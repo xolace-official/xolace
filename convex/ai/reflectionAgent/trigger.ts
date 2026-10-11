@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { internalAction } from "../../_generated/server";
+import { internalAction, type ActionCtx } from "../../_generated/server";
+import type { Id } from "../../_generated/dataModel";
 import { internal } from "../../_generated/api";
 import { rateLimiter } from "../../lib/rateLimits";
 import { posthog } from "../../posthog";
@@ -8,6 +9,7 @@ import {
   extractTextFromResponse,
   REFLECTION_LIGHT_MODEL,
   REFLECTION_LIGHT_VERSION,
+  thinkingOff,
 } from "../providers/anthropic";
 import {
   buildLightPassPrompt,
@@ -59,6 +61,7 @@ export const onSessionComplete = internalAction({
         const response = await anthropic.messages.create({
           model: REFLECTION_LIGHT_MODEL,
           max_tokens: LIGHT_MAX_TOKENS,
+          thinking: thinkingOff(REFLECTION_LIGHT_MODEL),
           system: prompt.system,
           messages: [{ role: "user", content: prompt.user }],
         });
@@ -91,26 +94,46 @@ export const onSessionComplete = internalAction({
       );
       if (!due) return;
 
-      const { ok } = await rateLimiter.limit(ctx, "reflectionConsolidation", {
-        key,
-      });
-      if (!ok) return; // per-user token budget spent for today
-
-      await workflow.start(
-        ctx,
-        internal.ai.reflectionAgent.consolidation.consolidationWorkflow,
-        { emotionalProfileId: args.emotionalProfileId },
-        {
-          onComplete:
-            internal.ai.reflectionAgent.consolidation.onConsolidationComplete,
-          context: {},
-        },
-      );
+      await startConsolidation(ctx, args.emotionalProfileId);
     } catch (err) {
       console.error("[reflectionAgent] consolidation trigger failed", {
         message: err instanceof Error ? err.message : String(err),
         emotionalProfileId: args.emotionalProfileId,
       });
     }
+  },
+});
+
+/** Start the deep pass, within the per-user token budget. */
+async function startConsolidation(
+  ctx: ActionCtx,
+  emotionalProfileId: Id<"emotional_profiles">,
+): Promise<void> {
+  const { ok } = await rateLimiter.limit(ctx, "reflectionConsolidation", {
+    key: emotionalProfileId,
+  });
+  if (!ok) return; // per-user token budget spent for today
+
+  await workflow.start(
+    ctx,
+    internal.ai.reflectionAgent.consolidation.consolidationWorkflow,
+    { emotionalProfileId },
+    {
+      onComplete: internal.ai.reflectionAgent.consolidation.onConsolidationComplete,
+      context: {},
+    },
+  );
+}
+
+/**
+ * Upgrading to Xolace+ runs the pass once, so insights arrive without waiting
+ * for the activity gate (#525). Scheduled by premium.onEntitlementActivated.
+ */
+export const runOnUpgrade = internalAction({
+  args: { emotionalProfileId: v.id("emotional_profiles") },
+  returns: v.null(),
+  handler: async (ctx, { emotionalProfileId }) => {
+    await startConsolidation(ctx, emotionalProfileId);
+    return null;
   },
 });

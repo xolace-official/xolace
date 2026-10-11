@@ -6,6 +6,14 @@ All notable changes to Xolace are documented here.
 
 ## [Unreleased]
 
+## [1.13.0] - OTA Update (2026-10-08)
+
+### Changed
+
+- **Faster image loads** — Lantern entry covers now load from resized WebP variants with ThumbHash placeholders and a shared cover component with a stable cache key, so covers appear instantly as a soft blur and sharpen in instead of popping in.
+- **Smoother Lantern browsing** — hub covers are served at 1280px WebP, cutting download size and scroll jank.
+- **New Lantern entries** — more reads added to the library, including additional loneliness entries.
+
 ## [1.12.0] - (2026-09-30)
 
 ### Added

@@ -1,11 +1,14 @@
 // Model call + retry loop for session-derived quotes.
 // V8 runtime — Anthropic SDK uses fetch, no Node built-ins needed.
 
-import { getAnthropicClient } from "./providers/anthropic";
+import {
+  getAnthropicClient,
+  extractTextFromResponse,
+  thinkingOff,
+  DISTILLER_MODEL,
+} from "./providers/anthropic";
 import { parseQuoteResponse } from "./quotesPrompt";
 import { validateQuote, validateTitle } from "./quotesQuality";
-
-const DISTILLER_MODEL = "claude-haiku-4-5-20251001";
 
 const RETRY_NUDGE =
   "That attempt did not land — it ran long, drifted into explaining the reader, or was not valid JSON. Write it again: one breath, around 20 words, no interpretation, JSON only.";
@@ -35,6 +38,7 @@ export async function requestQuoteText(args: {
       response = await client.messages.create({
         model: DISTILLER_MODEL,
         max_tokens: 400,
+        thinking: thinkingOff(DISTILLER_MODEL),
         messages: [{ role: "user", content: prompt }],
         system: args.systemPrompt,
       });
@@ -44,8 +48,7 @@ export async function requestQuoteText(args: {
       continue;
     }
 
-    const rawText: string | null =
-      response.content[0].type === "text" ? response.content[0].text.trim() : null;
+    const rawText = extractTextFromResponse(response).trim() || null;
 
     if (!rawText) {
       console.error(`[quotesDistiller] Empty response for ${args.label}`);

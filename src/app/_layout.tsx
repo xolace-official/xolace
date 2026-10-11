@@ -83,6 +83,7 @@ Settings.preloadPresets([
   'Chirp',     // resonanceToggle, lighter mood
   'Murmur',    // peerReflections mount, unsure mood
   'Breath',    // processingBreath fallback
+  'Swell',     // insights overall dial fill — plays on mount
 ]);
 
 // Surface any route-subtree render crash to Sentry. metro.config.js uses

@@ -10,8 +10,7 @@
  */
 import type { SafeguardLevel } from "../safeguard";
 
-export const CHAT_MODERATION_MODEL = "claude-haiku-4-5-20251001";
-export const CHAT_MODERATION_VERSION = "chat-moderation-v1-haiku-4.5";
+export const CHAT_MODERATION_VERSION = "chat-moderation-v2-haiku-5.5";
 
 export type ChatModerationVerdict = {
   crisis: SafeguardLevel;

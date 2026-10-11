@@ -5,12 +5,8 @@ import type { Id } from "./_generated/dataModel";
 import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
 import { recordActivity } from "./streaks/activityLog";
-import { ACKNOWLEDGE_MODEL, buildVentAcknowledgePrompt } from "./ai/ventAcknowledge";
+import { writeVentAcknowledgement } from "./ai/ventAcknowledge";
 import { renderSemanticProfile } from "./semanticProfiles";
-import {
-  getAnthropicClient,
-  extractTextFromResponse,
-} from "./ai/providers/anthropic";
 import {
   moderateInput,
   MODERATION_UNAVAILABLE,
@@ -273,15 +269,9 @@ async function runVentPipeline(
     words = CRISIS_FALLBACK;
   } else {
     try {
-      const client = getAnthropicClient();
-      const { system, user } = buildVentAcknowledgePrompt(transcript, semanticProfile);
-      const response = await client.messages.create({
-        model: ACKNOWLEDGE_MODEL,
-        max_tokens: 120,
-        system,
-        messages: [{ role: "user", content: user }],
-      });
-      words = extractTextFromResponse(response).trim() || null;
+      words =
+        (await writeVentAcknowledgement(transcript, semanticProfile)).trim() ||
+        null;
       console.log("[vent] Acknowledgement:", words);
     } catch (err) {
       console.error("[vent] Claude acknowledgement failed:", err);

@@ -4,9 +4,9 @@ import { internal } from "../_generated/api";
 import {
   getAnthropicClient,
   extractTextFromResponse,
+  SLOT_FILL_MODEL,
+  thinkingOff,
 } from "./providers/anthropic";
-
-const SLOT_FILL_MODEL = "claude-haiku-4-5-20251001";
 
 /**
  * Fill exercise slot values for a session.
@@ -69,6 +69,7 @@ Respond with only a JSON object, for example: {"user_phrase": "stuck and can't m
         const response = await anthropic.messages.create({
           model: SLOT_FILL_MODEL,
           max_tokens: 150,
+          thinking: thinkingOff(SLOT_FILL_MODEL),
           system:
             "You extract concise phrases to personalize emotional processing exercises. Return only valid JSON.",
           messages: [{ role: "user", content: userPrompt }],

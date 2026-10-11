@@ -40,6 +40,12 @@ describe("matchExercise", () => {
     expect(first).toBe("make_room");
   });
 
+  it("reads free-text granular labels through the emotion aliases (#536)", () => {
+    expect(matchExercise({ ...base, primaryEmotion: "confusion", granularLabel: "worried", intensity: 4 })[0]).toBe("reset");
+    // The original word still counts, not just the root it maps to.
+    expect(matchExercise({ ...base, primaryEmotion: "confusion", granularLabel: "despair" })[0]).toBe("make_room");
+  });
+
   it("routes stuck language tags to make_room", () => {
     const [first] = matchExercise({ ...base, userLanguageTags: ["stuck", "trapped"] });
     expect(first).toBe("make_room");

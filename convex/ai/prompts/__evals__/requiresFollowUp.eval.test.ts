@@ -10,7 +10,7 @@
  * suite asserts overall accuracy >= 0.8 across the labeled set plus exact
  * correctness on the unambiguous anchors.
  */
-import { getAnthropicClient, parseClassificationResponse, CLASSIFIER_MODEL } from "../../providers/anthropic";
+import { getAnthropicClient, parseClassificationResponse, CLASSIFIER_MODEL, thinkingOff } from "../../providers/anthropic";
 import { buildClassifierPrompt } from "../classifier";
 import { runLabeledEval, type LabeledCase } from "./harness.eval";
 
@@ -47,6 +47,7 @@ async function classify(c: Case): Promise<boolean> {
   const res = await anthropic.messages.create({
     model: CLASSIFIER_MODEL,
     max_tokens: 400,
+    thinking: thinkingOff(CLASSIFIER_MODEL),
     system: prompt.system,
     messages: [{ role: "user", content: prompt.user }],
   });

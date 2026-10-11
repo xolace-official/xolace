@@ -173,6 +173,13 @@ describe('notificationTapPlan', () => {
     });
   });
 
+  it('routes domain_unlock to the insights screen', () => {
+    expect(notificationTapPlan({ type: 'domain_unlock' }, null, 1).navigation).toEqual({
+      action: 'push',
+      href: '/profile/insights',
+    });
+  });
+
   it('carries the banner only when there is both a log id and a body', () => {
     expect(notificationTapPlan({ logId: 'l1', type: 'milestone' }, 'Ten days', 1)).toMatchObject({
       logId: 'l1',

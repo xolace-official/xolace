@@ -13,6 +13,7 @@ import {
   supportNeedValidator,
   triggerTypeValidator,
   activityActionTypeValidator,
+  domainValidator,
 } from "./lib/validators";
 import { voiceSlugValidator } from "./lib/voices";
 import { specialtyValidator } from "./lib/specialties";
@@ -201,6 +202,11 @@ export default defineSchema({
     // Prevents duplicate wipe jobs from being scheduled.
     dataWipeInProgress: v.optional(v.boolean()),
 
+    // runAt of the newest consolidation run whose insight set is published
+    // (compounding/insightStore.endRun). An older run finishing late can't
+    // write or keep rows past it. Absent until the first insight run ends.
+    insightsRunAt: v.optional(v.number()),
+
     // --- Cognition Layer: semantic memory pointer ---
     // Current semantic profile version (row in semantic_profiles).
     // Versions are append-only; this pointer selects the live one so a
@@ -213,6 +219,13 @@ export default defineSchema({
     // point). Undefined → anchor on firstSessionAt ?? createdAt. Cleared by
     // the data-wipe pipeline alongside currentSemanticProfileId.
     lastConsolidationAt: v.optional(v.number()),
+
+    // --- Steadiness (#535) ---
+    // When each domain first left warming. Outlives the session that unlocked
+    // it, so travel or retention leaving fewer days never re-locks it or
+    // replays its beat. Dropped by retention once a domain has no readings;
+    // cleared by the data wipe. One entry per domain at most.
+    unlockedDomains: v.optional(v.array(v.object({ domain: domainValidator, at: v.number() }))),
 
     // --- Timestamps ---
     createdAt: v.number(),
@@ -522,8 +535,7 @@ export default defineSchema({
     mirrorText: v.optional(v.string()),
 
     // Which version of the articulation engine produced this.
-    // Format: "articulation-v{N}-{anthropic_model}"
-    // e.g., "articulation-v3-claude-sonnet-4-20250514"
+    // Format: "articulator-v{N}-{model}", e.g. "articulator-v2-sonnet-5.5" (ARTICULATOR_VERSION)
     // Critical for tracking quality across prompt iterations.
     // Optional: not set until mirror_delivered state.
     mirrorModelVersion: v.optional(v.string()),
@@ -605,6 +617,20 @@ export default defineSchema({
         v.literal("heavier"),
         v.literal("unsure"),
       ),
+    ),
+
+    // --- Unlock moment (#523) ---
+
+    // The domains this session's reading moved out of warming, stamped at
+    // completion. `first`: nothing was unlocked before it. `seenAt`: the
+    // session-end beat showed; unset next day → one generic push. Lives and
+    // dies with the session, so retention and wipe carry it.
+    domainUnlock: v.optional(
+      v.object({
+        domains: v.array(domainValidator),
+        first: v.boolean(),
+        seenAt: v.optional(v.number()),
+      }),
     ),
 
     // --- Safety ---
@@ -1220,6 +1246,9 @@ export default defineSchema({
       v.literal("kindling_ready"),
       // Streak hit 7/30/100/every 100 (#439). Template copy, own rate bucket.
       v.literal("streak_milestone"),
+      // A domain unlocked and the beat went unseen (#523). Generic text,
+      // never the domain; own weekly bucket.
+      v.literal("domain_unlock"),
     ),
 
     // AI-generated, contextual notification text.
@@ -1752,6 +1781,10 @@ export default defineSchema({
     // Whether the triggering session was escalation-derived. Gates the
     // "resources are still here" link in the UI.
     escalationDerived: v.boolean(),
+
+    // The compounding domain the card names (#522). Set → the push stays
+    // generic, since the lock screen isn't private.
+    compoundingDomain: v.optional(domainValidator),
 
     // "pending"    — workflow active, card not yet due
     // "ready"      — user returned (or nudge fired); show on next open
@@ -2407,4 +2440,55 @@ export default defineSchema({
     views: v.number(),
     helped: v.number(),
   }).index("by_entryId", ["entryId"]),
+
+  // One run of a domain compounding (ADR 0020, CONTEXT.md "Stretch"). Stored,
+  // never replayed: written by compounding/stretches.evaluateCompounding when
+  // a reading lands. At most one open row (no endedAt) per profile + domain.
+  // Retention drops closed rows past the cutoff, never open ones; wipe and
+  // account deletion drop all.
+  compounding_stretches: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    domain: domainValidator,
+    startedAt: v.number(),
+    // The baseline held while the stretch runs, for at most 90 days.
+    anchorBaseline: v.number(),
+    // Absent while open. A quiet stretch's end (last reading + 30 days) is
+    // written by the next evaluation; readers derive it until then.
+    endedAt: v.optional(v.number()),
+    // Events no reading records (#492, #496): once set, spent for the stretch.
+    followUpStartedAt: v.optional(v.number()),
+    upsellShownAt: v.optional(v.number()),
+  })
+    .index("by_emotionalProfileId_and_domain_and_startedAt", ["emotionalProfileId", "domain", "startedAt"])
+    .index("by_emotionalProfileId_and_endedAt", ["emotionalProfileId", "endedAt"]),
+
+  // Steadiness insights (#525, #526, ADR 0019): written by the Reflection
+  // Agent's consolidation pass, only after the quality gate passes. Each run
+  // replaces the last run's set. Retention drops a row once its oldest cited
+  // session is past the cutoff; a wipe or account deletion drops every row.
+  steadiness_insights: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    kind: v.union(
+      // Overall (under the dial), then per-domain (#526).
+      v.literal("thread"), v.literal("crowding"),
+      v.literal("say_vs_after"), v.literal("relief"), v.literal("absence"),
+      // DEPRECATED(remove-after: no steadiness_insights row has these kinds): #525's
+      // first build; never shown (insightsFor drops them), replaced by each profile's next run.
+      v.literal("link"), v.literal("helped"), v.literal("then_now"), v.literal("shape"),
+    ),
+    // One domain; an overall insight names every domain it spans, the lead one first.
+    domains: v.array(domainValidator),
+    // What the text claims about the lead domain against its usual (#526):
+    // anything but "none" waits for that domain to settle.
+    direction: v.optional(v.union(v.literal("lower"), v.literal("higher"), v.literal("none"))),
+    // Each named domain's raw steadiness when written, in `domains` order: the
+    // insight is hidden once one moves past its reliable-change band (#526).
+    scoresAt: v.optional(v.array(v.number())),
+    text: v.string(),
+    citedSessionIds: v.array(v.id("sessions")),
+    oldestCitedAt: v.number(),
+    // The consolidation run that wrote it; a run's end clears older runs' rows (#531).
+    runAt: v.number(),
+    writtenAt: v.number(),
+  }).index("by_emotionalProfileId_and_oldestCitedAt", ["emotionalProfileId", "oldestCitedAt"]),
 });

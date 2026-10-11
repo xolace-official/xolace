@@ -27,7 +27,7 @@ function getLocalHour(timezone: string): number {
  * Returns true if the current local hour is inside the user's quiet window
  * (i.e., outside active delivery hours).
  */
-function isInQuietWindow(
+export function isInQuietWindow(
   timezone: string,
   dontReachBefore: number,
   dontReachAfter: number

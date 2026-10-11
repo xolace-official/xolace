@@ -71,7 +71,7 @@ export const getRecentSessions = internalQuery({
 });
 
 /** A session's answered check-in, or null if it never got one. */
-async function readFollowUp(ctx: QueryCtx, sessionId: Id<"sessions">) {
+export async function readFollowUp(ctx: QueryCtx, sessionId: Id<"sessions">) {
   // One card per session in production; dev resets can add more, so take the
   // newest one the user actually answered.
   const cards = await ctx.db

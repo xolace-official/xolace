@@ -7,6 +7,7 @@ import {
   ARTICULATOR_MODEL,
   ARTICULATOR_VERSION,
   CLASSIFIER_VERSION,
+  thinkingOff,
 } from "./providers/anthropic";
 import { classifierCache, moderationCache } from "./cached";
 import { MODERATION_UNAVAILABLE } from "./providers/moderation";
@@ -330,6 +331,7 @@ export const handleClarification = internalAction({
         const response = await anthropic.messages.create({
           model: ARTICULATOR_MODEL,
           max_tokens: 300,
+          thinking: thinkingOff(ARTICULATOR_MODEL),
           system: articulatorPrompt.system,
           messages: [{ role: "user", content: articulatorPrompt.user }],
         });

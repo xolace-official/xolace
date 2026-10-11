@@ -1,0 +1,59 @@
+name: Intensity gate
+
+# #533: a classifier model, prompt or offset change must re-measure the
+# intensity shift against INTENSITY_OFFSET before it ships. Calls the live
+# model (135 classifier requests per run), so it only runs when one of these moves.
+# A model swap without a version bump is caught by the always-on unit test
+# in convex/compounding/steadiness.test.ts.
+on:
+  pull_request:
+    branches: [dev, default]
+    paths:
+      - convex/ai/providers/anthropic.ts
+      - convex/ai/prompts/classifier.ts
+      - convex/ai/cachedActions.ts
+      - convex/lib/understandingVocab.ts
+      - convex/compounding/readings.ts
+      - convex/ai/prompts/__evals__/intensity.*
+      - convex/ai/prompts/__evals__/harness.eval.ts
+      - .github/workflows/intensity-gate.yml
+  workflow_dispatch:
+
+jobs:
+  intensity:
+    name: Intensity eval
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # vitest runs under Node via its shebang (see ci.yml).
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Without the key the eval skips, and a skipped gate would read green.
+      - name: Require ANTHROPIC_API_KEY
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::ANTHROPIC_API_KEY secret is not set; the intensity gate cannot run."
+            exit 1
+          fi
+
+      - name: Run intensity eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bun run test:evals:intensity

@@ -4,6 +4,7 @@ import type { Id } from "../../_generated/dataModel";
 import { internal } from "../../_generated/api";
 import { rag } from "../../rag";
 import { REFLECTION_CONSOLIDATION_VERSION } from "../providers/anthropic";
+import { dispatchInsightTool } from "./insightTools";
 
 // =============================================================
 // Reflection Agent — TOOL SET (Cognition Layer Phase 3).
@@ -14,9 +15,10 @@ import { REFLECTION_CONSOLIDATION_VERSION } from "../providers/anthropic";
 // narrative sections and always goes through the sanctioned createVersion
 // path (which is itself wipe-guarded and versioned).
 //
-// The strangler write-tools (queue_follow_up / propose_notification /
-// write_insight) are deliberately NOT here yet — doc §3 mandates absorbing
-// them one at a time behind a comparison period.
+// The steadiness-insight tools (#525) are offered only to Xolace+ with
+// personal memory on (INSIGHT_TOOLS). The other strangler write-tools
+// (queue_follow_up / propose_notification) are deliberately NOT here yet —
+// doc §3 mandates absorbing them one at a time behind a comparison period.
 // =============================================================
 
 export const REFLECTION_TOOLS: Anthropic.Tool[] = [
@@ -29,7 +31,7 @@ export const REFLECTION_TOOLS: Anthropic.Tool[] = [
   {
     name: "search_episodic_memory",
     description:
-      "Semantically search this person's own past reflections for moments similar to a query (e.g. a theme or their own phrase). Returns matching composite memories. Use to test whether a pattern actually recurs.",
+      "Semantically search this person's own past reflections for moments similar to a query (e.g. a theme or their own phrase). Returns matching composite memories, each with its sessionId. Use to test whether a pattern actually recurs.",
     input_schema: {
       type: "object",
       properties: {
@@ -103,6 +105,7 @@ export async function dispatchTool(
   emotionalProfileId: Id<"emotional_profiles">,
   name: string,
   input: Record<string, unknown>,
+  { runAt, insights }: { runAt: number; insights: boolean },
 ): Promise<string> {
   switch (name) {
     case "get_emotion_timeline":
@@ -154,7 +157,9 @@ export async function dispatchTool(
           query,
           limit: 5,
         });
-        return JSON.stringify({ matches: entries.map((e) => e.text) });
+        return JSON.stringify({
+          matches: entries.map((e) => ({ sessionId: e.key ?? null, text: e.text })),
+        });
       } catch {
         // No namespace yet or embedding outage — memory can never block.
         return JSON.stringify({ matches: [] });
@@ -196,6 +201,10 @@ export async function dispatchTool(
     }
 
     default:
-      return `Unknown tool: ${name}`;
+      // Only an insight-enabled run may reach them, whatever the model asks for.
+      return (
+        (insights && (await dispatchInsightTool(ctx, emotionalProfileId, name, input, runAt))) ||
+        `Unknown tool: ${name}`
+      );
   }
 }

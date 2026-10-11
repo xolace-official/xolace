@@ -32,7 +32,7 @@
 export type TerminalState = "confirmed" | "refined" | "gave_up" | "abandoned";
 
 export interface ConfirmationSample {
-  /** mirrorModelVersion stamp, e.g. "articulator-v1-sonnet-4.6". */
+  /** mirrorModelVersion stamp, e.g. "articulator-v2-sonnet-5.5". */
   version: string;
   /** toneUsed for this mirror, if recorded. Lets Loop #1 be measured too. */
   tone?: string | null;

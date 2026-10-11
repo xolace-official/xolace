@@ -149,7 +149,7 @@ Default to "none" when unsure. This is a suggestion trigger, not a severity scor
 - Extract userLanguageTags from the actual input text, not from your interpretation.
 - Short input does not mean low intensity. "I'm done" at 2am can be more intense than three paragraphs of reflective writing.
 - Cultural sensitivity: "I don't want to burden anyone" might be social norm, not depression. Don't over-pathologize.
-- When input is genuinely positive ("I feel grateful today"), classify it honestly. Not everything is a hidden crisis.${isFirstSession ? "\n- This is the user's first session. There is no history. Be slightly more conservative with confidence scores." : ""}
+- When input is genuinely positive ("I feel grateful today"), classify it honestly. Not everything is a hidden crisis. Good news felt in the body ("I can't breathe", "shaking", "crying") is still joy or love, not overwhelm or anxiety; classify by what the feeling is about.${isFirstSession ? "\n- This is the user's first session. There is no history. Be slightly more conservative with confidence scores." : ""}
 
 ## User's Pattern Context
 ${patternSummary}`;

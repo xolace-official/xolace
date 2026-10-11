@@ -23,28 +23,54 @@ export function getAnthropicClient(): Anthropic {
 
 // --- Model Constants ---
 
-export const CLASSIFIER_MODEL = "claude-haiku-4-5-20251001";
-export const CLASSIFIER_VERSION = "classifier-v1-haiku-4.5";
+export const CLASSIFIER_MODEL = "claude-haiku-5-5";
+// Changing the classifier prompt or model? Bump this (it must name the model —
+// steadiness.test.ts asserts it), run the intensity release gate
+// (`bun run test:evals:intensity`; the Intensity gate CI job runs it on PRs
+// touching this file) and record the new version in INTENSITY_OFFSET
+// (convex/compounding/readings.ts).
+export const CLASSIFIER_VERSION = "classifier-v2-haiku-5.5";
 
-export const ARTICULATOR_MODEL = "claude-sonnet-4-6";
-export const ARTICULATOR_VERSION = "articulator-v1-sonnet-4.6";
+export const ARTICULATOR_MODEL = "claude-sonnet-5-5";
+export const ARTICULATOR_VERSION = "articulator-v2-sonnet-5.5";
 
-export const DISTILLER_MODEL = "claude-haiku-4-5-20251001";
-export const DISTILLER_VERSION = "distiller-v1-haiku-4.5";
+export const DISTILLER_MODEL = "claude-haiku-5-5";
+export const DISTILLER_VERSION = "distiller-v2-haiku-5.5";
 
 // Reflection Agent (Cognition Layer Phase 3). writerVersion mirrors the
 // mirrorModelVersion format ("{writer}-v{N}-{model}").
-export const REFLECTION_LIGHT_MODEL = "claude-haiku-4-5-20251001";
-export const REFLECTION_LIGHT_VERSION = "reflect-light-v1-haiku-4.5";
+export const REFLECTION_LIGHT_MODEL = "claude-haiku-5-5";
+export const REFLECTION_LIGHT_VERSION = "reflect-light-v2-haiku-5.5";
 
-export const REFLECTION_CONSOLIDATION_MODEL = "claude-sonnet-4-6";
+export const REFLECTION_CONSOLIDATION_MODEL = "claude-sonnet-5-5";
 export const REFLECTION_CONSOLIDATION_VERSION =
-  "reflect-consolidation-v2-sonnet-4.6"; // v2: reads follow-up check-ins (#453)
+  "reflect-consolidation-v3-sonnet-5.5"; // v2: reads follow-up check-ins (#453); v3: Sonnet 5.5 (#534)
 
 // Kindling generation (docs/paths-v1.md §2.2, ADR 0010). One standalone
 // Haiku call that picks 2–3 action types and writes a `why` line each.
-export const PATHS_MODEL = "claude-haiku-4-5-20251001";
-export const PATHS_VERSION = "paths-v1-haiku-4.5";
+export const PATHS_MODEL = "claude-haiku-5-5";
+export const PATHS_VERSION = "paths-v2-haiku-5.5";
+
+export const NOTIFICATION_MODEL = "claude-haiku-5-5";
+export const ACKNOWLEDGE_MODEL = "claude-haiku-5-5";
+export const SLOT_FILL_MODEL = "claude-haiku-5-5";
+export const CHAT_MODERATION_MODEL = "claude-haiku-5-5";
+export const FOLLOW_UP_CARD_MODEL = "claude-haiku-5-5";
+
+/**
+ * Thinking off, like for like with the 4.x models these routes were tuned
+ * on (their small max_tokens leave no room for thinking). The 5.5 models
+ * think by default; Haiku 5.5 turns it off with "disabled", Sonnet 5.5
+ * rejects that and calls its lowest setting "between_tools" — which SDK
+ * 0.92 doesn't type yet, hence the cast. Both need effort ≤ high (default).
+ */
+export function thinkingOff(model: string): Anthropic.ThinkingConfigParam {
+  return (
+    model.startsWith("claude-sonnet-5-5")
+      ? { type: "between_tools" }
+      : { type: "disabled" }
+  ) as Anthropic.ThinkingConfigParam;
+}
 
 // --- Types ---
 

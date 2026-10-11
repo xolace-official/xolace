@@ -7,6 +7,7 @@ import { Button, LinkButton } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { CloseOffer } from "@/src/features/session-end/components/close-offer";
 import { KindlingCloseSlot } from "@/src/features/session-end/components/kindling-close-slot";
+import { SessionEndUpsell } from "@/src/features/insights/compounding-upsell";
 import type { Id } from "@/convex/_generated/dataModel";
 import { NIGHT_SESSION_END_EXIT } from "@/src/features/reflect/night-copy";
 
@@ -104,6 +105,7 @@ export const ExitVariant = ({
             className="w-full items-center gap-4"
           >
             <CloseOffer sessionId={sessionId} variant="exit" />
+            <SessionEndUpsell sessionId={sessionId} />
             <KindlingCloseSlot sessionId={sessionId} />
 
             <Button

@@ -26,6 +26,12 @@ describe("bindTwig", () => {
     expect(bind("xolacer", [], { suggestedSpecialty: "burnout" })).toEqual({ specialty: "burnout" });
   });
 
+  it("read binds a free-text secondary to entries shelved under its emotion (#536)", () => {
+    const entries = [{ slug: "on-grief", emotions: ["grief"], lifeAreas: [] }];
+    expect(bindTwig("read", u({ primaryEmotion: "love", secondaryEmotion: "heartbreak" }), [], entries)).toEqual({ slug: "on-grief" });
+    expect(bindTwig("read", u({ primaryEmotion: "love" }), [], entries)).toBeNull();
+  });
+
   it("bridge binds without content", () => {
     expect(bind("bridge", [])).toEqual({ exercise: "trusted-bridge" });
   });
@@ -102,5 +108,15 @@ describe("bindTwig", () => {
   it("skips inactive rows and unknown action types", () => {
     expect(bind("audio_topic_anxiety_relief", [track({ slug: "off", active: false })])).toBeNull();
     expect(bind("not_a_key", [track({ slug: "x" })])).toBeNull();
+  });
+
+  it("lets a compounding domain's life areas outweigh tonight's own tags (#521)", () => {
+    const racing = track({ slug: "racing", tags: ["anxiety", "racing-thoughts"] });
+    const rest = track({ slug: "rest", tags: ["anxiety", "sleep", "health"] });
+    const tags = { thematicTags: ["racing-thoughts"] };
+    expect(bind("audio_topic_anxiety_relief", [racing, rest], tags)).toEqual({ slug: "racing" });
+    expect(
+      bind("audio_topic_anxiety_relief", [racing, rest], { ...tags, compoundingTags: ["health", "sleep"] }),
+    ).toEqual({ slug: "rest" });
   });
 });

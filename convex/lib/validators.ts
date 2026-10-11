@@ -1,5 +1,9 @@
 import { v } from "convex/values";
 import { voiceSlugValidator } from "./voices";
+import { DOMAINS } from "./understandingVocab";
+
+/** One of the 8 scored domains (CONTEXT.md). */
+export const domainValidator = v.union(...DOMAINS.map((d) => v.literal(d)));
 
 export const resourceValidator = v.object({
   // How the value is opened: phone → tel:, url → browser, email → mailto:, text → display only

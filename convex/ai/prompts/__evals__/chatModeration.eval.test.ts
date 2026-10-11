@@ -8,11 +8,14 @@
  */
 import {
   buildChatModerationPrompt,
-  CHAT_MODERATION_MODEL,
   parseChatModerationResponse,
   type ChatModerationVerdict,
 } from "../../chat/classify";
-import { getAnthropicClient } from "../../providers/anthropic";
+import {
+  CHAT_MODERATION_MODEL,
+  getAnthropicClient,
+  thinkingOff,
+} from "../../providers/anthropic";
 import { runLabeledEval, type LabeledCase } from "./harness.eval";
 
 type Label = "none" | "crisis" | "elevated" | "harassment" | "spam" | "contact";
@@ -61,6 +64,7 @@ async function classify(c: Case): Promise<Label> {
   const res = await getAnthropicClient().messages.create({
     model: CHAT_MODERATION_MODEL,
     max_tokens: 200,
+    thinking: thinkingOff(CHAT_MODERATION_MODEL),
     system: prompt.system,
     messages: [{ role: "user", content: prompt.user }],
   });

@@ -82,7 +82,7 @@ export type TapNavigation =
   | { action: "navigate"; href: ReturnType<typeof chatNotificationRoute> }
   | {
       action: "push";
-      href: "/(protected)/quotes" | "/(protected)" | "/(protected)/kindling";
+      href: "/(protected)/quotes" | "/(protected)" | "/(protected)/kindling" | "/profile/insights";
     };
 
 export type NotificationTapPlan = {
@@ -128,6 +128,8 @@ export function notificationTapPlan(
     }
   } else if (data?.screen === "quotes") {
     plan.navigation = { action: "push", href: "/(protected)/quotes" };
+  } else if (data?.type === "domain_unlock") {
+    plan.navigation = { action: "push", href: "/profile/insights" };
   } else if (data?.type === "kindling_ready") {
     plan.navigation = { action: "push", href: "/(protected)/kindling" };
   } else if (

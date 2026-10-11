@@ -40,7 +40,11 @@ export type PaywallSurface =
   | "kindling"
   // The Lantern reader's audio dock at the end of the 30s preview (#411).
   // Pushed over the reader, never replacing it — the read stays in place.
-  | "library_audio";
+  | "library_audio"
+  // The insights screen's free-only "Unlock numbers" pill (#517, copy #513).
+  | "steadiness_numbers"
+  // A free user's compounding upsell (#524): Insights and session end.
+  | "compounding_upsell";
 
 /**
  * `sessionId` rides only with the `kindling` surface: the just-completed

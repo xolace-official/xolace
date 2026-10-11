@@ -24,6 +24,7 @@ import {
   getAnthropicClient,
   parseClassificationResponse,
   CLASSIFIER_MODEL,
+  thinkingOff,
 } from "../../providers/anthropic";
 import { moderateInput } from "../../providers/moderation";
 import { evaluateSafeguard } from "../../safeguard";
@@ -145,6 +146,7 @@ async function reached(c: Case): Promise<boolean> {
   const res = await anthropic.messages.create({
     model: CLASSIFIER_MODEL,
     max_tokens: 400,
+    thinking: thinkingOff(CLASSIFIER_MODEL),
     system: prompt.system,
     messages: [{ role: "user", content: prompt.user }],
   });

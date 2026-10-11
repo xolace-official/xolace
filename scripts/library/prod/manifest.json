@@ -417,7 +417,7 @@
       }
     ],
     "reuse": "adapted",
-    "active": false,
+    "active": true,
     "retrievedAt": 1791359721872,
     "lastReviewedAt": 1791359721872,
     "facets": {
@@ -530,7 +530,7 @@
     "reuse": "adapted",
     "retrievedAt": 1791364428236,
     "lastReviewedAt": 1791364428236,
-    "active": false,
+    "active": true,
     "facets": {
       "emotion": [
         "loneliness",
@@ -641,7 +641,7 @@
     "reuse": "adapted",
     "retrievedAt": 1791368976066,
     "lastReviewedAt": 1791368976066,
-    "active": false,
+    "active": true,
     "facets": {
       "emotion": [
         "sadness",
@@ -753,7 +753,7 @@
     "reuse": "adapted",
     "retrievedAt": 1791368976066,
     "lastReviewedAt": 1791368976066,
-    "active": false,
+    "active": true,
     "facets": {
       "emotion": [
         "stress",
@@ -853,7 +853,7 @@
     "reuse": "adapted",
     "retrievedAt": 1791368976066,
     "lastReviewedAt": 1791368976066,
-    "active": false,
+    "active": true,
     "facets": {
       "emotion": [
         "stress",

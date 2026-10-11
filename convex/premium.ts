@@ -3,6 +3,7 @@ import { query, internalQuery, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
 import { hasPremium, PLUS_ENTITLEMENT_ID } from "./lib/premium";
+import { hasInsights } from "./compounding/insightStore";
 import { posthog } from "./posthog";
 
 // =============================================================
@@ -113,6 +114,15 @@ export const onEntitlementActivated = internalMutation({
 
     const profileId = ctx.db.normalizeId("emotional_profiles", args.appUserId);
     const profile = profileId ? await ctx.db.get("emotional_profiles", profileId) : null;
+    // Steadiness insights never ran while free (#525): one run now. This hook
+    // fires only on inactive → active (an upgrade or a return), never on a renewal.
+    if (profile?.firstSessionAt !== undefined) {
+      if (!(await hasInsights(ctx, profile._id))) {
+        await ctx.scheduler.runAfter(0, internal.ai.reflectionAgent.trigger.runOnUpgrade, {
+          emotionalProfileId: profile._id,
+        });
+      }
+    }
     if (!profile?.pendingKindlingSessionId) return;
     await ctx.db.patch("emotional_profiles", profile._id, { pendingKindlingSessionId: undefined });
     await ctx.scheduler.runAfter(0, internal.ai.paths.generate.run, {

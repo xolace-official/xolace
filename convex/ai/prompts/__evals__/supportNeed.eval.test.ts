@@ -10,7 +10,7 @@
  * near-miss (off by one grade) is acceptable signal; exact match on the
  * unambiguous anchors is not.
  */
-import { getAnthropicClient, parseClassificationResponse, CLASSIFIER_MODEL, type SupportNeed } from "../../providers/anthropic";
+import { getAnthropicClient, parseClassificationResponse, CLASSIFIER_MODEL, thinkingOff, type SupportNeed } from "../../providers/anthropic";
 import { buildClassifierPrompt } from "../classifier";
 import { runLabeledEval, type LabeledCase } from "./harness.eval";
 
@@ -44,6 +44,7 @@ async function classify(c: Case): Promise<SupportNeed> {
   const res = await anthropic.messages.create({
     model: CLASSIFIER_MODEL,
     max_tokens: 400,
+    thinking: thinkingOff(CLASSIFIER_MODEL),
     system: prompt.system,
     messages: [{ role: "user", content: prompt.user }],
   });

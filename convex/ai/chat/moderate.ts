@@ -12,11 +12,15 @@ import {
   conversationRoleValidator,
   safeguardLevelValidator,
 } from "../../lib/validators";
-import { extractTextFromResponse, getAnthropicClient } from "../providers/anthropic";
+import {
+  CHAT_MODERATION_MODEL,
+  extractTextFromResponse,
+  getAnthropicClient,
+  thinkingOff,
+} from "../providers/anthropic";
 import { CRISIS_RESOURCES, SUPPORT_RESOURCES, type Resource, type SafeguardLevel } from "../safeguard";
 import {
   buildChatModerationPrompt,
-  CHAT_MODERATION_MODEL,
   CHAT_MODERATION_VERSION,
   parseChatModerationResponse,
 } from "./classify";
@@ -59,6 +63,7 @@ export const moderateChatMessage = internalAction({
     const response = await getAnthropicClient().messages.create({
       model: CHAT_MODERATION_MODEL,
       max_tokens: 200,
+      thinking: thinkingOff(CHAT_MODERATION_MODEL),
       system: prompt.system,
       messages: [{ role: "user", content: prompt.user }],
     });

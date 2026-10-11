@@ -11,6 +11,7 @@ import {
   getAnthropicClient,
   ARTICULATOR_MODEL,
   extractTextFromResponse,
+  thinkingOff,
 } from "./providers/anthropic";
 import { requireAuth, requireSessionOwnership } from "../lib/auth";
 import { hasPremium } from "../lib/premium";
@@ -255,6 +256,7 @@ async function _generateDraft(input: DraftInput): Promise<string> {
   const response = await client.messages.create({
     model: ARTICULATOR_MODEL,
     max_tokens: 300,
+    thinking: thinkingOff(ARTICULATOR_MODEL),
     messages: [{ role: "user", content: prompt }],
   });
 

@@ -161,4 +161,33 @@ describe("buildPathsPrompt", () => {
     expect(system).toMatch(/do not/i);
     expect(system).not.toMatch(/good example|for example, write/i);
   });
+
+  // #521: context only for compounding domains tonight touched — the gate is
+  // upstream; here, one line when given, none when not.
+  it("adds one compounding line, roughly dated, only when given", () => {
+    expect(buildPathsPrompt(base).user).not.toContain("weighing on them");
+    const { user } = buildPathsPrompt({
+      ...base,
+      compounding: [
+        { domain: "work", state: "easing", returning: false, days: 20 },
+        { domain: "health", state: "compounding", returning: true, days: 3 },
+      ],
+    });
+    const lines = user.split("\n").filter((l) => l.includes("weighing on them"));
+    expect(lines).toEqual([
+      "- weighing on them lately: work for about 3 weeks, easing; health for a few days, returning",
+    ]);
+  });
+});
+
+describe("the why line never carries compounding (#521)", () => {
+  it.each([
+    "You said work has been heavier than your usual, so this is one slow minute before the day.",
+    "You said work keeps compounding lately, so this is one slow minute before the day starts.",
+    "You said work has weighed on you for three weeks, so this is one slow minute before the day.",
+    "You said work has been heavy for 20 days, so this is one slow minute before the day starts.",
+  ])("drops %s", (why) => {
+    const { dropped } = parsePathsResponse(JSON.stringify([entry("breathing", 1, why)]), CATALOG);
+    expect(dropped[0].reason).toBe("why_vocabulary");
+  });
 });

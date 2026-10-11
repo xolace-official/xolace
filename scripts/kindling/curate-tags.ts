@@ -23,7 +23,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { CATALOG_BY_KEY } from "../../convex/ai/paths/catalog";
-import { CLASSIFIER_MODEL, extractTextFromResponse, getAnthropicClient } from "../../convex/ai/providers/anthropic";
+import { CLASSIFIER_MODEL, extractTextFromResponse, getAnthropicClient, thinkingOff } from "../../convex/ai/providers/anthropic";
 
 type ManifestTrack = {
   slug: string;
@@ -75,6 +75,7 @@ async function curateOne(track: ManifestTrack): Promise<string[]> {
   const response = await getAnthropicClient().messages.create({
     model: CLASSIFIER_MODEL,
     max_tokens: 200,
+    thinking: thinkingOff(CLASSIFIER_MODEL),
     system:
       "You curate mood/theme tags for instrumental music tracks in a mental-health app. " +
       "Given a track's title and its raw source tags, pick the subset of the CANDIDATE " +

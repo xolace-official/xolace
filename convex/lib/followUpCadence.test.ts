@@ -38,6 +38,11 @@ describe("followUpTier", () => {
     ).toBe("elevated");
   });
 
+  it("reads free-text granular labels through the emotion aliases (#536)", () => {
+    expect(followUpTier({ primaryEmotion: "confusion", granularLabel: "sorrow", intensity: 8 })).toBe("elevated");
+    expect(followUpTier({ primaryEmotion: "confusion", granularLabel: "Ashamed", intensity: 7 })).toBe("elevated");
+  });
+
   it("keeps grief BELOW intensity 7 as standard", () => {
     expect(followUpTier({ primaryEmotion: "grief", intensity: 6 })).toBe(
       "standard",

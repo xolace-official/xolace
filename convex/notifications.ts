@@ -28,6 +28,7 @@ const notificationLogDocValidator = v.object({
     v.literal("follow_up"),
     v.literal("kindling_ready"),
     v.literal("streak_milestone"),
+    v.literal("domain_unlock"),
   ),
   content: v.string(),
   triggerReason: v.string(),
@@ -78,8 +79,11 @@ export const schedule = internalMutation({
       v.literal("affirmation"),
       v.literal("follow_up"),
       v.literal("kindling_ready"),
-      v.literal("streak_milestone")
+      v.literal("streak_milestone"),
+      v.literal("domain_unlock")
     ),
+    // Defaults to "Xolace"; the unlock push carries its own (#523).
+    title: v.optional(v.string()),
     content: v.string(),
     triggerReason: v.string(),
     scheduledFor: v.number(),
@@ -112,7 +116,9 @@ export const schedule = internalMutation({
           ? "kindlingReady"
           : args.type === "streak_milestone"
             ? "streakMilestone"
-            : "notification";
+            : args.type === "domain_unlock"
+              ? "domainUnlock"
+              : "notification";
     const { ok } = await rateLimiter.limit(ctx, bucket, {
       key: args.emotionalProfileId,
     });
@@ -156,7 +162,7 @@ export const schedule = internalMutation({
     await sendPushToProfile(ctx, {
       emotionalProfileId: args.emotionalProfileId,
       notification: {
-        title: "Xolace",
+        title: args.title ?? "Xolace",
         body: args.content,
         // iOS reads the sound off the payload; Android ignores it and takes the
         // sound from the channel. Sending both is what covers the two platforms

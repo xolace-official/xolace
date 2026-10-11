@@ -14,7 +14,7 @@ import { localDayKey, shiftDayKey } from "./streaks/activityLog";
 import { workflow } from "./followUps";
 import { deleteResponsesForCard } from "./followUpResponses";
 
-function assertDevToolsEnabled() {
+export function assertDevToolsEnabled() {
   if (process.env.DEV_TOOLS_ENABLED !== "true") {
     throw new Error("Dev tools are disabled on this deployment");
   }

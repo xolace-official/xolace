@@ -25,19 +25,22 @@ import {
   shouldReshowShownCard,
   shouldSupersede,
 } from "./lib/followUpCadence";
-import {
-  getAnthropicClient,
-  extractTextFromResponse,
-} from "./ai/providers/anthropic";
-import { safeguardLevelValidator } from "./lib/validators";
+import { writeFollowUpCard } from "./ai/followUpCard";
+import { domainValidator, safeguardLevelValidator } from "./lib/validators";
 import {
   buildFollowUpCardPrompt,
   fallbackFollowUpCard,
 } from "./ai/prompts/followUpCardWriter";
 import { renderSemanticProfile } from "./semanticProfiles";
 import { deleteResponsesForCard } from "./followUpResponses";
+import {
+  compoundingFor,
+  spendStretch,
+  type StretchRef,
+} from "./compounding/stretches";
+import { hasPremium } from "./lib/premium";
+import { domainOf } from "./lib/understandingVocab";
 
-const CARD_MODEL = "claude-haiku-4-5-20251001";
 const MAX_CARD_CHARS = 200;
 
 export const workflow = new WorkflowManager(components.workflow);
@@ -133,10 +136,42 @@ type StartContextSignals = {
   confirmationState: string | null;
 };
 
+const stretchRefValidator = v.object({ domain: domainValidator, stretchStartedAt: v.number() });
+
+/**
+ * The stretch a completed session's follow-up checks in on (#522, #492 §3–4):
+ * a domain tonight's session touched that is compounding (never easing) and
+ * hasn't had its check-in; top-ranked wins. Nothing on an abandoned, burned,
+ * or elevated/crisis session, so the trigger stays unused for the next
+ * ordinary one. Xolace+ only. The safeguard gate lives here, not in
+ * compounding/, which never reads safeguard state.
+ */
+async function compoundingFollowUp(
+  ctx: QueryCtx,
+  session: Doc<"sessions">,
+  metadata: Doc<"emotional_metadata"> | null,
+): Promise<StretchRef | null> {
+  if (session.state !== "completed" || session.kept === false || !metadata) return null;
+  const levels = [metadata.safeguardLevel, session.safeguardLevel];
+  if (levels.some((l) => l === "elevated" || l === "crisis")) return null;
+  const profile = await ctx.db.get("emotional_profiles", session.emotionalProfileId);
+  // Entitlement outage reads as free: compounding timing is Xolace+, and an
+  // ordinary follow-up must not fail with it.
+  if (!profile || !(await hasPremium(ctx, profile).catch(() => false))) return null;
+  const touched = new Set(metadata.thematicTags.map(domainOf));
+  const top = (await compoundingFor(ctx, profile._id)).find(
+    (c) => c.state === "compounding" && !c.followUpUsed && touched.has(c.domain),
+  );
+  return top ? { domain: top.domain, stretchStartedAt: top.startedAt } : null;
+}
+
 type StartContext = {
   emotionalProfileId: Id<"emotional_profiles">;
   escalationDerived: boolean;
   signals: StartContextSignals;
+  compounding: StretchRef | null;
+  /** Compounding alone earned this one: standard tier (#522). */
+  compoundingOnly: boolean;
   cardCtx: {
     mirrorText: string | null;
     followUpReason: string | null;
@@ -152,12 +187,15 @@ export const getStartContext = internalQuery({
     const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) return null;
     if (session.followUpWorkflowId) return null; // already started (idempotent)
-    if (session.requiresFollowUp !== true) return null;
 
     const metadata: Doc<"emotional_metadata"> | null = await ctx.runQuery(
       internal.understanding.getUnderstanding,
       { sessionId: args.sessionId },
     );
+    // A trigger, not a tier bump: compounding can earn a session its follow-up
+    // on its own, and rides along on one the session earned anyway.
+    const compounding = await compoundingFollowUp(ctx, session, metadata);
+    if (session.requiresFollowUp !== true && !compounding) return null;
 
     const gaveUp = session.confirmationState === "gave_up";
     const escalationDerived = session.escalationTriggered === true;
@@ -176,6 +214,8 @@ export const getStartContext = internalQuery({
       emotionalProfileId: session.emotionalProfileId,
       escalationDerived,
       signals,
+      compounding,
+      compoundingOnly: session.requiresFollowUp !== true,
       cardCtx: {
         // gave_up sessions have no landed mirror — write mirror-free.
         mirrorText: gaveUp ? null : (session.mirrorText ?? null),
@@ -203,7 +243,7 @@ export const startFollowUpWorkflow = internalAction({
     });
     if (!start) return; // already started, or session no longer qualifies
 
-    const tier = followUpTier(start.signals);
+    const tier = start.compoundingOnly ? "standard" : followUpTier(start.signals);
 
     // Memory enrichment: suppressed for acute tier — a crisis check-in stays
     // presence-first and wound-light, never "you keep feeling this way".
@@ -219,7 +259,6 @@ export const startFollowUpWorkflow = internalAction({
 
     let cardText: string;
     try {
-      const anthropic = getAnthropicClient();
       const prompt = buildFollowUpCardPrompt({
         tier,
         mirrorText: start.cardCtx.mirrorText,
@@ -228,16 +267,10 @@ export const startFollowUpWorkflow = internalAction({
         granularLabel: start.cardCtx.granularLabel,
         gaveUp: start.cardCtx.gaveUp,
         semanticProfile,
+        compoundingDomain: start.compounding?.domain ?? null,
       });
 
-      const response = await anthropic.messages.create({
-        model: CARD_MODEL,
-        max_tokens: 120,
-        system: prompt.system,
-        messages: [{ role: "user", content: prompt.user }],
-      });
-
-      const raw = extractTextFromResponse(response)
+      const raw = (await writeFollowUpCard(prompt))
         .trim()
         .replace(/^["']|["']$/g, "");
       cardText =
@@ -247,7 +280,7 @@ export const startFollowUpWorkflow = internalAction({
         message: err instanceof Error ? err.message : String(err),
         sessionId: args.sessionId,
       });
-      cardText = fallbackFollowUpCard(tier);
+      cardText = fallbackFollowUpCard(tier, start.compounding?.domain);
     }
 
     await ctx.runMutation(internal.followUps.createAndStart, {
@@ -256,6 +289,7 @@ export const startFollowUpWorkflow = internalAction({
       cardText,
       escalationDerived: start.escalationDerived,
       signals: start.signals,
+      ...(start.compounding ? { compounding: start.compounding } : {}),
     });
   },
 });
@@ -284,22 +318,36 @@ export const createAndStart = internalMutation({
       granularLabel: v.union(v.string(), v.null()),
       confirmationState: v.union(v.string(), v.null()),
     }),
+    // The stretch the card names (#522); absent on an ordinary follow-up.
+    compounding: v.optional(stretchRefValidator),
   },
   handler: async (ctx, args) => {
     // Idempotency: session may already have a workflow (double completion).
     const session = await ctx.db.get("sessions", args.sessionId);
     if (!session || session.followUpWorkflowId) return null;
 
-    const cadence = followUpCadence(args.signals);
+    // Earned by compounding alone: always standard, whatever the signals say.
+    const compoundingOnly = session.requiresFollowUp !== true;
+    if (compoundingOnly && !args.compounding) return null;
+    const cadence = followUpCadence(compoundingOnly ? {} : args.signals);
     const newTier = cadence.tier;
 
     // One-active-per-profile + weight-aware supersede.
     const active = await getActiveCardForProfile(ctx, args.emotionalProfileId);
+    if (active && !shouldSupersede(newTier, active.tier)) {
+      // Lower-weight session — skip entirely (do not start). A compounding
+      // stretch stays unspent for the next session.
+      return null;
+    }
+    // Spent only now the workflow is certain to start. A sibling session in
+    // the same stretch may have spent it since getStartContext looked.
+    const spent =
+      !!args.compounding && (await spendStretch(ctx, args.emotionalProfileId, args.compounding, "followUpStartedAt"));
+    if (compoundingOnly && !spent) return null;
+    // An ordinary follow-up that lost the stretch to a sibling keeps going,
+    // but without the framing: naming the domain again would be a re-fire.
+    const cardText = args.compounding && !spent ? fallbackFollowUpCard(newTier) : args.cardText;
     if (active) {
-      if (!shouldSupersede(newTier, active.tier)) {
-        // Lower-weight session — skip entirely (do not start).
-        return null;
-      }
       // Equal-or-higher weight — cancel the old workflow and mark superseded.
       await workflow.cancel(ctx, active.workflowId);
       await ctx.db.patch("follow_up_cards", active._id, { status: "superseded" });
@@ -323,8 +371,9 @@ export const createAndStart = internalMutation({
       sessionId: args.sessionId,
       workflowId,
       tier: newTier,
-      cardText: args.cardText,
+      cardText,
       escalationDerived: args.escalationDerived,
+      ...(spent && args.compounding ? { compoundingDomain: args.compounding.domain } : {}),
       status: "pending",
       createdAt: Date.now(),
     });
@@ -374,10 +423,13 @@ export const sendFollowUpNudge = internalMutation({
       return null;
     }
 
+    // A card naming a compounding domain stays in-app: the lock screen isn't private.
     const body =
       card.tier === "acute"
         ? "Just checking in on what you worked through a little while ago. We're here."
-        : card.cardText;
+        : card.compoundingDomain
+          ? fallbackFollowUpCard(card.tier)
+          : card.cardText;
 
     await ctx.scheduler.runAfter(0, internal.notifications.schedule, {
       emotionalProfileId: card.emotionalProfileId,
@@ -516,6 +568,9 @@ export const resolveCard = mutation({
       userResponse: args.response,
       resolvedAt: Date.now(),
     });
+    // An answer is a reading: it can close a stretch, never open one (#519).
+    // Its own transaction, so it can't fail the answer (#529).
+    await ctx.scheduler.runAfter(0, internal.compounding.stretches.evaluate, { profileId: profile._id });
     return null;
   },
 });

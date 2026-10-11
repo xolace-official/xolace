@@ -1,4 +1,4 @@
-import { emotionFamily } from "../lib/understandingVocab";
+import { freeEmotionFamily } from "../lib/understandingVocab";
 
 export type MatchInput = {
   primaryEmotion: string;
@@ -57,10 +57,9 @@ function hasTag(tags: string[], set: Set<string>): boolean {
 /** Returns ranked exercises (primary + fallbacks). Never returns an empty list. */
 export function matchExercise(input: MatchInput): ExerciseTitle[] {
   const { primaryEmotion, granularLabel, intensity, userLanguageTags, confirmationState } = input;
-  const emotion = primaryEmotion.toLowerCase();
-  const granular = granularLabel?.toLowerCase();
-  // Family, so a finer emotion (stress) steers like its parent (anxiety) — ADR 0018.
-  const words = [...emotionFamily(emotion), ...(granular !== undefined ? emotionFamily(granular) : [])];
+  // Family, so a finer emotion (stress) steers like its parent (anxiety) — ADR 0018,
+  // and a free-text granular label (worried) like the emotion it means (#536).
+  const words = [...freeEmotionFamily(primaryEmotion), ...(granularLabel !== undefined ? freeEmotionFamily(granularLabel) : [])];
   const matches = (set: Set<string>) => words.some((w) => set.has(w));
 
   if (confirmationState === "gave_up" || confirmationState === "abandoned") {

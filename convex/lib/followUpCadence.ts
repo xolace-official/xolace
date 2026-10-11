@@ -1,4 +1,4 @@
-import { emotionFamily } from "./understandingVocab";
+import { freeEmotionFamily } from "./understandingVocab";
 /**
  * Pure follow-up tiering + gating helpers.
  *
@@ -69,9 +69,8 @@ export function followUpTier(signals: CadenceSignals): FollowUpTier {
 
   const intensity = signals.intensity ?? 0;
   const emotionWords = [signals.primaryEmotion, signals.granularLabel]
-    .filter((w): w is string => typeof w === "string" && w.length > 0)
-    .map((w) => w.toLowerCase());
-  const isGriefShame = emotionWords.some((w) => emotionFamily(w).some((e) => GRIEF_SHAME.has(e)));
+    .filter((w): w is string => typeof w === "string" && w.length > 0);
+  const isGriefShame = emotionWords.some((w) => freeEmotionFamily(w).some((e) => GRIEF_SHAME.has(e)));
 
   if (
     signals.safeguardLevel === "elevated" ||

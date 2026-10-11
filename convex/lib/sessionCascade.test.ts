@@ -93,11 +93,43 @@ describe("episodic key classes", () => {
     expect(sources.length).toBeGreaterThanOrEqual(5);
   });
 
+  // Profile-keyed, not session-keyed, so the schema walk above can't see it
+  // (ADR 0020): wipe and account deletion drop every row, retention the
+  // closed ones past cutoff. Behaviour is in compounding/stretches.test.ts.
+  it.each(["dataWipe.ts", "dataRetention.ts", "accountDeletionSteps.ts"])(
+    "%s deletes compounding stretches",
+    (file) => {
+      const src = fs.readFileSync(path.resolve(process.cwd(), "convex/jobs", file), "utf8");
+      expect(src).toContain(`ctx.db.delete("compounding_stretches"`);
+    },
+  );
+
   it.each(Object.entries(EPISODIC_PURGE_HELPERS))(
     "purges the %s key class from a deletion job",
     (_keyClass, helper) => {
       const callers = sources.filter((src) => src.includes(`${helper}(`));
       expect(callers.length).toBeGreaterThan(0);
+    },
+  );
+});
+
+/**
+ * Compounding and safeguard are separate axes with no cross-feed (#489):
+ * safeguard watches the present moment, compounding one domain over weeks,
+ * and neither reads the other. Crisis sessions still count as readings
+ * (compounding/stretches.test.ts).
+ */
+describe("compounding ⟂ safeguard", () => {
+  const src = (file: string) => fs.readFileSync(path.resolve(process.cwd(), "convex", file), "utf8");
+
+  it("safeguard never reads compounding", () => {
+    expect(src("ai/safeguard.ts")).not.toMatch(/compounding/i);
+  });
+
+  it.each(["compounding/detect.ts", "compounding/stretches.ts", "compounding/readings.ts"])(
+    "%s never reads or writes safeguard state",
+    (file) => {
+      expect(src(file)).not.toMatch(/\.riskFlag|\.safeguardLevel|evaluateSafeguard|escalation_events/);
     },
   );
 });

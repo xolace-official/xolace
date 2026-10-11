@@ -24,7 +24,7 @@ export const classifierCache: ActionCache<
   >
 > = new ActionCache(components.actionCache, {
   action: internal.ai.cachedActions.classifierAction,
-  name: "classifier-v1",
+  name: "classifier-v2",
   ttl: 7 * DAY,
 });
 
@@ -37,6 +37,6 @@ export const distillerCache: ActionCache<
   >
 > = new ActionCache(components.actionCache, {
   action: internal.ai.cachedActions.distillerAction,
-  name: "distiller-v1",
+  name: "distiller-v2",
   ttl: 30 * DAY,
 });

@@ -6,7 +6,7 @@
  *
  * Run: `bun run test:evals` (needs ANTHROPIC_API_KEY; skips cleanly without).
  */
-import { getAnthropicClient, parseClassificationResponse, CLASSIFIER_MODEL } from "../../providers/anthropic";
+import { getAnthropicClient, parseClassificationResponse, CLASSIFIER_MODEL, thinkingOff } from "../../providers/anthropic";
 import { buildClassifierPrompt } from "../classifier";
 import { runLabeledEval, type LabeledCase } from "./harness.eval";
 
@@ -17,6 +17,7 @@ async function classify(input: string) {
   const res = await getAnthropicClient().messages.create({
     model: CLASSIFIER_MODEL,
     max_tokens: 400,
+    thinking: thinkingOff(CLASSIFIER_MODEL),
     system: prompt.system,
     messages: [{ role: "user", content: prompt.user }],
   });

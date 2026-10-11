@@ -3,7 +3,10 @@ import { useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { GradientText } from "./gradient-text";
 
-export function PaywallHero() {
+const DEFAULT_LINE =
+  "The fire keeps them all. Plus is where the small thing that keeps coming back shows up early — the third time, not the thirtieth.";
+
+export function PaywallHero({ line = DEFAULT_LINE }: { line?: string }) {
   const accentColor = useThemeColor("accent") as string;
 
   return (
@@ -14,7 +17,7 @@ export function PaywallHero() {
         gradientProps={{ colors: [`${accentColor}80`, accentColor, `${accentColor}80`] }}
       />
       <AppText className="text-sm font-light text-muted text-center leading-6 px-4">
-        {"The fire keeps them all. Plus is where the small thing that keeps coming back shows up early — the third time, not the thirtieth."}
+        {line}
       </AppText>
     </View>
   );

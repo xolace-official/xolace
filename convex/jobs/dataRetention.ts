@@ -60,6 +60,11 @@ export const enforce = internalMutation({
       }
 
       await purgeSessions(ctx, pref.emotionalProfileId, oldSessions);
+      if (oldSessions.length > 0) {
+        await ctx.scheduler.runAfter(0, internal.compounding.unlocks.dropColdUnlocks, {
+          profileId: pref.emotionalProfileId,
+        });
+      }
 
       // Sweep old semantic profile VERSIONS past the cutoff. The current
       // version is always kept — retention shortens history, it doesn't
@@ -78,6 +83,30 @@ export const enforce = internalMutation({
         ) {
           await ctx.db.delete("semantic_profiles", version._id);
         }
+      }
+
+      // Closed compounding stretches that ended before the cutoff. The lower
+      // bound skips open rows (endedAt absent sorts first): retention never
+      // ends a stretch, and an open one keeps its stored anchor (ADR 0020).
+      const oldStretches = await ctx.db
+        .query("compounding_stretches")
+        .withIndex("by_emotionalProfileId_and_endedAt", (q) =>
+          q.eq("emotionalProfileId", pref.emotionalProfileId).gte("endedAt", 0).lt("endedAt", cutoff)
+        )
+        .take(BATCH_SIZE);
+      for (const stretch of oldStretches) {
+        await ctx.db.delete("compounding_stretches", stretch._id);
+      }
+
+      // Steadiness insights citing a session past the cutoff go with it (#525).
+      const oldInsights = await ctx.db
+        .query("steadiness_insights")
+        .withIndex("by_emotionalProfileId_and_oldestCitedAt", (q) =>
+          q.eq("emotionalProfileId", pref.emotionalProfileId).lt("oldestCitedAt", cutoff)
+        )
+        .take(BATCH_SIZE);
+      for (const insight of oldInsights) {
+        await ctx.db.delete("steadiness_insights", insight._id);
       }
 
       // Delete feedback records for this profile older than the retention cutoff

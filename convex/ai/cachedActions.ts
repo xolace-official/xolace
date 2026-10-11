@@ -6,6 +6,7 @@ import {
   parseClassificationResponse,
   CLASSIFIER_MODEL,
   DISTILLER_MODEL,
+  thinkingOff,
 } from "./providers/anthropic";
 import {
   MODERATION_UNAVAILABLE,
@@ -52,6 +53,7 @@ export const classifierAction = internalAction({
     const response = await anthropic.messages.create({
       model: CLASSIFIER_MODEL,
       max_tokens: 512,
+      thinking: thinkingOff(CLASSIFIER_MODEL),
       system: args.systemPrompt,
       messages: [{ role: "user", content: args.userPrompt }],
     });
@@ -63,6 +65,7 @@ export const classifierAction = internalAction({
       const retryResponse = await anthropic.messages.create({
         model: CLASSIFIER_MODEL,
         max_tokens: 512,
+        thinking: thinkingOff(CLASSIFIER_MODEL),
         system: args.systemPrompt,
         messages: [
           { role: "user", content: args.userPrompt },
@@ -99,6 +102,7 @@ export const distillerAction = internalAction({
     const response = await anthropic.messages.create({
       model: DISTILLER_MODEL,
       max_tokens: 200,
+      thinking: thinkingOff(DISTILLER_MODEL),
       system: args.systemPrompt,
       messages: [{ role: "user", content: args.userPrompt }],
     });

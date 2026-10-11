@@ -21,7 +21,7 @@ import { hasFreeTrial, paywallCtaLabel } from "./paywall-cta-label";
 import { PaywallPlansUnavailable } from "./paywall-plans-unavailable";
 import { PaywallCloseButton, PaywallRestoreButton } from "./paywall-header-actions";
 import { ProgressiveBlurView } from "./progressive-blur-view";
-import { PAYWALL_SURFACE_FEATURE } from "./paywall-surface-map";
+import { PAYWALL_SURFACE_FEATURE, PAYWALL_SURFACE_LINE } from "./paywall-surface-map";
 import {
   INSIGHTS_ICON,
   MIRROR_TONE_ICON,
@@ -193,7 +193,7 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
             },
           ]}
         >
-          <PaywallHero />
+          <PaywallHero line={surface && PAYWALL_SURFACE_LINE[surface]} />
 
           <PaywallFeatureSection title="What starts showing up">
             <PaywallFeatureItem

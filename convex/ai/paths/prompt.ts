@@ -1,6 +1,7 @@
 import type { SupportNeed } from "../providers/anthropic";
 import type { PremiumTier } from "../../lib/premium";
 import type { CatalogEntry } from "./catalog";
+import type { Compounding } from "../../compounding/stretches";
 
 /**
  * Kindling generation prompt + parser (docs/paths-v1.md §2.2, #331).
@@ -26,11 +27,17 @@ export interface PathsPromptUnderstanding {
   safeguardLevel?: string;
 }
 
+/** A compounding domain tonight's session touched (#521). Context, never a rule. */
+export type PromptCompounding = Pick<Compounding, "domain" | "state" | "returning"> & {
+  days: number; // since the stretch began
+};
+
 export interface PathsPromptContext {
   understanding: PathsPromptUnderstanding;
   profile: string | null; // rendered semantic profile; null on cold start
   catalog: readonly CatalogEntry[]; // already filtered to what can bind
   tier: PremiumTier; // prompt framing only, never a branch
+  compounding?: readonly PromptCompounding[]; // already gated upstream; empty = no line
 }
 
 export interface PickedTwig {
@@ -69,9 +76,14 @@ const WHY_MAX_WORDS = 32;
 // "coping", "regulation", "grounded", "managing" all fail too.
 const BANNED_WHY = /\b(anxi|symptom|cop(e|es|ed|ing)\b|regulat|ground(ing|ed)\b|manag)/i;
 
+// Compounding is context for the pick, never something the why line says
+// (#521): not the word, not "your usual", not how long it has weighed.
+const COMPOUNDING_WHY = /compound|\busual\b|\b(\d+|few|couple of) days\b|\bweeks?\b|\bmonths?\b/i;
+
 // Outcome promises (§2.2 "Do NOT promise an outcome"): "this will help",
 // "you'll feel calmer", "proven to", "guaranteed". Modal forms only — a bare
 // "you feel" is usually the person's own words being quoted back.
+
 const PROMISE_WHY =
   /\b(will|would|going to) (help|calm|ease|make|feel|work)\b|\byou('ll| will|'d| would) feel\b|\b(proven|guaranteed)\b/i;
 
@@ -100,6 +112,7 @@ Pick exactly ${MAX_TWIGS} actions from the catalog below that fit this person ri
 - Do NOT pick two spoken support-audio actions (\`audio_topic_*\`) together, and do NOT pick two instrumental music actions (\`music_topic_*\`) together — vary it: one spoken and one music is good, or pair either with breathing or xolacer.
 - Do NOT pick "xolacer" unless they seem to want a person rather than a tool.
 - Do NOT mention Xolace, the app, the model, or the catalog in the why line.
+- Do NOT mention how long something has weighed on them, any number, or what is "usual" for them in the why line; "weighing on them lately" is background for your pick only.
 
 ## Output
 Respond with ONLY a JSON array, no fences, no prose:
@@ -114,6 +127,9 @@ Respond with ONLY a JSON array, no fences, no prose:
       ? `- their words: ${u.userLanguageTags.map((t) => `"${t}"`).join(", ")}`
       : null,
     u.temporalContext ? `- focus: ${u.temporalContext.replace("_", " ")}` : null,
+    ctx.compounding?.length
+      ? `- weighing on them lately: ${ctx.compounding.map(compoundingPhrase).join("; ")}`
+      : null,
     `- support need: ${u.supportNeed}`,
   ]
     .filter((line): line is string => !!line)
@@ -132,6 +148,18 @@ Respond with ONLY a JSON array, no fences, no prose:
   return { system, user };
 }
 
+function roughDuration(days: number): string {
+  if (days < 7) return "a few days";
+  if (days < 11) return "about a week";
+  if (days < 60) return `about ${Math.round(days / 7)} weeks`;
+  return `about ${Math.round(days / 30)} months`;
+}
+
+const compoundingPhrase = (c: PromptCompounding) =>
+  [`${c.domain} for ${roughDuration(c.days)}`, c.state === "easing" ? "easing" : null, c.returning ? "returning" : null]
+    .filter((part): part is string => !!part)
+    .join(", ");
+
 function validateWhy(why: unknown): DropReason | null {
   if (typeof why !== "string" || !why.trim()) return "why_missing";
   const text = why.trim();
@@ -141,7 +169,7 @@ function validateWhy(why: unknown): DropReason | null {
   // any following text — "e.g. the" and "wait... then" are still one.
   if (/[.!?]\s+[A-Z]/.test(text)) return "why_sentences";
   if (!/\byou(r|'re|'ve|'d)?\b/i.test(text)) return "why_person";
-  if (BANNED_WHY.test(text)) return "why_vocabulary";
+  if (BANNED_WHY.test(text) || COMPOUNDING_WHY.test(text)) return "why_vocabulary";
   if (PROMISE_WHY.test(text)) return "why_promise";
   return null;
 }

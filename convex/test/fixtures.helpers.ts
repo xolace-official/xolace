@@ -12,6 +12,7 @@
  */
 import type { TestConvex } from "convex-test";
 import { expect } from "vitest";
+import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { ClassificationResult } from "../ai/providers/anthropic";
 import {
@@ -72,6 +73,23 @@ export async function allScheduledCalls(
     name: j.name.replace(".js:", ":"),
     args: (j.args[0] ?? {}) as Record<string, unknown>,
   }));
+}
+
+/**
+ * Run the compounding evaluations a reading's mutation scheduled (#529) now,
+ * in order, in place of the scheduler (which would otherwise run each again).
+ */
+export async function runEvaluations(root: Root): Promise<void> {
+  const pending = await root.run(async (ctx) => {
+    const jobs = (await ctx.db.system.query("_scheduled_functions").collect()).filter(
+      (j) => j.state.kind === "pending" && j.name.replace(".js:", ":").endsWith("compounding/stretches:evaluate"),
+    );
+    for (const j of jobs) await ctx.scheduler.cancel(j._id);
+    return jobs;
+  });
+  for (const j of pending) {
+    await root.mutation(internal.compounding.stretches.evaluate, j.args[0] as never);
+  }
 }
 
 /** The one scheduled call whose name ends in `suffix`, or undefined. */

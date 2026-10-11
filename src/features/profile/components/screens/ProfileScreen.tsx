@@ -20,6 +20,7 @@ import { FollowUpsSection } from "@/src/features/profile/components/follow-ups-s
 import { PlusRow } from "@/src/features/profile/components/plus-row";
 import { PlusInsightOffer } from "@/src/features/profile/components/plus-insight-offer";
 import { AvatarPickerSheet } from "@/src/features/profile/components/avatar-picker-sheet";
+import { SteadinessRow } from "@/src/features/insights/steadiness-row";
 import { useProfileSummary } from "@/src/features/profile/hooks/use-profile-summary";
 import { useMoodDelta } from "@/src/features/profile/hooks/use-mood-delta";
 import { useWeekIntensity } from "@/src/features/profile/hooks/use-week-intensity";
@@ -155,6 +156,8 @@ export function ProfileScreen() {
             </View>
           </EaseView>
         )}
+
+        {hasEnoughForChart && <SteadinessRow />}
 
         {/* Widest lens first: you among everyone, then your week, then your
             words. Always rendered — the card carries its own pending state. */}

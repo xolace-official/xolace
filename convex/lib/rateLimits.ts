@@ -83,6 +83,11 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // the shared bucket would swallow the milestone. Cadence caps it anyway.
   streakMilestone: { kind: "fixed window", rate: 1, period: DAY },
 
+  // domain_unlock (#523) — at most one missed-unlock push in any 7 days
+  // (a one-token bucket, so no window boundary lets two through), its own
+  // bucket so a same-day nudge can't swallow it.
+  domainUnlock: { kind: "token bucket", rate: 1, period: 7 * DAY, capacity: 1 },
+
   // Resonance toggle abuse prevention
   resonanceToggle: { kind: "token bucket", rate: 20, period: MINUTE, capacity: 5 },
 

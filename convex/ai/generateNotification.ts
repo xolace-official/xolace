@@ -1,7 +1,12 @@
 import { v } from "convex/values";
 import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { getAnthropicClient, extractTextFromResponse } from "./providers/anthropic";
+import {
+  getAnthropicClient,
+  extractTextFromResponse,
+  NOTIFICATION_MODEL,
+  thinkingOff,
+} from "./providers/anthropic";
 import { buildNotificationPrompt } from "./prompts/notificationWriter";
 import { renderSemanticProfile } from "../semanticProfiles";
 import {
@@ -11,7 +16,6 @@ import {
   type NotificationTemplateType,
 } from "./prompts/notificationTemplates";
 
-const NOTIFICATION_MODEL = "claude-haiku-4-5-20251001";
 const COLD_START_THRESHOLD = 3;
 
 /**
@@ -119,6 +123,7 @@ export const generate = internalAction({
       const response = await anthropic.messages.create({
         model: NOTIFICATION_MODEL,
         max_tokens: 120,
+        thinking: thinkingOff(NOTIFICATION_MODEL),
         system: prompt.system,
         messages: [{ role: "user", content: prompt.user }],
       });

@@ -11,6 +11,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { CloseOffer } from "@/src/features/session-end/components/close-offer";
 import { KindlingCloseSlot } from "@/src/features/session-end/components/kindling-close-slot";
+import { SessionEndUpsell } from "@/src/features/insights/compounding-upsell";
 import { Presets } from "react-native-pulsar";
 import { ContributedConfirmation } from "@/src/features/session-end/components/contributed-confirmation";
 import { HeavierFeedbackPrompt } from "@/src/features/session-end/components/heavier-feedback-prompt";
@@ -324,6 +325,7 @@ export const ActivityVariant = ({
             className="w-full items-center gap-5"
           >
             <CloseOffer sessionId={sessionId} variant="activity" />
+            <SessionEndUpsell sessionId={sessionId} />
             <KindlingCloseSlot sessionId={sessionId} />
             <Button
               variant="primary"

@@ -15,6 +15,8 @@
  * sample outputs (positive examples cause mode-collapse / fixation).
  */
 
+import type { Domain } from "../../lib/understandingVocab";
+
 export type FollowUpCardTier = "acute" | "elevated" | "standard";
 
 export type FollowUpCardContext = {
@@ -33,6 +35,20 @@ export type FollowUpCardContext = {
    * regardless of whether a profile exists (see NEVER rule below).
    */
   semanticProfile?: string | null;
+  /** A compounding domain this check-in covers (#522). Never on acute. */
+  compoundingDomain?: Domain | null;
+};
+
+// How the card may name a domain: plain nouns (prompt and fallback both), never the insights label.
+const DOMAIN_WORDS: Record<Domain, string> = {
+  self: "self-worth and identity",
+  purpose: "purpose and the future",
+  work: "work and studies",
+  love: "love and friendship",
+  family: "family",
+  belonging: "belonging",
+  health: "health and rest",
+  money: "money and home",
 };
 
 export function buildFollowUpCardPrompt(ctx: FollowUpCardContext): {
@@ -74,6 +90,7 @@ ${sourceRule}
   // caller mistakenly passes one through — the tier gate is the real
   // suppression point (in startFollowUpWorkflow), this is a backstop.
   const semanticProfile = ctx.tier === "acute" ? null : ctx.semanticProfile;
+  const compoundingDomain = ctx.tier === "acute" ? null : ctx.compoundingDomain;
 
   const facts: string[] = [];
   if (semanticProfile) {
@@ -87,6 +104,11 @@ ${sourceRule}
       `Primary emotion: ${ctx.primaryEmotion}${
         ctx.granularLabel ? ` (${ctx.granularLabel})` : ""
       }`,
+    );
+  }
+  if (compoundingDomain) {
+    facts.push(
+      `Weighing on them across recent sessions, not just this one: ${DOMAIN_WORDS[compoundingDomain]}. Name it softly in the check-in. Never a number, a score, how long, or any comparison to how they usually are.`,
     );
   }
   if (ctx.followUpReason) {
@@ -111,9 +133,13 @@ ${sourceRule}
  * safety-relevant follow-up is never silently dropped. Tier-aware so an Acute
  * fallback still reads as presence, not a processing prompt.
  */
-export function fallbackFollowUpCard(tier: FollowUpCardTier): string {
+export function fallbackFollowUpCard(tier: FollowUpCardTier, compoundingDomain?: Domain | null): string {
   if (tier === "acute") {
     return "Just checking in on you. We're here, no rush.";
+  }
+  if (compoundingDomain) {
+    // Still names the domain (#522): the stretch's one check-in is spent on it.
+    return `You've brought ${DOMAIN_WORDS[compoundingDomain]} here a few times lately. How's it sitting now?`;
   }
   return "A little while ago you let something out here. How's it sitting now?";
 }

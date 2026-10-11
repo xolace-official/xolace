@@ -24,6 +24,7 @@ type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
  * - `distilledText` — the session's distilled text, or `null` if unavailable
  * - `contributeByDefault` — whether contributions are enabled by default (defaults to `false`)
  * - `sessionCount` — the user's completed-session count
+ * - `domainUnlock` — the domains this session brought into focus, if any (#523)
  * - `dismiss` — record feedback and navigate home
  * - `haveMore` — record feedback and navigate home
  */
@@ -126,6 +127,7 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
     distilledText,
     contributeByDefault,
     sessionCount,
+    domainUnlock: session?.domainUnlock,
     dismiss,
     haveMore,
   };

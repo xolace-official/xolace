@@ -34,6 +34,7 @@
     "test:debug": "vitest --inspect-brk --no-file-parallelism --exclude '**/*.eval.test.ts'",
     "test:coverage": "vitest run --coverage --exclude '**/*.eval.test.ts'",
     "test:evals": "RUN_EVALS=1 vitest run --testTimeout 30000 convex/ai/prompts/__evals__",
+    "test:evals:intensity": "RUN_EVALS=1 vitest run --testTimeout 30000 convex/ai/prompts/__evals__/intensity.eval.test.ts",
     "stream:webhook": "convex run streamWebhook:registerWebhook",
     "stream:webhook:prod": "convex run --prod streamWebhook:registerWebhook",
     "stream:setup": "convex run streamSetup:setup",

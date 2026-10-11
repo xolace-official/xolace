@@ -30,6 +30,23 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-ota-image-speed",
+    label: "OTA Update",
+    date: "October 2026",
+    highlights: [
+      {
+        icon: { ios: "photo.fill", android: "image" },
+        title: "Pictures show up faster",
+        body: "Covers in the Lantern now load quickly, appearing as a soft blur first and then sharpening, so browsing feels smooth instead of waiting on images.",
+      },
+      {
+        icon: { ios: "book.fill", android: "menu_book" },
+        title: "More to read",
+        body: "A few new reads have joined the Lantern, including more on loneliness.",
+      },
+    ],
+  },
+  {
     id: "1.12.0",
     label: "Version 1.12.0",
     date: "September 2026",

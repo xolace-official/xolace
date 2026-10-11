@@ -154,3 +154,23 @@ export const drainFrozenDays: DrainStep = async (ctx, profileId) => {
   for (const r of rows) await ctx.db.delete("frozen_days", r._id);
   return rows.length === BATCH_SIZE;
 };
+
+/** Compounding stretches (ADR 0020): every row, open or closed. */
+export const drainStretches: DrainStep = async (ctx, profileId) => {
+  const rows = await ctx.db
+    .query("compounding_stretches")
+    .withIndex("by_emotionalProfileId_and_endedAt", (q) => q.eq("emotionalProfileId", profileId))
+    .take(BATCH_SIZE);
+  for (const r of rows) await ctx.db.delete("compounding_stretches", r._id);
+  return rows.length === BATCH_SIZE;
+};
+
+/** Steadiness insights (#525): every row. */
+export const drainInsights: DrainStep = async (ctx, profileId) => {
+  const rows = await ctx.db
+    .query("steadiness_insights")
+    .withIndex("by_emotionalProfileId_and_oldestCitedAt", (q) => q.eq("emotionalProfileId", profileId))
+    .take(BATCH_SIZE);
+  for (const r of rows) await ctx.db.delete("steadiness_insights", r._id);
+  return rows.length === BATCH_SIZE;
+};
