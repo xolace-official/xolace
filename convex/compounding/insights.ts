@@ -41,6 +41,12 @@ const freeFields = (d: DomainSteadiness) => ({
   lastSeenAt: d.quiet ? d.lastReadingAt : null,
 });
 
+/**
+ * The client's clock, refreshed on a timer: a query isn't rerun as time passes,
+ * so a wall-clock read would freeze the trend and quiet cutoff until the next write.
+ */
+const nowArg = { now: v.number() };
+
 const round = (n: number | null) => (n === null ? null : Math.round(n));
 
 /**
@@ -63,12 +69,12 @@ async function activeKindling(ctx: QueryCtx, profileId: Id<"emotional_profiles">
 }
 
 export const freeView = query({
-  args: {},
+  args: nowArg,
   returns: v.object({ overall: nullableNumber, domains: v.array(v.object(freeDomain)) }),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     const { readings, timezone, unlocked } = await loadReadings(ctx, profile._id);
-    const { domains, overall } = computeSteadiness(readings, { now: Date.now(), timezone, unlocked });
+    const { domains, overall } = computeSteadiness(readings, { now: args.now, timezone, unlocked });
     return { overall: round(overall), domains: ordered(domains).map(freeFields) };
   },
 });
@@ -79,7 +85,7 @@ export const freeView = query({
  * view; nothing is stored, so upgrading shows the full history at once.
  */
 export const plusView = query({
-  args: {},
+  args: nowArg,
   returns: v.union(
     v.null(),
     v.object({
@@ -102,12 +108,12 @@ export const plusView = query({
       insights: v.array(insightValidator),
     }),
   ),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     if (!(await hasPremium(ctx, profile))) return null;
     const loaded = await loadReadings(ctx, profile._id);
     const { readings, timezone, unlocked } = loaded;
-    const now = Date.now();
+    const { now } = args;
     const { domains, overall } = computeSteadiness(readings, { now, timezone, unlocked });
     const trend = trendFor(readings, { now, timezone, unlocked });
     const live = await compoundingFor(ctx, profile._id, { now, loaded });

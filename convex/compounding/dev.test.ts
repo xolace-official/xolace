@@ -120,7 +120,7 @@ describe("compounding/devSeedCompounding.seedCompounding", () => {
     vi.stubEnv("PREMIUM_DEV_OVERRIDE", "true");
     const user = await asNewUser();
     await user.root.mutation(internal.compounding.devSeedCompounding.seedCompounding, { profileId: user.profileId });
-    const out = await user.t.query(api.compounding.insights.plusView, {});
+    const out = await user.t.query(api.compounding.insights.plusView, { now: Date.now() });
     expect(out!.domains[0]).toMatchObject({ domain: "work", compounding: "compounding", kindling: true });
   });
 });

@@ -202,6 +202,11 @@ export default defineSchema({
     // Prevents duplicate wipe jobs from being scheduled.
     dataWipeInProgress: v.optional(v.boolean()),
 
+    // runAt of the newest consolidation run whose insight set is published
+    // (compounding/insightStore.endRun). An older run finishing late can't
+    // write or keep rows past it. Absent until the first insight run ends.
+    insightsRunAt: v.optional(v.number()),
+
     // --- Cognition Layer: semantic memory pointer ---
     // Current semantic profile version (row in semantic_profiles).
     // Versions are append-only; this pointer selects the live one so a

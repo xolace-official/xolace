@@ -45,7 +45,7 @@ async function seed(user: SeededUser, daysAgo: number, tags: string[], intensity
   return sessionId;
 }
 
-const read = (user: SeededUser) => user.t.query(api.compounding.insights.freeView, {});
+const read = (user: SeededUser) => user.t.query(api.compounding.insights.freeView, { now: Date.now() });
 
 describe("compounding/insights.freeView", () => {
   it("gives a texture-only user no domains and no overall", async () => {
@@ -104,7 +104,7 @@ describe("compounding/insights.freeView", () => {
  * Kindling hand-off offered for a domain tonight's kindling never touched.
  */
 describe("compounding/insights.plusView", () => {
-  const readPlus = (user: SeededUser) => user.t.query(api.compounding.insights.plusView, {});
+  const readPlus = (user: SeededUser) => user.t.query(api.compounding.insights.plusView, { now: Date.now() });
 
   it("is null without Xolace+, and again after a lapse", async () => {
     const user = await asNewUser();

@@ -40,6 +40,15 @@ const rowsOf = (ctx: QueryCtx, profileId: Id<"emotional_profiles">) =>
     .withIndex("by_emotionalProfileId_and_oldestCitedAt", (q) => q.eq("emotionalProfileId", profileId))
     .take(ROWS);
 
+/** Insights are model memory: hidden and unwritable while personal memory is off, even mid-run. */
+async function memoryOff(ctx: QueryCtx, profileId: Id<"emotional_profiles">) {
+  const prefs = await ctx.db
+    .query("preferences")
+    .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
+    .unique();
+  return prefs?.personalMemoryEnabled === false;
+}
+
 async function citable(
   ctx: QueryCtx,
   profileId: Id<"emotional_profiles">,
@@ -82,6 +91,8 @@ export const save = internalMutation({
   handler: async (ctx, { emotionalProfileId: profileId, runAt, ...draft }) => {
     const profile = await ctx.db.get("emotional_profiles", profileId);
     if (!profile || profile.dataWipeInProgress === true) return "Skipped (a data wipe is in progress).";
+    if (runAt < (profile.insightsRunAt ?? 0)) return "Not saved: a newer run has already finished.";
+    if (await memoryOff(ctx, profileId)) return "Not saved: personal memory is off.";
 
     const sessions = new Map<string, CitableSession>();
     for (const id of new Set(draft.citedSessionIds)) {
@@ -126,14 +137,22 @@ export const save = internalMutation({
 /**
  * An insight-enabled run finished: its set replaces every older run's. Only
  * older — an overlapping run that started later keeps its set when this one
- * ends late, and its own endRun then clears this one's (#531).
+ * ends late, and its own endRun then clears this one's (#531). The newest
+ * finished runAt is recorded so an older run ending after it clears its own
+ * rows and `save` refuses its late writes.
  */
 export const endRun = internalMutation({
   args: { emotionalProfileId: v.id("emotional_profiles"), runAt: v.number() },
   returns: v.null(),
   handler: async (ctx, { emotionalProfileId, runAt }) => {
+    const profile = await ctx.db.get("emotional_profiles", emotionalProfileId);
+    if (!profile) return null;
+    const published = Math.max(runAt, profile.insightsRunAt ?? 0);
     for (const row of await rowsOf(ctx, emotionalProfileId)) {
-      if (row.runAt < runAt) await ctx.db.delete("steadiness_insights", row._id);
+      if (row.runAt < published) await ctx.db.delete("steadiness_insights", row._id);
+    }
+    if (published !== profile.insightsRunAt) {
+      await ctx.db.patch("emotional_profiles", emotionalProfileId, { insightsRunAt: published });
     }
     return null;
   },
@@ -151,12 +170,13 @@ export const insightValidator = v.object({
   writtenAt: v.number(),
 });
 
-/** Newest first; only current kinds, shown now, whose every cited session is still here and kept. */
+/** Newest first; only current kinds, shown now, whose every cited session is still here and kept. None while personal memory is off. */
 export async function insightsFor(
   ctx: QueryCtx,
   profileId: Id<"emotional_profiles">,
   live: Map<Domain, LiveDomain>,
 ) {
+  if (await memoryOff(ctx, profileId)) return [];
   const out = [];
   for (const row of await rowsOf(ctx, profileId)) {
     if (!(INSIGHT_KINDS as readonly string[]).includes(row.kind) || !shownNow(row, live)) continue;

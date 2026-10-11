@@ -6,6 +6,7 @@ import { requireAuth } from "./lib/auth";
 import { rateLimiter } from "./lib/rateLimits";
 import { rankInsert } from "./lib/aggregates";
 import { generateDisplayName } from "./lib/displayName";
+import schema from "./schema";
 import {
   intakeAnswerValidators,
   preferencesDocValidator,
@@ -31,38 +32,12 @@ const userDocValidator = v.object({
   updatedAt: v.number(),
 });
 
-// Full `emotional_profiles` document shape, mirroring schema.ts exactly.
+// Full `emotional_profiles` document shape, derived from schema.ts so a new
+// profile field can't break this query's return validation again.
 const profileDocValidator = v.object({
   _id: v.id("emotional_profiles"),
   _creationTime: v.number(),
-  onboardingComplete: v.boolean(),
-  sessionCount: v.number(),
-  savedQuoteCount: v.optional(v.number()),
-  firstSessionAt: v.optional(v.number()),
-  lastSessionAt: v.optional(v.number()),
-  averageSessionDuration: v.optional(v.number()),
-  currentStreak: v.number(),
-  longestStreak: v.optional(v.number()),
-  streakFreezes: v.optional(v.number()),
-  streakSavers: v.optional(v.number()),
-  streakRevivedDay: v.optional(v.string()),
-  brokenStreak: v.optional(v.object({ streak: v.number(), lastCoveredDay: v.string() })),
-  freezeAckedDay: v.optional(v.string()),
-  pendingKindlingSessionId: v.optional(v.id("sessions")),
-  dominantEmotionTags: v.array(v.string()),
-  frequentWords: v.optional(
-    v.array(v.object({ word: v.string(), count: v.number() })),
-  ),
-  typicalUsagePattern: v.optional(
-    v.object({ dayOfWeek: v.number(), hourOfDay: v.number() }),
-  ),
-  ventDailyMinutesUsed: v.optional(v.number()),
-  ventDailyResetAt: v.optional(v.number()),
-  dataWipeInProgress: v.optional(v.boolean()),
-  currentSemanticProfileId: v.optional(v.id("semantic_profiles")),
-  lastConsolidationAt: v.optional(v.number()),
-  createdAt: v.number(),
-  updatedAt: v.number(),
+  ...schema.tables.emotional_profiles.validator.fields,
 });
 
 // Full `intake_responses` document shape, mirroring schema.ts exactly.
