@@ -60,7 +60,7 @@ function trial(history: number, dip: number, noise: number, cadence: number, see
     CAPS.forEach((C, i) => {
       if (ended[i] !== null) return;
       const e = endsWith(d, stretch!, at, C);
-      if (C === 90 && e !== "ended" in judgeOpen(d, stretch!, { now: at, timezone: TZ })) throw new Error("parity broken");
+      if (C === 90 && e !== ("ended" in judgeOpen(d, stretch!, { now: at, timezone: TZ }))) throw new Error("parity broken");
       if (e) ended[i] = day;
     });
     if (ended.every((x) => x !== null)) break;

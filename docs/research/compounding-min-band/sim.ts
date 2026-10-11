@@ -1,7 +1,7 @@
 /**
  * #528: MIN_BAND grid on the real engine (post-#527).
  * Steady 70, then a sustained drop for up to 60 days; opens() evaluated at every landing session.
- * opensWith(B) mirrors opens() with MIN_BAND = B; parity with the real opens() is asserted at B = 12.
+ * opensWith(B) mirrors opens() with MIN_BAND = B; parity with the real opens() (production MIN_BAND = 10) is asserted at B = 10.
  */
 import { opens } from "../../../convex/compounding/detect";
 import {
@@ -61,7 +61,7 @@ function trial(history: number, drop: number, noise: number, cadence: number, se
     const d = computeSteadiness(readings, { now: at, timezone: TZ }).domains[0];
     BANDS.forEach((B, i) => {
       const o = opensWith(d, at, B);
-      if (B === 12 && o !== opens(d, { now: at, timezone: TZ })) throw new Error("parity broken");
+      if (B === 10 && o !== opens(d, { now: at, timezone: TZ })) throw new Error("parity broken");
       if (o && first[i] === null) first[i] = day;
     });
     if (first.every((f) => f !== null)) break;

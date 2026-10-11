@@ -4,7 +4,7 @@ import { Chip } from "heroui-native";
 import { SymbolView } from "expo-symbols";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { icon } from "./domains";
+import { icon } from "@/src/features/insights/domains";
 
 const UP = icon("arrow.up", "arrow_upward");
 const DOWN = icon("arrow.down", "arrow_downward");

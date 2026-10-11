@@ -9,12 +9,12 @@ import { useStableQuery } from "@/src/lib/convex/use-stable-query";
 import { AppText } from "@/src/components/shared/app-text";
 import { AuroraArc } from "@/src/features/profile/components/aurora-arc";
 import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { OverallDial } from "./overall-dial";
-import { PartsOfLife } from "./parts-of-life";
-import { UpsellScrollContext } from "./compounding-upsell";
-import { TopBlur } from "./top-blur";
-import { useHour } from "./use-hour";
-import { CAVEAT, type InsightsView } from "./domains";
+import { OverallDial } from "@/src/features/insights/overall-dial";
+import { PartsOfLife } from "@/src/features/insights/parts-of-life";
+import { UpsellScrollContext } from "@/src/features/insights/compounding-upsell";
+import { TopBlur } from "@/src/features/insights/top-blur";
+import { useHour } from "@/src/features/insights/use-hour";
+import { CAVEAT, type InsightsView } from "@/src/features/insights/domains";
 
 export function InsightsScreen() {
   const insets = useSafeAreaInsets();

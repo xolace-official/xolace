@@ -3,7 +3,7 @@
 // dial; with a `domain`, that domain's own ones in its detail card.
 import { View } from "react-native";
 import { AppText } from "@/src/components/shared/app-text";
-import { lastSeen, type DomainItem, type Insight } from "./domains";
+import { lastSeen, type DomainItem, type Insight } from "@/src/features/insights/domains";
 
 const EYEBROW: Record<Insight["kind"], string> = {
   thread: "One thread",

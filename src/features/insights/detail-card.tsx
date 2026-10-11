@@ -11,10 +11,10 @@ import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { playSoftPress } from "@/src/lib/haptics";
-import { GlassSurface, TickGauge, gaugeSize } from "./glass";
-import { DOMAIN_META, icon, subOf, toneOf, type DomainItem, type Insight, type Tone } from "./domains";
-import { SteadinessInsights } from "./steadiness-insights";
-import { TrendChip } from "./trend-chip";
+import { GlassSurface, TickGauge, gaugeSize } from "@/src/features/insights/glass";
+import { DOMAIN_META, icon, subOf, toneOf, type DomainItem, type Insight, type Tone } from "@/src/features/insights/domains";
+import { SteadinessInsights } from "@/src/features/insights/steadiness-insights";
+import { TrendChip } from "@/src/features/insights/trend-chip";
 
 const RADIUS = 120;
 const TICK = 30;

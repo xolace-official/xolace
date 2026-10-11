@@ -8,10 +8,10 @@ import { Presets } from "react-native-pulsar";
 import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { GlassSurface, TickGauge } from "./glass";
-import { GAUGE, type Insight } from "./domains";
-import { SteadinessInsights } from "./steadiness-insights";
-import { LockedTrendChip, TrendChip } from "./trend-chip";
+import { GlassSurface, TickGauge } from "@/src/features/insights/glass";
+import { GAUGE, type Insight } from "@/src/features/insights/domains";
+import { SteadinessInsights } from "@/src/features/insights/steadiness-insights";
+import { LockedTrendChip, TrendChip } from "@/src/features/insights/trend-chip";
 
 type Props = {
   overall: number | null;

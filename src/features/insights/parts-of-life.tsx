@@ -10,11 +10,11 @@ import { Presets } from "react-native-pulsar";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { GlassSurface } from "./glass";
-import { DomainCell, DomainRow, ViewToggle, type DomainView } from "./domain-list";
-import { DetailCard } from "./detail-card";
-import { CompoundingUpsellLine, useCompoundingUpsell, useOpenUpsell } from "./compounding-upsell";
-import { icon, type DomainItem, type Insight } from "./domains";
+import { GlassSurface } from "@/src/features/insights/glass";
+import { DomainCell, DomainRow, ViewToggle, type DomainView } from "@/src/features/insights/domain-list";
+import { DetailCard } from "@/src/features/insights/detail-card";
+import { CompoundingUpsellLine, useCompoundingUpsell, useOpenUpsell } from "@/src/features/insights/compounding-upsell";
+import { icon, type DomainItem, type Insight } from "@/src/features/insights/domains";
 
 const LOCK = icon("lock", "lock");
 

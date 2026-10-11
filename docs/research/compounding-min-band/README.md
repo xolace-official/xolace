@@ -8,7 +8,7 @@ A clean 10-point dip still never opens at 10 (the gap approaches 10 from below; 
 
 ## Method
 
-`sim.ts` (run from the repo root: `TRIALS=30 bun docs/research/compounding-min-band/sim.ts`; filters `CADENCE`, `HISTORY`, `BANDS`, `DROPS`, `NOISES`). Real engine: `computeSteadiness` + `opens`, with the band floor varied; parity with the real `opens()` is asserted at 12 on every evaluation.
+`sim.ts` (run from the repo root: `TRIALS=30 bun docs/research/compounding-min-band/sim.ts`; filters `CADENCE`, `HISTORY`, `BANDS`, `DROPS`, `NOISES`). Real engine: `computeSteadiness` + `opens`, with the band floor varied; parity with the real `opens()` is asserted at 10 (the production floor) on every evaluation; with `BANDS` set, include 10 to keep the check.
 
 - Steady 70 for {30, 60, 120, 365} days, then 70 − drop for up to 60 days.
 - Cadence {daily, every 2d, weekly}; uniform noise {0, ±5, ±10, ±20} per reading; seeded.

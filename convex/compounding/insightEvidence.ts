@@ -14,6 +14,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { internalQuery, type QueryCtx } from "../_generated/server";
 import { readFollowUp } from "../ai/reflectionAgent/toolQueries";
 import { hasPremium } from "../lib/premium";
+import { domainValidator, postSessionMoodValidator } from "../lib/validators";
 import { DOMAIN_LABELS, LIFE_AREA_HOME, domainOf, emotionFamily, type Domain, type ThematicTag } from "../lib/understandingVocab";
 import type { FactSession } from "./insightFacts";
 import { loadReadings } from "./readings";
@@ -74,9 +75,68 @@ export const insightsEnabled = internalQuery({
   },
 });
 
+const nullableString = v.union(v.string(), v.null());
+const moodAfterV = v.union(postSessionMoodValidator, v.null());
+
+const domainSteadinessValidator = v.object({
+  today: v.string(),
+  timezone: v.string(),
+  domains: v.array(
+    v.object({
+      domain: domainValidator,
+      label: v.string(),
+      steadiness: v.number(),
+      usual: v.number(),
+      weekTrend: v.union(v.number(), v.null()),
+      quietSince: nullableString,
+      compounding: v.union(
+        v.object({
+          state: v.union(v.literal("compounding"), v.literal("easing")),
+          since: v.string(),
+          returning: v.boolean(),
+          linkedOnsetOrder: v.array(v.string()),
+        }),
+        v.null(),
+      ),
+    }),
+  ),
+  sessions: v.array(
+    v.object({
+      id: v.id("sessions"),
+      when: v.string(),
+      domains: v.array(domainValidator),
+      alsoAbout: v.array(v.string()),
+      emotion: v.string(),
+      intensity: v.number(),
+      theirWords: v.array(v.string()),
+      chose: nullableString,
+      moodAfter: moodAfterV,
+      checkIn: v.union(
+        v.object({ answer: v.string(), whatHelped: nullableString, heavierChoice: nullableString }),
+        v.null(),
+      ),
+    }),
+  ),
+  raw: v.array(
+    v.object({
+      id: v.string(),
+      at: v.number(),
+      domains: v.array(domainValidator),
+      intensity: v.number(),
+      good: v.boolean(),
+      moodAfter: nullableString,
+      checkIn: nullableString,
+      alsoAbout: v.array(v.string()),
+      theirWords: v.array(v.string()),
+      text: nullableString,
+    }),
+  ),
+});
+
 /** The get_domain_steadiness tool. */
 export const domainSteadiness = internalQuery({
   args: { emotionalProfileId: v.id("emotional_profiles") },
+  returns: domainSteadinessValidator,
   handler: async (ctx, { emotionalProfileId: profileId }) => {
     const now = Date.now();
     const loaded = await loadReadings(ctx, profileId);

@@ -5,9 +5,9 @@ import { SymbolView } from "expo-symbols";
 import { Presets } from "react-native-pulsar";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { SteadinessRing } from "./steadiness-ring";
-import { COMPOUNDING_SHORT, COMPOUNDING_WORD, DOMAIN_META, STAGE_WORD, icon, lastSeen, subOf, toneOf, type DomainItem } from "./domains";
-import { TrendChip } from "./trend-chip";
+import { SteadinessRing } from "@/src/features/insights/steadiness-ring";
+import { COMPOUNDING_SHORT, COMPOUNDING_WORD, DOMAIN_META, STAGE_WORD, icon, lastSeen, subOf, toneOf, type DomainItem } from "@/src/features/insights/domains";
+import { TrendChip } from "@/src/features/insights/trend-chip";
 
 export type DomainView = "grid" | "list";
 

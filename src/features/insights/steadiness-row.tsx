@@ -6,7 +6,7 @@ import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { playSoftPress } from "@/src/lib/haptics";
-import { GAUGE, icon } from "./domains";
+import { GAUGE, icon } from "@/src/features/insights/domains";
 
 const CHEVRON = icon("chevron.right", "chevron_right");
 
