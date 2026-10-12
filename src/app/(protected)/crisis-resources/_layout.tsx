@@ -1,5 +1,4 @@
 import { Stack, useRouter } from 'expo-router';
-import { View } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { PressableFeedback, useThemeColor } from 'heroui-native';
 import { useLargeHeaderOptions } from '@/src/lib/navigation-options';
@@ -28,10 +27,8 @@ export default function CrisisResourcesLayout() {
   };
 
   return (
-    <View className="flex-1 bg-background">
-      <Stack screenOptions={screenOptions}>
-        <Stack.Screen name="index" options={INDEX_OPTIONS} />
-      </Stack>
-    </View>
+    <Stack screenOptions={screenOptions}>
+      <Stack.Screen name="index" options={INDEX_OPTIONS} />
+    </Stack>
   );
 }

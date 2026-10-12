@@ -1,5 +1,5 @@
 import { Stack, useRouter } from "expo-router";
-import { Pressable, View } from "react-native";
+import { Pressable } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
@@ -37,16 +37,14 @@ export default function SettingsLayout() {
   };
 
   return (
-    <View className="flex-1 bg-background">
-      <Stack screenOptions={screenOptions}>
-        <Stack.Screen name="index" options={SETTINGS_OPTIONS} />
-        <Stack.Screen name="appearance" options={APPEARANCE_OPTIONS} />
-        <Stack.Screen name="mirror" options={MIRROR_OPTIONS} />
-        <Stack.Screen name="notifications" options={NOTIFICATIONS_OPTIONS} />
-        <Stack.Screen name="data" options={DATA_OPTIONS} />
-        <Stack.Screen name="account" options={ACCOUNT_OPTIONS} />
-        <Stack.Screen name="follow" options={FOLLOW_OPTIONS} />
-      </Stack>
-    </View>
+    <Stack screenOptions={screenOptions}>
+      <Stack.Screen name="index" options={SETTINGS_OPTIONS} />
+      <Stack.Screen name="appearance" options={APPEARANCE_OPTIONS} />
+      <Stack.Screen name="mirror" options={MIRROR_OPTIONS} />
+      <Stack.Screen name="notifications" options={NOTIFICATIONS_OPTIONS} />
+      <Stack.Screen name="data" options={DATA_OPTIONS} />
+      <Stack.Screen name="account" options={ACCOUNT_OPTIONS} />
+      <Stack.Screen name="follow" options={FOLLOW_OPTIONS} />
+    </Stack>
   );
 }

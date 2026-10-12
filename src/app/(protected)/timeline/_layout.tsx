@@ -1,5 +1,5 @@
 import { Stack, useRouter } from "expo-router";
-import { Pressable, View } from "react-native";
+import { Pressable } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
@@ -39,10 +39,8 @@ export default function TimelineLayout() {
   };
 
   return (
-    <View className="flex-1 bg-background">
-      <Stack screenOptions={screenOptions}>
-        <Stack.Screen name="index" options={TIMELINE_OPTIONS} />
-      </Stack>
-    </View>
+    <Stack screenOptions={screenOptions}>
+      <Stack.Screen name="index" options={TIMELINE_OPTIONS} />
+    </Stack>
   );
 }
