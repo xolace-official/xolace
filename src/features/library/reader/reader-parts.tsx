@@ -12,6 +12,7 @@ import { useCSSVariable } from 'uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { CoverImage } from '@/src/features/library/cover-image';
 import { cn } from '@/src/lib/utils';
+import { COVER_BUTTON, CoverGlass } from './cover-glass';
 import { COVER_SCRIM } from './cover-palette';
 import { headerCredit, metaLabel, metaLine, prepareBody } from './reader-copy';
 import type { ReaderEntry } from './reader-screen';
@@ -33,18 +34,16 @@ const goBack = () => (router.canGoBack() ? router.back() : router.replace('/(pro
 export function BackButton({ onCover = false }: { onCover?: boolean }) {
   const coverInk = String(useCSSVariable('--color-cover-ink'));
   const foreground = useThemeColor('foreground');
+  const icon = <SymbolView name={BACK_ICON} size={17} weight="semibold" tintColor={onCover ? coverInk : foreground} />;
   return (
     <Pressable
       onPress={goBack}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel="Back"
-      className={cn(
-        'h-10 w-10 items-center justify-center rounded-full active:opacity-60',
-        onCover ? 'bg-cover-scrim/30' : 'bg-surface-secondary',
-      )}
+      className={onCover ? COVER_BUTTON : 'h-10 w-10 items-center justify-center rounded-full bg-surface-secondary active:opacity-60'}
     >
-      <SymbolView name={BACK_ICON} size={17} weight="semibold" tintColor={onCover ? coverInk : foreground} />
+      {onCover ? <CoverGlass>{icon}</CoverGlass> : icon}
     </Pressable>
   );
 }
@@ -58,9 +57,11 @@ export function AaButton({ onPress }: { onPress: () => void }) {
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel="Reading appearance"
-      className="h-10 w-10 items-center justify-center rounded-full bg-cover-scrim/30 active:opacity-60"
+      className={COVER_BUTTON}
     >
-      <SymbolView name={AA_ICON} size={17} weight="semibold" tintColor={coverInk} />
+      <CoverGlass>
+        <SymbolView name={AA_ICON} size={17} weight="semibold" tintColor={coverInk} />
+      </CoverGlass>
     </Pressable>
   );
 }
@@ -77,6 +78,7 @@ export function SaveButton({ entryId, saved, onCover = false }: { entryId: Reade
   const shown = pending ?? saved;
   const coverInk = String(useCSSVariable('--color-cover-ink'));
   const foreground = useThemeColor('foreground');
+  const icon = <SymbolView name={shown ? SAVED_ICON : SAVE_ICON} size={17} weight="semibold" tintColor={onCover ? coverInk : foreground} />;
   return (
     <Pressable
       disabled={pending !== null}
@@ -88,12 +90,9 @@ export function SaveButton({ entryId, saved, onCover = false }: { entryId: Reade
       accessibilityRole="button"
       accessibilityLabel="Save"
       accessibilityState={{ selected: shown }}
-      className={cn(
-        'h-10 w-10 items-center justify-center rounded-full active:opacity-60',
-        onCover && 'bg-cover-scrim/30',
-      )}
+      className={onCover ? COVER_BUTTON : 'h-10 w-10 items-center justify-center rounded-full active:opacity-60'}
     >
-      <SymbolView name={shown ? SAVED_ICON : SAVE_ICON} size={17} weight="semibold" tintColor={onCover ? coverInk : foreground} />
+      {onCover ? <CoverGlass>{icon}</CoverGlass> : icon}
     </Pressable>
   );
 }

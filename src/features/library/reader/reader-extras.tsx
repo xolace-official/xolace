@@ -15,6 +15,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { trackLibrary } from '@/src/features/library/analytics';
 import { detectCountry } from '@/src/features/crisis-resources/use-crisis-resources';
 import { useAppStore } from '@/src/store/store';
+import { COVER_BUTTON, CoverGlass } from './cover-glass';
 import { REFLECT_PROMPT, shareMessage } from './reader-copy';
 import type { ReaderEntry } from './reader-screen';
 
@@ -84,9 +85,11 @@ export function ShareButton({ entry }: { entry: Pick<ReaderEntry, 'slug' | 'titl
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel="Share"
-      className="h-10 w-10 items-center justify-center rounded-full bg-cover-scrim/30 active:opacity-60"
+      className={COVER_BUTTON}
     >
-      <SymbolView name={SHARE_ICON} size={17} weight="semibold" tintColor={coverInk} />
+      <CoverGlass>
+        <SymbolView name={SHARE_ICON} size={17} weight="semibold" tintColor={coverInk} />
+      </CoverGlass>
     </Pressable>
   );
 }

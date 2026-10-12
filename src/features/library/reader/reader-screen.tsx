@@ -171,26 +171,25 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
         </View>
       </Animated.ScrollView>
 
-      {/* The bar window: same photo, same offset, clipped to the bar. */}
-      <View pointerEvents="box-none" className="absolute inset-x-0 top-0 overflow-hidden" style={{ height: barH }}>
-        <View pointerEvents="none" style={StyleSheet.absoluteFill} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          {photoEl}
-          <Animated.View style={[StyleSheet.absoluteFill, barShade]} className="bg-cover-scrim/35" />
-        </View>
-        <View className="flex-1 flex-row items-center gap-3 px-4" style={{ paddingTop: insets.top }}>
-          <BackButton onCover />
-          {/* A visual echo of the title: screen readers already have the heading. */}
-          <Animated.View className="flex-1" style={barTitle} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <AppText numberOfLines={1} maxFontSizeMultiplier={BAR_MAX_SCALE} className="font-semibold text-cover-ink">
-              {entry.title}
-            </AppText>
-          </Animated.View>
-          {signals && <SaveButton entryId={entry._id} saved={signals.saved} onCover />}
-          <ShareButton entry={entry} />
-          <AaButton onPress={onOpenAa} />
-        </View>
+      {/* The bar window: same photo, same offset, clipped to the bar. Decorative. */}
+      <View pointerEvents="none" className="absolute inset-x-0 top-0 overflow-hidden" style={{ height: barH }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        {photoEl}
+        <Animated.View style={[StyleSheet.absoluteFill, barShade]} className="bg-cover-scrim/35" />
         {/* Reading progress hairline. */}
-        <Animated.View style={[{ height: 2, transformOrigin: 'left' }, readBar]} className="bg-cover-ink/80" />
+        <Animated.View style={[{ height: 2, transformOrigin: 'left' }, readBar]} className="absolute inset-x-0 bottom-0 bg-cover-ink/80" />
+      </View>
+      {/* The controls sit outside the clip so a pressed glass button can swell past the bar's edge. */}
+      <View pointerEvents="box-none" className="absolute inset-x-0 top-0 flex-row items-center gap-3 px-4 pb-0.5" style={{ height: barH, paddingTop: insets.top }}>
+        <BackButton onCover />
+        {/* A visual echo of the title: screen readers already have the heading. */}
+        <Animated.View className="flex-1" style={barTitle} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          <AppText numberOfLines={1} maxFontSizeMultiplier={BAR_MAX_SCALE} className="font-semibold text-cover-ink">
+            {entry.title}
+          </AppText>
+        </Animated.View>
+        {signals && <SaveButton entryId={entry._id} saved={signals.saved} onCover />}
+        <ShareButton entry={entry} />
+        <AaButton onPress={onOpenAa} />
       </View>
 
       <FireDim />
