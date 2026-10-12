@@ -19,9 +19,8 @@ import { CoverImage } from '@/src/features/library/cover-image';
 import { facetLabel, readTimeLine } from '@/src/features/library/home/library-copy';
 import { COVER_SCRIM } from '@/src/features/library/reader/cover-palette';
 import { capitalise } from '@/src/features/library/reader/reader-copy';
-import { SAVE_ICON, SAVED_ICON, SaveButton } from '@/src/features/library/reader/reader-parts';
+import { SAVE_ICON, SAVED_ICON, SaveButton, useSaveToggle } from '@/src/features/library/reader/reader-parts';
 import { SHARE_ICON, shareEntry } from '@/src/features/library/reader/reader-extras';
-import { logDropped, useRecord } from '@/src/features/library/reader/use-read-signals';
 import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 import type { ReaderFrom } from '@/src/features/library/analytics';
 
@@ -138,7 +137,7 @@ export function EntryRow({
   from: ReaderFrom;
   hub?: string;
 }) {
-  const record = useRecord();
+  const save = useSaveToggle(entry._id, entry.saved);
   const posthog = usePostHog();
   return (
     <View className="flex-row items-center pr-4">
@@ -163,18 +162,15 @@ export function EntryRow({
         </Link.Trigger>
         <Link.Preview />
         <Link.Menu>
-          <Link.MenuAction
-            icon={entry.saved ? SAVED_ICON.ios : SAVE_ICON.ios}
-            onPress={() => record({ entryId: entry._id, saved: !entry.saved }).catch(logDropped)}
-          >
-            {entry.saved ? 'Remove from saved' : 'Save'}
+          <Link.MenuAction icon={save.shown ? SAVED_ICON.ios : SAVE_ICON.ios} onPress={save.toggle}>
+            {save.shown ? 'Remove from saved' : 'Save'}
           </Link.MenuAction>
           <Link.MenuAction icon={SHARE_ICON.ios} onPress={() => shareEntry(entry, posthog)}>
             Share
           </Link.MenuAction>
         </Link.Menu>
       </Link>
-      <SaveButton entryId={entry._id} saved={entry.saved} />
+      <SaveButton save={save} />
     </View>
   );
 }

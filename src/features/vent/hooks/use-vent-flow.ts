@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 import { api } from '@/convex/_generated/api';
 import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlement';
-import { configureAudioSession } from '@/src/lib/audio/session';
+import { claimAudioSession } from '@/src/lib/audio/session';
 import { useVentRecorder } from '@/src/features/vent/hooks/use-vent-recorder';
 import {
   playAffirmativePress,
@@ -81,6 +81,7 @@ export function useVentFlow(): UseVentFlowReturn {
 
   // TTS audio player — source swapped in via player.replace() when playback starts
   const player = useAudioPlayer(null);
+  const focus = useRef(null);
   const playerStatus = useAudioPlayerStatus(player);
 
   // Advance out of 'processing' only when the burn animation has finished AND
@@ -114,7 +115,7 @@ export function useVentFlow(): UseVentFlowReturn {
   useEffect(() => {
     if (state !== 'heard' || !audioUrl) return;
     player.replace({ uri: audioUrl });
-    configureAudioSession()
+    claimAudioSession(focus, () => player.pause())
       .then(() => player.play())
       .catch((err) => console.error('[vent-flow] TTS playback failed:', err));
   }, [state, audioUrl, player]);

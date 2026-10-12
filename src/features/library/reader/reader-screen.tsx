@@ -36,7 +36,7 @@ import { BackToTop } from './back-to-top';
 import { EndOfRead } from './end-of-read';
 import { ContentNote, FireDim, HelplineLink, ReflectOnThis, ShareButton } from './reader-extras';
 import { ReaderPageScope } from './reader-page';
-import { AaButton, BackButton, CoverPhoto, ReaderBody, ReaderTitle, SaveButton, SourceCredit } from './reader-parts';
+import { AaButton, BackButton, CoverPhoto, ReaderBody, ReaderTitle, SaveButton, SourceCredit, useSaveToggle } from './reader-parts';
 import { READING_MODES, useReadingFonts } from './reading-mode';
 import { EntryCredits } from './entry-credits';
 import { useEntryAudio } from './use-entry-audio';
@@ -99,6 +99,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
   const signals = useReadSignals({ entryId: entry._id, slug: entry.slug, readMin: entry.readMin, scrollY: y, scrollRef, maxScroll, endAt });
   const toTop = () => scrollRef.current?.scrollTo({ y: 0, animated: !reduced });
   const resumeAt = signals?.position ? signals.position * maxScroll : 0;
+  const save = useSaveToggle(entry._id, signals?.saved ?? false);
   const title = (
     <ReaderTitle
       entry={entry}
@@ -191,7 +192,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
             {entry.title}
           </AppText>
         </Animated.View>
-        {signals && <SaveButton entryId={entry._id} saved={signals.saved} onCover />}
+        {signals && <SaveButton save={save} onCover />}
         <ShareButton entry={entry} />
         <AaButton onPress={onOpenAa} />
       </View>

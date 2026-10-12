@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAudioPlayer, useAudioPlayerStatus, type AudioMetadata } from 'expo-audio';
 import { ConvexError } from 'convex/values';
-import { configureAudioSession } from '@/src/lib/audio/session';
+import { claimAudioFocus, claimAudioSession } from '@/src/lib/audio/session';
 
 /** What any signed-URL player needs from its server read. */
 export type Playable = { url: string; expiresAt: number; durationSec: number };
@@ -47,6 +47,8 @@ export function usePlayback<T extends Playable>(
   // whether the user had asked to play.
   const pending = useRef<{ seek: number; play: boolean } | null>(null);
   const [volume, setVolumeState] = useState(1);
+  // Identity for audio focus: the ref object itself, not its contents.
+  const focus = useRef(null);
 
   // Transient (network) failures retry with bounded backoff; a ConvexError is
   // the server refusing on purpose, so it surfaces at once.
@@ -94,7 +96,7 @@ export function usePlayback<T extends Playable>(
     (async () => {
       if (seek > 0) await player.seekTo(seek);
       if (play) {
-        await configureAudioSession();
+        await claimAudioSession(focus, () => player.pause());
         if (track) player.setActiveForLockScreen(true, lockScreen(track));
         player.play();
       }
@@ -108,6 +110,12 @@ export function usePlayback<T extends Playable>(
     // eslint-disable-next-line react-hooks/immutability -- expo-audio AudioPlayer.volume is a documented mutable setter
     player.volume = volume;
   }, [player, volume]);
+
+  // A lock-screen play command resumes the native player without passing
+  // through `toggle`, so claim focus from the status too.
+  useEffect(() => {
+    if (status.playing) claimAudioFocus(focus, () => player.pause());
+  }, [status.playing, player]);
 
   useEffect(() => {
     if (status.didJustFinish) player.setActiveForLockScreen(false);
@@ -149,7 +157,7 @@ export function usePlayback<T extends Playable>(
         pending.current = { seek: 0, play: true };
         return;
       }
-      await configureAudioSession();
+      await claimAudioSession(focus, () => player.pause());
       player.setActiveForLockScreen(true, lockScreen(track));
       if (status.didJustFinish) await player.seekTo(0);
       player.play();

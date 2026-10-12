@@ -16,7 +16,7 @@ import { COVER_BUTTON, CoverGlass } from './cover-glass';
 import { COVER_SCRIM } from './cover-palette';
 import { headerCredit, metaLabel, metaLine, prepareBody } from './reader-copy';
 import type { ReaderEntry } from './reader-screen';
-import { useRecord } from './use-read-signals';
+import { logDropped, useRecord } from './use-read-signals';
 
 const BACK_ICON = { ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' } as const;
 const AA_ICON = { ios: 'textformat.size', android: 'text_fields', web: 'text_fields' } as const;
@@ -70,22 +70,34 @@ export function AaButton({ onPress }: { onPress: () => void }) {
  * "I want this back" (#410): a plain toggle on the entry, same on the cards
  * and in the reader. On a cover photo it takes the fixed cover ink.
  */
-export function SaveButton({ entryId, saved, onCover = false }: { entryId: ReaderEntry['_id']; saved: boolean; onCover?: boolean }) {
+/**
+ * Cards' `saved` comes from list queries the optimistic update can't reach:
+ * hold the tapped value until the server answers, and take no second toggle.
+ * One per row, shared by every control that flips it (button, context menu).
+ */
+export function useSaveToggle(entryId: ReaderEntry['_id'], saved: boolean) {
   const record = useRecord();
-  // Cards' `saved` comes from list queries the optimistic update can't reach:
-  // hold the tapped value until the server answers, and take no second tap.
   const [pending, setPending] = useState<boolean | null>(null);
   const shown = pending ?? saved;
+  const toggle = () => {
+    if (pending !== null) return;
+    setPending(!shown);
+    record({ entryId, saved: !shown })
+      .catch(logDropped)
+      .finally(() => setPending(null));
+  };
+  return { shown, pending, toggle };
+}
+
+export function SaveButton({ save, onCover = false }: { save: ReturnType<typeof useSaveToggle>; onCover?: boolean }) {
+  const { shown, pending, toggle } = save;
   const coverInk = String(useCSSVariable('--color-cover-ink'));
   const foreground = useThemeColor('foreground');
   const icon = <SymbolView name={shown ? SAVED_ICON : SAVE_ICON} size={17} weight="semibold" tintColor={onCover ? coverInk : foreground} />;
   return (
     <Pressable
       disabled={pending !== null}
-      onPress={() => {
-        setPending(!shown);
-        record({ entryId, saved: !shown }).finally(() => setPending(null));
-      }}
+      onPress={toggle}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel="Save"

@@ -3,7 +3,7 @@ import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
-import { configureAudioSession } from '@/src/lib/audio/session';
+import { claimAudioSession } from '@/src/lib/audio/session';
 
 type UseMirrorAudioReturn = {
   isReady: boolean;
@@ -27,6 +27,7 @@ export function useMirrorAudio(
   const player = useAudioPlayer(activated ? (audioUrl ?? null) : null);
   const status = useAudioPlayerStatus(player);
   const awaitingFirstPlay = useRef(false);
+  const focus = useRef(null);
 
   // Ready once a playable URL has loaded (undefined while the query is in flight,
   // null when the session has no mirror audio).
@@ -36,7 +37,7 @@ export function useMirrorAudio(
   useEffect(() => {
     if (!awaitingFirstPlay.current || !status.isLoaded) return;
     awaitingFirstPlay.current = false;
-    configureAudioSession()
+    claimAudioSession(focus, () => player.pause())
       .then(() => player.play())
       .catch((e) => console.error('[useMirrorAudio] first play failed:', e));
   }, [status.isLoaded, player]);
@@ -53,7 +54,7 @@ export function useMirrorAudio(
       if (status.playing) {
         player.pause();
       } else {
-        await configureAudioSession();
+        await claimAudioSession(focus, () => player.pause());
         if (status.didJustFinish) {
           player.seekTo(0);
         }

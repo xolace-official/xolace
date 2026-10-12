@@ -7,8 +7,7 @@ import {
 } from 'expo-audio';
 import { useEffect } from 'react';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
-import { AUDIO_SESSION } from '@/src/lib/audio/session';
-import { pauseNowPlaying } from '@/src/features/browse/now-playing/now-playing-store';
+import { AUDIO_SESSION, yieldAudioFocus } from '@/src/lib/audio/session';
 
 export type UseVentRecorderReturn = {
   // Resolves true only when recording actually began (permission granted and
@@ -55,8 +54,8 @@ export function useVentRecorder(): UseVentRecorderReturn {
         return false;
       }
 
-      // Recording sets its own session, so it yields the Browse track itself.
-      pauseNowPlaying();
+      // Recording sets its own session, so it silences any player itself.
+      yieldAudioFocus();
       await setAudioModeAsync({ ...AUDIO_SESSION, allowsRecording: true });
       await recorder.prepareToRecordAsync();
       recorder.record();

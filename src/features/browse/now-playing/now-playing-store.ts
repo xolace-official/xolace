@@ -82,14 +82,6 @@ export function claimFirstPlay() {
   return true;
 }
 
-/**
- * Any other sound starting (reader dock, mirror, vent, voice preview) pauses
- * the Browse track, so only one thing is ever audible.
- */
-export function pauseNowPlaying() {
-  if (playback?.isPlaying) playback.toggle();
-}
-
 export const useNowPlaying = () => useSyncExternalStore(subscribe, getCurrent, getCurrent);
 /** The live playback, or the idle shape until `slug` is the one loaded and published. */
 export function useNowPlayingPlayback(slug?: string): Playback {
