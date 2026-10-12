@@ -1,7 +1,7 @@
 /**
  * Root layout — wraps the entire app in providers and renders the tab navigation.
  *
- * Provider order: RootProvider (gestures, keyboard, theme, HeroUI) → ThemeProvider (React Navigation).
+ * Provider order: RootProvider (gestures, keyboard, theme, HeroUI) → NavThemeProvider (React Navigation).
  * See src/providers/root-provider.tsx to add your own providers (auth, analytics, etc.).
  */
 import '@/src/lib/clerk-online-polyfill';
@@ -11,10 +11,8 @@ import '@/src/lib/theme-bootstrap';
 import { Settings } from 'react-native-pulsar';
 
 
-import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { useEffect, useRef, useState } from 'react';
 import { Stack, usePathname, useGlobalSearchParams } from 'expo-router';
-import { useUniwind } from 'uniwind'
 import * as SplashScreen from 'expo-splash-screen';
 import { useConvexAuth } from 'convex/react';
 import { useFullContext } from '@/src/lib/convex/use-full-context';
@@ -30,6 +28,7 @@ import {
 import { Observe, ObserveRoot, useObserve } from 'expo-observe';
 
 import { RootProvider } from '@/src/providers/root-provider';
+import { NavThemeProvider } from '@/src/providers/nav-theme-provider';
 import { usePostHogIdentity } from '@/src/lib/use-posthog-identity';
 import { useAppStore } from '@/src/store/store';
 import { ChatLocalDataGuard } from '@/src/features/xolacer-chat/chat-local-data-guard';
@@ -196,14 +195,13 @@ const AppContent = () => {
 }
 
 /**
- * Wraps the app content with root providers and supplies a navigation theme based on the current Uniwind theme.
+ * Wraps the app content with root providers and a navigation theme built from the active app palette.
  *
- * The component retrieves the active theme from `useUniwind` and passes `DarkTheme` when the theme equals `"dark"`, otherwise `DefaultTheme`. It also establishes the `RootProvider` context before rendering the app content.
+ * `NavThemeProvider` must sit inside `RootProvider`, which owns the theme context it reads from.
  *
  * @returns The root layout element that provides app-wide context and a navigation theme.
  */
 function RootLayout() {
-  const { theme } = useUniwind();
   const setIsVersionChecked = useAppStore((s) => s.setIsVersionChecked);
   const setIsNewVersionAvailable = useAppStore((s) => s.setIsNewVersionAvailable);
   const isVersionChecked = useAppStore((s) => s.isVersionChecked);
@@ -246,14 +244,14 @@ function RootLayout() {
   }
   return (
     <RootProvider>
-      <ThemeProvider value={theme.includes('dark') ? DarkTheme : DefaultTheme}>
+      <NavThemeProvider>
         <AppContent />
         <UpdateBottomSheet
           isOpen={updateSheetOpen}
           onOpenChange={setUpdateSheetOpen}
           mode={updateSheetMode}
         />
-      </ThemeProvider>
+      </NavThemeProvider>
     </RootProvider>
   );
 }
