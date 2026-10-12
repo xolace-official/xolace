@@ -26,7 +26,8 @@ type Params = { slug: string; from?: BrowseFrom; stepId?: Id<"path_steps"> };
 
 const ABSOLUTE_FILL = { position: "absolute", inset: 0 } as const;
 const TILE = 72;
-const CLOSE_GLASS = { position: "absolute", inset: 0, borderRadius: 18, overflow: "visible" } as const;
+// Sized to the pill and wrapping the icon, so every touch inside lands on the glass (its press swell).
+const CLOSE_GLASS = { width: 36, height: 36, borderRadius: 18, borderCurve: "continuous", overflow: "visible", alignItems: "center", justifyContent: "center" } as const;
 
 /**
  * The Browse player (#340, §9.3) — and the second half of the free-user gate
@@ -63,6 +64,7 @@ function Player() {
   const [barWidth, setBarWidth] = useState(0);
   const glass = isLiquidGlassAvailable();
   const played = useRef(false);
+  const closeIcon = <SymbolView name={{ ios: "chevron.down", android: "keyboard_arrow_down", web: "keyboard_arrow_down" }} size={16} weight="semibold" tintColor={ink} />;
 
   const track = p.track;
   const progress = p.duration ? p.currentTime / p.duration : 0;
@@ -95,8 +97,7 @@ function Player() {
         style={{ top: insets.top + 8 }}
       >
         {/* Fixed palette over the artwork: dark clear glass; its own press response replaces the opacity dip. */}
-        {glass && <GlassView glassEffectStyle="clear" colorScheme="dark" isInteractive style={CLOSE_GLASS} />}
-        <SymbolView name={{ ios: "chevron.down", android: "keyboard_arrow_down", web: "keyboard_arrow_down" }} size={16} weight="semibold" tintColor={ink} />
+        {glass ? <GlassView glassEffectStyle="clear" colorScheme="dark" isInteractive style={CLOSE_GLASS}>{closeIcon}</GlassView> : closeIcon}
       </Pressable>
 
       {track === null || p.error ? (
