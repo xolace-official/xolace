@@ -4,6 +4,7 @@
  * `library/[slug]` (#407).
  */
 import type { FunctionReturnType } from 'convex/server';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
@@ -12,6 +13,7 @@ import { useCSSVariable } from 'uniwind';
 
 import type { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
+import { cn } from '@/src/lib/utils';
 import { CoverImage } from '@/src/features/library/cover-image';
 import { facetLabel, readTimeLine } from '@/src/features/library/home/library-copy';
 import { COVER_SCRIM } from '@/src/features/library/reader/cover-palette';
@@ -92,17 +94,22 @@ const PLAY = { ios: 'play.fill', android: 'play_arrow', web: 'play_arrow' } as c
 /** A mark, not a control: this entry has audio. Taps fall through to the card. */
 function HasAudio() {
   const coverInk = String(useCSSVariable('--color-cover-ink'));
+  const glass = isLiquidGlassAvailable();
   return (
     <View
       pointerEvents="none"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      className="absolute right-3 top-3 h-10 w-10 items-center justify-center rounded-full bg-cover-scrim/30"
+      className={cn('absolute right-3 top-3 h-10 w-10 items-center justify-center rounded-full', !glass && 'bg-cover-scrim/30')}
     >
+      {/* Over the photo, a fixed palette: dark clear glass, not the themed GlassSurface. */}
+      {glass && <GlassView glassEffectStyle="clear" colorScheme="dark" style={BADGE_GLASS} />}
       <SymbolView name={PLAY} size={15} weight="semibold" tintColor={coverInk} />
     </View>
   );
 }
+
+const BADGE_GLASS = { position: 'absolute', inset: 0, borderRadius: 20 } as const;
 
 /** Thumbnail left, "Kind · Subject" kicker, bold title, meta. */
 export function EntryRow({

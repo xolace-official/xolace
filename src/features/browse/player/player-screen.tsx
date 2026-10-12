@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
@@ -15,6 +16,7 @@ import { useTrackPlayback } from "@/src/features/browse/use-track-playback";
 import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/src/lib/haptics";
+import { cn } from "@/src/lib/utils";
 import { imageSource } from "@/src/lib/image-source";
 import { formatTime } from "./format-time";
 import { CrisisLine, GlyphButton, VolumeRow, usePlayerInk } from "./player-controls";
@@ -24,6 +26,7 @@ type Params = { slug: string; from?: BrowseFrom; stepId?: Id<"path_steps"> };
 
 const ABSOLUTE_FILL = { position: "absolute", inset: 0 } as const;
 const TILE = 72;
+const CLOSE_GLASS = { position: "absolute", inset: 0, borderRadius: 18, overflow: "visible" } as const;
 
 /**
  * The Browse player (#340, §9.3) — and the second half of the free-user gate
@@ -58,6 +61,7 @@ function Player() {
   const ink = usePlayerInk();
   const scrim = String(useCSSVariable("--color-player-scrim"));
   const [barWidth, setBarWidth] = useState(0);
+  const glass = isLiquidGlassAvailable();
   const played = useRef(false);
 
   const track = p.track;
@@ -84,9 +88,14 @@ function Player() {
         hitSlop={12}
         accessibilityRole="button"
         accessibilityLabel="Close player"
-        className="absolute left-5 h-9 w-9 items-center justify-center rounded-full bg-player-ink/15 active:opacity-60"
+        className={cn(
+          "absolute left-5 h-9 w-9 items-center justify-center rounded-full",
+          !glass && "bg-player-ink/15 active:opacity-60",
+        )}
         style={{ top: insets.top + 8 }}
       >
+        {/* Fixed palette over the artwork: dark clear glass; its own press response replaces the opacity dip. */}
+        {glass && <GlassView glassEffectStyle="clear" colorScheme="dark" isInteractive style={CLOSE_GLASS} />}
         <SymbolView name={{ ios: "chevron.down", android: "keyboard_arrow_down", web: "keyboard_arrow_down" }} size={16} weight="semibold" tintColor={ink} />
       </Pressable>
 
