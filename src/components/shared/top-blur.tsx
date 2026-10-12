@@ -7,14 +7,14 @@ import MaskedView from "@react-native-masked-view/masked-view";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAppTheme } from "@/src/context/app-theme-context";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
+import { useThemeColor } from "heroui-native";
 
 const MASK =
   "linear-gradient(to bottom, rgb(0,0,0) 0%, rgb(0,0,0) 35%, rgba(0,0,0,0.8) 55%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0) 100%)";
 
 export function TopBlur({ height }: { height: number }) {
   const { isDark } = useAppTheme();
-  const bg = useTokenColor("background");
+  const bg = useThemeColor("background") as string;
   const strong = Platform.OS === "android" ? "F0" : "B0";
   return (
     <View pointerEvents="none" className="absolute inset-x-0 top-0" style={{ height }}>

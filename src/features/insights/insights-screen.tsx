@@ -12,7 +12,7 @@ import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlemen
 import { OverallDial } from "@/src/features/insights/overall-dial";
 import { PartsOfLife } from "@/src/features/insights/parts-of-life";
 import { UpsellScrollContext } from "@/src/features/insights/compounding-upsell";
-import { TopBlur } from "@/src/features/insights/top-blur";
+import { TopBlur } from "@/src/components/shared/top-blur";
 import { useHour } from "@/src/features/insights/use-hour";
 import { CAVEAT, type InsightsView } from "@/src/features/insights/domains";
 

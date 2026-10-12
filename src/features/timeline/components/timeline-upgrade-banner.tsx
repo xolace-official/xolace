@@ -1,17 +1,14 @@
 import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePostHog } from "posthog-react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
+import { GlassSurface } from "@/src/components/shared/glass-surface";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
-
-const BLUR_INTENSITY = 70;
 
 const styles = StyleSheet.create({
   wrapper: { position: "absolute", left: 20, right: 20 },
-  blur: { borderRadius: 24, borderCurve: "continuous", overflow: "hidden" },
 });
 
 /** 7 → "week", 14 → "2 weeks", 30 → "30 days". */
@@ -47,9 +44,10 @@ export function TimelineUpgradeBanner({ windowDays }: { windowDays: number }) {
   };
 
   return (
+    // Translate only: an animated opacity on an ancestor stops the glass blur rendering.
     <EaseView
-      initialAnimate={{ opacity: 0, translateY: 12 }}
-      animate={{ opacity: 1, translateY: 0 }}
+      initialAnimate={{ translateY: 12 }}
+      animate={{ translateY: 0 }}
       transition={{ type: "timing", duration: 260 }}
       style={[styles.wrapper, { bottom: insets.bottom + 12 }]}
     >
@@ -58,25 +56,23 @@ export function TimelineUpgradeBanner({ windowDays }: { windowDays: number }) {
         accessibilityRole="button"
         accessibilityLabel="Unlock your full timeline with Xolace+"
       >
-        <BlurView intensity={BLUR_INTENSITY} tint="default" style={styles.blur}>
-          <View
-            pointerEvents="none"
-            className="absolute inset-0 bg-overlay/35 border border-foreground/10"
-          />
-          <View className="px-5 py-4 flex-row items-center justify-between gap-3">
-            <View className="flex-1 gap-0.5">
-              <AppText className="text-[13px] font-medium text-foreground">
-                You&apos;re seeing the last {formatWindow(windowDays)}
-              </AppText>
-              <AppText className="text-[11px] text-foreground/55">
-                Unlock your full timeline with Xolace+
-              </AppText>
-            </View>
-            <AppText className="text-[12px] font-semibold text-accent">
-              Unlock
+        <GlassSurface
+          radius={24}
+          interactive
+          className="px-5 py-4 flex-row items-center justify-between gap-3"
+        >
+          <View className="flex-1 gap-0.5">
+            <AppText className="text-[13px] font-medium text-foreground">
+              You&apos;re seeing the last {formatWindow(windowDays)}
+            </AppText>
+            <AppText className="text-[11px] text-foreground/55">
+              Unlock your full timeline with Xolace+
             </AppText>
           </View>
-        </BlurView>
+          <AppText className="text-[12px] font-semibold text-accent">
+            Unlock
+          </AppText>
+        </GlassSurface>
       </Pressable>
     </EaseView>
   );

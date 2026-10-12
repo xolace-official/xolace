@@ -11,6 +11,7 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { isSpecialty, specialtyListensTo } from '@/convex/lib/specialties';
 import { AppText } from '@/src/components/shared/app-text';
+import { TopBlur } from '@/src/components/shared/top-blur';
 import { playSoftPress } from '@/src/lib/haptics';
 import {
   declineCooldownActive,
@@ -227,6 +228,7 @@ function ProfileBody({
           </Block>
         </View>
       </ScrollView>
+      <TopBlur height={insets.top + 70} />
 
       <View
         className="gap-3 border-t border-border/40 px-6 pt-4"
