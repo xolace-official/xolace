@@ -51,11 +51,15 @@ export function NavThemeProvider({ children }: { children: ReactNode }) {
   // the OS appearance, not our theme — a dark theme on a light-mode phone got
   // light glass under light text. Force it to match an explicit choice. In
   // "system" mode leave it unspecified: forcing would freeze the OS listener
-  // that the system theme follows.
+  // that the system theme follows. A colour theme in system mode is already
+  // frozen (theme-bootstrap resolves `<id>-<mode>` once at launch), so force
+  // it there too or an OS flip leaves native chrome on the wrong side.
   const mode = useAppStore((s) => s.theme);
+  const colorThemeId = useAppStore((s) => s.colorThemeId);
+  const followsOS = mode === 'system' && colorThemeId === 'default';
   useEffect(() => {
-    Appearance.setColorScheme(mode === 'system' ? 'unspecified' : isDark ? 'dark' : 'light');
-  }, [mode, isDark]);
+    Appearance.setColorScheme(followsOS ? 'unspecified' : isDark ? 'dark' : 'light');
+  }, [followsOS, isDark]);
 
   return <ThemeProvider value={navTheme}>{children}</ThemeProvider>;
 }
