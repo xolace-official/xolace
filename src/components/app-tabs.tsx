@@ -30,6 +30,7 @@ export default function AppTabs() {
       backgroundColor={background}
       tintColor={accent}
       disableTransparentOnScrollEdge
+      minimizeBehavior="onScrollDown"
       screenListeners={screenListeners}
     >
       <NativeTabs.Trigger name="discovery">

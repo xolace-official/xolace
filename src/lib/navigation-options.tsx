@@ -38,6 +38,10 @@ export function useLargeHeaderOptions(): NativeStackNavigationOptions {
         ? "dark"
         : "light"
       : undefined,
+    // iOS 26: content fades softly under the glass header. Never alongside
+    // headerBlurEffect — the two overlap. Needs the scroll view to be the
+    // screen's first descendant to find it.
+    scrollEdgeEffects: isGlassAvailable ? { top: "soft" } : undefined,
     headerLargeStyle: {
       backgroundColor: "transparent",
     },
@@ -48,5 +52,7 @@ export function useLargeHeaderOptions(): NativeStackNavigationOptions {
       color: headerTintColor,
     },
     headerLargeTitle: true,
+    // Chevron only — matches the icon-only toolbar back on each stack root.
+    headerBackButtonDisplayMode: "minimal",
   };
 }
