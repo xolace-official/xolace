@@ -1,8 +1,10 @@
 import { useEffect, type ReactNode } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider, type Theme } from 'expo-router/react-navigation';
+import { Appearance } from 'react-native';
 import * as SystemUI from 'expo-system-ui';
 import { useThemeColor } from 'heroui-native';
 import { useUniwind } from 'uniwind';
+import { useAppStore } from '@/src/store/store';
 
 // Single source of truth for the native route background. The navigator paints
 // every screen container (and opaque / formSheet headers) with the nav theme's
@@ -16,7 +18,8 @@ export function NavThemeProvider({ children }: { children: ReactNode }) {
     'border',
     'accent',
   ]);
-  const base = theme.includes('dark') ? DarkTheme : DefaultTheme;
+  const isDark = theme.includes('dark');
+  const base = isDark ? DarkTheme : DefaultTheme;
 
   const navTheme: Theme = {
     ...base,
@@ -43,6 +46,16 @@ export function NavThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(background);
   }, [background]);
+
+  // Native chrome (liquid glass sheets/headers/tabs, alerts, keyboards) reads
+  // the OS appearance, not our theme — a dark theme on a light-mode phone got
+  // light glass under light text. Force it to match an explicit choice. In
+  // "system" mode leave it unspecified: forcing would freeze the OS listener
+  // that the system theme follows.
+  const mode = useAppStore((s) => s.theme);
+  useEffect(() => {
+    Appearance.setColorScheme(mode === 'system' ? 'unspecified' : isDark ? 'dark' : 'light');
+  }, [mode, isDark]);
 
   return <ThemeProvider value={navTheme}>{children}</ThemeProvider>;
 }

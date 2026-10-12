@@ -8,6 +8,8 @@ import {
 } from "@/src/features/xolacer-chat/providers/stream-chat-provider";
 import { UnreadIconBadge } from "@/src/features/xolacer-chat/components/unread-icon-badge";
 import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { isLiquidGlassAvailable } from "expo-glass-effect";
+import { useThemeColor } from "heroui-native";
 
 /**
  * Provides the navigation layout used by protected routes.
@@ -57,6 +59,17 @@ export default function ProtectedLayout() {
   // usePostHogIdentity is hoisted to the root — it must run during intake.
   useNotifications();
   const reducedMotion = useEffectiveReducedMotion();
+  const background = useThemeColor("background");
+  // Small native sheets sized to their rows. iOS 26 paints its own glass behind
+  // a transparent screen (tinted to the app theme by NavThemeProvider's
+  // appearance sync); iOS 18 and Android show transparent literally, so they
+  // get the theme fill.
+  const fitSheetOptions = {
+    presentation: "formSheet",
+    sheetAllowedDetents: "fitToContents",
+    sheetGrabberVisible: true,
+    contentStyle: isLiquidGlassAvailable() ? undefined : { backgroundColor: background },
+  } as const;
 
   return (
     // Above the Stack so the message overlay can lay itself out against the
@@ -109,6 +122,12 @@ export default function ProtectedLayout() {
           <Stack.Screen name="xolacer-setup" />
           <Stack.Screen name="xolacer-edit" options={EDIT_PROFILE_OPTIONS} />
           <Stack.Screen name="rate/[conversationId]" options={RATE_OPTIONS} />
+          <Stack.Screen name="report-reflection" options={fitSheetOptions} />
+          {/* The reader stays undimmed behind it, so mode and size changes show on the page live. */}
+          <Stack.Screen
+            name="reader-appearance"
+            options={{ ...fitSheetOptions, sheetLargestUndimmedDetentIndex: "last" }}
+          />
         </Stack>
       </StreamChatProvider>
     </StreamOverlayProvider>

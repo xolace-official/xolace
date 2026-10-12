@@ -13,7 +13,7 @@
  */
 import { api } from '@/convex/_generated/api';
 import type { FunctionReturnType } from 'convex/server';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useThemeColor } from 'heroui-native';
 import { useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -30,7 +30,6 @@ import { AppText } from '@/src/components/shared/app-text';
 import { AX_FONT_SCALE } from '@/src/features/library/home/entry-cards';
 import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 import { useAppStore } from '@/src/store/store';
-import { AaSheet } from './aa-sheet';
 import { AudioDock, BAR_MAX_SCALE, ListenPill } from './audio-dock';
 import { BackToTop } from './back-to-top';
 import { EndOfRead } from './end-of-read';
@@ -53,14 +52,10 @@ const COVER_BAND = 72;
 /** The reader on its reading mode's page (#408); the Aa sheet sits outside it, on the app theme. */
 export function ReaderScreen({ entry }: { entry: ReaderEntry }) {
   const mode = useAppStore((s) => s.readingMode);
-  const [aaOpen, setAaOpen] = useState(false);
   return (
-    <>
-      <ReaderPageScope page={READING_MODES[mode].page}>
-        <ReaderView entry={entry} onOpenAa={() => setAaOpen(true)} />
-      </ReaderPageScope>
-      <AaSheet isOpen={aaOpen} onClose={() => setAaOpen(false)} />
-    </>
+    <ReaderPageScope page={READING_MODES[mode].page}>
+      <ReaderView entry={entry} onOpenAa={() => router.push('/reader-appearance')} />
+    </ReaderPageScope>
   );
 }
 
