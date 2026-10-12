@@ -1,4 +1,5 @@
 import { Stack } from "expo-router";
+import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
 import { AppPresence } from "@/src/providers/app-presence";
 import { useNotifications } from "@/src/lib/use-notifications";
 import {
@@ -66,6 +67,12 @@ export default function ProtectedLayout() {
             reporting whichever screen the user is on. */}
         <AppPresence />
         <UnreadIconBadge />
+        {/* Points Reanimated's "System" at the in-app tri-state, so every
+            withSpring/withTiming/entering that doesn't opt out follows it, not
+            just the OS flag. Here, not the root: preferences.get needs auth. */}
+        <ReducedMotionConfig
+          mode={reducedMotion ? ReduceMotion.Always : ReduceMotion.Never}
+        />
         <Stack screenOptions={SCREEN_OPTIONS}>
           <Stack.Screen name="index" />
           <Stack.Screen name="(tabs)" options={NO_GESTURE} />
