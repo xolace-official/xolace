@@ -9,6 +9,12 @@ import { useAppTheme } from "@/src/context/app-theme-context";
 // heroui-native's token union only knows built-ins; custom tokens (ember, …) resolve fine at runtime.
 const useToken = useThemeColor as (t: string) => string;
 
+// Entrance fade for a surface wrapping GlassSurface. Glass stops rendering
+// under an animated opacity, so the fade runs only where there is no glass.
+const hasGlass = isLiquidGlassAvailable();
+export const FADE_IN = hasGlass ? {} : { opacity: 0 };
+export const FADE_OUT = hasGlass ? {} : { opacity: 1 };
+
 // Interactive glass swells past its bounds on press; clipping would shear it.
 const unclipped: ViewStyle = { overflow: "visible" };
 

@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePostHog } from "posthog-react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
+import { FADE_IN, FADE_OUT, GlassSurface } from "@/src/components/shared/glass-surface";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
 
 const styles = StyleSheet.create({
@@ -44,10 +44,10 @@ export function TimelineUpgradeBanner({ windowDays }: { windowDays: number }) {
   };
 
   return (
-    // Translate only: an animated opacity on an ancestor stops the glass blur rendering.
+    // Glass stops rendering under an animated opacity, so the fade only runs where there is no glass.
     <EaseView
-      initialAnimate={{ translateY: 12 }}
-      animate={{ translateY: 0 }}
+      initialAnimate={{ translateY: 12, ...FADE_IN }}
+      animate={{ translateY: 0, ...FADE_OUT }}
       transition={{ type: "timing", duration: 260 }}
       style={[styles.wrapper, { bottom: insets.bottom + 12 }]}
     >
