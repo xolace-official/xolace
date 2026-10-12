@@ -13,7 +13,7 @@
  */
 import { api } from '@/convex/_generated/api';
 import type { FunctionReturnType } from 'convex/server';
-import { Link, router } from 'expo-router';
+import { Link, router, Stack } from 'expo-router';
 import { useIsFocused } from 'expo-router/react-navigation';
 import { useThemeColor } from 'heroui-native';
 import { useState } from 'react';
@@ -63,7 +63,8 @@ export function ReaderScreen({ entry }: { entry: ReaderEntry }) {
 function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => void }) {
   const insets = useSafeAreaInsets();
   // The Aa sheet leaves the reader undimmed and touchable (its detent setting);
-  // the bar's buttons go inert while it is up so Back and Aa can't fire under it.
+  // the bar's buttons and the pull-down dismiss go inert while it is up so the
+  // reader can't close under it.
   const focused = useIsFocused();
   const { height: screenH, width, fontScale } = useWindowDimensions();
   const reduced = useEffectiveReducedMotion();
@@ -133,6 +134,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
 
   return (
     <View className="flex-1" style={{ backgroundColor: page }} onLayout={(e) => setViewH(e.nativeEvent.layout.height)}>
+      <Stack.Screen options={{ gestureEnabled: focused }} />
       {/* Decorative: the cover is hidden from screen readers (#400). Cover-sized so a photo card zooms into the photo. */}
       <Link.AppleZoomTarget>
         <View className="absolute inset-x-0 top-0" style={{ height: coverH }} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
