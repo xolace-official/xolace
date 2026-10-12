@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, View, Pressable } from "react-native";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useIsPreview, useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import { Card, PressableFeedback, useThemeColor } from "heroui-native";
@@ -15,7 +15,6 @@ import {
   getPathLabel,
 } from "@/src/features/timeline/emotions";
 import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
-
 
 const formatDate = (timestamp: number) => {
   const date = new Date(timestamp);
@@ -84,7 +83,9 @@ export const SessionDetailsScreen = () => {
   );
   const { isReady, isPlaying, toggle } = useMirrorAudio(sessionId);
 
-  const topInsetStyle = { paddingTop: insets.top };
+  // A long-press preview is a card, not a screen: no back button, no notch inset.
+  const isPreview = useIsPreview();
+  const topInsetStyle = { paddingTop: isPreview ? 0 : insets.top };
 
   if (!id) {
     return (
@@ -144,17 +145,19 @@ export const SessionDetailsScreen = () => {
         contentContainerStyle={styles.scrollContent}
       >
         {/* Back button */}
-        <View className="px-6 pb-1 pt-3">
-          <Pressable
-            onPress={() => router.back()}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-            className="self-start"
-          >
-            <SymbolView name={BACK_ICON} size={20} tintColor={tintColor} />
-          </Pressable>
-        </View>
+        {!isPreview && (
+          <View className="px-6 pb-1 pt-3">
+            <Pressable
+              onPress={() => router.back()}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              className="self-start"
+            >
+              <SymbolView name={BACK_ICON} size={20} tintColor={tintColor} />
+            </Pressable>
+          </View>
+        )}
 
         {/* Date + time */}
         <View className="px-6 pb-8 pt-5">

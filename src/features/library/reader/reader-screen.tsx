@@ -13,6 +13,7 @@
  */
 import { api } from '@/convex/_generated/api';
 import type { FunctionReturnType } from 'convex/server';
+import { Link } from 'expo-router';
 import { useThemeColor } from 'heroui-native';
 import { useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -133,10 +134,12 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
 
   return (
     <View className="flex-1" style={{ backgroundColor: page }} onLayout={(e) => setViewH(e.nativeEvent.layout.height)}>
-      {/* Decorative: the cover is hidden from screen readers (#400). */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        {photoEl}
-      </View>
+      {/* Decorative: the cover is hidden from screen readers (#400). Cover-sized so a photo card zooms into the photo. */}
+      <Link.AppleZoomTarget>
+        <View className="absolute inset-x-0 top-0" style={{ height: coverH }} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          {photoEl}
+        </View>
+      </Link.AppleZoomTarget>
 
       <Animated.ScrollView
         ref={scrollRef}

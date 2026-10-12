@@ -62,22 +62,25 @@ export function HubCarousel({ hubs }: { hubs: Hub[] }) {
         >
           {hubs.map((hub) => (
             <Link key={hub._id} href={{ pathname: '/browse/library/hub/[slug]', params: { slug: hub.slug } }} asChild>
-              <Pressable
-                accessibilityRole="link"
-                className="rounded-[28px] bg-surface p-2 active:opacity-90"
-                style={{ width: cardW, borderCurve: 'continuous' }}
-              >
-                <View className="overflow-hidden rounded-[22px] bg-surface-secondary" style={{ height: cardW * 0.62 }}>
-                  <CoverImage uri={hub.coverUrl} thumbhash={hub.coverThumbhash} style={{ width: '100%', height: '100%' }} transition={200} />
-                </View>
-                <View className="gap-1.5 px-3 pb-3 pt-3">
-                  <AppText className="text-[22px] font-bold leading-[27px]">{hub.title}</AppText>
-                  <AppText className="text-[14px] leading-5 text-muted" numberOfLines={2}>
-                    {hub.intro}
-                  </AppText>
-                  <AppText className="text-[13px] font-semibold text-accent">{countLine(hub)}</AppText>
-                </View>
-              </Pressable>
+              <Link.Trigger>
+                <Pressable
+                  accessibilityRole="link"
+                  className="rounded-[28px] bg-surface p-2 active:opacity-90"
+                  style={{ width: cardW, borderCurve: 'continuous' }}
+                >
+                  <View className="overflow-hidden rounded-[22px] bg-surface-secondary" style={{ height: cardW * 0.62 }}>
+                    <CoverImage uri={hub.coverUrl} thumbhash={hub.coverThumbhash} style={{ width: '100%', height: '100%' }} transition={200} />
+                  </View>
+                  <View className="gap-1.5 px-3 pb-3 pt-3">
+                    <AppText className="text-[22px] font-bold leading-[27px]">{hub.title}</AppText>
+                    <AppText className="text-[14px] leading-5 text-muted" numberOfLines={2}>
+                      {hub.intro}
+                    </AppText>
+                    <AppText className="text-[13px] font-semibold text-accent">{countLine(hub)}</AppText>
+                  </View>
+                </Pressable>
+              </Link.Trigger>
+              <Link.Preview />
             </Link>
           ))}
         </Animated.ScrollView>

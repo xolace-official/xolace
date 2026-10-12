@@ -7,7 +7,7 @@ import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useThemeColor } from 'heroui-native';
-import { usePostHog } from 'posthog-react-native';
+import { usePostHog, type PostHog } from 'posthog-react-native';
 import { Pressable, Share, StyleSheet, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
@@ -20,7 +20,7 @@ import { REFLECT_PROMPT, shareMessage } from './reader-copy';
 import type { ReaderEntry } from './reader-screen';
 
 const NOTE_ICON = { ios: 'exclamationmark.circle', android: 'info', web: 'info' } as const;
-const SHARE_ICON = { ios: 'square.and.arrow.up', android: 'share', web: 'share' } as const;
+export const SHARE_ICON = { ios: 'square.and.arrow.up', android: 'share', web: 'share' } as const;
 const HELP_ICON = { ios: 'phone', android: 'call', web: 'call' } as const;
 export const CHEVRON = { ios: 'chevron.right', android: 'chevron_right', web: 'chevron_right' } as const;
 const DAY_MS = 86_400_000;
@@ -67,21 +67,24 @@ export function ReflectOnThis({ entry }: { entry: Pick<ReaderEntry, '_id' | 'slu
   );
 }
 
-/** Standard share sheet with a deep link to the entry. Sits on the cover. */
+/** Standard share sheet with a deep link to the entry — the reader's button and the cards' menu. */
+export async function shareEntry(entry: Pick<ReaderEntry, 'slug' | 'title'>, posthog: PostHog) {
+  const url = Linking.createURL(`library/${entry.slug}`, { queryParams: { from: 'share' } });
+  try {
+    const { action } = await Share.share({ message: shareMessage(entry.title, url) });
+    if (action === Share.sharedAction) trackLibrary(posthog, 'library_entry_shared', { slug: entry.slug });
+  } catch {
+    // The sheet failed to open; nothing was shared and there's nothing to undo.
+  }
+}
+
+/** Shares the entry. Sits on the cover. */
 export function ShareButton({ entry }: { entry: Pick<ReaderEntry, 'slug' | 'title'> }) {
   const coverInk = String(useCSSVariable('--color-cover-ink'));
   const posthog = usePostHog();
   return (
     <Pressable
-      onPress={async () => {
-        const url = Linking.createURL(`library/${entry.slug}`, { queryParams: { from: 'share' } });
-        try {
-          const { action } = await Share.share({ message: shareMessage(entry.title, url) });
-          if (action === Share.sharedAction) trackLibrary(posthog, 'library_entry_shared', { slug: entry.slug });
-        } catch {
-          // The sheet failed to open; nothing was shared and there's nothing to undo.
-        }
-      }}
+      onPress={() => shareEntry(entry, posthog)}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel="Share"

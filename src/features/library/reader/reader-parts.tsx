@@ -20,8 +20,8 @@ import { useRecord } from './use-read-signals';
 
 const BACK_ICON = { ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' } as const;
 const AA_ICON = { ios: 'textformat.size', android: 'text_fields', web: 'text_fields' } as const;
-const SAVE_ICON = { ios: 'bookmark', android: 'bookmark_border', web: 'bookmark_border' } as const;
-const SAVED_ICON = { ios: 'bookmark.fill', android: 'bookmark_added', web: 'bookmark_added' } as const;
+export const SAVE_ICON = { ios: 'bookmark', android: 'bookmark_border', web: 'bookmark_border' } as const;
+export const SAVED_ICON = { ios: 'bookmark.fill', android: 'bookmark_added', web: 'bookmark_added' } as const;
 const SOURCE_ICON = { ios: 'building.columns', android: 'account_balance', web: 'account_balance' } as const;
 const XOLACE_LOGO = require('@/assets/images/icon.png');
 // Callouts arrive as quotes led by their kind in bold (`prepareBody`), so the kind is read first.

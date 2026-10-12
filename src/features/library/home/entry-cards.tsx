@@ -8,6 +8,7 @@ import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
+import { usePostHog } from 'posthog-react-native';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
@@ -18,7 +19,10 @@ import { CoverImage } from '@/src/features/library/cover-image';
 import { facetLabel, readTimeLine } from '@/src/features/library/home/library-copy';
 import { COVER_SCRIM } from '@/src/features/library/reader/cover-palette';
 import { capitalise } from '@/src/features/library/reader/reader-copy';
-import { SaveButton } from '@/src/features/library/reader/reader-parts';
+import { SAVE_ICON, SAVED_ICON, SaveButton } from '@/src/features/library/reader/reader-parts';
+import { SHARE_ICON, shareEntry } from '@/src/features/library/reader/reader-extras';
+import { logDropped, useRecord } from '@/src/features/library/reader/use-read-signals';
+import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 import type { ReaderFrom } from '@/src/features/library/analytics';
 
 export type EntryItem = FunctionReturnType<typeof api.library.entries.listEntries>[number];
@@ -55,34 +59,45 @@ export function PhotoCard({
   label?: string;
 }) {
   const ax = useWindowDimensions().fontScale >= AX_FONT_SCALE;
+  const reduced = useEffectiveReducedMotion();
+  const posthog = usePostHog();
   return (
     <View style={{ width, minHeight: height }}>
       <Link href={href} asChild>
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel={label}
-          className="overflow-hidden bg-cover-scrim active:opacity-90"
-          style={{
-            width,
-            minHeight: height,
-            borderRadius: CARD_RADIUS,
-            borderCurve: 'continuous',
-          }}
-        >
-          <CoverImage uri={entry.coverUrl} thumbhash={entry.coverThumbhash} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
-          <LinearGradient
-            colors={COVER_SCRIM.colors}
-            locations={COVER_SCRIM.locations}
-            style={StyleSheet.absoluteFill}
-          />
-          <View className="flex-1 justify-end gap-2 p-5">
-            <AppText className="text-[12px] font-medium uppercase tracking-[1.5px] text-cover-ink/70">{kicker}</AppText>
-            <AppText className="text-[24px] font-bold leading-[29px] text-cover-ink" numberOfLines={ax ? undefined : 3}>
-              {entry.title}
-            </AppText>
-            <AppText className="text-[13px] text-cover-ink/75">{meta}</AppText>
-          </View>
-        </Pressable>
+        <Link.Trigger withAppleZoom={!reduced}>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={label}
+            className="overflow-hidden bg-cover-scrim active:opacity-90"
+            style={{
+              width,
+              minHeight: height,
+              borderRadius: CARD_RADIUS,
+              borderCurve: 'continuous',
+            }}
+          >
+            <CoverImage uri={entry.coverUrl} thumbhash={entry.coverThumbhash} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
+            <LinearGradient
+              colors={COVER_SCRIM.colors}
+              locations={COVER_SCRIM.locations}
+              style={StyleSheet.absoluteFill}
+            />
+            <View className="flex-1 justify-end gap-2 p-5">
+              <AppText className="text-[12px] font-medium uppercase tracking-[1.5px] text-cover-ink/70">{kicker}</AppText>
+              <AppText className="text-[24px] font-bold leading-[29px] text-cover-ink" numberOfLines={ax ? undefined : 3}>
+                {entry.title}
+              </AppText>
+              <AppText className="text-[13px] text-cover-ink/75">{meta}</AppText>
+            </View>
+          </Pressable>
+        </Link.Trigger>
+        <Link.Preview />
+        {/* No Save here: these entries don't carry `saved`. */}
+        <Link.Menu>
+          <Link.MenuAction icon={SHARE_ICON.ios} onPress={() => shareEntry(entry, posthog)}>
+            Share
+          </Link.MenuAction>
+        </Link.Menu>
       </Link>
       {entry.listenMin !== undefined && <HasAudio />}
     </View>
@@ -123,24 +138,41 @@ export function EntryRow({
   from: ReaderFrom;
   hub?: string;
 }) {
+  const record = useRecord();
+  const posthog = usePostHog();
   return (
     <View className="flex-row items-center pr-4">
       <Link href={readerHref(entry.slug, from, hub)} asChild>
-        <Pressable accessibilityRole="link" className="flex-1 flex-row items-center gap-4 py-3 pl-4 active:opacity-70">
-          {index !== undefined && <AppText className="w-4 text-[13px] text-muted">{index + 1}</AppText>}
-          <View className="overflow-hidden rounded-[14px] bg-surface-secondary" style={THUMB}>
-            <CoverImage uri={entry.coverThumbUrl ?? entry.coverUrl} thumbhash={entry.coverThumbhash} style={THUMB} transition={200} />
-          </View>
-          <View className="flex-1 gap-1">
-            <AppText className="text-[12px] text-muted">
-              {capitalise(entry.kind)} · {facetLabel(entry.primarySubject)}
-            </AppText>
-            <AppText className="text-[16px] font-semibold leading-[21px]" numberOfLines={2}>
-              {entry.title}
-            </AppText>
-            <AppText className="text-[13px] text-muted">{readTimeLine(entry.readMin, entry.views, entry.listenMin)}</AppText>
-          </View>
-        </Pressable>
+        {/* No zoom: the thumb is too small to grow from. */}
+        <Link.Trigger>
+          <Pressable accessibilityRole="link" className="flex-1 flex-row items-center gap-4 py-3 pl-4 active:opacity-70">
+            {index !== undefined && <AppText className="w-4 text-[13px] text-muted">{index + 1}</AppText>}
+            <View className="overflow-hidden rounded-[14px] bg-surface-secondary" style={THUMB}>
+              <CoverImage uri={entry.coverThumbUrl ?? entry.coverUrl} thumbhash={entry.coverThumbhash} style={THUMB} transition={200} />
+            </View>
+            <View className="flex-1 gap-1">
+              <AppText className="text-[12px] text-muted">
+                {capitalise(entry.kind)} · {facetLabel(entry.primarySubject)}
+              </AppText>
+              <AppText className="text-[16px] font-semibold leading-[21px]" numberOfLines={2}>
+                {entry.title}
+              </AppText>
+              <AppText className="text-[13px] text-muted">{readTimeLine(entry.readMin, entry.views, entry.listenMin)}</AppText>
+            </View>
+          </Pressable>
+        </Link.Trigger>
+        <Link.Preview />
+        <Link.Menu>
+          <Link.MenuAction
+            icon={entry.saved ? SAVED_ICON.ios : SAVE_ICON.ios}
+            onPress={() => record({ entryId: entry._id, saved: !entry.saved }).catch(logDropped)}
+          >
+            {entry.saved ? 'Remove from saved' : 'Save'}
+          </Link.MenuAction>
+          <Link.MenuAction icon={SHARE_ICON.ios} onPress={() => shareEntry(entry, posthog)}>
+            Share
+          </Link.MenuAction>
+        </Link.Menu>
       </Link>
       <SaveButton entryId={entry._id} saved={entry.saved} />
     </View>

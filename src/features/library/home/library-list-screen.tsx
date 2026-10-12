@@ -4,7 +4,7 @@
  * of a kind or subject. Filter/sort menu from #396 is not built yet.
  */
 import { useQuery } from 'convex/react';
-import { Stack } from 'expo-router';
+import { Stack, useIsPreview } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { useEffect } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
@@ -72,8 +72,10 @@ export function LibraryListScreen({ by }: { by: ListBy }) {
   const { title, rows } = listOf(by);
   const posthog = usePostHog();
   const key = 'hub' in by ? by.hub : 'kind' in by ? by.kind : by.subject;
+  const isPreview = useIsPreview(); // a long-press preview isn't an open
 
   useEffect(() => {
+    if (isPreview) return;
     if ('hub' in by) trackLibrary(posthog, 'library_hub_opened', { hub: by.hub });
     else if ('kind' in by) trackLibrary(posthog, 'library_kind_opened', { kind: by.kind });
     else trackLibrary(posthog, 'library_subject_opened', { subject: by.subject });
