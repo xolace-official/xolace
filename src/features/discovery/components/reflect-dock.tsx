@@ -5,6 +5,7 @@ import { PressableFeedback, useThemeColor } from 'heroui-native';
 import { SymbolView } from 'expo-symbols';
 
 import { AppText } from '@/src/components/shared/app-text';
+import { MINI_PLAYER_CLEARANCE, useMiniPlayerShown } from '@/src/features/browse/now-playing/now-playing-store';
 import { playSoftPress } from '@/src/lib/haptics';
 
 // iOS: the native tab bar is translucent and content runs underneath it, so the
@@ -35,6 +36,8 @@ export function ReflectDock() {
   const router = useRouter();
   // const insets = useSafeAreaInsets();
   const accent = useThemeColor('accent');
+  // Rides above the Browse mini-player when it's docked over the tab bar.
+  const lift = useMiniPlayerShown() ? MINI_PLAYER_CLEARANCE : 0;
 
   const goToReflect = () => {
     playSoftPress();
@@ -44,7 +47,7 @@ export function ReflectDock() {
   return (
     <View
       className="absolute left-4 right-4"
-      style={{ bottom:  TAB_BAR_CLEARANCE }}
+      style={{ bottom: TAB_BAR_CLEARANCE + lift }}
       pointerEvents="box-none"
     >
       <PressableFeedback

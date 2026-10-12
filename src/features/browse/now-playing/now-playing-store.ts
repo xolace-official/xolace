@@ -1,0 +1,110 @@
+import { useSyncExternalStore } from 'react';
+import { isLiquidGlassAvailable } from 'expo-glass-effect';
+import type { Id } from '@/convex/_generated/dataModel';
+import type { BrowseFrom } from '@/src/features/browse/use-open-track';
+import type { BoundTrack } from '@/src/features/browse/use-track-playback';
+import type { PlaybackReturn } from '@/src/lib/audio/use-playback';
+import { useTabBarHidden } from '@/src/lib/tab-bar';
+
+export type NowPlaying = { slug: string; stepId?: Id<'path_steps'>; from?: BrowseFrom };
+type Playback = PlaybackReturn<BoundTrack>;
+
+/**
+ * The one Browse track loaded outside any screen (S4). Module-level like
+ * `src/lib/tab-bar.ts`: the writers (player screen, accessory) and readers
+ * (host, player, both accessory copies) sit in unrelated subtrees.
+ *
+ * `current` is what to play; `playback` is the live `useTrackPlayback` result
+ * the host publishes, so every reader drives the same audio player.
+ */
+let current: NowPlaying | null = null;
+let playback: Playback | null = null;
+// One `browse_track_played` per loaded track, however often the player reopens.
+let played = false;
+const listeners = new Set<() => void>();
+const emit = () => listeners.forEach((l) => l());
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+const getCurrent = () => current;
+const getPlayback = () => playback;
+const getLoaded = () => !!playback?.track;
+
+const noop = () => {};
+/** What a reader sees before the host has published: the same as minting. */
+const IDLE: Playback = {
+  track: undefined,
+  error: null,
+  isLoaded: false,
+  isPlaying: false,
+  didJustFinish: false,
+  currentTime: 0,
+  duration: 0,
+  toggle: noop,
+  seekTo: noop,
+  volume: 1,
+  setVolume: noop,
+};
+
+export function setNowPlaying(next: NowPlaying) {
+  if (current?.slug === next.slug && current.stepId === next.stepId && current.from === next.from) return;
+  if (current?.slug !== next.slug) {
+    // Never show the previous track's status under the new slug.
+    playback = null;
+    played = false;
+  }
+  current = next;
+  emit();
+}
+
+export function clearNowPlaying() {
+  if (!current && !playback) return;
+  current = null;
+  playback = null;
+  emit();
+}
+
+/** Host only. */
+export function publishPlayback(next: Playback | null) {
+  playback = next;
+  emit();
+}
+
+/** True the first time it's called for the loaded track. */
+export function claimFirstPlay() {
+  if (played) return false;
+  played = true;
+  return true;
+}
+
+/**
+ * Any other sound starting (reader dock, mirror, vent, voice preview) pauses
+ * the Browse track, so only one thing is ever audible.
+ */
+export function pauseNowPlaying() {
+  if (playback?.isPlaying) playback.toggle();
+}
+
+export const useNowPlaying = () => useSyncExternalStore(subscribe, getCurrent, getCurrent);
+/** The live playback, or the idle shape until `slug` is the one loaded and published. */
+export function useNowPlayingPlayback(slug?: string): Playback {
+  const np = useNowPlaying();
+  const pb = useSyncExternalStore(subscribe, getPlayback, getPlayback);
+  return pb && (slug === undefined || np?.slug === slug) ? pb : IDLE;
+}
+/** A boolean snapshot, so the tab layout doesn't re-render on every status tick. */
+export const useNowPlayingLoaded = () => useSyncExternalStore(subscribe, getLoaded, getLoaded);
+
+/** The accessory capsule plus its gap above the tab bar — what floating UI over the tabs must clear. */
+export const MINI_PLAYER_CLEARANCE = 64;
+/** Whether the accessory is on screen: iOS 26 only, and it yields with the bar. */
+export function useMiniPlayerShown() {
+  const loaded = useNowPlayingLoaded();
+  const hidden = useTabBarHidden();
+  return loaded && !hidden && isLiquidGlassAvailable();
+}

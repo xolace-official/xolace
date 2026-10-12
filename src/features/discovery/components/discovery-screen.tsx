@@ -7,6 +7,7 @@ import { DiscoveryTimelineSection } from './discovery-timeline-section';
 import { KindlingTodayCard } from './kindling-today-card';
 import { LibraryStrip } from '@/src/features/discovery/components/library-strip';
 import { DOCK_CLEARANCE, ReflectDock } from './reflect-dock';
+import { MINI_PLAYER_CLEARANCE, useMiniPlayerShown } from '@/src/features/browse/now-playing/now-playing-store';
 
 /**
  * First tab. The masthead runs under the status bar, so this screen opts out of
@@ -14,13 +15,14 @@ import { DOCK_CLEARANCE, ReflectDock } from './reflect-dock';
  * pads the safe area itself.
  */
 export function DiscoveryScreen() {
+  const lift = useMiniPlayerShown() ? MINI_PLAYER_CLEARANCE : 0;
   return (
     <View className="flex-1 bg-background">
       <ScrollView
         contentInsetAdjustmentBehavior="never"
         alwaysBounceVertical={false}
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: DOCK_CLEARANCE + 30 }}
+        contentContainerStyle={{ paddingBottom: DOCK_CLEARANCE + lift + 30 }}
       >
         <DiscoveryHeader />
 

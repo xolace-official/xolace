@@ -8,6 +8,7 @@ import {
 import { useEffect } from 'react';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { AUDIO_SESSION } from '@/src/lib/audio/session';
+import { pauseNowPlaying } from '@/src/features/browse/now-playing/now-playing-store';
 
 export type UseVentRecorderReturn = {
   // Resolves true only when recording actually began (permission granted and
@@ -54,6 +55,8 @@ export function useVentRecorder(): UseVentRecorderReturn {
         return false;
       }
 
+      // Recording sets its own session, so it yields the Browse track itself.
+      pauseNowPlaying();
       await setAudioModeAsync({ ...AUDIO_SESSION, allowsRecording: true });
       await recorder.prepareToRecordAsync();
       recorder.record();

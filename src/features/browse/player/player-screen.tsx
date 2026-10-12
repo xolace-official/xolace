@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -12,7 +12,12 @@ import { useCSSVariable } from "uniwind";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { type BrowseFrom, FAMILY_LABEL } from "@/src/features/browse/components/track-row";
-import { useTrackPlayback } from "@/src/features/browse/use-track-playback";
+import {
+  claimFirstPlay,
+  clearNowPlaying,
+  setNowPlaying,
+  useNowPlayingPlayback,
+} from "@/src/features/browse/now-playing/now-playing-store";
 import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/src/lib/haptics";
@@ -44,6 +49,8 @@ export function PlayerScreen() {
 
   useEffect(() => {
     if (!gated) return;
+    // A lapsed entitlement takes the mini-player down with the player.
+    clearNowPlaying();
     posthog.capture("browse_paywall_shown", { slug, from: from ?? null });
     // Replace, not push: the paywall's close pops back to wherever the player
     // was opened from, and the player never re-enters the stack.
@@ -56,14 +63,23 @@ export function PlayerScreen() {
 
 function Player() {
   const { slug, from, stepId } = useLocalSearchParams<Params>();
-  const p = useTrackPlayback(slug, { stepId });
+  // The audio lives in NowPlayingHost; opening for the loaded slug (e.g. from
+  // the mini-player) keeps playing, another slug swaps the track.
+  useEffect(() => {
+    setNowPlaying({ slug, stepId, from });
+    // Only iOS 26 has the tab-bar mini-player to keep it reachable; elsewhere
+    // closing the player stops the audio, as it always has.
+    return () => {
+      if (!isLiquidGlassAvailable()) clearNowPlaying();
+    };
+  }, [slug, stepId, from]);
+  const p = useNowPlayingPlayback(slug);
   const insets = useSafeAreaInsets();
   const posthog = usePostHog();
   const ink = usePlayerInk();
   const scrim = String(useCSSVariable("--color-player-scrim"));
   const [barWidth, setBarWidth] = useState(0);
   const glass = isLiquidGlassAvailable();
-  const played = useRef(false);
   const closeIcon = <SymbolView name={{ ios: "chevron.down", android: "keyboard_arrow_down", web: "keyboard_arrow_down" }} size={16} weight="semibold" tintColor={ink} />;
 
   const track = p.track;
@@ -71,8 +87,7 @@ function Player() {
 
   const toggle = () => {
     playSoftPress();
-    if (!p.isPlaying && !played.current && track && from) {
-      played.current = true;
+    if (!p.isPlaying && track && from && claimFirstPlay()) {
       posthog.capture("browse_track_played", { slug, family: track.family, from });
     }
     p.toggle();

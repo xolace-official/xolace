@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
 import { AppPresence } from "@/src/providers/app-presence";
+import { NowPlayingHost } from "@/src/features/browse/now-playing/now-playing-host";
 import { useNotifications } from "@/src/lib/use-notifications";
 import {
   StreamChatProvider,
@@ -79,6 +80,8 @@ export default function ProtectedLayout() {
         {/* Renders nothing — it is here, above the Stack, so presence keeps
             reporting whichever screen the user is on. */}
         <AppPresence />
+        {/* The Browse track's audio, outliving the player screen (S4). */}
+        <NowPlayingHost />
         <UnreadIconBadge />
         {/* Points Reanimated's "System" at the in-app tri-state, so every
             withSpring/withTiming/entering that doesn't opt out follows it, not
