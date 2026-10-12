@@ -14,6 +14,7 @@
 import { api } from '@/convex/_generated/api';
 import type { FunctionReturnType } from 'convex/server';
 import { Link, router } from 'expo-router';
+import { useIsFocused } from 'expo-router/react-navigation';
 import { useThemeColor } from 'heroui-native';
 import { useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -54,13 +55,16 @@ export function ReaderScreen({ entry }: { entry: ReaderEntry }) {
   const mode = useAppStore((s) => s.readingMode);
   return (
     <ReaderPageScope page={READING_MODES[mode].page}>
-      <ReaderView entry={entry} onOpenAa={() => router.push('/reader-appearance')} />
+      <ReaderView entry={entry} onOpenAa={() => router.navigate('/reader-appearance')} />
     </ReaderPageScope>
   );
 }
 
 function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => void }) {
   const insets = useSafeAreaInsets();
+  // The Aa sheet leaves the reader undimmed and touchable (its detent setting);
+  // the bar's buttons go inert while it is up so Back and Aa can't fire under it.
+  const focused = useIsFocused();
   const { height: screenH, width, fontScale } = useWindowDimensions();
   const reduced = useEffectiveReducedMotion();
   const ax = fontScale >= AX_FONT_SCALE;
@@ -177,7 +181,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
         <Animated.View style={[{ height: 2, transformOrigin: 'left' }, readBar]} className="absolute inset-x-0 bottom-0 bg-cover-ink/80" />
       </View>
       {/* The controls sit outside the clip so a pressed glass button can swell past the bar's edge. */}
-      <View pointerEvents="box-none" className="absolute inset-x-0 top-0 flex-row items-center gap-3 px-4 pb-0.5" style={{ height: barH, paddingTop: insets.top }}>
+      <View pointerEvents={focused ? 'box-none' : 'none'} className="absolute inset-x-0 top-0 flex-row items-center gap-3 px-4 pb-0.5" style={{ height: barH, paddingTop: insets.top }}>
         <BackButton onCover />
         {/* A visual echo of the title: screen readers already have the heading. */}
         <Animated.View className="flex-1" style={barTitle} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">

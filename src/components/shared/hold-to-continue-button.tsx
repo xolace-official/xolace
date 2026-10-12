@@ -4,6 +4,7 @@ import Animated, {
   cancelAnimation,
   FadeIn,
   interpolate,
+  ReduceMotion,
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
@@ -80,7 +81,9 @@ export function HoldToContinueButton({
 
   const handlePressIn = useCallback(() => {
     playSoftPress();
-    fillProgress.set(withTiming(1, { duration: holdDurationMs }));
+    // The fill is the hold timer, not decoration: under reduce motion a plain
+    // withTiming completes instantly and a single tap would pass the gate.
+    fillProgress.set(withTiming(1, { duration: holdDurationMs, reduceMotion: ReduceMotion.Never }));
     pressScale.set(withTiming(PRESS_SCALE, { duration: PRESS_SCALE_IN }));
   }, [fillProgress, pressScale, holdDurationMs]);
 
