@@ -62,7 +62,9 @@ Sentry.init({
 
 // Per-route navigation metrics (cold_ttr / warm_ttr / per-route tti). Must run
 // at module scope before any screen mounts — toggling it after mount throws.
-Observe.configure({ integrations: { 'expo-router': true } });
+// `q` is the raw Browse search query (may be a crisis term, never logged —
+// see crisisTerms.ts); keep it out of exported navigation metrics.
+Observe.configure({ integrations: { 'expo-router': { filteredParams: ['q'] } } });
 
 SplashScreen.preventAutoHideAsync();
 
