@@ -3,6 +3,21 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Shadow record, canary probe, drift boundary (2026-10-13)
+
+A **shadow record** is one Jev answer recorded beside the decision the
+pipeline actually made on the same input: probabilities only, never text,
+and never read by any feature. It belongs to the person it came from and
+dies with them. Shadow records are eval scaffolding. A lane that goes live
+moves its Jev answers into that lane's own home and stops writing them.
+_Avoid_: Jev log, Jev event.
+
+A **canary probe** is a fixed synthetic input sent to Jev every day. It
+belongs to nobody and is kept for good. A **drift boundary** is the moment a
+model's canary answers shift past tolerance. Shadow results are only
+compared within the span between two boundaries.
+_Avoid_: health check, ping.
+
 ## Stretch, returning, linked domains (2026-10-04)
 
 A **stretch** is one run of a domain compounding, from the session that

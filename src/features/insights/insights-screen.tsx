@@ -15,6 +15,7 @@ import { UpsellScrollContext } from "@/src/features/insights/compounding-upsell"
 import { TopBlur } from "@/src/components/shared/top-blur";
 import { useHour } from "@/src/features/insights/use-hour";
 import { CAVEAT, type InsightsView } from "@/src/features/insights/domains";
+import { InsightsSkeleton } from "@/src/features/insights/insights-skeleton";
 
 export function InsightsScreen() {
   const insets = useSafeAreaInsets();
@@ -50,12 +51,14 @@ export function InsightsScreen() {
         onScroll={() => scrollListeners.forEach((f) => f())}
         scrollEventThrottle={100}
       >
-        {view && (
+        {view ? (
           <View className="gap-8 px-5">
             <OverallDial overall={view.overall} trend={view.overallTrend} locked={!isPlus} insights={view.insights} />
             {view.domains.length > 0 && <PartsOfLife domains={view.domains} isPlus={isPlus} insights={view.insights} />}
             <AppText className="text-[12px] text-muted text-center leading-5 px-4">{CAVEAT}</AppText>
           </View>
+        ) : (
+          <InsightsSkeleton />
         )}
       </ScrollView>
       </UpsellScrollContext>
