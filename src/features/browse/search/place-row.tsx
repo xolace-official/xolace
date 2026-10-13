@@ -18,9 +18,10 @@ type Place = FunctionReturnType<typeof api.library.search.searchCatalogue>['plac
 const THUMB = 56;
 const KIND_LABEL = { hub: 'Lantern hub', topic: 'Topic' } as const;
 
-export function PlaceRow({ place }: { place: Place }) {
+export function PlaceRow({ place, onOpen }: { place: Place; onOpen?: () => void }) {
   const open = () => {
     playSoftPress();
+    onOpen?.();
     if (place.kind === 'hub') {
       router.push({ pathname: '/browse/library/hub/[slug]', params: { slug: place.slug } });
     } else {

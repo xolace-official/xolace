@@ -24,7 +24,18 @@ const THUMB = 56;
  * Free users (§9.4): the thumbnail wears a lock and the tap opens the paywall
  * instead of the player (`useOpenTrack`).
  */
-export function TrackRow({ track, from, glyph = false }: { track: TrackItem; from: BrowseFrom; glyph?: boolean }) {
+export function TrackRow({
+  track,
+  from,
+  glyph = false,
+  onOpen,
+}: {
+  track: TrackItem;
+  from: BrowseFrom;
+  glyph?: boolean;
+  /** Runs before the open, e.g. Browse search's tap analytics. */
+  onOpen?: () => void;
+}) {
   const { open, locked } = useOpenTrack(from);
   const tint = useCSSVariable(
     track.family === 'music' ? '--color-browse-music-foreground' : '--color-browse-audio-foreground',
@@ -42,7 +53,10 @@ export function TrackRow({ track, from, glyph = false }: { track: TrackItem; fro
       className="flex-row items-center gap-3 pl-4 active:opacity-60"
       accessibilityRole="button"
       accessibilityLabel={`${track.title}${subtitle ? `, ${subtitle}` : ''}`}
-      onPress={() => open(track)}
+      onPress={() => {
+        onOpen?.();
+        open(track);
+      }}
     >
       <View className="bg-surface-tertiary overflow-hidden rounded-lg" style={{ width: THUMB, height: THUMB }}>
         <Image source={imageSource(track.thumbUrl)} style={{ width: THUMB, height: THUMB }} />

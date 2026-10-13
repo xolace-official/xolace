@@ -146,7 +146,30 @@ describe("library.search.searchCatalogue", () => {
       support: [],
       music: [],
       places: [],
+      needSomeone: false,
     });
+  });
+
+  it("flags a crisis-term query for the Need someone now? row and still returns its results", async () => {
+    const user = await asNewUser();
+    await user.root.run(async (ctx) => {
+      await ctx.db.insert("audio_tracks", track("m", "music", { sourceTags: ["hurt", "myself"] }));
+    });
+    const r = await user.t.query(api.library.search.searchCatalogue, { query: "Hurt  MYSELF" });
+    expect(r.needSomeone).toBe(true);
+    expect(r.music.map((t) => t.slug)).toEqual(["m"]);
+    expect((await user.t.query(api.library.search.searchCatalogue, { query: "self-harm" })).needSomeone).toBe(true);
+    expect((await user.t.query(api.library.search.searchCatalogue, { query: "suicidal" })).needSomeone).toBe(true);
+    for (const query of ["suicide?", "i want to die.", "kms"]) {
+      expect((await user.t.query(api.library.search.searchCatalogue, { query })).needSomeone).toBe(true);
+    }
+  });
+
+  it("does not flag a query that only contains a crisis term inside another word", async () => {
+    const user = await asNewUser();
+    for (const query of ["piano", "die hard", "skill myself"]) {
+      expect((await user.t.query(api.library.search.searchCatalogue, { query })).needSomeone).toBe(false);
+    }
   });
 });
 

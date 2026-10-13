@@ -7,6 +7,7 @@ import { activeTopics, familyValidator, thumbUrlFor, toTrackItem, trackItemValid
 import { cardItemValidator, coverOf, toListItem } from "./entries";
 import { withCardSignals } from "./reads";
 import { asWords } from "./searchText";
+import { isCrisisQuery } from "./crisisTerms";
 
 /**
  * Browse search (#549, #550, CONTEXT.md "Browse search"). Lantern entries and
@@ -85,7 +86,8 @@ const placeValidator = v.object({
 });
 
 /**
- * The Support audio, Music, and Hubs & topics sections. Hubs and topics are
+ * The Support audio, Music, and Hubs & topics sections, plus whether the query
+ * gets the Need someone now? row (#552). Hubs and topics are
  * small, bounded tables, so they're matched in memory on title — a topic only
  * while it has an active track (the topic grid's own rule).
  */
@@ -95,11 +97,13 @@ export const searchCatalogue = query({
     support: v.array(trackItemValidator),
     music: v.array(trackItemValidator),
     places: v.array(placeValidator),
+    /** The query matched a crisis term: show the Need someone now? row (#552). */
+    needSomeone: v.boolean(),
   }),
   handler: async (ctx, args) => {
     await requireAuth(ctx);
     const text = queryWords(args.query);
-    if (!text) return { support: [], music: [], places: [] };
+    if (!text) return { support: [], music: [], places: [], needSomeone: false };
     // Every query word somewhere in the title, any order; a title that starts
     // with the query ranks first.
     const words = text.split(/\s+/);
@@ -127,6 +131,7 @@ export const searchCatalogue = query({
           .filter((t) => matches(t.title))
           .map(async (t) => ({ kind: "topic" as const, slug: t.slug, title: t.title, imageUrl: await thumbUrlFor(t.thumbKey) })),
       ])).sort((a, b) => rank(a.title) - rank(b.title)),
+      needSomeone: isCrisisQuery(text),
     };
   },
 });

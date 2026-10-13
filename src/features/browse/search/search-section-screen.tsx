@@ -2,7 +2,7 @@
  * A Browse search section's See all (#551, `search?section=…&q=…`): every
  * match for that query, in the rows Browse already uses. Lantern, Support
  * audio and Music page in on scroll; Hubs & topics is a small bounded list,
- * so it shows whole.
+ * so it shows whole. Taps report only section and position (#552).
  */
 import type { PaginationStatus } from 'convex/browser';
 import { usePaginatedQuery, useQuery } from 'convex/react';
@@ -16,6 +16,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { TrackRow } from '@/src/features/browse/components/track-row';
 import { useMiniPlayerInset } from '@/src/features/browse/now-playing/now-playing-store';
 import { PlaceRow } from '@/src/features/browse/search/place-row';
+import { useSearchTap } from '@/src/features/browse/search/search-analytics';
 import { SECTION_TITLE, type SearchSection } from '@/src/features/browse/search/search-sections';
 import { EntryRow } from '@/src/features/library/home/entry-cards';
 import { RowsSkeleton } from '@/src/features/library/skeletons';
@@ -32,14 +33,14 @@ function Paged<T extends { _id: string }>({
     isLoading: boolean;
     loadMore: (n: number) => void;
   };
-  row: (item: T) => ReactElement;
+  row: (item: T, position: number) => ReactElement;
 }) {
   const playerInset = useMiniPlayerInset();
   if (status === 'LoadingFirstPage') return <RowsSkeleton count={4} />;
   return (
     <LegendList
       data={results}
-      renderItem={({ item }) => row(item)}
+      renderItem={({ item, index }) => row(item, index + 1)}
       keyExtractor={(item) => item._id}
       estimatedItemSize={80}
       onEndReached={status === 'CanLoadMore' ? () => loadMore(PAGE_SIZE) : undefined}
@@ -53,21 +54,24 @@ function Paged<T extends { _id: string }>({
 }
 
 function Entries({ query }: { query: string }) {
+  const tap = useSearchTap('see_all');
   const page = usePaginatedQuery(api.library.search.searchEntriesPage, { query }, { initialNumItems: PAGE_SIZE });
-  return <Paged page={page} row={(e) => <EntryRow entry={e} from="search" />} />;
+  return <Paged page={page} row={(e, i) => <EntryRow entry={e} from="search" onOpen={tap('lantern', i)} />} />;
 }
 
 function Tracks({ query, family }: { query: string; family: 'support' | 'music' }) {
+  const tap = useSearchTap('see_all');
   const page = usePaginatedQuery(
     api.library.search.searchTracksPage,
     { query, family },
     { initialNumItems: PAGE_SIZE },
   );
-  return <Paged page={page} row={(t) => <TrackRow track={t} from="search" />} />;
+  return <Paged page={page} row={(t, i) => <TrackRow track={t} from="search" onOpen={tap(family, i)} />} />;
 }
 
 function Places({ query }: { query: string }) {
   const playerInset = useMiniPlayerInset();
+  const tap = useSearchTap('see_all');
   const places = useQuery(api.library.search.searchCatalogue, {
     query,
   })?.places;
@@ -80,7 +84,7 @@ function Places({ query }: { query: string }) {
       {places === undefined ? (
         <RowsSkeleton count={4} />
       ) : (
-        places.map((p) => <PlaceRow key={`${p.kind}:${p.slug}`} place={p} />)
+        places.map((p, i) => <PlaceRow key={`${p.kind}:${p.slug}`} place={p} onOpen={tap('places', i + 1)} />)
       )}
     </ScrollView>
   );
