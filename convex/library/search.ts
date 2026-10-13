@@ -16,7 +16,8 @@ import { asWords } from "./searchText";
  */
 
 const MAX_QUERY = 100;
-const MAX_RESULTS = 20;
+// The results screen shows 5 per section; the 6th only tells it to offer See all.
+const MAX_RESULTS = 6;
 
 const queryWords = (query: string) => asWords(query.slice(0, MAX_QUERY));
 
