@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { SymbolView } from 'expo-symbols';
 import { useThemeColor } from 'heroui-native';
+import { usePostHog } from 'posthog-react-native';
 import { Pressable, View } from 'react-native';
 
 import { AppText } from '@/src/components/shared/app-text';
@@ -11,7 +12,7 @@ import { useAccessibilityInfo } from '@/src/helpers/hooks/use-accessability-info
 import { playSoftPress } from '@/src/lib/haptics';
 import { imageSource } from '@/src/lib/image-source';
 import { cn } from '@/src/lib/utils';
-import { clearNowPlaying, useNowPlaying, useNowPlayingPlayback } from '@/src/features/browse/now-playing/now-playing-store';
+import { clearNowPlaying, togglePlayback, useNowPlaying, useNowPlayingPlayback } from '@/src/features/browse/now-playing/now-playing-store';
 
 // 32pt art inside the 48pt capsule, as Apple Music measures it.
 const ART = { width: 32, height: 32, borderRadius: 5, borderCurve: 'continuous' } as const;
@@ -26,6 +27,7 @@ export function MiniPlayerAccessory() {
   const placement = NativeTabs.BottomAccessory.usePlacement();
   const np = useNowPlaying();
   const p = useNowPlayingPlayback();
+  const posthog = usePostHog();
   const [foreground, muted] = useThemeColor(['foreground', 'muted']);
   // Under Reduce Transparency the bar's glass goes flat; give the content a solid fill.
   const { reduceTransparencyEnabled } = useAccessibilityInfo();
@@ -41,7 +43,7 @@ export function MiniPlayerAccessory() {
   };
   const toggle = () => {
     playSoftPress();
-    p.toggle();
+    togglePlayback(p, posthog);
   };
   const dismiss = () => {
     playSoftPress();

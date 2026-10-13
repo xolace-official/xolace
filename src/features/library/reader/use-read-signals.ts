@@ -90,12 +90,15 @@ export function useReadSignals({
   const isPreview = useIsPreview();
 
   // Every way in sets `from` (shared links too); missing means a link forgot it.
+  // Once per entry, counted when a preview becomes the real reader.
+  const trackedFor = useRef<EntryId | null>(null);
   useEffect(() => {
-    if (isPreview) return;
+    if (isPreview || trackedFor.current === entryId) return;
+    trackedFor.current = entryId;
     trackLibrary(posthog, 'library_entry_opened', { slug, from: from ?? 'unknown' });
-    // Once per entry: slug/from/posthog are fixed for a mounted reader.
+    // slug/from/posthog are fixed for a mounted reader.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entryId]);
+  }, [entryId, isPreview]);
 
   // The view: the server counts only the first open.
   const openedFor = useRef<EntryId | null>(null);

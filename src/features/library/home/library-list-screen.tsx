@@ -6,7 +6,7 @@
 import { useQuery } from 'convex/react';
 import { Stack, useIsPreview } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 
 import { api } from '@/convex/_generated/api';
@@ -74,14 +74,16 @@ export function LibraryListScreen({ by }: { by: ListBy }) {
   const key = 'hub' in by ? by.hub : 'kind' in by ? by.kind : by.subject;
   const isPreview = useIsPreview(); // a long-press preview isn't an open
 
+  const trackedFor = useRef<string | null>(null);
   useEffect(() => {
-    if (isPreview) return;
+    if (isPreview || trackedFor.current === key) return;
+    trackedFor.current = key;
     if ('hub' in by) trackLibrary(posthog, 'library_hub_opened', { hub: by.hub });
     else if ('kind' in by) trackLibrary(posthog, 'library_kind_opened', { kind: by.kind });
     else trackLibrary(posthog, 'library_subject_opened', { subject: by.subject });
-    // Once per list, not per render of the `by` object.
+    // Once per list, not per render of the `by` object; a preview counts once it becomes the real screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, isPreview]);
 
   return (
     <>

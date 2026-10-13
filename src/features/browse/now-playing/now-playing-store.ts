@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
+import type { PostHog } from 'posthog-react-native';
 import type { Id } from '@/convex/_generated/dataModel';
 import type { BrowseFrom } from '@/src/features/browse/use-open-track';
 import type { BoundTrack } from '@/src/features/browse/use-track-playback';
@@ -75,11 +76,16 @@ export function publishPlayback(next: Playback | null) {
   emit();
 }
 
-/** True the first time it's called for the loaded track. */
-export function claimFirstPlay() {
-  if (played) return false;
-  played = true;
-  return true;
+/**
+ * Play/pause for every control (player, mini-player): the first start of the
+ * loaded track records `browse_track_played`, whichever control started it.
+ */
+export function togglePlayback(p: Playback, posthog: PostHog) {
+  if (!p.isPlaying && p.track && current?.from && !played) {
+    played = true;
+    posthog.capture('browse_track_played', { slug: current.slug, family: p.track.family, from: current.from });
+  }
+  p.toggle();
 }
 
 export const useNowPlaying = () => useSyncExternalStore(subscribe, getCurrent, getCurrent);

@@ -13,9 +13,9 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { type BrowseFrom, FAMILY_LABEL } from "@/src/features/browse/components/track-row";
 import {
-  claimFirstPlay,
   clearNowPlaying,
   setNowPlaying,
+  togglePlayback,
   useNowPlayingPlayback,
 } from "@/src/features/browse/now-playing/now-playing-store";
 import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
@@ -87,10 +87,7 @@ function Player() {
 
   const toggle = () => {
     playSoftPress();
-    if (!p.isPlaying && track && from && claimFirstPlay()) {
-      posthog.capture("browse_track_played", { slug, family: track.family, from });
-    }
-    p.toggle();
+    togglePlayback(p, posthog);
   };
 
   return (
