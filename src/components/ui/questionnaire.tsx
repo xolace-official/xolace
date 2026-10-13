@@ -794,7 +794,7 @@ function QuestionnaireBody({
     if (!node) return;
     const tag = findNodeHandle(node);
     if (tag != null) AccessibilityInfo.setAccessibilityFocus(tag);
-  }, [activeName]);
+  }, [activeName, nav.navigated]);
 
   const onPaneLayout = useCallback(
     (event: LayoutChangeEvent) => {

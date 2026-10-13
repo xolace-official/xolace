@@ -1,11 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 
-// The modules under test are pure, but they sit in files that import the Clerk
-// and Sentry native SDKs at module scope.
-vi.mock('@clerk/expo', () => ({ useAuth: () => ({}) }));
-vi.mock('@sentry/react-native', () => ({ captureMessage: () => {} }));
-vi.mock('convex/react', () => ({ useConvexAuth: () => ({}) }));
-
 import { desyncRecovery } from './auth-sync-guard';
 import {
   getReauthEpoch,
@@ -13,6 +7,12 @@ import {
   sessionIdWithEpoch,
   subscribeEpoch,
 } from './use-resilient-clerk-auth';
+
+// The modules under test are pure, but they sit in files that import the Clerk
+// and Sentry native SDKs at module scope.
+vi.mock('@clerk/expo', () => ({ useAuth: () => ({}) }));
+vi.mock('@sentry/react-native', () => ({ captureMessage: () => {} }));
+vi.mock('convex/react', () => ({ useConvexAuth: () => ({}) }));
 
 /**
  * The bug this replaced: a mintable token meant "keep the session and let Convex

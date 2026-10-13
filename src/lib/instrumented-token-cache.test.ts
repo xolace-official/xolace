@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { instrumentedTokenCache } from './instrumented-token-cache';
+
 /** Stands in for expo-secure-store; tests can drop a key to simulate a loss. */
 const store = new Map<string, string>();
 
@@ -17,8 +19,6 @@ vi.mock('@sentry/react-native', () => ({
   addBreadcrumb: () => {},
   captureException: () => {},
 }));
-
-import { instrumentedTokenCache } from './instrumented-token-cache';
 
 const cache = instrumentedTokenCache!;
 const KEY = '__clerk_client_jwt';
