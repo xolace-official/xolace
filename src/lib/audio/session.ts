@@ -38,6 +38,14 @@ export function claimAudioFocus(owner: RefObject<unknown>, pause: () => void) {
   active = { owner, pause };
 }
 
+/**
+ * A hook going away drops focus it still holds, so nobody later "pauses" a
+ * released player. No epoch bump: nothing new is audible.
+ */
+export function releaseAudioFocus(owner: RefObject<unknown>) {
+  if (active?.owner === owner) active = null;
+}
+
 /** Recorders: silence whatever is playing without taking focus themselves. */
 export function yieldAudioFocus() {
   try {

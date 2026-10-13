@@ -3,7 +3,11 @@ import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
-import { claimAudioSession } from '@/src/lib/audio/session';
+import {
+  claimAudioSession,
+  holdsAudioFocus,
+  releaseAudioFocus,
+} from '@/src/lib/audio/session';
 
 type UseMirrorAudioReturn = {
   isReady: boolean;
@@ -37,9 +41,16 @@ export function useMirrorAudio(
   useEffect(() => {
     if (!awaitingFirstPlay.current || !status.isLoaded) return;
     awaitingFirstPlay.current = false;
+    let cancelled = false;
     claimAudioSession(focus, () => player.pause())
-      .then(() => player.play())
+      .then(() => {
+        if (!cancelled && holdsAudioFocus(focus)) player.play();
+      })
       .catch((e) => console.error('[useMirrorAudio] first play failed:', e));
+    return () => {
+      cancelled = true;
+      releaseAudioFocus(focus);
+    };
   }, [status.isLoaded, player]);
 
   const toggle = async () => {

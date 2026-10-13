@@ -7,7 +7,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 import { api } from '@/convex/_generated/api';
 import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlement';
-import { claimAudioSession } from '@/src/lib/audio/session';
+import {
+  claimAudioSession,
+  holdsAudioFocus,
+  releaseAudioFocus,
+} from '@/src/lib/audio/session';
 import { useVentRecorder } from '@/src/features/vent/hooks/use-vent-recorder';
 import {
   playAffirmativePress,
@@ -115,9 +119,16 @@ export function useVentFlow(): UseVentFlowReturn {
   useEffect(() => {
     if (state !== 'heard' || !audioUrl) return;
     player.replace({ uri: audioUrl });
+    let cancelled = false;
     claimAudioSession(focus, () => player.pause())
-      .then(() => player.play())
+      .then(() => {
+        if (!cancelled && holdsAudioFocus(focus)) player.play();
+      })
       .catch((err) => console.error('[vent-flow] TTS playback failed:', err));
+    return () => {
+      cancelled = true;
+      releaseAudioFocus(focus);
+    };
   }, [state, audioUrl, player]);
 
   // Advance to 'gone' once TTS finishes
