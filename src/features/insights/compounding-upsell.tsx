@@ -18,7 +18,7 @@ import { usePaywall } from "@/src/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/src/lib/haptics";
 import { DOMAIN_META } from "@/src/features/insights/domains";
-import { GlassSurface } from "@/src/features/insights/glass";
+import { GlassSurface } from "@/src/components/shared/glass-surface";
 
 export type Upsell = NonNullable<FunctionReturnType<typeof api.compounding.upsell.get>>;
 

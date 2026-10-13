@@ -6,6 +6,7 @@ import {
 } from 'expo-speech-recognition';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
+import { yieldAudioFocus } from '@/src/lib/audio/session';
 
 export function useVoiceInput() {
   const [isRecording, setIsRecording] = useState(false);
@@ -65,6 +66,8 @@ export function useVoiceInput() {
       );
     }
 
+    // Recognition sets its own session, so it yields the Browse track itself.
+    yieldAudioFocus();
     ExpoSpeechRecognitionModule.start({
       lang: 'en-US',
       interimResults: true,

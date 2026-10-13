@@ -1,5 +1,7 @@
 import { Stack } from "expo-router";
+import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
 import { AppPresence } from "@/src/providers/app-presence";
+import { NowPlayingHost } from "@/src/features/browse/now-playing/now-playing-host";
 import { useNotifications } from "@/src/lib/use-notifications";
 import {
   StreamChatProvider,
@@ -7,6 +9,8 @@ import {
 } from "@/src/features/xolacer-chat/providers/stream-chat-provider";
 import { UnreadIconBadge } from "@/src/features/xolacer-chat/components/unread-icon-badge";
 import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { isLiquidGlassAvailable } from "expo-glass-effect";
+import { useThemeColor } from "heroui-native";
 
 /**
  * Provides the navigation layout used by protected routes.
@@ -56,6 +60,17 @@ export default function ProtectedLayout() {
   // usePostHogIdentity is hoisted to the root — it must run during intake.
   useNotifications();
   const reducedMotion = useEffectiveReducedMotion();
+  const background = useThemeColor("background");
+  // Small native sheets sized to their rows. iOS 26 paints its own glass behind
+  // a transparent screen (tinted to the app theme by NavThemeProvider's
+  // appearance sync); iOS 18 and Android show transparent literally, so they
+  // get the theme fill.
+  const fitSheetOptions = {
+    presentation: "formSheet",
+    sheetAllowedDetents: "fitToContents",
+    sheetGrabberVisible: true,
+    contentStyle: isLiquidGlassAvailable() ? undefined : { backgroundColor: background },
+  } as const;
 
   return (
     // Above the Stack so the message overlay can lay itself out against the
@@ -65,7 +80,15 @@ export default function ProtectedLayout() {
         {/* Renders nothing — it is here, above the Stack, so presence keeps
             reporting whichever screen the user is on. */}
         <AppPresence />
+        {/* The Browse track's audio, outliving the player screen (S4). */}
+        <NowPlayingHost />
         <UnreadIconBadge />
+        {/* Points Reanimated's "System" at the in-app tri-state, so every
+            withSpring/withTiming/entering that doesn't opt out follows it, not
+            just the OS flag. Here, not the root: preferences.get needs auth. */}
+        <ReducedMotionConfig
+          mode={reducedMotion ? ReduceMotion.Always : ReduceMotion.Never}
+        />
         <Stack screenOptions={SCREEN_OPTIONS}>
           <Stack.Screen name="index" />
           <Stack.Screen name="(tabs)" options={NO_GESTURE} />
@@ -102,6 +125,12 @@ export default function ProtectedLayout() {
           <Stack.Screen name="xolacer-setup" />
           <Stack.Screen name="xolacer-edit" options={EDIT_PROFILE_OPTIONS} />
           <Stack.Screen name="rate/[conversationId]" options={RATE_OPTIONS} />
+          <Stack.Screen name="report-reflection" options={fitSheetOptions} />
+          {/* The reader stays undimmed behind it, so mode and size changes show on the page live. */}
+          <Stack.Screen
+            name="reader-appearance"
+            options={{ ...fitSheetOptions, sheetLargestUndimmedDetentIndex: "last" }}
+          />
         </Stack>
       </StreamChatProvider>
     </StreamOverlayProvider>

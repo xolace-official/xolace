@@ -7,7 +7,7 @@
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { useConvex, useConvexAuth, useMutation, useQuery } from 'convex/react';
-import { useLocalSearchParams } from 'expo-router';
+import { useIsPreview, useLocalSearchParams } from 'expo-router';
 import { usePostHog } from 'posthog-react-native';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type Animated from 'react-native-reanimated';
@@ -86,24 +86,30 @@ export function useReadSignals({
   // A resumed app can run the reader while Convex waits on Clerk for a fresh
   // token (#472): writes wait for auth, and a flip back re-sends what didn't land.
   const { isAuthenticated } = useConvexAuth();
+  // A long-press preview mounts the real reader: it leaves nothing behind.
+  const isPreview = useIsPreview();
 
   // Every way in sets `from` (shared links too); missing means a link forgot it.
+  // Once per entry, counted when a preview becomes the real reader.
+  const trackedFor = useRef<EntryId | null>(null);
   useEffect(() => {
+    if (isPreview || trackedFor.current === entryId) return;
+    trackedFor.current = entryId;
     trackLibrary(posthog, 'library_entry_opened', { slug, from: from ?? 'unknown' });
-    // Once per entry: slug/from/posthog are fixed for a mounted reader.
+    // slug/from/posthog are fixed for a mounted reader.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entryId]);
+  }, [entryId, isPreview]);
 
   // The view: the server counts only the first open.
   const openedFor = useRef<EntryId | null>(null);
   useEffect(() => {
-    if (openedFor.current === entryId || !isAuthenticated) return;
+    if (isPreview || openedFor.current === entryId || !isAuthenticated) return;
     openedFor.current = entryId;
     record({ entryId, opened: true }).catch((e) => {
       openedFor.current = null;
       logDropped(e);
     });
-  }, [record, entryId, isAuthenticated]);
+  }, [record, entryId, isAuthenticated, isPreview]);
 
   useAnimatedReaction(
     () => scrollY.get() >= endAt,
@@ -116,18 +122,18 @@ export function useReadSignals({
   // Finished once the end was reached and the dwell has run, whichever comes last.
   const finished = state?.finished;
   useEffect(() => {
-    if (!reachedEnd || finished !== false || !isAuthenticated) return;
+    if (isPreview || !reachedEnd || finished !== false || !isAuthenticated) return;
     const wait = openedAt + DWELL_SHARE * readMin * 60_000 - Date.now();
     const t = setTimeout(() => record({ entryId, finished: true }).catch(logDropped), Math.max(wait, 0));
     return () => clearTimeout(t);
-  }, [reachedEnd, finished, isAuthenticated, openedAt, readMin, record, entryId]);
+  }, [reachedEnd, finished, isAuthenticated, isPreview, openedAt, readMin, record, entryId]);
 
   // Seen flip to finished while open (read or listened), not already finished on arrival.
   const wasFinished = useRef(finished);
   useEffect(() => {
-    if (wasFinished.current === false && finished === true) trackLibrary(posthog, 'library_entry_finished', { slug });
+    if (!isPreview && wasFinished.current === false && finished === true) trackLibrary(posthog, 'library_entry_finished', { slug });
     wasFinished.current = finished;
-  }, [finished, posthog, slug]);
+  }, [finished, posthog, slug, isPreview]);
 
   // A read twig is tended by the finish alone (reading or listening), once.
   // A rejection frees it to try again when the connection comes back, a few times at most.
@@ -142,7 +148,7 @@ export function useReadSignals({
   const tended = useRef(false);
   const tendAttempts = useRef(0);
   useEffect(() => {
-    if (!stepId || finished !== true || tended.current || !isWebSocketConnected || !isAuthenticated) return;
+    if (isPreview || !stepId || finished !== true || tended.current || !isWebSocketConnected || !isAuthenticated) return;
     if (tendAttempts.current >= TEND_ATTEMPTS) return;
     tended.current = true;
     tendAttempts.current += 1;
@@ -150,7 +156,7 @@ export function useReadSignals({
       tended.current = false;
       console.error('[useReadSignals] completeStep failed:', e);
     });
-  }, [stepId, finished, completeStep, isWebSocketConnected, isAuthenticated]);
+  }, [stepId, finished, completeStep, isWebSocketConnected, isAuthenticated, isPreview]);
 
   // Resume once, as soon as both the saved position and the layout are in.
   const restored = useRef(false);
@@ -173,11 +179,11 @@ export function useReadSignals({
       // so `isAuthenticated` is stale here; ask the client. Unmounted, there's no later
       // to retry in, so that position is dropped. `sync` is @internal to convex/react (1.45).
       const { sync } = convex as unknown as { sync: { hasAuth(): boolean } };
-      if (!restored.current || maxRef.current <= 0 || !sync.hasAuth()) return;
+      if (isPreview || !restored.current || maxRef.current <= 0 || !sync.hasAuth()) return;
       const at = scrollY.get() / maxRef.current;
       record({ entryId, position: at >= RESUME_CEILING ? 0 : at }).catch(logDropped);
     },
-    [record, entryId, scrollY, convex],
+    [record, entryId, scrollY, convex, isPreview],
   );
 
   return state;

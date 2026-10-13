@@ -13,6 +13,8 @@
  */
 import { api } from '@/convex/_generated/api';
 import type { FunctionReturnType } from 'convex/server';
+import { Link, router, Stack } from 'expo-router';
+import { useIsFocused } from 'expo-router/react-navigation';
 import { useThemeColor } from 'heroui-native';
 import { useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -29,18 +31,17 @@ import { AppText } from '@/src/components/shared/app-text';
 import { AX_FONT_SCALE } from '@/src/features/library/home/entry-cards';
 import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 import { useAppStore } from '@/src/store/store';
-import { AaSheet } from './aa-sheet';
-import { AudioDock, BAR_MAX_SCALE, ListenPill } from './audio-dock';
-import { BackToTop } from './back-to-top';
-import { EndOfRead } from './end-of-read';
-import { ContentNote, FireDim, HelplineLink, ReflectOnThis, ShareButton } from './reader-extras';
-import { ReaderPageScope } from './reader-page';
-import { AaButton, BackButton, CoverPhoto, ReaderBody, ReaderTitle, SaveButton, SourceCredit } from './reader-parts';
-import { READING_MODES, useReadingFonts } from './reading-mode';
-import { EntryCredits } from './entry-credits';
-import { useEntryAudio } from './use-entry-audio';
-import { useReadSignals } from './use-read-signals';
-import { useMarkdownStyle } from './use-markdown-style';
+import { AudioDock, BAR_MAX_SCALE, ListenPill } from '@/src/features/library/reader/audio-dock';
+import { BackToTop } from '@/src/features/library/reader/back-to-top';
+import { EndOfRead } from '@/src/features/library/reader/end-of-read';
+import { ContentNote, FireDim, HelplineLink, ReflectOnThis, ShareButton } from '@/src/features/library/reader/reader-extras';
+import { ReaderPageScope } from '@/src/features/library/reader/reader-page';
+import { AaButton, BackButton, CoverPhoto, ReaderBody, ReaderTitle, SaveButton, SourceCredit, useSaveToggle } from '@/src/features/library/reader/reader-parts';
+import { READING_MODES, useReadingFonts } from '@/src/features/library/reader/reading-mode';
+import { EntryCredits } from '@/src/features/library/reader/entry-credits';
+import { useEntryAudio } from '@/src/features/library/reader/use-entry-audio';
+import { useReadSignals } from '@/src/features/library/reader/use-read-signals';
+import { useMarkdownStyle } from '@/src/features/library/reader/use-markdown-style';
 
 export type ReaderEntry = NonNullable<FunctionReturnType<typeof api.library.entries.getEntry>>;
 
@@ -52,19 +53,19 @@ const COVER_BAND = 72;
 /** The reader on its reading mode's page (#408); the Aa sheet sits outside it, on the app theme. */
 export function ReaderScreen({ entry }: { entry: ReaderEntry }) {
   const mode = useAppStore((s) => s.readingMode);
-  const [aaOpen, setAaOpen] = useState(false);
   return (
-    <>
-      <ReaderPageScope page={READING_MODES[mode].page}>
-        <ReaderView entry={entry} onOpenAa={() => setAaOpen(true)} />
-      </ReaderPageScope>
-      <AaSheet isOpen={aaOpen} onClose={() => setAaOpen(false)} />
-    </>
+    <ReaderPageScope page={READING_MODES[mode].page}>
+      <ReaderView entry={entry} onOpenAa={() => router.navigate('/reader-appearance')} />
+    </ReaderPageScope>
   );
 }
 
 function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => void }) {
   const insets = useSafeAreaInsets();
+  // The Aa sheet leaves the reader undimmed and touchable (its detent setting);
+  // the bar's buttons and the pull-down dismiss go inert while it is up so the
+  // reader can't close under it.
+  const focused = useIsFocused();
   const { height: screenH, width, fontScale } = useWindowDimensions();
   const reduced = useEffectiveReducedMotion();
   const ax = fontScale >= AX_FONT_SCALE;
@@ -98,6 +99,7 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
   const signals = useReadSignals({ entryId: entry._id, slug: entry.slug, readMin: entry.readMin, scrollY: y, scrollRef, maxScroll, endAt });
   const toTop = () => scrollRef.current?.scrollTo({ y: 0, animated: !reduced });
   const resumeAt = signals?.position ? signals.position * maxScroll : 0;
+  const save = useSaveToggle(entry._id, signals?.saved ?? false);
   const title = (
     <ReaderTitle
       entry={entry}
@@ -133,10 +135,13 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
 
   return (
     <View className="flex-1" style={{ backgroundColor: page }} onLayout={(e) => setViewH(e.nativeEvent.layout.height)}>
-      {/* Decorative: the cover is hidden from screen readers (#400). */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        {photoEl}
-      </View>
+      <Stack.Screen options={{ gestureEnabled: focused }} />
+      {/* Decorative: the cover is hidden from screen readers (#400). Cover-sized so a photo card zooms into the photo. */}
+      <Link.AppleZoomTarget>
+        <View className="absolute inset-x-0 top-0" style={{ height: coverH }} pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          {photoEl}
+        </View>
+      </Link.AppleZoomTarget>
 
       <Animated.ScrollView
         ref={scrollRef}
@@ -171,26 +176,25 @@ function ReaderView({ entry, onOpenAa }: { entry: ReaderEntry; onOpenAa: () => v
         </View>
       </Animated.ScrollView>
 
-      {/* The bar window: same photo, same offset, clipped to the bar. */}
-      <View pointerEvents="box-none" className="absolute inset-x-0 top-0 overflow-hidden" style={{ height: barH }}>
-        <View pointerEvents="none" style={StyleSheet.absoluteFill} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          {photoEl}
-          <Animated.View style={[StyleSheet.absoluteFill, barShade]} className="bg-cover-scrim/35" />
-        </View>
-        <View className="flex-1 flex-row items-center gap-3 px-4" style={{ paddingTop: insets.top }}>
-          <BackButton onCover />
-          {/* A visual echo of the title: screen readers already have the heading. */}
-          <Animated.View className="flex-1" style={barTitle} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <AppText numberOfLines={1} maxFontSizeMultiplier={BAR_MAX_SCALE} className="font-semibold text-cover-ink">
-              {entry.title}
-            </AppText>
-          </Animated.View>
-          {signals && <SaveButton entryId={entry._id} saved={signals.saved} onCover />}
-          <ShareButton entry={entry} />
-          <AaButton onPress={onOpenAa} />
-        </View>
+      {/* The bar window: same photo, same offset, clipped to the bar. Decorative. */}
+      <View pointerEvents="none" className="absolute inset-x-0 top-0 overflow-hidden" style={{ height: barH }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        {photoEl}
+        <Animated.View style={[StyleSheet.absoluteFill, barShade]} className="bg-cover-scrim/35" />
         {/* Reading progress hairline. */}
-        <Animated.View style={[{ height: 2, transformOrigin: 'left' }, readBar]} className="bg-cover-ink/80" />
+        <Animated.View style={[{ height: 2, transformOrigin: 'left' }, readBar]} className="absolute inset-x-0 bottom-0 bg-cover-ink/80" />
+      </View>
+      {/* The controls sit outside the clip so a pressed glass button can swell past the bar's edge. */}
+      <View pointerEvents={focused ? 'box-none' : 'none'} className="absolute inset-x-0 top-0 flex-row items-center gap-3 px-4 pb-0.5" style={{ height: barH, paddingTop: insets.top }}>
+        <BackButton onCover />
+        {/* A visual echo of the title: screen readers already have the heading. */}
+        <Animated.View className="flex-1" style={barTitle} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          <AppText numberOfLines={1} maxFontSizeMultiplier={BAR_MAX_SCALE} className="font-semibold text-cover-ink">
+            {entry.title}
+          </AppText>
+        </Animated.View>
+        {signals && <SaveButton save={save} onCover />}
+        <ShareButton entry={entry} />
+        <AaButton onPress={onOpenAa} />
       </View>
 
       <FireDim />

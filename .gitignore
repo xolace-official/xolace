@@ -69,3 +69,9 @@ google-services-preview/
 /scripts/library/prod/media/
 /scripts/library/dev/research/
 /scripts/library/prod/research/
+# design-sync (generated/staged)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules

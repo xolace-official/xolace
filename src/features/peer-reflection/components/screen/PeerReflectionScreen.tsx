@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
@@ -14,8 +14,6 @@ import { PillButton } from "@/src/components/shared/pill-button";
 import { ReflectionCard } from "@/src/features/peer-reflection/components/reflection-card";
 import { usePathSession } from "@/src/features/sit-with-this/hooks/use-path-session";
 import { useSessionEndHref } from "@/src/features/kindling/use-session-end-href";
-import { ReportSheet } from "@/src/features/peer-reflection/components/report-sheet";
-import { Id } from "@/convex/_generated/dataModel";
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const EASE_INITIAL_FADE = { opacity: 0 };
@@ -103,42 +101,6 @@ export const PeerReflectionScreen = () => {
   );
 
   const toggleResonanceMutation = useMutation(api.reflections.toggleResonance);
-  const reportReflectionMutation = useMutation(api.reflections.reportReflection);
-
-  const [reportTarget, setReportTarget] = useState<Id<"reflections"> | null>(null);
-
-  const handleReport = async (reason: "offensive" | "self_harm" | "spam" | "other") => {
-    if (!reportTarget) return;
-    try {
-      const result = await reportReflectionMutation({ reflectionId: reportTarget, reason });
-      if (result?.rateLimited) {
-        toast.show({
-          label: "Too many reports",
-          description: "You've reported a lot recently. Try again later.",
-          variant: "default",
-        });
-      } else if (result?.alreadyReported) {
-        toast.show({
-          label: "Already reported",
-          description: "You've already flagged this reflection.",
-          variant: "default",
-        });
-      } else {
-        toast.show({
-          label: "Report received",
-          description: "Thanks. We'll review this.",
-          variant: "default",
-        });
-        posthog.capture('peer_reflection_reported', { reason });
-      }
-    } catch {
-      toast.show({
-        label: "Something went wrong",
-        description: "Try again in a moment.",
-        variant: "default",
-      });
-    }
-  };
 
   const handleDone = async () => {
     if (finishingRef.current) return;
@@ -223,7 +185,9 @@ export const PeerReflectionScreen = () => {
             index={i}
             resonanceCount={reflection.resonanceCount}
             resonated={!!resonatedMap?.[reflection._id]}
-            onRequestReport={() => setReportTarget(reflection._id)}
+            onRequestReport={() =>
+              router.push({ pathname: "/report-reflection", params: { reflectionId: reflection._id } })
+            }
             onToggleResonance={async () => {
               try {
                 const result = await toggleResonanceMutation({ reflectionId: reflection._id });
@@ -264,12 +228,6 @@ export const PeerReflectionScreen = () => {
           Long press any card to report
         </AppText>
       </EaseView>
-
-      <ReportSheet
-        isOpen={!!reportTarget}
-        onClose={() => setReportTarget(null)}
-        onSubmit={handleReport}
-      />
     </View>
   );
 };

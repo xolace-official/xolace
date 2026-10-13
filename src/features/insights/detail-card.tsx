@@ -11,7 +11,8 @@ import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { playSoftPress } from "@/src/lib/haptics";
-import { GlassSurface, TickGauge, gaugeSize } from "@/src/features/insights/glass";
+import { GlassSurface } from "@/src/components/shared/glass-surface";
+import { TickGauge, gaugeSize } from "@/src/features/insights/glass";
 import { DOMAIN_META, icon, subOf, toneOf, type DomainItem, type Insight, type Tone } from "@/src/features/insights/domains";
 import { SteadinessInsights } from "@/src/features/insights/steadiness-insights";
 import { TrendChip } from "@/src/features/insights/trend-chip";
@@ -37,7 +38,7 @@ export function DetailCard({ d, value, insights }: { d: DomainItem; value: numbe
             {baseline !== null ? ` · usually ${baseline}` : ""}
           </AppText>
         </View>
-        {d.trend != null && <TrendChip delta={d.trend} />}
+        {d.trend != null && <TrendChip delta={d.trend} since={d.trendSince} />}
       </View>
       <SteadinessInsights insights={insights} domain={d.domain} />
       {d.kindling && <KindlingRow />}

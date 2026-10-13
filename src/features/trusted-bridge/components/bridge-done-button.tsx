@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet } from "react-native";
-import { GlassView } from "expo-glass-effect";
+import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
 import { useThemeColor } from "heroui-native";
@@ -22,7 +22,20 @@ type Props = {
  */
 export function BridgeDoneButton({ onPress }: Props) {
   const foreground = useThemeColor("foreground") as string;
+  const glass = isLiquidGlassAvailable();
+  const body = (
+    <>
+      <SymbolView
+        name={{ ios: "checkmark", android: "check", web: "check" }}
+        size={14}
+        tintColor={foreground}
+      />
+      <AppText className="text-sm font-medium text-foreground">Done</AppText>
+    </>
+  );
 
+  // Glass path: the label sits inside the glass so every touch on the pill
+  // reaches it (its press swell), and nothing clips the swell.
   return (
     <EaseView initialAnimate={FROM} animate={TO} transition={ENTER}>
       <Pressable
@@ -31,30 +44,36 @@ export function BridgeDoneButton({ onPress }: Props) {
         accessibilityRole="button"
         accessibilityLabel="Done"
         accessibilityHint="Finish and return home"
-        className="flex-row items-center gap-1.5 h-10 px-4 border-foreground/16"
-        style={styles.button}
+        className={glass ? undefined : "flex-row items-center gap-1.5 h-10 px-4 border-foreground/16"}
+        style={glass ? undefined : styles.fallback}
       >
-        <GlassView glassEffectStyle="regular" style={styles.glass} isInteractive />
-        <SymbolView
-          name={{ ios: "checkmark", android: "check", web: "check" }}
-          size={14}
-          tintColor={foreground}
-        />
-        <AppText className="text-sm font-medium text-foreground">Done</AppText>
+        {glass ? (
+          <GlassView glassEffectStyle="regular" isInteractive style={styles.glass}>
+            {body}
+          </GlassView>
+        ) : (
+          body
+        )}
       </Pressable>
     </EaseView>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
+  fallback: {
     borderRadius: 20,
     borderWidth: 0.5,
     borderCurve: "continuous",
     overflow: "hidden",
   },
   glass: {
-    ...StyleSheet.absoluteFill,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    height: 40,
+    paddingHorizontal: 16,
     borderRadius: 20,
+    borderCurve: "continuous",
+    overflow: "visible",
   },
 });

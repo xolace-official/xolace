@@ -12,15 +12,16 @@ import { useCSSVariable } from 'uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { CoverImage } from '@/src/features/library/cover-image';
 import { cn } from '@/src/lib/utils';
-import { COVER_SCRIM } from './cover-palette';
-import { headerCredit, metaLabel, metaLine, prepareBody } from './reader-copy';
-import type { ReaderEntry } from './reader-screen';
-import { useRecord } from './use-read-signals';
+import { COVER_BUTTON, CoverGlass } from '@/src/features/library/reader/cover-glass';
+import { COVER_SCRIM } from '@/src/features/library/reader/cover-palette';
+import { headerCredit, metaLabel, metaLine, prepareBody } from '@/src/features/library/reader/reader-copy';
+import type { ReaderEntry } from '@/src/features/library/reader/reader-screen';
+import { logDropped, useRecord } from '@/src/features/library/reader/use-read-signals';
 
 const BACK_ICON = { ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' } as const;
 const AA_ICON = { ios: 'textformat.size', android: 'text_fields', web: 'text_fields' } as const;
-const SAVE_ICON = { ios: 'bookmark', android: 'bookmark_border', web: 'bookmark_border' } as const;
-const SAVED_ICON = { ios: 'bookmark.fill', android: 'bookmark_added', web: 'bookmark_added' } as const;
+export const SAVE_ICON = { ios: 'bookmark', android: 'bookmark_border', web: 'bookmark_border' } as const;
+export const SAVED_ICON = { ios: 'bookmark.fill', android: 'bookmark_added', web: 'bookmark_added' } as const;
 const SOURCE_ICON = { ios: 'building.columns', android: 'account_balance', web: 'account_balance' } as const;
 const XOLACE_LOGO = require('@/assets/images/icon.png');
 // Callouts arrive as quotes led by their kind in bold (`prepareBody`), so the kind is read first.
@@ -33,18 +34,16 @@ const goBack = () => (router.canGoBack() ? router.back() : router.replace('/(pro
 export function BackButton({ onCover = false }: { onCover?: boolean }) {
   const coverInk = String(useCSSVariable('--color-cover-ink'));
   const foreground = useThemeColor('foreground');
+  const icon = <SymbolView name={BACK_ICON} size={17} weight="semibold" tintColor={onCover ? coverInk : foreground} />;
   return (
     <Pressable
       onPress={goBack}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel="Back"
-      className={cn(
-        'h-10 w-10 items-center justify-center rounded-full active:opacity-60',
-        onCover ? 'bg-cover-scrim/30' : 'bg-surface-secondary',
-      )}
+      className={onCover ? COVER_BUTTON : 'h-10 w-10 items-center justify-center rounded-full bg-surface-secondary active:opacity-60'}
     >
-      <SymbolView name={BACK_ICON} size={17} weight="semibold" tintColor={onCover ? coverInk : foreground} />
+      {onCover ? <CoverGlass>{icon}</CoverGlass> : icon}
     </Pressable>
   );
 }
@@ -58,9 +57,11 @@ export function AaButton({ onPress }: { onPress: () => void }) {
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel="Reading appearance"
-      className="h-10 w-10 items-center justify-center rounded-full bg-cover-scrim/30 active:opacity-60"
+      className={COVER_BUTTON}
     >
-      <SymbolView name={AA_ICON} size={17} weight="semibold" tintColor={coverInk} />
+      <CoverGlass>
+        <SymbolView name={AA_ICON} size={17} weight="semibold" tintColor={coverInk} />
+      </CoverGlass>
     </Pressable>
   );
 }
@@ -69,31 +70,41 @@ export function AaButton({ onPress }: { onPress: () => void }) {
  * "I want this back" (#410): a plain toggle on the entry, same on the cards
  * and in the reader. On a cover photo it takes the fixed cover ink.
  */
-export function SaveButton({ entryId, saved, onCover = false }: { entryId: ReaderEntry['_id']; saved: boolean; onCover?: boolean }) {
+/**
+ * Cards' `saved` comes from list queries the optimistic update can't reach:
+ * hold the tapped value until the server answers, and take no second toggle.
+ * One per row, shared by every control that flips it (button, context menu).
+ */
+export function useSaveToggle(entryId: ReaderEntry['_id'], saved: boolean) {
   const record = useRecord();
-  // Cards' `saved` comes from list queries the optimistic update can't reach:
-  // hold the tapped value until the server answers, and take no second tap.
   const [pending, setPending] = useState<boolean | null>(null);
   const shown = pending ?? saved;
+  const toggle = () => {
+    if (pending !== null) return;
+    setPending(!shown);
+    record({ entryId, saved: !shown })
+      .catch(logDropped)
+      .finally(() => setPending(null));
+  };
+  return { shown, pending, toggle };
+}
+
+export function SaveButton({ save, onCover = false }: { save: ReturnType<typeof useSaveToggle>; onCover?: boolean }) {
+  const { shown, pending, toggle } = save;
   const coverInk = String(useCSSVariable('--color-cover-ink'));
   const foreground = useThemeColor('foreground');
+  const icon = <SymbolView name={shown ? SAVED_ICON : SAVE_ICON} size={17} weight="semibold" tintColor={onCover ? coverInk : foreground} />;
   return (
     <Pressable
       disabled={pending !== null}
-      onPress={() => {
-        setPending(!shown);
-        record({ entryId, saved: !shown }).finally(() => setPending(null));
-      }}
+      onPress={toggle}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel="Save"
       accessibilityState={{ selected: shown }}
-      className={cn(
-        'h-10 w-10 items-center justify-center rounded-full active:opacity-60',
-        onCover && 'bg-cover-scrim/30',
-      )}
+      className={onCover ? COVER_BUTTON : 'h-10 w-10 items-center justify-center rounded-full active:opacity-60'}
     >
-      <SymbolView name={shown ? SAVED_ICON : SAVE_ICON} size={17} weight="semibold" tintColor={onCover ? coverInk : foreground} />
+      {onCover ? <CoverGlass>{icon}</CoverGlass> : icon}
     </Pressable>
   );
 }

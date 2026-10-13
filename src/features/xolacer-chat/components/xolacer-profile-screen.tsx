@@ -11,6 +11,7 @@ import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { isSpecialty, specialtyListensTo } from '@/convex/lib/specialties';
 import { AppText } from '@/src/components/shared/app-text';
+import { TopBlur } from '@/src/components/shared/top-blur';
 import { playSoftPress } from '@/src/lib/haptics';
 import {
   declineCooldownActive,
@@ -20,14 +21,14 @@ import {
 } from '@/src/features/xolacer-chat/utils';
 import { formatMonthYear } from '@/src/features/xolacer-chat/format-time';
 import { useAskFlow } from '@/src/features/xolacer-chat/use-ask-flow';
-import { Fact } from './fact-row';
-import { XolacerMenu } from './xolacer-menu';
-import { XolacerAvatar } from './xolacer-avatar';
-import { ExpandableAvatar } from './expandable-avatar';
-import { PresenceDot } from './presence-dot';
-import { NewXolacerChip, RatingStars } from './rating-stars';
-import { SpecialtyChips } from './specialty-chips';
-import { XolacerPrimerSheet } from './xolacer-primer-sheet';
+import { Fact } from '@/src/features/xolacer-chat/components/fact-row';
+import { XolacerMenu } from '@/src/features/xolacer-chat/components/xolacer-menu';
+import { XolacerAvatar } from '@/src/features/xolacer-chat/components/xolacer-avatar';
+import { ExpandableAvatar } from '@/src/features/xolacer-chat/components/expandable-avatar';
+import { PresenceDot } from '@/src/features/xolacer-chat/components/presence-dot';
+import { NewXolacerChip, RatingStars } from '@/src/features/xolacer-chat/components/rating-stars';
+import { SpecialtyChips } from '@/src/features/xolacer-chat/components/specialty-chips';
+import { XolacerPrimerSheet } from '@/src/features/xolacer-chat/components/xolacer-primer-sheet';
 
 type Profile = NonNullable<FunctionReturnType<typeof api.xolacerChat.xolacerProfile>>;
 
@@ -227,6 +228,7 @@ function ProfileBody({
           </Block>
         </View>
       </ScrollView>
+      <TopBlur height={insets.top + 70} />
 
       <View
         className="gap-3 border-t border-border/40 px-6 pt-4"

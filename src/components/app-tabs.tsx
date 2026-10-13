@@ -3,6 +3,8 @@ import { useThemeColor } from 'heroui-native';
 import { playSoftPress } from '@/src/lib/haptics';
 import { useTabBarHidden } from '@/src/lib/tab-bar';
 import { useUnreadBadge } from '@/src/features/xolacer-chat/use-unread-badge';
+import { MiniPlayerAccessory } from '@/src/features/browse/now-playing/mini-player-accessory';
+import { useMiniPlayerShown } from '@/src/features/browse/now-playing/now-playing-store';
 
 /**
  * Tab surface — a sibling stack entry to the reflect (index) screen, not the
@@ -17,6 +19,7 @@ export default function AppTabs() {
   // Stream's total across every conversation — the same number the app icon
   // shows, so the two never disagree. Null (no chat yet) reads as nothing.
   const unread = useUnreadBadge();
+  const showPlayer = useMiniPlayerShown();
 
   const screenListeners = {
     tabPress: () => {
@@ -30,8 +33,14 @@ export default function AppTabs() {
       backgroundColor={background}
       tintColor={accent}
       disableTransparentOnScrollEdge
+      minimizeBehavior="onScrollDown"
       screenListeners={screenListeners}
     >
+      {showPlayer && (
+        <NativeTabs.BottomAccessory>
+          <MiniPlayerAccessory />
+        </NativeTabs.BottomAccessory>
+      )}
       <NativeTabs.Trigger name="discovery">
         <NativeTabs.Trigger.Icon
           sf={{ default: 'safari', selected: 'safari.fill' }}

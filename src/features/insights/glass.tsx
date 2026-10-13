@@ -1,8 +1,7 @@
-// Liquid-glass card and tick gauge, ported from sample-codes/clarity-main
-// (ui/glass-surface, session/tick-gauge) onto Xolace tokens (#491).
+// Tick gauge, ported from sample-codes/clarity-main (session/tick-gauge)
+// onto Xolace tokens (#491). GlassSurface lives in components/shared.
 import type { ReactNode } from "react";
-import { View, type ViewStyle } from "react-native";
-import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
+import { View } from "react-native";
 import Animated, {
   Extrapolation,
   interpolate,
@@ -11,40 +10,7 @@ import Animated, {
   type SharedValue,
 } from "react-native-reanimated";
 import Svg, { Line } from "react-native-svg";
-import { useAppTheme } from "@/src/context/app-theme-context";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-
-type SurfaceProps = { children?: ReactNode; radius?: number; className?: string; tint?: string };
-
-/**
- * Frosted surface; `tint` is a token name washed faintly into the glass.
- * Never put it under an animated opacity — the blur stops rendering.
- */
-export function GlassSurface({ children, radius = 32, className, tint }: SurfaceProps) {
-  const surface = useTokenColor("surface");
-  const tintColor = useTokenColor(tint ?? "surface");
-  const { isDark } = useAppTheme();
-  const shape: ViewStyle = { borderRadius: radius, borderCurve: "continuous", overflow: "hidden" };
-  // GlassView is third-party, so Uniwind ignores a className on it; style the inside instead.
-  const inner = <View className={className}>{children}</View>;
-  if (!isLiquidGlassAvailable()) {
-    return (
-      <View style={[shape, { backgroundColor: surface + "CC" }]}>
-        <View style={tint ? { backgroundColor: tintColor + "1A" } : undefined}>{inner}</View>
-      </View>
-    );
-  }
-  return (
-    // Follow the app's theme, not the OS: the two can disagree.
-    <GlassView
-      glassEffectStyle="regular"
-      colorScheme={isDark ? "dark" : "light"}
-      tintColor={tint ? tintColor + "33" : undefined}
-      style={[shape, { backgroundColor: surface + "40" }]}>
-      {inner}
-    </GlassView>
-  );
-}
 
 const AnimatedLine = Animated.createAnimatedComponent(Line);
 

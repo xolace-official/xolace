@@ -1,37 +1,28 @@
 import { Stack, useRouter } from 'expo-router';
-import { View } from 'react-native';
-import { SymbolView } from 'expo-symbols';
-import { PressableFeedback, useThemeColor } from 'heroui-native';
+import ArrowBack from '@expo/material-symbols/arrow_back.xml';
+import { playSoftPress } from '@/src/lib/haptics';
 import { useLargeHeaderOptions } from '@/src/lib/navigation-options';
 
-const BACK_ICON_NAME = { ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' } as const;
 const INDEX_OPTIONS = { title: 'Get Help Now' };
 
 export default function CrisisResourcesLayout() {
   const router = useRouter();
   const largeHeaderOptions = useLargeHeaderOptions();
-  const tintColor = useThemeColor('foreground') as string;
-
-  const renderBackButton = () => (
-    <PressableFeedback onPress={() => router.back()} hitSlop={8}>
-      <SymbolView
-        name={BACK_ICON_NAME}
-        size={20}
-        tintColor={tintColor}
-      />
-    </PressableFeedback>
-  );
-
-  const screenOptions = {
-    ...largeHeaderOptions,
-    headerLeft: renderBackButton,
-  };
 
   return (
-    <View className="flex-1 bg-background">
-      <Stack screenOptions={screenOptions}>
-        <Stack.Screen name="index" options={INDEX_OPTIONS} />
-      </Stack>
-    </View>
+    <Stack screenOptions={largeHeaderOptions}>
+      <Stack.Screen name="index" options={INDEX_OPTIONS}>
+        <Stack.Toolbar placement="left">
+          <Stack.Toolbar.Button
+            icon={process.env.EXPO_OS === 'ios' ? 'chevron.left' : ArrowBack}
+            accessibilityLabel="Back"
+            onPress={() => {
+              playSoftPress();
+              router.back();
+            }}
+          />
+        </Stack.Toolbar>
+      </Stack.Screen>
+    </Stack>
   );
 }

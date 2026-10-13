@@ -68,11 +68,11 @@ const PROCESSING_BREATH_PATTERN: Pattern = {
 export function useProcessingBreathHaptic(): () => void {
   // Passing `undefined` on web skips Pulsar's parse effect — there is no
   // native module to parse against, and `run()` would no-op the playback anyway.
-  const composer = usePatternComposer(isWeb ? undefined : PROCESSING_BREATH_PATTERN);
+  const { play } = usePatternComposer(isWeb ? undefined : PROCESSING_BREATH_PATTERN);
   // useCallback, not the compiler: the consumer holds this in a `deps: []`
   // effect, so identity stability is correctness here, not an optimization.
-  // `composer.play` is itself a `useCallback(..., [])` inside Pulsar.
-  return useCallback(() => run(() => composer.play()), [composer.play]);
+  // `play` is itself a `useCallback(..., [])` inside Pulsar.
+  return useCallback(() => run(() => play()), [play]);
 }
 
 export function playGentlePresence(): void {

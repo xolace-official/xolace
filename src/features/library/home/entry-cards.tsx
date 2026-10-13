@@ -4,19 +4,24 @@
  * `library/[slug]` (#407).
  */
 import type { FunctionReturnType } from 'convex/server';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
+import { usePostHog } from 'posthog-react-native';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
 
 import type { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
+import { cn } from '@/src/lib/utils';
 import { CoverImage } from '@/src/features/library/cover-image';
 import { facetLabel, readTimeLine } from '@/src/features/library/home/library-copy';
 import { COVER_SCRIM } from '@/src/features/library/reader/cover-palette';
 import { capitalise } from '@/src/features/library/reader/reader-copy';
-import { SaveButton } from '@/src/features/library/reader/reader-parts';
+import { SAVE_ICON, SAVED_ICON, SaveButton, useSaveToggle } from '@/src/features/library/reader/reader-parts';
+import { SHARE_ICON, shareEntry } from '@/src/features/library/reader/reader-extras';
+import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 import type { ReaderFrom } from '@/src/features/library/analytics';
 
 export type EntryItem = FunctionReturnType<typeof api.library.entries.listEntries>[number];
@@ -53,34 +58,45 @@ export function PhotoCard({
   label?: string;
 }) {
   const ax = useWindowDimensions().fontScale >= AX_FONT_SCALE;
+  const reduced = useEffectiveReducedMotion();
+  const posthog = usePostHog();
   return (
     <View style={{ width, minHeight: height }}>
       <Link href={href} asChild>
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel={label}
-          className="overflow-hidden bg-cover-scrim active:opacity-90"
-          style={{
-            width,
-            minHeight: height,
-            borderRadius: CARD_RADIUS,
-            borderCurve: 'continuous',
-          }}
-        >
-          <CoverImage uri={entry.coverUrl} thumbhash={entry.coverThumbhash} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
-          <LinearGradient
-            colors={COVER_SCRIM.colors}
-            locations={COVER_SCRIM.locations}
-            style={StyleSheet.absoluteFill}
-          />
-          <View className="flex-1 justify-end gap-2 p-5">
-            <AppText className="text-[12px] font-medium uppercase tracking-[1.5px] text-cover-ink/70">{kicker}</AppText>
-            <AppText className="text-[24px] font-bold leading-[29px] text-cover-ink" numberOfLines={ax ? undefined : 3}>
-              {entry.title}
-            </AppText>
-            <AppText className="text-[13px] text-cover-ink/75">{meta}</AppText>
-          </View>
-        </Pressable>
+        <Link.Trigger withAppleZoom={!reduced}>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={label}
+            className="overflow-hidden bg-cover-scrim active:opacity-90"
+            style={{
+              width,
+              minHeight: height,
+              borderRadius: CARD_RADIUS,
+              borderCurve: 'continuous',
+            }}
+          >
+            <CoverImage uri={entry.coverUrl} thumbhash={entry.coverThumbhash} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
+            <LinearGradient
+              colors={COVER_SCRIM.colors}
+              locations={COVER_SCRIM.locations}
+              style={StyleSheet.absoluteFill}
+            />
+            <View className="flex-1 justify-end gap-2 p-5">
+              <AppText className="text-[12px] font-medium uppercase tracking-[1.5px] text-cover-ink/70">{kicker}</AppText>
+              <AppText className="text-[24px] font-bold leading-[29px] text-cover-ink" numberOfLines={ax ? undefined : 3}>
+                {entry.title}
+              </AppText>
+              <AppText className="text-[13px] text-cover-ink/75">{meta}</AppText>
+            </View>
+          </Pressable>
+        </Link.Trigger>
+        <Link.Preview />
+        {/* No Save here: these entries don't carry `saved`. */}
+        <Link.Menu>
+          <Link.MenuAction icon={SHARE_ICON.ios} onPress={() => shareEntry(entry, posthog)}>
+            Share
+          </Link.MenuAction>
+        </Link.Menu>
       </Link>
       {entry.listenMin !== undefined && <HasAudio />}
     </View>
@@ -92,17 +108,22 @@ const PLAY = { ios: 'play.fill', android: 'play_arrow', web: 'play_arrow' } as c
 /** A mark, not a control: this entry has audio. Taps fall through to the card. */
 function HasAudio() {
   const coverInk = String(useCSSVariable('--color-cover-ink'));
+  const glass = isLiquidGlassAvailable();
   return (
     <View
       pointerEvents="none"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      className="absolute right-3 top-3 h-10 w-10 items-center justify-center rounded-full bg-cover-scrim/30"
+      className={cn('absolute right-3 top-3 h-10 w-10 items-center justify-center rounded-full', !glass && 'bg-cover-scrim/30')}
     >
+      {/* Over the photo, a fixed palette: dark clear glass, not the themed GlassSurface. */}
+      {glass && <GlassView glassEffectStyle="clear" colorScheme="dark" style={BADGE_GLASS} />}
       <SymbolView name={PLAY} size={15} weight="semibold" tintColor={coverInk} />
     </View>
   );
 }
+
+const BADGE_GLASS = { position: 'absolute', inset: 0, borderRadius: 20 } as const;
 
 /** Thumbnail left, "Kind · Subject" kicker, bold title, meta. */
 export function EntryRow({
@@ -116,26 +137,40 @@ export function EntryRow({
   from: ReaderFrom;
   hub?: string;
 }) {
+  const save = useSaveToggle(entry._id, entry.saved);
+  const posthog = usePostHog();
   return (
     <View className="flex-row items-center pr-4">
       <Link href={readerHref(entry.slug, from, hub)} asChild>
-        <Pressable accessibilityRole="link" className="flex-1 flex-row items-center gap-4 py-3 pl-4 active:opacity-70">
-          {index !== undefined && <AppText className="w-4 text-[13px] text-muted">{index + 1}</AppText>}
-          <View className="overflow-hidden rounded-[14px] bg-surface-secondary" style={THUMB}>
-            <CoverImage uri={entry.coverThumbUrl ?? entry.coverUrl} thumbhash={entry.coverThumbhash} style={THUMB} transition={200} />
-          </View>
-          <View className="flex-1 gap-1">
-            <AppText className="text-[12px] text-muted">
-              {capitalise(entry.kind)} · {facetLabel(entry.primarySubject)}
-            </AppText>
-            <AppText className="text-[16px] font-semibold leading-[21px]" numberOfLines={2}>
-              {entry.title}
-            </AppText>
-            <AppText className="text-[13px] text-muted">{readTimeLine(entry.readMin, entry.views, entry.listenMin)}</AppText>
-          </View>
-        </Pressable>
+        {/* No zoom: the thumb is too small to grow from. */}
+        <Link.Trigger>
+          <Pressable accessibilityRole="link" className="flex-1 flex-row items-center gap-4 py-3 pl-4 active:opacity-70">
+            {index !== undefined && <AppText className="w-4 text-[13px] text-muted">{index + 1}</AppText>}
+            <View className="overflow-hidden rounded-[14px] bg-surface-secondary" style={THUMB}>
+              <CoverImage uri={entry.coverThumbUrl ?? entry.coverUrl} thumbhash={entry.coverThumbhash} style={THUMB} transition={200} />
+            </View>
+            <View className="flex-1 gap-1">
+              <AppText className="text-[12px] text-muted">
+                {capitalise(entry.kind)} · {facetLabel(entry.primarySubject)}
+              </AppText>
+              <AppText className="text-[16px] font-semibold leading-[21px]" numberOfLines={2}>
+                {entry.title}
+              </AppText>
+              <AppText className="text-[13px] text-muted">{readTimeLine(entry.readMin, entry.views, entry.listenMin)}</AppText>
+            </View>
+          </Pressable>
+        </Link.Trigger>
+        <Link.Preview />
+        <Link.Menu>
+          <Link.MenuAction icon={save.shown ? SAVED_ICON.ios : SAVE_ICON.ios} onPress={save.toggle}>
+            {save.shown ? 'Remove from saved' : 'Save'}
+          </Link.MenuAction>
+          <Link.MenuAction icon={SHARE_ICON.ios} onPress={() => shareEntry(entry, posthog)}>
+            Share
+          </Link.MenuAction>
+        </Link.Menu>
       </Link>
-      <SaveButton entryId={entry._id} saved={entry.saved} />
+      <SaveButton save={save} />
     </View>
   );
 }

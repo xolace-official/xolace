@@ -2,41 +2,30 @@
  * The reader's Aa sheet (#408, Variant C from #401): three reading modes, each
  * drawn as a small page in its own look, plus text size. No separate font or
  * colour controls. Writes straight to the persisted store.
+ *
+ * A native formSheet route (`reader-appearance`) sized to its contents, with
+ * the reader left undimmed behind it so each change shows on the page live.
  */
-import { BottomSheet, Switch } from 'heroui-native';
+import { Switch } from 'heroui-native';
 import type { ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
-import { BottomSheetBlurOverlay } from '@/src/components/bottom-sheet-blur-overlay';
 import { AppText } from '@/src/components/shared/app-text';
 import { cn } from '@/src/lib/utils';
 import { useAppStore } from '@/src/store/store';
-import { ReaderPageScope } from './reader-page';
-import { READING_MODE_KEYS, READING_MODES, stepTextSize, TEXT_SIZES, type ReadingModeKey } from './reading-mode';
+import { ReaderPageScope } from '@/src/features/library/reader/reader-page';
+import { READING_MODE_KEYS, READING_MODES, stepTextSize, TEXT_SIZES, type ReadingModeKey } from '@/src/features/library/reader/reading-mode';
 
-export function AaSheet({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function AaSheet() {
   return (
-    <BottomSheet isOpen={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
-        <BottomSheetBlurOverlay />
-        <BottomSheet.Content
-          // gorhom makes the sheet one accessible element, which hides the mode cards and controls.
-          accessible={false}
-          enableDynamicSizing
-          enableOverDrag={false}
-          backgroundClassName="bg-background"
-          handleIndicatorClassName="bg-foreground/20"
-        >
-          <View className="gap-6 px-6 pb-12 pt-2">
-            <Label>Reading mode</Label>
-            <ModePicker />
-            <Label>Text size</Label>
-            <SizeStepper />
-            <FireToggle />
-          </View>
-        </BottomSheet.Content>
-      </BottomSheet.Portal>
-    </BottomSheet>
+    // Sizes to its content; at accessibility text sizes the sheet caps out and this scrolls.
+    <ScrollView bounces={false} contentContainerClassName="gap-6 px-6 pb-12 pt-8">
+      <Label>Reading mode</Label>
+      <ModePicker />
+      <Label>Text size</Label>
+      <SizeStepper />
+      <FireToggle />
+    </ScrollView>
   );
 }
 

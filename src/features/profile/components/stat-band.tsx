@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
+import { FADE_IN, FADE_OUT, GlassSurface } from "@/src/components/shared/glass-surface";
 
 type Stat = { value: string; label: string; sub?: string; amber?: boolean };
 
@@ -35,13 +36,14 @@ export function StatBand({
   if (usualDay) stats.push({ value: usualDay, label: "Usual day" });
 
   return (
+    // Glass stops rendering under an animated opacity, so the fade only runs where there is no glass.
     <EaseView
-      initialAnimate={{ opacity: 0, translateY: 8 }}
-      animate={{ opacity: 1, translateY: 0 }}
+      initialAnimate={{ translateY: 8, ...FADE_IN }}
+      animate={{ translateY: 0, ...FADE_OUT }}
       transition={{ type: "timing", duration: 300, easing: EASE, delay: staggerDelay }}
       className="px-5 mt-7"
     >
-      <View className="flex-row rounded-3xl bg-surface border border-border/60 py-5 px-3">
+      <GlassSurface radius={24} className="flex-row py-5 px-3">
         {stats.map((s, i) => (
           <View
             key={s.label}
@@ -62,7 +64,7 @@ export function StatBand({
             ) : null}
           </View>
         ))}
-      </View>
+      </GlassSurface>
     </EaseView>
   );
 }

@@ -8,7 +8,8 @@ import { Presets } from "react-native-pulsar";
 import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { GlassSurface, TickGauge } from "@/src/features/insights/glass";
+import { GlassSurface } from "@/src/components/shared/glass-surface";
+import { TickGauge } from "@/src/features/insights/glass";
 import { GAUGE, type Insight } from "@/src/features/insights/domains";
 import { SteadinessInsights } from "@/src/features/insights/steadiness-insights";
 import { LockedTrendChip, TrendChip } from "@/src/features/insights/trend-chip";
@@ -17,12 +18,14 @@ type Props = {
   overall: number | null;
   /** Xolace+ only; null hides it (quiet week, under 2 domains). */
   trend?: number | null;
+  /** Set when the trend runs from quiet domains' last reading: "since <month>". */
+  trendSince?: number | null;
   /** Free view: the chip is a locked upsell instead. */
   locked: boolean;
   insights?: Insight[];
 };
 
-export function OverallDial({ overall, trend, locked, insights }: Props) {
+export function OverallDial({ overall, trend, trendSince, locked, insights }: Props) {
   const accent = useTokenColor("accent");
   const track = useTokenColor("border");
   const progress = useSharedValue(0);
@@ -60,7 +63,7 @@ export function OverallDial({ overall, trend, locked, insights }: Props) {
         </View>
       )}
       {overall !== null && (locked || trend != null) && (
-        <View className="self-center">{locked ? <LockedTrendChip /> : <TrendChip delta={trend!} />}</View>
+        <View className="self-center">{locked ? <LockedTrendChip /> : <TrendChip delta={trend!} since={trendSince} />}</View>
       )}
       {overall !== null && (
         <View className="self-stretch px-5">

@@ -3,6 +3,37 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Second detector, crisis miss, downgrade, shared miss (2026-10-13)
+
+A **second detector** is a model that answers fixed safety and
+classification questions with probabilities, run beside the current
+pipeline and never in place of it. Two candidates exist: **Luna direct**
+(OpenAI Decisions) and **Jev** (TypeSafe, through Vercel AI Gateway).
+_Avoid_: Jev layer (when either candidate is meant).
+
+On a labeled eval case, a **crisis miss** (crisis false negative) is a
+`crisis` case answered below `elevated`: the person would see no support
+resources. A **downgrade** is a `crisis` case answered `elevated`: resources
+still show, so it is reported but is not a miss. A **shared miss** is a crisis
+miss by both a second detector and the current moderation check. It measures
+whether the second detector is actually independent.
+_Avoid_: false negative (unqualified), missed crisis.
+
+## Shadow record, canary probe, drift boundary (2026-10-13)
+
+A **shadow record** is one second-detector answer recorded beside the decision the
+pipeline actually made on the same input: probabilities only, never text,
+and never read by any feature. It belongs to the person it came from and
+dies with them. Shadow records are eval scaffolding. A lane that goes live
+moves its answers into that lane's own home and stops writing them.
+_Avoid_: Jev log, Jev event.
+
+A **canary probe** is a fixed synthetic input sent to the second detector every day. It
+belongs to nobody and is kept for good. A **drift boundary** is the moment a
+model's canary answers shift past tolerance. Shadow results are only
+compared within the span between two boundaries.
+_Avoid_: health check, ping.
+
 ## Stretch, returning, linked domains (2026-10-04)
 
 A **stretch** is one run of a domain compounding, from the session that

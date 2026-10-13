@@ -92,6 +92,8 @@ export const plusView = query({
       overall: nullableNumber,
       /** Mean of per-domain deltas; null under 2 domains or in a quiet week. */
       overallTrend: nullableNumber,
+      /** Set when the trend runs from a quiet domain's last reading, not 7 days ago: "since <month>". */
+      overallTrendSince: nullableNumber,
       domains: v.array(
         v.object({
           ...freeDomain,
@@ -99,6 +101,8 @@ export const plusView = query({
           baseline: nullableNumber,
           /** Null when warming 7 days ago or quiet since; 0 = "same as last week". */
           trend: nullableNumber,
+          /** Set when this domain was quiet 7 days ago: its delta runs from this last reading. */
+          trendSince: nullableNumber,
           compounding: v.union(v.literal("compounding"), v.literal("easing"), v.null()),
           /** Compounding, and the active kindling was lit since the stretch began, from a session that touched it. */
           kindling: v.boolean(),
@@ -128,6 +132,7 @@ export const plusView = query({
     return {
       overall: round(overall),
       overallTrend: trend.overall,
+      overallTrendSince: trend.overallSince,
       insights: await insightsFor(
         ctx,
         profile._id,
@@ -144,6 +149,7 @@ export const plusView = query({
             // While it compounds, "your usual" is the anchor it's judged against (CONTEXT.md).
             baseline: round(flag?.baseline ?? d.baseline),
             trend: trend.domains.get(d.domain) ?? null,
+            trendSince: trend.since.get(d.domain) ?? null,
             compounding: state,
             kindling:
               !!flag && !!kindling && kindling.generatedAt >= flag.startedAt && kindling.domains.has(d.domain),

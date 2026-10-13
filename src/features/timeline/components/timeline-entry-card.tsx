@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { Link } from "expo-router";
 import { PressableFeedback, Card, cn } from "heroui-native";
 import { Presets } from "react-native-pulsar";
 import { StyleSheet, View } from "react-native";
@@ -10,7 +10,7 @@ import {
 } from "@/src/features/timeline/emotions";
 import type { TimelineEntry } from "@/src/features/timeline/types";
 import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
-
+import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 
 type Props = {
   entry: TimelineEntry;
@@ -34,15 +34,7 @@ const TONE_BADGE: Partial<Record<string, { text: string; border: string }>> = {
 };
 
 export const TimelineEntryCard = ({ entry, className }: Props) => {
-  const router = useRouter();
-
-  const handlePress = () => {
-    Presets.ping();
-    router.push({
-      pathname: "/(protected)/timeline/session/[id]",
-      params: { id: entry.id },
-    });
-  };
+  const reduced = useEffectiveReducedMotion();
 
   const emoji = getEmotionEmoji(entry.granularLabel ?? entry.primaryEmotion);
   const emotionLabel = getEmotionLabel(
@@ -60,48 +52,67 @@ export const TimelineEntryCard = ({ entry, className }: Props) => {
     : null;
 
   return (
-    <PressableFeedback
-      onPress={handlePress}
-      animation={PRESS_ANIMATION}
-      className={cn("mx-5 mb-3", className)}
+    <Link
+      href={{
+        pathname: "/(protected)/timeline/session/[id]",
+        params: { id: entry.id },
+      }}
+      onPress={() => Presets.ping()}
+      asChild
     >
-      <Card
-        variant="tertiary"
-        className="rounded-2xl border border-foreground/10"
-        style={styles.continuousCurve}
-      >
-        <Card.Body className="gap-4 px-3 py-3">
-          <AppText
-            className="text-base italic leading-7 text-foreground"
-            numberOfLines={3}
+      <Link.Trigger withAppleZoom={!reduced}>
+        <PressableFeedback
+          animation={PRESS_ANIMATION}
+          className={cn("mx-5 mb-3", className)}
+        >
+          <Card
+            variant="tertiary"
+            className="rounded-2xl border border-foreground/10"
+            style={styles.continuousCurve}
           >
-            &ldquo;{removeEmDash(entry.mirrorText)}&rdquo;
-          </AppText>
-
-          <View className="flex-row items-center justify-between gap-3">
-            <View className="flex-row flex-1 items-center gap-2 overflow-hidden">
-              <AppText className="text-base">{emoji}</AppText>
-              <AppText className="shrink text-sm text-foreground/65" numberOfLines={1}>
-                {emotionLabel}
-              </AppText>
-              <AppText className="text-sm text-foreground/25">&middot;</AppText>
-              <AppText className="shrink text-sm text-foreground/40" numberOfLines={1}>
-                {pathLabel}
-              </AppText>
-            </View>
-
-            {toneLabel && toneBadge ? (
-              <View
-                className={`rounded-full border px-2.5 py-0.5 ${toneBadge.border}`}
+            <Card.Body className="gap-4 px-3 py-3">
+              <AppText
+                className="text-base italic leading-7 text-foreground"
+                numberOfLines={3}
               >
-                <AppText className={`text-xs ${toneBadge.text}`}>
-                  {toneLabel}
-                </AppText>
+                &ldquo;{removeEmDash(entry.mirrorText)}&rdquo;
+              </AppText>
+
+              <View className="flex-row items-center justify-between gap-3">
+                <View className="flex-row flex-1 items-center gap-2 overflow-hidden">
+                  <AppText className="text-base">{emoji}</AppText>
+                  <AppText
+                    className="shrink text-sm text-foreground/65"
+                    numberOfLines={1}
+                  >
+                    {emotionLabel}
+                  </AppText>
+                  <AppText className="text-sm text-foreground/25">
+                    &middot;
+                  </AppText>
+                  <AppText
+                    className="shrink text-sm text-foreground/40"
+                    numberOfLines={1}
+                  >
+                    {pathLabel}
+                  </AppText>
+                </View>
+
+                {toneLabel && toneBadge ? (
+                  <View
+                    className={`rounded-full border px-2.5 py-0.5 ${toneBadge.border}`}
+                  >
+                    <AppText className={`text-xs ${toneBadge.text}`}>
+                      {toneLabel}
+                    </AppText>
+                  </View>
+                ) : null}
               </View>
-            ) : null}
-          </View>
-        </Card.Body>
-      </Card>
-    </PressableFeedback>
+            </Card.Body>
+          </Card>
+        </PressableFeedback>
+      </Link.Trigger>
+      <Link.Preview />
+    </Link>
   );
 };

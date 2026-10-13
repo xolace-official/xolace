@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
@@ -11,10 +12,16 @@ import { useCSSVariable } from "uniwind";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { type BrowseFrom, FAMILY_LABEL } from "@/src/features/browse/components/track-row";
-import { useTrackPlayback } from "@/src/features/browse/use-track-playback";
+import {
+  clearNowPlaying,
+  setNowPlaying,
+  togglePlayback,
+  useNowPlayingPlayback,
+} from "@/src/features/browse/now-playing/now-playing-store";
 import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/src/lib/haptics";
+import { cn } from "@/src/lib/utils";
 import { imageSource } from "@/src/lib/image-source";
 import { formatTime } from "./format-time";
 import { CrisisLine, GlyphButton, VolumeRow, usePlayerInk } from "./player-controls";
@@ -24,6 +31,8 @@ type Params = { slug: string; from?: BrowseFrom; stepId?: Id<"path_steps"> };
 
 const ABSOLUTE_FILL = { position: "absolute", inset: 0 } as const;
 const TILE = 72;
+// Sized to the pill and wrapping the icon, so every touch inside lands on the glass (its press swell).
+const CLOSE_GLASS = { width: 36, height: 36, borderRadius: 18, borderCurve: "continuous", overflow: "visible", alignItems: "center", justifyContent: "center" } as const;
 
 /**
  * The Browse player (#340, §9.3) — and the second half of the free-user gate
@@ -40,6 +49,8 @@ export function PlayerScreen() {
 
   useEffect(() => {
     if (!gated) return;
+    // A lapsed entitlement takes the mini-player down with the player.
+    clearNowPlaying();
     posthog.capture("browse_paywall_shown", { slug, from: from ?? null });
     // Replace, not push: the paywall's close pops back to wherever the player
     // was opened from, and the player never re-enters the stack.
@@ -52,24 +63,31 @@ export function PlayerScreen() {
 
 function Player() {
   const { slug, from, stepId } = useLocalSearchParams<Params>();
-  const p = useTrackPlayback(slug, { stepId });
+  // The audio lives in NowPlayingHost; opening for the loaded slug (e.g. from
+  // the mini-player) keeps playing, another slug swaps the track.
+  useEffect(() => {
+    setNowPlaying({ slug, stepId, from });
+    // Only iOS 26 has the tab-bar mini-player to keep it reachable; elsewhere
+    // closing the player stops the audio, as it always has.
+    return () => {
+      if (!isLiquidGlassAvailable()) clearNowPlaying();
+    };
+  }, [slug, stepId, from]);
+  const p = useNowPlayingPlayback(slug);
   const insets = useSafeAreaInsets();
   const posthog = usePostHog();
   const ink = usePlayerInk();
   const scrim = String(useCSSVariable("--color-player-scrim"));
   const [barWidth, setBarWidth] = useState(0);
-  const played = useRef(false);
+  const glass = isLiquidGlassAvailable();
+  const closeIcon = <SymbolView name={{ ios: "chevron.down", android: "keyboard_arrow_down", web: "keyboard_arrow_down" }} size={16} weight="semibold" tintColor={ink} />;
 
   const track = p.track;
   const progress = p.duration ? p.currentTime / p.duration : 0;
 
   const toggle = () => {
     playSoftPress();
-    if (!p.isPlaying && !played.current && track && from) {
-      played.current = true;
-      posthog.capture("browse_track_played", { slug, family: track.family, from });
-    }
-    p.toggle();
+    togglePlayback(p, posthog);
   };
 
   return (
@@ -84,10 +102,14 @@ function Player() {
         hitSlop={12}
         accessibilityRole="button"
         accessibilityLabel="Close player"
-        className="absolute left-5 h-9 w-9 items-center justify-center rounded-full bg-player-ink/15 active:opacity-60"
+        className={cn(
+          "absolute left-5 h-9 w-9 items-center justify-center rounded-full",
+          !glass && "bg-player-ink/15 active:opacity-60",
+        )}
         style={{ top: insets.top + 8 }}
       >
-        <SymbolView name={{ ios: "chevron.down", android: "keyboard_arrow_down", web: "keyboard_arrow_down" }} size={16} weight="semibold" tintColor={ink} />
+        {/* Fixed palette over the artwork: dark clear glass; its own press response replaces the opacity dip. */}
+        {glass ? <GlassView glassEffectStyle="clear" colorScheme="dark" isInteractive style={CLOSE_GLASS}>{closeIcon}</GlassView> : closeIcon}
       </Pressable>
 
       {track === null || p.error ? (

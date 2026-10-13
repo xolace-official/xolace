@@ -6,7 +6,7 @@ import { Presets } from "react-native-pulsar";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { SteadinessRing } from "@/src/features/insights/steadiness-ring";
-import { COMPOUNDING_SHORT, COMPOUNDING_WORD, DOMAIN_META, STAGE_WORD, icon, lastSeen, subOf, toneOf, type DomainItem } from "@/src/features/insights/domains";
+import { COMPOUNDING_SHORT, COMPOUNDING_WORD, DOMAIN_META, STAGE_WORD, icon, lastSeen, subOf, toneOf, trendBasis, type DomainItem } from "@/src/features/insights/domains";
 import { TrendChip } from "@/src/features/insights/trend-chip";
 
 export type DomainView = "grid" | "list";
@@ -43,10 +43,13 @@ export function ViewToggle({ value, onChange }: { value: DomainView; onChange: (
 /** Xolace+ rows and cells select the detail card; free ones aren't pressable. */
 type ItemProps = { d: DomainItem; selected?: boolean; onPress?: () => void };
 
-const trendLabel = (t: number) => (t === 0 ? ", same as last week" : `, ${t > 0 ? "up" : "down"} ${Math.abs(t)} since last week`);
+const trendLabel = (t: number, since?: number | null) =>
+  t === 0
+    ? since == null ? ", same as last week" : `, same since ${trendBasis(since)}`
+    : `, ${t > 0 ? "up" : "down"} ${Math.abs(t)} since ${trendBasis(since)}`;
 const scoreLabel = (d: DomainItem) =>
   d.steadiness != null
-    ? `, ${d.steadiness} out of 100${d.baseline != null ? `, usually ${d.baseline}` : ""}${d.trend != null ? trendLabel(d.trend) : ""}`
+    ? `, ${d.steadiness} out of 100${d.baseline != null ? `, usually ${d.baseline}` : ""}${d.trend != null ? trendLabel(d.trend, d.trendSince) : ""}`
     : "";
 
 export function DomainCell({ d, selected, onPress }: ItemProps) {

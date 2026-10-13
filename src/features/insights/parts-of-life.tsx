@@ -10,7 +10,7 @@ import { Presets } from "react-native-pulsar";
 import { AppText } from "@/src/components/shared/app-text";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { GlassSurface } from "@/src/features/insights/glass";
+import { GlassSurface } from "@/src/components/shared/glass-surface";
 import { DomainCell, DomainRow, ViewToggle, type DomainView } from "@/src/features/insights/domain-list";
 import { DetailCard } from "@/src/features/insights/detail-card";
 import { CompoundingUpsellLine, useCompoundingUpsell, useOpenUpsell } from "@/src/features/insights/compounding-upsell";

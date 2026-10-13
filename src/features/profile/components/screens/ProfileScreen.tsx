@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
 import { AuroraArc } from "@/src/features/profile/components/aurora-arc";
+import { TopBlur } from "@/src/components/shared/top-blur";
 import { ProfileSkeleton } from "@/src/features/profile/components/profile-skeleton";
 import { ProfileHero } from "@/src/features/profile/components/profile-hero";
 import { StatBand } from "@/src/features/profile/components/stat-band";
@@ -208,6 +209,7 @@ export function ProfileScreen() {
         <FollowUpsSection staggerDelay={480} />
 
       </ScrollView>
+      <TopBlur height={insets.top + 70} />
 
       <AvatarPickerSheet
         isOpen={pickerOpen}

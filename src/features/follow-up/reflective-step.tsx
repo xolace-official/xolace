@@ -62,10 +62,7 @@ export function ReflectiveStep({ answer, cardId, streak, canShare, onClose }: Pr
   const done = async () => {
     if (saving) return;
     setSaving(true);
-    let saved = false;
-    try {
-      saved = await record({ cardId, reflectionText: text, shareRequested: share });
-    } catch {}
+    const saved = await record({ cardId, reflectionText: text, shareRequested: share }).catch(() => false);
     if (!saved) {
       // Keep the editor open with the note intact so the user can retry.
       setSaving(false);

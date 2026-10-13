@@ -1,5 +1,4 @@
 import { Stack } from 'expo-router';
-import { View } from 'react-native';
 import { useLargeHeaderOptions } from '@/src/lib/navigation-options';
 
 const CONNECT_OPTIONS = { title: 'Connect' };
@@ -9,13 +8,11 @@ export default function ConnectLayout() {
   const largeHeaderOptions = useLargeHeaderOptions();
 
   return (
-    <View className="flex-1 bg-background">
-      <Stack
-        screenOptions={largeHeaderOptions}
-      >
-        <Stack.Screen name="index" options={CONNECT_OPTIONS} />
-        <Stack.Screen name="archived" options={ARCHIVED_OPTIONS} />
-      </Stack>
-    </View>
+    <Stack
+      screenOptions={largeHeaderOptions}
+    >
+      <Stack.Screen name="index" options={CONNECT_OPTIONS} />
+      <Stack.Screen name="archived" options={ARCHIVED_OPTIONS} />
+    </Stack>
   );
 }
