@@ -131,7 +131,8 @@ export const searchCatalogue = query({
           .filter((t) => matches(t.title))
           .map(async (t) => ({ kind: "topic" as const, slug: t.slug, title: t.title, imageUrl: await thumbUrlFor(t.thumbKey) })),
       ])).sort((a, b) => rank(a.title) - rank(b.title)),
-      needSomeone: isCrisisQuery(text),
+      // Full raw query: the index cap must not hide a crisis term past it.
+      needSomeone: isCrisisQuery(args.query),
     };
   },
 });
