@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import Animated, { Easing, FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,11 +10,13 @@ const EXIT = FadeOutDown.duration(160).easing(Easing.out(Easing.quad));
 
 /**
  * Where the native tab bar's top edge sits, measured from the screen bottom.
+ * iPad below iOS 26 puts the bar at the top, so there is no bar to clear.
  * ponytail: hard-coded bar heights — NativeTabs exposes none. Recheck if the
  * bar's style changes (labels off, a compact Android variant).
  */
 function useTabBarTop() {
   const { bottom } = useSafeAreaInsets();
+  if (Platform.OS === 'ios' && Platform.isPad) return bottom;
   return (process.env.EXPO_OS === 'android' ? 80 : 49) + bottom;
 }
 
@@ -34,11 +36,7 @@ export function MiniPlayerOverlay() {
       style={{ bottom }}
       pointerEvents="box-none"
     >
-      {/* borderRadius on the style too, so the shadow path follows the pill. */}
-      <View
-        className="bg-surface border-border/50 h-12 flex-row rounded-full border shadow-lg"
-        style={{ borderRadius: 999 }}
-      >
+      <View className="bg-surface border-border/50 h-12 flex-row rounded-full border shadow-lg">
         <MiniPlayerContent inline={false} />
       </View>
     </Animated.View>

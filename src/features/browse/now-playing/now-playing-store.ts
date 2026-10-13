@@ -109,7 +109,11 @@ export function useMiniPlayerShown() {
   const hidden = useTabBarHidden();
   return loaded && !hidden;
 }
-/** Scroll tail a tab screen reserves for the overlay; iOS 26 insets its accessory natively. */
+/**
+ * Scroll tail a tab screen reserves for the overlay; iOS 26 insets its
+ * accessory natively. Not tied to the bar hiding: a sheet that hides the bar
+ * is momentary, and dropping the tail with it jumps a list sitting at its end.
+ */
 export function useMiniPlayerInset() {
-  return useMiniPlayerShown() && !isLiquidGlassAvailable() ? MINI_PLAYER_CLEARANCE : 0;
+  return useNowPlayingLoaded() && !isLiquidGlassAvailable() ? MINI_PLAYER_CLEARANCE : 0;
 }
