@@ -27,6 +27,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { playSoftPress } from "@/src/lib/haptics";
 import { useAppStore } from "@/src/store/store";
 import { posthog } from "@/src/config/posthog";
+import { shouldShowReflectTour } from "@/src/features/reflect/tour-copy";
 import {
   getCardMetrics,
   MINI_SIZE,
@@ -57,9 +58,10 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
   // a streak update would play the reveal on top of whatever screen
   // the user is on. Wait until this screen is focused again.
   const isFocused = useIsFocused();
-  // Waits for the Starter suggestions bubble so the two never stack (#460).
+  // Waits for any home sheet and the first-run tour so they never stack (#460).
   // Not homeSheetBlocking: that stays up through a follow-up's whole pending wait.
-  const starterOpen = useAppStore((s) => s.starterSuggestionsOpen);
+  const homeSheetOpen = useAppStore((s) => s.homeSheetOpen);
+  const tourPending = useAppStore((s) => shouldShowReflectTour(s.reflectTourVersion));
 
   const headerColor = useThemeColor("accent") as string;
   const headerTextColor = useThemeColor("accent-foreground") as string;
@@ -110,7 +112,7 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
       setLastAcknowledgedStreak(currentStreak);
       return;
     }
-    if (!revealPending || revealing || !isFocused || starterOpen) return;
+    if (!revealPending || revealing || !isFocused || homeSheetOpen || tourPending) return;
 
     // Reduced motion: skip the reveal entirely, just update the number
     if (reducedMotion) {
@@ -126,8 +128,10 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
         // retries. Acknowledge the streak anyway — the mini deliberately shows
         // a day behind while a reveal is pending, so without this it sits one
         // short forever. A missed animation beats a wrong number.
-        if (layout === null) scheduleOnRN(setLastAcknowledgedStreak, currentStreak);
-        else scheduleOnRN(setMiniLayout, layout);
+        // Acknowledge as it goes up either way: once seen it's delivered, so a
+        // kill mid-reveal never replays it.
+        scheduleOnRN(setLastAcknowledgedStreak, currentStreak);
+        if (layout !== null) scheduleOnRN(setMiniLayout, layout);
       })();
     }, REVEAL_START_DELAY_MS);
     return () => clearTimeout(timer);
@@ -138,13 +142,13 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
     revealing,
     reducedMotion,
     isFocused,
-    starterOpen,
+    homeSheetOpen,
+    tourPending,
     miniRef,
     setLastAcknowledgedStreak,
   ]);
 
   const handleDismissed = () => {
-    setLastAcknowledgedStreak(currentStreak);
     setMiniLayout(null);
     posthog.capture("streak_reveal_acknowledged", { day: currentStreak });
   };

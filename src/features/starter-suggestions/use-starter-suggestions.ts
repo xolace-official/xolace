@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { shouldShowReflectTour } from "@/src/features/reflect/tour-copy";
 import { useAppStore } from "@/src/store/store";
 
@@ -29,12 +28,6 @@ export function useStarterSuggestions({ active, sessionCount }: Args) {
   const zeroSessions = sessionCount === 0 || (devEligible && sessionCount !== undefined);
 
   const isOpen = active && tourDone && !seen && zeroSessions;
-
-  const setOpen = useAppStore((s) => s.setStarterSuggestionsOpen);
-  useEffect(() => {
-    setOpen(isOpen);
-    return () => setOpen(false);
-  }, [isOpen, setOpen]);
 
   return { isOpen, resolve: () => setSeen(true) };
 }

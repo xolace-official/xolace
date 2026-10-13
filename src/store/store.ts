@@ -39,9 +39,13 @@ type OnboardingSlice = {
    */
   homeSheetBlocking: boolean;
   setHomeSheetBlocking: (v: boolean) => void;
-  /** Starter suggestions bubble is on screen. Transient — the streak reveal waits on it. */
-  starterSuggestionsOpen: boolean;
-  setStarterSuggestionsOpen: (v: boolean) => void;
+  /**
+   * A home sheet (return welcome, monthly event, starter suggestions) is on
+   * screen right now. Transient — the streak reveal waits on it. Unlike
+   * homeSheetBlocking it drops while a follow-up is merely pending.
+   */
+  homeSheetOpen: boolean;
+  setHomeSheetOpen: (v: boolean) => void;
 };
 
 type PendingEventPrompt = { text: string; label?: string; expiresAt: number; fromEntryId?: Id<'library_entries'> };
@@ -188,8 +192,8 @@ export const useAppStore = create<AppState>()(
 
         homeSheetBlocking: false,
         setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
-        starterSuggestionsOpen: false,
-        setStarterSuggestionsOpen: (v) => set({ starterSuggestionsOpen: v }),
+        homeSheetOpen: false,
+        setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
 
         nightModeEnabled: true,
         setNightModeEnabled: (v) => set({ nightModeEnabled: v }),

@@ -92,6 +92,7 @@ export default function ProtectedIndex() {
   const clearLastNotification = useAppStore((s) => s.clearLastNotification);
   const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
   const setHomeSheetBlocking = useAppStore((s) => s.setHomeSheetBlocking);
+  const setHomeSheetOpen = useAppStore((s) => s.setHomeSheetOpen);
   const reflectSettled = useAppStore((s) => s.reflectSettled);
   const isFocused = useIsFocused();
   const awarenessEvent = useAwarenessEvent();
@@ -208,6 +209,13 @@ export default function ProtectedIndex() {
   useEffect(() => {
     setHomeSheetBlocking(sheetBlocking);
   }, [sheetBlocking, setHomeSheetBlocking]);
+
+  // The streak reveal waits on sheets actually on screen, not a pending follow-up.
+  const sheetOpen = returnWelcome.isOpen || awarenessShowing || starter.isOpen;
+  useEffect(() => {
+    setHomeSheetOpen(sheetOpen);
+    return () => setHomeSheetOpen(false);
+  }, [sheetOpen, setHomeSheetOpen]);
 
   // Waits its turn behind the home sheets; the screen acknowledges on close.
   useEffect(() => {
