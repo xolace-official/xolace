@@ -124,6 +124,11 @@ Every expo-router API used below has been checked against the installed 57.0.17 
   - Twig completion (`use-track-playback.ts:31-40`) must keep working when the player screen is unmounted.
   - Hide the accessory on fixed-palette and full-bleed routes.
   - The accessory is iOS 26 only.
+- **Status (2026-10-13): shipped** on `chore/ui-makeover-v2` (`src/features/browse/now-playing/mini-player-accessory.tsx`, plus a floating overlay for pre-iOS-26 and iPad, `mini-player-overlay.tsx`). Oyelo's updated mini-player (`O/Oyelo/Features/PlayerView.swift`) has three follow-ups we don't have yet:
+  1. **Attention pulse** (S): a one-shot keyframe lift when playback starts from another screen, so the eye finds the capsule. It runs only after mount, so moving between screens never replays it, and it is skipped under Reduce Motion (`:104-127`).
+  2. **Marquee title** (S): a long title scrolls slowly, with insets, only while the capsule is visible, the scene is active, and Reduce Motion is off (`:568-610`). Today we truncate (`mini-player-accessory.tsx:96`).
+  3. **Header swipe for previous/next** (M): the threshold is `max(44, min(width * 0.28, 80))` or a deliberate flick, and the neighbouring title follows the finger (`:312-401`). Worth it only for Kindling paths with steps; standalone tracks have no "next".
+- **Follow-ups (2026-10-13):** 1 and 2 shipped in `src/features/browse/now-playing/mini-player-motion.tsx`. The pulse fires once when the player closes after a new track loaded, since in Xolace a track only starts from the full player. 3 dropped: a kindling is 2-3 twigs of mixed kinds (`convex/schema.ts:2246`), so two adjacent audio steps are rare.
 
 ### S6. Pace the App Store review prompt
 - **Source:** `O/Oyelo/App/ReviewPromptPolicy.swift:4-26`, `O/Oyelo/App/RootView.swift:284-299`.
