@@ -57,6 +57,20 @@ Pre-existing on `dev`, unrelated to that branch.
 
 ---
 
+## P3 — Kindling: population signal ("people with a similar session found this helpful")
+
+**What:** Let twig outcomes across all users inform routing. Store outcome counts per catalogue item (done vs skipped, plus whatever "good twig" means), grouped by coarse Understanding fields (`primaryEmotion`, `supportNeed`). Never a person's vector or text. Ruled out of scope on the [Support routing map](https://github.com/xolace-official/xolace_app/issues/497), which learns only from the person's own outcomes.
+
+**How to start:** a counts table keyed by item + group. Add a minimum group size before any count is read, so a rare emotion + rare entry can't point to one person. Feed the counts into `pickSeeded` in `convex/ai/paths/bind.ts` as one more score input next to tag overlap.
+
+**Key files:** `convex/ai/paths/bind.ts`, `convex/schema.ts` (`path_steps`)
+
+**Effort:** M
+**Priority:** P3 — personal feedback loop comes first
+**Depends on:** [What counts as a good twig](https://github.com/xolace-official/xolace_app/issues/544). Nothing to count without it.
+
+---
+
 ## P3 — Connect list: rows lag on foreground until the re-warm query returns
 
 **What:** After a background/foreground cycle, `useChatWarmup` re-runs `queryChannels` on `connection.changed { online }` (the SDK's `ChannelList` does this internally; we own the list, see CONTEXT.md "The Connect list is Convex-owned"). Row unread badges and thread messages received while backgrounded appear only once handshake + that round trip complete — correct, but a visible beat late.
