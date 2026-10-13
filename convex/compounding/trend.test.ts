@@ -13,6 +13,11 @@
  *     where nothing was read.
  *  6. The overall delta is not the mean of per-domain deltas, so a domain
  *     joining or leaving moves it.
+ *  7. A domain quiet 7 days ago claims "vs last week" when the number it's
+ *     compared against was last fed months earlier — or a domain read within
+ *     the month gets a "since" date it doesn't need.
+ *  8. The overall chip says "since" while some moving domain was live a week
+ *     ago, or "vs last week" when every moving domain was quiet then.
  */
 import { describe, expect, it } from "vitest";
 import type { Reading } from "./steadiness";
@@ -91,5 +96,25 @@ describe("compounding/trendFor", () => {
   it("hides the overall chip when nothing was read this week", () => {
     const out = trend([...unlockedWeekAgo("work"), ...unlockedWeekAgo("health")]);
     expect(out.overall).toBeNull();
+  });
+
+  it("dates a domain's delta from its last reading when it was quiet a week ago", () => {
+    const out = trend([r("work", 200, 40), r("work", 201, 40), r("work", 202, 40), r("work", 0, 80)]);
+    expect(out.domains.get("work")).toBe(40);
+    expect(out.since.get("work")).toBe(NOW - 200 * DAY);
+  });
+
+  it("keeps \"vs last week\" for a domain read within the month before", () => {
+    const out = trend([...unlockedWeekAgo("work"), r("work", 0, 80)]);
+    expect(out.since.has("work")).toBe(false);
+  });
+
+  it("dates the overall chip only when every domain read this week was quiet then", () => {
+    const quiet = (domain: Reading["domain"], days: number) =>
+      [days, days + 1, days + 2].map((d) => r(domain, d, 40));
+    const allQuiet = trend([...quiet("work", 200), r("work", 0, 80), ...quiet("love", 190), r("love", 0, 80)]);
+    expect(allQuiet.overallSince).toBe(NOW - 190 * DAY);
+    const mixed = trend([...quiet("work", 200), r("work", 0, 80), ...unlockedWeekAgo("love"), r("love", 0, 80)]);
+    expect(mixed.overallSince).toBeNull();
   });
 });

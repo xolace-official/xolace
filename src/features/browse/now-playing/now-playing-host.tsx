@@ -12,7 +12,8 @@ export function NowPlayingHost() {
   const np = useNowPlaying();
   // Leaving the protected tree (sign-out) drops the track with it.
   useEffect(() => clearNowPlaying, []);
-  // Keyed by slug: a new track gets a fresh player and a fresh twig latch.
+  // Keyed by slug: a new track gets a fresh player. A new twig on the same
+  // track keeps the audio; `useTrackPlayback` re-arms its latch on `stepId`.
   return np ? <Runner key={np.slug} slug={np.slug} stepId={np.stepId} /> : null;
 }
 

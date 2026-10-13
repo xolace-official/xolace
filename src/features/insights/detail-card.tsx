@@ -38,7 +38,7 @@ export function DetailCard({ d, value, insights }: { d: DomainItem; value: numbe
             {baseline !== null ? ` · usually ${baseline}` : ""}
           </AppText>
         </View>
-        {d.trend != null && <TrendChip delta={d.trend} />}
+        {d.trend != null && <TrendChip delta={d.trend} since={d.trendSince} />}
       </View>
       <SteadinessInsights insights={insights} domain={d.domain} />
       {d.kindling && <KindlingRow />}

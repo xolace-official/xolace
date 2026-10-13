@@ -7,10 +7,10 @@ export type Icon = Exclude<ComponentProps<typeof SymbolView>["name"], string>;
 type FreeView = FunctionReturnType<typeof api.compounding.insights.freeView>;
 type PlusView = NonNullable<FunctionReturnType<typeof api.compounding.insights.plusView>>;
 /** Free or Xolace+: the Xolace+ fields are simply absent from the free view. */
-export type InsightsView = FreeView & Partial<Pick<PlusView, "overallTrend" | "insights">>;
+export type InsightsView = FreeView & Partial<Pick<PlusView, "overallTrend" | "overallTrendSince" | "insights">>;
 export type Insight = PlusView["insights"][number];
 export type DomainItem = FreeView["domains"][number] &
-  Partial<Pick<PlusView["domains"][number], "steadiness" | "baseline" | "trend" | "compounding" | "kindling">>;
+  Partial<Pick<PlusView["domains"][number], "steadiness" | "baseline" | "trend" | "trendSince" | "compounding" | "kindling">>;
 
 export const icon = (ios: string, android: string) => ({ ios, android, web: android }) as Icon;
 export const GAUGE = icon("gauge.with.needle", "speed");
@@ -50,6 +50,14 @@ export const subOf = (d: DomainItem) =>
 
 export const lastSeen = (at: number) =>
   new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+/** What a trend is measured against: last week, or a quiet domain's last reading ("since April"). */
+export const trendBasis = (since?: number | null) => {
+  if (since == null) return "last week";
+  const d = new Date(since);
+  const year = d.getFullYear() === new Date().getFullYear() ? undefined : "numeric";
+  return d.toLocaleDateString(undefined, { month: "long", year });
+};
 
 export const CAVEAT =
   "This is what Xolace knows from how you've used Xolace. It may not reflect your whole life.";
