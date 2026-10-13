@@ -18,7 +18,7 @@ import { cn } from '@/src/lib/utils';
 import { BrowseHubScreen } from '@/src/features/browse/components/browse-hub-screen';
 import { TrackRow } from '@/src/features/browse/components/track-row';
 import { PlaceRow } from '@/src/features/browse/search/place-row';
-import { SECTION_TITLE, type SearchSection } from '@/src/features/browse/search/search-section-screen';
+import { SECTION_TITLE, type SearchSection } from '@/src/features/browse/search/search-sections';
 import { useMiniPlayerInset } from '@/src/features/browse/now-playing/now-playing-store';
 import { EntryRow, SectionTitle } from '@/src/features/library/home/entry-cards';
 import { RowsSkeleton } from '@/src/features/library/skeletons';

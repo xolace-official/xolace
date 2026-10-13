@@ -13,20 +13,14 @@ import { ActivityIndicator, ScrollView } from 'react-native';
 
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
-import { FAMILY_LABEL, TrackRow } from '@/src/features/browse/components/track-row';
+import { TrackRow } from '@/src/features/browse/components/track-row';
 import { useMiniPlayerInset } from '@/src/features/browse/now-playing/now-playing-store';
 import { PlaceRow } from '@/src/features/browse/search/place-row';
+import { SECTION_TITLE, type SearchSection } from '@/src/features/browse/search/search-sections';
 import { EntryRow } from '@/src/features/library/home/entry-cards';
 import { RowsSkeleton } from '@/src/features/library/skeletons';
 
-export type SearchSection = 'lantern' | 'support' | 'music' | 'places';
-
 const PAGE_SIZE = 20;
-export const SECTION_TITLE: Record<SearchSection, string> = {
-  lantern: 'Lantern',
-  ...FAMILY_LABEL,
-  places: 'Hubs & topics',
-};
 
 function Paged<T extends { _id: string }>({
   page: { results, status, isLoading, loadMore },
