@@ -64,12 +64,20 @@ export function SwipeableConversationRow({
   const accent = useCSSVariable('--color-accent-foreground');
   const label = conversation.archived ? 'Unarchive' : 'Archive';
 
-  // Fires once per open, which is the latch: one haptic, one mutation. On
-  // success the row leaves the list; on failure it slides shut again.
+  // The revealed action's `openRight()` re-fires `onSwipeableWillOpen` while
+  // the row is already open, so this ref is the latch: one haptic, one
+  // mutation. On success the row leaves the list; on failure it slides shut
+  // again and unlatches.
+  const committed = useRef(false);
   const commit = () => {
+    if (committed.current) return;
+    committed.current = true;
     playSoftPress();
     void onArchive(conversation, { haptic: false }).then((ok) => {
-      if (!ok) swipeable.current?.close();
+      if (!ok) {
+        committed.current = false;
+        swipeable.current?.close();
+      }
     });
   };
 
