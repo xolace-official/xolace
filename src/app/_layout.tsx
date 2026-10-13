@@ -85,11 +85,10 @@ Settings.preloadPresets([
   'Swell',     // insights overall dial fill — plays on mount
 ]);
 
-// Surface any route-subtree render crash to Sentry. metro.config.js uses
-// getSentryExpoConfig, which auto-wraps this re-export so the error is captured
-// (with route context) before Expo Router shows its fallback — otherwise a
-// cold-start render throw is swallowed silently.
-export { ErrorBoundary } from 'expo-router';
+// Root route error fallback. Expo Router's boundary swallows render crashes
+// (nothing auto-reports them), so RouteError reports to Sentry and Observe
+// itself, then shows a calm themed screen instead of the raw error text.
+export { RouteError as ErrorBoundary } from '@/src/components/shared/route-error';
 
 const NO_HEADER = { headerShown: false };
 
