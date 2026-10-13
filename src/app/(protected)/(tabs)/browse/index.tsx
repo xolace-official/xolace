@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 import { useIsFocused } from 'expo-router/react-navigation';
-import { BrowseHubScreen } from '@/src/features/browse/components/browse-hub-screen';
+import { BrowseHome } from '@/src/features/browse/search/browse-home';
 
 /**
  * NativeTabs mounts every tab eagerly (see connect/index.tsx's ConnectRoute) —
@@ -14,5 +14,5 @@ export default function BrowseRoute() {
   if (isFocused && !everFocused) setEverFocused(true);
 
   if (!everFocused) return <View className="flex-1 bg-background" />;
-  return <BrowseHubScreen />;
+  return <BrowseHome />;
 }

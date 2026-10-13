@@ -2338,9 +2338,13 @@ export default defineSchema({
     safetyReviewedAt: v.optional(v.number()), // explainers: required to publish
     lastReviewedAt: v.number(),
     sha256: v.optional(v.string()), // ingest no-op gate: manifest record + body (#406)
+    // Browse search (#549): lowercase title, dek, subject, story descriptor and
+    // facet words, written by ingest (library/search.ts searchTextOf).
+    searchText: v.optional(v.string()),
   })
     .index("by_slug", ["slug"])
-    .index("by_active_and_kind", ["active", "kind"]),
+    .index("by_active_and_kind", ["active", "kind"])
+    .searchIndex("search_searchText", { searchField: "searchText", filterFields: ["active"] }),
 
   // What an entry draws on, one row per (entry, source) pair in manifest
   // order (#468, CONTEXT.md "Most entries are adapted from several

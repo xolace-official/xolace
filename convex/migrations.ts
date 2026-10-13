@@ -4,6 +4,7 @@ import { DataModel } from "./_generated/dataModel";
 import { reflectionRank } from "./lib/aggregates";
 import { localDayKey, shiftDayKey } from "./streaks/activityLog";
 import { FREEZE_CAP } from "./streaks/state";
+import { searchTextOf } from "./library/search";
 
 // Run both in sequence (renameRawInput first, then renameUserInput):
 //   bunx convex run migrations:runAll
@@ -134,6 +135,22 @@ export const restoreBestStreak = migrations.define({
       streakFreezes: Math.max(doc.streakFreezes ?? 0, FREEZE_CAP),
       brokenStreak: undefined,
     };
+  },
+});
+
+// Browse search (#549): fills `searchText` on entries ingested before it
+// existed (ingest skips an unchanged sha, so a re-ingest won't). Recomputes
+// from the row and its facets, writing only on a difference — safe to re-run.
+//   bunx convex run migrations:run '{"fn": "migrations:backfillLibrarySearchText"}'
+export const backfillLibrarySearchText = migrations.define({
+  table: "library_entries",
+  migrateOne: async (ctx, doc) => {
+    const facets = await ctx.db
+      .query("library_entry_facets")
+      .withIndex("by_entryId", (q) => q.eq("entryId", doc._id))
+      .take(500);
+    const searchText = searchTextOf(doc, facets);
+    if (doc.searchText !== searchText) return { searchText };
   },
 });
 

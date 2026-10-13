@@ -15,7 +15,7 @@ import type { Kind } from '@/src/features/library/home/library-copy';
  * `next` is the Up next card at the end of a read (#417); `continue` is the
  * home's Continue reading card (#420).
  */
-export type ReaderFrom = 'twig' | 'home' | 'hub' | 'kind' | 'subject' | 'share' | 'today' | 'next' | 'continue' | 'unknown';
+export type ReaderFrom = 'twig' | 'home' | 'hub' | 'kind' | 'subject' | 'share' | 'today' | 'next' | 'continue' | 'search' | 'unknown';
 
 type Entry = { slug: string };
 

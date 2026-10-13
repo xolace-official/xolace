@@ -156,6 +156,7 @@ Every expo-router API used below has been checked against the installed 57.0.17 
 - **Source:** `A/src/app/(app)/(tabs)/(search)/index.tsx:42-62`, `O/Oyelo/Features/LibraryView.swift:254-258`.
 - **Sketch (M):** add `Stack.SearchBar` to the browse index. Debounce with `src/lib/use-debounce.ts` and hold results with `useStableQuery`. Add themed empty and no-result states.
 - **Gotcha:** do not add a `role="search"` tab.
+- **Status (2026-10-13): in progress** (#549). The tracer bullet ships the bar on the Browse home with a Lantern section (`src/features/browse/search/browse-home.tsx`, `convex/library/search.ts`). Scope is one search over the whole catalogue (CONTEXT.md "Browse search"), so Lantern home gets no bar of its own. Audio, music and hubs and topics sections follow.
 
 ---
 

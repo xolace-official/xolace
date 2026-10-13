@@ -4,6 +4,7 @@ import type { Doc } from "../_generated/dataModel";
 import { PRIMARY_EMOTIONS, THEMATIC_TAGS, canonicalFacet } from "../lib/understandingVocab";
 import schema from "../schema";
 import { assertImageAlts } from "./imageAlts";
+import { searchTextOf } from "./search";
 import { manifestSource, replaceSources, resolveSources } from "./sources";
 
 /**
@@ -25,6 +26,7 @@ const {
   readMin: _readMin,
   safetyReviewedAt: _safetyReviewedAt,
   sha256: _entrySha,
+  searchText: _searchText,
   ...entryManifestFields
 } = schema.tables.library_entries.validator.fields;
 
@@ -120,6 +122,7 @@ export const upsertEntry = internalMutation({
       // A review covers one body: any edit clears it (#392).
       safetyReviewedAt: body?.markdown === markdown ? existing?.safetyReviewedAt : undefined,
       sha256,
+      searchText: searchTextOf(fields, pairs.values()),
     };
     assertPublishable(doc);
 
