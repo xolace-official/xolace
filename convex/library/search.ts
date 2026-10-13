@@ -1,8 +1,9 @@
+import { paginationOptsValidator, paginationResultValidator } from "convex/server";
 import { v } from "convex/values";
 import { query, type QueryCtx } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
 import { requireAuth } from "../lib/auth";
-import { activeTopics, thumbUrlFor, toTrackItem, trackItemValidator } from "../browse";
+import { activeTopics, familyValidator, thumbUrlFor, toTrackItem, trackItemValidator } from "../browse";
 import { cardItemValidator, coverOf, toListItem } from "./entries";
 import { withCardSignals } from "./reads";
 import { asWords } from "./searchText";
@@ -11,7 +12,7 @@ import { asWords } from "./searchText";
  * Browse search (#549, #550, CONTEXT.md "Browse search"). Lantern entries and
  * tracks match the `searchText` ingest writes (the `migrations:backfill*SearchText`
  * migrations fill older rows) — active rows only, never a retired one. Each
- * section is ranked on its own.
+ * section is ranked on its own; the `*Page` queries back a section's See all (#551).
  */
 
 const MAX_QUERY = 100;
@@ -26,21 +27,54 @@ export const searchEntries = query({
     const { profile } = await requireAuth(ctx);
     const text = queryWords(args.query);
     if (!text) return [];
-    const rows = await ctx.db
-      .query("library_entries")
-      .withSearchIndex("search_searchText", (q) => q.search("searchText", text).eq("active", true))
-      .take(MAX_RESULTS);
+    const rows = await entriesMatching(ctx, text).take(MAX_RESULTS);
     return await withCardSignals(ctx, profile._id, await Promise.all(rows.map(toListItem)));
   },
 });
 
-const searchFamily = (ctx: QueryCtx, family: Doc<"audio_tracks">["family"], text: string) =>
+const entriesMatching = (ctx: QueryCtx, text: string) =>
+  ctx.db
+    .query("library_entries")
+    .withSearchIndex("search_searchText", (q) => q.search("searchText", text).eq("active", true));
+
+const tracksMatching = (ctx: QueryCtx, family: Doc<"audio_tracks">["family"], text: string) =>
   ctx.db
     .query("audio_tracks")
     .withSearchIndex("search_searchText", (q) =>
       q.search("searchText", text).eq("active", true).eq("family", family),
-    )
-    .take(MAX_RESULTS);
+    );
+
+const searchFamily = (ctx: QueryCtx, family: Doc<"audio_tracks">["family"], text: string) =>
+  tracksMatching(ctx, family, text).take(MAX_RESULTS);
+
+const NOTHING = { page: [], isDone: true, continueCursor: "" };
+
+/** Lantern's See all: the same matches as `searchEntries`, a page at a time. */
+export const searchEntriesPage = query({
+  args: { query: v.string(), paginationOpts: paginationOptsValidator },
+  returns: paginationResultValidator(cardItemValidator),
+  handler: async (ctx, args) => {
+    const { profile } = await requireAuth(ctx);
+    const text = queryWords(args.query);
+    if (!text) return NOTHING;
+    const result = await entriesMatching(ctx, text).paginate(args.paginationOpts);
+    const items = await Promise.all(result.page.map(toListItem));
+    return { ...result, page: await withCardSignals(ctx, profile._id, items) };
+  },
+});
+
+/** Support audio's or Music's See all: the same matches as `searchCatalogue`, a page at a time. */
+export const searchTracksPage = query({
+  args: { query: v.string(), family: familyValidator, paginationOpts: paginationOptsValidator },
+  returns: paginationResultValidator(trackItemValidator),
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const text = queryWords(args.query);
+    if (!text) return NOTHING;
+    const result = await tracksMatching(ctx, args.family, text).paginate(args.paginationOpts);
+    return { ...result, page: await Promise.all(result.page.map(toTrackItem)) };
+  },
+});
 
 const placeValidator = v.object({
   kind: v.union(v.literal("hub"), v.literal("topic")),

@@ -107,7 +107,7 @@ export const getFeatured = query({
 // Browsing screens (#339, docs/paths-v1.md §9.3)
 // ---------------------------------------------------------------------------
 
-const familyValidator = v.union(v.literal("support"), v.literal("music"));
+export const familyValidator = v.union(v.literal("support"), v.literal("music"));
 
 export const trackItemValidator = v.object({
   _id: v.id("audio_tracks"),

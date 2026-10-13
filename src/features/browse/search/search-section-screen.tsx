@@ -1,0 +1,114 @@
+/**
+ * A Browse search section's See all (#551, `search?section=…&q=…`): every
+ * match for that query, in the rows Browse already uses. Lantern, Support
+ * audio and Music page in on scroll; Hubs & topics is a small bounded list,
+ * so it shows whole.
+ */
+import type { PaginationStatus } from 'convex/browser';
+import { usePaginatedQuery, useQuery } from 'convex/react';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { LegendList } from '@legendapp/list/react-native';
+import type { ReactElement } from 'react';
+import { ActivityIndicator, ScrollView } from 'react-native';
+
+import { api } from '@/convex/_generated/api';
+import { AppText } from '@/src/components/shared/app-text';
+import { FAMILY_LABEL, TrackRow } from '@/src/features/browse/components/track-row';
+import { useMiniPlayerInset } from '@/src/features/browse/now-playing/now-playing-store';
+import { PlaceRow } from '@/src/features/browse/search/place-row';
+import { EntryRow } from '@/src/features/library/home/entry-cards';
+import { RowsSkeleton } from '@/src/features/library/skeletons';
+
+export type SearchSection = 'lantern' | 'support' | 'music' | 'places';
+
+const PAGE_SIZE = 20;
+export const SECTION_TITLE: Record<SearchSection, string> = {
+  lantern: 'Lantern',
+  ...FAMILY_LABEL,
+  places: 'Hubs & topics',
+};
+
+function Paged<T extends { _id: string }>({
+  page: { results, status, isLoading, loadMore },
+  row,
+}: {
+  page: {
+    results: T[];
+    status: PaginationStatus;
+    isLoading: boolean;
+    loadMore: (n: number) => void;
+  };
+  row: (item: T) => ReactElement;
+}) {
+  const playerInset = useMiniPlayerInset();
+  if (status === 'LoadingFirstPage') return <RowsSkeleton count={4} />;
+  return (
+    <LegendList
+      data={results}
+      renderItem={({ item }) => row(item)}
+      keyExtractor={(item) => item._id}
+      estimatedItemSize={80}
+      onEndReached={status === 'CanLoadMore' ? () => loadMore(PAGE_SIZE) : undefined}
+      onEndReachedThreshold={0.4}
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={{ paddingBottom: 40 + playerInset }}
+      ListEmptyComponent={<AppText className="px-4 pt-8 text-[15px] text-muted">Nothing matches that.</AppText>}
+      ListFooterComponent={isLoading && results.length > 0 ? <ActivityIndicator className="py-4" /> : null}
+    />
+  );
+}
+
+function Entries({ query }: { query: string }) {
+  const page = usePaginatedQuery(api.library.search.searchEntriesPage, { query }, { initialNumItems: PAGE_SIZE });
+  return <Paged page={page} row={(e) => <EntryRow entry={e} from="search" />} />;
+}
+
+function Tracks({ query, family }: { query: string; family: 'support' | 'music' }) {
+  const page = usePaginatedQuery(
+    api.library.search.searchTracksPage,
+    { query, family },
+    { initialNumItems: PAGE_SIZE },
+  );
+  return <Paged page={page} row={(t) => <TrackRow track={t} from="search" />} />;
+}
+
+function Places({ query }: { query: string }) {
+  const playerInset = useMiniPlayerInset();
+  const places = useQuery(api.library.search.searchCatalogue, {
+    query,
+  })?.places;
+  return (
+    <ScrollView
+      className="flex-1 bg-background"
+      contentInsetAdjustmentBehavior="automatic"
+      contentContainerStyle={{ paddingBottom: 40 + playerInset }}
+    >
+      {places === undefined ? (
+        <RowsSkeleton count={4} />
+      ) : (
+        places.map((p) => <PlaceRow key={`${p.kind}:${p.slug}`} place={p} />)
+      )}
+    </ScrollView>
+  );
+}
+
+export function SearchSectionScreen() {
+  const { section, q = '' } = useLocalSearchParams<{
+    section?: string;
+    q?: string;
+  }>();
+  const known: SearchSection =
+    section && Object.hasOwn(SECTION_TITLE, section) ? (section as SearchSection) : 'lantern';
+  return (
+    <>
+      <Stack.Screen options={{ title: SECTION_TITLE[known] }} />
+      {known === 'lantern' ? (
+        <Entries query={q} />
+      ) : known === 'places' ? (
+        <Places query={q} />
+      ) : (
+        <Tracks query={q} family={known} />
+      )}
+    </>
+  );
+}

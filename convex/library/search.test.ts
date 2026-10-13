@@ -149,3 +149,49 @@ describe("library.search.searchCatalogue", () => {
     });
   });
 });
+
+describe("library.search See all pages (#551)", () => {
+  const first = (numItems: number) => ({ numItems, cursor: null });
+
+  it("pages matching active entries, never a retired one", async () => {
+    const user = await asNewUser();
+    await user.root.run(async (ctx) => {
+      for (const n of [1, 2, 3]) await ctx.db.insert("library_entries", entry(`e${n}`, "exam nerves"));
+      await ctx.db.insert("library_entries", entry("retired", "exam nerves", false));
+    });
+    const p1 = await user.t.query(api.library.search.searchEntriesPage, { query: "exam", paginationOpts: first(2) });
+    expect(p1.page).toHaveLength(2);
+    expect(p1.page[0]).toMatchObject({ views: 0, saved: false });
+    expect(p1.isDone).toBe(false);
+    const p2 = await user.t.query(api.library.search.searchEntriesPage, {
+      query: "exam",
+      paginationOpts: { numItems: 2, cursor: p1.continueCursor },
+    });
+    expect([...p1.page, ...p2.page].map((e) => e.slug).sort()).toEqual(["e1", "e2", "e3"]);
+  });
+
+  it("pages one family's matching active tracks", async () => {
+    const user = await asNewUser();
+    await user.root.run(async (ctx) => {
+      await ctx.db.insert("audio_tracks", track("m1", "music", { sourceTags: ["piano"] }));
+      await ctx.db.insert("audio_tracks", track("m2", "music", { sourceTags: ["piano"], active: false }));
+      await ctx.db.insert("audio_tracks", track("s1", "support", { narrators: ["piano"] }));
+    });
+    const r = await user.t.query(api.library.search.searchTracksPage, {
+      query: "piano",
+      family: "music",
+      paginationOpts: first(10),
+    });
+    expect(r.page.map((t) => t.slug)).toEqual(["m1"]);
+  });
+
+  it("searches nothing for a blank query", async () => {
+    const user = await asNewUser();
+    const r = await user.t.query(api.library.search.searchTracksPage, {
+      query: " ",
+      family: "support",
+      paginationOpts: first(10),
+    });
+    expect(r).toMatchObject({ page: [], isDone: true });
+  });
+});
