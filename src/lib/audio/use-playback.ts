@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAudioPlayer, useAudioPlayerStatus, type AudioMetadata } from 'expo-audio';
 import { ConvexError } from 'convex/values';
-import { claimAudioFocus, claimAudioSession } from '@/src/lib/audio/session';
+import {
+  audioFocusEpoch,
+  claimAudioFocus,
+  claimAudioSession,
+  holdsAudioFocus,
+} from '@/src/lib/audio/session';
 
 /** What any signed-URL player needs from its server read. */
 export type Playable = { url: string; expiresAt: number; durationSec: number };
@@ -44,8 +49,9 @@ export function usePlayback<T extends Playable>(
   const [track, setTrack] = useState<T | null | undefined>(undefined);
   const [error, setError] = useState<Error | null>(null);
   // Applied once the (re)built player reports loaded: where to resume, and
-  // whether the user had asked to play.
-  const pending = useRef<{ seek: number; play: boolean } | null>(null);
+  // whether the user had asked to play. `epoch` is the focus epoch at request
+  // time: if another source took focus since, the queued play is stale.
+  const pending = useRef<{ seek: number; play: boolean; epoch: number } | null>(null);
   const [volume, setVolumeState] = useState(1);
   // Identity for audio focus: the ref object itself, not its contents.
   const focus = useRef(null);
@@ -91,15 +97,17 @@ export function usePlayback<T extends Playable>(
 
   useEffect(() => {
     if (!pending.current || !status.isLoaded) return;
-    const { seek, play } = pending.current;
+    const { seek, play, epoch } = pending.current;
     pending.current = null;
     (async () => {
       if (seek > 0) await player.seekTo(seek);
-      if (play) {
-        await claimAudioSession(focus, () => player.pause());
-        if (track) player.setActiveForLockScreen(true, lockScreen(track));
-        player.play();
-      }
+      // Someone else started (or a recorder yielded) while this one loaded:
+      // their sound wins, the stale request is dropped.
+      if (!play || (audioFocusEpoch() !== epoch && !holdsAudioFocus(focus))) return;
+      await claimAudioSession(focus, () => player.pause());
+      if (!holdsAudioFocus(focus)) return;
+      if (track) player.setActiveForLockScreen(true, lockScreen(track));
+      player.play();
     })().catch((e) => console.error('[usePlayback] resume failed:', e));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- track read for lock-screen metadata only, not a resume trigger
   }, [status.isLoaded, player]);
@@ -132,7 +140,7 @@ export function usePlayback<T extends Playable>(
   const remintIfExpired = async (seek: number, play: boolean) => {
     // `expiresAt` is server time; the margin absorbs a slow device clock.
     if (!track || Date.now() + EXPIRY_MARGIN_MS < track.expiresAt) return false;
-    pending.current = { seek, play };
+    pending.current = { seek, play, epoch: audioFocusEpoch() };
     try {
       setTrack(await mint());
     } catch (e) {
@@ -154,12 +162,13 @@ export function usePlayback<T extends Playable>(
       const from = status.didJustFinish ? 0 : status.currentTime;
       if (await remintIfExpired(from, true)) return;
       if (!status.isLoaded) {
-        pending.current = { seek: 0, play: true };
+        pending.current = { seek: 0, play: true, epoch: audioFocusEpoch() };
         return;
       }
       await claimAudioSession(focus, () => player.pause());
-      player.setActiveForLockScreen(true, lockScreen(track));
       if (status.didJustFinish) await player.seekTo(0);
+      if (!holdsAudioFocus(focus)) return;
+      player.setActiveForLockScreen(true, lockScreen(track));
       player.play();
     } catch (e) {
       console.error('[usePlayback] toggle failed:', e);

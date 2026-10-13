@@ -14,6 +14,12 @@ export const AUDIO_SESSION = {
 /** Who is audible: a per-hook identity (its ref object) and how to silence it. */
 type Focus = { owner: RefObject<unknown>; pause: () => void };
 let active: Focus | null = null;
+// Bumps whenever focus changes hands, so a play queued before an await can
+// tell that another source spoke up in the meantime.
+let epoch = 0;
+
+export const audioFocusEpoch = () => epoch;
+export const holdsAudioFocus = (owner: RefObject<unknown>) => active?.owner === owner;
 
 /**
  * One sound at a time (S4). The player about to make sound claims focus and
@@ -21,6 +27,7 @@ let active: Focus | null = null;
  * the hook's ref object, stable across re-minted players.
  */
 export function claimAudioFocus(owner: RefObject<unknown>, pause: () => void) {
+  if (active?.owner !== owner) epoch++;
   if (active && active.owner !== owner) {
     try {
       active.pause();
@@ -39,6 +46,7 @@ export function yieldAudioFocus() {
     // released player, see above
   }
   active = null;
+  epoch++;
 }
 
 /** Every in-app player calls this right before `play()`. */
