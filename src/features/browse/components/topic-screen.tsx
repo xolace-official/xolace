@@ -43,6 +43,7 @@ export function TopicScreen() {
   const from: BrowseFrom = params.from && FROM_VALUES.has(params.from) ? params.from : 'topic';
   const posthog = usePostHog();
   const tracks = useQuery(api.browse.getTopic, { slug });
+  const title = useQuery(api.browse.getTopicTitle, { slug });
   const [segment, setSegment] = useState<Segment>(family === 'music' || family === 'support' ? family : 'all');
 
   const renderItem = ({ item }: { item: Row }) => {
@@ -71,7 +72,7 @@ export function TopicScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: titleFor(slug) }} />
+      <Stack.Screen options={{ title: title ?? titleFor(slug) }} />
       <BrowseFilterMenu title="Show" value={segment} options={options} onChange={setSegment} />
       {tracks === undefined ? (
         <ScrollView

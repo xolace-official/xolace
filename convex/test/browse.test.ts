@@ -145,3 +145,14 @@ describe("browse.getTopic", () => {
     expect(tracks[2].attribution).toBe("Music by Artist");
   });
 });
+
+describe("browse.getTopicTitle", () => {
+  it("uses the curated title, else the one derived from the slug", async () => {
+    const user = await asNewUser();
+    await user.root.run(async (ctx) => {
+      await ctx.db.insert("topics", { slug: "sleep_rest", title: "Sleep & Rest", thumbKey: "thumb/s.webp", thumbSha256: "s" });
+    });
+    expect(await user.t.query(api.browse.getTopicTitle, { slug: "sleep_rest" })).toBe("Sleep & Rest");
+    expect(await user.t.query(api.browse.getTopicTitle, { slug: "self_worth" })).toBe("Self worth");
+  });
+});

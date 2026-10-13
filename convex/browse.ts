@@ -219,6 +219,20 @@ export const getTopics = query({
   },
 });
 
+/** Topic screen header: the curated `topics` title (#353), else the slug-derived one the grid uses. */
+export const getTopicTitle = query({
+  args: { slug: v.string() },
+  returns: v.string(),
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const row = await ctx.db
+      .query("topics")
+      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+      .unique();
+    return row?.title || topicTitle(args.slug);
+  },
+});
+
 /** Topic screen — both families' active tracks for one shared topic slug. */
 export const getTopic = query({
   args: { slug: v.string() },
