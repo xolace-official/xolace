@@ -14,17 +14,30 @@ import { imageSource } from '@/src/lib/image-source';
 import { cn } from '@/src/lib/utils';
 import { clearNowPlaying, togglePlayback, useNowPlaying, useNowPlayingPlayback } from '@/src/features/browse/now-playing/now-playing-store';
 
+// Object form: a bare SF name renders nothing on Android.
+const PLAY = { ios: 'play.fill', android: 'play_arrow', web: 'play_arrow' } as const;
+const PAUSE = { ios: 'pause.fill', android: 'pause', web: 'pause' } as const;
+const CLOSE = { ios: 'xmark', android: 'close', web: 'close' } as const;
+
 // 32pt art inside the 48pt capsule, as Apple Music measures it.
 const ART = { width: 32, height: 32, borderRadius: 5, borderCurve: 'continuous' } as const;
 
 /**
  * The Browse mini-player in the iOS 26 tab bar (S4). The tab bar mounts this
  * twice (regular + inline placement), so it holds no state: both copies read
- * the one now-playing store. The body opens the full player, which re-checks
- * the Plus gate like every other way in.
+ * the one now-playing store.
  */
 export function MiniPlayerAccessory() {
   const placement = NativeTabs.BottomAccessory.usePlacement();
+  return <MiniPlayerContent inline={placement === 'inline'} />;
+}
+
+/**
+ * The mini-player's row, shared by the iOS 26 accessory and the overlay capsule
+ * elsewhere. The body opens the full player, which re-checks the Plus gate
+ * like every other way in.
+ */
+export function MiniPlayerContent({ inline }: { inline: boolean }) {
   const np = useNowPlaying();
   const p = useNowPlayingPlayback();
   const posthog = usePostHog();
@@ -51,7 +64,6 @@ export function MiniPlayerAccessory() {
     clearNowPlaying();
   };
 
-  const inline = placement === 'inline';
   const playGlyph = (
     <Pressable
       onPress={toggle}
@@ -60,7 +72,7 @@ export function MiniPlayerAccessory() {
       accessibilityRole="button"
       accessibilityLabel={p.isPlaying ? 'Pause' : 'Play'}
     >
-      <SymbolView name={p.isPlaying ? 'pause.fill' : 'play.fill'} size={inline ? 16 : 20} tintColor={foreground} />
+      <SymbolView name={p.isPlaying ? PAUSE : PLAY} size={inline ? 16 : 20} tintColor={foreground} />
     </Pressable>
   );
 
@@ -101,7 +113,7 @@ export function MiniPlayerAccessory() {
           accessibilityLabel="Stop and close"
           accessibilityHint="Stops this track and removes the mini-player"
         >
-          <SymbolView name="xmark" size={16} weight="semibold" tintColor={muted} />
+          <SymbolView name={CLOSE} size={16} weight="semibold" tintColor={muted} />
         </Pressable>
       )}
     </View>

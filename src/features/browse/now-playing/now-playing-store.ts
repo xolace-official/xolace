@@ -98,11 +98,18 @@ export function useNowPlayingPlayback(slug?: string): Playback {
 /** A boolean snapshot, so the tab layout doesn't re-render on every status tick. */
 export const useNowPlayingLoaded = () => useSyncExternalStore(subscribe, getLoaded, getLoaded);
 
-/** The accessory capsule plus its gap above the tab bar — what floating UI over the tabs must clear. */
+/** The mini-player capsule plus its gap above the tab bar — what floating UI over the tabs must clear. */
 export const MINI_PLAYER_CLEARANCE = 64;
-/** Whether the accessory is on screen: iOS 26 only, and it yields with the bar. */
+/**
+ * Whether the mini-player is on screen — the tab-bar accessory on iOS 26, the
+ * overlay capsule everywhere else — and it yields with the bar.
+ */
 export function useMiniPlayerShown() {
   const loaded = useNowPlayingLoaded();
   const hidden = useTabBarHidden();
-  return loaded && !hidden && isLiquidGlassAvailable();
+  return loaded && !hidden;
+}
+/** Scroll tail a tab screen reserves for the overlay; iOS 26 insets its accessory natively. */
+export function useMiniPlayerInset() {
+  return useMiniPlayerShown() && !isLiquidGlassAvailable() ? MINI_PLAYER_CLEARANCE : 0;
 }

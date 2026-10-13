@@ -65,13 +65,9 @@ function Player() {
   const { slug, from, stepId } = useLocalSearchParams<Params>();
   // The audio lives in NowPlayingHost; opening for the loaded slug (e.g. from
   // the mini-player) keeps playing, another slug swaps the track.
+  // Closing the player leaves it playing; the mini-player keeps it reachable.
   useEffect(() => {
     setNowPlaying({ slug, stepId, from });
-    // Only iOS 26 has the tab-bar mini-player to keep it reachable; elsewhere
-    // closing the player stops the audio, as it always has.
-    return () => {
-      if (!isLiquidGlassAvailable()) clearNowPlaying();
-    };
   }, [slug, stepId, from]);
   const p = useNowPlayingPlayback(slug);
   const insets = useSafeAreaInsets();

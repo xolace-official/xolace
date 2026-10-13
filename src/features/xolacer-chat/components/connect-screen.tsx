@@ -18,6 +18,7 @@ import { ChatsList } from './chats-list';
 import { ConversationActions } from './conversation-actions';
 import { XolacerRoster } from './xolacer-roster';
 import { XolacerSetupBanner } from './xolacer-setup-banner';
+import { useMiniPlayerInset } from '@/src/features/browse/now-playing/now-playing-store';
 
 type Segment = 'chats' | 'xolacers';
 
@@ -55,6 +56,8 @@ export function ConnectScreen({
   /** Kindling twig that sent us — carried to the profile, tended on request. */
   stepId?: string;
 }) {
+  // Clears the floating mini-player off the last row (none on iOS 26).
+  const playerInset = useMiniPlayerInset();
   const router = useRouter();
   const status = useQuery(api.xolacerChat.status);
   const conversations = useQuery(api.xolacerChat.myConversations);
@@ -167,6 +170,7 @@ export function ConnectScreen({
         className="flex-1 bg-background"
         contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName="px-4 pb-10 gap-4"
+        contentContainerStyle={playerInset ? { paddingBottom: 40 + playerInset } : undefined}
         showsVerticalScrollIndicator={false}
       >
         {loading ? (

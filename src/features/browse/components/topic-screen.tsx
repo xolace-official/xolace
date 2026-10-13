@@ -11,6 +11,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { topicRows, type Segment, type TopicRow } from '../topic-sections';
 import { BrowseFilterMenu, type FilterOption } from './browse-filter-menu';
 import { FAMILY_LABEL, TrackRow, type BrowseFrom, type TrackItem } from './track-row';
+import { useMiniPlayerInset } from '@/src/features/browse/now-playing/now-playing-store';
 
 type Row = TopicRow<TrackItem>;
 type Params = { slug: string; family?: Segment; from?: BrowseFrom };
@@ -34,6 +35,8 @@ const titleFor = (slug: string) => {
  * (§9.6) and its plays read `twig-more-like-this` in analytics.
  */
 export function TopicScreen() {
+  // Clears the floating mini-player off the last row (none on iOS 26).
+  const playerInset = useMiniPlayerInset();
   const params = useLocalSearchParams<Params>();
   const { slug, family } = params;
   // URL params are untyped strings; only the two values that can land here are trusted.
@@ -91,7 +94,7 @@ export function TopicScreen() {
           estimatedItemSize={68}
           recycleItems
           contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={{ paddingTop: 8, paddingBottom: 40 }}
+          contentContainerStyle={{ paddingTop: 8, paddingBottom: 40 + playerInset }}
         />
       )}
     </>

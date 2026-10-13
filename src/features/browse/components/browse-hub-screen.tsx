@@ -13,6 +13,7 @@ import { imageSource } from '@/src/lib/image-source';
 import { playSoftPress } from '@/src/lib/haptics';
 import { ShelfTile } from '@/src/features/browse/components/shelf-tile';
 import { pickListeningTip } from '@/src/features/browse/components/listening-tip';
+import { useMiniPlayerInset } from '@/src/features/browse/now-playing/now-playing-store';
 
 type Entry = {
   id: 'support' | 'music' | 'topics' | 'lantern';
@@ -59,6 +60,8 @@ function EntryButton({ entry }: { entry: Entry }) {
  * every signed-in user; the free-user gate is on playback, not browsing.
  */
 export function BrowseHubScreen() {
+  // Clears the floating mini-player off the last row (none on iOS 26).
+  const playerInset = useMiniPlayerInset();
   const { width } = useWindowDimensions();
   const posthog = usePostHog();
   const shelf = useQuery(api.browse.getNewShelf, {});
@@ -75,7 +78,7 @@ export function BrowseHubScreen() {
     <ScrollView
       className="flex-1 bg-background"
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={{ paddingBottom: 40 }}
+      contentContainerStyle={{ paddingBottom: 40 + playerInset }}
     >
       <View className="flex-row items-center gap-1.5 px-4 pt-4">
         <SymbolView
