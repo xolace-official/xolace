@@ -66,6 +66,7 @@ export function useMirrorAudio(
         player.pause();
       } else {
         await claimAudioSession(focus, () => player.pause());
+        if (!holdsAudioFocus(focus)) return;
         if (status.didJustFinish) {
           player.seekTo(0);
         }

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { VOICE_PREVIEWS } from "@/src/features/settings/voice-options";
-import { claimAudioSession } from "@/src/lib/audio/session";
+import { claimAudioSession, holdsAudioFocus } from "@/src/lib/audio/session";
 import type { VoiceSlug } from "@/convex/lib/voices";
 
 type UseVoicePreviewReturn = {
@@ -35,6 +35,8 @@ export function useVoicePreview(): UseVoicePreviewReturn {
         return;
       }
       await claimAudioSession(focus, () => player.pause());
+      // Another source (or a recorder) took focus during the await.
+      if (!holdsAudioFocus(focus)) return;
       player.replace(VOICE_PREVIEWS[slug]);
       player.play();
       setActiveSlug(slug);
