@@ -11,7 +11,7 @@ import { useAccessibilityInfo } from '@/src/helpers/hooks/use-accessability-info
 import { playSoftPress } from '@/src/lib/haptics';
 import { imageSource } from '@/src/lib/image-source';
 import { cn } from '@/src/lib/utils';
-import { clearNowPlaying, useNowPlaying, useNowPlayingPlayback } from './now-playing-store';
+import { clearNowPlaying, useNowPlaying, useNowPlayingPlayback } from '@/src/features/browse/now-playing/now-playing-store';
 
 // 32pt art inside the 48pt capsule, as Apple Music measures it.
 const ART = { width: 32, height: 32, borderRadius: 5, borderCurve: 'continuous' } as const;

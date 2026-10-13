@@ -15,9 +15,9 @@ import { AppText } from '@/src/components/shared/app-text';
 import { trackLibrary } from '@/src/features/library/analytics';
 import { detectCountry } from '@/src/features/crisis-resources/use-crisis-resources';
 import { useAppStore } from '@/src/store/store';
-import { COVER_BUTTON, CoverGlass } from './cover-glass';
-import { REFLECT_PROMPT, shareMessage } from './reader-copy';
-import type { ReaderEntry } from './reader-screen';
+import { COVER_BUTTON, CoverGlass } from '@/src/features/library/reader/cover-glass';
+import { REFLECT_PROMPT, shareMessage } from '@/src/features/library/reader/reader-copy';
+import type { ReaderEntry } from '@/src/features/library/reader/reader-screen';
 
 const NOTE_ICON = { ios: 'exclamationmark.circle', android: 'info', web: 'info' } as const;
 export const SHARE_ICON = { ios: 'square.and.arrow.up', android: 'share', web: 'share' } as const;

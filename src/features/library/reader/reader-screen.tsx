@@ -31,17 +31,17 @@ import { AppText } from '@/src/components/shared/app-text';
 import { AX_FONT_SCALE } from '@/src/features/library/home/entry-cards';
 import { useEffectiveReducedMotion } from '@/src/lib/motion/use-effective-reduced-motion';
 import { useAppStore } from '@/src/store/store';
-import { AudioDock, BAR_MAX_SCALE, ListenPill } from './audio-dock';
-import { BackToTop } from './back-to-top';
-import { EndOfRead } from './end-of-read';
-import { ContentNote, FireDim, HelplineLink, ReflectOnThis, ShareButton } from './reader-extras';
-import { ReaderPageScope } from './reader-page';
-import { AaButton, BackButton, CoverPhoto, ReaderBody, ReaderTitle, SaveButton, SourceCredit, useSaveToggle } from './reader-parts';
-import { READING_MODES, useReadingFonts } from './reading-mode';
-import { EntryCredits } from './entry-credits';
-import { useEntryAudio } from './use-entry-audio';
-import { useReadSignals } from './use-read-signals';
-import { useMarkdownStyle } from './use-markdown-style';
+import { AudioDock, BAR_MAX_SCALE, ListenPill } from '@/src/features/library/reader/audio-dock';
+import { BackToTop } from '@/src/features/library/reader/back-to-top';
+import { EndOfRead } from '@/src/features/library/reader/end-of-read';
+import { ContentNote, FireDim, HelplineLink, ReflectOnThis, ShareButton } from '@/src/features/library/reader/reader-extras';
+import { ReaderPageScope } from '@/src/features/library/reader/reader-page';
+import { AaButton, BackButton, CoverPhoto, ReaderBody, ReaderTitle, SaveButton, SourceCredit, useSaveToggle } from '@/src/features/library/reader/reader-parts';
+import { READING_MODES, useReadingFonts } from '@/src/features/library/reader/reading-mode';
+import { EntryCredits } from '@/src/features/library/reader/entry-credits';
+import { useEntryAudio } from '@/src/features/library/reader/use-entry-audio';
+import { useReadSignals } from '@/src/features/library/reader/use-read-signals';
+import { useMarkdownStyle } from '@/src/features/library/reader/use-markdown-style';
 
 export type ReaderEntry = NonNullable<FunctionReturnType<typeof api.library.entries.getEntry>>;
 

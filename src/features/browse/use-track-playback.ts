@@ -4,7 +4,7 @@ import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { usePlayback, type PlaybackReturn } from '@/src/lib/audio/use-playback';
-import { getLockScreenMetadata } from './track-lock-screen-metadata';
+import { getLockScreenMetadata } from '@/src/features/browse/track-lock-screen-metadata';
 
 export type BoundTrack = NonNullable<FunctionReturnType<typeof api.paths.getBoundAudioTrack>>;
 

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import type { Id } from '@/convex/_generated/dataModel';
 import { useTrackPlayback } from '@/src/features/browse/use-track-playback';
 import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlement';
-import { clearNowPlaying, publishPlayback, useNowPlaying } from './now-playing-store';
+import { clearNowPlaying, publishPlayback, useNowPlaying } from '@/src/features/browse/now-playing/now-playing-store';
 
 /**
  * Owns the Browse track's audio above every screen (S4), so closing the

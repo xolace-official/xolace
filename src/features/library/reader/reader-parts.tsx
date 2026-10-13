@@ -12,11 +12,11 @@ import { useCSSVariable } from 'uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { CoverImage } from '@/src/features/library/cover-image';
 import { cn } from '@/src/lib/utils';
-import { COVER_BUTTON, CoverGlass } from './cover-glass';
-import { COVER_SCRIM } from './cover-palette';
-import { headerCredit, metaLabel, metaLine, prepareBody } from './reader-copy';
-import type { ReaderEntry } from './reader-screen';
-import { logDropped, useRecord } from './use-read-signals';
+import { COVER_BUTTON, CoverGlass } from '@/src/features/library/reader/cover-glass';
+import { COVER_SCRIM } from '@/src/features/library/reader/cover-palette';
+import { headerCredit, metaLabel, metaLine, prepareBody } from '@/src/features/library/reader/reader-copy';
+import type { ReaderEntry } from '@/src/features/library/reader/reader-screen';
+import { logDropped, useRecord } from '@/src/features/library/reader/use-read-signals';
 
 const BACK_ICON = { ios: 'chevron.left', android: 'arrow_back', web: 'arrow_back' } as const;
 const AA_ICON = { ios: 'textformat.size', android: 'text_fields', web: 'text_fields' } as const;

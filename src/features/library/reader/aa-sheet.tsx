@@ -13,8 +13,8 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { AppText } from '@/src/components/shared/app-text';
 import { cn } from '@/src/lib/utils';
 import { useAppStore } from '@/src/store/store';
-import { ReaderPageScope } from './reader-page';
-import { READING_MODE_KEYS, READING_MODES, stepTextSize, TEXT_SIZES, type ReadingModeKey } from './reading-mode';
+import { ReaderPageScope } from '@/src/features/library/reader/reader-page';
+import { READING_MODE_KEYS, READING_MODES, stepTextSize, TEXT_SIZES, type ReadingModeKey } from '@/src/features/library/reader/reading-mode';
 
 export function AaSheet() {
   return (

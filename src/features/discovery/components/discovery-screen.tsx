@@ -1,12 +1,12 @@
 import { ScrollView, View } from 'react-native';
 
-import { CohortCard } from './cohort-card';
-import { DiscoveryHeader } from './discovery-header';
-import { DailyQuotesCard } from './daily-quotes-card';
-import { DiscoveryTimelineSection } from './discovery-timeline-section';
-import { KindlingTodayCard } from './kindling-today-card';
+import { CohortCard } from '@/src/features/discovery/components/cohort-card';
+import { DiscoveryHeader } from '@/src/features/discovery/components/discovery-header';
+import { DailyQuotesCard } from '@/src/features/discovery/components/daily-quotes-card';
+import { DiscoveryTimelineSection } from '@/src/features/discovery/components/discovery-timeline-section';
+import { KindlingTodayCard } from '@/src/features/discovery/components/kindling-today-card';
 import { LibraryStrip } from '@/src/features/discovery/components/library-strip';
-import { DOCK_CLEARANCE, ReflectDock } from './reflect-dock';
+import { DOCK_CLEARANCE, ReflectDock } from '@/src/features/discovery/components/reflect-dock';
 import { MINI_PLAYER_CLEARANCE, useMiniPlayerShown } from '@/src/features/browse/now-playing/now-playing-store';
 
 /**
