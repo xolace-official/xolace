@@ -5,6 +5,7 @@ import { SymbolView } from 'expo-symbols';
 import { useThemeColor } from 'heroui-native';
 import { usePostHog } from 'posthog-react-native';
 import { Pressable, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { FAMILY_LABEL } from '@/src/features/browse/components/track-row';
@@ -12,6 +13,7 @@ import { useAccessibilityInfo } from '@/src/helpers/hooks/use-accessability-info
 import { playSoftPress } from '@/src/lib/haptics';
 import { imageSource } from '@/src/lib/image-source';
 import { cn } from '@/src/lib/utils';
+import { MarqueeTitle, useAttentionPulse } from '@/src/features/browse/now-playing/mini-player-motion';
 import { clearNowPlaying, togglePlayback, useNowPlaying, useNowPlayingPlayback } from '@/src/features/browse/now-playing/now-playing-store';
 
 // Object form: a bare SF name renders nothing on Android.
@@ -44,6 +46,7 @@ export function MiniPlayerContent({ inline }: { inline: boolean }) {
   const [foreground, muted] = useThemeColor(['foreground', 'muted']);
   // Under Reduce Transparency the bar's glass goes flat; give the content a solid fill.
   const { reduceTransparencyEnabled } = useAccessibilityInfo();
+  const pulse = useAttentionPulse();
   const track = p.track;
   if (!np || !track) return null;
 
@@ -77,7 +80,8 @@ export function MiniPlayerContent({ inline }: { inline: boolean }) {
   );
 
   return (
-    <View
+    <Animated.View
+      style={pulse}
       className={cn(
         'flex-1 flex-row items-center py-2',
         inline ? 'gap-2 pl-4 pr-6' : 'gap-2.5 pl-[15px] pr-3.5',
@@ -93,9 +97,7 @@ export function MiniPlayerContent({ inline }: { inline: boolean }) {
       >
         <Image source={imageSource(track.thumbUrl)} style={ART} />
         <View className="min-w-0 flex-1">
-          <AppText numberOfLines={1} className={cn('font-semibold text-foreground', inline ? 'text-[13px]' : 'text-[15px]')}>
-            {track.title}
-          </AppText>
+          <MarqueeTitle title={track.title} className={cn('font-semibold text-foreground', inline ? 'text-[13px]' : 'text-[15px]')} />
           {!inline && (
             <AppText numberOfLines={1} className="text-[13px] text-muted">
               {FAMILY_LABEL[track.family]}
@@ -116,6 +118,6 @@ export function MiniPlayerContent({ inline }: { inline: boolean }) {
           <SymbolView name={CLOSE} size={16} weight="semibold" tintColor={muted} />
         </Pressable>
       )}
-    </View>
+    </Animated.View>
   );
 }

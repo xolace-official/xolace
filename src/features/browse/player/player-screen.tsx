@@ -14,6 +14,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { type BrowseFrom, FAMILY_LABEL } from "@/src/features/browse/components/track-row";
 import {
   clearNowPlaying,
+  releaseMiniPlayerAttention,
   setNowPlaying,
   togglePlayback,
   useNowPlayingPlayback,
@@ -69,6 +70,7 @@ function Player() {
   useEffect(() => {
     setNowPlaying({ slug, stepId, from });
   }, [slug, stepId, from]);
+  useEffect(() => releaseMiniPlayerAttention, []);
   const p = useNowPlayingPlayback(slug);
   const insets = useSafeAreaInsets();
   const posthog = usePostHog();

@@ -22,6 +22,9 @@ let current: NowPlaying | null = null;
 let playback: Playback | null = null;
 // One `browse_track_played` per loaded track, however often the player reopens.
 let played = false;
+// A new track lifts the mini-player once, when the player closes over it (S4 pulse).
+let attention = 0;
+let attentionPending = false;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
@@ -58,6 +61,7 @@ export function setNowPlaying(next: NowPlaying) {
     // Never show the previous track's status under the new slug.
     playback = null;
     played = false;
+    attentionPending = true;
   }
   current = next;
   emit();
@@ -67,8 +71,19 @@ export function clearNowPlaying() {
   if (!current && !playback) return;
   current = null;
   playback = null;
+  attentionPending = false;
   emit();
 }
+
+/** Player screen unmount: a track loaded during that visit pulses the mini-player once. */
+export function releaseMiniPlayerAttention() {
+  if (!attentionPending || !current) return;
+  attentionPending = false;
+  attention++;
+  emit();
+}
+const getAttention = () => attention;
+export const useMiniPlayerAttention = () => useSyncExternalStore(subscribe, getAttention, getAttention);
 
 /** Host only. */
 export function publishPlayback(next: Playback | null) {
