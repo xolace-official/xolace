@@ -216,6 +216,7 @@ export function ConnectScreen({
                     : undefined
                 }
                 header={archivedEntry}
+                onArchive={actions.toggleArchive}
                 onBrowseXolacers={() => setSelected('xolacers')}
                 onLongPress={setSheetFor}
                 onOpen={() => setSheetFor(null)}

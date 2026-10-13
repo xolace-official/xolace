@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation } from 'convex/react';
 import { useToast } from 'heroui-native';
 import { api } from '@/convex/_generated/api';
+import { useAccessibilityInfo } from '@/src/helpers/hooks/use-accessability-info';
 import { playAffirmativePress } from '@/src/lib/haptics';
 import { setTabBarHidden } from '@/src/lib/tab-bar';
 import type { PairConversation } from './components/chats-list';
@@ -22,6 +23,7 @@ export function useConversationRowActions() {
   const unarchiveConversation = useMutation(api.xolacerChat.unarchiveConversation);
   const restConversation = useMutation(api.xolacerChat.restConversation);
   const deleteConversation = useMutation(api.xolacerChat.deleteConversation);
+  const { screenReaderEnabled } = useAccessibilityInfo();
   // The long-pressed row, which is also what the action sheet is: the bottom
   // toolbar only exists while something is selected.
   const [sheetFor, setSheetFor] = useState<PairConversation | null>(null);
@@ -38,17 +40,46 @@ export function useConversationRowActions() {
     return () => setTabBarHidden(false);
   }, [sheetFor]);
 
-  const toggleArchive = (conversation: PairConversation) => {
-    setSheetFor(null);
-    playAffirmativePress();
-    const call = conversation.archived ? unarchiveConversation : archiveConversation;
-    call({ conversationId: conversation.id }).catch((err: unknown) => {
-      console.error('[xolacer-chat] archive toggle failed', err);
-      toast.show({
-        label: conversation.archived ? "Couldn't unarchive" : "Couldn't archive",
-        description: 'Something went wrong. Try again.',
-        variant: 'default',
+  const archiveCall = (conversation: PairConversation, archive: boolean) =>
+    (archive ? archiveConversation : unarchiveConversation)({ conversationId: conversation.id })
+      .then(() => true)
+      .catch((err: unknown) => {
+        console.error('[xolacer-chat] archive toggle failed', err);
+        toast.show({
+          label: archive ? "Couldn't archive" : "Couldn't unarchive",
+          description: 'Something went wrong. Try again.',
+          variant: 'default',
+        });
+        return false;
       });
+
+  /**
+   * Shared by the long-press sheet and the row swipe. Both stamps are
+   * reversible, so this offers Undo instead of asking first. The swipe plays
+   * its own haptic at commit, so it passes `haptic: false`.
+   * Resolves false if the mutation failed, so a swiped row can close again.
+   */
+  const toggleArchive = (conversation: PairConversation, { haptic = true } = {}) => {
+    setSheetFor(null);
+    if (haptic) playAffirmativePress();
+    const archive = !conversation.archived;
+    // After the server confirms, not before: the row has no optimistic
+    // update, so this lands as it leaves the list, and a failure never shows
+    // "Archived" beside "Couldn't archive".
+    return archiveCall(conversation, archive).then((ok) => {
+      if (!ok) return false;
+      toast.show({
+        label: archive ? 'Archived' : 'Moved back to Chats',
+        actionLabel: 'Undo',
+        onActionPress: ({ hide }) => {
+          hide();
+          void archiveCall(conversation, !archive);
+        },
+        // Doubled with a screen reader on: the toast is announced, then the
+        // user still has to find and activate Undo.
+        duration: screenReaderEnabled ? 12000 : 6000,
+      });
+      return true;
     });
   };
 

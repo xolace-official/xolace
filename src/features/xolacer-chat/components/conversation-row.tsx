@@ -11,6 +11,7 @@ import { XolacerAvatar } from './xolacer-avatar';
 import { PresenceDot } from './presence-dot';
 import { rowPresentation } from './conversation-row-labels';
 import type { ConversationList } from './chats-list';
+import type { rowAccessibilityActions } from './swipeable-conversation-row';
 
 type Conversation = ConversationList[number];
 
@@ -21,6 +22,8 @@ export function ConversationRow(props: {
   conversation: Conversation;
   onPress: () => void;
   onLongPress?: () => void;
+  /** Pair rows only: the swipe's mirrored archive + "More actions". */
+  a11yActions?: ReturnType<typeof rowAccessibilityActions>;
   /** Omitted after the last row, so the list ends rather than stops. */
   showSeparator: boolean;
 }) {
@@ -39,11 +42,13 @@ function PairRow({
   conversation,
   onPress,
   onLongPress,
+  a11yActions,
   showSeparator,
 }: {
   conversation: Extract<Conversation, { kind: 'pair' }>;
   onPress: () => void;
   onLongPress?: () => void;
+  a11yActions?: ReturnType<typeof rowAccessibilityActions>;
   showSeparator: boolean;
 }) {
   // Both the subscription and the pill read the same rule, so a row that could
@@ -59,6 +64,7 @@ function PairRow({
     <PressableFeedback
       onPress={onPress}
       onLongPress={onLongPress}
+      {...a11yActions}
       accessibilityRole="button"
       accessibilityLabel={`Conversation with ${conversation.counterpartName}${
         conversation.counterpartPresent ? ', here right now' : ''

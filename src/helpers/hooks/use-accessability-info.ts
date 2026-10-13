@@ -5,6 +5,7 @@ export const useAccessibilityInfo = () => {
   const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
   const [reduceTransparencyEnabled, setReduceTransparencyEnabled] =
     useState(false);
+  const [screenReaderEnabled, setScreenReaderEnabled] = useState(false);
 
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -24,6 +25,12 @@ export const useAccessibilityInfo = () => {
         }
       );
 
+    const screenReaderChangedSubscription = AccessibilityInfo.addEventListener(
+      'screenReaderChanged',
+      setScreenReaderEnabled
+    );
+    AccessibilityInfo.isScreenReaderEnabled().then(setScreenReaderEnabled);
+
     AccessibilityInfo.isReduceMotionEnabled().then((isReduceMotionEnabled) => {
       setReduceMotionEnabled(isReduceMotionEnabled);
     });
@@ -36,11 +43,13 @@ export const useAccessibilityInfo = () => {
     return () => {
       reduceMotionChangedSubscription.remove();
       reduceTransparencyChangedSubscription.remove();
+      screenReaderChangedSubscription.remove();
     };
   }, []);
 
   return {
     reduceMotionEnabled,
     reduceTransparencyEnabled,
+    screenReaderEnabled,
   };
 };

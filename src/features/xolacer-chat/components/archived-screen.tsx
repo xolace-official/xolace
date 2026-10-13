@@ -58,6 +58,7 @@ export function ArchivedScreen() {
             </AppText>
             <ChatsList
               conversations={archived}
+              onArchive={actions.toggleArchive}
               onLongPress={actions.setSheetFor}
               onOpen={() => actions.setSheetFor(null)}
             />
