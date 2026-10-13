@@ -27,7 +27,6 @@ import { AppText } from "@/src/components/shared/app-text";
 import { playSoftPress } from "@/src/lib/haptics";
 import { useAppStore } from "@/src/store/store";
 import { posthog } from "@/src/config/posthog";
-import { shouldShowReflectTour } from "@/src/features/reflect/tour-copy";
 import {
   getCardMetrics,
   MINI_SIZE,
@@ -61,7 +60,7 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
   // Waits for any home sheet and the first-run tour so they never stack (#460).
   // Not homeSheetBlocking: that stays up through a follow-up's whole pending wait.
   const homeSheetOpen = useAppStore((s) => s.homeSheetOpen);
-  const tourPending = useAppStore((s) => shouldShowReflectTour(s.reflectTourVersion));
+  const tourActive = useAppStore((s) => s.reflectTourActive);
 
   const headerColor = useThemeColor("accent") as string;
   const headerTextColor = useThemeColor("accent-foreground") as string;
@@ -112,7 +111,7 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
       setLastAcknowledgedStreak(currentStreak);
       return;
     }
-    if (!revealPending || revealing || !isFocused || homeSheetOpen || tourPending) return;
+    if (!revealPending || revealing || !isFocused || homeSheetOpen || tourActive) return;
 
     // Reduced motion: skip the reveal entirely, just update the number
     if (reducedMotion) {
@@ -143,7 +142,7 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
     reducedMotion,
     isFocused,
     homeSheetOpen,
-    tourPending,
+    tourActive,
     miniRef,
     setLastAcknowledgedStreak,
   ]);

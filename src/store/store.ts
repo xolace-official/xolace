@@ -46,6 +46,13 @@ type OnboardingSlice = {
    */
   homeSheetOpen: boolean;
   setHomeSheetOpen: (v: boolean) => void;
+  /**
+   * The first-run tour is on screen right now. Transient — the streak reveal
+   * waits on it, not on the persisted version (a pending tour that can't start
+   * yet would otherwise park the reveal).
+   */
+  reflectTourActive: boolean;
+  setReflectTourActive: (v: boolean) => void;
 };
 
 type PendingEventPrompt = { text: string; label?: string; expiresAt: number; fromEntryId?: Id<'library_entries'> };
@@ -194,6 +201,8 @@ export const useAppStore = create<AppState>()(
         setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
         homeSheetOpen: false,
         setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
+        reflectTourActive: false,
+        setReflectTourActive: (v) => set({ reflectTourActive: v }),
 
         nightModeEnabled: true,
         setNightModeEnabled: (v) => set({ nightModeEnabled: v }),

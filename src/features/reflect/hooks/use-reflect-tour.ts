@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { posthog } from "@/src/config/posthog";
 import {
   REFLECT_TOUR_VERSION,
@@ -17,7 +17,10 @@ export function useReflectTour() {
   const setReflectTourVersion = useAppStore((s) => s.setReflectTourVersion);
   const homeSheetBlocking = useAppStore((s) => s.homeSheetBlocking);
 
-  const [isActive, setIsActive] = useState(false);
+  // Lives in the store so the streak reveal can wait on the tour actually
+  // being on screen rather than on the persisted version flag.
+  const isActive = useAppStore((s) => s.reflectTourActive);
+  const setIsActive = useAppStore((s) => s.setReflectTourActive);
   // Only read when the tour is abandoned, so a ref rather than state: the
   // number the event wants is the last step shown, not a render input.
   const lastStep = useRef(0);
@@ -38,7 +41,7 @@ export function useReflectTour() {
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [reflectTourVersion, homeSheetBlocking]);
+  }, [reflectTourVersion, homeSheetBlocking, setIsActive]);
 
   const finish = () => {
     setIsActive(false);
