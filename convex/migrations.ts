@@ -4,7 +4,7 @@ import { DataModel } from "./_generated/dataModel";
 import { reflectionRank } from "./lib/aggregates";
 import { localDayKey, shiftDayKey } from "./streaks/activityLog";
 import { FREEZE_CAP } from "./streaks/state";
-import { searchTextOf } from "./library/search";
+import { searchTextOf, trackSearchTextOf } from "./library/searchText";
 
 // Run both in sequence (renameRawInput first, then renameUserInput):
 //   bunx convex run migrations:runAll
@@ -150,6 +150,17 @@ export const backfillLibrarySearchText = migrations.define({
       .withIndex("by_entryId", (q) => q.eq("entryId", doc._id))
       .take(500);
     const searchText = searchTextOf(doc, facets);
+    if (doc.searchText !== searchText) return { searchText };
+  },
+});
+
+// Browse search (#550): fills `searchText` on tracks ingested before it
+// existed. Recomputes from the row, writing only on a difference — safe to re-run.
+//   bunx convex run migrations:run '{"fn": "migrations:backfillTrackSearchText"}'
+export const backfillTrackSearchText = migrations.define({
+  table: "audio_tracks",
+  migrateOne: async (_ctx, doc) => {
+    const searchText = trackSearchTextOf(doc);
     if (doc.searchText !== searchText) return { searchText };
   },
 });

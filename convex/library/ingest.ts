@@ -4,7 +4,7 @@ import type { Doc } from "../_generated/dataModel";
 import { PRIMARY_EMOTIONS, THEMATIC_TAGS, canonicalFacet } from "../lib/understandingVocab";
 import schema from "../schema";
 import { assertImageAlts } from "./imageAlts";
-import { searchTextOf } from "./search";
+import { searchTextOf } from "./searchText";
 import { manifestSource, replaceSources, resolveSources } from "./sources";
 
 /**

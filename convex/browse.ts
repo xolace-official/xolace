@@ -28,7 +28,7 @@ const shelfItemValidator = v.object({
  * A relaunch or any catalogue write re-signs well inside the window.
  */
 const THUMB_URL_TTL_SEC = 604800;
-const thumbUrlFor = (thumbKey: string) => r2.getUrl(thumbKey, { expiresIn: THUMB_URL_TTL_SEC });
+export const thumbUrlFor = (thumbKey: string) => r2.getUrl(thumbKey, { expiresIn: THUMB_URL_TTL_SEC });
 
 function attributionFor(track: { family: "support" | "music"; narrators?: string[]; licence?: { attributionRequired: boolean; attributionText: string } }) {
   if (track.family === "music") {
@@ -172,6 +172,33 @@ async function activeByFamily(ctx: QueryCtx, family: Doc<"audio_tracks">["family
     .take(1000);
 }
 
+/**
+ * Every shared topic with ≥ 1 active track in either family, slug order. A
+ * `topics` row (#353) decorates a tile — cover + curated title — but never
+ * adds one: membership is the active-track grouping. Shared by the topic grid
+ * and Browse search (#550).
+ */
+export async function activeTopics(ctx: QueryCtx) {
+  const tracks = [...(await activeByFamily(ctx, "support")), ...(await activeByFamily(ctx, "music"))];
+
+  const byTopic = new Map<string, { thumbKey: string; supportCount: number; musicCount: number }>();
+  for (const t of tracks) {
+    const slug = topicSlug(t.topic);
+    const entry = byTopic.get(slug) ?? { thumbKey: t.thumbKey, supportCount: 0, musicCount: 0 };
+    if (t.family === "support") entry.supportCount += 1;
+    else entry.musicCount += 1;
+    byTopic.set(slug, entry);
+  }
+
+  const rows = new Map((await ctx.db.query("topics").take(1000)).map((r) => [r.slug, r]));
+  return [...byTopic.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([slug, entry]) => {
+      const row = rows.get(slug);
+      return { ...entry, slug, title: row?.title || topicTitle(slug), thumbKey: row?.thumbKey ?? entry.thumbKey };
+    });
+}
+
 /** Topic grid — one tile per shared topic with ≥ 1 active track in either family. */
 export const getTopics = query({
   args: {},
@@ -186,33 +213,8 @@ export const getTopics = query({
   ),
   handler: async (ctx) => {
     await requireAuth(ctx);
-    const tracks = [...(await activeByFamily(ctx, "support")), ...(await activeByFamily(ctx, "music"))];
-
-    const byTopic = new Map<string, { thumbKey: string; supportCount: number; musicCount: number }>();
-    for (const t of tracks) {
-      const slug = topicSlug(t.topic);
-      const entry = byTopic.get(slug) ?? { thumbKey: t.thumbKey, supportCount: 0, musicCount: 0 };
-      if (t.family === "support") entry.supportCount += 1;
-      else entry.musicCount += 1;
-      byTopic.set(slug, entry);
-    }
-
-    // A `topics` row (#353) decorates a tile — cover + curated title — but
-    // never adds one: membership is the active-track grouping above.
-    const rows = new Map((await ctx.db.query("topics").take(1000)).map((r) => [r.slug, r]));
     return await Promise.all(
-      [...byTopic.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(async ([slug, entry]) => {
-          const row = rows.get(slug);
-          return {
-            slug,
-            title: row?.title || topicTitle(slug),
-            thumbUrl: await thumbUrlFor(row?.thumbKey ?? entry.thumbKey),
-            supportCount: entry.supportCount,
-            musicCount: entry.musicCount,
-          };
-        }),
+      (await activeTopics(ctx)).map(async ({ thumbKey, ...t }) => ({ ...t, thumbUrl: await thumbUrlFor(thumbKey) })),
     );
   },
 });

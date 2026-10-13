@@ -147,6 +147,7 @@ import type * as library_ingest from "../library/ingest.js";
 import type * as library_next from "../library/next.js";
 import type * as library_reads from "../library/reads.js";
 import type * as library_search from "../library/search.js";
+import type * as library_searchText from "../library/searchText.js";
 import type * as library_sources from "../library/sources.js";
 import type * as migrations from "../migrations.js";
 import type * as monthlyEvents from "../monthlyEvents.js";
@@ -331,6 +332,7 @@ declare const fullApi: ApiFromModules<{
   "library/next": typeof library_next;
   "library/reads": typeof library_reads;
   "library/search": typeof library_search;
+  "library/searchText": typeof library_searchText;
   "library/sources": typeof library_sources;
   migrations: typeof migrations;
   monthlyEvents: typeof monthlyEvents;

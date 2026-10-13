@@ -3,6 +3,7 @@ import { R2 } from "@convex-dev/r2";
 import { components } from "../../_generated/api";
 import { internalMutation, internalQuery } from "../../_generated/server";
 import { licenceValidator } from "../../lib/validators";
+import { trackSearchTextOf } from "../../library/searchText";
 import { TOPIC_SLUGS } from "./catalog";
 
 /**
@@ -148,9 +149,10 @@ export const upsertTrack = internalMutation({
       .query("audio_tracks")
       .withIndex("by_slug", (q) => q.eq("slug", track.slug))
       .unique();
+    const searchText = trackSearchTextOf(track);
 
     if (!existing) {
-      const trackId = await ctx.db.insert("audio_tracks", { ...track, active: true });
+      const trackId = await ctx.db.insert("audio_tracks", { ...track, searchText, active: true });
       return { action: "inserted" as const, trackId };
     }
 
@@ -160,6 +162,7 @@ export const upsertTrack = internalMutation({
       // field (title, tags, thumb, licence, ...) — metadata edits must land.
       await ctx.db.replace("audio_tracks", existing._id, {
         ...track,
+        searchText,
         key: existing.key,
         active: existing.active,
       });
@@ -169,7 +172,7 @@ export const upsertTrack = internalMutation({
     }
 
     const oldKey = existing.key;
-    await ctx.db.replace("audio_tracks", existing._id, { ...track, active: existing.active });
+    await ctx.db.replace("audio_tracks", existing._id, { ...track, searchText, active: existing.active });
     await r2.deleteObject(ctx, oldKey);
     return { action: "updated" as const, trackId: existing._id };
   },

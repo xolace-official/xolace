@@ -6,7 +6,7 @@ import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlemen
 import { playSoftPress } from '@/src/lib/haptics';
 
 /** Where a browse play was reached from (docs/paths-v1.md §13). */
-export type BrowseFrom = 'hub-new' | 'family-list' | 'topic' | 'discovery-strip' | 'twig-more-like-this' | 'library-hub';
+export type BrowseFrom = 'hub-new' | 'family-list' | 'topic' | 'discovery-strip' | 'twig-more-like-this' | 'library-hub' | 'search';
 
 /**
  * The one tap every catalogue surface shares (row, shelf tile, Discovery
