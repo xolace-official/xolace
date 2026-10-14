@@ -6,6 +6,7 @@ import { usePostHog } from 'posthog-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SharedValue } from 'react-native-reanimated';
 import { api } from '@/convex/_generated/api';
+import { useVoiceProcessingConsent } from '@/src/features/consent/use-voice-processing-consent';
 import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlement';
 import {
   claimAudioSession,
@@ -72,6 +73,8 @@ export function useVentFlow(): UseVentFlowReturn {
   // Snapshot of durationMs at stop time — used in post-stop events where
   // the recorder state has already been cleared.
   const durationAtStopRef = useRef(0);
+  // Consent write started with the vent; the upload waits on it.
+  const consentRef = useRef<Promise<void> | null>(null);
 
   const [state, setState] = useState<VentState>('idle');
   const [words, setWords] = useState<string | null>(null);
@@ -82,6 +85,7 @@ export function useVentFlow(): UseVentFlowReturn {
   const { startRecording, stopRecording, metering, isRecording, durationMs } =
     useVentRecorder();
   const processVentAudio = useAction(api.vent.processVentAudio);
+  const { ensureConsent } = useVoiceProcessingConsent();
 
   // TTS audio player — source swapped in via player.replace() when playback starts
   const player = useAudioPlayer(null);
@@ -163,6 +167,10 @@ export function useVentFlow(): UseVentFlowReturn {
       return;
     }
     playAffirmativePress();
+    // Started here so the write lands while they speak, not after.
+    const consent = ensureConsent();
+    consent.catch(() => {}); // surfaced when the upload awaits it
+    consentRef.current = consent;
     setState('recording');
     posthog.capture('vent_started');
   };
@@ -194,6 +202,9 @@ export function useVentFlow(): UseVentFlowReturn {
     }
 
     const run = async () => {
+      // No audio reaches ElevenLabs before voice_processing consent is on record.
+      // A write that failed at start gets one retry rather than sinking the vent.
+      await (consentRef.current?.catch(ensureConsent) ?? ensureConsent());
       // Convert local file URI → ArrayBuffer for Convex v.bytes().
       // RN's fetch Blob has no arrayBuffer(), so read via expo-file-system.
       const bytes = await new File(uri).bytes();
