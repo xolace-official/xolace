@@ -14,6 +14,7 @@ import { useMorphCardStyles } from "@/src/features/reflect/compose/morph-card-st
 import { CARD_PAD } from "@/src/features/reflect/compose/morph-geometry";
 import type { CardContent } from "@/src/features/reflect/compose/resolve-card-content";
 import { a11yHidden } from "@/src/lib/utils";
+import type { PlusDictationView } from "@/src/features/reflect/hooks/use-plus-dictation";
 
 type Props = {
   progress: SharedValue<number>;
@@ -28,6 +29,7 @@ type Props = {
   showNudge: boolean;
   nudgeMessage: string;
   isRecording: boolean;
+  plusDictation: PlusDictationView | null;
   inputRef: RefObject<TextInput | null>;
   onOpen: () => void;
   onChangeText: (text: string) => void;
@@ -58,6 +60,7 @@ export const MorphCard = ({
   showNudge,
   nudgeMessage,
   isRecording,
+  plusDictation,
   inputRef,
   onOpen,
   onChangeText,
@@ -115,6 +118,7 @@ export const MorphCard = ({
         expanded={expanded}
         entryText={entryText}
         isRecording={isRecording}
+        plusDictation={plusDictation}
         inputRef={inputRef}
         style={bodyStyle}
         onChangeText={onChangeText}

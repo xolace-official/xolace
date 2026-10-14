@@ -25,6 +25,7 @@ import { useSessionMode } from "@/src/context/session-mode-context";
 import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 import { playTypingBegin } from "@/src/lib/haptics";
 import { useAppStore } from "@/src/store/store";
+import type { PlusDictationView } from "@/src/features/reflect/hooks/use-plus-dictation";
 
 type Props = {
   screen: ReflectionStateName;
@@ -40,6 +41,7 @@ type Props = {
   onVoiceTapIdle: () => void;
   onVoiceTapTyping: () => void;
   isRecording: boolean;
+  plusDictation: PlusDictationView | null;
   spaceName?: string;
   /** False for the outgoing copy during a cross-fade to another state. */
   focusOnExpand?: boolean;
@@ -68,6 +70,7 @@ export const ComposeScreen = ({
   onVoiceTapIdle,
   onVoiceTapTyping,
   isRecording,
+  plusDictation,
   spaceName,
   focusOnExpand = true,
 }: Props) => {
@@ -142,6 +145,7 @@ export const ComposeScreen = ({
             showNudge={showNudge}
             nudgeMessage={nudgeMessage}
             isRecording={isRecording}
+            plusDictation={plusDictation}
             inputRef={inputRef}
             onOpen={handleTap}
             onChangeText={handleChangeText}

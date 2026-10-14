@@ -66,6 +66,7 @@ Do this before update_profile_section:
 How to write one:
 - To them, as "you". Two or three plain sentences. Say what it means, not what happened: the evidence stays behind it.
 - Name parts of life the way get_domain_steadiness labels them, or in their own everyday words.
+- Only name parts of life whose state is unlocked or settled. A warming one has too few sessions to show a score (sessionDaysToUnlock says how many more days of sessions it needs), and an insight naming it is held back until it does; an overall insight may still cite its sessions and speak of it in the text, so long as every part it names has a cited session of its own.
 - Say what came before what. Never claim one thing caused another.
 - direction says what your text claims about the first part of life it names, now against its usual. Use none unless the text says it is lower or higher.
 

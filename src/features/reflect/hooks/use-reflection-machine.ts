@@ -14,7 +14,7 @@ import {
   projectScreen,
 } from '@/src/features/reflect/session-service';
 import { MAX_TURNS, initialState, reducer } from './reflection-reducer';
-import { useVoiceInput } from '@/src/features/reflect/hooks/use-voice-input';
+import { useDictation } from '@/src/features/reflect/hooks/use-dictation';
 
 /**
  * Manages the reflection UI state machine and bridges it to the session API.
@@ -41,7 +41,15 @@ import { useVoiceInput } from '@/src/features/reflect/hooks/use-voice-input';
 export function useReflectionMachine() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const posthog = usePostHog();
-  const { isRecording, partialTranscript, startRecording, stopRecording } = useVoiceInput();
+  const {
+    isRecording,
+    partialTranscript,
+    plusDictation,
+    dictationUpsell,
+    startRecording,
+    stopRecording,
+    abortRecording,
+  } = useDictation((text) => dispatch({ type: 'VOICE_APPEND', text }));
   const voicePrefixRef = useRef('');
   const {
     sessionId,
@@ -107,6 +115,7 @@ export function useReflectionMachine() {
 
     if (serverState === 'completed' || serverState === 'abandoned') {
       // Terminal states — reset UI for a fresh session
+      abortRecording();
       resetSession();
       clearRefs();
       dispatch({ type: 'RESET' });
@@ -155,7 +164,7 @@ export function useReflectionMachine() {
     } else if (next && next !== state.screen) {
       dispatch({ type: 'SESSION_RESUMED', screen: next });
     }
-  }, [serverState, mirrorText, errorMessage, state.screen, session, resetSession, clearRefs, posthog, dispatchError]);
+  }, [serverState, mirrorText, errorMessage, state.screen, session, resetSession, clearRefs, posthog, dispatchError, abortRecording]);
 
   // Track freeze (typing-nudge = user paused)
   useEffect(() => {
@@ -180,6 +189,7 @@ export function useReflectionMachine() {
   const submitReflection = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
+    abortRecording();
     dispatch({ type: 'SUBMIT' });
     const duration = typingStartRef.current
       ? Date.now() - typingStartRef.current
@@ -203,7 +213,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [state.entryText, state.entryType, initiateAndSubmit, posthog, dispatchError]);
+  }, [state.entryText, state.entryType, initiateAndSubmit, posthog, dispatchError, abortRecording]);
 
   const submitScaffold = useCallback(async () => {
     if (busyRef.current) return;
@@ -232,6 +242,7 @@ export function useReflectionMachine() {
   const submitClarification = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
+    abortRecording();
     dispatch({ type: 'SUBMIT' });
     const feedbackType: FeedbackType = state.lastFeedbackType ?? 'not_quite';
     try {
@@ -245,7 +256,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [state.clarifyText, state.lastFeedbackType, submitRefinement, dispatchError]);
+  }, [state.clarifyText, state.lastFeedbackType, submitRefinement, dispatchError, abortRecording]);
 
   const handleThatsIt = useCallback(async () => {
     if (busyRef.current) return;
@@ -392,9 +403,9 @@ export function useReflectionMachine() {
 
   const startVoiceFromIdle = async () => {
     if (isRecording) { stopRecording(); return; }
-    voicePrefixRef.current = '';
-    dispatch({ type: 'VOICE_START' });
-    await startRecording();
+    // A kept draft (#258) is the prefix too, or the first word would replace it.
+    voicePrefixRef.current = state.entryText.trim();
+    await startRecording(() => dispatch({ type: 'VOICE_START' }));
   };
 
   const startVoiceFromTyping = async () => {
@@ -404,13 +415,14 @@ export function useReflectionMachine() {
   };
 
   const handleDismissTyping = () => {
-    if (isRecording) stopRecording();
+    abortRecording();
     dispatch({ type: 'DISMISS_TYPING' });
   };
 
   const handleReset = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
+    abortRecording();
     try {
       await abandon();
     } finally {
@@ -419,7 +431,13 @@ export function useReflectionMachine() {
       dispatch({ type: 'RESET' });
       busyRef.current = false;
     }
-  }, [abandon, resetSession, clearRefs]);
+  }, [abandon, resetSession, clearRefs, abortRecording]);
+
+  // A live mic would re-fill the draft with its next transcript.
+  const dispatchAction: typeof dispatch = (action) => {
+    if (action.type === 'DISCARD_DRAFT') abortRecording();
+    dispatch(action);
+  };
 
   const handleRetry = useCallback(async () => {
     if (busyRef.current) return;
@@ -435,7 +453,7 @@ export function useReflectionMachine() {
 
   return {
     state,
-    dispatch,
+    dispatch: dispatchAction,
     isLoading,
     sessionId,
     turnsCount,
@@ -444,6 +462,8 @@ export function useReflectionMachine() {
     toneUsed: session?.toneUsed ?? null,
     claimStrength: session?.claimStrength ?? null,
     isRecording,
+    plusDictation,
+    dictationUpsell,
     submitReflection,
     submitScaffold,
     submitClarification,

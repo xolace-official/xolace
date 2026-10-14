@@ -19,6 +19,10 @@ describe("store partialize", () => {
     expect(persisted).toContain("bridgeIntroSeen");
   });
 
+  it("dictationUpsellSeen is persisted", () => {
+    expect(persistedKeys()).toContain("dictationUpsellSeen");
+  });
+
   it("ventIntroSeen is persisted", () => {
     const persisted = persistedKeys();
     expect(persisted).toContain("ventIntroSeen");

@@ -94,6 +94,11 @@ describe("gateInsight", () => {
     expect(reason(absence({ citedSessionIds: ["a", "e", "c"] }))).toMatch(/touch/);
   });
 
+  it("lets an overall insight cite a session about a part of life it doesn't name, e.g. one still warming", () => {
+    // Love is cited but unnamed; every named domain still has a session of its own.
+    expect(reason(draft({ domains: ["work", "health"], citedSessionIds: ["a", "b", "g"] }))).toBeNull();
+  });
+
   describe("overall insights", () => {
     it("name at least two domains", () => {
       expect(reason(draft({ domains: ["work"], citedSessionIds: ["a", "d", "f"] }))).toMatch(/two domains/);
@@ -120,6 +125,12 @@ describe("gateInsight", () => {
     const noScore = { sessions, domains: new Map([...domains].filter(([d]) => d !== "work")) };
     const r = gateInsight(absence(), noScore);
     expect(r.ok ? null : r.reason).toMatch(/no score/i);
+  });
+
+  it("refuses a warming domain: shownNow would hide the insight until it unlocks", () => {
+    const warming = { sessions, domains: new Map([...domains, ["work", { steadiness: 48, baseline: 66, warming: true }]]) };
+    const r = gateInsight(absence(), warming);
+    expect(r.ok ? null : r.reason).toMatch(/warming/i);
   });
 
   it("a per-domain insight names one domain", () => {

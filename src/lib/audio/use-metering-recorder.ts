@@ -9,12 +9,12 @@ import { useEffect } from 'react';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 import { AUDIO_SESSION, yieldAudioFocus } from '@/src/lib/audio/session';
 
-export type UseVentRecorderReturn = {
+export type UseMeteringRecorderReturn = {
   // Resolves true only when recording actually began (permission granted and
   // the recorder started); false on denial or any setup failure.
   startRecording: () => Promise<boolean>;
   stopRecording: () => Promise<string | null>;
-  // SharedValue so the Skia particle system reads it on the UI thread via
+  // SharedValue so animations (vent particles, dictation waveform) read it on the UI thread via
   // useDerivedValue — no JS bridge overhead on every animation frame.
   // 0 = silence, 1 = max volume.
   metering: SharedValue<number>;
@@ -22,7 +22,8 @@ export type UseVentRecorderReturn = {
   durationMs: number;
 };
 
-export function useVentRecorder(): UseVentRecorderReturn {
+// Lower bitRate for longer takes that must still fit Convex's 1MB v.bytes().
+export function useMeteringRecorder(bitRate = 48000): UseMeteringRecorderReturn {
   const meteringValue = useSharedValue(0);
 
   // Mono 48kbps AAC: voice-quality for Scribe STT while keeping a 2-minute
@@ -32,7 +33,7 @@ export function useVentRecorder(): UseVentRecorderReturn {
     ...RecordingPresets.HIGH_QUALITY,
     sampleRate: 24000,
     numberOfChannels: 1,
-    bitRate: 48000,
+    bitRate,
     isMeteringEnabled: true,
   });
 
@@ -50,7 +51,7 @@ export function useVentRecorder(): UseVentRecorderReturn {
     try {
       const { granted } = await AudioModule.requestRecordingPermissionsAsync();
       if (!granted) {
-        console.warn('[vent-recorder] Microphone permission denied');
+        console.warn('[metering-recorder] Microphone permission denied');
         return false;
       }
 
@@ -61,7 +62,7 @@ export function useVentRecorder(): UseVentRecorderReturn {
       recorder.record();
       return true;
     } catch (err) {
-      console.error('[vent-recorder] startRecording failed:', err);
+      console.error('[metering-recorder] startRecording failed:', err);
       return false;
     }
   };
@@ -72,7 +73,7 @@ export function useVentRecorder(): UseVentRecorderReturn {
       meteringValue.set(0);
       return recorder.uri ?? null;
     } catch (err) {
-      console.error('[vent-recorder] stopRecording failed:', err);
+      console.error('[metering-recorder] stopRecording failed:', err);
       return null;
     }
   };

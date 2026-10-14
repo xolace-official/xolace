@@ -3,6 +3,24 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Dictation (2026-10-14)
+
+**Dictation** is speech turned into text inside a composer, which the person
+then edits and sends themselves. It has two engines: **on-device dictation**
+(free) and **Plus dictation** (Plus, transcribed by ElevenLabs Scribe). It is
+not a **vent**: a vent is a spoken session that gets a spoken reply, while
+dictation only fills a text box.
+_Avoid_: voice input, voice note, speech translation ("voice" already means a
+TTS voice; nothing is translated).
+
+A **sound tag** is Scribe's own label for a non-speech sound in a take
+(`[sighs]`, `[laughs]`, `[pause]`). A **dictation cue** is what Xolace keeps
+from a Plus dictation take about *how* it was said: an allowlisted sound, or
+a long pause between words, anchored to the nearby words. Cues never appear
+in the composer; they reach only the mirror, as texture it may not name.
+On-device dictation has none.
+_Avoid_: voice cue, voice signal (same "voice" collision as above).
+
 ## Browse search (2026-10-13)
 
 **Browse search** is the one search bar in the app. It sits on the Browse
@@ -184,7 +202,9 @@ one thread under what look like separate problems, or one domain crowding
 out another. A **domain insight** sits in that domain's card: what the person
 says at the end of a session against what happens after, where relief
 actually came from, or what never appears. An insight waits for its domains
-to unlock, and one that speaks of "your usual" waits for settled. It is never
+to unlock, and one that speaks of "your usual" waits for settled; so the
+writer is refused a warming domain outright, rather than spending the run on
+an insight nobody sees. It is never
 held back because the person seems vulnerable. Each shows the date it was
 noticed; the next consolidation replaces the set, and one citing a session
 that is gone is not shown.
@@ -771,6 +791,28 @@ hot-path in `docs/cognition-layer-architecture.md`). "Kindling" was
 unclaimed and is inherently a *gathered bundle* — matching the any-order,
 skippable shape — rather than a sequence, which also rules it out as a
 name collision with the ordered-sounding "path."
+
+**Tended, skipped, ignored.** A twig's outcome is one of three, judged per
+twig. **Tended**: the person reached the finish line of the thing the twig
+sent them to (finished the track or read, finished the breathing, shared the
+bridge message, sent the xolacer request). Opening it is not tending.
+**Skipped**: they said "Not for me". This is the only rejection. **Ignored**:
+they never tended or skipped it before the kindling was replaced or
+dismissed. This is neutral ("not now", not "not this"). A twig still open on
+the current kindling is **undecided** and has no outcome yet. A **good twig**
+is a tended one. Outcomes are compared only within one kind of twig, never
+across kinds.
+
+A **try-this twig** suggests something the person does away from the app
+(stop earlier tonight, take a day off), drawn from a curated set, never
+written fresh. It prefers what eased this person before over general good
+practice. It never suggests medical steps, reaching a specific person (that
+is the bridge or a xolacer), crisis help, or anything costly to undo, and
+never follows a session safeguard flagged. Having no finish line the app can
+see, it is tended when the person says they did it. A kindling holds at most
+one. Advice lives here, never in an insight: an insight is noticed, a
+try-this twig is offered.
+_Avoid_: tip, habit, homework.
 
 ## Series, episode, standalone audio (2026-09-10)
 

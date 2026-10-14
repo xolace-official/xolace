@@ -6,12 +6,14 @@ import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
 import { recordActivity } from "./streaks/activityLog";
 import { writeVentAcknowledgement } from "./ai/ventAcknowledge";
+import { transcribeAudio } from "./ai/transcribe";
 import { renderSemanticProfile } from "./semanticProfiles";
 import {
   moderateInput,
   MODERATION_UNAVAILABLE,
 } from "./ai/providers/moderation";
 import { resolveVoiceId, VENT_DEFAULT_VOICE_ID } from "./lib/voices";
+import { startOfTodayUTC } from "./lib/timeOfDay";
 
 const CRISIS_FALLBACK = "you don't have to carry this alone";
 
@@ -32,11 +34,6 @@ const AUDIO_BYTES_PER_SECOND = 6000;
 // seconds; an hour absorbs a backgrounded app returning to the coda. After
 // this the URL 404s, which is fine — the words are already on screen.
 const VENT_AUDIO_TTL_MS = 60 * 60 * 1000;
-
-function startOfTodayUTC(): number {
-  const now = new Date();
-  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-}
 
 /**
  * Gate voice vent sessions behind a daily usage cap.
@@ -172,45 +169,6 @@ type VentResult = {
  * All failures are soft — returns null words/audioUrl so the client can still
  * play the destruction animation regardless.
  */
-async function transcribeVentAudio(
-  apiKey: string,
-  audioBytes: ArrayBuffer,
-): Promise<string | null> {
-  const scribeController = new AbortController();
-  const scribeTimeout = setTimeout(() => scribeController.abort(), 30_000);
-  try {
-    const blob = new Blob([audioBytes], { type: "audio/m4a" });
-    const formData = new FormData();
-    formData.append("file", blob, "recording.m4a");
-    formData.append("model_id", "scribe_v2");
-
-    const scribeRes = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
-      method: "POST",
-      headers: { "xi-api-key": apiKey },
-      body: formData,
-      signal: scribeController.signal,
-    });
-
-    if (!scribeRes.ok) {
-      const body = await scribeRes.text();
-      console.error(`[vent] Scribe error ${scribeRes.status}: ${body}`);
-      return null;
-    }
-
-    const data = await scribeRes.json();
-    return typeof data.text === "string" ? data.text.trim() : "";
-  } catch (err) {
-    if (err instanceof Error && err.name === "AbortError") {
-      console.error("[vent] Scribe request timed out");
-    } else {
-      console.error("[vent] Scribe fetch failed:", err);
-    }
-    return null;
-  } finally {
-    clearTimeout(scribeTimeout);
-  }
-}
-
 async function runVentPipeline(
   ctx: ActionCtx,
   audioBytes: ArrayBuffer,
@@ -226,7 +184,7 @@ async function runVentPipeline(
   // and resolved-voice fetches — both depend only on emotionalProfileId, not
   // the transcript, so their cost is fully hidden behind the STT round-trip.
   const [transcriptResult, semanticProfileDoc, voiceSlug] = await Promise.all([
-    transcribeVentAudio(apiKey, audioBytes),
+    transcribeAudio(apiKey, audioBytes),
     emotionalProfileId
       ? ctx.runQuery(internal.semanticProfiles.getCurrent, { emotionalProfileId })
       : Promise.resolve(null),
@@ -238,7 +196,7 @@ async function runVentPipeline(
   if (transcriptResult === null) {
     return { words: null, audioUrl: null, isCrisis: false, capReached: false };
   }
-  const transcript = transcriptResult;
+  const transcript = transcriptResult.taggedText;
 
   if (transcript.length < 20) {
     console.log("[vent] Transcript too short — skipping acknowledgement");

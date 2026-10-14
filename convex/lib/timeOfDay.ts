@@ -24,3 +24,8 @@ export function getTimeOfDay(date: Date): TimeOfDay {
 export function getDayOfWeek(date: Date): number {
   return date.getDay();
 }
+
+/** UTC midnight of the given moment's day — the daily caps' lazy-reset boundary. */
+export function startOfTodayUTC(now = new Date()): number {
+  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+}

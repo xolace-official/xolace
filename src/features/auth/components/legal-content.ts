@@ -16,7 +16,7 @@ export const PRIVACY_POLICY: LegalDocument = {
     },
     {
       heading: 'AI Processing',
-      body: 'Your emotional input is processed by Anthropic (Claude) to generate reflections. This data is transmitted securely and is not used to train AI models. Content is also automatically screened for safety signals to detect potential crisis situations. Voice features use ElevenLabs for audio generation.',
+      body: 'Your emotional input is processed by Anthropic (Claude) to generate reflections. This data is transmitted securely and is not used to train AI models. Content is also automatically screened for safety signals to detect potential crisis situations. Voice features use ElevenLabs for voice audio generation and speech transcription: when you speak to Xolace, your recorded audio is sent to ElevenLabs to be transcribed and is never stored.',
     },
     {
       heading: 'Analytics',
@@ -28,7 +28,7 @@ export const PRIVACY_POLICY: LegalDocument = {
     },
     {
       heading: 'Third-Party Services',
-      body: 'We use the following sub-processors to operate the service: Anthropic (AI reflection generation), Convex (database and backend infrastructure), Clerk (authentication), ElevenLabs (voice audio generation), PostHog (product analytics), Sentry (crash and error monitoring), and Apple / Google (sign-in). Each processes only the data necessary for their function.',
+      body: 'We use the following sub-processors to operate the service: Anthropic (AI reflection generation), Convex (database and backend infrastructure), Clerk (authentication), ElevenLabs (voice audio generation and speech transcription), PostHog (product analytics), Sentry (crash and error monitoring), and Apple / Google (sign-in). Each processes only the data necessary for their function.',
     },
     {
       heading: 'How We Use It',

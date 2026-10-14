@@ -15,7 +15,7 @@ The dissolution is the emotional peak. The ≤8 words are a quiet coda — the f
 - **Library:** `@shopify/react-native-skia` (Skia canvas, already installed)
 - **Count:** 80–120 particles
 - **Shape:** Soft circles, 2–4px radius, with a light Skia paint blur for a glow quality
-- **Architecture:** Particle positions and velocities stored in Reanimated `useSharedValue` array, updated per-frame via `useDerivedValue`. Metering value from `use-vent-recorder` feeds directly into field radius and color interpolation on every frame. Runs on the UI thread — no JS bridge overhead.
+- **Architecture:** Particle positions and velocities stored in Reanimated `useSharedValue` array, updated per-frame via `useDerivedValue`. Metering value from `use-metering-recorder` (`src/lib/audio/`) feeds directly into field radius and color interpolation on every frame. Runs on the UI thread — no JS bridge overhead.
 
 ### Color Arc
 
@@ -182,7 +182,7 @@ The crinkle → crackle → silence sequence is the emotional payload. It must n
 | Pinch gesture | `PinchGestureHandler` from `react-native-gesture-handler` |
 | Entry/exit transitions | Reanimated `withTiming`, `withSequence`, `withSpring` |
 | Particle state | `useSharedValue` array (not useState — stays on UI thread) |
-| Metering input | Normalized 0–1 from `use-vent-recorder.ts` (already specified in CEO plan) |
+| Metering input | Normalized 0–1 from `src/lib/audio/use-metering-recorder.ts` (already specified in CEO plan) |
 
 ---
 

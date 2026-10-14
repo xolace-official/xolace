@@ -11,7 +11,7 @@ import { XolacerAvatar } from './xolacer-avatar';
 import { PresenceDot } from './presence-dot';
 import { rowPresentation } from './conversation-row-labels';
 import type { ConversationList } from './chats-list';
-import type { rowAccessibilityActions } from './swipeable-conversation-row';
+import type { rowAccessibilityActions } from '@/src/features/xolacer-chat/components/swipeable-conversation-row';
 
 type Conversation = ConversationList[number];
 

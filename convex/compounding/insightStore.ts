@@ -101,7 +101,10 @@ export const save = internalMutation({
     }
     const { readings, timezone, unlocked } = await loadReadings(ctx, profileId);
     const domains = new Map(
-      computeSteadiness(readings, { now: Date.now(), timezone, unlocked }).domains.map((d) => [d.domain, d.raw]),
+      computeSteadiness(readings, { now: Date.now(), timezone, unlocked }).domains.map((d) => [
+        d.domain,
+        { ...d.raw, warming: d.state === "warming" },
+      ]),
     );
     const gate = gateInsight(draft, { sessions, domains });
     if (!gate.ok) return `Rejected, not saved: ${gate.reason}`;

@@ -18,7 +18,7 @@ import { domainValidator, postSessionMoodValidator } from "../lib/validators";
 import { DOMAIN_LABELS, LIFE_AREA_HOME, domainOf, emotionFamily, type Domain, type ThematicTag } from "../lib/understandingVocab";
 import type { FactSession } from "./insightFacts";
 import { loadReadings } from "./readings";
-import { computeSteadiness } from "./steadiness";
+import { computeSteadiness, UNLOCK_DAYS } from "./steadiness";
 import { compoundingFor } from "./stretches";
 import { trendFor } from "./trend";
 
@@ -85,6 +85,10 @@ const domainSteadinessValidator = v.object({
     v.object({
       domain: domainValidator,
       label: v.string(),
+      /** Warming: too few session days to show a score, so write_insight refuses it as a named part of life. */
+      state: v.union(v.literal("warming"), v.literal("unlocked"), v.literal("settled")),
+      /** Warming only: session days still needed before it unlocks. */
+      sessionDaysToUnlock: v.union(v.number(), v.null()),
       steadiness: v.number(),
       usual: v.number(),
       weekTrend: v.union(v.number(), v.null()),
@@ -149,6 +153,8 @@ export const domainSteadiness = internalQuery({
       return {
         domain: d.domain,
         label: DOMAIN_LABELS[d.domain],
+        state: d.state,
+        sessionDaysToUnlock: d.state === "warming" ? Math.max(1, UNLOCK_DAYS - d.sessionDays) : null,
         steadiness: Math.round(d.raw.steadiness),
         usual: Math.round(d.raw.baseline),
         weekTrend: trend.domains.get(d.domain) ?? null,

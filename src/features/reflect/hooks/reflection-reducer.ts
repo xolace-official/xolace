@@ -4,6 +4,7 @@ import type {
   EntryType,
 } from '@/src/features/reflect/types';
 import { MAX_TEXTURES } from '@/src/features/reflect/texture-sets';
+import { joinDictation } from '@/src/features/reflect/hooks/dictation-transcript';
 
 export const MAX_TURNS = 2;
 
@@ -113,6 +114,14 @@ export function reducer(
 
     case 'VOICE_TRANSCRIPT':
       return { ...state, screen: 'typing', entryText: action.text, entryType: 'voice' };
+
+    case 'VOICE_APPEND':
+      return {
+        ...state,
+        screen: 'typing',
+        entryText: joinDictation(state.entryText, action.text),
+        entryType: 'voice',
+      };
 
     case 'CLEAR_TEXTURES':
       return { ...state, selectedTextures: [] };

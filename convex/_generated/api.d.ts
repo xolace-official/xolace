@@ -58,6 +58,7 @@ import type * as ai_reflectionAgent_triggerQueries from "../ai/reflectionAgent/t
 import type * as ai_routing from "../ai/routing.js";
 import type * as ai_safeguard from "../ai/safeguard.js";
 import type * as ai_slotFill from "../ai/slotFill.js";
+import type * as ai_transcribe from "../ai/transcribe.js";
 import type * as ai_tts from "../ai/tts.js";
 import type * as ai_ventAcknowledge from "../ai/ventAcknowledge.js";
 import type * as avatars from "../avatars.js";
@@ -83,6 +84,7 @@ import type * as consent from "../consent.js";
 import type * as crons from "../crons.js";
 import type * as dailyQuotes from "../dailyQuotes.js";
 import type * as devTools from "../devTools.js";
+import type * as dictation_plus from "../dictation/plus.js";
 import type * as emotionalMetadata from "../emotionalMetadata.js";
 import type * as episodicImportance from "../episodicImportance.js";
 import type * as episodicMemory from "../episodicMemory.js";
@@ -244,6 +246,7 @@ declare const fullApi: ApiFromModules<{
   "ai/routing": typeof ai_routing;
   "ai/safeguard": typeof ai_safeguard;
   "ai/slotFill": typeof ai_slotFill;
+  "ai/transcribe": typeof ai_transcribe;
   "ai/tts": typeof ai_tts;
   "ai/ventAcknowledge": typeof ai_ventAcknowledge;
   avatars: typeof avatars;
@@ -269,6 +272,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   dailyQuotes: typeof dailyQuotes;
   devTools: typeof devTools;
+  "dictation/plus": typeof dictation_plus;
   emotionalMetadata: typeof emotionalMetadata;
   episodicImportance: typeof episodicImportance;
   episodicMemory: typeof episodicMemory;
