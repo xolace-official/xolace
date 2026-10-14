@@ -2220,11 +2220,17 @@ export default defineSchema({
 
     // music-family
     licence: v.optional(licenceValidator), // required at write for family="music"
+
+    // Browse search (#550): lowercase title, topic, tags, narrators, series
+    // title (+ raw source tags for music), written by upsertTrack
+    // (library/searchText.ts trackSearchTextOf).
+    searchText: v.optional(v.string()),
   })
     .index("by_slug", ["slug"])
     .index("by_family_and_topic", ["family", "topic"])
     .index("by_family_and_active", ["family", "active"]) // Browse per-family list (#339)
-    .index("by_thumbKey", ["thumbKey"]),
+    .index("by_thumbKey", ["thumbKey"])
+    .searchIndex("search_searchText", { searchField: "searchText", filterFields: ["active", "family"] }),
 
   // Topic decoration (#353): a shared topic suffix (`sadness`) may carry its
   // own cover and display title for the Browse topic grid. One row per slug
@@ -2338,9 +2344,13 @@ export default defineSchema({
     safetyReviewedAt: v.optional(v.number()), // explainers: required to publish
     lastReviewedAt: v.number(),
     sha256: v.optional(v.string()), // ingest no-op gate: manifest record + body (#406)
+    // Browse search (#549): lowercase title, dek, subject, story descriptor and
+    // facet words, written by ingest (library/search.ts searchTextOf).
+    searchText: v.optional(v.string()),
   })
     .index("by_slug", ["slug"])
-    .index("by_active_and_kind", ["active", "kind"]),
+    .index("by_active_and_kind", ["active", "kind"])
+    .searchIndex("search_searchText", { searchField: "searchText", filterFields: ["active"] }),
 
   // What an entry draws on, one row per (entry, source) pair in manifest
   // order (#468, CONTEXT.md "Most entries are adapted from several

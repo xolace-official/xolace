@@ -3,6 +3,24 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Browse search (2026-10-13)
+
+**Browse search** is the one search bar in the app. It sits on the Browse
+home and covers the whole **catalogue**: Support audio, Music, Lantern
+entries, hubs and topics. It never covers anything private to a person
+(sessions, quotes, Connect, saves). Results show Plus-only items exactly as
+browsing does; the paywall is met on open, not hidden. Lantern home has no
+bar of its own. This overrules the "no search in v1" ruling (#397), made
+when the catalogue was small.
+
+A search is **never remembered**: no recent searches, and analytics carry
+only its shape (length, counts per section, what was tapped), never the
+words. A query matching a short curated list of crisis terms gets a quiet
+**Need someone now?** row above its results; the results still show.
+Results come in sections (Lantern, Support audio, Music, Hubs & topics),
+each ranked on its own, because relevance is not comparable across them.
+_Avoid_: Library search, Lantern search (it is one search, not per surface).
+
 ## Second detector, crisis miss, downgrade, shared miss (2026-10-13)
 
 A **second detector** is a model that answers fixed safety and

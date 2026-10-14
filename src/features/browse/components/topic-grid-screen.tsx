@@ -12,6 +12,7 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { imageSource } from '@/src/lib/image-source';
 import { playSoftPress } from '@/src/lib/haptics';
+import { useMiniPlayerInset } from '@/src/features/browse/now-playing/now-playing-store';
 
 type Topic = FunctionReturnType<typeof api.browse.getTopics>[number];
 
@@ -32,6 +33,8 @@ function countLine(t: Topic) {
  * with ≥ 1 active track in either family. Two-up, square artwork.
  */
 export function TopicGridScreen() {
+  // Clears the floating mini-player off the last row (none on iOS 26).
+  const playerInset = useMiniPlayerInset();
   const posthog = usePostHog();
   const topics = useQuery(api.browse.getTopics, {});
   const { width } = useWindowDimensions();
@@ -72,7 +75,7 @@ export function TopicGridScreen() {
       keyExtractor={keyExtractor}
       estimatedItemSize={tile + 48}
       contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={{ paddingHorizontal: GUTTER - GAP / 2, paddingTop: 8, paddingBottom: 40 }}
+      contentContainerStyle={{ paddingHorizontal: GUTTER - GAP / 2, paddingTop: 8, paddingBottom: 40 + playerInset }}
       renderItem={({ item }) => (
         <Pressable
           className="active:opacity-60"

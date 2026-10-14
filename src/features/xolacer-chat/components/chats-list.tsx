@@ -7,6 +7,11 @@ import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { ConversationRow } from './conversation-row';
+import {
+  rowAccessibilityActions,
+  SwipeableConversationRow,
+  type ArchiveHandler,
+} from './swipeable-conversation-row';
 
 export type ConversationList = FunctionReturnType<typeof api.xolacerChat.myConversations>;
 /** The `xolacer_conversations`-backed rows — every row except the synthetic Xolace-channel one. */
@@ -30,6 +35,7 @@ export function ChatsList({
   conversations,
   empty,
   header,
+  onArchive,
   onBrowseXolacers,
   onLongPress,
   onOpen,
@@ -43,6 +49,8 @@ export function ChatsList({
   empty?: { title: string; body: string };
   /** Rendered above the rows, full-bleed like them. */
   header?: ReactNode;
+  /** Trailing swipe + accessibility action on pair rows; flips by `archived`. */
+  onArchive: ArchiveHandler;
   /** Omitted where there is nowhere to browse from — the Archived screen. */
   onBrowseXolacers?: () => void;
   onLongPress: (conversation: PairConversation) => void;
@@ -89,39 +97,56 @@ export function ChatsList({
     // horizontal padding and each row puts it back on itself.
     <View className="-mx-4">
       {header}
-      {conversations.map((conversation, index) => (
-        <ConversationRow
-          key={conversation.id}
-          conversation={conversation}
-          showSeparator={index < conversations.length - 1}
-          onPress={() => {
-            playSoftPress();
-            // Opening a thread leaves this screen mounted, so a sheet raised on
-            // another row would still be waiting — over the wrong row, with the
-            // tab bar still hidden — when you come back.
-            onOpen();
-            if (conversation.kind === 'broadcast') {
-              router.push('/xolace-channel');
-              return;
-            }
-            router.push({
-              pathname: '/chat/[conversationId]',
-              params: { conversationId: conversation.id },
-            });
-          }}
-          // Archive/close/delete are xolacer_conversations operations — the
-          // broadcast row has no such row behind it, so it gets no long-press
-          // sheet.
-          onLongPress={
-            conversation.kind === 'pair'
-              ? () => {
-                  playSoftPress();
-                  onLongPress(conversation);
-                }
-              : undefined
+      {conversations.map((conversation, index) => {
+        const onPress = () => {
+          playSoftPress();
+          // Opening a thread leaves this screen mounted, so a sheet raised on
+          // another row would still be waiting — over the wrong row, with the
+          // tab bar still hidden — when you come back.
+          onOpen();
+          if (conversation.kind === 'broadcast') {
+            router.push('/xolace-channel');
+            return;
           }
-        />
-      ))}
+          router.push({
+            pathname: '/chat/[conversationId]',
+            params: { conversationId: conversation.id },
+          });
+        };
+        const showSeparator = index < conversations.length - 1;
+        // Archive/close/delete are xolacer_conversations operations — the
+        // broadcast row has no such row behind it, so it gets no long-press
+        // sheet, no swipe and no accessibility actions.
+        if (conversation.kind === 'broadcast') {
+          return (
+            <ConversationRow
+              key={conversation.id}
+              conversation={conversation}
+              showSeparator={showSeparator}
+              onPress={onPress}
+            />
+          );
+        }
+        const longPress = () => {
+          playSoftPress();
+          onLongPress(conversation);
+        };
+        return (
+          <SwipeableConversationRow
+            key={conversation.id}
+            conversation={conversation}
+            onArchive={onArchive}
+          >
+            <ConversationRow
+              conversation={conversation}
+              showSeparator={showSeparator}
+              onPress={onPress}
+              onLongPress={longPress}
+              a11yActions={rowAccessibilityActions(conversation, onArchive, longPress)}
+            />
+          </SwipeableConversationRow>
+        );
+      })}
     </View>
   );
 }

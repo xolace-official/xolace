@@ -98,6 +98,15 @@ describe("upsertEntry", () => {
     expect(r?.facets).toEqual(["lifeArea:work", "subject:anxiety"]);
   });
 
+  it("writes lowercase search text from the record and its facets, refreshed on update", async () => {
+    const t = await withSource();
+    await ingest(t, entry("a", { title: "Exam Nerves", storyDescriptor: "A second-year student", facets: { lifeArea: ["self-worth"] } }));
+    expect((await row(t, "a"))?.e.searchText).toBe("exam nerves dek a a second year student self worth anxiety");
+
+    await ingest(t, entry("a", { title: "Exam Dread", facets: { audience: ["student"] } }), "x", "h2");
+    expect((await row(t, "a"))?.e.searchText).toBe("exam dread dek a student anxiety");
+  });
+
   it("rejects an unknown source and an off-vocabulary emotion/lifeArea facet", async () => {
     const t = await withSource();
     await expect(ingest(t, entry("a", { sources: [{ source: "nope", pageTitle: "x" }] }))).rejects.toThrow(/source "nope"/);

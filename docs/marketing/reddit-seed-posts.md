@@ -79,14 +79,43 @@ I'll reply to everyone. This thread goes up every Monday.
 
 ## Day 7 — flair: Team update
 
-**Title:** I'm the founder of Xolace, and this sub is the community side of it. Here's what I'm unsure about.
+Two versions, one doubt. **A** goes in r/xolace only (it names the app). **B** is the reshare for other subs: it never names the app, so it won't trip self-promo rules. Post A first, so anyone who clicks your profile from B lands on it.
+
+The doubt comes from the Day 4 thread (posted in r/selfcare): asking a commenter whether they want their partner to "just listen or acknowledge" what they vented is the design question behind the mirror, which reflects and doesn't prescribe by default. Paraphrase that commenter, never name them.
+
+### A. r/xolace
+
+**Title:** I'm building Xolace, and something from this week made me question how it works
 
 **Body:**
-I'm [Name]. I'm building Xolace, an app for noticing what you're carrying before it stacks up. This sub is where I'd like that conversation to happen in public, and it's moderated by the Xolace team.
+Hey, I'm [first name]. I'm the one building Xolace, and I've been in the threads here all week.
 
-What I'm not sure about:
-- whether naming a feeling is enough, or whether people need something to do next
-- how much an app should remember about you
-- [one honest doubt of yours]
+Quick context so this isn't weird: Xolace is an app where you write down what's on your mind and it reflects it back, so you can see what's underneath before it stacks up. This sub is the community side of it.
 
-I'd rather hear where I'm wrong now than later. What would make you trust, or not trust, something like this?
+Here's the honest part.
+
+On a thread I posted earlier this week, I asked someone how they vent. They said they tell their husband, and what helps is when he says something that makes the worry feel smaller.
+
+That stuck with me, because I built Xolace to do the opposite. It reflects what you said and deliberately doesn't tell you what to do. I assumed most people want to be heard first. Now I'm not sure that's true for everyone, or even for most people.
+
+Two other things I keep going back and forth on:
+- how much an app like this should remember about you. Remembering means it can notice patterns, but it's also a lot to trust anyone with.
+- [optional: one more true doubt, or delete this line]
+
+So I'd really like to know: **when you vent, do you want someone to just listen, or to say something back?** And would your answer change if the "someone" was an app?
+
+I'd rather hear where I'm wrong now than after I've built more of it.
+
+**Pinned first comment** (the only place the link goes):
+> If you want to see what I mean, it's here: [link]. The reflecting part is free and stays free. Tell me if it gets it wrong, that's the useful part.
+
+### B. Reshare (other subs)
+
+**Title:** When you vent to someone, do you want them to just listen, or say something back?
+
+**Body:**
+Someone told me the thing that helps them most is when their partner says something that makes the worry feel silly. I'm the opposite. I mostly want someone to let me finish. [your true answer, one line]
+
+Which one are you? Has it changed depending on who you're talking to?
+
+**Rules for B:** check each sub's rules first, and post natively where crossposts aren't welcome. If anyone asks why you're asking, say plainly that you're building something around it. Never dodge.

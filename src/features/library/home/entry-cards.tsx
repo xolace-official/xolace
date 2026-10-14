@@ -131,17 +131,20 @@ export function EntryRow({
   index,
   from,
   hub,
+  onOpen,
 }: {
   entry: EntryItem;
   index?: number;
   from: ReaderFrom;
   hub?: string;
+  /** Runs before the open, e.g. Browse search's tap analytics. */
+  onOpen?: () => void;
 }) {
   const save = useSaveToggle(entry._id, entry.saved);
   const posthog = usePostHog();
   return (
     <View className="flex-row items-center pr-4">
-      <Link href={readerHref(entry.slug, from, hub)} asChild>
+      <Link href={readerHref(entry.slug, from, hub)} asChild onPress={onOpen}>
         {/* No zoom: the thumb is too small to grow from. */}
         <Link.Trigger>
           <Pressable accessibilityRole="link" className="flex-1 flex-row items-center gap-4 py-3 pl-4 active:opacity-70">

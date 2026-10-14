@@ -249,3 +249,54 @@ Oyelo's rules: no persisted localized text, one sentence per string, plural vari
 - **Oyelo is native SwiftUI with no backend.** Only its patterns (snapshot shape, inbox protocol, reminder identity, review pacing) port. The code does not.
 - **Device-unverified pieces.** Amber's biometric lock and widget refresh were not exercised on a physical device (`amber/docs/biometric-app-lock.md`, "Local validation"). Oyelo's Action button shortcut is "Built, not yet verified on a device" (`oyelo/docs/PRO.md`). Budget device QA for G1, G2 and S1.
 - **The AI E2E stack needs paid model access.** Amber's e2e uses the AI Gateway for its act/explore agents (`amber/e2e.config.ts`, `gateway('openai/...')`), so budget for it in CI.
+
+---
+
+## 5. Oyelo refresh (2026-10-13)
+
+The Oyelo sources were updated after this research was written. Everything in section 1's Oyelo table still holds. This is what's new, and what it means for Xolace.
+
+### What's new in Oyelo
+
+| Feature | Where |
+|---|---|
+| 20 local achievements (saving, favorites, measured listening, daily habits, a followed blog, a curated queue, an alternate icon, verified Pro). Tap a medal to see its requirement and progress, or the date it was earned | `oyelo/Oyelo/Core/AchievementStore.swift:4-60`, `oyelo/Oyelo/Features/AchievementsView.swift`, `oyelo/README.md` ("Included in 1.0") |
+| Evidence rules for achievements: only successful saves and measured listening unlock a medal. Deleting an article does not take one back. A migration backfills only from evidence it already has ("never fabricated"). A corrupt file is never overwritten | `oyelo/Oyelo/Core/AchievementStore.swift:62-140` |
+| A celebration that waits for a quiet moment: the scene is active, onboarding is done, nothing is playing, no sheet is open, and no presented controller is still dismissing. It counts as delivered once it is visible. Several medals share one celebration | `oyelo/Oyelo/App/RootView.swift:526-578`, `oyelo/Oyelo/App/AchievementPresentation.swift` |
+| A shareable medal card rendered on the device. It holds only the public milestone and Oyelo branding. Confetti and medal motion are skipped under Reduce Motion | `oyelo/Oyelo/Features/AchievementsView.swift:135-280,405-505` |
+| Duplicate detection by source, not title: canonical URL (lowercased host, default port dropped, only `utm_*`/`fbclid`/`gclid`/`msclkid` stripped, SPA `#/` routes kept). Changed text is offered as an explicit separate version | `oyelo/Oyelo/Import/ArticleDuplicateMatcher.swift` |
+| Share-import feedback: one message for "added" and "already saved". If exactly one item is involved, it routes to that item | `oyelo/Oyelo/Features/ImportFeedback.swift` |
+| Generation that keeps running in the background through `BGContinuedProcessingTask`. The system's own progress UI (including a system Live Activity) shows real byte progress. An uncertain paid request is never retried automatically | `oyelo/docs/BACKGROUND-GENERATION.md`, `oyelo/Oyelo/Core/GenerationController.swift:25,491` |
+| A phrase-level transcript in Now Playing that follows the audio. Positions are *estimated* from text weight and labelled that way, not presented as word timestamps | `oyelo/Oyelo/Features/PlayerTranscript.swift`, `oyelo/Oyelo/Features/NowPlayingView.swift:700-760` |
+| X thread import and an in-app browser that doesn't persist data | `oyelo/docs/X-THREAD-IMPORT.md`, `oyelo/Oyelo/Features/WebBrowserView.swift` |
+| Research on monetizing a BYOK app (App Review 3.1.1/3.1.3(f), affiliate links, tips) and ASO notes | `oyelo/docs/MONETIZATION.md`, `oyelo/docs/ASO.md` |
+
+### New idea
+
+#### N9. Private milestone shelf ("what you've built")
+- **What:** a small set of earned, private milestones in Profile. They mark *benefit*, not volume. Examples: first follow-up answered, first Kindling path finished, first time you came back after time away, a month of check-ins. Tapping a medal shows its requirement, progress or earned date. An optional share card holds only the milestone's name.
+- **From:** Oyelo's achievement store and celebration rules (table above).
+- **Why it fits:** habit mechanics are welcome (rule 9, `docs/foundation/xolace.md:131`). Streaks already have milestones (`convex/notifications.ts` `streak_milestone`), but nothing marks the other ways people get value from Xolace. Oyelo's evidence rules map directly onto ours: unlock only from completed, Understanding-backed events, never take a medal back, and never backfill one from data you don't have.
+- **Build:** derive progress from existing data in a Convex query under `convex/milestones/` (no model call, which satisfies the Cognition Layer rule). Keep an `earned` + `acknowledged` table per profile so a medal is celebrated exactly once on any device. Reuse the streak reveal's particles (`src/features/reflect/components/streak-calendar/blast-particles.tsx`).
+- **Effort:** M.
+- **Risks:**
+  - Milestones must never count sessions or time for their own sake (`docs/foundation/xolace.md:534`). Avoid anything like "10 reflections".
+  - Never celebrate right after a session whose safeguard level is elevated or crisis. Hold the celebration until a later, calmer open.
+  - The share card must not contain reflection text, emotions or themes. People see each other's phones (rule 8).
+
+### Improvements to existing Xolace features
+
+| Where in Xolace | Improvement | Oyelo source |
+|---|---|---|
+| `src/features/reflect/components/streak-calendar/streak-calendar.tsx:107-140` | The reveal already waits for focus and for the starter sheet to close. Also wait until Vessa/Lantern audio is paused and no other sheet or modal is still dismissing. Count it as delivered once it's visible, so a kill mid-reveal never replays it. | `oyelo/Oyelo/App/RootView.swift:526-578` |
+| S3 (Share into Xolace), when built | Dedupe by canonical source URL, not by title. When the same link comes back with different text, offer "open the earlier one". Give one notice covering both "added" and "already here". | `oyelo/Oyelo/Import/ArticleDuplicateMatcher.swift`, `oyelo/Oyelo/Features/ImportFeedback.swift` |
+
+### Looked at, not proposed
+
+- **Phrase-synced transcript.** Lantern's transcript is deliberately "not a synced caption" (`src/features/library/reader/transcript-sheet.tsx:1-5`). If that decision is ever revisited, Oyelo's approach is the honest one to copy: label positions as estimates and never claim word timing.
+- **`BGContinuedProcessingTask`.** Xolace's mirror and Kindling run on Convex, so nothing long-running happens on the device.
+- **BYOK monetization and X thread import.** Neither fits Xolace's product.
+
+### Correction to section 4
+
+Oyelo still has no `ActivityKit` code. The Live Activity in its docs is the **system** progress UI that iOS shows for a `BGContinuedProcessingTask` (`oyelo/docs/BACKGROUND-GENERATION.md`), not a custom one. The section 4 conclusion stands: a Xolace Live Activity has to be built from scratch.

@@ -6,6 +6,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { useConversationRowActions } from '../use-conversation-row-actions';
 import { ChatsList } from './chats-list';
 import { ConversationActions } from './conversation-actions';
+import { useMiniPlayerInset } from '@/src/features/browse/now-playing/now-playing-store';
 
 /**
  * The same list, somewhere else. It reads the same `myConversations` query the
@@ -13,6 +14,8 @@ import { ConversationActions } from './conversation-actions';
  * work — and renders the same rows with the same long-press sheet.
  */
 export function ArchivedScreen() {
+  // Clears the floating mini-player off the last row (none on iOS 26).
+  const playerInset = useMiniPlayerInset();
   const conversations = useQuery(api.xolacerChat.myConversations);
   const actions = useConversationRowActions();
 
@@ -24,6 +27,7 @@ export function ArchivedScreen() {
         className="flex-1 bg-background"
         contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName="px-4 pb-10 gap-4"
+        contentContainerStyle={playerInset ? { paddingBottom: 40 + playerInset } : undefined}
         showsVerticalScrollIndicator={false}
       >
         {conversations === undefined ? (
@@ -54,6 +58,7 @@ export function ArchivedScreen() {
             </AppText>
             <ChatsList
               conversations={archived}
+              onArchive={actions.toggleArchive}
               onLongPress={actions.setSheetFor}
               onOpen={() => actions.setSheetFor(null)}
             />
