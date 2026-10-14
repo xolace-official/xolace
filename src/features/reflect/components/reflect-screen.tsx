@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation } from "convex/react";
 import { useFullContext } from "@/src/lib/convex/use-full-context";
 import { api } from "@/convex/_generated/api";
+import { DictationUpsellDialog } from "@/src/features/reflect/compose/dictation-upsell-dialog";
 import { useReflectionMachine } from "@/src/features/reflect/hooks/use-reflection-machine";
 import { MAX_TURNS } from "@/src/features/reflect/hooks/reflection-reducer";
 import { useScreenTransition } from "@/src/features/reflect/hooks/use-screen-transition";
@@ -63,6 +64,7 @@ export const ReflectScreen = () => {
     claimStrength,
     isRecording,
     plusDictation,
+    dictationUpsell,
     submitReflection,
     submitScaffold,
     submitClarification,
@@ -414,6 +416,8 @@ export const ReflectScreen = () => {
         isOpen={mirrorFeedbackOpen}
         onClose={() => setMirrorFeedbackTurn(null)}
       />
+
+      <DictationUpsellDialog {...dictationUpsell} />
 
       {/* Space naming — fires once on first path-selection when unnamed */}
       <SpaceNamePromptDialog

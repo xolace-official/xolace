@@ -73,6 +73,9 @@ type TogglesSlice = {
   /** One-time flag — once true, bridge first-run intro modal never shows again. */
   bridgeIntroSeen: boolean;
   setBridgeIntroSeen: (v: boolean) => void;
+  /** One-time flag — once true, the Plus dictation upsell never shows again on this device (#559). */
+  dictationUpsellSeen: boolean;
+  setDictationUpsellSeen: (v: boolean) => void;
   /** One-time flag — once true, vent first-run intro never shows again. */
   ventIntroSeen: boolean;
   setVentIntroSeen: (v: boolean) => void;
@@ -218,6 +221,8 @@ export const useAppStore = create<AppState>()(
 
         bridgeIntroSeen: false,
         setBridgeIntroSeen: (v) => set({ bridgeIntroSeen: v }),
+        dictationUpsellSeen: false,
+        setDictationUpsellSeen: (v) => set({ dictationUpsellSeen: v }),
         ventIntroSeen: false,
         setVentIntroSeen: (v) => set({ ventIntroSeen: v }),
         xolacerPrimerSeen: false,
@@ -318,6 +323,7 @@ export const useAppStore = create<AppState>()(
           reflectTourVersion: s.reflectTourVersion,
           bridgeIntroSeen: s.bridgeIntroSeen,
           ventIntroSeen: s.ventIntroSeen,
+          dictationUpsellSeen: s.dictationUpsellSeen,
           xolacerPrimerSeen: s.xolacerPrimerSeen,
           musicIntroSeen: s.musicIntroSeen,
           supportAudioIntroSeen: s.supportAudioIntroSeen,

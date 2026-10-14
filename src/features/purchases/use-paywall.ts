@@ -44,7 +44,9 @@ export type PaywallSurface =
   // The insights screen's free-only "Unlock numbers" pill (#517, copy #513).
   | "steadiness_numbers"
   // A free user's compounding upsell (#524): Insights and session end.
-  | "compounding_upsell";
+  | "compounding_upsell"
+  // A free user's first mic tap after Plus dictation shipped (#559). Once per device.
+  | "dictation";
 
 /**
  * `sessionId` rides only with the `kindling` surface: the just-completed
