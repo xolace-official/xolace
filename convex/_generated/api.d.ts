@@ -84,7 +84,7 @@ import type * as consent from "../consent.js";
 import type * as crons from "../crons.js";
 import type * as dailyQuotes from "../dailyQuotes.js";
 import type * as devTools from "../devTools.js";
-import type * as dictation from "../dictation.js";
+import type * as dictation_plus from "../dictation/plus.js";
 import type * as emotionalMetadata from "../emotionalMetadata.js";
 import type * as episodicImportance from "../episodicImportance.js";
 import type * as episodicMemory from "../episodicMemory.js";
@@ -272,7 +272,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   dailyQuotes: typeof dailyQuotes;
   devTools: typeof devTools;
-  dictation: typeof dictation;
+  "dictation/plus": typeof dictation_plus;
   emotionalMetadata: typeof emotionalMetadata;
   episodicImportance: typeof episodicImportance;
   episodicMemory: typeof episodicMemory;

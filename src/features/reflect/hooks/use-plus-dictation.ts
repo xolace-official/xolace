@@ -10,7 +10,7 @@ import { useMeteringRecorder } from '@/src/lib/audio/use-metering-recorder';
 import { playAffirmativePress, playErrorNotice } from '@/src/lib/haptics';
 import { fallbackNote, takeFailedNote } from '@/src/features/reflect/hooks/dictation-fallback';
 
-/** One take's ceiling; the server rejects anything larger (convex/dictation.ts). */
+/** One take's ceiling; the server rejects anything larger (convex/dictation/plus.ts). */
 export const MAX_TAKE_MS = 180_000;
 /** The waveform counts down over the last stretch of a take. */
 export const COUNTDOWN_FROM_MS = 15_000;
@@ -59,12 +59,12 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
   // ponytail: once Scribe fails, on-device for the rest of this screen; retry
   // per take if Scribe outages turn out to be short blips.
   const [scribeFailed, setScribeFailed] = useState(false);
-  const cappedOn = useQuery(api.dictation.status)?.cappedOn ?? null;
+  const cappedOn = useQuery(api.dictation.plus.status)?.cappedOn ?? null;
   // Loading reads as under the cap; the server refuses an over-cap take anyway.
   const convex = useConvex();
   const { startRecording, stopRecording, metering, isRecording, durationMs } =
     useMeteringRecorder(DICTATION_BIT_RATE);
-  const transcribe = useAction(api.dictation.transcribe);
+  const transcribe = useAction(api.dictation.plus.transcribe);
   const { ensureConsent } = useVoiceProcessingConsent();
   const consentRef = useRef<Promise<void> | null>(null);
   // An aborted take's recorder stop, which the next start must wait out.

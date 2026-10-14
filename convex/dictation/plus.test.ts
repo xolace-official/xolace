@@ -13,9 +13,9 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
-import { expectCode } from "./fixtures.helpers";
-import { asNewUser, asUnauthed } from "./harness.helpers";
-import { aggregatesMock, posthogMock, ragMock, revenuecatMock } from "./mocks.helpers";
+import { expectCode } from "../test/fixtures.helpers";
+import { asNewUser, asUnauthed } from "../test/harness.helpers";
+import { aggregatesMock, posthogMock, ragMock, revenuecatMock } from "../test/mocks.helpers";
 
 const stub = vi.hoisted(() => ({ isPlus: true }));
 
@@ -45,7 +45,7 @@ afterEach(() => {
 describe("dictation.transcribe (#557)", () => {
   it("returns a Plus caller's transcript in the language it was spoken", async () => {
     const { t } = await asNewUser();
-    expect(await t.action(api.dictation.transcribe, { audioBytes: AUDIO })).toBe(
+    expect(await t.action(api.dictation.plus.transcribe, { audioBytes: AUDIO })).toBe(
       "je suis fatigué",
     );
     // No language_code: Scribe auto-detects.
@@ -56,24 +56,24 @@ describe("dictation.transcribe (#557)", () => {
   it("refuses a free caller before any audio leaves", async () => {
     stub.isPlus = false;
     const { t } = await asNewUser();
-    await expectCode(() => t.action(api.dictation.transcribe, { audioBytes: AUDIO }), "plus_required");
+    await expectCode(() => t.action(api.dictation.plus.transcribe, { audioBytes: AUDIO }), "plus_required");
     expect(scribe).not.toHaveBeenCalled();
   });
 
   it("refuses a signed-out caller", async () => {
     await expectCode(
-      () => asUnauthed().action(api.dictation.transcribe, { audioBytes: AUDIO }),
+      () => asUnauthed().action(api.dictation.plus.transcribe, { audioBytes: AUDIO }),
       "not_authenticated",
     );
     expect(scribe).not.toHaveBeenCalled();
   });
 
   it("refuses audio over the 3-minute ceiling", async () => {
-    const { MAX_DICTATION_BYTES } = await import("../dictation");
+    const { MAX_DICTATION_BYTES } = await import("./plus");
     const { t } = await asNewUser();
     await expectCode(
       () =>
-        t.action(api.dictation.transcribe, {
+        t.action(api.dictation.plus.transcribe, {
           audioBytes: new ArrayBuffer(MAX_DICTATION_BYTES + 1),
         }),
       "audio_too_large",
@@ -84,7 +84,7 @@ describe("dictation.transcribe (#557)", () => {
   it("returns null when Scribe fails", async () => {
     scribe.mockImplementation(async () => new Response("nope", { status: 500 }));
     const { t } = await asNewUser();
-    expect(await t.action(api.dictation.transcribe, { audioBytes: AUDIO })).toBeNull();
+    expect(await t.action(api.dictation.plus.transcribe, { audioBytes: AUDIO })).toBeNull();
   });
 });
 
@@ -98,14 +98,14 @@ describe("dictation daily cap (#558)", () => {
 
   it("charges the take's recorded duration to dictation, not vent", async () => {
     const s = await asNewUser();
-    await s.t.action(api.dictation.transcribe, { audioBytes: AUDIO, durationMs: 90_000 });
+    await s.t.action(api.dictation.plus.transcribe, { audioBytes: AUDIO, durationMs: 90_000 });
     expect(await usage(s)).toEqual({ dictation: 90, vent: undefined });
   });
 
   it("charges by payload size when the client under-reports", async () => {
     const s = await asNewUser();
     // 120KB at 32kbps (4KB/s) is 30s of audio.
-    await s.t.action(api.dictation.transcribe, {
+    await s.t.action(api.dictation.plus.transcribe, {
       audioBytes: new ArrayBuffer(120_000),
       durationMs: 1_000,
     });
@@ -115,7 +115,7 @@ describe("dictation daily cap (#558)", () => {
   it("does not charge a take Scribe failed to transcribe", async () => {
     scribe.mockImplementation(async () => new Response("nope", { status: 500 }));
     const s = await asNewUser();
-    await s.t.action(api.dictation.transcribe, { audioBytes: AUDIO, durationMs: 60_000 });
+    await s.t.action(api.dictation.plus.transcribe, { audioBytes: AUDIO, durationMs: 60_000 });
     expect((await usage(s)).dictation).toBeUndefined();
   });
 
@@ -123,15 +123,15 @@ describe("dictation daily cap (#558)", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-14T15:00:00Z"));
     const s = await asNewUser();
-    expect(await s.t.query(api.dictation.status, {})).toEqual({ cappedOn: null });
-    await s.t.action(api.dictation.transcribe, { audioBytes: AUDIO, durationMs: 30 * MIN });
-    expect(await s.t.query(api.dictation.status, {})).toEqual({
+    expect(await s.t.query(api.dictation.plus.status, {})).toEqual({ cappedOn: null });
+    await s.t.action(api.dictation.plus.transcribe, { audioBytes: AUDIO, durationMs: 30 * MIN });
+    expect(await s.t.query(api.dictation.plus.status, {})).toEqual({
       cappedOn: Date.UTC(2026, 9, 14),
     });
 
     scribe.mockClear();
     await expectCode(
-      () => s.t.action(api.dictation.transcribe, { audioBytes: AUDIO, durationMs: 1_000 }),
+      () => s.t.action(api.dictation.plus.transcribe, { audioBytes: AUDIO, durationMs: 1_000 }),
       "dictation_cap_reached",
     );
     expect(scribe).not.toHaveBeenCalled();
@@ -141,22 +141,22 @@ describe("dictation daily cap (#558)", () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-10-14T23:00:00Z"));
     const s = await asNewUser();
-    await s.t.action(api.dictation.transcribe, { audioBytes: AUDIO, durationMs: 30 * MIN });
+    await s.t.action(api.dictation.plus.transcribe, { audioBytes: AUDIO, durationMs: 30 * MIN });
 
     // The status query reads no clock (Convex caches it): yesterday's
     // cappedOn is the client's cue that the budget is back.
     vi.setSystemTime(new Date("2026-10-15T00:30:00Z"));
-    expect(await s.t.query(api.dictation.status, {})).toEqual({
+    expect(await s.t.query(api.dictation.plus.status, {})).toEqual({
       cappedOn: Date.UTC(2026, 9, 14),
     });
-    await s.t.action(api.dictation.transcribe, { audioBytes: AUDIO, durationMs: 10_000 });
+    await s.t.action(api.dictation.plus.transcribe, { audioBytes: AUDIO, durationMs: 10_000 });
     expect((await usage(s)).dictation).toBe(10);
   });
 
   it("reads the cap from DICTATION_DAILY_CAP_MINUTES_PLUS", async () => {
     vi.stubEnv("DICTATION_DAILY_CAP_MINUTES_PLUS", "1");
     const s = await asNewUser();
-    await s.t.action(api.dictation.transcribe, { audioBytes: AUDIO, durationMs: MIN });
-    expect((await s.t.query(api.dictation.status, {})).cappedOn).not.toBeNull();
+    await s.t.action(api.dictation.plus.transcribe, { audioBytes: AUDIO, durationMs: MIN });
+    expect((await s.t.query(api.dictation.plus.status, {})).cappedOn).not.toBeNull();
   });
 });

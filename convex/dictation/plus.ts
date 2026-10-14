@@ -1,11 +1,11 @@
 import { ConvexError, v } from "convex/values";
-import { action, internalMutation, query } from "./_generated/server";
-import { internal } from "./_generated/api";
-import type { Doc } from "./_generated/dataModel";
-import { requireAuth } from "./lib/auth";
-import { hasPremium } from "./lib/premium";
-import { transcribeAudio } from "./ai/transcribe";
-import { startOfTodayUTC } from "./lib/timeOfDay";
+import { action, internalMutation, query } from "../_generated/server";
+import { internal } from "../_generated/api";
+import type { Doc } from "../_generated/dataModel";
+import { requireAuth } from "../lib/auth";
+import { hasPremium } from "../lib/premium";
+import { transcribeAudio } from "../ai/transcribe";
+import { startOfTodayUTC } from "../lib/timeOfDay";
 
 // Plus dictation (#557). A take is capped at 3 minutes on the client and
 // recorded as mono 32kbps AAC (≈4KB/s → ~720KB); this leaves room for container
@@ -93,7 +93,7 @@ export const transcribe = action({
   returns: v.union(v.string(), v.null()),
   handler: async (ctx, args): Promise<string | null> => {
     const caller: { isPlus: boolean; capReached: boolean } = await ctx.runMutation(
-      internal.dictation.callerStatus,
+      internal.dictation.plus.callerStatus,
       {},
     );
     if (!caller.isPlus) {
@@ -124,7 +124,7 @@ export const transcribe = action({
         Math.max((args.durationMs ?? 0) / 1000, args.audioBytes.byteLength / AUDIO_BYTES_PER_SECOND),
       );
       try {
-        await ctx.runMutation(internal.dictation.charge, { seconds });
+        await ctx.runMutation(internal.dictation.plus.charge, { seconds });
       } catch (err) {
         // The words are already paid for; losing them costs more than the charge.
         console.error("[dictation] charge failed:", err);

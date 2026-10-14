@@ -67,7 +67,11 @@ export const MorphCardBody = ({
             onSubmit();
           }}
           // Sending mid-take would drop the words still being written down.
-          disabled={entryText.trim().length === 0 || plusDictation?.phase === "writing"}
+          disabled={
+            entryText.trim().length === 0 ||
+            plusDictation?.phase === "listening" ||
+            plusDictation?.phase === "writing"
+          }
         />
       </View>
     </Animated.View>
