@@ -6,6 +6,32 @@ All notable changes to Xolace are documented here.
 
 ## [Unreleased]
 
+## [1.14.0] - (2026-10-14)
+
+### Added
+
+- **Insights (steadiness & compounding)** — a new Insights screen under Profile reads how steady each life area (domain) has been across sessions. Domains move from warming → unlocked → settled as readings land on distinct days; an unlock moment marks the first time a domain's number appears. Xolace+ shows each domain's number, "your usual", the 7-day trend, whether it is compounding or easing, and written steadiness insights from the Reflection Agent. Free users see overall steadiness, domain states, and a once-per-stretch compounding upsell that never shows near a recent hard moment. Compounding also feeds Kindling context and follow-up timing (#515–#537).
+- **Plus dictation in Reflect** — Xolace+ members can dictate into the reflect composer with server transcription (ElevenLabs Scribe), live waveform, a stop control, and a daily cap that falls back to on-device dictation. Free users are introduced to it once on their first mic tap. Voice-processing consent (v2.0) is recorded before any audio leaves the device (#561).
+- **Browse search** — one search bar across the Lantern, Support audio, Music, hubs and topics, grouped by section with "See all". Plus items stay discoverable and gate on open; crisis-adjacent queries show a quiet "Need someone now?" row. Query text is never stored or sent to analytics (#549–#552).
+- **Mini-player** — the current Browse track stays playable while you move around: in the iOS 26 tab bar accessory, floating elsewhere. Playback pauses when voice reflect starts listening.
+- **Swipe to archive** — swipe a Connect conversation to archive or unarchive it, with Undo.
+- **Native previews and menus** — timeline and Lantern cards get native peek, context menus (share, save) and zoom transitions.
+
+### Changed
+
+- **iOS 26 look** — shared glass surfaces across profile, timeline and the Lantern reader, soft scroll edges, minimizing tabs, toolbar back buttons. The app theme now drives the native navigation theme and appearance.
+- **Reader sheets** — Lantern reader appearance (Aa) and reflection reporting moved to native form sheets.
+- **Models** — AI pipeline migrated to Claude Haiku 5.5 / Sonnet 5.5; classifier changes are now gated on the intensity eval.
+- **Streak reveal** waits until home sheets and the tour are closed.
+- **Privacy info** updated to explain how spoken audio is transcribed and handled.
+- Animations and previews respect reduced-motion settings.
+
+### Fixed
+
+- On-device dictation keeps listening through pauses and no longer drops the last words when the mic is tapped off; starting dictation from the closed card keeps your draft.
+- Mini-player overlay on iPad and inset jump under a hidden tab bar.
+- Screens that hit an error now show a themed fallback and report to Sentry.
+
 ## [1.13.0] - OTA Update (2026-10-08)
 
 ### Changed
