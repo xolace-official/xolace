@@ -14,7 +14,7 @@ import {
   projectScreen,
 } from '@/src/features/reflect/session-service';
 import { MAX_TURNS, initialState, reducer } from './reflection-reducer';
-import { useVoiceInput } from '@/src/features/reflect/hooks/use-voice-input';
+import { useDictation } from '@/src/features/reflect/hooks/use-dictation';
 
 /**
  * Manages the reflection UI state machine and bridges it to the session API.
@@ -41,7 +41,14 @@ import { useVoiceInput } from '@/src/features/reflect/hooks/use-voice-input';
 export function useReflectionMachine() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const posthog = usePostHog();
-  const { isRecording, partialTranscript, startRecording, stopRecording, abortRecording } = useVoiceInput();
+  const {
+    isRecording,
+    partialTranscript,
+    plusDictation,
+    startRecording,
+    stopRecording,
+    abortRecording,
+  } = useDictation((text) => dispatch({ type: 'VOICE_APPEND', text }));
   const voicePrefixRef = useRef('');
   const {
     sessionId,
@@ -447,6 +454,7 @@ export function useReflectionMachine() {
     toneUsed: session?.toneUsed ?? null,
     claimStrength: session?.claimStrength ?? null,
     isRecording,
+    plusDictation,
     submitReflection,
     submitScaffold,
     submitClarification,

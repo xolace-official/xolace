@@ -22,7 +22,8 @@ export type UseMeteringRecorderReturn = {
   durationMs: number;
 };
 
-export function useMeteringRecorder(): UseMeteringRecorderReturn {
+// Lower bitRate for longer takes that must still fit Convex's 1MB v.bytes().
+export function useMeteringRecorder(bitRate = 48000): UseMeteringRecorderReturn {
   const meteringValue = useSharedValue(0);
 
   // Mono 48kbps AAC: voice-quality for Scribe STT while keeping a 2-minute
@@ -32,7 +33,7 @@ export function useMeteringRecorder(): UseMeteringRecorderReturn {
     ...RecordingPresets.HIGH_QUALITY,
     sampleRate: 24000,
     numberOfChannels: 1,
-    bitRate: 48000,
+    bitRate,
     isMeteringEnabled: true,
   });
 

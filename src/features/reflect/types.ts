@@ -42,6 +42,8 @@ export type ReflectionAction =
   | { type: 'SESSION_RESUMED'; screen: ReflectionStateName }
   | { type: 'VOICE_START' }
   | { type: 'VOICE_TRANSCRIPT'; text: string }
+  /** Plus dictation: a finished take, appended after whatever is written now. */
+  | { type: 'VOICE_APPEND'; text: string }
   | { type: 'BACK_TO_MIRROR' }
   | { type: 'CLEAR_TEXTURES' };
 

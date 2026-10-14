@@ -5,6 +5,8 @@ import { Presets } from "react-native-pulsar";
 import { useThemeColor } from "heroui-native";
 import { PillButton } from "@/src/components/shared/pill-button";
 import { a11yHidden } from "@/src/lib/utils";
+import { DictationStrip } from "@/src/features/reflect/compose/dictation-strip";
+import type { PlusDictationView } from "@/src/features/reflect/hooks/use-plus-dictation";
 
 // Mirror of MAX_RAW_INPUT in convex/sessions.ts. The input simply stops
 // accepting past this, so a user never hits the server's anti-tamper throw.
@@ -16,6 +18,8 @@ type Props = {
   expanded: boolean;
   entryText: string;
   isRecording: boolean;
+  /** Null unless the person dictates with Plus. */
+  plusDictation: PlusDictationView | null;
   inputRef: RefObject<TextInput | null>;
   style: AnimatedStyle<ViewStyle>;
   onChangeText: (text: string) => void;
@@ -27,6 +31,7 @@ export const MorphCardBody = ({
   expanded,
   entryText,
   isRecording,
+  plusDictation,
   inputRef,
   style,
   onChangeText,
@@ -52,6 +57,8 @@ export const MorphCardBody = ({
         className="flex-1 pt-4 text-lg text-foreground"
       />
 
+      {plusDictation && <DictationStrip {...plusDictation} />}
+
       <View className="items-center pt-2">
         <PillButton
           label="Let it out"
@@ -59,7 +66,8 @@ export const MorphCardBody = ({
             Presets.propel();
             onSubmit();
           }}
-          disabled={entryText.trim().length === 0}
+          // Sending mid-take would drop the words still being written down.
+          disabled={entryText.trim().length === 0 || plusDictation?.phase === "writing"}
         />
       </View>
     </Animated.View>

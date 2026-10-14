@@ -62,6 +62,7 @@ export const ReflectScreen = () => {
     toneUsed,
     claimStrength,
     isRecording,
+    plusDictation,
     submitReflection,
     submitScaffold,
     submitClarification,
@@ -214,6 +215,7 @@ export const ReflectScreen = () => {
             onVoiceTapIdle={startVoiceFromIdle}
             onVoiceTapTyping={startVoiceFromTyping}
             isRecording={isRecording}
+            plusDictation={plusDictation}
             spaceName={context?.preferences?.spaceName}
           />
         );
