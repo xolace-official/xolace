@@ -141,6 +141,9 @@ describe("library.search.searchCatalogue", () => {
     // Trailing punctuation is dropped rather than failing every title.
     const punct = await user.t.query(api.library.search.searchCatalogue, { query: "sad?" });
     expect(punct.places.map((p) => p.slug)).toEqual(["sadness", "sad-days"]);
+    // See all reads the same places on their own, without the track searches.
+    expect(await user.t.query(api.library.search.searchPlaces, { query: "sad" })).toEqual(r.places);
+    expect(await user.t.query(api.library.search.searchPlaces, { query: " " })).toEqual([]);
   });
 
   it("searches nothing for a blank query", async () => {

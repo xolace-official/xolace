@@ -13,7 +13,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
 import { imageSource } from '@/src/lib/image-source';
 
-type Place = FunctionReturnType<typeof api.library.search.searchCatalogue>['places'][number];
+type Place = FunctionReturnType<typeof api.library.search.searchPlaces>[number];
 
 const THUMB = 56;
 const KIND_LABEL = { hub: 'Lantern hub', topic: 'Topic' } as const;

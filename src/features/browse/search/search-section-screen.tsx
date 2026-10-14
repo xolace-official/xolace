@@ -72,9 +72,7 @@ function Tracks({ query, family }: { query: string; family: 'support' | 'music' 
 function Places({ query }: { query: string }) {
   const playerInset = useMiniPlayerInset();
   const tap = useSearchTap('see_all');
-  const places = useQuery(api.library.search.searchCatalogue, {
-    query,
-  })?.places;
+  const places = useQuery(api.library.search.searchPlaces, { query });
   return (
     <ScrollView
       className="flex-1 bg-background"

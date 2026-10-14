@@ -87,10 +87,54 @@ const placeValidator = v.object({
 });
 
 /**
+ * Hubs & topics matching a query. Hubs and topics are small, bounded tables, so
+ * they're matched in memory on title — a topic only while it has an active
+ * track (the topic grid's own rule). Every query word a prefix of some title
+ * word, any order ("sa" finds "Sad days", "a" does not list every title); a
+ * title that starts with the query ranks first. Punctuation is dropped so
+ * "sad?" still matches.
+ */
+async function placesMatching(ctx: QueryCtx, text: string) {
+  const words = titleWords(text);
+  const matches = (title: string) => {
+    const tw = titleWords(title);
+    return words.length > 0 && words.every((w) => tw.some((t) => t.startsWith(w)));
+  };
+  const rank = (title: string) => (asWords(title).startsWith(words.join(" ")) ? 0 : 1);
+
+  const [hubs, topics] = await Promise.all([
+    ctx.db
+      .query("library_hubs")
+      .withIndex("by_active", (q) => q.eq("active", true))
+      .take(50), // ponytail: same ceiling as listHubs; page if hubs ever pass 50
+    activeTopics(ctx),
+  ]);
+
+  return (await Promise.all([
+    ...hubs
+      .filter((h) => matches(h.title))
+      .map(async (h) => ({ kind: "hub" as const, slug: h.slug, title: h.title, imageUrl: await coverOf(h) })),
+    ...topics
+      .filter((t) => matches(t.title))
+      .map(async (t) => ({ kind: "topic" as const, slug: t.slug, title: t.title, imageUrl: await thumbUrlFor(t.thumbKey) })),
+  ])).sort((a, b) => rank(a.title) - rank(b.title));
+}
+
+/** Hubs & topics' See all: the same places as `searchCatalogue`, without its track searches. */
+export const searchPlaces = query({
+  args: { query: v.string() },
+  returns: v.array(placeValidator),
+  handler: async (ctx, args) => {
+    await requireAuth(ctx);
+    const text = queryWords(args.query);
+    if (!text) return [];
+    return await placesMatching(ctx, text);
+  },
+});
+
+/**
  * The Support audio, Music, and Hubs & topics sections, plus whether the query
- * gets the Need someone now? row (#552). Hubs and topics are
- * small, bounded tables, so they're matched in memory on title — a topic only
- * while it has an active track (the topic grid's own rule).
+ * gets the Need someone now? row (#552).
  */
 export const searchCatalogue = query({
   args: { query: v.string() },
@@ -105,37 +149,17 @@ export const searchCatalogue = query({
     await requireAuth(ctx);
     const text = queryWords(args.query);
     if (!text) return { support: [], music: [], places: [], needSomeone: false };
-    // Every query word a prefix of some title word, any order ("sa" finds
-    // "Sad days", "a" does not list every title); a title that starts with the
-    // query ranks first. Punctuation is dropped so "sad?" still matches.
-    const words = titleWords(text);
-    const matches = (title: string) => {
-      const tw = titleWords(title);
-      return words.length > 0 && words.every((w) => tw.some((t) => t.startsWith(w)));
-    };
-    const rank = (title: string) => (asWords(title).startsWith(words.join(" ")) ? 0 : 1);
 
-    const [support, music, hubs, topics] = await Promise.all([
+    const [support, music, places] = await Promise.all([
       searchFamily(ctx, "support", text),
       searchFamily(ctx, "music", text),
-      ctx.db
-        .query("library_hubs")
-        .withIndex("by_active", (q) => q.eq("active", true))
-        .take(50), // ponytail: same ceiling as listHubs; page if hubs ever pass 50
-      activeTopics(ctx),
+      placesMatching(ctx, text),
     ]);
 
     return {
       support: await Promise.all(support.map(toTrackItem)),
       music: await Promise.all(music.map(toTrackItem)),
-      places: (await Promise.all([
-        ...hubs
-          .filter((h) => matches(h.title))
-          .map(async (h) => ({ kind: "hub" as const, slug: h.slug, title: h.title, imageUrl: await coverOf(h) })),
-        ...topics
-          .filter((t) => matches(t.title))
-          .map(async (t) => ({ kind: "topic" as const, slug: t.slug, title: t.title, imageUrl: await thumbUrlFor(t.thumbKey) })),
-      ])).sort((a, b) => rank(a.title) - rank(b.title)),
+      places,
       // Full raw query: the index cap must not hide a crisis term past it.
       needSomeone: isCrisisQuery(args.query),
     };
