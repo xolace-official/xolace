@@ -21,6 +21,7 @@ const MAX_QUERY = 100;
 const MAX_RESULTS = 6;
 
 const queryWords = (query: string) => asWords(query.slice(0, MAX_QUERY));
+const titleWords = (s: string) => asWords(s).replace(/[^\p{L}\p{N}\s]+/gu, " ").split(/\s+/).filter(Boolean);
 
 export const searchEntries = query({
   args: { query: v.string() },
@@ -104,11 +105,15 @@ export const searchCatalogue = query({
     await requireAuth(ctx);
     const text = queryWords(args.query);
     if (!text) return { support: [], music: [], places: [], needSomeone: false };
-    // Every query word somewhere in the title, any order; a title that starts
-    // with the query ranks first.
-    const words = text.split(/\s+/);
-    const matches = (title: string) => words.every((w) => asWords(title).includes(w));
-    const rank = (title: string) => (asWords(title).startsWith(text) ? 0 : 1);
+    // Every query word a prefix of some title word, any order ("sa" finds
+    // "Sad days", "a" does not list every title); a title that starts with the
+    // query ranks first. Punctuation is dropped so "sad?" still matches.
+    const words = titleWords(text);
+    const matches = (title: string) => {
+      const tw = titleWords(title);
+      return words.length > 0 && words.every((w) => tw.some((t) => t.startsWith(w)));
+    };
+    const rank = (title: string) => (asWords(title).startsWith(words.join(" ")) ? 0 : 1);
 
     const [support, music, hubs, topics] = await Promise.all([
       searchFamily(ctx, "support", text),

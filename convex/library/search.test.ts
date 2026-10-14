@@ -135,6 +135,12 @@ describe("library.search.searchCatalogue", () => {
     ]);
     const reordered = await user.t.query(api.library.search.searchCatalogue, { query: "days sad" });
     expect(reordered.places.map((p) => p.slug)).toEqual(["sad-days"]);
+    // Prefix of a title word, not a substring: "a" is inside every title but starts none.
+    const letter = await user.t.query(api.library.search.searchCatalogue, { query: "a" });
+    expect(letter.places).toEqual([]);
+    // Trailing punctuation is dropped rather than failing every title.
+    const punct = await user.t.query(api.library.search.searchCatalogue, { query: "sad?" });
+    expect(punct.places.map((p) => p.slug)).toEqual(["sadness", "sad-days"]);
   });
 
   it("searches nothing for a blank query", async () => {
