@@ -6,6 +6,7 @@ import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
 import { recordActivity } from "./streaks/activityLog";
 import { writeVentAcknowledgement } from "./ai/ventAcknowledge";
+import { transcribeAudio } from "./ai/transcribe";
 import { renderSemanticProfile } from "./semanticProfiles";
 import {
   moderateInput,
@@ -172,45 +173,6 @@ type VentResult = {
  * All failures are soft — returns null words/audioUrl so the client can still
  * play the destruction animation regardless.
  */
-async function transcribeVentAudio(
-  apiKey: string,
-  audioBytes: ArrayBuffer,
-): Promise<string | null> {
-  const scribeController = new AbortController();
-  const scribeTimeout = setTimeout(() => scribeController.abort(), 30_000);
-  try {
-    const blob = new Blob([audioBytes], { type: "audio/m4a" });
-    const formData = new FormData();
-    formData.append("file", blob, "recording.m4a");
-    formData.append("model_id", "scribe_v2");
-
-    const scribeRes = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
-      method: "POST",
-      headers: { "xi-api-key": apiKey },
-      body: formData,
-      signal: scribeController.signal,
-    });
-
-    if (!scribeRes.ok) {
-      const body = await scribeRes.text();
-      console.error(`[vent] Scribe error ${scribeRes.status}: ${body}`);
-      return null;
-    }
-
-    const data = await scribeRes.json();
-    return typeof data.text === "string" ? data.text.trim() : "";
-  } catch (err) {
-    if (err instanceof Error && err.name === "AbortError") {
-      console.error("[vent] Scribe request timed out");
-    } else {
-      console.error("[vent] Scribe fetch failed:", err);
-    }
-    return null;
-  } finally {
-    clearTimeout(scribeTimeout);
-  }
-}
-
 async function runVentPipeline(
   ctx: ActionCtx,
   audioBytes: ArrayBuffer,
@@ -226,7 +188,7 @@ async function runVentPipeline(
   // and resolved-voice fetches — both depend only on emotionalProfileId, not
   // the transcript, so their cost is fully hidden behind the STT round-trip.
   const [transcriptResult, semanticProfileDoc, voiceSlug] = await Promise.all([
-    transcribeVentAudio(apiKey, audioBytes),
+    transcribeAudio(apiKey, audioBytes),
     emotionalProfileId
       ? ctx.runQuery(internal.semanticProfiles.getCurrent, { emotionalProfileId })
       : Promise.resolve(null),

@@ -13,7 +13,7 @@ import {
   holdsAudioFocus,
   releaseAudioFocus,
 } from '@/src/lib/audio/session';
-import { useVentRecorder } from '@/src/features/vent/hooks/use-vent-recorder';
+import { useMeteringRecorder } from '@/src/lib/audio/use-metering-recorder';
 import {
   playAffirmativePress,
   playErrorNotice,
@@ -54,7 +54,7 @@ export type UseVentFlowReturn = {
   onBurnComplete: () => void;
   // Screen calls this when the 'gone' animation finishes — triggers router.back()
   onGoneComplete: () => void;
-  // Forwarded from use-vent-recorder for the Skia particle system
+  // Forwarded from use-metering-recorder for the Skia particle system
   metering: SharedValue<number>;
   isRecording: boolean;
   durationMs: number;
@@ -83,7 +83,7 @@ export function useVentFlow(): UseVentFlowReturn {
   const [capReached, setCapReached] = useState(false);
 
   const { startRecording, stopRecording, metering, isRecording, durationMs } =
-    useVentRecorder();
+    useMeteringRecorder();
   const processVentAudio = useAction(api.vent.processVentAudio);
   const { ensureConsent } = useVoiceProcessingConsent();
 
