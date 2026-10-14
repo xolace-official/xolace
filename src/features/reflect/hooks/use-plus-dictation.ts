@@ -72,6 +72,8 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
   // Bumped by abort so a transcript still in flight is dropped, not appended.
   const takeRef = useRef(0);
   const phaseRef = useRef<PlusDictationPhase>('idle');
+  // A start still waiting on the mic permission or recorder setup.
+  const startingRef = useRef(false);
   const isFocused = useIsFocused();
 
   const setPhaseSynced = (next: PlusDictationPhase) => {
@@ -81,7 +83,7 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 
   /** False when this take should go to on-device dictation instead. */
   const start = async (): Promise<boolean> => {
-    if (phaseRef.current !== 'idle') return true;
+    if (phaseRef.current !== 'idle' || startingRef.current) return true;
     const fallback = fallbackNote({
       cappedOn,
       scribeFailed,
@@ -89,8 +91,16 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
     });
     setNote(fallback);
     if (fallback) return false;
+    const take = takeRef.current;
+    startingRef.current = true;
     await abandonedStopRef.current;
     const started = await startRecording();
+    startingRef.current = false;
+    // Dismissed or submitted while the mic was still setting up.
+    if (take !== takeRef.current) {
+      if (started) abandonedStopRef.current = stopRecording().then(deleteRecording);
+      return true;
+    }
     if (!started) {
       playErrorNotice();
       return true;
@@ -150,8 +160,9 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
   // For when the text must not change any more (dismiss, submit).
   const abort = () => {
     setNote(null);
-    if (phaseRef.current === 'idle') return;
+    // Bumped even when idle: it also cancels a start still setting up.
     takeRef.current += 1;
+    if (phaseRef.current === 'idle') return;
     if (phaseRef.current === 'listening') {
       abandonedStopRef.current = stopRecording().then(deleteRecording);
     }

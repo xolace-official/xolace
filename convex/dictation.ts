@@ -105,6 +105,11 @@ export const transcribe = action({
     if (args.audioBytes.byteLength > MAX_DICTATION_BYTES) {
       throw new ConvexError({ code: "audio_too_large", message: "Dictation take too long" });
     }
+    // v.number() admits NaN/Infinity; a NaN charge would poison the counter and
+    // disable the cap for the rest of the day.
+    if (args.durationMs !== undefined && !(Number.isFinite(args.durationMs) && args.durationMs >= 0)) {
+      throw new ConvexError({ code: "invalid_duration", message: "Invalid dictation duration" });
+    }
 
     const apiKey = process.env.ELEVENLABS_VOICE_API_KEY;
     if (!apiKey) {
