@@ -18,6 +18,7 @@ const shelfItemValidator = v.object({
   family: v.union(v.literal("support"), v.literal("music")),
   title: v.string(),
   thumbUrl: v.string(),
+  thumbhash: v.optional(v.string()),
   attribution: v.optional(v.string()),
 });
 
@@ -65,6 +66,7 @@ export const getNewShelf = query({
         family: t.family,
         title: t.title,
         thumbUrl: await thumbUrlFor(t.thumbKey),
+        thumbhash: t.thumbhash,
         attribution: attributionFor(t),
       })),
     );
@@ -98,6 +100,7 @@ export const getFeatured = query({
       family: picked.family,
       title: picked.title,
       thumbUrl: await thumbUrlFor(picked.thumbKey),
+      thumbhash: picked.thumbhash,
       attribution: attributionFor(picked),
     };
   },
@@ -115,6 +118,7 @@ export const trackItemValidator = v.object({
   family: familyValidator,
   title: v.string(),
   thumbUrl: v.string(),
+  thumbhash: v.optional(v.string()),
   attribution: v.optional(v.string()),
   durationSec: v.number(),
   series: v.optional(v.string()),
@@ -129,6 +133,7 @@ export async function toTrackItem(t: Doc<"audio_tracks">) {
     family: t.family,
     title: t.title,
     thumbUrl: await thumbUrlFor(t.thumbKey),
+    thumbhash: t.thumbhash,
     attribution: attributionFor(t),
     durationSec: t.durationSec,
     series: t.series,
@@ -181,10 +186,10 @@ async function activeByFamily(ctx: QueryCtx, family: Doc<"audio_tracks">["family
 export async function activeTopics(ctx: QueryCtx) {
   const tracks = [...(await activeByFamily(ctx, "support")), ...(await activeByFamily(ctx, "music"))];
 
-  const byTopic = new Map<string, { thumbKey: string; supportCount: number; musicCount: number }>();
+  const byTopic = new Map<string, { thumbKey: string; thumbhash?: string; supportCount: number; musicCount: number }>();
   for (const t of tracks) {
     const slug = topicSlug(t.topic);
-    const entry = byTopic.get(slug) ?? { thumbKey: t.thumbKey, supportCount: 0, musicCount: 0 };
+    const entry = byTopic.get(slug) ?? { thumbKey: t.thumbKey, thumbhash: t.thumbhash, supportCount: 0, musicCount: 0 };
     if (t.family === "support") entry.supportCount += 1;
     else entry.musicCount += 1;
     byTopic.set(slug, entry);
@@ -195,7 +200,7 @@ export async function activeTopics(ctx: QueryCtx) {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([slug, entry]) => {
       const row = rows.get(slug);
-      return { ...entry, slug, title: row?.title || topicTitle(slug), thumbKey: row?.thumbKey ?? entry.thumbKey };
+      return { ...entry, slug, title: row?.title || topicTitle(slug), ...(row && { thumbKey: row.thumbKey, thumbhash: row.thumbhash }) };
     });
 }
 
@@ -207,6 +212,7 @@ export const getTopics = query({
       slug: v.string(),
       title: v.string(),
       thumbUrl: v.string(),
+      thumbhash: v.optional(v.string()),
       supportCount: v.number(),
       musicCount: v.number(),
     }),

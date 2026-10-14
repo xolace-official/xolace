@@ -110,6 +110,8 @@ export function BrowseHubScreen() {
           >
             <Image
               source={imageSource(featured.thumbUrl)}
+              placeholder={featured.thumbhash ? { thumbhash: featured.thumbhash } : undefined}
+              placeholderContentFit="cover"
               style={{ width: '100%', height: '100%' }}
               transition={200}
             />

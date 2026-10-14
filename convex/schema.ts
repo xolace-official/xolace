@@ -2210,6 +2210,7 @@ export default defineSchema({
     durationSec: v.number(),
     sha256: v.string(), // audio re-ingest idempotency
     thumbSha256: v.string(), // thumbnail idempotency, independent of audio
+    thumbhash: v.optional(v.string()), // base64 ThumbHash of the thumb, the blurred placeholder while it loads
     active: v.boolean(), // retire (licence lapse) without deleting
     newUntil: v.optional(v.number()), // ms epoch; in the Browse "New" shelf while > now
     featured: v.optional(v.boolean()), // hand-picked Browse hero; set from the Convex dashboard
@@ -2247,6 +2248,7 @@ export default defineSchema({
     title: v.optional(v.string()), // curated display title; else derived from the slug
     thumbKey: v.string(), // R2 key, content-addressed: `thumb/${thumbSha256}.<ext>`
     thumbSha256: v.string(),
+    thumbhash: v.optional(v.string()), // base64 ThumbHash of the cover
   })
     .index("by_slug", ["slug"])
     .index("by_thumbKey", ["thumbKey"]), // discardUpload: is this blob still referenced?

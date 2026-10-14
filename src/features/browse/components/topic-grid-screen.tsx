@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { LegendList } from '@legendapp/list/react-native';
 import { useQuery } from 'convex/react';
@@ -10,7 +9,7 @@ import { Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
-import { imageSource } from '@/src/lib/image-source';
+import { CoverImage } from '@/src/features/library/cover-image';
 import { playSoftPress } from '@/src/lib/haptics';
 import { useMiniPlayerInset } from '@/src/features/browse/now-playing/now-playing-store';
 
@@ -88,7 +87,12 @@ export function TopicGridScreen() {
           }}
         >
           <View className="bg-surface-tertiary overflow-hidden rounded-xl" style={{ width: tile, height: tile }}>
-            <Image source={imageSource(item.thumbUrl)} style={{ width: tile, height: tile }} />
+            <CoverImage
+              uri={item.thumbUrl}
+              thumbhash={item.thumbhash}
+              recyclingKey={item.slug}
+              style={{ width: tile, height: tile }}
+            />
           </View>
           <View className="mt-2">
             <AppText className="text-[15px] font-semibold" numberOfLines={1}>

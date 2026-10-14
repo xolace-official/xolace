@@ -23,6 +23,7 @@ const sharedFields = {
   durationSec: v.number(),
   sha256: v.string(),
   thumbSha256: v.string(),
+  thumbhash: v.optional(v.string()),
   newUntil: v.optional(v.number()),
 };
 
@@ -179,6 +180,25 @@ export const upsertTrack = internalMutation({
 });
 
 /**
+ * `ingest.ts --thumbs-only`: repoint an existing track at a new thumbnail
+ * without re-uploading its audio. The old thumb blob is left for the same
+ * reason upsertTrack never deletes one (content-addressed, maybe shared).
+ */
+export const setTrackThumb = internalMutation({
+  args: { slug: v.string(), thumbKey: v.string(), thumbSha256: v.string(), thumbhash: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { slug, ...thumb }) => {
+    const existing = await ctx.db
+      .query("audio_tracks")
+      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .unique();
+    if (!existing) throw new ConvexError(`setTrackThumb: no audio_tracks row for slug "${slug}"`);
+    await ctx.db.patch("audio_tracks", existing._id, thumb);
+    return null;
+  },
+});
+
+/**
  * Topic decoration (#353): the shared suffix's cover + display title for the
  * Browse topic grid. The model catalogue stays the only source of valid
  * topics — an unknown slug is rejected so presentation data can never invent
@@ -193,6 +213,7 @@ export const upsertTopic = internalMutation({
       title: v.optional(v.string()),
       thumbKey: v.string(),
       thumbSha256: v.string(),
+      thumbhash: v.optional(v.string()),
     }),
   },
   returns: v.object({
