@@ -29,6 +29,7 @@ export function useVoiceInput() {
 
   useSpeechRecognitionEvent('start', () => {
     finalisedRef.current = '';
+    setPartialTranscript('');
     setIsRecording(true);
     isRecordingRef.current = true;
   });
@@ -36,7 +37,9 @@ export function useVoiceInput() {
   useSpeechRecognitionEvent('end', () => {
     setIsRecording(false);
     isRecordingRef.current = false;
-    setPartialTranscript('');
+    // Don't clear the transcript here: stop()'s final result can land in the
+    // same render batch as 'end', and clearing would drop the tail. 'start'
+    // clears it instead.
   });
 
   useSpeechRecognitionEvent('result', (event) => {
