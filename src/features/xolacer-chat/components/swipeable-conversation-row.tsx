@@ -8,7 +8,7 @@ import { SymbolView } from 'expo-symbols';
 import { useCSSVariable } from 'uniwind';
 import { AppText } from '@/src/components/shared/app-text';
 import { playSoftPress } from '@/src/lib/haptics';
-import type { PairConversation } from './chats-list';
+import type { PairConversation } from '@/src/features/xolacer-chat/components/chats-list';
 
 const ARCHIVE_ICON = { ios: 'archivebox', android: 'archive', web: 'archive' } as const;
 const UNARCHIVE_ICON = { ios: 'tray.and.arrow.up', android: 'unarchive', web: 'unarchive' } as const;
