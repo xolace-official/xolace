@@ -3,11 +3,10 @@ import { startOfTodayUTC } from '@/convex/lib/timeOfDay';
 
 // Plus dictation never strands the person (#558): these say, in one line, why
 // the mic is on the phone's own dictation or that a take was lost.
-const NOTE_CAPPED = "Sharper dictation is back tomorrow. Using your phone's for now.";
-const NOTE_UNAVAILABLE = "Sharper dictation isn't available right now. Using your phone's.";
+// Each must fit one line of the composer strip on the narrowest phone.
+const NOTE_CAPPED = 'Sharper dictation is back tomorrow.';
+const NOTE_UNAVAILABLE = "Sharper dictation isn't available right now.";
 const NOTE_TAKE_FAILED = "That one didn't come through. Try again.";
-const NOTE_TAKE_CAPPED =
-  "That one didn't come through, and sharper dictation is back tomorrow. Try again with your phone's.";
 
 /** The note for a mic tap that should go on device instead, or null to use Plus. */
 export function fallbackNote({
@@ -33,8 +32,5 @@ export function takeFailedNote(err: unknown, reachedScribe: boolean) {
   const capped =
     err instanceof ConvexError &&
     (err.data as { code?: string } | undefined)?.code === 'dictation_cap_reached';
-  return {
-    note: capped ? NOTE_TAKE_CAPPED : NOTE_TAKE_FAILED,
-    scribeDown: reachedScribe && !capped,
-  };
+  return { note: NOTE_TAKE_FAILED, scribeDown: reachedScribe && !capped };
 }
