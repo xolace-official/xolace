@@ -41,7 +41,7 @@ import { useVoiceInput } from '@/src/features/reflect/hooks/use-voice-input';
 export function useReflectionMachine() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const posthog = usePostHog();
-  const { isRecording, partialTranscript, startRecording, stopRecording } = useVoiceInput();
+  const { isRecording, partialTranscript, startRecording, stopRecording, abortRecording } = useVoiceInput();
   const voicePrefixRef = useRef('');
   const {
     sessionId,
@@ -180,6 +180,7 @@ export function useReflectionMachine() {
   const submitReflection = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
+    abortRecording();
     dispatch({ type: 'SUBMIT' });
     const duration = typingStartRef.current
       ? Date.now() - typingStartRef.current
@@ -203,7 +204,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [state.entryText, state.entryType, initiateAndSubmit, posthog, dispatchError]);
+  }, [state.entryText, state.entryType, initiateAndSubmit, posthog, dispatchError, abortRecording]);
 
   const submitScaffold = useCallback(async () => {
     if (busyRef.current) return;
@@ -232,6 +233,7 @@ export function useReflectionMachine() {
   const submitClarification = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
+    abortRecording();
     dispatch({ type: 'SUBMIT' });
     const feedbackType: FeedbackType = state.lastFeedbackType ?? 'not_quite';
     try {
@@ -245,7 +247,7 @@ export function useReflectionMachine() {
     } finally {
       busyRef.current = false;
     }
-  }, [state.clarifyText, state.lastFeedbackType, submitRefinement, dispatchError]);
+  }, [state.clarifyText, state.lastFeedbackType, submitRefinement, dispatchError, abortRecording]);
 
   const handleThatsIt = useCallback(async () => {
     if (busyRef.current) return;
@@ -404,7 +406,7 @@ export function useReflectionMachine() {
   };
 
   const handleDismissTyping = () => {
-    if (isRecording) stopRecording();
+    abortRecording();
     dispatch({ type: 'DISMISS_TYPING' });
   };
 

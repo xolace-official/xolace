@@ -102,8 +102,15 @@ export function useVoiceInput() {
     });
   };
 
+  // stop() delivers a final result for words still in flight, so the tail of
+  // the sentence isn't lost. abort() drops them — for when the text must not
+  // change any more (dismiss, submit).
   const stopRecording = () => {
-    ExpoSpeechRecognitionModule.abort();
+    ExpoSpeechRecognitionModule.stop();
+  };
+
+  const abortRecording = () => {
+    if (isRecordingRef.current) ExpoSpeechRecognitionModule.abort();
   };
 
   return {
@@ -111,6 +118,7 @@ export function useVoiceInput() {
     partialTranscript,
     startRecording,
     stopRecording,
+    abortRecording,
     error,
   };
 }
