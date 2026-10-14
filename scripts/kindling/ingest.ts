@@ -4,10 +4,10 @@
 // `audio_tracks`. Idempotent — safe to re-run the whole manifest.
 //
 // Topic art (#354): `topics.json` beside the manifest holds
-// `[{ slug, title?, thumbPath, thumbSha256 }]` and is ingested as a first
-// pass into `topics` via `upsertTopic`. Covers follow the track-thumbnail
-// spec — square ~600×600, ≤ 80 KB WebP/JPEG — and share the content-addressed
-// `thumb/<sha>.<ext>` key space. A cover whose key already backs the slug's
+// `[{ slug, title?, thumbPath }]` and is ingested as a first pass into
+// `topics` via `upsertTopic`. Covers go through the same WebP pipeline as
+// track thumbs (below) and share the content-addressed `thumb/<sha>.webp`
+// key space. A cover whose key already backs the slug's
 // row is not re-uploaded, so a title-only edit is cheap; an unknown slug is
 // rejected by the mutation and leaves no row or blob behind.
 //
@@ -20,7 +20,7 @@
 // to override either side independently.
 //
 // Usage:
-//   bun scripts/kindling/ingest.ts --update-hashes   # fill in sha256 fields from local files
+//   bun scripts/kindling/ingest.ts --update-hashes   # fill in audio sha256 fields from local files
 //   bun scripts/kindling/ingest.ts --update-hashes --prod (or --manifest scripts/kindling/prod/manifest.json explicitly)
 //   bun scripts/kindling/ingest.ts                    # dev deployment + dev/ fixtures
 //   bun scripts/kindling/ingest.ts --prod             # prod deployment + prod/ curated catalogue
@@ -30,9 +30,12 @@
 //
 // Thumbnails are never uploaded as-is: each source is resized to a 1080px
 // WebP (sharp: lanczos3, q78, effort 6 — the library cover settings) and
-// keyed by the WebP's hash, so the manifest's `thumbSha256` (the *source*
-// hash) only groups shared art. A base64 ThumbHash of it is stored on the row
-// for the blurred placeholder. 1080 covers the widest use (the hub hero);
+// keyed by the WebP's hash; that hash is the row's `thumbSha256` (manifests
+// carry no thumb hash — a stale one in old JSON is overwritten). A base64
+// ThumbHash of it is stored on the row for the blurred placeholder.
+// The first full run after switching to WebP reports unchanged-audio tracks
+// as "updated" (stored source hash ≠ WebP hash); so does a sharp/libvips
+// upgrade that changes the encoder's output. 1080 covers the widest use (the hub hero);
 // 4375² sources made every Browse row decode ~19MP. `--thumbs-only` swaps
 // thumbs on existing rows without the audio re-upload a full run does.
 //
@@ -54,7 +57,6 @@ type SharedFields = {
   thumbPath: string;
   durationSec: number;
   sha256: string;
-  thumbSha256: string;
   newUntil?: number;
 };
 type SupportTrack = SharedFields & {
@@ -68,7 +70,7 @@ type SupportTrack = SharedFields & {
 };
 type MusicTrack = SharedFields & { family: "music"; licence: Record<string, unknown> };
 type ManifestTrack = SupportTrack | MusicTrack;
-type ManifestTopic = { slug: string; title?: string; thumbPath: string; thumbSha256: string };
+type ManifestTopic = { slug: string; title?: string; thumbPath: string };
 
 const args = process.argv.slice(2);
 const flag = (name: string, fallback: string) => {
@@ -255,14 +257,9 @@ async function main() {
   if (updateHashes) {
     for (const track of manifest) {
       track.sha256 = await sha256File(path.resolve(mediaDir, track.audioPath));
-      track.thumbSha256 = await sha256File(path.resolve(mediaDir, track.thumbPath));
     }
     writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
-    for (const topic of topics) {
-      topic.thumbSha256 = await sha256File(path.resolve(mediaDir, topic.thumbPath));
-    }
-    writeFileSync(topicsPath, JSON.stringify(topics, null, 2) + "\n");
-    console.log(`Updated hashes for ${manifest.length} tracks and ${topics.length} topics`);
+    console.log(`Updated hashes for ${manifest.length} tracks`);
     return;
   }
 
@@ -272,7 +269,14 @@ async function main() {
   // uploading to it at once; cleanup must never delete those (#354 race).
   const thumbKeyCounts = new Map<string, number>();
   for (const entry of [...manifest, ...topics]) {
-    const key = (await thumbOf(entry.thumbPath)).key;
+    let key: string;
+    try {
+      key = (await thumbOf(entry.thumbPath)).key;
+    } catch {
+      // Missing/unreadable thumb: the memoised rejection fails just this
+      // entry in ingestOne/ingestTopic, before anything is uploaded.
+      continue;
+    }
     thumbKeyCounts.set(key, (thumbKeyCounts.get(key) ?? 0) + 1);
   }
   const sharedThumbKeys = new Set(
