@@ -394,7 +394,8 @@ export function useReflectionMachine() {
 
   const startVoiceFromIdle = async () => {
     if (isRecording) { stopRecording(); return; }
-    voicePrefixRef.current = '';
+    // A kept draft (#258) is the prefix too, or the first word would replace it.
+    voicePrefixRef.current = state.entryText.trim();
     dispatch({ type: 'VOICE_START' });
     await startRecording();
   };
