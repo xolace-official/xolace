@@ -8,7 +8,7 @@
  *
  * Daily cap (#558): minutes charged to vent's counter (or not at all); a
  * client under-reporting its duration; an over-cap caller still reaching
- * Scribe; a failed take eating budget; the counter never resetting; the env
+ * Scribe; concurrent takes all passing the check; a failed take eating budget; the counter never resetting; the env
  * override ignored.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -116,7 +116,16 @@ describe("dictation daily cap (#558)", () => {
     scribe.mockImplementation(async () => new Response("nope", { status: 500 }));
     const s = await asNewUser();
     await s.t.action(api.dictation.plus.transcribe, { audioBytes: AUDIO, durationMs: 60_000 });
-    expect((await usage(s)).dictation).toBeUndefined();
+    expect((await usage(s)).dictation ?? 0).toBe(0);
+  });
+
+  it("lets only one of two concurrent takes through the last of the budget", async () => {
+    vi.stubEnv("DICTATION_DAILY_CAP_MINUTES_PLUS", "1");
+    const s = await asNewUser();
+    const take = () => s.t.action(api.dictation.plus.transcribe, { audioBytes: AUDIO, durationMs: MIN });
+    const results = await Promise.allSettled([take(), take()]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(scribe).toHaveBeenCalledTimes(1);
   });
 
   it("refuses an over-cap caller before any audio leaves, and says which day", async () => {

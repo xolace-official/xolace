@@ -49,26 +49,41 @@ export const status = query({
 });
 
 /**
- * Auth, Plus and today's cap for the action, which can't read the db itself.
- * A mutation, not a query, so the clock-dependent cap is never served cached.
+ * Auth, Plus and today's cap for the action, which can't read the db itself —
+ * and, when the take is admitted, reserves its seconds in the same transaction
+ * so concurrent takes see each other's spend. Returns the UTC day the
+ * reservation landed on, for `release`.
  */
-export const callerStatus = internalMutation({
-  args: {},
-  returns: v.object({ isPlus: v.boolean(), capReached: v.boolean() }),
-  handler: async (ctx) => {
+export const reserve = internalMutation({
+  args: { seconds: v.number() },
+  returns: v.union(
+    v.object({ ok: v.literal(false), reason: v.union(v.literal("plus_required"), v.literal("dictation_cap_reached")) }),
+    v.object({ ok: v.literal(true), day: v.number() }),
+  ),
+  handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
-    return { isPlus: await hasPremium(ctx, profile), capReached: capReached(profile) };
+    if (!(await hasPremium(ctx, profile))) return { ok: false as const, reason: "plus_required" as const };
+    // Admits a take while under the cap; the last one may overshoot by itself.
+    if (capReached(profile)) return { ok: false as const, reason: "dictation_cap_reached" as const };
+    const day = startOfTodayUTC();
+    await ctx.db.patch("emotional_profiles", profile._id, {
+      dictationDailySecondsUsed: secondsUsedToday(profile) + args.seconds,
+      dictationDailyResetAt: day,
+      updatedAt: Date.now(),
+    });
+    return { ok: true as const, day };
   },
 });
 
-export const charge = internalMutation({
-  args: { seconds: v.number() },
+/** Hands a failed take's reservation back, unless the day has since rolled over. */
+export const release = internalMutation({
+  args: { seconds: v.number(), day: v.number() },
   returns: v.null(),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
+    if (profile.dictationDailyResetAt !== args.day) return null;
     await ctx.db.patch("emotional_profiles", profile._id, {
-      dictationDailySecondsUsed: secondsUsedToday(profile) + args.seconds,
-      dictationDailyResetAt: startOfTodayUTC(),
+      dictationDailySecondsUsed: Math.max(0, (profile.dictationDailySecondsUsed ?? 0) - args.seconds),
       updatedAt: Date.now(),
     });
     return null;
@@ -80,8 +95,8 @@ export const charge = internalMutation({
  * The audio is never stored or logged — it goes straight to Scribe and is
  * dropped. Returns the text with sound tags stripped, null when transcription
  * fails, "" when nothing was heard.
- * A transcribed take is charged to today's dictation budget by its recorded
- * duration; a failed one is not.
+ * A take reserves its recorded duration from today's dictation budget before
+ * Scribe is called; a failed one hands it back.
  *
  * @throws ConvexError `plus_required` for a non-Plus caller
  * @throws ConvexError `dictation_cap_reached` once today's budget is spent
@@ -92,16 +107,6 @@ export const transcribe = action({
   args: { audioBytes: v.bytes(), durationMs: v.optional(v.number()) },
   returns: v.union(v.string(), v.null()),
   handler: async (ctx, args): Promise<string | null> => {
-    const caller: { isPlus: boolean; capReached: boolean } = await ctx.runMutation(
-      internal.dictation.plus.callerStatus,
-      {},
-    );
-    if (!caller.isPlus) {
-      throw new ConvexError({ code: "plus_required", message: "Xolace+ required: dictation" });
-    }
-    if (caller.capReached) {
-      throw new ConvexError({ code: "dictation_cap_reached", message: "Dictation cap reached" });
-    }
     if (args.audioBytes.byteLength > MAX_DICTATION_BYTES) {
       throw new ConvexError({ code: "audio_too_large", message: "Dictation take too long" });
     }
@@ -110,24 +115,32 @@ export const transcribe = action({
     if (args.durationMs !== undefined && !(Number.isFinite(args.durationMs) && args.durationMs >= 0)) {
       throw new ConvexError({ code: "invalid_duration", message: "Invalid dictation duration" });
     }
-
     const apiKey = process.env.ELEVENLABS_VOICE_API_KEY;
     if (!apiKey) {
       console.error("[dictation] ELEVENLABS_VOICE_API_KEY not set");
       return null;
     }
-    const result = await transcribeAudio(apiKey, args.audioBytes);
-    if (result !== null) {
-      // ponytail: checked before Scribe and charged after, so parallel takes can
-      // overshoot the cap by one take each; a soft cap is fine for cost.
-      const seconds = Math.ceil(
-        Math.max((args.durationMs ?? 0) / 1000, args.audioBytes.byteLength / AUDIO_BYTES_PER_SECOND),
-      );
-      try {
-        await ctx.runMutation(internal.dictation.plus.charge, { seconds });
-      } catch (err) {
-        // The words are already paid for; losing them costs more than the charge.
-        console.error("[dictation] charge failed:", err);
+
+    const seconds = Math.ceil(
+      Math.max((args.durationMs ?? 0) / 1000, args.audioBytes.byteLength / AUDIO_BYTES_PER_SECOND),
+    );
+    const reservation: { ok: false; reason: "plus_required" | "dictation_cap_reached" } | { ok: true; day: number } =
+      await ctx.runMutation(internal.dictation.plus.reserve, { seconds });
+    if (!reservation.ok) {
+      const message = reservation.reason === "plus_required" ? "Xolace+ required: dictation" : "Dictation cap reached";
+      throw new ConvexError({ code: reservation.reason, message });
+    }
+
+    let result: Awaited<ReturnType<typeof transcribeAudio>> = null;
+    try {
+      result = await transcribeAudio(apiKey, args.audioBytes);
+    } finally {
+      if (result === null) {
+        try {
+          await ctx.runMutation(internal.dictation.plus.release, { seconds, day: reservation.day });
+        } catch (err) {
+          console.error("[dictation] release failed:", err);
+        }
       }
     }
     return result?.text ?? null;

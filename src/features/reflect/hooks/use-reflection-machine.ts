@@ -115,6 +115,7 @@ export function useReflectionMachine() {
 
     if (serverState === 'completed' || serverState === 'abandoned') {
       // Terminal states — reset UI for a fresh session
+      abortRecording();
       resetSession();
       clearRefs();
       dispatch({ type: 'RESET' });
@@ -163,7 +164,7 @@ export function useReflectionMachine() {
     } else if (next && next !== state.screen) {
       dispatch({ type: 'SESSION_RESUMED', screen: next });
     }
-  }, [serverState, mirrorText, errorMessage, state.screen, session, resetSession, clearRefs, posthog, dispatchError]);
+  }, [serverState, mirrorText, errorMessage, state.screen, session, resetSession, clearRefs, posthog, dispatchError, abortRecording]);
 
   // Track freeze (typing-nudge = user paused)
   useEffect(() => {
@@ -421,6 +422,7 @@ export function useReflectionMachine() {
   const handleReset = useCallback(async () => {
     if (busyRef.current) return;
     busyRef.current = true;
+    abortRecording();
     try {
       await abandon();
     } finally {
@@ -429,7 +431,13 @@ export function useReflectionMachine() {
       dispatch({ type: 'RESET' });
       busyRef.current = false;
     }
-  }, [abandon, resetSession, clearRefs]);
+  }, [abandon, resetSession, clearRefs, abortRecording]);
+
+  // A live mic would re-fill the draft with its next transcript.
+  const dispatchAction: typeof dispatch = (action) => {
+    if (action.type === 'DISCARD_DRAFT') abortRecording();
+    dispatch(action);
+  };
 
   const handleRetry = useCallback(async () => {
     if (busyRef.current) return;
@@ -445,7 +453,7 @@ export function useReflectionMachine() {
 
   return {
     state,
-    dispatch,
+    dispatch: dispatchAction,
     isLoading,
     sessionId,
     turnsCount,
