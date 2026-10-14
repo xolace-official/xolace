@@ -1,7 +1,7 @@
 {
   "name": "xolace",
   "main": "expo-router/entry",
-  "version": "1.11.0",
+  "version": "1.14.0",
   "expo": {
     "install": {
       "// exclude": "@shopify/react-native-skia held at 2.11.x (SDK 57 bundles 2.6.2). 2.11.1 is same major, bug-fix + additive only, Skia m152; all peers satisfied (react 19.2, RN 0.86, reanimated 4.5, worklets 0.10). Remove when SDK bump catches up.",
