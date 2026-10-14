@@ -42,11 +42,23 @@ const STOP_NAME = { ios: "stop.fill", android: "stop", web: "stop" } as const;
 
 const formatRemaining = (ms: number) => `0:${String(Math.ceil(ms / 1000)).padStart(2, "0")}`;
 
-/** A Plus dictation take in the composer: listening, then writing it down. */
-export const DictationStrip = ({ phase, metering, remainingMs, stop }: PlusDictationView) => {
+/**
+ * A Plus dictation take in the composer: listening, then writing it down.
+ * Between takes, the one-line note on a fallback or a lost take, if any.
+ */
+export const DictationStrip = ({ phase, metering, remainingMs, note, stop }: PlusDictationView) => {
   const accent = useThemeColor("accent") as string;
 
-  if (phase === "idle") return null;
+  if (phase === "idle") {
+    if (!note) return null;
+    return (
+      <Animated.View entering={FadeIn} exiting={FadeOut} className="min-h-10 items-center justify-center">
+        <AppText className="text-center text-sm text-muted" accessibilityLiveRegion="polite">
+          {note}
+        </AppText>
+      </Animated.View>
+    );
+  }
 
   if (phase === "writing") {
     return (

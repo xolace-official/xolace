@@ -1,13 +1,14 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { useIsFocused } from 'expo-router/react-navigation';
-import { useAction } from 'convex/react';
+import { useAction, useConvex, useQuery } from 'convex/react';
 import { File } from 'expo-file-system';
 import type { SharedValue } from 'react-native-reanimated';
 import { api } from '@/convex/_generated/api';
 import { useVoiceProcessingConsent } from '@/src/features/consent/use-voice-processing-consent';
 import { useMeteringRecorder } from '@/src/lib/audio/use-metering-recorder';
 import { playAffirmativePress, playErrorNotice } from '@/src/lib/haptics';
+import { fallbackNote, takeFailedNote } from '@/src/features/reflect/hooks/dictation-fallback';
 
 /** One take's ceiling; the server rejects anything larger (convex/dictation.ts). */
 export const MAX_TAKE_MS = 180_000;
@@ -15,6 +16,9 @@ export const MAX_TAKE_MS = 180_000;
 export const COUNTDOWN_FROM_MS = 15_000;
 // Mono 32kbps AAC ≈ 4KB/s → a full take is ~720KB, under Convex's 1MB v.bytes().
 const DICTATION_BIT_RATE = 32_000;
+// Scribe's own 30s timeout plus room for the upload; offline, an action waits
+// for the socket indefinitely.
+const UPLOAD_TIMEOUT_MS = 45_000;
 
 export type PlusDictationPhase = 'idle' | 'listening' | 'writing';
 
@@ -23,6 +27,8 @@ export type PlusDictationView = {
   phase: PlusDictationPhase;
   metering: SharedValue<number>;
   remainingMs: number;
+  /** One line on why the mic fell back to on-device, or that a take was lost. */
+  note: string | null;
   /** Ends the take and writes it down — the same as tapping the mic. */
   stop: () => void;
 };
@@ -40,9 +46,22 @@ const deleteRecording = (uri: string | null) => {
  * Plus dictation (#557): record on device, then Scribe transcribes the take
  * server-side. The transcript goes to `onTranscript` once, at the end. The
  * recording file is deleted once the take is transcribed or abandoned.
+ *
+ * Never strands the person (#558): `start` declines (returns false) when the
+ * daily cap is spent, the app is offline, or Scribe already failed on this
+ * screen, so the caller dictates on device instead; the view's `note` says
+ * why. A take that fails to transcribe leaves the composer untouched and asks
+ * them to try again.
  */
 export function usePlusDictation(onTranscript: (text: string) => void) {
   const [phase, setPhase] = useState<PlusDictationPhase>('idle');
+  const [note, setNote] = useState<string | null>(null);
+  // ponytail: once Scribe fails, on-device for the rest of this screen; retry
+  // per take if Scribe outages turn out to be short blips.
+  const [scribeFailed, setScribeFailed] = useState(false);
+  const cappedOn = useQuery(api.dictation.status)?.cappedOn ?? null;
+  // Loading reads as under the cap; the server refuses an over-cap take anyway.
+  const convex = useConvex();
   const { startRecording, stopRecording, metering, isRecording, durationMs } =
     useMeteringRecorder(DICTATION_BIT_RATE);
   const transcribe = useAction(api.dictation.transcribe);
@@ -60,13 +79,21 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
     setPhase(next);
   };
 
-  const start = async () => {
-    if (phaseRef.current !== 'idle') return;
+  /** False when this take should go to on-device dictation instead. */
+  const start = async (): Promise<boolean> => {
+    if (phaseRef.current !== 'idle') return true;
+    const fallback = fallbackNote({
+      cappedOn,
+      scribeFailed,
+      offline: !convex.connectionState().isWebSocketConnected,
+    });
+    setNote(fallback);
+    if (fallback) return false;
     await abandonedStopRef.current;
     const started = await startRecording();
     if (!started) {
       playErrorNotice();
-      return;
+      return true;
     }
     playAffirmativePress();
     // Started now so the write lands while they speak; the upload waits on it.
@@ -74,27 +101,47 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
     consent.catch(() => {});
     consentRef.current = consent;
     setPhaseSynced('listening');
+    return true;
   };
 
   const stop = async () => {
     if (phaseRef.current !== 'listening') return;
     const take = takeRef.current;
+    const takeMs = durationMs;
     setPhaseSynced('writing');
     const uri = await stopRecording();
-    try {
+    // Only a failure at Scribe sends later takes on device; a local one doesn't.
+    let reachedScribe = false;
+    const upload = async () => {
       if (!uri) throw new Error('no recording');
       // No audio reaches ElevenLabs before voice_processing consent is on record.
       await (consentRef.current?.catch(ensureConsent) ?? ensureConsent());
       const bytes = await new File(uri).bytes();
       const audioBytes = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-      const text = await transcribe({ audioBytes });
+      reachedScribe = true;
+      return transcribe({ audioBytes, durationMs: takeMs });
+    };
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const text = await Promise.race([
+        upload(),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error('upload timed out')), UPLOAD_TIMEOUT_MS);
+        }),
+      ]);
       if (take !== takeRef.current) return;
       if (text === null) throw new Error('transcription failed');
       if (text) onTranscript(text);
     } catch (err) {
       console.error('[plus-dictation] take failed:', err);
-      if (take === takeRef.current) playErrorNotice();
+      if (take === takeRef.current) {
+        playErrorNotice();
+        const { note: failedNote, scribeDown } = takeFailedNote(err, reachedScribe);
+        if (scribeDown) setScribeFailed(true);
+        setNote(failedNote);
+      }
     } finally {
+      clearTimeout(timer);
       deleteRecording(uri);
       if (take === takeRef.current) setPhaseSynced('idle');
     }
@@ -102,6 +149,7 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 
   // For when the text must not change any more (dismiss, submit).
   const abort = () => {
+    setNote(null);
     if (phaseRef.current === 'idle') return;
     takeRef.current += 1;
     if (phaseRef.current === 'listening') {
@@ -142,6 +190,7 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
     metering,
     // Until the recorder reports this take, durationMs is still the last one's.
     remainingMs: isRecording ? Math.max(0, MAX_TAKE_MS - durationMs) : MAX_TAKE_MS,
+    note,
     stop: () => void stop(),
   };
 

@@ -13,6 +13,7 @@ import {
   MODERATION_UNAVAILABLE,
 } from "./ai/providers/moderation";
 import { resolveVoiceId, VENT_DEFAULT_VOICE_ID } from "./lib/voices";
+import { startOfTodayUTC } from "./lib/timeOfDay";
 
 const CRISIS_FALLBACK = "you don't have to carry this alone";
 
@@ -33,11 +34,6 @@ const AUDIO_BYTES_PER_SECOND = 6000;
 // seconds; an hour absorbs a backgrounded app returning to the coda. After
 // this the URL 404s, which is fine — the words are already on screen.
 const VENT_AUDIO_TTL_MS = 60 * 60 * 1000;
-
-function startOfTodayUTC(): number {
-  const now = new Date();
-  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-}
 
 /**
  * Gate voice vent sessions behind a daily usage cap.

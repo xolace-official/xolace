@@ -197,6 +197,12 @@ export default defineSchema({
     // UTC midnight timestamp of the last reset. Used for lazy daily reset logic.
     ventDailyResetAt: v.optional(v.number()),
 
+    // --- Plus Dictation Usage (#558) ---
+    // Seconds of Scribe dictation transcribed today; separate from vent's
+    // budget. Lazy-reset to 0 when dictationDailyResetAt < startOfTodayUTC.
+    dictationDailySecondsUsed: v.optional(v.number()),
+    dictationDailyResetAt: v.optional(v.number()),
+
     // --- Data Wipe ---
     // Set to true when a data wipe is in progress.
     // Prevents duplicate wipe jobs from being scheduled.
