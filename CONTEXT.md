@@ -184,7 +184,9 @@ one thread under what look like separate problems, or one domain crowding
 out another. A **domain insight** sits in that domain's card: what the person
 says at the end of a session against what happens after, where relief
 actually came from, or what never appears. An insight waits for its domains
-to unlock, and one that speaks of "your usual" waits for settled. It is never
+to unlock, and one that speaks of "your usual" waits for settled; so the
+writer is refused a warming domain outright, rather than spending the run on
+an insight nobody sees. It is never
 held back because the person seems vulnerable. Each shows the date it was
 noticed; the next consolidation replaces the set, and one citing a session
 that is gone is not shown.

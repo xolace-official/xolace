@@ -34,8 +34,8 @@ export type CitableSession = { id: string; at: number; domains: Domain[]; lighte
 
 export type GateEvidence = {
   sessions: Map<string, CitableSession>;
-  /** Raw (ungated) steadiness and baseline per domain. */
-  domains: Map<Domain, { steadiness: number; baseline: number }>;
+  /** Raw (ungated) steadiness and baseline per domain; warming ones can't be named (shownNow would hide them). */
+  domains: Map<Domain, { steadiness: number; baseline: number; warming?: boolean }>;
 };
 
 const DAY = 86_400_000;
@@ -109,7 +109,8 @@ export function gateInsight(draft: InsightDraft, evidence: GateEvidence): Result
     const session = evidence.sessions.get(id);
     if (!session) return no(`Session ${id} can't be cited (burned, gone, or not in the evidence).`);
     // Relief is often found elsewhere: its lighter session may be about any part of life.
-    if (kind !== "relief" && !session.domains.some((d) => named.has(d))) {
+    // An overall insight may rest on a session about an unnamed (say, warming) part of life: that third thread is its point.
+    if (kind !== "relief" && !overall && !session.domains.some((d) => named.has(d))) {
       return no(`Session ${id} doesn't touch ${domains.join(" or ")}.`);
     }
     cited.push(session);
@@ -118,6 +119,8 @@ export function gateInsight(draft: InsightDraft, evidence: GateEvidence): Result
     if (!cited.some((s) => s.domains.includes(d))) return no(`No cited session is about ${d}; cite at least one that is.`);
     // Its sessions are all past the loader's window: no score to store beside it (#535).
     if (!evidence.domains.has(d)) return no(`${d} has no score right now; leave it out.`);
+    // Read time hides any insight naming a warming domain; refusing now keeps the run's budget for ones that show.
+    if (evidence.domains.get(d)?.warming) return no(`${d} is still warming up, so nothing naming it would show yet. Take it out of domains; you may still speak of it in the text.`);
   }
   if ((overall || kind === "absence") && cited.length < 3) {
     return no("This kind rests on at least three cited sessions.");

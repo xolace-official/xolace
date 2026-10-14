@@ -11,7 +11,7 @@ const DAY_MS = 86_400_000;
 const STEADINESS_HALF_LIFE_DAYS = 21;
 export const BASELINE_HALF_LIFE_DAYS = 90;
 export const QUIET_AFTER_DAYS = 30;
-const UNLOCK_DAYS = 3;
+export const UNLOCK_DAYS = 3;
 const SETTLE_DAYS = 5;
 const SETTLE_SPAN_DAYS = 21;
 // "Your usual" is the readings older than this (#527): lately never counts
