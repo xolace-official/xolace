@@ -792,6 +792,28 @@ unclaimed and is inherently a *gathered bundle* — matching the any-order,
 skippable shape — rather than a sequence, which also rules it out as a
 name collision with the ordered-sounding "path."
 
+**Tended, skipped, ignored.** A twig's outcome is one of three, judged per
+twig. **Tended**: the person reached the finish line of the thing the twig
+sent them to (finished the track or read, finished the breathing, shared the
+bridge message, sent the xolacer request). Opening it is not tending.
+**Skipped**: they said "Not for me". This is the only rejection. **Ignored**:
+they never tended or skipped it before the kindling was replaced or
+dismissed. This is neutral ("not now", not "not this"). A twig still open on
+the current kindling is **undecided** and has no outcome yet. A **good twig**
+is a tended one. Outcomes are compared only within one kind of twig, never
+across kinds.
+
+A **try-this twig** suggests something the person does away from the app
+(stop earlier tonight, take a day off), drawn from a curated set, never
+written fresh. It prefers what eased this person before over general good
+practice. It never suggests medical steps, reaching a specific person (that
+is the bridge or a xolacer), crisis help, or anything costly to undo, and
+never follows a session safeguard flagged. Having no finish line the app can
+see, it is tended when the person says they did it. A kindling holds at most
+one. Advice lives here, never in an insight: an insight is noticed, a
+try-this twig is offered.
+_Avoid_: tip, habit, homework.
+
 ## Series, episode, standalone audio (2026-09-10)
 
 The kindling audio catalogue (`audio_tracks`, family `support`) has two
