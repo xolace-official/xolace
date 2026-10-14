@@ -38,7 +38,8 @@ function Section<T>({
   row,
 }: {
   section: SearchSection;
-  query: string;
+  /** Undefined while the rows are held from the last query: See all would open different words. */
+  query: string | undefined;
   items: T[];
   row: (item: T, onOpen: () => void) => ReactNode;
 }) {
@@ -49,7 +50,7 @@ function Section<T>({
     <>
       <SectionTitle
         title={SECTION_TITLE[section]}
-        {...(items.length > PREVIEW && { action: 'See all', onAction: seeAll })}
+        {...(query && items.length > PREVIEW && { action: 'See all', onAction: seeAll })}
       />
       {items.slice(0, PREVIEW).map((item, i) => row(item, tap(section, i + 1)))}
     </>
@@ -97,25 +98,25 @@ function SearchResults({ query }: { query: string }) {
         <>
           <Section
             section="lantern"
-            query={query}
+            query={freshLantern && query}
             items={lantern}
             row={(e, onOpen) => <EntryRow key={e._id} entry={e} from="search" onOpen={onOpen} />}
           />
           <Section
             section="support"
-            query={query}
+            query={freshCatalogue && query}
             items={catalogue.support}
             row={(t, onOpen) => <TrackRow key={t._id} track={t} from="search" onOpen={onOpen} />}
           />
           <Section
             section="music"
-            query={query}
+            query={freshCatalogue && query}
             items={catalogue.music}
             row={(t, onOpen) => <TrackRow key={t._id} track={t} from="search" onOpen={onOpen} />}
           />
           <Section
             section="places"
-            query={query}
+            query={freshCatalogue && query}
             items={catalogue.places}
             row={(p, onOpen) => <PlaceRow key={`${p.kind}:${p.slug}`} place={p} onOpen={onOpen} />}
           />
