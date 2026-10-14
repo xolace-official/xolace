@@ -196,7 +196,7 @@ async function runVentPipeline(
   if (transcriptResult === null) {
     return { words: null, audioUrl: null, isCrisis: false, capReached: false };
   }
-  const transcript = transcriptResult;
+  const transcript = transcriptResult.taggedText;
 
   if (transcript.length < 20) {
     console.log("[vent] Transcript too short — skipping acknowledgement");

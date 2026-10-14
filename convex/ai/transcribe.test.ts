@@ -18,7 +18,10 @@ afterEach(() => {
 describe("transcribeAudio", () => {
   it("posts the audio to Scribe v2 and returns the trimmed transcript", async () => {
     const spy = mockFetch(async () => Response.json({ text: "  hello there \n" }));
-    expect(await transcribeAudio("key", AUDIO)).toBe("hello there");
+    expect(await transcribeAudio("key", AUDIO)).toEqual({
+      text: "hello there",
+      taggedText: "hello there",
+    });
 
     const [url, init] = spy.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("https://api.elevenlabs.io/v1/speech-to-text");
@@ -26,9 +29,29 @@ describe("transcribeAudio", () => {
     expect((init.body as FormData).get("model_id")).toBe("scribe_v2");
   });
 
-  it("returns an empty string when Scribe heard nothing", async () => {
+  it("returns empty strings when Scribe heard nothing", async () => {
     mockFetch(async () => Response.json({}));
-    expect(await transcribeAudio("key", AUDIO)).toBe("");
+    expect(await transcribeAudio("key", AUDIO)).toEqual({ text: "", taggedText: "" });
+  });
+
+  it("returns empty strings for a take with only sound tags", async () => {
+    mockFetch(async () =>
+      Response.json({ text: "[pause]", words: [{ text: "[pause]", type: "audio_event" }] }),
+    );
+    expect(await transcribeAudio("key", AUDIO)).toEqual({ text: "", taggedText: "" });
+  });
+
+  it.each([
+    ["[sighs] I'm tired.", "I'm tired."],
+    ["I'm tired [sighs] all the time.", "I'm tired all the time."],
+    ["I'm tired. [laughs]", "I'm tired."],
+    ["tired [sighs], but fine", "tired, but fine"],
+    ["tired [sighs] [laughs]  [clears throat] okay", "tired okay"],
+    ["[clears throat]so anyway", "so anyway"],
+    ["no tags here", "no tags here"],
+  ])("strips sound tags from %j", async (scribe, clean) => {
+    mockFetch(async () => Response.json({ text: scribe }));
+    expect(await transcribeAudio("key", AUDIO)).toEqual({ text: clean, taggedText: scribe });
   });
 
   it("returns null on a non-2xx response", async () => {

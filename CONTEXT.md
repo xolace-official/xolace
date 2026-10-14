@@ -3,6 +3,24 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Dictation (2026-10-14)
+
+**Dictation** is speech turned into text inside a composer, which the person
+then edits and sends themselves. It has two engines: **on-device dictation**
+(free) and **Plus dictation** (Plus, transcribed by ElevenLabs Scribe). It is
+not a **vent**: a vent is a spoken session that gets a spoken reply, while
+dictation only fills a text box.
+_Avoid_: voice input, voice note, speech translation ("voice" already means a
+TTS voice; nothing is translated).
+
+A **sound tag** is Scribe's own label for a non-speech sound in a take
+(`[sighs]`, `[laughs]`, `[pause]`). A **dictation cue** is what Xolace keeps
+from a Plus dictation take about *how* it was said: an allowlisted sound, or
+a long pause between words, anchored to the nearby words. Cues never appear
+in the composer; they reach only the mirror, as texture it may not name.
+On-device dictation has none.
+_Avoid_: voice cue, voice signal (same "voice" collision as above).
+
 ## Browse search (2026-10-13)
 
 **Browse search** is the one search bar in the app. It sits on the Browse

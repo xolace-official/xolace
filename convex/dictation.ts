@@ -78,7 +78,8 @@ export const charge = internalMutation({
 /**
  * Transcribe one Plus dictation take with Scribe (language auto-detected).
  * The audio is never stored or logged — it goes straight to Scribe and is
- * dropped. Returns null when transcription fails, "" when nothing was heard.
+ * dropped. Returns the text with sound tags stripped, null when transcription
+ * fails, "" when nothing was heard.
  * A transcribed take is charged to today's dictation budget by its recorded
  * duration; a failed one is not.
  *
@@ -110,8 +111,8 @@ export const transcribe = action({
       console.error("[dictation] ELEVENLABS_VOICE_API_KEY not set");
       return null;
     }
-    const text = await transcribeAudio(apiKey, args.audioBytes);
-    if (text !== null) {
+    const result = await transcribeAudio(apiKey, args.audioBytes);
+    if (result !== null) {
       // ponytail: checked before Scribe and charged after, so parallel takes can
       // overshoot the cap by one take each; a soft cap is fine for cost.
       const seconds = Math.ceil(
@@ -124,6 +125,6 @@ export const transcribe = action({
         console.error("[dictation] charge failed:", err);
       }
     }
-    return text;
+    return result?.text ?? null;
   },
 });
