@@ -31,6 +31,10 @@ export async function transcribeAudio(
     }
 
     const data = await res.json();
+    // Room noise with no speech comes back as a lone sound tag ("[pause]",
+    // "[silence]"). No spoken word means Scribe heard nothing.
+    const words: { type?: string }[] = Array.isArray(data.words) ? data.words : [];
+    if (words.length > 0 && !words.some((w) => w.type === "word")) return "";
     return typeof data.text === "string" ? data.text.trim() : "";
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
