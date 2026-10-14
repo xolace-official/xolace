@@ -170,4 +170,8 @@ export const runAll = migrations.runner([
   internal.migrations.renameUserInput,
   internal.migrations.backfillLongestStreak,
   internal.migrations.backfillReflectionRank,
+  // Both idempotent (write only on a difference); Browse search returns
+  // nothing for pre-#549/#550 rows until they run.
+  internal.migrations.backfillLibrarySearchText,
+  internal.migrations.backfillTrackSearchText,
 ]);
