@@ -1,13 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
-import Animated, {
-  interpolate,
-  interpolateColor,
-  useAnimatedStyle,
-  useDerivedValue,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import { interpolate, interpolateColor } from "react-native-reanimated";
 import { EaseView } from "react-native-ease/uniwind";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
@@ -49,8 +42,11 @@ const BAR_MIN_H = 5;
 const GATE_H = 64;
 const CARD_INSET = 40; // card is mx-5 → 20px each side
 
-// Adapted from sample-codes/miles-bar-chart/src/components/weekly-chart/single-bar.tsx
-// Progress (0–1) drives height via interpolate and color via interpolateColor.
+// Height and colour are plain styles, so a bar is right on its first frame.
+// They used to be Reanimated shared values springing up from the 5px floor, and
+// on some TestFlight devices that spring never landed, so every bar stayed flat.
+// The grow-in is now a native scaleY that ends at 1, so a missed animation still
+// leaves the bar at its full height.
 function IntensityBar({
   intensity,
   isToday,
@@ -64,28 +60,6 @@ function IntensityBar({
   accentHex: string;
   emberHex: string;
 }) {
-  const progress = useSharedValue(0);
-
-  useEffect(() => {
-    if (intensity === null) return;
-    progress.set(intensity / 10);
-  }, [intensity, progress]);
-
-  const animatedProgress = useDerivedValue(() => {
-    return withSpring(progress.get(), { dampingRatio: 1, duration: 520 });
-  });
-
-  const rBarStyle = useAnimatedStyle(() => {
-    const height = interpolate(animatedProgress.get(), [0, 1], [BAR_MIN_H, BAR_MAX_H]);
-    // Low intensity → muted accent, high → ember
-    const backgroundColor = interpolateColor(
-      animatedProgress.get(),
-      [0, 0.5, 1],
-      [accentHex + "28", accentHex + "99", emberHex],
-    );
-    return { height, backgroundColor };
-  });
-
   if (intensity === null) {
     return (
       <View
@@ -95,10 +69,27 @@ function IntensityBar({
     );
   }
 
+  const progress = intensity / 10;
+  const height = interpolate(progress, [0, 1], [BAR_MIN_H, BAR_MAX_H]);
+  // Low intensity → muted accent, high → ember
+  const backgroundColor = interpolateColor(
+    progress,
+    [0, 0.5, 1],
+    [accentHex + "28", accentHex + "99", emberHex],
+  );
+
   return (
-    <Animated.View
-      style={[styles.bar, isToday || isPeak ? styles.barFull : styles.barDim, rBarStyle]}
-    />
+    <EaseView
+      initialAnimate={{ scaleY: 0 }}
+      animate={{ scaleY: 1 }}
+      transition={{ type: "spring", damping: 20, stiffness: 180 }}
+      transformOrigin={{ x: 0.5, y: 1 }}
+      style={{ height }}
+    >
+      <View
+        style={[styles.bar, isToday || isPeak ? styles.barFull : styles.barDim, { backgroundColor }]}
+      />
+    </EaseView>
   );
 }
 
@@ -310,7 +301,7 @@ export function WeekIntensityCard({
 }
 
 const styles = StyleSheet.create({
-  bar: { borderRadius: 8, borderCurve: "continuous" },
+  bar: { flex: 1, borderRadius: 8, borderCurve: "continuous" },
   barFull: { opacity: 1 },
   barDim: { opacity: 0.65 },
   navChevron: { opacity: 1 },

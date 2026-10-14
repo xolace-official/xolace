@@ -1,6 +1,7 @@
 import { forwardRef, useMemo } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { EaseView } from 'react-native-ease';
+import { useReducedMotion } from 'react-native-reanimated';
 import Svg from 'react-native-svg';
 import { ChartAccessibilityData } from '@/src/components/ui/chart-accessibility';
 import { cn } from '@/src/lib/cn';
@@ -52,7 +53,6 @@ export const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function Hea
     accessibilityCells,
     activeCell,
     setActiveCell,
-    reveal,
   } = useHeatmapModel({
     data,
     layout,
@@ -64,10 +64,10 @@ export const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function Hea
     color,
     emptyColor,
     levelOpacity,
-    animationDuration,
     onActiveCellChange,
     axisWidth,
   });
+  const reducedMotion = useReducedMotion();
 
   const onLayout = (event: LayoutChangeEvent) => {
     const next = event.nativeEvent.layout.width;
@@ -103,13 +103,6 @@ export const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function Hea
       setActiveCell,
     ]
   );
-
-  /*
-   * One clip wiping left to right, rather than an animation per column. The
-   * effect is the same — columns arriving in order — and it costs one animated
-   * value instead of one per week, which for a year is fifty-two.
-   */
-  const revealStyle = useAnimatedStyle(() => ({ width: grid.width * reveal.get() }));
 
   return (
     <HeatmapContext.Provider value={context}>
@@ -159,28 +152,24 @@ export const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function Hea
             {grid.width > 0 ? (
               <>
                 {/*
-                 * The reveal is a view that grows, not an SVG clip path.
-                 *
-                 * It used to be an animated `<Rect>` inside `<Defs>`, and on
-                 * Android those animated props never reach the native clip, so
-                 * the grid drew complete and the reveal did not play at all. A
-                 * view with `overflow: 'hidden'` is clipped by the platform
-                 * itself, which both platforms agree on.
-                 *
-                 * Animating `width` is normally a layout pass per frame. This
-                 * view is absolutely positioned and its only child is an
-                 * `<Svg>` with an explicit width and height, so it is one node
-                 * and nothing around it moves.
+                 * A native fade, not a Reanimated clip. The grid used to sit
+                 * in a view whose width animated from 0, and on some TestFlight
+                 * devices that animation never landed, so it stayed at 0 and
+                 * the grid never showed. A missed fade still ends at opacity 1,
+                 * so the grid can't stay hidden.
                  */}
-                <Animated.View
+                <EaseView
                   pointerEvents="none"
-                  style={[styles.revealClip, revealStyle]}
+                  initialAnimate={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ type: 'timing', duration: reducedMotion ? 0 : animationDuration, easing: 'easeOut' }}
+                  style={StyleSheet.absoluteFill}
                 >
                   <Svg width={grid.width} height={grid.height}>
                     {parts.rules}
                     {parts.cells}
                   </Svg>
-                </Animated.View>
+                </EaseView>
                 {parts.tooltip}
               </>
             ) : null}
@@ -191,8 +180,4 @@ export const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function Hea
       </View>
     </HeatmapContext.Provider>
   );
-});
-
-const styles = StyleSheet.create({
-  revealClip: { position: 'absolute', top: 0, bottom: 0, left: 0, overflow: 'hidden' },
 });

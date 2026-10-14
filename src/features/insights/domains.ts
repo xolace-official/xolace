@@ -6,8 +6,8 @@ import type { api } from "@/convex/_generated/api";
 export type Icon = Exclude<ComponentProps<typeof SymbolView>["name"], string>;
 type FreeView = FunctionReturnType<typeof api.compounding.insights.freeView>;
 type PlusView = NonNullable<FunctionReturnType<typeof api.compounding.insights.plusView>>;
-/** Free or Xolace+: the Xolace+ fields are simply absent from the free view. */
-export type InsightsView = FreeView & Partial<Pick<PlusView, "overallTrend" | "overallTrendSince" | "insights">>;
+/** Free or Xolace+: the Xolace+ fields are simply absent from the free view, the upsell from Xolace+'s. */
+export type InsightsView = Omit<FreeView, "upsell"> & Partial<Pick<FreeView, "upsell">> & Partial<Pick<PlusView, "overallTrend" | "overallTrendSince" | "insights">>;
 export type Insight = PlusView["insights"][number];
 export type DomainItem = FreeView["domains"][number] &
   Partial<Pick<PlusView["domains"][number], "steadiness" | "baseline" | "trend" | "trendSince" | "compounding" | "kindling">>;

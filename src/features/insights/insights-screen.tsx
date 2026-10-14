@@ -54,7 +54,7 @@ export function InsightsScreen() {
         {view ? (
           <View className="gap-8 px-5">
             <OverallDial overall={view.overall} trend={view.overallTrend} trendSince={view.overallTrendSince} locked={!isPlus} insights={view.insights} />
-            {view.domains.length > 0 && <PartsOfLife domains={view.domains} isPlus={isPlus} insights={view.insights} />}
+            {view.domains.length > 0 && <PartsOfLife domains={view.domains} isPlus={isPlus} insights={view.insights} upsell={view.upsell} />}
             <AppText className="text-[12px] text-muted text-center leading-5 px-4">{CAVEAT}</AppText>
           </View>
         ) : (

@@ -13,18 +13,18 @@ import { usePaywall } from "@/src/features/purchases/use-paywall";
 import { GlassSurface } from "@/src/components/shared/glass-surface";
 import { DomainCell, DomainRow, ViewToggle, type DomainView } from "@/src/features/insights/domain-list";
 import { DetailCard } from "@/src/features/insights/detail-card";
-import { CompoundingUpsellLine, useCompoundingUpsell, useOpenUpsell } from "@/src/features/insights/compounding-upsell";
+import { CompoundingUpsellLine, useHeldUpsell, useOpenUpsell, type Upsell } from "@/src/features/insights/compounding-upsell";
 import { icon, type DomainItem, type Insight } from "@/src/features/insights/domains";
 
 const LOCK = icon("lock", "lock");
 
 export function PartsOfLife({
-  domains: touched, isPlus, insights,
-}: { domains: DomainItem[]; isPlus: boolean; insights?: Insight[] }) {
+  domains: touched, isPlus, insights, upsell: live,
+}: { domains: DomainItem[]; isPlus: boolean; insights?: Insight[]; upsell?: Upsell | null }) {
   const [view, setView] = useState<DomainView>("grid");
   const accent = useTokenColor("accent");
   const openPaywall = usePaywall((s) => s.open);
-  const upsell = useCompoundingUpsell({});
+  const upsell = useHeldUpsell(live, "");
   const openUpsell = useOpenUpsell();
   const domains = touched.map((d) => (d.domain === upsell?.domain ? { ...d, compounding: "compounding" as const } : d));
   const [selKey, setSelKey] = useState<DomainItem["domain"]>();
