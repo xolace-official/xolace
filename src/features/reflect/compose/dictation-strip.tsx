@@ -6,7 +6,10 @@ import Animated, {
   withTiming,
   type SharedValue,
 } from "react-native-reanimated";
+import { SymbolView } from "expo-symbols";
+import { PressableFeedback, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
+import { playSoftPress } from "@/src/lib/haptics";
 import {
   COUNTDOWN_FROM_MS,
   type PlusDictationView,
@@ -35,10 +38,14 @@ const WaveBar = ({ metering, weight }: { metering: SharedValue<number>; weight: 
   return <Animated.View style={style} className="w-[3px] rounded-full bg-accent" />;
 };
 
+const STOP_NAME = { ios: "stop.fill", android: "stop", web: "stop" } as const;
+
 const formatRemaining = (ms: number) => `0:${String(Math.ceil(ms / 1000)).padStart(2, "0")}`;
 
 /** A Plus dictation take in the composer: listening, then writing it down. */
-export const DictationStrip = ({ phase, metering, remainingMs }: PlusDictationView) => {
+export const DictationStrip = ({ phase, metering, remainingMs, stop }: PlusDictationView) => {
+  const accent = useThemeColor("accent") as string;
+
   if (phase === "idle") return null;
 
   if (phase === "writing") {
@@ -67,6 +74,20 @@ export const DictationStrip = ({ phase, metering, remainingMs }: PlusDictationVi
       {counting && (
         <AppText className="text-xs tabular-nums text-muted">{formatRemaining(remainingMs)}</AppText>
       )}
+      {/* Its own stop, beside what it stops: the header mic sits next to the
+          composer's ✕, and a missed tap there closes the card. */}
+      <PressableFeedback
+        onPress={() => {
+          playSoftPress();
+          stop();
+        }}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel="Stop and write it down"
+        className="h-8 w-8 items-center justify-center rounded-full bg-accent/15"
+      >
+        <SymbolView name={STOP_NAME} size={12} tintColor={accent} />
+      </PressableFeedback>
     </Animated.View>
   );
 };

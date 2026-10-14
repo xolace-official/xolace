@@ -23,6 +23,8 @@ export type PlusDictationView = {
   phase: PlusDictationPhase;
   metering: SharedValue<number>;
   remainingMs: number;
+  /** Ends the take and writes it down — the same as tapping the mic. */
+  stop: () => void;
 };
 
 const deleteRecording = (uri: string | null) => {
@@ -140,6 +142,7 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
     metering,
     // Until the recorder reports this take, durationMs is still the last one's.
     remainingMs: isRecording ? Math.max(0, MAX_TAKE_MS - durationMs) : MAX_TAKE_MS,
+    stop: () => void stop(),
   };
 
   return { view, isListening: phase === 'listening', start, stop, abort };
