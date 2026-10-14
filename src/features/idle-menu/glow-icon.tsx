@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { View } from 'react-native';
+import { useIsFocused } from 'expo-router/react-navigation';
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -24,8 +26,14 @@ type Props = {
  */
 export function GlowIcon({ name, size, color }: Props) {
   const breath = useSharedValue(0.4);
+  // Off-screen it would keep committing every frame under the pushed screen.
+  const isFocused = useIsFocused();
 
   useEffect(() => {
+    if (!isFocused) {
+      cancelAnimation(breath);
+      return;
+    }
     breath.set(
       withRepeat(
         withSequence(
@@ -35,7 +43,7 @@ export function GlowIcon({ name, size, color }: Props) {
         -1,
       ),
     );
-  }, [breath]);
+  }, [breath, isFocused]);
 
   const haloStyle = useAnimatedStyle(() => ({ opacity: breath.get() }));
 
