@@ -20,7 +20,9 @@ export function useDictation(onPlusTranscript: (text: string) => void) {
   // A take in progress keeps its engine even if the entitlement flips mid-way.
   const usingPlus = (isPlus && !fellBack) || plus.view.phase !== 'idle';
 
-  const start = async () => {
+  // `openComposer` runs first, so the card is on screen before the take starts.
+  const start = async (openComposer?: () => void) => {
+    openComposer?.();
     const plusTake = isPlus && (await plus.start());
     setFellBack(isPlus && !plusTake);
     if (!plusTake) await onDevice.startRecording();
@@ -33,8 +35,9 @@ export function useDictation(onPlusTranscript: (text: string) => void) {
     /** Null for a free person; a Plus person's strip also carries the fallback note. */
     plusDictation: isPlus || usingPlus ? plus.view : null,
     dictationUpsell,
-    startRecording: async () => {
-      if (!intercept()) await start();
+    /** `openComposer` opens the card; deferred past the upsell, which shows alone. */
+    startRecording: async (openComposer?: () => void) => {
+      if (!intercept(openComposer)) await start(openComposer);
     },
     stopRecording: usingPlus ? plus.stop : onDevice.stopRecording,
     abortRecording: () => {

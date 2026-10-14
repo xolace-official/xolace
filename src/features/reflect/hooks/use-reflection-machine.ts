@@ -404,8 +404,7 @@ export function useReflectionMachine() {
     if (isRecording) { stopRecording(); return; }
     // A kept draft (#258) is the prefix too, or the first word would replace it.
     voicePrefixRef.current = state.entryText.trim();
-    dispatch({ type: 'VOICE_START' });
-    await startRecording();
+    await startRecording(() => dispatch({ type: 'VOICE_START' }));
   };
 
   const startVoiceFromTyping = async () => {
