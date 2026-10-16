@@ -5,6 +5,7 @@ import { EaseView } from "react-native-ease/uniwind";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
+import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 import { useTokenColor } from "../hooks/use-token-color";
 import { GateFade } from "./gate-fade";
 import { CardInfo } from "./card-info";
@@ -60,6 +61,7 @@ function IntensityBar({
   accentHex: string;
   emberHex: string;
 }) {
+  const reduced = useEffectiveReducedMotion();
   if (intensity === null) {
     return (
       <View
@@ -80,7 +82,7 @@ function IntensityBar({
 
   return (
     <EaseView
-      initialAnimate={{ scaleY: 0 }}
+      initialAnimate={{ scaleY: reduced ? 1 : 0 }}
       animate={{ scaleY: 1 }}
       transition={{ type: "spring", damping: 20, stiffness: 180 }}
       transformOrigin={{ x: 0.5, y: 1 }}
@@ -198,6 +200,7 @@ export function WeekIntensityCard({
   const accentHex = useTokenColor("accent");
   const emberHex = useTokenColor("ember");
   const mutedHex = useTokenColor("muted");
+  const reduced = useEffectiveReducedMotion();
 
   const viewed = useRef(false);
   useEffect(() => {
@@ -210,7 +213,7 @@ export function WeekIntensityCard({
 
   return (
     <EaseView
-      initialAnimate={{ opacity: 0, translateY: 8 }}
+      initialAnimate={{ opacity: 0, translateY: reduced ? 0 : 8 }}
       animate={{ opacity: 1, translateY: 0 }}
       transition={{ type: "timing", duration: 280, easing: EASE, delay: staggerDelay }}
       className="mx-5"
