@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { AccessibilityInfo, ScrollView, StyleSheet, View, type Text } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { Chip, PressableFeedback, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
@@ -73,12 +73,19 @@ export const MirrorState = ({
 }: Props) => {
   const { isReady, isPlaying, toggle } = useMirrorAudio(sessionId);
   const accent = useThemeColor("accent");
+  const mirrorRef = useRef<Text>(null);
 
   // No audio cleanup here: useAudioPlayer releases the native player on unmount,
   // which stops playback. Pausing it ourselves races that release and crashes
   // (see ba00535 "fix timeline crash").
   useEffect(() => {
     playMirrorArrival();
+    // Move the screen reader onto the mirror so it reads it aloud. Delayed so the
+    // processing → mirror swap settles first, or iOS drops the focus move.
+    const t = setTimeout(() => {
+      if (mirrorRef.current) AccessibilityInfo.sendAccessibilityEvent(mirrorRef.current, "focus");
+    }, 500);
+    return () => clearTimeout(t);
   }, []);
 
   const showTextures =
@@ -152,6 +159,7 @@ export const MirrorState = ({
         className="border-l-2 border-accent/40 pl-4"
       >
         <AppText
+          ref={mirrorRef}
           className="text-xl italic leading-8 text-foreground"
           selectable
         >
