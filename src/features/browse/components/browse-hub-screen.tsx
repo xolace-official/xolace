@@ -14,6 +14,7 @@ import { playSoftPress } from '@/src/lib/haptics';
 import { ShelfTile } from '@/src/features/browse/components/shelf-tile';
 import { pickListeningTip } from '@/src/features/browse/components/listening-tip';
 import { useMiniPlayerInset } from '@/src/features/browse/now-playing/now-playing-store';
+import { useUtcDay } from '@/src/features/browse/use-utc-day';
 
 type Entry = {
   id: 'support' | 'music' | 'topics' | 'lantern';
@@ -64,7 +65,8 @@ export function BrowseHubScreen() {
   const playerInset = useMiniPlayerInset();
   const { width } = useWindowDimensions();
   const posthog = usePostHog();
-  const shelf = useQuery(api.browse.getNewShelf, {});
+  const day = useUtcDay();
+  const shelf = useQuery(api.browse.getNewShelf, { day });
   const featured = useQuery(api.browse.getFeatured, {});
   const [tip] = useState(pickListeningTip);
   const mutedTint = useCSSVariable('--muted');

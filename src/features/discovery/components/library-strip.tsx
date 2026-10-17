@@ -8,6 +8,7 @@ import { ScrollView, View } from "react-native";
 import { api } from "@/convex/_generated/api";
 import { AppText } from "@/src/components/shared/app-text";
 import { ShelfTile } from "@/src/features/browse/components/shelf-tile";
+import { useUtcDay } from "@/src/features/browse/use-utc-day";
 import { LibraryStripSkeleton } from "./skeletons";
 import { playSoftPress } from "@/src/lib/haptics";
 
@@ -15,8 +16,8 @@ const TILE = 132;
 
 /**
  * "Something to listen to" (docs/paths-v1.md §9.5, #341; was "From the library" —
- * that name now belongs to Lantern, #409) — the same newest-4 query
- * as the hub's New shelf, ending in "See all" into the Browse tab. Hidden
+ * that name now belongs to Lantern, #409) — the same query
+ * as the hub's New shelf (rotating daily), ending in "See all" into the Browse tab. Hidden
  * entirely below one item, never padded. Recently-played and
  * recommended-for-you are fog (§11).
  */
@@ -24,7 +25,8 @@ export function LibraryStrip() {
   const router = useRouter();
   const posthog = usePostHog();
   const accent = useThemeColor("accent") as string;
-  const shelf = useQuery(api.browse.getNewShelf, {});
+  const day = useUtcDay();
+  const shelf = useQuery(api.browse.getNewShelf, { day });
 
   if (shelf === undefined) return <LibraryStripSkeleton tile={TILE} />;
   if (shelf.length === 0) return null;

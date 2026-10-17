@@ -15,6 +15,40 @@ Keep entries tight. Link out to commits/PRs/dashboards rather than pasting long 
 
 ---
 
+## 2026-10-17 — Browse "New" shelf froze, then vanished in prod (every `newUntil` expired + Convex query caching)
+
+**Symptom**
+After the music upload to prod, the Browse hub's **New** shelf showed the same three tracks for weeks without changing. Then the shelf disappeared, along with the Discovery "Something to listen to" strip, and the "Featured this week" hero too when no track had `featured` set.
+
+**Where it appeared**
+Production, both platforms, all app versions. `convex/browse.ts` `getNewShelf` / `getFeatured`.
+
+**Root cause**
+Two things together:
+1. The shelf only showed `active` tracks with `newUntil > Date.now()` and had no fallback. The prod manifest (`scripts/kindling/prod/manifest.json`) stamps every track with a staggered, one-per-day `newUntil`, and the last one expired on 2026-10-17 at 13:39 GMT. After that the query returned `[]`, and the UI hides an empty shelf.
+2. It never rotated: it always sorted by `newUntil` desc and took the top 4. Convex also caches a query result until the data it read changes, so `Date.now()` inside the query never made it run again as time passed. The result stayed frozen even past expiry, until some `audio_tracks` write invalidated it.
+
+**How we diagnosed it**
+1. Grepped `newUntil`. Only `convex/browse.ts` reads it.
+2. Decoded every manifest `newUntil` with `date -r <sec>`. All of them fell on or before today, and the latest was a few minutes before the report.
+3. Checked the hub and strip render: both render nothing when the shelf is empty.
+
+**Fix**
+`convex/browse.ts`:
+- `newPool` puts fresh tracks first and tops them up with the most recently ingested active tracks, capped at 12.
+- `getNewShelf` takes an optional `day` (UTC days since epoch) and rotates the pool one step per day. The changing argument is what makes Convex run the query again each day.
+- `getFeatured` falls back to the head of the pool.
+- Both queries read with `.order("desc").take(1000)`.
+
+The client's `src/features/browse/use-utc-day.ts` re-reads the day each time the app returns to the foreground, and both shelf callers use it. Old clients send `{}` and get the non-empty pool head, so deploying the backend alone brings the shelf back.
+
+**Prevention / future reference**
+- Never use `Date.now()` in a Convex query to drive anything time-based. The result won't refresh as time passes. Pass a coarse time arg (a day, an hour) from the client, or write the state change from a cron/scheduler.
+- Any UI section fed only by an expiring field needs a fallback, or it silently disappears when the data ages out.
+- If the shelf looks stale again: check the `day` arg is reaching the query (Convex dashboard logs), then check how many `active` tracks exist.
+
+---
+
 ## 2026-10-06 — Users "randomly" logged out on cold start (it was Clerk's 7-day max session lifetime)
 
 **Symptom**
