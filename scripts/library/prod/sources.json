@@ -160,5 +160,13 @@
     "permission": "not_required",
     "attributionText": "Adapted from information by the National Institute of Mental Health (nimh.nih.gov).",
     "dropBrandingIfAdapted": true
+  },
+  {
+    "slug": "xolace",
+    "name": "Xolace",
+    "licence": "Xolace original",
+    "permission": "not_required",
+    "attributionText": "Shared with Xolace, with permission",
+    "dropBrandingIfAdapted": false
   }
 ]

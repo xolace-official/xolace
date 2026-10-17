@@ -917,5 +917,157 @@
     "bodyPath": "bodies/advice/sleep-what-helps.md",
     "coverPath": "advice/sleep-what-helps.jpg",
     "contentNote": "Mentions alcohol and medication used to sleep, with advice to seek professional help. Nothing graphic."
+  },
+  {
+    "slug": "finding-my-why",
+    "coverPath": "stories/Finding-my-why-studying-building-and-the-people-who-push-you-higher.png",
+    "kind": "story",
+    "title": "Finding my \"why\": studying, building, and the people who push you higher",
+    "dek": "He spent university keeping people at a distance. Building something with others is what finally connected him.",
+    "primarySubject": "starting-university",
+    "sources": [
+      {
+        "source": "xolace",
+        "pageTitle": "Finding my \"why\": studying, building, and the people who push you higher",
+        "author": "Andrews Nana Beniako"
+      }
+    ],
+    "reuse": "original",
+    "active": true,
+    "storyDescriptor": "Andrews Nana Beniako, Xolace CMO",
+    "consentRecordedAt": 1792108800000,
+    "lastReviewedAt": 1792108800000,
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "loneliness",
+        "stress",
+        "hope"
+      ],
+      "lifeArea": [
+        "purpose",
+        "studies",
+        "friendships",
+        "work"
+      ]
+    },
+    "reflectPrompt": "What do you want this season of your life to be the foundation for?",
+    "bodyPath": "bodies/stories/finding-my-why.md"
+  },
+  {
+    "slug": "make-or-break-the-friends-who-carried-me",
+    "coverPath": "stories/make or break- the friends who carried me.png",
+    "kind": "story",
+    "title": "Make or break: the friends who carried me to first class",
+    "dek": "From nearly failing SHS to first class honours. He says the reason wasn't studying harder, but who he studied with.",
+    "primarySubject": "starting-university",
+    "sources": [
+      {
+        "source": "xolace",
+        "pageTitle": "Make or break: the friends who carried me to first class",
+        "author": "Nathaniel E. Adama"
+      }
+    ],
+    "reuse": "original",
+    "active": true,
+    "storyDescriptor": "Nathaniel E. Adama, Xolace CEO",
+    "consentRecordedAt": 1792108800000,
+    "lastReviewedAt": 1792108800000,
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "fear",
+        "self-doubt",
+        "disappointment",
+        "hope"
+      ],
+      "lifeArea": [
+        "studies",
+        "friendships",
+        "achievement"
+      ]
+    },
+    "reflectPrompt": "Who in your circle is strong where you're not?",
+    "bodyPath": "bodies/stories/make-or-break-the-friends-who-carried-me.md"
+  },
+  {
+    "slug": "for-godwin-my-best-friend",
+    "coverPath": "stories/kwame-story-1.png",
+    "kind": "story",
+    "title": "For Godwin, my best friend",
+    "dek": "Losing his closest friend at a young age taught him what it means to carry something with nowhere to put it.",
+    "primarySubject": "grief",
+    "sources": [
+      {
+        "source": "xolace",
+        "pageTitle": "For Godwin, my best friend",
+        "author": "Emmanuel Acquah"
+      }
+    ],
+    "reuse": "original",
+    "active": true,
+    "storyDescriptor": "Emmanuel Acquah, Xolace COO",
+    "consentRecordedAt": 1792108800000,
+    "lastReviewedAt": 1792108800000,
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "grief",
+        "sadness",
+        "loneliness"
+      ],
+      "lifeArea": [
+        "loss",
+        "friendships",
+        "isolation"
+      ]
+    },
+    "reflectPrompt": "Is there someone you've lost that you haven't had the space to talk about?",
+    "bodyPath": "bodies/stories/for-godwin-my-best-friend.md",
+    "contentNote": "About the sudden death of a close friend and the grief that followed. Nothing graphic."
+  },
+  {
+    "slug": "what-they-dont-put-on-the-transcript",
+    "coverPath": "stories/what_they_dont_put_on_the_transcript.png",
+    "kind": "story",
+    "title": "What they don't put on the transcript",
+    "dek": "Money gone in two months, a broken heart, and the day he cried at work. What finally changed was one honest message.",
+    "primarySubject": "loneliness",
+    "sources": [
+      {
+        "source": "xolace",
+        "pageTitle": "What they don't put on the transcript",
+        "author": "Emmanuel Somuah"
+      }
+    ],
+    "reuse": "original",
+    "active": true,
+    "storyDescriptor": "Emmanuel Somuah, Xolace CTO",
+    "consentRecordedAt": 1792108800000,
+    "lastReviewedAt": 1792108800000,
+    "facets": {
+      "audience": [
+        "student"
+      ],
+      "emotion": [
+        "loneliness",
+        "self-doubt",
+        "hope"
+      ],
+      "lifeArea": [
+        "studies",
+        "finances",
+        "work",
+        "isolation"
+      ]
+    },
+    "reflectPrompt": "What are you carrying that you haven't said out loud yet?",
+    "bodyPath": "bodies/stories/what-they-dont-put-on-the-transcript.md"
   }
 ]

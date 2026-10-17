@@ -1,0 +1,50 @@
+[
+  {
+    "entrySlug": "finding-my-why",
+    "audioPath": "audios/stories/Finding-my-why-studying-building-and-the-people-who-push-you-higher.mp3",
+    "transcriptPath": "audios/stories/Finding-my-why-studying-building-and-the-people-who-push-you-higher.txt",
+    "active": true
+  },
+  {
+    "entrySlug": "make-or-break-the-friends-who-carried-me",
+    "audioPath": "audios/stories/make or break- the friends who carried me.mp3",
+    "transcriptPath": "audios/stories/make or break- the friends who carried me.txt",
+    "active": true
+  },
+  {
+    "entrySlug": "for-godwin-my-best-friend",
+    "audioPath": "audios/stories/kwame-story-1.mp3",
+    "transcriptPath": "audios/stories/kwame-story-1.txt",
+    "active": true
+  },
+  {
+    "entrySlug": "what-they-dont-put-on-the-transcript",
+    "audioPath": "audios/stories/what_they_dont_put_on_the_transcript.mp3",
+    "transcriptPath": "audios/stories/what_they_dont_put_on_the_transcript.txt",
+    "active": true
+  },
+  {
+    "entrySlug": "depression-what-it-is",
+    "audioPath": "audios/explainer/depression-what-it-is.mp3",
+    "transcriptPath": "audios/explainer/depression-what-it-is.txt",
+    "active": true
+  },
+  {
+    "entrySlug": "anxiety-what-it-is-and-why-it-happens",
+    "audioPath": "audios/explainer/anxiety-what-it-is-and-why-it-happens.mp3",
+    "transcriptPath": "audios/explainer/anxiety-what-it-is-and-why-it-happens.txt",
+    "active": true
+  },
+  {
+    "entrySlug": "anxiety-what-helps",
+    "audioPath": "audios/advice/anxiety-what-helps.mp3",
+    "transcriptPath": "audios/advice/anxiety-what-helps.txt",
+    "active": true
+  },
+  {
+    "entrySlug": "depression-what-helps",
+    "audioPath": "audios/advice/depression-what-helps.mp3",
+    "transcriptPath": "audios/advice/depression-what-helps.txt",
+    "active": true
+  }
+]
