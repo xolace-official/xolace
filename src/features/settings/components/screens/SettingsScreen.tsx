@@ -4,7 +4,7 @@ import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { useQuery } from "convex/react";
 import { useUser } from "@clerk/expo";
-import Constants from "expo-constants";
+import { UpdateRow, useVersionLabel } from "@/src/features/settings/components/update-row";
 import { api } from "@/convex/_generated/api";
 import { useAppStore } from "@/src/store/store";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
@@ -60,7 +60,7 @@ export const SettingsScreen = () => {
     return "Email";
   })();
 
-  const version = Constants.expoConfig?.version ?? "";
+  const versionLabel = useVersionLabel();
 
   const icon = (name: CrossPlatformSymbol) => (
     <SymbolView name={name} size={17} tintColor={mutedColor} />
@@ -139,8 +139,8 @@ export const SettingsScreen = () => {
           icon={icon(HEART_ICON)}
           label="Follow & Support"
           onPress={() => router.push("/(protected)/settings/follow")}
-          isLast
         />
+        <UpdateRow isLast />
       </SettingsSection>
 
       {/* ── VERSION FOOTER ──────────────────────────────────── */}
@@ -149,7 +149,7 @@ export const SettingsScreen = () => {
           Xolace
         </AppText>
         <AppText className="text-xs text-foreground/20" selectable>
-          Version {version}
+          {versionLabel}
         </AppText>
       </View>
     </ScrollView>
