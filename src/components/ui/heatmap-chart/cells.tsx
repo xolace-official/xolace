@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { G, Line as SvgLine, Rect } from 'react-native-svg';
 import { useCSSVariable } from 'uniwind';
 import { useHeatmap, type HeatmapCell, type Slot } from './context';
@@ -24,6 +25,13 @@ export interface HeatmapCellStyle {
 /**
  * The grid itself. Every row of every column is drawn, including the ones with
  * nothing in them — a calendar with holes in it stops being a calendar.
+ *
+ * Holding the grid changes `activeCell` once per cell the finger crosses, and
+ * the only thing that depends on it is whether a cell is dimmed. So each cell
+ * is built twice up front — lit and dimmed — off everything *but* the held
+ * cell, and a hold just picks one of the two. Moving from A to B hands React a
+ * new element for A and B only; every other cell gets back the exact element
+ * it had, and React skips it without diffing a prop.
  */
 export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
   const chart = useHeatmap('HeatmapChart.Cells');
@@ -31,19 +39,21 @@ export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
   const radius = cornerRadius ?? chart.cornerRadius;
   const step = grid.size + grid.gap;
 
-  return (
-    <G>
-      {data.map((column, columnIndex) =>
+  // Manual on purpose: the compiler folds `cells` into the same cache block as
+  // the `activeCell` pick below (it is only read there), so it would rebuild
+  // every element on every held cell and none would ever be reused.
+  const cells = useMemo(
+    () =>
+      data.flatMap((column, columnIndex) =>
         Array.from({ length: grid.rows }, (_unused, row) => {
           const bin = column.bins.find((candidate) => candidate.bin === row);
           const count = bin?.count ?? 0;
           const level = levelOf(count);
-          const dimmed =
-            activeCell !== null &&
-            !(activeCell.column === columnIndex && activeCell.row === row);
           const override = cellStyle?.({ column: columnIndex, row, count, level, date: bin?.date });
-
-          return (
+          const opacity = override?.fillOpacity ?? opacities[level]!;
+          // Only the fill dims. A frozen day's outline is still a frozen day
+          // while another one is held.
+          const paint = (fillOpacity: number) => (
             <Rect
               key={`${column.bin}-${row}`}
               x={columnIndex * step}
@@ -53,13 +63,28 @@ export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
               rx={radius}
               ry={radius}
               fill={override?.fill ?? ramp[level]}
-              fillOpacity={(override?.fillOpacity ?? opacities[level]!) * (dimmed ? inactiveOpacity : 1)}
+              fillOpacity={fillOpacity}
               stroke={override?.stroke}
               strokeWidth={override?.strokeWidth}
               strokeDasharray={override?.strokeDasharray}
             />
           );
+          const lit = paint(opacity);
+          // At an inactive opacity of 1 dimming is a no-op: one element, and a
+          // hold re-renders no cell at all.
+          const dim = inactiveOpacity === 1 ? lit : paint(opacity * inactiveOpacity);
+          return { column: columnIndex, row, lit, dim };
         })
+      ),
+    [data, grid, step, levelOf, opacities, ramp, radius, cellStyle, inactiveOpacity]
+  );
+
+  return (
+    <G>
+      {cells.map((cell) =>
+        activeCell === null || (activeCell.column === cell.column && activeCell.row === cell.row)
+          ? cell.lit
+          : cell.dim
       )}
     </G>
   );

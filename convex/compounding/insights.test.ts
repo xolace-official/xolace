@@ -51,7 +51,7 @@ describe("compounding/insights.freeView", () => {
   it("gives a texture-only user no domains and no overall", async () => {
     const user = await asNewUser();
     await seed(user, 0, ["loss", "trauma"]);
-    expect(await read(user)).toEqual({ overall: null, domains: [] });
+    expect(await read(user)).toEqual({ overall: null, domains: [], upsell: null });
   });
 
   it("keeps the overall dial dark at one unlocked domain", async () => {

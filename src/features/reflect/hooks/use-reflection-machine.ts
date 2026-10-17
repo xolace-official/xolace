@@ -434,10 +434,17 @@ export function useReflectionMachine() {
   }, [abandon, resetSession, clearRefs, abortRecording]);
 
   // A live mic would re-fill the draft with its next transcript.
-  const dispatchAction: typeof dispatch = (action) => {
-    if (action.type === 'DISCARD_DRAFT') abortRecording();
+  // Stable on purpose: `dispatch` sits in effect dependency arrays downstream
+  // (reflect-screen's variant effect, useReplySeed, useReflectBridge), and a
+  // per-render identity re-ran them every render — an infinite update loop.
+  const abortRecordingRef = useRef(abortRecording);
+  useEffect(() => {
+    abortRecordingRef.current = abortRecording;
+  });
+  const dispatchAction = useCallback<typeof dispatch>((action) => {
+    if (action.type === 'DISCARD_DRAFT') abortRecordingRef.current();
     dispatch(action);
-  };
+  }, []);
 
   const handleRetry = useCallback(async () => {
     if (busyRef.current) return;

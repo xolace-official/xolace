@@ -18,6 +18,7 @@ import { insightValidator, insightsFor } from "./insightStore";
 import { computeSteadiness, type DomainSteadiness } from "./steadiness";
 import { compoundingFor } from "./stretches";
 import { trendFor } from "./trend";
+import { upsellFor, upsellValidator } from "./upsell";
 
 const domainV = v.union(...DOMAINS.map((d) => v.literal(d)));
 const nullableNumber = v.union(v.number(), v.null());
@@ -70,12 +71,20 @@ async function activeKindling(ctx: QueryCtx, profileId: Id<"emotional_profiles">
 
 export const freeView = query({
   args: nowArg,
-  returns: v.object({ overall: nullableNumber, domains: v.array(v.object(freeDomain)) }),
+  returns: v.object({
+    overall: nullableNumber,
+    domains: v.array(v.object(freeDomain)),
+    /** upsell.get's answer from the same readings, so Insights needn't load them twice (#524). */
+    upsell: v.union(upsellValidator, v.null()),
+  }),
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
-    const { readings, timezone, unlocked } = await loadReadings(ctx, profile._id);
+    const loaded = await loadReadings(ctx, profile._id);
+    const { readings, timezone, unlocked } = loaded;
     const { domains, overall } = computeSteadiness(readings, { now: args.now, timezone, unlocked });
-    return { overall: round(overall), domains: ordered(domains).map(freeFields) };
+    // ponytail: compoundingFor reruns computeSteadiness; pure in-memory over loaded readings, no reads.
+    const upsell = await upsellFor(ctx, profile, { now: args.now, loaded });
+    return { overall: round(overall), domains: ordered(domains).map(freeFields), upsell };
   },
 });
 

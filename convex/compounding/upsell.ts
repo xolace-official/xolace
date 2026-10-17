@@ -8,15 +8,16 @@
  * follow-ups never pass through here, so they stay free in every state.
  */
 import { v } from "convex/values";
-import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { mutation, query, type QueryCtx } from "../_generated/server";
 import { requireAuth, requireSessionOwnership } from "../lib/auth";
 import { hasPremium } from "../lib/premium";
 import { domainValidator } from "../lib/validators";
+import { understandingOf } from "../understanding";
+import type { loadReadings } from "./readings";
 import { compoundingFor, spendStretch } from "./stretches";
 
-const upsellValidator = v.object({ domain: domainValidator, stretchStartedAt: v.number() });
+export const upsellValidator = v.object({ domain: domainValidator, stretchStartedAt: v.number() });
 
 const WEEK_MS = 7 * 86_400_000;
 /** More sessions than this in the window reads as flagged: never pitch when unsure. */
@@ -38,15 +39,31 @@ async function hardMomentSince(ctx: QueryCtx, profileId: Id<"emotional_profiles"
   if (sessions.length > WINDOW_CAP) return true;
   for (const session of sessions) {
     if (session.kept === false || session.escalationTriggered === true) return true;
-    const meta: Doc<"emotional_metadata"> | null = await ctx.runQuery(
-      internal.understanding.getUnderstanding,
-      { sessionId: session._id },
-    );
+    const meta = await understandingOf(ctx, session._id);
     if ([session.safeguardLevel, meta?.safeguardLevel].some((l) => l === "elevated" || l === "crisis")) {
       return true;
     }
   }
   return false;
+}
+
+/**
+ * The rules both entry points share, so they can't drift. Insights' freeView
+ * passes the readings it already loaded and its client clock; upsell.get
+ * passes neither (loads its own, Date.now()).
+ */
+export async function upsellFor(
+  ctx: QueryCtx,
+  profile: Doc<"emotional_profiles">,
+  opts: { now?: number; loaded?: Awaited<ReturnType<typeof loadReadings>> } = {},
+) {
+  // An entitlement outage reads as Xolace+: never upsell someone who may have paid.
+  if (await hasPremium(ctx, profile).catch(() => true)) return null;
+  const top = (await compoundingFor(ctx, profile._id, opts)).find(
+    (c) => c.state === "compounding" && !c.upsellShown,
+  );
+  if (!top || (await hardMomentSince(ctx, profile._id, top.startedAt))) return null;
+  return { domain: top.domain, stretchStartedAt: top.startedAt };
 }
 
 /** The stretch to name, or null. Session end passes its session; Insights passes none. */
@@ -55,13 +72,7 @@ export const get = query({
   returns: v.union(upsellValidator, v.null()),
   handler: async (ctx, { sessionId }) => {
     const { profile } = sessionId ? await requireSessionOwnership(ctx, sessionId) : await requireAuth(ctx);
-    // An entitlement outage reads as Xolace+: never upsell someone who may have paid.
-    if (await hasPremium(ctx, profile).catch(() => true)) return null;
-    const top = (await compoundingFor(ctx, profile._id)).find(
-      (c) => c.state === "compounding" && !c.upsellShown,
-    );
-    if (!top || (await hardMomentSince(ctx, profile._id, top.startedAt))) return null;
-    return { domain: top.domain, stretchStartedAt: top.startedAt };
+    return await upsellFor(ctx, profile);
   },
 });
 

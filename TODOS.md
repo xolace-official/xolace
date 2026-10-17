@@ -991,3 +991,72 @@ Then rebuild (native change, not OTA-safe).
 **Effort:** XS (1 config change + rebuild)
 **Priority:** P3 — cosmetic Play Console warning, 0 installs affected per the console's own report; fix on the next native build rather than a dedicated release
 **Depends on:** Nothing — deferred only because iOS was already submitted for the current build and this needs a shared rebuild cycle
+
+---
+
+## Profile & Insights performance follow-ups (perf review, 2026-10-14)
+
+Left over from the profiling pass on Profile + Insights (iPhone 17 Pro sim, dev build,
+React profiler + Instruments). Fixed in that pass: heatmap a11y Pressables + per-cell
+`toLocaleDateString`, heatmap cell re-renders on hold-drag, layout-animating reveal/bars,
+and the duplicate `loadReadings` on Insights (`freeView` now carries `upsell`).
+
+### QA the free-user Insights upsell on a device
+
+**What:** Insights now reads the compounding upsell from `freeView.upsell` (held via
+`useHeldUpsell` in `src/features/insights/compounding-upsell.tsx`) instead of subscribing to
+`upsell.get`. Only the Plus path was exercised in the app.
+**How to start:** with a free account that has a compounding stretch, open Insights: the
+line shows, scrolling it into view spends it (`markShown`), and it stays on screen after the
+query returns `null`. Also check session end still shows its own upsell.
+**Note:** the Insights upsell is now judged at the client's hourly `now`, so it can appear or
+clear up to an hour late; the hard-moment week window still uses server time.
+**Priority:** P1 — before shipping the change. **Effort:** XS.
+
+### Insights gauges: one Skia canvas instead of 72 animated SVG ticks
+
+**What:** `TickGauge` (`src/features/insights/glass.tsx`) renders each tick as its own
+`AnimatedLine` with its own `useAnimatedProps` worklet — 56 on the overall dial, 17 on the
+detail half-gauge. Insights' mount commit was 118ms in dev, ~29ms of it `Tick` plus worklet
+cloning.
+**How to start:** draw the ticks in one Skia `<Canvas>` driven by the single `progress`
+shared value, computing each tick's colour from `progress * n - i` as today — keeps the
+per-tick crossfade, so the animation looks identical. (Cheaper alternative: two paths —
+lit/unlit — split at the progress tick plus one crossfading leading tick; near-identical.)
+**Priority:** P3. **Effort:** S.
+
+### Pause Profile's infinite loops when the screen is off-screen
+
+**What:** `EmberField` breath (`withRepeat(-1)`, `src/features/profile/components/ember-field.tsx`)
+and `AnimatedDashedBorder` on `PlusRow` keep running while Profile is scrolled away or
+covered by a pushed screen (e.g. Insights).
+**How to start:** reuse the pattern from `6440d4c` ("pause home-screen breathing loops while
+unfocused") — gate on `useIsFocused`.
+**Priority:** P3. **Effort:** XS.
+
+### Remaining `ctx.runQuery(internal.understanding.getUnderstanding)` calls
+
+**What:** `understandingOf(ctx, sessionId)` (`convex/understanding.ts`) now does the same read
+inside the caller's transaction. Still using a sub-query: `convex/paths.ts:139`,
+`convex/followUps.ts:192`, `convex/jobs/followUpShare.ts:115`.
+**How to start:** switch the ones running inside a query/mutation; leave actions on
+`runQuery`. Behaviour identical.
+**Priority:** P3. **Effort:** XS.
+
+### `loadReadings` subscribes to every session document
+
+**What:** `convex/compounding/readings.ts` does a `ctx.db.get` per metadata row (up to 1000
+sessions) for `createdAt`, `confirmationState`, `postSessionMood`. Any patch to any of the
+user's sessions reruns `freeView` / `plusView` / `upsell.get` (~3000 reads each).
+**How to start:** denormalize the few session fields readings need onto `emotional_metadata`
+(or a rollup), with a backfill; schema must keep matching existing data.
+**Priority:** P3 — matters as heavy users approach the 1000-session cap. **Effort:** M.
+
+### Profile polish
+
+- `ContributionGraphCard` renders at zero grid height until `onLayout` reports a width, then
+  expands — everything below it jumps on open. Reserve the grid height up front.
+- `WordsTeaserCard` / `FrostedCount` mount up to five Skia canvases and call `matchFont`
+  every render; hoist the fonts to module scope.
+
+**Priority:** P4. **Effort:** XS each.

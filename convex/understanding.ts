@@ -38,13 +38,22 @@ export type Understanding = Doc<"emotional_metadata">;
  */
 export const getUnderstanding = internalQuery({
   args: { sessionId: v.id("sessions") },
-  handler: async (ctx, args): Promise<Understanding | null> => {
-    return await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-      .unique();
-  },
+  handler: async (ctx, args): Promise<Understanding | null> => understandingOf(ctx, args.sessionId),
 });
+
+/**
+ * getUnderstanding as a helper, for queries and mutations that read it
+ * inside their own transaction instead of paying a ctx.runQuery per session.
+ */
+export async function understandingOf(
+  ctx: QueryCtx,
+  sessionId: Id<"sessions">,
+): Promise<Understanding | null> {
+  return await ctx.db
+    .query("emotional_metadata")
+    .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+    .unique();
+}
 
 /**
  * A profile's most recent Understandings, newest first — the sanctioned

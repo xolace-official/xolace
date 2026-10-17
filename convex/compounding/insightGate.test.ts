@@ -18,6 +18,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { gateInsight, shownNow, type CitableSession, type InsightDraft, type LiveDomain } from "./insightGate";
+import type { Domain } from "../lib/understandingVocab";
 
 const DAY = 86_400_000;
 const T = Date.UTC(2026, 9, 1);
@@ -128,7 +129,7 @@ describe("gateInsight", () => {
   });
 
   it("refuses a warming domain: shownNow would hide the insight until it unlocks", () => {
-    const warming = { sessions, domains: new Map([...domains, ["work", { steadiness: 48, baseline: 66, warming: true }]]) };
+    const warming = { sessions, domains: new Map<Domain, { steadiness: number; baseline: number; warming?: boolean }>([...domains, ["work", { steadiness: 48, baseline: 66, warming: true }]]) };
     const r = gateInsight(absence(), warming);
     expect(r.ok ? null : r.reason).toMatch(/warming/i);
   });

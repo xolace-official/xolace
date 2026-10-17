@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Image } from "expo-image";
+import { useIsFocused } from "expo-router/react-navigation";
 import Animated, {
   cancelAnimation,
   Easing,
@@ -55,6 +56,9 @@ export const FluxPerch = ({ progress, fade, expanded, reduceMotion }: Props) => 
   const geo = useMorphGeometry();
   const entrance = useSharedValue(reduceMotion ? 1 : 0);
   const breath = useSharedValue(0);
+  // A loop under a pushed screen still commits every frame and steals the
+  // top screen's scroll budget: breathe only while this screen is in front.
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     if (reduceMotion) {
@@ -66,7 +70,7 @@ export const FluxPerch = ({ progress, fade, expanded, reduceMotion }: Props) => 
 
   useEffect(() => {
     if (reduceMotion) return;
-    if (expanded) {
+    if (expanded || !isFocused) {
       cancelAnimation(breath);
       breath.set(withTiming(0, { duration: 300 }));
       return;
@@ -91,7 +95,7 @@ export const FluxPerch = ({ progress, fade, expanded, reduceMotion }: Props) => 
       ),
     );
     return () => cancelAnimation(breath);
-  }, [breath, expanded, reduceMotion]);
+  }, [breath, expanded, isFocused, reduceMotion]);
 
   const style = useAnimatedStyle(() => {
     const p = progress.get();

@@ -4,10 +4,10 @@
 // `audio_tracks`. Idempotent — safe to re-run the whole manifest.
 //
 // Topic art (#354): `topics.json` beside the manifest holds
-// `[{ slug, title?, thumbPath, thumbSha256 }]` and is ingested as a first
-// pass into `topics` via `upsertTopic`. Covers follow the track-thumbnail
-// spec — square ~600×600, ≤ 80 KB WebP/JPEG — and share the content-addressed
-// `thumb/<sha>.<ext>` key space. A cover whose key already backs the slug's
+// `[{ slug, title?, thumbPath }]` and is ingested as a first pass into
+// `topics` via `upsertTopic`. Covers go through the same WebP pipeline as
+// track thumbs (below) and share the content-addressed `thumb/<sha>.webp`
+// key space. A cover whose key already backs the slug's
 // row is not re-uploaded, so a title-only edit is cheap; an unknown slug is
 // rejected by the mutation and leaves no row or blob behind.
 //
@@ -20,11 +20,24 @@
 // to override either side independently.
 //
 // Usage:
-//   bun scripts/kindling/ingest.ts --update-hashes   # fill in sha256 fields from local files
+//   bun scripts/kindling/ingest.ts --update-hashes   # fill in audio sha256 fields from local files
 //   bun scripts/kindling/ingest.ts --update-hashes --prod (or --manifest scripts/kindling/prod/manifest.json explicitly)
 //   bun scripts/kindling/ingest.ts                    # dev deployment + dev/ fixtures
 //   bun scripts/kindling/ingest.ts --prod             # prod deployment + prod/ curated catalogue
 //   bun scripts/kindling/ingest.ts --manifest scripts/kindling/dev/manifest.json   # topics.json is read from the same dir
+//
+//   bun scripts/kindling/ingest.ts --thumbs-only [--prod]   # re-upload thumbs only, no audio
+//
+// Thumbnails are never uploaded as-is: each source is resized to a 1080px
+// WebP (sharp: lanczos3, q78, effort 6 — the library cover settings) and
+// keyed by the WebP's hash; that hash is the row's `thumbSha256` (manifests
+// carry no thumb hash — a stale one in old JSON is overwritten). A base64
+// ThumbHash of it is stored on the row for the blurred placeholder.
+// The first full run after switching to WebP reports unchanged-audio tracks
+// as "updated" (stored source hash ≠ WebP hash); so does a sharp/libvips
+// upgrade that changes the encoder's output. 1080 covers the widest use (the hub hero);
+// 4375² sources made every Browse row decode ~19MP. `--thumbs-only` swaps
+// thumbs on existing rows without the audio re-upload a full run does.
 //
 // Drives Convex via the local `convex` CLI (reuses your existing CLI login — no new secret).
 
@@ -32,6 +45,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { createReadStream, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import sharp from "sharp";
+import { rgbaToThumbHash } from "thumbhash";
 
 type SharedFields = {
   slug: string;
@@ -42,7 +57,6 @@ type SharedFields = {
   thumbPath: string;
   durationSec: number;
   sha256: string;
-  thumbSha256: string;
   newUntil?: number;
 };
 type SupportTrack = SharedFields & {
@@ -56,7 +70,7 @@ type SupportTrack = SharedFields & {
 };
 type MusicTrack = SharedFields & { family: "music"; licence: Record<string, unknown> };
 type ManifestTrack = SupportTrack | MusicTrack;
-type ManifestTopic = { slug: string; title?: string; thumbPath: string; thumbSha256: string };
+type ManifestTopic = { slug: string; title?: string; thumbPath: string };
 
 const args = process.argv.slice(2);
 const flag = (name: string, fallback: string) => {
@@ -65,6 +79,8 @@ const flag = (name: string, fallback: string) => {
 };
 const prod = args.includes("--prod");
 const updateHashes = args.includes("--update-hashes");
+const thumbsOnly = args.includes("--thumbs-only");
+const THUMB_PX = 1080;
 const catalogueDir = prod ? "prod" : "dev";
 const manifestPath = path.resolve(flag("manifest", `scripts/kindling/${catalogueDir}/manifest.json`));
 const topicsPath = path.join(path.dirname(manifestPath), "topics.json");
@@ -88,20 +104,50 @@ function convexRun(fn: string, jsonArgs: unknown): any {
     ["convex", "run", fn, JSON.stringify(jsonArgs), ...(prod ? ["--prod"] : [])],
     { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] },
   );
-  return JSON.parse(out);
+  // A `null` return prints nothing.
+  return out.trim() ? JSON.parse(out) : null;
 }
 
 function ext(filePath: string): string {
   return path.extname(filePath).slice(1);
 }
 
-async function putFile(url: string, filePath: string): Promise<void> {
+type Thumb = { key: string; sha256: string; thumbhash: string; file: Buffer };
+
+// Resized WebP + ThumbHash of a source thumb, memoised by path: shared art
+// is processed once and every entry using it gets the same key.
+const thumbs = new Map<string, Promise<Thumb>>();
+function thumbOf(thumbPath: string): Promise<Thumb> {
+  let thumb = thumbs.get(thumbPath);
+  if (!thumb) {
+    thumb = (async () => {
+      const source = readFileSync(path.resolve(mediaDir, thumbPath));
+      const file = await sharp(source)
+        .resize(THUMB_PX, THUMB_PX, { fit: "inside", withoutEnlargement: true, kernel: "lanczos3" })
+        .webp({ quality: 78, effort: 6 })
+        .toBuffer();
+      // ThumbHash encodes at most 100×100 RGBA.
+      const { data, info } = await sharp(file)
+        .resize(100, 100, { fit: "inside" })
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      const sha256 = createHash("sha256").update(file).digest("hex");
+      const thumbhash = Buffer.from(rgbaToThumbHash(info.width, info.height, data)).toString("base64");
+      return { key: `thumb/${sha256}.webp`, sha256, thumbhash, file };
+    })();
+    thumbs.set(thumbPath, thumb);
+  }
+  return thumb;
+}
+
+async function putFile(url: string, filePath: string | Buffer): Promise<void> {
   const res = await fetch(url, {
     method: "PUT",
-    body: readFileSync(filePath),
+    body: new Uint8Array(typeof filePath === "string" ? readFileSync(filePath) : filePath),
     signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
   });
-  if (!res.ok) throw new Error(`upload failed (${res.status}): ${filePath}`);
+  if (!res.ok) throw new Error(`upload failed (${res.status})${typeof filePath === "string" ? `: ${filePath}` : ""}`);
 }
 
 async function ingestOne(track: ManifestTrack, sharedThumbKeys: Set<string>): Promise<void> {
@@ -111,18 +157,36 @@ async function ingestOne(track: ManifestTrack, sharedThumbKeys: Set<string>): Pr
 
   // Thumb before audio (docs/paths-v1.md §3.4 step 2): if the run dies
   // mid-track, a row is never created pointing at a missing thumbnail.
-  const thumbKey = `thumb/${track.thumbSha256}.${ext(track.thumbPath)}`;
+  const thumb = await thumbOf(track.thumbPath);
+  const thumbKey = thumb.key;
   const audioKey = `${track.family}/${track.slug}/${randomUUID()}.${ext(track.audioPath)}`;
   try {
     const thumbUpload = convexRun("ai/paths/audioTracks:mintUploadUrl", { key: thumbKey });
-    await putFile(thumbUpload.url, path.resolve(mediaDir, track.thumbPath));
+    await putFile(thumbUpload.url, thumb.file);
+
+    if (thumbsOnly) {
+      convexRun("ai/paths/audioTracks:setTrackThumb", {
+        slug: track.slug,
+        thumbKey,
+        thumbSha256: thumb.sha256,
+        thumbhash: thumb.thumbhash,
+      });
+      console.log(`${track.slug}: thumb ${thumbKey} (${thumb.file.length} bytes)`);
+      return;
+    }
 
     const audioUpload = convexRun("ai/paths/audioTracks:mintUploadUrl", { key: audioKey });
     await putFile(audioUpload.url, path.resolve(mediaDir, track.audioPath));
 
     const { audioPath: _audioPath, thumbPath: _thumbPath, ...rest } = track;
     const result = convexRun("ai/paths/audioTracks:upsertTrack", {
-      track: { ...rest, key: audioUpload.key, thumbKey: thumbUpload.key },
+      track: {
+        ...rest,
+        key: audioUpload.key,
+        thumbKey: thumbUpload.key,
+        thumbSha256: thumb.sha256,
+        thumbhash: thumb.thumbhash,
+      },
     });
     console.log(`${track.slug}: ${result.action}`);
   } catch (err) {
@@ -133,7 +197,7 @@ async function ingestOne(track: ManifestTrack, sharedThumbKeys: Set<string>): Pr
     // an unreferenced shared blob is a harmless orphan for GC, not a bug.
     try {
       convexRun("ai/paths/audioTracks:discardUpload", {
-        audioKey,
+        audioKey: thumbsOnly ? undefined : audioKey,
         thumbKey: sharedThumbKeys.has(thumbKey) ? undefined : thumbKey,
       });
     } catch (cleanupErr) {
@@ -148,15 +212,18 @@ async function ingestTopic(
   liveThumbKeys: Record<string, string>,
   sharedThumbKeys: Set<string>,
 ): Promise<void> {
-  const thumbKey = `thumb/${topic.thumbSha256}.${ext(topic.thumbPath)}`;
+  const thumb = await thumbOf(topic.thumbPath);
+  const thumbKey = thumb.key;
   const uploaded = liveThumbKeys[topic.slug] !== thumbKey;
   try {
     if (uploaded) {
       const upload = convexRun("ai/paths/audioTracks:mintUploadUrl", { key: thumbKey });
-      await putFile(upload.url, path.resolve(mediaDir, topic.thumbPath));
+      await putFile(upload.url, thumb.file);
     }
     const { thumbPath: _thumbPath, ...rest } = topic;
-    const result = convexRun("ai/paths/audioTracks:upsertTopic", { topic: { ...rest, thumbKey } });
+    const result = convexRun("ai/paths/audioTracks:upsertTopic", {
+      topic: { ...rest, thumbKey, thumbSha256: thumb.sha256, thumbhash: thumb.thumbhash },
+    });
     console.log(`topic ${topic.slug}: ${result.action}`);
   } catch (err) {
     if (!uploaded) throw err;
@@ -190,14 +257,9 @@ async function main() {
   if (updateHashes) {
     for (const track of manifest) {
       track.sha256 = await sha256File(path.resolve(mediaDir, track.audioPath));
-      track.thumbSha256 = await sha256File(path.resolve(mediaDir, track.thumbPath));
     }
     writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
-    for (const topic of topics) {
-      topic.thumbSha256 = await sha256File(path.resolve(mediaDir, topic.thumbPath));
-    }
-    writeFileSync(topicsPath, JSON.stringify(topics, null, 2) + "\n");
-    console.log(`Updated hashes for ${manifest.length} tracks and ${topics.length} topics`);
+    console.log(`Updated hashes for ${manifest.length} tracks`);
     return;
   }
 
@@ -205,10 +267,16 @@ async function main() {
 
   // A thumbKey used by >1 manifest/topic entry may have concurrent workers
   // uploading to it at once; cleanup must never delete those (#354 race).
-  const thumbKeyOf = (t: ManifestTrack | ManifestTopic) => `thumb/${t.thumbSha256}.${ext(t.thumbPath)}`;
   const thumbKeyCounts = new Map<string, number>();
   for (const entry of [...manifest, ...topics]) {
-    const key = thumbKeyOf(entry);
+    let key: string;
+    try {
+      key = (await thumbOf(entry.thumbPath)).key;
+    } catch {
+      // Missing/unreadable thumb: the memoised rejection fails just this
+      // entry in ingestOne/ingestTopic, before anything is uploaded.
+      continue;
+    }
     thumbKeyCounts.set(key, (thumbKeyCounts.get(key) ?? 0) + 1);
   }
   const sharedThumbKeys = new Set(

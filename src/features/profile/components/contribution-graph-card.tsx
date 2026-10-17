@@ -8,12 +8,14 @@ import { HeatmapChart, buildHeatmapCalendar, type HeatmapCell } from "@/src/comp
 import { tap } from "@/src/lib/haptics";
 import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
 import { CardInfo } from "@/src/features/profile/components/card-info";
-import { MIN_WEEKS, cellState, dayKeyOf, graphRange, indexHistory, parseDayKey, readout, todayIn } from "@/src/features/profile/contribution-graph";
+import { MIN_WEEKS, cellState, dayKeyOf, graphRange, indexHistory, parseDayKey, readout, todayIn, type IndexedHistory } from "@/src/features/profile/contribution-graph";
 
 const GAP = 3;
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 // Breadth is fixed, not quartile-derived: 1/2/3/4+ distinct kinds.
 const LEVELS = [1, 2, 3, 4];
+// Level 1 has to read as lit, not muddy, against a dark card.
+const LEVEL_OPACITY = [1, 0.45, 0.65, 0.85, 1];
 const GRAPH_INFO =
   "Every square is a day since you joined. The brighter it glows, the more ways you showed up. Press and hold any day to see what you did.";
 
@@ -27,6 +29,9 @@ export function ContributionGraphCard({ staggerDelay = 150 }: { staggerDelay?: n
   const history = useQuery(api.streaks.history.get);
   const [width, setWidth] = useState(0);
   const [heldDay, setHeldDay] = useState<string | null>(null);
+  // Read by the gesture callback rather than closing over heldDay, so the
+  // callback (and the chart's props) stay put while a hold drags across days.
+  const holding = useRef(false);
   const scrollRef = useRef<ScrollView>(null);
   const frost = useTokenColor("frost");
   const foreground = useTokenColor("foreground");
@@ -41,14 +46,24 @@ export function ContributionGraphCard({ staggerDelay = 150 }: { staggerDelay?: n
     { start, end },
   );
   const binSize = Math.floor((width - (MIN_WEEKS - 1) * GAP) / MIN_WEEKS);
-  const { value, caption } = readout(heldDay, indexed);
+  const summary = readout(null, indexed).value;
 
   const onActiveCellChange = (cell: HeatmapCell | null) => {
-    if (!cell) return setHeldDay(null);
+    if (!cell) {
+      holding.current = false;
+      return setHeldDay(null);
+    }
     // Pre-join padding has no day: keep the last one rather than flicker.
     if (!cell.date) return;
-    if (!heldDay) tap();
+    if (!holding.current) tap();
+    holding.current = true;
     setHeldDay(dayKeyOf(cell.date));
+  };
+
+  const accessibilityLabelForDatum = (cell: HeatmapCell) => {
+    if (!cell.date) return "Before you joined";
+    const day = readout(dayKeyOf(cell.date), indexed);
+    return `${day.value}. ${day.caption ?? ""}`;
   };
 
   const cellStyle = (cell: HeatmapCell) => {
@@ -72,18 +87,7 @@ export function ContributionGraphCard({ staggerDelay = 150 }: { staggerDelay?: n
       className="px-5 mt-4"
     >
       <View className="rounded-3xl bg-surface border border-border/65 p-4">
-        <View className="mb-3 min-h-10">
-          <AppText className="text-[17px] font-bold tracking-tight text-foreground">{value}</AppText>
-          {caption ? (
-            <AppText className="text-[12px] text-muted mt-0.5">{caption}</AppText>
-          ) : (
-            // At rest the caption slot carries the hold hint, so nothing shifts when a day is held.
-            <View className="flex-row items-center gap-1.5 mt-0.5">
-              <CardInfo title="Your days" description={GRAPH_INFO} />
-              <AppText className="text-[11px] text-muted">Hold on any day to see the details</AppText>
-            </View>
-          )}
-        </View>
+        <HeldReadout dayKey={heldDay} indexed={indexed} />
 
         <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
           {binSize > 0 && (
@@ -102,16 +106,11 @@ export function ContributionGraphCard({ staggerDelay = 150 }: { staggerDelay?: n
                 levels={LEVELS}
                 color="--color-ember"
                 emptyColor="--color-separator"
-                // Level 1 has to read as lit, not muddy, against a dark card.
-                levelOpacity={[1, 0.45, 0.65, 0.85, 1]}
+                levelOpacity={LEVEL_OPACITY}
                 inactiveOpacity={0.45}
                 onActiveCellChange={onActiveCellChange}
-                accessibilityLabel={`Contribution graph. ${readout(null, indexed).value}.`}
-                accessibilityLabelForDatum={(cell) => {
-                  if (!cell.date) return "Before you joined";
-                  const day = readout(dayKeyOf(cell.date), indexed);
-                  return `${day.value}. ${day.caption ?? ""}`;
-                }}
+                accessibilityLabel={`Contribution graph. ${summary}.`}
+                accessibilityLabelForDatum={accessibilityLabelForDatum}
               >
                 <HeatmapChart.XAxis />
                 <HeatmapChart.Cells cellStyle={cellStyle} />
@@ -123,5 +122,27 @@ export function ContributionGraphCard({ staggerDelay = 150 }: { staggerDelay?: n
         </View>
       </View>
     </EaseView>
+  );
+}
+
+/**
+ * The header, split out so only it re-renders as a hold moves between days —
+ * in the card, `readout(heldDay, indexed)` tied every derived prop to heldDay.
+ */
+function HeldReadout({ dayKey, indexed }: { dayKey: string | null; indexed: IndexedHistory }) {
+  const { value, caption } = readout(dayKey, indexed);
+  return (
+    <View className="mb-3 min-h-10">
+      <AppText className="text-[17px] font-bold tracking-tight text-foreground">{value}</AppText>
+      {caption ? (
+        <AppText className="text-[12px] text-muted mt-0.5">{caption}</AppText>
+      ) : (
+        // At rest the caption slot carries the hold hint, so nothing shifts when a day is held.
+        <View className="flex-row items-center gap-1.5 mt-0.5">
+          <CardInfo title="Your days" description={GRAPH_INFO} />
+          <AppText className="text-[11px] text-muted">Hold on any day to see the details</AppText>
+        </View>
+      )}
+    </View>
   );
 }

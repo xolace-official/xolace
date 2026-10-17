@@ -23,7 +23,7 @@ const ACTION_LABELS: Record<ActionType, string> = {
  */
 export function todayIn(timezone: string, now = Date.now()): string {
   const format = (timeZone: string) => {
-    const parts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
+    const parts = dayKeyFormat(timeZone).formatToParts(now);
     const part = (type: string) => parts.find((p) => p.type === type)!.value;
     return `${part("year")}-${part("month")}-${part("day")}`;
   };
@@ -32,6 +32,20 @@ export function todayIn(timezone: string, now = Date.now()): string {
   } catch {
     return format("UTC");
   }
+}
+
+// Building an Intl.DateTimeFormat is the expensive part (ICU setup on
+// Hermes), so each zone's formatter is made once and reused.
+const dayKeyFormats = new Map<string, Intl.DateTimeFormat>();
+
+function dayKeyFormat(timeZone: string): Intl.DateTimeFormat {
+  let format = dayKeyFormats.get(timeZone);
+  if (!format) {
+    // Throws on an invalid zone before caching, so todayIn falls back to UTC.
+    format = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" });
+    dayKeyFormats.set(timeZone, format);
+  }
+  return format;
 }
 
 /** "YYYY-MM-DD" → local midnight, the calendar the grid is drawn in. */
@@ -78,17 +92,16 @@ export function cellState(dayKey: string, history: IndexedHistory): CellState {
   return dayKey === history.today ? "today" : "missed";
 }
 
+// Same output as toLocaleDateString(undefined, …), without a new formatter per call.
+const READOUT_DATE = new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric" });
+
 /** The header: a lifetime count at rest, a held day's breakdown otherwise. */
 export function readout(dayKey: string | null, history: IndexedHistory): { value: string; caption?: string } {
   if (!dayKey) {
     const n = history.daysShowedUp;
     return { value: `${n} ${n === 1 ? "day" : "days"} showed up` };
   }
-  const value = parseDayKey(dayKey).toLocaleDateString(undefined, {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
+  const value = READOUT_DATE.format(parseDayKey(dayKey));
   const day = history.byDay.get(dayKey);
   const state = cellState(dayKey, history);
   if (day) {

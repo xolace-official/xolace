@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
 import { Pressable, View } from 'react-native';
 import { useCSSVariable } from 'uniwind';
@@ -6,7 +5,7 @@ import { useCSSVariable } from 'uniwind';
 import type { FunctionReturnType } from 'convex/server';
 import type { api } from '@/convex/_generated/api';
 import { AppText } from '@/src/components/shared/app-text';
-import { imageSource } from '@/src/lib/image-source';
+import { CoverImage } from '@/src/features/library/cover-image';
 import { useOpenTrack, type BrowseFrom } from '@/src/features/browse/use-open-track';
 
 export type { BrowseFrom };
@@ -59,7 +58,12 @@ export function TrackRow({
       }}
     >
       <View className="bg-surface-tertiary overflow-hidden rounded-lg" style={{ width: THUMB, height: THUMB }}>
-        <Image source={imageSource(track.thumbUrl)} style={{ width: THUMB, height: THUMB }} />
+        <CoverImage
+          uri={track.thumbUrl}
+          thumbhash={track.thumbhash}
+          recyclingKey={track._id}
+          style={{ width: THUMB, height: THUMB }}
+        />
         {locked && (
           <View className="bg-background/85 absolute bottom-1 right-1 h-5 w-5 items-center justify-center rounded-full">
             <SymbolView name={{ ios: "lock.fill", android: "lock", web: "lock" }} size={10} tintColor={String(lockTint)} accessibilityLabel="Xolace+" />

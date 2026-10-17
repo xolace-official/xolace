@@ -22,17 +22,24 @@ import { GlassSurface } from "@/src/components/shared/glass-surface";
 
 export type Upsell = NonNullable<FunctionReturnType<typeof api.compounding.upsell.get>>;
 
-/** Session end passes its session; Insights passes `{}`. Null until there's one to show. */
-export function useCompoundingUpsell(args: { sessionId?: Id<"sessions"> } | "skip"): Upsell | null {
+/** Session end's: upsell.get for its session. Null until there's one to show. */
+export function useCompoundingUpsell(args: { sessionId: Id<"sessions"> } | "skip"): Upsell | null {
   const { isPlus, isResolved } = usePlusEntitlement();
   const live = useQuery(api.compounding.upsell.get, isResolved && !isPlus ? args : "skip");
-  // The first upsell, held: once marked, the query moves on underneath. A
-  // null isn't held, since the stretch can open a moment after mount (#529).
-  // Held per session, so a new one starts clean; gone once the user upgrades.
-  const key = args === "skip" ? null : (args.sessionId ?? "");
+  return useHeldUpsell(live, args === "skip" ? null : args.sessionId);
+}
+
+/**
+ * The first upsell, held: once marked, the query moves on underneath. A
+ * null isn't held, since the stretch can open a moment after mount (#529).
+ * Held per key (session, or "" on Insights), so a new one starts clean;
+ * gone once the user upgrades. Insights passes freeView's (#524).
+ */
+export function useHeldUpsell(live: Upsell | null | undefined, key: string | null): Upsell | null {
+  const { isPlus, isResolved } = usePlusEntitlement();
   const [held, setHeld] = useState<{ key: string; upsell: Upsell } | null>(null);
   const current = held && held.key === key ? held.upsell : null;
-  if (!current && live && key !== null) setHeld({ key, upsell: live });
+  if (!current && live && key !== null && isResolved && !isPlus) setHeld({ key, upsell: live });
   return isPlus ? null : current;
 }
 

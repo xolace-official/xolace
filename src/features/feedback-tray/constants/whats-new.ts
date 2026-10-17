@@ -30,6 +30,38 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "1.14.0",
+    label: "Version 1.14.0",
+    date: "October 2026",
+    highlights: [
+      {
+        icon: { ios: "chart.line.uptrend.xyaxis", android: "insights" },
+        title: "See how steady you've been",
+        body: "A new Insights screen in your profile shows how each part of your life has been sitting over time. Areas open up as you keep coming back, and Xolace+ members also see their usual, the trend, and what Xolace has noticed across months.",
+      },
+      {
+        icon: { ios: "mic.fill", android: "mic" },
+        title: "Speak your reflection",
+        body: "Xolace+ members can now talk instead of type in Reflect, with clearer transcription. We'll always ask before your voice is processed, and it's never kept.",
+      },
+      {
+        icon: { ios: "magnifyingglass", android: "search" },
+        title: "Search everything in Browse",
+        body: "One search bar now finds reads, support audio, music and topics, all in one place.",
+      },
+      {
+        icon: { ios: "play.circle.fill", android: "play_circle" },
+        title: "Keep listening as you go",
+        body: "A mini-player keeps your track close while you move around the app.",
+      },
+      {
+        icon: { ios: "sparkles", android: "auto_awesome" },
+        title: "A fresher look",
+        body: "Glassier surfaces, smoother navigation, swipe to archive a conversation, and press-and-hold previews on your moments and reads.",
+      },
+    ],
+  },
+  {
     id: "2026-10-ota-image-speed",
     label: "OTA Update",
     date: "October 2026",

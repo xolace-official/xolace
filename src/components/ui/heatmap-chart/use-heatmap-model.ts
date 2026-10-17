@@ -1,10 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Easing,
-  useReducedMotion,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
+import { useMemo, useState } from 'react';
 import { useCSSVariable } from 'uniwind';
 import { deriveLevels } from './calendar';
 import { isToken, LEVEL_OPACITY } from './constants';
@@ -12,7 +6,7 @@ import type { Grid, HeatmapCell } from './context';
 import type { HeatmapChartProps } from './props';
 
 type ModelOptions = Required<
-  Pick<HeatmapChartProps, 'data' | 'layout' | 'binSize' | 'gap' | 'rows' | 'animationDuration'>
+  Pick<HeatmapChartProps, 'data' | 'layout' | 'binSize' | 'gap' | 'rows'>
 > &
   Pick<
     HeatmapChartProps,
@@ -22,7 +16,7 @@ type ModelOptions = Required<
     axisWidth: number;
   };
 
-/** Everything the chart derives from its props: the grid, the ramp, the reveal. */
+/** Everything the chart derives from its props: the grid and the ramp. */
 export function useHeatmapModel({
   data,
   layout,
@@ -34,15 +28,11 @@ export function useHeatmapModel({
   color,
   emptyColor,
   levelOpacity,
-  animationDuration,
   onActiveCellChange,
   axisWidth,
 }: ModelOptions) {
   const [width, setWidth] = useState(0);
   const [activeCell, setActiveCellState] = useState<HeatmapCell | null>(null);
-
-  const reveal = useSharedValue(0);
-  const reducedMotion = useReducedMotion();
 
   /*
    * `color` and `emptyColor` take a token name as readily as a literal. A
@@ -144,21 +134,6 @@ export function useHeatmapModel({
     [onActiveCellChange]
   );
 
-  // Plays once, when there is both a grid to reveal and data to reveal in it.
-  const revealed = useRef(false);
-  useEffect(() => {
-    if (revealed.current || grid.width <= 0) return;
-    revealed.current = true;
-    if (reducedMotion) {
-      reveal.set(1);
-      return;
-    }
-    reveal.set(withTiming(1, {
-      duration: animationDuration,
-      easing: Easing.out(Easing.cubic),
-    }));
-  }, [grid.width, reducedMotion, animationDuration, reveal]);
-
   return {
     setWidth,
     grid,
@@ -169,6 +144,5 @@ export function useHeatmapModel({
     accessibilityCells,
     activeCell,
     setActiveCell,
-    reveal,
   };
 }
