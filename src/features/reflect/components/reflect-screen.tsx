@@ -246,6 +246,7 @@ export const ReflectScreen = () => {
             dispatch={dispatch}
             onSubmit={submitClarification}
             feedbackType={state.lastFeedbackType}
+            missReason={state.missReason}
             // Armed, not open: the sheet is still transitioning in at mount
             // time, and autoFocus would raise the keyboard underneath it.
             autoFocus={!isOutgoing && mirrorFeedbackTurn === null}
@@ -415,6 +416,7 @@ export const ReflectScreen = () => {
         turnIndex={mirrorFeedbackTurn ?? 0}
         isOpen={mirrorFeedbackOpen}
         onClose={() => setMirrorFeedbackTurn(null)}
+        onPick={(reason) => dispatch({ type: "MISS_REASON", reason })}
       />
 
       <DictationUpsellDialog {...dictationUpsell} />

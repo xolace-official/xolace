@@ -14,6 +14,7 @@ export const initialState: ReflectionState = {
   clarifyText: '',
   errorMessage: '',
   lastFeedbackType: null,
+  missReason: null,
   userVariant: { kind: 'first-time' },
   quietReturn: null,
   selectedTextures: [],
@@ -86,10 +87,13 @@ export function reducer(
       return { ...state, screen: 'path-selection' };
 
     case 'NOT_QUITE':
-      return { ...state, screen: 'clarify', lastFeedbackType: 'not_quite' };
+      return { ...state, screen: 'clarify', lastFeedbackType: 'not_quite', missReason: null };
 
     case 'SAY_MORE':
-      return { ...state, screen: 'clarify', lastFeedbackType: 'say_more' };
+      return { ...state, screen: 'clarify', lastFeedbackType: 'say_more', missReason: null };
+
+    case 'MISS_REASON':
+      return { ...state, missReason: action.reason };
 
     case 'BACK_TO_MIRROR':
       return { ...state, screen: 'mirror', clarifyText: '' };
