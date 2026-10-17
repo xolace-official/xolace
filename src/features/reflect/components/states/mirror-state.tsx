@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { AccessibilityInfo, ScrollView, StyleSheet, View, type Text } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { Chip, PressableFeedback, useThemeColor } from "heroui-native";
+import { Chip, PressableFeedback, ScrollShadow, useThemeColor } from "heroui-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import type { EntryType } from "@/src/features/reflect/types";
@@ -153,19 +154,28 @@ export const MirrorState = ({
 
       <MirrorToneBadge toneUsed={toneUsed} />
 
-      <ScrollView
+      {/* The fade says "more below": a long mirror cut at a line break looks
+          finished. Height cap lives on the wrapper — a % maxHeight on the
+          ScrollView would resolve against the wrapper's undefined height.
+          TODO: untested on device — check a long mirror on a light theme. */}
+      <ScrollShadow
+        LinearGradientComponent={LinearGradient}
+        size={32}
         style={styles.mirrorScroll}
-        showsVerticalScrollIndicator={false}
-        className="border-l-2 border-accent/40 pl-4"
       >
-        <AppText
-          ref={mirrorRef}
-          className="text-xl italic leading-8 text-foreground"
-          selectable
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          className="border-l-2 border-accent/40 pl-4"
         >
-          {removeEmDash(mirror)}
-        </AppText>
-      </ScrollView>
+          <AppText
+            ref={mirrorRef}
+            className="text-xl italic leading-8 text-foreground"
+            selectable
+          >
+            {removeEmDash(mirror)}
+          </AppText>
+        </ScrollView>
+      </ScrollShadow>
 
       <MirrorActionRow
         claimStrength={claimStrength}

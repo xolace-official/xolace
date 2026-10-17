@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import { ScrollView, View, type TextInput } from 'react-native';
 import { Presets } from 'react-native-pulsar';
 import { EaseView } from 'react-native-ease/uniwind';
-import { TextArea, LinkButton } from 'heroui-native';
+import { TextArea, LinkButton, ScrollShadow } from 'heroui-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
@@ -86,15 +87,17 @@ export const ClarifyState = ({
           animate={EASE_ANIMATE_FADE}
           transition={EASE_MIRROR_TRANSITION}
         >
-          <ScrollView
-            className="mb-6 max-h-[160]"
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <AppText className="text-center text-base italic leading-7 text-foreground/30">
-              {previousMirror}
-            </AppText>
-          </ScrollView>
+          {/* TODO: untested on device — check the fade with a long previous mirror. */}
+          <ScrollShadow LinearGradientComponent={LinearGradient} size={28} className="mb-6 max-h-[160]">
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <AppText className="text-center text-base italic leading-7 text-foreground/30">
+                {previousMirror}
+              </AppText>
+            </ScrollView>
+          </ScrollShadow>
         </EaseView>
 
         <EaseView
