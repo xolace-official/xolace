@@ -98,7 +98,6 @@ export const ClarifyState = ({
           animate={EASE_ANIMATE_FADE}
           transition={EASE_MIRROR_TRANSITION}
         >
-          {/* TODO: untested on device — check the fade with a long previous mirror. */}
           <ScrollShadow LinearGradientComponent={LinearGradient} size={28} className="mb-6 max-h-[160]">
             <ScrollView
               showsVerticalScrollIndicator={false}

@@ -82,7 +82,6 @@ export const ErrorState = ({
 
       {/* A failure must never look like the writing vanished. Literally true:
           the text shown is the stored session input that retry reprocesses. */}
-      {/* TODO: Nothing has been checked on a device yet — verify with long input. */}
       {rawInput ? (
         <View className="mt-8">
           <AppText className="mb-2 text-sm text-foreground/40">

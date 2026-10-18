@@ -8,7 +8,7 @@ import type { MissReason } from '@/src/features/reflect/types';
  * a heading → null, and the caller keeps "Say more".
  */
 export function closingQuestion(mirror: string): string | null {
-  const match = mirror.trim().match(/([^.!?]+\?)["”’]?$/);
+  const match = mirror.trim().match(/([^.!?\n"“”]+\?)["”’]?$/);
   const question = match?.[1].trim();
   return question && question.length <= 140 ? removeEmDash(question) : null;
 }

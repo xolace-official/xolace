@@ -58,9 +58,6 @@ export function useMirrorAudio(
   // phone or leave the app (rule 8). The shared session keeps background play
   // on for Browse, and the mirror has no lock-screen control to pause it from.
   // `background`, not `inactive`, so Control Center or a banner doesn't cut it off.
-  // TODO(needs-device-test): untested. On a sim/device, play a mirror on both the
-  // reflect screen and timeline detail, lock / switch apps → should go silent;
-  // tap play on return → resumes. Remove this note once verified.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
       if (state === 'background') player.pause();

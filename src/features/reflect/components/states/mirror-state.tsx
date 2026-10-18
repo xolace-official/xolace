@@ -156,8 +156,7 @@ export const MirrorState = ({
 
       {/* The fade says "more below": a long mirror cut at a line break looks
           finished. Height cap lives on the wrapper — a % maxHeight on the
-          ScrollView would resolve against the wrapper's undefined height.
-          TODO: untested on device — check a long mirror on a light theme. */}
+          ScrollView would resolve against the wrapper's undefined height. */}
       <ScrollShadow
         LinearGradientComponent={LinearGradient}
         size={32}

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { useThemeColor } from "heroui-native";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -38,7 +38,12 @@ type Props = {
 export const ProcessingState = ({ stage }: Props) => {
   const accentColor = useThemeColor("accent");
   const playBreath = useProcessingBreathHaptic();
-  const line = LINES[stage ?? "reading"];
+  // Stages only move forward within a mount. The server leaves "processing"
+  // before this screen finishes fading out, which un-gates `stage` to
+  // undefined — without the latch the line flicks back to "Taking this in...".
+  const [shown, setShown] = useState(stage);
+  if (stage && stage !== shown) setShown(stage);
+  const line = LINES[shown ?? "reading"];
 
   useEffect(() => {
     playBreath();
@@ -65,7 +70,6 @@ export const ProcessingState = ({ stage }: Props) => {
             <View style={shimmerOverlayStyle} />
           </Shimmer.Overlay>
           {/* Keyed by line: each stage change fades the new line in. */}
-          {/* TODO: Nothing has been checked on a device yet — verify the fade between stage lines. */}
           <Animated.View
             key={line}
             entering={FADE_IN}

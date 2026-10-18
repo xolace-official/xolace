@@ -13,9 +13,8 @@ import type { ReflectionStateName } from '@/src/features/reflect/types';
  * is the most private text in the app. Never used for Vent, which is never
  * stored anywhere.
  */
-// TODO: not yet tested on a device. Verify: type a draft, kill the app,
-// relaunch (draft restored); submit then kill (not restored); sign out and in
-// as another account (not restored); discard then kill (not restored).
+// TODO: account switch untested on a device — sign out, sign in as another
+// account, the previous draft must not appear.
 type StoredDraft = { userId: string; text: string; savedAt: number };
 
 const KEY = 'xolace-reflect-draft';
