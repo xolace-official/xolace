@@ -1,29 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { View } from "react-native";
 import { useThemeColor } from "heroui-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  Easing,
-} from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
+import Animated, { FadeIn } from "react-native-reanimated";
+import type { Doc } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { ThinkingOrb } from "@/src/components/ui/thinking-orb";
 import Shimmer from "@/src/components/shared/shimmer";
 import { SparkleStars } from "@/src/components/shared/sparkle-stars";
 import { useProcessingBreathHaptic } from "@/src/lib/haptics";
 
-const PHRASES = [
-  "Taking this in...",
-  "Sitting with what you shared...",
-  "Finding the words...",
-  "Feeling into this...",
-  "Sensing what's here...",
-];
+// Chosen by what the pipeline is actually doing, never cycled (rule 12):
+// a line only claims memory when one connected (convex/ai/process.ts).
+const LINES = {
+  reading: "Taking this in...",
+  writing: "Finding the words...",
+  connecting: "Holding this next to what you've shared before...",
+} as const;
 
-const PHRASE_DURATION_MS = 2500;
-const FADE_DURATION_MS = 400;
+const FADE_IN = FadeIn.duration(400);
 
 const SHIMMER_CONTAINER_STYLE = {
   overflow: "hidden",
@@ -37,53 +31,20 @@ const SHIMMER_OVERLAY_INNER_STYLE = {
   opacity: 0.15,
 } as const;
 
-export const ProcessingState = () => {
+type Props = {
+  stage: Doc<"sessions">["processingStage"];
+};
+
+export const ProcessingState = ({ stage }: Props) => {
   const accentColor = useThemeColor("accent");
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const opacity = useSharedValue(1);
-  const phraseIndexSV = useSharedValue(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const playBreath = useProcessingBreathHaptic();
+  const line = LINES[stage ?? "reading"];
 
   useEffect(() => {
     playBreath();
     // Mount-once: the breath marks arrival at the processing state, not each render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      // Fade out
-      opacity.set(
-        withTiming(
-          0,
-          { duration: FADE_DURATION_MS, easing: Easing.out(Easing.ease) },
-          (finished) => {
-            "worklet";
-            if (!finished) return;
-            // Compute next index on UI thread, schedule React state update on JS thread
-            const nextIndex = (phraseIndexSV.get() + 1) % PHRASES.length;
-            phraseIndexSV.set(nextIndex);
-            scheduleOnRN(setPhraseIndex, nextIndex);
-            opacity.set(
-              withTiming(1, {
-                duration: FADE_DURATION_MS,
-                easing: Easing.in(Easing.ease),
-              }),
-            );
-          },
-        ),
-      );
-    }, PHRASE_DURATION_MS);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [opacity, phraseIndexSV]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.get(),
-  }));
 
   const shimmerOverlayStyle = {
     ...SHIMMER_OVERLAY_INNER_STYLE,
@@ -103,10 +64,14 @@ export const ProcessingState = () => {
           >
             <View style={shimmerOverlayStyle} />
           </Shimmer.Overlay>
-          <Animated.View style={animatedStyle}>
-            <AppText className="text-sm text-foreground/40">
-              {PHRASES[phraseIndex]}
-            </AppText>
+          {/* Keyed by line: each stage change fades the new line in. */}
+          {/* TODO: Nothing has been checked on a device yet — verify the fade between stage lines. */}
+          <Animated.View
+            key={line}
+            entering={FADE_IN}
+            accessibilityLiveRegion="polite"
+          >
+            <AppText className="text-sm text-foreground/40">{line}</AppText>
           </Animated.View>
         </Shimmer>
         <SparkleStars color={accentColor} />

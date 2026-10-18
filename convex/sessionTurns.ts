@@ -71,6 +71,7 @@ export const submitFeedback = mutation({
     // Transition session back to processing
     await ctx.db.patch("sessions", args.sessionId, {
       state: "processing",
+      processingStage: undefined,
       updatedAt: now,
     });
 

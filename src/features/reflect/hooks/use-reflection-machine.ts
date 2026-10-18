@@ -468,6 +468,12 @@ export function useReflectionMachine() {
     escalationResources: session?.escalationResources ?? null,
     toneUsed: session?.toneUsed ?? null,
     claimStrength: session?.claimStrength ?? null,
+    // Gated on the server state: the processing screen shows optimistically,
+    // while the row still carries the previous run's stage (retry, refinement).
+    processingStage:
+      serverState === 'processing' ? session?.processingStage : undefined,
+    // What retry reprocesses — present after a cold resume, unlike entryText.
+    rawInput: session?.rawInput ?? '',
     isRecording,
     plusDictation,
     dictationUpsell,

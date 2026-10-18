@@ -62,6 +62,8 @@ export const ReflectScreen = () => {
     escalationResources,
     toneUsed,
     claimStrength,
+    processingStage,
+    rawInput,
     isRecording,
     plusDictation,
     dictationUpsell,
@@ -222,7 +224,7 @@ export const ReflectScreen = () => {
           />
         );
       case "processing":
-        return <ProcessingState />;
+        return <ProcessingState stage={processingStage} />;
       case "mirror":
         return (
           <MirrorState
@@ -288,6 +290,7 @@ export const ReflectScreen = () => {
         return (
           <ErrorState
             errorMessage={state.errorMessage || "Something went wrong."}
+            rawInput={rawInput}
             onRetry={handleRetry}
             onReset={handleReset}
           />

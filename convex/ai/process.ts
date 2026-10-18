@@ -197,7 +197,17 @@ export const generateMirror = internalAction({
         profileReachedToday: context.profileReachedToday,
       });
 
-      // 6. Articulate mirror (Sonnet)
+      // 6. Articulate mirror (Sonnet). Tell the client first so its waiting
+      // copy follows the pipeline; a copy hint must never cost the mirror.
+      await ctx
+        .runMutation(internal.sessions.setProcessingStage, {
+          sessionId: args.sessionId,
+          stage:
+            (episodic.topScore ?? 0) >= EPISODIC_CONNECT_FLOOR
+              ? "connecting"
+              : "writing",
+        })
+        .catch(() => {});
       const recentMirrors = collectRecentMirrors(context.recentSessions);
 
       let mirrorText: string;
