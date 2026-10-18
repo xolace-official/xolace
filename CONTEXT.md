@@ -3,6 +3,17 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Binding on meaning (2026-10-18)
+
+**Binding on meaning** ranks a twig's candidates by how close their text sits
+to what the person wrote, not by shared tags. It only orders what a **gate**
+already let through. A gate is a rule that decides eligibility: the topic the
+model picked, a xolacer's declared specialty, the crisis cut-off, the
+exercise ladder's safety steps. Below a **similarity floor**, binding falls
+back to the overlap it replaced. See
+[ADR 0021](docs/adr/0021-binding-ranks-on-meaning-inside-rule-gates.md).
+_Avoid_: "RAG pick" (meaning never picks on its own; a gate always comes first).
+
 ## Dictation (2026-10-14)
 
 **Dictation** is speech turned into text inside a composer, which the person
