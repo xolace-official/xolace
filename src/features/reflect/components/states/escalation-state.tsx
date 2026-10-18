@@ -5,6 +5,7 @@ import { Presets } from "react-native-pulsar";
 import { AppText } from "@/src/components/shared/app-text";
 import { playAffirmativePress, playSoftPress } from "@/src/lib/haptics";
 import type { Resource } from "@/src/features/crisis-resources/types";
+import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
 
 type Props = {
   mirror: string;
@@ -235,7 +236,7 @@ export const EscalationState = ({
           className="mb-6 text-base italic leading-7 text-foreground/30"
           selectable
         >
-          &ldquo;{mirror}&rdquo;
+          &ldquo;{removeEmDash(mirror)}&rdquo;
         </AppText>
       </EaseView>
 

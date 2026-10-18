@@ -9,6 +9,7 @@ import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
 import type { FeedbackType, MissReason, ReflectionAction } from '@/src/features/reflect/types';
 import { closingQuestion, MISS_REASON_PLACEHOLDER } from '@/src/features/reflect/clarify-copy';
+import { removeEmDash } from '@/src/features/quotes/utils/text-utils';
 
 type Props = {
   previousMirror: string;
@@ -104,7 +105,7 @@ export const ClarifyState = ({
               keyboardShouldPersistTaps="handled"
             >
               <AppText className="text-center text-base italic leading-7 text-foreground/30">
-                {previousMirror}
+                {removeEmDash(previousMirror)}
               </AppText>
             </ScrollView>
           </ScrollShadow>
