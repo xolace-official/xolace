@@ -30,6 +30,18 @@ export type WhatsNewEntry = {
  */
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-ota-fixes",
+    label: "OTA Update",
+    date: "October 2026",
+    highlights: [
+      {
+        icon: { ios: "wrench.and.screwdriver.fill", android: "build" },
+        title: "Bug fixes",
+        body: "Small fixes and polish across Reflect, Browse and Settings to keep things running smoothly.",
+      },
+    ],
+  },
+  {
     id: "1.14.0",
     label: "Version 1.14.0",
     date: "October 2026",

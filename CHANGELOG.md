@@ -6,7 +6,30 @@ All notable changes to Xolace are documented here.
 
 ## [Unreleased]
 
-## [1.14.0] - (2026-10-14)
+## [1.14.0] - OTA Update (2026-10-18)
+
+### Added
+
+- **Unsent drafts survive an app kill** — the reflection you're writing is kept on the device while you compose and restored on relaunch. It belongs to one account, expires after a day, and is cleared on submit, discard, sign-out, account switch and "Delete my data". Never used for Vent.
+- **Hide profile number cards** — Appearance → Profile lets you take the reflection calendar, "Among the fires" rank and week intensity cards off your profile. Per device.
+- **Check for updates** — a Settings row that checks EAS Update on demand (the root `useOtaUpdate` still does the fetch and the "Update ready" sheet). The version footer now shows the OTA update date and, off production, the channel.
+
+### Changed
+
+- **Processing copy follows the pipeline** — instead of cycling phrases, the waiting line says what is actually happening: "Taking this in…" while reading, "Finding the words…" while writing, and "Holding this next to what you've shared before…" only when an episodic memory above the connect floor is in play. Driven by a new `sessions.processingStage` field, set before articulation in both the first mirror and clarify passes.
+- **Clarify asks the mirror's own question** — "Say more" on a reaching mirror uses the mirror's closing question as the heading. The chip picked in "What didn't land?" now shapes the clarify placeholder; chips lock and the sheet closes after a pick.
+- **Long mirrors fade at the edge** — the mirror, the previous mirror in clarify, and the words on the error screen fade where they scroll, so a cut-off mirror doesn't read as finished.
+- **Screen reader focus moves to the mirror** when it arrives.
+- **Error screen keeps your words** — a failed session shows the input it stored. A content-policy rejection now shows gentler copy and "Talk to someone" instead of a retry that could only fail again.
+- **Mirror audio pauses when you leave the app** or lock the phone.
+
+### Fixed
+
+- **Browse New shelf went empty** once every track's `newUntil` window had passed, and never rotated because the query result was cached. It now tops up with the most recent tracks and rotates daily (the Discovery "Something to listen to" strip too).
+- **Em dashes** removed from the previous mirror in clarify and the escalation mirror; "a — b" now reads "a, b" instead of "a , b" everywhere em dashes are stripped.
+- **Processing line no longer flicks back** to "Taking this in…" just before the mirror appears.
+
+## [1.14.0] - Released (2026-10-14)
 
 ### Added
 
