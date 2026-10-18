@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -52,6 +53,20 @@ export function useMirrorAudio(
       releaseAudioFocus(focus);
     };
   }, [status.isLoaded, player]);
+
+  // A mirror is the person's feelings spoken aloud: stop it once they lock the
+  // phone or leave the app (rule 8). The shared session keeps background play
+  // on for Browse, and the mirror has no lock-screen control to pause it from.
+  // `background`, not `inactive`, so Control Center or a banner doesn't cut it off.
+  // TODO(needs-device-test): untested. On a sim/device, play a mirror on both the
+  // reflect screen and timeline detail, lock / switch apps → should go silent;
+  // tap play on return → resumes. Remove this note once verified.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'background') player.pause();
+    });
+    return () => sub.remove();
+  }, [player]);
 
   const toggle = async () => {
     if (!isReady || !audioUrl) return;
