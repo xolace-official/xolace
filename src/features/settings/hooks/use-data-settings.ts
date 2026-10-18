@@ -3,6 +3,7 @@ import { useAuth } from "@clerk/expo";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { usePreferenceMutation } from "./use-preference-mutation";
+import { clearReflectDraft } from "@/src/features/reflect/reflect-draft";
 
 export type RetentionOption = "indefinite" | "6_months" | "1_year";
 
@@ -40,6 +41,7 @@ export const useDataSettings = () => {
 
   const performDeleteData = async () => {
     await requestDataWipe();
+    clearReflectDraft();
   };
 
   const performDeleteAccount = async () => {

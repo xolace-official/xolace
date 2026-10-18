@@ -32,6 +32,7 @@ import { NavThemeProvider } from '@/src/providers/nav-theme-provider';
 import { usePostHogIdentity } from '@/src/lib/use-posthog-identity';
 import { useAppStore } from '@/src/store/store';
 import { ChatLocalDataGuard } from '@/src/features/xolacer-chat/chat-local-data-guard';
+import { ReflectDraftGuard } from '@/src/features/reflect/reflect-draft';
 import { UpdateBottomSheet, type UpdateBottomSheetMode } from '@/src/components/shared/update-bottom-sheet';
 import { useOtaUpdate } from '@/src/helpers/hooks/use-ota-update';
 import { useVersionCheck } from '@/src/helpers/hooks/use-version-check';
@@ -173,6 +174,7 @@ const AppContent = () => {
     <>
       {/* Above every route group so it outlives (protected) — see the component. */}
       <ChatLocalDataGuard />
+      <ReflectDraftGuard />
       <Stack screenOptions={NO_HEADER}>
         <Stack.Protected guard={!isAuthenticated && !introSeen}>
           <Stack.Screen name="(onboarding)" options={NO_HEADER} />

@@ -15,6 +15,12 @@ import {
 } from '@/src/features/reflect/session-service';
 import { MAX_TURNS, initialState, reducer } from './reflection-reducer';
 import { useDictation } from '@/src/features/reflect/hooks/use-dictation';
+import { useAuth } from '@clerk/expo';
+import {
+  clearReflectDraft,
+  readReflectDraft,
+  usePersistReflectDraft,
+} from '@/src/features/reflect/reflect-draft';
 
 /**
  * Manages the reflection UI state machine and bridges it to the session API.
@@ -39,7 +45,11 @@ import { useDictation } from '@/src/features/reflect/hooks/use-dictation';
  * - `handleRetry` — request the session to retry the last action.
  */
 export function useReflectionMachine() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const { userId } = useAuth();
+  const [state, dispatch] = useReducer(reducer, initialState, (s) => ({
+    ...s,
+    entryText: readReflectDraft(userId),
+  }));
   const posthog = usePostHog();
   const {
     isRecording,
@@ -51,6 +61,7 @@ export function useReflectionMachine() {
     abortRecording,
   } = useDictation((text) => dispatch({ type: 'VOICE_APPEND', text }));
   const voicePrefixRef = useRef('');
+  usePersistReflectDraft(userId, state.entryText, state.screen);
   const {
     sessionId,
     session,
@@ -202,6 +213,8 @@ export function useReflectionMachine() {
         freezeOccurredRef.current,
         freezeDurationRef.current,
       );
+      // The server holds the words now; a restart must not offer them as unsent.
+      clearReflectDraft();
       posthog.capture('reflection_submitted', {
         entry_type: state.entryType,
         input_length: state.entryText.length,
