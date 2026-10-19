@@ -139,7 +139,12 @@ type PreferencesSlice = {
   /** "Read by the fire" (#413): the reader's dimmed ambience, independent of the reading mode. */
   readByFire: boolean;
   setReadByFire: (on: boolean) => void;
+  /** Profile number cards the person chose not to see. Per device. */
+  hiddenProfileCards: ProfileCardId[];
+  toggleProfileCard: (id: ProfileCardId) => void;
 };
+
+export type ProfileCardId = 'calendar' | 'rank' | 'week';
 
 /** Ephemeral, not persisted. Tracks store version check state. */
 type UpdateCheckSlice = {
@@ -289,6 +294,13 @@ export const useAppStore = create<AppState>()(
         setReaderTextSize: (n) => set({ readerTextSize: n }),
         readByFire: false,
         setReadByFire: (on) => set({ readByFire: on }),
+        hiddenProfileCards: [],
+        toggleProfileCard: (id) =>
+          set((s) => ({
+            hiddenProfileCards: s.hiddenProfileCards.includes(id)
+              ? s.hiddenProfileCards.filter((c) => c !== id)
+              : [...s.hiddenProfileCards, id],
+          })),
 
         isVersionChecked: false,
         setIsVersionChecked: (v) => set({ isVersionChecked: v }),
@@ -340,6 +352,7 @@ export const useAppStore = create<AppState>()(
           readingMode: s.readingMode,
           readerTextSize: s.readerTextSize,
           readByFire: s.readByFire,
+          hiddenProfileCards: s.hiddenProfileCards,
           seenEventIds: s.seenEventIds,
           pendingEventPrompt: s.pendingEventPrompt,
           ...plusOfferPersistedKeys(s),

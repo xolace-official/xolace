@@ -2,11 +2,14 @@ import { useEffect, useRef } from 'react';
 import { ScrollView, View, type TextInput } from 'react-native';
 import { Presets } from 'react-native-pulsar';
 import { EaseView } from 'react-native-ease/uniwind';
-import { TextArea, LinkButton } from 'heroui-native';
+import { TextArea, LinkButton, ScrollShadow } from 'heroui-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { AppText } from '@/src/components/shared/app-text';
 import { PillButton } from '@/src/components/shared/pill-button';
-import type { FeedbackType, ReflectionAction } from '@/src/features/reflect/types';
+import type { FeedbackType, MissReason, ReflectionAction } from '@/src/features/reflect/types';
+import { closingQuestion, MISS_REASON_PLACEHOLDER } from '@/src/features/reflect/clarify-copy';
+import { removeEmDash } from '@/src/features/quotes/utils/text-utils';
 
 type Props = {
   previousMirror: string;
@@ -21,6 +24,8 @@ type Props = {
    * missing. Defaults to the correction copy, which is the older behaviour.
    */
   feedbackType?: FeedbackType | null;
+  /** The chip picked in the "What didn't land?" sheet, if any. */
+  missReason?: MissReason | null;
 };
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -39,6 +44,7 @@ export const ClarifyState = ({
   onSubmit,
   autoFocus = true,
   feedbackType,
+  missReason,
 }: Props) => {
   useEffect(() => {
     Presets.wobble();
@@ -59,6 +65,12 @@ export const ClarifyState = ({
 
   const canSubmit = clarifyText.trim().length > 0;
   const isSayMore = feedbackType === 'say_more';
+  // Answering the mirror's own question is easier than "saying more".
+  const question = isSayMore ? closingQuestion(previousMirror) : null;
+  const heading = isSayMore ? question ?? 'Say more' : "What didn't land right?";
+  const placeholder = isSayMore
+    ? question ? 'Answer in your own words...' : "Add what's missing..."
+    : missReason ? MISS_REASON_PLACEHOLDER[missReason] : 'Help me understand better...';
 
   return (
     <View className="flex-1">
@@ -86,15 +98,16 @@ export const ClarifyState = ({
           animate={EASE_ANIMATE_FADE}
           transition={EASE_MIRROR_TRANSITION}
         >
-          <ScrollView
-            className="mb-6 max-h-[160]"
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            <AppText className="text-center text-base italic leading-7 text-foreground/30">
-              {previousMirror}
-            </AppText>
-          </ScrollView>
+          <ScrollShadow LinearGradientComponent={LinearGradient} size={28} className="mb-6 max-h-[160]">
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <AppText className="text-center text-base italic leading-7 text-foreground/30">
+                {removeEmDash(previousMirror)}
+              </AppText>
+            </ScrollView>
+          </ScrollShadow>
         </EaseView>
 
         <EaseView
@@ -103,7 +116,7 @@ export const ClarifyState = ({
           transition={EASE_PROMPT_TRANSITION}
         >
           <AppText className="mb-4 text-center text-lg text-foreground">
-            {isSayMore ? 'Say more' : "What didn't land right?"}
+            {heading}
           </AppText>
         </EaseView>
 
@@ -111,9 +124,7 @@ export const ClarifyState = ({
           <TextArea
             ref={inputRef}
             autoFocus={autoFocus}
-            placeholder={
-              isSayMore ? 'Add what\'s missing...' : 'Help me understand better...'
-            }
+            placeholder={placeholder}
             value={clarifyText}
             onChangeText={(text: string) =>
               dispatch({ type: 'CLARIFY_TEXT_CHANGE', text })

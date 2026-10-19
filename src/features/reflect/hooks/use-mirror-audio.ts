@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
@@ -37,6 +38,10 @@ export function useMirrorAudio(
   // null when the session has no mirror audio).
   const isReady = !!audioUrl;
 
+  // A claim can resolve after the person left the app or another player took focus.
+  const canPlay = () =>
+    AppState.currentState === 'active' && holdsAudioFocus(focus);
+
   // First tap only marks intent — playback starts once the player finishes loading.
   useEffect(() => {
     if (!awaitingFirstPlay.current || !status.isLoaded) return;
@@ -44,7 +49,7 @@ export function useMirrorAudio(
     let cancelled = false;
     claimAudioSession(focus, () => player.pause())
       .then(() => {
-        if (!cancelled && holdsAudioFocus(focus)) player.play();
+        if (!cancelled && canPlay()) player.play();
       })
       .catch((e) => console.error('[useMirrorAudio] first play failed:', e));
     return () => {
@@ -52,6 +57,17 @@ export function useMirrorAudio(
       releaseAudioFocus(focus);
     };
   }, [status.isLoaded, player]);
+
+  // A mirror is the person's feelings spoken aloud: stop it once they lock the
+  // phone or leave the app (rule 8). The shared session keeps background play
+  // on for Browse, and the mirror has no lock-screen control to pause it from.
+  // `background`, not `inactive`, so Control Center or a banner doesn't cut it off.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'background') player.pause();
+    });
+    return () => sub.remove();
+  }, [player]);
 
   const toggle = async () => {
     if (!isReady || !audioUrl) return;
@@ -66,7 +82,7 @@ export function useMirrorAudio(
         player.pause();
       } else {
         await claimAudioSession(focus, () => player.pause());
-        if (!holdsAudioFocus(focus)) return;
+        if (!canPlay()) return;
         if (status.didJustFinish) {
           player.seekTo(0);
         }

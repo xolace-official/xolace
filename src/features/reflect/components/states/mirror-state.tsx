@@ -1,7 +1,8 @@
-import { useEffect } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { AccessibilityInfo, ScrollView, StyleSheet, View, type Text } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { Chip, PressableFeedback, useThemeColor } from "heroui-native";
+import { Chip, PressableFeedback, ScrollShadow, useThemeColor } from "heroui-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import type { EntryType } from "@/src/features/reflect/types";
@@ -73,12 +74,19 @@ export const MirrorState = ({
 }: Props) => {
   const { isReady, isPlaying, toggle } = useMirrorAudio(sessionId);
   const accent = useThemeColor("accent");
+  const mirrorRef = useRef<Text>(null);
 
   // No audio cleanup here: useAudioPlayer releases the native player on unmount,
   // which stops playback. Pausing it ourselves races that release and crashes
   // (see ba00535 "fix timeline crash").
   useEffect(() => {
     playMirrorArrival();
+    // Move the screen reader onto the mirror so it reads it aloud. Delayed so the
+    // processing → mirror swap settles first, or iOS drops the focus move.
+    const t = setTimeout(() => {
+      if (mirrorRef.current) AccessibilityInfo.sendAccessibilityEvent(mirrorRef.current, "focus");
+    }, 500);
+    return () => clearTimeout(t);
   }, []);
 
   const showTextures =
@@ -146,18 +154,27 @@ export const MirrorState = ({
 
       <MirrorToneBadge toneUsed={toneUsed} />
 
-      <ScrollView
+      {/* The fade says "more below": a long mirror cut at a line break looks
+          finished. Height cap lives on the wrapper — a % maxHeight on the
+          ScrollView would resolve against the wrapper's undefined height. */}
+      <ScrollShadow
+        LinearGradientComponent={LinearGradient}
+        size={32}
         style={styles.mirrorScroll}
-        showsVerticalScrollIndicator={false}
-        className="border-l-2 border-accent/40 pl-4"
       >
-        <AppText
-          className="text-xl italic leading-8 text-foreground"
-          selectable
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          className="border-l-2 border-accent/40 pl-4"
         >
-          {removeEmDash(mirror)}
-        </AppText>
-      </ScrollView>
+          <AppText
+            ref={mirrorRef}
+            className="text-xl italic leading-8 text-foreground"
+            selectable
+          >
+            {removeEmDash(mirror)}
+          </AppText>
+        </ScrollView>
+      </ScrollShadow>
 
       <MirrorActionRow
         claimStrength={claimStrength}

@@ -688,6 +688,14 @@ export default defineSchema({
     // Error message when state is "error" (AI processing failure).
     errorMessage: v.optional(v.string()),
 
+    // What the pipeline is doing while state is "processing", so the waiting
+    // copy is literally true (rule 12). Absent = still reading the input;
+    // "connecting" = writing with an episodic memory at/above
+    // EPISODIC_CONNECT_FLOOR. Cleared on every transition into "processing".
+    processingStage: v.optional(
+      v.union(v.literal("writing"), v.literal("connecting")),
+    ),
+
     // --- Follow-Up System ---
 
     // Safeguard level computed at mirror delivery. Persisted so the follow-up

@@ -25,7 +25,7 @@ import { applyAudioFence } from "./prompts/mirrorAudioTags";
 import { evaluateSafeguard, resolveSupportNeed } from "./safeguard";
 import { resolveMirrorTone } from "./mirrorPlan";
 import { scheduleMirrorAudio } from "./tts";
-import { routeClaimStrength } from "./routing";
+import { EPISODIC_CONNECT_FLOOR, routeClaimStrength } from "./routing";
 import { MAX_TURNS } from "../sessionTurns";
 import {
   buildArticulatorPatternSummary,
@@ -323,7 +323,16 @@ export const handleClarification = internalAction({
         turnCount: args.turnNumber,
       });
 
-      // 5. Call Sonnet for revised mirror
+      // 5. Call Sonnet for revised mirror. Stage hint first (see process.ts).
+      await ctx
+        .runMutation(internal.sessions.setProcessingStage, {
+          sessionId: args.sessionId,
+          stage:
+            (episodic.topScore ?? 0) >= EPISODIC_CONNECT_FLOOR
+              ? "connecting"
+              : "writing",
+        })
+        .catch(() => {});
       const anthropic = getAnthropicClient();
 
       let revisedMirrorText: string;

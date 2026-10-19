@@ -313,6 +313,7 @@ export const submitInput = mutation({
 
     await ctx.db.patch("sessions", args.sessionId, {
       state: "processing",
+      processingStage: undefined,
       rawInput: rawText,
       rawInputLength: rawText.length,
       inputDuration: args.inputDuration,
@@ -612,6 +613,7 @@ export const retrySession = mutation({
     await ctx.db.patch("sessions", args.sessionId, {
       state: "processing",
       errorMessage: undefined,
+      processingStage: undefined,
       updatedAt: Date.now(),
     });
 
@@ -1068,6 +1070,26 @@ export const failSession = internalMutation({
       errorMessage: args.errorMessage,
       updatedAt: Date.now(),
     });
+  },
+});
+
+/**
+ * Mark that articulation has started (drives the processing copy). No-op once
+ * the session has left "processing", so a late call can't touch a delivered row.
+ */
+export const setProcessingStage = internalMutation({
+  args: {
+    sessionId: v.id("sessions"),
+    stage: v.union(v.literal("writing"), v.literal("connecting")),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get("sessions", args.sessionId);
+    if (session?.state !== "processing") return null;
+    await ctx.db.patch("sessions", args.sessionId, {
+      processingStage: args.stage,
+    });
+    return null;
   },
 });
 

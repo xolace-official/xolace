@@ -28,6 +28,7 @@ import { useWeekIntensity } from "@/src/features/profile/hooks/use-week-intensit
 import { useInsightGate } from "@/src/features/profile/hooks/use-insight-gate";
 import { useReflectionRank } from "@/src/features/profile/hooks/use-reflection-rank";
 import { useAvatars, resolveAvatar } from "@/src/features/profile/hooks/use-avatars";
+import { useAppStore } from "@/src/store/store";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -37,7 +38,9 @@ export function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const summary = useProfileSummary();
   const moodDelta = useMoodDelta();
-  const rank = useReflectionRank();
+  const hidden = useAppStore((s) => s.hiddenProfileCards);
+  const fetchedRank = useReflectionRank();
+  const rank = hidden.includes("rank") ? undefined : fetchedRank;
   const [weekOffset, setWeekOffset] = useState(0);
   const avatars = useAvatars();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -121,7 +124,7 @@ export function ProfileScreen() {
         )}
 
         {/* Visible from sign-up: join day is day one, an empty grid otherwise. */}
-        {summary && <ContributionGraphCard staggerDelay={150} />}
+        {summary && !hidden.includes("calendar") && <ContributionGraphCard staggerDelay={150} />}
 
         {/* A standing door, never rate-limited — but pointless once they're in.
             `isPlus` is false while entitlement resolves, so waiting on the read
@@ -168,7 +171,7 @@ export function ProfileScreen() {
           </View>
         )}
 
-        {hasEnoughForChart && weekIntensity && (
+        {hasEnoughForChart && weekIntensity && !hidden.includes("week") && (
           <WeekIntensityCard
             days={weekIntensity.days}
             peakDay={weekIntensity.peakDay}

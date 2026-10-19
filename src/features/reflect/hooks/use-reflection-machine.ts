@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useEffect, useRef } from 'react';
+import { useReducer, useCallback, useEffect, useRef, useState } from 'react';
 import { usePostHog } from 'posthog-react-native';
 // AppMetrics, not Observe: `logEvent` lives on the ExpoAppMetrics native module,
 // and Observe only reaches it via a Proxy fallback keyed on `!(prop in target)`.
@@ -15,6 +15,13 @@ import {
 } from '@/src/features/reflect/session-service';
 import { MAX_TURNS, initialState, reducer } from './reflection-reducer';
 import { useDictation } from '@/src/features/reflect/hooks/use-dictation';
+import { useAuth } from '@clerk/expo';
+import {
+  clearReflectDraft,
+  onReflectDraftWiped,
+  readReflectDraft,
+  usePersistReflectDraft,
+} from '@/src/features/reflect/reflect-draft';
 
 /**
  * Manages the reflection UI state machine and bridges it to the session API.
@@ -39,7 +46,19 @@ import { useDictation } from '@/src/features/reflect/hooks/use-dictation';
  * - `handleRetry` — request the session to retry the last action.
  */
 export function useReflectionMachine() {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const { userId } = useAuth();
+  const [state, dispatch] = useReducer(reducer, initialState, (s) => ({
+    ...s,
+    entryText: readReflectDraft(userId),
+  }));
+  // Reset during render, not in an effect: an effect would let
+  // usePersistReflectDraft commit once with the new userId and the old text,
+  // saving the previous account's words under the new one.
+  const [draftOwner, setDraftOwner] = useState(userId);
+  if (draftOwner !== userId) {
+    setDraftOwner(userId);
+    dispatch({ type: 'ACCOUNT_SWITCHED', entryText: readReflectDraft(userId) });
+  }
   const posthog = usePostHog();
   const {
     isRecording,
@@ -51,6 +70,8 @@ export function useReflectionMachine() {
     abortRecording,
   } = useDictation((text) => dispatch({ type: 'VOICE_APPEND', text }));
   const voicePrefixRef = useRef('');
+  usePersistReflectDraft(userId, state.entryText, state.screen);
+  useEffect(() => onReflectDraftWiped(() => dispatch({ type: 'DISCARD_DRAFT' })), []);
   const {
     sessionId,
     session,
@@ -202,6 +223,8 @@ export function useReflectionMachine() {
         freezeOccurredRef.current,
         freezeDurationRef.current,
       );
+      // The server holds the words now; a restart must not offer them as unsent.
+      clearReflectDraft();
       posthog.capture('reflection_submitted', {
         entry_type: state.entryType,
         input_length: state.entryText.length,
@@ -468,6 +491,12 @@ export function useReflectionMachine() {
     escalationResources: session?.escalationResources ?? null,
     toneUsed: session?.toneUsed ?? null,
     claimStrength: session?.claimStrength ?? null,
+    // Gated on the server state: the processing screen shows optimistically,
+    // while the row still carries the previous run's stage (retry, refinement).
+    processingStage:
+      serverState === 'processing' ? session?.processingStage : undefined,
+    // What retry reprocesses — present after a cold resume, unlike entryText.
+    rawInput: session?.rawInput ?? '',
     isRecording,
     plusDictation,
     dictationUpsell,

@@ -506,9 +506,15 @@ Route subtree `(protected)/(tabs)/browse/`:
 | `topic/[slug]` | **Topic screen** — both families for one topic, `All / Music / Support audio` segmented control (a segment disabled at 0), per-card **family glyph** ("spoken" vs "music") — the only screen where both families share a list, so the only place that distinction is solved. Episodes grouped by `series` client-side. |
 | `player` (`?slug=…`) | **Dedicated player** — `requirePremium`. Artwork, title, attribution line (rendered when `licence.attributionRequired`), scrubber, play/pause, ±15 s. **No** queue / up-next / lyrics / AirPlay in v1. No inline play on list rows — a row tap opens the player. |
 
-- **`newUntil` query:** `audio_tracks` where `newUntil > Date.now()`, order by
-  `newUntil` desc, `take(4)`. No new index (bounded 4-row read). Reused for the
-  Discovery strip (§9.5). Self-expiring — no cron.
+- **New shelf query (`getNewShelf`):** a pool of ≤ 12 `active` tracks —
+  those with `newUntil > now` (newest window first), topped up with the most
+  recently ingested — so the shelf never empties when every window has passed.
+  Shows 4, rotated one step per day by a client-sent `day` (UTC days since
+  epoch; refreshed on foreground). `day` is required for rotation because a
+  Convex query result is cached until its data changes, so `Date.now()` alone
+  never re-runs it. Old clients omit `day` and get the pool head. No new index
+  (bounded catalogue, newest-first `take(1000)`). Reused for the Discovery
+  strip (§9.5). No cron. See docs/bug-log.md 2026-10-17.
 - **`getBrowseTracks`** — premium-gated read; mints R2 `url` + `thumbUrl` +
   `attributionText` per row. Browsable set is `active: true` only.
 
@@ -526,8 +532,8 @@ All kindling — music included — is Xolace+ only. For a free user:
 
 ### 9.5 Discovery → Browse pointer
 
-**One "From the library" strip on the Discovery tab** — the same newest-4
-(`newUntil`) query as the New shelf, horizontally scrollable, ending in **"See
+**One "From the library" strip on the Discovery tab** — the same
+`getNewShelf` query (pool + daily rotation, §9.3) as the New shelf, horizontally scrollable, ending in **"See
 all" → the Browse tab**. Recently-played (needs a play-history table) and
 recommended-for-you (needs a ranker) are **fog** (§11).
 

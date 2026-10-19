@@ -107,23 +107,29 @@ type ChipsProps = {
   chips: readonly Chip[];
   selected: string | null;
   onSelect: (key: string) => void;
+  // One-shot pick: once something is selected, the rest dim and stop
+  // responding, so the choice reads as final while the sheet closes.
+  lockOnSelect?: boolean;
 };
 
-function FeedbackSheetChips({ chips, selected, onSelect }: ChipsProps) {
+function FeedbackSheetChips({ chips, selected, onSelect, lockOnSelect = false }: ChipsProps) {
   return (
     <View className="gap-3">
-      {chips.map(({ key, label }) => (
+      {chips.map(({ key, label }) => {
+        const locked = lockOnSelect && selected !== null;
+        return (
         <PressableFeedback
           key={key}
           onPress={() => onSelect(key)}
+          isDisabled={locked}
           accessibilityRole="radio"
           accessibilityLabel={label}
-          accessibilityState={{ selected: selected === key }}
+          accessibilityState={{ selected: selected === key, disabled: locked }}
           className={`w-full py-4 rounded-2xl border items-center ${
             selected === key
               ? "border-accent/40 bg-accent/10"
               : "border-border/65 bg-surface/40"
-          }`}
+          } ${locked && selected !== key ? "opacity-40" : ""}`}
         >
           <AppText
             className={`text-sm ${
@@ -135,7 +141,8 @@ function FeedbackSheetChips({ chips, selected, onSelect }: ChipsProps) {
             {label}
           </AppText>
         </PressableFeedback>
-      ))}
+        );
+      })}
     </View>
   );
 }

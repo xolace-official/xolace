@@ -9,6 +9,7 @@ import { SettingsRow } from "@/src/features/settings/components/settings-row";
 import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
 import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
 import { ThemeCarousel } from "@/src/features/settings/components/theme-carousel";
+import { ProfileCardsSection } from "@/src/features/settings/components/profile-cards-section";
 import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
 import { useAppearanceSettings, type ThemeMode } from "@/src/features/settings/hooks/use-appearance-settings";
 import type { MotionPreference } from "@/src/lib/motion/use-effective-reduced-motion";
@@ -275,6 +276,8 @@ export const AppearanceScreen = () => {
             </AppText>
           </View>
         </EaseView>
+
+        <ProfileCardsSection />
 
         {/* ── GENERAL ──────────────────────────────────────────── */}
         <EaseView

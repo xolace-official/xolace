@@ -21,6 +21,13 @@ export type EntryType = 'typed' | 'scaffold' | 'hybrid' | 'voice';
 
 export type FeedbackType = 'not_quite' | 'say_more';
 
+/** The chip picked in the "What didn't land?" sheet. */
+export type MissReason =
+  | 'wrong_emotion'
+  | 'too_surface_level'
+  | 'close_but_not_quite'
+  | 'missed_the_main_thing';
+
 export type ReflectionAction =
   | { type: 'TAP_INPUT' }
   | { type: 'DISMISS_TYPING' }
@@ -34,10 +41,12 @@ export type ReflectionAction =
   | { type: 'THATS_IT' }
   | { type: 'NOT_QUITE' }
   | { type: 'SAY_MORE' }
+  | { type: 'MISS_REASON'; reason: MissReason }
   | { type: 'CLARIFY_TEXT_CHANGE'; text: string }
   | { type: 'SET_USER_VARIANT'; variant: UserVariant }
   | { type: 'SET_QUIET_RETURN'; tier: QuietReturnTier | null }
   | { type: 'RESET' }
+  | { type: 'ACCOUNT_SWITCHED'; entryText: string }
   | { type: 'SESSION_ERROR'; message: string }
   | { type: 'SESSION_RESUMED'; screen: ReflectionStateName }
   | { type: 'VOICE_START' }
@@ -53,6 +62,7 @@ export interface ReflectionState {
   clarifyText: string;
   errorMessage: string;
   lastFeedbackType: FeedbackType | null;
+  missReason: MissReason | null;
   userVariant: UserVariant;
   quietReturn: QuietReturnTier | null;
   selectedTextures: string[];
