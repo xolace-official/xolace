@@ -31,10 +31,10 @@ Dense, rule-first version of [`xolace.md`](./xolace.md) (team doc) and [`xolace-
 7. **Consent line.** Anonymous aggregate counts with a minimum group size (≥ 3) need no consent. Anything containing a person's words needs it.
 8. **Outside-app channels** (WhatsApp, SMS, widgets, etc. — Phase 3): opt-in, discreet by default (never reveal what someone is carrying), sandbox and safety still apply.
 9. **Retention through benefit.** Habit mechanics are welcome. No hard usage limits for anti-dependency; watch for unhealthy use instead. Not goals: time in app, sessions or streak length for their own sake.
-10. **Not a character, but not ruled out.** The Fire is a capable journal that remembers you, not a persona. Persona/companion features aren't forbidden; if they come, rules 1–5 still apply.
+10. **One companion, rules unchanged.** The mirror is the Fire as a capable journal that remembers you. The **companion** (Xolace+, `Building`) is the Fire speaking out loud: one named character, never several specialists. Rules 1–5 still apply to it.
 11. **Money.** The mirror is free, always. Plus pays for the support layer. No ads. Never sell or license user data.
 12. **User-facing claims** (store, policy, in-app copy) must be literally true today. The privacy promises below are a standard, not current fact.
-13. **Status honesty.** Label anything you describe as `Shipped`, `Building` or `Planned`. Do not assume steadiness, compounding detection, baseline or full insights exist — they are `Building`.
+13. **Status honesty.** Label anything you describe as `Shipped`, `Building` or `Planned`. Steadiness, compounding detection, baseline and steadiness insights (Plus) are `Shipped`.
 
 ## Kindling catalogue
 
@@ -58,11 +58,11 @@ Safeguard (rules + OpenAI moderation; none/gentle/elevated/crisis) ∥ Haiku cla
 
 ## Phases
 
-1. Reflect — Shipped. 2. Support layer — **current**; next: steadiness + compounding, real insights, route Vent, Vessa name in UI, learn from completions, grow catalogue, close safety gaps. 3. Proactive — reach out first, incl. outside-app channels. 4. Clinical — licensed care as top of the sandbox, context carried over with consent.
+1. Reflect — Shipped. 2. Support layer — **current**; next: route Vent, Vessa name in UI, learn from completions, grow catalogue, close safety gaps. 3. Proactive — reach out first, incl. outside-app channels. 4. Clinical — licensed care as top of the sandbox, context carried over with consent.
 
 ## Metrics
 
-North star: **weekly active reflectors** (≥ 1 completed reflection that week). Counterweight: steadiness change over 30 days (once built). Guardrails: escalation reaches help; unhealthy use watched; fewer referrals never a goal.
+North star: **weekly active reflectors** (≥ 1 completed reflection that week). Counterweight: steadiness change over 30 days. Guardrails: escalation reaches help; unhealthy use watched; fewer referrals never a goal.
 
 ## Privacy standard and known gaps
 
