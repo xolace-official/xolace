@@ -374,6 +374,13 @@ export const ReflectScreen = () => {
             />
           </Stack.Toolbar>
           <Stack.Toolbar placement="right">
+            {/* PROTOTYPE (#584): dev-only door to the talk-screen variants. Remove with the prototype. */}
+            {__DEV__ && process.env.EXPO_OS === "ios" && (
+              <Stack.Toolbar.Button
+                icon="waveform"
+                onPress={() => router.push("/talk-prototype?variant=A")}
+              />
+            )}
             <Stack.Toolbar.Button
               icon={
                 process.env.EXPO_OS === "ios" ? "lifepreserver" : CrisisAlert
