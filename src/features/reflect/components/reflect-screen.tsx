@@ -4,6 +4,8 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { Stack, useRouter } from "expo-router";
 import AccountCircle from "@expo/material-symbols/account_circle.xml";
 import CrisisAlert from "@expo/material-symbols/crisis_alert.xml";
+import GraphicEq from "@expo/material-symbols/graphic_eq.xml";
+import { TalkDoorChip, TalkDoorDialog, useTalkDoor } from "@/src/features/talk/prototype/talk-door";
 import { useThemeColor } from "heroui-native";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { EaseView } from "react-native-ease";
@@ -53,6 +55,7 @@ const isWashScreen = (screen: ReflectionStateName) =>
 
 export const ReflectScreen = () => {
   const router = useRouter();
+  const talkDoor = useTalkDoor(); // PROTOTYPE (#586)
   const {
     state,
     dispatch,
@@ -374,11 +377,13 @@ export const ReflectScreen = () => {
             />
           </Stack.Toolbar>
           <Stack.Toolbar placement="right">
-            {/* PROTOTYPE (#584): dev-only door to the talk-screen variants. Remove with the prototype. */}
-            {__DEV__ && process.env.EXPO_OS === "ios" && (
+            {/* PROTOTYPE (#586): the talk door, its own bubble left of crisis. */}
+            {talkDoor.visible && (
               <Stack.Toolbar.Button
-                icon="waveform"
-                onPress={() => router.push("/talk-prototype?variant=A")}
+                icon={process.env.EXPO_OS === "ios" ? "waveform" : GraphicEq}
+                separateBackground
+                accessibilityLabel="Start a talk"
+                onPress={talkDoor.onPress}
               />
             )}
             <Stack.Toolbar.Button
@@ -430,6 +435,9 @@ export const ReflectScreen = () => {
       />
 
       <DictationUpsellDialog {...dictationUpsell} />
+      {/* PROTOTYPE (#586) */}
+      <TalkDoorDialog door={talkDoor} />
+      {isIdle && <TalkDoorChip door={talkDoor} />}
 
       {/* Space naming — fires once on first path-selection when unnamed */}
       <SpaceNamePromptDialog
