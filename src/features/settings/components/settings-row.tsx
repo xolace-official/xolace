@@ -101,6 +101,7 @@ export const SettingsRow = (props: SettingsRowProps) => {
       return (
         <Switch
           isSelected={props.isSelected}
+          accessibilityLabel={label}
           onSelectedChange={(value) => {
             if (value) playTextureSelect();
             else playSoftPress();
