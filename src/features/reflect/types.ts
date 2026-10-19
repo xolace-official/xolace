@@ -46,6 +46,7 @@ export type ReflectionAction =
   | { type: 'SET_USER_VARIANT'; variant: UserVariant }
   | { type: 'SET_QUIET_RETURN'; tier: QuietReturnTier | null }
   | { type: 'RESET' }
+  | { type: 'ACCOUNT_SWITCHED'; entryText: string }
   | { type: 'SESSION_ERROR'; message: string }
   | { type: 'SESSION_RESUMED'; screen: ReflectionStateName }
   | { type: 'VOICE_START' }

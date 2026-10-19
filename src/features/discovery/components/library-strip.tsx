@@ -25,8 +25,8 @@ export function LibraryStrip() {
   const router = useRouter();
   const posthog = usePostHog();
   const accent = useThemeColor("accent") as string;
-  const day = useUtcDay();
-  const shelf = useQuery(api.browse.getNewShelf, { day });
+  const clock = useUtcDay();
+  const shelf = useQuery(api.browse.getNewShelf, clock);
 
   if (shelf === undefined) return <LibraryStripSkeleton tile={TILE} />;
   if (shelf.length === 0) return null;

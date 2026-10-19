@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 import { useAuth } from '@clerk/expo';
 import { zustandJSONStorage } from '@/src/lib/storage/unified-storage';
 import type { ReflectionStateName } from '@/src/features/reflect/types';
@@ -38,12 +39,38 @@ export function readReflectDraft(userId: string | null | undefined): string {
   return Date.now() - draft.savedAt < MAX_AGE_MS ? draft.text : '';
 }
 
-export function clearReflectDraft() {
-  void zustandJSONStorage.removeItem(KEY).catch(() => {});
+// One composer at a time, so one pending write — module-level so a clear from
+// outside the Reflect screen (Settings) can cancel it.
+let pendingWrite: ReturnType<typeof setTimeout> | undefined;
+const wipeListeners = new Set<() => void>();
+
+export function clearReflectDraft(): Promise<void> {
+  clearTimeout(pendingWrite);
+  pendingWrite = undefined;
+  return zustandJSONStorage.removeItem(KEY).catch(() => {});
 }
 
 /**
- * Mirrors `entryText` to disk while the person is composing. Leaving the
+ * Delete-my-data: the stored draft *and* the words still on a mounted compose
+ * screen — otherwise the next keystroke would write the deleted text back.
+ */
+export function wipeReflectDraft(): Promise<void> {
+  const cleared = clearReflectDraft();
+  wipeListeners.forEach((listener) => listener());
+  return cleared;
+}
+
+/** Subscribe the in-memory draft to `wipeReflectDraft`. Returns unsubscribe. */
+export function onReflectDraftWiped(listener: () => void) {
+  wipeListeners.add(listener);
+  return () => {
+    wipeListeners.delete(listener);
+  };
+}
+
+/**
+ * Mirrors `entryText` to disk while the person is composing — debounced, but
+ * flushed at once when the app leaves the foreground. Leaving the
  * compose screens cancels a pending write, so a debounce can't land after the
  * submit has cleared the draft.
  */
@@ -56,12 +83,28 @@ export function usePersistReflectDraft(
   useEffect(() => {
     if (!composing || !userId) return;
     // A discard is a decision: no debounce window in which a kill revives it.
-    if (!text.trim()) return clearReflectDraft();
-    const timer = setTimeout(() => {
+    if (!text.trim()) {
+      void clearReflectDraft();
+      return;
+    }
+    const save = () => {
+      clearTimeout(timer);
+      pendingWrite = undefined;
       const draft: StoredDraft = { userId, text, savedAt: Date.now() };
       void zustandJSONStorage.setItem(KEY, JSON.stringify(draft)).catch(() => {});
-    }, WRITE_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
+    };
+    const timer = setTimeout(save, WRITE_DEBOUNCE_MS);
+    pendingWrite = timer;
+    // Typing then locking the phone: the debounce may never get to run before
+    // the OS kills the app. Only while this write is still pending — a clear
+    // (submit, discard, wipe) has already decided the text must not land.
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next !== 'active' && pendingWrite === timer) save();
+    });
+    return () => {
+      clearTimeout(timer);
+      sub.remove();
+    };
   }, [userId, text, composing]);
 }
 

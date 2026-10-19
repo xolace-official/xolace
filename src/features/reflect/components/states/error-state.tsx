@@ -65,7 +65,12 @@ export const ErrorState = ({
   }, []);
 
   return (
-    <View className="flex-1 justify-center px-6">
+    // Scrolls so the recovery actions stay reachable on short screens / large text.
+    <ScrollView
+      className="flex-1"
+      contentContainerClassName="grow justify-center px-6 py-8"
+      showsVerticalScrollIndicator={false}
+    >
       <AppText className="text-xl leading-8 text-foreground">
         Take a breath.
       </AppText>
@@ -92,7 +97,7 @@ export const ErrorState = ({
             size={28}
             className="max-h-[160]"
           >
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
               <AppText className="text-base italic leading-7 text-foreground/30">
                 {rawInput}
               </AppText>
@@ -174,6 +179,6 @@ export const ErrorState = ({
           </LinkButton>
         </EaseView>
       </View>
-    </View>
+    </ScrollView>
   );
 };

@@ -65,8 +65,8 @@ export function BrowseHubScreen() {
   const playerInset = useMiniPlayerInset();
   const { width } = useWindowDimensions();
   const posthog = usePostHog();
-  const day = useUtcDay();
-  const shelf = useQuery(api.browse.getNewShelf, { day });
+  const clock = useUtcDay();
+  const shelf = useQuery(api.browse.getNewShelf, clock);
   const featured = useQuery(api.browse.getFeatured, {});
   const [tip] = useState(pickListeningTip);
   const mutedTint = useCSSVariable('--muted');

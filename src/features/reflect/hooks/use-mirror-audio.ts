@@ -38,6 +38,10 @@ export function useMirrorAudio(
   // null when the session has no mirror audio).
   const isReady = !!audioUrl;
 
+  // A claim can resolve after the person left the app or another player took focus.
+  const canPlay = () =>
+    AppState.currentState === 'active' && holdsAudioFocus(focus);
+
   // First tap only marks intent — playback starts once the player finishes loading.
   useEffect(() => {
     if (!awaitingFirstPlay.current || !status.isLoaded) return;
@@ -45,7 +49,7 @@ export function useMirrorAudio(
     let cancelled = false;
     claimAudioSession(focus, () => player.pause())
       .then(() => {
-        if (!cancelled && holdsAudioFocus(focus)) player.play();
+        if (!cancelled && canPlay()) player.play();
       })
       .catch((e) => console.error('[useMirrorAudio] first play failed:', e));
     return () => {
@@ -78,7 +82,7 @@ export function useMirrorAudio(
         player.pause();
       } else {
         await claimAudioSession(focus, () => player.pause());
-        if (!holdsAudioFocus(focus)) return;
+        if (!canPlay()) return;
         if (status.didJustFinish) {
           player.seekTo(0);
         }

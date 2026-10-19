@@ -1,24 +1,27 @@
 import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
-const DAY_MS = 86_400_000;
-const utcDay = () => Math.floor(Date.now() / DAY_MS);
+const HOUR_MS = 3_600_000;
+const utcClock = () => {
+  const hour = Math.floor(Date.now() / HOUR_MS);
+  return { day: Math.floor(hour / 24), hour };
+};
 
 /**
- * UTC days since epoch — the `day` arg of `api.browse.getNewShelf`, which
- * rotates the New shelf daily. Re-read on every return to the foreground:
+ * UTC days and hours since epoch — the `day` (daily rotation) and `hour`
+ * (`newUntil` expiry) args of `api.browse.getNewShelf`. Re-read on every return to the foreground:
  * tab screens stay mounted and a backgrounded app can live for days, so a
  * mount-time value would pin the shelf to the day the app was opened.
  */
 export function useUtcDay() {
-  const [day, setDay] = useState(utcDay);
+  const [clock, setClock] = useState(utcClock);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') setDay(utcDay());
+      if (state === 'active') setClock(utcClock());
     });
     return () => sub.remove();
   }, []);
 
-  return day;
+  return clock;
 }

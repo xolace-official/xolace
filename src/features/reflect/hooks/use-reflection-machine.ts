@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useEffect, useRef } from 'react';
+import { useReducer, useCallback, useEffect, useRef, useState } from 'react';
 import { usePostHog } from 'posthog-react-native';
 // AppMetrics, not Observe: `logEvent` lives on the ExpoAppMetrics native module,
 // and Observe only reaches it via a Proxy fallback keyed on `!(prop in target)`.
@@ -18,6 +18,7 @@ import { useDictation } from '@/src/features/reflect/hooks/use-dictation';
 import { useAuth } from '@clerk/expo';
 import {
   clearReflectDraft,
+  onReflectDraftWiped,
   readReflectDraft,
   usePersistReflectDraft,
 } from '@/src/features/reflect/reflect-draft';
@@ -50,6 +51,14 @@ export function useReflectionMachine() {
     ...s,
     entryText: readReflectDraft(userId),
   }));
+  // Reset during render, not in an effect: an effect would let
+  // usePersistReflectDraft commit once with the new userId and the old text,
+  // saving the previous account's words under the new one.
+  const [draftOwner, setDraftOwner] = useState(userId);
+  if (draftOwner !== userId) {
+    setDraftOwner(userId);
+    dispatch({ type: 'ACCOUNT_SWITCHED', entryText: readReflectDraft(userId) });
+  }
   const posthog = usePostHog();
   const {
     isRecording,
@@ -62,6 +71,7 @@ export function useReflectionMachine() {
   } = useDictation((text) => dispatch({ type: 'VOICE_APPEND', text }));
   const voicePrefixRef = useRef('');
   usePersistReflectDraft(userId, state.entryText, state.screen);
+  useEffect(() => onReflectDraftWiped(() => dispatch({ type: 'DISCARD_DRAFT' })), []);
   const {
     sessionId,
     session,

@@ -133,6 +133,10 @@ export function reducer(
     case 'RESET':
       return { ...initialState, userVariant: state.userVariant };
 
+    // Nothing of the previous person's composer survives into the next one's.
+    case 'ACCOUNT_SWITCHED':
+      return { ...initialState, entryText: action.entryText };
+
     default:
       return state;
   }

@@ -40,7 +40,8 @@ function attributionFor(track: { family: "support" | "music"; narrators?: string
 
 const SHELF_SIZE = 4;
 const POOL_SIZE = 12;
-const DAY_MS = 86_400_000;
+const HOUR_MS = 3_600_000;
+const DAY_MS = 24 * HOUR_MS;
 
 /**
  * The New shelf's rotation pool: tracks still inside their `newUntil` window
@@ -68,15 +69,17 @@ function newPool(tracks: Doc<"audio_tracks">[], now: number) {
  * The New shelf: `SHELF_SIZE` tracks from `newPool`, rotated one step per
  * `day`. `day` comes from the client (UTC days since epoch) because a
  * Convex query result is cached until its data changes — `Date.now()` alone
- * never re-runs it, which is why the shelf sat frozen. Pre-`day` clients get
- * the pool's head, unrotated. Reused for the Discovery strip (§9.5).
+ * never re-runs it, which is why the shelf sat frozen. `hour` (UTC hours
+ * since epoch) is the `newUntil` expiry clock — `day` alone would keep a
+ * track fresh until the next UTC midnight. Pre-`day` clients get the pool's
+ * head, unrotated. Reused for the Discovery strip (§9.5).
  */
 export const getNewShelf = query({
-  args: { day: v.optional(v.number()) },
+  args: { day: v.optional(v.number()), hour: v.optional(v.number()) },
   returns: v.array(shelfItemValidator),
-  handler: async (ctx, { day }) => {
+  handler: async (ctx, { day, hour }) => {
     await requireAuth(ctx);
-    const now = day !== undefined ? day * DAY_MS : Date.now();
+    const now = hour !== undefined ? hour * HOUR_MS : day !== undefined ? day * DAY_MS : Date.now();
 
     const pool = newPool(await ctx.db.query("audio_tracks").order("desc").take(1000), now);
     const offset = pool.length > 0 && day !== undefined ? day % pool.length : 0;
