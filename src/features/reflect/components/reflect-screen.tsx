@@ -377,11 +377,10 @@ export const ReflectScreen = () => {
             />
           </Stack.Toolbar>
           <Stack.Toolbar placement="right">
-            {/* PROTOTYPE (#586): the talk door, its own bubble left of crisis. */}
+            {/* PROTOTYPE (#586): the talk door, sharing the crisis button's glass container. */}
             {talkDoor.visible && (
               <Stack.Toolbar.Button
                 icon={process.env.EXPO_OS === "ios" ? "waveform" : GraphicEq}
-                separateBackground
                 accessibilityLabel="Start a talk"
                 onPress={talkDoor.onPress}
               />
