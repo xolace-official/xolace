@@ -3,6 +3,44 @@
 Recorded decisions that reviews and future refactors should treat as settled.
 One entry per concept; newest first.
 
+## Companion, talk (2026-10-19)
+
+The **companion** is the Fire speaking out loud: one named character per
+person that knows them through their memory, never a separate brain. There
+is one companion, never several specialists; what it is doing at a given
+moment (reflecting, reading insights back, following a kindling) is a
+**skill**, set by the door the person came in through. The one exception
+is the **safety skill**: safety sets it, not the door, and once on, it holds
+for the rest of the talk. Nothing that makes
+the companion better is held back for seeming "relational"; where the
+relationship line sits is a team call, made on the product, not by trimming
+features.
+
+A **talk** is one sitting with the companion. Voice is the core experience,
+and text is the fallback inside the same talk. A talk ends in a mirror: the
+whole talk becomes that session's input. "Say more" on that mirror reopens
+the talk; there are no typed refinements. A talk is not a **vent** (a vent
+keeps nothing; a talk is remembered) and not a **conversation** (a
+conversation is between two people).
+_Avoid_: conversation, chat, call, voice session ("conversation" is a
+Xolacer DM; "voice" is a TTS voice).
+
+**Talk time** is a person's weekly allowance for talks, shown in minutes.
+It resets each week rather than accumulating. A talk has a **ceiling** (its
+longest length); a crisis raises the ceiling of that one talk without
+spending talk time.
+_Avoid_: credits, quota, minutes balance (credits are how talk time is
+counted, not what a person sees).
+
+The companion's name **is the space name**: one name for the Fire, whether
+it writes the mirror or speaks in a talk. **Ember** is the fallback when the
+person has named nothing. Renaming the companion renames the space.
+_Avoid_: companion name and space name as two things; persona, bot name.
+
+The **preferred name** is what the companion calls the person when it
+differs from their display name and they chose not to show it to others.
+Only the companion uses it; the display name stays what other Xolacers see.
+
 ## Binding on meaning (2026-10-18)
 
 **Binding on meaning** ranks a twig's candidates by how close their text sits
