@@ -41,7 +41,8 @@ export const entryTypeValidator = v.union(
   v.literal("guided_entry"),
   v.literal("body_scan"),
   v.literal("word_cloud"),
-  v.literal("voice")
+  v.literal("voice"),
+  v.literal("talk")
 );
 
 export const confirmationStateValidator = v.union(

@@ -46,7 +46,7 @@ const OPENER = "(The talk begins.)";
 // ElevenLabs' system tools (end_call) end the talk rather than report back.
 const UNREPORTED_RESULT = "ok";
 
-function textOf(content: OpenAIContent | undefined): string {
+export function textOf(content: OpenAIContent | undefined): string {
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";
   return content.map((p) => (p.type === "text" ? (p.text ?? "") : "")).join("");

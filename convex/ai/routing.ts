@@ -56,6 +56,9 @@ const HIGH_SPECIFICITY = 6;
  * always, so the gate collapses to `!memoryConnected` and the reach becomes
  * the ordinary word-cloud experience. The same-day guard (§3.7) is what bounds
  * it. This is one set literal — revert it if the data says to.
+ *
+ * `talk` is excluded (#592): a reach asks for a typed clarify, and a talk has
+ * none — its "Say more" reopens the talk (#604), where the companion asks.
  */
 const REACH_ELIGIBLE_ENTRY_TYPES = new Set([
   "open_prompt",

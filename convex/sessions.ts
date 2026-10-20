@@ -26,11 +26,16 @@ import {
   abandonRequiresFollowUp,
   computeRequiresFollowUp,
 } from "./lib/followUpCadence";
+import { purgeSessions } from "./lib/sessionCascade";
+import { finalizeTalk } from "./talk/session";
 import schema from "./schema";
 import type { Doc } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 
 const ABANDON_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
+// A cut-off talk's mirror is made while the person is away (#588): it waits
+// for their return this long, not the typed 30 minutes.
+const TALK_MIRROR_WAIT_MS = 24 * 60 * 60 * 1000;
 
 // Hard ceiling on a single reflection's text. The client's TextArea enforces
 // the same limit via maxLength, so a normal user never reaches this — the
@@ -240,6 +245,8 @@ export const initiate = mutation({
   handler: async (ctx, args) => {
     const { profile } = await requireAuth(ctx);
     const now = Date.now();
+    // A talk's session is created by talk.live.start, bound to its talk.
+    if (args.entryType === "talk") throw new ConvexError({ code: "not_a_talk" });
 
     // Rate limit: 2 sessions/hour per profile (token bucket, burst 2),
     // 10/hour for Plus.
@@ -297,6 +304,8 @@ export const submitInput = mutation({
     if (session.state !== "initiated") {
       throw new Error(`Cannot submit input in state "${session.state}"`);
     }
+    // A talk's input is its transcript, set when the talk closes.
+    if (session.entryType === "talk") throw new ConvexError({ code: "not_a_talk" });
 
     if (args.rawInput.length > MAX_RAW_INPUT) {
       throw new ConvexError({
@@ -642,6 +651,12 @@ export const abandon = mutation({
       throw new Error(
         `Cannot abandon session in terminal state "${session.state}"`,
       );
+    }
+
+    // Backing out of a talk still mirrors what the person said (#588).
+    if (session.entryType === "talk" && session.state === "initiated") {
+      await finalizeTalk(ctx, session);
+      return null;
     }
 
     await ctx.db.patch("sessions", args.sessionId, {
@@ -1183,6 +1198,21 @@ export const checkAbandoned = internalMutation({
         .take(50);
 
       for (const session of staleSessions) {
+        // A talk that never closed (its idle check failed): close it the
+        // talk way, mirror or not.
+        if (session.entryType === "talk" && state === "initiated") {
+          await finalizeTalk(ctx, session);
+          continue;
+        }
+        // ponytail: skipped rows stay in this take(50) window for up to a day;
+        // give talks their own index range if they ever crowd it.
+        if (
+          session.entryType === "talk" &&
+          state === "mirror_delivered" &&
+          session.updatedAt > Date.now() - TALK_MIRROR_WAIT_MS
+        ) {
+          continue;
+        }
         if ((stalePathStates as readonly string[]).includes(state)) {
           await finalizeCompletion(ctx, session, { pathCompleted: false, stranded: true });
         } else {
@@ -1194,6 +1224,19 @@ export const checkAbandoned = internalMutation({
           await finalizeFollowUp(ctx, session, abandonRequiresFollowUp(session));
         }
       }
+    }
+
+    // A talk abandoned with nothing to mirror goes with its transcript (#588).
+    // A talk with input keeps the typed lifetime (data retention).
+    // ponytail: 50 per pass; page through if short talks outpace it.
+    const emptyTalks = await ctx.db
+      .query("sessions")
+      .withIndex("by_entryType_and_state_and_rawInputLength", (q) =>
+        q.eq("entryType", "talk").eq("state", "abandoned").eq("rawInputLength", undefined),
+      )
+      .take(50);
+    for (const session of emptyTalks) {
+      await purgeSessions(ctx, session.emotionalProfileId, [session]);
     }
   },
 });

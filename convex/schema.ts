@@ -508,6 +508,7 @@ export default defineSchema({
       v.literal("body_scan"),
       v.literal("word_cloud"),
       v.literal("voice"),
+      v.literal("talk"), // A companion talk (#592): rawInput is the person's lines only
     ),
 
     // The user's raw text. Optional: not set until input_received state.
@@ -736,6 +737,14 @@ export default defineSchema({
     // the tag-based cascade (also the graceful path if the embed action failed).
     semanticMatchIds: v.optional(v.array(v.id("reflections"))),
 
+    // --- Talk (entryType "talk", #592) ---
+    // Random per-talk secret, handed only to the person who started it. The
+    // Custom LLM endpoint serves a turn only when ElevenLabs relays it back
+    // with the sessionId (via the extra body), binding the talk to this session.
+    talkKey: v.optional(v.string()),
+    // Reported by the client once connected; the webhook DELETEs it (#595).
+    elevenLabsConversationId: v.optional(v.string()),
+
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated
     completedAt: v.optional(v.number()), // Session closed
@@ -764,7 +773,30 @@ export default defineSchema({
       "emotionalProfileId",
       "gapNamed",
       "createdAt",
+    ])
+
+    // Abandoned-session sweep: talks that ended with nothing to mirror
+    // (no rawInput) are removed with their transcript (#588).
+    .index("by_entryType_and_state_and_rawInputLength", [
+      "entryType",
+      "state",
+      "rawInputLength",
     ]),
+
+  // Both sides of a companion talk, one row per line, as the Custom LLM
+  // endpoint served it (#588). The only lasting copy; same lifetime as its
+  // session (SESSION_CASCADE_TABLES). The session's rawInput is built from
+  // the person's lines at the end.
+  talk_turns: defineTable({
+    sessionId: v.id("sessions"),
+    seq: v.number(), // 0-based position in the talk
+    role: v.union(v.literal("person"), v.literal("companion")),
+    text: v.string(),
+    // The companion's reply as we served it, until ElevenLabs' next resend
+    // of the history (what was actually spoken) replaces it. Stays when the
+    // talk ends on it.
+    provisional: v.optional(v.boolean()),
+  }).index("by_session_and_seq", ["sessionId", "seq"]),
 
   // ===========================================================
   // 5. SESSION TURNS

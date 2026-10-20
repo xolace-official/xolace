@@ -1,4 +1,6 @@
 import { httpAction } from "../../_generated/server";
+import { internal } from "../../_generated/api";
+import { talkLines } from "../../talk/transcript";
 import { timingSafeEqual } from "../../lib/timingSafeEqual";
 import { getAnthropicClient, thinkingOff } from "../providers/anthropic";
 import { toAnthropicRequest, type OpenAIMessage, type OpenAITool } from "./openaiCompat";
@@ -25,11 +27,16 @@ async function sha256Hex(s: string): Promise<string> {
  * Prototype brain: relays whatever the agent sends (its prompt + history).
  * Safeguard, memory and the talk ledger land in later tickets.
  *
+ * Each turn is bound to its talk's session by the `{ sessionId, talkKey }`
+ * the client set as the custom LLM extra body (#592), and the talk so far is
+ * written to `talk_turns` as the turn starts: an interruption kills this
+ * handler mid-stream (#591), so nothing that must land can wait for the end.
+ *
  * ponytail: the `[talk]` logs carry only timings, model and body keys (never
  * text); they answer #591's open measurements. Drop or downgrade them once
  * those are recorded.
  */
-export const chatCompletions = httpAction(async (_ctx, request) => {
+export const chatCompletions = httpAction(async (ctx, request) => {
   const startedAt = Date.now();
   const secret = process.env.TALK_LLM_SECRET;
   const auth = request.headers.get("authorization") ?? "";
@@ -45,6 +52,17 @@ export const chatCompletions = httpAction(async (_ctx, request) => {
     return new Response("invalid json", { status: 400 });
   }
   if (!Array.isArray(body.messages)) return new Response("messages required", { status: 400 });
+  const extra = (body.elevenlabs_extra_body ?? {}) as { sessionId?: unknown; talkKey?: unknown };
+  if (typeof extra.sessionId !== "string" || typeof extra.talkKey !== "string") {
+    return new Response("no talk", { status: 403 });
+  }
+  const talk = { sessionId: extra.sessionId, talkKey: extra.talkKey, lines: talkLines(body.messages) };
+  // Started now, awaited once the model call is in flight: costs no TTFT.
+  // A failed write fails closed: no turn the transcript can't hold.
+  const bound = ctx.runMutation(internal.talk.turns.syncLines, talk).catch((err) => {
+    console.error("[talk] turn sync failed", err);
+    return false;
+  });
 
   const model = TALK_MODELS.find((m) => m === body.model) ?? TALK_MODELS[0];
   const { system, messages: turns, tools } = toAnthropicRequest(body.messages, body.tools);
@@ -52,7 +70,7 @@ export const chatCompletions = httpAction(async (_ctx, request) => {
 
   const meta = { id: `chatcmpl-${crypto.randomUUID()}`, model, created: Math.floor(startedAt / 1000) };
   const abort = new AbortController();
-  let outcome: "done" | "aborted" | "error" = "done";
+  let outcome: "done" | "aborted" | "error" | "unbound" = "done";
   let firstTokenAt: number | null = null;
   // Tag words only (e.g. "sigh"), never the turn's text: does #583's audio-tag
   // set make it through to ElevenLabs?
@@ -94,6 +112,15 @@ export const chatCompletions = httpAction(async (_ctx, request) => {
           // One attempt: a retried turn would land long after the person stopped waiting.
           { signal: abort.signal, maxRetries: 0 },
         );
+        // Not this talk's turn (wrong key, or the talk has closed): serve nothing.
+        if (!(await bound)) {
+          outcome = "unbound";
+          abort.abort();
+          send(sseChunk(meta, {}, "stop"));
+          send(SSE_DONE);
+          controller.close();
+          return;
+        }
         send(sseChunk(meta, { role: "assistant" }));
         const translate = createEventTranslator();
         let finish: FinishReason = "stop";
@@ -111,6 +138,12 @@ export const chatCompletions = httpAction(async (_ctx, request) => {
         }
         send(sseChunk(meta, {}, finish));
         send(SSE_DONE);
+        // After [DONE]: the agent already has its turn.
+        await ctx.runMutation(internal.talk.turns.syncLines, {
+          sessionId: talk.sessionId,
+          talkKey: talk.talkKey,
+          reply: { seq: talk.lines.length, text: reply },
+        });
         controller.close();
       } catch (err) {
         if (outcome !== "aborted") {

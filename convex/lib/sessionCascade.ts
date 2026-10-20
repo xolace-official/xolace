@@ -24,6 +24,7 @@ export const SESSION_CASCADE_TABLES = [
   "follow_up_responses",
   "paths",
   "path_steps",
+  "talk_turns",
 ] as const;
 
 /** Tables carrying a sessionId that intentionally outlive their session. */
@@ -79,6 +80,17 @@ export async function purgeSessions(
         .take(10);
       for (const turn of turns) await ctx.db.delete("session_turns", turn._id);
     } while (turns.length === 10);
+
+    // A companion talk's transcript (#588): bounded by the talk ceiling, but
+    // drain in batches all the same.
+    let lines;
+    do {
+      lines = await ctx.db
+        .query("talk_turns")
+        .withIndex("by_session_and_seq", (q) => q.eq("sessionId", session._id))
+        .take(100);
+      for (const line of lines) await ctx.db.delete("talk_turns", line._id);
+    } while (lines.length === 100);
 
     // One card per session at most, but query by index rather than assume.
     const cards = await ctx.db

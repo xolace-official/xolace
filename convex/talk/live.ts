@@ -1,23 +1,14 @@
 import { v } from "convex/values";
-import { action, internalQuery } from "../_generated/server";
+import { action } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { requireAuth } from "../lib/auth";
-import { requirePremium } from "../lib/premium";
-
-export const assertCanTalk = internalQuery({
-  args: {},
-  returns: v.null(),
-  handler: async (ctx) => {
-    const { profile } = await requireAuth(ctx);
-    await requirePremium(ctx, profile, "talk");
-    return null;
-  },
-});
+import type { Id } from "../_generated/dataModel";
 
 /**
- * A single-use WebRTC token for the companion agent (#591). The agent stays
- * private (auth required in its Security tab), so a talk can only start
- * through here, behind auth and Plus.
+ * Starts a talk (#592): creates its session, then a single-use WebRTC token
+ * for the companion agent (#591). The agent stays private (auth required in
+ * its Security tab), so a talk can only start through here, behind auth and
+ * Plus. The client hands `{ sessionId, talkKey }` to ElevenLabs as the
+ * custom LLM extra body; our endpoint serves only turns that carry them.
  *
  * Its own key (ElevenAgents permission only): the Vent/TTS key is scoped
  * without agents access, and should stay that way.
@@ -25,14 +16,18 @@ export const assertCanTalk = internalQuery({
  * ponytail: no usage cap or talk ledger yet; a Plus tester can talk until
  * the agent's 1,560 s backstop. The weekly cap ticket adds the reserve here.
  */
-export const conversationToken = action({
+export const start = action({
   args: {},
-  returns: v.string(),
-  handler: async (ctx): Promise<string> => {
-    await ctx.runQuery(internal.talk.live.assertCanTalk, {});
+  returns: v.object({ token: v.string(), sessionId: v.id("sessions"), talkKey: v.string() }),
+  handler: async (ctx): Promise<{ token: string; sessionId: Id<"sessions">; talkKey: string }> => {
     const apiKey = process.env.ELEVENLABS_AGENTS_API_KEY;
     const agentId = process.env.TALK_AGENT_ID;
     if (!apiKey || !agentId) throw new Error("Talk is not configured");
+
+    // Minted here, not in the mutation: an action's randomness is the real thing.
+    const talkKey = crypto.randomUUID();
+    // A failed token leaves an empty session; the idle check abandons it.
+    const sessionId = await ctx.runMutation(internal.talk.session.start, { talkKey });
 
     const res = await fetch(
       `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(agentId)}`,
@@ -43,6 +38,6 @@ export const conversationToken = action({
       throw new Error("Could not start a talk");
     }
     const { token } = (await res.json()) as { token: string };
-    return token;
+    return { token, sessionId, talkKey };
   },
 });
