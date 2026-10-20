@@ -1,9 +1,9 @@
 /**
  * Safety during a live talk (#599, decisions in #581). Every turn passes a
- * phrase-check floor and a moderation race (the endpoint); the classifier
- * safeguard follows a turn behind (ai/talk/safety.ts). A verdict only ever
- * raises the talk's peak; the endpoint reads it each turn and generateMirror
- * folds it into the session level at the end.
+ * phrase-check floor and a moderation race (the endpoint). No classifier runs
+ * live (cost): implicit risk is caught by the full safeguard at the end. A
+ * verdict only ever raises the talk's peak; the endpoint reads it each turn
+ * and generateMirror folds it into the session level at the end.
  */
 import { v } from "convex/values";
 import { internalMutation, query, type MutationCtx } from "../_generated/server";
@@ -124,8 +124,8 @@ export async function raiseTalkSafety(ctx: MutationCtx, session: Doc<"sessions">
 }
 
 /**
- * A verdict for an open talk: the endpoint's moderation (in time or late,
- * only once `syncLines` bound the turn to this talk) and the async classifier.
+ * A verdict for an open talk: the endpoint's moderation, in time or late,
+ * only once `syncLines` bound the turn to this talk.
  */
 export const raise = internalMutation({
   args: {

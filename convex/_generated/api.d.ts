@@ -61,7 +61,6 @@ import type * as ai_slotFill from "../ai/slotFill.js";
 import type * as ai_talk_chatCompletions from "../ai/talk/chatCompletions.js";
 import type * as ai_talk_openaiCompat from "../ai/talk/openaiCompat.js";
 import type * as ai_talk_openaiSse from "../ai/talk/openaiSse.js";
-import type * as ai_talk_safety from "../ai/talk/safety.js";
 import type * as ai_transcribe from "../ai/transcribe.js";
 import type * as ai_tts from "../ai/tts.js";
 import type * as ai_ventAcknowledge from "../ai/ventAcknowledge.js";
@@ -264,7 +263,6 @@ declare const fullApi: ApiFromModules<{
   "ai/talk/chatCompletions": typeof ai_talk_chatCompletions;
   "ai/talk/openaiCompat": typeof ai_talk_openaiCompat;
   "ai/talk/openaiSse": typeof ai_talk_openaiSse;
-  "ai/talk/safety": typeof ai_talk_safety;
   "ai/transcribe": typeof ai_transcribe;
   "ai/tts": typeof ai_tts;
   "ai/ventAcknowledge": typeof ai_ventAcknowledge;

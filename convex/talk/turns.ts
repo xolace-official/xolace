@@ -4,12 +4,7 @@ import { internal } from "../_generated/api";
 import { TALK_IDLE_MS } from "./session";
 import { recallQuery } from "./remember";
 import { raiseTalkSafety } from "./safety";
-import { personText } from "./transcript";
 import { talkPeakValidator } from "../lib/validators";
-
-// The classifier reads the talk's recent stretch, not all of it: what it
-// catches is risk in what they are saying now, and cost stays flat per turn.
-const CLASSIFY_LINES = 10;
 
 const talkLineValidator = v.object({
   role: v.union(v.literal("person"), v.literal("companion")),
@@ -80,13 +75,6 @@ export const syncLines = internalMutation({
       // The person said something new: recall in the background for the next turn (#598).
       const query = changed && session.talkRecall ? recallQuery(args.lines) : null;
       if (query) await ctx.scheduler.runAfter(0, internal.talk.remember.recall, { sessionId: session._id, query });
-      // And the classifier safeguard over the talk so far, applied from the next turn (#599).
-      if (changed && args.lines.at(-1)?.role === "person") {
-        await ctx.scheduler.runAfter(0, internal.ai.talk.safety.classify, {
-          sessionId: session._id,
-          rawText: personText(args.lines.slice(-CLASSIFY_LINES)),
-        });
-      }
     }
     if (args.peak) await raiseTalkSafety(ctx, session, args.peak);
 
