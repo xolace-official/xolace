@@ -19,6 +19,9 @@ export const assertCanTalk = internalQuery({
  * private (auth required in its Security tab), so a talk can only start
  * through here, behind auth and Plus.
  *
+ * Its own key (ElevenAgents permission only): the Vent/TTS key is scoped
+ * without agents access, and should stay that way.
+ *
  * ponytail: no usage cap or talk ledger yet; a Plus tester can talk until
  * the agent's 1,560 s backstop. The weekly cap ticket adds the reserve here.
  */
@@ -27,7 +30,7 @@ export const conversationToken = action({
   returns: v.string(),
   handler: async (ctx): Promise<string> => {
     await ctx.runQuery(internal.talk.live.assertCanTalk, {});
-    const apiKey = process.env.ELEVENLABS_VOICE_API_KEY;
+    const apiKey = process.env.ELEVENLABS_AGENTS_API_KEY;
     const agentId = process.env.TALK_AGENT_ID;
     if (!apiKey || !agentId) throw new Error("Talk is not configured");
 
