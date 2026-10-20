@@ -21,9 +21,11 @@ import type { Id } from "../_generated/dataModel";
  * `voiceId` and `speed` are this talk's voice and pace (#603), for the
  * client's `overrides.tts`; they're fixed once the talk starts. The agent's
  * Security tab must allow the voice and speed overrides.
+ *
+ * `reopen`: "Say more" on that talk's mirror (#604), for up to 5 more minutes.
  */
 export const start = action({
-  args: {},
+  args: { reopen: v.optional(v.id("sessions")) },
   returns: v.object({
     token: v.string(),
     sessionId: v.id("sessions"),
@@ -34,6 +36,7 @@ export const start = action({
   }),
   handler: async (
     ctx,
+    { reopen },
   ): Promise<{ token: string; sessionId: Id<"sessions">; talkKey: string; msLeft: number; voiceId: string; speed: number }> => {
     const apiKey = process.env.ELEVENLABS_AGENTS_API_KEY;
     const agentId = process.env.TALK_AGENT_ID;
@@ -42,10 +45,10 @@ export const start = action({
     // The key's secret comes from here, not the mutation: an action's
     // randomness is the real thing. The mutation adds the ceiling it reserved.
     const startedAt = Date.now();
-    const { sessionId, talkKey, ceilingS, voiceId, speed } = await ctx.runMutation(internal.talk.session.start, {
-      startedAt,
-      secret: crypto.randomUUID(),
-    });
+    const key = { startedAt, secret: crypto.randomUUID() };
+    const { sessionId, talkKey, ceilingS, voiceId, speed } = reopen
+      ? await ctx.runMutation(internal.talk.reopen.start, { sessionId: reopen, ...key })
+      : await ctx.runMutation(internal.talk.session.start, key);
 
     const res = await fetch(
       `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(agentId)}`,
@@ -53,7 +56,7 @@ export const start = action({
     );
     if (!res.ok) {
       console.error("[talk] token request failed", res.status, await res.text());
-      // Gives the reserved talk time back at once.
+      // Gives the reserved talk time back at once (a reopening goes back to its mirror).
       await ctx.runMutation(internal.talk.session.abandon, { sessionId });
       throw new Error("Could not start a talk");
     }

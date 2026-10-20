@@ -142,3 +142,12 @@ export function talkSystem(
     ...(tail ? [{ type: "text" as const, text: tail }] : []),
   ];
 }
+
+/**
+ * A "Say more" reopening's prefix (#604): the talk so far, which its new
+ * conversation doesn't carry. Fixed for the reopening, so it caches.
+ */
+export function renderEarlier(lines: { role: "person" | "companion"; text: string }[]): string {
+  const thread = lines.map((l) => `${l.role === "person" ? "Them" : "You"}: ${l.text}`).join("\n");
+  return `This talk so far. They saw their mirror and came back to say more; pick up where it left off, without greeting them as if new or going over it again:\n${thread}`;
+}

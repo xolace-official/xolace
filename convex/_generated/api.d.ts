@@ -59,6 +59,7 @@ import type * as ai_reflectionAgent_triggerQueries from "../ai/reflectionAgent/t
 import type * as ai_routing from "../ai/routing.js";
 import type * as ai_safeguard from "../ai/safeguard.js";
 import type * as ai_slotFill from "../ai/slotFill.js";
+import type * as ai_talk_audioTags from "../ai/talk/audioTags.js";
 import type * as ai_talk_chatCompletions from "../ai/talk/chatCompletions.js";
 import type * as ai_talk_openaiCompat from "../ai/talk/openaiCompat.js";
 import type * as ai_talk_openaiSse from "../ai/talk/openaiSse.js";
@@ -194,6 +195,7 @@ import type * as talk_live from "../talk/live.js";
 import type * as talk_memory from "../talk/memory.js";
 import type * as talk_provider from "../talk/provider.js";
 import type * as talk_remember from "../talk/remember.js";
+import type * as talk_reopen from "../talk/reopen.js";
 import type * as talk_safety from "../talk/safety.js";
 import type * as talk_session from "../talk/session.js";
 import type * as talk_time from "../talk/time.js";
@@ -263,6 +265,7 @@ declare const fullApi: ApiFromModules<{
   "ai/routing": typeof ai_routing;
   "ai/safeguard": typeof ai_safeguard;
   "ai/slotFill": typeof ai_slotFill;
+  "ai/talk/audioTags": typeof ai_talk_audioTags;
   "ai/talk/chatCompletions": typeof ai_talk_chatCompletions;
   "ai/talk/openaiCompat": typeof ai_talk_openaiCompat;
   "ai/talk/openaiSse": typeof ai_talk_openaiSse;
@@ -398,6 +401,7 @@ declare const fullApi: ApiFromModules<{
   "talk/memory": typeof talk_memory;
   "talk/provider": typeof talk_provider;
   "talk/remember": typeof talk_remember;
+  "talk/reopen": typeof talk_reopen;
   "talk/safety": typeof talk_safety;
   "talk/session": typeof talk_session;
   "talk/time": typeof talk_time;

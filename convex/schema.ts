@@ -788,6 +788,9 @@ export default defineSchema({
     // slow down mid-talk: shorter lines and [slow] from then on.
     talkDirectness: v.optional(talkDirectnessValidator),
     talkSlowed: v.optional(v.boolean()),
+    // A "Say more" reopening (#604): the seq its lines start at. ElevenLabs
+    // numbers a reopening's lines from 0; the ones before this are the earlier thread.
+    talkFromSeq: v.optional(v.number()),
 
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated
@@ -858,10 +861,26 @@ export default defineSchema({
     chargeId: v.string(),
     reserved: v.number(), // seconds
     startedAt: v.number(),
+    // The opening it reserved for (#604): a reopening has its own key and
+    // row. Absent on rows from before #604: the session's only one.
+    talkKey: v.optional(v.string()),
   })
     .index("by_emotionalProfileId", ["emotionalProfileId"])
     .index("by_sessionId", ["sessionId"])
     .index("by_startedAt", ["startedAt"]),
+
+  // Every ElevenLabs conversation of a talk (#604): a "Say more" reopening is
+  // a conversation of its own. Maps a webhook back to its opening's charge
+  // and holds the id until their copy is deleted. `sessions.elevenLabsConversationId`
+  // stays the first one's, as before.
+  talk_conversations: defineTable({
+    sessionId: v.id("sessions"),
+    talkKey: v.string(),
+    conversationId: v.string(),
+    providerDeletedAt: v.optional(v.number()),
+  })
+    .index("by_sessionId", ["sessionId"])
+    .index("by_providerDeletedAt_and_conversationId", ["providerDeletedAt", "conversationId"]),
 
   // ===========================================================
   // 5. SESSION TURNS

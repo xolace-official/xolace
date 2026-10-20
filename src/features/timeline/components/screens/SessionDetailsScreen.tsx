@@ -15,6 +15,7 @@ import {
   getPathLabel,
 } from "@/src/features/timeline/emotions";
 import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+import { TalkTranscript } from "@/src/features/talk/talk-thread";
 
 const formatDate = (timestamp: number) => {
   const date = new Date(timestamp);
@@ -170,8 +171,8 @@ export const SessionDetailsScreen = () => {
         </View>
 
         <View className="px-6">
-          {/* User input */}
-          {details.rawInput && (
+          {/* User input: a talk's is its thread, under the mirror */}
+          {details.rawInput && details.entryType !== "talk" && (
             <>
               <SectionLabel>You said</SectionLabel>
               <Card
@@ -235,6 +236,13 @@ export const SessionDetailsScreen = () => {
                 &ldquo;{removeEmDash(details.mirrorText)}&rdquo;
               </AppText>
             </>
+          )}
+
+          {details.entryType === "talk" && sessionId && (
+            <View className="mb-8">
+              <SectionLabel>The talk</SectionLabel>
+              <TalkTranscript sessionId={sessionId} name={details.companionName} />
+            </View>
           )}
 
           {/* Emotion row */}

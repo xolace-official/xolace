@@ -1,7 +1,13 @@
 // The Hearth talk screen (#584, #593): the talk as a transcript under the
 // native header, with an aurora rising behind the composer that brightens when
-// either side speaks. Consent comes before the first word.
+// either side speaks. Consent comes before the first word. "Say more" opens it
+// again on its thread (#604), straight into the talk: consent was given.
+import { useEffect } from "react";
 import { View } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConversationProvider } from "@elevenlabs/react-native";
@@ -13,11 +19,15 @@ import { TalkHeader } from "./talk-header";
 import { TalkHelp } from "./talk-help";
 import { TalkThread } from "./talk-thread";
 import { useTalk } from "./use-talk";
+import type { ThreadLine } from "./use-thread";
 
-function Talk() {
-  const talk = useTalk();
+function Talk({ reopen }: { reopen?: { sessionId: Id<"sessions">; thread: ThreadLine[] } }) {
+  const talk = useTalk(reopen);
   const insets = useSafeAreaInsets();
-  const footer = !talk.connected ? (
+  // Once, on open.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => void (reopen && talk.start()), []);
+  const footer = !talk.connected && !reopen ? (
     <ConsentCard talk={talk} />
   ) : talk.error ? (
     <AppText className="text-center text-xs text-danger">{talk.error}</AppText>
@@ -37,9 +47,14 @@ function Talk() {
 }
 
 export function TalkScreen() {
+  const { reopen } = useLocalSearchParams<{ reopen?: string }>();
+  const sessionId = reopen as Id<"sessions"> | undefined;
+  // Read once: the talk keeps its own thread from here.
+  const thread = useQuery(api.talk.turns.thread, sessionId ? { sessionId } : "skip");
+  if (sessionId && thread === undefined) return <View className="flex-1 bg-background" />;
   return (
     <ConversationProvider>
-      <Talk />
+      <Talk reopen={sessionId && thread ? { sessionId, thread } : undefined} />
     </ConversationProvider>
   );
 }

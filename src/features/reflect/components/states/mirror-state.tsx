@@ -9,6 +9,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import type { EntryType } from "@/src/features/reflect/types";
 import { TalkTimeLeft } from "@/src/features/talk/talk-time-left";
 import { TalkWith } from "@/src/features/talk/talk-with";
+import { useTalkSayMore } from "@/src/features/talk/use-talk-say-more";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { ClaimStrength } from "@/convex/ai/routing";
 import { playMirrorArrival } from "@/src/lib/haptics";
@@ -76,6 +77,7 @@ export const MirrorState = ({
   onSayMore,
 }: Props) => {
   const { isReady, isPlaying, toggle } = useMirrorAudio(sessionId);
+  const talkSayMore = useTalkSayMore(sessionId);
   const accent = useThemeColor("accent");
   const mirrorRef = useRef<TextInstance>(null);
 
@@ -183,9 +185,10 @@ export const MirrorState = ({
       <MirrorActionRow
         claimStrength={claimStrength}
         atCap={atCap}
+        sayMore={talkSayMore?.offered ?? true}
         onThatsIt={onThatsIt}
         onNotQuite={onNotQuite}
-        onSayMore={onSayMore}
+        onSayMore={talkSayMore?.open ?? onSayMore}
       />
       <TalkTimeLeft sessionId={sessionId} />
     </View>

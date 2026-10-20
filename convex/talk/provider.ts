@@ -111,11 +111,21 @@ function pendingSessions(ctx: QueryCtx, conversationId: string) {
     );
 }
 
+/** The same, per conversation of a talk (#604): a reopening's live only here. */
+function pendingConversations(ctx: QueryCtx, conversationId: string) {
+  return ctx.db
+    .query("talk_conversations")
+    .withIndex("by_providerDeletedAt_and_conversationId", (q) =>
+      q.eq("providerDeletedAt", undefined).eq("conversationId", conversationId),
+    );
+}
+
 export const isPending = internalQuery({
   args: { conversationId: v.string() },
   returns: v.boolean(),
   handler: async (ctx, { conversationId }) =>
-    (await pendingSessions(ctx, conversationId).first()) !== null,
+    (await pendingSessions(ctx, conversationId).first()) !== null ||
+    (await pendingConversations(ctx, conversationId).first()) !== null,
 });
 
 export const markProviderDeleted = internalMutation({
@@ -127,6 +137,9 @@ export const markProviderDeleted = internalMutation({
       // attachConversation writes an id once per talk: one row, in practice.
       for (const s of await pendingSessions(ctx, conversationId).take(10)) {
         await ctx.db.patch("sessions", s._id, { providerDeletedAt: now });
+      }
+      for (const c of await pendingConversations(ctx, conversationId).take(10)) {
+        await ctx.db.patch("talk_conversations", c._id, { providerDeletedAt: now });
       }
     }
     return null;
@@ -149,7 +162,18 @@ export const listUnstamped = internalQuery({
         q.eq("providerDeletedAt", undefined).gt("elevenLabsConversationId", ""),
       )
       .take(SWEEP_BATCH);
-    return pending.filter((s) => s.createdAt < cutoff).map((s) => s.elevenLabsConversationId!);
+    const conversations = await ctx.db
+      .query("talk_conversations")
+      .withIndex("by_providerDeletedAt_and_conversationId", (q) =>
+        q.eq("providerDeletedAt", undefined).gt("conversationId", ""),
+      )
+      .take(SWEEP_BATCH);
+    return [
+      ...new Set([
+        ...pending.filter((s) => s.createdAt < cutoff).map((s) => s.elevenLabsConversationId!),
+        ...conversations.filter((c) => c._creationTime < cutoff).map((c) => c.conversationId),
+      ]),
+    ];
   },
 });
 

@@ -1,18 +1,23 @@
 // The talk as a transcript (#593): the companion on the left under its name,
 // the person on the right. A spoken turn from the person carries a waveform tag.
+// On the timeline, the same thread sits read-only under its mirror (#604).
 import { useRef, type ReactNode } from "react";
 import { Platform, ScrollView, View, type ScrollViewInstance } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SymbolView } from "expo-symbols";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import { useThemeColor } from "heroui-native";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { cn } from "@/src/lib/utils";
 import { useCompanionName } from "./use-companion-name";
 import type { Turn } from "./use-thread";
 
-function TurnBubble({ turn }: { turn: Turn }) {
-  const name = useCompanionName();
+function TurnBubble({ turn, name: named }: { turn: Turn; name?: string }) {
+  const current = useCompanionName();
+  const name = named ?? current;
   const muted = useThemeColor("muted");
   const mine = turn.speaker === "person";
   return (
@@ -53,5 +58,18 @@ export function TalkThread({ turns, footer }: { turns: Turn[]; footer?: ReactNod
       ))}
       {footer}
     </ScrollView>
+  );
+}
+
+/** A past talk's thread, as it was: the companion under the name it had then. */
+export function TalkTranscript({ sessionId, name }: { sessionId: Id<"sessions">; name?: string }) {
+  const lines = useQuery(api.talk.turns.thread, { sessionId });
+  if (!lines?.length) return null;
+  return (
+    <View className="gap-3">
+      {lines.map((l, i) => (
+        <TurnBubble key={i} turn={{ id: i, speaker: l.role, via: "text", text: l.text }} name={name} />
+      ))}
+    </View>
   );
 }

@@ -6,9 +6,9 @@
  *
  * A talk reserves its ceiling at start, then the post-call webhook charges
  * the connected duration ElevenLabs reports and refunds the rest. Keys are
- * per session, not conversation: the conversation id arrives after the
- * reservation. Every write tops up first, so a refund after Monday lands on
- * the new week.
+ * per opening (the talk, or a "Say more" reopening, #604), not conversation:
+ * the conversation id arrives after the reservation. Every write tops up
+ * first, so a refund after Monday lands on the new week.
  */
 import { Credits } from "@clipin/convex-credits";
 import { ConvexError, v } from "convex/values";
@@ -20,13 +20,14 @@ import { hasPremium } from "../lib/premium";
 import { posthog } from "../posthog";
 import { localDayKey } from "../streaks/activityLog";
 import { profileTimezone } from "../streaks/state";
-import { TALK_CEILING_MS } from "./clock";
+import { mintTalkKey, REOPEN_CEILING_MS, TALK_CEILING_MS } from "./clock";
 
 const credits = new Credits(components.credits);
 
 export const WEEKLY_S = 15 * 60;
 /** One talk's ceiling, before what's left of the week limits it. */
 const TALK_CEILING_S = TALK_CEILING_MS / 1000;
+export const REOPEN_CEILING_S = REOPEN_CEILING_MS / 1000;
 /** Under this, a talk isn't offered. */
 export const MIN_START_S = 3 * 60;
 // Webhook retries stop after ~40.5 min and the agent's backstop is 26 min.
@@ -79,43 +80,112 @@ async function topUp(ctx: MutationCtx, profileId: Id<"emotional_profiles">, now:
   return balance + topUp;
 }
 
+/** A row from before #604 keeps the session's keys; an opening's own are apart. */
+const keyOf = (row: Doc<"talk_charges">, step: string) =>
+  row.talkKey ? `talk:${row.sessionId}:${row.talkKey}:${step}` : `talk:${row.sessionId}:${step}`;
+
 async function release(ctx: MutationCtx, row: Doc<"talk_charges">) {
-  await credits.release(ctx, { chargeId: row.chargeId, key: `talk:${row.sessionId}:release` });
+  await credits.release(ctx, { chargeId: row.chargeId, key: keyOf(row, "release") });
   await ctx.db.delete("talk_charges", row._id);
 }
 
+/** A session's open reservations: one per opening not settled yet. */
+const chargesOf = (ctx: QueryCtx, sessionId: Id<"sessions">) =>
+  ctx.db
+    .query("talk_charges")
+    .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
+    .take(10);
+
 /**
- * At talk start: reserves the talk's ceiling, limited by what's left, and
- * returns it in seconds. Throws `talk_time_used` under the 3-min minimum.
+ * At the start of a talk or a reopening: reserves its ceiling (15 or 5 min),
+ * limited by what's left, and mints its key. Throws `talk_time_used` under
+ * the 3-min minimum.
  */
-export async function reserveTalk(ctx: MutationCtx, profileId: Id<"emotional_profiles">, sessionId: Id<"sessions">) {
+export async function reserveTalk(
+  ctx: MutationCtx,
+  profileId: Id<"emotional_profiles">,
+  sessionId: Id<"sessions">,
+  key: { startedAt: number; secret: string; ceilingS?: number },
+) {
   const now = Date.now();
   const balance = await topUp(ctx, profileId, now);
   if (balance < MIN_START_S) throw new ConvexError({ code: "talk_time_used" });
-  const reserved = Math.min(TALK_CEILING_S, balance);
+  const ceilingS = Math.min(key.ceilingS ?? TALK_CEILING_S, balance);
+  const talkKey = mintTalkKey(key.startedAt, ceilingS, key.secret);
   const { chargeId } = await credits.reserve(ctx, {
     owner: profileId,
-    amount: reserved,
-    key: `talk:${sessionId}:reserve`,
+    amount: ceilingS,
+    key: `talk:${sessionId}:${talkKey}:reserve`,
     reason: "talk",
     reference: sessionId,
   });
-  await ctx.db.insert("talk_charges", { emotionalProfileId: profileId, sessionId, chargeId, reserved, startedAt: now });
-  return reserved;
+  await ctx.db.insert("talk_charges", {
+    emotionalProfileId: profileId,
+    sessionId,
+    chargeId,
+    reserved: ceilingS,
+    startedAt: now,
+    talkKey,
+  });
+  return { ceilingS, talkKey };
 }
 
 /**
- * A talk that closed without ever connecting (no conversation attached, so
- * no webhook will come) gives its reserved time back at once, so a retry
+ * An opening that closed without ever connecting (no conversation attached,
+ * so no webhook will come) gives its reserved time back at once, so a retry
  * isn't blocked for the sweeper's 2 h.
  */
 export async function releaseUnconnected(ctx: MutationCtx, session: Doc<"sessions">) {
-  if (session.elevenLabsConversationId) return;
-  const row = await ctx.db
-    .query("talk_charges")
-    .withIndex("by_sessionId", (q) => q.eq("sessionId", session._id))
-    .unique();
-  if (row) await release(ctx, row);
+  const row = (await chargesOf(ctx, session._id)).find((r) =>
+    r.talkKey ? r.talkKey === session.talkKey : !session.elevenLabsConversationId,
+  );
+  if (!row) return;
+  const attached = row.talkKey && (await conversationsOf(ctx, session._id)).some((c) => c.talkKey === row.talkKey);
+  if (!attached) await release(ctx, row);
+}
+
+export const conversationsOf = (ctx: QueryCtx, sessionId: Id<"sessions">) =>
+  ctx.db
+    .query("talk_conversations")
+    .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
+    .take(20);
+
+/**
+ * The webhook's session and the open charge of the opening it was for.
+ * The echoed extra body names the opening; `sessionId` is untrusted, so its
+ * key must match. Without it, the conversation id does.
+ */
+async function chargeFor(
+  ctx: QueryCtx,
+  conversationId: string,
+  talk: { sessionId: string; talkKey: string } | undefined,
+): Promise<{ session: Doc<"sessions">; row: Doc<"talk_charges"> | undefined } | null> {
+  const byId = talk && ctx.db.normalizeId("sessions", talk.sessionId);
+  const echoed = byId ? await ctx.db.get("sessions", byId) : null;
+  if (echoed && talk) {
+    const rows = await chargesOf(ctx, echoed._id);
+    const own = rows.find((r) => r.talkKey === talk.talkKey);
+    if (own) return { session: echoed, row: own };
+    // Pre-#604, or already settled (a redelivery): the key on the session vouches.
+    if (echoed.talkKey === talk.talkKey) return { session: echoed, row: rows.find((r) => !r.talkKey) };
+  }
+  const mapped = await ctx.db
+    .query("talk_conversations")
+    .withIndex("by_providerDeletedAt_and_conversationId", (q) =>
+      q.eq("providerDeletedAt", undefined).eq("conversationId", conversationId),
+    )
+    .first();
+  const session = mapped
+    ? await ctx.db.get("sessions", mapped.sessionId)
+    : await ctx.db
+        .query("sessions")
+        .withIndex("by_providerDeletedAt_and_elevenLabsConversationId", (q) =>
+          q.eq("providerDeletedAt", undefined).eq("elevenLabsConversationId", conversationId),
+        )
+        .first();
+  if (!session) return null;
+  const rows = await chargesOf(ctx, session._id);
+  return { session, row: rows.find((r) => (mapped ? r.talkKey === mapped.talkKey : !r.talkKey)) };
 }
 
 /**
@@ -154,24 +224,10 @@ export const settle = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, { conversationId, durationS, talk }) => {
-    const byId = talk && ctx.db.normalizeId("sessions", talk.sessionId);
-    const echoed = byId ? await ctx.db.get("sessions", byId) : null;
-    const session =
-      echoed?.talkKey && echoed.talkKey === talk?.talkKey
-        ? echoed
-        : await ctx.db
-            .query("sessions")
-            .withIndex("by_providerDeletedAt_and_elevenLabsConversationId", (q) =>
-              q.eq("providerDeletedAt", undefined).eq("elevenLabsConversationId", conversationId),
-            )
-            .first();
-    if (!session) return null;
-    const row = await ctx.db
-      .query("talk_charges")
-      .withIndex("by_sessionId", (q) => q.eq("sessionId", session._id))
-      .unique();
+    const found = await chargeFor(ctx, conversationId, talk);
     // Settled already: a redelivery.
-    if (!row) return null;
+    if (!found?.row) return null;
+    const { session, row } = found;
 
     const crisis = session.escalationTriggered === true || session.safeguardLevel === "crisis";
     if (durationS > ALERT_AFTER_S && !crisis) {
@@ -189,12 +245,12 @@ export const settle = internalMutation({
       await release(ctx, row);
       return null;
     }
-    await credits.complete(ctx, { chargeId: row.chargeId, key: `talk:${row.sessionId}:complete` });
+    await credits.complete(ctx, { chargeId: row.chargeId, key: keyOf(row, "complete") });
     if (row.reserved > used) {
       await credits.refund(ctx, {
         chargeId: row.chargeId,
         amount: row.reserved - used,
-        key: `talk:${row.sessionId}:refund`,
+        key: keyOf(row, "refund"),
         reason: "unused talk time",
       });
     }

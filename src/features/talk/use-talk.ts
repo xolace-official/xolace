@@ -1,6 +1,7 @@
 // One live talk (#593): the ElevenLabs conversation, the thread it writes and
 // the voice levels the aurora and composer read. A talk is a session (#592):
-// ending it hands off to the reflect screens' processing → mirror.
+// ending it hands off to the reflect screens' processing → mirror. "Say more"
+// on its mirror opens it again (#604): `reopen`, with the thread so far.
 import { useEffect, useRef, useState } from "react";
 import { router } from "expo-router";
 import { AudioModule } from "expo-audio";
@@ -10,9 +11,10 @@ import { ConvexError } from "convex/values";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { api } from "@/convex/_generated/api";
 import { stripAudioTags } from "@/convex/ai/talk/audioTags";
+import { wrapUpMs } from "@/convex/talk/clock";
 import type { Id } from "@/convex/_generated/dataModel";
 import { TALK_TIME_RESETS } from "./talk-copy";
-import { useThread } from "./use-thread";
+import { useThread, type ThreadLine } from "./use-thread";
 
 export type Presence = "Connecting…" | "Listening" | "Thinking…" | "Speaking" | "Mic off";
 
@@ -25,11 +27,11 @@ const messageOf = (e: unknown) =>
       ? e.message
       : String(e);
 
-export function useTalk() {
+export function useTalk(reopen?: { sessionId: Id<"sessions">; thread: ThreadLine[] }) {
   const startTalk = useAction(api.talk.live.start);
   const attachConversation = useMutation(api.talk.session.attachConversation);
   const endTalk = useMutation(api.talk.session.end);
-  const thread = useThread();
+  const thread = useThread(reopen?.thread);
   // The open talk's session; cleared once ended so a second disconnect is a no-op.
   const sessionRef = useRef<Id<"sessions"> | null>(null);
   // The last typed line, in case it comes back as a transcript.
@@ -39,6 +41,8 @@ export function useTalk() {
   const [started, setStarted] = useState(false);
   /** When the talk's time runs out, on this device's clock (#597). */
   const [endsAt, setEndsAt] = useState<number | null>(null);
+  /** Seconds left when the clock shows: with the wrap-up cue, compressed on a short talk. */
+  const [clockFromS, setClockFromS] = useState(0);
   const [thinking, setThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** Either voice, for the aurora. */
@@ -132,6 +136,7 @@ export function useTalk() {
     isMuted,
     error,
     endsAt,
+    clockFromS,
     turns: thread.turns,
     level,
     micLevel,
@@ -142,10 +147,13 @@ export function useTalk() {
       if (!granted) return setError("A talk needs the microphone. You can allow it in Settings.");
       setStarted(true);
       try {
-        const { token, sessionId, talkKey, msLeft, voiceId, speed } = await startTalk();
+        const { token, sessionId, talkKey, msLeft, voiceId, speed } = await startTalk(
+          reopen ? { reopen: reopen.sessionId } : {},
+        );
         sessionRef.current = sessionId;
         setSessionId(sessionId);
         setEndsAt(Date.now() + msLeft);
+        setClockFromS(wrapUpMs(msLeft) / 1000);
         convo.startSession({
           conversationToken: token,
           // Relayed to our endpoint on every turn (#591), binding it to this

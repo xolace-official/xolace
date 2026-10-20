@@ -26,6 +26,7 @@ export const SESSION_CASCADE_TABLES = [
   "paths",
   "path_steps",
   "talk_turns",
+  "talk_conversations",
 ] as const;
 
 /** Tables carrying a sessionId that intentionally outlive their session. */
@@ -60,13 +61,28 @@ export async function purgeSessions(
     sessions.map((s) => s._id),
   );
 
-  // ElevenLabs' copy of a talk (#595): the id dies with the row, so its
-  // DELETE is scheduled in this same transaction, before the purge commits.
-  const conversationIds = sessions.flatMap((s) =>
-    s.elevenLabsConversationId && !s.providerDeletedAt ? [s.elevenLabsConversationId] : [],
+  // ElevenLabs' copies of a talk (#595, every conversation of it since #604):
+  // the ids die with the rows, so their DELETE is scheduled in this same
+  // transaction, before the purge commits.
+  const conversationIds = new Set(
+    sessions.flatMap((s) =>
+      s.elevenLabsConversationId && !s.providerDeletedAt ? [s.elevenLabsConversationId] : [],
+    ),
   );
-  if (conversationIds.length) {
-    await ctx.scheduler.runAfter(0, internal.talk.provider.deleteConversations, { conversationIds });
+  for (const session of sessions) {
+    const conversations = await ctx.db
+      .query("talk_conversations")
+      .withIndex("by_sessionId", (q) => q.eq("sessionId", session._id))
+      .take(50);
+    for (const c of conversations) {
+      if (!c.providerDeletedAt) conversationIds.add(c.conversationId);
+      await ctx.db.delete("talk_conversations", c._id);
+    }
+  }
+  if (conversationIds.size) {
+    await ctx.scheduler.runAfter(0, internal.talk.provider.deleteConversations, {
+      conversationIds: [...conversationIds],
+    });
   }
 
   for (const session of sessions) {

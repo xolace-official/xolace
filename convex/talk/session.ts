@@ -6,8 +6,7 @@ import { requireAuth, requireSessionOwnership } from "../lib/auth";
 import { requirePremium } from "../lib/premium";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "../lib/rateLimits";
 import { getDayOfWeek, getTimeOfDay } from "../lib/timeOfDay";
-import { mintTalkKey } from "./clock";
-import { releaseUnconnected, reserveTalk } from "./time";
+import { conversationsOf, releaseUnconnected, reserveTalk } from "./time";
 import { personText } from "./transcript";
 import { talkPreload } from "./remember";
 import { patternRisk, type TalkPeak } from "../ai/safeguard";
@@ -17,7 +16,7 @@ import { markNameAsked, talkSetup } from "./companion";
 // line for this long is over: cut off, or ended without the client telling us (#588).
 export const TALK_IDLE_MS = 5 * 60 * 1000;
 // Far past a 15-min talk plus a 5-min "Say more".
-const MAX_TALK_LINES = 1000;
+export const MAX_TALK_LINES = 1000;
 
 /** A talk is a session (#592): created for the signed-in Plus person at talk start. */
 export const start = internalMutation({
@@ -49,8 +48,7 @@ export const start = internalMutation({
       updatedAt: now,
     });
     // Throws `talk_time_used` under the minimum, rolling the session back.
-    const ceilingS = await reserveTalk(ctx, profile._id, sessionId);
-    const talkKey = mintTalkKey(startedAt, ceilingS, secret);
+    const { ceilingS, talkKey } = await reserveTalk(ctx, profile._id, sessionId, { startedAt, secret });
     const { talkMemory, recall } = await talkPreload(ctx, profile, now);
     const opening = await historyOpening(ctx, profile._id, now);
     const setup = await talkSetup(ctx, profile._id);
@@ -116,7 +114,10 @@ export const abandon = internalMutation({
   },
 });
 
-/** The client's report once connected; the webhook deletes it on their side (#595). */
+/**
+ * The client's report once connected; the webhook deletes it on their side
+ * (#595). A "Say more" reopening is a conversation of its own (#604).
+ */
 export const attachConversation = mutation({
   args: { sessionId: v.id("sessions"), conversationId: v.string() },
   returns: v.null(),
@@ -125,7 +126,15 @@ export const attachConversation = mutation({
     if (session.entryType !== "talk" || args.conversationId.length > 200) {
       throw new ConvexError({ code: "not_a_talk" });
     }
-    // Write once: the id we later DELETE must stay the talk's own.
+    // Once per opening (a short talk can close before this lands): the ids
+    // we later DELETE must stay the talk's own.
+    if (!session.talkKey) return null;
+    if ((await conversationsOf(ctx, session._id)).some((c) => c.talkKey === session.talkKey)) return null;
+    await ctx.db.insert("talk_conversations", {
+      sessionId: session._id,
+      talkKey: session.talkKey,
+      conversationId: args.conversationId,
+    });
     if (!session.elevenLabsConversationId) {
       await ctx.db.patch("sessions", session._id, { elevenLabsConversationId: args.conversationId });
     }
@@ -153,7 +162,9 @@ const FORGET = { talkMemory: undefined, talkRecall: undefined };
 /**
  * The one way a talk closes, however it ended (#588). The person's lines go
  * through the typed pipeline; with nothing said there's no mirror, and the
- * abandoned-session sweep removes the session with its transcript.
+ * abandoned-session sweep removes the session with its transcript. A
+ * reopening (#604) remakes the mirror from the whole thread, or, with
+ * nothing new said, goes back to the mirror it had.
  * Idempotent: anything past `initiated` is already closed.
  */
 export async function finalizeTalk(
@@ -168,6 +179,19 @@ export async function finalizeTalk(
     .take(MAX_TALK_LINES);
   const rawText = personText(lines);
   const now = Date.now();
+
+  if (session.talkFromSeq !== undefined) {
+    if (!personText(lines.filter((l) => l.seq >= session.talkFromSeq!))) {
+      await ctx.db.patch("sessions", session._id, { state: "mirror_delivered", updatedAt: now, ...FORGET });
+      await releaseUnconnected(ctx, session);
+      return "mirror_delivered";
+    }
+    // The old mirror's audio would be kept over the new mirror's (generation skips when one exists).
+    if (session.mirrorAudioStorageId) {
+      await ctx.storage.delete(session.mirrorAudioStorageId);
+      await ctx.db.patch("sessions", session._id, { mirrorAudioStorageId: undefined });
+    }
+  }
 
   // The typed minimum is any words at all (the "Let it out" gate).
   if (!rawText) {

@@ -13,6 +13,9 @@ export type Turn = {
   live?: boolean;
 };
 
+/** A stored line: the thread a reopening opens on (#604). */
+export type ThreadLine = { role: "person" | "companion"; text: string };
+
 type Timer = ReturnType<typeof setTimeout>;
 type LiveTurn = {
   id: number;
@@ -31,9 +34,12 @@ const SETTLE_MS = 800;
 // The companion's text arriving this soon after being cut off is the unspoken rest.
 const AFTER_INTERRUPT_MS = 2000;
 
-export function useThread() {
-  const [turns, setTurns] = useState<Turn[]>([]);
-  const nextId = useRef(0);
+// Stored lines don't say how they were said: no "spoken" tag.
+const toTurn = (l: ThreadLine, id: number): Turn => ({ id, speaker: l.role, via: "text", text: l.text });
+
+export function useThread(earlier: ThreadLine[] = []) {
+  const [turns, setTurns] = useState<Turn[]>(() => earlier.map(toTurn));
+  const nextId = useRef(earlier.length);
   const live = useRef<LiveTurn | null>(null);
   const interruptedAt = useRef(0);
 

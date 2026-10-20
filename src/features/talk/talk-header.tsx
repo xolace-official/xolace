@@ -16,8 +16,6 @@ import { useTimeLeft } from "./use-time-left";
 const ios = Platform.OS === "ios";
 // Only iOS 26 paints glass behind a transparent header; older iOS gets a blur.
 const hasGlass = isLiquidGlassAvailable();
-// The clock shows only from here, with the spoken wrap-up cue (#584).
-const CLOCK_FROM_S = 5 * 60;
 
 const clockOf = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
@@ -25,7 +23,8 @@ function TitlePill({ talk }: { talk: Talk }) {
   const name = useCompanionName();
   const accent = useThemeColor("accent");
   const secondsLeft = useTimeLeft(talk.connected ? talk.endsAt : null, 1000);
-  const late = secondsLeft !== null && secondsLeft <= CLOCK_FROM_S;
+  // The clock shows only from the spoken wrap-up cue (#584).
+  const late = secondsLeft !== null && secondsLeft <= talk.clockFromS;
   return (
     <GlassSurface radius={22}>
       <View className="flex-row items-center gap-2 py-1.5 pl-1.5 pr-4">

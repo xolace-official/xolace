@@ -1,10 +1,12 @@
 import { v } from "convex/values";
-import { internalMutation } from "../_generated/server";
+import { internalMutation, query } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { TALK_IDLE_MS } from "./session";
 import { recallQuery } from "./remember";
 import { raiseTalkSafety } from "./safety";
 import { talkPeakValidator } from "../lib/validators";
+import { requireSessionOwnership } from "../lib/auth";
+import { MAX_TALK_LINES } from "./session";
 
 const talkLineValidator = v.object({
   role: v.union(v.literal("person"), v.literal("companion")),
@@ -25,6 +27,9 @@ const talkLineValidator = v.object({
  * - after the stream, `reply`: the companion's turn we just served, stored
  *   provisionally at `reply.seq` until a resend says what was spoken. Stays
  *   when the talk ends on it.
+ *
+ * A "Say more" reopening (#604) is a new conversation numbering its lines
+ * from 0: they land from `talkFromSeq`, and the earlier thread is never revised.
  *
  * `sessionId` is a string: it arrives from ElevenLabs, untrusted.
  */
@@ -58,18 +63,19 @@ export const syncLines = internalMutation({
       .order("desc")
       .take(2);
     const stored = recent.length ? recent[0].seq + 1 : 0;
+    const from = session.talkFromSeq ?? 0;
 
     if (args.lines) {
       let changed = false;
       for (const row of recent) {
-        const resent = args.lines[row.seq];
+        const resent = row.seq >= from ? args.lines[row.seq - from] : undefined;
         if (resent && (row.provisional || resent.text !== row.text || resent.role !== row.role)) {
           await ctx.db.patch("talk_turns", row._id, { ...resent, provisional: undefined });
           changed = true;
         }
       }
-      for (let seq = stored; seq < args.lines.length; seq++) {
-        await ctx.db.insert("talk_turns", { sessionId: session._id, seq, ...args.lines[seq] });
+      for (let seq = stored; seq < from + args.lines.length; seq++) {
+        await ctx.db.insert("talk_turns", { sessionId: session._id, seq, ...args.lines[seq - from] });
         changed = true;
       }
       // The person said something new: recall in the background for the next turn (#598).
@@ -78,7 +84,7 @@ export const syncLines = internalMutation({
     }
     if (args.peak) await raiseTalkSafety(ctx, session, args.peak);
 
-    const reply = args.reply && { seq: args.reply.seq, text: args.reply.text.trim() };
+    const reply = args.reply && { seq: from + args.reply.seq, text: args.reply.text.trim() };
     if (reply?.text) {
       const at = recent.find((r) => r.seq === reply.seq);
       // A later turn's resend already holds this position: it wins.
@@ -99,5 +105,23 @@ export const syncLines = internalMutation({
       sessionId: session._id,
     });
     return true;
+  },
+});
+
+/**
+ * A talk's thread, read-only: under its mirror on the timeline, and as the
+ * talk screen opens again on "Say more" (#604).
+ */
+export const thread = query({
+  args: { sessionId: v.id("sessions") },
+  returns: v.array(talkLineValidator),
+  handler: async (ctx, { sessionId }) => {
+    const { session } = await requireSessionOwnership(ctx, sessionId);
+    if (session.entryType !== "talk") return [];
+    const lines = await ctx.db
+      .query("talk_turns")
+      .withIndex("by_session_and_seq", (q) => q.eq("sessionId", sessionId))
+      .take(MAX_TALK_LINES);
+    return lines.map(({ role, text }) => ({ role, text }));
   },
 });
