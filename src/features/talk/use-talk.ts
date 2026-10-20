@@ -27,6 +27,8 @@ export function useTalk() {
   // The last typed line, in case it comes back as a transcript.
   const lastTyped = useRef<string | null>(null);
   const [started, setStarted] = useState(false);
+  /** When the talk's time runs out, on this device's clock (#597). */
+  const [endsAt, setEndsAt] = useState<number | null>(null);
   const [thinking, setThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** Either voice, for the aurora. */
@@ -111,6 +113,7 @@ export function useTalk() {
     presence,
     isMuted,
     error,
+    endsAt,
     turns: thread.turns,
     level,
     micLevel,
@@ -121,8 +124,9 @@ export function useTalk() {
       if (!granted) return setError("A talk needs the microphone. You can allow it in Settings.");
       setStarted(true);
       try {
-        const { token, sessionId, talkKey } = await startTalk();
+        const { token, sessionId, talkKey, msLeft } = await startTalk();
         sessionRef.current = sessionId;
+        setEndsAt(Date.now() + msLeft);
         convo.startSession({
           conversationToken: token,
           // Relayed to our endpoint on every turn (#591), binding it to this

@@ -5,12 +5,16 @@ import { timingSafeEqual } from "../../lib/timingSafeEqual";
 import { getAnthropicClient, thinkingOff } from "../providers/anthropic";
 import { toAnthropicRequest, type OpenAIMessage, type OpenAITool } from "./openaiCompat";
 import { createEventTranslator, sseChunk, SSE_DONE, type FinishReason } from "./openaiSse";
+import { talkCue, withCue } from "../../talk/clock";
 
 // The agent's Custom LLM `model_id` picks one of these; anything else gets
 // the first. Both are listed so the prototype can measure TTFT on each (#591).
 const TALK_MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5"] as const;
 // A spoken turn is a few sentences.
 const TALK_MAX_TOKENS = 400;
+// The agent's system tool that hangs up; our clock calls it on the last turn (#597).
+// Emitted even if the agent doesn't list it: then nothing hangs up but the backstop.
+const END_CALL = "end_call";
 
 // Digests first so the compare is fixed-length and leaks nothing of the secret.
 async function sha256Hex(s: string): Promise<string> {
@@ -26,6 +30,11 @@ async function sha256Hex(s: string): Promise<string> {
  *
  * Prototype brain: relays whatever the agent sends (its prompt + history).
  * Safeguard, memory and the talk ledger land in later tickets.
+ *
+ * Our clock rules the talk's length (#597): every turn gets the time left
+ * from Convex's record, and the last turn (ceiling reached, or a long
+ * silence) ends on an `end_call` the endpoint emits itself. The app never
+ * enforces it.
  *
  * Each turn is bound to its talk's session by the `{ sessionId, talkKey }`
  * the client set as the custom LLM extra body (#592), and the talk so far is
@@ -61,16 +70,22 @@ export const chatCompletions = httpAction(async (ctx, request) => {
     return new Response("no talk", { status: 403 });
   }
   const talk = { sessionId: extra.sessionId, talkKey: extra.talkKey, lines: talkLines(body.messages) };
-  // Started now, awaited once the model call is in flight: costs no TTFT.
+  // Awaited before the model call: the clock it returns goes into the prompt.
   // A failed write fails closed: no turn the transcript can't hold.
-  const bound = ctx.runMutation(internal.talk.turns.syncLines, talk).catch((err) => {
+  const clock = await ctx.runMutation(internal.talk.turns.syncLines, talk).catch((err) => {
     console.error("[talk] turn sync failed", err);
-    return false;
+    return null;
   });
+  mark("bound");
 
   const model = TALK_MODELS.find((m) => m === body.model) ?? TALK_MODELS[0];
-  const { system, messages: turns, tools } = toAnthropicRequest(body.messages, body.tools);
+  const { system: agentSystem, messages: turns, tools } = toAnthropicRequest(body.messages, body.tools);
+  const cue = clock && talkCue(clock);
+  const system = withCue(agentSystem, turns, cue);
   if (turns.length === 0) return new Response("no turns", { status: 400 });
+  // The last turn ends on our end_call; tools stay listed (the history may
+  // hold past calls) but the model can't make one of its own.
+  const closing = cue?.closing ?? false;
 
   const meta = { id: `chatcmpl-${crypto.randomUUID()}`, model, created: Math.floor(startedAt / 1000) };
   const abort = new AbortController();
@@ -94,6 +109,9 @@ export const chatCompletions = httpAction(async (ctx, request) => {
       cacheRead: usage?.cache_read_input_tokens,
       cacheWrite: usage?.cache_creation_input_tokens,
       turns: turns.length,
+      elapsedS: clock && Math.round(clock.elapsedMs / 1000),
+      silentTurns: clock?.silentTurns,
+      closing,
       bodyKeys: Object.keys(body),
       audioTags,
       toolCalls,
@@ -107,6 +125,15 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const send = (s: string) => controller.enqueue(encoder.encode(s));
+      // Not this talk's turn (wrong key, or the talk has closed): serve nothing.
+      if (!clock) {
+        outcome = "unbound";
+        send(sseChunk(meta, {}, "stop"));
+        send(SSE_DONE);
+        controller.close();
+        log();
+        return;
+      }
       try {
         const anthropic = getAnthropicClient().messages.stream(
           {
@@ -115,7 +142,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
             thinking: thinkingOff(model),
             ...(system ? { system } : {}),
             // The agent's system tools (end_call) — the model decides to use them.
-            ...(tools.length ? { tools } : {}),
+            ...(tools.length ? { tools, ...(closing ? { tool_choice: { type: "none" as const } } : {}) } : {}),
             messages: turns,
             // From eu-west-1, "us" cut Haiku's median TTFT by 140–290 ms over
             // "global" in three A/Bs; Sonnet within noise (#591).
@@ -126,16 +153,6 @@ export const chatCompletions = httpAction(async (ctx, request) => {
         );
         mark("streamCalled");
         anthropic.on("connect", () => mark("headers"));
-        // Not this talk's turn (wrong key, or the talk has closed): serve nothing.
-        if (!(await bound)) {
-          outcome = "unbound";
-          abort.abort();
-          send(sseChunk(meta, {}, "stop"));
-          send(SSE_DONE);
-          controller.close();
-          return;
-        }
-        mark("bound");
         send(sseChunk(meta, { role: "assistant" }));
         const translate = createEventTranslator();
         let finish: FinishReason = "stop";
@@ -152,6 +169,12 @@ export const chatCompletions = httpAction(async (ctx, request) => {
           send(sseChunk(meta, out.delta));
           reply += out.delta.content ?? "";
           for (const call of out.delta.tool_calls ?? []) if (call.function.name) toolCalls.push(call.function.name);
+        }
+        if (closing) {
+          const call = { index: 0, id: `call_${crypto.randomUUID()}`, type: "function" as const };
+          send(sseChunk(meta, { tool_calls: [{ ...call, function: { name: END_CALL, arguments: '{"reason":"talk ended"}' } }] }));
+          toolCalls.push(END_CALL);
+          finish = "tool_calls";
         }
         send(sseChunk(meta, {}, finish));
         send(SSE_DONE);

@@ -8,8 +8,8 @@ import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "../lib/rateLimits";
 import { getDayOfWeek, getTimeOfDay } from "../lib/timeOfDay";
 import { personText } from "./transcript";
 
-// ElevenLabs ends a silent talk at 60 s, so a talk with no new line for this
-// long is over: cut off, or ended without the client telling us (#588).
+// Our endpoint ends a silent talk at about 60 s (#597), so a talk with no new
+// line for this long is over: cut off, or ended without the client telling us (#588).
 export const TALK_IDLE_MS = 5 * 60 * 1000;
 // Far past a 15-min talk plus a 5-min "Say more".
 const MAX_TALK_LINES = 1000;
