@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
 import { AppText } from "@/src/components/shared/app-text";
 import { usePaywall, type PaywallSurface } from "@/src/features/purchases/use-paywall";
-import { COMPANION_NAME } from "./talk-script";
+import { COMPANION_NAME } from "@/src/features/talk/talk-copy";
 
 const DOOR_STATES = {
   plus: "Plus · time left",
@@ -31,7 +31,7 @@ export function useTalkDoor() {
     visible: state !== "freeHidden",
     cycle: () => setState(KEYS[(KEYS.indexOf(state) + 1) % KEYS.length]),
     onPress: () => {
-      if (state === "plus") router.push("/talk-prototype?variant=C");
+      if (state === "plus") router.push("/talk");
       else setDialog(state === "capped" ? "capped" : "free");
     },
     dialog,

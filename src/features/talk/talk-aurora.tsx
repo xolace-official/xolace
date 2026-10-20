@@ -1,4 +1,4 @@
-// PROTOTYPE (#584) — throwaway. The aurora-curtain shader from
+// The Hearth aurora (#584, #593): the aurora-curtain shader from
 // react-native-motion (apps/expo/components/animations/aurora-curtain), made
 // transparent, tinted from the theme and fed the voice level: louder voice →
 // brighter, longer rays. Time is never touched, so the 14 s loop stays seamless.
@@ -119,7 +119,7 @@ export function TalkAurora({ level, flip = 0, coverage = 1 }: Props) {
 
   const uniforms = useDerivedValue(() => {
     smooth.set(smooth.get() + (level.get() - smooth.get()) * 0.12);
-    return { u_res: [width, h], u_t: phase.get(), u_pull: 0, u_level: smooth.get(), u_flip: flip, u_tint: tint };
+    return { u_res: [width, h], u_t: phase.get(), u_pull: 0, u_level: reduced ? 0 : smooth.get(), u_flip: flip, u_tint: tint };
   });
 
   if (!SHADER) return null;
