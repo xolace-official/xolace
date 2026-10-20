@@ -12,7 +12,7 @@ import { InputGroup, useThemeColor } from "heroui-native";
 import { GlassSurface } from "@/src/components/shared/glass-surface";
 import { playSoftPress } from "@/src/lib/haptics";
 import { cn } from "@/src/lib/utils";
-import { COMPANION_NAME } from "./talk-copy";
+import { useCompanionName } from "./use-companion-name";
 import type { Talk } from "./use-talk";
 
 const hasGlass = isLiquidGlassAvailable();
@@ -45,6 +45,7 @@ function ActionButton({ talk, hasText, onSend }: { talk: Talk; hasText: boolean;
 }
 
 export function TalkComposer({ talk }: { talk: Talk }) {
+  const name = useCompanionName();
   const insets = useSafeAreaInsets();
   const muted = useThemeColor("muted");
   const fg = useThemeColor("foreground");
@@ -77,7 +78,7 @@ export function TalkComposer({ talk }: { talk: Talk }) {
                 value={text}
                 onChangeText={setText}
                 multiline
-                placeholder={`Speak or message ${COMPANION_NAME}`}
+                placeholder={`Speak or message ${name}`}
                 placeholderTextColor={muted}
                 className="max-h-28 flex-1 py-2 text-base text-foreground"
               />
@@ -90,7 +91,7 @@ export function TalkComposer({ talk }: { talk: Talk }) {
               value={text}
               onChangeText={setText}
               multiline
-              placeholder={`Speak or message ${COMPANION_NAME}`}
+              placeholder={`Speak or message ${name}`}
               textAlignVertical="center"
               className="max-h-28 min-h-11 py-3"
               style={{ borderRadius: 22, borderCurve: "continuous" }}

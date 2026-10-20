@@ -7,6 +7,7 @@ import { renderSemanticProfile } from "../semanticProfiles";
 import { shapeIntakeSignals } from "../ai/intakeSignals";
 import { searchEpisodicMemory } from "../ai/helpers/episodicSearch";
 import { recallLine, renderMemory, renderRecall } from "./memory";
+import { COMPANION_FALLBACK_NAME } from "../ai/prompts/companion";
 import { talkPeakValidator } from "../lib/validators";
 
 // Read at talk start: the companion's preload (#598, #580).
@@ -88,6 +89,8 @@ export const forTurn = internalQuery({
       // Safety rides the same read (#599): the talk's peak, and whether the crisis line was said.
       safety: v.optional(talkPeakValidator),
       crisisLineSpoken: v.boolean(),
+      // Who the companion is this turn (#601).
+      name: v.string(),
     }),
   ),
   handler: async (ctx, args) => {
@@ -99,6 +102,7 @@ export const forTurn = internalQuery({
       recall: renderRecall(session.talkRecall?.lines ?? []),
       safety: session.talkSafety,
       crisisLineSpoken: session.talkCrisisLineSpoken === true,
+      name: session.companionName ?? COMPANION_FALLBACK_NAME,
     };
   },
 });

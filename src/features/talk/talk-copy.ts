@@ -1,7 +1,7 @@
 // Words the talk screen says about itself (#593).
 
-/** Working name until the companion takes the person's spaceName (#601). */
-export const COMPANION_NAME = "Ember";
+/** The companion's name when the person hasn't named their space (#601). */
+export { COMPANION_FALLBACK_NAME } from "@/convex/ai/prompts/companion";
 
 /** Agreed in #588. Rule 12: it has to be literally true when it ships. */
 export const PRIVACY_LINE =

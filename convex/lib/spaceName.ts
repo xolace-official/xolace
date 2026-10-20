@@ -6,6 +6,23 @@ export const SPACE_NAME_CRISIS_BLOCKLIST = [
   "harm", "selfharm", "self-harm", "cut", "bleed",
 ] as const;
 
+// The space name is also the companion's name (#601): it never passes for
+// another AI or a clinician. Matched against the whole name (letters only)
+// and each hyphen/camel-case part, so "ChatGPT", "Dr-Maya" and "DrJones" are
+// caught but "Drew" and "Claudette" are not.
+export const SPACE_NAME_DENYLIST = new Set([
+  "chatgpt", "gpt", "openai", "claude", "anthropic", "gemini", "bard", "google",
+  "copilot", "bing", "siri", "alexa", "cortana", "llama", "meta", "mistral",
+  "grok", "xai", "deepseek", "perplexity", "replika", "character", "characterai",
+  "doctor", "dr", "therapist", "psychiatrist", "psychologist", "counselor",
+  "counsellor", "clinician", "physician", "nurse", "psychotherapist",
+]);
+
+function deniedName(name: string): boolean {
+  const parts = name.split(/[-0-9]+|(?=[A-Z][a-z])/).map((p) => p.toLowerCase());
+  return [name.toLowerCase().replace(/[^a-z]/g, ""), ...parts].some((p) => SPACE_NAME_DENYLIST.has(p));
+}
+
 export type SpaceNameValidation =
   | { ok: true; trimmed: string }
   | { ok: false; message: string };
@@ -27,5 +44,6 @@ export function validateSpaceName(name: string): SpaceNameValidation {
       return { ok: false, message: "That's not a name we can use here" };
     }
   }
+  if (deniedName(trimmed)) return { ok: false, message: "That name belongs to someone else. Pick another?" };
   return { ok: true, trimmed };
 }

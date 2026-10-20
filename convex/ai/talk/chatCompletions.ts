@@ -3,11 +3,12 @@ import { internal } from "../../_generated/api";
 import { talkLines } from "../../talk/transcript";
 import { timingSafeEqual } from "../../lib/timingSafeEqual";
 import { getAnthropicClient, thinkingOff } from "../providers/anthropic";
-import { toAnthropicRequest, type OpenAIMessage, type OpenAITool } from "./openaiCompat";
+import { toAnthropicRequest, type AnthropicTurn, type OpenAIMessage, type OpenAITool } from "./openaiCompat";
 import { createEventTranslator, sseChunk, SSE_DONE, type FinishReason } from "./openaiSse";
 import { talkClockOf, talkCue } from "../../talk/clock";
 import { talkSystem } from "../../talk/memory";
 import { moderateInput } from "../providers/moderation";
+import { COMPANION_FALLBACK_NAME, RENAME_TOOL, companionPrompt, renameTool, renameTurns } from "../prompts/companion";
 import { CRISIS_LINE, moderationPeak, phrasePeak, raises, safetySkill, turnWords } from "../../talk/safety";
 
 // The agent's Custom LLM `model_id` picks one of these; anything else gets
@@ -115,9 +116,14 @@ export const chatCompletions = httpAction(async (ctx, request) => {
     });
 
   const model = TALK_MODELS.find((m) => m === body.model) ?? TALK_MODELS[0];
-  const { system: agentSystem, messages: turns, tools } = toAnthropicRequest(body.messages, body.tools);
+  const { system: agentSystem, messages: turns, tools: agentTools } = toAnthropicRequest(body.messages, body.tools);
+  // Who the companion is leads the cached prefix (#601); our rename tool is
+  // listed beside the agent's own and answered here, never relayed.
+  const name = memory?.name ?? COMPANION_FALLBACK_NAME;
+  const tools = [...agentTools, renameTool];
   const cue = talkCue(clock);
-  const system = talkSystem(agentSystem, memory, turns, cue, safetySkill(peak));
+  const systemAs = (n: string) =>
+    talkSystem([companionPrompt(n), agentSystem].filter(Boolean).join("\n\n"), memory, turns, cue, safetySkill(peak));
   if (turns.length === 0) return new Response("no turns", { status: 400 });
   // The last turn ends on our end_call; tools stay listed (the history may
   // hold past calls) but the model can't make one of its own.
@@ -164,17 +170,17 @@ export const chatCompletions = httpAction(async (ctx, request) => {
     async start(controller) {
       const send = (s: string) => controller.enqueue(encoder.encode(s));
       try {
-        const anthropic = crisisLine
-          ? null
-          : getAnthropicClient().messages.stream(
+        const call = (messages: AnthropicTurn[], noTools: boolean, system = systemAs(name)) =>
+          getAnthropicClient().messages.stream(
           {
             model,
             max_tokens: TALK_MAX_TOKENS,
             thinking: thinkingOff(model),
             ...(system.length ? { system } : {}),
-            // The agent's system tools (end_call) — the model decides to use them.
-            ...(tools.length ? { tools, ...(closing ? { tool_choice: { type: "none" as const } } : {}) } : {}),
-            messages: turns,
+            // The agent's system tools (end_call) and our rename — the model decides to use them.
+            tools,
+            ...(noTools ? { tool_choice: { type: "none" as const } } : {}),
+            messages,
             // From eu-west-1, "us" cut Haiku's median TTFT by 140–290 ms over
             // "global" in three A/Bs; Sonnet within noise (#591).
             inference_geo: "us",
@@ -182,6 +188,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
           // One attempt: a retried turn would land long after the person stopped waiting.
           { signal: abort.signal, maxRetries: 0 },
         );
+        const anthropic = crisisLine ? null : call(turns, closing);
         mark("streamCalled");
         anthropic?.on("connect", () => mark("headers"));
         // We abort it ourselves (unbound, or a crisis caught in time); not an error.
@@ -210,26 +217,63 @@ export const chatCompletions = httpAction(async (ctx, request) => {
           }
         }
         send(sseChunk(meta, { role: "assistant" }));
-        const translate = createEventTranslator();
         let finish: FinishReason = "stop";
         if (crisisLine) {
           firstTokenAt = Date.now();
           send(sseChunk(meta, { content: CRISIS_LINE }));
           reply = CRISIS_LINE;
         }
-        for await (const event of crisisLine || !anthropic ? [] : anthropic) {
-          if (event.type === "message_start") usage = event.message.usage;
-          const out = translate(event);
-          if (!out) continue;
-          if ("finish" in out) {
-            finish = out.finish;
-            continue;
+        // Relays one model call; a rename call is held back and returned.
+        const relay = async (events: NonNullable<typeof anthropic>) => {
+          const translate = createEventTranslator();
+          let text = "";
+          let rename: { index: number; id: string; json: string } | null = null;
+          for await (const event of events) {
+            if (event.type === "message_start") usage ??= event.message.usage;
+            if (event.type === "content_block_start" && event.content_block.type === "tool_use" && event.content_block.name === RENAME_TOOL) {
+              rename = { index: event.index, id: event.content_block.id, json: "" };
+              continue;
+            }
+            if (rename && event.type === "content_block_delta" && event.index === rename.index) {
+              if (event.delta.type === "input_json_delta") rename.json += event.delta.partial_json;
+              continue;
+            }
+            const out = translate(event);
+            if (!out) continue;
+            if ("finish" in out) {
+              finish = out.finish;
+              continue;
+            }
+            firstTokenAt ??= Date.now();
+            mark("firstDelta");
+            send(sseChunk(meta, out.delta));
+            text += out.delta.content ?? "";
+            for (const call of out.delta.tool_calls ?? []) if (call.function.name) toolCalls.push(call.function.name);
           }
-          firstTokenAt ??= Date.now();
-          mark("firstDelta");
-          send(sseChunk(meta, out.delta));
-          reply += out.delta.content ?? "";
-          for (const call of out.delta.tool_calls ?? []) if (call.function.name) toolCalls.push(call.function.name);
+          reply += text;
+          return { text, rename };
+        };
+        const first = crisisLine || !anthropic ? null : await relay(anthropic);
+        // A rename (#601): saved, then one more call to confirm or decline it
+        // aloud. Skipped if the turn also relayed a tool call: the agent
+        // already holds that turn.
+        if (first?.rename) {
+          toolCalls.push(RENAME_TOOL);
+          let input: { name?: unknown } = {};
+          try {
+            input = JSON.parse(first.rename.json || "{}");
+          } catch {}
+          const result = await ctx.runMutation(internal.talk.companion.rename, {
+            sessionId: talk.sessionId,
+            talkKey: talk.talkKey,
+            name: typeof input.name === "string" ? input.name : "",
+          });
+          if ((finish as FinishReason) === "tool_calls" && toolCalls.length === 1) {
+            finish = "stop";
+            // The confirmation already speaks as the new name.
+            const as = systemAs(result.ok ? result.name : name);
+            await relay(call([...turns, ...renameTurns(first.text, first.rename.id, input, result, name)], true, as));
+          }
         }
         // Never hang up on the crisis line (#581).
         if (closing && !crisisLine) {

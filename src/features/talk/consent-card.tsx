@@ -5,7 +5,8 @@ import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { COMPANION_NAME, MIN_TALK_S, PRIVACY_LINE, TALK_TIME_RESETS, talkTimeLine } from "./talk-copy";
+import { useCompanionName } from "./use-companion-name";
+import { MIN_TALK_S, PRIVACY_LINE, TALK_TIME_RESETS, talkTimeLine } from "./talk-copy";
 import type { Talk } from "./use-talk";
 import { useTalkTime } from "./use-talk-time";
 
@@ -20,6 +21,7 @@ function Row({ icon, children }: { icon: SymbolViewProps["name"]; children: stri
 }
 
 export function ConsentCard({ talk }: { talk: Talk }) {
+  const name = useCompanionName();
   const time = useTalkTime();
   // Under the minimum, Start can't be pressed (#582); the server refuses it too.
   const low = time != null && time.secondsLeft < MIN_TALK_S;
@@ -27,7 +29,7 @@ export function ConsentCard({ talk }: { talk: Talk }) {
   return (
     <GlassSurface radius={28}>
       <View className="gap-4 p-5">
-        <AppText className="text-xl font-semibold text-foreground">Talk it through with {COMPANION_NAME}</AppText>
+        <AppText className="text-xl font-semibold text-foreground">Talk it through with {name}</AppText>
         <Row icon={{ ios: "waveform", android: "graphic_eq" }}>
           Speak whenever you like, or type. Both land in the same talk.
         </Row>
@@ -35,7 +37,7 @@ export function ConsentCard({ talk }: { talk: Talk }) {
           When you finish, the whole talk becomes your mirror, like any reflection.
         </Row>
         <Row icon={{ ios: "flame", android: "local_fire_department" }}>
-          {`${COMPANION_NAME} is an AI, part of Xolace. This talk is remembered with your reflections.`}
+          {`${name} is an AI, part of Xolace. This talk is remembered with your reflections.`}
         </Row>
         <Row icon={{ ios: "clock", android: "schedule" }}>
           {(time && talkTimeLine(time.secondsLeft)) ?? "A talk lasts up to 15 minutes."}

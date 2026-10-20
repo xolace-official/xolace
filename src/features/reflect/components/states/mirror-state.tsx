@@ -8,6 +8,7 @@ import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import type { EntryType } from "@/src/features/reflect/types";
 import { TalkTimeLeft } from "@/src/features/talk/talk-time-left";
+import { TalkWith } from "@/src/features/talk/talk-with";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { ClaimStrength } from "@/convex/ai/routing";
 import { playMirrorArrival } from "@/src/lib/haptics";
@@ -154,6 +155,7 @@ export const MirrorState = ({
         )}
       </EaseView>
 
+      <TalkWith sessionId={sessionId} />
       <MirrorToneBadge toneUsed={toneUsed} />
 
       {/* The fade says "more below": a long mirror cut at a line break looks

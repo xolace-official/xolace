@@ -22,6 +22,7 @@ import { PaywallPlansUnavailable } from "./paywall-plans-unavailable";
 import { PaywallCloseButton, PaywallRestoreButton } from "./paywall-header-actions";
 import { ProgressiveBlurView } from "./progressive-blur-view";
 import { PAYWALL_SURFACE_FEATURE, PAYWALL_SURFACE_LINE } from "./paywall-surface-map";
+import { useCompanionName } from "@/src/features/talk/use-companion-name";
 import {
   INSIGHTS_ICON,
   MIRROR_TONE_ICON,
@@ -65,6 +66,7 @@ type Props = {
 
 export function PaywallScreen({ surface, sessionId, onExit }: Props) {
   const posthog = usePostHog();
+  const companionName = useCompanionName();
   const defaultClose = usePaywall((s) => s.close);
   const closePaywall = onExit ?? (() => defaultClose());
   const insets = useSafeAreaInsets();
@@ -193,7 +195,7 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
             },
           ]}
         >
-          <PaywallHero line={surface && PAYWALL_SURFACE_LINE[surface]} />
+          <PaywallHero line={surface && PAYWALL_SURFACE_LINE[surface]?.replace("{name}", companionName)} />
 
           <PaywallFeatureSection title="What starts showing up">
             <PaywallFeatureItem

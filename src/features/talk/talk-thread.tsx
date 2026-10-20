@@ -8,10 +8,11 @@ import { useHeaderHeight } from "expo-router/react-navigation";
 import { useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { cn } from "@/src/lib/utils";
-import { COMPANION_NAME } from "./talk-copy";
+import { useCompanionName } from "./use-companion-name";
 import type { Turn } from "./use-thread";
 
 function TurnBubble({ turn }: { turn: Turn }) {
+  const name = useCompanionName();
   const muted = useThemeColor("muted");
   const mine = turn.speaker === "person";
   return (
@@ -20,7 +21,7 @@ function TurnBubble({ turn }: { turn: Turn }) {
         className={cn("rounded-3xl px-4 py-3", mine ? "bg-accent/15" : "bg-surface", turn.live && "opacity-80")}
         style={{ borderCurve: "continuous" }}
       >
-        {!mine && <AppText className="mb-1 text-xs font-semibold text-accent">{COMPANION_NAME}</AppText>}
+        {!mine && <AppText className="mb-1 text-xs font-semibold text-accent">{name}</AppText>}
         <AppText className="text-[16px] leading-6 text-foreground">{turn.text || "…"}</AppText>
       </View>
       {mine && turn.via === "voice" && (

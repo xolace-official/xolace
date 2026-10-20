@@ -10,6 +10,8 @@ import { mintTalkKey } from "./clock";
 import { releaseUnconnected, reserveTalk } from "./time";
 import { personText } from "./transcript";
 import { talkPreload } from "./remember";
+import { COMPANION_FALLBACK_NAME } from "../ai/prompts/companion";
+import { validateSpaceName } from "../lib/spaceName";
 import { patternRisk, type TalkPeak } from "../ai/safeguard";
 
 // Our endpoint ends a silent talk at about 60 s (#597), so a talk with no new
@@ -46,8 +48,17 @@ export const start = internalMutation({
     const talkKey = mintTalkKey(startedAt, ceilingS, secret);
     const { talkMemory, recall } = await talkPreload(ctx, profile, now);
     const opening = await historyOpening(ctx, profile._id, now);
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+      .unique();
     await ctx.db.patch("sessions", sessionId, {
       talkKey,
+      // A name saved before the deny list (#601) is re-checked here.
+      companionName:
+        preferences?.spaceName && validateSpaceName(preferences.spaceName).ok
+          ? preferences.spaceName
+          : COMPANION_FALLBACK_NAME,
       talkMemory,
       ...(recall ? { talkRecall: { lines: [], surfaced: [] } } : {}),
       ...(opening ? { talkSafety: opening } : {}),

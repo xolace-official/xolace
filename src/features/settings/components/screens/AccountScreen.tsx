@@ -13,6 +13,7 @@ import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-acti
 import { AppleIcon } from "@/src/features/auth/components/apple-icon";
 import { GoogleIcon } from "@/src/features/auth/components/google-icon";
 import { validateSpaceName } from "@/convex/lib/spaceName";
+import { COMPANION_FALLBACK_NAME } from "@/src/features/talk/talk-copy";
 import { validateDisplayName } from "@/convex/lib/displayName";
 import {
   ACCOUNT_ICON,
@@ -146,13 +147,14 @@ export const AccountScreen = () => {
       <NameDialog
         isOpen={spaceNameOpen}
         title="Your space"
-        description="A soft label, just for you."
+        description={`A soft label, just for you. It's also the name of your talk companion, ${COMPANION_FALLBACK_NAME} until you name it.`}
         placeholder="e.g. ember, haven, mine"
         validate={validateSpaceName}
         currentName={spaceName}
         onOpenChange={setSpaceNameOpen}
         onSave={async (name) => { await setSpaceName(name); }}
         onClear={async () => { await setSpaceName(null); }}
+        clearLabel={`Reset to ${COMPANION_FALLBACK_NAME}`}
       />
 
       <NameDialog

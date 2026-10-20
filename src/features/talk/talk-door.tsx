@@ -11,7 +11,8 @@ import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
 import { AppText } from "@/src/components/shared/app-text";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { COMPANION_NAME, TALK_TIME_RESETS } from "@/src/features/talk/talk-copy";
+import { TALK_TIME_RESETS } from "@/src/features/talk/talk-copy";
+import { useCompanionName } from "@/src/features/talk/use-companion-name";
 import { useTalkTime } from "@/src/features/talk/use-talk-time";
 
 export function useTalkDoor() {
@@ -44,6 +45,7 @@ export function useTalkDoor() {
 export type TalkDoor = ReturnType<typeof useTalkDoor>;
 
 export function TalkDoorDialog({ door }: { door: TalkDoor }) {
+  const name = useCompanionName();
   const used = door.dialog === "used";
   return (
     <Dialog isOpen={door.dialog !== null} onOpenChange={(open) => !open && door.close()}>
@@ -51,12 +53,12 @@ export function TalkDoorDialog({ door }: { door: TalkDoor }) {
         <DialogBlurBackdrop />
         <Dialog.Content className="max-w-sm mx-auto">
           <View className="mb-5 gap-1.5">
-            <Dialog.Title>{used ? "This week's talk time is used" : `Talk it through with ${COMPANION_NAME}`}</Dialog.Title>
+            <Dialog.Title>{used ? "This week's talk time is used" : `Talk it through with ${name}`}</Dialog.Title>
             <Dialog.Description>
               <AppText className="text-sm text-foreground/60">
                 {used
                   ? `${TALK_TIME_RESETS}. You can still write a reflection here any time.`
-                  : `Speak or type with ${COMPANION_NAME}, out loud and back and forth. When you finish, the whole talk becomes your mirror. Talks are part of Xolace+.`}
+                  : `Speak or type with ${name}, out loud and back and forth. When you finish, the whole talk becomes your mirror. Talks are part of Xolace+.`}
               </AppText>
             </Dialog.Description>
           </View>

@@ -9,7 +9,7 @@ import { useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { GlassSurface } from "@/src/components/shared/glass-surface";
 import { useAppTheme } from "@/src/context/app-theme-context";
-import { COMPANION_NAME } from "./talk-copy";
+import { useCompanionName } from "./use-companion-name";
 import type { Talk } from "./use-talk";
 import { useTimeLeft } from "./use-time-left";
 
@@ -22,6 +22,7 @@ const CLOCK_FROM_S = 5 * 60;
 const clockOf = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 function TitlePill({ talk }: { talk: Talk }) {
+  const name = useCompanionName();
   const accent = useThemeColor("accent");
   const secondsLeft = useTimeLeft(talk.connected ? talk.endsAt : null, 1000);
   const late = secondsLeft !== null && secondsLeft <= CLOCK_FROM_S;
@@ -33,7 +34,7 @@ function TitlePill({ talk }: { talk: Talk }) {
           <SymbolView name={{ ios: "flame.fill", android: "local_fire_department" }} size={16} tintColor={accent} />
         </View>
         <View>
-          <AppText className="text-[15px] font-semibold text-foreground">{COMPANION_NAME}</AppText>
+          <AppText className="text-[15px] font-semibold text-foreground">{name}</AppText>
           <AppText className={late ? "text-[11px] text-warning" : "text-[11px] text-muted"}>
             {!talk.started ? "Ready when you are" : late ? `${talk.presence} · ${clockOf(secondsLeft)} left` : talk.presence}
           </AppText>
@@ -44,6 +45,7 @@ function TitlePill({ talk }: { talk: Talk }) {
 }
 
 export function TalkHeader({ talk }: { talk: Talk }) {
+  const name = useCompanionName();
   const { isDark } = useAppTheme();
   const background = useThemeColor("background");
   const foreground = useThemeColor("foreground");
@@ -62,7 +64,7 @@ export function TalkHeader({ talk }: { talk: Talk }) {
           headerShadowVisible: false,
           headerTintColor: foreground,
           headerBackButtonDisplayMode: "minimal",
-          title: COMPANION_NAME,
+          title: name,
           // eslint-disable-next-line react/no-unstable-nested-components -- header render prop
           headerTitle: () => <TitlePill talk={talk} />,
         }}

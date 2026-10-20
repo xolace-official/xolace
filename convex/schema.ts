@@ -764,6 +764,9 @@ export default defineSchema({
     talkSafety: v.optional(talkPeakValidator),
     // The fixed crisis line was spoken: it is said once per talk.
     talkCrisisLineSpoken: v.optional(v.boolean()),
+    // The companion's name for this talk (#601): spaceName at start, or a
+    // rename mid-talk. Kept: the talk's mirror says who it was with.
+    companionName: v.optional(v.string()),
 
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated
