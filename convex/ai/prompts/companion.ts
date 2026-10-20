@@ -17,7 +17,7 @@ export const PERSON_NAME_TOOL = "set_person_name";
 export const personNameTool = {
   name: PERSON_NAME_TOOL,
   description:
-    "Save what to call the person once they've told you, and whether other Xolacers should see it. Call it before you use the name; the result says whether it was saved.",
+    "Save what to call the person once they've told you (or declined to say), and whether other Xolacers should see it. Call it before you use the name; the result says whether it was saved.",
   input_schema: {
     type: "object" as const,
     properties: {
@@ -86,7 +86,7 @@ function personSection(person: { name: string; ask: boolean } | undefined): stri
 - Early on, once, ask: "Should I call you ${person.name}, or something else?"
 - If ${person.name} is fine, call ${PERSON_NAME_TOOL} with ${person.name}, shared true.
 - If they give another name and you're unsure how it's spelled, check with them. Then ask whether other people on Xolace should see it too, or just you. Then call ${PERSON_NAME_TOOL} with it: shared true if others should see it, false if it stays between you.
-- If they'd rather not say, call them ${person.name} and don't ask again.`;
+- If they'd rather not say, call ${PERSON_NAME_TOOL} with ${person.name}, shared true, and don't ask again.`;
 }
 
 export function companionPrompt(name: string, person?: { name: string; ask: boolean }): string {
