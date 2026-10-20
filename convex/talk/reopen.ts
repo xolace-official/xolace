@@ -51,6 +51,8 @@ export const start = internalMutation({
       talkKey,
       talkFromSeq: (lines.at(-1)?.seq ?? -1) + 1,
       ...setup.session,
+      // Still the talk it was with, even if the space was renamed since.
+      ...(session.companionName ? { companionName: session.companionName } : {}),
       // Their name was asked in the talk itself, answered or not.
       askPersonName: false,
       talkMemory: [talkMemory, renderEarlier(lines)].join("\n\n"),

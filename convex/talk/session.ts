@@ -181,7 +181,10 @@ export async function finalizeTalk(
   const now = Date.now();
 
   if (session.talkFromSeq !== undefined) {
-    if (!personText(lines.filter((l) => l.seq >= session.talkFromSeq!))) {
+    const reopened = lines.filter((l) => l.seq >= session.talkFromSeq!);
+    if (!personText(reopened)) {
+      // Nothing was added: the thread stays as its mirror saw it.
+      for (const l of reopened) await ctx.db.delete("talk_turns", l._id);
       await ctx.db.patch("sessions", session._id, { state: "mirror_delivered", updatedAt: now, ...FORGET });
       await releaseUnconnected(ctx, session);
       return "mirror_delivered";

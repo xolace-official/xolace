@@ -129,8 +129,15 @@ describe("talk.reopen.start (#604)", () => {
   it("with nothing new said, goes back to its mirror and gives the time back", async () => {
     const user = await asNewUser();
     const sessionId = await talkToMirror(user);
-    await user.t.mutation(internal.talk.reopen.start, { sessionId, ...key() });
+    const { talkKey } = await user.t.mutation(internal.talk.reopen.start, { sessionId, ...key() });
+    // The companion greeted them; they said nothing.
+    await user.t.mutation(internal.talk.turns.syncLines, {
+      sessionId,
+      talkKey,
+      reply: { seq: 0, text: "Back again?" },
+    });
     expect(await user.t.mutation(api.talk.session.end, { sessionId })).toBe(true);
+    expect(await user.t.query(api.talk.turns.thread, { sessionId })).toHaveLength(2);
     const back = await session(user, sessionId);
     expect(back?.state).toBe("mirror_delivered");
     expect(back?.mirrorAudioStorageId).toBeDefined();
