@@ -17,11 +17,24 @@ import type { Id } from "../_generated/dataModel";
  *
  * The talk's ceiling is reserved from the person's weekly talk time (#596);
  * under 3 min left it throws `talk_time_used`.
+ *
+ * `voiceId` and `speed` are this talk's voice and pace (#603), for the
+ * client's `overrides.tts`; they're fixed once the talk starts. The agent's
+ * Security tab must allow the voice and speed overrides.
  */
 export const start = action({
   args: {},
-  returns: v.object({ token: v.string(), sessionId: v.id("sessions"), talkKey: v.string(), msLeft: v.number() }),
-  handler: async (ctx): Promise<{ token: string; sessionId: Id<"sessions">; talkKey: string; msLeft: number }> => {
+  returns: v.object({
+    token: v.string(),
+    sessionId: v.id("sessions"),
+    talkKey: v.string(),
+    msLeft: v.number(),
+    voiceId: v.string(),
+    speed: v.number(),
+  }),
+  handler: async (
+    ctx,
+  ): Promise<{ token: string; sessionId: Id<"sessions">; talkKey: string; msLeft: number; voiceId: string; speed: number }> => {
     const apiKey = process.env.ELEVENLABS_AGENTS_API_KEY;
     const agentId = process.env.TALK_AGENT_ID;
     if (!apiKey || !agentId) throw new Error("Talk is not configured");
@@ -29,7 +42,7 @@ export const start = action({
     // The key's secret comes from here, not the mutation: an action's
     // randomness is the real thing. The mutation adds the ceiling it reserved.
     const startedAt = Date.now();
-    const { sessionId, talkKey, ceilingS } = await ctx.runMutation(internal.talk.session.start, {
+    const { sessionId, talkKey, ceilingS, voiceId, speed } = await ctx.runMutation(internal.talk.session.start, {
       startedAt,
       secret: crypto.randomUUID(),
     });
@@ -45,6 +58,6 @@ export const start = action({
       throw new Error("Could not start a talk");
     }
     const { token } = (await res.json()) as { token: string };
-    return { token, sessionId, talkKey, msLeft: ceilingS * 1000 - (Date.now() - startedAt) };
+    return { token, sessionId, talkKey, msLeft: ceilingS * 1000 - (Date.now() - startedAt), voiceId, speed };
   },
 });

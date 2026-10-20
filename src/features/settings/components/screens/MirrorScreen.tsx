@@ -6,6 +6,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
 import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
 import { VoiceSection } from "@/src/features/settings/components/voice-section";
+import { TalkStyleSection } from "@/src/features/talk/talk-style-section";
 import { useMirrorSettings, type MirrorTone } from "@/src/features/settings/hooks/use-mirror-settings";
 import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
@@ -127,6 +128,7 @@ export const MirrorScreen = () => {
       </EaseView>
 
       <VoiceSection />
+      <TalkStyleSection />
     </ScrollView>
   );
 };

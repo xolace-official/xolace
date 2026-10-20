@@ -9,6 +9,7 @@ import { useCompanionName } from "./use-companion-name";
 import { MIN_TALK_S, PRIVACY_LINE, TALK_TIME_RESETS, talkTimeLine } from "./talk-copy";
 import type { Talk } from "./use-talk";
 import { useTalkTime } from "./use-talk-time";
+import { TalkVoicePicker } from "./talk-voice-picker";
 
 function Row({ icon, children }: { icon: SymbolViewProps["name"]; children: string }) {
   const accent = useThemeColor("accent");
@@ -43,6 +44,10 @@ export function ConsentCard({ talk }: { talk: Talk }) {
           {(time && talkTimeLine(time.secondsLeft)) ?? "A talk lasts up to 15 minutes."}
         </Row>
         <Row icon={{ ios: "lock", android: "lock" }}>{PRIVACY_LINE}</Row>
+        <View className="gap-2">
+          <AppText className="text-xs font-medium text-muted">{`${name}'s voice`}</AppText>
+          <TalkVoicePicker />
+        </View>
         <Button onPress={talk.start} isDisabled={talk.started || low}>
           <Button.Label>{label}</Button.Label>
         </Button>

@@ -9,6 +9,7 @@ import { searchEpisodicMemory } from "../ai/helpers/episodicSearch";
 import { recallLine, renderMemory, renderRecall } from "./memory";
 import { COMPANION_FALLBACK_NAME } from "../ai/prompts/companion";
 import { talkPeakValidator } from "../lib/validators";
+import { talkDirectnessValidator } from "../lib/voices";
 
 // Read at talk start: the companion's preload (#598, #580).
 const RECENT_MOMENTS = 5;
@@ -93,6 +94,8 @@ export const forTurn = internalQuery({
       name: v.string(),
       // What it calls the person, and whether it asks first (#602).
       person: v.object({ name: v.string(), ask: v.boolean() }),
+      // How it speaks this talk (#603).
+      style: v.object({ directness: v.optional(talkDirectnessValidator), slowed: v.boolean() }),
     }),
   ),
   handler: async (ctx, args) => {
@@ -106,6 +109,7 @@ export const forTurn = internalQuery({
       crisisLineSpoken: session.talkCrisisLineSpoken === true,
       name: session.companionName ?? COMPANION_FALLBACK_NAME,
       person: { name: session.personName ?? "", ask: session.askPersonName === true },
+      style: { directness: session.talkDirectness, slowed: session.talkSlowed === true },
     };
   },
 });

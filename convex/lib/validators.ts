@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { voiceSlugValidator } from "./voices";
+import { talkDirectnessValidator, talkPaceValidator, voiceSlugValidator } from "./voices";
 import { DOMAINS } from "./understandingVocab";
 
 /** One of the 8 scored domains (CONTEXT.md). */
@@ -346,6 +346,9 @@ export const preferencesDocValidator = v.object({
   avatarId: v.optional(v.string()),
   preferredName: v.optional(v.string()),
   talkNameAsked: v.optional(v.boolean()),
+  talkVoice: v.optional(voiceSlugValidator),
+  talkPace: v.optional(talkPaceValidator),
+  talkDirectness: v.optional(talkDirectnessValidator),
   spaceNamePromptDismissed: v.optional(v.boolean()),
   registerComplaint: v.optional(v.boolean()),
   libraryAudiences: v.optional(v.array(v.string())),

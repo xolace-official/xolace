@@ -54,6 +54,9 @@ export const usePreferenceMutation = () =>
       ...(args.colorTheme !== undefined && { colorTheme: args.colorTheme }),
       ...(args.spaceName !== undefined && { spaceName: args.spaceName ?? undefined }),
       ...(args.voice !== undefined && { voice: args.voice ?? undefined }),
+      ...(args.talkVoice !== undefined && { talkVoice: args.talkVoice ?? undefined }),
+      ...(args.talkPace !== undefined && { talkPace: args.talkPace }),
+      ...(args.talkDirectness !== undefined && { talkDirectness: args.talkDirectness ?? undefined }),
       ...(args.spaceNamePromptDismissed !== undefined && { spaceNamePromptDismissed: args.spaceNamePromptDismissed }),
       // Mirrors the server's set-only-true rule, including the tone-change
       // inference — the flag is never turned back off.

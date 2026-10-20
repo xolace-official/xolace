@@ -9,6 +9,7 @@ import { useAction, useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { api } from "@/convex/_generated/api";
+import { stripAudioTags } from "@/convex/ai/talk/audioTags";
 import type { Id } from "@/convex/_generated/dataModel";
 import { TALK_TIME_RESETS } from "./talk-copy";
 import { useThread } from "./use-thread";
@@ -90,7 +91,8 @@ export function useTalk() {
         // A typed line that wasn't echoed by now won't be.
         lastTyped.current = null;
         setThinking(false);
-        thread.said(message);
+        // Tags are heard, not read (#603).
+        thread.said(stripAudioTags(message));
       }
     },
     onAudioAlignment: (a) => {
@@ -140,7 +142,7 @@ export function useTalk() {
       if (!granted) return setError("A talk needs the microphone. You can allow it in Settings.");
       setStarted(true);
       try {
-        const { token, sessionId, talkKey, msLeft } = await startTalk();
+        const { token, sessionId, talkKey, msLeft, voiceId, speed } = await startTalk();
         sessionRef.current = sessionId;
         setSessionId(sessionId);
         setEndsAt(Date.now() + msLeft);
@@ -149,6 +151,9 @@ export function useTalk() {
           // Relayed to our endpoint on every turn (#591), binding it to this
           // talk's session. Needs the agent's `custom_llm_extra_body` override on.
           customLlmExtraBody: { sessionId, talkKey },
+          // This talk's voice and pace, fixed until it ends (#603). Needs the
+          // agent's voice and speed overrides on.
+          overrides: { tts: { voiceId, speed } },
         });
       } catch (e) {
         setStarted(false);

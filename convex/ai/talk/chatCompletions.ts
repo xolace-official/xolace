@@ -4,20 +4,25 @@ import { talkLines } from "../../talk/transcript";
 import { timingSafeEqual } from "../../lib/timingSafeEqual";
 import { getAnthropicClient, thinkingOff } from "../providers/anthropic";
 import { toAnthropicRequest, type AnthropicTurn, type OpenAIMessage, type OpenAITool } from "./openaiCompat";
-import { createEventTranslator, sseChunk, SSE_DONE, type FinishReason } from "./openaiSse";
+import { createEventTranslator, sseChunk, SSE_DONE, type FinishReason, type OpenAIDelta } from "./openaiSse";
 import { talkClockOf, talkCue } from "../../talk/clock";
 import { talkSystem } from "../../talk/memory";
 import { moderateInput } from "../providers/moderation";
 import {
   COMPANION_FALLBACK_NAME,
+  OWN_TOOLS,
   PERSON_NAME_TOOL,
-  RENAME_TOOL,
+  SLOW_TOOL,
   companionPrompt,
   ownToolAnswer,
   ownToolTurns,
   personNameTool,
   renameTool,
+  slowTool,
+  type OwnToolResult,
+  type TalkStyle,
 } from "../prompts/companion";
+import { createTagFilter, stripAudioTags } from "./audioTags";
 import { CRISIS_LINE, moderationPeak, phrasePeak, raises, safetySkill, turnWords } from "../../talk/safety";
 
 // The agent's Custom LLM `model_id` picks one of these; anything else gets
@@ -68,6 +73,9 @@ async function sha256Hex(s: string): Promise<string> {
  * MODERATION_WAIT_MS. At crisis the companion speaks CRISIS_LINE (once per
  * talk, no model call), then the crisis safety skill for the rest of the
  * talk; at elevated, the elevated skill. Late verdicts land for the next turn.
+ *
+ * Only #583's five audio tags reach the TTS (#603): any other bracketed text
+ * is filtered out as it streams. The transcript keeps no tags at all.
  *
  * ponytail: the `[talk]` logs carry only timings, model and body keys (never
  * text); they answer #591's open measurements. Drop or downgrade them once
@@ -130,10 +138,11 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   // the person (#602); our own tools are listed beside the agent's and
   // answered here, never relayed.
   const name = memory?.name ?? COMPANION_FALLBACK_NAME;
-  const tools = [...agentTools, renameTool, personNameTool];
+  const tools = [...agentTools, renameTool, personNameTool, slowTool];
   const cue = talkCue(clock);
-  const systemAs = (n: string, person = memory?.person) =>
-    talkSystem([companionPrompt(n, person), agentSystem].filter(Boolean).join("\n\n"), memory, turns, cue, safetySkill(peak));
+  // Directness and a mid-talk "slow down" ride the same prompt (#603).
+  const systemAs = (n: string, person = memory?.person, style: TalkStyle | undefined = memory?.style) =>
+    talkSystem([companionPrompt(n, person, style), agentSystem].filter(Boolean).join("\n\n"), memory, turns, cue, safetySkill(peak));
   if (turns.length === 0) return new Response("no turns", { status: 400 });
   // The last turn ends on our end_call; tools stay listed (the history may
   // hold past calls) but the model can't make one of its own.
@@ -236,14 +245,21 @@ export const chatCompletions = httpAction(async (ctx, request) => {
         // Relays one model call; a call to one of our tools is held back and returned.
         const relay = async (events: NonNullable<typeof anthropic>) => {
           const translate = createEventTranslator();
+          const tags = createTagFilter();
           let text = "";
+          const emit = (delta: OpenAIDelta) => {
+            firstTokenAt ??= Date.now();
+            mark("firstDelta");
+            send(sseChunk(meta, delta));
+            text += delta.content ?? "";
+          };
           let own: { tool: string; index: number; id: string; json: string } | null = null;
           for await (const event of events) {
             if (event.type === "message_start") usage ??= event.message.usage;
             if (
               event.type === "content_block_start" &&
               event.content_block.type === "tool_use" &&
-              (event.content_block.name === RENAME_TOOL || event.content_block.name === PERSON_NAME_TOOL)
+              OWN_TOOLS.includes(event.content_block.name)
             ) {
               own = { tool: event.content_block.name, index: event.index, id: event.content_block.id, json: "" };
               continue;
@@ -258,17 +274,26 @@ export const chatCompletions = httpAction(async (ctx, request) => {
               finish = out.finish;
               continue;
             }
-            firstTokenAt ??= Date.now();
-            mark("firstDelta");
-            send(sseChunk(meta, out.delta));
-            text += out.delta.content ?? "";
+            const { content, ...rest } = out.delta;
+            if (content !== undefined) {
+              // Held while a "[" is open; stripped if it isn't one of our tags.
+              const kept = tags.push(content);
+              if (kept) emit({ ...rest, content: kept });
+              continue;
+            }
+            // Text held before a tool call goes first.
+            const held = tags.flush();
+            if (held) emit({ content: held });
+            emit(out.delta);
             for (const call of out.delta.tool_calls ?? []) if (call.function.name) toolCalls.push(call.function.name);
           }
+          const held = tags.flush();
+          if (held) emit({ content: held });
           reply += text;
           return { text, own };
         };
         const first = crisisLine || !anthropic ? null : await relay(anthropic);
-        // One of our tools (#601 rename, #602 the person's name): saved, then
+        // One of our tools (#601 rename, #602 the person's name, #603 slow down): saved, then
         // one more call speaks to it. Skipped if the turn also relayed a tool
         // call: the agent already holds that turn.
         if (first?.own) {
@@ -279,17 +304,22 @@ export const chatCompletions = httpAction(async (ctx, request) => {
             input = JSON.parse(json || "{}");
           } catch {}
           const bind = { sessionId: talk.sessionId, talkKey: talk.talkKey, name: typeof input.name === "string" ? input.name : "" };
-          const result =
-            tool === PERSON_NAME_TOOL
-              ? await ctx.runMutation(internal.talk.companion.setPersonName, { ...bind, shared: input.shared === true })
-              : await ctx.runMutation(internal.talk.companion.rename, bind);
+          const result: OwnToolResult =
+            tool === SLOW_TOOL
+              ? await ctx.runMutation(internal.talk.companion.slowDown, { sessionId: talk.sessionId, talkKey: talk.talkKey })
+              : tool === PERSON_NAME_TOOL
+                ? await ctx.runMutation(internal.talk.companion.setPersonName, { ...bind, shared: input.shared === true })
+                : await ctx.runMutation(internal.talk.companion.rename, bind);
           if ((finish as FinishReason) === "tool_calls" && toolCalls.length === 1) {
             finish = "stop";
             // The follow-up already speaks as the new name, or to the person by theirs.
+            // The follow-up to a slow-down is already slowed.
             const as =
-              tool === PERSON_NAME_TOOL
-                ? systemAs(name, result.ok ? { name: result.name, ask: false } : memory?.person)
-                : systemAs(result.ok ? result.name : name);
+              tool === SLOW_TOOL
+                ? systemAs(name, memory?.person, result.ok ? { ...memory?.style, slowed: true } : memory?.style)
+                : tool === PERSON_NAME_TOOL
+                  ? systemAs(name, result.ok && result.name ? { name: result.name, ask: false } : memory?.person)
+                  : systemAs(result.ok && result.name ? result.name : name);
             const answer = ownToolAnswer(tool, result, name);
             await relay(call([...turns, ...ownToolTurns(first.text, id, tool, input, answer)], true, as));
           }
@@ -307,7 +337,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
         await ctx.runMutation(internal.talk.turns.syncLines, {
           sessionId: talk.sessionId,
           talkKey: talk.talkKey,
-          reply: { seq: talk.lines.length, text: reply },
+          reply: { seq: talk.lines.length, text: stripAudioTags(reply) },
         });
         // A verdict that missed the race applies from the next turn.
         const late = early ?? (moderation ? await within(moderation, MODERATION_LATE_MS) : null);

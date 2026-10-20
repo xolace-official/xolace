@@ -16,7 +16,7 @@ import {
   activityActionTypeValidator,
   domainValidator,
 } from "./lib/validators";
-import { voiceSlugValidator } from "./lib/voices";
+import { talkDirectnessValidator, talkPaceValidator, voiceSlugValidator } from "./lib/voices";
 import { specialtyValidator } from "./lib/specialties";
 
 // =============================================================
@@ -399,6 +399,12 @@ export default defineSchema({
     // Set once they answer, or their first talk with words in it closes:
     // the companion asks their name in one talk only.
     talkNameAsked: v.optional(v.boolean()),
+    // How the companion speaks in a talk (#603): its voice (unset = their
+    // mirror voice, else Vesper), pace and directness (unset = in between).
+    // Read at talk start and fixed for the talk.
+    talkVoice: v.optional(voiceSlugValidator),
+    talkPace: v.optional(talkPaceValidator),
+    talkDirectness: v.optional(talkDirectnessValidator),
 
     // True once the naming dialog has been shown and the user tapped "Not now".
     // Prevents re-prompting; settings entry is the only other path.
@@ -778,6 +784,10 @@ export default defineSchema({
     // asks (their first talk, until they answer).
     personName: v.optional(v.string()),
     askPersonName: v.optional(v.boolean()),
+    // How plainly it speaks this talk (#603), and whether they asked it to
+    // slow down mid-talk: shorter lines and [slow] from then on.
+    talkDirectness: v.optional(talkDirectnessValidator),
+    talkSlowed: v.optional(v.boolean()),
 
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated

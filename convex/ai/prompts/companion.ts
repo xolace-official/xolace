@@ -5,6 +5,8 @@
  */
 
 import type { AnthropicTurn } from "../talk/openaiCompat";
+import { AUDIO_TAGS } from "../talk/audioTags";
+import type { TalkDirectness } from "../../lib/voices";
 
 export const COMPANION_FALLBACK_NAME = "Ember";
 
@@ -13,6 +15,17 @@ export const RENAME_TOOL = "rename_companion";
 
 /** Our endpoint's own tool (#602): what to call the person; never relayed either. */
 export const PERSON_NAME_TOOL = "set_person_name";
+
+/** Our endpoint's own tool (#603): they asked it to slow down; never relayed either. */
+export const SLOW_TOOL = "slow_down";
+
+export const OWN_TOOLS: readonly string[] = [RENAME_TOOL, PERSON_NAME_TOOL, SLOW_TOOL] as const;
+
+export const slowTool = {
+  name: SLOW_TOOL,
+  description: "Call when the person asks you to slow down or speak more slowly. It saves the slower pace for next time.",
+  input_schema: { type: "object" as const, properties: {} },
+};
 
 export const personNameTool = {
   name: PERSON_NAME_TOOL,
@@ -42,10 +55,15 @@ export const renameTool = {
   },
 };
 
-type ToolResult = { ok: true; name: string } | { ok: false; message: string };
+export type OwnToolResult = { ok: true; name?: string } | { ok: false; message: string };
 
 /** What the follow-up call hears from one of our tools. */
-export function ownToolAnswer(tool: string, result: ToolResult, name: string): string {
+export function ownToolAnswer(tool: string, result: OwnToolResult, name: string): string {
+  if (tool === SLOW_TOOL) {
+    return result.ok
+      ? "Saved. Answer now in a short, unhurried line that starts with [slow], and keep it that way."
+      : `Not saved (${result.message}). Carry on.`;
+  }
   if (tool === PERSON_NAME_TOOL) {
     return result.ok
       ? `Saved. Call them ${result.name} from now on. Carry on naturally.`
@@ -89,7 +107,26 @@ function personSection(person: { name: string; ask: boolean } | undefined): stri
 - If they'd rather not say, call ${PERSON_NAME_TOOL} with ${person.name}, shared true, and don't ask again.`;
 }
 
-export function companionPrompt(name: string, person?: { name: string; ask: boolean }): string {
+export type TalkStyle = { directness?: TalkDirectness; slowed: boolean };
+
+const DIRECTNESS: Record<TalkDirectness, string> = {
+  gentle: "- Lean gentle: soften what you notice, leave them room, and go slowly toward hard things.",
+  straight: "- Be straight with them: say what you notice plainly, without cushioning. Still warm, never blunt for its own sake.",
+};
+
+/** How it sounds (#603): audio tags, directness, and a "slow down" mid-talk. */
+function styleSection(style: TalkStyle | undefined): string {
+  const lines = [
+    `- You may use these audio tags, sparingly, in square brackets: ${AUDIO_TAGS.map((t) => `[${t}]`).join(" ")}. Never any other bracketed text.`,
+    ...(style?.directness ? [DIRECTNESS[style.directness]] : []),
+    style?.slowed
+      ? "- They asked you to slow down: keep every line short and unhurried, and start each with [slow]."
+      : `- If they ask you to slow down, call ${SLOW_TOOL}, then answer in short, unhurried lines that start with [slow].`,
+  ];
+  return `\n\nHow you sound:\n${lines.join("\n")}`;
+}
+
+export function companionPrompt(name: string, person?: { name: string; ask: boolean }, style?: TalkStyle): string {
   return `You are ${name}, a voice companion inside Xolace. The person is talking with you out loud.
 
 Who you are:
@@ -100,5 +137,5 @@ Who you are:
 
 Your name:
 - They may rename you ("can I call you Juniper?"). Call ${RENAME_TOOL} with the name first. If it was saved, confirm it aloud in a line and use it from then on. If not, say warmly that you can't take that one, and keep your name.
-- Naming you after someone in their life is fine. Decline warmly to be a public figure, or to role-play a real person (a late parent, a friend): you stay yourself, and you can still talk about that person with them.${personSection(person)}`;
+- Naming you after someone in their life is fine. Decline warmly to be a public figure, or to role-play a real person (a late parent, a friend): you stay yourself, and you can still talk about that person with them.${personSection(person)}${styleSection(style)}`;
 }

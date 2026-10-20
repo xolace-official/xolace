@@ -11,7 +11,7 @@ import { releaseUnconnected, reserveTalk } from "./time";
 import { personText } from "./transcript";
 import { talkPreload } from "./remember";
 import { patternRisk, type TalkPeak } from "../ai/safeguard";
-import { markNameAsked, talkNames } from "./companion";
+import { markNameAsked, talkSetup } from "./companion";
 
 // Our endpoint ends a silent talk at about 60 s (#597), so a talk with no new
 // line for this long is over: cut off, or ended without the client telling us (#588).
@@ -22,7 +22,13 @@ const MAX_TALK_LINES = 1000;
 /** A talk is a session (#592): created for the signed-in Plus person at talk start. */
 export const start = internalMutation({
   args: { startedAt: v.number(), secret: v.string() },
-  returns: v.object({ sessionId: v.id("sessions"), talkKey: v.string(), ceilingS: v.number() }),
+  returns: v.object({
+    sessionId: v.id("sessions"),
+    talkKey: v.string(),
+    ceilingS: v.number(),
+    voiceId: v.string(),
+    speed: v.number(),
+  }),
   handler: async (ctx, { startedAt, secret }) => {
     const { profile } = await requireAuth(ctx);
     await requirePremium(ctx, profile, "talk");
@@ -47,16 +53,17 @@ export const start = internalMutation({
     const talkKey = mintTalkKey(startedAt, ceilingS, secret);
     const { talkMemory, recall } = await talkPreload(ctx, profile, now);
     const opening = await historyOpening(ctx, profile._id, now);
+    const setup = await talkSetup(ctx, profile._id);
     await ctx.db.patch("sessions", sessionId, {
       talkKey,
-      ...(await talkNames(ctx, profile._id)),
+      ...setup.session,
       talkMemory,
       ...(recall ? { talkRecall: { lines: [], surfaced: [] } } : {}),
       ...(opening ? { talkSafety: opening } : {}),
     });
     // A talk that never serves a turn still gets closed.
     await ctx.scheduler.runAfter(TALK_IDLE_MS, internal.talk.session.finalizeIfIdle, { sessionId });
-    return { sessionId, talkKey, ceilingS };
+    return { sessionId, talkKey, ceilingS, voiceId: setup.voiceId, speed: setup.speed };
   },
 });
 
