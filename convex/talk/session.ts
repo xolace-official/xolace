@@ -9,6 +9,7 @@ import { getDayOfWeek, getTimeOfDay } from "../lib/timeOfDay";
 import { mintTalkKey } from "./clock";
 import { releaseUnconnected, reserveTalk } from "./time";
 import { personText } from "./transcript";
+import { talkPreload } from "./remember";
 
 // Our endpoint ends a silent talk at about 60 s (#597), so a talk with no new
 // line for this long is over: cut off, or ended without the client telling us (#588).
@@ -42,7 +43,12 @@ export const start = internalMutation({
     // Throws `talk_time_used` under the minimum, rolling the session back.
     const ceilingS = await reserveTalk(ctx, profile._id, sessionId);
     const talkKey = mintTalkKey(startedAt, ceilingS, secret);
-    await ctx.db.patch("sessions", sessionId, { talkKey });
+    const { talkMemory, recall } = await talkPreload(ctx, profile, now);
+    await ctx.db.patch("sessions", sessionId, {
+      talkKey,
+      talkMemory,
+      ...(recall ? { talkRecall: { lines: [], surfaced: [] } } : {}),
+    });
     // A talk that never serves a turn still gets closed.
     await ctx.scheduler.runAfter(TALK_IDLE_MS, internal.talk.session.finalizeIfIdle, { sessionId });
     return { sessionId, talkKey, ceilingS };
@@ -103,6 +109,9 @@ export const end = mutation({
   },
 });
 
+// The talk's copy of what it knew of the person ends with the talk.
+const FORGET = { talkMemory: undefined, talkRecall: undefined };
+
 /**
  * The one way a talk closes, however it ended (#588). The person's lines go
  * through the typed pipeline; with nothing said there's no mirror, and the
@@ -124,7 +133,7 @@ export async function finalizeTalk(
 
   // The typed minimum is any words at all (the "Let it out" gate).
   if (!rawText) {
-    await ctx.db.patch("sessions", session._id, { state: "abandoned", updatedAt: now });
+    await ctx.db.patch("sessions", session._id, { state: "abandoned", updatedAt: now, ...FORGET });
     await releaseUnconnected(ctx, session);
     return "abandoned";
   }
@@ -136,6 +145,7 @@ export async function finalizeTalk(
     processingStage: undefined,
     rawInput: rawText,
     rawInputLength: rawText.length,
+    ...FORGET,
     timeOfDay: getTimeOfDay(startedAt),
     dayOfWeek: getDayOfWeek(startedAt),
     updatedAt: now,

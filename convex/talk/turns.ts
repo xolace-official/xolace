@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { TALK_IDLE_MS } from "./session";
+import { recallQuery } from "./remember";
 
 const talkLineValidator = v.object({
   role: v.union(v.literal("person"), v.literal("companion")),
@@ -54,15 +55,21 @@ export const syncLines = internalMutation({
     const stored = recent.length ? recent[0].seq + 1 : 0;
 
     if (args.lines) {
+      let changed = false;
       for (const row of recent) {
         const resent = args.lines[row.seq];
         if (resent && (row.provisional || resent.text !== row.text || resent.role !== row.role)) {
           await ctx.db.patch("talk_turns", row._id, { ...resent, provisional: undefined });
+          changed = true;
         }
       }
       for (let seq = stored; seq < args.lines.length; seq++) {
         await ctx.db.insert("talk_turns", { sessionId: session._id, seq, ...args.lines[seq] });
+        changed = true;
       }
+      // The person said something new: recall in the background for the next turn (#598).
+      const query = changed && session.talkRecall ? recallQuery(args.lines) : null;
+      if (query) await ctx.scheduler.runAfter(0, internal.talk.remember.recall, { sessionId: session._id, query });
     }
 
     const reply = args.reply && { seq: args.reply.seq, text: args.reply.text.trim() };

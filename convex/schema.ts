@@ -749,6 +749,14 @@ export default defineSchema({
     elevenLabsConversationId: v.optional(v.string()),
     // When ElevenLabs confirmed their copy deleted (webhook or sweeper, #595).
     providerDeletedAt: v.optional(v.number()),
+    // What the companion knows of the person, rendered once at talk start
+    // (#598): the cached prompt prefix. Cleared when the talk closes.
+    talkMemory: v.optional(v.string()),
+    // Episodic recall during a talk (#598): the latest hits, read by the next
+    // turn, and every memory key surfaced so far. Absent with memory off.
+    talkRecall: v.optional(
+      v.object({ lines: v.array(v.string()), surfaced: v.array(v.string()) }),
+    ),
 
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated

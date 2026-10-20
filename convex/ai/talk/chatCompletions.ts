@@ -5,7 +5,8 @@ import { timingSafeEqual } from "../../lib/timingSafeEqual";
 import { getAnthropicClient, thinkingOff } from "../providers/anthropic";
 import { toAnthropicRequest, type OpenAIMessage, type OpenAITool } from "./openaiCompat";
 import { createEventTranslator, sseChunk, SSE_DONE, type FinishReason } from "./openaiSse";
-import { talkClockOf, talkCue, withCue } from "../../talk/clock";
+import { talkClockOf, talkCue } from "../../talk/clock";
+import { talkSystem } from "../../talk/memory";
 
 // The agent's Custom LLM `model_id` picks one of these; anything else gets
 // the first. Both are listed so the prototype can measure TTFT on each (#591).
@@ -28,8 +29,9 @@ async function sha256Hex(s: string): Promise<string> {
  * Anthropic stream (#578, #579). The agent sends the shared secret as its
  * Custom LLM api_key, i.e. `Authorization: Bearer <TALK_LLM_SECRET>`.
  *
- * Prototype brain: relays whatever the agent sends (its prompt + history).
- * Safeguard, memory and the talk ledger land in later tickets.
+ * Relays the agent's prompt and history, with what the companion knows of
+ * the person (#598): the preload rendered at talk start rides in the cached
+ * system prefix; the latest episodic recall and the clock cue ride after it.
  *
  * Our clock rules the talk's length (#597): every turn gets the time left
  * from Convex's record, and the last turn (ceiling reached, or a long
@@ -78,11 +80,18 @@ export const chatCompletions = httpAction(async (ctx, request) => {
     console.error("[talk] turn sync failed", err);
     return false;
   });
+  // The one database read before the model call (#598): the preload is
+  // fixed at talk start, the recall lands in the background between turns.
+  const memory = await ctx.runQuery(internal.talk.remember.forTurn, talk).catch((err) => {
+    console.error("[talk] memory read failed", err);
+    return null;
+  });
+  mark("memory");
 
   const model = TALK_MODELS.find((m) => m === body.model) ?? TALK_MODELS[0];
   const { system: agentSystem, messages: turns, tools } = toAnthropicRequest(body.messages, body.tools);
   const cue = talkCue(clock);
-  const system = withCue(agentSystem, turns, cue);
+  const system = talkSystem(agentSystem, memory, turns, cue);
   if (turns.length === 0) return new Response("no turns", { status: 400 });
   // The last turn ends on our end_call; tools stay listed (the history may
   // hold past calls) but the model can't make one of its own.
@@ -132,7 +141,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
             model,
             max_tokens: TALK_MAX_TOKENS,
             thinking: thinkingOff(model),
-            ...(system ? { system } : {}),
+            ...(system.length ? { system } : {}),
             // The agent's system tools (end_call) — the model decides to use them.
             ...(tools.length ? { tools, ...(closing ? { tool_choice: { type: "none" as const } } : {}) } : {}),
             messages: turns,
