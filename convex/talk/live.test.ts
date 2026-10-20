@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
 import { asNewUser } from "../test/harness.helpers";
 import { aggregatesMock, posthogMock, ragMock, rateLimiterMock, revenuecatMock } from "../test/mocks.helpers";
+import { VOICE_CATALOG } from "../lib/voices";
 
 const stub = vi.hoisted(() => ({ isPlus: true }));
 
@@ -37,9 +38,12 @@ afterEach(() => {
 describe("talk.live.start (#594)", () => {
   it("starts a talk for a Plus caller", async () => {
     const { t } = await asNewUser();
-    const { token, sessionId } = await t.action(api.talk.live.start, {});
+    const { token, sessionId, voiceId, speed } = await t.action(api.talk.live.start, {});
     expect(token).toBe("tok");
-    const session = await t.run((ctx) => ctx.db.get(sessionId));
+    // This talk's voice and pace for the client's overrides (#603): the defaults.
+    expect(voiceId).toBe(VOICE_CATALOG.vesper.elevenLabsId);
+    expect(speed).toBe(1);
+    const session = await t.run((ctx) => ctx.db.get("sessions", sessionId));
     expect(session?.entryType).toBe("talk");
   });
 
