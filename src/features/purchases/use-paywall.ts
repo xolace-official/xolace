@@ -46,7 +46,9 @@ export type PaywallSurface =
   // A free user's compounding upsell (#524): Insights and session end.
   | "compounding_upsell"
   // A free user's first mic tap after Plus dictation shipped (#559). Once per device.
-  | "dictation";
+  | "dictation"
+  // A free person's tap on Reflect home's talk door (#594).
+  | "talk_door";
 
 /**
  * `sessionId` rides only with the `kindling` surface: the just-completed
