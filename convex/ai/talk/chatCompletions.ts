@@ -38,12 +38,15 @@ async function sha256Hex(s: string): Promise<string> {
  */
 export const chatCompletions = httpAction(async (ctx, request) => {
   const startedAt = Date.now();
+  const t: Record<string, number> = {};
+  const mark = (k: string) => (t[k] ??= Date.now() - startedAt);
   const secret = process.env.TALK_LLM_SECRET;
   const auth = request.headers.get("authorization") ?? "";
   // Fail closed: an unset secret must not open the endpoint.
   if (!secret || !timingSafeEqual(await sha256Hex(auth), await sha256Hex(`Bearer ${secret}`))) {
     return new Response("unauthorized", { status: 401 });
   }
+  mark("auth");
 
   let body: { model?: string; messages?: OpenAIMessage[]; tools?: OpenAITool[]; elevenlabs_extra_body?: unknown };
   try {
@@ -51,6 +54,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   } catch {
     return new Response("invalid json", { status: 400 });
   }
+  mark("parsed");
   if (!Array.isArray(body.messages)) return new Response("messages required", { status: 400 });
   const extra = (body.elevenlabs_extra_body ?? {}) as { sessionId?: unknown; talkKey?: unknown };
   if (typeof extra.sessionId !== "string" || typeof extra.talkKey !== "string") {
@@ -77,6 +81,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   const audioTags: string[] = [];
   let reply = "";
   const toolCalls: string[] = [];
+  let usage: { input_tokens: number; cache_read_input_tokens?: number | null; cache_creation_input_tokens?: number | null } | null = null;
 
   const log = () =>
     console.log("[talk] turn", {
@@ -84,6 +89,10 @@ export const chatCompletions = httpAction(async (ctx, request) => {
       outcome,
       ttftMs: firstTokenAt === null ? null : firstTokenAt - startedAt,
       totalMs: Date.now() - startedAt,
+      phasesMs: t,
+      inputTokens: usage?.input_tokens,
+      cacheRead: usage?.cache_read_input_tokens,
+      cacheWrite: usage?.cache_creation_input_tokens,
       turns: turns.length,
       bodyKeys: Object.keys(body),
       audioTags,
@@ -108,10 +117,15 @@ export const chatCompletions = httpAction(async (ctx, request) => {
             // The agent's system tools (end_call) — the model decides to use them.
             ...(tools.length ? { tools } : {}),
             messages: turns,
+            // From eu-west-1, "us" cut Haiku's median TTFT by 140–290 ms over
+            // "global" in three A/Bs; Sonnet within noise (#591).
+            inference_geo: "us",
           },
           // One attempt: a retried turn would land long after the person stopped waiting.
           { signal: abort.signal, maxRetries: 0 },
         );
+        mark("streamCalled");
+        anthropic.on("connect", () => mark("headers"));
         // Not this talk's turn (wrong key, or the talk has closed): serve nothing.
         if (!(await bound)) {
           outcome = "unbound";
@@ -121,10 +135,12 @@ export const chatCompletions = httpAction(async (ctx, request) => {
           controller.close();
           return;
         }
+        mark("bound");
         send(sseChunk(meta, { role: "assistant" }));
         const translate = createEventTranslator();
         let finish: FinishReason = "stop";
         for await (const event of anthropic) {
+          if (event.type === "message_start") usage = event.message.usage;
           const out = translate(event);
           if (!out) continue;
           if ("finish" in out) {
@@ -132,6 +148,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
             continue;
           }
           firstTokenAt ??= Date.now();
+          mark("firstDelta");
           send(sseChunk(meta, out.delta));
           reply += out.delta.content ?? "";
           for (const call of out.delta.tool_calls ?? []) if (call.function.name) toolCalls.push(call.function.name);
