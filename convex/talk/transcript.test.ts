@@ -11,6 +11,7 @@ describe("talkLines", () => {
         { role: "assistant", content: null, tool_calls: [{ id: "t1", function: { name: "end_call" } }] },
         { role: "tool", content: "ok", tool_call_id: "t1" },
         { role: "user", content: "   " },
+        { role: "user", content: "..." },
       ]),
     ).toEqual([
       { role: "companion", text: "Hey, I'm here." },
@@ -33,6 +34,20 @@ describe("personText", () => {
 
   it("is empty when the person said nothing", () => {
     expect(personText([{ role: "companion", text: "Still there?" }])).toBe("");
+  });
+
+  it("is empty when the person's lines are only transcribed noise", () => {
+    expect(
+      personText([
+        { role: "companion", text: "Still there?" },
+        { role: "person", text: "..." },
+        { role: "person", text: "…" },
+      ]),
+    ).toBe("");
+  });
+
+  it("keeps words in any script", () => {
+    expect(personText([{ role: "person", text: "眠れない。" }])).toBe("眠れない。");
   });
 
   it("keeps the end of a talk past the cap", () => {

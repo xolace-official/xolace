@@ -8,6 +8,12 @@ export type TalkLine = { role: "person" | "companion"; text: string };
 export const MAX_TALK_INPUT = 20_000;
 
 /**
+ * ElevenLabs transcribes noise it can't make out as "..." : a person line
+ * with no letters or digits (any script) said nothing.
+ */
+const said = (l: TalkLine) => l.role !== "person" || /[\p{L}\p{N}]/u.test(l.text);
+
+/**
  * The talk as ElevenLabs resends it every turn: both sides' spoken text in
  * order. The agent's prompt, tool calls and tool results are not the talk.
  */
@@ -16,7 +22,8 @@ export function talkLines(messages: OpenAIMessage[]): TalkLine[] {
   for (const m of messages) {
     if (m.role !== "user" && m.role !== "assistant") continue;
     const text = textOf(m.content).trim();
-    if (text) lines.push({ role: m.role === "user" ? "person" : "companion", text });
+    const line: TalkLine = { role: m.role === "user" ? "person" : "companion", text };
+    if (text && said(line)) lines.push(line);
   }
   return lines;
 }
@@ -24,7 +31,8 @@ export function talkLines(messages: OpenAIMessage[]): TalkLine[] {
 /** The mirror's input: the person's lines only, keeping the end past the cap. */
 export function personText(lines: TalkLine[]): string {
   const text = lines
-    .filter((l) => l.role === "person")
+    // `said` again: rows stored before noise was dropped at the door.
+    .filter((l) => l.role === "person" && said(l))
     .map((l) => l.text)
     .join("\n")
     .trim();
