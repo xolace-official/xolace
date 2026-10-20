@@ -344,6 +344,8 @@ export const preferencesDocValidator = v.object({
   spaceName: v.optional(v.string()),
   displayName: v.optional(v.string()),
   avatarId: v.optional(v.string()),
+  preferredName: v.optional(v.string()),
+  talkNameAsked: v.optional(v.boolean()),
   spaceNamePromptDismissed: v.optional(v.boolean()),
   registerComplaint: v.optional(v.boolean()),
   libraryAudiences: v.optional(v.array(v.string())),

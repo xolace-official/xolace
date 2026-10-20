@@ -91,6 +91,8 @@ export const forTurn = internalQuery({
       crisisLineSpoken: v.boolean(),
       // Who the companion is this turn (#601).
       name: v.string(),
+      // What it calls the person, and whether it asks first (#602).
+      person: v.object({ name: v.string(), ask: v.boolean() }),
     }),
   ),
   handler: async (ctx, args) => {
@@ -103,6 +105,7 @@ export const forTurn = internalQuery({
       safety: session.talkSafety,
       crisisLineSpoken: session.talkCrisisLineSpoken === true,
       name: session.companionName ?? COMPANION_FALLBACK_NAME,
+      person: { name: session.personName ?? "", ask: session.askPersonName === true },
     };
   },
 });

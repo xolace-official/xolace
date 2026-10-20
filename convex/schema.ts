@@ -393,6 +393,13 @@ export default defineSchema({
     displayName: v.optional(v.string()),
     avatarId: v.optional(v.string()),
 
+    // What the companion calls them when it isn't their displayName (#602):
+    // private, never shown to other Xolacers. Cleared by a data wipe.
+    preferredName: v.optional(v.string()),
+    // Set once they answer, or their first talk with words in it closes:
+    // the companion asks their name in one talk only.
+    talkNameAsked: v.optional(v.boolean()),
+
     // True once the naming dialog has been shown and the user tapped "Not now".
     // Prevents re-prompting; settings entry is the only other path.
     spaceNamePromptDismissed: v.optional(v.boolean()),
@@ -767,6 +774,10 @@ export default defineSchema({
     // The companion's name for this talk (#601): spaceName at start, or a
     // rename mid-talk. Kept: the talk's mirror says who it was with.
     companionName: v.optional(v.string()),
+    // What the companion calls the person this talk (#602), and whether it
+    // asks (their first talk, until they answer).
+    personName: v.optional(v.string()),
+    askPersonName: v.optional(v.boolean()),
 
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated

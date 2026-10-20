@@ -16,7 +16,7 @@ const BATCH_SIZE = 100;
  *          reflection_resonances, notification_log, library_reads, activity_log,
  *          frozen_days, compounding_stretches, steadiness_insights
  * Anonymizes: escalation_events (strip profileId for safety audit)
- * Resets: emotional_profile counters
+ * Resets: emotional_profile counters, the companion's preferred name
  *
  * Processes in batches and self-reschedules if more remain.
  */
@@ -183,6 +183,16 @@ export const wipe = internalMutation({
       )
       .unique();
     if (intake) await ctx.db.delete("intake_responses", intake._id);
+
+    // ── Forget the companion's private name for them (#602) ──────
+    // The next talk asks again.
+    const preferences = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", emotionalProfileId))
+      .unique();
+    if (preferences && (preferences.preferredName || preferences.talkNameAsked)) {
+      await ctx.db.patch("preferences", preferences._id, { preferredName: undefined, talkNameAsked: undefined });
+    }
 
     // ── Reset emotional profile counters ─────────────────────────
     // Only reset on the final batch (no more sessions to delete)

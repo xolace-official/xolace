@@ -8,7 +8,16 @@ import { createEventTranslator, sseChunk, SSE_DONE, type FinishReason } from "./
 import { talkClockOf, talkCue } from "../../talk/clock";
 import { talkSystem } from "../../talk/memory";
 import { moderateInput } from "../providers/moderation";
-import { COMPANION_FALLBACK_NAME, RENAME_TOOL, companionPrompt, renameTool, renameTurns } from "../prompts/companion";
+import {
+  COMPANION_FALLBACK_NAME,
+  PERSON_NAME_TOOL,
+  RENAME_TOOL,
+  companionPrompt,
+  ownToolAnswer,
+  ownToolTurns,
+  personNameTool,
+  renameTool,
+} from "../prompts/companion";
 import { CRISIS_LINE, moderationPeak, phrasePeak, raises, safetySkill, turnWords } from "../../talk/safety";
 
 // The agent's Custom LLM `model_id` picks one of these; anything else gets
@@ -117,13 +126,14 @@ export const chatCompletions = httpAction(async (ctx, request) => {
 
   const model = TALK_MODELS.find((m) => m === body.model) ?? TALK_MODELS[0];
   const { system: agentSystem, messages: turns, tools: agentTools } = toAnthropicRequest(body.messages, body.tools);
-  // Who the companion is leads the cached prefix (#601); our rename tool is
-  // listed beside the agent's own and answered here, never relayed.
+  // Who the companion is leads the cached prefix (#601), with what it calls
+  // the person (#602); our own tools are listed beside the agent's and
+  // answered here, never relayed.
   const name = memory?.name ?? COMPANION_FALLBACK_NAME;
-  const tools = [...agentTools, renameTool];
+  const tools = [...agentTools, renameTool, personNameTool];
   const cue = talkCue(clock);
-  const systemAs = (n: string) =>
-    talkSystem([companionPrompt(n), agentSystem].filter(Boolean).join("\n\n"), memory, turns, cue, safetySkill(peak));
+  const systemAs = (n: string, person = memory?.person) =>
+    talkSystem([companionPrompt(n, person), agentSystem].filter(Boolean).join("\n\n"), memory, turns, cue, safetySkill(peak));
   if (turns.length === 0) return new Response("no turns", { status: 400 });
   // The last turn ends on our end_call; tools stay listed (the history may
   // hold past calls) but the model can't make one of its own.
@@ -223,19 +233,23 @@ export const chatCompletions = httpAction(async (ctx, request) => {
           send(sseChunk(meta, { content: CRISIS_LINE }));
           reply = CRISIS_LINE;
         }
-        // Relays one model call; a rename call is held back and returned.
+        // Relays one model call; a call to one of our tools is held back and returned.
         const relay = async (events: NonNullable<typeof anthropic>) => {
           const translate = createEventTranslator();
           let text = "";
-          let rename: { index: number; id: string; json: string } | null = null;
+          let own: { tool: string; index: number; id: string; json: string } | null = null;
           for await (const event of events) {
             if (event.type === "message_start") usage ??= event.message.usage;
-            if (event.type === "content_block_start" && event.content_block.type === "tool_use" && event.content_block.name === RENAME_TOOL) {
-              rename = { index: event.index, id: event.content_block.id, json: "" };
+            if (
+              event.type === "content_block_start" &&
+              event.content_block.type === "tool_use" &&
+              (event.content_block.name === RENAME_TOOL || event.content_block.name === PERSON_NAME_TOOL)
+            ) {
+              own = { tool: event.content_block.name, index: event.index, id: event.content_block.id, json: "" };
               continue;
             }
-            if (rename && event.type === "content_block_delta" && event.index === rename.index) {
-              if (event.delta.type === "input_json_delta") rename.json += event.delta.partial_json;
+            if (own && event.type === "content_block_delta" && event.index === own.index) {
+              if (event.delta.type === "input_json_delta") own.json += event.delta.partial_json;
               continue;
             }
             const out = translate(event);
@@ -251,28 +265,33 @@ export const chatCompletions = httpAction(async (ctx, request) => {
             for (const call of out.delta.tool_calls ?? []) if (call.function.name) toolCalls.push(call.function.name);
           }
           reply += text;
-          return { text, rename };
+          return { text, own };
         };
         const first = crisisLine || !anthropic ? null : await relay(anthropic);
-        // A rename (#601): saved, then one more call to confirm or decline it
-        // aloud. Skipped if the turn also relayed a tool call: the agent
-        // already holds that turn.
-        if (first?.rename) {
-          toolCalls.push(RENAME_TOOL);
-          let input: { name?: unknown } = {};
+        // One of our tools (#601 rename, #602 the person's name): saved, then
+        // one more call speaks to it. Skipped if the turn also relayed a tool
+        // call: the agent already holds that turn.
+        if (first?.own) {
+          const { tool, id, json } = first.own;
+          toolCalls.push(tool);
+          let input: { name?: unknown; shared?: unknown } = {};
           try {
-            input = JSON.parse(first.rename.json || "{}");
+            input = JSON.parse(json || "{}");
           } catch {}
-          const result = await ctx.runMutation(internal.talk.companion.rename, {
-            sessionId: talk.sessionId,
-            talkKey: talk.talkKey,
-            name: typeof input.name === "string" ? input.name : "",
-          });
+          const bind = { sessionId: talk.sessionId, talkKey: talk.talkKey, name: typeof input.name === "string" ? input.name : "" };
+          const result =
+            tool === PERSON_NAME_TOOL
+              ? await ctx.runMutation(internal.talk.companion.setPersonName, { ...bind, shared: input.shared === true })
+              : await ctx.runMutation(internal.talk.companion.rename, bind);
           if ((finish as FinishReason) === "tool_calls" && toolCalls.length === 1) {
             finish = "stop";
-            // The confirmation already speaks as the new name.
-            const as = systemAs(result.ok ? result.name : name);
-            await relay(call([...turns, ...renameTurns(first.text, first.rename.id, input, result, name)], true, as));
+            // The follow-up already speaks as the new name, or to the person by theirs.
+            const as =
+              tool === PERSON_NAME_TOOL
+                ? systemAs(name, result.ok ? { name: result.name, ask: false } : memory?.person)
+                : systemAs(result.ok ? result.name : name);
+            const answer = ownToolAnswer(tool, result, name);
+            await relay(call([...turns, ...ownToolTurns(first.text, id, tool, input, answer)], true, as));
           }
         }
         // Never hang up on the crisis line (#581).

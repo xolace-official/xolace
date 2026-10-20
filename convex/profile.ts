@@ -3,22 +3,9 @@ import { query, mutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
 import { insightFeatureValidator } from "./lib/validators";
-import { generateDisplayName, validateDisplayName } from "./lib/displayName";
+import { generateDisplayName, seededDisplayName, validateDisplayName } from "./lib/displayName";
 import { streakState } from "./streaks/state";
 import { reflectionRank } from "./lib/aggregates";
-
-// Deterministic fallback name for users created before displayName existed.
-// Consistent per-profile so the same user always sees the same name.
-function seededDisplayName(profileId: string): string {
-  const NAMES = [
-    'Wren', 'River', 'Sage', 'Cedar', 'Vale', 'Fern', 'Lumen', 'Mist',
-    'Dusk', 'Ash', 'Reed', 'Birch', 'Lyra', 'Haze', 'Cloud', 'Stone',
-    'Cove', 'Flint', 'Glen', 'Sable', 'Haven', 'Soleil', 'Briar', 'Crest',
-  ];
-  let hash = 0;
-  for (const ch of profileId) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
-  return NAMES[hash % NAMES.length];
-}
 
 /**
  * Full profile summary for the profile screen.
@@ -388,7 +375,8 @@ export const updateDisplayName = mutation({
       .unique();
     if (!prefs) throw new Error("Preferences not found");
 
-    await ctx.db.patch("preferences", prefs._id, { displayName: trimmed });
+    // Their own new name replaces any private one the companion used (#602).
+    await ctx.db.patch("preferences", prefs._id, { displayName: trimmed, preferredName: undefined });
     return null;
   },
 });
