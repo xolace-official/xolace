@@ -19,9 +19,11 @@ import {
   ACCOUNT_ICON,
   HEART_ICON,
   PLUS_TIER_ICON,
+  TALK_TIME_ICON,
 } from "@/src/features/settings/components/settings-icons";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
+import { useTalkTime } from "@/src/features/talk/use-talk-time";
 
 const styles = StyleSheet.create({
   contentContainer: { paddingTop: 20, paddingBottom: 48 },
@@ -34,6 +36,7 @@ export const SettingsScreen = () => {
   const preferences = useQuery(api.preferences.get);
   const { user } = useUser();
   const { isPlus } = usePlusEntitlement();
+  const talkTime = useTalkTime(isPlus);
   const openPaywall = usePaywall((s) => s.open);
   const storedTheme = useAppStore((s) => s.theme);
 
@@ -75,13 +78,16 @@ export const SettingsScreen = () => {
       {/* ── XOLACE+ ─────────────────────────────────────────── */}
       <SettingsSection title="Xolace+">
         {isPlus ? (
-          <SettingsRow
-            variant="value"
-            icon={icon(PLUS_TIER_ICON)}
-            label="Xolace+"
-            value="Active"
-            isLast
-          />
+          <>
+            <SettingsRow variant="value" icon={icon(PLUS_TIER_ICON)} label="Xolace+" value="Active" />
+            <SettingsRow
+              variant="value"
+              icon={icon(TALK_TIME_ICON)}
+              label="Talk time this week"
+              value={talkTime ? `${Math.floor(talkTime.secondsLeft / 60)} min left` : "—"}
+              isLast
+            />
+          </>
         ) : (
           <SettingsRow
             variant="nav"

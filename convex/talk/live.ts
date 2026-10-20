@@ -2,7 +2,6 @@ import { v } from "convex/values";
 import { action } from "../_generated/server";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
-import { mintTalkKey, TALK_CEILING_MS } from "./clock";
 
 /**
  * Starts a talk (#592): creates its session, then a single-use WebRTC token
@@ -16,8 +15,8 @@ import { mintTalkKey, TALK_CEILING_MS } from "./clock";
  * Its own key (ElevenAgents permission only): the Vent/TTS key is scoped
  * without agents access, and should stay that way.
  *
- * ponytail: no usage cap or talk ledger yet; a Plus tester can talk until
- * the agent's 1,560 s backstop. The weekly cap ticket adds the reserve here.
+ * The talk's ceiling is reserved from the person's weekly talk time (#596);
+ * under 3 min left it throws `talk_time_used`.
  */
 export const start = action({
   args: {},
@@ -27,11 +26,13 @@ export const start = action({
     const agentId = process.env.TALK_AGENT_ID;
     if (!apiKey || !agentId) throw new Error("Talk is not configured");
 
-    // Minted here, not in the mutation: an action's randomness is the real thing.
+    // The key's secret comes from here, not the mutation: an action's
+    // randomness is the real thing. The mutation adds the ceiling it reserved.
     const startedAt = Date.now();
-    const talkKey = mintTalkKey(startedAt);
-    // A failed token leaves an empty session; the idle check abandons it.
-    const sessionId = await ctx.runMutation(internal.talk.session.start, { talkKey });
+    const { sessionId, talkKey, ceilingS } = await ctx.runMutation(internal.talk.session.start, {
+      startedAt,
+      secret: crypto.randomUUID(),
+    });
 
     const res = await fetch(
       `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(agentId)}`,
@@ -39,9 +40,11 @@ export const start = action({
     );
     if (!res.ok) {
       console.error("[talk] token request failed", res.status, await res.text());
+      // Gives the reserved talk time back at once.
+      await ctx.runMutation(internal.talk.session.abandon, { sessionId });
       throw new Error("Could not start a talk");
     }
     const { token } = (await res.json()) as { token: string };
-    return { token, sessionId, talkKey, msLeft: TALK_CEILING_MS - (Date.now() - startedAt) };
+    return { token, sessionId, talkKey, msLeft: ceilingS * 1000 - (Date.now() - startedAt) };
   },
 });

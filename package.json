@@ -42,6 +42,7 @@
     "@anthropic-ai/sdk": "0.92.0",
     "@clerk/expo": "^4.6.1",
     "@clerk/expo-google-signin": "^1.0.2",
+    "@clipin/convex-credits": "1.0.1",
     "@config-plugins/react-native-webrtc": "15.0.2",
     "@convex-dev/action-cache": "^0.3.1",
     "@convex-dev/aggregate": "^0.3.0",
@@ -181,5 +182,6 @@
   "patchedDependencies": {
     "@react-native-masked-view/masked-view@0.3.2": "patches/@react-native-masked-view%2Fmasked-view@0.3.2.patch",
     "uniwind@1.11.0": "patches/uniwind@1.11.0.patch"
-  }
+  },
+  "packageManager": "npm@12.2.0+sha512.66c2632a94e796649738b2d7894d710c2cc2e1696893823066687f6b0d8a52e5f2b54eeaeaa32ffdc513ecca1e49ff794a5c2ec3f9515d879f1b3182b291cf35"
 }

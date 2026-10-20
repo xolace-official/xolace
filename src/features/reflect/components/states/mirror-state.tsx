@@ -7,6 +7,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import type { EntryType } from "@/src/features/reflect/types";
+import { TalkTimeLeft } from "@/src/features/talk/talk-time-left";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { ClaimStrength } from "@/convex/ai/routing";
 import { playMirrorArrival } from "@/src/lib/haptics";
@@ -184,6 +185,7 @@ export const MirrorState = ({
         onNotQuite={onNotQuite}
         onSayMore={onSayMore}
       />
+      <TalkTimeLeft sessionId={sessionId} />
     </View>
   );
 };

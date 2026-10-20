@@ -6,6 +6,8 @@ import { requireAuth, requireSessionOwnership } from "../lib/auth";
 import { requirePremium } from "../lib/premium";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "../lib/rateLimits";
 import { getDayOfWeek, getTimeOfDay } from "../lib/timeOfDay";
+import { mintTalkKey } from "./clock";
+import { releaseUnconnected, reserveTalk } from "./time";
 import { personText } from "./transcript";
 
 // Our endpoint ends a silent talk at about 60 s (#597), so a talk with no new
@@ -16,9 +18,9 @@ const MAX_TALK_LINES = 1000;
 
 /** A talk is a session (#592): created for the signed-in Plus person at talk start. */
 export const start = internalMutation({
-  args: { talkKey: v.string() },
-  returns: v.id("sessions"),
-  handler: async (ctx, { talkKey }) => {
+  args: { startedAt: v.number(), secret: v.string() },
+  returns: v.object({ sessionId: v.id("sessions"), talkKey: v.string(), ceilingS: v.number() }),
+  handler: async (ctx, { startedAt, secret }) => {
     const { profile } = await requireAuth(ctx);
     await requirePremium(ctx, profile, "talk");
     // The same initiate budget as a typed Plus session (override spread as
@@ -34,13 +36,16 @@ export const start = internalMutation({
       state: "initiated",
       entryType: "talk",
       kept: true,
-      talkKey,
       createdAt: now,
       updatedAt: now,
     });
+    // Throws `talk_time_used` under the minimum, rolling the session back.
+    const ceilingS = await reserveTalk(ctx, profile._id, sessionId);
+    const talkKey = mintTalkKey(startedAt, ceilingS, secret);
+    await ctx.db.patch("sessions", sessionId, { talkKey });
     // A talk that never serves a turn still gets closed.
     await ctx.scheduler.runAfter(TALK_IDLE_MS, internal.talk.session.finalizeIfIdle, { sessionId });
-    return sessionId;
+    return { sessionId, talkKey, ceilingS };
   },
 });
 
@@ -52,6 +57,17 @@ export const finalizeIfIdle = internalMutation({
     // A later line scheduled its own check; that one decides.
     if (!session || Date.now() - session.updatedAt < TALK_IDLE_MS - 1000) return null;
     await finalizeTalk(ctx, session);
+    return null;
+  },
+});
+
+/** live.start's token request failed: the talk never begins. */
+export const abandon = internalMutation({
+  args: { sessionId: v.id("sessions") },
+  returns: v.null(),
+  handler: async (ctx, { sessionId }) => {
+    const session = await ctx.db.get("sessions", sessionId);
+    if (session) await finalizeTalk(ctx, session);
     return null;
   },
 });
@@ -109,6 +125,7 @@ export async function finalizeTalk(
   // The typed minimum is any words at all (the "Let it out" gate).
   if (!rawText) {
     await ctx.db.patch("sessions", session._id, { state: "abandoned", updatedAt: now });
+    await releaseUnconnected(ctx, session);
     return "abandoned";
   }
 

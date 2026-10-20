@@ -156,6 +156,9 @@ export default defineSchema({
     // Latest frozen_days dayKey the app has acknowledged in-app (#436), so the
     // "a freeze kept your streak lit" banner shows once per freeze event.
     freezeAckedDay: v.optional(v.string()),
+    // The local Monday ("YYYY-MM-DD") of the week whose talk time was last
+    // topped up (#596). Lazily, at the person's next talk-time read or start.
+    talkWeekOf: v.optional(v.string()),
 
     // Session a free user bought Plus from at session-end's kindling upsell
     // (`paths.requestKindling`). The completion-time `generate.run` no-oped
@@ -806,6 +809,20 @@ export default defineSchema({
     // talk ends on it.
     provisional: v.optional(v.boolean()),
   }).index("by_session_and_seq", ["sessionId", "seq"]),
+
+  // A talk's open reservation of talk time (#596): reserved at start, gone
+  // once the post-call webhook settles it or the sweeper releases it. The
+  // ledger itself lives in the credits component (convex/talk/time.ts).
+  talk_charges: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    sessionId: v.id("sessions"),
+    chargeId: v.string(),
+    reserved: v.number(), // seconds
+    startedAt: v.number(),
+  })
+    .index("by_emotionalProfileId", ["emotionalProfileId"])
+    .index("by_sessionId", ["sessionId"])
+    .index("by_startedAt", ["startedAt"]),
 
   // ===========================================================
   // 5. SESSION TURNS

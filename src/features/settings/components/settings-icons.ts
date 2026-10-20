@@ -115,6 +115,12 @@ export const PLUS_TIER_ICON: CrossPlatformSymbol = {
   web: "auto_awesome",
 };
 
+export const TALK_TIME_ICON: CrossPlatformSymbol = {
+  ios: "waveform",
+  android: "graphic_eq",
+  web: "graphic_eq",
+};
+
 export const DISPLAY_NAME_ICON: CrossPlatformSymbol = {
   ios: "textformat",
   android: "text_fields",

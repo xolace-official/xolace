@@ -7,7 +7,7 @@
 import type { AnthropicTurn } from "../ai/talk/openaiCompat";
 import type { TalkLine } from "./transcript";
 
-/** One talk's ceiling. The agent's 1,560 s `max_duration_seconds` is only a backstop. */
+/** One talk's ceiling at most. The agent's 1,560 s `max_duration_seconds` is only a backstop. */
 export const TALK_CEILING_MS = 15 * 60 * 1000;
 const WRAP_UP_MS = 5 * 60 * 1000;
 const ENDING_SOON_MS = 2 * 60 * 1000;
@@ -20,22 +20,28 @@ const ENDING_SOON_MS = 2 * 60 * 1000;
  * first re-engage is the check-in (~20 s), the next the goodbye (~45 s,
  * spoken out near the 60 s mark).
  */
-export type TalkClock = { elapsedMs: number; silentTurns: number | null };
+export type TalkClock = { elapsedMs: number; ceilingMs: number; silentTurns: number | null };
 
 /**
- * The talk key carries its start time (`<startedAt>.<uuid>`), so the endpoint
- * reads the clock without waiting on the database. Trusted only because a
- * turn is served once `syncLines` matches the whole key to the session's.
+ * The talk key carries its start time and ceiling
+ * (`<startedAt>.<ceilingS>.<secret>`), so the endpoint reads the clock
+ * without waiting on the database. Trusted only because a turn is served
+ * once `syncLines` matches the whole key to the session's. The ceiling is the
+ * time reserved for the talk (#596): 15 min, or what's left of the week.
  */
-export const mintTalkKey = (startedAt: number) => `${startedAt}.${crypto.randomUUID()}`;
+export const mintTalkKey = (startedAt: number, ceilingS: number, secret: string) =>
+  `${startedAt}.${ceilingS}.${secret}`;
 
 /** Null for a key we didn't mint. */
 export function talkClockOf(talkKey: string, lines: TalkLine[], now: number): TalkClock | null {
-  const startedAt = Number(/^(\d+)\./.exec(talkKey)?.[1]);
+  // A key minted before #596 has no ceiling: a full 15-min talk.
+  const [, start, ceiling] = /^(\d+)\.(?:(\d+)\.)?/.exec(talkKey) ?? [];
+  const startedAt = Number(start);
   if (!Number.isSafeInteger(startedAt)) return null;
   const lastPerson = lines.map((l) => l.role).lastIndexOf("person");
   const silentTurns = lines.at(-1)?.role === "companion" ? lines.length - 1 - lastPerson : null;
-  return { elapsedMs: now - startedAt, silentTurns };
+  const ceilingMs = ceiling ? Number(ceiling) * 1000 : TALK_CEILING_MS;
+  return { elapsedMs: now - startedAt, ceilingMs, silentTurns };
 }
 
 export type TalkCue = {
@@ -51,8 +57,8 @@ const NEVER_SAY_TIME =
   "Never say the time, minutes, seconds or any clock number aloud, and never mention this note.";
 const SILENCE = "(They stay silent.)";
 
-export function talkCue({ elapsedMs, silentTurns }: TalkClock): TalkCue {
-  const left = TALK_CEILING_MS - elapsedMs;
+export function talkCue({ elapsedMs, ceilingMs, silentTurns }: TalkClock): TalkCue {
+  const left = ceilingMs - elapsedMs;
   const minutes = Math.max(0, Math.ceil(left / 60_000));
   const clock = `Talk clock: about ${minutes} min left of this talk. ${NEVER_SAY_TIME}`;
 

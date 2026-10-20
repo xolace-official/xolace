@@ -62,7 +62,14 @@ export const postCallWebhook = httpAction(async (ctx, request) => {
   if (!(await verifySignature(rawBody, request.headers.get("ElevenLabs-Signature")))) {
     return new Response("invalid signature", { status: 401 });
   }
-  let event: { type?: unknown; data?: { conversation_id?: unknown } };
+  let event: {
+    type?: unknown;
+    data?: {
+      conversation_id?: unknown;
+      metadata?: { call_duration_secs?: unknown };
+      conversation_initiation_client_data?: { custom_llm_extra_body?: { sessionId?: unknown; talkKey?: unknown } };
+    };
+  };
   try {
     event = JSON.parse(rawBody);
   } catch {
@@ -71,6 +78,17 @@ export const postCallWebhook = httpAction(async (ctx, request) => {
   const conversationId = event.data?.conversation_id;
   if (event.type !== "post_call_transcription" || typeof conversationId !== "string") {
     return new Response(null, { status: 200 });
+  }
+  // Charge talk time from the connected duration (#596), before the DELETE
+  // stamps the talk. Idempotent on its own.
+  const durationS = event.data?.metadata?.call_duration_secs;
+  if (typeof durationS === "number") {
+    const extra = event.data?.conversation_initiation_client_data?.custom_llm_extra_body;
+    const talk =
+      typeof extra?.sessionId === "string" && typeof extra.talkKey === "string"
+        ? { sessionId: extra.sessionId, talkKey: extra.talkKey }
+        : undefined;
+    await ctx.runMutation(internal.talk.time.settle, { conversationId, durationS, talk });
   }
   // Idempotent: only a talk still awaiting deletion gets a DELETE, so a
   // redelivery does nothing. A conversation not attached yet is skipped too;

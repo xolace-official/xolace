@@ -75,7 +75,8 @@ export const posthogMock = () => ({
 
 /** `convex/revenuecat` — entitlement state. `hasPremium` stays real. */
 export const revenuecatMock = (hasEntitlement: Lazy<boolean> = false) => ({
-  revenuecat: { hasEntitlement: async () => unwrap(hasEntitlement) },
+  // registerRoutes: http.ts runs it when a test fetches a route.
+  revenuecat: { hasEntitlement: async () => unwrap(hasEntitlement), registerRoutes: () => {} },
 });
 
 /**

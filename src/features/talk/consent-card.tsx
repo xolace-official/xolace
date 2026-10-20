@@ -5,8 +5,9 @@ import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { COMPANION_NAME, PRIVACY_LINE } from "./talk-copy";
+import { COMPANION_NAME, MIN_TALK_S, PRIVACY_LINE, TALK_TIME_RESETS, talkTimeLine } from "./talk-copy";
 import type { Talk } from "./use-talk";
+import { useTalkTime } from "./use-talk-time";
 
 function Row({ icon, children }: { icon: SymbolViewProps["name"]; children: string }) {
   const accent = useThemeColor("accent");
@@ -19,6 +20,10 @@ function Row({ icon, children }: { icon: SymbolViewProps["name"]; children: stri
 }
 
 export function ConsentCard({ talk }: { talk: Talk }) {
+  const time = useTalkTime();
+  // Under the minimum, Start can't be pressed (#582); the server refuses it too.
+  const low = time != null && time.secondsLeft < MIN_TALK_S;
+  const label = low ? TALK_TIME_RESETS : talk.started ? "Starting…" : "Start talking";
   return (
     <GlassSurface radius={28}>
       <View className="gap-4 p-5">
@@ -32,15 +37,19 @@ export function ConsentCard({ talk }: { talk: Talk }) {
         <Row icon={{ ios: "flame", android: "local_fire_department" }}>
           {`${COMPANION_NAME} is an AI, part of Xolace. This talk is remembered with your reflections.`}
         </Row>
-        <Row icon={{ ios: "clock", android: "schedule" }}>A talk lasts up to 15 minutes.</Row>
+        <Row icon={{ ios: "clock", android: "schedule" }}>
+          {(time && talkTimeLine(time.secondsLeft)) ?? "A talk lasts up to 15 minutes."}
+        </Row>
         <Row icon={{ ios: "lock", android: "lock" }}>{PRIVACY_LINE}</Row>
-        <Button onPress={talk.start} isDisabled={talk.started}>
-          <Button.Label>{talk.started ? "Starting…" : "Start talking"}</Button.Label>
+        <Button onPress={talk.start} isDisabled={talk.started || low}>
+          <Button.Label>{label}</Button.Label>
         </Button>
         {talk.error ? (
           <AppText className="text-center text-xs text-danger">{talk.error}</AppText>
         ) : (
-          <AppText className="text-center text-xs text-muted">We will ask for the microphone once.</AppText>
+          <AppText className="text-center text-xs text-muted">
+            {low ? "You can still write a reflection any time." : "We will ask for the microphone once."}
+          </AppText>
         )}
       </View>
     </GlassSurface>

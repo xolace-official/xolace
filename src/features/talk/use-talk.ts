@@ -6,16 +6,23 @@ import { router } from "expo-router";
 import { AudioModule } from "expo-audio";
 import { useConversation } from "@elevenlabs/react-native";
 import { useAction, useMutation } from "convex/react";
+import { ConvexError } from "convex/values";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { TALK_TIME_RESETS } from "./talk-copy";
 import { useThread } from "./use-thread";
 
 export type Presence = "Connecting…" | "Listening" | "Thinking…" | "Speaking" | "Mic off";
 
 // Voice volumes sit low (speech is ~0.05–0.3); the root lifts them into view.
 const lift = (v: number) => Math.min(1, Math.sqrt(Math.max(0, v)));
-const messageOf = (e: unknown) => (e instanceof Error ? e.message : String(e));
+const messageOf = (e: unknown) =>
+  e instanceof ConvexError && e.data?.code === "talk_time_used"
+    ? `There isn't enough talk time left this week. ${TALK_TIME_RESETS}.`
+    : e instanceof Error
+      ? e.message
+      : String(e);
 
 export function useTalk() {
   const startTalk = useAction(api.talk.live.start);
@@ -61,8 +68,14 @@ export function useTalk() {
     onDisconnect: () => void finish(),
     onError: (message) => {
       setError(message);
-      // A talk that never connected goes back to the card, so it can be retried.
-      if (status !== "connected") setStarted(false);
+      // A talk that never connected goes back to the card, so it can be
+      // retried; closing its session gives the reserved talk time back.
+      if (status !== "connected") {
+        setStarted(false);
+        const sessionId = sessionRef.current;
+        sessionRef.current = null;
+        if (sessionId) endTalk({ sessionId }).catch(console.warn);
+      }
     },
     onMessage: ({ message, role }) => {
       if (role === "user") {

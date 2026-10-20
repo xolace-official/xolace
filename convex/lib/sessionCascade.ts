@@ -34,6 +34,8 @@ export const SESSION_ID_EXEMPT = {
     "Safety-audit tombstone — retained (profileId stripped) even past account deletion; holds no user text by policy.",
   feedback:
     "Profile-scoped structural signal — anonymized in place on account deletion (owner link + text stripped), not cascaded with its session.",
+  talk_charges:
+    "An open talk-time reservation (#596), no text: it must still be released after its session is wiped. The talk-time sweeper removes it within ~2 h.",
 } as const;
 
 /**
