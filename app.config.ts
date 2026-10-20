@@ -159,6 +159,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         "android.permission.READ_MEDIA_VIDEO",
         "android.permission.ACTIVITY_RECOGNITION",
         "com.google.android.gms.permission.AD_ID",
+        // Added by @config-plugins/react-native-webrtc; talks are audio only.
+        "android.permission.CAMERA",
+        "android.permission.SYSTEM_ALERT_WINDOW",
       ]
     },
     web: {
@@ -237,6 +240,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       ],
       "expo-video",
       ["expo-audio", { enableBackgroundPlayback: true }],
+      // Companion talks (#591): ElevenLabs agents run over LiveKit WebRTC.
+      "@livekit/react-native-expo-plugin",
+      [
+        "@config-plugins/react-native-webrtc",
+        { microphonePermission: "Allow Xolace to use the microphone to capture what you're feeling." }
+      ],
       "expo-asset",
       "expo-image",
       "expo-status-bar",

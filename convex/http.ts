@@ -1,6 +1,7 @@
 import { httpRouter } from "convex/server";
 import { revenuecat } from "./revenuecat";
 import { streamEvents } from "./streamWebhook";
+import { chatCompletions } from "./ai/talk/chatCompletions";
 
 const http = httpRouter();
 
@@ -11,6 +12,14 @@ http.route({
   path: "/webhooks/stream",
   method: "POST",
   handler: streamEvents,
+});
+
+// Companion talk brain: the ElevenLabs agent's Custom LLM (base URL
+// `<site>/v1`). Checks the shared secret itself.
+http.route({
+  path: "/v1/chat/completions",
+  method: "POST",
+  handler: chatCompletions,
 });
 
 // Mounts POST /webhooks/revenuecat — the component verifies the

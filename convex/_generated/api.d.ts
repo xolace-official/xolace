@@ -58,6 +58,8 @@ import type * as ai_reflectionAgent_triggerQueries from "../ai/reflectionAgent/t
 import type * as ai_routing from "../ai/routing.js";
 import type * as ai_safeguard from "../ai/safeguard.js";
 import type * as ai_slotFill from "../ai/slotFill.js";
+import type * as ai_talk_chatCompletions from "../ai/talk/chatCompletions.js";
+import type * as ai_talk_openaiCompat from "../ai/talk/openaiCompat.js";
 import type * as ai_transcribe from "../ai/transcribe.js";
 import type * as ai_tts from "../ai/tts.js";
 import type * as ai_ventAcknowledge from "../ai/ventAcknowledge.js";
@@ -183,6 +185,7 @@ import type * as streaks_state from "../streaks/state.js";
 import type * as streamGunzip from "../streamGunzip.js";
 import type * as streamSetup from "../streamSetup.js";
 import type * as streamWebhook from "../streamWebhook.js";
+import type * as talk_live from "../talk/live.js";
 import type * as understanding from "../understanding.js";
 import type * as users from "../users.js";
 import type * as vent from "../vent.js";
@@ -246,6 +249,8 @@ declare const fullApi: ApiFromModules<{
   "ai/routing": typeof ai_routing;
   "ai/safeguard": typeof ai_safeguard;
   "ai/slotFill": typeof ai_slotFill;
+  "ai/talk/chatCompletions": typeof ai_talk_chatCompletions;
+  "ai/talk/openaiCompat": typeof ai_talk_openaiCompat;
   "ai/transcribe": typeof ai_transcribe;
   "ai/tts": typeof ai_tts;
   "ai/ventAcknowledge": typeof ai_ventAcknowledge;
@@ -371,6 +376,7 @@ declare const fullApi: ApiFromModules<{
   streamGunzip: typeof streamGunzip;
   streamSetup: typeof streamSetup;
   streamWebhook: typeof streamWebhook;
+  "talk/live": typeof talk_live;
   understanding: typeof understanding;
   users: typeof users;
   vent: typeof vent;
