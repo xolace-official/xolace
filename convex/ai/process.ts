@@ -14,7 +14,7 @@ import { MODERATION_UNAVAILABLE } from "./providers/moderation";
 import { buildClassifierPrompt } from "./prompts/classifier";
 import { buildArticulatorPrompt, hasMetaNarration } from "./prompts/articulator";
 import { applyAudioFence } from "./prompts/mirrorAudioTags";
-import { evaluateSafeguard, resolveSupportNeed } from "./safeguard";
+import { evaluateSafeguard, keepsWordsPrivate, resolveSupportNeed, withTalkPeak, type TalkPeak } from "./safeguard";
 import { decideMirrorOutcome, resolveMirrorTone } from "./mirrorPlan";
 import { EPISODIC_CONNECT_FLOOR } from "./routing";
 import { scheduleMirrorAudio } from "./tts";
@@ -160,11 +160,11 @@ export const generateMirror = internalAction({
       const episodicMatches = episodic.matches;
       const episodicRecall = episodicMatches.map((m) => m.text);
 
-      // 5. Evaluate safeguard (rule engine, no LLM)
-      const safeguard = evaluateSafeguard(
-        classification,
-        moderationResult,
-        context.recentMetadata,
+      // 5. Evaluate safeguard (rule engine, no LLM). A talk's level is the
+      // higher of this end verdict and its live peak (#599).
+      const safeguard = withTalkPeak(
+        evaluateSafeguard(classification, moderationResult, context.recentMetadata),
+        session.talkSafety as TalkPeak | undefined,
       );
       console.log("safeguard ", safeguard);
 
@@ -388,8 +388,8 @@ export const generateMirror = internalAction({
 
       // Schedule speculative distillation (for reflection pool)
       // Skip if mirror is the fallback — nothing meaningful to distill.
-      // Skip entirely for crisis sessions
-      if (mirrorText !== FALLBACK_MIRROR && !plan.isCrisis) {
+      // Skip entirely for crisis sessions, and a talk at elevated (#599).
+      if (mirrorText !== FALLBACK_MIRROR && !keepsWordsPrivate(session.entryType, safeguard.level)) {
         await ctx.scheduler.runAfter(
           0,
           internal.jobs.reflectionDistiller.distill,

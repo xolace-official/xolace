@@ -33,6 +33,8 @@ export function useTalk() {
   const sessionRef = useRef<Id<"sessions"> | null>(null);
   // The last typed line, in case it comes back as a transcript.
   const lastTyped = useRef<string | null>(null);
+  /** The talk's session, kept after it ends: help stays on screen (#599). */
+  const [sessionId, setSessionId] = useState<Id<"sessions"> | null>(null);
   const [started, setStarted] = useState(false);
   /** When the talk's time runs out, on this device's clock (#597). */
   const [endsAt, setEndsAt] = useState<number | null>(null);
@@ -121,6 +123,7 @@ export function useTalk() {
           : "Listening";
 
   return {
+    sessionId,
     started,
     connected,
     presence,
@@ -139,6 +142,7 @@ export function useTalk() {
       try {
         const { token, sessionId, talkKey, msLeft } = await startTalk();
         sessionRef.current = sessionId;
+        setSessionId(sessionId);
         setEndsAt(Date.now() + msLeft);
         convo.startSession({
           conversationToken: token,

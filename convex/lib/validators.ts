@@ -112,6 +112,15 @@ export const triggerTypeValidator = v.union(
   v.literal("user_requested")
 );
 
+/** A live talk's peak (#599), `TalkPeak` in ai/safeguard.ts. */
+export const talkPeakValidator = v.object({
+  level: v.union(v.literal("elevated"), v.literal("crisis")),
+  triggerType: triggerTypeValidator,
+  triggerConfidence: v.number(),
+  triggerEvidence: v.string(),
+  fromHistory: v.optional(v.boolean()),
+});
+
 export const actionTakenValidator = v.union(
   v.literal("resources_shown"),
   v.literal("warm_handoff_offered"),

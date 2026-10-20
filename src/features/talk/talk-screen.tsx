@@ -10,6 +10,7 @@ import { ConsentCard } from "./consent-card";
 import { TalkAurora } from "./talk-aurora";
 import { TalkComposer } from "./talk-composer";
 import { TalkHeader } from "./talk-header";
+import { TalkHelp } from "./talk-help";
 import { TalkThread } from "./talk-thread";
 import { useTalk } from "./use-talk";
 
@@ -28,6 +29,7 @@ function Talk() {
       <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={8 - insets.bottom} className="flex-1">
         <TalkHeader talk={talk} />
         <TalkThread turns={talk.turns} footer={footer} />
+        <TalkHelp sessionId={talk.sessionId} />
         {talk.connected && <TalkComposer talk={talk} />}
       </KeyboardAvoidingView>
     </View>

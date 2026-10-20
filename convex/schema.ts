@@ -12,6 +12,7 @@ import {
   safeguardLevelValidator,
   supportNeedValidator,
   triggerTypeValidator,
+  talkPeakValidator,
   activityActionTypeValidator,
   domainValidator,
 } from "./lib/validators";
@@ -757,6 +758,12 @@ export default defineSchema({
     talkRecall: v.optional(
       v.object({ lines: v.array(v.string()), surfaced: v.array(v.string()) }),
     ),
+    // Safety during the talk (#599): the highest level it reached, never
+    // lowered. Read each turn (safety skill, help on screen) and by
+    // generateMirror (session level = max of this and the end verdict).
+    talkSafety: v.optional(talkPeakValidator),
+    // The fixed crisis line was spoken: it is said once per talk.
+    talkCrisisLineSpoken: v.optional(v.boolean()),
 
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated

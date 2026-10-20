@@ -125,16 +125,18 @@ export function renderRecall(lines: string[]): string {
 
 /**
  * The turn's system blocks: the agent's prompt and the preload as the cached
- * prefix, then the recall and the clock cue, which change turn to turn.
+ * prefix, then the recall, the safety skill (#599) and the clock cue, which
+ * change turn to turn.
  */
 export function talkSystem(
   agentSystem: string,
   memory: { memory: string; recall: string } | null,
   turns: AnthropicTurn[],
   cue: TalkCue,
+  safety = "",
 ) {
   const prefix = [agentSystem, memory?.memory].filter(Boolean).join("\n\n");
-  const tail = withCue(memory?.recall ?? "", turns, cue);
+  const tail = withCue([memory?.recall, safety].filter(Boolean).join("\n\n"), turns, cue);
   return [
     ...(prefix ? [{ type: "text" as const, text: prefix, cache_control: { type: "ephemeral" as const } }] : []),
     ...(tail ? [{ type: "text" as const, text: tail }] : []),

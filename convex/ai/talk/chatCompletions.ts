@@ -7,6 +7,8 @@ import { toAnthropicRequest, type OpenAIMessage, type OpenAITool } from "./opena
 import { createEventTranslator, sseChunk, SSE_DONE, type FinishReason } from "./openaiSse";
 import { talkClockOf, talkCue } from "../../talk/clock";
 import { talkSystem } from "../../talk/memory";
+import { moderateInput } from "../providers/moderation";
+import { CRISIS_LINE, moderationPeak, phrasePeak, raises, safetySkill, turnWords } from "../../talk/safety";
 
 // The agent's Custom LLM `model_id` picks one of these; anything else gets
 // the first. Both are listed so the prototype can measure TTFT on each (#591).
@@ -16,6 +18,14 @@ const TALK_MAX_TOKENS = 400;
 // The agent's system tool that hangs up; our clock calls it on the last turn (#597).
 // Emitted even if the agent doesn't list it: then nothing hangs up but the backstop.
 const END_CALL = "end_call";
+// How long moderation may hold the first chunk, from the turn's start (#581).
+// A miss streams the turn; the verdict applies from the next one.
+const MODERATION_WAIT_MS = 250;
+// A late verdict is waited on this long after [DONE], then dropped.
+const MODERATION_LATE_MS = 5000;
+
+const within = <T,>(p: Promise<T>, ms: number) =>
+  Promise.race([p, new Promise<null>((r) => setTimeout(() => r(null), Math.max(0, ms)))]);
 
 // Digests first so the compare is fixed-length and leaks nothing of the secret.
 async function sha256Hex(s: string): Promise<string> {
@@ -42,6 +52,12 @@ async function sha256Hex(s: string): Promise<string> {
  * the client set as the custom LLM extra body (#592), and the talk so far is
  * written to `talk_turns` as the turn starts: an interruption kills this
  * handler mid-stream (#591), so nothing that must land can wait for the end.
+ *
+ * Safety (#599): this turn's words pass a crisis-phrase floor before the
+ * model, and moderation races the model, holding the first chunk up to
+ * MODERATION_WAIT_MS. At crisis the companion speaks CRISIS_LINE (once per
+ * talk, no model call), then the crisis safety skill for the rest of the
+ * talk; at elevated, the elevated skill. Late verdicts land for the next turn.
  *
  * ponytail: the `[talk]` logs carry only timings, model and body keys (never
  * text); they answer #591's open measurements. Drop or downgrade them once
@@ -74,24 +90,34 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   const talk = { sessionId: extra.sessionId, talkKey: extra.talkKey, lines: talkLines(body.messages) };
   const clock = talkClockOf(talk.talkKey, talk.lines, startedAt);
   if (!clock) return new Response("no talk", { status: 403 });
-  // Started now, awaited once the model call is in flight: costs no TTFT.
-  // A failed write fails closed: no turn the transcript can't hold.
-  const bound = ctx.runMutation(internal.talk.turns.syncLines, talk).catch((err) => {
-    console.error("[talk] turn sync failed", err);
-    return false;
-  });
+  const words = turnWords(talk.lines);
+  const phrase = phrasePeak(words);
+  // Raced against the first chunk below; never rejects (unavailable = no verdict).
+  const moderation = words && !phrase ? moderateInput(words).then(moderationPeak) : null;
   // The one database read before the model call (#598): the preload is
-  // fixed at talk start, the recall lands in the background between turns.
+  // fixed at talk start, the recall and the safety peak land between turns.
   const memory = await ctx.runQuery(internal.talk.remember.forTurn, talk).catch((err) => {
     console.error("[talk] memory read failed", err);
     return null;
   });
   mark("memory");
+  const peak = phrase && raises(memory?.safety, phrase) ? phrase : memory?.safety;
+  // The fixed line, said once (marked only once fully sent: an interrupted
+  // line comes again); this turn makes no model call.
+  let crisisLine = peak?.level === "crisis" && !memory?.crisisLineSpoken;
+  // Started now, awaited once the model call is in flight: costs no TTFT.
+  // A failed write fails closed: no turn the transcript can't hold.
+  const bound = ctx
+    .runMutation(internal.talk.turns.syncLines, { ...talk, ...(phrase ? { peak: phrase } : {}) })
+    .catch((err) => {
+      console.error("[talk] turn sync failed", err);
+      return false;
+    });
 
   const model = TALK_MODELS.find((m) => m === body.model) ?? TALK_MODELS[0];
   const { system: agentSystem, messages: turns, tools } = toAnthropicRequest(body.messages, body.tools);
   const cue = talkCue(clock);
-  const system = talkSystem(agentSystem, memory, turns, cue);
+  const system = talkSystem(agentSystem, memory, turns, cue, safetySkill(peak));
   if (turns.length === 0) return new Response("no turns", { status: 400 });
   // The last turn ends on our end_call; tools stay listed (the history may
   // hold past calls) but the model can't make one of its own.
@@ -122,6 +148,8 @@ export const chatCompletions = httpAction(async (ctx, request) => {
       elapsedS: Math.round(clock.elapsedMs / 1000),
       silentTurns: clock.silentTurns,
       closing,
+      safety: peak?.level ?? null,
+      crisisLine,
       bodyKeys: Object.keys(body),
       audioTags,
       toolCalls,
@@ -136,7 +164,9 @@ export const chatCompletions = httpAction(async (ctx, request) => {
     async start(controller) {
       const send = (s: string) => controller.enqueue(encoder.encode(s));
       try {
-        const anthropic = getAnthropicClient().messages.stream(
+        const anthropic = crisisLine
+          ? null
+          : getAnthropicClient().messages.stream(
           {
             model,
             max_tokens: TALK_MAX_TOKENS,
@@ -153,7 +183,9 @@ export const chatCompletions = httpAction(async (ctx, request) => {
           { signal: abort.signal, maxRetries: 0 },
         );
         mark("streamCalled");
-        anthropic.on("connect", () => mark("headers"));
+        anthropic?.on("connect", () => mark("headers"));
+        // We abort it ourselves (unbound, or a crisis caught in time); not an error.
+        anthropic?.on("abort", () => {});
         // Not this talk's turn (wrong key, or the talk has closed): serve nothing.
         // The clock read from the key is trusted only past this check.
         if (!(await bound)) {
@@ -165,10 +197,27 @@ export const chatCompletions = httpAction(async (ctx, request) => {
           return;
         }
         mark("bound");
+        // Moderation holds the first chunk: a crisis caught in time is met this turn.
+        let early: Awaited<NonNullable<typeof moderation>> = null;
+        if (anthropic && moderation && !crisisLine) {
+          early = await within(moderation, MODERATION_WAIT_MS - (Date.now() - startedAt));
+          mark("moderated");
+          if (early?.level === "crisis") {
+            crisisLine = !memory?.crisisLineSpoken;
+            if (crisisLine) abort.abort();
+            // Help on screen before anything is said.
+            await ctx.runMutation(internal.talk.safety.raise, { sessionId: talk.sessionId, peak: early });
+          }
+        }
         send(sseChunk(meta, { role: "assistant" }));
         const translate = createEventTranslator();
         let finish: FinishReason = "stop";
-        for await (const event of anthropic) {
+        if (crisisLine) {
+          firstTokenAt = Date.now();
+          send(sseChunk(meta, { content: CRISIS_LINE }));
+          reply = CRISIS_LINE;
+        }
+        for await (const event of crisisLine || !anthropic ? [] : anthropic) {
           if (event.type === "message_start") usage = event.message.usage;
           const out = translate(event);
           if (!out) continue;
@@ -182,7 +231,8 @@ export const chatCompletions = httpAction(async (ctx, request) => {
           reply += out.delta.content ?? "";
           for (const call of out.delta.tool_calls ?? []) if (call.function.name) toolCalls.push(call.function.name);
         }
-        if (closing) {
+        // Never hang up on the crisis line (#581).
+        if (closing && !crisisLine) {
           const call = { index: 0, id: `call_${crypto.randomUUID()}`, type: "function" as const };
           send(sseChunk(meta, { tool_calls: [{ ...call, function: { name: END_CALL, arguments: '{"reason":"talk ended"}' } }] }));
           toolCalls.push(END_CALL);
@@ -196,6 +246,15 @@ export const chatCompletions = httpAction(async (ctx, request) => {
           talkKey: talk.talkKey,
           reply: { seq: talk.lines.length, text: reply },
         });
+        // A verdict that missed the race applies from the next turn.
+        const late = early ?? (moderation ? await within(moderation, MODERATION_LATE_MS) : null);
+        if (late || crisisLine) {
+          await ctx.runMutation(internal.talk.safety.raise, {
+            sessionId: talk.sessionId,
+            ...(late ? { peak: late } : {}),
+            ...(crisisLine ? { crisisLineSpoken: true } : {}),
+          });
+        }
         controller.close();
       } catch (err) {
         if (outcome !== "aborted") {

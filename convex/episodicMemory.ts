@@ -8,6 +8,7 @@ import {
   type MutationCtx,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { keepsWordsPrivate } from "./ai/safeguard";
 import { Id } from "./_generated/dataModel";
 import {
   rag,
@@ -104,8 +105,9 @@ export const getSessionForEpisodic = internalQuery({
 
     // undefined = on by default (§1.1b).
     const personalMemoryEnabled = preferences?.personalMemoryEnabled !== false;
-    // Crisis sessions embed metadata-only until the §6 revisit lands.
-    const isCrisis = session.safeguardLevel === "crisis";
+    // Crisis sessions (and a talk at elevated, #599) embed metadata-only
+    // until the §6 revisit lands.
+    const isCrisis = keepsWordsPrivate(session.entryType, session.safeguardLevel);
 
     const metadataLine = [
       `emotion: ${metadata.primaryEmotion}`,

@@ -10,6 +10,7 @@ import { mintTalkKey } from "./clock";
 import { releaseUnconnected, reserveTalk } from "./time";
 import { personText } from "./transcript";
 import { talkPreload } from "./remember";
+import { patternRisk, type TalkPeak } from "../ai/safeguard";
 
 // Our endpoint ends a silent talk at about 60 s (#597), so a talk with no new
 // line for this long is over: cut off, or ended without the client telling us (#588).
@@ -44,16 +45,44 @@ export const start = internalMutation({
     const ceilingS = await reserveTalk(ctx, profile._id, sessionId);
     const talkKey = mintTalkKey(startedAt, ceilingS, secret);
     const { talkMemory, recall } = await talkPreload(ctx, profile, now);
+    const opening = await historyOpening(ctx, profile._id, now);
     await ctx.db.patch("sessions", sessionId, {
       talkKey,
       talkMemory,
       ...(recall ? { talkRecall: { lines: [], surfaced: [] } } : {}),
+      ...(opening ? { talkSafety: opening } : {}),
     });
     // A talk that never serves a turn still gets closed.
     await ctx.scheduler.runAfter(TALK_IDLE_MS, internal.talk.session.finalizeIfIdle, { sessionId });
     return { sessionId, talkKey, ceilingS };
   },
 });
+
+/**
+ * Pattern escalation at talk start (#599): 3+ of the last 5 sessions flagged
+ * opens the talk in the elevated safety skill, help button showing. A
+ * precaution, never mentioned to them, and never the session's level alone.
+ */
+async function historyOpening(
+  ctx: MutationCtx,
+  profileId: Doc<"sessions">["emotionalProfileId"],
+  now: number,
+): Promise<TalkPeak | null> {
+  const recent = await ctx.db
+    .query("emotional_metadata")
+    .withIndex("by_profile_theme", (q) => q.eq("emotionalProfileId", profileId))
+    .order("desc")
+    .take(5);
+  const { riskCount, windowCount } = patternRisk(recent, now);
+  if (riskCount < 3) return null;
+  return {
+    level: "elevated",
+    triggerType: "pattern_escalation",
+    triggerConfidence: riskCount / windowCount,
+    triggerEvidence: `Pattern: ${riskCount} of last ${windowCount} sessions within 48 hours had risk flags.`,
+    fromHistory: true,
+  };
+}
 
 export const finalizeIfIdle = internalMutation({
   args: { sessionId: v.id("sessions") },

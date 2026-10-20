@@ -7,6 +7,7 @@ import { renderSemanticProfile } from "../semanticProfiles";
 import { shapeIntakeSignals } from "../ai/intakeSignals";
 import { searchEpisodicMemory } from "../ai/helpers/episodicSearch";
 import { recallLine, renderMemory, renderRecall } from "./memory";
+import { talkPeakValidator } from "../lib/validators";
 
 // Read at talk start: the companion's preload (#598, #580).
 const RECENT_MOMENTS = 5;
@@ -79,12 +80,26 @@ export function recallQuery(lines: { role: string; text: string }[]): string | n
  */
 export const forTurn = internalQuery({
   args: { sessionId: v.string(), talkKey: v.string() },
-  returns: v.union(v.null(), v.object({ memory: v.string(), recall: v.string() })),
+  returns: v.union(
+    v.null(),
+    v.object({
+      memory: v.string(),
+      recall: v.string(),
+      // Safety rides the same read (#599): the talk's peak, and whether the crisis line was said.
+      safety: v.optional(talkPeakValidator),
+      crisisLineSpoken: v.boolean(),
+    }),
+  ),
   handler: async (ctx, args) => {
     const id = ctx.db.normalizeId("sessions", args.sessionId);
     const session = id ? await ctx.db.get("sessions", id) : null;
     if (!session?.talkKey || session.talkKey !== args.talkKey) return null;
-    return { memory: session.talkMemory ?? "", recall: renderRecall(session.talkRecall?.lines ?? []) };
+    return {
+      memory: session.talkMemory ?? "",
+      recall: renderRecall(session.talkRecall?.lines ?? []),
+      safety: session.talkSafety,
+      crisisLineSpoken: session.talkCrisisLineSpoken === true,
+    };
   },
 });
 
