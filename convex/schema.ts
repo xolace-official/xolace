@@ -744,6 +744,8 @@ export default defineSchema({
     talkKey: v.optional(v.string()),
     // Reported by the client once connected; the webhook DELETEs it (#595).
     elevenLabsConversationId: v.optional(v.string()),
+    // When ElevenLabs confirmed their copy deleted (webhook or sweeper, #595).
+    providerDeletedAt: v.optional(v.number()),
 
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated
@@ -781,6 +783,13 @@ export default defineSchema({
       "entryType",
       "state",
       "rawInputLength",
+    ])
+
+    // Talks whose ElevenLabs copy isn't deleted yet (#595): unstamped, with a
+    // conversation id. Also the webhook's lookup by conversation id.
+    .index("by_providerDeletedAt_and_elevenLabsConversationId", [
+      "providerDeletedAt",
+      "elevenLabsConversationId",
     ]),
 
   // Both sides of a companion talk, one row per line, as the Custom LLM

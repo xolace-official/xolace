@@ -1,5 +1,6 @@
 import { Doc, Id } from "../_generated/dataModel";
 import { MutationCtx } from "../_generated/server";
+import { internal } from "../_generated/api";
 import { purgeEpisodicEntries } from "../episodicMemory";
 import { ACTIVE_STATUSES, cancelFollowUpWorkflow } from "../followUps";
 import { deleteResponsesForCard } from "../followUpResponses";
@@ -56,6 +57,15 @@ export async function purgeSessions(
     emotionalProfileId,
     sessions.map((s) => s._id),
   );
+
+  // ElevenLabs' copy of a talk (#595): the id dies with the row, so its
+  // DELETE is scheduled in this same transaction, before the purge commits.
+  const conversationIds = sessions.flatMap((s) =>
+    s.elevenLabsConversationId && !s.providerDeletedAt ? [s.elevenLabsConversationId] : [],
+  );
+  if (conversationIds.length) {
+    await ctx.scheduler.runAfter(0, internal.talk.provider.deleteConversations, { conversationIds });
+  }
 
   for (const session of sessions) {
     // The TTS render of the user's own mirror — nothing else references this

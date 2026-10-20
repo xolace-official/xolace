@@ -188,6 +188,7 @@ import type * as streamGunzip from "../streamGunzip.js";
 import type * as streamSetup from "../streamSetup.js";
 import type * as streamWebhook from "../streamWebhook.js";
 import type * as talk_live from "../talk/live.js";
+import type * as talk_provider from "../talk/provider.js";
 import type * as talk_session from "../talk/session.js";
 import type * as talk_transcript from "../talk/transcript.js";
 import type * as talk_turns from "../talk/turns.js";
@@ -384,6 +385,7 @@ declare const fullApi: ApiFromModules<{
   streamSetup: typeof streamSetup;
   streamWebhook: typeof streamWebhook;
   "talk/live": typeof talk_live;
+  "talk/provider": typeof talk_provider;
   "talk/session": typeof talk_session;
   "talk/transcript": typeof talk_transcript;
   "talk/turns": typeof talk_turns;
