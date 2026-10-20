@@ -1,7 +1,8 @@
 import { httpAction } from "../../_generated/server";
 import { timingSafeEqual } from "../../lib/timingSafeEqual";
 import { getAnthropicClient, thinkingOff } from "../providers/anthropic";
-import { sseChunk, SSE_DONE, toAnthropicRequest, type OpenAIMessage } from "./openaiCompat";
+import { toAnthropicRequest, type OpenAIMessage, type OpenAITool } from "./openaiCompat";
+import { createEventTranslator, sseChunk, SSE_DONE, type FinishReason } from "./openaiSse";
 
 // The agent's Custom LLM `model_id` picks one of these; anything else gets
 // the first. Both are listed so the prototype can measure TTFT on each (#591).
@@ -37,7 +38,7 @@ export const chatCompletions = httpAction(async (_ctx, request) => {
     return new Response("unauthorized", { status: 401 });
   }
 
-  let body: { model?: string; messages?: OpenAIMessage[]; elevenlabs_extra_body?: unknown };
+  let body: { model?: string; messages?: OpenAIMessage[]; tools?: OpenAITool[]; elevenlabs_extra_body?: unknown };
   try {
     body = await request.json();
   } catch {
@@ -46,7 +47,7 @@ export const chatCompletions = httpAction(async (_ctx, request) => {
   if (!Array.isArray(body.messages)) return new Response("messages required", { status: 400 });
 
   const model = TALK_MODELS.find((m) => m === body.model) ?? TALK_MODELS[0];
-  const { system, messages: turns } = toAnthropicRequest(body.messages);
+  const { system, messages: turns, tools } = toAnthropicRequest(body.messages, body.tools);
   if (turns.length === 0) return new Response("no turns", { status: 400 });
 
   const meta = { id: `chatcmpl-${crypto.randomUUID()}`, model, created: Math.floor(startedAt / 1000) };
@@ -57,6 +58,7 @@ export const chatCompletions = httpAction(async (_ctx, request) => {
   // set make it through to ElevenLabs?
   const audioTags: string[] = [];
   let reply = "";
+  const toolCalls: string[] = [];
 
   const log = () =>
     console.log("[talk] turn", {
@@ -67,6 +69,7 @@ export const chatCompletions = httpAction(async (_ctx, request) => {
       turns: turns.length,
       bodyKeys: Object.keys(body),
       audioTags,
+      toolCalls,
       extraBodyKeys:
         body.elevenlabs_extra_body && typeof body.elevenlabs_extra_body === "object"
           ? Object.keys(body.elevenlabs_extra_body)
@@ -84,23 +87,29 @@ export const chatCompletions = httpAction(async (_ctx, request) => {
             max_tokens: TALK_MAX_TOKENS,
             thinking: thinkingOff(model),
             ...(system ? { system } : {}),
+            // The agent's system tools (end_call) — the model decides to use them.
+            ...(tools.length ? { tools } : {}),
             messages: turns,
           },
           // One attempt: a retried turn would land long after the person stopped waiting.
           { signal: abort.signal, maxRetries: 0 },
         );
         send(sseChunk(meta, { role: "assistant" }));
-        let stopReason: string | null = null;
+        const translate = createEventTranslator();
+        let finish: FinishReason = "stop";
         for await (const event of anthropic) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            firstTokenAt ??= Date.now();
-            send(sseChunk(meta, { content: event.delta.text }));
-            reply += event.delta.text;
-          } else if (event.type === "message_delta") {
-            stopReason = event.delta.stop_reason;
+          const out = translate(event);
+          if (!out) continue;
+          if ("finish" in out) {
+            finish = out.finish;
+            continue;
           }
+          firstTokenAt ??= Date.now();
+          send(sseChunk(meta, out.delta));
+          reply += out.delta.content ?? "";
+          for (const call of out.delta.tool_calls ?? []) if (call.function.name) toolCalls.push(call.function.name);
         }
-        send(sseChunk(meta, {}, stopReason === "max_tokens" ? "length" : "stop"));
+        send(sseChunk(meta, {}, finish));
         send(SSE_DONE);
         controller.close();
       } catch (err) {
