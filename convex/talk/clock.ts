@@ -5,6 +5,7 @@
  * applies it.
  */
 import type { AnthropicTurn } from "../ai/talk/openaiCompat";
+import type { TalkLine } from "./transcript";
 
 /** One talk's ceiling. The agent's 1,560 s `max_duration_seconds` is only a backstop. */
 export const TALK_CEILING_MS = 15 * 60 * 1000;
@@ -14,12 +15,28 @@ const ENDING_SOON_MS = 2 * 60 * 1000;
 /**
  * `silentTurns`: companion lines since the person last spoke or typed, when
  * this turn is a re-engage on the agent's `turn_timeout` (20 s); null when it
- * answers them. Counted, not timed: a row lands before its audio plays, so
- * time since it would count the companion's own speech as silence. The first
- * re-engage is the check-in (~20 s), the next the goodbye (~45 s, spoken out
- * near the 60 s mark).
+ * answers them. Counted, not timed: a reply is done before its audio plays,
+ * so time since it would count the companion's own speech as silence. The
+ * first re-engage is the check-in (~20 s), the next the goodbye (~45 s,
+ * spoken out near the 60 s mark).
  */
 export type TalkClock = { elapsedMs: number; silentTurns: number | null };
+
+/**
+ * The talk key carries its start time (`<startedAt>.<uuid>`), so the endpoint
+ * reads the clock without waiting on the database. Trusted only because a
+ * turn is served once `syncLines` matches the whole key to the session's.
+ */
+export const mintTalkKey = (startedAt: number) => `${startedAt}.${crypto.randomUUID()}`;
+
+/** Null for a key we didn't mint. */
+export function talkClockOf(talkKey: string, lines: TalkLine[], now: number): TalkClock | null {
+  const startedAt = Number(/^(\d+)\./.exec(talkKey)?.[1]);
+  if (!Number.isSafeInteger(startedAt)) return null;
+  const lastPerson = lines.map((l) => l.role).lastIndexOf("person");
+  const silentTurns = lines.at(-1)?.role === "companion" ? lines.length - 1 - lastPerson : null;
+  return { elapsedMs: now - startedAt, silentTurns };
+}
 
 export type TalkCue = {
   /** Joins the agent's system prompt. */

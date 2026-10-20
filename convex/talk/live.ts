@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { action } from "../_generated/server";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
-import { TALK_CEILING_MS } from "./clock";
+import { mintTalkKey, TALK_CEILING_MS } from "./clock";
 
 /**
  * Starts a talk (#592): creates its session, then a single-use WebRTC token
@@ -10,7 +10,7 @@ import { TALK_CEILING_MS } from "./clock";
  * its Security tab), so a talk can only start through here, behind auth and
  * Plus. The client hands `{ sessionId, talkKey }` to ElevenLabs as the
  * custom LLM extra body; our endpoint serves only turns that carry them.
- * `msLeft` is the talk's time from its session's start, relative so the
+ * `msLeft` is the talk's time from the start in its key, relative so the
  * client's own clock skew can't move it; it only drives the on-screen clock.
  *
  * Its own key (ElevenAgents permission only): the Vent/TTS key is scoped
@@ -28,10 +28,10 @@ export const start = action({
     if (!apiKey || !agentId) throw new Error("Talk is not configured");
 
     // Minted here, not in the mutation: an action's randomness is the real thing.
-    const talkKey = crypto.randomUUID();
+    const startedAt = Date.now();
+    const talkKey = mintTalkKey(startedAt);
     // A failed token leaves an empty session; the idle check abandons it.
     const sessionId = await ctx.runMutation(internal.talk.session.start, { talkKey });
-    const startedAt = Date.now();
 
     const res = await fetch(
       `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(agentId)}`,

@@ -2,23 +2,16 @@ import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { TALK_IDLE_MS } from "./session";
-import type { TalkClock } from "./clock";
 
 const talkLineValidator = v.object({
   role: v.union(v.literal("person"), v.literal("companion")),
   text: v.string(),
 });
 
-// Past the check-in and the goodbye, more companion lines all read as "long quiet".
-const SILENCE_LOOKBACK = 4;
-
 /**
  * The Custom LLM endpoint's write (#588): binds a served turn to its talk and
- * keeps `talk_turns` in step with it. Returns the talk clock (#597) from our
- * record: time used since the session started and, when the resent talk ends
- * on the companion (a `turn_timeout` re-engage), how many companion lines
- * since the person's last. Null when the turn isn't this talk's (wrong key,
- * or the talk has closed): the endpoint serves nothing.
+ * keeps `talk_turns` in step with it. Returns false when the turn isn't this
+ * talk's (wrong key, or the talk has closed): the endpoint serves nothing.
  *
  * Two calls per turn, because an interruption kills the endpoint mid-stream
  * (#591), so nothing that must land can wait for the end:
@@ -39,8 +32,8 @@ export const syncLines = internalMutation({
     lines: v.optional(v.array(talkLineValidator)),
     reply: v.optional(v.object({ seq: v.number(), text: v.string() })),
   },
-  returns: v.union(v.null(), v.object({ elapsedMs: v.number(), silentTurns: v.union(v.number(), v.null()) })),
-  handler: async (ctx, args): Promise<TalkClock | null> => {
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
     const sessionId = ctx.db.normalizeId("sessions", args.sessionId);
     const session = sessionId ? await ctx.db.get("sessions", sessionId) : null;
     if (
@@ -50,7 +43,7 @@ export const syncLines = internalMutation({
       !session.talkKey ||
       session.talkKey !== args.talkKey
     ) {
-      return null;
+      return false;
     }
 
     const recent = await ctx.db
@@ -88,22 +81,10 @@ export const syncLines = internalMutation({
       }
     }
 
-    const now = Date.now();
-    await ctx.db.patch("sessions", session._id, { updatedAt: now });
+    await ctx.db.patch("sessions", session._id, { updatedAt: Date.now() });
     await ctx.scheduler.runAfter(TALK_IDLE_MS, internal.talk.session.finalizeIfIdle, {
       sessionId: session._id,
     });
-
-    let silentTurns: number | null = null;
-    if (args.lines?.at(-1)?.role === "companion") {
-      const tail = await ctx.db
-        .query("talk_turns")
-        .withIndex("by_session_and_seq", (q) => q.eq("sessionId", session._id))
-        .order("desc")
-        .take(SILENCE_LOOKBACK);
-      const lastPerson = tail.findIndex((r) => r.role === "person");
-      silentTurns = lastPerson === -1 ? tail.length : lastPerson;
-    }
-    return { elapsedMs: now - session.createdAt, silentTurns };
+    return true;
   },
 });

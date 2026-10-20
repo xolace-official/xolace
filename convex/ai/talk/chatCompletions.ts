@@ -5,7 +5,7 @@ import { timingSafeEqual } from "../../lib/timingSafeEqual";
 import { getAnthropicClient, thinkingOff } from "../providers/anthropic";
 import { toAnthropicRequest, type OpenAIMessage, type OpenAITool } from "./openaiCompat";
 import { createEventTranslator, sseChunk, SSE_DONE, type FinishReason } from "./openaiSse";
-import { talkCue, withCue } from "../../talk/clock";
+import { talkClockOf, talkCue, withCue } from "../../talk/clock";
 
 // The agent's Custom LLM `model_id` picks one of these; anything else gets
 // the first. Both are listed so the prototype can measure TTFT on each (#591).
@@ -70,22 +70,23 @@ export const chatCompletions = httpAction(async (ctx, request) => {
     return new Response("no talk", { status: 403 });
   }
   const talk = { sessionId: extra.sessionId, talkKey: extra.talkKey, lines: talkLines(body.messages) };
-  // Awaited before the model call: the clock it returns goes into the prompt.
+  const clock = talkClockOf(talk.talkKey, talk.lines, startedAt);
+  if (!clock) return new Response("no talk", { status: 403 });
+  // Started now, awaited once the model call is in flight: costs no TTFT.
   // A failed write fails closed: no turn the transcript can't hold.
-  const clock = await ctx.runMutation(internal.talk.turns.syncLines, talk).catch((err) => {
+  const bound = ctx.runMutation(internal.talk.turns.syncLines, talk).catch((err) => {
     console.error("[talk] turn sync failed", err);
-    return null;
+    return false;
   });
-  mark("bound");
 
   const model = TALK_MODELS.find((m) => m === body.model) ?? TALK_MODELS[0];
   const { system: agentSystem, messages: turns, tools } = toAnthropicRequest(body.messages, body.tools);
-  const cue = clock && talkCue(clock);
+  const cue = talkCue(clock);
   const system = withCue(agentSystem, turns, cue);
   if (turns.length === 0) return new Response("no turns", { status: 400 });
   // The last turn ends on our end_call; tools stay listed (the history may
   // hold past calls) but the model can't make one of its own.
-  const closing = cue?.closing ?? false;
+  const { closing } = cue;
 
   const meta = { id: `chatcmpl-${crypto.randomUUID()}`, model, created: Math.floor(startedAt / 1000) };
   const abort = new AbortController();
@@ -109,8 +110,8 @@ export const chatCompletions = httpAction(async (ctx, request) => {
       cacheRead: usage?.cache_read_input_tokens,
       cacheWrite: usage?.cache_creation_input_tokens,
       turns: turns.length,
-      elapsedS: clock && Math.round(clock.elapsedMs / 1000),
-      silentTurns: clock?.silentTurns,
+      elapsedS: Math.round(clock.elapsedMs / 1000),
+      silentTurns: clock.silentTurns,
       closing,
       bodyKeys: Object.keys(body),
       audioTags,
@@ -125,15 +126,6 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const send = (s: string) => controller.enqueue(encoder.encode(s));
-      // Not this talk's turn (wrong key, or the talk has closed): serve nothing.
-      if (!clock) {
-        outcome = "unbound";
-        send(sseChunk(meta, {}, "stop"));
-        send(SSE_DONE);
-        controller.close();
-        log();
-        return;
-      }
       try {
         const anthropic = getAnthropicClient().messages.stream(
           {
@@ -153,6 +145,17 @@ export const chatCompletions = httpAction(async (ctx, request) => {
         );
         mark("streamCalled");
         anthropic.on("connect", () => mark("headers"));
+        // Not this talk's turn (wrong key, or the talk has closed): serve nothing.
+        // The clock read from the key is trusted only past this check.
+        if (!(await bound)) {
+          outcome = "unbound";
+          abort.abort();
+          send(sseChunk(meta, {}, "stop"));
+          send(SSE_DONE);
+          controller.close();
+          return;
+        }
+        mark("bound");
         send(sseChunk(meta, { role: "assistant" }));
         const translate = createEventTranslator();
         let finish: FinishReason = "stop";
