@@ -15,13 +15,12 @@ const WRAP_UP_MS = 5 * 60 * 1000;
 const ENDING_SOON_MS = 2 * 60 * 1000;
 
 /**
- * The cues sit at 5 and 2 min left of a full 15-min talk; a shorter opening
- * (a reopening, or what's left of the week) gets them compressed to the same
- * share of its ceiling (#582).
+ * The cues sit at 5 and 2 min left of a talk; a reopening gets them
+ * compressed to its share of a full talk, 5 of 15 min (#582).
  */
-const share = (ms: number, ceilingMs: number) => Math.round((ms * Math.min(ceilingMs, TALK_CEILING_MS)) / TALK_CEILING_MS);
+const share = (ms: number, reopened: boolean) => (reopened ? (ms * REOPEN_CEILING_MS) / TALK_CEILING_MS : ms);
 /** When the wrap-up starts; the app's clock shows from here too. */
-export const wrapUpMs = (ceilingMs: number) => share(WRAP_UP_MS, ceilingMs);
+export const wrapUpMs = (reopened: boolean) => share(WRAP_UP_MS, reopened);
 
 /**
  * `silentTurns`: companion lines since the person last spoke or typed, when
@@ -31,7 +30,7 @@ export const wrapUpMs = (ceilingMs: number) => share(WRAP_UP_MS, ceilingMs);
  * first re-engage is the check-in (~20 s), the next the goodbye (~45 s,
  * spoken out near the 60 s mark).
  */
-export type TalkClock = { elapsedMs: number; ceilingMs: number; silentTurns: number | null };
+export type TalkClock = { elapsedMs: number; ceilingMs: number; silentTurns: number | null; reopened: boolean };
 
 /**
  * The talk key carries its start time and ceiling
@@ -39,9 +38,10 @@ export type TalkClock = { elapsedMs: number; ceilingMs: number; silentTurns: num
  * without waiting on the database. Trusted only because a turn is served
  * once `syncLines` matches the whole key to the session's. The ceiling is the
  * time reserved for the talk (#596): 15 min, or what's left of the week.
+ * A reopening's secret starts with `r` (#604), never a hex digit.
  */
-export const mintTalkKey = (startedAt: number, ceilingS: number, secret: string) =>
-  `${startedAt}.${ceilingS}.${secret}`;
+export const mintTalkKey = (startedAt: number, ceilingS: number, secret: string, reopened = false) =>
+  `${startedAt}.${ceilingS}.${reopened ? "r" : ""}${secret}`;
 
 /** Null for a key we didn't mint. */
 export function talkClockOf(talkKey: string, lines: TalkLine[], now: number): TalkClock | null {
@@ -52,7 +52,7 @@ export function talkClockOf(talkKey: string, lines: TalkLine[], now: number): Ta
   const lastPerson = lines.map((l) => l.role).lastIndexOf("person");
   const silentTurns = lines.at(-1)?.role === "companion" ? lines.length - 1 - lastPerson : null;
   const ceilingMs = ceiling ? Number(ceiling) * 1000 : TALK_CEILING_MS;
-  return { elapsedMs: now - startedAt, ceilingMs, silentTurns };
+  return { elapsedMs: now - startedAt, ceilingMs, silentTurns, reopened: /^\d+\.\d+\.r/.test(talkKey) };
 }
 
 export type TalkCue = {
@@ -68,7 +68,7 @@ const NEVER_SAY_TIME =
   "Never say the time, minutes, seconds or any clock number aloud, and never mention this note.";
 const SILENCE = "(They stay silent.)";
 
-export function talkCue({ elapsedMs, ceilingMs, silentTurns }: TalkClock): TalkCue {
+export function talkCue({ elapsedMs, ceilingMs, silentTurns, reopened }: TalkClock): TalkCue {
   const left = ceilingMs - elapsedMs;
   const minutes = Math.max(0, Math.ceil(left / 60_000));
   const clock = `Talk clock: about ${minutes} min left of this talk. ${NEVER_SAY_TIME}`;
@@ -95,14 +95,14 @@ export function talkCue({ elapsedMs, ceilingMs, silentTurns }: TalkClock): TalkC
       closing: true,
     };
   }
-  if (left <= share(ENDING_SOON_MS, ceilingMs)) {
+  if (left <= share(ENDING_SOON_MS, reopened)) {
     return {
       note: `${clock}\nThe talk ends soon. If you haven't already, say plainly and in your own words that the talk will end soon, and ask if anything else belongs in their mirror. Open no new threads.`,
       stageDirection: null,
       closing: false,
     };
   }
-  if (left <= wrapUpMs(ceilingMs)) {
+  if (left <= wrapUpMs(reopened)) {
     return {
       note: `${clock}\nThe talk is nearing its end. Open no new threads; start drawing together what you have heard.`,
       stageDirection: null,

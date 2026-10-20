@@ -41,8 +41,8 @@ export function useTalk(reopen?: { sessionId: Id<"sessions">; thread: ThreadLine
   const [started, setStarted] = useState(false);
   /** When the talk's time runs out, on this device's clock (#597). */
   const [endsAt, setEndsAt] = useState<number | null>(null);
-  /** Seconds left when the clock shows: with the wrap-up cue, compressed on a short talk. */
-  const [clockFromS, setClockFromS] = useState(0);
+  /** Seconds left when the clock shows: with the wrap-up cue, compressed on a reopening. */
+  const clockFromS = wrapUpMs(!!reopen) / 1000;
   const [thinking, setThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** Either voice, for the aurora. */
@@ -153,7 +153,6 @@ export function useTalk(reopen?: { sessionId: Id<"sessions">; thread: ThreadLine
         sessionRef.current = sessionId;
         setSessionId(sessionId);
         setEndsAt(Date.now() + msLeft);
-        setClockFromS(wrapUpMs(msLeft) / 1000);
         convo.startSession({
           conversationToken: token,
           // Relayed to our endpoint on every turn (#591), binding it to this

@@ -27,7 +27,7 @@ const credits = new Credits(components.credits);
 export const WEEKLY_S = 15 * 60;
 /** One talk's ceiling, before what's left of the week limits it. */
 const TALK_CEILING_S = TALK_CEILING_MS / 1000;
-export const REOPEN_CEILING_S = REOPEN_CEILING_MS / 1000;
+const REOPEN_CEILING_S = REOPEN_CEILING_MS / 1000;
 /** Under this, a talk isn't offered. */
 export const MIN_START_S = 3 * 60;
 // Webhook retries stop after ~40.5 min and the agent's backstop is 26 min.
@@ -105,13 +105,13 @@ export async function reserveTalk(
   ctx: MutationCtx,
   profileId: Id<"emotional_profiles">,
   sessionId: Id<"sessions">,
-  key: { startedAt: number; secret: string; ceilingS?: number },
+  key: { startedAt: number; secret: string; reopen?: boolean },
 ) {
   const now = Date.now();
   const balance = await topUp(ctx, profileId, now);
   if (balance < MIN_START_S) throw new ConvexError({ code: "talk_time_used" });
-  const ceilingS = Math.min(key.ceilingS ?? TALK_CEILING_S, balance);
-  const talkKey = mintTalkKey(key.startedAt, ceilingS, key.secret);
+  const ceilingS = Math.min(key.reopen ? REOPEN_CEILING_S : TALK_CEILING_S, balance);
+  const talkKey = mintTalkKey(key.startedAt, ceilingS, key.secret, key.reopen);
   const { chargeId } = await credits.reserve(ctx, {
     owner: profileId,
     amount: ceilingS,

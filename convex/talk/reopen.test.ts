@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
+import { talkClockOf, talkCue } from "./clock";
 import { aggregatesMock, posthogMock, ragMock, rateLimiterMock, revenuecatMock } from "../test/mocks.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
@@ -96,7 +97,7 @@ describe("talk.reopen.start (#604)", () => {
     const sessionId = await talkToMirror(user);
 
     const { talkKey } = await user.t.mutation(internal.talk.reopen.start, { sessionId, ...key() });
-    expect(talkKey).toMatch(/^\d+\.300\./);
+    expect(talkKey).toMatch(/^\d+\.300\.r/);
     expect(await secondsLeft(user)).toBe(300);
     expect((await session(user, sessionId))?.talkMemory).toContain("Them: Work is too much.");
 
@@ -157,5 +158,19 @@ describe("talk.reopen.start (#604)", () => {
     await webhook(other, "conv_3", 480, { sessionId: second, talkKey });
     expect(await secondsLeft(other)).toBe(120);
     await expect(other.t.mutation(internal.talk.reopen.start, { sessionId: mirrored, ...key() })).rejects.toThrow("talk_time_used");
+  });
+});
+
+describe("wrap-up cues (#582, #604)", () => {
+  const cueAt = (talkKey: string, elapsedS: number) =>
+    talkCue(talkClockOf(talkKey, [{ role: "person", text: "hi" }], 1_000 + elapsedS * 1000)!).note;
+
+  it("are compressed on a reopening only", () => {
+    // A first talk cut to 5 min by the week: the full-talk cues, wrap-up from the start.
+    expect(cueAt("1000.300.abc", 10)).toContain("nearing its end");
+    // A 5-min reopening: wrap-up from 1:40 left, ending soon from 0:40.
+    expect(cueAt("1000.300.rabc", 10)).not.toContain("nearing its end");
+    expect(cueAt("1000.300.rabc", 200)).toContain("nearing its end");
+    expect(cueAt("1000.300.rabc", 260)).toContain("ends soon");
   });
 });

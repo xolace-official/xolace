@@ -3,7 +3,7 @@ import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { requireSessionOwnership } from "../lib/auth";
 import { requirePremium } from "../lib/premium";
-import { REOPEN_CEILING_S, reserveTalk } from "./time";
+import { reserveTalk } from "./time";
 import { talkPreload } from "./remember";
 import { talkSetup } from "./companion";
 import { renderEarlier } from "./memory";
@@ -37,7 +37,7 @@ export const start = internalMutation({
     const { ceilingS, talkKey } = await reserveTalk(ctx, profile._id, sessionId, {
       startedAt,
       secret,
-      ceilingS: REOPEN_CEILING_S,
+      reopen: true,
     });
     const lines = await ctx.db
       .query("talk_turns")
