@@ -84,8 +84,6 @@ export const forTurn = internalQuery({
     const id = ctx.db.normalizeId("sessions", args.sessionId);
     const session = id ? await ctx.db.get("sessions", id) : null;
     if (!session?.talkKey || session.talkKey !== args.talkKey) return null;
-    // Turned off mid-talk: the companion stops knowing them at once.
-    if (session.talkRecall && !(await memoryOn(ctx, session.emotionalProfileId))) return null;
     return { memory: session.talkMemory ?? "", recall: renderRecall(session.talkRecall?.lines ?? []) };
   },
 });
@@ -96,8 +94,6 @@ export const recallTarget = internalQuery({
   handler: async (ctx, { sessionId }) => {
     const session = await ctx.db.get("sessions", sessionId);
     if (!session?.talkRecall || session.state !== "initiated") return null;
-    // Turned off mid-talk: recall stops at once.
-    if (!(await memoryOn(ctx, session.emotionalProfileId))) return null;
     return { profileId: session.emotionalProfileId, surfaced: session.talkRecall.surfaced };
   },
 });
