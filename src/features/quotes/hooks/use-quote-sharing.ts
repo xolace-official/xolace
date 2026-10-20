@@ -1,5 +1,6 @@
+import type { ViewInstance } from 'react-native';
 import { useRef, useState } from "react";
-import { PixelRatio, Platform, View } from "react-native";
+import { PixelRatio, Platform } from "react-native";
 import type { LayoutChangeEvent } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import { useToast } from "heroui-native";
@@ -22,7 +23,7 @@ const exportWidth = Math.round(
 );
 
 export function useQuoteSharing(displayedQuote: { text: string; type: "session" | "curated" } | null) {
-  const sharingCardRef = useRef<View>(null);
+  const sharingCardRef = useRef<ViewInstance>(null);
   const layoutResolverRef = useRef<(() => void) | null>(null);
   const imageResolverRef = useRef<(() => void) | null>(null);
   const imageLoadedRef = useRef(false);

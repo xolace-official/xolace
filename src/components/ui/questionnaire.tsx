@@ -1,3 +1,4 @@
+import { type ViewInstance, type TextInputInstance } from 'react-native';
 /*
  * VENDORED — registry output, tracked in `panelui-lock.json` with its digest.
  * Exempt from the 200-line ceiling in CLAUDE.md because it is not hand-written
@@ -98,7 +99,6 @@ import {
   Pressable,
   View,
   type LayoutChangeEvent,
-  type TextInput,
   type ViewProps,
 } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -739,7 +739,7 @@ function QuestionnaireBody({
   // height outright instead of growing into it from nothing.
   const height = useSharedValue(-1);
   const drag = useSharedValue(0);
-  const paneRef = useRef<View>(null);
+  const paneRef = useRef<ViewInstance>(null);
 
   /*
    * Until the first question has been measured the pane stays in the flow, so
@@ -1289,7 +1289,7 @@ export interface QuestionnaireChoiceProps {
  * One fixed answer — the whole row is the target, with the indicator reading
  * as confirmation rather than as the thing to aim at.
  */
-const QuestionnaireChoice = forwardRef<View, QuestionnaireChoiceProps>(
+const QuestionnaireChoice = forwardRef<ViewInstance, QuestionnaireChoiceProps>(
   ({ className, value, label, description, disabled, children }, ref) => {
     const { answers, toggleAnswer } = useQuestionnaire('Questionnaire.Choice');
     const item = useQuestionnaireItem('Questionnaire.Choice');
@@ -1387,7 +1387,7 @@ export interface QuestionnaireInputProps
  * empties it and typing clears the choice — one answer to one question, with
  * neither part having to know about the other.
  */
-const QuestionnaireInput = forwardRef<TextInput, QuestionnaireInputProps>(
+const QuestionnaireInput = forwardRef<TextInputInstance, QuestionnaireInputProps>(
   ({ className, ...props }, ref) => {
     const { answers, setAnswer } = useQuestionnaire('Questionnaire.Input');
     const item = useQuestionnaireItem('Questionnaire.Input');
@@ -1416,7 +1416,8 @@ const QuestionnaireInput = forwardRef<TextInput, QuestionnaireInputProps>(
 
     return (
       <Input
-        ref={ref}
+        // heroui-native still types `ref` as the pre-0.87 TextInput class; the runtime value is the instance.
+        ref={ref as never}
         value={freeform}
         onChangeText={onChangeText}
         className={className}

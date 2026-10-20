@@ -1,5 +1,6 @@
+import type { TextInstance } from 'react-native';
 import { useEffect, useRef } from "react";
-import { AccessibilityInfo, ScrollView, StyleSheet, View, type Text } from "react-native";
+import { AccessibilityInfo, ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { Chip, PressableFeedback, ScrollShadow, useThemeColor } from "heroui-native";
 import { LinearGradient } from "expo-linear-gradient";
@@ -74,7 +75,7 @@ export const MirrorState = ({
 }: Props) => {
   const { isReady, isPlaying, toggle } = useMirrorAudio(sessionId);
   const accent = useThemeColor("accent");
-  const mirrorRef = useRef<Text>(null);
+  const mirrorRef = useRef<TextInstance>(null);
 
   // No audio cleanup here: useAudioPlayer releases the native player on unmount,
   // which stops playback. Pausing it ourselves races that release and crashes

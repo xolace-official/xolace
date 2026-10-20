@@ -1,3 +1,4 @@
+import type { TextInputInstance } from 'react-native';
 import type { RefObject } from "react";
 import { TextInput, View, type ViewStyle } from "react-native";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
@@ -20,7 +21,7 @@ type Props = {
   isRecording: boolean;
   /** Null unless the person dictates with Plus. */
   plusDictation: PlusDictationView | null;
-  inputRef: RefObject<TextInput | null>;
+  inputRef: RefObject<TextInputInstance | null>;
   style: AnimatedStyle<ViewStyle>;
   onChangeText: (text: string) => void;
   onSubmit: () => void;

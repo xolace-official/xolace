@@ -29,13 +29,13 @@ export function CircleProgress({
   }, [progress, animatedProgress]);
 
   const backgroundPath = (() => {
-    const path = Skia.Path.Make();
+    const path = Skia.PathBuilder.Make();
     path.addCircle(center, center, radius);
-    return path;
+    return path.build();
   })();
 
   const progressPath = useDerivedValue(() => {
-    const path = Skia.Path.Make();
+    const path = Skia.PathBuilder.Make();
     path.addArc(
       {
         x: strokeWidth / 2,
@@ -46,7 +46,7 @@ export function CircleProgress({
       -90,
       animatedProgress.get() * 360,
     );
-    return path;
+    return path.build();
   }, [animatedProgress, size, strokeWidth]);
 
   const canvasStyle = { width: size, height: size };

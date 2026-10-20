@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
+import { AndroidImportance } from "expo-notifications";
 import * as Device from "expo-device";
 import Constants from "expo-constants";
 import {
@@ -52,7 +53,7 @@ export async function requestPushToken(): Promise<string | null> {
     // as the landing spot for any notification that arrives without a channel.
     await Notifications.setNotificationChannelAsync(DEFAULT_CHANNEL_ID, {
       name: "default",
-      importance: Notifications.AndroidImportance.MAX,
+      importance: AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: "#6C63FF",
     });
@@ -69,7 +70,7 @@ export async function requestPushToken(): Promise<string | null> {
     for (const channel of SOUND_CHANNELS) {
       await Notifications.setNotificationChannelAsync(channel.id, {
         name: channel.name,
-        importance: Notifications.AndroidImportance.MAX,
+        importance: AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: "#6C63FF",
         sound: channel.sound,

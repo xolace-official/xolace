@@ -12,7 +12,7 @@ import {
 } from "expo-router/ui";
 import { SymbolView } from "expo-symbols";
 import React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, View, type PressableProps } from "react-native";
 import { useThemeColor } from "heroui-native";
 
 import { ExternalLink } from "./external-link";
@@ -46,7 +46,8 @@ export function TabButton({
   ...props
 }: TabTriggerSlotProps) {
   return (
-    <Pressable {...props} className="active:opacity-70">
+    // expo-router/ui slot props still type `ref` as the pre-0.87 View class.
+    <Pressable {...(props as PressableProps)} className="active:opacity-70">
       <View
         className={`py-1 px-4 rounded-2xl ${
           isFocused ? "bg-default" : "bg-surface"

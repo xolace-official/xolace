@@ -1,3 +1,4 @@
+import type { ViewInstance } from 'react-native';
 import { forwardRef, useMemo } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import { EaseView } from 'react-native-ease';
@@ -11,7 +12,7 @@ import { splitParts } from './parts';
 import type { HeatmapChartProps } from './props';
 import { useHeatmapModel } from './use-heatmap-model';
 
-export const HeatmapChartRoot = forwardRef<View, HeatmapChartProps>(function HeatmapChartRoot(
+export const HeatmapChartRoot = forwardRef<ViewInstance, HeatmapChartProps>(function HeatmapChartRoot(
   {
     className,
     data,

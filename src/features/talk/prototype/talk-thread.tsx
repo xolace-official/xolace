@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from 'react-native';
 // PROTOTYPE (#584) — throwaway. The talk as a transcript: spoken and typed
 // turns in one thread, so switching between them never needs a mode.
 import { useRef } from "react";
@@ -37,7 +38,7 @@ export function TurnBubble({ turn }: { turn: Turn }) {
 }
 
 export function TalkThread({ turns, footer }: { turns: Turn[]; footer?: React.ReactNode }) {
-  const ref = useRef<ScrollView>(null);
+  const ref = useRef<ScrollViewInstance>(null);
   const headerHeight = useHeaderHeight();
   return (
     <ScrollView

@@ -109,11 +109,11 @@ export const AnimatedDashedBorder: React.FC<Props> = ({
     const h = Math.max(0, size.h - strokeWidth);
     const r = Math.min(borderRadius, Math.min(w, h) / 2);
 
-    const p = Skia.Path.Make();
+    const p = Skia.PathBuilder.Make();
 
     const rect = Skia.XYWHRect(inset, inset, w, h);
     p.addRRect(Skia.RRectXY(rect, r, r));
-    return p;
+    return p.build();
   }, [size, strokeWidth, borderRadius]);
 
   return (

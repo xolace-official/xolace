@@ -1,5 +1,6 @@
+import type { TextInputInstance } from 'react-native';
 import { useEffect, useRef, type RefObject } from "react";
-import { Keyboard, type TextInput } from "react-native";
+import { Keyboard } from "react-native";
 import {
   ReduceMotion,
   useSharedValue,
@@ -15,7 +16,7 @@ type Args = {
   reduceMotion: boolean;
   /** False for the outgoing copy during a cross-fade to another state. */
   focusOnExpand: boolean;
-  inputRef: RefObject<TextInput | null>;
+  inputRef: RefObject<TextInputInstance | null>;
   /** Runs when the card closes — the pending pause nudge goes with it. */
   onCollapse: () => void;
 };

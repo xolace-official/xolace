@@ -1,3 +1,4 @@
+import type { ViewInstance } from 'react-native';
 import React, { createContext, useContext, useMemo } from "react";
 import { View } from "react-native";
 import Animated, {
@@ -34,7 +35,7 @@ const useLoader = (): LoaderContextValue => {
 // ------------------------------------------
 
 /** Root component. Provides progress SharedValue (0–1) to children via context. */
-const LoaderRoot = React.forwardRef<View, LoaderProps>(
+const LoaderRoot = React.forwardRef<ViewInstance, LoaderProps>(
   (
     {
       children,

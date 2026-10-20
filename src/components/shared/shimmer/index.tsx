@@ -1,3 +1,4 @@
+import { type ViewInstance } from 'react-native';
 import React, { createContext, useContext, useMemo } from "react";
 import {
   View,
@@ -36,7 +37,7 @@ const useShimmer = (): ShimmerContextValue => {
 
 // ── Root ────────────────────────────────────────────────────────────────
 
-const ShimmerRoot = React.forwardRef<View, ShimmerProps>(
+const ShimmerRoot = React.forwardRef<ViewInstance, ShimmerProps>(
   ({ debug = false, children, style, onLayout, ...props }, ref) => {
     const containerWidth = useSharedValue(0);
     const containerHeight = useSharedValue(0);

@@ -1,3 +1,4 @@
+import type { ImageProps } from 'expo-image';
 /**
  * An info slot as a conversation.
  *
@@ -7,7 +8,7 @@
  * waits for an actual shake) instead of on a tap.
  */
 import { useState } from 'react';
-import { Pressable, ScrollView, View, type ImageSourcePropType } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { Button } from 'heroui-native';
 
 import { AppText } from '@/src/components/shared/app-text';
@@ -25,7 +26,7 @@ interface MascotConversationProps {
   eyebrow: string;
   lines: readonly ConversationLine[];
   /** The pose for this slot. Defaults to the talking one. */
-  mascot?: ImageSourcePropType;
+  mascot?: ImageProps['source'];
   /** Flips true when the gated moment has happened. */
   gateOpen?: boolean;
   /** Shown in place of the button while a gated line waits. */

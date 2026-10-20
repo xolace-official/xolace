@@ -1,3 +1,4 @@
+import type { ViewInstance } from 'react-native';
 /**
  * The reader's audio (#411), built from #395's variant A. A Listen pill beside
  * the source credit starts it; only then does a one-row dock slide up flush
@@ -152,7 +153,7 @@ function KeepListening({ slug }: { slug: string }) {
   const openPaywall = usePaywall((s) => s.open);
   const posthog = usePostHog();
   // Mounts the moment the preview ends: say so, and put focus on the way on.
-  const ref = useRef<View>(null);
+  const ref = useRef<ViewInstance>(null);
   useEffect(() => {
     // A beat after mount: focus set before the first layout is dropped.
     const t = setTimeout(() => {

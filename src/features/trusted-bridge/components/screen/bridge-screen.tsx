@@ -1,5 +1,6 @@
+import type { TextInputInstance } from 'react-native';
 import { useEffect, useRef, useState } from "react";
-import { Pressable, Share, TextInput, View } from "react-native";
+import { Pressable, Share, View } from "react-native";
 import {
   KeyboardAwareScrollView,
   KeyboardStickyView,
@@ -89,7 +90,7 @@ export function BridgeScreen({ sessionId, stepId }: Props) {
   const [addressTerm, setAddressTerm] = useState<string | null>(null);
   const [hasShared, setHasShared] = useState(false);
   const { status, draft, setDraft, generate } = useBridgeDraft();
-  const addressInputRef = useRef<TextInput>(null);
+  const addressInputRef = useRef<TextInputInstance>(null);
 
   const nameRemaining = MAX_NAME_LENGTH - name.length;
   const addressRemaining = MAX_ADDRESS_TERM_LENGTH - (addressTerm?.length ?? 0);
@@ -313,7 +314,8 @@ export function BridgeScreen({ sessionId, stepId }: Props) {
                     )}
                     <TextField>
                       <Input
-                        ref={addressInputRef}
+                        // heroui-native still types `ref` as the pre-0.87 TextInput class; the runtime value is the instance.
+                        ref={addressInputRef as never}
                         value={addressTerm ?? ""}
                         onChangeText={(t) =>
                           setAddressTerm(t.length > 0 ? t : null)

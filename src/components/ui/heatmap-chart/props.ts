@@ -3,7 +3,9 @@ import type { ViewProps } from 'react-native';
 import type { ChartAccessibilityProps } from '@/src/components/ui/chart-accessibility';
 import type { HeatmapCell, HeatmapColumn, HeatmapLayout } from './context';
 
-export interface HeatmapChartProps extends ViewProps, ChartAccessibilityProps<HeatmapCell> {
+export interface HeatmapChartProps
+  extends Omit<ViewProps, keyof ChartAccessibilityProps<HeatmapCell>>,
+    ChartAccessibilityProps<HeatmapCell> {
   className?: string;
   /** One column per period, with its row bins inside. */
   data: HeatmapColumn[];

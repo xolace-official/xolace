@@ -1,3 +1,4 @@
+import type { TextInputInstance } from 'react-native';
 import { useRef, useState } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
@@ -41,7 +42,7 @@ export function ComposePanel({
 }) {
   const router = useRouter();
   const posthog = usePostHog();
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
   const [draft, setDraft] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [focused, setFocused] = useState(false);
