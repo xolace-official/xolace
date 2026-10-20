@@ -26,7 +26,12 @@ function LiveTalk() {
     setError(null);
     setLines([]);
     try {
-      startSession({ conversationToken: await getToken() });
+      startSession({
+        conversationToken: await getToken(),
+        // #591 measurement: does this reach our endpoint on every turn? Needs
+        // the agent's `custom_llm_extra_body` override on.
+        customLlmExtraBody: { probe: "talk-live" },
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
