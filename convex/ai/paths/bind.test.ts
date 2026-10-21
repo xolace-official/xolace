@@ -129,7 +129,7 @@ describe("bindTwig", () => {
   it("a slug skipped before loses a tie to an unskipped one, never a better score (#566)", () => {
     const a = track({ slug: "a", tags: ["anxiety"] });
     const b = track({ slug: "b", tags: ["anxiety"] });
-    const first = bind("audio_topic_anxiety_relief", [a, b])!;
+    const first = bind("audio_topic_anxiety_relief", [a, b]) as { slug: string };
     const other = first.slug === "a" ? { slug: "b" } : { slug: "a" };
     expect(bind("audio_topic_anxiety_relief", [a, b], { skippedSlugs: k(first.slug) })).toEqual(other);
     // Every tied slug skipped: back to the seeded pick.
@@ -140,7 +140,7 @@ describe("bindTwig", () => {
   it("a returning stretch re-offers its previous tended slug: after the score, before a skip (#566)", () => {
     const a = track({ slug: "a", tags: ["anxiety"] });
     const b = track({ slug: "b", tags: ["anxiety"] });
-    const first = bind("audio_topic_anxiety_relief", [a, b])!;
+    const first = bind("audio_topic_anxiety_relief", [a, b]) as { slug: string };
     const other = first.slug === "a" ? "b" : "a";
     expect(bind("audio_topic_anxiety_relief", [a, b], { reofferSlugs: k(other) })).toEqual({ slug: other });
     // Re-offer outranks a skip on the same slug.
@@ -157,7 +157,7 @@ describe("bindTwig", () => {
   it("history only touches slugs of its own twig type (#566)", () => {
     const a = track({ slug: "a", tags: ["anxiety"] });
     const b = track({ slug: "b", tags: ["anxiety"] });
-    const first = bind("audio_topic_anxiety_relief", [a, b])!;
+    const first = bind("audio_topic_anxiety_relief", [a, b]) as { slug: string };
     const other = first.slug === "a" ? "b" : "a";
     // A read with the same slug, or another topic's track, leaves this type alone.
     const elsewhere = [slugKey("read", first.slug), slugKey("audio_topic_grief", first.slug)];
