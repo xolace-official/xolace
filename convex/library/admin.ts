@@ -36,7 +36,7 @@ export const setActive = internalMutation({
     assertPublishable({ ...e, active });
     await ctx.db.patch("library_entries", e._id, { active });
     // Retired leaves the meaning index; republished comes back (#568).
-    await ctx.scheduler.runAfter(0, internal.library.embed.indexEntry, { entryId: e._id });
+    await ctx.scheduler.runAfter(0, internal.ai.library.embed.indexEntry, { entryId: e._id });
     return null;
   },
 });

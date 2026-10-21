@@ -21,7 +21,7 @@ import { components } from "./_generated/api";
 // - Peer reflection pool        → namespace = REFLECTION_POOL_NAMESPACE
 //   (shared, anonymized; filter on status to drop flagged/removed)
 // - Library entries             → namespace = LIBRARY_NAMESPACE
-//   (convex/library/embed.ts; sentinel filters, nothing filtered)
+//   (convex/ai/library/embed.ts; sentinel filters, nothing filtered)
 //
 // filterNames declares which metadata fields can be filtered at
 // query time. They must be declared here up front — filtering on

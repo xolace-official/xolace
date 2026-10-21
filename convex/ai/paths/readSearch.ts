@@ -3,7 +3,7 @@ import { internalQuery, type ActionCtx } from "../../_generated/server";
 import { internal } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
 import { rag } from "../../rag";
-import { LIBRARY_NAMESPACE } from "../../library/embed";
+import { LIBRARY_NAMESPACE } from "../library/embed";
 import { readRow } from "../../library/reads";
 import { embedSessionText } from "../helpers/embedSessionText";
 import { SIMILARITY_FLOOR, type BindEntry } from "./bind";

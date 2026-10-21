@@ -23,6 +23,7 @@ import type * as ai_helpers_embedSessionText from "../ai/helpers/embedSessionTex
 import type * as ai_helpers_episodicSearch from "../ai/helpers/episodicSearch.js";
 import type * as ai_helpers_patternSummary from "../ai/helpers/patternSummary.js";
 import type * as ai_intakeSignals from "../ai/intakeSignals.js";
+import type * as ai_library_embed from "../ai/library/embed.js";
 import type * as ai_mirrorPlan from "../ai/mirrorPlan.js";
 import type * as ai_paths_audioTracks from "../ai/paths/audioTracks.js";
 import type * as ai_paths_bind from "../ai/paths/bind.js";
@@ -241,6 +242,7 @@ declare const fullApi: ApiFromModules<{
   "ai/helpers/episodicSearch": typeof ai_helpers_episodicSearch;
   "ai/helpers/patternSummary": typeof ai_helpers_patternSummary;
   "ai/intakeSignals": typeof ai_intakeSignals;
+  "ai/library/embed": typeof ai_library_embed;
   "ai/mirrorPlan": typeof ai_mirrorPlan;
   "ai/paths/audioTracks": typeof ai_paths_audioTracks;
   "ai/paths/bind": typeof ai_paths_bind;

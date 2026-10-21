@@ -143,7 +143,7 @@ export const upsertEntry = internalMutation({
     for (const f of pairs.values()) await ctx.db.insert("library_entry_facets", { entryId, ...f });
     await replaceSources(ctx, entryId, sources, resolved);
     // Re-embed (or drop, if inactive) off the transaction: embedding is network.
-    await ctx.scheduler.runAfter(0, internal.library.embed.indexEntry, { entryId });
+    await ctx.scheduler.runAfter(0, internal.ai.library.embed.indexEntry, { entryId });
 
     return { action: existing ? ("updated" as const) : ("inserted" as const) };
   },

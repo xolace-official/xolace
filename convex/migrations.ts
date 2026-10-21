@@ -172,7 +172,7 @@ export const backfillTrackSearchText = migrations.define({
 export const backfillLibraryIndex = migrations.define({
   table: "library_entries",
   migrateOne: async (ctx, doc) => {
-    if (doc.active) await ctx.scheduler.runAfter(0, internal.library.embed.indexEntry, { entryId: doc._id });
+    if (doc.active) await ctx.scheduler.runAfter(0, internal.ai.library.embed.indexEntry, { entryId: doc._id });
   },
 });
 
