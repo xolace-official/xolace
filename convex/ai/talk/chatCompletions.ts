@@ -2,23 +2,20 @@ import { httpAction } from "../../_generated/server";
 import { internal } from "../../_generated/api";
 import { toAnthropicRequest } from "./openaiCompat";
 import { sseChunk, SSE_DONE, type FinishReason, type OpenAIDelta } from "./openaiSse";
-import { talkCue } from "../../talk/clock";
-import { talkSystem } from "../../talk/memory";
 import { moderateInput } from "../providers/moderation";
 import {
-  COMPANION_FALLBACK_NAME,
   PERSON_NAME_TOOL,
   SLOW_TOOL,
-  companionPrompt,
   ownToolAnswer,
   ownToolTurns,
   personNameTool,
   renameTool,
   slowTool,
-  type TalkStyle,
 } from "../prompts/companion";
 import { stripAudioTags } from "./audioTags";
-import { CRISIS_LINE, moderationPeak, phrasePeak, raises, safetySkill, turnWords } from "../../talk/safety";
+import { moderationPeak, phrasePeak, turnWords } from "../../talk/safety";
+import { CRISIS_LINE } from "../../talk/safetyScript";
+import { planTurn } from "./plan";
 import { readTurn, relayTurn, runOwnTool, streamTurn, talkModel, type RelaySink } from "./turn";
 
 // The agent's system tool that hangs up; our clock calls it on the last turn (#597).
@@ -105,23 +102,14 @@ export const chatCompletions = httpAction(async (ctx, request) => {
     return null;
   });
   mark("memory");
-  const peak = phrase && raises(memory?.safety, phrase) ? phrase : memory?.safety;
-  // The fixed line, said once (marked only once fully sent: an interrupted
-  // line comes again); this turn makes no model call.
-  let crisisLine = peak?.level === "crisis" && !memory?.crisisLineSpoken;
 
   const model = talkModel(body.model);
   const { system: agentSystem, messages: turns, tools: agentTools } = toAnthropicRequest(body.messages, body.tools);
-  // Who the companion is leads the cached prefix (#601), with what it calls
-  // the person (#602); our own tools are listed beside the agent's and
-  // answered here, never relayed.
-  const name = memory?.name ?? COMPANION_FALLBACK_NAME;
+  const { peak, name, cue, systemAs, crisisLine: planned } = planTurn({ memory, phrase, clock, agentSystem, turns });
+  // Marked spoken only once fully sent: an interrupted line comes again.
+  let crisisLine = planned;
+  // Our own tools are listed beside the agent's and answered here, never relayed.
   const tools = [...agentTools, renameTool, personNameTool, slowTool];
-  // Same clock at crisis (no extension, #581); only where its cues point changes.
-  const cue = talkCue(clock, peak?.level === "crisis");
-  // Directness and a mid-talk "slow down" ride the same prompt (#603).
-  const systemAs = (n: string, person = memory?.person, style: TalkStyle | undefined = memory?.style) =>
-    talkSystem([companionPrompt(n, person, style), agentSystem].filter(Boolean).join("\n\n"), memory, turns, cue, safetySkill(peak));
   if (turns.length === 0) return new Response("no turns", { status: 400 });
   // The last turn ends on our end_call; tools stay listed (the history may
   // hold past calls) but the model can't make one of its own.
