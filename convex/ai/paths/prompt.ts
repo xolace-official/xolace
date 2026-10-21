@@ -2,6 +2,7 @@ import type { SupportNeed } from "../providers/anthropic";
 import type { PremiumTier } from "../../lib/premium";
 import type { CatalogEntry } from "./catalog";
 import type { Compounding } from "../../compounding/stretches";
+import type { KindRecord } from "./history";
 
 /**
  * Kindling generation prompt + parser (docs/paths-v1.md §2.2, #331).
@@ -30,6 +31,7 @@ export interface PathsPromptUnderstanding {
 /** A compounding domain tonight's session touched (#521). Context, never a rule. */
 export type PromptCompounding = Pick<Compounding, "domain" | "state" | "returning"> & {
   days: number; // since the stretch began
+  tendedBefore?: string[]; // returning only: tended during the previous stretch (#565)
 };
 
 export interface PathsPromptContext {
@@ -38,6 +40,7 @@ export interface PathsPromptContext {
   catalog: readonly CatalogEntry[]; // already filtered to what can bind
   tier: PremiumTier; // prompt framing only, never a branch
   compounding?: readonly PromptCompounding[]; // already gated upstream; empty = no line
+  history?: readonly KindRecord[]; // the person's own past twigs (#565); empty = no block
 }
 
 export interface PickedTwig {
@@ -80,6 +83,10 @@ const BANNED_WHY = /\b(anxi|symptom|cop(e|es|ed|ing)\b|regulat|ground(ing|ed)\b|
 // (#521): not the word, not "your usual", not how long it has weighed.
 const COMPOUNDING_WHY = /compound|\busual\b|\b(\d+|few|couple of) days\b|\bweeks?\b|\bmonths?\b/i;
 
+// Past outcomes are context too (#565): no count of what they did before.
+// Counts only, so "a 2-minute breath" still ships as it did before.
+const HISTORY_WHY = /\b\d+ (of|times)\b|\b(twice|(two|three|several|many) times)\b|\blast time\b/i;
+
 // Outcome promises (§2.2 "Do NOT promise an outcome"): "this will help",
 // "you'll feel calmer", "proven to", "guaranteed". Modal forms only — a bare
 // "you feel" is usually the person's own words being quoted back.
@@ -118,7 +125,12 @@ Pick exactly ${MAX_TWIGS} actions from the catalog below that fit this person ri
 Respond with ONLY a JSON array, no fences, no prose:
 [{"actionType": "<catalog key>", "order": 1, "why": "..."}, ...]`;
 
+  const offered = new Set(ctx.catalog.map((c) => c.actionType));
   const u = ctx.understanding;
+  const compounding = ctx.compounding?.map((c) => ({
+    ...c,
+    tendedBefore: c.tendedBefore?.filter((t) => offered.has(t)),
+  }));
   const understandingBlock = [
     `- feeling: ${u.primaryEmotion}${u.granularLabel ? ` (${u.granularLabel})` : ""}`,
     `- intensity: ${u.intensity}/10, specificity: ${u.specificity}/10`,
@@ -127,8 +139,8 @@ Respond with ONLY a JSON array, no fences, no prose:
       ? `- their words: ${u.userLanguageTags.map((t) => `"${t}"`).join(", ")}`
       : null,
     u.temporalContext ? `- focus: ${u.temporalContext.replace("_", " ")}` : null,
-    ctx.compounding?.length
-      ? `- weighing on them lately: ${ctx.compounding.map(compoundingPhrase).join("; ")}`
+    compounding?.length
+      ? `- weighing on them lately: ${compounding.map(compoundingPhrase).join("; ")}`
       : null,
     `- support need: ${u.supportNeed}`,
   ]
@@ -143,7 +155,12 @@ Respond with ONLY a JSON array, no fences, no prose:
     .map((c) => `- ${c.actionType}: ${c.modelDescription}`)
     .join("\n");
 
-  const user = `## This session\n${understandingBlock}\n\n${profileBlock}\n\n## Catalog (${ctx.tier} member — every action is available)\n${catalogBlock}`;
+  const history = (ctx.history ?? []).filter((r) => offered.has(r.actionType));
+  const historyBlock = history.length
+    ? `\n\n## How they've met past offers\nEach line is that action's own record, never a ranking against the others. Background for your pick only, never something the why line says.\n${history.map(kindPhrase).join("\n")}`
+    : "";
+
+  const user = `## This session\n${understandingBlock}\n\n${profileBlock}${historyBlock}\n\n## Catalog (${ctx.tier} member — every action is available)\n${catalogBlock}`;
 
   return { system, user };
 }
@@ -156,9 +173,22 @@ function roughDuration(days: number): string {
 }
 
 const compoundingPhrase = (c: PromptCompounding) =>
-  [`${c.domain} for ${roughDuration(c.days)}`, c.state === "easing" ? "easing" : null, c.returning ? "returning" : null]
+  [
+    `${c.domain} for ${roughDuration(c.days)}`,
+    c.state === "easing" ? "easing" : null,
+    c.returning ? "returning" : null,
+    c.returning && c.tendedBefore?.length
+      ? `tended when this weighed on them before: ${c.tendedBefore.join(", ")}`
+      : null,
+  ]
     .filter((part): part is string => !!part)
     .join(", ");
+
+function kindPhrase(r: KindRecord): string {
+  const offered = r.tended + r.skipped;
+  const rate = r.tended > 0 ? `tended ${r.tended} of ${offered} offered` : `passed on ${r.skipped} of ${offered} offered`;
+  return `- ${r.actionType}: ${rate}${r.helped > 0 ? `, said it helped ${r.helped}` : ""}`;
+}
 
 function validateWhy(why: unknown): DropReason | null {
   if (typeof why !== "string" || !why.trim()) return "why_missing";
@@ -169,7 +199,7 @@ function validateWhy(why: unknown): DropReason | null {
   // any following text — "e.g. the" and "wait... then" are still one.
   if (/[.!?]\s+[A-Z]/.test(text)) return "why_sentences";
   if (!/\byou(r|'re|'ve|'d)?\b/i.test(text)) return "why_person";
-  if (BANNED_WHY.test(text) || COMPOUNDING_WHY.test(text)) return "why_vocabulary";
+  if (BANNED_WHY.test(text) || COMPOUNDING_WHY.test(text) || HISTORY_WHY.test(text)) return "why_vocabulary";
   if (PROMISE_WHY.test(text)) return "why_promise";
   return null;
 }

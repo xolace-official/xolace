@@ -921,3 +921,165 @@ describe("compounding context for Kindling (#521)", () => {
     expect(await tonight(user, ["burnout"])).toBeNull();
   });
 });
+
+describe("past outcomes shape the pick (#565)", () => {
+  const DAY = 86_400_000;
+  type Outcome = [actionType: string, state: Doc<"path_steps">["state"], params?: unknown];
+
+  /** A past kindling on its own session, generated `daysAgo`. */
+  async function pastKindling(
+    user: SeededUser,
+    daysAgo: number,
+    outcomes: Outcome[],
+    over: { status?: Doc<"paths">["status"]; sessionId?: Id<"sessions"> } = {},
+  ): Promise<Id<"sessions">> {
+    const sessionId = over.sessionId ?? (await seedSession(user.root, user.profileId, { state: "completed" }));
+    await user.root.run(async (ctx) => {
+      const pathId = await ctx.db.insert("paths", {
+        emotionalProfileId: user.profileId,
+        sessionId,
+        status: over.status ?? "replaced",
+        model: "test",
+        modelVersion: "test",
+        generatedAt: Date.now() - daysAgo * DAY,
+      });
+      for (const [i, [actionType, state, params]] of outcomes.entries()) {
+        await ctx.db.insert("path_steps", { pathId, actionType, order: i + 1, why: WHY, params: params ?? {}, state });
+      }
+    });
+    return sessionId;
+  }
+
+  const captured = async (user: SeededUser, sessionId: Id<"sessions">) => {
+    const { posthog } = await import("../posthog");
+    const capture = vi.spyOn(posthog, "capture");
+    await generate(user, sessionId);
+    const prompt = String(stub.requests.at(-1)!.messages[0].content);
+    const event = capture.mock.calls.map(([, e]) => e).find((e) => e.event === "path_generated");
+    return { prompt, props: event?.properties as { historyKinds: string[]; withheld: string[] } };
+  };
+
+  it("cold start: no history block, empty historyKinds and withheld", async () => {
+    const user = await asNewUser();
+    const { prompt, props } = await captured(user, await seedQualifying(user));
+    expect(prompt).not.toContain("past offers");
+    expect(props).toMatchObject({ historyKinds: [], withheld: [] });
+  });
+
+  it("carries each kind's own rate; ignored and active-pending twigs add nothing", async () => {
+    const user = await asNewUser();
+    await pastKindling(user, 5, [["breathing", "done"], ["bridge", "skipped"], ["xolacer", "pending"]]);
+    await pastKindling(user, 1, [["breathing", "done"], ["xolacer", "pending"]], { status: "active" });
+    await pastKindling(user, 100, [["bridge", "done"]]); // outside 90 days
+
+    const { prompt, props } = await captured(user, await seedQualifying(user));
+    expect(prompt).toContain("- breathing: tended 2 of 2 offered");
+    expect(prompt).toContain("- bridge: passed on 1 of 1 offered");
+    expect(prompt).not.toMatch(/- xolacer: (tended|passed)/);
+    expect(props.historyKinds).toEqual(["breathing", "bridge"]);
+  });
+
+  it("says a tended read helped when the reader marked it so", async () => {
+    const user = await asNewUser();
+    await user.root.run(async (ctx) => {
+      const entryId = await ctx.db.insert("library_entries", {
+        slug: "on-loss", kind: "advice", title: "T", dek: "D", primarySubject: "grief",
+        reuse: "adapted", readMin: 4, active: true, lastReviewedAt: 1, searchText: "loss",
+      } as Doc<"library_entries">);
+      await ctx.db.insert("library_reads", { emotionalProfileId: user.profileId, entryId, saved: false, helped: true });
+      // Unfinished and on tonight's feeling, so a read twig can bind again.
+      await ctx.db.insert("library_entry_facets", { entryId, axis: "emotion", slug: "anxiety" });
+    });
+    await pastKindling(user, 3, [["read", "done", { slug: "on-loss" }]]);
+    const { prompt } = await captured(user, await seedQualifying(user));
+    expect(prompt).toContain("- read: tended 1 of 1 offered, said it helped 1");
+  });
+
+  it("withholds a type skipped on its last 2 offers", async () => {
+    stub.reply = JSON.stringify([twig("breathing", 1), twig("xolacer", 2), twig(CATALOGUE_TOPIC, 3)]);
+    const user = await asNewUser();
+    await seedCatalogue(user);
+    await pastKindling(user, 4, [["bridge", "skipped"]]);
+    await pastKindling(user, 2, [["bridge", "skipped"]]);
+    const { prompt, props } = await captured(user, await seedQualifying(user));
+    expect(prompt).not.toContain("- bridge:");
+    expect(props.withheld).toEqual(["bridge"]);
+  });
+
+  it("a tend between the skips resets the rule", async () => {
+    const user = await asNewUser();
+    await seedCatalogue(user);
+    await pastKindling(user, 6, [["bridge", "skipped"]]);
+    await pastKindling(user, 4, [["bridge", "done"]]);
+    await pastKindling(user, 2, [["bridge", "skipped"]]);
+    const { props } = await captured(user, await seedQualifying(user));
+    expect(props.withheld).toEqual([]);
+  });
+
+  it("never withholds below MAX_TWIGS bindable types", async () => {
+    const user = await asNewUser(); // no catalogue: only breathing, bridge, xolacer bind
+    await pastKindling(user, 4, [["bridge", "skipped"]]);
+    await pastKindling(user, 2, [["bridge", "skipped"]]);
+    const { prompt, props } = await captured(user, await seedQualifying(user));
+    expect(prompt).toContain("- bridge: Draft");
+    expect(props.withheld).toEqual([]);
+  });
+
+  async function matchedOld(user: SeededUser, personalMemoryEnabled: boolean) {
+    await user.root.run(async (ctx) => {
+      const prefs = await ctx.db
+        .query("preferences")
+        .withIndex("by_profile", (q) => q.eq("emotionalProfileId", user.profileId))
+        .unique();
+      await ctx.db.patch("preferences", prefs!._id, { personalMemoryEnabled });
+    });
+    const matched = await pastKindling(user, 60, [["bridge", "done"]]);
+    for (let i = 0; i < 10; i++) await pastKindling(user, 10 - i * 0.5, [["breathing", "done"]]);
+    const sessionId = await seedSession(user.root, user.profileId, { state: "confirmed" });
+    await seedMetadata(user.root, sessionId, user.profileId, {
+      supportNeed: "light",
+      suggestedSpecialty: "burnout",
+      episodicMatchKeys: [matched],
+    });
+    return (await captured(user, sessionId)).prompt;
+  }
+
+  it("reads the episodic matches' kindlings beyond the recent ten", async () => {
+    expect(await matchedOld(await asNewUser(), true)).toContain("- bridge: tended 1 of 1 offered");
+  });
+
+  it("reads only the recent kindlings with personal memory off", async () => {
+    expect(await matchedOld(await asNewUser(), false)).not.toContain("- bridge: tended");
+  });
+
+  it("names what was tended during a returning stretch's previous run", async () => {
+    const user = await asNewUser();
+    for (let i = 0; i < 50; i++) {
+      const s = await seedSession(user.root, user.profileId, {
+        state: "completed", confirmationState: "confirmed", createdAt: Date.now() - (120 - i * 2) * DAY,
+      });
+      await seedMetadata(user.root, s, user.profileId, { intensity: 4, thematicTags: ["work"] });
+    }
+    for (let d = 1; d <= 7; d++) {
+      const s = await seedSession(user.root, user.profileId, {
+        state: "completed", confirmationState: "confirmed", createdAt: Date.now() - (d + 0.5) * DAY,
+      });
+      await seedMetadata(user.root, s, user.profileId, { intensity: 10, thematicTags: ["work"] });
+    }
+    await user.root.run(async (ctx) => {
+      const base = { emotionalProfileId: user.profileId, domain: "work" as const, anchorBaseline: 67 };
+      await ctx.db.insert("compounding_stretches", { ...base, startedAt: Date.now() - 60 * DAY, endedAt: Date.now() - 30 * DAY });
+      await ctx.db.insert("compounding_stretches", { ...base, startedAt: Date.now() - 20 * DAY });
+    });
+    const workSession = await seedSession(user.root, user.profileId, { state: "completed" });
+    await seedMetadata(user.root, workSession, user.profileId, { thematicTags: ["work"] });
+    await pastKindling(user, 45, [["breathing", "done"], ["bridge", "skipped"]], { sessionId: workSession });
+
+    const sessionId = await seedSession(user.root, user.profileId, { state: "confirmed" });
+    await seedMetadata(user.root, sessionId, user.profileId, {
+      supportNeed: "light", suggestedSpecialty: "burnout", thematicTags: ["burnout"],
+    });
+    const { prompt } = await captured(user, sessionId);
+    expect(prompt).toContain("returning, tended when this weighed on them before: breathing");
+  });
+});

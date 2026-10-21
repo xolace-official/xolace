@@ -2423,7 +2423,9 @@ export default defineSchema({
     generatedAt: v.number(),
   })
     .index("by_profile_and_status", ["emotionalProfileId", "status"])
-    .index("by_session", ["sessionId"]),
+    .index("by_session", ["sessionId"])
+    // Kindling history (#565): a profile's recent kindlings, any status.
+    .index("by_emotionalProfileId_and_generatedAt", ["emotionalProfileId", "generatedAt"]),
 
   path_steps: defineTable({
     pathId: v.id("paths"),

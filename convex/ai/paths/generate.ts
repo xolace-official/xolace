@@ -13,6 +13,7 @@ import {
 } from "../providers/anthropic";
 import { bindTwig } from "./bind";
 import { CATALOG } from "./catalog";
+import { withhold } from "./history";
 import type { GenerateContext } from "./generateDb";
 import {
   buildPathsPrompt,
@@ -84,18 +85,21 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
     return;
   }
 
-  // Offer only what fits this grade and can bind for this session.
-  const catalog = CATALOG.filter(
+  // Offer only what fits this grade and can bind for this session, less any
+  // type they keep passing on (never below MAX_TWIGS, #565).
+  const bindable = CATALOG.filter(
     (c) =>
       c.supportNeedFit.includes(context.understanding.supportNeed as "light" | "active") &&
       bind(c.actionType, context) !== null,
   );
+  const { catalog, withheld } = withhold(bindable, context.history.skippedTwice);
   const prompt = buildPathsPrompt({
     understanding: context.understanding,
     profile: context.profile,
     catalog,
     tier: "plus",
     compounding: context.compounding,
+    history: context.history.kinds,
   });
   const response = await getAnthropicClient().messages.create({
     model: PATHS_MODEL,
@@ -133,6 +137,8 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
     promptTokens: response.usage.input_tokens,
     completionTokens: response.usage.output_tokens,
     twigs: twigs.map((t, i) => ({ ...t, order: i + 1 })),
+    historyKinds: context.history.kinds.map((k) => k.actionType),
+    withheld,
   });
   if (pathId === null) {
     await logNoShip(ctx, args, "rate_limited", twigs.length);

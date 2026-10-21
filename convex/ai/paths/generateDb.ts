@@ -11,6 +11,7 @@ import { understoodEmotions, type BindEntry, type BindTrack, type BindUnderstand
 import { readRow } from "../../library/reads";
 import { domainOf, lifeAreasOf } from "../../lib/understandingVocab";
 import { compoundingFor, type Compounding } from "../../compounding/stretches";
+import { loadHistory, tendedBefore, type KindlingHistory } from "./history";
 
 /**
  * Kindling generation — the DB halves of `generate.ts` (#331): the context
@@ -26,6 +27,7 @@ export interface GenerateContext {
   tracks: BindTrack[];
   entries: BindEntry[];
   compounding: PromptCompounding[];
+  history: KindlingHistory;
 }
 
 // ponytail: the whole active catalogue in one read (~200–400 rows, six small
@@ -121,9 +123,22 @@ export const getContext = internalQuery({
       : null;
 
     const now = Date.now();
-    const compounding: PromptCompounding[] = (await touchedCompounding(ctx, profile._id, u, now)).map(
-      (c) => ({ domain: c.domain, state: c.state, returning: c.returning, days: (now - c.startedAt) / DAY_MS }),
-    );
+    const compounding: PromptCompounding[] = [];
+    for (const c of await touchedCompounding(ctx, profile._id, u, now)) {
+      compounding.push({
+        domain: c.domain,
+        state: c.state,
+        returning: c.returning,
+        days: (now - c.startedAt) / DAY_MS,
+        tendedBefore: c.returning ? await tendedBefore(ctx, profile._id, c.domain, c.startedAt) : undefined,
+      });
+    }
+    // Personal memory off reads only the recent kindlings, never the matches (#565).
+    const prefs = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+      .unique();
+    const matchKeys = prefs?.personalMemoryEnabled === false ? [] : (u.episodicMatchKeys ?? []);
     const tracks = (await ctx.db.query("audio_tracks").take(MAX_TRACKS))
       .filter((t) => t.active)
       .map(({ slug, family, topic, tags, active, series }) => ({
@@ -154,6 +169,7 @@ export const getContext = internalQuery({
       tracks,
       entries: await loadReadCandidates(ctx, profile._id, u),
       compounding,
+      history: await loadHistory(ctx, profile._id, matchKeys, now),
     };
   },
 });
@@ -181,6 +197,8 @@ export const write = internalMutation({
     promptTokens: v.optional(v.number()),
     completionTokens: v.optional(v.number()),
     twigs: v.array(twigValidator),
+    historyKinds: v.optional(v.array(v.string())),
+    withheld: v.optional(v.array(v.string())),
   },
   returns: v.union(v.id("paths"), v.null()),
   handler: async (ctx, args) => {
@@ -230,6 +248,8 @@ export const write = internalMutation({
         modelVersion: args.modelVersion,
         twigs: args.twigs.length,
         actionTypes: args.twigs.map((t) => t.actionType),
+        historyKinds: args.historyKinds ?? [],
+        withheld: args.withheld ?? [],
       },
     });
     return pathId;
