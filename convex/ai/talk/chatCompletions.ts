@@ -97,7 +97,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
     : null;
   // The one database read before the model call (#598): the preload is
   // fixed at talk start, the recall and the safety peak land between turns.
-  const memory = await ctx.runQuery(internal.talk.remember.forTurn, talk).catch((err) => {
+  const memory = await ctx.runQuery(internal.talk.remember.forTurn, { sessionId: talk.sessionId, talkKey: talk.talkKey }).catch((err) => {
     console.error("[talk] memory read failed", err);
     return null;
   });
