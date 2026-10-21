@@ -55,7 +55,7 @@ export function PlayerScreen() {
     posthog.capture("browse_paywall_shown", { slug, from: from ?? null });
     // Replace, not push: the paywall's close pops back to wherever the player
     // was opened from, and the player never re-enters the stack.
-    router.replace({ pathname: "/(paywall)", params: { surface: "browse" satisfies PaywallSurface } });
+    router.replace({ pathname: "/upgrade", params: { surface: "browse" satisfies PaywallSurface } });
   }, [gated, slug, from, posthog]);
 
   if (!isPlus) return <View className="flex-1 bg-player-scrim" />;

@@ -1,13 +1,14 @@
 import { ConvexError, v } from "convex/values";
 import { internalMutation, mutation, type MutationCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import { requireAuth, requireSessionOwnership } from "../lib/auth";
 import { requirePremium } from "../lib/premium";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "../lib/rateLimits";
 import { getDayOfWeek, getTimeOfDay } from "../lib/timeOfDay";
-import { conversationsOf, markEnded, releaseUnconnected, reserveTalk } from "./time";
+import { attachTo, markEnded, releaseUnconnected, reserveTalk } from "./time";
 import { personText } from "./transcript";
+import { MAX_TURNS } from "../sessionTurns";
 import { talkPreload } from "./remember";
 import { patternRisk, type TalkPeak } from "../ai/safeguard";
 import { markNameAsked, talkSetup } from "./companion";
@@ -17,6 +18,19 @@ import { markNameAsked, talkSetup } from "./companion";
 export const TALK_IDLE_MS = 5 * 60 * 1000;
 // Far past a 15-min talk plus a 5-min "Say more".
 export const MAX_TALK_LINES = 1000;
+
+/**
+ * Every opening (a talk, or a "Say more" reopening) spends the same initiate
+ * budget as a typed Plus session: an opening mints an ElevenLabs token before
+ * anything connects, and one that never connects refunds its time in full.
+ * (Override spread as in sessions.initiate: the named limit's type doesn't list `config`.)
+ */
+export const limitTalkStart = (ctx: MutationCtx, profileId: Id<"emotional_profiles">) =>
+  rateLimiter.limit(ctx, "sessionInitiate", {
+    key: profileId,
+    throws: true,
+    ...{ config: SESSION_INITIATE_LIMITS_PLUS },
+  });
 
 /** A talk is a session (#592): created for the signed-in Plus person at talk start. */
 export const start = internalMutation({
@@ -31,13 +45,7 @@ export const start = internalMutation({
   handler: async (ctx, { startedAt, secret }) => {
     const { profile } = await requireAuth(ctx);
     await requirePremium(ctx, profile, "talk");
-    // The same initiate budget as a typed Plus session (override spread as
-    // in sessions.initiate: the named limit's type doesn't list `config`).
-    await rateLimiter.limit(ctx, "sessionInitiate", {
-      key: profile._id,
-      throws: true,
-      ...{ config: SESSION_INITIATE_LIMITS_PLUS },
-    });
+    await limitTalkStart(ctx, profile._id);
     const now = Date.now();
     const sessionId = await ctx.db.insert("sessions", {
       emotionalProfileId: profile._id,
@@ -142,16 +150,7 @@ export const attachConversation = mutation({
     }
     // Once per opening (a short talk can close before this lands): the ids
     // we later DELETE must stay the talk's own.
-    if (!session.talkKey) return null;
-    if ((await conversationsOf(ctx, session._id)).some((c) => c.talkKey === session.talkKey)) return null;
-    await ctx.db.insert("talk_conversations", {
-      sessionId: session._id,
-      talkKey: session.talkKey,
-      conversationId: args.conversationId,
-    });
-    if (!session.elevenLabsConversationId) {
-      await ctx.db.patch("sessions", session._id, { elevenLabsConversationId: args.conversationId });
-    }
+    if (session.talkKey) await attachTo(ctx, session, session.talkKey, args.conversationId);
     return null;
   },
 });
@@ -209,6 +208,12 @@ export async function finalizeTalk(
       await ctx.storage.delete(session.mirrorAudioStorageId);
       await ctx.db.patch("sessions", session._id, { mirrorAudioStorageId: undefined });
     }
+    // The old mirror's refinement turns would cap the new one's action row.
+    const turns = await ctx.db
+      .query("session_turns")
+      .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+      .take(MAX_TURNS + 1);
+    for (const t of turns) await ctx.db.delete("session_turns", t._id);
   }
 
   // The typed minimum is any words at all (the "Let it out" gate).
@@ -228,6 +233,10 @@ export async function finalizeTalk(
     processingStage: undefined,
     rawInput: rawText,
     rawInputLength: rawText.length,
+    // deliverMirror only raises these; a remade mirror starts from none.
+    // escalationTriggered stays: escalation is sticky (see clarify).
+    gapNamed: undefined,
+    requiresFollowUp: undefined,
     ...FORGET,
     timeOfDay: getTimeOfDay(startedAt),
     dayOfWeek: getDayOfWeek(startedAt),

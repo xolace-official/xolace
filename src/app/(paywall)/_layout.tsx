@@ -10,7 +10,7 @@ export default function PaywallLayout() {
   return (
     <Stack screenOptions={SCREEN_OPTIONS}>
       <Stack.Screen
-        name="index"
+        name="upgrade"
         options={{
           title: "",
           headerTransparent: true,

@@ -66,17 +66,16 @@ type PaywallState = {
  * Zustand action, not a component.
  *
  * `close` cannot assume a back stack: the route is reachable by deep link
- * (`xolace:///(paywall)`), and on a cold start from one the paywall is the root
+ * (`xolace:///upgrade`), and on a cold start from one the paywall is the root
  * entry — a bare `router.back()` no-ops there and strands the user in a
  * full-screen modal with no way out. Fall back to the reflect screen.
  *
- * The fallback must name `/(protected)` explicitly. `(onboarding)/index`,
- * `(paywall)/index` and `(protected)/index` all resolve to `/`, so a bare
- * `replace("/")` resolves within the *current* group and lands back on the
- * paywall.
+ * The route is `(paywall)/upgrade`, never `(paywall)/index`: an index would
+ * also resolve to `/`, sharing (protected)'s guard, and expo-router ≥ 58 breaks
+ * that tie by shortest group name — every cold start opened the paywall.
  */
 export const usePaywall = create<PaywallState>(() => ({
   open: (surface, params) =>
-    router.push({ pathname: "/(paywall)", params: { surface, ...params } }),
+    router.push({ pathname: "/upgrade", params: { surface, ...params } }),
   close: () => (router.canGoBack() ? router.back() : router.replace("/(protected)")),
 }));

@@ -1,8 +1,9 @@
 // @vitest-environment edge-runtime
 /**
  * Weekly talk time (#596). Failure modes: a new Plus person has no time to
- * start; the weekly top-up runs twice, or a talk open at reset pushes the
- * balance past 15 min; a talk starts with under 3 min left, or reserves more
+ * start; the weekly top-up runs twice, or a talk open at reset eats into
+ * the new week, or its refund (or a sweep) pushes the balance past 15 min; a
+ * talk starts with under 3 min left, or reserves more
  * than is left; a webhook redelivery charges twice; a duration past the
  * reservation over-refunds, a 0 s talk throws on a 0 refund; a lost webhook
  * holds the minutes forever; a talk that never connected blocks the retry; a
@@ -11,6 +12,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
+import { dayStartMs } from "../streaks/activityLog";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, posthogMock, ragMock, rateLimiterMock, revenuecatMock } from "../test/mocks.helpers";
 
@@ -99,6 +101,15 @@ async function webhook(
   expect(res.status).toBe(200);
 }
 
+describe("dayStartMs", () => {
+  it("lands on local midnight either side of a DST change", () => {
+    expect(dayStartMs("2026-10-26", "UTC")).toBe(Date.UTC(2026, 9, 26));
+    expect(dayStartMs("2026-10-26", "America/New_York")).toBe(Date.UTC(2026, 9, 26, 4)); // EDT
+    expect(dayStartMs("2026-11-02", "America/New_York")).toBe(Date.UTC(2026, 10, 2, 5)); // EST
+    expect(dayStartMs("2026-10-26", "Asia/Tokyo")).toBe(Date.UTC(2026, 9, 25, 15));
+  });
+});
+
 describe("weekly talk time (#596)", () => {
   it("a new Plus person has 15 min, and a talk reserves its ceiling", async () => {
     const user = await asNewUser();
@@ -144,7 +155,7 @@ describe("weekly talk time (#596)", () => {
     await expect(startTalk(user)).rejects.toThrow(/talk_time_used/);
   });
 
-  it("tops up to 15 min on the local Monday, counting a talk still open", async () => {
+  it("tops up to 15 min on the local Monday; last week's open talk neither counts nor refunds", async () => {
     const user = await asNewUser();
     const a = await startTalk(user);
     await attach(user, a.sessionId, "conv_a");
@@ -153,16 +164,25 @@ describe("weekly talk time (#596)", () => {
     await attach(user, b.sessionId, "conv_b");
 
     vi.setSystemTime(NEXT_MON);
-    expect(await left(user)).toEqual({ secondsLeft: 600 });
+    expect(await left(user)).toEqual({ secondsLeft: 900 });
     await webhook(user, "conv_b", 100);
-    // The top-up was 900 − (0 + 300); the refund brings back 200.
-    expect(await left(user)).toEqual({ secondsLeft: 800 });
+    // Its unused 200 was last week's: forfeited, not added to the new 900.
+    expect(await left(user)).toEqual({ secondsLeft: 900 });
 
     // A second read the same week doesn't top up again.
     const c = await startTalk(user);
     await attach(user, c.sessionId, "conv_c");
     await webhook(user, "conv_c", 60);
-    expect(await left(user)).toEqual({ secondsLeft: 740 });
+    expect(await left(user)).toEqual({ secondsLeft: 840 });
+  });
+
+  it("a lost webhook from last week is swept without landing on the new week", async () => {
+    const user = await asNewUser();
+    const { sessionId } = await startTalk(user);
+    await attach(user, sessionId, "conv_lost_sun");
+    vi.setSystemTime(NEXT_MON + 3 * HOUR);
+    await user.root.mutation(internal.talk.time.sweep, {});
+    expect(await left(user)).toEqual({ secondsLeft: 900 });
   });
 
   it("the sweeper releases a reservation whose webhook never came", async () => {
@@ -192,6 +212,9 @@ describe("weekly talk time (#596)", () => {
     expect(await left(user)).toEqual({ secondsLeft: 0 }); // nor a wrong key
     await webhook(user, "conv_unattached", 120, { sessionId, talkKey });
     expect(await left(user)).toEqual({ secondsLeft: 780 });
+    // The key also attaches it, so their copy is deleted (not left forever).
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("conv_unattached"), expect.objectContaining({ method: "DELETE" }));
+    expect(await user.t.query(internal.talk.provider.isPending, { conversationId: "conv_unattached" })).toBe(false);
   });
 
   it("says a talk's charge is still settling once it has ended", async () => {
@@ -202,10 +225,15 @@ describe("weekly talk time (#596)", () => {
     await user.t.mutation(api.talk.session.end, { sessionId });
     expect((await user.t.query(api.talk.time.left, {}))?.settling).toBe(true);
     await webhook(user, "conv_s", 60);
-    expect(await user.t.query(api.talk.time.left, {})).toEqual({ secondsLeft: 840, week: "2026-10-19", settling: false });
+    expect(await user.t.query(api.talk.time.left, {})).toEqual({
+      secondsLeft: 840,
+      week: "2026-10-19",
+      resetsAt: Date.UTC(2026, 9, 26),
+      settling: false,
+    });
   });
 
-  it("alerts on a talk reported past 16 min without a crisis flag", async () => {
+  it("alerts on a talk reported past 16 min", async () => {
     const user = await asNewUser();
     const { sessionId } = await startTalk(user);
     await attach(user, sessionId, "conv_long");

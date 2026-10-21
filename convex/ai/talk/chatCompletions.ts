@@ -36,8 +36,6 @@ const END_CALL = "end_call";
 // How long moderation may hold the first chunk, from the turn's start (#581).
 // A miss streams the turn; the verdict applies from the next one.
 const MODERATION_WAIT_MS = 250;
-// A late verdict is waited on this long after [DONE], then dropped.
-const MODERATION_LATE_MS = 5000;
 
 const within = <T,>(p: Promise<T>, ms: number) =>
   Promise.race([p, new Promise<null>((r) => setTimeout(() => r(null), Math.max(0, ms)))]);
@@ -111,7 +109,8 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   const words = turnWords(talk.lines);
   const phrase = phrasePeak(words);
   // Raced against the first chunk below; never rejects (unavailable = no verdict).
-  const moderation = words && !phrase ? moderateInput(words).then(moderationPeak) : null;
+  // A loose phrase floors at elevated; moderation can still raise it to crisis.
+  const moderation = words && phrase?.level !== "crisis" ? moderateInput(words).then(moderationPeak) : null;
   // Started before the memory read, awaited once the model call is in flight:
   // costs no TTFT. A failed write fails closed: no turn the transcript can't hold.
   const bound = ctx
@@ -120,6 +119,16 @@ export const chatCompletions = httpAction(async (ctx, request) => {
       console.error("[talk] turn sync failed", err);
       return false;
     });
+  // The verdict lands whenever it does, chained here rather than after [DONE]:
+  // an interruption kills the stream (and anything after it), but the person's
+  // flagged words are moderated only this turn. Idempotent with the early raise.
+  const late = moderation
+    ? Promise.all([moderation, bound])
+        .then(([peak, ok]) =>
+          ok && peak ? ctx.runMutation(internal.talk.safety.raise, { sessionId: talk.sessionId, peak }) : null,
+        )
+        .catch((err) => console.error("[talk] safety raise failed", err))
+    : null;
   // The one database read before the model call (#598): the preload is
   // fixed at talk start, the recall and the safety peak land between turns.
   const memory = await ctx.runQuery(internal.talk.remember.forTurn, talk).catch((err) => {
@@ -139,7 +148,8 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   // answered here, never relayed.
   const name = memory?.name ?? COMPANION_FALLBACK_NAME;
   const tools = [...agentTools, renameTool, personNameTool, slowTool];
-  const cue = talkCue(clock);
+  // Same clock at crisis (no extension, #581); only where its cues point changes.
+  const cue = talkCue(clock, peak?.level === "crisis");
   // Directness and a mid-talk "slow down" ride the same prompt (#603).
   const systemAs = (n: string, person = memory?.person, style: TalkStyle | undefined = memory?.style) =>
     talkSystem([companionPrompt(n, person, style), agentSystem].filter(Boolean).join("\n\n"), memory, turns, cue, safetySkill(peak));
@@ -299,7 +309,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
         if (first?.own) {
           const { tool, id, json } = first.own;
           toolCalls.push(tool);
-          let input: { name?: unknown; shared?: unknown } = {};
+          let input: { name?: unknown } = {};
           try {
             input = JSON.parse(json || "{}");
           } catch {}
@@ -308,7 +318,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
             tool === SLOW_TOOL
               ? await ctx.runMutation(internal.talk.companion.slowDown, { sessionId: talk.sessionId, talkKey: talk.talkKey })
               : tool === PERSON_NAME_TOOL
-                ? await ctx.runMutation(internal.talk.companion.setPersonName, { ...bind, shared: input.shared === true })
+                ? await ctx.runMutation(internal.talk.companion.setPersonName, bind)
                 : await ctx.runMutation(internal.talk.companion.rename, bind);
           if ((finish as FinishReason) === "tool_calls" && toolCalls.length === 1) {
             finish = "stop";
@@ -339,16 +349,12 @@ export const chatCompletions = httpAction(async (ctx, request) => {
           talkKey: talk.talkKey,
           reply: { seq: talk.lines.length, text: stripAudioTags(reply) },
         });
-        // A verdict that missed the race applies from the next turn.
-        const late = early ?? (moderation ? await within(moderation, MODERATION_LATE_MS) : null);
-        if (late || crisisLine) {
-          await ctx.runMutation(internal.talk.safety.raise, {
-            sessionId: talk.sessionId,
-            ...(late ? { peak: late } : {}),
-            ...(crisisLine ? { crisisLineSpoken: true } : {}),
-          });
+        // A verdict that missed the race (`late`) applies from the next turn.
+        if (crisisLine) {
+          await ctx.runMutation(internal.talk.safety.raise, { sessionId: talk.sessionId, crisisLineSpoken: true });
         }
         controller.close();
+        await late;
       } catch (err) {
         if (outcome !== "aborted") {
           outcome = "error";

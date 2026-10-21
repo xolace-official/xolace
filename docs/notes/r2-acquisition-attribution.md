@@ -346,7 +346,7 @@ store alone is sufficient:
    its own answer option distinct from generic "TikTok"; if not, collapse to
    "TikTok / Instagram / social".
 4. **Cheap win already in place:** the early Xolace+ paywall the map wants
-   already has a route group (`src/app/(paywall)/index.tsx`, reads a `surface`
+   already has a route group (`src/app/(paywall)/upgrade.tsx`, reads a `surface`
    param) and `paywall_opened` already carries `session_count` + `surface`
    (R1 §3). A `surface: "onboarding"` value is the whole instrumentation change
    — and if acquisition source is captured *before* that paywall in the flow,

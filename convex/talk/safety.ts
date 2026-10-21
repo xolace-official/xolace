@@ -30,16 +30,23 @@ import type { TalkLine } from "./transcript";
 export const CRISIS_LINE =
   "I'm really glad you told me. I'm worried about you, and I want you to have someone who can help right now, so I've put help on your screen. I'm right here with you.";
 
-// ponytail: a short English list, matched on the turn's own words. The
-// floor under moderation, not a classifier; tune it with the prototype (#581).
+// ponytail: short English lists, matched on the turn's own words. The floor
+// under moderation, not a classifier; tune them with the prototype (#581).
+// Crisis is irreversible for the talk, so only unambiguous first-person forms
+// reach it alone.
 const CRISIS_PHRASES = [
   /\bkill(ing)? my ?self\b/,
   /\b(end|take|ending|taking) (my|my own) life\b/,
-  /\bsuicid(e|al)\b/,
-  /\b(want|wanna|going|ready) (to )?die\b/,
   /\bbetter off dead\b/,
-  /\b(don'?t|do not) want to (be alive|live|wake up)\b/,
   /\bno reason to (live|go on|be here)\b/,
+];
+
+// Idiom-prone ("want to die laughing", "don't want to live like this"): help
+// on screen, and moderation still runs to raise it to crisis.
+const DISTRESS_PHRASES = [
+  /\bsuicid(e|al)\b/,
+  /\b(want|wanna|going) (to )?die\b/,
+  /\b(don'?t|do not) want to (be alive|live|wake up)\b/,
   /\b(hurt(ing)?|harm(ing)?|cut(ting)?) my ?self\b/,
   /\bend it all\b/,
 ];
@@ -53,17 +60,17 @@ export function turnWords(lines: TalkLine[]): string {
     .join("\n");
 }
 
-/** The deterministic floor: a crisis phrase in this turn's words. */
+/** The deterministic floor: crisis on a clear phrase, elevated on a loose one. */
 export function phrasePeak(words: string): TalkPeak | null {
   const text = words.toLowerCase().replace(/[’‘]/g, "'");
-  const hit = CRISIS_PHRASES.find((p) => p.test(text));
-  if (!hit) return null;
+  const crisis = CRISIS_PHRASES.some((p) => p.test(text));
+  if (!crisis && !DISTRESS_PHRASES.some((p) => p.test(text))) return null;
   return {
-    level: "crisis",
+    level: crisis ? "crisis" : "elevated",
     triggerType: "crisis_keywords",
     triggerConfidence: 1,
     // A clinical summary, not their words.
-    triggerEvidence: "Crisis phrase matched.",
+    triggerEvidence: crisis ? "Crisis phrase matched." : "Distress phrase matched.",
   };
 }
 

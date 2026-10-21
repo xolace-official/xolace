@@ -166,6 +166,30 @@ async function notifyStreakMilestone(
   });
 }
 
+/** The instant a local day begins. Two passes land right across a DST change. */
+export function dayStartMs(dayKey: string, timezone: string): number {
+  const naive = Date.parse(`${dayKey}T00:00:00Z`);
+  let guess = naive;
+  for (let i = 0; i < 2; i++) guess = naive - (wallClockMs(guess, timezone) - guess);
+  return guess;
+}
+
+/** The zone's wall clock at `timestampMs`, read as if it were UTC. */
+function wallClockMs(timestampMs: number, timezone: string): number {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date(timestampMs));
+  // "YYYY-MM-DD, HH:MM:SS"
+  return Date.parse(parts.replace(", ", "T") + "Z");
+}
+
 /** "YYYY-MM-DD" shifted by whole calendar days (DST-free: pure date math). */
 export function shiftDayKey(dayKey: string, days: number): string {
   const date = new Date(`${dayKey}T00:00:00Z`);

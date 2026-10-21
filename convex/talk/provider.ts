@@ -91,8 +91,8 @@ export const postCallWebhook = httpAction(async (ctx, request) => {
     await ctx.runMutation(internal.talk.time.settle, { conversationId, durationS, talk });
   }
   // Idempotent: only a talk still awaiting deletion gets a DELETE, so a
-  // redelivery does nothing. A conversation not attached yet is skipped too;
-  // the sweeper deletes it once attached.
+  // redelivery does nothing. settle attaches an unattached talk from the
+  // echoed key, so it is pending by now.
   if (!(await ctx.runQuery(internal.talk.provider.isPending, { conversationId }))) {
     return new Response(null, { status: 200 });
   }

@@ -33,12 +33,13 @@ export const rename = internalMutation({
 });
 
 /**
- * The companion's set_person_name tool (#602): what to call the person.
- * Shared overwrites their public displayName; private is a preferred name
- * only the companion uses. Either way the talk stops asking.
+ * The companion's set_person_name tool (#602): what to call the person. It
+ * only ever sets the private preferred name; the public displayName is the
+ * settings screen's alone, so a model-chosen flag or a spoken surname can
+ * never become their public identity. Either way the talk stops asking.
  */
 export const setPersonName = internalMutation({
-  args: { sessionId: v.string(), talkKey: v.string(), name: v.string(), shared: v.boolean() },
+  args: { sessionId: v.string(), talkKey: v.string(), name: v.string() },
   returns: v.union(v.object({ ok: v.literal(true), name: v.string() }), v.object({ ok: v.literal(false), message: v.string() })),
   handler: async (ctx, args) => {
     const id = ctx.db.normalizeId("sessions", args.sessionId);
@@ -53,10 +54,7 @@ export const setPersonName = internalMutation({
       .withIndex("by_profile", (q) => q.eq("emotionalProfileId", session.emotionalProfileId))
       .unique();
     if (preferences) {
-      await ctx.db.patch("preferences", preferences._id, {
-        ...(args.shared ? { displayName: result.trimmed, preferredName: undefined } : { preferredName: result.trimmed }),
-        talkNameAsked: true,
-      });
+      await ctx.db.patch("preferences", preferences._id, { preferredName: result.trimmed, talkNameAsked: true });
     }
     await ctx.db.patch("sessions", session._id, { personName: result.trimmed, askPersonName: false });
     return { ok: true as const, name: result.trimmed };

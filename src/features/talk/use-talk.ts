@@ -88,7 +88,8 @@ export function useTalk(reopen?: { sessionId: Id<"sessions">; thread: ThreadLine
       if (role === "user") {
         if (message === lastTyped.current) return void (lastTyped.current = null);
         // ElevenLabs transcribes noise it couldn't make out as "...".
-        if (!/\w/.test(message)) return;
+        // Same test as convex/talk/transcript.ts: a letter or digit in any script.
+        if (!/[\p{L}\p{N}]/u.test(message)) return;
         setThinking(true);
         thread.heard(message);
       } else {

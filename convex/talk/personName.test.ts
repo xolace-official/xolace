@@ -2,8 +2,8 @@
 /**
  * What the companion calls the person (#602). Failure modes: the ask runs on
  * a later talk too, or never on the first; a Clerk name is offered instead
- * of displayName; "keep it private" overwrites the public displayName, or
- * "share it" leaves a stale private name winning; a bad name is saved; a
+ * of displayName; the tool touches the public displayName (only Settings
+ * may, #602 review); a bad name is saved; a
  * name is saved through someone else's talk or a closed one; the private
  * name outlives a data wipe.
  */
@@ -53,7 +53,7 @@ describe("the person's name in a talk", () => {
     await user.t.mutation(internal.talk.session.abandon, { sessionId: first.sessionId });
     const retry = await startTalk(user);
     expect(await person(user, retry)).toEqual({ name: "Fern", ask: true });
-    await user.root.mutation(internal.talk.companion.setPersonName, { ...retry, name: "Fern", shared: true });
+    await user.root.mutation(internal.talk.companion.setPersonName, { ...retry, name: "Fern" });
     await user.t.mutation(internal.talk.session.abandon, { sessionId: retry.sessionId });
     const second = await startTalk(user);
     expect(await person(user, second)).toEqual({ name: "Fern", ask: false });
@@ -63,7 +63,7 @@ describe("the person's name in a talk", () => {
     const user = await asNewUser();
     await setDisplayName(user, "Fern");
     const talk = await startTalk(user);
-    const result = await user.root.mutation(internal.talk.companion.setPersonName, { ...talk, name: " Sam ", shared: false });
+    const result = await user.root.mutation(internal.talk.companion.setPersonName, { ...talk, name: " Sam " });
     expect(result).toEqual({ ok: true, name: "Sam" });
     expect(await person(user, talk)).toEqual({ name: "Sam", ask: false });
     expect(await prefs(user)).toMatchObject({ displayName: "Fern", preferredName: "Sam" });
@@ -71,14 +71,15 @@ describe("the person's name in a talk", () => {
     expect(await person(user, await startTalk(user))).toEqual({ name: "Sam", ask: false });
   });
 
-  it("a shared name overwrites displayName and clears the private one", async () => {
+  it("never touches the public displayName, whatever the model sends", async () => {
     const user = await asNewUser();
+    await setDisplayName(user, "Fern");
     const talk = await startTalk(user);
-    await user.root.mutation(internal.talk.companion.setPersonName, { ...talk, name: "Sam", shared: false });
-    await user.root.mutation(internal.talk.companion.setPersonName, { ...talk, name: "Sammy", shared: true });
+    await user.root.mutation(internal.talk.companion.setPersonName, { ...talk, name: "Sam" });
+    await user.root.mutation(internal.talk.companion.setPersonName, { ...talk, name: "Sammy" });
     const p = await prefs(user);
-    expect(p?.displayName).toBe("Sammy");
-    expect(p?.preferredName).toBeUndefined();
+    expect(p?.displayName).toBe("Fern");
+    expect(p?.preferredName).toBe("Sammy");
     expect(await person(user, talk)).toEqual({ name: "Sammy", ask: false });
   });
 
@@ -86,7 +87,7 @@ describe("the person's name in a talk", () => {
     const user = await asNewUser();
     const talk = await startTalk(user);
     const set = (args: { sessionId: string; talkKey: string; name: string }) =>
-      user.root.mutation(internal.talk.companion.setPersonName, { ...args, shared: false });
+      user.root.mutation(internal.talk.companion.setPersonName, args);
     expect((await set({ ...talk, name: "   " })).ok).toBe(false);
     expect((await set({ ...talk, name: "x".repeat(31) })).ok).toBe(false);
     expect((await set({ ...talk, talkKey: "nope", name: "Sam" })).ok).toBe(false);
@@ -98,7 +99,7 @@ describe("the person's name in a talk", () => {
   it("a data wipe forgets the private name", async () => {
     const user = await asNewUser();
     const talk = await startTalk(user);
-    await user.root.mutation(internal.talk.companion.setPersonName, { ...talk, name: "Sam", shared: false });
+    await user.root.mutation(internal.talk.companion.setPersonName, { ...talk, name: "Sam" });
     await user.root.mutation(internal.jobs.dataWipe.wipe, { emotionalProfileId: user.profileId });
     expect((await prefs(user))?.preferredName).toBeUndefined();
   });

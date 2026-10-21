@@ -7,7 +7,7 @@ import { reserveTalk } from "./time";
 import { talkPreload } from "./remember";
 import { talkSetup } from "./companion";
 import { renderEarlier } from "./memory";
-import { MAX_TALK_LINES, TALK_IDLE_MS } from "./session";
+import { limitTalkStart, MAX_TALK_LINES, TALK_IDLE_MS } from "./session";
 
 /**
  * "Say more" on a talk's mirror (#604): the same talk opens again for up to
@@ -33,6 +33,7 @@ export const start = internalMutation({
     if (session.entryType !== "talk" || session.state !== "mirror_delivered") {
       throw new ConvexError({ code: "not_reopenable" });
     }
+    await limitTalkStart(ctx, profile._id);
     // Throws `talk_time_used` under the minimum.
     const { ceilingS, talkKey } = await reserveTalk(ctx, profile._id, sessionId, {
       startedAt,

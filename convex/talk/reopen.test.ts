@@ -7,7 +7,9 @@
  * and never charges; its conversation is never deleted; the mirror isn't
  * remade from the whole thread, or keeps the old mirror's audio; a reopening
  * with nothing new said remakes the mirror or holds the minutes; a talk
- * still open, or past its mirror, reopens.
+ * still open, or past its mirror, reopens; the first mirror's reach, its
+ * refinement turns (which cap the action row) or a second escalation event
+ * carry into the remade mirror.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
@@ -96,6 +98,18 @@ describe("talk.reopen.start (#604)", () => {
     const user = await asNewUser();
     const sessionId = await talkToMirror(user);
 
+    // What the first mirror left on the session.
+    await user.root.run(async (ctx) => {
+      await ctx.db.patch("sessions", sessionId, { gapNamed: true, requiresFollowUp: true });
+      await ctx.db.insert("session_turns", { sessionId, turnNumber: 1, userFeedback: "not_quite", revisedMirrorText: "", modelVersion: "", createdAt: Date.now() });
+    });
+    const escalation = {
+      emotionalProfileId: user.profileId, sessionId,
+      triggerType: "explicit_crisis_language" as const, triggerConfidence: 0.9, triggerEvidence: "x",
+      actionTaken: "crisis_line_presented" as const, resourcesPresented: [],
+    };
+    const eventId = await user.root.mutation(internal.escalation.create, escalation);
+
     const { talkKey } = await user.t.mutation(internal.talk.reopen.start, { sessionId, ...key() });
     expect(talkKey).toMatch(/^\d+\.300\.r/);
     expect(await secondsLeft(user)).toBe(300);
@@ -117,6 +131,11 @@ describe("talk.reopen.start (#604)", () => {
     expect(ended?.state).toBe("processing");
     expect(ended?.rawInput).toBe("Work is too much.\nAnd my sister isn't speaking to me.");
     expect(ended?.mirrorAudioStorageId).toBeUndefined();
+    expect(ended?.gapNamed).toBeUndefined();
+    expect(ended?.requiresFollowUp).toBeUndefined();
+    expect(ended?.escalationTriggered).toBe(true);
+    expect(await user.t.query(api.sessionTurns.listBySession, { sessionId })).toEqual([]);
+    expect(await user.root.mutation(internal.escalation.create, escalation)).toBe(eventId);
 
     // Its webhook settles its own reservation; a redelivery of the first changes nothing.
     await webhook(user, "conv_2", 120, { sessionId, talkKey });
@@ -172,5 +191,15 @@ describe("wrap-up cues (#582, #604)", () => {
     expect(cueAt("1000.300.rabc", 10)).not.toContain("nearing its end");
     expect(cueAt("1000.300.rabc", 200)).toContain("nearing its end");
     expect(cueAt("1000.300.rabc", 260)).toContain("ends soon");
+  });
+
+  it("at crisis keep the clock and point every cue to help, not the mirror (#581)", () => {
+    const crisisAt = (elapsedS: number) =>
+      talkCue(talkClockOf("1000.300.abc", [{ role: "person", text: "hi" }], 1_000 + elapsedS * 1000)!, true);
+    expect(crisisAt(10).note).not.toContain("mirror");
+    expect(crisisAt(10).note).toContain("who they can reach");
+    expect(crisisAt(300).closing).toBe(true);
+    expect(crisisAt(300).note).toContain("help on their screen");
+    expect(crisisAt(300).note).not.toContain("mirror");
   });
 });

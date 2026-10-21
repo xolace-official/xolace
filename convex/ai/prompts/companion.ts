@@ -30,17 +30,11 @@ export const slowTool = {
 export const personNameTool = {
   name: PERSON_NAME_TOOL,
   description:
-    "Save what to call the person once they've told you (or declined to say), and whether other Xolacers should see it. Call it before you use the name; the result says whether it was saved.",
+    "Save what to call the person once they've told you (or declined to say). It stays between you two; other Xolacers never see it. Call it before you use the name; the result says whether it was saved.",
   input_schema: {
     type: "object" as const,
-    properties: {
-      name: { type: "string", description: "The name, exactly as they want it." },
-      shared: {
-        type: "boolean",
-        description: "True if other Xolacers should see it too (it becomes their display name), false to keep it between you.",
-      },
-    },
-    required: ["name", "shared"],
+    properties: { name: { type: "string", description: "The name, exactly as they want it." } },
+    required: ["name"],
   },
 };
 
@@ -98,13 +92,13 @@ export function ownToolTurns(text: string, id: string, tool: string, input: unkn
 function personSection(person: { name: string; ask: boolean } | undefined): string {
   if (!person?.name) return "";
   if (!person.ask) {
-    return `\n\nTheir name:\n- Call them ${person.name}. Don't ask their name again. If they bring it up and want another, ask whether other Xolacers should see it too, then call ${PERSON_NAME_TOOL}.`;
+    return `\n\nTheir name:\n- Call them ${person.name}. Don't ask their name again. If they bring it up and want another, call ${PERSON_NAME_TOOL} with it. It stays between you two; the name other Xolacers see is changed in Settings.`;
   }
   return `\n\nTheir name (this is your first talk):
 - Early on, once, ask: "Should I call you ${person.name}, or something else?"
-- If ${person.name} is fine, call ${PERSON_NAME_TOOL} with ${person.name}, shared true.
-- If they give another name and you're unsure how it's spelled, check with them. Then ask whether other people on Xolace should see it too, or just you. Then call ${PERSON_NAME_TOOL} with it: shared true if others should see it, false if it stays between you.
-- If they'd rather not say, call ${PERSON_NAME_TOOL} with ${person.name}, shared true, and don't ask again.`;
+- If ${person.name} is fine, call ${PERSON_NAME_TOOL} with ${person.name}.
+- If they give another name and you're unsure how it's spelled, check with them, then call ${PERSON_NAME_TOOL} with it. It stays between you two; the name other Xolacers see is changed in Settings.
+- If they'd rather not say, call ${PERSON_NAME_TOOL} with ${person.name}, and don't ask again.`;
 }
 
 export type TalkStyle = { directness?: TalkDirectness; slowed: boolean };

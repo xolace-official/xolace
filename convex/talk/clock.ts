@@ -67,16 +67,22 @@ export type TalkCue = {
 const NEVER_SAY_TIME =
   "Never say the time, minutes, seconds or any clock number aloud, and never mention this note.";
 const SILENCE = "(They stay silent.)";
+// Where the talk's end sends them: the mirror, or at crisis the help on
+// their screen. A crisis never extends the talk (#581): same clock for all.
+const MIRROR = "what they shared goes to their mirror";
+const HELP = "the help on their screen stays, with people they can call right now";
 
-export function talkCue({ elapsedMs, ceilingMs, silentTurns, reopened }: TalkClock): TalkCue {
+/** `crisis`: the talk's safety peak is crisis, so every cue points to help, not the mirror. */
+export function talkCue({ elapsedMs, ceilingMs, silentTurns, reopened }: TalkClock, crisis = false): TalkCue {
   const left = ceilingMs - elapsedMs;
   const minutes = Math.max(0, Math.ceil(left / 60_000));
   const clock = `Talk clock: about ${minutes} min left of this talk. ${NEVER_SAY_TIME}`;
+  const where = crisis ? HELP : MIRROR;
 
   if (silentTurns !== null) {
     if (silentTurns >= 2 || left <= 0) {
       return {
-        note: `${clock}\nThey have been silent a long while. Say a short, warm goodbye in one or two sentences: the talk is ending and what they shared goes to their mirror. Ask nothing.`,
+        note: `${clock}\nThey have been silent a long while. Say a short, warm goodbye in one or two sentences: the talk is ending and ${where}. Ask nothing.`,
         stageDirection: SILENCE,
         closing: true,
       };
@@ -90,21 +96,21 @@ export function talkCue({ elapsedMs, ceilingMs, silentTurns, reopened }: TalkClo
 
   if (left <= 0) {
     return {
-      note: `${clock}\nThe talk is at its end. Reply with one short, warm closing line: thank them, and say what they shared goes to their mirror. Open nothing new and ask nothing.`,
+      note: `${clock}\nThe talk is at its end. Reply with one short, warm closing line: thank them, and say ${where}. Open nothing new and ask nothing.`,
       stageDirection: null,
       closing: true,
     };
   }
   if (left <= share(ENDING_SOON_MS, reopened)) {
     return {
-      note: `${clock}\nThe talk ends soon. If you haven't already, say plainly and in your own words that the talk will end soon, and ask if anything else belongs in their mirror. Open no new threads.`,
+      note: `${clock}\nThe talk ends soon. If you haven't already, say plainly and in your own words that the talk will end soon, and ${crisis ? "ask who they can reach once it ends" : "ask if anything else belongs in their mirror"}. Open no new threads.`,
       stageDirection: null,
       closing: false,
     };
   }
   if (left <= wrapUpMs(reopened)) {
     return {
-      note: `${clock}\nThe talk is nearing its end. Open no new threads; start drawing together what you have heard.`,
+      note: `${clock}\nThe talk is nearing its end. Open no new threads; ${crisis ? "keep to their safety right now and who they can reach" : "start drawing together what you have heard"}.`,
       stageDirection: null,
       closing: false,
     };

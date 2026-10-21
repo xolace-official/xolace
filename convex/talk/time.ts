@@ -8,7 +8,9 @@
  * the connected duration ElevenLabs reports and refunds the rest. Keys are
  * per opening (the talk, or a "Say more" reopening, #604), not conversation:
  * the conversation id arrives after the reservation. Every write tops up
- * first, so a refund after Monday lands on the new week.
+ * first. A reservation from before Monday is last week's: it doesn't count
+ * toward the new 900, and what it didn't use is forfeited (as any leftover
+ * is at Monday), not refunded onto the new week.
  */
 import { Credits } from "@clipin/convex-credits";
 import { ConvexError, v } from "convex/values";
@@ -18,7 +20,7 @@ import { internalMutation, query, type MutationCtx, type QueryCtx } from "../_ge
 import { requireAuth } from "../lib/auth";
 import { hasPremium } from "../lib/premium";
 import { posthog } from "../posthog";
-import { localDayKey } from "../streaks/activityLog";
+import { dayStartMs, localDayKey, shiftDayKey } from "../streaks/activityLog";
 import { profileTimezone } from "../streaks/state";
 import { mintTalkKey, REOPEN_CEILING_MS, TALK_CEILING_MS } from "./clock";
 
@@ -53,17 +55,23 @@ async function openReservations(ctx: QueryCtx, profileId: Id<"emotional_profiles
 /** Seconds left this week, as the next ledger write will see it. */
 async function secondsLeft(ctx: QueryCtx, profile: Doc<"emotional_profiles">, now: number) {
   const balance = await credits.balance(ctx, { owner: profile._id });
-  const week = weekOf(now, await profileTimezone(ctx, profile));
-  if (profile.talkWeekOf && profile.talkWeekOf >= week) return { balance, week, topUp: 0 };
-  // A reservation is already out of the balance, so it counts toward the 900.
-  const open = (await openReservations(ctx, profile._id)).reduce((s, r) => s + r.reserved, 0);
-  return { balance, week, topUp: Math.max(0, WEEKLY_S - (balance + open)) };
+  const timezone = await profileTimezone(ctx, profile);
+  const week = weekOf(now, timezone);
+  const weekStart = dayStartMs(week, timezone);
+  const resetsAt = dayStartMs(shiftDayKey(week, 7), timezone);
+  if (profile.talkWeekOf && profile.talkWeekOf >= week) return { balance, week, weekStart, resetsAt, topUp: 0 };
+  // This week's reservations are already out of the balance, so they count
+  // toward the 900. Last week's don't: their leftover is forfeited.
+  const open = (await openReservations(ctx, profile._id))
+    .filter((r) => r.startedAt >= weekStart)
+    .reduce((s, r) => s + r.reserved, 0);
+  return { balance, week, weekStart, resetsAt, topUp: Math.max(0, WEEKLY_S - (balance + open)) };
 }
 
-async function topUp(ctx: MutationCtx, profileId: Id<"emotional_profiles">, now: number): Promise<number> {
+async function topUp(ctx: MutationCtx, profileId: Id<"emotional_profiles">, now: number) {
   const profile = await ctx.db.get("emotional_profiles", profileId);
-  if (!profile) return 0;
-  const { balance, week, topUp } = await secondsLeft(ctx, profile, now);
+  if (!profile) return { balance: 0, weekStart: now };
+  const { balance, week, weekStart, topUp } = await secondsLeft(ctx, profile, now);
   if (topUp > 0) {
     await credits.grant(ctx, {
       owner: profileId,
@@ -77,16 +85,32 @@ async function topUp(ctx: MutationCtx, profileId: Id<"emotional_profiles">, now:
   if (!profile.talkWeekOf || profile.talkWeekOf < week) {
     await ctx.db.patch("emotional_profiles", profileId, { talkWeekOf: week });
   }
-  return balance + topUp;
+  return { balance: balance + topUp, weekStart };
 }
 
 /** A row from before #604 keeps the session's keys; an opening's own are apart. */
 const keyOf = (row: Doc<"talk_charges">, step: string) =>
   row.talkKey ? `talk:${row.sessionId}:${row.talkKey}:${step}` : `talk:${row.sessionId}:${step}`;
 
-async function release(ctx: MutationCtx, row: Doc<"talk_charges">) {
-  await credits.release(ctx, { chargeId: row.chargeId, key: keyOf(row, "release") });
+/**
+ * Gives a reservation back, unless it is last week's: that leftover was
+ * forfeited at Monday's top-up, so it is charged in full instead.
+ */
+async function release(ctx: MutationCtx, row: Doc<"talk_charges">, weekStart: number) {
+  if (row.startedAt < weekStart) {
+    await credits.complete(ctx, { chargeId: row.chargeId, key: keyOf(row, "complete") });
+  } else {
+    await credits.release(ctx, { chargeId: row.chargeId, key: keyOf(row, "release") });
+  }
   await ctx.db.delete("talk_charges", row._id);
+}
+
+/** The start of the week `now` falls in, in the profile's timezone. */
+async function weekStartOf(ctx: QueryCtx, profileId: Id<"emotional_profiles">, now: number) {
+  const profile = await ctx.db.get("emotional_profiles", profileId);
+  if (!profile) return now;
+  const timezone = await profileTimezone(ctx, profile);
+  return dayStartMs(weekOf(now, timezone), timezone);
 }
 
 /** A session's open reservations: one per opening not settled yet. */
@@ -108,7 +132,7 @@ export async function reserveTalk(
   key: { startedAt: number; secret: string; reopen?: boolean },
 ) {
   const now = Date.now();
-  const balance = await topUp(ctx, profileId, now);
+  const { balance } = await topUp(ctx, profileId, now);
   if (balance < MIN_START_S) throw new ConvexError({ code: "talk_time_used" });
   const ceilingS = Math.min(key.reopen ? REOPEN_CEILING_S : TALK_CEILING_S, balance);
   const talkKey = mintTalkKey(key.startedAt, ceilingS, key.secret, key.reopen);
@@ -148,7 +172,7 @@ export async function releaseUnconnected(ctx: MutationCtx, session: Doc<"session
   );
   if (!row) return;
   const attached = row.talkKey && (await conversationsOf(ctx, session._id)).some((c) => c.talkKey === row.talkKey);
-  if (!attached) await release(ctx, row);
+  if (!attached) await release(ctx, row, await weekStartOf(ctx, session.emotionalProfileId, Date.now()));
 }
 
 export const conversationsOf = (ctx: QueryCtx, sessionId: Id<"sessions">) =>
@@ -156,6 +180,18 @@ export const conversationsOf = (ctx: QueryCtx, sessionId: Id<"sessions">) =>
     .query("talk_conversations")
     .withIndex("by_sessionId", (q) => q.eq("sessionId", sessionId))
     .take(20);
+
+/**
+ * Records an opening's conversation, once: the ids we later DELETE. From the
+ * client's report, or from the webhook when the app died before it.
+ */
+export async function attachTo(ctx: MutationCtx, session: Doc<"sessions">, talkKey: string, conversationId: string) {
+  if ((await conversationsOf(ctx, session._id)).some((c) => c.talkKey === talkKey)) return;
+  await ctx.db.insert("talk_conversations", { sessionId: session._id, talkKey, conversationId });
+  if (!session.elevenLabsConversationId) {
+    await ctx.db.patch("sessions", session._id, { elevenLabsConversationId: conversationId });
+  }
+}
 
 /**
  * The webhook's session and the open charge of the opening it was for.
@@ -197,27 +233,32 @@ async function chargeFor(
 
 /**
  * Minutes for the door, consent card, mirror and settings. Null off Plus.
- * `week` is the local Monday it was read in: a query doesn't re-run as time
- * passes, so the client ignores an answer from a past week. `settling`: a
- * talk has ended but its charge hasn't landed, so the number is low for now.
+ * `resetsAt` is when this answer's week ends in the profile's timezone: a
+ * query doesn't re-run as time passes, so the client ignores an answer past
+ * it. The device's own Monday must not decide (its clock can sit either side
+ * of the server's). `week` is that Monday, kept for the shipped UI.
+ * `settling`: a talk has ended but its charge hasn't landed, so the number is
+ * low for now.
  */
 export const left = query({
   args: {},
-  returns: v.union(v.null(), v.object({ secondsLeft: v.number(), week: v.string(), settling: v.boolean() })),
+  returns: v.union(
+    v.null(),
+    v.object({ secondsLeft: v.number(), week: v.string(), resetsAt: v.number(), settling: v.boolean() }),
+  ),
   handler: async (ctx) => {
     const { profile } = await requireAuth(ctx);
     if (!(await hasPremium(ctx, profile))) return null;
-    const { balance, week, topUp } = await secondsLeft(ctx, profile, Date.now());
+    const { balance, week, resetsAt, topUp } = await secondsLeft(ctx, profile, Date.now());
     // Not the session: every turn patches it, and this would re-run with it.
     const settling = (await openReservations(ctx, profile._id)).some((r) => r.endedAt !== undefined);
-    return { secondsLeft: balance + topUp, week, settling };
+    return { secondsLeft: balance + topUp, week, resetsAt, settling };
   },
 });
 
 /**
  * The post-call webhook's charge: the connected duration, capped at what was
- * reserved (crisis extensions are never charged). Idempotent: the open row
- * goes with the first delivery.
+ * reserved. Idempotent: the open row goes with the first delivery.
  */
 export const settle = internalMutation({
   args: {
@@ -233,21 +274,28 @@ export const settle = internalMutation({
     // Settled already: a redelivery.
     if (!found?.row) return null;
     const { session, row } = found;
+    // The echoed key proves the opening: attach here, else a talk the app
+    // never attached is never pending and its provider copy stays forever.
+    if (talk && (row.talkKey === talk.talkKey || session.talkKey === talk.talkKey)) {
+      await attachTo(ctx, session, talk.talkKey, conversationId);
+    }
 
-    const crisis = session.escalationTriggered === true || session.safeguardLevel === "crisis";
-    if (durationS > ALERT_AFTER_S && !crisis) {
-      console.error("[talk] alert: talk past 16 min without a crisis flag", session._id, durationS);
+    // No talk extends past its ceiling, crisis included (#581).
+    if (durationS > ALERT_AFTER_S) {
+      console.error("[talk] alert: talk past 16 min", session._id, durationS);
       await posthog.capture(ctx, {
         distinctId: session.emotionalProfileId,
         event: "talk_duration_alert",
         properties: { sessionId: session._id, durationS },
       });
     }
-    await topUp(ctx, row.emotionalProfileId, Date.now());
+    const { weekStart } = await topUp(ctx, row.emotionalProfileId, Date.now());
 
     const used = Math.min(row.reserved, Math.max(0, Math.ceil(durationS)));
-    if (used === 0) {
-      await release(ctx, row);
+    // Last week's talk: its unused time was forfeited at Monday, not refunded.
+    const forfeit = row.startedAt < weekStart;
+    if (used === 0 || forfeit) {
+      await release(ctx, row, weekStart);
       return null;
     }
     await credits.complete(ctx, { chargeId: row.chargeId, key: keyOf(row, "complete") });
@@ -276,8 +324,8 @@ export const sweep = internalMutation({
       .withIndex("by_startedAt", (q) => q.lt("startedAt", now - SWEEP_AFTER_MS))
       .take(BATCH);
     for (const row of stale) {
-      await topUp(ctx, row.emotionalProfileId, now);
-      await release(ctx, row);
+      const { weekStart } = await topUp(ctx, row.emotionalProfileId, now);
+      await release(ctx, row, weekStart);
     }
     return null;
   },
