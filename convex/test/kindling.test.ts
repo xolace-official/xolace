@@ -40,6 +40,10 @@ const stub = vi.hoisted(() => ({
   libraryHits: [] as { key: string; scores: number[] }[],
   embedFails: false,
   searched: [] as string[],
+  // The track meaning search (#572): hits per namespace, and what got indexed / removed.
+  trackHits: {} as Record<string, { key: string; scores: number[] }[]>,
+  indexed: [] as { namespace: string; key: string; text: string }[],
+  unindexed: [] as string[],
   events: [] as { event: string; properties: Record<string, unknown> }[],
 }));
 
@@ -69,11 +73,18 @@ vi.mock("../rag", () => {
       // One result per chunk; an entry's score is its best chunk's.
       search: async (_ctx: unknown, args: { namespace: string }) => {
         stub.searched.push(args.namespace);
-        if (args.namespace !== "library") return { entries: [], results: [] };
+        const hits = args.namespace === "library" ? stub.libraryHits : (stub.trackHits[args.namespace] ?? []);
         return {
-          entries: stub.libraryHits.map((h) => ({ entryId: `e_${h.key}`, key: h.key, text: "" })),
-          results: stub.libraryHits.flatMap((h) => h.scores.map((score) => ({ entryId: `e_${h.key}`, score }))),
+          entries: hits.map((h) => ({ entryId: `e_${h.key}`, key: h.key, text: "" })),
+          results: hits.flatMap((h) => h.scores.map((score) => ({ entryId: `e_${h.key}`, score }))),
         };
+      },
+      add: async (_ctx: unknown, args: { namespace: string; key: string; text: string }) => {
+        stub.indexed.push({ namespace: args.namespace, key: args.key, text: args.text });
+      },
+      getNamespace: async (_ctx: unknown, args: { namespace: string }) => ({ namespaceId: args.namespace }),
+      deleteByKey: async (_ctx: unknown, args: { namespaceId: string; key: string }) => {
+        stub.unindexed.push(`${args.namespaceId}/${args.key}`);
       },
     },
   };
@@ -132,6 +143,9 @@ beforeEach(() => {
   stub.libraryHits = [];
   stub.embedFails = false;
   stub.searched = [];
+  stub.trackHits = {};
+  stub.indexed = [];
+  stub.unindexed = [];
   stub.events = [];
   sentPushes.length = 0;
 });
@@ -1328,5 +1342,102 @@ describe("the read twig binds on meaning (#568)", () => {
     expect(slug).toBeNull();
     expect(logged).toMatchObject({ readSearch: "skipped" });
     expect(stub.searched).not.toContain("library");
+  });
+});
+
+describe("tracks bind on meaning inside the picked topic (#572)", () => {
+  const TOPIC = "audio_topic_anxiety_relief";
+  type Spec = Partial<Doc<"audio_tracks">> & { slug: string };
+  const seedTracks = (user: SeededUser, specs: Spec[]) =>
+    user.root.run(async (ctx) => {
+      const ids: Record<string, Id<"audio_tracks">> = {};
+      for (const spec of specs) {
+        ids[spec.slug] = await ctx.db.insert("audio_tracks", {
+          family: "support", title: `Title ${spec.slug}`, topic: TOPIC, tags: [], sourceTags: [],
+          key: "k", thumbKey: "t", durationSec: 60, sha256: "s", thumbSha256: "ts", active: true, ...spec,
+        });
+      }
+      return ids;
+    });
+
+  const session = async (user: SeededUser) => {
+    const sessionId = await seedSession(user.root, user.profileId, {
+      state: "confirmed", rawInput: "a dread I can't name sits on my chest every morning",
+    });
+    await seedMetadata(user.root, sessionId, user.profileId, {
+      supportNeed: "light", suggestedSpecialty: "burnout", primaryEmotion: "anxiety", thematicTags: [],
+    });
+    return sessionId;
+  };
+
+  async function run(user: SeededUser) {
+    stub.reply = JSON.stringify([twig(TOPIC, 1), twig("breathing", 2), twig("xolacer", 3), twig("bridge", 4)]);
+    await generate(user, await session(user));
+    const active = (await readPaths(user)).find((p) => p.status === "active")!;
+    const step = (await readSteps(user, active._id)).find((t) => t.actionType === TOPIC)!;
+    const logged = stub.events.find((e) => e.event === "path_generated")!.properties;
+    return { slug: (step.params as { slug: string }).slug, logged };
+  }
+
+  it("binds the closest track in the topic over tag overlap, never another topic's, and logs the score", async () => {
+    const user = await asNewUser();
+    await seedTracks(user, [
+      { slug: "tagged", tags: ["anxiety"] },
+      { slug: "on-dread" },
+      { slug: "elsewhere", topic: "audio_topic_grief" },
+    ]);
+    stub.trackHits = {
+      [`track:${TOPIC}`]: [{ key: "on-dread", scores: [0.2, 0.58] }, { key: "elsewhere", scores: [0.99] }],
+    };
+    const { slug, logged } = await run(user);
+    expect(slug).toBe("on-dread");
+    expect(logged.trackSearch).toEqual([{ actionType: TOPIC, search: "ran", topScore: 0.58, fallback: false }]);
+    expect(stub.searched.filter((n) => n.startsWith("track:"))).toEqual([`track:${TOPIC}`]);
+  });
+
+  it("below the floor binds on tags and logs the fallback", async () => {
+    const user = await asNewUser();
+    await seedTracks(user, [{ slug: "tagged", tags: ["anxiety"] }, { slug: "far" }]);
+    stub.trackHits = { [`track:${TOPIC}`]: [{ key: "far", scores: [0.1] }] };
+    const { slug, logged } = await run(user);
+    expect(slug).toBe("tagged");
+    expect(logged.trackSearch).toEqual([{ actionType: TOPIC, search: "ran", topScore: 0.1, fallback: true }]);
+  });
+
+  it("an embed failure binds on tags, is logged, and the kindling still ships", async () => {
+    const user = await asNewUser();
+    await seedTracks(user, [{ slug: "tagged", tags: ["anxiety"] }, { slug: "on-dread" }]);
+    stub.trackHits = { [`track:${TOPIC}`]: [{ key: "on-dread", scores: [0.9] }] };
+    stub.embedFails = true;
+    const { slug, logged } = await run(user);
+    expect(slug).toBe("tagged");
+    expect(logged.trackSearch).toEqual([{ actionType: TOPIC, search: "failed", fallback: true }]);
+  });
+
+  it("indexes each track's own text in its topic (and the reframe series); retiring one removes it", async () => {
+    const user = await asNewUser();
+    const ids = await seedTracks(user, [
+      { slug: "voiced", transcript: "Breathe out slower than you breathe in." },
+      { slug: "tune", family: "music", topic: "music_topic_calm", tags: ["calm", "rest"], whatItsFor: "For a racing mind at night." },
+      { slug: "bare", tags: ["anxiety"] },
+      { slug: "reframe", topic: "audio_topic_shame", series: "reality-not-false-hope", transcript: "It is not your fault." },
+    ]);
+    for (const trackId of Object.values(ids)) {
+      await user.root.action(internal.ai.paths.trackSearch.indexTrack, { trackId });
+    }
+    expect(stub.indexed).toHaveLength(5);
+    expect(stub.indexed).toEqual(expect.arrayContaining([
+      { namespace: `track:${TOPIC}`, key: "voiced", text: "Breathe out slower than you breathe in." },
+      { namespace: "track:music_topic_calm", key: "tune", text: "Title tune\n\ncalm, rest\n\nFor a racing mind at night." },
+      { namespace: `track:${TOPIC}`, key: "bare", text: "Title bare\n\nanxiety" },
+      { namespace: "track:audio_topic_shame", key: "reframe", text: "It is not your fault." },
+      { namespace: "track:reality-not-false-hope", key: "reframe", text: "It is not your fault." },
+    ]));
+
+    await user.root.mutation(internal.ai.paths.trackSearch.setTrackActive, { slug: "reframe", active: false });
+    expect(scheduled(await scheduledCalls(user.root), "ai/paths/trackSearch:indexTrack")?.args).toEqual({ trackId: ids["reframe"] });
+    // Run it here; the scheduled copy may land too, so compare as a set.
+    await user.root.action(internal.ai.paths.trackSearch.indexTrack, { trackId: ids["reframe"] });
+    expect(new Set(stub.unindexed)).toEqual(new Set(["track:audio_topic_shame/reframe", "track:reality-not-false-hope/reframe"]));
   });
 });

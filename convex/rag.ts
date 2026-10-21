@@ -22,6 +22,8 @@ import { components } from "./_generated/api";
 //   (shared, anonymized; filter on status to drop flagged/removed)
 // - Library entries             → namespace = LIBRARY_NAMESPACE
 //   (convex/ai/library/embed.ts; sentinel filters, nothing filtered)
+// - Kindling tracks             → namespace = track:<topic>, plus
+//   track:reality-not-false-hope (convex/ai/paths/trackSearch.ts)
 //
 // filterNames declares which metadata fields can be filtered at
 // query time. They must be declared here up front — filtering on

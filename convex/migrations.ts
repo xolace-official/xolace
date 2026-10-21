@@ -176,6 +176,16 @@ export const backfillLibraryIndex = migrations.define({
   },
 });
 
+// Track meaning index (#572): embeds every active track ingested before the
+// index existed. One index action per row, keyed on the slug — safe to re-run.
+//   bunx convex run migrations:run '{"fn": "migrations:backfillTrackIndex"}'
+export const backfillTrackIndex = migrations.define({
+  table: "audio_tracks",
+  migrateOne: async (ctx, doc) => {
+    if (doc.active) await ctx.scheduler.runAfter(0, internal.ai.paths.trackSearch.indexTrack, { trackId: doc._id });
+  },
+});
+
 export const runAll = migrations.runner([
   internal.migrations.renameRawInput,
   internal.migrations.renameUserInput,

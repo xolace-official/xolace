@@ -67,8 +67,13 @@ type SupportTrack = SharedFields & {
   episodeNumber?: number;
   tier?: number;
   safetyReviewedAt?: number;
+  transcript?: string; // the meaning index embeds it (#572)
 };
-type MusicTrack = SharedFields & { family: "music"; licence: Record<string, unknown> };
+type MusicTrack = SharedFields & {
+  family: "music";
+  licence: Record<string, unknown>;
+  whatItsFor?: string; // one line, embedded with title + tags (#572)
+};
 type ManifestTrack = SupportTrack | MusicTrack;
 type ManifestTopic = { slug: string; title?: string; thumbPath: string };
 

@@ -36,6 +36,7 @@ import type * as ai_paths_notify from "../ai/paths/notify.js";
 import type * as ai_paths_prompt from "../ai/paths/prompt.js";
 import type * as ai_paths_readSearch from "../ai/paths/readSearch.js";
 import type * as ai_paths_tendedBefore from "../ai/paths/tendedBefore.js";
+import type * as ai_paths_trackSearch from "../ai/paths/trackSearch.js";
 import type * as ai_paths_tryThis from "../ai/paths/tryThis.js";
 import type * as ai_process from "../ai/process.js";
 import type * as ai_prompts_accumulatedInput from "../ai/prompts/accumulatedInput.js";
@@ -260,6 +261,7 @@ declare const fullApi: ApiFromModules<{
   "ai/paths/prompt": typeof ai_paths_prompt;
   "ai/paths/readSearch": typeof ai_paths_readSearch;
   "ai/paths/tendedBefore": typeof ai_paths_tendedBefore;
+  "ai/paths/trackSearch": typeof ai_paths_trackSearch;
   "ai/paths/tryThis": typeof ai_paths_tryThis;
   "ai/process": typeof ai_process;
   "ai/prompts/accumulatedInput": typeof ai_prompts_accumulatedInput;

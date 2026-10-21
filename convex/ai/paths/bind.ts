@@ -15,7 +15,10 @@ import { freeEmotionFamily } from "../../lib/understandingVocab";
 export type BindTrack = Pick<
   Doc<"audio_tracks">,
   "slug" | "family" | "topic" | "tags" | "active" | "series"
->;
+> & {
+  /** Best-chunk similarity to tonight's text (#572); absent when the topic wasn't searched or didn't reach it. */
+  similarity?: number;
+};
 
 export interface BindUnderstanding {
   primaryEmotion: string;
@@ -46,10 +49,11 @@ export interface BindEntry {
  * Below this a match in meaning doesn't count and binding falls back to the
  * overlap it replaced (ADR 0021). One floor per twig type, since each
  * content type's text sits differently against a session's.
- * ponytail: provisional; tune from `path_generated.readTopScore` and
- * `mirror_delivered.exerciseTopScore`; the xolacer floor has no logged score yet.
+ * ponytail: provisional; tune from `path_generated.readTopScore`,
+ * `path_generated.trackSearch[].topScore` and `mirror_delivered.exerciseTopScore`;
+ * the xolacer floor has no logged score yet.
  */
-export const SIMILARITY_FLOOR = { read: 0.3, exercise: 0.3, xolacer: 0.3 } as const;
+export const SIMILARITY_FLOOR = { read: 0.3, exercise: 0.3, xolacer: 0.3, track: 0.3 } as const;
 
 /** Similarity in 0.05 bands, so the history rules still have ties to break (ADR 0021). */
 export const similarityBand = (score: number) => Math.floor(score * 20);
@@ -104,8 +108,9 @@ function bindTrack(
   const entry = CATALOG_BY_KEY.get(actionType);
   if (!entry) return null;
 
+  // The topic is the gate (ADR 0021): the model's `why` was written for it.
   // Acuity `tier` is editorial (tone, review process, Browse grouping) — it
-  // never gates binding. Standalones and episodes of a topic compete on tags.
+  // never gates binding. Standalones and episodes of a topic compete as one.
   const family = actionType.startsWith("music_topic_") ? "music" : "support";
   const candidates = tracks.filter(
     (t) =>
@@ -114,6 +119,10 @@ function bindTrack(
       (actionType === "episode_reframe" ? t.series === REFRAME_SERIES : t.topic === actionType),
   );
   if (candidates.length === 0) return null;
+
+  // Closest in meaning first (#572); with nothing above the floor, tag overlap.
+  const close = candidates.filter((t) => (t.similarity ?? -1) >= SIMILARITY_FLOOR.track);
+  if (close.length > 0) return pickSeeded(actionType, close, (t) => similarityBand(t.similarity!), u);
 
   const wanted = new Set([
     ...understoodEmotions(u),

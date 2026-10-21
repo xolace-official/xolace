@@ -5,7 +5,6 @@ import type { Id } from "../../_generated/dataModel";
 import { rag } from "../../rag";
 import { LIBRARY_NAMESPACE } from "../library/embed";
 import { readRow } from "../../library/reads";
-import { embedSessionText } from "../helpers/embedSessionText";
 import { SIMILARITY_FLOOR, type BindEntry } from "./bind";
 
 /** Chunks, not entries: a long entry can fill several slots with its own chunks. */
@@ -15,14 +14,12 @@ export type ReadHit = { entryId: Id<"library_entries">; similarity: number };
 
 /**
  * The Library entries closest in meaning to tonight's text (#568, ADR 0021),
- * each scored by its best chunk. The session is re-embedded here and the
- * vector never stored. Null = the search never ran (embed or search failed),
- * which the caller treats as "fall back to facets", never as "nothing close".
- * Unfiltered: retired and finished entries are dropped when the hits resolve.
+ * each scored by its best chunk, against the session vector generation
+ * embeds once and never stores. Null = the search failed, which the caller
+ * treats as "fall back to facets", never as "nothing close". Unfiltered:
+ * retired and finished entries are dropped when the hits resolve.
  */
-export async function searchReads(ctx: ActionCtx, text: string): Promise<ReadHit[] | null> {
-  const vector = await embedSessionText(text);
-  if (vector === null) return null;
+export async function searchReads(ctx: ActionCtx, vector: number[]): Promise<ReadHit[] | null> {
   try {
     const { entries, results } = await rag.search(ctx, { namespace: LIBRARY_NAMESPACE, query: vector, limit: SEARCH_LIMIT });
     const best = new Map<string, number>();
@@ -57,22 +54,23 @@ export const resolveHits = internalQuery({
 
 /**
  * The read twig's candidates: the facet join's, plus every entry close in
- * meaning, each carrying its similarity. Best-effort — a failed search keeps
- * the facet candidates, logs, and generation carries on. `search` says
- * whether it ran (`skipped` = no read may bind tonight); `fallback` says
- * nothing cleared the floor, so the binder ran on facets.
+ * meaning, each carrying its similarity. Best-effort — a failed embed
+ * (`vector` null) or search keeps the facet candidates, logs, and generation
+ * carries on. `search` says whether it ran (`skipped` = `vector` undefined,
+ * no read may bind tonight); `fallback` says nothing cleared the floor, so
+ * the binder ran on facets.
  */
 export async function readCandidates(
   ctx: ActionCtx,
   emotionalProfileId: Id<"emotional_profiles">,
   sessionId: Id<"sessions">,
-  readText: string | null,
+  vector: number[] | null | undefined,
   facetEntries: BindEntry[],
 ): Promise<{ entries: BindEntry[]; search: "ran" | "failed" | "skipped"; topScore?: number; fallback: boolean }> {
-  if (readText === null) return { entries: facetEntries, search: "skipped", fallback: true };
+  if (vector === undefined) return { entries: facetEntries, search: "skipped", fallback: true };
   let close: BindEntry[] | null = null;
   try {
-    const hits = await searchReads(ctx, readText);
+    const hits = vector === null ? null : await searchReads(ctx, vector);
     if (hits !== null) {
       close = hits.length > 0 ? await ctx.runQuery(internal.ai.paths.readSearch.resolveHits, { emotionalProfileId, hits }) : [];
     }

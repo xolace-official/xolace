@@ -188,4 +188,30 @@ describe("bindTwig", () => {
       expect(read([...tied].reverse())).toEqual(first);
     });
   });
+  describe("tracks bind on meaning inside the topic (#572)", () => {
+    const at = (slug: string, similarity?: number, over: Partial<BindTrack> = {}) => track({ slug, similarity, ...over });
+    const relief = (tracks: BindTrack[], over?: Partial<BindUnderstanding>) => bind("audio_topic_anxiety_relief", tracks, over);
+
+    it("the closest track in the topic wins over tag overlap", () => {
+      expect(relief([at("tagged", undefined, { tags: ["anxiety"] }), at("on-dread", 0.62)])).toEqual({ slug: "on-dread" });
+    });
+    it("never leaves the model's topic, however close another topic's track is", () => {
+      const other = at("elsewhere", 0.95, { topic: "audio_topic_grief" });
+      expect(relief([other, at("here", 0.1, { tags: ["anxiety"] })])).toEqual({ slug: "here" });
+      expect(relief([other])).toBeNull();
+      const reframe = at("reframe", 0.4, { topic: "audio_topic_shame", series: "reality-not-false-hope" });
+      expect(bind("episode_reframe", [at("close-plain", 0.9), reframe])).toEqual({ slug: "reframe" });
+    });
+    it("below the floor falls back to tag overlap; a topic with one track binds it", () => {
+      expect(relief([at("tagged", 0.05, { tags: ["anxiety"] }), at("far", 0.1)])).toEqual({ slug: "tagged" });
+      expect(relief([at("only", 0.01)])).toEqual({ slug: "only" });
+    });
+    it("a better band wins; inside one band the history rules decide (#566)", () => {
+      expect(relief([at("a", 0.61), at("b", 0.71)], { skippedSlugs: k("b") })).toEqual({ slug: "b" });
+      const tied = [at("a", 0.61), at("b", 0.64)];
+      const first = relief(tied) as { slug: string };
+      const other = first.slug === "a" ? "b" : "a";
+      expect(relief(tied, { skippedSlugs: k(first.slug) })).toEqual({ slug: other });
+    });
+  });
 });

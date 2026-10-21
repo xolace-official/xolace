@@ -2368,9 +2368,11 @@ export default defineSchema({
     episodeNumber: v.optional(v.number()),
     tier: v.optional(v.number()), // acuity 1-4; tier >= 3 requires safetyReviewedAt
     safetyReviewedAt: v.optional(v.number()),
+    transcript: v.optional(v.string()), // what the track says; its meaning-index text (#572)
 
     // music-family
     licence: v.optional(licenceValidator), // required at write for family="music"
+    whatItsFor: v.optional(v.string()), // one curated line; embedded with title + tags (#572)
 
     // Browse search (#550): lowercase title, topic, tags, narrators, series
     // title (+ raw source tags for music), written by upsertTrack

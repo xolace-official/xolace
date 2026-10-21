@@ -13,6 +13,7 @@ import { domainOf, lifeAreasOf } from "../../lib/understandingVocab";
 import { compoundingFor, type Compounding } from "../../compounding/stretches";
 import { loadHistory, type KindlingHistory } from "./history";
 import { tendedBefore } from "./tendedBefore";
+import { trackSearchLogValidator } from "./trackSearch";
 
 /**
  * Kindling generation — the DB halves of `generate.ts` (#331): the context
@@ -27,8 +28,10 @@ export interface GenerateContext {
   binding: BindUnderstanding;
   tracks: BindTrack[];
   entries: BindEntry[];
-  /** What the person wrote, for the read twig's meaning search (#568); null where no read may bind. */
-  readText: string | null;
+  /** What the person wrote, for the read (#568) and track (#572) meaning searches. */
+  sessionText: string | null;
+  /** No read may bind on an elevated/crisis session, so it never searches the Library. */
+  readsAllowed: boolean;
   compounding: PromptCompounding[];
   history: KindlingHistory;
 }
@@ -181,7 +184,8 @@ export const getContext = internalQuery({
       },
       tracks,
       entries: await loadReadCandidates(ctx, profile._id, u),
-      readText: readsAllowed(u) ? ((await ctx.db.get("sessions", args.sessionId))?.rawInput ?? null) : null,
+      sessionText: (await ctx.db.get("sessions", args.sessionId))?.rawInput ?? null,
+      readsAllowed: readsAllowed(u),
       compounding,
       history,
     };
@@ -216,6 +220,7 @@ export const write = internalMutation({
     readSearch: v.optional(v.union(v.literal("ran"), v.literal("failed"), v.literal("skipped"))),
     readTopScore: v.optional(v.number()),
     readFallback: v.optional(v.boolean()),
+    trackSearch: v.optional(v.array(trackSearchLogValidator)),
   },
   returns: v.union(v.id("paths"), v.null()),
   handler: async (ctx, args) => {
@@ -272,6 +277,8 @@ export const write = internalMutation({
         readSearch: args.readSearch,
         readTopScore: args.readTopScore,
         readFallback: args.readFallback,
+        // Per track twig (#572): the same three, inside the topic the model picked.
+        trackSearch: args.trackSearch ?? [],
       },
     });
     return pathId;

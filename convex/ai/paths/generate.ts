@@ -16,6 +16,8 @@ import { CATALOG } from "./catalog";
 import { isTryThis } from "./tryThis";
 import { withhold } from "./history";
 import { readCandidates } from "./readSearch";
+import { scoreTracks } from "./trackSearch";
+import { embedSessionText } from "../helpers/embedSessionText";
 import type { GenerateContext } from "./generateDb";
 import {
   buildPathsPrompt,
@@ -87,8 +89,14 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
     return;
   }
 
-  // The read twig's candidates in meaning (#568), before `bind` ever runs.
-  const reads = await readCandidates(ctx, args.emotionalProfileId, args.sessionId, context.readText, context.entries);
+  // Tonight's text, embedded at most once, only when a search needs it, and
+  // never stored (ADR 0021): the read twig's candidates in meaning (#568)
+  // before `bind` ever runs, the picked tracks' (#572) once the model chose.
+  const text = context.sessionText;
+  let embedded: Promise<number[] | null> | undefined;
+  const vector = () => (embedded ??= text === null ? Promise.resolve(null) : embedSessionText(text));
+  const readVector = context.readsAllowed && text !== null ? await vector() : undefined;
+  const reads = await readCandidates(ctx, args.emotionalProfileId, args.sessionId, readVector, context.entries);
   context.entries = reads.entries;
 
   // Offer only what fits this grade and can bind for this session, less any
@@ -123,6 +131,8 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
     extractTextFromResponse(response),
     catalog,
   );
+  const scored = await scoreTracks(ctx, vector, picked.map((t) => t.actionType), context.tracks, args.sessionId);
+  context.tracks = scored.tracks;
   const twigs = [];
   for (const twig of picked) {
     const params = bind(twig.actionType, context);
@@ -152,6 +162,7 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
     readSearch: reads.search,
     readTopScore: reads.topScore,
     readFallback: reads.fallback,
+    trackSearch: scored.logs,
   });
   if (pathId === null) {
     await logNoShip(ctx, args, "rate_limited", twigs.length);
