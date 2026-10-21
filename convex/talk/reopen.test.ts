@@ -180,6 +180,33 @@ describe("talk.reopen.start (#604)", () => {
   });
 });
 
+// Fails if ElevenLabs' resend (tags as the model wrote them) overwrites the
+// stripped reply, putting "[slow]" in the thread under the mirror.
+describe("talk.turns.syncLines", () => {
+  it("keeps audio tags out of the stored thread", async () => {
+    const user = await asNewUser();
+    const { sessionId, talkKey } = await user.t.mutation(internal.talk.session.start, key());
+    await sync(user, sessionId, talkKey, [{ role: "person", text: "Family stuff." }], "[slow] That can sit heavy.");
+    await sync(
+      user,
+      sessionId,
+      talkKey,
+      [
+        { role: "person", text: "Family stuff." },
+        { role: "companion", text: "[slow] That can sit heavy. [sighs] What's going on?" },
+        { role: "person", text: "Drifting." },
+      ],
+      "Drifting how?",
+    );
+    expect(await user.t.query(api.talk.turns.thread, { sessionId })).toEqual([
+      { role: "person", text: "Family stuff." },
+      { role: "companion", text: "That can sit heavy. What's going on?" },
+      { role: "person", text: "Drifting." },
+      { role: "companion", text: "Drifting how?" },
+    ]);
+  });
+});
+
 describe("wrap-up cues (#582, #604)", () => {
   const cueAt = (talkKey: string, elapsedS: number) =>
     talkCue(talkClockOf(talkKey, [{ role: "person", text: "hi" }], 1_000 + elapsedS * 1000)!).note;

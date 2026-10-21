@@ -138,12 +138,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   const toolCalls: string[] = [];
   const sink: RelaySink = { emit: () => {}, toolCalls, usage: null };
 
-  // Once per turn: a hang-up logs from cancel(), since the runtime may stop
-  // the action before the stream's finally runs.
-  let logged = false;
   const log = () => {
-    if (logged) return;
-    logged = true;
     console.log("[talk] turn", {
       model,
       outcome,
@@ -286,7 +281,6 @@ export const chatCompletions = httpAction(async (ctx, request) => {
     cancel() {
       outcome = "aborted";
       abort.abort();
-      log();
     },
   });
 

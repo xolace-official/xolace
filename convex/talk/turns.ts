@@ -6,6 +6,7 @@ import { raiseTalkSafety } from "./safety";
 import { talkPeakValidator } from "../lib/validators";
 import { requireSessionOwnership } from "../lib/auth";
 import { MAX_TALK_LINES } from "./session";
+import { stripAudioTags } from "../ai/talk/audioTags";
 
 const talkLineValidator = v.object({
   role: v.union(v.literal("person"), v.literal("companion")),
@@ -62,23 +63,26 @@ export const syncLines = internalMutation({
       .order("desc")
       .take(2);
     const stored = recent.length ? recent[0].seq + 1 : 0;
+    // ElevenLabs resends the companion's lines as the model wrote them, audio
+    // tags and all; the thread under the mirror shows them, so they go.
+    const lines = args.lines?.map((l) => (l.role === "companion" ? { ...l, text: stripAudioTags(l.text) } : l));
     const from = session.talkFromSeq ?? 0;
 
-    if (args.lines) {
+    if (lines) {
       let changed = false;
       for (const row of recent) {
-        const resent = row.seq >= from ? args.lines[row.seq - from] : undefined;
+        const resent = row.seq >= from ? lines[row.seq - from] : undefined;
         if (resent && (row.provisional || resent.text !== row.text || resent.role !== row.role)) {
           await ctx.db.patch("talk_turns", row._id, { ...resent, provisional: undefined });
           changed = true;
         }
       }
-      for (let seq = stored; seq < from + args.lines.length; seq++) {
-        await ctx.db.insert("talk_turns", { sessionId: session._id, seq, ...args.lines[seq - from] });
+      for (let seq = stored; seq < from + lines.length; seq++) {
+        await ctx.db.insert("talk_turns", { sessionId: session._id, seq, ...lines[seq - from] });
         changed = true;
       }
       // The person said something new: recall in the background for the next turn (#598).
-      const query = changed && session.talkRecall ? recallQuery(args.lines) : null;
+      const query = changed && session.talkRecall ? recallQuery(lines) : null;
       if (query) await ctx.scheduler.runAfter(0, internal.talk.remember.recall, { sessionId: session._id, query });
     }
     if (args.peak) await raiseTalkSafety(ctx, session, args.peak);
