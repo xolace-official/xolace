@@ -1,16 +1,12 @@
 import { httpAction } from "../../_generated/server";
 import { internal } from "../../_generated/api";
-import { talkLines } from "../../talk/transcript";
-import { timingSafeEqual } from "../../lib/timingSafeEqual";
-import { getAnthropicClient, thinkingOff } from "../providers/anthropic";
-import { toAnthropicRequest, type AnthropicTurn, type OpenAIMessage, type OpenAITool } from "./openaiCompat";
-import { createEventTranslator, sseChunk, SSE_DONE, type FinishReason, type OpenAIDelta } from "./openaiSse";
-import { talkClockOf, talkCue } from "../../talk/clock";
+import { toAnthropicRequest } from "./openaiCompat";
+import { sseChunk, SSE_DONE, type FinishReason, type OpenAIDelta } from "./openaiSse";
+import { talkCue } from "../../talk/clock";
 import { talkSystem } from "../../talk/memory";
 import { moderateInput } from "../providers/moderation";
 import {
   COMPANION_FALLBACK_NAME,
-  OWN_TOOLS,
   PERSON_NAME_TOOL,
   SLOW_TOOL,
   companionPrompt,
@@ -19,17 +15,12 @@ import {
   personNameTool,
   renameTool,
   slowTool,
-  type OwnToolResult,
   type TalkStyle,
 } from "../prompts/companion";
-import { createTagFilter, stripAudioTags } from "./audioTags";
+import { stripAudioTags } from "./audioTags";
 import { CRISIS_LINE, moderationPeak, phrasePeak, raises, safetySkill, turnWords } from "../../talk/safety";
+import { readTurn, relayTurn, runOwnTool, streamTurn, talkModel, type RelaySink } from "./turn";
 
-// The agent's Custom LLM `model_id` picks one of these; anything else gets
-// the first. Both are listed so the prototype can measure TTFT on each (#591).
-const TALK_MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5"] as const;
-// A spoken turn is a few sentences.
-const TALK_MAX_TOKENS = 400;
 // The agent's system tool that hangs up; our clock calls it on the last turn (#597).
 // Emitted even if the agent doesn't list it: then nothing hangs up but the backstop.
 const END_CALL = "end_call";
@@ -40,11 +31,6 @@ const MODERATION_WAIT_MS = 250;
 const within = <T,>(p: Promise<T>, ms: number) =>
   Promise.race([p, new Promise<null>((r) => setTimeout(() => r(null), Math.max(0, ms)))]);
 
-// Digests first so the compare is fixed-length and leaks nothing of the secret.
-async function sha256Hex(s: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
-}
 
 /**
  * ElevenLabs Custom LLM endpoint: `POST /v1/chat/completions`, answered as
@@ -83,29 +69,9 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   const startedAt = Date.now();
   const t: Record<string, number> = {};
   const mark = (k: string) => (t[k] ??= Date.now() - startedAt);
-  const secret = process.env.TALK_LLM_SECRET;
-  const auth = request.headers.get("authorization") ?? "";
-  // Fail closed: an unset secret must not open the endpoint.
-  if (!secret || !timingSafeEqual(await sha256Hex(auth), await sha256Hex(`Bearer ${secret}`))) {
-    return new Response("unauthorized", { status: 401 });
-  }
-  mark("auth");
-
-  let body: { model?: string; messages?: OpenAIMessage[]; tools?: OpenAITool[]; elevenlabs_extra_body?: unknown };
-  try {
-    body = await request.json();
-  } catch {
-    return new Response("invalid json", { status: 400 });
-  }
-  mark("parsed");
-  if (!Array.isArray(body.messages)) return new Response("messages required", { status: 400 });
-  const extra = (body.elevenlabs_extra_body ?? {}) as { sessionId?: unknown; talkKey?: unknown };
-  if (typeof extra.sessionId !== "string" || typeof extra.talkKey !== "string") {
-    return new Response("no talk", { status: 403 });
-  }
-  const talk = { sessionId: extra.sessionId, talkKey: extra.talkKey, lines: talkLines(body.messages) };
-  const clock = talkClockOf(talk.talkKey, talk.lines, startedAt);
-  if (!clock) return new Response("no talk", { status: 403 });
+  const read = await readTurn(request, startedAt, mark);
+  if (read instanceof Response) return read;
+  const { body, talk, clock } = read;
   const words = turnWords(talk.lines);
   const phrase = phrasePeak(words);
   // Raced against the first chunk below; never rejects (unavailable = no verdict).
@@ -141,7 +107,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   // line comes again); this turn makes no model call.
   let crisisLine = peak?.level === "crisis" && !memory?.crisisLineSpoken;
 
-  const model = TALK_MODELS.find((m) => m === body.model) ?? TALK_MODELS[0];
+  const model = talkModel(body.model);
   const { system: agentSystem, messages: turns, tools: agentTools } = toAnthropicRequest(body.messages, body.tools);
   // Who the companion is leads the cached prefix (#601), with what it calls
   // the person (#602); our own tools are listed beside the agent's and
@@ -167,7 +133,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   const audioTags: string[] = [];
   let reply = "";
   const toolCalls: string[] = [];
-  let usage: { input_tokens: number; cache_read_input_tokens?: number | null; cache_creation_input_tokens?: number | null } | null = null;
+  const sink: RelaySink = { emit: () => {}, toolCalls, usage: null };
 
   const log = () =>
     console.log("[talk] turn", {
@@ -176,9 +142,9 @@ export const chatCompletions = httpAction(async (ctx, request) => {
       ttftMs: firstTokenAt === null ? null : firstTokenAt - startedAt,
       totalMs: Date.now() - startedAt,
       phasesMs: t,
-      inputTokens: usage?.input_tokens,
-      cacheRead: usage?.cache_read_input_tokens,
-      cacheWrite: usage?.cache_creation_input_tokens,
+      inputTokens: sink.usage?.input_tokens,
+      cacheRead: sink.usage?.cache_read_input_tokens,
+      cacheWrite: sink.usage?.cache_creation_input_tokens,
       turns: turns.length,
       elapsedS: Math.round(clock.elapsedMs / 1000),
       silentTurns: clock.silentTurns,
@@ -199,24 +165,8 @@ export const chatCompletions = httpAction(async (ctx, request) => {
     async start(controller) {
       const send = (s: string) => controller.enqueue(encoder.encode(s));
       try {
-        const call = (messages: AnthropicTurn[], noTools: boolean, system = systemAs(name)) =>
-          getAnthropicClient().messages.stream(
-          {
-            model,
-            max_tokens: TALK_MAX_TOKENS,
-            thinking: thinkingOff(model),
-            ...(system.length ? { system } : {}),
-            // The agent's system tools (end_call) and our rename — the model decides to use them.
-            tools,
-            ...(noTools ? { tool_choice: { type: "none" as const } } : {}),
-            messages,
-            // From eu-west-1, "us" cut Haiku's median TTFT by 140–290 ms over
-            // "global" in three A/Bs; Sonnet within noise (#591).
-            inference_geo: "us",
-          },
-          // One attempt: a retried turn would land long after the person stopped waiting.
-          { signal: abort.signal, maxRetries: 0 },
-        );
+        const call = (messages: Parameters<typeof streamTurn>[0]["messages"], noTools: boolean, system = systemAs(name)) =>
+          streamTurn({ model, system, tools, messages, noTools }, abort.signal);
         const anthropic = crisisLine ? null : call(turns, closing);
         mark("streamCalled");
         anthropic?.on("connect", () => mark("headers"));
@@ -252,55 +202,16 @@ export const chatCompletions = httpAction(async (ctx, request) => {
           send(sseChunk(meta, { content: CRISIS_LINE }));
           reply = CRISIS_LINE;
         }
-        // Relays one model call; a call to one of our tools is held back and returned.
+        sink.emit = (delta: OpenAIDelta) => {
+          firstTokenAt ??= Date.now();
+          mark("firstDelta");
+          send(sseChunk(meta, delta));
+        };
         const relay = async (events: NonNullable<typeof anthropic>) => {
-          const translate = createEventTranslator();
-          const tags = createTagFilter();
-          let text = "";
-          const emit = (delta: OpenAIDelta) => {
-            firstTokenAt ??= Date.now();
-            mark("firstDelta");
-            send(sseChunk(meta, delta));
-            text += delta.content ?? "";
-          };
-          let own: { tool: string; index: number; id: string; json: string } | null = null;
-          for await (const event of events) {
-            if (event.type === "message_start") usage ??= event.message.usage;
-            if (
-              event.type === "content_block_start" &&
-              event.content_block.type === "tool_use" &&
-              OWN_TOOLS.includes(event.content_block.name)
-            ) {
-              own = { tool: event.content_block.name, index: event.index, id: event.content_block.id, json: "" };
-              continue;
-            }
-            if (own && event.type === "content_block_delta" && event.index === own.index) {
-              if (event.delta.type === "input_json_delta") own.json += event.delta.partial_json;
-              continue;
-            }
-            const out = translate(event);
-            if (!out) continue;
-            if ("finish" in out) {
-              finish = out.finish;
-              continue;
-            }
-            const { content, ...rest } = out.delta;
-            if (content !== undefined) {
-              // Held while a "[" is open; stripped if it isn't one of our tags.
-              const kept = tags.push(content);
-              if (kept) emit({ ...rest, content: kept });
-              continue;
-            }
-            // Text held before a tool call goes first.
-            const held = tags.flush();
-            if (held) emit({ content: held });
-            emit(out.delta);
-            for (const call of out.delta.tool_calls ?? []) if (call.function.name) toolCalls.push(call.function.name);
-          }
-          const held = tags.flush();
-          if (held) emit({ content: held });
-          reply += text;
-          return { text, own };
+          const r = await relayTurn(events, sink);
+          finish = r.finish ?? finish;
+          reply += r.text;
+          return r;
         };
         const first = crisisLine || !anthropic ? null : await relay(anthropic);
         // One of our tools (#601 rename, #602 the person's name, #603 slow down): saved, then
@@ -309,17 +220,7 @@ export const chatCompletions = httpAction(async (ctx, request) => {
         if (first?.own) {
           const { tool, id, json } = first.own;
           toolCalls.push(tool);
-          let input: { name?: unknown } = {};
-          try {
-            input = JSON.parse(json || "{}");
-          } catch {}
-          const bind = { sessionId: talk.sessionId, talkKey: talk.talkKey, name: typeof input.name === "string" ? input.name : "" };
-          const result: OwnToolResult =
-            tool === SLOW_TOOL
-              ? await ctx.runMutation(internal.talk.companion.slowDown, { sessionId: talk.sessionId, talkKey: talk.talkKey })
-              : tool === PERSON_NAME_TOOL
-                ? await ctx.runMutation(internal.talk.companion.setPersonName, bind)
-                : await ctx.runMutation(internal.talk.companion.rename, bind);
+          const { input, result } = await runOwnTool(ctx, tool, json, talk);
           if ((finish as FinishReason) === "tool_calls" && toolCalls.length === 1) {
             finish = "stop";
             // The follow-up already speaks as the new name, or to the person by theirs.

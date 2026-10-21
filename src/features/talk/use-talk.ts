@@ -11,7 +11,7 @@ import { ConvexError } from "convex/values";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { api } from "@/convex/_generated/api";
 import { stripAudioTags } from "@/convex/ai/talk/audioTags";
-import { wrapUpMs } from "@/convex/talk/clock";
+import { TALK_CEILING_MS, wrapUpMs } from "@/convex/talk/clock";
 import type { Id } from "@/convex/_generated/dataModel";
 import { TALK_TIME_RESETS } from "./talk-copy";
 import { useThread, type ThreadLine } from "./use-thread";
@@ -41,8 +41,8 @@ export function useTalk(reopen?: { sessionId: Id<"sessions">; thread: ThreadLine
   const [started, setStarted] = useState(false);
   /** When the talk's time runs out, on this device's clock (#597). */
   const [endsAt, setEndsAt] = useState<number | null>(null);
-  /** Seconds left when the clock shows: with the wrap-up cue, compressed on a reopening. */
-  const clockFromS = wrapUpMs(!!reopen) / 1000;
+  /** Seconds left when the clock shows: with the wrap-up cue, compressed to the talk's ceiling. */
+  const [clockFromS, setClockFromS] = useState(wrapUpMs(TALK_CEILING_MS) / 1000);
   const [thinking, setThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** Either voice, for the aurora. */
@@ -148,12 +148,13 @@ export function useTalk(reopen?: { sessionId: Id<"sessions">; thread: ThreadLine
       if (!granted) return setError("A talk needs the microphone. You can allow it in Settings.");
       setStarted(true);
       try {
-        const { token, sessionId, talkKey, msLeft, voiceId, speed } = await startTalk(
+        const { token, sessionId, talkKey, msLeft, ceilingS, voiceId, speed } = await startTalk(
           reopen ? { reopen: reopen.sessionId } : {},
         );
         sessionRef.current = sessionId;
         setSessionId(sessionId);
         setEndsAt(Date.now() + msLeft);
+        setClockFromS(wrapUpMs(ceilingS * 1000) / 1000);
         convo.startSession({
           conversationToken: token,
           // Relayed to our endpoint on every turn (#591), binding it to this

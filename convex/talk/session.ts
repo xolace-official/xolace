@@ -6,7 +6,7 @@ import { requireAuth, requireSessionOwnership } from "../lib/auth";
 import { requirePremium } from "../lib/premium";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "../lib/rateLimits";
 import { getDayOfWeek, getTimeOfDay } from "../lib/timeOfDay";
-import { attachTo, markEnded, releaseUnconnected, reserveTalk } from "./time";
+import { attachTo, markEnded, releaseUnconnected, reserveTalk } from "./openings";
 import { personText } from "./transcript";
 import { MAX_TURNS } from "../sessionTurns";
 import { talkPreload } from "./remember";

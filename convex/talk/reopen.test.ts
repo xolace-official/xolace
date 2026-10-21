@@ -184,20 +184,27 @@ describe("wrap-up cues (#582, #604)", () => {
   const cueAt = (talkKey: string, elapsedS: number) =>
     talkCue(talkClockOf(talkKey, [{ role: "person", text: "hi" }], 1_000 + elapsedS * 1000)!).note;
 
-  it("are compressed on a reopening only", () => {
-    // A first talk cut to 5 min by the week: the full-talk cues, wrap-up from the start.
-    expect(cueAt("1000.300.abc", 10)).toContain("nearing its end");
+  it("are compressed to any ceiling under 15 min, never opening in wrap-up", () => {
+    // A full talk: wrap-up from 5 min left.
+    expect(cueAt("1000.900.abc", 590)).not.toContain("nearing its end");
+    expect(cueAt("1000.900.abc", 610)).toContain("nearing its end");
     // A 5-min reopening: wrap-up from 1:40 left, ending soon from 0:40.
     expect(cueAt("1000.300.rabc", 10)).not.toContain("nearing its end");
     expect(cueAt("1000.300.rabc", 200)).toContain("nearing its end");
     expect(cueAt("1000.300.rabc", 260)).toContain("ends soon");
+    // A first talk cut to 3 min by the week: the same share, wrap-up from 1:00 left.
+    expect(cueAt("1000.180.abc", 10)).not.toContain("no new threads");
+    expect(cueAt("1000.180.abc", 110)).not.toContain("nearing its end");
+    expect(cueAt("1000.180.abc", 130)).toContain("nearing its end");
+    expect(cueAt("1000.180.abc", 160)).toContain("ends soon");
   });
 
   it("at crisis keep the clock and point every cue to help, not the mirror (#581)", () => {
     const crisisAt = (elapsedS: number) =>
       talkCue(talkClockOf("1000.300.abc", [{ role: "person", text: "hi" }], 1_000 + elapsedS * 1000)!, true);
-    expect(crisisAt(10).note).not.toContain("mirror");
-    expect(crisisAt(10).note).toContain("who they can reach");
+    // 1:30 left of 5 min: inside the compressed wrap-up.
+    expect(crisisAt(210).note).not.toContain("mirror");
+    expect(crisisAt(210).note).toContain("who they can reach");
     expect(crisisAt(300).closing).toBe(true);
     expect(crisisAt(300).note).toContain("help on their screen");
     expect(crisisAt(300).note).not.toContain("mirror");

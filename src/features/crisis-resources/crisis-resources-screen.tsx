@@ -1,6 +1,7 @@
 import { Linking, ScrollView, View } from "react-native";
 import { SymbolView } from "expo-symbols";
 import { EaseView } from "react-native-ease/uniwind";
+import { useLocalSearchParams } from "expo-router";
 import {
   PressableFeedback,
   Select,
@@ -40,6 +41,8 @@ export function CrisisResourcesScreen() {
   const warningColor = useThemeColor("warning") as string;
   const { toast } = useToast();
   const posthog = usePostHog();
+  // Which screen sent the person here (talk, library, quote_reply, ...).
+  const { from } = useLocalSearchParams<{ from?: string }>();
 
   const selectValue = selectedCountry
     ? COUNTRY_OPTIONS.find((o) => o.value === selectedCountry)
@@ -82,7 +85,7 @@ export function CrisisResourcesScreen() {
       });
     });
     try {
-      posthog.capture("emergency_call_tapped", { country: selectedCountry });
+      posthog.capture("emergency_call_tapped", { country: selectedCountry, from: from ?? null });
     } catch (error) {
       void error;
     }
@@ -99,6 +102,7 @@ export function CrisisResourcesScreen() {
         type: resource.type,
         source: resource.source,
         country: selectedCountry,
+        from: from ?? null,
       });
     } catch (error) {
       void error;

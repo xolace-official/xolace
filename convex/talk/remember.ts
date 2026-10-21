@@ -28,12 +28,14 @@ const memoryOn = async (ctx: QueryCtx, profileId: Id<"emotional_profiles">) =>
 
 /**
  * The talk's preload, plus whether recall runs. Memory off reads nothing of
- * the person; steadiness and insights are never read.
+ * the person; steadiness and insights are never read. A reopening passes its
+ * own session as `exclude`: its first half is the thread, not a past moment.
  */
 export async function talkPreload(
   ctx: QueryCtx,
   profile: Doc<"emotional_profiles">,
   now: number,
+  exclude?: Id<"sessions">,
 ): Promise<{ talkMemory: string; recall: boolean }> {
   if (!(await memoryOn(ctx, profile._id))) {
     return { talkMemory: renderMemory({ memoryOn: false, profile: null, moments: [], intake: null }, now), recall: false };
@@ -42,7 +44,8 @@ export async function talkPreload(
     ? await ctx.db.get("semantic_profiles", profile.currentSemanticProfileId)
     : null;
   const moments = [];
-  for (const u of await recentUnderstandings(ctx, profile._id, RECENT_MOMENTS)) {
+  const recent = await recentUnderstandings(ctx, profile._id, RECENT_MOMENTS + 1);
+  for (const u of recent.filter((r) => r.sessionId !== exclude).slice(0, RECENT_MOMENTS)) {
     const session = await ctx.db.get("sessions", u.sessionId);
     moments.push({ ...u, entryType: session?.entryType ?? "open_prompt" });
   }

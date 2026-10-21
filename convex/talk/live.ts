@@ -31,13 +31,14 @@ export const start = action({
     sessionId: v.id("sessions"),
     talkKey: v.string(),
     msLeft: v.number(),
+    ceilingS: v.number(),
     voiceId: v.string(),
     speed: v.number(),
   }),
   handler: async (
     ctx,
     { reopen },
-  ): Promise<{ token: string; sessionId: Id<"sessions">; talkKey: string; msLeft: number; voiceId: string; speed: number }> => {
+  ): Promise<{ token: string; sessionId: Id<"sessions">; talkKey: string; msLeft: number; ceilingS: number; voiceId: string; speed: number }> => {
     const apiKey = process.env.ELEVENLABS_AGENTS_API_KEY;
     const agentId = process.env.TALK_AGENT_ID;
     if (!apiKey || !agentId) throw new Error("Talk is not configured");
@@ -64,6 +65,6 @@ export const start = action({
       await ctx.runMutation(internal.talk.session.abandon, { sessionId });
       throw new Error("Could not start a talk");
     }
-    return { token, sessionId, talkKey, msLeft: ceilingS * 1000 - (Date.now() - startedAt), voiceId, speed };
+    return { token, sessionId, talkKey, msLeft: ceilingS * 1000 - (Date.now() - startedAt), ceilingS, voiceId, speed };
   },
 });

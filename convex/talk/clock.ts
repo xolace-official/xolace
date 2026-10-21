@@ -15,12 +15,13 @@ const WRAP_UP_MS = 5 * 60 * 1000;
 const ENDING_SOON_MS = 2 * 60 * 1000;
 
 /**
- * The cues sit at 5 and 2 min left of a talk; a reopening gets them
- * compressed to its share of a full talk, 5 of 15 min (#582).
+ * The cues sit at 5 and 2 min left of a full talk; a shorter ceiling (a
+ * reopening's 5 min, or a first talk cut short by the week, #604) gets them
+ * compressed to its share of the full 15, so no talk opens in wrap-up (#582).
  */
-const share = (ms: number, reopened: boolean) => (reopened ? (ms * REOPEN_CEILING_MS) / TALK_CEILING_MS : ms);
+const share = (ms: number, ceilingMs: number) => (ms * Math.min(ceilingMs, TALK_CEILING_MS)) / TALK_CEILING_MS;
 /** When the wrap-up starts; the app's clock shows from here too. */
-export const wrapUpMs = (reopened: boolean) => share(WRAP_UP_MS, reopened);
+export const wrapUpMs = (ceilingMs: number) => share(WRAP_UP_MS, ceilingMs);
 
 /**
  * `silentTurns`: companion lines since the person last spoke or typed, when
@@ -30,15 +31,15 @@ export const wrapUpMs = (reopened: boolean) => share(WRAP_UP_MS, reopened);
  * first re-engage is the check-in (~20 s), the next the goodbye (~45 s,
  * spoken out near the 60 s mark).
  */
-export type TalkClock = { elapsedMs: number; ceilingMs: number; silentTurns: number | null; reopened: boolean };
+export type TalkClock = { elapsedMs: number; ceilingMs: number; silentTurns: number | null };
 
 /**
  * The talk key carries its start time and ceiling
  * (`<startedAt>.<ceilingS>.<secret>`), so the endpoint reads the clock
  * without waiting on the database. Trusted only because a turn is served
  * once `syncLines` matches the whole key to the session's. The ceiling is the
- * time reserved for the talk (#596): 15 min, or what's left of the week.
- * A reopening's secret starts with `r` (#604), never a hex digit.
+ * time reserved for the talk (#596): 15 min (5 on a reopening, #604), or
+ * what's left of the week. A reopening's secret starts with `r`, never a hex digit.
  */
 export const mintTalkKey = (startedAt: number, ceilingS: number, secret: string, reopened = false) =>
   `${startedAt}.${ceilingS}.${reopened ? "r" : ""}${secret}`;
@@ -52,7 +53,7 @@ export function talkClockOf(talkKey: string, lines: TalkLine[], now: number): Ta
   const lastPerson = lines.map((l) => l.role).lastIndexOf("person");
   const silentTurns = lines.at(-1)?.role === "companion" ? lines.length - 1 - lastPerson : null;
   const ceilingMs = ceiling ? Number(ceiling) * 1000 : TALK_CEILING_MS;
-  return { elapsedMs: now - startedAt, ceilingMs, silentTurns, reopened: /^\d+\.\d+\.r/.test(talkKey) };
+  return { elapsedMs: now - startedAt, ceilingMs, silentTurns };
 }
 
 export type TalkCue = {
@@ -73,7 +74,7 @@ const MIRROR = "what they shared goes to their mirror";
 const HELP = "the help on their screen stays, with people they can call right now";
 
 /** `crisis`: the talk's safety peak is crisis, so every cue points to help, not the mirror. */
-export function talkCue({ elapsedMs, ceilingMs, silentTurns, reopened }: TalkClock, crisis = false): TalkCue {
+export function talkCue({ elapsedMs, ceilingMs, silentTurns }: TalkClock, crisis = false): TalkCue {
   const left = ceilingMs - elapsedMs;
   const minutes = Math.max(0, Math.ceil(left / 60_000));
   const clock = `Talk clock: about ${minutes} min left of this talk. ${NEVER_SAY_TIME}`;
@@ -101,14 +102,14 @@ export function talkCue({ elapsedMs, ceilingMs, silentTurns, reopened }: TalkClo
       closing: true,
     };
   }
-  if (left <= share(ENDING_SOON_MS, reopened)) {
+  if (left <= share(ENDING_SOON_MS, ceilingMs)) {
     return {
       note: `${clock}\nThe talk ends soon. If you haven't already, say plainly and in your own words that the talk will end soon, and ${crisis ? "ask who they can reach once it ends" : "ask if anything else belongs in their mirror"}. Open no new threads.`,
       stageDirection: null,
       closing: false,
     };
   }
-  if (left <= wrapUpMs(reopened)) {
+  if (left <= wrapUpMs(ceilingMs)) {
     return {
       note: `${clock}\nThe talk is nearing its end. Open no new threads; ${crisis ? "keep to their safety right now and who they can reach" : "start drawing together what you have heard"}.`,
       stageDirection: null,

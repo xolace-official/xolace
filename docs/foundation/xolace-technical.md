@@ -147,7 +147,7 @@ Runs as a durable workflow. Push notifications: follow-up nudges, Kindling ready
 
 - **Retention** — default *indefinite*. Opt-in tiers delete sessions (full cascade), old profile versions and old feedback after 6 months or 1 year. Daily job.
 - **Account deletion** — marked on request, purged by a job every 2 h; signing back in first cancels it. Wipes sessions and everything hanging off them, plus profile, preferences, quotes, conversations, ratings, devices, Stream data and more.
-- **Survives deletion:** anonymised escalation events · feedback with links and text stripped · `product_feedback` text (deliberately) · contributed pool reflections · library totals · cohort counts.
+- **Survives deletion:** anonymised escalation events · feedback with links and text stripped · `product_feedback` text (deliberately) · contributed pool reflections · library totals · cohort counts · the talk-time ledger (credits component: balance, grants and charges keyed by profile id, referencing session ids; amounts and times, no text). The component has no delete. It is also kept through a data wipe, so wiping doesn't reset the week's time.
 - **Not deleted at third parties:** PostHog person, Clerk user, RevenueCat customer, any provider copies. Stream deletion is fail-open (logged only).
 - **Vent** — audio sent to Scribe in memory, never written; transcript never stored. Stored: daily minutes used, a `vent` activity row. The acknowledgement words are logged with `console.log`; their TTS audio sits in storage for 1 h.
 - **Analytics** — PostHog server events carry structural fields only. No LLM tracing installed; prompts and outputs don't reach PostHog. Client autocapture records touches with `testID` only.

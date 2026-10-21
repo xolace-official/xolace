@@ -3,7 +3,7 @@ import { internalMutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 import { requireSessionOwnership } from "../lib/auth";
 import { requirePremium } from "../lib/premium";
-import { reserveTalk } from "./time";
+import { reserveTalk } from "./openings";
 import { talkPreload } from "./remember";
 import { talkSetup } from "./companion";
 import { renderEarlier } from "./memory";
@@ -45,7 +45,7 @@ export const start = internalMutation({
       .withIndex("by_session_and_seq", (q) => q.eq("sessionId", sessionId))
       .take(MAX_TALK_LINES);
     const now = Date.now();
-    const { talkMemory, recall } = await talkPreload(ctx, profile, now);
+    const { talkMemory, recall } = await talkPreload(ctx, profile, now, sessionId);
     const setup = await talkSetup(ctx, profile._id);
     await ctx.db.patch("sessions", sessionId, {
       state: "initiated",
