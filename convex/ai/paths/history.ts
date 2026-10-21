@@ -1,7 +1,6 @@
 import type { Doc, Id } from "../../_generated/dataModel";
 import type { QueryCtx } from "../../_generated/server";
 import { readRow } from "../../library/reads";
-import { domainOf, type Domain } from "../../lib/understandingVocab";
 import { MAX_TWIGS } from "./prompt";
 
 /**
@@ -35,6 +34,8 @@ export interface KindlingHistory {
    * last 10, not a match) can't break a streak; widen the pool if that bites.
    */
   skippedTwice: string[];
+  /** Slugs whose newest verdict is a skip: they lose binder ties (#566). A later tend clears it. */
+  skippedSlugs: string[];
 }
 
 const WINDOW_MS = 90 * 86_400_000;
@@ -42,16 +43,21 @@ const RECENT = 10;
 const MAX_POOL = 20;
 const MAX_STEPS = 10;
 
-type ProfileId = Id<"emotional_profiles">;
+export type ProfileId = Id<"emotional_profiles">;
 type Verdict = "tended" | "skipped";
 
-const stepsOf = (ctx: QueryCtx, pathId: Id<"paths">) =>
+export const slugOf = (params: unknown) => {
+  const slug = (params as { slug?: unknown } | null)?.slug;
+  return typeof slug === "string" ? slug : undefined;
+};
+
+export const stepsOf = (ctx: QueryCtx, pathId: Id<"paths">) =>
   ctx.db
     .query("path_steps")
     .withIndex("by_path", (q) => q.eq("pathId", pathId))
     .take(MAX_STEPS);
 
-const kindlingsIn = (ctx: QueryCtx, profileId: ProfileId, from: number, to = Infinity) =>
+export const kindlingsIn = (ctx: QueryCtx, profileId: ProfileId, from: number, to = Infinity) =>
   ctx.db
     .query("paths")
     .withIndex("by_emotionalProfileId_and_generatedAt", (q) =>
@@ -85,8 +91,8 @@ async function historyPool(
 }
 
 async function readHelped(ctx: QueryCtx, profileId: ProfileId, params: unknown): Promise<boolean> {
-  const slug = (params as { slug?: unknown } | null)?.slug;
-  if (typeof slug !== "string") return false;
+  const slug = slugOf(params);
+  if (slug === undefined) return false;
   const entry = await ctx.db
     .query("library_entries")
     .withIndex("by_slug", (q) => q.eq("slug", slug))
@@ -104,6 +110,7 @@ export async function loadHistory(
   const records = new Map<string, KindRecord>();
   const verdicts = new Map<string, Verdict[]>(); // newest first
   const helpedSlugs = new Set<unknown>(); // one entry helps once, however often tended
+  const slugVerdicts = new Map<string, Verdict>(); // newest verdict per slug
   for (const path of await historyPool(ctx, profileId, matchKeys, now)) {
     for (const step of await stepsOf(ctx, path._id)) {
       if (step.state === "pending" && path.status === "active") continue;
@@ -115,12 +122,13 @@ export async function loadHistory(
         continue;
       }
       const verdict: Verdict = step.state === "done" ? "tended" : "skipped";
+      const stepSlug = slugOf(step.params);
+      if (stepSlug !== undefined && !slugVerdicts.has(stepSlug)) slugVerdicts.set(stepSlug, verdict);
       if (verdict === "skipped") r.skipped++;
       else {
         r.tended++;
-        const slug = (step.params as { slug?: unknown } | null)?.slug;
-        if (type === "read" && !helpedSlugs.has(slug) && (await readHelped(ctx, profileId, step.params))) {
-          helpedSlugs.add(slug);
+        if (type === "read" && !helpedSlugs.has(stepSlug) && (await readHelped(ctx, profileId, step.params))) {
+          helpedSlugs.add(stepSlug);
           r.helped++;
         }
       }
@@ -136,40 +144,11 @@ export async function loadHistory(
       .filter(([, v]) => v[0] === "skipped" && v[1] === "skipped")
       .map(([type]) => type)
       .sort(),
+    skippedSlugs: [...slugVerdicts]
+      .filter(([, v]) => v === "skipped")
+      .map(([slug]) => slug)
+      .sort(),
   };
-}
-
-/**
- * What was tended during this domain's previous stretch, on kindlings whose
- * session touched the domain — read for a returning stretch only.
- */
-export async function tendedBefore(
-  ctx: QueryCtx,
-  profileId: ProfileId,
-  domain: Domain,
-  startedAt: number,
-): Promise<string[]> {
-  const previous = await ctx.db
-    .query("compounding_stretches")
-    .withIndex("by_emotionalProfileId_and_domain_and_startedAt", (q) =>
-      q.eq("emotionalProfileId", profileId).eq("domain", domain).lt("startedAt", startedAt),
-    )
-    .order("desc")
-    .first();
-  if (previous?.endedAt === undefined) return [];
-
-  const tended = new Set<string>();
-  for (const path of await kindlingsIn(ctx, profileId, previous.startedAt, previous.endedAt)) {
-    const u = await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_session", (q) => q.eq("sessionId", path.sessionId))
-      .unique();
-    if (!u?.thematicTags.some((t) => domainOf(t) === domain)) continue;
-    for (const step of await stepsOf(ctx, path._id)) {
-      if (step.state === "done") tended.add(step.actionType);
-    }
-  }
-  return [...tended].sort();
 }
 
 /**

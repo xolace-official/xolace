@@ -119,4 +119,32 @@ describe("bindTwig", () => {
       bind("audio_topic_anxiety_relief", [racing, rest], { ...tags, compoundingTags: ["health", "sleep"] }),
     ).toEqual({ slug: "rest" });
   });
+  it("a slug skipped before loses a tie to an unskipped one, never a better score (#566)", () => {
+    const a = track({ slug: "a", tags: ["anxiety"] });
+    const b = track({ slug: "b", tags: ["anxiety"] });
+    const first = bind("audio_topic_anxiety_relief", [a, b])!;
+    const other = first.slug === "a" ? { slug: "b" } : { slug: "a" };
+    expect(bind("audio_topic_anxiety_relief", [a, b], { skippedSlugs: [first.slug] })).toEqual(other);
+    // Every tied slug skipped: back to the seeded pick.
+    expect(bind("audio_topic_anxiety_relief", [a, b], { skippedSlugs: ["a", "b"] })).toEqual(first);
+    const better = track({ slug: "better", tags: ["anxiety", "sleep"] });
+    expect(bind("audio_topic_anxiety_relief", [a, better], { thematicTags: ["sleep"], skippedSlugs: ["better"] })).toEqual({ slug: "better" });
+  });
+  it("a returning stretch re-offers its previous tended slug: after the score, before a skip (#566)", () => {
+    const a = track({ slug: "a", tags: ["anxiety"] });
+    const b = track({ slug: "b", tags: ["anxiety"] });
+    const first = bind("audio_topic_anxiety_relief", [a, b])!;
+    const other = first.slug === "a" ? "b" : "a";
+    expect(bind("audio_topic_anxiety_relief", [a, b], { reofferSlugs: [other] })).toEqual({ slug: other });
+    // Re-offer outranks a skip on the same slug.
+    expect(bind("audio_topic_anxiety_relief", [a, b], { reofferSlugs: [other], skippedSlugs: [other] })).toEqual({ slug: other });
+    // Gone from the candidates (inactive, finished read): nothing to re-offer.
+    expect(bind("audio_topic_anxiety_relief", [a, b], { reofferSlugs: ["retired"] })).toEqual(first);
+    // Never over a better score.
+    const better = track({ slug: "better", tags: ["anxiety", "sleep"] });
+    expect(bind("audio_topic_anxiety_relief", [a, better], { thematicTags: ["sleep"], reofferSlugs: ["a"] })).toEqual({ slug: "better" });
+    const entries = [{ slug: "on-worry", emotions: ["anxiety"], lifeAreas: [] }, { slug: "on-fear", emotions: ["anxiety"], lifeAreas: [] }];
+    expect(bindTwig("read", u({ reofferSlugs: ["on-fear"] }), [], entries)).toEqual({ slug: "on-fear" });
+    expect(bindTwig("read", u({ reofferSlugs: ["on-worry"] }), [], entries)).toEqual({ slug: "on-worry" });
+  });
 });

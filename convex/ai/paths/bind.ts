@@ -23,6 +23,13 @@ export interface BindUnderstanding {
   suggestedSpecialty: Doc<"emotional_metadata">["suggestedSpecialty"];
   /** Life areas of the compounding domains tonight touched (#521): tie-breakers, never a gate. */
   compoundingTags?: string[];
+  /** Slugs whose newest past verdict is a skip (#566): they lose ties, never a better score. */
+  skippedSlugs?: string[];
+  /**
+   * Slugs tended during a returning compounding domain's previous stretch
+   * (#566) — the one place repetition is the point. Wins ties over a skip.
+   */
+  reofferSlugs?: string[];
 }
 
 /** A Library entry the reader hasn't finished, with the facets that matched this Understanding. */
@@ -133,9 +140,17 @@ function pickSeeded<T extends { slug: string }>(
     (a, b) => score(b) - score(a) || (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0),
   );
   const topScore = score(sorted[0]);
-  const tied = sorted.filter((t) => score(t) === topScore);
+  // Within the top band, in order (#566): the returning stretch's re-offer,
+  // then a slug skipped before loses ties. Each step keeps the band if it'd empty it.
+  const narrow = (band: T[], keep: (t: T) => boolean) => {
+    const kept = band.filter(keep);
+    return kept.length > 0 ? kept : band;
+  };
+  const band = sorted.filter((t) => score(t) === topScore);
+  const reoffered = narrow(band, (t) => u.reofferSlugs?.includes(t.slug) === true);
+  const pool = narrow(reoffered, (t) => !u.skippedSlugs?.includes(t.slug));
   const canonicalTags = [...new Set(u.thematicTags)].sort();
   const seed = [u.primaryEmotion, u.secondaryEmotion ?? "", ...canonicalTags].join("|");
-  const pick = tied[hashSeed(seed) % tied.length];
+  const pick = pool[hashSeed(seed) % pool.length];
   return { slug: pick.slug };
 }

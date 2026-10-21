@@ -11,7 +11,8 @@ import { understoodEmotions, type BindEntry, type BindTrack, type BindUnderstand
 import { readRow } from "../../library/reads";
 import { domainOf, lifeAreasOf } from "../../lib/understandingVocab";
 import { compoundingFor, type Compounding } from "../../compounding/stretches";
-import { loadHistory, tendedBefore, type KindlingHistory } from "./history";
+import { loadHistory, type KindlingHistory } from "./history";
+import { tendedBefore } from "./tendedBefore";
 
 /**
  * Kindling generation — the DB halves of `generate.ts` (#331): the context
@@ -124,13 +125,16 @@ export const getContext = internalQuery({
 
     const now = Date.now();
     const compounding: PromptCompounding[] = [];
+    const reofferSlugs: string[] = [];
     for (const c of await touchedCompounding(ctx, profile._id, u, now)) {
+      const before = c.returning ? await tendedBefore(ctx, profile._id, c.domain, c.startedAt) : undefined;
+      reofferSlugs.push(...(before?.slugs ?? []));
       compounding.push({
         domain: c.domain,
         state: c.state,
         returning: c.returning,
         days: (now - c.startedAt) / DAY_MS,
-        tendedBefore: c.returning ? await tendedBefore(ctx, profile._id, c.domain, c.startedAt) : undefined,
+        tendedBefore: before?.types,
       });
     }
     // Personal memory off reads only the recent kindlings, never the matches (#565).
@@ -139,6 +143,7 @@ export const getContext = internalQuery({
       .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
       .unique();
     const matchKeys = prefs?.personalMemoryEnabled === false ? [] : (u.episodicMatchKeys ?? []);
+    const history = await loadHistory(ctx, profile._id, matchKeys, now);
     const tracks = (await ctx.db.query("audio_tracks").take(MAX_TRACKS))
       .filter((t) => t.active)
       .map(({ slug, family, topic, tags, active, series }) => ({
@@ -165,11 +170,13 @@ export const getContext = internalQuery({
         thematicTags: u.thematicTags,
         suggestedSpecialty: u.suggestedSpecialty,
         compoundingTags: compounding.flatMap((c) => lifeAreasOf(c.domain)),
+        skippedSlugs: history.skippedSlugs,
+        reofferSlugs,
       },
       tracks,
       entries: await loadReadCandidates(ctx, profile._id, u),
       compounding,
-      history: await loadHistory(ctx, profile._id, matchKeys, now),
+      history,
     };
   },
 });
