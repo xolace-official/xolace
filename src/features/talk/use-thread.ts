@@ -2,7 +2,7 @@
 // companion's words land as they are spoken, from the audio's timings; its
 // full text settles the turn once the audio has gone quiet.
 import { useEffect, useRef, useState } from "react";
-import { spokenWords, type Alignment } from "./spoken-words";
+import { spokenWords, type Alignment } from "@/src/features/talk/spoken-words";
 
 export type Turn = {
   id: number;

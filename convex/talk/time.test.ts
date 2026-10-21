@@ -49,7 +49,7 @@ afterEach(() => {
 });
 
 const left = async (user: SeededUser) => {
-  const time = await user.t.query(api.talk.time.left, {});
+  const time = await user.t.query(api.talk.time.left, { now: Date.now() });
   return time && { secondsLeft: time.secondsLeft };
 };
 
@@ -230,11 +230,11 @@ describe("weekly talk time (#596)", () => {
     const user = await asNewUser();
     const { sessionId } = await startTalk(user);
     await attach(user, sessionId, "conv_s");
-    expect((await user.t.query(api.talk.time.left, {}))?.settling).toBe(false);
+    expect((await user.t.query(api.talk.time.left, { now: Date.now() }))?.settling).toBe(false);
     await user.t.mutation(api.talk.session.end, { sessionId });
-    expect((await user.t.query(api.talk.time.left, {}))?.settling).toBe(true);
+    expect((await user.t.query(api.talk.time.left, { now: Date.now() }))?.settling).toBe(true);
     await webhook(user, "conv_s", 60);
-    expect(await user.t.query(api.talk.time.left, {})).toEqual({
+    expect(await user.t.query(api.talk.time.left, { now: Date.now() })).toEqual({
       secondsLeft: 840,
       week: "2026-10-19",
       resetsAt: Date.UTC(2026, 9, 26),

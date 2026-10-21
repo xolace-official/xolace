@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { spokenWords } from "./spoken-words";
+import { spokenWords } from "@/src/features/talk/spoken-words";
 
 const chunk = (text: string, step = 50) => ({
   chars: [...text],

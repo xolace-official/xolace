@@ -152,10 +152,10 @@ export const markProviderDeleted = internalMutation({
 
 /** Unstamped talks older than SWEEP_AFTER_MS. */
 export const listUnstamped = internalQuery({
-  args: {},
+  args: { now: v.number() },
   returns: v.array(v.string()),
-  handler: async (ctx) => {
-    const cutoff = Date.now() - SWEEP_AFTER_MS;
+  handler: async (ctx, { now }) => {
+    const cutoff = now - SWEEP_AFTER_MS;
     // ponytail: ordered by conversation id, not age, so >100 young or
     // persistently failing talks can crowd out older ones; add a createdAt
     // index (and a give-up stamp) then. Talks end by the agent's 26-min
@@ -186,7 +186,7 @@ export const sweep = internalAction({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
-    const ids = await ctx.runQuery(internal.talk.provider.listUnstamped, {});
+    const ids = await ctx.runQuery(internal.talk.provider.listUnstamped, { now: Date.now() });
     const deleted: string[] = [];
     for (const id of ids) if (await deleteConversation(id)) deleted.push(id);
     if (deleted.length) await ctx.runMutation(internal.talk.provider.markProviderDeleted, { conversationIds: deleted });

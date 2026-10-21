@@ -12,8 +12,8 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
 import { cn } from "@/src/lib/utils";
-import { useCompanionName } from "./use-companion-name";
-import type { Turn } from "./use-thread";
+import { useCompanionName } from "@/src/features/talk/use-companion-name";
+import type { Turn } from "@/src/features/talk/use-thread";
 
 function TurnBubble({ turn, name: named }: { turn: Turn; name?: string }) {
   const current = useCompanionName();

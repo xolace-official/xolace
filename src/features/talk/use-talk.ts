@@ -13,8 +13,8 @@ import { api } from "@/convex/_generated/api";
 import { stripAudioTags } from "@/convex/ai/talk/audioTags";
 import { TALK_CEILING_MS, wrapUpMs } from "@/convex/talk/clock";
 import type { Id } from "@/convex/_generated/dataModel";
-import { TALK_TIME_RESETS } from "./talk-copy";
-import { useThread, type ThreadLine } from "./use-thread";
+import { TALK_TIME_RESETS } from "@/src/features/talk/talk-copy";
+import { useThread, type ThreadLine } from "@/src/features/talk/use-thread";
 
 export type Presence = "Connecting…" | "Listening" | "Thinking…" | "Speaking" | "Mic off";
 

@@ -47,7 +47,7 @@ afterEach(() => {
 
 type Line = { role: "person" | "companion"; text: string };
 const key = () => ({ startedAt: Date.now(), secret: crypto.randomUUID() });
-const secondsLeft = async (user: SeededUser) => (await user.t.query(api.talk.time.left, {}))?.secondsLeft;
+const secondsLeft = async (user: SeededUser) => (await user.t.query(api.talk.time.left, { now: Date.now() }))?.secondsLeft;
 
 async function sign(body: string) {
   const t = Math.floor(Date.now() / 1000);

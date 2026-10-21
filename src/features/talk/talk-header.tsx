@@ -9,9 +9,9 @@ import { useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { GlassSurface } from "@/src/components/shared/glass-surface";
 import { useAppTheme } from "@/src/context/app-theme-context";
-import { useCompanionName } from "./use-companion-name";
-import type { Talk } from "./use-talk";
-import { useTimeLeft } from "./use-time-left";
+import { useCompanionName } from "@/src/features/talk/use-companion-name";
+import type { Talk } from "@/src/features/talk/use-talk";
+import { useTimeLeft } from "@/src/features/talk/use-time-left";
 
 const ios = Platform.OS === "ios";
 // Only iOS 26 paints glass behind a transparent header; older iOS gets a blur.

@@ -32,23 +32,23 @@ const BATCH = 100;
 
 /**
  * Minutes for the door, consent card, mirror and settings. Null off Plus.
- * `resetsAt` is when this answer's week ends in the profile's timezone: a
- * query doesn't re-run as time passes, so the client ignores an answer past
- * it. The device's own Monday must not decide (its clock can sit either side
- * of the server's). `week` is that Monday, kept for the shipped UI.
+ * `now` comes from the client (a query must not read the clock) and is
+ * re-sent once `resetsAt`, when this answer's week ends in the profile's
+ * timezone, has passed. Display only: every write tops up on the server's
+ * clock. `week` is that Monday, kept for the shipped UI.
  * `settling`: a talk has ended but its charge hasn't landed, so the number is
  * low for now.
  */
 export const left = query({
-  args: {},
+  args: { now: v.number() },
   returns: v.union(
     v.null(),
     v.object({ secondsLeft: v.number(), week: v.string(), resetsAt: v.number(), settling: v.boolean() }),
   ),
-  handler: async (ctx) => {
+  handler: async (ctx, { now }) => {
     const { profile } = await requireAuth(ctx);
     if (!(await hasPremium(ctx, profile))) return null;
-    const { balance, week, resetsAt, topUp } = await secondsLeft(ctx, profile, Date.now());
+    const { balance, week, resetsAt, topUp } = await secondsLeft(ctx, profile, now);
     // Not the session: every turn patches it, and this would re-run with it.
     const settling = (await openReservations(ctx, profile._id)).some((r) => r.endedAt !== undefined);
     return { secondsLeft: balance + topUp, week, resetsAt, settling };

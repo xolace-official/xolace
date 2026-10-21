@@ -4,10 +4,10 @@ import { View } from "react-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { SettingsSection } from "@/src/features/settings/components/settings-section";
 import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { useCompanionName } from "./use-companion-name";
-import { TalkChips } from "./talk-chips";
-import { TalkVoicePicker } from "./talk-voice-picker";
-import { useTalkStyle } from "./use-talk-style";
+import { useCompanionName } from "@/src/features/talk/use-companion-name";
+import { TalkChips } from "@/src/features/talk/talk-chips";
+import { TalkVoicePicker } from "@/src/features/talk/talk-voice-picker";
+import { useTalkStyle } from "@/src/features/talk/use-talk-style";
 
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (

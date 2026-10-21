@@ -6,8 +6,8 @@ import type { VoiceSlug } from "@/convex/lib/voices";
 import { VOICE_OPTIONS } from "@/src/features/settings/voice-options";
 import { useVoicePreview } from "@/src/features/settings/hooks/use-voice-preview";
 import { playSoftPress } from "@/src/lib/haptics";
-import { TalkChips } from "./talk-chips";
-import { useTalkStyle } from "./use-talk-style";
+import { TalkChips } from "@/src/features/talk/talk-chips";
+import { useTalkStyle } from "@/src/features/talk/use-talk-style";
 
 const CAST = VOICE_OPTIONS.filter((o): o is (typeof o & { value: VoiceSlug }) => o.value !== "auto");
 

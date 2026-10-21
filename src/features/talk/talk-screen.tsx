@@ -12,14 +12,14 @@ import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConversationProvider } from "@elevenlabs/react-native";
 import { AppText } from "@/src/components/shared/app-text";
-import { ConsentCard } from "./consent-card";
-import { TalkAurora } from "./talk-aurora";
-import { TalkComposer } from "./talk-composer";
-import { TalkHeader } from "./talk-header";
-import { TalkHelp } from "./talk-help";
-import { TalkThread } from "./talk-thread";
-import { useTalk } from "./use-talk";
-import type { ThreadLine } from "./use-thread";
+import { ConsentCard } from "@/src/features/talk/consent-card";
+import { TalkAurora } from "@/src/features/talk/talk-aurora";
+import { TalkComposer } from "@/src/features/talk/talk-composer";
+import { TalkHeader } from "@/src/features/talk/talk-header";
+import { TalkHelp } from "@/src/features/talk/talk-help";
+import { TalkThread } from "@/src/features/talk/talk-thread";
+import { useTalk } from "@/src/features/talk/use-talk";
+import type { ThreadLine } from "@/src/features/talk/use-thread";
 
 function Talk({ reopen }: { reopen?: { sessionId: Id<"sessions">; thread: ThreadLine[] } }) {
   const talk = useTalk(reopen);

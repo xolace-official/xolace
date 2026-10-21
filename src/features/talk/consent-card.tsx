@@ -5,11 +5,11 @@ import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { useCompanionName } from "./use-companion-name";
-import { MIN_TALK_S, PRIVACY_LINE, TALK_TIME_RESETS, talkTimeLine } from "./talk-copy";
-import type { Talk } from "./use-talk";
-import { useTalkTime } from "./use-talk-time";
-import { TalkVoicePicker } from "./talk-voice-picker";
+import { useCompanionName } from "@/src/features/talk/use-companion-name";
+import { MIN_TALK_S, PRIVACY_LINE, TALK_TIME_RESETS, talkTimeLine } from "@/src/features/talk/talk-copy";
+import type { Talk } from "@/src/features/talk/use-talk";
+import { useTalkTime } from "@/src/features/talk/use-talk-time";
+import { TalkVoicePicker } from "@/src/features/talk/talk-voice-picker";
 
 function Row({ icon, children }: { icon: SymbolViewProps["name"]; children: string }) {
   const accent = useThemeColor("accent");

@@ -12,8 +12,8 @@ import { InputGroup, useThemeColor } from "heroui-native";
 import { GlassSurface } from "@/src/components/shared/glass-surface";
 import { playSoftPress } from "@/src/lib/haptics";
 import { cn } from "@/src/lib/utils";
-import { useCompanionName } from "./use-companion-name";
-import type { Talk } from "./use-talk";
+import { useCompanionName } from "@/src/features/talk/use-companion-name";
+import type { Talk } from "@/src/features/talk/use-talk";
 
 const hasGlass = isLiquidGlassAvailable();
 const BAR_SHAPE = [0.5, 0.85, 1, 0.75, 0.45];

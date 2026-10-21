@@ -26,6 +26,8 @@ const memoryOn = async (ctx: QueryCtx, profileId: Id<"emotional_profiles">) =>
       .unique()
   )?.personalMemoryEnabled !== false;
 
+const MEMORY_OFF_TEXT = renderMemory({ memoryOn: false, profile: null, moments: [], intake: null }, 0);
+
 /**
  * The talk's preload, plus whether recall runs. Memory off reads nothing of
  * the person; steadiness and insights are never read. A reopening passes its
@@ -38,7 +40,7 @@ export async function talkPreload(
   exclude?: Id<"sessions">,
 ): Promise<{ talkMemory: string; recall: boolean }> {
   if (!(await memoryOn(ctx, profile._id))) {
-    return { talkMemory: renderMemory({ memoryOn: false, profile: null, moments: [], intake: null }, now), recall: false };
+    return { talkMemory: MEMORY_OFF_TEXT, recall: false };
   }
   const semantic = profile.currentSemanticProfileId
     ? await ctx.db.get("semantic_profiles", profile.currentSemanticProfileId)
@@ -105,9 +107,11 @@ export const forTurn = internalQuery({
     const id = ctx.db.normalizeId("sessions", args.sessionId);
     const session = id ? await ctx.db.get("sessions", id) : null;
     if (!session?.talkKey || session.talkKey !== args.talkKey) return null;
+    // Rechecked each turn: memory turned off mid-talk (any device) stops the past at once.
+    const on = await memoryOn(ctx, session.emotionalProfileId);
     return {
-      memory: session.talkMemory ?? "",
-      recall: renderRecall(session.talkRecall?.lines ?? []),
+      memory: on ? (session.talkMemory ?? "") : MEMORY_OFF_TEXT,
+      recall: on ? renderRecall(session.talkRecall?.lines ?? []) : "",
       safety: session.talkSafety,
       crisisLineSpoken: session.talkCrisisLineSpoken === true,
       name: session.companionName ?? COMPANION_FALLBACK_NAME,
@@ -123,6 +127,7 @@ export const recallTarget = internalQuery({
   handler: async (ctx, { sessionId }) => {
     const session = await ctx.db.get("sessions", sessionId);
     if (!session?.talkRecall || session.state !== "initiated") return null;
+    if (!(await memoryOn(ctx, session.emotionalProfileId))) return null;
     return { profileId: session.emotionalProfileId, surfaced: session.talkRecall.surfaced };
   },
 });
@@ -148,6 +153,7 @@ export const storeRecall = internalMutation({
   handler: async (ctx, { sessionId, matches }) => {
     const session = await ctx.db.get("sessions", sessionId);
     if (!session?.talkRecall || session.state !== "initiated") return null;
+    if (!(await memoryOn(ctx, session.emotionalProfileId))) return null;
     const surfaced = new Set(session.talkRecall.surfaced);
     const lines = [];
     for (const m of matches) {
