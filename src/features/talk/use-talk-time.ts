@@ -16,7 +16,9 @@ export function useTalkTime(enabled = true) {
   const time = useStableQuery(api.talk.time.left, enabled ? { now } : "skip");
   const expired = useTimeLeft(time?.resetsAt ?? null, HOUR_MS) === 0;
   useEffect(() => {
-    if (expired) setNow(Date.now());
+    if (!expired) return;
+    const id = setTimeout(() => setNow(Date.now()), 0);
+    return () => clearTimeout(id);
   }, [expired]);
   // Until it lands, the server tops up to a full week on the next write.
   if (time && expired) return { secondsLeft: WEEKLY_TALK_S, settling: false };
