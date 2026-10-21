@@ -5,7 +5,7 @@ import { requireSessionOwnership } from "../lib/auth";
 import { requirePremium } from "../lib/premium";
 import { reserveTalk } from "./openings";
 import { talkPreload } from "./remember";
-import { talkSetup } from "./companion";
+import { talkGreeting, talkSetup } from "./companion";
 import { renderEarlier } from "./memory";
 import { limitTalkStart, MAX_TALK_LINES, TALK_IDLE_MS } from "./session";
 
@@ -25,6 +25,7 @@ export const start = internalMutation({
     ceilingS: v.number(),
     voiceId: v.string(),
     speed: v.number(),
+    firstMessage: v.string(),
   }),
   handler: async (ctx, { sessionId, startedAt, secret }) => {
     const { profile, session } = await requireSessionOwnership(ctx, sessionId);
@@ -61,6 +62,13 @@ export const start = internalMutation({
       updatedAt: now,
     });
     await ctx.scheduler.runAfter(TALK_IDLE_MS, internal.talk.session.finalizeIfIdle, { sessionId, talkKey });
-    return { sessionId, talkKey, ceilingS, voiceId: setup.voiceId, speed: setup.speed };
+    return {
+      sessionId,
+      talkKey,
+      ceilingS,
+      voiceId: setup.voiceId,
+      speed: setup.speed,
+      firstMessage: talkGreeting(session.companionName ?? setup.session.companionName, true),
+    };
   },
 });

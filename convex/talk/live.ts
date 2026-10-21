@@ -20,7 +20,9 @@ import type { Id } from "../_generated/dataModel";
  *
  * `voiceId` and `speed` are this talk's voice and pace (#603), for the
  * client's `overrides.tts`; they're fixed once the talk starts. The agent's
- * Security tab must allow the voice and speed overrides.
+ * Security tab must allow the voice and speed overrides. `firstMessage` is the
+ * greeting in the companion's name (#583), for `overrides.agent`; the Security
+ * tab must allow the first message override too.
  *
  * `reopen`: "Say more" on that talk's mirror (#604), for up to 5 more minutes.
  */
@@ -34,11 +36,21 @@ export const start = action({
     ceilingS: v.number(),
     voiceId: v.string(),
     speed: v.number(),
+    firstMessage: v.string(),
   }),
   handler: async (
     ctx,
     { reopen },
-  ): Promise<{ token: string; sessionId: Id<"sessions">; talkKey: string; msLeft: number; ceilingS: number; voiceId: string; speed: number }> => {
+  ): Promise<{
+    token: string;
+    sessionId: Id<"sessions">;
+    talkKey: string;
+    msLeft: number;
+    ceilingS: number;
+    voiceId: string;
+    speed: number;
+    firstMessage: string;
+  }> => {
     const apiKey = process.env.ELEVENLABS_AGENTS_API_KEY;
     const agentId = process.env.TALK_AGENT_ID;
     if (!apiKey || !agentId) throw new Error("Talk is not configured");
@@ -47,7 +59,7 @@ export const start = action({
     // randomness is the real thing. The mutation adds the ceiling it reserved.
     const startedAt = Date.now();
     const key = { startedAt, secret: crypto.randomUUID() };
-    const { sessionId, talkKey, ceilingS, voiceId, speed } = reopen
+    const { sessionId, talkKey, ceilingS, voiceId, speed, firstMessage } = reopen
       ? await ctx.runMutation(internal.talk.reopen.start, { sessionId: reopen, ...key })
       : await ctx.runMutation(internal.talk.session.start, key);
 
@@ -65,6 +77,6 @@ export const start = action({
       await ctx.runMutation(internal.talk.session.abandon, { sessionId });
       throw new Error("Could not start a talk");
     }
-    return { token, sessionId, talkKey, msLeft: ceilingS * 1000 - (Date.now() - startedAt), ceilingS, voiceId, speed };
+    return { token, sessionId, talkKey, msLeft: ceilingS * 1000 - (Date.now() - startedAt), ceilingS, voiceId, speed, firstMessage };
   },
 });

@@ -148,7 +148,7 @@ export function useTalk(reopen?: { sessionId: Id<"sessions">; thread: ThreadLine
       if (!granted) return setError("A talk needs the microphone. You can allow it in Settings.");
       setStarted(true);
       try {
-        const { token, sessionId, talkKey, msLeft, ceilingS, voiceId, speed } = await startTalk(
+        const { token, sessionId, talkKey, msLeft, ceilingS, voiceId, speed, firstMessage } = await startTalk(
           reopen ? { reopen: reopen.sessionId } : {},
         );
         sessionRef.current = sessionId;
@@ -161,8 +161,9 @@ export function useTalk(reopen?: { sessionId: Id<"sessions">; thread: ThreadLine
           // talk's session. Needs the agent's `custom_llm_extra_body` override on.
           customLlmExtraBody: { sessionId, talkKey },
           // This talk's voice and pace, fixed until it ends (#603). Needs the
-          // agent's voice and speed overrides on.
-          overrides: { tts: { voiceId, speed } },
+          // agent's voice and speed overrides on. The greeting names this
+          // talk's companion (#583); needs the first message override on.
+          overrides: { agent: { firstMessage }, tts: { voiceId, speed } },
         });
       } catch (e) {
         setStarted(false);

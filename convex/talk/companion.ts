@@ -95,6 +95,14 @@ export const slowDown = internalMutation({
 });
 
 /**
+ * The agent's first words, sent as this talk's `firstMessage` override (#583):
+ * it names the talk's companion, not the agent's fixed greeting. A reopening
+ * ("Say more", #604) picks up the same thread, so it doesn't introduce itself.
+ */
+export const talkGreeting = (name: string, reopen = false) =>
+  reopen ? "I'm still here. What else is there?" : `Hey. I'm ${name}, part of Xolace. What's on your mind?`;
+
+/**
  * Who's talking and how it sounds, read at talk start (#601, #602, #603).
  * `session` is snapshot on the talk; voice and speed go to the client once,
  * as the agent's per-talk overrides.

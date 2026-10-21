@@ -11,7 +11,7 @@ import { personText } from "./transcript";
 import { MAX_TURNS } from "../sessionTurns";
 import { talkPreload } from "./remember";
 import { patternRisk, type TalkPeak } from "../ai/safeguard";
-import { markNameAsked, talkSetup } from "./companion";
+import { markNameAsked, talkGreeting, talkSetup } from "./companion";
 
 // Our endpoint ends a silent talk at about 60 s (#597), so a talk with no new
 // line for this long is over: cut off, or ended without the client telling us (#588).
@@ -41,6 +41,7 @@ export const start = internalMutation({
     ceilingS: v.number(),
     voiceId: v.string(),
     speed: v.number(),
+    firstMessage: v.string(),
   }),
   handler: async (ctx, { startedAt, secret }) => {
     const { profile } = await requireAuth(ctx);
@@ -69,7 +70,14 @@ export const start = internalMutation({
     });
     // A talk that never serves a turn still gets closed.
     await ctx.scheduler.runAfter(TALK_IDLE_MS, internal.talk.session.finalizeIfIdle, { sessionId, talkKey });
-    return { sessionId, talkKey, ceilingS, voiceId: setup.voiceId, speed: setup.speed };
+    return {
+      sessionId,
+      talkKey,
+      ceilingS,
+      voiceId: setup.voiceId,
+      speed: setup.speed,
+      firstMessage: talkGreeting(setup.session.companionName),
+    };
   },
 });
 
