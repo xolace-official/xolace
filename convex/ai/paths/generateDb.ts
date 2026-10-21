@@ -14,6 +14,8 @@ import { compoundingFor, type Compounding } from "../../compounding/stretches";
 import { loadHistory, type KindlingHistory } from "./history";
 import { tendedBefore } from "./tendedBefore";
 import { trackSearchLogValidator } from "./trackSearch";
+import { buildAccumulatedInput } from "../prompts/accumulatedInput";
+import { MAX_TURNS } from "../../sessionTurns";
 
 /**
  * Kindling generation — the DB halves of `generate.ts` (#331): the context
@@ -184,13 +186,28 @@ export const getContext = internalQuery({
       },
       tracks,
       entries: await loadReadCandidates(ctx, profile._id, u),
-      sessionText: (await ctx.db.get("sessions", args.sessionId))?.rawInput ?? null,
+      sessionText: await loadSessionText(ctx, args.sessionId),
       readsAllowed: readsAllowed(u),
       compounding,
       history,
     };
   },
 });
+
+/**
+ * The text the Understanding was classified on: after a refinement turn the
+ * classifier re-read the accumulated input (ai/clarify.ts), so the read and
+ * track searches must too, or they rank on words the Understanding moved past.
+ */
+async function loadSessionText(ctx: QueryCtx, sessionId: Id<"sessions">) {
+  const session = await ctx.db.get("sessions", sessionId);
+  if (session?.rawInput === undefined) return null;
+  const turns = await ctx.db
+    .query("session_turns")
+    .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+    .take(MAX_TURNS);
+  return buildAccumulatedInput(session.rawInput, turns);
+}
 
 const twigValidator = v.object({
   actionType: v.string(),
