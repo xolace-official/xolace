@@ -94,6 +94,12 @@ Settings.preloadPresets([
 export { RouteError as ErrorBoundary } from '@/src/components/shared/route-error';
 
 const NO_HEADER = { headerShown: false };
+// The root stack only ever swaps route groups, and its state is computed from
+// the URL before the guards settle: on a cold start it already holds the first
+// group that matches `/` when the loader lifts, and Stack.Protected then
+// replaces it with the right one. Animating that replacement reads as a push
+// into the home screen, so group swaps cut instead.
+const ROOT_SCREEN_OPTIONS = { headerShown: false, animation: 'none' } as const;
 
 const AppContent = () => {
   const introSeen = useAppStore((s) => s.introSeen);
@@ -175,7 +181,7 @@ const AppContent = () => {
       {/* Above every route group so it outlives (protected) — see the component. */}
       <ChatLocalDataGuard />
       <ReflectDraftGuard />
-      <Stack screenOptions={NO_HEADER}>
+      <Stack screenOptions={ROOT_SCREEN_OPTIONS}>
         <Stack.Protected guard={!isAuthenticated && !introSeen}>
           <Stack.Screen name="(onboarding)" options={NO_HEADER} />
         </Stack.Protected>
