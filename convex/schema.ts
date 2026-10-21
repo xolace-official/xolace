@@ -12,10 +12,12 @@ import {
   safeguardLevelValidator,
   supportNeedValidator,
   triggerTypeValidator,
+  talkPeakValidator,
+  talkIssueValidator,
   activityActionTypeValidator,
   domainValidator,
 } from "./lib/validators";
-import { voiceSlugValidator } from "./lib/voices";
+import { talkDirectnessValidator, talkPaceValidator, voiceSlugValidator } from "./lib/voices";
 import { specialtyValidator } from "./lib/specialties";
 
 // =============================================================
@@ -156,6 +158,9 @@ export default defineSchema({
     // Latest frozen_days dayKey the app has acknowledged in-app (#436), so the
     // "a freeze kept your streak lit" banner shows once per freeze event.
     freezeAckedDay: v.optional(v.string()),
+    // The local Monday ("YYYY-MM-DD") of the week whose talk time was last
+    // topped up (#596). Lazily, at the person's next talk-time read or start.
+    talkWeekOf: v.optional(v.string()),
 
     // Session a free user bought Plus from at session-end's kindling upsell
     // (`paths.requestKindling`). The completion-time `generate.run` no-oped
@@ -389,6 +394,19 @@ export default defineSchema({
     displayName: v.optional(v.string()),
     avatarId: v.optional(v.string()),
 
+    // What the companion calls them when it isn't their displayName (#602):
+    // private, never shown to other Xolacers. Cleared by a data wipe.
+    preferredName: v.optional(v.string()),
+    // Set once they answer, or their first talk with words in it closes:
+    // the companion asks their name in one talk only.
+    talkNameAsked: v.optional(v.boolean()),
+    // How the companion speaks in a talk (#603): its voice (unset = their
+    // mirror voice, else Vesper), pace and directness (unset = in between).
+    // Read at talk start and fixed for the talk.
+    talkVoice: v.optional(voiceSlugValidator),
+    talkPace: v.optional(talkPaceValidator),
+    talkDirectness: v.optional(talkDirectnessValidator),
+
     // True once the naming dialog has been shown and the user tapped "Not now".
     // Prevents re-prompting; settings entry is the only other path.
     spaceNamePromptDismissed: v.optional(v.boolean()),
@@ -508,6 +526,7 @@ export default defineSchema({
       v.literal("body_scan"),
       v.literal("word_cloud"),
       v.literal("voice"),
+      v.literal("talk"), // A companion talk (#592): rawInput is the person's lines only
     ),
 
     // The user's raw text. Optional: not set until input_received state.
@@ -736,6 +755,53 @@ export default defineSchema({
     // the tag-based cascade (also the graceful path if the embed action failed).
     semanticMatchIds: v.optional(v.array(v.id("reflections"))),
 
+    // --- Talk (entryType "talk", #592) ---
+    // Random per-talk secret, handed only to the person who started it. The
+    // Custom LLM endpoint serves a turn only when ElevenLabs relays it back
+    // with the sessionId (via the extra body), binding the talk to this session.
+    talkKey: v.optional(v.string()),
+    // Reported by the client once connected; the webhook DELETEs it (#595).
+    elevenLabsConversationId: v.optional(v.string()),
+    // When ElevenLabs confirmed their copy deleted (webhook or sweeper, #595).
+    providerDeletedAt: v.optional(v.number()),
+    // What the companion knows of the person, rendered once at talk start
+    // (#598): the cached prompt prefix. Cleared when the talk closes.
+    talkMemory: v.optional(v.string()),
+    // Episodic recall during a talk (#598): the latest hits, read by the next
+    // turn, and every memory key surfaced so far. Absent with memory off.
+    talkRecall: v.optional(
+      v.object({ lines: v.array(v.string()), surfaced: v.array(v.string()) }),
+    ),
+    // Safety during the talk (#599): the highest level it reached, never
+    // lowered. Read each turn (safety skill, help on screen) and by
+    // generateMirror (session level = max of this and the end verdict).
+    talkSafety: v.optional(talkPeakValidator),
+    // The fixed crisis line was spoken: it is said once per talk.
+    talkCrisisLineSpoken: v.optional(v.boolean()),
+    // The companion's name for this talk (#601): spaceName at start, or a
+    // rename mid-talk. Kept: the talk's mirror says who it was with.
+    companionName: v.optional(v.string()),
+    // What the companion calls the person this talk (#602), and whether it
+    // asks (their first talk, until they answer).
+    personName: v.optional(v.string()),
+    askPersonName: v.optional(v.boolean()),
+    // How plainly it speaks this talk (#603), and whether they asked it to
+    // slow down mid-talk: shorter lines and [slow] from then on.
+    talkDirectness: v.optional(talkDirectnessValidator),
+    talkSlowed: v.optional(v.boolean()),
+    // A "Say more" reopening (#604): the seq its lines start at. ElevenLabs
+    // numbers a reopening's lines from 0; the ones before this are the earlier thread.
+    talkFromSeq: v.optional(v.number()),
+    // Which companion served the talk (#606), "companion-v{N}-{model}"; the
+    // last turn's, should the agent's model change mid-talk. Evals group its
+    // mirror by it beside mirrorModelVersion (byCompanion).
+    talkCompanionVersion: v.optional(v.string()),
+    // The after-talk check's findings (#606), set as the talk closes; read
+    // through talk.check.flagged for the CEO's review. Bounded by the
+    // companion's lines (MAX_TALK_LINES).
+    talkFlags: v.optional(v.array(talkIssueValidator)),
+    talkFlaggedAt: v.optional(v.number()),
+
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated
     completedAt: v.optional(v.number()), // Session closed
@@ -764,7 +830,72 @@ export default defineSchema({
       "emotionalProfileId",
       "gapNamed",
       "createdAt",
-    ]),
+    ])
+
+    // Abandoned-session sweep: talks that ended with nothing to mirror
+    // (no rawInput) are removed with their transcript (#588).
+    .index("by_entryType_and_state_and_rawInputLength", [
+      "entryType",
+      "state",
+      "rawInputLength",
+    ])
+
+    // Talks whose ElevenLabs copy isn't deleted yet (#595): unstamped, with a
+    // conversation id. Also the webhook's lookup by conversation id.
+    .index("by_providerDeletedAt_and_elevenLabsConversationId", [
+      "providerDeletedAt",
+      "elevenLabsConversationId",
+    ])
+
+    // After-talk review queue (#606): flagged talks, newest first.
+    .index("by_talkFlaggedAt", ["talkFlaggedAt"]),
+
+  // Both sides of a companion talk, one row per line, as the Custom LLM
+  // endpoint served it (#588). The only lasting copy; same lifetime as its
+  // session (SESSION_CASCADE_TABLES). The session's rawInput is built from
+  // the person's lines at the end.
+  talk_turns: defineTable({
+    sessionId: v.id("sessions"),
+    seq: v.number(), // 0-based position in the talk
+    role: v.union(v.literal("person"), v.literal("companion")),
+    text: v.string(),
+    // The companion's reply as we served it, until ElevenLabs' next resend
+    // of the history (what was actually spoken) replaces it. Stays when the
+    // talk ends on it.
+    provisional: v.optional(v.boolean()),
+  }).index("by_session_and_seq", ["sessionId", "seq"]),
+
+  // A talk's open reservation of talk time (#596): reserved at start, gone
+  // once the post-call webhook settles it or the sweeper releases it. The
+  // ledger itself lives in the credits component (convex/talk/time.ts).
+  talk_charges: defineTable({
+    emotionalProfileId: v.id("emotional_profiles"),
+    sessionId: v.id("sessions"),
+    chargeId: v.string(),
+    reserved: v.number(), // seconds
+    startedAt: v.number(),
+    // The opening it reserved for (#604): a reopening has its own key and
+    // row. Absent on rows from before #604: the session's only one.
+    talkKey: v.optional(v.string()),
+    // Set when its talk closes: the charge is settling until the webhook lands.
+    endedAt: v.optional(v.number()),
+  })
+    .index("by_emotionalProfileId", ["emotionalProfileId"])
+    .index("by_sessionId", ["sessionId"])
+    .index("by_startedAt", ["startedAt"]),
+
+  // Every ElevenLabs conversation of a talk (#604): a "Say more" reopening is
+  // a conversation of its own. Maps a webhook back to its opening's charge
+  // and holds the id until their copy is deleted. `sessions.elevenLabsConversationId`
+  // stays the first one's, as before.
+  talk_conversations: defineTable({
+    sessionId: v.id("sessions"),
+    talkKey: v.string(),
+    conversationId: v.string(),
+    providerDeletedAt: v.optional(v.number()),
+  })
+    .index("by_sessionId", ["sessionId"])
+    .index("by_providerDeletedAt_and_conversationId", ["providerDeletedAt", "conversationId"]),
 
   // ===========================================================
   // 5. SESSION TURNS

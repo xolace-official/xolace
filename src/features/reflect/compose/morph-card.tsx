@@ -1,5 +1,6 @@
+import type { TextInputInstance } from 'react-native';
 import type { RefObject } from "react";
-import { Pressable, TextInput } from "react-native";
+import { Pressable } from "react-native";
 import Animated, {
   FadeInDown,
   FadeOut,
@@ -30,7 +31,7 @@ type Props = {
   nudgeMessage: string;
   isRecording: boolean;
   plusDictation: PlusDictationView | null;
-  inputRef: RefObject<TextInput | null>;
+  inputRef: RefObject<TextInputInstance | null>;
   onOpen: () => void;
   onChangeText: (text: string) => void;
   onSubmit: () => void;

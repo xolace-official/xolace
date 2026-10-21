@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { voiceSlugValidator } from "./voices";
+import { talkDirectnessValidator, talkPaceValidator, voiceSlugValidator } from "./voices";
 import { DOMAINS } from "./understandingVocab";
 
 /** One of the 8 scored domains (CONTEXT.md). */
@@ -41,7 +41,8 @@ export const entryTypeValidator = v.union(
   v.literal("guided_entry"),
   v.literal("body_scan"),
   v.literal("word_cloud"),
-  v.literal("voice")
+  v.literal("voice"),
+  v.literal("talk")
 );
 
 export const confirmationStateValidator = v.union(
@@ -110,6 +111,23 @@ export const triggerTypeValidator = v.union(
   v.literal("crisis_keywords"),
   v.literal("user_requested")
 );
+
+/** A live talk's peak (#599), `TalkPeak` in ai/safeguard.ts. */
+export const talkPeakValidator = v.object({
+  level: v.union(v.literal("elevated"), v.literal("crisis")),
+  triggerType: triggerTypeValidator,
+  triggerConfidence: v.number(),
+  triggerEvidence: v.string(),
+  fromHistory: v.optional(v.boolean()),
+});
+
+// What the after-talk check found (#606): a provider or model name in a
+// companion line (`seq`, `match`), or a crisis talk without the fixed line verbatim.
+export const talkIssueValidator = v.object({
+  kind: v.union(v.literal("provider_name"), v.literal("crisis_line")),
+  seq: v.optional(v.number()),
+  match: v.optional(v.string()),
+});
 
 export const actionTakenValidator = v.union(
   v.literal("resources_shown"),
@@ -334,6 +352,11 @@ export const preferencesDocValidator = v.object({
   spaceName: v.optional(v.string()),
   displayName: v.optional(v.string()),
   avatarId: v.optional(v.string()),
+  preferredName: v.optional(v.string()),
+  talkNameAsked: v.optional(v.boolean()),
+  talkVoice: v.optional(voiceSlugValidator),
+  talkPace: v.optional(talkPaceValidator),
+  talkDirectness: v.optional(talkDirectnessValidator),
   spaceNamePromptDismissed: v.optional(v.boolean()),
   registerComplaint: v.optional(v.boolean()),
   libraryAudiences: v.optional(v.array(v.string())),

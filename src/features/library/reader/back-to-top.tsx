@@ -32,8 +32,7 @@ export function BackToTop({
     () => scrollY.get() >= endAt,
     (now, was) => {
       if (now !== was) scheduleOnRN(setShow, now);
-    },
-    [endAt],
+    }
   );
 
   if (!show) return null;

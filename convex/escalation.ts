@@ -19,7 +19,14 @@ export const create = internalMutation({
     resourcesPresented: v.array(v.union(v.string(), resourceValidator)),
   },
   handler: async (ctx, args) => {
-    // Create the escalation event
+    // One event per session: a remade mirror (a talk's "Say more" reopening,
+    // a clarify turn) re-runs the pipeline on a session that already escalated.
+    const existing = await ctx.db
+      .query("escalation_events")
+      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+      .first();
+    if (existing) return existing._id;
+
     const eventId = await ctx.db.insert("escalation_events", {
       emotionalProfileId: args.emotionalProfileId,
       sessionId: args.sessionId,

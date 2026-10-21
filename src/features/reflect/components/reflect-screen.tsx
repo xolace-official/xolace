@@ -4,6 +4,8 @@ import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { Stack, useRouter } from "expo-router";
 import AccountCircle from "@expo/material-symbols/account_circle.xml";
 import CrisisAlert from "@expo/material-symbols/crisis_alert.xml";
+import GraphicEq from "@expo/material-symbols/graphic_eq.xml";
+import { TalkDoorDialog, useTalkDoor } from "@/src/features/talk/talk-door";
 import { useThemeColor } from "heroui-native";
 import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { EaseView } from "react-native-ease";
@@ -53,6 +55,7 @@ const isWashScreen = (screen: ReflectionStateName) =>
 
 export const ReflectScreen = () => {
   const router = useRouter();
+  const talkDoor = useTalkDoor();
   const {
     state,
     dispatch,
@@ -374,6 +377,12 @@ export const ReflectScreen = () => {
             />
           </Stack.Toolbar>
           <Stack.Toolbar placement="right">
+            {/* The talk door shares the crisis button's glass container (#586). */}
+            <Stack.Toolbar.Button
+              icon={process.env.EXPO_OS === "ios" ? "waveform" : GraphicEq}
+              accessibilityLabel="Start a talk"
+              onPress={talkDoor.onPress}
+            />
             <Stack.Toolbar.Button
               icon={
                 process.env.EXPO_OS === "ios" ? "lifepreserver" : CrisisAlert
@@ -423,6 +432,7 @@ export const ReflectScreen = () => {
       />
 
       <DictationUpsellDialog {...dictationUpsell} />
+      <TalkDoorDialog door={talkDoor} />
 
       {/* Space naming — fires once on first path-selection when unnamed */}
       <SpaceNamePromptDialog

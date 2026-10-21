@@ -1,3 +1,5 @@
+import type { ImageProps } from 'expo-image';
+import type { ScrollViewInstance } from 'react-native';
 /**
  * One section of questions, one step.
  *
@@ -8,7 +10,7 @@
  */
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView, View, type ImageSourcePropType } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { usePostHog } from 'posthog-react-native';
 
 import {
@@ -36,7 +38,7 @@ interface SectionScreenProps {
   /** What the mascot says about this section. */
   says: string;
   /** The pose for this section. Defaults to the talking one. */
-  mascot?: ImageSourcePropType;
+  mascot?: ImageProps['source'];
   questions: readonly IntakeQuestion[];
   items: readonly QuestionnaireItemDefinition[];
   /** Multi-selects to hold at MAX_SELECTIONS. */
@@ -89,7 +91,7 @@ export function SectionScreen({
   const [own, setOwn] = useState<QuestionnaireAnswers>({});
   const answers = value ?? own;
   const setAnswers = onChange ?? setOwn;
-  const scroller = useRef<ScrollView>(null);
+  const scroller = useRef<ScrollViewInstance>(null);
 
   /*
    * The funnel's per-question steps (T7, #267) are only visible from in here:

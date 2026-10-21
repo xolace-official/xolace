@@ -29,14 +29,10 @@ import { convexTest, type TestConvex } from "convex-test";
 import { api } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import schema from "../schema";
+import { register as registerCredits } from "@clipin/convex-credits/test";
 
-// Vite injects `import.meta.glob`; declared here rather than pulling in the
-// whole `vite/client` ambient type set for one property.
-declare global {
-  interface ImportMeta {
-    glob: (pattern: string) => Record<string, () => Promise<unknown>>;
-  }
-}
+// `import.meta.glob` is typed by `vite/client`, which the credits test entry
+// references.
 
 const modules = import.meta.glob("../**/*.ts");
 
@@ -53,7 +49,10 @@ export const makeIdentity = (n = 1) => ({
 
 /** A bare test backend with no identity attached. */
 export function asUnauthed(): TestConvex<typeof schema> {
-  return convexTest(schema, modules);
+  const t = convexTest(schema, modules);
+  // Talk time's ledger (#596): mounted app-wide, cheap to register everywhere.
+  registerCredits(t);
+  return t;
 }
 
 export type SeededUser = {

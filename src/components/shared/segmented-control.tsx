@@ -142,7 +142,7 @@ function SegmentedControlIndicator({
           : withSpring(activeMeasurements.x, reanimatedConfig as WithSpringConfig),
       opacity: 1,
     };
-  }, [activeMeasurements]);
+  });
 
   return <Animated.View className={cn("absolute", className)} style={[animatedStyle, style]} {...props} />;
 }

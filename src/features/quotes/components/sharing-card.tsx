@@ -1,3 +1,4 @@
+import type { ViewInstance } from 'react-native';
 import { forwardRef, useEffect, useState } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { Image } from "expo-image";
@@ -32,7 +33,7 @@ type Props = {
  * (#295). It never carries the source line either — provenance is the screen's
  * Xolace+ entry point, and an export is not a place to sell.
  */
-export const SharingCard = forwardRef<View, Props>(function SharingCard(
+export const SharingCard = forwardRef<ViewInstance, Props>(function SharingCard(
   { title, text, onReady },
   ref,
 ) {

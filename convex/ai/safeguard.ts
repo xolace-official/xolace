@@ -12,11 +12,12 @@ import type { ModerationResult } from "./providers/moderation";
 
 export type SafeguardLevel = "none" | "gentle" | "elevated" | "crisis";
 
-type TriggerType =
+export type TriggerType =
   | "explicit_crisis_language"
   | "implicit_risk_language"
   | "pattern_escalation"
-  | "crisis_keywords";
+  | "crisis_keywords"
+  | "user_requested";
 
 type ActionTaken =
   | "resources_shown"
@@ -193,6 +194,70 @@ export function evaluateSafeguard(
     isCrisis: base.level === "crisis",
   };
 }
+
+/**
+ * Pattern escalation's history half: of the last 5 sessions within 48 hours,
+ * how many carried a risk flag. 3+ is the pattern. A typed session also needs
+ * current distress; a talk opens elevated on the history alone (#599).
+ */
+export function patternRisk(
+  recentMetadata: Pick<RecentMetadataEntry, "riskFlag" | "createdAt">[],
+  now: number,
+): { riskCount: number; windowCount: number } {
+  const windowSessions = recentMetadata
+    .slice(0, 5)
+    .filter((m) => now - m.createdAt < PATTERN_WINDOW_MS);
+  return {
+    windowCount: windowSessions.length,
+    riskCount: windowSessions.filter((m) => m.riskFlag).length,
+  };
+}
+
+const RANK: Record<SafeguardLevel, number> = { none: 0, gentle: 1, elevated: 2, crisis: 3 };
+
+/** True when `level` is above `than`. */
+export const levelAbove = (level: SafeguardLevel, than: SafeguardLevel) => RANK[level] > RANK[than];
+
+/** The highest a live talk reached (#599): stored on the session as `talkSafety`. */
+export type TalkPeak = {
+  level: "elevated" | "crisis";
+  triggerType: TriggerType;
+  triggerConfidence: number;
+  triggerEvidence: string;
+  /** Opened elevated on pattern history alone: a precaution, not a verdict. */
+  fromHistory?: boolean;
+};
+
+/**
+ * A talk's session level is the higher of its live peak and the end-of-talk
+ * verdict (#599). On a tie the end verdict stands (its evidence covers the
+ * whole talk); a history-only opening never counts. A crisis peak also beats
+ * a rejection: someone met in crisis is not turned away at the end.
+ */
+export function withTalkPeak(end: SafeguardResult, peak: TalkPeak | undefined): SafeguardResult {
+  if (!peak || peak.fromHistory) return end;
+  if (end.shouldReject ? peak.level !== "crisis" : !levelAbove(peak.level, end.level)) return end;
+  const crisis = peak.level === "crisis";
+  return {
+    level: peak.level,
+    triggerType: peak.triggerType,
+    triggerConfidence: peak.triggerConfidence,
+    triggerEvidence: `Live talk: ${peak.triggerEvidence}`,
+    actionTaken: crisis ? "crisis_line_presented" : "resources_shown",
+    resourcesPresented: crisis ? CRISIS_RESOURCES : SUPPORT_RESOURCES,
+    shouldReject: false,
+    isEscalation: true,
+    riskFlag: peak.triggerType !== "pattern_escalation",
+    isCrisis: crisis,
+  };
+}
+
+/**
+ * The session's own words stay out of distillation and episodic memory:
+ * crisis, and a talk at elevated too (#599). Its metadata still counts.
+ */
+export const keepsWordsPrivate = (entryType: string | undefined, level: SafeguardLevel | undefined) =>
+  level === "crisis" || (entryType === "talk" && level === "elevated");
 
 /**
  * Kindling trigger (docs/paths-v1.md §1). The classifier's graded
@@ -426,27 +491,17 @@ function checkElevated(
   // Only triggers if the CURRENT input also shows distress signals —
   // prevents a self-reinforcing loop where historical risk flags
   // cause every new session (even happy ones) to escalate.
-  if (recentMetadata.length >= 3) {
-    const now = Date.now();
-    const windowSessions = recentMetadata
-      .slice(0, 5)
-      .filter((m) => (now - m.createdAt) < PATTERN_WINDOW_MS);
-    const windowCount = windowSessions.length;
-    const riskCount = windowSessions.filter((m) => m.riskFlag).length;
-
-    const currentShowsDistress = !!distressWord(DISTRESS_EMOTIONS, classification);
-
-    if (riskCount >= 3 && currentShowsDistress) {
-      return {
-        level: "elevated",
-        triggerType: "pattern_escalation",
-        triggerConfidence: windowCount > 0 ? riskCount / windowCount : 0,
-        triggerEvidence: `Pattern: ${riskCount} of last ${windowCount} sessions within 48 hours had risk flags. Current intensity: ${classification.intensity}/10.`,
-        actionTaken: "resources_shown",
-        resourcesPresented: SUPPORT_RESOURCES,
-        shouldReject: false,
-      };
-    }
+  const { riskCount, windowCount } = patternRisk(recentMetadata, Date.now());
+  if (riskCount >= 3 && distressWord(DISTRESS_EMOTIONS, classification)) {
+    return {
+      level: "elevated",
+      triggerType: "pattern_escalation",
+      triggerConfidence: riskCount / windowCount,
+      triggerEvidence: `Pattern: ${riskCount} of last ${windowCount} sessions within 48 hours had risk flags. Current intensity: ${classification.intensity}/10.`,
+      actionTaken: "resources_shown",
+      resourcesPresented: SUPPORT_RESOURCES,
+      shouldReject: false,
+    };
   }
 
   return null;

@@ -106,22 +106,9 @@ minimum-supported UI may still call. Instead mark, don't delete:
 
 - Add JSDoc `@deprecated` + a marker comment:
   `// DEPRECATED(remove-after: app >= X.Y.Z): <reason + what replaces it>`
-- Add a line to the Pending Deprecations ledger below.
+- Add a line to the ledger in `docs/deprecations.md`. Read it before removing any server function, field, or arg.
 - Delete only once the store-published minimum supported version no longer
   references it.
-
-**Pending Deprecations** (remove each once the store-published minimum supported app version no longer sends the arg)
-- `users.getOrCreate` arg `authProviderAccountId` — server now stores `identity.subject`; value ignored.
-- `sessions.submitInput` args `rawText`, `rawInputLength` — derived from `rawInput` server-side; values ignored.
-- `sessions.retrySession` arg `rawText` — retry reprocesses `session.rawInput`; value ignored.
-- `preferences.reducedMotion` (schema field + `update` arg) — superseded by tri-state `motionPreference`. Server keeps the boolean in sync as a back-compat mirror. Remove the field and arg once no store-published client reads `reducedMotion` (old UIs read it directly for the "sit with this" breathing).
-- `notifications.removeToken` absent `pushToken` arg (remove-after: app >= 1.9.0) — old clients call `removeToken({})`, which is treated as "remove every device for this profile". Require the token once no store-published client omits it.
-- Profile-keyed push recipient fallback in `sendPushToProfile` (`convex/lib/pushNotifications.ts`, remove-after: app >= 1.9.0) — a user who hasn't relaunched since the multi-device deploy still has their token under the old profile-keyed recipient, and the nudge meant to bring them back has to reach them. Any registration retires that recipient; remove the fallback once the supported version floor has passed.
-- The two `confirmationState === "gave_up"` conditions in `convex/lib/followUpCadence.ts` (`followUpTier`'s Elevated bump and `computeRequiresFollowUp`'s force-grant, remove-after: app >= 1.10.0) — new clients collapse the at-cap row to "That's it" and record `refined`, so only pre-#176 binaries still write `gave_up` at the cap (new ones reach it only on the `isMaxRefinementError` race path). Deprecated in place with **no** `holding`/`gapNamed` equivalent by ruling (docs/confidence-aware-mirroring.md §8): deleting them now would strip old-binary users of today's check-in. Remove both clauses once the supported version floor passes.
-- `daily_quotes.reaction` member `"not_today"` (`convex/schema.ts` + `convex/dailyQuotes.ts` `react`, remove-after: app >= 1.10.0) — #303 ships no control for it, so no current client writes it. Sharper than the rest of this ledger: narrowing the union **throws rather than degrading** — a pre-#309 binary's `react({reaction:"not_today"})` fails argument validation and the button visibly breaks. The 9 existing rows stay; the toggle renders off and the first tap overwrites.
-- `paths.getActive` absent `withRead` arg (remove-after: app >= 1.11.0) — pre-#412 clients omit it and have no card for a `"read"` twig (they'd crash on `TWIG_PRESENTATION[kind]`), so read twigs are filtered out for them. Make `withRead` implicit once no store-published client omits it.
-- `steadiness_insights.kind` members `link` / `helped` / `then_now` / `shape` (`convex/schema.ts`) — #525's first build, superseded by #526's five kinds. Never shown; each profile's next consolidation replaces them. Gated on data, not an app version: narrow the union once no row carries them.
-- Client `isMaxRefinementError` message-substring fallback (`.includes('Maximum refinement turns')` in `src/features/reflect/session-service.ts`) — the server now throws a `ConvexError` with code `max_refinement_turns`; remove the fallback once the backend deployed before that code is no longer reachable. Conversely, the server's error message must keep the "Maximum refinement turns" substring until no store-published client matches on it.
 
 ## Good to know
 

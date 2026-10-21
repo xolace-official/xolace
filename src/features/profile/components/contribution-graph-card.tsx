@@ -1,3 +1,4 @@
+import type { ScrollViewInstance } from 'react-native';
 import { useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { useQuery } from "convex/react";
@@ -32,7 +33,7 @@ export function ContributionGraphCard({ staggerDelay = 150 }: { staggerDelay?: n
   // Read by the gesture callback rather than closing over heldDay, so the
   // callback (and the chart's props) stay put while a hold drags across days.
   const holding = useRef(false);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const frost = useTokenColor("frost");
   const foreground = useTokenColor("foreground");
 

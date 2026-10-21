@@ -13,7 +13,7 @@ const quotedList = (values: readonly string[]) => values.map((v) => `"${v}"`).jo
  * @param rawInput - The user's raw emotional text to classify
  * @param patternSummary - Background pattern/context to embed in the system prompt
  * @param isFirstSession - If true, include guidance to be slightly more conservative with confidence
- * @param entryType - How the input was entered: "open_prompt" | "guided_entry" | "body_scan" | "word_cloud" | "voice"
+ * @param entryType - How the input was entered: "open_prompt" | "guided_entry" | "body_scan" | "word_cloud" | "voice" | "talk"
  * @param timeOfDay - Optional time context: "early_morning" | "morning" | "afternoon" | "evening" | "late_night"
  * @returns An object with `system` (the composed instruction prompt) and `user` (metadata-framed raw input)
  */
@@ -175,6 +175,11 @@ ${patternSummary}`;
     case "voice":
       userParts.push(
         "[Voice transcription — may contain filler words, repetition, and incomplete sentences.]"
+      );
+      break;
+    case "talk":
+      userParts.push(
+        "[A spoken talk with a companion — the person's lines only, transcribed. Answers to questions you can't see; may contain filler words and repetition.]"
       );
       break;
     default:

@@ -5,7 +5,8 @@ type ServerEntryType =
   | 'guided_entry'
   | 'word_cloud'
   | 'body_scan'
-  | 'voice';
+  | 'voice'
+  | 'talk';
 
 export type ServerSessionState =
   | 'initiated'

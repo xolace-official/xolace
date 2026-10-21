@@ -1,5 +1,6 @@
+import type { ViewInstance } from 'react-native';
 import { useRef, useState, type ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, StyleSheet, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
@@ -33,7 +34,7 @@ export function ExpandableAvatar({
   name: string;
   children: ReactNode;
 }) {
-  const anchor = useRef<View>(null);
+  const anchor = useRef<ViewInstance>(null);
   const [open, setOpen] = useState(false);
   const { width, height } = useWindowDimensions();
   const { isDark } = useAppTheme();

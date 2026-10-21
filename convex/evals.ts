@@ -45,6 +45,7 @@ function toSample(session: Doc<"sessions">): ConfirmationSample | null {
   return {
     version,
     tone: session.toneUsed ?? null,
+    companion: session.talkCompanionVersion ?? null,
     state: state as TerminalState,
   };
 }

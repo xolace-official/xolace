@@ -1,3 +1,4 @@
+import type { ViewInstance } from 'react-native';
 // The compounding upsell (#524, #496 §4): a free user learns a named domain
 // has been heavier than their usual, with no number, on Insights and at
 // session end. Once per stretch: seeing the line spends it, so the first
@@ -73,7 +74,7 @@ export function CompoundingUpsellLine({ upsell, glass = false }: { upsell: Upsel
   const scroll = use(UpsellScrollContext);
   const isFocused = useIsFocused();
   const { height } = useWindowDimensions();
-  const ref = useRef<View>(null);
+  const ref = useRef<ViewInstance>(null);
   const [seen, setSeen] = useState(scroll === null);
   const check = useCallback(() => {
     if (seen || !isFocused) return;

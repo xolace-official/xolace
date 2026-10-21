@@ -1,3 +1,4 @@
+import type { ViewInstance } from 'react-native';
 import React, {
   createContext,
   PropsWithChildren,
@@ -44,7 +45,7 @@ const SkeletonItem = ({
   className,
   style,
   ...props
-}: ViewProps & { ref?: RefObject<View | null> }) => {
+}: ViewProps & { ref?: RefObject<ViewInstance | null> }) => {
   const { isLoading } = useSkeleton();
 
   return (
@@ -115,7 +116,7 @@ const SkeletonGroup: FC<PropsWithChildren> = ({ children }) => {
 export const SocialProfile: FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const avatarRef = useRef<View>(null);
+  const avatarRef = useRef<ViewInstance>(null);
   const avatarLeft = useSharedValue(0);
   const avatarTop = useSharedValue(0);
 

@@ -48,16 +48,19 @@ export async function searchEpisodicMemory(
   emotionalProfileId: string,
   currentSessionId: string,
   rawText: string,
+  // Keys already used elsewhere (a talk's surfaced memories, #598).
+  exclude: string[] = [],
 ): Promise<EpisodicSearch> {
   try {
     const { entries, results } = await rag.search(ctx, {
       namespace: emotionalProfileId,
       query: rawText,
-      limit: 4,
+      // ponytail: a long talk's exclusions crowd out fresh hits past 50.
+      limit: Math.min(4 + exclude.length, 50),
       filters: [{ name: "status", value: EPISODIC_STATUS }],
     });
     const retained = entries
-      .filter((e) => e.key !== undefined && e.key !== currentSessionId)
+      .filter((e) => e.key !== undefined && e.key !== currentSessionId && !exclude.includes(e.key))
       .slice(0, 3);
     const retainedIds = new Set(retained.map((e) => e.entryId));
     // Scores live on the sibling `results` array, joined by entryId. Taken as

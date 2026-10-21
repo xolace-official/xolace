@@ -38,6 +38,22 @@ crons.interval(
   {}
 );
 
+// Retry deleting ElevenLabs' copy of talks the webhook missed (#595).
+crons.interval(
+  "sweep talk provider copies",
+  isProd ? { hours: 1 } : { hours: 12 },
+  internal.talk.provider.sweep,
+  {}
+);
+
+// Release talk time reserved by talks whose post-call webhook never came (#596).
+crons.interval(
+  "sweep open talk time",
+  isProd ? { hours: 1 } : { hours: 12 },
+  internal.talk.time.sweep,
+  {}
+);
+
 // Check for gentle return notifications
 crons.interval(
   "check gentle return notifications",

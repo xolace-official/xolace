@@ -1,5 +1,6 @@
+import type { TextInputInstance } from 'react-native';
 import { useRef } from "react";
-import { StyleSheet, TextInput, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { PressableFeedback } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { Tour } from "@/src/components/ui/tour";
@@ -79,7 +80,7 @@ export const ComposeScreen = ({
 
   const expanded = screen !== "idle";
   const showNudge = screen === "typing-nudge";
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
 
   const { card, nudgeMessage, eventPrompt, eventLabel } = useComposeCard({
     isNight,

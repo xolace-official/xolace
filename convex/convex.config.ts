@@ -11,6 +11,7 @@ import rag from "@convex-dev/rag/convex.config.js";
 import revenuecat from "convex-revenuecat/convex.config.js";
 import aggregate from "@convex-dev/aggregate/convex.config.js";
 import r2 from "@convex-dev/r2/convex.config.js";
+import credits from "@clipin/convex-credits/convex.config.js";
 
 const app = defineApp({
   env: {
@@ -32,6 +33,8 @@ app.use(presence);
 // alongside this one instead of overloading a single unnamed instance.
 app.use(aggregate, { name: "reflectionRank" });
 app.use(r2);
+// Weekly talk time (#596), reached only through convex/talk/time.ts.
+app.use(credits);
 app.use(posthog, {
   env: {
     POSTHOG_PROJECT_TOKEN: app.env.POSTHOG_PROJECT_TOKEN,

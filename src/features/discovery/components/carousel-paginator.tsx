@@ -105,7 +105,7 @@ function AnimatedDot({ index, visibleDotsIndices, spacing, dotSize, dotColor }: 
       duration: 500,
       easing: Easing.linear,
     });
-  }, [visibleDotsIndices, index]);
+  });
 
   const rContainerStyle = useAnimatedStyle(() => {
     const scale = withSpring(visibleDotsIndices.get().currentIndex !== index ? 0.75 : 1, SpringConfig);

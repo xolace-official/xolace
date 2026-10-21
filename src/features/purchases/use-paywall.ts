@@ -46,7 +46,9 @@ export type PaywallSurface =
   // A free user's compounding upsell (#524): Insights and session end.
   | "compounding_upsell"
   // A free user's first mic tap after Plus dictation shipped (#559). Once per device.
-  | "dictation";
+  | "dictation"
+  // A free person's tap on Reflect home's talk door (#594).
+  | "talk_door";
 
 /**
  * `sessionId` rides only with the `kindling` surface: the just-completed
@@ -64,17 +66,17 @@ type PaywallState = {
  * Zustand action, not a component.
  *
  * `close` cannot assume a back stack: the route is reachable by deep link
- * (`xolace:///(paywall)`), and on a cold start from one the paywall is the root
+ * (`xolace:///upgrade`), and on a cold start from one the paywall is the root
  * entry — a bare `router.back()` no-ops there and strands the user in a
  * full-screen modal with no way out. Fall back to the reflect screen.
  *
- * The fallback must name `/(protected)` explicitly. `(onboarding)/index`,
- * `(paywall)/index` and `(protected)/index` all resolve to `/`, so a bare
- * `replace("/")` resolves within the *current* group and lands back on the
- * paywall.
+ * The route is `(protected)/upgrade`, not its own `(paywall)` group: a sibling
+ * group sharing (protected)'s guard is what expo-router ≥ 58 picks for `/`
+ * first — with an index every cold start opened the paywall, without one every
+ * cold start hit Unmatched Route.
  */
 export const usePaywall = create<PaywallState>(() => ({
   open: (surface, params) =>
-    router.push({ pathname: "/(paywall)", params: { surface, ...params } }),
+    router.push({ pathname: "/upgrade", params: { surface, ...params } }),
   close: () => (router.canGoBack() ? router.back() : router.replace("/(protected)")),
 }));

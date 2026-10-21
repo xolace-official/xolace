@@ -42,6 +42,15 @@ const EDIT_PROFILE_OPTIONS = {
 };
 
 
+/** Native header kept (transparent, untitled) so the screen's Stack.Toolbar buttons have somewhere to land. */
+const PAYWALL_OPTIONS = {
+  title: "",
+  headerTransparent: true,
+  headerShadowVisible: false,
+  presentation: "fullScreenModal",
+  gestureEnabled: true,
+} as const;
+
 const PLAYER_OPTIONS = { presentation: "fullScreenModal", animation: "slide_from_bottom" } as const;
 
 const CHAT_OPTIONS = {
@@ -110,6 +119,9 @@ export default function ProtectedLayout() {
           <Stack.Screen name="kindling/index" />
           {/* Outside `(tabs)` on purpose: the player is full-bleed, no tab bar. */}
           <Stack.Screen name="browse-player" options={PLAYER_OPTIONS} />
+          {/* Lives here, not in its own root group: a sibling group beside
+              (protected) competes for `/` and expo-router ≥ 58 picks it first. */}
+          <Stack.Screen name="upgrade" options={PAYWALL_OPTIONS} />
           <Stack.Screen name="streak-held" options={PLAYER_OPTIONS} />
           {/* The close button (or Android back) is the no-guilt dismiss. */}
           <Stack.Screen name="follow-up" options={PLAYER_OPTIONS} />

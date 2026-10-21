@@ -11,22 +11,22 @@ const FLOWER_LOBE_STEPS = 108; // 12×9 — even point density per lobe
 
 /** Inscribed circle filling the inner rect. */
 const circlePath = (w: number, h: number): SkPath => {
-  const p = Skia.Path.Make();
+  const p = Skia.PathBuilder.Make();
   p.addCircle(w / 2, h / 2, Math.min(w, h) / 2);
-  return p;
+  return p.build();
 };
 
 /** Soft rounded rectangle. */
 const roundedRectPath = (w: number, h: number): SkPath => {
-  const p = Skia.Path.Make();
+  const p = Skia.PathBuilder.Make();
   const r = Math.min(IMAGE_CORNER_RADIUS, w / 2, h / 2);
   p.addRRect(Skia.RRectXY(Skia.XYWHRect(0, 0, w, h), r, r));
-  return p;
+  return p.build();
 };
 
 /** Doorway / portal: rounded arch on top, straight jambs, softly rounded base. */
 const portalPath = (w: number, h: number): SkPath => {
-  const p = Skia.Path.Make();
+  const p = Skia.PathBuilder.Make();
   const arch = Math.min(w / 2, h * 0.5);
   const base = h * 0.12;
   p.moveTo(0, h - base);
@@ -38,24 +38,24 @@ const portalPath = (w: number, h: number): SkPath => {
   p.lineTo(base, h);
   p.quadTo(0, h, 0, h - base);
   p.close();
-  return p;
+  return p.build();
 };
 
 /** Organic squircle — a slightly lopsided soft blob, no two corners alike. */
 const blobPath = (w: number, h: number): SkPath => {
-  const p = Skia.Path.Make();
+  const p = Skia.PathBuilder.Make();
   p.moveTo(w * 0.5, h * 0.02);
   p.cubicTo(w * 0.9, h * -0.02, w * 1.04, h * 0.42, w * 0.96, h * 0.62);
   p.cubicTo(w * 0.88, h * 0.9, w * 0.55, h * 1.03, w * 0.34, h * 0.97);
   p.cubicTo(w * 0.06, h * 0.88, w * -0.04, h * 0.5, w * 0.05, h * 0.3);
   p.cubicTo(w * 0.12, h * 0.1, w * 0.28, h * 0.05, w * 0.5, h * 0.02);
   p.close();
-  return p;
+  return p.build();
 };
 
 /** Scalloped rose — nine shallow lobes, kept shallow so the photo stays readable. */
 const flowerPath = (w: number, h: number): SkPath => {
-  const p = Skia.Path.Make();
+  const p = Skia.PathBuilder.Make();
   const cx = w / 2;
   const cy = h / 2;
   const rw = w / 2;
@@ -72,7 +72,7 @@ const flowerPath = (w: number, h: number): SkPath => {
     else p.lineTo(x, y);
   }
   p.close();
-  return p;
+  return p.build();
 };
 
 export const createFounderClipPath = (

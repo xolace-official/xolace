@@ -49,6 +49,8 @@ export const PAYWALL_SURFACE_FEATURE: Record<PaywallSurface, PaywallFeatureId | 
   compounding_upsell: "insights",
   // No feature row for dictation; the surface line below carries it.
   dictation: null,
+  // No feature row for talks yet; the surface line below carries it.
+  talk_door: null,
 };
 
 /** A surface's own line under the Xolace+ title, replacing the default (#513). */
@@ -57,4 +59,6 @@ export const PAYWALL_SURFACE_LINE: Partial<Record<PaywallSurface, string>> = {
   // Sells seeing the pattern, never relief (#496 §4).
   compounding_upsell: "Xolace+ shows you the pattern: how far it's moved from your usual, and since when.",
   dictation: "Xolace+ writes down what you say more sharply, then leaves it for you to edit.",
+  // {name} is the companion's name (#601), filled in by the paywall screen.
+  talk_door: "Xolace+ lets you talk it through out loud with {name}. When you finish, the whole talk becomes your mirror.",
 };

@@ -110,13 +110,11 @@ function SpecialtyChip({
       borderColor: withTiming(checked ? `${accent}33` : `${muted}26`, TIMING),
       backgroundColor: withTiming(checked ? `${accent}14` : 'transparent', TIMING),
       opacity: withTiming(disabled ? 0.4 : 1, TIMING),
-    }),
-    [checked, disabled, accent, muted],
+    })
   );
 
   const rLabel = useAnimatedStyle(
-    () => ({ color: withTiming(checked ? accent : muted, TIMING) }),
-    [checked, accent, muted],
+    () => ({ color: withTiming(checked ? accent : muted, TIMING) })
   );
 
   return (

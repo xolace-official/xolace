@@ -6,8 +6,8 @@
  * and says why the section is being asked; on an info screen the same bubble
  * stacks into a conversation.
  */
-import { View, type ImageSourcePropType } from 'react-native';
-import { Image } from 'expo-image';
+import { View } from 'react-native';
+import { Image, type ImageProps } from 'expo-image';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
 import { AppText } from '@/src/components/shared/app-text';
@@ -26,7 +26,7 @@ export const MASCOT_COMPOUND = require('@/assets/images/flux/flux-compound.png')
 
 interface MascotSaysProps {
   children: string;
-  source?: ImageSourcePropType;
+  source?: ImageProps['source'];
   /** Hide the mascot itself — for a follow-up line in a conversation. */
   continued?: boolean;
 }

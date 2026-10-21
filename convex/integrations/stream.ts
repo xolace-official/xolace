@@ -18,6 +18,8 @@
  *  - webhook sig:  hex HMAC-SHA256 of the raw body, keyed by the API secret
  */
 
+import { timingSafeEqual } from "../lib/timingSafeEqual";
+
 const BASE_URL = "https://chat.stream-io-api.com";
 
 function getStreamEnv() {
@@ -61,17 +63,6 @@ async function signJwt(
   return `${header}.${body}.${base64url(new Uint8Array(signature))}`;
 }
 
-/**
- * Byte-by-byte with no early return on the first mismatch. The length check is
- * not a leak: a valid signature is always 64 hex chars, so the length carries
- * nothing secret.
- */
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
 
 /**
  * Is this webhook really from Stream?

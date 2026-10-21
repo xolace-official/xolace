@@ -10,6 +10,8 @@ type Props = {
   claimStrength: ClaimStrength | null;
   /** Refinement turns are exhausted — the row collapses to "That's it". */
   atCap: boolean;
+  /** False hides only "Say more": a talk with too little talk time left to reopen. */
+  sayMore?: boolean;
   onThatsIt: () => void;
   onNotQuite: () => void;
   onSayMore: () => void;
@@ -44,6 +46,7 @@ const EASE_NOTQUITE_TRANSITION = {
 export const MirrorActionRow = ({
   claimStrength,
   atCap,
+  sayMore = true,
   onThatsIt,
   onNotQuite,
   onSayMore,
@@ -77,42 +80,44 @@ export const MirrorActionRow = ({
           only outcome is rejection. */}
       {!atCap && (
         <>
-          <EaseView
-            initialAnimate={EASE_INITIAL_SLIDE}
-            animate={EASE_ANIMATE_SLIDE}
-            transition={EASE_SAYMORE_TRANSITION}
-          >
-            <View>
-              <PressableFeedback
-                onPress={onSayMore}
-                className="h-14 w-full flex-row items-center justify-center rounded-4xl border border-accent/60 px-5"
-                accessibilityRole="button"
-                accessibilityLabel="Say more"
-                accessibilityHint={
-                  reached
-                    ? "Recommended: add more so the mirror has something to work with"
-                    : undefined
-                }
-              >
-                <AppText className="text-lg font-medium text-accent">
-                  Say more
-                </AppText>
-              </PressableFeedback>
-              {/* Sits ON the border, masking the line beneath it with the
+          {sayMore && (
+            <EaseView
+              initialAnimate={EASE_INITIAL_SLIDE}
+              animate={EASE_ANIMATE_SLIDE}
+              transition={EASE_SAYMORE_TRANSITION}
+            >
+              <View>
+                <PressableFeedback
+                  onPress={onSayMore}
+                  className="h-14 w-full flex-row items-center justify-center rounded-4xl border border-accent/60 px-5"
+                  accessibilityRole="button"
+                  accessibilityLabel="Say more"
+                  accessibilityHint={
+                    reached
+                      ? "Recommended: add more so the mirror has something to work with"
+                      : undefined
+                  }
+                >
+                  <AppText className="text-lg font-medium text-accent">
+                    Say more
+                  </AppText>
+                </PressableFeedback>
+                {/* Sits ON the border, masking the line beneath it with the
                   ancestor's own token so it reads as part of the border.
                   Assumes the row is on --background (see doc §6). */}
-              {reached && (
-                <View
-                  pointerEvents="none"
-                  className="absolute -top-2 right-6 rounded-full bg-background px-1.5"
-                >
-                  <AppText className="text-[10px] uppercase tracking-widest text-accent">
-                    Recommended
-                  </AppText>
-                </View>
-              )}
-            </View>
-          </EaseView>
+                {reached && (
+                  <View
+                    pointerEvents="none"
+                    className="absolute -top-2 right-6 rounded-full bg-background px-1.5"
+                  >
+                    <AppText className="text-[10px] uppercase tracking-widest text-accent">
+                      Recommended
+                    </AppText>
+                  </View>
+                )}
+              </View>
+            </EaseView>
+          )}
 
           <EaseView
             initialAnimate={EASE_INITIAL_SLIDE}

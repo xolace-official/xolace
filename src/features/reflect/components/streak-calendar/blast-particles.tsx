@@ -58,7 +58,7 @@ export const BlastParticles = forwardRef<
     return new Array(count)
       .fill(0)
       .map((_, i) => rect(circleSize * i, 0, circleSize, circleSize));
-  }, [count]);
+  });
 
   const texture = useTexture(
     <Group>
@@ -107,7 +107,7 @@ export const BlastParticles = forwardRef<
 
   const progressRadius = useDerivedValue(() => {
     return interpolate(progress.get(), [0, 1], [0, blastRadius]);
-  }, [progress]);
+  });
 
   const transforms = useRSXformBuffer(count, (val, i) => {
     "worklet";
@@ -129,7 +129,7 @@ export const BlastParticles = forwardRef<
   const opacity = useDerivedValue(() => {
     const baseOpacity = interpolate(progress.get(), [0.8, 1], [1, 0]);
     return baseOpacity ** 2;
-  }, [progress]);
+  });
 
   return (
     <Canvas style={{ width: containerSize, height: containerSize }}>

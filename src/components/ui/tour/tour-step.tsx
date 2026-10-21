@@ -1,3 +1,4 @@
+import type { ViewInstance } from 'react-native';
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { View, type ViewProps } from "react-native";
 
@@ -59,7 +60,7 @@ export const TourStep = ({
   ...props
 }: TourStepProps) => {
   const { register, unregister } = useTourContext("Tour.Step");
-  const target = useRef<View>(null);
+  const target = useRef<ViewInstance>(null);
 
   // Memoized because it is the identity the effect below registers and
   // unregisters on — an unstable entry would re-register every render.

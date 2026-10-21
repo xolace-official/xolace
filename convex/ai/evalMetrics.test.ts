@@ -83,6 +83,22 @@ describe("summarizeConfirmations — grouping", () => {
     // The untoned sample still counts toward the overall roll-up.
     expect(overall.total).toBe(5);
   });
+
+  it("splits talk mirrors by companion, leaving typed mirrors out of byCompanion", () => {
+    const samples: ConfirmationSample[] = [
+      ...mk("v1", "confirmed", 3).map((s) => ({ ...s, companion: "companion-v1-haiku-5.5" })),
+      ...mk("v1", "gave_up", 1).map((s) => ({ ...s, companion: "companion-v2-haiku-5.5" })),
+      ...mk("v1", "confirmed", 2),
+    ];
+    const { byCompanion, byVersion } = summarizeConfirmations(samples);
+    expect(byCompanion.map((g) => [g.key, g.judged]).sort()).toEqual([
+      ["companion-v1-haiku-5.5", 3],
+      ["companion-v2-haiku-5.5", 1],
+    ]);
+    // The articulator's own group still holds every mirror it wrote.
+    expect(byVersion).toHaveLength(1);
+    expect(byVersion[0].total).toBe(6);
+  });
 });
 
 describe("rankVersions", () => {

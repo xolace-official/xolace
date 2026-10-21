@@ -1,11 +1,15 @@
+import type { TextInstance } from 'react-native';
 import { useEffect, useRef } from "react";
-import { AccessibilityInfo, ScrollView, StyleSheet, View, type Text } from "react-native";
+import { AccessibilityInfo, ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { Chip, PressableFeedback, ScrollShadow, useThemeColor } from "heroui-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SymbolView } from "expo-symbols";
 import { AppText } from "@/src/components/shared/app-text";
 import type { EntryType } from "@/src/features/reflect/types";
+import { TalkTimeLeft } from "@/src/features/talk/talk-time-left";
+import { TalkWith } from "@/src/features/talk/talk-with";
+import { useTalkSayMore } from "@/src/features/talk/use-talk-say-more";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { ClaimStrength } from "@/convex/ai/routing";
 import { playMirrorArrival } from "@/src/lib/haptics";
@@ -73,8 +77,9 @@ export const MirrorState = ({
   onSayMore,
 }: Props) => {
   const { isReady, isPlaying, toggle } = useMirrorAudio(sessionId);
+  const talkSayMore = useTalkSayMore(sessionId);
   const accent = useThemeColor("accent");
-  const mirrorRef = useRef<Text>(null);
+  const mirrorRef = useRef<TextInstance>(null);
 
   // No audio cleanup here: useAudioPlayer releases the native player on unmount,
   // which stops playback. Pausing it ourselves races that release and crashes
@@ -152,6 +157,7 @@ export const MirrorState = ({
         )}
       </EaseView>
 
+      <TalkWith sessionId={sessionId} />
       <MirrorToneBadge toneUsed={toneUsed} />
 
       {/* The fade says "more below": a long mirror cut at a line break looks
@@ -179,10 +185,12 @@ export const MirrorState = ({
       <MirrorActionRow
         claimStrength={claimStrength}
         atCap={atCap}
+        sayMore={talkSayMore?.offered ?? true}
         onThatsIt={onThatsIt}
         onNotQuite={onNotQuite}
-        onSayMore={onSayMore}
+        onSayMore={talkSayMore?.open ?? onSayMore}
       />
+      <TalkTimeLeft sessionId={sessionId} />
     </View>
   );
 };

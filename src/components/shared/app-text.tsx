@@ -1,6 +1,6 @@
 import { cn } from '@/src/lib/utils';
 import React from 'react';
-import { Platform, StyleSheet, Text as RNText, type TextProps as RNTextProps } from 'react-native';
+import { Platform, StyleSheet, Text as RNText, type TextInstance, type TextProps as RNTextProps } from 'react-native';
 
 /**
  * Drop-in replacement for React Native's Text with default font and theme color applied.
@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
   android: { includeFontPadding: false },
 });
 
-export const AppText = React.forwardRef<RNText, RNTextProps>((props, ref) => {
+export const AppText = React.forwardRef<TextInstance, RNTextProps>((props, ref) => {
   const { className, style, ...restProps } = props;
 
   return (

@@ -439,6 +439,8 @@ function getEntryTypeInstructions(
       return "## Entry Type: Body Areas\nThe user tapped body locations where they feel emotion. Translate somatic to emotional: chest = grief/anxiety/tightness, stomach = dread/guilt, head = overwhelm/rumination, throat = suppression/things unsaid, hands = helplessness/restlessness.\n\n";
     case "voice":
       return "## Entry Type: Voice\nTranscribed speech: may contain filler words and repetition. Focus on the emotional content, not the polish.\n\n";
+    case "talk":
+      return "## Entry Type: Talk\nThe person's side of a spoken talk with a companion, transcribed: replies to questions you can't see, filler words, repetition. Mirror the whole talk's emotional arc, weighted toward where it landed, not any single line.\n\n";
     default:
       return "";
   }

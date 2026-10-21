@@ -1,3 +1,4 @@
+import type { ViewInstance } from 'react-native';
 import React, { createContext, useContext, useCallback, useMemo } from "react";
 import { View, type LayoutChangeEvent, StyleSheet } from "react-native";
 import Animated, {
@@ -31,7 +32,7 @@ const useShimmer = (): ShimmerContextValue => {
 // ------------------------------------------
 
 /** Root component. Measures its own dimensions and provides context to children. */
-const ShimmerRoot = React.forwardRef<View, ShimmerProps>(
+const ShimmerRoot = React.forwardRef<ViewInstance, ShimmerProps>(
   ({ debug = false, children, style, onLayout, ...props }, ref) => {
     const containerWidth = useSharedValue(0);
     const containerHeight = useSharedValue(0);

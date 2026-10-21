@@ -62,6 +62,10 @@ export function SwipeableConversationRow({
 }) {
   const swipeable = useRef<SwipeableMethods>(null);
   const accent = useCSSVariable('--color-accent-foreground');
+  // RNGH 3 keeps the actions mounted behind the row (absoluteFill), so the row
+  // must be opaque or the action shows through at rest. Matches the host
+  // screens' `bg-background`.
+  const background = useCSSVariable('--color-background');
   const label = conversation.archived ? 'Unarchive' : 'Archive';
 
   // The revealed action's `openRight()` re-fires `onSwipeableWillOpen` while
@@ -83,10 +87,11 @@ export function SwipeableConversationRow({
   return (
     <ReanimatedSwipeable
       ref={swipeable}
+      childrenContainerStyle={{ backgroundColor: background as ColorValue }}
       friction={2}
       rightThreshold={ACTION_WIDTH / 2}
       overshootRight={false}
-      dragOffsetFromLeftEdge={Number.MAX_SAFE_INTEGER}
+      dragOffsetFromLeft={Number.MAX_SAFE_INTEGER}
       onSwipeableWillOpen={commit}
       renderRightActions={() => (
         <PressableFeedback

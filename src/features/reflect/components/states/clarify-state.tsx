@@ -1,5 +1,6 @@
+import type { TextInputInstance } from 'react-native';
 import { useEffect, useRef } from 'react';
-import { ScrollView, View, type TextInput } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { Presets } from 'react-native-pulsar';
 import { EaseView } from 'react-native-ease/uniwind';
 import { TextArea, LinkButton, ScrollShadow } from 'heroui-native';
@@ -50,7 +51,7 @@ export const ClarifyState = ({
     Presets.wobble();
   }, []);
 
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
   // React Native honors `autoFocus` only at mount. When the feedback sheet is
   // open the input mounts unfocused on purpose (the keyboard would rise behind
   // the sheet), so once the sheet closes and `autoFocus` flips true we have to
@@ -122,7 +123,8 @@ export const ClarifyState = ({
 
         <View className="flex-1 overflow-hidden">
           <TextArea
-            ref={inputRef}
+            // heroui-native still types `ref` as the pre-0.87 TextInput class; the runtime value is the instance.
+            ref={inputRef as never}
             autoFocus={autoFocus}
             placeholder={placeholder}
             value={clarifyText}

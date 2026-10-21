@@ -24,6 +24,8 @@ type Props = {
   autoCapitalize?: 'none' | 'words';
   /** Omit to hide the "Remove name" affordance — i.e. the name is required. */
   onClear?: () => Promise<void>;
+  /** Label for the clear affordance. Defaults to "Remove name". */
+  clearLabel?: string;
   onOpenChange: (open: boolean) => void;
   onSave: (name: string) => Promise<void>;
 };
@@ -39,6 +41,7 @@ const NameForm = ({
   currentName,
   autoCapitalize = 'none',
   onClear,
+  clearLabel = 'Remove name',
   onOpenChange,
   onSave,
 }: FormProps) => {
@@ -102,7 +105,7 @@ const NameForm = ({
         {onClear && currentName ? (
           <Pressable onPress={handleClear} disabled={isSaving} hitSlop={8}>
             <AppText className="text-sm text-foreground/40">
-              Remove name
+              {clearLabel}
             </AppText>
           </Pressable>
         ) : null}

@@ -1,10 +1,10 @@
+import { type ViewInstance } from 'react-native';
 import {
   createContext,
   useContext,
   type ReactNode,
   type RefObject,
 } from "react";
-import type { View } from "react-native";
 
 export type TourShape = "rect" | "circle";
 export type TourPlacement = "top" | "bottom" | "auto";
@@ -126,7 +126,7 @@ export type TourStepEntry = {
   padding?: number;
   radius?: number;
   placement?: TourPlacement;
-  target: RefObject<View | null>;
+  target: RefObject<ViewInstance | null>;
 };
 
 type TourContextValue = {

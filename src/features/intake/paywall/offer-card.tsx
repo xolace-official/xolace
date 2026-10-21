@@ -10,8 +10,8 @@
  * disappear.
  */
 import type { ReactNode } from 'react';
-import { View, type ImageSourcePropType } from 'react-native';
-import { Image } from 'expo-image';
+import { View } from 'react-native';
+import { Image, type ImageProps } from 'expo-image';
 
 import { AppText } from '@/src/components/shared/app-text';
 import { cn } from '@/src/lib/utils';
@@ -41,7 +41,7 @@ interface OfferCardProps {
   title: string;
   tint: OfferTint;
   width: number;
-  mascot: ImageSourcePropType;
+  mascot: ImageProps['source'];
   /** The mock — what the feature actually looks like, not a decoration. */
   children: ReactNode;
 }

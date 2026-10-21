@@ -10,7 +10,7 @@ import {
 import { validateSpaceName } from "./lib/spaceName";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
 import { requirePremium, hasPremium } from "./lib/premium";
-import { voiceSlugValidator } from "./lib/voices";
+import { talkDirectnessValidator, talkPaceValidator, voiceSlugValidator } from "./lib/voices";
 
 /**
  * Get the user's quote preferences (themes, notification settings).
@@ -178,6 +178,10 @@ export const update = mutation({
     // Plus-only custom voice. null clears back to "Auto"; a slug sets it;
     // undefined = no-op. Gated below, same shape as spaceName.
     voice: v.optional(v.union(voiceSlugValidator, v.null())),
+    // The companion in a talk (#603); null clears back to the default.
+    talkVoice: v.optional(v.union(voiceSlugValidator, v.null())),
+    talkPace: v.optional(talkPaceValidator),
+    talkDirectness: v.optional(v.union(talkDirectnessValidator, v.null())),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -258,6 +262,9 @@ export const update = mutation({
       patch.spaceNamePromptDismissed = args.spaceNamePromptDismissed;
     }
     if (args.voice !== undefined) patch.voice = args.voice ?? undefined;
+    if (args.talkVoice !== undefined) patch.talkVoice = args.talkVoice ?? undefined;
+    if (args.talkPace !== undefined) patch.talkPace = args.talkPace;
+    if (args.talkDirectness !== undefined) patch.talkDirectness = args.talkDirectness ?? undefined;
 
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch("preferences", preferences._id, patch);

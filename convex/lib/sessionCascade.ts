@@ -1,5 +1,6 @@
 import { Doc, Id } from "../_generated/dataModel";
 import { MutationCtx } from "../_generated/server";
+import { internal } from "../_generated/api";
 import { purgeEpisodicEntries } from "../episodicMemory";
 import { ACTIVE_STATUSES, cancelFollowUpWorkflow } from "../followUps";
 import { deleteResponsesForCard } from "../followUpResponses";
@@ -24,6 +25,8 @@ export const SESSION_CASCADE_TABLES = [
   "follow_up_responses",
   "paths",
   "path_steps",
+  "talk_turns",
+  "talk_conversations",
 ] as const;
 
 /** Tables carrying a sessionId that intentionally outlive their session. */
@@ -32,6 +35,8 @@ export const SESSION_ID_EXEMPT = {
     "Safety-audit tombstone — retained (profileId stripped) even past account deletion; holds no user text by policy.",
   feedback:
     "Profile-scoped structural signal — anonymized in place on account deletion (owner link + text stripped), not cascaded with its session.",
+  talk_charges:
+    "An open talk-time reservation (#596), no text: it must still be released after its session is wiped. The talk-time sweeper removes it within ~2 h.",
 } as const;
 
 /**
@@ -56,6 +61,30 @@ export async function purgeSessions(
     sessions.map((s) => s._id),
   );
 
+  // ElevenLabs' copies of a talk (#595, every conversation of it since #604):
+  // the ids die with the rows, so their DELETE is scheduled in this same
+  // transaction, before the purge commits.
+  const conversationIds = new Set(
+    sessions.flatMap((s) =>
+      s.elevenLabsConversationId && !s.providerDeletedAt ? [s.elevenLabsConversationId] : [],
+    ),
+  );
+  for (const session of sessions) {
+    const conversations = await ctx.db
+      .query("talk_conversations")
+      .withIndex("by_sessionId", (q) => q.eq("sessionId", session._id))
+      .take(50);
+    for (const c of conversations) {
+      if (!c.providerDeletedAt) conversationIds.add(c.conversationId);
+      await ctx.db.delete("talk_conversations", c._id);
+    }
+  }
+  if (conversationIds.size) {
+    await ctx.scheduler.runAfter(0, internal.talk.provider.deleteConversations, {
+      conversationIds: [...conversationIds],
+    });
+  }
+
   for (const session of sessions) {
     // The TTS render of the user's own mirror — nothing else references this
     // blob, so it leaks into storage forever if we skip it.
@@ -79,6 +108,17 @@ export async function purgeSessions(
         .take(10);
       for (const turn of turns) await ctx.db.delete("session_turns", turn._id);
     } while (turns.length === 10);
+
+    // A companion talk's transcript (#588): bounded by the talk ceiling, but
+    // drain in batches all the same.
+    let lines;
+    do {
+      lines = await ctx.db
+        .query("talk_turns")
+        .withIndex("by_session_and_seq", (q) => q.eq("sessionId", session._id))
+        .take(100);
+      for (const line of lines) await ctx.db.delete("talk_turns", line._id);
+    } while (lines.length === 100);
 
     // One card per session at most, but query by index rather than assume.
     const cards = await ctx.db

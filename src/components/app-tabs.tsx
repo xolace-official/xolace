@@ -1,4 +1,4 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { NativeTabs } from 'expo-router/native-tabs';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { View } from 'react-native';
 import { useThemeColor } from 'heroui-native';

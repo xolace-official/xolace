@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, type Infer } from "convex/values";
 
 // Single source of truth for TTS voices. Client-facing slugs only — raw
 // ElevenLabs ids never leave the server. See docs/voice-naming.md for the
@@ -48,3 +48,17 @@ export function resolveVoiceId(
 ): string {
   return (slug && VOICE_CATALOG[slug as VoiceSlug]?.elevenLabsId) || fallback;
 }
+
+// The companion in a talk (#603, decided in #583): its own voice from the
+// cast, the person's mirror/vent voice when unset, else Vesper. Pace is the
+// agent's `speed` override; directness a line in our prompt. All three are
+// fixed for the length of a talk.
+export const TALK_FALLBACK_VOICE: VoiceSlug = "vesper";
+
+export const talkPaceValidator = v.union(v.literal("slower"), v.literal("normal"));
+export type TalkPace = Infer<typeof talkPaceValidator>;
+export const TALK_SPEED: Record<TalkPace, number> = { slower: 0.85, normal: 1.0 };
+
+// Unset sits between the two: no prompt line.
+export const talkDirectnessValidator = v.union(v.literal("gentle"), v.literal("straight"));
+export type TalkDirectness = Infer<typeof talkDirectnessValidator>;

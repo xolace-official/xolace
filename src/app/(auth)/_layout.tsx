@@ -9,7 +9,7 @@ const SCREEN_OPTIONS = {
 export default function AuthLayout() {
   return (
     <Stack screenOptions={SCREEN_OPTIONS}>
-      <Stack.Screen name="auth-onboarding" />
+      <Stack.Screen name="index" />
     </Stack>
   );
 }
