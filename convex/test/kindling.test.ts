@@ -1053,8 +1053,8 @@ describe("past outcomes shape the pick (#565)", () => {
     expect(await matchedOld(await asNewUser(), false)).not.toContain("- bridge: tended");
   });
 
-  it("names what was tended during a returning stretch's previous run", async () => {
-    const user = await asNewUser();
+  /** A settled work usual, a heavy last week, and a work stretch that ended and is back. */
+  async function returningWork(user: SeededUser) {
     for (let i = 0; i < 50; i++) {
       const s = await seedSession(user.root, user.profileId, {
         state: "completed", confirmationState: "confirmed", createdAt: Date.now() - (120 - i * 2) * DAY,
@@ -1072,6 +1072,11 @@ describe("past outcomes shape the pick (#565)", () => {
       await ctx.db.insert("compounding_stretches", { ...base, startedAt: Date.now() - 60 * DAY, endedAt: Date.now() - 30 * DAY });
       await ctx.db.insert("compounding_stretches", { ...base, startedAt: Date.now() - 20 * DAY });
     });
+  }
+
+  it("names what was tended during a returning stretch's previous run", async () => {
+    const user = await asNewUser();
+    await returningWork(user);
     const workSession = await seedSession(user.root, user.profileId, { state: "completed" });
     await seedMetadata(user.root, workSession, user.profileId, { thematicTags: ["work"] });
     await pastKindling(user, 45, [["breathing", "done"], ["bridge", "skipped"]], { sessionId: workSession });
@@ -1082,5 +1087,69 @@ describe("past outcomes shape the pick (#565)", () => {
     });
     const { prompt } = await captured(user, sessionId);
     expect(prompt).toContain("returning, tended when this weighed on them before: breathing");
+  });
+
+  describe("the binder's pick (#566)", () => {
+    /** Two unfinished entries tied on tonight's feeling, so only history can separate them. */
+    async function tiedEntries(user: SeededUser) {
+      await user.root.run(async (ctx) => {
+        for (const slug of ["on-a", "on-b"]) {
+          const entryId = await ctx.db.insert("library_entries", {
+            slug, kind: "advice", title: "T", dek: "D", primarySubject: "anxiety",
+            reuse: "adapted", readMin: 4, active: true, lastReviewedAt: 1, searchText: slug,
+          } as Doc<"library_entries">);
+          await ctx.db.insert("library_entry_facets", { entryId, axis: "emotion", slug: "anxiety" });
+        }
+      });
+    }
+
+    const boundRead = async (user: SeededUser, sessionId: Id<"sessions">) => {
+      stub.reply = JSON.stringify([twig("read", 1), twig("breathing", 2), twig("xolacer", 3)]);
+      await generate(user, sessionId);
+      const active = (await readPaths(user)).find((p) => p.status === "active")!;
+      const read = (await readSteps(user, active._id)).find((t) => t.actionType === "read")!;
+      return (read.params as { slug: string }).slug;
+    };
+
+    const tonight = async (user: SeededUser, thematicTags: string[] = []) => {
+      const sessionId = await seedSession(user.root, user.profileId, { state: "confirmed" });
+      await seedMetadata(user.root, sessionId, user.profileId, {
+        supportNeed: "light", suggestedSpecialty: "burnout", thematicTags,
+      });
+      return sessionId;
+    };
+
+    /** The seeded pick with no history, and the slug it beat. */
+    async function coldPick(thematicTags?: string[]) {
+      const user = await asNewUser();
+      await tiedEntries(user);
+      const seeded = await boundRead(user, await tonight(user, thematicTags));
+      return { seeded, other: seeded === "on-a" ? "on-b" : "on-a" };
+    }
+
+    it("a read skipped before loses its tie; one skipped as another type doesn't", async () => {
+      const { seeded, other } = await coldPick();
+
+      const skipped = await asNewUser();
+      await tiedEntries(skipped);
+      await pastKindling(skipped, 3, [["read", "skipped", { slug: seeded }]]);
+      expect(await boundRead(skipped, await tonight(skipped))).toBe(other);
+
+      const elsewhere = await asNewUser();
+      await tiedEntries(elsewhere);
+      await pastKindling(elsewhere, 3, [[CATALOGUE_TOPIC, "skipped", { slug: seeded }]]);
+      expect(await boundRead(elsewhere, await tonight(elsewhere))).toBe(seeded);
+    });
+
+    it("a returning stretch re-offers the read tended during its previous run", async () => {
+      const { other } = await coldPick(["burnout"]);
+      const user = await asNewUser();
+      await tiedEntries(user);
+      await returningWork(user);
+      const workSession = await seedSession(user.root, user.profileId, { state: "completed" });
+      await seedMetadata(user.root, workSession, user.profileId, { thematicTags: ["work"] });
+      await pastKindling(user, 45, [["read", "done", { slug: other }]], { sessionId: workSession });
+      expect(await boundRead(user, await tonight(user, ["burnout"]))).toBe(other);
+    });
   });
 });
