@@ -20,6 +20,8 @@ import { components } from "./_generated/api";
 //   (each user's own mirror history, never cross-user)
 // - Peer reflection pool        → namespace = REFLECTION_POOL_NAMESPACE
 //   (shared, anonymized; filter on status to drop flagged/removed)
+// - Library entries             → namespace = LIBRARY_NAMESPACE
+//   (convex/library/embed.ts; sentinel filters, nothing filtered)
 //
 // filterNames declares which metadata fields can be filtered at
 // query time. They must be declared here up front — filtering on
@@ -47,6 +49,8 @@ export const EPISODIC_STATUS = "n/a";
 export const REPLY_STATUS = "reply";
 // A reply carries no classification — no mirror ran on it.
 export const NO_PRIMARY_EMOTION = "n/a";
+// Shared content (the Library, #568) has no moderation status to filter on.
+export const NO_STATUS = "n/a";
 
 export const rag = new RAG(components.rag, {
   textEmbeddingModel: openai.embedding("text-embedding-3-small"),

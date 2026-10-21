@@ -15,6 +15,7 @@ import { bindTwig } from "./bind";
 import { CATALOG } from "./catalog";
 import { isTryThis } from "./tryThis";
 import { withhold } from "./history";
+import { readCandidates } from "./readSearch";
 import type { GenerateContext } from "./generateDb";
 import {
   buildPathsPrompt,
@@ -86,6 +87,10 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
     return;
   }
 
+  // The read twig's candidates in meaning (#568), before `bind` ever runs.
+  const reads = await readCandidates(ctx, args.emotionalProfileId, args.sessionId, context.readText, context.entries);
+  context.entries = reads.entries;
+
   // Offer only what fits this grade and can bind for this session, less any
   // type they keep passing on (never below MAX_TWIGS, #565). No advice after
   // a session safeguard flagged at any level (#567).
@@ -144,6 +149,9 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
     twigs: twigs.map((t, i) => ({ ...t, order: i + 1 })),
     historyKinds: context.history.kinds.map((k) => k.actionType),
     withheld,
+    readSearch: reads.search,
+    readTopScore: reads.topScore,
+    readFallback: reads.fallback,
   });
   if (pathId === null) {
     await logNoShip(ctx, args, "rate_limited", twigs.length);

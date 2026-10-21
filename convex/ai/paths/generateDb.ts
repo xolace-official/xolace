@@ -27,6 +27,8 @@ export interface GenerateContext {
   binding: BindUnderstanding;
   tracks: BindTrack[];
   entries: BindEntry[];
+  /** What the person wrote, for the read twig's meaning search (#568); null where no read may bind. */
+  readText: string | null;
   compounding: PromptCompounding[];
   history: KindlingHistory;
 }
@@ -50,7 +52,7 @@ async function loadReadCandidates(
   profileId: Id<"emotional_profiles">,
   u: Doc<"emotional_metadata">,
 ): Promise<BindEntry[]> {
-  if (u.safeguardLevel === "elevated" || u.safeguardLevel === "crisis") return [];
+  if (!readsAllowed(u)) return [];
   const wanted = [
     // Family: a "stress" session still reaches entries shelved under "anxiety" (ADR 0018).
     ...understoodEmotions(u).map((slug) => ({ axis: "emotion", slug })),
@@ -78,6 +80,10 @@ async function loadReadCandidates(
   }
   return entries;
 }
+
+/** The read twig's gate (ADR 0015 twig safety, kept by ADR 0021): no read on an elevated/crisis session. */
+const readsAllowed = (u: Doc<"emotional_metadata">) =>
+  u.safeguardLevel !== "elevated" && u.safeguardLevel !== "crisis";
 
 const DAY_MS = 86_400_000;
 
@@ -175,6 +181,7 @@ export const getContext = internalQuery({
       },
       tracks,
       entries: await loadReadCandidates(ctx, profile._id, u),
+      readText: readsAllowed(u) ? ((await ctx.db.get("sessions", args.sessionId))?.rawInput ?? null) : null,
       compounding,
       history,
     };
@@ -206,6 +213,9 @@ export const write = internalMutation({
     twigs: v.array(twigValidator),
     historyKinds: v.optional(v.array(v.string())),
     withheld: v.optional(v.array(v.string())),
+    readSearch: v.optional(v.union(v.literal("ran"), v.literal("failed"), v.literal("skipped"))),
+    readTopScore: v.optional(v.number()),
+    readFallback: v.optional(v.boolean()),
   },
   returns: v.union(v.id("paths"), v.null()),
   handler: async (ctx, args) => {
@@ -257,6 +267,11 @@ export const write = internalMutation({
         actionTypes: args.twigs.map((t) => t.actionType),
         historyKinds: args.historyKinds ?? [],
         withheld: args.withheld ?? [],
+        // Whether the meaning search ran, how close the best Library entry came,
+        // and whether the read bound on facets (#568).
+        readSearch: args.readSearch,
+        readTopScore: args.readTopScore,
+        readFallback: args.readFallback,
       },
     });
     return pathId;

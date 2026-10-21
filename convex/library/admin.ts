@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { internalMutation, type MutationCtx } from "../_generated/server";
+import { internal } from "../_generated/api";
 import { assertPublishable } from "./ingest";
 
 /**
@@ -34,6 +35,8 @@ export const setActive = internalMutation({
     const e = await bySlug(ctx, slug);
     assertPublishable({ ...e, active });
     await ctx.db.patch("library_entries", e._id, { active });
+    // Retired leaves the meaning index; republished comes back (#568).
+    await ctx.scheduler.runAfter(0, internal.library.embed.indexEntry, { entryId: e._id });
     return null;
   },
 });

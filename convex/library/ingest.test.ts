@@ -3,9 +3,23 @@
  * Library curator ingest (#406): sha-gated upserts, the consent / safety
  * review hard gates, and the one-off setActive / markSafetyReviewed.
  */
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "../_generated/api";
 import { asUnauthed } from "../test/harness.helpers";
+import { ragMock } from "../test/mocks.helpers";
+
+const index = vi.hoisted(() => ({
+  added: [] as { namespace: string; key: string; text: string }[],
+  deleted: [] as string[],
+}));
+vi.mock("../rag", () => ragMock({}, index.deleted, index.added));
+// Ingest schedules an index job; on fake timers it runs only when a test flushes it.
+beforeEach(() => vi.useFakeTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  index.added.length = 0;
+  index.deleted.length = 0;
+});
 
 const source = {
   slug: "nhs",
@@ -192,5 +206,27 @@ describe("setActive", () => {
     await expect(t.mutation(internal.library.admin.setActive, { slug: "ghost", active: true })).rejects.toThrow(
       /ghost/,
     );
+  });
+});
+
+describe("library index (#568)", () => {
+  it("embeds an active entry's title, dek and body; retiring it removes it", async () => {
+    const t = await withSource();
+    await ingest(t, entry("a"), "the body words");
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    const id = (await row(t, "a"))!.e._id;
+    expect(index.added).toEqual([{ namespace: "library", key: id, text: "Title a\n\nDek a\n\nthe body words" }]);
+
+    await t.mutation(internal.library.admin.setActive, { slug: "a", active: false });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(index.deleted).toEqual([id]);
+    expect(index.added).toHaveLength(1);
+  });
+
+  it("never embeds an entry ingested inactive", async () => {
+    const t = await withSource();
+    await ingest(t, entry("off", { active: false }));
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+    expect(index.added).toEqual([]);
   });
 });

@@ -164,4 +164,28 @@ describe("bindTwig", () => {
     expect(bind("audio_topic_anxiety_relief", [a, b], { skippedSlugs: elsewhere })).toEqual(first);
     expect(bind("audio_topic_anxiety_relief", [a, b], { reofferSlugs: [slugKey("read", other)] })).toEqual(first);
   });
+  describe("read binds on meaning (#568)", () => {
+    const entry = (slug: string, similarity?: number, emotions: string[] = []) => ({ slug, emotions, lifeAreas: [], similarity });
+    const read = (entries: ReturnType<typeof entry>[], over?: Partial<BindUnderstanding>) =>
+      bindTwig("read", u(over), [], entries) as { slug: string } | null;
+
+    it("binds an entry close in meaning that shares no facet", () => {
+      expect(read([entry("on-dread", 0.62)])).toEqual({ slug: "on-dread" });
+    });
+    it("meaning outranks facet overlap once above the floor", () => {
+      expect(read([entry("facet-match", undefined, ["anxiety"]), entry("on-dread", 0.62)])).toEqual({ slug: "on-dread" });
+    });
+    it("below the floor falls back to facet overlap, and to nothing without one", () => {
+      expect(read([entry("facet-match", undefined, ["anxiety"]), entry("far", 0.05)])).toEqual({ slug: "facet-match" });
+      expect(read([entry("far", 0.05)])).toBeNull();
+    });
+    it("a better band wins; inside one band the history rules decide (#566)", () => {
+      expect(read([entry("a", 0.61), entry("b", 0.71)], { skippedSlugs: [slugKey("read", "b")] })).toEqual({ slug: "b" });
+      const tied = [entry("a", 0.61), entry("b", 0.64)];
+      const first = read(tied)!;
+      const other = first.slug === "a" ? "b" : "a";
+      expect(read(tied, { skippedSlugs: [slugKey("read", first.slug)] })).toEqual({ slug: other });
+      expect(read([...tied].reverse())).toEqual(first);
+    });
+  });
 });

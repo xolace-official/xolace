@@ -165,6 +165,17 @@ export const backfillTrackSearchText = migrations.define({
   },
 });
 
+// Library meaning index (#568): embeds every active entry ingested before the
+// index existed. Each row schedules its own index action (an embed is network,
+// a migration is a mutation); re-running just re-embeds, keyed on the entry id.
+//   bunx convex run migrations:run '{"fn": "migrations:backfillLibraryIndex"}'
+export const backfillLibraryIndex = migrations.define({
+  table: "library_entries",
+  migrateOne: async (ctx, doc) => {
+    if (doc.active) await ctx.scheduler.runAfter(0, internal.library.embed.indexEntry, { entryId: doc._id });
+  },
+});
+
 export const runAll = migrations.runner([
   internal.migrations.renameRawInput,
   internal.migrations.renameUserInput,

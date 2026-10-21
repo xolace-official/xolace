@@ -38,7 +38,20 @@ export interface BindEntry {
   slug: string;
   emotions: string[]; // `emotion` facet slugs
   lifeAreas: string[]; // `lifeArea` facet slugs
+  /** Best-chunk similarity to tonight's text (#568); absent when the search didn't reach it. */
+  similarity?: number;
 }
+
+/**
+ * Below this a match in meaning doesn't count and binding falls back to the
+ * overlap it replaced (ADR 0021). One floor per twig type, since each
+ * content type's text sits differently against a session's.
+ * ponytail: provisional; tune from `path_generated.readTopScore`.
+ */
+export const SIMILARITY_FLOOR = { read: 0.3 } as const;
+
+/** Similarity in 0.05 bands, so the history rules still have ties to break (ADR 0021). */
+export const similarityBand = (score: number) => Math.floor(score * 20);
 
 export type BoundParams = { slug: string } | { exercise: string } | { specialty: string };
 
@@ -114,11 +127,14 @@ function bindTrack(
 }
 
 /**
- * The read twig (#412): a plain facet join, no catalogue indirection
- * (ADR 0015) — the Understanding's emotions against `emotion` facets, its
- * thematic tags against `lifeArea`. Finished entries never reach here.
+ * The read twig: the entry closest in meaning to what the person wrote
+ * (#568), banded. With nothing above the floor, a plain facet join (#412,
+ * ADR 0015) — the Understanding's emotions against `emotion` facets, its
+ * thematic tags against `lifeArea`. Finished and retired entries never reach here.
  */
 function bindEntry(u: BindUnderstanding, entries: readonly BindEntry[]): { slug: string } | null {
+  const close = entries.filter((e) => (e.similarity ?? -1) >= SIMILARITY_FLOOR.read);
+  if (close.length > 0) return pickSeeded("read", close, (e) => similarityBand(e.similarity!), u);
   const emotions = new Set(understoodEmotions(u));
   const areas = new Set(u.thematicTags);
   const score = (e: BindEntry) =>

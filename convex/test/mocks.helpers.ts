@@ -92,14 +92,17 @@ export const ragMock = (
     entries?: { entryId: string; key?: string; text: string }[];
     results?: { entryId: string; score: number }[];
   } = {},
-  /** Sink for keys passed to `deleteByKeyAsync` — pass one to assert a purge. */
+  /** Sink for keys passed to `deleteByKeyAsync` / `deleteByKey` — pass one to assert a purge. */
   deletedKeys?: string[],
+  /** Sink for `add` calls — pass one to assert what got indexed. */
+  added?: { namespace: string; key: string; text: string }[],
 ) => ({
   REFLECTION_POOL_NAMESPACE: "reflection-pool",
   NO_GRANULAR_LABEL: "",
   EPISODIC_STATUS: "n/a",
   REPLY_STATUS: "reply",
   NO_PRIMARY_EMOTION: "n/a",
+  NO_STATUS: "n/a",
   rag: {
     options: {
       textEmbeddingModel: new MockEmbeddingModelV3({
@@ -111,9 +114,14 @@ export const ragMock = (
       entries: result.entries ?? [],
       results: result.results ?? [],
     }),
-    add: async () => {},
+    add: async (_ctx: unknown, args: { namespace: string; key: string; text: string }) => {
+      added?.push({ namespace: args.namespace, key: args.key, text: args.text });
+    },
     getNamespace: async () => ({ namespaceId: "ns_test" }),
     deleteByKeyAsync: async (_ctx: unknown, args: { key: string }) => {
+      deletedKeys?.push(args.key);
+    },
+    deleteByKey: async (_ctx: unknown, args: { key: string }) => {
       deletedKeys?.push(args.key);
     },
   },
