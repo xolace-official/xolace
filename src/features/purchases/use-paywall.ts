@@ -70,9 +70,10 @@ type PaywallState = {
  * entry — a bare `router.back()` no-ops there and strands the user in a
  * full-screen modal with no way out. Fall back to the reflect screen.
  *
- * The route is `(paywall)/upgrade`, never `(paywall)/index`: an index would
- * also resolve to `/`, sharing (protected)'s guard, and expo-router ≥ 58 breaks
- * that tie by shortest group name — every cold start opened the paywall.
+ * The route is `(protected)/upgrade`, not its own `(paywall)` group: a sibling
+ * group sharing (protected)'s guard is what expo-router ≥ 58 picks for `/`
+ * first — with an index every cold start opened the paywall, without one every
+ * cold start hit Unmatched Route.
  */
 export const usePaywall = create<PaywallState>(() => ({
   open: (surface, params) =>

@@ -187,10 +187,6 @@ const AppContent = () => {
         </Stack.Protected>
         <Stack.Protected guard={isAuthenticated && onboardingComplete}>
           <Stack.Screen name="(protected)" options={NO_HEADER} />
-          <Stack.Screen
-            name="(paywall)"
-            options={{ headerShown: false, presentation: "fullScreenModal" }}
-          />
         </Stack.Protected>
       </Stack>
     </>
