@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, query } from "../_generated/server";
 import { internal } from "../_generated/api";
-import { TALK_IDLE_MS } from "./session";
 import { recallQuery } from "./remember";
 import { raiseTalkSafety } from "./safety";
 import { talkPeakValidator } from "../lib/validators";
@@ -100,10 +99,9 @@ export const syncLines = internalMutation({
       }
     }
 
-    await ctx.db.patch("sessions", session._id, { updatedAt: Date.now() });
-    await ctx.scheduler.runAfter(TALK_IDLE_MS, internal.talk.session.finalizeIfIdle, {
-      sessionId: session._id,
-    });
+    // Only a resend is activity: the reply-only call lands seconds after it.
+    // The idle check scheduled at talk start reads this and reschedules itself.
+    if (args.lines) await ctx.db.patch("sessions", session._id, { updatedAt: Date.now() });
     return true;
   },
 });

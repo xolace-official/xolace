@@ -59,7 +59,7 @@ export const start = internalMutation({
       ...(recall ? { talkRecall: { lines: [], surfaced: [] } } : {}),
       updatedAt: now,
     });
-    await ctx.scheduler.runAfter(TALK_IDLE_MS, internal.talk.session.finalizeIfIdle, { sessionId });
+    await ctx.scheduler.runAfter(TALK_IDLE_MS, internal.talk.session.finalizeIfIdle, { sessionId, talkKey });
     return { sessionId, talkKey, ceilingS, voiceId: setup.voiceId, speed: setup.speed };
   },
 });

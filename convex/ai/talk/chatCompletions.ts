@@ -112,6 +112,14 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   const phrase = phrasePeak(words);
   // Raced against the first chunk below; never rejects (unavailable = no verdict).
   const moderation = words && !phrase ? moderateInput(words).then(moderationPeak) : null;
+  // Started before the memory read, awaited once the model call is in flight:
+  // costs no TTFT. A failed write fails closed: no turn the transcript can't hold.
+  const bound = ctx
+    .runMutation(internal.talk.turns.syncLines, { ...talk, ...(phrase ? { peak: phrase } : {}) })
+    .catch((err) => {
+      console.error("[talk] turn sync failed", err);
+      return false;
+    });
   // The one database read before the model call (#598): the preload is
   // fixed at talk start, the recall and the safety peak land between turns.
   const memory = await ctx.runQuery(internal.talk.remember.forTurn, talk).catch((err) => {
@@ -123,14 +131,6 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   // The fixed line, said once (marked only once fully sent: an interrupted
   // line comes again); this turn makes no model call.
   let crisisLine = peak?.level === "crisis" && !memory?.crisisLineSpoken;
-  // Started now, awaited once the model call is in flight: costs no TTFT.
-  // A failed write fails closed: no turn the transcript can't hold.
-  const bound = ctx
-    .runMutation(internal.talk.turns.syncLines, { ...talk, ...(phrase ? { peak: phrase } : {}) })
-    .catch((err) => {
-      console.error("[talk] turn sync failed", err);
-      return false;
-    });
 
   const model = TALK_MODELS.find((m) => m === body.model) ?? TALK_MODELS[0];
   const { system: agentSystem, messages: turns, tools: agentTools } = toAnthropicRequest(body.messages, body.tools);

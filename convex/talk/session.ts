@@ -60,7 +60,7 @@ export const start = internalMutation({
       ...(opening ? { talkSafety: opening } : {}),
     });
     // A talk that never serves a turn still gets closed.
-    await ctx.scheduler.runAfter(TALK_IDLE_MS, internal.talk.session.finalizeIfIdle, { sessionId });
+    await ctx.scheduler.runAfter(TALK_IDLE_MS, internal.talk.session.finalizeIfIdle, { sessionId, talkKey });
     return { sessionId, talkKey, ceilingS, voiceId: setup.voiceId, speed: setup.speed };
   },
 });
@@ -91,13 +91,27 @@ async function historyOpening(
   };
 }
 
+/**
+ * One check per opening, scheduled at its start: it reschedules itself for
+ * the rest of the idle window while lines keep coming. `talkKey` ends the
+ * chain once a "Say more" reopening (#604) started its own; checks scheduled
+ * before it existed carry none.
+ */
 export const finalizeIfIdle = internalMutation({
-  args: { sessionId: v.id("sessions") },
+  args: { sessionId: v.id("sessions"), talkKey: v.optional(v.string()) },
   returns: v.null(),
-  handler: async (ctx, { sessionId }) => {
+  handler: async (ctx, { sessionId, talkKey }) => {
     const session = await ctx.db.get("sessions", sessionId);
-    // A later line scheduled its own check; that one decides.
-    if (!session || Date.now() - session.updatedAt < TALK_IDLE_MS - 1000) return null;
+    if (!session || session.entryType !== "talk" || session.state !== "initiated") return null;
+    if (talkKey && talkKey !== session.talkKey) return null;
+    const left = TALK_IDLE_MS - (Date.now() - session.updatedAt);
+    if (left > 1000) {
+      await ctx.scheduler.runAfter(left, internal.talk.session.finalizeIfIdle, {
+        sessionId,
+        talkKey: session.talkKey,
+      });
+      return null;
+    }
     await finalizeTalk(ctx, session);
     return null;
   },

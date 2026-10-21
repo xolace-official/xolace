@@ -50,17 +50,20 @@ export const start = action({
       ? await ctx.runMutation(internal.talk.reopen.start, { sessionId: reopen, ...key })
       : await ctx.runMutation(internal.talk.session.start, key);
 
-    const res = await fetch(
-      `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(agentId)}`,
-      { headers: { "xi-api-key": apiKey } },
-    );
-    if (!res.ok) {
-      console.error("[talk] token request failed", res.status, await res.text());
+    let token: string;
+    try {
+      const res = await fetch(
+        `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(agentId)}`,
+        { headers: { "xi-api-key": apiKey } },
+      );
+      if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+      ({ token } = (await res.json()) as { token: string });
+    } catch (e) {
+      console.error("[talk] token request failed", e);
       // Gives the reserved talk time back at once (a reopening goes back to its mirror).
       await ctx.runMutation(internal.talk.session.abandon, { sessionId });
       throw new Error("Could not start a talk");
     }
-    const { token } = (await res.json()) as { token: string };
     return { token, sessionId, talkKey, msLeft: ceilingS * 1000 - (Date.now() - startedAt), voiceId, speed };
   },
 });
