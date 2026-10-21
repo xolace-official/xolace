@@ -1,4 +1,5 @@
 import type { CatalogEntry } from "./catalog";
+import { freeEmotionFamily } from "../../lib/understandingVocab";
 
 /**
  * `try_<slug>` — something done away from the app (#567, CONTEXT.md
@@ -9,6 +10,22 @@ import type { CatalogEntry } from "./catalog";
  */
 const TRY_PREFIX = /^try_/;
 export const isTryThis = (actionType: string) => TRY_PREFIX.test(actionType);
+
+/**
+ * Try-this entries in prompt order (#571): most tags shared with tonight's
+ * Understanding first, catalog order on a tie. Emotions meet through their
+ * family (stress meets anxiety); their own words meet a theme as a slug
+ * ("racing thoughts" meets racing-thoughts). Only a nudge: every entry stays.
+ */
+export function rankTryThis<T extends Pick<CatalogEntry, "emotions" | "themes">>(
+  entries: readonly T[],
+  u: { primaryEmotion: string; thematicTags: string[]; userLanguageTags: string[] },
+): T[] {
+  const emotions = new Set(freeEmotionFamily(u.primaryEmotion));
+  const themes = new Set([...u.thematicTags, ...u.userLanguageTags].map((t) => t.trim().toLowerCase().replace(/\s+/g, "-")));
+  const score = (e: T) => e.emotions.filter((x) => emotions.has(x)).length + e.themes.filter((x) => themes.has(x)).length;
+  return entries.map((e, i) => ({ e, i, s: score(e) })).sort((a, b) => b.s - a.s || a.i - b.i).map(({ e }) => e);
+}
 
 function tryThis(
   slug: string,

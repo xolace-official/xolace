@@ -171,6 +171,14 @@ describe("buildPathsPrompt", () => {
     for (const t of TRY_THIS) expect(user).toContain(`- ${t.actionType}: ${t.modelDescription}`);
   });
 
+  it("orders try-this lines by tags and leaves the rest in catalog order (#571)", () => {
+    const { user } = buildPathsPrompt({ ...base, understanding: { ...base.understanding, primaryEmotion: "fear", thematicTags: ["news"] } });
+    const keys = user.split("\n").filter((l) => l.startsWith("- ") && l.includes(": ")).map((l) => l.slice(2, l.indexOf(":")));
+    const listed = keys.filter((k) => CATALOG.some((c) => c.actionType === k));
+    expect(listed.filter((k) => !k.startsWith("try_"))).toEqual(CATALOG.map((c) => c.actionType).filter((k) => !k.startsWith("try_")));
+    expect(listed.filter((k) => k.startsWith("try_"))[0]).toBe("try_news_at_set_times");
+  });
+
   it("carries negative examples only", () => {
     const { system } = buildPathsPrompt(base);
     expect(system).toMatch(/do not/i);
