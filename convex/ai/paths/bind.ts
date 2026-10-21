@@ -23,10 +23,10 @@ export interface BindUnderstanding {
   suggestedSpecialty: Doc<"emotional_metadata">["suggestedSpecialty"];
   /** Life areas of the compounding domains tonight touched (#521): tie-breakers, never a gate. */
   compoundingTags?: string[];
-  /** Slugs whose newest past verdict is a skip (#566): they lose ties, never a better score. */
+  /** `slugKey`s whose newest past verdict is a skip (#566): they lose ties, never a better score. */
   skippedSlugs?: string[];
   /**
-   * Slugs tended during a returning compounding domain's previous stretch
+   * `slugKey`s tended during a returning compounding domain's previous stretch
    * (#566) — the one place repetition is the point. Wins ties over a skip.
    */
   reofferSlugs?: string[];
@@ -43,6 +43,9 @@ export type BoundParams = { slug: string } | { exercise: string } | { specialty:
 
 /** Track 2 "Reality, Not False Hope" — the one cross-topic series (§3.1). */
 export const REFRAME_SERIES = "reality-not-false-hope";
+
+/** History is per twig type (#566): a skipped read never demotes a track that shares its slug. */
+export const slugKey = (actionType: string, slug: string) => `${actionType}:${slug}`;
 
 /** FNV-1a — deterministic, no randomness/clock, spreads ties across sessions. */
 function hashSeed(seed: string): number {
@@ -104,7 +107,7 @@ function bindTrack(
   ]);
   const score = (t: BindTrack) => t.tags.filter((tag) => wanted.has(tag)).length;
 
-  return pickSeeded(candidates, score, u);
+  return pickSeeded(actionType, candidates, score, u);
 }
 
 /**
@@ -118,7 +121,7 @@ function bindEntry(u: BindUnderstanding, entries: readonly BindEntry[]): { slug:
   const score = (e: BindEntry) =>
     e.emotions.filter((s) => emotions.has(s)).length + e.lifeAreas.filter((s) => areas.has(s)).length;
   const candidates = entries.filter((e) => score(e) > 0);
-  return candidates.length === 0 ? null : pickSeeded(candidates, score, u);
+  return candidates.length === 0 ? null : pickSeeded("read", candidates, score, u);
 }
 
 /**
@@ -130,6 +133,7 @@ export function understoodEmotions(u: Pick<BindUnderstanding, "primaryEmotion" |
 }
 
 function pickSeeded<T extends { slug: string }>(
+  actionType: string,
   candidates: readonly T[],
   score: (c: T) => number,
   u: BindUnderstanding,
@@ -147,8 +151,8 @@ function pickSeeded<T extends { slug: string }>(
     return kept.length > 0 ? kept : band;
   };
   const band = sorted.filter((t) => score(t) === topScore);
-  const reoffered = narrow(band, (t) => u.reofferSlugs?.includes(t.slug) === true);
-  const pool = narrow(reoffered, (t) => !u.skippedSlugs?.includes(t.slug));
+  const reoffered = narrow(band, (t) => u.reofferSlugs?.includes(slugKey(actionType, t.slug)) === true);
+  const pool = narrow(reoffered, (t) => !u.skippedSlugs?.includes(slugKey(actionType, t.slug)));
   const canonicalTags = [...new Set(u.thematicTags)].sort();
   const seed = [u.primaryEmotion, u.secondaryEmotion ?? "", ...canonicalTags].join("|");
   const pick = pool[hashSeed(seed) % pool.length];

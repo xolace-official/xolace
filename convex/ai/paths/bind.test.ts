@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bindTwig, type BindTrack, type BindUnderstanding } from "./bind";
+import { bindTwig, slugKey, type BindTrack, type BindUnderstanding } from "./bind";
 
 const track = (over: Partial<BindTrack> & { slug: string }): BindTrack => ({
   family: "support",
@@ -15,6 +15,8 @@ const u = (over: Partial<BindUnderstanding> = {}): BindUnderstanding => ({
   suggestedSpecialty: undefined,
   ...over,
 });
+
+const k = (...slugs: string[]) => slugs.map((s) => slugKey("audio_topic_anxiety_relief", s));
 
 const bind = (actionType: string, tracks: BindTrack[], over?: Partial<BindUnderstanding>) =>
   bindTwig(actionType, u(over), tracks);
@@ -124,27 +126,37 @@ describe("bindTwig", () => {
     const b = track({ slug: "b", tags: ["anxiety"] });
     const first = bind("audio_topic_anxiety_relief", [a, b])!;
     const other = first.slug === "a" ? { slug: "b" } : { slug: "a" };
-    expect(bind("audio_topic_anxiety_relief", [a, b], { skippedSlugs: [first.slug] })).toEqual(other);
+    expect(bind("audio_topic_anxiety_relief", [a, b], { skippedSlugs: k(first.slug) })).toEqual(other);
     // Every tied slug skipped: back to the seeded pick.
-    expect(bind("audio_topic_anxiety_relief", [a, b], { skippedSlugs: ["a", "b"] })).toEqual(first);
+    expect(bind("audio_topic_anxiety_relief", [a, b], { skippedSlugs: k("a", "b") })).toEqual(first);
     const better = track({ slug: "better", tags: ["anxiety", "sleep"] });
-    expect(bind("audio_topic_anxiety_relief", [a, better], { thematicTags: ["sleep"], skippedSlugs: ["better"] })).toEqual({ slug: "better" });
+    expect(bind("audio_topic_anxiety_relief", [a, better], { thematicTags: ["sleep"], skippedSlugs: k("better") })).toEqual({ slug: "better" });
   });
   it("a returning stretch re-offers its previous tended slug: after the score, before a skip (#566)", () => {
     const a = track({ slug: "a", tags: ["anxiety"] });
     const b = track({ slug: "b", tags: ["anxiety"] });
     const first = bind("audio_topic_anxiety_relief", [a, b])!;
     const other = first.slug === "a" ? "b" : "a";
-    expect(bind("audio_topic_anxiety_relief", [a, b], { reofferSlugs: [other] })).toEqual({ slug: other });
+    expect(bind("audio_topic_anxiety_relief", [a, b], { reofferSlugs: k(other) })).toEqual({ slug: other });
     // Re-offer outranks a skip on the same slug.
-    expect(bind("audio_topic_anxiety_relief", [a, b], { reofferSlugs: [other], skippedSlugs: [other] })).toEqual({ slug: other });
+    expect(bind("audio_topic_anxiety_relief", [a, b], { reofferSlugs: k(other), skippedSlugs: k(other) })).toEqual({ slug: other });
     // Gone from the candidates (inactive, finished read): nothing to re-offer.
-    expect(bind("audio_topic_anxiety_relief", [a, b], { reofferSlugs: ["retired"] })).toEqual(first);
+    expect(bind("audio_topic_anxiety_relief", [a, b], { reofferSlugs: k("retired") })).toEqual(first);
     // Never over a better score.
     const better = track({ slug: "better", tags: ["anxiety", "sleep"] });
-    expect(bind("audio_topic_anxiety_relief", [a, better], { thematicTags: ["sleep"], reofferSlugs: ["a"] })).toEqual({ slug: "better" });
+    expect(bind("audio_topic_anxiety_relief", [a, better], { thematicTags: ["sleep"], reofferSlugs: k("a") })).toEqual({ slug: "better" });
     const entries = [{ slug: "on-worry", emotions: ["anxiety"], lifeAreas: [] }, { slug: "on-fear", emotions: ["anxiety"], lifeAreas: [] }];
-    expect(bindTwig("read", u({ reofferSlugs: ["on-fear"] }), [], entries)).toEqual({ slug: "on-fear" });
-    expect(bindTwig("read", u({ reofferSlugs: ["on-worry"] }), [], entries)).toEqual({ slug: "on-worry" });
+    expect(bindTwig("read", u({ reofferSlugs: [slugKey("read", "on-fear")] }), [], entries)).toEqual({ slug: "on-fear" });
+    expect(bindTwig("read", u({ reofferSlugs: [slugKey("read", "on-worry")] }), [], entries)).toEqual({ slug: "on-worry" });
+  });
+  it("history only touches slugs of its own twig type (#566)", () => {
+    const a = track({ slug: "a", tags: ["anxiety"] });
+    const b = track({ slug: "b", tags: ["anxiety"] });
+    const first = bind("audio_topic_anxiety_relief", [a, b])!;
+    const other = first.slug === "a" ? "b" : "a";
+    // A read with the same slug, or another topic's track, leaves this type alone.
+    const elsewhere = [slugKey("read", first.slug), slugKey("audio_topic_grief", first.slug)];
+    expect(bind("audio_topic_anxiety_relief", [a, b], { skippedSlugs: elsewhere })).toEqual(first);
+    expect(bind("audio_topic_anxiety_relief", [a, b], { reofferSlugs: [slugKey("read", other)] })).toEqual(first);
   });
 });

@@ -1,11 +1,12 @@
 import type { QueryCtx } from "../../_generated/server";
 import { domainOf, type Domain } from "../../lib/understandingVocab";
 import { kindlingsIn, slugOf, stepsOf, type ProfileId } from "./history";
+import { slugKey } from "./bind";
 
 /**
  * What was tended during this domain's previous stretch, on kindlings whose
  * session touched the domain — read for a returning stretch only. `types`
- * goes to the prompt (#565); `slugs` are what the binder re-offers (#566).
+ * goes to the prompt (#565); `slugs` (as `slugKey`s) are what the binder re-offers (#566).
  */
 export async function tendedBefore(
   ctx: QueryCtx,
@@ -34,7 +35,7 @@ export async function tendedBefore(
       if (step.state !== "done") continue;
       tended.add(step.actionType);
       const slug = slugOf(step.params);
-      if (slug !== undefined) slugs.add(slug);
+      if (slug !== undefined) slugs.add(slugKey(step.actionType, slug));
     }
   }
   return { types: [...tended].sort(), slugs: [...slugs].sort() };

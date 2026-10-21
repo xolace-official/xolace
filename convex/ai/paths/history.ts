@@ -2,6 +2,7 @@ import type { Doc, Id } from "../../_generated/dataModel";
 import type { QueryCtx } from "../../_generated/server";
 import { readRow } from "../../library/reads";
 import { MAX_TWIGS } from "./prompt";
+import { slugKey } from "./bind";
 
 /**
  * Kindling history (#565, decided in #547): the person's own past twigs,
@@ -34,7 +35,7 @@ export interface KindlingHistory {
    * last 10, not a match) can't break a streak; widen the pool if that bites.
    */
   skippedTwice: string[];
-  /** Slugs whose newest verdict is a skip: they lose binder ties (#566). A later tend clears it. */
+  /** `slugKey`s whose newest verdict is a skip: they lose binder ties (#566). A later tend clears it. */
   skippedSlugs: string[];
 }
 
@@ -110,7 +111,7 @@ export async function loadHistory(
   const records = new Map<string, KindRecord>();
   const verdicts = new Map<string, Verdict[]>(); // newest first
   const helpedSlugs = new Set<unknown>(); // one entry helps once, however often tended
-  const slugVerdicts = new Map<string, Verdict>(); // newest verdict per slug
+  const slugVerdicts = new Map<string, Verdict>(); // newest verdict per slugKey
   for (const path of await historyPool(ctx, profileId, matchKeys, now)) {
     for (const step of await stepsOf(ctx, path._id)) {
       if (step.state === "pending" && path.status === "active") continue;
@@ -123,7 +124,8 @@ export async function loadHistory(
       }
       const verdict: Verdict = step.state === "done" ? "tended" : "skipped";
       const stepSlug = slugOf(step.params);
-      if (stepSlug !== undefined && !slugVerdicts.has(stepSlug)) slugVerdicts.set(stepSlug, verdict);
+      const key = stepSlug === undefined ? undefined : slugKey(type, stepSlug);
+      if (key !== undefined && !slugVerdicts.has(key)) slugVerdicts.set(key, verdict);
       if (verdict === "skipped") r.skipped++;
       else {
         r.tended++;
