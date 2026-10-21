@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CATALOG } from "./catalog";
 import { buildPathsPrompt, parsePathsResponse } from "./prompt";
+import { TRY_THIS } from "./tryThis";
 
 const WHY = "You said the mornings are the hardest, so this is one slow minute before the day starts.";
 
@@ -163,6 +164,11 @@ describe("buildPathsPrompt", () => {
     const { user } = buildPathsPrompt({ ...base, catalog: CATALOG.filter((c) => c.actionType !== "xolacer") });
     expect(user).not.toContain("xolacer");
     expect(user).toContain("breathing");
+  });
+
+  it("offers every try-this entry with its curated step (#571)", () => {
+    const { user } = buildPathsPrompt(base);
+    for (const t of TRY_THIS) expect(user).toContain(`- ${t.actionType}: ${t.modelDescription}`);
   });
 
   it("carries negative examples only", () => {
