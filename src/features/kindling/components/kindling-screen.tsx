@@ -41,7 +41,7 @@ export function KindlingScreen() {
   const skipStep = useMutation(api.paths.skipStep);
   const completeStep = useMutation(api.paths.completeStep);
   const dismiss = useMutation(api.paths.dismiss);
-  const xolacerTwigHref = useXolacerTwigHref();
+  const xolacerTwig = useXolacerTwigHref();
   const [confirmDismiss, setConfirmDismiss] = useState(false);
   const [openId, setOpenId] = useState<Twig["_id"]>();
   const [sheetHeight, setSheetHeight] = useState<number>();
@@ -69,7 +69,8 @@ export function KindlingScreen() {
       }
       return;
     }
-    const href = twig.kind === "xolacer" ? await xolacerTwigHref(twig, kindling.sessionId) : twigHref(twig, kindling.sessionId);
+    if (xolacerTwig.pendingId) return;
+    const href = twig.kind === "xolacer" ? await xolacerTwig.resolve(twig, kindling.sessionId) : twigHref(twig, kindling.sessionId);
     if (!href) {
       toast.show({ label: "Not quite ready", description: "Playback is on its way." });
       return;
@@ -201,6 +202,7 @@ export function KindlingScreen() {
         <TwigSheet
           twig={open}
           bottom={insets.bottom + 12}
+          matching={xolacerTwig.pendingId === open._id}
           onBegin={() => handleBegin(open)}
           onSkip={() => handleSkip(open)}
           onBrowseMore={() => handleBrowseMore(open)}

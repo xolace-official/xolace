@@ -1,6 +1,6 @@
 import { Pressable, View } from "react-native";
 import { Image } from "expo-image";
-import { Button } from "heroui-native";
+import { Button, Spinner, useThemeColor } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
 import { cn } from "@/src/lib/utils";
@@ -16,6 +16,7 @@ import { TWIG_PRESENTATION, twigBrowseHref, type Twig } from "../twig-presentati
 export function TwigSheet({
   twig,
   bottom,
+  matching = false,
   onBegin,
   onSkip,
   onBrowseMore,
@@ -23,6 +24,8 @@ export function TwigSheet({
 }: {
   twig: Twig;
   bottom: number;
+  /** A xolacer twig's match is in flight (#570): the button says so and holds. */
+  matching?: boolean;
   onBegin: () => void;
   onSkip: () => void;
   onBrowseMore: () => void;
@@ -33,6 +36,7 @@ export function TwigSheet({
   const skipped = twig.state === "skipped";
   const browsable = twigBrowseHref(twig) !== null;
   const reduced = useEffectiveReducedMotion();
+  const accentForeground = useThemeColor("accent-foreground") as string;
 
   return (
     <EaseView
@@ -88,8 +92,9 @@ export function TwigSheet({
           <Pressable onPress={onSkip} hitSlop={8} accessibilityRole="button">
             <AppText className="text-sm text-muted">Not for me</AppText>
           </Pressable>
-          <Button size="sm" onPress={onBegin}>
-            <Button.Label>{look.actionLabel}</Button.Label>
+          <Button size="sm" onPress={onBegin} isDisabled={matching} accessibilityState={{ busy: matching }}>
+            {matching ? <Spinner size="sm" color={accentForeground} /> : null}
+            <Button.Label>{matching ? "Finding someone" : look.actionLabel}</Button.Label>
           </Button>
         </View>
       )}
