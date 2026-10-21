@@ -22,6 +22,13 @@ const TALK_MAX_TOKENS = 400;
 
 export const talkModel = (id: string | undefined) => TALK_MODELS.find((m) => m === id) ?? TALK_MODELS[0];
 
+// Stamped on each talk's mirror (#606), "{writer}-v{N}-{model}" like mirrorModelVersion.
+// Bump N on any change the talk eval (#605) gates: the companion prompt, the
+// safety skill or crisis line, turn assembly, or the ElevenLabs agent's own prompt.
+const COMPANION_VERSION = "companion-v1";
+export const companionVersion = (model: (typeof TALK_MODELS)[number]) =>
+  `${COMPANION_VERSION}-${model.replace(/^claude-/, "").replace(/-(\d+)-(\d+)$/, "-$1.$2")}`;
+
 // Digests first so the compare is fixed-length and leaks nothing of the secret.
 async function sha256Hex(s: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));

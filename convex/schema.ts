@@ -13,6 +13,7 @@ import {
   supportNeedValidator,
   triggerTypeValidator,
   talkPeakValidator,
+  talkIssueValidator,
   activityActionTypeValidator,
   domainValidator,
 } from "./lib/validators";
@@ -791,6 +792,15 @@ export default defineSchema({
     // A "Say more" reopening (#604): the seq its lines start at. ElevenLabs
     // numbers a reopening's lines from 0; the ones before this are the earlier thread.
     talkFromSeq: v.optional(v.number()),
+    // Which companion served the talk (#606), "companion-v{N}-{model}"; the
+    // last turn's, should the agent's model change mid-talk. Evals group its
+    // mirror by it beside mirrorModelVersion (byCompanion).
+    talkCompanionVersion: v.optional(v.string()),
+    // The after-talk check's findings (#606), set as the talk closes; read
+    // through talk.check.flagged for the CEO's review. Bounded by the
+    // companion's lines (MAX_TALK_LINES).
+    talkFlags: v.optional(v.array(talkIssueValidator)),
+    talkFlaggedAt: v.optional(v.number()),
 
     // --- Timestamps ---
     createdAt: v.number(), // Session initiated
@@ -835,7 +845,10 @@ export default defineSchema({
     .index("by_providerDeletedAt_and_elevenLabsConversationId", [
       "providerDeletedAt",
       "elevenLabsConversationId",
-    ]),
+    ])
+
+    // After-talk review queue (#606): flagged talks, newest first.
+    .index("by_talkFlaggedAt", ["talkFlaggedAt"]),
 
   // Both sides of a companion talk, one row per line, as the Custom LLM
   // endpoint served it (#588). The only lasting copy; same lifetime as its

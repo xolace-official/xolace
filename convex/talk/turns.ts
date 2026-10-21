@@ -42,6 +42,8 @@ export const syncLines = internalMutation({
     // A phrase-check crisis (#599), known as the turn starts: here so help
     // is on screen before the crisis line is said.
     peak: v.optional(talkPeakValidator),
+    // The companion serving this turn (#606), stamped on the talk.
+    companionVersion: v.optional(v.string()),
   },
   returns: v.boolean(),
   handler: async (ctx, args) => {
@@ -105,7 +107,12 @@ export const syncLines = internalMutation({
 
     // Only a resend is activity: the reply-only call lands seconds after it.
     // The idle check scheduled at talk start reads this and reschedules itself.
-    if (args.lines) await ctx.db.patch("sessions", session._id, { updatedAt: Date.now() });
+    if (args.lines) {
+      await ctx.db.patch("sessions", session._id, {
+        updatedAt: Date.now(),
+        ...(args.companionVersion ? { talkCompanionVersion: args.companionVersion } : {}),
+      });
+    }
     return true;
   },
 });

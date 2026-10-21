@@ -36,6 +36,8 @@ export interface ConfirmationSample {
   version: string;
   /** toneUsed for this mirror, if recorded. Lets Loop #1 be measured too. */
   tone?: string | null;
+  /** talkCompanionVersion on a talk's mirror (#606); absent on typed mirrors. */
+  companion?: string | null;
   state: TerminalState;
 }
 
@@ -62,6 +64,8 @@ export interface ConfirmationSummary {
   overall: VersionStats;
   byVersion: VersionStats[];
   byTone: VersionStats[];
+  /** Talk mirrors only, per companion version (#606). */
+  byCompanion: VersionStats[];
 }
 
 // A version needs at least this many *judged* samples before its rates are
@@ -148,6 +152,7 @@ export function summarizeConfirmations(
     overall,
     byVersion: groupBy(samples, (s) => s.version),
     byTone: groupBy(samples, (s) => s.tone ?? null),
+    byCompanion: groupBy(samples, (s) => s.companion ?? null),
   };
 }
 

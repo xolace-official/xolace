@@ -121,6 +121,14 @@ export const talkPeakValidator = v.object({
   fromHistory: v.optional(v.boolean()),
 });
 
+// What the after-talk check found (#606): a provider or model name in a
+// companion line (`seq`, `match`), or a crisis talk without the fixed line verbatim.
+export const talkIssueValidator = v.object({
+  kind: v.union(v.literal("provider_name"), v.literal("crisis_line")),
+  seq: v.optional(v.number()),
+  match: v.optional(v.string()),
+});
+
 export const actionTakenValidator = v.union(
   v.literal("resources_shown"),
   v.literal("warm_handoff_offered"),

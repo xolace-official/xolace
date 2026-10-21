@@ -16,7 +16,7 @@ import { stripAudioTags } from "./audioTags";
 import { moderationPeak, phrasePeak, turnWords } from "../../talk/safety";
 import { CRISIS_LINE } from "../../talk/safetyScript";
 import { planTurn } from "./plan";
-import { readTurn, relayTurn, runOwnTool, streamTurn, talkModel, type RelaySink } from "./turn";
+import { readTurn, relayTurn, runOwnTool, streamTurn, talkModel, companionVersion, type RelaySink } from "./turn";
 
 // The agent's system tool that hangs up; our clock calls it on the last turn (#597).
 // Emitted even if the agent doesn't list it: then nothing hangs up but the backstop.
@@ -79,8 +79,13 @@ export const chatCompletions = httpAction(async (ctx, request) => {
       : null;
   // Started before the memory read, awaited once the model call is in flight:
   // costs no TTFT. A failed write fails closed: no turn the transcript can't hold.
+  const model = talkModel(body.model);
   const bound = ctx
-    .runMutation(internal.talk.turns.syncLines, { ...talk, ...(phrase ? { peak: phrase } : {}) })
+    .runMutation(internal.talk.turns.syncLines, {
+      ...talk,
+      ...(phrase ? { peak: phrase } : {}),
+      companionVersion: companionVersion(model),
+    })
     .catch((err) => {
       console.error("[talk] turn sync failed", err);
       return false;
@@ -103,7 +108,6 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   });
   mark("memory");
 
-  const model = talkModel(body.model);
   const { system: agentSystem, messages: turns, tools: agentTools } = toAnthropicRequest(body.messages, body.tools);
   const { peak, name, cue, systemAs, crisisLine: planned } = planTurn({ memory, phrase, clock, agentSystem, turns });
   // Marked spoken only once fully sent: an interrupted line comes again.

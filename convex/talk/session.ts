@@ -12,6 +12,7 @@ import { MAX_TURNS } from "../sessionTurns";
 import { talkPreload } from "./remember";
 import { patternRisk, type TalkPeak } from "../ai/safeguard";
 import { markNameAsked, talkGreeting, talkSetup } from "./companion";
+import { afterTalkIssues } from "./check";
 
 // Our endpoint ends a silent talk at about 60 s (#597), so a talk with no new
 // line for this long is over: cut off, or ended without the client telling us (#588).
@@ -236,6 +237,8 @@ export async function finalizeTalk(
 
   // Like submitInput, minus inputDuration/freeze: those read typing behavior.
   const startedAt = new Date(session.createdAt);
+  // The whole thread, a reopening's earlier lines too: a remade mirror is checked afresh (#606).
+  const issues = afterTalkIssues(lines, session.talkSafety);
   await ctx.db.patch("sessions", session._id, {
     state: "processing",
     processingStage: undefined,
@@ -246,6 +249,7 @@ export async function finalizeTalk(
     gapNamed: undefined,
     requiresFollowUp: undefined,
     ...FORGET,
+    ...(issues.length ? { talkFlags: issues, talkFlaggedAt: now } : { talkFlags: undefined, talkFlaggedAt: undefined }),
     timeOfDay: getTimeOfDay(startedAt),
     dayOfWeek: getDayOfWeek(startedAt),
     updatedAt: now,
