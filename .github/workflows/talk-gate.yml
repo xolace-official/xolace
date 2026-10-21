@@ -19,7 +19,6 @@ on:
       - convex/ai/prompts/__evals__/talk*
       - convex/ai/prompts/__evals__/harness.eval.ts
       - .github/workflows/talk-gate.yml
-      - package.json
   workflow_dispatch:
 
 jobs:

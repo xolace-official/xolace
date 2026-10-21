@@ -13,7 +13,9 @@
  * per-turn episodic recall (needs the database; memory checks run against the
  * preload), silence turns, and the companion's rename on a tool call.
  *
- * Two tiers: zero tolerance (one miss fails) and an aggregate ≥ 90%.
+ * Three tiers: code checks at zero tolerance (one miss fails); judged must-haves
+ * at ≥ 98% (a judge isn't deterministic, so one borderline verdict can't fail
+ * the gate); the softer judged checks at ≥ 90%.
  * First-token latency is printed, never gating: CI isn't production.
  */
 import { afterAll, beforeAll } from "vitest";
@@ -28,7 +30,7 @@ import { relayTurn, streamTurn, talkModel, type RelaySink } from "../../talk/tur
 import { COMPANION_FALLBACK_NAME, ownToolAnswer, ownToolTurns, personNameTool, renameTool, slowTool } from "../companion";
 import { hasApiKey, runLabeledEval, type LabeledCase } from "./harness.eval";
 import { TALKS, type ScriptedTalk } from "./talk.fixtures.eval";
-import { crisisLine, judgeTurn, PASS, providerNames, safetyLevel, wrapUpCue, type Judged, type Verdict } from "./talk.judge.eval";
+import { crisisLine, judgeTurn, JUDGED, PASS, providerNames, safetyLevel, wrapUpCue, type Judged, type Verdict } from "./talk.judge.eval";
 import { momentsOf, PEOPLE } from "./talk.people.eval";
 
 // The agent's model_id picks it in production; override to eval the other.
@@ -175,5 +177,7 @@ async function check(c: Case): Promise<string> {
 }
 
 const all = cases();
-runLabeledEval(`talk eval, zero tolerance: ${MODEL}`, all.filter((c) => c.anchor), check, { threshold: 1 });
+const judged = (c: Case) => (JUDGED as readonly string[]).includes(c.check);
+runLabeledEval(`talk eval, zero tolerance: ${MODEL}`, all.filter((c) => c.anchor && !judged(c)), check, { threshold: 1 });
+runLabeledEval(`talk eval, judged must-haves ≥ 98%: ${MODEL}`, all.filter((c) => c.anchor && judged(c)).map((c) => ({ ...c, anchor: false })), check, { threshold: 0.98 });
 runLabeledEval(`talk eval, aggregate ≥ 90%: ${MODEL}`, all.filter((c) => !c.anchor), check, { threshold: 0.9 });

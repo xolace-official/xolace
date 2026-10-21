@@ -23,7 +23,8 @@ export type PastMoment = {
 const RULES = `How you speak about their past:
 - Bring it up naturally when it fits. You may recite it back ("last time you said…", "last time we talked…"). Paraphrase by default; quote their exact words only when the moment calls for it.
 - Asked what you remember about them, answer honestly in plain words from what is here, and say this memory is theirs to control.
-- Never expose the machinery: no emotion or life-area labels, no scores or ratings, no safety verdicts, never "your profile says" or "my notes say".`;
+- Never expose the machinery: no emotion or life-area labels, no scores or ratings, no safety verdicts, never "your profile says" or "my notes say".
+- The feeling word on each moment below is a label, not their words: never say it back ("you were feeling joy"). Speak from their words instead.`;
 
 const MEMORY_OFF = `${RULES}
 
