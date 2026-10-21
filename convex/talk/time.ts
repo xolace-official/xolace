@@ -130,6 +130,13 @@ export async function reserveTalk(
   return { ceilingS, talkKey };
 }
 
+/** At a talk's close: its open charges are settling from here. */
+export async function markEnded(ctx: MutationCtx, sessionId: Id<"sessions">, now: number) {
+  for (const row of await chargesOf(ctx, sessionId)) {
+    if (row.endedAt === undefined) await ctx.db.patch("talk_charges", row._id, { endedAt: now });
+  }
+}
+
 /**
  * An opening that closed without ever connecting (no conversation attached,
  * so no webhook will come) gives its reserved time back at once, so a retry
@@ -201,10 +208,8 @@ export const left = query({
     const { profile } = await requireAuth(ctx);
     if (!(await hasPremium(ctx, profile))) return null;
     const { balance, week, topUp } = await secondsLeft(ctx, profile, Date.now());
-    let settling = false;
-    for (const row of await openReservations(ctx, profile._id)) {
-      if ((await ctx.db.get("sessions", row.sessionId))?.state !== "initiated") settling = true;
-    }
+    // Not the session: every turn patches it, and this would re-run with it.
+    const settling = (await openReservations(ctx, profile._id)).some((r) => r.endedAt !== undefined);
     return { secondsLeft: balance + topUp, week, settling };
   },
 });

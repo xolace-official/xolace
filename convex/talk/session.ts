@@ -6,7 +6,7 @@ import { requireAuth, requireSessionOwnership } from "../lib/auth";
 import { requirePremium } from "../lib/premium";
 import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "../lib/rateLimits";
 import { getDayOfWeek, getTimeOfDay } from "../lib/timeOfDay";
-import { conversationsOf, releaseUnconnected, reserveTalk } from "./time";
+import { conversationsOf, markEnded, releaseUnconnected, reserveTalk } from "./time";
 import { personText } from "./transcript";
 import { talkPreload } from "./remember";
 import { patternRisk, type TalkPeak } from "../ai/safeguard";
@@ -179,6 +179,7 @@ export async function finalizeTalk(
     .take(MAX_TALK_LINES);
   const rawText = personText(lines);
   const now = Date.now();
+  await markEnded(ctx, session._id, now);
 
   if (session.talkFromSeq !== undefined) {
     const reopened = lines.filter((l) => l.seq >= session.talkFromSeq!);

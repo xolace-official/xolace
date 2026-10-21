@@ -864,6 +864,8 @@ export default defineSchema({
     // The opening it reserved for (#604): a reopening has its own key and
     // row. Absent on rows from before #604: the session's only one.
     talkKey: v.optional(v.string()),
+    // Set when its talk closes: the charge is settling until the webhook lands.
+    endedAt: v.optional(v.number()),
   })
     .index("by_emotionalProfileId", ["emotionalProfileId"])
     .index("by_sessionId", ["sessionId"])

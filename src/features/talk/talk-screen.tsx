@@ -2,10 +2,10 @@
 // native header, with an aurora rising behind the composer that brightens when
 // either side speaks. Consent comes before the first word. "Say more" opens it
 // again on its thread (#604), straight into the talk: consent was given.
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { useQuery } from "convex/react";
+import { useConvex } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -49,8 +49,14 @@ function Talk({ reopen }: { reopen?: { sessionId: Id<"sessions">; thread: Thread
 export function TalkScreen() {
   const { reopen } = useLocalSearchParams<{ reopen?: string }>();
   const sessionId = reopen as Id<"sessions"> | undefined;
-  // Read once: the talk keeps its own thread from here.
-  const thread = useQuery(api.talk.turns.thread, sessionId ? { sessionId } : "skip");
+  const convex = useConvex();
+  // Read once, not subscribed: every synced turn would re-send the whole thread
+  // mid-call, and the talk keeps its own thread from here.
+  const [thread, setThread] = useState<ThreadLine[] | Error>();
+  useEffect(() => {
+    if (sessionId) void convex.query(api.talk.turns.thread, { sessionId }).then(setThread, setThread);
+  }, [convex, sessionId]);
+  if (thread instanceof Error) throw thread;
   if (sessionId && thread === undefined) return <View className="flex-1 bg-background" />;
   return (
     <ConversationProvider>

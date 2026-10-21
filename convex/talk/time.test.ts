@@ -199,7 +199,7 @@ describe("weekly talk time (#596)", () => {
     const { sessionId } = await startTalk(user);
     await attach(user, sessionId, "conv_s");
     expect((await user.t.query(api.talk.time.left, {}))?.settling).toBe(false);
-    await user.root.run((ctx) => ctx.db.patch("sessions", sessionId, { state: "processing" }));
+    await user.t.mutation(api.talk.session.end, { sessionId });
     expect((await user.t.query(api.talk.time.left, {}))?.settling).toBe(true);
     await webhook(user, "conv_s", 60);
     expect(await user.t.query(api.talk.time.left, {})).toEqual({ secondsLeft: 840, week: "2026-10-19", settling: false });
