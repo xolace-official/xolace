@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CATALOG } from "./catalog";
-import { TRY_THIS, isTryThis, rankTryThis } from "./tryThis";
+import { TRY_THIS, isTryThis } from "./tryThis";
 import { PRIMARY_EMOTIONS, THEMATIC_TAGS } from "../../lib/understandingVocab";
 import { buildClassifierPrompt } from "../prompts/classifier";
 
@@ -41,31 +41,5 @@ describe("try-this catalog (#571)", () => {
       expect(system).toContain(`"${theme}"`);
       expect(TRY_THIS.some((t) => t.themes.includes(theme))).toBe(true);
     }
-  });
-});
-
-describe("rankTryThis (#571)", () => {
-  const u = (primaryEmotion: string, thematicTags: string[] = [], userLanguageTags: string[] = []) => ({
-    primaryEmotion,
-    thematicTags,
-    userLanguageTags,
-  });
-  const keys = (rows: readonly { actionType: string }[]) => rows.map((r) => r.actionType);
-
-  it("keeps every entry exactly once", () => {
-    expect([...keys(rankTryThis(TRY_THIS, u("anxiety", ["sleep"])))].sort()).toEqual([...keys(TRY_THIS)].sort());
-  });
-
-  it("keeps catalog order when nothing matches", () => {
-    expect(keys(rankTryThis(TRY_THIS, u("surprise")))).toEqual(keys(TRY_THIS));
-  });
-
-  it("puts the closest tags first, catalog order on a tie", () => {
-    const ranked = keys(rankTryThis(TRY_THIS, u("fear", ["news"])));
-    expect(ranked.slice(0, 2)).toEqual(["try_news_at_set_times", "try_muscle_release"]);
-  });
-
-  it("meets a child emotion through its parent, and their words as a theme", () => {
-    expect(keys(rankTryThis(TRY_THIS, u("stress", [], ["Racing  Thoughts"])))[0]).toBe("try_screens_off_hour");
   });
 });

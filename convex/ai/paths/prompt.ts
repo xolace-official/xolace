@@ -1,7 +1,7 @@
 import type { SupportNeed } from "../providers/anthropic";
 import type { PremiumTier } from "../../lib/premium";
 import type { CatalogEntry } from "./catalog";
-import { isTryThis, rankTryThis } from "./tryThis";
+import { isTryThis } from "./tryThis";
 import type { Compounding } from "../../compounding/stretches";
 import type { KindRecord } from "./history";
 
@@ -154,11 +154,7 @@ Respond with ONLY a JSON array, no fences, no prose:
     ? `## What Xolace knows about this person over time\n${ctx.profile}`
     : `## What Xolace knows about this person over time\n(none yet, this is a first read)`;
 
-  // Try-this lines last, closest tags first (#571); every other line keeps catalog order.
-  const catalogBlock = [
-    ...ctx.catalog.filter((c) => !isTryThis(c.actionType)),
-    ...rankTryThis(ctx.catalog.filter((c) => isTryThis(c.actionType)), u),
-  ]
+  const catalogBlock = ctx.catalog
     .map((c) => `- ${c.actionType}: ${c.modelDescription}`)
     .join("\n");
 
