@@ -20,9 +20,13 @@ const stub = vi.hoisted(() => ({
   embedFails: false,
   added: [] as { key: string; text: string }[],
   deleted: [] as string[],
+  captured: [] as { event: string; properties: Record<string, unknown> }[],
 }));
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
+vi.mock("../posthog", () => ({
+  posthog: { capture: async (_ctx: unknown, e: (typeof stub.captured)[number]) => void stub.captured.push(e) },
+}));
 vi.mock("../presence", async (orig) => ({
   ...(await orig<typeof import("../presence")>()),
   presentProfileIds: async () => new Set(),
@@ -66,6 +70,7 @@ beforeEach(() => {
   stub.embedFails = false;
   stub.added = [];
   stub.deleted = [];
+  stub.captured = [];
 });
 
 let nextUser = 2;
@@ -126,6 +131,23 @@ describe("xolacer suggestion on meaning", () => {
     stub.hits = { [ranked === a ? b : a]: 0.29 };
 
     expect((await suggest(seeker, sessionId))?.xolacerProfileId).toBe(ranked);
+  });
+
+  it("logs the best score and the fallback, never who was chosen (#574)", async () => {
+    const { seeker, sessionId } = await seekerSession();
+    const a = await seedXolacer(seeker);
+    const b = await seedXolacer(seeker);
+    stub.hits = { [a]: 0.29, [b]: 0.25 };
+
+    await suggest(seeker, sessionId);
+    expect(stub.captured).toEqual([
+      {
+        distinctId: seeker.profileId,
+        event: "xolacer_suggestion_ranked",
+        properties: { specialty: "burnout", candidates: 2, search: "ran", topScore: 0.29, fallback: true },
+      },
+    ]);
+    expect(JSON.stringify(stub.captured)).not.toMatch(new RegExp(`${a}|${b}`));
   });
 
   it("a failed embed falls back to the old ranker", async () => {

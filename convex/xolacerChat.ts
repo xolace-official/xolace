@@ -791,6 +791,7 @@ async function eligibleSuggestions(ctx: QueryCtx, sessionId: Id<"sessions">) {
   }
 
   return {
+    emotionalProfileId: profile._id,
     rawInput: session.rawInput,
     candidates: rankSuggestionCandidates(candidates, sessionId).map((c) => ({
       xolacerProfileId: c.xolacerProfileId,
@@ -831,7 +832,11 @@ export const suggestionCandidates = internalQuery({
   args: { sessionId: v.id("sessions") },
   returns: v.union(
     v.null(),
-    v.object({ rawInput: v.optional(v.string()), candidates: v.array(suggestionValidator) }),
+    v.object({
+      emotionalProfileId: v.id("emotional_profiles"),
+      rawInput: v.optional(v.string()),
+      candidates: v.array(suggestionValidator),
+    }),
   ),
   handler: async (ctx, args) => {
     return await eligibleSuggestions(ctx, args.sessionId);
