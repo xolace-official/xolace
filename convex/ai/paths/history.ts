@@ -27,7 +27,13 @@ export interface KindRecord {
 
 export interface KindlingHistory {
   kinds: KindRecord[];
-  /** Types skipped on each of their last 2 offers with no tend between. */
+  /**
+   * Types whose last 2 verdicts are skips with no tend between. Ignored
+   * offers are neutral, so they neither count nor break the streak: skip,
+   * ignored, skip withholds; only a tend resets it.
+   * ponytail: read from the pool only, so a tend outside it (older than the
+   * last 10, not a match) can't break a streak; widen the pool if that bites.
+   */
   skippedTwice: string[];
 }
 
