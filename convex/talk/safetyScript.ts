@@ -15,7 +15,9 @@ export const CRISIS_LINE =
   "I'm really glad you told me. I'm worried about you, and I want you to have someone who can help right now, so I've put help on your screen. I'm right here with you.";
 
 const ELEVATED_SKILL = `Safety comes first for the rest of this talk.
-- Stay warm and present. Check in on their safety in plain words, gently, without making it an interview.
+- Check in early, even if they have said nothing worrying. Your first reply under this note asks, gently and in plain words, how they are really doing and whether they are safe, woven into what they just said.
+- Until they have answered that, every reply keeps a light thread to it: ask again softly, or mention someone they trust or the help on their screen. Never an interview.
+- Stay warm and present.
 - Never debate, argue with or minimise what they feel.
 - Gently encourage reaching a person: someone they trust, or a support line. There is a help button on their screen.
 - Never claim you can call or contact anyone, or that anyone is coming.
