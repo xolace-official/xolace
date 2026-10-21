@@ -694,6 +694,115 @@ export const xolacerProfile = query({
   },
 });
 
+export const suggestionValidator = v.object({
+  xolacerProfileId: v.id("emotional_profiles"),
+  displayName: v.string(),
+  photoUrl: v.optional(v.string()),
+  specialties: v.array(specialtyValidator),
+  specialty: specialtyValidator,
+  rating: v.optional(v.number()),
+  ratingCount: v.number(),
+});
+
+/**
+ * Every xolacer this session may be offered, in the ranker's order, or null
+ * when the session offers no one. The single owner of suggestion eligibility:
+ * the deprecated query takes the head, the meaning ranker (#570) reorders the
+ * list. Reads only — nothing here records who was offered.
+ */
+async function eligibleSuggestions(ctx: QueryCtx, sessionId: Id<"sessions">) {
+  if (!chatEnabled()) return null;
+
+  // Null, never throw, when the session isn't this user's or is gone. The
+  // caller is the session-end close phase, which reads `sessionId` from a
+  // route param and renders inside no error boundary — a throw there takes
+  // the whole screen down.
+  const { profile } = await requireAuth(ctx);
+  const session = await ctx.db.get("sessions", sessionId);
+  if (!session || session.emotionalProfileId !== profile._id) return null;
+
+
+  const metadata = await ctx.db
+    .query("emotional_metadata")
+    .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+    .unique();
+  const specialty = metadata?.suggestedSpecialty;
+  if (!specialty) return null;
+
+  // The stored verdict only ever saw the first input. Refinement turns are
+  // deliberately not re-classified (ai/clarify.ts: "Skips moderation +
+  // classification"), so anything the user added afterwards has been through
+  // no safeguard and no classifier — and the specialty above predates it.
+  // Suggesting on it would route someone to a volunteer on the strength of a
+  // verdict that never read what they last said.
+  // Bounded by design: a session has at most MAX_TURNS (2) refinement turns.
+  const turns = await ctx.db
+    .query("session_turns")
+    .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+    .take(4);
+  if (turns.some((turn) => turn.userInput)) return null;
+
+  // `specialties` is an array field, so it can't be indexed — the specialty
+  // filter has to run in memory, which means the scan feeding it must not be
+  // truncated first. A prefix would silently hide declaring xolacers the
+  // moment the roster outgrew it, and the failure looks like "no suggestion"
+  // rather than an error. Bounded in practice by roster size: this is the
+  // directory, a curated set.
+  // ponytail: full active-roster scan; needs a denormalized
+  // specialty->xolacer index if the roster reaches the low thousands.
+  const declaring: Doc<"xolacer_profiles">[] = [];
+  for await (const xolacer of ctx.db
+    .query("xolacer_profiles")
+    .withIndex("by_complete_and_active", (q) =>
+      q.eq("complete", true).eq("active", true),
+    )) {
+    if (xolacer.emotionalProfileId === profile._id) continue;
+    if (!xolacer.specialties?.includes(specialty)) continue;
+    if (!meetsRatingFloor(xolacer)) continue;
+    declaring.push(xolacer);
+    if (declaring.length >= MAX_SUGGESTION_CANDIDATES) break;
+  }
+
+  // One room read for the whole candidate set — see presentProfileIds.
+  const present = await presentProfileIds(ctx);
+
+  const candidates = [];
+  for (const xolacer of declaring) {
+    // Exact pair lookup, not a scan of this user's rows: a past decline or
+    // an expired request must not come back dressed as a fresh
+    // recommendation, and a capped scan would eventually miss one. This is
+    // what by_user_and_xolacer exists for.
+    const { forward, reverse } = await loadPairRows(
+      ctx,
+      profile._id,
+      xolacer.emotionalProfileId,
+    );
+    if (forward) continue;
+
+    if (isPairBlocked(forward, reverse)) continue;
+    const openCount = await countOpen(ctx, xolacer.emotionalProfileId);
+    if (!xolacerAvailable(xolacer, openCount)) continue;
+    candidates.push({
+      xolacerProfileId: xolacer.emotionalProfileId,
+      openCount,
+      present: present.has(xolacer.emotionalProfileId),
+      xolacer,
+    });
+  }
+
+  return {
+    rawInput: session.rawInput,
+    candidates: rankSuggestionCandidates(candidates, sessionId).map((c) => ({
+      xolacerProfileId: c.xolacerProfileId,
+      displayName: c.xolacer.displayName ?? "Xolacer",
+      photoUrl: c.xolacer.photoUrl,
+      specialties: c.xolacer.specialties ?? [],
+      specialty,
+      ...publicRating(c.xolacer),
+    })),
+  };
+}
+
 /**
  * The one xolacer this session would offer, or null — null being the correct
  * and common answer.
@@ -704,111 +813,28 @@ export const xolacerProfile = query({
  * that a chat is never linked to a user's reflections literally true. It also
  * means availability is always current, so there is no stale suggestion to
  * expire.
+ *
+ * @deprecated Ranks without meaning; current clients call the read-time action
+ * `ai/xolacers/suggest:sessionSuggestion` (#570).
  */
+// DEPRECATED(remove-after: app >= 1.16.0): pre-#570 clients read this; the action replaces it.
 export const sessionSuggestion = query({
+  args: { sessionId: v.id("sessions") },
+  returns: v.union(v.null(), suggestionValidator),
+  handler: async (ctx, args) => {
+    return (await eligibleSuggestions(ctx, args.sessionId))?.candidates[0] ?? null;
+  },
+});
+
+/** The meaning ranker's input (#570): the eligible list plus the text to embed. */
+export const suggestionCandidates = internalQuery({
   args: { sessionId: v.id("sessions") },
   returns: v.union(
     v.null(),
-    v.object({
-      xolacerProfileId: v.id("emotional_profiles"),
-      displayName: v.string(),
-      photoUrl: v.optional(v.string()),
-      specialties: v.array(specialtyValidator),
-      specialty: specialtyValidator,
-      rating: v.optional(v.number()),
-      ratingCount: v.number(),
-    }),
+    v.object({ rawInput: v.optional(v.string()), candidates: v.array(suggestionValidator) }),
   ),
   handler: async (ctx, args) => {
-    if (!chatEnabled()) return null;
-
-    // Null, never throw, when the session isn't this user's or is gone. The
-    // caller is the session-end close phase, which reads `sessionId` from a
-    // route param and renders inside no error boundary — a throw there takes
-    // the whole screen down.
-    const { profile } = await requireAuth(ctx);
-    const session = await ctx.db.get("sessions", args.sessionId);
-    if (!session || session.emotionalProfileId !== profile._id) return null;
-
-
-    const metadata = await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-      .unique();
-    const specialty = metadata?.suggestedSpecialty;
-    if (!specialty) return null;
-
-    // The stored verdict only ever saw the first input. Refinement turns are
-    // deliberately not re-classified (ai/clarify.ts: "Skips moderation +
-    // classification"), so anything the user added afterwards has been through
-    // no safeguard and no classifier — and the specialty above predates it.
-    // Suggesting on it would route someone to a volunteer on the strength of a
-    // verdict that never read what they last said.
-    // Bounded by design: a session has at most MAX_TURNS (2) refinement turns.
-    const turns = await ctx.db
-      .query("session_turns")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-      .take(4);
-    if (turns.some((turn) => turn.userInput)) return null;
-
-    // `specialties` is an array field, so it can't be indexed — the specialty
-    // filter has to run in memory, which means the scan feeding it must not be
-    // truncated first. A prefix would silently hide declaring xolacers the
-    // moment the roster outgrew it, and the failure looks like "no suggestion"
-    // rather than an error. Bounded in practice by roster size: this is the
-    // directory, a curated set.
-    // ponytail: full active-roster scan; needs a denormalized
-    // specialty->xolacer index if the roster reaches the low thousands.
-    const declaring: Doc<"xolacer_profiles">[] = [];
-    for await (const xolacer of ctx.db
-      .query("xolacer_profiles")
-      .withIndex("by_complete_and_active", (q) =>
-        q.eq("complete", true).eq("active", true),
-      )) {
-      if (xolacer.emotionalProfileId === profile._id) continue;
-      if (!xolacer.specialties?.includes(specialty)) continue;
-      if (!meetsRatingFloor(xolacer)) continue;
-      declaring.push(xolacer);
-      if (declaring.length >= MAX_SUGGESTION_CANDIDATES) break;
-    }
-
-    // One room read for the whole candidate set — see presentProfileIds.
-    const present = await presentProfileIds(ctx);
-
-    const candidates = [];
-    for (const xolacer of declaring) {
-      // Exact pair lookup, not a scan of this user's rows: a past decline or
-      // an expired request must not come back dressed as a fresh
-      // recommendation, and a capped scan would eventually miss one. This is
-      // what by_user_and_xolacer exists for.
-      const { forward, reverse } = await loadPairRows(
-        ctx,
-        profile._id,
-        xolacer.emotionalProfileId,
-      );
-      if (forward) continue;
-
-      if (isPairBlocked(forward, reverse)) continue;
-      const openCount = await countOpen(ctx, xolacer.emotionalProfileId);
-      if (!xolacerAvailable(xolacer, openCount)) continue;
-      candidates.push({
-        xolacerProfileId: xolacer.emotionalProfileId,
-        openCount,
-        present: present.has(xolacer.emotionalProfileId),
-        xolacer,
-      });
-    }
-
-    const [best] = rankSuggestionCandidates(candidates, args.sessionId);
-    if (!best) return null;
-    return {
-      xolacerProfileId: best.xolacerProfileId,
-      displayName: best.xolacer.displayName ?? "Xolacer",
-      photoUrl: best.xolacer.photoUrl,
-      specialties: best.xolacer.specialties ?? [],
-      specialty,
-      ...publicRating(best.xolacer),
-    };
+    return await eligibleSuggestions(ctx, args.sessionId);
   },
 });
 
@@ -2122,6 +2148,7 @@ export const upsertMyXolacerProfile = mutation({
     const existing = await getXolacerProfileByProfileId(ctx, profile._id);
     if (existing) {
       await ctx.db.patch("xolacer_profiles", existing._id, { ...args, updatedAt: Date.now() });
+      await reindexXolacer(ctx, profile._id);
       return null;
     }
     await ctx.db.insert("xolacer_profiles", {
@@ -2202,6 +2229,7 @@ export const publishProfile = mutation({
       throw new Error("Profile is incomplete");
     }
     await ctx.db.patch("xolacer_profiles", xolacer._id, { complete: true, updatedAt: Date.now() });
+    await reindexXolacer(ctx, profile._id);
     return null;
   },
 });
@@ -2225,9 +2253,15 @@ export const setXolacerActive = mutation({
     const xolacer = await getXolacerProfileByProfileId(ctx, profile._id);
     if (!xolacer) throw new Error("No xolacer profile");
     await ctx.db.patch("xolacer_profiles", xolacer._id, { active: args.active, updatedAt: Date.now() });
+    await reindexXolacer(ctx, profile._id);
     return null;
   },
 });
+
+/** Re-index after any change to what's embedded or whether they may be suggested. */
+async function reindexXolacer(ctx: MutationCtx, emotionalProfileId: Id<"emotional_profiles">) {
+  await ctx.scheduler.runAfter(0, internal.ai.xolacers.embed.indexXolacer, { emotionalProfileId });
+}
 
 // ============================================================
 // Lifecycle sweep (cron)

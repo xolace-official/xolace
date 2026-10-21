@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { EaseView } from "react-native-ease/uniwind";
-import { useQuery } from "convex/react";
+import { useAction, useConvexAuth } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { usePostHog } from "posthog-react-native";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -14,7 +15,7 @@ import { playSoftPress } from "@/src/lib/haptics";
 
 /**
  * How long the close slot stays empty waiting for a suggestion. Long enough
- * that a normal round-trip lands inside it, short enough that a stalled query
+ * that a normal round-trip lands inside it, short enough that a stalled call
  * doesn't cost the user their offer.
  */
 const SUGGESTION_WAIT_MS = 2000;
@@ -41,10 +42,25 @@ type Props = {
 export const CloseOffer = ({ sessionId, variant }: Props) => {
   const router = useRouter();
   const posthog = usePostHog();
-  const suggestion = useQuery(
-    api.xolacerChat.sessionSuggestion,
-    sessionId ? { sessionId } : "skip",
-  );
+  // An action, not a query (#570): the session is re-embedded to rank on
+  // meaning and nothing is stored, so it is asked once rather than subscribed.
+  // A failure is "no suggestion", never a broken close.
+  // Waits for auth: unlike a query, an action fired before it won't re-run.
+  const { isAuthenticated } = useConvexAuth();
+  const fetchSuggestion = useAction(api.ai.xolacers.suggest.sessionSuggestion);
+  const [suggestion, setSuggestion] = useState<
+    FunctionReturnType<typeof api.ai.xolacers.suggest.sessionSuggestion> | undefined
+  >(undefined);
+  useEffect(() => {
+    if (!sessionId || !isAuthenticated) return;
+    let live = true;
+    fetchSuggestion({ sessionId })
+      .then((s) => live && setSuggestion(s))
+      .catch(() => live && setSuggestion(null));
+    return () => {
+      live = false;
+    };
+  }, [sessionId, isAuthenticated, fetchSuggestion]);
   const shownRef = useRef(false);
   const openPaywall = usePaywall((s) => s.open);
   // Moments 1, 4 and 5 all land here; which one (if any) is the policy
@@ -59,8 +75,8 @@ export const CloseOffer = ({ sessionId, variant }: Props) => {
     posthog.capture("xolacer_suggestion_shown", { variant });
   }, [suggestion, posthog, variant]);
 
-  // Bounds the hold. The slot stays empty while the suggestion query is in
-  // flight, but an unresolved query — offline, or auth not yet hydrated —
+  // Bounds the hold. The slot stays empty while the suggestion call is in
+  // flight, but an unresolved call — offline, or auth not yet hydrated —
   // would otherwise hold it empty forever and the user would be offered
   // nothing at all.
   const [waitedOut, setWaitedOut] = useState(false);
@@ -81,7 +97,7 @@ export const CloseOffer = ({ sessionId, variant }: Props) => {
   if (offer === "suggestion" && suggestion) {
     return (
       // Fades in on its own. The parent group has already animated by the time
-      // the query resolves, so without this the card snaps into place and
+      // the call resolves, so without this the card snaps into place and
       // shoves the button below it down — at the most fragile moment of the
       // flow. Arriving is the point; a swap that pops reads as a glitch.
       <EaseView

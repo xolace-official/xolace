@@ -143,7 +143,11 @@ export async function finalizePurge(
     .query("xolacer_profiles")
     .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
     .unique();
-  if (xolacerProfile) await ctx.db.delete("xolacer_profiles", xolacerProfile._id);
+  if (xolacerProfile) {
+    await ctx.db.delete("xolacer_profiles", xolacerProfile._id);
+    // Their bio leaves the meaning index too (#570): no row → removed.
+    await ctx.scheduler.runAfter(0, internal.ai.xolacers.embed.indexXolacer, { emotionalProfileId: profileId });
+  }
 
   // Stream-hosted chat content is external — the row deletes above don't
   // reach it. Fail-open action: logs and continues on Stream outage so a

@@ -134,8 +134,8 @@ export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | n
       };
     case "xolacer": {
       // Only the ranker's specialty is stored — never a person (privacy, see
-      // `xolacerChat.sessionSuggestion`). The roster filtered to it is where
-      // the person gets picked.
+      // `ai/xolacers/suggest.sessionSuggestion`). The roster filtered to it is
+      // the fallback when no one is suggested (`use-xolacer-twig-href.ts`).
       const specialty = (twig.params as { specialty?: string } | null)?.specialty;
       // `t` makes a repeat tap re-apply the filter even when nothing else changed.
       // `stepId` rides along to the profile so a sent request tends the twig.

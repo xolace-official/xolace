@@ -14,6 +14,7 @@ import { trackLibrary } from "@/src/features/library/analytics";
 import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
 import { playSoftPress, playTextureSelect } from "@/src/lib/haptics";
 import { twigBrowseHref, twigHref, twigSlug, type Twig } from "../twig-presentation";
+import { useXolacerTwigHref } from "../use-xolacer-twig-href";
 import { KindlingTrail } from "./kindling-trail";
 import { TwigSheet } from "./twig-sheet";
 
@@ -40,6 +41,7 @@ export function KindlingScreen() {
   const skipStep = useMutation(api.paths.skipStep);
   const completeStep = useMutation(api.paths.completeStep);
   const dismiss = useMutation(api.paths.dismiss);
+  const xolacerTwigHref = useXolacerTwigHref();
   const [confirmDismiss, setConfirmDismiss] = useState(false);
   const [openId, setOpenId] = useState<Twig["_id"]>();
   const [sheetHeight, setSheetHeight] = useState<number>();
@@ -67,7 +69,7 @@ export function KindlingScreen() {
       }
       return;
     }
-    const href = twigHref(twig, kindling.sessionId);
+    const href = twig.kind === "xolacer" ? await xolacerTwigHref(twig, kindling.sessionId) : twigHref(twig, kindling.sessionId);
     if (!href) {
       toast.show({ label: "Not quite ready", description: "Playback is on its way." });
       return;

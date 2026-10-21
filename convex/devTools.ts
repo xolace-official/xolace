@@ -223,6 +223,7 @@ export const seedXolacer = internalMutation({
       updatedAt: Date.now(),
     };
 
+    await ctx.scheduler.runAfter(0, internal.ai.xolacers.embed.indexXolacer, { emotionalProfileId });
     if (existing) {
       await ctx.db.patch("xolacer_profiles", existing._id, fields);
       return emotionalProfileId;

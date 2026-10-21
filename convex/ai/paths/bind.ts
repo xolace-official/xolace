@@ -47,9 +47,9 @@ export interface BindEntry {
  * overlap it replaced (ADR 0021). One floor per twig type, since each
  * content type's text sits differently against a session's.
  * ponytail: provisional; tune from `path_generated.readTopScore` and
- * `mirror_delivered.exerciseTopScore`.
+ * `mirror_delivered.exerciseTopScore`; the xolacer floor has no logged score yet.
  */
-export const SIMILARITY_FLOOR = { read: 0.3, exercise: 0.3 } as const;
+export const SIMILARITY_FLOOR = { read: 0.3, exercise: 0.3, xolacer: 0.3 } as const;
 
 /** Similarity in 0.05 bands, so the history rules still have ties to break (ADR 0021). */
 export const similarityBand = (score: number) => Math.floor(score * 20);
@@ -86,7 +86,7 @@ export function bindTwig(
     case "bridge":
       return { exercise: "trusted-bridge" };
     case "xolacer":
-      // The person is chosen at read time by `xolacerChat.sessionSuggestion`
+      // The person is chosen at read time by `ai/xolacers/suggest.sessionSuggestion`
       // and never stored — only the ranker's resolved specialty travels.
       return u.suggestedSpecialty ? { specialty: u.suggestedSpecialty } : null;
     default:

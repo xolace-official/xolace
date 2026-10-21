@@ -30,7 +30,7 @@ for. So similarity decides order and never eligibility.
   (re-offer last stretch's tended slug, demote skipped slugs) still have ties
   to break. The binder stays pure: scores are passed in.
 - The xolacer is ranked in a read-time action that re-embeds the session and
-  stores nothing, keeping the never-stored rule (`xolacerChat.sessionSuggestion`).
+  stores nothing, keeping the never-stored rule (`ai/xolacers/suggest.sessionSuggestion`).
   The cost is that the suggestion is no longer reactive.
 - Kindling re-embeds the session with the model constant from `convex/rag.ts`
   rather than storing the vector. Exercise matching reuses the mirror's vector.

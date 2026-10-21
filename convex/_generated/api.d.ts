@@ -75,6 +75,8 @@ import type * as ai_talk_turn from "../ai/talk/turn.js";
 import type * as ai_transcribe from "../ai/transcribe.js";
 import type * as ai_tts from "../ai/tts.js";
 import type * as ai_ventAcknowledge from "../ai/ventAcknowledge.js";
+import type * as ai_xolacers_embed from "../ai/xolacers/embed.js";
+import type * as ai_xolacers_suggest from "../ai/xolacers/suggest.js";
 import type * as avatars from "../avatars.js";
 import type * as browse from "../browse.js";
 import type * as chatNotifications from "../chatNotifications.js";
@@ -221,6 +223,7 @@ import type * as users from "../users.js";
 import type * as vent from "../vent.js";
 import type * as xolaceChannelNotifications from "../xolaceChannelNotifications.js";
 import type * as xolacerChat from "../xolacerChat.js";
+import type * as xolacers_embed from "../xolacers/embed.js";
 
 import type {
   ApiFromModules,
@@ -296,6 +299,8 @@ declare const fullApi: ApiFromModules<{
   "ai/transcribe": typeof ai_transcribe;
   "ai/tts": typeof ai_tts;
   "ai/ventAcknowledge": typeof ai_ventAcknowledge;
+  "ai/xolacers/embed": typeof ai_xolacers_embed;
+  "ai/xolacers/suggest": typeof ai_xolacers_suggest;
   avatars: typeof avatars;
   browse: typeof browse;
   chatNotifications: typeof chatNotifications;
@@ -442,6 +447,7 @@ declare const fullApi: ApiFromModules<{
   vent: typeof vent;
   xolaceChannelNotifications: typeof xolaceChannelNotifications;
   xolacerChat: typeof xolacerChat;
+  "xolacers/embed": typeof xolacers_embed;
 }>;
 
 /**
