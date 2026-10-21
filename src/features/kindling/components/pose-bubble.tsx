@@ -4,14 +4,14 @@ import Svg, { Circle } from "react-native-svg";
 
 import { TWIG_PRESENTATION } from "@/src/features/kindling/twig-presentation";
 import {
-  CLEAN_POSES, POSE, RING_ACCENT, RING_ARC, type TwigKind,
+  CLEAN_POSES, POSE, RING_ACCENT, RING_ARC, type AnnouncementKind,
 } from "@/src/features/kindling/announcement-poses";
 
 /**
  * One Flux pose in a tinted circle with a decorative partial ring.
  * Purely illustrative: an image to screen readers, never a tap target.
  */
-export function PoseBubble({ kind, size }: { kind: TwigKind; size: number }) {
+export function PoseBubble({ kind, size }: { kind: AnnouncementKind; size: number }) {
   const stroke = Math.max(3, size * 0.05);
   const inset = stroke * 1.8;
   const r = (size - stroke) / 2;

@@ -1,6 +1,7 @@
 import type { SupportNeed } from "../providers/anthropic";
 import type { PremiumTier } from "../../lib/premium";
 import type { CatalogEntry } from "./catalog";
+import { isTryThis } from "./tryThis";
 import type { Compounding } from "../../compounding/stretches";
 import type { KindRecord } from "./history";
 
@@ -54,6 +55,7 @@ export type DropReason =
   | "not_object"
   | "unknown_action_type"
   | "duplicate_action_type"
+  | "second_try_this"
   | "why_missing"
   | "why_length"
   | "why_sentences"
@@ -117,6 +119,7 @@ Pick exactly ${MAX_TWIGS} actions from the catalog below that fit this person ri
 - Do NOT write more than one sentence, and do NOT stack clauses to smuggle a second one in.
 - Do NOT pick the same action twice, and do NOT pick an action that is not in the catalog.
 - Do NOT pick two spoken support-audio actions (\`audio_topic_*\`) together, and do NOT pick two instrumental music actions (\`music_topic_*\`) together — vary it: one spoken and one music is good, or pair either with breathing or xolacer.
+- Do NOT pick more than one off-app action (\`try_*\`). If you pick one, prefer one their past offers show they tended; otherwise fall back to general good practice for what this session holds.
 - Do NOT pick "xolacer" unless they seem to want a person rather than a tool.
 - Do NOT mention Xolace, the app, the model, or the catalog in the why line.
 - Do NOT mention how long something has weighed on them, any number, or what is "usual" for them in the why line; "weighing on them lately" is background for your pick only.
@@ -243,6 +246,11 @@ export function parsePathsResponse(
     }
     if (seen.has(key)) {
       dropped.push({ actionType: key, reason: "duplicate_action_type" });
+      continue;
+    }
+    // At most one try-this twig per kindling (#567).
+    if (isTryThis(key) && kept.some((t) => isTryThis(t.actionType))) {
+      dropped.push({ actionType: key, reason: "second_try_this" });
       continue;
     }
     const whyReason = validateWhy(why);

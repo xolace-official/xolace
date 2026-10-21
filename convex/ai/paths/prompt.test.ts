@@ -46,6 +46,15 @@ describe("parsePathsResponse", () => {
     expect(dropped[0].reason).toBe("duplicate_action_type");
   });
 
+  it("keeps one try-this twig and drops a second (#567)", () => {
+    const { twigs, dropped } = parsePathsResponse(
+      JSON.stringify([entry("try_brisk_walk", 1), entry("breathing", 2), entry("try_screens_off_hour", 3)]),
+      CATALOG,
+    );
+    expect(twigs.map((t) => t.actionType)).toEqual(["try_brisk_walk", "breathing"]);
+    expect(dropped).toEqual([{ actionType: "try_screens_off_hour", reason: "second_try_this" }]);
+  });
+
   it("drops a why in the clinical register", () => {
     const { dropped } = parsePathsResponse(
       JSON.stringify([

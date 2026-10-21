@@ -3,6 +3,7 @@ import type { QueryCtx } from "../../_generated/server";
 import { readRow } from "../../library/reads";
 import { MAX_TWIGS } from "./prompt";
 import { slugKey } from "./bind";
+import { isTryThis } from "./tryThis";
 
 /**
  * Kindling history (#565, decided in #547): the person's own past twigs,
@@ -157,15 +158,18 @@ export async function loadHistory(
  * The hard rule: drop each skipped-twice type from this generation's
  * catalog, but never below MAX_TWIGS bindable types — history can't cause a
  * no-ship. The next tend resets it (it's read fresh every generation).
+ * The try-this family is one slot: a kindling holds at most one (#567).
  */
 export function withhold<T extends { actionType: string }>(
   catalog: readonly T[],
   skippedTwice: readonly string[],
 ): { catalog: T[]; withheld: string[] } {
   const withheld: string[] = [];
+  const slots = (without: string[]) =>
+    new Set(catalog.filter((c) => !without.includes(c.actionType)).map((c) => (isTryThis(c.actionType) ? "try" : c.actionType))).size;
   for (const type of skippedTwice) {
-    if (catalog.length - withheld.length <= MAX_TWIGS) break;
-    if (catalog.some((c) => c.actionType === type)) withheld.push(type);
+    if (!catalog.some((c) => c.actionType === type)) continue;
+    if (slots([...withheld, type]) >= MAX_TWIGS) withheld.push(type);
   }
   return { catalog: catalog.filter((c) => !withheld.includes(c.actionType)), withheld };
 }

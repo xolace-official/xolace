@@ -304,6 +304,26 @@ describe("ai/paths/generate.run", () => {
     expect(offered).not.toContain("music_topic_");
   });
 
+  it("offers try-this on an unflagged session, never on one safeguard flagged (#567)", async () => {
+    stub.reply = JSON.stringify([twig("try_brisk_walk", 1), twig("breathing", 2), twig("bridge", 3), twig("xolacer", 4)]);
+    const user = await asNewUser();
+    await generate(user, await seedQualifying(user));
+    expect(String(stub.requests[0].messages[0].content)).toContain("- try_brisk_walk:");
+
+    const flagged = await seedSession(user.root, user.profileId, { state: "confirmed" });
+    await seedMetadata(user.root, flagged, user.profileId, {
+      supportNeed: "light",
+      suggestedSpecialty: "burnout",
+      safeguardLevel: "gentle",
+    });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await generate(user, flagged);
+    expect(String(stub.requests[1].messages[0].content)).not.toContain("try_");
+    const path = (await readPaths(user)).find((p) => p.sessionId === flagged);
+    const types = (await readSteps(user, path!._id)).map((s) => s.actionType);
+    expect(types.sort()).toEqual(["breathing", "bridge", "xolacer"]);
+  });
+
   it("writes no kindling and no notification when every twig is unbindable", async () => {
     // No catalogue rows and no specialty: only breathing can bind, and the
     // model returns two content twigs anyway.
@@ -597,6 +617,33 @@ describe("the active-kindling screen API (#333)", () => {
       [2, "xolacer", "pending"],
       [3, "bridge", "pending"],
     ]);
+  });
+
+  it("a try-this twig reaches only clients that ask for it, and both controls settle it (#567)", async () => {
+    stub.reply = JSON.stringify([twig("try_brisk_walk", 1), twig("breathing", 2), twig("bridge", 3)]);
+    const user = await asNewUser();
+    await generate(user, await seedQualifying(user));
+
+    const old = await user.t.query(api.paths.getActive, { withRead: true });
+    expect(old?.twigs.map((t) => t.kind)).toEqual(["breathing", "bridge"]);
+
+    const active = await user.t.query(api.paths.getActive, { withRead: true, withTry: true });
+    const tryThis = active!.twigs[0];
+    expect(tryThis).toMatchObject({
+      kind: "try",
+      title: "A brisk walk",
+      detail: "Go for a 15–20 minute brisk walk today.",
+    });
+    await user.t.mutation(api.paths.completeStep, { stepId: tryThis._id }); // "I did this"
+    expect((await user.t.query(api.paths.getActive, { withTry: true }))?.twigs[0].state).toBe("done");
+
+    await generate(user, await seedQualifying(user));
+    const next = await user.t.query(api.paths.getActive, { withTry: true });
+    await user.t.mutation(api.paths.skipStep, { stepId: next!.twigs[0]._id }); // "Not for me"
+    expect((await user.t.query(api.paths.getActive, { withTry: true }))?.twigs[0]).toMatchObject({
+      kind: "try",
+      state: "skipped",
+    });
   });
 
   it("getActive is null for a free user even when a kindling row exists", async () => {

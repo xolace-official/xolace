@@ -13,6 +13,7 @@ import {
 } from "../providers/anthropic";
 import { bindTwig } from "./bind";
 import { CATALOG } from "./catalog";
+import { isTryThis } from "./tryThis";
 import { withhold } from "./history";
 import type { GenerateContext } from "./generateDb";
 import {
@@ -86,10 +87,14 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
   }
 
   // Offer only what fits this grade and can bind for this session, less any
-  // type they keep passing on (never below MAX_TWIGS, #565).
+  // type they keep passing on (never below MAX_TWIGS, #565). No advice after
+  // a session safeguard flagged at any level (#567).
+  const { safeguardLevel, supportNeed } = context.understanding;
+  const flagged = safeguardLevel !== undefined && safeguardLevel !== "none";
   const bindable = CATALOG.filter(
     (c) =>
-      c.supportNeedFit.includes(context.understanding.supportNeed as "light" | "active") &&
+      c.supportNeedFit.includes(supportNeed as "light" | "active") &&
+      !(flagged && isTryThis(c.actionType)) &&
       bind(c.actionType, context) !== null,
   );
   const { catalog, withheld } = withhold(bindable, context.history.skippedTwice);

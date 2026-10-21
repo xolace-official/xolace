@@ -34,6 +34,11 @@ describe("bindTwig", () => {
     expect(bindTwig("read", u({ primaryEmotion: "love" }), [], entries)).toBeNull();
   });
 
+  it("a catalogued try-this twig binds without content; an uncatalogued one never binds (#567)", () => {
+    expect(bind("try_brisk_walk", [])).toEqual({ exercise: "try_brisk_walk" });
+    expect(bind("try_quit_your_job", [])).toBeNull();
+  });
+
   it("bridge binds without content", () => {
     expect(bind("bridge", [])).toEqual({ exercise: "trusted-bridge" });
   });

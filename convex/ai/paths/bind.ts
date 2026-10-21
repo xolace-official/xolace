@@ -1,5 +1,6 @@
 import type { Doc } from "../../_generated/dataModel";
 import { CATALOG_BY_KEY } from "./catalog";
+import { isTryThis } from "./tryThis";
 import { freeEmotionFamily } from "../../lib/understandingVocab";
 
 /**
@@ -75,6 +76,8 @@ export function bindTwig(
       // and never stored — only the ranker's resolved specialty travels.
       return u.suggestedSpecialty ? { specialty: u.suggestedSpecialty } : null;
     default:
+      // Try-this (#567): the curated step is the content; only a catalogued one exists.
+      if (isTryThis(actionType)) return CATALOG_BY_KEY.has(actionType) ? { exercise: actionType } : null;
       return bindTrack(actionType, u, tracks);
   }
 }

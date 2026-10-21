@@ -36,8 +36,9 @@ export function KindlingScreen() {
     headerBackButtonDisplayMode: "minimal" as const,
   };
 
-  const kindling = useQuery(api.paths.getActive, { withRead: true });
+  const kindling = useQuery(api.paths.getActive, { withRead: true, withTry: true });
   const skipStep = useMutation(api.paths.skipStep);
+  const completeStep = useMutation(api.paths.completeStep);
   const dismiss = useMutation(api.paths.dismiss);
   const [confirmDismiss, setConfirmDismiss] = useState(false);
   const [openId, setOpenId] = useState<Twig["_id"]>();
@@ -54,9 +55,18 @@ export function KindlingScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kindling?._id]);
 
-  const handleBegin = (twig: Twig) => {
+  const handleBegin = async (twig: Twig) => {
     if (!kindling) return;
     playSoftPress();
+    // Try-this happens away from the app: "I did this" is the tend (#567).
+    if (twig.kind === "try") {
+      try {
+        await completeStep({ stepId: twig._id });
+      } catch {
+        toast.show({ label: "Couldn't mark that", description: "Try again in a moment." });
+      }
+      return;
+    }
     const href = twigHref(twig, kindling.sessionId);
     if (!href) {
       toast.show({ label: "Not quite ready", description: "Playback is on its way." });

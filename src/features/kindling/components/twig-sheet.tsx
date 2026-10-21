@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import { Button } from "heroui-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
+import { cn } from "@/src/lib/utils";
 import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
 import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
 import { TWIG_PRESENTATION, twigBrowseHref, type Twig } from "../twig-presentation";
@@ -60,6 +61,11 @@ export function TwigSheet({
           style={{ width: 56, height: 56, opacity: skipped ? 0.4 : 0.8 }}
         />
       </View>
+      {twig.detail ? (
+        <AppText className={cn("mt-2 text-[15px] leading-relaxed", skipped ? "text-muted" : "text-foreground")}>
+          {twig.detail}
+        </AppText>
+      ) : null}
       <AppText className="mt-2 text-[15px] leading-relaxed text-muted">{removeEmDash(twig.why)}</AppText>
       {browsable && !done && !skipped && (
         <Pressable
