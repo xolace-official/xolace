@@ -76,7 +76,10 @@ export const chatCompletions = httpAction(async (ctx, request) => {
   const phrase = phrasePeak(words);
   // Raced against the first chunk below; never rejects (unavailable = no verdict).
   // A loose phrase floors at elevated; moderation can still raise it to crisis.
-  const moderation = words && phrase?.level !== "crisis" ? moderateInput(words).then(moderationPeak) : null;
+  const moderation =
+    words && phrase?.level !== "crisis"
+      ? moderateInput(words).then((r) => (mark("moderationDone"), moderationPeak(r)))
+      : null;
   // Started before the memory read, awaited once the model call is in flight:
   // costs no TTFT. A failed write fails closed: no turn the transcript can't hold.
   const bound = ctx
@@ -151,6 +154,8 @@ export const chatCompletions = httpAction(async (ctx, request) => {
       closing,
       safety: peak?.level ?? null,
       crisisLine,
+      // Sizes only, never the text: did the preload and recall reach this turn?
+      memory: memory ? { preloadChars: memory.memory.length, recallChars: memory.recall.length, name: memory.name } : null,
       bodyKeys: Object.keys(body),
       audioTags,
       toolCalls,
