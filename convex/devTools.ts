@@ -311,6 +311,12 @@ export const seedKindling = internalMutation({
         why: "Feeling alone kept coming up. A xolacer who's felt the same is around.",
         params: { specialty: "burnout" },
       },
+      {
+        actionType: "try_brisk_walk",
+        order: 4,
+        why: "You said you'd felt stuck indoors all week, so this one happens outside.",
+        params: { exercise: "try_brisk_walk" },
+      },
     ];
     for (const t of twigs) {
       await ctx.db.insert("path_steps", { pathId, ...t, state: "pending" });
