@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { query, mutation, internalQuery, internalMutation, QueryCtx, MutationCtx } from "./_generated/server";
 import { Doc, Id } from "./_generated/dataModel";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
+import { internal } from "./_generated/api";
 import { matchExercise } from "./exercises/match";
 
 /**
@@ -33,7 +34,7 @@ async function computeSwapOptions(
     userLanguageTags: metadata.userLanguageTags,
     entryType: session.entryType ?? "open_prompt",
     confirmationState: "confirmed",
-  });
+  }, session.exerciseSimilarity);
 
   const currentId = session.swappedExerciseIds?.length
     ? session.swappedExerciseIds[session.swappedExerciseIds.length - 1]
@@ -185,7 +186,7 @@ export const matchForSession = query({
       userLanguageTags: metadata.userLanguageTags,
       entryType: session.entryType ?? "open_prompt",
       confirmationState: "confirmed",
-    });
+    }, session.exerciseSimilarity);
 
     const byTitle = new Map(matching.map((e) => [e.title, e]));
     const ordered: typeof matching = [];
@@ -277,12 +278,14 @@ export const setMatched = internalMutation({
   args: {
     sessionId: v.id("sessions"),
     matchedExerciseId: v.id("exercises"),
+    exerciseSimilarity: v.optional(v.record(v.string(), v.number())),
   },
   handler: async (ctx, args) => {
     const session = await ctx.db.get("sessions", args.sessionId);
     if (!session) return;
     await ctx.db.patch("sessions", args.sessionId, {
       matchedExerciseId: args.matchedExerciseId,
+      exerciseSimilarity: args.exerciseSimilarity,
     });
   },
 });
@@ -329,5 +332,6 @@ export const seed = internalMutation({
         });
       }
     }
+    await ctx.scheduler.runAfter(0, internal.ai.exercises.embed.indexExercises, {});
   },
 });

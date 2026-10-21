@@ -1,4 +1,5 @@
 import { freeEmotionFamily } from "../lib/understandingVocab";
+import { SIMILARITY_FLOOR } from "../ai/paths/bind";
 
 export type MatchInput = {
   primaryEmotion: string;
@@ -50,12 +51,18 @@ const ANGER_TAGS = new Set([
   "violated",
 ]);
 
+/** Best-chunk similarity to tonight's text by exercise title (#569); a title may be missing. */
+export type ExerciseSimilarity = Record<string, number>;
+
 function hasTag(tags: string[], set: Set<string>): boolean {
   return tags.some((t) => set.has(t.toLowerCase()));
 }
 
-/** Returns ranked exercises (primary + fallbacks). Never returns an empty list. */
-export function matchExercise(input: MatchInput): ExerciseTitle[] {
+/**
+ * Returns ranked exercises (primary + fallbacks). Never returns an empty list.
+ * Every step is a rule (ADR 0021); only the catch-all ranks on `similarity`.
+ */
+export function matchExercise(input: MatchInput, similarity?: ExerciseSimilarity): ExerciseTitle[] {
   const { primaryEmotion, granularLabel, intensity, userLanguageTags, confirmationState } = input;
   // Family, so a finer emotion (stress) steers like its parent (anxiety) — ADR 0018,
   // and a free-text granular label (worried) like the emotion it means (#536).
@@ -86,5 +93,12 @@ export function matchExercise(input: MatchInput): ExerciseTitle[] {
     return ["speak_to_it", "make_room", "let_it_land", "reset", "find_your_edges", "soften_toward_it"];
   }
 
-  return ["let_it_land", "make_room", "soften_toward_it", "find_your_edges", "reset", "speak_to_it"];
+  const order: ExerciseTitle[] = ["let_it_land", "make_room", "soften_toward_it", "find_your_edges", "reset", "speak_to_it"];
+  if (!similarity) return order;
+  // Above the floor by meaning, closest first; the rest keep today's order.
+  // Raw scores, no bands: exercises have no history rules to break ties.
+  const close = order
+    .filter((t) => (similarity[t] ?? -1) >= SIMILARITY_FLOOR.exercise)
+    .sort((a, b) => similarity[b]! - similarity[a]!);
+  return [...close, ...order.filter((t) => !close.includes(t))];
 }

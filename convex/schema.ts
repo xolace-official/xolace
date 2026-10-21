@@ -614,6 +614,11 @@ export default defineSchema({
     // Exercises swapped into during the session (append-only, bounded ≤2).
     swappedExerciseIds: v.optional(v.array(v.id("exercises"))),
 
+    // Each exercise's similarity to the session text at mirror time (#569),
+    // keyed on title, so the swap sheet ranks exactly as the match did.
+    // Absent = no vector (first session, embed or search failed).
+    exerciseSimilarity: v.optional(v.record(v.string(), v.number())),
+
     // Claude-filled slot values for the matched exercise (e.g. user_phrase).
     exerciseSlots: v.optional(v.record(v.string(), v.string())),
 

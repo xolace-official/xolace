@@ -87,4 +87,29 @@ describe("matchExercise", () => {
     const all = ["let_it_land", "find_your_edges", "make_room", "speak_to_it", "soften_toward_it", "reset"];
     expect(result.sort()).toEqual(all.sort());
   });
+
+  describe("catch-all ranks on meaning (#569)", () => {
+    const today = ["let_it_land", "make_room", "soften_toward_it", "find_your_edges", "reset", "speak_to_it"];
+
+    it("puts the closest exercise above the floor first", () => {
+      const ranked = matchExercise(base, { speak_to_it: 0.6, find_your_edges: 0.45, let_it_land: 0.1 });
+      expect(ranked).toEqual(["speak_to_it", "find_your_edges", "let_it_land", "make_room", "soften_toward_it", "reset"]);
+    });
+
+    it("keeps today's order when nothing clears the floor", () => {
+      expect(matchExercise(base, { speak_to_it: 0.29, reset: 0.2 })).toEqual(today);
+    });
+
+    it("keeps today's order with no vector", () => {
+      expect(matchExercise(base, undefined)).toEqual(today);
+    });
+
+    it("never lets meaning reorder a safety or emotion step", () => {
+      const close = { speak_to_it: 0.9, make_room: 0.8 };
+      expect(matchExercise({ ...base, intensity: 9 }, close)).toEqual(matchExercise({ ...base, intensity: 9 }));
+      expect(matchExercise({ ...base, confirmationState: "gave_up" }, close)[0]).toBe("reset");
+      expect(matchExercise({ ...base, primaryEmotion: "numbness" }, close)[0]).toBe("find_your_edges");
+      expect(matchExercise({ ...base, primaryEmotion: "shame" }, close)[0]).toBe("soften_toward_it");
+    });
+  });
 });

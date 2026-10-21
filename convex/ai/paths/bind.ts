@@ -46,9 +46,10 @@ export interface BindEntry {
  * Below this a match in meaning doesn't count and binding falls back to the
  * overlap it replaced (ADR 0021). One floor per twig type, since each
  * content type's text sits differently against a session's.
- * ponytail: provisional; tune from `path_generated.readTopScore`.
+ * ponytail: provisional; tune from `path_generated.readTopScore` and
+ * `mirror_delivered.exerciseTopScore`.
  */
-export const SIMILARITY_FLOOR = { read: 0.3 } as const;
+export const SIMILARITY_FLOOR = { read: 0.3, exercise: 0.3 } as const;
 
 /** Similarity in 0.05 bands, so the history rules still have ties to break (ADR 0021). */
 export const similarityBand = (score: number) => Math.floor(score * 20);
