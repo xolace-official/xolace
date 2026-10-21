@@ -27,7 +27,7 @@ function Talk({ reopen }: { reopen?: { sessionId: Id<"sessions">; thread: Thread
   // Once, on open.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => void (reopen && talk.start()), []);
-  const footer = !talk.connected && !reopen ? (
+  const footer = !talk.connected && !talk.wasLive && !reopen ? (
     <ConsentCard talk={talk} />
   ) : talk.error ? (
     <AppText className="text-center text-xs text-danger">{talk.error}</AppText>

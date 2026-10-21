@@ -115,8 +115,7 @@ export function useReadSignals({
     () => scrollY.get() >= endAt,
     (now, was) => {
       if (now && !was) scheduleOnRN(setReachedEnd, true);
-    },
-    [endAt],
+    }
   );
 
   // Finished once the end was reached and the dwell has run, whichever comes last.

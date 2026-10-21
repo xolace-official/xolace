@@ -39,6 +39,8 @@ export function useTalk(reopen?: { sessionId: Id<"sessions">; thread: ThreadLine
   /** The talk's session, kept after it ends: help stays on screen (#599). */
   const [sessionId, setSessionId] = useState<Id<"sessions"> | null>(null);
   const [started, setStarted] = useState(false);
+  /** Connected at least once: the consent card stays down while the talk ends. */
+  const [wasLive, setWasLive] = useState(false);
   /** When the talk's time runs out, on this device's clock (#597). */
   const [endsAt, setEndsAt] = useState<number | null>(null);
   /** Seconds left when the clock shows: with the wrap-up cue, compressed to the talk's ceiling. */
@@ -61,6 +63,7 @@ export function useTalk(reopen?: { sessionId: Id<"sessions">; thread: ThreadLine
       if (await endTalk({ sessionId })) router.replace("/");
       else {
         setStarted(false);
+        setWasLive(false);
         setError("Nothing was said, so there's no mirror.");
       }
     } catch (e) {
@@ -70,10 +73,13 @@ export function useTalk(reopen?: { sessionId: Id<"sessions">; thread: ThreadLine
 
   const convo = useConversation({
     onConnect: ({ conversationId }) => {
+      setWasLive(true);
       if (sessionRef.current) attachConversation({ sessionId: sessionRef.current, conversationId }).catch(console.warn);
     },
     onDisconnect: () => void finish(),
     onError: (message) => {
+      // Teardown noise after the talk has ended isn't the person's problem.
+      if (!sessionRef.current) return;
       setError(message);
       // A talk that never connected goes back to the card, so it can be
       // retried; closing its session gives the reserved talk time back.
@@ -133,6 +139,7 @@ export function useTalk(reopen?: { sessionId: Id<"sessions">; thread: ThreadLine
     sessionId,
     started,
     connected,
+    wasLive,
     presence,
     isMuted,
     error,

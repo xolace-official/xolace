@@ -47,7 +47,7 @@ export function CircleProgress({
       animatedProgress.get() * 360,
     );
     return path.build();
-  }, [animatedProgress, size, strokeWidth]);
+  });
 
   const canvasStyle = { width: size, height: size };
 

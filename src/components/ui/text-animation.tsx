@@ -650,9 +650,7 @@ function TextAnimationCounting({
     () => Math.round(progress.value * factor) / factor,
     (current, previous) => {
       if (current !== previous) scheduleOnRN(setShown, current);
-    },
-    [factor]
-  );
+    });
 
   return (
     <Text

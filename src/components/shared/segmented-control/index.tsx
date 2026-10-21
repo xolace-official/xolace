@@ -133,7 +133,7 @@ const SegmentedControlIndicator = ({
       left: animate(activeMeasurements.x),
       opacity: 1,
     };
-  }, [activeMeasurements]);
+  });
 
   return <Animated.View className={cn('absolute', className)} style={[animatedStyle, style]} {...props} />;
 };
