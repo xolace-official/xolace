@@ -11,9 +11,9 @@ import { MAX_TWIGS } from "./prompt";
  * a type they keep passing on. Reads Understanding (`episodicMatchKeys`) +
  * Memory (`paths` / `path_steps` / `library_reads`); no model call.
  *
- * Outcomes (#544): tended (`done`) > ignored > skipped. A pending twig adds
- * nothing either way — ignored on a closed kindling, still open on the
- * active one.
+ * Outcomes (#544): tended (`done`) > ignored > skipped. Ignored (pending on
+ * a closed kindling) is neutral: it counts as offered, never as a skip. A
+ * twig still pending on the active kindling isn't counted at all.
  */
 
 /** One action type's own record; never compared across kinds. */
@@ -21,6 +21,7 @@ export interface KindRecord {
   actionType: string;
   tended: number;
   skipped: number;
+  ignored: number; // offered, left pending on a closed kindling
   helped: number; // tended reads the reader marked helped
 }
 
@@ -99,10 +100,15 @@ export async function loadHistory(
   const helpedSlugs = new Set<unknown>(); // one entry helps once, however often tended
   for (const path of await historyPool(ctx, profileId, matchKeys, now)) {
     for (const step of await stepsOf(ctx, path._id)) {
-      if (step.state === "pending") continue;
+      if (step.state === "pending" && path.status === "active") continue;
       const type = step.actionType;
+      const r = records.get(type) ?? { actionType: type, tended: 0, skipped: 0, ignored: 0, helped: 0 };
+      records.set(type, r);
+      if (step.state === "pending") {
+        r.ignored++;
+        continue;
+      }
       const verdict: Verdict = step.state === "done" ? "tended" : "skipped";
-      const r = records.get(type) ?? { actionType: type, tended: 0, skipped: 0, helped: 0 };
       if (verdict === "skipped") r.skipped++;
       else {
         r.tended++;
@@ -112,12 +118,14 @@ export async function loadHistory(
           r.helped++;
         }
       }
-      records.set(type, r);
       verdicts.set(type, [...(verdicts.get(type) ?? []), verdict]);
     }
   }
   return {
-    kinds: [...records.values()].sort((a, b) => (a.actionType < b.actionType ? -1 : 1)),
+    // A kind only ever ignored has no record: ignored adds nothing on its own.
+    kinds: [...records.values()]
+      .filter((r) => r.tended + r.skipped > 0)
+      .sort((a, b) => (a.actionType < b.actionType ? -1 : 1)),
     skippedTwice: [...verdicts]
       .filter(([, v]) => v[0] === "skipped" && v[1] === "skipped")
       .map(([type]) => type)

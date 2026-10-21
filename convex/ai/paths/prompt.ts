@@ -185,7 +185,7 @@ const compoundingPhrase = (c: PromptCompounding) =>
     .join(", ");
 
 function kindPhrase(r: KindRecord): string {
-  const offered = r.tended + r.skipped;
+  const offered = r.tended + r.skipped + r.ignored;
   const rate = r.tended > 0 ? `tended ${r.tended} of ${offered} offered` : `passed on ${r.skipped} of ${offered} offered`;
   return `- ${r.actionType}: ${rate}${r.helped > 0 ? `, said it helped ${r.helped}` : ""}`;
 }

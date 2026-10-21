@@ -968,12 +968,13 @@ describe("past outcomes shape the pick (#565)", () => {
 
   it("carries each kind's own rate; ignored and active-pending twigs add nothing", async () => {
     const user = await asNewUser();
+    await pastKindling(user, 7, [["breathing", "pending"]], { status: "dismissed" }); // ignored: offered, not a skip
     await pastKindling(user, 5, [["breathing", "done"], ["bridge", "skipped"], ["xolacer", "pending"]]);
     await pastKindling(user, 1, [["breathing", "done"], ["xolacer", "pending"]], { status: "active" });
     await pastKindling(user, 100, [["bridge", "done"]]); // outside 90 days
 
     const { prompt, props } = await captured(user, await seedQualifying(user));
-    expect(prompt).toContain("- breathing: tended 2 of 2 offered");
+    expect(prompt).toContain("- breathing: tended 2 of 3 offered");
     expect(prompt).toContain("- bridge: passed on 1 of 1 offered");
     expect(prompt).not.toMatch(/- xolacer: (tended|passed)/);
     expect(props.historyKinds).toEqual(["breathing", "bridge"]);
