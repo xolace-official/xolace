@@ -21,6 +21,7 @@ import {
   searchEpisodicMemory,
   type EpisodicSearch,
 } from "./helpers/episodicSearch";
+import { embedSessionText } from "./helpers/embedSessionText";
 import { applyAudioFence } from "./prompts/mirrorAudioTags";
 import { evaluateSafeguard, resolveSupportNeed } from "./safeguard";
 import { resolveMirrorTone } from "./mirrorPlan";
@@ -168,6 +169,7 @@ export const handleClarification = internalAction({
             )
           : null;
 
+      const profileId = session.emotionalProfileId;
       const [reclassified, episodic, moderationResult] = await Promise.all([
         classifierPrompt
           ? classifierCache
@@ -181,11 +183,13 @@ export const handleClarification = internalAction({
           : Promise.resolve(null),
         context.isFirstSession
           ? Promise.resolve({ matches: [] } as EpisodicSearch)
-          : searchEpisodicMemory(
-              ctx,
-              session.emotionalProfileId,
-              args.sessionId,
-              accumulatedInput,
+          : embedSessionText(accumulatedInput).then((vector) =>
+              searchEpisodicMemory(
+                ctx,
+                profileId,
+                args.sessionId,
+                vector,
+              ),
             ),
         addedText.length > 0
           ? moderationCache

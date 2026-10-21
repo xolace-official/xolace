@@ -30,6 +30,7 @@ import {
   searchEpisodicMemory,
   type EpisodicSearch,
 } from "./helpers/episodicSearch";
+import { embedSessionText } from "./helpers/embedSessionText";
 
 import type { SessionContext } from "./context";
 
@@ -139,6 +140,7 @@ export const generateMirror = internalAction({
       // from the user's personal namespace, matched raw-to-raw against
       // tonight's input. Best-effort — memory failing must never block
       // the mirror.
+      const profileId = session.emotionalProfileId;
       const [moderationResult, classification, episodic] =
         await Promise.all([
           moderationCache
@@ -150,11 +152,13 @@ export const generateMirror = internalAction({
           }),
           context.isFirstSession
             ? Promise.resolve({ matches: [] } as EpisodicSearch)
-            : searchEpisodicMemory(
-                ctx,
-                session.emotionalProfileId,
-                args.sessionId,
-                args.rawText,
+            : embedSessionText(args.rawText).then((vector) =>
+                searchEpisodicMemory(
+                  ctx,
+                  profileId,
+                  args.sessionId,
+                  vector,
+                ),
               ),
         ]);
       const episodicMatches = episodic.matches;

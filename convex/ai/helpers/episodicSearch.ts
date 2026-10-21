@@ -23,9 +23,12 @@ export type EpisodicSearch = {
 
 /**
  * Top-K episodic matches for the current input from the user's personal
- * namespace. Returns composite texts, newest-format
- * or metadata-only alike. Best-effort: any failure (no namespace yet,
- * embedding outage) returns no matches so memory can never block the mirror.
+ * namespace. `query` is raw text, or the pass's precomputed vector from
+ * `embedSessionText` — `null` there means that embed failed, and reports
+ * `failed` exactly as an outage inside the search does. Returns composite
+ * texts, newest-format or metadata-only alike. Best-effort: any failure (no
+ * namespace yet, embedding outage) returns no matches so memory can never
+ * block the mirror.
  *
  * Shared by the initial pass and every refinement turn — a refinement
  * re-searches against the accumulated input, because the detail that arrives
@@ -47,14 +50,15 @@ export async function searchEpisodicMemory(
   ctx: Parameters<typeof rag.search>[0],
   emotionalProfileId: string,
   currentSessionId: string,
-  rawText: string,
+  query: string | number[] | null,
   // Keys already used elsewhere (a talk's surfaced memories, #598).
   exclude: string[] = [],
 ): Promise<EpisodicSearch> {
+  if (query === null) return { matches: [], failed: true };
   try {
     const { entries, results } = await rag.search(ctx, {
       namespace: emotionalProfileId,
-      query: rawText,
+      query,
       // ponytail: a long talk's exclusions crowd out fresh hits past 50.
       limit: Math.min(4 + exclude.length, 50),
       filters: [{ name: "status", value: EPISODIC_STATUS }],

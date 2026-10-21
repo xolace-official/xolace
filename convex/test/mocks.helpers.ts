@@ -19,6 +19,7 @@
  * Only mock what the file under test actually reaches. An unused mock is a
  * real code path silently stubbed out.
  */
+import { MockEmbeddingModelV3 } from "ai/test";
 import { internalAction } from "../_generated/server";
 
 /** `convex/lib/aggregates` — writes are no-ops; nothing reads ranks back. */
@@ -82,7 +83,9 @@ export const revenuecatMock = (hasEntitlement: Lazy<boolean> = false) => ({
 /**
  * `convex/rag` — the search half of the shared RAG instance. Defaults to a
  * cold namespace (nothing retrieved), which is what a first-session profile
- * genuinely looks like. `searchEpisodicMemory` itself stays real.
+ * genuinely looks like. `searchEpisodicMemory` and `embedSessionText` stay
+ * real — the embedding model is the only stand-in, so the pipeline's one
+ * embed call genuinely runs against `rag.options`.
  */
 export const ragMock = (
   result: {
@@ -98,6 +101,12 @@ export const ragMock = (
   REPLY_STATUS: "reply",
   NO_PRIMARY_EMOTION: "n/a",
   rag: {
+    options: {
+      textEmbeddingModel: new MockEmbeddingModelV3({
+        doEmbed: async ({ values }) => ({ embeddings: values.map(() => [0]), warnings: [] }),
+      }),
+      embeddingDimension: 1,
+    },
     search: async () => ({
       entries: result.entries ?? [],
       results: result.results ?? [],
