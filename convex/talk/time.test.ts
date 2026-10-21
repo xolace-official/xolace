@@ -217,6 +217,15 @@ describe("weekly talk time (#596)", () => {
     expect(await user.t.query(internal.talk.provider.isPending, { conversationId: "conv_unattached" })).toBe(false);
   });
 
+  it("a late webhook still gets a released talk's copy deleted", async () => {
+    const user = await asNewUser();
+    const { sessionId, talkKey } = await startTalk(user); // app died before attaching
+    await user.t.mutation(api.talk.session.end, { sessionId }); // idle close releases it
+    await webhook(user, "conv_late", 120, { sessionId, talkKey });
+    expect(await left(user)).toEqual({ secondsLeft: 900 }); // nothing left to charge
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("conv_late"), expect.objectContaining({ method: "DELETE" }));
+  });
+
   it("says a talk's charge is still settling once it has ended", async () => {
     const user = await asNewUser();
     const { sessionId } = await startTalk(user);

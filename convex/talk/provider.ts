@@ -47,12 +47,16 @@ async function deleteConversation(conversationId: string): Promise<boolean> {
     console.error("[talk] provider delete: ELEVENLABS_AGENTS_API_KEY not set");
     return false;
   }
-  const res = await fetch(
-    `https://api.elevenlabs.io/v1/convai/conversations/${encodeURIComponent(conversationId)}`,
-    { method: "DELETE", headers: { "xi-api-key": apiKey } },
-  );
-  if (res.ok || res.status === 404) return true;
-  console.error("[talk] provider delete failed", res.status, await res.text());
+  try {
+    const res = await fetch(
+      `https://api.elevenlabs.io/v1/convai/conversations/${encodeURIComponent(conversationId)}`,
+      { method: "DELETE", headers: { "xi-api-key": apiKey } },
+    );
+    if (res.ok || res.status === 404) return true;
+    console.error("[talk] provider delete failed", res.status, await res.text());
+  } catch (err) {
+    console.error("[talk] provider delete request failed", err);
+  }
   return false;
 }
 

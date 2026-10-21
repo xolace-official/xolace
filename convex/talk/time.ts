@@ -70,14 +70,16 @@ export const settle = internalMutation({
   returns: v.null(),
   handler: async (ctx, { conversationId, durationS, talk }) => {
     const found = await chargeFor(ctx, conversationId, talk);
-    // Settled already: a redelivery.
-    if (!found?.row) return null;
+    if (!found) return null;
     const { session, row } = found;
     // The echoed key proves the opening: attach here, else a talk the app
     // never attached is never pending and its provider copy stays forever.
-    if (talk && (row.talkKey === talk.talkKey || session.talkKey === talk.talkKey)) {
+    // Before the charge check: an idle close may have released its row.
+    if (talk && (row?.talkKey === talk.talkKey || session.talkKey === talk.talkKey)) {
       await attachTo(ctx, session, talk.talkKey, conversationId);
     }
+    // Settled already (a redelivery), or released.
+    if (!row) return null;
 
     // No talk extends past its ceiling, crisis included (#581).
     if (durationS > ALERT_AFTER_S) {
