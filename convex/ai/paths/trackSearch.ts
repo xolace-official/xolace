@@ -2,7 +2,7 @@ import { ConvexError, v, type Infer } from "convex/values";
 import { internalAction, internalMutation, internalQuery, type ActionCtx } from "../../_generated/server";
 import { internal } from "../../_generated/api";
 import type { Doc, Id } from "../../_generated/dataModel";
-import { rag, NO_GRANULAR_LABEL, NO_PRIMARY_EMOTION, NO_STATUS } from "../../rag";
+import { bestScoreByKey, syncKey } from "../helpers/namespaceIndex";
 import { REFRAME_SERIES, SIMILARITY_FLOOR, type BindTrack } from "./bind";
 
 /**
@@ -61,23 +61,8 @@ export const indexTrack = internalAction({
     const t = await ctx.runQuery(internal.ai.paths.trackSearch.trackForIndex, { trackId });
     if (!t) return null;
     for (const namespace of t.namespaces) {
-      if (t.text === null) {
-        const found = await rag.getNamespace(ctx, { namespace });
-        if (found) await rag.deleteByKey(ctx, { namespaceId: found.namespaceId, key: t.slug });
-        continue;
-      }
       try {
-        await rag.add(ctx, {
-          namespace,
-          key: t.slug,
-          text: t.text,
-          // Every declared filter is required on every add (see rag.ts); none applies here.
-          filterValues: [
-            { name: "primaryEmotion", value: NO_PRIMARY_EMOTION },
-            { name: "granularLabel", value: NO_GRANULAR_LABEL },
-            { name: "status", value: NO_STATUS },
-          ],
-        });
+        await syncKey(ctx, namespace, t.slug, t.text);
       } catch (e) {
         // The slug is what makes a hole findable; rethrow so the run still shows failed.
         console.error("track index: embed failed", { trackId, slug: t.slug, namespace });
@@ -158,14 +143,7 @@ export async function scoreTracks(
 /** slug → best-chunk score in one namespace; null = the search failed. */
 async function search(ctx: ActionCtx, vector: number[], namespace: string): Promise<Map<string, number> | null> {
   try {
-    const { entries, results } = await rag.search(ctx, { namespace, query: vector, limit: SEARCH_LIMIT });
-    const slugOf = new Map(entries.map((e) => [e.entryId, e.key]));
-    const best = new Map<string, number>();
-    for (const r of results) {
-      const slug = slugOf.get(r.entryId);
-      if (slug) best.set(slug, Math.max(best.get(slug) ?? -Infinity, r.score));
-    }
-    return best;
+    return await bestScoreByKey(ctx, namespace, vector, SEARCH_LIMIT);
   } catch {
     return null;
   }

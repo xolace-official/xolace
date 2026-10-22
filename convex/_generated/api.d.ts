@@ -22,6 +22,7 @@ import type * as ai_followUpCard from "../ai/followUpCard.js";
 import type * as ai_generateNotification from "../ai/generateNotification.js";
 import type * as ai_helpers_embedSessionText from "../ai/helpers/embedSessionText.js";
 import type * as ai_helpers_episodicSearch from "../ai/helpers/episodicSearch.js";
+import type * as ai_helpers_namespaceIndex from "../ai/helpers/namespaceIndex.js";
 import type * as ai_helpers_patternSummary from "../ai/helpers/patternSummary.js";
 import type * as ai_intakeSignals from "../ai/intakeSignals.js";
 import type * as ai_library_embed from "../ai/library/embed.js";
@@ -247,6 +248,7 @@ declare const fullApi: ApiFromModules<{
   "ai/generateNotification": typeof ai_generateNotification;
   "ai/helpers/embedSessionText": typeof ai_helpers_embedSessionText;
   "ai/helpers/episodicSearch": typeof ai_helpers_episodicSearch;
+  "ai/helpers/namespaceIndex": typeof ai_helpers_namespaceIndex;
   "ai/helpers/patternSummary": typeof ai_helpers_patternSummary;
   "ai/intakeSignals": typeof ai_intakeSignals;
   "ai/library/embed": typeof ai_library_embed;

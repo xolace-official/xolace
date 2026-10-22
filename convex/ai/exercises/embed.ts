@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internalAction, type ActionCtx } from "../../_generated/server";
 import { internal } from "../../_generated/api";
-import { rag, NO_GRANULAR_LABEL, NO_PRIMARY_EMOTION, NO_STATUS } from "../../rag";
+import { bestScoreByKey, syncKey } from "../helpers/namespaceIndex";
 import type { ExerciseSimilarity } from "../../exercises/match";
 
 /**
@@ -17,24 +17,7 @@ export const indexExercises = internalAction({
   returns: v.null(),
   handler: async (ctx) => {
     const texts = await ctx.runQuery(internal.exercises.embed.textsForIndex, {});
-    for (const { title, text } of texts) {
-      if (text === null) {
-        const namespace = await rag.getNamespace(ctx, { namespace: EXERCISE_NAMESPACE });
-        if (namespace) await rag.deleteByKey(ctx, { namespaceId: namespace.namespaceId, key: title });
-        continue;
-      }
-      await rag.add(ctx, {
-        namespace: EXERCISE_NAMESPACE,
-        key: title,
-        text,
-        // Every declared filter is required on every add (see rag.ts); none applies here.
-        filterValues: [
-          { name: "primaryEmotion", value: NO_PRIMARY_EMOTION },
-          { name: "granularLabel", value: NO_GRANULAR_LABEL },
-          { name: "status", value: NO_STATUS },
-        ],
-      });
-    }
+    for (const { title, text } of texts) await syncKey(ctx, EXERCISE_NAMESPACE, title, text);
     return null;
   },
 });
@@ -53,14 +36,7 @@ export async function searchExercises(
 ): Promise<ExerciseSimilarity | undefined> {
   if (vector === null) return undefined;
   try {
-    const { entries, results } = await rag.search(ctx, { namespace: EXERCISE_NAMESPACE, query: vector, limit: SEARCH_LIMIT });
-    const titleOf = new Map(entries.map((e) => [e.entryId, e.key]));
-    const best: Record<string, number> = {};
-    for (const r of results) {
-      const title = titleOf.get(r.entryId);
-      if (title) best[title] = Math.max(best[title] ?? -Infinity, r.score);
-    }
-    return best;
+    return Object.fromEntries(await bestScoreByKey(ctx, EXERCISE_NAMESPACE, vector, SEARCH_LIMIT));
   } catch (error) {
     console.error("searchExercises failed", error);
     return undefined;

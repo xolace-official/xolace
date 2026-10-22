@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { internalQuery, type ActionCtx } from "../../_generated/server";
 import { internal } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
-import { rag } from "../../rag";
+import { bestScoreByKey } from "../helpers/namespaceIndex";
 import { LIBRARY_NAMESPACE } from "../library/embed";
 import { readRow } from "../../library/reads";
 import { SIMILARITY_FLOOR, type BindEntry } from "./bind";
@@ -21,14 +21,8 @@ export type ReadHit = { entryId: Id<"library_entries">; similarity: number };
  */
 export async function searchReads(ctx: ActionCtx, vector: number[]): Promise<ReadHit[] | null> {
   try {
-    const { entries, results } = await rag.search(ctx, { namespace: LIBRARY_NAMESPACE, query: vector, limit: SEARCH_LIMIT });
-    const best = new Map<string, number>();
-    for (const r of results) best.set(r.entryId, Math.max(best.get(r.entryId) ?? -Infinity, r.score));
-    return entries.flatMap((e) =>
-      e.key && best.has(e.entryId)
-        ? [{ entryId: e.key as Id<"library_entries">, similarity: best.get(e.entryId)! }]
-        : [],
-    );
+    const best = await bestScoreByKey(ctx, LIBRARY_NAMESPACE, vector, SEARCH_LIMIT);
+    return [...best].map(([key, similarity]) => ({ entryId: key as Id<"library_entries">, similarity }));
   } catch {
     return null;
   }

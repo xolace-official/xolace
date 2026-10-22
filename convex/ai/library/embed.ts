@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internalAction } from "../../_generated/server";
 import { internal } from "../../_generated/api";
-import { rag, NO_GRANULAR_LABEL, NO_PRIMARY_EMOTION, NO_STATUS } from "../../rag";
+import { syncKey } from "../helpers/namespaceIndex";
 
 /**
  * The Library's meaning index (#568, ADR 0021): every active entry's title,
@@ -18,23 +18,8 @@ export const indexEntry = internalAction({
   returns: v.null(),
   handler: async (ctx, { entryId }) => {
     const text = await ctx.runQuery(internal.library.embed.textForIndex, { entryId });
-    if (text === null) {
-      const namespace = await rag.getNamespace(ctx, { namespace: LIBRARY_NAMESPACE });
-      if (namespace) await rag.deleteByKey(ctx, { namespaceId: namespace.namespaceId, key: entryId });
-      return null;
-    }
     try {
-      await rag.add(ctx, {
-        namespace: LIBRARY_NAMESPACE,
-        key: entryId,
-        text,
-        // Every declared filter is required on every add (see rag.ts); none applies here.
-        filterValues: [
-          { name: "primaryEmotion", value: NO_PRIMARY_EMOTION },
-          { name: "granularLabel", value: NO_GRANULAR_LABEL },
-          { name: "status", value: NO_STATUS },
-        ],
-      });
+      await syncKey(ctx, LIBRARY_NAMESPACE, entryId, text);
     } catch (e) {
       // The id is what makes a hole findable; rethrow so the run still shows failed.
       console.error("library index: embed failed", { entryId });
