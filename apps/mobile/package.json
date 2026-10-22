@@ -116,7 +116,7 @@
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.2.1",
-    "uniwind": "1.11.0",
+    "uniwind": "1.12.2",
     "zustand": "^5.0.11"
   },
   "devDependencies": {
