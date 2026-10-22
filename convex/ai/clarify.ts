@@ -22,6 +22,8 @@ import {
   type EpisodicSearch,
 } from "./helpers/episodicSearch";
 import { embedSessionText } from "./helpers/embedSessionText";
+import { searchExercises } from "./exercises/embed";
+import type { ExerciseSimilarity } from "../exercises/match";
 import { applyAudioFence } from "./prompts/mirrorAudioTags";
 import { evaluateSafeguard, resolveSupportNeed } from "./safeguard";
 import { resolveMirrorTone } from "./mirrorPlan";
@@ -170,7 +172,7 @@ export const handleClarification = internalAction({
           : null;
 
       const profileId = session.emotionalProfileId;
-      const [reclassified, episodic, moderationResult] = await Promise.all([
+      const [reclassified, [episodic, exerciseSimilarity], moderationResult] = await Promise.all([
         classifierPrompt
           ? classifierCache
               .fetch(ctx, {
@@ -181,15 +183,17 @@ export const handleClarification = internalAction({
               // fall back to the classification the session already has.
               .catch(() => null)
           : Promise.resolve(null),
+        // The same vector re-ranks the exercises (#569) when this turn added
+        // words — otherwise swaps keep ranking against the original text.
         context.isFirstSession
-          ? Promise.resolve({ matches: [] } as EpisodicSearch)
+          ? Promise.resolve<[EpisodicSearch, ExerciseSimilarity | undefined]>([{ matches: [] }, undefined])
           : embedSessionText(accumulatedInput).then((vector) =>
-              searchEpisodicMemory(
-                ctx,
-                profileId,
-                args.sessionId,
-                vector,
-              ),
+              Promise.all<[Promise<EpisodicSearch>, Promise<ExerciseSimilarity | undefined>]>([
+                searchEpisodicMemory(ctx, profileId, args.sessionId, vector),
+                addedText.length > 0
+                  ? searchExercises(ctx, vector)
+                  : Promise.resolve(undefined),
+              ]),
             ),
         addedText.length > 0
           ? moderationCache
@@ -450,6 +454,15 @@ export const handleClarification = internalAction({
             }
           : {}),
       });
+
+      // Scores ranked the original text; a failed search clears them so
+      // ranking falls back to the refreshed classification alone.
+      if (addedText.length > 0) {
+        await ctx.runMutation(internal.exercises.setExerciseSimilarity, {
+          sessionId: args.sessionId,
+          exerciseSimilarity,
+        });
+      }
 
       // First escalation on this session lands the event; a session that
       // already escalated keeps the one it has.

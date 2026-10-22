@@ -34,6 +34,14 @@ export const resolveHits = internalQuery({
     emotionalProfileId: v.id("emotional_profiles"),
     hits: v.array(v.object({ entryId: v.id("library_entries"), similarity: v.number() })),
   },
+  returns: v.array(
+    v.object({
+      slug: v.string(),
+      emotions: v.array(v.string()),
+      lifeAreas: v.array(v.string()),
+      similarity: v.optional(v.number()),
+    }),
+  ),
   handler: async (ctx, { emotionalProfileId, hits }): Promise<BindEntry[]> => {
     const entries: BindEntry[] = [];
     for (const { entryId, similarity } of hits) {

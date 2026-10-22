@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useFocusEffect, type Href } from "expo-router";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { twigHref, type Kindling, type Twig } from "./twig-presentation";
+import { twigHref, type Kindling, type Twig } from "@/src/features/kindling/twig-presentation";
 
 /**
  * Where a xolacer twig goes (#570): straight to the person closest in meaning,

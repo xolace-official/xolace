@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useNavigation, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useMutation, useQuery } from "convex/react";
 import { useThemeColor, useToast } from "heroui-native";
@@ -13,10 +13,10 @@ import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { trackLibrary } from "@/src/features/library/analytics";
 import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
 import { playSoftPress, playTextureSelect } from "@/src/lib/haptics";
-import { twigBrowseHref, twigHref, twigSlug, type Twig } from "../twig-presentation";
-import { useXolacerTwigHref } from "../use-xolacer-twig-href";
-import { KindlingTrail } from "./kindling-trail";
-import { TwigSheet } from "./twig-sheet";
+import { twigBrowseHref, twigHref, twigSlug, type Twig } from "@/src/features/kindling/twig-presentation";
+import { useXolacerTwigHref } from "@/src/features/kindling/use-xolacer-twig-href";
+import { KindlingTrail } from "@/src/features/kindling/components/kindling-trail";
+import { TwigSheet } from "@/src/features/kindling/components/twig-sheet";
 
 /**
  * The active-kindling screen (docs/paths-v1.md §9.1, #333) — the Lantern
@@ -27,6 +27,7 @@ import { TwigSheet } from "./twig-sheet";
 export function KindlingScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const navigation = useNavigation();
   const posthog = usePostHog();
   const { toast } = useToast();
   const foreground = useThemeColor("foreground") as string;
@@ -71,6 +72,8 @@ export function KindlingScreen() {
     }
     if (xolacerTwig.pendingId) return;
     const href = twig.kind === "xolacer" ? await xolacerTwig.resolve(twig, kindling.sessionId) : twigHref(twig, kindling.sessionId);
+    // The match can land after Back/Dismiss: don't pull them somewhere they left.
+    if (!navigation.isFocused()) return;
     if (!href) {
       toast.show({ label: "Not quite ready", description: "This one is on its way." });
       return;

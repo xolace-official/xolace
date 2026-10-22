@@ -291,6 +291,24 @@ export const setMatched = internalMutation({
 });
 
 /**
+ * Refresh a session's exercise scores after refinement adds text
+ * (undefined clears them).
+ */
+export const setExerciseSimilarity = internalMutation({
+  args: {
+    sessionId: v.id("sessions"),
+    exerciseSimilarity: v.optional(v.record(v.string(), v.number())),
+  },
+  handler: async (ctx, args) => {
+    const session = await ctx.db.get("sessions", args.sessionId);
+    if (!session) return;
+    await ctx.db.patch("sessions", args.sessionId, {
+      exerciseSimilarity: args.exerciseSimilarity,
+    });
+  },
+});
+
+/**
  * Seed exercises into the library (upserts by title).
  */
 export const seed = internalMutation({
