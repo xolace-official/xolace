@@ -1,0 +1,8 @@
+# Commits that only reformat code. `git blame` skips them when configured with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub's blame view reads this file automatically.
+#
+# Add one full SHA per line, each with a comment saying what it was.
+
+# style: apply ultracite fix across the repo (repo-wide Biome/Ultracite format)
+6bff51c2f90b4066f4df5b292d53d677732429c3

@@ -1,0 +1,41 @@
+name: Security audit
+
+on:
+  schedule:
+    # Mondays 06:00 UTC
+    - cron: "0 6 * * 1"
+  pull_request:
+    paths:
+      - bun.lock
+      - "**/package.json"
+      - .github/workflows/security-audit.yml
+  push:
+    branches: [main]
+    paths:
+      - bun.lock
+      - "**/package.json"
+  workflow_dispatch:
+
+concurrency:
+  group: security-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: bun audit (high+)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: "false"
+      # bun audit (bun >= 1.2.15) exits non-zero when an advisory at or above
+      # --audit-level is found. Ignore a specific advisory, with a reason in the
+      # PR, via `--ignore=<GHSA/CVE id>`.
+      - run: bun audit --audit-level=high

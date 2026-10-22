@@ -1,0 +1,3 @@
+{
+  "extends": "@xolace/config/tsconfig.base.json"
+}

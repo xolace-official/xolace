@@ -1,0 +1,50 @@
+{
+  "name": "@xolace/backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Xolace Convex backend: schema, functions and the generated client API.",
+  "type": "module",
+  "exports": {
+    "./api": {
+      "types": "./convex/_generated/api.d.ts",
+      "default": "./convex/_generated/api.js"
+    },
+    "./dataModel": {
+      "types": "./convex/_generated/dataModel.d.ts"
+    },
+    "./convex/_generated/*": {
+      "types": "./convex/_generated/*.d.ts",
+      "default": "./convex/_generated/*.js"
+    },
+    "./convex/*": "./convex/*.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit -p convex && tsc --noEmit -p tsconfig.json",
+    "codegen": "node scripts/codegen.mjs",
+    "dev": "convex dev",
+    "dev:setup": "convex dev --configure --until-success",
+    "lint": "biome check . && eslint convex",
+    "lint:convex": "eslint convex",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:local": "node scripts/test-local.mjs",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "convex": "catalog:",
+    "convex-helpers": "^0.1.128"
+  },
+  "devDependencies": {
+    "@convex-dev/eslint-plugin": "^5.0.0",
+    "@edge-runtime/vm": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "^4.1.11",
+    "@xolace/config": "workspace:*",
+    "convex-test": "catalog:",
+    "eslint": "^9.39.0",
+    "typescript": "catalog:",
+    "typescript-eslint": "^8.72.0",
+    "vite": "^8.2.2",
+    "vitest": "catalog:"
+  }
+}
