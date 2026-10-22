@@ -66,7 +66,6 @@ async function logSearch(
     distinctId: emotionalProfileId,
     event: "xolacer_suggestion_ranked",
     properties: {
-      specialty: candidates[0].specialty,
       candidates: candidates.length,
       search,
       topScore,

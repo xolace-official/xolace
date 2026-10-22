@@ -144,7 +144,7 @@ describe("xolacer suggestion on meaning", () => {
       {
         distinctId: seeker.profileId,
         event: "xolacer_suggestion_ranked",
-        properties: { specialty: "burnout", candidates: 2, search: "ran", topScore: 0.29, fallback: true },
+        properties: { candidates: 2, search: "ran", topScore: 0.29, fallback: true },
       },
     ]);
     expect(JSON.stringify(stub.captured)).not.toMatch(new RegExp(`${a}|${b}`));
