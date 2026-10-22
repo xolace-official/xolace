@@ -6,7 +6,7 @@ Agents: read [`AGENTS.md`](./AGENTS.md) first. This file is the human-facing ver
 
 ## Setup
 
-Requirements: [bun](https://bun.sh) at the version in `package.json` → `packageManager` (currently 1.3.4). Rust is needed only for `apps/desktop`; Xcode and Android Studio only for native mobile builds.
+Requirements: [bun](https://bun.sh) at the version in `package.json` → `packageManager` (currently 1.3.14). Rust is needed only for `apps/desktop`; Xcode and Android Studio only for native mobile builds.
 
 ```bash
 bun install

@@ -138,6 +138,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           turbo-cache: "false"
+          ignore-scripts: "true"
       - run: bun run check
 
   typecheck:
@@ -158,6 +159,8 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - uses: ./.github/actions/setup
+        with:
+          ignore-scripts: "true"
       - run: bunx turbo run check-types ${AFFECTED:+"$AFFECTED"}
         env:
           AFFECTED: ${{ needs.changes.outputs.affected }}
@@ -177,6 +180,8 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - uses: ./.github/actions/setup
+        with:
+          ignore-scripts: "true"
       - run: bunx turbo run test ${AFFECTED:+"$AFFECTED"}
         env:
           AFFECTED: ${{ needs.changes.outputs.affected }}
@@ -205,6 +210,8 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - uses: ./.github/actions/setup
+        with:
+          ignore-scripts: "true"
       # desktop needs Rust (see the desktop job); mobile builds go through EAS.
       - run: >-
           bunx turbo run build ${AFFECTED:+"$AFFECTED"}

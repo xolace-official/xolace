@@ -15,6 +15,16 @@ inputs:
       do not overwrite each other's cache entries. Defaults to the job id.
     required: false
     default: ""
+  ignore-scripts:
+    description: >-
+      Install with `--ignore-scripts`. For jobs that only read source (lint,
+      typecheck, test, web builds): dependency lifecycle scripts there only
+      fetch native assets nothing in CI uses (react-native-enriched-markdown
+      alone downloads ~30s of tree-sitter and RaTeX sources), print banners,
+      or install git hooks. Leave it off for anything that runs native
+      tooling or relies on the root `prepare` script.
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -45,4 +55,11 @@ runs:
 
     - name: Install dependencies
       shell: bash
-      run: bun install --frozen-lockfile
+      env:
+        IGNORE_SCRIPTS: ${{ inputs.ignore-scripts }}
+      run: |
+        if [[ "$IGNORE_SCRIPTS" == "true" ]]; then
+          bun install --frozen-lockfile --ignore-scripts
+        else
+          bun install --frozen-lockfile
+        fi
