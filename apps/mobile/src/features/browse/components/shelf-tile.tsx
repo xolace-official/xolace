@@ -1,14 +1,18 @@
-import { SymbolView } from 'expo-symbols';
-import { Pressable, View } from 'react-native';
-import { useCSSVariable } from 'uniwind';
+import type { api } from "@xolace/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
+import { SymbolView } from "expo-symbols";
+import { Pressable, View } from "react-native";
+import { useCSSVariable } from "uniwind";
+import { AppText } from "@/src/components/shared/app-text";
+import {
+	type BrowseFrom,
+	useOpenTrack,
+} from "@/src/features/browse/use-open-track";
+import { CoverImage } from "@/src/features/library/cover-image";
 
-import type { FunctionReturnType } from 'convex/server';
-import type { api } from '@/convex/_generated/api';
-import { AppText } from '@/src/components/shared/app-text';
-import { CoverImage } from '@/src/features/library/cover-image';
-import { useOpenTrack, type BrowseFrom } from '@/src/features/browse/use-open-track';
-
-export type ShelfItem = FunctionReturnType<typeof api.browse.getNewShelf>[number];
+export type ShelfItem = FunctionReturnType<
+	typeof api.browse.getNewShelf
+>[number];
 
 export const TILE = 170;
 
@@ -17,34 +21,54 @@ export const TILE = 170;
  * Discovery "From the library" strip (§9.3, §9.5) render the same query
  * through this. Tap → player, or the paywall for a free user (§9.4).
  */
-export function ShelfTile({ item, from, size = TILE }: { item: ShelfItem; from: BrowseFrom; size?: number }) {
-  const { open, locked } = useOpenTrack(from);
-  const lockTint = useCSSVariable('--color-foreground');
+export function ShelfTile({
+	item,
+	from,
+	size = TILE,
+}: {
+	item: ShelfItem;
+	from: BrowseFrom;
+	size?: number;
+}) {
+	const { open, locked } = useOpenTrack(from);
+	const lockTint = useCSSVariable("--color-foreground");
 
-  return (
-    <Pressable
-      style={{ width: size }}
-      className="active:opacity-60"
-      accessibilityRole="button"
-      accessibilityLabel={`${item.title}${item.attribution ? `, ${item.attribution}` : ''}`}
-      onPress={() => open(item)}
-    >
-      <View className="bg-surface-tertiary overflow-hidden rounded-[10px]" style={{ width: size, height: size }}>
-        <CoverImage uri={item.thumbUrl} thumbhash={item.thumbhash} style={{ width: size, height: size }} />
-        {locked && (
-          <View className="bg-background/85 absolute bottom-1.5 right-1.5 h-5 w-5 items-center justify-center rounded-full">
-            <SymbolView name={{ ios: "lock.fill", android: "lock", web: "lock" }} size={10} tintColor={String(lockTint)} accessibilityLabel="Xolace+" />
-          </View>
-        )}
-      </View>
-      <AppText className="mt-1.5 text-[13px] font-medium" numberOfLines={1}>
-        {item.title}
-      </AppText>
-      {item.attribution && (
-        <AppText className="text-muted text-xs" numberOfLines={1}>
-          {item.attribution}
-        </AppText>
-      )}
-    </Pressable>
-  );
+	return (
+		<Pressable
+			accessibilityLabel={`${item.title}${item.attribution ? `, ${item.attribution}` : ""}`}
+			accessibilityRole="button"
+			className="active:opacity-60"
+			onPress={() => open(item)}
+			style={{ width: size }}
+		>
+			<View
+				className="overflow-hidden rounded-[10px] bg-surface-tertiary"
+				style={{ height: size, width: size }}
+			>
+				<CoverImage
+					style={{ height: size, width: size }}
+					thumbhash={item.thumbhash}
+					uri={item.thumbUrl}
+				/>
+				{locked && (
+					<View className="absolute right-1.5 bottom-1.5 h-5 w-5 items-center justify-center rounded-full bg-background/85">
+						<SymbolView
+							accessibilityLabel="Xolace+"
+							name={{ android: "lock", ios: "lock.fill", web: "lock" }}
+							size={10}
+							tintColor={String(lockTint)}
+						/>
+					</View>
+				)}
+			</View>
+			<AppText className="mt-1.5 font-medium text-[13px]" numberOfLines={1}>
+				{item.title}
+			</AppText>
+			{item.attribution && (
+				<AppText className="text-muted text-xs" numberOfLines={1}>
+					{item.attribution}
+				</AppText>
+			)}
+		</Pressable>
+	);
 }

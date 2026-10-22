@@ -22,6 +22,7 @@ web-build/
 .nx/
 .cache/
 .expo/
+expo-env.d.ts
 .metro-health-check*
 coverage/
 .nyc_output/
@@ -66,10 +67,20 @@ src-tauri/target/
 local.db
 local.db-*
 
+# Backend ingestion scripts and their local media (not part of the app build)
+packages/backend/scripts/kindling/
+packages/backend/scripts/library/
+
 # Agent and editor local state
 .claude/
-.argent/recordings/
-.argent/artifacts/
+.argent/
+apps/mobile/.argent/
+.heroui-docs/
+.stream/
+.gstack/
+.ds-sync/
+ds-bundle/
+.design-sync/
 .idea/
 .vscode/
 .DS_Store

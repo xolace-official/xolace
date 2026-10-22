@@ -1,40 +1,40 @@
+import { api } from "@xolace/backend/convex/_generated/api";
+import type { Id } from "@xolace/backend/convex/_generated/dataModel";
+import { useQuery } from "convex/react";
+import { SymbolView } from "expo-symbols";
+import { PressableFeedback, useThemeColor } from "heroui-native";
+import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { View } from "react-native";
-import { PressableFeedback, useThemeColor } from "heroui-native";
-import { SymbolView } from "expo-symbols";
-import { useQuery } from "convex/react";
-import { usePostHog } from "posthog-react-native";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
 import { AppText } from "@/src/components/shared/app-text";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 import { usePaywall } from "@/src/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/src/lib/haptics";
 
 type Props = {
-  sessionId?: Id<"sessions">;
+	sessionId?: Id<"sessions">;
 };
 
 /** Rounded-square icon badge: flame for pro, lock for the free upsell. */
 function KindlingIconTile({ locked }: { locked: boolean }) {
-  const accent = useThemeColor("accent") as string;
-  return (
-    <View className="h-11 w-11 items-center justify-center rounded-2xl border border-accent/20 bg-accent/12">
-      <SymbolView
-        name={
-          locked
-            ? { ios: "lock.fill", android: "lock", web: "lock" }
-            : {
-                ios: "flame.fill",
-                android: "local_fire_department",
-                web: "local_fire_department",
-              }
-        }
-        size={22}
-        tintColor={accent}
-      />
-    </View>
-  );
+	const accent = useThemeColor("accent") as string;
+	return (
+		<View className="h-11 w-11 items-center justify-center rounded-2xl border border-accent/20 bg-accent/12">
+			<SymbolView
+				name={
+					locked
+						? { android: "lock", ios: "lock.fill", web: "lock" }
+						: {
+								android: "local_fire_department",
+								ios: "flame.fill",
+								web: "local_fire_department",
+							}
+				}
+				size={22}
+				tintColor={accent}
+			/>
+		</View>
+	);
 }
 
 /**
@@ -50,61 +50,66 @@ function KindlingIconTile({ locked }: { locked: boolean }) {
  * flashing the wrong state for a frame is worse than a beat late.
  */
 export const KindlingCloseSlot = ({ sessionId }: Props) => {
-  const { isPlus, isResolved } = usePlusEntitlement();
-  const qualifies = useQuery(
-    api.paths.isKindlingQualifyingSession,
-    sessionId ? { sessionId } : "skip",
-  );
-  const posthog = usePostHog();
-  const openPaywall = usePaywall((s) => s.open);
-  const shownRef = useRef(false);
+	const { isPlus, isResolved } = usePlusEntitlement();
+	const qualifies = useQuery(
+		api.paths.isKindlingQualifyingSession,
+		sessionId ? { sessionId } : "skip"
+	);
+	const posthog = usePostHog();
+	const openPaywall = usePaywall((s) => s.open);
+	const shownRef = useRef(false);
 
-  const ready = isResolved && qualifies !== undefined;
+	const ready = isResolved && qualifies !== undefined;
 
-  useEffect(() => {
-    if (!ready || isPlus || !qualifies || shownRef.current) return;
-    shownRef.current = true;
-    posthog.capture("plus_upsell_shown", { surface: "kindling" });
-  }, [ready, isPlus, qualifies, posthog]);
+	useEffect(() => {
+		if (!ready || isPlus || !qualifies || shownRef.current) {
+			return;
+		}
+		shownRef.current = true;
+		posthog.capture("plus_upsell_shown", { surface: "kindling" });
+	}, [ready, isPlus, qualifies, posthog]);
 
-  if (!ready || !qualifies) return null;
+	if (!(ready && qualifies)) {
+		return null;
+	}
 
-  if (isPlus) {
-    return (
-      <View className="w-full flex-row items-center gap-3 rounded-2xl border border-accent/25 bg-accent/10 px-5 py-4">
-        <KindlingIconTile locked={false} />
-        <View className="flex-1">
-          <AppText className="text-base font-medium text-foreground">
-            Setting up your kindling…
-          </AppText>
-          <AppText className="mt-0.5 text-xs font-light text-foreground/55">
-            What next? Check back soon on the discovery screen for the curated support actions for you.
-          </AppText>
-        </View>
-      </View>
-    );
-  }
+	if (isPlus) {
+		return (
+			<View className="w-full flex-row items-center gap-3 rounded-2xl border border-accent/25 bg-accent/10 px-5 py-4">
+				<KindlingIconTile locked={false} />
+				<View className="flex-1">
+					<AppText className="font-medium text-base text-foreground">
+						Setting up your kindling…
+					</AppText>
+					<AppText className="mt-0.5 font-light text-foreground/55 text-xs">
+						What next? Check back soon on the discovery screen for the curated
+						support actions for you.
+					</AppText>
+				</View>
+			</View>
+		);
+	}
 
-  return (
-    <PressableFeedback
-      onPress={() => {
-        playSoftPress();
-        posthog.capture("plus_upsell_tapped", { surface: "kindling" });
-        openPaywall("kindling", { sessionId });
-      }}
-      accessibilityRole="button"
-      accessibilityLabel="See what Xolace+ sets up"
-      className="w-full flex-row items-center gap-3 rounded-2xl border border-accent/40 bg-accent/15 px-5 py-4"
-    >
-      <KindlingIconTile locked={true} />
-      <View className="flex-1">
-        <AppText className="text-base font-medium text-accent">
-          Turn this into kindling
-        </AppText>
-        <AppText className="mt-0.5 text-xs font-light text-foreground/55">
-          Xolace+ carries today into what&apos;s next. Tap to see how.
-        </AppText>
-      </View>
-    </PressableFeedback>
-  );
+	return (
+		<PressableFeedback
+			accessibilityLabel="See what Xolace+ sets up"
+			accessibilityRole="button"
+			className="w-full flex-row items-center gap-3 rounded-2xl border border-accent/40 bg-accent/15 px-5 py-4"
+			onPress={() => {
+				playSoftPress();
+				posthog.capture("plus_upsell_tapped", { surface: "kindling" });
+				openPaywall("kindling", { sessionId });
+			}}
+		>
+			<KindlingIconTile locked={true} />
+			<View className="flex-1">
+				<AppText className="font-medium text-accent text-base">
+					Turn this into kindling
+				</AppText>
+				<AppText className="mt-0.5 font-light text-foreground/55 text-xs">
+					Xolace+ carries today into what&apos;s next. Tap to see how.
+				</AppText>
+			</View>
+		</PressableFeedback>
+	);
 };

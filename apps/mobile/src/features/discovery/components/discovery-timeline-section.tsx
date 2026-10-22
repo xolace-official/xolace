@@ -1,15 +1,15 @@
-import { useWindowDimensions, View } from "react-native";
-import { useRouter } from "expo-router";
+import { api } from "@xolace/backend/convex/_generated/api";
 import { usePaginatedQuery } from "convex/react";
+import { useRouter } from "expo-router";
 import { PressableFeedback } from "heroui-native";
-import { api } from "@/convex/_generated/api";
+import { useWindowDimensions, View } from "react-native";
 import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import type { TimelineEntry } from "@/src/features/timeline/types";
 import { toTimelineEntry } from "@/src/features/timeline/utils";
-import { StackedCarousel } from "./stacked-carousel";
+import { playSoftPress } from "@/src/lib/haptics";
 import { DiscoveryMomentCard } from "./discovery-moment-card";
 import { MomentsSkeleton } from "./skeletons";
-import type { TimelineEntry } from "@/src/features/timeline/types";
+import { StackedCarousel } from "./stacked-carousel";
 
 const MOMENT_COUNT = 4;
 const CARD_HEIGHT = 166;
@@ -23,64 +23,68 @@ const SCREEN_PADDING_X = 32;
  * as the real timeline rather than duplicating that logic in a second query.
  */
 export function DiscoveryTimelineSection() {
-  const router = useRouter();
-  const { width } = useWindowDimensions();
-  const cardWidth = width - SCREEN_PADDING_X;
-  const { results, status } = usePaginatedQuery(
-    api.sessions.listForTimeline,
-    {},
-    { initialNumItems: MOMENT_COUNT },
-  );
+	const router = useRouter();
+	const { width } = useWindowDimensions();
+	const cardWidth = width - SCREEN_PADDING_X;
+	const { results, status } = usePaginatedQuery(
+		api.sessions.listForTimeline,
+		{},
+		{ initialNumItems: MOMENT_COUNT }
+	);
 
-  if (status === "LoadingFirstPage") return <MomentsSkeleton cardHeight={CARD_HEIGHT} />;
-  if (results.length === 0) return null;
+	if (status === "LoadingFirstPage") {
+		return <MomentsSkeleton cardHeight={CARD_HEIGHT} />;
+	}
+	if (results.length === 0) {
+		return null;
+	}
 
-  const entries: TimelineEntry[] = results.map(toTimelineEntry);
+	const entries: TimelineEntry[] = results.map(toTimelineEntry);
 
-  const goToTimeline = () => {
-    playSoftPress();
-    router.push("/(protected)/timeline");
-  };
+	const goToTimeline = () => {
+		playSoftPress();
+		router.push("/(protected)/timeline");
+	};
 
-  const goToSession = (entry: TimelineEntry) => {
-    playSoftPress();
-    router.push({
-      pathname: "/(protected)/timeline/session/[id]",
-      params: { id: entry.id },
-    });
-  };
+	const goToSession = (entry: TimelineEntry) => {
+		playSoftPress();
+		router.push({
+			params: { id: entry.id },
+			pathname: "/(protected)/timeline/session/[id]",
+		});
+	};
 
-  return (
-    <View className="mt-10">
-      <View className="flex-row items-start justify-between px-4">
-        <View className="flex-1 pr-3">
-          <AppText className="text-lg font-semibold text-foreground">
-            Your Moments
-          </AppText>
-          <AppText className="mt-1.5 text-sm leading-5 text-muted">
-            A few reflections you&rsquo;ve carried recently.
-          </AppText>
-        </View>
-        <PressableFeedback
-          onPress={goToTimeline}
-          accessibilityRole="button"
-          accessibilityLabel="See more moments"
-        >
-          <AppText className="text-sm font-medium text-accent">
-            See more
-          </AppText>
-        </PressableFeedback>
-      </View>
+	return (
+		<View className="mt-10">
+			<View className="flex-row items-start justify-between px-4">
+				<View className="flex-1 pr-3">
+					<AppText className="font-semibold text-foreground text-lg">
+						Your Moments
+					</AppText>
+					<AppText className="mt-1.5 text-muted text-sm leading-5">
+						A few reflections you&rsquo;ve carried recently.
+					</AppText>
+				</View>
+				<PressableFeedback
+					accessibilityLabel="See more moments"
+					accessibilityRole="button"
+					onPress={goToTimeline}
+				>
+					<AppText className="font-medium text-accent text-sm">
+						See more
+					</AppText>
+				</PressableFeedback>
+			</View>
 
-      <View className="mt-4">
-        <StackedCarousel
-          data={entries}
-          renderCard={(entry) => <DiscoveryMomentCard entry={entry} />}
-          onCardPress={goToSession}
-          cardWidth={cardWidth}
-          cardHeight={CARD_HEIGHT}
-        />
-      </View>
-    </View>
-  );
+			<View className="mt-4">
+				<StackedCarousel
+					cardHeight={CARD_HEIGHT}
+					cardWidth={cardWidth}
+					data={entries}
+					onCardPress={goToSession}
+					renderCard={(entry) => <DiscoveryMomentCard entry={entry} />}
+				/>
+			</View>
+		</View>
+	);
 }

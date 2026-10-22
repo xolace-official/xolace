@@ -1,18 +1,18 @@
+import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 
 export type AvatarOption = {
-  key: string;
-  tier: "free" | "premium";
-  label: string;
-  order: number;
-  isDefault: boolean;
-  url: string;
+	key: string;
+	tier: "free" | "premium";
+	label: string;
+	order: number;
+	isDefault: boolean;
+	url: string;
 };
 
 /** The curated avatar catalog. Undefined while loading. */
 export function useAvatars(): AvatarOption[] | undefined {
-  return useQuery(api.avatars.listAvatars) as AvatarOption[] | undefined;
+	return useQuery(api.avatars.listAvatars) as AvatarOption[] | undefined;
 }
 
 /**
@@ -21,13 +21,15 @@ export function useAvatars(): AvatarOption[] | undefined {
  * catalog loads or if it's empty.
  */
 export function resolveAvatar(
-  avatars: AvatarOption[] | undefined,
-  avatarId: string | null | undefined,
+	avatars: AvatarOption[] | undefined,
+	avatarId: string | null | undefined
 ): AvatarOption | null {
-  if (!avatars || avatars.length === 0) return null;
-  return (
-    avatars.find((a) => a.key === avatarId) ??
-    avatars.find((a) => a.isDefault) ??
-    avatars[0]
-  );
+	if (!avatars || avatars.length === 0) {
+		return null;
+	}
+	return (
+		avatars.find((a) => a.key === avatarId) ??
+		avatars.find((a) => a.isDefault) ??
+		avatars[0]
+	);
 }

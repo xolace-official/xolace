@@ -23,6 +23,18 @@
     "expo-mcp": {
       "type": "http",
       "url": "https://mcp.expo.dev/mcp"
+    },
+    "heroui-native": {
+      "command": "bunx",
+      "args": ["-y", "@heroui/native-mcp@latest"]
+    },
+    "argent": {
+      "type": "stdio",
+      "command": "argent",
+      "args": ["mcp"]
+    },
+    "Sentry": {
+      "url": "https://mcp.sentry.dev/mcp/xolace-inc/react-native"
     }
   }
 }

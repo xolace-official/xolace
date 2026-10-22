@@ -1,5 +1,5 @@
+import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 
 /**
  * Percentile rank among people who reflect. Returns `undefined` while loading,
@@ -8,5 +8,5 @@ import { api } from "@/convex/_generated/api";
  * renders in all three; there is no "nothing to show" case.
  */
 export function useReflectionRank() {
-  return useQuery(api.profile.getReflectionRank);
+	return useQuery(api.profile.getReflectionRank);
 }

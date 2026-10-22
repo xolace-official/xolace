@@ -3,98 +3,152 @@
  * intro on top, entries numbered, audio rows inline), or every active entry
  * of a kind or subject. Filter/sort menu from #396 is not built yet.
  */
-import { useQuery } from 'convex/react';
-import { Stack, useIsPreview } from 'expo-router';
-import { usePostHog } from 'posthog-react-native';
-import { useEffect, useRef } from 'react';
-import { ScrollView, View, useWindowDimensions } from 'react-native';
 
-import { api } from '@/convex/_generated/api';
-import { AppText } from '@/src/components/shared/app-text';
-import { CoverImage } from '@/src/features/library/cover-image';
-import { trackLibrary } from '@/src/features/library/analytics';
-import { TrackRow } from '@/src/features/browse/components/track-row';
-import { EntryRow } from '@/src/features/library/home/entry-cards';
-import { KINDS, type Kind, facetLabel } from '@/src/features/library/home/library-copy';
-import { HubSkeleton, RowsSkeleton } from '@/src/features/library/skeletons';
+import { api } from "@xolace/backend/convex/_generated/api";
+import { useQuery } from "convex/react";
+import { Stack, useIsPreview } from "expo-router";
+import { usePostHog } from "posthog-react-native";
+import { useEffect, useRef } from "react";
+import { ScrollView, useWindowDimensions, View } from "react-native";
+import { AppText } from "@/src/components/shared/app-text";
+import { TrackRow } from "@/src/features/browse/components/track-row";
+import { trackLibrary } from "@/src/features/library/analytics";
+import { CoverImage } from "@/src/features/library/cover-image";
+import { EntryRow } from "@/src/features/library/home/entry-cards";
+import {
+	facetLabel,
+	KINDS,
+	type Kind,
+} from "@/src/features/library/home/library-copy";
+import { HubSkeleton, RowsSkeleton } from "@/src/features/library/skeletons";
 
 export type ListBy = { hub: string } | { kind: Kind } | { subject: string };
 
 function HubList({ slug }: { slug: string }) {
-  const { width } = useWindowDimensions();
-  const hub = useQuery(api.library.hubs.getHub, { slug });
-  if (hub === undefined) return <HubSkeleton />;
-  if (hub === null) return <Empty line="This hub has been put away." />;
+	const { width } = useWindowDimensions();
+	const hub = useQuery(api.library.hubs.getHub, { slug });
+	if (hub === undefined) {
+		return <HubSkeleton />;
+	}
+	if (hub === null) {
+		return <Empty line="This hub has been put away." />;
+	}
 
-  let n = 0;
-  return (
-    <>
-      <View className="bg-surface-secondary" style={{ width, height: width * 0.62 }}>
-        <CoverImage uri={hub.coverUrl} thumbhash={hub.coverThumbhash} style={{ width: '100%', height: '100%' }} transition={200} />
-      </View>
-      <View className="gap-2 px-4 pb-2 pt-5">
-        <AppText accessibilityRole="header" className="text-[30px] font-bold leading-[35px]">
-          {hub.title}
-        </AppText>
-        <AppText className="text-[16px] leading-[22px] text-muted">{hub.intro}</AppText>
-      </View>
-      {hub.items.map((item) =>
-        item.kind === 'entry' ? (
-          <EntryRow key={item.entry._id} entry={item.entry} index={n++} from="hub" hub={slug} />
-        ) : (
-          <TrackRow key={item.track._id} track={item.track} from="library-hub" />
-        ),
-      )}
-    </>
-  );
+	let n = 0;
+	return (
+		<>
+			<View
+				className="bg-surface-secondary"
+				style={{ height: width * 0.62, width }}
+			>
+				<CoverImage
+					style={{ height: "100%", width: "100%" }}
+					thumbhash={hub.coverThumbhash}
+					transition={200}
+					uri={hub.coverUrl}
+				/>
+			</View>
+			<View className="gap-2 px-4 pt-5 pb-2">
+				<AppText
+					accessibilityRole="header"
+					className="font-bold text-[30px] leading-[35px]"
+				>
+					{hub.title}
+				</AppText>
+				<AppText className="text-[16px] text-muted leading-[22px]">
+					{hub.intro}
+				</AppText>
+			</View>
+			{hub.items.map((item) =>
+				item.kind === "entry" ? (
+					<EntryRow
+						entry={item.entry}
+						from="hub"
+						hub={slug}
+						index={n++}
+						key={item.entry._id}
+					/>
+				) : (
+					<TrackRow
+						from="library-hub"
+						key={item.track._id}
+						track={item.track}
+					/>
+				)
+			)}
+		</>
+	);
 }
 
 function EntryList({ kind, subject }: { kind?: Kind; subject?: string }) {
-  const entries = useQuery(api.library.entries.listEntries, { kind, subject });
-  if (entries === undefined) return <RowsSkeleton />;
-  if (entries.length === 0) return <Empty line="Nothing here yet." />;
-  return entries.map((e) => <EntryRow key={e._id} entry={e} from={kind ? 'kind' : 'subject'} />);
+	const entries = useQuery(api.library.entries.listEntries, { kind, subject });
+	if (entries === undefined) {
+		return <RowsSkeleton />;
+	}
+	if (entries.length === 0) {
+		return <Empty line="Nothing here yet." />;
+	}
+	return entries.map((e) => (
+		<EntryRow entry={e} from={kind ? "kind" : "subject"} key={e._id} />
+	));
 }
 
 const Empty = ({ line }: { line: string }) => (
-  <AppText className="px-4 pt-12 text-center text-[15px] text-muted">{line}</AppText>
+	<AppText className="px-4 pt-12 text-center text-[15px] text-muted">
+		{line}
+	</AppText>
 );
 
 /** One branch on what the list is of: its header title and its rows. */
 function listOf(by: ListBy) {
-  if ('hub' in by) return { title: '', rows: <HubList slug={by.hub} /> };
-  if ('kind' in by)
-    return { title: KINDS.find((k) => k.kind === by.kind)?.label ?? '', rows: <EntryList kind={by.kind} /> };
-  return { title: facetLabel(by.subject), rows: <EntryList subject={by.subject} /> };
+	if ("hub" in by) {
+		return { rows: <HubList slug={by.hub} />, title: "" };
+	}
+	if ("kind" in by) {
+		return {
+			rows: <EntryList kind={by.kind} />,
+			title: KINDS.find((k) => k.kind === by.kind)?.label ?? "",
+		};
+	}
+	return {
+		rows: <EntryList subject={by.subject} />,
+		title: facetLabel(by.subject),
+	};
 }
 
 export function LibraryListScreen({ by }: { by: ListBy }) {
-  const { title, rows } = listOf(by);
-  const posthog = usePostHog();
-  const key = 'hub' in by ? by.hub : 'kind' in by ? by.kind : by.subject;
-  const isPreview = useIsPreview(); // a long-press preview isn't an open
+	const { title, rows } = listOf(by);
+	const posthog = usePostHog();
+	const key = "hub" in by ? by.hub : "kind" in by ? by.kind : by.subject;
+	const isPreview = useIsPreview(); // a long-press preview isn't an open
 
-  const trackedFor = useRef<string | null>(null);
-  useEffect(() => {
-    if (isPreview || trackedFor.current === key) return;
-    trackedFor.current = key;
-    if ('hub' in by) trackLibrary(posthog, 'library_hub_opened', { hub: by.hub });
-    else if ('kind' in by) trackLibrary(posthog, 'library_kind_opened', { kind: by.kind });
-    else trackLibrary(posthog, 'library_subject_opened', { subject: by.subject });
-    // Once per list, not per render of the `by` object; a preview counts once it becomes the real screen.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, isPreview]);
+	const trackedFor = useRef<string | null>(null);
+	useEffect(() => {
+		if (isPreview || trackedFor.current === key) {
+			return;
+		}
+		trackedFor.current = key;
+		if ("hub" in by) {
+			trackLibrary(posthog, "library_hub_opened", { hub: by.hub });
+		} else if ("kind" in by) {
+			trackLibrary(posthog, "library_kind_opened", { kind: by.kind });
+		} else {
+			trackLibrary(posthog, "library_subject_opened", { subject: by.subject });
+		}
+		// Once per list, not per render of the `by` object; a preview counts once it becomes the real screen.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [key, isPreview]);
 
-  return (
-    <>
-      <Stack.Screen options={{ title }} />
-      <ScrollView
-        className="flex-1 bg-background"
-        contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={{ paddingBottom: 120 }}
-      >
-        {rows}
-      </ScrollView>
-    </>
-  );
+	return (
+		<>
+			<Stack.Screen options={{ title }} />
+			<ScrollView
+				className="flex-1 bg-background"
+				contentContainerStyle={{ paddingBottom: 120 }}
+				contentInsetAdjustmentBehavior="automatic"
+			>
+				{rows}
+			</ScrollView>
+		</>
+	);
 }

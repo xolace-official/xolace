@@ -1,5 +1,5 @@
+import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { useAccessibilityInfo } from "@/src/helpers/hooks/use-accessability-info";
 
 /**
@@ -17,10 +17,10 @@ export type MotionPreference = "system" | "reduced" | "full";
  * else becomes "system" (the correct, least-surprising default).
  */
 export function resolveMotionPreference(
-  motionPreference: MotionPreference | undefined,
-  reducedMotion: boolean | undefined
+	motionPreference: MotionPreference | undefined,
+	reducedMotion: boolean | undefined
 ): MotionPreference {
-  return motionPreference ?? (reducedMotion ? "reduced" : "system");
+	return motionPreference ?? (reducedMotion ? "reduced" : "system");
 }
 
 /**
@@ -29,11 +29,13 @@ export function resolveMotionPreference(
  * forced values ignore it.
  */
 export function isReducedMotion(
-  preference: MotionPreference,
-  osReduceMotionEnabled: boolean
+	preference: MotionPreference,
+	osReduceMotionEnabled: boolean
 ): boolean {
-  if (preference === "system") return osReduceMotionEnabled;
-  return preference === "reduced";
+	if (preference === "system") {
+		return osReduceMotionEnabled;
+	}
+	return preference === "reduced";
 }
 
 /**
@@ -47,13 +49,13 @@ export function isReducedMotion(
  * state before this matters.
  */
 export const useEffectiveReducedMotion = (): boolean => {
-  const preferences = useQuery(api.preferences.get);
-  const { reduceMotionEnabled } = useAccessibilityInfo();
+	const preferences = useQuery(api.preferences.get);
+	const { reduceMotionEnabled } = useAccessibilityInfo();
 
-  const preference = resolveMotionPreference(
-    preferences?.motionPreference,
-    preferences?.reducedMotion
-  );
+	const preference = resolveMotionPreference(
+		preferences?.motionPreference,
+		preferences?.reducedMotion
+	);
 
-  return isReducedMotion(preference, reduceMotionEnabled);
+	return isReducedMotion(preference, reduceMotionEnabled);
 };

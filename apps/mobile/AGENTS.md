@@ -1,9 +1,8 @@
 # @xolace/mobile
 
 Expo SDK 58 app (iOS + Android) on Expo Router, Clerk (`@clerk/expo`) and Convex.
-Today this is the template app; the real app moves in from `xolace_app` in Phase 2
-(into `src/`, `assets/`, `modules/`, `app.config.ts`, `eas.json`). The conventions
-below are the real app's and apply as soon as it lands.
+Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
+`app.config.ts`, `eas.json`).
 
 ## Commands
 
@@ -12,6 +11,7 @@ below are the real app's and apply as soon as it lands.
 - Native dev build: `bun run ios` / `bun run android` (needed after adding a native module).
 - Add an Expo package: `bunx expo install <pkg>` (picks the SDK-compatible version).
 - Check: `bun run check:changed` from the root; `bun run check-types` here.
+- Tests: `bun run test` here (vitest, node + RN stubs in `vitest.setup.ts`).
 
 ## Boundaries
 
@@ -20,7 +20,7 @@ below are the real app's and apply as soon as it lands.
 - Must not import: `@xolace/ui` (web-only), other apps, `api.admin.*`.
 - One React / React Native / expo-modules-core copy: see `.agents/rules/expo-monorepo.md`.
 
-## Conventions (real app)
+## Conventions
 
 - **Text:** never `Text` from `react-native`; use `AppText` (`src/components/shared/app-text`).
 - **Images:** `expo-image` only.

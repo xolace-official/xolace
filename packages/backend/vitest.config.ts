@@ -1,9 +1,6 @@
 import { loadEnv } from "vite";
 import { configDefaults, defineConfig } from "vitest/config";
 
-// Mirrors xolace_app/vitest.config.ts (backend half) so the real convex/ drops
-// in during Phase 2 without touching this file.
-
 const RUN_EVALS = process.env.RUN_EVALS === "1";
 
 // Outside evals the key is dropped, so no test can reach the live API.
@@ -18,11 +15,18 @@ const withoutAnthropicKey = (env: Record<string, string>) => {
 export default defineConfig({
 	test: {
 		coverage: {
-			include: ["convex/**"],
+			include: ["convex/**/*.ts"],
 			provider: "v8",
 			reporter: ["text"],
-			// Phase 2 restores the real app's floor once its tests move in:
-			// statements 24, branches 23, functions 26, lines 24.
+			// Floor set just under the observed baseline at xolace_app#252
+			// (statements 24.55, branches 23.68, functions 26.92, lines 25.18).
+			// Ratchet these up as coverage grows; they exist to catch a drop.
+			thresholds: {
+				branches: 23,
+				functions: 26,
+				lines: 24,
+				statements: 24,
+			},
 		},
 		// vitest only exposes VITE_-prefixed vars by default; an empty prefix loads
 		// everything from .env.test / .env.test.local into process.env.

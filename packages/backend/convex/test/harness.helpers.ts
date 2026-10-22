@@ -25,11 +25,12 @@
  * `rankInsert`, and the `@convex-dev/aggregate` component is not registered in
  * the test backend.
  */
+
+import { register as registerCredits } from "@clipin/convex-credits/test";
 import { convexTest, type TestConvex } from "convex-test";
 import { api } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import schema from "../schema";
-import { register as registerCredits } from "@clipin/convex-credits/test";
 
 // `import.meta.glob` is typed by `vite/client`, which the credits test entry
 // references.
@@ -43,26 +44,38 @@ export const TEST_ISSUER = "https://test.clerk.accounts.dev";
 /** Distinct, recognisable Clerk-shaped identity. `tokenIdentifier` is left for
  * `withIdentity` to derive. */
 export const makeIdentity = (n = 1) => ({
-  issuer: TEST_ISSUER,
-  subject: `user_test_${n}`,
+	issuer: TEST_ISSUER,
+	subject: `user_test_${n}`,
 });
 
 /** A bare test backend with no identity attached. */
 export function asUnauthed(): TestConvex<typeof schema> {
-  const t = convexTest(schema, modules);
-  // Talk time's ledger (#596): mounted app-wide, cheap to register everywhere.
-  registerCredits(t);
-  return t;
+	const t = convexTest(schema, modules);
+	// Talk time's ledger (#596): mounted app-wide, cheap to register everywhere.
+	registerCredits(t);
+	return t;
+}
+
+/** Backend scoped to signed-in user `n` without the admin role. Unlike
+ * `asNewUser`, no `users` row is created. */
+export function asUser(n = 1, root = asUnauthed()) {
+	return root.withIdentity(makeIdentity(n));
+}
+
+/** Backend scoped to user `n` whose token carries `role: "admin"`, as the
+ * Clerk `convex` JWT template emits it. */
+export function asAdmin(n = 1, root = asUnauthed()) {
+	return root.withIdentity({ ...makeIdentity(n), role: "admin" });
 }
 
 export type SeededUser = {
-  /** Backend scoped to this user's identity. */
-  t: ReturnType<TestConvex<typeof schema>["withIdentity"]>;
-  /** Unscoped backend — pass it to `asNewUser` again for a second user on the
-   * same data, or use `root.run` for states `getOrCreate` cannot produce. */
-  root: TestConvex<typeof schema>;
-  userId: Id<"users">;
-  profileId: Id<"emotional_profiles">;
+	/** Backend scoped to this user's identity. */
+	t: ReturnType<TestConvex<typeof schema>["withIdentity"]>;
+	/** Unscoped backend — pass it to `asNewUser` again for a second user on the
+	 * same data, or use `root.run` for states `getOrCreate` cannot produce. */
+	root: TestConvex<typeof schema>;
+	userId: Id<"users">;
+	profileId: Id<"emotional_profiles">;
 };
 
 /**
@@ -71,29 +84,34 @@ export type SeededUser = {
  * @param n - Distinguishes identities; pass 2 (and `root`) for a second user.
  * @param root - Existing backend to seed into. Omit for a fresh one.
  */
-export async function asNewUser(n = 1, root = asUnauthed()): Promise<SeededUser> {
-  const t = root.withIdentity(makeIdentity(n));
-  const userId = await t.mutation(api.users.getOrCreate, {
-    authProvider: "google",
-  });
-  const profileId = await root.run(async (ctx) => {
-    const user = await ctx.db.get("users", userId);
-    if (!user) throw new Error("getOrCreate returned an id with no user row");
-    return user.emotionalProfileId;
-  });
-  return { t, root, userId, profileId };
+export async function asNewUser(
+	n = 1,
+	root = asUnauthed()
+): Promise<SeededUser> {
+	const t = root.withIdentity(makeIdentity(n));
+	const userId = await t.mutation(api.users.getOrCreate, {
+		authProvider: "google",
+	});
+	const profileId = await root.run(async (ctx) => {
+		const user = await ctx.db.get("users", userId);
+		if (!user) {
+			throw new Error("getOrCreate returned an id with no user row");
+		}
+		return user.emotionalProfileId;
+	});
+	return { profileId, root, t, userId };
 }
 
 /** `asNewUser`, then force the account into a non-active status — the states
  * `getOrCreate` will not produce on its own. */
 export async function asUserWithStatus(
-  status: Doc<"users">["accountStatus"],
-  n = 1,
-  root = asUnauthed(),
+	status: Doc<"users">["accountStatus"],
+	n = 1,
+	root = asUnauthed()
 ): Promise<SeededUser> {
-  const seeded = await asNewUser(n, root);
-  await seeded.root.run((ctx) =>
-    ctx.db.patch("users", seeded.userId, { accountStatus: status }),
-  );
-  return seeded;
+	const seeded = await asNewUser(n, root);
+	await seeded.root.run((ctx) =>
+		ctx.db.patch("users", seeded.userId, { accountStatus: status })
+	);
+	return seeded;
 }

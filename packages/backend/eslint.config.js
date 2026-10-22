@@ -21,6 +21,10 @@ export default defineConfig([
 	{
 		files: ["convex/**/*.ts"],
 		rules: {
+			// Lint debt from the xolace_app move (docs/plan/lint-debt.md). Dropping an
+			// index is a schema change, so it waits for its own PR.
+			"@convex-dev/explicit-table-ids": "warn",
+			"@convex-dev/no-duplicate-indexes": "warn",
 			// New in plugin v5. auth.config.ts must read process.env (it is not a
 			// function module, so the typed `env` from defineApp is unavailable), and
 			// the real backend reads process.env in ~22 modules. Revisit after

@@ -7,7 +7,7 @@
  * other thread still need to reach the user. Stream sends push irrespective of
  * online status, so server-side eligibility cannot make that distinction.
  */
-import { isChatNotificationType } from '@/convex/lib/chatNotifications';
+import { isChatNotificationType } from "@xolace/backend/convex/lib/chatNotifications";
 
 /** A push payload as it actually arrives: an open bag, nothing guaranteed. */
 type NotificationData = Record<string, unknown> | undefined | null;
@@ -18,17 +18,19 @@ type NotificationData = Record<string, unknown> | undefined | null;
  * runnable under Vitest.
  */
 type PresentedNotification = {
-  request: { identifier: string; content: { data?: NotificationData } };
+	request: { identifier: string; content: { data?: NotificationData } };
 };
 
 let activeConversationId: string | null = null;
 
 export function setActiveNotificationConversation(conversationId: string) {
-  activeConversationId = conversationId;
+	activeConversationId = conversationId;
 }
 
 export function clearActiveNotificationConversation(conversationId: string) {
-  if (activeConversationId === conversationId) activeConversationId = null;
+	if (activeConversationId === conversationId) {
+		activeConversationId = null;
+	}
 }
 
 /**
@@ -36,11 +38,11 @@ export function clearActiveNotificationConversation(conversationId: string) {
  * so its foreground arrival must still use the OS notification surfaces.
  */
 export function suppressedInForeground(data: NotificationData): boolean {
-  return (
-    isChatNotificationType(data?.type) &&
-    typeof data?.conversationId === 'string' &&
-    data.conversationId === activeConversationId
-  );
+	return (
+		isChatNotificationType(data?.type) &&
+		typeof data?.conversationId === "string" &&
+		data.conversationId === activeConversationId
+	);
 }
 
 /**
@@ -49,15 +51,16 @@ export function suppressedInForeground(data: NotificationData): boolean {
  * swept out of the tray with them.
  */
 export function conversationNotificationIds(
-  presented: PresentedNotification[],
-  conversationId: string,
+	presented: PresentedNotification[],
+	conversationId: string
 ): string[] {
-  return presented
-    .filter((n) => {
-      const data = n.request.content.data;
-      return (
-        isChatNotificationType(data?.type) && data?.conversationId === conversationId
-      );
-    })
-    .map((n) => n.request.identifier);
+	return presented
+		.filter((n) => {
+			const data = n.request.content.data;
+			return (
+				isChatNotificationType(data?.type) &&
+				data?.conversationId === conversationId
+			);
+		})
+		.map((n) => n.request.identifier);
 }

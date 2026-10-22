@@ -1,18 +1,21 @@
-import { Stack } from 'expo-router';
-import ArchiveIcon from '@expo/material-symbols/archive.xml';
-import BedtimeIcon from '@expo/material-symbols/bedtime.xml';
-import CloseIcon from '@expo/material-symbols/close.xml';
-import DeleteIcon from '@expo/material-symbols/delete.xml';
-import UnarchiveIcon from '@expo/material-symbols/unarchive.xml';
-import { canDelete, canManualRest } from '@/convex/lib/conversationGating';
-import type { PairConversation } from './chats-list';
+import ArchiveIcon from "@expo/material-symbols/archive.xml";
+import BedtimeIcon from "@expo/material-symbols/bedtime.xml";
+import CloseIcon from "@expo/material-symbols/close.xml";
+import DeleteIcon from "@expo/material-symbols/delete.xml";
+import UnarchiveIcon from "@expo/material-symbols/unarchive.xml";
+import {
+	canDelete,
+	canManualRest,
+} from "@xolace/backend/convex/lib/conversationGating";
+import { Stack } from "expo-router";
+import type { PairConversation } from "./chats-list";
 
 export type ChatActionSheetProps = {
-  conversation: PairConversation;
-  onDismiss: () => void;
-  onArchive: () => void;
-  onClose: () => void;
-  onDelete: () => void;
+	conversation: PairConversation;
+	onDismiss: () => void;
+	onArchive: () => void;
+	onClose: () => void;
+	onDelete: () => void;
 };
 
 /**
@@ -27,50 +30,56 @@ export type ChatActionSheetProps = {
  * so neither platform bundles the other's icons.
  */
 export function ChatActionSheet({
-  conversation,
-  onDismiss,
-  onArchive,
-  onClose,
-  onDelete,
+	conversation,
+	onDismiss,
+	onArchive,
+	onClose,
+	onDelete,
 }: ChatActionSheetProps) {
-  const android = process.env.EXPO_OS === 'android';
-  return (
-    <Stack.Toolbar placement="bottom">
-      <Stack.Toolbar.Button
-        icon={android ? CloseIcon : undefined}
-        onPress={onDismiss}
-      >
-        Cancel
-      </Stack.Toolbar.Button>
-      <Stack.Toolbar.Spacer width={android ? 24 : undefined} />
-      {canManualRest(conversation, conversation.role) && (
-        // Wrapping a conversation up is the resting transition, so it takes
-        // the resting metaphor's icon rather than an X, which would read as
-        // "delete this" — the one thing Close never does.
-        <Stack.Toolbar.Button
-          icon={android ? BedtimeIcon : undefined}
-          onPress={onClose}
-        >
-          Close
-        </Stack.Toolbar.Button>
-      )}
-      <Stack.Toolbar.Button
-        icon={android ? (conversation.archived ? UnarchiveIcon : ArchiveIcon) : undefined}
-        onPress={onArchive}
-      >
-        {conversation.archived ? 'Unarchive' : 'Archive'}
-      </Stack.Toolbar.Button>
-      {canDelete(conversation) && (
-        // Only ever on a declined or expired request — the two outcomes that
-        // never became a conversation. Unlike the rest of this toolbar it asks
-        // first, because this one doesn't come back.
-        <Stack.Toolbar.Button
-          icon={android ? DeleteIcon : undefined}
-          onPress={onDelete}
-        >
-          Delete
-        </Stack.Toolbar.Button>
-      )}
-    </Stack.Toolbar>
-  );
+	const android = process.env.EXPO_OS === "android";
+	return (
+		<Stack.Toolbar placement="bottom">
+			<Stack.Toolbar.Button
+				icon={android ? CloseIcon : undefined}
+				onPress={onDismiss}
+			>
+				Cancel
+			</Stack.Toolbar.Button>
+			<Stack.Toolbar.Spacer width={android ? 24 : undefined} />
+			{canManualRest(conversation, conversation.role) && (
+				// Wrapping a conversation up is the resting transition, so it takes
+				// the resting metaphor's icon rather than an X, which would read as
+				// "delete this" — the one thing Close never does.
+				<Stack.Toolbar.Button
+					icon={android ? BedtimeIcon : undefined}
+					onPress={onClose}
+				>
+					Close
+				</Stack.Toolbar.Button>
+			)}
+			<Stack.Toolbar.Button
+				icon={
+					android
+						? conversation.archived
+							? UnarchiveIcon
+							: ArchiveIcon
+						: undefined
+				}
+				onPress={onArchive}
+			>
+				{conversation.archived ? "Unarchive" : "Archive"}
+			</Stack.Toolbar.Button>
+			{canDelete(conversation) && (
+				// Only ever on a declined or expired request — the two outcomes that
+				// never became a conversation. Unlike the rest of this toolbar it asks
+				// first, because this one doesn't come back.
+				<Stack.Toolbar.Button
+					icon={android ? DeleteIcon : undefined}
+					onPress={onDelete}
+				>
+					Delete
+				</Stack.Toolbar.Button>
+			)}
+		</Stack.Toolbar>
+	);
 }

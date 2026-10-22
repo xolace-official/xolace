@@ -9,95 +9,109 @@
  * `username` is the one question whose answer never leaves the device: it
  * records whether the suggested handle was kept, never the handle itself.
  */
-import type { PostHog } from 'posthog-react-native';
 
-import { INTAKE_VERSION } from '@/convex/lib/validators';
-import { SERIES_BRANCH_VALUE } from '@/src/features/intake/questions';
-import type { IntakeAnswers } from '@/src/store/intake-slice';
+import { INTAKE_VERSION } from "@xolace/backend/convex/lib/validators";
+import type { PostHog } from "posthog-react-native";
+import { SERIES_BRANCH_VALUE } from "@/src/features/intake/questions";
+import type { IntakeAnswers } from "@/src/store/intake-slice";
 
-type StepType = 'founder' | 'question' | 'interstitial' | 'paywall';
-type Section = 'you' | 'how_you_carry_it' | 'finding_us' | null;
+type StepType = "founder" | "question" | "interstitial" | "paywall";
+type Section = "you" | "how_you_carry_it" | "finding_us" | null;
 
 /** T7 §2.3 — the canonical ordered flow. Position in here is `step_index`. */
 const STEPS = [
-  { key: 'founder', type: 'founder', section: null },
-  { key: 'username', type: 'question', section: 'you' },
-  { key: 'intent', type: 'question', section: 'you' },
-  { key: 'weighing_on', type: 'question', section: 'you' },
-  { key: 'interstitial_privacy', type: 'interstitial', section: null },
-  { key: 'emotion_awareness', type: 'question', section: 'how_you_carry_it' },
-  { key: 'disclosure_style', type: 'question', section: 'how_you_carry_it' },
-  { key: 'coping_style', type: 'question', section: 'how_you_carry_it' },
-  { key: 'support_frequency', type: 'question', section: 'how_you_carry_it' },
-  { key: 'interstitial_feedback_awareness', type: 'interstitial', section: null },
-  { key: 'age_bracket', type: 'question', section: 'finding_us' },
-  { key: 'acquisition_source', type: 'question', section: 'finding_us' },
-  { key: 'series_seen', type: 'question', section: 'finding_us' },
-  { key: 'series_want_in_app', type: 'question', section: 'finding_us' },
-  { key: 'paywall', type: 'paywall', section: null },
-] as const satisfies readonly { key: string; type: StepType; section: Section }[];
+	{ key: "founder", section: null, type: "founder" },
+	{ key: "username", section: "you", type: "question" },
+	{ key: "intent", section: "you", type: "question" },
+	{ key: "weighing_on", section: "you", type: "question" },
+	{ key: "interstitial_privacy", section: null, type: "interstitial" },
+	{ key: "emotion_awareness", section: "how_you_carry_it", type: "question" },
+	{ key: "disclosure_style", section: "how_you_carry_it", type: "question" },
+	{ key: "coping_style", section: "how_you_carry_it", type: "question" },
+	{ key: "support_frequency", section: "how_you_carry_it", type: "question" },
+	{
+		key: "interstitial_feedback_awareness",
+		section: null,
+		type: "interstitial",
+	},
+	{ key: "age_bracket", section: "finding_us", type: "question" },
+	{ key: "acquisition_source", section: "finding_us", type: "question" },
+	{ key: "series_seen", section: "finding_us", type: "question" },
+	{ key: "series_want_in_app", section: "finding_us", type: "question" },
+	{ key: "paywall", section: null, type: "paywall" },
+] as const satisfies readonly {
+	key: string;
+	type: StepType;
+	section: Section;
+}[];
 
-export type IntakeStepKey = (typeof STEPS)[number]['key'];
+export type IntakeStepKey = (typeof STEPS)[number]["key"];
 
 /** Answer-slice key → `step_key`. Q1's answer key is `displayName`. */
 export const STEP_KEY_BY_ANSWER = {
-  displayName: 'username',
-  intent: 'intent',
-  weighingOn: 'weighing_on',
-  emotionAwareness: 'emotion_awareness',
-  disclosureStyle: 'disclosure_style',
-  copingStyle: 'coping_style',
-  supportFrequency: 'support_frequency',
-  ageBracket: 'age_bracket',
-  acquisitionSource: 'acquisition_source',
-  seriesSeen: 'series_seen',
-  seriesWantInApp: 'series_want_in_app',
+	acquisitionSource: "acquisition_source",
+	ageBracket: "age_bracket",
+	copingStyle: "coping_style",
+	disclosureStyle: "disclosure_style",
+	displayName: "username",
+	emotionAwareness: "emotion_awareness",
+	intent: "intent",
+	seriesSeen: "series_seen",
+	seriesWantInApp: "series_want_in_app",
+	supportFrequency: "support_frequency",
+	weighingOn: "weighing_on",
 } as const satisfies Record<string, IntakeStepKey>;
 
 /** The `step_key` for an answer key, or nothing if it names no tracked step. */
 export const stepKeyOfAnswer = (name: string): IntakeStepKey | undefined =>
-  STEP_KEY_BY_ANSWER[name as keyof typeof STEP_KEY_BY_ANSWER];
+	STEP_KEY_BY_ANSWER[name as keyof typeof STEP_KEY_BY_ANSWER];
 
-export const DECLINED_VALUE = 'prefer_not_to_say';
+export const DECLINED_VALUE = "prefer_not_to_say";
 
-const indexOf = (key: IntakeStepKey) => STEPS.findIndex((step) => step.key === key);
+const indexOf = (key: IntakeStepKey) =>
+	STEPS.findIndex((step) => step.key === key);
 
 function stepViewedProps(stepKey: IntakeStepKey) {
-  const index = indexOf(stepKey);
-  const step = STEPS[index]!;
-  return {
-    step_key: step.key,
-    step_index: index,
-    step_type: step.type,
-    section: step.section,
-  };
+	const index = indexOf(stepKey);
+	const step = STEPS[index]!;
+	return {
+		section: step.section,
+		step_index: index,
+		step_key: step.key,
+		step_type: step.type,
+	};
 }
 
 const isDeclined = (value: unknown) =>
-  Array.isArray(value) ? value.includes(DECLINED_VALUE) : value === DECLINED_VALUE;
+	Array.isArray(value)
+		? value.includes(DECLINED_VALUE)
+		: value === DECLINED_VALUE;
 
-export function questionAnsweredProps(questionKey: IntakeStepKey, value: string | string[]) {
-  const multi = Array.isArray(value);
-  return {
-    question_key: questionKey,
-    question_index: indexOf(questionKey),
-    value,
-    is_multi: multi,
-    // Omitted for single-selects per T7 §2.1 rather than sent as 1.
-    ...(multi ? { selection_count: value.length } : {}),
-    declined: isDeclined(value),
-  };
+export function questionAnsweredProps(
+	questionKey: IntakeStepKey,
+	value: string | string[]
+) {
+	const multi = Array.isArray(value);
+	return {
+		is_multi: multi,
+		question_index: indexOf(questionKey),
+		question_key: questionKey,
+		value,
+		// Omitted for single-selects per T7 §2.1 rather than sent as 1.
+		...(multi ? { selection_count: value.length } : {}),
+		declined: isDeclined(value),
+	};
 }
 
 /** Questions answered "I'd rather not say" across the whole set. */
 export function declinedCount(answers: IntakeAnswers): number {
-  return Object.values(answers).filter(isDeclined).length;
+	return Object.values(answers).filter(isDeclined).length;
 }
 
 const prune = <T extends Record<string, unknown>>(props: T): Partial<T> =>
-  Object.fromEntries(
-    Object.entries(props).filter(([, value]) => value !== undefined)
-  ) as Partial<T>;
+	Object.fromEntries(
+		Object.entries(props).filter(([, value]) => value !== undefined)
+	) as Partial<T>;
 
 /**
  * The person-property dual-write (T7 §3), written at questionnaire submit and
@@ -107,24 +121,27 @@ const prune = <T extends Record<string, unknown>>(props: T): Partial<T> =>
  * overwrite how someone originally found us. `displayName` is deliberately not
  * here: it is not segmentation signal.
  */
-export function intakePersonProperties(answers: IntakeAnswers, version = INTAKE_VERSION) {
-  return {
-    $set: prune({
-      intent: answers.intent,
-      weighing_on: answers.weighingOn,
-      emotion_awareness: answers.emotionAwareness,
-      disclosure_style: answers.disclosureStyle,
-      coping_style: answers.copingStyle,
-      support_frequency: answers.supportFrequency,
-      age_bracket: answers.ageBracket,
-      intake_version: version,
-    }),
-    $set_once: prune({
-      acquisition_source: answers.acquisitionSource,
-      series_seen: answers.seriesSeen,
-      series_want_in_app: answers.seriesWantInApp,
-    }),
-  };
+export function intakePersonProperties(
+	answers: IntakeAnswers,
+	version = INTAKE_VERSION
+) {
+	return {
+		$set: prune({
+			age_bracket: answers.ageBracket,
+			coping_style: answers.copingStyle,
+			disclosure_style: answers.disclosureStyle,
+			emotion_awareness: answers.emotionAwareness,
+			intake_version: version,
+			intent: answers.intent,
+			support_frequency: answers.supportFrequency,
+			weighing_on: answers.weighingOn,
+		}),
+		$set_once: prune({
+			acquisition_source: answers.acquisitionSource,
+			series_seen: answers.seriesSeen,
+			series_want_in_app: answers.seriesWantInApp,
+		}),
+	};
 }
 
 /**
@@ -153,66 +170,74 @@ let completedFired = false;
 const durationMs = () => (startedAt === 0 ? 0 : Date.now() - startedAt);
 
 export function trackIntakeStarted(posthog: PostHog, sessionCount: number) {
-  startedAt = Date.now();
-  returningUser = sessionCount > 0;
-  completedFired = false;
-  posthog.capture('intake_started', {
-    session_count: sessionCount,
-    is_returning_user: sessionCount > 0,
-  });
-  trackStepViewed(posthog, 'founder');
+	startedAt = Date.now();
+	returningUser = sessionCount > 0;
+	completedFired = false;
+	posthog.capture("intake_started", {
+		is_returning_user: sessionCount > 0,
+		session_count: sessionCount,
+	});
+	trackStepViewed(posthog, "founder");
 }
 
 export function trackStepViewed(posthog: PostHog, stepKey: IntakeStepKey) {
-  posthog.capture('intake_step_viewed', stepViewedProps(stepKey));
+	posthog.capture("intake_step_viewed", stepViewedProps(stepKey));
 }
 
 export function trackQuestionAnswered(
-  posthog: PostHog,
-  questionKey: IntakeStepKey,
-  value: string | string[],
-  /** Extra props for a question that needs one — see `username` below. */
-  extra?: Record<string, unknown>
+	posthog: PostHog,
+	questionKey: IntakeStepKey,
+	value: string | string[],
+	/** Extra props for a question that needs one — see `username` below. */
+	extra?: Record<string, unknown>
 ) {
-  posthog.capture('intake_question_answered', {
-    ...questionAnsweredProps(questionKey, value),
-    ...extra,
-  });
+	posthog.capture("intake_question_answered", {
+		...questionAnsweredProps(questionKey, value),
+		...extra,
+	});
 }
 
 const branchedSeries = (answers: IntakeAnswers) =>
-  answers.acquisitionSource === SERIES_BRANCH_VALUE;
+	answers.acquisitionSource === SERIES_BRANCH_VALUE;
 
 /**
  * Last §3 question answered. Carries the person-property dual-write, so the
  * paywall funnel is channel-attributed without a second call.
  */
-export function trackQuestionnaireCompleted(posthog: PostHog, answers: IntakeAnswers) {
-  posthog.capture('intake_questionnaire_completed', {
-    duration_ms: durationMs(),
-    declined_count: declinedCount(answers),
-    branched_series: branchedSeries(answers),
-    ...intakePersonProperties(answers),
-  });
+export function trackQuestionnaireCompleted(
+	posthog: PostHog,
+	answers: IntakeAnswers
+) {
+	posthog.capture("intake_questionnaire_completed", {
+		branched_series: branchedSeries(answers),
+		declined_count: declinedCount(answers),
+		duration_ms: durationMs(),
+		...intakePersonProperties(answers),
+	});
 }
 
 export function trackPaywallSkipped(posthog: PostHog) {
-  posthog.capture('intake_paywall_skipped', { reason: 'active_entitlement' });
+	posthog.capture("intake_paywall_skipped", { reason: "active_entitlement" });
 }
 
-export type IntakeOutcome = 'purchased' | 'dismissed_paywall' | 'skipped_paywall';
+export type IntakeOutcome =
+	| "purchased"
+	| "dismissed_paywall"
+	| "skipped_paywall";
 
 export function trackIntakeCompleted(
-  posthog: PostHog,
-  outcome: IntakeOutcome,
-  answers: IntakeAnswers
+	posthog: PostHog,
+	outcome: IntakeOutcome,
+	answers: IntakeAnswers
 ) {
-  if (completedFired) return;
-  completedFired = true;
-  posthog.capture('intake_completed', {
-    outcome,
-    duration_ms: durationMs(),
-    branched_series: branchedSeries(answers),
-    is_returning_user: returningUser,
-  });
+	if (completedFired) {
+		return;
+	}
+	completedFired = true;
+	posthog.capture("intake_completed", {
+		branched_series: branchedSeries(answers),
+		duration_ms: durationMs(),
+		is_returning_user: returningUser,
+		outcome,
+	});
 }

@@ -1,94 +1,96 @@
+import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
-import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useSessionEnd } from "@/src/features/session-end/hooks/use-session-end";
-import { ExitVariant } from "@/src/features/session-end/components/exit-variant";
+import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
+import { useSessionMode } from "@/src/context/session-mode-context";
 import { ActivityVariant } from "@/src/features/session-end/components/activity-variant";
+import { ExitVariant } from "@/src/features/session-end/components/exit-variant";
 import { ReachFeedbackCard } from "@/src/features/session-end/components/reach-feedback-card";
 import { SessionEndNotifNudge } from "@/src/features/session-end/components/session-end-notif-nudge";
 import { UnlockBeat } from "@/src/features/session-end/components/unlock-beat";
+import { useSessionEnd } from "@/src/features/session-end/hooks/use-session-end";
 import { playSessionComplete } from "@/src/lib/haptics";
-import { useSessionMode } from "@/src/context/session-mode-context";
-
-import type { Id } from "@/convex/_generated/dataModel";
 
 type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
 type PathType = "solo" | "peers" | "exit";
 
 type Props = {
-  path: PathType;
-  sessionId: Id<"sessions"> | null;
+	path: PathType;
+	sessionId: Id<"sessions"> | null;
 };
 
 const styles = StyleSheet.create({
-  insetsContainer: {
-    paddingTop: 0,
-    paddingBottom: 0,
-  },
+	insetsContainer: {
+		paddingBottom: 0,
+		paddingTop: 0,
+	},
 });
 
-export const SessionEndScreen = ({ path, sessionId: routeSessionId }: Props) => {
-  const insets = useSafeAreaInsets();
-  const {
-    sessionId,
-    isLoading,
-    distilledText,
-    contributeByDefault,
-    sessionCount,
-    domainUnlock,
-    dismiss,
-    haveMore,
-  } = useSessionEnd(routeSessionId);
-  const { isNight } = useSessionMode();
-  const insetsStyle = [
-    styles.insetsContainer,
-    { paddingTop: insets.top, paddingBottom: insets.bottom },
-  ];
+export const SessionEndScreen = ({
+	path,
+	sessionId: routeSessionId,
+}: Props) => {
+	const insets = useSafeAreaInsets();
+	const {
+		sessionId,
+		isLoading,
+		distilledText,
+		contributeByDefault,
+		sessionCount,
+		domainUnlock,
+		dismiss,
+		haveMore,
+	} = useSessionEnd(routeSessionId);
+	const { isNight } = useSessionMode();
+	const insetsStyle = [
+		styles.insetsContainer,
+		{ paddingBottom: insets.bottom, paddingTop: insets.top },
+	];
 
-  useEffect(() => {
-    if (!isLoading) {
-      playSessionComplete();
-    }
-  }, [isLoading]);
+	useEffect(() => {
+		if (!isLoading) {
+			playSessionComplete();
+		}
+	}, [isLoading]);
 
-  if (isLoading) {
-    return (
-      <View
-        className="flex-1 items-center justify-center bg-background"
-        style={insetsStyle}
-      >
-        <MorphLoader />
-      </View>
-    );
-  }
+	if (isLoading) {
+		return (
+			<View
+				className="flex-1 items-center justify-center bg-background"
+				style={insetsStyle}
+			>
+				<MorphLoader />
+			</View>
+		);
+	}
 
-  return (
-    <View className="flex-1 bg-background" style={insetsStyle}>
-      {path === "exit" ? (
-        <ExitVariant
-          onHaveMore={() => haveMore()}
-          isNight={isNight}
-          sessionId={sessionId ?? undefined}
-        />
-      ) : (
-        <ActivityVariant
-          sessionId={sessionId ?? undefined}
-          distilledText={distilledText}
-          contributeByDefault={contributeByDefault}
-          onDismiss={(contributed: boolean | null, mood?: PostSessionMood) =>
-            dismiss(contributed, mood)
-          }
-          onHaveMore={(contributed: boolean | null, mood?: PostSessionMood) =>
-            haveMore(contributed, mood)
-          }
-          isNight={isNight}
-        />
-      )}
+	return (
+		<View className="flex-1 bg-background" style={insetsStyle}>
+			{path === "exit" ? (
+				<ExitVariant
+					isNight={isNight}
+					onHaveMore={() => haveMore()}
+					sessionId={sessionId ?? undefined}
+				/>
+			) : (
+				<ActivityVariant
+					contributeByDefault={contributeByDefault}
+					distilledText={distilledText}
+					isNight={isNight}
+					onDismiss={(contributed: boolean | null, mood?: PostSessionMood) =>
+						dismiss(contributed, mood)
+					}
+					onHaveMore={(contributed: boolean | null, mood?: PostSessionMood) =>
+						haveMore(contributed, mood)
+					}
+					sessionId={sessionId ?? undefined}
+				/>
+			)}
 
-      {sessionId && <UnlockBeat sessionId={sessionId} unlock={domainUnlock} />}
-      <SessionEndNotifNudge />
-      <ReachFeedbackCard sessionCount={sessionCount} />
-    </View>
-  );
+			{sessionId && <UnlockBeat sessionId={sessionId} unlock={domainUnlock} />}
+			<SessionEndNotifNudge />
+			<ReachFeedbackCard sessionCount={sessionCount} />
+		</View>
+	);
 };

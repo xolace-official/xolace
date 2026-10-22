@@ -56,25 +56,40 @@
     "better-t-stack": {
       "source": "custom",
       "command": "bunx",
-      "args": ["create-better-t-stack@latest", "mcp"],
+      "args": [
+        "create-better-t-stack@latest",
+        "mcp"
+      ],
       "env": {}
     },
     "convex": {
       "source": "custom",
       "command": "npx",
-      "args": ["-y", "convex@latest", "mcp", "start"],
+      "args": [
+        "-y",
+        "convex@latest",
+        "mcp",
+        "start"
+      ],
       "env": {}
     },
     "shadcn": {
       "source": "custom",
       "command": "npx",
-      "args": ["-y", "shadcn@latest", "mcp"],
+      "args": [
+        "-y",
+        "shadcn@latest",
+        "mcp"
+      ],
       "env": {}
     },
     "next-devtools": {
       "source": "custom",
       "command": "npx",
-      "args": ["-y", "next-devtools-mcp@latest"],
+      "args": [
+        "-y",
+        "next-devtools-mcp@latest"
+      ],
       "env": {}
     },
     "clerk": {
@@ -88,6 +103,13 @@
       "type": "http",
       "url": "https://mcp.expo.dev/mcp",
       "headers": {}
+    },
+    "argent": {
+      "source": "custom",
+      "command": "argent",
+      "args": [
+        "mcp"
+      ]
     }
   }
 }

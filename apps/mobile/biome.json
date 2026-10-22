@@ -14,7 +14,71 @@
   },
   "overrides": [
     {
-      "includes": ["themes/**/*.css"],
+      "includes": ["src/**", "vitest.setup.ts", "metro.config.js"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off",
+            "noForEach": "off",
+            "noUselessLoneBlockStatements": "off",
+            "noVoid": "off",
+            "useOptionalChain": "off"
+          },
+          "correctness": {
+            "noUnusedFunctionParameters": "off",
+            "noUnusedImports": "off",
+            "noUnusedVariables": "off",
+            "noVoidTypeReturn": "off",
+            "useExhaustiveDependencies": "off"
+          },
+          "performance": {
+            "noAwaitInLoops": "off",
+            "noBarrelFile": "off",
+            "noNamespaceImport": "off",
+            "useTopLevelRegex": "off"
+          },
+          "style": {
+            "noExportedImports": "off",
+            "noIncrementDecrement": "off",
+            "noNestedTernary": "off",
+            "noNonNullAssertion": "off",
+            "useAtIndex": "off",
+            "useConsistentMethodSignatures": "off",
+            "useConsistentTypeDefinitions": "off",
+            "useDefaultSwitchClause": "off",
+            "useDestructuring": "off",
+            "useFilenamingConvention": "off",
+            "useNodejsImportProtocol": "off",
+            "useShorthandAssign": "off",
+            "useTemplate": "off"
+          },
+          "suspicious": {
+            "noArrayIndexKey": "off",
+            "noAssignInExpressions": "off",
+            "noBitwiseOperators": "off",
+            "noConfusingVoidType": "off",
+            "noEmptyBlockStatements": "off",
+            "noEqualsToNull": "off",
+            "noEvolvingTypes": "off",
+            "noExplicitAny": "off",
+            "noGlobalAssign": "off",
+            "noImplicitAnyLet": "off",
+            "noLeakedRender": "off",
+            "noNestedPromises": "off",
+            "noRedeclare": "off",
+            "noReturnAssign": "off",
+            "noShadow": "off",
+            "noShadowRestrictedNames": "off",
+            "noUnnecessaryConditions": "off",
+            "noUnusedExpressions": "off",
+            "useAwait": "off",
+            "useIterableCallbackReturn": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/themes/**/*.css"],
       "linter": {
         "rules": {
           "suspicious": {
@@ -37,5 +101,8 @@
         }
       }
     }
-  ]
+  ],
+  "javascript": {
+    "globals": ["__DEV__"]
+  }
 }

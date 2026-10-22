@@ -1,9 +1,9 @@
-import { useConvexAuth } from 'convex/react';
-import { usePresence } from '@convex-dev/presence/react-native';
-import { api } from '@/convex/_generated/api';
+import { usePresence } from "@convex-dev/presence/react-native";
+import { api } from "@xolace/backend/convex/_generated/api";
+import { useConvexAuth } from "convex/react";
 
 /** Must match `PRESENCE_ROOM` in convex/presence.ts. */
-const PRESENCE_ROOM = 'app';
+const PRESENCE_ROOM = "app";
 
 /**
  * 30s, matching the server. The component times a session out at 2.5x this,
@@ -37,9 +37,9 @@ const HEARTBEAT_INTERVAL_MS = 30_000;
  * revisiting only if it shows up as Sentry noise.
  */
 export function AppPresence() {
-  const { isAuthenticated } = useConvexAuth();
-  // Hooks can't be called conditionally, so the gate is a mount boundary.
-  return isAuthenticated ? <Heartbeat /> : null;
+	const { isAuthenticated } = useConvexAuth();
+	// Hooks can't be called conditionally, so the gate is a mount boundary.
+	return isAuthenticated ? <Heartbeat /> : null;
 }
 
 /**
@@ -54,6 +54,6 @@ export function AppPresence() {
  * heartbeat as someone else, and cannot choose its own room.
  */
 function Heartbeat() {
-  usePresence(api.presence, PRESENCE_ROOM, '', HEARTBEAT_INTERVAL_MS);
-  return null;
+	usePresence(api.presence, PRESENCE_ROOM, "", HEARTBEAT_INTERVAL_MS);
+	return null;
 }

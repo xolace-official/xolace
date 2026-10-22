@@ -1,9 +1,9 @@
-import { useCallback, useRef, useEffect } from "react";
+import { api } from "@xolace/backend/convex/_generated/api";
+import type { Id } from "@xolace/backend/convex/_generated/dataModel";
+import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
-import { useQuery, useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { useCallback, useEffect, useRef } from "react";
 import { useAppStore } from "@/src/store/store";
 
 type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
@@ -29,106 +29,114 @@ type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
  * - `haveMore` — record feedback and navigate home
  */
 export function useSessionEnd(sessionId: Id<"sessions"> | null) {
-  const router = useRouter();
-  const session = useQuery(
-    api.sessions.getById,
-    sessionId ? { sessionId } : "skip",
-  );
-  const recordFeedback = useMutation(api.sessions.recordPostSessionFeedback);
-  const contributeByDefaultQuery = useQuery(
-    api.preferences.getContributeByDefault,
-  );
-  const sessionCountQuery = useQuery(api.users.getSessionCount);
-  const posthog = usePostHog();
-  const setPendingEventPrompt = useAppStore((s) => s.setPendingEventPrompt);
-  const busyRef = useRef(false);
-  const navigatedRef = useRef(false);
+	const router = useRouter();
+	const session = useQuery(
+		api.sessions.getById,
+		sessionId ? { sessionId } : "skip"
+	);
+	const recordFeedback = useMutation(api.sessions.recordPostSessionFeedback);
+	const contributeByDefaultQuery = useQuery(
+		api.preferences.getContributeByDefault
+	);
+	const sessionCountQuery = useQuery(api.users.getSessionCount);
+	const posthog = usePostHog();
+	const setPendingEventPrompt = useAppStore((s) => s.setPendingEventPrompt);
+	const busyRef = useRef(false);
+	const navigatedRef = useRef(false);
 
-  const isLoading = sessionId != null && session === undefined;
+	const isLoading = sessionId != null && session === undefined;
 
-  const navigateHome = useCallback(() => {
-    if (navigatedRef.current) return;
-    navigatedRef.current = true;
-    router.replace("/");
-  }, [router]);
+	const navigateHome = useCallback(() => {
+		if (navigatedRef.current) {
+			return;
+		}
+		navigatedRef.current = true;
+		router.replace("/");
+	}, [router]);
 
-  // Guard: no session id, or it resolved to nothing (not owned / not found).
-  useEffect(() => {
-    if (!sessionId || session === null) {
-      navigateHome();
-    }
-  }, [sessionId, session, navigateHome]);
+	// Guard: no session id, or it resolved to nothing (not owned / not found).
+	useEffect(() => {
+		if (!sessionId || session === null) {
+			navigateHome();
+		}
+	}, [sessionId, session, navigateHome]);
 
-  // Record optional feedback onto the already-completed session. Best-effort:
-  // failures never block navigation, since completion already happened.
-  const record = useCallback(
-    async (
-      contributedReflection: boolean | null,
-      postSessionMood?: PostSessionMood,
-    ) => {
-      if (!sessionId) return;
-      try {
-        await recordFeedback({
-          sessionId,
-          contributedReflection: contributedReflection ?? undefined,
-          postSessionMood,
-        });
-      } catch {
-        // best-effort enrichment — session is already terminal
-      }
-    },
-    [sessionId, recordFeedback],
-  );
+	// Record optional feedback onto the already-completed session. Best-effort:
+	// failures never block navigation, since completion already happened.
+	const record = useCallback(
+		async (
+			contributedReflection: boolean | null,
+			postSessionMood?: PostSessionMood
+		) => {
+			if (!sessionId) {
+				return;
+			}
+			try {
+				await recordFeedback({
+					contributedReflection: contributedReflection ?? undefined,
+					postSessionMood,
+					sessionId,
+				});
+			} catch {
+				// best-effort enrichment — session is already terminal
+			}
+		},
+		[sessionId, recordFeedback]
+	);
 
-  const dismiss = async (
-    contributedReflection: boolean | null = null,
-    postSessionMood?: PostSessionMood,
-  ) => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    await record(contributedReflection, postSessionMood).finally(() => {
-      busyRef.current = false;
-    });
-    setPendingEventPrompt(null);
-    posthog.capture("session_completed", {
-      post_session_mood: postSessionMood ?? null,
-      contributed_reflection: contributedReflection,
-      action: "dismiss",
-    });
-    navigateHome();
-  };
+	const dismiss = async (
+		contributedReflection: boolean | null = null,
+		postSessionMood?: PostSessionMood
+	) => {
+		if (busyRef.current) {
+			return;
+		}
+		busyRef.current = true;
+		await record(contributedReflection, postSessionMood).finally(() => {
+			busyRef.current = false;
+		});
+		setPendingEventPrompt(null);
+		posthog.capture("session_completed", {
+			action: "dismiss",
+			contributed_reflection: contributedReflection,
+			post_session_mood: postSessionMood ?? null,
+		});
+		navigateHome();
+	};
 
-  const haveMore = async (
-    contributedReflection: boolean | null = null,
-    postSessionMood?: PostSessionMood,
-  ) => {
-    if (busyRef.current) return;
-    busyRef.current = true;
-    await record(contributedReflection, postSessionMood).finally(() => {
-      busyRef.current = false;
-    });
-    setPendingEventPrompt(null);
-    posthog.capture("session_completed", {
-      post_session_mood: postSessionMood ?? null,
-      contributed_reflection: contributedReflection,
-      action: "have_more",
-    });
-    navigateHome();
-  };
+	const haveMore = async (
+		contributedReflection: boolean | null = null,
+		postSessionMood?: PostSessionMood
+	) => {
+		if (busyRef.current) {
+			return;
+		}
+		busyRef.current = true;
+		await record(contributedReflection, postSessionMood).finally(() => {
+			busyRef.current = false;
+		});
+		setPendingEventPrompt(null);
+		posthog.capture("session_completed", {
+			action: "have_more",
+			contributed_reflection: contributedReflection,
+			post_session_mood: postSessionMood ?? null,
+		});
+		navigateHome();
+	};
 
-  const sessionData = session as { distilledText?: string } | null | undefined;
-  const distilledText = sessionData?.distilledText ?? null;
-  const contributeByDefault = contributeByDefaultQuery ?? false;
-  const sessionCount = sessionCountQuery ?? 0;
+	const sessionData = session as { distilledText?: string } | null | undefined;
+	const distilledText = sessionData?.distilledText ?? null;
+	const contributeByDefault = contributeByDefaultQuery ?? false;
+	const sessionCount = sessionCountQuery ?? 0;
 
-  return {
-    sessionId,
-    isLoading,
-    distilledText,
-    contributeByDefault,
-    sessionCount,
-    domainUnlock: session?.domainUnlock,
-    dismiss,
-    haveMore,
-  };
+	return {
+		contributeByDefault,
+		dismiss,
+		distilledText,
+		domainUnlock: session?.domainUnlock,
+		haveMore,
+		isLoading,
+		sessionCount,
+		sessionId,
+	};
 }

@@ -1,7 +1,10 @@
+import { api } from "@xolace/backend/convex/_generated/api";
 import { usePaginatedQuery, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { buildTimelineSections, toTimelineEntry } from "@/src/features/timeline/utils";
 import type { TimelineEntry } from "@/src/features/timeline/types";
+import {
+	buildTimelineSections,
+	toTimelineEntry,
+} from "@/src/features/timeline/utils";
 
 const PAGE_SIZE = 15;
 
@@ -19,27 +22,28 @@ const PAGE_SIZE = 15;
  * - `windowDays` — server-truth length of the free-tier window, for the nudge copy.
  */
 export function useTimeline() {
-  const { results, status, loadMore } = usePaginatedQuery(
-    api.sessions.listForTimeline,
-    {},
-    { initialNumItems: PAGE_SIZE },
-  );
-  const windowInfo = useQuery(api.sessions.getTimelineWindowInfo);
+	const { results, status, loadMore } = usePaginatedQuery(
+		api.sessions.listForTimeline,
+		{},
+		{ initialNumItems: PAGE_SIZE }
+	);
+	const windowInfo = useQuery(api.sessions.getTimelineWindowInfo);
 
-  const isLoading = status === "LoadingFirstPage";
+	const isLoading = status === "LoadingFirstPage";
 
-  const entries: TimelineEntry[] = results.map(toTimelineEntry);
+	const entries: TimelineEntry[] = results.map(toTimelineEntry);
 
-  const sections = buildTimelineSections(entries);
+	const sections = buildTimelineSections(entries);
 
-  return {
-    sections,
-    isEmpty: !isLoading && entries.length === 0,
-    isLoading,
-    canLoadMore: status === "CanLoadMore",
-    isLoadingMore: status === "LoadingMore",
-    loadMore: () => loadMore(PAGE_SIZE),
-    showUpgradeNudge: status === "Exhausted" && windowInfo?.hasOlderSessions === true,
-    windowDays: windowInfo?.windowDays ?? null,
-  };
+	return {
+		canLoadMore: status === "CanLoadMore",
+		isEmpty: !isLoading && entries.length === 0,
+		isLoading,
+		isLoadingMore: status === "LoadingMore",
+		loadMore: () => loadMore(PAGE_SIZE),
+		sections,
+		showUpgradeNudge:
+			status === "Exhausted" && windowInfo?.hasOlderSessions === true,
+		windowDays: windowInfo?.windowDays ?? null,
+	};
 }

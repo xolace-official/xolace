@@ -1,4 +1,4 @@
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc } from "@xolace/backend/convex/_generated/dataModel";
 
 export type NotificationPrefs = Doc<"preferences">["notifications"];
 
@@ -20,7 +20,7 @@ export type NotificationPrefs = Doc<"preferences">["notifications"];
 
 /** Is the AI reaching out — the master's word plus this family's own flag. */
 export const gentleRemindersOn = (prefs: NotificationPrefs | undefined) =>
-  !!prefs?.enabled && prefs.gentleReturn;
+	!!prefs?.enabled && prefs.gentleReturn;
 
 /**
  * What the user last chose for a family, ignoring the master.
@@ -33,10 +33,10 @@ export const gentleRemindersOn = (prefs: NotificationPrefs | undefined) =>
  * this is where that survives.
  */
 export const chatChoice = (prefs: NotificationPrefs | undefined) =>
-  prefs?.chat !== false;
+	prefs?.chat !== false;
 
 export const gentleChoice = (prefs: NotificationPrefs | undefined) =>
-  prefs?.gentleReturn ?? false;
+	prefs?.gentleReturn ?? false;
 
 /**
  * What the two toggles say, and nothing else.
@@ -54,12 +54,12 @@ export const gentleChoice = (prefs: NotificationPrefs | undefined) =>
  * dispatch path, so nothing needs it restated here either.
  */
 export const nextNotificationPrefs = (next: {
-  gentle: boolean;
-  chat: boolean;
+	gentle: boolean;
+	chat: boolean;
 }): NotificationPrefs => ({
-  enabled: next.gentle || next.chat,
-  gentleReturn: next.gentle,
-  patternNudge: next.gentle,
-  milestone: next.gentle,
-  chat: next.chat,
+	chat: next.chat,
+	enabled: next.gentle || next.chat,
+	gentleReturn: next.gentle,
+	milestone: next.gentle,
+	patternNudge: next.gentle,
 });

@@ -40,6 +40,4 @@ yarn-error.*
 /ios
 /android
 
-# UniWind generated types
-uniwind-types.d.ts
 

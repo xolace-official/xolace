@@ -157,6 +157,60 @@
           }
         }
       }
+    },
+    {
+      "includes": ["packages/backend/convex/**", "packages/backend/scripts/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noCommaOperator": "off",
+            "noExcessiveCognitiveComplexity": "off",
+            "noUselessSwitchCase": "off",
+            "noVoid": "off",
+            "useLiteralKeys": "off",
+            "useOptionalChain": "off"
+          },
+          "correctness": {
+            "noUnsafeOptionalChaining": "off",
+            "noUnusedFunctionParameters": "off",
+            "noUnusedInstantiation": "off",
+            "noUnusedVariables": "off"
+          },
+          "performance": {
+            "noAwaitInLoops": "off",
+            "useTopLevelRegex": "off"
+          },
+          "style": {
+            "noExportedImports": "off",
+            "noIncrementDecrement": "off",
+            "noNestedTernary": "off",
+            "noNonNullAssertion": "off",
+            "noParameterAssign": "off",
+            "useAtIndex": "off",
+            "useCollapsedIf": "off",
+            "useConsistentBuiltinInstantiation": "off",
+            "useConsistentTypeDefinitions": "off",
+            "useDefaultSwitchClause": "off",
+            "useDestructuring": "off",
+            "useErrorCause": "off",
+            "useTemplate": "off"
+          },
+          "suspicious": {
+            "noAssignInExpressions": "off",
+            "noBitwiseOperators": "off",
+            "noEmptyBlockStatements": "off",
+            "noEqualsToNull": "off",
+            "noEvolvingTypes": "off",
+            "noExplicitAny": "off",
+            "noImplicitAnyLet": "off",
+            "noReturnAssign": "off",
+            "noShadow": "off",
+            "noUnnecessaryConditions": "off",
+            "useAwait": "off",
+            "useStaticResponseMethods": "off"
+          }
+        }
+      }
     }
   ]
 }

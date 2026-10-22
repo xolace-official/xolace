@@ -1,4 +1,4 @@
-import type { VoiceSlug } from "@/convex/lib/voices";
+import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
 import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
 
 /**
@@ -10,48 +10,62 @@ import type { CrossPlatformSymbol } from "@/src/features/settings/components/set
 export type VoiceValue = VoiceSlug | "auto";
 
 export type VoiceOption = {
-  value: VoiceValue;
-  label: string;
-  description: string;
-  symbol: CrossPlatformSymbol;
-  premium?: boolean;
+	value: VoiceValue;
+	label: string;
+	description: string;
+	symbol: CrossPlatformSymbol;
+	premium?: boolean;
 };
 
 export const VOICE_OPTIONS: VoiceOption[] = [
-  {
-    value: "auto",
-    label: "Auto",
-    description: "Matches your mirror tone",
-    symbol: { ios: "wand.and.stars", android: "auto_awesome", web: "auto_awesome" },
-  },
-  {
-    value: "sage",
-    label: "Sage",
-    description: "Older and unhurried. Like someone who's heard a lot and isn't in a rush.",
-    symbol: { ios: "leaf.fill", android: "eco", web: "eco" },
-    premium: true,
-  },
-  {
-    value: "wren",
-    label: "Wren",
-    description: "Soft-spoken, with a gentle lilt. Easy to sit with.",
-    symbol: { ios: "bird.fill", android: "flutter_dash", web: "flutter_dash" },
-    premium: true,
-  },
-  {
-    value: "vesper",
-    label: "Vesper",
-    description: "Calm and steady. Holds the ground when your thoughts won't.",
-    symbol: { ios: "moon.stars.fill", android: "nights_stay", web: "nights_stay" },
-    premium: true,
-  },
-  {
-    value: "ash",
-    label: "Ash",
-    description: "Low and gravelly. Close, like someone leaning in across the fire.",
-    symbol: { ios: "flame.fill", android: "local_fire_department", web: "local_fire_department" },
-    premium: true,
-  },
+	{
+		description: "Matches your mirror tone",
+		label: "Auto",
+		symbol: {
+			android: "auto_awesome",
+			ios: "wand.and.stars",
+			web: "auto_awesome",
+		},
+		value: "auto",
+	},
+	{
+		description:
+			"Older and unhurried. Like someone who's heard a lot and isn't in a rush.",
+		label: "Sage",
+		premium: true,
+		symbol: { android: "eco", ios: "leaf.fill", web: "eco" },
+		value: "sage",
+	},
+	{
+		description: "Soft-spoken, with a gentle lilt. Easy to sit with.",
+		label: "Wren",
+		premium: true,
+		symbol: { android: "flutter_dash", ios: "bird.fill", web: "flutter_dash" },
+		value: "wren",
+	},
+	{
+		description: "Calm and steady. Holds the ground when your thoughts won't.",
+		label: "Vesper",
+		premium: true,
+		symbol: {
+			android: "nights_stay",
+			ios: "moon.stars.fill",
+			web: "nights_stay",
+		},
+		value: "vesper",
+	},
+	{
+		description:
+			"Low and gravelly. Close, like someone leaning in across the fire.",
+		label: "Ash",
+		premium: true,
+		symbol: {
+			android: "local_fire_department",
+			ios: "flame.fill",
+			web: "local_fire_department",
+		},
+		value: "ash",
+	},
 ];
 
 /**
@@ -60,8 +74,8 @@ export const VOICE_OPTIONS: VoiceOption[] = [
  * Regenerate with scratchpad/generate-voice-previews.mjs.
  */
 export const VOICE_PREVIEWS: Record<VoiceSlug, number> = {
-  sage: require("@/assets/sounds/voice-previews/sage.mp3"),
-  wren: require("@/assets/sounds/voice-previews/wren.mp3"),
-  vesper: require("@/assets/sounds/voice-previews/vesper.mp3"),
-  ash: require("@/assets/sounds/voice-previews/ash.mp3"),
+	ash: require("@/assets/sounds/voice-previews/ash.mp3"),
+	sage: require("@/assets/sounds/voice-previews/sage.mp3"),
+	vesper: require("@/assets/sounds/voice-previews/vesper.mp3"),
+	wren: require("@/assets/sounds/voice-previews/wren.mp3"),
 };

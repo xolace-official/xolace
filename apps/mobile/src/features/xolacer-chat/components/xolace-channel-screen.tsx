@@ -1,35 +1,42 @@
-import { useMemo, useState } from 'react';
-import { useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Stack } from 'expo-router';
 import {
-  Channel,
-  MessageList,
-  WithComponents,
-  useChatContext,
-  useOverlayContext,
-} from 'stream-chat-expo';
-import { XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID } from '@/convex/lib/streamSetup';
-import { AppText } from '@/src/components/shared/app-text';
-import { useStreamConnection } from '../providers/stream-chat-provider';
-import { OfflineStrip } from './offline-strip';
-import { SafetyStrip } from './safety-strip';
+	XOLACE_BROADCAST_CHANNEL_TYPE,
+	XOLACE_CHANNEL_ID,
+} from "@xolace/backend/convex/lib/streamSetup";
+import { Stack } from "expo-router";
+import { useMemo, useState } from "react";
 import {
-  CHANNEL_ROOT_PROPS,
-  COMPONENT_OVERRIDES,
-  SUPPORTED_REACTIONS,
-  TEXT_ONLY_CAPABILITIES,
-  minimalMessageActions,
-} from './thread-channel-config';
-import { MessagesUnavailable } from './thread-screen';
-import { ThreadSkeleton } from './thread-skeleton';
-import { useLocalChannelState } from './thread-messages';
-import { XolacerAvatar } from './xolacer-avatar';
+	type LayoutChangeEvent,
+	useWindowDimensions,
+	View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  BroadcastComposerBar,
-  BroadcastMessageAuthor,
-  BroadcastMessageFooter,
-} from './xolace-channel-overrides';
+	Channel,
+	MessageList,
+	useChatContext,
+	useOverlayContext,
+	WithComponents,
+} from "stream-chat-expo";
+import { AppText } from "@/src/components/shared/app-text";
+import { useStreamConnection } from "../providers/stream-chat-provider";
+import { OfflineStrip } from "./offline-strip";
+import { SafetyStrip } from "./safety-strip";
+import {
+	CHANNEL_ROOT_PROPS,
+	COMPONENT_OVERRIDES,
+	minimalMessageActions,
+	SUPPORTED_REACTIONS,
+	TEXT_ONLY_CAPABILITIES,
+} from "./thread-channel-config";
+import { useLocalChannelState } from "./thread-messages";
+import { MessagesUnavailable } from "./thread-screen";
+import { ThreadSkeleton } from "./thread-skeleton";
+import {
+	BroadcastComposerBar,
+	BroadcastMessageAuthor,
+	BroadcastMessageFooter,
+} from "./xolace-channel-overrides";
+import { XolacerAvatar } from "./xolacer-avatar";
 
 /**
  * The one fixed, no-lifecycle channel every camper is a member of (#372-#375).
@@ -49,8 +56,10 @@ import {
 // (pseudonymous) reactor names instead of hiding every non-self row, which is
 // what `ConversationReactionUser` does with no `ConversationIdentityProvider`
 // mounted. Everything else in the map is a safe no-op without one.
-const { MessageUserReactionsItem: _reactionIdentityOverride, ...BROADCAST_OVERRIDES_BASE } =
-  COMPONENT_OVERRIDES;
+const {
+	MessageUserReactionsItem: _reactionIdentityOverride,
+	...BROADCAST_OVERRIDES_BASE
+} = COMPONENT_OVERRIDES;
 
 /**
  * Same identity as the chats-list row (#377) — campfire mark, "Camp
@@ -58,112 +67,115 @@ const { MessageUserReactionsItem: _reactionIdentityOverride, ...BROADCAST_OVERRI
  * instead of a plain string, same pattern as `ThreadHeader`.
  */
 function XolaceChannelHeader() {
-  return (
-    <View className="flex-row items-center gap-2.5">
-      <XolacerAvatar name="Xolace" size="sm" campfire />
-      <View className="min-w-0 shrink">
-        <AppText className="text-sm font-semibold text-foreground" numberOfLines={1}>
-          Xolace
-        </AppText>
-        <AppText className="text-[11px] text-muted mt-px" numberOfLines={1}>
-          Camp announcements
-        </AppText>
-      </View>
-    </View>
-  );
+	return (
+		<View className="flex-row items-center gap-2.5">
+			<XolacerAvatar campfire name="Xolace" size="sm" />
+			<View className="min-w-0 shrink">
+				<AppText
+					className="font-semibold text-foreground text-sm"
+					numberOfLines={1}
+				>
+					Xolace
+				</AppText>
+				<AppText className="mt-px text-[11px] text-muted" numberOfLines={1}>
+					Camp announcements
+				</AppText>
+			</View>
+		</View>
+	);
 }
 
 const BROADCAST_OVERRIDES = {
-  ...BROADCAST_OVERRIDES_BASE,
-  MessageAuthor: BroadcastMessageAuthor,
-  MessageFooter: BroadcastMessageFooter,
+	...BROADCAST_OVERRIDES_BASE,
+	MessageAuthor: BroadcastMessageAuthor,
+	MessageFooter: BroadcastMessageFooter,
 };
 
 export function XolaceChannelScreen() {
-  const { status: streamStatus, retry } = useStreamConnection();
-  const { overlay } = useOverlayContext();
+	const { status: streamStatus, retry } = useStreamConnection();
+	const { overlay } = useOverlayContext();
 
-  return (
-    <>
-      <Stack.Screen
-        options={{
-          // eslint-disable-next-line react/no-unstable-nested-components -- navigation header render prop, not a mounted subtree
-          headerTitle: () => <XolaceChannelHeader />,
-          title: 'Xolace',
-          gestureEnabled: overlay === 'none',
-        }}
-      />
-      {streamStatus === 'ready' ? (
-        <XolaceChannelMessages />
-      ) : (
-        <View className="flex-1 bg-background">
-          <SafetyStrip />
-          {streamStatus === 'connecting' ? (
-            <ThreadSkeleton />
-          ) : (
-            <MessagesUnavailable onRetry={retry} />
-          )}
-        </View>
-      )}
-    </>
-  );
+	return (
+		<>
+			<Stack.Screen
+				options={{
+					gestureEnabled: overlay === "none",
+					// eslint-disable-next-line react/no-unstable-nested-components -- navigation header render prop, not a mounted subtree
+					headerTitle: () => <XolaceChannelHeader />,
+					title: "Xolace",
+				}}
+			/>
+			{streamStatus === "ready" ? (
+				<XolaceChannelMessages />
+			) : (
+				<View className="flex-1 bg-background">
+					<SafetyStrip />
+					{streamStatus === "connecting" ? (
+						<ThreadSkeleton />
+					) : (
+						<MessagesUnavailable onRetry={retry} />
+					)}
+				</View>
+			)}
+		</>
+	);
 }
 
 function XolaceChannelMessages() {
-  const { client } = useChatContext();
-  const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
-  const [contentHeight, setContentHeight] = useState(0);
+	const { client } = useChatContext();
+	const insets = useSafeAreaInsets();
+	const { height: windowHeight } = useWindowDimensions();
+	const [contentHeight, setContentHeight] = useState(0);
 
-  // See `ThreadMessages` for why this offset is measured rather than assumed.
-  const headerOffset = contentHeight ? windowHeight - contentHeight : 0;
-  const onContentLayout = (event: LayoutChangeEvent) =>
-    setContentHeight(event.nativeEvent.layout.height);
+	// See `ThreadMessages` for why this offset is measured rather than assumed.
+	const headerOffset = contentHeight ? windowHeight - contentHeight : 0;
+	const onContentLayout = (event: LayoutChangeEvent) =>
+		setContentHeight(event.nativeEvent.layout.height);
 
-  const channel = useMemo(
-    () => client.channel(XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID),
-    [client],
-  );
-  const hasLocalState = useLocalChannelState(channel);
+	const channel = useMemo(
+		() => client.channel(XOLACE_BROADCAST_CHANNEL_TYPE, XOLACE_CHANNEL_ID),
+		[client]
+	);
+	const hasLocalState = useLocalChannelState(channel);
 
-  if (!hasLocalState) {
-    return (
-      <View className="flex-1 bg-background">
-        <SafetyStrip />
-        <ThreadSkeleton />
-      </View>
-    );
-  }
+	if (!hasLocalState) {
+		return (
+			<View className="flex-1 bg-background">
+				<SafetyStrip />
+				<ThreadSkeleton />
+			</View>
+		);
+	}
 
-  return (
-    <View className="flex-1" onLayout={onContentLayout}>
-      <WithComponents overrides={BROADCAST_OVERRIDES}>
-        <Channel
-          channel={channel}
-          keyboardVerticalOffset={headerOffset}
-          additionalKeyboardAvoidingViewProps={CHANNEL_ROOT_PROPS}
-          topInset={insets.top}
-          supportedReactions={SUPPORTED_REACTIONS}
-          enforceUniqueReaction
-          overrideOwnCapabilities={TEXT_ONLY_CAPABILITIES}
-          hasImagePicker={false}
-          hasFilePicker={false}
-          hasCameraPicker={false}
-          hasCommands={false}
-          // No `useFlagMessage` here — that mutation is keyed on
-          // `xolacer_conversations` and would throw for this channel.
-          messageActions={(params) =>
-            minimalMessageActions(params, () => {}).filter(
-              (action) => action.actionType !== 'flagMessage',
-            )
-          }
-        >
-          <SafetyStrip />
-          <MessageList />
-          <OfflineStrip />
-          <BroadcastComposerBar />
-        </Channel>
-      </WithComponents>
-    </View>
-  );
+	return (
+		<View className="flex-1" onLayout={onContentLayout}>
+			<WithComponents overrides={BROADCAST_OVERRIDES}>
+				<Channel
+					additionalKeyboardAvoidingViewProps={CHANNEL_ROOT_PROPS}
+					channel={channel}
+					enforceUniqueReaction
+					hasCameraPicker={false}
+					hasCommands={false}
+					hasFilePicker={false}
+					hasImagePicker={false}
+					keyboardVerticalOffset={headerOffset}
+					// No `useFlagMessage` here — that mutation is keyed on
+					// `xolacer_conversations` and would throw for this channel.
+					messageActions={(params) =>
+						minimalMessageActions(params, () => {}).filter(
+							(action) => action.actionType !== "flagMessage"
+						)
+					}
+					overrideOwnCapabilities={TEXT_ONLY_CAPABILITIES}
+					supportedReactions={SUPPORTED_REACTIONS}
+					topInset={insets.top}
+				>
+					<SafetyStrip />
+					<MessageList />
+					<OfflineStrip />
+					<BroadcastComposerBar />
+				</Channel>
+			</WithComponents>
+		</View>
+	);
 }
