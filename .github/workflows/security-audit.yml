@@ -38,4 +38,15 @@ jobs:
       # bun audit (bun >= 1.2.15) exits non-zero when an advisory at or above
       # --audit-level is found. Ignore a specific advisory, with a reason in the
       # PR, via `--ignore=<GHSA/CVE id>`.
-      - run: bun audit --audit-level=high
+      #
+      # Ignored (no patched release exists for either; re-check when one ships):
+      # - GHSA-vfj7-8cjw-p6xm braces <=3.0.3: stack exhaustion on crafted glob
+      #   patterns. Build tooling only (micromatch via Expo, RN, Sentry,
+      #   shadcn), fed our own config globs, never user input.
+      # - GHSA-86w9-cpqp-85rv node-forge <=1.4.0: lax RSA signature parsing.
+      #   Only expo-updates' code-signing CLI uses it, on a dev machine; devices
+      #   verify updates natively, so it never ships in the app.
+      - run: >-
+          bun audit --audit-level=high
+          --ignore=GHSA-vfj7-8cjw-p6xm
+          --ignore=GHSA-86w9-cpqp-85rv
