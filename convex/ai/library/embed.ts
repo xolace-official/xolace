@@ -23,17 +23,23 @@ export const indexEntry = internalAction({
       if (namespace) await rag.deleteByKey(ctx, { namespaceId: namespace.namespaceId, key: entryId });
       return null;
     }
-    await rag.add(ctx, {
-      namespace: LIBRARY_NAMESPACE,
-      key: entryId,
-      text,
-      // Every declared filter is required on every add (see rag.ts); none applies here.
-      filterValues: [
-        { name: "primaryEmotion", value: NO_PRIMARY_EMOTION },
-        { name: "granularLabel", value: NO_GRANULAR_LABEL },
-        { name: "status", value: NO_STATUS },
-      ],
-    });
+    try {
+      await rag.add(ctx, {
+        namespace: LIBRARY_NAMESPACE,
+        key: entryId,
+        text,
+        // Every declared filter is required on every add (see rag.ts); none applies here.
+        filterValues: [
+          { name: "primaryEmotion", value: NO_PRIMARY_EMOTION },
+          { name: "granularLabel", value: NO_GRANULAR_LABEL },
+          { name: "status", value: NO_STATUS },
+        ],
+      });
+    } catch (e) {
+      // The id is what makes a hole findable; rethrow so the run still shows failed.
+      console.error("library index: embed failed", { entryId });
+      throw e;
+    }
     return null;
   },
 });

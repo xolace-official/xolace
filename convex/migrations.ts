@@ -169,6 +169,12 @@ export const backfillTrackSearchText = migrations.define({
   },
 });
 
+// ponytail: random spread, not a rate limiter — ~200 rows over 5 min stays well
+// under OpenAI's embedding limits; move to @convex-dev/workpool if the corpus
+// grows past a few thousand. A failed embed logs its id; re-running is the fix.
+const BACKFILL_SPREAD_MS = 5 * 60 * 1000;
+const spread = () => Math.random() * BACKFILL_SPREAD_MS;
+
 // Library meaning index (#568): embeds every active entry ingested before the
 // index existed. Each row schedules its own index action (an embed is network,
 // a migration is a mutation); re-running just re-embeds, keyed on the entry id.
@@ -176,7 +182,7 @@ export const backfillTrackSearchText = migrations.define({
 export const backfillLibraryIndex = migrations.define({
   table: "library_entries",
   migrateOne: async (ctx, doc) => {
-    if (doc.active) await ctx.scheduler.runAfter(0, internal.ai.library.embed.indexEntry, { entryId: doc._id });
+    if (doc.active) await ctx.scheduler.runAfter(spread(), internal.ai.library.embed.indexEntry, { entryId: doc._id });
   },
 });
 
@@ -186,7 +192,7 @@ export const backfillLibraryIndex = migrations.define({
 export const backfillTrackIndex = migrations.define({
   table: "audio_tracks",
   migrateOne: async (ctx, doc) => {
-    if (doc.active) await ctx.scheduler.runAfter(0, internal.ai.paths.trackSearch.indexTrack, { trackId: doc._id });
+    if (doc.active) await ctx.scheduler.runAfter(spread(), internal.ai.paths.trackSearch.indexTrack, { trackId: doc._id });
   },
 });
 

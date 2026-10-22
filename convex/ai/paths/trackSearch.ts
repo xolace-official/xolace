@@ -66,17 +66,23 @@ export const indexTrack = internalAction({
         if (found) await rag.deleteByKey(ctx, { namespaceId: found.namespaceId, key: t.slug });
         continue;
       }
-      await rag.add(ctx, {
-        namespace,
-        key: t.slug,
-        text: t.text,
-        // Every declared filter is required on every add (see rag.ts); none applies here.
-        filterValues: [
-          { name: "primaryEmotion", value: NO_PRIMARY_EMOTION },
-          { name: "granularLabel", value: NO_GRANULAR_LABEL },
-          { name: "status", value: NO_STATUS },
-        ],
-      });
+      try {
+        await rag.add(ctx, {
+          namespace,
+          key: t.slug,
+          text: t.text,
+          // Every declared filter is required on every add (see rag.ts); none applies here.
+          filterValues: [
+            { name: "primaryEmotion", value: NO_PRIMARY_EMOTION },
+            { name: "granularLabel", value: NO_GRANULAR_LABEL },
+            { name: "status", value: NO_STATUS },
+          ],
+        });
+      } catch (e) {
+        // The slug is what makes a hole findable; rethrow so the run still shows failed.
+        console.error("track index: embed failed", { trackId, slug: t.slug, namespace });
+        throw e;
+      }
     }
     return null;
   },
