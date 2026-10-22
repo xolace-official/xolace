@@ -11,6 +11,11 @@ import { understoodEmotions, type BindEntry, type BindTrack, type BindUnderstand
 import { readRow } from "../../library/reads";
 import { domainOf, lifeAreasOf } from "../../lib/understandingVocab";
 import { compoundingFor, type Compounding } from "../../compounding/stretches";
+import { loadHistory, type KindlingHistory } from "./history";
+import { tendedBefore } from "./tendedBefore";
+import { trackSearchLogValidator } from "./trackSearch";
+import { buildAccumulatedInput } from "../prompts/accumulatedInput";
+import { MAX_TURNS } from "../../sessionTurns";
 
 /**
  * Kindling generation — the DB halves of `generate.ts` (#331): the context
@@ -25,7 +30,12 @@ export interface GenerateContext {
   binding: BindUnderstanding;
   tracks: BindTrack[];
   entries: BindEntry[];
+  /** What the person wrote, for the read (#568) and track (#572) meaning searches. */
+  sessionText: string | null;
+  /** No read may bind on an elevated/crisis session, so it never searches the Library. */
+  readsAllowed: boolean;
   compounding: PromptCompounding[];
+  history: KindlingHistory;
 }
 
 // ponytail: the whole active catalogue in one read (~200–400 rows, six small
@@ -47,7 +57,7 @@ async function loadReadCandidates(
   profileId: Id<"emotional_profiles">,
   u: Doc<"emotional_metadata">,
 ): Promise<BindEntry[]> {
-  if (u.safeguardLevel === "elevated" || u.safeguardLevel === "crisis") return [];
+  if (!readsAllowed(u)) return [];
   const wanted = [
     // Family: a "stress" session still reaches entries shelved under "anxiety" (ADR 0018).
     ...understoodEmotions(u).map((slug) => ({ axis: "emotion", slug })),
@@ -75,6 +85,10 @@ async function loadReadCandidates(
   }
   return entries;
 }
+
+/** The read twig's gate (ADR 0015 twig safety, kept by ADR 0021): no read on an elevated/crisis session. */
+const readsAllowed = (u: Doc<"emotional_metadata">) =>
+  u.safeguardLevel !== "elevated" && u.safeguardLevel !== "crisis";
 
 const DAY_MS = 86_400_000;
 
@@ -121,9 +135,26 @@ export const getContext = internalQuery({
       : null;
 
     const now = Date.now();
-    const compounding: PromptCompounding[] = (await touchedCompounding(ctx, profile._id, u, now)).map(
-      (c) => ({ domain: c.domain, state: c.state, returning: c.returning, days: (now - c.startedAt) / DAY_MS }),
-    );
+    const compounding: PromptCompounding[] = [];
+    const reofferSlugs: string[] = [];
+    for (const c of await touchedCompounding(ctx, profile._id, u, now)) {
+      const before = c.returning ? await tendedBefore(ctx, profile._id, c.domain, c.startedAt) : undefined;
+      reofferSlugs.push(...(before?.slugs ?? []));
+      compounding.push({
+        domain: c.domain,
+        state: c.state,
+        returning: c.returning,
+        days: (now - c.startedAt) / DAY_MS,
+        tendedBefore: before?.types,
+      });
+    }
+    // Personal memory off reads only the recent kindlings, never the matches (#565).
+    const prefs = await ctx.db
+      .query("preferences")
+      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+      .unique();
+    const matchKeys = prefs?.personalMemoryEnabled === false ? [] : (u.episodicMatchKeys ?? []);
+    const history = await loadHistory(ctx, profile._id, matchKeys, now);
     const tracks = (await ctx.db.query("audio_tracks").take(MAX_TRACKS))
       .filter((t) => t.active)
       .map(({ slug, family, topic, tags, active, series }) => ({
@@ -150,13 +181,35 @@ export const getContext = internalQuery({
         thematicTags: u.thematicTags,
         suggestedSpecialty: u.suggestedSpecialty,
         compoundingTags: compounding.flatMap((c) => lifeAreasOf(c.domain)),
+        skippedSlugs: history.skippedSlugs,
+        reofferSlugs,
       },
       tracks,
       entries: await loadReadCandidates(ctx, profile._id, u),
+      sessionText: await loadSessionText(ctx, args.sessionId),
+      readsAllowed: readsAllowed(u),
       compounding,
+      history,
     };
   },
 });
+
+/**
+ * The text the Understanding was classified on: after a refinement turn the
+ * classifier re-read the accumulated input (ai/clarify.ts), so the read and
+ * track searches must too, or they rank on words the Understanding moved past.
+ */
+async function loadSessionText(ctx: QueryCtx, sessionId: Id<"sessions">) {
+  const session = await ctx.db.get("sessions", sessionId);
+  if (session?.rawInput === undefined) return null;
+  const turns = await ctx.db
+    .query("session_turns")
+    .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+    .take(MAX_TURNS);
+  // Blank text has no meaning to search: null = "skipped", not a failed embed.
+  const text = buildAccumulatedInput(session.rawInput, turns);
+  return text.trim() ? text : null;
+}
 
 const twigValidator = v.object({
   actionType: v.string(),
@@ -181,6 +234,12 @@ export const write = internalMutation({
     promptTokens: v.optional(v.number()),
     completionTokens: v.optional(v.number()),
     twigs: v.array(twigValidator),
+    historyKinds: v.optional(v.array(v.string())),
+    withheld: v.optional(v.array(v.string())),
+    readSearch: v.optional(v.union(v.literal("ran"), v.literal("failed"), v.literal("skipped"))),
+    readTopScore: v.optional(v.number()),
+    readFallback: v.optional(v.boolean()),
+    trackSearch: v.optional(v.array(trackSearchLogValidator)),
   },
   returns: v.union(v.id("paths"), v.null()),
   handler: async (ctx, args) => {
@@ -230,6 +289,15 @@ export const write = internalMutation({
         modelVersion: args.modelVersion,
         twigs: args.twigs.length,
         actionTypes: args.twigs.map((t) => t.actionType),
+        historyKinds: args.historyKinds ?? [],
+        withheld: args.withheld ?? [],
+        // Whether the meaning search ran, how close the best Library entry came,
+        // and whether the read bound on facets (#568).
+        readSearch: args.readSearch,
+        readTopScore: args.readTopScore,
+        readFallback: args.readFallback,
+        // Per track twig (#572): the same three, inside the topic the model picked.
+        trackSearch: args.trackSearch ?? [],
       },
     });
     return pathId;

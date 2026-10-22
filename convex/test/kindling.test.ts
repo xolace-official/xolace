@@ -13,13 +13,13 @@ import {
   aggregatesMock,
   anthropicMock,
   noopJob,
-  posthogMock,
   ragMock,
   rateLimiterMock,
   revenuecatMock,
 } from "./mocks.helpers";
 import manifest from "../../scripts/kindling/dev/manifest.json";
 import type { WorkflowId } from "@convex-dev/workflow";
+import { MockEmbeddingModelV3 } from "ai/test";
 
 type ManifestTrack = Omit<Doc<"audio_tracks">, "_id" | "_creationTime" | "key" | "thumbKey" | "active"> & {
   audioPath: string;
@@ -36,11 +36,63 @@ const stub = vi.hoisted(() => ({
   reply: "" as string,
   limit: { ok: true } as { ok: boolean; retryAfter?: number },
   requests: [] as { messages: { content: unknown }[] }[],
+  // The Library meaning search (#568): what it returns, and whether the embed fails.
+  libraryHits: [] as { key: string; scores: number[] }[],
+  embedFails: false,
+  embeds: 0,
+  searchFails: false,
+  searched: [] as string[],
+  // The track meaning search (#572): hits per namespace, and what got indexed / removed.
+  trackHits: {} as Record<string, { key: string; scores: number[] }[]>,
+  indexed: [] as { namespace: string; key: string; text: string }[],
+  unindexed: [] as string[],
+  events: [] as { event: string; properties: Record<string, unknown> }[],
 }));
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
-vi.mock("../posthog", () => posthogMock());
-vi.mock("../rag", () => ragMock());
+vi.mock("../posthog", () => ({
+  posthog: {
+    capture: async (_ctx: unknown, e: { event: string; properties: Record<string, unknown> }) => {
+      stub.events.push(e);
+    },
+  },
+}));
+vi.mock("../rag", () => {
+  const base = ragMock();
+  return {
+    ...base,
+    rag: {
+      ...base.rag,
+      options: {
+        ...base.rag.options,
+        textEmbeddingModel: new MockEmbeddingModelV3({
+          doEmbed: async ({ values }) => {
+            stub.embeds++;
+            if (stub.embedFails) throw new Error("embeddings down");
+            return { embeddings: values.map(() => [0]), warnings: [] };
+          },
+        }),
+      },
+      // One result per chunk; an entry's score is its best chunk's.
+      search: async (_ctx: unknown, args: { namespace: string }) => {
+        stub.searched.push(args.namespace);
+        if (stub.searchFails) throw new Error("vector search down");
+        const hits = args.namespace === "library" ? stub.libraryHits : (stub.trackHits[args.namespace] ?? []);
+        return {
+          entries: hits.map((h) => ({ entryId: `e_${h.key}`, key: h.key, text: "" })),
+          results: hits.flatMap((h) => h.scores.map((score) => ({ entryId: `e_${h.key}`, score }))),
+        };
+      },
+      add: async (_ctx: unknown, args: { namespace: string; key: string; text: string }) => {
+        stub.indexed.push({ namespace: args.namespace, key: args.key, text: args.text });
+      },
+      getNamespace: async (_ctx: unknown, args: { namespace: string }) => ({ namespaceId: args.namespace }),
+      deleteByKey: async (_ctx: unknown, args: { namespaceId: string; key: string }) => {
+        stub.unindexed.push(`${args.namespaceId}/${args.key}`);
+      },
+    },
+  };
+});
 vi.mock("../ai/paths/audioTracks", async (orig) => ({
   ...(await orig<typeof import("../ai/paths/audioTracks")>()),
   r2: { getUrl: async (key: string) => `https://r2.test/${key}` },
@@ -92,6 +144,15 @@ beforeEach(() => {
   stub.reply = goodReply;
   stub.limit = { ok: true };
   stub.requests = [];
+  stub.libraryHits = [];
+  stub.embedFails = false;
+  stub.embeds = 0;
+  stub.searchFails = false;
+  stub.searched = [];
+  stub.trackHits = {};
+  stub.indexed = [];
+  stub.unindexed = [];
+  stub.events = [];
   sentPushes.length = 0;
 });
 afterEach(() => vi.restoreAllMocks());
@@ -302,6 +363,26 @@ describe("ai/paths/generate.run", () => {
     expect(offered).toContain("- xolacer:");
     expect(offered).not.toContain("audio_topic_");
     expect(offered).not.toContain("music_topic_");
+  });
+
+  it("offers try-this on an unflagged session, never on one safeguard flagged (#567)", async () => {
+    stub.reply = JSON.stringify([twig("try_brisk_walk", 1), twig("breathing", 2), twig("bridge", 3), twig("xolacer", 4)]);
+    const user = await asNewUser();
+    await generate(user, await seedQualifying(user));
+    expect(String(stub.requests[0].messages[0].content)).toContain("- try_brisk_walk:");
+
+    const flagged = await seedSession(user.root, user.profileId, { state: "confirmed" });
+    await seedMetadata(user.root, flagged, user.profileId, {
+      supportNeed: "light",
+      suggestedSpecialty: "burnout",
+      safeguardLevel: "gentle",
+    });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await generate(user, flagged);
+    expect(String(stub.requests[1].messages[0].content)).not.toContain("try_");
+    const path = (await readPaths(user)).find((p) => p.sessionId === flagged);
+    const types = (await readSteps(user, path!._id)).map((s) => s.actionType);
+    expect(types.sort()).toEqual(["breathing", "bridge", "xolacer"]);
   });
 
   it("writes no kindling and no notification when every twig is unbindable", async () => {
@@ -597,6 +678,33 @@ describe("the active-kindling screen API (#333)", () => {
       [2, "xolacer", "pending"],
       [3, "bridge", "pending"],
     ]);
+  });
+
+  it("a try-this twig reaches only clients that ask for it, and both controls settle it (#567)", async () => {
+    stub.reply = JSON.stringify([twig("try_brisk_walk", 1), twig("breathing", 2), twig("bridge", 3)]);
+    const user = await asNewUser();
+    await generate(user, await seedQualifying(user));
+
+    const old = await user.t.query(api.paths.getActive, { withRead: true });
+    expect(old?.twigs.map((t) => t.kind)).toEqual(["breathing", "bridge"]);
+
+    const active = await user.t.query(api.paths.getActive, { withRead: true, withTry: true });
+    const tryThis = active!.twigs[0];
+    expect(tryThis).toMatchObject({
+      kind: "try",
+      title: "A brisk walk",
+      detail: "Go for a 15–20 minute brisk walk today.",
+    });
+    await user.t.mutation(api.paths.completeStep, { stepId: tryThis._id }); // "I did this"
+    expect((await user.t.query(api.paths.getActive, { withTry: true }))?.twigs[0].state).toBe("done");
+
+    await generate(user, await seedQualifying(user));
+    const next = await user.t.query(api.paths.getActive, { withTry: true });
+    await user.t.mutation(api.paths.skipStep, { stepId: next!.twigs[0]._id }); // "Not for me"
+    expect((await user.t.query(api.paths.getActive, { withTry: true }))?.twigs[0]).toMatchObject({
+      kind: "try",
+      state: "skipped",
+    });
   });
 
   it("getActive is null for a free user even when a kindling row exists", async () => {
@@ -919,5 +1027,465 @@ describe("compounding context for Kindling (#521)", () => {
     const user = await asNewUser();
     await compoundingWork(user);
     expect(await tonight(user, ["burnout"])).toBeNull();
+  });
+});
+
+describe("past outcomes shape the pick (#565)", () => {
+  const DAY = 86_400_000;
+  type Outcome = [actionType: string, state: Doc<"path_steps">["state"], params?: unknown];
+
+  /** A past kindling on its own session, generated `daysAgo`. */
+  async function pastKindling(
+    user: SeededUser,
+    daysAgo: number,
+    outcomes: Outcome[],
+    over: { status?: Doc<"paths">["status"]; sessionId?: Id<"sessions"> } = {},
+  ): Promise<Id<"sessions">> {
+    const sessionId = over.sessionId ?? (await seedSession(user.root, user.profileId, { state: "completed" }));
+    await user.root.run(async (ctx) => {
+      const pathId = await ctx.db.insert("paths", {
+        emotionalProfileId: user.profileId,
+        sessionId,
+        status: over.status ?? "replaced",
+        model: "test",
+        modelVersion: "test",
+        generatedAt: Date.now() - daysAgo * DAY,
+      });
+      for (const [i, [actionType, state, params]] of outcomes.entries()) {
+        await ctx.db.insert("path_steps", { pathId, actionType, order: i + 1, why: WHY, params: params ?? {}, state });
+      }
+    });
+    return sessionId;
+  }
+
+  const captured = async (user: SeededUser, sessionId: Id<"sessions">) => {
+    const { posthog } = await import("../posthog");
+    const capture = vi.spyOn(posthog, "capture");
+    await generate(user, sessionId);
+    const prompt = String(stub.requests.at(-1)!.messages[0].content);
+    const event = capture.mock.calls.map(([, e]) => e).find((e) => e.event === "path_generated");
+    return { prompt, props: event?.properties as { historyKinds: string[]; withheld: string[] } };
+  };
+
+  it("cold start: no history block, empty historyKinds and withheld", async () => {
+    const user = await asNewUser();
+    const { prompt, props } = await captured(user, await seedQualifying(user));
+    expect(prompt).not.toContain("past offers");
+    expect(props).toMatchObject({ historyKinds: [], withheld: [] });
+  });
+
+  it("carries each kind's own rate; ignored and active-pending twigs add nothing", async () => {
+    const user = await asNewUser();
+    await pastKindling(user, 7, [["breathing", "pending"]], { status: "dismissed" }); // ignored: offered, not a skip
+    await pastKindling(user, 5, [["breathing", "done"], ["bridge", "skipped"], ["xolacer", "pending"]]);
+    await pastKindling(user, 1, [["breathing", "done"], ["xolacer", "pending"]], { status: "active" });
+    await pastKindling(user, 100, [["bridge", "done"]]); // outside 90 days
+
+    const { prompt, props } = await captured(user, await seedQualifying(user));
+    expect(prompt).toContain("- breathing: tended 2 of 3 offered");
+    expect(prompt).toContain("- bridge: passed on 1 of 1 offered");
+    expect(prompt).not.toMatch(/- xolacer: (tended|passed)/);
+    expect(props.historyKinds).toEqual(["breathing", "bridge"]);
+  });
+
+  it("says a tended read helped when the reader marked it so", async () => {
+    const user = await asNewUser();
+    await user.root.run(async (ctx) => {
+      const entryId = await ctx.db.insert("library_entries", {
+        slug: "on-loss", kind: "advice", title: "T", dek: "D", primarySubject: "grief",
+        reuse: "adapted", readMin: 4, active: true, lastReviewedAt: 1, searchText: "loss",
+      } as Doc<"library_entries">);
+      await ctx.db.insert("library_reads", { emotionalProfileId: user.profileId, entryId, saved: false, helped: true });
+      // Unfinished and on tonight's feeling, so a read twig can bind again.
+      await ctx.db.insert("library_entry_facets", { entryId, axis: "emotion", slug: "anxiety" });
+    });
+    await pastKindling(user, 3, [["read", "done", { slug: "on-loss" }]]);
+    const { prompt } = await captured(user, await seedQualifying(user));
+    expect(prompt).toContain("- read: tended 1 of 1 offered, said it helped 1");
+  });
+
+  it("withholds a type skipped on its last 2 offers", async () => {
+    stub.reply = JSON.stringify([twig("breathing", 1), twig("xolacer", 2), twig(CATALOGUE_TOPIC, 3)]);
+    const user = await asNewUser();
+    await seedCatalogue(user);
+    await pastKindling(user, 4, [["bridge", "skipped"]]);
+    await pastKindling(user, 2, [["bridge", "skipped"]]);
+    const { prompt, props } = await captured(user, await seedQualifying(user));
+    expect(prompt).not.toContain("- bridge:");
+    expect(props.withheld).toEqual(["bridge"]);
+  });
+
+  it("a tend between the skips resets the rule", async () => {
+    const user = await asNewUser();
+    await seedCatalogue(user);
+    await pastKindling(user, 6, [["bridge", "skipped"]]);
+    await pastKindling(user, 4, [["bridge", "done"]]);
+    await pastKindling(user, 2, [["bridge", "skipped"]]);
+    const { props } = await captured(user, await seedQualifying(user));
+    expect(props.withheld).toEqual([]);
+  });
+
+  it("never withholds below MAX_TWIGS bindable types", async () => {
+    const user = await asNewUser(); // no catalogue: only breathing, bridge, xolacer bind
+    await pastKindling(user, 4, [["bridge", "skipped"]]);
+    await pastKindling(user, 2, [["bridge", "skipped"]]);
+    const { prompt, props } = await captured(user, await seedQualifying(user));
+    expect(prompt).toContain("- bridge: Draft");
+    expect(props.withheld).toEqual([]);
+  });
+
+  async function matchedOld(user: SeededUser, personalMemoryEnabled: boolean) {
+    await user.root.run(async (ctx) => {
+      const prefs = await ctx.db
+        .query("preferences")
+        .withIndex("by_profile", (q) => q.eq("emotionalProfileId", user.profileId))
+        .unique();
+      await ctx.db.patch("preferences", prefs!._id, { personalMemoryEnabled });
+    });
+    const matched = await pastKindling(user, 60, [["bridge", "done"]]);
+    for (let i = 0; i < 10; i++) await pastKindling(user, 10 - i * 0.5, [["breathing", "done"]]);
+    const sessionId = await seedSession(user.root, user.profileId, { state: "confirmed" });
+    await seedMetadata(user.root, sessionId, user.profileId, {
+      supportNeed: "light",
+      suggestedSpecialty: "burnout",
+      episodicMatchKeys: [matched],
+    });
+    return (await captured(user, sessionId)).prompt;
+  }
+
+  it("reads the episodic matches' kindlings beyond the recent ten", async () => {
+    expect(await matchedOld(await asNewUser(), true)).toContain("- bridge: tended 1 of 1 offered");
+  });
+
+  it("reads only the recent kindlings with personal memory off", async () => {
+    expect(await matchedOld(await asNewUser(), false)).not.toContain("- bridge: tended");
+  });
+
+  /** A settled work usual, a heavy last week, and a work stretch that ended and is back. */
+  async function returningWork(user: SeededUser) {
+    for (let i = 0; i < 50; i++) {
+      const s = await seedSession(user.root, user.profileId, {
+        state: "completed", confirmationState: "confirmed", createdAt: Date.now() - (120 - i * 2) * DAY,
+      });
+      await seedMetadata(user.root, s, user.profileId, { intensity: 4, thematicTags: ["work"] });
+    }
+    for (let d = 1; d <= 7; d++) {
+      const s = await seedSession(user.root, user.profileId, {
+        state: "completed", confirmationState: "confirmed", createdAt: Date.now() - (d + 0.5) * DAY,
+      });
+      await seedMetadata(user.root, s, user.profileId, { intensity: 10, thematicTags: ["work"] });
+    }
+    await user.root.run(async (ctx) => {
+      const base = { emotionalProfileId: user.profileId, domain: "work" as const, anchorBaseline: 67 };
+      await ctx.db.insert("compounding_stretches", { ...base, startedAt: Date.now() - 60 * DAY, endedAt: Date.now() - 30 * DAY });
+      await ctx.db.insert("compounding_stretches", { ...base, startedAt: Date.now() - 20 * DAY });
+    });
+  }
+
+  it("names what was tended during a returning stretch's previous run", async () => {
+    const user = await asNewUser();
+    await returningWork(user);
+    const workSession = await seedSession(user.root, user.profileId, { state: "completed" });
+    await seedMetadata(user.root, workSession, user.profileId, { thematicTags: ["work"] });
+    await pastKindling(user, 45, [["breathing", "done"], ["bridge", "skipped"]], { sessionId: workSession });
+
+    const sessionId = await seedSession(user.root, user.profileId, { state: "confirmed" });
+    await seedMetadata(user.root, sessionId, user.profileId, {
+      supportNeed: "light", suggestedSpecialty: "burnout", thematicTags: ["burnout"],
+    });
+    const { prompt } = await captured(user, sessionId);
+    expect(prompt).toContain("returning, tended when this weighed on them before: breathing");
+  });
+
+  describe("the binder's pick (#566)", () => {
+    /** Two unfinished entries tied on tonight's feeling, so only history can separate them. */
+    async function tiedEntries(user: SeededUser) {
+      await user.root.run(async (ctx) => {
+        for (const slug of ["on-a", "on-b"]) {
+          const entryId = await ctx.db.insert("library_entries", {
+            slug, kind: "advice", title: "T", dek: "D", primarySubject: "anxiety",
+            reuse: "adapted", readMin: 4, active: true, lastReviewedAt: 1, searchText: slug,
+          } as Doc<"library_entries">);
+          await ctx.db.insert("library_entry_facets", { entryId, axis: "emotion", slug: "anxiety" });
+        }
+      });
+    }
+
+    const boundRead = async (user: SeededUser, sessionId: Id<"sessions">) => {
+      stub.reply = JSON.stringify([twig("read", 1), twig("breathing", 2), twig("xolacer", 3)]);
+      await generate(user, sessionId);
+      const active = (await readPaths(user)).find((p) => p.status === "active")!;
+      const read = (await readSteps(user, active._id)).find((t) => t.actionType === "read")!;
+      return (read.params as { slug: string }).slug;
+    };
+
+    const tonight = async (user: SeededUser, thematicTags: string[] = []) => {
+      const sessionId = await seedSession(user.root, user.profileId, { state: "confirmed" });
+      await seedMetadata(user.root, sessionId, user.profileId, {
+        supportNeed: "light", suggestedSpecialty: "burnout", thematicTags,
+      });
+      return sessionId;
+    };
+
+    /** The seeded pick with no history, and the slug it beat. */
+    async function coldPick(thematicTags?: string[]) {
+      const user = await asNewUser();
+      await tiedEntries(user);
+      const seeded = await boundRead(user, await tonight(user, thematicTags));
+      return { seeded, other: seeded === "on-a" ? "on-b" : "on-a" };
+    }
+
+    it("a read skipped before loses its tie; one skipped as another type doesn't", async () => {
+      const { seeded, other } = await coldPick();
+
+      const skipped = await asNewUser();
+      await tiedEntries(skipped);
+      await pastKindling(skipped, 3, [["read", "skipped", { slug: seeded }]]);
+      expect(await boundRead(skipped, await tonight(skipped))).toBe(other);
+
+      const elsewhere = await asNewUser();
+      await tiedEntries(elsewhere);
+      await pastKindling(elsewhere, 3, [[CATALOGUE_TOPIC, "skipped", { slug: seeded }]]);
+      expect(await boundRead(elsewhere, await tonight(elsewhere))).toBe(seeded);
+    });
+
+    it("a returning stretch re-offers the read tended during its previous run", async () => {
+      const { other } = await coldPick(["burnout"]);
+      const user = await asNewUser();
+      await tiedEntries(user);
+      await returningWork(user);
+      const workSession = await seedSession(user.root, user.profileId, { state: "completed" });
+      await seedMetadata(user.root, workSession, user.profileId, { thematicTags: ["work"] });
+      await pastKindling(user, 45, [["read", "done", { slug: other }]], { sessionId: workSession });
+      expect(await boundRead(user, await tonight(user, ["burnout"]))).toBe(other);
+    });
+  });
+});
+
+describe("the read twig binds on meaning (#568)", () => {
+  type Spec = { slug: string; facet?: boolean; active?: boolean; finished?: boolean };
+  /** Library entries by slug; `facet` shelves one under tonight's "anxiety". */
+  const seedEntries = (user: SeededUser, specs: Spec[]) =>
+    user.root.run(async (ctx) => {
+      const ids: Record<string, Id<"library_entries">> = {};
+      for (const { slug, facet, active = true, finished } of specs) {
+        const entryId = await ctx.db.insert("library_entries", {
+          slug, kind: "advice", title: "T", dek: "D", primarySubject: "anxiety",
+          reuse: "adapted", readMin: 4, active, lastReviewedAt: 1, searchText: slug,
+        } as Doc<"library_entries">);
+        if (facet) await ctx.db.insert("library_entry_facets", { entryId, axis: "emotion", slug: "anxiety" });
+        if (finished) {
+          await ctx.db.insert("library_reads", {
+            emotionalProfileId: user.profileId, entryId, finishedAt: 1, saved: false, helped: false,
+          });
+        }
+        ids[slug] = entryId;
+      }
+      return ids;
+    });
+
+  const session = async (user: SeededUser, over: Partial<Doc<"emotional_metadata">> = {}) => {
+    const sessionId = await seedSession(user.root, user.profileId, {
+      state: "confirmed", rawInput: "a dread I can't name sits on my chest every morning",
+    });
+    await seedMetadata(user.root, sessionId, user.profileId, { supportNeed: "light", suggestedSpecialty: "burnout", ...over });
+    return sessionId;
+  };
+
+  /** Generate with a read twig asked for; the bound read slug (null if dropped) and the logged event. */
+  async function run(user: SeededUser, sessionId: Id<"sessions">) {
+    stub.reply = JSON.stringify([twig("read", 1), twig("breathing", 2), twig("xolacer", 3), twig("bridge", 4)]);
+    await generate(user, sessionId);
+    const active = (await readPaths(user)).find((p) => p.status === "active")!;
+    const read = (await readSteps(user, active._id)).find((t) => t.actionType === "read");
+    const logged = stub.events.find((e) => e.event === "path_generated")!.properties;
+    return { slug: read ? (read.params as { slug: string }).slug : null, logged };
+  }
+
+  it("binds the closest entry by its best chunk, though it shares no facet; never a retired or finished one", async () => {
+    const user = await asNewUser();
+    const ids = await seedEntries(user, [
+      { slug: "on-facet", facet: true },
+      { slug: "on-dread" },
+      { slug: "retired", active: false },
+      { slug: "finished", finished: true },
+    ]);
+    stub.libraryHits = [
+      { key: ids["retired"], scores: [0.95] },
+      { key: ids["finished"], scores: [0.9] },
+      { key: ids["on-dread"], scores: [0.2, 0.62] },
+    ];
+    const { slug, logged } = await run(user, await session(user));
+    expect(slug).toBe("on-dread");
+    expect(logged).toMatchObject({ readSearch: "ran", readTopScore: 0.62, readFallback: false });
+  });
+
+  it("below the floor, binds on facets and logs the fallback", async () => {
+    const user = await asNewUser();
+    const ids = await seedEntries(user, [{ slug: "on-facet", facet: true }, { slug: "far" }]);
+    stub.libraryHits = [{ key: ids["far"], scores: [0.05] }];
+    const { slug, logged } = await run(user, await session(user));
+    expect(slug).toBe("on-facet");
+    expect(logged).toMatchObject({ readTopScore: 0.05, readFallback: true });
+  });
+
+  it("an embed failure falls back to facets, is logged, and the kindling still ships", async () => {
+    const user = await asNewUser();
+    const ids = await seedEntries(user, [{ slug: "on-facet", facet: true }, { slug: "on-dread" }]);
+    stub.libraryHits = [{ key: ids["on-dread"], scores: [0.9] }];
+    stub.embedFails = true;
+    const { slug, logged } = await run(user, await session(user));
+    expect(slug).toBe("on-facet");
+    expect(logged).toMatchObject({ readSearch: "failed", readFallback: true });
+    expect(logged.readTopScore).toBeUndefined();
+  });
+
+  it("an elevated session gets no read twig and never searches", async () => {
+    const user = await asNewUser();
+    const ids = await seedEntries(user, [{ slug: "on-facet", facet: true }, { slug: "on-dread" }]);
+    stub.libraryHits = [{ key: ids["on-dread"], scores: [0.9] }];
+    const { slug, logged } = await run(user, await session(user, { safeguardLevel: "elevated" }));
+    expect(slug).toBeNull();
+    expect(logged).toMatchObject({ readSearch: "skipped" });
+    expect(stub.searched).not.toContain("library");
+  });
+});
+
+describe("tracks bind on meaning inside the picked topic (#572)", () => {
+  const TOPIC = "audio_topic_anxiety_relief";
+  type Spec = Partial<Doc<"audio_tracks">> & { slug: string };
+  const seedTracks = (user: SeededUser, specs: Spec[]) =>
+    user.root.run(async (ctx) => {
+      const ids: Record<string, Id<"audio_tracks">> = {};
+      for (const spec of specs) {
+        ids[spec.slug] = await ctx.db.insert("audio_tracks", {
+          family: "support", title: `Title ${spec.slug}`, topic: TOPIC, tags: [], sourceTags: [],
+          key: "k", thumbKey: "t", durationSec: 60, sha256: "s", thumbSha256: "ts", active: true, ...spec,
+        });
+      }
+      return ids;
+    });
+
+  const session = async (user: SeededUser) => {
+    const sessionId = await seedSession(user.root, user.profileId, {
+      state: "confirmed", rawInput: "a dread I can't name sits on my chest every morning",
+    });
+    await seedMetadata(user.root, sessionId, user.profileId, {
+      supportNeed: "light", suggestedSpecialty: "burnout", primaryEmotion: "anxiety", thematicTags: [],
+    });
+    return sessionId;
+  };
+
+  async function run(user: SeededUser) {
+    stub.reply = JSON.stringify([twig(TOPIC, 1), twig("breathing", 2), twig("xolacer", 3), twig("bridge", 4)]);
+    await generate(user, await session(user));
+    const active = (await readPaths(user)).find((p) => p.status === "active")!;
+    const step = (await readSteps(user, active._id)).find((t) => t.actionType === TOPIC)!;
+    const logged = stub.events.find((e) => e.event === "path_generated")!.properties;
+    return { slug: (step.params as { slug: string }).slug, logged };
+  }
+
+  it("binds the closest track in the topic over tag overlap, never another topic's, and logs the score", async () => {
+    const user = await asNewUser();
+    await seedTracks(user, [
+      { slug: "tagged", tags: ["anxiety"] },
+      { slug: "on-dread" },
+      { slug: "elsewhere", topic: "audio_topic_grief" },
+    ]);
+    stub.trackHits = {
+      [`track:${TOPIC}`]: [{ key: "on-dread", scores: [0.2, 0.58] }, { key: "elsewhere", scores: [0.99] }],
+    };
+    const { slug, logged } = await run(user);
+    expect(slug).toBe("on-dread");
+    expect(logged.trackSearch).toEqual([{ actionType: TOPIC, search: "ran", topScore: 0.58, fallback: false }]);
+    expect(stub.searched.filter((n) => n.startsWith("track:"))).toEqual([`track:${TOPIC}`]);
+  });
+
+  it("below the floor binds on tags and logs the fallback", async () => {
+    const user = await asNewUser();
+    await seedTracks(user, [{ slug: "tagged", tags: ["anxiety"] }, { slug: "far" }]);
+    stub.trackHits = { [`track:${TOPIC}`]: [{ key: "far", scores: [0.1] }] };
+    const { slug, logged } = await run(user);
+    expect(slug).toBe("tagged");
+    expect(logged.trackSearch).toEqual([{ actionType: TOPIC, search: "ran", topScore: 0.1, fallback: true }]);
+  });
+
+  it("an embed failure binds on tags, is logged, and the kindling still ships", async () => {
+    const user = await asNewUser();
+    await seedTracks(user, [{ slug: "tagged", tags: ["anxiety"] }, { slug: "on-dread" }]);
+    stub.trackHits = { [`track:${TOPIC}`]: [{ key: "on-dread", scores: [0.9] }] };
+    stub.embedFails = true;
+    const { slug, logged } = await run(user);
+    expect(slug).toBe("tagged");
+    expect(logged.trackSearch).toEqual([{ actionType: TOPIC, search: "failed", fallback: true }]);
+  });
+
+  it("a search failure binds on tags, is logged, and the kindling still ships", async () => {
+    const user = await asNewUser();
+    await seedTracks(user, [{ slug: "tagged", tags: ["anxiety"] }, { slug: "on-dread" }]);
+    stub.trackHits = { [`track:${TOPIC}`]: [{ key: "on-dread", scores: [0.9] }] };
+    stub.searchFails = true;
+    const { slug, logged } = await run(user);
+    expect(slug).toBe("tagged");
+    expect(logged.trackSearch).toEqual([{ actionType: TOPIC, search: "failed", fallback: true }]);
+  });
+
+  it("embeds the session once per generation, shared by the read and track searches", async () => {
+    const user = await asNewUser();
+    await seedTracks(user, [{ slug: "on-dread" }]);
+    stub.reply = JSON.stringify([twig("read", 1), twig(TOPIC, 2), twig("breathing", 3), twig("xolacer", 4)]);
+    await generate(user, await session(user));
+    expect(stub.searched).toEqual(expect.arrayContaining(["library", `track:${TOPIC}`]));
+    expect(stub.embeds).toBe(1);
+  });
+
+  it("upsertTrack re-embeds only when what the index embeds changed", async () => {
+    const actual = await vi.importActual<typeof import("../ai/paths/audioTracks")>("../ai/paths/audioTracks");
+    const deleteObject = vi.spyOn(actual.r2, "deleteObject").mockResolvedValue(undefined);
+    const user = await asNewUser();
+    const track = {
+      family: "support" as const, slug: "s1", title: "Slow breath", topic: TOPIC, tags: ["calm"], sourceTags: [],
+      key: "k1", thumbKey: "t", durationSec: 60, sha256: "a", thumbSha256: "ta",
+    };
+    const upsert = (over: Partial<typeof track>) =>
+      user.root.mutation(internal.ai.paths.audioTracks.upsertTrack, { track: { ...track, ...over } });
+    const reindexes = async () =>
+      (await scheduledCalls(user.root)).filter((j) => j.name === "ai/paths/trackSearch:indexTrack").length;
+
+    await upsert({});
+    expect(await reindexes()).toBe(1);
+    await upsert({ key: "k2", durationSec: 61 }); // same audio, a field the index never reads
+    await upsert({ key: "k3", sha256: "b" }); // new audio, same index text
+    expect(await reindexes()).toBe(1);
+    await upsert({ key: "k4", title: "Slower breath" });
+    expect(await reindexes()).toBe(2);
+    deleteObject.mockRestore();
+  });
+
+  it("indexes each track's own text in its topic (and the reframe series); retiring one removes it", async () => {
+    const user = await asNewUser();
+    const ids = await seedTracks(user, [
+      { slug: "voiced", transcript: "Breathe out slower than you breathe in." },
+      { slug: "tune", family: "music", topic: "music_topic_calm", tags: ["calm", "rest"], whatItsFor: "For a racing mind at night." },
+      { slug: "bare", tags: ["anxiety"] },
+      { slug: "reframe", topic: "audio_topic_shame", series: "reality-not-false-hope", transcript: "It is not your fault." },
+    ]);
+    for (const trackId of Object.values(ids)) {
+      await user.root.action(internal.ai.paths.trackSearch.indexTrack, { trackId });
+    }
+    expect(stub.indexed).toHaveLength(5);
+    expect(stub.indexed).toEqual(expect.arrayContaining([
+      { namespace: `track:${TOPIC}`, key: "voiced", text: "Breathe out slower than you breathe in." },
+      { namespace: "track:music_topic_calm", key: "tune", text: "Title tune\n\ncalm, rest\n\nFor a racing mind at night." },
+      { namespace: `track:${TOPIC}`, key: "bare", text: "Title bare\n\nanxiety" },
+      { namespace: "track:audio_topic_shame", key: "reframe", text: "It is not your fault." },
+      { namespace: "track:reality-not-false-hope", key: "reframe", text: "It is not your fault." },
+    ]));
+
+    await user.root.mutation(internal.ai.paths.trackSearch.setTrackActive, { slug: "reframe", active: false });
+    expect(scheduled(await scheduledCalls(user.root), "ai/paths/trackSearch:indexTrack")?.args).toEqual({ trackId: ids["reframe"] });
+    // Run it here; the scheduled copy may land too, so compare as a set.
+    await user.root.action(internal.ai.paths.trackSearch.indexTrack, { trackId: ids["reframe"] });
+    expect(new Set(stub.unindexed)).toEqual(new Set(["track:audio_topic_shame/reframe", "track:reality-not-false-hope/reframe"]));
   });
 });

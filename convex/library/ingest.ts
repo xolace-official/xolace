@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
 import { internalMutation } from "../_generated/server";
+import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { PRIMARY_EMOTIONS, THEMATIC_TAGS, canonicalFacet } from "../lib/understandingVocab";
 import schema from "../schema";
@@ -141,6 +142,8 @@ export const upsertEntry = internalMutation({
     else await ctx.db.insert("library_entry_bodies", { entryId, markdown });
     for (const f of pairs.values()) await ctx.db.insert("library_entry_facets", { entryId, ...f });
     await replaceSources(ctx, entryId, sources, resolved);
+    // Re-embed (or drop, if inactive) off the transaction: embedding is network.
+    await ctx.scheduler.runAfter(0, internal.ai.library.embed.indexEntry, { entryId });
 
     return { action: existing ? ("updated" as const) : ("inserted" as const) };
   },

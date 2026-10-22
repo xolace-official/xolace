@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CATALOG } from "./catalog";
 import { buildPathsPrompt, parsePathsResponse } from "./prompt";
+import { TRY_THIS } from "./tryThis";
 
 const WHY = "You said the mornings are the hardest, so this is one slow minute before the day starts.";
 
@@ -44,6 +45,15 @@ describe("parsePathsResponse", () => {
     );
     expect(twigs).toHaveLength(1);
     expect(dropped[0].reason).toBe("duplicate_action_type");
+  });
+
+  it("keeps one try-this twig and drops a second (#567)", () => {
+    const { twigs, dropped } = parsePathsResponse(
+      JSON.stringify([entry("try_brisk_walk", 1), entry("breathing", 2), entry("try_screens_off_hour", 3)]),
+      CATALOG,
+    );
+    expect(twigs.map((t) => t.actionType)).toEqual(["try_brisk_walk", "breathing"]);
+    expect(dropped).toEqual([{ actionType: "try_screens_off_hour", reason: "second_try_this" }]);
   });
 
   it("drops a why in the clinical register", () => {
@@ -156,6 +166,11 @@ describe("buildPathsPrompt", () => {
     expect(user).toContain("breathing");
   });
 
+  it("offers every try-this entry with its curated step (#571)", () => {
+    const { user } = buildPathsPrompt(base);
+    for (const t of TRY_THIS) expect(user).toContain(`- ${t.actionType}: ${t.modelDescription}`);
+  });
+
   it("carries negative examples only", () => {
     const { system } = buildPathsPrompt(base);
     expect(system).toMatch(/do not/i);
@@ -189,5 +204,32 @@ describe("the why line never carries compounding (#521)", () => {
   ])("drops %s", (why) => {
     const { dropped } = parsePathsResponse(JSON.stringify([entry("breathing", 1, why)]), CATALOG);
     expect(dropped[0].reason).toBe("why_vocabulary");
+  });
+});
+
+describe("past outcomes stay out of the why line (#565)", () => {
+  it.each([
+    "You tended this breathing 3 of 3 times, so here is one slow minute before the day starts.",
+    "You went for this twice when work weighed on you, so here is one slow minute again.",
+    "Like last time you said the mornings are hardest, so here is one slow minute to start.",
+    "You said the mornings are the hardest, and this is your usual slow minute before the day.",
+  ])("drops %j", (why) => {
+    const { dropped } = parsePathsResponse(JSON.stringify([entry("breathing", 1, why)]), CATALOG);
+    expect(dropped[0]?.reason).toBe("why_vocabulary");
+  });
+
+  it("still ships a why with a non-count number", () => {
+    const why = "You said the mornings are the hardest, so this is a 2-minute breath before the day starts.";
+    expect(parsePathsResponse(JSON.stringify([entry("breathing", 1, why)]), CATALOG).dropped).toEqual([]);
+  });
+
+  it("renders no history block when there is no history", () => {
+    const ctx = {
+      understanding: { primaryEmotion: "sadness", intensity: 5, specificity: 5, thematicTags: [], userLanguageTags: [], supportNeed: "light" as const },
+      profile: null,
+      catalog: CATALOG,
+      tier: "plus" as const,
+    };
+    expect(buildPathsPrompt({ ...ctx, history: [] })).toEqual(buildPathsPrompt(ctx));
   });
 });

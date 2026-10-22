@@ -1,5 +1,6 @@
 import type { Doc } from "../../_generated/dataModel";
 import { CATALOG_BY_KEY } from "./catalog";
+import { isTryThis } from "./tryThis";
 import { freeEmotionFamily } from "../../lib/understandingVocab";
 
 /**
@@ -14,7 +15,10 @@ import { freeEmotionFamily } from "../../lib/understandingVocab";
 export type BindTrack = Pick<
   Doc<"audio_tracks">,
   "slug" | "family" | "topic" | "tags" | "active" | "series"
->;
+> & {
+  /** Best-chunk similarity to tonight's text (#572); absent when the topic wasn't searched or didn't reach it. */
+  similarity?: number;
+};
 
 export interface BindUnderstanding {
   primaryEmotion: string;
@@ -23,6 +27,13 @@ export interface BindUnderstanding {
   suggestedSpecialty: Doc<"emotional_metadata">["suggestedSpecialty"];
   /** Life areas of the compounding domains tonight touched (#521): tie-breakers, never a gate. */
   compoundingTags?: string[];
+  /** `slugKey`s whose newest past verdict is a skip (#566): they lose ties, never a better score. */
+  skippedSlugs?: string[];
+  /**
+   * `slugKey`s tended during a returning compounding domain's previous stretch
+   * (#566) — the one place repetition is the point. Wins ties over a skip.
+   */
+  reofferSlugs?: string[];
 }
 
 /** A Library entry the reader hasn't finished, with the facets that matched this Understanding. */
@@ -30,12 +41,30 @@ export interface BindEntry {
   slug: string;
   emotions: string[]; // `emotion` facet slugs
   lifeAreas: string[]; // `lifeArea` facet slugs
+  /** Best-chunk similarity to tonight's text (#568); absent when the search didn't reach it. */
+  similarity?: number;
 }
+
+/**
+ * Below this a match in meaning doesn't count and binding falls back to the
+ * overlap it replaced (ADR 0021). One floor per twig type, since each
+ * content type's text sits differently against a session's.
+ * ponytail: provisional; tune from `path_generated.readTopScore`,
+ * `path_generated.trackSearch[].topScore`, `mirror_delivered.exerciseTopScore`
+ * and `xolacer_suggestion_ranked.topScore`.
+ */
+export const SIMILARITY_FLOOR = { read: 0.3, exercise: 0.3, xolacer: 0.3, track: 0.3 } as const;
+
+/** Similarity in 0.05 bands, so the history rules still have ties to break (ADR 0021). */
+export const similarityBand = (score: number) => Math.floor(score * 20);
 
 export type BoundParams = { slug: string } | { exercise: string } | { specialty: string };
 
 /** Track 2 "Reality, Not False Hope" — the one cross-topic series (§3.1). */
 export const REFRAME_SERIES = "reality-not-false-hope";
+
+/** History is per twig type (#566): a skipped read never demotes a track that shares its slug. */
+export const slugKey = (actionType: string, slug: string) => `${actionType}:${slug}`;
 
 /** FNV-1a — deterministic, no randomness/clock, spreads ties across sessions. */
 function hashSeed(seed: string): number {
@@ -61,10 +90,12 @@ export function bindTwig(
     case "bridge":
       return { exercise: "trusted-bridge" };
     case "xolacer":
-      // The person is chosen at read time by `xolacerChat.sessionSuggestion`
+      // The person is chosen at read time by `ai/xolacers/suggest.sessionSuggestion`
       // and never stored — only the ranker's resolved specialty travels.
       return u.suggestedSpecialty ? { specialty: u.suggestedSpecialty } : null;
     default:
+      // Try-this (#567): the curated step is the content; only a catalogued one exists.
+      if (isTryThis(actionType)) return CATALOG_BY_KEY.has(actionType) ? { exercise: actionType } : null;
       return bindTrack(actionType, u, tracks);
   }
 }
@@ -77,8 +108,9 @@ function bindTrack(
   const entry = CATALOG_BY_KEY.get(actionType);
   if (!entry) return null;
 
+  // The topic is the gate (ADR 0021): the model's `why` was written for it.
   // Acuity `tier` is editorial (tone, review process, Browse grouping) — it
-  // never gates binding. Standalones and episodes of a topic compete on tags.
+  // never gates binding. Standalones and episodes of a topic compete as one.
   const family = actionType.startsWith("music_topic_") ? "music" : "support";
   const candidates = tracks.filter(
     (t) =>
@@ -87,6 +119,10 @@ function bindTrack(
       (actionType === "episode_reframe" ? t.series === REFRAME_SERIES : t.topic === actionType),
   );
   if (candidates.length === 0) return null;
+
+  // Closest in meaning first (#572); with nothing above the floor, tag overlap.
+  const close = candidates.filter((t) => (t.similarity ?? -1) >= SIMILARITY_FLOOR.track);
+  if (close.length > 0) return pickSeeded(actionType, close, (t) => similarityBand(t.similarity!), u);
 
   const wanted = new Set([
     ...understoodEmotions(u),
@@ -97,21 +133,24 @@ function bindTrack(
   ]);
   const score = (t: BindTrack) => t.tags.filter((tag) => wanted.has(tag)).length;
 
-  return pickSeeded(candidates, score, u);
+  return pickSeeded(actionType, candidates, score, u);
 }
 
 /**
- * The read twig (#412): a plain facet join, no catalogue indirection
- * (ADR 0015) — the Understanding's emotions against `emotion` facets, its
- * thematic tags against `lifeArea`. Finished entries never reach here.
+ * The read twig: the entry closest in meaning to what the person wrote
+ * (#568), banded. With nothing above the floor, a plain facet join (#412,
+ * ADR 0015) — the Understanding's emotions against `emotion` facets, its
+ * thematic tags against `lifeArea`. Finished and retired entries never reach here.
  */
 function bindEntry(u: BindUnderstanding, entries: readonly BindEntry[]): { slug: string } | null {
+  const close = entries.filter((e) => (e.similarity ?? -1) >= SIMILARITY_FLOOR.read);
+  if (close.length > 0) return pickSeeded("read", close, (e) => similarityBand(e.similarity!), u);
   const emotions = new Set(understoodEmotions(u));
   const areas = new Set(u.thematicTags);
   const score = (e: BindEntry) =>
     e.emotions.filter((s) => emotions.has(s)).length + e.lifeAreas.filter((s) => areas.has(s)).length;
   const candidates = entries.filter((e) => score(e) > 0);
-  return candidates.length === 0 ? null : pickSeeded(candidates, score, u);
+  return candidates.length === 0 ? null : pickSeeded("read", candidates, score, u);
 }
 
 /**
@@ -123,6 +162,7 @@ export function understoodEmotions(u: Pick<BindUnderstanding, "primaryEmotion" |
 }
 
 function pickSeeded<T extends { slug: string }>(
+  actionType: string,
   candidates: readonly T[],
   score: (c: T) => number,
   u: BindUnderstanding,
@@ -133,9 +173,17 @@ function pickSeeded<T extends { slug: string }>(
     (a, b) => score(b) - score(a) || (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0),
   );
   const topScore = score(sorted[0]);
-  const tied = sorted.filter((t) => score(t) === topScore);
+  // Within the top band, in order (#566): the returning stretch's re-offer,
+  // then a slug skipped before loses ties. Each step keeps the band if it'd empty it.
+  const narrow = (band: T[], keep: (t: T) => boolean) => {
+    const kept = band.filter(keep);
+    return kept.length > 0 ? kept : band;
+  };
+  const band = sorted.filter((t) => score(t) === topScore);
+  const reoffered = narrow(band, (t) => u.reofferSlugs?.includes(slugKey(actionType, t.slug)) === true);
+  const pool = narrow(reoffered, (t) => !u.skippedSlugs?.includes(slugKey(actionType, t.slug)));
   const canonicalTags = [...new Set(u.thematicTags)].sort();
   const seed = [u.primaryEmotion, u.secondaryEmotion ?? "", ...canonicalTags].join("|");
-  const pick = tied[hashSeed(seed) % tied.length];
+  const pick = pool[hashSeed(seed) % pool.length];
   return { slug: pick.slug };
 }

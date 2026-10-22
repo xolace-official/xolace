@@ -1,10 +1,12 @@
 import { ConvexError, v } from "convex/values";
 import { R2 } from "@convex-dev/r2";
-import { components } from "../../_generated/api";
+import { components, internal } from "../../_generated/api";
+import type { Id } from "../../_generated/dataModel";
 import { internalMutation, internalQuery } from "../../_generated/server";
 import { licenceValidator } from "../../lib/validators";
 import { trackSearchTextOf } from "../../library/searchText";
 import { TOPIC_SLUGS } from "./catalog";
+import { indexSignature, trackNamespaces } from "./trackSearch";
 
 /**
  * Kindling audio/music catalogue (#328, docs/paths-v1.md §3.2). Blobs live in
@@ -43,11 +45,13 @@ export const trackUpsertValidator = v.union(
     episodeNumber: v.optional(v.number()),
     tier: v.optional(v.number()),
     safetyReviewedAt: v.optional(v.number()),
+    transcript: v.optional(v.string()),
   }),
   v.object({
     family: v.literal("music"),
     ...sharedFields,
     licence: licenceValidator,
+    whatItsFor: v.optional(v.string()),
   }),
 );
 
@@ -152,8 +156,20 @@ export const upsertTrack = internalMutation({
       .unique();
     const searchText = trackSearchTextOf(track);
 
+    // The meaning index (#572) re-embeds only when what it embeds changed.
+    const reindex = async (trackId: Id<"audio_tracks">) => {
+      const after = await ctx.db.get("audio_tracks", trackId);
+      if (after && (!existing || indexSignature(existing) !== indexSignature(after))) {
+        await ctx.scheduler.runAfter(0, internal.ai.paths.trackSearch.indexTrack, {
+          trackId,
+          ...(existing && { previousNamespaces: trackNamespaces(existing) }),
+        });
+      }
+    };
+
     if (!existing) {
       const trackId = await ctx.db.insert("audio_tracks", { ...track, searchText, active: true });
+      await reindex(trackId);
       return { action: "inserted" as const, trackId };
     }
 
@@ -167,6 +183,7 @@ export const upsertTrack = internalMutation({
         key: existing.key,
         active: existing.active,
       });
+      await reindex(existing._id);
       const action =
         existing.thumbSha256 === track.thumbSha256 ? ("unchanged" as const) : ("updated" as const);
       return { action, trackId: existing._id };
@@ -175,6 +192,7 @@ export const upsertTrack = internalMutation({
     const oldKey = existing.key;
     await ctx.db.replace("audio_tracks", existing._id, { ...track, searchText, active: existing.active });
     await r2.deleteObject(ctx, oldKey);
+    await reindex(existing._id);
     return { action: "updated" as const, trackId: existing._id };
   },
 });

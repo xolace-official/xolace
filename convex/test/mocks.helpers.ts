@@ -19,6 +19,7 @@
  * Only mock what the file under test actually reaches. An unused mock is a
  * real code path silently stubbed out.
  */
+import { MockEmbeddingModelV3 } from "ai/test";
 import { internalAction } from "../_generated/server";
 
 /** `convex/lib/aggregates` — writes are no-ops; nothing reads ranks back. */
@@ -82,29 +83,45 @@ export const revenuecatMock = (hasEntitlement: Lazy<boolean> = false) => ({
 /**
  * `convex/rag` — the search half of the shared RAG instance. Defaults to a
  * cold namespace (nothing retrieved), which is what a first-session profile
- * genuinely looks like. `searchEpisodicMemory` itself stays real.
+ * genuinely looks like. `searchEpisodicMemory` and `embedSessionText` stay
+ * real — the embedding model is the only stand-in, so the pipeline's one
+ * embed call genuinely runs against `rag.options`.
  */
 export const ragMock = (
   result: {
     entries?: { entryId: string; key?: string; text: string }[];
     results?: { entryId: string; score: number }[];
   } = {},
-  /** Sink for keys passed to `deleteByKeyAsync` — pass one to assert a purge. */
+  /** Sink for keys passed to `deleteByKeyAsync` / `deleteByKey` — pass one to assert a purge. */
   deletedKeys?: string[],
+  /** Sink for `add` calls — pass one to assert what got indexed. */
+  added?: { namespace: string; key: string; text: string }[],
 ) => ({
   REFLECTION_POOL_NAMESPACE: "reflection-pool",
   NO_GRANULAR_LABEL: "",
   EPISODIC_STATUS: "n/a",
   REPLY_STATUS: "reply",
   NO_PRIMARY_EMOTION: "n/a",
+  NO_STATUS: "n/a",
   rag: {
+    options: {
+      textEmbeddingModel: new MockEmbeddingModelV3({
+        doEmbed: async ({ values }) => ({ embeddings: values.map(() => [0]), warnings: [] }),
+      }),
+      embeddingDimension: 1,
+    },
     search: async () => ({
       entries: result.entries ?? [],
       results: result.results ?? [],
     }),
-    add: async () => {},
+    add: async (_ctx: unknown, args: { namespace: string; key: string; text: string }) => {
+      added?.push({ namespace: args.namespace, key: args.key, text: args.text });
+    },
     getNamespace: async () => ({ namespaceId: "ns_test" }),
     deleteByKeyAsync: async (_ctx: unknown, args: { key: string }) => {
+      deletedKeys?.push(args.key);
+    },
+    deleteByKey: async (_ctx: unknown, args: { key: string }) => {
       deletedKeys?.push(args.key);
     },
   },

@@ -30,6 +30,9 @@ import {
   searchEpisodicMemory,
   type EpisodicSearch,
 } from "./helpers/episodicSearch";
+import { embedSessionText } from "./helpers/embedSessionText";
+import { searchExercises } from "./exercises/embed";
+import type { ExerciseSimilarity } from "../exercises/match";
 
 import type { SessionContext } from "./context";
 
@@ -138,8 +141,9 @@ export const generateMirror = internalAction({
       // Episodic recall (Cognition Layer §1.3): top-K past composites
       // from the user's personal namespace, matched raw-to-raw against
       // tonight's input. Best-effort — memory failing must never block
-      // the mirror.
-      const [moderationResult, classification, episodic] =
+      // the mirror. The same vector ranks the exercises (#569).
+      const profileId = session.emotionalProfileId;
+      const [moderationResult, classification, [episodic, exerciseSimilarity]] =
         await Promise.all([
           moderationCache
             .fetch(ctx, { text: args.rawText })
@@ -149,12 +153,12 @@ export const generateMirror = internalAction({
             userPrompt: classifierPrompt.user,
           }),
           context.isFirstSession
-            ? Promise.resolve({ matches: [] } as EpisodicSearch)
-            : searchEpisodicMemory(
-                ctx,
-                session.emotionalProfileId,
-                args.sessionId,
-                args.rawText,
+            ? Promise.resolve<[EpisodicSearch, ExerciseSimilarity | undefined]>([{ matches: [] }, undefined])
+            : embedSessionText(args.rawText).then((vector) =>
+                Promise.all<[Promise<EpisodicSearch>, Promise<ExerciseSimilarity | undefined>]>([
+                  searchEpisodicMemory(ctx, profileId, args.sessionId, vector),
+                  searchExercises(ctx, vector),
+                ]),
               ),
         ]);
       const episodicMatches = episodic.matches;
@@ -195,6 +199,7 @@ export const generateMirror = internalAction({
         entryType: session.entryType ?? "open_prompt",
         episodicTopScore: episodic.topScore,
         profileReachedToday: context.profileReachedToday,
+        exerciseSimilarity,
       });
 
       // 6. Articulate mirror (Sonnet). Tell the client first so its waiting
@@ -296,6 +301,12 @@ export const generateMirror = internalAction({
             episodic.topScore !== undefined &&
             episodic.topScore >= EPISODIC_CONNECT_FLOOR,
           episodicTopScore: episodic.topScore ?? null,
+          // Tunes SIMILARITY_FLOOR.exercise; null = no vector, a failed
+          // search, or nothing indexed — never a fake score.
+          exerciseTopScore:
+            exerciseSimilarity && Object.keys(exerciseSimilarity).length > 0
+              ? Math.max(...Object.values(exerciseSimilarity))
+              : null,
           entryType: session.entryType ?? "open_prompt",
           toneUsed: plan.tone,
           claimStrength: plan.claimStrength,
@@ -364,6 +375,7 @@ export const generateMirror = internalAction({
         await ctx.runMutation(internal.exercises.setMatched, {
           sessionId: args.sessionId,
           matchedExerciseId: matched._id,
+          exerciseSimilarity,
         });
 
         // Slot-fill — fire-and-forget so it doesn't block mirror delivery.

@@ -128,6 +128,11 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
   // any write lands, so this guards that call directly (not just the DB row).
   quoteReply: { kind: "fixed window", rate: 4, period: DAY },
 
+  // Xolacer suggestion (#570) — each call embeds the session via OpenAI. Fired
+  // on every close-offer mount and xolacer twig tap; a normal day is a handful.
+  // Past it the action falls back to the free ranker rather than failing.
+  xolacerSuggestion: { kind: "token bucket", rate: 30, period: HOUR, capacity: 10 },
+
   // Kindling generation (docs/paths-v1.md §2.2), Plus only. One kindling per
   // profile per day: the first qualifying session of the day generates, every
   // later session that day is a no-ship (logged `rate_limited`). A user gets

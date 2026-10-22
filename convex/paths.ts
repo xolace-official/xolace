@@ -7,6 +7,8 @@ import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { hasPremium, requirePremium } from "./lib/premium";
 import { posthog } from "./posthog";
 import { r2 } from "./ai/paths/audioTracks";
+import { CATALOG_BY_KEY } from "./ai/paths/catalog";
+import { isTryThis } from "./ai/paths/tryThis";
 import type { Understanding } from "./understanding";
 import { recordActivity } from "./streaks/activityLog";
 
@@ -20,9 +22,10 @@ import { recordActivity } from "./streaks/activityLog";
  */
 
 /** Display family for a twig — what the card and the rail node render as. */
-export type TwigKind = "breathing" | "bridge" | "xolacer" | "audio" | "music" | "read";
+export type TwigKind = "breathing" | "bridge" | "xolacer" | "audio" | "music" | "read" | "try";
 
 function twigKind(actionType: string): TwigKind {
+  if (isTryThis(actionType)) return "try";
   if (actionType === "read") return "read";
   if (actionType === "breathing") return "breathing";
   if (actionType === "bridge") return "bridge";
@@ -40,11 +43,14 @@ const twigValidator = v.object({
     v.literal("audio"),
     v.literal("music"),
     v.literal("read"),
+    v.literal("try"),
   ),
   order: v.number(),
   why: v.string(),
-  /** Track or entry title for bound audio/music/read; undefined for breathing + xolacer. */
+  /** Track or entry title for bound audio/music/read, the catalog's for try-this; undefined for breathing + xolacer. */
   title: v.optional(v.string()),
+  /** Try-this only (#567): the curated step, as offered. */
+  detail: v.optional(v.string()),
   params: v.any(),
   state: v.union(v.literal("pending"), v.literal("done"), v.literal("skipped")),
 });
@@ -58,6 +64,9 @@ export const getActive = query({
     /** @deprecated Pre-#412 clients omit it and get no read twigs — they have no card for one. */
     // DEPRECATED(remove-after: app >= 1.11.0): return read twigs unconditionally once no client omits this.
     withRead: v.optional(v.boolean()),
+    /** @deprecated Pre-#567 clients omit it and get no try-this twigs — they have no card for one. */
+    // DEPRECATED(remove-after: app >= 1.16.0): return try-this twigs unconditionally once no client omits this.
+    withTry: v.optional(v.boolean()),
   },
   returns: v.union(
     v.null(),
@@ -89,6 +98,8 @@ export const getActive = query({
     for (const step of steps.sort((a, b) => a.order - b.order)) {
       const kind = twigKind(step.actionType);
       if (kind === "read" && !args.withRead) continue;
+      if (kind === "try" && !args.withTry) continue;
+      const curated = kind === "try" ? CATALOG_BY_KEY.get(step.actionType) : undefined;
       const slug = (step.params as { slug?: string } | null)?.slug;
       const bound = !slug
         ? null
@@ -107,7 +118,8 @@ export const getActive = query({
         kind,
         order: step.order,
         why: step.why,
-        title: bound?.title,
+        title: curated?.title ?? bound?.title,
+        detail: curated?.detail,
         params: step.params,
         state: step.state,
       });
@@ -237,6 +249,7 @@ async function settle(
     .query("path_steps")
     .withIndex("by_path", (q) => q.eq("pathId", path._id))
     .collect();
+  // Counts twigs pre-#412/#567 clients can't see too — see docs/deprecations.md.
   if (steps.some((s) => s.state === "pending")) return;
   await ctx.db.patch("paths", path._id, { status: "completed" });
   await posthog.capture(ctx, {

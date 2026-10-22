@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, PressableFeedback, useThemeColor } from "heroui-native";
 
 import { AppText } from "@/src/components/shared/app-text";
-import { ANNOUNCEMENT_KINDS, type TwigKind } from "@/src/features/kindling/announcement-poses";
+import { ANNOUNCEMENT_KINDS, type AnnouncementKind } from "@/src/features/kindling/announcement-poses";
 import { PoseBubble } from "@/src/features/kindling/components/pose-bubble";
 
 const COPY = {
@@ -18,7 +18,7 @@ const COPY = {
 
 // [centreX, centreY, radius] as fractions of the cluster width: one large
 // circle in the middle, the rest packed close around it at mixed sizes.
-const CLUSTER: Record<TwigKind, readonly [number, number, number]> = {
+const CLUSTER: Record<AnnouncementKind, readonly [number, number, number]> = {
   audio: [0.44, 0.15, 0.13],
   music: [0.72, 0.29, 0.114],
   breathing: [0.44, 0.467, 0.146],

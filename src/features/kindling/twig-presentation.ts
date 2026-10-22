@@ -6,6 +6,9 @@ import type { api } from "@/convex/_generated/api";
 export type Kindling = NonNullable<FunctionReturnType<typeof api.paths.getActive>>;
 export type Twig = Kindling["twigs"][number];
 
+const BREATHING_IMAGE =
+  "https://energetic-guineapig-283.convex.cloud/api/storage/6d4d937e-8dd9-4e8d-bbd6-3ee58b538988";
+
 /**
  * How each twig family reads on the card and the rail (docs/paths-v1.md
  * §9.1). Audio and music take the bound track's title when the server could
@@ -26,7 +29,7 @@ export const TWIG_PRESENTATION: Record<
     eyebrow: "A few minutes",
     title: "Sit with this",
     actionLabel: "Begin",
-    image: "https://energetic-guineapig-283.convex.cloud/api/storage/6d4d937e-8dd9-4e8d-bbd6-3ee58b538988",
+    image: BREATHING_IMAGE,
   },
   audio: {
     symbol: { ios: "waveform", android: "graphic_eq", web: "graphic_eq" },
@@ -55,7 +58,7 @@ export const TWIG_PRESENTATION: Record<
     title: "A few pages for this",
     actionLabel: "Read",
     // Borrows breathing's until read has an image of its own.
-    image: "https://energetic-guineapig-283.convex.cloud/api/storage/6d4d937e-8dd9-4e8d-bbd6-3ee58b538988",
+    image: BREATHING_IMAGE,
   },
   bridge: {
     symbol: { ios: "envelope", android: "mail", web: "mail" },
@@ -63,6 +66,15 @@ export const TWIG_PRESENTATION: Record<
     title: "Tell someone you trust",
     actionLabel: "Write",
     image: "https://energetic-guineapig-283.convex.cloud/api/storage/8f7dc3c4-9caa-4744-b3bf-2393b572a1e9",
+  },
+  // Off-app (#567): no screen to hand off to, so the action is the person saying they did it.
+  try: {
+    symbol: { ios: "figure.walk", android: "directions_walk", web: "directions_walk" },
+    eyebrow: "Away from the app",
+    title: "Something to try",
+    actionLabel: "I did this",
+    // Borrows breathing's until try-this has an image of its own.
+    image: BREATHING_IMAGE,
   },
 };
 
@@ -125,8 +137,8 @@ export function twigHref(twig: Twig, sessionId: Kindling["sessionId"]): Href | n
       };
     case "xolacer": {
       // Only the ranker's specialty is stored — never a person (privacy, see
-      // `xolacerChat.sessionSuggestion`). The roster filtered to it is where
-      // the person gets picked.
+      // `ai/xolacers/suggest.sessionSuggestion`). The roster filtered to it is
+      // the fallback when no one is suggested (`use-xolacer-twig-href.ts`).
       const specialty = (twig.params as { specialty?: string } | null)?.specialty;
       // `t` makes a repeat tap re-apply the filter even when nothing else changed.
       // `stepId` rides along to the profile so a sent request tends the twig.

@@ -223,6 +223,7 @@ export const seedXolacer = internalMutation({
       updatedAt: Date.now(),
     };
 
+    await ctx.scheduler.runAfter(0, internal.ai.xolacers.embed.indexXolacer, { emotionalProfileId });
     if (existing) {
       await ctx.db.patch("xolacer_profiles", existing._id, fields);
       return emotionalProfileId;
@@ -310,6 +311,12 @@ export const seedKindling = internalMutation({
         order: 3,
         why: "Feeling alone kept coming up. A xolacer who's felt the same is around.",
         params: { specialty: "burnout" },
+      },
+      {
+        actionType: "try_brisk_walk",
+        order: 4,
+        why: "You said you'd felt stuck indoors all week, so this one happens outside.",
+        params: { exercise: "try_brisk_walk" },
       },
     ];
     for (const t of twigs) {

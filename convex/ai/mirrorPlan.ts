@@ -9,7 +9,7 @@
 import type { ClassificationResult } from "./providers/anthropic";
 import type { SafeguardResult } from "./safeguard";
 import { routeClaimStrength, type ClaimStrength } from "./routing";
-import { matchExercise, type ExerciseTitle } from "../exercises/match";
+import { matchExercise, type ExerciseSimilarity, type ExerciseTitle } from "../exercises/match";
 
 export type MirrorTone =
   | "poetic"
@@ -53,6 +53,8 @@ export function decideMirrorOutcome(input: {
   episodicTopScore?: number;
   /** Another session by this profile already reached today. */
   profileReachedToday: boolean;
+  /** Exercise similarity to tonight's text; absent with no vector (#569). */
+  exerciseSimilarity?: ExerciseSimilarity;
 }): MirrorPlan {
   const { classification, safeguard } = input;
 
@@ -63,7 +65,7 @@ export function decideMirrorOutcome(input: {
     userLanguageTags: classification.userLanguageTags,
     entryType: input.entryType,
     confirmationState: "confirmed",
-  });
+  }, input.exerciseSimilarity);
 
   return {
     tone: resolveMirrorTone(input.rawMirrorTone, input.isPremium),

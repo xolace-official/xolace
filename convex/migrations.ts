@@ -6,8 +6,12 @@ import { localDayKey, shiftDayKey } from "./streaks/activityLog";
 import { FREEZE_CAP } from "./streaks/state";
 import { searchTextOf, trackSearchTextOf } from "./library/searchText";
 
-// Run both in sequence (renameRawInput first, then renameUserInput):
-//   bunx convex run migrations:runAll
+// After every deploy, run all of these. The meaning indexes (#568-#572) stay
+// empty until they do, and an empty namespace logs as search "ran" with no
+// topScore, which pollutes floor calibration:
+//   bunx convex run migrations:runAll            (includes both index backfills)
+//   bunx convex run ai/exercises/embed:indexExercises
+//   bunx convex run ai/xolacers/embed:indexAll
 import { internal } from "./_generated/api";
 
 export const migrations = new Migrations<DataModel>(components.migrations);
@@ -165,6 +169,33 @@ export const backfillTrackSearchText = migrations.define({
   },
 });
 
+// ponytail: random spread, not a rate limiter — ~200 rows over 5 min stays well
+// under OpenAI's embedding limits; move to @convex-dev/workpool if the corpus
+// grows past a few thousand. A failed embed logs its id; re-running is the fix.
+const BACKFILL_SPREAD_MS = 5 * 60 * 1000;
+const spread = () => Math.random() * BACKFILL_SPREAD_MS;
+
+// Library meaning index (#568): embeds every active entry ingested before the
+// index existed. Each row schedules its own index action (an embed is network,
+// a migration is a mutation); re-running just re-embeds, keyed on the entry id.
+//   bunx convex run migrations:run '{"fn": "migrations:backfillLibraryIndex"}'
+export const backfillLibraryIndex = migrations.define({
+  table: "library_entries",
+  migrateOne: async (ctx, doc) => {
+    if (doc.active) await ctx.scheduler.runAfter(spread(), internal.ai.library.embed.indexEntry, { entryId: doc._id });
+  },
+});
+
+// Track meaning index (#572): embeds every active track ingested before the
+// index existed. One index action per row, keyed on the slug — safe to re-run.
+//   bunx convex run migrations:run '{"fn": "migrations:backfillTrackIndex"}'
+export const backfillTrackIndex = migrations.define({
+  table: "audio_tracks",
+  migrateOne: async (ctx, doc) => {
+    if (doc.active) await ctx.scheduler.runAfter(spread(), internal.ai.paths.trackSearch.indexTrack, { trackId: doc._id });
+  },
+});
+
 export const runAll = migrations.runner([
   internal.migrations.renameRawInput,
   internal.migrations.renameUserInput,
@@ -174,4 +205,7 @@ export const runAll = migrations.runner([
   // nothing for pre-#549/#550 rows until they run.
   internal.migrations.backfillLibrarySearchText,
   internal.migrations.backfillTrackSearchText,
+  // Library re-ingest can't fill these: its sha gate skips unchanged rows.
+  internal.migrations.backfillLibraryIndex,
+  internal.migrations.backfillTrackIndex,
 ]);

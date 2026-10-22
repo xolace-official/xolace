@@ -118,6 +118,9 @@ export const THEMATIC_TAGS = [
   "body-image",
   "social-media",
   "housing",
+  // #571: try-this themes (#560) — following the news, measuring up to others.
+  "news",
+  "comparison",
 ] as const;
 
 export type ThematicTag = (typeof THEMATIC_TAGS)[number];
@@ -182,6 +185,8 @@ export const LIFE_AREA_HOME: Record<ThematicTag, Domain | "texture" | "sensitive
   change: "texture",
   conflict: "texture",
   achievement: "texture",
+  news: "texture",
+  comparison: "self",
   trauma: "sensitive",
   abuse: "sensitive",
   neglect: "sensitive",

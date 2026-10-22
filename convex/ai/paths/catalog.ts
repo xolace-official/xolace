@@ -1,4 +1,5 @@
 import type { SupportNeed } from "../providers/anthropic";
+import { TRY_THIS } from "./tryThis";
 
 /**
  * Kindling action catalog (docs/paths-v1.md §3.1, #331). Action TYPES in
@@ -20,6 +21,9 @@ export interface CatalogEntry {
   humanContact: boolean; // true only for xolacer
   alwaysAvailable: boolean; // breathing = true; content-bound = false
   modelDescription: string; // what the generation model sees
+  /** Try-this only (#567): the card's short name, and the curated step as offered. */
+  title?: string;
+  detail?: string;
 }
 
 const BOTH: Exclude<SupportNeed, "none">[] = ["light", "active"];
@@ -341,6 +345,7 @@ export const CATALOG: readonly CatalogEntry[] = [
     ["self-doubt", "not-enough", "resolve", "strength", "self-trust"],
     "Grounded, rising instrumental music for when self-doubt is loud.",
   ),
+  ...TRY_THIS,
 ];
 
 export const CATALOG_BY_KEY: ReadonlyMap<string, CatalogEntry> = new Map(
