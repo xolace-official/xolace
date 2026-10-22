@@ -1,6 +1,6 @@
 # YC Winter 2027 application — final copy
 
-Fourth application. Paste the answers below as written. `[FILL]` marks the three things only you can supply.
+Fourth application. Paste the answers below as written. `[FILL]` marks the things only you can supply.
 
 ## What the Fall 2026 application got wrong
 
@@ -64,7 +64,7 @@ Android: https://play.google.com/store/apps/details?id=com.xolaceincorg.xolace
 
 **Login credentials**
 
-xolace.review@gmail.com / Xolace@review (this account is on Xolace+)
+`[FILL: review account email / password — keep out of the repo] (this account is on Xolace+)`
 
 **What is your company going to make? Please describe your product and what it does or will do.**
 

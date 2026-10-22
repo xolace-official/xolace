@@ -6,7 +6,7 @@ import { internalMutation, internalQuery } from "../../_generated/server";
 import { licenceValidator } from "../../lib/validators";
 import { trackSearchTextOf } from "../../library/searchText";
 import { TOPIC_SLUGS } from "./catalog";
-import { indexSignature } from "./trackSearch";
+import { indexSignature, trackNamespaces } from "./trackSearch";
 
 /**
  * Kindling audio/music catalogue (#328, docs/paths-v1.md §3.2). Blobs live in
@@ -160,7 +160,10 @@ export const upsertTrack = internalMutation({
     const reindex = async (trackId: Id<"audio_tracks">) => {
       const after = await ctx.db.get("audio_tracks", trackId);
       if (after && (!existing || indexSignature(existing) !== indexSignature(after))) {
-        await ctx.scheduler.runAfter(0, internal.ai.paths.trackSearch.indexTrack, { trackId });
+        await ctx.scheduler.runAfter(0, internal.ai.paths.trackSearch.indexTrack, {
+          trackId,
+          ...(existing && { previousNamespaces: trackNamespaces(existing) }),
+        });
       }
     };
 

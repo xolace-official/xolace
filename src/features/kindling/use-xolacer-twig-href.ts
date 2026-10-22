@@ -20,7 +20,10 @@ export function useXolacerTwigHref() {
   const resolve = async (twig: Twig, sessionId: Kindling["sessionId"]): Promise<Href | null> => {
     const roster = twigHref(twig, sessionId);
     setPendingId(twig._id);
-    const person = await suggest({ sessionId }).catch(() => null);
+    const person = await suggest({ sessionId }).catch((e) => {
+      console.error("Xolacer suggestion failed, falling back to roster:", e);
+      return null;
+    });
     if (!person) {
       if (!roster) setPendingId(undefined);
       return roster;

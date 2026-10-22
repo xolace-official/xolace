@@ -51,18 +51,17 @@ export const trackForIndex = internalQuery({
   },
 });
 
-// ponytail: a track moved to another topic leaves its old namespace entry
-// behind. It's inert (a hit only scores a track of the namespace it was found
-// in); clear old namespaces in upsertTrack if topics start moving.
+/** `previousNamespaces`: where the track lived before a topic/series move; its slug leaves the ones it no longer does. */
 export const indexTrack = internalAction({
-  args: { trackId: v.id("audio_tracks") },
+  args: { trackId: v.id("audio_tracks"), previousNamespaces: v.optional(v.array(v.string())) },
   returns: v.null(),
-  handler: async (ctx, { trackId }) => {
+  handler: async (ctx, { trackId, previousNamespaces = [] }) => {
     const t = await ctx.runQuery(internal.ai.paths.trackSearch.trackForIndex, { trackId });
     if (!t) return null;
-    for (const namespace of t.namespaces) {
+    const stale = previousNamespaces.filter((n) => !t.namespaces.includes(n));
+    for (const [namespace, text] of [...stale.map((n) => [n, null] as const), ...t.namespaces.map((n) => [n, t.text] as const)]) {
       try {
-        await syncKey(ctx, namespace, t.slug, t.text);
+        await syncKey(ctx, namespace, t.slug, text);
       } catch (e) {
         // The slug is what makes a hole findable; rethrow so the run still shows failed.
         console.error("track index: embed failed", { trackId, slug: t.slug, namespace });
@@ -135,7 +134,7 @@ export async function scoreTracks(
       logs.push({ actionType, search: "failed", fallback: true });
       continue;
     }
-    // Only a track that lives in this namespace scores here (see indexTrack's ponytail).
+    // Only a track that lives in this namespace scores here (guards a stale entry a failed move left).
     const inTopic = tracks.filter((t) => scores.has(t.slug) && trackNamespaces(t).includes(namespace));
     for (const t of inTopic) best.set(t.slug, Math.max(best.get(t.slug) ?? -Infinity, scores.get(t.slug)!));
     const topScore = inTopic.length > 0 ? Math.max(...inTopic.map((t) => scores.get(t.slug)!)) : undefined;
