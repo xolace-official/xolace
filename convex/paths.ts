@@ -249,6 +249,7 @@ async function settle(
     .query("path_steps")
     .withIndex("by_path", (q) => q.eq("pathId", path._id))
     .collect();
+  // Counts twigs pre-#412/#567 clients can't see too — see docs/deprecations.md.
   if (steps.some((s) => s.state === "pending")) return;
   await ctx.db.patch("paths", path._id, { status: "completed" });
   await posthog.capture(ctx, {
