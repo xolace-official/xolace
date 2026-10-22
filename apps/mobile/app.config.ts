@@ -219,6 +219,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 		[
 			"expo-build-properties",
 			{
+				android: {
+					// @livekit/react-native-webrtc 144.2.0 keeps `org.jni_zero.**`, but the
+					// prefixed WebRTC SDK it ships renames it to `livekit.org.jni_zero`. R8 then
+					// strips JniInit and release builds crash at launch in JNI_OnLoad.
+					extraProguardRules: "-keep class livekit.org.jni_zero.** { *; }",
+				},
 				ios: {
 					extraPods: [
 						{ modular_headers: true, name: "GoogleUtilities" },
