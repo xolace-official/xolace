@@ -150,7 +150,7 @@ async function play(talk: ScriptedTalk): Promise<Played[]> {
 				person: { ask: false, name: person.name },
 				recall: "",
 				safety,
-				style: { slowed: false },
+				style: { directness: undefined, slowed: false },
 			},
 			phrase: phrasePeak(turnWords(lines)),
 			turns,
