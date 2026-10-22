@@ -6,8 +6,12 @@ import { localDayKey, shiftDayKey } from "./streaks/activityLog";
 import { FREEZE_CAP } from "./streaks/state";
 import { searchTextOf, trackSearchTextOf } from "./library/searchText";
 
-// Run both in sequence (renameRawInput first, then renameUserInput):
-//   bunx convex run migrations:runAll
+// After every deploy, run all of these. The meaning indexes (#568-#572) stay
+// empty until they do, and an empty namespace logs as search "ran" with no
+// topScore, which pollutes floor calibration:
+//   bunx convex run migrations:runAll            (includes both index backfills)
+//   bunx convex run ai/exercises/embed:indexExercises
+//   bunx convex run ai/xolacers/embed:indexAll
 import { internal } from "./_generated/api";
 
 export const migrations = new Migrations<DataModel>(components.migrations);
@@ -195,4 +199,7 @@ export const runAll = migrations.runner([
   // nothing for pre-#549/#550 rows until they run.
   internal.migrations.backfillLibrarySearchText,
   internal.migrations.backfillTrackSearchText,
+  // Library re-ingest can't fill these: its sha gate skips unchanged rows.
+  internal.migrations.backfillLibraryIndex,
+  internal.migrations.backfillTrackIndex,
 ]);
