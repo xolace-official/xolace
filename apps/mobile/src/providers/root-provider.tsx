@@ -1,17 +1,17 @@
-import { HeroUINativeConfig, HeroUINativeProvider } from "heroui-native";
+import { type HeroUINativeConfig, HeroUINativeProvider } from "heroui-native";
+import { PostHogProvider } from "posthog-react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
-  KeyboardAvoidingView,
-  KeyboardProvider,
+	KeyboardAvoidingView,
+	KeyboardProvider,
 } from "react-native-keyboard-controller";
-import { PostHogProvider } from "posthog-react-native";
+import { posthog } from "@/src/config/posthog";
 import { AppThemeProvider } from "@/src/context/app-theme-context";
 import { SessionModeProvider } from "@/src/context/session-mode-context";
-import { ConvexClientProvider } from "./convex-provider";
-import { posthog } from "@/src/config/posthog";
 import { FeedbackTrayProvider } from "@/src/features/feedback-tray/feedback-tray-provider";
-import { RevenueCatProvider } from "@/src/features/purchases/revenuecat-context";
 import { PremiumThemeReconciler } from "@/src/features/purchases/premium-theme-reconciler";
+import { RevenueCatProvider } from "@/src/features/purchases/revenuecat-context";
+import { ConvexClientProvider } from "./convex-provider";
 
 /**
  * Root provider that composes all app-wide providers in the correct order.
@@ -26,52 +26,52 @@ import { PremiumThemeReconciler } from "@/src/features/purchases/premium-theme-r
  */
 const FLEX_1 = { flex: 1 };
 const AUTO_CAPTURE = {
-  captureScreens: false,
-  captureTouches: true,
-  propsToCapture: ["testID"],
+	captureScreens: false,
+	captureTouches: true,
+	propsToCapture: ["testID"],
 };
 
 export function RootProvider({ children }: { children: React.ReactNode }) {
-  const contentWrapper = (children: React.ReactNode) => (
-    <KeyboardAvoidingView
-      pointerEvents="box-none"
-      behavior="padding"
-      keyboardVerticalOffset={12}
-      style={FLEX_1}
-    >
-      {children}
-    </KeyboardAvoidingView>
-  );
+	const contentWrapper = (children: React.ReactNode) => (
+		<KeyboardAvoidingView
+			behavior="padding"
+			keyboardVerticalOffset={12}
+			pointerEvents="box-none"
+			style={FLEX_1}
+		>
+			{children}
+		</KeyboardAvoidingView>
+	);
 
-  const config: HeroUINativeConfig = {
-    toast: {
-      contentWrapper,
-    },
-    devInfo: {
-      stylingPrinciples: false,
-    },
-  };
+	const config: HeroUINativeConfig = {
+		devInfo: {
+			stylingPrinciples: false,
+		},
+		toast: {
+			contentWrapper,
+		},
+	};
 
-  return (
-    <GestureHandlerRootView style={FLEX_1}>
-      <KeyboardProvider>
-        <AppThemeProvider>
-          <SessionModeProvider>
-            <PostHogProvider client={posthog} autocapture={AUTO_CAPTURE}>
-              <ConvexClientProvider>
-                <HeroUINativeProvider config={config}>
-                  {/* Inside Convex (logIn needs the authed profile id) and
+	return (
+		<GestureHandlerRootView style={FLEX_1}>
+			<KeyboardProvider>
+				<AppThemeProvider>
+					<SessionModeProvider>
+						<PostHogProvider autocapture={AUTO_CAPTURE} client={posthog}>
+							<ConvexClientProvider>
+								<HeroUINativeProvider config={config}>
+									{/* Inside Convex (logIn needs the authed profile id) and
                       inside HeroUI (purchase/restore toasts). */}
-                  <RevenueCatProvider>
-                    <PremiumThemeReconciler />
-                    <FeedbackTrayProvider>{children}</FeedbackTrayProvider>
-                  </RevenueCatProvider>
-                </HeroUINativeProvider>
-              </ConvexClientProvider>
-            </PostHogProvider>
-          </SessionModeProvider>
-        </AppThemeProvider>
-      </KeyboardProvider>
-    </GestureHandlerRootView>
-  );
+									<RevenueCatProvider>
+										<PremiumThemeReconciler />
+										<FeedbackTrayProvider>{children}</FeedbackTrayProvider>
+									</RevenueCatProvider>
+								</HeroUINativeProvider>
+							</ConvexClientProvider>
+						</PostHogProvider>
+					</SessionModeProvider>
+				</AppThemeProvider>
+			</KeyboardProvider>
+		</GestureHandlerRootView>
+	);
 }

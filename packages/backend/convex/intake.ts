@@ -2,8 +2,8 @@ import { ConvexError, v } from "convex/values";
 import { internalQuery, mutation, query } from "./_generated/server";
 import { reflectionRank } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
-import { INTAKE_VERSION, intakeAnswerValidators } from "./lib/validators";
 import { validateDisplayName } from "./lib/displayName";
+import { INTAKE_VERSION, intakeAnswerValidators } from "./lib/validators";
 
 // Lives in `lib/validators` so the client can read it for the `intake_version`
 // person property (T7) without importing a server module.
@@ -27,99 +27,99 @@ const MAX_SELECTIONS = 3;
  * rather than failing or duplicating.
  */
 export const complete = mutation({
-  args: {
-    /** Q1. Written to the existing `preferences.displayName`, max 30 chars. */
-    displayName: v.string(),
-    ...intakeAnswerValidators,
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const { profile } = await requireAuth(ctx);
+	args: {
+		/** Q1. Written to the existing `preferences.displayName`, max 30 chars. */
+		displayName: v.string(),
+		...intakeAnswerValidators,
+	},
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
 
-    const validated = validateDisplayName(args.displayName);
-    if (!validated.ok) {
-      throw new ConvexError({
-        code: "invalid_display_name",
-        message: validated.message,
-      });
-    }
+		const validated = validateDisplayName(args.displayName);
+		if (!validated.ok) {
+			throw new ConvexError({
+				code: "invalid_display_name",
+				message: validated.message,
+			});
+		}
 
-    for (const [field, selections] of [
-      ["weighingOn", args.weighingOn],
-      ["copingStyle", args.copingStyle],
-    ] as const) {
-      if (selections.length > MAX_SELECTIONS) {
-        throw new ConvexError({
-          code: "too_many_selections",
-          message: `${field} accepts at most ${MAX_SELECTIONS} options`,
-        });
-      }
-    }
+		for (const [field, selections] of [
+			["weighingOn", args.weighingOn],
+			["copingStyle", args.copingStyle],
+		] as const) {
+			if (selections.length > MAX_SELECTIONS) {
+				throw new ConvexError({
+					code: "too_many_selections",
+					message: `${field} accepts at most ${MAX_SELECTIONS} options`,
+				});
+			}
+		}
 
-    // The series branch only fires for short-form-video arrivals. Dropping
-    // stray answers keeps "absent" meaning exactly one thing: the branch
-    // never ran (never "declined").
-    const branched = args.acquisitionSource === "short_form_video";
+		// The series branch only fires for short-form-video arrivals. Dropping
+		// stray answers keeps "absent" meaning exactly one thing: the branch
+		// never ran (never "declined").
+		const branched = args.acquisitionSource === "short_form_video";
 
+		if (
+			branched &&
+			(args.seriesSeen === undefined || args.seriesWantInApp === undefined)
+		) {
+			throw new ConvexError({
+				code: "missing_series_answer",
+				message:
+					"Both series answers are required for short-form-video arrivals",
+			});
+		}
 
-    if (
-      branched &&
-      (args.seriesSeen === undefined || args.seriesWantInApp === undefined)
-    ) {
-      throw new ConvexError({
-        code: "missing_series_answer",
-        message: "Both series answers are required for short-form-video arrivals",
-      });
-    }
+		const answers = {
+			acquisitionSource: args.acquisitionSource,
+			ageBracket: args.ageBracket,
+			completedAt: Date.now(),
+			copingStyle: args.copingStyle,
+			disclosureStyle: args.disclosureStyle,
+			emotionAwareness: args.emotionAwareness,
+			emotionalProfileId: profile._id,
+			intakeVersion: INTAKE_VERSION,
+			intent: args.intent,
+			seriesSeen: branched ? args.seriesSeen : undefined,
+			seriesWantInApp: branched ? args.seriesWantInApp : undefined,
+			supportFrequency: args.supportFrequency,
+			weighingOn: args.weighingOn,
+		};
 
-    const answers = {
-      emotionalProfileId: profile._id,
-      intakeVersion: INTAKE_VERSION,
-      completedAt: Date.now(),
-      intent: args.intent,
-      weighingOn: args.weighingOn,
-      emotionAwareness: args.emotionAwareness,
-      disclosureStyle: args.disclosureStyle,
-      copingStyle: args.copingStyle,
-      supportFrequency: args.supportFrequency,
-      ageBracket: args.ageBracket,
-      acquisitionSource: args.acquisitionSource,
-      seriesSeen: branched ? args.seriesSeen : undefined,
-      seriesWantInApp: branched ? args.seriesWantInApp : undefined,
-    };
+		const existing = await ctx.db
+			.query("intake_responses")
+			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+			.unique();
 
-    const existing = await ctx.db
-      .query("intake_responses")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
-      .unique();
+		if (existing) {
+			await ctx.db.replace("intake_responses", existing._id, answers);
+		} else {
+			await ctx.db.insert("intake_responses", answers);
+		}
 
-    if (existing) {
-      await ctx.db.replace("intake_responses", existing._id, answers);
-    } else {
-      await ctx.db.insert("intake_responses", answers);
-    }
+		const prefs = await ctx.db
+			.query("preferences")
+			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+			.unique();
+		if (!prefs) {
+			throw new ConvexError({
+				code: "preferences_not_found",
+				message: "Preferences not found",
+			});
+		}
+		await ctx.db.patch("preferences", prefs._id, {
+			displayName: validated.trimmed,
+		});
 
-    const prefs = await ctx.db
-      .query("preferences")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
-      .unique();
-    if (!prefs) {
-      throw new ConvexError({
-        code: "preferences_not_found",
-        message: "Preferences not found",
-      });
-    }
-    await ctx.db.patch("preferences", prefs._id, {
-      displayName: validated.trimmed,
-    });
+		await ctx.db.patch("emotional_profiles", profile._id, {
+			onboardingComplete: true,
+			updatedAt: Date.now(),
+		});
 
-    await ctx.db.patch("emotional_profiles", profile._id, {
-      onboardingComplete: true,
-      updatedAt: Date.now(),
-    });
-
-    return null;
-  },
+		return null;
+	},
+	returns: v.null(),
 });
 
 /**
@@ -144,33 +144,33 @@ const MIN_RATED = 25;
  * A null is the client's cue to drop the line, never to invent one.
  */
 export const campfireStats = query({
-  args: {},
-  returns: v.object({
-    campers: v.number(),
-    lighterPercent: v.union(v.number(), v.null()),
-  }),
-  handler: async (ctx) => {
-    await requireAuth(ctx);
+	args: {},
+	handler: async (ctx) => {
+		await requireAuth(ctx);
 
-    const campers = await reflectionRank.count(ctx);
+		const campers = await reflectionRank.count(ctx);
 
-    const recent = await ctx.db
-      .query("sessions")
-      .withIndex("by_date")
-      .order("desc")
-      .take(MOOD_WINDOW);
+		const recent = await ctx.db
+			.query("sessions")
+			.withIndex("by_date")
+			.order("desc")
+			.take(MOOD_WINDOW);
 
-    const rated = recent.filter((s) => s.postSessionMood !== undefined);
-    const lighter = rated.filter((s) => s.postSessionMood === "lighter").length;
+		const rated = recent.filter((s) => s.postSessionMood !== undefined);
+		const lighter = rated.filter((s) => s.postSessionMood === "lighter").length;
 
-    return {
-      campers,
-      lighterPercent:
-        rated.length >= MIN_RATED
-          ? Math.round((lighter / rated.length) * 100)
-          : null,
-    };
-  },
+		return {
+			campers,
+			lighterPercent:
+				rated.length >= MIN_RATED
+					? Math.round((lighter / rated.length) * 100)
+					: null,
+		};
+	},
+	returns: v.object({
+		campers: v.number(),
+		lighterPercent: v.union(v.number(), v.null()),
+	}),
 });
 
 /**
@@ -181,8 +181,8 @@ export const campfireStats = query({
  * not a runtime read.
  */
 export const storageUrls = internalQuery({
-  args: { storageIds: v.array(v.id("_storage")) },
-  returns: v.array(v.union(v.string(), v.null())),
-  handler: async (ctx, args) =>
-    Promise.all(args.storageIds.map((id) => ctx.storage.getUrl(id))),
+	args: { storageIds: v.array(v.id("_storage")) },
+	handler: async (ctx, args) =>
+		Promise.all(args.storageIds.map((id) => ctx.storage.getUrl(id))),
+	returns: v.array(v.union(v.string(), v.null())),
 });

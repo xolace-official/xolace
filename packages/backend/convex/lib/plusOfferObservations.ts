@@ -23,13 +23,24 @@ export const PLUS_OFFER_STREAK_MILESTONE = 7;
 export const PLUS_OFFER_SESSION_MILESTONE = 5;
 
 const WORDS = [
-  "zero", "one", "two", "three", "four", "five", "six",
-  "seven", "eight", "nine", "ten", "eleven", "twelve",
+	"zero",
+	"one",
+	"two",
+	"three",
+	"four",
+	"five",
+	"six",
+	"seven",
+	"eight",
+	"nine",
+	"ten",
+	"eleven",
+	"twelve",
 ];
 
 /** Copy rule 6 bans numerals in a moment card — never fall back to a digit. */
 function numberWord(n: number): string {
-  return WORDS[n] ?? "many";
+	return WORDS[n] ?? "many";
 }
 
 /**
@@ -37,31 +48,33 @@ function numberWord(n: number): string {
  * ("the fire remembered you") that the same beat keeps inviting.
  */
 export function gapObservation(gapMs: number): string | null {
-  if (gapMs < PLUS_OFFER_GAP_MS) return null;
-  const days = Math.floor(gapMs / DAY_MS);
-  if (days >= 60) {
-    const months = Math.round(days / 30);
-    return `${capitalize(numberWord(months))} months since the last one.`;
-  }
-  const weeks = Math.round(days / 7);
-  return `${capitalize(numberWord(weeks))} weeks since the last one.`;
+	if (gapMs < PLUS_OFFER_GAP_MS) {
+		return null;
+	}
+	const days = Math.floor(gapMs / DAY_MS);
+	if (days >= 60) {
+		const months = Math.round(days / 30);
+		return `${capitalize(numberWord(months))} months since the last one.`;
+	}
+	const weeks = Math.round(days / 7);
+	return `${capitalize(numberWord(weeks))} weeks since the last one.`;
 }
 
 /** Moment 5. Acknowledgment, stated as the count and nothing more. */
 export function milestoneObservation({
-  streak,
-  sessionCount,
+	streak,
+	sessionCount,
 }: {
-  streak: number;
-  sessionCount: number;
+	streak: number;
+	sessionCount: number;
 }): string | null {
-  if (streak === PLUS_OFFER_STREAK_MILESTONE) {
-    return `${capitalize(numberWord(streak))} nights running.`;
-  }
-  if (sessionCount === PLUS_OFFER_SESSION_MILESTONE) {
-    return `${capitalize(numberWord(sessionCount))} nights now.`;
-  }
-  return null;
+	if (streak === PLUS_OFFER_STREAK_MILESTONE) {
+		return `${capitalize(numberWord(streak))} nights running.`;
+	}
+	if (sessionCount === PLUS_OFFER_SESSION_MILESTONE) {
+		return `${capitalize(numberWord(sessionCount))} nights now.`;
+	}
+	return null;
 }
 
 /**
@@ -73,21 +86,27 @@ export function milestoneObservation({
  * before counting.
  */
 export function patternObservation(sessionTags: string[][]): string | null {
-  const counts = new Map<string, number>();
-  for (const tags of sessionTags) {
-    for (const tag of new Set(tags.map((t) => t.toLowerCase().trim()))) {
-      if (!tag) continue;
-      counts.set(tag, (counts.get(tag) ?? 0) + 1);
-    }
-  }
-  let best: [string, number] | null = null;
-  for (const entry of counts) {
-    if (entry[1] > (best?.[1] ?? 0)) best = entry;
-  }
-  if (!best || best[1] < PLUS_OFFER_RECURRENCE_MIN) return null;
-  return `"${best[0]}" came back ${numberWord(best[1])} times this week.`;
+	const counts = new Map<string, number>();
+	for (const tags of sessionTags) {
+		for (const tag of new Set(tags.map((t) => t.toLowerCase().trim()))) {
+			if (!tag) {
+				continue;
+			}
+			counts.set(tag, (counts.get(tag) ?? 0) + 1);
+		}
+	}
+	let best: [string, number] | null = null;
+	for (const entry of counts) {
+		if (entry[1] > (best?.[1] ?? 0)) {
+			best = entry;
+		}
+	}
+	if (!best || best[1] < PLUS_OFFER_RECURRENCE_MIN) {
+		return null;
+	}
+	return `"${best[0]}" came back ${numberWord(best[1])} times this week.`;
 }
 
 function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+	return s.charAt(0).toUpperCase() + s.slice(1);
 }

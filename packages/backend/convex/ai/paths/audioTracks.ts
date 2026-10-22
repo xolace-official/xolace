@@ -1,5 +1,5 @@
-import { ConvexError, v } from "convex/values";
 import { R2 } from "@convex-dev/r2";
+import { ConvexError, v } from "convex/values";
 import { components, internal } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
 import { internalMutation, internalQuery } from "../../_generated/server";
@@ -15,18 +15,18 @@ import { indexSignature, trackNamespaces } from "./trackSearch";
 export const r2 = new R2(components.r2);
 
 const sharedFields = {
-  slug: v.string(),
-  title: v.string(),
-  topic: v.string(),
-  tags: v.array(v.string()),
-  sourceTags: v.array(v.string()),
-  key: v.string(),
-  thumbKey: v.string(),
-  durationSec: v.number(),
-  sha256: v.string(),
-  thumbSha256: v.string(),
-  thumbhash: v.optional(v.string()),
-  newUntil: v.optional(v.number()),
+	durationSec: v.number(),
+	key: v.string(),
+	newUntil: v.optional(v.number()),
+	sha256: v.string(),
+	slug: v.string(),
+	sourceTags: v.array(v.string()),
+	tags: v.array(v.string()),
+	thumbhash: v.optional(v.string()),
+	thumbKey: v.string(),
+	thumbSha256: v.string(),
+	title: v.string(),
+	topic: v.string(),
 };
 
 /**
@@ -36,23 +36,23 @@ const sharedFields = {
  * validator itself (Convex object validators are exact-shape).
  */
 export const trackUpsertValidator = v.union(
-  v.object({
-    family: v.literal("support"),
-    ...sharedFields,
-    narrators: v.optional(v.array(v.string())),
-    series: v.optional(v.string()),
-    seriesTitle: v.optional(v.string()),
-    episodeNumber: v.optional(v.number()),
-    tier: v.optional(v.number()),
-    safetyReviewedAt: v.optional(v.number()),
-    transcript: v.optional(v.string()),
-  }),
-  v.object({
-    family: v.literal("music"),
-    ...sharedFields,
-    licence: licenceValidator,
-    whatItsFor: v.optional(v.string()),
-  }),
+	v.object({
+		family: v.literal("support"),
+		...sharedFields,
+		episodeNumber: v.optional(v.number()),
+		narrators: v.optional(v.array(v.string())),
+		safetyReviewedAt: v.optional(v.number()),
+		series: v.optional(v.string()),
+		seriesTitle: v.optional(v.string()),
+		tier: v.optional(v.number()),
+		transcript: v.optional(v.string()),
+	}),
+	v.object({
+		family: v.literal("music"),
+		...sharedFields,
+		licence: licenceValidator,
+		whatItsFor: v.optional(v.string()),
+	})
 );
 
 /**
@@ -61,9 +61,9 @@ export const trackUpsertValidator = v.union(
  * developer's own CLI session), never exposed to the client.
  */
 export const mintUploadUrl = internalMutation({
-  args: { key: v.string() },
-  returns: v.object({ key: v.string(), url: v.string() }),
-  handler: async (_ctx, { key }) => r2.generateUploadUrl(key),
+	args: { key: v.string() },
+	handler: async (_ctx, { key }) => r2.generateUploadUrl(key),
+	returns: v.object({ key: v.string(), url: v.string() }),
 });
 
 /**
@@ -74,24 +74,28 @@ export const mintUploadUrl = internalMutation({
  * (script-only).
  */
 export const discardUpload = internalMutation({
-  args: { audioKey: v.optional(v.string()), thumbKey: v.optional(v.string()) },
-  returns: v.null(),
-  handler: async (ctx, { audioKey, thumbKey }) => {
-    if (audioKey) await r2.deleteObject(ctx, audioKey);
-    if (thumbKey) {
-      const referenced =
-        (await ctx.db
-          .query("audio_tracks")
-          .withIndex("by_thumbKey", (q) => q.eq("thumbKey", thumbKey))
-          .first()) ??
-        (await ctx.db
-          .query("topics")
-          .withIndex("by_thumbKey", (q) => q.eq("thumbKey", thumbKey))
-          .first());
-      if (!referenced) await r2.deleteObject(ctx, thumbKey);
-    }
-    return null;
-  },
+	args: { audioKey: v.optional(v.string()), thumbKey: v.optional(v.string()) },
+	handler: async (ctx, { audioKey, thumbKey }) => {
+		if (audioKey) {
+			await r2.deleteObject(ctx, audioKey);
+		}
+		if (thumbKey) {
+			const referenced =
+				(await ctx.db
+					.query("audio_tracks")
+					.withIndex("by_thumbKey", (q) => q.eq("thumbKey", thumbKey))
+					.first()) ??
+				(await ctx.db
+					.query("topics")
+					.withIndex("by_thumbKey", (q) => q.eq("thumbKey", thumbKey))
+					.first());
+			if (!referenced) {
+				await r2.deleteObject(ctx, thumbKey);
+			}
+		}
+		return null;
+	},
+	returns: v.null(),
 });
 
 /**
@@ -100,13 +104,15 @@ export const discardUpload = internalMutation({
  * (one row per topic suffix), so reading every row is fine. Script-only.
  */
 export const listTopicThumbKeys = internalQuery({
-  args: {},
-  returns: v.record(v.string(), v.string()),
-  handler: async (ctx) => {
-    const keys: Record<string, string> = {};
-    for await (const row of ctx.db.query("topics")) keys[row.slug] = row.thumbKey;
-    return keys;
-  },
+	args: {},
+	handler: async (ctx) => {
+		const keys: Record<string, string> = {};
+		for await (const row of ctx.db.query("topics")) {
+			keys[row.slug] = row.thumbKey;
+		}
+		return keys;
+	},
+	returns: v.record(v.string(), v.string()),
 });
 
 /**
@@ -122,79 +128,104 @@ export const listTopicThumbKeys = internalQuery({
  * addressed, so an unchanged-sha256 duplicate really is safe to delete.
  */
 export const upsertTrack = internalMutation({
-  args: { track: trackUpsertValidator },
-  returns: v.object({
-    action: v.union(v.literal("inserted"), v.literal("updated"), v.literal("unchanged")),
-    trackId: v.id("audio_tracks"),
-  }),
-  handler: async (ctx, { track }) => {
-    // Browse (#339) derives the shared topic slug by stripping this prefix and
-    // rebuilds it per family — a mismatch would count on a grid tile but never
-    // list on the topic screen.
-    const prefix = track.family === "music" ? "music_topic_" : "audio_topic_";
-    if (!track.topic.startsWith(prefix)) {
-      await r2.deleteObject(ctx, track.key);
-      throw new ConvexError(
-        `audio_tracks upsert rejected: slug "${track.slug}" topic "${track.topic}" must start with "${prefix}"`,
-      );
-    }
+	args: { track: trackUpsertValidator },
+	handler: async (ctx, { track }) => {
+		// Browse (#339) derives the shared topic slug by stripping this prefix and
+		// rebuilds it per family — a mismatch would count on a grid tile but never
+		// list on the topic screen.
+		const prefix = track.family === "music" ? "music_topic_" : "audio_topic_";
+		if (!track.topic.startsWith(prefix)) {
+			await r2.deleteObject(ctx, track.key);
+			throw new ConvexError(
+				`audio_tracks upsert rejected: slug "${track.slug}" topic "${track.topic}" must start with "${prefix}"`
+			);
+		}
 
-    // Editorial safeguard (§8): a tier >= 3 support row must be human-reviewed.
-    // Enforced here too, not just in the script — this mutation is the real
-    // trust boundary. Only the audio blob is ever cleaned up on rejection;
-    // the thumb key may be shared with an already-live row and must survive.
-    if (track.family === "support" && (track.tier ?? 0) >= 3 && !track.safetyReviewedAt) {
-      await r2.deleteObject(ctx, track.key);
-      throw new ConvexError(
-        `audio_tracks upsert rejected: slug "${track.slug}" has tier ${track.tier} with no safetyReviewedAt`,
-      );
-    }
+		// Editorial safeguard (§8): a tier >= 3 support row must be human-reviewed.
+		// Enforced here too, not just in the script — this mutation is the real
+		// trust boundary. Only the audio blob is ever cleaned up on rejection;
+		// the thumb key may be shared with an already-live row and must survive.
+		if (
+			track.family === "support" &&
+			(track.tier ?? 0) >= 3 &&
+			!track.safetyReviewedAt
+		) {
+			await r2.deleteObject(ctx, track.key);
+			throw new ConvexError(
+				`audio_tracks upsert rejected: slug "${track.slug}" has tier ${track.tier} with no safetyReviewedAt`
+			);
+		}
 
-    const existing = await ctx.db
-      .query("audio_tracks")
-      .withIndex("by_slug", (q) => q.eq("slug", track.slug))
-      .unique();
-    const searchText = trackSearchTextOf(track);
+		const existing = await ctx.db
+			.query("audio_tracks")
+			.withIndex("by_slug", (q) => q.eq("slug", track.slug))
+			.unique();
+		const searchText = trackSearchTextOf(track);
 
-    // The meaning index (#572) re-embeds only when what it embeds changed.
-    const reindex = async (trackId: Id<"audio_tracks">) => {
-      const after = await ctx.db.get("audio_tracks", trackId);
-      if (after && (!existing || indexSignature(existing) !== indexSignature(after))) {
-        await ctx.scheduler.runAfter(0, internal.ai.paths.trackSearch.indexTrack, {
-          trackId,
-          ...(existing && { previousNamespaces: trackNamespaces(existing) }),
-        });
-      }
-    };
+		// The meaning index (#572) re-embeds only when what it embeds changed.
+		const reindex = async (trackId: Id<"audio_tracks">) => {
+			const after = await ctx.db.get("audio_tracks", trackId);
+			if (
+				after &&
+				(!existing || indexSignature(existing) !== indexSignature(after))
+			) {
+				await ctx.scheduler.runAfter(
+					0,
+					internal.ai.paths.trackSearch.indexTrack,
+					{
+						trackId,
+						...(existing && { previousNamespaces: trackNamespaces(existing) }),
+					}
+				);
+			}
+		};
 
-    if (!existing) {
-      const trackId = await ctx.db.insert("audio_tracks", { ...track, searchText, active: true });
-      await reindex(trackId);
-      return { action: "inserted" as const, trackId };
-    }
+		if (!existing) {
+			const trackId = await ctx.db.insert("audio_tracks", {
+				...track,
+				active: true,
+				searchText,
+			});
+			await reindex(trackId);
+			return { action: "inserted" as const, trackId };
+		}
 
-    if (existing.sha256 === track.sha256) {
-      await r2.deleteObject(ctx, track.key);
-      // Audio blob unchanged: keep the live key, but persist every other
-      // field (title, tags, thumb, licence, ...) — metadata edits must land.
-      await ctx.db.replace("audio_tracks", existing._id, {
-        ...track,
-        searchText,
-        key: existing.key,
-        active: existing.active,
-      });
-      await reindex(existing._id);
-      const action =
-        existing.thumbSha256 === track.thumbSha256 ? ("unchanged" as const) : ("updated" as const);
-      return { action, trackId: existing._id };
-    }
+		if (existing.sha256 === track.sha256) {
+			await r2.deleteObject(ctx, track.key);
+			// Audio blob unchanged: keep the live key, but persist every other
+			// field (title, tags, thumb, licence, ...) — metadata edits must land.
+			await ctx.db.replace("audio_tracks", existing._id, {
+				...track,
+				active: existing.active,
+				key: existing.key,
+				searchText,
+			});
+			await reindex(existing._id);
+			const action =
+				existing.thumbSha256 === track.thumbSha256
+					? ("unchanged" as const)
+					: ("updated" as const);
+			return { action, trackId: existing._id };
+		}
 
-    const oldKey = existing.key;
-    await ctx.db.replace("audio_tracks", existing._id, { ...track, searchText, active: existing.active });
-    await r2.deleteObject(ctx, oldKey);
-    await reindex(existing._id);
-    return { action: "updated" as const, trackId: existing._id };
-  },
+		const oldKey = existing.key;
+		await ctx.db.replace("audio_tracks", existing._id, {
+			...track,
+			active: existing.active,
+			searchText,
+		});
+		await r2.deleteObject(ctx, oldKey);
+		await reindex(existing._id);
+		return { action: "updated" as const, trackId: existing._id };
+	},
+	returns: v.object({
+		action: v.union(
+			v.literal("inserted"),
+			v.literal("updated"),
+			v.literal("unchanged")
+		),
+		trackId: v.id("audio_tracks"),
+	}),
 });
 
 /**
@@ -203,17 +234,26 @@ export const upsertTrack = internalMutation({
  * reason upsertTrack never deletes one (content-addressed, maybe shared).
  */
 export const setTrackThumb = internalMutation({
-  args: { slug: v.string(), thumbKey: v.string(), thumbSha256: v.string(), thumbhash: v.string() },
-  returns: v.null(),
-  handler: async (ctx, { slug, ...thumb }) => {
-    const existing = await ctx.db
-      .query("audio_tracks")
-      .withIndex("by_slug", (q) => q.eq("slug", slug))
-      .unique();
-    if (!existing) throw new ConvexError(`setTrackThumb: no audio_tracks row for slug "${slug}"`);
-    await ctx.db.patch("audio_tracks", existing._id, thumb);
-    return null;
-  },
+	args: {
+		slug: v.string(),
+		thumbhash: v.string(),
+		thumbKey: v.string(),
+		thumbSha256: v.string(),
+	},
+	handler: async (ctx, { slug, ...thumb }) => {
+		const existing = await ctx.db
+			.query("audio_tracks")
+			.withIndex("by_slug", (q) => q.eq("slug", slug))
+			.unique();
+		if (!existing) {
+			throw new ConvexError(
+				`setTrackThumb: no audio_tracks row for slug "${slug}"`
+			);
+		}
+		await ctx.db.patch("audio_tracks", existing._id, thumb);
+		return null;
+	},
+	returns: v.null(),
 });
 
 /**
@@ -225,31 +265,36 @@ export const setTrackThumb = internalMutation({
  * deleted here; a changed cover just repoints `thumbKey`.
  */
 export const upsertTopic = internalMutation({
-  args: {
-    topic: v.object({
-      slug: v.string(),
-      title: v.optional(v.string()),
-      thumbKey: v.string(),
-      thumbSha256: v.string(),
-      thumbhash: v.optional(v.string()),
-    }),
-  },
-  returns: v.object({
-    action: v.union(v.literal("inserted"), v.literal("updated")),
-    topicId: v.id("topics"),
-  }),
-  handler: async (ctx, { topic }) => {
-    if (!TOPIC_SLUGS.has(topic.slug)) {
-      throw new ConvexError(`topics upsert rejected: slug "${topic.slug}" is not a catalogued topic`);
-    }
-    const existing = await ctx.db
-      .query("topics")
-      .withIndex("by_slug", (q) => q.eq("slug", topic.slug))
-      .unique();
-    if (!existing) {
-      return { action: "inserted" as const, topicId: await ctx.db.insert("topics", topic) };
-    }
-    await ctx.db.replace("topics", existing._id, topic);
-    return { action: "updated" as const, topicId: existing._id };
-  },
+	args: {
+		topic: v.object({
+			slug: v.string(),
+			thumbhash: v.optional(v.string()),
+			thumbKey: v.string(),
+			thumbSha256: v.string(),
+			title: v.optional(v.string()),
+		}),
+	},
+	handler: async (ctx, { topic }) => {
+		if (!TOPIC_SLUGS.has(topic.slug)) {
+			throw new ConvexError(
+				`topics upsert rejected: slug "${topic.slug}" is not a catalogued topic`
+			);
+		}
+		const existing = await ctx.db
+			.query("topics")
+			.withIndex("by_slug", (q) => q.eq("slug", topic.slug))
+			.unique();
+		if (!existing) {
+			return {
+				action: "inserted" as const,
+				topicId: await ctx.db.insert("topics", topic),
+			};
+		}
+		await ctx.db.replace("topics", existing._id, topic);
+		return { action: "updated" as const, topicId: existing._id };
+	},
+	returns: v.object({
+		action: v.union(v.literal("inserted"), v.literal("updated")),
+		topicId: v.id("topics"),
+	}),
 });

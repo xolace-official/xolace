@@ -12,13 +12,13 @@ import { freeEmotionFamily } from "./understandingVocab";
 export type FollowUpTier = "acute" | "elevated" | "standard";
 
 export type Cadence = {
-  tier: FollowUpTier;
-  /** Delay from workflow start to the first check-in / nudge #1. */
-  stage1Ms: number;
-  /** Additional delay after stage 1 to nudge #2. */
-  stage2Ms: number;
-  /** Additional delay after stage 2 before the card expires. */
-  expiryMs: number;
+	tier: FollowUpTier;
+	/** Delay from workflow start to the first check-in / nudge #1. */
+	stage1Ms: number;
+	/** Additional delay after stage 1 to nudge #2. */
+	stage2Ms: number;
+	/** Additional delay after stage 2 before the card expires. */
+	expiryMs: number;
 };
 
 const MINUTE = 60 * 1000;
@@ -31,28 +31,28 @@ const DAY = 24 * HOUR;
  * is >= the active tier (Acute > Elevated > Standard).
  */
 const TIER_WEIGHT: Record<FollowUpTier, number> = {
-  acute: 3,
-  elevated: 2,
-  standard: 1,
+	acute: 3,
+	elevated: 2,
+	standard: 1,
 };
 
 /** Emotions that count as grief/shame for the Elevated intensity>=7 rule. */
 const GRIEF_SHAME = new Set([
-  "grief",
-  "shame",
-  "guilt",
-  "sadness",
-  "loss",
-  "bereavement",
-  "heartbreak",
+	"grief",
+	"shame",
+	"guilt",
+	"sadness",
+	"loss",
+	"bereavement",
+	"heartbreak",
 ]);
 
 export type CadenceSignals = {
-  safeguardLevel?: "none" | "gentle" | "elevated" | "crisis" | null;
-  intensity?: number | null;
-  primaryEmotion?: string | null;
-  granularLabel?: string | null;
-  confirmationState?: string | null;
+	safeguardLevel?: "none" | "gentle" | "elevated" | "crisis" | null;
+	intensity?: number | null;
+	primaryEmotion?: string | null;
+	granularLabel?: string | null;
+	confirmationState?: string | null;
 };
 
 /**
@@ -65,39 +65,44 @@ export type CadenceSignals = {
  * function stays.
  */
 export function followUpTier(signals: CadenceSignals): FollowUpTier {
-  if (signals.safeguardLevel === "crisis") return "acute";
+	if (signals.safeguardLevel === "crisis") {
+		return "acute";
+	}
 
-  const intensity = signals.intensity ?? 0;
-  const emotionWords = [signals.primaryEmotion, signals.granularLabel]
-    .filter((w): w is string => typeof w === "string" && w.length > 0);
-  const isGriefShame = emotionWords.some((w) => freeEmotionFamily(w).some((e) => GRIEF_SHAME.has(e)));
+	const intensity = signals.intensity ?? 0;
+	const emotionWords = [signals.primaryEmotion, signals.granularLabel].filter(
+		(w): w is string => typeof w === "string" && w.length > 0
+	);
+	const isGriefShame = emotionWords.some((w) =>
+		freeEmotionFamily(w).some((e) => GRIEF_SHAME.has(e))
+	);
 
-  if (
-    signals.safeguardLevel === "elevated" ||
-    (isGriefShame && intensity >= 7) ||
-    // DEPRECATED(remove-after: app >= 1.10.0): only pre-#176 clients write gave_up at
-    // the cap; new clients reach it only on the isMaxRefinementError race path.
-    // No holding/gapNamed equivalent by ruling (doc §8) — a holding session is a
-    // completed one, and terseness is not distress.
-    signals.confirmationState === "gave_up"
-  ) {
-    return "elevated";
-  }
+	if (
+		signals.safeguardLevel === "elevated" ||
+		(isGriefShame && intensity >= 7) ||
+		// DEPRECATED(remove-after: app >= 1.10.0): only pre-#176 clients write gave_up at
+		// the cap; new clients reach it only on the isMaxRefinementError race path.
+		// No holding/gapNamed equivalent by ruling (doc §8) — a holding session is a
+		// completed one, and terseness is not distress.
+		signals.confirmationState === "gave_up"
+	) {
+		return "elevated";
+	}
 
-  return "standard";
+	return "standard";
 }
 
 const CADENCE_BY_TIER: Record<FollowUpTier, Omit<Cadence, "tier">> = {
-  // Fast, warm presence check; short window — a 24h gap reads as abandonment.
-  acute: { stage1Ms: 45 * MINUTE, stage2Ms: 4 * HOUR, expiryMs: 48 * HOUR },
-  elevated: { stage1Ms: 12 * HOUR, stage2Ms: 1 * DAY, expiryMs: 7 * DAY },
-  standard: { stage1Ms: 24 * HOUR, stage2Ms: 3 * DAY, expiryMs: 14 * DAY },
+	// Fast, warm presence check; short window — a 24h gap reads as abandonment.
+	acute: { expiryMs: 48 * HOUR, stage1Ms: 45 * MINUTE, stage2Ms: 4 * HOUR },
+	elevated: { expiryMs: 7 * DAY, stage1Ms: 12 * HOUR, stage2Ms: 1 * DAY },
+	standard: { expiryMs: 14 * DAY, stage1Ms: 24 * HOUR, stage2Ms: 3 * DAY },
 };
 
 /** Full cadence (tier + the three durations) for a session. */
 export function followUpCadence(signals: CadenceSignals): Cadence {
-  const tier = followUpTier(signals);
-  return { tier, ...CADENCE_BY_TIER[tier] };
+	const tier = followUpTier(signals);
+	return { tier, ...CADENCE_BY_TIER[tier] };
 }
 
 /**
@@ -106,10 +111,10 @@ export function followUpCadence(signals: CadenceSignals): Cadence {
  * session must never cancel an active Acute crisis check-in.
  */
 export function shouldSupersede(
-  newTier: FollowUpTier,
-  activeTier: FollowUpTier,
+	newTier: FollowUpTier,
+	activeTier: FollowUpTier
 ): boolean {
-  return TIER_WEIGHT[newTier] >= TIER_WEIGHT[activeTier];
+	return TIER_WEIGHT[newTier] >= TIER_WEIGHT[activeTier];
 }
 
 // =============================================================
@@ -125,19 +130,19 @@ export function shouldSupersede(
  * function stays.
  */
 export function computeRequiresFollowUp(args: {
-  storedFlag?: boolean | null;
-  confirmationState?: string | null;
-  escalationTriggered?: boolean | null;
+	storedFlag?: boolean | null;
+	confirmationState?: string | null;
+	escalationTriggered?: boolean | null;
 }): boolean {
-  return (
-    args.storedFlag === true ||
-    // DEPRECATED(remove-after: app >= 1.10.0): only pre-#176 clients write gave_up at
-    // the cap; new clients reach it only on the isMaxRefinementError race path.
-    // No holding/gapNamed equivalent by ruling (doc §8) — a holding session earns a
-    // check-in only through the ordinary signals.
-    args.confirmationState === "gave_up" ||
-    args.escalationTriggered === true
-  );
+	return (
+		args.storedFlag === true ||
+		// DEPRECATED(remove-after: app >= 1.10.0): only pre-#176 clients write gave_up at
+		// the cap; new clients reach it only on the isMaxRefinementError race path.
+		// No holding/gapNamed equivalent by ruling (doc §8) — a holding session earns a
+		// check-in only through the ordinary signals.
+		args.confirmationState === "gave_up" ||
+		args.escalationTriggered === true
+	);
 }
 
 /**
@@ -148,9 +153,9 @@ export function computeRequiresFollowUp(args: {
  * stricter than `computeRequiresFollowUp` (the completion gate).
  */
 export function abandonRequiresFollowUp(args: {
-  escalationTriggered?: boolean | null;
+	escalationTriggered?: boolean | null;
 }): boolean {
-  return args.escalationTriggered === true;
+	return args.escalationTriggered === true;
 }
 
 // =============================================================
@@ -164,9 +169,9 @@ export function abandonRequiresFollowUp(args: {
  * next-day guard so a return never resolves in the same sitting.
  */
 const MIN_RETURN_GAP_MS_BY_TIER: Record<FollowUpTier, number> = {
-  acute: 30 * MINUTE, // below the 45min stage1 push
-  elevated: 8 * HOUR,
-  standard: 8 * HOUR,
+	acute: 30 * MINUTE, // below the 45min stage1 push
+	elevated: 8 * HOUR,
+	standard: 8 * HOUR,
 };
 
 // QA-only override: force a short gap for every tier so the check-in card
@@ -180,7 +185,7 @@ const TEST_RETURN_GAP_OVERRIDE_MS: number | null = null;
  * for the given tier. Honours the test override when set.
  */
 export function minReturnGapForTier(tier: FollowUpTier): number {
-  return TEST_RETURN_GAP_OVERRIDE_MS ?? MIN_RETURN_GAP_MS_BY_TIER[tier];
+	return TEST_RETURN_GAP_OVERRIDE_MS ?? MIN_RETURN_GAP_MS_BY_TIER[tier];
 }
 
 /**
@@ -197,11 +202,13 @@ export const RESHOW_COOLDOWN_MS = 2 * HOUR;
  * actually rendered) is not eligible here.
  */
 export function shouldReshowShownCard(args: {
-  shownAt: number | null | undefined;
-  now: number;
+	shownAt: number | null | undefined;
+	now: number;
 }): boolean {
-  if (args.shownAt == null) return false;
-  return args.now - args.shownAt >= RESHOW_COOLDOWN_MS;
+	if (args.shownAt == null) {
+		return false;
+	}
+	return args.now - args.shownAt >= RESHOW_COOLDOWN_MS;
 }
 
 /**
@@ -212,11 +219,13 @@ export function shouldReshowShownCard(args: {
  * `minReturnGapForTier`).
  */
 export function shouldEmitReturn(args: {
-  cardStatus: string;
-  cardCreatedAt: number;
-  now: number;
-  minGapMs: number;
+	cardStatus: string;
+	cardCreatedAt: number;
+	now: number;
+	minGapMs: number;
 }): boolean {
-  if (args.cardStatus !== "pending") return false;
-  return args.now - args.cardCreatedAt >= args.minGapMs;
+	if (args.cardStatus !== "pending") {
+		return false;
+	}
+	return args.now - args.cardCreatedAt >= args.minGapMs;
 }

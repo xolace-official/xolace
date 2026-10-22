@@ -1,5 +1,4 @@
-import { useCallback, useRef, useEffect } from 'react';
-
+import { useCallback, useEffect, useRef } from "react";
 
 /**
  * Manage a typing-inactivity timer that invokes a callback after a configurable delay.
@@ -12,23 +11,21 @@ import { useCallback, useRef, useEffect } from 'react';
  */
 
 export function useTypingPause(onPause: () => void, delay = 8000) {
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const clearTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
+	const clearTimer = useCallback(() => {
+		if (timerRef.current) {
+			clearTimeout(timerRef.current);
+			timerRef.current = null;
+		}
+	}, []);
 
-  const resetTimer = useCallback(() => {
-    clearTimer();
-    timerRef.current = setTimeout(onPause, delay);
-  }, [onPause, delay, clearTimer]);
+	const resetTimer = useCallback(() => {
+		clearTimer();
+		timerRef.current = setTimeout(onPause, delay);
+	}, [onPause, delay, clearTimer]);
 
-  useEffect(() => {
-    return clearTimer;
-  }, [clearTimer]);
+	useEffect(() => clearTimer, [clearTimer]);
 
-  return { resetTimer, clearTimer };
+	return { clearTimer, resetTimer };
 }

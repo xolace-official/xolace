@@ -10,12 +10,12 @@ type Conversation = Doc<"xolacer_conversations">;
 type ClosedReason = Conversation["closedReason"];
 
 export type BlockPlanRow = Pick<
-  Conversation,
-  "_id" | "streamChannelId" | "closedReason"
+	Conversation,
+	"_id" | "streamChannelId" | "closedReason"
 >;
 type RatingInputs = Pick<
-  Conversation,
-  "closedReason" | "acceptedAt" | "lastMessageAt" | "messageCount"
+	Conversation,
+	"closedReason" | "acceptedAt" | "lastMessageAt" | "messageCount"
 >;
 
 /**
@@ -39,25 +39,26 @@ type RatingInputs = Pick<
  *   decides what the UI shows.
  */
 export function planBlock(pair: {
-  forward: BlockPlanRow | null | undefined;
-  reverse: BlockPlanRow | null | undefined;
+	forward: BlockPlanRow | null | undefined;
+	reverse: BlockPlanRow | null | undefined;
 }): {
-  noop: boolean;
-  channelsToFreeze: string[];
-  rowsToClose: Id<"xolacer_conversations">[];
+	noop: boolean;
+	channelsToFreeze: string[];
+	rowsToClose: Id<"xolacer_conversations">[];
 } {
-  if (isPairBlocked(pair.forward, pair.reverse))
-    return { noop: true, channelsToFreeze: [], rowsToClose: [] };
-  const rows = [pair.forward, pair.reverse].filter((row): row is BlockPlanRow =>
-    Boolean(row),
-  );
-  return {
-    noop: false,
-    channelsToFreeze: rows
-      .map((row) => row.streamChannelId)
-      .filter((id): id is string => Boolean(id)),
-    rowsToClose: rows.map((row) => row._id),
-  };
+	if (isPairBlocked(pair.forward, pair.reverse)) {
+		return { channelsToFreeze: [], noop: true, rowsToClose: [] };
+	}
+	const rows = [pair.forward, pair.reverse].filter((row): row is BlockPlanRow =>
+		Boolean(row)
+	);
+	return {
+		channelsToFreeze: rows
+			.map((row) => row.streamChannelId)
+			.filter((id): id is string => Boolean(id)),
+		noop: false,
+		rowsToClose: rows.map((row) => row._id),
+	};
 }
 
 /**
@@ -66,7 +67,7 @@ export function planBlock(pair: {
  * offered a rating would invite someone to score a person they just escaped.
  */
 export function isBlocked(closedReason: ClosedReason): boolean {
-  return closedReason === "blocked";
+	return closedReason === "blocked";
 }
 
 /**
@@ -79,10 +80,10 @@ export function isBlocked(closedReason: ClosedReason): boolean {
  * to be. Either argument is absent when that direction was never opened.
  */
 export function isPairBlocked(
-  forward: Pick<Conversation, "closedReason"> | null | undefined,
-  reverse: Pick<Conversation, "closedReason"> | null | undefined,
+	forward: Pick<Conversation, "closedReason"> | null | undefined,
+	reverse: Pick<Conversation, "closedReason"> | null | undefined
 ): boolean {
-  return isBlocked(forward?.closedReason) || isBlocked(reverse?.closedReason);
+	return isBlocked(forward?.closedReason) || isBlocked(reverse?.closedReason);
 }
 
 /**
@@ -96,7 +97,7 @@ export function isPairBlocked(
  * product hands out for free.
  */
 export function presenceDisclosed(status: Conversation["status"]): boolean {
-  return status === "requested" || status === "open";
+	return status === "requested" || status === "open";
 }
 
 /**
@@ -114,7 +115,7 @@ export const REQUEST_EXPIRY_MS = 48 * 60 * 60 * 1000;
  * here where it can be tested against the constant rather than a literal.
  */
 export function hasRequestExpired(requestedAt: number, now: number): boolean {
-  return now - requestedAt >= REQUEST_EXPIRY_MS;
+	return now - requestedAt >= REQUEST_EXPIRY_MS;
 }
 
 /**
@@ -141,8 +142,8 @@ export function hasRequestExpired(requestedAt: number, now: number): boolean {
 export const DECLINE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 type CooldownInputs = Pick<
-  Conversation,
-  "status" | "closedReason" | "declinedAt"
+	Conversation,
+	"status" | "closedReason" | "declinedAt"
 >;
 
 /**
@@ -158,14 +159,20 @@ type CooldownInputs = Pick<
  * alternative is inventing a decline time.
  */
 export function declineCooldownUntil(
-  conversation: CooldownInputs | null | undefined,
-  now: number,
+	conversation: CooldownInputs | null | undefined,
+	now: number
 ): number | undefined {
-  if (conversation?.status !== "closed") return undefined;
-  if (conversation.closedReason !== "declined") return undefined;
-  if (!conversation.declinedAt) return undefined;
-  const until = conversation.declinedAt + DECLINE_COOLDOWN_MS;
-  return until > now ? until : undefined;
+	if (conversation?.status !== "closed") {
+		return undefined;
+	}
+	if (conversation.closedReason !== "declined") {
+		return undefined;
+	}
+	if (!conversation.declinedAt) {
+		return undefined;
+	}
+	const until = conversation.declinedAt + DECLINE_COOLDOWN_MS;
+	return until > now ? until : undefined;
 }
 
 /**
@@ -177,7 +184,7 @@ export function declineCooldownUntil(
  * past the cap read as full instead of wrapping around.
  */
 export function isAtOpenCap(openCount: number, cap: number): boolean {
-  return openCount >= cap;
+	return openCount >= cap;
 }
 
 /**
@@ -187,11 +194,11 @@ export function isAtOpenCap(openCount: number, cap: number): boolean {
  * was accepted and then ignored could still be rated.
  */
 export function hasRealExchange(conversation: RatingInputs): boolean {
-  return Boolean(
-    conversation.acceptedAt &&
-    conversation.lastMessageAt &&
-    conversation.lastMessageAt > conversation.acceptedAt,
-  );
+	return Boolean(
+		conversation.acceptedAt &&
+			conversation.lastMessageAt &&
+			conversation.lastMessageAt > conversation.acceptedAt
+	);
 }
 
 /**
@@ -220,25 +227,25 @@ export const MIN_MESSAGES_TO_RATE = 15;
  * rather than being backfilled.
  */
 export function canRate(
-  conversation: RatingInputs,
-  role: "user" | "xolacer",
+	conversation: RatingInputs,
+	role: "user" | "xolacer"
 ): boolean {
-  return (
-    role === "user" &&
-    !isBlocked(conversation.closedReason) &&
-    hasRealExchange(conversation) &&
-    (conversation.messageCount ?? 0) >= MIN_MESSAGES_TO_RATE
-  );
+	return (
+		role === "user" &&
+		!isBlocked(conversation.closedReason) &&
+		hasRealExchange(conversation) &&
+		(conversation.messageCount ?? 0) >= MIN_MESSAGES_TO_RATE
+	);
 }
 
 type ArchiveInputs = Pick<
-  Conversation,
-  | "archivedByUserAt"
-  | "archivedByXolacerAt"
-  | "requestedAt"
-  | "acceptedAt"
-  | "declinedAt"
-  | "lastMessageAt"
+	Conversation,
+	| "archivedByUserAt"
+	| "archivedByXolacerAt"
+	| "requestedAt"
+	| "acceptedAt"
+	| "declinedAt"
+	| "lastMessageAt"
 >;
 
 /**
@@ -253,24 +260,26 @@ type ArchiveInputs = Pick<
  * on an archived conversation must bring it back on its own.
  */
 export function isArchivedFor(
-  conversation: ArchiveInputs,
-  role: "user" | "xolacer",
-  // Accepted so call sites read like the other read-time gates; archive-ness
-  // is a comparison between stamps, so there is nothing for it to decide.
-  _now?: number,
+	conversation: ArchiveInputs,
+	role: "user" | "xolacer",
+	// Accepted so call sites read like the other read-time gates; archive-ness
+	// is a comparison between stamps, so there is nothing for it to decide.
+	_now?: number
 ): boolean {
-  const archivedAt =
-    role === "user"
-      ? conversation.archivedByUserAt
-      : conversation.archivedByXolacerAt;
-  if (!archivedAt) return false;
-  const activity = Math.max(
-    conversation.requestedAt,
-    conversation.acceptedAt ?? 0,
-    conversation.declinedAt ?? 0,
-    conversation.lastMessageAt ?? 0,
-  );
-  return activity <= archivedAt;
+	const archivedAt =
+		role === "user"
+			? conversation.archivedByUserAt
+			: conversation.archivedByXolacerAt;
+	if (!archivedAt) {
+		return false;
+	}
+	const activity = Math.max(
+		conversation.requestedAt,
+		conversation.acceptedAt ?? 0,
+		conversation.declinedAt ?? 0,
+		conversation.lastMessageAt ?? 0
+	);
+	return activity <= archivedAt;
 }
 
 /**
@@ -282,10 +291,10 @@ export function isArchivedFor(
  * free. A seeker wanting a row off their list has archive.
  */
 export function canManualRest(
-  conversation: Pick<Conversation, "status">,
-  role: "user" | "xolacer",
+	conversation: Pick<Conversation, "status">,
+	role: "user" | "xolacer"
 ): boolean {
-  return role === "xolacer" && conversation.status === "open";
+	return role === "xolacer" && conversation.status === "open";
 }
 
 /**
@@ -298,13 +307,13 @@ export function canManualRest(
  * deleting any of those waits on a retention policy that does not exist.
  */
 export function canDelete(
-  conversation: Pick<Conversation, "status" | "closedReason">,
+	conversation: Pick<Conversation, "status" | "closedReason">
 ): boolean {
-  return (
-    conversation.status === "closed" &&
-    (conversation.closedReason === "declined" ||
-      conversation.closedReason === "expired")
-  );
+	return (
+		conversation.status === "closed" &&
+		(conversation.closedReason === "declined" ||
+			conversation.closedReason === "expired")
+	);
 }
 
 /**
@@ -313,7 +322,7 @@ export function canDelete(
  * safe to remove.
  */
 export function bothPartiesDeleted(
-  conversation: Pick<Conversation, "deletedByUser" | "deletedByXolacer">,
+	conversation: Pick<Conversation, "deletedByUser" | "deletedByXolacer">
 ): boolean {
-  return Boolean(conversation.deletedByUser && conversation.deletedByXolacer);
+	return Boolean(conversation.deletedByUser && conversation.deletedByXolacer);
 }

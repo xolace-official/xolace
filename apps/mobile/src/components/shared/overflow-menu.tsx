@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import { Stack } from 'expo-router';
-import MoreVert from '@expo/material-symbols/more_vert.xml';
+import MoreVert from "@expo/material-symbols/more_vert.xml";
+import { Stack } from "expo-router";
+import type { ReactNode } from "react";
 
 /**
  * The native overflow menu at the header right — the home for per-screen
@@ -11,16 +11,16 @@ import MoreVert from '@expo/material-symbols/more_vert.xml';
  * dialog carries the weight.
  */
 export function OverflowMenu({ children }: { children: ReactNode }) {
-  return (
-    <Stack.Toolbar placement="right">
-      <Stack.Toolbar.Menu
-        icon={process.env.EXPO_OS === 'ios' ? 'ellipsis' : MoreVert}
-        accessibilityLabel="More options"
-      >
-        {children}
-      </Stack.Toolbar.Menu>
-    </Stack.Toolbar>
-  );
+	return (
+		<Stack.Toolbar placement="right">
+			<Stack.Toolbar.Menu
+				accessibilityLabel="More options"
+				icon={process.env.EXPO_OS === "ios" ? "ellipsis" : MoreVert}
+			>
+				{children}
+			</Stack.Toolbar.Menu>
+		</Stack.Toolbar>
+	);
 }
 
 OverflowMenu.Action = Stack.Toolbar.MenuAction;

@@ -7,17 +7,17 @@ import { useDerivedValue, withSpring } from "react-native-reanimated";
  * by RootProvider.
  */
 export const useKeyboardOffset = () => {
-  const { height } = useReanimatedKeyboardAnimation();
+	const { height } = useReanimatedKeyboardAnimation();
 
-  const keyboardAnimatedOffset = useDerivedValue(() => {
-    return withSpring(height.get(), {
-      damping: 15,
-      stiffness: 150,
-      mass: 0.6,
-    });
-  });
+	const keyboardAnimatedOffset = useDerivedValue(() =>
+		withSpring(height.get(), {
+			damping: 15,
+			mass: 0.6,
+			stiffness: 150,
+		})
+	);
 
-  return {
-    translateY: keyboardAnimatedOffset,
-  };
+	return {
+		translateY: keyboardAnimatedOffset,
+	};
 };

@@ -1,13 +1,13 @@
-import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import {
-  internalAction,
-  internalMutation,
-  internalQuery,
-} from "./_generated/server";
+import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { Id } from "./_generated/dataModel";
-import { rag, REFLECTION_POOL_NAMESPACE, NO_GRANULAR_LABEL } from "./rag";
+import type { Id } from "./_generated/dataModel";
+import {
+	internalAction,
+	internalMutation,
+	internalQuery,
+} from "./_generated/server";
+import { NO_GRANULAR_LABEL, REFLECTION_POOL_NAMESPACE, rag } from "./rag";
 
 // =============================================================
 // REFLECTIONS RAG — embeds the anonymous peer pool and precomputes
@@ -24,17 +24,19 @@ import { rag, REFLECTION_POOL_NAMESPACE, NO_GRANULAR_LABEL } from "./rag";
 
 /** Fields needed to embed a single reflection. */
 export const getReflectionForRag = internalQuery({
-  args: { reflectionId: v.id("reflections") },
-  handler: async (ctx, args) => {
-    const r = await ctx.db.get("reflections", args.reflectionId);
-    if (!r) return null;
-    return {
-      displayText: r.displayText,
-      primaryEmotion: r.primaryEmotion,
-      granularLabel: r.granularLabel ?? null,
-      status: r.status,
-    };
-  },
+	args: { reflectionId: v.id("reflections") },
+	handler: async (ctx, args) => {
+		const r = await ctx.db.get("reflections", args.reflectionId);
+		if (!r) {
+			return null;
+		}
+		return {
+			displayText: r.displayText,
+			granularLabel: r.granularLabel ?? null,
+			primaryEmotion: r.primaryEmotion,
+			status: r.status,
+		};
+	},
 });
 
 /**
@@ -45,53 +47,52 @@ export const getReflectionForRag = internalQuery({
  * the vector store.
  */
 export const ingestReflection = internalAction({
-  args: { reflectionId: v.id("reflections") },
-  handler: async (ctx, args) => {
-    const r = await ctx.runQuery(
-      internal.reflectionsRag.getReflectionForRag,
-      { reflectionId: args.reflectionId },
-    );
-    if (!r || r.status !== "active") {
-      const namespace = await rag.getNamespace(ctx, {
-        namespace: REFLECTION_POOL_NAMESPACE,
-      });
-      if (namespace) {
-        await rag.deleteByKey(ctx, {
-          namespaceId: namespace.namespaceId,
-          key: args.reflectionId,
-        });
-      }
-      return;
-    }
+	args: { reflectionId: v.id("reflections") },
+	handler: async (ctx, args) => {
+		const r = await ctx.runQuery(internal.reflectionsRag.getReflectionForRag, {
+			reflectionId: args.reflectionId,
+		});
+		if (!r || r.status !== "active") {
+			const namespace = await rag.getNamespace(ctx, {
+				namespace: REFLECTION_POOL_NAMESPACE,
+			});
+			if (namespace) {
+				await rag.deleteByKey(ctx, {
+					key: args.reflectionId,
+					namespaceId: namespace.namespaceId,
+				});
+			}
+			return;
+		}
 
-    await rag.add(ctx, {
-      namespace: REFLECTION_POOL_NAMESPACE,
-      key: args.reflectionId,
-      text: r.displayText,
-      // All three declared filters are required on every add (see rag.ts).
-      filterValues: [
-        { name: "primaryEmotion", value: r.primaryEmotion },
-        { name: "granularLabel", value: r.granularLabel ?? NO_GRANULAR_LABEL },
-        { name: "status", value: r.status },
-      ],
-    });
-  },
+		await rag.add(ctx, {
+			// All three declared filters are required on every add (see rag.ts).
+			filterValues: [
+				{ name: "primaryEmotion", value: r.primaryEmotion },
+				{ name: "granularLabel", value: r.granularLabel ?? NO_GRANULAR_LABEL },
+				{ name: "status", value: r.status },
+			],
+			key: args.reflectionId,
+			namespace: REFLECTION_POOL_NAMESPACE,
+			text: r.displayText,
+		});
+	},
 });
 
 /** One page of active reflection ids for the backfill walk. */
 export const listActiveForBackfill = internalQuery({
-  args: { paginationOpts: paginationOptsValidator },
-  handler: async (ctx, args) => {
-    const page = await ctx.db
-      .query("reflections")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
-      .paginate(args.paginationOpts);
-    return {
-      ids: page.page.map((r) => r._id),
-      isDone: page.isDone,
-      continueCursor: page.continueCursor,
-    };
-  },
+	args: { paginationOpts: paginationOptsValidator },
+	handler: async (ctx, args) => {
+		const page = await ctx.db
+			.query("reflections")
+			.withIndex("by_status", (q) => q.eq("status", "active"))
+			.paginate(args.paginationOpts);
+		return {
+			continueCursor: page.continueCursor,
+			ids: page.page.map((r) => r._id),
+			isDone: page.isDone,
+		};
+	},
 });
 
 /**
@@ -100,25 +101,25 @@ export const listActiveForBackfill = internalQuery({
  * Run once: `bunx convex run reflectionsRag:backfillPool '{}'`
  */
 export const backfillPool = internalAction({
-  args: { cursor: v.optional(v.union(v.string(), v.null())) },
-  handler: async (ctx, args) => {
-    const page = await ctx.runQuery(
-      internal.reflectionsRag.listActiveForBackfill,
-      { paginationOpts: { numItems: 25, cursor: args.cursor ?? null } },
-    );
+	args: { cursor: v.optional(v.union(v.string(), v.null())) },
+	handler: async (ctx, args) => {
+		const page = await ctx.runQuery(
+			internal.reflectionsRag.listActiveForBackfill,
+			{ paginationOpts: { cursor: args.cursor ?? null, numItems: 25 } }
+		);
 
-    for (const reflectionId of page.ids) {
-      await ctx.runAction(internal.reflectionsRag.ingestReflection, {
-        reflectionId,
-      });
-    }
+		for (const reflectionId of page.ids) {
+			await ctx.runAction(internal.reflectionsRag.ingestReflection, {
+				reflectionId,
+			});
+		}
 
-    if (!page.isDone) {
-      await ctx.scheduler.runAfter(0, internal.reflectionsRag.backfillPool, {
-        cursor: page.continueCursor,
-      });
-    }
-  },
+		if (!page.isDone) {
+			await ctx.scheduler.runAfter(0, internal.reflectionsRag.backfillPool, {
+				cursor: page.continueCursor,
+			});
+		}
+	},
 });
 
 // =============================================================
@@ -127,21 +128,23 @@ export const backfillPool = internalAction({
 
 /** Query text + intensity for a session's semantic match. */
 export const getSessionForSemantic = internalQuery({
-  args: { sessionId: v.id("sessions") },
-  handler: async (ctx, args) => {
-    const session = await ctx.db.get("sessions", args.sessionId);
-    if (!session) return null;
+	args: { sessionId: v.id("sessions") },
+	handler: async (ctx, args) => {
+		const session = await ctx.db.get("sessions", args.sessionId);
+		if (!session) {
+			return null;
+		}
 
-    const metadata = await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-      .unique();
+		const metadata = await ctx.db
+			.query("emotional_metadata")
+			.withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+			.unique();
 
-    // The mirror captures the session's emotional essence best; fall back
-    // to the raw input if the mirror somehow wasn't stored.
-    const queryText = session.mirrorText ?? session.rawInput ?? null;
-    return { queryText, intensity: metadata?.intensity ?? null };
-  },
+		// The mirror captures the session's emotional essence best; fall back
+		// to the raw input if the mirror somehow wasn't stored.
+		const queryText = session.mirrorText ?? session.rawInput ?? null;
+		return { intensity: metadata?.intensity ?? null, queryText };
+	},
 });
 
 /**
@@ -151,30 +154,38 @@ export const getSessionForSemantic = internalQuery({
  * rows, and store the top 4.
  */
 export const finalizeSemanticMatches = internalMutation({
-  args: {
-    sessionId: v.id("sessions"),
-    candidateKeys: v.array(v.string()),
-    intensity: v.union(v.number(), v.null()),
-  },
-  handler: async (ctx, args) => {
-    const matched: Id<"reflections">[] = [];
-    for (const key of args.candidateKeys) {
-      const id = ctx.db.normalizeId("reflections", key);
-      if (!id) continue;
-      const r = await ctx.db.get("reflections", id);
-      if (!r || r.status !== "active") continue;
-      if (
-        args.intensity !== null &&
-        Math.abs(r.intensity - args.intensity) > 3
-      ) {
-        continue;
-      }
-      matched.push(id);
-      if (matched.length >= 4) break;
-    }
+	args: {
+		candidateKeys: v.array(v.string()),
+		intensity: v.union(v.number(), v.null()),
+		sessionId: v.id("sessions"),
+	},
+	handler: async (ctx, args) => {
+		const matched: Id<"reflections">[] = [];
+		for (const key of args.candidateKeys) {
+			const id = ctx.db.normalizeId("reflections", key);
+			if (!id) {
+				continue;
+			}
+			const r = await ctx.db.get("reflections", id);
+			if (!r || r.status !== "active") {
+				continue;
+			}
+			if (
+				args.intensity !== null &&
+				Math.abs(r.intensity - args.intensity) > 3
+			) {
+				continue;
+			}
+			matched.push(id);
+			if (matched.length >= 4) {
+				break;
+			}
+		}
 
-    await ctx.db.patch("sessions", args.sessionId, { semanticMatchIds: matched });
-  },
+		await ctx.db.patch("sessions", args.sessionId, {
+			semanticMatchIds: matched,
+		});
+	},
 });
 
 /**
@@ -183,30 +194,34 @@ export const finalizeSemanticMatches = internalMutation({
  * reactive matchForSession query upgrades from tag-cascade to these live.
  */
 export const computeSemanticMatches = internalAction({
-  args: { sessionId: v.id("sessions") },
-  handler: async (ctx, args) => {
-    const info = await ctx.runQuery(
-      internal.reflectionsRag.getSessionForSemantic,
-      { sessionId: args.sessionId },
-    );
-    if (!info?.queryText) return;
+	args: { sessionId: v.id("sessions") },
+	handler: async (ctx, args) => {
+		const info = await ctx.runQuery(
+			internal.reflectionsRag.getSessionForSemantic,
+			{ sessionId: args.sessionId }
+		);
+		if (!info?.queryText) {
+			return;
+		}
 
-    const { entries } = await rag.search(ctx, {
-      namespace: REFLECTION_POOL_NAMESPACE,
-      query: info.queryText,
-      filters: [{ name: "status", value: "active" }],
-      limit: 8,
-    });
+		const { entries } = await rag.search(ctx, {
+			filters: [{ name: "status", value: "active" }],
+			limit: 8,
+			namespace: REFLECTION_POOL_NAMESPACE,
+			query: info.queryText,
+		});
 
-    const candidateKeys = entries
-      .map((e) => e.key)
-      .filter((k): k is string => !!k);
-    if (candidateKeys.length === 0) return;
+		const candidateKeys = entries
+			.map((e) => e.key)
+			.filter((k): k is string => !!k);
+		if (candidateKeys.length === 0) {
+			return;
+		}
 
-    await ctx.runMutation(internal.reflectionsRag.finalizeSemanticMatches, {
-      sessionId: args.sessionId,
-      candidateKeys,
-      intensity: info.intensity,
-    });
-  },
+		await ctx.runMutation(internal.reflectionsRag.finalizeSemanticMatches, {
+			candidateKeys,
+			intensity: info.intensity,
+			sessionId: args.sessionId,
+		});
+	},
 });

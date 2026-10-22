@@ -7,16 +7,23 @@ import { internalQuery } from "../_generated/server";
  * index job removes them. The embed lives in `ai/xolacers/embed.ts`.
  */
 export const textForIndex = internalQuery({
-  args: { emotionalProfileId: v.id("emotional_profiles") },
-  returns: v.union(v.string(), v.null()),
-  handler: async (ctx, { emotionalProfileId }) => {
-    const xolacer = await ctx.db
-      .query("xolacer_profiles")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", emotionalProfileId))
-      .unique();
-    if (!xolacer?.complete || !xolacer.active || !xolacer.bio) return null;
-    return [xolacer.bio, `Listens to: ${(xolacer.specialties ?? []).join(", ")}`].join("\n");
-  },
+	args: { emotionalProfileId: v.id("emotional_profiles") },
+	handler: async (ctx, { emotionalProfileId }) => {
+		const xolacer = await ctx.db
+			.query("xolacer_profiles")
+			.withIndex("by_profile", (q) =>
+				q.eq("emotionalProfileId", emotionalProfileId)
+			)
+			.unique();
+		if (!(xolacer?.complete && xolacer.active && xolacer.bio)) {
+			return null;
+		}
+		return [
+			xolacer.bio,
+			`Listens to: ${(xolacer.specialties ?? []).join(", ")}`,
+		].join("\n");
+	},
+	returns: v.union(v.string(), v.null()),
 });
 
 /**
@@ -25,10 +32,10 @@ export const textForIndex = internalQuery({
  * curated set, single digits today) ever gets near.
  */
 export const profileIdsForIndex = internalQuery({
-  args: {},
-  returns: v.array(v.id("emotional_profiles")),
-  handler: async (ctx) => {
-    const rows = await ctx.db.query("xolacer_profiles").take(1000);
-    return rows.map((r) => r.emotionalProfileId);
-  },
+	args: {},
+	handler: async (ctx) => {
+		const rows = await ctx.db.query("xolacer_profiles").take(1000);
+		return rows.map((r) => r.emotionalProfileId);
+	},
+	returns: v.array(v.id("emotional_profiles")),
 });

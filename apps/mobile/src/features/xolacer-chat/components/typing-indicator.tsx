@@ -1,7 +1,7 @@
-import { useTypingContext } from 'stream-chat-expo';
-import { AppText } from '@/src/components/shared/app-text';
-import { resolveMessageIdentity } from '@/src/features/xolacer-chat/utils';
-import { useConversationIdentity } from '@/src/features/xolacer-chat/components/message-author';
+import { useTypingContext } from "stream-chat-expo";
+import { AppText } from "@/src/components/shared/app-text";
+import { useConversationIdentity } from "@/src/features/xolacer-chat/components/message-author";
+import { resolveMessageIdentity } from "@/src/features/xolacer-chat/utils";
 
 /**
  * Replaces Stream's stock `TypingIndicator` (registered via `WithComponents`
@@ -22,16 +22,24 @@ import { useConversationIdentity } from '@/src/features/xolacer-chat/components/
  * would be redundant as well as wrong.
  */
 export function ConversationTypingIndicator() {
-  const { typing } = useTypingContext();
-  const identity = useConversationIdentity();
-  if (!identity) return null;
+	const { typing } = useTypingContext();
+	const identity = useConversationIdentity();
+	if (!identity) {
+		return null;
+	}
 
-  const counterpart = Object.values(typing)
-    .map((event) => resolveMessageIdentity(event.user?.id, identity.conversation))
-    .find((resolved) => resolved !== null);
-  if (!counterpart) return null;
+	const counterpart = Object.values(typing)
+		.map((event) =>
+			resolveMessageIdentity(event.user?.id, identity.conversation)
+		)
+		.find((resolved) => resolved !== null);
+	if (!counterpart) {
+		return null;
+	}
 
-  return (
-    <AppText className="text-xs text-muted">{counterpart.name} is typing…</AppText>
-  );
+	return (
+		<AppText className="text-muted text-xs">
+			{counterpart.name} is typing…
+		</AppText>
+	);
 }

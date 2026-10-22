@@ -1,8 +1,8 @@
 type WashTokens = {
-  accent: string;
-  surface: string;
-  surfaceTertiary: string;
-  background: string;
+	accent: string;
+	surface: string;
+	surfaceTertiary: string;
+	background: string;
 };
 
 /**
@@ -34,18 +34,18 @@ type WashTokens = {
  * surface ramp carries the falloff into the quiet side.
  */
 export const buildSweepStops = ({
-  accent,
-  surface,
-  surfaceTertiary,
-  background,
+	accent,
+	surface,
+	surfaceTertiary,
+	background,
 }: WashTokens) => [
-  accent + "33", //   0° right
-  accent + "4D", //  45° down-right
-  accent + "73", //  90° down — peak
-  accent + "4D", // 135° down-left
-  accent + "26", // 180° left
-  surfaceTertiary, // 225° up-left
-  surface, //        270° up
-  accent + "14", // 315° up-right — the lift
-  background, //     360° ≡ 0°, closing the turn
+	accent + "33", //   0° right
+	accent + "4D", //  45° down-right
+	accent + "73", //  90° down — peak
+	accent + "4D", // 135° down-left
+	accent + "26", // 180° left
+	surfaceTertiary, // 225° up-left
+	surface, //        270° up
+	accent + "14", // 315° up-right — the lift
+	background, //     360° ≡ 0°, closing the turn
 ];

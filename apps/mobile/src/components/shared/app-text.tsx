@@ -1,6 +1,12 @@
-import { cn } from '@/src/lib/utils';
-import React from 'react';
-import { Platform, StyleSheet, Text as RNText, type TextInstance, type TextProps as RNTextProps } from 'react-native';
+import React from "react";
+import {
+	Platform,
+	Text as RNText,
+	type TextProps as RNTextProps,
+	StyleSheet,
+	type TextInstance,
+} from "react-native";
+import { cn } from "@/src/lib/utils";
 
 /**
  * Drop-in replacement for React Native's Text with default font and theme color applied.
@@ -14,20 +20,22 @@ import { Platform, StyleSheet, Text as RNText, type TextInstance, type TextProps
  * intake offer cards) that difference is enough to overflow a fixed-height box.
  */
 const styles = StyleSheet.create({
-  android: { includeFontPadding: false },
+	android: { includeFontPadding: false },
 });
 
-export const AppText = React.forwardRef<TextInstance, RNTextProps>((props, ref) => {
-  const { className, style, ...restProps } = props;
+export const AppText = React.forwardRef<TextInstance, RNTextProps>(
+	(props, ref) => {
+		const { className, style, ...restProps } = props;
 
-  return (
-    <RNText
-      ref={ref}
-      className={cn('font-normal text-foreground', className)}
-      style={Platform.OS === 'android' ? [styles.android, style] : style}
-      {...restProps}
-    />
-  );
-});
+		return (
+			<RNText
+				className={cn("font-normal text-foreground", className)}
+				ref={ref}
+				style={Platform.OS === "android" ? [styles.android, style] : style}
+				{...restProps}
+			/>
+		);
+	}
+);
 
-AppText.displayName = 'AppText';
+AppText.displayName = "AppText";

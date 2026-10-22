@@ -10,8 +10,8 @@
 
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
-import { routeClaimStrength, type ClaimStrength } from "../ai/routing";
 import { localDay } from "../ai/context";
+import { type ClaimStrength, routeClaimStrength } from "../ai/routing";
 import { MAX_TURNS } from "../sessionTurns";
 
 /**
@@ -19,58 +19,62 @@ import { MAX_TURNS } from "../sessionTurns";
  * on screen and nothing to claim.
  */
 export async function deriveClaimStrength(
-  ctx: QueryCtx,
-  session: Doc<"sessions">,
+	ctx: QueryCtx,
+	session: Doc<"sessions">
 ): Promise<ClaimStrength | null> {
-  const metadata = await ctx.db
-    .query("emotional_metadata")
-    .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-    .unique();
-  if (!metadata) return null;
+	const metadata = await ctx.db
+		.query("emotional_metadata")
+		.withIndex("by_session", (q) => q.eq("sessionId", session._id))
+		.unique();
+	if (!metadata) {
+		return null;
+	}
 
-  const turns = await ctx.db
-    .query("session_turns")
-    .withIndex("by_session", (q) => q.eq("sessionId", session._id))
-    .take(MAX_TURNS + 1);
+	const turns = await ctx.db
+		.query("session_turns")
+		.withIndex("by_session", (q) => q.eq("sessionId", session._id))
+		.take(MAX_TURNS + 1);
 
-  const gapNamedThisSession = session.gapNamed === true;
+	const gapNamedThisSession = session.gapNamed === true;
 
-  // The same-day guard (§3.7) is ignored once this session has itself reached,
-  // so skip both of its reads in that case rather than pay for an input that
-  // cannot change the answer.
-  let profileReachedToday = false;
-  if (!gapNamedThisSession) {
-    const [preferences, reachedSessions] = await Promise.all([
-      ctx.db
-        .query("preferences")
-        .withIndex("by_profile", (q) =>
-          q.eq("emotionalProfileId", session.emotionalProfileId),
-        )
-        .unique(),
-      ctx.db
-        .query("sessions")
-        .withIndex("by_profile_gapNamed", (q) =>
-          q.eq("emotionalProfileId", session.emotionalProfileId).eq("gapNamed", true),
-        )
-        .order("desc")
-        .take(2),
-    ]);
-    const timezone = preferences?.notifications.timezone;
-    const today = localDay(Date.now(), timezone);
-    profileReachedToday = reachedSessions.some(
-      (s) => s._id !== session._id && localDay(s.createdAt, timezone) === today,
-    );
-  }
+	// The same-day guard (§3.7) is ignored once this session has itself reached,
+	// so skip both of its reads in that case rather than pay for an input that
+	// cannot change the answer.
+	let profileReachedToday = false;
+	if (!gapNamedThisSession) {
+		const [preferences, reachedSessions] = await Promise.all([
+			ctx.db
+				.query("preferences")
+				.withIndex("by_profile", (q) =>
+					q.eq("emotionalProfileId", session.emotionalProfileId)
+				)
+				.unique(),
+			ctx.db
+				.query("sessions")
+				.withIndex("by_profile_gapNamed", (q) =>
+					q
+						.eq("emotionalProfileId", session.emotionalProfileId)
+						.eq("gapNamed", true)
+				)
+				.order("desc")
+				.take(2),
+		]);
+		const timezone = preferences?.notifications.timezone;
+		const today = localDay(Date.now(), timezone);
+		profileReachedToday = reachedSessions.some(
+			(s) => s._id !== session._id && localDay(s.createdAt, timezone) === today
+		);
+	}
 
-  return routeClaimStrength({
-    confidence: metadata.primaryEmotionConfidence,
-    specificity: metadata.specificity,
-    episodicTopScore: metadata.episodicTopScore,
-    entryType: session.entryType ?? "open_prompt",
-    isEscalation: session.escalationTriggered === true,
-    profileReachedToday,
-    gapNamedThisSession,
-    atCap: turns.length >= MAX_TURNS,
-    userFeedback: turns[turns.length - 1]?.userFeedback,
-  });
+	return routeClaimStrength({
+		atCap: turns.length >= MAX_TURNS,
+		confidence: metadata.primaryEmotionConfidence,
+		entryType: session.entryType ?? "open_prompt",
+		episodicTopScore: metadata.episodicTopScore,
+		gapNamedThisSession,
+		isEscalation: session.escalationTriggered === true,
+		profileReachedToday,
+		specificity: metadata.specificity,
+		userFeedback: turns[turns.length - 1]?.userFeedback,
+	});
 }

@@ -1,11 +1,11 @@
-import { Radio, useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
+import { Radio, useThemeColor } from "heroui-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
 import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
 
 type Props = {
-  symbol: CrossPlatformSymbol;
-  isSelected: boolean;
+	symbol: CrossPlatformSymbol;
+	isSelected: boolean;
 };
 
 /**
@@ -16,22 +16,22 @@ type Props = {
  * color) to stay legible.
  */
 export const RadioIconIndicator = ({ symbol, isSelected }: Props) => {
-  const accentForeground = useThemeColor("accent-foreground") as string;
+	const accentForeground = useThemeColor("accent-foreground") as string;
 
-  return (
-    <Radio>
-      <Radio.Indicator>
-        {isSelected && (
-          <Animated.View entering={ZoomIn.springify().damping(40)}>
-            <SymbolView
-              name={symbol}
-              size={14}
-              weight="bold"
-              tintColor={accentForeground}
-            />
-          </Animated.View>
-        )}
-      </Radio.Indicator>
-    </Radio>
-  );
+	return (
+		<Radio>
+			<Radio.Indicator>
+				{isSelected && (
+					<Animated.View entering={ZoomIn.springify().damping(40)}>
+						<SymbolView
+							name={symbol}
+							size={14}
+							tintColor={accentForeground}
+							weight="bold"
+						/>
+					</Animated.View>
+				)}
+			</Radio.Indicator>
+		</Radio>
+	);
 };

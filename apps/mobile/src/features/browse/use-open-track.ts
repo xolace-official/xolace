@@ -1,12 +1,19 @@
-import { router } from 'expo-router';
-import { usePostHog } from 'posthog-react-native';
+import { router } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 
-import { usePaywall } from '@/src/features/purchases/use-paywall';
-import { usePlusEntitlement } from '@/src/features/purchases/use-plus-entitlement';
-import { playSoftPress } from '@/src/lib/haptics';
+import { usePaywall } from "@/src/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
+import { playSoftPress } from "@/src/lib/haptics";
 
 /** Where a browse play was reached from (docs/paths-v1.md §13). */
-export type BrowseFrom = 'hub-new' | 'family-list' | 'topic' | 'discovery-strip' | 'twig-more-like-this' | 'library-hub' | 'search';
+export type BrowseFrom =
+	| "hub-new"
+	| "family-list"
+	| "topic"
+	| "discovery-strip"
+	| "twig-more-like-this"
+	| "library-hub"
+	| "search";
 
 /**
  * The one tap every catalogue surface shares (row, shelf tile, Discovery
@@ -18,21 +25,32 @@ export type BrowseFrom = 'hub-new' | 'family-list' | 'topic' | 'discovery-strip'
  * Never carries a `stepId`, so nothing opened from here can tend a twig (§9.6).
  */
 export function useOpenTrack(from: BrowseFrom) {
-  const posthog = usePostHog();
-  const { isPlus, isLoading } = usePlusEntitlement();
-  const locked = !isLoading && !isPlus;
+	const posthog = usePostHog();
+	const { isPlus, isLoading } = usePlusEntitlement();
+	const locked = !(isLoading || isPlus);
 
-  const open = (track: { slug: string; family: 'support' | 'music' }) => {
-    playSoftPress();
-    if (locked) {
-      posthog.capture('browse_paywall_tapped', { slug: track.slug, family: track.family, from });
-      posthog.capture('browse_paywall_shown', { slug: track.slug, from });
-      usePaywall.getState().open('browse');
-      return;
-    }
-    posthog.capture('browse_track_opened', { slug: track.slug, family: track.family, from });
-    router.push({ pathname: '/browse-player', params: { slug: track.slug, from } });
-  };
+	const open = (track: { slug: string; family: "support" | "music" }) => {
+		playSoftPress();
+		if (locked) {
+			posthog.capture("browse_paywall_tapped", {
+				family: track.family,
+				from,
+				slug: track.slug,
+			});
+			posthog.capture("browse_paywall_shown", { from, slug: track.slug });
+			usePaywall.getState().open("browse");
+			return;
+		}
+		posthog.capture("browse_track_opened", {
+			family: track.family,
+			from,
+			slug: track.slug,
+		});
+		router.push({
+			params: { from, slug: track.slug },
+			pathname: "/browse-player",
+		});
+	};
 
-  return { open, locked };
+	return { locked, open };
 }

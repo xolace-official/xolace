@@ -17,9 +17,7 @@
  * still considers unchanged.
  */
 export function sortByPresence<T extends { present: boolean }>(
-  xolacers: readonly T[],
+	xolacers: readonly T[]
 ): T[] {
-  return [...xolacers].sort(
-    (a, b) => Number(b.present) - Number(a.present),
-  );
+	return [...xolacers].sort((a, b) => Number(b.present) - Number(a.present));
 }

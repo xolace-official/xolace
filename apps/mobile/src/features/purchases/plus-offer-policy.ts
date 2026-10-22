@@ -11,12 +11,11 @@
 /** The five ranked proactive moments (#220 §5). */
 export type PlusOfferMoment = 1 | 2 | 3 | 4 | 5;
 
-
 /** The three physical places the app may speak first. */
 export type PlusOfferSurface =
-  | "session_close"
-  | "mirror_landed"
-  | "profile_insight";
+	| "session_close"
+	| "mirror_landed"
+	| "profile_insight";
 
 /** Which pitch the card speaks. `register` is a copy swap, never a trigger. */
 export type PlusOfferVariant = "default" | "register";
@@ -28,84 +27,96 @@ export const PLUS_OFFER_FULL_STOP_MS = 30 * 24 * 60 * 60 * 1000;
 export const PLUS_OFFER_DISMISSAL_LIMIT = 3;
 
 export type PlusOfferDecision =
-  | {
-      show: false;
-      reason:
-        | "safeguard"
-        | "full_stop"
-        | "session_cap"
-        | "back_to_back"
-        | "cooldown"
-        | "no_candidate";
-    }
-  /** `moment` is null for a user-initiated surface — those have no moment id. */
-  | { show: true; moment: PlusOfferMoment | null; variant: PlusOfferVariant };
+	| {
+			show: false;
+			reason:
+				| "safeguard"
+				| "full_stop"
+				| "session_cap"
+				| "back_to_back"
+				| "cooldown"
+				| "no_candidate";
+	  }
+	/** `moment` is null for a user-initiated surface — those have no moment id. */
+	| { show: true; moment: PlusOfferMoment | null; variant: PlusOfferVariant };
 
 export type PlusOfferInput = {
-  /** Moments eligible this instant, most-preferred first. Empty for reactive surfaces. */
-  candidates?: PlusOfferMoment[];
-  /** An active safeguard/escalation flow. Hard veto, checked first (#220 rule 4). */
-  safeguardActive: boolean;
-  /** They tapped the locked thing themselves — never rate-limited (#220 rule 5). */
-  userInitiated?: boolean;
-  /** The surface asking. Cooldown is keyed by it, not by moment. */
-  surface: PlusOfferSurface;
-  /** Per-surface last-dismissed epoch ms. */
-  lastDismissedAt?: Partial<Record<PlusOfferSurface, number>>;
-  /** Lifetime proactive dismissals across all surfaces. */
-  dismissalCount?: number;
-  /** When the 30-day full stop started. */
-  fullStopSince?: number | null;
-  shownThisSession?: boolean;
-  shownLastSession?: boolean;
-  /** This user complained about how the mirror speaks. Swaps copy only. */
-  registerComplaint?: boolean;
-  now: number;
+	/** Moments eligible this instant, most-preferred first. Empty for reactive surfaces. */
+	candidates?: PlusOfferMoment[];
+	/** An active safeguard/escalation flow. Hard veto, checked first (#220 rule 4). */
+	safeguardActive: boolean;
+	/** They tapped the locked thing themselves — never rate-limited (#220 rule 5). */
+	userInitiated?: boolean;
+	/** The surface asking. Cooldown is keyed by it, not by moment. */
+	surface: PlusOfferSurface;
+	/** Per-surface last-dismissed epoch ms. */
+	lastDismissedAt?: Partial<Record<PlusOfferSurface, number>>;
+	/** Lifetime proactive dismissals across all surfaces. */
+	dismissalCount?: number;
+	/** When the 30-day full stop started. */
+	fullStopSince?: number | null;
+	shownThisSession?: boolean;
+	shownLastSession?: boolean;
+	/** This user complained about how the mirror speaks. Swaps copy only. */
+	registerComplaint?: boolean;
+	now: number;
 };
 
 export function choosePlusOffer({
-  candidates = [],
-  surface,
-  safeguardActive,
-  userInitiated = false,
-  lastDismissedAt = {},
-  dismissalCount = 0,
-  fullStopSince = null,
-  shownThisSession = false,
-  shownLastSession = false,
-  registerComplaint = false,
-  now,
+	candidates = [],
+	surface,
+	safeguardActive,
+	userInitiated = false,
+	lastDismissedAt = {},
+	dismissalCount = 0,
+	fullStopSince = null,
+	shownThisSession = false,
+	shownLastSession = false,
+	registerComplaint = false,
+	now,
 }: PlusOfferInput): PlusOfferDecision {
-  // First and unconditional. The moment where escalation is genuinely
-  // happening is the one moment the app is forbidden to sell in.
-  if (safeguardActive) return { show: false, reason: "safeguard" };
+	// First and unconditional. The moment where escalation is genuinely
+	// happening is the one moment the app is forbidden to sell in.
+	if (safeguardActive) {
+		return { reason: "safeguard", show: false };
+	}
 
-  const variant: PlusOfferVariant = registerComplaint ? "register" : "default";
+	const variant: PlusOfferVariant = registerComplaint ? "register" : "default";
 
-  // They asked. Cadence, cooldown and the full stop all govern offers the app
-  // makes unprompted — none of them apply to a door the user opened.
-  if (userInitiated) return { show: true, moment: null, variant };
+	// They asked. Cadence, cooldown and the full stop all govern offers the app
+	// makes unprompted — none of them apply to a door the user opened.
+	if (userInitiated) {
+		return { moment: null, show: true, variant };
+	}
 
-  const stopped =
-    dismissalCount >= PLUS_OFFER_DISMISSAL_LIMIT &&
-    fullStopSince !== null &&
-    now - fullStopSince < PLUS_OFFER_FULL_STOP_MS;
-  if (stopped) return { show: false, reason: "full_stop" };
+	const stopped =
+		dismissalCount >= PLUS_OFFER_DISMISSAL_LIMIT &&
+		fullStopSince !== null &&
+		now - fullStopSince < PLUS_OFFER_FULL_STOP_MS;
+	if (stopped) {
+		return { reason: "full_stop", show: false };
+	}
 
-  if (shownThisSession) return { show: false, reason: "session_cap" };
-  if (shownLastSession) return { show: false, reason: "back_to_back" };
+	if (shownThisSession) {
+		return { reason: "session_cap", show: false };
+	}
+	if (shownLastSession) {
+		return { reason: "back_to_back", show: false };
+	}
 
-  if (candidates.length === 0) return { show: false, reason: "no_candidate" };
+	if (candidates.length === 0) {
+		return { reason: "no_candidate", show: false };
+	}
 
-  // Keyed by surface, not by moment: a "no" here is a no to this place, and
-  // rotating to the next-ranked moment in the same slot would be the same ask
-  // wearing a different hat.
-  const dismissedAt = lastDismissedAt[surface];
-  if (dismissedAt !== undefined && now - dismissedAt < PLUS_OFFER_COOLDOWN_MS) {
-    return { show: false, reason: "cooldown" };
-  }
+	// Keyed by surface, not by moment: a "no" here is a no to this place, and
+	// rotating to the next-ranked moment in the same slot would be the same ask
+	// wearing a different hat.
+	const dismissedAt = lastDismissedAt[surface];
+	if (dismissedAt !== undefined && now - dismissedAt < PLUS_OFFER_COOLDOWN_MS) {
+		return { reason: "cooldown", show: false };
+	}
 
-  return { show: true, moment: candidates[0], variant };
+	return { moment: candidates[0], show: true, variant };
 }
 
 /**
@@ -117,9 +128,9 @@ export function choosePlusOffer({
  * of three conditionals that can drift apart.
  */
 const SURFACE_MOMENTS: Record<PlusOfferSurface, PlusOfferMoment[]> = {
-  session_close: [1, 4, 5],
-  mirror_landed: [2],
-  profile_insight: [3],
+	mirror_landed: [2],
+	profile_insight: [3],
+	session_close: [1, 4, 5],
 };
 
 /**
@@ -129,10 +140,10 @@ const SURFACE_MOMENTS: Record<PlusOfferSurface, PlusOfferMoment[]> = {
  * cadence rules must not be re-derivable from a call site's own conditions.
  */
 export function plusOfferCandidates(
-  surface: PlusOfferSurface,
-  conditionMet: Partial<Record<PlusOfferMoment, boolean>>,
+	surface: PlusOfferSurface,
+	conditionMet: Partial<Record<PlusOfferMoment, boolean>>
 ): PlusOfferMoment[] {
-  return SURFACE_MOMENTS[surface].filter((m) => conditionMet[m] === true);
+	return SURFACE_MOMENTS[surface].filter((m) => conditionMet[m] === true);
 }
 
 /**
@@ -141,9 +152,9 @@ export function plusOfferCandidates(
  * threading a surface prop that the table above already knows.
  */
 export function plusOfferSurfaceForMoment(
-  moment: PlusOfferMoment,
+	moment: PlusOfferMoment
 ): PlusOfferSurface {
-  return (Object.keys(SURFACE_MOMENTS) as PlusOfferSurface[]).find((s) =>
-    SURFACE_MOMENTS[s].includes(moment),
-  )!;
+	return (Object.keys(SURFACE_MOMENTS) as PlusOfferSurface[]).find((s) =>
+		SURFACE_MOMENTS[s].includes(moment)
+	)!;
 }

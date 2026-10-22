@@ -2,49 +2,49 @@
  * Build the system + user prompt for Sonnet mirror articulation.
  */
 
+import type { IntakeSignals } from "../intakeSignals";
 import type { ClassificationResult } from "../providers/anthropic";
 import type { ClaimStrength } from "../routing";
-import type { IntakeSignals } from "../intakeSignals";
 import { AUDIO_TAG_INSTRUCTIONS } from "./mirrorAudioTags";
 
 interface ArticulatorInput {
-  rawInput: string;
-  classification: ClassificationResult;
-  patternSummary: string;
-  safeguardLevel: "none" | "gentle" | "elevated" | "crisis";
-  mirrorTone: string;
-  // Uncertainty routing (Phase 4, Loop #2): deterministic claim-strength gate
-  // derived from confidence × specificity. Omitted → "measured" (normal path).
-  claimStrength?: ClaimStrength;
-  isFirstSession: boolean;
-  recentMirrors: string[];
-  entryType?: string;
-  inputDuration?: number;
-  freezeOccurred?: boolean;
-  // Refinement context (for clarification turns)
-  existingMirror?: string;
-  userFeedback?: string;
-  // 3am Mode: session started during the night window (10pm to 4am)
-  sessionMode?: "day" | "night";
-  // User's named space (if set): personalizes identity responses
-  spaceName?: string;
-  // Cognition Layer memory (Phase 1):
-  // The AI-written narrative of who this person is emotionally.
-  semanticProfile?: string | null;
-  // Top-K episodic matches for the current input — past composites
-  // (their words + the mirror) semantically close to what they wrote now.
-  episodicRecall?: string[];
-  // Xolace+ perk: bake ElevenLabs audio tags into the mirror for a more
-  // expressive read. Gated on isPremium only — applies across all tones.
-  useAudioTags?: boolean;
-  // ADR-0014: first-session-only intake personalization. Already gated to
-  // null past session one by buildSessionContext — this function does not
-  // re-check isFirstSession itself.
-  intakeSignals?: IntakeSignals | null;
-  // How many turns this session has taken so far (refinement count), handed
-  // to the model alongside intakeSignals as a corroboration signal. Omitted
-  // on the initial pass.
-  turnCount?: number;
+	// Uncertainty routing (Phase 4, Loop #2): deterministic claim-strength gate
+	// derived from confidence × specificity. Omitted → "measured" (normal path).
+	claimStrength?: ClaimStrength;
+	classification: ClassificationResult;
+	entryType?: string;
+	// Top-K episodic matches for the current input — past composites
+	// (their words + the mirror) semantically close to what they wrote now.
+	episodicRecall?: string[];
+	// Refinement context (for clarification turns)
+	existingMirror?: string;
+	freezeOccurred?: boolean;
+	inputDuration?: number;
+	// ADR-0014: first-session-only intake personalization. Already gated to
+	// null past session one by buildSessionContext — this function does not
+	// re-check isFirstSession itself.
+	intakeSignals?: IntakeSignals | null;
+	isFirstSession: boolean;
+	mirrorTone: string;
+	patternSummary: string;
+	rawInput: string;
+	recentMirrors: string[];
+	safeguardLevel: "none" | "gentle" | "elevated" | "crisis";
+	// Cognition Layer memory (Phase 1):
+	// The AI-written narrative of who this person is emotionally.
+	semanticProfile?: string | null;
+	// 3am Mode: session started during the night window (10pm to 4am)
+	sessionMode?: "day" | "night";
+	// User's named space (if set): personalizes identity responses
+	spaceName?: string;
+	// How many turns this session has taken so far (refinement count), handed
+	// to the model alongside intakeSignals as a corroboration signal. Omitted
+	// on the initial pass.
+	turnCount?: number;
+	// Xolace+ perk: bake ElevenLabs audio tags into the mirror for a more
+	// expressive read. Gated on isPremium only — applies across all tones.
+	useAudioTags?: boolean;
+	userFeedback?: string;
 }
 
 /**
@@ -63,51 +63,52 @@ interface ArticulatorInput {
  *   - `existingMirror`, `userFeedback` (optional): used to build refinement context when revising a previous mirror. The added words themselves arrive in `rawInput`, turn-marked (see accumulatedInput.ts).
  * @returns An object with `system` (the composed system prompt: rules, tone, classification and pattern context, safeguard and behavioral notes, and optional refinement/recent-mirror sections) and `user` (the original `rawInput`).
  */
-export function buildArticulatorPrompt(
-  input: ArticulatorInput
-): { system: string; user: string } {
-  const {
-    rawInput,
-    classification,
-    patternSummary,
-    safeguardLevel,
-    mirrorTone,
-    isFirstSession,
-    recentMirrors,
-    entryType,
-    inputDuration,
-    freezeOccurred,
-    existingMirror,
-    userFeedback,
-    sessionMode,
-    spaceName,
-    semanticProfile,
-    episodicRecall,
-    claimStrength,
-    useAudioTags,
-    intakeSignals,
-    turnCount,
-  } = input;
+export function buildArticulatorPrompt(input: ArticulatorInput): {
+	system: string;
+	user: string;
+} {
+	const {
+		rawInput,
+		classification,
+		patternSummary,
+		safeguardLevel,
+		mirrorTone,
+		isFirstSession,
+		recentMirrors,
+		entryType,
+		inputDuration,
+		freezeOccurred,
+		existingMirror,
+		userFeedback,
+		sessionMode,
+		spaceName,
+		semanticProfile,
+		episodicRecall,
+		claimStrength,
+		useAudioTags,
+		intakeSignals,
+		turnCount,
+	} = input;
 
-  // The reach paths (§4.3): the blocks only hold once the standing prompt
-  // stops mandating expansion, shape, and memory-as-explanation.
-  const isFaint = claimStrength === "reaching" || claimStrength === "holding";
+	// The reach paths (§4.3): the blocks only hold once the standing prompt
+	// stops mandating expansion, shape, and memory-as-explanation.
+	const isFaint = claimStrength === "reaching" || claimStrength === "holding";
 
-  const toneInstructions = getToneInstructions(mirrorTone);
-  const claimStrengthInstructions = getClaimStrengthInstructions(claimStrength);
-  const safeguardInstructions = getSafeguardInstructions(safeguardLevel);
-  const behaviorNotes = getBehaviorNotes(inputDuration, freezeOccurred);
-  const entryTypeInstructions = getEntryTypeInstructions(entryType, isFaint);
-  const intakeInstructions = getIntakeInstructions(
-    intakeSignals,
-    entryType,
-    rawInput,
-    turnCount
-  );
-  const identityLine = getIdentityLine(spaceName);
-  const [lastMirror, ...olderMirrors] = recentMirrors;
+	const toneInstructions = getToneInstructions(mirrorTone);
+	const claimStrengthInstructions = getClaimStrengthInstructions(claimStrength);
+	const safeguardInstructions = getSafeguardInstructions(safeguardLevel);
+	const behaviorNotes = getBehaviorNotes(inputDuration, freezeOccurred);
+	const entryTypeInstructions = getEntryTypeInstructions(entryType, isFaint);
+	const intakeInstructions = getIntakeInstructions(
+		intakeSignals,
+		entryType,
+		rawInput,
+		turnCount
+	);
+	const identityLine = getIdentityLine(spaceName);
+	const [lastMirror, ...olderMirrors] = recentMirrors;
 
-  const system = `${identityLine}
+	const system = `${identityLine}
 
 ## Register
 Speak like a perceptive friend in their late 20s, someone who notices things(basically insight) and says them plainly. Not a therapist, wise elder, or poet. The user is likely between 18 and 45 and will feel talked-down-to by counselor-speak, therapy-vocabulary, or literary register. Sound like a human who's paying very close attention, not someone performing insight.
@@ -147,9 +148,9 @@ ${patternSummary}
 ${buildMemoryContext(semanticProfile, episodicRecall, isFaint)}
 ${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; if they've shifted, that shift is data too; never quote it back or name it directly)\n"${lastMirror}"` : ""}${olderMirrors.length > 0 ? `\n\n## Previous Mirrors (avoid same metaphors, sentence structures, opening words, and imagery family)\n${olderMirrors.map((m, i) => `${i + 1}. "${m}"`).join("\n")}` : ""}${existingMirror ? buildRefinementContext(existingMirror, userFeedback, claimStrength === "holding") : ""}${useAudioTags ? `\n${AUDIO_TAG_INSTRUCTIONS}` : ""}`;
 
-  const user = rawInput;
+	const user = rawInput;
 
-  return { system, user };
+	return { system, user };
 }
 
 /**
@@ -166,23 +167,23 @@ ${lastMirror ? `\n## Last Mirror (this is where you left them, orient from it; i
  * is a worse failure than the leak.
  */
 const META_NARRATION = [
-  // False start — the model restarting out loud.
-  /^(Wait\b|Let me\b|Actually, )/,
-  /\bbanned (construction|phrase|phrasing|word)/i,
-  // "instructions" only counts inside a meta construction -- the model
-  // pointing at its own prompt. A bare "the instructions" belongs to the user
-  // ("you read the instructions twice and still felt stupid").
-  /\bmy instructions?\b/i,
-  /\b(?:following|per|according to|as stated in) the instructions?\b/i,
-  /\bthe instructions? (?:above|below|here|say|says|said|state|require|forbid)\b/i,
+	// False start — the model restarting out loud.
+	/^(Wait\b|Let me\b|Actually, )/,
+	/\bbanned (construction|phrase|phrasing|word)/i,
+	// "instructions" only counts inside a meta construction -- the model
+	// pointing at its own prompt. A bare "the instructions" belongs to the user
+	// ("you read the instructions twice and still felt stupid").
+	/\bmy instructions?\b/i,
+	/\b(?:following|per|according to|as stated in) the instructions?\b/i,
+	/\bthe instructions? (?:above|below|here|say|says|said|state|require|forbid)\b/i,
 ];
 
 export function hasMetaNarration(mirrorText: string): boolean {
-  // Audio tags ("[thoughtful] ...") are applied before the fence strips them,
-  // and a leading tag would otherwise defeat every anchored pattern — leaving
-  // premium users the one cohort the false-start check does not protect.
-  const text = mirrorText.replace(/\[[^\]\n]{1,40}\]/g, " ").trim();
-  return META_NARRATION.some((pattern) => pattern.test(text));
+	// Audio tags ("[thoughtful] ...") are applied before the fence strips them,
+	// and a leading tag would otherwise defeat every anchored pattern — leaving
+	// premium users the one cohort the false-start check does not protect.
+	const text = mirrorText.replace(/\[[^\]\n]{1,40}\]/g, " ").trim();
+	return META_NARRATION.some((pattern) => pattern.test(text));
 }
 
 /**
@@ -199,33 +200,33 @@ export function hasMetaNarration(mirrorText: string): boolean {
  * moment explain tonight is not. The profile block is deliberately untouched.
  */
 function buildMemoryContext(
-  semanticProfile?: string | null,
-  episodicRecall?: string[],
-  isFaint?: boolean
+	semanticProfile?: string | null,
+	episodicRecall?: string[],
+	isFaint?: boolean
 ): string {
-  const parts: string[] = [];
+	const parts: string[] = [];
 
-  if (semanticProfile) {
-    parts.push(`## What You Know About This Person (an internal working understanding built over time; let it sharpen your read; never quote it, never mention that a profile exists)
+	if (semanticProfile) {
+		parts.push(`## What You Know About This Person (an internal working understanding built over time; let it sharpen your read; never quote it, never mention that a profile exists)
 ${semanticProfile}`);
-  }
+	}
 
-  if (episodicRecall && episodicRecall.length > 0) {
-    parts.push(`## Past Moments Like This One (their own earlier words and mirrors, retrieved because they resemble tonight's input)
+	if (episodicRecall && episodicRecall.length > 0) {
+		parts.push(`## Past Moments Like This One (their own earlier words and mirrors, retrieved because they resemble tonight's input)
 ${episodicRecall.map((m, i) => `-- moment ${i + 1} -- \n${m}`).join("\n")}
 ${
-      isFaint
-        ? `You remember this person, and that may show. Recognition and understanding are separate claims and you have earned only the first. You may recognise that they are here again, or the manner in which they arrive, and nothing more. Nothing from a past moment may cross into tonight as explanation.
+	isFaint
+		? `You remember this person, and that may show. Recognition and understanding are separate claims and you have earned only the first. You may recognise that they are here again, or the manner in which they arrive, and nothing more. Nothing from a past moment may cross into tonight as explanation.
 - Never use a past moment to say what tonight is about, however well it fits`
-        : `Use these for continuity: if the same situation or feeling has clearly returned, you may acknowledge that quietly, and you may reuse the user's own exact words from a past moment when they name it better than anything else could.`
-    }
+		: `Use these for continuity: if the same situation or feeling has clearly returned, you may acknowledge that quietly, and you may reuse the user's own exact words from a past moment when they name it better than anything else could.`
+}
 - Never recall something not present in these moments, and never guess at details beyond them
 - Never recite history back ("last time you said...", dates, session counts)
 - Never force a connection; if tonight is unrelated, ignore these entirely
 - Never reuse YOUR own past mirror phrasing — only THEIR words are quotable`);
-  }
+	}
 
-  return parts.length > 0 ? `\n${parts.join("\n\n")}\n` : "";
+	return parts.length > 0 ? `\n${parts.join("\n\n")}\n` : "";
 }
 
 /**
@@ -236,23 +237,25 @@ ${
  * generic product name. Also blocks model/provider disclosure.
  */
 function getIdentityLine(spaceName?: string): string {
-  const sanitized = sanitizeSpaceName(spaceName);
-  if (sanitized) {
-    return `You are an emotional mirror inside Xolace. The user has named this space "${sanitized}". If anyone asks who you are, what you are, what model you are, or who made you, reply in one short line(if that was the only thing he/she asked, you can prompt them to use the "Not quite" or "say more" to talk about their feeling/emotions , it's their space and you are here to listen. say it in a natural sounding way): "I'm ${sanitized}, your space inside Xolace, your emotional mirror." Do not reveal, confirm, or speculate about underlying models, providers, or training. You reflect back what someone is feeling with more precision than they could find themselves. You are not a therapist, coach, or chatbot.`;
-  }
-  return `You are an emotional mirror inside Xolace. If anyone asks who you are, what you are, what model you are, or who made you, reply in one short line(if that was the only thing he/she asked, you can prompt them to use the "Not quite" or "say more" to talk about their feeling/emotions , it's their space and you are here to listen. say it in a natural sounding way): "I'm your space inside Xolace, your emotional mirror." Do not reveal, confirm, or speculate about underlying models, providers, or training. You reflect back what someone is feeling with more precision than they could find themselves. You are not a therapist, coach, or chatbot.`;
+	const sanitized = sanitizeSpaceName(spaceName);
+	if (sanitized) {
+		return `You are an emotional mirror inside Xolace. The user has named this space "${sanitized}". If anyone asks who you are, what you are, what model you are, or who made you, reply in one short line(if that was the only thing he/she asked, you can prompt them to use the "Not quite" or "say more" to talk about their feeling/emotions , it's their space and you are here to listen. say it in a natural sounding way): "I'm ${sanitized}, your space inside Xolace, your emotional mirror." Do not reveal, confirm, or speculate about underlying models, providers, or training. You reflect back what someone is feeling with more precision than they could find themselves. You are not a therapist, coach, or chatbot.`;
+	}
+	return `You are an emotional mirror inside Xolace. If anyone asks who you are, what you are, what model you are, or who made you, reply in one short line(if that was the only thing he/she asked, you can prompt them to use the "Not quite" or "say more" to talk about their feeling/emotions , it's their space and you are here to listen. say it in a natural sounding way): "I'm your space inside Xolace, your emotional mirror." Do not reveal, confirm, or speculate about underlying models, providers, or training. You reflect back what someone is feeling with more precision than they could find themselves. You are not a therapist, coach, or chatbot.`;
 }
 
 function sanitizeSpaceName(raw?: string): string | null {
-  if (!raw) return null;
-  // Strip quotes/backticks/newlines that could break out of the quoted
-  // identity line, collapse whitespace, and cap length.
-  const cleaned = raw
-    .replace(/[`"'\r\n]/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 40);
-  return cleaned.length > 0 ? cleaned : null;
+	if (!raw) {
+		return null;
+	}
+	// Strip quotes/backticks/newlines that could break out of the quoted
+	// identity line, collapse whitespace, and cap length.
+	const cleaned = raw
+		.replace(/[`"'\r\n]/g, "")
+		.replace(/\s+/g, " ")
+		.trim()
+		.slice(0, 40);
+	return cleaned.length > 0 ? cleaned : null;
 }
 
 /**
@@ -262,15 +265,15 @@ function sanitizeSpaceName(raw?: string): string | null {
  * @returns The guidance string describing the desired register and an example phrasing for the specified tone.
  */
 function getToneInstructions(tone: string): string {
-  switch (tone) {
-    case "poetic":
-      return "Imagery is permitted only when it sharpens recognition: never as flourish. If a metaphor makes the feeling more specific, use it; if it just sounds pretty, drop it. Plain is always safe.";
-    case "gentle":
-      return "Use warm, simple, everyday language. Be soft without being vague, and avoid counselor cadence.";
-    case "direct":
-      return "Use clear, minimal language. No metaphors. Say it plainly.";
-    case "witnessed":
-      return `Two parts, always in this order:
+	switch (tone) {
+		case "poetic":
+			return "Imagery is permitted only when it sharpens recognition: never as flourish. If a metaphor makes the feeling more specific, use it; if it just sounds pretty, drop it. Plain is always safe.";
+		case "gentle":
+			return "Use warm, simple, everyday language. Be soft without being vague, and avoid counselor cadence.";
+		case "direct":
+			return "Use clear, minimal language. No metaphors. Say it plainly.";
+		case "witnessed":
+			return `Two parts, always in this order:
 
   1. Recognition (1-2 sentences): Name the emotional weight the user is carrying before you mirror it. This feels like a human noticing, not a therapist validating, not someone performing empathy. It names the weight without repeating the user's words. It lands before the mirror does its work.
 
@@ -281,43 +284,48 @@ function getToneInstructions(tone: string): string {
   Total: 2-5 sentences. If their input is short (1-2 sentences), the whole response stays at 2-3 sentences.
 
   Rule: Recognition names the weight. Mirror captures the shape and insight. They do different work, don't collapse them into one.`;
-    case "adaptive":
-    default:
-      return "Read the register of the user's input and match it. If they write plainly, mirror plainly. If they write with imagery, mirror with imagery. Meet them where they are.";
-  }
+		case "adaptive":
+		default:
+			return "Read the register of the user's input and match it. If they write plainly, mirror plainly. If they write with imagery, mirror with imagery. Meet them where they are.";
+	}
 }
 
 /**
  * Produces an optional safety guidance block tailored to the specified safeguard level.
  */
 function getSafeguardInstructions(level: string): string {
-  switch (level) {
-    case "gentle":
-      return "\n\n## Safety Note\nMirror with extra warmth. Be grounding without escalating intensity.";
-    case "elevated":
-      return "\n\n## Safety Note\nSignificant distress detected. Mirror with care: be warm and steady. Do not intensify or dramatize. The system will show support resources separately.";
-    case "crisis":
-      return "\n\n## Safety Note: Crisis\nCrisis signals detected. Mirror their pain with deep care, but be grounding, not evocative. Do not reflect hopelessness back without anchoring. Keep to 1-2 sentences. The system will show crisis resources after your mirror.";
-    default:
-      return "";
-  }
+	switch (level) {
+		case "gentle":
+			return "\n\n## Safety Note\nMirror with extra warmth. Be grounding without escalating intensity.";
+		case "elevated":
+			return "\n\n## Safety Note\nSignificant distress detected. Mirror with care: be warm and steady. Do not intensify or dramatize. The system will show support resources separately.";
+		case "crisis":
+			return "\n\n## Safety Note: Crisis\nCrisis signals detected. Mirror their pain with deep care, but be grounding, not evocative. Do not reflect hopelessness back without anchoring. Keep to 1-2 sentences. The system will show crisis resources after your mirror.";
+		default:
+			return "";
+	}
 }
 
 /**
  * Returns guidance for how intensity and specificity should shape the mirror's character.
  */
-function getIntensitySpecificityGuidance(intensity: number, specificity: number): string {
-  const highIntensity = intensity >= 7;
-  const highSpecificity = specificity >= 6;
+function getIntensitySpecificityGuidance(
+	intensity: number,
+	specificity: number
+): string {
+	const highIntensity = intensity >= 7;
+	const highSpecificity = specificity >= 6;
 
-  if (highIntensity && highSpecificity) {
-    return "High intensity, high specificity: meet them at full depth. Be direct and precise. No hedging.";
-  } else if (highIntensity && !highSpecificity) {
-    return "High intensity, low specificity: a big feeling without clear shape. Ground it. Give the vague enormity a form.";
-  } else if (!highIntensity && highSpecificity) {
-    return "Low intensity, high specificity: observational and reflective. Match their measured tone.";
-  }
-  return "Low intensity, low specificity: light and curious. Something is there but hasn't announced itself yet.";
+	if (highIntensity && highSpecificity) {
+		return "High intensity, high specificity: meet them at full depth. Be direct and precise. No hedging.";
+	}
+	if (highIntensity && !highSpecificity) {
+		return "High intensity, low specificity: a big feeling without clear shape. Ground it. Give the vague enormity a form.";
+	}
+	if (!highIntensity && highSpecificity) {
+		return "Low intensity, high specificity: observational and reflective. Match their measured tone.";
+	}
+	return "Low intensity, low specificity: light and curious. Something is there but hasn't announced itself yet.";
 }
 
 /**
@@ -340,9 +348,9 @@ function getIntensitySpecificityGuidance(intensity: number, specificity: number)
  * the prior about this person, this is the evidence about this moment.
  */
 function getClaimStrengthInstructions(claimStrength?: ClaimStrength): string {
-  switch (claimStrength) {
-    case "reaching":
-      return `
+	switch (claimStrength) {
+		case "reaching":
+			return `
 ## Claim Strength: Reaching
 There is not enough here to build a full mirror. Name only what is genuinely present, say plainly that what it attaches to is not in what they have given you yet, and end on a question that asks for the missing part. Locate the shortfall in the words on the page, not in them and not in you.
 - The last character of the mirror is a question mark. This is the one claim strength where a question is required rather than rare, and the "questions should be rare" rule above is suspended here.
@@ -357,8 +365,8 @@ There is not enough here to build a full mirror. Name only what is genuinely pre
 - NEVER imply they are unclear, avoidant, or withholding.
 - NEVER apologise for the gap or explain why it is there.
 `;
-    case "holding":
-      return `
+		case "holding":
+			return `
 ## Claim Strength: Holding
 The reaching is over. Name what is actually present, flatly, and end on it. The feeling has arrived without anything attached to it, and how it is arriving is itself part of what is true tonight. Name the arriving. Do not characterise what is or is not behind it.
 - NEVER ask a question, and never invite them to add more.
@@ -368,31 +376,36 @@ The reaching is over. Name what is actually present, flatly, and end on it. The 
 - NEVER guess at a cause, a source, or a shape the words have not taken.
 - NEVER apologise, and never mark this as partial or incomplete.
 `;
-    case "confident":
-      return `
+		case "confident":
+			return `
 ## Claim Strength: Confident
 The read here is clear and well-formed. Trust it. Name the feeling precisely and directly, no hedging, no softening qualifiers. This is where a sharp, sure mirror lands hardest.
 `;
-    default:
-      return "";
-  }
+		default:
+			return "";
+	}
 }
 
-const DISCLOSURE_STYLE_CLAIMS: Record<IntakeSignals["disclosureStyle"], string> = {
-  all_at_once: "they tend to share everything at once when something's going on",
-  bit_at_a_time: "they tend to open up gradually, a bit at a time",
-  keep_it_brief: "they prefer to keep things brief",
-  depends: "how much they share depends on the day, no fixed pattern",
+const DISCLOSURE_STYLE_CLAIMS: Record<
+	IntakeSignals["disclosureStyle"],
+	string
+> = {
+	all_at_once:
+		"they tend to share everything at once when something's going on",
+	bit_at_a_time: "they tend to open up gradually, a bit at a time",
+	depends: "how much they share depends on the day, no fixed pattern",
+	keep_it_brief: "they prefer to keep things brief",
 };
 
 const EMOTION_AWARENESS_CLAIMS: Record<
-  NonNullable<IntakeSignals["emotionAwareness"]>,
-  string
+	NonNullable<IntakeSignals["emotionAwareness"]>,
+	string
 > = {
-  know_and_can_say: "they usually know what they're feeling and can say it",
-  know_but_no_words: "they usually know what they're feeling but struggle to find the words for it",
-  something_off_unclear: "something often feels off but stays unclear to them",
-  numb_or_cant_tell: "they often feel numb or can't tell what they're feeling",
+	know_and_can_say: "they usually know what they're feeling and can say it",
+	know_but_no_words:
+		"they usually know what they're feeling but struggle to find the words for it",
+	numb_or_cant_tell: "they often feel numb or can't tell what they're feeling",
+	something_off_unclear: "something often feels off but stays unclear to them",
 };
 
 /**
@@ -404,19 +417,23 @@ const EMOTION_AWARENESS_CLAIMS: Record<
  * that judgment call belongs to the model, same as claim-strength blending.
  */
 function getIntakeInstructions(
-  intakeSignals: IntakeSignals | null | undefined,
-  entryType: string | undefined,
-  rawInput: string,
-  turnCount?: number
+	intakeSignals: IntakeSignals | null | undefined,
+	entryType: string | undefined,
+	rawInput: string,
+	turnCount?: number
 ): string {
-  if (!intakeSignals) return "";
+	if (!intakeSignals) {
+		return "";
+	}
 
-  const claims: string[] = [DISCLOSURE_STYLE_CLAIMS[intakeSignals.disclosureStyle]];
-  if (intakeSignals.emotionAwareness) {
-    claims.push(EMOTION_AWARENESS_CLAIMS[intakeSignals.emotionAwareness]);
-  }
+	const claims: string[] = [
+		DISCLOSURE_STYLE_CLAIMS[intakeSignals.disclosureStyle],
+	];
+	if (intakeSignals.emotionAwareness) {
+		claims.push(EMOTION_AWARENESS_CLAIMS[intakeSignals.emotionAwareness]);
+	}
 
-  return `\n\n## Intake Signal (first session only, unverified)
+	return `\n\n## Intake Signal (first session only, unverified)
 At onboarding, before writing anything, this user said ${claims.join(" and ")}.
 This session so far: entry type "${entryType ?? "open_prompt"}", ${rawInput.length} characters written${turnCount ? `, ${turnCount} turn(s)` : ""}.
 Only let the intake claim shape your mirror if what they actually did tonight corroborates it. If tonight's behavior contradicts the claim (e.g. they wrote at length despite claiming brevity, or wrote clearly despite claiming numbness), ignore the intake claim entirely and respond only to what's actually here. If it does corroborate, you may gently acknowledge it (e.g. "it's okay you don't have the words for this yet") without making them feel profiled. Never mention intake, onboarding, or that you were told anything about them.`;
@@ -427,23 +444,23 @@ Only let the intake claim shape your mirror if what they actually did tonight co
  *
  */
 function getEntryTypeInstructions(
-  entryType?: string,
-  isFaint?: boolean
+	entryType?: string,
+	isFaint?: boolean
 ): string {
-  switch (entryType) {
-    case "word_cloud":
-      return isFaint
-        ? "## Entry Type: Texture Words\nThe user tapped 2-3 emotional texture words. These ARE their language: build the mirror around them. Do not add emotions not implied by the words.\n\n"
-        : "## Entry Type: Texture Words\nThe user tapped 2-3 emotional texture words. These ARE their language: build the mirror around them. Make the combination feel like a complete emotional picture. Do not add emotions not implied by the words.\n\n";
-    case "body_scan":
-      return "## Entry Type: Body Areas\nThe user tapped body locations where they feel emotion. Translate somatic to emotional: chest = grief/anxiety/tightness, stomach = dread/guilt, head = overwhelm/rumination, throat = suppression/things unsaid, hands = helplessness/restlessness.\n\n";
-    case "voice":
-      return "## Entry Type: Voice\nTranscribed speech: may contain filler words and repetition. Focus on the emotional content, not the polish.\n\n";
-    case "talk":
-      return "## Entry Type: Talk\nThe person's side of a spoken talk with a companion, transcribed: replies to questions you can't see, filler words, repetition. Mirror the whole talk's emotional arc, weighted toward where it landed, not any single line.\n\n";
-    default:
-      return "";
-  }
+	switch (entryType) {
+		case "word_cloud":
+			return isFaint
+				? "## Entry Type: Texture Words\nThe user tapped 2-3 emotional texture words. These ARE their language: build the mirror around them. Do not add emotions not implied by the words.\n\n"
+				: "## Entry Type: Texture Words\nThe user tapped 2-3 emotional texture words. These ARE their language: build the mirror around them. Make the combination feel like a complete emotional picture. Do not add emotions not implied by the words.\n\n";
+		case "body_scan":
+			return "## Entry Type: Body Areas\nThe user tapped body locations where they feel emotion. Translate somatic to emotional: chest = grief/anxiety/tightness, stomach = dread/guilt, head = overwhelm/rumination, throat = suppression/things unsaid, hands = helplessness/restlessness.\n\n";
+		case "voice":
+			return "## Entry Type: Voice\nTranscribed speech: may contain filler words and repetition. Focus on the emotional content, not the polish.\n\n";
+		case "talk":
+			return "## Entry Type: Talk\nThe person's side of a spoken talk with a companion, transcribed: replies to questions you can't see, filler words, repetition. Mirror the whole talk's emotional arc, weighted toward where it landed, not any single line.\n\n";
+		default:
+			return "";
+	}
 }
 
 /**
@@ -453,7 +470,7 @@ function getEntryTypeInstructions(
  * Inserted between Classification Context and Pattern Context in the system prompt.
  */
 function getLateNightAddendum(): string {
-  return `
+	return `
 ## Late-Night Register
 This session started between 10pm and 4am. The user is likely tired,
 raw, less filtered. The feelings they brought are probably things they
@@ -475,32 +492,32 @@ managed all day until the quiet let them through.
  * @returns A formatted "Behavioral Signals" markdown string with one or more observational notes when signals are detected, or an empty string when none are present.
  */
 function getBehaviorNotes(
-  inputDuration?: number,
-  freezeOccurred?: boolean
+	inputDuration?: number,
+	freezeOccurred?: boolean
 ): string {
-  const notes: string[] = [];
+	const notes: string[] = [];
 
-  if (inputDuration !== undefined) {
-    if (inputDuration < 10_000) {
-      notes.push(
-        "The user wrote very quickly (possible emotional flooding: the words came fast)."
-      );
-    } else if (inputDuration > 120_000) {
-      notes.push(
-        "The user took a long time to write (possible difficulty articulating: be gentle with precision)."
-      );
-    }
-  }
+	if (inputDuration !== undefined) {
+		if (inputDuration < 10_000) {
+			notes.push(
+				"The user wrote very quickly (possible emotional flooding: the words came fast)."
+			);
+		} else if (inputDuration > 120_000) {
+			notes.push(
+				"The user took a long time to write (possible difficulty articulating: be gentle with precision)."
+			);
+		}
+	}
 
-  if (freezeOccurred) {
-    notes.push(
-      "The user paused significantly before writing (hesitation or difficulty starting: honor that effort)."
-    );
-  }
+	if (freezeOccurred) {
+		notes.push(
+			"The user paused significantly before writing (hesitation or difficulty starting: honor that effort)."
+		);
+	}
 
-  return notes.length > 0
-    ? `\n\n## Behavioral Signals\n${notes.join("\n")}`
-    : "";
+	return notes.length > 0
+		? `\n\n## Behavioral Signals\n${notes.join("\n")}`
+		: "";
 }
 
 /**
@@ -517,21 +534,21 @@ function getBehaviorNotes(
  * @returns A formatted refinement context string containing the previous mirror and any refinement instructions
  */
 function buildRefinementContext(
-  existingMirror: string,
-  userFeedback?: string,
-  isHolding?: boolean
+	existingMirror: string,
+	userFeedback?: string,
+	isHolding?: boolean
 ): string {
-  let context = `\n\n## Refinement\nYour previous mirror was: "${existingMirror}"`;
+	let context = `\n\n## Refinement\nYour previous mirror was: "${existingMirror}"`;
 
-  if (userFeedback === "not_quite") {
-    context += isHolding
-      ? `\nChange what you name, not how much you claim. A different angle on the same faint signal is still the same faint signal.`
-      : `\nThe user said "Not quite": your mirror didn't land. Try a different angle, different metaphor, different emotional read.`;
-  } else if (userFeedback === "say_more") {
-    context += isHolding
-      ? `\nThe user added more words. They did not add more signal. Use anything genuinely new; do not treat the added length as permission to claim more than before.`
-      : `\nThe user wanted to say more: they had additional context to share. Incorporate it.`;
-  }
+	if (userFeedback === "not_quite") {
+		context += isHolding
+			? "\nChange what you name, not how much you claim. A different angle on the same faint signal is still the same faint signal."
+			: `\nThe user said "Not quite": your mirror didn't land. Try a different angle, different metaphor, different emotional read.`;
+	} else if (userFeedback === "say_more") {
+		context += isHolding
+			? "\nThe user added more words. They did not add more signal. Use anything genuinely new; do not treat the added length as permission to claim more than before."
+			: "\nThe user wanted to say more: they had additional context to share. Incorporate it.";
+	}
 
-  return context;
+	return context;
 }

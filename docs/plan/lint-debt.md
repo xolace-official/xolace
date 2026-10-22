@@ -122,12 +122,13 @@ ESLint (`@convex-dev/eslint-plugin` v5, new rules vs the app's v4), downgraded t
 
 `@convex-dev/no-top-of-hour-crons` reports 3 warnings and is left as is.
 
-## Hazard for Commit D
+## Attribute sort turned off in five files
 
 `ultracite fix` corrupts JSX in five files under
 `apps/mobile/src/features/insights/` (`glass.tsx`, `detail-card.tsx`,
 `domain-list.tsx`, `trend-chip.tsx`, `overall-dial.tsx`): with several props per
 line, the attribute sort merges the tag name into the first prop
 (`<Tick key=... fill=...` becomes `<Tickfill=...`), leaving unparseable code.
-Reformat those by hand, or turn `assist/source/useSortedAttributes` off for them,
-and check `tsc` before committing D.
+`apps/mobile/biome.json` turns `assist/source/useSortedAttributes` off for exactly
+these files. Remove the override once Biome fixes the bug (re-run `ultracite fix`
+on them and check they still parse).

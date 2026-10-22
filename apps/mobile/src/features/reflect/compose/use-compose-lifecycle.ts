@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
 import { useNavigation } from "expo-router";
+import { useEffect, useRef } from "react";
 import { playHomeEntrance } from "@/src/lib/haptics";
 
 /**
@@ -11,24 +11,28 @@ import { playHomeEntrance } from "@/src/lib/haptics";
  * a screen the user is leaving.
  */
 export const useComposeLifecycle = (
-  focusOnExpand: boolean,
-  tourActive: boolean,
-  skipTour: () => void,
+	focusOnExpand: boolean,
+	tourActive: boolean,
+	skipTour: () => void
 ) => {
-  const navigation = useNavigation();
+	const navigation = useNavigation();
 
-  // Dismiss the tour if the user navigates away (e.g. the header's Help button)
-  useEffect(() => {
-    const unsub = navigation.addListener("blur", () => {
-      if (tourActive) skipTour();
-    });
-    return unsub;
-  }, [navigation, tourActive, skipTour]);
+	// Dismiss the tour if the user navigates away (e.g. the header's Help button)
+	useEffect(() => {
+		const unsub = navigation.addListener("blur", () => {
+			if (tourActive) {
+				skipTour();
+			}
+		});
+		return unsub;
+	}, [navigation, tourActive, skipTour]);
 
-  const entranceFired = useRef(false);
-  useEffect(() => {
-    if (entranceFired.current || !focusOnExpand) return;
-    entranceFired.current = true;
-    playHomeEntrance();
-  }, [focusOnExpand]);
+	const entranceFired = useRef(false);
+	useEffect(() => {
+		if (entranceFired.current || !focusOnExpand) {
+			return;
+		}
+		entranceFired.current = true;
+		playHomeEntrance();
+	}, [focusOnExpand]);
 };

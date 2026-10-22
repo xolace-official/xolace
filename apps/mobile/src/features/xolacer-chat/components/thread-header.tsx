@@ -1,12 +1,15 @@
-import { View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { PressableFeedback } from 'heroui-native';
-import { AppText } from '@/src/components/shared/app-text';
-import { playSoftPress } from '@/src/lib/haptics';
-import { formatLongAgo } from '../format-time';
-import { XolacerAvatar } from '@/src/features/xolacer-chat/components/xolacer-avatar';
-import { useCounterpartActivity, type CounterpartPresence } from './use-counterpart-activity';
-import type { ThreadConversation } from './thread-screen';
+import { useRouter } from "expo-router";
+import { PressableFeedback } from "heroui-native";
+import { View } from "react-native";
+import { AppText } from "@/src/components/shared/app-text";
+import { XolacerAvatar } from "@/src/features/xolacer-chat/components/xolacer-avatar";
+import { playSoftPress } from "@/src/lib/haptics";
+import { formatLongAgo } from "../format-time";
+import type { ThreadConversation } from "./thread-screen";
+import {
+	type CounterpartPresence,
+	useCounterpartActivity,
+} from "./use-counterpart-activity";
 
 /**
  * Once a thread is `open` the chat socket is already live, so a real dot
@@ -15,38 +18,53 @@ import type { ThreadConversation } from './thread-screen';
  * socket signal is a fact, not a promise. Every other status keeps its own
  * copy; Stream has nothing to say about a request that hasn't been accepted.
  */
-function openSubtitle(role: ThreadConversation['role'], activity: {
-  typing: boolean;
-  presence: CounterpartPresence | null;
-}): string {
-  const who = role === 'user' ? 'Xolacer' : null;
-  if (activity.typing) return who ? `${who} · typing…` : 'typing…';
-  if (!activity.presence) return who ? `${who} · usually replies within a day` : 'Usually replies within a day';
-  if (activity.presence.online) return who ? `${who} · online` : 'Online';
-  const lastActive = activity.presence.lastActive;
-  const suffix = lastActive ? `last here ${formatLongAgo(lastActive)}` : 'offline';
-  return who ? `${who} · ${suffix}` : suffix;
+function openSubtitle(
+	role: ThreadConversation["role"],
+	activity: {
+		typing: boolean;
+		presence: CounterpartPresence | null;
+	}
+): string {
+	const who = role === "user" ? "Xolacer" : null;
+	if (activity.typing) {
+		return who ? `${who} · typing…` : "typing…";
+	}
+	if (!activity.presence) {
+		return who
+			? `${who} · usually replies within a day`
+			: "Usually replies within a day";
+	}
+	if (activity.presence.online) {
+		return who ? `${who} · online` : "Online";
+	}
+	const lastActive = activity.presence.lastActive;
+	const suffix = lastActive
+		? `last here ${formatLongAgo(lastActive)}`
+		: "offline";
+	return who ? `${who} · ${suffix}` : suffix;
 }
 
 function subtitleFor(conversation: ThreadConversation): string {
-  if (conversation.status === 'requested') {
-    if (conversation.role !== 'xolacer') return 'Request sent, no reply yet';
+	if (conversation.status === "requested") {
+		if (conversation.role !== "xolacer") {
+			return "Request sent, no reply yet";
+		}
 
-    return conversation.origin === 'suggestion'
-      ? 'Waiting on you · just after a session'
-      : 'Waiting on you';
-  }
-  if (conversation.status === 'resting') {
-    return conversation.lastMessageAt
-      ? `Resting · last spoke ${formatLongAgo(conversation.lastMessageAt)}`
-      : 'Resting';
-  }
-  if (conversation.status === 'closed') {
-    return conversation.role === 'xolacer'
-      ? 'This request is closed'
-      : 'Not taking conversations right now';
-  }
-  return '';
+		return conversation.origin === "suggestion"
+			? "Waiting on you · just after a session"
+			: "Waiting on you";
+	}
+	if (conversation.status === "resting") {
+		return conversation.lastMessageAt
+			? `Resting · last spoke ${formatLongAgo(conversation.lastMessageAt)}`
+			: "Resting";
+	}
+	if (conversation.status === "closed") {
+		return conversation.role === "xolacer"
+			? "This request is closed"
+			: "Not taking conversations right now";
+	}
+	return "";
 }
 
 /**
@@ -57,52 +75,63 @@ function subtitleFor(conversation: ThreadConversation): string {
  * — `useCounterpartActivity` reads the channel directly rather than through
  * Channel-scoped context for that reason.
  */
-export function ThreadHeader({ conversation }: { conversation: ThreadConversation }) {
-  const router = useRouter();
-  const activity = useCounterpartActivity(
-    conversation.status === 'open' ? conversation.streamChannelId : undefined,
-    conversation.counterpartProfileId,
-  );
-  const dim = conversation.status !== 'open';
-  const subtitle =
-    conversation.status === 'open' ? openSubtitle(conversation.role, activity) : subtitleFor(conversation);
+export function ThreadHeader({
+	conversation,
+}: {
+	conversation: ThreadConversation;
+}) {
+	const router = useRouter();
+	const activity = useCounterpartActivity(
+		conversation.status === "open" ? conversation.streamChannelId : undefined,
+		conversation.counterpartProfileId
+	);
+	const dim = conversation.status !== "open";
+	const subtitle =
+		conversation.status === "open"
+			? openSubtitle(conversation.role, activity)
+			: subtitleFor(conversation);
 
-  const identity = (
-    <View className="flex-row items-center gap-2.5">
-      <XolacerAvatar
-        name={conversation.counterpartName}
-        photoUrl={conversation.counterpartPhotoUrl}
-        size="sm"
-        muted={dim}
-      />
-      <View className="min-w-0 shrink">
-        <AppText className="text-sm font-semibold text-foreground" numberOfLines={1}>
-          {conversation.counterpartName}
-        </AppText>
-        <AppText className="text-[11px] text-muted mt-px" numberOfLines={1}>
-          {subtitle}
-        </AppText>
-      </View>
-    </View>
-  );
+	const identity = (
+		<View className="flex-row items-center gap-2.5">
+			<XolacerAvatar
+				muted={dim}
+				name={conversation.counterpartName}
+				photoUrl={conversation.counterpartPhotoUrl}
+				size="sm"
+			/>
+			<View className="min-w-0 shrink">
+				<AppText
+					className="font-semibold text-foreground text-sm"
+					numberOfLines={1}
+				>
+					{conversation.counterpartName}
+				</AppText>
+				<AppText className="mt-px text-[11px] text-muted" numberOfLines={1}>
+					{subtitle}
+				</AppText>
+			</View>
+		</View>
+	);
 
-  // Only the seeker's side is tappable: the counterpart there is a Xolacer with
-  // a public profile. A Xolacer looking at a seeker has nowhere to go.
-  if (conversation.role !== 'user') return identity;
+	// Only the seeker's side is tappable: the counterpart there is a Xolacer with
+	// a public profile. A Xolacer looking at a seeker has nowhere to go.
+	if (conversation.role !== "user") {
+		return identity;
+	}
 
-  return (
-    <PressableFeedback
-      onPress={() => {
-        playSoftPress();
-        router.push({
-          pathname: '/xolacer/[profileId]',
-          params: { profileId: conversation.counterpartProfileId },
-        });
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={`View ${conversation.counterpartName}'s profile`}
-    >
-      {identity}
-    </PressableFeedback>
-  );
+	return (
+		<PressableFeedback
+			accessibilityLabel={`View ${conversation.counterpartName}'s profile`}
+			accessibilityRole="button"
+			onPress={() => {
+				playSoftPress();
+				router.push({
+					params: { profileId: conversation.counterpartProfileId },
+					pathname: "/xolacer/[profileId]",
+				});
+			}}
+		>
+			{identity}
+		</PressableFeedback>
+	);
 }

@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/expo";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 import * as Sentry from "@sentry/react-native";
+import { type ReactNode, useEffect, useRef, useState } from "react";
+import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 
 import { FullRippleLoader } from "@/src/components/shared/loader/ripple/full-ripple-loader";
 import { isBootstrapError } from "./bootstrap-error";
@@ -13,8 +13,10 @@ import { attemptsFor, MAX_RETRIES, RETRY_DELAY_MS } from "./bootstrap-retry";
  * on the root ErrorBoundary, which reports it.
  */
 function BootstrapFallback({ error }: FallbackProps) {
-  if (!isBootstrapError(error)) throw error;
-  return <FullRippleLoader />;
+	if (!isBootstrapError(error)) {
+		throw error;
+	}
+	return <FullRippleLoader />;
 }
 
 /**
@@ -45,50 +47,58 @@ function BootstrapFallback({ error }: FallbackProps) {
  * Any other error is rethrown from the fallback, which lands it on the root
  * ErrorBoundary that reports it.
  */
-export function AccountBootstrapBoundary({ children }: { children: ReactNode }) {
-  const { signOut, sessionId } = useAuth();
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+export function AccountBootstrapBoundary({
+	children,
+}: {
+	children: ReactNode;
+}) {
+	const { signOut, sessionId } = useAuth();
+	const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Tagged with the session id — not `isSignedIn`, which returns to `true` on
-  // the next sign-in and would hand a fresh session the old one's spent budget.
-  // Derived, so no effect has to sync it.
-  const [budget, setBudget] = useState({ session: sessionId, attempt: 0 });
-  const attempt = attemptsFor(budget, sessionId);
+	// Tagged with the session id — not `isSignedIn`, which returns to `true` on
+	// the next sign-in and would hand a fresh session the old one's spent budget.
+	// Derived, so no effect has to sync it.
+	const [budget, setBudget] = useState({ attempt: 0, session: sessionId });
+	const attempt = attemptsFor(budget, sessionId);
 
-  // Also runs when the session changes, dropping a retry queued by the session
-  // that just ended.
-  useEffect(
-    () => () => {
-      if (timer.current) clearTimeout(timer.current);
-    },
-    [sessionId],
-  );
+	// Also runs when the session changes, dropping a retry queued by the session
+	// that just ended.
+	useEffect(
+		() => () => {
+			if (timer.current) {
+				clearTimeout(timer.current);
+			}
+		},
+		[sessionId]
+	);
 
-  const handleError = (error: unknown) => {
-    if (!isBootstrapError(error)) return; // rethrown by the fallback below
-    if (attempt >= MAX_RETRIES) {
-      Sentry.captureMessage(
-        "Account bootstrap never settled — signing out",
-        "error",
-      );
-      void signOut().catch(() => {});
-      return;
-    }
-    timer.current = setTimeout(
-      () => setBudget({ session: sessionId, attempt: attempt + 1 }),
-      RETRY_DELAY_MS,
-    );
-  };
+	const handleError = (error: unknown) => {
+		if (!isBootstrapError(error)) {
+			return; // rethrown by the fallback below
+		}
+		if (attempt >= MAX_RETRIES) {
+			Sentry.captureMessage(
+				"Account bootstrap never settled — signing out",
+				"error"
+			);
+			void signOut().catch(() => {});
+			return;
+		}
+		timer.current = setTimeout(
+			() => setBudget({ attempt: attempt + 1, session: sessionId }),
+			RETRY_DELAY_MS
+		);
+	};
 
-  return (
-    <ErrorBoundary
-      // A landed sign-out is itself a resolution: the queries stop being
-      // issued, so remount rather than sitting on the loader.
-      resetKeys={[attempt, sessionId]}
-      onError={handleError}
-      FallbackComponent={BootstrapFallback}
-    >
-      {children}
-    </ErrorBoundary>
-  );
+	return (
+		<ErrorBoundary
+			FallbackComponent={BootstrapFallback}
+			onError={handleError}
+			// A landed sign-out is itself a resolution: the queries stop being
+			// issued, so remount rather than sitting on the loader.
+			resetKeys={[attempt, sessionId]}
+		>
+			{children}
+		</ErrorBoundary>
+	);
 }

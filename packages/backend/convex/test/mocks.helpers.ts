@@ -24,10 +24,10 @@ import { internalAction } from "../_generated/server";
 
 /** `convex/lib/aggregates` — writes are no-ops; nothing reads ranks back. */
 export const aggregatesMock = () => ({
-  reflectionRank: {},
-  rankInsert: async () => {},
-  rankReplace: async () => {},
-  rankDelete: async () => {},
+	rankDelete: async () => {},
+	rankInsert: async () => {},
+	rankReplace: async () => {},
+	reflectionRank: {},
 });
 
 /**
@@ -37,7 +37,7 @@ export const aggregatesMock = () => ({
  */
 export type Lazy<T> = T | (() => T);
 const unwrap = <T>(v: Lazy<T>): T =>
-  typeof v === "function" ? (v as () => T)() : v;
+	typeof v === "function" ? (v as () => T)() : v;
 
 /**
  * The `rateLimiter` half of `convex/lib/rateLimits` — allow by default. Pass
@@ -45,13 +45,13 @@ const unwrap = <T>(v: Lazy<T>): T =>
  * the real module so the limit constants stay real.
  */
 export const rateLimiterMock = (
-  limit: Lazy<{ ok: boolean; retryAfter?: number }> = { ok: true },
+	limit: Lazy<{ ok: boolean; retryAfter?: number }> = { ok: true }
 ) => ({
-  rateLimiter: {
-    limit: async () => unwrap(limit),
-    check: async () => unwrap(limit),
-    reset: async () => {},
-  },
+	rateLimiter: {
+		check: async () => unwrap(limit),
+		limit: async () => unwrap(limit),
+		reset: async () => {},
+	},
 });
 
 /**
@@ -71,13 +71,16 @@ export const noopJob = () => internalAction({ handler: async () => null });
 
 /** `convex/posthog` — analytics capture is fire-and-forget. */
 export const posthogMock = () => ({
-  posthog: { capture: async () => {} },
+	posthog: { capture: async () => {} },
 });
 
 /** `convex/revenuecat` — entitlement state. `hasPremium` stays real. */
 export const revenuecatMock = (hasEntitlement: Lazy<boolean> = false) => ({
-  // registerRoutes: http.ts runs it when a test fetches a route.
-  revenuecat: { hasEntitlement: async () => unwrap(hasEntitlement), registerRoutes: () => {} },
+	// registerRoutes: http.ts runs it when a test fetches a route.
+	revenuecat: {
+		hasEntitlement: async () => unwrap(hasEntitlement),
+		registerRoutes: () => {},
+	},
 });
 
 /**
@@ -88,43 +91,53 @@ export const revenuecatMock = (hasEntitlement: Lazy<boolean> = false) => ({
  * embed call genuinely runs against `rag.options`.
  */
 export const ragMock = (
-  result: {
-    entries?: { entryId: string; key?: string; text: string }[];
-    results?: { entryId: string; score: number }[];
-  } = {},
-  /** Sink for keys passed to `deleteByKeyAsync` / `deleteByKey` — pass one to assert a purge. */
-  deletedKeys?: string[],
-  /** Sink for `add` calls — pass one to assert what got indexed. */
-  added?: { namespace: string; key: string; text: string }[],
+	result: {
+		entries?: { entryId: string; key?: string; text: string }[];
+		results?: { entryId: string; score: number }[];
+	} = {},
+	/** Sink for keys passed to `deleteByKeyAsync` / `deleteByKey` — pass one to assert a purge. */
+	deletedKeys?: string[],
+	/** Sink for `add` calls — pass one to assert what got indexed. */
+	added?: { namespace: string; key: string; text: string }[]
 ) => ({
-  REFLECTION_POOL_NAMESPACE: "reflection-pool",
-  NO_GRANULAR_LABEL: "",
-  EPISODIC_STATUS: "n/a",
-  REPLY_STATUS: "reply",
-  NO_PRIMARY_EMOTION: "n/a",
-  NO_STATUS: "n/a",
-  rag: {
-    options: {
-      textEmbeddingModel: new MockEmbeddingModelV3({
-        doEmbed: async ({ values }) => ({ embeddings: values.map(() => [0]), warnings: [] }),
-      }),
-      embeddingDimension: 1,
-    },
-    search: async () => ({
-      entries: result.entries ?? [],
-      results: result.results ?? [],
-    }),
-    add: async (_ctx: unknown, args: { namespace: string; key: string; text: string }) => {
-      added?.push({ namespace: args.namespace, key: args.key, text: args.text });
-    },
-    getNamespace: async () => ({ namespaceId: "ns_test" }),
-    deleteByKeyAsync: async (_ctx: unknown, args: { key: string }) => {
-      deletedKeys?.push(args.key);
-    },
-    deleteByKey: async (_ctx: unknown, args: { key: string }) => {
-      deletedKeys?.push(args.key);
-    },
-  },
+	EPISODIC_STATUS: "n/a",
+	NO_GRANULAR_LABEL: "",
+	NO_PRIMARY_EMOTION: "n/a",
+	NO_STATUS: "n/a",
+	REFLECTION_POOL_NAMESPACE: "reflection-pool",
+	REPLY_STATUS: "reply",
+	rag: {
+		add: async (
+			_ctx: unknown,
+			args: { namespace: string; key: string; text: string }
+		) => {
+			added?.push({
+				key: args.key,
+				namespace: args.namespace,
+				text: args.text,
+			});
+		},
+		deleteByKey: async (_ctx: unknown, args: { key: string }) => {
+			deletedKeys?.push(args.key);
+		},
+		deleteByKeyAsync: async (_ctx: unknown, args: { key: string }) => {
+			deletedKeys?.push(args.key);
+		},
+		getNamespace: async () => ({ namespaceId: "ns_test" }),
+		options: {
+			embeddingDimension: 1,
+			textEmbeddingModel: new MockEmbeddingModelV3({
+				doEmbed: async ({ values }) => ({
+					embeddings: values.map(() => [0]),
+					warnings: [],
+				}),
+			}),
+		},
+		search: async () => ({
+			entries: result.entries ?? [],
+			results: result.results ?? [],
+		}),
+	},
 });
 
 /**
@@ -135,24 +148,26 @@ export const ragMock = (
  * outage.
  */
 export const actionCacheMock = (
-  results: Lazy<{
-    moderation?: unknown;
-    classification?: unknown;
-    distilled?: unknown;
-  }>,
+	results: Lazy<{
+		moderation?: unknown;
+		classification?: unknown;
+		distilled?: unknown;
+	}>
 ) => {
-  const fetcher = (pick: (r: Record<string, unknown>) => unknown) => ({
-    fetch: async () => {
-      const value = pick(unwrap(results) as Record<string, unknown>);
-      if (value instanceof Error) throw value;
-      return value;
-    },
-  });
-  return {
-    moderationCache: fetcher((r) => r.moderation),
-    classifierCache: fetcher((r) => r.classification),
-    distillerCache: fetcher((r) => r.distilled),
-  };
+	const fetcher = (pick: (r: Record<string, unknown>) => unknown) => ({
+		fetch: async () => {
+			const value = pick(unwrap(results) as Record<string, unknown>);
+			if (value instanceof Error) {
+				throw value;
+			}
+			return value;
+		},
+	});
+	return {
+		classifierCache: fetcher((r) => r.classification),
+		distillerCache: fetcher((r) => r.distilled),
+		moderationCache: fetcher((r) => r.moderation),
+	};
 };
 
 /**
@@ -163,18 +178,20 @@ export const actionCacheMock = (
  * fallback-mirror branch.
  */
 export const anthropicMock = (reply: Lazy<string | Error>) => ({
-  getAnthropicClient: () => ({
-    messages: {
-      create: async () => {
-        const value = unwrap(reply);
-        if (value instanceof Error) throw value;
-        return {
-          content: [{ type: "text", text: value }],
-          usage: { input_tokens: 0, output_tokens: 0 },
-        };
-      },
-    },
-  }),
+	getAnthropicClient: () => ({
+		messages: {
+			create: async () => {
+				const value = unwrap(reply);
+				if (value instanceof Error) {
+					throw value;
+				}
+				return {
+					content: [{ text: value, type: "text" }],
+					usage: { input_tokens: 0, output_tokens: 0 },
+				};
+			},
+		},
+	}),
 });
 
 // The workflow factory lands with the test that first reaches it — its return

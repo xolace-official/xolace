@@ -21,12 +21,12 @@
  * Imported for its side effect; must run before `@clerk/expo` is first used.
  */
 try {
-  if (typeof navigator !== "undefined" && navigator.onLine !== true) {
-    Object.defineProperty(navigator, "onLine", {
-      configurable: true,
-      get: () => true,
-    });
-  }
+	if (typeof navigator !== "undefined" && navigator.onLine !== true) {
+		Object.defineProperty(navigator, "onLine", {
+			configurable: true,
+			get: () => true,
+		});
+	}
 } catch {
-  // `navigator.onLine` is non-configurable in this runtime — nothing to do.
+	// `navigator.onLine` is non-configurable in this runtime — nothing to do.
 }

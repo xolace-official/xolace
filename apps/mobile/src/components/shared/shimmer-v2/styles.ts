@@ -7,51 +7,51 @@ const DEBUG_OVERLAY_OUTLINE = "lime";
 const TRANSPARENT = "transparent";
 
 export const styles = StyleSheet.create({
-  container: {
-    overflow: "hidden",
-  },
-  containerDebug: {
-    borderWidth: 1,
-    borderColor: DEBUG_OUTLINE,
-    overflow: "visible",
-  },
-  trackDebug: {
-    height: 1,
-    backgroundColor: DEBUG_OUTLINE,
-  },
-  translateContainer: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  rotateContainer: {
-    minWidth: 1,
-    overflow: "hidden",
-  },
-  overlayDebug: {
-    borderWidth: 1,
-    borderColor: DEBUG_OVERLAY_OUTLINE,
-  },
-  maskSizer: {
-    opacity: 0,
-  },
-  overlayTrack: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  directionArrow: {
-    position: "absolute",
-    backgroundColor: TRANSPARENT,
-    borderStyle: "solid",
-    borderLeftWidth: 18,
-    borderTopWidth: 8,
-    borderBottomWidth: 8,
-    borderLeftColor: DEBUG_OUTLINE,
-    borderTopColor: TRANSPARENT,
-    borderBottomColor: TRANSPARENT,
-  },
+	container: {
+		overflow: "hidden",
+	},
+	containerDebug: {
+		borderColor: DEBUG_OUTLINE,
+		borderWidth: 1,
+		overflow: "visible",
+	},
+	directionArrow: {
+		backgroundColor: TRANSPARENT,
+		borderBottomColor: TRANSPARENT,
+		borderBottomWidth: 8,
+		borderLeftColor: DEBUG_OUTLINE,
+		borderLeftWidth: 18,
+		borderStyle: "solid",
+		borderTopColor: TRANSPARENT,
+		borderTopWidth: 8,
+		position: "absolute",
+	},
+	maskSizer: {
+		opacity: 0,
+	},
+	overlayDebug: {
+		borderColor: DEBUG_OVERLAY_OUTLINE,
+		borderWidth: 1,
+	},
+	overlayTrack: {
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	rotateContainer: {
+		minWidth: 1,
+		overflow: "hidden",
+	},
+	trackDebug: {
+		backgroundColor: DEBUG_OUTLINE,
+		height: 1,
+	},
+	translateContainer: {
+		alignItems: "center",
+		bottom: 0,
+		justifyContent: "center",
+		left: 0,
+		overflow: "hidden",
+		position: "absolute",
+		top: 0,
+	},
 });

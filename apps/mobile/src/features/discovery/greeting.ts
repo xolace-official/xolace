@@ -3,21 +3,29 @@
  * the screen re-renders on focus, which is often enough for a day part.
  */
 
-export type DayPart = 'morning' | 'afternoon' | 'evening' | 'late';
+export type DayPart = "morning" | "afternoon" | "evening" | "late";
 
 export function getDayPart(now = new Date()): DayPart {
-  const hour = now.getHours();
-  if (hour < 5) return 'late';
-  if (hour < 12) return 'morning';
-  if (hour < 17) return 'afternoon';
-  if (hour < 22) return 'evening';
-  return 'late';
+	const hour = now.getHours();
+	if (hour < 5) {
+		return "late";
+	}
+	if (hour < 12) {
+		return "morning";
+	}
+	if (hour < 17) {
+		return "afternoon";
+	}
+	if (hour < 22) {
+		return "evening";
+	}
+	return "late";
 }
 
 /** Eyebrow datestamp — "Tuesday · evening". Rendered uppercase + tracked. */
 export function getDateStamp(now = new Date()): string {
-  const weekday = now.toLocaleDateString(undefined, { weekday: 'long' });
-  return `${weekday} · ${getDayPart(now)}`;
+	const weekday = now.toLocaleDateString(undefined, { weekday: "long" });
+	return `${weekday} · ${getDayPart(now)}`;
 }
 
 /**
@@ -26,7 +34,7 @@ export function getDateStamp(now = new Date()): string {
  * the Clerk account name.
  */
 export function getGreeting(displayName?: string | null): string {
-  return displayName ? `Welcome back, ${displayName}` : 'Welcome back';
+	return displayName ? `Welcome back, ${displayName}` : "Welcome back";
 }
 
 /**
@@ -37,11 +45,11 @@ export function getGreeting(displayName?: string | null): string {
  * so it is not the destination; this stays inert until there is one.
  */
 export const DISPLAY_LINES = [
-  { lead: 'Be the support someone needs.', tail: 'Become a Xolacer.' },
-  { lead: 'Listen. Connect. Support.', tail: 'Become a Xolacer.' },
-  { lead: 'Your story, your empathy, your impact.', tail: 'Become a Xolacer.' },
-  { lead: 'Make space for someone to be heard.', tail: 'Become a Xolacer.' },
-  { lead: 'Someone needs a safe space.', tail: 'You could help create it.' },
+	{ lead: "Be the support someone needs.", tail: "Become a Xolacer." },
+	{ lead: "Listen. Connect. Support.", tail: "Become a Xolacer." },
+	{ lead: "Your story, your empathy, your impact.", tail: "Become a Xolacer." },
+	{ lead: "Make space for someone to be heard.", tail: "Become a Xolacer." },
+	{ lead: "Someone needs a safe space.", tail: "You could help create it." },
 ] as const;
 
 const ACTIVE_LINE = 3;

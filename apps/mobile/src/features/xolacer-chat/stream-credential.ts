@@ -1,11 +1,11 @@
-import { zustandJSONStorage } from '@/src/lib/storage/unified-storage';
+import { zustandJSONStorage } from "@/src/lib/storage/unified-storage";
 
 /** What `xolacerChat.getStreamToken` returns, plus who it was minted for. */
 export type StreamCredential = {
-  clerkUserId: string;
-  apiKey: string;
-  token: string;
-  userId: string;
+	clerkUserId: string;
+	apiKey: string;
+	token: string;
+	userId: string;
 };
 
 /**
@@ -17,21 +17,21 @@ export type StreamCredential = {
  * token's server-side `exp` is what bounds a lost device (see
  * `convex/integrations/stream.ts`).
  */
-const KEY = 'xolace-stream-credential';
+const KEY = "xolace-stream-credential";
 
 export function readStreamCredential(): StreamCredential | null {
-  try {
-    const raw = zustandJSONStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as StreamCredential) : null;
-  } catch {
-    return null;
-  }
+	try {
+		const raw = zustandJSONStorage.getItem(KEY);
+		return raw ? (JSON.parse(raw) as StreamCredential) : null;
+	} catch {
+		return null;
+	}
 }
 
 export function writeStreamCredential(credential: StreamCredential) {
-  void zustandJSONStorage.setItem(KEY, JSON.stringify(credential));
+	void zustandJSONStorage.setItem(KEY, JSON.stringify(credential));
 }
 
 export function clearStreamCredential() {
-  void zustandJSONStorage.removeItem(KEY);
+	void zustandJSONStorage.removeItem(KEY);
 }

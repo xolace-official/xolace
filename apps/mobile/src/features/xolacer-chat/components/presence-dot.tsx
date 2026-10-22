@@ -1,5 +1,5 @@
-import { View } from 'react-native';
-import { cn } from '@/src/lib/utils';
+import { View } from "react-native";
+import { cn } from "@/src/lib/utils";
 
 /**
  * "Here now", as a dot on the corner of an avatar.
@@ -12,14 +12,14 @@ import { cn } from '@/src/lib/utils';
  * without it the dot disappears into a photo of the same colour.
  */
 export function PresenceDot({ large = false }: { large?: boolean }) {
-  return (
-    <View
-      className={cn(
-        'absolute rounded-full border-2 border-surface bg-success',
-        large ? '-bottom-1 -right-1 h-4 w-4' : '-bottom-0.5 -right-0.5 h-3 w-3',
-      )}
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-    />
-  );
+	return (
+		<View
+			accessibilityElementsHidden
+			className={cn(
+				"absolute rounded-full border-2 border-surface bg-success",
+				large ? "-right-1 -bottom-1 h-4 w-4" : "-right-0.5 -bottom-0.5 h-3 w-3"
+			)}
+			importantForAccessibility="no-hide-descendants"
+		/>
+	);
 }

@@ -1,16 +1,16 @@
-import { useEffect } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
-import { useCSSVariable } from 'uniwind';
-import { AppText } from '@/src/components/shared/app-text';
-import { useFitFontSize } from '@/src/features/quotes/use-fit-font-size';
+import { useEffect } from "react";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { useCSSVariable } from "uniwind";
+import { AppText } from "@/src/components/shared/app-text";
+import { useFitFontSize } from "@/src/features/quotes/use-fit-font-size";
 
 /** the body box is a fraction of the screen, not a literal 300 (SE 233, 17 Pro 306) */
 const BODY_BOX_RATIO = 0.35;
 
 /** The box the quote fills. Shared so the skeleton is the same shape (#309). */
 export function usePosterBoxHeight() {
-  const { height } = useWindowDimensions();
-  return Math.round(height * BODY_BOX_RATIO);
+	const { height } = useWindowDimensions();
+	return Math.round(height * BODY_BOX_RATIO);
 }
 const LINE_HEIGHT_RATIO = 1.5;
 
@@ -34,84 +34,89 @@ export const PLATE_GAP = 16;
  * share export does: captured mid-search it comes back a blank paper card (#317).
  */
 export function PosterBody({
-  title,
-  body,
-  onSettled,
+	title,
+	body,
+	onSettled,
 }: {
-  title?: string;
-  body: string;
-  onSettled?: () => void;
+	title?: string;
+	body: string;
+	onSettled?: () => void;
 }) {
-  const boxHeight = usePosterBoxHeight();
-  const shadow = useCSSVariable('--color-poster-shadow') as string;
-  const fit = useFitFontSize(body);
-  const settled = fit.settled;
+	const boxHeight = usePosterBoxHeight();
+	const shadow = useCSSVariable("--color-poster-shadow") as string;
+	const fit = useFitFontSize(body);
+	const settled = fit.settled;
 
-  useEffect(() => {
-    if (settled) onSettled?.();
-  }, [settled, onSettled]);
+	useEffect(() => {
+		if (settled) {
+			onSettled?.();
+		}
+	}, [settled, onSettled]);
 
-  const bodyType = {
-    fontSize: fit.fontSize,
-    lineHeight: Math.round(fit.fontSize * LINE_HEIGHT_RATIO),
-  };
+	const bodyType = {
+		fontSize: fit.fontSize,
+		lineHeight: Math.round(fit.fontSize * LINE_HEIGHT_RATIO),
+	};
 
-  return (
-    <View>
-      {title ? (
-        <View
-          className="rounded-xl bg-poster-plate p-3"
-          style={[styles.plate, { shadowColor: shadow }]}
-        >
-          <AppText
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.8}
-            className="text-center font-poster-display text-[27px] leading-[34px] tracking-[1.6px] text-poster-ink"
-          >
-            {title.toUpperCase()}
-          </AppText>
-        </View>
-      ) : null}
+	return (
+		<View>
+			{title ? (
+				<View
+					className="rounded-xl bg-poster-plate p-3"
+					style={[styles.plate, { shadowColor: shadow }]}
+				>
+					<AppText
+						adjustsFontSizeToFit
+						className="text-center font-poster-display text-[27px] text-poster-ink leading-[34px] tracking-[1.6px]"
+						minimumFontScale={0.8}
+						numberOfLines={1}
+					>
+						{title.toUpperCase()}
+					</AppText>
+				</View>
+			) : null}
 
-      <View
-        onLayout={fit.onBoxLayout}
-        style={{ height: boxHeight }}
-        className={title ? 'mt-4 overflow-hidden' : 'overflow-hidden'}
-      >
-        <AppText
-          allowFontScaling
-          className="font-poster-body text-poster-ink-soft"
-          style={[bodyType, fit.settled ? null : styles.searching]}
-        >
-          {body}
-        </AppText>
-        {/* Unclipped twin: the visible Text is height-capped, so its own
+			<View
+				className={title ? "mt-4 overflow-hidden" : "overflow-hidden"}
+				onLayout={fit.onBoxLayout}
+				style={{ height: boxHeight }}
+			>
+				<AppText
+					allowFontScaling
+					className="font-poster-body text-poster-ink-soft"
+					style={[bodyType, fit.settled ? null : styles.searching]}
+				>
+					{body}
+				</AppText>
+				{/* Unclipped twin: the visible Text is height-capped, so its own
             onTextLayout only ever reports the lines that already fit and the
             search settles at the ceiling with the text overflowing. Remounted
             per candidate so onTextLayout re-fires. */}
-        {fit.settled ? null : (
-          <AppText
-            key={fit.measureKey}
-            className="font-poster-body"
-            onTextLayout={fit.onTextLayout}
-            style={[styles.twin, { fontSize: fit.fontSize, lineHeight: bodyType.lineHeight }]}
-          >
-            {body}
-          </AppText>
-        )}
-      </View>
-    </View>
-  );
+				{fit.settled ? null : (
+					<AppText
+						className="font-poster-body"
+						key={fit.measureKey}
+						onTextLayout={fit.onTextLayout}
+						style={[
+							styles.twin,
+							{ fontSize: fit.fontSize, lineHeight: bodyType.lineHeight },
+						]}
+					>
+						{body}
+					</AppText>
+				)}
+			</View>
+		</View>
+	);
 }
 
 const styles = StyleSheet.create({
-  plate: {
-    shadowOpacity: 0.07,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
-  },
-  twin: { position: 'absolute', left: 0, right: 0, top: 0, opacity: 0 },
-  /* the first candidate is the ceiling — don't paint it clipped before it settles */
-  searching: { opacity: 0 },
+	plate: {
+		shadowOffset: { height: 4, width: 0 },
+		shadowOpacity: 0.07,
+		shadowRadius: 14,
+	},
+	/* the first candidate is the ceiling — don't paint it clipped before it settles */
+	searching: { opacity: 0 },
+	twin: { left: 0, opacity: 0, position: "absolute", right: 0, top: 0 },
 });

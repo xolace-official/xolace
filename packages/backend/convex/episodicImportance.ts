@@ -50,19 +50,19 @@ const DECAY = 0.15;
  * attribute to the retrieved memories, so they leave the weight untouched.
  */
 export function importanceDelta(feedback: MemoryFeedback): number {
-  switch (feedback) {
-    case "confirmed":
-      return BUMP;
-    case "gave_up":
-      return -DECAY;
-    default:
-      return 0;
-  }
+	switch (feedback) {
+		case "confirmed":
+			return BUMP;
+		case "gave_up":
+			return -DECAY;
+		default:
+			return 0;
+	}
 }
 
 /** Whether this feedback moves the weight at all (skip the re-embed if not). */
 export function isActionableFeedback(feedback: MemoryFeedback): boolean {
-  return importanceDelta(feedback) !== 0;
+	return importanceDelta(feedback) !== 0;
 }
 
 /**
@@ -71,10 +71,10 @@ export function isActionableFeedback(feedback: MemoryFeedback): boolean {
  * from DEFAULT_IMPORTANCE.
  */
 export function adjustImportance(
-  current: number | undefined,
-  feedback: MemoryFeedback,
+	current: number | undefined,
+	feedback: MemoryFeedback
 ): number {
-  const base = current ?? DEFAULT_IMPORTANCE;
-  const next = base + importanceDelta(feedback);
-  return Math.min(MAX_IMPORTANCE, Math.max(MIN_IMPORTANCE, next));
+	const base = current ?? DEFAULT_IMPORTANCE;
+	const next = base + importanceDelta(feedback);
+	return Math.min(MAX_IMPORTANCE, Math.max(MIN_IMPORTANCE, next));
 }

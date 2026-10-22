@@ -1,51 +1,51 @@
 const EMOTION_EMOJI: Record<string, string> = {
-  anger: '😤',
-  sadness: '😢',
-  anxiety: '😰',
-  joy: '😊',
-  fear: '😨',
-  disgust: '🤢',
-  surprise: '😲',
-  calm: '🟢',
-  frustration: '😔',
-  grief: '🥀',
-  loneliness: '🫥',
-  shame: '😶',
-  hope: '🌱',
-  relief: '😮‍💨',
-  confusion: '🌀',
-  numbness: '🧊',
-  guilt: '😞',
-  overwhelm: '🌊',
-  contentment: '☀️',
-  love: '💛',
-  paralysis: '⏸️',
-  inadequacy: '🪨',
-  'emotional flatness': '🫥',
-  'emotional exhaustion': '🔋',
-  disconnection: '🔌',
-  heartbreak: '💔',
-  ambivalence: '⚖️',
-  flatness: '➖',
-  rage: '🔥',
-  'emotional shutdown': '🛑',
-  'self-directed shame': '🪞',
-  restlessness: '⚡',
-  disorientation: '🌪️',
-  resentment: '💢',
-  stress: '😬',
-  exhaustion: '🪫',
-  demotivation: '🛋️',
-  'self-doubt': '🫣',
-  embarrassment: '😳',
-  regret: '🍂',
-  uncertainty: '❓',
-  homesickness: '🏠',
-  'not-belonging': '🚪',
-  disappointment: '🥺',
-  hopelessness: '🕳️',
-  gratitude: '🙏',
-  pride: '🌟',
+	ambivalence: "⚖️",
+	anger: "😤",
+	anxiety: "😰",
+	calm: "🟢",
+	confusion: "🌀",
+	contentment: "☀️",
+	demotivation: "🛋️",
+	disappointment: "🥺",
+	disconnection: "🔌",
+	disgust: "🤢",
+	disorientation: "🌪️",
+	embarrassment: "😳",
+	"emotional exhaustion": "🔋",
+	"emotional flatness": "🫥",
+	"emotional shutdown": "🛑",
+	exhaustion: "🪫",
+	fear: "😨",
+	flatness: "➖",
+	frustration: "😔",
+	gratitude: "🙏",
+	grief: "🥀",
+	guilt: "😞",
+	heartbreak: "💔",
+	homesickness: "🏠",
+	hope: "🌱",
+	hopelessness: "🕳️",
+	inadequacy: "🪨",
+	joy: "😊",
+	loneliness: "🫥",
+	love: "💛",
+	"not-belonging": "🚪",
+	numbness: "🧊",
+	overwhelm: "🌊",
+	paralysis: "⏸️",
+	pride: "🌟",
+	rage: "🔥",
+	regret: "🍂",
+	relief: "😮‍💨",
+	resentment: "💢",
+	restlessness: "⚡",
+	sadness: "😢",
+	"self-directed shame": "🪞",
+	"self-doubt": "🫣",
+	shame: "😶",
+	stress: "😬",
+	surprise: "😲",
+	uncertainty: "❓",
 };
 
 /**
@@ -55,9 +55,10 @@ const EMOTION_EMOJI: Record<string, string> = {
  * @returns The emoji for the provided emotion, or '💭' if `emotion` is null, falsy, or not found
  */
 export function getEmotionEmoji(emotion: string | null): string {
-  
-  if (!emotion) return '💭';
-  return EMOTION_EMOJI[emotion.toLowerCase()] ?? '💭';
+	if (!emotion) {
+		return "💭";
+	}
+	return EMOTION_EMOJI[emotion.toLowerCase()] ?? "💭";
 }
 
 /**
@@ -67,15 +68,17 @@ export function getEmotionEmoji(emotion: string | null): string {
  * @returns The emotion with hyphens as spaces and its first character capitalized, or `'Reflection'` if `emotion` is `null` or empty.
  */
 export function getEmotionLabel(emotion: string | null): string {
-  if (!emotion) return 'Reflection';
-  const words = emotion.replace(/-/g, ' ');
-  return words.charAt(0).toUpperCase() + words.slice(1);
+	if (!emotion) {
+		return "Reflection";
+	}
+	const words = emotion.replace(/-/g, " ");
+	return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 const PATH_LABELS: Record<string, string> = {
-  solo: 'Sat with this',
-  peers: "You're not alone",
-  exit: 'Just needed to say it',
+	exit: "Just needed to say it",
+	peers: "You're not alone",
+	solo: "Sat with this",
 };
 
 /**
@@ -85,6 +88,8 @@ const PATH_LABELS: Record<string, string> = {
  * @returns The label for `pathChosen`, or `Reflected` if `pathChosen` is falsy or not recognized
  */
 export function getPathLabel(pathChosen: string | null): string {
-  if (!pathChosen) return 'Reflected';
-  return PATH_LABELS[pathChosen] ?? 'Reflected';
+	if (!pathChosen) {
+		return "Reflected";
+	}
+	return PATH_LABELS[pathChosen] ?? "Reflected";
 }

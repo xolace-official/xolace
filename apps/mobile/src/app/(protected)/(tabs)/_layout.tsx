@@ -1,5 +1,5 @@
-import AppTabs from '@/src/components/app-tabs';
+import AppTabs from "@/src/components/app-tabs";
 
 export default function TabsLayout() {
-  return <AppTabs />;
+	return <AppTabs />;
 }

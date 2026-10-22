@@ -1,13 +1,17 @@
-import { View } from 'react-native';
-import { useThemeColor } from 'heroui-native';
-import { SymbolView } from 'expo-symbols';
-import { NetworkDownIndicator, useChannelContext, useChatContext } from 'stream-chat-expo';
-import { AppText } from '@/src/components/shared/app-text';
+import { SymbolView } from "expo-symbols";
+import { useThemeColor } from "heroui-native";
+import { View } from "react-native";
+import {
+	NetworkDownIndicator,
+	useChannelContext,
+	useChatContext,
+} from "stream-chat-expo";
+import { AppText } from "@/src/components/shared/app-text";
 
 const OFFLINE_ICON = {
-  ios: 'wifi.slash',
-  android: 'wifi_off',
-  web: 'wifi_off',
+	android: "wifi_off",
+	ios: "wifi.slash",
+	web: "wifi_off",
 } as const;
 
 /**
@@ -24,21 +28,23 @@ const OFFLINE_ICON = {
  *
  */
 export function OfflineStrip() {
-  const { connectionRecovering, isOnline } = useChatContext();
-  const muted = useThemeColor('muted') as string;
+	const { connectionRecovering, isOnline } = useChatContext();
+	const muted = useThemeColor("muted") as string;
 
-  if (isOnline !== false) return null;
+	if (isOnline !== false) {
+		return null;
+	}
 
-  return (
-    <View className="flex-row items-center gap-2 border-t border-border/40 bg-surface-secondary px-4 py-2">
-      <SymbolView name={OFFLINE_ICON} size={13} tintColor={muted} />
-      <AppText className="flex-1 text-[11px] text-muted">
-        {connectionRecovering
-          ? 'Reconnecting — hold onto that for a second.'
-          : "You're offline. Messages won't send until the connection is back."}
-      </AppText>
-    </View>
-  );
+	return (
+		<View className="flex-row items-center gap-2 border-border/40 border-t bg-surface-secondary px-4 py-2">
+			<SymbolView name={OFFLINE_ICON} size={13} tintColor={muted} />
+			<AppText className="flex-1 text-[11px] text-muted">
+				{connectionRecovering
+					? "Reconnecting — hold onto that for a second."
+					: "You're offline. Messages won't send until the connection is back."}
+			</AppText>
+		</View>
+	);
 }
 
 /**
@@ -54,9 +60,11 @@ export function OfflineStrip() {
  * Passed to `<Channel>` as the `NetworkDownIndicator` override.
  */
 export function ChannelErrorIndicator() {
-  const { error } = useChannelContext();
-  const { isOnline } = useChatContext();
+	const { error } = useChannelContext();
+	const { isOnline } = useChatContext();
 
-  if (!isOnline || !error) return null;
-  return <NetworkDownIndicator />;
+	if (!(isOnline && error)) {
+		return null;
+	}
+	return <NetworkDownIndicator />;
 }

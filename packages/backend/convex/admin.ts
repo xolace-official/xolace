@@ -19,47 +19,59 @@ import { internalMutation } from "./_generated/server";
  *   bunx convex run --prod admin:promoteXolacer '{"clerkUserId":"user_..."}'
  */
 export const promoteXolacer = internalMutation({
-  args: { clerkUserId: v.string(), isXolacer: v.optional(v.boolean()) },
-  returns: v.object({ displayName: v.string(), isXolacer: v.boolean() }),
-  handler: async (ctx, args) => {
-    // The index is (authProvider, authProviderAccountId) and there are only
-    // two providers, so checking both is cheaper than a new index.
-    const user =
-      (await ctx.db
-        .query("users")
-        .withIndex("by_auth_provider", (q) =>
-          q.eq("authProvider", "google").eq("authProviderAccountId", args.clerkUserId),
-        )
-        .unique()) ??
-      (await ctx.db
-        .query("users")
-        .withIndex("by_auth_provider", (q) =>
-          q.eq("authProvider", "apple").eq("authProviderAccountId", args.clerkUserId),
-        )
-        .unique());
+	args: { clerkUserId: v.string(), isXolacer: v.optional(v.boolean()) },
+	handler: async (ctx, args) => {
+		// The index is (authProvider, authProviderAccountId) and there are only
+		// two providers, so checking both is cheaper than a new index.
+		const user =
+			(await ctx.db
+				.query("users")
+				.withIndex("by_auth_provider", (q) =>
+					q
+						.eq("authProvider", "google")
+						.eq("authProviderAccountId", args.clerkUserId)
+				)
+				.unique()) ??
+			(await ctx.db
+				.query("users")
+				.withIndex("by_auth_provider", (q) =>
+					q
+						.eq("authProvider", "apple")
+						.eq("authProviderAccountId", args.clerkUserId)
+				)
+				.unique());
 
-    if (!user) {
-      throw new Error(
-        `No user for Clerk id ${args.clerkUserId}. They have to sign in to the app at least once before they can be promoted.`,
-      );
-    }
-    if (user.accountStatus !== "active") {
-      throw new Error(`Account is ${user.accountStatus}, not active`);
-    }
+		if (!user) {
+			throw new Error(
+				`No user for Clerk id ${args.clerkUserId}. They have to sign in to the app at least once before they can be promoted.`
+			);
+		}
+		if (user.accountStatus !== "active") {
+			throw new Error(`Account is ${user.accountStatus}, not active`);
+		}
 
-    const isXolacer = args.isXolacer ?? true;
-    await ctx.db.patch("users", user._id, { isXolacer, updatedAt: Date.now() });
+		const isXolacer = args.isXolacer ?? true;
+		await ctx.db.patch("users", user._id, { isXolacer, updatedAt: Date.now() });
 
-    // Echoing the profile name back is the confirmation that you promoted the
-    // account you meant to — a Clerk id is not something you can eyeball.
-    const profile = await ctx.db.get("emotional_profiles", user.emotionalProfileId);
-    const xolacerProfile = profile
-      ? await ctx.db
-          .query("xolacer_profiles")
-          .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
-          .unique()
-      : null;
+		// Echoing the profile name back is the confirmation that you promoted the
+		// account you meant to — a Clerk id is not something you can eyeball.
+		const profile = await ctx.db.get(
+			"emotional_profiles",
+			user.emotionalProfileId
+		);
+		const xolacerProfile = profile
+			? await ctx.db
+					.query("xolacer_profiles")
+					.withIndex("by_profile", (q) =>
+						q.eq("emotionalProfileId", profile._id)
+					)
+					.unique()
+			: null;
 
-    return { displayName: xolacerProfile?.displayName ?? "(profile not set up yet)", isXolacer };
-  },
+		return {
+			displayName: xolacerProfile?.displayName ?? "(profile not set up yet)",
+			isXolacer,
+		};
+	},
+	returns: v.object({ displayName: v.string(), isXolacer: v.boolean() }),
 });

@@ -4,7 +4,7 @@ import { MorphLoader } from "./morph-loader";
 
 /** Full-screen centered morph loader. */
 export const FullMorphLoader = () => (
-  <View className="flex-1 items-center justify-center bg-background">
-    <MorphLoader />
-  </View>
+	<View className="flex-1 items-center justify-center bg-background">
+		<MorphLoader />
+	</View>
 );

@@ -1,5 +1,5 @@
+import { usePaginatedQuery, useQuery } from "convex/react";
 import { useRef } from "react";
-import { useQuery, usePaginatedQuery } from "convex/react";
 
 /**
  * Drop-in replacement for `useQuery` for parametrized queries.
@@ -18,17 +18,17 @@ import { useQuery, usePaginatedQuery } from "convex/react";
  * See https://stack.convex.dev/help-my-app-is-overreacting for details.
  */
 export const useStableQuery = ((name, ...args) => {
-  const result = useQuery(name, ...args);
-  const stored = useRef(result); // ref objects are stable between rerenders
+	const result = useQuery(name, ...args);
+	const stored = useRef(result); // ref objects are stable between rerenders
 
-  // `result` is only undefined while data is loading; once a fresh result is
-  // available, store it so we can keep returning it during the next reload.
-  if (result !== undefined) {
-    stored.current = result;
-  }
+	// `result` is only undefined while data is loading; once a fresh result is
+	// available, store it so we can keep returning it during the next reload.
+	if (result !== undefined) {
+		stored.current = result;
+	}
 
-  // undefined on first load, stale data while reloading, fresh data otherwise.
-  return stored.current;
+	// undefined on first load, stale data while reloading, fresh data otherwise.
+	return stored.current;
 }) as typeof useQuery;
 
 /**
@@ -46,16 +46,16 @@ export const useStableQuery = ((name, ...args) => {
  * See https://stack.convex.dev/help-my-app-is-overreacting for details.
  */
 export const useStablePaginatedQuery = ((name, ...args) => {
-  const result = usePaginatedQuery(name, ...args);
-  const stored = useRef(result); // ref objects are stable between rerenders
+	const result = usePaginatedQuery(name, ...args);
+	const stored = useRef(result); // ref objects are stable between rerenders
 
-  // Hold the last settled result while a new first page loads after an arg
-  // change; only overwrite once we're past the loading states.
-  if (result.status !== "LoadingMore" && result.status !== "LoadingFirstPage") {
-    stored.current = result;
-  }
+	// Hold the last settled result while a new first page loads after an arg
+	// change; only overwrite once we're past the loading states.
+	if (result.status !== "LoadingMore" && result.status !== "LoadingFirstPage") {
+		stored.current = result;
+	}
 
-  // `isLoading` stays live: the held page/status masks the in-flight fetch,
-  // and a list still needs to know when to show its footer spinner.
-  return { ...stored.current, isLoading: result.isLoading };
+	// `isLoading` stays live: the held page/status masks the in-flight fetch,
+	// and a list still needs to know when to show its footer spinner.
+	return { ...stored.current, isLoading: result.isLoading };
 }) as typeof usePaginatedQuery;

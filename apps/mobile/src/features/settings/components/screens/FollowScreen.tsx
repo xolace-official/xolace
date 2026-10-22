@@ -1,71 +1,81 @@
+import { SymbolView } from "expo-symbols";
+import { useThemeColor } from "heroui-native";
 import { useState } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { EnjoyingXolaceSection } from "@/src/features/settings/components/enjoying-xolace-section";
-import { FollowUsSection } from "@/src/features/settings/components/follow-us-section";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
-import { SettingsRow } from "@/src/features/settings/components/settings-row";
 import { FeedbackDialog } from "@/src/features/settings/components/feedback-dialog";
+import { FollowUsSection } from "@/src/features/settings/components/follow-us-section";
 import { FEEDBACK_ICON } from "@/src/features/settings/components/settings-icons";
-import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
+import { SettingsRow } from "@/src/features/settings/components/settings-row";
+import { SettingsSection } from "@/src/features/settings/components/settings-section";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
 const styles = StyleSheet.create({
-  contentContainer: { paddingTop: 20, paddingBottom: 48 },
+	contentContainer: { paddingBottom: 48, paddingTop: 20 },
 });
 
 export const FollowScreen = () => {
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const mutedColor = useThemeColor("muted") as string;
+	const [feedbackOpen, setFeedbackOpen] = useState(false);
+	const mutedColor = useThemeColor("muted") as string;
 
-  const settingIcon = (icon: React.ComponentProps<typeof SymbolView>["name"]) => (
-    <SymbolView name={icon} size={17} tintColor={mutedColor} />
-  );
+	const settingIcon = (
+		icon: React.ComponentProps<typeof SymbolView>["name"]
+	) => <SymbolView name={icon} size={17} tintColor={mutedColor} />;
 
-  return (
-    <>
-      <ScrollView
-        className="flex-1 bg-background"
-        contentInsetAdjustmentBehavior="automatic"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
-      >
-        <EaseView
-          initialAnimate={{ opacity: 0, translateY: 16 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 280, easing: EASE }}
-        >
-          <EnjoyingXolaceSection />
-        </EaseView>
+	return (
+		<>
+			<ScrollView
+				className="flex-1 bg-background"
+				contentContainerStyle={styles.contentContainer}
+				contentInsetAdjustmentBehavior="automatic"
+				showsVerticalScrollIndicator={false}
+			>
+				<EaseView
+					animate={{ opacity: 1, translateY: 0 }}
+					initialAnimate={{ opacity: 0, translateY: 16 }}
+					transition={{ duration: 280, easing: EASE, type: "timing" }}
+				>
+					<EnjoyingXolaceSection />
+				</EaseView>
 
-        <EaseView
-          initialAnimate={{ opacity: 0, translateY: 16 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 280, delay: 60, easing: EASE }}
-        >
-          <FollowUsSection />
-        </EaseView>
+				<EaseView
+					animate={{ opacity: 1, translateY: 0 }}
+					initialAnimate={{ opacity: 0, translateY: 16 }}
+					transition={{
+						delay: 60,
+						duration: 280,
+						easing: EASE,
+						type: "timing",
+					}}
+				>
+					<FollowUsSection />
+				</EaseView>
 
-        <EaseView
-          initialAnimate={{ opacity: 0, translateY: 16 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: "timing", duration: 280, delay: 120, easing: EASE }}
-        >
-          <SettingsSection title="Support">
-            <SettingsRow
-              variant="chevron"
-              icon={settingIcon(FEEDBACK_ICON)}
-              label="Send feedback"
-              onPress={() => setFeedbackOpen(true)}
-              isLast
-            />
-          </SettingsSection>
-        </EaseView>
-      </ScrollView>
+				<EaseView
+					animate={{ opacity: 1, translateY: 0 }}
+					initialAnimate={{ opacity: 0, translateY: 16 }}
+					transition={{
+						delay: 120,
+						duration: 280,
+						easing: EASE,
+						type: "timing",
+					}}
+				>
+					<SettingsSection title="Support">
+						<SettingsRow
+							icon={settingIcon(FEEDBACK_ICON)}
+							isLast
+							label="Send feedback"
+							onPress={() => setFeedbackOpen(true)}
+							variant="chevron"
+						/>
+					</SettingsSection>
+				</EaseView>
+			</ScrollView>
 
-      <FeedbackDialog isOpen={feedbackOpen} onOpenChange={setFeedbackOpen} />
-    </>
-  );
+			<FeedbackDialog isOpen={feedbackOpen} onOpenChange={setFeedbackOpen} />
+		</>
+	);
 };

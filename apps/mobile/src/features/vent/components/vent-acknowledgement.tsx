@@ -1,12 +1,12 @@
-import { View } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { AppText } from '@/src/components/shared/app-text';
+import { View } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { AppText } from "@/src/components/shared/app-text";
 
 // Cream-white from the design spec — fixed artwork color on the dark ritual screen.
-const TEXT_STYLE = { color: '#F5F0E8' };
+const TEXT_STYLE = { color: "#F5F0E8" };
 
 type Props = {
-  words: string;
+	words: string;
 };
 
 /**
@@ -15,30 +15,30 @@ type Props = {
  * the flow hook). The parent unmounts this when the state advances to 'gone'.
  */
 export function VentAcknowledgement({ words }: Props) {
-  const tokens = words.split(/\s+/).filter(Boolean);
-  const perWordDelay = tokens.length > 1 ? 500 / tokens.length : 0;
-  // Words can repeat ("it goes it goes") — position makes the key unique.
-  const parts = tokens.map((word, position) => ({
-    word,
-    position,
-    key: `${position}-${word}`,
-  }));
+	const tokens = words.split(/\s+/).filter(Boolean);
+	const perWordDelay = tokens.length > 1 ? 500 / tokens.length : 0;
+	// Words can repeat ("it goes it goes") — position makes the key unique.
+	const parts = tokens.map((word, position) => ({
+		key: `${position}-${word}`,
+		position,
+		word,
+	}));
 
-  return (
-    <View className="absolute inset-0 items-center justify-center px-12">
-      <View className="flex-row flex-wrap justify-center gap-x-1.5 gap-y-1">
-        {parts.map((part) => (
-          <Animated.View
-            key={part.key}
-            entering={FadeIn.duration(260).delay(part.position * perWordDelay)}
-            exiting={FadeOut.duration(600)}
-          >
-            <AppText className="text-[17px] font-normal" style={TEXT_STYLE}>
-              {part.word}
-            </AppText>
-          </Animated.View>
-        ))}
-      </View>
-    </View>
-  );
+	return (
+		<View className="absolute inset-0 items-center justify-center px-12">
+			<View className="flex-row flex-wrap justify-center gap-x-1.5 gap-y-1">
+				{parts.map((part) => (
+					<Animated.View
+						entering={FadeIn.duration(260).delay(part.position * perWordDelay)}
+						exiting={FadeOut.duration(600)}
+						key={part.key}
+					>
+						<AppText className="font-normal text-[17px]" style={TEXT_STYLE}>
+							{part.word}
+						</AppText>
+					</Animated.View>
+				))}
+			</View>
+		</View>
+	);
 }

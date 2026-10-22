@@ -3,7 +3,10 @@ export const MAX_RETRIES = 4;
 export const RETRY_DELAY_MS = 800;
 
 /** Retry attempts spent, tagged with the Clerk session that spent them. */
-export type RetryBudget = { session: string | null | undefined; attempt: number };
+export type RetryBudget = {
+	session: string | null | undefined;
+	attempt: number;
+};
 
 /**
  * Attempts already spent against `session`. A different session — including a
@@ -15,8 +18,8 @@ export type RetryBudget = { session: string | null | undefined; attempt: number 
  * See src/providers/account-bootstrap-boundary.tsx for how it is used.
  */
 export function attemptsFor(
-  budget: RetryBudget,
-  session: string | null | undefined,
+	budget: RetryBudget,
+	session: string | null | undefined
 ): number {
-  return budget.session === session ? budget.attempt : 0;
+	return budget.session === session ? budget.attempt : 0;
 }

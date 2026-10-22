@@ -1,71 +1,71 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
+import { reflectionRank } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
+import { seededDisplayName, validateDisplayName } from "./lib/displayName";
 import { hasPremium } from "./lib/premium";
 import { insightFeatureValidator } from "./lib/validators";
-import { generateDisplayName, seededDisplayName, validateDisplayName } from "./lib/displayName";
 import { streakState } from "./streaks/state";
-import { reflectionRank } from "./lib/aggregates";
 
 /**
  * Full profile summary for the profile screen.
  * Reads denormalized profile fields + preferences in two bounded point reads.
  */
 export const getSummary = query({
-  args: {},
-  returns: v.object({
-    displayName: v.string(),
-    avatarId: v.string(),
-    firstSessionAt: v.union(v.number(), v.null()),
-    sessionCount: v.number(),
-    currentStreak: v.number(),
-    longestStreak: v.number(),
-    dominantEmotionTags: v.array(v.string()),
-    typicalUsagePattern: v.union(
-      v.object({ dayOfWeek: v.number(), hourOfDay: v.number() }),
-      v.null(),
-    ),
-    recentWords: v.array(v.object({ word: v.string(), count: v.number() })),
-    wordCount: v.number(),
-    premiumRequired: v.boolean(),
-  }),
-  handler: async (ctx) => {
-    const { profile } = await requireAuth(ctx);
+	args: {},
+	handler: async (ctx) => {
+		const { profile } = await requireAuth(ctx);
 
-    const prefs = await ctx.db
-      .query("preferences")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
-      .unique();
+		const prefs = await ctx.db
+			.query("preferences")
+			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+			.unique();
 
-    // Frequency-ranked language for the P5 words teaser. Read from the
-    // denormalized profile field (recomputed in profileStats after each
-    // session) — no scan on this hot, reactive query. Both the word and its
-    // real count are premium-gated together: whichever rows are unlocked for
-    // this tier ship their true count, everything else stays server-side.
-    const premium = await hasPremium(ctx, profile);
-    const allWords = profile.frequentWords ?? [];
-    const recentWords = premium ? allWords.slice(0, 4) : allWords.slice(0, 1);
+		// Frequency-ranked language for the P5 words teaser. Read from the
+		// denormalized profile field (recomputed in profileStats after each
+		// session) — no scan on this hot, reactive query. Both the word and its
+		// real count are premium-gated together: whichever rows are unlocked for
+		// this tier ship their true count, everything else stays server-side.
+		const premium = await hasPremium(ctx, profile);
+		const allWords = profile.frequentWords ?? [];
+		const recentWords = premium ? allWords.slice(0, 4) : allWords.slice(0, 1);
 
-    return {
-      displayName: prefs?.displayName ?? seededDisplayName(profile._id),
-      avatarId: prefs?.avatarId ?? "default",
-      firstSessionAt: profile.firstSessionAt ?? null,
-      sessionCount: profile.sessionCount,
-      // Derive live: the stored streak goes stale once a gap outruns the
-      // freezes (it's only rewritten on a qualifying action).
-      currentStreak: (await streakState(ctx, profile)).streak,
-      // Raw, not live-derived: longest is a record and never decays. Fall back
-      // to the stored streak for rows predating the field (pre-backfill).
-      longestStreak: profile.longestStreak ?? profile.currentStreak,
-      dominantEmotionTags: profile.dominantEmotionTags,
-      typicalUsagePattern: profile.typicalUsagePattern ?? null,
-      recentWords,
-      // Genuine recurring-word count, independent of tier truncation — lets
-      // the client decide teaser vs. empty state without seeing locked words.
-      wordCount: allWords.length,
-      premiumRequired: !premium,
-    };
-  },
+		return {
+			avatarId: prefs?.avatarId ?? "default",
+			// Derive live: the stored streak goes stale once a gap outruns the
+			// freezes (it's only rewritten on a qualifying action).
+			currentStreak: (await streakState(ctx, profile)).streak,
+			displayName: prefs?.displayName ?? seededDisplayName(profile._id),
+			dominantEmotionTags: profile.dominantEmotionTags,
+			firstSessionAt: profile.firstSessionAt ?? null,
+			// Raw, not live-derived: longest is a record and never decays. Fall back
+			// to the stored streak for rows predating the field (pre-backfill).
+			longestStreak: profile.longestStreak ?? profile.currentStreak,
+			premiumRequired: !premium,
+			recentWords,
+			sessionCount: profile.sessionCount,
+			typicalUsagePattern: profile.typicalUsagePattern ?? null,
+			// Genuine recurring-word count, independent of tier truncation — lets
+			// the client decide teaser vs. empty state without seeing locked words.
+			wordCount: allWords.length,
+		};
+	},
+	returns: v.object({
+		avatarId: v.string(),
+		currentStreak: v.number(),
+		displayName: v.string(),
+		dominantEmotionTags: v.array(v.string()),
+		firstSessionAt: v.union(v.number(), v.null()),
+		longestStreak: v.number(),
+		premiumRequired: v.boolean(),
+		recentWords: v.array(v.object({ count: v.number(), word: v.string() })),
+		sessionCount: v.number(),
+		typicalUsagePattern: v.union(
+			v.object({ dayOfWeek: v.number(), hourOfDay: v.number() }),
+			v.null()
+		),
+		wordCount: v.number(),
+	}),
 });
 
 /**
@@ -73,42 +73,57 @@ export const getSummary = query({
  * Returns null if fewer than 3 data points (not enough to show a pattern).
  */
 export const getMoodDelta = query({
-  args: {},
-  returns: v.union(
-    v.null(),
-    v.literal("lighter"),
-    v.literal("same"),
-    v.literal("heavier"),
-    v.literal("unsure"),
-    v.literal("mixed"),
-  ),
-  handler: async (ctx) => {
-    const { profile } = await requireAuth(ctx);
+	args: {},
+	handler: async (ctx) => {
+		const { profile } = await requireAuth(ctx);
 
-    // Take last 30 sessions; filter in JS (bounded, one user's data).
-    const sessions = await ctx.db
-      .query("sessions")
-      .withIndex("by_profile_time", (q) => q.eq("emotionalProfileId", profile._id))
-      .order("desc")
-      .take(30);
+		// Take last 30 sessions; filter in JS (bounded, one user's data).
+		const sessions = await ctx.db
+			.query("sessions")
+			.withIndex("by_profile_time", (q) =>
+				q.eq("emotionalProfileId", profile._id)
+			)
+			.order("desc")
+			.take(30);
 
-    const moods = sessions
-      .filter((s) => s.postSessionMood !== undefined)
-      .slice(0, 10)
-      .map((s) => s.postSessionMood as "lighter" | "same" | "heavier" | "unsure");
+		const moods = sessions
+			.filter((s) => s.postSessionMood !== undefined)
+			.slice(0, 10)
+			.map(
+				(s) => s.postSessionMood as "lighter" | "same" | "heavier" | "unsure"
+			);
 
-    if (moods.length < 3) return null;
+		if (moods.length < 3) {
+			return null;
+		}
 
-    const counts: Record<string, number> = { lighter: 0, same: 0, heavier: 0, unsure: 0 };
-    for (const m of moods) counts[m]++;
+		const counts: Record<string, number> = {
+			heavier: 0,
+			lighter: 0,
+			same: 0,
+			unsure: 0,
+		};
+		for (const m of moods) {
+			counts[m]++;
+		}
 
-    const [topBucket, topCount] = (Object.entries(counts) as [string, number][]).reduce((a, b) =>
-      b[1] > a[1] ? b : a
-    );
+		const [topBucket, topCount] = (
+			Object.entries(counts) as [string, number][]
+		).reduce((a, b) => (b[1] > a[1] ? b : a));
 
-    if (topCount / moods.length < 0.4) return "mixed" as const;
-    return topBucket as "lighter" | "same" | "heavier" | "unsure" | "mixed";
-  },
+		if (topCount / moods.length < 0.4) {
+			return "mixed" as const;
+		}
+		return topBucket as "lighter" | "same" | "heavier" | "unsure" | "mixed";
+	},
+	returns: v.union(
+		v.null(),
+		v.literal("lighter"),
+		v.literal("same"),
+		v.literal("heavier"),
+		v.literal("unsure"),
+		v.literal("mixed")
+	),
 });
 
 // Own sessions needed before the card appears. Matches the existing "rhythm"
@@ -127,8 +142,8 @@ const RANK_MIN_SESSIONS = 5;
 // is NaN, and `population < NaN` is always false — the warming gate would
 // silently vanish and tiny-population percentiles would ship as ranked.
 const RANK_MIN_POPULATION = (() => {
-  const parsed = Number(process.env.RANK_MIN_POPULATION);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
+	const parsed = Number(process.env.RANK_MIN_POPULATION);
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
 })();
 
 /**
@@ -147,80 +162,91 @@ const RANK_MIN_POPULATION = (() => {
  * profile summary must not inherit that global churn.
  */
 export const getReflectionRank = query({
-  args: {},
-  returns: v.union(
-    v.object({
-      status: v.literal("pending"),
-      sessionCount: v.number(),
-      threshold: v.number(),
-      remaining: v.number(),
-    }),
-    v.object({
-      status: v.literal("warming"),
-      sessionCount: v.number(),
-    }),
-    v.object({
-      status: v.literal("ranked"),
-      percentile: v.number(),
-      sessionCount: v.number(),
-    }),
-  ),
-  handler: async (ctx) => {
-    const { profile } = await requireAuth(ctx);
+	args: {},
+	handler: async (ctx) => {
+		const { profile } = await requireAuth(ctx);
 
-    const mine = profile.sessionCount;
+		const mine = profile.sessionCount;
 
-    // Withheld, not hidden: the card still renders and says what it's waiting
-    // for. Returning the *reason* lets the copy be specific ("3 more moments")
-    // instead of vague — a promise the user can actually act on.
-    if (mine < RANK_MIN_SESSIONS) {
-      return {
-        status: "pending" as const,
-        sessionCount: mine,
-        threshold: RANK_MIN_SESSIONS,
-        remaining: RANK_MIN_SESSIONS - mine,
-      };
-    }
+		// Withheld, not hidden: the card still renders and says what it's waiting
+		// for. Returning the *reason* lets the copy be specific ("3 more moments")
+		// instead of vague — a promise the user can actually act on.
+		if (mine < RANK_MIN_SESSIONS) {
+			return {
+				remaining: RANK_MIN_SESSIONS - mine,
+				sessionCount: mine,
+				status: "pending" as const,
+				threshold: RANK_MIN_SESSIONS,
+			};
+		}
 
-    const reflectors = { lower: { key: 1, inclusive: true } } as const;
-    const population = await reflectionRank.count(ctx, { bounds: reflectors });
+		const reflectors = { lower: { inclusive: true, key: 1 } } as const;
+		const population = await reflectionRank.count(ctx, { bounds: reflectors });
 
-    // The user has done their part; the sample hasn't. Distinct from "pending"
-    // so we never tell someone to reflect more when that isn't what's missing.
-    if (population < RANK_MIN_POPULATION) {
-      return { status: "warming" as const, sessionCount: mine };
-    }
+		// The user has done their part; the sample hasn't. Distinct from "pending"
+		// so we never tell someone to reflect more when that isn't what's missing.
+		if (population < RANK_MIN_POPULATION) {
+			return { sessionCount: mine, status: "warming" as const };
+		}
 
-    const below = await reflectionRank.count(ctx, {
-      bounds: {
-        lower: { key: 1, inclusive: true },
-        upper: { key: mine, inclusive: false },
-      },
-    });
+		const below = await reflectionRank.count(ctx, {
+			bounds: {
+				lower: { inclusive: true, key: 1 },
+				upper: { inclusive: false, key: mine },
+			},
+		});
 
-    // The cap is a defensive no-op: you are in the population but never in
-    // your own `below` bucket, so this can't reach 100 on its own.
-    const percentile = Math.min(Math.floor((below / population) * 100), 99);
+		// The cap is a defensive no-op: you are in the population but never in
+		// your own `below` bucket, so this can't reach 100 on its own.
+		const percentile = Math.min(Math.floor((below / population) * 100), 99);
 
-    return { status: "ranked" as const, percentile, sessionCount: mine };
-  },
+		return { percentile, sessionCount: mine, status: "ranked" as const };
+	},
+	returns: v.union(
+		v.object({
+			remaining: v.number(),
+			sessionCount: v.number(),
+			status: v.literal("pending"),
+			threshold: v.number(),
+		}),
+		v.object({
+			sessionCount: v.number(),
+			status: v.literal("warming"),
+		}),
+		v.object({
+			percentile: v.number(),
+			sessionCount: v.number(),
+			status: v.literal("ranked"),
+		})
+	),
 });
 
 // How far back a Plus user can page. Matches the longest data-retention
 // tier ("1_year") — beyond this, earlier sessions are already purged.
 const MAX_WEEKS_BACK = 52;
 const MONTH_LABELS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+	"Jan",
+	"Feb",
+	"Mar",
+	"Apr",
+	"May",
+	"Jun",
+	"Jul",
+	"Aug",
+	"Sep",
+	"Oct",
+	"Nov",
+	"Dec",
 ];
 
 function formatWeekLabel(weekStart: Date, weekEnd: Date): string {
-  const lastDay = new Date(weekEnd.getTime() - 86_400_000);
-  const sameMonth = weekStart.getMonth() === lastDay.getMonth();
-  const start = `${MONTH_LABELS[weekStart.getMonth()]} ${weekStart.getDate()}`;
-  const end = sameMonth
-    ? `${lastDay.getDate()}`
-    : `${MONTH_LABELS[lastDay.getMonth()]} ${lastDay.getDate()}`;
-  return `${start}–${end}`;
+	const lastDay = new Date(weekEnd.getTime() - 86_400_000);
+	const sameMonth = weekStart.getMonth() === lastDay.getMonth();
+	const start = `${MONTH_LABELS[weekStart.getMonth()]} ${weekStart.getDate()}`;
+	const end = sameMonth
+		? `${lastDay.getDate()}`
+		: `${MONTH_LABELS[lastDay.getMonth()]} ${lastDay.getDate()}`;
+	return `${start}–${end}`;
 }
 
 /**
@@ -229,86 +255,109 @@ function formatWeekLabel(weekStart: Date, weekEnd: Date): string {
  * server-side); Plus can page up to MAX_WEEKS_BACK weeks into history.
  */
 export const getWeekIntensity = query({
-  args: { weekOffset: v.optional(v.number()) },
-  returns: v.object({
-    days: v.array(
-      v.object({
-        label: v.string(),
-        dayName: v.string(),
-        intensity: v.union(v.number(), v.null()),
-        isToday: v.boolean(),
-      }),
-    ),
-    peakDay: v.union(v.string(), v.null()),
-    hasData: v.boolean(),
-    premiumRequired: v.boolean(),
-    weekOffset: v.number(),
-    weekLabel: v.string(),
-    isEarliestWeek: v.boolean(),
-  }),
-  handler: async (ctx, args) => {
-    const { profile } = await requireAuth(ctx);
-    const premium = await hasPremium(ctx, profile);
+	args: { weekOffset: v.optional(v.number()) },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
+		const premium = await hasPremium(ctx, profile);
 
-    // v.number() is a Float64: NaN and ±Infinity pass validation and would
-    // otherwise propagate into Invalid Date and NaN index bounds below.
-    const rawOffset = args.weekOffset ?? 0;
-    const requestedOffset = Number.isFinite(rawOffset) ? Math.trunc(rawOffset) : 0;
-    const weekOffset = premium
-      ? Math.max(-MAX_WEEKS_BACK, Math.min(0, requestedOffset))
-      : 0;
+		// v.number() is a Float64: NaN and ±Infinity pass validation and would
+		// otherwise propagate into Invalid Date and NaN index bounds below.
+		const rawOffset = args.weekOffset ?? 0;
+		const requestedOffset = Number.isFinite(rawOffset)
+			? Math.trunc(rawOffset)
+			: 0;
+		const weekOffset = premium
+			? Math.max(-MAX_WEEKS_BACK, Math.min(0, requestedOffset))
+			: 0;
 
-    const now = Date.now();
-    // Shift so Mon=0, Sun=6
-    const dayOfWeek = (new Date(now).getDay() + 6) % 7;
-    const currentWeekStart = new Date(now - dayOfWeek * 86_400_000);
-    currentWeekStart.setHours(0, 0, 0, 0);
-    const weekStart = new Date(currentWeekStart.getTime() + weekOffset * 7 * 86_400_000);
-    const weekEnd = new Date(weekStart.getTime() + 7 * 86_400_000);
+		const now = Date.now();
+		// Shift so Mon=0, Sun=6
+		const dayOfWeek = (new Date(now).getDay() + 6) % 7;
+		const currentWeekStart = new Date(now - dayOfWeek * 86_400_000);
+		currentWeekStart.setHours(0, 0, 0, 0);
+		const weekStart = new Date(
+			currentWeekStart.getTime() + weekOffset * 7 * 86_400_000
+		);
+		const weekEnd = new Date(weekStart.getTime() + 7 * 86_400_000);
 
-    const metadata = await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_profile_createdAt", (q) =>
-        q
-          .eq("emotionalProfileId", profile._id)
-          .gte("createdAt", weekStart.getTime())
-          .lt("createdAt", weekEnd.getTime()),
-      )
-      .take(300);
+		const metadata = await ctx.db
+			.query("emotional_metadata")
+			.withIndex("by_profile_createdAt", (q) =>
+				q
+					.eq("emotionalProfileId", profile._id)
+					.gte("createdAt", weekStart.getTime())
+					.lt("createdAt", weekEnd.getTime())
+			)
+			.take(300);
 
-    const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
-    const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-    const buckets: number[][] = [[], [], [], [], [], [], []];
+		const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
+		const DAY_NAMES = [
+			"Monday",
+			"Tuesday",
+			"Wednesday",
+			"Thursday",
+			"Friday",
+			"Saturday",
+			"Sunday",
+		];
+		const buckets: number[][] = [[], [], [], [], [], [], []];
 
-    for (const m of metadata) {
-      const idx = (new Date(m.createdAt).getDay() + 6) % 7;
-      buckets[idx].push(m.intensity);
-    }
+		for (const m of metadata) {
+			const idx = (new Date(m.createdAt).getDay() + 6) % 7;
+			buckets[idx].push(m.intensity);
+		}
 
-    const todayIdx = weekOffset === 0 ? (new Date(now).getDay() + 6) % 7 : -1;
+		const todayIdx = weekOffset === 0 ? (new Date(now).getDay() + 6) % 7 : -1;
 
-    const days = DAY_LABELS.map((label, i) => {
-      const vals = buckets[i];
-      const avg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
-      return { label, dayName: DAY_NAMES[i], intensity: avg, isToday: i === todayIdx };
-    });
+		const days = DAY_LABELS.map((label, i) => {
+			const vals = buckets[i];
+			const avg =
+				vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+			return {
+				dayName: DAY_NAMES[i],
+				intensity: avg,
+				isToday: i === todayIdx,
+				label,
+			};
+		});
 
-    const peakIdx = days.reduce<number | null>((best, d, i) => {
-      if (d.intensity === null) return best;
-      if (best === null) return i;
-      return (days[i].intensity ?? 0) > (days[best].intensity ?? 0) ? i : best;
-    }, null);
+		const peakIdx = days.reduce<number | null>((best, d, i) => {
+			if (d.intensity === null) {
+				return best;
+			}
+			if (best === null) {
+				return i;
+			}
+			return (days[i].intensity ?? 0) > (days[best].intensity ?? 0) ? i : best;
+		}, null);
 
-    return {
-      days,
-      peakDay: peakIdx !== null ? days[peakIdx].dayName : null,
-      hasData: days.some((d) => d.intensity !== null),
-      premiumRequired: !premium,
-      weekOffset,
-      weekLabel: weekOffset === 0 ? "This week" : formatWeekLabel(weekStart, weekEnd),
-      isEarliestWeek: weekOffset <= -MAX_WEEKS_BACK,
-    };
-  },
+		return {
+			days,
+			hasData: days.some((d) => d.intensity !== null),
+			isEarliestWeek: weekOffset <= -MAX_WEEKS_BACK,
+			peakDay: peakIdx === null ? null : days[peakIdx].dayName,
+			premiumRequired: !premium,
+			weekLabel:
+				weekOffset === 0 ? "This week" : formatWeekLabel(weekStart, weekEnd),
+			weekOffset,
+		};
+	},
+	returns: v.object({
+		days: v.array(
+			v.object({
+				dayName: v.string(),
+				intensity: v.union(v.number(), v.null()),
+				isToday: v.boolean(),
+				label: v.string(),
+			})
+		),
+		hasData: v.boolean(),
+		isEarliestWeek: v.boolean(),
+		peakDay: v.union(v.string(), v.null()),
+		premiumRequired: v.boolean(),
+		weekLabel: v.string(),
+		weekOffset: v.number(),
+	}),
 });
 
 /**
@@ -316,27 +365,29 @@ export const getWeekIntensity = query({
  * Pre-billing desire signal — no price, no IAP. Idempotent per profile+feature.
  */
 export const joinInsightWaitlist = mutation({
-  args: { feature: insightFeatureValidator },
-  returns: v.object({ alreadyJoined: v.boolean() }),
-  handler: async (ctx, args) => {
-    const { profile } = await requireAuth(ctx);
+	args: { feature: insightFeatureValidator },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
 
-    const existing = await ctx.db
-      .query("insight_waitlist")
-      .withIndex("by_profile_feature", (q) =>
-        q.eq("emotionalProfileId", profile._id).eq("feature", args.feature),
-      )
-      .unique();
+		const existing = await ctx.db
+			.query("insight_waitlist")
+			.withIndex("by_profile_feature", (q) =>
+				q.eq("emotionalProfileId", profile._id).eq("feature", args.feature)
+			)
+			.unique();
 
-    if (existing) return { alreadyJoined: true };
+		if (existing) {
+			return { alreadyJoined: true };
+		}
 
-    await ctx.db.insert("insight_waitlist", {
-      emotionalProfileId: profile._id,
-      feature: args.feature,
-      joinedAt: Date.now(),
-    });
-    return { alreadyJoined: false };
-  },
+		await ctx.db.insert("insight_waitlist", {
+			emotionalProfileId: profile._id,
+			feature: args.feature,
+			joinedAt: Date.now(),
+		});
+		return { alreadyJoined: false };
+	},
+	returns: v.object({ alreadyJoined: v.boolean() }),
 });
 
 /**
@@ -344,39 +395,48 @@ export const joinInsightWaitlist = mutation({
  * Lets the teaser show an "already on the list" state on re-tap.
  */
 export const listInsightWaitlist = query({
-  args: {},
-  returns: v.array(insightFeatureValidator),
-  handler: async (ctx) => {
-    const { profile } = await requireAuth(ctx);
-    const rows = await ctx.db
-      .query("insight_waitlist")
-      .withIndex("by_profile_feature", (q) => q.eq("emotionalProfileId", profile._id))
-      .take(20);
-    return rows.map((r) => r.feature);
-  },
+	args: {},
+	handler: async (ctx) => {
+		const { profile } = await requireAuth(ctx);
+		const rows = await ctx.db
+			.query("insight_waitlist")
+			.withIndex("by_profile_feature", (q) =>
+				q.eq("emotionalProfileId", profile._id)
+			)
+			.take(20);
+		return rows.map((r) => r.feature);
+	},
+	returns: v.array(insightFeatureValidator),
 });
 
 /**
  * Update displayName. Max 30 chars. Emoji and symbols allowed.
  */
 export const updateDisplayName = mutation({
-  args: { displayName: v.string() },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const { profile } = await requireAuth(ctx);
+	args: { displayName: v.string() },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
 
-    const validated = validateDisplayName(args.displayName);
-    if (!validated.ok) throw new Error(validated.message);
-    const trimmed = validated.trimmed;
+		const validated = validateDisplayName(args.displayName);
+		if (!validated.ok) {
+			throw new Error(validated.message);
+		}
+		const trimmed = validated.trimmed;
 
-    const prefs = await ctx.db
-      .query("preferences")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
-      .unique();
-    if (!prefs) throw new Error("Preferences not found");
+		const prefs = await ctx.db
+			.query("preferences")
+			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+			.unique();
+		if (!prefs) {
+			throw new Error("Preferences not found");
+		}
 
-    // Their own new name replaces any private one the companion used (#602).
-    await ctx.db.patch("preferences", prefs._id, { displayName: trimmed, preferredName: undefined });
-    return null;
-  },
+		// Their own new name replaces any private one the companion used (#602).
+		await ctx.db.patch("preferences", prefs._id, {
+			displayName: trimmed,
+			preferredName: undefined,
+		});
+		return null;
+	},
+	returns: v.null(),
 });

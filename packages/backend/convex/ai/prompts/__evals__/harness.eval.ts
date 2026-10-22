@@ -19,19 +19,19 @@ import { describe, expect, it } from "vitest";
 export const hasApiKey = (): boolean => !!process.env.ANTHROPIC_API_KEY;
 
 export interface LabeledCase<E> {
-  /** The correct answer for this case. */
-  expected: E;
-  /** Unambiguous cases that must be exactly right (not just aggregate). */
-  anchor?: boolean;
-  /** Human-readable description, used as the test name. */
-  note: string;
+	/** Unambiguous cases that must be exactly right (not just aggregate). */
+	anchor?: boolean;
+	/** The correct answer for this case. */
+	expected: E;
+	/** Human-readable description, used as the test name. */
+	note: string;
 }
 
 export interface EvalOptions {
-  /** Minimum aggregate accuracy across all cases. Defaults to 0.8. */
-  threshold?: number;
-  /** Per-case budget for the live model call. Defaults to 30s. */
-  timeoutMs?: number;
+	/** Minimum aggregate accuracy across all cases. Defaults to 0.8. */
+	threshold?: number;
+	/** Per-case budget for the live model call. Defaults to 30s. */
+	timeoutMs?: number;
 }
 
 /**
@@ -48,38 +48,42 @@ const DEFAULT_CASE_TIMEOUT_MS = 30_000;
  * boolean/string/enum outputs these evals produce).
  */
 export function runLabeledEval<E, C extends LabeledCase<E>>(
-  suiteName: string,
-  cases: C[],
-  run: (c: C) => Promise<E>,
-  options: EvalOptions = {},
+	suiteName: string,
+	cases: C[],
+	run: (c: C) => Promise<E>,
+	options: EvalOptions = {}
 ): void {
-  const threshold = options.threshold ?? 0.8;
-  const timeoutMs = options.timeoutMs ?? DEFAULT_CASE_TIMEOUT_MS;
+	const threshold = options.threshold ?? 0.8;
+	const timeoutMs = options.timeoutMs ?? DEFAULT_CASE_TIMEOUT_MS;
 
-  describe(suiteName, () => {
-    let correct = 0;
+	describe(suiteName, () => {
+		let correct = 0;
 
-    for (const c of cases) {
-      const label = `${c.anchor ? "[anchor] " : ""}${c.note}`;
-      // skipIf, not an early return: a keyless run must report skips, not
-      // greens — a silently-passing eval is indistinguishable from a real one.
-      it.skipIf(!hasApiKey())(
-        label,
-        async () => {
-          const got = await run(c);
-          if (got === c.expected) correct++;
-          // Anchors must be exactly right; non-anchors feed the aggregate.
-          if (c.anchor) expect(got).toBe(c.expected);
-        },
-        timeoutMs,
-      );
-    }
+		for (const c of cases) {
+			const label = `${c.anchor ? "[anchor] " : ""}${c.note}`;
+			// skipIf, not an early return: a keyless run must report skips, not
+			// greens — a silently-passing eval is indistinguishable from a real one.
+			it.skipIf(!hasApiKey())(
+				label,
+				async () => {
+					const got = await run(c);
+					if (got === c.expected) {
+						correct++;
+					}
+					// Anchors must be exactly right; non-anchors feed the aggregate.
+					if (c.anchor) {
+						expect(got).toBe(c.expected);
+					}
+				},
+				timeoutMs
+			);
+		}
 
-    it.skipIf(!hasApiKey())(
-      `aggregate accuracy across the labeled set is >= ${threshold}`,
-      () => {
-        expect(correct / cases.length).toBeGreaterThanOrEqual(threshold);
-      },
-    );
-  });
+		it.skipIf(!hasApiKey())(
+			`aggregate accuracy across the labeled set is >= ${threshold}`,
+			() => {
+				expect(correct / cases.length).toBeGreaterThanOrEqual(threshold);
+			}
+		);
+	});
 }

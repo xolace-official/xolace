@@ -1,16 +1,16 @@
-import type { MessageComposerState } from 'stream-chat';
+import type { MessageComposerState } from "stream-chat";
 import {
-  Reply,
-  useMessageComposer,
-  useMessageContext,
-  useStateStore,
-  type ReplyProps,
-} from 'stream-chat-expo';
-import { resolveMessageIdentity } from '@/src/features/xolacer-chat/utils';
-import { useConversationIdentity } from '@/src/features/xolacer-chat/components/message-author';
+	Reply,
+	type ReplyProps,
+	useMessageComposer,
+	useMessageContext,
+	useStateStore,
+} from "stream-chat-expo";
+import { useConversationIdentity } from "@/src/features/xolacer-chat/components/message-author";
+import { resolveMessageIdentity } from "@/src/features/xolacer-chat/utils";
 
 const quotedMessageSelector = (state: MessageComposerState) => ({
-  quotedMessage: state.quotedMessage,
+	quotedMessage: state.quotedMessage,
 });
 
 /**
@@ -34,28 +34,35 @@ const quotedMessageSelector = (state: MessageComposerState) => ({
  * which reads the same patched message.
  */
 export function ConversationReply(props: ReplyProps) {
-  const { message } = useMessageContext();
-  const messageComposer = useMessageComposer();
-  const { quotedMessage } = useStateStore(messageComposer.state, quotedMessageSelector);
-  const identity = useConversationIdentity();
+	const { message } = useMessageContext();
+	const messageComposer = useMessageComposer();
+	const { quotedMessage } = useStateStore(
+		messageComposer.state,
+		quotedMessageSelector
+	);
+	const identity = useConversationIdentity();
 
-  const quoted =
-    props.quotedMessage ??
-    ((message ? message.quoted_message : quotedMessage) as ReplyProps['quotedMessage']);
+	const quoted =
+		props.quotedMessage ??
+		((message
+			? message.quoted_message
+			: quotedMessage) as ReplyProps["quotedMessage"]);
 
-  const override =
-    identity && quoted?.user
-      ? resolveMessageIdentity(quoted.user.id, identity.conversation)
-      : null;
-  if (!override || !quoted?.user) return <Reply {...props} />;
+	const override =
+		identity && quoted?.user
+			? resolveMessageIdentity(quoted.user.id, identity.conversation)
+			: null;
+	if (!(override && quoted?.user)) {
+		return <Reply {...props} />;
+	}
 
-  return (
-    <Reply
-      {...props}
-      quotedMessage={{
-        ...quoted,
-        user: { ...quoted.user, name: override.name, image: override.image },
-      }}
-    />
-  );
+	return (
+		<Reply
+			{...props}
+			quotedMessage={{
+				...quoted,
+				user: { ...quoted.user, image: override.image, name: override.name },
+			}}
+		/>
+	);
 }

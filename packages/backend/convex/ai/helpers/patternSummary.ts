@@ -4,37 +4,37 @@
  */
 
 interface RecentMetadataEntry {
-  primaryEmotion: string;
-  granularLabel?: string;
-  intensity: number;
-  thematicTags: string[];
-  userLanguageTags: string[];
-  temporalContext?: string;
+	granularLabel?: string;
+	intensity: number;
+	primaryEmotion: string;
+	temporalContext?: string;
+	thematicTags: string[];
+	userLanguageTags: string[];
 }
 
 interface RecentSessionEntry {
-  state: string;
-  entryType: string;
-  timeOfDay?: string;
-  pathChosen?: string;
-  mirrorText?: string;
-  createdAt: number;
+	createdAt: number;
+	entryType: string;
+	mirrorText?: string;
+	pathChosen?: string;
+	state: string;
+	timeOfDay?: string;
 }
 
 interface ProfileSummary {
-  sessionCount: number;
-  currentStreak: number;
-  dominantEmotionTags: string[];
-  averageSessionDuration?: number;
-  onboardingComplete: boolean;
+	averageSessionDuration?: number;
+	currentStreak: number;
+	dominantEmotionTags: string[];
+	onboardingComplete: boolean;
+	sessionCount: number;
 }
 
 interface PatternSummaryInput {
-  profile: ProfileSummary;
-  recentMetadata: RecentMetadataEntry[];
-  recentSessions: RecentSessionEntry[];
-  isFirstSession: boolean;
-  mirrorTone: string;
+	isFirstSession: boolean;
+	mirrorTone: string;
+	profile: ProfileSummary;
+	recentMetadata: RecentMetadataEntry[];
+	recentSessions: RecentSessionEntry[];
 }
 
 /**
@@ -49,47 +49,51 @@ interface PatternSummaryInput {
  * @returns A single-line summary string describing sessions, dominant emotions, average intensity (out of 10), intensity trend when available, up to five themes, path preferences, and the mirror tone.
  */
 export function buildPatternSummary(input: PatternSummaryInput): string {
-  const { profile, recentMetadata, recentSessions, isFirstSession, mirrorTone } = input;
+	const {
+		profile,
+		recentMetadata,
+		recentSessions,
+		isFirstSession,
+		mirrorTone,
+	} = input;
 
-  if (isFirstSession) {
-    return `First session. No history. Mirror tone: ${mirrorTone}.`;
-  }
+	if (isFirstSession) {
+		return `First session. No history. Mirror tone: ${mirrorTone}.`;
+	}
 
-  const lines: string[] = [];
+	const lines: string[] = [];
 
-  // Profile stats
-  lines.push(
-    `Sessions: ${profile.sessionCount}. Streak: ${profile.currentStreak}.`
-  );
+	// Profile stats
+	lines.push(
+		`Sessions: ${profile.sessionCount}. Streak: ${profile.currentStreak}.`
+	);
 
-  if (profile.dominantEmotionTags.length > 0) {
-    lines.push(
-      `Dominant emotions: ${profile.dominantEmotionTags.join(", ")}.`
-    );
-  }
+	if (profile.dominantEmotionTags.length > 0) {
+		lines.push(`Dominant emotions: ${profile.dominantEmotionTags.join(", ")}.`);
+	}
 
-  lines.push(...buildEmotionPatternLines(recentMetadata));
+	lines.push(...buildEmotionPatternLines(recentMetadata));
 
-  // Path preferences
-  if (recentSessions.length > 0) {
-    const pathCounts = new Map<string, number>();
-    for (const s of recentSessions) {
-      if (s.pathChosen) {
-        pathCounts.set(s.pathChosen, (pathCounts.get(s.pathChosen) ?? 0) + 1);
-      }
-    }
-    if (pathCounts.size > 0) {
-      const paths = [...pathCounts.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .map(([path, count]) => `${path} (${count}x)`)
-        .join(", ");
-      lines.push(`Path preferences: ${paths}.`);
-    }
-  }
+	// Path preferences
+	if (recentSessions.length > 0) {
+		const pathCounts = new Map<string, number>();
+		for (const s of recentSessions) {
+			if (s.pathChosen) {
+				pathCounts.set(s.pathChosen, (pathCounts.get(s.pathChosen) ?? 0) + 1);
+			}
+		}
+		if (pathCounts.size > 0) {
+			const paths = [...pathCounts.entries()]
+				.sort((a, b) => b[1] - a[1])
+				.map(([path, count]) => `${path} (${count}x)`)
+				.join(", ");
+			lines.push(`Path preferences: ${paths}.`);
+		}
+	}
 
-  lines.push(`Mirror tone: ${mirrorTone}.`);
+	lines.push(`Mirror tone: ${mirrorTone}.`);
 
-  return lines.join(" ");
+	return lines.join(" ");
 }
 
 /**
@@ -101,70 +105,72 @@ export function buildPatternSummary(input: PatternSummaryInput): string {
  * Longitudinal identity comes from the semantic profile block instead.
  */
 export function buildArticulatorPatternSummary(
-  input: Pick<PatternSummaryInput, "recentMetadata" | "isFirstSession">
+	input: Pick<PatternSummaryInput, "recentMetadata" | "isFirstSession">
 ): string {
-  if (input.isFirstSession) {
-    return "First session. No history.";
-  }
-  const lines = buildEmotionPatternLines(input.recentMetadata);
-  return lines.length > 0 ? lines.join(" ") : "No recent emotional data.";
+	if (input.isFirstSession) {
+		return "First session. No history.";
+	}
+	const lines = buildEmotionPatternLines(input.recentMetadata);
+	return lines.length > 0 ? lines.join(" ") : "No recent emotional data.";
 }
 
 /** Emotion-pattern lines computed from recent metadata, shared by both variants. */
 function buildEmotionPatternLines(
-  recentMetadata: RecentMetadataEntry[]
+	recentMetadata: RecentMetadataEntry[]
 ): string[] {
-  if (recentMetadata.length === 0) return [];
+	if (recentMetadata.length === 0) {
+		return [];
+	}
 
-  const lines: string[] = [];
-  const emotionCounts = new Map<string, number>();
-  let totalIntensity = 0;
-  const allThemes = new Set<string>();
+	const lines: string[] = [];
+	const emotionCounts = new Map<string, number>();
+	let totalIntensity = 0;
+	const allThemes = new Set<string>();
 
-  for (const m of recentMetadata) {
-    emotionCounts.set(
-      m.primaryEmotion,
-      (emotionCounts.get(m.primaryEmotion) ?? 0) + 1
-    );
-    totalIntensity += m.intensity;
-    for (const t of m.thematicTags) {
-      allThemes.add(t);
-    }
-  }
+	for (const m of recentMetadata) {
+		emotionCounts.set(
+			m.primaryEmotion,
+			(emotionCounts.get(m.primaryEmotion) ?? 0) + 1
+		);
+		totalIntensity += m.intensity;
+		for (const t of m.thematicTags) {
+			allThemes.add(t);
+		}
+	}
 
-  const sorted = [...emotionCounts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([emotion, count]) => `${emotion} (${count}x)`)
-    .join(", ");
+	const sorted = [...emotionCounts.entries()]
+		.sort((a, b) => b[1] - a[1])
+		.map(([emotion, count]) => `${emotion} (${count}x)`)
+		.join(", ");
 
-  lines.push(`Recent emotions: ${sorted}.`);
-  lines.push(
-    `Avg intensity: ${(totalIntensity / recentMetadata.length).toFixed(1)}/10.`
-  );
+	lines.push(`Recent emotions: ${sorted}.`);
+	lines.push(
+		`Avg intensity: ${(totalIntensity / recentMetadata.length).toFixed(1)}/10.`
+	);
 
-  if (allThemes.size > 0) {
-    lines.push(`Themes: ${[...allThemes].slice(0, 5).join(", ")}.`);
-  }
+	if (allThemes.size > 0) {
+		lines.push(`Themes: ${[...allThemes].slice(0, 5).join(", ")}.`);
+	}
 
-  // Intensity trend (non-overlapping windows)
-  if (recentMetadata.length >= 4) {
-    const windowSize = Math.floor(recentMetadata.length / 2);
-    const recent = recentMetadata.slice(0, windowSize).map((m) => m.intensity);
-    const older = recentMetadata.slice(-windowSize).map((m) => m.intensity);
-    const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
-    const olderAvg = older.reduce((a, b) => a + b, 0) / older.length;
-    const delta = recentAvg - olderAvg;
+	// Intensity trend (non-overlapping windows)
+	if (recentMetadata.length >= 4) {
+		const windowSize = Math.floor(recentMetadata.length / 2);
+		const recent = recentMetadata.slice(0, windowSize).map((m) => m.intensity);
+		const older = recentMetadata.slice(-windowSize).map((m) => m.intensity);
+		const recentAvg = recent.reduce((a, b) => a + b, 0) / recent.length;
+		const olderAvg = older.reduce((a, b) => a + b, 0) / older.length;
+		const delta = recentAvg - olderAvg;
 
-    if (delta > 1) {
-      lines.push("Intensity trend: increasing.");
-    } else if (delta < -1) {
-      lines.push("Intensity trend: decreasing.");
-    } else {
-      lines.push("Intensity trend: stable.");
-    }
-  }
+		if (delta > 1) {
+			lines.push("Intensity trend: increasing.");
+		} else if (delta < -1) {
+			lines.push("Intensity trend: decreasing.");
+		} else {
+			lines.push("Intensity trend: stable.");
+		}
+	}
 
-  return lines;
+	return lines;
 }
 
 /**
@@ -174,10 +180,10 @@ function buildEmotionPatternLines(
  * @returns An array of up to three mirror texts in the same order they appeared in `recentSessions`.
  */
 export function collectRecentMirrors(
-  recentSessions: RecentSessionEntry[]
+	recentSessions: RecentSessionEntry[]
 ): string[] {
-  return recentSessions
-    .filter((s) => s.mirrorText)
-    .map((s) => s.mirrorText!)
-    .slice(0, 3);
+	return recentSessions
+		.filter((s) => s.mirrorText)
+		.map((s) => s.mirrorText!)
+		.slice(0, 3);
 }

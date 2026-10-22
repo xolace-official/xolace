@@ -1,10 +1,10 @@
-import { StyleSheet, View } from 'react-native';
-import { useThemeColor } from 'heroui-native';
-import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import { AppText } from '@/src/components/shared/app-text';
+import { SymbolView, type SymbolViewProps } from "expo-symbols";
+import { useThemeColor } from "heroui-native";
+import { StyleSheet, View } from "react-native";
+import { AppText } from "@/src/components/shared/app-text";
 
 const styles = StyleSheet.create({
-  icon: { marginTop: 2 },
+	icon: { marginTop: 2 },
 });
 
 /**
@@ -13,18 +13,20 @@ const styles = StyleSheet.create({
  * related things about the same relationship and should look like it.
  */
 export function Fact({
-  icon,
-  children,
+	icon,
+	children,
 }: {
-  icon: SymbolViewProps['name'];
-  children: React.ReactNode;
+	icon: SymbolViewProps["name"];
+	children: React.ReactNode;
 }) {
-  const muted = useThemeColor('muted') as string;
+	const muted = useThemeColor("muted") as string;
 
-  return (
-    <View className="flex-row gap-3">
-      <SymbolView name={icon} size={15} tintColor={muted} style={styles.icon} />
-      <AppText className="flex-1 text-[13px] leading-5 text-foreground/85">{children}</AppText>
-    </View>
-  );
+	return (
+		<View className="flex-row gap-3">
+			<SymbolView name={icon} size={15} style={styles.icon} tintColor={muted} />
+			<AppText className="flex-1 text-[13px] text-foreground/85 leading-5">
+				{children}
+			</AppText>
+		</View>
+	);
 }

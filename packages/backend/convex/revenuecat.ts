@@ -25,9 +25,9 @@ import { components, internal } from "./_generated/api";
 // internal.premium.*, whose module imports lib/premium.ts, which imports back
 // into this instance.
 export const revenuecat: RevenueCat = new RevenueCat(components.revenuecat, {
-  REVENUECAT_WEBHOOK_AUTH: process.env.REVENUECAT_WEBHOOK_AUTH,
-  hooks: {
-    onEntitlementActivated: internal.premium.onEntitlementActivated,
-    onEntitlementDeactivated: internal.premium.onEntitlementDeactivated,
-  },
+	hooks: {
+		onEntitlementActivated: internal.premium.onEntitlementActivated,
+		onEntitlementDeactivated: internal.premium.onEntitlementDeactivated,
+	},
+	REVENUECAT_WEBHOOK_AUTH: process.env.REVENUECAT_WEBHOOK_AUTH,
 });

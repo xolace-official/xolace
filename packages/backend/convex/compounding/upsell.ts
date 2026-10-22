@@ -9,7 +9,7 @@
  */
 import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
-import { mutation, query, type QueryCtx } from "../_generated/server";
+import { mutation, type QueryCtx, query } from "../_generated/server";
 import { requireAuth, requireSessionOwnership } from "../lib/auth";
 import { hasPremium } from "../lib/premium";
 import { domainValidator } from "../lib/validators";
@@ -17,7 +17,10 @@ import { understandingOf } from "../understanding";
 import type { loadReadings } from "./readings";
 import { compoundingFor, spendStretch } from "./stretches";
 
-export const upsellValidator = v.object({ domain: domainValidator, stretchStartedAt: v.number() });
+export const upsellValidator = v.object({
+	domain: domainValidator,
+	stretchStartedAt: v.number(),
+});
 
 const WEEK_MS = 7 * 86_400_000;
 /** More sessions than this in the window reads as flagged: never pitch when unsure. */
@@ -30,21 +33,35 @@ const WINDOW_CAP = 200;
  * The gate lives here, not in compounding/stretches, which never reads
  * safeguard state.
  */
-async function hardMomentSince(ctx: QueryCtx, profileId: Id<"emotional_profiles">, stretchStartedAt: number) {
-  const since = Math.min(stretchStartedAt, Date.now() - WEEK_MS);
-  const sessions = await ctx.db
-    .query("sessions")
-    .withIndex("by_profile_time", (q) => q.eq("emotionalProfileId", profileId).gte("createdAt", since))
-    .take(WINDOW_CAP + 1);
-  if (sessions.length > WINDOW_CAP) return true;
-  for (const session of sessions) {
-    if (session.kept === false || session.escalationTriggered === true) return true;
-    const meta = await understandingOf(ctx, session._id);
-    if ([session.safeguardLevel, meta?.safeguardLevel].some((l) => l === "elevated" || l === "crisis")) {
-      return true;
-    }
-  }
-  return false;
+async function hardMomentSince(
+	ctx: QueryCtx,
+	profileId: Id<"emotional_profiles">,
+	stretchStartedAt: number
+) {
+	const since = Math.min(stretchStartedAt, Date.now() - WEEK_MS);
+	const sessions = await ctx.db
+		.query("sessions")
+		.withIndex("by_profile_time", (q) =>
+			q.eq("emotionalProfileId", profileId).gte("createdAt", since)
+		)
+		.take(WINDOW_CAP + 1);
+	if (sessions.length > WINDOW_CAP) {
+		return true;
+	}
+	for (const session of sessions) {
+		if (session.kept === false || session.escalationTriggered === true) {
+			return true;
+		}
+		const meta = await understandingOf(ctx, session._id);
+		if (
+			[session.safeguardLevel, meta?.safeguardLevel].some(
+				(l) => l === "elevated" || l === "crisis"
+			)
+		) {
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
@@ -53,36 +70,42 @@ async function hardMomentSince(ctx: QueryCtx, profileId: Id<"emotional_profiles"
  * passes neither (loads its own, Date.now()).
  */
 export async function upsellFor(
-  ctx: QueryCtx,
-  profile: Doc<"emotional_profiles">,
-  opts: { now?: number; loaded?: Awaited<ReturnType<typeof loadReadings>> } = {},
+	ctx: QueryCtx,
+	profile: Doc<"emotional_profiles">,
+	opts: { now?: number; loaded?: Awaited<ReturnType<typeof loadReadings>> } = {}
 ) {
-  // An entitlement outage reads as Xolace+: never upsell someone who may have paid.
-  if (await hasPremium(ctx, profile).catch(() => true)) return null;
-  const top = (await compoundingFor(ctx, profile._id, opts)).find(
-    (c) => c.state === "compounding" && !c.upsellShown,
-  );
-  if (!top || (await hardMomentSince(ctx, profile._id, top.startedAt))) return null;
-  return { domain: top.domain, stretchStartedAt: top.startedAt };
+	// An entitlement outage reads as Xolace+: never upsell someone who may have paid.
+	if (await hasPremium(ctx, profile).catch(() => true)) {
+		return null;
+	}
+	const top = (await compoundingFor(ctx, profile._id, opts)).find(
+		(c) => c.state === "compounding" && !c.upsellShown
+	);
+	if (!top || (await hardMomentSince(ctx, profile._id, top.startedAt))) {
+		return null;
+	}
+	return { domain: top.domain, stretchStartedAt: top.startedAt };
 }
 
 /** The stretch to name, or null. Session end passes its session; Insights passes none. */
 export const get = query({
-  args: { sessionId: v.optional(v.id("sessions")) },
-  returns: v.union(upsellValidator, v.null()),
-  handler: async (ctx, { sessionId }) => {
-    const { profile } = sessionId ? await requireSessionOwnership(ctx, sessionId) : await requireAuth(ctx);
-    return await upsellFor(ctx, profile);
-  },
+	args: { sessionId: v.optional(v.id("sessions")) },
+	handler: async (ctx, { sessionId }) => {
+		const { profile } = sessionId
+			? await requireSessionOwnership(ctx, sessionId)
+			: await requireAuth(ctx);
+		return await upsellFor(ctx, profile);
+	},
+	returns: v.union(upsellValidator, v.null()),
 });
 
 /** It showed: spent for the stretch, wherever it showed (a dismissal holds too). */
 export const markShown = mutation({
-  args: upsellValidator.fields,
-  returns: v.null(),
-  handler: async (ctx, ref) => {
-    const { profile } = await requireAuth(ctx);
-    await spendStretch(ctx, profile._id, ref, "upsellShownAt");
-    return null;
-  },
+	args: upsellValidator.fields,
+	handler: async (ctx, ref) => {
+		const { profile } = await requireAuth(ctx);
+		await spendStretch(ctx, profile._id, ref, "upsellShownAt");
+		return null;
+	},
+	returns: v.null(),
 });

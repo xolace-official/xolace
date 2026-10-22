@@ -1,36 +1,36 @@
-import type { ViewInstance } from 'react-native';
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import { type ReactNode, useEffect, useMemo, useRef } from "react";
+import type { ViewInstance } from "react-native";
 import { View, type ViewProps } from "react-native";
 
 import {
-  useTourContext,
-  type TourPlacement,
-  type TourShape,
-  type TourStepEntry,
+	type TourPlacement,
+	type TourShape,
+	type TourStepEntry,
+	useTourContext,
 } from "@/src/components/ui/tour/types";
 
 export type TourStepProps = Omit<ViewProps, "children"> & {
-  /**
-   * Where this step falls in the walkthrough. The author's numbering rather
-   * than the tree's, and unique within a tour — two steps sharing an order
-   * means one of them replaces the other.
-   */
-  order: number;
-  /** The step's heading. */
-  title?: string;
-  /** The sentence under it. */
-  description?: string;
-  /** Shape of this step's cutout, overriding the tour's. */
-  shape?: TourShape;
-  /** Room around this target, overriding the tour's. */
-  padding?: number;
-  /** Corner radius of this cutout, overriding the tour's. */
-  radius?: number;
-  /** Which side of this target the card prefers, overriding the tour's. */
-  placement?: TourPlacement;
-  className?: string;
-  /** The control this step is about. */
-  children?: ReactNode;
+	/**
+	 * Where this step falls in the walkthrough. The author's numbering rather
+	 * than the tree's, and unique within a tour — two steps sharing an order
+	 * means one of them replaces the other.
+	 */
+	order: number;
+	/** The step's heading. */
+	title?: string;
+	/** The sentence under it. */
+	description?: string;
+	/** Shape of this step's cutout, overriding the tour's. */
+	shape?: TourShape;
+	/** Room around this target, overriding the tour's. */
+	padding?: number;
+	/** Corner radius of this cutout, overriding the tour's. */
+	radius?: number;
+	/** Which side of this target the card prefers, overriding the tour's. */
+	placement?: TourPlacement;
+	className?: string;
+	/** The control this step is about. */
+	children?: ReactNode;
 };
 
 /**
@@ -48,46 +48,46 @@ export type TourStepProps = Omit<ViewProps, "children"> & {
  * the screen, not something that appears with the walkthrough.
  */
 export const TourStep = ({
-  order,
-  title,
-  description,
-  shape,
-  padding,
-  radius,
-  placement,
-  className,
-  children,
-  ...props
+	order,
+	title,
+	description,
+	shape,
+	padding,
+	radius,
+	placement,
+	className,
+	children,
+	...props
 }: TourStepProps) => {
-  const { register, unregister } = useTourContext("Tour.Step");
-  const target = useRef<ViewInstance>(null);
+	const { register, unregister } = useTourContext("Tour.Step");
+	const target = useRef<ViewInstance>(null);
 
-  // Memoized because it is the identity the effect below registers and
-  // unregisters on — an unstable entry would re-register every render.
-  const entry = useMemo<TourStepEntry>(
-    () => ({
-      order,
-      title,
-      description,
-      shape,
-      padding,
-      radius,
-      placement,
-      target,
-    }),
-    [order, title, description, shape, padding, radius, placement],
-  );
+	// Memoized because it is the identity the effect below registers and
+	// unregisters on — an unstable entry would re-register every render.
+	const entry = useMemo<TourStepEntry>(
+		() => ({
+			description,
+			order,
+			padding,
+			placement,
+			radius,
+			shape,
+			target,
+			title,
+		}),
+		[order, title, description, shape, padding, radius, placement]
+	);
 
-  useEffect(() => {
-    register(entry);
-    return () => unregister(entry);
-  }, [entry, register, unregister]);
+	useEffect(() => {
+		register(entry);
+		return () => unregister(entry);
+	}, [entry, register, unregister]);
 
-  return (
-    <View ref={target} collapsable={false} className={className} {...props}>
-      {children}
-    </View>
-  );
+	return (
+		<View className={className} collapsable={false} ref={target} {...props}>
+			{children}
+		</View>
+	);
 };
 
 TourStep.displayName = "Tour.Step";

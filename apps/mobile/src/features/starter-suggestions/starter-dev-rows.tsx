@@ -10,32 +10,46 @@ import { useThemeColor, useToast } from "heroui-native";
 import { SettingsRow } from "@/src/features/settings/components/settings-row";
 import { useAppStore } from "@/src/store/store";
 
-const MAP_ICON = { ios: "map", android: "map", web: "map" } as const;
+const MAP_ICON = { android: "map", ios: "map", web: "map" } as const;
 
 export function StarterSuggestionsDevRows() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const muted = useThemeColor("muted") as string;
-  const icon = <SymbolView name={MAP_ICON} size={17} tintColor={muted} />;
+	const router = useRouter();
+	const { toast } = useToast();
+	const muted = useThemeColor("muted") as string;
+	const icon = <SymbolView name={MAP_ICON} size={17} tintColor={muted} />;
 
-  // Idempotent pair, so an E2E flow gets the same state whatever it started
-  // from. "As new user" is a fresh device too: the tour replays and the bubble
-  // follows it. Straight home, since the home tour draws over whatever screen
-  // is on top.
-  const arm = (asNewUser: boolean) => {
-    useAppStore.setState({
-      devStarterEligible: asNewUser,
-      starterSuggestionsSeen: false,
-      ...(asNewUser && { reflectTourVersion: 0 }),
-    });
-    toast.show({ label: asNewUser ? "Starter suggestions armed · new user" : "Starter suggestions · real gate" });
-    router.dismissTo("/");
-  };
+	// Idempotent pair, so an E2E flow gets the same state whatever it started
+	// from. "As new user" is a fresh device too: the tour replays and the bubble
+	// follows it. Straight home, since the home tour draws over whatever screen
+	// is on top.
+	const arm = (asNewUser: boolean) => {
+		useAppStore.setState({
+			devStarterEligible: asNewUser,
+			starterSuggestionsSeen: false,
+			...(asNewUser && { reflectTourVersion: 0 }),
+		});
+		toast.show({
+			label: asNewUser
+				? "Starter suggestions armed · new user"
+				: "Starter suggestions · real gate",
+		});
+		router.dismissTo("/");
+	};
 
-  return (
-    <>
-      <SettingsRow variant="action" icon={icon} label="Starter suggestions · as new user" onPress={() => arm(true)} />
-      <SettingsRow variant="action" icon={icon} label="Starter suggestions · real gate" onPress={() => arm(false)} />
-    </>
-  );
+	return (
+		<>
+			<SettingsRow
+				icon={icon}
+				label="Starter suggestions · as new user"
+				onPress={() => arm(true)}
+				variant="action"
+			/>
+			<SettingsRow
+				icon={icon}
+				label="Starter suggestions · real gate"
+				onPress={() => arm(false)}
+				variant="action"
+			/>
+		</>
+	);
 }

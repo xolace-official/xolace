@@ -21,11 +21,11 @@ const LENGTH = 4;
 const MAX_ATTEMPTS = 100;
 
 function draw() {
-  let tag = "";
-  for (let i = 0; i < LENGTH; i++) {
-    tag += CHARS[Math.floor(Math.random() * CHARS.length)];
-  }
-  return tag;
+	let tag = "";
+	for (let i = 0; i < LENGTH; i++) {
+		tag += CHARS[Math.floor(Math.random() * CHARS.length)];
+	}
+	return tag;
 }
 
 /**
@@ -38,16 +38,20 @@ function draw() {
  * the name its xolacer has already been reading.
  */
 export function generateCamperTag(
-  taken: Iterable<string> = [],
-  preferred?: string,
+	taken: Iterable<string> = [],
+	preferred?: string
 ): string {
-  const excluded = new Set(taken);
-  if (preferred && !excluded.has(preferred)) return preferred;
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const tag = draw();
-    if (!excluded.has(tag)) return tag;
-  }
-  throw new Error(`No free camper tag after ${MAX_ATTEMPTS} draws`);
+	const excluded = new Set(taken);
+	if (preferred && !excluded.has(preferred)) {
+		return preferred;
+	}
+	for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+		const tag = draw();
+		if (!excluded.has(tag)) {
+			return tag;
+		}
+	}
+	throw new Error(`No free camper tag after ${MAX_ATTEMPTS} draws`);
 }
 
 /**
@@ -57,12 +61,12 @@ export function generateCamperTag(
  * heal in a mutation agree on the name.
  */
 export function legacyCamperTag(conversationId: string): string {
-  return conversationId.slice(-LENGTH).toUpperCase();
+	return conversationId.slice(-LENGTH).toUpperCase();
 }
 
 /** The displayed name. One place, so the two words never drift apart. */
 export function camperName(tag: string): string {
-  return `Camper ${tag}`;
+	return `Camper ${tag}`;
 }
 
 /**
@@ -80,5 +84,5 @@ export const GENERIC_CAMPER_NAME = "Camper";
  * tag can never collide with a legacy name already on screen.
  */
 export function camperTagOf(row: { _id: string; camperTag?: string }): string {
-  return row.camperTag ?? legacyCamperTag(row._id);
+	return row.camperTag ?? legacyCamperTag(row._id);
 }

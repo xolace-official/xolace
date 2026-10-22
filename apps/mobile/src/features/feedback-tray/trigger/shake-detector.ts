@@ -32,23 +32,31 @@ const COOLDOWN_MS = 1500;
  * recorded or synthetic accelerometer traces — see shake-detector.test.ts.
  */
 export function createShakeDetector() {
-  let jolts: number[] = [];
-  let armed = true;
-  let lastFire = -Infinity;
+	let jolts: number[] = [];
+	let armed = true;
+	let lastFire = Number.NEGATIVE_INFINITY;
 
-  return (sample: Sample, now: number): boolean => {
-    const jolt = Math.abs(Math.hypot(sample.x, sample.y, sample.z) - 1);
-    if (jolt < REARM_G) armed = true;
-    if (jolt < JOLT_G || !armed) return false;
-    if (now - lastFire < COOLDOWN_MS) return false;
+	return (sample: Sample, now: number): boolean => {
+		const jolt = Math.abs(Math.hypot(sample.x, sample.y, sample.z) - 1);
+		if (jolt < REARM_G) {
+			armed = true;
+		}
+		if (jolt < JOLT_G || !armed) {
+			return false;
+		}
+		if (now - lastFire < COOLDOWN_MS) {
+			return false;
+		}
 
-    armed = false;
-    jolts = jolts.filter((t) => now - t < WINDOW_MS);
-    jolts.push(now);
-    if (jolts.length < REQUIRED_JOLTS) return false;
+		armed = false;
+		jolts = jolts.filter((t) => now - t < WINDOW_MS);
+		jolts.push(now);
+		if (jolts.length < REQUIRED_JOLTS) {
+			return false;
+		}
 
-    jolts = [];
-    lastFire = now;
-    return true;
-  };
+		jolts = [];
+		lastFire = now;
+		return true;
+	};
 }

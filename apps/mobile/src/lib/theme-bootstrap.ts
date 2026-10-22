@@ -7,22 +7,21 @@
  *
  * Mirrors the resolution logic in use-settings.ts (setColorTheme/setThemeMode).
  */
-import { Appearance } from 'react-native';
-import { Uniwind } from 'uniwind';
-import { useAppStore } from '@/src/store/store';
+import { Appearance } from "react-native";
+import { Uniwind } from "uniwind";
+import { useAppStore } from "@/src/store/store";
 
 const { theme, colorThemeId } = useAppStore.getState();
 
-if (colorThemeId === 'default' && theme === 'system') {
-  Uniwind.setTheme('system' as never);
+if (colorThemeId === "default" && theme === "system") {
+	Uniwind.setTheme("system" as never);
 } else {
-  const mode =
-    theme === 'system'
-      ? Appearance.getColorScheme() === 'dark'
-        ? 'dark'
-        : 'light'
-      : theme;
-  const variant =
-    colorThemeId === 'default' ? mode : `${colorThemeId}-${mode}`;
-  Uniwind.setTheme(variant as never);
+	const mode =
+		theme === "system"
+			? Appearance.getColorScheme() === "dark"
+				? "dark"
+				: "light"
+			: theme;
+	const variant = colorThemeId === "default" ? mode : `${colorThemeId}-${mode}`;
+	Uniwind.setTheme(variant as never);
 }

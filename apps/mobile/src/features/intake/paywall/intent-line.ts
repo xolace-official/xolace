@@ -7,9 +7,9 @@
  * who declined to say what brought them here has not handed us permission to
  * tell them what they came for.
  */
-import type { IntakeAnswers } from '@/src/store/intake-slice';
+import type { IntakeAnswers } from "@/src/store/intake-slice";
 
-type Intent = NonNullable<IntakeAnswers['intent']>;
+type Intent = NonNullable<IntakeAnswers["intent"]>;
 
 /**
  * Keyed off the `intent` enum rather than `string`: renaming a literal in
@@ -17,15 +17,20 @@ type Intent = NonNullable<IntakeAnswers['intent']>;
  * dropping the line for everyone who picked it.
  */
 const INTENT_LINE: Partial<Record<Intent, string>> = {
-  understand_feelings: "You came to understand what you're feeling.",
-  get_through_hard_moment: 'You came to get through something hard.',
-  feel_less_alone: 'You came to feel less alone.',
-  make_it_regular: 'You came to make this part of your life.',
+	feel_less_alone: "You came to feel less alone.",
+	get_through_hard_moment: "You came to get through something hard.",
+	make_it_regular: "You came to make this part of your life.",
+	understand_feelings: "You came to understand what you're feeling.",
 };
 
 /** `null` for the three non-committal cases, and whenever the arm is control. */
-export function intentLine(answers: IntakeAnswers, personalized: boolean): string | null {
-  if (!personalized) return null;
-  const intent = answers.intent;
-  return (intent && INTENT_LINE[intent]) || null;
+export function intentLine(
+	answers: IntakeAnswers,
+	personalized: boolean
+): string | null {
+	if (!personalized) {
+		return null;
+	}
+	const intent = answers.intent;
+	return (intent && INTENT_LINE[intent]) || null;
 }

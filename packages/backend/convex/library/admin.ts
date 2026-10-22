@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
-import { internalMutation, type MutationCtx } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { internalMutation, type MutationCtx } from "../_generated/server";
 import { assertPublishable } from "./ingest";
 
 /**
@@ -20,34 +20,44 @@ import { assertPublishable } from "./ingest";
  */
 
 async function bySlug(ctx: MutationCtx, slug: string) {
-  const e = await ctx.db
-    .query("library_entries")
-    .withIndex("by_slug", (q) => q.eq("slug", slug))
-    .unique();
-  if (!e) throw new ConvexError(`library entry "${slug}" not found`);
-  return e;
+	const e = await ctx.db
+		.query("library_entries")
+		.withIndex("by_slug", (q) => q.eq("slug", slug))
+		.unique();
+	if (!e) {
+		throw new ConvexError(`library entry "${slug}" not found`);
+	}
+	return e;
 }
 
 export const setActive = internalMutation({
-  args: { slug: v.string(), active: v.boolean() },
-  returns: v.null(),
-  handler: async (ctx, { slug, active }) => {
-    const e = await bySlug(ctx, slug);
-    assertPublishable({ ...e, active });
-    await ctx.db.patch("library_entries", e._id, { active });
-    // Retired leaves the meaning index; republished comes back (#568).
-    await ctx.scheduler.runAfter(0, internal.ai.library.embed.indexEntry, { entryId: e._id });
-    return null;
-  },
+	args: { active: v.boolean(), slug: v.string() },
+	handler: async (ctx, { slug, active }) => {
+		const e = await bySlug(ctx, slug);
+		assertPublishable({ ...e, active });
+		await ctx.db.patch("library_entries", e._id, { active });
+		// Retired leaves the meaning index; republished comes back (#568).
+		await ctx.scheduler.runAfter(0, internal.ai.library.embed.indexEntry, {
+			entryId: e._id,
+		});
+		return null;
+	},
+	returns: v.null(),
 });
 
 export const markSafetyReviewed = internalMutation({
-  args: { slug: v.string() },
-  returns: v.null(),
-  handler: async (ctx, { slug }) => {
-    const e = await bySlug(ctx, slug);
-    if (e.kind !== "explainer") throw new ConvexError(`library entry "${slug}" is a ${e.kind}, not an explainer`);
-    await ctx.db.patch("library_entries", e._id, { safetyReviewedAt: Date.now() });
-    return null;
-  },
+	args: { slug: v.string() },
+	handler: async (ctx, { slug }) => {
+		const e = await bySlug(ctx, slug);
+		if (e.kind !== "explainer") {
+			throw new ConvexError(
+				`library entry "${slug}" is a ${e.kind}, not an explainer`
+			);
+		}
+		await ctx.db.patch("library_entries", e._id, {
+			safetyReviewedAt: Date.now(),
+		});
+		return null;
+	},
+	returns: v.null(),
 });

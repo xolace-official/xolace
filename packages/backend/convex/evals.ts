@@ -20,13 +20,13 @@
 // =============================================================
 
 import { v } from "convex/values";
-import { internalQuery } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
+import { internalQuery } from "./_generated/server";
 import {
-  summarizeConfirmations,
-  rankVersions,
-  type ConfirmationSample,
-  type TerminalState,
+	type ConfirmationSample,
+	rankVersions,
+	summarizeConfirmations,
+	type TerminalState,
 } from "./ai/evalMetrics";
 
 // Hard ceilings so a growing sessions table can never blow the read limit.
@@ -39,15 +39,17 @@ const MAX_PER_VERSION = 8000;
 // Only rows that reached a terminal mirror verdict AND carry a version stamp
 // are eval signal. Non-terminal / unstamped sessions are filtered out.
 function toSample(session: Doc<"sessions">): ConfirmationSample | null {
-  const state = session.confirmationState;
-  const version = session.mirrorModelVersion;
-  if (!state || !version) return null;
-  return {
-    version,
-    tone: session.toneUsed ?? null,
-    companion: session.talkCompanionVersion ?? null,
-    state: state as TerminalState,
-  };
+	const state = session.confirmationState;
+	const version = session.mirrorModelVersion;
+	if (!(state && version)) {
+		return null;
+	}
+	return {
+		companion: session.talkCompanionVersion ?? null,
+		state: state as TerminalState,
+		tone: session.toneUsed ?? null,
+		version,
+	};
 }
 
 /**
@@ -59,34 +61,34 @@ function toSample(session: Doc<"sessions">): ConfirmationSample | null {
  * is exactly what you want when watching a freshly shipped prompt.
  */
 export const confirmationRateByVersion = internalQuery({
-  args: {
-    sinceMs: v.optional(v.number()),
-    limit: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const limit = Math.min(args.limit ?? DEFAULT_WINDOW, MAX_WINDOW);
+	args: {
+		limit: v.optional(v.number()),
+		sinceMs: v.optional(v.number()),
+	},
+	handler: async (ctx, args) => {
+		const limit = Math.min(args.limit ?? DEFAULT_WINDOW, MAX_WINDOW);
 
-    const rows = await ctx.db
-      .query("sessions")
-      .withIndex("by_date", (q) =>
-        args.sinceMs !== undefined ? q.gte("createdAt", args.sinceMs) : q,
-      )
-      .order("desc")
-      .take(limit);
+		const rows = await ctx.db
+			.query("sessions")
+			.withIndex("by_date", (q) =>
+				args.sinceMs === undefined ? q : q.gte("createdAt", args.sinceMs)
+			)
+			.order("desc")
+			.take(limit);
 
-    const samples = rows
-      .map(toSample)
-      .filter((s): s is ConfirmationSample => s !== null);
+		const samples = rows
+			.map(toSample)
+			.filter((s): s is ConfirmationSample => s !== null);
 
-    const summary = summarizeConfirmations(samples);
-    return {
-      sampled: rows.length,
-      judged: summary.overall.judged,
-      truncated: rows.length === limit,
-      summary,
-      ranking: rankVersions(summary.byVersion),
-    };
-  },
+		const summary = summarizeConfirmations(samples);
+		return {
+			judged: summary.overall.judged,
+			ranking: rankVersions(summary.byVersion),
+			sampled: rows.length,
+			summary,
+			truncated: rows.length === limit,
+		};
+	},
 });
 
 /**
@@ -96,36 +98,43 @@ export const confirmationRateByVersion = internalQuery({
  * this stays exact per version rather than sampling a shared window.
  */
 export const confirmationRateForVersions = internalQuery({
-  args: {
-    versions: v.array(v.string()),
-    perVersionLimit: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const cap = Math.min(args.perVersionLimit ?? MAX_PER_VERSION, MAX_PER_VERSION);
+	args: {
+		perVersionLimit: v.optional(v.number()),
+		versions: v.array(v.string()),
+	},
+	handler: async (ctx, args) => {
+		const cap = Math.min(
+			args.perVersionLimit ?? MAX_PER_VERSION,
+			MAX_PER_VERSION
+		);
 
-    const samples: ConfirmationSample[] = [];
-    const truncated: string[] = [];
-    // De-dupe requested versions so a repeated arg doesn't double-count.
-    for (const version of new Set(args.versions)) {
-      const rows = await ctx.db
-        .query("sessions")
-        .withIndex("by_model_version", (q) =>
-          q.eq("mirrorModelVersion", version),
-        )
-        .take(cap);
-      if (rows.length === cap) truncated.push(version);
-      for (const row of rows) {
-        const s = toSample(row);
-        if (s) samples.push(s);
-      }
-    }
+		const samples: ConfirmationSample[] = [];
+		const truncated: string[] = [];
+		// De-dupe requested versions so a repeated arg doesn't double-count.
+		for (const version of new Set(args.versions)) {
+			const rows = await ctx.db
+				.query("sessions")
+				.withIndex("by_model_version", (q) =>
+					q.eq("mirrorModelVersion", version)
+				)
+				.take(cap);
+			if (rows.length === cap) {
+				truncated.push(version);
+			}
+			for (const row of rows) {
+				const s = toSample(row);
+				if (s) {
+					samples.push(s);
+				}
+			}
+		}
 
-    const summary = summarizeConfirmations(samples);
-    return {
-      judged: summary.overall.judged,
-      truncated,
-      summary,
-      ranking: rankVersions(summary.byVersion),
-    };
-  },
+		const summary = summarizeConfirmations(samples);
+		return {
+			judged: summary.overall.judged,
+			ranking: rankVersions(summary.byVersion),
+			summary,
+			truncated,
+		};
+	},
 });

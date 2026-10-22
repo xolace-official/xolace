@@ -11,14 +11,14 @@ let client: Anthropic | null = null;
  * @returns The shared `Anthropic` client instance
  */
 export function getAnthropicClient(): Anthropic {
-  if (!client) {
-    client = new Anthropic({
-      // Reads ANTHROPIC_API_KEY from process.env automatically
-      timeout: 30_000,
-      maxRetries: 4,
-    });
-  }
-  return client;
+	if (!client) {
+		client = new Anthropic({
+			maxRetries: 4,
+			// Reads ANTHROPIC_API_KEY from process.env automatically
+			timeout: 30_000,
+		});
+	}
+	return client;
 }
 
 // --- Model Constants ---
@@ -44,7 +44,7 @@ export const REFLECTION_LIGHT_VERSION = "reflect-light-v2-haiku-5.5";
 
 export const REFLECTION_CONSOLIDATION_MODEL = "claude-sonnet-5-5";
 export const REFLECTION_CONSOLIDATION_VERSION =
-  "reflect-consolidation-v3-sonnet-5.5"; // v2: reads follow-up check-ins (#453); v3: Sonnet 5.5 (#534)
+	"reflect-consolidation-v3-sonnet-5.5"; // v2: reads follow-up check-ins (#453); v3: Sonnet 5.5 (#534)
 
 // Kindling generation (docs/paths-v1.md §2.2, ADR 0010). One standalone
 // Haiku call that picks 2–3 action types and writes a `why` line each.
@@ -65,33 +65,33 @@ export const FOLLOW_UP_CARD_MODEL = "claude-haiku-5-5";
  * 0.92 doesn't type yet, hence the cast. Both need effort ≤ high (default).
  */
 export function thinkingOff(model: string): Anthropic.ThinkingConfigParam {
-  return (
-    model.startsWith("claude-sonnet-5-5")
-      ? { type: "between_tools" }
-      : { type: "disabled" }
-  ) as Anthropic.ThinkingConfigParam;
+	return (
+		model.startsWith("claude-sonnet-5-5")
+			? { type: "between_tools" }
+			: { type: "disabled" }
+	) as Anthropic.ThinkingConfigParam;
 }
 
 // --- Types ---
 
 export interface ClassificationResult {
-  primaryEmotion: string;
-  primaryEmotionConfidence: number;
-  granularLabel?: string;
-  secondaryEmotion?: string;
-  intensity: number;
-  specificity: number;
-  thematicTags: string[];
-  userLanguageTags: string[];
-  temporalContext?: "past_focused" | "present_focused" | "future_focused";
-  // Follow-up system: does this session warrant a later check-in? Defaults to
-  // false. followUpReason is a brief internal sentence (never shown to user).
-  requiresFollowUp: boolean;
-  followUpReason?: string;
-  // Kindling trigger (docs/paths-v1.md §1). Graded, defaults to "none" when
-  // the model omits it or returns an invalid value. Escalation forces this
-  // to "none" server-side (process.ts) — never trust the prompt alone.
-  supportNeed: SupportNeed;
+	followUpReason?: string;
+	granularLabel?: string;
+	intensity: number;
+	primaryEmotion: string;
+	primaryEmotionConfidence: number;
+	// Follow-up system: does this session warrant a later check-in? Defaults to
+	// false. followUpReason is a brief internal sentence (never shown to user).
+	requiresFollowUp: boolean;
+	secondaryEmotion?: string;
+	specificity: number;
+	// Kindling trigger (docs/paths-v1.md §1). Graded, defaults to "none" when
+	// the model omits it or returns an invalid value. Escalation forces this
+	// to "none" server-side (process.ts) — never trust the prompt alone.
+	supportNeed: SupportNeed;
+	temporalContext?: "past_focused" | "present_focused" | "future_focused";
+	thematicTags: string[];
+	userLanguageTags: string[];
 }
 
 export type SupportNeed = "none" | "light" | "active";
@@ -111,15 +111,13 @@ const VALID_SUPPORT_NEEDS = new Set(["none", "light", "active"]);
  * @param message - The Anthropic message to scan for a text block
  * @returns The text of the first block whose `type` is `"text"`, or an empty string if no text block is found
  */
-export function extractTextFromResponse(
-  message: Anthropic.Message
-): string {
-  for (const block of message.content) {
-    if (block.type === "text") {
-      return block.text;
-    }
-  }
-  return "";
+export function extractTextFromResponse(message: Anthropic.Message): string {
+	for (const block of message.content) {
+		if (block.type === "text") {
+			return block.text;
+		}
+	}
+	return "";
 }
 
 /**
@@ -135,83 +133,84 @@ export function extractTextFromResponse(
  * @param raw - The raw classifier output string; may include surrounding Markdown JSON code fences.
  * @returns The normalized and validated ClassificationResult constructed from the parsed input.
  */
-export function parseClassificationResponse(
-  raw: string
-): ClassificationResult {
-  console.log("raw ", raw)
-  // Take the JSON object out of whatever the model wrapped it in. Fences are
-  // the common case; on crisis input Haiku also appends a hotline note AFTER
-  // the closing fence, and stripping fences alone left that prose in the
-  // string — JSON.parse threw and the session failed on exactly the input
-  // that must not fail.
-  const start = raw.indexOf("{");
-  const end = raw.lastIndexOf("}");
-  const cleaned = start >= 0 && end > start ? raw.slice(start, end + 1) : raw.trim();
+export function parseClassificationResponse(raw: string): ClassificationResult {
+	console.log("raw ", raw);
+	// Take the JSON object out of whatever the model wrapped it in. Fences are
+	// the common case; on crisis input Haiku also appends a hotline note AFTER
+	// the closing fence, and stripping fences alone left that prose in the
+	// string — JSON.parse threw and the session failed on exactly the input
+	// that must not fail.
+	const start = raw.indexOf("{");
+	const end = raw.lastIndexOf("}");
+	const cleaned =
+		start >= 0 && end > start ? raw.slice(start, end + 1) : raw.trim();
 
-  const parsed = JSON.parse(cleaned);
+	const parsed = JSON.parse(cleaned);
 
-  // Validate and coerce required fields
-  const rawEmotion =
-    typeof parsed.primaryEmotion === "string"
-      ? parsed.primaryEmotion.toLowerCase()
-      : "unclassified";
+	// Validate and coerce required fields
+	const rawEmotion =
+		typeof parsed.primaryEmotion === "string"
+			? parsed.primaryEmotion.toLowerCase()
+			: "unclassified";
 
-  const result: ClassificationResult = {
-    primaryEmotion: VALID_PRIMARY_EMOTIONS.has(rawEmotion)
-      ? rawEmotion
-      : "confusion",
-    primaryEmotionConfidence: clamp(
-      Number(parsed.primaryEmotionConfidence) || 0.3,
-      0,
-      1
-    ),
-    intensity: clamp(Math.round(Number(parsed.intensity) || 5), 1, 10),
-    specificity: clamp(Math.round(Number(parsed.specificity) || 5), 1, 10),
-    thematicTags: Array.isArray(parsed.thematicTags)
-      ? [
-          ...new Set<string>(
-            parsed.thematicTags
-              .filter((t: unknown): t is string => typeof t === "string")
-              .map((t: string) => t.toLowerCase())
-              .filter((t: string) => VALID_THEMATIC_TAGS.has(t))
-          ),
-        ].slice(0, 5)
-      : [],
-    userLanguageTags: Array.isArray(parsed.userLanguageTags)
-      ? parsed.userLanguageTags.filter((t: unknown) => typeof t === "string").slice(0, 5)
-      : [],
-    // Default false — follow-up is the exception, never assume it.
-    requiresFollowUp: parsed.requiresFollowUp === true,
-    // Default "none" — an invalid/missing grade must never trigger kindling.
-    supportNeed: VALID_SUPPORT_NEEDS.has(parsed.supportNeed)
-      ? (parsed.supportNeed as SupportNeed)
-      : "none",
-  };
+	const result: ClassificationResult = {
+		intensity: clamp(Math.round(Number(parsed.intensity) || 5), 1, 10),
+		primaryEmotion: VALID_PRIMARY_EMOTIONS.has(rawEmotion)
+			? rawEmotion
+			: "confusion",
+		primaryEmotionConfidence: clamp(
+			Number(parsed.primaryEmotionConfidence) || 0.3,
+			0,
+			1
+		),
+		// Default false — follow-up is the exception, never assume it.
+		requiresFollowUp: parsed.requiresFollowUp === true,
+		specificity: clamp(Math.round(Number(parsed.specificity) || 5), 1, 10),
+		// Default "none" — an invalid/missing grade must never trigger kindling.
+		supportNeed: VALID_SUPPORT_NEEDS.has(parsed.supportNeed)
+			? (parsed.supportNeed as SupportNeed)
+			: "none",
+		thematicTags: Array.isArray(parsed.thematicTags)
+			? [
+					...new Set<string>(
+						parsed.thematicTags
+							.filter((t: unknown): t is string => typeof t === "string")
+							.map((t: string) => t.toLowerCase())
+							.filter((t: string) => VALID_THEMATIC_TAGS.has(t))
+					),
+				].slice(0, 5)
+			: [],
+		userLanguageTags: Array.isArray(parsed.userLanguageTags)
+			? parsed.userLanguageTags
+					.filter((t: unknown) => typeof t === "string")
+					.slice(0, 5)
+			: [],
+	};
 
-  // Optional fields
-  if (typeof parsed.granularLabel === "string" && parsed.granularLabel) {
-    result.granularLabel = parsed.granularLabel.toLowerCase();
-  }
-  if (typeof parsed.secondaryEmotion === "string" && parsed.secondaryEmotion) {
-    result.secondaryEmotion = parsed.secondaryEmotion.toLowerCase();
-  }
-  if (
-    parsed.temporalContext === "past_focused" ||
-    parsed.temporalContext === "present_focused" ||
-    parsed.temporalContext === "future_focused"
-  ) {
-    result.temporalContext = parsed.temporalContext;
-  }
-  // Only keep a reason when a follow-up was actually requested.
-  if (
-    result.requiresFollowUp &&
-    typeof parsed.followUpReason === "string" &&
-    parsed.followUpReason.trim()
-  ) {
-    result.followUpReason = parsed.followUpReason.trim();
-  }
+	// Optional fields
+	if (typeof parsed.granularLabel === "string" && parsed.granularLabel) {
+		result.granularLabel = parsed.granularLabel.toLowerCase();
+	}
+	if (typeof parsed.secondaryEmotion === "string" && parsed.secondaryEmotion) {
+		result.secondaryEmotion = parsed.secondaryEmotion.toLowerCase();
+	}
+	if (
+		parsed.temporalContext === "past_focused" ||
+		parsed.temporalContext === "present_focused" ||
+		parsed.temporalContext === "future_focused"
+	) {
+		result.temporalContext = parsed.temporalContext;
+	}
+	// Only keep a reason when a follow-up was actually requested.
+	if (
+		result.requiresFollowUp &&
+		typeof parsed.followUpReason === "string" &&
+		parsed.followUpReason.trim()
+	) {
+		result.followUpReason = parsed.followUpReason.trim();
+	}
 
-  return result;
+	return result;
 }
 
 /**
@@ -223,5 +222,5 @@ export function parseClassificationResponse(
  * @returns The input value restricted to the inclusive range `[min, max]`
  */
 function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
+	return Math.min(Math.max(value, min), max);
 }

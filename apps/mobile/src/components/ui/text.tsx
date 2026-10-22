@@ -1,69 +1,71 @@
-import { Children, forwardRef, type ReactElement, type ReactNode } from 'react';
-import { type TextInstance, type TextProps as RNTextProps } from 'react-native';
-import { AppText } from '@/src/components/shared/app-text';
-import { tv, type VariantProps } from 'tailwind-variants';
-import { useDirection } from '@/src/helpers/hooks/use-direction';
+import { Children, forwardRef, type ReactElement, type ReactNode } from "react";
+import type { TextProps as RNTextProps, TextInstance } from "react-native";
+import { tv, type VariantProps } from "tailwind-variants";
+import { AppText } from "@/src/components/shared/app-text";
+import { useDirection } from "@/src/helpers/hooks/use-direction";
 
 const textVariants = tv({
-  base: 'text-foreground',
-  variants: {
-    size: {
-      xs: 'text-xs',
-      sm: 'text-sm',
-      base: 'text-base',
-      lg: 'text-lg',
-      xl: 'text-xl',
-      '2xl': 'text-2xl',
-      '3xl': 'text-3xl',
-    },
-    weight: {
-      normal: 'font-normal',
-      medium: 'font-medium',
-      semibold: 'font-semibold',
-      bold: 'font-bold',
-    },
-    muted: {
-      true: 'text-muted',
-    },
-  },
-  defaultVariants: {
-    size: 'base',
-    weight: 'normal',
-  },
+	base: "text-foreground",
+	defaultVariants: {
+		size: "base",
+		weight: "normal",
+	},
+	variants: {
+		muted: {
+			true: "text-muted",
+		},
+		size: {
+			"2xl": "text-2xl",
+			"3xl": "text-3xl",
+			base: "text-base",
+			lg: "text-lg",
+			sm: "text-sm",
+			xl: "text-xl",
+			xs: "text-xs",
+		},
+		weight: {
+			bold: "font-bold",
+			medium: "font-medium",
+			normal: "font-normal",
+			semibold: "font-semibold",
+		},
+	},
 });
 
-export interface TextProps extends RNTextProps, VariantProps<typeof textVariants> {
-  className?: string;
+export interface TextProps
+	extends RNTextProps,
+		VariantProps<typeof textVariants> {
+	className?: string;
 }
 
 export const Text = forwardRef<TextInstance, TextProps>(
-  ({ className, size, weight, muted, style, ...props }, ref) => {
-    /*
-     * `direction` is a Yoga *layout* property, and React Native resolves a
-     * paragraph's own alignment from the process-wide `I18nManager.isRTL`
-     * instead — so a `<Direction dir="rtl">` mirrors the furniture around this
-     * text and leaves the text itself left-aligned inside it. Setting
-     * `writingDirection` is what closes that gap, and it also puts bidi
-     * punctuation on the correct end of a mixed line.
-     *
-     * Only the direction, not the alignment: `textAlign` stays whatever the
-     * caller asked for, or unset. A component that centres its label means it
-     * in both directions.
-     */
-    const direction = useDirection();
+	({ className, size, weight, muted, style, ...props }, ref) => {
+		/*
+		 * `direction` is a Yoga *layout* property, and React Native resolves a
+		 * paragraph's own alignment from the process-wide `I18nManager.isRTL`
+		 * instead — so a `<Direction dir="rtl">` mirrors the furniture around this
+		 * text and leaves the text itself left-aligned inside it. Setting
+		 * `writingDirection` is what closes that gap, and it also puts bidi
+		 * punctuation on the correct end of a mixed line.
+		 *
+		 * Only the direction, not the alignment: `textAlign` stays whatever the
+		 * caller asked for, or unset. A component that centres its label means it
+		 * in both directions.
+		 */
+		const direction = useDirection();
 
-    return (
-      <AppText
-        ref={ref}
-        className={textVariants({ size, weight, muted, className })}
-        style={[{ writingDirection: direction }, style]}
-        {...props}
-      />
-    );
-  }
+		return (
+			<AppText
+				className={textVariants({ className, muted, size, weight })}
+				ref={ref}
+				style={[{ writingDirection: direction }, style]}
+				{...props}
+			/>
+		);
+	}
 );
 
-Text.displayName = 'Text';
+Text.displayName = "Text";
 
 /**
  * Wraps the bare text among `children` so it can live in a plain view.
@@ -84,10 +86,14 @@ Text.displayName = 'Text';
  * the text arrives dressed the way the part would have dressed it anyway.
  */
 export function textChildren(
-  children: ReactNode,
-  render: (text: string | number) => ReactElement = (text) => <Text>{text}</Text>
+	children: ReactNode,
+	render: (text: string | number) => ReactElement = (text) => (
+		<Text>{text}</Text>
+	)
 ): ReactNode {
-  return Children.map(children, (child) =>
-    typeof child === 'string' || typeof child === 'number' ? render(child) : child
-  );
+	return Children.map(children, (child) =>
+		typeof child === "string" || typeof child === "number"
+			? render(child)
+			: child
+	);
 }

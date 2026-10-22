@@ -1,18 +1,18 @@
-import type { LocalMessage } from 'stream-chat';
-import { messageActions as defaultMessageActions } from 'stream-chat-expo';
+import type { LocalMessage } from "stream-chat";
 import type {
-  MessageActionsParams,
-  MessageActionType,
-  ReactionData,
-} from 'stream-chat-expo';
-import { AppText } from '@/src/components/shared/app-text';
-import { ConversationMessageSystem } from './crisis-resources-card';
-import { ConversationMessageAuthor } from './message-author';
-import { ChannelErrorIndicator } from './offline-strip';
-import { ConversationReactionSheet } from './reaction-sheet';
-import { ConversationReactionUser } from './reaction-user';
-import { ConversationReply } from './quoted-reply';
-import { ConversationTypingIndicator } from './typing-indicator';
+	MessageActionsParams,
+	MessageActionType,
+	ReactionData,
+} from "stream-chat-expo";
+import { messageActions as defaultMessageActions } from "stream-chat-expo";
+import { AppText } from "@/src/components/shared/app-text";
+import { ConversationMessageSystem } from "./crisis-resources-card";
+import { ConversationMessageAuthor } from "./message-author";
+import { ChannelErrorIndicator } from "./offline-strip";
+import { ConversationReply } from "./quoted-reply";
+import { ConversationReactionSheet } from "./reaction-sheet";
+import { ConversationReactionUser } from "./reaction-user";
+import { ConversationTypingIndicator } from "./typing-indicator";
 
 // Everything that configures the Stream `<Channel>` in thread-messages.tsx.
 // The message surface is text plus a curated reaction set: no thread replies,
@@ -26,19 +26,23 @@ import { ConversationTypingIndicator } from './typing-indicator';
  * set is this one edit; the server accepts any type string.
  */
 export const SUPPORTED_REACTIONS: ReactionData[] = (
-  [
-    ['hug', '🫂'],
-    ['love', '❤️'],
-    ['thanks', '🙏'],
-    ['growth', '🌱'],
-    ['fire', '🔥'],
-    ['smile', '😊'],
-    ['laugh', '😂'],
-  ] as const
+	[
+		["hug", "🫂"],
+		["love", "❤️"],
+		["thanks", "🙏"],
+		["growth", "🌱"],
+		["fire", "🔥"],
+		["smile", "😊"],
+		["laugh", "😂"],
+	] as const
 ).map(([type, emoji]) => ({
-  type,
-  isMain: true,
-  Icon: ({ size = 24 }) => <AppText style={{ fontSize: size * 0.8, lineHeight: size }}>{emoji}</AppText>,
+	Icon: ({ size = 24 }) => (
+		<AppText style={{ fontSize: size * 0.8, lineHeight: size }}>
+			{emoji}
+		</AppText>
+	),
+	isMain: true,
+	type,
 }));
 
 /**
@@ -88,19 +92,19 @@ export const CHANNEL_ROOT_PROPS = { style: { flex: 1 } };
  * close, one file further down.
  */
 export const COMPONENT_OVERRIDES = {
-  NetworkDownIndicator: ChannelErrorIndicator,
-  MessageAuthor: ConversationMessageAuthor,
-  // The resources card (#344): a system message the app sends, rendered by
-  // kind. Not an identity override — a system message has no author to leak.
-  MessageSystem: ConversationMessageSystem,
-  TypingIndicator: ConversationTypingIndicator,
-  Reply: ConversationReply,
-  // The "who reacted" sheet behind a reaction chip (#345): a name-and-avatar
-  // row, so an identity override like MessageAuthor.
-  MessageUserReactionsItem: ConversationReactionUser,
-  // The sheet itself, rebuilt without the SDK's "more emojis" button — the
-  // second way past the curated set, with no theme key to hide it.
-  MessageUserReactions: ConversationReactionSheet,
+	MessageAuthor: ConversationMessageAuthor,
+	// The resources card (#344): a system message the app sends, rendered by
+	// kind. Not an identity override — a system message has no author to leak.
+	MessageSystem: ConversationMessageSystem,
+	// The sheet itself, rebuilt without the SDK's "more emojis" button — the
+	// second way past the curated set, with no theme key to hide it.
+	MessageUserReactions: ConversationReactionSheet,
+	// The "who reacted" sheet behind a reaction chip (#345): a name-and-avatar
+	// row, so an identity override like MessageAuthor.
+	MessageUserReactionsItem: ConversationReactionUser,
+	NetworkDownIndicator: ChannelErrorIndicator,
+	Reply: ConversationReply,
+	TypingIndicator: ConversationTypingIndicator,
 };
 
 /**
@@ -116,11 +120,11 @@ export const COMPONENT_OVERRIDES = {
  * registered, Retry on a message that never failed, Flag on your own message.
  */
 const ALLOWED_ACTIONS = new Set([
-  'copyMessage',
-  'editMessage',
-  'deleteMessage',
-  'flagMessage',
-  'retry',
+	"copyMessage",
+	"editMessage",
+	"deleteMessage",
+	"flagMessage",
+	"retry",
 ]);
 
 /**
@@ -146,21 +150,21 @@ const ALLOWED_ACTIONS = new Set([
  * `useFlagMessage`. Same `actionType`, so the SDK's icon and ordering stay.
  */
 export function minimalMessageActions(
-  params: MessageActionsParams,
-  onFlag: (message: LocalMessage) => void,
+	params: MessageActionsParams,
+	onFlag: (message: LocalMessage) => void
 ): MessageActionType[] {
-  return defaultMessageActions(params)
-    .filter((action) => ALLOWED_ACTIONS.has(action.actionType))
-    .map((action) =>
-      action.actionType === 'flagMessage'
-        ? {
-            ...action,
-            title: 'Flag message',
-            action: () => {
-              params.dismissOverlay();
-              onFlag(params.message);
-            },
-          }
-        : action,
-    );
+	return defaultMessageActions(params)
+		.filter((action) => ALLOWED_ACTIONS.has(action.actionType))
+		.map((action) =>
+			action.actionType === "flagMessage"
+				? {
+						...action,
+						action: () => {
+							params.dismissOverlay();
+							onFlag(params.message);
+						},
+						title: "Flag message",
+					}
+				: action
+		);
 }

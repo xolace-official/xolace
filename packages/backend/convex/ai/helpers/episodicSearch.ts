@@ -1,4 +1,4 @@
-import { rag, EPISODIC_STATUS } from "../../rag";
+import { EPISODIC_STATUS, rag } from "../../rag";
 
 /**
  * One episodic memory that informed a mirror: composite text for the
@@ -16,9 +16,9 @@ export type EpisodicMatch = { text: string; key: string };
  * as "nothing matched" and wipe the keys the initial pass retrieved.
  */
 export type EpisodicSearch = {
-  matches: EpisodicMatch[];
-  topScore?: number;
-  failed?: boolean;
+	matches: EpisodicMatch[];
+	topScore?: number;
+	failed?: boolean;
 };
 
 /**
@@ -47,41 +47,48 @@ export type EpisodicSearch = {
  * the articulator, which flags them rather than filtering them out.
  */
 export async function searchEpisodicMemory(
-  ctx: Parameters<typeof rag.search>[0],
-  emotionalProfileId: string,
-  currentSessionId: string,
-  query: string | number[] | null,
-  // Keys already used elsewhere (a talk's surfaced memories, #598).
-  exclude: string[] = [],
+	ctx: Parameters<typeof rag.search>[0],
+	emotionalProfileId: string,
+	currentSessionId: string,
+	query: string | number[] | null,
+	// Keys already used elsewhere (a talk's surfaced memories, #598).
+	exclude: string[] = []
 ): Promise<EpisodicSearch> {
-  if (query === null) return { matches: [], failed: true };
-  try {
-    const { entries, results } = await rag.search(ctx, {
-      namespace: emotionalProfileId,
-      query,
-      // ponytail: a long talk's exclusions crowd out fresh hits past 50.
-      limit: Math.min(4 + exclude.length, 50),
-      filters: [{ name: "status", value: EPISODIC_STATUS }],
-    });
-    const retained = entries
-      .filter((e) => e.key !== undefined && e.key !== currentSessionId && !exclude.includes(e.key))
-      .slice(0, 3);
-    const retainedIds = new Set(retained.map((e) => e.entryId));
-    // Scores live on the sibling `results` array, joined by entryId. Taken as
-    // returned by rag.search — never recomputed or normalised. Scoped to the
-    // retained entries, not all results: the score has to describe the memory
-    // that actually reached the articulator, and this session's own re-ingested
-    // composite would otherwise near-perfectly self-match and read as connected.
-    const scores = results
-      .filter((r) => retainedIds.has(r.entryId))
-      .map((r) => r.score);
+	if (query === null) {
+		return { failed: true, matches: [] };
+	}
+	try {
+		const { entries, results } = await rag.search(ctx, {
+			filters: [{ name: "status", value: EPISODIC_STATUS }],
+			// ponytail: a long talk's exclusions crowd out fresh hits past 50.
+			limit: Math.min(4 + exclude.length, 50),
+			namespace: emotionalProfileId,
+			query,
+		});
+		const retained = entries
+			.filter(
+				(e) =>
+					e.key !== undefined &&
+					e.key !== currentSessionId &&
+					!exclude.includes(e.key)
+			)
+			.slice(0, 3);
+		const retainedIds = new Set(retained.map((e) => e.entryId));
+		// Scores live on the sibling `results` array, joined by entryId. Taken as
+		// returned by rag.search — never recomputed or normalised. Scoped to the
+		// retained entries, not all results: the score has to describe the memory
+		// that actually reached the articulator, and this session's own re-ingested
+		// composite would otherwise near-perfectly self-match and read as connected.
+		const scores = results
+			.filter((r) => retainedIds.has(r.entryId))
+			.map((r) => r.score);
 
-    return {
-      matches: retained.map((e) => ({ text: e.text, key: e.key as string })),
-      topScore: scores.length > 0 ? Math.max(...scores) : undefined,
-    };
-  } catch (error) {
-    console.error("searchEpisodicMemory failed", error);
-    return { matches: [], failed: true };
-  }
+		return {
+			matches: retained.map((e) => ({ key: e.key as string, text: e.text })),
+			topScore: scores.length > 0 ? Math.max(...scores) : undefined,
+		};
+	} catch (error) {
+		console.error("searchEpisodicMemory failed", error);
+		return { failed: true, matches: [] };
+	}
 }

@@ -34,15 +34,9 @@
     "retrievedAt": 1789430400000,
     "lastReviewedAt": 1789430400000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "anxiety"
-      ],
-      "lifeArea": [
-        "achievement"
-      ]
+      "audience": ["student"],
+      "emotion": ["anxiety"],
+      "lifeArea": ["achievement"]
     },
     "bodyPath": "bodies/dev-exam-stress-advice.md"
   },
@@ -65,12 +59,8 @@
     "retrievedAt": 1788220800000,
     "lastReviewedAt": 1788220800000,
     "facets": {
-      "emotion": [
-        "anxiety"
-      ],
-      "lifeArea": [
-        "health"
-      ]
+      "emotion": ["anxiety"],
+      "lifeArea": ["health"]
     },
     "bodyPath": "bodies/dev-sleep-verbatim.md"
   },
@@ -93,15 +83,9 @@
     "retrievedAt": 1789430400000,
     "lastReviewedAt": 1789430400000,
     "facets": {
-      "audience": [
-        "professional"
-      ],
-      "emotion": [
-        "numbness"
-      ],
-      "lifeArea": [
-        "work"
-      ]
+      "audience": ["professional"],
+      "emotion": ["numbness"],
+      "lifeArea": ["work"]
     },
     "bodyPath": "bodies/dev-what-is-burnout.md"
   },
@@ -123,16 +107,9 @@
     "consentRecordedAt": 1789862400000,
     "lastReviewedAt": 1789862400000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "sadness"
-      ],
-      "lifeArea": [
-        "isolation",
-        "change"
-      ]
+      "audience": ["student"],
+      "emotion": ["sadness"],
+      "lifeArea": ["isolation", "change"]
     },
     "bodyPath": "bodies/dev-first-term-story.md"
   },
@@ -157,15 +134,9 @@
     "retrievedAt": 1790697114000,
     "lastReviewedAt": 1790697114000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "anxiety"
-      ],
-      "lifeArea": [
-        "achievement"
-      ]
+      "audience": ["student"],
+      "emotion": ["anxiety"],
+      "lifeArea": ["achievement"]
     },
     "bodyPath": "bodies/dev-exam-stress-student-minds.md",
     "coverPath": "exams-stress-s.png",
@@ -190,12 +161,8 @@
     "retrievedAt": 1790697114000,
     "lastReviewedAt": 1790697114000,
     "facets": {
-      "emotion": [
-        "anxiety"
-      ],
-      "lifeArea": [
-        "health"
-      ]
+      "emotion": ["anxiety"],
+      "lifeArea": ["health"]
     },
     "bodyPath": "bodies/dev-wind-down-adapted.md"
   },
@@ -242,16 +209,8 @@
     "retrievedAt": 1791359721872,
     "lastReviewedAt": 1791359721872,
     "facets": {
-      "emotion": [
-        "anxiety",
-        "overwhelm",
-        "stress"
-      ],
-      "lifeArea": [
-        "health",
-        "studies",
-        "work"
-      ]
+      "emotion": ["anxiety", "overwhelm", "stress"],
+      "lifeArea": ["health", "studies", "work"]
     },
     "reflectPrompt": "What is one small next step you could take today?",
     "bodyPath": "bodies/dev-anxiety-what-helps.md",

@@ -11,28 +11,37 @@ import { shouldOfferKindlingAnnouncement } from "@/src/features/kindling/kindlin
  *    reads as free, flashing the upsell at a subscriber for a frame.
  * 4. Qualification still loading (`undefined`) is treated as qualifying.
  */
-const offer = (qualifies: boolean | undefined, isPlus: boolean, isResolved = true) =>
-  shouldOfferKindlingAnnouncement({ qualifies, isPlus, isResolved });
+const offer = (
+	qualifies: boolean | undefined,
+	isPlus: boolean,
+	isResolved = true
+) => shouldOfferKindlingAnnouncement({ isPlus, isResolved, qualifies });
 
 describe("shouldOfferKindlingAnnouncement", () => {
-  it.each([true, false])("not qualifying → none (isPlus %s)", (isPlus) => {
-    expect(offer(false, isPlus)).toBe("none");
-  });
+	it.each([true, false])("not qualifying → none (isPlus %s)", (isPlus) => {
+		expect(offer(false, isPlus)).toBe("none");
+	});
 
-  it("qualifying + plus → plus", () => {
-    expect(offer(true, true)).toBe("plus");
-  });
+	it("qualifying + plus → plus", () => {
+		expect(offer(true, true)).toBe("plus");
+	});
 
-  it("qualifying + free → free", () => {
-    expect(offer(true, false)).toBe("free");
-  });
+	it("qualifying + free → free", () => {
+		expect(offer(true, false)).toBe("free");
+	});
 
-  it.each([true, false, undefined])("%s + entitlement resolving → none", (qualifies) => {
-    expect(offer(qualifies, false, false)).toBe("none");
-    expect(offer(qualifies, true, false)).toBe("none");
-  });
+	it.each([true, false, undefined])(
+		"%s + entitlement resolving → none",
+		(qualifies) => {
+			expect(offer(qualifies, false, false)).toBe("none");
+			expect(offer(qualifies, true, false)).toBe("none");
+		}
+	);
 
-  it.each([true, false])("qualification loading → none (isPlus %s)", (isPlus) => {
-    expect(offer(undefined, isPlus)).toBe("none");
-  });
+	it.each([true, false])(
+		"qualification loading → none (isPlus %s)",
+		(isPlus) => {
+			expect(offer(undefined, isPlus)).toBe("none");
+		}
+	);
 });

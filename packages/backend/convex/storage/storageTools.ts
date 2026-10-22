@@ -9,9 +9,7 @@ import { internalQuery } from "../_generated/server";
  *   bunx convex run storageTools:getFileUrl '{"storageId":"..."}' --prod
  */
 export const getFileUrl = internalQuery({
-  args: { storageId: v.id("_storage") },
-  returns: v.union(v.string(), v.null()),
-  handler: async (ctx, args) => {
-    return await ctx.storage.getUrl(args.storageId);
-  },
+	args: { storageId: v.id("_storage") },
+	handler: async (ctx, args) => await ctx.storage.getUrl(args.storageId),
+	returns: v.union(v.string(), v.null()),
 });

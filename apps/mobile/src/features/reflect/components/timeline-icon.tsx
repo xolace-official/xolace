@@ -1,39 +1,39 @@
-import { Pressable, View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { useThemeColor } from "heroui-native";
 import { SymbolView } from "expo-symbols";
+import { useThemeColor } from "heroui-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { playSoftPress } from "@/src/lib/haptics";
 
-const TIMELINE_ICON_NAME = { ios: "clock", android: "history" } as const;
+const TIMELINE_ICON_NAME = { android: "history", ios: "clock" } as const;
 
 export const TimelineIcon = () => {
-  const router = useRouter();
-  const foregroundColor = useThemeColor("foreground");
+	const router = useRouter();
+	const foregroundColor = useThemeColor("foreground");
 
-  const handlePress = () => {
-    playSoftPress();
-    router.push("/(protected)/timeline");
-  };
+	const handlePress = () => {
+		playSoftPress();
+		router.push("/(protected)/timeline");
+	};
 
-  return (
-    <Pressable
-      onPress={handlePress}
-      hitSlop={8}
-      accessibilityRole="button"
-      accessibilityLabel="Open your timeline"
-    >
-      <View className="h-10 w-10 items-center justify-center rounded-full border border-accent">
-        <SymbolView
-          name={TIMELINE_ICON_NAME}
-          size={20}
-          tintColor={foregroundColor}
-          style={styles.icon}
-        />
-      </View>
-    </Pressable>
-  );
+	return (
+		<Pressable
+			accessibilityLabel="Open your timeline"
+			accessibilityRole="button"
+			hitSlop={8}
+			onPress={handlePress}
+		>
+			<View className="h-10 w-10 items-center justify-center rounded-full border border-accent">
+				<SymbolView
+					name={TIMELINE_ICON_NAME}
+					size={20}
+					style={styles.icon}
+					tintColor={foregroundColor}
+				/>
+			</View>
+		</Pressable>
+	);
 };
 
 const styles = StyleSheet.create({
-  icon: { opacity: 0.5 },
+	icon: { opacity: 0.5 },
 });

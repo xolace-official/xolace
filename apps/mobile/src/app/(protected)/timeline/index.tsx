@@ -1,9 +1,5 @@
-import { TimelineScreen } from "@/src/features/timeline/components/screens/TimelineScreen"
+import { TimelineScreen } from "@/src/features/timeline/components/screens/TimelineScreen";
 
-const Timeline = () => {
-  return (
-   <TimelineScreen />
-  )
-}
+const Timeline = () => <TimelineScreen />;
 
-export default Timeline
+export default Timeline;

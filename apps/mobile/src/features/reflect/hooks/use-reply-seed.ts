@@ -1,6 +1,9 @@
-import { useEffect } from 'react';
-import { useAppStore } from '@/src/store/store';
-import type { ReflectionAction, ReflectionStateName } from '@/src/features/reflect/types';
+import { useEffect } from "react";
+import type {
+	ReflectionAction,
+	ReflectionStateName,
+} from "@/src/features/reflect/types";
+import { useAppStore } from "@/src/store/store";
 
 /**
  * Arriving with a reply seed (#316) opens the composer for the user; leaving the
@@ -8,20 +11,22 @@ import type { ReflectionAction, ReflectionStateName } from '@/src/features/refle
  * spends it, so the card cannot re-open itself on a later visit to idle.
  */
 export function useReplySeed(
-  screen: ReflectionStateName,
-  dispatch: (action: ReflectionAction) => void,
+	screen: ReflectionStateName,
+	dispatch: (action: ReflectionAction) => void
 ) {
-  const replySeed = useAppStore((s) => s.replySeed);
-  const clearReplySeed = useAppStore((s) => s.clearReplySeed);
+	const replySeed = useAppStore((s) => s.replySeed);
+	const clearReplySeed = useAppStore((s) => s.clearReplySeed);
 
-  useEffect(() => {
-    if (!replySeed) return;
-    if (screen === 'idle') {
-      dispatch({ type: 'TAP_INPUT' });
-      return;
-    }
-    if (screen !== 'typing' && screen !== 'typing-nudge') {
-      clearReplySeed();
-    }
-  }, [replySeed, screen, dispatch, clearReplySeed]);
+	useEffect(() => {
+		if (!replySeed) {
+			return;
+		}
+		if (screen === "idle") {
+			dispatch({ type: "TAP_INPUT" });
+			return;
+		}
+		if (screen !== "typing" && screen !== "typing-nudge") {
+			clearReplySeed();
+		}
+	}, [replySeed, screen, dispatch, clearReplySeed]);
 }

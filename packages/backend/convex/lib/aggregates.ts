@@ -1,7 +1,7 @@
 import { TableAggregate } from "@convex-dev/aggregate";
 import { components } from "../_generated/api";
-import { DataModel, Doc, Id } from "../_generated/dataModel";
-import { MutationCtx } from "../_generated/server";
+import type { DataModel, Doc, Id } from "../_generated/dataModel";
+import type { MutationCtx } from "../_generated/server";
 
 /**
  * Sorted index over `emotional_profiles.sessionCount`.
@@ -28,30 +28,45 @@ import { MutationCtx } from "../_generated/server";
  * completion that throws is a broken app, so we take the wrong number.
  */
 export const reflectionRank = new TableAggregate<{
-  Key: number;
-  DataModel: DataModel;
-  TableName: "emotional_profiles";
+	Key: number;
+	DataModel: DataModel;
+	TableName: "emotional_profiles";
 }>(components.reflectionRank, {
-  sortKey: (doc) => doc.sessionCount,
+	sortKey: (doc) => doc.sessionCount,
 });
 
 /** Call immediately after inserting a new emotional_profiles row. */
-export async function rankInsert(ctx: MutationCtx, profileId: Id<"emotional_profiles">) {
-  const doc = await ctx.db.get("emotional_profiles", profileId);
-  if (doc) await reflectionRank.insertIfDoesNotExist(ctx, doc);
+export async function rankInsert(
+	ctx: MutationCtx,
+	profileId: Id<"emotional_profiles">
+) {
+	const doc = await ctx.db.get("emotional_profiles", profileId);
+	if (doc) {
+		await reflectionRank.insertIfDoesNotExist(ctx, doc);
+	}
 }
 
 /**
  * Call immediately after patching a profile, passing the doc as it was read
  * *before* the patch. Re-reads the fresh doc itself.
  */
-export async function rankReplace(ctx: MutationCtx, oldDoc: Doc<"emotional_profiles">) {
-  const newDoc = await ctx.db.get("emotional_profiles", oldDoc._id);
-  if (newDoc) await reflectionRank.replaceOrInsert(ctx, oldDoc, newDoc);
+export async function rankReplace(
+	ctx: MutationCtx,
+	oldDoc: Doc<"emotional_profiles">
+) {
+	const newDoc = await ctx.db.get("emotional_profiles", oldDoc._id);
+	if (newDoc) {
+		await reflectionRank.replaceOrInsert(ctx, oldDoc, newDoc);
+	}
 }
 
 /** Call *before* deleting the profile row — the doc must still exist. */
-export async function rankDelete(ctx: MutationCtx, profileId: Id<"emotional_profiles">) {
-  const doc = await ctx.db.get("emotional_profiles", profileId);
-  if (doc) await reflectionRank.deleteIfExists(ctx, doc);
+export async function rankDelete(
+	ctx: MutationCtx,
+	profileId: Id<"emotional_profiles">
+) {
+	const doc = await ctx.db.get("emotional_profiles", profileId);
+	if (doc) {
+		await reflectionRank.deleteIfExists(ctx, doc);
+	}
 }

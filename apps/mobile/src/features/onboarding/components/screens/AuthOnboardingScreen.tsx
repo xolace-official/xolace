@@ -1,12 +1,10 @@
-import { StatusBar } from 'expo-status-bar';
+import { StatusBar } from "expo-status-bar";
 
-import { AuthOnboardingShell } from '@/src/features/onboarding/components/auth-onboarding/auth-onboarding-shell';
+import { AuthOnboardingShell } from "@/src/features/onboarding/components/auth-onboarding/auth-onboarding-shell";
 
-export const AuthOnboardingScreen = () => {
-  return (
-    <>
-      <StatusBar hidden />
-      <AuthOnboardingShell />
-    </>
-  );
-};
+export const AuthOnboardingScreen = () => (
+	<>
+		<StatusBar hidden />
+		<AuthOnboardingShell />
+	</>
+);

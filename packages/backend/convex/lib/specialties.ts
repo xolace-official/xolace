@@ -22,67 +22,72 @@ import { v } from "convex/values";
  * filter can never drift apart.
  */
 export const SPECIALTIES = [
-  {
-    slug: "anxiety",
-    label: "Anxiety",
-    pickerLabel: "Anxiety & overthinking",
-    listensTo: "anxiety and overthinking",
-  },
-  {
-    slug: "sleep",
-    label: "Sleep",
-    pickerLabel: "Sleep & exhaustion",
-    listensTo: "sleepless nights and exhaustion",
-  },
-  {
-    slug: "loneliness",
-    label: "Loneliness",
-    pickerLabel: "Loneliness",
-    listensTo: "loneliness",
-  },
-  {
-    slug: "grief",
-    label: "Grief",
-    pickerLabel: "Grief & loss",
-    listensTo: "grief and loss",
-  },
-  {
-    slug: "burnout",
-    label: "Burnout",
-    pickerLabel: "Burnout & work stress",
-    listensTo: "burnout and work stress",
-  },
-  {
-    slug: "relationships",
-    label: "Relationships",
-    pickerLabel: "Relationships",
-    listensTo: "relationships",
-  },
-  { slug: "family", label: "Family", pickerLabel: "Family", listensTo: "family" },
-  {
-    slug: "identity",
-    label: "Identity",
-    pickerLabel: "Identity & belonging",
-    listensTo: "identity and belonging",
-  },
-  {
-    slug: "addiction",
-    label: "Addiction",
-    pickerLabel: "Addiction & recovery",
-    listensTo: "addiction and staying sober",
-  },
-  {
-    slug: "studies",
-    label: "Studies",
-    pickerLabel: "Studies & exams",
-    listensTo: "studies and exams",
-  },
-  {
-    slug: "change",
-    label: "Big changes",
-    pickerLabel: "Big life changes",
-    listensTo: "big life changes",
-  },
+	{
+		label: "Anxiety",
+		listensTo: "anxiety and overthinking",
+		pickerLabel: "Anxiety & overthinking",
+		slug: "anxiety",
+	},
+	{
+		label: "Sleep",
+		listensTo: "sleepless nights and exhaustion",
+		pickerLabel: "Sleep & exhaustion",
+		slug: "sleep",
+	},
+	{
+		label: "Loneliness",
+		listensTo: "loneliness",
+		pickerLabel: "Loneliness",
+		slug: "loneliness",
+	},
+	{
+		label: "Grief",
+		listensTo: "grief and loss",
+		pickerLabel: "Grief & loss",
+		slug: "grief",
+	},
+	{
+		label: "Burnout",
+		listensTo: "burnout and work stress",
+		pickerLabel: "Burnout & work stress",
+		slug: "burnout",
+	},
+	{
+		label: "Relationships",
+		listensTo: "relationships",
+		pickerLabel: "Relationships",
+		slug: "relationships",
+	},
+	{
+		label: "Family",
+		listensTo: "family",
+		pickerLabel: "Family",
+		slug: "family",
+	},
+	{
+		label: "Identity",
+		listensTo: "identity and belonging",
+		pickerLabel: "Identity & belonging",
+		slug: "identity",
+	},
+	{
+		label: "Addiction",
+		listensTo: "addiction and staying sober",
+		pickerLabel: "Addiction & recovery",
+		slug: "addiction",
+	},
+	{
+		label: "Studies",
+		listensTo: "studies and exams",
+		pickerLabel: "Studies & exams",
+		slug: "studies",
+	},
+	{
+		label: "Big changes",
+		listensTo: "big life changes",
+		pickerLabel: "Big life changes",
+		slug: "change",
+	},
 ] as const;
 
 export type Specialty = (typeof SPECIALTIES)[number]["slug"];
@@ -91,21 +96,23 @@ export type Specialty = (typeof SPECIALTIES)[number]["slug"];
 export const MAX_SPECIALTIES = 4;
 
 export const specialtyValidator = v.union(
-  ...SPECIALTIES.map((specialty) => v.literal(specialty.slug)),
+	...SPECIALTIES.map((specialty) => v.literal(specialty.slug))
 );
 
 /** Guards a slug arriving from a route param — anything else is ignored. */
 export function isSpecialty(slug: string | undefined): slug is Specialty {
-  return SPECIALTIES.some((specialty) => specialty.slug === slug);
+	return SPECIALTIES.some((specialty) => specialty.slug === slug);
 }
 
 export function specialtyLabel(slug: string): string {
-  return SPECIALTIES.find((specialty) => specialty.slug === slug)?.label ?? slug;
+	return (
+		SPECIALTIES.find((specialty) => specialty.slug === slug)?.label ?? slug
+	);
 }
 
 /** Completes "<name> listens to ___." Falls back to the slug's own words. */
 export function specialtyListensTo(slug: string): string {
-  return (
-    SPECIALTIES.find((specialty) => specialty.slug === slug)?.listensTo ?? slug
-  );
+	return (
+		SPECIALTIES.find((specialty) => specialty.slug === slug)?.listensTo ?? slug
+	);
 }

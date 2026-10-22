@@ -13,20 +13,22 @@
  * has its own pair, `intake_offer_opened` / `intake_offer_dismissed`; keeping
  * them apart is what keeps intake's dismissal rate inside [0, 1].
  */
-import { useIntakeComplete } from '@/src/features/intake/use-intake-complete';
-import { PaywallScreen } from '@/src/features/purchases/screens/paywall-screen';
+import { useIntakeComplete } from "@/src/features/intake/use-intake-complete";
+import { PaywallScreen } from "@/src/features/purchases/screens/paywall-screen";
 
 export default function IntakePlans() {
-  const completeIntake = useIntakeComplete();
+	const completeIntake = useIntakeComplete();
 
-  return (
-    <PaywallScreen
-      surface="intake"
-      // Returned, not fire-and-forget: `false` (a swallowed write) is what
-      // unlatches the paywall's single-flight exit guard.
-      onExit={(reason) =>
-        completeIntake(reason === 'purchased' ? 'purchased' : 'dismissed_paywall')
-      }
-    />
-  );
+	return (
+		<PaywallScreen
+			// Returned, not fire-and-forget: `false` (a swallowed write) is what
+			// unlatches the paywall's single-flight exit guard.
+			onExit={(reason) =>
+				completeIntake(
+					reason === "purchased" ? "purchased" : "dismissed_paywall"
+				)
+			}
+			surface="intake"
+		/>
+	);
 }

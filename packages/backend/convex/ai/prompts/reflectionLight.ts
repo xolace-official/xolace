@@ -15,46 +15,48 @@
 
 /** One recent session's Understanding, newest-first in the caller's window. */
 export interface LightPassMetadataRow {
-  primaryEmotion: string;
-  granularLabel?: string;
-  intensity: number;
-  thematicTags: string[];
-  userLanguageTags: string[];
-  temporalContext?: string;
-  createdAt: number;
+	createdAt: number;
+	granularLabel?: string;
+	intensity: number;
+	primaryEmotion: string;
+	temporalContext?: string;
+	thematicTags: string[];
+	userLanguageTags: string[];
 }
 
 export interface LightPassContext {
-  // The just-completed session.
-  justCompleted: LightPassMetadataRow | null;
-  // The current rendered narrative profile, or null before the first version.
-  currentProfile: string | null;
-  // The last ~8 Understanding rows (recency signal), newest first.
-  recentMetadata: LightPassMetadataRow[];
+	// The current rendered narrative profile, or null before the first version.
+	currentProfile: string | null;
+	// The just-completed session.
+	justCompleted: LightPassMetadataRow | null;
+	// The last ~8 Understanding rows (recency signal), newest first.
+	recentMetadata: LightPassMetadataRow[];
 }
 
 function renderRow(row: LightPassMetadataRow): string {
-  const parts = [
-    row.primaryEmotion,
-    row.granularLabel ? `(${row.granularLabel})` : null,
-    `intensity ${row.intensity}/10`,
-    row.thematicTags.length > 0 ? `themes: ${row.thematicTags.join(", ")}` : null,
-    row.userLanguageTags.length > 0
-      ? `their words: ${row.userLanguageTags.join(", ")}`
-      : null,
-    row.temporalContext ? row.temporalContext : null,
-  ].filter((p): p is string => !!p);
-  return `- ${parts.join(" | ")}`;
+	const parts = [
+		row.primaryEmotion,
+		row.granularLabel ? `(${row.granularLabel})` : null,
+		`intensity ${row.intensity}/10`,
+		row.thematicTags.length > 0
+			? `themes: ${row.thematicTags.join(", ")}`
+			: null,
+		row.userLanguageTags.length > 0
+			? `their words: ${row.userLanguageTags.join(", ")}`
+			: null,
+		row.temporalContext ? row.temporalContext : null,
+	].filter((p): p is string => !!p);
+	return `- ${parts.join(" | ")}`;
 }
 
 /**
  * Build the system + user prompt for the trajectory refresh.
  */
 export function buildLightPassPrompt(ctx: LightPassContext): {
-  system: string;
-  user: string;
+	system: string;
+	user: string;
 } {
-  const system = `You maintain the "recent trajectory" line of a person's emotional profile inside Xolace — an app that helps people notice and name what they are feeling.
+	const system = `You maintain the "recent trajectory" line of a person's emotional profile inside Xolace — an app that helps people notice and name what they are feeling.
 
 Your ONLY job right now: write 1-3 sentences describing where this person's emotional weather has been heading lately, given their newest session and the recent ones before it. This is the fast-moving line of a longer profile; you are not rewriting who they are, only the direction of travel.
 
@@ -72,24 +74,24 @@ Write it as a quiet, grounded observation a thoughtful friend might make — som
 ## Output
 Respond with ONLY the trajectory text — the bare 1-3 sentences, nothing else.`;
 
-  const profileBlock = ctx.currentProfile
-    ? `## Current profile (for continuity)\n${ctx.currentProfile}`
-    : `## Current profile\n(none yet — this is the first read of this person)`;
+	const profileBlock = ctx.currentProfile
+		? `## Current profile (for continuity)\n${ctx.currentProfile}`
+		: "## Current profile\n(none yet — this is the first read of this person)";
 
-  const justBlock = ctx.justCompleted
-    ? `## The session that just completed\n${renderRow(ctx.justCompleted)}`
-    : `## The session that just completed\n(no classification available)`;
+	const justBlock = ctx.justCompleted
+		? `## The session that just completed\n${renderRow(ctx.justCompleted)}`
+		: "## The session that just completed\n(no classification available)";
 
-  const recentBlock =
-    ctx.recentMetadata.length > 0
-      ? `## Recent sessions before it (newest first)\n${ctx.recentMetadata
-          .map(renderRow)
-          .join("\n")}`
-      : `## Recent sessions before it\n(none)`;
+	const recentBlock =
+		ctx.recentMetadata.length > 0
+			? `## Recent sessions before it (newest first)\n${ctx.recentMetadata
+					.map(renderRow)
+					.join("\n")}`
+			: "## Recent sessions before it\n(none)";
 
-  const user = `${justBlock}\n\n${recentBlock}\n\n${profileBlock}`;
+	const user = `${justBlock}\n\n${recentBlock}\n\n${profileBlock}`;
 
-  return { system, user };
+	return { system, user };
 }
 
 /**
@@ -98,15 +100,19 @@ Respond with ONLY the trajectory text — the bare 1-3 sentences, nothing else.`
  * sentence is never truncated (a mid-sentence cut ruins the trajectory);
  * generation length is bounded by max_tokens on the call instead.
  */
-export function parseLightPassResponse(raw: string): { trajectory: string } | null {
-  const cleaned = raw
-    .replace(/^```[a-z]*\s*/i, "")
-    .replace(/\s*```$/i, "")
-    .trim()
-    .replace(/^["']|["']$/g, "")
-    .trim();
+export function parseLightPassResponse(
+	raw: string
+): { trajectory: string } | null {
+	const cleaned = raw
+		.replace(/^```[a-z]*\s*/i, "")
+		.replace(/\s*```$/i, "")
+		.trim()
+		.replace(/^["']|["']$/g, "")
+		.trim();
 
-  if (!cleaned) return null;
+	if (!cleaned) {
+		return null;
+	}
 
-  return { trajectory: cleaned };
+	return { trajectory: cleaned };
 }

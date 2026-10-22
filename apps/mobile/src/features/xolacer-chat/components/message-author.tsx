@@ -1,11 +1,11 @@
-import { createContext, use, useMemo, type ReactNode } from 'react';
+import { createContext, type ReactNode, use, useMemo } from "react";
 import {
-  MessageAuthor,
-  useMessageContext,
-  type MessageAuthorProps,
-} from 'stream-chat-expo';
-import { resolveMessageIdentity } from '../utils';
-import type { ThreadConversation } from './thread-screen';
+	MessageAuthor,
+	type MessageAuthorProps,
+	useMessageContext,
+} from "stream-chat-expo";
+import { resolveMessageIdentity } from "../utils";
+import type { ThreadConversation } from "./thread-screen";
 
 /**
  * The conversation the message list is rendering, reachable from a component
@@ -17,30 +17,30 @@ import type { ThreadConversation } from './thread-screen';
  * component stays module-level and stable; the data moves through here.
  */
 const ConversationIdentityContext = createContext<{
-  conversation: ThreadConversation;
+	conversation: ThreadConversation;
 } | null>(null);
 
 /** The conversation behind the currently mounted `WithComponents` override tree. */
 export function useConversationIdentity() {
-  return use(ConversationIdentityContext);
+	return use(ConversationIdentityContext);
 }
 
 export function ConversationIdentityProvider({
-  conversation,
-  children,
+	conversation,
+	children,
 }: {
-  conversation: ThreadConversation;
-  children: ReactNode;
+	conversation: ThreadConversation;
+	children: ReactNode;
 }) {
-  // Kept despite the React Compiler: a new value object here re-renders every
-  // message bubble in the list, and the compiler doesn't stabilize across a
-  // context boundary.
-  const value = useMemo(() => ({ conversation }), [conversation]);
-  return (
-    <ConversationIdentityContext.Provider value={value}>
-      {children}
-    </ConversationIdentityContext.Provider>
-  );
+	// Kept despite the React Compiler: a new value object here re-renders every
+	// message bubble in the list, and the compiler doesn't stabilize across a
+	// context boundary.
+	const value = useMemo(() => ({ conversation }), [conversation]);
+	return (
+		<ConversationIdentityContext.Provider value={value}>
+			{children}
+		</ConversationIdentityContext.Provider>
+	);
 }
 
 /**
@@ -55,21 +55,23 @@ export function ConversationIdentityProvider({
  * means no recursion back into this one.
  */
 export function ConversationMessageAuthor(props: MessageAuthorProps) {
-  const { message } = useMessageContext();
-  const identity = useConversationIdentity();
+	const { message } = useMessageContext();
+	const identity = useConversationIdentity();
 
-  const override = identity
-    ? resolveMessageIdentity(message.user?.id, identity.conversation)
-    : null;
-  if (!override || !message.user) return <MessageAuthor {...props} />;
+	const override = identity
+		? resolveMessageIdentity(message.user?.id, identity.conversation)
+		: null;
+	if (!(override && message.user)) {
+		return <MessageAuthor {...props} />;
+	}
 
-  return (
-    <MessageAuthor
-      {...props}
-      message={{
-        ...message,
-        user: { ...message.user, name: override.name, image: override.image },
-      }}
-    />
-  );
+	return (
+		<MessageAuthor
+			{...props}
+			message={{
+				...message,
+				user: { ...message.user, image: override.image, name: override.name },
+			}}
+		/>
+	);
 }

@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { internalQuery, type QueryCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
+import { internalQuery, type QueryCtx } from "./_generated/server";
 
 // =============================================================
 // UNDERSTANDING — Cognition Layer Phase 2
@@ -37,8 +37,9 @@ export type Understanding = Doc<"emotional_metadata">;
  * (or the row was purged by retention/wipe).
  */
 export const getUnderstanding = internalQuery({
-  args: { sessionId: v.id("sessions") },
-  handler: async (ctx, args): Promise<Understanding | null> => understandingOf(ctx, args.sessionId),
+	args: { sessionId: v.id("sessions") },
+	handler: async (ctx, args): Promise<Understanding | null> =>
+		understandingOf(ctx, args.sessionId),
 });
 
 /**
@@ -46,13 +47,13 @@ export const getUnderstanding = internalQuery({
  * inside their own transaction instead of paying a ctx.runQuery per session.
  */
 export async function understandingOf(
-  ctx: QueryCtx,
-  sessionId: Id<"sessions">,
+	ctx: QueryCtx,
+	sessionId: Id<"sessions">
 ): Promise<Understanding | null> {
-  return await ctx.db
-    .query("emotional_metadata")
-    .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
-    .unique();
+	return await ctx.db
+		.query("emotional_metadata")
+		.withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+		.unique();
 }
 
 /**
@@ -62,13 +63,15 @@ export async function understandingOf(
  * inside their own transaction.
  */
 export async function recentUnderstandings(
-  ctx: QueryCtx,
-  profileId: Id<"emotional_profiles">,
-  limit: number,
+	ctx: QueryCtx,
+	profileId: Id<"emotional_profiles">,
+	limit: number
 ): Promise<Understanding[]> {
-  return await ctx.db
-    .query("emotional_metadata")
-    .withIndex("by_profile_createdAt", (q) => q.eq("emotionalProfileId", profileId))
-    .order("desc")
-    .take(limit);
+	return await ctx.db
+		.query("emotional_metadata")
+		.withIndex("by_profile_createdAt", (q) =>
+			q.eq("emotionalProfileId", profileId)
+		)
+		.order("desc")
+		.take(limit);
 }

@@ -16,20 +16,20 @@
  */
 
 export type PushDeviceRow<TId extends string> = {
-  _id: TId;
-  emotionalProfileId: string;
+	_id: TId;
+	emotionalProfileId: string;
 };
 
 export type PushDeviceReconciliation<TId extends string> = {
-  /** Row to reuse for this registration, or null when one must be inserted. */
-  keepId: TId | null;
-  /**
-   * Rows to delete along with their component recipients: any row holding this
-   * token under a different profile (ownership transfer — a reinstalled or
-   * handed-down device must never inherit the previous account's
-   * notifications), plus any duplicate row under this profile.
-   */
-  deleteIds: TId[];
+	/** Row to reuse for this registration, or null when one must be inserted. */
+	keepId: TId | null;
+	/**
+	 * Rows to delete along with their component recipients: any row holding this
+	 * token under a different profile (ownership transfer — a reinstalled or
+	 * handed-down device must never inherit the previous account's
+	 * notifications), plus any duplicate row under this profile.
+	 */
+	deleteIds: TId[];
 };
 
 /**
@@ -37,21 +37,21 @@ export type PushDeviceReconciliation<TId extends string> = {
  * token, given the profile that is registering it.
  */
 export function reconcilePushDevice<TId extends string>(
-  rowsForToken: PushDeviceRow<TId>[],
-  emotionalProfileId: string,
+	rowsForToken: PushDeviceRow<TId>[],
+	emotionalProfileId: string
 ): PushDeviceReconciliation<TId> {
-  let keepId: TId | null = null;
-  const deleteIds: TId[] = [];
+	let keepId: TId | null = null;
+	const deleteIds: TId[] = [];
 
-  for (const row of rowsForToken) {
-    if (row.emotionalProfileId === emotionalProfileId && keepId === null) {
-      keepId = row._id;
-    } else {
-      deleteIds.push(row._id);
-    }
-  }
+	for (const row of rowsForToken) {
+		if (row.emotionalProfileId === emotionalProfileId && keepId === null) {
+			keepId = row._id;
+		} else {
+			deleteIds.push(row._id);
+		}
+	}
 
-  return { keepId, deleteIds };
+	return { deleteIds, keepId };
 }
 
 /**
@@ -59,13 +59,13 @@ export function reconcilePushDevice<TId extends string>(
  * `getNotificationsForUser` returns them.
  */
 export type PushNotificationState =
-  | "awaiting_delivery"
-  | "in_progress"
-  | "delivered"
-  | "needs_retry"
-  | "failed"
-  | "maybe_delivered"
-  | "unable_to_deliver";
+	| "awaiting_delivery"
+	| "in_progress"
+	| "delivered"
+	| "needs_retry"
+	| "failed"
+	| "maybe_delivered"
+	| "unable_to_deliver";
 
 /**
  * How long a device may go without registering before it is assumed gone.
@@ -95,15 +95,17 @@ export type PushDeviceVerdict = "keep" | "dead" | "expired";
  * the watchdog's ambiguous bucket. See docs/adr/0001-no-expo-receipts.md.
  */
 export function classifyPushDevice(args: {
-  latestStates: PushNotificationState[];
-  lastRegisteredAt: number;
-  now: number;
+	latestStates: PushNotificationState[];
+	lastRegisteredAt: number;
+	now: number;
 }): PushDeviceVerdict {
-  if (args.latestStates[0] === "unable_to_deliver") return "dead";
-  if (args.now - args.lastRegisteredAt > PUSH_DEVICE_MAX_AGE_MS) {
-    return "expired";
-  }
-  return "keep";
+	if (args.latestStates[0] === "unable_to_deliver") {
+		return "dead";
+	}
+	if (args.now - args.lastRegisteredAt > PUSH_DEVICE_MAX_AGE_MS) {
+		return "expired";
+	}
+	return "keep";
 }
 
 /**
@@ -128,8 +130,8 @@ export const PUSH_HISTORY_PRUNE_GRACE_MS = 15 * 60 * 1000;
 export const PUSH_SEND_SETTLE_MS = 60 * 1000;
 
 export type PushHistoryRow = {
-  state: PushNotificationState;
-  _creationTime: number;
+	state: PushNotificationState;
+	_creationTime: number;
 };
 
 /**
@@ -150,11 +152,11 @@ export type PushHistoryRow = {
  * store it cannot quietly become prunable.
  */
 const PUSH_STATE_QUIET_MS: Partial<Record<PushNotificationState, number>> = {
-  maybe_delivered: PUSH_HISTORY_PRUNE_GRACE_MS,
-  delivered: PUSH_SEND_SETTLE_MS,
-  // Written by the coordinator mutation, but a watchdog from the batch that
-  // failed it can still be pending and patch it back to `maybe_delivered`.
-  unable_to_deliver: PUSH_SEND_SETTLE_MS,
+	delivered: PUSH_SEND_SETTLE_MS,
+	maybe_delivered: PUSH_HISTORY_PRUNE_GRACE_MS,
+	// Written by the coordinator mutation, but a watchdog from the batch that
+	// failed it can still be pending and patch it back to `maybe_delivered`.
+	unable_to_deliver: PUSH_SEND_SETTLE_MS,
 };
 
 /**
@@ -162,19 +164,19 @@ const PUSH_STATE_QUIET_MS: Partial<Record<PushNotificationState, number>> = {
  * saw it in a shape that could be pruned, and what that shape was.
  */
 export type PushHistoryWatch = {
-  since: number;
-  fingerprint: string;
+	since: number;
+	fingerprint: string;
 };
 
 export type PushHistoryPruneDecision = {
-  prune: boolean;
-  /** Watch to store back on the device row; `undefined` clears it. */
-  watch: PushHistoryWatch | undefined;
+	prune: boolean;
+	/** Watch to store back on the device row; `undefined` clears it. */
+	watch: PushHistoryWatch | undefined;
 };
 
 /** Identity of a history read: any write by anyone changes this. */
 function fingerprintPushHistory(rows: PushHistoryRow[]): string {
-  return rows.map((row) => `${row._creationTime}:${row.state}`).join("|");
+	return rows.map((row) => `${row._creationTime}:${row.state}`).join("|");
 }
 
 /**
@@ -207,23 +209,27 @@ function fingerprintPushHistory(rows: PushHistoryRow[]): string {
  * component retries `needs_retry` continuously, so that means genuinely stuck.
  */
 export function decidePushHistoryPrune(args: {
-  rows: PushHistoryRow[];
-  watch: PushHistoryWatch | undefined;
-  now: number;
+	rows: PushHistoryRow[];
+	watch: PushHistoryWatch | undefined;
+	now: number;
 }): PushHistoryPruneDecision {
-  const { rows, watch, now } = args;
-  if (rows.length === 0) return { prune: false, watch: undefined };
+	const { rows, watch, now } = args;
+	if (rows.length === 0) {
+		return { prune: false, watch: undefined };
+	}
 
-  let quietFor = 0;
-  for (const row of rows) {
-    const required = PUSH_STATE_QUIET_MS[row.state];
-    if (required === undefined) return { prune: false, watch: undefined };
-    quietFor = Math.max(quietFor, required);
-  }
+	let quietFor = 0;
+	for (const row of rows) {
+		const required = PUSH_STATE_QUIET_MS[row.state];
+		if (required === undefined) {
+			return { prune: false, watch: undefined };
+		}
+		quietFor = Math.max(quietFor, required);
+	}
 
-  const fingerprint = fingerprintPushHistory(rows);
-  if (watch?.fingerprint !== fingerprint) {
-    return { prune: false, watch: { since: now, fingerprint } };
-  }
-  return { prune: now - watch.since >= quietFor, watch };
+	const fingerprint = fingerprintPushHistory(rows);
+	if (watch?.fingerprint !== fingerprint) {
+		return { prune: false, watch: { fingerprint, since: now } };
+	}
+	return { prune: now - watch.since >= quietFor, watch };
 }

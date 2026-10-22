@@ -1,10 +1,10 @@
 import {
-  CARD_OFFSET,
-  MAX_CARD_WIDTH,
-  SCREEN_MARGIN,
-  type Rect,
-  type TourPlacement,
-  type TourShape,
+	CARD_OFFSET,
+	MAX_CARD_WIDTH,
+	type Rect,
+	SCREEN_MARGIN,
+	type TourPlacement,
+	type TourShape,
 } from "@/src/components/ui/tour/types";
 
 /**
@@ -18,27 +18,27 @@ import {
  * by someone who cannot see why it was backwards.
  */
 export function cutoutPath(
-  screenWidth: number,
-  screenHeight: number,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number,
+	screenWidth: number,
+	screenHeight: number,
+	x: number,
+	y: number,
+	width: number,
+	height: number,
+	radius: number
 ): string {
-  "worklet";
-  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
-  const right = x + width;
-  const bottom = y + height;
+	"worklet";
+	const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+	const right = x + width;
+	const bottom = y + height;
 
-  return (
-    `M0 0H${screenWidth}V${screenHeight}H0Z ` +
-    `M${x + r} ${y}` +
-    `H${right - r}A${r} ${r} 0 0 1 ${right} ${y + r}` +
-    `V${bottom - r}A${r} ${r} 0 0 1 ${right - r} ${bottom}` +
-    `H${x + r}A${r} ${r} 0 0 1 ${x} ${bottom - r}` +
-    `V${y + r}A${r} ${r} 0 0 1 ${x + r} ${y}Z`
-  );
+	return (
+		`M0 0H${screenWidth}V${screenHeight}H0Z ` +
+		`M${x + r} ${y}` +
+		`H${right - r}A${r} ${r} 0 0 1 ${right} ${y + r}` +
+		`V${bottom - r}A${r} ${r} 0 0 1 ${right - r} ${bottom}` +
+		`H${x + r}A${r} ${r} 0 0 1 ${x} ${bottom - r}` +
+		`V${y + r}A${r} ${r} 0 0 1 ${x + r} ${y}Z`
+	);
 }
 
 /**
@@ -50,29 +50,29 @@ export function cutoutPath(
  * a hole round instead of letting it collapse to a slot.
  */
 export function spotlightFor(
-  rect: Rect,
-  shape: TourShape,
-  padding: number,
-  radius: number,
+	rect: Rect,
+	shape: TourShape,
+	padding: number,
+	radius: number
 ): Rect & { radius: number } {
-  if (shape === "circle") {
-    const diameter = Math.max(rect.width, rect.height) + padding * 2;
-    return {
-      x: rect.x + rect.width / 2 - diameter / 2,
-      y: rect.y + rect.height / 2 - diameter / 2,
-      width: diameter,
-      height: diameter,
-      radius: diameter / 2,
-    };
-  }
+	if (shape === "circle") {
+		const diameter = Math.max(rect.width, rect.height) + padding * 2;
+		return {
+			height: diameter,
+			radius: diameter / 2,
+			width: diameter,
+			x: rect.x + rect.width / 2 - diameter / 2,
+			y: rect.y + rect.height / 2 - diameter / 2,
+		};
+	}
 
-  return {
-    x: rect.x - padding,
-    y: rect.y - padding,
-    width: rect.width + padding * 2,
-    height: rect.height + padding * 2,
-    radius,
-  };
+	return {
+		height: rect.height + padding * 2,
+		radius,
+		width: rect.width + padding * 2,
+		x: rect.x - padding,
+		y: rect.y - padding,
+	};
 }
 
 /**
@@ -84,49 +84,49 @@ export function spotlightFor(
  * only means a shorter line length and one more thing to get wrong.
  */
 export function cardFrame({
-  spot,
-  cardHeight,
-  placement,
-  screenWidth,
-  screenHeight,
-  insets,
+	spot,
+	cardHeight,
+	placement,
+	screenWidth,
+	screenHeight,
+	insets,
 }: {
-  spot: Rect | null;
-  cardHeight: number | null;
-  placement: TourPlacement;
-  screenWidth: number;
-  screenHeight: number;
-  insets: { top: number; bottom: number; left: number; right: number };
+	spot: Rect | null;
+	cardHeight: number | null;
+	placement: TourPlacement;
+	screenWidth: number;
+	screenHeight: number;
+	insets: { top: number; bottom: number; left: number; right: number };
 }): { left: number; top: number; width: number } {
-  const minX = insets.left + SCREEN_MARGIN;
-  const maxX = screenWidth - insets.right - SCREEN_MARGIN;
-  const width = Math.min(maxX - minX, MAX_CARD_WIDTH);
-  const left = minX + (maxX - minX - width) / 2;
+	const minX = insets.left + SCREEN_MARGIN;
+	const maxX = screenWidth - insets.right - SCREEN_MARGIN;
+	const width = Math.min(maxX - minX, MAX_CARD_WIDTH);
+	const left = minX + (maxX - minX - width) / 2;
 
-  const minY = insets.top + SCREEN_MARGIN;
-  const maxY = screenHeight - insets.bottom - SCREEN_MARGIN;
-  const height = cardHeight ?? 0;
+	const minY = insets.top + SCREEN_MARGIN;
+	const maxY = screenHeight - insets.bottom - SCREEN_MARGIN;
+	const height = cardHeight ?? 0;
 
-  if (!spot) {
-    return { left, top: Math.max(minY, (screenHeight - height) / 2), width };
-  }
+	if (!spot) {
+		return { left, top: Math.max(minY, (screenHeight - height) / 2), width };
+	}
 
-  const below = spot.y + spot.height + CARD_OFFSET;
-  const above = spot.y - CARD_OFFSET - height;
-  const fitsBelow = below + height <= maxY;
-  const fitsAbove = above >= minY;
+	const below = spot.y + spot.height + CARD_OFFSET;
+	const above = spot.y - CARD_OFFSET - height;
+	const fitsBelow = below + height <= maxY;
+	const fitsAbove = above >= minY;
 
-  const goBelow =
-    placement === "bottom"
-      ? fitsBelow || !fitsAbove
-      : placement === "top"
-        ? !fitsAbove
-        : fitsBelow;
+	const goBelow =
+		placement === "bottom"
+			? fitsBelow || !fitsAbove
+			: placement === "top"
+				? !fitsAbove
+				: fitsBelow;
 
-  // Neither side fits — a target taller than the room around it. Clamping keeps
-  // the card on screen and lets it overlap the dim rather than the other way
-  // round, which is the lesser of the two failures.
-  const top = goBelow ? Math.min(below, maxY - height) : Math.max(above, minY);
+	// Neither side fits — a target taller than the room around it. Clamping keeps
+	// the card on screen and lets it overlap the dim rather than the other way
+	// round, which is the lesser of the two failures.
+	const top = goBelow ? Math.min(below, maxY - height) : Math.max(above, minY);
 
-  return { left, top: Math.max(minY, top), width };
+	return { left, top: Math.max(minY, top), width };
 }

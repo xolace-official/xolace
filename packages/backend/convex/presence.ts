@@ -1,8 +1,8 @@
-import { v } from "convex/values";
 import { Presence } from "@convex-dev/presence";
+import { v } from "convex/values";
 import { components } from "./_generated/api";
-import { mutation, query, QueryCtx } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
+import type { Id } from "./_generated/dataModel";
+import { mutation, type QueryCtx, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 
 /**
@@ -38,34 +38,34 @@ export const HEARTBEAT_INTERVAL_MS = 30_000;
  * query, where the complete-and-active index already does it.
  */
 export const heartbeat = mutation({
-  args: {
-    roomId: v.string(),
-    userId: v.string(),
-    sessionId: v.string(),
-    interval: v.number(),
-  },
-  returns: v.object({ roomToken: v.string(), sessionToken: v.string() }),
-  handler: async (ctx, args) => {
-    // Identity is derived server-side. `args.userId` exists only to satisfy
-    // the hook's signature and is ignored — a client cannot heartbeat as
-    // someone else, and cannot pick its own room.
-    const { profile } = await requireAuth(ctx);
-    return await presence.heartbeat(
-      ctx,
-      PRESENCE_ROOM,
-      profile._id,
-      args.sessionId,
-      // Nor can it choose how long it stays present. The component sets the
-      // session deadline to `interval * 2.5`, so an unclamped arg is a
-      // client-controlled expiry: `interval: 3_600_000` keeps a green dot on
-      // the roster for 2.5 hours after the app is gone, which is exactly the
-      // failure this feature exists to prevent — a seeker reaching for
-      // someone who isn't there. Clamped rather than replaced so a client
-      // beating *faster* than us still gets a deadline that matches its own
-      // cadence instead of one 2.5 intervals too generous.
-      Math.min(args.interval, HEARTBEAT_INTERVAL_MS),
-    );
-  },
+	args: {
+		interval: v.number(),
+		roomId: v.string(),
+		sessionId: v.string(),
+		userId: v.string(),
+	},
+	handler: async (ctx, args) => {
+		// Identity is derived server-side. `args.userId` exists only to satisfy
+		// the hook's signature and is ignored — a client cannot heartbeat as
+		// someone else, and cannot pick its own room.
+		const { profile } = await requireAuth(ctx);
+		return await presence.heartbeat(
+			ctx,
+			PRESENCE_ROOM,
+			profile._id,
+			args.sessionId,
+			// Nor can it choose how long it stays present. The component sets the
+			// session deadline to `interval * 2.5`, so an unclamped arg is a
+			// client-controlled expiry: `interval: 3_600_000` keeps a green dot on
+			// the roster for 2.5 hours after the app is gone, which is exactly the
+			// failure this feature exists to prevent — a seeker reaching for
+			// someone who isn't there. Clamped rather than replaced so a client
+			// beating *faster* than us still gets a deadline that matches its own
+			// cadence instead of one 2.5 intervals too generous.
+			Math.min(args.interval, HEARTBEAT_INTERVAL_MS)
+		);
+	},
+	returns: v.object({ roomToken: v.string(), sessionToken: v.string() }),
 });
 
 /**
@@ -76,26 +76,26 @@ export const heartbeat = mutation({
  * "fix" it by proxying `presence.list`.
  */
 export const list = query({
-  args: { roomToken: v.string() },
-  returns: v.array(
-    v.object({
-      userId: v.string(),
-      online: v.boolean(),
-      lastDisconnected: v.number(),
-    }),
-  ),
-  handler: async () => [],
+	args: { roomToken: v.string() },
+	handler: async () => [],
+	returns: v.array(
+		v.object({
+			lastDisconnected: v.number(),
+			online: v.boolean(),
+			userId: v.string(),
+		})
+	),
 });
 
 export const disconnect = mutation({
-  args: { sessionToken: v.string() },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    // No auth check: the hook fires this over plain HTTP from the background
-    // handler, with no Convex auth token attached. Possession of the opaque
-    // session token is the authorization, and it only ends that one session.
-    return await presence.disconnect(ctx, args.sessionToken);
-  },
+	args: { sessionToken: v.string() },
+	handler: async (ctx, args) => {
+		// No auth check: the hook fires this over plain HTTP from the background
+		// handler, with no Convex auth token attached. Possession of the opaque
+		// session token is the authorization, and it only ends that one session.
+		return await presence.disconnect(ctx, args.sessionToken);
+	},
+	returns: v.null(),
 });
 
 const PRESENCE_ROOM_LIMIT = 512;
@@ -107,27 +107,27 @@ const PRESENCE_ROOM_LIMIT = 512;
  * One room read serves a whole query — cheaper than a per-user read.
  */
 export async function presentProfileIds(
-  ctx: QueryCtx,
+	ctx: QueryCtx
 ): Promise<Set<Id<"emotional_profiles">>> {
-  // ponytail: the ceiling is PRESENCE_ROOM_LIMIT concurrent *app users*, not
-  // xolacers — the room is app-wide and mostly seekers, so it arrives sooner
-  // than a xolacer headcount suggests.
-  //
-  // Past it the truncation is not random: `room_order` is
-  // [roomId, online, lastDisconnected], and every online row carries
-  // lastDisconnected 0, so ties resolve by _creationTime and the oldest
-  // presence rows always win. A xolacer whose row was created later would
-  // read as absent permanently rather than intermittently.
-  //
-  // Absent is still the safe direction to fail, and at current scale (single-
-  // digit xolacers) we are nowhere near. The upgrade is a per-candidate
-  // `presence.listUser` read, which also narrows this query's read set — see
-  // the note in xolacerChat.directory.
-  const online = await presence.listRoom(
-    ctx,
-    PRESENCE_ROOM,
-    true,
-    PRESENCE_ROOM_LIMIT,
-  );
-  return new Set(online.map((p) => p.userId as Id<"emotional_profiles">));
+	// ponytail: the ceiling is PRESENCE_ROOM_LIMIT concurrent *app users*, not
+	// xolacers — the room is app-wide and mostly seekers, so it arrives sooner
+	// than a xolacer headcount suggests.
+	//
+	// Past it the truncation is not random: `room_order` is
+	// [roomId, online, lastDisconnected], and every online row carries
+	// lastDisconnected 0, so ties resolve by _creationTime and the oldest
+	// presence rows always win. A xolacer whose row was created later would
+	// read as absent permanently rather than intermittently.
+	//
+	// Absent is still the safe direction to fail, and at current scale (single-
+	// digit xolacers) we are nowhere near. The upgrade is a per-candidate
+	// `presence.listUser` read, which also narrows this query's read set — see
+	// the note in xolacerChat.directory.
+	const online = await presence.listRoom(
+		ctx,
+		PRESENCE_ROOM,
+		true,
+		PRESENCE_ROOM_LIMIT
+	);
+	return new Set(online.map((p) => p.userId as Id<"emotional_profiles">));
 }

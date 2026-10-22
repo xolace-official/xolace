@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from "react";
 
 /**
  * Whether the native tab bar is hidden right now.
@@ -16,22 +16,24 @@ let hidden = false;
 const listeners = new Set<() => void>();
 
 function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
+	listeners.add(listener);
+	return () => {
+		listeners.delete(listener);
+	};
 }
 
 function getSnapshot() {
-  return hidden;
+	return hidden;
 }
 
 export function setTabBarHidden(nextHidden: boolean) {
-  if (hidden === nextHidden) return;
-  hidden = nextHidden;
-  listeners.forEach((listener) => listener());
+	if (hidden === nextHidden) {
+		return;
+	}
+	hidden = nextHidden;
+	listeners.forEach((listener) => listener());
 }
 
 export function useTabBarHidden() {
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+	return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }

@@ -1,9 +1,5 @@
-import { PromiseScreen } from '@/src/features/onboarding/components/screens/PromiseScreen'
+import { PromiseScreen } from "@/src/features/onboarding/components/screens/PromiseScreen";
 
-const OnboardingPromise = () => {
-  return (
-    <PromiseScreen />
-  )
-}
+const OnboardingPromise = () => <PromiseScreen />;
 
-export default OnboardingPromise
+export default OnboardingPromise;

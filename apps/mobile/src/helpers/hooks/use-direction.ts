@@ -12,14 +12,14 @@
  * component that only needs to know the direction pulls in a hook, not the
  * whole provider.
  */
-import { createContext, useContext } from 'react';
-import { I18nManager } from 'react-native';
+import { createContext, useContext } from "react";
+import { I18nManager } from "react-native";
 
-export type DirectionValue = 'ltr' | 'rtl';
+export type DirectionValue = "ltr" | "rtl";
 
 /** What the device is set to, for anything outside a provider. */
 export const deviceDirection = (): DirectionValue =>
-  I18nManager.isRTL ? 'rtl' : 'ltr';
+	I18nManager.isRTL ? "rtl" : "ltr";
 
 export const DirectionContext = createContext<DirectionValue | null>(null);
 
@@ -29,7 +29,7 @@ export const DirectionContext = createContext<DirectionValue | null>(null);
  * device's own setting.
  */
 export function useDirection(): DirectionValue {
-  return useContext(DirectionContext) ?? deviceDirection();
+	return useContext(DirectionContext) ?? deviceDirection();
 }
 
 /**
@@ -41,5 +41,5 @@ export function useDirection(): DirectionValue {
  * errors live.
  */
 export function useDirectionSign(): 1 | -1 {
-  return useDirection() === 'rtl' ? -1 : 1;
+	return useDirection() === "rtl" ? -1 : 1;
 }

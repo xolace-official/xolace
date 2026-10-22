@@ -4,23 +4,9 @@
     "family": "support",
     "title": "The Procrastination Trap",
     "topic": "audio_topic_procrastination",
-    "tags": [
-      "avoidance",
-      "stuck",
-      "fear",
-      "momentum",
-      "self-talk"
-    ],
-    "sourceTags": [
-      "avoidance",
-      "stuck",
-      "fear",
-      "momentum",
-      "self-talk"
-    ],
-    "narrators": [
-      "Juniper"
-    ],
+    "tags": ["avoidance", "stuck", "fear", "momentum", "self-talk"],
+    "sourceTags": ["avoidance", "stuck", "fear", "momentum", "self-talk"],
+    "narrators": ["Juniper"],
     "audioPath": "support-audios/Procrastination/ElevenLabs_2026-09-17T08_53_34_Juniper - Grounded and Professional_pvc_sp100_s50_sb75_v3.mp3",
     "thumbPath": "support-audio-thumbs/Procrastination/Proscrastination-album-cover.png",
     "durationSec": 97,
@@ -33,13 +19,7 @@
     "family": "support",
     "title": "The Weight You Didn't Notice You Were Carrying",
     "topic": "audio_topic_mild_stress",
-    "tags": [
-      "tension",
-      "buildup",
-      "intervention",
-      "breathwork",
-      "release"
-    ],
+    "tags": ["tension", "buildup", "intervention", "breathwork", "release"],
     "sourceTags": [
       "tension",
       "buildup",
@@ -47,9 +27,7 @@
       "breathwork",
       "release"
     ],
-    "narrators": [
-      "Juniper"
-    ],
+    "narrators": ["Juniper"],
     "audioPath": "support-audios/Mild Stress/The Weight You Didn't Notice You Were Carrying.mp3",
     "thumbPath": "support-audio-thumbs/Mild Stress/mild-stress-album-cover.png",
     "durationSec": 91,
@@ -62,12 +40,7 @@
     "family": "music",
     "title": "Meditation Mindfulness Ambient",
     "topic": "music_topic_mindfulness",
-    "tags": [
-      "presence",
-      "awareness",
-      "grounding",
-      "noticing"
-    ],
+    "tags": ["presence", "awareness", "grounding", "noticing"],
     "audioPath": "support/databend-meditation-mindfulness-ambient-546937.mp3",
     "thumbPath": "thumbs/mindfullness-01.jpg",
     "durationSec": 118,
@@ -84,11 +57,7 @@
       "attributionText": "Music by Databend from Pixabay",
       "acquiredAt": 1757650000000
     },
-    "sourceTags": [
-      "ambient",
-      "meditation",
-      "instrumental"
-    ],
+    "sourceTags": ["ambient", "meditation", "instrumental"],
     "whatItsFor": "soft ambient pads for coming back to the room when your head has run off without you"
   },
   {
@@ -96,11 +65,7 @@
     "family": "music",
     "title": "Sacred Fire of Mindfulness",
     "topic": "music_topic_mindfulness",
-    "tags": [
-      "presence",
-      "awareness",
-      "grounding"
-    ],
+    "tags": ["presence", "awareness", "grounding"],
     "audioPath": "support/meditativecalmbuddha-sacred-fire-of-mindfulness-389028.mp3",
     "thumbPath": "thumbs/mindfullness-02.jpg",
     "durationSec": 272,
@@ -116,11 +81,7 @@
       "attributionText": "Music by MeditativeCalmBuddha from Pixabay",
       "acquiredAt": 1757650000000
     },
-    "sourceTags": [
-      "meditation",
-      "spiritual",
-      "instrumental"
-    ],
+    "sourceTags": ["meditation", "spiritual", "instrumental"],
     "whatItsFor": "a slow, warm meditation piece for when you want to sit with yourself for a few minutes"
   },
   {
@@ -128,11 +89,7 @@
     "family": "music",
     "title": "LoFi Sleep",
     "topic": "music_topic_sleep_rest",
-    "tags": [
-      "sleep",
-      "drowsiness",
-      "winding-down"
-    ],
+    "tags": ["sleep", "drowsiness", "winding-down"],
     "audioPath": "support/the_mountain-lofi-sleep-lofi-sleep-music-587590.mp3",
     "thumbPath": "thumbs/sleep-rest-01.jpg",
     "durationSec": 70,
@@ -149,11 +106,7 @@
       "attributionText": "Music by The_Mountain from Pixabay",
       "acquiredAt": 1757650000000
     },
-    "sourceTags": [
-      "lofi",
-      "beats",
-      "sleep"
-    ],
+    "sourceTags": ["lofi", "beats", "sleep"],
     "whatItsFor": "slow lo-fi beats for winding down when you're in bed but your head isn't"
   },
   {
@@ -161,11 +114,7 @@
     "family": "music",
     "title": "Deep Sleep",
     "topic": "music_topic_sleep_rest",
-    "tags": [
-      "sleep",
-      "drowsiness",
-      "winding-down"
-    ],
+    "tags": ["sleep", "drowsiness", "winding-down"],
     "audioPath": "support/the_mountain-deep-sleep-deep-sleep-music-587578.mp3",
     "thumbPath": "thumbs/sleep-rest-02.jpg",
     "durationSec": 135,
@@ -182,11 +131,7 @@
       "attributionText": "Music by The_Mountain from Pixabay",
       "acquiredAt": 1757650000000
     },
-    "sourceTags": [
-      "lullaby",
-      "sleep",
-      "instrumental"
-    ],
+    "sourceTags": ["lullaby", "sleep", "instrumental"],
     "whatItsFor": "a soft lullaby-like instrumental for drifting off after a long day"
   }
 ]

@@ -4,6 +4,8 @@ import { Redirect } from "expo-router";
 import { TalkScreen } from "@/src/features/talk/talk-screen";
 
 export default function TalkRoute() {
-  if (!__DEV__) return <Redirect href="/" />;
-  return <TalkScreen />;
+	if (!__DEV__) {
+		return <Redirect href="/" />;
+	}
+	return <TalkScreen />;
 }

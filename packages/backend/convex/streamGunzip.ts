@@ -1,7 +1,7 @@
 "use node";
 
-import { v } from "convex/values";
 import { gunzipSync } from "node:zlib";
+import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 
 /**
@@ -14,9 +14,9 @@ import { internalAction } from "./_generated/server";
 export const MAX_UNCOMPRESSED_BYTES = 2 * 1024 * 1024;
 
 export function decompressWebhookBody(body: ArrayBuffer): string {
-  return gunzipSync(Buffer.from(body), {
-    maxOutputLength: MAX_UNCOMPRESSED_BYTES,
-  }).toString("utf8");
+	return gunzipSync(Buffer.from(body), {
+		maxOutputLength: MAX_UNCOMPRESSED_BYTES,
+	}).toString("utf8");
 }
 
 /**
@@ -26,7 +26,7 @@ export function decompressWebhookBody(body: ArrayBuffer): string {
  * in Node, and is called only when `content-encoding: gzip` is actually set.
  */
 export const gunzip = internalAction({
-  args: { body: v.bytes() },
-  returns: v.string(),
-  handler: async (_ctx, args) => decompressWebhookBody(args.body),
+	args: { body: v.bytes() },
+	handler: async (_ctx, args) => decompressWebhookBody(args.body),
+	returns: v.string(),
 });

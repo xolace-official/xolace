@@ -9,13 +9,13 @@
 import type { Domain } from "../lib/understandingVocab";
 import { localDayKey } from "../streaks/activityLog";
 import {
-  BASELINE_HALF_LIFE_DAYS,
-  decayedMean,
-  QUIET_AFTER_DAYS,
-  type DomainSteadiness,
-  type Reading,
-  USUAL_AFTER_MS,
-  usualOf,
+	BASELINE_HALF_LIFE_DAYS,
+	type DomainSteadiness,
+	decayedMean,
+	QUIET_AFTER_DAYS,
+	type Reading,
+	USUAL_AFTER_MS,
+	usualOf,
 } from "./steadiness";
 
 const DAY_MS = 86_400_000;
@@ -32,8 +32,13 @@ const SHARE_LONG_MS = 90 * DAY_MS;
 type Clock = { now: number; timezone: string };
 export type OpenStretch = { startedAt: number; anchorBaseline: number };
 export type Judged =
-  | { state: "compounding" | "easing"; gap: number; band: number; baseline: number }
-  | { ended: "quiet" | "usual"; endedAt: number };
+	| {
+			state: "compounding" | "easing";
+			gap: number;
+			band: number;
+			baseline: number;
+	  }
+	| { ended: "quiet" | "usual"; endedAt: number };
 
 /**
  * How far below the usual counts as "clearly": 10 points, or one SD of how
@@ -45,9 +50,14 @@ export type Judged =
  * the stretch's own readings never count as the usual either.
  */
 export function bandOf(d: DomainSteadiness, since: number): number {
-  const usual = usualOf(d.readings, since);
-  if (usual.length === 0) return MIN_BAND;
-  return Math.max(MIN_BAND, decayedMean(usual, since, BASELINE_HALF_LIFE_DAYS).sd);
+	const usual = usualOf(d.readings, since);
+	if (usual.length === 0) {
+		return MIN_BAND;
+	}
+	return Math.max(
+		MIN_BAND,
+		decayedMean(usual, since, BASELINE_HALF_LIFE_DAYS).sd
+	);
 }
 
 /**
@@ -57,15 +67,24 @@ export function bandOf(d: DomainSteadiness, since: number): number {
  * unrelated session.
  */
 export function opens(d: DomainSteadiness, { now, timezone }: Clock): boolean {
-  if (d.state !== "settled") return false;
-  const baseline = d.raw.baseline;
-  if (baseline - d.raw.steadiness <= bandOf(d, now)) return false;
-  const belowDays = new Set(
-    d.readings
-      .filter((r) => r.source === "session" && r.at > now - SIGNAL_WINDOW_MS && r.value < baseline)
-      .map((r) => localDayKey(r.at, timezone)),
-  );
-  return belowDays.size >= MIN_BELOW_DAYS;
+	if (d.state !== "settled") {
+		return false;
+	}
+	const baseline = d.raw.baseline;
+	if (baseline - d.raw.steadiness <= bandOf(d, now)) {
+		return false;
+	}
+	const belowDays = new Set(
+		d.readings
+			.filter(
+				(r) =>
+					r.source === "session" &&
+					r.at > now - SIGNAL_WINDOW_MS &&
+					r.value < baseline
+			)
+			.map((r) => localDayKey(r.at, timezone))
+	);
+	return belowDays.size >= MIN_BELOW_DAYS;
 }
 
 /**
@@ -74,29 +93,56 @@ export function opens(d: DomainSteadiness, { now, timezone }: Clock): boolean {
  * its last reading, whenever someone next looks; one back within half a band
  * of the usual ended now (hysteresis, so it can't flicker at the edge).
  */
-export function judgeOpen(d: DomainSteadiness, row: OpenStretch, clock: Clock): Judged {
-  const quietAt = lapsedAt(d.readings, row.startedAt, clock.now);
-  if (quietAt !== null) return { ended: "quiet", endedAt: quietAt };
+export function judgeOpen(
+	d: DomainSteadiness,
+	row: OpenStretch,
+	clock: Clock
+): Judged {
+	const quietAt = lapsedAt(d.readings, row.startedAt, clock.now);
+	if (quietAt !== null) {
+		return { ended: "quiet", endedAt: quietAt };
+	}
 
-  const baseline =
-    clock.now - row.startedAt < ANCHOR_CAP_MS ? row.anchorBaseline : d.raw.baseline;
-  const band = bandOf(d, row.startedAt);
-  const gap = baseline - d.raw.steadiness;
-  if (gap < band / 2) return { ended: "usual", endedAt: clock.now };
-  return { state: isEasing(d, clock.timezone) ? "easing" : "compounding", gap, band, baseline };
+	const baseline =
+		clock.now - row.startedAt < ANCHOR_CAP_MS
+			? row.anchorBaseline
+			: d.raw.baseline;
+	const band = bandOf(d, row.startedAt);
+	const gap = baseline - d.raw.steadiness;
+	if (gap < band / 2) {
+		return { ended: "usual", endedAt: clock.now };
+	}
+	return {
+		band,
+		baseline,
+		gap,
+		state: isEasing(d, clock.timezone) ? "easing" : "compounding",
+	};
 }
 
-function lapsedAt(readings: Reading[], startedAt: number, now: number): number | null {
-  // Counted from the last reading, and the one that tipped the stretch in is
-  // dated at its session's start, before the stretch was written.
-  let last = Math.max(0, ...readings.map((r) => r.at).filter((at) => at <= startedAt));
-  for (const at of readings.map((r) => r.at).filter((at) => at > startedAt).sort((a, b) => a - b)) {
-    if (at - last >= SILENCE_MS) break;
-    last = at;
-  }
-  // A reading after a 30-day gap doesn't revive the stretch: it lapsed first.
-  const next = readings.find((r) => r.at > last);
-  return next || now - last >= SILENCE_MS ? last + SILENCE_MS : null;
+function lapsedAt(
+	readings: Reading[],
+	startedAt: number,
+	now: number
+): number | null {
+	// Counted from the last reading, and the one that tipped the stretch in is
+	// dated at its session's start, before the stretch was written.
+	let last = Math.max(
+		0,
+		...readings.map((r) => r.at).filter((at) => at <= startedAt)
+	);
+	for (const at of readings
+		.map((r) => r.at)
+		.filter((at) => at > startedAt)
+		.sort((a, b) => a - b)) {
+		if (at - last >= SILENCE_MS) {
+			break;
+		}
+		last = at;
+	}
+	// A reading after a 30-day gap doesn't revive the stretch: it lapsed first.
+	const next = readings.find((r) => r.at > last);
+	return next || now - last >= SILENCE_MS ? last + SILENCE_MS : null;
 }
 
 /**
@@ -105,24 +151,30 @@ function lapsedAt(readings: Reading[], startedAt: number, now: number): number |
  * after it, so it is that day's latest.
  */
 export function isEasing(d: DomainSteadiness, timezone: string): boolean {
-  const latest = new Map<string, Reading>();
-  for (const r of d.readings) {
-    const day = localDayKey(r.at, timezone);
-    const seen = latest.get(day);
-    if (!seen || r.at >= seen.at) latest.set(day, r);
-  }
-  const lastTwo = [...latest.values()].sort((a, b) => b.at - a.at).slice(0, 2);
-  return lastTwo.length === 2 && lastTwo.every((r) => r.value > d.raw.steadiness);
+	const latest = new Map<string, Reading>();
+	for (const r of d.readings) {
+		const day = localDayKey(r.at, timezone);
+		const seen = latest.get(day);
+		if (!seen || r.at >= seen.at) {
+			latest.set(day, r);
+		}
+	}
+	const lastTwo = [...latest.values()].sort((a, b) => b.at - a.at).slice(0, 2);
+	return (
+		lastTwo.length === 2 && lastTwo.every((r) => r.value > d.raw.steadiness)
+	);
 }
 
 /** Session timestamps in a window, each marked with the domains it touched. */
 function sessionsSince(readings: Reading[], since: number, now: number) {
-  const sessions = new Map<number, Set<Domain>>();
-  for (const r of readings) {
-    if (r.source !== "session" || r.at <= since || r.at > now) continue;
-    sessions.set(r.at, (sessions.get(r.at) ?? new Set()).add(r.domain));
-  }
-  return [...sessions.values()];
+	const sessions = new Map<number, Set<Domain>>();
+	for (const r of readings) {
+		if (r.source !== "session" || r.at <= since || r.at > now) {
+			continue;
+		}
+		sessions.set(r.at, (sessions.get(r.at) ?? new Set()).add(r.domain));
+	}
+	return [...sessions.values()];
 }
 
 /**
@@ -130,16 +182,28 @@ function sessionsSince(readings: Reading[], since: number, now: number) {
  * minus its share over 90. Sessions are told apart by timestamp; one with no
  * scored domain makes no reading and so isn't counted.
  */
-export function shareTrend(readings: Reading[], domain: Domain, now: number): number {
-  const share = (ms: number) => {
-    const sessions = sessionsSince(readings, now - ms, now);
-    return sessions.length ? sessions.filter((s) => s.has(domain)).length / sessions.length : 0;
-  };
-  return share(SIGNAL_WINDOW_MS) - share(SHARE_LONG_MS);
+export function shareTrend(
+	readings: Reading[],
+	domain: Domain,
+	now: number
+): number {
+	const share = (ms: number) => {
+		const sessions = sessionsSince(readings, now - ms, now);
+		return sessions.length
+			? sessions.filter((s) => s.has(domain)).length / sessions.length
+			: 0;
+	};
+	return share(SIGNAL_WINDOW_MS) - share(SHARE_LONG_MS);
 }
 
 /** Sessions in the last 21 days that touched both domains. */
-export function sharedSessions(readings: Reading[], a: Domain, b: Domain, now: number): number {
-  return sessionsSince(readings, now - SIGNAL_WINDOW_MS, now).filter((s) => s.has(a) && s.has(b))
-    .length;
+export function sharedSessions(
+	readings: Reading[],
+	a: Domain,
+	b: Domain,
+	now: number
+): number {
+	return sessionsSince(readings, now - SIGNAL_WINDOW_MS, now).filter(
+		(s) => s.has(a) && s.has(b)
+	).length;
 }

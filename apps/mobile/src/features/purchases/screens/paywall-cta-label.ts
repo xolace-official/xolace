@@ -21,17 +21,22 @@ const SEVEN_DAYS = ["P1W", "P7D"];
  * so the label needs a loading state) once resubscribes are a real cohort.
  */
 export function hasFreeTrial(pkg: PurchasesPackage | null): boolean {
-  const product = pkg?.product;
-  if (!product) return false;
-  const period =
-    product.introPrice?.price === 0
-      ? product.introPrice.period
-      : (product.defaultOption?.freePhase?.billingPeriod?.iso8601 ?? null);
-  return period != null && SEVEN_DAYS.includes(period.toUpperCase());
+	const product = pkg?.product;
+	if (!product) {
+		return false;
+	}
+	const period =
+		product.introPrice?.price === 0
+			? product.introPrice.period
+			: (product.defaultOption?.freePhase?.billingPeriod?.iso8601 ?? null);
+	return period != null && SEVEN_DAYS.includes(period.toUpperCase());
 }
 
-export function paywallCtaLabel(selected: PlanId, pkg: PurchasesPackage | null): string {
-  return selected === "annual" && hasFreeTrial(pkg)
-    ? "Start your free week"
-    : "Continue with Plus";
+export function paywallCtaLabel(
+	selected: PlanId,
+	pkg: PurchasesPackage | null
+): string {
+	return selected === "annual" && hasFreeTrial(pkg)
+		? "Start your free week"
+		: "Continue with Plus";
 }

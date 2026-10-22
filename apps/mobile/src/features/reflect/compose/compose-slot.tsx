@@ -1,13 +1,13 @@
+import type { ViewStyle } from "react-native";
 import { StyleSheet } from "react-native";
 import Animated, {
-  FadeIn,
-  FadeOut,
-  type AnimatedStyle,
+	type AnimatedStyle,
+	FadeIn,
+	FadeOut,
 } from "react-native-reanimated";
-import type { ViewStyle } from "react-native";
+import { PillButton } from "@/src/components/shared/pill-button";
 import { Tour } from "@/src/components/ui/tour";
 import { MicButton } from "@/src/features/reflect/components/mic-button";
-import { PillButton } from "@/src/components/shared/pill-button";
 import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
 import { a11yHidden } from "@/src/lib/utils";
 
@@ -20,13 +20,13 @@ export const SLOT_H = 40;
 export const SLOT_BAND_GAP = 12;
 
 type Props = {
-  expanded: boolean;
-  hasSelection: boolean;
-  isRecording: boolean;
-  /** Position and recede, from the surround that owns the band. */
-  style: (AnimatedStyle<ViewStyle> | ViewStyle)[];
-  onScaffoldSubmit: () => void;
-  onVoiceTap: () => void;
+	expanded: boolean;
+	hasSelection: boolean;
+	isRecording: boolean;
+	/** Position and recede, from the surround that owns the band. */
+	style: (AnimatedStyle<ViewStyle> | ViewStyle)[];
+	onScaffoldSubmit: () => void;
+	onVoiceTap: () => void;
 };
 
 /**
@@ -40,50 +40,50 @@ type Props = {
  * and a user who has committed to writing is not offered one.
  */
 export const ComposeSlot = ({
-  expanded,
-  hasSelection,
-  isRecording,
-  style,
-  onScaffoldSubmit,
-  onVoiceTap,
+	expanded,
+	hasSelection,
+	isRecording,
+	style,
+	onScaffoldSubmit,
+	onVoiceTap,
 }: Props) => (
-  <Animated.View
-    style={style}
-    pointerEvents={expanded ? "none" : "box-none"}
-    className="h-10 items-center justify-center"
-    {...a11yHidden(expanded)}
-  >
-    {hasSelection ? (
-      <Animated.View
-        style={StyleSheet.absoluteFill}
-        entering={SLOT_IN}
-        exiting={SLOT_OUT}
-        className="items-center justify-center"
-      >
-        {/* Sized to the mic it replaces, so the slot's height is constant. */}
-        <PillButton
-          label="Let it out"
-          onPress={onScaffoldSubmit}
-          className="px-6 py-2"
-        />
-      </Animated.View>
-    ) : (
-      <Animated.View
-        style={StyleSheet.absoluteFill}
-        entering={SLOT_IN}
-        exiting={SLOT_OUT}
-        className="items-center justify-center"
-      >
-        <Tour.Step
-          order={1}
-          title={TOUR_STEPS[1].title}
-          description={TOUR_STEPS[1].description}
-          shape="circle"
-          className="self-center"
-        >
-          <MicButton size="md" isRecording={isRecording} onPress={onVoiceTap} />
-        </Tour.Step>
-      </Animated.View>
-    )}
-  </Animated.View>
+	<Animated.View
+		className="h-10 items-center justify-center"
+		pointerEvents={expanded ? "none" : "box-none"}
+		style={style}
+		{...a11yHidden(expanded)}
+	>
+		{hasSelection ? (
+			<Animated.View
+				className="items-center justify-center"
+				entering={SLOT_IN}
+				exiting={SLOT_OUT}
+				style={StyleSheet.absoluteFill}
+			>
+				{/* Sized to the mic it replaces, so the slot's height is constant. */}
+				<PillButton
+					className="px-6 py-2"
+					label="Let it out"
+					onPress={onScaffoldSubmit}
+				/>
+			</Animated.View>
+		) : (
+			<Animated.View
+				className="items-center justify-center"
+				entering={SLOT_IN}
+				exiting={SLOT_OUT}
+				style={StyleSheet.absoluteFill}
+			>
+				<Tour.Step
+					className="self-center"
+					description={TOUR_STEPS[1].description}
+					order={1}
+					shape="circle"
+					title={TOUR_STEPS[1].title}
+				>
+					<MicButton isRecording={isRecording} onPress={onVoiceTap} size="md" />
+				</Tour.Step>
+			</Animated.View>
+		)}
+	</Animated.View>
 );

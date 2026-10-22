@@ -3,7 +3,7 @@ import { twMerge } from "tailwind-merge";
 
 /** Merges Tailwind class names with conflict resolution. Use this for conditional className composition. */
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+	return twMerge(clsx(inputs));
 }
 
 /**
@@ -14,7 +14,7 @@ export function cn(...inputs: ClassValue[]) {
  * still reachable by swipe. Anything animated to invisible needs this too.
  */
 export const a11yHidden = (hidden: boolean) =>
-  ({
-    accessibilityElementsHidden: hidden,
-    importantForAccessibility: hidden ? "no-hide-descendants" : "auto",
-  }) as const;
+	({
+		accessibilityElementsHidden: hidden,
+		importantForAccessibility: hidden ? "no-hide-descendants" : "auto",
+	}) as const;

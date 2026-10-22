@@ -1,30 +1,30 @@
 import { useState } from "react";
-import { useAppStore } from "@/src/store/store";
-import type { UserVariant } from "@/src/features/reflect/types";
 import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
 import type { ReturnWelcomeTier } from "@/src/features/reflect/return-welcome-copy";
+import type { UserVariant } from "@/src/features/reflect/types";
+import { useAppStore } from "@/src/store/store";
 
 type Args = {
-  /** Gate: true only once loaded and sitting on the idle canvas. */
-  active: boolean;
-  variant: UserVariant;
-  quietReturn: QuietReturnTier | null;
-  /** Timestamp of the user's last completed session — keys the "episode". */
-  lastSessionAt?: number;
+	/** Gate: true only once loaded and sitting on the idle canvas. */
+	active: boolean;
+	variant: UserVariant;
+	quietReturn: QuietReturnTier | null;
+	/** Timestamp of the user's last completed session — keys the "episode". */
+	lastSessionAt?: number;
 };
 
 type Result = {
-  isOpen: boolean;
-  tier: ReturnWelcomeTier;
-  dismiss: () => void;
-  /**
-   * True while this greeting owns the stage — from the moment it becomes
-   * eligible until it is dismissed. Other auto-presenting sheets on the home
-   * screen (e.g. the monthly awareness event) gate on `!blocking` so they wait
-   * their turn instead of stacking. `eligible` is true synchronously on the
-   * first render, so there's no one-frame window where another sheet sneaks in.
-   */
-  blocking: boolean;
+	isOpen: boolean;
+	tier: ReturnWelcomeTier;
+	dismiss: () => void;
+	/**
+	 * True while this greeting owns the stage — from the moment it becomes
+	 * eligible until it is dismissed. Other auto-presenting sheets on the home
+	 * screen (e.g. the monthly awareness event) gate on `!blocking` so they wait
+	 * their turn instead of stacking. `eligible` is true synchronously on the
+	 * first render, so there's no one-frame window where another sheet sneaks in.
+	 */
+	blocking: boolean;
 };
 
 /**
@@ -40,34 +40,36 @@ type Result = {
  * the space-name dialog in reflect-screen.
  */
 export function useReturnWelcome({
-  active,
-  variant,
-  quietReturn,
-  lastSessionAt,
+	active,
+	variant,
+	quietReturn,
+	lastSessionAt,
 }: Args): Result {
-  const seenAt = useAppStore((s) => s.returnWelcomeSeenAt);
-  const setSeenAt = useAppStore((s) => s.setReturnWelcomeSeenAt);
+	const seenAt = useAppStore((s) => s.returnWelcomeSeenAt);
+	const setSeenAt = useAppStore((s) => s.setReturnWelcomeSeenAt);
 
-  const [open, setOpen] = useState(false);
-  const [fired, setFired] = useState(false);
+	const [open, setOpen] = useState(false);
+	const [fired, setFired] = useState(false);
 
-  const tier: ReturnWelcomeTier = quietReturn ?? "recent";
+	const tier: ReturnWelcomeTier = quietReturn ?? "recent";
 
-  const eligible =
-    active &&
-    variant.kind === "returning" &&
-    !!lastSessionAt &&
-    lastSessionAt !== seenAt;
+	const eligible =
+		active &&
+		variant.kind === "returning" &&
+		!!lastSessionAt &&
+		lastSessionAt !== seenAt;
 
-  if (eligible && !fired) {
-    setFired(true);
-    setOpen(true);
-  }
+	if (eligible && !fired) {
+		setFired(true);
+		setOpen(true);
+	}
 
-  const dismiss = () => {
-    setOpen(false);
-    if (lastSessionAt) setSeenAt(lastSessionAt);
-  };
+	const dismiss = () => {
+		setOpen(false);
+		if (lastSessionAt) {
+			setSeenAt(lastSessionAt);
+		}
+	};
 
-  return { isOpen: open, tier, dismiss, blocking: eligible || open };
+	return { blocking: eligible || open, dismiss, isOpen: open, tier };
 }

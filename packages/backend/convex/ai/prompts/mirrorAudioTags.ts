@@ -34,7 +34,10 @@ Enclose every tag in square brackets. Reply with ONLY the enhanced mirror text â
  * carries them â€” only the TTS request sees the raw tagged version.
  */
 export function stripAudioTags(text: string): string {
-  return text.replace(/\[[^\]]*\]/g, " ").replace(/\s+/g, " ").trim();
+	return text
+		.replace(/\[[^\]]*\]/g, " ")
+		.replace(/\s+/g, " ")
+		.trim();
 }
 
 /**
@@ -45,15 +48,15 @@ export function stripAudioTags(text: string): string {
  * their own FALLBACK_MIRROR string local and pass the boolean.
  */
 export function applyAudioFence(input: {
-  mirrorText: string;
-  isFallback: boolean;
-  isPremium: boolean;
+	mirrorText: string;
+	isFallback: boolean;
+	isPremium: boolean;
 }): { displayText: string; ttsText: string } {
-  return {
-    ttsText: input.mirrorText,
-    displayText:
-      input.isPremium && !input.isFallback
-        ? stripAudioTags(input.mirrorText)
-        : input.mirrorText,
-  };
+	return {
+		displayText:
+			input.isPremium && !input.isFallback
+				? stripAudioTags(input.mirrorText)
+				: input.mirrorText,
+		ttsText: input.mirrorText,
+	};
 }

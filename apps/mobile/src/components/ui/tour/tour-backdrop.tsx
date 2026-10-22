@@ -7,12 +7,12 @@ import type { Rect } from "@/src/components/ui/tour/types";
 const TAP_SLOP = 10;
 
 type Props = {
-  interactive: boolean;
-  dismissible: boolean;
-  spot: Rect | null;
-  screenWidth: number;
-  screenHeight: number;
-  onDismiss: () => void;
+	interactive: boolean;
+	dismissible: boolean;
+	spot: Rect | null;
+	screenWidth: number;
+	screenHeight: number;
+	onDismiss: () => void;
 };
 
 /**
@@ -24,82 +24,79 @@ type Props = {
  * that leaves a rectangle of the screen reachable.
  */
 export const TourBackdrop = ({
-  interactive,
-  dismissible,
-  spot,
-  screenWidth,
-  screenHeight,
-  onDismiss,
+	interactive,
+	dismissible,
+	spot,
+	screenWidth,
+	screenHeight,
+	onDismiss,
 }: Props) => {
-  const start = useRef({ x: 0, y: 0 });
+	const start = useRef({ x: 0, y: 0 });
 
-  const press = dismissible
-    ? {
-        onStartShouldSetResponder: () => true,
-        onResponderGrant: (e: GestureResponderEvent) => {
-          start.current = {
-            x: e.nativeEvent.pageX,
-            y: e.nativeEvent.pageY,
-          };
-        },
-        onResponderRelease: (e: GestureResponderEvent) => {
-          const { pageX, pageY } = e.nativeEvent;
-          if (
-            Math.abs(pageX - start.current.x) <= TAP_SLOP &&
-            Math.abs(pageY - start.current.y) <= TAP_SLOP
-          ) {
-            onDismiss();
-          }
-        },
-      }
-    : { onStartShouldSetResponder: () => true };
+	const press = dismissible
+		? {
+				onResponderGrant: (e: GestureResponderEvent) => {
+					start.current = {
+						x: e.nativeEvent.pageX,
+						y: e.nativeEvent.pageY,
+					};
+				},
+				onResponderRelease: (e: GestureResponderEvent) => {
+					const { pageX, pageY } = e.nativeEvent;
+					if (
+						Math.abs(pageX - start.current.x) <= TAP_SLOP &&
+						Math.abs(pageY - start.current.y) <= TAP_SLOP
+					) {
+						onDismiss();
+					}
+				},
+				onStartShouldSetResponder: () => true,
+			}
+		: { onStartShouldSetResponder: () => true };
 
-  if (!interactive || !spot) {
-    return <View style={StyleSheet.absoluteFill} {...press} />;
-  }
+	if (!(interactive && spot)) {
+		return <View style={StyleSheet.absoluteFill} {...press} />;
+	}
 
-  const bottom = spot.y + spot.height;
-  const right = spot.x + spot.width;
+	const bottom = spot.y + spot.height;
+	const right = spot.x + spot.width;
 
-  return (
-    <>
-      <View
-        style={[styles.top, { height: Math.max(0, spot.y) }]}
-        {...press}
-      />
-      <View
-        style={[
-          styles.bottom,
-          { top: bottom, height: Math.max(0, screenHeight - bottom) },
-        ]}
-        {...press}
-      />
-      <View
-        style={[
-          styles.left,
-          { top: spot.y, width: Math.max(0, spot.x), height: spot.height },
-        ]}
-        {...press}
-      />
-      <View
-        style={[
-          styles.right,
-          {
-            left: right,
-            top: spot.y,
-            width: Math.max(0, screenWidth - right),
-            height: spot.height,
-          },
-        ]}
-        {...press}
-      />
-    </>
-  );
+	return (
+		<>
+			<View style={[styles.top, { height: Math.max(0, spot.y) }]} {...press} />
+			<View
+				style={[
+					styles.bottom,
+					{ height: Math.max(0, screenHeight - bottom), top: bottom },
+				]}
+				{...press}
+			/>
+			<View
+				style={[
+					styles.left,
+					{ height: spot.height, top: spot.y, width: Math.max(0, spot.x) },
+				]}
+				{...press}
+			/>
+			<View
+				style={[
+					styles.right,
+					{
+						height: spot.height,
+						left: right,
+						top: spot.y,
+						width: Math.max(0, screenWidth - right),
+					},
+				]}
+				{...press}
+			/>
+		</>
+	);
 };
 
 const styles = StyleSheet.create({
-  top: { position: "absolute", left: 0, top: 0, right: 0 },
-  bottom: { position: "absolute", left: 0, right: 0 },
-  left: { position: "absolute", left: 0 },
-  right: { position: "absolute" },
+	bottom: { left: 0, position: "absolute", right: 0 },
+	left: { left: 0, position: "absolute" },
+	right: { position: "absolute" },
+	top: { left: 0, position: "absolute", right: 0, top: 0 },
 });

@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
  */
 
 /** The morph. Slow and overshoot-free: the space opening, not a modal. */
-export const MORPH_SPRING = { damping: 26, stiffness: 90, mass: 1.1 } as const;
+export const MORPH_SPRING = { damping: 26, mass: 1.1, stiffness: 90 } as const;
 
 export const FLUX_SIZE = 104;
 export const DOT_SIZE = 12;
@@ -29,31 +29,31 @@ const EXP_LEFT = 16;
 const EXP_TOP = 8;
 
 export function useMorphGeometry() {
-  const { width: W, height: H } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
+	const { width: W, height: H } = useWindowDimensions();
+	const insets = useSafeAreaInsets();
 
-  const restH = H / 2.8;
-  const restW = restH * 0.75;
+	const restH = H / 2.8;
+	const restW = restH * 0.75;
 
-  return {
-    W,
-    H,
-    insetTop: insets.top,
-    insetBottom: insets.bottom,
-    restH,
-    restW,
-    restLeft: (W - restW) / 2,
-    restTop: H * 0.32 - insets.top,
-    expLeft: EXP_LEFT,
-    expTop: EXP_TOP,
-    expW: W - EXP_LEFT * 2,
-    /** Flux's resting frame — he leans on the card's top-left shoulder. */
-    fluxLeft: (W - restW) / 2 + 8,
-    fluxTop: H * 0.32 - insets.top - FLUX_SIZE - 12,
-    /** Perch: he straddles the card's top edge and the card paints his legs. */
-    fluxPerch: { dy: 56, scale: 0.8 },
-    /** Centre of the presence dot inside the expanded card's header row. */
-    dotX: EXP_LEFT + CARD_PAD,
-    dotY: EXP_TOP + CARD_PAD + DOT_SIZE / 2,
-  };
+	return {
+		/** Centre of the presence dot inside the expanded card's header row. */
+		dotX: EXP_LEFT + CARD_PAD,
+		dotY: EXP_TOP + CARD_PAD + DOT_SIZE / 2,
+		expLeft: EXP_LEFT,
+		expTop: EXP_TOP,
+		expW: W - EXP_LEFT * 2,
+		/** Flux's resting frame — he leans on the card's top-left shoulder. */
+		fluxLeft: (W - restW) / 2 + 8,
+		/** Perch: he straddles the card's top edge and the card paints his legs. */
+		fluxPerch: { dy: 56, scale: 0.8 },
+		fluxTop: H * 0.32 - insets.top - FLUX_SIZE - 12,
+		H,
+		insetBottom: insets.bottom,
+		insetTop: insets.top,
+		restH,
+		restLeft: (W - restW) / 2,
+		restTop: H * 0.32 - insets.top,
+		restW,
+		W,
+	};
 }

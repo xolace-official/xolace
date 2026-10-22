@@ -14,32 +14,32 @@
  * share that field.
  */
 export type ChatNotificationType =
-  | "chat_request"
-  | "chat_accepted"
-  | "chat_declined"
-  | "chat_expired"
-  | "chat_message"
-  | "xolace_message";
+	| "chat_request"
+	| "chat_accepted"
+	| "chat_declined"
+	| "chat_expired"
+	| "chat_message"
+	| "xolace_message";
 
 const TYPES: ChatNotificationType[] = [
-  "chat_request",
-  "chat_accepted",
-  "chat_declined",
-  "chat_expired",
-  "chat_message",
-  "xolace_message",
+	"chat_request",
+	"chat_accepted",
+	"chat_declined",
+	"chat_expired",
+	"chat_message",
+	"xolace_message",
 ];
 
 /** Narrows the `type` field off a push payload, which arrives untyped. */
 export function isChatNotificationType(
-  value: unknown,
+	value: unknown
 ): value is ChatNotificationType {
-  return TYPES.includes(value as ChatNotificationType);
+	return TYPES.includes(value as ChatNotificationType);
 }
 
 export type ChatNotificationContent = {
-  title: string;
-  body: string;
+	title: string;
+	body: string;
 };
 
 /**
@@ -47,7 +47,8 @@ export type ChatNotificationContent = {
  * it from here so a reword cannot leave the notification describing the same
  * event in different words.
  */
-export const CHAT_REQUEST_SUBTITLE = "Wants to talk, accept when you have space";
+export const CHAT_REQUEST_SUBTITLE =
+	"Wants to talk, accept when you have space";
 
 /**
  * Where tapping lands.
@@ -64,33 +65,33 @@ export const CHAT_REQUEST_SUBTITLE = "Wants to talk, accept when you have space"
  * no navigation at all to a screen that is already mounted.
  */
 export function chatNotificationRoute(
-  type: ChatNotificationType,
-  conversationId: string,
-  tappedAt: number,
+	type: ChatNotificationType,
+	conversationId: string,
+	tappedAt: number
 ) {
-  switch (type) {
-    case "chat_request":
-      return {
-        pathname: "/connect",
-        params: { view: "chats", t: String(tappedAt) },
-      } as const;
-    case "chat_accepted":
-    case "chat_message":
-      return {
-        pathname: "/chat/[conversationId]",
-        params: { conversationId },
-      } as const;
-    case "chat_declined":
-    case "chat_expired":
-      return {
-        pathname: "/connect",
-        params: { view: "xolacers", t: String(tappedAt) },
-      } as const;
-    // The Xolace channel (#378) isn't a `xolacer_conversations` row, so it has
-    // no thread route keyed by id — it opens the one screen for it instead.
-    case "xolace_message":
-      return { pathname: "/xolace-channel", params: {} } as const;
-  }
+	switch (type) {
+		case "chat_request":
+			return {
+				params: { t: String(tappedAt), view: "chats" },
+				pathname: "/connect",
+			} as const;
+		case "chat_accepted":
+		case "chat_message":
+			return {
+				params: { conversationId },
+				pathname: "/chat/[conversationId]",
+			} as const;
+		case "chat_declined":
+		case "chat_expired":
+			return {
+				params: { t: String(tappedAt), view: "xolacers" },
+				pathname: "/connect",
+			} as const;
+		// The Xolace channel (#378) isn't a `xolacer_conversations` row, so it has
+		// no thread route keyed by id — it opens the one screen for it instead.
+		case "xolace_message":
+			return { params: {}, pathname: "/xolace-channel" } as const;
+	}
 }
 
 /**
@@ -111,34 +112,34 @@ export function chatNotificationRoute(
  * anything, so its wording blames neither side and points at the roster.
  */
 export function chatNotificationContent(
-  type: ChatNotificationType,
-  counterpartName: string = "Xolace",
+	type: ChatNotificationType,
+	counterpartName = "Xolace"
 ): ChatNotificationContent {
-  switch (type) {
-    case "chat_request":
-      return { title: counterpartName, body: CHAT_REQUEST_SUBTITLE };
-    case "chat_accepted":
-      return {
-        title: counterpartName,
-        body: "Has space for you, your conversation is open",
-      };
-    case "chat_declined":
-      return {
-        title: "Xolace",
-        body: "That conversation didn't open. Other xolacers are available.",
-      };
-    case "chat_expired":
-      return {
-        title: "Xolace",
-        body: "That request timed out without an answer. Other xolacers are here.",
-      };
-    case "chat_message":
-      return { title: counterpartName, body: "Sent you a message" };
-    // Always "Xolace" — there is no counterpart to name for the broadcast
-    // channel, so the `counterpartName` parameter is unused here.
-    case "xolace_message":
-      return { title: "Xolace", body: "Posted a new message" };
-  }
+	switch (type) {
+		case "chat_request":
+			return { body: CHAT_REQUEST_SUBTITLE, title: counterpartName };
+		case "chat_accepted":
+			return {
+				body: "Has space for you, your conversation is open",
+				title: counterpartName,
+			};
+		case "chat_declined":
+			return {
+				body: "That conversation didn't open. Other xolacers are available.",
+				title: "Xolace",
+			};
+		case "chat_expired":
+			return {
+				body: "That request timed out without an answer. Other xolacers are here.",
+				title: "Xolace",
+			};
+		case "chat_message":
+			return { body: "Sent you a message", title: counterpartName };
+		// Always "Xolace" — there is no counterpart to name for the broadcast
+		// channel, so the `counterpartName` parameter is unused here.
+		case "xolace_message":
+			return { body: "Posted a new message", title: "Xolace" };
+	}
 }
 
 // ============================================================
@@ -153,7 +154,7 @@ export function chatNotificationContent(
 const CHANNEL_ID_PREFIX = "xolacer_";
 
 export function xolacerChannelId(conversationId: string): string {
-  return `${CHANNEL_ID_PREFIX}${conversationId}`;
+	return `${CHANNEL_ID_PREFIX}${conversationId}`;
 }
 
 /**
@@ -161,13 +162,15 @@ export function xolacerChannelId(conversationId: string): string {
  * the raw id string only — the caller still has to check it names a real row,
  * because a forged payload can put any text after the prefix.
  */
-export function conversationIdFromChannelId(
-  channelId: unknown,
-): string | null {
-  if (typeof channelId !== "string") return null;
-  if (!channelId.startsWith(CHANNEL_ID_PREFIX)) return null;
-  const id = channelId.slice(CHANNEL_ID_PREFIX.length);
-  return id.length > 0 ? id : null;
+export function conversationIdFromChannelId(channelId: unknown): string | null {
+	if (typeof channelId !== "string") {
+		return null;
+	}
+	if (!channelId.startsWith(CHANNEL_ID_PREFIX)) {
+		return null;
+	}
+	const id = channelId.slice(CHANNEL_ID_PREFIX.length);
+	return id.length > 0 ? id : null;
 }
 
 /**
@@ -179,16 +182,16 @@ export function conversationIdFromChannelId(
  * — so a forged event cannot push a notification at an arbitrary profile.
  */
 export function messageNotificationRecipient<T extends string>(
-  conversation: { userProfileId: T; xolacerProfileId: T },
-  senderId: unknown,
+	conversation: { userProfileId: T; xolacerProfileId: T },
+	senderId: unknown
 ): T | null {
-  if (senderId === conversation.userProfileId) {
-    return conversation.xolacerProfileId;
-  }
-  if (senderId === conversation.xolacerProfileId) {
-    return conversation.userProfileId;
-  }
-  return null;
+	if (senderId === conversation.userProfileId) {
+		return conversation.xolacerProfileId;
+	}
+	if (senderId === conversation.xolacerProfileId) {
+		return conversation.userProfileId;
+	}
+	return null;
 }
 
 /**
@@ -204,11 +207,13 @@ export function messageNotificationRecipient<T extends string>(
 export const MESSAGE_NOTIFICATION_WINDOW_MS = 2 * 60 * 1000;
 
 export function messageNotificationSuppressed(
-  lastNotifiedAt: number | undefined,
-  now: number,
+	lastNotifiedAt: number | undefined,
+	now: number
 ): boolean {
-  if (lastNotifiedAt === undefined) return false;
-  return now - lastNotifiedAt < MESSAGE_NOTIFICATION_WINDOW_MS;
+	if (lastNotifiedAt === undefined) {
+		return false;
+	}
+	return now - lastNotifiedAt < MESSAGE_NOTIFICATION_WINDOW_MS;
 }
 
 /**
@@ -220,12 +225,12 @@ export function messageNotificationSuppressed(
  * of a chat, going silent. Two participants, so two fields rather than a map.
  */
 export function messageNotifiedField<T extends string>(
-  conversation: { userProfileId: T },
-  recipientProfileId: T,
+	conversation: { userProfileId: T },
+	recipientProfileId: T
 ): "lastNotifiedUserAt" | "lastNotifiedXolacerAt" {
-  return recipientProfileId === conversation.userProfileId
-    ? "lastNotifiedUserAt"
-    : "lastNotifiedXolacerAt";
+	return recipientProfileId === conversation.userProfileId
+		? "lastNotifiedUserAt"
+		: "lastNotifiedXolacerAt";
 }
 
 /**
@@ -236,8 +241,10 @@ export function messageNotifiedField<T extends string>(
  * A missing preferences row is nobody who ever turned notifications on.
  */
 export function chatNotificationsAllowed(
-  notifications: { enabled: boolean; chat?: boolean } | null | undefined,
+	notifications: { enabled: boolean; chat?: boolean } | null | undefined
 ): boolean {
-  if (!notifications) return false;
-  return notifications.enabled && notifications.chat !== false;
+	if (!notifications) {
+		return false;
+	}
+	return notifications.enabled && notifications.chat !== false;
 }

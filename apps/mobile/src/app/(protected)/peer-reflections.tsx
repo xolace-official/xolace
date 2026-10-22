@@ -1,5 +1,4 @@
-import { PeerReflectionScreen } from '@/src/features/peer-reflection/components/screen/PeerReflectionScreen';
-
+import { PeerReflectionScreen } from "@/src/features/peer-reflection/components/screen/PeerReflectionScreen";
 
 /**
  * Renders the Peer Reflections screen.
@@ -8,7 +7,5 @@ import { PeerReflectionScreen } from '@/src/features/peer-reflection/components/
  */
 
 export default function PeerReflections() {
-  return (
-   <PeerReflectionScreen />
-  );
+	return <PeerReflectionScreen />;
 }

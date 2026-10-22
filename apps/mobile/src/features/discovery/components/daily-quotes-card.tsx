@@ -1,10 +1,10 @@
-import { StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Image } from 'expo-image';
-import { PressableFeedback } from 'heroui-native';
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import { PressableFeedback } from "heroui-native";
+import { StyleSheet, View } from "react-native";
 
-import { AppText } from '@/src/components/shared/app-text';
-import { playSoftPress } from '@/src/lib/haptics';
+import { AppText } from "@/src/components/shared/app-text";
+import { playSoftPress } from "@/src/lib/haptics";
 
 // TODO(asset): placeholder — swap for the dedicated quotes illustration when it
 // lands, and drop the oversize/offset trick with it.
@@ -20,7 +20,7 @@ import { playSoftPress } from '@/src/lib/haptics';
 // there is no gutter that clears both. 500 clears the blob and lets the bun
 // bleed off the top edge, which reads as intentional; the alternative reads as
 // a rendering artifact. Goes away with the dedicated asset above.
-const ART = require('@/assets/images/illustrations/discovery-image-bg.png');
+const ART = require("@/assets/images/illustrations/discovery-image-bg.png");
 const ART_SCALE = 0.4;
 const ART_CROP_X = 230;
 const ART_CROP_Y = 500;
@@ -29,26 +29,26 @@ const ART_CROP_Y = 500;
 const CARD_RADIUS = 24;
 
 const styles = StyleSheet.create({
-  card: { borderCurve: 'continuous' },
-  // Android only honours `overflow: 'hidden'` on a view that has a border
-  // radius — without one it never sets up the clip and the oversized art below
-  // spills out past the card. Only the right corners are rounded, so the window
-  // still meets the card's right edge exactly and the art reads as bleeding
-  // into it; the left corners stay square and invisible mid-card.
-  artWindow: {
-    width: 132,
-    overflow: 'hidden',
-    borderTopRightRadius: CARD_RADIUS,
-    borderBottomRightRadius: CARD_RADIUS,
-    borderCurve: 'continuous',
-  },
-  art: {
-    position: 'absolute',
-    width: 1200 * ART_SCALE,
-    height: 1000 * ART_SCALE,
-    left: -ART_CROP_X * ART_SCALE,
-    top: -ART_CROP_Y * ART_SCALE,
-  },
+	art: {
+		height: 1000 * ART_SCALE,
+		left: -ART_CROP_X * ART_SCALE,
+		position: "absolute",
+		top: -ART_CROP_Y * ART_SCALE,
+		width: 1200 * ART_SCALE,
+	},
+	// Android only honours `overflow: 'hidden'` on a view that has a border
+	// radius — without one it never sets up the clip and the oversized art below
+	// spills out past the card. Only the right corners are rounded, so the window
+	// still meets the card's right edge exactly and the art reads as bleeding
+	// into it; the left corners stay square and invisible mid-card.
+	artWindow: {
+		borderBottomRightRadius: CARD_RADIUS,
+		borderCurve: "continuous",
+		borderTopRightRadius: CARD_RADIUS,
+		overflow: "hidden",
+		width: 132,
+	},
+	card: { borderCurve: "continuous" },
 });
 
 /**
@@ -60,42 +60,45 @@ const styles = StyleSheet.create({
  * card radius.
  */
 export function DailyQuotesCard() {
-  const router = useRouter();
+	const router = useRouter();
 
-  const goToQuotes = () => {
-    playSoftPress();
-    router.push('/(protected)/quotes');
-  };
+	const goToQuotes = () => {
+		playSoftPress();
+		router.push("/(protected)/quotes");
+	};
 
-  return (
-    <PressableFeedback
-      onPress={goToQuotes}
-      accessibilityRole="button"
-      accessibilityLabel="Open daily quotes"
-    >
-      <View
-        className="flex-row items-center overflow-hidden rounded-3xl border border-border/60 bg-surface"
-        style={styles.card}
-      >
-        <View className="flex-1 py-6 pl-5 pr-3">
-          <AppText className="text-lg font-semibold text-foreground">Daily Quotes</AppText>
-          <AppText className="mt-1.5 text-sm leading-5 text-muted">
-            Curated lines for the day, and the ones your own sessions left behind.
-          </AppText>
-        </View>
-        {/* Stretches to the card's height rather than carrying its own, so the
+	return (
+		<PressableFeedback
+			accessibilityLabel="Open daily quotes"
+			accessibilityRole="button"
+			onPress={goToQuotes}
+		>
+			<View
+				className="flex-row items-center overflow-hidden rounded-3xl border border-border/60 bg-surface"
+				style={styles.card}
+			>
+				<View className="flex-1 py-6 pr-3 pl-5">
+					<AppText className="font-semibold text-foreground text-lg">
+						Daily Quotes
+					</AppText>
+					<AppText className="mt-1.5 text-muted text-sm leading-5">
+						Curated lines for the day, and the ones your own sessions left
+						behind.
+					</AppText>
+				</View>
+				{/* Stretches to the card's height rather than carrying its own, so the
             rounded corners land on the card's corners instead of floating a
             few points inside them. */}
-        <View className="self-stretch" style={styles.artWindow}>
-          <Image
-            source={ART}
-            contentFit="cover"
-            style={styles.art}
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-          />
-        </View>
-      </View>
-    </PressableFeedback>
-  );
+				<View className="self-stretch" style={styles.artWindow}>
+					<Image
+						accessibilityElementsHidden
+						contentFit="cover"
+						importantForAccessibility="no-hide-descendants"
+						source={ART}
+						style={styles.art}
+					/>
+				</View>
+			</View>
+		</PressableFeedback>
+	);
 }

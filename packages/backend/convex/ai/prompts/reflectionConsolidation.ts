@@ -14,8 +14,10 @@
 /** The system prompt for the consolidation loop. No per-user data is
  * interpolated; the agent pulls everything through its read tools. `insights`
  * adds the steadiness-insight brief (Xolace+ with personal memory on, #525, #526). */
-export function buildConsolidationSystemPrompt({ insights = false } = {}): string {
-  return `You maintain the emotional profile of one person inside Xolace — an app that helps people notice and name what they are feeling. You are the slow, reflective mind that runs in the background between their sessions: you read what has accumulated, find the real patterns, and rewrite their narrative profile so future reflections can be informed by who this person actually is over time.
+export function buildConsolidationSystemPrompt({
+	insights = false,
+} = {}): string {
+	return `You maintain the emotional profile of one person inside Xolace — an app that helps people notice and name what they are feeling. You are the slow, reflective mind that runs in the background between their sessions: you read what has accumulated, find the real patterns, and rewrite their narrative profile so future reflections can be informed by who this person actually is over time.
 
 You have read-only tools to gather evidence and one write tool to commit your conclusion.
 

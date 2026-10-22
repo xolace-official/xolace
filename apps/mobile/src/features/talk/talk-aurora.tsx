@@ -3,18 +3,18 @@
 // transparent, tinted from the theme and fed the voice level: louder voice →
 // brighter, longer rays. Time is never touched, so the 14 s loop stays seamless.
 import { Canvas, Fill, Shader, Skia } from "@shopify/react-native-skia";
+import { useThemeColor } from "heroui-native";
 import { useEffect } from "react";
 import { StyleSheet, useWindowDimensions } from "react-native";
 import {
-  Easing,
-  useDerivedValue,
-  useReducedMotion,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-  type SharedValue,
+	Easing,
+	type SharedValue,
+	useDerivedValue,
+	useReducedMotion,
+	useSharedValue,
+	withRepeat,
+	withTiming,
 } from "react-native-reanimated";
-import { useThemeColor } from "heroui-native";
 
 const SKSL = `
 uniform float2 u_res;
@@ -94,43 +94,63 @@ half4 main(float2 fragCoord) {
 const SHADER = Skia.RuntimeEffect.Make(SKSL);
 
 type Props = {
-  level: SharedValue<number>;
-  /** Rays hang from the top (0) or rise from the bottom (1). */
-  flip?: 0 | 1;
-  /** Fraction of the screen the canvas covers, anchored to its edge. */
-  coverage?: number;
+	level: SharedValue<number>;
+	/** Rays hang from the top (0) or rise from the bottom (1). */
+	flip?: 0 | 1;
+	/** Fraction of the screen the canvas covers, anchored to its edge. */
+	coverage?: number;
 };
 
 export function TalkAurora({ level, flip = 0, coverage = 1 }: Props) {
-  const { width, height } = useWindowDimensions();
-  const reduced = useReducedMotion();
-  const accent = useThemeColor("accent");
-  const phase = useSharedValue(0.18);
-  const smooth = useSharedValue(0);
-  const h = height * coverage;
-  const c = Skia.Color(accent);
-  const tint = [c[0], c[1], c[2]];
+	const { width, height } = useWindowDimensions();
+	const reduced = useReducedMotion();
+	const accent = useThemeColor("accent");
+	const phase = useSharedValue(0.18);
+	const smooth = useSharedValue(0);
+	const h = height * coverage;
+	const c = Skia.Color(accent);
+	const tint = [c[0], c[1], c[2]];
 
-  useEffect(() => {
-    if (reduced) return;
-    phase.set(0);
-    phase.set(withRepeat(withTiming(1, { duration: 14000, easing: Easing.linear }), -1, false));
-  }, [reduced, phase]);
+	useEffect(() => {
+		if (reduced) {
+			return;
+		}
+		phase.set(0);
+		phase.set(
+			withRepeat(
+				withTiming(1, { duration: 14_000, easing: Easing.linear }),
+				-1,
+				false
+			)
+		);
+	}, [reduced, phase]);
 
-  const uniforms = useDerivedValue(() => {
-    smooth.set(smooth.get() + (level.get() - smooth.get()) * 0.12);
-    return { u_res: [width, h], u_t: phase.get(), u_pull: 0, u_level: reduced ? 0 : smooth.get(), u_flip: flip, u_tint: tint };
-  });
+	const uniforms = useDerivedValue(() => {
+		smooth.set(smooth.get() + (level.get() - smooth.get()) * 0.12);
+		return {
+			u_flip: flip,
+			u_level: reduced ? 0 : smooth.get(),
+			u_pull: 0,
+			u_res: [width, h],
+			u_t: phase.get(),
+			u_tint: tint,
+		};
+	});
 
-  if (!SHADER) return null;
-  return (
-    <Canvas
-      pointerEvents="none"
-      style={[StyleSheet.absoluteFill, flip ? { top: undefined, height: h } : { bottom: undefined, height: h }]}
-    >
-      <Fill>
-        <Shader source={SHADER} uniforms={uniforms} />
-      </Fill>
-    </Canvas>
-  );
+	if (!SHADER) {
+		return null;
+	}
+	return (
+		<Canvas
+			pointerEvents="none"
+			style={[
+				StyleSheet.absoluteFill,
+				flip ? { height: h, top: undefined } : { bottom: undefined, height: h },
+			]}
+		>
+			<Fill>
+				<Shader source={SHADER} uniforms={uniforms} />
+			</Fill>
+		</Canvas>
+	);
 }

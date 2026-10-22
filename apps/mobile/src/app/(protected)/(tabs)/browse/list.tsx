@@ -1,3 +1,3 @@
-import { FamilyListScreen } from '@/src/features/browse/components/family-list-screen';
+import { FamilyListScreen } from "@/src/features/browse/components/family-list-screen";
 
 export default FamilyListScreen;

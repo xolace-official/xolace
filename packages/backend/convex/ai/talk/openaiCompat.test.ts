@@ -1,154 +1,250 @@
 import { describe, expect, it } from "vitest";
 import { toAnthropicRequest } from "./openaiCompat";
-import { createEventTranslator, sseChunk, SSE_DONE } from "./openaiSse";
+import { createEventTranslator, SSE_DONE, sseChunk } from "./openaiSse";
 
 describe("toAnthropicRequest", () => {
-  it("lifts the agent prompt into system and opens on the person when the agent spoke first", () => {
-    const req = toAnthropicRequest([
-      { role: "system", content: "You are Ember." },
-      { role: "assistant", content: "Hey, I'm here. What's on your mind?" },
-      { role: "user", content: "Work has been a lot." },
-    ]);
+	it("lifts the agent prompt into system and opens on the person when the agent spoke first", () => {
+		const req = toAnthropicRequest([
+			{ content: "You are Ember.", role: "system" },
+			{ content: "Hey, I'm here. What's on your mind?", role: "assistant" },
+			{ content: "Work has been a lot.", role: "user" },
+		]);
 
-    expect(req.system).toBe("You are Ember.");
-    expect(req.messages).toEqual([
-      { role: "user", content: "(The talk begins.)" },
-      { role: "assistant", content: "Hey, I'm here. What's on your mind?" },
-      { role: "user", content: "Work has been a lot." },
-    ]);
-  });
+		expect(req.system).toBe("You are Ember.");
+		expect(req.messages).toEqual([
+			{ content: "(The talk begins.)", role: "user" },
+			{ content: "Hey, I'm here. What's on your mind?", role: "assistant" },
+			{ content: "Work has been a lot.", role: "user" },
+		]);
+	});
 
-  it("keeps only spoken text: parts join, tool traffic drops, back-to-back turns merge", () => {
-    const req = toAnthropicRequest([
-      { role: "user", content: [{ type: "text", text: "I can't sleep." }, { type: "image_url" }] },
-      { role: "assistant", content: null },
-      { role: "tool", content: "{\"ok\":true}" },
-      { role: "user", content: "Again." },
-    ]);
+	it("keeps only spoken text: parts join, tool traffic drops, back-to-back turns merge", () => {
+		const req = toAnthropicRequest([
+			{
+				content: [
+					{ text: "I can't sleep.", type: "text" },
+					{ type: "image_url" },
+				],
+				role: "user",
+			},
+			{ content: null, role: "assistant" },
+			{ content: '{"ok":true}', role: "tool" },
+			{ content: "Again.", role: "user" },
+		]);
 
-    expect(req.system).toBe("");
-    expect(req.messages).toEqual([{ role: "user", content: "I can't sleep.\n\nAgain." }]);
-  });
+		expect(req.system).toBe("");
+		expect(req.messages).toEqual([
+			{ content: "I can't sleep.\n\nAgain.", role: "user" },
+		]);
+	});
 });
 
 describe("toAnthropicRequest with tools", () => {
-  const endCall = {
-    type: "function",
-    function: {
-      name: "end_call",
-      description: "End the call.",
-      parameters: { type: "object", properties: { reason: { type: "string" } } },
-    },
-  };
+	const endCall = {
+		function: {
+			description: "End the call.",
+			name: "end_call",
+			parameters: {
+				properties: { reason: { type: "string" } },
+				type: "object",
+			},
+		},
+		type: "function",
+	};
 
-  it("offers the agent's tools to the model as Anthropic tools", () => {
-    const req = toAnthropicRequest([{ role: "user", content: "Bye." }], [endCall]);
+	it("offers the agent's tools to the model as Anthropic tools", () => {
+		const req = toAnthropicRequest(
+			[{ content: "Bye.", role: "user" }],
+			[endCall]
+		);
 
-    expect(req.tools).toEqual([
-      {
-        name: "end_call",
-        description: "End the call.",
-        input_schema: { type: "object", properties: { reason: { type: "string" } } },
-      },
-    ]);
-  });
+		expect(req.tools).toEqual([
+			{
+				description: "End the call.",
+				input_schema: {
+					properties: { reason: { type: "string" } },
+					type: "object",
+				},
+				name: "end_call",
+			},
+		]);
+	});
 
-  it("replays a past tool call as tool_use, answered by its tool_result", () => {
-    const req = toAnthropicRequest([
-      { role: "user", content: "That's all, thanks." },
-      {
-        role: "assistant",
-        content: "Take care.",
-        tool_calls: [{ id: "call_1", type: "function", function: { name: "end_call", arguments: '{"reason":"done"}' } }],
-      },
-      { role: "tool", tool_call_id: "call_1", content: "ok" },
-      { role: "user", content: "Wait, one more thing." },
-    ]);
+	it("replays a past tool call as tool_use, answered by its tool_result", () => {
+		const req = toAnthropicRequest([
+			{ content: "That's all, thanks.", role: "user" },
+			{
+				content: "Take care.",
+				role: "assistant",
+				tool_calls: [
+					{
+						function: { arguments: '{"reason":"done"}', name: "end_call" },
+						id: "call_1",
+						type: "function",
+					},
+				],
+			},
+			{ content: "ok", role: "tool", tool_call_id: "call_1" },
+			{ content: "Wait, one more thing.", role: "user" },
+		]);
 
-    expect(req.messages).toEqual([
-      { role: "user", content: "That's all, thanks." },
-      {
-        role: "assistant",
-        content: [
-          { type: "text", text: "Take care." },
-          { type: "tool_use", id: "call_1", name: "end_call", input: { reason: "done" } },
-        ],
-      },
-      {
-        role: "user",
-        content: [
-          { type: "tool_result", tool_use_id: "call_1", content: "ok" },
-          { type: "text", text: "Wait, one more thing." },
-        ],
-      },
-    ]);
-  });
+		expect(req.messages).toEqual([
+			{ content: "That's all, thanks.", role: "user" },
+			{
+				content: [
+					{ text: "Take care.", type: "text" },
+					{
+						id: "call_1",
+						input: { reason: "done" },
+						name: "end_call",
+						type: "tool_use",
+					},
+				],
+				role: "assistant",
+			},
+			{
+				content: [
+					{ content: "ok", tool_use_id: "call_1", type: "tool_result" },
+					{ text: "Wait, one more thing.", type: "text" },
+				],
+				role: "user",
+			},
+		]);
+	});
 
-  it("answers a tool call ElevenLabs never reported back, so the history stays valid", () => {
-    const req = toAnthropicRequest([
-      { role: "user", content: "Bye." },
-      { role: "assistant", tool_calls: [{ id: "call_2", type: "function", function: { name: "end_call", arguments: "" } }] },
-      { role: "user", content: "Actually, no." },
-    ]);
+	it("answers a tool call ElevenLabs never reported back, so the history stays valid", () => {
+		const req = toAnthropicRequest([
+			{ content: "Bye.", role: "user" },
+			{
+				role: "assistant",
+				tool_calls: [
+					{
+						function: { arguments: "", name: "end_call" },
+						id: "call_2",
+						type: "function",
+					},
+				],
+			},
+			{ content: "Actually, no.", role: "user" },
+		]);
 
-    expect(req.messages.slice(1)).toEqual([
-      { role: "assistant", content: [{ type: "tool_use", id: "call_2", name: "end_call", input: {} }] },
-      {
-        role: "user",
-        content: [
-          { type: "tool_result", tool_use_id: "call_2", content: "ok" },
-          { type: "text", text: "Actually, no." },
-        ],
-      },
-    ]);
-  });
+		expect(req.messages.slice(1)).toEqual([
+			{
+				content: [
+					{ id: "call_2", input: {}, name: "end_call", type: "tool_use" },
+				],
+				role: "assistant",
+			},
+			{
+				content: [
+					{ content: "ok", tool_use_id: "call_2", type: "tool_result" },
+					{ text: "Actually, no.", type: "text" },
+				],
+				role: "user",
+			},
+		]);
+	});
 });
 
 describe("sseChunk", () => {
-  it("frames a text delta as an OpenAI chat.completion.chunk event", () => {
-    const line = sseChunk({ id: "chatcmpl-1", model: "claude-haiku-5-5", created: 1700000000 }, { content: "Hi" });
+	it("frames a text delta as an OpenAI chat.completion.chunk event", () => {
+		const line = sseChunk(
+			{ created: 1_700_000_000, id: "chatcmpl-1", model: "claude-haiku-5-5" },
+			{ content: "Hi" }
+		);
 
-    expect(line.endsWith("\n\n")).toBe(true);
-    expect(JSON.parse(line.slice("data: ".length))).toEqual({
-      id: "chatcmpl-1",
-      object: "chat.completion.chunk",
-      created: 1700000000,
-      model: "claude-haiku-5-5",
-      choices: [{ index: 0, delta: { content: "Hi" }, finish_reason: null }],
-    });
-  });
+		expect(line.endsWith("\n\n")).toBe(true);
+		expect(JSON.parse(line.slice("data: ".length))).toEqual({
+			choices: [{ delta: { content: "Hi" }, finish_reason: null, index: 0 }],
+			created: 1_700_000_000,
+			id: "chatcmpl-1",
+			model: "claude-haiku-5-5",
+			object: "chat.completion.chunk",
+		});
+	});
 
-  it("closes with an empty delta carrying finish_reason, then [DONE]", () => {
-    const line = sseChunk({ id: "c", model: "m", created: 1 }, {}, "stop");
+	it("closes with an empty delta carrying finish_reason, then [DONE]", () => {
+		const line = sseChunk({ created: 1, id: "c", model: "m" }, {}, "stop");
 
-    expect(JSON.parse(line.slice(6)).choices).toEqual([{ index: 0, delta: {}, finish_reason: "stop" }]);
-    expect(SSE_DONE).toBe("data: [DONE]\n\n");
-  });
+		expect(JSON.parse(line.slice(6)).choices).toEqual([
+			{ delta: {}, finish_reason: "stop", index: 0 },
+		]);
+		expect(SSE_DONE).toBe("data: [DONE]\n\n");
+	});
 });
 
 describe("createEventTranslator", () => {
-  it("streams spoken text, then a tool call as OpenAI tool_calls deltas, finishing on tool_calls", () => {
-    const translate = createEventTranslator();
-    const events = [
-      { type: "content_block_start", index: 0, content_block: { type: "text", text: "" } },
-      { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "Take care." } },
-      { type: "content_block_start", index: 1, content_block: { type: "tool_use", id: "toolu_1", name: "end_call", input: {} } },
-      { type: "content_block_delta", index: 1, delta: { type: "input_json_delta", partial_json: '{"reason":' } },
-      { type: "content_block_delta", index: 1, delta: { type: "input_json_delta", partial_json: '"done"}' } },
-      { type: "message_delta", delta: { stop_reason: "tool_use" } },
-    ];
+	it("streams spoken text, then a tool call as OpenAI tool_calls deltas, finishing on tool_calls", () => {
+		const translate = createEventTranslator();
+		const events = [
+			{
+				content_block: { text: "", type: "text" },
+				index: 0,
+				type: "content_block_start",
+			},
+			{
+				delta: { text: "Take care.", type: "text_delta" },
+				index: 0,
+				type: "content_block_delta",
+			},
+			{
+				content_block: {
+					id: "toolu_1",
+					input: {},
+					name: "end_call",
+					type: "tool_use",
+				},
+				index: 1,
+				type: "content_block_start",
+			},
+			{
+				delta: { partial_json: '{"reason":', type: "input_json_delta" },
+				index: 1,
+				type: "content_block_delta",
+			},
+			{
+				delta: { partial_json: '"done"}', type: "input_json_delta" },
+				index: 1,
+				type: "content_block_delta",
+			},
+			{ delta: { stop_reason: "tool_use" }, type: "message_delta" },
+		];
 
-    expect(events.map((e) => translate(e))).toEqual([
-      null,
-      { delta: { content: "Take care." } },
-      { delta: { tool_calls: [{ index: 0, id: "toolu_1", type: "function", function: { name: "end_call", arguments: "" } }] } },
-      { delta: { tool_calls: [{ index: 0, function: { arguments: '{"reason":' } }] } },
-      { delta: { tool_calls: [{ index: 0, function: { arguments: '"done"}' } }] } },
-      { finish: "tool_calls" },
-    ]);
-  });
+		expect(events.map((e) => translate(e))).toEqual([
+			null,
+			{ delta: { content: "Take care." } },
+			{
+				delta: {
+					tool_calls: [
+						{
+							function: { arguments: "", name: "end_call" },
+							id: "toolu_1",
+							index: 0,
+							type: "function",
+						},
+					],
+				},
+			},
+			{
+				delta: {
+					tool_calls: [{ function: { arguments: '{"reason":' }, index: 0 }],
+				},
+			},
+			{
+				delta: {
+					tool_calls: [{ function: { arguments: '"done"}' }, index: 0 }],
+				},
+			},
+			{ finish: "tool_calls" },
+		]);
+	});
 
-  it("maps the model running out of room to finish_reason length", () => {
-    expect(createEventTranslator()({ type: "message_delta", delta: { stop_reason: "max_tokens" } })).toEqual({ finish: "length" });
-  });
+	it("maps the model running out of room to finish_reason length", () => {
+		expect(
+			createEventTranslator()({
+				delta: { stop_reason: "max_tokens" },
+				type: "message_delta",
+			})
+		).toEqual({ finish: "length" });
+	});
 });

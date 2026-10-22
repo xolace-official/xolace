@@ -7,13 +7,13 @@
  */
 
 interface DistillerInput {
-  rawInput: string;
-  mirrorText: string;
-  primaryEmotion: string;
-  granularLabel?: string;
-  intensity: number;
-  thematicTags: string[];
-  userLanguageTags: string[];
+	granularLabel?: string;
+	intensity: number;
+	mirrorText: string;
+	primaryEmotion: string;
+	rawInput: string;
+	thematicTags: string[];
+	userLanguageTags: string[];
 }
 
 /**
@@ -26,20 +26,21 @@ interface DistillerInput {
  * @param input - Classification and mirror context to guide faithful distillation
  * @returns System and user prompt pair for the distillation model call
  */
-export function buildDistillerPrompt(
-  input: DistillerInput
-): { system: string; user: string } {
-  const {
-    rawInput,
-    mirrorText,
-    primaryEmotion,
-    granularLabel,
-    intensity,
-    thematicTags,
-    userLanguageTags,
-  } = input;
+export function buildDistillerPrompt(input: DistillerInput): {
+	system: string;
+	user: string;
+} {
+	const {
+		rawInput,
+		mirrorText,
+		primaryEmotion,
+		granularLabel,
+		intensity,
+		thematicTags,
+		userLanguageTags,
+	} = input;
 
-  const system = `You are a voice-preserving anonymizer for an emotional reflection pool. Your job is to take a person's raw emotional expression and produce a version that:
+	const system = `You are a voice-preserving anonymizer for an emotional reflection pool. Your job is to take a person's raw emotional expression and produce a version that:
 
 1. **Preserves their voice** — their cadence, fragments, tone, register, even their "lol" or trailing thoughts. This should sound like a real person wrote it, because a real person did.
 2. **Strips all identifying details** — names, places, specific roles, organizations, relationships that narrow identity. Replace specifics with universal equivalents only when necessary.
@@ -81,7 +82,7 @@ The mirror shows what the AI identified as the emotional core. Use it to stay fa
 ## Output
 Respond with ONLY the distilled reflection text, or NULL. No quotes, no labels, no explanation.`;
 
-  const user = rawInput;
+	const user = rawInput;
 
-  return { system, user };
+	return { system, user };
 }

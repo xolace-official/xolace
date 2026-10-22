@@ -61,35 +61,35 @@ const HIGH_SPECIFICITY = 6;
  * none — its "Say more" reopens the talk (#604), where the companion asks.
  */
 const REACH_ELIGIBLE_ENTRY_TYPES = new Set([
-  "open_prompt",
-  "guided_entry",
-  "voice",
-  "word_cloud",
+	"open_prompt",
+	"guided_entry",
+	"voice",
+	"word_cloud",
 ]);
 
 export interface ClaimStrengthSignal {
-  /** primaryEmotionConfidence, 0-1. */
-  confidence: number;
-  /** classifier specificity, 0-10. */
-  specificity: number;
-  /**
-   * Highest episodic search score as returned by rag.search. Absent = no
-   * search ran (cold start) or nothing retrieved — NOT zero (§3.4).
-   */
-  episodicTopScore?: number;
-  entryType: string;
-  /** SafeguardResult.isEscalation — the same flag that replaces the mirror screen. */
-  isEscalation: boolean;
-  /**
-   * Another session by this profile already reached today (indexed read).
-   * Ignored once this session itself has reached — see routeClaimStrength.
-   */
-  profileReachedToday: boolean;
-  /** A reach already went out on THIS session. */
-  gapNamedThisSession: boolean;
-  /** turnsCount >= MAX_TURNS. */
-  atCap: boolean;
-  userFeedback?: string;
+	/** turnsCount >= MAX_TURNS. */
+	atCap: boolean;
+	/** primaryEmotionConfidence, 0-1. */
+	confidence: number;
+	entryType: string;
+	/**
+	 * Highest episodic search score as returned by rag.search. Absent = no
+	 * search ran (cold start) or nothing retrieved — NOT zero (§3.4).
+	 */
+	episodicTopScore?: number;
+	/** A reach already went out on THIS session. */
+	gapNamedThisSession: boolean;
+	/** SafeguardResult.isEscalation — the same flag that replaces the mirror screen. */
+	isEscalation: boolean;
+	/**
+	 * Another session by this profile already reached today (indexed read).
+	 * Ignored once this session itself has reached — see routeClaimStrength.
+	 */
+	profileReachedToday: boolean;
+	/** classifier specificity, 0-10. */
+	specificity: number;
+	userFeedback?: string;
 }
 
 /**
@@ -98,44 +98,50 @@ export interface ClaimStrengthSignal {
  * Resolution order is §3.9 of the doc, in order.
  */
 export function routeClaimStrength(input: ClaimStrengthSignal): ClaimStrength {
-  // 1. Suppressed sessions are plain — never reaching, never holding, on any
-  //    turn including the cap (§3.8).
-  // The same-day guard binds a whole session including its refinement turns:
-  // a session that already reached is not re-suppressed by a SIBLING session
-  // reaching between turns, or turn 2 would go plain where it must hold.
-  const suppressed =
-    !REACH_ELIGIBLE_ENTRY_TYPES.has(input.entryType) ||
-    input.isEscalation ||
-    (input.profileReachedToday && !input.gapNamedThisSession);
+	// 1. Suppressed sessions are plain — never reaching, never holding, on any
+	//    turn including the cap (§3.8).
+	// The same-day guard binds a whole session including its refinement turns:
+	// a session that already reached is not re-suppressed by a SIBLING session
+	// reaching between turns, or turn 2 would go plain where it must hold.
+	const suppressed =
+		!REACH_ELIGIBLE_ENTRY_TYPES.has(input.entryType) ||
+		input.isEscalation ||
+		(input.profileReachedToday && !input.gapNamedThisSession);
 
-  if (!suppressed) {
-    // 2. At the cap, a session that reached stops reaching and holds.
-    if (input.atCap && input.gapNamedThisSession) return "holding";
+	if (!suppressed) {
+		// 2. At the cap, a session that reached stops reaching and holds.
+		if (input.atCap && input.gapNamedThisSession) {
+			return "holding";
+		}
 
-    // 3. The gate itself. A NEW reach never opens at the cap: "Say more"
-    // never renders there (§6), so a question with no way to answer it is a
-    // dead end, not a reach. A session that already reached still holds;
-    // one that never reached falls through to the normal poles and answers
-    // with its best read instead of a question nobody can respond to.
-    const memoryConnected =
-      input.episodicTopScore !== undefined &&
-      input.episodicTopScore >= EPISODIC_CONNECT_FLOOR;
-    if (input.specificity < LOW_SPECIFICITY && !memoryConnected) {
-      if (input.gapNamedThisSession) return "holding";
-      if (!input.atCap) return "reaching";
-    }
-  }
+		// 3. The gate itself. A NEW reach never opens at the cap: "Say more"
+		// never renders there (§6), so a question with no way to answer it is a
+		// dead end, not a reach. A session that already reached still holds;
+		// one that never reached falls through to the normal poles and answers
+		// with its best read instead of a question nobody can respond to.
+		const memoryConnected =
+			input.episodicTopScore !== undefined &&
+			input.episodicTopScore >= EPISODIC_CONNECT_FLOOR;
+		if (input.specificity < LOW_SPECIFICITY && !memoryConnected) {
+			if (input.gapNamedThisSession) {
+				return "holding";
+			}
+			if (!input.atCap) {
+				return "reaching";
+			}
+		}
+	}
 
-  // 5. The normal poles.
-  const base =
-    input.confidence >= HIGH_CONFIDENCE && input.specificity >= HIGH_SPECIFICITY
-      ? "confident"
-      : "measured";
+	// 5. The normal poles.
+	const base =
+		input.confidence >= HIGH_CONFIDENCE && input.specificity >= HIGH_SPECIFICITY
+			? "confident"
+			: "measured";
 
-  // 6. Floor: a "not quite" is empirical proof the read missed, so never carry
-  //    a confident posture into a rejected turn. "say_more" adds context
-  //    without rejecting, so it stands.
-  return input.userFeedback === "not_quite" && base === "confident"
-    ? "measured"
-    : base;
+	// 6. Floor: a "not quite" is empirical proof the read missed, so never carry
+	//    a confident posture into a rejected turn. "say_more" adds context
+	//    without rejecting, so it stands.
+	return input.userFeedback === "not_quite" && base === "confident"
+		? "measured"
+		: base;
 }

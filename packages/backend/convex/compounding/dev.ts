@@ -15,39 +15,54 @@ import { computeSteadiness } from "./steadiness";
 
 const domainV = v.union(...DOMAINS.map((d) => v.literal(d)));
 const readingV = v.object({
-  domain: domainV,
-  value: v.number(),
-  weight: v.number(),
-  at: v.number(),
-  source: v.union(v.literal("session"), v.literal("mood"), v.literal("follow_up")),
+	at: v.number(),
+	domain: domainV,
+	source: v.union(
+		v.literal("session"),
+		v.literal("mood"),
+		v.literal("follow_up")
+	),
+	value: v.number(),
+	weight: v.number(),
 });
 
 export const steadiness = internalQuery({
-  args: { profileId: v.id("emotional_profiles"), now: v.optional(v.number()) },
-  returns: v.object({
-    timezone: v.string(),
-    overall: v.union(v.number(), v.null()),
-    domains: v.array(
-      v.object({
-        domain: domainV,
-        state: v.union(v.literal("warming"), v.literal("unlocked"), v.literal("settled")),
-        steadiness: v.union(v.number(), v.null()),
-        baseline: v.union(v.number(), v.null()),
-        raw: v.object({ steadiness: v.number(), baseline: v.number() }),
-        lastReadingAt: v.number(),
-        quiet: v.boolean(),
-        evidenceWeight: v.number(),
-        sessionDays: v.number(),
-        readings: v.array(readingV),
-      }),
-    ),
-  }),
-  handler: async (ctx, args) => {
-    assertDevToolsEnabled();
-    const { readings, timezone, unlocked } = await loadReadings(ctx, args.profileId);
-    return {
-      timezone,
-      ...computeSteadiness(readings, { now: args.now ?? Date.now(), timezone, unlocked }),
-    };
-  },
+	args: { now: v.optional(v.number()), profileId: v.id("emotional_profiles") },
+	handler: async (ctx, args) => {
+		assertDevToolsEnabled();
+		const { readings, timezone, unlocked } = await loadReadings(
+			ctx,
+			args.profileId
+		);
+		return {
+			timezone,
+			...computeSteadiness(readings, {
+				now: args.now ?? Date.now(),
+				timezone,
+				unlocked,
+			}),
+		};
+	},
+	returns: v.object({
+		domains: v.array(
+			v.object({
+				baseline: v.union(v.number(), v.null()),
+				domain: domainV,
+				evidenceWeight: v.number(),
+				lastReadingAt: v.number(),
+				quiet: v.boolean(),
+				raw: v.object({ baseline: v.number(), steadiness: v.number() }),
+				readings: v.array(readingV),
+				sessionDays: v.number(),
+				state: v.union(
+					v.literal("warming"),
+					v.literal("unlocked"),
+					v.literal("settled")
+				),
+				steadiness: v.union(v.number(), v.null()),
+			})
+		),
+		overall: v.union(v.number(), v.null()),
+		timezone: v.string(),
+	}),
 });

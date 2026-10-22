@@ -1,6 +1,6 @@
-import { ConfirmationDialog } from '@/src/components/shared/confirmation-dialog';
-import type { useConversationRowActions } from '../use-conversation-row-actions';
-import { ChatActionSheet } from './chat-action-sheet';
+import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
+import type { useConversationRowActions } from "../use-conversation-row-actions";
+import { ChatActionSheet } from "./chat-action-sheet";
 
 /**
  * The long-press sheet and the delete confirmation, together.
@@ -14,37 +14,44 @@ import { ChatActionSheet } from './chat-action-sheet';
  * runs on the tap with no confirmation and nothing is lost either way.
  */
 export function ConversationActions({
-  actions,
+	actions,
 }: {
-  actions: ReturnType<typeof useConversationRowActions>;
+	actions: ReturnType<typeof useConversationRowActions>;
 }) {
-  const { sheetFor, setSheetFor, toggleArchive, close, deleteFor, setDeleteFor, confirmDelete } =
-    actions;
+	const {
+		sheetFor,
+		setSheetFor,
+		toggleArchive,
+		close,
+		deleteFor,
+		setDeleteFor,
+		confirmDelete,
+	} = actions;
 
-  return (
-    <>
-      {sheetFor && (
-        <ChatActionSheet
-          conversation={sheetFor}
-          onDismiss={() => setSheetFor(null)}
-          onArchive={() => toggleArchive(sheetFor)}
-          onClose={() => close(sheetFor)}
-          onDelete={() => {
-            setSheetFor(null);
-            setDeleteFor(sheetFor);
-          }}
-        />
-      )}
+	return (
+		<>
+			{sheetFor && (
+				<ChatActionSheet
+					conversation={sheetFor}
+					onArchive={() => toggleArchive(sheetFor)}
+					onClose={() => close(sheetFor)}
+					onDelete={() => {
+						setSheetFor(null);
+						setDeleteFor(sheetFor);
+					}}
+					onDismiss={() => setSheetFor(null)}
+				/>
+			)}
 
-      <ConfirmationDialog
-        isOpen={deleteFor !== null}
-        onOpenChange={(open) => !open && setDeleteFor(null)}
-        title="Delete this request?"
-        description="It disappears from your list for good. Their copy stays until they delete it too."
-        confirmLabel="Delete"
-        onConfirm={confirmDelete}
-        isDestructive
-      />
-    </>
-  );
+			<ConfirmationDialog
+				confirmLabel="Delete"
+				description="It disappears from your list for good. Their copy stays until they delete it too."
+				isDestructive
+				isOpen={deleteFor !== null}
+				onConfirm={confirmDelete}
+				onOpenChange={(open) => !open && setDeleteFor(null)}
+				title="Delete this request?"
+			/>
+		</>
+	);
 }

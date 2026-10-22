@@ -59,8 +59,8 @@
 //   bun scripts/library/ingest.ts --cover-variants   # + 512/1280 WebP covers (add --prod for prod)
 //   bun scripts/library/ingest.ts --manifest scripts/library/dev/manifest.json   # sources/hubs read from the same dir
 
-import { createHash, randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -69,205 +69,329 @@ import { rgbaToThumbHash } from "thumbhash";
 
 type Source = { slug: string; refreshDays?: number; [k: string]: unknown };
 type Entry = {
-  slug: string;
-  sources: { source: string; retrievedAt?: number }[];
-  reuse: string;
-  bodyPath: string;
-  coverPath?: string;
-  decorativeImages?: string[];
-  [k: string]: unknown;
+	slug: string;
+	sources: { source: string; retrievedAt?: number }[];
+	reuse: string;
+	bodyPath: string;
+	coverPath?: string;
+	decorativeImages?: string[];
+	[k: string]: unknown;
 };
 type Hub = { slug: string; coverPath?: string; [k: string]: unknown };
-type Audio = { entrySlug: string; audioPath: string; transcriptPath: string; active: boolean; title?: string };
+type Audio = {
+	entrySlug: string;
+	audioPath: string;
+	transcriptPath: string;
+	active: boolean;
+	title?: string;
+};
 
 const args = process.argv.slice(2);
 const i = args.indexOf("--manifest");
 const prod = args.includes("--prod");
 const coverVariants = args.includes("--cover-variants");
-const manifestPath = path.resolve(i === -1 ? `scripts/library/${prod ? "prod" : "dev"}/manifest.json` : args[i + 1]);
+const manifestPath = path.resolve(
+	i === -1
+		? `scripts/library/${prod ? "prod" : "dev"}/manifest.json`
+		: args[i + 1]
+);
 const dir = path.dirname(manifestPath);
 const DAY_MS = 86_400_000;
 const PREVIEW_SEC = 30; // the free preview (#390)
 
 const readJson = <T>(p: string): T => JSON.parse(readFileSync(p, "utf8"));
-const sha256 = (...parts: string[]) => createHash("sha256").update(parts.join("\u0000")).digest("hex");
+const sha256 = (...parts: string[]) =>
+	createHash("sha256").update(parts.join("\u0000")).digest("hex");
 
 function convexRun<T = { action: string }>(fn: string, jsonArgs: unknown): T {
-  const out = execFileSync(
-    "npx",
-    ["convex", "run", fn, JSON.stringify(jsonArgs), ...(prod ? ["--prod"] : [])],
-    { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] },
-  );
-  return JSON.parse(out);
+	const out = execFileSync(
+		"npx",
+		[
+			"convex",
+			"run",
+			fn,
+			JSON.stringify(jsonArgs),
+			...(prod ? ["--prod"] : []),
+		],
+		{ encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] }
+	);
+	return JSON.parse(out);
 }
 
 let failures = 0;
-async function attempt(label: string, fn: () => { action: string } | Promise<{ action: string }>) {
-  try {
-    console.log(`${label}: ${(await fn()).action}`);
-  } catch (err) {
-    failures++;
-    console.error(`${label}: FAILED — ${(err as Error).message}`);
-  }
+async function attempt(
+	label: string,
+	fn: () => { action: string } | Promise<{ action: string }>
+) {
+	try {
+		console.log(`${label}: ${(await fn()).action}`);
+	} catch (err) {
+		failures++;
+		console.error(`${label}: FAILED — ${(err as Error).message}`);
+	}
 }
 
 async function upload(key: string, body: Buffer) {
-  const { url } = convexRun<{ url: string }>("ai/paths/audioTracks:mintUploadUrl", { key });
-  const res = await fetch(url, { method: "PUT", body: new Uint8Array(body), signal: AbortSignal.timeout(10 * 60_000) });
-  if (!res.ok) throw new Error(`upload failed (${res.status}): ${key}`);
+	const { url } = convexRun<{ url: string }>(
+		"ai/paths/audioTracks:mintUploadUrl",
+		{ key }
+	);
+	const res = await fetch(url, {
+		body: new Uint8Array(body),
+		method: "PUT",
+		signal: AbortSignal.timeout(10 * 60_000),
+	});
+	if (!res.ok) {
+		throw new Error(`upload failed (${res.status}): ${key}`);
+	}
 }
 
 // Content-addressed like kindling's thumbs: the key is the hash, so an unchanged
 // cover is the same key and is only re-PUT (idempotent), never duplicated.
 async function uploadContent(prefix: string, file: Buffer, ext: string) {
-  const key = `${prefix}/${createHash("sha256").update(file).digest("hex")}${ext}`;
-  await upload(key, file);
-  return key;
+	const key = `${prefix}/${createHash("sha256").update(file).digest("hex")}${ext}`;
+	await upload(key, file);
+	return key;
 }
 
-const readCover = (coverPath: string) => readFileSync(path.resolve(dir, "media/cover", coverPath));
+const readCover = (coverPath: string) =>
+	readFileSync(path.resolve(dir, "media/cover", coverPath));
 
-async function uploadCover(coverPath: string, prefix = "library-thumb", file = readCover(coverPath)) {
-  return { coverKey: await uploadContent(prefix, file, path.extname(coverPath).toLowerCase()) };
+async function uploadCover(
+	coverPath: string,
+	prefix = "library-thumb",
+	file = readCover(coverPath)
+) {
+	return {
+		coverKey: await uploadContent(
+			prefix,
+			file,
+			path.extname(coverPath).toLowerCase()
+		),
+	};
 }
 
 // The original's key, plus the --cover-variants fields when the flag is on.
-async function coverFields(coverPath: string | undefined, prefix: string, variants: (file: Buffer) => Promise<object>) {
-  if (!coverPath) return {};
-  const file = readCover(coverPath);
-  return { ...(await uploadCover(coverPath, prefix, file)), ...(coverVariants ? await variants(file) : {}) };
+async function coverFields(
+	coverPath: string | undefined,
+	prefix: string,
+	variants: (file: Buffer) => Promise<object>
+) {
+	if (!coverPath) {
+		return {};
+	}
+	const file = readCover(coverPath);
+	return {
+		...(await uploadCover(coverPath, prefix, file)),
+		...(coverVariants ? await variants(file) : {}),
+	};
 }
 
 // --cover-variants: a resized WebP of the cover, uploaded and logged with its size.
 async function uploadCoverVariant(file: Buffer, px: number, prefix: string) {
-  const webp = await sharp(file)
-    .resize(px, px, { fit: "inside", withoutEnlargement: true, kernel: "lanczos3" })
-    .webp({ quality: 78, effort: 6 })
-    .toBuffer();
-  const key = await uploadContent(prefix, webp, ".webp");
-  console.log(`  ${px}px ${key}: ${webp.length} bytes (original ${file.length} bytes)`);
-  return key;
+	const webp = await sharp(file)
+		.resize(px, px, {
+			fit: "inside",
+			kernel: "lanczos3",
+			withoutEnlargement: true,
+		})
+		.webp({ effort: 6, quality: 78 })
+		.toBuffer();
+	const key = await uploadContent(prefix, webp, ".webp");
+	console.log(
+		`  ${px}px ${key}: ${webp.length} bytes (original ${file.length} bytes)`
+	);
+	return key;
 }
 
 // The entry cover's 512 (list thumbnails) and 1280 (full-width) WebPs.
 async function uploadCoverVariants(file: Buffer) {
-  return {
-    cover512Key: await uploadCoverVariant(file, 512, "library-thumb"),
-    cover1280Key: await uploadCoverVariant(file, 1280, "library-thumb"),
-    coverThumbhash: await thumbhashOf(file),
-  };
+	return {
+		cover512Key: await uploadCoverVariant(file, 512, "library-thumb"),
+		cover1280Key: await uploadCoverVariant(file, 1280, "library-thumb"),
+		coverThumbhash: await thumbhashOf(file),
+	};
 }
 
 // Hubs are never shown small (#508): only the 1280.
 async function uploadHubCoverVariants(file: Buffer) {
-  return { cover1280Key: await uploadCoverVariant(file, 1280, "hub-cover"), coverThumbhash: await thumbhashOf(file) };
+	return {
+		cover1280Key: await uploadCoverVariant(file, 1280, "hub-cover"),
+		coverThumbhash: await thumbhashOf(file),
+	};
 }
 
 // ThumbHash encodes at most 100×100 RGBA.
 async function thumbhashOf(file: Buffer) {
-  const { data, info } = await sharp(file)
-    .resize(100, 100, { fit: "inside" })
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-  return Buffer.from(rgbaToThumbHash(info.width, info.height, data)).toString("base64");
+	const { data, info } = await sharp(file)
+		.resize(100, 100, { fit: "inside" })
+		.ensureAlpha()
+		.raw()
+		.toBuffer({ resolveWithObject: true });
+	return Buffer.from(rgbaToThumbHash(info.width, info.height, data)).toString(
+		"base64"
+	);
 }
 
 async function ingestAudio(a: Audio) {
-  const media = path.join(dir, "media");
-  const file = path.resolve(media, a.audioPath);
-  const audio = readFileSync(file);
-  const transcript = readFileSync(path.resolve(media, a.transcriptPath), "utf8").trim();
-  const ext = path.extname(file);
-  const durationSec = Number(
-    execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file], { encoding: "utf8" }),
-  );
-  if (!(durationSec > PREVIEW_SEC)) throw new Error(`audio is ${durationSec}s — must be longer than the ${PREVIEW_SEC}s preview`);
-  const previewFile = path.join(mkdtempSync(path.join(tmpdir(), "library-audio-")), `preview${ext}`);
-  execFileSync("ffmpeg", ["-v", "error", "-i", file, "-t", String(PREVIEW_SEC), "-c", "copy", previewFile]);
+	const media = path.join(dir, "media");
+	const file = path.resolve(media, a.audioPath);
+	const audio = readFileSync(file);
+	const transcript = readFileSync(
+		path.resolve(media, a.transcriptPath),
+		"utf8"
+	).trim();
+	const ext = path.extname(file);
+	const durationSec = Number(
+		execFileSync(
+			"ffprobe",
+			[
+				"-v",
+				"error",
+				"-show_entries",
+				"format=duration",
+				"-of",
+				"csv=p=0",
+				file,
+			],
+			{ encoding: "utf8" }
+		)
+	);
+	if (!(durationSec > PREVIEW_SEC)) {
+		throw new Error(
+			`audio is ${durationSec}s — must be longer than the ${PREVIEW_SEC}s preview`
+		);
+	}
+	const previewFile = path.join(
+		mkdtempSync(path.join(tmpdir(), "library-audio-")),
+		`preview${ext}`
+	);
+	execFileSync("ffmpeg", [
+		"-v",
+		"error",
+		"-i",
+		file,
+		"-t",
+		String(PREVIEW_SEC),
+		"-c",
+		"copy",
+		previewFile,
+	]);
 
-  // Fresh keys per attempt; the mutation deletes whichever pair loses.
-  const id = randomUUID();
-  const key = `library/${a.entrySlug}/${id}${ext}`;
-  const previewKey = `library/${a.entrySlug}/${id}.preview${ext}`;
-  try {
-    await upload(key, audio);
-    await upload(previewKey, readFileSync(previewFile));
-  } catch (err) {
-    for (const k of [key, previewKey]) {
-      try {
-        convexRun("ai/paths/audioTracks:discardUpload", { audioKey: k });
-      } catch {
-        // best-effort: an orphan blob is harmless
-      }
-    }
-    throw err;
-  }
-  // No discard past this point: a failed CLI call may still have committed,
-  // and the row would then point at deleted blobs. Worst case is an orphan.
-  return convexRun("library/audio:upsertEntryAudio", {
-    audio: {
-      entrySlug: a.entrySlug,
-      key,
-      previewKey,
-      durationSec: Math.round(durationSec),
-      transcript,
-      title: a.title,
-      active: a.active,
-      sha256: sha256(createHash("sha256").update(audio).digest("hex"), transcript),
-    },
-  });
+	// Fresh keys per attempt; the mutation deletes whichever pair loses.
+	const id = randomUUID();
+	const key = `library/${a.entrySlug}/${id}${ext}`;
+	const previewKey = `library/${a.entrySlug}/${id}.preview${ext}`;
+	try {
+		await upload(key, audio);
+		await upload(previewKey, readFileSync(previewFile));
+	} catch (err) {
+		for (const k of [key, previewKey]) {
+			try {
+				convexRun("ai/paths/audioTracks:discardUpload", { audioKey: k });
+			} catch {
+				// best-effort: an orphan blob is harmless
+			}
+		}
+		throw err;
+	}
+	// No discard past this point: a failed CLI call may still have committed,
+	// and the row would then point at deleted blobs. Worst case is an orphan.
+	return convexRun("library/audio:upsertEntryAudio", {
+		audio: {
+			active: a.active,
+			durationSec: Math.round(durationSec),
+			entrySlug: a.entrySlug,
+			key,
+			previewKey,
+			sha256: sha256(
+				createHash("sha256").update(audio).digest("hex"),
+				transcript
+			),
+			title: a.title,
+			transcript,
+		},
+	});
 }
 
 async function main() {
-  const sources = readJson<Source[]>(path.join(dir, "sources.json"));
-  const entries = readJson<Entry[]>(manifestPath);
-  const hubs = readJson<Hub[]>(path.join(dir, "hubs.json"));
+	const sources = readJson<Source[]>(path.join(dir, "sources.json"));
+	const entries = readJson<Entry[]>(manifestPath);
+	const hubs = readJson<Hub[]>(path.join(dir, "hubs.json"));
 
-  if (!prod) execFileSync("npx", ["convex", "dev", "--once"], { stdio: "inherit" });
+	if (!prod) {
+		execFileSync("npx", ["convex", "dev", "--once"], { stdio: "inherit" });
+	}
 
-  for (const source of sources) {
-    await attempt(`source ${source.slug}`, () =>
-      convexRun("library/ingest:upsertSource", { source, sha256: sha256(JSON.stringify(source)) }),
-    );
-  }
+	for (const source of sources) {
+		await attempt(`source ${source.slug}`, () =>
+			convexRun("library/ingest:upsertSource", {
+				sha256: sha256(JSON.stringify(source)),
+				source,
+			})
+		);
+	}
 
-  const refreshDays = new Map(sources.map((s) => [s.slug, s.refreshDays]));
-  for (const record of entries) {
-    const [s] = record.sources;
-    const days = s && refreshDays.get(s.source);
-    if (days && record.reuse === "verbatim" && (s.retrievedAt ?? 0) < Date.now() - days * DAY_MS) {
-      console.warn(`entry ${record.slug}: WARNING — verbatim copy older than ${days} days, re-pull it from ${s.source}`);
-    }
-    await attempt(`entry ${record.slug}`, async () => {
-      const markdown = readFileSync(path.resolve(dir, record.bodyPath), "utf8");
-      const { bodyPath: _bodyPath, coverPath, decorativeImages, ...rest } = record;
-      const cover = await coverFields(coverPath, "library-thumb", uploadCoverVariants);
-      const entry = { ...rest, ...cover };
-      return convexRun("library/ingest:upsertEntry", {
-        entry,
-        markdown,
-        decorativeImages,
-        sha256: sha256(JSON.stringify({ ...record, ...cover }), markdown),
-      });
-    });
-  }
+	const refreshDays = new Map(sources.map((s) => [s.slug, s.refreshDays]));
+	for (const record of entries) {
+		const [s] = record.sources;
+		const days = s && refreshDays.get(s.source);
+		if (
+			days &&
+			record.reuse === "verbatim" &&
+			(s.retrievedAt ?? 0) < Date.now() - days * DAY_MS
+		) {
+			console.warn(
+				`entry ${record.slug}: WARNING — verbatim copy older than ${days} days, re-pull it from ${s.source}`
+			);
+		}
+		await attempt(`entry ${record.slug}`, async () => {
+			const markdown = readFileSync(path.resolve(dir, record.bodyPath), "utf8");
+			const {
+				bodyPath: _bodyPath,
+				coverPath,
+				decorativeImages,
+				...rest
+			} = record;
+			const cover = await coverFields(
+				coverPath,
+				"library-thumb",
+				uploadCoverVariants
+			);
+			const entry = { ...rest, ...cover };
+			return convexRun("library/ingest:upsertEntry", {
+				decorativeImages,
+				entry,
+				markdown,
+				sha256: sha256(JSON.stringify({ ...record, ...cover }), markdown),
+			});
+		});
+	}
 
-  for (const hub of hubs) {
-    await attempt(`hub ${hub.slug}`, async () => {
-      const { coverPath, ...rest } = hub;
-      const cover = await coverFields(coverPath, "hub-cover", uploadHubCoverVariants);
-      const doc = { ...rest, ...cover };
-      return convexRun("library/ingest:upsertHub", { hub: doc, sha256: sha256(JSON.stringify(doc)) });
-    });
-  }
+	for (const hub of hubs) {
+		await attempt(`hub ${hub.slug}`, async () => {
+			const { coverPath, ...rest } = hub;
+			const cover = await coverFields(
+				coverPath,
+				"hub-cover",
+				uploadHubCoverVariants
+			);
+			const doc = { ...rest, ...cover };
+			return convexRun("library/ingest:upsertHub", {
+				hub: doc,
+				sha256: sha256(JSON.stringify(doc)),
+			});
+		});
+	}
 
-  const audioPath = path.join(dir, "audio.json");
-  for (const a of existsSync(audioPath) ? readJson<Audio[]>(audioPath) : []) {
-    await attempt(`audio ${a.entrySlug}`, () => ingestAudio(a));
-  }
+	const audioPath = path.join(dir, "audio.json");
+	for (const a of existsSync(audioPath) ? readJson<Audio[]>(audioPath) : []) {
+		await attempt(`audio ${a.entrySlug}`, () => ingestAudio(a));
+	}
 
-  if (failures > 0) process.exit(1);
+	if (failures > 0) {
+		process.exit(1);
+	}
 }
 
 main();

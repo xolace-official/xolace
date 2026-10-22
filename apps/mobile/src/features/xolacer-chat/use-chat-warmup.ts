@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 import {
-  chatLocalDataGeneration,
-  chatLocalDataSettled,
-  hydrateChannelsFromCache,
-} from '@/src/features/xolacer-chat/offline-db';
-import { useStreamConnection } from './providers/stream-chat-provider';
-import type { ConversationList } from './components/chats-list';
+	chatLocalDataGeneration,
+	chatLocalDataSettled,
+	hydrateChannelsFromCache,
+} from "@/src/features/xolacer-chat/offline-db";
+import type { ConversationList } from "./components/chats-list";
+import { useStreamConnection } from "./providers/stream-chat-provider";
 
 /**
  * `queryChannels` caps at 30 per call. The rows are warmed most-recent-first so
@@ -48,67 +48,79 @@ const MAX_PREFETCH = 30;
  * would not be part of — the re-render would never reach them.
  */
 export function useChatWarmup(
-  conversations: ConversationList | undefined,
-  enabled: boolean,
+	conversations: ConversationList | undefined,
+	enabled: boolean
 ) {
-  const { client } = useStreamConnection(enabled);
+	const { client } = useStreamConnection(enabled);
 
-  const channelIds = (conversations ?? [])
-    .filter((conversation) => conversation.streamChannelId)
-    .sort((a, b) => (b.lastMessageAt ?? 0) - (a.lastMessageAt ?? 0))
-    .slice(0, MAX_PREFETCH)
-    .map((conversation) => conversation.streamChannelId as string)
-    .join(',');
+	const channelIds = (conversations ?? [])
+		.filter((conversation) => conversation.streamChannelId)
+		.sort((a, b) => (b.lastMessageAt ?? 0) - (a.lastMessageAt ?? 0))
+		.slice(0, MAX_PREFETCH)
+		.map((conversation) => conversation.streamChannelId as string)
+		.join(",");
 
-  useEffect(() => {
-    if (!enabled || !client || !channelIds) return;
-    const ids = channelIds.split(',');
-    // Not cancellable, and deliberately not awaited: the only effect that
-    // matters is the client-side cache it fills, which a later mount still
-    // benefits from. Nothing here renders the result. `queryChannels` waits
-    // on the socket internally and rejects if it never opens — offline, the
-    // cache read above is all that happens, and that is the point.
-    let inFlight = false;
-    const warm = () => {
-      if (inFlight) return;
-      inFlight = true;
-      // `queryChannels` writes straight into the offline database, so it
-      // waits for any reset to finish and is skipped if one starts meanwhile
-      // — the rows would belong to the signed-out account. See
-      // `chatLocalDataSettled`.
-      chatLocalDataSettled()
-        .then(async (generation) => {
-          await hydrateChannelsFromCache(client, ids).catch((error) =>
-            console.error('[xolacer-chat] channel cache read failed', error),
-          );
-          if (generation !== chatLocalDataGeneration()) return;
-          await client.queryChannels(
-            { id: { $in: ids }, members: { $in: [client.userID as string] } },
-            { last_message_at: -1 },
-            { watch: true, presence: true, limit: MAX_PREFETCH },
-          );
-          if (generation !== chatLocalDataGeneration()) return;
-          client.dispatchEvent({ type: 'channels.queried' });
-        })
-        .catch((error) => console.warn('[xolacer-chat] channel prefetch failed', error))
-        .finally(() => {
-          inFlight = false;
-        });
-    };
-    warm();
-    // Again every time the socket comes back. The SDK closes it in the
-    // background and reopens it on foreground as a *fresh* connect — not the
-    // JS client's `_reconnect`, so `connection.recovered` never fires and the
-    // client's own re-query is off anyway (`recoverStateOnReconnect = false`;
-    // the SDK does it inside `ChannelList`, which this app does not use).
-    // Without this, everything received while backgrounded stays out of the
-    // warmed channels: rows read a stale `countUnread()` and a thread mounts
-    // over the old messages, since `initialized` is still true and nothing
-    // re-watches. The in-flight guard covers the first connect, where the
-    // mount-time call above is still waiting on the same socket.
-    const { unsubscribe } = client.on('connection.changed', (event) => {
-      if (event.online) warm();
-    });
-    return unsubscribe;
-  }, [enabled, client, channelIds]);
+	useEffect(() => {
+		if (!(enabled && client && channelIds)) {
+			return;
+		}
+		const ids = channelIds.split(",");
+		// Not cancellable, and deliberately not awaited: the only effect that
+		// matters is the client-side cache it fills, which a later mount still
+		// benefits from. Nothing here renders the result. `queryChannels` waits
+		// on the socket internally and rejects if it never opens — offline, the
+		// cache read above is all that happens, and that is the point.
+		let inFlight = false;
+		const warm = () => {
+			if (inFlight) {
+				return;
+			}
+			inFlight = true;
+			// `queryChannels` writes straight into the offline database, so it
+			// waits for any reset to finish and is skipped if one starts meanwhile
+			// — the rows would belong to the signed-out account. See
+			// `chatLocalDataSettled`.
+			chatLocalDataSettled()
+				.then(async (generation) => {
+					await hydrateChannelsFromCache(client, ids).catch((error) =>
+						console.error("[xolacer-chat] channel cache read failed", error)
+					);
+					if (generation !== chatLocalDataGeneration()) {
+						return;
+					}
+					await client.queryChannels(
+						{ id: { $in: ids }, members: { $in: [client.userID as string] } },
+						{ last_message_at: -1 },
+						{ limit: MAX_PREFETCH, presence: true, watch: true }
+					);
+					if (generation !== chatLocalDataGeneration()) {
+						return;
+					}
+					client.dispatchEvent({ type: "channels.queried" });
+				})
+				.catch((error) =>
+					console.warn("[xolacer-chat] channel prefetch failed", error)
+				)
+				.finally(() => {
+					inFlight = false;
+				});
+		};
+		warm();
+		// Again every time the socket comes back. The SDK closes it in the
+		// background and reopens it on foreground as a *fresh* connect — not the
+		// JS client's `_reconnect`, so `connection.recovered` never fires and the
+		// client's own re-query is off anyway (`recoverStateOnReconnect = false`;
+		// the SDK does it inside `ChannelList`, which this app does not use).
+		// Without this, everything received while backgrounded stays out of the
+		// warmed channels: rows read a stale `countUnread()` and a thread mounts
+		// over the old messages, since `initialized` is still true and nothing
+		// re-watches. The in-flight guard covers the first connect, where the
+		// mount-time call above is still waiting on the same socket.
+		const { unsubscribe } = client.on("connection.changed", (event) => {
+			if (event.online) {
+				warm();
+			}
+		});
+		return unsubscribe;
+	}, [enabled, client, channelIds]);
 }

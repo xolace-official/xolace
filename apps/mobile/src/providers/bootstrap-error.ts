@@ -14,6 +14,6 @@ const TRANSIENT_CODES = ["user_not_found", "account_inactive"];
  * See src/providers/account-bootstrap-boundary.tsx for how it is used.
  */
 export function isBootstrapError(error: unknown): boolean {
-  const code = (error as { data?: { code?: string } } | null)?.data?.code;
-  return !!code && TRANSIENT_CODES.includes(code);
+	const code = (error as { data?: { code?: string } } | null)?.data?.code;
+	return !!code && TRANSIENT_CODES.includes(code);
 }

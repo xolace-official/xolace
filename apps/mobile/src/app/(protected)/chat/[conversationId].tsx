@@ -1,5 +1,5 @@
-import { useLocalSearchParams } from 'expo-router';
-import { ThreadScreen } from '@/src/features/xolacer-chat/components/thread-screen';
+import { useLocalSearchParams } from "expo-router";
+import { ThreadScreen } from "@/src/features/xolacer-chat/components/thread-screen";
 
 /**
  * No layout and no provider between this screen and the protected stack.
@@ -16,6 +16,6 @@ import { ThreadScreen } from '@/src/features/xolacer-chat/components/thread-scre
  * thread declares its need via `useStreamConnection` instead of owning it.
  */
 export default function ChatThreadRoute() {
-  const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
-  return <ThreadScreen conversationId={conversationId} />;
+	const { conversationId } = useLocalSearchParams<{ conversationId: string }>();
+	return <ThreadScreen conversationId={conversationId} />;
 }

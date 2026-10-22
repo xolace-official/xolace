@@ -12,14 +12,16 @@ export type KindlingAnnouncement = "plus" | "free" | "none";
  * than "free" so a subscriber never sees the upsell flash.
  */
 export function shouldOfferKindlingAnnouncement({
-  qualifies,
-  isPlus,
-  isResolved,
+	qualifies,
+	isPlus,
+	isResolved,
 }: {
-  qualifies: boolean | undefined;
-  isPlus: boolean;
-  isResolved: boolean;
+	qualifies: boolean | undefined;
+	isPlus: boolean;
+	isResolved: boolean;
 }): KindlingAnnouncement {
-  if (!isResolved || !qualifies) return "none";
-  return isPlus ? "plus" : "free";
+	if (!(isResolved && qualifies)) {
+		return "none";
+	}
+	return isPlus ? "plus" : "free";
 }

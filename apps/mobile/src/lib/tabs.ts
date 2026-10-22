@@ -10,31 +10,31 @@
  * - Find Material icon names at https://fonts.google.com/icons
  */
 export const TABS = [
-     {
-        name: 'index',
-        label: 'Home',
-        icon: {
-            sf: 'house',
-            selected: 'house.fill',
-            md: 'home',
-        },
-    },
-    {
-        name: 'explore',
-        label: 'Explore',
-        icon: {
-            sf: 'safari',
-            selected: 'safari.fill',
-            md: 'explore',
-        },
-    },
-    {
-        name: 'theme',
-        label: 'Theme',
-        icon: {
-            sf: 'circle',
-            selected: 'circle.fill',
-            md: 'circle',
-        },
-    }
+	{
+		icon: {
+			md: "home",
+			selected: "house.fill",
+			sf: "house",
+		},
+		label: "Home",
+		name: "index",
+	},
+	{
+		icon: {
+			md: "explore",
+			selected: "safari.fill",
+			sf: "safari",
+		},
+		label: "Explore",
+		name: "explore",
+	},
+	{
+		icon: {
+			md: "circle",
+			selected: "circle.fill",
+			sf: "circle",
+		},
+		label: "Theme",
+		name: "theme",
+	},
 ] as const;

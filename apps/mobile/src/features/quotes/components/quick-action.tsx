@@ -1,50 +1,50 @@
-import { View } from "react-native";
 import { GlassView } from "expo-glass-effect";
-import { PressableFeedback } from "heroui-native";
 import { SymbolView } from "expo-symbols";
+import { PressableFeedback } from "heroui-native";
+import { View } from "react-native";
 import { AppText } from "@/src/components/shared/app-text";
 
 type Props = {
-  iosIcon: string;
-  androidIcon: string;
-  label: string;
-  foregroundColor: string;
-  onPress: () => void;
+	iosIcon: string;
+	androidIcon: string;
+	label: string;
+	foregroundColor: string;
+	onPress: () => void;
 };
 
 export function QuickAction({
-  iosIcon,
-  androidIcon,
-  label,
-  foregroundColor,
-  onPress,
+	iosIcon,
+	androidIcon,
+	label,
+	foregroundColor,
+	onPress,
 }: Props) {
-  const glassStyle = {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    backgroundColor: `${foregroundColor}08`,
-  };
+	const glassStyle = {
+		alignItems: "center" as const,
+		backgroundColor: `${foregroundColor}08`,
+		borderRadius: 16,
+		height: 56,
+		justifyContent: "center" as const,
+		width: 56,
+	};
 
-  const iconName = { ios: iosIcon as any, android: androidIcon as any };
-  const labelStyle = { color: `${foregroundColor}50` };
+	const iconName = { android: androidIcon as any, ios: iosIcon as any };
+	const labelStyle = { color: `${foregroundColor}50` };
 
-  return (
-    <PressableFeedback onPress={onPress} accessibilityLabel={label} hitSlop={8}>
-      <View className="items-center gap-2">
-        <GlassView style={glassStyle} glassEffectStyle="clear">
-          <SymbolView
-            name={iconName}
-            size={22}
-            tintColor={`${foregroundColor}70`}
-          />
-        </GlassView>
-        <AppText className="text-xs" style={labelStyle}>
-          {label}
-        </AppText>
-      </View>
-    </PressableFeedback>
-  );
+	return (
+		<PressableFeedback accessibilityLabel={label} hitSlop={8} onPress={onPress}>
+			<View className="items-center gap-2">
+				<GlassView glassEffectStyle="clear" style={glassStyle}>
+					<SymbolView
+						name={iconName}
+						size={22}
+						tintColor={`${foregroundColor}70`}
+					/>
+				</GlassView>
+				<AppText className="text-xs" style={labelStyle}>
+					{label}
+				</AppText>
+			</View>
+		</PressableFeedback>
+	);
 }

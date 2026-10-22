@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import type { ActionCtx } from "../../_generated/server";
-import type { Id } from "../../_generated/dataModel";
 import { internal } from "../../_generated/api";
+import type { Id } from "../../_generated/dataModel";
+import type { ActionCtx } from "../../_generated/server";
 import { rag } from "../../rag";
 import { REFLECTION_CONSOLIDATION_VERSION } from "../providers/anthropic";
 import { dispatchInsightTool } from "./insightTools";
@@ -22,74 +22,75 @@ import { dispatchInsightTool } from "./insightTools";
 // =============================================================
 
 export const REFLECTION_TOOLS: Anthropic.Tool[] = [
-  {
-    name: "get_emotion_timeline",
-    description:
-      "The person's recent emotions over time (primary + granular emotion, intensity, themes, their own words, temporal focus, timestamp), newest first. Use to spot recurring feelings and how intensity moves.",
-    input_schema: { type: "object", properties: {} },
-  },
-  {
-    name: "search_episodic_memory",
-    description:
-      "Semantically search this person's own past reflections for moments similar to a query (e.g. a theme or their own phrase). Returns matching composite memories, each with its sessionId. Use to test whether a pattern actually recurs.",
-    input_schema: {
-      type: "object",
-      properties: {
-        query: {
-          type: "string",
-          description: "What to look for — a theme, feeling, or the person's phrase.",
-        },
-      },
-      required: ["query"],
-    },
-  },
-  {
-    name: "get_recent_sessions",
-    description:
-      "Recent sessions with their shape: how the mirror landed (confirmed / refined / gave up), the path chosen, the mirror text, post-session mood, and the later check-in (followUp: how it sat days after — lighter / still_here / heavier / processed / vent, or dismissed, which says nothing about mood — what they said helped, and what they reached for if it got heavier; null if none). Newest first.",
-    input_schema: { type: "object", properties: {} },
-  },
-  {
-    name: "get_mood_deltas",
-    description:
-      "Post-session mood signals over recent sessions (lighter / same / heavier / unsure) with timestamps. Use to see whether sessions tend to help.",
-    input_schema: { type: "object", properties: {} },
-  },
-  {
-    name: "get_confirmation_stats",
-    description:
-      "Aggregate of how mirrors have landed (confirmation-state tallies) and which tones were used, across a recent window. Use to gauge what tends to resonate.",
-    input_schema: { type: "object", properties: {} },
-  },
-  {
-    name: "read_semantic_profile",
-    description:
-      "The current narrative profile you are refining, rendered whole, with its version number. Read this before writing so you build on it rather than discard it.",
-    input_schema: { type: "object", properties: {} },
-  },
-  {
-    name: "update_profile_section",
-    description:
-      "Write the new profile version. Call this exactly ONCE, at the end, after gathering evidence. Provide recurringThemes, emotionalSignatures, and trajectory (leave calibration alone). User-safe, non-clinical language.",
-    input_schema: {
-      type: "object",
-      properties: {
-        recurringThemes: {
-          type: "string",
-          description: "What this person keeps carrying.",
-        },
-        emotionalSignatures: {
-          type: "string",
-          description:
-            "How their emotions tend to behave, e.g. 'anger usually masks fear; goes quiet rather than escalating'.",
-        },
-        trajectory: {
-          type: "string",
-          description: "Where things have been heading recently.",
-        },
-      },
-    },
-  },
+	{
+		description:
+			"The person's recent emotions over time (primary + granular emotion, intensity, themes, their own words, temporal focus, timestamp), newest first. Use to spot recurring feelings and how intensity moves.",
+		input_schema: { properties: {}, type: "object" },
+		name: "get_emotion_timeline",
+	},
+	{
+		description:
+			"Semantically search this person's own past reflections for moments similar to a query (e.g. a theme or their own phrase). Returns matching composite memories, each with its sessionId. Use to test whether a pattern actually recurs.",
+		input_schema: {
+			properties: {
+				query: {
+					description:
+						"What to look for — a theme, feeling, or the person's phrase.",
+					type: "string",
+				},
+			},
+			required: ["query"],
+			type: "object",
+		},
+		name: "search_episodic_memory",
+	},
+	{
+		description:
+			"Recent sessions with their shape: how the mirror landed (confirmed / refined / gave up), the path chosen, the mirror text, post-session mood, and the later check-in (followUp: how it sat days after — lighter / still_here / heavier / processed / vent, or dismissed, which says nothing about mood — what they said helped, and what they reached for if it got heavier; null if none). Newest first.",
+		input_schema: { properties: {}, type: "object" },
+		name: "get_recent_sessions",
+	},
+	{
+		description:
+			"Post-session mood signals over recent sessions (lighter / same / heavier / unsure) with timestamps. Use to see whether sessions tend to help.",
+		input_schema: { properties: {}, type: "object" },
+		name: "get_mood_deltas",
+	},
+	{
+		description:
+			"Aggregate of how mirrors have landed (confirmation-state tallies) and which tones were used, across a recent window. Use to gauge what tends to resonate.",
+		input_schema: { properties: {}, type: "object" },
+		name: "get_confirmation_stats",
+	},
+	{
+		description:
+			"The current narrative profile you are refining, rendered whole, with its version number. Read this before writing so you build on it rather than discard it.",
+		input_schema: { properties: {}, type: "object" },
+		name: "read_semantic_profile",
+	},
+	{
+		description:
+			"Write the new profile version. Call this exactly ONCE, at the end, after gathering evidence. Provide recurringThemes, emotionalSignatures, and trajectory (leave calibration alone). User-safe, non-clinical language.",
+		input_schema: {
+			properties: {
+				emotionalSignatures: {
+					description:
+						"How their emotions tend to behave, e.g. 'anger usually masks fear; goes quiet rather than escalating'.",
+					type: "string",
+				},
+				recurringThemes: {
+					description: "What this person keeps carrying.",
+					type: "string",
+				},
+				trajectory: {
+					description: "Where things have been heading recently.",
+					type: "string",
+				},
+			},
+			type: "object",
+		},
+		name: "update_profile_section",
+	},
 ];
 
 /** Names the loop treats as the terminal write step. */
@@ -101,110 +102,125 @@ export const WRITE_TOOL = "update_profile_section";
  * profile version through createVersion and returns a short confirmation.
  */
 export async function dispatchTool(
-  ctx: ActionCtx,
-  emotionalProfileId: Id<"emotional_profiles">,
-  name: string,
-  input: Record<string, unknown>,
-  { runAt, insights }: { runAt: number; insights: boolean },
+	ctx: ActionCtx,
+	emotionalProfileId: Id<"emotional_profiles">,
+	name: string,
+	input: Record<string, unknown>,
+	{ runAt, insights }: { runAt: number; insights: boolean }
 ): Promise<string> {
-  switch (name) {
-    case "get_emotion_timeline":
-      return JSON.stringify(
-        await ctx.runQuery(
-          internal.ai.reflectionAgent.toolQueries.getEmotionTimeline,
-          { emotionalProfileId },
-        ),
-      );
+	switch (name) {
+		case "get_emotion_timeline":
+			return JSON.stringify(
+				await ctx.runQuery(
+					internal.ai.reflectionAgent.toolQueries.getEmotionTimeline,
+					{ emotionalProfileId }
+				)
+			);
 
-    case "get_recent_sessions":
-      return JSON.stringify(
-        await ctx.runQuery(
-          internal.ai.reflectionAgent.toolQueries.getRecentSessions,
-          { emotionalProfileId },
-        ),
-      );
+		case "get_recent_sessions":
+			return JSON.stringify(
+				await ctx.runQuery(
+					internal.ai.reflectionAgent.toolQueries.getRecentSessions,
+					{ emotionalProfileId }
+				)
+			);
 
-    case "get_mood_deltas":
-      return JSON.stringify(
-        await ctx.runQuery(
-          internal.ai.reflectionAgent.toolQueries.getMoodDeltas,
-          { emotionalProfileId },
-        ),
-      );
+		case "get_mood_deltas":
+			return JSON.stringify(
+				await ctx.runQuery(
+					internal.ai.reflectionAgent.toolQueries.getMoodDeltas,
+					{ emotionalProfileId }
+				)
+			);
 
-    case "get_confirmation_stats":
-      return JSON.stringify(
-        await ctx.runQuery(
-          internal.ai.reflectionAgent.toolQueries.getConfirmationStats,
-          { emotionalProfileId },
-        ),
-      );
+		case "get_confirmation_stats":
+			return JSON.stringify(
+				await ctx.runQuery(
+					internal.ai.reflectionAgent.toolQueries.getConfirmationStats,
+					{ emotionalProfileId }
+				)
+			);
 
-    case "read_semantic_profile":
-      return JSON.stringify(
-        await ctx.runQuery(
-          internal.ai.reflectionAgent.toolQueries.readSemanticProfile,
-          { emotionalProfileId },
-        ),
-      );
+		case "read_semantic_profile":
+			return JSON.stringify(
+				await ctx.runQuery(
+					internal.ai.reflectionAgent.toolQueries.readSemanticProfile,
+					{ emotionalProfileId }
+				)
+			);
 
-    case "search_episodic_memory": {
-      const query = typeof input.query === "string" ? input.query : "";
-      if (!query.trim()) return JSON.stringify({ matches: [] });
-      try {
-        const { entries } = await rag.search(ctx, {
-          namespace: emotionalProfileId,
-          query,
-          limit: 5,
-        });
-        return JSON.stringify({
-          matches: entries.map((e) => ({ sessionId: e.key ?? null, text: e.text })),
-        });
-      } catch {
-        // No namespace yet or embedding outage — memory can never block.
-        return JSON.stringify({ matches: [] });
-      }
-    }
+		case "search_episodic_memory": {
+			const query = typeof input.query === "string" ? input.query : "";
+			if (!query.trim()) {
+				return JSON.stringify({ matches: [] });
+			}
+			try {
+				const { entries } = await rag.search(ctx, {
+					limit: 5,
+					namespace: emotionalProfileId,
+					query,
+				});
+				return JSON.stringify({
+					matches: entries.map((e) => ({
+						sessionId: e.key ?? null,
+						text: e.text,
+					})),
+				});
+			} catch {
+				// No namespace yet or embedding outage — memory can never block.
+				return JSON.stringify({ matches: [] });
+			}
+		}
 
-    case WRITE_TOOL: {
-      const sections: {
-        recurringThemes?: string;
-        emotionalSignatures?: string;
-        trajectory?: string;
-      } = {};
-      if (typeof input.recurringThemes === "string" && input.recurringThemes.trim()) {
-        sections.recurringThemes = input.recurringThemes.trim();
-      }
-      if (
-        typeof input.emotionalSignatures === "string" &&
-        input.emotionalSignatures.trim()
-      ) {
-        sections.emotionalSignatures = input.emotionalSignatures.trim();
-      }
-      if (typeof input.trajectory === "string" && input.trajectory.trim()) {
-        sections.trajectory = input.trajectory.trim();
-      }
-      if (Object.keys(sections).length === 0) {
-        return "No sections provided — nothing written. Provide at least one section.";
-      }
-      const newId = await ctx.runMutation(
-        internal.semanticProfiles.createVersion,
-        {
-          emotionalProfileId,
-          ...sections,
-          writerVersion: REFLECTION_CONSOLIDATION_VERSION,
-        },
-      );
-      return newId
-        ? "New profile version written."
-        : "Write skipped (a data wipe is in progress).";
-    }
+		case WRITE_TOOL: {
+			const sections: {
+				recurringThemes?: string;
+				emotionalSignatures?: string;
+				trajectory?: string;
+			} = {};
+			if (
+				typeof input.recurringThemes === "string" &&
+				input.recurringThemes.trim()
+			) {
+				sections.recurringThemes = input.recurringThemes.trim();
+			}
+			if (
+				typeof input.emotionalSignatures === "string" &&
+				input.emotionalSignatures.trim()
+			) {
+				sections.emotionalSignatures = input.emotionalSignatures.trim();
+			}
+			if (typeof input.trajectory === "string" && input.trajectory.trim()) {
+				sections.trajectory = input.trajectory.trim();
+			}
+			if (Object.keys(sections).length === 0) {
+				return "No sections provided — nothing written. Provide at least one section.";
+			}
+			const newId = await ctx.runMutation(
+				internal.semanticProfiles.createVersion,
+				{
+					emotionalProfileId,
+					...sections,
+					writerVersion: REFLECTION_CONSOLIDATION_VERSION,
+				}
+			);
+			return newId
+				? "New profile version written."
+				: "Write skipped (a data wipe is in progress).";
+		}
 
-    default:
-      // Only an insight-enabled run may reach them, whatever the model asks for.
-      return (
-        (insights && (await dispatchInsightTool(ctx, emotionalProfileId, name, input, runAt))) ||
-        `Unknown tool: ${name}`
-      );
-  }
+		default:
+			// Only an insight-enabled run may reach them, whatever the model asks for.
+			return (
+				(insights &&
+					(await dispatchInsightTool(
+						ctx,
+						emotionalProfileId,
+						name,
+						input,
+						runAt
+					))) ||
+				`Unknown tool: ${name}`
+			);
+	}
 }

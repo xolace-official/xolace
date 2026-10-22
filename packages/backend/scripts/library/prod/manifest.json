@@ -52,19 +52,9 @@
     "retrievedAt": 1790812800000,
     "lastReviewedAt": 1790812800000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "uncertainty",
-        "stress",
-        "anxiety"
-      ],
-      "lifeArea": [
-        "change",
-        "future",
-        "settling-in"
-      ]
+      "audience": ["student"],
+      "emotion": ["uncertainty", "stress", "anxiety"],
+      "lifeArea": ["change", "future", "settling-in"]
     },
     "reflectPrompt": "What are you most unsure about right now?",
     "bodyPath": "bodies/explainer/not-knowing-feels-so-stressful-why.md"
@@ -122,20 +112,9 @@
     "retrievedAt": 1790812800000,
     "lastReviewedAt": 1790812800000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "uncertainty",
-        "anxiety",
-        "hope",
-        "disappointment"
-      ],
-      "lifeArea": [
-        "change",
-        "settling-in",
-        "future"
-      ]
+      "audience": ["student"],
+      "emotion": ["uncertainty", "anxiety", "hope", "disappointment"],
+      "lifeArea": ["change", "settling-in", "future"]
     },
     "reflectPrompt": "What does the ordinary version of your first week look like?",
     "bodyPath": "bodies/advice/setting-expectations-you-can-adjust.md"
@@ -186,18 +165,9 @@
     "retrievedAt": 1790812800000,
     "lastReviewedAt": 1790812800000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "self-doubt",
-        "anxiety"
-      ],
-      "lifeArea": [
-        "studies",
-        "achievement",
-        "self-worth"
-      ]
+      "audience": ["student"],
+      "emotion": ["self-doubt", "anxiety"],
+      "lifeArea": ["studies", "achievement", "self-worth"]
     },
     "reflectPrompt": "What evidence do you already have that you can do this?",
     "bodyPath": "bodies/advice/am-i-good-enough-for-this.md"
@@ -253,19 +223,9 @@
     "retrievedAt": 1790812800000,
     "lastReviewedAt": 1790812800000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "not-belonging",
-        "embarrassment",
-        "uncertainty"
-      ],
-      "lifeArea": [
-        "belonging",
-        "settling-in",
-        "studies"
-      ]
+      "audience": ["student"],
+      "emotion": ["not-belonging", "embarrassment", "uncertainty"],
+      "lifeArea": ["belonging", "settling-in", "studies"]
     },
     "reflectPrompt": "Which word or role at university are you most unsure about?",
     "bodyPath": "bodies/advice/decoding-the-place-words-and-people.md"
@@ -309,20 +269,9 @@
     "retrievedAt": 1790812800000,
     "lastReviewedAt": 1790812800000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "uncertainty",
-        "stress",
-        "hope"
-      ],
-      "lifeArea": [
-        "studies",
-        "finances",
-        "housing",
-        "change"
-      ]
+      "audience": ["student"],
+      "emotion": ["uncertainty", "stress", "hope"],
+      "lifeArea": ["studies", "finances", "housing", "change"]
     },
     "reflectPrompt": "What is one thing from last year you'd like to repeat, and one you'd like to leave behind?",
     "bodyPath": "bodies/advice/picking-up-where-you-left-off.md",
@@ -359,20 +308,9 @@
     "retrievedAt": 1790812800000,
     "lastReviewedAt": 1790812800000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "loneliness",
-        "uncertainty",
-        "not-belonging"
-      ],
-      "lifeArea": [
-        "friendships",
-        "change",
-        "belonging",
-        "isolation"
-      ]
+      "audience": ["student"],
+      "emotion": ["loneliness", "uncertainty", "not-belonging"],
+      "lifeArea": ["friendships", "change", "belonging", "isolation"]
     },
     "reflectPrompt": "Who are you hoping to see this term, and what would make it easy to arrange?",
     "bodyPath": "bodies/explainer/why-this-years-social-life-feels-different.md",
@@ -421,15 +359,8 @@
     "retrievedAt": 1791359721872,
     "lastReviewedAt": 1791359721872,
     "facets": {
-      "emotion": [
-        "anxiety",
-        "fear",
-        "stress"
-      ],
-      "lifeArea": [
-        "health",
-        "sleep"
-      ]
+      "emotion": ["anxiety", "fear", "stress"],
+      "lifeArea": ["health", "sleep"]
     },
     "reflectPrompt": "When does your mind feel loudest, and what is your body doing then?",
     "bodyPath": "bodies/explainer/anxiety-what-it-is-and-why-it-happens.md",
@@ -479,16 +410,8 @@
     "retrievedAt": 1791359721872,
     "lastReviewedAt": 1791359721872,
     "facets": {
-      "emotion": [
-        "anxiety",
-        "overwhelm",
-        "stress"
-      ],
-      "lifeArea": [
-        "health",
-        "studies",
-        "work"
-      ]
+      "emotion": ["anxiety", "overwhelm", "stress"],
+      "lifeArea": ["health", "studies", "work"]
     },
     "reflectPrompt": "What is one small next step you could take today?",
     "bodyPath": "bodies/advice/anxiety-what-helps.md",
@@ -532,16 +455,8 @@
     "lastReviewedAt": 1791364428236,
     "active": true,
     "facets": {
-      "emotion": [
-        "loneliness",
-        "not-belonging",
-        "anxiety"
-      ],
-      "lifeArea": [
-        "isolation",
-        "friendships",
-        "belonging"
-      ]
+      "emotion": ["loneliness", "not-belonging", "anxiety"],
+      "lifeArea": ["isolation", "friendships", "belonging"]
     },
     "reflectPrompt": "When did you last feel truly understood by someone?",
     "bodyPath": "bodies/explainer/loneliness-what-it-is.md",
@@ -585,15 +500,8 @@
     "lastReviewedAt": 1791364428236,
     "active": true,
     "facets": {
-      "emotion": [
-        "loneliness",
-        "hope"
-      ],
-      "lifeArea": [
-        "isolation",
-        "friendships",
-        "belonging"
-      ]
+      "emotion": ["loneliness", "hope"],
+      "lifeArea": ["isolation", "friendships", "belonging"]
     },
     "reflectPrompt": "Who is one person you could send a small message to today?",
     "bodyPath": "bodies/advice/loneliness-what-helps.md",
@@ -643,16 +551,8 @@
     "lastReviewedAt": 1791368976066,
     "active": true,
     "facets": {
-      "emotion": [
-        "sadness",
-        "hopelessness",
-        "numbness"
-      ],
-      "lifeArea": [
-        "health",
-        "self-worth",
-        "isolation"
-      ]
+      "emotion": ["sadness", "hopelessness", "numbness"],
+      "lifeArea": ["health", "self-worth", "isolation"]
     },
     "reflectPrompt": "What has felt heavier than usual lately, and for how long?",
     "bodyPath": "bodies/explainer/depression-what-it-is.md",
@@ -702,16 +602,8 @@
     "lastReviewedAt": 1791368976066,
     "active": true,
     "facets": {
-      "emotion": [
-        "hopelessness",
-        "hope",
-        "sadness"
-      ],
-      "lifeArea": [
-        "health",
-        "isolation",
-        "self-worth"
-      ]
+      "emotion": ["hopelessness", "hope", "sadness"],
+      "lifeArea": ["health", "isolation", "self-worth"]
     },
     "reflectPrompt": "Who is one person you could tell, even in a few words, that you haven't been feeling like yourself?",
     "bodyPath": "bodies/advice/depression-what-helps.md",
@@ -755,16 +647,8 @@
     "lastReviewedAt": 1791368976066,
     "active": true,
     "facets": {
-      "emotion": [
-        "stress",
-        "overwhelm",
-        "anxiety"
-      ],
-      "lifeArea": [
-        "health",
-        "work",
-        "studies"
-      ]
+      "emotion": ["stress", "overwhelm", "anxiety"],
+      "lifeArea": ["health", "work", "studies"]
     },
     "reflectPrompt": "Where do you notice stress first: in your body, your thoughts, or how you treat people?",
     "bodyPath": "bodies/explainer/stress-what-it-is.md",
@@ -808,16 +692,8 @@
     "lastReviewedAt": 1791368976066,
     "active": true,
     "facets": {
-      "emotion": [
-        "stress",
-        "overwhelm",
-        "hope"
-      ],
-      "lifeArea": [
-        "health",
-        "work",
-        "studies"
-      ]
+      "emotion": ["stress", "overwhelm", "hope"],
+      "lifeArea": ["health", "work", "studies"]
     },
     "reflectPrompt": "What is one thing on your list that could wait until tomorrow?",
     "bodyPath": "bodies/advice/stress-what-helps.md",
@@ -855,16 +731,8 @@
     "lastReviewedAt": 1791368976066,
     "active": true,
     "facets": {
-      "emotion": [
-        "stress",
-        "anxiety",
-        "overwhelm"
-      ],
-      "lifeArea": [
-        "sleep",
-        "health",
-        "studies"
-      ]
+      "emotion": ["stress", "anxiety", "overwhelm"],
+      "lifeArea": ["sleep", "health", "studies"]
     },
     "reflectPrompt": "What is your mind doing when your body is ready to sleep?",
     "bodyPath": "bodies/explainer/sleep-why-it-matters.md",
@@ -902,16 +770,8 @@
     "lastReviewedAt": 1791368976066,
     "active": true,
     "facets": {
-      "emotion": [
-        "stress",
-        "overwhelm",
-        "hope"
-      ],
-      "lifeArea": [
-        "sleep",
-        "health",
-        "studies"
-      ]
+      "emotion": ["stress", "overwhelm", "hope"],
+      "lifeArea": ["sleep", "health", "studies"]
     },
     "reflectPrompt": "What is one small thing you could do tonight to let the day end?",
     "bodyPath": "bodies/advice/sleep-what-helps.md",
@@ -938,20 +798,9 @@
     "consentRecordedAt": 1792108800000,
     "lastReviewedAt": 1792108800000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "loneliness",
-        "stress",
-        "hope"
-      ],
-      "lifeArea": [
-        "purpose",
-        "studies",
-        "friendships",
-        "work"
-      ]
+      "audience": ["student"],
+      "emotion": ["loneliness", "stress", "hope"],
+      "lifeArea": ["purpose", "studies", "friendships", "work"]
     },
     "reflectPrompt": "What do you want this season of your life to be the foundation for?",
     "bodyPath": "bodies/stories/finding-my-why.md"
@@ -976,20 +825,9 @@
     "consentRecordedAt": 1792108800000,
     "lastReviewedAt": 1792108800000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "fear",
-        "self-doubt",
-        "disappointment",
-        "hope"
-      ],
-      "lifeArea": [
-        "studies",
-        "friendships",
-        "achievement"
-      ]
+      "audience": ["student"],
+      "emotion": ["fear", "self-doubt", "disappointment", "hope"],
+      "lifeArea": ["studies", "friendships", "achievement"]
     },
     "reflectPrompt": "Who in your circle is strong where you're not?",
     "bodyPath": "bodies/stories/make-or-break-the-friends-who-carried-me.md"
@@ -1014,19 +852,9 @@
     "consentRecordedAt": 1792108800000,
     "lastReviewedAt": 1792108800000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "grief",
-        "sadness",
-        "loneliness"
-      ],
-      "lifeArea": [
-        "loss",
-        "friendships",
-        "isolation"
-      ]
+      "audience": ["student"],
+      "emotion": ["grief", "sadness", "loneliness"],
+      "lifeArea": ["loss", "friendships", "isolation"]
     },
     "reflectPrompt": "Is there someone you've lost that you haven't had the space to talk about?",
     "bodyPath": "bodies/stories/for-godwin-my-best-friend.md",
@@ -1052,20 +880,9 @@
     "consentRecordedAt": 1792108800000,
     "lastReviewedAt": 1792108800000,
     "facets": {
-      "audience": [
-        "student"
-      ],
-      "emotion": [
-        "loneliness",
-        "self-doubt",
-        "hope"
-      ],
-      "lifeArea": [
-        "studies",
-        "finances",
-        "work",
-        "isolation"
-      ]
+      "audience": ["student"],
+      "emotion": ["loneliness", "self-doubt", "hope"],
+      "lifeArea": ["studies", "finances", "work", "isolation"]
     },
     "reflectPrompt": "What are you carrying that you haven't said out loud yet?",
     "bodyPath": "bodies/stories/what-they-dont-put-on-the-transcript.md"

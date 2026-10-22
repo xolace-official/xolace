@@ -1,8 +1,8 @@
 import { v } from "convex/values";
-import { internalAction, type ActionCtx } from "../../_generated/server";
 import { internal } from "../../_generated/api";
-import { bestScoreByKey, syncKey } from "../helpers/namespaceIndex";
+import { type ActionCtx, internalAction } from "../../_generated/server";
 import type { ExerciseSimilarity } from "../../exercises/match";
+import { bestScoreByKey, syncKey } from "../helpers/namespaceIndex";
 
 /**
  * The exercises' meaning index (#569, ADR 0021): title + steps, one namespace
@@ -13,13 +13,18 @@ import type { ExerciseSimilarity } from "../../exercises/match";
 export const EXERCISE_NAMESPACE = "exercises";
 
 export const indexExercises = internalAction({
-  args: {},
-  returns: v.null(),
-  handler: async (ctx) => {
-    const texts = await ctx.runQuery(internal.exercises.embed.textsForIndex, {});
-    for (const { title, text } of texts) await syncKey(ctx, EXERCISE_NAMESPACE, title, text);
-    return null;
-  },
+	args: {},
+	handler: async (ctx) => {
+		const texts = await ctx.runQuery(
+			internal.exercises.embed.textsForIndex,
+			{}
+		);
+		for (const { title, text } of texts) {
+			await syncKey(ctx, EXERCISE_NAMESPACE, title, text);
+		}
+		return null;
+	},
+	returns: v.null(),
 });
 
 /** Chunks, not exercises: every exercise gets room for all of its chunks. */
@@ -31,14 +36,18 @@ const SEARCH_LIMIT = 30;
  * no vector or the search failed: the matcher keeps today's order.
  */
 export async function searchExercises(
-  ctx: ActionCtx,
-  vector: number[] | null,
+	ctx: ActionCtx,
+	vector: number[] | null
 ): Promise<ExerciseSimilarity | undefined> {
-  if (vector === null) return undefined;
-  try {
-    return Object.fromEntries(await bestScoreByKey(ctx, EXERCISE_NAMESPACE, vector, SEARCH_LIMIT));
-  } catch (error) {
-    console.error("searchExercises failed", error);
-    return undefined;
-  }
+	if (vector === null) {
+		return undefined;
+	}
+	try {
+		return Object.fromEntries(
+			await bestScoreByKey(ctx, EXERCISE_NAMESPACE, vector, SEARCH_LIMIT)
+		);
+	} catch (error) {
+		console.error("searchExercises failed", error);
+		return undefined;
+	}
 }

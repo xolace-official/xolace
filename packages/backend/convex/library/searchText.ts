@@ -8,20 +8,26 @@ import { topicSlug } from "../ai/paths/catalog";
  */
 
 /** Lowercase, with slug separators as spaces: "self-doubt" → "self doubt". */
-export const asWords = (s: string) => s.toLowerCase().replace(/[-_]+/g, " ").trim();
+export const asWords = (s: string) =>
+	s.toLowerCase().replace(/[-_]+/g, " ").trim();
 
 const joinWords = (parts: (string | undefined)[]) =>
-  parts
-    .filter((s): s is string => !!s)
-    .map(asWords)
-    .join(" ");
+	parts
+		.filter((s): s is string => !!s)
+		.map(asWords)
+		.join(" ");
 
 export const searchTextOf = (
-  e: Pick<Doc<"library_entries">, "title" | "dek" | "storyDescriptor">,
-  facets: Iterable<{ slug: string }>,
+	e: Pick<Doc<"library_entries">, "title" | "dek" | "storyDescriptor">,
+	facets: Iterable<{ slug: string }>
 ) =>
-  // The primary subject comes in as its `subject` facet.
-  joinWords([e.title, e.dek, e.storyDescriptor, ...Array.from(facets, (f) => f.slug)]);
+	// The primary subject comes in as its `subject` facet.
+	joinWords([
+		e.title,
+		e.dek,
+		e.storyDescriptor,
+		...Array.from(facets, (f) => f.slug),
+	]);
 
 /**
  * Title, topic, curated tags, narrators and series title. Only Music adds its
@@ -29,16 +35,22 @@ export const searchTextOf = (
  * enough to match on.
  */
 export const trackSearchTextOf = (
-  t: Pick<
-    Doc<"audio_tracks">,
-    "family" | "title" | "topic" | "tags" | "sourceTags" | "narrators" | "seriesTitle"
-  >,
+	t: Pick<
+		Doc<"audio_tracks">,
+		| "family"
+		| "title"
+		| "topic"
+		| "tags"
+		| "sourceTags"
+		| "narrators"
+		| "seriesTitle"
+	>
 ) =>
-  joinWords([
-    t.title,
-    topicSlug(t.topic),
-    ...t.tags,
-    ...(t.narrators ?? []),
-    t.seriesTitle,
-    ...(t.family === "music" ? t.sourceTags : []),
-  ]);
+	joinWords([
+		t.title,
+		topicSlug(t.topic),
+		...t.tags,
+		...(t.narrators ?? []),
+		t.seriesTitle,
+		...(t.family === "music" ? t.sourceTags : []),
+	]);

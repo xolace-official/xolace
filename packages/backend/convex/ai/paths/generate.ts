@@ -1,30 +1,30 @@
 import { v } from "convex/values";
-import { internalAction, type ActionCtx } from "../../_generated/server";
 import { internal } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
+import { type ActionCtx, internalAction } from "../../_generated/server";
 import { rateLimiter } from "../../lib/rateLimits";
 import { posthog } from "../../posthog";
+import { embedSessionText } from "../helpers/embedSessionText";
 import {
-  getAnthropicClient,
-  extractTextFromResponse,
-  PATHS_MODEL,
-  PATHS_VERSION,
-  thinkingOff,
+	extractTextFromResponse,
+	getAnthropicClient,
+	PATHS_MODEL,
+	PATHS_VERSION,
+	thinkingOff,
 } from "../providers/anthropic";
 import { bindTwig } from "./bind";
 import { CATALOG } from "./catalog";
-import { isTryThis } from "./tryThis";
+import type { GenerateContext } from "./generateDb";
 import { withhold } from "./history";
+import {
+	buildPathsPrompt,
+	type Dropped,
+	MIN_TWIGS,
+	parsePathsResponse,
+} from "./prompt";
 import { readCandidates } from "./readSearch";
 import { scoreTracks } from "./trackSearch";
-import { embedSessionText } from "../helpers/embedSessionText";
-import type { GenerateContext } from "./generateDb";
-import {
-  buildPathsPrompt,
-  parsePathsResponse,
-  MIN_TWIGS,
-  type Dropped,
-} from "./prompt";
+import { isTryThis } from "./tryThis";
 
 /**
  * Kindling generation entry point (docs/paths-v1.md §2.2, §5; ADR 0010; #331).
@@ -46,155 +46,196 @@ import {
 
 const MAX_TOKENS = 512;
 
-type Args = { sessionId: Id<"sessions">; emotionalProfileId: Id<"emotional_profiles"> };
+type Args = {
+	sessionId: Id<"sessions">;
+	emotionalProfileId: Id<"emotional_profiles">;
+};
 
 /**
  * Null = unbindable: the type is neither offered to the model nor persisted,
  * so no `path_steps` row ever lands that a reader cannot resolve.
  */
 const bind = (actionType: string, ctx: GenerateContext) =>
-  bindTwig(actionType, ctx.binding, ctx.tracks, ctx.entries);
+	bindTwig(actionType, ctx.binding, ctx.tracks, ctx.entries);
 
 async function logDrops(ctx: ActionCtx, args: Args, dropped: Dropped[]) {
-  for (const drop of dropped) {
-    console.error("kindling: twig dropped", { sessionId: args.sessionId, ...drop });
-    await posthog.capture(ctx, {
-      distinctId: args.emotionalProfileId,
-      event: "path_twig_dropped",
-      properties: { sessionId: args.sessionId, ...drop },
-    });
-  }
+	for (const drop of dropped) {
+		console.error("kindling: twig dropped", {
+			sessionId: args.sessionId,
+			...drop,
+		});
+		await posthog.capture(ctx, {
+			distinctId: args.emotionalProfileId,
+			event: "path_twig_dropped",
+			properties: { sessionId: args.sessionId, ...drop },
+		});
+	}
 }
 
-async function logNoShip(ctx: ActionCtx, args: Args, reason: string, surviving: number) {
-  console.error("kindling: no-ship", { sessionId: args.sessionId, reason, surviving });
-  await posthog.capture(ctx, {
-    distinctId: args.emotionalProfileId,
-    event: "path_no_ship",
-    properties: { sessionId: args.sessionId, reason, surviving },
-  });
+async function logNoShip(
+	ctx: ActionCtx,
+	args: Args,
+	reason: string,
+	surviving: number
+) {
+	console.error("kindling: no-ship", {
+		reason,
+		sessionId: args.sessionId,
+		surviving,
+	});
+	await posthog.capture(ctx, {
+		distinctId: args.emotionalProfileId,
+		event: "path_no_ship",
+		properties: { reason, sessionId: args.sessionId, surviving },
+	});
 }
 
 async function generate(ctx: ActionCtx, args: Args): Promise<void> {
-  const context = await ctx.runQuery(internal.ai.paths.generateDb.getContext, args);
-  if (!context) return;
+	const context = await ctx.runQuery(
+		internal.ai.paths.generateDb.getContext,
+		args
+	);
+	if (!context) {
+		return;
+	}
 
-  // One kindling per profile per day. `check` here so a spent slot skips
-  // the model call; the slot is only consumed (`limit`) once there is
-  // something to write — a provider error or a no-ship must not burn the
-  // day's single chance.
-  const limitKey = { key: args.emotionalProfileId };
-  if (!(await rateLimiter.check(ctx, "pathsGenerate", limitKey)).ok) {
-    await logNoShip(ctx, args, "rate_limited", 0);
-    return;
-  }
+	// One kindling per profile per day. `check` here so a spent slot skips
+	// the model call; the slot is only consumed (`limit`) once there is
+	// something to write — a provider error or a no-ship must not burn the
+	// day's single chance.
+	const limitKey = { key: args.emotionalProfileId };
+	if (!(await rateLimiter.check(ctx, "pathsGenerate", limitKey)).ok) {
+		await logNoShip(ctx, args, "rate_limited", 0);
+		return;
+	}
 
-  // Tonight's text, embedded at most once, only when a search needs it, and
-  // never stored (ADR 0021): the read twig's candidates in meaning (#568)
-  // before `bind` ever runs, the picked tracks' (#572) once the model chose.
-  const text = context.sessionText;
-  let embedded: Promise<number[] | null> | undefined;
-  const vector = () => (embedded ??= text === null ? Promise.resolve(null) : embedSessionText(text));
-  const readVector = context.readsAllowed && text !== null ? await vector() : undefined;
-  const reads = await readCandidates(ctx, args.emotionalProfileId, args.sessionId, readVector, context.entries);
-  context.entries = reads.entries;
+	// Tonight's text, embedded at most once, only when a search needs it, and
+	// never stored (ADR 0021): the read twig's candidates in meaning (#568)
+	// before `bind` ever runs, the picked tracks' (#572) once the model chose.
+	const text = context.sessionText;
+	let embedded: Promise<number[] | null> | undefined;
+	const vector = () =>
+		(embedded ??=
+			text === null ? Promise.resolve(null) : embedSessionText(text));
+	const readVector =
+		context.readsAllowed && text !== null ? await vector() : undefined;
+	const reads = await readCandidates(
+		ctx,
+		args.emotionalProfileId,
+		args.sessionId,
+		readVector,
+		context.entries
+	);
+	context.entries = reads.entries;
 
-  // Offer only what fits this grade and can bind for this session, less any
-  // type they keep passing on (never below MAX_TWIGS, #565). No advice after
-  // a session safeguard flagged at any level (#567).
-  const { safeguardLevel, supportNeed } = context.understanding;
-  const flagged = safeguardLevel !== undefined && safeguardLevel !== "none";
-  const bindable = CATALOG.filter(
-    (c) =>
-      c.supportNeedFit.includes(supportNeed as "light" | "active") &&
-      !(flagged && isTryThis(c.actionType)) &&
-      bind(c.actionType, context) !== null,
-  );
-  const { catalog, withheld } = withhold(bindable, context.history.skippedTwice);
-  const prompt = buildPathsPrompt({
-    understanding: context.understanding,
-    profile: context.profile,
-    catalog,
-    tier: "plus",
-    compounding: context.compounding,
-    history: context.history.kinds,
-  });
-  const response = await getAnthropicClient().messages.create({
-    model: PATHS_MODEL,
-    max_tokens: MAX_TOKENS,
-    thinking: thinkingOff(PATHS_MODEL),
-    system: prompt.system,
-    messages: [{ role: "user", content: prompt.user }],
-  });
+	// Offer only what fits this grade and can bind for this session, less any
+	// type they keep passing on (never below MAX_TWIGS, #565). No advice after
+	// a session safeguard flagged at any level (#567).
+	const { safeguardLevel, supportNeed } = context.understanding;
+	const flagged = safeguardLevel !== undefined && safeguardLevel !== "none";
+	const bindable = CATALOG.filter(
+		(c) =>
+			c.supportNeedFit.includes(supportNeed as "light" | "active") &&
+			!(flagged && isTryThis(c.actionType)) &&
+			bind(c.actionType, context) !== null
+	);
+	const { catalog, withheld } = withhold(
+		bindable,
+		context.history.skippedTwice
+	);
+	const prompt = buildPathsPrompt({
+		catalog,
+		compounding: context.compounding,
+		history: context.history.kinds,
+		profile: context.profile,
+		tier: "plus",
+		understanding: context.understanding,
+	});
+	const response = await getAnthropicClient().messages.create({
+		max_tokens: MAX_TOKENS,
+		messages: [{ content: prompt.user, role: "user" }],
+		model: PATHS_MODEL,
+		system: prompt.system,
+		thinking: thinkingOff(PATHS_MODEL),
+	});
 
-  const { twigs: picked, dropped } = parsePathsResponse(
-    extractTextFromResponse(response),
-    catalog,
-  );
-  const scored = await scoreTracks(ctx, vector, picked.map((t) => t.actionType), context.tracks, args.sessionId);
-  context.tracks = scored.tracks;
-  const twigs = [];
-  for (const twig of picked) {
-    const params = bind(twig.actionType, context);
-    if (params) twigs.push({ ...twig, params });
-    else dropped.push({ actionType: twig.actionType, reason: "unbindable" });
-  }
-  await logDrops(ctx, args, dropped);
+	const { twigs: picked, dropped } = parsePathsResponse(
+		extractTextFromResponse(response),
+		catalog
+	);
+	const scored = await scoreTracks(
+		ctx,
+		vector,
+		picked.map((t) => t.actionType),
+		context.tracks,
+		args.sessionId
+	);
+	context.tracks = scored.tracks;
+	const twigs = [];
+	for (const twig of picked) {
+		const params = bind(twig.actionType, context);
+		if (params) {
+			twigs.push({ ...twig, params });
+		} else {
+			dropped.push({ actionType: twig.actionType, reason: "unbindable" });
+		}
+	}
+	await logDrops(ctx, args, dropped);
 
-  if (twigs.length < MIN_TWIGS) {
-    await logNoShip(ctx, args, "fewer_than_min_twigs", twigs.length);
-    return;
-  }
+	if (twigs.length < MIN_TWIGS) {
+		await logNoShip(ctx, args, "fewer_than_min_twigs", twigs.length);
+		return;
+	}
 
-  // The slot is consumed inside `write`, in the same transaction as the
-  // rows: a failed write rolls the limit back too, so the day's chance is
-  // never burned on a kindling that did not land.
-  const pathId = await ctx.runMutation(internal.ai.paths.generateDb.write, {
-    ...args,
-    semanticProfileId: context.semanticProfileId,
-    model: PATHS_MODEL,
-    modelVersion: PATHS_VERSION,
-    promptTokens: response.usage.input_tokens,
-    completionTokens: response.usage.output_tokens,
-    twigs: twigs.map((t, i) => ({ ...t, order: i + 1 })),
-    historyKinds: context.history.kinds.map((k) => k.actionType),
-    withheld,
-    readSearch: reads.search,
-    readTopScore: reads.topScore,
-    readFallback: reads.fallback,
-    trackSearch: scored.logs,
-  });
-  if (pathId === null) {
-    await logNoShip(ctx, args, "rate_limited", twigs.length);
-    return;
-  }
+	// The slot is consumed inside `write`, in the same transaction as the
+	// rows: a failed write rolls the limit back too, so the day's chance is
+	// never burned on a kindling that did not land.
+	const pathId = await ctx.runMutation(internal.ai.paths.generateDb.write, {
+		...args,
+		completionTokens: response.usage.output_tokens,
+		historyKinds: context.history.kinds.map((k) => k.actionType),
+		model: PATHS_MODEL,
+		modelVersion: PATHS_VERSION,
+		promptTokens: response.usage.input_tokens,
+		readFallback: reads.fallback,
+		readSearch: reads.search,
+		readTopScore: reads.topScore,
+		semanticProfileId: context.semanticProfileId,
+		trackSearch: scored.logs,
+		twigs: twigs.map((t, i) => ({ ...t, order: i + 1 })),
+		withheld,
+	});
+	if (pathId === null) {
+		await logNoShip(ctx, args, "rate_limited", twigs.length);
+		return;
+	}
 
-  // Fires only now — after the kindling is written (docs/paths-v1.md §10).
-  // There is no "your kindling is being generated" notification.
-  await ctx.runMutation(internal.ai.paths.notify.notifyReady, {
-    emotionalProfileId: args.emotionalProfileId,
-    pathId,
-  });
+	// Fires only now — after the kindling is written (docs/paths-v1.md §10).
+	// There is no "your kindling is being generated" notification.
+	await ctx.runMutation(internal.ai.paths.notify.notifyReady, {
+		emotionalProfileId: args.emotionalProfileId,
+		pathId,
+	});
 }
 
 export const run = internalAction({
-  args: {
-    sessionId: v.id("sessions"),
-    emotionalProfileId: v.id("emotional_profiles"),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    // Every read, gate and model call sits before the single write mutation,
-    // so a caught throw leaves either a whole kindling or none — never a
-    // replaced previous with no successor.
-    try {
-      await generate(ctx, args);
-    } catch (error) {
-      console.error("kindling: generation failed", {
-        sessionId: args.sessionId,
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
-    return null;
-  },
+	args: {
+		emotionalProfileId: v.id("emotional_profiles"),
+		sessionId: v.id("sessions"),
+	},
+	handler: async (ctx, args) => {
+		// Every read, gate and model call sits before the single write mutation,
+		// so a caught throw leaves either a whole kindling or none — never a
+		// replaced previous with no successor.
+		try {
+			await generate(ctx, args);
+		} catch (error) {
+			console.error("kindling: generation failed", {
+				message: error instanceof Error ? error.message : String(error),
+				sessionId: args.sessionId,
+			});
+		}
+		return null;
+	},
+	returns: v.null(),
 });

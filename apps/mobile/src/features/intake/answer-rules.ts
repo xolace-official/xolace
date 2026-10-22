@@ -3,11 +3,11 @@
  * `questions.ts` so that file stays what it says it is: the T1 copy and enums,
  * and nothing that runs.
  */
-import { MAX_SELECTIONS } from '@/src/features/intake/questions';
+import { MAX_SELECTIONS } from "@/src/features/intake/questions";
 
 /** Q1's auto-suggested handle: `Camper` and four digits. */
 export function suggestHandle(): string {
-  return `Camper ${Math.floor(1000 + Math.random() * 9000)}`;
+	return `Camper ${Math.floor(1000 + Math.random() * 9000)}`;
 }
 
 /**
@@ -16,15 +16,15 @@ export function suggestHandle(): string {
  * `intake.complete` rejects an over-long array outright.
  */
 export function applyCap<T extends Record<string, unknown>>(
-  answers: T,
-  capped: readonly string[]
+	answers: T,
+	capped: readonly string[]
 ): T {
-  let next = answers;
-  for (const name of capped) {
-    const value = next[name];
-    if (Array.isArray(value) && value.length > MAX_SELECTIONS) {
-      next = { ...next, [name]: value.slice(-MAX_SELECTIONS) };
-    }
-  }
-  return next;
+	let next = answers;
+	for (const name of capped) {
+		const value = next[name];
+		if (Array.isArray(value) && value.length > MAX_SELECTIONS) {
+			next = { ...next, [name]: value.slice(-MAX_SELECTIONS) };
+		}
+	}
+	return next;
 }

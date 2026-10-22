@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation, internalMutation } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { requirePremium } from "./lib/premium";
 
@@ -11,31 +11,34 @@ const tierValidator = v.union(v.literal("free"), v.literal("premium"));
  * no per-request storage URL resolution.
  */
 export const listAvatars = query({
-  args: {},
-  returns: v.array(
-    v.object({
-      key: v.string(),
-      tier: tierValidator,
-      label: v.string(),
-      order: v.number(),
-      isDefault: v.boolean(),
-      url: v.string(),
-    }),
-  ),
-  handler: async (ctx) => {
-    // Parity with setAvatar / the rest of the API — the catalog isn't secret,
-    // but every function reads auth; no reason this one is the exception.
-    await requireAuth(ctx);
-    const rows = await ctx.db.query("avatars").withIndex("by_tier_order").take(50);
-    return rows.map((a) => ({
-      key: a.key,
-      tier: a.tier,
-      label: a.label,
-      order: a.order,
-      isDefault: a.isDefault,
-      url: a.url,
-    }));
-  },
+	args: {},
+	handler: async (ctx) => {
+		// Parity with setAvatar / the rest of the API — the catalog isn't secret,
+		// but every function reads auth; no reason this one is the exception.
+		await requireAuth(ctx);
+		const rows = await ctx.db
+			.query("avatars")
+			.withIndex("by_tier_order")
+			.take(50);
+		return rows.map((a) => ({
+			isDefault: a.isDefault,
+			key: a.key,
+			label: a.label,
+			order: a.order,
+			tier: a.tier,
+			url: a.url,
+		}));
+	},
+	returns: v.array(
+		v.object({
+			isDefault: v.boolean(),
+			key: v.string(),
+			label: v.string(),
+			order: v.number(),
+			tier: tierValidator,
+			url: v.string(),
+		})
+	),
 });
 
 /**
@@ -43,30 +46,34 @@ export const listAvatars = query({
  * Validates the key exists and enforces the tier gate server-side.
  */
 export const setAvatar = mutation({
-  args: { key: v.string() },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const { profile } = await requireAuth(ctx);
+	args: { key: v.string() },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
 
-    const avatar = await ctx.db
-      .query("avatars")
-      .withIndex("by_key", (q) => q.eq("key", args.key))
-      .unique();
-    if (!avatar) throw new Error(`Unknown avatar: ${args.key}`);
+		const avatar = await ctx.db
+			.query("avatars")
+			.withIndex("by_key", (q) => q.eq("key", args.key))
+			.unique();
+		if (!avatar) {
+			throw new Error(`Unknown avatar: ${args.key}`);
+		}
 
-    if (avatar.tier === "premium") {
-      await requirePremium(ctx, profile, "premium avatar");
-    }
+		if (avatar.tier === "premium") {
+			await requirePremium(ctx, profile, "premium avatar");
+		}
 
-    const prefs = await ctx.db
-      .query("preferences")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
-      .unique();
-    if (!prefs) throw new Error("Preferences not found");
+		const prefs = await ctx.db
+			.query("preferences")
+			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+			.unique();
+		if (!prefs) {
+			throw new Error("Preferences not found");
+		}
 
-    await ctx.db.patch("preferences", prefs._id, { avatarId: args.key });
-    return null;
-  },
+		await ctx.db.patch("preferences", prefs._id, { avatarId: args.key });
+		return null;
+	},
+	returns: v.null(),
 });
 
 /**
@@ -81,29 +88,31 @@ export const setAvatar = mutation({
  * new storageId; no duplicate rows.
  */
 export const seedAvatar = internalMutation({
-  args: {
-    key: v.string(),
-    tier: tierValidator,
-    label: v.string(),
-    order: v.number(),
-    isDefault: v.boolean(),
-    storageId: v.id("_storage"),
-  },
-  handler: async (ctx, args) => {
-    const url = await ctx.storage.getUrl(args.storageId);
-    if (!url) throw new Error(`No file for storageId ${args.storageId}`);
+	args: {
+		isDefault: v.boolean(),
+		key: v.string(),
+		label: v.string(),
+		order: v.number(),
+		storageId: v.id("_storage"),
+		tier: tierValidator,
+	},
+	handler: async (ctx, args) => {
+		const url = await ctx.storage.getUrl(args.storageId);
+		if (!url) {
+			throw new Error(`No file for storageId ${args.storageId}`);
+		}
 
-    const existing = await ctx.db
-      .query("avatars")
-      .withIndex("by_key", (q) => q.eq("key", args.key))
-      .unique();
+		const existing = await ctx.db
+			.query("avatars")
+			.withIndex("by_key", (q) => q.eq("key", args.key))
+			.unique();
 
-    const doc = { ...args, url };
-    if (existing) {
-      await ctx.db.patch("avatars", existing._id, doc);
-    } else {
-      await ctx.db.insert("avatars", doc);
-    }
-    return null;
-  },
+		const doc = { ...args, url };
+		if (existing) {
+			await ctx.db.patch("avatars", existing._id, doc);
+		} else {
+			await ctx.db.insert("avatars", doc);
+		}
+		return null;
+	},
 });

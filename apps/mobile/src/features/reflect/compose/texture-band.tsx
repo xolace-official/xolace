@@ -1,24 +1,24 @@
+import { TagGroup } from "heroui-native";
 import { useState } from "react";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { TagGroup } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
-import { TextureSetTabs } from "@/src/features/reflect/components/texture-set-tabs";
 import { Tour } from "@/src/components/ui/tour";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
+import { posthog } from "@/src/config/posthog";
+import { TextureSetTabs } from "@/src/features/reflect/components/texture-set-tabs";
 import { NIGHT_TEXTURE_WORDS } from "@/src/features/reflect/night-copy";
 import {
-  MAX_TEXTURES,
-  TEXTURE_PILL,
-  TEXTURE_SETS,
-  resolveTextureSetId,
-  textureHue,
-  type TextureSetId,
+	MAX_TEXTURES,
+	resolveTextureSetId,
+	TEXTURE_PILL,
+	TEXTURE_SETS,
+	type TextureSetId,
+	textureHue,
 } from "@/src/features/reflect/texture-sets";
-import { cn } from "@/src/lib/utils";
+import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
 import type { ReflectionAction } from "@/src/features/reflect/types";
 import { playSoftPress, playTextureSelect } from "@/src/lib/haptics";
-import { posthog } from "@/src/config/posthog";
+import { cn } from "@/src/lib/utils";
 import { useAppStore } from "@/src/store/store";
 
 /**
@@ -36,14 +36,14 @@ import { useAppStore } from "@/src/store/store";
  * vertical nudge only has to break the shared baseline.
  */
 const SCATTER = [
-  "-rotate-2",
-  "rotate-1 mt-1 ml-1",
-  "rotate-3 mt-0.5",
-  "-rotate-1 mt-1.5 ml-2",
-  "rotate-2 mt-0.5",
-  "-rotate-3 mt-1 ml-1",
-  "rotate-1",
-  "-rotate-2 mt-1 ml-2",
+	"-rotate-2",
+	"rotate-1 mt-1 ml-1",
+	"rotate-3 mt-0.5",
+	"-rotate-1 mt-1.5 ml-2",
+	"rotate-2 mt-0.5",
+	"-rotate-3 mt-1 ml-1",
+	"rotate-1",
+	"-rotate-2 mt-1 ml-2",
 ];
 
 const PILL = "border";
@@ -59,13 +59,13 @@ const PILL = "border";
  */
 const MAX_PILL_FONT_SCALE = 1.3;
 
-const WORDS_FADE_OUT = { type: "timing" as const, duration: 150 };
-const WORDS_FADE_IN = { type: "timing" as const, duration: 200 };
+const WORDS_FADE_OUT = { duration: 150, type: "timing" as const };
+const WORDS_FADE_IN = { duration: 200, type: "timing" as const };
 
 type Props = {
-  isNight: boolean;
-  selectedTextures: string[];
-  dispatch: React.Dispatch<ReflectionAction>;
+	isNight: boolean;
+	selectedTextures: string[];
+	dispatch: React.Dispatch<ReflectionAction>;
 };
 
 /**
@@ -75,134 +75,136 @@ type Props = {
  * translates and fades it as the card expands, and its redesign is a separate
  * pass.
  */
-export const TextureBand = ({
-  isNight,
-  selectedTextures,
-  dispatch,
-}: Props) => {
-  const storedSetId = useAppStore((s) => s.textureSetId);
-  const setTextureSetId = useAppStore((s) => s.setTextureSetId);
-  const safeSetId = resolveTextureSetId(storedSetId);
+export const TextureBand = ({ isNight, selectedTextures, dispatch }: Props) => {
+	const storedSetId = useAppStore((s) => s.textureSetId);
+	const setTextureSetId = useAppStore((s) => s.setTextureSetId);
+	const safeSetId = resolveTextureSetId(storedSetId);
 
-  const [wordsVisible, setWordsVisible] = useState(true);
-  const [pendingSetId, setPendingSetId] = useState<TextureSetId>(safeSetId);
-  const [resolvedSetId, setResolvedSetId] = useState<TextureSetId>(safeSetId);
+	const [wordsVisible, setWordsVisible] = useState(true);
+	const [pendingSetId, setPendingSetId] = useState<TextureSetId>(safeSetId);
+	const [resolvedSetId, setResolvedSetId] = useState<TextureSetId>(safeSetId);
 
-  const TEXTURE_WORDS: readonly string[] = isNight
-    ? NIGHT_TEXTURE_WORDS
-    : (TEXTURE_SETS[resolvedSetId] ?? TEXTURE_SETS.flat);
+	const TEXTURE_WORDS: readonly string[] = isNight
+		? NIGHT_TEXTURE_WORDS
+		: (TEXTURE_SETS[resolvedSetId] ?? TEXTURE_SETS.flat);
 
-  const selectedTextureKeys = new Set(selectedTextures);
-  const wordsFadeAnimate = { opacity: wordsVisible ? 1 : 0 };
+	const selectedTextureKeys = new Set(selectedTextures);
+	const wordsFadeAnimate = { opacity: wordsVisible ? 1 : 0 };
 
-  const atCap = selectedTextures.length >= MAX_TEXTURES;
+	const atCap = selectedTextures.length >= MAX_TEXTURES;
 
-  const handleToggle = (word: string) => {
-    playTextureSelect();
-    dispatch({ type: "TOGGLE_TEXTURE", word });
-  };
+	const handleToggle = (word: string) => {
+		playTextureSelect();
+		dispatch({ type: "TOGGLE_TEXTURE", word });
+	};
 
-  const handleSelectionChange = (keys: Set<string | number>) => {
-    const next = new Set(keys);
-    for (const word of TEXTURE_WORDS) {
-      const isSelected = selectedTextures.includes(word);
-      const shouldBeSelected = next.has(word);
-      if (isSelected === shouldBeSelected) continue;
-      // At the cap the reducer refuses the add, so don't answer the tap with a
-      // haptic that promises one.
-      if (!isSelected && atCap) continue;
-      handleToggle(word);
-    }
-  };
+	const handleSelectionChange = (keys: Set<string | number>) => {
+		const next = new Set(keys);
+		for (const word of TEXTURE_WORDS) {
+			const isSelected = selectedTextures.includes(word);
+			const shouldBeSelected = next.has(word);
+			if (isSelected === shouldBeSelected) {
+				continue;
+			}
+			// At the cap the reducer refuses the add, so don't answer the tap with a
+			// haptic that promises one.
+			if (!isSelected && atCap) {
+				continue;
+			}
+			handleToggle(word);
+		}
+	};
 
-  const handleSetChange = (id: TextureSetId) => {
-    if (id === resolvedSetId) return;
-    dispatch({ type: "CLEAR_TEXTURES" });
-    setTextureSetId(id);
-    setPendingSetId(id);
-    setWordsVisible(false);
-    playSoftPress();
-    posthog.capture("texture_set_changed", { from: resolvedSetId, to: id });
-  };
+	const handleSetChange = (id: TextureSetId) => {
+		if (id === resolvedSetId) {
+			return;
+		}
+		dispatch({ type: "CLEAR_TEXTURES" });
+		setTextureSetId(id);
+		setPendingSetId(id);
+		setWordsVisible(false);
+		playSoftPress();
+		posthog.capture("texture_set_changed", { from: resolvedSetId, to: id });
+	};
 
-  return (
-    // The old `pt-6`/`pb-8` were dead space standing in for a gap the band
-    // could not actually guarantee — the surround now measures this frame and
-    // holds the mic off it, so the padding can go back to being padding.
-    <View className="px-6 pt-4 pb-6">
-      <AppText
-        maxFontSizeMultiplier={MAX_PILL_FONT_SCALE}
-        className="mb-3 text-xs text-foreground/30"
-      >
-        Or just tap what feels close:
-      </AppText>
+	return (
+		// The old `pt-6`/`pb-8` were dead space standing in for a gap the band
+		// could not actually guarantee — the surround now measures this frame and
+		// holds the mic off it, so the padding can go back to being padding.
+		<View className="px-6 pt-4 pb-6">
+			<AppText
+				className="mb-3 text-foreground/30 text-xs"
+				maxFontSizeMultiplier={MAX_PILL_FONT_SCALE}
+			>
+				Or just tap what feels close:
+			</AppText>
 
-      {!isNight && (
-        <TextureSetTabs
-          activeSet={resolvedSetId}
-          onSelect={handleSetChange}
-          disabled={!wordsVisible}
-        />
-      )}
+			{!isNight && (
+				<TextureSetTabs
+					activeSet={resolvedSetId}
+					disabled={!wordsVisible}
+					onSelect={handleSetChange}
+				/>
+			)}
 
-      <Tour.Step
-        order={2}
-        title={TOUR_STEPS[2].title}
-        description={TOUR_STEPS[2].description}
-      >
-        <EaseView
-          animate={wordsFadeAnimate}
-          transition={wordsVisible ? WORDS_FADE_IN : WORDS_FADE_OUT}
-          onTransitionEnd={({ finished }) => {
-            if (finished && !wordsVisible) {
-              setResolvedSetId(pendingSetId);
-              setWordsVisible(true);
-            }
-          }}
-        >
-          <TagGroup
-            key={resolvedSetId}
-            selectionMode="multiple"
-            size="sm"
-            variant="surface"
-            selectedKeys={selectedTextureKeys}
-            onSelectionChange={handleSelectionChange}
-            animation="disable-all"
-          >
-            <TagGroup.List className="flex-row flex-wrap items-start gap-x-2 gap-y-1.5 pr-14">
-              {TEXTURE_WORDS.map((word, i) => {
-                const skin = TEXTURE_PILL[textureHue(word)];
-                const isSelected = selectedTextureKeys.has(word);
-                return (
-                  <TagGroup.Item
-                    key={word}
-                    id={word}
-                    className={cn(
-                      PILL,
-                      SCATTER[i % SCATTER.length],
-                      isSelected ? skin.selected : skin.rest,
-                      // Full up: the words still on offer step back rather than
-                      // silently swallowing taps.
-                      atCap && !isSelected && "opacity-35",
-                    )}
-                  >
-                    <TagGroup.ItemLabel
-                      maxFontSizeMultiplier={MAX_PILL_FONT_SCALE}
-                      className={cn(
-                        "text-xs",
-                        skin.label,
-                        !isSelected && "opacity-75",
-                      )}
-                    >
-                      {word}
-                    </TagGroup.ItemLabel>
-                  </TagGroup.Item>
-                );
-              })}
-            </TagGroup.List>
-          </TagGroup>
-        </EaseView>
-      </Tour.Step>
-    </View>
-  );
+			<Tour.Step
+				description={TOUR_STEPS[2].description}
+				order={2}
+				title={TOUR_STEPS[2].title}
+			>
+				<EaseView
+					animate={wordsFadeAnimate}
+					onTransitionEnd={({ finished }) => {
+						if (finished && !wordsVisible) {
+							setResolvedSetId(pendingSetId);
+							setWordsVisible(true);
+						}
+					}}
+					transition={wordsVisible ? WORDS_FADE_IN : WORDS_FADE_OUT}
+				>
+					<TagGroup
+						animation="disable-all"
+						key={resolvedSetId}
+						onSelectionChange={handleSelectionChange}
+						selectedKeys={selectedTextureKeys}
+						selectionMode="multiple"
+						size="sm"
+						variant="surface"
+					>
+						<TagGroup.List className="flex-row flex-wrap items-start gap-x-2 gap-y-1.5 pr-14">
+							{TEXTURE_WORDS.map((word, i) => {
+								const skin = TEXTURE_PILL[textureHue(word)];
+								const isSelected = selectedTextureKeys.has(word);
+								return (
+									<TagGroup.Item
+										className={cn(
+											PILL,
+											SCATTER[i % SCATTER.length],
+											isSelected ? skin.selected : skin.rest,
+											// Full up: the words still on offer step back rather than
+											// silently swallowing taps.
+											atCap && !isSelected && "opacity-35"
+										)}
+										id={word}
+										key={word}
+									>
+										<TagGroup.ItemLabel
+											className={cn(
+												"text-xs",
+												skin.label,
+												!isSelected && "opacity-75"
+											)}
+											maxFontSizeMultiplier={MAX_PILL_FONT_SCALE}
+										>
+											{word}
+										</TagGroup.ItemLabel>
+									</TagGroup.Item>
+								);
+							})}
+						</TagGroup.List>
+					</TagGroup>
+				</EaseView>
+			</Tour.Step>
+		</View>
+	);
 };

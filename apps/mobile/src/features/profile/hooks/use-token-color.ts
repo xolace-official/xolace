@@ -9,5 +9,5 @@ import { useThemeColor } from "heroui-native";
  * See memory: custom JS-only tokens must live in `@theme static` to be emitted.
  */
 export function useTokenColor(token: string): string {
-  return (useThemeColor as (t: string) => string)(token);
+	return (useThemeColor as (t: string) => string)(token);
 }

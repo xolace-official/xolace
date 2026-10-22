@@ -1,8 +1,8 @@
 import type { Doc } from "../_generated/dataModel";
 
 type PoolabilityInputs = Pick<
-  Doc<"sessions">,
-  "kept" | "contributedReflection" | "safeguardLevel"
+	Doc<"sessions">,
+	"kept" | "contributedReflection" | "safeguardLevel"
 >;
 
 /**
@@ -17,11 +17,11 @@ type PoolabilityInputs = Pick<
  * - safeguardLevel !== crisis — crisis sessions must never enter the pool
  */
 export function isPoolable(s: PoolabilityInputs): boolean {
-  return (
-    s.kept === true &&
-    s.contributedReflection === true &&
-    s.safeguardLevel !== "crisis"
-  );
+	return (
+		s.kept === true &&
+		s.contributedReflection === true &&
+		s.safeguardLevel !== "crisis"
+	);
 }
 
 /**
@@ -31,17 +31,17 @@ export function isPoolable(s: PoolabilityInputs): boolean {
  * before it lands.
  */
 export function isFollowUpPoolable(r: {
-  shareRequested: boolean;
-  reflectionText?: string;
-  tier: Doc<"follow_up_cards">["tier"];
-  escalationDerived: boolean;
-  safeguardLevel: Doc<"sessions">["safeguardLevel"];
+	shareRequested: boolean;
+	reflectionText?: string;
+	tier: Doc<"follow_up_cards">["tier"];
+	escalationDerived: boolean;
+	safeguardLevel: Doc<"sessions">["safeguardLevel"];
 }): boolean {
-  return (
-    r.shareRequested &&
-    !!r.reflectionText &&
-    r.tier !== "acute" &&
-    !r.escalationDerived &&
-    r.safeguardLevel !== "crisis"
-  );
+	return (
+		r.shareRequested &&
+		!!r.reflectionText &&
+		r.tier !== "acute" &&
+		!r.escalationDerived &&
+		r.safeguardLevel !== "crisis"
+	);
 }

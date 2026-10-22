@@ -1,10 +1,10 @@
 import { ConvexError, v } from "convex/values";
-import { action, internalMutation, query } from "../_generated/server";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
+import { action, internalMutation, query } from "../_generated/server";
+import { transcribeAudio } from "../ai/transcribe";
 import { requireAuth } from "../lib/auth";
 import { hasPremium } from "../lib/premium";
-import { transcribeAudio } from "../ai/transcribe";
 import { startOfTodayUTC } from "../lib/timeOfDay";
 
 // Plus dictation (#557). A take is capped at 3 minutes on the client and
@@ -16,19 +16,22 @@ const AUDIO_BYTES_PER_SECOND = 4000;
 const DEFAULT_DAILY_CAP_MINUTES = 30;
 
 function dailyCapSeconds(): number {
-  const raw = Number(process.env.DICTATION_DAILY_CAP_MINUTES_PLUS ?? DEFAULT_DAILY_CAP_MINUTES);
-  const minutes = Number.isFinite(raw) && raw >= 0 ? raw : DEFAULT_DAILY_CAP_MINUTES;
-  return minutes * 60;
+	const raw = Number(
+		process.env.DICTATION_DAILY_CAP_MINUTES_PLUS ?? DEFAULT_DAILY_CAP_MINUTES
+	);
+	const minutes =
+		Number.isFinite(raw) && raw >= 0 ? raw : DEFAULT_DAILY_CAP_MINUTES;
+	return minutes * 60;
 }
 
 /** Seconds dictated today, with the same lazy daily reset as vent's counter. */
 function secondsUsedToday(profile: Doc<"emotional_profiles">): number {
-  const fresh = (profile.dictationDailyResetAt ?? 0) >= startOfTodayUTC();
-  return fresh ? (profile.dictationDailySecondsUsed ?? 0) : 0;
+	const fresh = (profile.dictationDailyResetAt ?? 0) >= startOfTodayUTC();
+	return fresh ? (profile.dictationDailySecondsUsed ?? 0) : 0;
 }
 
 const capReached = (profile: Doc<"emotional_profiles">) =>
-  secondsUsedToday(profile) >= dailyCapSeconds();
+	secondsUsedToday(profile) >= dailyCapSeconds();
 
 /**
  * The UTC day (its midnight) on which the Plus dictation budget was spent, or
@@ -37,15 +40,17 @@ const capReached = (profile: Doc<"emotional_profiles">) =>
  * answer would stay "capped" past midnight.
  */
 export const status = query({
-  args: {},
-  returns: v.object({ cappedOn: v.union(v.number(), v.null()) }),
-  handler: async (ctx) => {
-    const { profile } = await requireAuth(ctx);
-    const used = profile.dictationDailySecondsUsed ?? 0;
-    const cappedOn =
-      used >= dailyCapSeconds() ? (profile.dictationDailyResetAt ?? null) : null;
-    return { cappedOn };
-  },
+	args: {},
+	handler: async (ctx) => {
+		const { profile } = await requireAuth(ctx);
+		const used = profile.dictationDailySecondsUsed ?? 0;
+		const cappedOn =
+			used >= dailyCapSeconds()
+				? (profile.dictationDailyResetAt ?? null)
+				: null;
+		return { cappedOn };
+	},
+	returns: v.object({ cappedOn: v.union(v.number(), v.null()) }),
 });
 
 /**
@@ -55,39 +60,54 @@ export const status = query({
  * reservation landed on, for `release`.
  */
 export const reserve = internalMutation({
-  args: { seconds: v.number() },
-  returns: v.union(
-    v.object({ ok: v.literal(false), reason: v.union(v.literal("plus_required"), v.literal("dictation_cap_reached")) }),
-    v.object({ ok: v.literal(true), day: v.number() }),
-  ),
-  handler: async (ctx, args) => {
-    const { profile } = await requireAuth(ctx);
-    if (!(await hasPremium(ctx, profile))) return { ok: false as const, reason: "plus_required" as const };
-    // Admits a take while under the cap; the last one may overshoot by itself.
-    if (capReached(profile)) return { ok: false as const, reason: "dictation_cap_reached" as const };
-    const day = startOfTodayUTC();
-    await ctx.db.patch("emotional_profiles", profile._id, {
-      dictationDailySecondsUsed: secondsUsedToday(profile) + args.seconds,
-      dictationDailyResetAt: day,
-      updatedAt: Date.now(),
-    });
-    return { ok: true as const, day };
-  },
+	args: { seconds: v.number() },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
+		if (!(await hasPremium(ctx, profile))) {
+			return { ok: false as const, reason: "plus_required" as const };
+		}
+		// Admits a take while under the cap; the last one may overshoot by itself.
+		if (capReached(profile)) {
+			return { ok: false as const, reason: "dictation_cap_reached" as const };
+		}
+		const day = startOfTodayUTC();
+		await ctx.db.patch("emotional_profiles", profile._id, {
+			dictationDailyResetAt: day,
+			dictationDailySecondsUsed: secondsUsedToday(profile) + args.seconds,
+			updatedAt: Date.now(),
+		});
+		return { day, ok: true as const };
+	},
+	returns: v.union(
+		v.object({
+			ok: v.literal(false),
+			reason: v.union(
+				v.literal("plus_required"),
+				v.literal("dictation_cap_reached")
+			),
+		}),
+		v.object({ day: v.number(), ok: v.literal(true) })
+	),
 });
 
 /** Hands a failed take's reservation back, unless the day has since rolled over. */
 export const release = internalMutation({
-  args: { seconds: v.number(), day: v.number() },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const { profile } = await requireAuth(ctx);
-    if (profile.dictationDailyResetAt !== args.day) return null;
-    await ctx.db.patch("emotional_profiles", profile._id, {
-      dictationDailySecondsUsed: Math.max(0, (profile.dictationDailySecondsUsed ?? 0) - args.seconds),
-      updatedAt: Date.now(),
-    });
-    return null;
-  },
+	args: { day: v.number(), seconds: v.number() },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
+		if (profile.dictationDailyResetAt !== args.day) {
+			return null;
+		}
+		await ctx.db.patch("emotional_profiles", profile._id, {
+			dictationDailySecondsUsed: Math.max(
+				0,
+				(profile.dictationDailySecondsUsed ?? 0) - args.seconds
+			),
+			updatedAt: Date.now(),
+		});
+		return null;
+	},
+	returns: v.null(),
 });
 
 /**
@@ -103,46 +123,68 @@ export const release = internalMutation({
  * @throws ConvexError `audio_too_large` for a take over the 3-minute ceiling
  */
 export const transcribe = action({
-  // durationMs is optional for the #557 client, which charges by payload alone.
-  args: { audioBytes: v.bytes(), durationMs: v.optional(v.number()) },
-  returns: v.union(v.string(), v.null()),
-  handler: async (ctx, args): Promise<string | null> => {
-    if (args.audioBytes.byteLength > MAX_DICTATION_BYTES) {
-      throw new ConvexError({ code: "audio_too_large", message: "Dictation take too long" });
-    }
-    // v.number() admits NaN/Infinity; a NaN charge would poison the counter and
-    // disable the cap for the rest of the day.
-    if (args.durationMs !== undefined && !(Number.isFinite(args.durationMs) && args.durationMs >= 0)) {
-      throw new ConvexError({ code: "invalid_duration", message: "Invalid dictation duration" });
-    }
-    const apiKey = process.env.ELEVENLABS_VOICE_API_KEY;
-    if (!apiKey) {
-      console.error("[dictation] ELEVENLABS_VOICE_API_KEY not set");
-      return null;
-    }
+	// durationMs is optional for the #557 client, which charges by payload alone.
+	args: { audioBytes: v.bytes(), durationMs: v.optional(v.number()) },
+	handler: async (ctx, args): Promise<string | null> => {
+		if (args.audioBytes.byteLength > MAX_DICTATION_BYTES) {
+			throw new ConvexError({
+				code: "audio_too_large",
+				message: "Dictation take too long",
+			});
+		}
+		// v.number() admits NaN/Infinity; a NaN charge would poison the counter and
+		// disable the cap for the rest of the day.
+		if (
+			args.durationMs !== undefined &&
+			!(Number.isFinite(args.durationMs) && args.durationMs >= 0)
+		) {
+			throw new ConvexError({
+				code: "invalid_duration",
+				message: "Invalid dictation duration",
+			});
+		}
+		const apiKey = process.env.ELEVENLABS_VOICE_API_KEY;
+		if (!apiKey) {
+			console.error("[dictation] ELEVENLABS_VOICE_API_KEY not set");
+			return null;
+		}
 
-    const seconds = Math.ceil(
-      Math.max((args.durationMs ?? 0) / 1000, args.audioBytes.byteLength / AUDIO_BYTES_PER_SECOND),
-    );
-    const reservation: { ok: false; reason: "plus_required" | "dictation_cap_reached" } | { ok: true; day: number } =
-      await ctx.runMutation(internal.dictation.plus.reserve, { seconds });
-    if (!reservation.ok) {
-      const message = reservation.reason === "plus_required" ? "Xolace+ required: dictation" : "Dictation cap reached";
-      throw new ConvexError({ code: reservation.reason, message });
-    }
+		const seconds = Math.ceil(
+			Math.max(
+				(args.durationMs ?? 0) / 1000,
+				args.audioBytes.byteLength / AUDIO_BYTES_PER_SECOND
+			)
+		);
+		const reservation:
+			| { ok: false; reason: "plus_required" | "dictation_cap_reached" }
+			| { ok: true; day: number } = await ctx.runMutation(
+			internal.dictation.plus.reserve,
+			{ seconds }
+		);
+		if (!reservation.ok) {
+			const message =
+				reservation.reason === "plus_required"
+					? "Xolace+ required: dictation"
+					: "Dictation cap reached";
+			throw new ConvexError({ code: reservation.reason, message });
+		}
 
-    let result: Awaited<ReturnType<typeof transcribeAudio>> = null;
-    try {
-      result = await transcribeAudio(apiKey, args.audioBytes);
-    } finally {
-      if (result === null) {
-        try {
-          await ctx.runMutation(internal.dictation.plus.release, { seconds, day: reservation.day });
-        } catch (err) {
-          console.error("[dictation] release failed:", err);
-        }
-      }
-    }
-    return result?.text ?? null;
-  },
+		let result: Awaited<ReturnType<typeof transcribeAudio>> = null;
+		try {
+			result = await transcribeAudio(apiKey, args.audioBytes);
+		} finally {
+			if (result === null) {
+				try {
+					await ctx.runMutation(internal.dictation.plus.release, {
+						day: reservation.day,
+						seconds,
+					});
+				} catch (err) {
+					console.error("[dictation] release failed:", err);
+				}
+			}
+		}
+		return result?.text ?? null;
+	},
+	returns: v.union(v.string(), v.null()),
 });

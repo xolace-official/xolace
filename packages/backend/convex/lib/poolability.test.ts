@@ -2,33 +2,33 @@ import { describe, expect, it } from "vitest";
 import { isPoolable } from "./poolability";
 
 describe("isPoolable", () => {
-  // kept | contributed | safeguard → poolable
-  const cases: {
-    kept?: boolean;
-    contributed?: boolean;
-    safeguard?: "none" | "gentle" | "elevated" | "crisis";
-    expected: boolean;
-  }[] = [
-    { kept: true, contributed: true, safeguard: "none", expected: true },
-    { kept: true, contributed: true, safeguard: "gentle", expected: true },
-    { kept: true, contributed: true, safeguard: "elevated", expected: true },
-    // safety row: crisis never enters the pool
-    { kept: true, contributed: true, safeguard: "crisis", expected: false },
-    { kept: false, contributed: true, safeguard: "none", expected: false },
-    { kept: undefined, contributed: true, safeguard: "none", expected: false },
-    { kept: true, contributed: false, safeguard: "none", expected: false },
-    { kept: true, contributed: undefined, safeguard: "none", expected: false },
-  ];
+	// kept | contributed | safeguard → poolable
+	const cases: {
+		kept?: boolean;
+		contributed?: boolean;
+		safeguard?: "none" | "gentle" | "elevated" | "crisis";
+		expected: boolean;
+	}[] = [
+		{ contributed: true, expected: true, kept: true, safeguard: "none" },
+		{ contributed: true, expected: true, kept: true, safeguard: "gentle" },
+		{ contributed: true, expected: true, kept: true, safeguard: "elevated" },
+		// safety row: crisis never enters the pool
+		{ contributed: true, expected: false, kept: true, safeguard: "crisis" },
+		{ contributed: true, expected: false, kept: false, safeguard: "none" },
+		{ contributed: true, expected: false, kept: undefined, safeguard: "none" },
+		{ contributed: false, expected: false, kept: true, safeguard: "none" },
+		{ contributed: undefined, expected: false, kept: true, safeguard: "none" },
+	];
 
-  for (const c of cases) {
-    it(`kept=${c.kept} contributed=${c.contributed} safeguard=${c.safeguard} → ${c.expected}`, () => {
-      expect(
-        isPoolable({
-          kept: c.kept,
-          contributedReflection: c.contributed,
-          safeguardLevel: c.safeguard,
-        }),
-      ).toBe(c.expected);
-    });
-  }
+	for (const c of cases) {
+		it(`kept=${c.kept} contributed=${c.contributed} safeguard=${c.safeguard} → ${c.expected}`, () => {
+			expect(
+				isPoolable({
+					contributedReflection: c.contributed,
+					kept: c.kept,
+					safeguardLevel: c.safeguard,
+				})
+			).toBe(c.expected);
+		});
+	}
 });

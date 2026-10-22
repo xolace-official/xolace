@@ -1,11 +1,11 @@
 import { v } from "convex/values";
-import { internalAction } from "../_generated/server";
 import { internal } from "../_generated/api";
+import { internalAction } from "../_generated/server";
 import {
-  getAnthropicClient,
-  extractTextFromResponse,
-  SLOT_FILL_MODEL,
-  thinkingOff,
+	extractTextFromResponse,
+	getAnthropicClient,
+	SLOT_FILL_MODEL,
+	thinkingOff,
 } from "./providers/anthropic";
 
 /**
@@ -16,46 +16,52 @@ import {
  * Any failure swallows silently — beats fall back to defaultContent.
  */
 export const fillSlots = internalAction({
-  args: {
-    sessionId: v.id("sessions"),
-    exerciseTitle: v.string(),
-    slotKeys: v.array(v.string()),
-    mirrorText: v.string(),
-    userLanguageTags: v.array(v.string()),
-    primaryEmotion: v.string(),
-  },
-  handler: async (ctx, args) => {
-    if (args.slotKeys.length === 0) return;
+	args: {
+		exerciseTitle: v.string(),
+		mirrorText: v.string(),
+		primaryEmotion: v.string(),
+		sessionId: v.id("sessions"),
+		slotKeys: v.array(v.string()),
+		userLanguageTags: v.array(v.string()),
+	},
+	handler: async (ctx, args) => {
+		if (args.slotKeys.length === 0) {
+			return;
+		}
 
-    const slots: Record<string, string> = {};
+		const slots: Record<string, string> = {};
 
-    // Fill deterministic slots without LLM
-    for (const key of args.slotKeys) {
-      if (key === "mirror_line") {
-        const cleaned = args.mirrorText.replace(/\s+/g, " ").trim();
-        if (cleaned) slots[key] = cleaned;
-      } else if (key === "user_emotion") {
-        const cleaned = args.primaryEmotion.trim();
-        if (cleaned) slots[key] = cleaned;
-      }
-    }
+		// Fill deterministic slots without LLM
+		for (const key of args.slotKeys) {
+			if (key === "mirror_line") {
+				const cleaned = args.mirrorText.replace(/\s+/g, " ").trim();
+				if (cleaned) {
+					slots[key] = cleaned;
+				}
+			} else if (key === "user_emotion") {
+				const cleaned = args.primaryEmotion.trim();
+				if (cleaned) {
+					slots[key] = cleaned;
+				}
+			}
+		}
 
-    const llmKeys = args.slotKeys.filter((k) => k === "user_phrase");
+		const llmKeys = args.slotKeys.filter((k) => k === "user_phrase");
 
-    if (llmKeys.length > 0) {
-      try {
-        const anthropic = getAnthropicClient();
+		if (llmKeys.length > 0) {
+			try {
+				const anthropic = getAnthropicClient();
 
-        const hasUserWords = args.userLanguageTags.length > 0;
-        const langContext = hasUserWords
-          ? args.userLanguageTags.join(", ")
-          : "(none provided)";
+				const hasUserWords = args.userLanguageTags.length > 0;
+				const langContext = hasUserWords
+					? args.userLanguageTags.join(", ")
+					: "(none provided)";
 
-        const sourceRule = hasUserWords
-          ? `Prefer exact words from "User's own words" above.`
-          : `No user's own words are provided. Extract only from Mirror text; do not use Primary emotion or clinical terms.`;
+				const sourceRule = hasUserWords
+					? `Prefer exact words from "User's own words" above.`
+					: `No user's own words are provided. Extract only from Mirror text; do not use Primary emotion or clinical terms.`;
 
-        const userPrompt = `Mirror text: "${args.mirrorText}"
+				const userPrompt = `Mirror text: "${args.mirrorText}"
 Primary emotion: ${args.primaryEmotion}
 User's own words: ${langContext}
 
@@ -66,58 +72,68 @@ Slot to fill:
 
 Respond with only a JSON object, for example: {"user_phrase": "stuck and can't move"}`;
 
-        const response = await anthropic.messages.create({
-          model: SLOT_FILL_MODEL,
-          max_tokens: 150,
-          thinking: thinkingOff(SLOT_FILL_MODEL),
-          system:
-            "You extract concise phrases to personalize emotional processing exercises. Return only valid JSON.",
-          messages: [{ role: "user", content: userPrompt }],
-        });
+				const response = await anthropic.messages.create({
+					max_tokens: 150,
+					messages: [{ content: userPrompt, role: "user" }],
+					model: SLOT_FILL_MODEL,
+					system:
+						"You extract concise phrases to personalize emotional processing exercises. Return only valid JSON.",
+					thinking: thinkingOff(SLOT_FILL_MODEL),
+				});
 
-        const raw = extractTextFromResponse(response).trim();
-        const cleaned = raw
-          .replace(/^```json\s*/i, "")
-          .replace(/^```\s*/i, "")
-          .replace(/\s*```$/i, "")
-          .trim();
+				const raw = extractTextFromResponse(response).trim();
+				const cleaned = raw
+					.replace(/^```json\s*/i, "")
+					.replace(/^```\s*/i, "")
+					.replace(/\s*```$/i, "")
+					.trim();
 
-        const parsed = JSON.parse(cleaned);
+				const parsed = JSON.parse(cleaned);
 
-        const tokenize = (s: string) =>
-          s.toLowerCase().match(/[\p{L}']+/gu) ?? [];
-        const sourceTokens = new Set<string>([
-          ...tokenize(args.mirrorText),
-          ...args.userLanguageTags.flatMap(tokenize),
-        ]);
+				const tokenize = (s: string) =>
+					s.toLowerCase().match(/[\p{L}']+/gu) ?? [];
+				const sourceTokens = new Set<string>([
+					...tokenize(args.mirrorText),
+					...args.userLanguageTags.flatMap(tokenize),
+				]);
 
-        for (const key of llmKeys) {
-          const val = parsed[key];
-          if (typeof val !== "string") continue;
-          const normalized = val
-            .toLowerCase()
-            .replace(/[.,;:!?"'`]+$/g, "")
-            .replace(/\s+/g, " ")
-            .trim();
-          if (!normalized) continue;
-          const words = normalized.split(/\s+/);
-          if (words.length > 10) continue;
-          const tokens = tokenize(normalized);
-          if (tokens.length === 0) continue;
-          const grounded = tokens.every((t) => sourceTokens.has(t));
-          if (!grounded) continue;
-          slots[key] = normalized;
-        }
-      } catch {
-        // Haiku failed — user_phrase will fall back to defaultContent in the runner
-      }
-    }
+				for (const key of llmKeys) {
+					const val = parsed[key];
+					if (typeof val !== "string") {
+						continue;
+					}
+					const normalized = val
+						.toLowerCase()
+						.replace(/[.,;:!?"'`]+$/g, "")
+						.replace(/\s+/g, " ")
+						.trim();
+					if (!normalized) {
+						continue;
+					}
+					const words = normalized.split(/\s+/);
+					if (words.length > 10) {
+						continue;
+					}
+					const tokens = tokenize(normalized);
+					if (tokens.length === 0) {
+						continue;
+					}
+					const grounded = tokens.every((t) => sourceTokens.has(t));
+					if (!grounded) {
+						continue;
+					}
+					slots[key] = normalized;
+				}
+			} catch {
+				// Haiku failed — user_phrase will fall back to defaultContent in the runner
+			}
+		}
 
-    if (Object.keys(slots).length > 0) {
-      await ctx.runMutation(internal.sessions.writeExerciseSlots, {
-        sessionId: args.sessionId,
-        slots,
-      });
-    }
-  },
+		if (Object.keys(slots).length > 0) {
+			await ctx.runMutation(internal.sessions.writeExerciseSlots, {
+				sessionId: args.sessionId,
+				slots,
+			});
+		}
+	},
 });

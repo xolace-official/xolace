@@ -1,7 +1,5 @@
-import { AuthOnboardingScreen } from '@/src/features/onboarding/components/screens/AuthOnboardingScreen';
+import { AuthOnboardingScreen } from "@/src/features/onboarding/components/screens/AuthOnboardingScreen";
 
-const OnboardingAuth = () => {
-  return <AuthOnboardingScreen />;
-};
+const OnboardingAuth = () => <AuthOnboardingScreen />;
 
 export default OnboardingAuth;

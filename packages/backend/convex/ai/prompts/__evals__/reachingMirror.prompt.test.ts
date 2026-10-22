@@ -24,21 +24,21 @@
  * that is still present. §9.3's fixed-n review is the instrument for that.
  */
 import { describe, expect, it } from "vitest";
-import { buildArticulatorPrompt, hasMetaNarration } from "../articulator";
-import type { ClaimStrength } from "../../routing";
 import type { ClassificationResult } from "../../providers/anthropic";
+import type { ClaimStrength } from "../../routing";
+import { buildArticulatorPrompt, hasMetaNarration } from "../articulator";
 
 // --- Fixtures ---------------------------------------------------------
 
 const classification: ClassificationResult = {
-  primaryEmotion: "sadness",
-  primaryEmotionConfidence: 0.4,
-  intensity: 8,
-  specificity: 2,
-  thematicTags: [],
-  userLanguageTags: ["heavy"],
-  requiresFollowUp: false,
-  supportNeed: "none",
+	intensity: 8,
+	primaryEmotion: "sadness",
+	primaryEmotionConfidence: 0.4,
+	requiresFollowUp: false,
+	specificity: 2,
+	supportNeed: "none",
+	thematicTags: [],
+	userLanguageTags: ["heavy"],
 };
 
 /**
@@ -47,37 +47,37 @@ const classification: ClassificationResult = {
  * would pass against a prompt that had deleted it.
  */
 const build = (
-  claimStrength?: ClaimStrength,
-  overrides: {
-    userFeedback?: string;
-    intensity?: number;
-    specificity?: number;
-    /** Cold start passes `null` / `[]`: the memory headings then never render. */
-    semanticProfile?: string | null;
-    episodicRecall?: string[];
-  } = {},
+	claimStrength?: ClaimStrength,
+	overrides: {
+		userFeedback?: string;
+		intensity?: number;
+		specificity?: number;
+		/** Cold start passes `null` / `[]`: the memory headings then never render. */
+		semanticProfile?: string | null;
+		episodicRecall?: string[];
+	} = {}
 ) =>
-  buildArticulatorPrompt({
-    rawInput: "feeling heavy tonight",
-    classification: {
-      ...classification,
-      intensity: overrides.intensity ?? classification.intensity,
-      specificity: overrides.specificity ?? classification.specificity,
-    },
-    patternSummary: "carries weight quietly",
-    safeguardLevel: "none",
-    mirrorTone: "adaptive",
-    claimStrength,
-    isFirstSession: false,
-    recentMirrors: [],
-    semanticProfile:
-      overrides.semanticProfile === undefined
-        ? "They tend to arrive without words for it."
-        : overrides.semanticProfile,
-    episodicRecall: overrides.episodicRecall ?? ["they wrote about work"],
-    existingMirror: overrides.userFeedback ? "a previous mirror" : undefined,
-    userFeedback: overrides.userFeedback,
-  }).system;
+	buildArticulatorPrompt({
+		claimStrength,
+		classification: {
+			...classification,
+			intensity: overrides.intensity ?? classification.intensity,
+			specificity: overrides.specificity ?? classification.specificity,
+		},
+		episodicRecall: overrides.episodicRecall ?? ["they wrote about work"],
+		existingMirror: overrides.userFeedback ? "a previous mirror" : undefined,
+		isFirstSession: false,
+		mirrorTone: "adaptive",
+		patternSummary: "carries weight quietly",
+		rawInput: "feeling heavy tonight",
+		recentMirrors: [],
+		safeguardLevel: "none",
+		semanticProfile:
+			overrides.semanticProfile === undefined
+				? "They tend to arrive without words for it."
+				: overrides.semanticProfile,
+		userFeedback: overrides.userFeedback,
+	}).system;
 
 // --- Presence: full text (doc §4.1, §4.2, §4.3) -----------------------
 
@@ -112,11 +112,11 @@ The reaching is over. Name what is actually present, flatly, and end on it. The 
 - NEVER apologise, and never mark this as partial or incomplete.`;
 
 const SUBTRACTION_1 =
-  "Weave the user's own emotionally charged words into your mirror. Do not add a dimension they did not give you; at this signal strength an expansion is a guess wearing the clothes of insight.";
+	"Weave the user's own emotionally charged words into your mirror. Do not add a dimension they did not give you; at this signal strength an expansion is a guess wearing the clothes of insight.";
 const SUBTRACTION_2 =
-  "The signal is faint. Do not give it a form it has not taken.";
+	"The signal is faint. Do not give it a form it has not taken.";
 const SUBTRACTION_3 =
-  "let it inform your ear only; it may not supply anything tonight's words did not";
+	"let it inform your ear only; it may not supply anything tonight's words did not";
 const SUBTRACTION_4 = `You remember this person, and that may show. Recognition and understanding are separate claims and you have earned only the first. You may recognise that they are here again, or the manner in which they arrive, and nothing more. Nothing from a past moment may cross into tonight as explanation.
 - Never use a past moment to say what tonight is about, however well it fits`;
 
@@ -125,10 +125,10 @@ const SUBTRACTION_4 = `You remember this person, and that may show. Recognition 
 const EXPANSION_MANDATE = "add a dimension they didn't have words for";
 /** All four Intensity × Specificity branches (§4.3 subtraction 2). */
 const IS_BRANCHES = [
-  "meet them at full depth",
-  "Give the vague enormity a form",
-  "Match their measured tone",
-  "light and curious",
+	"meet them at full depth",
+	"Give the vague enormity a form",
+	"Match their measured tone",
+	"light and curious",
 ];
 const PATTERN_MANDATE = "let it actively shape what you notice";
 const EPISODIC_MANDATE = "you may acknowledge that quietly";
@@ -136,90 +136,92 @@ const DELETED_BLOCK = "## Claim Strength: Tentative";
 /** #216: the reach now closes on a question; the old ban must be gone. */
 const OLD_QUESTION_BAN = "The gap is stated, never posed.";
 const REFINEMENT_PUSH =
-  "Try a different angle, different metaphor, different emotional read.";
+	"Try a different angle, different metaphor, different emotional read.";
 
 describe("reaching path", () => {
-  const system = build("reaching");
+	const system = build("reaching");
 
-  it("carries the Reaching block verbatim", () => {
-    expect(system).toContain(REACHING_BLOCK);
-  });
+	it("carries the Reaching block verbatim", () => {
+		expect(system).toContain(REACHING_BLOCK);
+	});
 
-  it("carries subtractions 1-4 in full", () => {
-    expect(system).toContain(SUBTRACTION_1);
-    expect(system).toContain(SUBTRACTION_2);
-    expect(system).toContain(SUBTRACTION_3);
-    expect(system).toContain(SUBTRACTION_4);
-  });
+	it("carries subtractions 1-4 in full", () => {
+		expect(system).toContain(SUBTRACTION_1);
+		expect(system).toContain(SUBTRACTION_2);
+		expect(system).toContain(SUBTRACTION_3);
+		expect(system).toContain(SUBTRACTION_4);
+	});
 
-  it("keeps the semantic-profile block (deliberately not subtracted)", () => {
-    expect(system).toContain("## What You Know About This Person");
-  });
+	it("keeps the semantic-profile block (deliberately not subtracted)", () => {
+		expect(system).toContain("## What You Know About This Person");
+	});
 
-  /**
-   * #216. The reach reverses "declarative, never interrogative" (doc §1, §4.1)
-   * for this block alone. The instruction text is identical either way — the
-   * model conditions on whether the profile section is in its own context, so
-   * both fixtures must carry it — while the cold-start assertion is what makes
-   * "absent, not present-but-empty" a checked fact rather than an assumption.
-   */
-  it("closes on a question, cold start and memory-present alike", () => {
-    const coldStart = build("reaching", {
-      semanticProfile: null,
-      episodicRecall: [],
-    });
-    for (const prompt of [system, coldStart]) {
-      expect(prompt).toContain(CLOSING_QUESTION_INSTRUCTION);
-      expect(prompt).not.toContain(OLD_QUESTION_BAN);
-    }
-    expect(coldStart).not.toContain("## What You Know About This Person");
-  });
+	/**
+	 * #216. The reach reverses "declarative, never interrogative" (doc §1, §4.1)
+	 * for this block alone. The instruction text is identical either way — the
+	 * model conditions on whether the profile section is in its own context, so
+	 * both fixtures must carry it — while the cold-start assertion is what makes
+	 * "absent, not present-but-empty" a checked fact rather than an assumption.
+	 */
+	it("closes on a question, cold start and memory-present alike", () => {
+		const coldStart = build("reaching", {
+			episodicRecall: [],
+			semanticProfile: null,
+		});
+		for (const prompt of [system, coldStart]) {
+			expect(prompt).toContain(CLOSING_QUESTION_INSTRUCTION);
+			expect(prompt).not.toContain(OLD_QUESTION_BAN);
+		}
+		expect(coldStart).not.toContain("## What You Know About This Person");
+	});
 
-  it("has none of the three standing instructions that fill the gap", () => {
-    expect(system).not.toContain(EXPANSION_MANDATE);
-    for (const branch of IS_BRANCHES) expect(system).not.toContain(branch);
-    expect(system).not.toContain(PATTERN_MANDATE);
-    expect(system).not.toContain(EPISODIC_MANDATE);
-  });
+	it("has none of the three standing instructions that fill the gap", () => {
+		expect(system).not.toContain(EXPANSION_MANDATE);
+		for (const branch of IS_BRANCHES) {
+			expect(system).not.toContain(branch);
+		}
+		expect(system).not.toContain(PATTERN_MANDATE);
+		expect(system).not.toContain(EPISODIC_MANDATE);
+	});
 
-  it("does not resurrect the deleted Tentative block", () => {
-    expect(system).not.toContain(DELETED_BLOCK);
-  });
+	it("does not resurrect the deleted Tentative block", () => {
+		expect(system).not.toContain(DELETED_BLOCK);
+	});
 });
 
 describe("holding path", () => {
-  const system = build("holding");
+	const system = build("holding");
 
-  it("carries the Holding block verbatim, third NEVER included", () => {
-    expect(system).toContain(HOLDING_BLOCK);
-    expect(system).toContain(
-      "NEVER assert that there is nothing underneath it or no reason for it.",
-    );
-  });
+	it("carries the Holding block verbatim, third NEVER included", () => {
+		expect(system).toContain(HOLDING_BLOCK);
+		expect(system).toContain(
+			"NEVER assert that there is nothing underneath it or no reason for it."
+		);
+	});
 
-  it("carries subtractions 1-4 unchanged", () => {
-    expect(system).toContain(SUBTRACTION_1);
-    expect(system).toContain(SUBTRACTION_2);
-    expect(system).toContain(SUBTRACTION_3);
-    expect(system).toContain(SUBTRACTION_4);
-  });
+	it("carries subtractions 1-4 unchanged", () => {
+		expect(system).toContain(SUBTRACTION_1);
+		expect(system).toContain(SUBTRACTION_2);
+		expect(system).toContain(SUBTRACTION_3);
+		expect(system).toContain(SUBTRACTION_4);
+	});
 
-  it("never reaches again — the Reaching block is not also present", () => {
-    expect(system).not.toContain("## Claim Strength: Reaching");
-  });
+	it("never reaches again — the Reaching block is not also present", () => {
+		expect(system).not.toContain("## Claim Strength: Reaching");
+	});
 
-  it("replaces the refinement pushes with subtraction 5", () => {
-    const notQuite = build("holding", { userFeedback: "not_quite" });
-    expect(notQuite).toContain(
-      "Change what you name, not how much you claim. A different angle on the same faint signal is still the same faint signal.",
-    );
-    expect(notQuite).not.toContain(REFINEMENT_PUSH);
+	it("replaces the refinement pushes with subtraction 5", () => {
+		const notQuite = build("holding", { userFeedback: "not_quite" });
+		expect(notQuite).toContain(
+			"Change what you name, not how much you claim. A different angle on the same faint signal is still the same faint signal."
+		);
+		expect(notQuite).not.toContain(REFINEMENT_PUSH);
 
-    const sayMore = build("holding", { userFeedback: "say_more" });
-    expect(sayMore).toContain(
-      "The user added more words. They did not add more signal. Use anything genuinely new; do not treat the added length as permission to claim more than before.",
-    );
-  });
+		const sayMore = build("holding", { userFeedback: "say_more" });
+		expect(sayMore).toContain(
+			"The user added more words. They did not add more signal. Use anything genuinely new; do not treat the added length as permission to claim more than before."
+		);
+	});
 });
 
 /**
@@ -227,29 +229,29 @@ describe("holding path", () => {
  * globally would still pass every absence assertion above.
  */
 describe("control: the standing instructions are still there off the reach paths", () => {
-  for (const strength of [undefined, "measured", "confident"] as const) {
-    const label = strength ?? "unset";
+	for (const strength of [undefined, "measured", "confident"] as const) {
+		const label = strength ?? "unset";
 
-    it(`${label}: keeps the expansion mandate and the memory mandates`, () => {
-      const system = build(strength);
-      expect(system).toContain(EXPANSION_MANDATE);
-      expect(system).toContain(PATTERN_MANDATE);
-      expect(system).toContain(EPISODIC_MANDATE);
-      expect(system).not.toContain(SUBTRACTION_2);
-    });
-  }
+		it(`${label}: keeps the expansion mandate and the memory mandates`, () => {
+			const system = build(strength);
+			expect(system).toContain(EXPANSION_MANDATE);
+			expect(system).toContain(PATTERN_MANDATE);
+			expect(system).toContain(EPISODIC_MANDATE);
+			expect(system).not.toContain(SUBTRACTION_2);
+		});
+	}
 
-  it("keeps all four Intensity × Specificity branches reachable", () => {
-    const bands: [number, number, string][] = [
-      [8, 8, IS_BRANCHES[0]],
-      [8, 2, IS_BRANCHES[1]],
-      [2, 8, IS_BRANCHES[2]],
-      [2, 2, IS_BRANCHES[3]],
-    ];
-    for (const [intensity, specificity, branch] of bands) {
-      expect(build("measured", { intensity, specificity })).toContain(branch);
-    }
-  });
+	it("keeps all four Intensity × Specificity branches reachable", () => {
+		const bands: [number, number, string][] = [
+			[8, 8, IS_BRANCHES[0]],
+			[8, 2, IS_BRANCHES[1]],
+			[2, 8, IS_BRANCHES[2]],
+			[2, 2, IS_BRANCHES[3]],
+		];
+		for (const [intensity, specificity, branch] of bands) {
+			expect(build("measured", { intensity, specificity })).toContain(branch);
+		}
+	});
 });
 
 /**
@@ -258,41 +260,45 @@ describe("control: the standing instructions are still there off the reach paths
  * production, so the pipeline falls back rather than deliver one.
  */
 describe("meta-narration never reaches mirrorText", () => {
-  it("catches the false-start prefix and the instruction vocabulary", () => {
-    expect(
-      hasMetaNarration("Wait, let me redo that without the banned construction."),
-    ).toBe(true);
-    expect(hasMetaNarration("Let me try that again.")).toBe(true);
-    expect(hasMetaNarration("Actually, that was the wrong read.")).toBe(true);
-    expect(hasMetaNarration("Following the instructions above: you are tired.")).toBe(true);
-  });
+	it("catches the false-start prefix and the instruction vocabulary", () => {
+		expect(
+			hasMetaNarration(
+				"Wait, let me redo that without the banned construction."
+			)
+		).toBe(true);
+		expect(hasMetaNarration("Let me try that again.")).toBe(true);
+		expect(hasMetaNarration("Actually, that was the wrong read.")).toBe(true);
+		expect(
+			hasMetaNarration("Following the instructions above: you are tired.")
+		).toBe(true);
+	});
 
-  it("sees through a leading audio tag", () => {
-    expect(
-      hasMetaNarration("[thoughtful] Wait, let me redo that."),
-    ).toBe(true);
-  });
+	it("sees through a leading audio tag", () => {
+		expect(hasMetaNarration("[thoughtful] Wait, let me redo that.")).toBe(true);
+	});
 
-  it("leaves a real mirror alone", () => {
-    // The mirror weaves the user's own words back in, so the rule vocabulary
-    // shows up in ordinary entries and must not cost them their mirror.
-    expect(
-      hasMetaNarration("Getting banned from that group chat took something."),
-    ).toBe(false);
-    expect(
-      hasMetaNarration("You keep following his instructions and losing yourself."),
-    ).toBe(false);
-    expect(
-      hasMetaNarration("You read the instructions twice and still felt stupid."),
-    ).toBe(false);
-    expect(
-      hasMetaNarration(
-        "That heaviness is sitting right there, but what it's resting on isn't in what you've given me yet.",
-      ),
-    ).toBe(false);
-    // "Waiting" is not "Wait" — the prefix is anchored and word-shaped.
-    expect(hasMetaNarration("Waiting is its own kind of weight tonight.")).toBe(
-      false,
-    );
-  });
+	it("leaves a real mirror alone", () => {
+		// The mirror weaves the user's own words back in, so the rule vocabulary
+		// shows up in ordinary entries and must not cost them their mirror.
+		expect(
+			hasMetaNarration("Getting banned from that group chat took something.")
+		).toBe(false);
+		expect(
+			hasMetaNarration(
+				"You keep following his instructions and losing yourself."
+			)
+		).toBe(false);
+		expect(
+			hasMetaNarration("You read the instructions twice and still felt stupid.")
+		).toBe(false);
+		expect(
+			hasMetaNarration(
+				"That heaviness is sitting right there, but what it's resting on isn't in what you've given me yet."
+			)
+		).toBe(false);
+		// "Waiting" is not "Wait" — the prefix is anchored and word-shaped.
+		expect(hasMetaNarration("Waiting is its own kind of weight tonight.")).toBe(
+			false
+		);
+	});
 });

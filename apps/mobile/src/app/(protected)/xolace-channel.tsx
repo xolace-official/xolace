@@ -1,4 +1,4 @@
-import { XolaceChannelScreen } from '@/src/features/xolacer-chat/components/xolace-channel-screen';
+import { XolaceChannelScreen } from "@/src/features/xolacer-chat/components/xolace-channel-screen";
 
 /**
  * Direct route to the fixed Xolace channel (#375) — not in the chats list yet,
@@ -6,5 +6,5 @@ import { XolaceChannelScreen } from '@/src/features/xolacer-chat/components/xola
  * protected stack" reasoning as `chat/[conversationId]` applies here.
  */
 export default function XolaceChannelRoute() {
-  return <XolaceChannelScreen />;
+	return <XolaceChannelScreen />;
 }

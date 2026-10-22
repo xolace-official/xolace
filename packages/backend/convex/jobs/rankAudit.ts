@@ -31,46 +31,50 @@ import { reflectionRank } from "../lib/aggregates";
 const SCAN_CAP = 5000;
 
 export const audit = internalMutation({
-  args: {},
-  returns: v.object({
-    status: v.union(v.literal("ok"), v.literal("drift"), v.literal("saturated")),
-    tableTotal: v.number(),
-    treeTotal: v.number(),
-    tableReflectors: v.number(),
-    treeReflectors: v.number(),
-  }),
-  handler: async (ctx) => {
-    const rows = await ctx.db.query("emotional_profiles").take(SCAN_CAP);
+	args: {},
+	handler: async (ctx) => {
+		const rows = await ctx.db.query("emotional_profiles").take(SCAN_CAP);
 
-    const tableTotal = rows.length;
-    const tableReflectors = rows.filter((r) => r.sessionCount >= 1).length;
-    const treeTotal = await reflectionRank.count(ctx);
-    const treeReflectors = await reflectionRank.count(ctx, {
-      bounds: { lower: { key: 1, inclusive: true } },
-    });
+		const tableTotal = rows.length;
+		const tableReflectors = rows.filter((r) => r.sessionCount >= 1).length;
+		const treeTotal = await reflectionRank.count(ctx);
+		const treeReflectors = await reflectionRank.count(ctx, {
+			bounds: { lower: { inclusive: true, key: 1 } },
+		});
 
-    const counts = { tableTotal, treeTotal, tableReflectors, treeReflectors };
+		const counts = { tableReflectors, tableTotal, treeReflectors, treeTotal };
 
-    if (rows.length === SCAN_CAP) {
-      console.error(
-        "[rankAudit] emotional_profiles exceeds SCAN_CAP — audit is blind past the cap. " +
-          "Rewrite as a batched scan before trusting these numbers.",
-        counts,
-      );
-      return { status: "saturated" as const, ...counts };
-    }
+		if (rows.length === SCAN_CAP) {
+			console.error(
+				"[rankAudit] emotional_profiles exceeds SCAN_CAP — audit is blind past the cap. " +
+					"Rewrite as a batched scan before trusting these numbers.",
+				counts
+			);
+			return { status: "saturated" as const, ...counts };
+		}
 
-    if (tableTotal !== treeTotal || tableReflectors !== treeReflectors) {
-      console.error(
-        "[rankAudit] DRIFT: reflectionRank aggregate disagrees with emotional_profiles. " +
-          "Percentiles are wrong for someone. Repair: migrations:backfillReflectionRank " +
-          "(missing entries) or clear + rebuild (orphans/wrong keys).",
-        counts,
-      );
-      return { status: "drift" as const, ...counts };
-    }
+		if (tableTotal !== treeTotal || tableReflectors !== treeReflectors) {
+			console.error(
+				"[rankAudit] DRIFT: reflectionRank aggregate disagrees with emotional_profiles. " +
+					"Percentiles are wrong for someone. Repair: migrations:backfillReflectionRank " +
+					"(missing entries) or clear + rebuild (orphans/wrong keys).",
+				counts
+			);
+			return { status: "drift" as const, ...counts };
+		}
 
-    console.log("[rankAudit] ok — aggregate matches table.", counts);
-    return { status: "ok" as const, ...counts };
-  },
+		console.log("[rankAudit] ok — aggregate matches table.", counts);
+		return { status: "ok" as const, ...counts };
+	},
+	returns: v.object({
+		status: v.union(
+			v.literal("ok"),
+			v.literal("drift"),
+			v.literal("saturated")
+		),
+		tableReflectors: v.number(),
+		tableTotal: v.number(),
+		treeReflectors: v.number(),
+		treeTotal: v.number(),
+	}),
 });

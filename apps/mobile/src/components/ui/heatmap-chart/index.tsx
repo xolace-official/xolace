@@ -35,34 +35,39 @@
  * follows the theme, and `levelColors` replaces it outright when a brand needs
  * its own.
  */
-import { HeatmapChartRoot } from './root';
-import { HeatmapHeader } from './header';
-import { HeatmapCells, HeatmapSeparator } from './cells';
-import { HeatmapXAxis, HeatmapYAxis } from './axes';
-import { HeatmapTooltip } from './tooltip';
-import { HeatmapLegend } from './legend';
 
-export { buildHeatmapCalendar } from './calendar';
+import { HeatmapXAxis, HeatmapYAxis } from "./axes";
+import { HeatmapCells, HeatmapSeparator } from "./cells";
+import { HeatmapHeader } from "./header";
+import { HeatmapLegend } from "./legend";
+import { HeatmapChartRoot } from "./root";
+import { HeatmapTooltip } from "./tooltip";
+
+export type { HeatmapXAxisProps, HeatmapYAxisProps } from "./axes";
+export { buildHeatmapCalendar } from "./calendar";
+export type {
+	HeatmapCellStyle,
+	HeatmapCellsProps,
+	HeatmapSeparatorProps,
+} from "./cells";
 export {
-  useHeatmapChart,
-  type HeatmapBin,
-  type HeatmapCell,
-  type HeatmapColumn,
-  type HeatmapLayout,
-} from './context';
-export type { HeatmapChartProps } from './props';
-export type { HeatmapCellsProps, HeatmapCellStyle, HeatmapSeparatorProps } from './cells';
-export type { HeatmapXAxisProps, HeatmapYAxisProps } from './axes';
-export type { HeatmapTooltipProps } from './tooltip';
-export type { HeatmapLegendProps } from './legend';
-export type { HeatmapHeaderProps } from './header';
+	type HeatmapBin,
+	type HeatmapCell,
+	type HeatmapColumn,
+	type HeatmapLayout,
+	useHeatmapChart,
+} from "./context";
+export type { HeatmapHeaderProps } from "./header";
+export type { HeatmapLegendProps } from "./legend";
+export type { HeatmapChartProps } from "./props";
+export type { HeatmapTooltipProps } from "./tooltip";
 
 export const HeatmapChart = Object.assign(HeatmapChartRoot, {
-  Header: HeatmapHeader,
-  Cells: HeatmapCells,
-  Separator: HeatmapSeparator,
-  XAxis: HeatmapXAxis,
-  YAxis: HeatmapYAxis,
-  Tooltip: HeatmapTooltip,
-  Legend: HeatmapLegend,
+	Cells: HeatmapCells,
+	Header: HeatmapHeader,
+	Legend: HeatmapLegend,
+	Separator: HeatmapSeparator,
+	Tooltip: HeatmapTooltip,
+	XAxis: HeatmapXAxis,
+	YAxis: HeatmapYAxis,
 });

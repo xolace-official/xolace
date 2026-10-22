@@ -1,10 +1,10 @@
 import { v } from "convex/values";
 import { internalMutation } from "../../_generated/server";
-import { writeCalibrationInternal } from "../../semanticProfiles";
 import { posthog } from "../../posthog";
+import { writeCalibrationInternal } from "../../semanticProfiles";
 import {
-  computeCalibration,
-  deriveCalibrationSignals,
+	computeCalibration,
+	deriveCalibrationSignals,
 } from "./calibrationSignals";
 
 // =============================================================
@@ -42,32 +42,34 @@ const SIGNAL_WINDOW = 40;
  * and cheap, so it runs every consolidation regardless of the agent's write.
  */
 export const refreshCalibration = internalMutation({
-  args: { emotionalProfileId: v.id("emotional_profiles") },
-  handler: async (ctx, args) => {
-    const rows = await ctx.db
-      .query("sessions")
-      .withIndex("by_profile_time", (q) =>
-        q.eq("emotionalProfileId", args.emotionalProfileId),
-      )
-      .order("desc")
-      .take(SIGNAL_WINDOW);
+	args: { emotionalProfileId: v.id("emotional_profiles") },
+	handler: async (ctx, args) => {
+		const rows = await ctx.db
+			.query("sessions")
+			.withIndex("by_profile_time", (q) =>
+				q.eq("emotionalProfileId", args.emotionalProfileId)
+			)
+			.order("desc")
+			.take(SIGNAL_WINDOW);
 
-    const calibration = computeCalibration(deriveCalibrationSignals(rows));
-    if (!calibration) return null;
+		const calibration = computeCalibration(deriveCalibrationSignals(rows));
+		if (!calibration) {
+			return null;
+		}
 
-    const result = await writeCalibrationInternal(ctx, {
-      emotionalProfileId: args.emotionalProfileId,
-      calibration,
-      writerVersion: CALIBRATION_VERSION,
-    });
+		const result = await writeCalibrationInternal(ctx, {
+			calibration,
+			emotionalProfileId: args.emotionalProfileId,
+			writerVersion: CALIBRATION_VERSION,
+		});
 
-    if (result) {
-      await posthog.capture(ctx, {
-        distinctId: args.emotionalProfileId,
-        event: "reflect_calibration_written",
-        properties: { writerVersion: CALIBRATION_VERSION },
-      });
-    }
-    return null;
-  },
+		if (result) {
+			await posthog.capture(ctx, {
+				distinctId: args.emotionalProfileId,
+				event: "reflect_calibration_written",
+				properties: { writerVersion: CALIBRATION_VERSION },
+			});
+		}
+		return null;
+	},
 });

@@ -1,4 +1,4 @@
-import Constants from 'expo-constants';
+import Constants from "expo-constants";
 
 /**
  * App-level feature configuration.
@@ -10,33 +10,33 @@ import Constants from 'expo-constants';
  * Flip to true once RC dashboard + store products + API keys are configured.
  */
 const extra = Constants.expoConfig?.extra as
-  | {
-      revenueCat?: {
-        iosKey?: string;
-        androidKey?: string;
-        iosTestKey?: string;
-        androidTestKey?: string;
-      };
-    }
-  | undefined;
+	| {
+			revenueCat?: {
+				iosKey?: string;
+				androidKey?: string;
+				iosTestKey?: string;
+				androidTestKey?: string;
+			};
+	  }
+	| undefined;
 
 export const appConfig = {
-  features: {
-    /** ← flip true once RC dashboard + store products are configured. */
-    payments: true,
-  },
-  monetization: {
-    /** User is Plus if ANY of these entitlements is active. */
-    entitlements: ['xolace-plus'],
-    revenueCatApiKey: {
-      ios: extra?.revenueCat?.iosKey ?? '',
-      android: extra?.revenueCat?.androidKey ?? '',
-    },
-    revenueCatApiKeyTestStore: {
-      ios: extra?.revenueCat?.iosTestKey ?? '',
-      android: extra?.revenueCat?.androidTestKey ?? '',
-    },
-  },
-  /** Local free/plus switch while payments=false (client gates only). */
-  devIsPlus: false,
+	/** Local free/plus switch while payments=false (client gates only). */
+	devIsPlus: false,
+	features: {
+		/** ← flip true once RC dashboard + store products are configured. */
+		payments: true,
+	},
+	monetization: {
+		/** User is Plus if ANY of these entitlements is active. */
+		entitlements: ["xolace-plus"],
+		revenueCatApiKey: {
+			android: extra?.revenueCat?.androidKey ?? "",
+			ios: extra?.revenueCat?.iosKey ?? "",
+		},
+		revenueCatApiKeyTestStore: {
+			android: extra?.revenueCat?.androidTestKey ?? "",
+			ios: extra?.revenueCat?.iosTestKey ?? "",
+		},
+	},
 } as const;

@@ -44,39 +44,39 @@ const SUPPRESSED_THEMES = new Set(["trauma", "abuse", "neglect", "body-image"]);
  * would be returned as if it were a Specialty.
  */
 const THEME_SPECIALTY = new Map<string, Specialty>([
-  ["work", "burnout"],
-  ["burnout", "burnout"],
-  ["relationships", "relationships"],
-  ["conflict", "relationships"],
-  ["friendships", "relationships"],
-  ["romance", "relationships"],
-  ["family", "family"],
-  ["parenting", "family"],
-  ["caregiving", "family"],
-  ["identity", "identity"],
-  ["self-worth", "identity"],
-  ["purpose", "identity"],
-  ["belonging", "identity"],
-  ["change", "change"],
-  ["settling-in", "change"],
-  ["future", "change"],
-  ["loss", "grief"],
-  ["isolation", "loneliness"],
-  ["sleep", "sleep"],
-  ["addiction", "addiction"],
-  ["studies", "studies"],
+	["work", "burnout"],
+	["burnout", "burnout"],
+	["relationships", "relationships"],
+	["conflict", "relationships"],
+	["friendships", "relationships"],
+	["romance", "relationships"],
+	["family", "family"],
+	["parenting", "family"],
+	["caregiving", "family"],
+	["identity", "identity"],
+	["self-worth", "identity"],
+	["purpose", "identity"],
+	["belonging", "identity"],
+	["change", "change"],
+	["settling-in", "change"],
+	["future", "change"],
+	["loss", "grief"],
+	["isolation", "loneliness"],
+	["sleep", "sleep"],
+	["addiction", "addiction"],
+	["studies", "studies"],
 ]);
 
 /** Fallback, only consulted when no theme mapped. */
 const EMOTION_SPECIALTY = new Map<string, Specialty>([
-  ["anxiety", "anxiety"],
-  ["stress", "anxiety"],
-  ["overwhelm", "anxiety"],
-  ["grief", "grief"],
-  ["loneliness", "loneliness"],
-  ["homesickness", "loneliness"],
-  ["not-belonging", "loneliness"],
-  ["exhaustion", "sleep"],
+	["anxiety", "anxiety"],
+	["stress", "anxiety"],
+	["overwhelm", "anxiety"],
+	["grief", "grief"],
+	["loneliness", "loneliness"],
+	["homesickness", "loneliness"],
+	["not-belonging", "loneliness"],
+	["exhaustion", "sleep"],
 ]);
 
 /**
@@ -94,13 +94,13 @@ const EMOTION_SPECIALTY = new Map<string, Specialty>([
 const TAP_ONLY_ENTRY_TYPES = new Set(["word_cloud", "body_scan"]);
 
 export type SuggestionInput = {
-  thematicTags: string[];
-  primaryEmotion: string;
-  granularLabel?: string;
-  intensity: number;
-  safeguardLevel?: "none" | "gentle" | "elevated" | "crisis";
-  /** How the session was entered — see TAP_ONLY_ENTRY_TYPES. */
-  entryType: string;
+	thematicTags: string[];
+	primaryEmotion: string;
+	granularLabel?: string;
+	intensity: number;
+	safeguardLevel?: "none" | "gentle" | "elevated" | "crisis";
+	/** How the session was entered — see TAP_ONLY_ENTRY_TYPES. */
+	entryType: string;
 };
 
 /**
@@ -114,25 +114,33 @@ export type SuggestionInput = {
  * thing actually worth excluding is an entry mode, which is a fact.
  */
 export function suggestedSpecialty(input: SuggestionInput): Specialty | null {
-  const { thematicTags, intensity, safeguardLevel, entryType } = input;
+	const { thematicTags, intensity, safeguardLevel, entryType } = input;
 
-  if (thematicTags.some((tag) => SUPPRESSED_THEMES.has(tag.toLowerCase()))) {
-    return null;
-  }
-  if (TAP_ONLY_ENTRY_TYPES.has(entryType)) return null;
-  if (safeguardLevel === "elevated" || safeguardLevel === "crisis") return null;
-  if (intensity < MIN_SUGGESTION_INTENSITY) return null;
+	if (thematicTags.some((tag) => SUPPRESSED_THEMES.has(tag.toLowerCase()))) {
+		return null;
+	}
+	if (TAP_ONLY_ENTRY_TYPES.has(entryType)) {
+		return null;
+	}
+	if (safeguardLevel === "elevated" || safeguardLevel === "crisis") {
+		return null;
+	}
+	if (intensity < MIN_SUGGESTION_INTENSITY) {
+		return null;
+	}
 
-  for (const tag of thematicTags) {
-    const themeMatch = THEME_SPECIALTY.get(tag.toLowerCase());
-    if (themeMatch) return themeMatch;
-  }
+	for (const tag of thematicTags) {
+		const themeMatch = THEME_SPECIALTY.get(tag.toLowerCase());
+		if (themeMatch) {
+			return themeMatch;
+		}
+	}
 
-  return (
-    EMOTION_SPECIALTY.get(input.primaryEmotion.toLowerCase()) ??
-    EMOTION_SPECIALTY.get(input.granularLabel?.toLowerCase() ?? "") ??
-    null
-  );
+	return (
+		EMOTION_SPECIALTY.get(input.primaryEmotion.toLowerCase()) ??
+		EMOTION_SPECIALTY.get(input.granularLabel?.toLowerCase() ?? "") ??
+		null
+	);
 }
 
 /**
@@ -151,14 +159,14 @@ export function suggestedSpecialty(input: SuggestionInput): Specialty | null {
  * one extra suggestion in a week.
  */
 export function retainedSuggestion<T extends string>(
-  resolved: T | undefined,
-  stored: T | undefined,
-  safeguardLevel: SuggestionInput["safeguardLevel"],
+	resolved: T | undefined,
+	stored: T | undefined,
+	safeguardLevel: SuggestionInput["safeguardLevel"]
 ): T | undefined {
-  if (safeguardLevel === "elevated" || safeguardLevel === "crisis") {
-    return undefined;
-  }
-  return resolved ?? stored;
+	if (safeguardLevel === "elevated" || safeguardLevel === "crisis") {
+		return undefined;
+	}
+	return resolved ?? stored;
 }
 
 /**
@@ -180,22 +188,24 @@ export const MIN_AVERAGE_RATING = 3.0;
  * Unrated xolacers pass — being new is not a fault, and there is no tenure gate.
  */
 export function meetsRatingFloor(xolacer: {
-  ratingSum?: number;
-  ratingCount?: number;
+	ratingSum?: number;
+	ratingCount?: number;
 }): boolean {
-  const count = xolacer.ratingCount ?? 0;
-  if (count < MIN_RATINGS_TO_JUDGE) return true;
-  return (xolacer.ratingSum ?? 0) / count >= MIN_AVERAGE_RATING;
+	const count = xolacer.ratingCount ?? 0;
+	if (count < MIN_RATINGS_TO_JUDGE) {
+		return true;
+	}
+	return (xolacer.ratingSum ?? 0) / count >= MIN_AVERAGE_RATING;
 }
 
 /** FNV-1a. Deterministic and cheap; not a security primitive. */
 function hash32(input: string): number {
-  let hash = 0x811c9dc5;
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193);
-  }
-  return hash >>> 0;
+	let hash = 0x81_1c_9d_c5;
+	for (let i = 0; i < input.length; i++) {
+		hash ^= input.charCodeAt(i);
+		hash = Math.imul(hash, 0x01_00_01_93);
+	}
+	return hash >>> 0;
 }
 
 /**
@@ -220,15 +230,15 @@ function hash32(input: string): number {
  * session is re-read, so the suggested name doesn't flicker.
  */
 export function rankSuggestionCandidates<
-  T extends { xolacerProfileId: string; openCount: number; present: boolean },
+	T extends { xolacerProfileId: string; openCount: number; present: boolean },
 >(candidates: T[], sessionId: string): T[] {
-  return [...candidates].sort(
-    (a, b) =>
-      Number(b.present) - Number(a.present) ||
-      a.openCount - b.openCount ||
-      hash32(sessionId + a.xolacerProfileId) -
-        hash32(sessionId + b.xolacerProfileId),
-  );
+	return [...candidates].sort(
+		(a, b) =>
+			Number(b.present) - Number(a.present) ||
+			a.openCount - b.openCount ||
+			hash32(sessionId + a.xolacerProfileId) -
+				hash32(sessionId + b.xolacerProfileId)
+	);
 }
 
 /**
@@ -253,13 +263,13 @@ export type ConversationOrigin = "suggestion" | "direct";
  * found a burnout listener is exactly as raw and recent.
  */
 export function conversationOrigin(
-  recentlySuggested: readonly string[],
-  declared: readonly string[] | undefined,
+	recentlySuggested: readonly string[],
+	declared: readonly string[] | undefined
 ): ConversationOrigin {
-  const listensTo = new Set(declared ?? []);
-  return recentlySuggested.some((specialty) => listensTo.has(specialty))
-    ? "suggestion"
-    : "direct";
+	const listensTo = new Set(declared ?? []);
+	return recentlySuggested.some((specialty) => listensTo.has(specialty))
+		? "suggestion"
+		: "direct";
 }
 
 /**
@@ -269,12 +279,12 @@ export function conversationOrigin(
  * no timestamp is stored anywhere.
  */
 export function isInSuggestionCooldown(
-  recent: { createdAt: number; suggestedSpecialty?: string }[],
-  now: number,
+	recent: { createdAt: number; suggestedSpecialty?: string }[],
+	now: number
 ): boolean {
-  return recent.some(
-    (row) =>
-      row.suggestedSpecialty !== undefined &&
-      now - row.createdAt < SUGGESTION_COOLDOWN_MS,
-  );
+	return recent.some(
+		(row) =>
+			row.suggestedSpecialty !== undefined &&
+			now - row.createdAt < SUGGESTION_COOLDOWN_MS
+	);
 }

@@ -2,7 +2,11 @@ import { v } from "convex/values";
 import { query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
 import { activityActionTypeValidator } from "../lib/validators";
-import { ACTION_WEIGHTS, localDayKey, type ActivityActionType } from "./activityLog";
+import {
+	ACTION_WEIGHTS,
+	type ActivityActionType,
+	localDayKey,
+} from "./activityLog";
 import { profileTimezone } from "./state";
 
 // ponytail: one read of the whole log. ≤6 rows/day, so this covers years of
@@ -19,62 +23,78 @@ const MAX_FROZEN_ROWS = 2000;
  * in `actions` for the breakdown readout.
  */
 export const get = query({
-  args: {},
-  returns: v.object({
-    joinDay: v.string(),
-    /**
-     * The stored IANA timezone. The client derives today from it: a query's
-     * result is cached, so a server-side "today" would go stale at midnight.
-     */
-    timezone: v.string(),
-    days: v.array(
-      v.object({
-        dayKey: v.string(),
-        breadth: v.number(),
-        actions: v.array(v.object({ type: activityActionTypeValidator, count: v.number() })),
-      }),
-    ),
-    frozenDays: v.array(v.string()),
-    /** Days with a full-credit action — lifetime, never goes down. */
-    daysShowedUp: v.number(),
-  }),
-  handler: async (ctx) => {
-    const { profile } = await requireAuth(ctx);
-    const timezone = await profileTimezone(ctx, profile);
+	args: {},
+	handler: async (ctx) => {
+		const { profile } = await requireAuth(ctx);
+		const timezone = await profileTimezone(ctx, profile);
 
-    let logs = (
-      await ctx.db
-        .query("activity_log")
-        .withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) => q.eq("emotionalProfileId", profile._id))
-        .order("desc")
-        .take(MAX_LOG_ROWS)
-    ).reverse();
-    // A full page may have cut the oldest day mid-way — drop it rather than
-    // report it with partial breadth.
-    if (logs.length === MAX_LOG_ROWS) logs = logs.filter((log) => log.dayKey !== logs[0].dayKey);
-    const frozen = await ctx.db
-      .query("frozen_days")
-      .withIndex("by_emotionalProfileId_and_dayKey", (q) => q.eq("emotionalProfileId", profile._id))
-      .order("desc")
-      .take(MAX_FROZEN_ROWS);
+		let logs = (
+			await ctx.db
+				.query("activity_log")
+				.withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) =>
+					q.eq("emotionalProfileId", profile._id)
+				)
+				.order("desc")
+				.take(MAX_LOG_ROWS)
+		).reverse();
+		// A full page may have cut the oldest day mid-way — drop it rather than
+		// report it with partial breadth.
+		if (logs.length === MAX_LOG_ROWS) {
+			logs = logs.filter((log) => log.dayKey !== logs[0].dayKey);
+		}
+		const frozen = await ctx.db
+			.query("frozen_days")
+			.withIndex("by_emotionalProfileId_and_dayKey", (q) =>
+				q.eq("emotionalProfileId", profile._id)
+			)
+			.order("desc")
+			.take(MAX_FROZEN_ROWS);
 
-    // The index sorts by dayKey, so each day's rows arrive together.
-    const days: { dayKey: string; breadth: number; actions: { type: ActivityActionType; count: number }[] }[] = [];
-    for (const log of logs) {
-      let day = days[days.length - 1];
-      if (day?.dayKey !== log.dayKey) days.push((day = { dayKey: log.dayKey, breadth: 0, actions: [] }));
-      day.actions.push({ type: log.actionType, count: log.count });
-      if (ACTION_WEIGHTS[log.actionType] > 0) day.breadth++;
-    }
+		// The index sorts by dayKey, so each day's rows arrive together.
+		const days: {
+			dayKey: string;
+			breadth: number;
+			actions: { type: ActivityActionType; count: number }[];
+		}[] = [];
+		for (const log of logs) {
+			let day = days[days.length - 1];
+			if (day?.dayKey !== log.dayKey) {
+				days.push((day = { actions: [], breadth: 0, dayKey: log.dayKey }));
+			}
+			day.actions.push({ count: log.count, type: log.actionType });
+			if (ACTION_WEIGHTS[log.actionType] > 0) {
+				day.breadth++;
+			}
+		}
 
-    // Join is day one — or earlier, if log history predates the profile row.
-    const joinDay = localDayKey(profile.createdAt, timezone);
-    return {
-      joinDay: days[0] && days[0].dayKey < joinDay ? days[0].dayKey : joinDay,
-      timezone,
-      days,
-      frozenDays: frozen.map((f) => f.dayKey),
-      daysShowedUp: days.filter((d) => d.breadth > 0).length,
-    };
-  },
+		// Join is day one — or earlier, if log history predates the profile row.
+		const joinDay = localDayKey(profile.createdAt, timezone);
+		return {
+			days,
+			daysShowedUp: days.filter((d) => d.breadth > 0).length,
+			frozenDays: frozen.map((f) => f.dayKey),
+			joinDay: days[0] && days[0].dayKey < joinDay ? days[0].dayKey : joinDay,
+			timezone,
+		};
+	},
+	returns: v.object({
+		days: v.array(
+			v.object({
+				actions: v.array(
+					v.object({ count: v.number(), type: activityActionTypeValidator })
+				),
+				breadth: v.number(),
+				dayKey: v.string(),
+			})
+		),
+		/** Days with a full-credit action — lifetime, never goes down. */
+		daysShowedUp: v.number(),
+		frozenDays: v.array(v.string()),
+		joinDay: v.string(),
+		/**
+		 * The stored IANA timezone. The client derives today from it: a query's
+		 * result is cached, so a server-side "today" would go stale at midnight.
+		 */
+		timezone: v.string(),
+	}),
 });

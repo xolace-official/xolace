@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
-import { Pressable, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { ErrorBoundaryProps } from 'expo-router';
-import { Observe } from 'expo-observe';
-import * as Sentry from '@sentry/react-native';
+import * as Sentry from "@sentry/react-native";
+import { Observe } from "expo-observe";
+import type { ErrorBoundaryProps } from "expo-router";
+import { useEffect } from "react";
+import { Pressable, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AppText } from '@/src/components/shared/app-text';
+import { AppText } from "@/src/components/shared/app-text";
 
 /**
  * Root route error fallback (exported as `ErrorBoundary` from the root layout).
@@ -19,37 +19,42 @@ import { AppText } from '@/src/components/shared/app-text';
  * mental-health journal raw error text is both noise and a possible leak.
  */
 export function RouteError({ error, retry }: ErrorBoundaryProps) {
-  const insets = useSafeAreaInsets();
+	const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    Sentry.captureException(error);
-    Observe.reportError(error);
-  }, [error]);
+	useEffect(() => {
+		Sentry.captureException(error);
+		Observe.reportError(error);
+	}, [error]);
 
-  return (
-    <View
-      className="flex-1 items-center justify-center gap-3 bg-background px-10"
-      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
-    >
-      <AppText accessibilityRole="header" className="text-center text-xl font-semibold">
-        Something went wrong
-      </AppText>
-      <AppText className="text-center text-base text-muted">
-        Try again to reload this screen.
-      </AppText>
-      <Pressable
-        onPress={retry}
-        accessibilityRole="button"
-        accessibilityLabel="Try again"
-        className="mt-4 rounded-full bg-accent/10 px-8 py-3"
-      >
-        <AppText className="text-center text-base font-semibold text-accent">Try again</AppText>
-      </Pressable>
-      {__DEV__ ? (
-        <AppText selectable className="mt-6 text-center text-xs text-muted">
-          {error.message}
-        </AppText>
-      ) : null}
-    </View>
-  );
+	return (
+		<View
+			className="flex-1 items-center justify-center gap-3 bg-background px-10"
+			style={{ paddingBottom: insets.bottom, paddingTop: insets.top }}
+		>
+			<AppText
+				accessibilityRole="header"
+				className="text-center font-semibold text-xl"
+			>
+				Something went wrong
+			</AppText>
+			<AppText className="text-center text-base text-muted">
+				Try again to reload this screen.
+			</AppText>
+			<Pressable
+				accessibilityLabel="Try again"
+				accessibilityRole="button"
+				className="mt-4 rounded-full bg-accent/10 px-8 py-3"
+				onPress={retry}
+			>
+				<AppText className="text-center font-semibold text-accent text-base">
+					Try again
+				</AppText>
+			</Pressable>
+			{__DEV__ ? (
+				<AppText className="mt-6 text-center text-muted text-xs" selectable>
+					{error.message}
+				</AppText>
+			) : null}
+		</View>
+	);
 }

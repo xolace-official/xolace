@@ -28,11 +28,11 @@
  * a halo; the beat hangs a real review off it. It sits low and left so the
  * quote can drop straight down from it without crossing the field.
  */
-import { View } from 'react-native';
-import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
-import Svg, { Circle } from 'react-native-svg';
+import { View } from "react-native";
+import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
+import Svg, { Circle } from "react-native-svg";
 
-import { EmberGlow } from './ember-glow';
+import { EmberGlow } from "./ember-glow";
 
 export const VOICED = { x: 0.08, y: 0.78 };
 /** Points cleared around it, so the speaking ember never sits in a crowd. */
@@ -43,9 +43,9 @@ const CLEARANCE = 52;
  *  brightness of a near one. Kept small on purpose — past ~3pt a dot stops
  *  reading as a distant light and starts reading as an object. */
 const BANDS = [
-  { r: 1.1, opacity: 0.22, delay: 0 },
-  { r: 1.6, opacity: 0.4, delay: 200 },
-  { r: 2.2, opacity: 0.72, delay: 400 },
+	{ delay: 0, opacity: 0.22, r: 1.1 },
+	{ delay: 200, opacity: 0.4, r: 1.6 },
+	{ delay: 400, opacity: 0.72, r: 2.2 },
 ];
 
 /** After the beat's own text has landed — matches `PatternLine`'s FIND. */
@@ -54,8 +54,8 @@ const LIGHT = 700;
 /** Deterministic 0..1 from an integer. The usual fract(sin) trick: no seeded
  *  PRNG to carry around, same answer on every render and both platforms. */
 const noise = (n: number) => {
-  const v = Math.sin(n * 12.9898) * 43758.5453;
-  return v - Math.floor(v);
+	const v = Math.sin(n * 12.9898) * 43_758.5453;
+	return v - Math.floor(v);
 };
 
 /**
@@ -64,97 +64,112 @@ const noise = (n: number) => {
  * before neighbours start touching at the corners.
  */
 const scatter = (count: number, width: number, height: number) => {
-  const cols = Math.max(1, Math.round(Math.sqrt((count * width) / height)));
-  const rows = Math.max(1, Math.ceil(count / cols));
-  const cw = 1 / cols;
-  const ch = 1 / rows;
+	const cols = Math.max(1, Math.round(Math.sqrt((count * width) / height)));
+	const rows = Math.max(1, Math.ceil(count / cols));
+	const cw = 1 / cols;
+	const ch = 1 / rows;
 
-  const points: { x: number; y: number }[] = [];
-  for (let i = 0; i < count; i += 1) {
-    const x = (i % cols) * cw + cw * (0.11 + noise(i + 1) * 0.78);
-    const y = Math.floor(i / cols) * ch + ch * (0.11 + noise(i + 91) * 0.78);
-    // Measured in points, not in normalised units — the box is wider than it
-    // is tall, so a normalised radius would clear an ellipse.
-    const dx = (x - VOICED.x) * width;
-    const dy = (y - VOICED.y) * height;
-    const dist = Math.hypot(dx, dy);
+	const points: { x: number; y: number }[] = [];
+	for (let i = 0; i < count; i += 1) {
+		const x = (i % cols) * cw + cw * (0.11 + noise(i + 1) * 0.78);
+		const y = Math.floor(i / cols) * ch + ch * (0.11 + noise(i + 91) * 0.78);
+		// Measured in points, not in normalised units — the box is wider than it
+		// is tall, so a normalised radius would clear an ellipse.
+		const dx = (x - VOICED.x) * width;
+		const dy = (y - VOICED.y) * height;
+		const dist = Math.hypot(dx, dy);
 
-    // PUSHED OUT, NEVER DROPPED. Skipping a point inside the clearance would
-    // silently render fewer embers than `count`, and on this beat the drawn
-    // count IS the claim — a field that quietly loses three people is a false
-    // one. Projecting them onto the clearance edge keeps the arithmetic exact
-    // and reads as light holding a little space around itself.
-    const scale = dist < CLEARANCE ? CLEARANCE / Math.max(dist, 0.001) : 1;
-    points.push({ x: x * width + dx * (scale - 1), y: y * height + dy * (scale - 1) });
-  }
-  return points;
+		// PUSHED OUT, NEVER DROPPED. Skipping a point inside the clearance would
+		// silently render fewer embers than `count`, and on this beat the drawn
+		// count IS the claim — a field that quietly loses three people is a false
+		// one. Projecting them onto the clearance edge keeps the arithmetic exact
+		// and reads as light holding a little space around itself.
+		const scale = dist < CLEARANCE ? CLEARANCE / Math.max(dist, 0.001) : 1;
+		points.push({
+			x: x * width + dx * (scale - 1),
+			y: y * height + dy * (scale - 1),
+		});
+	}
+	return points;
 };
 
 export const EmberField = ({
-  count,
-  color,
-  width,
-  height,
+	count,
+	color,
+	width,
+	height,
 }: {
-  /** How many people. Drawn literally — see the note above. */
-  count: number;
-  color: string;
-  width: number;
-  height: number;
+	/** How many people. Drawn literally — see the note above. */
+	count: number;
+	color: string;
+	width: number;
+	height: number;
 }) => {
-  const reduced = useReducedMotion();
-  const points = scatter(Math.max(0, count - 1), width, height);
+	const reduced = useReducedMotion();
+	const points = scatter(Math.max(0, count - 1), width, height);
 
-  // The halo is drawn in points, not viewbox units, so it stays a light source
-  // rather than stretching with the box.
-  const halo = Math.min(width, height) * 0.42;
+	// The halo is drawn in points, not viewbox units, so it stays a light source
+	// rather than stretching with the box.
+	const halo = Math.min(width, height) * 0.42;
 
-  return (
-    <View style={{ width, height }} pointerEvents="none">
-      {BANDS.map((band, index) => (
-        <Animated.View
-          key={band.delay}
-          entering={reduced ? undefined : FadeIn.delay(LIGHT + band.delay).duration(900)}
-          className="absolute inset-0"
-        >
-          <Svg width={width} height={height}>
-            {points
-              // Dealt round-robin rather than sliced into thirds: contiguous
-              // slices follow the grid order, which would land each depth in
-              // its own horizontal stripe and turn the field into a gradient.
-              .filter((_, i) => i % BANDS.length === index)
-              .map((p) => (
-                <Circle
-                  key={`${p.x}-${p.y}`}
-                  cx={p.x}
-                  cy={p.y}
-                  r={band.r}
-                  fill={color}
-                  opacity={band.opacity}
-                />
-              ))}
-          </Svg>
-        </Animated.View>
-      ))}
+	return (
+		<View pointerEvents="none" style={{ height, width }}>
+			{BANDS.map((band, index) => (
+				<Animated.View
+					className="absolute inset-0"
+					entering={
+						reduced ? undefined : FadeIn.delay(LIGHT + band.delay).duration(900)
+					}
+					key={band.delay}
+				>
+					<Svg height={height} width={width}>
+						{points
+							// Dealt round-robin rather than sliced into thirds: contiguous
+							// slices follow the grid order, which would land each depth in
+							// its own horizontal stripe and turn the field into a gradient.
+							.filter((_, i) => i % BANDS.length === index)
+							.map((p) => (
+								<Circle
+									cx={p.x}
+									cy={p.y}
+									fill={color}
+									key={`${p.x}-${p.y}`}
+									opacity={band.opacity}
+									r={band.r}
+								/>
+							))}
+					</Svg>
+				</Animated.View>
+			))}
 
-      {/* The one with a voice. Last to arrive, and the only ember on the field
+			{/* The one with a voice. Last to arrive, and the only ember on the field
           with a halo — that is what marks the quote below as coming from
           inside the picture instead of sitting under it. */}
-      <Animated.View
-        entering={reduced ? undefined : FadeIn.delay(LIGHT + 700).duration(1000)}
-        className="absolute items-center justify-center"
-        style={{
-          left: VOICED.x * width - halo / 2,
-          top: VOICED.y * height - halo / 2,
-          width: halo,
-          height: halo,
-        }}
-      >
-        <View className="absolute inset-0">
-          <EmberGlow id="proof-voiced" size={halo} color={color} opacity={0.4} />
-        </View>
-        <View className="rounded-full w-1.5 h-1.5" style={{ backgroundColor: color }} />
-      </Animated.View>
-    </View>
-  );
+			<Animated.View
+				className="absolute items-center justify-center"
+				entering={
+					reduced ? undefined : FadeIn.delay(LIGHT + 700).duration(1000)
+				}
+				style={{
+					height: halo,
+					left: VOICED.x * width - halo / 2,
+					top: VOICED.y * height - halo / 2,
+					width: halo,
+				}}
+			>
+				<View className="absolute inset-0">
+					<EmberGlow
+						color={color}
+						id="proof-voiced"
+						opacity={0.4}
+						size={halo}
+					/>
+				</View>
+				<View
+					className="h-1.5 w-1.5 rounded-full"
+					style={{ backgroundColor: color }}
+				/>
+			</Animated.View>
+		</View>
+	);
 };

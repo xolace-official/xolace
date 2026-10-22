@@ -2,10 +2,10 @@ import { v } from "convex/values";
 import type { MutationCtx } from "../_generated/server";
 import { internalMutation } from "../_generated/server";
 import {
-  COHORT_EMOTIONS,
-  isCohortMatch,
-  WEEK_MS,
-  weekStartUtc,
+	COHORT_EMOTIONS,
+	isCohortMatch,
+	WEEK_MS,
+	weekStartUtc,
 } from "../lib/cohortCard";
 
 /**
@@ -30,82 +30,84 @@ import {
 const SCAN_CAP = 8000;
 
 export async function computeCohortCounts(
-  ctx: MutationCtx,
-  args: { weekOf?: number },
+	ctx: MutationCtx,
+	args: { weekOf?: number }
 ) {
-  const weekStart =
-    args.weekOf !== undefined
-      ? weekStartUtc(args.weekOf)
-      : weekStartUtc(Date.now()) - WEEK_MS;
-  const weekEnd = weekStart + WEEK_MS;
+	const weekStart =
+		args.weekOf === undefined
+			? weekStartUtc(Date.now()) - WEEK_MS
+			: weekStartUtc(args.weekOf);
+	const weekEnd = weekStart + WEEK_MS;
 
-  const rows = await ctx.db
-    .query("emotional_metadata")
-    .withIndex("by_createdAt", (q) =>
-      q.gte("createdAt", weekStart).lt("createdAt", weekEnd),
-    )
-    // One over the cap so saturation is detectable before anything is written.
-    .take(SCAN_CAP + 1);
+	const rows = await ctx.db
+		.query("emotional_metadata")
+		.withIndex("by_createdAt", (q) =>
+			q.gte("createdAt", weekStart).lt("createdAt", weekEnd)
+		)
+		// One over the cap so saturation is detectable before anything is written.
+		.take(SCAN_CAP + 1);
 
-  if (rows.length > SCAN_CAP) {
-    console.error(
-      "[cohortCounts] week scan hit SCAN_CAP — no row written. " +
-        "Rewrite as a batched fold before trusting these numbers.",
-      { weekStart, cap: SCAN_CAP },
-    );
-    // A partial count would be indistinguishable from a quiet week on the
-    // card, so leave last week's row (or no row) alone.
-    return { weekStart, scanned: rows.length, saturated: true, counts: {} };
-  }
+	if (rows.length > SCAN_CAP) {
+		console.error(
+			"[cohortCounts] week scan hit SCAN_CAP — no row written. " +
+				"Rewrite as a batched fold before trusting these numbers.",
+			{ cap: SCAN_CAP, weekStart }
+		);
+		// A partial count would be indistinguishable from a quiet week on the
+		// card, so leave last week's row (or no row) alone.
+		return { counts: {}, saturated: true, scanned: rows.length, weekStart };
+	}
 
-  // emotion → distinct emotionalProfileIds carrying it that week.
-  const campers = new Map<string, Set<string>>(
-    COHORT_EMOTIONS.map((e) => [e, new Set<string>()]),
-  );
+	// emotion → distinct emotionalProfileIds carrying it that week.
+	const campers = new Map<string, Set<string>>(
+		COHORT_EMOTIONS.map((e) => [e, new Set<string>()])
+	);
 
-  for (const row of rows) {
-    for (const emotion of COHORT_EMOTIONS) {
-      if (isCohortMatch(row, emotion)) {
-        campers.get(emotion)!.add(row.emotionalProfileId);
-      }
-    }
-  }
+	for (const row of rows) {
+		for (const emotion of COHORT_EMOTIONS) {
+			if (isCohortMatch(row, emotion)) {
+				campers.get(emotion)!.add(row.emotionalProfileId);
+			}
+		}
+	}
 
-  const counts: Record<string, number> = {};
-  for (const [emotion, set] of campers) counts[emotion] = set.size;
+	const counts: Record<string, number> = {};
+	for (const [emotion, set] of campers) {
+		counts[emotion] = set.size;
+	}
 
-  const existing = await ctx.db
-    .query("cohort_weekly_counts")
-    .withIndex("by_weekStart", (q) => q.eq("weekStart", weekStart))
-    .unique();
+	const existing = await ctx.db
+		.query("cohort_weekly_counts")
+		.withIndex("by_weekStart", (q) => q.eq("weekStart", weekStart))
+		.unique();
 
-  const doc = { weekStart, weekEnd, counts, computedAt: Date.now() };
-  if (existing) {
-    await ctx.db.replace("cohort_weekly_counts", existing._id, doc);
-  } else {
-    await ctx.db.insert("cohort_weekly_counts", doc);
-  }
+	const doc = { computedAt: Date.now(), counts, weekEnd, weekStart };
+	if (existing) {
+		await ctx.db.replace("cohort_weekly_counts", existing._id, doc);
+	} else {
+		await ctx.db.insert("cohort_weekly_counts", doc);
+	}
 
-  console.log("[cohortCounts] week counted.", {
-    weekStart,
-    scanned: rows.length,
-    counts,
-  });
+	console.log("[cohortCounts] week counted.", {
+		counts,
+		scanned: rows.length,
+		weekStart,
+	});
 
-  return { weekStart, scanned: rows.length, saturated: false, counts };
+	return { counts, saturated: false, scanned: rows.length, weekStart };
 }
 
 export const compute = internalMutation({
-  args: {
-    // Any timestamp inside the week to count. Omitted by the cron, which
-    // counts the week that just closed; passed when backfilling by hand.
-    weekOf: v.optional(v.number()),
-  },
-  returns: v.object({
-    weekStart: v.number(),
-    scanned: v.number(),
-    saturated: v.boolean(),
-    counts: v.record(v.string(), v.number()),
-  }),
-  handler: computeCohortCounts,
+	args: {
+		// Any timestamp inside the week to count. Omitted by the cron, which
+		// counts the week that just closed; passed when backfilling by hand.
+		weekOf: v.optional(v.number()),
+	},
+	handler: computeCohortCounts,
+	returns: v.object({
+		counts: v.record(v.string(), v.number()),
+		saturated: v.boolean(),
+		scanned: v.number(),
+		weekStart: v.number(),
+	}),
 });

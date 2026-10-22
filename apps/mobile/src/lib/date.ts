@@ -30,26 +30,31 @@
 export type DateLocale = string | undefined;
 
 export function startOfDay(date: Date): Date {
-  const copy = new Date(date);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
+	const copy = new Date(date);
+	copy.setHours(0, 0, 0, 0);
+	return copy;
 }
 
-export function isSameDay(a: Date | null | undefined, b: Date | null | undefined): boolean {
-  if (!a || !b) return false;
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+export function isSameDay(
+	a: Date | null | undefined,
+	b: Date | null | undefined
+): boolean {
+	if (!(a && b)) {
+		return false;
+	}
+	return (
+		a.getFullYear() === b.getFullYear() &&
+		a.getMonth() === b.getMonth() &&
+		a.getDate() === b.getDate()
+	);
 }
 
 export function isSameMonth(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
+	return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth();
 }
 
 export function startOfMonth(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), 1);
+	return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
 /**
@@ -57,35 +62,35 @@ export function startOfMonth(date: Date): Date {
  * this one — so a leap February needs no special case.
  */
 export function endOfMonth(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+	return new Date(date.getFullYear(), date.getMonth() + 1, 0);
 }
 
 export function addMonths(date: Date, months: number): Date {
-  const copy = new Date(date.getFullYear(), date.getMonth(), 1);
-  copy.setMonth(copy.getMonth() + months);
-  return copy;
+	const copy = new Date(date.getFullYear(), date.getMonth(), 1);
+	copy.setMonth(copy.getMonth() + months);
+	return copy;
 }
 
 export function addDays(date: Date, days: number): Date {
-  const copy = new Date(date);
-  copy.setDate(copy.getDate() + days);
-  return copy;
+	const copy = new Date(date);
+	copy.setDate(copy.getDate() + days);
+	return copy;
 }
 
 export function isBefore(a: Date, b: Date): boolean {
-  return startOfDay(a).getTime() < startOfDay(b).getTime();
+	return startOfDay(a).getTime() < startOfDay(b).getTime();
 }
 
 export function isAfter(a: Date, b: Date): boolean {
-  return startOfDay(a).getTime() > startOfDay(b).getTime();
+	return startOfDay(a).getTime() > startOfDay(b).getTime();
 }
 
 /** Inclusive at both ends, which is what a selected range means to a reader. */
 export function isWithin(date: Date, from: Date, to: Date): boolean {
-  const time = startOfDay(date).getTime();
-  const start = startOfDay(from).getTime();
-  const end = startOfDay(to).getTime();
-  return time >= Math.min(start, end) && time <= Math.max(start, end);
+	const time = startOfDay(date).getTime();
+	const start = startOfDay(from).getTime();
+	const end = startOfDay(to).getTime();
+	return time >= Math.min(start, end) && time <= Math.max(start, end);
 }
 
 /**
@@ -96,9 +101,13 @@ export function isWithin(date: Date, from: Date, to: Date): boolean {
  * that then compares as *after* the last selectable day.
  */
 export function clampDate(date: Date, min?: Date, max?: Date): Date {
-  if (min && isBefore(date, min)) return startOfDay(min);
-  if (max && isAfter(date, max)) return startOfDay(max);
-  return date;
+	if (min && isBefore(date, min)) {
+		return startOfDay(min);
+	}
+	if (max && isAfter(date, max)) {
+		return startOfDay(max);
+	}
+	return date;
 }
 
 /**
@@ -109,8 +118,10 @@ export function clampDate(date: Date, min?: Date, max?: Date): Date {
  * negative index and an `undefined` weekday name. Both directions wrap.
  */
 export function normalizeWeekStart(weekStartsOn: number): number {
-  if (!Number.isFinite(weekStartsOn)) return 0;
-  return ((Math.trunc(weekStartsOn) % 7) + 7) % 7;
+	if (!Number.isFinite(weekStartsOn)) {
+		return 0;
+	}
+	return ((Math.trunc(weekStartsOn) % 7) + 7) % 7;
 }
 
 /**
@@ -123,22 +134,24 @@ export function normalizeWeekStart(weekStartsOn: number): number {
  * calendar that says otherwise is wrong in a way its reader notices immediately.
  */
 export function localeWeekStart(locale: DateLocale): number {
-  try {
-    const tag = (locale ?? 'en').split('-u-')[0] || 'en';
-    const resolved = new Intl.Locale(tag) as Intl.Locale & {
-      getWeekInfo?: () => { firstDay?: number };
-      weekInfo?: { firstDay?: number };
-    };
-    // Proposed as a method and shipped as a property first; both are in the
-    // wild, and neither is guaranteed to be there at all.
-    const info = resolved.getWeekInfo?.() ?? resolved.weekInfo;
-    const first = info?.firstDay;
-    // `Intl` counts 1 = Monday … 7 = Sunday; `Date.getDay()` counts 0 = Sunday.
-    if (typeof first === 'number' && Number.isFinite(first)) return first % 7;
-  } catch {
-    // No week data in this build.
-  }
-  return 0;
+	try {
+		const tag = (locale ?? "en").split("-u-")[0] || "en";
+		const resolved = new Intl.Locale(tag) as Intl.Locale & {
+			getWeekInfo?: () => { firstDay?: number };
+			weekInfo?: { firstDay?: number };
+		};
+		// Proposed as a method and shipped as a property first; both are in the
+		// wild, and neither is guaranteed to be there at all.
+		const info = resolved.getWeekInfo?.() ?? resolved.weekInfo;
+		const first = info?.firstDay;
+		// `Intl` counts 1 = Monday … 7 = Sunday; `Date.getDay()` counts 0 = Sunday.
+		if (typeof first === "number" && Number.isFinite(first)) {
+			return first % 7;
+		}
+	} catch {
+		// No week data in this build.
+	}
+	return 0;
 }
 
 /**
@@ -156,20 +169,22 @@ export function localeWeekStart(locale: DateLocale): number {
  * month it has to open on is not the Gregorian 1st.
  */
 export function monthGrid(
-  month: Date,
-  weekStartsOn: number,
-  system: 'gregory' | 'islamic' = 'gregory',
-  locale?: DateLocale
+	month: Date,
+	weekStartsOn: number,
+	system: "gregory" | "islamic" = "gregory",
+	locale?: DateLocale
 ): Date[][] {
-  const first = startOfCalendarMonth(month, system, locale);
-  // How far back to the most recent `weekStartsOn`. The `+ 7` keeps the
-  // modulo positive when the week starts later than the first of the month.
-  const lead = (first.getDay() - normalizeWeekStart(weekStartsOn) + 7) % 7;
-  const start = addDays(first, -lead);
+	const first = startOfCalendarMonth(month, system, locale);
+	// How far back to the most recent `weekStartsOn`. The `+ 7` keeps the
+	// modulo positive when the week starts later than the first of the month.
+	const lead = (first.getDay() - normalizeWeekStart(weekStartsOn) + 7) % 7;
+	const start = addDays(first, -lead);
 
-  return Array.from({ length: 6 }, (_unusedWeek, week) =>
-    Array.from({ length: 7 }, (_unusedDay, day) => addDays(start, week * 7 + day))
-  );
+	return Array.from({ length: 6 }, (_unusedWeek, week) =>
+		Array.from({ length: 7 }, (_unusedDay, day) =>
+			addDays(start, week * 7 + day)
+		)
+	);
 }
 
 /**
@@ -194,37 +209,46 @@ export function monthGrid(
 const formatters = new Map<string, Intl.DateTimeFormat | null>();
 
 function formatter(
-  locale: DateLocale,
-  options: Intl.DateTimeFormatOptions
+	locale: DateLocale,
+	options: Intl.DateTimeFormatOptions
 ): Intl.DateTimeFormat | null {
-  // Sorted, so two call sites writing the same options in a different order
-  // share one entry rather than building two.
-  const shape = Object.keys(options)
-    .sort()
-    .map((key) => `${key}=${String(options[key as keyof Intl.DateTimeFormatOptions])}`)
-    .join(',');
-  const key = `${locale ?? ''}|${shape}`;
+	// Sorted, so two call sites writing the same options in a different order
+	// share one entry rather than building two.
+	const shape = Object.keys(options)
+		.sort()
+		.map(
+			(key) =>
+				`${key}=${String(options[key as keyof Intl.DateTimeFormatOptions])}`
+		)
+		.join(",");
+	const key = `${locale ?? ""}|${shape}`;
 
-  if (formatters.has(key)) return formatters.get(key) ?? null;
+	if (formatters.has(key)) {
+		return formatters.get(key) ?? null;
+	}
 
-  let made: Intl.DateTimeFormat | null = null;
-  try {
-    made = new Intl.DateTimeFormat(locale, options);
-  } catch {
-    made = null;
-  }
-  formatters.set(key, made);
-  return made;
+	let made: Intl.DateTimeFormat | null = null;
+	try {
+		made = new Intl.DateTimeFormat(locale, options);
+	} catch {
+		made = null;
+	}
+	formatters.set(key, made);
+	return made;
 }
 
-function format(date: Date, locale: DateLocale, options: Intl.DateTimeFormatOptions): string | null {
-  try {
-    return formatter(locale, options)?.format(date) ?? null;
-  } catch {
-    // Constructing succeeded and formatting still failed — some builds only
-    // discover a missing calendar at format time.
-    return null;
-  }
+function format(
+	date: Date,
+	locale: DateLocale,
+	options: Intl.DateTimeFormatOptions
+): string | null {
+	try {
+		return formatter(locale, options)?.format(date) ?? null;
+	} catch {
+		// Constructing succeeded and formatting still failed — some builds only
+		// discover a missing calendar at format time.
+		return null;
+	}
 }
 
 /**
@@ -237,9 +261,12 @@ function format(date: Date, locale: DateLocale, options: Intl.DateTimeFormatOpti
  * device kept answering in Hijri. Any extension already on the tag is dropped
  * first, so a caller passing `ar-u-ca-islamic` cannot end up with two.
  */
-function withCalendar(locale: DateLocale, calendar: 'gregory' | 'islamic'): string {
-  const base = (locale ?? 'en').split('-u-')[0] || 'en';
-  return `${base}-u-ca-${calendar}-nu-latn`;
+function withCalendar(
+	locale: DateLocale,
+	calendar: "gregory" | "islamic"
+): string {
+	const base = (locale ?? "en").split("-u-")[0] || "en";
+	return `${base}-u-ca-${calendar}-nu-latn`;
 }
 
 /**
@@ -252,16 +279,20 @@ function withCalendar(locale: DateLocale, calendar: 'gregory' | 'islamic'): stri
  * set.
  */
 function formatGregory(
-  date: Date,
-  locale: DateLocale,
-  options: Intl.DateTimeFormatOptions
+	date: Date,
+	locale: DateLocale,
+	options: Intl.DateTimeFormatOptions
 ): string | null {
-  return (
-    format(date, withCalendar(locale, 'gregory'), options) ??
-    // A build that cannot parse the extension at all still gets asked, in the
-    // hope that it honours the option instead.
-    format(date, locale, { ...options, calendar: 'gregory', numberingSystem: 'latn' })
-  );
+	return (
+		format(date, withCalendar(locale, "gregory"), options) ??
+		// A build that cannot parse the extension at all still gets asked, in the
+		// hope that it honours the option instead.
+		format(date, locale, {
+			...options,
+			calendar: "gregory",
+			numberingSystem: "latn",
+		})
+	);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -276,24 +307,29 @@ function formatGregory(
  * with the device's language is a surprise, and the caller who wants that can
  * ask for it.
  */
-export type CalendarSystem = 'gregory' | 'islamic' | 'auto';
+export type CalendarSystem = "gregory" | "islamic" | "auto";
 
 /** Year, month and day as the chosen calendar counts them. 1-based month. */
 export interface CalendarParts {
-  year: number;
-  month: number;
-  day: number;
+	day: number;
+	month: number;
+	year: number;
 }
 
 /** What `auto` resolves to for a locale, falling back to the Gregorian. */
-export function resolveCalendar(system: CalendarSystem, locale: DateLocale): 'gregory' | 'islamic' {
-  if (system !== 'auto') return system;
-  try {
-    const resolved = formatter(locale, {})?.resolvedOptions().calendar ?? '';
-    return resolved.startsWith('islamic') ? 'islamic' : 'gregory';
-  } catch {
-    return 'gregory';
-  }
+export function resolveCalendar(
+	system: CalendarSystem,
+	locale: DateLocale
+): "gregory" | "islamic" {
+	if (system !== "auto") {
+		return system;
+	}
+	try {
+		const resolved = formatter(locale, {})?.resolvedOptions().calendar ?? "";
+		return resolved.startsWith("islamic") ? "islamic" : "gregory";
+	} catch {
+		return "gregory";
+	}
 }
 
 /**
@@ -306,50 +342,65 @@ export function resolveCalendar(system: CalendarSystem, locale: DateLocale): 'gr
  * them end up in one set of digits.
  */
 export function calendarParts(
-  date: Date,
-  system: 'gregory' | 'islamic',
-  locale: DateLocale
+	date: Date,
+	system: "gregory" | "islamic",
+	locale: DateLocale
 ): CalendarParts {
-  if (system === 'gregory') {
-    return { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
-  }
-  try {
-    const parts = formatter(withCalendar(locale, 'islamic'), {
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric',
-    })?.formatToParts(date);
-    if (!parts) throw new Error('unusable');
-    const read = (type: string) => Number(parts.find((part) => part.type === type)?.value);
-    const year = read('year');
-    const month = read('month');
-    const day = read('day');
-    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
-      throw new Error('unusable');
-    }
-    return { year, month, day };
-  } catch {
-    // No islamic data in this build. Gregorian is wrong, but it is coherent —
-    // the grid, the caption and the cells will at least agree with each other.
-    return { year: date.getFullYear(), month: date.getMonth() + 1, day: date.getDate() };
-  }
+	if (system === "gregory") {
+		return {
+			day: date.getDate(),
+			month: date.getMonth() + 1,
+			year: date.getFullYear(),
+		};
+	}
+	try {
+		const parts = formatter(withCalendar(locale, "islamic"), {
+			day: "numeric",
+			month: "numeric",
+			year: "numeric",
+		})?.formatToParts(date);
+		if (!parts) {
+			throw new Error("unusable");
+		}
+		const read = (type: string) =>
+			Number(parts.find((part) => part.type === type)?.value);
+		const year = read("year");
+		const month = read("month");
+		const day = read("day");
+		if (
+			!(Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day))
+		) {
+			throw new Error("unusable");
+		}
+		return { day, month, year };
+	} catch {
+		// No islamic data in this build. Gregorian is wrong, but it is coherent —
+		// the grid, the caption and the cells will at least agree with each other.
+		return {
+			day: date.getDate(),
+			month: date.getMonth() + 1,
+			year: date.getFullYear(),
+		};
+	}
 }
 
 export function isSameCalendarMonth(
-  a: Date,
-  b: Date,
-  system: 'gregory' | 'islamic',
-  locale: DateLocale
+	a: Date,
+	b: Date,
+	system: "gregory" | "islamic",
+	locale: DateLocale
 ): boolean {
-  if (system === 'gregory') return isSameMonth(a, b);
-  const one = calendarParts(a, system, locale);
-  const two = calendarParts(b, system, locale);
-  return one.year === two.year && one.month === two.month;
+	if (system === "gregory") {
+		return isSameMonth(a, b);
+	}
+	const one = calendarParts(a, system, locale);
+	const two = calendarParts(b, system, locale);
+	return one.year === two.year && one.month === two.month;
 }
 
 /** Whether two days fall in the same year and month of the given calendar. */
 function sameCalendarMonthParts(a: CalendarParts, b: CalendarParts): boolean {
-  return a.year === b.year && a.month === b.month;
+	return a.year === b.year && a.month === b.month;
 }
 
 /**
@@ -367,85 +418,104 @@ function sameCalendarMonthParts(a: CalendarParts, b: CalendarParts): boolean {
  * end of its budget and then paged the calendar to the same month forever.
  */
 export function startOfCalendarMonth(
-  date: Date,
-  system: 'gregory' | 'islamic',
-  locale: DateLocale
+	date: Date,
+	system: "gregory" | "islamic",
+	locale: DateLocale
 ): Date {
-  if (system === 'gregory') return startOfMonth(date);
-  let cursor = startOfDay(date);
-  const target = calendarParts(cursor, system, locale);
-  // 32, not 31: one step more than the longest month, so the loop is bounded
-  // by a real answer rather than by running out.
-  for (let step = 0; step < 32; step += 1) {
-    const previous = addDays(cursor, -1);
-    if (!sameCalendarMonthParts(calendarParts(previous, system, locale), target)) {
-      return cursor;
-    }
-    cursor = previous;
-  }
-  return cursor;
+	if (system === "gregory") {
+		return startOfMonth(date);
+	}
+	let cursor = startOfDay(date);
+	const target = calendarParts(cursor, system, locale);
+	// 32, not 31: one step more than the longest month, so the loop is bounded
+	// by a real answer rather than by running out.
+	for (let step = 0; step < 32; step += 1) {
+		const previous = addDays(cursor, -1);
+		if (
+			!sameCalendarMonthParts(calendarParts(previous, system, locale), target)
+		) {
+			return cursor;
+		}
+		cursor = previous;
+	}
+	return cursor;
 }
 
 /** Days in the calendar month `date` falls in. */
 export function daysInCalendarMonth(
-  date: Date,
-  system: 'gregory' | 'islamic',
-  locale: DateLocale
+	date: Date,
+	system: "gregory" | "islamic",
+	locale: DateLocale
 ): number {
-  if (system === 'gregory') return endOfMonth(date).getDate();
-  const start = startOfCalendarMonth(date, system, locale);
-  const parts = calendarParts(start, system, locale);
-  // The first offset that lands outside this month is its length, whatever the
-  // day numbers along the way are called.
-  for (let length = 28; length <= 31; length += 1) {
-    if (!sameCalendarMonthParts(calendarParts(addDays(start, length), system, locale), parts)) {
-      return length;
-    }
-  }
-  return 30;
+	if (system === "gregory") {
+		return endOfMonth(date).getDate();
+	}
+	const start = startOfCalendarMonth(date, system, locale);
+	const parts = calendarParts(start, system, locale);
+	// The first offset that lands outside this month is its length, whatever the
+	// day numbers along the way are called.
+	for (let length = 28; length <= 31; length += 1) {
+		if (
+			!sameCalendarMonthParts(
+				calendarParts(addDays(start, length), system, locale),
+				parts
+			)
+		) {
+			return length;
+		}
+	}
+	return 30;
 }
 
 /** Page by whole calendar months, forwards or back. */
 export function addCalendarMonths(
-  date: Date,
-  months: number,
-  system: 'gregory' | 'islamic',
-  locale: DateLocale
+	date: Date,
+	months: number,
+	system: "gregory" | "islamic",
+	locale: DateLocale
 ): Date {
-  if (system === 'gregory') return addMonths(date, months);
-  let cursor = startOfCalendarMonth(date, system, locale);
-  for (let step = 0; step < Math.abs(months); step += 1) {
-    cursor =
-      months > 0
-        ? // One past the end of this month is the first of the next.
-          addDays(cursor, daysInCalendarMonth(cursor, system, locale))
-        : // One before the start of this month is somewhere in the previous
-          // one, which then gets walked back to its own first day.
-          startOfCalendarMonth(addDays(cursor, -1), system, locale);
-  }
-  return cursor;
+	if (system === "gregory") {
+		return addMonths(date, months);
+	}
+	let cursor = startOfCalendarMonth(date, system, locale);
+	for (let step = 0; step < Math.abs(months); step += 1) {
+		cursor =
+			months > 0
+				? // One past the end of this month is the first of the next.
+					addDays(cursor, daysInCalendarMonth(cursor, system, locale))
+				: // One before the start of this month is somewhere in the previous
+					// one, which then gets walked back to its own first day.
+					startOfCalendarMonth(addDays(cursor, -1), system, locale);
+	}
+	return cursor;
 }
 
 /** The day-of-month a cell shows. */
 export function calendarDayNumber(
-  date: Date,
-  system: 'gregory' | 'islamic',
-  locale: DateLocale
+	date: Date,
+	system: "gregory" | "islamic",
+	locale: DateLocale
 ): number {
-  return system === 'gregory' ? date.getDate() : calendarParts(date, system, locale).day;
+	return system === "gregory"
+		? date.getDate()
+		: calendarParts(date, system, locale).day;
 }
 
 /** "Ramadan 1447" or "March 2026", in whichever calendar is in force. */
 export function calendarMonthLabel(
-  date: Date,
-  system: 'gregory' | 'islamic',
-  locale: DateLocale
+	date: Date,
+	system: "gregory" | "islamic",
+	locale: DateLocale
 ): string {
-  if (system === 'gregory') return monthLabel(date, locale);
-  return (
-    format(date, withCalendar(locale, 'islamic'), { month: 'long', year: 'numeric' }) ??
-    monthLabel(date, locale)
-  );
+	if (system === "gregory") {
+		return monthLabel(date, locale);
+	}
+	return (
+		format(date, withCalendar(locale, "islamic"), {
+			month: "long",
+			year: "numeric",
+		}) ?? monthLabel(date, locale)
+	);
 }
 
 /**
@@ -457,124 +527,155 @@ export function calendarMonthLabel(
  * Gregorian month, which meant nothing at all.
  */
 export function calendarMonthNames(
-  reference: Date,
-  system: 'gregory' | 'islamic',
-  locale: DateLocale,
-  style: 'long' | 'short' = 'short'
+	reference: Date,
+	system: "gregory" | "islamic",
+	locale: DateLocale,
+	style: "long" | "short" = "short"
 ): string[] {
-  if (system === 'gregory') return monthNames(locale, style);
-  const names: string[] = [];
-  let cursor = startOfCalendarMonth(reference, system, locale);
-  // Back to month 1 of this year, then forward through all twelve.
-  cursor = addCalendarMonths(cursor, -(calendarParts(cursor, system, locale).month - 1), system, locale);
-  for (let month = 0; month < 12; month += 1) {
-    names.push(
-      format(cursor, withCalendar(locale, 'islamic'), { month: style }) ?? String(month + 1)
-    );
-    cursor = addCalendarMonths(cursor, 1, system, locale);
-  }
-  return names;
+	if (system === "gregory") {
+		return monthNames(locale, style);
+	}
+	const names: string[] = [];
+	let cursor = startOfCalendarMonth(reference, system, locale);
+	// Back to month 1 of this year, then forward through all twelve.
+	cursor = addCalendarMonths(
+		cursor,
+		-(calendarParts(cursor, system, locale).month - 1),
+		system,
+		locale
+	);
+	for (let month = 0; month < 12; month += 1) {
+		names.push(
+			format(cursor, withCalendar(locale, "islamic"), { month: style }) ??
+				String(month + 1)
+		);
+		cursor = addCalendarMonths(cursor, 1, system, locale);
+	}
+	return names;
 }
 
 /** The whole date read out, in whichever calendar is in force. */
 export function calendarLongDate(
-  date: Date,
-  system: 'gregory' | 'islamic',
-  locale: DateLocale
+	date: Date,
+	system: "gregory" | "islamic",
+	locale: DateLocale
 ): string {
-  if (system === 'gregory') return longDate(date, locale);
-  return (
-    format(date, withCalendar(locale, 'islamic'), {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }) ?? longDate(date, locale)
-  );
+	if (system === "gregory") {
+		return longDate(date, locale);
+	}
+	return (
+		format(date, withCalendar(locale, "islamic"), {
+			day: "numeric",
+			month: "long",
+			weekday: "long",
+			year: "numeric",
+		}) ?? longDate(date, locale)
+	);
 }
 
 /** The compact form a trigger shows, in whichever calendar is in force. */
 export function calendarShortDate(
-  date: Date,
-  system: 'gregory' | 'islamic',
-  locale: DateLocale
+	date: Date,
+	system: "gregory" | "islamic",
+	locale: DateLocale
 ): string {
-  if (system === 'gregory') return shortDate(date, locale);
-  return (
-    format(date, withCalendar(locale, 'islamic'), {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }) ?? shortDate(date, locale)
-  );
+	if (system === "gregory") {
+		return shortDate(date, locale);
+	}
+	return (
+		format(date, withCalendar(locale, "islamic"), {
+			day: "numeric",
+			month: "short",
+			year: "numeric",
+		}) ?? shortDate(date, locale)
+	);
 }
 
 const MONTHS_EN = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
+	"January",
+	"February",
+	"March",
+	"April",
+	"May",
+	"June",
+	"July",
+	"August",
+	"September",
+	"October",
+	"November",
+	"December",
 ];
 
-const WEEKDAYS_EN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 /** Month names in order, for the caption and its dropdown. */
-export function monthNames(locale: DateLocale, style: 'long' | 'short' = 'long'): string[] {
-  return MONTHS_EN.map((fallback, month) => {
-    const formatted = formatGregory(new Date(2021, month, 1), locale, { month: style });
-    return formatted ?? (style === 'short' ? fallback.slice(0, 3) : fallback);
-  });
+export function monthNames(
+	locale: DateLocale,
+	style: "long" | "short" = "long"
+): string[] {
+	return MONTHS_EN.map((fallback, month) => {
+		const formatted = formatGregory(new Date(2021, month, 1), locale, {
+			month: style,
+		});
+		return formatted ?? (style === "short" ? fallback.slice(0, 3) : fallback);
+	});
 }
 
 /** Column headings, rotated so the first one is `weekStartsOn`. */
 export function weekdayNames(
-  locale: DateLocale,
-  weekStartsOn: number,
-  /*
-   * `narrow` is a single letter in most locales, and several of them repeat —
-   * English has T twice and S twice. That is only safe where the column it
-   * heads is already unambiguous by position, which is why it is a caller's
-   * choice rather than the default.
-   */
-  width: 'short' | 'narrow' = 'short'
+	locale: DateLocale,
+	weekStartsOn: number,
+	/*
+	 * `narrow` is a single letter in most locales, and several of them repeat —
+	 * English has T twice and S twice. That is only safe where the column it
+	 * heads is already unambiguous by position, which is why it is a caller's
+	 * choice rather than the default.
+	 */
+	width: "short" | "narrow" = "short"
 ): string[] {
-  const first = normalizeWeekStart(weekStartsOn);
-  // 2021-08-01 was a Sunday, so adding the index lands on each weekday in turn.
-  return Array.from({ length: 7 }, (_unused, day) => {
-    const index = (day + first) % 7;
-    const formatted = formatGregory(new Date(2021, 7, 1 + index), locale, { weekday: width });
-    return formatted ?? (width === 'narrow' ? WEEKDAYS_EN[index]![0]! : WEEKDAYS_EN[index]!);
-  });
+	const first = normalizeWeekStart(weekStartsOn);
+	// 2021-08-01 was a Sunday, so adding the index lands on each weekday in turn.
+	return Array.from({ length: 7 }, (_unused, day) => {
+		const index = (day + first) % 7;
+		const formatted = formatGregory(new Date(2021, 7, 1 + index), locale, {
+			weekday: width,
+		});
+		return (
+			formatted ??
+			(width === "narrow" ? WEEKDAYS_EN[index]![0]! : WEEKDAYS_EN[index]!)
+		);
+	});
 }
 
 /** "March 2026", for the caption. */
 export function monthLabel(date: Date, locale: DateLocale): string {
-  return (
-    formatGregory(date, locale, { month: 'long', year: 'numeric' }) ??
-    `${MONTHS_EN[date.getMonth()]} ${date.getFullYear()}`
-  );
+	return (
+		formatGregory(date, locale, { month: "long", year: "numeric" }) ??
+		`${MONTHS_EN[date.getMonth()]} ${date.getFullYear()}`
+	);
 }
 
 /** "12 March 2026" — the whole date, for a screen reader to read out. */
 export function longDate(date: Date, locale: DateLocale): string {
-  return (
-    formatGregory(date, locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) ??
-    `${WEEKDAYS_EN[date.getDay()]} ${date.getDate()} ${MONTHS_EN[date.getMonth()]} ${date.getFullYear()}`
-  );
+	return (
+		formatGregory(date, locale, {
+			day: "numeric",
+			month: "long",
+			weekday: "long",
+			year: "numeric",
+		}) ??
+		`${WEEKDAYS_EN[date.getDay()]} ${date.getDate()} ${MONTHS_EN[date.getMonth()]} ${date.getFullYear()}`
+	);
 }
 
 /** "12 Mar 2026" — the compact form a trigger shows. */
 export function shortDate(date: Date, locale: DateLocale): string {
-  return (
-    formatGregory(date, locale, { day: 'numeric', month: 'short', year: 'numeric' }) ??
-    `${date.getDate()} ${MONTHS_EN[date.getMonth()]!.slice(0, 3)} ${date.getFullYear()}`
-  );
+	return (
+		formatGregory(date, locale, {
+			day: "numeric",
+			month: "short",
+			year: "numeric",
+		}) ??
+		`${date.getDate()} ${MONTHS_EN[date.getMonth()]!.slice(0, 3)} ${date.getFullYear()}`
+	);
 }

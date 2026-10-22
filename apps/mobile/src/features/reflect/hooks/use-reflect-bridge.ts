@@ -1,7 +1,10 @@
-import { useEffect } from 'react';
-import { useToast } from 'heroui-native';
-import { useAppStore } from '@/src/store/store';
-import type { ReflectionAction, ReflectionStateName } from '@/src/features/reflect/types';
+import { useToast } from "heroui-native";
+import { useEffect } from "react";
+import type {
+	ReflectionAction,
+	ReflectionStateName,
+} from "@/src/features/reflect/types";
+import { useAppStore } from "@/src/store/store";
 
 /**
  * The reflect screen's link to what is laid over home (the starter bubble).
@@ -14,31 +17,37 @@ import type { ReflectionAction, ReflectionStateName } from '@/src/features/refle
  * than left with nothing happening. Spent either way.
  */
 export function useReflectBridge(
-  screen: ReflectionStateName,
-  isLoading: boolean,
-  dispatch: (action: ReflectionAction) => void,
+	screen: ReflectionStateName,
+	isLoading: boolean,
+	dispatch: (action: ReflectionAction) => void
 ) {
-  const setSettled = useAppStore((s) => s.setReflectSettled);
-  // Anything laid over home (the starter bubble) waits for this, so it never
-  // arrives over the loader or ahead of the card's own 400ms fade-in.
-  useEffect(() => {
-    if (isLoading) return;
-    const t = setTimeout(() => setSettled(true), 500);
-    return () => {
-      clearTimeout(t);
-      setSettled(false);
-    };
-  }, [isLoading, setSettled]);
+	const setSettled = useAppStore((s) => s.setReflectSettled);
+	// Anything laid over home (the starter bubble) waits for this, so it never
+	// arrives over the loader or ahead of the card's own 400ms fade-in.
+	useEffect(() => {
+		if (isLoading) {
+			return;
+		}
+		const t = setTimeout(() => setSettled(true), 500);
+		return () => {
+			clearTimeout(t);
+			setSettled(false);
+		};
+	}, [isLoading, setSettled]);
 
-  const requested = useAppStore((s) => s.composerOpenRequested);
-  const clear = useAppStore((s) => s.clearComposerOpenRequest);
-  const { toast } = useToast();
+	const requested = useAppStore((s) => s.composerOpenRequested);
+	const clear = useAppStore((s) => s.clearComposerOpenRequest);
+	const { toast } = useToast();
 
-  useEffect(() => {
-    if (!requested) return;
-    clear();
-    if (screen === 'idle') dispatch({ type: 'TAP_INPUT' });
-    else if (screen !== 'typing' && screen !== 'typing-nudge')
-      toast.show({ label: 'Tap the card to start reflecting' });
-  }, [requested, screen, dispatch, clear, toast]);
+	useEffect(() => {
+		if (!requested) {
+			return;
+		}
+		clear();
+		if (screen === "idle") {
+			dispatch({ type: "TAP_INPUT" });
+		} else if (screen !== "typing" && screen !== "typing-nudge") {
+			toast.show({ label: "Tap the card to start reflecting" });
+		}
+	}, [requested, screen, dispatch, clear, toast]);
 }

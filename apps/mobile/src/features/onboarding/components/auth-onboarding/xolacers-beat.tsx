@@ -28,19 +28,24 @@
  *
  * The fire, sky and scrims belong to `HearthBackdrop` and are untouched here.
  */
-import { useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
-import { Image } from 'expo-image';
-import { SymbolView } from 'expo-symbols';
 
-import { AppText } from '@/src/components/shared/app-text';
-import type { StoryBeat } from '@/src/features/onboarding/story-beats';
-import { CompanionEmber } from './companion-ember';
-import { useDeckColor } from './deck-color';
-import { EmberGlow } from './ember-glow';
-import { deckFigureHeight, XOLACERS_SCALE } from './figure-metrics';
+import { Image } from "expo-image";
+import { SymbolView } from "expo-symbols";
+import { useWindowDimensions, View } from "react-native";
+import Animated, {
+	FadeIn,
+	FadeInDown,
+	useReducedMotion,
+} from "react-native-reanimated";
 
-const FIGURE = require('@/assets/images/flux/flux-sad.png');
+import { AppText } from "@/src/components/shared/app-text";
+import type { StoryBeat } from "@/src/features/onboarding/story-beats";
+import { CompanionEmber } from "./companion-ember";
+import { useDeckColor } from "./deck-color";
+import { EmberGlow } from "./ember-glow";
+import { deckFigureHeight, XOLACERS_SCALE } from "./figure-metrics";
+
+const FIGURE = require("@/assets/images/flux/flux-sad.png");
 
 const SRC_W = 635;
 const SRC_H = 1054;
@@ -88,99 +93,122 @@ const ARRIVE = 560;
 const WARMTH = 420;
 
 export const XolacersBeat = ({ beat }: { beat: StoryBeat }) => {
-  const ember = useDeckColor('ember');
-  const reduced = useReducedMotion();
-  const { height } = useWindowDimensions();
+	const ember = useDeckColor("ember");
+	const reduced = useReducedMotion();
+	const { height } = useWindowDimensions();
 
-  const figH = deckFigureHeight(height) * XOLACERS_SCALE;
-  const figW = figH * ASPECT;
+	const figH = deckFigureHeight(height) * XOLACERS_SCALE;
+	const figW = figH * ASPECT;
 
-  const faceGlow = figW * FACE_GLOW;
-  // Their ember sits at the character's eye height, measured from the same
-  // floor the figure is anchored to, so the two stay level at every size.
-  const companionBottom = FIGURE_FLOOR + figH * (1 - FACE_Y) - COMPANION / 2;
+	const faceGlow = figW * FACE_GLOW;
+	// Their ember sits at the character's eye height, measured from the same
+	// floor the figure is anchored to, so the two stay level at every size.
+	const companionBottom = FIGURE_FLOOR + figH * (1 - FACE_Y) - COMPANION / 2;
 
-  const enter = (index: number) =>
-    reduced ? undefined : FadeInDown.delay(index * STEP).duration(DUR);
+	const enter = (index: number) =>
+		reduced ? undefined : FadeInDown.delay(index * STEP).duration(DUR);
 
-  return (
-    <View className="flex-1 px-9 pt-6">
-      <Animated.View entering={enter(0)} className="flex-row items-center gap-2.5 mb-6">
-        <SymbolView name={beat.symbol} size={15} tintColor={ember} type="hierarchical" />
-        <AppText className="text-ember/75 text-[10.5px] uppercase tracking-[2.2px]">
-          {beat.label}
-        </AppText>
-      </Animated.View>
+	return (
+		<View className="flex-1 px-9 pt-6">
+			<Animated.View
+				className="mb-6 flex-row items-center gap-2.5"
+				entering={enter(0)}
+			>
+				<SymbolView
+					name={beat.symbol}
+					size={15}
+					tintColor={ember}
+					type="hierarchical"
+				/>
+				<AppText className="text-[10.5px] text-ember/75 uppercase tracking-[2.2px]">
+					{beat.label}
+				</AppText>
+			</Animated.View>
 
-      <Animated.View entering={enter(1)}>
-        <AppText className="text-foreground/95 text-[32px] leading-11.25 font-poppins-medium">
-          {beat.beat}
-        </AppText>
-      </Animated.View>
+			<Animated.View entering={enter(1)}>
+				<AppText className="font-poppins-medium text-[32px] text-foreground/95 leading-11.25">
+					{beat.beat}
+				</AppText>
+			</Animated.View>
 
-      <Animated.View entering={enter(2)}>
-        <AppText className="text-foreground/42 text-[14px] leading-6 mt-5 pr-4">
-          {beat.aside}
-        </AppText>
-      </Animated.View>
+			<Animated.View entering={enter(2)}>
+				<AppText className="mt-5 pr-4 text-[14px] text-foreground/42 leading-6">
+					{beat.aside}
+				</AppText>
+			</Animated.View>
 
-      {beat.tag ? (
-        <Animated.View entering={enter(3)}>
-          <AppText className="text-ember/75 text-[10.5px] uppercase mt-4 tracking-[2px]">
-            {beat.tag}
-          </AppText>
-        </Animated.View>
-      ) : null}
+			{beat.tag ? (
+				<Animated.View entering={enter(3)}>
+					<AppText className="mt-4 text-[10.5px] text-ember/75 uppercase tracking-[2px]">
+						{beat.tag}
+					</AppText>
+				</Animated.View>
+			) : null}
 
-      <View className="flex-1 min-h-3" />
+			<View className="min-h-3 flex-1" />
 
-      <Animated.View
-        entering={enter(4)}
-        pointerEvents="none"
-        className="items-center"
-        style={{ paddingRight: FIGURE_NUDGE, paddingBottom: FIGURE_FLOOR }}
-      >
-        <View style={{ width: figW, height: figH }}>
-          <Image source={FIGURE} style={{ width: figW, height: figH }} contentFit="contain" />
-          <Animated.View
-            entering={
-              reduced ? undefined : FadeIn.delay(4 * STEP + ARRIVE + WARMTH).duration(1000)
-            }
-            pointerEvents="none"
-            className="absolute"
-          >
-            <Image
-              source={FIGURE}
-              tintColor={ember}
-              style={{ width: figW, height: figH, opacity: WASH_ALPHA }}
-              contentFit="contain"
-            />
-          </Animated.View>
+			<Animated.View
+				className="items-center"
+				entering={enter(4)}
+				pointerEvents="none"
+				style={{ paddingBottom: FIGURE_FLOOR, paddingRight: FIGURE_NUDGE }}
+			>
+				<View style={{ height: figH, width: figW }}>
+					<Image
+						contentFit="contain"
+						source={FIGURE}
+						style={{ height: figH, width: figW }}
+					/>
+					<Animated.View
+						className="absolute"
+						entering={
+							reduced
+								? undefined
+								: FadeIn.delay(4 * STEP + ARRIVE + WARMTH).duration(1000)
+						}
+						pointerEvents="none"
+					>
+						<Image
+							contentFit="contain"
+							source={FIGURE}
+							style={{ height: figH, opacity: WASH_ALPHA, width: figW }}
+							tintColor={ember}
+						/>
+					</Animated.View>
 
-          <Animated.View
-            entering={
-              reduced ? undefined : FadeIn.delay(4 * STEP + ARRIVE + WARMTH).duration(900)
-            }
-            pointerEvents="none"
-            className="absolute"
-            style={{
-              left: (FACE_X + LIGHT_BIAS) * figW - faceGlow / 2,
-              top: FACE_Y * figH - faceGlow / 2,
-            }}
-          >
-            <EmberGlow id="xolacer-face" size={faceGlow} color={ember} opacity={0.5} />
-          </Animated.View>
-        </View>
-      </Animated.View>
+					<Animated.View
+						className="absolute"
+						entering={
+							reduced
+								? undefined
+								: FadeIn.delay(4 * STEP + ARRIVE + WARMTH).duration(900)
+						}
+						pointerEvents="none"
+						style={{
+							left: (FACE_X + LIGHT_BIAS) * figW - faceGlow / 2,
+							top: FACE_Y * figH - faceGlow / 2,
+						}}
+					>
+						<EmberGlow
+							color={ember}
+							id="xolacer-face"
+							opacity={0.5}
+							size={faceGlow}
+						/>
+					</Animated.View>
+				</View>
+			</Animated.View>
 
-      <Animated.View
-        entering={reduced ? undefined : FadeIn.delay(4 * STEP + ARRIVE).duration(1100)}
-        pointerEvents="none"
-        className="absolute"
-        style={{ right: COMPANION_RIGHT, bottom: companionBottom }}
-      >
-        <CompanionEmber color={ember} reduced={reduced} size={COMPANION} />
-      </Animated.View>
-    </View>
-  );
+			<Animated.View
+				className="absolute"
+				entering={
+					reduced ? undefined : FadeIn.delay(4 * STEP + ARRIVE).duration(1100)
+				}
+				pointerEvents="none"
+				style={{ bottom: companionBottom, right: COMPANION_RIGHT }}
+			>
+				<CompanionEmber color={ember} reduced={reduced} size={COMPANION} />
+			</Animated.View>
+		</View>
+	);
 };

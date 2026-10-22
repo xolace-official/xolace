@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
-import { useAuth } from '@clerk/expo';
-import { connectPlan } from '@/src/features/xolacer-chat/connect-plan';
-import { resetChatLocalData } from '@/src/features/xolacer-chat/offline-db';
-import { readStreamCredential } from '@/src/features/xolacer-chat/stream-credential';
+import { useAuth } from "@clerk/expo";
+import { useEffect } from "react";
+import { connectPlan } from "@/src/features/xolacer-chat/connect-plan";
+import { resetChatLocalData } from "@/src/features/xolacer-chat/offline-db";
+import { readStreamCredential } from "@/src/features/xolacer-chat/stream-credential";
 
 /**
  * The single reset choke point for on-device chat data.
@@ -18,21 +18,25 @@ import { readStreamCredential } from '@/src/features/xolacer-chat/stream-credent
  * `connectPlan` decides; this only carries it out.
  */
 export function ChatLocalDataGuard() {
-  const { isLoaded, userId } = useAuth();
+	const { isLoaded, userId } = useAuth();
 
-  useEffect(() => {
-    if (!isLoaded) return;
-    const { resetDb } = connectPlan({
-      cachedEnabled: false,
-      cachedCredential: readStreamCredential(),
-      liveStatus: undefined,
-      clerkUserId: userId ?? null,
-    });
-    if (!resetDb) return;
-    resetChatLocalData().catch((error) =>
-      console.error('[xolacer-chat] local data reset failed', error),
-    );
-  }, [isLoaded, userId]);
+	useEffect(() => {
+		if (!isLoaded) {
+			return;
+		}
+		const { resetDb } = connectPlan({
+			cachedCredential: readStreamCredential(),
+			cachedEnabled: false,
+			clerkUserId: userId ?? null,
+			liveStatus: undefined,
+		});
+		if (!resetDb) {
+			return;
+		}
+		resetChatLocalData().catch((error) =>
+			console.error("[xolacer-chat] local data reset failed", error)
+		);
+	}, [isLoaded, userId]);
 
-  return null;
+	return null;
 }

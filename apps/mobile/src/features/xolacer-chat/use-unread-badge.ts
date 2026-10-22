@@ -1,7 +1,7 @@
-import { useCallback, useSyncExternalStore } from 'react';
-import type { StreamChat } from 'stream-chat';
-import { useStreamStatus } from '@/src/features/xolacer-chat/providers/stream-chat-provider';
-import { badgeFromEvents } from '@/src/features/xolacer-chat/unread-badge';
+import { useCallback, useSyncExternalStore } from "react";
+import type { StreamChat } from "stream-chat";
+import { useStreamStatus } from "@/src/features/xolacer-chat/providers/stream-chat-provider";
+import { badgeFromEvents } from "@/src/features/xolacer-chat/unread-badge";
 
 /**
  * Held beside the client rather than read off `client.user`: the SDK only
@@ -12,19 +12,26 @@ import { badgeFromEvents } from '@/src/features/xolacer-chat/unread-badge';
  * folded for — a sign-out/sign-in reconnects the same instance as someone
  * else, whose count must not start from the previous user's total.
  */
-const totals = new WeakMap<StreamChat, { userId: string | undefined; total: number | null }>();
+const totals = new WeakMap<
+	StreamChat,
+	{ userId: string | undefined; total: number | null }
+>();
 
 function seed(client: StreamChat): number | null {
-  const me = client.user;
-  return me && 'total_unread_count' in me ? (me.total_unread_count ?? null) : null;
+	const me = client.user;
+	return me && "total_unread_count" in me
+		? (me.total_unread_count ?? null)
+		: null;
 }
 
 function totalFor(client: StreamChat): number | null {
-  const entry = totals.get(client);
-  if (entry && entry.userId === client.userID) return entry.total;
-  const total = seed(client);
-  totals.set(client, { userId: client.userID, total });
-  return total;
+	const entry = totals.get(client);
+	if (entry && entry.userId === client.userID) {
+		return entry.total;
+	}
+	const total = seed(client);
+	totals.set(client, { total, userId: client.userID });
+	return total;
 }
 
 /**
@@ -38,30 +45,34 @@ function totalFor(client: StreamChat): number | null {
  * badge a push just set is right until Stream says otherwise.
  */
 export function useUnreadBadge(): number | null {
-  const { client, status } = useStreamStatus();
-  const connected = status === 'ready' ? client : null;
+	const { client, status } = useStreamStatus();
+	const connected = status === "ready" ? client : null;
 
-  // Stable per client for the same reason as `useConversationUnreadCount`.
-  const subscribe = useCallback(
-    (onStoreChange: () => void) => {
-      if (!connected) return () => {};
-      totalFor(connected);
-      // Every subscriber writes the shared total and always notifies. Skipping
-      // "unchanged" here is wrong: the first listener to run has already
-      // updated the map, so every later one would see no change and never
-      // re-render — the tab badge froze while the icon badge moved. React
-      // bails out itself when the snapshot is equal.
-      const { unsubscribe } = connected.on((event) => {
-        totals.set(connected, {
-          userId: connected.userID,
-          total: badgeFromEvents(totalFor(connected) ?? 0, event),
-        });
-        onStoreChange();
-      });
-      return unsubscribe;
-    },
-    [connected],
-  );
+	// Stable per client for the same reason as `useConversationUnreadCount`.
+	const subscribe = useCallback(
+		(onStoreChange: () => void) => {
+			if (!connected) {
+				return () => {};
+			}
+			totalFor(connected);
+			// Every subscriber writes the shared total and always notifies. Skipping
+			// "unchanged" here is wrong: the first listener to run has already
+			// updated the map, so every later one would see no change and never
+			// re-render — the tab badge froze while the icon badge moved. React
+			// bails out itself when the snapshot is equal.
+			const { unsubscribe } = connected.on((event) => {
+				totals.set(connected, {
+					total: badgeFromEvents(totalFor(connected) ?? 0, event),
+					userId: connected.userID,
+				});
+				onStoreChange();
+			});
+			return unsubscribe;
+		},
+		[connected]
+	);
 
-  return useSyncExternalStore(subscribe, () => (connected ? totalFor(connected) : null));
+	return useSyncExternalStore(subscribe, () =>
+		connected ? totalFor(connected) : null
+	);
 }

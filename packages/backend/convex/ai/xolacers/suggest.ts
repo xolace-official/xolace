@@ -1,11 +1,11 @@
-import { v, type Infer } from "convex/values";
-import { action, type ActionCtx } from "../../_generated/server";
-import type { Id } from "../../_generated/dataModel";
+import { type Infer, v } from "convex/values";
 import { internal } from "../../_generated/api";
+import type { Id } from "../../_generated/dataModel";
+import { type ActionCtx, action } from "../../_generated/server";
+import { rateLimiter } from "../../lib/rateLimits";
+import { posthog } from "../../posthog";
 import { suggestionValidator } from "../../xolacerChat";
 import { SIMILARITY_FLOOR, similarityBand } from "../paths/bind";
-import { posthog } from "../../posthog";
-import { rateLimiter } from "../../lib/rateLimits";
 import { searchXolacers } from "./embed";
 
 type Suggestion = Infer<typeof suggestionValidator>;
@@ -29,56 +29,76 @@ type Suggestion = Infer<typeof suggestionValidator>;
  * (#574) — the score and the fallback only, never who was chosen.
  */
 export const sessionSuggestion = action({
-  args: { sessionId: v.id("sessions") },
-  returns: v.union(v.null(), suggestionValidator),
-  handler: async (ctx, { sessionId }): Promise<Suggestion | null> => {
-    const eligible: { emotionalProfileId: Id<"emotional_profiles">; rawInput?: string; candidates: Suggestion[] } | null =
-      await ctx.runQuery(internal.xolacerChat.suggestionCandidates, { sessionId });
-    if (!eligible || eligible.candidates.length === 0) return null;
-    const { emotionalProfileId, rawInput, candidates } = eligible;
-    const log = (search: "ran" | "failed" | "skipped", topScore?: number) =>
-      logSearch(ctx, emotionalProfileId, candidates, search, topScore);
-    // Over the bucket, the old ranker alone: only the embed spends a token.
-    if (
-      candidates.length === 1 ||
-      !rawInput ||
-      !(await rateLimiter.limit(ctx, "xolacerSuggestion", { key: emotionalProfileId })).ok
-    ) {
-      await log("skipped");
-      return candidates[0];
-    }
+	args: { sessionId: v.id("sessions") },
+	handler: async (ctx, { sessionId }): Promise<Suggestion | null> => {
+		const eligible: {
+			emotionalProfileId: Id<"emotional_profiles">;
+			rawInput?: string;
+			candidates: Suggestion[];
+		} | null = await ctx.runQuery(internal.xolacerChat.suggestionCandidates, {
+			sessionId,
+		});
+		if (!eligible || eligible.candidates.length === 0) {
+			return null;
+		}
+		const { emotionalProfileId, rawInput, candidates } = eligible;
+		const log = (search: "ran" | "failed" | "skipped", topScore?: number) =>
+			logSearch(ctx, emotionalProfileId, candidates, search, topScore);
+		// Over the bucket, the old ranker alone: only the embed spends a token.
+		if (
+			candidates.length === 1 ||
+			!rawInput ||
+			!(
+				await rateLimiter.limit(ctx, "xolacerSuggestion", {
+					key: emotionalProfileId,
+				})
+			).ok
+		) {
+			await log("skipped");
+			return candidates[0];
+		}
 
-    const similarity = await searchXolacers(ctx, rawInput);
-    if (!similarity) {
-      await log("failed");
-      return candidates[0];
-    }
-    const scores = candidates.map((c) => similarity[c.xolacerProfileId]).filter((s) => s !== undefined);
-    await log("ran", scores.length > 0 ? Math.max(...scores) : undefined);
-    const band = (id: Suggestion["xolacerProfileId"]) => {
-      const score = similarity[id];
-      return score !== undefined && score >= SIMILARITY_FLOOR.xolacer ? similarityBand(score) : -1;
-    };
-    // Stable sort: within a band the ranker's order stands.
-    return [...candidates].sort((a, b) => band(b.xolacerProfileId) - band(a.xolacerProfileId))[0];
-  },
+		const similarity = await searchXolacers(ctx, rawInput);
+		if (!similarity) {
+			await log("failed");
+			return candidates[0];
+		}
+		const scores = candidates
+			.map((c) => similarity[c.xolacerProfileId])
+			.filter((s) => s !== undefined);
+		await log("ran", scores.length > 0 ? Math.max(...scores) : undefined);
+		const band = (id: Suggestion["xolacerProfileId"]) => {
+			const score = similarity[id];
+			return score !== undefined && score >= SIMILARITY_FLOOR.xolacer
+				? similarityBand(score)
+				: -1;
+		};
+		// Stable sort: within a band the ranker's order stands.
+		return [...candidates].sort(
+			(a, b) => band(b.xolacerProfileId) - band(a.xolacerProfileId)
+		)[0];
+	},
+	returns: v.union(v.null(), suggestionValidator),
 });
 
 async function logSearch(
-  ctx: ActionCtx,
-  emotionalProfileId: Id<"emotional_profiles">,
-  candidates: Suggestion[],
-  search: "ran" | "failed" | "skipped",
-  topScore?: number,
+	ctx: ActionCtx,
+	emotionalProfileId: Id<"emotional_profiles">,
+	candidates: Suggestion[],
+	search: "ran" | "failed" | "skipped",
+	topScore?: number
 ) {
-  await posthog.capture(ctx, {
-    distinctId: emotionalProfileId,
-    event: "xolacer_suggestion_ranked",
-    properties: {
-      candidates: candidates.length,
-      search,
-      topScore,
-      fallback: search !== "ran" || topScore === undefined || topScore < SIMILARITY_FLOOR.xolacer,
-    },
-  });
+	await posthog.capture(ctx, {
+		distinctId: emotionalProfileId,
+		event: "xolacer_suggestion_ranked",
+		properties: {
+			candidates: candidates.length,
+			fallback:
+				search !== "ran" ||
+				topScore === undefined ||
+				topScore < SIMILARITY_FLOOR.xolacer,
+			search,
+			topScore,
+		},
+	});
 }

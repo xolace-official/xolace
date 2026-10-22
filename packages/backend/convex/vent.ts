@@ -1,19 +1,24 @@
 import { v } from "convex/values";
-import { internalMutation, action, internalAction, type ActionCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
+import {
+	type ActionCtx,
+	action,
+	internalAction,
+	internalMutation,
+} from "./_generated/server";
+import {
+	MODERATION_UNAVAILABLE,
+	moderateInput,
+} from "./ai/providers/moderation";
+import { transcribeAudio } from "./ai/transcribe";
+import { writeVentAcknowledgement } from "./ai/ventAcknowledge";
 import { requireAuth } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
-import { recordActivity } from "./streaks/activityLog";
-import { writeVentAcknowledgement } from "./ai/ventAcknowledge";
-import { transcribeAudio } from "./ai/transcribe";
-import { renderSemanticProfile } from "./semanticProfiles";
-import {
-  moderateInput,
-  MODERATION_UNAVAILABLE,
-} from "./ai/providers/moderation";
-import { resolveVoiceId, VENT_DEFAULT_VOICE_ID } from "./lib/voices";
 import { startOfTodayUTC } from "./lib/timeOfDay";
+import { resolveVoiceId, VENT_DEFAULT_VOICE_ID } from "./lib/voices";
+import { renderSemanticProfile } from "./semanticProfiles";
+import { recordActivity } from "./streaks/activityLog";
 
 const CRISIS_FALLBACK = "you don't have to carry this alone";
 
@@ -24,7 +29,7 @@ const MAX_INCREMENT_MINUTES_FREE = 3;
 const MAX_INCREMENT_MINUTES_PLUS = 5;
 
 function getMaxIncrementMinutes(premium: boolean): number {
-  return premium ? MAX_INCREMENT_MINUTES_PLUS : MAX_INCREMENT_MINUTES_FREE;
+	return premium ? MAX_INCREMENT_MINUTES_PLUS : MAX_INCREMENT_MINUTES_FREE;
 }
 // Mono 48kbps AAC ≈ 6KB/s. Used to sanity-check the client-claimed duration
 // against the actual payload so a tampered client can't under-report.
@@ -48,51 +53,54 @@ const VENT_AUDIO_TTL_MS = 60 * 60 * 1000;
  * Returns { allowed: false } without incrementing when cap is exceeded.
  */
 export const checkAndIncrementCap = internalMutation({
-  args: { minutes: v.number() },
-  handler: async (ctx, args) => {
-    const { profile } = await requireAuth(ctx);
-    const premium = await hasPremium(ctx, profile);
+	args: { minutes: v.number() },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
+		const premium = await hasPremium(ctx, profile);
 
-    const minutes = Math.min(
-      Math.max(Math.ceil(args.minutes), 1),
-      getMaxIncrementMinutes(premium),
-    );
+		const minutes = Math.min(
+			Math.max(Math.ceil(args.minutes), 1),
+			getMaxIncrementMinutes(premium)
+		);
 
-    const todayStart = startOfTodayUTC();
-    const capRaw = Number(
-      process.env[
-        premium
-          ? "ELEVENLABS_DAILY_CAP_MINUTES_PLUS"
-          : "ELEVENLABS_DAILY_CAP_MINUTES_FREE"
-      ] ?? (premium ? "8" : "2"),
-    );
-    const cap =
-      Number.isFinite(capRaw) && capRaw >= 0
-        ? Math.floor(capRaw)
-        : premium
-          ? 8
-          : 2;
+		const todayStart = startOfTodayUTC();
+		const capRaw = Number(
+			process.env[
+				premium
+					? "ELEVENLABS_DAILY_CAP_MINUTES_PLUS"
+					: "ELEVENLABS_DAILY_CAP_MINUTES_FREE"
+			] ?? (premium ? "8" : "2")
+		);
+		const cap =
+			Number.isFinite(capRaw) && capRaw >= 0
+				? Math.floor(capRaw)
+				: premium
+					? 8
+					: 2;
 
-    const needsReset =
-      !profile.ventDailyResetAt || profile.ventDailyResetAt < todayStart;
+		const needsReset =
+			!profile.ventDailyResetAt || profile.ventDailyResetAt < todayStart;
 
-    const currentUsed = needsReset ? 0 : (profile.ventDailyMinutesUsed ?? 0);
+		const currentUsed = needsReset ? 0 : (profile.ventDailyMinutesUsed ?? 0);
 
-    if (currentUsed >= cap) {
-      return { allowed: false as const };
-    }
+		if (currentUsed >= cap) {
+			return { allowed: false as const };
+		}
 
-    await ctx.db.patch("emotional_profiles", profile._id, {
-      ventDailyMinutesUsed: currentUsed + minutes,
-      ventDailyResetAt: needsReset ? todayStart : profile.ventDailyResetAt,
-      updatedAt: Date.now(),
-    });
-    // The charge is the vent's only server-side write — the burn itself is
-    // client-only — so a charged vent is the completed one.
-    await recordActivity(ctx, { emotionalProfileId: profile._id, actionType: "vent" });
+		await ctx.db.patch("emotional_profiles", profile._id, {
+			updatedAt: Date.now(),
+			ventDailyMinutesUsed: currentUsed + minutes,
+			ventDailyResetAt: needsReset ? todayStart : profile.ventDailyResetAt,
+		});
+		// The charge is the vent's only server-side write — the burn itself is
+		// client-only — so a charged vent is the completed one.
+		await recordActivity(ctx, {
+			actionType: "vent",
+			emotionalProfileId: profile._id,
+		});
 
-    return { allowed: true as const, emotionalProfileId: profile._id };
-  },
+		return { allowed: true as const, emotionalProfileId: profile._id };
+	},
 });
 
 /**
@@ -101,24 +109,24 @@ export const checkAndIncrementCap = internalMutation({
  * is already gone.
  */
 export const deleteVentAudio = internalMutation({
-  args: { storageId: v.id("_storage") },
-  handler: async (ctx, args) => {
-    await ctx.storage.delete(args.storageId);
-    return null;
-  },
+	args: { storageId: v.id("_storage") },
+	handler: async (ctx, args) => {
+		await ctx.storage.delete(args.storageId);
+		return null;
+	},
 });
 
 // Crisis keywords for the vent pipeline's server-side pre-filter. A hit is
 // confirmed via moderation before it changes behavior (see runVentPipeline).
 const CRISIS_KEYWORDS = [
-  "kill myself",
-  "hurt myself",
-  "end it",
-  "end my life",
-  "don't want to be here",
-  "want to die",
-  "suicidal",
-  "suicide",
+	"kill myself",
+	"hurt myself",
+	"end it",
+	"end my life",
+	"don't want to be here",
+	"want to die",
+	"suicidal",
+	"suicide",
 ];
 
 // Moderation may only DE-escalate a keyword hit, never escalate — so the
@@ -126,9 +134,9 @@ const CRISIS_KEYWORDS = [
 // static fallback line; a false negative riffs warmly over suicidal content.
 const CRISIS_CLEAR_THRESHOLD = 0.35;
 const SELF_HARM_CATEGORIES = [
-  "self-harm",
-  "self-harm/intent",
-  "self-harm/instructions",
+	"self-harm",
+	"self-harm/intent",
+	"self-harm/instructions",
 ] as const;
 
 /**
@@ -138,16 +146,18 @@ const SELF_HARM_CATEGORIES = [
  * unavailable, the keyword hit stands and we stay in crisis mode.
  */
 async function confirmCrisisWithModeration(
-  transcript: string,
+	transcript: string
 ): Promise<boolean> {
-  const moderation = await moderateInput(transcript);
-  if (moderation === MODERATION_UNAVAILABLE) {
-    console.warn("[vent] Moderation unavailable — keeping crisis flag (fail safe)");
-    return true;
-  }
-  return SELF_HARM_CATEGORIES.some(
-    (cat) => (moderation.categoryScores[cat] ?? 0) >= CRISIS_CLEAR_THRESHOLD,
-  );
+	const moderation = await moderateInput(transcript);
+	if (moderation === MODERATION_UNAVAILABLE) {
+		console.warn(
+			"[vent] Moderation unavailable — keeping crisis flag (fail safe)"
+		);
+		return true;
+	}
+	return SELF_HARM_CATEGORIES.some(
+		(cat) => (moderation.categoryScores[cat] ?? 0) >= CRISIS_CLEAR_THRESHOLD
+	);
 }
 
 // ---------------------------------------------------------------------------
@@ -155,12 +165,12 @@ async function confirmCrisisWithModeration(
 // ---------------------------------------------------------------------------
 
 type VentResult = {
-  words: string | null;
-  audioUrl: string | null;
-  isCrisis: boolean;
-  // True only when the daily cap blocked the pipeline — lets the client
-  // distinguish "limit reached" from a genuine (silent) pipeline failure.
-  capReached: boolean;
+	words: string | null;
+	audioUrl: string | null;
+	isCrisis: boolean;
+	// True only when the daily cap blocked the pipeline — lets the client
+	// distinguish "limit reached" from a genuine (silent) pipeline failure.
+	capReached: boolean;
 };
 
 /**
@@ -170,126 +180,141 @@ type VentResult = {
  * play the destruction animation regardless.
  */
 async function runVentPipeline(
-  ctx: ActionCtx,
-  audioBytes: ArrayBuffer,
-  emotionalProfileId?: Id<"emotional_profiles">,
+	ctx: ActionCtx,
+	audioBytes: ArrayBuffer,
+	emotionalProfileId?: Id<"emotional_profiles">
 ): Promise<VentResult> {
-  const apiKey = process.env.ELEVENLABS_VOICE_API_KEY;
-  if (!apiKey) {
-    console.error("[vent] ELEVENLABS_VOICE_API_KEY not set — skipping pipeline");
-    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
-  }
+	const apiKey = process.env.ELEVENLABS_VOICE_API_KEY;
+	if (!apiKey) {
+		console.error(
+			"[vent] ELEVENLABS_VOICE_API_KEY not set — skipping pipeline"
+		);
+		return { audioUrl: null, capReached: false, isCrisis: false, words: null };
+	}
 
-  // --- Step 1: Scribe v2 STT, run alongside the (read-only) semantic profile
-  // and resolved-voice fetches — both depend only on emotionalProfileId, not
-  // the transcript, so their cost is fully hidden behind the STT round-trip.
-  const [transcriptResult, semanticProfileDoc, voiceSlug] = await Promise.all([
-    transcribeAudio(apiKey, audioBytes),
-    emotionalProfileId
-      ? ctx.runQuery(internal.semanticProfiles.getCurrent, { emotionalProfileId })
-      : Promise.resolve(null),
-    emotionalProfileId
-      ? ctx.runQuery(internal.preferences.getResolvedVoiceSlug, { emotionalProfileId })
-      : Promise.resolve(null),
-  ]);
+	// --- Step 1: Scribe v2 STT, run alongside the (read-only) semantic profile
+	// and resolved-voice fetches — both depend only on emotionalProfileId, not
+	// the transcript, so their cost is fully hidden behind the STT round-trip.
+	const [transcriptResult, semanticProfileDoc, voiceSlug] = await Promise.all([
+		transcribeAudio(apiKey, audioBytes),
+		emotionalProfileId
+			? ctx.runQuery(internal.semanticProfiles.getCurrent, {
+					emotionalProfileId,
+				})
+			: Promise.resolve(null),
+		emotionalProfileId
+			? ctx.runQuery(internal.preferences.getResolvedVoiceSlug, {
+					emotionalProfileId,
+				})
+			: Promise.resolve(null),
+	]);
 
-  if (transcriptResult === null) {
-    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
-  }
-  const transcript = transcriptResult.taggedText;
+	if (transcriptResult === null) {
+		return { audioUrl: null, capReached: false, isCrisis: false, words: null };
+	}
+	const transcript = transcriptResult.taggedText;
 
-  if (transcript.length < 20) {
-    console.log("[vent] Transcript too short — skipping acknowledgement");
-    return { words: null, audioUrl: null, isCrisis: false, capReached: false };
-  }
+	if (transcript.length < 20) {
+		console.log("[vent] Transcript too short — skipping acknowledgement");
+		return { audioUrl: null, capReached: false, isCrisis: false, words: null };
+	}
 
-  console.log("[vent] Transcript length:", transcript.length, "(not stored)");
+	console.log("[vent] Transcript length:", transcript.length, "(not stored)");
 
-  const semanticProfile = semanticProfileDoc
-    ? renderSemanticProfile(semanticProfileDoc)
-    : null;
+	const semanticProfile = semanticProfileDoc
+		? renderSemanticProfile(semanticProfileDoc)
+		: null;
 
-  // --- Step 2: Crisis check (keyword pre-filter → moderation confirm) ---
-  const lower = transcript.toLowerCase();
-  let isCrisis = false;
-  if (CRISIS_KEYWORDS.some((kw) => lower.includes(kw))) {
-    isCrisis = await confirmCrisisWithModeration(transcript);
-    if (isCrisis) {
-      console.warn("[vent] Crisis confirmed — returning static fallback");
-    } else {
-      console.log("[vent] Crisis keyword cleared by moderation (idiom)");
-    }
-  }
+	// --- Step 2: Crisis check (keyword pre-filter → moderation confirm) ---
+	const lower = transcript.toLowerCase();
+	let isCrisis = false;
+	if (CRISIS_KEYWORDS.some((kw) => lower.includes(kw))) {
+		isCrisis = await confirmCrisisWithModeration(transcript);
+		if (isCrisis) {
+			console.warn("[vent] Crisis confirmed — returning static fallback");
+		} else {
+			console.log("[vent] Crisis keyword cleared by moderation (idiom)");
+		}
+	}
 
-  // --- Step 3: Generate acknowledgement words ---
-  let words: string | null = null;
-  if (isCrisis) {
-    words = CRISIS_FALLBACK;
-  } else {
-    try {
-      words =
-        (await writeVentAcknowledgement(transcript, semanticProfile)).trim() ||
-        null;
-      console.log("[vent] Acknowledgement:", words);
-    } catch (err) {
-      console.error("[vent] Claude acknowledgement failed:", err);
-    }
-  }
+	// --- Step 3: Generate acknowledgement words ---
+	let words: string | null = null;
+	if (isCrisis) {
+		words = CRISIS_FALLBACK;
+	} else {
+		try {
+			words =
+				(await writeVentAcknowledgement(transcript, semanticProfile)).trim() ||
+				null;
+			console.log("[vent] Acknowledgement:", words);
+		} catch (err) {
+			console.error("[vent] Claude acknowledgement failed:", err);
+		}
+	}
 
-  if (!words) return { words: null, audioUrl: null, isCrisis, capReached: false };
+	if (!words) {
+		return { audioUrl: null, capReached: false, isCrisis, words: null };
+	}
 
-  // --- Step 4: ElevenLabs TTS ---
-  let audioUrl: string | null = null;
-  const ttsController = new AbortController();
-  const ttsTimeout = setTimeout(() => ttsController.abort(), 30_000);
-  try {
-    const ventVoiceId = resolveVoiceId(voiceSlug ?? undefined, VENT_DEFAULT_VOICE_ID);
-    console.log("[vent] voice:", voiceSlug ?? "default", "->", ventVoiceId);
-    const ttsRes = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${ventVoiceId}`,
-      {
-        method: "POST",
-        headers: {
-          "xi-api-key": apiKey,
-          "Content-Type": "application/json",
-          Accept: "audio/mpeg",
-        },
-        body: JSON.stringify({
-          text: words,
-          model_id: "eleven_v3",
-          voice_settings: { stability: 0.4, use_speaker_boost: true },
-        }),
-        signal: ttsController.signal,
-      },
-    );
+	// --- Step 4: ElevenLabs TTS ---
+	let audioUrl: string | null = null;
+	const ttsController = new AbortController();
+	const ttsTimeout = setTimeout(() => ttsController.abort(), 30_000);
+	try {
+		const ventVoiceId = resolveVoiceId(
+			voiceSlug ?? undefined,
+			VENT_DEFAULT_VOICE_ID
+		);
+		console.log("[vent] voice:", voiceSlug ?? "default", "->", ventVoiceId);
+		const ttsRes = await fetch(
+			`https://api.elevenlabs.io/v1/text-to-speech/${ventVoiceId}`,
+			{
+				body: JSON.stringify({
+					model_id: "eleven_v3",
+					text: words,
+					voice_settings: { stability: 0.4, use_speaker_boost: true },
+				}),
+				headers: {
+					Accept: "audio/mpeg",
+					"Content-Type": "application/json",
+					"xi-api-key": apiKey,
+				},
+				method: "POST",
+				signal: ttsController.signal,
+			}
+		);
 
-    if (!ttsRes.ok) {
-      const body = await ttsRes.text();
-      console.error(`[vent] TTS error ${ttsRes.status}: ${body}`);
-    } else {
-      const audioBuffer = await ttsRes.arrayBuffer();
-      const audioBlob = new Blob([audioBuffer], { type: "audio/mpeg" });
-      const storageId = await ctx.storage.store(audioBlob);
-      audioUrl = await ctx.storage.getUrl(storageId);
-      // The client plays this once, right after the burn animation, then pops
-      // the route — the blob is never replayed or persisted. Nothing keeps its
-      // id anywhere, so schedule its own deletion or it orphans in storage
-      // forever. The TTL covers a user who backgrounds mid-coda and returns.
-      await ctx.scheduler.runAfter(VENT_AUDIO_TTL_MS, internal.vent.deleteVentAudio, {
-        storageId,
-      });
-    }
-  } catch (err) {
-    if (err instanceof Error && err.name === "AbortError") {
-      console.error("[vent] TTS request timed out");
-    } else {
-      console.error("[vent] TTS fetch failed:", err);
-    }
-  } finally {
-    clearTimeout(ttsTimeout);
-  }
+		if (ttsRes.ok) {
+			const audioBuffer = await ttsRes.arrayBuffer();
+			const audioBlob = new Blob([audioBuffer], { type: "audio/mpeg" });
+			const storageId = await ctx.storage.store(audioBlob);
+			audioUrl = await ctx.storage.getUrl(storageId);
+			// The client plays this once, right after the burn animation, then pops
+			// the route — the blob is never replayed or persisted. Nothing keeps its
+			// id anywhere, so schedule its own deletion or it orphans in storage
+			// forever. The TTL covers a user who backgrounds mid-coda and returns.
+			await ctx.scheduler.runAfter(
+				VENT_AUDIO_TTL_MS,
+				internal.vent.deleteVentAudio,
+				{
+					storageId,
+				}
+			);
+		} else {
+			const body = await ttsRes.text();
+			console.error(`[vent] TTS error ${ttsRes.status}: ${body}`);
+		}
+	} catch (err) {
+		if (err instanceof Error && err.name === "AbortError") {
+			console.error("[vent] TTS request timed out");
+		} else {
+			console.error("[vent] TTS fetch failed:", err);
+		}
+	} finally {
+		clearTimeout(ttsTimeout);
+	}
 
-  return { words, audioUrl, isCrisis, capReached: false };
+	return { audioUrl, capReached: false, isCrisis, words };
 }
 
 /**
@@ -297,10 +322,8 @@ async function runVentPipeline(
  * Useful for server-side testing. Transcript is never stored.
  */
 export const transcribeAndAcknowledge = internalAction({
-  args: { audioBytes: v.bytes() },
-  handler: async (ctx, args) => {
-    return runVentPipeline(ctx, args.audioBytes);
-  },
+	args: { audioBytes: v.bytes() },
+	handler: async (ctx, args) => runVentPipeline(ctx, args.audioBytes),
 });
 
 /**
@@ -311,28 +334,32 @@ export const transcribeAndAcknowledge = internalAction({
  * The client plays the destruction animation regardless of what comes back.
  */
 export const processVentAudio = action({
-  args: { audioBytes: v.bytes(), durationMs: v.number() },
-  handler: async (ctx, args): Promise<VentResult> => {
-    // Fast-fail only — full requireAuth (user, accountStatus, profile) runs
-    // inside checkAndIncrementCap below, transactionally with the cap charge.
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+	args: { audioBytes: v.bytes(), durationMs: v.number() },
+	handler: async (ctx, args): Promise<VentResult> => {
+		// Fast-fail only — full requireAuth (user, accountStatus, profile) runs
+		// inside checkAndIncrementCap below, transactionally with the cap charge.
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) {
+			throw new Error("Not authenticated");
+		}
 
-    // Charge actual usage: trust whichever is larger of the client-claimed
-    // duration and what the payload size implies, so under-reporting is moot.
-    const claimedSeconds = Math.max(args.durationMs, 0) / 1000;
-    const payloadSeconds = args.audioBytes.byteLength / AUDIO_BYTES_PER_SECOND;
-    const minutes = Math.max(claimedSeconds, payloadSeconds) / 60;
+		// Charge actual usage: trust whichever is larger of the client-claimed
+		// duration and what the payload size implies, so under-reporting is moot.
+		const claimedSeconds = Math.max(args.durationMs, 0) / 1000;
+		const payloadSeconds = args.audioBytes.byteLength / AUDIO_BYTES_PER_SECOND;
+		const minutes = Math.max(claimedSeconds, payloadSeconds) / 60;
 
-    const capResult: (
-      | { allowed: true; emotionalProfileId: Id<"emotional_profiles"> }
-      | { allowed: false }
-    ) = await ctx.runMutation(internal.vent.checkAndIncrementCap, { minutes });
-    if (!capResult.allowed) {
-      console.log("[vent] Daily cap reached — skipping pipeline");
-      return { words: null, audioUrl: null, isCrisis: false, capReached: true };
-    }
+		const capResult:
+			| { allowed: true; emotionalProfileId: Id<"emotional_profiles"> }
+			| { allowed: false } = await ctx.runMutation(
+			internal.vent.checkAndIncrementCap,
+			{ minutes }
+		);
+		if (!capResult.allowed) {
+			console.log("[vent] Daily cap reached — skipping pipeline");
+			return { audioUrl: null, capReached: true, isCrisis: false, words: null };
+		}
 
-    return runVentPipeline(ctx, args.audioBytes, capResult.emotionalProfileId);
-  },
+		return runVentPipeline(ctx, args.audioBytes, capResult.emotionalProfileId);
+	},
 });

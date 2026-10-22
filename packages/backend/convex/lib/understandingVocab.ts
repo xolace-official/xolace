@@ -8,19 +8,19 @@
 
 /** The original broad emotions. They have no parent. */
 const ROOT_EMOTIONS = [
-  "anger",
-  "sadness",
-  "grief",
-  "fear",
-  "anxiety",
-  "joy",
-  "love",
-  "surprise",
-  "disgust",
-  "shame",
-  "guilt",
-  "confusion",
-  "numbness",
+	"anger",
+	"sadness",
+	"grief",
+	"fear",
+	"anxiety",
+	"joy",
+	"love",
+	"surprise",
+	"disgust",
+	"shame",
+	"guilt",
+	"confusion",
+	"numbness",
 ] as const;
 
 /**
@@ -29,30 +29,32 @@ const ROOT_EMOTIONS = [
  * edit is never a silent miss (ADR 0018).
  */
 const CHILD_EMOTION_PARENT = {
-  stress: "anxiety",
-  overwhelm: "anxiety",
-  exhaustion: "numbness",
-  demotivation: "numbness",
-  "self-doubt": "shame",
-  embarrassment: "shame",
-  regret: "guilt",
-  uncertainty: "confusion",
-  loneliness: "sadness",
-  homesickness: "sadness",
-  "not-belonging": "sadness",
-  disappointment: "sadness",
-  hopelessness: "sadness",
-  frustration: "anger",
-  hope: "joy",
-  relief: "joy",
-  gratitude: "joy",
-  calm: "joy",
-  pride: "joy",
+	calm: "joy",
+	demotivation: "numbness",
+	disappointment: "sadness",
+	embarrassment: "shame",
+	exhaustion: "numbness",
+	frustration: "anger",
+	gratitude: "joy",
+	homesickness: "sadness",
+	hope: "joy",
+	hopelessness: "sadness",
+	loneliness: "sadness",
+	"not-belonging": "sadness",
+	overwhelm: "anxiety",
+	pride: "joy",
+	regret: "guilt",
+	relief: "joy",
+	"self-doubt": "shame",
+	stress: "anxiety",
+	uncertainty: "confusion",
 } as const;
 
 export const PRIMARY_EMOTIONS = [
-  ...ROOT_EMOTIONS,
-  ...(Object.keys(CHILD_EMOTION_PARENT) as (keyof typeof CHILD_EMOTION_PARENT)[]),
+	...ROOT_EMOTIONS,
+	...(Object.keys(
+		CHILD_EMOTION_PARENT
+	) as (keyof typeof CHILD_EMOTION_PARENT)[]),
 ] as const;
 
 export type PrimaryEmotion = (typeof PRIMARY_EMOTIONS)[number];
@@ -63,9 +65,9 @@ export type PrimaryEmotion = (typeof PRIMARY_EMOTIONS)[number];
  * Also used for unknown words (granular labels), which are returned as-is.
  */
 export function emotionFamily(emotion: string): string[] {
-  return hasOwn(CHILD_EMOTION_PARENT, emotion)
-    ? [emotion, (CHILD_EMOTION_PARENT as Record<string, string>)[emotion]]
-    : [emotion];
+	return hasOwn(CHILD_EMOTION_PARENT, emotion)
+		? [emotion, (CHILD_EMOTION_PARENT as Record<string, string>)[emotion]]
+		: [emotion];
 }
 
 /**
@@ -77,78 +79,78 @@ export function emotionFamily(emotion: string): string[] {
  * too (#536).
  */
 export function freeEmotionFamily(word: string): string[] {
-  const w = word.trim().toLowerCase();
-  return [...new Set([w, ...emotionFamily(canonicalFacet("emotion", w))])];
+	const w = word.trim().toLowerCase();
+	return [...new Set([w, ...emotionFamily(canonicalFacet("emotion", w))])];
 }
 
 /** Own-property check, so inherited members ("constructor", …) never count as vocabulary. */
 function hasOwn(obj: object, key: string): boolean {
-  return Object.prototype.hasOwnProperty.call(obj, key);
+	return Object.hasOwn(obj, key);
 }
 
 export const THEMATIC_TAGS = [
-  "work",
-  "relationships",
-  "family",
-  "identity",
-  "health",
-  "finances",
-  "purpose",
-  "self-worth",
-  "loss",
-  "change",
-  "conflict",
-  "isolation",
-  "achievement",
-  "creativity",
-  "trauma",
-  "abuse",
-  "neglect",
-  "studies",
-  "friendships",
-  "romance",
-  "belonging",
-  "settling-in",
-  "future",
-  "burnout",
-  "sleep",
-  "parenting",
-  "caregiving",
-  "addiction",
-  "body-image",
-  "social-media",
-  "housing",
-  // #571: try-this themes (#560) — following the news, measuring up to others.
-  "news",
-  "comparison",
+	"work",
+	"relationships",
+	"family",
+	"identity",
+	"health",
+	"finances",
+	"purpose",
+	"self-worth",
+	"loss",
+	"change",
+	"conflict",
+	"isolation",
+	"achievement",
+	"creativity",
+	"trauma",
+	"abuse",
+	"neglect",
+	"studies",
+	"friendships",
+	"romance",
+	"belonging",
+	"settling-in",
+	"future",
+	"burnout",
+	"sleep",
+	"parenting",
+	"caregiving",
+	"addiction",
+	"body-image",
+	"social-media",
+	"housing",
+	// #571: try-this themes (#560) — following the news, measuring up to others.
+	"news",
+	"comparison",
 ] as const;
 
 export type ThematicTag = (typeof THEMATIC_TAGS)[number];
 
 /** The 8 scored domains (CONTEXT.md, #486). Keys, not labels. */
 export const DOMAINS = [
-  "self",
-  "purpose",
-  "work",
-  "love",
-  "family",
-  "belonging",
-  "health",
-  "money",
+	"self",
+	"purpose",
+	"work",
+	"love",
+	"family",
+	"belonging",
+	"health",
+	"money",
 ] as const;
 
 export type Domain = (typeof DOMAINS)[number];
 
 /** The names people see (the insights screen uses the same). */
 export const DOMAIN_LABELS: Record<Domain, string> = {
-  self: "Self",
-  purpose: "Purpose & Future",
-  work: "Work & Studies",
-  love: "Love & Friendship",
-  family: "Family",
-  belonging: "Belonging",
-  health: "Health & Rest",
-  money: "Money & Home",
+	belonging: "Belonging",
+	family: "Family",
+	health: "Health & Rest",
+	love: "Love & Friendship",
+	money: "Money & Home",
+	purpose: "Purpose & Future",
+	self: "Self",
+	work: "Work & Studies",
 };
 
 /**
@@ -157,45 +159,48 @@ export const DOMAIN_LABELS: Record<Domain, string> = {
  * Texture says what is happening, not where; sensitive is never scored or
  * shown. Neither gives a reading, and neither stops the session's other tags.
  */
-export const LIFE_AREA_HOME: Record<ThematicTag, Domain | "texture" | "sensitive"> = {
-  "self-worth": "self",
-  identity: "self",
-  "body-image": "self",
-  purpose: "purpose",
-  future: "purpose",
-  creativity: "purpose",
-  work: "work",
-  studies: "work",
-  burnout: "work",
-  relationships: "love",
-  romance: "love",
-  friendships: "love",
-  family: "family",
-  parenting: "family",
-  caregiving: "family",
-  belonging: "belonging",
-  "settling-in": "belonging",
-  isolation: "belonging",
-  "social-media": "belonging",
-  health: "health",
-  sleep: "health",
-  finances: "money",
-  housing: "money",
-  loss: "texture",
-  change: "texture",
-  conflict: "texture",
-  achievement: "texture",
-  news: "texture",
-  comparison: "self",
-  trauma: "sensitive",
-  abuse: "sensitive",
-  neglect: "sensitive",
-  addiction: "sensitive",
+export const LIFE_AREA_HOME: Record<
+	ThematicTag,
+	Domain | "texture" | "sensitive"
+> = {
+	abuse: "sensitive",
+	achievement: "texture",
+	addiction: "sensitive",
+	belonging: "belonging",
+	"body-image": "self",
+	burnout: "work",
+	caregiving: "family",
+	change: "texture",
+	comparison: "self",
+	conflict: "texture",
+	creativity: "purpose",
+	family: "family",
+	finances: "money",
+	friendships: "love",
+	future: "purpose",
+	health: "health",
+	housing: "money",
+	identity: "self",
+	isolation: "belonging",
+	loss: "texture",
+	neglect: "sensitive",
+	news: "texture",
+	parenting: "family",
+	purpose: "purpose",
+	relationships: "love",
+	romance: "love",
+	"self-worth": "self",
+	"settling-in": "belonging",
+	sleep: "health",
+	"social-media": "belonging",
+	studies: "work",
+	trauma: "sensitive",
+	work: "work",
 };
 
 /** The life areas whose home is this domain. */
 export const lifeAreasOf = (domain: Domain): ThematicTag[] =>
-  THEMATIC_TAGS.filter((tag) => LIFE_AREA_HOME[tag] === domain);
+	THEMATIC_TAGS.filter((tag) => LIFE_AREA_HOME[tag] === domain);
 
 /**
  * Tags older classifier versions wrote outside the closed list (#490). Two are
@@ -203,20 +208,22 @@ export const lifeAreasOf = (domain: Domain): ThematicTag[] =>
  * (trust, mood, overwhelm, …) is ignored.
  */
 const LEGACY_LIFE_AREA: Record<string, ThematicTag> = {
-  direction: "purpose",
-  "self-awareness": "identity",
+	direction: "purpose",
+	"self-awareness": "identity",
 };
 
 /** The domain a tag scores, or null when it gives no reading. */
 export function domainOf(tag: string): Domain | null {
-  const area = hasOwn(LIFE_AREA_HOME, tag)
-    ? (tag as ThematicTag)
-    : hasOwn(LEGACY_LIFE_AREA, tag)
-      ? LEGACY_LIFE_AREA[tag]
-      : null;
-  if (!area) return null;
-  const home = LIFE_AREA_HOME[area];
-  return home === "texture" || home === "sensitive" ? null : home;
+	const area = hasOwn(LIFE_AREA_HOME, tag)
+		? (tag as ThematicTag)
+		: hasOwn(LEGACY_LIFE_AREA, tag)
+			? LEGACY_LIFE_AREA[tag]
+			: null;
+	if (!area) {
+		return null;
+	}
+	const home = LIFE_AREA_HOME[area];
+	return home === "texture" || home === "sensitive" ? null : home;
 }
 
 /**
@@ -225,75 +232,77 @@ export function domainOf(tag: string): Domain | null {
  * absent: it is the Daily Mood scale, not an emotion (ADR 0002).
  */
 const ALIASES: Record<"emotion" | "lifeArea", Record<string, string>> = {
-  emotion: {
-    anxious: "anxiety",
-    grieving: "grief",
-    lonely: "loneliness",
-    stressed: "stress",
-    overwhelmed: "overwhelm",
-    "self-doubting": "self-doubt",
-    unmotivated: "demotivation",
-    uncertain: "uncertainty",
-    hopeful: "hope",
-    homesick: "homesickness",
-    "out-of-place": "not-belonging",
-    // Free-text secondaries the classifier writes (#536). Words that could go
-    // either way next to love or joy (longing, jealousy, irritation) are left
-    // out on purpose: an unknown word changes nothing.
-    heartbreak: "grief",
-    heartache: "grief",
-    heartbroken: "grief",
-    bereavement: "grief",
-    sorrow: "sadness",
-    sad: "sadness",
-    hopeless: "hopelessness",
-    hurt: "sadness",
-    pain: "sadness",
-    despair: "sadness",
-    emptiness: "sadness",
-    helplessness: "sadness",
-    isolation: "sadness",
-    disconnection: "sadness",
-    rejection: "sadness",
-    dread: "fear",
-    scared: "fear",
-    afraid: "fear",
-    terrified: "fear",
-    frightened: "fear",
-    terror: "fear",
-    panic: "anxiety",
-    worry: "anxiety",
-    nervousness: "anxiety",
-    desperation: "anxiety",
-    desperate: "anxiety",
-    worried: "anxiety",
-    insecurity: "anxiety",
-    resentment: "anger",
-    rage: "anger",
-    angry: "anger",
-    bitterness: "anger",
-    betrayal: "anger",
-    resignation: "numbness",
-    apathy: "numbness",
-    worthlessness: "shame",
-    inadequacy: "shame",
-    humiliation: "shame",
-    ashamed: "shame",
-    remorse: "guilt",
-    guilty: "guilt",
-    revulsion: "disgust",
-  },
-  lifeArea: {
-    money: "finances",
-    wellbeing: "health",
-    "grief-and-loss": "loss",
-    "life-after-uni": "future",
-  },
+	emotion: {
+		afraid: "fear",
+		angry: "anger",
+		anxious: "anxiety",
+		apathy: "numbness",
+		ashamed: "shame",
+		bereavement: "grief",
+		betrayal: "anger",
+		bitterness: "anger",
+		despair: "sadness",
+		desperate: "anxiety",
+		desperation: "anxiety",
+		disconnection: "sadness",
+		dread: "fear",
+		emptiness: "sadness",
+		frightened: "fear",
+		grieving: "grief",
+		guilty: "guilt",
+		heartache: "grief",
+		// Free-text secondaries the classifier writes (#536). Words that could go
+		// either way next to love or joy (longing, jealousy, irritation) are left
+		// out on purpose: an unknown word changes nothing.
+		heartbreak: "grief",
+		heartbroken: "grief",
+		helplessness: "sadness",
+		homesick: "homesickness",
+		hopeful: "hope",
+		hopeless: "hopelessness",
+		humiliation: "shame",
+		hurt: "sadness",
+		inadequacy: "shame",
+		insecurity: "anxiety",
+		isolation: "sadness",
+		lonely: "loneliness",
+		nervousness: "anxiety",
+		"out-of-place": "not-belonging",
+		overwhelmed: "overwhelm",
+		pain: "sadness",
+		panic: "anxiety",
+		rage: "anger",
+		rejection: "sadness",
+		remorse: "guilt",
+		resentment: "anger",
+		resignation: "numbness",
+		revulsion: "disgust",
+		sad: "sadness",
+		scared: "fear",
+		"self-doubting": "self-doubt",
+		sorrow: "sadness",
+		stressed: "stress",
+		terrified: "fear",
+		terror: "fear",
+		uncertain: "uncertainty",
+		unmotivated: "demotivation",
+		worried: "anxiety",
+		worry: "anxiety",
+		worthlessness: "shame",
+	},
+	lifeArea: {
+		"grief-and-loss": "loss",
+		"life-after-uni": "future",
+		money: "finances",
+		wellbeing: "health",
+	},
 };
 
 /** The canonical slug for an author's word on an axis; unknown words pass through. */
 export function canonicalFacet(axis: string, slug: string): string {
-  if (!hasOwn(ALIASES, axis)) return slug;
-  const aliases = (ALIASES as Record<string, Record<string, string>>)[axis];
-  return hasOwn(aliases, slug) ? aliases[slug] : slug;
+	if (!hasOwn(ALIASES, axis)) {
+		return slug;
+	}
+	const aliases = (ALIASES as Record<string, Record<string, string>>)[axis];
+	return hasOwn(aliases, slug) ? aliases[slug] : slug;
 }

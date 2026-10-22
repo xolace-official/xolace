@@ -1,12 +1,12 @@
-import { useCallback, useEffect } from "react";
-import { DevSettings, Platform } from "react-native";
 import { usePathname } from "expo-router";
 import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
+import { useCallback, useEffect } from "react";
+import { DevSettings, Platform } from "react-native";
 import { useAppStore } from "@/src/store/store";
 import { TrayProvider, useTray } from "./engine/tray-provider";
+import { type Trays, trays } from "./screens/registry";
 import { useShakeToOpen } from "./trigger/use-shake-to-open";
-import { trays, type Trays } from "./screens/registry";
 
 const REFLECT_ROUTE = "/";
 
@@ -15,17 +15,17 @@ const REFLECT_ROUTE = "/";
  * No free-text content is captured — structural only ([[project_posthog_convex]]).
  */
 function useOpenFeedbackTray() {
-  const { show } = useTray<Trays>();
-  const posthog = usePostHog();
-  const pathname = usePathname();
+	const { show } = useTray<Trays>();
+	const posthog = usePostHog();
+	const pathname = usePathname();
 
-  return useCallback(
-    (source: "shake" | "dev_menu") => {
-      posthog.capture("feedback_tray_opened", { source, route: pathname });
-      show("menu");
-    },
-    [show, posthog, pathname],
-  );
+	return useCallback(
+		(source: "shake" | "dev_menu") => {
+			posthog.capture("feedback_tray_opened", { route: pathname, source });
+			show("menu");
+		},
+		[show, posthog, pathname]
+	);
 }
 
 /**
@@ -34,17 +34,19 @@ function useOpenFeedbackTray() {
  * effect (not state mirroring), so a guarded effect is appropriate here.
  */
 function useShakeHint(eligible: boolean) {
-  const { toast } = useToast();
-  const shakeHintSeen = useAppStore((s) => s.shakeHintSeen);
-  const setShakeHintSeen = useAppStore((s) => s.setShakeHintSeen);
+	const { toast } = useToast();
+	const shakeHintSeen = useAppStore((s) => s.shakeHintSeen);
+	const setShakeHintSeen = useAppStore((s) => s.setShakeHintSeen);
 
-  useEffect(() => {
-    if (!eligible || shakeHintSeen) return;
-    toast.show({
-      label: "Shake your phone anytime to send feedback.",
-    });
-    setShakeHintSeen(true);
-  }, [eligible, shakeHintSeen, setShakeHintSeen, toast]);
+	useEffect(() => {
+		if (!eligible || shakeHintSeen) {
+			return;
+		}
+		toast.show({
+			label: "Shake your phone anytime to send feedback.",
+		});
+		setShakeHintSeen(true);
+	}, [eligible, shakeHintSeen, setShakeHintSeen, toast]);
 }
 
 /**
@@ -54,9 +56,9 @@ function useShakeHint(eligible: boolean) {
  * FeedbackTrayProvider.
  */
 export function useFeedbackShake({ enabled }: { enabled: boolean }) {
-  const open = useOpenFeedbackTray();
-  useShakeHint(enabled);
-  useShakeToOpen({ enabled, onShake: () => open("shake") });
+	const open = useOpenFeedbackTray();
+	useShakeHint(enabled);
+	useShakeToOpen({ enabled, onShake: () => open("shake") });
 }
 
 /**
@@ -65,22 +67,22 @@ export function useFeedbackShake({ enabled }: { enabled: boolean }) {
  * menu items. Always opens regardless of route/state — it's a manual trigger.
  */
 function useDevMenuTrigger() {
-  const open = useOpenFeedbackTray();
-  useEffect(() => {
-    if (__DEV__ && Platform.OS !== "web") {
-      return DevSettings.addMenuItem("💬 Send Feedback", () =>
-        open("dev_menu"),
-      );
-    }
-  }, [open]);
+	const open = useOpenFeedbackTray();
+	useEffect(() => {
+		if (__DEV__ && Platform.OS !== "web") {
+			return DevSettings.addMenuItem("💬 Send Feedback", () =>
+				open("dev_menu")
+			);
+		}
+	}, [open]);
 }
 
 /** Global shake call site — active on every screen except the reflect canvas. */
 function GlobalFeedbackShake() {
-  const pathname = usePathname();
-  useDevMenuTrigger();
-  useFeedbackShake({ enabled: pathname !== REFLECT_ROUTE });
-  return null;
+	const pathname = usePathname();
+	useDevMenuTrigger();
+	useFeedbackShake({ enabled: pathname !== REFLECT_ROUTE });
+	return null;
 }
 
 /**
@@ -89,14 +91,14 @@ function GlobalFeedbackShake() {
  * Convex, and the keyboard/gesture providers above it).
  */
 export function FeedbackTrayProvider({
-  children,
+	children,
 }: {
-  children: React.ReactNode;
+	children: React.ReactNode;
 }) {
-  return (
-    <TrayProvider screens={trays}>
-      <GlobalFeedbackShake />
-      {children}
-    </TrayProvider>
-  );
+	return (
+		<TrayProvider screens={trays}>
+			<GlobalFeedbackShake />
+			{children}
+		</TrayProvider>
+	);
 }

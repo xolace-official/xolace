@@ -22,7 +22,14 @@ import { internalMutation, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
 import { hasPremium } from "../lib/premium";
 import { posthog } from "../posthog";
-import { credits, keyOf, openReservations, release, secondsLeft, topUp } from "./ledger";
+import {
+	credits,
+	keyOf,
+	openReservations,
+	release,
+	secondsLeft,
+	topUp,
+} from "./ledger";
 import { attachTo, chargeFor } from "./openings";
 
 // Webhook retries stop after ~40.5 min and the agent's backstop is 26 min.
@@ -40,19 +47,32 @@ const BATCH = 100;
  * low for now.
  */
 export const left = query({
-  args: { now: v.number() },
-  returns: v.union(
-    v.null(),
-    v.object({ secondsLeft: v.number(), week: v.string(), resetsAt: v.number(), settling: v.boolean() }),
-  ),
-  handler: async (ctx, { now }) => {
-    const { profile } = await requireAuth(ctx);
-    if (!(await hasPremium(ctx, profile))) return null;
-    const { balance, week, resetsAt, topUp } = await secondsLeft(ctx, profile, now);
-    // Not the session: every turn patches it, and this would re-run with it.
-    const settling = (await openReservations(ctx, profile._id)).some((r) => r.endedAt !== undefined);
-    return { secondsLeft: balance + topUp, week, resetsAt, settling };
-  },
+	args: { now: v.number() },
+	handler: async (ctx, { now }) => {
+		const { profile } = await requireAuth(ctx);
+		if (!(await hasPremium(ctx, profile))) {
+			return null;
+		}
+		const { balance, week, resetsAt, topUp } = await secondsLeft(
+			ctx,
+			profile,
+			now
+		);
+		// Not the session: every turn patches it, and this would re-run with it.
+		const settling = (await openReservations(ctx, profile._id)).some(
+			(r) => r.endedAt !== undefined
+		);
+		return { resetsAt, secondsLeft: balance + topUp, settling, week };
+	},
+	returns: v.union(
+		v.null(),
+		v.object({
+			resetsAt: v.number(),
+			secondsLeft: v.number(),
+			settling: v.boolean(),
+			week: v.string(),
+		})
+	),
 });
 
 /**
@@ -60,74 +80,84 @@ export const left = query({
  * reserved. Idempotent: the open row goes with the first delivery.
  */
 export const settle = internalMutation({
-  args: {
-    conversationId: v.string(),
-    durationS: v.number(),
-    // The extra body ElevenLabs echoes back, so a talk the client never
-    // attached is still charged. `sessionId` is untrusted: the key must match.
-    talk: v.optional(v.object({ sessionId: v.string(), talkKey: v.string() })),
-  },
-  returns: v.null(),
-  handler: async (ctx, { conversationId, durationS, talk }) => {
-    const found = await chargeFor(ctx, conversationId, talk);
-    if (!found) return null;
-    const { session, row } = found;
-    // The echoed key proves the opening: attach here, else a talk the app
-    // never attached is never pending and its provider copy stays forever.
-    // Before the charge check: an idle close may have released its row.
-    if (talk && (row?.talkKey === talk.talkKey || session.talkKey === talk.talkKey)) {
-      await attachTo(ctx, session, talk.talkKey, conversationId);
-    }
-    // Settled already (a redelivery), or released.
-    if (!row) return null;
+	args: {
+		conversationId: v.string(),
+		durationS: v.number(),
+		// The extra body ElevenLabs echoes back, so a talk the client never
+		// attached is still charged. `sessionId` is untrusted: the key must match.
+		talk: v.optional(v.object({ sessionId: v.string(), talkKey: v.string() })),
+	},
+	handler: async (ctx, { conversationId, durationS, talk }) => {
+		const found = await chargeFor(ctx, conversationId, talk);
+		if (!found) {
+			return null;
+		}
+		const { session, row } = found;
+		// The echoed key proves the opening: attach here, else a talk the app
+		// never attached is never pending and its provider copy stays forever.
+		// Before the charge check: an idle close may have released its row.
+		if (
+			talk &&
+			(row?.talkKey === talk.talkKey || session.talkKey === talk.talkKey)
+		) {
+			await attachTo(ctx, session, talk.talkKey, conversationId);
+		}
+		// Settled already (a redelivery), or released.
+		if (!row) {
+			return null;
+		}
 
-    // No talk extends past its ceiling, crisis included (#581).
-    if (durationS > ALERT_AFTER_S) {
-      console.error("[talk] alert: talk past 16 min", session._id, durationS);
-      await posthog.capture(ctx, {
-        distinctId: session.emotionalProfileId,
-        event: "talk_duration_alert",
-        properties: { sessionId: session._id, durationS },
-      });
-    }
-    const { weekStart } = await topUp(ctx, row.emotionalProfileId, Date.now());
+		// No talk extends past its ceiling, crisis included (#581).
+		if (durationS > ALERT_AFTER_S) {
+			console.error("[talk] alert: talk past 16 min", session._id, durationS);
+			await posthog.capture(ctx, {
+				distinctId: session.emotionalProfileId,
+				event: "talk_duration_alert",
+				properties: { durationS, sessionId: session._id },
+			});
+		}
+		const { weekStart } = await topUp(ctx, row.emotionalProfileId, Date.now());
 
-    const used = Math.min(row.reserved, Math.max(0, Math.ceil(durationS)));
-    // Last week's talk: its unused time was forfeited at Monday, not refunded.
-    const forfeit = row.startedAt < weekStart;
-    if (used === 0 || forfeit) {
-      await release(ctx, row, weekStart);
-      return null;
-    }
-    await credits.complete(ctx, { chargeId: row.chargeId, key: keyOf(row, "complete") });
-    if (row.reserved > used) {
-      await credits.refund(ctx, {
-        chargeId: row.chargeId,
-        amount: row.reserved - used,
-        key: keyOf(row, "refund"),
-        reason: "unused talk time",
-      });
-    }
-    await ctx.db.delete("talk_charges", row._id);
-    return null;
-  },
+		const used = Math.min(row.reserved, Math.max(0, Math.ceil(durationS)));
+		// Last week's talk: its unused time was forfeited at Monday, not refunded.
+		const forfeit = row.startedAt < weekStart;
+		if (used === 0 || forfeit) {
+			await release(ctx, row, weekStart);
+			return null;
+		}
+		await credits.complete(ctx, {
+			chargeId: row.chargeId,
+			key: keyOf(row, "complete"),
+		});
+		if (row.reserved > used) {
+			await credits.refund(ctx, {
+				amount: row.reserved - used,
+				chargeId: row.chargeId,
+				key: keyOf(row, "refund"),
+				reason: "unused talk time",
+			});
+		}
+		await ctx.db.delete("talk_charges", row._id);
+		return null;
+	},
+	returns: v.null(),
 });
 
 /** Cron: releases reservations whose webhook never arrived. */
 export const sweep = internalMutation({
-  args: {},
-  returns: v.null(),
-  handler: async (ctx) => {
-    const now = Date.now();
-    // ponytail: 100 per hourly run, no reschedule; fine while lost webhooks are rare.
-    const stale = await ctx.db
-      .query("talk_charges")
-      .withIndex("by_startedAt", (q) => q.lt("startedAt", now - SWEEP_AFTER_MS))
-      .take(BATCH);
-    for (const row of stale) {
-      const { weekStart } = await topUp(ctx, row.emotionalProfileId, now);
-      await release(ctx, row, weekStart);
-    }
-    return null;
-  },
+	args: {},
+	handler: async (ctx) => {
+		const now = Date.now();
+		// ponytail: 100 per hourly run, no reschedule; fine while lost webhooks are rare.
+		const stale = await ctx.db
+			.query("talk_charges")
+			.withIndex("by_startedAt", (q) => q.lt("startedAt", now - SWEEP_AFTER_MS))
+			.take(BATCH);
+		for (const row of stale) {
+			const { weekStart } = await topUp(ctx, row.emotionalProfileId, now);
+			await release(ctx, row, weekStart);
+		}
+		return null;
+	},
+	returns: v.null(),
 });

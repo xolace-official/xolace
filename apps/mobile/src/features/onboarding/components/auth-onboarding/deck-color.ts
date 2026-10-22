@@ -7,6 +7,7 @@
  * Uniwind's own `useCSSVariable` resolves through `scopedTheme`, so it honours
  * the pin. Any color this screen reads in JS must come through here.
  */
-import { useCSSVariable } from 'uniwind';
+import { useCSSVariable } from "uniwind";
 
-export const useDeckColor = (token: string) => useCSSVariable(`--${token}`) as string;
+export const useDeckColor = (token: string) =>
+	useCSSVariable(`--${token}`) as string;

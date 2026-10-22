@@ -8,19 +8,19 @@
 export const NIGHT_HEADLINE = "What's carrying over?";
 
 export const NIGHT_TEXTURE_WORDS = [
-  "wide awake",
-  "can't turn it off",
-  "something happened",
-  "replaying it",
-  "spiraling",
-  "aching",
-  "hollow",
-  "too much",
+	"wide awake",
+	"can't turn it off",
+	"something happened",
+	"replaying it",
+	"spiraling",
+	"aching",
+	"hollow",
+	"too much",
 ] as const;
 
 /** Activity variant (solo/peers path): replaces "You showed up for yourself today." */
 export const NIGHT_SESSION_END_ACTIVITY =
-  "You can put it down now. It'll still be here tomorrow if you need it.";
+	"You can put it down now. It'll still be here tomorrow if you need it.";
 
 /** Exit variant: replaces "Heard." */
 export const NIGHT_SESSION_END_EXIT = "Heard. Rest if you can.";
@@ -29,4 +29,4 @@ export const NIGHT_SESSION_END_EXIT = "Heard. Rest if you can.";
 export const NIGHT_NUDGE_DELAY_MS = 14_000;
 
 /** Day nudge delay for reference. */
-export const DAY_NUDGE_DELAY_MS = 8_000;
+export const DAY_NUDGE_DELAY_MS = 8000;

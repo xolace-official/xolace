@@ -1,6 +1,7 @@
 import { PRIMARY_EMOTIONS, THEMATIC_TAGS } from "../../lib/understandingVocab";
 
-const quotedList = (values: readonly string[]) => values.map((v) => `"${v}"`).join(", ");
+const quotedList = (values: readonly string[]) =>
+	values.map((v) => `"${v}"`).join(", ");
 
 /**
  * Construct the system and user prompts used for Haiku emotion classification.
@@ -19,13 +20,13 @@ const quotedList = (values: readonly string[]) => values.map((v) => `"${v}"`).jo
  */
 
 export function buildClassifierPrompt(
-  rawInput: string,
-  patternSummary: string,
-  isFirstSession: boolean,
-  entryType: string,
-  timeOfDay?: string
+	rawInput: string,
+	patternSummary: string,
+	isFirstSession: boolean,
+	entryType: string,
+	timeOfDay?: string
 ): { system: string; user: string } {
-  const system = `You are an emotion classification system for Xolace, an emotional processing app. Your job is to analyze raw emotional input and return a structured JSON classification.
+	const system = `You are an emotion classification system for Xolace, an emotional processing app. Your job is to analyze raw emotional input and return a structured JSON classification.
 
 You are NOT a therapist. You are NOT having a conversation. You are a precise analytical instrument that detects what someone is feeling from what they wrote.
 
@@ -154,47 +155,47 @@ Default to "none" when unsure. This is a suggestion trigger, not a severity scor
 ## User's Pattern Context
 ${patternSummary}`;
 
-  // Build structured user message with metadata
-  const userParts: string[] = [];
+	// Build structured user message with metadata
+	const userParts: string[] = [];
 
-  // Entry type framing
-  switch (entryType) {
-    case "open_prompt":
-      userParts.push("[Free text input]");
-      break;
-    case "word_cloud":
-      userParts.push(
-        "[Texture words — tapped, not typed. Interpret as emotional textures, not literal descriptions.]"
-      );
-      break;
-    case "body_scan":
-      userParts.push(
-        "[Body areas — tapped locations where emotion is felt physically.]"
-      );
-      break;
-    case "voice":
-      userParts.push(
-        "[Voice transcription — may contain filler words, repetition, and incomplete sentences.]"
-      );
-      break;
-    case "talk":
-      userParts.push(
-        "[A spoken talk with a companion — the person's lines only, transcribed. Answers to questions you can't see; may contain filler words and repetition.]"
-      );
-      break;
-    default:
-      userParts.push("[Text input]");
-  }
+	// Entry type framing
+	switch (entryType) {
+		case "open_prompt":
+			userParts.push("[Free text input]");
+			break;
+		case "word_cloud":
+			userParts.push(
+				"[Texture words — tapped, not typed. Interpret as emotional textures, not literal descriptions.]"
+			);
+			break;
+		case "body_scan":
+			userParts.push(
+				"[Body areas — tapped locations where emotion is felt physically.]"
+			);
+			break;
+		case "voice":
+			userParts.push(
+				"[Voice transcription — may contain filler words, repetition, and incomplete sentences.]"
+			);
+			break;
+		case "talk":
+			userParts.push(
+				"[A spoken talk with a companion — the person's lines only, transcribed. Answers to questions you can't see; may contain filler words and repetition.]"
+			);
+			break;
+		default:
+			userParts.push("[Text input]");
+	}
 
-  // Time context
-  if (timeOfDay) {
-    userParts.push(`[Time: ${timeOfDay}]`);
-  }
+	// Time context
+	if (timeOfDay) {
+		userParts.push(`[Time: ${timeOfDay}]`);
+	}
 
-  // The actual input
-  userParts.push(`\n---\n${rawInput}\n---`);
+	// The actual input
+	userParts.push(`\n---\n${rawInput}\n---`);
 
-  const user = userParts.join("\n");
+	const user = userParts.join("\n");
 
-  return { system, user };
+	return { system, user };
 }

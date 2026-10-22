@@ -1,10 +1,10 @@
-import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
-import { query, type QueryCtx } from "./_generated/server";
+import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
-import { requireAuth } from "./lib/auth";
+import { type QueryCtx, query } from "./_generated/server";
 import { r2 } from "./ai/paths/audioTracks";
 import { topicSlug } from "./ai/paths/catalog";
+import { requireAuth } from "./lib/auth";
 
 /**
  * Browse hub reads (#338, docs/paths-v1.md §9.3). Open to every signed-in
@@ -13,13 +13,13 @@ import { topicSlug } from "./ai/paths/catalog";
  */
 
 const shelfItemValidator = v.object({
-  _id: v.id("audio_tracks"),
-  slug: v.string(),
-  family: v.union(v.literal("support"), v.literal("music")),
-  title: v.string(),
-  thumbUrl: v.string(),
-  thumbhash: v.optional(v.string()),
-  attribution: v.optional(v.string()),
+	_id: v.id("audio_tracks"),
+	attribution: v.optional(v.string()),
+	family: v.union(v.literal("support"), v.literal("music")),
+	slug: v.string(),
+	thumbhash: v.optional(v.string()),
+	thumbUrl: v.string(),
+	title: v.string(),
 });
 
 /**
@@ -28,14 +28,23 @@ const shelfItemValidator = v.object({
  * broken images after 15 minutes without a data change to re-run the query.
  * A relaunch or any catalogue write re-signs well inside the window.
  */
-const THUMB_URL_TTL_SEC = 604800;
-export const thumbUrlFor = (thumbKey: string) => r2.getUrl(thumbKey, { expiresIn: THUMB_URL_TTL_SEC });
+const THUMB_URL_TTL_SEC = 604_800;
+export const thumbUrlFor = (thumbKey: string) =>
+	r2.getUrl(thumbKey, { expiresIn: THUMB_URL_TTL_SEC });
 
-function attributionFor(track: { family: "support" | "music"; narrators?: string[]; licence?: { attributionRequired: boolean; attributionText: string } }) {
-  if (track.family === "music") {
-    return track.licence?.attributionRequired ? track.licence.attributionText : undefined;
-  }
-  return track.narrators && track.narrators.length > 0 ? track.narrators.join(", ") : undefined;
+function attributionFor(track: {
+	family: "support" | "music";
+	narrators?: string[];
+	licence?: { attributionRequired: boolean; attributionText: string };
+}) {
+	if (track.family === "music") {
+		return track.licence?.attributionRequired
+			? track.licence.attributionText
+			: undefined;
+	}
+	return track.narrators && track.narrators.length > 0
+		? track.narrators.join(", ")
+		: undefined;
 }
 
 const SHELF_SIZE = 4;
@@ -54,15 +63,15 @@ const DAY_MS = 24 * HOUR_MS;
  * 1000 rows drops its oldest tracks, not the ones the top-up wants.
  */
 function newPool(tracks: Doc<"audio_tracks">[], now: number) {
-  const active = tracks.filter((t) => t.active);
-  const fresh = active
-    .filter((t) => t.newUntil !== undefined && t.newUntil > now)
-    .sort((a, b) => b.newUntil! - a.newUntil!);
-  const freshIds = new Set(fresh.map((t) => t._id));
-  const recent = active
-    .filter((t) => !freshIds.has(t._id))
-    .sort((a, b) => b._creationTime - a._creationTime);
-  return [...fresh, ...recent].slice(0, POOL_SIZE);
+	const active = tracks.filter((t) => t.active);
+	const fresh = active
+		.filter((t) => t.newUntil !== undefined && t.newUntil > now)
+		.sort((a, b) => b.newUntil! - a.newUntil!);
+	const freshIds = new Set(fresh.map((t) => t._id));
+	const recent = active
+		.filter((t) => !freshIds.has(t._id))
+		.sort((a, b) => b._creationTime - a._creationTime);
+	return [...fresh, ...recent].slice(0, POOL_SIZE);
 }
 
 /**
@@ -75,28 +84,39 @@ function newPool(tracks: Doc<"audio_tracks">[], now: number) {
  * head, unrotated. Reused for the Discovery strip (§9.5).
  */
 export const getNewShelf = query({
-  args: { day: v.optional(v.number()), hour: v.optional(v.number()) },
-  returns: v.array(shelfItemValidator),
-  handler: async (ctx, { day, hour }) => {
-    await requireAuth(ctx);
-    const now = hour !== undefined ? hour * HOUR_MS : day !== undefined ? day * DAY_MS : Date.now();
+	args: { day: v.optional(v.number()), hour: v.optional(v.number()) },
+	handler: async (ctx, { day, hour }) => {
+		await requireAuth(ctx);
+		const now =
+			hour === undefined
+				? day === undefined
+					? Date.now()
+					: day * DAY_MS
+				: hour * HOUR_MS;
 
-    const pool = newPool(await ctx.db.query("audio_tracks").order("desc").take(1000), now);
-    const offset = pool.length > 0 && day !== undefined ? day % pool.length : 0;
-    const shelf = [...pool.slice(offset), ...pool.slice(0, offset)].slice(0, SHELF_SIZE);
+		const pool = newPool(
+			await ctx.db.query("audio_tracks").order("desc").take(1000),
+			now
+		);
+		const offset = pool.length > 0 && day !== undefined ? day % pool.length : 0;
+		const shelf = [...pool.slice(offset), ...pool.slice(0, offset)].slice(
+			0,
+			SHELF_SIZE
+		);
 
-    return await Promise.all(
-      shelf.map(async (t) => ({
-        _id: t._id,
-        slug: t.slug,
-        family: t.family,
-        title: t.title,
-        thumbUrl: await thumbUrlFor(t.thumbKey),
-        thumbhash: t.thumbhash,
-        attribution: attributionFor(t),
-      })),
-    );
-  },
+		return await Promise.all(
+			shelf.map(async (t) => ({
+				_id: t._id,
+				attribution: attributionFor(t),
+				family: t.family,
+				slug: t.slug,
+				thumbhash: t.thumbhash,
+				thumbUrl: await thumbUrlFor(t.thumbKey),
+				title: t.title,
+			}))
+		);
+	},
+	returns: v.array(shelfItemValidator),
 });
 
 /**
@@ -106,95 +126,113 @@ export const getNewShelf = query({
  * something.
  */
 export const getFeatured = query({
-  args: {},
-  returns: v.union(shelfItemValidator, v.null()),
-  handler: async (ctx) => {
-    await requireAuth(ctx);
-    const tracks = await ctx.db.query("audio_tracks").order("desc").take(1000);
-    const picked = tracks.find((t) => t.active && t.featured) ?? newPool(tracks, Date.now())[0];
-    if (!picked) return null;
+	args: {},
+	handler: async (ctx) => {
+		await requireAuth(ctx);
+		const tracks = await ctx.db.query("audio_tracks").order("desc").take(1000);
+		const picked =
+			tracks.find((t) => t.active && t.featured) ??
+			newPool(tracks, Date.now())[0];
+		if (!picked) {
+			return null;
+		}
 
-    return {
-      _id: picked._id,
-      slug: picked.slug,
-      family: picked.family,
-      title: picked.title,
-      thumbUrl: await thumbUrlFor(picked.thumbKey),
-      thumbhash: picked.thumbhash,
-      attribution: attributionFor(picked),
-    };
-  },
+		return {
+			_id: picked._id,
+			attribution: attributionFor(picked),
+			family: picked.family,
+			slug: picked.slug,
+			thumbhash: picked.thumbhash,
+			thumbUrl: await thumbUrlFor(picked.thumbKey),
+			title: picked.title,
+		};
+	},
+	returns: v.union(shelfItemValidator, v.null()),
 });
 
 // ---------------------------------------------------------------------------
 // Browsing screens (#339, docs/paths-v1.md §9.3)
 // ---------------------------------------------------------------------------
 
-export const familyValidator = v.union(v.literal("support"), v.literal("music"));
+export const familyValidator = v.union(
+	v.literal("support"),
+	v.literal("music")
+);
 
 export const trackItemValidator = v.object({
-  _id: v.id("audio_tracks"),
-  slug: v.string(),
-  family: familyValidator,
-  title: v.string(),
-  thumbUrl: v.string(),
-  thumbhash: v.optional(v.string()),
-  attribution: v.optional(v.string()),
-  durationSec: v.number(),
-  series: v.optional(v.string()),
-  seriesTitle: v.optional(v.string()),
-  episodeNumber: v.optional(v.number()),
+	_id: v.id("audio_tracks"),
+	attribution: v.optional(v.string()),
+	durationSec: v.number(),
+	episodeNumber: v.optional(v.number()),
+	family: familyValidator,
+	series: v.optional(v.string()),
+	seriesTitle: v.optional(v.string()),
+	slug: v.string(),
+	thumbhash: v.optional(v.string()),
+	thumbUrl: v.string(),
+	title: v.string(),
 });
 
 export async function toTrackItem(t: Doc<"audio_tracks">) {
-  return {
-    _id: t._id,
-    slug: t.slug,
-    family: t.family,
-    title: t.title,
-    thumbUrl: await thumbUrlFor(t.thumbKey),
-    thumbhash: t.thumbhash,
-    attribution: attributionFor(t),
-    durationSec: t.durationSec,
-    series: t.series,
-    seriesTitle: t.seriesTitle,
-    episodeNumber: t.episodeNumber,
-  };
+	return {
+		_id: t._id,
+		attribution: attributionFor(t),
+		durationSec: t.durationSec,
+		episodeNumber: t.episodeNumber,
+		family: t.family,
+		series: t.series,
+		seriesTitle: t.seriesTitle,
+		slug: t.slug,
+		thumbhash: t.thumbhash,
+		thumbUrl: await thumbUrlFor(t.thumbKey),
+		title: t.title,
+	};
 }
 
 const topicTitle = (slug: string) => {
-  const words = slug.replace(/_/g, " ");
-  return words.charAt(0).toUpperCase() + words.slice(1);
+	const words = slug.replace(/_/g, " ");
+	return words.charAt(0).toUpperCase() + words.slice(1);
 };
 
 /** Per-family list — `active` rows only, page size chosen by the client (30). */
 export const listByFamily = query({
-  args: { family: familyValidator, paginationOpts: paginationOptsValidator },
-  returns: v.object({
-    page: v.array(trackItemValidator),
-    isDone: v.boolean(),
-    continueCursor: v.string(),
-    splitCursor: v.optional(v.union(v.string(), v.null())),
-    pageStatus: v.optional(
-      v.union(v.literal("SplitRecommended"), v.literal("SplitRequired"), v.null())
-    ),
-  }),
-  handler: async (ctx, args) => {
-    await requireAuth(ctx);
-    const result = await ctx.db
-      .query("audio_tracks")
-      .withIndex("by_family_and_active", (q) => q.eq("family", args.family).eq("active", true))
-      .paginate(args.paginationOpts);
-    return { ...result, page: await Promise.all(result.page.map(toTrackItem)) };
-  },
+	args: { family: familyValidator, paginationOpts: paginationOptsValidator },
+	handler: async (ctx, args) => {
+		await requireAuth(ctx);
+		const result = await ctx.db
+			.query("audio_tracks")
+			.withIndex("by_family_and_active", (q) =>
+				q.eq("family", args.family).eq("active", true)
+			)
+			.paginate(args.paginationOpts);
+		return { ...result, page: await Promise.all(result.page.map(toTrackItem)) };
+	},
+	returns: v.object({
+		continueCursor: v.string(),
+		isDone: v.boolean(),
+		page: v.array(trackItemValidator),
+		pageStatus: v.optional(
+			v.union(
+				v.literal("SplitRecommended"),
+				v.literal("SplitRequired"),
+				v.null()
+			)
+		),
+		splitCursor: v.optional(v.union(v.string(), v.null())),
+	}),
 });
 
-async function activeByFamily(ctx: QueryCtx, family: Doc<"audio_tracks">["family"]) {
-  // Bounded catalogue (docs/paths-v1.md decision 18) — a few hundred rows at most.
-  return await ctx.db
-    .query("audio_tracks")
-    .withIndex("by_family_and_active", (q) => q.eq("family", family).eq("active", true))
-    .take(1000);
+async function activeByFamily(
+	ctx: QueryCtx,
+	family: Doc<"audio_tracks">["family"]
+) {
+	// Bounded catalogue (docs/paths-v1.md decision 18) — a few hundred rows at most.
+	return await ctx.db
+		.query("audio_tracks")
+		.withIndex("by_family_and_active", (q) =>
+			q.eq("family", family).eq("active", true)
+		)
+		.take(1000);
 }
 
 /**
@@ -204,77 +242,112 @@ async function activeByFamily(ctx: QueryCtx, family: Doc<"audio_tracks">["family
  * and Browse search (#550).
  */
 export async function activeTopics(ctx: QueryCtx) {
-  const tracks = [...(await activeByFamily(ctx, "support")), ...(await activeByFamily(ctx, "music"))];
+	const tracks = [
+		...(await activeByFamily(ctx, "support")),
+		...(await activeByFamily(ctx, "music")),
+	];
 
-  const byTopic = new Map<string, { thumbKey: string; thumbhash?: string; supportCount: number; musicCount: number }>();
-  for (const t of tracks) {
-    const slug = topicSlug(t.topic);
-    const entry = byTopic.get(slug) ?? { thumbKey: t.thumbKey, thumbhash: t.thumbhash, supportCount: 0, musicCount: 0 };
-    if (t.family === "support") entry.supportCount += 1;
-    else entry.musicCount += 1;
-    byTopic.set(slug, entry);
-  }
+	const byTopic = new Map<
+		string,
+		{
+			thumbKey: string;
+			thumbhash?: string;
+			supportCount: number;
+			musicCount: number;
+		}
+	>();
+	for (const t of tracks) {
+		const slug = topicSlug(t.topic);
+		const entry = byTopic.get(slug) ?? {
+			musicCount: 0,
+			supportCount: 0,
+			thumbhash: t.thumbhash,
+			thumbKey: t.thumbKey,
+		};
+		if (t.family === "support") {
+			entry.supportCount += 1;
+		} else {
+			entry.musicCount += 1;
+		}
+		byTopic.set(slug, entry);
+	}
 
-  const rows = new Map((await ctx.db.query("topics").take(1000)).map((r) => [r.slug, r]));
-  return [...byTopic.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([slug, entry]) => {
-      const row = rows.get(slug);
-      return { ...entry, slug, title: row?.title || topicTitle(slug), ...(row && { thumbKey: row.thumbKey, thumbhash: row.thumbhash }) };
-    });
+	const rows = new Map(
+		(await ctx.db.query("topics").take(1000)).map((r) => [r.slug, r])
+	);
+	return [...byTopic.entries()]
+		.sort(([a], [b]) => a.localeCompare(b))
+		.map(([slug, entry]) => {
+			const row = rows.get(slug);
+			return {
+				...entry,
+				slug,
+				title: row?.title || topicTitle(slug),
+				...(row && { thumbhash: row.thumbhash, thumbKey: row.thumbKey }),
+			};
+		});
 }
 
 /** Topic grid — one tile per shared topic with ≥ 1 active track in either family. */
 export const getTopics = query({
-  args: {},
-  returns: v.array(
-    v.object({
-      slug: v.string(),
-      title: v.string(),
-      thumbUrl: v.string(),
-      thumbhash: v.optional(v.string()),
-      supportCount: v.number(),
-      musicCount: v.number(),
-    }),
-  ),
-  handler: async (ctx) => {
-    await requireAuth(ctx);
-    return await Promise.all(
-      (await activeTopics(ctx)).map(async ({ thumbKey, ...t }) => ({ ...t, thumbUrl: await thumbUrlFor(thumbKey) })),
-    );
-  },
+	args: {},
+	handler: async (ctx) => {
+		await requireAuth(ctx);
+		return await Promise.all(
+			(await activeTopics(ctx)).map(async ({ thumbKey, ...t }) => ({
+				...t,
+				thumbUrl: await thumbUrlFor(thumbKey),
+			}))
+		);
+	},
+	returns: v.array(
+		v.object({
+			musicCount: v.number(),
+			slug: v.string(),
+			supportCount: v.number(),
+			thumbhash: v.optional(v.string()),
+			thumbUrl: v.string(),
+			title: v.string(),
+		})
+	),
 });
 
 /** Topic screen header: the curated `topics` title (#353), else the slug-derived one the grid uses. */
 export const getTopicTitle = query({
-  args: { slug: v.string() },
-  returns: v.string(),
-  handler: async (ctx, args) => {
-    await requireAuth(ctx);
-    const row = await ctx.db
-      .query("topics")
-      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
-      .unique();
-    return row?.title || topicTitle(args.slug);
-  },
+	args: { slug: v.string() },
+	handler: async (ctx, args) => {
+		await requireAuth(ctx);
+		const row = await ctx.db
+			.query("topics")
+			.withIndex("by_slug", (q) => q.eq("slug", args.slug))
+			.unique();
+		return row?.title || topicTitle(args.slug);
+	},
+	returns: v.string(),
 });
 
 /** Topic screen — both families' active tracks for one shared topic slug. */
 export const getTopic = query({
-  args: { slug: v.string() },
-  returns: v.array(trackItemValidator),
-  handler: async (ctx, args) => {
-    await requireAuth(ctx);
-    const [support, music] = await Promise.all([
-      ctx.db
-        .query("audio_tracks")
-        .withIndex("by_family_and_topic", (q) => q.eq("family", "support").eq("topic", `audio_topic_${args.slug}`))
-        .take(1000),
-      ctx.db
-        .query("audio_tracks")
-        .withIndex("by_family_and_topic", (q) => q.eq("family", "music").eq("topic", `music_topic_${args.slug}`))
-        .take(1000),
-    ]);
-    return await Promise.all([...support, ...music].filter((t) => t.active).map(toTrackItem));
-  },
+	args: { slug: v.string() },
+	handler: async (ctx, args) => {
+		await requireAuth(ctx);
+		const [support, music] = await Promise.all([
+			ctx.db
+				.query("audio_tracks")
+				.withIndex("by_family_and_topic", (q) =>
+					q.eq("family", "support").eq("topic", `audio_topic_${args.slug}`)
+				)
+				.take(1000),
+			ctx.db
+				.query("audio_tracks")
+				.withIndex("by_family_and_topic", (q) =>
+					q.eq("family", "music").eq("topic", `music_topic_${args.slug}`)
+				)
+				.take(1000),
+		]);
+		return await Promise.all(
+			[...support, ...music].filter((t) => t.active).map(toTrackItem)
+		);
+	},
+	returns: v.array(trackItemValidator),
 });

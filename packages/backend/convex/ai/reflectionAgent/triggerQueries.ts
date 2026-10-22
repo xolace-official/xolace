@@ -2,8 +2,8 @@ import { v } from "convex/values";
 import { internalQuery } from "../../_generated/server";
 import { renderSemanticProfile } from "../../semanticProfiles";
 import type {
-  LightPassContext,
-  LightPassMetadataRow,
+	LightPassContext,
+	LightPassMetadataRow,
 } from "../prompts/reflectionLight";
 
 // =============================================================
@@ -19,23 +19,23 @@ const RECENCY_WINDOW = 8;
 
 /** Map a stored metadata row to the prompt's recency shape. */
 function toMetadataRow(m: {
-  primaryEmotion: string;
-  granularLabel?: string;
-  intensity: number;
-  thematicTags: string[];
-  userLanguageTags: string[];
-  temporalContext?: string;
-  createdAt: number;
+	primaryEmotion: string;
+	granularLabel?: string;
+	intensity: number;
+	thematicTags: string[];
+	userLanguageTags: string[];
+	temporalContext?: string;
+	createdAt: number;
 }): LightPassMetadataRow {
-  return {
-    primaryEmotion: m.primaryEmotion,
-    granularLabel: m.granularLabel,
-    intensity: m.intensity,
-    thematicTags: m.thematicTags,
-    userLanguageTags: m.userLanguageTags,
-    temporalContext: m.temporalContext,
-    createdAt: m.createdAt,
-  };
+	return {
+		createdAt: m.createdAt,
+		granularLabel: m.granularLabel,
+		intensity: m.intensity,
+		primaryEmotion: m.primaryEmotion,
+		temporalContext: m.temporalContext,
+		thematicTags: m.thematicTags,
+		userLanguageTags: m.userLanguageTags,
+	};
 }
 
 /**
@@ -43,38 +43,41 @@ function toMetadataRow(m: {
  * the current rendered profile (for continuity), and a short recency window.
  */
 export const getLightPassContext = internalQuery({
-  args: {
-    emotionalProfileId: v.id("emotional_profiles"),
-    sessionId: v.id("sessions"),
-  },
-  handler: async (ctx, args): Promise<LightPassContext> => {
-    const justMeta = await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-      .unique();
+	args: {
+		emotionalProfileId: v.id("emotional_profiles"),
+		sessionId: v.id("sessions"),
+	},
+	handler: async (ctx, args): Promise<LightPassContext> => {
+		const justMeta = await ctx.db
+			.query("emotional_metadata")
+			.withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
+			.unique();
 
-    const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
-    const currentDoc = profile?.currentSemanticProfileId
-      ? await ctx.db.get("semantic_profiles", profile.currentSemanticProfileId)
-      : null;
+		const profile = await ctx.db.get(
+			"emotional_profiles",
+			args.emotionalProfileId
+		);
+		const currentDoc = profile?.currentSemanticProfileId
+			? await ctx.db.get("semantic_profiles", profile.currentSemanticProfileId)
+			: null;
 
-    const recent = await ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_profile_theme", (q) =>
-        q.eq("emotionalProfileId", args.emotionalProfileId),
-      )
-      .order("desc")
-      .take(RECENCY_WINDOW);
+		const recent = await ctx.db
+			.query("emotional_metadata")
+			.withIndex("by_profile_theme", (q) =>
+				q.eq("emotionalProfileId", args.emotionalProfileId)
+			)
+			.order("desc")
+			.take(RECENCY_WINDOW);
 
-    return {
-      justCompleted: justMeta ? toMetadataRow(justMeta) : null,
-      currentProfile: currentDoc ? renderSemanticProfile(currentDoc) : null,
-      // Drop the just-completed row from the recency window (it's shown above).
-      recentMetadata: recent
-        .filter((m) => m.sessionId !== args.sessionId)
-        .map(toMetadataRow),
-    };
-  },
+		return {
+			currentProfile: currentDoc ? renderSemanticProfile(currentDoc) : null,
+			justCompleted: justMeta ? toMetadataRow(justMeta) : null,
+			// Drop the just-completed row from the recency window (it's shown above).
+			recentMetadata: recent
+				.filter((m) => m.sessionId !== args.sessionId)
+				.map(toMetadataRow),
+		};
+	},
 });
 
 /**
@@ -84,28 +87,35 @@ export const getLightPassContext = internalQuery({
  * then createdAt, when no consolidation has run yet.
  */
 export const getConsolidationGate = internalQuery({
-  args: { emotionalProfileId: v.id("emotional_profiles") },
-  handler: async (ctx, args): Promise<{ due: boolean }> => {
-    const profile = await ctx.db.get("emotional_profiles", args.emotionalProfileId);
-    if (!profile) return { due: false };
+	args: { emotionalProfileId: v.id("emotional_profiles") },
+	handler: async (ctx, args): Promise<{ due: boolean }> => {
+		const profile = await ctx.db.get(
+			"emotional_profiles",
+			args.emotionalProfileId
+		);
+		if (!profile) {
+			return { due: false };
+		}
 
-    const anchor =
-      profile.lastConsolidationAt ??
-      profile.firstSessionAt ??
-      profile.createdAt;
+		const anchor =
+			profile.lastConsolidationAt ??
+			profile.firstSessionAt ??
+			profile.createdAt;
 
-    // Bounded: the six newest completed sessions is enough to decide >= 5.
-    const completed = await ctx.db
-      .query("sessions")
-      .withIndex("by_profile_state", (q) =>
-        q.eq("emotionalProfileId", args.emotionalProfileId).eq("state", "completed"),
-      )
-      .order("desc")
-      .take(6);
+		// Bounded: the six newest completed sessions is enough to decide >= 5.
+		const completed = await ctx.db
+			.query("sessions")
+			.withIndex("by_profile_state", (q) =>
+				q
+					.eq("emotionalProfileId", args.emotionalProfileId)
+					.eq("state", "completed")
+			)
+			.order("desc")
+			.take(6);
 
-    const count = completed.filter((s) => s.createdAt > anchor).length;
-    const due =
-      count >= 5 || (Date.now() - anchor >= SEVEN_DAYS_MS && count >= 1);
-    return { due };
-  },
+		const count = completed.filter((s) => s.createdAt > anchor).length;
+		const due =
+			count >= 5 || (Date.now() - anchor >= SEVEN_DAYS_MS && count >= 1);
+		return { due };
+	},
 });

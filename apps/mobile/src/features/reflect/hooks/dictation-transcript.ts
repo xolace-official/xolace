@@ -5,5 +5,5 @@
  * segments with a space; trimming keeps the join to exactly one.
  */
 export function joinDictation(finalised: string, live: string): string {
-  return [finalised.trim(), live.trim()].filter(Boolean).join(' ');
+	return [finalised.trim(), live.trim()].filter(Boolean).join(" ");
 }

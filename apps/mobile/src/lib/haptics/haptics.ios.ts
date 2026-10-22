@@ -1,47 +1,46 @@
-import { Presets } from 'react-native-pulsar';
-import CoreHaptics from '@/modules/native-core-haptics';
-import type { HapticPatternData } from '@/modules/native-core-haptics';
-import type { BreathPhase, HapticName } from './haptics.types';
-
+import { Presets } from "react-native-pulsar";
+import type { HapticPatternData } from "@/modules/native-core-haptics";
+import CoreHaptics from "@/modules/native-core-haptics";
 import {
-  processingBreath,
-  gentlePresence,
-  mirrorArrival,
-  sessionComplete,
-  resonanceToggle,
-  pathChoice,
-  textureSelect,
-  typingBegin,
-  softPress,
-  affirmativePress,
-  errorNotice,
-  compassionateHold,
-  onboardingEntrance,
-  homeEntrance,
-  softenPulse,
-  breathInhalePattern,
-  breathTopHold,
-  breathExhalePattern,
-} from '@/src/lib/haptics/haptics-patterns.ios';
+	affirmativePress,
+	breathExhalePattern,
+	breathInhalePattern,
+	breathTopHold,
+	compassionateHold,
+	errorNotice,
+	gentlePresence,
+	homeEntrance,
+	mirrorArrival,
+	onboardingEntrance,
+	pathChoice,
+	processingBreath,
+	resonanceToggle,
+	sessionComplete,
+	softenPulse,
+	softPress,
+	textureSelect,
+	typingBegin,
+} from "@/src/lib/haptics/haptics-patterns.ios";
+import type { BreathPhase, HapticName } from "./haptics.types";
 
 // ── Generic helpers ──────────────────────────────────────────────────
 
 function play(pattern: HapticPatternData): void {
-  CoreHaptics.playPattern(pattern).catch((e: unknown) => {
-    console.warn('[haptics] playPattern failed:', e);
-  });
+	CoreHaptics.playPattern(pattern).catch((e: unknown) => {
+		console.warn("[haptics] playPattern failed:", e);
+	});
 }
 
 export function tap(intensity = 0.5, sharpness = 0.3): void {
-  CoreHaptics.impact(sharpness, intensity).catch((e: unknown) => {
-    console.warn('[haptics] impact failed:', e);
-  });
+	CoreHaptics.impact(sharpness, intensity).catch((e: unknown) => {
+		console.warn("[haptics] impact failed:", e);
+	});
 }
 
 // ── Named pattern functions ──────────────────────────────────────────
 
 export function playProcessingBreath(): void {
-  play(processingBreath);
+	play(processingBreath);
 }
 
 /**
@@ -49,69 +48,69 @@ export function playProcessingBreath(): void {
  * amplitude-controlled envelope in `processingBreath`, so this just wraps it.
  */
 export function useProcessingBreathHaptic(): () => void {
-  return playProcessingBreath;
+	return playProcessingBreath;
 }
 
 export function playGentlePresence(): void {
-  play(gentlePresence);
+	play(gentlePresence);
 }
 
 export function playMirrorArrival(): void {
-  play(mirrorArrival);
+	play(mirrorArrival);
 }
 
 export function playSessionComplete(): void {
-  play(sessionComplete);
+	play(sessionComplete);
 }
 
 export function playResonanceToggle(): void {
-  play(resonanceToggle);
+	play(resonanceToggle);
 }
 
 export function playPathChoice(): void {
-  play(pathChoice);
+	play(pathChoice);
 }
 
 export function playTextureSelect(): void {
-  play(textureSelect);
+	play(textureSelect);
 }
 
 export function playTypingBegin(): void {
-  play(typingBegin);
+	play(typingBegin);
 }
 
 export function playSoftPress(): void {
-  play(softPress);
+	play(softPress);
 }
 
 export function playAffirmativePress(): void {
-  play(affirmativePress);
+	play(affirmativePress);
 }
 
 export function playErrorNotice(): void {
-  play(errorNotice);
+	play(errorNotice);
 }
 
 export function playCompassionateHold(): void {
-  play(compassionateHold);
+	play(compassionateHold);
 }
 
 export function playSoftenPulse(): void {
-  play(softenPulse);
+	play(softenPulse);
 }
 
 export function playOnboardingEntrance(): void {
-  play(onboardingEntrance);
+	play(onboardingEntrance);
 }
 
 export function playHomeEntrance(): void {
-  play(homeEntrance);
+	play(homeEntrance);
 }
 
 // The one iOS haptic backed by a Pulsar preset rather than a CoreHaptics
 // pattern — `bellToll` is used as-is on both platforms (#499).
 export function playFollowUpEntrance(): void {
-  Presets.bellToll();
+	Presets.bellToll();
 }
 
 // ── Breath phase haptics ─────────────────────────────────────────────
@@ -119,43 +118,48 @@ export function playFollowUpEntrance(): void {
 // *with* the orb rather than ticking at boundaries.
 
 export function playBreathPhase(phase: BreathPhase, durationMs: number): void {
-  const seconds = durationMs / 1000;
-  switch (phase) {
-    case 'inhale':
-      play(breathInhalePattern(seconds));
-      return;
-    case 'top':
-      play(breathTopHold);
-      return;
-    case 'exhale':
-      play(breathExhalePattern(seconds));
-      return;
-  }
+	const seconds = durationMs / 1000;
+	switch (phase) {
+		case "inhale":
+			play(breathInhalePattern(seconds));
+			return;
+		case "top":
+			play(breathTopHold);
+			return;
+		case "exhale":
+			play(breathExhalePattern(seconds));
+			return;
+	}
 }
 
 // ── Dynamic play-by-name ─────────────────────────────────────────────
 
-const patternMap: Record<Exclude<HapticName, 'followUpEntrance'>, HapticPatternData> = {
-  processingBreath,
-  gentlePresence,
-  mirrorArrival,
-  sessionComplete,
-  resonanceToggle,
-  pathChoice,
-  textureSelect,
-  typingBegin,
-  softPress,
-  affirmativePress,
-  errorNotice,
-  compassionateHold,
-  onboardingEntrance,
-  homeEntrance,
-  softenPulse,
+const patternMap: Record<
+	Exclude<HapticName, "followUpEntrance">,
+	HapticPatternData
+> = {
+	affirmativePress,
+	compassionateHold,
+	errorNotice,
+	gentlePresence,
+	homeEntrance,
+	mirrorArrival,
+	onboardingEntrance,
+	pathChoice,
+	processingBreath,
+	resonanceToggle,
+	sessionComplete,
+	softenPulse,
+	softPress,
+	textureSelect,
+	typingBegin,
 };
 
 export type { BreathPhase, HapticName };
 
 export function playHaptic(name: HapticName): void {
-  if (name === 'followUpEntrance') return playFollowUpEntrance();
-  play(patternMap[name]);
+	if (name === "followUpEntrance") {
+		return playFollowUpEntrance();
+	}
+	play(patternMap[name]);
 }

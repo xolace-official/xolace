@@ -4,10 +4,10 @@
  * 4th in any negative offset, and the archive would label the card a day early.
  */
 export function formatDate(date: string) {
-  const [y, m, d] = date.split("-").map(Number);
-  const local = new Date(y, m - 1, d);
-  return {
-    dayMonth: `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}`,
-    weekday: local.toLocaleDateString(undefined, { weekday: "long" }),
-  };
+	const [y, m, d] = date.split("-").map(Number);
+	const local = new Date(y, m - 1, d);
+	return {
+		dayMonth: `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}`,
+		weekday: local.toLocaleDateString(undefined, { weekday: "long" }),
+	};
 }

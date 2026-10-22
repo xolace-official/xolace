@@ -12,7 +12,7 @@ import type { TalkPeak } from "../ai/safeguard";
  * "On your screen" is literally true: the endpoint raises the peak first.
  */
 export const CRISIS_LINE =
-  "I'm really glad you told me. I'm worried about you, and I want you to have someone who can help right now, so I've put help on your screen. I'm right here with you.";
+	"I'm really glad you told me. I'm worried about you, and I want you to have someone who can help right now, so I've put help on your screen. I'm right here with you.";
 
 const ELEVATED_SKILL = `Safety comes first for the rest of this talk.
 - Check in early, even if they have said nothing worrying. Your first reply under this note asks, gently and in plain words, how they are really doing and whether they are safe, woven into what they just said.
@@ -33,4 +33,4 @@ const CRISIS_SKILL = `They may be in danger. For the rest of this talk you stay 
 
 /** The safety skill for this turn's system prompt; empty below elevated. */
 export const safetySkill = (peak: TalkPeak | undefined) =>
-  !peak ? "" : peak.level === "crisis" ? CRISIS_SKILL : ELEVATED_SKILL;
+	peak ? (peak.level === "crisis" ? CRISIS_SKILL : ELEVATED_SKILL) : "";

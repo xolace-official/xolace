@@ -1,5 +1,5 @@
-import { Doc } from "../_generated/dataModel";
-import { QueryCtx, MutationCtx } from "../_generated/server";
+import type { Doc } from "../_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { revenuecat } from "../revenuecat";
 
 // =============================================================
@@ -32,14 +32,16 @@ export type PremiumTier = "free" | "plus";
  * when RC goes live.
  */
 export async function hasPremium(
-  ctx: QueryCtx | MutationCtx,
-  profile: Doc<"emotional_profiles">,
+	ctx: QueryCtx | MutationCtx,
+	profile: Doc<"emotional_profiles">
 ): Promise<boolean> {
-  if (process.env.PREMIUM_DEV_OVERRIDE === "true") return true;
-  return await revenuecat.hasEntitlement(ctx, {
-    appUserId: profile._id,
-    entitlementId: PLUS_ENTITLEMENT_ID,
-  });
+	if (process.env.PREMIUM_DEV_OVERRIDE === "true") {
+		return true;
+	}
+	return await revenuecat.hasEntitlement(ctx, {
+		appUserId: profile._id,
+		entitlementId: PLUS_ENTITLEMENT_ID,
+	});
 }
 
 /**
@@ -47,11 +49,11 @@ export async function hasPremium(
  * for surfaces that render tier-aware copy.
  */
 export async function getTier(
-  ctx: QueryCtx | MutationCtx,
-  profile: Doc<"emotional_profiles">,
+	ctx: QueryCtx | MutationCtx,
+	profile: Doc<"emotional_profiles">
 ): Promise<{ isPremium: boolean; tier: PremiumTier }> {
-  const isPremium = await hasPremium(ctx, profile);
-  return { isPremium, tier: isPremium ? "plus" : "free" };
+	const isPremium = await hasPremium(ctx, profile);
+	return { isPremium, tier: isPremium ? "plus" : "free" };
 }
 
 /**
@@ -59,11 +61,11 @@ export async function getTier(
  * The client mirrors the gate optimistically, but this is the real fence.
  */
 export async function requirePremium(
-  ctx: QueryCtx | MutationCtx,
-  profile: Doc<"emotional_profiles">,
-  feature: string,
+	ctx: QueryCtx | MutationCtx,
+	profile: Doc<"emotional_profiles">,
+	feature: string
 ): Promise<void> {
-  if (!(await hasPremium(ctx, profile))) {
-    throw new Error(`Xolace+ required: ${feature}`);
-  }
+	if (!(await hasPremium(ctx, profile))) {
+		throw new Error(`Xolace+ required: ${feature}`);
+	}
 }

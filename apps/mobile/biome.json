@@ -3,7 +3,7 @@
   "root": false,
   "extends": "//",
   "files": {
-    "includes": ["**", "!assets"]
+    "includes": ["**", "!assets", "!src/uniwind-types.d.ts"]
   },
   "linter": {
     "rules": {
@@ -97,6 +97,18 @@
           "style": {
             "useConsistentMethodSignatures": "off",
             "useFilenamingConvention": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "src/features/insights/{glass,trend-chip,detail-card,domain-list,overall-dial}.tsx"
+      ],
+      "assist": {
+        "actions": {
+          "source": {
+            "useSortedAttributes": "off"
           }
         }
       }

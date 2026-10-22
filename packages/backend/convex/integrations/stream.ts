@@ -23,46 +23,52 @@ import { timingSafeEqual } from "../lib/timingSafeEqual";
 const BASE_URL = "https://chat.stream-io-api.com";
 
 function getStreamEnv() {
-  const apiKey = process.env.STREAM_API_KEY;
-  const apiSecret = process.env.STREAM_API_SECRET;
-  if (!apiKey || !apiSecret) {
-    throw new Error("STREAM_API_KEY / STREAM_API_SECRET not configured");
-  }
-  return { apiKey, apiSecret };
+	const apiKey = process.env.STREAM_API_KEY;
+	const apiSecret = process.env.STREAM_API_SECRET;
+	if (!(apiKey && apiSecret)) {
+		throw new Error("STREAM_API_KEY / STREAM_API_SECRET not configured");
+	}
+	return { apiKey, apiSecret };
 }
 
 function base64url(bytes: Uint8Array): string {
-  let binary = "";
-  for (const b of bytes) binary += String.fromCharCode(b);
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+	let binary = "";
+	for (const b of bytes) {
+		binary += String.fromCharCode(b);
+	}
+	return btoa(binary)
+		.replace(/\+/g, "-")
+		.replace(/\//g, "_")
+		.replace(/[=]+$/, "");
 }
 
 /** The one HMAC-SHA256 key import — shared by JWT signing and webhook verification. */
 async function hmacKey(secret: string): Promise<CryptoKey> {
-  return crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
+	return crypto.subtle.importKey(
+		"raw",
+		new TextEncoder().encode(secret),
+		{ hash: "SHA-256", name: "HMAC" },
+		false,
+		["sign"]
+	);
 }
 
 async function signJwt(
-  payload: Record<string, unknown>,
-  secret: string,
+	payload: Record<string, unknown>,
+	secret: string
 ): Promise<string> {
-  const encoder = new TextEncoder();
-  const header = base64url(encoder.encode(JSON.stringify({ alg: "HS256", typ: "JWT" })));
-  const body = base64url(encoder.encode(JSON.stringify(payload)));
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    await hmacKey(secret),
-    encoder.encode(`${header}.${body}`),
-  );
-  return `${header}.${body}.${base64url(new Uint8Array(signature))}`;
+	const encoder = new TextEncoder();
+	const header = base64url(
+		encoder.encode(JSON.stringify({ alg: "HS256", typ: "JWT" }))
+	);
+	const body = base64url(encoder.encode(JSON.stringify(payload)));
+	const signature = await crypto.subtle.sign(
+		"HMAC",
+		await hmacKey(secret),
+		encoder.encode(`${header}.${body}`)
+	);
+	return `${header}.${body}.${base64url(new Uint8Array(signature))}`;
 }
-
 
 /**
  * Is this webhook really from Stream?
@@ -73,20 +79,22 @@ async function signJwt(
  * Mirrors `verifySignature` in the `stream-chat` package's signing.ts.
  */
 export async function verifyStreamWebhookSignature(
-  rawBody: string,
-  signature: string | null,
+	rawBody: string,
+	signature: string | null
 ): Promise<boolean> {
-  if (!signature) return false;
-  const { apiSecret } = getStreamEnv();
-  const digest = await crypto.subtle.sign(
-    "HMAC",
-    await hmacKey(apiSecret),
-    new TextEncoder().encode(rawBody),
-  );
-  const hex = Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-  return timingSafeEqual(hex, signature);
+	if (!signature) {
+		return false;
+	}
+	const { apiSecret } = getStreamEnv();
+	const digest = await crypto.subtle.sign(
+		"HMAC",
+		await hmacKey(apiSecret),
+		new TextEncoder().encode(rawBody)
+	);
+	const hex = Array.from(new Uint8Array(digest))
+		.map((byte) => byte.toString(16).padStart(2, "0"))
+		.join("");
+	return timingSafeEqual(hex, signature);
 }
 
 /**
@@ -96,7 +104,7 @@ export async function verifyStreamWebhookSignature(
  * env vars fails as an unreadable WS signature error at connect time.
  */
 export function getStreamApiKey(): string {
-  return getStreamEnv().apiKey;
+	return getStreamEnv().apiKey;
 }
 
 /**
@@ -109,37 +117,39 @@ export const USER_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
 
 /** Client-facing Stream user token. userId is always a pseudonymous profile id. */
 export async function mintUserToken(userId: string): Promise<string> {
-  const { apiSecret } = getStreamEnv();
-  const exp = Math.floor(Date.now() / 1000) + USER_TOKEN_TTL_SECONDS;
-  return signJwt({ user_id: userId, exp }, apiSecret);
+	const { apiSecret } = getStreamEnv();
+	const exp = Math.floor(Date.now() / 1000) + USER_TOKEN_TTL_SECONDS;
+	return signJwt({ exp, user_id: userId }, apiSecret);
 }
 
 async function streamRequest(
-  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
-  path: string,
-  options: { query?: Record<string, string>; body?: unknown } = {},
+	method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
+	path: string,
+	options: { query?: Record<string, string>; body?: unknown } = {}
 ): Promise<Record<string, unknown>> {
-  const { apiKey, apiSecret } = getStreamEnv();
-  const serverToken = await signJwt({ server: true }, apiSecret);
-  const url = new URL(BASE_URL + path);
-  url.searchParams.set("api_key", apiKey);
-  for (const [k, v] of Object.entries(options.query ?? {})) {
-    url.searchParams.set(k, v);
-  }
-  const response = await fetch(url.toString(), {
-    method,
-    headers: {
-      Authorization: serverToken,
-      "stream-auth-type": "jwt",
-      "Content-Type": "application/json",
-    },
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
-  });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Stream ${method} ${path} failed (${response.status}): ${text}`);
-  }
-  return (await response.json()) as Record<string, unknown>;
+	const { apiKey, apiSecret } = getStreamEnv();
+	const serverToken = await signJwt({ server: true }, apiSecret);
+	const url = new URL(BASE_URL + path);
+	url.searchParams.set("api_key", apiKey);
+	for (const [k, v] of Object.entries(options.query ?? {})) {
+		url.searchParams.set(k, v);
+	}
+	const response = await fetch(url.toString(), {
+		body: options.body === undefined ? undefined : JSON.stringify(options.body),
+		headers: {
+			Authorization: serverToken,
+			"Content-Type": "application/json",
+			"stream-auth-type": "jwt",
+		},
+		method,
+	});
+	if (!response.ok) {
+		const text = await response.text();
+		throw new Error(
+			`Stream ${method} ${path} failed (${response.status}): ${text}`
+		);
+	}
+	return (await response.json()) as Record<string, unknown>;
 }
 
 export type StreamUser = { id: string; name?: string; image?: string };
@@ -161,9 +171,11 @@ export type StreamUser = { id: string; name?: string; image?: string };
  * COMPONENT_OVERRIDES in `thread-messages.tsx`.
  */
 export async function upsertStreamUsers(users: StreamUser[]): Promise<void> {
-  const userMap: Record<string, StreamUser> = {};
-  for (const user of users) userMap[user.id] = user;
-  await streamRequest("POST", "/users", { body: { users: userMap } });
+	const userMap: Record<string, StreamUser> = {};
+	for (const user of users) {
+		userMap[user.id] = user;
+	}
+	await streamRequest("POST", "/users", { body: { users: userMap } });
 }
 
 /**
@@ -173,30 +185,38 @@ export async function upsertStreamUsers(users: StreamUser[]): Promise<void> {
  * to exist go through this instead.
  */
 export async function ensureStreamUsers(users: StreamUser[]): Promise<void> {
-  const missing: StreamUser[] = [];
-  // ponytail: $in and query limit cap at 100 ids per call
-  for (let i = 0; i < users.length; i += 100) {
-    const chunk = users.slice(i, i + 100);
-    const result = await streamRequest("GET", "/users", {
-      query: {
-        payload: JSON.stringify({
-          filter_conditions: { id: { $in: chunk.map((u) => u.id) } },
-          limit: chunk.length,
-        }),
-      },
-    });
-    const known = new Set(((result.users ?? []) as { id: string }[]).map((u) => u.id));
-    for (const u of chunk) if (!known.has(u.id)) missing.push(u);
-  }
-  if (missing.length > 0) await upsertStreamUsers(missing);
+	const missing: StreamUser[] = [];
+	// ponytail: $in and query limit cap at 100 ids per call
+	for (let i = 0; i < users.length; i += 100) {
+		const chunk = users.slice(i, i + 100);
+		const result = await streamRequest("GET", "/users", {
+			query: {
+				payload: JSON.stringify({
+					filter_conditions: { id: { $in: chunk.map((u) => u.id) } },
+					limit: chunk.length,
+				}),
+			},
+		});
+		const known = new Set(
+			((result.users ?? []) as { id: string }[]).map((u) => u.id)
+		);
+		for (const u of chunk) {
+			if (!known.has(u.id)) {
+				missing.push(u);
+			}
+		}
+	}
+	if (missing.length > 0) {
+		await upsertStreamUsers(missing);
+	}
 }
 
 /** Partial update — touches only the given fields of an existing user. */
 export async function setStreamUserFields(
-  id: string,
-  set: Omit<StreamUser, "id">,
+	id: string,
+	set: Omit<StreamUser, "id">
 ): Promise<void> {
-  await streamRequest("PATCH", "/users", { body: { users: [{ id, set }] } });
+	await streamRequest("PATCH", "/users", { body: { users: [{ id, set }] } });
 }
 
 /**
@@ -204,11 +224,14 @@ export async function setStreamUserFields(
  * Channel id is deterministic per conversation row, so accept is idempotent.
  */
 export async function createXolacerChannel(
-  channelId: string,
-  memberIds: string[],
-  createdById: string,
+	channelId: string,
+	memberIds: string[],
+	createdById: string
 ): Promise<void> {
-  await upsertStreamChannel("messaging", channelId, { members: memberIds, createdById });
+	await upsertStreamChannel("messaging", channelId, {
+		createdById,
+		members: memberIds,
+	});
 }
 
 /**
@@ -218,9 +241,13 @@ export async function createXolacerChannel(
  * already-frozen channel is a no-op on Stream's side.
  */
 export async function freezeStreamChannel(channelId: string): Promise<void> {
-  await streamRequest("PATCH", `/channels/messaging/${encodeURIComponent(channelId)}`, {
-    body: { set: { frozen: true } },
-  });
+	await streamRequest(
+		"PATCH",
+		`/channels/messaging/${encodeURIComponent(channelId)}`,
+		{
+			body: { set: { frozen: true } },
+		}
+	);
 }
 
 /**
@@ -229,18 +256,18 @@ export async function freezeStreamChannel(channelId: string): Promise<void> {
  * round trip untouched, so hooks we did not create are passed back verbatim.
  */
 export type StreamEventHook = {
-  hook_type?: string;
-  enabled?: boolean;
-  webhook_url?: string;
-  event_types?: string[];
-  [key: string]: unknown;
+	hook_type?: string;
+	enabled?: boolean;
+	webhook_url?: string;
+	event_types?: string[];
+	[key: string]: unknown;
 };
 
 /** Every event hook currently registered on this Stream app. */
 export async function listStreamEventHooks(): Promise<StreamEventHook[]> {
-  const response = await streamRequest("GET", "/app");
-  const app = response.app as { event_hooks?: StreamEventHook[] } | undefined;
-  return app?.event_hooks ?? [];
+	const response = await streamRequest("GET", "/app");
+	const app = response.app as { event_hooks?: StreamEventHook[] } | undefined;
+	return app?.event_hooks ?? [];
 }
 
 /**
@@ -250,16 +277,16 @@ export async function listStreamEventHooks(): Promise<StreamEventHook[]> {
  * pass the full list — read, append, write. There is no add-one endpoint.
  */
 export async function setStreamEventHooks(
-  hooks: StreamEventHook[],
+	hooks: StreamEventHook[]
 ): Promise<void> {
-  await streamRequest("PATCH", "/app", { body: { event_hooks: hooks } });
+	await streamRequest("PATCH", "/app", { body: { event_hooks: hooks } });
 }
 
 /** Hard-delete a Stream user and their messages (account-deletion path). */
 export async function deleteStreamUser(userId: string): Promise<void> {
-  await streamRequest("DELETE", `/users/${encodeURIComponent(userId)}`, {
-    query: { mark_messages_deleted: "true", hard_delete: "true" },
-  });
+	await streamRequest("DELETE", `/users/${encodeURIComponent(userId)}`, {
+		query: { hard_delete: "true", mark_messages_deleted: "true" },
+	});
 }
 
 /**
@@ -269,10 +296,14 @@ export async function deleteStreamUser(userId: string): Promise<void> {
  * client's `getUnreadCount`.
  */
 export async function getStreamUnreadCount(userId: string): Promise<number> {
-  const response = await streamRequest("GET", "/unread", { query: { user_id: userId } });
-  const total = response.total_unread_count;
-  if (typeof total !== "number") throw new Error("Stream /unread returned no total");
-  return total;
+	const response = await streamRequest("GET", "/unread", {
+		query: { user_id: userId },
+	});
+	const total = response.total_unread_count;
+	if (typeof total !== "number") {
+		throw new Error("Stream /unread returned no total");
+	}
+	return total;
 }
 
 /**
@@ -281,10 +312,13 @@ export async function getStreamUnreadCount(userId: string): Promise<number> {
  * already watches for message flags. Mirrors the client's `flagUser` with the
  * server-side `user_id` option naming who is flagging.
  */
-export async function flagStreamUser(targetId: string, reporterId: string): Promise<void> {
-  await streamRequest("POST", "/moderation/flag", {
-    body: { target_user_id: targetId, user_id: reporterId },
-  });
+export async function flagStreamUser(
+	targetId: string,
+	reporterId: string
+): Promise<void> {
+	await streamRequest("POST", "/moderation/flag", {
+		body: { target_user_id: targetId, user_id: reporterId },
+	});
 }
 
 // ============================================================
@@ -300,7 +334,7 @@ export async function flagStreamUser(targetId: string, reporterId: string): Prom
 export const XOLACE_SYSTEM_USER_ID = "xolace";
 
 async function ensureSystemUser(): Promise<void> {
-  await upsertStreamUsers([{ id: XOLACE_SYSTEM_USER_ID, name: "Xolace" }]);
+	await upsertStreamUsers([{ id: XOLACE_SYSTEM_USER_ID, name: "Xolace" }]);
 }
 
 /**
@@ -308,11 +342,18 @@ async function ensureSystemUser(): Promise<void> {
  * post-delivery lane's answer to harassment, spam and contact leaks. Same
  * endpoint as `flagStreamUser`; the queue names the system user as flagger.
  */
-export async function flagStreamMessage(messageId: string, reason: string): Promise<void> {
-  await ensureSystemUser();
-  await streamRequest("POST", "/moderation/flag", {
-    body: { target_message_id: messageId, reason, user_id: XOLACE_SYSTEM_USER_ID },
-  });
+export async function flagStreamMessage(
+	messageId: string,
+	reason: string
+): Promise<void> {
+	await ensureSystemUser();
+	await streamRequest("POST", "/moderation/flag", {
+		body: {
+			reason,
+			target_message_id: messageId,
+			user_id: XOLACE_SYSTEM_USER_ID,
+		},
+	});
 }
 
 /**
@@ -323,41 +364,58 @@ export async function flagStreamMessage(messageId: string, reason: string): Prom
  * ride at the top level of the message, where the client SDK reads them.
  */
 export async function sendStreamSystemMessage(
-  channelId: string,
-  message: { text: string; id?: string } & Record<string, unknown>,
+	channelId: string,
+	message: { text: string; id?: string } & Record<string, unknown>
 ): Promise<void> {
-  await ensureSystemUser();
-  try {
-    await streamRequest("POST", `/channels/messaging/${encodeURIComponent(channelId)}/message`, {
-      body: {
-        message: { ...message, type: "system", user_id: XOLACE_SYSTEM_USER_ID, silent: true },
-        skip_push: true,
-      },
-    });
-  } catch (error) {
-    // A caller-supplied `id` makes the send idempotent: Stream rejects a
-    // duplicate with 400 "message with ID … already exists", which means the
-    // earlier attempt landed — a retry treats that as delivered.
-    if (message.id && isStreamDuplicateMessage(error)) return;
-    throw error;
-  }
+	await ensureSystemUser();
+	try {
+		await streamRequest(
+			"POST",
+			`/channels/messaging/${encodeURIComponent(channelId)}/message`,
+			{
+				body: {
+					message: {
+						...message,
+						silent: true,
+						type: "system",
+						user_id: XOLACE_SYSTEM_USER_ID,
+					},
+					skip_push: true,
+				},
+			}
+		);
+	} catch (error) {
+		// A caller-supplied `id` makes the send idempotent: Stream rejects a
+		// duplicate with 400 "message with ID … already exists", which means the
+		// earlier attempt landed — a retry treats that as delivered.
+		if (message.id && isStreamDuplicateMessage(error)) {
+			return;
+		}
+		throw error;
+	}
 }
 
 function isStreamDuplicateMessage(error: unknown): boolean {
-  return error instanceof Error && /\(400\).*already exists/i.test(error.message);
+	return (
+		error instanceof Error && /\(400\).*already exists/i.test(error.message)
+	);
 }
 
 /** The `messaging` channel type as Stream holds it, every field. */
-export async function getStreamChannelType(name: string): Promise<Record<string, unknown>> {
-  return streamRequest("GET", `/channeltypes/${encodeURIComponent(name)}`);
+export async function getStreamChannelType(
+	name: string
+): Promise<Record<string, unknown>> {
+	return streamRequest("GET", `/channeltypes/${encodeURIComponent(name)}`);
 }
 
 /** Top-level scalars merge; nested arrays (`blocklists`) replace — submit them whole. */
 export async function updateStreamChannelType(
-  name: string,
-  body: Record<string, unknown>,
+	name: string,
+	body: Record<string, unknown>
 ): Promise<void> {
-  await streamRequest("PUT", `/channeltypes/${encodeURIComponent(name)}`, { body });
+	await streamRequest("PUT", `/channeltypes/${encodeURIComponent(name)}`, {
+		body,
+	});
 }
 
 /**
@@ -366,20 +424,24 @@ export async function updateStreamChannelType(
  * channel type that isn't guaranteed to exist on every Stream app (unlike the built-in `messaging`).
  */
 export async function tryGetStreamChannelType(
-  name: string,
+	name: string
 ): Promise<Record<string, unknown> | null> {
-  try {
-    return await getStreamChannelType(name);
-  } catch (error) {
-    if (error instanceof Error && /\(404\)/.test(error.message)) return null;
-    throw error;
-  }
+	try {
+		return await getStreamChannelType(name);
+	} catch (error) {
+		if (error instanceof Error && /\(404\)/.test(error.message)) {
+			return null;
+		}
+		throw error;
+	}
 }
 
 /** POST /channeltypes — Stream requires only `name`; every other field defaults from the
  * built-in `messaging` type when omitted. */
-export async function createStreamChannelType(body: Record<string, unknown>): Promise<void> {
-  await streamRequest("POST", "/channeltypes", { body });
+export async function createStreamChannelType(
+	body: Record<string, unknown>
+): Promise<void> {
+	await streamRequest("POST", "/channeltypes", { body });
 }
 
 /**
@@ -388,13 +450,13 @@ export async function createStreamChannelType(body: Record<string, unknown>): Pr
  * unregistered role there.
  */
 export async function listStreamRoles(): Promise<string[]> {
-  const response = await streamRequest("GET", "/roles");
-  const roles = response.roles as Array<{ name?: string }> | undefined;
-  return (roles ?? []).map((r) => r.name).filter((n): n is string => !!n);
+	const response = await streamRequest("GET", "/roles");
+	const roles = response.roles as Array<{ name?: string }> | undefined;
+	return (roles ?? []).map((r) => r.name).filter((n): n is string => !!n);
 }
 
 export async function createStreamRole(name: string): Promise<void> {
-  await streamRequest("POST", "/roles", { body: { name } });
+	await streamRequest("POST", "/roles", { body: { name } });
 }
 
 /**
@@ -402,15 +464,20 @@ export async function createStreamRole(name: string): Promise<void> {
  * `createXolacerChannel`, which hardcodes `messaging`. Used for the fixed Xolace singleton.
  */
 export async function upsertStreamChannel(
-  channelType: string,
-  channelId: string,
-  data: { members: string[]; createdById: string },
+	channelType: string,
+	channelId: string,
+	data: { members: string[]; createdById: string }
 ): Promise<void> {
-  await streamRequest(
-    "POST",
-    `/channels/${encodeURIComponent(channelType)}/${encodeURIComponent(channelId)}/query`,
-    { body: { data: { members: data.members, created_by_id: data.createdById }, state: false } },
-  );
+	await streamRequest(
+		"POST",
+		`/channels/${encodeURIComponent(channelType)}/${encodeURIComponent(channelId)}/query`,
+		{
+			body: {
+				data: { created_by_id: data.createdById, members: data.members },
+				state: false,
+			},
+		}
+	);
 }
 
 /**
@@ -428,15 +495,15 @@ export async function upsertStreamChannel(
  * call repeatedly for the same member.
  */
 export async function addStreamChannelMembers(
-  channelType: string,
-  channelId: string,
-  memberIds: string[],
+	channelType: string,
+	channelId: string,
+	memberIds: string[]
 ): Promise<void> {
-  await streamRequest(
-    "POST",
-    `/channels/${encodeURIComponent(channelType)}/${encodeURIComponent(channelId)}`,
-    { body: { add_members: memberIds } },
-  );
+	await streamRequest(
+		"POST",
+		`/channels/${encodeURIComponent(channelType)}/${encodeURIComponent(channelId)}`,
+		{ body: { add_members: memberIds } }
+	);
 }
 
 /**
@@ -446,50 +513,73 @@ export async function addStreamChannelMembers(
  * posts (not patches) `{ assign_roles }` to the channel's own endpoint.
  */
 export async function assignStreamChannelRole(
-  channelType: string,
-  channelId: string,
-  roles: { userId: string; channelRole: string }[],
+	channelType: string,
+	channelId: string,
+	roles: { userId: string; channelRole: string }[]
 ): Promise<void> {
-  await streamRequest(
-    "POST",
-    `/channels/${encodeURIComponent(channelType)}/${encodeURIComponent(channelId)}`,
-    { body: { assign_roles: roles.map((r) => ({ user_id: r.userId, channel_role: r.channelRole })) } },
-  );
+	await streamRequest(
+		"POST",
+		`/channels/${encodeURIComponent(channelType)}/${encodeURIComponent(channelId)}`,
+		{
+			body: {
+				assign_roles: roles.map((r) => ({
+					channel_role: r.channelRole,
+					user_id: r.userId,
+				})),
+			},
+		}
+	);
 }
 
 export type StreamBlockList = { name: string; type?: string; words: string[] };
 
 export async function listStreamBlockLists(): Promise<StreamBlockList[]> {
-  const response = await streamRequest("GET", "/blocklists");
-  return (response.blocklists as StreamBlockList[] | undefined) ?? [];
+	const response = await streamRequest("GET", "/blocklists");
+	return (response.blocklists as StreamBlockList[] | undefined) ?? [];
 }
 
-export async function createStreamBlockList(list: StreamBlockList): Promise<void> {
-  await streamRequest("POST", "/blocklists", { body: list });
+export async function createStreamBlockList(
+	list: StreamBlockList
+): Promise<void> {
+	await streamRequest("POST", "/blocklists", { body: list });
 }
 
-export async function updateStreamBlockList(name: string, words: string[]): Promise<void> {
-  await streamRequest("PUT", `/blocklists/${encodeURIComponent(name)}`, { body: { words } });
+export async function updateStreamBlockList(
+	name: string,
+	words: string[]
+): Promise<void> {
+	await streamRequest("PUT", `/blocklists/${encodeURIComponent(name)}`, {
+		body: { words },
+	});
 }
 
 export async function deleteStreamBlockList(name: string): Promise<void> {
-  await streamRequest("DELETE", `/blocklists/${encodeURIComponent(name)}`);
+	await streamRequest("DELETE", `/blocklists/${encodeURIComponent(name)}`);
 }
 
 /** The Moderation v2 policy for a key such as `chat:messaging`, every field. A fresh app
  * (prod before first setup) has no policy row yet — Stream 404s — so that comes back as the
  * bare `{ key }` the planner needs to create it. */
-export async function getStreamModerationPolicy(key: string): Promise<Record<string, unknown>> {
-  try {
-    const response = await streamRequest("GET", `/api/v2/moderation/config/${encodeURIComponent(key)}`);
-    return response.config as Record<string, unknown>;
-  } catch (error) {
-    if (error instanceof Error && /\(404\)/.test(error.message)) return { key };
-    throw error;
-  }
+export async function getStreamModerationPolicy(
+	key: string
+): Promise<Record<string, unknown>> {
+	try {
+		const response = await streamRequest(
+			"GET",
+			`/api/v2/moderation/config/${encodeURIComponent(key)}`
+		);
+		return response.config as Record<string, unknown>;
+	} catch (error) {
+		if (error instanceof Error && /\(404\)/.test(error.message)) {
+			return { key };
+		}
+		throw error;
+	}
 }
 
 /** Replaces the policy — submit it whole (see `lib/streamSetup.planModerationPolicy`). */
-export async function upsertStreamModerationPolicy(body: Record<string, unknown>): Promise<void> {
-  await streamRequest("POST", "/api/v2/moderation/config", { body });
+export async function upsertStreamModerationPolicy(
+	body: Record<string, unknown>
+): Promise<void> {
+	await streamRequest("POST", "/api/v2/moderation/config", { body });
 }

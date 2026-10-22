@@ -17,7 +17,6 @@
  */
 const SLIDE_FRACTION = 0.764;
 
-
 const TEXT_BLOCK = 270;
 
 /** Held back so the figure never crowds the aside above it. */
@@ -33,13 +32,14 @@ export const REFLECT_RATIO = 0.42;
  * stops reading as a reflection.
  */
 export const deckFigureHeight = (screenHeight: number) =>
-  Math.max(
-    118,
-    Math.min(
-      290,
-      (screenHeight * SLIDE_FRACTION - TEXT_BLOCK - BREATHING_ROOM) / (1 + REFLECT_RATIO),
-    ),
-  );
+	Math.max(
+		118,
+		Math.min(
+			290,
+			(screenHeight * SLIDE_FRACTION - TEXT_BLOCK - BREATHING_ROOM) /
+				(1 + REFLECT_RATIO)
+		)
+	);
 
 /**
  * The Xolacers beat's figure, as a multiple of the pair's.

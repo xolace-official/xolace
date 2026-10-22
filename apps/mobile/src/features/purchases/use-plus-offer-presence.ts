@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState } from "react";
 import { usePostHog } from "posthog-react-native";
+import { useEffect, useRef, useState } from "react";
 import { plusOfferCopy } from "@/src/features/purchases/plus-offer-copy";
 import {
-  plusOfferSurfaceForMoment,
-  type PlusOfferMoment,
-  type PlusOfferVariant,
+	type PlusOfferMoment,
+	type PlusOfferVariant,
+	plusOfferSurfaceForMoment,
 } from "@/src/features/purchases/plus-offer-policy";
 import { playSoftPress } from "@/src/lib/haptics";
 import { useAppStore } from "@/src/store/store";
 
 type Options = {
-  moment: PlusOfferMoment;
-  variant?: PlusOfferVariant;
-  sessionId?: string | null;
-  onOpen: () => void;
-  onDismiss?: () => void;
+	moment: PlusOfferMoment;
+	variant?: PlusOfferVariant;
+	sessionId?: string | null;
+	onOpen: () => void;
+	onDismiss?: () => void;
 };
 
 /**
@@ -25,37 +25,39 @@ type Options = {
  * the bug this keeps out of every call site.
  */
 export function usePlusOfferPresence({
-  moment,
-  variant = "default",
-  sessionId = null,
-  onOpen,
-  onDismiss,
+	moment,
+	variant = "default",
+	sessionId = null,
+	onOpen,
+	onDismiss,
 }: Options) {
-  const posthog = usePostHog();
-  const recordDismissal = useAppStore((s) => s.recordPlusOfferDismissal);
-  const recordShown = useAppStore((s) => s.recordPlusOfferShown);
-  const shownRef = useRef(false);
-  const [declined, setDeclined] = useState(false);
+	const posthog = usePostHog();
+	const recordDismissal = useAppStore((s) => s.recordPlusOfferDismissal);
+	const recordShown = useAppStore((s) => s.recordPlusOfferShown);
+	const shownRef = useRef(false);
+	const [declined, setDeclined] = useState(false);
 
-  useEffect(() => {
-    if (shownRef.current) return;
-    shownRef.current = true;
-    posthog.capture("plus_offer_shown", { moment, variant });
-    recordShown(sessionId);
-  }, [posthog, moment, variant, recordShown, sessionId]);
+	useEffect(() => {
+		if (shownRef.current) {
+			return;
+		}
+		shownRef.current = true;
+		posthog.capture("plus_offer_shown", { moment, variant });
+		recordShown(sessionId);
+	}, [posthog, moment, variant, recordShown, sessionId]);
 
-  const open = () => {
-    playSoftPress();
-    onOpen();
-  };
+	const open = () => {
+		playSoftPress();
+		onOpen();
+	};
 
-  const dismiss = () => {
-    playSoftPress();
-    setDeclined(true);
-    posthog.capture("plus_offer_dismissed", { moment, variant });
-    recordDismissal(plusOfferSurfaceForMoment(moment));
-    onDismiss?.();
-  };
+	const dismiss = () => {
+		playSoftPress();
+		setDeclined(true);
+		posthog.capture("plus_offer_dismissed", { moment, variant });
+		recordDismissal(plusOfferSurfaceForMoment(moment));
+		onDismiss?.();
+	};
 
-  return { copy: plusOfferCopy(moment, variant), declined, open, dismiss };
+	return { copy: plusOfferCopy(moment, variant), declined, dismiss, open };
 }

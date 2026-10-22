@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/expo";
-import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import * as Sentry from "@sentry/react-native";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 
 type ClerkGetToken = ReturnType<typeof useAuth>["getToken"];
 
@@ -28,16 +28,16 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 let reauthEpoch = 0;
 const epochListeners = new Set<() => void>();
 export const subscribeEpoch = (listener: () => void) => {
-  epochListeners.add(listener);
-  return () => {
-    epochListeners.delete(listener);
-  };
+	epochListeners.add(listener);
+	return () => {
+		epochListeners.delete(listener);
+	};
 };
 export const getReauthEpoch = () => reauthEpoch;
 
 export function requestConvexReauth() {
-  reauthEpoch++;
-  epochListeners.forEach((listener) => listener());
+	reauthEpoch++;
+	epochListeners.forEach((listener) => listener());
 }
 
 /**
@@ -45,8 +45,8 @@ export function requestConvexReauth() {
  * case) reports Clerk's value untouched.
  */
 export const sessionIdWithEpoch = (
-  sessionId: string | null | undefined,
-  epoch: number,
+	sessionId: string | null | undefined,
+	epoch: number
 ) => (epoch > 0 && sessionId ? `${sessionId}#${epoch}` : sessionId);
 
 /**
@@ -67,62 +67,68 @@ export const sessionIdWithEpoch = (
  * {@link requestConvexReauth} exploits.
  */
 export function useResilientClerkAuth() {
-  const auth = useAuth();
-  const epoch = useSyncExternalStore(
-    subscribeEpoch,
-    getReauthEpoch,
-    getReauthEpoch,
-  );
-  const getTokenRef = useRef(auth.getToken);
-  const isSignedInRef = useRef(auth.isSignedIn);
-  useEffect(() => {
-    getTokenRef.current = auth.getToken;
-    isSignedInRef.current = auth.isSignedIn;
-  }, [auth.getToken, auth.isSignedIn]);
+	const auth = useAuth();
+	const epoch = useSyncExternalStore(
+		subscribeEpoch,
+		getReauthEpoch,
+		getReauthEpoch
+	);
+	const getTokenRef = useRef(auth.getToken);
+	const isSignedInRef = useRef(auth.isSignedIn);
+	useEffect(() => {
+		getTokenRef.current = auth.getToken;
+		isSignedInRef.current = auth.isSignedIn;
+	}, [auth.getToken, auth.isSignedIn]);
 
-  const getToken = useCallback<ClerkGetToken>(async (options) => {
-    const start = Date.now();
-    let attempt = 0;
-    let lastError: unknown = null;
+	const getToken = useCallback<ClerkGetToken>(async (options) => {
+		const start = Date.now();
+		let attempt = 0;
+		let lastError: unknown = null;
 
-    // Retry only while Clerk still claims a session — a failure then is the boot
-    // race, not a real sign-out. The first iteration always runs.
-    while (true) {
-      attempt++;
-      try {
-        const token = await getTokenRef.current(options);
-        if (token) return token;
-        lastError = null;
-      } catch (error) {
-        lastError = error;
-      }
-      if (isSignedInRef.current !== true) break;
-      if (Date.now() - start + RETRY_DELAY_MS >= RETRY_WINDOW_MS) break;
-      await sleep(RETRY_DELAY_MS);
-    }
+		// Retry only while Clerk still claims a session — a failure then is the boot
+		// race, not a real sign-out. The first iteration always runs.
+		while (true) {
+			attempt++;
+			try {
+				const token = await getTokenRef.current(options);
+				if (token) {
+					return token;
+				}
+				lastError = null;
+			} catch (error) {
+				lastError = error;
+			}
+			if (isSignedInRef.current !== true) {
+				break;
+			}
+			if (Date.now() - start + RETRY_DELAY_MS >= RETRY_WINDOW_MS) {
+				break;
+			}
+			await sleep(RETRY_DELAY_MS);
+		}
 
-    // Exhausted while still signed in: a token never minted in the window — a
-    // genuine failure, not the transient boot race. Surface it; this is rare and
-    // actionable (the only thing left that would still strand a user on auth).
-    if (isSignedInRef.current === true) {
-      const err =
-        lastError instanceof Error
-          ? `${lastError.name}: ${lastError.message}`
-          : lastError != null
-            ? String(lastError)
-            : "null-token";
-      Sentry.captureMessage(
-        `Clerk getToken never minted after ${attempt} attempts in ${Date.now() - start}ms (skipCache:${options?.skipCache ?? false} err:${err})`,
-        "error",
-      );
-    }
-    // Match Clerk's native contract: null means unauthenticated.
-    return null;
-  }, []);
+		// Exhausted while still signed in: a token never minted in the window — a
+		// genuine failure, not the transient boot race. Surface it; this is rare and
+		// actionable (the only thing left that would still strand a user on auth).
+		if (isSignedInRef.current === true) {
+			const err =
+				lastError instanceof Error
+					? `${lastError.name}: ${lastError.message}`
+					: lastError == null
+						? "null-token"
+						: String(lastError);
+			Sentry.captureMessage(
+				`Clerk getToken never minted after ${attempt} attempts in ${Date.now() - start}ms (skipCache:${options?.skipCache ?? false} err:${err})`,
+				"error"
+			);
+		}
+		// Match Clerk's native contract: null means unauthenticated.
+		return null;
+	}, []);
 
-  return {
-    ...auth,
-    getToken,
-    sessionId: sessionIdWithEpoch(auth.sessionId, epoch),
-  };
+	return {
+		...auth,
+		getToken,
+		sessionId: sessionIdWithEpoch(auth.sessionId, epoch),
+	};
 }

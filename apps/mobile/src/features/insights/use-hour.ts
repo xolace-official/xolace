@@ -9,10 +9,10 @@ const hour = () => Math.floor(Date.now() / HOUR) * HOUR;
  * Hourly keeps the subscription cache warm while still crossing day boundaries.
  */
 export function useHour() {
-  const [now, setNow] = useState(hour);
-  useEffect(() => {
-    const id = setTimeout(() => setNow(hour()), now + HOUR - Date.now());
-    return () => clearTimeout(id);
-  }, [now]);
-  return now;
+	const [now, setNow] = useState(hour);
+	useEffect(() => {
+		const id = setTimeout(() => setNow(hour()), now + HOUR - Date.now());
+		return () => clearTimeout(id);
+	}, [now]);
+	return now;
 }

@@ -1,16 +1,16 @@
 export interface TimelineEntry {
-  id: string;
-  mirrorText: string;
-  entryType: string;
-  hasMirrorAudio: boolean;
-  primaryEmotion: string | null;
-  granularLabel: string | null;
-  pathChosen: string | null;
-  toneUsed: string | null;
-  confirmationState: string | null;
-  createdAt: number;
+	confirmationState: string | null;
+	createdAt: number;
+	entryType: string;
+	granularLabel: string | null;
+	hasMirrorAudio: boolean;
+	id: string;
+	mirrorText: string;
+	pathChosen: string | null;
+	primaryEmotion: string | null;
+	toneUsed: string | null;
 }
 
 export type TimelineFlatItem =
-  | { type: "section"; id: string; label: string }
-  | { type: "entry"; id: string; entry: TimelineEntry };
+	| { type: "section"; id: string; label: string }
+	| { type: "entry"; id: string; entry: TimelineEntry };

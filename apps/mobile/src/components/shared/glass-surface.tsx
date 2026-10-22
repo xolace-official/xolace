@@ -1,9 +1,10 @@
 // Liquid-glass card, ported from sample-codes/clarity-main (ui/glass-surface)
 // onto Xolace tokens (#491).
-import type { ReactNode } from "react";
-import { View, type ViewStyle } from "react-native";
+
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { useThemeColor } from "heroui-native";
+import type { ReactNode } from "react";
+import { View, type ViewStyle } from "react-native";
 import { useAppTheme } from "@/src/context/app-theme-context";
 
 // heroui-native's token union only knows built-ins; custom tokens (ember, …) resolve fine at runtime.
@@ -19,41 +20,58 @@ export const FADE_OUT = hasGlass ? {} : { opacity: 1 };
 const unclipped: ViewStyle = { overflow: "visible" };
 
 type SurfaceProps = {
-  children?: ReactNode;
-  radius?: number;
-  className?: string;
-  tint?: string;
-  /** Native press response. Only for a surface that is itself tappable. */
-  interactive?: boolean;
+	children?: ReactNode;
+	radius?: number;
+	className?: string;
+	tint?: string;
+	/** Native press response. Only for a surface that is itself tappable. */
+	interactive?: boolean;
 };
 
 /**
  * Frosted surface; `tint` is a token name washed faintly into the glass.
  * Never put it under an animated opacity — the blur stops rendering.
  */
-export function GlassSurface({ children, radius = 32, className, tint, interactive }: SurfaceProps) {
-  const surface = useToken("surface");
-  const tintColor = useToken(tint ?? "surface");
-  const { isDark } = useAppTheme();
-  const shape: ViewStyle = { borderRadius: radius, borderCurve: "continuous", overflow: "hidden" };
-  // GlassView is third-party, so Uniwind ignores a className on it; style the inside instead.
-  const inner = <View className={className}>{children}</View>;
-  if (!isLiquidGlassAvailable()) {
-    return (
-      <View style={[shape, { backgroundColor: surface + "CC" }]}>
-        <View style={tint ? { backgroundColor: tintColor + "1A" } : undefined}>{inner}</View>
-      </View>
-    );
-  }
-  return (
-    // Follow the app's theme, not the OS: the two can disagree.
-    <GlassView
-      glassEffectStyle="regular"
-      colorScheme={isDark ? "dark" : "light"}
-      isInteractive={interactive}
-      tintColor={tint ? tintColor + "33" : undefined}
-      style={[shape, interactive && unclipped, { backgroundColor: surface + "40" }]}>
-      {inner}
-    </GlassView>
-  );
+export function GlassSurface({
+	children,
+	radius = 32,
+	className,
+	tint,
+	interactive,
+}: SurfaceProps) {
+	const surface = useToken("surface");
+	const tintColor = useToken(tint ?? "surface");
+	const { isDark } = useAppTheme();
+	const shape: ViewStyle = {
+		borderCurve: "continuous",
+		borderRadius: radius,
+		overflow: "hidden",
+	};
+	// GlassView is third-party, so Uniwind ignores a className on it; style the inside instead.
+	const inner = <View className={className}>{children}</View>;
+	if (!isLiquidGlassAvailable()) {
+		return (
+			<View style={[shape, { backgroundColor: surface + "CC" }]}>
+				<View style={tint ? { backgroundColor: tintColor + "1A" } : undefined}>
+					{inner}
+				</View>
+			</View>
+		);
+	}
+	return (
+		// Follow the app's theme, not the OS: the two can disagree.
+		<GlassView
+			colorScheme={isDark ? "dark" : "light"}
+			glassEffectStyle="regular"
+			isInteractive={interactive}
+			style={[
+				shape,
+				interactive && unclipped,
+				{ backgroundColor: surface + "40" },
+			]}
+			tintColor={tint ? tintColor + "33" : undefined}
+		>
+			{inner}
+		</GlassView>
+	);
 }

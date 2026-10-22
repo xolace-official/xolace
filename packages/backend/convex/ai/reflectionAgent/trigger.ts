@@ -1,20 +1,20 @@
 import { v } from "convex/values";
-import { internalAction, type ActionCtx } from "../../_generated/server";
-import type { Id } from "../../_generated/dataModel";
 import { internal } from "../../_generated/api";
+import type { Id } from "../../_generated/dataModel";
+import { type ActionCtx, internalAction } from "../../_generated/server";
 import { rateLimiter } from "../../lib/rateLimits";
 import { posthog } from "../../posthog";
 import {
-  getAnthropicClient,
-  extractTextFromResponse,
-  REFLECTION_LIGHT_MODEL,
-  REFLECTION_LIGHT_VERSION,
-  thinkingOff,
-} from "../providers/anthropic";
-import {
-  buildLightPassPrompt,
-  parseLightPassResponse,
+	buildLightPassPrompt,
+	parseLightPassResponse,
 } from "../prompts/reflectionLight";
+import {
+	extractTextFromResponse,
+	getAnthropicClient,
+	REFLECTION_LIGHT_MODEL,
+	REFLECTION_LIGHT_VERSION,
+	thinkingOff,
+} from "../providers/anthropic";
 import { workflow } from "./consolidation";
 
 // =============================================================
@@ -41,88 +41,100 @@ const LIGHT_MAX_TOKENS = 256;
  * other and nothing ever throws back into the scheduler.
  */
 export const onSessionComplete = internalAction({
-  args: {
-    emotionalProfileId: v.id("emotional_profiles"),
-    sessionId: v.id("sessions"),
-  },
-  handler: async (ctx, args) => {
-    const key = args.emotionalProfileId;
+	args: {
+		emotionalProfileId: v.id("emotional_profiles"),
+		sessionId: v.id("sessions"),
+	},
+	handler: async (ctx, args) => {
+		const key = args.emotionalProfileId;
 
-    // ── Light pass: refresh the trajectory line ──────────────────
-    try {
-      const { ok } = await rateLimiter.limit(ctx, "reflectionLightPass", { key });
-      if (ok) {
-        const lightCtx = await ctx.runQuery(
-          internal.ai.reflectionAgent.triggerQueries.getLightPassContext,
-          { emotionalProfileId: args.emotionalProfileId, sessionId: args.sessionId },
-        );
-        const prompt = buildLightPassPrompt(lightCtx);
-        const anthropic = getAnthropicClient();
-        const response = await anthropic.messages.create({
-          model: REFLECTION_LIGHT_MODEL,
-          max_tokens: LIGHT_MAX_TOKENS,
-          thinking: thinkingOff(REFLECTION_LIGHT_MODEL),
-          system: prompt.system,
-          messages: [{ role: "user", content: prompt.user }],
-        });
-        const parsed = parseLightPassResponse(extractTextFromResponse(response));
-        if (parsed) {
-          await ctx.runMutation(internal.semanticProfiles.updateTrajectory, {
-            emotionalProfileId: args.emotionalProfileId,
-            trajectory: parsed.trajectory,
-            writerVersion: REFLECTION_LIGHT_VERSION,
-          });
-          await posthog.capture(ctx, {
-            distinctId: args.emotionalProfileId,
-            event: "reflect_light_pass",
-            properties: { writerVersion: REFLECTION_LIGHT_VERSION },
-          });
-        }
-      }
-    } catch (err) {
-      console.error("[reflectionAgent] light pass failed", {
-        message: err instanceof Error ? err.message : String(err),
-        sessionId: args.sessionId,
-      });
-    }
+		// ── Light pass: refresh the trajectory line ──────────────────
+		try {
+			const { ok } = await rateLimiter.limit(ctx, "reflectionLightPass", {
+				key,
+			});
+			if (ok) {
+				const lightCtx = await ctx.runQuery(
+					internal.ai.reflectionAgent.triggerQueries.getLightPassContext,
+					{
+						emotionalProfileId: args.emotionalProfileId,
+						sessionId: args.sessionId,
+					}
+				);
+				const prompt = buildLightPassPrompt(lightCtx);
+				const anthropic = getAnthropicClient();
+				const response = await anthropic.messages.create({
+					max_tokens: LIGHT_MAX_TOKENS,
+					messages: [{ content: prompt.user, role: "user" }],
+					model: REFLECTION_LIGHT_MODEL,
+					system: prompt.system,
+					thinking: thinkingOff(REFLECTION_LIGHT_MODEL),
+				});
+				const parsed = parseLightPassResponse(
+					extractTextFromResponse(response)
+				);
+				if (parsed) {
+					await ctx.runMutation(internal.semanticProfiles.updateTrajectory, {
+						emotionalProfileId: args.emotionalProfileId,
+						trajectory: parsed.trajectory,
+						writerVersion: REFLECTION_LIGHT_VERSION,
+					});
+					await posthog.capture(ctx, {
+						distinctId: args.emotionalProfileId,
+						event: "reflect_light_pass",
+						properties: { writerVersion: REFLECTION_LIGHT_VERSION },
+					});
+				}
+			}
+		} catch (err) {
+			console.error("[reflectionAgent] light pass failed", {
+				message: err instanceof Error ? err.message : String(err),
+				sessionId: args.sessionId,
+			});
+		}
 
-    // ── Consolidation gate: maybe start the deep pass ────────────
-    try {
-      const { due } = await ctx.runQuery(
-        internal.ai.reflectionAgent.triggerQueries.getConsolidationGate,
-        { emotionalProfileId: args.emotionalProfileId },
-      );
-      if (!due) return;
+		// ── Consolidation gate: maybe start the deep pass ────────────
+		try {
+			const { due } = await ctx.runQuery(
+				internal.ai.reflectionAgent.triggerQueries.getConsolidationGate,
+				{ emotionalProfileId: args.emotionalProfileId }
+			);
+			if (!due) {
+				return;
+			}
 
-      await startConsolidation(ctx, args.emotionalProfileId);
-    } catch (err) {
-      console.error("[reflectionAgent] consolidation trigger failed", {
-        message: err instanceof Error ? err.message : String(err),
-        emotionalProfileId: args.emotionalProfileId,
-      });
-    }
-  },
+			await startConsolidation(ctx, args.emotionalProfileId);
+		} catch (err) {
+			console.error("[reflectionAgent] consolidation trigger failed", {
+				emotionalProfileId: args.emotionalProfileId,
+				message: err instanceof Error ? err.message : String(err),
+			});
+		}
+	},
 });
 
 /** Start the deep pass, within the per-user token budget. */
 async function startConsolidation(
-  ctx: ActionCtx,
-  emotionalProfileId: Id<"emotional_profiles">,
+	ctx: ActionCtx,
+	emotionalProfileId: Id<"emotional_profiles">
 ): Promise<void> {
-  const { ok } = await rateLimiter.limit(ctx, "reflectionConsolidation", {
-    key: emotionalProfileId,
-  });
-  if (!ok) return; // per-user token budget spent for today
+	const { ok } = await rateLimiter.limit(ctx, "reflectionConsolidation", {
+		key: emotionalProfileId,
+	});
+	if (!ok) {
+		return; // per-user token budget spent for today
+	}
 
-  await workflow.start(
-    ctx,
-    internal.ai.reflectionAgent.consolidation.consolidationWorkflow,
-    { emotionalProfileId },
-    {
-      onComplete: internal.ai.reflectionAgent.consolidation.onConsolidationComplete,
-      context: {},
-    },
-  );
+	await workflow.start(
+		ctx,
+		internal.ai.reflectionAgent.consolidation.consolidationWorkflow,
+		{ emotionalProfileId },
+		{
+			context: {},
+			onComplete:
+				internal.ai.reflectionAgent.consolidation.onConsolidationComplete,
+		}
+	);
 }
 
 /**
@@ -130,10 +142,10 @@ async function startConsolidation(
  * for the activity gate (#525). Scheduled by premium.onEntitlementActivated.
  */
 export const runOnUpgrade = internalAction({
-  args: { emotionalProfileId: v.id("emotional_profiles") },
-  returns: v.null(),
-  handler: async (ctx, { emotionalProfileId }) => {
-    await startConsolidation(ctx, emotionalProfileId);
-    return null;
-  },
+	args: { emotionalProfileId: v.id("emotional_profiles") },
+	handler: async (ctx, { emotionalProfileId }) => {
+		await startConsolidation(ctx, emotionalProfileId);
+		return null;
+	},
+	returns: v.null(),
 });

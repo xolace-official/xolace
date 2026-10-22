@@ -1,13 +1,13 @@
+import { Button, Spinner, useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { FadeIn, LinearTransition } from "react-native-reanimated";
-import { Button, Spinner, useThemeColor } from "heroui-native";
 import { AppText } from "@/src/components/shared/app-text";
 
 const SPINNER_ENTERING = FadeIn.delay(50);
 
 type Props = {
-  isRetrying: boolean;
-  onRetry: () => void;
+	isRetrying: boolean;
+	onRetry: () => void;
 };
 
 /**
@@ -18,43 +18,46 @@ type Props = {
  * users on transient App Store / network failures.
  */
 export function PaywallPlansUnavailable({ isRetrying, onRetry }: Props) {
-  const accentForeground = useThemeColor("accent-foreground") as string;
+	const accentForeground = useThemeColor("accent-foreground") as string;
 
-  return (
-    <View className="gap-4">
-      <View
-        className="rounded-2xl border border-border bg-surface px-4 py-4 items-center gap-1"
-        style={styles.borderCurve}
-      >
-        <AppText className="text-[15px] font-semibold text-foreground">
-          Plans are temporarily unavailable
-        </AppText>
-        <AppText className="text-[12px] text-muted text-center leading-4">
-          We couldn&apos;t reach the App Store. Check your connection and try again.
-        </AppText>
-      </View>
+	return (
+		<View className="gap-4">
+			<View
+				className="items-center gap-1 rounded-2xl border border-border bg-surface px-4 py-4"
+				style={styles.borderCurve}
+			>
+				<AppText className="font-semibold text-[15px] text-foreground">
+					Plans are temporarily unavailable
+				</AppText>
+				<AppText className="text-center text-[12px] text-muted leading-4">
+					We couldn&apos;t reach the App Store. Check your connection and try
+					again.
+				</AppText>
+			</View>
 
-      <Button
-        onPress={onRetry}
-        isDisabled={isRetrying}
-        accessibilityRole="button"
-        accessibilityLabel="Try again"
-        variant="primary"
-        size="lg"
-        isIconOnly={isRetrying}
-        layout={LinearTransition.springify()}
-        className={`rounded-2xl${isRetrying ? " self-center" : " w-full"}`}
-      >
-        {isRetrying ? (
-          <Spinner entering={SPINNER_ENTERING} color={accentForeground} />
-        ) : (
-          <Button.Label className="text-base font-medium">Try again</Button.Label>
-        )}
-      </Button>
-    </View>
-  );
+			<Button
+				accessibilityLabel="Try again"
+				accessibilityRole="button"
+				className={`rounded-2xl${isRetrying ? "self-center" : "w-full"}`}
+				isDisabled={isRetrying}
+				isIconOnly={isRetrying}
+				layout={LinearTransition.springify()}
+				onPress={onRetry}
+				size="lg"
+				variant="primary"
+			>
+				{isRetrying ? (
+					<Spinner color={accentForeground} entering={SPINNER_ENTERING} />
+				) : (
+					<Button.Label className="font-medium text-base">
+						Try again
+					</Button.Label>
+				)}
+			</Button>
+		</View>
+	);
 }
 
 const styles = StyleSheet.create({
-  borderCurve: { borderCurve: "continuous" },
+	borderCurve: { borderCurve: "continuous" },
 });

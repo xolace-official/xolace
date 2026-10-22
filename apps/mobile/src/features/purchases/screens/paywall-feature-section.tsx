@@ -1,12 +1,12 @@
-import { View } from "react-native";
 import { Separator, Surface } from "heroui-native";
-import { AppText } from "@/src/components/shared/app-text";
 import type { ReactElement } from "react";
+import { View } from "react-native";
+import { AppText } from "@/src/components/shared/app-text";
 import type { PaywallFeatureId } from "./paywall-surface-map";
 
 type Props = {
-  title: string;
-  children: ReactElement<{ id: PaywallFeatureId }>[];
+	title: string;
+	children: ReactElement<{ id: PaywallFeatureId }>[];
 };
 
 /**
@@ -15,17 +15,19 @@ type Props = {
  * themed HeroUI Surface, with Separator between rows instead of a hairline.
  */
 export function PaywallFeatureSection({ title, children }: Props) {
-  return (
-    <View className="gap-3">
-      <AppText className="text-lg font-semibold text-foreground text-center">{title}</AppText>
-      <Surface variant="secondary" className="gap-4">
-        {children.map((child, index) => (
-          <View key={child.props.id}>
-            {index > 0 && <Separator className="mb-4" />}
-            {child}
-          </View>
-        ))}
-      </Surface>
-    </View>
-  );
+	return (
+		<View className="gap-3">
+			<AppText className="text-center font-semibold text-foreground text-lg">
+				{title}
+			</AppText>
+			<Surface className="gap-4" variant="secondary">
+				{children.map((child, index) => (
+					<View key={child.props.id}>
+						{index > 0 && <Separator className="mb-4" />}
+						{child}
+					</View>
+				))}
+			</Surface>
+		</View>
+	);
 }

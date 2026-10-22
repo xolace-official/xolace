@@ -14,7 +14,7 @@ export const LEVEL_OPACITY = [1, 0.28, 0.5, 0.74, 1] as const;
  * kind they passed.
  */
 export function isToken(value: string | undefined): value is string {
-  return typeof value === 'string' && value.startsWith('--');
+	return typeof value === "string" && value.startsWith("--");
 }
 
 /** Room left for the weekday labels when the y-axis does not ask for its own. */
@@ -37,26 +37,26 @@ export const DEFAULT_HOLD = 180;
 
 /** Weekday names, indexed from Sunday, as the `Date` API numbers them. */
 export const WEEKDAYS = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
+	"Sunday",
+	"Monday",
+	"Tuesday",
+	"Wednesday",
+	"Thursday",
+	"Friday",
+	"Saturday",
 ] as const;
 
 export const MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
+	"Jan",
+	"Feb",
+	"Mar",
+	"Apr",
+	"May",
+	"Jun",
+	"Jul",
+	"Aug",
+	"Sep",
+	"Oct",
+	"Nov",
+	"Dec",
 ] as const;

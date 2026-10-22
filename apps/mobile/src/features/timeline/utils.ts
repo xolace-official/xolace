@@ -1,33 +1,36 @@
-import type { TimelineEntry, TimelineFlatItem } from '@/src/features/timeline/types';
+import type {
+	TimelineEntry,
+	TimelineFlatItem,
+} from "@/src/features/timeline/types";
 
 /** Shape returned by `sessions.listForTimeline` per enriched session. */
 type TimelineSession = {
-  _id: string;
-  mirrorText: string;
-  entryType: string;
-  hasMirrorAudio: boolean;
-  primaryEmotion: string | null;
-  granularLabel: string | null;
-  pathChosen: string | null;
-  toneUsed: string | null;
-  confirmationState: string | null;
-  createdAt: number;
+	_id: string;
+	mirrorText: string;
+	entryType: string;
+	hasMirrorAudio: boolean;
+	primaryEmotion: string | null;
+	granularLabel: string | null;
+	pathChosen: string | null;
+	toneUsed: string | null;
+	confirmationState: string | null;
+	createdAt: number;
 };
 
 /** Maps a `listForTimeline` result row to the client-side `TimelineEntry` shape. */
 export function toTimelineEntry(session: TimelineSession): TimelineEntry {
-  return {
-    id: session._id,
-    mirrorText: session.mirrorText,
-    entryType: session.entryType,
-    hasMirrorAudio: session.hasMirrorAudio,
-    primaryEmotion: session.primaryEmotion,
-    granularLabel: session.granularLabel,
-    pathChosen: session.pathChosen,
-    toneUsed: session.toneUsed,
-    confirmationState: session.confirmationState,
-    createdAt: session.createdAt,
-  };
+	return {
+		confirmationState: session.confirmationState,
+		createdAt: session.createdAt,
+		entryType: session.entryType,
+		granularLabel: session.granularLabel,
+		hasMirrorAudio: session.hasMirrorAudio,
+		id: session._id,
+		mirrorText: session.mirrorText,
+		pathChosen: session.pathChosen,
+		primaryEmotion: session.primaryEmotion,
+		toneUsed: session.toneUsed,
+	};
 }
 
 /**
@@ -37,24 +40,26 @@ export function toTimelineEntry(session: TimelineSession): TimelineEntry {
  * @returns `Today` if the timestamp is the current day, `Yesterday` if it was one day ago, `X days ago` for 2–6 days ago, or a short month/day string (for example, `Jan 3`) for dates 7 or more days ago
  */
 function getRelativeLabel(timestamp: number): string {
-  const now = new Date();
-  const date = new Date(timestamp);
-  const nowUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  const dateUtc = Date.UTC(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-  );
-  const diffDays = Math.floor((nowUtc - dateUtc) / 86400000);
+	const now = new Date();
+	const date = new Date(timestamp);
+	const nowUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+	const dateUtc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+	const diffDays = Math.floor((nowUtc - dateUtc) / 86_400_000);
 
-  if (diffDays <= 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
+	if (diffDays <= 0) {
+		return "Today";
+	}
+	if (diffDays === 1) {
+		return "Yesterday";
+	}
+	if (diffDays < 7) {
+		return `${diffDays} days ago`;
+	}
 
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-  }).format(date);
+	return new Intl.DateTimeFormat("en-US", {
+		day: "numeric",
+		month: "short",
+	}).format(date);
 }
 
 /**
@@ -64,21 +69,21 @@ function getRelativeLabel(timestamp: number): string {
  * @returns An array of TimelineFlatItem containing section items (type `'section'`) followed by the corresponding entry items (type `'entry'`) for each relative date.
  */
 export function buildTimelineSections(
-  entries: TimelineEntry[],
+	entries: TimelineEntry[]
 ): TimelineFlatItem[] {
-  const result: TimelineFlatItem[] = [];
-  let lastLabel = '';
+	const result: TimelineFlatItem[] = [];
+	let lastLabel = "";
 
-  for (const entry of entries) {
-    const label = getRelativeLabel(entry.createdAt);
+	for (const entry of entries) {
+		const label = getRelativeLabel(entry.createdAt);
 
-    if (label !== lastLabel) {
-      result.push({ type: 'section', id: `section-${label}`, label });
-      lastLabel = label;
-    }
+		if (label !== lastLabel) {
+			result.push({ id: `section-${label}`, label, type: "section" });
+			lastLabel = label;
+		}
 
-    result.push({ type: 'entry', id: entry.id, entry });
-  }
+		result.push({ entry, id: entry.id, type: "entry" });
+	}
 
-  return result;
+	return result;
 }

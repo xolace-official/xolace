@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
-import { Uniwind } from 'uniwind';
-import { useAppStore } from '@/src/store/store';
-import { usePreferenceMutation } from '@/src/features/settings/hooks/use-preference-mutation';
-import { usePlusEntitlement } from './use-plus-entitlement';
-import { planPremiumThemeReset } from './premium-theme-reset';
+import { useEffect } from "react";
+import { Uniwind } from "uniwind";
+import { usePreferenceMutation } from "@/src/features/settings/hooks/use-preference-mutation";
+import { useAppStore } from "@/src/store/store";
+import { planPremiumThemeReset } from "./premium-theme-reset";
+import { usePlusEntitlement } from "./use-plus-entitlement";
 
 /**
  * Drops a lapsed subscriber off a premium theme.
@@ -17,34 +17,38 @@ import { planPremiumThemeReset } from './premium-theme-reset';
  * hook only applies the store + Uniwind writes it returns.
  */
 export function usePremiumThemeReconciler() {
-  const { isPlus, isResolved } = usePlusEntitlement();
-  const colorThemeId = useAppStore((s) => s.colorThemeId);
-  const updatePreferences = usePreferenceMutation();
+	const { isPlus, isResolved } = usePlusEntitlement();
+	const colorThemeId = useAppStore((s) => s.colorThemeId);
+	const updatePreferences = usePreferenceMutation();
 
-  useEffect(() => {
-    const {
-      theme: storedTheme,
-      previousTheme,
-      setColorThemeId,
-      setPreviousTheme,
-    } = useAppStore.getState();
+	useEffect(() => {
+		const {
+			theme: storedTheme,
+			previousTheme,
+			setColorThemeId,
+			setPreviousTheme,
+		} = useAppStore.getState();
 
-    const plan = planPremiumThemeReset({
-      isPlus,
-      isResolved,
-      colorThemeId,
-      previousTheme,
-      currentTheme: Uniwind.currentTheme,
-      storedTheme,
-    });
-    if (!plan) return;
+		const plan = planPremiumThemeReset({
+			colorThemeId,
+			currentTheme: Uniwind.currentTheme,
+			isPlus,
+			isResolved,
+			previousTheme,
+			storedTheme,
+		});
+		if (!plan) {
+			return;
+		}
 
-    setColorThemeId('default');
-    updatePreferences({ colorTheme: 'default' });
+		setColorThemeId("default");
+		updatePreferences({ colorTheme: "default" });
 
-    if (plan.clearPreviousTheme) setPreviousTheme(null);
-    if (plan.applyBaseTheme !== null) {
-      Uniwind.setTheme(plan.applyBaseTheme as never);
-    }
-  }, [isPlus, isResolved, colorThemeId, updatePreferences]);
+		if (plan.clearPreviousTheme) {
+			setPreviousTheme(null);
+		}
+		if (plan.applyBaseTheme !== null) {
+			Uniwind.setTheme(plan.applyBaseTheme as never);
+		}
+	}, [isPlus, isResolved, colorThemeId, updatePreferences]);
 }

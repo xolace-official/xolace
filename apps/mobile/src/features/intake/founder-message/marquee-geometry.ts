@@ -11,21 +11,21 @@ export const CARD_STRIDE = CARD_WIDTH * 0.82; // deliberate overlap, so the band
  * empty on anything wider than the belt (#280) — the recycle test never fired.
  */
 export const beltSlots = (viewport: number, minSlots: number) =>
-  Math.max(minSlots, Math.ceil((viewport + CARD_WIDTH) / CARD_STRIDE));
+	Math.max(minSlots, Math.ceil((viewport + CARD_WIDTH) / CARD_STRIDE));
 
 const mod = (a: number, m: number) => {
-  'worklet';
-  return ((a % m) + m) % m;
+	"worklet";
+	return ((a % m) + m) % m;
 };
 
 /** Left edge of one slot for the current drift, recycled onto the near side. */
 export const slotLeft = (
-  index: number,
-  offset: number,
-  beltWidth: number,
-  viewport: number
+	index: number,
+	offset: number,
+	beltWidth: number,
+	viewport: number
 ) => {
-  'worklet';
-  const left = mod(index * CARD_STRIDE - mod(offset, beltWidth), beltWidth);
-  return left > viewport ? left - beltWidth : left;
+	"worklet";
+	const left = mod(index * CARD_STRIDE - mod(offset, beltWidth), beltWidth);
+	return left > viewport ? left - beltWidth : left;
 };

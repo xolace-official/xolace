@@ -1,20 +1,20 @@
-import { View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Asset } from 'expo-asset';
-import { SymbolView } from 'expo-symbols';
-import { useThemeColor } from 'heroui-native';
+import { Asset } from "expo-asset";
+import { SymbolView } from "expo-symbols";
+import { useThemeColor } from "heroui-native";
+import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
-  MessageAuthor,
-  MessageComposer,
-  MessageFooter,
-  useMessageContext,
-  useOwnCapabilitiesContext,
-  type MessageAuthorProps,
-  type MessageFooterProps,
-} from 'stream-chat-expo';
-import { AppText } from '@/src/components/shared/app-text';
+	MessageAuthor,
+	type MessageAuthorProps,
+	MessageComposer,
+	MessageFooter,
+	type MessageFooterProps,
+	useMessageContext,
+	useOwnCapabilitiesContext,
+} from "stream-chat-expo";
+import { AppText } from "@/src/components/shared/app-text";
 
-const LOCK_ICON = { ios: 'lock.fill', android: 'lock', web: 'lock' } as const;
+const LOCK_ICON = { android: "lock", ios: "lock.fill", web: "lock" } as const;
 
 /**
  * Replaces the bare `<MessageComposer>` for anyone but the broadcast sender.
@@ -24,24 +24,26 @@ const LOCK_ICON = { ios: 'lock.fill', android: 'lock', web: 'lock' } as const;
  * seat just doesn't have a mic.
  */
 export function BroadcastComposerBar() {
-  const { sendMessage: canSendMessage } = useOwnCapabilitiesContext();
-  const muted = useThemeColor('muted') as string;
-  const insets = useSafeAreaInsets();
+	const { sendMessage: canSendMessage } = useOwnCapabilitiesContext();
+	const muted = useThemeColor("muted") as string;
+	const insets = useSafeAreaInsets();
 
-  if (canSendMessage) return <MessageComposer />;
+	if (canSendMessage) {
+		return <MessageComposer />;
+	}
 
-  // The stock composer clears the home indicator itself; this bar has to.
-  return (
-    <View
-      className="flex-row items-center gap-2.5 border-t border-border/40 bg-surface-secondary px-4 pt-3"
-      style={{ paddingBottom: Math.max(insets.bottom, 12) }}
-    >
-      <SymbolView name={LOCK_ICON} size={14} tintColor={muted} />
-      <AppText className="flex-1 text-xs leading-4 text-muted">
-        Xolace only talks to the whole camp, not back, drop a reaction instead
-      </AppText>
-    </View>
-  );
+	// The stock composer clears the home indicator itself; this bar has to.
+	return (
+		<View
+			className="flex-row items-center gap-2.5 border-border/40 border-t bg-surface-secondary px-4 pt-3"
+			style={{ paddingBottom: Math.max(insets.bottom, 12) }}
+		>
+			<SymbolView name={LOCK_ICON} size={14} tintColor={muted} />
+			<AppText className="flex-1 text-muted text-xs leading-4">
+				Xolace only talks to the whole camp, not back, drop a reaction instead
+			</AppText>
+		</View>
+	);
 }
 
 /**
@@ -57,18 +59,25 @@ export function BroadcastComposerBar() {
  * `MessageFooter` prints the name (only in channels with >2 members, which is
  * why the 1:1 `ConversationMessageAuthor` never needed the footer half).
  */
-const CAMPFIRE_URI = Asset.fromModule(require('@/assets/images/flux/campfire-mini.jpeg')).uri;
+const CAMPFIRE_URI = Asset.fromModule(
+	require("@/assets/images/flux/campfire-mini.jpeg")
+).uri;
 
 function useXolaceAuthoredMessage() {
-  const { message } = useMessageContext();
-  if (!message.user) return message;
-  return { ...message, user: { ...message.user, name: 'Xolace', image: CAMPFIRE_URI } };
+	const { message } = useMessageContext();
+	if (!message.user) {
+		return message;
+	}
+	return {
+		...message,
+		user: { ...message.user, image: CAMPFIRE_URI, name: "Xolace" },
+	};
 }
 
 export function BroadcastMessageAuthor(props: MessageAuthorProps) {
-  return <MessageAuthor {...props} message={useXolaceAuthoredMessage()} />;
+	return <MessageAuthor {...props} message={useXolaceAuthoredMessage()} />;
 }
 
 export function BroadcastMessageFooter(props: MessageFooterProps) {
-  return <MessageFooter {...props} message={useXolaceAuthoredMessage()} />;
+	return <MessageFooter {...props} message={useXolaceAuthoredMessage()} />;
 }

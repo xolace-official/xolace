@@ -12,7 +12,7 @@ export const COHORT_EMOTIONS = PRIMARY_EMOTIONS;
 export type CohortEmotion = (typeof COHORT_EMOTIONS)[number];
 
 export function isCohortEmotion(e: string): e is CohortEmotion {
-  return (COHORT_EMOTIONS as readonly string[]).includes(e);
+	return (COHORT_EMOTIONS as readonly string[]).includes(e);
 }
 
 /**
@@ -22,7 +22,7 @@ export function isCohortEmotion(e: string): e is CohortEmotion {
  * union), but every function boundary can.
  */
 export const cohortEmotionValidator = v.union(
-  ...COHORT_EMOTIONS.map((e) => v.literal(e)),
+	...COHORT_EMOTIONS.map((e) => v.literal(e))
 );
 
 /**
@@ -33,8 +33,8 @@ export const cohortEmotionValidator = v.union(
 const COHORT_FLOOR = 3;
 
 type CohortMatchInputs = Pick<
-  Doc<"emotional_metadata">,
-  "primaryEmotion" | "secondaryEmotion"
+	Doc<"emotional_metadata">,
+	"primaryEmotion" | "secondaryEmotion"
 >;
 
 /**
@@ -55,15 +55,17 @@ type CohortMatchInputs = Pick<
  * predicate here. It's a subtraction at read time instead — see cohort.ts.
  */
 export function isCohortMatch(
-  s: CohortMatchInputs,
-  targetEmotion: CohortEmotion,
+	s: CohortMatchInputs,
+	targetEmotion: CohortEmotion
 ): boolean {
-  return s.primaryEmotion === targetEmotion || s.secondaryEmotion === targetEmotion;
+	return (
+		s.primaryEmotion === targetEmotion || s.secondaryEmotion === targetEmotion
+	);
 }
 
 export type CohortCardState =
-  | { type: "count"; value: number }
-  | { type: "warming" };
+	| { type: "count"; value: number }
+	| { type: "warming" };
 
 /**
  * Floor gate, same shape as `getReflectionRank`'s: withhold the number rather
@@ -71,9 +73,9 @@ export type CohortCardState =
  * without a count.
  */
 export function deriveCohortCardState(count: number): CohortCardState {
-  return count >= COHORT_FLOOR
-    ? { type: "count", value: count }
-    : { type: "warming" };
+	return count >= COHORT_FLOOR
+		? { type: "count", value: count }
+		: { type: "warming" };
 }
 
 const DAY_MS = 86_400_000;
@@ -81,10 +83,10 @@ export const WEEK_MS = 7 * DAY_MS;
 
 /** Start (00:00 UTC) of the Monday-anchored calendar week containing `ts`. */
 export function weekStartUtc(ts: number): number {
-  const d = new Date(ts);
-  const mondayOffset = (d.getUTCDay() + 6) % 7; // Sun=0 → 6, Mon=1 → 0
-  return (
-    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) -
-    mondayOffset * DAY_MS
-  );
+	const d = new Date(ts);
+	const mondayOffset = (d.getUTCDay() + 6) % 7; // Sun=0 → 6, Mon=1 → 0
+	return (
+		Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) -
+		mondayOffset * DAY_MS
+	);
 }

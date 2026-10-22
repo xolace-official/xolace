@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack } from "expo-router";
 
 /**
  * The promise screen — a signed-out user's very first mount, before
@@ -7,15 +7,15 @@ import { Stack } from 'expo-router';
  * Stack.Protected swaps straight to `(auth)` on its own.
  */
 const SCREEN_OPTIONS = {
-  headerShown: false,
-  animation: 'fade' as const,
-  contentStyle: { backgroundColor: 'transparent' },
+	animation: "fade" as const,
+	contentStyle: { backgroundColor: "transparent" },
+	headerShown: false,
 };
 
 export default function OnboardingLayout() {
-  return (
-    <Stack screenOptions={SCREEN_OPTIONS}>
-      <Stack.Screen name="index" />
-    </Stack>
-  );
+	return (
+		<Stack screenOptions={SCREEN_OPTIONS}>
+			<Stack.Screen name="index" />
+		</Stack>
+	);
 }

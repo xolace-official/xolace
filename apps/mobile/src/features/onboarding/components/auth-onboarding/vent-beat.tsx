@@ -1,15 +1,19 @@
-import { useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
-import { Image } from 'expo-image';
-import { SymbolView } from 'expo-symbols';
+import { Image } from "expo-image";
+import { SymbolView } from "expo-symbols";
+import { useWindowDimensions, View } from "react-native";
+import Animated, {
+	FadeIn,
+	FadeInDown,
+	useReducedMotion,
+} from "react-native-reanimated";
 
-import { AppText } from '@/src/components/shared/app-text';
-import type { StoryBeat } from '@/src/features/onboarding/story-beats';
-import { useDeckColor } from './deck-color';
-import { deckFigureHeight, VENT_SCALE_MATCH } from './figure-metrics';
-import { VentSparks } from './vent-sparks';
+import { AppText } from "@/src/components/shared/app-text";
+import type { StoryBeat } from "@/src/features/onboarding/story-beats";
+import { useDeckColor } from "./deck-color";
+import { deckFigureHeight, VENT_SCALE_MATCH } from "./figure-metrics";
+import { VentSparks } from "./vent-sparks";
 
-const FIGURE = require('@/assets/images/flux/vent-bg.png');
+const FIGURE = require("@/assets/images/flux/vent-bg.png");
 
 const SRC_W = 562;
 const SRC_H = 883;
@@ -44,73 +48,87 @@ const DUR = 520;
 const BREATH_IN = 520;
 
 export const VentBeat = ({ beat }: { beat: StoryBeat }) => {
-  const ember = useDeckColor('ember');
-  const reduced = useReducedMotion();
-  const { height } = useWindowDimensions();
+	const ember = useDeckColor("ember");
+	const reduced = useReducedMotion();
+	const { height } = useWindowDimensions();
 
-  const figH = deckFigureHeight(height) * VENT_SCALE_MATCH;
-  const figW = figH * ASPECT;
+	const figH = deckFigureHeight(height) * VENT_SCALE_MATCH;
+	const figW = figH * ASPECT;
 
-  // Both measured from the slide's content box, matching the bottom-anchored
-  // figure, so the plume stays with the character at every screen size.
-  const plumeX = FIGURE_INSET + PLUME_X * figW;
-  const plumeBottom = FIGURE_FLOOR + (1 - PLUME_Y) * figH;
+	// Both measured from the slide's content box, matching the bottom-anchored
+	// figure, so the plume stays with the character at every screen size.
+	const plumeX = FIGURE_INSET + PLUME_X * figW;
+	const plumeBottom = FIGURE_FLOOR + (1 - PLUME_Y) * figH;
 
-  const enter = (index: number) =>
-    reduced ? undefined : FadeInDown.delay(index * STEP).duration(DUR);
+	const enter = (index: number) =>
+		reduced ? undefined : FadeInDown.delay(index * STEP).duration(DUR);
 
-  return (
-    <View className="flex-1 px-9 pt-6">
-      <Animated.View entering={enter(0)} className="flex-row items-center gap-2.5 mb-6">
-        <SymbolView name={beat.symbol} size={15} tintColor={ember} type="hierarchical" />
-        <AppText className="text-ember/75 text-[10.5px] uppercase tracking-[2.2px]">
-          {beat.label}
-        </AppText>
-      </Animated.View>
+	return (
+		<View className="flex-1 px-9 pt-6">
+			<Animated.View
+				className="mb-6 flex-row items-center gap-2.5"
+				entering={enter(0)}
+			>
+				<SymbolView
+					name={beat.symbol}
+					size={15}
+					tintColor={ember}
+					type="hierarchical"
+				/>
+				<AppText className="text-[10.5px] text-ember/75 uppercase tracking-[2.2px]">
+					{beat.label}
+				</AppText>
+			</Animated.View>
 
-      <Animated.View entering={enter(1)}>
-        <AppText className="text-foreground/95 text-[32px] leading-11.25 font-poppins-medium">
-          {beat.beat}
-        </AppText>
-      </Animated.View>
+			<Animated.View entering={enter(1)}>
+				<AppText className="font-poppins-medium text-[32px] text-foreground/95 leading-11.25">
+					{beat.beat}
+				</AppText>
+			</Animated.View>
 
-      <Animated.View entering={enter(2)}>
-        <AppText className="text-foreground/42 text-[14px] leading-6 mt-5 pr-4">
-          {beat.aside}
-        </AppText>
-      </Animated.View>
+			<Animated.View entering={enter(2)}>
+				<AppText className="mt-5 pr-4 text-[14px] text-foreground/42 leading-6">
+					{beat.aside}
+				</AppText>
+			</Animated.View>
 
-      {beat.tag ? (
-        <Animated.View entering={enter(3)}>
-          <AppText className="text-ember/75 text-[10.5px] uppercase mt-4 tracking-[2px]">
-            {beat.tag}
-          </AppText>
-        </Animated.View>
-      ) : null}
+			{beat.tag ? (
+				<Animated.View entering={enter(3)}>
+					<AppText className="mt-4 text-[10.5px] text-ember/75 uppercase tracking-[2px]">
+						{beat.tag}
+					</AppText>
+				</Animated.View>
+			) : null}
 
-      <View className="flex-1 min-h-3" />
+			<View className="min-h-3 flex-1" />
 
-      <Animated.View
-        entering={enter(4)}
-        pointerEvents="none"
-        className="items-start"
-        style={{ paddingLeft: FIGURE_INSET, paddingBottom: FIGURE_FLOOR }}
-      >
-        <Image source={FIGURE} style={{ width: figW, height: figH }} contentFit="contain" />
-      </Animated.View>
+			<Animated.View
+				className="items-start"
+				entering={enter(4)}
+				pointerEvents="none"
+				style={{ paddingBottom: FIGURE_FLOOR, paddingLeft: FIGURE_INSET }}
+			>
+				<Image
+					contentFit="contain"
+					source={FIGURE}
+					style={{ height: figH, width: figW }}
+				/>
+			</Animated.View>
 
-      <Animated.View
-        entering={reduced ? undefined : FadeIn.delay(4 * STEP + BREATH_IN).duration(900)}
-        pointerEvents="none"
-        className="absolute inset-0"
-      >
-        <VentSparks
-          originX={plumeX}
-          originBottom={plumeBottom}
-          color={ember}
-          reduced={reduced}
-        />
-      </Animated.View>
-    </View>
-  );
+			<Animated.View
+				className="absolute inset-0"
+				entering={
+					reduced ? undefined : FadeIn.delay(4 * STEP + BREATH_IN).duration(900)
+				}
+				pointerEvents="none"
+			>
+				<VentSparks
+					color={ember}
+					originBottom={plumeBottom}
+					originX={plumeX}
+					reduced={reduced}
+				/>
+			</Animated.View>
+		</View>
+	);
 };

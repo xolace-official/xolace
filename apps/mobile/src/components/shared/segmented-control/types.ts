@@ -1,33 +1,39 @@
-import type { PressableProps, ViewProps } from 'react-native';
-import type { AnimatedProps, WithTimingConfig, WithSpringConfig } from 'react-native-reanimated';
+import type { PressableProps, ViewProps } from "react-native";
+import type {
+	AnimatedProps,
+	WithSpringConfig,
+	WithTimingConfig,
+} from "react-native-reanimated";
 
 export interface ItemMeasurements {
-  width: number;
-  height: number;
-  x: number;
+	height: number;
+	width: number;
+	x: number;
 }
 
 export interface SegmentedControlContextValue {
-  value: string;
-  onValueChange: (value: string) => void;
-  measurements: Record<string, ItemMeasurements>;
-  setMeasurements: (key: string, measurements: ItemMeasurements) => void;
+	measurements: Record<string, ItemMeasurements>;
+	onValueChange: (value: string) => void;
+	setMeasurements: (key: string, measurements: ItemMeasurements) => void;
+	value: string;
 }
 
 export interface SegmentedControlProps extends ViewProps {
-  value: string;
-  onValueChange: (value: string) => void;
-  className?: string;
+	className?: string;
+	onValueChange: (value: string) => void;
+	value: string;
 }
 
-export interface SegmentedControlItemProps extends AnimatedProps<PressableProps> {
-  value: string;
-  className?: string;
+export interface SegmentedControlItemProps
+	extends AnimatedProps<PressableProps> {
+	className?: string;
+	value: string;
 }
 
-export interface SegmentedControlIndicatorProps extends AnimatedProps<ViewProps> {
-  className?: string;
-  animationConfig?:
-    | { type: 'timing'; config?: WithTimingConfig }
-    | { type: 'spring'; config?: WithSpringConfig };
+export interface SegmentedControlIndicatorProps
+	extends AnimatedProps<ViewProps> {
+	animationConfig?:
+		| { type: "timing"; config?: WithTimingConfig }
+		| { type: "spring"; config?: WithSpringConfig };
+	className?: string;
 }

@@ -1,92 +1,93 @@
-import { Platform } from 'react-native';
+import { Platform } from "react-native";
 
 export type LegalDocument = {
-  title: string;
-  fullUrl: string;
-  sections: {heading: string; body: string}[];
+	title: string;
+	fullUrl: string;
+	sections: { heading: string; body: string }[];
 };
 
 export const PRIVACY_POLICY: LegalDocument = {
-  title: 'Privacy Policy',
-  fullUrl: 'https://xolaceinc.com/privacy',
-  sections: [
-    {
-      heading: 'What We Collect',
-      body: 'We collect your account info (auth ID from Google or Apple), the text, AI-generated reflections, and session metadata like duration, features used, and app lifecycle events.',
-    },
-    {
-      heading: 'AI Processing',
-      body: 'Your emotional input is processed by Anthropic (Claude) to generate reflections. This data is transmitted securely and is not used to train AI models. Content is also automatically screened for safety signals to detect potential crisis situations. Voice features use ElevenLabs for voice audio generation and speech transcription: when you speak to Xolace, your recorded audio is sent to ElevenLabs to be transcribed and is never stored.',
-    },
-    {
-      heading: 'Analytics',
-      body: 'We use PostHog, a third-party product analytics service, to understand how the app is used. PostHog records screen views (nothing personal is shown), button taps, and app lifecycle events (open/close), linked to your account ID. We do not use this data for advertising and never sell it. You can request deletion of analytics data along with your account.',
-    },
-    {
-      heading: 'Crash & Error Monitoring',
-      body: 'We use Sentry (@sentry/react-native) to capture crashes and errors so we can fix them. It collects technical error telemetry (stack traces, device and app version, breadcrumbs) linked to your account ID, and — on production builds only — session replays with all text and images masked. We disable Sentry\'s default personal-data collection (your IP address is not stored), and this data is never used for advertising or sold.',
-    },
-    {
-      heading: 'Third-Party Services',
-      body: 'We use the following sub-processors to operate the service: Anthropic (AI reflection generation), Convex (database and backend infrastructure), Clerk (authentication), ElevenLabs (voice audio generation and speech transcription), PostHog (product analytics), Sentry (crash and error monitoring), and Apple / Google (sign-in). Each processes only the data necessary for their function.',
-    },
-    {
-      heading: 'How We Use It',
-      body: 'Your data is used to generate AI reflections, personalize your experience, and improve the platform. If you opt in, anonymized reflections may be used for system improvement. We never sell your data.',
-    },
-    {
-      heading: 'Peer Reflections',
-      body: 'If you choose to contribute anonymously to the peer reflections pool, direct identifiers are removed before your entry is included. This is entirely your choice and can be changed at any time.',
-    },
-    {
-      heading: 'Data Retention & Security',
-      body: 'Your data is encrypted in transit and at rest. Session data is retained per your settings. When you delete your account, all personal data is permanently purged — with one exception: if the app detected a potential safety concern during a session, a fully anonymised record of that event (containing no text you wrote, no name, and no account reference) is retained indefinitely for safety auditing purposes. This is the only data that survives account deletion.',
-    },
-    {
-      heading: 'Your Rights',
-      body: 'You have the right to access or correct your data, delete your account and associated data, and withdraw any optional consent (such as anonymous sharing or notifications) at any time from Settings. To request a copy of your data or raise a concern, contact us at privacy@xolaceinc.com. We respond within 5 business days.',
-    },
-    {
-      heading: 'Children & Changes',
-      body: 'Xolace is not intended for users under 13. We may update this policy; significant changes will be communicated in the app before they take effect.',
-    },
-  ],
+	fullUrl: "https://xolaceinc.com/privacy",
+	sections: [
+		{
+			body: "We collect your account info (auth ID from Google or Apple), the text, AI-generated reflections, and session metadata like duration, features used, and app lifecycle events.",
+			heading: "What We Collect",
+		},
+		{
+			body: "Your emotional input is processed by Anthropic (Claude) to generate reflections. This data is transmitted securely and is not used to train AI models. Content is also automatically screened for safety signals to detect potential crisis situations. Voice features use ElevenLabs for voice audio generation and speech transcription: when you speak to Xolace, your recorded audio is sent to ElevenLabs to be transcribed and is never stored.",
+			heading: "AI Processing",
+		},
+		{
+			body: "We use PostHog, a third-party product analytics service, to understand how the app is used. PostHog records screen views (nothing personal is shown), button taps, and app lifecycle events (open/close), linked to your account ID. We do not use this data for advertising and never sell it. You can request deletion of analytics data along with your account.",
+			heading: "Analytics",
+		},
+		{
+			body: "We use Sentry (@sentry/react-native) to capture crashes and errors so we can fix them. It collects technical error telemetry (stack traces, device and app version, breadcrumbs) linked to your account ID, and — on production builds only — session replays with all text and images masked. We disable Sentry's default personal-data collection (your IP address is not stored), and this data is never used for advertising or sold.",
+			heading: "Crash & Error Monitoring",
+		},
+		{
+			body: "We use the following sub-processors to operate the service: Anthropic (AI reflection generation), Convex (database and backend infrastructure), Clerk (authentication), ElevenLabs (voice audio generation and speech transcription), PostHog (product analytics), Sentry (crash and error monitoring), and Apple / Google (sign-in). Each processes only the data necessary for their function.",
+			heading: "Third-Party Services",
+		},
+		{
+			body: "Your data is used to generate AI reflections, personalize your experience, and improve the platform. If you opt in, anonymized reflections may be used for system improvement. We never sell your data.",
+			heading: "How We Use It",
+		},
+		{
+			body: "If you choose to contribute anonymously to the peer reflections pool, direct identifiers are removed before your entry is included. This is entirely your choice and can be changed at any time.",
+			heading: "Peer Reflections",
+		},
+		{
+			body: "Your data is encrypted in transit and at rest. Session data is retained per your settings. When you delete your account, all personal data is permanently purged — with one exception: if the app detected a potential safety concern during a session, a fully anonymised record of that event (containing no text you wrote, no name, and no account reference) is retained indefinitely for safety auditing purposes. This is the only data that survives account deletion.",
+			heading: "Data Retention & Security",
+		},
+		{
+			body: "You have the right to access or correct your data, delete your account and associated data, and withdraw any optional consent (such as anonymous sharing or notifications) at any time from Settings. To request a copy of your data or raise a concern, contact us at privacy@xolaceinc.com. We respond within 5 business days.",
+			heading: "Your Rights",
+		},
+		{
+			body: "Xolace is not intended for users under 13. We may update this policy; significant changes will be communicated in the app before they take effect.",
+			heading: "Children & Changes",
+		},
+	],
+	title: "Privacy Policy",
 };
 
 export const TERMS_OF_SERVICE: LegalDocument = {
-  title: 'Terms of Service',
-  fullUrl: 'https://xolaceinc.com/terms',
-  sections: [
-    {
-      heading: 'What Xolace Is',
-      body: 'Xolace is a personal emotional processing tool, not a healthcare provider, therapist, crisis service, or social network. Using Xolace does not create a doctor-patient or therapist-client relationship.',
-    },
-    {
-      heading: 'Eligibility',
-      body: 'You must be at least 13 years old to use Xolace. By using the app, you confirm you have the legal capacity to agree to these Terms.',
-    },
-    {
-      heading: 'Your Responsibilities',
-      body: 'Use Xolace only for lawful, personal purposes. Do not misuse the service, use automated systems, or attempt to exploit the platform. You are responsible for all activity under your account.',
-    },
-    {
-      heading: 'AI-Generated Content',
-      body: 'Reflections are generated by AI and may be incomplete or imperfect. They are not professional advice. Do not rely on them for medical, mental health, or crisis decisions.',
-    },
-    {
-      heading: 'Your Content',
-      body: 'You retain ownership of what you write. You grant us a limited license to process it to operate the service and generate reflections. Your entries are private by default.',
-    },
-    {
-      heading: 'Subscriptions & Purchases',
-      // App Review 2.3.10 rejects any mention of Google Play in the iOS binary.
-      body: Platform.OS === 'ios'
-        ? 'Xolace+ is an auto-renewing subscription (monthly or annual) billed through your Apple account. Free trials, where offered, convert automatically to a paid subscription unless cancelled at least 24 hours before the trial ends. Your subscription renews automatically at the price shown at purchase unless cancelled; we will give advance notice in the app before any price change takes effect for existing subscribers. Manage or cancel anytime in your App Store account settings — cancelling stops future renewals but does not refund the current period. All payments are processed by Apple, and refunds are governed by Apple\'s policies, not by Xolace directly.'
-        : 'Xolace+ is an auto-renewing subscription (monthly or annual) billed through your Google account. Free trials, where offered, convert automatically to a paid subscription unless cancelled before the trial period expires. Your subscription renews automatically at the price shown at purchase unless cancelled; we will give advance notice in the app before any price change takes effect for existing subscribers. Manage or cancel anytime in your Google Play account settings — cancelling stops future renewals but does not refund the current period. All payments are processed by Google, and refunds are governed by Google\'s policies, not by Xolace directly.',
-    },
-    {
-      heading: 'Limitation of Liability',
-      body: 'Xolace is provided "as is." We are not liable for emotional distress or decisions made based on AI reflections. Our total liability will not exceed the amount you paid in the prior 12 months.',
-    },
-  ],
+	fullUrl: "https://xolaceinc.com/terms",
+	sections: [
+		{
+			body: "Xolace is a personal emotional processing tool, not a healthcare provider, therapist, crisis service, or social network. Using Xolace does not create a doctor-patient or therapist-client relationship.",
+			heading: "What Xolace Is",
+		},
+		{
+			body: "You must be at least 13 years old to use Xolace. By using the app, you confirm you have the legal capacity to agree to these Terms.",
+			heading: "Eligibility",
+		},
+		{
+			body: "Use Xolace only for lawful, personal purposes. Do not misuse the service, use automated systems, or attempt to exploit the platform. You are responsible for all activity under your account.",
+			heading: "Your Responsibilities",
+		},
+		{
+			body: "Reflections are generated by AI and may be incomplete or imperfect. They are not professional advice. Do not rely on them for medical, mental health, or crisis decisions.",
+			heading: "AI-Generated Content",
+		},
+		{
+			body: "You retain ownership of what you write. You grant us a limited license to process it to operate the service and generate reflections. Your entries are private by default.",
+			heading: "Your Content",
+		},
+		{
+			// App Review 2.3.10 rejects any mention of Google Play in the iOS binary.
+			body:
+				Platform.OS === "ios"
+					? "Xolace+ is an auto-renewing subscription (monthly or annual) billed through your Apple account. Free trials, where offered, convert automatically to a paid subscription unless cancelled at least 24 hours before the trial ends. Your subscription renews automatically at the price shown at purchase unless cancelled; we will give advance notice in the app before any price change takes effect for existing subscribers. Manage or cancel anytime in your App Store account settings — cancelling stops future renewals but does not refund the current period. All payments are processed by Apple, and refunds are governed by Apple's policies, not by Xolace directly."
+					: "Xolace+ is an auto-renewing subscription (monthly or annual) billed through your Google account. Free trials, where offered, convert automatically to a paid subscription unless cancelled before the trial period expires. Your subscription renews automatically at the price shown at purchase unless cancelled; we will give advance notice in the app before any price change takes effect for existing subscribers. Manage or cancel anytime in your Google Play account settings — cancelling stops future renewals but does not refund the current period. All payments are processed by Google, and refunds are governed by Google's policies, not by Xolace directly.",
+			heading: "Subscriptions & Purchases",
+		},
+		{
+			body: 'Xolace is provided "as is." We are not liable for emotional distress or decisions made based on AI reflections. Our total liability will not exceed the amount you paid in the prior 12 months.',
+			heading: "Limitation of Liability",
+		},
+	],
+	title: "Terms of Service",
 };

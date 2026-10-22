@@ -1,22 +1,22 @@
 import {
-  ACKNOWLEDGE_MODEL,
-  extractTextFromResponse,
-  getAnthropicClient,
-  thinkingOff,
+	ACKNOWLEDGE_MODEL,
+	extractTextFromResponse,
+	getAnthropicClient,
+	thinkingOff,
 } from "./providers/anthropic";
 
 export function buildVentAcknowledgePrompt(
-  transcript: string,
-  semanticProfile: string | null = null,
+	transcript: string,
+	semanticProfile: string | null = null
 ): { system: string; user: string } {
-  const memoryBlock = semanticProfile
-    ? `\n\n---\n\nWhat you know about this person may shape your warmth and word choice.
+	const memoryBlock = semanticProfile
+		? `\n\n---\n\nWhat you know about this person may shape your warmth and word choice.
 NEVER reference past sessions, name specifics, or imply you've been tracking them. Stay in this moment.
 
 ${semanticProfile}`
-    : "";
+		: "";
 
-  const system = `You witness someone who just spoke something heavy.
+	const system = `You witness someone who just spoke something heavy.
 Write 1-2 sentences that say: I caught what you carried.
 The words should feel like a warm hand on a shoulder in the dark.
 
@@ -48,21 +48,24 @@ Non-verbal: [sighs] [exhales sharply] [inhales deeply] [short pause] [long pause
 
 Reply ONLY with the enhanced text — no labels, no explanation, no preamble.`;
 
-  return { system, user: transcript };
+	return { system, user: transcript };
 }
 
 /** The model call (model calls live under convex/ai/). Throws on API failure. */
 export async function writeVentAcknowledgement(
-  transcript: string,
-  semanticProfile: string | null,
+	transcript: string,
+	semanticProfile: string | null
 ): Promise<string> {
-  const { system, user } = buildVentAcknowledgePrompt(transcript, semanticProfile);
-  const response = await getAnthropicClient().messages.create({
-    model: ACKNOWLEDGE_MODEL,
-    max_tokens: 120,
-    thinking: thinkingOff(ACKNOWLEDGE_MODEL),
-    system,
-    messages: [{ role: "user", content: user }],
-  });
-  return extractTextFromResponse(response);
+	const { system, user } = buildVentAcknowledgePrompt(
+		transcript,
+		semanticProfile
+	);
+	const response = await getAnthropicClient().messages.create({
+		max_tokens: 120,
+		messages: [{ content: user, role: "user" }],
+		model: ACKNOWLEDGE_MODEL,
+		system,
+		thinking: thinkingOff(ACKNOWLEDGE_MODEL),
+	});
+	return extractTextFromResponse(response);
 }

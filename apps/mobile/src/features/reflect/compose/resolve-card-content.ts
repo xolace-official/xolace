@@ -1,8 +1,8 @@
-import {
-  QUIET_RETURN_PROMPTS,
-  type QuietReturnTier,
-} from "@/src/features/reflect/quiet-return-copy";
 import { NIGHT_HEADLINE } from "@/src/features/reflect/night-copy";
+import {
+	QUIET_RETURN_PROMPTS,
+	type QuietReturnTier,
+} from "@/src/features/reflect/quiet-return-copy";
 
 /**
  * What the reflect card says, and how big it says it.
@@ -27,69 +27,83 @@ const LONG_TEXT_CHARS = 36;
 const SEED_CHARS = 88;
 
 export type CardContentSource =
-  | "draft"
-  | "reply-seed"
-  | "night"
-  | "quiet-return"
-  | "event"
-  | "default";
+	| "draft"
+	| "reply-seed"
+	| "night"
+	| "quiet-return"
+	| "event"
+	| "default";
 
 export type CardContent = {
-  text: string;
-  scale: "large" | "small";
-  source: CardContentSource;
+	text: string;
+	scale: "large" | "small";
+	source: CardContentSource;
 };
 
 export function resolveCardContent({
-  isNight = false,
-  quietReturnTier = null,
-  eventPrompt = null,
-  draft = null,
-  replySeed = null,
+	isNight = false,
+	quietReturnTier = null,
+	eventPrompt = null,
+	draft = null,
+	replySeed = null,
 }: {
-  isNight?: boolean;
-  quietReturnTier?: QuietReturnTier | null;
-  eventPrompt?: string | null;
-  /** The retained entry text. Whitespace-only is no draft at all. */
-  draft?: string | null;
-  /** A kept quote reply the user chose to start from (#316). */
-  replySeed?: string | null;
+	isNight?: boolean;
+	quietReturnTier?: QuietReturnTier | null;
+	eventPrompt?: string | null;
+	/** The retained entry text. Whitespace-only is no draft at all. */
+	draft?: string | null;
+	/** A kept quote reply the user chose to start from (#316). */
+	replySeed?: string | null;
 }): CardContent {
-  const opening = draft?.trim().split("\n")[0]?.trim();
-  if (opening) return withScale(opening, "draft");
+	const opening = draft?.trim().split("\n")[0]?.trim();
+	if (opening) {
+		return withScale(opening, "draft");
+	}
 
-  // Under a live draft, over everything the space would say: what is on the
-  // card is the user's own sentence, and the space has nothing better to open
-  // with than the words they came here from. The composer stays empty — this
-  // seeds the screen, never `rawInput` (#316).
-  const seed = replySeed?.trim().split("\n")[0]?.trim();
-  if (seed) return withScale(`You wrote: “${clip(seed)}”`, "reply-seed");
+	// Under a live draft, over everything the space would say: what is on the
+	// card is the user's own sentence, and the space has nothing better to open
+	// with than the words they came here from. The composer stays empty — this
+	// seeds the screen, never `rawInput` (#316).
+	const seed = replySeed?.trim().split("\n")[0]?.trim();
+	if (seed) {
+		return withScale(`You wrote: “${clip(seed)}”`, "reply-seed");
+	}
 
-  if (isNight) return withScale(NIGHT_HEADLINE, "night");
-  if (quietReturnTier)
-    return withScale(QUIET_RETURN_PROMPTS[quietReturnTier], "quiet-return");
-  if (eventPrompt?.trim()) return withScale(eventPrompt, "event");
-  return withScale(DEFAULT_PROMPT, "default");
+	if (isNight) {
+		return withScale(NIGHT_HEADLINE, "night");
+	}
+	if (quietReturnTier) {
+		return withScale(QUIET_RETURN_PROMPTS[quietReturnTier], "quiet-return");
+	}
+	if (eventPrompt?.trim()) {
+		return withScale(eventPrompt, "event");
+	}
+	return withScale(DEFAULT_PROMPT, "default");
 }
 
 /** Split by grapheme cluster so a cut at SEED_CHARS never leaves half an emoji. */
 function units(text: string): string[] {
-  const Segmenter = Intl.Segmenter;
-  if (!Segmenter) return Array.from(text); // Hermes without full-ICU: code points
-  return Array.from(new Segmenter(undefined, { granularity: "grapheme" }).segment(text), (s) => s.segment);
+	const Segmenter = Intl.Segmenter;
+	if (!Segmenter) {
+		return Array.from(text); // Hermes without full-ICU: code points
+	}
+	return Array.from(
+		new Segmenter(undefined, { granularity: "grapheme" }).segment(text),
+		(s) => s.segment
+	);
 }
 
 function clip(text: string): string {
-  const chars = units(text);
-  return chars.length > SEED_CHARS
-    ? `${chars.slice(0, SEED_CHARS).join("").trimEnd()}…`
-    : text;
+	const chars = units(text);
+	return chars.length > SEED_CHARS
+		? `${chars.slice(0, SEED_CHARS).join("").trimEnd()}…`
+		: text;
 }
 
 function withScale(text: string, source: CardContentSource): CardContent {
-  return {
-    text,
-    scale: text.length > LONG_TEXT_CHARS ? "small" : "large",
-    source,
-  };
+	return {
+		scale: text.length > LONG_TEXT_CHARS ? "small" : "large",
+		source,
+		text,
+	};
 }

@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { internalAction } from "../../_generated/server";
 import { internal } from "../../_generated/api";
+import { internalAction } from "../../_generated/server";
 import { syncKey } from "../helpers/namespaceIndex";
 
 /**
@@ -14,17 +14,19 @@ import { syncKey } from "../helpers/namespaceIndex";
 export const LIBRARY_NAMESPACE = "library";
 
 export const indexEntry = internalAction({
-  args: { entryId: v.id("library_entries") },
-  returns: v.null(),
-  handler: async (ctx, { entryId }) => {
-    const text = await ctx.runQuery(internal.library.embed.textForIndex, { entryId });
-    try {
-      await syncKey(ctx, LIBRARY_NAMESPACE, entryId, text);
-    } catch (e) {
-      // The id is what makes a hole findable; rethrow so the run still shows failed.
-      console.error("library index: embed failed", { entryId });
-      throw e;
-    }
-    return null;
-  },
+	args: { entryId: v.id("library_entries") },
+	handler: async (ctx, { entryId }) => {
+		const text = await ctx.runQuery(internal.library.embed.textForIndex, {
+			entryId,
+		});
+		try {
+			await syncKey(ctx, LIBRARY_NAMESPACE, entryId, text);
+		} catch (e) {
+			// The id is what makes a hole findable; rethrow so the run still shows failed.
+			console.error("library index: embed failed", { entryId });
+			throw e;
+		}
+		return null;
+	},
+	returns: v.null(),
 });

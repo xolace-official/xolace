@@ -3,21 +3,22 @@
  * DEV_TOOLS_ENABLED env var so these are inert on production — set it
  * with `bunx convex env set DEV_TOOLS_ENABLED true` on the dev deployment.
  */
-import { v } from "convex/values";
-import { internalMutation, mutation } from "./_generated/server";
+
 import type { WorkflowId } from "@convex-dev/workflow";
+import { v } from "convex/values";
 import { internal } from "./_generated/api";
-import { requireAuth } from "./lib/auth";
+import { internalMutation, mutation } from "./_generated/server";
+import { deleteResponsesForCard } from "./followUpResponses";
+import { workflow } from "./followUps";
 import { rankReplace, reflectionRank } from "./lib/aggregates";
+import { requireAuth } from "./lib/auth";
 import { migrations } from "./migrations";
 import { localDayKey, shiftDayKey } from "./streaks/activityLog";
-import { workflow } from "./followUps";
-import { deleteResponsesForCard } from "./followUpResponses";
 
 export function assertDevToolsEnabled() {
-  if (process.env.DEV_TOOLS_ENABLED !== "true") {
-    throw new Error("Dev tools are disabled on this deployment");
-  }
+	if (process.env.DEV_TOOLS_ENABLED !== "true") {
+		throw new Error("Dev tools are disabled on this deployment");
+	}
 }
 
 /**
@@ -29,24 +30,24 @@ export function assertDevToolsEnabled() {
  * never recomputes it, which is why this mutation exists.
  */
 export const setStreak = mutation({
-  args: { mode: v.union(v.literal("bump"), v.literal("reset")) },
-  returns: v.number(),
-  handler: async (ctx, args) => {
-    assertDevToolsEnabled();
-    const { profile } = await requireAuth(ctx);
+	args: { mode: v.union(v.literal("bump"), v.literal("reset")) },
+	handler: async (ctx, args) => {
+		assertDevToolsEnabled();
+		const { profile } = await requireAuth(ctx);
 
-    const newStreak = args.mode === "bump" ? profile.currentStreak + 1 : 1;
-    await ctx.db.patch("emotional_profiles", profile._id, {
-      currentStreak: newStreak,
-      // Keep the user in the "active" variant (streak window is 48h)
-      lastSessionAt: Date.now(),
-      // computeUserVariant needs sessionCount > 0 to show the calendar
-      sessionCount: Math.max(profile.sessionCount, 1),
-    });
-    // sessionCount can move 0→1 here — keep the percentile aggregate in step.
-    await rankReplace(ctx, profile);
-    return newStreak;
-  },
+		const newStreak = args.mode === "bump" ? profile.currentStreak + 1 : 1;
+		await ctx.db.patch("emotional_profiles", profile._id, {
+			currentStreak: newStreak,
+			// Keep the user in the "active" variant (streak window is 48h)
+			lastSessionAt: Date.now(),
+			// computeUserVariant needs sessionCount > 0 to show the calendar
+			sessionCount: Math.max(profile.sessionCount, 1),
+		});
+		// sessionCount can move 0→1 here — keep the percentile aggregate in step.
+		await rankReplace(ctx, profile);
+		return newStreak;
+	},
+	returns: v.number(),
 });
 
 /**
@@ -62,17 +63,17 @@ export const setStreak = mutation({
  * Verify afterwards (once the backfill finishes) with jobs/rankAudit:audit.
  */
 export const rebuildReflectionRank = mutation({
-  args: {},
-  returns: v.null(),
-  handler: async (ctx) => {
-    assertDevToolsEnabled();
-    await reflectionRank.clear(ctx);
-    // cursor: null restarts from the beginning even if a previous run completed.
-    await migrations.runOne(ctx, internal.migrations.backfillReflectionRank, {
-      cursor: null,
-    });
-    return null;
-  },
+	args: {},
+	handler: async (ctx) => {
+		assertDevToolsEnabled();
+		await reflectionRank.clear(ctx);
+		// cursor: null restarts from the beginning even if a previous run completed.
+		await migrations.runOne(ctx, internal.migrations.backfillReflectionRank, {
+			cursor: null,
+		});
+		return null;
+	},
+	returns: v.null(),
 });
 
 /**
@@ -82,61 +83,63 @@ export const rebuildReflectionRank = mutation({
  * (the read path — sheet render, markShown, resolve — never touches it).
  */
 export const seedFollowUpCard = mutation({
-  args: {
-    tier: v.union(
-      v.literal("acute"),
-      v.literal("elevated"),
-      v.literal("standard"),
-    ),
-    escalationDerived: v.optional(v.boolean()),
-    cardText: v.optional(v.string()),
-  },
-  returns: v.id("follow_up_cards"),
-  handler: async (ctx, args) => {
-    assertDevToolsEnabled();
-    const { profile } = await requireAuth(ctx);
+	args: {
+		cardText: v.optional(v.string()),
+		escalationDerived: v.optional(v.boolean()),
+		tier: v.union(
+			v.literal("acute"),
+			v.literal("elevated"),
+			v.literal("standard")
+		),
+	},
+	handler: async (ctx, args) => {
+		assertDevToolsEnabled();
+		const { profile } = await requireAuth(ctx);
 
-    const session = await ctx.db
-      .query("sessions")
-      .withIndex("by_profile_time", (q) =>
-        q.eq("emotionalProfileId", profile._id),
-      )
-      .order("desc")
-      .first();
-    if (!session) {
-      throw new Error("No session to attach a follow-up card to — process one moment first.");
-    }
+		const session = await ctx.db
+			.query("sessions")
+			.withIndex("by_profile_time", (q) =>
+				q.eq("emotionalProfileId", profile._id)
+			)
+			.order("desc")
+			.first();
+		if (!session) {
+			throw new Error(
+				"No session to attach a follow-up card to — process one moment first."
+			);
+		}
 
-    // Clear existing active cards so QA always shows exactly this one.
-    for (const status of ["pending", "ready", "shown"] as const) {
-      const existing = await ctx.db
-        .query("follow_up_cards")
-        .withIndex("by_profile_status", (q) =>
-          q.eq("emotionalProfileId", profile._id).eq("status", status),
-        )
-        .collect();
-      for (const c of existing) {
-        await deleteResponsesForCard(ctx, c._id);
-        await ctx.db.delete("follow_up_cards", c._id);
-      }
-    }
+		// Clear existing active cards so QA always shows exactly this one.
+		for (const status of ["pending", "ready", "shown"] as const) {
+			const existing = await ctx.db
+				.query("follow_up_cards")
+				.withIndex("by_profile_status", (q) =>
+					q.eq("emotionalProfileId", profile._id).eq("status", status)
+				)
+				.collect();
+			for (const c of existing) {
+				await deleteResponsesForCard(ctx, c._id);
+				await ctx.db.delete("follow_up_cards", c._id);
+			}
+		}
 
-    const defaultText =
-      args.tier === "acute"
-        ? "Just checking in on you. We're here, no rush."
-        : "A couple of days ago you let something heavy out here. How's it sitting now?";
+		const defaultText =
+			args.tier === "acute"
+				? "Just checking in on you. We're here, no rush."
+				: "A couple of days ago you let something heavy out here. How's it sitting now?";
 
-    return await ctx.db.insert("follow_up_cards", {
-      emotionalProfileId: profile._id,
-      sessionId: session._id,
-      workflowId: `qa-seed-${Date.now()}` as WorkflowId,
-      tier: args.tier,
-      cardText: args.cardText ?? defaultText,
-      escalationDerived: args.escalationDerived ?? args.tier === "acute",
-      status: "ready",
-      createdAt: Date.now(),
-    });
-  },
+		return await ctx.db.insert("follow_up_cards", {
+			cardText: args.cardText ?? defaultText,
+			createdAt: Date.now(),
+			emotionalProfileId: profile._id,
+			escalationDerived: args.escalationDerived ?? args.tier === "acute",
+			sessionId: session._id,
+			status: "ready",
+			tier: args.tier,
+			workflowId: `qa-seed-${Date.now()}` as WorkflowId,
+		});
+	},
+	returns: v.id("follow_up_cards"),
 });
 
 /**
@@ -148,39 +151,41 @@ export const seedFollowUpCard = mutation({
  * Returns the number of cards retired.
  */
 export const cleanupStuckFollowUps = mutation({
-  args: {},
-  returns: v.number(),
-  handler: async (ctx) => {
-    assertDevToolsEnabled();
-    const { profile } = await requireAuth(ctx);
+	args: {},
+	handler: async (ctx) => {
+		assertDevToolsEnabled();
+		const { profile } = await requireAuth(ctx);
 
-    let retired = 0;
-    for (const status of ["pending", "ready", "shown"] as const) {
-      const cards = await ctx.db
-        .query("follow_up_cards")
-        .withIndex("by_profile_status", (q) =>
-          q.eq("emotionalProfileId", profile._id).eq("status", status),
-        )
-        .collect();
+		let retired = 0;
+		for (const status of ["pending", "ready", "shown"] as const) {
+			const cards = await ctx.db
+				.query("follow_up_cards")
+				.withIndex("by_profile_status", (q) =>
+					q.eq("emotionalProfileId", profile._id).eq("status", status)
+				)
+				.collect();
 
-      for (const card of cards) {
-        try {
-          await workflow.cancel(ctx, card.workflowId);
-        } catch {
-          // Placeholder workflowId or already-terminal workflow — nothing to do.
-        }
-        await ctx.db.patch("follow_up_cards", card._id, { status: "expired" });
+			for (const card of cards) {
+				try {
+					await workflow.cancel(ctx, card.workflowId);
+				} catch {
+					// Placeholder workflowId or already-terminal workflow — nothing to do.
+				}
+				await ctx.db.patch("follow_up_cards", card._id, { status: "expired" });
 
-        // Unpin the session so getStartContext won't treat it as already-started.
-        const session = await ctx.db.get("sessions", card.sessionId);
-        if (session?.followUpWorkflowId) {
-          await ctx.db.patch("sessions", card.sessionId, { followUpWorkflowId: undefined });
-        }
-        retired += 1;
-      }
-    }
-    return retired;
-  },
+				// Unpin the session so getStartContext won't treat it as already-started.
+				const session = await ctx.db.get("sessions", card.sessionId);
+				if (session?.followUpWorkflowId) {
+					await ctx.db.patch("sessions", card.sessionId, {
+						followUpWorkflowId: undefined,
+					});
+				}
+				retired += 1;
+			}
+		}
+		return retired;
+	},
+	returns: v.number(),
 });
 
 /**
@@ -194,47 +199,53 @@ export const cleanupStuckFollowUps = mutation({
  *   bunx convex run devTools:seedXolacer '{"userId":"...","displayName":"Maya","bio":"..."}'
  */
 export const seedXolacer = internalMutation({
-  args: {
-    userId: v.id("users"),
-    displayName: v.string(),
-    bio: v.string(),
-    photoUrl: v.optional(v.string()),
-  },
-  returns: v.id("emotional_profiles"),
-  handler: async (ctx, args) => {
-    assertDevToolsEnabled();
+	args: {
+		bio: v.string(),
+		displayName: v.string(),
+		photoUrl: v.optional(v.string()),
+		userId: v.id("users"),
+	},
+	handler: async (ctx, args) => {
+		assertDevToolsEnabled();
 
-    const user = await ctx.db.get("users", args.userId);
-    if (!user) throw new Error("No such user");
-    await ctx.db.patch("users", user._id, { isXolacer: true });
+		const user = await ctx.db.get("users", args.userId);
+		if (!user) {
+			throw new Error("No such user");
+		}
+		await ctx.db.patch("users", user._id, { isXolacer: true });
 
-    const emotionalProfileId = user.emotionalProfileId;
-    const existing = await ctx.db
-      .query("xolacer_profiles")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", emotionalProfileId))
-      .unique();
+		const emotionalProfileId = user.emotionalProfileId;
+		const existing = await ctx.db
+			.query("xolacer_profiles")
+			.withIndex("by_profile", (q) =>
+				q.eq("emotionalProfileId", emotionalProfileId)
+			)
+			.unique();
 
-    const fields = {
-      displayName: args.displayName,
-      bio: args.bio,
-      photoUrl: args.photoUrl,
-      complete: true,
-      active: true,
-      updatedAt: Date.now(),
-    };
+		const fields = {
+			active: true,
+			bio: args.bio,
+			complete: true,
+			displayName: args.displayName,
+			photoUrl: args.photoUrl,
+			updatedAt: Date.now(),
+		};
 
-    await ctx.scheduler.runAfter(0, internal.ai.xolacers.embed.indexXolacer, { emotionalProfileId });
-    if (existing) {
-      await ctx.db.patch("xolacer_profiles", existing._id, fields);
-      return emotionalProfileId;
-    }
-    await ctx.db.insert("xolacer_profiles", {
-      emotionalProfileId,
-      createdAt: Date.now(),
-      ...fields,
-    });
-    return emotionalProfileId;
-  },
+		await ctx.scheduler.runAfter(0, internal.ai.xolacers.embed.indexXolacer, {
+			emotionalProfileId,
+		});
+		if (existing) {
+			await ctx.db.patch("xolacer_profiles", existing._id, fields);
+			return emotionalProfileId;
+		}
+		await ctx.db.insert("xolacer_profiles", {
+			createdAt: Date.now(),
+			emotionalProfileId,
+			...fields,
+		});
+		return emotionalProfileId;
+	},
+	returns: v.id("emotional_profiles"),
 });
 
 /**
@@ -246,17 +257,17 @@ export const seedXolacer = internalMutation({
  * a replay exercises the update path rather than only the insert.
  */
 export const resetIntake = mutation({
-  args: {},
-  returns: v.null(),
-  handler: async (ctx) => {
-    assertDevToolsEnabled();
-    const { profile } = await requireAuth(ctx);
-    await ctx.db.patch("emotional_profiles", profile._id, {
-      onboardingComplete: false,
-      updatedAt: Date.now(),
-    });
-    return null;
-  },
+	args: {},
+	handler: async (ctx) => {
+		assertDevToolsEnabled();
+		const { profile } = await requireAuth(ctx);
+		await ctx.db.patch("emotional_profiles", profile._id, {
+			onboardingComplete: false,
+			updatedAt: Date.now(),
+		});
+		return null;
+	},
+	returns: v.null(),
 });
 
 /**
@@ -266,64 +277,70 @@ export const resetIntake = mutation({
  *   bunx convex run devTools:seedKindling '{"sessionId":"..."}'
  */
 export const seedKindling = internalMutation({
-  args: { sessionId: v.id("sessions") },
-  returns: v.id("paths"),
-  handler: async (ctx, args) => {
-    assertDevToolsEnabled();
-    const session = await ctx.db.get("sessions", args.sessionId);
-    if (!session) throw new Error("No such session");
-    const emotionalProfileId = session.emotionalProfileId;
+	args: { sessionId: v.id("sessions") },
+	handler: async (ctx, args) => {
+		assertDevToolsEnabled();
+		const session = await ctx.db.get("sessions", args.sessionId);
+		if (!session) {
+			throw new Error("No such session");
+		}
+		const emotionalProfileId = session.emotionalProfileId;
 
-    const previous = await ctx.db
-      .query("paths")
-      .withIndex("by_profile_and_status", (q) =>
-        q.eq("emotionalProfileId", emotionalProfileId).eq("status", "active"),
-      )
-      .take(10);
-    for (const p of previous) await ctx.db.patch("paths", p._id, { status: "replaced" });
+		const previous = await ctx.db
+			.query("paths")
+			.withIndex("by_profile_and_status", (q) =>
+				q.eq("emotionalProfileId", emotionalProfileId).eq("status", "active")
+			)
+			.take(10);
+		for (const p of previous) {
+			await ctx.db.patch("paths", p._id, { status: "replaced" });
+		}
 
-    const pathId = await ctx.db.insert("paths", {
-      emotionalProfileId,
-      sessionId: session._id,
-      status: "active",
-      model: "qa-seed",
-      modelVersion: "qa-seed",
-      generatedAt: Date.now(),
-    });
-    const track = await ctx.db.query("audio_tracks").first();
-    const twigs = [
-      {
-        actionType: "breathing",
-        order: 1,
-        why: "You said it was hard to catch your breath. Take a few slow rounds here.",
-        params: { exercise: "sit-with-this" },
-      },
-      ...(track
-        ? [{
-            actionType: track.topic,
-            order: 2,
-            why: "The quiet came up more than once. Here's something soft to fill it.",
-            params: { slug: track.slug },
-          }]
-        : []),
-      {
-        actionType: "xolacer",
-        order: 3,
-        why: "Feeling alone kept coming up. A xolacer who's felt the same is around.",
-        params: { specialty: "burnout" },
-      },
-      {
-        actionType: "try_brisk_walk",
-        order: 4,
-        why: "You said you'd felt stuck indoors all week, so this one happens outside.",
-        params: { exercise: "try_brisk_walk" },
-      },
-    ];
-    for (const t of twigs) {
-      await ctx.db.insert("path_steps", { pathId, ...t, state: "pending" });
-    }
-    return pathId;
-  },
+		const pathId = await ctx.db.insert("paths", {
+			emotionalProfileId,
+			generatedAt: Date.now(),
+			model: "qa-seed",
+			modelVersion: "qa-seed",
+			sessionId: session._id,
+			status: "active",
+		});
+		const track = await ctx.db.query("audio_tracks").first();
+		const twigs = [
+			{
+				actionType: "breathing",
+				order: 1,
+				params: { exercise: "sit-with-this" },
+				why: "You said it was hard to catch your breath. Take a few slow rounds here.",
+			},
+			...(track
+				? [
+						{
+							actionType: track.topic,
+							order: 2,
+							params: { slug: track.slug },
+							why: "The quiet came up more than once. Here's something soft to fill it.",
+						},
+					]
+				: []),
+			{
+				actionType: "xolacer",
+				order: 3,
+				params: { specialty: "burnout" },
+				why: "Feeling alone kept coming up. A xolacer who's felt the same is around.",
+			},
+			{
+				actionType: "try_brisk_walk",
+				order: 4,
+				params: { exercise: "try_brisk_walk" },
+				why: "You said you'd felt stuck indoors all week, so this one happens outside.",
+			},
+		];
+		for (const t of twigs) {
+			await ctx.db.insert("path_steps", { pathId, ...t, state: "pending" });
+		}
+		return pathId;
+	},
+	returns: v.id("paths"),
 });
 
 /**
@@ -334,46 +351,67 @@ export const seedKindling = internalMutation({
  *   bunx convex run devTools:seedRevive '{"emotionalProfileId":"...","streak":5}'
  */
 export const seedRevive = internalMutation({
-  args: { emotionalProfileId: v.id("emotional_profiles"), streak: v.number(), savers: v.optional(v.number()) },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    assertDevToolsEnabled();
-    const profileId = args.emotionalProfileId;
-    const preferences = await ctx.db
-      .query("preferences")
-      .withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
-      .unique();
-    const yesterday = shiftDayKey(localDayKey(Date.now(), preferences?.notifications.timezone ?? "UTC"), -1);
+	args: {
+		emotionalProfileId: v.id("emotional_profiles"),
+		savers: v.optional(v.number()),
+		streak: v.number(),
+	},
+	handler: async (ctx, args) => {
+		assertDevToolsEnabled();
+		const profileId = args.emotionalProfileId;
+		const preferences = await ctx.db
+			.query("preferences")
+			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
+			.unique();
+		const yesterday = shiftDayKey(
+			localDayKey(Date.now(), preferences?.notifications.timezone ?? "UTC"),
+			-1
+		);
 
-    const logs = await ctx.db
-      .query("activity_log")
-      .withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) => q.eq("emotionalProfileId", profileId).gte("dayKey", yesterday))
-      .take(50);
-    const frozen = await ctx.db
-      .query("frozen_days")
-      .withIndex("by_emotionalProfileId_and_dayKey", (q) => q.eq("emotionalProfileId", profileId).gte("dayKey", yesterday))
-      .take(50);
-    for (const row of logs) await ctx.db.delete("activity_log", row._id);
-    for (const row of frozen) await ctx.db.delete("frozen_days", row._id);
-    // The run's last covered day is the day before the miss. Acked, so the
-    // streak-held screen (#436) doesn't claim it.
-    const lastCovered = shiftDayKey(yesterday, -1);
-    const covered = await ctx.db
-      .query("frozen_days")
-      .withIndex("by_emotionalProfileId_and_dayKey", (q) => q.eq("emotionalProfileId", profileId).eq("dayKey", lastCovered))
-      .first();
-    if (!covered) {
-      await ctx.db.insert("frozen_days", { emotionalProfileId: profileId, dayKey: lastCovered, createdAt: Date.now() });
-    }
+		const logs = await ctx.db
+			.query("activity_log")
+			.withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) =>
+				q.eq("emotionalProfileId", profileId).gte("dayKey", yesterday)
+			)
+			.take(50);
+		const frozen = await ctx.db
+			.query("frozen_days")
+			.withIndex("by_emotionalProfileId_and_dayKey", (q) =>
+				q.eq("emotionalProfileId", profileId).gte("dayKey", yesterday)
+			)
+			.take(50);
+		for (const row of logs) {
+			await ctx.db.delete("activity_log", row._id);
+		}
+		for (const row of frozen) {
+			await ctx.db.delete("frozen_days", row._id);
+		}
+		// The run's last covered day is the day before the miss. Acked, so the
+		// streak-held screen (#436) doesn't claim it.
+		const lastCovered = shiftDayKey(yesterday, -1);
+		const covered = await ctx.db
+			.query("frozen_days")
+			.withIndex("by_emotionalProfileId_and_dayKey", (q) =>
+				q.eq("emotionalProfileId", profileId).eq("dayKey", lastCovered)
+			)
+			.first();
+		if (!covered) {
+			await ctx.db.insert("frozen_days", {
+				createdAt: Date.now(),
+				dayKey: lastCovered,
+				emotionalProfileId: profileId,
+			});
+		}
 
-    await ctx.db.patch("emotional_profiles", profileId, {
-      freezeAckedDay: lastCovered,
-      currentStreak: args.streak,
-      streakSavers: args.savers ?? 1,
-      streakFreezes: 0,
-      streakRevivedDay: undefined,
-      brokenStreak: undefined,
-    });
-    return null;
-  },
+		await ctx.db.patch("emotional_profiles", profileId, {
+			brokenStreak: undefined,
+			currentStreak: args.streak,
+			freezeAckedDay: lastCovered,
+			streakFreezes: 0,
+			streakRevivedDay: undefined,
+			streakSavers: args.savers ?? 1,
+		});
+		return null;
+	},
+	returns: v.null(),
 });

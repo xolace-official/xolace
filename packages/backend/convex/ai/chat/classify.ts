@@ -13,22 +13,27 @@ import type { SafeguardLevel } from "../safeguard";
 export const CHAT_MODERATION_VERSION = "chat-moderation-v2-haiku-5.5";
 
 export type ChatModerationVerdict = {
-  crisis: SafeguardLevel;
-  harassment: boolean;
-  spam: boolean;
-  contact: boolean;
-  confidence: number;
+	crisis: SafeguardLevel;
+	harassment: boolean;
+	spam: boolean;
+	contact: boolean;
+	confidence: number;
 };
 
 export const QUIET_VERDICT: ChatModerationVerdict = {
-  crisis: "none",
-  harassment: false,
-  spam: false,
-  contact: false,
-  confidence: 0,
+	confidence: 0,
+	contact: false,
+	crisis: "none",
+	harassment: false,
+	spam: false,
 };
 
-const LEVELS = new Set<SafeguardLevel>(["none", "gentle", "elevated", "crisis"]);
+const LEVELS = new Set<SafeguardLevel>([
+	"none",
+	"gentle",
+	"elevated",
+	"crisis",
+]);
 
 /** Cost control: the model lane runs on conversation, not keystrokes. */
 export const MIN_WORDS = 2;
@@ -41,20 +46,24 @@ export const MIN_WORDS = 2;
 const wordSegmenter = new Intl.Segmenter(undefined, { granularity: "word" });
 
 export function shouldModerateChatMessage(text: string): boolean {
-  // Unicode-aware so no-space scripts (Chinese, Japanese, Thai) count words.
-  let words = 0;
-  for (const s of wordSegmenter.segment(text)) {
-    if (s.isWordLike && ++words >= MIN_WORDS) break;
-  }
-  if (words < MIN_WORDS) return false;
-  return /\p{L}/u.test(text);
+	// Unicode-aware so no-space scripts (Chinese, Japanese, Thai) count words.
+	let words = 0;
+	for (const s of wordSegmenter.segment(text)) {
+		if (s.isWordLike && ++words >= MIN_WORDS) {
+			break;
+		}
+	}
+	if (words < MIN_WORDS) {
+		return false;
+	}
+	return /\p{L}/u.test(text);
 }
 
 export function buildChatModerationPrompt(
-  text: string,
-  senderRole: "user" | "xolacer",
+	text: string,
+	senderRole: "user" | "xolacer"
 ): { system: string; user: string } {
-  const system = `You are a safety classifier for Xolace, a mental health app where a seeker talks one-to-one with a volunteer listener (a "Xolacer"). You will be shown ONE message from that conversation. Answer four questions about it and return ONLY a JSON object — no preamble, no fences.
+	const system = `You are a safety classifier for Xolace, a mental health app where a seeker talks one-to-one with a volunteer listener (a "Xolacer"). You will be shown ONE message from that conversation. Answer four questions about it and return ONLY a JSON object — no preamble, no fences.
 
 {
   "crisis": "none" | "gentle" | "elevated" | "crisis",
@@ -86,7 +95,7 @@ How sure you are of the whole verdict. Be decisive on clear cases; low confidenc
 
 The sender is the ${senderRole === "xolacer" ? "listener (Xolacer)" : "seeker"}.`;
 
-  return { system, user: `<message>\n${text}\n</message>` };
+	return { system, user: `<message>\n${text}\n</message>` };
 }
 
 /**
@@ -94,25 +103,31 @@ The sender is the ${senderRole === "xolacer" ? "listener (Xolacer)" : "seeker"}.
  * flag a person, and a missed crisis here is caught by the human the flag
  * queue is for, not by inventing one.
  */
-export function parseChatModerationResponse(raw: string): ChatModerationVerdict {
-  const start = raw.indexOf("{");
-  const end = raw.lastIndexOf("}");
-  if (start < 0 || end <= start) return QUIET_VERDICT;
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(raw.slice(start, end + 1));
-  } catch {
-    return QUIET_VERDICT;
-  }
-  const crisis = LEVELS.has(parsed.crisis as SafeguardLevel)
-    ? (parsed.crisis as SafeguardLevel)
-    : "none";
-  const confidence = Number(parsed.confidence);
-  return {
-    crisis,
-    harassment: parsed.harassment === true,
-    spam: parsed.spam === true,
-    contact: parsed.contact === true,
-    confidence: Number.isFinite(confidence) ? Math.min(Math.max(confidence, 0), 1) : 0,
-  };
+export function parseChatModerationResponse(
+	raw: string
+): ChatModerationVerdict {
+	const start = raw.indexOf("{");
+	const end = raw.lastIndexOf("}");
+	if (start < 0 || end <= start) {
+		return QUIET_VERDICT;
+	}
+	let parsed: Record<string, unknown>;
+	try {
+		parsed = JSON.parse(raw.slice(start, end + 1));
+	} catch {
+		return QUIET_VERDICT;
+	}
+	const crisis = LEVELS.has(parsed.crisis as SafeguardLevel)
+		? (parsed.crisis as SafeguardLevel)
+		: "none";
+	const confidence = Number(parsed.confidence);
+	return {
+		confidence: Number.isFinite(confidence)
+			? Math.min(Math.max(confidence, 0), 1)
+			: 0,
+		contact: parsed.contact === true,
+		crisis,
+		harassment: parsed.harassment === true,
+		spam: parsed.spam === true,
+	};
 }

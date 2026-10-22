@@ -21,21 +21,21 @@ export const FLASH_MS = 140;
 export const SCATTER_MS = 2200;
 export const SILENCE_MS = 1200;
 
-export const FLASH_COLOR = '#FFF3E0';
+export const FLASH_COLOR = "#FFF3E0";
 
 // Deterministic PRNG so the field looks the same every session.
 function mulberry32(seed: number) {
-  let a = seed;
-  return () => {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+	let a = seed;
+	return () => {
+		a |= 0;
+		a = (a + 0x6d_2b_79_f5) | 0;
+		let t = Math.imul(a ^ (a >>> 15), 1 | a);
+		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+		return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
+	};
 }
 
-const rand = mulberry32(20260610);
+const rand = mulberry32(20_260_610);
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
 // Unit sphere directions (fibonacci lattice) — the orbital home of each particle.
@@ -56,28 +56,28 @@ export const SCAT_VY: number[] = [];
 export const SCAT_G: number[] = [];
 
 for (let i = 0; i < PARTICLE_COUNT; i++) {
-  const t = (i + 0.5) / PARTICLE_COUNT;
-  const phi = Math.acos(1 - 2 * t);
-  const theta = GOLDEN_ANGLE * i;
-  DIR_X.push(Math.sin(phi) * Math.cos(theta));
-  DIR_Y.push(Math.cos(phi));
-  DIR_Z.push(Math.sin(phi) * Math.sin(theta));
+	const t = (i + 0.5) / PARTICLE_COUNT;
+	const phi = Math.acos(1 - 2 * t);
+	const theta = GOLDEN_ANGLE * i;
+	DIR_X.push(Math.sin(phi) * Math.cos(theta));
+	DIR_Y.push(Math.cos(phi));
+	DIR_Z.push(Math.sin(phi) * Math.sin(theta));
 
-  SIZE.push(2 + rand() * 2);
-  SPEED.push((0.5 + rand()) * (rand() > 0.5 ? 1 : -1));
-  PHASE0.push(rand() * Math.PI * 2);
-  DELAY.push(rand() * 600);
+	SIZE.push(2 + rand() * 2);
+	SPEED.push((0.5 + rand()) * (rand() > 0.5 ? 1 : -1));
+	PHASE0.push(rand() * Math.PI * 2);
+	DELAY.push(rand() * 600);
 
-  const entryAngle = rand() * Math.PI * 2;
-  ENTRY_X.push(Math.cos(entryAngle));
-  ENTRY_Y.push(Math.sin(entryAngle));
+	const entryAngle = rand() * Math.PI * 2;
+	ENTRY_X.push(Math.cos(entryAngle));
+	ENTRY_Y.push(Math.sin(entryAngle));
 
-  const scatAngle = rand() * Math.PI * 2;
-  const scatSpeed = 0.15 + rand() * 0.35;
-  SCAT_VX.push(Math.cos(scatAngle) * scatSpeed);
-  // Slight upward bias so the burst reads as release, not collapse.
-  SCAT_VY.push(Math.sin(scatAngle) * scatSpeed - 0.06);
-  SCAT_G.push(0.0001 + rand() * 0.0004);
+	const scatAngle = rand() * Math.PI * 2;
+	const scatSpeed = 0.15 + rand() * 0.35;
+	SCAT_VX.push(Math.cos(scatAngle) * scatSpeed);
+	// Slight upward bias so the burst reads as release, not collapse.
+	SCAT_VY.push(Math.sin(scatAngle) * scatSpeed - 0.06);
+	SCAT_G.push(0.0001 + rand() * 0.0004);
 }
 
 // Precomputed color ramp: ash gray → ember → amber. The render worklet indexes
@@ -91,20 +91,20 @@ export const RAMP_B: number[] = [];
 export const RAMP_COLORS: Float32Array[] = [];
 
 const STOPS = [
-  [0x93, 0x99, 0xa8], // #9399A8 cool ash-gray
-  [0xc4, 0x88, 0x3f], // #C4883F warming ember
-  [0xe8, 0xa8, 0x4c], // #E8A84C hot amber
+	[0x93, 0x99, 0xa8], // #9399A8 cool ash-gray
+	[0xc4, 0x88, 0x3f], // #C4883F warming ember
+	[0xe8, 0xa8, 0x4c], // #E8A84C hot amber
 ];
 
 for (let i = 0; i < RAMP_STEPS; i++) {
-  const p = (i / (RAMP_STEPS - 1)) * (STOPS.length - 1);
-  const lo = Math.min(Math.floor(p), STOPS.length - 2);
-  const f = p - lo;
-  const r = STOPS[lo][0] + (STOPS[lo + 1][0] - STOPS[lo][0]) * f;
-  const g = STOPS[lo][1] + (STOPS[lo + 1][1] - STOPS[lo][1]) * f;
-  const b = STOPS[lo][2] + (STOPS[lo + 1][2] - STOPS[lo][2]) * f;
-  RAMP_R.push(r);
-  RAMP_G.push(g);
-  RAMP_B.push(b);
-  RAMP_COLORS.push(Float32Array.of(r / 255, g / 255, b / 255, 1));
+	const p = (i / (RAMP_STEPS - 1)) * (STOPS.length - 1);
+	const lo = Math.min(Math.floor(p), STOPS.length - 2);
+	const f = p - lo;
+	const r = STOPS[lo][0] + (STOPS[lo + 1][0] - STOPS[lo][0]) * f;
+	const g = STOPS[lo][1] + (STOPS[lo + 1][1] - STOPS[lo][1]) * f;
+	const b = STOPS[lo][2] + (STOPS[lo + 1][2] - STOPS[lo][2]) * f;
+	RAMP_R.push(r);
+	RAMP_G.push(g);
+	RAMP_B.push(b);
+	RAMP_COLORS.push(Float32Array.of(r / 255, g / 255, b / 255, 1));
 }

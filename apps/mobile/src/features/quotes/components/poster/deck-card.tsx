@@ -1,14 +1,14 @@
-import type { ReactNode } from "react";
-import { PressableFeedback } from "heroui-native";
-import { View } from "react-native";
 import { SymbolView } from "expo-symbols";
+import { PressableFeedback } from "heroui-native";
+import type { ReactNode } from "react";
+import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/src/components/shared/app-text";
 
 const ARCHIVE_ICON = {
-  ios: "arrow.up.forward.square",
-  android: "open_in_new",
+	android: "open_in_new",
+	ios: "arrow.up.forward.square",
 } as const;
 
 /**
@@ -21,34 +21,34 @@ const ARCHIVE_ICON = {
  * It carries the composer and the way back to the archive.
  */
 export function DeckCard({
-  composer,
-  onOpenArchive,
+	composer,
+	onOpenArchive,
 }: {
-  composer?: ReactNode;
-  onOpenArchive: () => void;
+	composer?: ReactNode;
+	onOpenArchive: () => void;
 }) {
-  const [ink] = useCSSVariable(["--color-poster-ink"]) as string[];
+	const [ink] = useCSSVariable(["--color-poster-ink"]) as string[];
 
-  return (
-    // mt-0.5, not mt-3: RN margins do not collapse, and the hero already ends
-    // in 10pt of its own — 2 more is what makes the gap 12.
-    <View className="mx-2.5 mt-0.5 mb-6 gap-4 rounded-[28px] bg-poster-deck p-4">
-      {composer}
-      <PressableFeedback
-        onPress={() => {
-          Presets.flick();
-          onOpenArchive();
-        }}
-        accessibilityRole="button"
-        accessibilityLabel="See old quotes"
-      >
-        <View className="flex-row items-center justify-between px-1">
-          <AppText className="font-poster-display text-[22px] text-poster-ink">
-            SEE OLD QUOTES
-          </AppText>
-          <SymbolView name={ARCHIVE_ICON} size={20} tintColor={ink} />
-        </View>
-      </PressableFeedback>
-    </View>
-  );
+	return (
+		// mt-0.5, not mt-3: RN margins do not collapse, and the hero already ends
+		// in 10pt of its own — 2 more is what makes the gap 12.
+		<View className="mx-2.5 mt-0.5 mb-6 gap-4 rounded-[28px] bg-poster-deck p-4">
+			{composer}
+			<PressableFeedback
+				accessibilityLabel="See old quotes"
+				accessibilityRole="button"
+				onPress={() => {
+					Presets.flick();
+					onOpenArchive();
+				}}
+			>
+				<View className="flex-row items-center justify-between px-1">
+					<AppText className="font-poster-display text-[22px] text-poster-ink">
+						SEE OLD QUOTES
+					</AppText>
+					<SymbolView name={ARCHIVE_ICON} size={20} tintColor={ink} />
+				</View>
+			</PressableFeedback>
+		</View>
+	);
 }

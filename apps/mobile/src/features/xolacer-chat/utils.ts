@@ -1,4 +1,4 @@
-export type ConversationStatus = 'requested' | 'open' | 'resting' | 'closed';
+export type ConversationStatus = "requested" | "open" | "resting" | "closed";
 
 /**
  * Did these two ever actually exchange a message? A channel is only created on
@@ -11,15 +11,19 @@ export type ConversationStatus = 'requested' | 'open' | 'resting' | 'closed';
  * `streamChannelId`.
  */
 export function hasSpoken(conversation: {
-  status: ConversationStatus;
-  closedReason?: 'declined' | 'expired' | 'blocked' | 'xolacer_left';
+	status: ConversationStatus;
+	closedReason?: "declined" | "expired" | "blocked" | "xolacer_left";
 }): boolean {
-  if (conversation.status === 'requested') return false;
-  if (conversation.status !== 'closed') return true;
-  return (
-    conversation.closedReason !== 'declined' &&
-    conversation.closedReason !== 'expired'
-  );
+	if (conversation.status === "requested") {
+		return false;
+	}
+	if (conversation.status !== "closed") {
+		return true;
+	}
+	return (
+		conversation.closedReason !== "declined" &&
+		conversation.closedReason !== "expired"
+	);
 }
 
 /**
@@ -47,18 +51,20 @@ export function hasSpoken(conversation: {
  * record instead, so nothing is impersonated.
  */
 export function resolveMessageIdentity(
-  senderId: string | undefined,
-  conversation: {
-    counterpartProfileId: string;
-    counterpartName: string;
-    counterpartPhotoUrl?: string;
-  },
+	senderId: string | undefined,
+	conversation: {
+		counterpartProfileId: string;
+		counterpartName: string;
+		counterpartPhotoUrl?: string;
+	}
 ): { name: string; image?: string } | null {
-  if (senderId !== conversation.counterpartProfileId) return null;
-  return {
-    name: conversation.counterpartName,
-    image: conversation.counterpartPhotoUrl,
-  };
+	if (senderId !== conversation.counterpartProfileId) {
+		return null;
+	}
+	return {
+		image: conversation.counterpartPhotoUrl,
+		name: conversation.counterpartName,
+	};
 }
 
 /** Past this the pill stops growing and starts counting for itself. */
@@ -77,7 +83,7 @@ const UNREAD_CAP = 99;
  * never show a count, without holding a second copy of this rule.
  */
 export function canHoldUnread(status: ConversationStatus): boolean {
-  return status === 'open' || status === 'resting';
+	return status === "open" || status === "resting";
 }
 
 /**
@@ -87,23 +93,29 @@ export function canHoldUnread(status: ConversationStatus): boolean {
  * and "99+ unread" is worse information than "150 unread".
  */
 export function unreadBadge(
-  status: ConversationStatus,
-  count: number,
+	status: ConversationStatus,
+	count: number
 ): { label: string; a11y: string } | null {
-  if (!canHoldUnread(status)) return null;
-  return formatUnreadBadge(count);
+	if (!canHoldUnread(status)) {
+		return null;
+	}
+	return formatUnreadBadge(count);
 }
 
 /**
  * Same cap/copy as `unreadBadge`, without the lifecycle gate — for the
  * Xolace broadcast row (#377), which has no status and so nothing to gate on.
  */
-export function formatUnreadBadge(count: number): { label: string; a11y: string } | null {
-  if (count <= 0) return null;
-  return {
-    label: count > UNREAD_CAP ? `${UNREAD_CAP}+` : String(count),
-    a11y: `${count} unread message${count === 1 ? '' : 's'}`,
-  };
+export function formatUnreadBadge(
+	count: number
+): { label: string; a11y: string } | null {
+	if (count <= 0) {
+		return null;
+	}
+	return {
+		a11y: `${count} unread message${count === 1 ? "" : "s"}`,
+		label: count > UNREAD_CAP ? `${UNREAD_CAP}+` : String(count),
+	};
 }
 
 /**
@@ -112,19 +124,21 @@ export function formatUnreadBadge(count: number): { label: string; a11y: string 
  * the same way and only differ in the sentence they show.
  */
 export function chatLimitError(error: unknown): {
-  code?: string;
-  max?: number;
-  party?: 'seeker' | 'xolacer';
-  until?: number;
+	code?: string;
+	max?: number;
+	party?: "seeker" | "xolacer";
+	until?: number;
 } | null {
-  const data = (error as { data?: unknown } | null)?.data;
-  if (!data || typeof data !== 'object') return null;
-  return data as {
-    code?: string;
-    max?: number;
-    party?: 'seeker' | 'xolacer';
-    until?: number;
-  };
+	const data = (error as { data?: unknown } | null)?.data;
+	if (!data || typeof data !== "object") {
+		return null;
+	}
+	return data as {
+		code?: string;
+		max?: number;
+		party?: "seeker" | "xolacer";
+		until?: number;
+	};
 }
 
 /**
@@ -139,8 +153,10 @@ export function chatLimitError(error: unknown): {
  * server would now accept, and disabled means no write, so nothing ever
  * invalidates the cache — the door stays shut permanently.
  */
-export function declineCooldownActive(until: number | undefined): until is number {
-  return until !== undefined && until > Date.now();
+export function declineCooldownActive(
+	until: number | undefined
+): until is number {
+	return until !== undefined && until > Date.now();
 }
 
 /**
@@ -149,7 +165,7 @@ export function declineCooldownActive(until: number | undefined): until is numbe
  * sentence claims is already over.
  */
 export function daysUntil(timestamp: number): number {
-  return Math.max(1, Math.ceil((timestamp - Date.now()) / 86400000));
+	return Math.max(1, Math.ceil((timestamp - Date.now()) / 86_400_000));
 }
 
 /**
@@ -161,9 +177,12 @@ export function daysUntil(timestamp: number): number {
  * a decline is already a hard enough moment without the product agreeing with
  * it.
  */
-export function declineCooldownNote(displayName: string, until: number): string {
-  const days = daysUntil(until);
-  return `${displayName} couldn't take this one on. You can ask them again in ${days} day${days === 1 ? '' : 's'} — others on the roster have space in the meantime.`;
+export function declineCooldownNote(
+	displayName: string,
+	until: number
+): string {
+	const days = daysUntil(until);
+	return `${displayName} couldn't take this one on. You can ask them again in ${days} day${days === 1 ? "" : "s"} — others on the roster have space in the meantime.`;
 }
 
 /**
@@ -173,13 +192,13 @@ export function declineCooldownNote(displayName: string, until: number): string 
  * The seeker is never named — only that they have no room right now.
  */
 export function acceptFailureLabel(error: unknown): string {
-  const data = chatLimitError(error);
-  if (data?.code !== 'open_conversation_limit') {
-    return "Couldn't open the conversation. Try again.";
-  }
-  return data.party === 'xolacer'
-    ? `You're holding ${data.max ?? 8} open conversations. Let one rest before accepting another.`
-    : "They've got as many conversations open as they can hold right now. This request stays in your inbox.";
+	const data = chatLimitError(error);
+	if (data?.code !== "open_conversation_limit") {
+		return "Couldn't open the conversation. Try again.";
+	}
+	return data.party === "xolacer"
+		? `You're holding ${data.max ?? 8} open conversations. Let one rest before accepting another.`
+		: "They've got as many conversations open as they can hold right now. This request stays in your inbox.";
 }
 
 /**
@@ -195,9 +214,11 @@ export function acceptFailureLabel(error: unknown): string {
  * scored it.
  */
 export function rateCtaState(input: {
-  canRate: boolean;
-  myRating?: number;
-}): 'hidden' | 'prompt' | 'rated' {
-  if (!input.canRate) return 'hidden';
-  return input.myRating === undefined ? 'prompt' : 'rated';
+	canRate: boolean;
+	myRating?: number;
+}): "hidden" | "prompt" | "rated" {
+	if (!input.canRate) {
+		return "hidden";
+	}
+	return input.myRating === undefined ? "prompt" : "rated";
 }

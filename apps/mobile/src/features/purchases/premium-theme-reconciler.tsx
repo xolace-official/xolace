@@ -1,4 +1,4 @@
-import { usePremiumThemeReconciler } from './use-premium-theme-reconciler';
+import { usePremiumThemeReconciler } from "./use-premium-theme-reconciler";
 
 /**
  * Headless mount point for usePremiumThemeReconciler.
@@ -6,6 +6,6 @@ import { usePremiumThemeReconciler } from './use-premium-theme-reconciler';
  * check runs app-wide, not only while the Appearance screen is open.
  */
 export function PremiumThemeReconciler() {
-  usePremiumThemeReconciler();
-  return null;
+	usePremiumThemeReconciler();
+	return null;
 }

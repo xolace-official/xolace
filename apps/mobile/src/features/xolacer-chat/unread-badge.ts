@@ -1,8 +1,11 @@
-import type { Event } from 'stream-chat';
+import type { Event } from "stream-chat";
 
 /** The slice of a Stream `Event` the fold reads; `me` narrowed to the total. */
-export type BadgeEvent = Pick<Event, 'type' | 'total_unread_count' | 'unread_channels'> & {
-  me?: Pick<NonNullable<Event['me']>, 'total_unread_count'>;
+export type BadgeEvent = Pick<
+	Event,
+	"type" | "total_unread_count" | "unread_channels"
+> & {
+	me?: Pick<NonNullable<Event["me"]>, "total_unread_count">;
 };
 
 /**
@@ -14,7 +17,11 @@ export type BadgeEvent = Pick<Event, 'type' | 'total_unread_count' | 'unread_cha
  * channel this user is not a member of carries no total and changes nothing.
  */
 export function badgeFromEvents(current: number, event: BadgeEvent): number {
-  if (event.me?.total_unread_count !== undefined) return event.me.total_unread_count;
-  if (event.total_unread_count !== undefined) return event.total_unread_count;
-  return current;
+	if (event.me?.total_unread_count !== undefined) {
+		return event.me.total_unread_count;
+	}
+	if (event.total_unread_count !== undefined) {
+		return event.total_unread_count;
+	}
+	return current;
 }

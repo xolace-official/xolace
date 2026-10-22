@@ -1,12 +1,12 @@
-import { useEffect } from 'react';
-import { AppState } from 'react-native';
-import * as Notifications from 'expo-notifications';
-import { useIsFocused } from 'expo-router/react-navigation';
+import * as Notifications from "expo-notifications";
+import { useIsFocused } from "expo-router/react-navigation";
+import { useEffect } from "react";
+import { AppState } from "react-native";
 import {
-  clearActiveNotificationConversation,
-  conversationNotificationIds,
-  setActiveNotificationConversation,
-} from '@/src/lib/notification-suppression';
+	clearActiveNotificationConversation,
+	conversationNotificationIds,
+	setActiveNotificationConversation,
+} from "@/src/lib/notification-suppression";
 
 /**
  * Clears the tray of anything still sitting there for a conversation the user
@@ -18,35 +18,39 @@ import {
  * surface of its own.
  */
 export function useDismissThreadNotifications(conversationId: string) {
-  const isFocused = useIsFocused();
+	const isFocused = useIsFocused();
 
-  useEffect(() => {
-    if (!isFocused) return;
+	useEffect(() => {
+		if (!isFocused) {
+			return;
+		}
 
-    setActiveNotificationConversation(conversationId);
+		setActiveNotificationConversation(conversationId);
 
-    const dismissPresented = () => {
-      Notifications.getPresentedNotificationsAsync()
-        .then((presented) =>
-          Promise.all(
-            conversationNotificationIds(presented, conversationId).map((id) =>
-              Notifications.dismissNotificationAsync(id),
-            ),
-          ),
-        )
-        .catch((error) =>
-          console.log('[xolacer-chat] failed to clear conversation tray', error),
-        );
-    };
+		const dismissPresented = () => {
+			Notifications.getPresentedNotificationsAsync()
+				.then((presented) =>
+					Promise.all(
+						conversationNotificationIds(presented, conversationId).map((id) =>
+							Notifications.dismissNotificationAsync(id)
+						)
+					)
+				)
+				.catch((error) =>
+					console.log("[xolacer-chat] failed to clear conversation tray", error)
+				);
+		};
 
-    dismissPresented();
-    const subscription = AppState.addEventListener('change', (status) => {
-      if (status === 'active') dismissPresented();
-    });
+		dismissPresented();
+		const subscription = AppState.addEventListener("change", (status) => {
+			if (status === "active") {
+				dismissPresented();
+			}
+		});
 
-    return () => {
-      subscription.remove();
-      clearActiveNotificationConversation(conversationId);
-    };
-  }, [conversationId, isFocused]);
+		return () => {
+			subscription.remove();
+			clearActiveNotificationConversation(conversationId);
+		};
+	}, [conversationId, isFocused]);
 }

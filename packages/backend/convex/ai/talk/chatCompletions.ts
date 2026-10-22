@@ -1,22 +1,35 @@
-import { httpAction } from "../../_generated/server";
 import { internal } from "../../_generated/api";
-import { toAnthropicRequest } from "./openaiCompat";
-import { sseChunk, SSE_DONE, type FinishReason, type OpenAIDelta } from "./openaiSse";
-import { moderateInput } from "../providers/moderation";
-import {
-  PERSON_NAME_TOOL,
-  SLOW_TOOL,
-  ownToolAnswer,
-  ownToolTurns,
-  personNameTool,
-  renameTool,
-  slowTool,
-} from "../prompts/companion";
-import { stripAudioTags } from "./audioTags";
+import { httpAction } from "../../_generated/server";
 import { moderationPeak, phrasePeak, turnWords } from "../../talk/safety";
 import { CRISIS_LINE } from "../../talk/safetyScript";
+import {
+	ownToolAnswer,
+	ownToolTurns,
+	PERSON_NAME_TOOL,
+	personNameTool,
+	renameTool,
+	SLOW_TOOL,
+	slowTool,
+} from "../prompts/companion";
+import { moderateInput } from "../providers/moderation";
+import { stripAudioTags } from "./audioTags";
+import { toAnthropicRequest } from "./openaiCompat";
+import {
+	type FinishReason,
+	type OpenAIDelta,
+	SSE_DONE,
+	sseChunk,
+} from "./openaiSse";
 import { planTurn } from "./plan";
-import { readTurn, relayTurn, runOwnTool, streamTurn, talkModel, companionVersion, type RelaySink } from "./turn";
+import {
+	companionVersion,
+	type RelaySink,
+	readTurn,
+	relayTurn,
+	runOwnTool,
+	streamTurn,
+	talkModel,
+} from "./turn";
 
 // The agent's system tool that hangs up; our clock calls it on the last turn (#597).
 // Emitted even if the agent doesn't list it: then nothing hangs up but the backstop.
@@ -25,9 +38,11 @@ const END_CALL = "end_call";
 // A miss streams the turn; the verdict applies from the next one.
 const MODERATION_WAIT_MS = 250;
 
-const within = <T,>(p: Promise<T>, ms: number) =>
-  Promise.race([p, new Promise<null>((r) => setTimeout(() => r(null), Math.max(0, ms)))]);
-
+const within = <T>(p: Promise<T>, ms: number) =>
+	Promise.race([
+		p,
+		new Promise<null>((r) => setTimeout(() => r(null), Math.max(0, ms))),
+	]);
 
 /**
  * ElevenLabs Custom LLM endpoint: `POST /v1/chat/completions`, answered as
@@ -63,223 +78,316 @@ const within = <T,>(p: Promise<T>, ms: number) =>
  * those are recorded.
  */
 export const chatCompletions = httpAction(async (ctx, request) => {
-  const startedAt = Date.now();
-  const t: Record<string, number> = {};
-  const mark = (k: string) => (t[k] ??= Date.now() - startedAt);
-  const read = await readTurn(request, startedAt, mark);
-  if (read instanceof Response) return read;
-  const { body, talk, clock } = read;
-  const words = turnWords(talk.lines);
-  const phrase = phrasePeak(words);
-  // Raced against the first chunk below; never rejects (unavailable = no verdict).
-  // A loose phrase floors at elevated; moderation can still raise it to crisis.
-  const moderation =
-    words && phrase?.level !== "crisis"
-      ? moderateInput(words).then((r) => (mark("moderationDone"), moderationPeak(r)))
-      : null;
-  // Started before the memory read, awaited once the model call is in flight:
-  // costs no TTFT. A failed write fails closed: no turn the transcript can't hold.
-  const model = talkModel(body.model);
-  const bound = ctx
-    .runMutation(internal.talk.turns.syncLines, {
-      ...talk,
-      ...(phrase ? { peak: phrase } : {}),
-      companionVersion: companionVersion(model),
-    })
-    .catch((err) => {
-      console.error("[talk] turn sync failed", err);
-      return false;
-    });
-  // The verdict lands whenever it does, chained here rather than after [DONE]:
-  // an interruption kills the stream (and anything after it), but the person's
-  // flagged words are moderated only this turn. Idempotent with the early raise.
-  const late = moderation
-    ? Promise.all([moderation, bound])
-        .then(([peak, ok]) =>
-          ok && peak ? ctx.runMutation(internal.talk.safety.raise, { sessionId: talk.sessionId, peak }) : null,
-        )
-        .catch((err) => console.error("[talk] safety raise failed", err))
-    : null;
-  // The one database read before the model call (#598): the preload is
-  // fixed at talk start, the recall and the safety peak land between turns.
-  const memory = await ctx.runQuery(internal.talk.remember.forTurn, { sessionId: talk.sessionId, talkKey: talk.talkKey }).catch((err) => {
-    console.error("[talk] memory read failed", err);
-    return null;
-  });
-  mark("memory");
+	const startedAt = Date.now();
+	const t: Record<string, number> = {};
+	const mark = (k: string) => (t[k] ??= Date.now() - startedAt);
+	const read = await readTurn(request, startedAt, mark);
+	if (read instanceof Response) {
+		return read;
+	}
+	const { body, talk, clock } = read;
+	const words = turnWords(talk.lines);
+	const phrase = phrasePeak(words);
+	// Raced against the first chunk below; never rejects (unavailable = no verdict).
+	// A loose phrase floors at elevated; moderation can still raise it to crisis.
+	const moderation =
+		words && phrase?.level !== "crisis"
+			? moderateInput(words).then(
+					(r) => (mark("moderationDone"), moderationPeak(r))
+				)
+			: null;
+	// Started before the memory read, awaited once the model call is in flight:
+	// costs no TTFT. A failed write fails closed: no turn the transcript can't hold.
+	const model = talkModel(body.model);
+	const bound = ctx
+		.runMutation(internal.talk.turns.syncLines, {
+			...talk,
+			...(phrase ? { peak: phrase } : {}),
+			companionVersion: companionVersion(model),
+		})
+		.catch((err) => {
+			console.error("[talk] turn sync failed", err);
+			return false;
+		});
+	// The verdict lands whenever it does, chained here rather than after [DONE]:
+	// an interruption kills the stream (and anything after it), but the person's
+	// flagged words are moderated only this turn. Idempotent with the early raise.
+	const late = moderation
+		? Promise.all([moderation, bound])
+				.then(([peak, ok]) =>
+					ok && peak
+						? ctx.runMutation(internal.talk.safety.raise, {
+								peak,
+								sessionId: talk.sessionId,
+							})
+						: null
+				)
+				.catch((err) => console.error("[talk] safety raise failed", err))
+		: null;
+	// The one database read before the model call (#598): the preload is
+	// fixed at talk start, the recall and the safety peak land between turns.
+	const memory = await ctx
+		.runQuery(internal.talk.remember.forTurn, {
+			sessionId: talk.sessionId,
+			talkKey: talk.talkKey,
+		})
+		.catch((err) => {
+			console.error("[talk] memory read failed", err);
+			return null;
+		});
+	mark("memory");
 
-  const { system: agentSystem, messages: turns, tools: agentTools } = toAnthropicRequest(body.messages, body.tools);
-  const { peak, name, cue, systemAs, crisisLine: planned } = planTurn({ memory, phrase, clock, agentSystem, turns });
-  // Marked spoken only once fully sent: an interrupted line comes again.
-  let crisisLine = planned;
-  // Our own tools are listed beside the agent's and answered here, never relayed.
-  const tools = [...agentTools, renameTool, personNameTool, slowTool];
-  if (turns.length === 0) return new Response("no turns", { status: 400 });
-  // The last turn ends on our end_call; tools stay listed (the history may
-  // hold past calls) but the model can't make one of its own.
-  const { closing } = cue;
+	const {
+		system: agentSystem,
+		messages: turns,
+		tools: agentTools,
+	} = toAnthropicRequest(body.messages, body.tools);
+	const {
+		peak,
+		name,
+		cue,
+		systemAs,
+		crisisLine: planned,
+	} = planTurn({ agentSystem, clock, memory, phrase, turns });
+	// Marked spoken only once fully sent: an interrupted line comes again.
+	let crisisLine = planned;
+	// Our own tools are listed beside the agent's and answered here, never relayed.
+	const tools = [...agentTools, renameTool, personNameTool, slowTool];
+	if (turns.length === 0) {
+		return new Response("no turns", { status: 400 });
+	}
+	// The last turn ends on our end_call; tools stay listed (the history may
+	// hold past calls) but the model can't make one of its own.
+	const { closing } = cue;
 
-  const meta = { id: `chatcmpl-${crypto.randomUUID()}`, model, created: Math.floor(startedAt / 1000) };
-  const abort = new AbortController();
-  let outcome: "done" | "aborted" | "error" | "unbound" = "done";
-  let firstTokenAt: number | null = null;
-  // Tag words only (e.g. "sigh"), never the turn's text: does #583's audio-tag
-  // set make it through to ElevenLabs?
-  const audioTags: string[] = [];
-  let reply = "";
-  const toolCalls: string[] = [];
-  const sink: RelaySink = { emit: () => {}, toolCalls, usage: null };
+	const meta = {
+		created: Math.floor(startedAt / 1000),
+		id: `chatcmpl-${crypto.randomUUID()}`,
+		model,
+	};
+	const abort = new AbortController();
+	let outcome: "done" | "aborted" | "error" | "unbound" = "done";
+	let firstTokenAt: number | null = null;
+	// Tag words only (e.g. "sigh"), never the turn's text: does #583's audio-tag
+	// set make it through to ElevenLabs?
+	const audioTags: string[] = [];
+	let reply = "";
+	const toolCalls: string[] = [];
+	const sink: RelaySink = { emit: () => {}, toolCalls, usage: null };
 
-  const log = () => {
-    console.log("[talk] turn", {
-      model,
-      outcome,
-      ttftMs: firstTokenAt === null ? null : firstTokenAt - startedAt,
-      totalMs: Date.now() - startedAt,
-      phasesMs: t,
-      inputTokens: sink.usage?.input_tokens,
-      cacheRead: sink.usage?.cache_read_input_tokens,
-      cacheWrite: sink.usage?.cache_creation_input_tokens,
-      turns: turns.length,
-      elapsedS: Math.round(clock.elapsedMs / 1000),
-      silentTurns: clock.silentTurns,
-      closing,
-      safety: peak?.level ?? null,
-      crisisLine,
-      // Sizes only, never the text: did the preload and recall reach this turn?
-      memory: memory ? { preloadChars: memory.memory.length, recallChars: memory.recall.length, name: memory.name } : null,
-      bodyKeys: Object.keys(body),
-      audioTags,
-      toolCalls,
-      extraBodyKeys:
-        body.elevenlabs_extra_body && typeof body.elevenlabs_extra_body === "object"
-          ? Object.keys(body.elevenlabs_extra_body)
-          : null,
-    });
-  };
+	const log = () => {
+		console.log("[talk] turn", {
+			audioTags,
+			bodyKeys: Object.keys(body),
+			cacheRead: sink.usage?.cache_read_input_tokens,
+			cacheWrite: sink.usage?.cache_creation_input_tokens,
+			closing,
+			crisisLine,
+			elapsedS: Math.round(clock.elapsedMs / 1000),
+			extraBodyKeys:
+				body.elevenlabs_extra_body &&
+				typeof body.elevenlabs_extra_body === "object"
+					? Object.keys(body.elevenlabs_extra_body)
+					: null,
+			inputTokens: sink.usage?.input_tokens,
+			// Sizes only, never the text: did the preload and recall reach this turn?
+			memory: memory
+				? {
+						name: memory.name,
+						preloadChars: memory.memory.length,
+						recallChars: memory.recall.length,
+					}
+				: null,
+			model,
+			outcome,
+			phasesMs: t,
+			safety: peak?.level ?? null,
+			silentTurns: clock.silentTurns,
+			toolCalls,
+			totalMs: Date.now() - startedAt,
+			ttftMs: firstTokenAt === null ? null : firstTokenAt - startedAt,
+			turns: turns.length,
+		});
+	};
 
-  const encoder = new TextEncoder();
-  const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      const send = (s: string) => controller.enqueue(encoder.encode(s));
-      try {
-        const call = (messages: Parameters<typeof streamTurn>[0]["messages"], noTools: boolean, system = systemAs(name)) =>
-          streamTurn({ model, system, tools, messages, noTools }, abort.signal);
-        const anthropic = crisisLine ? null : call(turns, closing);
-        mark("streamCalled");
-        anthropic?.on("connect", () => mark("headers"));
-        // We abort it ourselves (unbound, or a crisis caught in time); not an error.
-        anthropic?.on("abort", () => {});
-        // Not this talk's turn (wrong key, or the talk has closed): serve nothing.
-        // The clock read from the key is trusted only past this check.
-        if (!(await bound)) {
-          outcome = "unbound";
-          abort.abort();
-          send(sseChunk(meta, {}, "stop"));
-          send(SSE_DONE);
-          controller.close();
-          return;
-        }
-        mark("bound");
-        // Moderation holds the first chunk: a crisis caught in time is met this turn.
-        let early: Awaited<NonNullable<typeof moderation>> = null;
-        if (anthropic && moderation && !crisisLine) {
-          early = await within(moderation, MODERATION_WAIT_MS - (Date.now() - startedAt));
-          mark("moderated");
-          if (early?.level === "crisis") {
-            crisisLine = !memory?.crisisLineSpoken;
-            if (crisisLine) abort.abort();
-            // Help on screen before anything is said.
-            await ctx.runMutation(internal.talk.safety.raise, { sessionId: talk.sessionId, peak: early });
-          }
-        }
-        send(sseChunk(meta, { role: "assistant" }));
-        let finish: FinishReason = "stop";
-        if (crisisLine) {
-          firstTokenAt = Date.now();
-          send(sseChunk(meta, { content: CRISIS_LINE }));
-          reply = CRISIS_LINE;
-        }
-        sink.emit = (delta: OpenAIDelta) => {
-          firstTokenAt ??= Date.now();
-          mark("firstDelta");
-          send(sseChunk(meta, delta));
-        };
-        const relay = async (events: NonNullable<typeof anthropic>) => {
-          const r = await relayTurn(events, sink);
-          finish = r.finish ?? finish;
-          reply += r.text;
-          return r;
-        };
-        const first = crisisLine || !anthropic ? null : await relay(anthropic);
-        // One of our tools (#601 rename, #602 the person's name, #603 slow down): saved, then
-        // one more call speaks to it. Skipped if the turn also relayed a tool
-        // call: the agent already holds that turn.
-        if (first?.own) {
-          const { tool, id, json } = first.own;
-          toolCalls.push(tool);
-          const { input, result } = await runOwnTool(ctx, tool, json, talk);
-          if ((finish as FinishReason) === "tool_calls" && toolCalls.length === 1) {
-            finish = "stop";
-            // The follow-up already speaks as the new name, or to the person by theirs.
-            // The follow-up to a slow-down is already slowed.
-            const as =
-              tool === SLOW_TOOL
-                ? systemAs(name, memory?.person, result.ok ? { ...memory?.style, slowed: true } : memory?.style)
-                : tool === PERSON_NAME_TOOL
-                  ? systemAs(name, result.ok && result.name ? { name: result.name, ask: false } : memory?.person)
-                  : systemAs(result.ok && result.name ? result.name : name);
-            const answer = ownToolAnswer(tool, result, name);
-            await relay(call([...turns, ...ownToolTurns(first.text, id, tool, input, answer)], true, as));
-          }
-        }
-        // Never hang up on the crisis line (#581).
-        if (closing && !crisisLine) {
-          const call = { index: 0, id: `call_${crypto.randomUUID()}`, type: "function" as const };
-          send(sseChunk(meta, { tool_calls: [{ ...call, function: { name: END_CALL, arguments: '{"reason":"talk ended"}' } }] }));
-          toolCalls.push(END_CALL);
-          finish = "tool_calls";
-        }
-        send(sseChunk(meta, {}, finish));
-        send(SSE_DONE);
-        // After [DONE]: the agent already has its turn.
-        await ctx.runMutation(internal.talk.turns.syncLines, {
-          sessionId: talk.sessionId,
-          talkKey: talk.talkKey,
-          reply: { seq: talk.lines.length, text: stripAudioTags(reply) },
-        });
-        // A verdict that missed the race (`late`) applies from the next turn.
-        if (crisisLine) {
-          await ctx.runMutation(internal.talk.safety.raise, { sessionId: talk.sessionId, crisisLineSpoken: true });
-        }
-        controller.close();
-        await late;
-      } catch (err) {
-        if (outcome !== "aborted") {
-          outcome = "error";
-          console.error("[talk] stream failed", err);
-          // End the SSE cleanly so the agent sees a finished (short) turn,
-          // not a torn stream.
-          send(sseChunk(meta, {}, "stop"));
-          send(SSE_DONE);
-          controller.close();
-        }
-      } finally {
-        for (const m of reply.matchAll(/\[([a-z][a-z ]{0,30})\]/gi)) audioTags.push(m[1]);
-        log();
-      }
-    },
-    // ElevenLabs hung up — an interruption, or the talk ended mid-turn.
-    cancel() {
-      outcome = "aborted";
-      abort.abort();
-    },
-  });
+	const encoder = new TextEncoder();
+	const stream = new ReadableStream<Uint8Array>({
+		// ElevenLabs hung up — an interruption, or the talk ended mid-turn.
+		cancel() {
+			outcome = "aborted";
+			abort.abort();
+		},
+		async start(controller) {
+			const send = (s: string) => controller.enqueue(encoder.encode(s));
+			try {
+				const call = (
+					messages: Parameters<typeof streamTurn>[0]["messages"],
+					noTools: boolean,
+					system = systemAs(name)
+				) =>
+					streamTurn({ messages, model, noTools, system, tools }, abort.signal);
+				const anthropic = crisisLine ? null : call(turns, closing);
+				mark("streamCalled");
+				anthropic?.on("connect", () => mark("headers"));
+				// We abort it ourselves (unbound, or a crisis caught in time); not an error.
+				anthropic?.on("abort", () => {});
+				// Not this talk's turn (wrong key, or the talk has closed): serve nothing.
+				// The clock read from the key is trusted only past this check.
+				if (!(await bound)) {
+					outcome = "unbound";
+					abort.abort();
+					send(sseChunk(meta, {}, "stop"));
+					send(SSE_DONE);
+					controller.close();
+					return;
+				}
+				mark("bound");
+				// Moderation holds the first chunk: a crisis caught in time is met this turn.
+				let early: Awaited<NonNullable<typeof moderation>> = null;
+				if (anthropic && moderation && !crisisLine) {
+					early = await within(
+						moderation,
+						MODERATION_WAIT_MS - (Date.now() - startedAt)
+					);
+					mark("moderated");
+					if (early?.level === "crisis") {
+						crisisLine = !memory?.crisisLineSpoken;
+						if (crisisLine) {
+							abort.abort();
+						}
+						// Help on screen before anything is said.
+						await ctx.runMutation(internal.talk.safety.raise, {
+							peak: early,
+							sessionId: talk.sessionId,
+						});
+					}
+				}
+				send(sseChunk(meta, { role: "assistant" }));
+				let finish: FinishReason = "stop";
+				if (crisisLine) {
+					firstTokenAt = Date.now();
+					send(sseChunk(meta, { content: CRISIS_LINE }));
+					reply = CRISIS_LINE;
+				}
+				sink.emit = (delta: OpenAIDelta) => {
+					firstTokenAt ??= Date.now();
+					mark("firstDelta");
+					send(sseChunk(meta, delta));
+				};
+				const relay = async (events: NonNullable<typeof anthropic>) => {
+					const r = await relayTurn(events, sink);
+					finish = r.finish ?? finish;
+					reply += r.text;
+					return r;
+				};
+				const first = crisisLine || !anthropic ? null : await relay(anthropic);
+				// One of our tools (#601 rename, #602 the person's name, #603 slow down): saved, then
+				// one more call speaks to it. Skipped if the turn also relayed a tool
+				// call: the agent already holds that turn.
+				if (first?.own) {
+					const { tool, id, json } = first.own;
+					toolCalls.push(tool);
+					const { input, result } = await runOwnTool(ctx, tool, json, talk);
+					if (
+						(finish as FinishReason) === "tool_calls" &&
+						toolCalls.length === 1
+					) {
+						finish = "stop";
+						// The follow-up already speaks as the new name, or to the person by theirs.
+						// The follow-up to a slow-down is already slowed.
+						const as =
+							tool === SLOW_TOOL
+								? systemAs(
+										name,
+										memory?.person,
+										result.ok
+											? { ...memory?.style, slowed: true }
+											: memory?.style
+									)
+								: tool === PERSON_NAME_TOOL
+									? systemAs(
+											name,
+											result.ok && result.name
+												? { ask: false, name: result.name }
+												: memory?.person
+										)
+									: systemAs(result.ok && result.name ? result.name : name);
+						const answer = ownToolAnswer(tool, result, name);
+						await relay(
+							call(
+								[
+									...turns,
+									...ownToolTurns(first.text, id, tool, input, answer),
+								],
+								true,
+								as
+							)
+						);
+					}
+				}
+				// Never hang up on the crisis line (#581).
+				if (closing && !crisisLine) {
+					const call = {
+						id: `call_${crypto.randomUUID()}`,
+						index: 0,
+						type: "function" as const,
+					};
+					send(
+						sseChunk(meta, {
+							tool_calls: [
+								{
+									...call,
+									function: {
+										arguments: '{"reason":"talk ended"}',
+										name: END_CALL,
+									},
+								},
+							],
+						})
+					);
+					toolCalls.push(END_CALL);
+					finish = "tool_calls";
+				}
+				send(sseChunk(meta, {}, finish));
+				send(SSE_DONE);
+				// After [DONE]: the agent already has its turn.
+				await ctx.runMutation(internal.talk.turns.syncLines, {
+					reply: { seq: talk.lines.length, text: stripAudioTags(reply) },
+					sessionId: talk.sessionId,
+					talkKey: talk.talkKey,
+				});
+				// A verdict that missed the race (`late`) applies from the next turn.
+				if (crisisLine) {
+					await ctx.runMutation(internal.talk.safety.raise, {
+						crisisLineSpoken: true,
+						sessionId: talk.sessionId,
+					});
+				}
+				controller.close();
+				await late;
+			} catch (err) {
+				if (outcome !== "aborted") {
+					outcome = "error";
+					console.error("[talk] stream failed", err);
+					// End the SSE cleanly so the agent sees a finished (short) turn,
+					// not a torn stream.
+					send(sseChunk(meta, {}, "stop"));
+					send(SSE_DONE);
+					controller.close();
+				}
+			} finally {
+				for (const m of reply.matchAll(/\[([a-z][a-z ]{0,30})\]/gi)) {
+					audioTags.push(m[1]);
+				}
+				log();
+			}
+		},
+	});
 
-  return new Response(stream, {
-    headers: {
-      "content-type": "text/event-stream",
-      "cache-control": "no-cache",
-    },
-  });
+	return new Response(stream, {
+		headers: {
+			"cache-control": "no-cache",
+			"content-type": "text/event-stream",
+		},
+	});
 });

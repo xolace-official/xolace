@@ -25,26 +25,27 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import {
-  classificationResult,
-  moderationResult,
-  scheduled,
-  scheduledCalls,
-  seedMetadata,
-  seedSession,
+	classificationResult,
+	moderationResult,
+	scheduled,
+	scheduledCalls,
+	seedMetadata,
+	seedSession,
 } from "./fixtures.helpers";
 import { asNewUser, type SeededUser } from "./harness.helpers";
 import {
-  actionCacheMock,
-  aggregatesMock,
-  anthropicMock,
-  noopJob,
-  posthogMock,
-  rateLimiterMock,
-  ragMock,
-  revenuecatMock,
+	actionCacheMock,
+	aggregatesMock,
+	anthropicMock,
+	noopJob,
+	posthogMock,
+	ragMock,
+	rateLimiterMock,
+	revenuecatMock,
 } from "./mocks.helpers";
 
-const MIRROR = "The deadline is not the weight. Being unseen while carrying it is.";
+const MIRROR =
+	"The deadline is not the weight. Being unseen while carrying it is.";
 const FALLBACK_MIRROR = "I hear you, and what you're feeling matters.";
 const RAW_TEXT = "another week of shipping and nobody said anything";
 
@@ -54,9 +55,9 @@ const RAW_TEXT = "another week of shipping and nobody said anything";
  * to the unremarkable happy-path defaults; each test names only what it bends.
  */
 const stub = vi.hoisted(() => ({
-  cache: {} as { moderation?: unknown; classification?: unknown },
-  limit: { ok: true } as { ok: boolean; retryAfter?: number },
-  articulator: "" as string | Error,
+	articulator: "" as string | Error,
+	cache: {} as { moderation?: unknown; classification?: unknown },
+	limit: { ok: true } as { ok: boolean; retryAfter?: number },
 }));
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
@@ -67,240 +68,255 @@ vi.mock("../revenuecat", () => revenuecatMock(false));
 // One episodic memory in the namespace. Only reached by the non-first-session
 // test below: `generateMirror` short-circuits recall entirely on a cold start.
 vi.mock("../rag", () =>
-  ragMock({
-    entries: [
-      { entryId: "entry_1", key: "past-session-1", text: "Same week, last month." },
-    ],
-    results: [{ entryId: "entry_1", score: 0.42 }],
-  }),
+	ragMock({
+		entries: [
+			{
+				entryId: "entry_1",
+				key: "past-session-1",
+				text: "Same week, last month.",
+			},
+		],
+		results: [{ entryId: "entry_1", score: 0.42 }],
+	})
 );
 vi.mock("../ai/cached", () => actionCacheMock(() => stub.cache));
 vi.mock("../lib/rateLimits", async (orig) => ({
-  ...(await orig<typeof import("../lib/rateLimits")>()),
-  ...rateLimiterMock(() => stub.limit),
+	...(await orig<typeof import("../lib/rateLimits")>()),
+	...rateLimiterMock(() => stub.limit),
 }));
 vi.mock("../ai/providers/anthropic", async (orig) => ({
-  ...(await orig<typeof import("../ai/providers/anthropic")>()),
-  ...anthropicMock(() => stub.articulator),
+	...(await orig<typeof import("../ai/providers/anthropic")>()),
+	...anthropicMock(() => stub.articulator),
 }));
 // Scheduled callees. `scheduleMirrorAudio` stays real — it owns the fallback
 // skip this file asserts; only the action it enqueues is neutered.
 vi.mock("../ai/tts", async (orig) => ({
-  ...(await orig<typeof import("../ai/tts")>()),
-  generateMirrorAudio: noopJob(),
+	...(await orig<typeof import("../ai/tts")>()),
+	generateMirrorAudio: noopJob(),
 }));
 vi.mock("../episodicMemory", async (orig) => ({
-  ...(await orig<typeof import("../episodicMemory")>()),
-  ingestSession: noopJob(),
+	...(await orig<typeof import("../episodicMemory")>()),
+	ingestSession: noopJob(),
 }));
 vi.mock("../jobs/reflectionDistiller", () => ({ distill: noopJob() }));
 
 beforeEach(() => {
-  stub.cache = {
-    moderation: moderationResult(),
-    classification: classificationResult(),
-  };
-  stub.limit = { ok: true };
-  stub.articulator = MIRROR;
+	stub.cache = {
+		classification: classificationResult(),
+		moderation: moderationResult(),
+	};
+	stub.limit = { ok: true };
+	stub.articulator = MIRROR;
 });
 
 const readSession = (user: SeededUser, sessionId: Id<"sessions">) =>
-  user.root.run((ctx) => ctx.db.get("sessions", sessionId));
+	user.root.run((ctx) => ctx.db.get("sessions", sessionId));
 
 const readMetadata = (user: SeededUser, sessionId: Id<"sessions">) =>
-  user.root.run((ctx) =>
-    ctx.db
-      .query("emotional_metadata")
-      .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
-      .unique(),
-  );
+	user.root.run((ctx) =>
+		ctx.db
+			.query("emotional_metadata")
+			.withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+			.unique()
+	);
 
 /** A processing session for a fresh user, plus the action's own arguments. */
 async function seedPipeline(): Promise<{
-  user: SeededUser;
-  sessionId: Id<"sessions">;
+	user: SeededUser;
+	sessionId: Id<"sessions">;
 }> {
-  const user = await asNewUser();
-  const sessionId = await seedSession(user.root, user.profileId, {
-    rawInput: RAW_TEXT,
-  });
-  return { user, sessionId };
+	const user = await asNewUser();
+	const sessionId = await seedSession(user.root, user.profileId, {
+		rawInput: RAW_TEXT,
+	});
+	return { sessionId, user };
 }
 
 const run = (user: SeededUser, sessionId: Id<"sessions">) =>
-  user.root.action(internal.ai.process.generateMirror, {
-    sessionId,
-    rawText: RAW_TEXT,
-  });
+	user.root.action(internal.ai.process.generateMirror, {
+		rawText: RAW_TEXT,
+		sessionId,
+	});
 
 describe("generateMirror", () => {
-  it("fails the session with a retry hint when rate limited", async () => {
-    const { user, sessionId } = await seedPipeline();
-    stub.limit = { ok: false, retryAfter: 120_000 };
+	it("fails the session with a retry hint when rate limited", async () => {
+		const { user, sessionId } = await seedPipeline();
+		stub.limit = { ok: false, retryAfter: 120_000 };
 
-    await run(user, sessionId);
+		await run(user, sessionId);
 
-    const session = await readSession(user, sessionId);
-    expect(session?.state).toBe("error");
-    expect(session?.errorMessage).toContain("Try again in 2 minutes.");
-    // Bailed before the model: nothing classified, nothing queued.
-    expect(await readMetadata(user, sessionId)).toBeNull();
-    expect(await scheduledCalls(user.root)).toHaveLength(0);
-  });
+		const session = await readSession(user, sessionId);
+		expect(session?.state).toBe("error");
+		expect(session?.errorMessage).toContain("Try again in 2 minutes.");
+		// Bailed before the model: nothing classified, nothing queued.
+		expect(await readMetadata(user, sessionId)).toBeNull();
+		expect(await scheduledCalls(user.root)).toHaveLength(0);
+	});
 
-  it("rejects content the moderation verdict disallows", async () => {
-    const { user, sessionId } = await seedPipeline();
-    stub.cache.moderation = moderationResult({
-      flagged: true,
-      categories: { "hate/threatening": true },
-      categoryScores: { "hate/threatening": 0.94 },
-    });
+	it("rejects content the moderation verdict disallows", async () => {
+		const { user, sessionId } = await seedPipeline();
+		stub.cache.moderation = moderationResult({
+			categories: { "hate/threatening": true },
+			categoryScores: { "hate/threatening": 0.94 },
+			flagged: true,
+		});
 
-    await run(user, sessionId);
+		await run(user, sessionId);
 
-    const session = await readSession(user, sessionId);
-    expect(session?.state).toBe("error");
-    expect(session?.errorMessage).toBe("content_policy_violation");
-    expect(session?.mirrorText).toBeUndefined();
-    // Rejection is terminal — no metadata row, no downstream work.
-    expect(await readMetadata(user, sessionId)).toBeNull();
-    expect(await scheduledCalls(user.root)).toHaveLength(0);
-  });
+		const session = await readSession(user, sessionId);
+		expect(session?.state).toBe("error");
+		expect(session?.errorMessage).toBe("content_policy_violation");
+		expect(session?.mirrorText).toBeUndefined();
+		// Rejection is terminal — no metadata row, no downstream work.
+		expect(await readMetadata(user, sessionId)).toBeNull();
+		expect(await scheduledCalls(user.root)).toHaveLength(0);
+	});
 
-  it("escalates a crisis verdict and still delivers a mirror", async () => {
-    const { user, sessionId } = await seedPipeline();
-    stub.cache.moderation = moderationResult({
-      flagged: true,
-      categories: { "self-harm": true, "self-harm/intent": true },
-      categoryScores: { "self-harm": 0.88, "self-harm/intent": 0.81 },
-    });
+	it("escalates a crisis verdict and still delivers a mirror", async () => {
+		const { user, sessionId } = await seedPipeline();
+		stub.cache.moderation = moderationResult({
+			categories: { "self-harm": true, "self-harm/intent": true },
+			categoryScores: { "self-harm": 0.88, "self-harm/intent": 0.81 },
+			flagged: true,
+		});
 
-    await run(user, sessionId);
+		await run(user, sessionId);
 
-    const session = await readSession(user, sessionId);
-    expect(session?.state).toBe("mirror_delivered");
-    expect(session?.mirrorText).toBe(MIRROR);
-    expect(session?.safeguardLevel).toBe("crisis");
-    expect(session?.escalationTriggered).toBe(true);
-    // Escalation forces the follow-up flag regardless of what the model said.
-    expect(session?.requiresFollowUp).toBe(true);
-    expect(session?.escalationResources?.length).toBeGreaterThan(0);
+		const session = await readSession(user, sessionId);
+		expect(session?.state).toBe("mirror_delivered");
+		expect(session?.mirrorText).toBe(MIRROR);
+		expect(session?.safeguardLevel).toBe("crisis");
+		expect(session?.escalationTriggered).toBe(true);
+		// Escalation forces the follow-up flag regardless of what the model said.
+		expect(session?.requiresFollowUp).toBe(true);
+		expect(session?.escalationResources?.length).toBeGreaterThan(0);
 
-    const [event] = await user.root.run((ctx) =>
-      ctx.db
-        .query("escalation_events")
-        .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
-        .collect(),
-    );
-    expect(event).toMatchObject({
-      triggerType: "explicit_crisis_language",
-      actionTaken: "crisis_line_presented",
-      reviewedByHuman: false,
-    });
-    expect(event.triggerConfidence).toBeCloseTo(0.81);
+		const [event] = await user.root.run((ctx) =>
+			ctx.db
+				.query("escalation_events")
+				.withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+				.collect()
+		);
+		expect(event).toMatchObject({
+			actionTaken: "crisis_line_presented",
+			reviewedByHuman: false,
+			triggerType: "explicit_crisis_language",
+		});
+		expect(event.triggerConfidence).toBeCloseTo(0.81);
 
-    const metadata = await readMetadata(user, sessionId);
-    expect(metadata).toMatchObject({ riskFlag: true, safeguardLevel: "crisis" });
+		const metadata = await readMetadata(user, sessionId);
+		expect(metadata).toMatchObject({
+			riskFlag: true,
+			safeguardLevel: "crisis",
+		});
 
-    // A crisis session is excluded from the reflection pool, but memory
-    // ingestion still runs (it handles crisis metadata-only itself).
-    const calls = await scheduledCalls(user.root);
-    expect(scheduled(calls, "jobs/reflectionDistiller:distill")).toBeUndefined();
-    expect(scheduled(calls, "episodicMemory:ingestSession")).toBeDefined();
-  });
+		// A crisis session is excluded from the reflection pool, but memory
+		// ingestion still runs (it handles crisis metadata-only itself).
+		const calls = await scheduledCalls(user.root);
+		expect(
+			scheduled(calls, "jobs/reflectionDistiller:distill")
+		).toBeUndefined();
+		expect(scheduled(calls, "episodicMemory:ingestSession")).toBeDefined();
+	});
 
-  it("fails the session with sanitized copy when a provider outage escapes", async () => {
-    const { user, sessionId } = await seedPipeline();
-    // The classifier has no in-pipeline fallback, so its failure reaches the
-    // outer catch — the only path through `sanitizeAiError`.
-    stub.cache.classification = new Error("529 overloaded_error");
+	it("fails the session with sanitized copy when a provider outage escapes", async () => {
+		const { user, sessionId } = await seedPipeline();
+		// The classifier has no in-pipeline fallback, so its failure reaches the
+		// outer catch — the only path through `sanitizeAiError`.
+		stub.cache.classification = new Error("529 overloaded_error");
 
-    await run(user, sessionId);
+		await run(user, sessionId);
 
-    const session = await readSession(user, sessionId);
-    expect(session?.state).toBe("error");
-    expect(session?.errorMessage).toBe(
-      "The space is a little full right now. Take a breath and try again in a moment.",
-    );
-    expect(await scheduledCalls(user.root)).toHaveLength(0);
-  });
+		const session = await readSession(user, sessionId);
+		expect(session?.state).toBe("error");
+		expect(session?.errorMessage).toBe(
+			"The space is a little full right now. Take a breath and try again in a moment."
+		);
+		expect(await scheduledCalls(user.root)).toHaveLength(0);
+	});
 
-  it("falls back to the safe mirror when the articulator call fails", async () => {
-    const { user, sessionId } = await seedPipeline();
-    stub.articulator = new Error("529 overloaded_error");
+	it("falls back to the safe mirror when the articulator call fails", async () => {
+		const { user, sessionId } = await seedPipeline();
+		stub.articulator = new Error("529 overloaded_error");
 
-    await run(user, sessionId);
+		await run(user, sessionId);
 
-    const session = await readSession(user, sessionId);
-    // The provider failing degrades the mirror; it never fails the session.
-    expect(session?.state).toBe("mirror_delivered");
-    expect(session?.mirrorText).toBe(FALLBACK_MIRROR);
-    // Classification survives the articulation failure.
-    expect(await readMetadata(user, sessionId)).toMatchObject({
-      primaryEmotion: "anxiety",
-    });
+		const session = await readSession(user, sessionId);
+		// The provider failing degrades the mirror; it never fails the session.
+		expect(session?.state).toBe("mirror_delivered");
+		expect(session?.mirrorText).toBe(FALLBACK_MIRROR);
+		// Classification survives the articulation failure.
+		expect(await readMetadata(user, sessionId)).toMatchObject({
+			primaryEmotion: "anxiety",
+		});
 
-    // A fallback names no gap and has nothing to distill or speak.
-    expect(session?.gapNamed).toBeUndefined();
-    const calls = await scheduledCalls(user.root);
-    expect(scheduled(calls, "jobs/reflectionDistiller:distill")).toBeUndefined();
-    expect(scheduled(calls, "ai/tts:generateMirrorAudio")).toBeUndefined();
-    expect(scheduled(calls, "episodicMemory:ingestSession")).toBeDefined();
-  });
+		// A fallback names no gap and has nothing to distill or speak.
+		expect(session?.gapNamed).toBeUndefined();
+		const calls = await scheduledCalls(user.root);
+		expect(
+			scheduled(calls, "jobs/reflectionDistiller:distill")
+		).toBeUndefined();
+		expect(scheduled(calls, "ai/tts:generateMirrorAudio")).toBeUndefined();
+		expect(scheduled(calls, "episodicMemory:ingestSession")).toBeDefined();
+	});
 
-  it("delivers the mirror, stores metadata and queues the downstream chain", async () => {
-    const { user, sessionId } = await seedPipeline();
-    // Not a cold start. `sessionCount` is what `isFirstSession` reads, and
-    // seeding rows alone leaves it at 0 — which would keep the pattern
-    // summaries on their first-session branch and skip episodic recall
-    // outright, quietly making the assertions below vacuous.
-    const priorSession = await seedSession(user.root, user.profileId, {
-      state: "completed",
-      mirrorText: "Last week's version of this.",
-    });
-    await seedMetadata(user.root, priorSession, user.profileId);
-    await user.root.run((ctx) =>
-      ctx.db.patch("emotional_profiles", user.profileId, { sessionCount: 1 }),
-    );
+	it("delivers the mirror, stores metadata and queues the downstream chain", async () => {
+		const { user, sessionId } = await seedPipeline();
+		// Not a cold start. `sessionCount` is what `isFirstSession` reads, and
+		// seeding rows alone leaves it at 0 — which would keep the pattern
+		// summaries on their first-session branch and skip episodic recall
+		// outright, quietly making the assertions below vacuous.
+		const priorSession = await seedSession(user.root, user.profileId, {
+			mirrorText: "Last week's version of this.",
+			state: "completed",
+		});
+		await seedMetadata(user.root, priorSession, user.profileId);
+		await user.root.run((ctx) =>
+			ctx.db.patch("emotional_profiles", user.profileId, { sessionCount: 1 })
+		);
 
-    await run(user, sessionId);
+		await run(user, sessionId);
 
-    const session = await readSession(user, sessionId);
-    expect(session?.state).toBe("mirror_delivered");
-    expect(session?.mirrorText).toBe(MIRROR);
-    expect(session?.toneUsed).toBe("adaptive");
-    expect(session?.safeguardLevel).toBe("none");
-    expect(session?.escalationTriggered).toBeUndefined();
-    expect(session?.errorMessage).toBeUndefined();
+		const session = await readSession(user, sessionId);
+		expect(session?.state).toBe("mirror_delivered");
+		expect(session?.mirrorText).toBe(MIRROR);
+		expect(session?.toneUsed).toBe("adaptive");
+		expect(session?.safeguardLevel).toBe("none");
+		expect(session?.escalationTriggered).toBeUndefined();
+		expect(session?.errorMessage).toBeUndefined();
 
-    expect(await readMetadata(user, sessionId)).toMatchObject({
-      primaryEmotion: "anxiety",
-      intensity: 5,
-      specificity: 7,
-      thematicTags: ["work"],
-      riskFlag: false,
-      safeguardLevel: "none",
-      // Episodic recall really ran: the key is provenance for Understanding,
-      // the score is what the claim-strength router reads.
-      episodicMatchKeys: ["past-session-1"],
-      episodicTopScore: 0.42,
-    });
+		expect(await readMetadata(user, sessionId)).toMatchObject({
+			// Episodic recall really ran: the key is provenance for Understanding,
+			// the score is what the claim-strength router reads.
+			episodicMatchKeys: ["past-session-1"],
+			episodicTopScore: 0.42,
+			intensity: 5,
+			primaryEmotion: "anxiety",
+			riskFlag: false,
+			safeguardLevel: "none",
+			specificity: 7,
+			thematicTags: ["work"],
+		});
 
-    const calls = await scheduledCalls(user.root);
-    expect(scheduled(calls, "ai/tts:generateMirrorAudio")?.args).toMatchObject({
-      sessionId,
-      mirrorText: MIRROR,
-      mirrorTone: "adaptive",
-    });
-    expect(scheduled(calls, "jobs/reflectionDistiller:distill")?.args).toMatchObject({
-      sessionId,
-      rawText: RAW_TEXT,
-      mirrorText: MIRROR,
-      primaryEmotion: "anxiety",
-      thematicTags: ["work"],
-    });
-    expect(scheduled(calls, "episodicMemory:ingestSession")?.args).toMatchObject({
-      sessionId,
-    });
-  });
+		const calls = await scheduledCalls(user.root);
+		expect(scheduled(calls, "ai/tts:generateMirrorAudio")?.args).toMatchObject({
+			mirrorText: MIRROR,
+			mirrorTone: "adaptive",
+			sessionId,
+		});
+		expect(
+			scheduled(calls, "jobs/reflectionDistiller:distill")?.args
+		).toMatchObject({
+			mirrorText: MIRROR,
+			primaryEmotion: "anxiety",
+			rawText: RAW_TEXT,
+			sessionId,
+			thematicTags: ["work"],
+		});
+		expect(
+			scheduled(calls, "episodicMemory:ingestSession")?.args
+		).toMatchObject({
+			sessionId,
+		});
+	});
 });

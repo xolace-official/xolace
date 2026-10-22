@@ -3,10 +3,10 @@ import { components } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
-  classifyPushDevice,
-  decidePushHistoryPrune,
-  type PushDeviceVerdict,
-  type PushHistoryRow,
+	classifyPushDevice,
+	decidePushHistoryPrune,
+	type PushDeviceVerdict,
+	type PushHistoryRow,
 } from "./pushDevices";
 
 /**
@@ -19,11 +19,11 @@ import {
  * component validates on the wire either way.
  */
 export const pushNotifications = new PushNotifications<string>(
-  components.pushNotifications,
+	components.pushNotifications
 );
 
 type Notification = Parameters<
-  typeof pushNotifications.sendPushNotification
+	typeof pushNotifications.sendPushNotification
 >[1]["notification"];
 
 /**
@@ -46,14 +46,14 @@ const PUSH_HISTORY_READ_LIMIT = 10;
 
 /** A device's component notification history, newest first. */
 async function pushDeviceHistory(
-  ctx: MutationCtx,
-  deviceId: Id<"push_devices">,
+	ctx: MutationCtx,
+	deviceId: Id<"push_devices">
 ): Promise<PushHistoryRow[]> {
-  const rows = await pushNotifications.getNotificationsForUser(ctx, {
-    userId: deviceId,
-    limit: PUSH_HISTORY_READ_LIMIT,
-  });
-  return rows.map(({ state, _creationTime }) => ({ state, _creationTime }));
+	const rows = await pushNotifications.getNotificationsForUser(ctx, {
+		limit: PUSH_HISTORY_READ_LIMIT,
+		userId: deviceId,
+	});
+	return rows.map(({ state, _creationTime }) => ({ _creationTime, state }));
 }
 
 /**
@@ -81,16 +81,16 @@ async function pushDeviceHistory(
  * pruning keeps histories far below 1000; drain in a loop if it ever doesn't.
  */
 export async function deletePushDevice(
-  ctx: MutationCtx,
-  deviceId: Id<"push_devices">,
+	ctx: MutationCtx,
+	deviceId: Id<"push_devices">
 ): Promise<void> {
-  await prunePushDeviceHistory(ctx, deviceId);
-  await pushNotifications.removeToken(ctx, { userId: deviceId });
-  // Logout, account deletion, and ownership transfer all remove devices, and
-  // `db.delete` throws on an id that is already gone.
-  if (await ctx.db.get("push_devices", deviceId)) {
-    await ctx.db.delete("push_devices", deviceId);
-  }
+	await prunePushDeviceHistory(ctx, deviceId);
+	await pushNotifications.removeToken(ctx, { userId: deviceId });
+	// Logout, account deletion, and ownership transfer all remove devices, and
+	// `db.delete` throws on an id that is already gone.
+	if (await ctx.db.get("push_devices", deviceId)) {
+		await ctx.db.delete("push_devices", deviceId);
+	}
 }
 
 /**
@@ -104,39 +104,43 @@ export async function deletePushDevice(
  * after a send stamps and the next one clears.
  */
 export async function prunePushDeviceHistory(
-  ctx: MutationCtx,
-  deviceId: Id<"push_devices">,
+	ctx: MutationCtx,
+	deviceId: Id<"push_devices">
 ): Promise<void> {
-  const device = await ctx.db.get("push_devices", deviceId);
-  if (!device) return;
+	const device = await ctx.db.get("push_devices", deviceId);
+	if (!device) {
+		return;
+	}
 
-  const { prune, watch } = decidePushHistoryPrune({
-    rows: await pushDeviceHistory(ctx, deviceId),
-    watch: device.historyWatch,
-    now: Date.now(),
-  });
+	const { prune, watch } = decidePushHistoryPrune({
+		now: Date.now(),
+		rows: await pushDeviceHistory(ctx, deviceId),
+		watch: device.historyWatch,
+	});
 
-  if (prune) {
-    await pushNotifications.deleteNotificationsForUser(ctx, {
-      userId: deviceId,
-    });
-  }
-  // Cleared on a prune: the history it described is gone.
-  await ctx.db.patch("push_devices", deviceId, { historyWatch: prune ? undefined : watch });
+	if (prune) {
+		await pushNotifications.deleteNotificationsForUser(ctx, {
+			userId: deviceId,
+		});
+	}
+	// Cleared on a prune: the history it described is gone.
+	await ctx.db.patch("push_devices", deviceId, {
+		historyWatch: prune ? undefined : watch,
+	});
 }
 
 /** Every device for a profile, most recently registered first. */
 export async function profilePushDevices(
-  ctx: MutationCtx,
-  emotionalProfileId: Id<"emotional_profiles">,
+	ctx: MutationCtx,
+	emotionalProfileId: Id<"emotional_profiles">
 ) {
-  return await ctx.db
-    .query("push_devices")
-    .withIndex("by_profile", (q) =>
-      q.eq("emotionalProfileId", emotionalProfileId),
-    )
-    .order("desc")
-    .take(MAX_DEVICES_PER_PROFILE);
+	return await ctx.db
+		.query("push_devices")
+		.withIndex("by_profile", (q) =>
+			q.eq("emotionalProfileId", emotionalProfileId)
+		)
+		.order("desc")
+		.take(MAX_DEVICES_PER_PROFILE);
 }
 
 /**
@@ -161,35 +165,38 @@ const MAX_REAPS_PER_SEND = 1;
  * this send whatever the delete budget is.
  */
 async function reapDeadDevices(
-  ctx: MutationCtx,
-  devices: Doc<"push_devices">[],
+	ctx: MutationCtx,
+	devices: Doc<"push_devices">[]
 ): Promise<Doc<"push_devices">[]> {
-  const now = Date.now();
-  const live: Doc<"push_devices">[] = [];
-  const gone: {
-    device: Doc<"push_devices">;
-    verdict: Exclude<PushDeviceVerdict, "keep">;
-  }[] = [];
+	const now = Date.now();
+	const live: Doc<"push_devices">[] = [];
+	const gone: {
+		device: Doc<"push_devices">;
+		verdict: Exclude<PushDeviceVerdict, "keep">;
+	}[] = [];
 
-  for (const device of devices) {
-    const history = await pushDeviceHistory(ctx, device._id);
-    const verdict = classifyPushDevice({
-      latestStates: history.map((row) => row.state),
-      lastRegisteredAt: device.lastRegisteredAt,
-      now,
-    });
+	for (const device of devices) {
+		const history = await pushDeviceHistory(ctx, device._id);
+		const verdict = classifyPushDevice({
+			lastRegisteredAt: device.lastRegisteredAt,
+			latestStates: history.map((row) => row.state),
+			now,
+		});
 
-    if (verdict === "keep") live.push(device);
-    else gone.push({ device, verdict });
-  }
+		if (verdict === "keep") {
+			live.push(device);
+		} else {
+			gone.push({ device, verdict });
+		}
+	}
 
-  for (const { device, verdict } of gone.slice(0, MAX_REAPS_PER_SEND)) {
-    // Device id and verdict only: never the token, never what was sent.
-    console.log(`[push] reaping device ${device._id} (${verdict})`);
-    await deletePushDevice(ctx, device._id);
-  }
+	for (const { device, verdict } of gone.slice(0, MAX_REAPS_PER_SEND)) {
+		// Device id and verdict only: never the token, never what was sent.
+		console.log(`[push] reaping device ${device._id} (${verdict})`);
+		await deletePushDevice(ctx, device._id);
+	}
 
-  return live;
+	return live;
 }
 
 /**
@@ -200,46 +207,48 @@ async function reapDeadDevices(
  * one rate-limit event and one log row regardless of device count.
  */
 export async function sendPushToProfile(
-  ctx: MutationCtx,
-  args: {
-    emotionalProfileId: Id<"emotional_profiles">;
-    notification: Notification;
-  },
+	ctx: MutationCtx,
+	args: {
+		emotionalProfileId: Id<"emotional_profiles">;
+		notification: Notification;
+	}
 ): Promise<void> {
-  const devices = await profilePushDevices(ctx, args.emotionalProfileId);
+	const devices = await profilePushDevices(ctx, args.emotionalProfileId);
 
-  // DEPRECATED(remove-after: app >= 1.9.0): profile-keyed fallback. A user who
-  // has not relaunched since this deploy still has their token under the
-  // profile-keyed recipient, and the nudge meant to bring them back is exactly
-  // the one that must still reach them. Any registration retires that
-  // recipient, so remove this once the supported version floor has passed.
-  //
-  // Decided on the pre-reap list deliberately. Reap first and a profile whose
-  // last row just died would fall through to a profile-keyed recipient that
-  // registration retired long ago.
-  if (devices.length === 0) {
-    await pushNotifications.sendPushNotification(ctx, {
-      userId: args.emotionalProfileId,
-      notification: args.notification,
-      // The recipient may have preferences on and no token at all — never
-      // opened the app on a physical device.
-      allowUnregisteredTokens: true,
-    });
-    return;
-  }
+	// DEPRECATED(remove-after: app >= 1.9.0): profile-keyed fallback. A user who
+	// has not relaunched since this deploy still has their token under the
+	// profile-keyed recipient, and the nudge meant to bring them back is exactly
+	// the one that must still reach them. Any registration retires that
+	// recipient, so remove this once the supported version floor has passed.
+	//
+	// Decided on the pre-reap list deliberately. Reap first and a profile whose
+	// last row just died would fall through to a profile-keyed recipient that
+	// registration retired long ago.
+	if (devices.length === 0) {
+		await pushNotifications.sendPushNotification(ctx, {
+			// The recipient may have preferences on and no token at all — never
+			// opened the app on a physical device.
+			allowUnregisteredTokens: true,
+			notification: args.notification,
+			userId: args.emotionalProfileId,
+		});
+		return;
+	}
 
-  const live = await reapDeadDevices(ctx, devices);
+	const live = await reapDeadDevices(ctx, devices);
 
-  // Everything this profile had is gone. Stop here rather than falling back:
-  // these devices were registered, so the profile-keyed recipient above was
-  // retired at that registration and there is nothing left to reach.
-  if (live.length === 0) return;
+	// Everything this profile had is gone. Stop here rather than falling back:
+	// these devices were registered, so the profile-keyed recipient above was
+	// retired at that registration and there is nothing left to reach.
+	if (live.length === 0) {
+		return;
+	}
 
-  await pushNotifications.sendPushNotificationBatch(ctx, {
-    notifications: live.map((device) => ({
-      userId: device._id,
-      notification: args.notification,
-    })),
-    allowUnregisteredTokens: true,
-  });
+	await pushNotifications.sendPushNotificationBatch(ctx, {
+		allowUnregisteredTokens: true,
+		notifications: live.map((device) => ({
+			notification: args.notification,
+			userId: device._id,
+		})),
+	});
 }

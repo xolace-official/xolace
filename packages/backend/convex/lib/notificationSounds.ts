@@ -71,10 +71,10 @@ export const NUDGE_CHANNEL_ID = "nudge";
 export const DEFAULT_CHANNEL_ID = "default";
 
 export type AndroidChannel = {
-  id: string;
-  /** Shown to the user in Android system settings. */
-  name: string;
-  sound: string;
+	id: string;
+	/** Shown to the user in Android system settings. */
+	name: string;
+	sound: string;
 };
 
 /**
@@ -83,14 +83,14 @@ export type AndroidChannel = {
  * created falls back to the stock sound without erroring.
  */
 export const SOUND_CHANNELS: AndroidChannel[] = [
-  { id: REACH_CHANNEL_ID, name: "Requests and accepts", sound: REACH_SOUND },
-  { id: MESSAGE_CHANNEL_ID, name: "Messages", sound: MESSAGE_SOUND },
-  { id: NUDGE_CHANNEL_ID, name: "Reflections", sound: NUDGE_SOUND },
+	{ id: REACH_CHANNEL_ID, name: "Requests and accepts", sound: REACH_SOUND },
+	{ id: MESSAGE_CHANNEL_ID, name: "Messages", sound: MESSAGE_SOUND },
+	{ id: NUDGE_CHANNEL_ID, name: "Reflections", sound: NUDGE_SOUND },
 ];
 
 export type NotificationSound = {
-  sound: string;
-  channelId: string;
+	sound: string;
+	channelId: string;
 };
 
 /**
@@ -98,8 +98,8 @@ export type NotificationSound = {
  * milestones. One sound for all of them: they are the same kind of event.
  */
 export const NUDGE_NOTIFICATION_SOUND: NotificationSound = {
-  sound: NUDGE_SOUND,
-  channelId: NUDGE_CHANNEL_ID,
+	channelId: NUDGE_CHANNEL_ID,
+	sound: NUDGE_SOUND,
 };
 
 /**
@@ -114,16 +114,16 @@ export const NUDGE_NOTIFICATION_SOUND: NotificationSound = {
  * announce itself.
  */
 export function chatNotificationSound(
-  type: ChatNotificationType,
+	type: ChatNotificationType
 ): NotificationSound {
-  switch (type) {
-    case "chat_request":
-    case "chat_accepted":
-      return { sound: REACH_SOUND, channelId: REACH_CHANNEL_ID };
-    case "chat_message":
-    case "chat_declined":
-    case "chat_expired":
-    case "xolace_message":
-      return { sound: MESSAGE_SOUND, channelId: MESSAGE_CHANNEL_ID };
-  }
+	switch (type) {
+		case "chat_request":
+		case "chat_accepted":
+			return { channelId: REACH_CHANNEL_ID, sound: REACH_SOUND };
+		case "chat_message":
+		case "chat_declined":
+		case "chat_expired":
+		case "xolace_message":
+			return { channelId: MESSAGE_CHANNEL_ID, sound: MESSAGE_SOUND };
+	}
 }

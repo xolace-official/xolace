@@ -13,20 +13,22 @@ import { usePlusOffer } from "@/src/features/purchases/use-plus-offer";
  * standing door next to PlusRow.
  */
 export function PlusInsightOffer() {
-  const openPaywall = usePaywall((s) => s.open);
-  const offer = usePlusOffer("profile_insight");
+	const openPaywall = usePaywall((s) => s.open);
+	const offer = usePlusOffer("profile_insight");
 
-  if (!offer) return null;
+	if (!offer) {
+		return null;
+	}
 
-  return (
-    <View className="mx-5 mt-6">
-      <PlusOfferCard
-        moment={offer.moment}
-        variant={offer.variant}
-        observation={offer.observation}
-        sessionId={offer.sessionId}
-        onOpen={() => openPaywall("profile_insight")}
-      />
-    </View>
-  );
+	return (
+		<View className="mx-5 mt-6">
+			<PlusOfferCard
+				moment={offer.moment}
+				observation={offer.observation}
+				onOpen={() => openPaywall("profile_insight")}
+				sessionId={offer.sessionId}
+				variant={offer.variant}
+			/>
+		</View>
+	);
 }

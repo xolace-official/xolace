@@ -3,13 +3,11 @@ import { SessionDetailsScreen } from "@/src/features/timeline/components/screens
 
 const NO_HEADER = { headerShown: false };
 
-const SessionDetails = () => {
-  return (
-    <>
-      <Stack.Screen options={NO_HEADER} />
-      <SessionDetailsScreen />
-    </>
-  );
-};
+const SessionDetails = () => (
+	<>
+		<Stack.Screen options={NO_HEADER} />
+		<SessionDetailsScreen />
+	</>
+);
 
 export default SessionDetails;
