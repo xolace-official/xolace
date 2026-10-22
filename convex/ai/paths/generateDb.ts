@@ -206,7 +206,9 @@ async function loadSessionText(ctx: QueryCtx, sessionId: Id<"sessions">) {
     .query("session_turns")
     .withIndex("by_session", (q) => q.eq("sessionId", sessionId))
     .take(MAX_TURNS);
-  return buildAccumulatedInput(session.rawInput, turns);
+  // Blank text has no meaning to search: null = "skipped", not a failed embed.
+  const text = buildAccumulatedInput(session.rawInput, turns);
+  return text.trim() ? text : null;
 }
 
 const twigValidator = v.object({
