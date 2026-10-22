@@ -170,3 +170,20 @@ Ultracite/Biome enforces the mechanics: run `bun run fix`. Full rules:
 - Work on a branch; nothing lands on `main` or touches prod Convex without review.
 - PR body: Problem / Change / Verification (with the proof above) / Model and harness.
 - Issues live in GitHub Issues; use `gh`.
+
+### Merging a PR
+
+| Button | Use for | Lands as |
+|---|---|---|
+| **Squash and merge** (default) | Most PRs: one logical change, even with fix-up commits on the branch | One commit titled like the PR, e.g. `chore(mobile): bump uniwind to 1.12.2 (#615)` |
+| **Create a merge commit** | Big PRs whose commits each stand alone (a migration done in steps), and `dev` → `main` releases | Every branch commit plus a merge commit; keeps the steps and the branch link |
+| **Rebase and merge** | Rarely: a few clean, independent commits you want without a merge commit | The commits replayed onto the base, with new hashes |
+
+- The PR title becomes the squash commit title, so it must be a Conventional Commit
+  (the PR title check enforces it).
+- After a squash, the branch's commits aren't on `dev`. A branch cut from it must drop
+  them: `git rebase --onto origin/dev <last-squashed-commit>`.
+- Stacked or overlapping PRs (same `package.json` / `bun.lock`): merge in order, then
+  rebase the next one. On a `bun.lock` conflict take the base's lockfile and re-run
+  `bun install`; never hand-merge it. After force-pushing a rebase, check the PR
+  still has its approval: the `dev` ruleset can ask for a new one after a push.
