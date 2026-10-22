@@ -1,7 +1,7 @@
 # Xolace
 
 One repo for every Xolace client (mobile, web, desktop, CLI, internal admin) and the
-docs site, all on **one Convex backend with Clerk auth**. bun 1.3.4 workspaces
+docs site, all on **one Convex backend with Clerk auth**. bun 1.3.14 workspaces
 (isolated linker) + Turborepo + Biome/Ultracite. Many people and agents work here at
 once: stay inside your task, your worktree and your Convex dev deployment.
 
