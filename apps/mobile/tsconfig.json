@@ -1,0 +1,17 @@
+{
+  "extends": "expo/tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./*"],
+      "@/assets/*": ["./assets/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": [
+    "node_modules",
+    // Read-only reference copies of other codebases. They are consulted, never
+    // imported, and they do not typecheck against this project's config.
+    "src/components/extras/sample-codes/**"
+  ]
+}

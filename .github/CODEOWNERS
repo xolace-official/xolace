@@ -1,3 +1,48 @@
-# The fixed crisis line and the talk safety skills (#581, #605): the CEO
-# signs off every change to their wording.
-/convex/talk/safetyScript.ts @s-kvng
+# CODEOWNERS
+#
+# PLACEHOLDER OWNERS: every entry below uses @xolace-official/core because the
+# real owners are not decided yet. Replace it with the real GitHub teams or
+# users per area (e.g. @xolace-official/mobile) before turning on "Require
+# review from Code Owners" in branch protection.
+#
+# Paths are repo-relative. The LAST matching pattern wins, so keep the
+# catch-all first and the specific areas below it.
+
+# Fallback for anything not listed below
+*                       @xolace-official/core
+
+# Apps
+/apps/mobile/           @xolace-official/core
+/apps/web/              @xolace-official/core
+/apps/admin/            @xolace-official/core
+/apps/desktop/          @xolace-official/core
+/apps/cli/              @xolace-official/core
+/apps/docs/             @xolace-official/core
+
+# Packages
+/packages/backend/      @xolace-official/core
+/packages/ui/           @xolace-official/core
+/packages/config/       @xolace-official/core
+
+# CI, repo automation and templates
+/.github/               @xolace-official/core
+/scripts/               @xolace-official/core
+
+# Root config: affects every package
+/package.json           @xolace-official/core
+/bun.lock               @xolace-official/core
+/bunfig.toml            @xolace-official/core
+/turbo.json             @xolace-official/core
+/biome.json             @xolace-official/core
+/tsconfig.json          @xolace-official/core
+/.gitignore             @xolace-official/core
+/.husky/                @xolace-official/core
+/vercel.json            @xolace-official/core
+
+# Agent and contributor guidance
+/AGENTS.md              @xolace-official/core
+/CLAUDE.md              @xolace-official/core
+/.agents/               @xolace-official/core
+/CONTRIBUTING.md        @xolace-official/core
+/SECURITY.md            @xolace-official/core
+/VISION.md              @xolace-official/core

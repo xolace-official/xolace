@@ -1,0 +1,67 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "globalEnv": ["CI", "NODE_ENV"],
+  "globalPassThroughEnv": ["_VARLOCK_ENV_KEY"],
+  "tasks": {
+    "codegen": {
+      "inputs": ["$TURBO_DEFAULT$", ".env.schema", "source.config.ts"],
+      "outputs": ["src/env.ts", ".source/**"]
+    },
+    "build": {
+      "dependsOn": ["^build", "codegen"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env.schema",
+        ".env",
+        ".env.production",
+        ".env.production.local",
+        ".env.local"
+      ],
+      "env": [
+        "NEXT_PUBLIC_*",
+        "EXPO_PUBLIC_*",
+        "CLERK_SECRET_KEY",
+        "TAURI_BUILD",
+        "VERCEL",
+        "VERCEL_ENV",
+        "VERCEL_URL",
+        "VERCEL_PROJECT_PRODUCTION_URL"
+      ],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "out/**"]
+    },
+    "check-types": {
+      "dependsOn": ["^codegen", "codegen"]
+    },
+    "lint": {},
+    "test": {
+      "dependsOn": ["^codegen", "codegen"],
+      "inputs": ["$TURBO_DEFAULT$", ".env.test", ".env.test.local"],
+      "env": [
+        "CONVEX_URL",
+        "CONVEX_DEPLOYMENT",
+        "CLERK_JWT_ISSUER_DOMAIN",
+        "RUN_EVALS"
+      ],
+      "outputs": ["coverage/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "NEXT_PUBLIC_*",
+        "EXPO_PUBLIC_*",
+        "CLERK_SECRET_KEY",
+        "CLERK_JWT_ISSUER_DOMAIN",
+        "CONVEX_DEPLOYMENT",
+        "CONVEX_DEPLOY_KEY",
+        "TAURI_BUILD"
+      ]
+    },
+    "dev:setup": {
+      "cache": false,
+      "interactive": true,
+      "passThroughEnv": ["CONVEX_DEPLOYMENT", "CONVEX_DEPLOY_KEY"]
+    }
+  }
+}

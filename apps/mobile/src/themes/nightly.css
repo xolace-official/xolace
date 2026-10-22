@@ -1,0 +1,201 @@
+/*
+ * Nightly theme — activated automatically between 10pm and 4am.
+ *
+ * Both variants are defined per Uniwind rules (all theme files require
+ * light and dark). Only nightly-dark is used in practice — it is
+ * applied by SessionModeProvider when the night window is active.
+ * nightly-light is the moonlit counterpart: still deeply muted,
+ * never bright.
+ *
+ * Design intent:
+ *   - Ultra-low chroma across all values (near monochrome)
+ *   - Deep cosmic quiet — the void of 3am
+ *   - Accent is soft muted indigo, not the vibrant daytime color
+ *   - Every value should feel still, unhurried, accompanied
+ */
+@layer theme {
+	:root {
+		@variant nightly-light {
+			--font-normal: "SNPro-Regular";
+			--font-medium: "SNPro-Medium";
+			--font-semibold: "SNPro-SemiBold";
+			--font-bold: "SNPro-Bold";
+
+			--radius: 0.625rem;
+
+			/* Moonlit — deep blue-gray, not a day theme */
+			--background: oklch(74% 0.007 265);
+			--foreground: oklch(16% 0.01 265);
+
+			--surface: oklch(79% 0.006 265);
+			--surface-foreground: oklch(16% 0.01 265);
+
+			--surface-secondary: oklch(77% 0.006 265);
+			--surface-secondary-foreground: oklch(16% 0.01 265);
+
+			--surface-tertiary: oklch(75.5% 0.007 265);
+			--surface-tertiary-foreground: oklch(16% 0.01 265);
+
+			--overlay: oklch(79% 0.005 265);
+			--overlay-foreground: oklch(16% 0.01 265);
+
+			--muted: oklch(46% 0.015 265);
+
+			--default: oklch(77% 0.006 265);
+			--default-foreground: oklch(16% 0.01 265);
+
+			/* Soft muted indigo — restrained even in the light variant */
+			--accent: oklch(50% 0.07 275);
+			--accent-foreground: oklch(96% 0.005 275);
+
+			--field-background: oklch(79% 0.005 265);
+			--field-foreground: oklch(16% 0.01 265);
+			--field-placeholder: var(--muted);
+			--field-border: transparent;
+
+			--resonance: oklch(0.796 0.0347 167.72 / 15%);
+			--resonance-foreground: oklch(0.796 0.0347 167.72);
+
+			--offer-ink: oklch(18% 0.02 285);
+
+			--tone-poetic: oklch(70% 0.18 305);
+			--tone-gentle: oklch(68% 0.17 15);
+			--tone-direct: oklch(68% 0.15 225);
+			--tone-witnessed: oklch(72% 0.15 75);
+			--tone-poetic-text: oklch(48% 0.18 305);
+			--tone-gentle-text: oklch(46% 0.17 15);
+			--tone-direct-text: oklch(46% 0.15 225);
+			--tone-witnessed-text: oklch(48% 0.15 75);
+			--browse-audio: oklch(70% 0.1 70 / 16%);
+			--browse-audio-foreground: oklch(70% 0.1 70);
+			--browse-music: oklch(68% 0.09 250 / 16%);
+			--browse-music-foreground: oklch(68% 0.09 250);
+			--browse-topics: oklch(72% 0.09 165 / 16%);
+			--browse-topics-foreground: oklch(72% 0.09 165);
+
+			/* Event — monthly awareness marker */
+			--event: oklch(60% 0.15 350);
+			--event-foreground: oklch(99% 0.005 350);
+
+			--success: oklch(58% 0.12 155);
+			--success-foreground: oklch(15% 0.01 155);
+
+			--warning: oklch(70% 0.09 75);
+			--warning-foreground: oklch(15% 0.01 75);
+			--ember: oklch(78% 0.13 75);
+
+			--danger: oklch(58% 0.12 22);
+			--danger-foreground: oklch(99% 0 0);
+
+			--segment: oklch(79% 0.006 265);
+			--segment-foreground: oklch(16% 0.01 265);
+
+			--border: oklch(66% 0.007 265);
+			--separator: oklch(60% 0.008 265);
+			--focus: oklch(50% 0.07 275);
+			--link: oklch(46% 0.08 275);
+
+			--surface-shadow:
+				0 2px 4px 0 rgba(20, 18, 40, 0.06), 0 1px 2px 0 rgba(20, 18, 40, 0.04);
+			--overlay-shadow:
+				0 4px 16px 0 rgba(20, 18, 40, 0.08), 0 -2px 8px 0 rgba(20, 18, 40, 0.02);
+			--field-shadow:
+				0 1px 3px 0 rgba(20, 18, 40, 0.04), 0 0 1px 0 rgba(20, 18, 40, 0.06);
+
+			--backdrop: oklch(0% 0 0 / 20%);
+		}
+
+		@variant nightly-dark {
+			--font-normal: "SNPro-Regular";
+			--font-medium: "SNPro-Medium";
+			--font-semibold: "SNPro-SemiBold";
+			--font-bold: "SNPro-Bold";
+
+			--radius: 0.625rem;
+
+			/* Ultra-deep near-void. Hue 265 = blue-violet. Very low chroma
+       * so it reads as still darkness, not colored darkness. */
+			--background: oklch(8.0% 0.006 265);
+			--foreground: oklch(86% 0.008 265);
+
+			--surface: oklch(12% 0.008 265);
+			--surface-foreground: oklch(86% 0.008 265);
+
+			--surface-secondary: oklch(15.5% 0.009 265);
+			--surface-secondary-foreground: oklch(86% 0.008 265);
+
+			--surface-tertiary: oklch(18% 0.01 265);
+			--surface-tertiary-foreground: oklch(86% 0.008 265);
+
+			--overlay: oklch(13% 0.008 265);
+			--overlay-foreground: oklch(86% 0.008 265);
+
+			/* Very muted — secondary text is barely there */
+			--muted: oklch(42% 0.014 265);
+
+			--default: oklch(17% 0.008 265);
+			--default-foreground: oklch(86% 0.008 265);
+
+			/* Accent: soft muted indigo. Present but restrained.
+       * Not the vibrant accent of daytime. The 3am color.
+       * Chroma 0.07 is half of the default theme — intentionally dimmer. */
+			--accent: oklch(64% 0.07 275);
+			--accent-foreground: oklch(8% 0.006 265);
+
+			--field-background: oklch(10.5% 0.007 265);
+			--field-foreground: oklch(86% 0.008 265);
+			--field-placeholder: var(--muted);
+			--field-border: transparent;
+
+			--resonance: oklch(0.796 0.0347 167.72 / 15%);
+			--resonance-foreground: oklch(0.796 0.0347 167.72);
+
+			--offer-ink: oklch(18% 0.02 285);
+
+			--tone-poetic: oklch(74% 0.18 305);
+			--tone-gentle: oklch(72% 0.17 15);
+			--tone-direct: oklch(72% 0.15 225);
+			--tone-witnessed: oklch(76% 0.15 75);
+			--tone-poetic-text: var(--tone-poetic);
+			--tone-gentle-text: var(--tone-gentle);
+			--tone-direct-text: var(--tone-direct);
+			--tone-witnessed-text: var(--tone-witnessed);
+			--browse-audio: oklch(74% 0.1 70 / 14%);
+			--browse-audio-foreground: oklch(74% 0.1 70);
+			--browse-music: oklch(72% 0.09 250 / 14%);
+			--browse-music-foreground: oklch(72% 0.09 250);
+			--browse-topics: oklch(76% 0.09 165 / 14%);
+			--browse-topics-foreground: oklch(76% 0.09 165);
+
+			/* Event — monthly awareness marker */
+			--event: oklch(76% 0.12 350);
+			--event-foreground: oklch(15% 0.01 350);
+
+			--success: oklch(63% 0.12 155);
+			--success-foreground: oklch(13% 0.01 155);
+
+			--warning: oklch(73% 0.09 75);
+			--warning-foreground: oklch(13% 0.01 75);
+			--ember: oklch(80% 0.1 75);
+
+			--danger: oklch(60% 0.12 22);
+			--danger-foreground: oklch(99% 0 0);
+
+			--segment: oklch(20% 0.009 265);
+			--segment-foreground: oklch(86% 0.008 265);
+
+			/* Borders barely visible — structure without declaration */
+			--border: oklch(19% 0.008 265);
+			--separator: oklch(26% 0.01 265);
+			--focus: oklch(64% 0.07 275);
+			--link: oklch(62% 0.07 275);
+
+			/* No shadows on nightly-dark — depth lives in the color alone */
+			--surface-shadow: 0 0 0 0 transparent inset;
+			--overlay-shadow: 0 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+			--field-shadow: 0 0 0 0 transparent inset;
+
+			--backdrop: oklch(0% 0 0 / 20%);
+		}
+	}
+}

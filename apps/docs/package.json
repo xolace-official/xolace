@@ -1,0 +1,33 @@
+{
+  "name": "@xolace/docs",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "check-types": "next typegen && tsc --noEmit",
+    "codegen": "fumadocs-mdx",
+    "dev": "next dev --port 4000",
+    "lint": "biome check .",
+    "start": "next start"
+  },
+  "dependencies": {
+    "fumadocs-core": "16.17.5",
+    "fumadocs-mdx": "15.4.7",
+    "fumadocs-ui": "npm:@fumadocs/base-ui@16.17.5",
+    "lucide-react": "catalog:",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "varlock": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "catalog:",
+    "@types/mdx": "^2.0.14",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "postcss": "^8.5.28",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  }
+}

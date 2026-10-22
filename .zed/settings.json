@@ -1,21 +1,95 @@
 {
+  "format_on_save": "on",
+  "formatter": "language_server",
+  "lsp": {
+    "vtsls": {
+      "settings": {
+        "javascript": {
+          "preferences": {
+            "includePackageJsonAutoImports": "on"
+          }
+        },
+        "typescript": {
+          "preferences": {
+            "includePackageJsonAutoImports": "on"
+          }
+        }
+      }
+    }
+  },
+  "languages": {
+    "JavaScript": {
+      "code_actions_on_format": {
+        "source.fixAll.biome": true,
+        "source.organizeImports.biome": true
+      },
+      "formatter": {
+        "language_server": {
+          "name": "biome"
+        }
+      }
+    },
+    "TSX": {
+      "code_actions_on_format": {
+        "source.fixAll.biome": true,
+        "source.organizeImports.biome": true
+      },
+      "formatter": {
+        "language_server": {
+          "name": "biome"
+        }
+      }
+    },
+    "TypeScript": {
+      "code_actions_on_format": {
+        "source.fixAll.biome": true,
+        "source.organizeImports.biome": true
+      },
+      "formatter": {
+        "language_server": {
+          "name": "biome"
+        }
+      }
+    }
+  },
   "context_servers": {
     "better-t-stack": {
       "source": "custom",
       "command": "bunx",
-      "args": ["create-better-t-stack@latest", "mcp"],
-      "env": {}
-    },
-    "context7": {
-      "source": "custom",
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"],
+      "args": [
+        "create-better-t-stack@latest",
+        "mcp"
+      ],
       "env": {}
     },
     "convex": {
       "source": "custom",
       "command": "npx",
-      "args": ["-y", "convex@latest", "mcp", "start"],
+      "args": [
+        "-y",
+        "convex@latest",
+        "mcp",
+        "start"
+      ],
+      "env": {}
+    },
+    "shadcn": {
+      "source": "custom",
+      "command": "npx",
+      "args": [
+        "-y",
+        "shadcn@latest",
+        "mcp"
+      ],
+      "env": {}
+    },
+    "next-devtools": {
+      "source": "custom",
+      "command": "npx",
+      "args": [
+        "-y",
+        "next-devtools-mcp@latest"
+      ],
       "env": {}
     },
     "clerk": {
@@ -36,11 +110,6 @@
       "args": [
         "mcp"
       ]
-    }
-  },
-  "agent": {
-    "tool_permissions": {
-      "default": "allow"
     }
   }
 }

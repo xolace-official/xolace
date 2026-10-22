@@ -1,35 +1,48 @@
-## Summary
+<!--
+PR title must be a Conventional Commit: type(scope): subject
+e.g. fix(mobile): keep the mirror visible after the keyboard closes
+One problem per PR. See CONTRIBUTING.md.
+-->
 
-<!-- What does this PR do? Keep it brief — 1-3 sentences. -->
+## Problem
 
-## Changes
+<!-- What is wrong or missing, and who it affects. Link the issue if there is one. -->
 
-<!-- Bullet list of what changed and why. -->
+## Change
 
--
+<!-- What this PR does about it, and anything a reviewer should look at first. -->
 
-## Type of change
+## Surfaces touched
 
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Documentation
-- [ ] Refactor
-- [ ] New theme
-- [ ] Other: <!-- describe -->
+<!-- Tick every surface this change can affect, even indirectly. -->
 
-## Checklist
+- [ ] Mobile (`apps/mobile`)
+- [ ] Web (`apps/web`)
+- [ ] Admin (`apps/admin`)
+- [ ] Desktop (`apps/desktop`)
+- [ ] CLI (`apps/cli`)
+- [ ] Backend contract (`packages/backend`: schema, function args or return shapes; must stay compatible with shipped mobile builds)
+- [ ] Docs (`apps/docs`, READMEs, AGENTS.md)
 
-- [ ] I've tested on at least one platform (iOS, Android, or web)
-- [ ] Linting passes (`bun expo lint`)
-- [ ] No `console.log` left in code
-- [ ] New files use the `@/src/` path alias for imports
-- [ ] Theme colors use CSS variables, not hard-coded values
-- [ ] Files stay under 200 lines
+## Verification
 
-## Screenshots / Recordings
+<!--
+Pick the evidence that fits the change:
+- Visual change: before/after screenshots
+- Timing or animation: a screen recording
+- Logic: a test that failed before this change and passes now (name it)
+-->
 
-<!-- If this is a visual change, add before/after screenshots or a recording. -->
+- [ ] Evidence attached (screenshots / recording / failing-then-passing test):
+- Commands run (e.g. `bun run check:changed`, `bun run test`):
 
-## Related issues
+**Could not verify:**
+<!-- What the simulator or local setup can't prove, e.g. microphone and voice, purchases, push, native auth sheets, production-only Clerk behaviour. Write "nothing" if everything was covered. -->
 
-<!-- Link any related issues: Fixes #123, Relates to #456 -->
+## Model & harness
+
+<!-- Only if an agent wrote some or all of this PR. Delete otherwise. -->
+
+- Model:
+- Harness / tool (e.g. Claude Code, Codex, Cursor):
+- How much was agent-written, and what a human reviewed:

@@ -1,0 +1,429 @@
+/*
+ * Global CSS — Xolace theme configuration.
+ *
+ * Tailwind CSS v4 + Uniwind (RN adapter) + HeroUI Native.
+ *
+ * The base light/dark overrides below define the Xolace identity:
+ * - Dark: Deep warm indigo with soft lavender accents and amber warmth
+ * - Light: Warm parchment with violet undertones
+ *
+ * Additional switchable themes live in src/themes/.
+ * Register new themes in metro.config.js `extraThemes`
+ * and add variant names to ThemeName in src/context/app-theme-context.tsx
+ */
+
+@import "tailwindcss";
+@import "uniwind";
+/*@source './components';
+@source './lib';
+@source './helpers';*/
+
+@import "heroui-native/styles";
+
+/* Custom color themes — user-selectable alternatives */
+@import "./themes/quiet.css";
+@import "./themes/reverie.css";
+@import "./themes/human.css";
+/* Night mode palette — activated automatically by SessionModeProvider */
+@import "./themes/nightly.css";
+
+/* xolace+ premium themes — gated behind an active Plus entitlement.
+ * See src/lib/themes.ts (tier: 'premium') and use-appearance-settings.ts. */
+@import "./themes/xolace-plus/emerald.css";
+@import "./themes/xolace-plus/rose.css";
+@import "./themes/xolace-plus/platinum.css";
+@import "./themes/xolace-plus/velvet.css";
+@import "./themes/xolace-plus/noir.css";
+
+/* @theme {
+  --font-sans: 'SpaceGrotesk-Regular';
+  --font-sans-medium: 'SpaceGrotesk-Medium';
+  --font-sans-bold: 'SpaceGrotesk-Bold';
+  --font-mono: 'SpaceGrotesk-SemiBold';
+} */
+
+@theme static {
+	--color-resonance: oklch(0.796 0.0347 167.72 / 15%);
+	--resonance-foreground: oklch(0.796 0.0347 167.72);
+
+	--color-ember: oklch(78% 0.13 75);
+	/* Frost — a day a streak freeze held (contribution graph). */
+	--color-frost: oklch(72% 0.12 240);
+	/* Plus night — the Xolace+ offer's own sky (postcard art, path-stack
+     * layer). Dark in every theme because the art is. */
+	--color-plus-night: #0b0716;
+
+	--font-poppins-medium: "Poppins-Medium";
+
+	/* Poster — the quotes poster is a printed object: its palette is the
+     * content, not the container, so it does not follow the active theme.
+     * Fixed on purpose; see the fixed-palette convention in CLAUDE.md.
+     * The two values a token cannot express (the gradient stop array and the
+     * Skia grain opacity) live in src/features/quotes/poster-palette.ts. */
+	--color-poster-paper: #f4f3f1;
+	--color-poster-plate: #ffffff;
+	--color-poster-ink: #141414;
+	--color-poster-ink-soft: #5d5d5d;
+	--color-poster-ink-faint: #6b6b6b;
+	--color-poster-hairline: rgba(0, 0, 0, 0.1);
+	--color-poster-shadow: #000000;
+	/* the design's Resonate fill and the deeper ink it sets its label in */
+	--color-poster-resonate: #f5726a;
+	--color-poster-ink-deep: #2b1414;
+	/* The deck: the poster's second sheet, not themed chrome. It is what keeps
+     * the hero from being an isolated lit rectangle on a dark chrome (#305). */
+	--color-poster-deck: #cbc9c5;
+	/* The composer on the deck: the field it is typed into, and the send pill
+     * — the only saturated colour outside the hero, so it takes the poster's
+     * own yellow rather than the accent (#305/#313). */
+	--color-poster-field: #e4e2de;
+	--color-poster-send: #f0e94d;
+
+	/* Player — the Browse player (#340) is lit by the track's own artwork,
+     * blurred into the backdrop, so its ink is fixed white-on-black whatever
+     * the theme. Fixed on purpose; see the fixed-palette convention in
+     * CLAUDE.md. The scrim gradient stops live in
+     * src/features/browse/player/player-palette.ts. */
+	--color-player-ink: #ffffff;
+	--color-player-scrim: #000000;
+	/* Lantern reader cover (#407): title and controls sit on the entry's
+     * photo, so the same fixed white-on-black. Scrim stops live in
+     * src/features/library/reader/cover-palette.ts. */
+	--color-cover-ink: #ffffff;
+	--color-cover-scrim: #000000;
+	/* Lantern reader pages (#408): the reading modes' own sheets, laid over
+     * the light/dark base by ScopedVariables in reader-page.tsx. Warm and
+     * low-blue; Night is for reading in the dark. Classic has no tokens here —
+     * its page is the app theme. */
+	--color-reader-paper-bg: #fbf8f1;
+	--color-reader-paper-ink: #2b2724;
+	--color-reader-paper-muted: #6f6760;
+	--color-reader-night-bg: #1b1714;
+	--color-reader-night-ink: #e6dccb;
+	--color-reader-night-muted: #9c9080;
+	/* The archive card's chip fill — ink at 7%, so one value sits on every tint */
+	--color-poster-chip: rgba(20, 20, 20, 0.07);
+	/* The archive card tints, cycled by item index (#296). Fixed objects inside
+     * a themed container — only the index picks one, so the array that walks
+     * them is assembled at the call site. */
+	--color-archive-tint-1: #f4e9b8;
+	--color-archive-tint-2: #f3d3dc;
+	--color-archive-tint-3: #e7e5e2;
+	--color-archive-tint-4: #dce6de;
+
+	/* The poster's voice is fixed too: `--font-*` is a per-theme variable
+     * (nightly swaps the whole family to SN Pro), and a printed object does not
+     * change typeface with the chrome behind it. */
+	--font-poster-display: "SpaceGrotesk-Bold";
+	--font-poster-body: "SpaceGrotesk-Regular";
+}
+
+@layer theme {
+	/* ============================================================
+   * XOLACE — BASE LIGHT THEME
+   * ============================================================
+   * Warm parchment. Not sterile white. Not cool gray.
+   * Like a page in a journal left near a window at golden hour.
+   *
+   * The violet undertone in the neutrals keeps the light theme
+   * connected to the dark theme's identity — they feel like
+   * the same room at different times of day.
+   * ============================================================ */
+	@variant light {
+		--font-normal: "SpaceGrotesk-Regular";
+		--font-medium: "SpaceGrotesk-Medium";
+		--font-semibold: "SpaceGrotesk-SemiBold";
+		--font-bold: "SpaceGrotesk-Bold";
+
+		--radius: 0.625rem;
+
+		/* Base — warm near-white with a faint violet breath */
+		--background: oklch(97.5% 0.006 285);
+		--foreground: oklch(16.5% 0.02 285);
+
+		/* Surface — clean but never sterile */
+		--surface: oklch(99.5% 0.003 285);
+		--surface-foreground: oklch(16.5% 0.02 285);
+
+		--surface-secondary: oklch(95.5% 0.008 285);
+		--surface-secondary-foreground: oklch(16.5% 0.02 285);
+
+		--surface-tertiary: oklch(93% 0.01 285);
+		--surface-tertiary-foreground: oklch(16.5% 0.02 285);
+
+		/* Overlay — for modals, popovers, sheets */
+		--overlay: oklch(99.5% 0.003 285);
+		--overlay-foreground: oklch(16.5% 0.02 285);
+
+		/* Muted — secondary text, placeholders */
+		--muted: oklch(52% 0.02 285);
+
+		/* Default — neutral interactive surfaces */
+		--default: oklch(94% 0.008 285);
+		--default-foreground: oklch(16.5% 0.02 285);
+
+		/* Accent — soft lavender, the Xolace signature.
+     * Slightly deeper on light backgrounds for contrast. */
+		--accent: oklch(62% 0.14 285);
+		--accent-foreground: oklch(99% 0.005 285);
+
+		/* Form fields */
+		--field-background: oklch(99.5% 0.003 285);
+		--field-foreground: oklch(16.5% 0.02 285);
+		--field-placeholder: var(--muted);
+		--field-border: transparent;
+
+		/* Resonance — quiet shared-feeling signal */
+		--resonance: oklch(0.796 0.0347 167.72 / 15%);
+		--resonance-foreground: oklch(0.796 0.0347 167.72);
+
+		/* Ink for text on a saturated tone-colored panel — see the dark block. */
+		--offer-ink: oklch(18% 0.02 285);
+
+		/* Mirror tone badge colors — each tone has its own hue family */
+		--tone-poetic: oklch(70% 0.18 305);
+		--tone-gentle: oklch(68% 0.17 15);
+		--tone-direct: oklch(68% 0.15 225);
+		--tone-witnessed: oklch(72% 0.15 75);
+
+		/* Text variants of the tone hues — the badge lightness (68-72%) reads as
+     * text on a light background, so the texture pill labels need a deeper
+     * pull of the same hue. Dark theme keeps the badge value (see below). */
+		--tone-poetic-text: oklch(48% 0.18 305);
+		--tone-gentle-text: oklch(46% 0.17 15);
+		--tone-direct-text: oklch(46% 0.15 225);
+		--tone-witnessed-text: oklch(48% 0.15 75);
+
+		/* Browse hub entry icons (#338) — fixed per-entry hues, same across
+     * every theme (like --tone-*), so Support audio / Music / Topics stay
+     * visually distinct without borrowing --accent. */
+		--browse-audio: oklch(70% 0.15 25 / 16%);
+		--browse-audio-foreground: oklch(70% 0.15 25);
+		--browse-music: oklch(68% 0.12 200 / 16%);
+		--browse-music-foreground: oklch(68% 0.12 200);
+		--browse-topics: oklch(72% 0.13 130 / 16%);
+		--browse-topics-foreground: oklch(72% 0.13 130);
+
+		/* Event — monthly awareness marker */
+		--event: oklch(60% 0.15 350);
+		--event-foreground: oklch(99% 0.005 350);
+
+		/* Status — muted but clear */
+		--success: oklch(65% 0.16 155);
+		--success-foreground: oklch(16.5% 0.01 155);
+
+		--warning: oklch(75% 0.12 75);
+		--warning-foreground: oklch(16.5% 0.01 75);
+
+		/* Ember — campfire glow. Distinct from --warning (status) to avoid
+     * semantic overload. Same amber hue family, slightly richer on light. */
+		--ember: oklch(78% 0.13 75);
+
+		/* Danger — soft coral, not alarming red.
+     * Even destructive actions shouldn't feel aggressive
+     * in an emotional safety app. */
+		--danger: oklch(62% 0.16 22);
+		--danger-foreground: oklch(99% 0 0);
+
+		/* Components */
+		--segment: oklch(99.5% 0.003 285);
+		--segment-foreground: oklch(16.5% 0.02 285);
+
+		/* Borders & lines — barely there, like pencil marks */
+		--border: oklch(90% 0.008 285);
+		--separator: oklch(84% 0.01 285);
+		--focus: oklch(62% 0.14 285);
+		--link: oklch(55% 0.12 285);
+
+		/* Shadows — soft, warm, never harsh */
+		--surface-shadow:
+			0 2px 4px 0 rgba(60, 40, 80, 0.04), 0 1px 2px 0 rgba(60, 40, 80, 0.05),
+			0 0 1px 0 rgba(60, 40, 80, 0.05);
+		--overlay-shadow:
+			0 4px 16px 0 rgba(60, 40, 80, 0.06), 0 -2px 8px 0 rgba(60, 40, 80, 0.02),
+			0 12px 24px 0 rgba(60, 40, 80, 0.04);
+		--field-shadow:
+			0 1px 3px 0 rgba(60, 40, 80, 0.04), 0 0 1px 0 rgba(60, 40, 80, 0.06);
+
+		--backdrop: oklch(0% 0 0 / 20%);
+	}
+
+	/* ============================================================
+   * XOLACE — BASE DARK THEME (Default)
+   * ============================================================
+   * A quiet room at night. A candle is lit.
+   *
+   * The background is deep warm indigo — not cold tech-black,
+   * not blue-black. It has a violet warmth that makes the
+   * screen feel inhabited, not empty.
+   *
+   * The accent (soft lavender) is present but never demanding.
+   * Like twilight through a window.
+   *
+   * The warm amber is reserved for moments of presence —
+   * the gentle nudge, the presence dot, the campfire glow.
+   * It appears as the accent here because in the emotional
+   * processing context, warmth is the action color.
+   * ============================================================ */
+	@variant dark {
+		--font-normal: "SpaceGrotesk-Regular";
+		--font-medium: "SpaceGrotesk-Medium";
+		--font-semibold: "SpaceGrotesk-SemiBold";
+		--font-bold: "SpaceGrotesk-Bold";
+
+		--radius: 0.625rem;
+
+		/* Base — deep warm indigo, not cold black
+     * Hue 285 = violet. Low chroma keeps it from being
+     * purple — it reads as warm dark, not colored dark. */
+		--background: oklch(10.5% 0.012 285);
+		--foreground: oklch(93% 0.01 285);
+
+		/* Surface — elevated cards, timeline entries.
+     * Each tier is a subtle step up from the background.
+     * The chroma increases slightly with lightness to
+     * maintain the warm violet undertone as surfaces
+     * get brighter. */
+		--surface: oklch(15% 0.014 285);
+		--surface-foreground: oklch(93% 0.01 285);
+
+		--surface-secondary: oklch(19% 0.016 285);
+		--surface-secondary-foreground: oklch(93% 0.01 285);
+
+		--surface-tertiary: oklch(22% 0.018 285);
+		--surface-tertiary-foreground: oklch(93% 0.01 285);
+
+		/* Overlay — modals and sheets.
+     * Slightly different from surface to create
+     * a sense of floating above the background. */
+		--overlay: oklch(16% 0.015 285);
+		--overlay-foreground: oklch(93% 0.01 285);
+
+		/* Muted — secondary text, timestamps, labels.
+     * Not gray — warm violet muted. */
+		--muted: oklch(48% 0.022 285);
+
+		/* Default — neutral interactive surfaces.
+     * Buttons that aren't primary or accent. */
+		--default: oklch(22% 0.014 285);
+		--default-foreground: oklch(93% 0.01 285);
+
+		/* Accent — soft lavender. The Xolace signature.
+     *
+     * This is the color of "That's it" / "Let it out" /
+     * active states / the timeline icon. Present but calm.
+     * Chroma 0.10 is deliberately moderate — not washed
+     * out, not vibrant. Like twilight, not neon. */
+		--accent: oklch(75% 0.1 285);
+		--accent-foreground: oklch(10.5% 0.012 285);
+
+		/* Form fields — input areas, the writing space */
+		--field-background: oklch(13.5% 0.013 285);
+		--field-foreground: oklch(93% 0.01 285);
+		--field-placeholder: var(--muted);
+		--field-border: transparent;
+
+		/* Resonance — quiet shared-feeling signal */
+		--resonance: oklch(0.796 0.0347 167.72 / 15%);
+		--resonance-foreground: oklch(0.796 0.0347 167.72);
+
+		/* Ink for text sitting on a saturated tone-colored panel (the intake offer
+     * cards). Deliberately theme-invariant: every --tone-* is a light surface
+     * (L ≈ 70–76%) in BOTH schemes, so the readable ink is dark either way. */
+		--offer-ink: oklch(18% 0.02 285);
+
+		/* Mirror tone badge colors — slightly brighter on dark for legibility */
+		--tone-poetic: oklch(74% 0.18 305);
+		--tone-gentle: oklch(72% 0.17 15);
+		--tone-direct: oklch(72% 0.15 225);
+		--tone-witnessed: oklch(76% 0.15 75);
+
+		/* Dark theme reads fine at the badge lightness, so the text variant is
+     * the same value — unlike light theme, no deeper pull is needed. */
+		--tone-poetic-text: var(--tone-poetic);
+		--tone-gentle-text: var(--tone-gentle);
+		--tone-direct-text: var(--tone-direct);
+		--tone-witnessed-text: var(--tone-witnessed);
+
+		/* Browse hub entry icons (#338) — same hues as light, bumped for dark */
+		--browse-audio: oklch(74% 0.15 25 / 14%);
+		--browse-audio-foreground: oklch(74% 0.15 25);
+		--browse-music: oklch(72% 0.12 200 / 14%);
+		--browse-music-foreground: oklch(72% 0.12 200);
+		--browse-topics: oklch(76% 0.13 130 / 14%);
+		--browse-topics-foreground: oklch(76% 0.13 130);
+
+		/* Event — monthly awareness marker */
+		--event: oklch(76% 0.12 350);
+		--event-foreground: oklch(15% 0.01 350);
+
+		/* Status colors — present but never alarming.
+     * In an emotional safety app, even system colors
+     * should feel held, not urgent. */
+		--success: oklch(70% 0.14 155);
+		--success-foreground: oklch(15% 0.01 155);
+
+		/* Warning uses the warm amber — the campfire color.
+     * In Xolace, warmth IS the warning: gentle, present,
+     * "I'm here, pay attention to this." */
+		--warning: oklch(80% 0.1 75);
+		--warning-foreground: oklch(15% 0.01 75);
+
+		/* Ember — campfire glow. Same hue as --warning but semantically distinct.
+     * Used for the profile arc halo and active-day intensity bars. */
+		--ember: oklch(80% 0.1 75);
+
+		/* Danger — soft coral, not screaming red.
+     * Someone in crisis doesn't need their app
+     * yelling at them with saturated red. */
+		--danger: oklch(65% 0.14 22);
+		--danger-foreground: oklch(99% 0 0);
+
+		/* Components */
+		--segment: oklch(25% 0.014 285);
+		--segment-foreground: oklch(93% 0.01 285);
+
+		/* Borders — barely visible. Like pencil lines
+     * on dark paper. They define structure without
+     * demanding attention. */
+		--border: oklch(22% 0.012 285);
+		--separator: oklch(30% 0.014 285);
+		--focus: oklch(75% 0.1 285);
+		--link: oklch(72% 0.1 285);
+
+		/* Shadows — invisible on dark. Using subtle
+     * inner glow on overlays instead. */
+		--surface-shadow: 0 0 0 0 transparent inset;
+		--overlay-shadow: 0 0 1px 0 rgba(184, 169, 232, 0.08) inset;
+		--field-shadow: 0 0 0 0 transparent inset;
+
+		--backdrop: oklch(0% 0 0 / 20%);
+	}
+}
+
+@theme inline {
+	--color-resonance: var(--resonance);
+	--color-resonance-foreground: var(--resonance-foreground);
+
+	--color-browse-audio: var(--browse-audio);
+	--color-browse-audio-foreground: var(--browse-audio-foreground);
+	--color-browse-music: var(--browse-music);
+	--color-browse-music-foreground: var(--browse-music-foreground);
+	--color-browse-topics: var(--browse-topics);
+	--color-browse-topics-foreground: var(--browse-topics-foreground);
+
+	--color-event: var(--event);
+	--color-event-foreground: var(--event-foreground);
+
+	--color-offer-ink: var(--offer-ink);
+
+	--color-tone-poetic: var(--tone-poetic);
+	--color-tone-gentle: var(--tone-gentle);
+	--color-tone-direct: var(--tone-direct);
+	--color-tone-witnessed: var(--tone-witnessed);
+
+	--color-tone-poetic-text: var(--tone-poetic-text);
+	--color-tone-gentle-text: var(--tone-gentle-text);
+	--color-tone-direct-text: var(--tone-direct-text);
+	--color-tone-witnessed-text: var(--tone-witnessed-text);
+}
