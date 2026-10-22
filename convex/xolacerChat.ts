@@ -2153,7 +2153,9 @@ export const upsertMyXolacerProfile = mutation({
     const existing = await getXolacerProfileByProfileId(ctx, profile._id);
     if (existing) {
       await ctx.db.patch("xolacer_profiles", existing._id, { ...args, updatedAt: Date.now() });
-      await reindexXolacer(ctx, profile._id);
+      // Only bio and specialties are embedded (see textForIndex); a name-only save skips the embed.
+      const embedded = (x: { bio?: string; specialties?: string[] }) => JSON.stringify([x.bio, x.specialties ?? []]);
+      if (embedded(existing) !== embedded({ ...existing, ...args })) await reindexXolacer(ctx, profile._id);
       return null;
     }
     await ctx.db.insert("xolacer_profiles", {

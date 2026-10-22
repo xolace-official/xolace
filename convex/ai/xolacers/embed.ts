@@ -4,6 +4,7 @@ import { internal } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
 import { embedSessionText } from "../helpers/embedSessionText";
 import { bestScoreByKey, syncKey } from "../helpers/namespaceIndex";
+import { rag } from "../../rag";
 
 /**
  * The xolacers' meaning index (#570, ADR 0021): each complete, active
@@ -36,6 +37,30 @@ export const indexAll = internalAction({
   handler: async (ctx) => {
     const ids = await ctx.runQuery(internal.xolacers.embed.profileIdsForIndex, {});
     for (const id of ids) await syncEntry(ctx, id);
+    return null;
+  },
+});
+
+/**
+ * The retry for a failed removal: `indexXolacer` is scheduled once on pause
+ * or deletion and actions don't retry, and `indexAll` can't reach a deleted
+ * xolacer (no row left). Walks the index itself and drops every key whose
+ * source now says null. Removes only, never re-embeds.
+ * ponytail: entries past 1000 are skipped; page it if the roster gets near.
+ */
+export const sweepIndex = internalAction({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const found = await rag.getNamespace(ctx, { namespace: XOLACER_NAMESPACE });
+    if (!found) return null;
+    const { page } = await rag.list(ctx, { namespaceId: found.namespaceId, limit: 1000 });
+    for (const { key } of page) {
+      if (!key) continue;
+      const id = key as Id<"emotional_profiles">;
+      const text = await ctx.runQuery(internal.xolacers.embed.textForIndex, { emotionalProfileId: id });
+      if (text === null) await syncKey(ctx, XOLACER_NAMESPACE, id, null);
+    }
     return null;
   },
 });

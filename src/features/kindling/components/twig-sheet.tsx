@@ -89,7 +89,13 @@ export function TwigSheet({
         <AppText className="mt-4 text-sm text-muted">Not for you</AppText>
       ) : (
         <View className="mt-4 flex-row items-center justify-between">
-          <Pressable onPress={onSkip} hitSlop={8} accessibilityRole="button">
+          <Pressable
+            onPress={onSkip}
+            disabled={matching}
+            hitSlop={8}
+            accessibilityRole="button"
+            className={matching ? "opacity-40" : undefined}
+          >
             <AppText className="text-sm text-muted">Not for me</AppText>
           </Pressable>
           <Button size="sm" onPress={onBegin} isDisabled={matching} accessibilityState={{ busy: matching }}>

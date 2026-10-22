@@ -3,6 +3,7 @@ import { CATALOG } from "./catalog";
 import { TRY_THIS, isTryThis } from "./tryThis";
 import { PRIMARY_EMOTIONS, THEMATIC_TAGS } from "../../lib/understandingVocab";
 import { buildClassifierPrompt } from "../prompts/classifier";
+import { withhold } from "./history";
 
 /**
  * Curation limits (#567, #571): what each try-this entry may never be.
@@ -41,5 +42,18 @@ describe("try-this catalog (#571)", () => {
       expect(system).toContain(`"${theme}"`);
       expect(TRY_THIS.some((t) => t.themes.includes(theme))).toBe(true);
     }
+  });
+});
+
+describe("withhold counts try-this as one slot (#567)", () => {
+  const types = (...actionTypes: string[]) => actionTypes.map((actionType) => ({ actionType }));
+  const catalog = types("breathing", "bridge", "xolacer", "try_a", "try_b");
+
+  it("keeps a skipped type when two try-this entries would only pad the count to MAX_TWIGS", () => {
+    expect(withhold(catalog, ["bridge"]).withheld).toEqual([]);
+  });
+
+  it("withholds a skipped try-this while a sibling still fills the slot", () => {
+    expect(withhold(catalog, ["try_a"]).withheld).toEqual(["try_a"]);
   });
 });

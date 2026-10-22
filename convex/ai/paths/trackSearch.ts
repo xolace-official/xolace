@@ -121,11 +121,15 @@ export async function scoreTracks(
 ): Promise<{ tracks: BindTrack[]; logs: TrackSearchLog[] }> {
   const best = new Map<string, number>();
   const logs: TrackSearchLog[] = [];
-  for (const actionType of new Set(actionTypes)) {
-    const namespace = namespaceFor(actionType);
-    if (namespace === null) continue;
-    const v = await vector();
-    const scores = v === null ? null : await search(ctx, v, namespace);
+  // `vector` memoizes its promise, so the parallel searches share one embed.
+  const searches = await Promise.all(
+    [...new Set(actionTypes)].flatMap((actionType) => {
+      const namespace = namespaceFor(actionType);
+      if (namespace === null) return [];
+      return [vector().then((v) => (v === null ? null : search(ctx, v, namespace))).then((scores) => ({ actionType, namespace, scores }))];
+    }),
+  );
+  for (const { actionType, namespace, scores } of searches) {
     if (scores === null) {
       console.error("kindling: track search failed, binding on tags", { sessionId, actionType });
       logs.push({ actionType, search: "failed", fallback: true });

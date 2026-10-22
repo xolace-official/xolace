@@ -111,7 +111,7 @@ export async function loadHistory(
 ): Promise<KindlingHistory> {
   const records = new Map<string, KindRecord>();
   const verdicts = new Map<string, Verdict[]>(); // newest first
-  const helpedSlugs = new Set<unknown>(); // one entry helps once, however often tended
+  const readSlugs = new Set<string | undefined>(); // checked once: one entry helps once, however often tended
   const slugVerdicts = new Map<string, Verdict>(); // newest verdict per slugKey
   for (const path of await historyPool(ctx, profileId, matchKeys, now)) {
     for (const step of await stepsOf(ctx, path._id)) {
@@ -130,9 +130,9 @@ export async function loadHistory(
       if (verdict === "skipped") r.skipped++;
       else {
         r.tended++;
-        if (type === "read" && !helpedSlugs.has(stepSlug) && (await readHelped(ctx, profileId, step.params))) {
-          helpedSlugs.add(stepSlug);
-          r.helped++;
+        if (type === "read" && !readSlugs.has(stepSlug)) {
+          readSlugs.add(stepSlug);
+          if (await readHelped(ctx, profileId, step.params)) r.helped++;
         }
       }
       verdicts.set(type, [...(verdicts.get(type) ?? []), verdict]);

@@ -72,7 +72,7 @@ export function KindlingScreen() {
     if (xolacerTwig.pendingId) return;
     const href = twig.kind === "xolacer" ? await xolacerTwig.resolve(twig, kindling.sessionId) : twigHref(twig, kindling.sessionId);
     if (!href) {
-      toast.show({ label: "Not quite ready", description: "Playback is on its way." });
+      toast.show({ label: "Not quite ready", description: "This one is on its way." });
       return;
     }
     posthog.capture("step_started", { pathId: kindling._id, actionType: twig.actionType });

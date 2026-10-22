@@ -18,6 +18,7 @@ const RAW_TEXT = "Work has eaten every evening this month";
 const stub = vi.hoisted(() => ({
   hits: {} as Record<string, number>,
   embedFails: false,
+  searchFails: false,
   limited: false,
   added: [] as { key: string; text: string }[],
   deleted: [] as string[],
@@ -53,6 +54,7 @@ vi.mock("../rag", () => {
       },
       search: async (_ctx: unknown, args: { namespace: string }) => {
         if (args.namespace !== "xolacer") return { entries: [], results: [] };
+        if (stub.searchFails) throw new Error("vector search down");
         const keys = Object.keys(stub.hits);
         return {
           entries: keys.map((key) => ({ entryId: `e_${key}`, key, text: "" })),
@@ -73,6 +75,7 @@ beforeEach(() => {
   process.env.XOLACER_CHAT_ENABLED = "true";
   stub.hits = {};
   stub.embedFails = false;
+  stub.searchFails = false;
   stub.limited = false;
   stub.added = [];
   stub.deleted = [];
@@ -163,6 +166,28 @@ describe("xolacer suggestion on meaning", () => {
     const ranked = await oldPick(seeker, sessionId);
     stub.hits = { [ranked === a ? b : a]: 0.9 };
     stub.embedFails = true;
+
+    expect((await suggest(seeker, sessionId))?.xolacerProfileId).toBe(ranked);
+  });
+
+  it("a failed search falls back to the old ranker, logged as failed", async () => {
+    const { seeker, sessionId } = await seekerSession();
+    const a = await seedXolacer(seeker);
+    const b = await seedXolacer(seeker);
+    const ranked = await oldPick(seeker, sessionId);
+    stub.hits = { [ranked === a ? b : a]: 0.9 };
+    stub.searchFails = true;
+
+    expect((await suggest(seeker, sessionId))?.xolacerProfileId).toBe(ranked);
+    expect(stub.captured[0].properties).toMatchObject({ search: "failed", fallback: true });
+  });
+
+  it("within one 0.05 band, the old ranker's order stands", async () => {
+    const { seeker, sessionId } = await seekerSession();
+    const a = await seedXolacer(seeker);
+    const b = await seedXolacer(seeker);
+    const ranked = await oldPick(seeker, sessionId);
+    stub.hits = { [ranked!]: 0.61, [ranked === a ? b : a]: 0.64 };
 
     expect((await suggest(seeker, sessionId))?.xolacerProfileId).toBe(ranked);
   });

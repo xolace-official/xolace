@@ -54,6 +54,14 @@ crons.interval(
   {}
 );
 
+// Drop xolacer index entries a one-shot removal (pause, deletion) missed (#570).
+crons.interval(
+  "sweep xolacer index",
+  isProd ? { hours: 24 } : { hours: 72 },
+  internal.ai.xolacers.embed.sweepIndex,
+  {}
+);
+
 // Check for gentle return notifications
 crons.interval(
   "check gentle return notifications",

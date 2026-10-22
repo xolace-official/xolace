@@ -50,8 +50,8 @@ export interface BindEntry {
  * overlap it replaced (ADR 0021). One floor per twig type, since each
  * content type's text sits differently against a session's.
  * ponytail: provisional; tune from `path_generated.readTopScore`,
- * `path_generated.trackSearch[].topScore` and `mirror_delivered.exerciseTopScore`;
- * the xolacer floor has no logged score yet.
+ * `path_generated.trackSearch[].topScore`, `mirror_delivered.exerciseTopScore`
+ * and `xolacer_suggestion_ranked.topScore`.
  */
 export const SIMILARITY_FLOOR = { read: 0.3, exercise: 0.3, xolacer: 0.3, track: 0.3 } as const;
 

@@ -2,9 +2,10 @@ import { embed } from "ai";
 import { rag } from "../../rag";
 
 /**
- * Embeds session text once per pass so every consumer of its meaning —
- * episodic recall today; Kindling, exercise matching and the xolacer ranker
- * next (#497) — searches with the same vector instead of re-embedding.
+ * Embeds session text once per pass so every consumer of its meaning in that
+ * pass — episodic recall, Kindling, exercise matching (#497) — searches with
+ * the same vector instead of re-embedding. The xolacer ranker runs in its own
+ * action, so it embeds separately, through this same function.
  *
  * The model comes from the shared `rag` instance, never a second copy: a
  * vector from any other model would be searched against namespaces it was

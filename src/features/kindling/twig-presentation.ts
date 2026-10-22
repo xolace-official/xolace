@@ -6,6 +6,9 @@ import type { api } from "@/convex/_generated/api";
 export type Kindling = NonNullable<FunctionReturnType<typeof api.paths.getActive>>;
 export type Twig = Kindling["twigs"][number];
 
+const BREATHING_IMAGE =
+  "https://energetic-guineapig-283.convex.cloud/api/storage/6d4d937e-8dd9-4e8d-bbd6-3ee58b538988";
+
 /**
  * How each twig family reads on the card and the rail (docs/paths-v1.md
  * §9.1). Audio and music take the bound track's title when the server could
@@ -26,7 +29,7 @@ export const TWIG_PRESENTATION: Record<
     eyebrow: "A few minutes",
     title: "Sit with this",
     actionLabel: "Begin",
-    image: "https://energetic-guineapig-283.convex.cloud/api/storage/6d4d937e-8dd9-4e8d-bbd6-3ee58b538988",
+    image: BREATHING_IMAGE,
   },
   audio: {
     symbol: { ios: "waveform", android: "graphic_eq", web: "graphic_eq" },
@@ -55,7 +58,7 @@ export const TWIG_PRESENTATION: Record<
     title: "A few pages for this",
     actionLabel: "Read",
     // Borrows breathing's until read has an image of its own.
-    image: "https://energetic-guineapig-283.convex.cloud/api/storage/6d4d937e-8dd9-4e8d-bbd6-3ee58b538988",
+    image: BREATHING_IMAGE,
   },
   bridge: {
     symbol: { ios: "envelope", android: "mail", web: "mail" },
@@ -71,7 +74,7 @@ export const TWIG_PRESENTATION: Record<
     title: "Something to try",
     actionLabel: "I did this",
     // Borrows breathing's until try-this has an image of its own.
-    image: "https://energetic-guineapig-283.convex.cloud/api/storage/6d4d937e-8dd9-4e8d-bbd6-3ee58b538988",
+    image: BREATHING_IMAGE,
   },
 };
 

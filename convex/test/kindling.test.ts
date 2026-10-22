@@ -39,6 +39,8 @@ const stub = vi.hoisted(() => ({
   // The Library meaning search (#568): what it returns, and whether the embed fails.
   libraryHits: [] as { key: string; scores: number[] }[],
   embedFails: false,
+  embeds: 0,
+  searchFails: false,
   searched: [] as string[],
   // The track meaning search (#572): hits per namespace, and what got indexed / removed.
   trackHits: {} as Record<string, { key: string; scores: number[] }[]>,
@@ -65,6 +67,7 @@ vi.mock("../rag", () => {
         ...base.rag.options,
         textEmbeddingModel: new MockEmbeddingModelV3({
           doEmbed: async ({ values }) => {
+            stub.embeds++;
             if (stub.embedFails) throw new Error("embeddings down");
             return { embeddings: values.map(() => [0]), warnings: [] };
           },
@@ -73,6 +76,7 @@ vi.mock("../rag", () => {
       // One result per chunk; an entry's score is its best chunk's.
       search: async (_ctx: unknown, args: { namespace: string }) => {
         stub.searched.push(args.namespace);
+        if (stub.searchFails) throw new Error("vector search down");
         const hits = args.namespace === "library" ? stub.libraryHits : (stub.trackHits[args.namespace] ?? []);
         return {
           entries: hits.map((h) => ({ entryId: `e_${h.key}`, key: h.key, text: "" })),
@@ -142,6 +146,8 @@ beforeEach(() => {
   stub.requests = [];
   stub.libraryHits = [];
   stub.embedFails = false;
+  stub.embeds = 0;
+  stub.searchFails = false;
   stub.searched = [];
   stub.trackHits = {};
   stub.indexed = [];
@@ -1412,6 +1418,48 @@ describe("tracks bind on meaning inside the picked topic (#572)", () => {
     const { slug, logged } = await run(user);
     expect(slug).toBe("tagged");
     expect(logged.trackSearch).toEqual([{ actionType: TOPIC, search: "failed", fallback: true }]);
+  });
+
+  it("a search failure binds on tags, is logged, and the kindling still ships", async () => {
+    const user = await asNewUser();
+    await seedTracks(user, [{ slug: "tagged", tags: ["anxiety"] }, { slug: "on-dread" }]);
+    stub.trackHits = { [`track:${TOPIC}`]: [{ key: "on-dread", scores: [0.9] }] };
+    stub.searchFails = true;
+    const { slug, logged } = await run(user);
+    expect(slug).toBe("tagged");
+    expect(logged.trackSearch).toEqual([{ actionType: TOPIC, search: "failed", fallback: true }]);
+  });
+
+  it("embeds the session once per generation, shared by the read and track searches", async () => {
+    const user = await asNewUser();
+    await seedTracks(user, [{ slug: "on-dread" }]);
+    stub.reply = JSON.stringify([twig("read", 1), twig(TOPIC, 2), twig("breathing", 3), twig("xolacer", 4)]);
+    await generate(user, await session(user));
+    expect(stub.searched).toEqual(expect.arrayContaining(["library", `track:${TOPIC}`]));
+    expect(stub.embeds).toBe(1);
+  });
+
+  it("upsertTrack re-embeds only when what the index embeds changed", async () => {
+    const actual = await vi.importActual<typeof import("../ai/paths/audioTracks")>("../ai/paths/audioTracks");
+    const deleteObject = vi.spyOn(actual.r2, "deleteObject").mockResolvedValue(undefined);
+    const user = await asNewUser();
+    const track = {
+      family: "support" as const, slug: "s1", title: "Slow breath", topic: TOPIC, tags: ["calm"], sourceTags: [],
+      key: "k1", thumbKey: "t", durationSec: 60, sha256: "a", thumbSha256: "ta",
+    };
+    const upsert = (over: Partial<typeof track>) =>
+      user.root.mutation(internal.ai.paths.audioTracks.upsertTrack, { track: { ...track, ...over } });
+    const reindexes = async () =>
+      (await scheduledCalls(user.root)).filter((j) => j.name === "ai/paths/trackSearch:indexTrack").length;
+
+    await upsert({});
+    expect(await reindexes()).toBe(1);
+    await upsert({ key: "k2", durationSec: 61 }); // same audio, a field the index never reads
+    await upsert({ key: "k3", sha256: "b" }); // new audio, same index text
+    expect(await reindexes()).toBe(1);
+    await upsert({ key: "k4", title: "Slower breath" });
+    expect(await reindexes()).toBe(2);
+    deleteObject.mockRestore();
   });
 
   it("indexes each track's own text in its topic (and the reframe series); retiring one removes it", async () => {
