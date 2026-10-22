@@ -23,8 +23,8 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@clerk/expo": "^4.6.1",
-    "@clerk/expo-google-signin": "^1.0.2",
+    "@clerk/expo": "^4.14.0",
+    "@clerk/expo-google-signin": "^1.1.0",
     "@config-plugins/react-native-webrtc": "15.0.2",
     "@convex-dev/presence": "^0.4.0",
     "@elevenlabs/react-native": "1.2.30",
