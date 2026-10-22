@@ -17,7 +17,8 @@ export async function embedSessionText(text: string): Promise<number[] | null> {
   try {
     const { embedding } = await embed({ model: rag.options.textEmbeddingModel, value: text });
     return embedding;
-  } catch {
+  } catch (error) {
+    console.error("embedSessionText failed", error);
     return null;
   }
 }

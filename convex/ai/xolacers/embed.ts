@@ -84,7 +84,8 @@ export async function searchXolacers(
       if (key) best[key] = Math.max(best[key] ?? -Infinity, r.score);
     }
     return best;
-  } catch {
+  } catch (error) {
+    console.error("searchXolacers failed", error);
     return undefined;
   }
 }

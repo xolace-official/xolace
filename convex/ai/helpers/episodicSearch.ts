@@ -80,7 +80,8 @@ export async function searchEpisodicMemory(
       matches: retained.map((e) => ({ text: e.text, key: e.key as string })),
       topScore: scores.length > 0 ? Math.max(...scores) : undefined,
     };
-  } catch {
+  } catch (error) {
+    console.error("searchEpisodicMemory failed", error);
     return { matches: [], failed: true };
   }
 }

@@ -61,7 +61,8 @@ export async function searchExercises(
       if (title) best[title] = Math.max(best[title] ?? -Infinity, r.score);
     }
     return best;
-  } catch {
+  } catch (error) {
+    console.error("searchExercises failed", error);
     return undefined;
   }
 }
