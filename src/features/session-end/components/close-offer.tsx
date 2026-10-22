@@ -54,9 +54,11 @@ export const CloseOffer = ({ sessionId, variant }: Props) => {
   useEffect(() => {
     if (!sessionId || !isAuthenticated) return;
     let live = true;
+    // Only fills a slot still waiting: once the hold expires the answer is
+    // settled, and a late result must not swap in a card after the fact.
     fetchSuggestion({ sessionId })
-      .then((s) => live && setSuggestion(s))
-      .catch(() => live && setSuggestion(null));
+      .then((s) => live && setSuggestion((prev) => (prev === undefined ? s : prev)))
+      .catch(() => live && setSuggestion((prev) => prev ?? null));
     return () => {
       live = false;
     };
@@ -78,17 +80,18 @@ export const CloseOffer = ({ sessionId, variant }: Props) => {
   // Bounds the hold. The slot stays empty while the suggestion call is in
   // flight, but an unresolved call — offline, or auth not yet hydrated —
   // would otherwise hold it empty forever and the user would be offered
-  // nothing at all.
-  const [waitedOut, setWaitedOut] = useState(false);
+  // nothing at all. Expiring settles an unresolved call as "no suggestion".
   useEffect(() => {
-    const timer = setTimeout(() => setWaitedOut(true), SUGGESTION_WAIT_MS);
+    const timer = setTimeout(
+      () => setSuggestion((prev) => prev ?? null),
+      SUGGESTION_WAIT_MS,
+    );
     return () => clearTimeout(timer);
   }, []);
 
   const offer = chooseCloseOffer({
     hasSession: sessionId !== undefined,
     suggestion,
-    waitedOut,
     plusOffer: plusOffer !== null,
   });
 
