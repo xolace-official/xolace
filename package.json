@@ -76,7 +76,7 @@
   },
   "patchedDependencies": {
     "@react-native-masked-view/masked-view@0.3.2": "patches/@react-native-masked-view%2Fmasked-view@0.3.2.patch",
-    "uniwind@1.11.0": "patches/uniwind@1.11.0.patch"
+    "uniwind@1.12.2": "patches/uniwind@1.12.2.patch"
   },
   "trustedDependencies": [
     "@clerk/shared",
