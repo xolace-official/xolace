@@ -11,19 +11,24 @@ import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { seedMetadata, seedSession } from "./fixtures.helpers";
 import { asNewUser, type SeededUser } from "./harness.helpers";
-import { aggregatesMock, ragMock } from "./mocks.helpers";
+import { aggregatesMock, ragMock, rateLimiterMock } from "./mocks.helpers";
 
 const RAW_TEXT = "Work has eaten every evening this month";
 
 const stub = vi.hoisted(() => ({
   hits: {} as Record<string, number>,
   embedFails: false,
+  limited: false,
   added: [] as { key: string; text: string }[],
   deleted: [] as string[],
   captured: [] as { event: string; properties: Record<string, unknown> }[],
 }));
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
+vi.mock("../lib/rateLimits", async (orig) => ({
+  ...(await orig<typeof import("../lib/rateLimits")>()),
+  ...rateLimiterMock(() => ({ ok: !stub.limited })),
+}));
 vi.mock("../posthog", () => ({
   posthog: { capture: async (_ctx: unknown, e: (typeof stub.captured)[number]) => void stub.captured.push(e) },
 }));
@@ -68,6 +73,7 @@ beforeEach(() => {
   process.env.XOLACER_CHAT_ENABLED = "true";
   stub.hits = {};
   stub.embedFails = false;
+  stub.limited = false;
   stub.added = [];
   stub.deleted = [];
   stub.captured = [];
@@ -157,6 +163,17 @@ describe("xolacer suggestion on meaning", () => {
     const ranked = await oldPick(seeker, sessionId);
     stub.hits = { [ranked === a ? b : a]: 0.9 };
     stub.embedFails = true;
+
+    expect((await suggest(seeker, sessionId))?.xolacerProfileId).toBe(ranked);
+  });
+
+  it("over the rate limit, the old ranker alone", async () => {
+    const { seeker, sessionId } = await seekerSession();
+    const a = await seedXolacer(seeker);
+    const b = await seedXolacer(seeker);
+    const ranked = await oldPick(seeker, sessionId);
+    stub.hits = { [ranked === a ? b : a]: 0.9 };
+    stub.limited = true;
 
     expect((await suggest(seeker, sessionId))?.xolacerProfileId).toBe(ranked);
   });

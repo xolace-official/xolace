@@ -5,6 +5,7 @@ import { internal } from "../../_generated/api";
 import { suggestionValidator } from "../../xolacerChat";
 import { SIMILARITY_FLOOR, similarityBand } from "../paths/bind";
 import { posthog } from "../../posthog";
+import { rateLimiter } from "../../lib/rateLimits";
 import { searchXolacers } from "./embed";
 
 type Suggestion = Infer<typeof suggestionValidator>;
@@ -21,6 +22,9 @@ type Suggestion = Infer<typeof suggestionValidator>;
  * chat is never linked to a person's reflections. Not reactive: callers ask
  * once.
  *
+ * The embed is rate limited per profile (`xolacerSuggestion`); past it the
+ * old ranker answers alone, so a caller is never refused.
+ *
  * Logs how close the best candidate came, to tune SIMILARITY_FLOOR.xolacer
  * (#574) — the score and the fallback only, never who was chosen.
  */
@@ -34,7 +38,12 @@ export const sessionSuggestion = action({
     const { emotionalProfileId, rawInput, candidates } = eligible;
     const log = (search: "ran" | "failed" | "skipped", topScore?: number) =>
       logSearch(ctx, emotionalProfileId, candidates, search, topScore);
-    if (candidates.length === 1 || !rawInput) {
+    // Over the bucket, the old ranker alone: only the embed spends a token.
+    if (
+      candidates.length === 1 ||
+      !rawInput ||
+      !(await rateLimiter.limit(ctx, "xolacerSuggestion", { key: emotionalProfileId })).ok
+    ) {
       await log("skipped");
       return candidates[0];
     }
