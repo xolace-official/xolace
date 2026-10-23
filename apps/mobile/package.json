@@ -33,6 +33,7 @@
     "@expo-google-fonts/space-grotesk": "^0.4.1",
     "@expo/material-symbols": "^0.1.1",
     "@expo/metro-runtime": "~58.0.14",
+    "@expo/ui": "~58.0.22",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@legendapp/list": "^3.3.9",
     "@livekit/react-native": "3.0.0",
