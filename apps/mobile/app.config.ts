@@ -1,4 +1,5 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import { assertProductionEnvironment } from "./release/production-guard.ts";
 
 function requireEnv(name: string, value: string | undefined): string {
 	if (!value) {
@@ -15,6 +16,10 @@ function requireEnv(name: string, value: string | undefined): string {
 
 const IS_DEV = process.env.APP_VARIANT === "development";
 const IS_PREVIEW = process.env.APP_VARIANT === "preview";
+
+// Throws on test config or secret-looking EXPO_PUBLIC_* values, but only for a
+// production EAS build or `eas update` export (see release/production-guard.ts).
+assertProductionEnvironment();
 
 const getUniqueIdentifier = () => {
 	if (IS_DEV) {
