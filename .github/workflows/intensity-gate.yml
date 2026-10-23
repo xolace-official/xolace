@@ -7,7 +7,7 @@ name: Intensity gate
 # in packages/backend/convex/compounding/steadiness.test.ts.
 on:
   pull_request:
-    branches: [dev, default]
+    branches: [dev, main]
     paths:
       - packages/backend/convex/ai/providers/anthropic.ts
       - packages/backend/convex/ai/prompts/classifier.ts

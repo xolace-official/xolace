@@ -6,7 +6,7 @@ name: Talk gate
 # when one of these moves.
 on:
   pull_request:
-    branches: [dev, default]
+    branches: [dev, main]
     paths:
       - packages/backend/convex/ai/prompts/companion.ts
       - packages/backend/convex/ai/talk/**
