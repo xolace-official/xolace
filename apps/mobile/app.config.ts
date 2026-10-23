@@ -357,8 +357,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 	// Production OTAs only reach binaries with the same native fingerprint, so a
 	// JS update can never land on a build missing a native module it needs.
 	// Development and preview keep appVersion. Store builds made before this
-	// switch (runtime "1.15.0") get no OTAs published under fingerprint runtimes;
-	// the next production release must ship a store build.
+	// switch (the shipped 1.14.0, runtime "1.14.0") get no OTAs published under
+	// fingerprint runtimes; 1.15.0 ships as the first fingerprint store build.
 	runtimeVersion: {
 		policy: IS_PRODUCTION ? "fingerprint" : "appVersion",
 	},

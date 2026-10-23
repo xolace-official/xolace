@@ -54,7 +54,7 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   Action after the prod Convex deploy; by hand: `bunx eas-cli workflow:run release.yml`
   here (`-F force_native=true` for new binaries). Agents never run it.
 - Production `runtimeVersion` is `{ policy: "fingerprint" }`; development and preview
-  keep `appVersion`. Store builds from before the switch (runtime `1.15.0`) get no
+  keep `appVersion`. Store builds from before the switch (shipped `1.14.0`) get no
   fingerprint-runtime OTAs.
 - `fingerprint.config.js` drops JS-only `extra` keys (Google client ids, PostHog,
   RevenueCat) so per-environment values don't fake a native change, and adds the
