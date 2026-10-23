@@ -23,3 +23,9 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.12.4" }
 tauri-plugin-log = "2"
+
+# Desktop-only plugins (the updater has no mobile implementation). Cargo.lock pins
+# the exact versions; CI builds with --locked.
+[target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
+tauri-plugin-updater = "2.14.0"
+tauri-plugin-dialog = "2.8.3"
