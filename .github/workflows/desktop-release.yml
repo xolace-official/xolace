@@ -1,0 +1,257 @@
+name: Desktop release
+
+# Builds the Tauri desktop app (apps/desktop) for macOS, Windows and Linux.
+#
+# - Push a tag `desktop-v<version>` (version = apps/desktop/package.json) to build
+#   and attach installers + updater artifacts to a DRAFT GitHub release. Publishing
+#   the draft is a manual step; once published, installed apps pick the update up
+#   from releases/latest/download/latest.json.
+# - workflow_dispatch builds the same matrix without a release and uploads the
+#   bundles as workflow artifacts (a dry run).
+#
+# Every secret below is optional. Without them the build is unsigned and has no
+# updater artifacts, but it still produces installers:
+#   TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD  updater signing
+#   APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY  macOS codesign
+#   APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID  macOS notarization
+#   WINDOWS_CERTIFICATE, WINDOWS_CERTIFICATE_PASSWORD  Windows Authenticode (.pfx)
+# The web static export reads repository/environment variables (public values):
+#   NEXT_PUBLIC_CONVEX_URL, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+#
+# Known blocker (2026-10): apps/web's TAURI_BUILD=1 export fails ("Server Actions
+# are not supported with static export") because @clerk/nextjs's app-router
+# ClerkProvider imports server actions. Desktop drops Clerk web components in
+# Phase 4e; until then this workflow fails at beforeBuildCommand.
+
+on:
+  push:
+    tags: ["desktop-v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  FORCE_COLOR: "1"
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  # Checks the tag against the single version source and creates the draft release.
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # create the draft release
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release-id: ${{ steps.release.outputs.id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read version and check the tag
+        id: version
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          version="$(jq -r .version apps/desktop/package.json)"
+          if [[ -z "$version" || "$version" == "null" ]]; then
+            echo "::error::apps/desktop/package.json has no version."
+            exit 1
+          fi
+          conf_version="$(jq -r .version apps/desktop/src-tauri/tauri.conf.json)"
+          if [[ "$conf_version" != "../package.json" ]]; then
+            echo "::error::tauri.conf.json must take its version from ../package.json (found '$conf_version')."
+            exit 1
+          fi
+          if [[ "$REF_TYPE" == "tag" && "$REF_NAME" != "desktop-v$version" ]]; then
+            echo "::error::Tag $REF_NAME does not match apps/desktop/package.json version $version (expected desktop-v$version)."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Create draft release
+        id: release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # Re-runs reuse the existing draft instead of failing on a duplicate tag.
+          id="$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+            --jq ".[] | select(.tag_name == \"$TAG\") | .id" | head -n1)"
+          if [[ -z "$id" ]]; then
+            id="$(gh api "repos/$GITHUB_REPOSITORY/releases" -X POST \
+              -f tag_name="$TAG" -f name="Xolace Desktop $VERSION" \
+              -f body="Xolace Desktop $VERSION. See the assets below to download." \
+              -F draft=true -F prerelease=false --jq .id)"
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build (${{ matrix.name }})
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS universal
+            os: macos-latest
+            rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
+            args: --target universal-apple-darwin
+          - name: Windows x64
+            os: windows-latest
+            rust-targets: ""
+            args: ""
+          - name: Linux x64
+            os: ubuntu-22.04
+            rust-targets: ""
+            args: ""
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    environment: desktop-release
+    permissions:
+      contents: write # upload release assets
+    defaults:
+      run:
+        shell: bash
+    env:
+      TAURI_BUILD: "1"
+      NEXT_PUBLIC_CONVEX_URL: ${{ vars.NEXT_PUBLIC_CONVEX_URL }}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+      # apps/web/.env.schema requires CLERK_SECRET_KEY, but the static export never
+      # uses it and a desktop bundle must never contain it. This is NOT a key.
+      CLERK_SECRET_KEY: sk_unused_in_static_export
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Tag builds ship to users, so they must not be built against test config.
+      - name: Check production web config
+        if: github.ref_type == 'tag'
+        run: |
+          if [[ -z "$NEXT_PUBLIC_CONVEX_URL" || "$NEXT_PUBLIC_CONVEX_URL" != https://*.convex.cloud ]]; then
+            echo "::error::Set the NEXT_PUBLIC_CONVEX_URL variable (prod *.convex.cloud URL) on the desktop-release environment."
+            exit 1
+          fi
+          if [[ "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" != pk_live_* ]]; then
+            echo "::error::NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY must be a pk_live_ key for release builds."
+            exit 1
+          fi
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Add Rust targets
+        if: matrix.rust-targets != ''
+        env:
+          RUST_TARGETS: ${{ matrix.rust-targets }}
+        run: |
+          IFS=, read -ra targets <<< "$RUST_TARGETS"
+          rustup target add "${targets[@]}"
+
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+          key: ${{ matrix.rust-targets }}
+
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache-key: desktop-release
+
+      # Exports only the optional secrets that are set: the Tauri bundler treats a
+      # present-but-empty APPLE_CERTIFICATE as "sign", and fails.
+      - name: Wire optional signing secrets
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          names=(TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD)
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            names+=(APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID)
+          fi
+          for name in "${names[@]}"; do
+            if [[ -n "${!name}" ]]; then
+              delimiter="EOF_$(openssl rand -hex 16)"
+              printf '%s<<%s\n%s\n%s\n' "$name" "$delimiter" "${!name}" "$delimiter" >> "$GITHUB_ENV"
+              echo "$name: set"
+            else
+              echo "$name: not set"
+            fi
+          done
+
+      - name: Import Windows signing certificate
+        id: wincert
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if (-not $env:WINDOWS_CERTIFICATE) {
+            Write-Output "WINDOWS_CERTIFICATE: not set, building unsigned"
+            exit 0
+          }
+          $pfx = Join-Path $env:RUNNER_TEMP "certificate.pfx"
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE))
+          $password = ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -Force -AsPlainText
+          $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $password
+          Remove-Item $pfx
+          "thumbprint=$($cert.Thumbprint)" >> $env:GITHUB_OUTPUT
+
+      # Config merged over tauri.conf.json for this build only. Updater artifacts
+      # need the private key, so they are switched on only when it is present.
+      - name: Write CI Tauri config
+        id: tauriconfig
+        env:
+          WINDOWS_THUMBPRINT: ${{ steps.wincert.outputs.thumbprint }}
+        run: |
+          config='{}'
+          if [[ -n "${TAURI_SIGNING_PRIVATE_KEY:-}" ]]; then
+            if jq -e '.plugins.updater.pubkey | startswith("REPLACE_")' apps/desktop/src-tauri/tauri.conf.json > /dev/null; then
+              echo "::error::TAURI_SIGNING_PRIVATE_KEY is set but plugins.updater.pubkey in tauri.conf.json is still the placeholder. Commit the public key first."
+              exit 1
+            fi
+            config="$(jq '.bundle.createUpdaterArtifacts = true' <<< "$config")"
+          else
+            echo "::warning::TAURI_SIGNING_PRIVATE_KEY is not set: no updater artifacts or latest.json for this build."
+          fi
+          if [[ -n "${WINDOWS_THUMBPRINT:-}" ]]; then
+            config="$(jq --arg t "$WINDOWS_THUMBPRINT" '.bundle.windows = {certificateThumbprint: $t, digestAlgorithm: "sha256", timestampUrl: "http://timestamp.digicert.com"}' <<< "$config")"
+          fi
+          path="$RUNNER_TEMP/tauri.ci.conf.json"
+          printf '%s\n' "$config" > "$path"
+          echo "path=$path" >> "$GITHUB_OUTPUT"
+
+      # beforeBuildCommand (tauri.conf.json) builds apps/web's static export with
+      # TAURI_BUILD=1 through turbo, so codegen runs first.
+      - name: Build and upload
+        uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # action-v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          projectPath: apps/desktop
+          tauriScript: bunx tauri
+          args: ${{ matrix.args }} --config ${{ steps.tauriconfig.outputs.path }}
+          releaseId: ${{ needs.prepare.outputs.release-id }}
+          uploadUpdaterJson: ${{ needs.prepare.outputs.release-id != '' }}
+          uploadWorkflowArtifacts: ${{ needs.prepare.outputs.release-id == '' }}
+          workflowArtifactNamePattern: xolace-desktop-[platform]-[arch]-[bundle]
