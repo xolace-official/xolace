@@ -16,7 +16,23 @@ from `xolace_app/convex` in Phase 2. Full rules: `.agents/rules/convex.md`.
   request: `bun run test:evals` (or `:intensity` / `:talk`), with
   `ANTHROPIC_API_KEY` set.
 - Never: `convex deploy`, `convex dev` against a shared/prod deployment,
-  `convex env set` on prod. Releases deploy Convex (Phase 3).
+  `convex env set` on prod. Only the release pipeline deploys Convex (below).
+
+## Deploy topology
+
+- **Only the web Vercel build deploys Convex.** `apps/web/vercel.json` runs
+  `apps/web/scripts/vercel-build.ts`: `convex deploy` from this package, then
+  `turbo run build -F @xolace/web` with `NEXT_PUBLIC_CONVEX_URL` injected. It refuses
+  to run off Vercel, under `TAURI_BUILD`, or with a key that doesn't match `VERCEL_ENV`.
+- **Keys:** `CONVEX_DEPLOY_KEY` lives only in the web Vercel project: the prod key on
+  Production, the preview key on Preview (one preview deployment per git branch,
+  starts empty). Never in admin, GitHub, EAS or a local `.env`.
+- **Admin** reads `NEXT_PUBLIC_CONVEX_URL` from its own Vercel env and fails its build
+  if `CONVEX_DEPLOY_KEY` is set. Desktop and local builds never deploy.
+- **Mobile after backend:** a successful Vercel Production deploy of web triggers
+  `.github/workflows/mobile-release.yml`, which starts the EAS
+  `apps/mobile/.eas/workflows/release.yml` (OTA or store build). So mobile JS always
+  ships against a backend that's already live; the store-gap rule still applies.
 
 ## Public surface
 

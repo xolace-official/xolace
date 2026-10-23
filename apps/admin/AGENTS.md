@@ -30,7 +30,10 @@ bundled into the user web app or desktop.
 
 ## Gotchas
 
-- Admin never deploys Convex; it points at the same deployment URL as web.
+- Admin never deploys Convex; it points at the same deployment URL as web
+  (`NEXT_PUBLIC_CONVEX_URL` in this project's Vercel env). `vercel.json` runs a plain
+  `turbo run build -F @xolace/admin`, and `next.config.ts` fails the build if
+  `CONVEX_DEPLOY_KEY` is set. Topology: `packages/backend/AGENTS.md`.
 - Content ingestion uploads straight from the browser to storage, then one upsert
   mutation keyed by `slug` + `contentHash`; unchanged items are no-ops. Don't
   reintroduce "re-upload everything" flows.
