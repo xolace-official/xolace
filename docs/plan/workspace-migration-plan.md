@@ -52,7 +52,7 @@ xolace/                                  (fresh clone of xolace_app, history kep
 ├─ .agents/rules/*.md                    short topic rules (convex, expo-metro, testing, env, release)
 ├─ .agents/skills/                       repo skills (test-mobile, test-web, pr-watch …); .claude/skills symlinks here
 ├─ .github/
-│  ├─ workflows/  ci.yml · convex-deploy.yml · mobile-fingerprint.yml · eas-update.yml
+│  ├─ workflows/  ci.yml · release.yml · mobile-fingerprint.yml · desktop-release.yml
 │  │              desktop-release.yml · evals-gate.yml (from intensity/talk gates) · security-audit.yml
 │  ├─ CODEOWNERS (repo-relative paths) · pull_request_template.md · ISSUE_TEMPLATE/*.yml
 │  └─ actions/setup/ (bun pin + cache)
@@ -211,7 +211,7 @@ Run it in a fresh clone of `xolace_app` (e.g. `repos/xolace`), on a `migration/m
   - if a compatible store build exists, JS-only changes ship as an `eas update` (OTA);
   - otherwise it builds and submits to TestFlight and Play internal.
   - Production uses `runtimeVersion.policy: fingerprint`; dev and preview keep `appVersion`.
-- **Convex:** deploy from a single place. Vercel's `web` build runs `convex deploy --cmd 'turbo run build -F @xolace/web'`, with deploy keys for preview and prod. Admin points at the same deployment URL and never deploys Convex itself.
+- **Convex:** deploy from a single place: `.github/workflows/release.yml` on every push to `main` runs `convex deploy` to prod (key in the GitHub `production` environment), then starts the clients: the EAS mobile release when mobile files changed, and Vercel deploy hooks for web and admin. Vercel's own Git deploys of `main` are off, and web and admin are plain builds that read `NEXT_PUBLIC_CONVEX_URL` and fail if a deploy key is present. *(Changed 2026-10-23 from "Vercel's web build runs `convex deploy`", so the backend never depends on a client build. Setup: `docs/setup/release.md`.)*
 - **Desktop:** tag-triggered `tauri build` plus the updater. Set a real identifier and a CSP that allows `*.convex.cloud` and the Clerk domain.
 - **Live evals gate:** carry over the existing intensity and talk eval gates.
 
@@ -286,6 +286,12 @@ These become the table in CONTRIBUTING.md.
 - **EAS Workflows** (`.eas/workflows/`) runs anything that builds mobile: the PR E2E build, argent flows, the exploratory run, and release.
 - **One PR comment.** A single summary comment gathers the results: pass/fail, screenshots, recordings and junit. Artifacts are uploaded.
 - **Optional label-gated OTA preview.** Adding the `preview-approved` label publishes the PR to EAS branch `pr-<n>` from an EAS environment that holds no secrets, and posts a QR code (the clarity pattern).
+- **Per-PR Convex preview backend (same label, built with the E2E work).** Today PR previews of web/admin and preview OTAs all use the shared dev deployment, so a PR's backend changes aren't in its preview. When the label is added, a PR workflow:
+  1. runs `convex deploy --preview-create pr-<n>` with a Convex **preview** deploy key (GitHub secret), then seeds it through the §5.3 test functions;
+  2. points the `pr-<n>` OTA preview at that deployment;
+  3. deploys a web preview against it through the Vercel CLI (`VERCEL_TOKEN`), since Vercel's Git previews can't know the URL.
+
+  Needs: a Convex plan with preview deployments, and project-level default env vars for preview deployments (Clerk issuer, PostHog, model keys), because each one starts empty. Previews are deleted when the PR closes. Only on the label, never on every PR.
 
 ### 5.5 Proof required in PRs (goes into AGENTS.md)
 
