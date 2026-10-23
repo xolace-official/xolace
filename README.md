@@ -92,21 +92,11 @@ Bun's automatic env loading is disabled in `bunfig.toml`; the framework integrat
 
 ## Deployment
 
-### Vercel Services
-
-- Target: web
-- Config: `vercel.json`
-- Link the project first: bun run deploy:setup
-- Local Vercel dev: bun run dev:vercel
-- Sync preview env: bun run env:preview
-- Sync production env: bun run env:production
-- Dry-run check (no upload): bun run deploy:check
-- Preview deploy: bun run deploy
-- Production deploy: bun run deploy:prod
-  Vercel Services share project environment variables, but deploys do not upload local `.env` files automatically. Link the project with `vercel link`, then run the env sync command before your first deploy (otherwise the deployment starts with no env vars), or pass one-off envs with `vercel deploy -e KEY=value`.
-  Pass Vercel CLI flags to the env sync command directly, for example: `bun run env:production --scope your-team`.
-
-For more details, see the guide on [Deploying to Vercel](https://www.better-t-stack.dev/docs/guides/vercel).
+Merging `dev` into `main` is a release. `.github/workflows/release.yml` deploys Convex
+to prod first, then starts the clients: the EAS mobile release
+(`apps/mobile/.eas/workflows/release.yml`) and Vercel deploy hooks for web and admin
+(two Vercel projects rooted at `apps/web` and `apps/admin`). Nothing deploys from a
+laptop. Setup: [docs/setup/release.md](docs/setup/release.md).
 
 ## Git Hooks and Formatting
 
@@ -142,10 +132,3 @@ xolace/
 - `bun run test`: Run tests
 - `bun run codegen`: Run code generation (Varlock env types, fumadocs sources)
 - `bun run check` / `bun run fix`: Run Ultracite (Biome) across the repo
-- `bun run deploy:setup`: Link this repo to a Vercel project (first-time setup)
-- `bun run dev:vercel`: Run the Vercel Services dev environment locally
-- `bun run env:preview`: Sync local env files to the Vercel preview environment
-- `bun run env:production`: Sync local env files to the Vercel production environment
-- `bun run deploy`: Create a Vercel preview deployment
-- `bun run deploy:prod`: Deploy to Vercel production
-- `bun run deploy:check`: Dry-run a deploy to preview framework detection and included files without uploading

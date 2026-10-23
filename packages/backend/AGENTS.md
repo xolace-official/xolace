@@ -16,7 +16,20 @@ from `xolace_app/convex` in Phase 2. Full rules: `.agents/rules/convex.md`.
   request: `bun run test:evals` (or `:intensity` / `:talk`), with
   `ANTHROPIC_API_KEY` set.
 - Never: `convex deploy`, `convex dev` against a shared/prod deployment,
-  `convex env set` on prod. Releases deploy Convex (Phase 3).
+  `convex env set` on prod. Only the release pipeline deploys Convex (below).
+
+## Deploy topology
+
+- **Only `.github/workflows/release.yml` deploys Convex**, on every push to `main`:
+  `convex deploy` to prod first, then the clients (EAS mobile release, Vercel deploy
+  hooks for web and admin). The backend never waits on a client build.
+- **Key:** the prod `CONVEX_DEPLOY_KEY` is a secret of the GitHub `production`
+  environment, and nowhere else: not Vercel, EAS or a local `.env`.
+- **Web and admin** are plain builds reading `NEXT_PUBLIC_CONVEX_URL` from Vercel env
+  (prod URL on Production, the shared dev deployment on Preview); both fail their
+  build if `CONVEX_DEPLOY_KEY` is set. Desktop and local builds never deploy.
+- Clients ship after the backend is live; the store-gap rule still applies to binaries
+  already in users' hands. Setup: `docs/setup/release.md`.
 
 ## Public surface
 

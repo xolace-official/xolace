@@ -26,6 +26,12 @@ Clerk via `@clerk/nextjs`, Convex). Two builds from one codebase:
   Clerk server helpers. Desktop signs in with OAuth + PKCE, not Clerk web components.
   Test with `TAURI_BUILD=1 bun run build` when you touch routing, auth or data loading.
 - Env: names in `.env.schema`, values in Vercel env. `NEXT_PUBLIC_*` is public.
+- **Web never deploys Convex.** `vercel.json` runs a plain
+  `turbo run build -F @xolace/web`; `NEXT_PUBLIC_CONVEX_URL` comes from Vercel env, and
+  `next.config.ts` fails the build if `CONVEX_DEPLOY_KEY` is set. Production deploys
+  come only from `.github/workflows/release.yml` (a deploy hook, after `convex deploy`);
+  Vercel's own Git deploys of `main` are off (`git.deploymentEnabled`). Setup:
+  `docs/setup/release.md`.
 - `.env` here may be a symlink to the main worktree; don't edit it in place.
 - Next.js 16 differs from training data; read `node_modules/next/dist/docs/` before
   using an API you are unsure of.

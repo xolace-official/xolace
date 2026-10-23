@@ -37,7 +37,6 @@
 /tsconfig.json          @xolace-official/core
 /.gitignore             @xolace-official/core
 /.husky/                @xolace-official/core
-/vercel.json            @xolace-official/core
 
 # Agent and contributor guidance
 /AGENTS.md              @xolace-official/core
