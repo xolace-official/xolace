@@ -92,12 +92,11 @@ Bun's automatic env loading is disabled in `bunfig.toml`; the framework integrat
 
 ## Deployment
 
-- **Web and admin** deploy as two Vercel projects from this repo (Root Directory
-  `apps/web` and `apps/admin`, config in each app's `vercel.json`). Only the web build
-  deploys Convex. Setup: [docs/setup/vercel.md](docs/setup/vercel.md).
-- **Mobile** releases through EAS (`apps/mobile/.eas/workflows/release.yml`), started
-  after a successful web Production deploy.
-- Nothing deploys from a laptop.
+Merging `dev` into `main` is a release. `.github/workflows/release.yml` deploys Convex
+to prod first, then starts the clients: the EAS mobile release
+(`apps/mobile/.eas/workflows/release.yml`) and Vercel deploy hooks for web and admin
+(two Vercel projects rooted at `apps/web` and `apps/admin`). Nothing deploys from a
+laptop. Setup: [docs/setup/release.md](docs/setup/release.md).
 
 ## Git Hooks and Formatting
 

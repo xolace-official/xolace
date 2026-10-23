@@ -1,0 +1,156 @@
+name: Release
+
+# The production release, on every push to main (a dev -> main merge).
+#
+#   backend: convex deploy to prod  (the ONLY place that deploys Convex)
+#     ├─ mobile: start the EAS release workflow (OTA or store build),
+#     │          when mobile-relevant files changed
+#     └─ web, admin: trigger their Vercel Production deploy hooks
+#
+# Backend first, then clients: no client can go live against a backend that
+# isn't deployed yet, and the backend never waits on a client build. Vercel's own
+# Git deploys of main are switched off (git.deploymentEnabled in each app's
+# vercel.json), so the deploy hooks below are the only way web and admin reach
+# Production. Setup: docs/setup/release.md.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      mobile:
+        type: choice
+        options: [auto, always, skip]
+        default: auto
+        description: "Mobile release: auto (only if mobile files changed), always, or skip"
+
+# One release at a time, in order, never cancelled half-way.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  FORCE_COLOR: "1"
+  EAS_CLI_VERSION: 24.12.1
+
+jobs:
+  backend:
+    name: Deploy Convex (prod)
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # CONVEX_DEPLOY_KEY is a secret of this GitHub environment, so it can be given
+    # required reviewers and is only readable by jobs that name it.
+    environment: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: "false"
+          ignore-scripts: "true"
+
+      - name: convex deploy
+        working-directory: packages/backend
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [[ "$CONVEX_DEPLOY_KEY" != prod:* ]]; then
+            echo "::error::The production environment's CONVEX_DEPLOY_KEY secret is missing or not a production key."
+            exit 1
+          fi
+          bunx convex deploy --message "release $SHA"
+
+  mobile:
+    name: Start EAS mobile release
+    needs: backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Decide whether mobile changed
+        id: gate
+        env:
+          MODE: ${{ inputs.mobile || 'auto' }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [[ "$MODE" == "skip" ]]; then
+            echo "release=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if [[ "$MODE" == "always" || -z "$BEFORE" || "$BEFORE" =~ ^0+$ ]]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # What the app bundle is built from: its own code, the backend API types
+          # it imports, dependencies and patches.
+          if git diff --name-only "$BEFORE" "$SHA" -- \
+              apps/mobile packages/backend/convex/_generated \
+              package.json bun.lock patches | grep -q .; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No mobile-relevant changes in $BEFORE..$SHA; no mobile release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # eas-cli evaluates apps/mobile/app.config.ts, which needs the workspace
+      # installed. No lifecycle scripts: nothing native runs here.
+      - name: Setup workspace
+        if: steps.gate.outputs.release == 'true'
+        uses: ./.github/actions/setup
+        with:
+          turbo-cache: "false"
+          ignore-scripts: "true"
+
+      - name: Run EAS release workflow
+        if: steps.gate.outputs.release == 'true'
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # app.config.ts throws on missing build env vars when CI=true. Those
+          # values live in EAS env and are only needed on the EAS runners; here
+          # eas-cli only reads the project id.
+          CI: "false"
+        run: |
+          if [[ -z "$EXPO_TOKEN" ]]; then
+            echo "::error::The EXPO_TOKEN secret is not set."
+            exit 1
+          fi
+          bunx "eas-cli@${EAS_CLI_VERSION}" workflow:run .eas/workflows/release.yml --non-interactive
+
+  web:
+    name: Deploy ${{ matrix.app }} (Vercel Production)
+    needs: backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: web
+            hook: VERCEL_DEPLOY_HOOK_WEB
+          - app: admin
+            hook: VERCEL_DEPLOY_HOOK_ADMIN
+    steps:
+      # Deploy hooks build the tip of main. Release runs never overlap
+      # (concurrency above), so that's this commit or a newer one queued behind.
+      - name: Trigger the deploy hook
+        env:
+          HOOK_URL: ${{ secrets[matrix.hook] }}
+          HOOK_NAME: ${{ matrix.hook }}
+        run: |
+          if [[ -z "$HOOK_URL" ]]; then
+            echo "::warning::$HOOK_NAME is not set; ${{ matrix.app }} was not deployed."
+            exit 0
+          fi
+          curl --fail --silent --show-error -X POST "$HOOK_URL" > /dev/null
+          echo "Vercel Production deploy queued for ${{ matrix.app }}."

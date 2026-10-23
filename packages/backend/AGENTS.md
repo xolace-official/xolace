@@ -20,21 +20,16 @@ from `xolace_app/convex` in Phase 2. Full rules: `.agents/rules/convex.md`.
 
 ## Deploy topology
 
-- **Only the web Vercel build deploys Convex.** `apps/web/vercel.json` runs
-  `apps/web/scripts/vercel-build.ts`: `convex deploy` from this package, then
-  `turbo run build -F @xolace/web` with `NEXT_PUBLIC_CONVEX_URL` injected. It refuses
-  to run off Vercel, under `TAURI_BUILD`, or with a key that doesn't match `VERCEL_ENV`.
-- **Keys:** `CONVEX_DEPLOY_KEY` lives only in the web Vercel project: the prod key on
-  Production, and optionally a preview key on Preview (one preview deployment per git
-  branch, starts empty). Without a preview key, web previews build against the shared
-  dev deployment and deploy nothing. Never in admin, GitHub, EAS or a local `.env`.
-  Setup: `docs/setup/vercel.md`.
-- **Admin** reads `NEXT_PUBLIC_CONVEX_URL` from its own Vercel env and fails its build
-  if `CONVEX_DEPLOY_KEY` is set. Desktop and local builds never deploy.
-- **Mobile after backend:** a successful Vercel Production deploy of web triggers
-  `.github/workflows/mobile-release.yml`, which starts the EAS
-  `apps/mobile/.eas/workflows/release.yml` (OTA or store build). So mobile JS always
-  ships against a backend that's already live; the store-gap rule still applies.
+- **Only `.github/workflows/release.yml` deploys Convex**, on every push to `main`:
+  `convex deploy` to prod first, then the clients (EAS mobile release, Vercel deploy
+  hooks for web and admin). The backend never waits on a client build.
+- **Key:** the prod `CONVEX_DEPLOY_KEY` is a secret of the GitHub `production`
+  environment, and nowhere else: not Vercel, EAS or a local `.env`.
+- **Web and admin** are plain builds reading `NEXT_PUBLIC_CONVEX_URL` from Vercel env
+  (prod URL on Production, the shared dev deployment on Preview); both fail their
+  build if `CONVEX_DEPLOY_KEY` is set. Desktop and local builds never deploy.
+- Clients ship after the backend is live; the store-gap rule still applies to binaries
+  already in users' hands. Setup: `docs/setup/release.md`.
 
 ## Public surface
 
