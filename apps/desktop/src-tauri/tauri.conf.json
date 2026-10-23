@@ -1,13 +1,13 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Xolace",
-  "version": "0.1.0",
+  "version": "../package.json",
   "identifier": "com.xolaceincorg.xolace.desktop",
   "build": {
     "frontendDist": "../../web/out",
     "devUrl": "http://localhost:3001",
     "beforeDevCommand": "bun --filter @xolace/web dev",
-    "beforeBuildCommand": "bun --filter @xolace/web build"
+    "beforeBuildCommand": "bunx turbo run build --filter=@xolace/web"
   },
   "app": {
     "windows": [
