@@ -96,7 +96,7 @@ the ones a row doesn't belong to.
 
 | Name | Production | Preview |
 |---|---|---|
-| `NEXT_PUBLIC_CONVEX_URL` | `https://energetic-guineapig-283.convex.cloud` | `https://groovy-mandrill-892.convex.cloud` |
+| `NEXT_PUBLIC_CONVEX_URL` | `https://energetic-guineapig-283.convex.cloud` | `https://groovy-mandrill-892.eu-west-1.convex.cloud` |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_live_…` | `pk_test_…` |
 | `CLERK_SECRET_KEY` | `sk_live_…` (Sensitive) | `sk_test_…` (Sensitive) |
 
