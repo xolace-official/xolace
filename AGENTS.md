@@ -22,7 +22,7 @@ docs are still placeholders until Phase 4. Plan and decisions:
 | `packages/backend` | `@xolace/backend` | Convex functions, schema, auth config; the contract every client uses |
 | `packages/ui` | `@xolace/ui` | Web-only shadcn components shared by web + admin |
 | `packages/config` | `@xolace/config` | Shared tsconfig bases |
-| `scripts/` | (root) | `check-changed.ts`, `setup-worktree.ts`, env sync |
+| `scripts/` | (root) | `check-changed.ts`, `setup-worktree.ts` |
 | `.agents/rules/` | | Topic rules; index in `.agents/README.md` |
 
 Each app/package has its own `AGENTS.md` with commands, boundaries and gotchas. Read it
