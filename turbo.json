@@ -28,6 +28,7 @@
         "VERCEL_URL",
         "VERCEL_PROJECT_PRODUCTION_URL"
       ],
+      "passThroughEnv": ["CONVEX_DEPLOY_KEY"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", "out/**"]
     },
     "check-types": {
