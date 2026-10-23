@@ -91,11 +91,11 @@ jobs:
           if [[ "$MODE" == "always" || -z "$BEFORE" || "$BEFORE" =~ ^0+$ ]]; then
             echo "release=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
-          # What the app bundle is built from: its own code, the backend API types
-          # it imports, dependencies and patches.
+          # What the app bundle is built from: its own code, dependencies and
+          # patches. Backend-only changes don't count: the generated `api` the app
+          # imports is a runtime proxy, so new backend functions change types only.
           if git diff --name-only "$BEFORE" "$SHA" -- \
-              apps/mobile packages/backend/convex/_generated \
-              package.json bun.lock patches | grep -q .; then
+              apps/mobile package.json bun.lock patches | grep -q .; then
             echo "release=true" >> "$GITHUB_OUTPUT"
           else
             echo "::notice::No mobile-relevant changes in $BEFORE..$SHA; no mobile release."
