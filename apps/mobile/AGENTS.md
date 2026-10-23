@@ -50,8 +50,8 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
 
 - `.eas/workflows/release.yml` (manual/CLI only, no push trigger): fingerprint →
   `get-build` per platform → OTA to channel `production` if a compatible store build
-  exists, else build + submit (TestFlight, Play internal). Started by the GitHub
-  Action after the prod Convex deploy; by hand: `bunx eas-cli workflow:run release.yml`
+  exists, else build + submit (TestFlight, Play internal). Started by
+  `.github/workflows/release.yml` after the prod Convex deploy; by hand: `bunx eas-cli workflow:run release.yml`
   here (`-F force_native=true` for new binaries). Agents never run it.
 - Production `runtimeVersion` is `{ policy: "fingerprint" }`; development and preview
   keep `appVersion`. Store builds from before the switch (shipped `1.14.0`) get no

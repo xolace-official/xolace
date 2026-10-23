@@ -7,9 +7,9 @@ name: Mobile release (OTA or store build)
 #                              Play internal track)
 #
 # NO push trigger on purpose. The backend must deploy first (store-gap rule):
-# the web Vercel build deploys Convex prod, and when that Production deploy
-# succeeds, .github/workflows/mobile-release.yml starts this workflow with
-# `eas workflow:run` (from apps/mobile). Run it by hand the same way:
+# .github/workflows/release.yml runs `convex deploy` to prod on each push to
+# main, then starts this workflow with `eas workflow:run` (from apps/mobile).
+# Run it by hand the same way:
 #
 #   cd apps/mobile && bunx eas-cli workflow:run release.yml
 #   cd apps/mobile && bunx eas-cli workflow:run release.yml -F force_native=true
