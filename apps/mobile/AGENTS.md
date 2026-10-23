@@ -46,6 +46,26 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   (`com.xolaceincorg.xolace.dev` / `.preview` / base). Plain `ios`/`android` builds the
   production id; use the variant scripts.
 
+## Release
+
+- `.eas/workflows/release.yml` (manual/CLI only, no push trigger): fingerprint →
+  `get-build` per platform → OTA to channel `production` if a compatible store build
+  exists, else build + submit (TestFlight, Play internal). Started by the GitHub
+  Action after the prod Convex deploy; by hand: `bunx eas-cli workflow:run release.yml`
+  here (`-F force_native=true` for new binaries). Agents never run it.
+- Production `runtimeVersion` is `{ policy: "fingerprint" }`; development and preview
+  keep `appVersion`. Store builds from before the switch (runtime `1.15.0`) get no
+  fingerprint-runtime OTAs.
+- `fingerprint.config.js` drops JS-only `extra` keys (Google client ids, PostHog,
+  RevenueCat) so per-environment values don't fake a native change, and adds the
+  root `patches/`. Adding an `extra` key a config plugin reads? Keep it hashed. The
+  `native-change` PR label comes from `.github/workflows/mobile-fingerprint.yml`.
+- `release/production-guard.ts` runs from `app.config.ts` for production EAS builds
+  and `eas update` exports (`APP_VARIANT=production` plus `EAS_BUILD` or
+  `NODE_ENV=production`). It fails on E2E/seed/mock flags, a non-`pk_live_` Clerk key,
+  a non-prod Convex URL, or a secret-looking `EXPO_PUBLIC_*` value. Fix the EAS
+  `production` environment, never the guard, unless the rule itself is wrong.
+
 ## Gotchas
 
 - Secrets (`google-services.json`, `GoogleService-Info.plist`, service-account JSON)

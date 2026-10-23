@@ -1,0 +1,140 @@
+name: Mobile release (OTA or store build)
+
+# Production release for iOS and Android, per platform:
+#   fingerprint -> get-build (completed production store build with the same
+#   fingerprint) -> found:     publish an OTA update to the `production` channel
+#                -> not found: build, then submit (iOS: TestFlight, Android:
+#                              Play internal track)
+#
+# NO push trigger on purpose. The backend must deploy first (store-gap rule):
+# the GitHub Action that runs `convex deploy` against prod starts this workflow
+# with `eas workflow:run release.yml` (from apps/mobile) only after the deploy
+# succeeds. Run it by hand the same way:
+#
+#   cd apps/mobile && bunx eas-cli workflow:run release.yml
+#   cd apps/mobile && bunx eas-cli workflow:run release.yml -F force_native=true
+#
+# Every job uses the `production` EAS environment plus APP_VARIANT=production,
+# the same as the `production` build profile, so the fingerprint computed here
+# matches the one the build records. app.config.ts runs the production guard
+# (release/production-guard.ts) in the build and update jobs.
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_native:
+        type: boolean
+        default: false
+        description: Build and submit new store binaries even if a compatible build exists
+      message:
+        type: string
+        required: false
+        description: Message for the OTA update and the builds (defaults to a generic one)
+
+concurrency:
+  # Never cancel a release halfway (a build or submit may already be running).
+  cancel_in_progress: false
+  group: ${{ workflow.filename }}-${{ github.ref }}
+
+jobs:
+  fingerprint:
+    name: Fingerprint native layer
+    type: fingerprint
+    environment: production
+    env:
+      APP_VARIANT: production
+
+  # ---------------------------------------------------------------- iOS
+
+  get_ios_build:
+    name: Find an OTA-compatible iOS build
+    type: get-build
+    needs: [fingerprint]
+    params:
+      platform: ios
+      profile: production
+      distribution: store
+      channel: production
+      fingerprint_hash: ${{ needs.fingerprint.outputs.ios_fingerprint_hash }}
+      # Production uses runtimeVersion.policy "fingerprint", so the runtime
+      # version is the fingerprint hash.
+      runtime_version: ${{ needs.fingerprint.outputs.ios_fingerprint_hash }}
+      # Only reuse completed builds; an in-progress build may never ship.
+      wait_for_in_progress: false
+
+  publish_ios_update:
+    name: Publish iOS OTA update
+    type: update
+    needs: [get_ios_build]
+    if: ${{ inputs.force_native != true && needs.get_ios_build.outputs.build_id }}
+    environment: production
+    env:
+      APP_VARIANT: production
+    params:
+      platform: ios
+      channel: production
+      message: ${{ inputs.message || 'Production release' }}
+
+  build_ios:
+    name: Build iOS (store)
+    type: build
+    needs: [get_ios_build]
+    if: ${{ inputs.force_native == true || !needs.get_ios_build.outputs.build_id }}
+    params:
+      platform: ios
+      profile: production
+      message: ${{ inputs.message || 'Production release' }}
+
+  submit_ios:
+    name: Submit iOS to TestFlight
+    type: submit
+    needs: [build_ios]
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      profile: production
+
+  # ------------------------------------------------------------ Android
+
+  get_android_build:
+    name: Find an OTA-compatible Android build
+    type: get-build
+    needs: [fingerprint]
+    params:
+      platform: android
+      profile: production
+      distribution: store
+      channel: production
+      fingerprint_hash: ${{ needs.fingerprint.outputs.android_fingerprint_hash }}
+      runtime_version: ${{ needs.fingerprint.outputs.android_fingerprint_hash }}
+      wait_for_in_progress: false
+
+  publish_android_update:
+    name: Publish Android OTA update
+    type: update
+    needs: [get_android_build]
+    if: ${{ inputs.force_native != true && needs.get_android_build.outputs.build_id }}
+    environment: production
+    env:
+      APP_VARIANT: production
+    params:
+      platform: android
+      channel: production
+      message: ${{ inputs.message || 'Production release' }}
+
+  build_android:
+    name: Build Android (store)
+    type: build
+    needs: [get_android_build]
+    if: ${{ inputs.force_native == true || !needs.get_android_build.outputs.build_id }}
+    params:
+      platform: android
+      profile: production
+      message: ${{ inputs.message || 'Production release' }}
+
+  submit_android:
+    name: Submit Android to Play internal track
+    type: submit
+    needs: [build_android]
+    params:
+      build_id: ${{ needs.build_android.outputs.build_id }}
+      profile: production
