@@ -2,6 +2,9 @@
   "extends": "expo/tsconfig.base.json",
   "compilerOptions": {
     "strict": true,
+    // app.config.ts imports release/production-guard.ts with its extension:
+    // Expo's config loader only resolves a TS import written that way.
+    "allowImportingTsExtensions": true,
     "paths": {
       "@/*": ["./*"],
       "@/assets/*": ["./assets/*"]

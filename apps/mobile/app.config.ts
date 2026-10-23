@@ -1,4 +1,5 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import { assertProductionEnvironment } from "./release/production-guard.ts";
 
 function requireEnv(name: string, value: string | undefined): string {
 	if (!value) {
@@ -15,6 +16,11 @@ function requireEnv(name: string, value: string | undefined): string {
 
 const IS_DEV = process.env.APP_VARIANT === "development";
 const IS_PREVIEW = process.env.APP_VARIANT === "preview";
+const IS_PRODUCTION = !(IS_DEV || IS_PREVIEW);
+
+// Throws on test config or secret-looking EXPO_PUBLIC_* values, but only for a
+// production EAS build or `eas update` export (see release/production-guard.ts).
+assertProductionEnvironment();
 
 const getUniqueIdentifier = () => {
 	if (IS_DEV) {
@@ -348,8 +354,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 			},
 		],
 	],
+	// Production OTAs only reach binaries with the same native fingerprint, so a
+	// JS update can never land on a build missing a native module it needs.
+	// Development and preview keep appVersion. Store builds made before this
+	// switch (the shipped 1.14.0, runtime "1.14.0") get no OTAs published under
+	// fingerprint runtimes; 1.15.0 ships as the first fingerprint store build.
 	runtimeVersion: {
-		policy: "appVersion",
+		policy: IS_PRODUCTION ? "fingerprint" : "appVersion",
 	},
 	scheme: "xolace",
 	slug: "xolace",

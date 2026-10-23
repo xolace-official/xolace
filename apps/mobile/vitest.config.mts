@@ -9,7 +9,7 @@ export default defineConfig({
 	test: {
 		// Pure-logic tests only; React Native modules are stubbed in the setup file.
 		environment: "node",
-		include: ["src/**/*.test.ts"],
+		include: ["src/**/*.test.ts", "release/**/*.test.ts"],
 		setupFiles: ["./vitest.setup.ts"],
 	},
 });
