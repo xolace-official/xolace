@@ -10,7 +10,9 @@
  *
  * The target comes from `CONVEX_DEPLOY_KEY` in the Vercel project's env:
  * a production key on Production, a preview key on Preview (Convex then makes
- * or reuses a preview deployment named after the git branch).
+ * or reuses a preview deployment named after the git branch). A Preview build
+ * with no deploy key but a NEXT_PUBLIC_CONVEX_URL builds against that URL and
+ * deploys nothing (setup guide: docs/setup/vercel.md).
  *
  * It refuses to run anywhere else, so a local `turbo run build -F @xolace/web`
  * or the desktop export (`TAURI_BUILD=1`) can never deploy. Locally, just run
@@ -38,7 +40,15 @@ function fail(message: string): never {
 	throw new Error(`[vercel-build] ${message}`);
 }
 
-function checkEnvironment(env: NodeJS.ProcessEnv): void {
+/**
+ * "deploy": convex deploy, then build web against the deployment it made.
+ * "build-only": a Preview build with no deploy key; build web against the
+ * NEXT_PUBLIC_CONVEX_URL set in Vercel's Preview env (e.g. the shared preview
+ * deployment) without deploying, for plans or setups without preview deployments.
+ */
+type Mode = "deploy" | "build-only";
+
+function checkEnvironment(env: NodeJS.ProcessEnv): Mode {
 	if (env.TAURI_BUILD) {
 		fail(
 			"TAURI_BUILD is set. The desktop static export never deploys Convex; " +
@@ -61,11 +71,17 @@ function checkEnvironment(env: NodeJS.ProcessEnv): void {
 		);
 	}
 	const key = env.CONVEX_DEPLOY_KEY;
+	if (!key && vercelEnv === "preview" && env[URL_ENV_VAR]) {
+		return "build-only";
+	}
 	if (!key) {
 		fail(
 			`CONVEX_DEPLOY_KEY is not set for Vercel ${vercelEnv}. Add the ` +
 				`${vercelEnv === "production" ? "production" : "preview"} deploy ` +
-				"key to this Vercel project's env for that environment only."
+				"key to this Vercel project's env for that environment only" +
+				(vercelEnv === "preview"
+					? `, or set ${URL_ENV_VAR} on Preview to build without deploying.`
+					: ".")
 		);
 	}
 	if (!key.startsWith(expectedPrefix)) {
@@ -81,11 +97,34 @@ function checkEnvironment(env: NodeJS.ProcessEnv): void {
 				"key alone picks the target deployment."
 		);
 	}
+	return "deploy";
 }
 
 function main(): void {
 	const dryRun = process.argv.includes("--dry-run");
-	checkEnvironment(process.env);
+	const mode = checkEnvironment(process.env);
+
+	if (mode === "build-only") {
+		process.stdout.write(
+			`[vercel-build] preview without CONVEX_DEPLOY_KEY: building against ${URL_ENV_VAR}, no Convex deploy.\n`
+		);
+		if (dryRun) {
+			return;
+		}
+		const build = spawnSync(
+			"bunx",
+			["turbo", "run", "build", "-F", "@xolace/web"],
+			{
+				cwd: REPO_ROOT,
+				stdio: "inherit",
+			}
+		);
+		if (build.error) {
+			throw build.error;
+		}
+		process.exitCode = build.status ?? 1;
+		return;
+	}
 
 	const message = process.env.VERCEL_GIT_COMMIT_SHA
 		? `vercel ${process.env.VERCEL_ENV} ${process.env.VERCEL_GIT_COMMIT_SHA}`

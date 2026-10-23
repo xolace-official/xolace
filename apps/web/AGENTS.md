@@ -28,9 +28,10 @@ Clerk via `@clerk/nextjs`, Convex). Two builds from one codebase:
 - Env: names in `.env.schema`, values in Vercel env. `NEXT_PUBLIC_*` is public.
 - **This app's Vercel build deploys Convex**, the only place that does.
   `vercel.json` → `scripts/vercel-build.ts` → `convex deploy` (prod key on
-  Production, preview key on Preview) → `turbo run build -F @xolace/web` with
-  `NEXT_PUBLIC_CONVEX_URL` injected. Don't run the script locally; it refuses off
-  Vercel and under `TAURI_BUILD`. Local and desktop builds are a plain
+  Production, optional preview key on Preview) → `turbo run build -F @xolace/web` with
+  `NEXT_PUBLIC_CONVEX_URL` injected. A Preview without a key builds against its
+  `NEXT_PUBLIC_CONVEX_URL` and deploys nothing. Setup: `docs/setup/vercel.md`.
+  Don't run the script locally; it refuses off Vercel and under `TAURI_BUILD`. Local and desktop builds are a plain
   `bunx turbo run build -F @xolace/web`. A Production deploy also starts the mobile
   release (`.github/workflows/mobile-release.yml`). Topology:
   `packages/backend/AGENTS.md`.

@@ -25,8 +25,10 @@ from `xolace_app/convex` in Phase 2. Full rules: `.agents/rules/convex.md`.
   `turbo run build -F @xolace/web` with `NEXT_PUBLIC_CONVEX_URL` injected. It refuses
   to run off Vercel, under `TAURI_BUILD`, or with a key that doesn't match `VERCEL_ENV`.
 - **Keys:** `CONVEX_DEPLOY_KEY` lives only in the web Vercel project: the prod key on
-  Production, the preview key on Preview (one preview deployment per git branch,
-  starts empty). Never in admin, GitHub, EAS or a local `.env`.
+  Production, and optionally a preview key on Preview (one preview deployment per git
+  branch, starts empty). Without a preview key, web previews build against the shared
+  dev deployment and deploy nothing. Never in admin, GitHub, EAS or a local `.env`.
+  Setup: `docs/setup/vercel.md`.
 - **Admin** reads `NEXT_PUBLIC_CONVEX_URL` from its own Vercel env and fails its build
   if `CONVEX_DEPLOY_KEY` is set. Desktop and local builds never deploy.
 - **Mobile after backend:** a successful Vercel Production deploy of web triggers
