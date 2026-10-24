@@ -20,8 +20,21 @@ import {
 	isMaxRefinementError,
 	projectScreen,
 } from "@/src/features/reflect/session-service";
-import type { FeedbackType } from "@/src/features/reflect/types";
+import type {
+	FeedbackType,
+	ReflectionStateName,
+} from "@/src/features/reflect/types";
 import { initialState, MAX_TURNS, reducer } from "./reflection-reducer";
+
+// Screens that show a server session's mirror. Processing and error aren't
+// here: both also stand before a session exists (a typed submit, a failed one).
+const MIRROR_SCREENS: ReadonlySet<ReflectionStateName> = new Set([
+	"mirror",
+	"clarify",
+	"gave-up",
+	"path-selection",
+	"escalation",
+]);
 
 /**
  * Manages the reflection UI state machine and bridges it to the session API.
@@ -95,6 +108,8 @@ export function useReflectionMachine() {
 	} = useSession();
 
 	const prevServerStateRef = useRef<string | null>(null);
+	/** The last session this screen had, to notice it going. */
+	const shownSessionRef = useRef<typeof sessionId>(null);
 	const typingStartRef = useRef<number | null>(null);
 	const submitTimestampRef = useRef<number | null>(null);
 	const freezeOccurredRef = useRef(false);
@@ -209,6 +224,25 @@ export function useReflectionMachine() {
 		dispatchError,
 		abortRecording,
 	]);
+
+	// The session on screen left getActive without a terminal state reaching
+	// us: a talk ended with "Just end" from its "Say more" (#636) is hidden
+	// while its mirror is remade. Reset, as for a terminal state, rather than
+	// leave a mirror with no session behind it.
+	useEffect(() => {
+		if (sessionId) {
+			shownSessionRef.current = sessionId;
+			return;
+		}
+		if (isLoading || !shownSessionRef.current) {
+			return;
+		}
+		shownSessionRef.current = null;
+		if (MIRROR_SCREENS.has(state.screen)) {
+			clearRefs();
+			dispatch({ type: "RESET" });
+		}
+	}, [sessionId, isLoading, state.screen, clearRefs]);
 
 	// Track freeze (typing-nudge = user paused)
 	useEffect(() => {

@@ -1,7 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
-import type { Doc } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import {
 	internalMutation,
@@ -711,6 +711,11 @@ export const getActive = query({
 				.order("desc")
 				.first();
 
+			// A talk ended with "Just end" makes its mirror for the timeline, not home;
+			// only a failed one shows here, for its retry.
+			if (session?.talkMirrorLater && state !== "error") {
+				continue;
+			}
 			if (
 				session &&
 				(!latest || session._creationTime > latest._creationTime)
@@ -1017,7 +1022,57 @@ export const deliverMirror = internalMutation({
 			...(args.gapNamed ? { gapNamed: true } : {}),
 			updatedAt: Date.now(),
 		});
+		// A "Just end" talk closes at the end of generateMirror, once its reading
+		// is stored. An escalated one stays open now, so home shows its help even
+		// if the rest of the pipeline fails.
+		if (
+			session.talkMirrorLater &&
+			(args.escalationTriggered || session.escalationTriggered)
+		) {
+			await ctx.db.patch("sessions", args.sessionId, {
+				talkMirrorLater: undefined,
+			});
+		}
 	},
+});
+
+/**
+ * A talk ended with "Just end" (talkMirrorLater) closes once its mirror is in:
+ * completed like a reflection, so it's in the timeline and counts, without
+ * a mirror screen. An escalated mirror stays open instead, for home to show
+ * with its help. Waits for the session's reading (emotional_metadata): the
+ * completion's jobs read it, and generateMirror stores it after delivery.
+ */
+async function closeIfMirrorLater(ctx: MutationCtx, sessionId: Id<"sessions">) {
+	const session = await ctx.db.get("sessions", sessionId);
+	if (!session?.talkMirrorLater || session.state !== "mirror_delivered") {
+		return;
+	}
+	if (session.escalationTriggered) {
+		await ctx.db.patch("sessions", sessionId, { talkMirrorLater: undefined });
+		return;
+	}
+	const reading = await ctx.db
+		.query("emotional_metadata")
+		.withIndex("by_session", (q) => q.eq("sessionId", sessionId))
+		.unique();
+	if (!reading) {
+		return;
+	}
+	await finalizeCompletion(ctx, session, { pathCompleted: false });
+}
+
+/**
+ * Closes a "Just end" talk: called at the end of generateMirror, and by
+ * talk.session.end for a mirror that was already delivered.
+ */
+export const closeMirrorLater = internalMutation({
+	args: { sessionId: v.id("sessions") },
+	handler: async (ctx, { sessionId }) => {
+		await closeIfMirrorLater(ctx, sessionId);
+		return null;
+	},
+	returns: v.null(),
 });
 
 /**
@@ -1168,8 +1223,13 @@ export const storeDistilledText = internalMutation({
 			return;
 		}
 
-		// Only store if session hasn't been abandoned/completed already
-		if (session.state === "completed" || session.state === "abandoned") {
+		// Only store if session hasn't been abandoned/completed already. A "Just
+		// end" talk completes as its mirror lands, before this runs; episodic
+		// memory still reads it.
+		if (
+			session.state === "abandoned" ||
+			(session.state === "completed" && !session.talkMirrorLater)
+		) {
 			return;
 		}
 
@@ -1242,7 +1302,12 @@ export const checkAbandoned = internalMutation({
 				) {
 					continue;
 				}
-				if ((stalePathStates as readonly string[]).includes(state)) {
+				// A "Just end" talk whose pipeline died before closing it: its mirror
+				// is in, so it completes rather than being abandoned.
+				if (
+					(stalePathStates as readonly string[]).includes(state) ||
+					(session.talkMirrorLater && state === "mirror_delivered")
+				) {
 					await finalizeCompletion(ctx, session, {
 						pathCompleted: false,
 						stranded: true,

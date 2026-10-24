@@ -1,7 +1,8 @@
 // One live talk (#593): the ElevenLabs conversation, the thread it writes and
 // the voice levels the aurora and composer read. A talk is a session (#592):
-// ending it hands off to the reflect screens' processing → mirror. "Say more"
-// on its mirror opens it again (#604): `reopen`, with the thread so far.
+// ending it hands off to the reflect screens' processing → mirror, or with
+// "Just end" files the mirror in the timeline instead. "Say more" on its
+// mirror opens it again (#604): `reopen`, with the thread so far.
 
 import { useConversation } from "@elevenlabs/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";
@@ -57,6 +58,18 @@ export function useTalk(reopen?: {
 		wrapUpMs(TALK_CEILING_MS) / 1000
 	);
 	const [thinking, setThinking] = useState(false);
+	/** The person chose to end: leaving no longer asks first. */
+	const [ending, setEnding] = useState(false);
+	// "Just end": the mirror is made for the timeline, not shown now.
+	const mirrorLater = useRef(false);
+	// The SDK hangs up when the screen goes, so a talk can close after it has.
+	const mounted = useRef(true);
+	useEffect(() => {
+		mounted.current = true;
+		return () => {
+			mounted.current = false;
+		};
+	}, []);
 	const [error, setError] = useState<string | null>(null);
 	/** Either voice, for the aurora. */
 	const level = useSharedValue(0);
@@ -70,12 +83,22 @@ export function useTalk(reopen?: {
 		if (!sessionId) {
 			return;
 		}
+		const later = mirrorLater.current;
 		try {
-			// The reflect screen picks the session up via getActive and takes it
-			// through processing → mirror.
-			if (await endTalk({ sessionId })) {
-				router.replace("/");
+			// Back to the home underneath, not a new one on top of it: its reflect
+			// screen picks the session up via getActive and takes it through
+			// processing → mirror. Ended with "Just end", it doesn't.
+			if (
+				(await endTalk(
+					later ? { mirrorLater: true, sessionId } : { sessionId }
+				)) ||
+				later
+			) {
+				if (mounted.current) {
+					router.dismissTo("/");
+				}
 			} else {
+				setEnding(false);
 				setStarted(false);
 				setWasLive(false);
 				setError("Nothing was said, so there's no mirror.");
@@ -176,11 +199,24 @@ export function useTalk(reopen?: {
 	return {
 		clockFromS,
 		connected,
-		end: () => convo.endSession(),
+		/** Ends the talk; its mirror comes now. */
+		end() {
+			mirrorLater.current = false;
+			setEnding(true);
+			convo.endSession();
+		},
 		endsAt,
+		/** Ends the talk; its mirror waits in the timeline. */
+		endWithoutMirror() {
+			mirrorLater.current = true;
+			setEnding(true);
+			convo.endSession();
+		},
 		error,
 		isMuted,
 		level,
+		/** Live and not ending: leaving asks first. */
+		live: connected && !ending,
 		micLevel,
 		presence,
 		send(text: string) {

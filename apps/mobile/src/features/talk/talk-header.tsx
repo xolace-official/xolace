@@ -10,6 +10,7 @@ import { Platform, View } from "react-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { GlassSurface } from "@/src/components/shared/glass-surface";
 import { useAppTheme } from "@/src/context/app-theme-context";
+import { JUST_END, MIRROR_LATER } from "@/src/features/talk/talk-copy";
 import { useCompanionName } from "@/src/features/talk/use-companion-name";
 import type { Talk } from "@/src/features/talk/use-talk";
 import { useTimeLeft } from "@/src/features/talk/use-time-left";
@@ -114,6 +115,14 @@ export function TalkHeader({ talk }: { talk: Talk }) {
 						onPress={talk.end}
 					>
 						End and make my mirror
+					</Stack.Toolbar.MenuAction>
+					<Stack.Toolbar.MenuAction
+						disabled={!talk.connected}
+						icon="stop.circle"
+						onPress={talk.endWithoutMirror}
+						subtitle={MIRROR_LATER}
+					>
+						{JUST_END}
 					</Stack.Toolbar.MenuAction>
 				</Stack.Toolbar.Menu>
 			</Stack.Toolbar>
