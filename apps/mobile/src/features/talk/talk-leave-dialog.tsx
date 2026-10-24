@@ -13,12 +13,17 @@ import type { Talk } from "@/src/features/talk/use-talk";
 export function TalkLeaveDialog({ talk }: { talk: Talk }) {
 	const [open, setOpen] = useState(false);
 	usePreventRemove(talk.live, () => setOpen(true));
+	// A talk that ends with the dialog up (a dropped line, the silence cutoff)
+	// closes it, so it can't come back by itself when a new talk connects.
+	if (open && !talk.live) {
+		setOpen(false);
+	}
 	const choose = (end?: () => void) => {
 		setOpen(false);
 		end?.();
 	};
 	return (
-		<Dialog isOpen={open && talk.live} onOpenChange={setOpen}>
+		<Dialog isOpen={open} onOpenChange={setOpen}>
 			<Dialog.Portal>
 				<DialogBlurBackdrop />
 				<Dialog.Content className="mx-auto max-w-sm">
