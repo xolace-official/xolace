@@ -15,6 +15,7 @@ import { AudioModule } from "expo-audio";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useSharedValue, withTiming } from "react-native-reanimated";
+import { endWithRetry } from "@/src/features/talk/end-with-retry";
 import { TALK_TIME_RESETS } from "@/src/features/talk/talk-copy";
 import { type ThreadLine, useThread } from "@/src/features/talk/use-thread";
 
@@ -41,6 +42,7 @@ export function useTalk(reopen?: {
 	const startTalk = useAction(api.talk.live.start);
 	const attachConversation = useMutation(api.talk.session.attachConversation);
 	const endTalk = useMutation(api.talk.session.end);
+	const markMirrorLater = useMutation(api.talk.session.markMirrorLater);
 	const thread = useThread(reopen?.thread);
 	// The open talk's session; cleared once ended so a second disconnect is a no-op.
 	const sessionRef = useRef<Id<"sessions"> | null>(null);
@@ -89,8 +91,8 @@ export function useTalk(reopen?: {
 			// screen picks the session up via getActive and takes it through
 			// processing → mirror. Ended with "Just end", it doesn't.
 			if (
-				(await endTalk(
-					later ? { mirrorLater: true, sessionId } : { sessionId }
+				(await endWithRetry(() =>
+					endTalk(later ? { mirrorLater: true, sessionId } : { sessionId })
 				)) ||
 				later
 			) {
@@ -104,6 +106,8 @@ export function useTalk(reopen?: {
 				setError("Nothing was said, so there's no mirror.");
 			}
 		} catch (e) {
+			// Not ended after all: leaving asks again while the line is up.
+			setEnding(false);
 			setError(messageOf(e));
 		}
 	};
@@ -210,6 +214,11 @@ export function useTalk(reopen?: {
 		endWithoutMirror() {
 			mirrorLater.current = true;
 			setEnding(true);
+			// Kept on the talk before hanging up, in case the end call never lands.
+			const sessionId = sessionRef.current;
+			if (sessionId) {
+				endWithRetry(() => markMirrorLater({ sessionId })).catch(console.warn);
+			}
 			convo.endSession();
 		},
 		error,
@@ -232,6 +241,9 @@ export function useTalk(reopen?: {
 		sessionId,
 		async start() {
 			setError(null);
+			// A new talk starts unended, its mirror shown when it ends.
+			mirrorLater.current = false;
+			setEnding(false);
 			// Asked once, from the consent card; the OS remembers the answer.
 			const { granted } = await AudioModule.requestRecordingPermissionsAsync();
 			if (!granted) {
