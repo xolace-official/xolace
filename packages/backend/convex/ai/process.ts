@@ -464,6 +464,13 @@ export const generateMirror = internalAction({
 					triggerType: safeguard.triggerType,
 				});
 			}
+			// A talk ended with "Just end" closes into the timeline now that its
+			// reading is stored (a no-op for anything else).
+			if (session.entryType === "talk") {
+				await ctx.runMutation(internal.sessions.closeMirrorLater, {
+					sessionId: args.sessionId,
+				});
+			}
 			return null;
 		} catch (error) {
 			const errorMessage =

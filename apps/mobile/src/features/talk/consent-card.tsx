@@ -7,6 +7,7 @@ import { View } from "react-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { GlassSurface } from "@/src/components/shared/glass-surface";
 import {
+	END_ANYTIME,
 	MIN_TALK_S,
 	PRIVACY_LINE,
 	TALK_TIME_RESETS,
@@ -57,6 +58,9 @@ export function ConsentCard({ talk }: { talk: Talk }) {
 				<Row icon={{ android: "auto_awesome", ios: "sparkles" }}>
 					When you finish, the whole talk becomes your mirror, like any
 					reflection.
+				</Row>
+				<Row icon={{ android: "stop_circle", ios: "stop.circle" }}>
+					{END_ANYTIME}
 				</Row>
 				<Row icon={{ android: "local_fire_department", ios: "flame" }}>
 					{`${name} is an AI, part of Xolace. This talk is remembered with your reflections.`}
