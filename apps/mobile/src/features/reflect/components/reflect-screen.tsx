@@ -228,7 +228,6 @@ export const ReflectScreen = () => {
 						screen={composeScreen}
 						selectedTextures={state.selectedTextures}
 						spaceName={context?.preferences?.spaceName}
-						variant={state.userVariant}
 					/>
 				);
 			case "processing":

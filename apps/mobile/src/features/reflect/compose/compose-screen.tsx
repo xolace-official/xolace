@@ -22,7 +22,6 @@ import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
 import type {
 	ReflectionAction,
 	ReflectionStateName,
-	UserVariant,
 } from "@/src/features/reflect/types";
 import { playTypingBegin } from "@/src/lib/haptics";
 import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
@@ -30,7 +29,6 @@ import { useAppStore } from "@/src/store/store";
 
 type Props = {
 	screen: ReflectionStateName;
-	variant: UserVariant;
 	quietReturn: QuietReturnTier | null;
 	selectedTextures: string[];
 	entryText: string;
@@ -59,7 +57,6 @@ type Props = {
  */
 export const ComposeScreen = ({
 	screen,
-	variant,
 	quietReturn,
 	selectedTextures,
 	entryText,
@@ -181,7 +178,6 @@ export const ComposeScreen = ({
 					reduceMotion={reduceMotion}
 					selectedTextures={selectedTextures}
 					spaceName={spaceName}
-					variant={variant}
 				/>
 
 				{/* DEV ONLY — tap to restart tour for testing */}

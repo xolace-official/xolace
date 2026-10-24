@@ -36,12 +36,14 @@ import {
 import { RekindleSheet } from "./rekindle-sheet";
 import { RevealOverlay } from "./reveal-overlay";
 import { StreakFlipCard } from "./streak-flip-card";
+import { streakStep } from "./streak-step";
 
 const MINI_METRICS = getCardMetrics(MINI_SIZE);
 const miniCardStyle = { width: MINI_SIZE };
 
 type Props = {
-	currentStreak: number;
+	/** Undefined until the streak has loaded: nothing is acknowledged or revealed on a guess. */
+	currentStreak: number | undefined;
 	/** The count a streak saver would restore, while a revive is on offer. */
 	reviveStreak?: number;
 };
@@ -105,16 +107,16 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
 		}
 	};
 
+	const step = streakStep(currentStreak, lastAcknowledgedStreak);
 	// The rekindled count plays the reveal once the offer is gone.
-	const revealPending =
-		offer === undefined &&
-		currentStreak > lastAcknowledgedStreak &&
-		currentStreak > 0;
+	const revealPending = offer === undefined && step === "reveal";
 	const revealing = miniLayout !== null;
 
 	useEffect(() => {
-		// Streak reset (or first sync after install) — acknowledge silently
-		if (currentStreak < lastAcknowledgedStreak) {
+		if (currentStreak === undefined) {
+			return;
+		}
+		if (step === "reset") {
 			setLastAcknowledgedStreak(currentStreak);
 			return;
 		}
@@ -153,7 +155,7 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
 		return () => clearTimeout(timer);
 	}, [
 		currentStreak,
-		lastAcknowledgedStreak,
+		step,
 		revealPending,
 		revealing,
 		reducedMotion,
@@ -166,13 +168,19 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
 
 	const handleDismissed = () => {
 		setMiniLayout(null);
-		posthog.capture("streak_reveal_acknowledged", { day: currentStreak });
+		posthog.capture("streak_reveal_acknowledged", {
+			day: currentStreak ?? null,
+		});
 	};
 
-	// While a reveal is pending/running, the mini shows the old number
-	const miniDay = revealPending
-		? Math.max(currentStreak - 1, 0)
-		: currentStreak;
+	// While a reveal is pending/running the mini shows the old number; before
+	// the streak loads, the last one seen.
+	const miniDay =
+		currentStreak === undefined
+			? lastAcknowledgedStreak
+			: revealPending
+				? Math.max(currentStreak - 1, 0)
+				: currentStreak;
 
 	if (offer !== undefined) {
 		return (
@@ -219,7 +227,7 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
 				<StreakFlipCard colors={colors} day={miniDay} metrics={MINI_METRICS} />
 			</Animated.View>
 
-			{revealing && (
+			{revealing && currentStreak !== undefined && (
 				<Portal name="streak-reveal">
 					<RevealOverlay
 						colors={colors}

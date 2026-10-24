@@ -7,7 +7,6 @@ import { View } from "react-native";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/src/components/shared/app-text";
 import { StreakCalendar } from "@/src/features/reflect/components/streak-calendar";
-import type { UserVariant } from "@/src/features/reflect/types";
 import { useFullContext } from "@/src/lib/convex/use-full-context";
 import { playSoftPress } from "@/src/lib/haptics";
 
@@ -19,7 +18,6 @@ const EVENT_ICON_NAME = {
 } as const;
 
 type Props = {
-	variant: UserVariant;
 	eventPrompt: string | null;
 	eventLabel: string | null;
 	spaceName?: string;
@@ -48,7 +46,6 @@ type Props = {
  * calendar's height, so the strip is no taller.
  */
 export const ComposeChrome = ({
-	variant,
 	eventPrompt,
 	eventLabel,
 	spaceName,
@@ -62,10 +59,10 @@ export const ComposeChrome = ({
 
 	return (
 		<View className="flex-row items-center gap-2 pb-3">
+			{/* The context's own streak, not the reflect machine's variant: that starts
+			    as a default with no day count on a fresh screen. */}
 			<StreakCalendar
-				currentStreak={
-					variant.kind === "returning" ? 0 : (variant.dayCount ?? 0)
-				}
+				currentStreak={context?.streak}
 				reviveStreak={context?.reviveStreak}
 			/>
 
