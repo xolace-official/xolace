@@ -8,6 +8,7 @@
  * offer (no saver, or the window closed) the card just reads the reset.
  */
 
+import { useAuth } from "@clerk/expo";
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
 
@@ -49,7 +50,16 @@ type Props = {
 };
 
 export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
-	const lastAcknowledgedStreak = useAppStore((s) => s.lastAcknowledgedStreak);
+	const { userId } = useAuth();
+	const storedStreak = useAppStore((s) => s.lastAcknowledgedStreak);
+	const storedOwner = useAppStore((s) => s.lastAcknowledgedStreakOwner);
+	// The acknowledged day is per account: another account's reads as a fresh
+	// install's 0. No owner is an install from before it was recorded — taken
+	// as this account's, so updating doesn't replay a reveal.
+	const lastAcknowledgedStreak =
+		userId && (storedOwner === userId || storedOwner === null)
+			? storedStreak
+			: 0;
 	const setLastAcknowledgedStreak = useAppStore(
 		(s) => s.setLastAcknowledgedStreak
 	);
@@ -113,11 +123,12 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
 	const revealing = miniLayout !== null;
 
 	useEffect(() => {
-		if (currentStreak === undefined) {
+		// No user id, no owner to acknowledge for.
+		if (currentStreak === undefined || !userId) {
 			return;
 		}
 		if (step === "reset") {
-			setLastAcknowledgedStreak(currentStreak);
+			setLastAcknowledgedStreak(currentStreak, userId);
 			return;
 		}
 		if (
@@ -132,7 +143,7 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
 
 		// Reduced motion: skip the reveal entirely, just update the number
 		if (reducedMotion) {
-			setLastAcknowledgedStreak(currentStreak);
+			setLastAcknowledgedStreak(currentStreak, userId);
 			return;
 		}
 
@@ -146,7 +157,7 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
 				// short forever. A missed animation beats a wrong number.
 				// Acknowledge as it goes up either way: once seen it's delivered, so a
 				// kill mid-reveal never replays it.
-				scheduleOnRN(setLastAcknowledgedStreak, currentStreak);
+				scheduleOnRN(setLastAcknowledgedStreak, currentStreak, userId);
 				if (layout !== null) {
 					scheduleOnRN(setMiniLayout, layout);
 				}
@@ -155,6 +166,7 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
 		return () => clearTimeout(timer);
 	}, [
 		currentStreak,
+		userId,
 		step,
 		revealPending,
 		revealing,

@@ -119,7 +119,9 @@ type TogglesSlice = {
 	markMenuItemSeen: (key: string) => void;
 	/** Highest streak day the user has seen the calendar reveal for. */
 	lastAcknowledgedStreak: number;
-	setLastAcknowledgedStreak: (n: number) => void;
+	/** Clerk user id the acknowledged streak belongs to. Null on installs from before it was recorded. */
+	lastAcknowledgedStreakOwner: string | null;
+	setLastAcknowledgedStreak: (n: number, owner: string) => void;
 	/** Awareness event slugs the user has already seen, with timestamps for pruning. */
 	seenEventIds: { slug: string; seenAt: number }[];
 	addToSeenEventIds: (slug: string) => void;
@@ -238,6 +240,7 @@ export const useAppStore = create<AppState>()(
 				introSeen: false,
 
 				lastAcknowledgedStreak: 0,
+				lastAcknowledgedStreakOwner: null,
 				lastSeenVersion: null,
 				libraryIntroSeen: false,
 				markMenuItemSeen: (key) =>
@@ -280,7 +283,11 @@ export const useAppStore = create<AppState>()(
 				setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 				setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
 				setIntroSeen: (v) => set({ introSeen: v }),
-				setLastAcknowledgedStreak: (n) => set({ lastAcknowledgedStreak: n }),
+				setLastAcknowledgedStreak: (n, owner) =>
+					set({
+						lastAcknowledgedStreak: n,
+						lastAcknowledgedStreakOwner: owner,
+					}),
 				setLastSeenVersion: (v) => set({ lastSeenVersion: v }),
 				setLibraryIntroSeen: (v) => set({ libraryIntroSeen: v }),
 				setMusicIntroSeen: (v) => set({ musicIntroSeen: v }),
@@ -357,6 +364,7 @@ export const useAppStore = create<AppState>()(
 					hiddenProfileCards: s.hiddenProfileCards,
 					introSeen: s.introSeen,
 					lastAcknowledgedStreak: s.lastAcknowledgedStreak,
+					lastAcknowledgedStreakOwner: s.lastAcknowledgedStreakOwner,
 					lastSeenVersion: s.lastSeenVersion,
 					libraryIntroSeen: s.libraryIntroSeen,
 					musicIntroSeen: s.musicIntroSeen,

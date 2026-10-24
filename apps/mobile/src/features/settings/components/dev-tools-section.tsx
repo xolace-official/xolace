@@ -4,6 +4,7 @@
  * own (the Convex mutation it calls is gated server-side instead).
  */
 
+import { useAuth } from "@clerk/expo";
 import * as Sentry from "@sentry/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
@@ -79,6 +80,7 @@ const RETURN_WELCOME_TIERS: { tier: ReturnWelcomeTier; label: string }[] = [
 export const DevToolsSection = () => {
 	const { toast } = useToast();
 	const mutedIconColor = useThemeColor("muted") as string;
+	const { userId } = useAuth();
 	const setLastAcknowledgedStreak = useAppStore(
 		(s) => s.setLastAcknowledgedStreak
 	);
@@ -134,7 +136,9 @@ export const DevToolsSection = () => {
 		setStreak({ mode })
 			.then((newStreak) => {
 				// Make the reveal pending: acknowledged = the day before
-				setLastAcknowledgedStreak(Math.max(newStreak - 1, 0));
+				if (userId) {
+					setLastAcknowledgedStreak(Math.max(newStreak - 1, 0), userId);
+				}
 				toast.show({
 					description: "Go back home to watch the reveal.",
 					label: `Streak set to day ${newStreak}`,
@@ -170,7 +174,9 @@ export const DevToolsSection = () => {
 	};
 
 	const replayReveal = () => {
-		setLastAcknowledgedStreak(0);
+		if (userId) {
+			setLastAcknowledgedStreak(0, userId);
+		}
 		toast.show({
 			description: "Go back home to watch it again.",
 			label: "Reveal re-armed",
