@@ -1,15 +1,17 @@
 // @vitest-environment edge-runtime
 /**
- * "End" without the mirror: the mirror is still made, then the talk closes
- * into the timeline. Failure modes: home picks the talk up and opens its
- * processing → mirror screens anyway; the delivered mirror is left open, or
- * never counts as a reflection; an escalated mirror closes silently, its
- * help unseen; a talk with nothing said gets a mirror; an old client (no
+ * "Just end": the mirror is still made, then the talk closes into the
+ * timeline. Failure modes: home picks the talk up and opens its processing →
+ * mirror screens anyway; the talk closes before its reading is stored, so the
+ * completion's jobs miss it; the delivered mirror is left open, or never
+ * counts as a reflection; an escalated mirror closes silently, its help
+ * unseen; a talk with nothing said gets a mirror; an old client (no
  * `mirrorLater`) stops getting its mirror on home.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
+import { seedMetadata } from "../test/fixtures.helpers";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import {
 	aggregatesMock,
@@ -89,6 +91,20 @@ describe("talk.session.end with mirrorLater", () => {
 			sessionId,
 			...MIRROR,
 		});
+		// Delivered, but its reading isn't stored yet: still open, still hidden.
+		await user.root.mutation(internal.sessions.closeMirrorLater, {
+			sessionId,
+		});
+		expect(await session(user, sessionId)).toMatchObject({
+			state: "mirror_delivered",
+		});
+		expect(await user.t.query(api.sessions.getActive, {})).toBeNull();
+
+		// generateMirror's tail: the reading is in, so it closes.
+		await seedMetadata(user.root, sessionId, user.profileId);
+		await user.root.mutation(internal.sessions.closeMirrorLater, {
+			sessionId,
+		});
 		expect(await session(user, sessionId)).toMatchObject({
 			mirrorText: MIRROR.mirrorText,
 			pathCompleted: false,
@@ -97,6 +113,15 @@ describe("talk.session.end with mirrorLater", () => {
 		expect(await user.t.query(api.sessions.getActive, {})).toBeNull();
 		expect((await reflects(user)).map((a) => a.actionType)).toContain(
 			"reflect"
+		);
+
+		// The distiller lands after the close; episodic memory still reads it.
+		await user.root.mutation(internal.sessions.storeDistilledText, {
+			distilledText: "Work is heavy.",
+			sessionId,
+		});
+		expect((await session(user, sessionId))?.distilledText).toBe(
+			"Work is heavy."
 		);
 	});
 
@@ -130,6 +155,7 @@ describe("talk.session.end with mirrorLater", () => {
 			sessionId,
 			...MIRROR,
 		});
+		await seedMetadata(user.root, sessionId, user.profileId);
 
 		await user.t.mutation(api.talk.session.end, {
 			mirrorLater: true,

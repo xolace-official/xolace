@@ -202,7 +202,7 @@ export const attachConversation = mutation({
 /**
  * The person ended the talk, or the companion did (end_call). True when a
  * mirror is on its way: the client moves to the processing → mirror screens.
- * `mirrorLater`: they chose "End", not the mirror now. It's still made, and
+ * `mirrorLater`: they chose "Just end", not the mirror now. It's still made, and
  * goes to their timeline (sessions.closeMirrorLater); nothing opens on home.
  * A talk already closed (its disconnect landed first) is flagged all the same.
  */
