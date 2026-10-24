@@ -1,7 +1,9 @@
 # Release setup (Convex, Vercel, EAS)
 
 One-time setup for releasing the backend, web, admin and mobile, written for someone
-new to monorepos. An agent can't do any of it for you.
+new to monorepos. An agent can't do any of it for you. Previews and the shared staging
+backend (deployed on every merge into `dev`) have their own guide:
+[staging.md](./staging.md).
 
 ## How it fits together
 
@@ -36,8 +38,8 @@ What triggers what:
 
 | You do | Convex | Web / admin (Vercel) | Mobile |
 |---|---|---|---|
-| Open or push a PR | nothing | Preview deploy (against the dev backend) | `native-change` label only |
-| Merge into `dev` | nothing | Preview deploy | nothing |
+| Open or push a PR | nothing | Preview deploy (against staging) | `native-change` label only |
+| Merge into `dev` | **staging** deployed ([staging.md](./staging.md)) | Preview deploy (against staging) | preview OTA, if opted in |
 | Merge `dev` into `main` (a release) | **prod deployed** | **Production** deploy | release, if mobile files changed |
 
 Merging `dev` into `main` **is** the release. The first one also replaces whatever the
@@ -49,8 +51,8 @@ old repo deployed to prod Convex; after that, never deploy Convex from the old
 - Admin access to the GitHub repo, Vercel team access (with the Vercel GitHub app able
   to see `xolace-official/xolace`), and expo.dev access to the `xolace` project.
 - Convex dashboard access to the `xolace-app` project (team `xolace-inc`). Prod:
-  `energetic-guineapig-283`. Shared dev deployment used by previews:
-  `groovy-mandrill-892`.
+  `energetic-guineapig-283`. Previews use the staging deployment in the separate
+  `xolace-staging` project ([staging.md](./staging.md)), not anyone's dev deployment.
 - Clerk: the production instance (domain `clerk.xolaceinc.com`, keys `pk_live_…` /
   `sk_live_…`) and the dev instance (`curious-kingfish-86`, keys `pk_test_…` /
   `sk_test_…`).
@@ -70,6 +72,9 @@ old repo deployed to prod Convex; after that, never deploy Convex from the old
      → `main`.
 3. In that environment → **Environment secrets → Add secret**: `CONVEX_DEPLOY_KEY`,
    paste the key. Don't save it anywhere else.
+
+The release refuses any key that doesn't name `energetic-guineapig-283`, so the
+staging key (also a `prod:` key, of `xolace-staging`) can't deploy here by mistake.
 
 ## Step 2: Create the web project in Vercel
 
@@ -96,7 +101,7 @@ the ones a row doesn't belong to.
 
 | Name | Production | Preview |
 |---|---|---|
-| `NEXT_PUBLIC_CONVEX_URL` | `https://energetic-guineapig-283.convex.cloud` | `https://groovy-mandrill-892.eu-west-1.convex.cloud` |
+| `NEXT_PUBLIC_CONVEX_URL` | `https://energetic-guineapig-283.convex.cloud` | the staging URL ([staging.md](./staging.md) Step 1) |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_live_…` | `pk_test_…` |
 | `CLERK_SECRET_KEY` | `sk_live_…` (Sensitive) | `sk_test_…` (Sensitive) |
 
@@ -147,6 +152,7 @@ To re-run a release by hand: **Actions → Release → Run workflow** on `main`.
 | Symptom | Fix |
 |---|---|
 | `CONVEX_DEPLOY_KEY secret is missing or not a production key` | Step 1: the secret must be in the `production` environment and start with `prod:`. |
+| `CONVEX_DEPLOY_KEY is for …, not the prod deployment` | The `production` environment holds another project's key (likely staging's). Put prod's key back (Step 1). |
 | `[web] / [admin] CONVEX_DEPLOY_KEY is set` in a Vercel build | Delete the key from that Vercel project. |
 | Vercel can't find `packages/…` or `bun.lock` | Turn on "Include files outside the root directory" (Step 2.5). |
 | Vercel deployed Production straight from a push | Production branch isn't `main`, or `git.deploymentEnabled` was removed from that app's `vercel.json`. |

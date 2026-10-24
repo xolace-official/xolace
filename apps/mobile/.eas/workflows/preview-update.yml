@@ -1,0 +1,38 @@
+name: Preview update (OTA to staging)
+
+# Publishes an OTA update to the `preview` channel, so internal `preview`
+# builds pick up the latest dev JavaScript running against the staging backend
+# (EXPO_PUBLIC_CONVEX_URL in the EAS `preview` environment).
+#
+# NO push trigger on purpose: .github/workflows/staging.yml starts it after
+# the staging Convex deploy, and only when the repo variable STAGING_MOBILE_OTA
+# is "true" (each run spends EAS quota). By hand, from apps/mobile:
+#
+#   bunx eas-cli workflow:run preview-update.yml
+#
+# Same environment and APP_VARIANT as the `preview` build profile. Preview
+# keeps runtimeVersion "appVersion", so the update reaches preview builds of
+# the same app version only.
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        type: string
+        required: false
+        description: Message for the OTA update (defaults to a generic one)
+
+concurrency:
+  cancel_in_progress: false
+  group: ${{ workflow.filename }}-${{ github.ref }}
+
+jobs:
+  publish_preview_update:
+    name: Publish preview OTA update
+    type: update
+    environment: preview
+    env:
+      APP_VARIANT: preview
+    params:
+      channel: preview
+      message: ${{ inputs.message || 'Staging preview update' }}

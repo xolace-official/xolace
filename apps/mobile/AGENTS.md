@@ -53,6 +53,11 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   exists, else build + submit (TestFlight, Play internal). Started by
   `.github/workflows/release.yml` after the prod Convex deploy; by hand: `bunx eas-cli workflow:run release.yml`
   here (`-F force_native=true` for new binaries). Agents never run it.
+- `.eas/workflows/preview-update.yml` (manual/CLI only): OTA to channel `preview`
+  with the EAS `preview` environment (staging backend). Started by
+  `.github/workflows/staging.yml` after the staging Convex deploy, only when the repo
+  variable `STAGING_MOBILE_OTA` is `true`. Agents never run it. Setup:
+  `docs/setup/staging.md`.
 - Production `runtimeVersion` is `{ policy: "fingerprint" }`; development and preview
   keep `appVersion`. Store builds from before the switch (shipped `1.14.0`) get no
   fingerprint-runtime OTAs.

@@ -60,9 +60,20 @@ jobs:
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
           SHA: ${{ github.sha }}
+          # The prod deployment (project xolace-app). Staging's key is also a
+          # `prod:` key (of project xolace-staging), so the prefix alone isn't
+          # enough: the key must name this deployment.
+          PROD_DEPLOYMENT: energetic-guineapig-283
         run: |
+          # Key format: prod:<deployment-name>|<secret>
           if [[ "$CONVEX_DEPLOY_KEY" != prod:* ]]; then
             echo "::error::The production environment's CONVEX_DEPLOY_KEY secret is missing or not a production key."
+            exit 1
+          fi
+          deployment="${CONVEX_DEPLOY_KEY#prod:}"
+          deployment="${deployment%%|*}"
+          if [[ "$deployment" != "$PROD_DEPLOYMENT" ]]; then
+            echo "::error::The production environment's CONVEX_DEPLOY_KEY is for $deployment, not the prod deployment $PROD_DEPLOYMENT (a staging key?)."
             exit 1
           fi
           bunx convex deploy --message "release $SHA"
