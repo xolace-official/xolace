@@ -1,0 +1,371 @@
+name: PR preview
+
+# Per-PR backend previews, opt-in with the `preview-backend` label.
+#
+#   deploy  (label added, or a push / reopen while the label is on):
+#     1. convex deploy → a Convex *preview* deployment named pr-<number> in the
+#        xolace-staging project (created on first run, reused after), then the
+#        curated, idempotent seeds
+#     2. Vercel CLI deploys of web and admin (remote builds on Vercel) with
+#        NEXT_PUBLIC_CONVEX_URL = that preview, then a check that the build
+#        really uses it
+#     3. one sticky PR comment with the Convex preview and both preview URLs
+#   cleanup (label removed, or PR closed with the label on):
+#     delete the Convex preview through the Management API
+#
+# Web and admin stay plain builds: no Convex key ever reaches Vercel, and the
+# backend never waits on a client build. Vercel's own Git previews of the PR
+# keep running against staging; the URLs in our comment are the ones on the
+# PR's backend.
+#
+# Security: plain `pull_request` (never pull_request_target) and only for
+# branches of this repo. Fork PRs get no preview and no secrets.
+# Setup: docs/setup/pr-previews.md.
+
+on:
+  pull_request:
+    types: [labeled, unlabeled, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+
+env:
+  FORCE_COLOR: "1"
+  VERCEL_CLI_VERSION: 62.2.0
+  # The Convex project that holds previews. Never the prod project (xolace-app).
+  PREVIEW_PROJECT: xolace-staging
+  # The prod deployment. A preview key or URL must never name it.
+  PROD_DEPLOYMENT: energetic-guineapig-283
+  # Hidden markers in the sticky comment. The cleanup job reads the deployment
+  # name back from it, so don't change these without updating both jobs.
+  COMMENT_MARKER: "<!-- xolace-pr-preview -->"
+
+jobs:
+  deploy:
+    name: Deploy preview (Convex + web + admin)
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (
+        (github.event.action == 'labeled' && github.event.label.name == 'preview-backend') ||
+        ((github.event.action == 'synchronize' || github.event.action == 'reopened') &&
+          contains(github.event.pull_request.labels.*.name, 'preview-backend'))
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # A newer push supersedes this one. Shares its group with cleanup so the two
+    # never run at once for a PR.
+    concurrency:
+      group: pr-preview-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    # CONVEX_PREVIEW_DEPLOY_KEY and VERCEL_TOKEN are secrets of this environment.
+    environment:
+      name: preview
+      url: ${{ steps.apps.outputs.web_url }}
+    permissions:
+      contents: read
+      pull-requests: write # the sticky comment
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PREVIEW_NAME: pr-${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      # The PR's head commit, so the backend and both apps are built from the
+      # same code the reviewer sees on the branch.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: "false"
+          ignore-scripts: "true"
+
+      - name: convex deploy (preview pr-${{ github.event.pull_request.number }})
+        id: convex
+        working-directory: packages/backend
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_PREVIEW_DEPLOY_KEY }}
+          URL_FILE: ${{ runner.temp }}/convex-preview-url
+        run: |
+          # Preview deploy key format: preview:<team-slug>:<project-slug>|<secret>
+          prefix="${CONVEX_DEPLOY_KEY%%|*}"
+          IFS=: read -r kind team project extra <<< "$prefix"
+          if [[ "$CONVEX_DEPLOY_KEY" != *"|"* || "$kind" != "preview" || -z "$team" || -n "$extra" ]]; then
+            echo "::error::The preview environment's CONVEX_PREVIEW_DEPLOY_KEY is missing or not a Convex *preview* deploy key."
+            exit 1
+          fi
+          if [[ "$project" != "$PREVIEW_PROJECT" ]]; then
+            echo "::error::CONVEX_PREVIEW_DEPLOY_KEY belongs to project '$project', not '$PREVIEW_PROJECT'. Previews never go to another project."
+            exit 1
+          fi
+          if [[ "$CONVEX_DEPLOY_KEY" == *"$PROD_DEPLOYMENT"* ]]; then
+            echo "::error::CONVEX_PREVIEW_DEPLOY_KEY names the prod deployment $PROD_DEPLOYMENT. Refusing."
+            exit 1
+          fi
+
+          # --preview-name reuses pr-<n> (and its data) across pushes and creates
+          # it when missing (first run, or after it expired). --cmd runs before
+          # the push with the preview's URL in PREVIEW_CONVEX_URL; it only saves
+          # the URL (not a secret), so we still know the deployment if the push
+          # itself fails. The single quotes are on purpose: that shell expands them.
+          # shellcheck disable=SC2016
+          bunx convex deploy \
+            --preview-name "$PREVIEW_NAME" \
+            --message "pr-preview #$PR_NUMBER $HEAD_SHA" \
+            --cmd-url-env-var-name PREVIEW_CONVEX_URL \
+            --cmd 'printf "%s" "$PREVIEW_CONVEX_URL" > "$URL_FILE"'
+
+      # Runs even if the push failed, so the comment (and cleanup) learn the name.
+      - name: Read the preview deployment
+        id: target
+        if: always() && steps.convex.outcome != 'skipped'
+        env:
+          URL_FILE: ${{ runner.temp }}/convex-preview-url
+        run: |
+          if [[ ! -s "$URL_FILE" ]]; then
+            echo "::warning::convex deploy didn't report a preview URL."
+            exit 0
+          fi
+          url="$(cat "$URL_FILE")"
+          host="${url#https://}"
+          name="${host%%.*}"
+          if [[ ! "$url" =~ ^https://[a-z]+-[a-z]+-[0-9]+(\.[a-z0-9-]+)?\.convex\.cloud$ ]]; then
+            echo "::error::Unexpected preview URL '$url'."
+            exit 1
+          fi
+          if [[ "$name" == "$PROD_DEPLOYMENT" ]]; then
+            echo "::error::The preview resolved to the prod deployment. Refusing."
+            exit 1
+          fi
+          echo "Convex preview $PREVIEW_NAME is $name ($url)."
+          {
+            echo "url=$url"
+            echo "name=$name"
+          } >> "$GITHUB_OUTPUT"
+
+      # Same curated content as staging: reflections skip existing text,
+      # exercises upsert by title (and re-embed 6 exercises: a few cents of
+      # OpenAI at most), quotes skip a non-empty library. Safe on every push,
+      # and it re-seeds a preview that expired and came back empty. The preview
+      # key authorizes `convex run` on its own project's previews only.
+      - name: Seed curated content
+        id: seed
+        if: steps.convex.outcome == 'success' && steps.target.outputs.name != ''
+        working-directory: packages/backend
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_PREVIEW_DEPLOY_KEY }}
+          DEPLOYMENT: ${{ steps.target.outputs.name }}
+        run: |
+          bunx convex run --deployment "$DEPLOYMENT" seed:seedReflections
+          bunx convex run --deployment "$DEPLOYMENT" seed:seedExercises
+          bunx convex run --deployment "$DEPLOYMENT" seed:seedQuotes
+
+      # Remote builds on Vercel, from the repo root: each project's Root
+      # Directory (apps/web, apps/admin) and vercel.json (install/build from the
+      # root) apply as for Git deploys, and the Preview env vars (Clerk test
+      # keys, Sensitive ones included) stay on Vercel. Only the Convex URL is
+      # passed in, for the build (inlined NEXT_PUBLIC_*) and the runtime.
+      - name: Deploy web and admin (Vercel Preview)
+        id: apps
+        if: steps.convex.outcome == 'success' && steps.target.outputs.url != ''
+        env:
+          CONVEX_URL: ${{ steps.target.outputs.url }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          PROJECT_WEB: ${{ vars.VERCEL_PROJECT_ID_WEB }}
+          PROJECT_ADMIN: ${{ vars.VERCEL_PROJECT_ID_ADMIN }}
+          BYPASS_WEB: ${{ secrets.VERCEL_BYPASS_SECRET_WEB }}
+          BYPASS_ADMIN: ${{ secrets.VERCEL_BYPASS_SECRET_ADMIN }}
+          LOGS: ${{ runner.temp }}
+        run: |
+          if [[ -z "$VERCEL_TOKEN" || -z "$VERCEL_ORG_ID" || -z "$PROJECT_WEB" || -z "$PROJECT_ADMIN" ]]; then
+            echo "::warning::VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID_WEB or VERCEL_PROJECT_ID_ADMIN is not set; only the backend preview was deployed."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          deploy_app() {
+            local app="$1" project="$2"
+            VERCEL_PROJECT_ID="$project" bunx "vercel@${VERCEL_CLI_VERSION}" deploy \
+              --yes --target=preview --token "$VERCEL_TOKEN" \
+              --build-env NEXT_PUBLIC_CONVEX_URL="$CONVEX_URL" \
+              --env NEXT_PUBLIC_CONVEX_URL="$CONVEX_URL" \
+              --meta prPreview="$PREVIEW_NAME" \
+              --meta githubCommitSha="$HEAD_SHA" \
+              > "$LOGS/$app.url" 2> "$LOGS/$app.log"
+          }
+
+          # Vercel's CLI doesn't document whether --build-env beats a project
+          # env var of the same name (the Preview NEXT_PUBLIC_CONVEX_URL points at
+          # staging). So check the client bundle actually contains the preview
+          # host. Deployment Protection blocks the fetch unless the project's
+          # "Protection Bypass for Automation" secret is set; then we only warn.
+          verify_app() {
+            local app="$1" url="$2" bypass="$3" host="${CONVEX_URL#https://}"
+            local -a hdr=()
+            if [[ -n "$bypass" ]]; then hdr=(-H "x-vercel-protection-bypass: $bypass"); fi
+            local html
+            if ! html="$(curl -fsSL "${hdr[@]}" "$url/")"; then
+              echo "::warning::Couldn't fetch the $app preview to check its Convex URL (Deployment Protection? See docs/setup/pr-previews.md)."
+              return 0
+            fi
+            if grep -qF "$host" <<< "$html"; then return 0; fi
+            local chunk
+            while read -r chunk; do
+              if curl -fsSL "${hdr[@]}" "$url$chunk" | grep -qF "$host"; then return 0; fi
+            done < <(grep -oE '/_next/static/[^"]+\.js' <<< "$html" | sort -u)
+            echo "::error::The $app preview doesn't reference $host: Vercel built it with another NEXT_PUBLIC_CONVEX_URL. See Troubleshooting in docs/setup/pr-previews.md."
+            return 1
+          }
+
+          bunx "vercel@${VERCEL_CLI_VERSION}" --version > /dev/null # fetch once, not twice in parallel
+          declare -A pids
+          deploy_app web "$PROJECT_WEB" & pids[web]=$!
+          deploy_app admin "$PROJECT_ADMIN" & pids[admin]=$!
+          status=0
+          for app in web admin; do
+            if wait "${pids[$app]}"; then
+              url="$(tail -n 1 "$LOGS/$app.url")"
+              echo "${app}_url=$url" >> "$GITHUB_OUTPUT"
+              echo "$app preview: $url"
+            else
+              echo "::error::Vercel deploy of $app failed:"
+              cat "$LOGS/$app.log"
+              status=1
+            fi
+          done
+
+          if [[ -s "$LOGS/web.url" ]]; then
+            verify_app web "$(tail -n 1 "$LOGS/web.url")" "$BYPASS_WEB" || status=1
+          fi
+          if [[ -s "$LOGS/admin.url" ]]; then
+            verify_app admin "$(tail -n 1 "$LOGS/admin.url")" "$BYPASS_ADMIN" || status=1
+          fi
+          exit "$status"
+
+      - name: Update the PR comment
+        if: always() && steps.target.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          NAME: ${{ steps.target.outputs.name }}
+          CONVEX_OUTCOME: ${{ steps.convex.outcome }}
+          SEED_OUTCOME: ${{ steps.seed.outcome }}
+          APPS_OUTCOME: ${{ steps.apps.outcome }}
+          APPS_SKIPPED: ${{ steps.apps.outputs.skipped }}
+          WEB_URL: ${{ steps.apps.outputs.web_url }}
+          ADMIN_URL: ${{ steps.apps.outputs.admin_url }}
+        run: |
+          backend="failed ([logs]($RUN_URL))"
+          if [[ "$CONVEX_OUTCOME" == "success" ]]; then backend="\`$PREVIEW_NAME\` → [\`$NAME\`](https://dashboard.convex.dev/d/$NAME)"; fi
+          if [[ "$CONVEX_OUTCOME" == "cancelled" ]]; then backend="superseded by a newer push"; fi
+          if [[ "$SEED_OUTCOME" == "failure" ]]; then backend="$backend (seeding failed, [logs]($RUN_URL))"; fi
+          app_cell() {
+            if [[ -n "$1" ]]; then echo "$1"
+            elif [[ "$APPS_SKIPPED" == "true" ]]; then echo "not deployed (Vercel secrets missing)"
+            elif [[ "$APPS_OUTCOME" == "skipped" ]]; then echo "not deployed (backend failed)"
+            else echo "failed ([logs]($RUN_URL))"; fi
+          }
+          body="$COMMENT_MARKER
+          ${NAME:+<!-- convex-deployment: $NAME -->}
+          ### Backend preview
+
+          This PR runs on its own Convex backend (label \`preview-backend\`). Use these links, not Vercel's own preview links (those talk to staging).
+
+          | | |
+          |---|---|
+          | Convex | $backend |
+          | Web | $(app_cell "$WEB_URL") |
+          | Admin | $(app_cell "$ADMIN_URL") |
+          | Commit | \`${HEAD_SHA:0:7}\` ([run]($RUN_URL)) |
+
+          Sign in with a Clerk **test** account. Data lives only in this preview and is deleted when the label is removed or the PR closes (or when Convex expires the preview). Remove and re-add the label for a fresh, re-seeded backend."
+          id="$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$COMMENT_MARKER\"))) | .id" | head -n 1)"
+          if [[ -n "$id" ]]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$id" -f body="$body" > /dev/null
+          else
+            gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" -f body="$body" > /dev/null
+          fi
+
+  cleanup:
+    name: Delete preview backend
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (
+        (github.event.action == 'unlabeled' && github.event.label.name == 'preview-backend') ||
+        (github.event.action == 'closed' && contains(github.event.pull_request.labels.*.name, 'preview-backend'))
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Same group as deploy, never cancelled: it waits for a running deploy.
+    concurrency:
+      group: pr-preview-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    environment: preview
+    permissions:
+      contents: read
+      pull-requests: write # the sticky comment
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PREVIEW_NAME: pr-${{ github.event.pull_request.number }}
+    steps:
+      - name: Delete the Convex preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_PREVIEW_DEPLOY_KEY }}
+          REASON: ${{ github.event.action == 'closed' && 'PR closed' || 'label removed' }}
+        run: |
+          prefix="${CONVEX_DEPLOY_KEY%%|*}"
+          IFS=: read -r kind team project extra <<< "$prefix"
+          if [[ "$CONVEX_DEPLOY_KEY" != *"|"* || "$kind" != "preview" || -z "$team" || -n "$extra" || "$project" != "$PREVIEW_PROJECT" ]]; then
+            echo "::error::CONVEX_PREVIEW_DEPLOY_KEY is missing or not a preview key of $PREVIEW_PROJECT."
+            exit 1
+          fi
+
+          # The deploy job recorded the deployment name in its comment; only
+          # this workflow (github-actions[bot]) can write that comment.
+          id="$(gh api --paginate "repos/$REPO/issues/$PR_NUMBER/comments" \
+            --jq ".[] | select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$COMMENT_MARKER\"))) | .id" | head -n 1)"
+          if [[ -z "$id" ]]; then
+            echo "::notice::No preview comment on this PR; nothing to delete."
+            exit 0
+          fi
+          name="$(gh api "repos/$REPO/issues/comments/$id" --jq .body \
+            | sed -nE 's/^<!-- convex-deployment: ([a-z]+-[a-z]+-[0-9]+) -->$/\1/p' | head -n 1)"
+
+          result="no Convex deployment was recorded; Convex expires previews on its own"
+          if [[ -n "$name" ]]; then
+            if [[ "$name" == "$PROD_DEPLOYMENT" ]]; then
+              echo "::error::Recorded deployment is the prod deployment. Refusing."
+              exit 1
+            fi
+            api="https://api.convex.dev/v1/deployments/$name"
+            code="$(curl -sS -o "$RUNNER_TEMP/deployment.json" -w '%{http_code}' \
+              -H "Authorization: Bearer $CONVEX_DEPLOY_KEY" "$api")"
+            if [[ "$code" == "404" ]]; then
+              result="Convex deployment \`$name\` was already gone (expired)"
+            elif [[ "$code" != "200" ]]; then
+              echo "::error::Looking up $name failed with HTTP $code."
+              exit 1
+            else
+              type="$(jq -r .deploymentType "$RUNNER_TEMP/deployment.json")"
+              ident="$(jq -r '.previewIdentifier // empty' "$RUNNER_TEMP/deployment.json")"
+              if [[ "$type" != "preview" ]] || [[ -n "$ident" && "$ident" != "$PREVIEW_NAME" ]]; then
+                echo "::error::$name is a '$type' deployment ('$ident'), not this PR's preview. Refusing to delete it."
+                exit 1
+              fi
+              curl -fsS -X POST -H "Authorization: Bearer $CONVEX_DEPLOY_KEY" "$api/delete" > /dev/null
+              result="Convex deployment \`$name\` deleted"
+            fi
+          fi
+          echo "$result."
+
+          body="$COMMENT_MARKER
+          ### Backend preview
+
+          Removed ($REASON): $result. The Vercel preview deployments stay until Vercel's retention removes them, but they no longer have a backend. Add the \`preview-backend\` label again for a fresh one."
+          gh api -X PATCH "repos/$REPO/issues/comments/$id" -f body="$body" > /dev/null
