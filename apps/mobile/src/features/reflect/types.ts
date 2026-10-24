@@ -1,9 +1,9 @@
 import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
 
 export type UserVariant =
-	| { kind: "first-time"; dayCount?: number }
+	| { kind: "first-time" }
 	| { kind: "returning" }
-	| { kind: "active"; dayCount: number };
+	| { kind: "active" };
 
 export type ReflectionStateName =
 	| "idle"
@@ -43,7 +43,6 @@ export type ReflectionAction =
 	| { type: "SAY_MORE" }
 	| { type: "MISS_REASON"; reason: MissReason }
 	| { type: "CLARIFY_TEXT_CHANGE"; text: string }
-	| { type: "SET_USER_VARIANT"; variant: UserVariant }
 	| { type: "SET_QUIET_RETURN"; tier: QuietReturnTier | null }
 	| { type: "RESET" }
 	| { type: "ACCOUNT_SWITCHED"; entryText: string }
@@ -66,5 +65,4 @@ export interface ReflectionState {
 	quietReturn: QuietReturnTier | null;
 	screen: ReflectionStateName;
 	selectedTextures: string[];
-	userVariant: UserVariant;
 }

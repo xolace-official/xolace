@@ -35,10 +35,7 @@ import {
 } from "@/src/features/reflect/reflect-transitions";
 import type { ReflectionStateName } from "@/src/features/reflect/types";
 import { TalkDoorDialog, useTalkDoor } from "@/src/features/talk/talk-door";
-import {
-	computeQuietReturn,
-	computeUserVariant,
-} from "@/src/helpers/utils/user-variant";
+import { computeQuietReturn } from "@/src/helpers/utils/user-variant";
 import { useFullContext } from "@/src/lib/convex/use-full-context";
 import { useAppStore } from "@/src/store/store";
 
@@ -177,14 +174,10 @@ export const ReflectScreen = () => {
 			return;
 		}
 		dispatch({
-			type: "SET_USER_VARIANT",
-			variant: computeUserVariant(context.profile, context.streak),
-		});
-		dispatch({
 			tier: computeQuietReturn(context.profile),
 			type: "SET_QUIET_RETURN",
 		});
-	}, [context?.profile, context?.streak, dispatch]);
+	}, [context?.profile, dispatch]);
 
 	if (
 		current === "path-selection" &&

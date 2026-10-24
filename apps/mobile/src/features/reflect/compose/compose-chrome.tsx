@@ -59,8 +59,6 @@ export const ComposeChrome = ({
 
 	return (
 		<View className="flex-row items-center gap-2 pb-3">
-			{/* The context's own streak, not the reflect machine's variant: that starts
-			    as a default with no day count on a fresh screen. */}
 			<StreakCalendar
 				currentStreak={context?.streak}
 				reviveStreak={context?.reviveStreak}
