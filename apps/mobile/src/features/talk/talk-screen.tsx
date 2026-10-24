@@ -18,6 +18,7 @@ import { TalkAurora } from "@/src/features/talk/talk-aurora";
 import { TalkComposer } from "@/src/features/talk/talk-composer";
 import { TalkHeader } from "@/src/features/talk/talk-header";
 import { TalkHelp } from "@/src/features/talk/talk-help";
+import { TalkLeaveDialog } from "@/src/features/talk/talk-leave-dialog";
 import { TalkThread } from "@/src/features/talk/talk-thread";
 import { useTalk } from "@/src/features/talk/use-talk";
 import type { ThreadLine } from "@/src/features/talk/use-thread";
@@ -56,6 +57,7 @@ function Talk({
 				<TalkHelp sessionId={talk.sessionId} />
 				{talk.connected && <TalkComposer talk={talk} />}
 			</KeyboardAvoidingView>
+			<TalkLeaveDialog talk={talk} />
 		</View>
 	);
 }
