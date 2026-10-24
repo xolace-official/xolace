@@ -13,7 +13,12 @@ import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "../lib/rateLimits";
 import { getDayOfWeek, getTimeOfDay } from "../lib/timeOfDay";
 import { MAX_TURNS } from "../sessionTurns";
 import { afterTalkIssues } from "./check";
-import { markNameAsked, talkGreeting, talkSetup } from "./companion";
+import {
+	markNameAsked,
+	nameQuestionSaid,
+	talkGreeting,
+	talkSetup,
+} from "./companion";
 import {
 	attachTo,
 	markEnded,
@@ -86,7 +91,11 @@ export const start = internalMutation({
 		);
 		return {
 			ceilingS,
-			firstMessage: talkGreeting(setup.session.companionName),
+			firstMessage: talkGreeting(setup.session.companionName, {
+				askName: setup.session.askPersonName
+					? setup.session.personName
+					: undefined,
+			}),
 			sessionId,
 			speed: setup.speed,
 			talkKey,
@@ -322,8 +331,9 @@ export async function finalizeTalk(
 		return "abandoned";
 	}
 
-	// Their first real talk asked their name, answered or not (#602).
-	if (session.askPersonName) {
+	// Asked once it was really said, answered or not (#602). An answer saves
+	// it already (set_person_name).
+	if (session.askPersonName && nameQuestionSaid(lines, session.personName)) {
 		await markNameAsked(ctx, session.emotionalProfileId);
 	}
 

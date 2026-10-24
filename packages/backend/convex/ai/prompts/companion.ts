@@ -129,11 +129,16 @@ function personSection(
 		return `\n\nTheir name:\n- Call them ${person.name}. Don't ask their name again. If they bring it up and want another, call ${PERSON_NAME_TOOL} with it. It stays between you two; the name other Xolacers see is changed in Settings.`;
 	}
 	return `\n\nTheir name (this is your first talk):
-- Early on, once, ask: "Should I call you ${person.name}, or something else?"
+- Your greeting asked: "${nameQuestion(person.name)}" Don't ask again. Only if they cut the greeting off before that question, ask it once, early, in those words.
 - If ${person.name} is fine, call ${PERSON_NAME_TOOL} with ${person.name}.
 - If they give another name and you're unsure how it's spelled, check with them, then call ${PERSON_NAME_TOOL} with it. It stays between you two; the name other Xolacers see is changed in Settings.
-- If they'd rather not say, call ${PERSON_NAME_TOOL} with ${person.name}, and don't ask again.`;
+- If they'd rather not say, or go straight past it into something else, call ${PERSON_NAME_TOOL} with ${person.name} and follow them.
+- Once it's settled, if they haven't started yet, ask what's on their mind.`;
 }
+
+/** The first talk's name question (#602), said in the greeting itself. */
+export const nameQuestion = (name: string) =>
+	`Should I call you ${name}, or something else?`;
 
 export type TalkStyle = { directness?: TalkDirectness; slowed: boolean };
 

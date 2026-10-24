@@ -7,7 +7,7 @@
  * name is saved through someone else's talk or a closed one; the private
  * name outlives a data wipe.
  */
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { internal } from "../_generated/api";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import {
@@ -85,6 +85,78 @@ describe("the person's name in a talk", () => {
 		});
 		const second = await startTalk(user);
 		expect(await person(user, second)).toEqual({ ask: false, name: "Fern" });
+	});
+
+	it("asks in the greeting itself, and only on the first talk", async () => {
+		const user = await asNewUser();
+		await setDisplayName(user, "Fern");
+		const greet = () =>
+			user.t
+				.mutation(internal.talk.session.start, {
+					secret: crypto.randomUUID(),
+					startedAt: Date.now(),
+				})
+				.then(async (t) => {
+					await user.t.mutation(internal.talk.session.abandon, {
+						sessionId: t.sessionId,
+					});
+					return t.firstMessage;
+				});
+		expect(await greet()).toBe(
+			"Hey. I'm Ember, part of Xolace. Should I call you Fern, or something else?"
+		);
+		await user.root.run(async (ctx) => {
+			const p = await ctx.db
+				.query("preferences")
+				.withIndex("by_profile", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.unique();
+			await ctx.db.patch("preferences", p!._id, { talkNameAsked: true });
+		});
+		expect(await greet()).toBe(
+			"Hey. I'm Ember, part of Xolace. What's on your mind?"
+		);
+	});
+
+	describe("a first talk that ends", () => {
+		beforeEach(() => {
+			// The mirror it schedules waits; these only read the ask.
+			vi.useFakeTimers({ toFake: ["Date", "setTimeout"] });
+			return () => vi.useRealTimers();
+		});
+
+		const endWith = async (user: SeededUser, greeting: string) => {
+			const talk = await startTalk(user);
+			await user.t.mutation(internal.talk.turns.syncLines, {
+				...talk,
+				lines: [
+					{ role: "companion", text: greeting },
+					{ role: "person", text: "Work is too much." },
+				],
+			});
+			await user.t.mutation(internal.talk.session.abandon, {
+				sessionId: talk.sessionId,
+			});
+		};
+
+		// Read off preferences: a second talk would need talk time this one spent.
+		it("has used up the ask once the question was said", async () => {
+			const user = await asNewUser();
+			await setDisplayName(user, "Fern");
+			await endWith(
+				user,
+				"Hey. I'm Ember, part of Xolace. Should I call you Fern, or something else?"
+			);
+			expect((await prefs(user))?.talkNameAsked).toBe(true);
+		});
+
+		it("still asks next time when the greeting was cut off before it", async () => {
+			const user = await asNewUser();
+			await setDisplayName(user, "Fern");
+			await endWith(user, "Hey. I'm Ember, part of...");
+			expect((await prefs(user))?.talkNameAsked).toBeFalsy();
+		});
 	});
 
 	it("a private name is used by the companion and leaves displayName alone", async () => {
