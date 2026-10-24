@@ -39,6 +39,7 @@ What triggers what:
 | You do | Convex | Web / admin (Vercel) | Mobile |
 |---|---|---|---|
 | Open or push a PR | nothing | Preview deploy (against staging) | `native-change` label only |
+| Add the `preview-backend` label to a PR | its own Convex preview `pr-<n>` ([pr-previews.md](./pr-previews.md)) | extra CLI previews against it | nothing |
 | Merge into `dev` | **staging** deployed ([staging.md](./staging.md)) | Preview deploy (against staging) | preview OTA, if opted in |
 | Merge `dev` into `main` (a release) | **prod deployed** | **Production** deploy | release, if mobile files changed |
 

@@ -52,7 +52,7 @@ xolace/                                  (fresh clone of xolace_app, history kep
 ├─ .agents/rules/*.md                    short topic rules (convex, expo-metro, testing, env, release)
 ├─ .agents/skills/                       repo skills (test-mobile, test-web, pr-watch …); .claude/skills symlinks here
 ├─ .github/
-│  ├─ workflows/  ci.yml · release.yml · staging.yml · mobile-fingerprint.yml · desktop-release.yml
+│  ├─ workflows/  ci.yml · release.yml · staging.yml · pr-preview.yml · mobile-fingerprint.yml · desktop-release.yml
 │  │              intensity-gate.yml · talk-gate.yml · security-audit.yml · pr-title.yml
 │  ├─ CODEOWNERS (repo-relative paths) · pull_request_template.md · ISSUE_TEMPLATE/*.yml
 │  └─ actions/setup/ (bun pin + cache)
@@ -300,7 +300,7 @@ These become the table in CONTRIBUTING.md.
 - **EAS Workflows** (`.eas/workflows/`) runs anything that builds mobile: the PR E2E build, argent flows, the exploratory run, and release.
 - **One PR comment.** A single summary comment gathers the results: pass/fail, screenshots, recordings and junit. Artifacts are uploaded.
 - **Optional label-gated OTA preview.** Adding the `preview-approved` label publishes the PR to EAS branch `pr-<n>` from an EAS environment that holds no secrets, and posts a QR code (the clarity pattern).
-- **Per-PR Convex preview backend (same label, built with the E2E work).** PR previews of web/admin and preview OTAs use staging, which runs `dev`'s backend, so a PR's own backend changes aren't in its preview. Staging stays the shared `dev` backend; per-PR previews are only for testing a labelled PR's backend changes. When the label is added, a PR workflow:
+- **Per-PR Convex preview backend.** *(Built 2026-10-24 ahead of the E2E work, on its own label `preview-backend`: `.github/workflows/pr-preview.yml`, previews in the `xolace-staging` project, web/admin previews via the Vercel CLI, mobile still to come. Setup: `docs/setup/pr-previews.md`.)* PR previews of web/admin and preview OTAs use staging, which runs `dev`'s backend, so a PR's own backend changes aren't in its preview. Staging stays the shared `dev` backend; per-PR previews are only for testing a labelled PR's backend changes. When the label is added, a PR workflow:
   1. runs `convex deploy --preview-create pr-<n>` with a Convex **preview** deploy key (GitHub secret), then seeds it through the §5.3 test functions;
   2. points the `pr-<n>` OTA preview at that deployment;
   3. deploys a web preview against it through the Vercel CLI (`VERCEL_TOKEN`), since Vercel's Git previews can't know the URL.

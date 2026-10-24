@@ -77,7 +77,7 @@ When you change behavior, walk this list and say in the PR which ones you checke
 ## Ways to hurt yourself
 
 - **Never** run `convex deploy`, or anything against the prod or staging Convex
-  deployments. Only the release and staging pipelines deploy.
+  deployments. Only the release, staging and PR-preview pipelines deploy.
 - **Never** run `convex dev` against a deployment you share. Each worktree gets its own
   dev deployment (`bunx convex dev --configure` in `packages/backend`, pick "new").
 - **Never** commit secrets: `.env*` values, `google-services.json`,

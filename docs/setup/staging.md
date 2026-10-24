@@ -42,7 +42,8 @@ merge a PR into dev
 - **PR previews use staging too.** A PR's Vercel preview runs the PR's web code
   against the staging backend built from `dev`. If the PR adds a Convex function, the
   preview can't call it until the PR is merged; test those against your own dev
-  deployment.
+  deployment, or add the `preview-backend` label for a per-PR backend
+  ([pr-previews.md](./pr-previews.md)).
 - **Vercel may finish first.** Vercel builds the `dev` push at the same time as the
   workflow deploys Convex, so a preview can be live for a minute before the backend
   catches up. Acceptable for staging. Production avoids this with deploy hooks.
@@ -73,6 +74,10 @@ merge a PR into dev
 1. In `xolace-staging`, on the **Production** deployment: **Settings → URL & Deploy
    Key → Generate Production Deploy Key**. It looks like `prod:<name>|…`, and `<name>`
    must be the staging deployment from Step 1, **not** `energetic-guineapig-283`.
+   **Permissions:** deploy, plus **run internal actions**. The seed functions
+   (`seed:seedReflections`, `seed:seedExercises`, `seed:seedQuotes`) are internal
+   actions; without that permission the seed step fails with
+   `deployment:functions:runInternalActions`.
 2. GitHub repo → **Settings → Environments → New environment** → name it
    **`staging`**.
    - **Deployment branches and tags:** "Selected branches and tags" → add `dev`.
@@ -219,6 +224,7 @@ wiping staging.
 | Symptom | Fix |
 |---|---|
 | `staging environment's CONVEX_DEPLOY_KEY secret is missing or not a production deploy key` | Step 2: the secret must be in the `staging` environment and start with `prod:`. A `dev:` or `preview:` key is refused. |
+| `You do not have permission to perform this operation (deployment:functions:runInternalActions)` | The seed step: the key lacks "run internal actions". Generate a new staging key with it (Step 2) and replace the GitHub secret. |
 | `CONVEX_DEPLOY_KEY is the PROD key` | You pasted prod's key into `staging`. Replace it with the `xolace-staging` key, and check prod's key didn't leak anywhere else. |
 | Release fails with `not the prod deployment … (a staging key?)` | The `production` environment holds the staging key. Put prod's key back (release.md Step 1). |
 | Deploy fails on `CLERK_JWT_ISSUER_DOMAIN is not set` or a missing `POSTHOG_PROJECT_TOKEN` | Step 4: set them on the staging deployment, then re-run the workflow. |
