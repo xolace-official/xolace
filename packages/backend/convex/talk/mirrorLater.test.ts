@@ -5,7 +5,8 @@
  * mirror screens anyway; the talk closes before its reading is stored, so the
  * completion's jobs miss it; the delivered mirror is left open, or never
  * counts as a reflection; an escalated mirror closes silently, its help
- * unseen; a talk with nothing said gets a mirror; an old client (no
+ * unseen; a failed mirror shows its error on home, or is never retried, or
+ * retries forever; a talk with nothing said gets a mirror; an old client (no
  * `mirrorLater`) stops getting its mirror on home.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -197,19 +198,77 @@ describe("talk.session.end with mirrorLater", () => {
 		});
 	});
 
-	it("shows a mirror that failed on home, for its retry", async () => {
+	it("retries a failed mirror on the server, never on home, then drops it", async () => {
 		const user = await asNewUser();
 		const sessionId = await talk(user);
 		await user.t.mutation(api.talk.session.end, {
 			mirrorLater: true,
 			sessionId,
 		});
-		await user.root.run((ctx) =>
-			ctx.db.patch("sessions", sessionId, { state: "error" })
-		);
-		expect((await user.t.query(api.sessions.getActive, {}))?._id).toBe(
-			sessionId
-		);
+		const fail = () =>
+			user.root.mutation(internal.sessions.failSession, {
+				errorMessage: "Something interrupted this moment.",
+				sessionId,
+			});
+
+		for (let attempt = 1; attempt <= 3; attempt++) {
+			await fail();
+			expect(await session(user, sessionId)).toMatchObject({
+				state: "error",
+				talkMirrorRetries: attempt,
+			});
+			expect(await user.t.query(api.sessions.getActive, {})).toBeNull();
+			await user.root.mutation(internal.sessions.retryMirrorLater, {
+				sessionId,
+			});
+			expect(await session(user, sessionId)).toMatchObject({
+				state: "processing",
+			});
+		}
+
+		// Out of retries: it goes quietly, like a talk nobody came back to.
+		await fail();
+		expect(await session(user, sessionId)).toMatchObject({
+			state: "abandoned",
+		});
+		expect(await user.t.query(api.sessions.getActive, {})).toBeNull();
+	});
+
+	it("drops a refused mirror without a retry or an error on home", async () => {
+		const user = await asNewUser();
+		const sessionId = await talk(user);
+		await user.t.mutation(api.talk.session.end, {
+			mirrorLater: true,
+			sessionId,
+		});
+		await user.root.mutation(internal.sessions.failSession, {
+			errorMessage: "content_policy_violation",
+			rejected: true,
+			sessionId,
+		});
+		const s = await session(user, sessionId);
+		expect(s).toMatchObject({ state: "abandoned" });
+		expect(s?.talkMirrorRetries).toBeUndefined();
+		expect(await user.t.query(api.sessions.getActive, {})).toBeNull();
+	});
+
+	it("keeps an old client's failed talk on home, for its retry", async () => {
+		const user = await asNewUser();
+		const sessionId = await talk(user);
+		await user.t.mutation(api.talk.session.end, { sessionId });
+		await user.root.mutation(internal.sessions.failSession, {
+			errorMessage: "Something interrupted this moment.",
+			sessionId,
+		});
+		expect(await user.t.query(api.sessions.getActive, {})).toMatchObject({
+			_id: sessionId,
+			state: "error",
+		});
+		// Retry with no text from the client: the server reprocesses what it stored.
+		await user.t.mutation(api.sessions.retrySession, { sessionId });
+		expect(await session(user, sessionId)).toMatchObject({
+			state: "processing",
+		});
 	});
 
 	it("still makes no mirror when nothing was said", async () => {

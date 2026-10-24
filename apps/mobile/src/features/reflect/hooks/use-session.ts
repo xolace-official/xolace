@@ -35,7 +35,6 @@ export function useSession() {
 	const [localSessionId, setLocalSessionId] = useState<Id<"sessions"> | null>(
 		null
 	);
-	const [lastRawText, setLastRawText] = useState<string | null>(null);
 	const { mode: sessionModeAtHook } = useSessionMode();
 
 	// Derive sessionId: prefer explicitly-set local ID, fall back to server active session
@@ -112,7 +111,6 @@ export function useSession() {
 				useAppStore.getState().setPendingEventPrompt(null);
 			}
 			setLocalSessionId(newSessionId);
-			setLastRawText(rawText);
 
 			try {
 				await submitInputMutation({
@@ -217,12 +215,14 @@ export function useSession() {
 		}
 	}, [sessionId, abandonMutation]);
 
+	// The server reprocesses the input it stored, so this works for a session
+	// picked up from getActive too (a talk, or after a restart).
 	const retry = useCallback(async () => {
-		if (!(sessionId && lastRawText)) {
+		if (!sessionId) {
 			return;
 		}
-		await retryMutation({ rawText: lastRawText, sessionId });
-	}, [sessionId, lastRawText, retryMutation]);
+		await retryMutation({ sessionId });
+	}, [sessionId, retryMutation]);
 
 	const recordEscalationResponse = useCallback(
 		async (userResponse: "engaged" | "dismissed") => {
@@ -236,7 +236,6 @@ export function useSession() {
 
 	const resetSession = useCallback(() => {
 		setLocalSessionId(null);
-		setLastRawText(null);
 	}, []);
 
 	return {
