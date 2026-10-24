@@ -117,9 +117,15 @@ type TogglesSlice = {
 	/** Menu item keys whose "new" glow has been acknowledged (item opened once). */
 	seenMenuItems: string[];
 	markMenuItemSeen: (key: string) => void;
-	/** Highest streak day the user has seen the calendar reveal for. */
+	/** Highest streak day each account (by Clerk user id) has seen the calendar reveal for. */
+	acknowledgedStreaks: Record<string, number>;
+	/**
+	 * The acknowledged day from before it was kept per account. It stands in
+	 * for any account without its own entry, until the first write claims it
+	 * (zeroed then).
+	 */
 	lastAcknowledgedStreak: number;
-	setLastAcknowledgedStreak: (n: number) => void;
+	setLastAcknowledgedStreak: (n: number, owner: string) => void;
 	/** Awareness event slugs the user has already seen, with timestamps for pruning. */
 	seenEventIds: { slug: string; seenAt: number }[];
 	addToSeenEventIds: (slug: string) => void;
@@ -213,6 +219,7 @@ export const useAppStore = create<AppState>()(
 	devtools(
 		persist(
 			(set) => ({
+				acknowledgedStreaks: {},
 				addToSeenEventIds: (slug) =>
 					set((s) =>
 						s.seenEventIds.some((e) => e.slug === slug)
@@ -280,7 +287,11 @@ export const useAppStore = create<AppState>()(
 				setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 				setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
 				setIntroSeen: (v) => set({ introSeen: v }),
-				setLastAcknowledgedStreak: (n) => set({ lastAcknowledgedStreak: n }),
+				setLastAcknowledgedStreak: (n, owner) =>
+					set((s) => ({
+						acknowledgedStreaks: { ...s.acknowledgedStreaks, [owner]: n },
+						lastAcknowledgedStreak: 0,
+					})),
 				setLastSeenVersion: (v) => set({ lastSeenVersion: v }),
 				setLibraryIntroSeen: (v) => set({ libraryIntroSeen: v }),
 				setMusicIntroSeen: (v) => set({ musicIntroSeen: v }),
@@ -349,6 +360,7 @@ export const useAppStore = create<AppState>()(
 			{
 				name: "xolace-app",
 				partialize: (s) => ({
+					acknowledgedStreaks: s.acknowledgedStreaks,
 					bridgeIntroSeen: s.bridgeIntroSeen,
 					chatEnabledCached: s.chatEnabledCached,
 					colorThemeId: s.colorThemeId,
