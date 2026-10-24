@@ -12,7 +12,7 @@ export const JUST_END = "Just end";
 export const MIRROR_LATER = "Your mirror waits in your timeline";
 /** The consent card: the companion keeps going unless told otherwise. */
 export const END_ANYTIME =
-	"You can end whenever you like, from the menu up top. Stop wherever feels right; you don't have to go deeper than you want.";
+	"You can end whenever you like, from the menu up top or tell . Stop wherever feels right; you don't have to go deeper than you want.";
 
 // Weekly talk time (#582, #596). Mirrors convex/talk/time.ts; the server enforces.
 export const WEEKLY_TALK_S = 15 * 60;
