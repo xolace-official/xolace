@@ -87,7 +87,7 @@
     "expo-updates": "~58.0.17",
     "expo-video": "~58.0.12",
     "expo-web-browser": "~58.0.6",
-    "heroui-native": "1.0.10",
+    "heroui-native": "1.0.11",
     "livekit-client": "^2.21.0",
     "posthog-react-native": "^4.43.10",
     "react": "catalog:",
@@ -115,7 +115,7 @@
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.2.1",
-    "uniwind": "1.12.2",
+    "uniwind": "1.13.0",
     "zustand": "^5.0.11"
   },
   "devDependencies": {

@@ -78,7 +78,7 @@
       }
     },
     {
-      "includes": ["src/themes/**/*.css"],
+      "includes": ["src/themes/**/*.css", "src/global.css"],
       "linter": {
         "rules": {
           "suspicious": {
