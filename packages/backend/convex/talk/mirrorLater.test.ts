@@ -167,6 +167,36 @@ describe("talk.session.end with mirrorLater", () => {
 		});
 	});
 
+	it("completes a delivered mirror the pipeline never closed, without the day's wait", async () => {
+		const user = await asNewUser();
+		const ended = await talk(user);
+		await user.t.mutation(api.talk.session.end, {
+			mirrorLater: true,
+			sessionId: ended,
+		});
+		// An old client's talk, delivered alongside: it still waits the day.
+		const other = await asNewUser(2, user.root);
+		const kept = await talk(other);
+		await other.t.mutation(api.talk.session.end, { sessionId: kept });
+		for (const sessionId of [ended, kept]) {
+			await user.root.mutation(internal.sessions.deliverMirror, {
+				sessionId,
+				...MIRROR,
+			});
+		}
+
+		// The cron's 30 minutes, not the 24 hours a talk waits for its person.
+		vi.setSystemTime(Date.now() + 31 * 60 * 1000);
+		await user.root.mutation(internal.sessions.checkAbandoned, {});
+		expect(await session(user, ended)).toMatchObject({
+			pathCompleted: false,
+			state: "completed",
+		});
+		expect(await session(other, kept)).toMatchObject({
+			state: "mirror_delivered",
+		});
+	});
+
 	it("shows a mirror that failed on home, for its retry", async () => {
 		const user = await asNewUser();
 		const sessionId = await talk(user);

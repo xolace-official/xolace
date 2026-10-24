@@ -1294,10 +1294,12 @@ export const checkAbandoned = internalMutation({
 					continue;
 				}
 				// ponytail: skipped rows stay in this take(50) window for up to a day;
-				// give talks their own index range if they ever crowd it.
+				// give talks their own index range if they ever crowd it. A "Just end"
+				// talk has no one coming back for it, so it doesn't wait.
 				if (
 					session.entryType === "talk" &&
 					state === "mirror_delivered" &&
+					!session.talkMirrorLater &&
 					session.updatedAt > Date.now() - TALK_MIRROR_WAIT_MS
 				) {
 					continue;
