@@ -91,6 +91,10 @@ Anyone who can label PRs (write or triage access) can start a preview.
 1. [dashboard.convex.dev](https://dashboard.convex.dev) → team `xolace-inc` → project
    **`xolace-staging`** (not `xolace-app`) → **Settings** (project settings) →
    **Preview Deploy Keys** → **Generate Preview Deploy Key**. Name it `github-pr-preview`.
+   **Permissions:** deploy, plus **run internal actions**. The seed functions
+   (`seed:seedReflections`, `seed:seedExercises`, `seed:seedQuotes`) are internal
+   actions; without that permission the seed step fails with
+   `deployment:functions:runInternalActions`.
 2. It looks like `preview:xolace-inc:xolace-staging|…`. Check the middle part is
    `xolace-staging`: the workflow refuses any other project, any non-preview key, and
    anything mentioning prod (`energetic-guineapig-283`).
