@@ -1,7 +1,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
-import type { Doc } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import {
 	internalMutation,
@@ -711,6 +711,11 @@ export const getActive = query({
 				.order("desc")
 				.first();
 
+			// A talk ended with "End" makes its mirror for the timeline, not home;
+			// only a failed one shows here, for its retry.
+			if (session?.talkMirrorLater && state !== "error") {
+				continue;
+			}
 			if (
 				session &&
 				(!latest || session._creationTime > latest._creationTime)
@@ -1017,7 +1022,36 @@ export const deliverMirror = internalMutation({
 			...(args.gapNamed ? { gapNamed: true } : {}),
 			updatedAt: Date.now(),
 		});
+		await closeIfMirrorLater(ctx, args.sessionId);
 	},
+});
+
+/**
+ * A talk ended with "End" (talkMirrorLater) closes once its mirror is in:
+ * completed like a reflection, so it's in the timeline and counts, without
+ * a mirror screen. An escalated mirror stays open instead, for home to show
+ * with its help.
+ */
+async function closeIfMirrorLater(ctx: MutationCtx, sessionId: Id<"sessions">) {
+	const session = await ctx.db.get("sessions", sessionId);
+	if (!session?.talkMirrorLater || session.state !== "mirror_delivered") {
+		return;
+	}
+	if (session.escalationTriggered) {
+		await ctx.db.patch("sessions", sessionId, { talkMirrorLater: undefined });
+		return;
+	}
+	await finalizeCompletion(ctx, session, { pathCompleted: false });
+}
+
+/** talk.session.end's close for a mirror that was already delivered. */
+export const closeMirrorLater = internalMutation({
+	args: { sessionId: v.id("sessions") },
+	handler: async (ctx, { sessionId }) => {
+		await closeIfMirrorLater(ctx, sessionId);
+		return null;
+	},
+	returns: v.null(),
 });
 
 /**

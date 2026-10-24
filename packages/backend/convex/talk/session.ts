@@ -202,15 +202,31 @@ export const attachConversation = mutation({
 /**
  * The person ended the talk, or the companion did (end_call). True when a
  * mirror is on its way: the client moves to the processing → mirror screens.
+ * `mirrorLater`: they chose "End", not the mirror now. It's still made, and
+ * goes to their timeline (sessions.closeMirrorLater); nothing opens on home.
+ * A talk already closed (its disconnect landed first) is flagged all the same.
  */
 export const end = mutation({
-	args: { sessionId: v.id("sessions") },
-	handler: async (ctx, { sessionId }) => {
+	args: { mirrorLater: v.optional(v.boolean()), sessionId: v.id("sessions") },
+	handler: async (ctx, { mirrorLater, sessionId }) => {
 		const { session } = await requireSessionOwnership(ctx, sessionId);
 		if (session.entryType !== "talk") {
 			throw new ConvexError({ code: "not_a_talk" });
 		}
-		return (await finalizeTalk(ctx, session)) !== "abandoned";
+		const state = await finalizeTalk(ctx, session);
+		if (state === "abandoned") {
+			return false;
+		}
+		if (mirrorLater) {
+			await ctx.db.patch("sessions", sessionId, { talkMirrorLater: true });
+			// Already delivered: a reopening with nothing new, or a mirror that beat this call.
+			if (state === "mirror_delivered") {
+				await ctx.scheduler.runAfter(0, internal.sessions.closeMirrorLater, {
+					sessionId,
+				});
+			}
+		}
+		return true;
 	},
 	returns: v.boolean(),
 });

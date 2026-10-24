@@ -2276,6 +2276,10 @@ export default defineSchema({
 		// What the companion knows of the person, rendered once at talk start
 		// (#598): the cached prompt prefix. Cleared when the talk closes.
 		talkMemory: v.optional(v.string()),
+		// Ended with "End" rather than "End and make my mirror": the mirror is
+		// still made, then the session closes into the timeline instead of
+		// opening on home. Cleared if the mirror escalates, so its help shows.
+		talkMirrorLater: v.optional(v.boolean()),
 		// Episodic recall during a talk (#598): the latest hits, read by the next
 		// turn, and every memory key surfaced so far. Absent with memory off.
 		talkRecall: v.optional(
