@@ -20,14 +20,22 @@ from `xolace_app/convex` in Phase 2. Full rules: `.agents/rules/convex.md`.
 
 ## Deploy topology
 
-- **Only `.github/workflows/release.yml` deploys Convex**, on every push to `main`:
-  `convex deploy` to prod first, then the clients (EAS mobile release, Vercel deploy
-  hooks for web and admin). The backend never waits on a client build.
-- **Key:** the prod `CONVEX_DEPLOY_KEY` is a secret of the GitHub `production`
-  environment, and nowhere else: not Vercel, EAS or a local `.env`.
+- **Only CI deploys Convex**, and agents never run either deploy:
+  - push to `dev` → `.github/workflows/staging.yml` → **staging** (the Production
+    deployment of the separate `xolace-staging` project), then an opt-in EAS OTA to
+    the `preview` channel. Vercel Previews deploy on their own.
+  - push to `main` → `.github/workflows/release.yml` → **prod**
+    (`energetic-guineapig-283`), then the clients (EAS mobile release, Vercel deploy
+    hooks for web and admin). The backend never waits on a client build.
+- **Keys:** each `CONVEX_DEPLOY_KEY` is a secret of its GitHub environment
+  (`production` / `staging`) and nowhere else: not Vercel, EAS or a local `.env`.
+  Both are `prod:` keys; the workflows check the deployment name so neither can deploy
+  the other's backend.
 - **Web and admin** are plain builds reading `NEXT_PUBLIC_CONVEX_URL` from Vercel env
-  (prod URL on Production, the shared dev deployment on Preview); both fail their
-  build if `CONVEX_DEPLOY_KEY` is set. Desktop and local builds never deploy.
+  (prod URL on Production, staging on Preview); both fail their build if
+  `CONVEX_DEPLOY_KEY` is set. Desktop and local builds never deploy.
+- Staging uses the Clerk dev instance, so test accounts work there. Setup:
+  `docs/setup/staging.md`.
 - Clients ship after the backend is live; the store-gap rule still applies to binaries
   already in users' hands. Setup: `docs/setup/release.md`.
 

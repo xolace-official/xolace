@@ -44,8 +44,9 @@ Put a dependency in the package that uses it; shared versions come from the root
   features, which live in `packages/backend/convex/ai/`.
 - **surface**: anything that ships: mobile, web, desktop, cli, admin, docs, plus the
   Convex contract itself.
-- **deployment**: a Convex deployment unless said otherwise: `prod`, `preview`,
-  a per-worktree `dev`, and the dedicated `e2e` one.
+- **deployment**: a Convex deployment unless said otherwise: `prod`, `staging`
+  (the shared backend for `dev`), `preview`, a per-worktree `dev`, and the dedicated
+  `e2e` one.
 
 ## Hit every surface
 
@@ -64,10 +65,19 @@ When you change behavior, walk this list and say in the PR which ones you checke
 - [ ] **docs**: user-visible behavior or setup changed? Update `apps/docs` or the
       relevant `AGENTS.md`.
 
+## Releases
+
+- Push to `dev` → `staging.yml`: staging Convex deploy (+ preview OTA if
+  `STAGING_MOBILE_OTA` is on). Vercel Previews of web/admin use staging.
+- Push to `main` → `release.yml`: prod Convex first, then the EAS release and the
+  web/admin deploy hooks.
+- Agents never run deploys, EAS builds or updates, or these workflows. Setup:
+  `docs/setup/release.md`, `docs/setup/staging.md`.
+
 ## Ways to hurt yourself
 
-- **Never** run `convex deploy`, or anything against the prod Convex deployment. Only
-  the release pipeline deploys.
+- **Never** run `convex deploy`, or anything against the prod or staging Convex
+  deployments. Only the release and staging pipelines deploy.
 - **Never** run `convex dev` against a deployment you share. Each worktree gets its own
   dev deployment (`bunx convex dev --configure` in `packages/backend`, pick "new").
 - **Never** commit secrets: `.env*` values, `google-services.json`,

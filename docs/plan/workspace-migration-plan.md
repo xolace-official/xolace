@@ -52,8 +52,8 @@ xolace/                                  (fresh clone of xolace_app, history kep
 ├─ .agents/rules/*.md                    short topic rules (convex, expo-metro, testing, env, release)
 ├─ .agents/skills/                       repo skills (test-mobile, test-web, pr-watch …); .claude/skills symlinks here
 ├─ .github/
-│  ├─ workflows/  ci.yml · release.yml · mobile-fingerprint.yml · desktop-release.yml
-│  │              desktop-release.yml · evals-gate.yml (from intensity/talk gates) · security-audit.yml
+│  ├─ workflows/  ci.yml · release.yml · staging.yml · mobile-fingerprint.yml · desktop-release.yml
+│  │              intensity-gate.yml · talk-gate.yml · security-audit.yml · pr-title.yml
 │  ├─ CODEOWNERS (repo-relative paths) · pull_request_template.md · ISSUE_TEMPLATE/*.yml
 │  └─ actions/setup/ (bun pin + cache)
 ├─ package.json  (bun workspaces, catalog, patchedDependencies, trustedDependencies)
@@ -206,12 +206,26 @@ Run it in a fresh clone of `xolace_app` (e.g. `repos/xolace`), on a `migration/m
 
 ### Phase 3: Release pipelines
 
+**Status:** done · 2026-10-24, apart from "Left" below. Shipped in:
+- #625 `ci(backend): run the eval gates on PRs to dev and main`
+- #626 `feat(repo): release Convex from GitHub Actions, then mobile, web and admin` (`release.yml`; the root `vercel.json` is gone)
+- #627 `feat(desktop): release pipeline with CSP, updater and tagged builds`
+- #628 `feat(mobile): add the EAS release pipeline, fingerprint runtime and production guard`
+- #629 `docs: compare React Native desktop and Tauri for the desktop app` (verdict: keep Tauri; `docs/research/desktop-platform.md`)
+- #630 `docs(repo): fix the dev Convex URL in the release guide`
+
+**Left:**
+- **The first `dev` → `main` release** (merge commit, owner-run) hasn't happened. It deploys prod Convex for the first time from `release.yml`, ships mobile 1.15.0 as the first store build on the fingerprint runtime (1.14.0 is what's in the stores), and does the first Production deploys of web and admin.
+- **Desktop releases are dormant** until 4e: the static export is blocked by `@clerk/nextjs`'s `ClerkProvider`, which uses server actions. Tagging also needs the signing secrets listed in `desktop-release.yml` (Tauri updater, Apple, Windows).
+- **Deferred edge case:** deploy hooks build the tip of `main`, not the commit that was released. Two quick merges can build web/admin from a commit whose backend hasn't deployed yet. Later fix: deploy with the Vercel CLI (`VERCEL_TOKEN`) at an explicit SHA.
+
 - **Order: backend first, then clients.** Each release job runs `convex deploy` before any OTA or web deploy. Backend changes must stay compatible with mobile binaries already in users' hands.
 - **Mobile:** an Expo fingerprint check on each PR labels native changes. On merge to main, an EAS Workflow (from clarity and amber) runs `fingerprint` and then `get-build` against the production channel:
   - if a compatible store build exists, JS-only changes ship as an `eas update` (OTA);
   - otherwise it builds and submits to TestFlight and Play internal.
   - Production uses `runtimeVersion.policy: fingerprint`; dev and preview keep `appVersion`.
 - **Convex:** deploy from a single place: `.github/workflows/release.yml` on every push to `main` runs `convex deploy` to prod (key in the GitHub `production` environment), then starts the clients: the EAS mobile release when mobile files changed, and Vercel deploy hooks for web and admin. Vercel's own Git deploys of `main` are off, and web and admin are plain builds that read `NEXT_PUBLIC_CONVEX_URL` and fail if a deploy key is present. *(Changed 2026-10-23 from "Vercel's web build runs `convex deploy`", so the backend never depends on a client build. Setup: `docs/setup/release.md`.)*
+- **Staging backend:** a separate Convex project, `xolace-staging`, whose production deployment is staging, on the Clerk dev instance (`pk_test_…`). `.github/workflows/staging.yml` deploys it on every push to `dev` (GitHub environment `staging`, its own `CONVEX_DEPLOY_KEY`). Both workflows check which key they hold, so the prod and staging keys can't be swapped. Behind the repo variable `STAGING_MOBILE_OTA` (off by default, since it spends EAS quota), the same run publishes an OTA to the EAS `preview` channel. Vercel Preview (web and admin) and the EAS `preview` environment point at staging. *(Changed 2026-10-24 from "previews use the owner's personal dev deployment", so `dev` has a shared backend that matches its code. Setup: `docs/setup/staging.md`.)*
 - **Desktop:** tag-triggered `tauri build` plus the updater. Set a real identifier and a CSP that allows `*.convex.cloud` and the Clerk domain.
 - **Live evals gate:** carry over the existing intensity and talk eval gates.
 
@@ -286,7 +300,7 @@ These become the table in CONTRIBUTING.md.
 - **EAS Workflows** (`.eas/workflows/`) runs anything that builds mobile: the PR E2E build, argent flows, the exploratory run, and release.
 - **One PR comment.** A single summary comment gathers the results: pass/fail, screenshots, recordings and junit. Artifacts are uploaded.
 - **Optional label-gated OTA preview.** Adding the `preview-approved` label publishes the PR to EAS branch `pr-<n>` from an EAS environment that holds no secrets, and posts a QR code (the clarity pattern).
-- **Per-PR Convex preview backend (same label, built with the E2E work).** Today PR previews of web/admin and preview OTAs all use the shared dev deployment, so a PR's backend changes aren't in its preview. When the label is added, a PR workflow:
+- **Per-PR Convex preview backend (same label, built with the E2E work).** PR previews of web/admin and preview OTAs use staging, which runs `dev`'s backend, so a PR's own backend changes aren't in its preview. Staging stays the shared `dev` backend; per-PR previews are only for testing a labelled PR's backend changes. When the label is added, a PR workflow:
   1. runs `convex deploy --preview-create pr-<n>` with a Convex **preview** deploy key (GitHub secret), then seeds it through the §5.3 test functions;
   2. points the `pr-<n>` OTA preview at that deployment;
   3. deploys a web preview against it through the Vercel CLI (`VERCEL_TOKEN`), since Vercel's Git previews can't know the URL.

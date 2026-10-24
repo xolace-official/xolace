@@ -1,0 +1,164 @@
+name: Staging
+
+# The shared staging backend, on every push to dev (a merged PR).
+#
+#   backend: convex deploy to staging (project xolace-staging, its Production
+#            deployment). Optional seed of curated content on a manual run.
+#     └─ mobile: start the EAS preview-update workflow (OTA to the `preview`
+#                channel), only when the repo opted in (vars.STAGING_MOBILE_OTA)
+#                and mobile-relevant files changed
+#
+# Web and admin need no step here: Vercel Git-deploys every push to dev as a
+# Preview, and their Preview env points NEXT_PUBLIC_CONVEX_URL at staging. That
+# Preview can finish building before the backend job below does, so for a minute
+# a new preview may call functions staging doesn't have yet. Fine for staging;
+# production avoids it with deploy hooks (release.yml).
+#
+# Staging is never prod: the guard below refuses the prod deployment's key.
+# Setup: docs/setup/staging.md.
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+    inputs:
+      seed:
+        type: boolean
+        default: false
+        description: "Seed curated reflections, exercises and quotes (idempotent; for a fresh staging)"
+      mobile:
+        type: choice
+        options: [auto, always, skip]
+        default: auto
+        description: "Preview OTA: auto (only if mobile files changed), always, or skip. Needs vars.STAGING_MOBILE_OTA == 'true'"
+
+# One staging deploy at a time, in push order, never cancelled half-way.
+concurrency:
+  group: staging
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  FORCE_COLOR: "1"
+  EAS_CLI_VERSION: 24.12.1
+  # The prod deployment (project xolace-app). A staging key must never name it.
+  PROD_DEPLOYMENT: energetic-guineapig-283
+
+jobs:
+  backend:
+    name: Deploy Convex (staging)
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # CONVEX_DEPLOY_KEY here is the *staging* project's production deploy key, a
+    # secret of the GitHub `staging` environment (not the `production` one).
+    environment: staging
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: "false"
+          ignore-scripts: "true"
+
+      - name: convex deploy
+        working-directory: packages/backend
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          SHA: ${{ github.sha }}
+        run: |
+          # Key format: prod:<deployment-name>|<secret>
+          if [[ "$CONVEX_DEPLOY_KEY" != prod:* ]]; then
+            echo "::error::The staging environment's CONVEX_DEPLOY_KEY secret is missing or not a production deploy key of the xolace-staging project."
+            exit 1
+          fi
+          deployment="${CONVEX_DEPLOY_KEY#prod:}"
+          deployment="${deployment%%|*}"
+          if [[ "$deployment" == "$PROD_DEPLOYMENT" ]]; then
+            echo "::error::The staging environment's CONVEX_DEPLOY_KEY is the PROD key ($PROD_DEPLOYMENT). Replace it with the xolace-staging project's key."
+            exit 1
+          fi
+          echo "Deploying to staging deployment $deployment."
+          bunx convex deploy --message "staging $SHA"
+
+      # Curated content only (no users): reflections upsert by text, exercises
+      # by title, quotes skip when the library isn't empty. Safe to re-run on the
+      # shared deployment. seedExercises also schedules exercise embeddings
+      # (OpenAI). Internal functions; the deploy key authorizes `convex run`.
+      - name: Seed curated content
+        if: inputs.seed == true
+        working-directory: packages/backend
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: |
+          bunx convex run seed:seedReflections
+          bunx convex run seed:seedExercises
+          bunx convex run seed:seedQuotes
+
+  mobile:
+    name: Start EAS preview update
+    needs: backend
+    # Opt-in: every OTA spends EAS quota. Set the repo variable
+    # STAGING_MOBILE_OTA to "true" to turn it on (docs/setup/staging.md).
+    if: vars.STAGING_MOBILE_OTA == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Decide whether mobile changed
+        id: gate
+        env:
+          MODE: ${{ inputs.mobile || 'auto' }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [[ "$MODE" == "skip" ]]; then
+            echo "update=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if [[ "$MODE" == "always" || -z "$BEFORE" || "$BEFORE" =~ ^0+$ ]]; then
+            echo "update=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # Same rule as release.yml: only the app's own code, dependencies and
+          # patches change the bundle.
+          if git diff --name-only "$BEFORE" "$SHA" -- \
+              apps/mobile package.json bun.lock patches | grep -q .; then
+            echo "update=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No mobile-relevant changes in $BEFORE..$SHA; no preview update."
+            echo "update=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # eas-cli evaluates apps/mobile/app.config.ts, which needs the workspace
+      # installed. No lifecycle scripts: nothing native runs here.
+      - name: Setup workspace
+        if: steps.gate.outputs.update == 'true'
+        uses: ./.github/actions/setup
+        with:
+          turbo-cache: "false"
+          ignore-scripts: "true"
+
+      - name: Run EAS preview-update workflow
+        if: steps.gate.outputs.update == 'true'
+        working-directory: apps/mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # app.config.ts throws on missing build env vars when CI=true. Those
+          # values live in the EAS `preview` environment and are only needed on
+          # the EAS runners; here eas-cli only reads the project id.
+          CI: "false"
+          SHA: ${{ github.sha }}
+        run: |
+          if [[ -z "$EXPO_TOKEN" ]]; then
+            echo "::error::The EXPO_TOKEN secret is not set."
+            exit 1
+          fi
+          bunx "eas-cli@${EAS_CLI_VERSION}" workflow:run .eas/workflows/preview-update.yml \
+            -F message="staging $SHA" --non-interactive
