@@ -42,7 +42,8 @@ merge a PR into dev
 - **PR previews use staging too.** A PR's Vercel preview runs the PR's web code
   against the staging backend built from `dev`. If the PR adds a Convex function, the
   preview can't call it until the PR is merged; test those against your own dev
-  deployment.
+  deployment, or add the `preview-backend` label for a per-PR backend
+  ([pr-previews.md](./pr-previews.md)).
 - **Vercel may finish first.** Vercel builds the `dev` push at the same time as the
   workflow deploys Convex, so a preview can be live for a minute before the backend
   catches up. Acceptable for staging. Production avoids this with deploy hooks.

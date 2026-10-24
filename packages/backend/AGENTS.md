@@ -27,6 +27,9 @@ from `xolace_app/convex` in Phase 2. Full rules: `.agents/rules/convex.md`.
   - push to `main` → `.github/workflows/release.yml` → **prod**
     (`energetic-guineapig-283`), then the clients (EAS mobile release, Vercel deploy
     hooks for web and admin). The backend never waits on a client build.
+  - PR labelled `preview-backend` → `.github/workflows/pr-preview.yml` → a Convex
+    preview `pr-<n>` in `xolace-staging` (preview deploy key in GitHub env
+    `preview`), deleted on unlabel or close.
 - **Keys:** each `CONVEX_DEPLOY_KEY` is a secret of its GitHub environment
   (`production` / `staging`) and nowhere else: not Vercel, EAS or a local `.env`.
   Both are `prod:` keys; the workflows check the deployment name so neither can deploy
