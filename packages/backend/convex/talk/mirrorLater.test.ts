@@ -21,6 +21,7 @@ import {
 	rateLimiterMock,
 	revenuecatMock,
 } from "../test/mocks.helpers";
+import { TALK_IDLE_MS } from "./session";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../posthog", () => posthogMock());
@@ -283,6 +284,31 @@ describe("talk.session.end with mirrorLater", () => {
 		const s = await session(user, sessionId);
 		expect(s).toMatchObject({ state: "abandoned" });
 		expect(s?.talkMirrorLater).toBeUndefined();
+	});
+
+	it("keeps the choice made before hanging up when the end never lands", async () => {
+		const user = await asNewUser();
+		const sessionId = await talk(user);
+		await user.t.mutation(api.talk.session.markMirrorLater, { sessionId });
+
+		// No `end` call: the idle check closes the talk.
+		vi.setSystemTime(Date.now() + TALK_IDLE_MS);
+		await user.root.mutation(internal.talk.session.finalizeIfIdle, {
+			sessionId,
+		});
+		expect(await session(user, sessionId)).toMatchObject({
+			state: "processing",
+			talkMirrorLater: true,
+		});
+		expect(await user.t.query(api.sessions.getActive, {})).toBeNull();
+	});
+
+	it("leaves a talk that's already closed to `end`", async () => {
+		const user = await asNewUser();
+		const sessionId = await talk(user);
+		await user.t.mutation(api.talk.session.end, { sessionId });
+		await user.t.mutation(api.talk.session.markMirrorLater, { sessionId });
+		expect((await session(user, sessionId))?.talkMirrorLater).toBeUndefined();
 	});
 
 	it("keeps an old client's talk on home for its mirror", async () => {

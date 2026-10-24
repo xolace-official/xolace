@@ -231,6 +231,27 @@ export const end = mutation({
 	returns: v.boolean(),
 });
 
+/**
+ * "Just end", kept before the client hangs up: if its `end` call never lands,
+ * the idle check closes the talk with the choice still on it, and the mirror
+ * still goes to the timeline, not home. Only for a talk still open; once
+ * closed, `end` with `mirrorLater` handles it.
+ */
+export const markMirrorLater = mutation({
+	args: { sessionId: v.id("sessions") },
+	handler: async (ctx, { sessionId }) => {
+		const { session } = await requireSessionOwnership(ctx, sessionId);
+		if (session.entryType !== "talk") {
+			throw new ConvexError({ code: "not_a_talk" });
+		}
+		if (session.state === "initiated") {
+			await ctx.db.patch("sessions", sessionId, { talkMirrorLater: true });
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
 // The talk's copy of what it knew of the person ends with the talk.
 const FORGET = { talkMemory: undefined, talkRecall: undefined };
 
