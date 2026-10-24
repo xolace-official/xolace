@@ -18,7 +18,6 @@ export const initialState: ReflectionState = {
 	quietReturn: null,
 	screen: "idle",
 	selectedTextures: [],
-	userVariant: { kind: "first-time" },
 };
 
 /**
@@ -115,9 +114,6 @@ export function reducer(
 		case "CLARIFY_TEXT_CHANGE":
 			return { ...state, clarifyText: action.text };
 
-		case "SET_USER_VARIANT":
-			return { ...state, userVariant: action.variant };
-
 		case "SET_QUIET_RETURN":
 			return { ...state, quietReturn: action.tier };
 
@@ -150,7 +146,7 @@ export function reducer(
 			return { ...state, selectedTextures: [] };
 
 		case "RESET":
-			return { ...initialState, userVariant: state.userVariant };
+			return initialState;
 
 		// Nothing of the previous person's composer survives into the next one's.
 		case "ACCOUNT_SWITCHED":

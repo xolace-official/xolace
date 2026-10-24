@@ -18,17 +18,16 @@ export function computeUserVariant(
 	profile: ProfileFields,
 	streak: number
 ): UserVariant {
-	// A first-timer can hold a live streak from non-reflect days; the greeting
-	// keys off `kind`, the calendar off `dayCount`.
+	// A first-timer can hold a live streak from non-reflect days; still first-time.
 	if (profile.sessionCount === 0) {
-		return { dayCount: streak, kind: "first-time" };
+		return { kind: "first-time" };
 	}
 
 	if (streak === 0) {
 		return { kind: "returning" };
 	}
 
-	return { dayCount: streak, kind: "active" };
+	return { kind: "active" };
 }
 
 /**

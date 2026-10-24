@@ -16,10 +16,7 @@ import {
 } from "@/src/features/reflect/compose/compose-slot";
 import { useMorphGeometry } from "@/src/features/reflect/compose/morph-geometry";
 import { TextureBand } from "@/src/features/reflect/compose/texture-band";
-import type {
-	ReflectionAction,
-	UserVariant,
-} from "@/src/features/reflect/types";
+import type { ReflectionAction } from "@/src/features/reflect/types";
 import { a11yHidden } from "@/src/lib/utils";
 
 type Props = {
@@ -28,7 +25,6 @@ type Props = {
 	fade: SharedValue<number>;
 	expanded: boolean;
 	reduceMotion: boolean;
-	variant: UserVariant;
 	isNight: boolean;
 	eventPrompt: string | null;
 	eventLabel: string | null;
@@ -53,7 +49,6 @@ export const ComposeSurround = ({
 	fade,
 	expanded,
 	reduceMotion,
-	variant,
 	isNight,
 	eventPrompt,
 	eventLabel,
@@ -127,7 +122,6 @@ export const ComposeSurround = ({
 					eventLabel={eventLabel}
 					eventPrompt={eventPrompt}
 					spaceName={spaceName}
-					variant={variant}
 				/>
 			</Animated.View>
 
