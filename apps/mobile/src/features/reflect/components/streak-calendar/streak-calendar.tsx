@@ -51,15 +51,15 @@ type Props = {
 
 export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
 	const { userId } = useAuth();
-	const storedStreak = useAppStore((s) => s.lastAcknowledgedStreak);
-	const storedOwner = useAppStore((s) => s.lastAcknowledgedStreakOwner);
-	// The acknowledged day is per account: another account's reads as a fresh
-	// install's 0. No owner is an install from before it was recorded — taken
-	// as this account's, so updating doesn't replay a reveal.
-	const lastAcknowledgedStreak =
-		userId && (storedOwner === userId || storedOwner === null)
-			? storedStreak
-			: 0;
+	const ownStreak = useAppStore((s) =>
+		userId ? s.acknowledgedStreaks[userId] : undefined
+	);
+	const legacyStreak = useAppStore((s) => s.lastAcknowledgedStreak);
+	// The acknowledged day is per account, so switching back doesn't replay a
+	// reveal. An account without its own entry falls back to the value from
+	// before that (so updating doesn't replay one either), which the first
+	// write zeroes.
+	const lastAcknowledgedStreak = userId ? (ownStreak ?? legacyStreak) : 0;
 	const setLastAcknowledgedStreak = useAppStore(
 		(s) => s.setLastAcknowledgedStreak
 	);

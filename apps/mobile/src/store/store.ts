@@ -117,10 +117,14 @@ type TogglesSlice = {
 	/** Menu item keys whose "new" glow has been acknowledged (item opened once). */
 	seenMenuItems: string[];
 	markMenuItemSeen: (key: string) => void;
-	/** Highest streak day the user has seen the calendar reveal for. */
+	/** Highest streak day each account (by Clerk user id) has seen the calendar reveal for. */
+	acknowledgedStreaks: Record<string, number>;
+	/**
+	 * The acknowledged day from before it was kept per account. It stands in
+	 * for any account without its own entry, until the first write claims it
+	 * (zeroed then).
+	 */
 	lastAcknowledgedStreak: number;
-	/** Clerk user id the acknowledged streak belongs to. Null on installs from before it was recorded. */
-	lastAcknowledgedStreakOwner: string | null;
 	setLastAcknowledgedStreak: (n: number, owner: string) => void;
 	/** Awareness event slugs the user has already seen, with timestamps for pruning. */
 	seenEventIds: { slug: string; seenAt: number }[];
@@ -215,6 +219,7 @@ export const useAppStore = create<AppState>()(
 	devtools(
 		persist(
 			(set) => ({
+				acknowledgedStreaks: {},
 				addToSeenEventIds: (slug) =>
 					set((s) =>
 						s.seenEventIds.some((e) => e.slug === slug)
@@ -240,7 +245,6 @@ export const useAppStore = create<AppState>()(
 				introSeen: false,
 
 				lastAcknowledgedStreak: 0,
-				lastAcknowledgedStreakOwner: null,
 				lastSeenVersion: null,
 				libraryIntroSeen: false,
 				markMenuItemSeen: (key) =>
@@ -284,10 +288,10 @@ export const useAppStore = create<AppState>()(
 				setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
 				setIntroSeen: (v) => set({ introSeen: v }),
 				setLastAcknowledgedStreak: (n, owner) =>
-					set({
-						lastAcknowledgedStreak: n,
-						lastAcknowledgedStreakOwner: owner,
-					}),
+					set((s) => ({
+						acknowledgedStreaks: { ...s.acknowledgedStreaks, [owner]: n },
+						lastAcknowledgedStreak: 0,
+					})),
 				setLastSeenVersion: (v) => set({ lastSeenVersion: v }),
 				setLibraryIntroSeen: (v) => set({ libraryIntroSeen: v }),
 				setMusicIntroSeen: (v) => set({ musicIntroSeen: v }),
@@ -356,6 +360,7 @@ export const useAppStore = create<AppState>()(
 			{
 				name: "xolace-app",
 				partialize: (s) => ({
+					acknowledgedStreaks: s.acknowledgedStreaks,
 					bridgeIntroSeen: s.bridgeIntroSeen,
 					chatEnabledCached: s.chatEnabledCached,
 					colorThemeId: s.colorThemeId,
@@ -364,7 +369,6 @@ export const useAppStore = create<AppState>()(
 					hiddenProfileCards: s.hiddenProfileCards,
 					introSeen: s.introSeen,
 					lastAcknowledgedStreak: s.lastAcknowledgedStreak,
-					lastAcknowledgedStreakOwner: s.lastAcknowledgedStreakOwner,
 					lastSeenVersion: s.lastSeenVersion,
 					libraryIntroSeen: s.libraryIntroSeen,
 					musicIntroSeen: s.musicIntroSeen,
