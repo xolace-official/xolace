@@ -38,6 +38,7 @@ import {
 } from "./paywall-icons";
 import { introOfferOf } from "./paywall-intro-offer";
 import { PaywallPeriodPicker, type PlanId } from "./paywall-period-picker";
+import { planDetail } from "./paywall-plan-detail";
 import { PaywallPlansUnavailable } from "./paywall-plans-unavailable";
 import {
 	PAYWALL_SURFACE_FEATURE,
@@ -148,7 +149,10 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 
 	const priceOf = (pkg: PurchasesPackage | null, plan: PlanId) =>
 		pkg
-			? { detail: FALLBACK[plan].detail, price: pkg.product.priceString }
+			? {
+					detail: planDetail(plan, pkg.product),
+					price: pkg.product.priceString,
+				}
 			: FALLBACK[plan];
 
 	const numericPriceOf = (pkg: PurchasesPackage | null, plan: PlanId) =>
