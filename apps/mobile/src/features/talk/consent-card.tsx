@@ -7,7 +7,6 @@ import { View } from "react-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { GlassSurface } from "@/src/components/shared/glass-surface";
 import {
-	END_ANYTIME,
 	MIN_TALK_S,
 	PRIVACY_LINE,
 	TALK_TIME_RESETS,
