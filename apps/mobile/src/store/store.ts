@@ -202,6 +202,13 @@ type ComposerOpenSlice = {
 	composerOpenRequested: boolean;
 	requestComposerOpen: () => void;
 	clearComposerOpenRequest: () => void;
+	/**
+	 * The idle menu's scrim is on screen. It lives in the screen's content, so
+	 * it can't cover the native header — the reflect screen takes its toolbar
+	 * buttons down instead while this is true.
+	 */
+	idleMenuOpen: boolean;
+	setIdleMenuOpen: (v: boolean) => void;
 };
 
 export type AppState = ThemeSlice &
@@ -326,6 +333,7 @@ export const useAppStore = create<AppState>()(
 				clearReplySeed: () => set({ replySeed: null }),
 				composerOpenRequested: false,
 				hiddenProfileCards: [],
+				idleMenuOpen: false,
 				isNewVersionAvailable: false,
 
 				isVersionChecked: false,
@@ -339,6 +347,7 @@ export const useAppStore = create<AppState>()(
 
 				replySeed: null,
 				requestComposerOpen: () => set({ composerOpenRequested: true }),
+				setIdleMenuOpen: (v) => set({ idleMenuOpen: v }),
 				setIsNewVersionAvailable: (v) => set({ isNewVersionAvailable: v }),
 				setIsVersionChecked: (v) => set({ isVersionChecked: v }),
 				setLastNotification: (n) => set({ lastNotification: n }),
