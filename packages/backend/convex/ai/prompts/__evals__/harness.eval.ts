@@ -58,6 +58,8 @@ export function runLabeledEval<E, C extends LabeledCase<E>>(
 
 	describe(suiteName, () => {
 		let correct = 0;
+		// Named in the aggregate's failure, which is all CI shows of a miss.
+		const missed: string[] = [];
 
 		for (const c of cases) {
 			const label = `${c.anchor ? "[anchor] " : ""}${c.note}`;
@@ -69,6 +71,8 @@ export function runLabeledEval<E, C extends LabeledCase<E>>(
 					const got = await run(c);
 					if (got === c.expected) {
 						correct++;
+					} else {
+						missed.push(`${label}: ${String(got)}`);
 					}
 					// Anchors must be exactly right; non-anchors feed the aggregate.
 					if (c.anchor) {
@@ -82,7 +86,14 @@ export function runLabeledEval<E, C extends LabeledCase<E>>(
 		it.skipIf(!hasApiKey())(
 			`aggregate accuracy across the labeled set is >= ${threshold}`,
 			() => {
-				expect(correct / cases.length).toBeGreaterThanOrEqual(threshold);
+				// Logged on a pass too: the misses a run got away with show drift early.
+				if (missed.length) {
+					console.log(`[${suiteName}] missed:\n${missed.join("\n")}`);
+				}
+				expect(
+					correct / cases.length,
+					`missed:\n${missed.join("\n")}`
+				).toBeGreaterThanOrEqual(threshold);
 			}
 		);
 	});
