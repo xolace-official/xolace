@@ -2,6 +2,9 @@ import type { PurchasesStoreProduct } from "react-native-purchases";
 
 const MICROS_PER_UNIT = 1_000_000;
 
+/** The paywall renders intro prices per month, so only P1M phases fit. */
+const MONTHLY_PERIOD = /^P1M$/i;
+
 const UNIT_BY_ISO: Record<string, string> = {
 	D: "day",
 	M: "month",
@@ -69,6 +72,8 @@ function introTerm(period: string, cycles: number): string | null {
  * What the paywall shows for a discounted intro, or null for the plain price.
  * `isEligible` is the iOS eligibility check (Android lists only offers the user
  * can take, so it passes true). The store's payment sheet has the final say.
+ * A pay-up-front intro (one P3M cycle, say) is one charge for the whole term,
+ * not a monthly price, so it falls back to the plain price.
  */
 export function introOfferOf(
 	product: PurchasesStoreProduct | null | undefined,
@@ -78,7 +83,10 @@ export function introOfferOf(
 		return null;
 	}
 	const phase = introPhaseOf(product);
-	if (!phase || phase.price >= product.price) {
+	if (
+		!(phase && MONTHLY_PERIOD.test(phase.period)) ||
+		phase.price >= product.price
+	) {
 		return null;
 	}
 	const term = introTerm(phase.period, phase.cycles);

@@ -8,9 +8,11 @@ type Status = "pending" | "eligible" | "ineligible";
  * Whether the user can still take this product's intro offer, so someone who
  * has already subscribed isn't shown "50% off".
  *
- * iOS asks RevenueCat; it's best-effort, so an unknown answer or a failed check
- * counts as eligible (Apple's payment sheet has the final say). Until it
- * answers we say no, so the discount appears late rather than vanishing.
+ * iOS asks RevenueCat, and only an explicit "eligible" counts: an unknown
+ * answer, no offer, a missing result or a failed check all mean no, so we never
+ * advertise a discount the user can't get (Apple's payment sheet still applies
+ * one they can). Until it answers we say no, so the discount appears late
+ * rather than vanishing.
  * Android always answers "unknown" here, but Play only lists offers the user
  * can take, so the product itself already carries the answer.
  */
@@ -30,15 +32,15 @@ export function useIntroEligibility(productId: string | null): boolean {
 				}
 				setStatus(
 					result[productId]?.status ===
-						INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_INELIGIBLE
-						? "ineligible"
-						: "eligible"
+						INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_ELIGIBLE
+						? "eligible"
+						: "ineligible"
 				);
 			})
 			.catch((error) => {
 				console.error("[RevenueCat] intro eligibility check failed:", error);
 				if (!cancelled) {
-					setStatus("eligible");
+					setStatus("ineligible");
 				}
 			});
 		return () => {

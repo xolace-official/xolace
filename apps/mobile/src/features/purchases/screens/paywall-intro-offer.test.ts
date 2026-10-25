@@ -68,6 +68,23 @@ describe("introOfferOf", () => {
 		expect(introOfferOf(oneMonth, true)?.term).toBe("month");
 	});
 
+	it("skips a pay-up-front intro rather than calling it a monthly price", () => {
+		const upfront = product({
+			introPrice: { cycles: 1, period: "P3M", price: 5, priceString: "$5.00" },
+		});
+		const playUpfront = product({
+			defaultOption: {
+				introPhase: {
+					billingCycleCount: 1,
+					billingPeriod: { iso8601: "P3M" },
+					price: { amountMicros: 5_000_000, formatted: "$5.00" },
+				},
+			},
+		});
+		expect(introOfferOf(upfront, true)).toBeNull();
+		expect(introOfferOf(playUpfront, true)).toBeNull();
+	});
+
 	it("shows the plain price to someone who can't take the offer", () => {
 		expect(introOfferOf(appStoreIntro, false)).toBeNull();
 	});
