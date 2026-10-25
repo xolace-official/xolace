@@ -9,6 +9,39 @@ export type Alignment = {
 	char_durations_ms: number[];
 };
 export type SpokenWord = { text: string; at: number };
+/** Carried across a turn's chunks: a tag can be split between two. */
+export type TagState = { inTag: boolean; space: boolean };
+
+/**
+ * The chunk without its audio tags (#603). The voice performs "[slow]" and
+ * the rest, and their characters come back in the timings like any other, so
+ * they'd be read out on screen. Everything in brackets goes (the endpoint lets
+ * only the five tags through), and so does the space a tag leaves doubled.
+ * `state` is updated in place; start each turn at `{ inTag: false, space: true }`.
+ */
+export function withoutTags(a: Alignment, state: TagState): Alignment {
+	const out: Alignment = {
+		char_durations_ms: [],
+		char_start_times_ms: [],
+		chars: [],
+	};
+	a.chars.forEach((ch, i) => {
+		if (ch === "[") {
+			state.inTag = true;
+		} else if (state.inTag) {
+			state.inTag = ch !== "]";
+		} else {
+			const space = ch.trim() === "";
+			if (!(space && state.space)) {
+				state.space = space;
+				out.chars.push(ch);
+				out.char_start_times_ms.push(a.char_start_times_ms[i]);
+				out.char_durations_ms.push(a.char_durations_ms[i]);
+			}
+		}
+	});
+	return out;
+}
 
 export function spokenWords(
 	a: Alignment,

@@ -55,7 +55,11 @@ export function createTagFilter() {
 	};
 }
 
-const TAG_RE = new RegExp(`\\s*\\[(?:${AUDIO_TAGS.join("|")})\\]\\s*`, "gi");
+// Spaces inside the brackets too: the filter trims before it judges a tag.
+const TAG_RE = new RegExp(
+	`\\s*\\[\\s*(?:${AUDIO_TAGS.join("|")})\\s*\\]\\s*`,
+	"gi"
+);
 
 /** The five tags out, for text that's read rather than heard (transcript, thread). */
 export const stripAudioTags = (s: string) => s.replace(TAG_RE, " ").trim();

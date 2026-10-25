@@ -44,6 +44,12 @@ describe("audio tag filter", () => {
 		expect(run("[Sighs] ok")).toBe("[Sighs] ok");
 	});
 
+	it("strips a tag the filter let through with spaces or capitals inside", () => {
+		expect(stripAudioTags("Okay. [ Slow ] Take your time.")).toBe(
+			"Okay. Take your time."
+		);
+	});
+
 	it("strips the five tags for the transcript", () => {
 		expect(stripAudioTags("[sighs] Yeah. [slow] Take your time.")).toBe(
 			"Yeah. Take your time."
