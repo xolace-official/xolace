@@ -256,14 +256,14 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 							title="Pattern & language insights"
 						/>
 						<PaywallFeatureItem
-							description="Pick how it says things back — and it stays that way"
+							description="Pick how it says things back and it stays that way"
 							icon={MIRROR_TONE_ICON}
 							id="mirror_tone"
 							isHighlighted={highlightedFeature === "mirror_tone"}
 							title="Mirror voice & tone"
 						/>
 						<PaywallFeatureItem
-							description="Your own words, handed back — and kept, in an archive that's yours"
+							description="Your own words, handed back and kept, in an archive that's yours"
 							icon={QUOTES_ICON}
 							id="quotes"
 							isHighlighted={highlightedFeature === "quotes"}
