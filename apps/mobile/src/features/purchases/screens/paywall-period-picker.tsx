@@ -185,6 +185,7 @@ function IntroPrice({ intro }: { intro: IntroOffer }) {
 		<View
 			accessibilityLabel={`${intro.price} per month for your first ${intro.term}, then ${intro.fullPrice} per month`}
 			accessible
+			className="shrink"
 		>
 			<View className="flex-row items-baseline gap-1.5">
 				<AppText className="font-semibold text-[15px] text-foreground">
