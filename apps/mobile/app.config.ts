@@ -46,7 +46,14 @@ const getAppName = () => {
 	return "Xolace";
 };
 
+// EAS gets the file from the GOOGLE_SERVICES_JSON file env var: the release
+// workflow uploads a clean checkout, which has none of the gitignored copies.
+// Local builds fall back to those copies in apps/mobile.
 const getGoogleServicesPath = () => {
+	if (process.env.GOOGLE_SERVICES_JSON) {
+		return process.env.GOOGLE_SERVICES_JSON;
+	}
+
 	if (IS_DEV) {
 		return "./google-services.json";
 	}

@@ -135,6 +135,21 @@ Repo → **Settings → Secrets and variables → Actions → New repository sec
 A missing hook only skips that app (with a warning in the run); a missing
 `EXPO_TOKEN` fails the mobile job.
 
+The EAS release uploads the GitHub checkout, which has no gitignored files, so the
+Android build gets `google-services.json` from an EAS **file** env var named
+`GOOGLE_SERVICES_JSON` in the `production` environment. Upload it on expo.dev
+(project → **Environment variables** → **Add** → type **File**, visibility
+**Sensitive**) or, from `apps/mobile`:
+
+```sh
+bunx eas-cli env:create --environment production --name GOOGLE_SERVICES_JSON --type file --visibility sensitive --value ./google-services.json
+```
+
+Do the same for `preview` with `./google-services-preview/google-services.json` if
+you build preview from a workflow. `app.config.ts` uses the variable when it is set
+and the local copy otherwise. The fingerprint hashes the file's contents, not its
+path, so both give the same runtime.
+
 ## Step 7: First release and checks
 
 1. Push any commit to `dev`. Both Vercel projects make a **Preview** deploy; open them
@@ -160,3 +175,4 @@ To re-run a release by hand: **Actions → Release → Run workflow** on `main`.
 | `VERCEL_DEPLOY_HOOK_… is not set` warning | Step 6. |
 | Mobile job says "no mobile-relevant changes" | Expected for backend- or web-only releases. Use Run workflow with `mobile: always` to force one. |
 | Clerk sign-in fails on the production domain | The domain isn't allowed in the Clerk production instance (Step 4). |
+| Android EAS build: `"google-services.json" is missing` | The `GOOGLE_SERVICES_JSON` file env var isn't set in that EAS environment (Step 6). |
