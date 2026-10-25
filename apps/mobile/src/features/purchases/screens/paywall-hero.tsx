@@ -4,7 +4,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { GradientText } from "./gradient-text";
 
 const DEFAULT_LINE =
-	"Plus opens up so much more — and it goes a long way toward the change you're here to make.";
+	"Plus opens up so much more and it goes a long way toward the change you're here to make.";
 
 export function PaywallHero({ line = DEFAULT_LINE }: { line?: string }) {
 	const accentColor = useThemeColor("accent") as string;
