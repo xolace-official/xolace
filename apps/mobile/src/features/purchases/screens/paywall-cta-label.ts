@@ -15,14 +15,15 @@ const SEVEN_DAYS = ["P1W", "P7D"];
  * offer's own period has to be seven days — the copy says "week", so a store
  * configured for three days or a month must not light the claim up.
  *
- * ponytail: this reads the product's offer, not *this user's* eligibility for
- * it — a lapsed subscriber who already spent their free week still sees the
- * claim. Swap in RevenueCat's `checkTrialOrIntroductoryPriceEligibility` (async,
- * so the label needs a loading state) once resubscribes are a real cohort.
+ * `isEligible` is this user's eligibility (`useIntroEligibility`), so a lapsed
+ * subscriber who already spent their free week isn't promised another one.
  */
-export function hasFreeTrial(pkg: PurchasesPackage | null): boolean {
+export function hasFreeTrial(
+	pkg: PurchasesPackage | null,
+	isEligible: boolean
+): boolean {
 	const product = pkg?.product;
-	if (!product) {
+	if (!(product && isEligible)) {
 		return false;
 	}
 	const period =
@@ -34,9 +35,10 @@ export function hasFreeTrial(pkg: PurchasesPackage | null): boolean {
 
 export function paywallCtaLabel(
 	selected: PlanId,
-	pkg: PurchasesPackage | null
+	pkg: PurchasesPackage | null,
+	isEligible: boolean
 ): string {
-	return selected === "annual" && hasFreeTrial(pkg)
+	return selected === "annual" && hasFreeTrial(pkg, isEligible)
 		? "Start your free week"
 		: "Continue with Plus";
 }

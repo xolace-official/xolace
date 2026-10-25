@@ -15,24 +15,37 @@ const noTrial = pkg({ defaultOption: { freePhase: null }, introPrice: null });
 
 describe("paywallCtaLabel", () => {
 	it("claims the free week only for an annual package that carries one", () => {
-		expect(paywallCtaLabel("annual", appStoreTrial)).toBe(
+		expect(paywallCtaLabel("annual", appStoreTrial, true)).toBe(
 			"Start your free week"
 		);
-		expect(paywallCtaLabel("annual", playTrial)).toBe("Start your free week");
+		expect(paywallCtaLabel("annual", playTrial, true)).toBe(
+			"Start your free week"
+		);
 	});
 
 	it("never claims a week for an offer that is not seven days", () => {
-		expect(paywallCtaLabel("annual", shortTrial)).toBe("Continue with Plus");
+		expect(paywallCtaLabel("annual", shortTrial, true)).toBe(
+			"Continue with Plus"
+		);
 	});
 
 	it("never claims a trial on monthly, even if the product carries one", () => {
-		expect(paywallCtaLabel("monthly", appStoreTrial)).toBe(
+		expect(paywallCtaLabel("monthly", appStoreTrial, true)).toBe(
 			"Continue with Plus"
 		);
 	});
 
 	it("falls back to the plain label without a trial or without a package", () => {
-		expect(paywallCtaLabel("annual", noTrial)).toBe("Continue with Plus");
-		expect(paywallCtaLabel("annual", null)).toBe("Continue with Plus");
+		expect(paywallCtaLabel("annual", noTrial, true)).toBe("Continue with Plus");
+		expect(paywallCtaLabel("annual", null, true)).toBe("Continue with Plus");
+	});
+
+	it("never claims a week for someone who already spent theirs", () => {
+		expect(paywallCtaLabel("annual", appStoreTrial, false)).toBe(
+			"Continue with Plus"
+		);
+		expect(paywallCtaLabel("annual", playTrial, false)).toBe(
+			"Continue with Plus"
+		);
 	});
 });

@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { SegmentedControl } from "@/src/components/shared/segmented-control";
 import { cn } from "@/src/lib/utils";
+import type { IntroOffer } from "./paywall-intro-offer";
 
 export type PlanId = "annual" | "monthly";
 
@@ -19,6 +20,8 @@ type Props = {
 	 * promise a free week the CTA underneath it refuses to.
 	 */
 	hasFreeTrial: boolean;
+	/** Monthly's intro discount when this user can take it; null shows the plain price. */
+	monthlyIntro: IntroOffer | null;
 	selected: PlanId;
 	onSelect: (plan: PlanId) => void;
 };
@@ -34,11 +37,12 @@ export function PaywallPeriodPicker({
 	monthly,
 	discountPercent,
 	hasFreeTrial,
+	monthlyIntro,
 	selected,
 	onSelect,
 }: Props) {
-	const accentForeground = useThemeColor("accent-foreground") as string;
 	const current = selected === "annual" ? annual : monthly;
+	const intro = selected === "monthly" ? monthlyIntro : null;
 
 	return (
 		<View className="gap-3">
@@ -53,7 +57,7 @@ export function PaywallPeriodPicker({
 				/>
 
 				<SegmentedControl.Item
-					className="flex-1 items-center py-2.5"
+					className="flex-1 flex-row items-center justify-center gap-2 py-2.5"
 					value="monthly"
 				>
 					<AppText
@@ -66,6 +70,16 @@ export function PaywallPeriodPicker({
 					>
 						Monthly
 					</AppText>
+					{monthlyIntro && (
+						<SegmentBadge
+							isSelected={selected === "monthly"}
+							label={
+								selected === "monthly"
+									? `-${monthlyIntro.percentOff}%`
+									: `${monthlyIntro.percentOff}% off`
+							}
+						/>
+					)}
 				</SegmentedControl.Item>
 
 				<SegmentedControl.Item
@@ -83,25 +97,14 @@ export function PaywallPeriodPicker({
 						Yearly
 					</AppText>
 					{discountPercent !== null && (
-						<View
-							className={cn(
-								"rounded-full px-2 py-0.5",
+						<SegmentBadge
+							isSelected={selected === "annual"}
+							label={
 								selected === "annual"
-									? "bg-accent-foreground/15"
-									: "bg-accent/15"
-							)}
-						>
-							<AppText
-								className="font-semibold text-[11px]"
-								style={{
-									color: selected === "annual" ? accentForeground : undefined,
-								}}
-							>
-								{selected === "annual"
 									? `-${discountPercent}%`
-									: `Save ${discountPercent}%`}
-							</AppText>
-						</View>
+									: `Save ${discountPercent}%`
+							}
+						/>
 					)}
 				</SegmentedControl.Item>
 			</SegmentedControl>
@@ -110,14 +113,18 @@ export function PaywallPeriodPicker({
 				className="flex-row items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3.5"
 				style={styles.borderCurve}
 			>
-				<View>
-					<AppText className="font-semibold text-[15px] text-foreground">
-						{current.price}
-					</AppText>
-					<AppText className="mt-0.5 text-[12px] text-muted">
-						{current.detail}
-					</AppText>
-				</View>
+				{intro ? (
+					<IntroPrice intro={intro} />
+				) : (
+					<View>
+						<AppText className="font-semibold text-[15px] text-foreground">
+							{current.price}
+						</AppText>
+						<AppText className="mt-0.5 text-[12px] text-muted">
+							{current.detail}
+						</AppText>
+					</View>
+				)}
 				{selected === "annual" && hasFreeTrial && (
 					<View
 						className="rounded-full bg-accent/12 px-2.5 py-1"
@@ -128,7 +135,66 @@ export function PaywallPeriodPicker({
 						</AppText>
 					</View>
 				)}
+				{intro && (
+					<View
+						className="rounded-full bg-accent/12 px-2.5 py-1"
+						style={styles.borderCurve}
+					>
+						<AppText className="font-medium text-[11px] text-accent">
+							Intro offer
+						</AppText>
+					</View>
+				)}
 			</View>
+		</View>
+	);
+}
+
+function SegmentBadge({
+	label,
+	isSelected,
+}: {
+	label: string;
+	isSelected: boolean;
+}) {
+	const accentForeground = useThemeColor("accent-foreground") as string;
+	return (
+		<View
+			className={cn(
+				"rounded-full px-2 py-0.5",
+				isSelected ? "bg-accent-foreground/15" : "bg-accent/15"
+			)}
+		>
+			<AppText
+				className="font-semibold text-[11px]"
+				style={{ color: isSelected ? accentForeground : undefined }}
+			>
+				{label}
+			</AppText>
+		</View>
+	);
+}
+
+/**
+ * Intro price with the full price struck through, and the renewal price spelled
+ * out: Apple rejects paywalls that hide what the plan renews at.
+ */
+function IntroPrice({ intro }: { intro: IntroOffer }) {
+	const renewal = `for your first ${intro.term}, then ${intro.fullPrice}/mo`;
+	return (
+		<View
+			accessibilityLabel={`${intro.price} per month for your first ${intro.term}, then ${intro.fullPrice} per month`}
+			accessible
+		>
+			<View className="flex-row items-baseline gap-1.5">
+				<AppText className="font-semibold text-[15px] text-foreground">
+					{intro.price}/mo
+				</AppText>
+				<AppText className="text-[13px] text-muted line-through">
+					{intro.fullPrice}
+				</AppText>
+			</View>
+			<AppText className="mt-0.5 text-[12px] text-muted">{renewal}</AppText>
 		</View>
 	);
 }
