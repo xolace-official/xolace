@@ -15,6 +15,7 @@ import {
 	SLOT_H,
 } from "@/src/features/reflect/compose/compose-slot";
 import { useMorphGeometry } from "@/src/features/reflect/compose/morph-geometry";
+import { TalkTourStep } from "@/src/features/reflect/compose/talk-tour-step";
 import { TextureBand } from "@/src/features/reflect/compose/texture-band";
 import type { ReflectionAction } from "@/src/features/reflect/types";
 import { a11yHidden } from "@/src/lib/utils";
@@ -112,6 +113,9 @@ export const ComposeSurround = ({
 
 	return (
 		<>
+			{/* Covers the header row, where the talk door sits. */}
+			<TalkTourStep height={chromeStyle.paddingTop} />
+
 			<Animated.View
 				className="px-6 pt-4"
 				pointerEvents={inFlow}

@@ -6,7 +6,9 @@ import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/src/components/shared/app-text";
+import { Tour } from "@/src/components/ui/tour";
 import { StreakCalendar } from "@/src/features/reflect/components/streak-calendar";
+import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
 import { useFullContext } from "@/src/lib/convex/use-full-context";
 import { playSoftPress } from "@/src/lib/haptics";
 
@@ -59,10 +61,16 @@ export const ComposeChrome = ({
 
 	return (
 		<View className="flex-row items-center gap-2 pb-3">
-			<StreakCalendar
-				currentStreak={context?.streak}
-				reviveStreak={context?.reviveStreak}
-			/>
+			<Tour.Step
+				description={TOUR_STEPS[3].description}
+				order={3}
+				title={TOUR_STEPS[3].title}
+			>
+				<StreakCalendar
+					currentStreak={context?.streak}
+					reviveStreak={context?.reviveStreak}
+				/>
+			</Tour.Step>
 
 			<View className="flex-1 gap-1.5">
 				<View className="flex-row items-center gap-2">

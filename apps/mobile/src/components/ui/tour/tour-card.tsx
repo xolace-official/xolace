@@ -82,19 +82,24 @@ export const TourCard = ({
 						{`${index + 1} of ${total}`}
 					</AppText>
 				)}
-				{active?.title && (
-					<AppText
-						accessibilityRole="header"
-						className="font-semibold text-overlay-foreground"
-					>
-						{active.title}
-					</AppText>
-				)}
-				{active?.description && (
-					<AppText className="text-overlay-foreground/70 text-sm">
-						{active.description}
-					</AppText>
-				)}
+				<View className="flex-row items-center gap-3">
+					{active?.icon}
+					<View className="flex-1 gap-1">
+						{active?.title && (
+							<AppText
+								accessibilityRole="header"
+								className="font-semibold text-overlay-foreground"
+							>
+								{active.title}
+							</AppText>
+						)}
+						{active?.description && (
+							<AppText className="text-overlay-foreground/70 text-sm">
+								{active.description}
+							</AppText>
+						)}
+					</View>
+				</View>
 			</View>
 
 			<View className="flex-row items-center justify-between gap-2">

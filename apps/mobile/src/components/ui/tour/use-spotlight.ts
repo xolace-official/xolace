@@ -19,6 +19,9 @@ type Spot = Rect & { radius: number };
 /**
  * The hole in the dim: where it is, and the animated path that draws it.
  *
+ * `spot` is where the target is, and places the card; `hole` is what gets cut,
+ * and is null for a step with `cutout` off.
+ *
  * Two halves that have to stay together. The rect is measured from the target
  * on the JS side; the path that cuts it out lives on the UI thread, so
  * travelling between two targets is one spring rather than a state update per
@@ -100,11 +103,15 @@ export function useSpotlight({
 	const cornerRadius = useSharedValue(0);
 	const settled = useSharedValue(false);
 
+	// A step with `cutout` off is measured, so the card has somewhere to go,
+	// but cuts nothing.
+	const hole = active?.cutout === false ? null : spot;
+
 	useEffect(() => {
 		// A step with nothing to point at collapses the hole rather than leaving
 		// the last one open: the previous target is no longer what is being talked
 		// about, and a hole over it says it is.
-		if (!spot) {
+		if (!hole) {
 			width.set(0);
 			height.set(0);
 			settled.set(false);
@@ -116,13 +123,13 @@ export function useSpotlight({
 			value.set(animate ? withSpring(next, SPRING) : next);
 		};
 
-		to(x, spot.x);
-		to(y, spot.y);
-		to(width, spot.width);
-		to(height, spot.height);
-		to(cornerRadius, spot.radius);
+		to(x, hole.x);
+		to(y, hole.y);
+		to(width, hole.width);
+		to(height, hole.height);
+		to(cornerRadius, hole.radius);
 		settled.set(true);
-	}, [spot, reducedMotion, x, y, width, height, cornerRadius, settled]);
+	}, [hole, reducedMotion, x, y, width, height, cornerRadius, settled]);
 
 	const pathProps = useAnimatedProps(() => ({
 		d: cutoutPath(
@@ -136,5 +143,5 @@ export function useSpotlight({
 		),
 	}));
 
-	return { pathProps, spot };
+	return { hole, pathProps, spot };
 }
