@@ -35,7 +35,7 @@ export const talkModel = (id: string | undefined) =>
 // Stamped on each talk's mirror (#606), "{writer}-v{N}-{model}" like mirrorModelVersion.
 // Bump N on any change the talk eval (#605) gates: the companion prompt, the
 // safety skill or crisis line, turn assembly, or the ElevenLabs agent's own prompt.
-const COMPANION_VERSION = "companion-v1";
+const COMPANION_VERSION = "companion-v2";
 export const companionVersion = (model: (typeof TALK_MODELS)[number]) =>
 	`${COMPANION_VERSION}-${model.replace(/^claude-/, "").replace(/-(\d+)-(\d+)$/, "-$1.$2")}`;
 
