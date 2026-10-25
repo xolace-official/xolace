@@ -1,0 +1,420 @@
+/**
+ * The steadiness-insight quality gate (#525, #526, ADR 0019). Failure modes:
+ * an insight shown that cites under two sessions, a burned or someone else's
+ * session, or sessions that never touched its domains; one a template could
+ * write (restating the score, "came up in 6 of 10 sessions"); generic comfort;
+ * a sensitive life area or clinical label; one contradicting the score's
+ * direction. And the #526 bar: a log recap (a list of dates, a string of their
+ * own quotes, a restated count) or a mirror-style reframe of one moment (its
+ * sessions bunched in a single week) passing as a revelation; an overall
+ * insight resting on one domain; a "what you say vs after" with no check-ins
+ * behind it; "where relief came from" citing nothing that ended lighter.
+ * And a named domain with no live score (its sessions all past the loader's
+ * window) crashing the save instead of being refused (#535).
+ *
+ * shownNow (read time): an insight shown before its domains unlock, one
+ * leaning on "your usual" before the domain settles, or one left beside a
+ * score that has since moved past its reliable-change band.
+ */
+import { describe, expect, it } from "vitest";
+import type { Domain } from "../lib/understandingVocab";
+import {
+	type CitableSession,
+	gateInsight,
+	type InsightDraft,
+	type LiveDomain,
+	shownNow,
+} from "./insightGate";
+
+const DAY = 86_400_000;
+const T = Date.UTC(2026, 9, 1);
+
+const s = (
+	id: string,
+	daysAgo: number,
+	domains: CitableSession["domains"],
+	over: Partial<CitableSession> = {}
+): CitableSession => ({
+	at: T - daysAgo * DAY,
+	checkedIn: false,
+	domains,
+	id,
+	lighter: false,
+	...over,
+});
+
+const sessions = new Map(
+	[
+		s("a", 60, ["work"]),
+		s("b", 45, ["health"]),
+		s("c", 30, ["money"]),
+		s("d", 20, ["work"], { checkedIn: true, lighter: true }),
+		s("e", 10, ["work"], { checkedIn: true }),
+		s("f", 2, ["work"]),
+		s("h", 4, ["work"]),
+		s("g", 70, ["love"]),
+		s("i", 50, ["love"]),
+	].map((x) => [x.id, x])
+);
+const domains = new Map([
+	["work", { baseline: 66, steadiness: 48 }],
+	["health", { baseline: 61, steadiness: 55 }],
+	["money", { baseline: 64, steadiness: 72 }],
+	["love", { baseline: 70, steadiness: 70 }],
+] as const);
+
+const evidence = { domains, sessions };
+
+const THREAD =
+	"Work, sleep and money feel like three problems. In every heavy session across all three, the same thing is there: being behind. It's one weight, showing up in three places.";
+const CROWDING =
+	"Since work got heavy in July, your friends have dropped out of your sessions completely. It's been eleven weeks. Work didn't just get heavier, it took the space they used to have.";
+const SAY_AFTER =
+	"You end most work sessions saying 'fine'. Three days later your check-ins say heavier almost every time. 'Fine' is where it starts, not where it ends.";
+const ABSENCE =
+	"In four months you've never described a good day at work. Not one neutral one either.";
+
+const draft = (over: Partial<InsightDraft> = {}): InsightDraft => ({
+	citedSessionIds: ["a", "b", "c"],
+	direction: "none",
+	domains: ["work", "health", "money"],
+	kind: "thread",
+	text: THREAD,
+	...over,
+});
+const absence = (over: Partial<InsightDraft> = {}) =>
+	draft({
+		citedSessionIds: ["a", "d", "e", "f"],
+		domains: ["work"],
+		kind: "absence",
+		text: ABSENCE,
+		...over,
+	});
+
+const reason = (d: InsightDraft) => {
+	const r = gateInsight(d, evidence);
+	return r.ok ? null : r.reason;
+};
+
+describe("gateInsight", () => {
+	it.each<[string, Partial<InsightDraft>]>([
+		["one thread", {}],
+		[
+			"crowding out",
+			{
+				citedSessionIds: ["g", "i", "a", "f"],
+				direction: "lower",
+				domains: ["work", "love"],
+				kind: "crowding",
+				text: CROWDING,
+			},
+		],
+		[
+			"say vs after",
+			{
+				citedSessionIds: ["d", "e", "a"],
+				domains: ["work"],
+				kind: "say_vs_after",
+				text: SAY_AFTER,
+			},
+		],
+		[
+			"absence",
+			{
+				citedSessionIds: ["a", "d", "e", "f"],
+				domains: ["work"],
+				kind: "absence",
+				text: ABSENCE,
+			},
+		],
+	])("passes the bar's %s", (_, over) => {
+		expect(gateInsight(draft(over), evidence)).toEqual({ ok: true });
+	});
+
+	it("needs two distinct cited sessions", () => {
+		expect(reason(absence({ citedSessionIds: ["a", "a"] }))).toMatch(/two/);
+	});
+
+	it("refuses a session that isn't citable (burned, missing, someone else's)", () => {
+		expect(reason(draft({ citedSessionIds: ["a", "b", "zzz"] }))).toMatch(
+			/can't be cited/
+		);
+	});
+
+	it("refuses a cited session that touched none of its domains", () => {
+		expect(reason(absence({ citedSessionIds: ["a", "e", "c"] }))).toMatch(
+			/touch/
+		);
+	});
+
+	it("lets an overall insight cite a session about a part of life it doesn't name, e.g. one still warming", () => {
+		// Love is cited but unnamed; every named domain still has a session of its own.
+		expect(
+			reason(
+				draft({ citedSessionIds: ["a", "b", "g"], domains: ["work", "health"] })
+			)
+		).toBeNull();
+	});
+
+	describe("overall insights", () => {
+		it("name at least two domains", () => {
+			expect(
+				reason(draft({ citedSessionIds: ["a", "d", "f"], domains: ["work"] }))
+			).toMatch(/two domains/);
+		});
+
+		it("cite sessions from at least two of them", () => {
+			expect(
+				reason(
+					draft({
+						citedSessionIds: ["a", "d", "f"],
+						domains: ["work", "health"],
+					})
+				)
+			).toMatch(/health/);
+		});
+
+		it("rest on at least three sessions", () => {
+			expect(
+				reason(
+					draft({ citedSessionIds: ["a", "b"], domains: ["work", "health"] })
+				)
+			).toMatch(/three/);
+		});
+
+		it("check direction against the domain they lead with", () => {
+			const crowding = draft({
+				citedSessionIds: ["g", "i", "a", "f"],
+				domains: ["work", "love"],
+				kind: "crowding",
+				text: CROWDING,
+			});
+			expect(reason({ ...crowding, direction: "higher" })).toMatch(/direction/);
+			expect(reason({ ...crowding, direction: "lower" })).toBeNull();
+			// Love sits exactly at its usual: neither lower nor higher.
+			expect(
+				reason({ ...crowding, direction: "higher", domains: ["love", "work"] })
+			).toMatch(/direction/);
+		});
+	});
+
+	it("refuses a domain with no score now: its only session is past the loader's window (#535)", () => {
+		const noScore = {
+			domains: new Map([...domains].filter(([d]) => d !== "work")),
+			sessions,
+		};
+		const r = gateInsight(absence(), noScore);
+		expect(r.ok ? null : r.reason).toMatch(/no score/i);
+	});
+
+	it("refuses a warming domain: shownNow would hide the insight until it unlocks", () => {
+		const warming = {
+			domains: new Map<
+				Domain,
+				{ steadiness: number; baseline: number; warming?: boolean }
+			>([
+				...domains,
+				["work", { baseline: 66, steadiness: 48, warming: true }],
+			]),
+			sessions,
+		};
+		const r = gateInsight(absence(), warming);
+		expect(r.ok ? null : r.reason).toMatch(/warming/i);
+	});
+
+	it("a per-domain insight names one domain", () => {
+		expect(
+			reason(
+				absence({
+					citedSessionIds: ["a", "b", "f"],
+					domains: ["work", "health"],
+				})
+			)
+		).toMatch(/one domain/);
+	});
+
+	it("refuses a reframe of one moment: sessions bunched in under two weeks", () => {
+		expect(reason(absence({ citedSessionIds: ["e", "h", "f"] }))).toMatch(
+			/spread/
+		);
+		expect(
+			reason(
+				draft({
+					citedSessionIds: ["e", "f"],
+					domains: ["work"],
+					kind: "say_vs_after",
+					text: SAY_AFTER,
+				})
+			)
+		).toMatch(/spread/);
+	});
+
+	it("refuses an absence resting on under three sessions", () => {
+		expect(reason(absence({ citedSessionIds: ["a", "f"] }))).toMatch(/three/);
+	});
+
+	it("refuses 'where relief came from' when nothing cited ended lighter", () => {
+		const text =
+			"Your lightest stretch at work came after the weeks you stopped answering messages at night, not after the deadline passed.";
+		const relief = absence({
+			citedSessionIds: ["a", "e"],
+			kind: "relief",
+			text,
+		});
+		expect(reason(relief)).toMatch(/lighter/);
+		expect(reason({ ...relief, citedSessionIds: ["a", "d"] })).toBeNull();
+	});
+
+	it("lets relief come from another part of life, as long as it rests on this one too", () => {
+		const text =
+			"Your lightest session in three months wasn't about fixing work. It was about your sister's wedding.";
+		const wedding = new Map([
+			...sessions,
+			["w", s("w", 40, ["family"], { lighter: true })],
+		]);
+		const relief = absence({
+			citedSessionIds: ["a", "e", "w"],
+			kind: "relief",
+			text,
+		});
+		expect(gateInsight(relief, { domains, sessions: wedding })).toEqual({
+			ok: true,
+		});
+		expect(
+			gateInsight(
+				{ ...relief, citedSessionIds: ["w", "b"] },
+				{ domains, sessions: wedding }
+			)
+		).toMatchObject({
+			reason: expect.stringMatching(/work/),
+		});
+	});
+
+	it("refuses 'what you say vs after' without check-ins behind it", () => {
+		const d = draft({
+			citedSessionIds: ["a", "d", "f"],
+			domains: ["work"],
+			kind: "say_vs_after",
+			text: SAY_AFTER,
+		});
+		expect(reason(d)).toMatch(/check-in/);
+	});
+
+	describe("log recaps", () => {
+		it.each([
+			"Money & Home worry has arrived on Sunday evenings across nine weeks (Aug 9, Aug 30, Sept 20, Oct 4), each after rent.",
+			"Work has felt heavier since 12 August, and again since 3 September, both right after the reorganisation was announced.",
+		])("refuses a list of dates: %s", (text) => {
+			expect(reason(absence({ text }))).toMatch(/dates/);
+		});
+
+		it.each([
+			"Money & Home worry has arrived on Sunday evenings four times across nine weeks, each one right after the rent reminder.",
+			"Work came up heavy in 6 of your last 10 conversations, and every one of them happened before a deadline landed.",
+			"You've brought work here twice this month, and both times it was late at night after the team call ran over.",
+		])("refuses a restated count: %s", (text) => {
+			expect(reason(absence({ text }))).toMatch(/count/);
+		});
+
+		it.each([
+			"When work is fully off the table, something lifts and stays lifted. You called one of those days the first time you felt like yourself.",
+			"Naming the work pressure here doesn't release it; it weighs more once you've had to look at it directly, days later.",
+		])("lets ordinary 'one of those' and 'once you've' through: %s", (text) => {
+			expect(reason(absence({ text }))).toBeNull();
+		});
+
+		it("refuses a string of their own quotes", () => {
+			const text =
+				"Over the summer you went from 'drowning' to 'stretched' to 'behind but managing' and now 'okay' about work.";
+			expect(reason(absence({ text }))).toMatch(/quotes/);
+		});
+	});
+
+	it("refuses internal numbers the person never sees", () => {
+		const text =
+			"In four months work has never once come in under intensity 6 for you, not even on the quiet weeks.";
+		expect(reason(absence({ text }))).toMatch(/internal/);
+	});
+
+	it("refuses a claim against the score's direction", () => {
+		expect(reason(absence({ direction: "higher" }))).toMatch(/direction/);
+		expect(reason(absence({ direction: "lower" }))).toBeNull();
+	});
+
+	it.each([
+		"Work & Studies came up in most of your sessions lately, more than any other part of your life has.",
+		"Work & Studies has been heavier than your usual lately, sitting below where it normally is.",
+		"Work is at 48 right now, under your usual of 66 — the lowest it has been in weeks for you.",
+	])("refuses what a template could write: %s", (text) => {
+		expect(reason(absence({ text }))).toMatch(/template|score/);
+	});
+
+	it.each([
+		"Remember to be gentle with yourself when work and sleep and money all pull at you like this.",
+		"It's okay to feel this way; balancing work, rest and money is a journey that takes real time.",
+		"It seems like work has been weighing on you, and that rest might be worth prioritizing.",
+	])("refuses generic comfort: %s", (text) => {
+		expect(reason(draft({ text }))).toMatch(/generic/i);
+	});
+
+	it.each([
+		"Work, sleep and money all got heavier right after the nights the addiction came back up this autumn.",
+		"Your sleep symptoms show up in work and money sessions too, which looks like one disorder, not three.",
+	])("refuses sensitive or clinical words: %s", (text) => {
+		expect(reason(draft({ text }))).toMatch(/sensitive|clinical/);
+	});
+
+	it("refuses text too short to say anything", () => {
+		expect(reason(draft({ text: "One weight, three places." }))).toMatch(
+			/short/
+		);
+	});
+});
+
+describe("shownNow", () => {
+	const live = (over: Partial<Record<string, Partial<LiveDomain>>> = {}) =>
+		new Map(
+			(["work", "health", "money"] as const).map((d) => [
+				d,
+				{
+					band: 12,
+					state: "settled",
+					steadiness: 50,
+					...over[d],
+				} as LiveDomain,
+			])
+		);
+	const row = {
+		direction: "none" as const,
+		domains: ["work", "health"] as InsightDraft["domains"],
+		kind: "thread" as const,
+		scoresAt: [50, 50],
+	};
+
+	it("shows a fresh insight on unlocked domains", () => {
+		expect(shownNow(row, live({ health: { state: "unlocked" } }))).toBe(true);
+	});
+
+	it("waits while any named domain is still warming, or gone", () => {
+		expect(shownNow(row, live({ health: { state: "warming" } }))).toBe(false);
+		expect(shownNow({ ...row, domains: ["work", "self"] }, live())).toBe(false);
+	});
+
+	it("waits for settled when it claims something against the usual", () => {
+		const lower = { ...row, direction: "lower" as const };
+		expect(shownNow(lower, live({ work: { state: "unlocked" } }))).toBe(false);
+		expect(shownNow(lower, live({ health: { state: "unlocked" } }))).toBe(true);
+	});
+
+	it("hides once a named domain's score has moved past its band since", () => {
+		expect(shownNow(row, live({ health: { steadiness: 62 } }))).toBe(true);
+		expect(shownNow(row, live({ health: { steadiness: 63 } }))).toBe(false);
+		expect(shownNow(row, live({ work: { band: 25, steadiness: 30 } }))).toBe(
+			true
+		);
+	});
+
+	it("hides a row written before scores were recorded", () => {
+		expect(shownNow({ ...row, scoresAt: undefined }, live())).toBe(false);
+	});
+});

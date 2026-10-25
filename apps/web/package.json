@@ -1,0 +1,39 @@
+{
+  "name": "@xolace/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "check-types": "tsc --noEmit",
+    "codegen": "varlock codegen",
+    "dev": "next dev --port 3001",
+    "lint": "biome check .",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^7.9.15",
+    "@swc/helpers": "^0.5.23",
+    "@varlock/nextjs-integration": "1.2.2",
+    "@xolace/backend": "workspace:*",
+    "@xolace/ui": "workspace:*",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "convex": "catalog:",
+    "lucide-react": "catalog:",
+    "next": "catalog:",
+    "next-themes": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "sonner": "catalog:",
+    "varlock": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@xolace/config": "workspace:*",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -1,0 +1,890 @@
+[
+  {
+    "slug": "not-knowing-feels-so-stressful-why",
+    "coverPath": "explainer/not-knowing-feels-so-stressful-why.png",
+    "kind": "explainer",
+    "title": "Not knowing feels so stressful, why?",
+    "dek": "Why uncertainty puts the body on alert, why a long wait is draining, and what helps before you start university.",
+    "primarySubject": "starting-university",
+    "sources": [
+      {
+        "source": "student-minds",
+        "pageTitle": "Why uncertainty can be stressful",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/why-uncertainty-can-be-stressful/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "nature-communications",
+        "pageTitle": "Computations of uncertainty mediate acute stress responses in humans",
+        "pageUrl": "https://www.nature.com/articles/ncomms10996",
+        "author": "de Berker, Rutledge, Mathys, Marshall, Cross, Dolan and Bestmann",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "computational-psychiatry",
+        "pageTitle": "Temporal Dynamics of Uncertainty Cause Anxiety and Avoidance",
+        "pageUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11192096/",
+        "author": "Holley, Varga, Boorman and Fox",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "frontiers",
+        "pageTitle": "The Intolerance of Uncertainty Inventory: Validity and Comparison of Scoring Methods to Assess Individuals Screening Positive for Anxiety and Depression",
+        "pageUrl": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2018.00388/full",
+        "author": "Lauriola et al.",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Anxiety (Every Mind Matters)",
+        "pageUrl": "https://www.nhs.uk/every-mind-matters/mental-health-issues/anxiety/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Tips to reduce stress",
+        "pageUrl": "https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/tips-to-reduce-stress/",
+        "retrievedAt": 1790812800000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790812800000,
+    "lastReviewedAt": 1790812800000,
+    "facets": {
+      "audience": ["student"],
+      "emotion": ["uncertainty", "stress", "anxiety"],
+      "lifeArea": ["change", "future", "settling-in"]
+    },
+    "reflectPrompt": "What are you most unsure about right now?",
+    "bodyPath": "bodies/explainer/not-knowing-feels-so-stressful-why.md"
+  },
+  {
+    "slug": "setting-expectations-you-can-adjust",
+    "coverPath": "advice/setting-expectations-you-can-adjust.png",
+    "kind": "advice",
+    "title": "Setting expectations you can adjust",
+    "dek": "Imagining university in advance is normal; here is how to keep the picture flexible, and how to find out what it is really like.",
+    "primarySubject": "starting-university",
+    "sources": [
+      {
+        "source": "student-minds",
+        "pageTitle": "Managing expectations of university",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/managing-expectations-of-university/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "frontiers",
+        "pageTitle": "An Investigation of First-Year Students' and Lecturers' Expectations of University Education",
+        "pageUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5790796/",
+        "author": "Stefanie Hassel and Nathan Ridout",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "frontiers",
+        "pageTitle": "Mind wandering via mental contrasting as a tool for behavior change",
+        "pageUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3759023/",
+        "author": "Gabriele Oettingen and Bettina Schwörer",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "elsevier",
+        "pageTitle": "Positive fantasies about idealized futures sap energy",
+        "pageUrl": "https://researchonline.lse.ac.uk/id/eprint/46284/",
+        "author": "Heather Barry Kappes and Gabriele Oettingen",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "University and mental health: tips for students",
+        "pageUrl": "https://www.mentalhealth.org.uk/our-work/public-engagement/behind-books/tips-students",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Anxiety (Every Mind Matters)",
+        "pageUrl": "https://www.nhs.uk/every-mind-matters/mental-health-issues/anxiety/",
+        "retrievedAt": 1790812800000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790812800000,
+    "lastReviewedAt": 1790812800000,
+    "facets": {
+      "audience": ["student"],
+      "emotion": ["uncertainty", "anxiety", "hope", "disappointment"],
+      "lifeArea": ["change", "settling-in", "future"]
+    },
+    "reflectPrompt": "What does the ordinary version of your first week look like?",
+    "bodyPath": "bodies/advice/setting-expectations-you-can-adjust.md"
+  },
+  {
+    "slug": "am-i-good-enough-for-this",
+    "coverPath": "advice/am-i-good-enough-for-this.png",
+    "kind": "advice",
+    "title": "\"Am I good enough for this?\"",
+    "dek": "Doubting your academic ability before you start is common, and there are small ways to test it before term begins.",
+    "primarySubject": "starting-university",
+    "sources": [
+      {
+        "source": "student-minds",
+        "pageTitle": "Will I be good enough for the next academic level?",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/will-i-be-good-enough-for-the-next-academic-level/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "frontiers",
+        "pageTitle": "Why Do I Feel More Confident? Bandura's Sources Predict Preservice Teachers' Latent Changes in Teacher Self-Efficacy",
+        "pageUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5070217/",
+        "author": "Franziska Pfitzner-Eden",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "springer",
+        "pageTitle": "Prevalence, Predictors, and Treatment of Impostor Syndrome: a Systematic Review",
+        "pageUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7174434/",
+        "author": "Bravata DM, Watts SA, Keefer AL, et al.",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Reframing unhelpful thoughts",
+        "pageUrl": "https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/self-help-cbt-techniques/reframing-unhelpful-thoughts/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "university-of-greenwich",
+        "pageTitle": "Get Academic Support",
+        "pageUrl": "https://libguides.gre.ac.uk/academicskills/support",
+        "retrievedAt": 1790812800000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790812800000,
+    "lastReviewedAt": 1790812800000,
+    "facets": {
+      "audience": ["student"],
+      "emotion": ["self-doubt", "anxiety"],
+      "lifeArea": ["studies", "achievement", "self-worth"]
+    },
+    "reflectPrompt": "What evidence do you already have that you can do this?",
+    "bodyPath": "bodies/advice/am-i-good-enough-for-this.md"
+  },
+  {
+    "slug": "decoding-the-place-words-and-people",
+    "coverPath": "advice/decoding-the-place-words-and-people.png",
+    "kind": "advice",
+    "title": "Decoding the place: the words and the people",
+    "dek": "Universities have their own vocabulary and their own kinds of staff; here's how to read both, and why not knowing yet isn't a sign you don't belong.",
+    "primarySubject": "starting-university",
+    "sources": [
+      {
+        "source": "student-minds",
+        "pageTitle": "What to expect from university staff",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/what-to-expect-from-university-staff/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "student-minds",
+        "pageTitle": "Prepare for people using different language",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/prepare-for-people-using-different-language/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "university-of-salford",
+        "pageTitle": "Hidden Curriculum in Higher Education",
+        "pageUrl": "https://openjournals.salford.ac.uk/pedagogy/article/id/276/print/",
+        "author": "Helen Whitehead",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "university-of-salford",
+        "pageTitle": "Glossary for new students",
+        "pageUrl": "https://www.salford.ac.uk/welcome/on-campus/checklist-for-new-students/glossary-for-new-students",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "university-of-southampton",
+        "pageTitle": "Support and wellbeing",
+        "pageUrl": "https://www.southampton.ac.uk/studentservices/support-wellbeing.page",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "newcastle-university",
+        "pageTitle": "Disability Support",
+        "pageUrl": "https://www.ncl.ac.uk/wellbeing/disability-support/",
+        "retrievedAt": 1790812800000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790812800000,
+    "lastReviewedAt": 1790812800000,
+    "facets": {
+      "audience": ["student"],
+      "emotion": ["not-belonging", "embarrassment", "uncertainty"],
+      "lifeArea": ["belonging", "settling-in", "studies"]
+    },
+    "reflectPrompt": "Which word or role at university are you most unsure about?",
+    "bodyPath": "bodies/advice/decoding-the-place-words-and-people.md"
+  },
+  {
+    "slug": "picking-up-where-you-left-off",
+    "kind": "advice",
+    "title": "Picking up where you left off",
+    "dek": "A short look back at last year, a gentle way back into your subject, and a few practical things worth sorting before term starts.",
+    "primarySubject": "returning-to-university",
+    "sources": [
+      {
+        "source": "student-minds",
+        "pageTitle": "Preparing to go back to university",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/preparing-to-go-back-to-university/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "student-minds",
+        "pageTitle": "Returning to university",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/returning-to-university/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "informs",
+        "pageTitle": "The Fresh Start Effect: Temporal Landmarks Motivate Aspirational Behavior",
+        "pageUrl": "https://faculty.wharton.upenn.edu/wp-content/uploads/2014/06/Dai_Fresh_Start_2014_Mgmt_Sci.pdf",
+        "author": "Hengchen Dai, Katherine L. Milkman and Jason Riis",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "university-of-surrey",
+        "pageTitle": "How are habits formed: Modelling habit formation in the real world",
+        "pageUrl": "https://openresearch.surrey.ac.uk/esploro/outputs/99783513802346",
+        "author": "Phillippa Lally, Cornelia H. M. van Jaarsveld, Henry W. W. Potts and Jane Wardle",
+        "retrievedAt": 1790812800000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790812800000,
+    "lastReviewedAt": 1790812800000,
+    "facets": {
+      "audience": ["student"],
+      "emotion": ["uncertainty", "stress", "hope"],
+      "lifeArea": ["studies", "finances", "housing", "change"]
+    },
+    "reflectPrompt": "What is one thing from last year you'd like to repeat, and one you'd like to leave behind?",
+    "bodyPath": "bodies/advice/picking-up-where-you-left-off.md",
+    "coverPath": "advice/picking-up-where-you-left-off.png"
+  },
+  {
+    "slug": "why-this-years-social-life-feels-different",
+    "kind": "explainer",
+    "title": "Why this year's social life feels different",
+    "dek": "Why friendships and routines shift between years at university, why that feels unsettling, and what helps.",
+    "primarySubject": "returning-to-university",
+    "sources": [
+      {
+        "source": "student-minds",
+        "pageTitle": "Why your social life might change as you progress into the next academic year",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/why-your-social-life-might-change-as-you-progress-into-the-next-academic-year/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "student-minds",
+        "pageTitle": "Returning to university",
+        "pageUrl": "https://www.studentminds.org.uk/advice-and-info/returning-to-university/",
+        "retrievedAt": 1790812800000
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Get help with loneliness",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/feeling-lonely/",
+        "retrievedAt": 1790812800000
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1790812800000,
+    "lastReviewedAt": 1790812800000,
+    "facets": {
+      "audience": ["student"],
+      "emotion": ["loneliness", "uncertainty", "not-belonging"],
+      "lifeArea": ["friendships", "change", "belonging", "isolation"]
+    },
+    "reflectPrompt": "Who are you hoping to see this term, and what would make it easy to arrange?",
+    "bodyPath": "bodies/explainer/why-this-years-social-life-feels-different.md",
+    "coverPath": "explainer/why-this-years-social-life-feels-different.png"
+  },
+  {
+    "slug": "anxiety-what-it-is-and-why-it-happens",
+    "kind": "explainer",
+    "title": "Anxiety: what it is and why it happens",
+    "dek": "What anxiety is, how it shows up in your mind and body, why it happens, and when ordinary worry starts to be too much.",
+    "primarySubject": "anxiety",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Anxiety, fear and panic",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/anxiety-fear-panic/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "mind",
+        "pageTitle": "Understanding anxiety",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/anxiety-problems/understanding-anxiety/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "american-psychological-association",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.apa.org/topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "american-psychological-association",
+        "pageTitle": "How psychologists help with anxiety disorders",
+        "pageUrl": "https://www.apa.org/topics/anxiety-disorders",
+        "retrievedAt": 1791359721872
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1791359721872,
+    "lastReviewedAt": 1791359721872,
+    "facets": {
+      "emotion": ["anxiety", "fear", "stress"],
+      "lifeArea": ["health", "sleep"]
+    },
+    "reflectPrompt": "When does your mind feel loudest, and what is your body doing then?",
+    "bodyPath": "bodies/explainer/anxiety-what-it-is-and-why-it-happens.md",
+    "coverPath": "explainer/anxiety-what-it-is-and-why-it-happens.png",
+    "contentNote": "Mentions panic, racing thoughts and physical symptoms such as a fast heartbeat. Nothing graphic."
+  },
+  {
+    "slug": "anxiety-what-helps",
+    "kind": "advice",
+    "title": "Anxiety: what helps",
+    "dek": "How anxiety shapes everyday life, five small things that can help when it feels overwhelming, and when to reach out for support.",
+    "primarySubject": "anxiety",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Anxiety, fear and panic",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/anxiety-fear-panic/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "mind",
+        "pageTitle": "Understanding anxiety",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/anxiety-problems/understanding-anxiety/",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "american-psychological-association",
+        "pageTitle": "Anxiety",
+        "pageUrl": "https://www.apa.org/topics/anxiety",
+        "retrievedAt": 1791359721872
+      },
+      {
+        "source": "american-psychological-association",
+        "pageTitle": "How psychologists help with anxiety disorders",
+        "pageUrl": "https://www.apa.org/topics/anxiety-disorders",
+        "retrievedAt": 1791359721872
+      }
+    ],
+    "reuse": "adapted",
+    "active": true,
+    "retrievedAt": 1791359721872,
+    "lastReviewedAt": 1791359721872,
+    "facets": {
+      "emotion": ["anxiety", "overwhelm", "stress"],
+      "lifeArea": ["health", "studies", "work"]
+    },
+    "reflectPrompt": "What is one small next step you could take today?",
+    "bodyPath": "bodies/advice/anxiety-what-helps.md",
+    "coverPath": "advice/anxiety-what-helps.png",
+    "contentNote": "Mentions panic, sleep trouble and relying on alcohol or other substances to cope. Nothing graphic."
+  },
+  {
+    "slug": "loneliness-what-it-is",
+    "kind": "explainer",
+    "title": "Loneliness: what it is",
+    "dek": "Why you can feel alone in a crowd, what loneliness looks like, why it happens, and how it can quietly feed itself.",
+    "primarySubject": "loneliness",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Loneliness",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/loneliness",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Every Mind Matters: Loneliness",
+        "pageUrl": "https://www.nhs.uk/every-mind-matters/lifes-challenges/loneliness/",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Feeling lonely",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/feeling-lonely/",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "mind",
+        "pageTitle": "About loneliness",
+        "pageUrl": "https://www.mind.org.uk/information-support/tips-for-everyday-living/loneliness/about-loneliness/",
+        "retrievedAt": 1791364428236
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791364428236,
+    "lastReviewedAt": 1791364428236,
+    "active": true,
+    "facets": {
+      "emotion": ["loneliness", "not-belonging", "anxiety"],
+      "lifeArea": ["isolation", "friendships", "belonging"]
+    },
+    "reflectPrompt": "When did you last feel truly understood by someone?",
+    "bodyPath": "bodies/explainer/loneliness-what-it-is.md",
+    "coverPath": "explainer/loneliness-what-it-is.png",
+    "contentNote": "Mentions isolation, low mood and depression. Nothing graphic."
+  },
+  {
+    "slug": "loneliness-what-helps",
+    "kind": "advice",
+    "title": "Loneliness: what helps",
+    "dek": "Small, low-pressure ways to rebuild connection, and when loneliness is a sign to reach out for more support.",
+    "primarySubject": "loneliness",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Loneliness",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/loneliness",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Every Mind Matters: Loneliness",
+        "pageUrl": "https://www.nhs.uk/every-mind-matters/lifes-challenges/loneliness/",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Feeling lonely",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/feeling-lonely/",
+        "retrievedAt": 1791364428236
+      },
+      {
+        "source": "mind",
+        "pageTitle": "About loneliness",
+        "pageUrl": "https://www.mind.org.uk/information-support/tips-for-everyday-living/loneliness/about-loneliness/",
+        "retrievedAt": 1791364428236
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791364428236,
+    "lastReviewedAt": 1791364428236,
+    "active": true,
+    "facets": {
+      "emotion": ["loneliness", "hope"],
+      "lifeArea": ["isolation", "friendships", "belonging"]
+    },
+    "reflectPrompt": "Who is one person you could send a small message to today?",
+    "bodyPath": "bodies/advice/loneliness-what-helps.md",
+    "coverPath": "advice/loneliness-what-helps.png",
+    "contentNote": "Mentions hopelessness and thoughts of self-harm as signs to seek professional support. Nothing graphic."
+  },
+  {
+    "slug": "depression-what-it-is",
+    "kind": "explainer",
+    "title": "Depression: what it is",
+    "dek": "How depression differs from a bad day, what it can feel like, why it happens, and how it can change the way you see yourself.",
+    "primarySubject": "depression",
+    "sources": [
+      {
+        "source": "world-health-organization",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.who.int/health-topics/depression/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/depression",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/depression",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Depression in adults",
+        "pageUrl": "https://www.nhs.uk/mental-health/conditions/depression-in-adults/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "mind",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/depression/",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": true,
+    "facets": {
+      "emotion": ["sadness", "hopelessness", "numbness"],
+      "lifeArea": ["health", "self-worth", "isolation"]
+    },
+    "reflectPrompt": "What has felt heavier than usual lately, and for how long?",
+    "bodyPath": "bodies/explainer/depression-what-it-is.md",
+    "coverPath": "explainer/depression-what-it-is.png",
+    "contentNote": "Mentions hopelessness, worthlessness and thoughts of suicide as possible symptoms. Nothing graphic."
+  },
+  {
+    "slug": "depression-what-helps",
+    "kind": "advice",
+    "title": "Depression: what helps",
+    "dek": "Small, realistic first steps when you're struggling, what professional treatment can involve, and when to reach out for support.",
+    "primarySubject": "depression",
+    "sources": [
+      {
+        "source": "world-health-organization",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.who.int/health-topics/depression/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/depression",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/depression",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Depression in adults",
+        "pageUrl": "https://www.nhs.uk/mental-health/conditions/depression-in-adults/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "mind",
+        "pageTitle": "Depression",
+        "pageUrl": "https://www.mind.org.uk/information-support/types-of-mental-health-problems/depression/",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": true,
+    "facets": {
+      "emotion": ["hopelessness", "hope", "sadness"],
+      "lifeArea": ["health", "isolation", "self-worth"]
+    },
+    "reflectPrompt": "Who is one person you could tell, even in a few words, that you haven't been feeling like yourself?",
+    "bodyPath": "bodies/advice/depression-what-helps.md",
+    "coverPath": "advice/depression-what-helps.jpg",
+    "contentNote": "Mentions hopelessness and thoughts of suicide or self-harm, with advice to seek urgent support. Nothing graphic."
+  },
+  {
+    "slug": "stress-what-it-is",
+    "kind": "explainer",
+    "title": "Stress: what it is",
+    "dek": "How stress shows up in your body, thoughts and behaviour, what builds it, and how one pressure can feed the next.",
+    "primarySubject": "stress",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Stress",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/stress",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Stress",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/stress/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "world-health-organization",
+        "pageTitle": "Stress",
+        "pageUrl": "https://www.who.int/news-room/questions-and-answers/item/stress",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Caring for Your Mental Health",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/caring-for-your-mental-health",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": true,
+    "facets": {
+      "emotion": ["stress", "overwhelm", "anxiety"],
+      "lifeArea": ["health", "work", "studies"]
+    },
+    "reflectPrompt": "Where do you notice stress first: in your body, your thoughts, or how you treat people?",
+    "bodyPath": "bodies/explainer/stress-what-it-is.md",
+    "coverPath": "explainer/stress-what-it-is.jpg",
+    "contentNote": "Describes physical and emotional signs of stress, including sleep and appetite changes. Nothing graphic."
+  },
+  {
+    "slug": "stress-what-helps",
+    "kind": "advice",
+    "title": "Stress: what helps",
+    "dek": "Small ways to ease stress as it builds, how to tell when it's too much, and why being stressed isn't a personal failure.",
+    "primarySubject": "stress",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Stress",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/stress",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Stress",
+        "pageUrl": "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/feelings-and-symptoms/stress/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "world-health-organization",
+        "pageTitle": "Stress",
+        "pageUrl": "https://www.who.int/news-room/questions-and-answers/item/stress",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Caring for Your Mental Health",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/caring-for-your-mental-health",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": true,
+    "facets": {
+      "emotion": ["stress", "overwhelm", "hope"],
+      "lifeArea": ["health", "work", "studies"]
+    },
+    "reflectPrompt": "What is one thing on your list that could wait until tomorrow?",
+    "bodyPath": "bodies/advice/stress-what-helps.md",
+    "coverPath": "advice/stress-what-helps.jpg",
+    "contentNote": "Mentions alcohol, smoking and drugs as coping habits that can backfire. Nothing graphic."
+  },
+  {
+    "slug": "sleep-why-it-matters",
+    "kind": "explainer",
+    "title": "Sleep: why it matters",
+    "dek": "Why sleep and mental health affect each other, the cycle that keeps you awake, and the signs your sleep needs attention.",
+    "primarySubject": "sleep",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Sleep and mental health",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/sleep-and-mental-health",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Insomnia",
+        "pageUrl": "https://www.nhs.uk/conditions/insomnia/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Caring for Your Mental Health",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/caring-for-your-mental-health",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": true,
+    "facets": {
+      "emotion": ["stress", "anxiety", "overwhelm"],
+      "lifeArea": ["sleep", "health", "studies"]
+    },
+    "reflectPrompt": "What is your mind doing when your body is ready to sleep?",
+    "bodyPath": "bodies/explainer/sleep-why-it-matters.md",
+    "coverPath": "explainer/sleep-why-it-matters.jpg",
+    "contentNote": "Mentions anxiety, depression and substance use in connection with poor sleep. Nothing graphic."
+  },
+  {
+    "slug": "sleep-what-helps",
+    "kind": "advice",
+    "title": "Sleep: what helps",
+    "dek": "Small changes to wind down, ease the worry about not sleeping, and when to talk to a professional.",
+    "primarySubject": "sleep",
+    "sources": [
+      {
+        "source": "mental-health-foundation",
+        "pageTitle": "Sleep and mental health",
+        "pageUrl": "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/sleep-and-mental-health",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "nhs",
+        "pageTitle": "Insomnia",
+        "pageUrl": "https://www.nhs.uk/conditions/insomnia/",
+        "retrievedAt": 1791368976066
+      },
+      {
+        "source": "national-institute-of-mental-health",
+        "pageTitle": "Caring for Your Mental Health",
+        "pageUrl": "https://www.nimh.nih.gov/health/topics/caring-for-your-mental-health",
+        "retrievedAt": 1791368976066
+      }
+    ],
+    "reuse": "adapted",
+    "retrievedAt": 1791368976066,
+    "lastReviewedAt": 1791368976066,
+    "active": true,
+    "facets": {
+      "emotion": ["stress", "overwhelm", "hope"],
+      "lifeArea": ["sleep", "health", "studies"]
+    },
+    "reflectPrompt": "What is one small thing you could do tonight to let the day end?",
+    "bodyPath": "bodies/advice/sleep-what-helps.md",
+    "coverPath": "advice/sleep-what-helps.jpg",
+    "contentNote": "Mentions alcohol and medication used to sleep, with advice to seek professional help. Nothing graphic."
+  },
+  {
+    "slug": "finding-my-why",
+    "coverPath": "stories/Finding-my-why-studying-building-and-the-people-who-push-you-higher.png",
+    "kind": "story",
+    "title": "Finding my \"why\": studying, building, and the people who push you higher",
+    "dek": "He spent university keeping people at a distance. Building something with others is what finally connected him.",
+    "primarySubject": "starting-university",
+    "sources": [
+      {
+        "source": "xolace",
+        "pageTitle": "Finding my \"why\": studying, building, and the people who push you higher",
+        "author": "Andrews Nana Beniako"
+      }
+    ],
+    "reuse": "original",
+    "active": true,
+    "storyDescriptor": "Andrews Nana Beniako, Xolace CMO",
+    "consentRecordedAt": 1792108800000,
+    "lastReviewedAt": 1792108800000,
+    "facets": {
+      "audience": ["student"],
+      "emotion": ["loneliness", "stress", "hope"],
+      "lifeArea": ["purpose", "studies", "friendships", "work"]
+    },
+    "reflectPrompt": "What do you want this season of your life to be the foundation for?",
+    "bodyPath": "bodies/stories/finding-my-why.md"
+  },
+  {
+    "slug": "make-or-break-the-friends-who-carried-me",
+    "coverPath": "stories/make or break- the friends who carried me.png",
+    "kind": "story",
+    "title": "Make or break: the friends who carried me to first class",
+    "dek": "From nearly failing SHS to first class honours. He says the reason wasn't studying harder, but who he studied with.",
+    "primarySubject": "starting-university",
+    "sources": [
+      {
+        "source": "xolace",
+        "pageTitle": "Make or break: the friends who carried me to first class",
+        "author": "Nathaniel E. Adama"
+      }
+    ],
+    "reuse": "original",
+    "active": true,
+    "storyDescriptor": "Nathaniel E. Adama, Xolace CEO",
+    "consentRecordedAt": 1792108800000,
+    "lastReviewedAt": 1792108800000,
+    "facets": {
+      "audience": ["student"],
+      "emotion": ["fear", "self-doubt", "disappointment", "hope"],
+      "lifeArea": ["studies", "friendships", "achievement"]
+    },
+    "reflectPrompt": "Who in your circle is strong where you're not?",
+    "bodyPath": "bodies/stories/make-or-break-the-friends-who-carried-me.md"
+  },
+  {
+    "slug": "for-godwin-my-best-friend",
+    "coverPath": "stories/kwame-story-1.png",
+    "kind": "story",
+    "title": "For Godwin, my best friend",
+    "dek": "Losing his closest friend at a young age taught him what it means to carry something with nowhere to put it.",
+    "primarySubject": "grief",
+    "sources": [
+      {
+        "source": "xolace",
+        "pageTitle": "For Godwin, my best friend",
+        "author": "Emmanuel Acquah"
+      }
+    ],
+    "reuse": "original",
+    "active": true,
+    "storyDescriptor": "Emmanuel Acquah, Xolace COO",
+    "consentRecordedAt": 1792108800000,
+    "lastReviewedAt": 1792108800000,
+    "facets": {
+      "audience": ["student"],
+      "emotion": ["grief", "sadness", "loneliness"],
+      "lifeArea": ["loss", "friendships", "isolation"]
+    },
+    "reflectPrompt": "Is there someone you've lost that you haven't had the space to talk about?",
+    "bodyPath": "bodies/stories/for-godwin-my-best-friend.md",
+    "contentNote": "About the sudden death of a close friend and the grief that followed. Nothing graphic."
+  },
+  {
+    "slug": "what-they-dont-put-on-the-transcript",
+    "coverPath": "stories/what_they_dont_put_on_the_transcript.png",
+    "kind": "story",
+    "title": "What they don't put on the transcript",
+    "dek": "Money gone in two months, a broken heart, and the day he cried at work. What finally changed was one honest message.",
+    "primarySubject": "loneliness",
+    "sources": [
+      {
+        "source": "xolace",
+        "pageTitle": "What they don't put on the transcript",
+        "author": "Emmanuel Somuah"
+      }
+    ],
+    "reuse": "original",
+    "active": true,
+    "storyDescriptor": "Emmanuel Somuah, Xolace CTO",
+    "consentRecordedAt": 1792108800000,
+    "lastReviewedAt": 1792108800000,
+    "facets": {
+      "audience": ["student"],
+      "emotion": ["loneliness", "self-doubt", "hope"],
+      "lifeArea": ["studies", "finances", "work", "isolation"]
+    },
+    "reflectPrompt": "What are you carrying that you haven't said out loud yet?",
+    "bodyPath": "bodies/stories/what-they-dont-put-on-the-transcript.md"
+  }
+]

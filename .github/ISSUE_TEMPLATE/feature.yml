@@ -1,0 +1,50 @@
+name: Feature request
+description: Propose a new capability or a change to an existing one.
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check VISION.md first: proposals have to respect the product rules there.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What the person using Xolace is trying to do, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What you would change. Sketches and examples welcome.
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surfaces
+      multiple: true
+      options:
+        - Mobile
+        - Web
+        - Admin
+        - Desktop
+        - CLI
+        - Backend / Convex
+        - Docs
+        - CI / tooling
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: checkboxes
+    id: vision
+    attributes:
+      label: Product rules
+      options:
+        - label: This proposal respects the invariants in VISION.md
+          required: true

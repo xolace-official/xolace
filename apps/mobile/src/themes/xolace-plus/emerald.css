@@ -1,0 +1,179 @@
+/*
+ * xolace+ — Emerald
+ * Deep green jewel tone. Pale mint-cream paper in light mode,
+ * near-black forest in dark mode, with a vivid emerald accent.
+ */
+@layer theme {
+	:root {
+		@variant emerald-light {
+			--font-normal: "SpaceGrotesk-Regular";
+			--font-medium: "SpaceGrotesk-Medium";
+			--font-semibold: "SpaceGrotesk-SemiBold";
+			--font-bold: "SpaceGrotesk-Bold";
+
+			--radius: 0.5rem;
+
+			--background: oklch(96.5% 0.015 155);
+			--foreground: oklch(18% 0.02 160);
+
+			--surface: oklch(99% 0.008 155);
+			--surface-foreground: oklch(18% 0.02 160);
+			--surface-secondary: oklch(93% 0.02 155);
+			--surface-secondary-foreground: oklch(18% 0.02 160);
+			--surface-tertiary: oklch(90% 0.025 155);
+			--surface-tertiary-foreground: oklch(18% 0.02 160);
+
+			--overlay: oklch(99% 0.006 155);
+			--overlay-foreground: oklch(18% 0.02 160);
+
+			--muted: oklch(55% 0.03 160);
+
+			--default: oklch(92% 0.02 155);
+			--default-foreground: oklch(18% 0.02 160);
+
+			--accent: oklch(45% 0.15 160);
+			--accent-foreground: oklch(97% 0.01 160);
+
+			--field-background: oklch(97% 0.01 155);
+			--field-foreground: oklch(18% 0.02 160);
+			--field-placeholder: var(--muted);
+			--field-border: transparent;
+
+			--resonance: oklch(0.796 0.0347 167.72 / 15%);
+			--resonance-foreground: oklch(0.796 0.0347 167.72);
+
+			--offer-ink: oklch(18% 0.02 285);
+
+			--tone-poetic: oklch(70% 0.18 305);
+			--tone-gentle: oklch(68% 0.17 15);
+			--tone-direct: oklch(68% 0.15 225);
+			--tone-witnessed: oklch(72% 0.15 75);
+			--tone-poetic-text: oklch(48% 0.18 305);
+			--tone-gentle-text: oklch(46% 0.17 15);
+			--tone-direct-text: oklch(46% 0.15 225);
+			--tone-witnessed-text: oklch(48% 0.15 75);
+			--browse-audio: oklch(70% 0.13 60 / 16%);
+			--browse-audio-foreground: oklch(70% 0.13 60);
+			--browse-music: oklch(68% 0.13 290 / 16%);
+			--browse-music-foreground: oklch(68% 0.13 290);
+			--browse-topics: oklch(72% 0.12 215 / 16%);
+			--browse-topics-foreground: oklch(72% 0.12 215);
+
+			--event: oklch(60% 0.15 350);
+			--event-foreground: oklch(99% 0.005 350);
+
+			--success: oklch(70% 0.15 150);
+			--success-foreground: oklch(21% 0.01 150);
+
+			--warning: oklch(80% 0.12 80);
+			--warning-foreground: oklch(21% 0.01 80);
+			--ember: oklch(78% 0.13 75);
+
+			--danger: oklch(65% 0.2 30);
+			--danger-foreground: oklch(99% 0 0);
+
+			--segment: oklch(92% 0.02 155);
+			--segment-foreground: oklch(18% 0.02 160);
+
+			--border: oklch(87% 0.02 155);
+			--separator: oklch(78% 0.02 155);
+			--focus: var(--accent);
+			--link: oklch(42% 0.15 160);
+
+			--surface-shadow:
+				0 2px 4px 0 rgba(10, 60, 40, 0.05), 0 1px 2px 0 rgba(10, 60, 40, 0.07),
+				0 0 1px 0 rgba(10, 60, 40, 0.06);
+			--overlay-shadow:
+				0 2px 8px 0 rgba(10, 60, 40, 0.03),
+				0 -6px 12px 0 rgba(10, 60, 40, 0.02),
+				0 14px 28px 0 rgba(10, 60, 40, 0.04);
+			--field-shadow:
+				0 2px 4px 0 rgba(10, 60, 40, 0.05), 0 1px 2px 0 rgba(10, 60, 40, 0.07),
+				0 0 1px 0 rgba(10, 60, 40, 0.06);
+
+			--backdrop: oklch(0% 0 0 / 20%);
+		}
+
+		@variant emerald-dark {
+			--font-normal: "SpaceGrotesk-Regular";
+			--font-medium: "SpaceGrotesk-Medium";
+			--font-semibold: "SpaceGrotesk-SemiBold";
+			--font-bold: "SpaceGrotesk-Bold";
+
+			--radius: 0.5rem;
+
+			--background: oklch(8% 0.015 160);
+			--foreground: oklch(95% 0.012 155);
+
+			--surface: oklch(13% 0.025 160);
+			--surface-foreground: oklch(95% 0.012 155);
+			--surface-secondary: oklch(17% 0.03 160);
+			--surface-secondary-foreground: oklch(95% 0.012 155);
+			--surface-tertiary: oklch(20% 0.035 160);
+			--surface-tertiary-foreground: oklch(95% 0.012 155);
+
+			--overlay: oklch(15% 0.028 160);
+			--overlay-foreground: oklch(95% 0.012 155);
+
+			--muted: oklch(55% 0.025 160);
+
+			--default: oklch(19% 0.028 160);
+			--default-foreground: oklch(95% 0.012 155);
+
+			--accent: oklch(62% 0.17 160);
+			--accent-foreground: oklch(10% 0.02 160);
+
+			--field-background: oklch(16% 0.028 160);
+			--field-foreground: oklch(95% 0.012 155);
+			--field-placeholder: var(--muted);
+			--field-border: transparent;
+
+			--resonance: oklch(0.796 0.0347 167.72 / 15%);
+			--resonance-foreground: oklch(0.796 0.0347 167.72);
+
+			--offer-ink: oklch(18% 0.02 285);
+
+			--tone-poetic: oklch(74% 0.18 305);
+			--tone-gentle: oklch(72% 0.17 15);
+			--tone-direct: oklch(72% 0.15 225);
+			--tone-witnessed: oklch(76% 0.15 75);
+			--tone-poetic-text: var(--tone-poetic);
+			--tone-gentle-text: var(--tone-gentle);
+			--tone-direct-text: var(--tone-direct);
+			--tone-witnessed-text: var(--tone-witnessed);
+			--browse-audio: oklch(74% 0.13 60 / 14%);
+			--browse-audio-foreground: oklch(74% 0.13 60);
+			--browse-music: oklch(72% 0.13 290 / 14%);
+			--browse-music-foreground: oklch(72% 0.13 290);
+			--browse-topics: oklch(76% 0.12 215 / 14%);
+			--browse-topics-foreground: oklch(76% 0.12 215);
+
+			--event: oklch(76% 0.12 350);
+			--event-foreground: oklch(15% 0.01 350);
+
+			--success: oklch(70% 0.15 150);
+			--success-foreground: oklch(15% 0.01 150);
+
+			--warning: oklch(80% 0.12 80);
+			--warning-foreground: oklch(15% 0.01 80);
+			--ember: oklch(80% 0.1 75);
+
+			--danger: oklch(65% 0.2 30);
+			--danger-foreground: oklch(99% 0 0);
+
+			--segment: oklch(19% 0.028 160);
+			--segment-foreground: oklch(95% 0.012 155);
+
+			--border: oklch(24% 0.028 160);
+			--separator: oklch(32% 0.028 160);
+			--focus: var(--accent);
+			--link: oklch(70% 0.16 160);
+
+			--surface-shadow: 0 0 0 0 transparent inset;
+			--overlay-shadow: 0 0 1px 0 rgba(40, 200, 140, 0.15) inset;
+			--field-shadow: 0 0 0 0 transparent inset;
+
+			--backdrop: oklch(0% 0 0 / 20%);
+		}
+	}
+}

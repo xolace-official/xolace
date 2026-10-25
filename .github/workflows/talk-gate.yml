@@ -1,0 +1,59 @@
+name: Talk gate
+
+# #605: a change to the companion's prompt, safety skill, crisis line, model
+# or turn assembly must pass the talk eval before it ships. Plays ~36 scripted
+# talks against the live model with a Sonnet judge per turn, so it only runs
+# when one of these moves.
+on:
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - packages/backend/convex/ai/prompts/companion.ts
+      - packages/backend/convex/ai/talk/**
+      - packages/backend/convex/ai/providers/anthropic.ts
+      - packages/backend/convex/talk/safety.ts
+      - packages/backend/convex/talk/safetyScript.ts
+      - packages/backend/convex/talk/memory.ts
+      - packages/backend/convex/talk/clock.ts
+      - packages/backend/convex/talk/transcript.ts
+      - packages/backend/convex/ai/prompts/__evals__/talk*
+      - packages/backend/convex/ai/prompts/__evals__/harness.eval.ts
+      - .github/workflows/talk-gate.yml
+  workflow_dispatch:
+
+jobs:
+  talk:
+    name: Talk eval
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # vitest runs under Node via its shebang (see ci.yml).
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Pinned bun from package.json, cached `bun install --frozen-lockfile`.
+      - name: Setup workspace
+        uses: ./.github/actions/setup
+        with:
+          turbo-cache: "false"
+
+      # Without the key the eval skips, and a skipped gate would read green.
+      - name: Require ANTHROPIC_API_KEY
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::ANTHROPIC_API_KEY secret is not set; the talk gate cannot run."
+            exit 1
+          fi
+
+      - name: Run talk eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: bun run --cwd packages/backend test:evals:talk

@@ -1,56 +1,89 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+# EAS Build upload rules for the whole monorepo.
+#
+# EAS CLI reads this file from the git root (`git rev-parse --show-toplevel`),
+# not from apps/mobile, and when it exists every .gitignore is ignored. So it
+# repeats the .gitignore rules that matter, and it deliberately does NOT list
+# the mobile build secrets (apps/mobile/google-services.json,
+# apps/mobile/google-services-preview/, apps/mobile/xolace-*.json): they are
+# gitignored but the build needs them until they move to EAS file env vars.
+# node_modules and .git are always excluded by EAS CLI.
 
-# dependencies
+# Dependencies
 node_modules/
+.pnp
+.pnp.js
 
-# Expo
-.expo/
+# Build outputs and caches
 dist/
+build/
 web-build/
+*.tsbuildinfo
+.turbo/
+.nx/
+.cache/
+.expo/
 expo-env.d.ts
+.metro-health-check*
+coverage/
+.nyc_output/
+tmp/
+temp/
+*.tgz
+*.log
+logs/
+.evlog/
 
-# Native
+# Local env files: EAS builds read EAS environment variables instead
+.env
+.env*.local
+
+# Generated native projects (EAS runs prebuild itself)
+apps/mobile/ios/
+apps/mobile/android/
+**/ios/Pods/
 .kotlin/
+
+# Signing material and keys that the build does not need
 *.orig.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
 *.pem
+*.aab
+*firebase-adminsdk*.json
 
-# local env files
-.env*.local
+# Other apps' build output (their sources stay so the workspace lockfile installs)
+apps/web/.next/
+apps/web/out/
+apps/admin/.next/
+apps/docs/.next/
+apps/docs/.source/
+apps/desktop/src-tauri/target/
+src-tauri/target/
+.vercel/
+.alchemy/
+local.db
+local.db-*
 
-# typescript
-*.tsbuildinfo
+# Backend ingestion scripts and their local media (not part of the app build)
+packages/backend/scripts/kindling/
+packages/backend/scripts/library/
 
-app-example
-
-# generated native folders
-/ios
-/android
-
-# key files
-/xolace-app-firebase-adminsdk-fbsvc-68c84aaff8.json
-
+# Agent and editor local state
+.claude/
 .argent/
-/scripts
-/script
-
+apps/mobile/.argent/
+.heroui-docs/
+.stream/
+.gstack/
 .ds-sync/
 ds-bundle/
-.design-sync/.cache/
-.design-sync/learnings/
-.design-sync/node_modules
+.design-sync/
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+*~

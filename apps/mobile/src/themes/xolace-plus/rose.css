@@ -1,0 +1,180 @@
+/*
+ * xolace+ — Rosé
+ * Soft rose gold. Blush-pink paper in light mode, deep mauve-black
+ * in dark mode, with a glowing pink-metallic accent. Romantic rather
+ * than moody — the softest of the five premium themes.
+ */
+@layer theme {
+	:root {
+		@variant rose-light {
+			--font-normal: "SpaceGrotesk-Regular";
+			--font-medium: "SpaceGrotesk-Medium";
+			--font-semibold: "SpaceGrotesk-SemiBold";
+			--font-bold: "SpaceGrotesk-Bold";
+
+			--radius: 1rem;
+
+			--background: oklch(97% 0.015 350);
+			--foreground: oklch(22% 0.02 350);
+
+			--surface: oklch(99% 0.008 350);
+			--surface-foreground: oklch(22% 0.02 350);
+			--surface-secondary: oklch(94% 0.02 350);
+			--surface-secondary-foreground: oklch(22% 0.02 350);
+			--surface-tertiary: oklch(91.5% 0.025 350);
+			--surface-tertiary-foreground: oklch(22% 0.02 350);
+
+			--overlay: oklch(99% 0.006 350);
+			--overlay-foreground: oklch(22% 0.02 350);
+
+			--muted: oklch(60% 0.03 350);
+
+			--default: oklch(93% 0.02 350);
+			--default-foreground: oklch(22% 0.02 350);
+
+			--accent: oklch(72% 0.13 350);
+			--accent-foreground: oklch(18% 0.02 350);
+
+			--field-background: oklch(98% 0.01 350);
+			--field-foreground: oklch(22% 0.02 350);
+			--field-placeholder: var(--muted);
+			--field-border: transparent;
+
+			--resonance: oklch(0.796 0.0347 167.72 / 15%);
+			--resonance-foreground: oklch(0.796 0.0347 167.72);
+
+			--offer-ink: oklch(18% 0.02 285);
+
+			--tone-poetic: oklch(70% 0.18 305);
+			--tone-gentle: oklch(68% 0.17 15);
+			--tone-direct: oklch(68% 0.15 225);
+			--tone-witnessed: oklch(72% 0.15 75);
+			--tone-poetic-text: oklch(48% 0.18 305);
+			--tone-gentle-text: oklch(46% 0.17 15);
+			--tone-direct-text: oklch(46% 0.15 225);
+			--tone-witnessed-text: oklch(48% 0.15 75);
+			--browse-audio: oklch(70% 0.13 50 / 16%);
+			--browse-audio-foreground: oklch(70% 0.13 50);
+			--browse-music: oklch(68% 0.12 280 / 16%);
+			--browse-music-foreground: oklch(68% 0.12 280);
+			--browse-topics: oklch(72% 0.11 175 / 16%);
+			--browse-topics-foreground: oklch(72% 0.11 175);
+
+			--event: oklch(60% 0.15 350);
+			--event-foreground: oklch(99% 0.005 350);
+
+			--success: oklch(70% 0.15 150);
+			--success-foreground: oklch(21% 0.01 150);
+
+			--warning: oklch(80% 0.12 80);
+			--warning-foreground: oklch(21% 0.01 80);
+			--ember: oklch(78% 0.13 75);
+
+			--danger: oklch(65% 0.2 30);
+			--danger-foreground: oklch(99% 0 0);
+
+			--segment: oklch(93% 0.02 350);
+			--segment-foreground: oklch(22% 0.02 350);
+
+			--border: oklch(88% 0.02 350);
+			--separator: oklch(80% 0.02 350);
+			--focus: var(--accent);
+			--link: oklch(55% 0.14 350);
+
+			--surface-shadow:
+				0 2px 4px 0 rgba(150, 60, 90, 0.05),
+				0 1px 2px 0 rgba(150, 60, 90, 0.07), 0 0 1px 0 rgba(150, 60, 90, 0.06);
+			--overlay-shadow:
+				0 2px 8px 0 rgba(150, 60, 90, 0.03),
+				0 -6px 12px 0 rgba(150, 60, 90, 0.02),
+				0 14px 28px 0 rgba(150, 60, 90, 0.04);
+			--field-shadow:
+				0 2px 4px 0 rgba(150, 60, 90, 0.05),
+				0 1px 2px 0 rgba(150, 60, 90, 0.07), 0 0 1px 0 rgba(150, 60, 90, 0.06);
+
+			--backdrop: oklch(0% 0 0 / 20%);
+		}
+
+		@variant rose-dark {
+			--font-normal: "SpaceGrotesk-Regular";
+			--font-medium: "SpaceGrotesk-Medium";
+			--font-semibold: "SpaceGrotesk-SemiBold";
+			--font-bold: "SpaceGrotesk-Bold";
+
+			--radius: 1rem;
+
+			--background: oklch(11% 0.015 350);
+			--foreground: oklch(95% 0.012 350);
+
+			--surface: oklch(17% 0.025 350);
+			--surface-foreground: oklch(95% 0.012 350);
+			--surface-secondary: oklch(21% 0.028 350);
+			--surface-secondary-foreground: oklch(95% 0.012 350);
+			--surface-tertiary: oklch(24% 0.03 350);
+			--surface-tertiary-foreground: oklch(95% 0.012 350);
+
+			--overlay: oklch(19% 0.027 350);
+			--overlay-foreground: oklch(95% 0.012 350);
+
+			--muted: oklch(58% 0.025 350);
+
+			--default: oklch(23% 0.028 350);
+			--default-foreground: oklch(95% 0.012 350);
+
+			--accent: oklch(75% 0.14 350);
+			--accent-foreground: oklch(15% 0.02 350);
+
+			--field-background: oklch(20% 0.027 350);
+			--field-foreground: oklch(95% 0.012 350);
+			--field-placeholder: var(--muted);
+			--field-border: transparent;
+
+			--resonance: oklch(0.796 0.0347 167.72 / 15%);
+			--resonance-foreground: oklch(0.796 0.0347 167.72);
+
+			--offer-ink: oklch(18% 0.02 285);
+
+			--tone-poetic: oklch(74% 0.18 305);
+			--tone-gentle: oklch(72% 0.17 15);
+			--tone-direct: oklch(72% 0.15 225);
+			--tone-witnessed: oklch(76% 0.15 75);
+			--tone-poetic-text: var(--tone-poetic);
+			--tone-gentle-text: var(--tone-gentle);
+			--tone-direct-text: var(--tone-direct);
+			--tone-witnessed-text: var(--tone-witnessed);
+			--browse-audio: oklch(74% 0.13 50 / 14%);
+			--browse-audio-foreground: oklch(74% 0.13 50);
+			--browse-music: oklch(72% 0.12 280 / 14%);
+			--browse-music-foreground: oklch(72% 0.12 280);
+			--browse-topics: oklch(76% 0.11 175 / 14%);
+			--browse-topics-foreground: oklch(76% 0.11 175);
+
+			--event: oklch(76% 0.12 350);
+			--event-foreground: oklch(15% 0.01 350);
+
+			--success: oklch(70% 0.15 150);
+			--success-foreground: oklch(15% 0.01 150);
+
+			--warning: oklch(80% 0.12 80);
+			--warning-foreground: oklch(15% 0.01 80);
+			--ember: oklch(80% 0.1 75);
+
+			--danger: oklch(65% 0.2 30);
+			--danger-foreground: oklch(99% 0 0);
+
+			--segment: oklch(23% 0.028 350);
+			--segment-foreground: oklch(95% 0.012 350);
+
+			--border: oklch(27% 0.027 350);
+			--separator: oklch(35% 0.027 350);
+			--focus: var(--accent);
+			--link: oklch(80% 0.13 350);
+
+			--surface-shadow: 0 0 0 0 transparent inset;
+			--overlay-shadow: 0 0 1px 0 rgba(255, 170, 190, 0.15) inset;
+			--field-shadow: 0 0 0 0 transparent inset;
+
+			--backdrop: oklch(0% 0 0 / 20%);
+		}
+	}
+}

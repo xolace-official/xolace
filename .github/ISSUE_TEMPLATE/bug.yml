@@ -1,0 +1,60 @@
+name: Bug report
+description: Something is broken or behaves differently than it should.
+title: "bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not report security vulnerabilities here. See SECURITY.md for private reporting.
+        Never paste secrets, tokens or real user data.
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      description: Where did you see it?
+      multiple: true
+      options:
+        - Mobile (iOS)
+        - Mobile (Android)
+        - Web
+        - Admin
+        - Desktop
+        - CLI
+        - Backend / Convex
+        - Docs
+        - CI / tooling
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshots, a screen recording, logs or a Sentry link.
+  - type: input
+    id: version
+    attributes:
+      label: Version / build
+      description: App version and build number, commit SHA, or deployment URL.
+  - type: input
+    id: environment
+    attributes:
+      label: Device / OS / browser
+      placeholder: iPhone 15, iOS 26.1 · Pixel 8, Android 16 · Chrome 141, macOS 26

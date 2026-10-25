@@ -1,132 +1,134 @@
 # Xolace
 
-Xolace is an emotional processing app. Not a chatbot. Not a social network. Not therapy.
-
-People open Xolace when they feel something they can't name — heavy, anxious, numb, confused — but not "bad enough" for therapy. The app asks one question: "What's here right now?" The user writes whatever is true (or taps texture words if they can't find words). An AI reads what they expressed and mirrors it back with more precision than they could find themselves — 1-3 sentences that make them think "yes, exactly, that's what I'm feeling." Then they choose: sit with a short guided exercise, see that strangers have felt something similar, or simply close the app knowing they were heard.
-
-### Core Thesis
-
-There is a massive gap between "Everything is fine" (social media performance mode) and "I need therapy" (clinical intervention). Most people live in that gap. Xolace exists in that gap as **emotional processing infrastructure** — the daily layer of mental wellness.
-
-### What It Is NOT
-
-- Not a chatbot (no chat bubbles, no conversation threads, no back-and-forth)
-- Not a social app (no feed, no profiles, no followers, no public content)
-- Not a wellness app with forced positivity (no gamification, no streak guilt)
-- Not clinical (no diagnoses, no therapeutic terminology)
-- Not an AI companion/relationship (no parasocial attachment by design)
-
-### The Metaphor
-
-A digital campfire. You sit by the fire alone. The flames help you see what you're carrying. Sometimes you hear quiet voices from others in the darkness — strangers who feel what you feel. The fire is the AI. It illuminates and warms but is not a participant. It's infrastructure.
-
-
-## Tech Stack
-
-| Category | Tool |
-|---|---|
-| Framework | [Expo](https://expo.dev) (SDK 55) + React Native 0.83 |
-| Routing | [Expo Router](https://docs.expo.dev/router/introduction/) (file-based, typed routes) |
-| UI Components | [HeroUI Native](https://heroui.com/native) |
-| Styling | [Uniwind](https://uniwind.dev) (Tailwind CSS v4) + [Tailwind Variants](https://www.tailwind-variants.org/) |
-| State | [Zustand](https://zustand.docs.pmnd.rs/) with persist middleware |
-| Keyboard | [react-native-keyboard-controller](https://kirurupa.github.io/react-native-keyboard-controller/) |
-| Bottom Sheets | [@gorhom/bottom-sheet](https://gorhom.dev/react-native-bottom-sheet/) |
-| Fonts | Poppins + Inter via `expo-font` |
-| Tabs | Native Tabs (`expo-router/unstable-native-tabs`) with web fallback |
-| Storage | `expo-sqlite/kv-store` (native) / localStorage (web) |
+This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines Next.js, Convex, and more.
 
 ## Features
 
-- **Multi-theme system** — Base light/dark plus color themes (lavender, mint, sky) with light/dark variants each, all using OKLCH color tokens
-- **HeroUI Native components** — Pre-configured provider with toast support and keyboard avoidance
-- **Native tab bar** — Platform-native tabs on iOS/Android with SF Symbols and Material icons, web fallback
-- **Theme switching** — `useAppTheme()` hook with `setTheme()` and `toggleTheme()` via `Uniwind.setTheme()`
-- **Unified storage** — Single adapter for Zustand persistence across native and web
-- **Bottom sheets** — `@gorhom/bottom-sheet` with blur backdrop support (`expo-blur`)
-- **`cn()` utility** — Tailwind class merging via `clsx` + `tailwind-merge`
-- **Custom `AppText`** — Drop-in text component with Poppins font family
-- **React Compiler** — Enabled via `reactCompiler: true` experiment
-- **Typed routes** — Full type safety for navigation
+- **TypeScript** - For type safety and improved developer experience
+- **Next.js** - Full-stack React framework
+- **React Native** - Build mobile apps using React
+- **Expo** - Tools for React Native development
+- **TailwindCSS** - Utility-first CSS for rapid UI development
+- **Shared UI package** - shadcn/ui primitives live in `packages/ui`
+- **Convex** - Reactive backend-as-a-service platform
+- **Authentication** - Clerk
+- **Biome** - Linting and formatting
+- **Husky** - Git hooks for code quality
+- **PWA** - Progressive Web App support
+- **Tauri** - Build native desktop applications
+- **Turborepo** - Optimized monorepo build system
+
+## Getting Started
+
+First, install the dependencies:
+
+```bash
+bun install
+```
+
+## Convex Setup
+
+This project uses Convex as a backend. You'll need to set up Convex before running the app:
+
+```bash
+bun run dev:setup
+```
+
+Follow the prompts to create a new Convex project and connect it to your application.
+
+Copy environment variables from `packages/backend/.env.local` to `apps/*/.env`.
+
+### Clerk Authentication Setup
+
+- Follow the guide: [Convex + Clerk](https://docs.convex.dev/auth/clerk)
+- Set `CLERK_JWT_ISSUER_DOMAIN` in Convex Dashboard
+- Set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` in `apps/web/.env`
+- Set `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` in `apps/mobile/.env` (see `apps/mobile/.env.example`)
+- Set `CLERK_SECRET_KEY` in `apps/web/.env` for Clerk server middleware
+
+Then, run the development server:
+
+```bash
+bun run dev
+```
+
+Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
+From `apps/mobile`, run the `ios` script for iOS or the `android` script for Android to build and launch the app. See [Expo development builds](https://docs.expo.dev/develop/development-builds/introduction/) for device setup.
+Your app will connect to the Convex cloud backend automatically.
+
+## UI Customization
+
+React web apps in this stack share shadcn/ui primitives through `packages/ui`.
+
+- Change design tokens and global styles in `packages/ui/src/styles/globals.css`
+- Update shared primitives in `packages/ui/src/components/*`
+- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
+
+### Add more shared components
+
+Run this from the project root to add more primitives to the shared UI package:
+
+```bash
+npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
+```
+
+Import shared components like this:
+
+```tsx
+import { Button } from "@xolace/ui/components/button";
+```
+
+### Add app-specific blocks
+
+If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
+
+## Environment Configuration
+
+- **Web and admin** (`apps/web`, `apps/admin`) use Varlock. Each owns its schema in `.env.schema`; run `bun run codegen` (or `turbo run codegen`) to generate `src/env.ts`. Deployed values come from Vercel env.
+- **Mobile** (`apps/mobile`) reads plain `process.env.EXPO_PUBLIC_*` values. Locally they come from `apps/mobile/.env` (names listed in `.env.example`); builds get them from EAS env.
+- **Backend** (`packages/backend`) reads its configuration from the Convex deployment's environment.
+
+Bun's automatic env loading is disabled in `bunfig.toml`; the framework integration loads Varlock.
+
+## Deployment
+
+Merging `dev` into `main` is a release. `.github/workflows/release.yml` deploys Convex
+to prod first, then starts the clients: the EAS mobile release
+(`apps/mobile/.eas/workflows/release.yml`) and Vercel deploy hooks for web and admin
+(two Vercel projects rooted at `apps/web` and `apps/admin`). Nothing deploys from a
+laptop. Setup: [docs/setup/release.md](docs/setup/release.md).
+
+## Git Hooks and Formatting
+
+- Initialize hooks: `bun run prepare`
+- Run checks: `bun run check`
 
 ## Project Structure
 
 ```
-src/
-  app/             Route pages & layouts (theme/ has its own Stack layout)
-  components/      UI components (shared/, ui/, icons/, examples/)
-  constants/       Theme colors, fonts, spacing, tab config
-  context/         React contexts (AppThemeContext for multi-theme)
-  providers/       Provider composition (RootProvider)
-  hooks/           Custom hooks (color scheme, large header options)
-  helpers/         Helper functions & hooks (accessibility, OTA updates, strings)
-  lib/             Utilities (cn(), unified storage adapter)
-  store/           Zustand store (auth, theme, profile, preferences)
-  services/        API & integrations
-  themes/          CSS theme files (lavender, mint, sky, alpha)
-  interfaces/      TypeScript interfaces by domain
-  types/           Type definitions
-  global.css       Tailwind/Uniwind/HeroUI Native theme config
+xolace/
+├── apps/
+│   ├── web/         # User-facing web app (Next.js; static export feeds desktop)
+│   ├── admin/       # Internal admin dashboard (Next.js)
+│   ├── desktop/     # Tauri shell around apps/web's static export
+│   ├── mobile/      # Mobile app (React Native, Expo)
+│   ├── cli/         # Terminal client (OpenTUI)
+│   └── docs/        # Documentation site (fumadocs)
+├── packages/
+│   ├── ui/          # Shared shadcn/ui components and styles (web + admin)
+│   ├── backend/     # Convex backend functions and schema
+│   └── config/      # Shared TypeScript config
 ```
 
-## Get Started
+## Available Scripts
 
-1. **Clone the repo**
-
-   ```bash
-   git clone https://github.com/xolace-official/xolace_app/
-   cd xolace_app
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   bun install   # or: npm install / yarn / pnpm
-   ```
-
-3. **Start the dev server**
-
-   ```bash
-   bun expo start
-   ```
-
-   From there you can open the app in:
-   - [Expo Go](https://expo.dev/go) (default branch)
-   - [iOS Simulator](https://docs.expo.dev/workflow/ios-simulator/)
-   - [Android Emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-   - [Development build](https://docs.expo.dev/develop/development-builds/introduction/)
-
-4. **Start editing** — Routes live in `src/app/`. The project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Scripts
-
-| Command | Description |
-|---|---|
-| `bun expo start` | Start the dev server |
-| `bun expo start --ios` | Start on iOS simulator |
-| `bun expo start --android` | Start on Android emulator |
-| `bun expo start --web` | Start on web |
-| `bun expo lint` | Run ESLint |
-| `bun run reset-project` | Reset to a blank project |
-
-## Learn More
-
-- [Expo docs](https://docs.expo.dev/) — Fundamentals and advanced guides
-- [Expo Router docs](https://docs.expo.dev/router/introduction/) — File-based routing
-- [HeroUI Native docs](https://v3.heroui.com/docs/native/getting-started) — React Native component library
-- [Uniwind docs](https://uniwind.dev) — Tailwind CSS v4 for React Native
-- [Zustand docs](https://zustand.docs.pmnd.rs/) — Lightweight state management
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/) — Step-by-step walkthrough
-
-## Community
-
-- [Expo on GitHub](https://github.com/expo/expo)
-- [Expo Discord](https://chat.expo.dev)
-
-## Inspired By ❤️
-
-This starter was built on the shoulders of:
-
-- [HeroUI Native Example](https://github.com/heroui-inc/heroui-native-example) — Reference app for HeroUI Native components and theming patterns
-- [Sonny's Expo Starter](https://github.com/Sonnysam/starter-template-expo) — Project structure and developer experience inspiration
-- [Expo Default Template](https://docs.expo.dev/) — The official Expo template that serves as the foundation
+- `bun run dev`: Start all applications in development mode
+- `bun run dev:web` / `dev:admin` / `dev:mobile` / `dev:desktop` / `dev:cli` / `dev:docs`: Start one app
+- `bun run dev:server`: Start the Convex dev server
+- `bun run dev:setup`: Setup and configure your Convex project
+- `bun run build`: Build all applications
+- `bun run check-types`: Type-check every package
+- `bun run lint`: Run Biome per package (through Turborepo)
+- `bun run test`: Run tests
+- `bun run codegen`: Run code generation (Varlock env types, fumadocs sources)
+- `bun run check` / `bun run fix`: Run Ultracite (Biome) across the repo

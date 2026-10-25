@@ -1,0 +1,20 @@
+{
+  "extends": "expo/tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    // app.config.ts imports release/production-guard.ts with its extension:
+    // Expo's config loader only resolves a TS import written that way.
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@/*": ["./*"],
+      "@/assets/*": ["./assets/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": [
+    "node_modules",
+    // Read-only reference copies of other codebases. They are consulted, never
+    // imported, and they do not typecheck against this project's config.
+    "src/components/extras/sample-codes/**"
+  ]
+}

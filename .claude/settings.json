@@ -1,15 +1,15 @@
 {
-  "permissions": {
-    "allow": [
-      "mcp__argent"
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "bunx ultracite fix --skip=correctness/noUnusedImports --hook",
+            "type": "command"
+          }
+        ],
+        "matcher": "Write|Edit"
+      }
     ]
-  },
-  "worktree": {
-    "bgIsolation": "none"
-  },
-  "enabledPlugins": {
-    "cwb-app-icon@cwb-plugins": true,
-    "ponytail@ponytail": true,
-    "mattpocock-skills@claude-plugins-official": true
   }
 }

@@ -1,0 +1,10 @@
+{
+  // Type-checks what convex/tsconfig.json leaves out: tests, vitest config and
+  // scripts. convex/tsconfig.json stays the Convex-owned config for deployed code.
+  "extends": "./convex/tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "vite/client"]
+  },
+  "include": ["convex/**/*", "scripts/**/*", "vitest.config.ts"],
+  "exclude": ["convex/_generated"]
+}

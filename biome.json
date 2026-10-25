@@ -1,0 +1,216 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["ultracite/biome/core", "ultracite/biome/react"],
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": false,
+    "includes": [
+      "!**/.next",
+      "!**/dist",
+      "!**/.turbo",
+      "!**/.nx",
+      "!**/dev-dist",
+      "!**/.zed",
+      "!**/.vscode",
+      "!**/routeTree.gen.ts",
+      "!**/src-tauri",
+      "!**/.nuxt",
+      "!bts.jsonc",
+      "!**/.expo",
+      "!**/.wrangler",
+      "!**/.alchemy",
+      "!**/.svelte-kit",
+      "!**/wrangler.jsonc",
+      "!**/.source",
+      "!**/convex/_generated",
+      "!**/ios",
+      "!**/android",
+      "!**/src-tauri/target",
+      "!**/*.gen.ts",
+      "!**/uniwind-types.d.ts",
+      "!**/*.svg"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "tab"
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "correctness": {
+        "useExhaustiveDependencies": "error"
+      },
+      "nursery": {
+        "useSortedClasses": {
+          "level": "warn",
+          "fix": "safe",
+          "options": {
+            "functions": ["clsx", "cva", "cn"]
+          }
+        }
+      },
+      "style": {
+        "noParameterAssign": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["apps/web/**", "apps/admin/**", "apps/docs/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noBeforeInteractiveScriptOutsideDocument": "error",
+            "noNextAsyncClientComponent": "error",
+            "useInlineScriptId": "error"
+          },
+          "performance": {
+            "noImgElement": "error"
+          },
+          "style": {
+            "noHeadElement": "error"
+          },
+          "suspicious": {
+            "noDocumentImportInPage": "error",
+            "noHeadImportInDocument": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/{web,admin,docs}/**/next.config.*",
+        "apps/{web,admin,docs}/**/page.{ts,tsx,js,jsx}",
+        "apps/{web,admin,docs}/**/layout.{ts,tsx,js,jsx}"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "useAwait": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/web/**", "apps/admin/**", "apps/mobile/**"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noJsxPropsBind": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/cli/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noUnknownAttribute": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/backend/convex/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": {
+              "level": "error",
+              "options": {
+                "filenameCases": ["camelCase", "kebab-case"]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/backend/convex/**", "packages/backend/scripts/**"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noCommaOperator": "off",
+            "noExcessiveCognitiveComplexity": "off",
+            "noUselessSwitchCase": "off",
+            "noVoid": "off",
+            "useLiteralKeys": "off",
+            "useOptionalChain": "off"
+          },
+          "correctness": {
+            "noUnsafeOptionalChaining": "off",
+            "noUnusedFunctionParameters": "off",
+            "noUnusedInstantiation": "off",
+            "noUnusedVariables": "off"
+          },
+          "performance": {
+            "noAwaitInLoops": "off",
+            "useTopLevelRegex": "off"
+          },
+          "style": {
+            "noExportedImports": "off",
+            "noIncrementDecrement": "off",
+            "noNestedTernary": "off",
+            "noNonNullAssertion": "off",
+            "noParameterAssign": "off",
+            "useAtIndex": "off",
+            "useCollapsedIf": "off",
+            "useConsistentBuiltinInstantiation": "off",
+            "useConsistentTypeDefinitions": "off",
+            "useDefaultSwitchClause": "off",
+            "useDestructuring": "off",
+            "useErrorCause": "off",
+            "useTemplate": "off"
+          },
+          "suspicious": {
+            "noAssignInExpressions": "off",
+            "noBitwiseOperators": "off",
+            "noEmptyBlockStatements": "off",
+            "noEqualsToNull": "off",
+            "noEvolvingTypes": "off",
+            "noExplicitAny": "off",
+            "noImplicitAnyLet": "off",
+            "noReturnAssign": "off",
+            "noShadow": "off",
+            "noUnnecessaryConditions": "off",
+            "useAwait": "off",
+            "useStaticResponseMethods": "off"
+          }
+        }
+      }
+    }
+  ]
+}

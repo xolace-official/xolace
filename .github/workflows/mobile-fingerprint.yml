@@ -1,0 +1,144 @@
+name: Mobile fingerprint
+
+# Labels PRs that change the mobile app's native layer. Computes the Expo
+# fingerprint of the PR head and of its merge base with the target branch and
+# adds `native-change` when they differ (removes it when they match). A
+# labelled PR can't ship as an OTA update: the release workflow
+# (apps/mobile/.eas/workflows/release.yml) will build and submit new store
+# binaries for it.
+#
+# Cheap on purpose: no EXPO_TOKEN, no EAS calls, no native build. The
+# fingerprint covers the resolved app config, native modules, config plugins
+# and patches; apps/mobile/fingerprint.config.js lists what is excluded and why.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "apps/mobile/**"
+      - "bun.lock"
+      - "package.json"
+      - "patches/**"
+      - ".github/workflows/mobile-fingerprint.yml"
+
+concurrency:
+  group: mobile-fingerprint-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Keep in step with the @expo/fingerprint version in bun.lock (the one
+  # expo-updates and EAS use) when upgrading the Expo SDK.
+  FINGERPRINT_VERSION: 0.21.6
+  LABEL: native-change
+
+jobs:
+  fingerprint:
+    name: Compare native fingerprints
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      issues: write # create the label
+      pull-requests: write # add/remove it on the PR
+    env:
+      # Fingerprint the production variant: its fingerprint is the production
+      # runtimeVersion, so it decides OTA compatibility.
+      APP_VARIANT: production
+      # CI has no EAS environment and no .env files. Both sides must see the
+      # same env, and app.config.ts's requireEnv throws when CI=true and a value
+      # is missing, so these get fixed placeholders. They are safe for
+      # comparing base vs head only; the real production fingerprint is
+      # computed on EAS with the production environment. The Android/iOS/web
+      # client ids only reach `extra` (dropped by fingerprint.config.js); the
+      # iOS URL scheme lands in Info.plist and stays hashed, constant here.
+      EXPO_NO_DOTENV: "1"
+      EXPO_PUBLIC_CLERK_GOOGLE_ANDROID_CLIENT_ID: fingerprint-placeholder
+      EXPO_PUBLIC_CLERK_GOOGLE_IOS_CLIENT_ID: fingerprint-placeholder
+      EXPO_PUBLIC_CLERK_GOOGLE_IOS_URL_SCHEME: fingerprint-placeholder
+      EXPO_PUBLIC_CLERK_GOOGLE_WEB_CLIENT_ID: fingerprint-placeholder
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0 # needs the merge base
+          persist-credentials: false
+
+      # Both sides install the same way (no lifecycle scripts). Native modules
+      # are hashed by name and version, so scripts don't change the result.
+      - uses: ./.github/actions/setup
+        with:
+          ignore-scripts: "true"
+          turbo-cache: "false"
+
+      - name: Check out and install the merge base
+        run: |
+          merge_base="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          echo "MERGE_BASE=$merge_base" >> "$GITHUB_ENV"
+          git worktree add --detach "$RUNNER_TEMP/base" "$merge_base"
+          cd "$RUNNER_TEMP/base"
+          bun install --frozen-lockfile --ignore-scripts
+
+      - name: Compute fingerprints
+        id: fp
+        run: |
+          fingerprint() {
+            (cd "$1/apps/mobile" && bunx "@expo/fingerprint@$FINGERPRINT_VERSION" fingerprint:generate) > "$2"
+          }
+          fingerprint "$GITHUB_WORKSPACE" "$RUNNER_TEMP/head.json"
+          fingerprint "$RUNNER_TEMP/base" "$RUNNER_TEMP/base.json"
+          head_hash="$(jq -r .hash "$RUNNER_TEMP/head.json")"
+          base_hash="$(jq -r .hash "$RUNNER_TEMP/base.json")"
+          if [[ "$head_hash" == "$base_hash" ]]; then changed=false; else changed=true; fi
+          {
+            echo "head=$head_hash"
+            echo "base=$base_hash"
+            echo "changed=$changed"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "### Mobile native fingerprint"
+            echo ""
+            echo "| | commit | fingerprint (production) |"
+            echo "|---|---|---|"
+            echo "| base | \`${MERGE_BASE:0:10}\` | \`$base_hash\` |"
+            echo "| head | \`${HEAD_SHA:0:10}\` | \`$head_hash\` |"
+            echo ""
+            if [[ "$changed" == true ]]; then
+              echo "**Native change:** the next release needs new store builds; it can't ship as an OTA update."
+              echo ""
+              echo "Changed sources:"
+              echo '```'
+              jq -r --slurpfile base "$RUNNER_TEMP/base.json" '
+                def key: "\(.type):\(.filePath // .id // .packageName // "")";
+                ($base[0].sources | map({key: key, value: .hash}) | from_entries) as $b
+                | (.sources | map({key: key, value: .hash}) | from_entries) as $h
+                | (($b | keys) + ($h | keys) | unique)[]
+                | select($b[.] != $h[.])
+              ' "$RUNNER_TEMP/head.json" | head -n 100
+              echo '```'
+            else
+              echo "No native change: this PR can ship as an OTA update."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Fork PRs get a read-only token, so only label same-repo PRs.
+      - name: Update the native-change label
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          CHANGED: ${{ steps.fp.outputs.changed }}
+        run: |
+          if [[ "$CHANGED" == true ]]; then
+            gh label create "$LABEL" --color B60205 \
+              --description "Changes the mobile native fingerprint: needs a store build, not an OTA" \
+              2>/dev/null || true
+            gh pr edit "$PR" --add-label "$LABEL"
+          else
+            gh pr edit "$PR" --remove-label "$LABEL" 2>/dev/null || true
+          fi

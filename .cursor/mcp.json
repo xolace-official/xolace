@@ -1,13 +1,26 @@
 {
   "mcpServers": {
-    "argent": {
-      "command": "argent",
-      "args": [
-        "mcp"
-      ]
+    "better-t-stack": {
+      "command": "bunx",
+      "args": ["create-better-t-stack@latest", "mcp"]
     },
-    "Sentry": {
-      "url": "https://mcp.sentry.dev/mcp/xolace-inc/react-native"
+    "convex": {
+      "command": "npx",
+      "args": ["-y", "convex@latest", "mcp", "start"]
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": ["-y", "shadcn@latest", "mcp"]
+    },
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "clerk": {
+      "url": "https://mcp.clerk.com/mcp"
+    },
+    "expo-mcp": {
+      "url": "https://mcp.expo.dev/mcp"
     }
   }
 }
