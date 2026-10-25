@@ -4,7 +4,7 @@ import { AppText } from "@/src/components/shared/app-text";
 import { GradientText } from "./gradient-text";
 
 const DEFAULT_LINE =
-	"The fire keeps them all. Plus is where the small thing that keeps coming back shows up early — the third time, not the thirtieth.";
+	"Plus opens up so much more — and it goes a long way toward the change you're here to make.";
 
 export function PaywallHero({ line = DEFAULT_LINE }: { line?: string }) {
 	const accentColor = useThemeColor("accent") as string;
