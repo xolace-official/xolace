@@ -106,6 +106,7 @@ export const ReflectScreen = () => {
 	// A reply the user chose to start from (#316). It is the card's line, never
 	// the input's contents — the composer opens empty.
 	const clearReplySeed = useAppStore((s) => s.clearReplySeed);
+	const idleMenuOpen = useAppStore((s) => s.idleMenuOpen);
 
 	const context = useFullContext();
 	const updatePreferences = useMutation(api.preferences.update);
@@ -362,8 +363,10 @@ export const ReflectScreen = () => {
 			{/* Mounted only while idle. A `hidden` toolbar button still leaves its
           transparent host view laid out across the top of the screen on
           Android, where (unlike UIKit) an invisible view still consumes
-          touches — that band swallowed the typing screen's mic and close. */}
-			{isIdle && (
+          touches — that band swallowed the typing screen's mic and close.
+          Down, too, while the idle menu is open: its scrim can't reach over
+          the native header, so the buttons would sit sharp above the blur. */}
+			{isIdle && !idleMenuOpen && (
 				<>
 					<Stack.Toolbar placement="left">
 						<Stack.Toolbar.Button

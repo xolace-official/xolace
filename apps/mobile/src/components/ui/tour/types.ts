@@ -122,6 +122,8 @@ export type TourStepEntry = {
 	order: number;
 	title?: string;
 	description?: string;
+	icon?: ReactNode;
+	cutout?: boolean;
 	shape?: TourShape;
 	padding?: number;
 	radius?: number;

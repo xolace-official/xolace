@@ -20,6 +20,18 @@ export type TourStepProps = Omit<ViewProps, "children"> & {
 	title?: string;
 	/** The sentence under it. */
 	description?: string;
+	/**
+	 * Drawn on the card beside the words. For a step about something the hole
+	 * can't show, so the card has to show what to look for instead.
+	 */
+	icon?: ReactNode;
+	/**
+	 * Cut a hole around the target. Default true. Off, the target only places
+	 * the card: for a control the tour can't wrap — a native header button has
+	 * no view of ours to measure — wrap a view beside it, and let the card say
+	 * where to look.
+	 */
+	cutout?: boolean;
 	/** Shape of this step's cutout, overriding the tour's. */
 	shape?: TourShape;
 	/** Room around this target, overriding the tour's. */
@@ -51,6 +63,8 @@ export const TourStep = ({
 	order,
 	title,
 	description,
+	icon,
+	cutout,
 	shape,
 	padding,
 	radius,
@@ -66,7 +80,9 @@ export const TourStep = ({
 	// unregisters on — an unstable entry would re-register every render.
 	const entry = useMemo<TourStepEntry>(
 		() => ({
+			cutout,
 			description,
+			icon,
 			order,
 			padding,
 			placement,
@@ -75,7 +91,7 @@ export const TourStep = ({
 			target,
 			title,
 		}),
-		[order, title, description, shape, padding, radius, placement]
+		[order, title, description, icon, cutout, shape, padding, radius, placement]
 	);
 
 	useEffect(() => {

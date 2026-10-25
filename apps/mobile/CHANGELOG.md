@@ -6,6 +6,19 @@ All notable changes to Xolace are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **Talk with the companion** — Xolace+ members can talk things through with the companion (Ember, or the name of their space) in a live voice conversation, back and forth, and type into it at any time. The door is the waveform at the top right of Reflect home, behind a consent card with the privacy line. Runs on an ElevenLabs Conversational AI agent whose turns go through our own Custom LLM endpoint on Convex, with the person's memory, a crisis-aware safety skill (no live classifier during a talk), and a five-tag audio set (#591–#599, #603).
+- **A talk ends in a mirror** — every talk is a session: ending it goes through processing to a mirror like a reflection, or "Just end" files the mirror in the timeline for later. Leaving a live talk asks first. "Say more" on a talk's mirror reopens the talk with its thread (#592, #604, #636).
+- **Companion identity** — the companion greets in its own name, asks once what to call the person in the first talk, and follows the person's chosen voice, pace and directness (#601–#603).
+- **Weekly talk time** — 15 minutes a week for Xolace+, reset on the person's local Monday, shown in minutes only (#596).
+- **Talk privacy** — the talk is kept as text only; the ElevenLabs post-call webhook deletes their copy, and no recording is kept (#595).
+- **First-run tour** — two new steps, for the streak and the talk door.
+
+### Fixed
+
+- Audio tags such as `[slow]` no longer show in the talk's live captions, including tags split across audio chunks or written with spaces inside the brackets.
+
 ## [1.14.0] - OTA Update (2026-10-18)
 
 ### Added

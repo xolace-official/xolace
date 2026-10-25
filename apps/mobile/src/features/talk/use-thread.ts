@@ -2,7 +2,12 @@
 // companion's words land as they are spoken, from the audio's timings; its
 // full text settles the turn once the audio has gone quiet.
 import { useEffect, useRef, useState } from "react";
-import { type Alignment, spokenWords } from "@/src/features/talk/spoken-words";
+import {
+	type Alignment,
+	spokenWords,
+	type TagState,
+	withoutTags,
+} from "@/src/features/talk/spoken-words";
 
 export type Turn = {
 	id: number;
@@ -25,6 +30,8 @@ type LiveTurn = {
 	final: string | null;
 	/** Shown whole (no timings came in time); later audio only extends playhead. */
 	whole: boolean;
+	/** Where this turn's chunks are, tag-wise, so a split tag still goes. */
+	tags: TagState;
 };
 
 // No audio timings this long after the companion's text: show the text whole.
@@ -77,6 +84,7 @@ export function useThread(earlier: ThreadLine[] = []) {
 			final: null,
 			id: add({ live: true, speaker: "companion", text: "", via: "voice" }),
 			playhead: 0,
+			tags: { inTag: false, space: true },
 			timers: [],
 			whole: false,
 		});
@@ -140,8 +148,10 @@ export function useThread(earlier: ThreadLine[] = []) {
 		spoken(a: Alignment) {
 			const l = open();
 			const now = Date.now();
-			const { words, end } = spokenWords(a, Math.max(now, l.playhead));
-			l.playhead = end;
+			const base = Math.max(now, l.playhead);
+			// The playhead follows the whole chunk: a tag takes audio time too.
+			l.playhead = spokenWords(a, base).end;
+			const { words } = spokenWords(withoutTags(a, l.tags), base);
 			if (!l.whole) {
 				for (const w of words) {
 					l.timers.push(

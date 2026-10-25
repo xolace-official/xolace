@@ -2280,6 +2280,9 @@ export default defineSchema({
 		// still made, then the session closes into the timeline instead of
 		// opening on home. Cleared if the mirror escalates, so its help shows.
 		talkMirrorLater: v.optional(v.boolean()),
+		// How many times the server has retried a "Just end" talk's failed mirror
+		// (sessions.failSession). Nobody is on home to press Retry for it.
+		talkMirrorRetries: v.optional(v.number()),
 		// Episodic recall during a talk (#598): the latest hits, read by the next
 		// turn, and every memory key surfaced so far. Absent with memory off.
 		talkRecall: v.optional(

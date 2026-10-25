@@ -617,24 +617,48 @@ export const retrySession = mutation({
 			throw new Error(`Cannot retry session in state "${session.state}"`);
 		}
 
-		const rawText = session.rawInput;
-		if (!rawText) {
+		if (!session.rawInput) {
 			throw new Error("Cannot retry a session with no stored input");
 		}
 
-		await ctx.db.patch("sessions", args.sessionId, {
-			errorMessage: undefined,
-			processingStage: undefined,
-			state: "processing",
-			updatedAt: Date.now(),
-		});
-
 		// Re-schedule AI processing with the stored input (client arg ignored).
-		await ctx.scheduler.runAfter(0, internal.ai.process.generateMirror, {
-			rawText,
-			sessionId: args.sessionId,
-		});
+		await reprocess(ctx, args.sessionId, session.rawInput);
 
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** error → processing, and the mirror is made again from the stored input. */
+async function reprocess(
+	ctx: MutationCtx,
+	sessionId: Id<"sessions">,
+	rawText: string
+) {
+	await ctx.db.patch("sessions", sessionId, {
+		errorMessage: undefined,
+		processingStage: undefined,
+		state: "processing",
+		updatedAt: Date.now(),
+	});
+	await ctx.scheduler.runAfter(0, internal.ai.process.generateMirror, {
+		rawText,
+		sessionId,
+	});
+}
+
+/** The server's retry of a "Just end" talk's failed mirror (see failSession). */
+export const retryMirrorLater = internalMutation({
+	args: { sessionId: v.id("sessions") },
+	handler: async (ctx, { sessionId }) => {
+		const session = await ctx.db.get("sessions", sessionId);
+		if (
+			session?.talkMirrorLater &&
+			session.state === "error" &&
+			session.rawInput
+		) {
+			await reprocess(ctx, sessionId, session.rawInput);
+		}
 		return null;
 	},
 	returns: v.null(),
@@ -711,9 +735,9 @@ export const getActive = query({
 				.order("desc")
 				.first();
 
-			// A talk ended with "Just end" makes its mirror for the timeline, not home;
-			// only a failed one shows here, for its retry.
-			if (session?.talkMirrorLater && state !== "error") {
+			// A talk ended with "Just end" makes its mirror for the timeline, not
+			// home. A failed one is retried by the server (failSession).
+			if (session?.talkMirrorLater) {
 				continue;
 			}
 			if (
@@ -1144,6 +1168,10 @@ export const getMirrorAudioUrl = query({
 export const failSession = internalMutation({
 	args: {
 		errorMessage: v.string(),
+		/** The safeguard refused the input: a retry can only fail again. */
+		rejected: v.optional(v.boolean()),
+		/** The rate limit's wait, for a "Just end" talk's retry. */
+		retryAfterMs: v.optional(v.number()),
 		sessionId: v.id("sessions"),
 	},
 	handler: async (ctx, args) => {
@@ -1161,8 +1189,48 @@ export const failSession = internalMutation({
 			state: "error",
 			updatedAt: Date.now(),
 		});
+		if (session.talkMirrorLater) {
+			await retryOrDropMirrorLater(ctx, session, args);
+		}
 	},
 });
+
+const MIRROR_LATER_RETRIES = 3;
+// Doubles each retry; every wait stays under ABANDON_THRESHOLD_MS, or the
+// cron would abandon the session before its retry runs.
+const MIRROR_LATER_RETRY_MS = 60 * 1000;
+const MIRROR_LATER_MAX_WAIT_MS = 10 * 60 * 1000;
+
+/**
+ * A "Just end" talk's mirror failed. Nobody is on home to press Retry, so the
+ * server retries it. One it can't make (refused, or out of retries) goes the
+ * way of a talk nobody came back to: abandoned, with no error shown.
+ */
+async function retryOrDropMirrorLater(
+	ctx: MutationCtx,
+	session: Doc<"sessions">,
+	opts: { rejected?: boolean; retryAfterMs?: number }
+) {
+	const retries = session.talkMirrorRetries ?? 0;
+	if (opts.rejected || retries >= MIRROR_LATER_RETRIES) {
+		await ctx.db.patch("sessions", session._id, {
+			state: "abandoned",
+			updatedAt: Date.now(),
+		});
+		await finalizeFollowUp(ctx, session, abandonRequiresFollowUp(session));
+		return;
+	}
+	const wait = Math.min(
+		opts.retryAfterMs ?? MIRROR_LATER_RETRY_MS * 2 ** retries,
+		MIRROR_LATER_MAX_WAIT_MS
+	);
+	await ctx.db.patch("sessions", session._id, {
+		talkMirrorRetries: retries + 1,
+	});
+	await ctx.scheduler.runAfter(wait, internal.sessions.retryMirrorLater, {
+		sessionId: session._id,
+	});
+}
 
 /**
  * Mark that articulation has started (drives the processing copy). No-op once

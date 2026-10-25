@@ -13,7 +13,12 @@ import { rateLimiter, SESSION_INITIATE_LIMITS_PLUS } from "../lib/rateLimits";
 import { getDayOfWeek, getTimeOfDay } from "../lib/timeOfDay";
 import { MAX_TURNS } from "../sessionTurns";
 import { afterTalkIssues } from "./check";
-import { markNameAsked, talkGreeting, talkSetup } from "./companion";
+import {
+	markNameAsked,
+	nameQuestionSaid,
+	talkGreeting,
+	talkSetup,
+} from "./companion";
 import {
 	attachTo,
 	markEnded,
@@ -86,7 +91,11 @@ export const start = internalMutation({
 		);
 		return {
 			ceilingS,
-			firstMessage: talkGreeting(setup.session.companionName),
+			firstMessage: talkGreeting(setup.session.companionName, {
+				askName: setup.session.askPersonName
+					? setup.session.personName
+					: undefined,
+			}),
 			sessionId,
 			speed: setup.speed,
 			talkKey,
@@ -231,6 +240,27 @@ export const end = mutation({
 	returns: v.boolean(),
 });
 
+/**
+ * "Just end", kept before the client hangs up: if its `end` call never lands,
+ * the idle check closes the talk with the choice still on it, and the mirror
+ * still goes to the timeline, not home. Only for a talk still open; once
+ * closed, `end` with `mirrorLater` handles it.
+ */
+export const markMirrorLater = mutation({
+	args: { sessionId: v.id("sessions") },
+	handler: async (ctx, { sessionId }) => {
+		const { session } = await requireSessionOwnership(ctx, sessionId);
+		if (session.entryType !== "talk") {
+			throw new ConvexError({ code: "not_a_talk" });
+		}
+		if (session.state === "initiated") {
+			await ctx.db.patch("sessions", sessionId, { talkMirrorLater: true });
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
 // The talk's copy of what it knew of the person ends with the talk.
 const FORGET = { talkMemory: undefined, talkRecall: undefined };
 
@@ -301,8 +331,9 @@ export async function finalizeTalk(
 		return "abandoned";
 	}
 
-	// Their first real talk asked their name, answered or not (#602).
-	if (session.askPersonName) {
+	// Asked once it was really said, answered or not (#602). An answer saves
+	// it already (set_person_name).
+	if (session.askPersonName && nameQuestionSaid(lines, session.personName)) {
 		await markNameAsked(ctx, session.emotionalProfileId);
 	}
 

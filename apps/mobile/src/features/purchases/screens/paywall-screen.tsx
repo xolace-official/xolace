@@ -10,6 +10,7 @@ import type { PurchasesPackage } from "react-native-purchases";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appConfig } from "@/src/config/app";
 import { useRevenueCat } from "@/src/features/purchases/revenuecat-context";
+import { useIntroEligibility } from "@/src/features/purchases/use-intro-eligibility";
 import {
 	type PaywallSurface,
 	usePaywall,
@@ -35,7 +36,9 @@ import {
 	THEMES_ICON,
 	TIMELINE_ICON,
 } from "./paywall-icons";
+import { introOfferOf } from "./paywall-intro-offer";
 import { PaywallPeriodPicker, type PlanId } from "./paywall-period-picker";
+import { planDetail } from "./paywall-plan-detail";
 import { PaywallPlansUnavailable } from "./paywall-plans-unavailable";
 import {
 	PAYWALL_SURFACE_FEATURE,
@@ -106,6 +109,13 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 
 	const annualPkg = offerings?.current?.annual ?? null;
 	const monthlyPkg = offerings?.current?.monthly ?? null;
+	const monthlyIntroEligible = useIntroEligibility(
+		monthlyPkg?.product.identifier ?? null
+	);
+	const monthlyIntro = introOfferOf(monthlyPkg?.product, monthlyIntroEligible);
+	const annualIntroEligible = useIntroEligibility(
+		annualPkg?.product.identifier ?? null
+	);
 	const highlightedFeature = surface ? PAYWALL_SURFACE_FEATURE[surface] : null;
 
 	// Payments are live but the store gave us nothing to sell — the cold-start
@@ -139,7 +149,10 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 
 	const priceOf = (pkg: PurchasesPackage | null, plan: PlanId) =>
 		pkg
-			? { detail: FALLBACK[plan].detail, price: pkg.product.priceString }
+			? {
+					detail: planDetail(plan, pkg.product),
+					price: pkg.product.priceString,
+				}
 			: FALLBACK[plan];
 
 	const numericPriceOf = (pkg: PurchasesPackage | null, plan: PlanId) =>
@@ -192,8 +205,10 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 			.finally(() => setBusy(false));
 	};
 
-	const trialAvailable = hasFreeTrial(selectedPkg);
-	const ctaLabel = paywallCtaLabel(selected, selectedPkg);
+	const selectedEligible =
+		selected === "annual" ? annualIntroEligible : monthlyIntroEligible;
+	const trialAvailable = hasFreeTrial(selectedPkg, selectedEligible);
+	const ctaLabel = paywallCtaLabel(selected, selectedPkg, selectedEligible);
 
 	return (
 		<>
@@ -241,14 +256,14 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 							title="Pattern & language insights"
 						/>
 						<PaywallFeatureItem
-							description="Pick how it says things back — and it stays that way"
+							description="Pick how it says things back and it stays that way"
 							icon={MIRROR_TONE_ICON}
 							id="mirror_tone"
 							isHighlighted={highlightedFeature === "mirror_tone"}
 							title="Mirror voice & tone"
 						/>
 						<PaywallFeatureItem
-							description="Your own words, handed back — and kept, in an archive that's yours"
+							description="Your own words, handed back and kept, in an archive that's yours"
 							icon={QUOTES_ICON}
 							id="quotes"
 							isHighlighted={highlightedFeature === "quotes"}
@@ -315,6 +330,7 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 								discountPercent={discountPercent}
 								hasFreeTrial={trialAvailable}
 								monthly={priceOf(monthlyPkg, "monthly")}
+								monthlyIntro={monthlyIntro}
 								onSelect={setSelected}
 								selected={selected}
 							/>

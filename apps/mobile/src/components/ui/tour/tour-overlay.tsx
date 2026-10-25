@@ -69,7 +69,7 @@ export const TourOverlay = ({
 }: Props) => {
 	const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 	const insets = useSafeAreaInsets();
-	const { spot, pathProps } = useSpotlight({
+	const { hole, spot, pathProps } = useSpotlight({
 		active,
 		padding: active?.padding ?? padding,
 		radius: active?.radius ?? radius,
@@ -128,7 +128,7 @@ export const TourOverlay = ({
 				onDismiss={onSkip}
 				screenHeight={screenHeight}
 				screenWidth={screenWidth}
-				spot={spot}
+				spot={hole}
 			/>
 
 			<Animated.View

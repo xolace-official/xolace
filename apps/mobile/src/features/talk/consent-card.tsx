@@ -7,7 +7,6 @@ import { View } from "react-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { GlassSurface } from "@/src/components/shared/glass-surface";
 import {
-	END_ANYTIME,
 	MIN_TALK_S,
 	PRIVACY_LINE,
 	TALK_TIME_RESETS,
@@ -60,7 +59,7 @@ export function ConsentCard({ talk }: { talk: Talk }) {
 					reflection.
 				</Row>
 				<Row icon={{ android: "stop_circle", ios: "stop.circle" }}>
-					{END_ANYTIME}
+					{`You can end whenever you like, from the menu up top or just tell ${name} you want to end here. Stop wherever feels right; you don't have to go deeper than you want.`}
 				</Row>
 				<Row icon={{ android: "local_fire_department", ios: "flame" }}>
 					{`${name} is an AI, part of Xolace. This talk is remembered with your reflections.`}

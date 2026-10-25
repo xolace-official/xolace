@@ -106,6 +106,18 @@ export async function judgeTurn(input: {
 	};
 	// One retry: a malformed verdict is the judge's miss, not the companion's.
 	const raw = await ask().catch(ask);
+	// Memory is the fussiest call: one judge failed roughly half the CI runs on
+	// framing alone. A memory miss counts only when a second judge fails it too.
+	if (raw.memory?.pass !== true) {
+		const again = (await ask().catch(() => null))?.memory;
+		raw.memory =
+			again?.pass === true
+				? again
+				: {
+						pass: false,
+						why: `${raw.memory?.why ?? "no verdict"} / again: ${again?.why ?? "no verdict"}`,
+					};
+	}
 	return Object.fromEntries(
 		JUDGED.map((k) => [
 			k,

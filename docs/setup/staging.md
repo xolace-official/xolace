@@ -132,6 +132,11 @@ means you can copy the value from the dev deployment `groovy-mandrill-892`.
 | `ELEVENLABS_DAILY_CAP_MINUTES_PLUS` | Daily voice cap, Plus users. Optional (default 8) | Leave unset |
 | `DICTATION_DAILY_CAP_MINUTES_PLUS` | Daily dictation cap, Plus users. Optional | Leave unset |
 
+The talk agent (`TALK_AGENT_ID`) also needs the pronunciation dictionary
+[`elevenlabs/xolace-pronunciation.pls`](./elevenlabs/xolace-pronunciation.pls), so its
+voice says "Xolace" like "solace" while the text keeps the real spelling. Upload it in
+the agent's **Voice settings** in ElevenLabs. Every agent needs it, prod's included.
+
 ### Integrations
 
 | Name | Purpose | Value for staging |

@@ -1,4 +1,5 @@
 import { BlurView } from "expo-blur";
+import { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -7,6 +8,7 @@ import { useMenuState } from "@/src/features/idle-menu/hooks/use-menu-state";
 import { MenuButtonsWrapper } from "@/src/features/idle-menu/menu-buttons-wrapper";
 import { MenuTrigger } from "@/src/features/idle-menu/menu-trigger";
 import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
+import { useAppStore } from "@/src/store/store";
 
 const EASE_INITIAL = { opacity: 0 };
 const EASE_ANIMATE = { opacity: 1 };
@@ -18,6 +20,14 @@ const EASE_TRANSITION = {
 
 export const IdleMenu = () => {
 	const { isOpen, isOpenJS, toggle, close } = useMenuState();
+	// Publish the scrim's lifetime so the reflect screen can lower its header
+	// buttons, which sit above anything this screen draws. The cleanup covers
+	// an unmount mid-open, which would otherwise strand the header hidden.
+	const setIdleMenuOpen = useAppStore((s) => s.setIdleMenuOpen);
+	useEffect(() => {
+		setIdleMenuOpen(isOpenJS);
+		return () => setIdleMenuOpen(false);
+	}, [isOpenJS, setIdleMenuOpen]);
 	const absoluteFillStyle = StyleSheet.absoluteFill;
 	// The host screen pads its root by the top inset, so an absoluteFill here
 	// stops short of the status bar. Reach back over that padding: the scrim
@@ -59,10 +69,10 @@ export const IdleMenu = () => {
             the profile and crisis controls in the header, so it can simply be
             wrapped — see TOUR_STEPS for the ordering. */}
 				<Tour.Step
-					description={TOUR_STEPS[3].description}
-					order={3}
+					description={TOUR_STEPS[5].description}
+					order={5}
 					shape="circle"
-					title={TOUR_STEPS[3].title}
+					title={TOUR_STEPS[5].title}
 				>
 					<MenuTrigger isOpen={isOpen} isOpenJS={isOpenJS} onPress={toggle} />
 				</Tour.Step>

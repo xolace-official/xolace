@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { internalMutation, type MutationCtx } from "../_generated/server";
-import { COMPANION_FALLBACK_NAME } from "../ai/prompts/companion";
+import { COMPANION_FALLBACK_NAME, nameQuestion } from "../ai/prompts/companion";
 import { seededDisplayName, validateDisplayName } from "../lib/displayName";
 import { validateSpaceName } from "../lib/spaceName";
 import {
@@ -153,13 +153,47 @@ export const slowDown = internalMutation({
 
 /**
  * The agent's first words, sent as this talk's `firstMessage` override (#583):
- * it names the talk's companion, not the agent's fixed greeting. A reopening
- * ("Say more", #604) picks up the same thread, so it doesn't introduce itself.
+ * it names the talk's companion, not the agent's fixed greeting. A first talk
+ * asks their name right there (#602), so it's always asked; left to the model,
+ * it often wasn't. A reopening ("Say more", #604) picks up the same thread, so
+ * it doesn't introduce itself.
  */
-export const talkGreeting = (name: string, reopen = false) =>
-	reopen
-		? "I'm still here. What else is there?"
-		: `Hey. I'm ${name}, part of Xolace. What's on your mind?`;
+export function talkGreeting(
+	name: string,
+	opening: { askName?: string; reopen?: boolean } = {}
+) {
+	if (opening.reopen) {
+		return "I'm still here. What else is there?";
+	}
+	const hello = `Hey. I'm ${name}, part of Xolace.`;
+	return opening.askName
+		? `${hello} ${nameQuestion(opening.askName)}`
+		: `${hello} What's on your mind?`;
+}
+
+const plain = (text: string) =>
+	text
+		.toLowerCase()
+		.replace(/[^\p{L}\p{N}]+/gu, " ")
+		.trim();
+
+/**
+ * The name question was really said: the greeting got to it, or the companion
+ * asked it after a cut-off greeting. A greeting cut off before it leaves the
+ * ask for their next talk (#602).
+ */
+export function nameQuestionSaid(
+	lines: { role: "person" | "companion"; text: string }[],
+	personName: string | undefined
+) {
+	if (!personName) {
+		return false;
+	}
+	const question = plain(nameQuestion(personName));
+	return lines.some(
+		(l) => l.role === "companion" && plain(l.text).includes(question)
+	);
+}
 
 /**
  * Who's talking and how it sounds, read at talk start (#601, #602, #603).

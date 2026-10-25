@@ -92,6 +92,7 @@ export const generateMirror = internalAction({
 
 				await ctx.runMutation(internal.sessions.failSession, {
 					errorMessage: `You've reached the limit for reflections. ${retryText}`,
+					retryAfterMs: retryAfter,
 					sessionId: args.sessionId,
 				});
 				await posthog.capture(ctx, {
@@ -193,6 +194,7 @@ export const generateMirror = internalAction({
 			if (safeguard.shouldReject) {
 				await ctx.runMutation(internal.sessions.failSession, {
 					errorMessage: safeguard.rejectionReason ?? "content_policy_violation",
+					rejected: true,
 					sessionId: args.sessionId,
 				});
 				await posthog.capture(ctx, {

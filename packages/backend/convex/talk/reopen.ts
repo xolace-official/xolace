@@ -78,7 +78,7 @@ export const start = internalMutation({
 			ceilingS,
 			firstMessage: talkGreeting(
 				session.companionName ?? setup.session.companionName,
-				true
+				{ reopen: true }
 			),
 			sessionId,
 			speed: setup.speed,
