@@ -33,6 +33,23 @@ export const WHATS_NEW: WhatsNewEntry[] = [
 		date: "October 2026",
 		highlights: [
 			{
+				body: "Xolace+ members can now talk things through with a companion, back and forth, out loud or by typing. Tap the waveform at the top of Reflect. When you're done, your talk becomes a mirror like any reflection, now or later in your timeline. Up to 15 minutes a week.",
+				icon: { android: "graphic_eq", ios: "waveform" },
+				title: "Talk it through out loud",
+			},
+			{
+				body: "Your talk is saved as text, like a reflection, and goes when you delete your data. We don't keep a recording.",
+				icon: { android: "lock", ios: "lock.fill" },
+				title: "Your words stay yours",
+			},
+		],
+		id: "1.15.0",
+		label: "Version 1.15.0",
+	},
+	{
+		date: "October 2026",
+		highlights: [
+			{
 				body: "Small fixes and polish across Reflect, Browse and Settings to keep things running smoothly.",
 				icon: { android: "build", ios: "wrench.and.screwdriver.fill" },
 				title: "Bug fixes",
