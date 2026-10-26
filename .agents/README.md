@@ -18,9 +18,11 @@ Per-package rules live in each package's `AGENTS.md`.
 
 ## Skills
 
-No third-party skills are checked in (decision D9). Add one only when a task needs it,
-record it in the root `skills-lock.json`, and prefer small repo-specific skills under
-`.agents/skills/` (e.g. `test-mobile`, `pr-watch`).
+Third-party skills are kept to a minimum (decision D9). Add one only when a task needs
+it, record it in the root `skills-lock.json`, and prefer small repo-specific skills under
+`.agents/skills/` (e.g. `test-mobile`, `pr-watch`). Checked in today:
+`vercel-react-best-practices` (`.claude/skills/`; see `rules/code-style.md` for the
+rules it must not override).
 
 ## Keeping this lean
 

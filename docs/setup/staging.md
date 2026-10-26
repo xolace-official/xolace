@@ -94,7 +94,8 @@ Staging uses the Clerk **development** instance. Its JWT issuer (the "Frontend A
 URL") is `https://curious-kingfish-86.clerk.accounts.dev`; confirm it in the Clerk
 dashboard → dev instance → **Configure → API keys** (or the Convex integration page).
 You set it as `CLERK_JWT_ISSUER_DOMAIN` in Step 4. The Clerk dev instance already has
-the `convex` JWT template (the dev deployment uses it), so nothing changes in Clerk.
+the Convex integration: its customized session token sets `aud: "convex"` and a
+`role` claim (the dev deployment uses it), so nothing changes in Clerk.
 
 ## Step 4: Staging Convex environment variables
 

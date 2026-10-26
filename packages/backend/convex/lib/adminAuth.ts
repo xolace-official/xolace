@@ -6,14 +6,17 @@
  * `adminAction`; each throws before the handler runs unless the caller's
  * token carries `role: "admin"`.
  *
- * Required Clerk setup: the `convex` JWT template must copy the role out of
- * the user's public metadata into a top-level claim:
+ * Required Clerk setup: the session token (Clerk Dashboard → Sessions →
+ * Customize session token, on each instance) must copy the role out of the
+ * user's public metadata into a top-level claim next to the Convex audience:
  *
  * ```json
  * { "aud": "convex", "role": "{{user.public_metadata.role}}" }
  * ```
  *
- * Grant access by setting `publicMetadata.role = "admin"` on the Clerk user.
+ * Convex receives that session token itself (no JWT template). Grant access
+ * with `bun run grant-admin <email>` in apps/admin, which sets
+ * `publicMetadata.role = "admin"` on the Clerk user.
  * Users without it get `role: null` (or no claim) and are rejected.
  *
  * Kept apart from `lib/auth.ts` on purpose: Phase 2 brings in the real app's

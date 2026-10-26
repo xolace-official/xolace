@@ -25,8 +25,18 @@ bundled into the user web app or desktop.
   `adminMutation` / `adminAction`, which reject tokens without `role: "admin"`.
 - The middleware/proxy check on `role` only hides pages. Never rely on it alone, and
   never call a non-admin function and filter the result client-side instead.
-- Same Clerk instance as web; admin = `publicMetadata.role === "admin"`, put in the
-  token by the `convex` JWT template.
+- Same Clerk instance as web; admin = `publicMetadata.role === "admin"`, copied into
+  a `role` claim by the customized session token (Clerk Dashboard → Sessions;
+  Convex gets that token, there is no JWT template).
+- Staff sign in at `/sign-in` with work email + password; a new device also asks
+  for an email code (Device Trust). There is no sign-up. The route-group layouts
+  (`src/features/auth/guards.ts`) send signed-out visitors to `/sign-in` and
+  non-admins to `/no-access`; `src/proxy.ts` only runs Clerk's session handling
+  (Clerk deprecated path matching in middleware).
+- Grant or revoke access with `bun run grant-admin <email> [--name "First Last"]
+  [--revoke]` (creates the Clerk account if missing; asks for the password without
+  echoing it). It uses this app's `CLERK_SECRET_KEY`, so dev keys hit the dev
+  instance; live keys ask for confirmation. No Convex user row is needed.
 
 ## Gotchas
 
@@ -43,7 +53,7 @@ bundled into the user web app or desktop.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 

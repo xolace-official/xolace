@@ -72,6 +72,10 @@ and explicit intent over brevity.
 - No spread in loop accumulators. Regex literals at module top level.
 - Next.js: `<Image>` not `<img>`; metadata API not `<head>`; data fetching in Server
   Components, not async Client Components.
+- The `vercel-react-best-practices` skill is advice; this file wins where they differ.
+  Skip its `rerender-memo`, `rerender-simple-expression-in-memo` and other
+  `memo`/`useMemo`/`useCallback` advice (React Compiler handles it), and
+  `client-swr-dedup` (client data comes from Convex hooks, which already dedupe).
 
 ## Tests
 

@@ -12,7 +12,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
 		// biome-ignore lint/a11y/useSemanticElements: shadcn input group is a styled div, not a form fieldset
 		<div
 			className={cn(
-				"group/input-group relative flex h-8 w-full min-w-0 items-center rounded-none border border-input bg-background shadow-xs outline-none transition-[color,box-shadow] has-[>textarea]:h-auto dark:bg-input/30",
+				"group/input-group relative flex h-12 w-full min-w-0 items-center rounded-md border-2 border-line bg-surface-sunken outline-none transition-[border-color,background-color,box-shadow] hover:border-line-strong has-[>textarea]:h-auto has-[[aria-invalid=true]]:border-coral has-[[data-slot=input-group-control]:focus-visible]:border-focus has-[[aria-invalid=true]]:bg-coral-soft has-[[data-slot=input-group-control]:focus-visible]:bg-surface has-[[data-slot=input-group-control]:focus-visible]:shadow-[0_var(--depth-sm)_0_var(--focus)]",
 				"has-[>[data-align=inline-end]]:[&>input]:pr-2 has-[>[data-align=inline-start]]:[&>input]:pl-2",
 				"has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:[&>input]:pb-3",
 				"has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3",
@@ -28,7 +28,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 const inputGroupAddonVariants = cva(
-	"flex h-auto cursor-text select-none items-center justify-center gap-2 py-1.5 font-medium text-muted-foreground text-xs group-data-[disabled=true]/input-group:opacity-50 [&>kbd]:rounded-none [&>svg:not([class*='size-'])]:size-4",
+	"type-small flex h-auto cursor-text select-none items-center justify-center gap-2 py-1.5 font-medium text-ink-muted group-data-[disabled=true]/input-group:opacity-50 [&>kbd]:rounded-sm [&>svg:not([class*='size-'])]:size-5 [&>svg]:stroke-[2.5]",
 	{
 		defaultVariants: {
 			align: "inline-start",
@@ -134,7 +134,7 @@ function InputGroupInput({
 	return (
 		<Input
 			className={cn(
-				"flex-1 rounded-none border-0 bg-transparent shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent",
+				"h-full flex-1 rounded-none border-0 bg-transparent shadow-none ring-0 hover:border-0 focus-visible:bg-transparent focus-visible:shadow-none focus-visible:ring-0 disabled:bg-transparent aria-invalid:bg-transparent aria-invalid:ring-0 aria-invalid:focus-visible:shadow-none dark:bg-transparent dark:disabled:bg-transparent",
 				className
 			)}
 			data-slot="input-group-control"
@@ -150,7 +150,7 @@ function InputGroupTextarea({
 	return (
 		<Textarea
 			className={cn(
-				"flex-1 resize-none rounded-none border-0 bg-transparent py-2 shadow-none ring-0 focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent",
+				"flex-1 resize-none rounded-none border-0 bg-transparent py-2 shadow-none ring-0 focus-visible:bg-transparent focus-visible:shadow-none focus-visible:ring-0 disabled:bg-transparent aria-invalid:ring-0 dark:bg-transparent dark:disabled:bg-transparent",
 				className
 			)}
 			data-slot="input-group-control"

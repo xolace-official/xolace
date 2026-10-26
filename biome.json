@@ -211,6 +211,35 @@
           }
         }
       }
+    },
+    {
+      "includes": [
+        "packages/ui/src/components/file-upload.tsx",
+        "packages/ui/src/components/stepper.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          },
+          "performance": {
+            "noNamespaceImport": "off"
+          },
+          "style": {
+            "noIncrementDecrement": "off",
+            "noNestedTernary": "off",
+            "useConsistentTypeDefinitions": "off",
+            "useDestructuring": "off",
+            "useForOf": "off"
+          },
+          "suspicious": {
+            "noBitwiseOperators": "off",
+            "noShadow": "off",
+            "noUnnecessaryConditions": "off",
+            "useAwait": "off"
+          }
+        }
+      }
     }
   ]
 }
