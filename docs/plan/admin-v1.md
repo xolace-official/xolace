@@ -73,8 +73,8 @@ a Base UI build. diceui and reui do (`@base-ui/react`); kibo-ui is plain React.
 Already in `packages/ui`: alert, avatar, badge, button, card, checkbox, dialog,
 dropdown-menu, empty, input, input-group, label, progress, separator, skeleton,
 sonner, switch, table, tabs, textarea, tooltip (plus everything installed in steps
-1–4: sidebar, breadcrumb, pagination, field, select, sheet, spinner, collapsible,
-file-upload, stepper, toggle-group, tags-input).
+1–5: sidebar, breadcrumb, pagination, field, select, sheet, spinner, collapsible,
+file-upload, stepper, toggle-group, tags-input, combobox, item, sortable).
 
 | Need | Use | Registry | Notes |
 |---|---|---|---|
@@ -88,7 +88,9 @@ file-upload, stepper, toggle-group, tags-input).
 | Forms | `field`, `select`, `combobox`, `radio-group`, `native-select` | @shadcn | `field` for layout, react-hook-form + zod |
 | Tags (curated tags, facets) | `tags-input` | @diceui | Installed in step 4 (track tags, narrators) |
 | File upload (cover, audio, manifest) | `file-upload` | @diceui (Base UI) | Over kibo `dropzone` (react-dropzone, not Base UI) |
-| Hub item reorder | `sortable` | @diceui (Base UI, dnd-kit) | |
+| Hub item reorder | `sortable` | @diceui (Base UI, dnd-kit) | Installed in step 5. Our copy lets keyboard drags through: upstream drops any drag whose activator event is default-prevented, and dnd-kit's KeyboardSensor always prevents it |
+| Add a hub item | `combobox` (grouped: Entries, Audio) | @shadcn | Installed in step 5; chips variant left out (tags-input covers it) |
+| Overview "Needs attention" rows | `item` | @shadcn | Installed in step 5 |
 | Narration / track preview | `media-player` | @diceui (Base UI, media-chrome) | Or a plain `<audio>` if it's too heavy |
 | Markdown body | `textarea` + rendered preview first | none | Rich editors (`@kibo-ui/editor`, `@shadcn-editor/editor-x`) are WYSIWYG, and our bodies are GFM files; revisit later |
 | Import steps (upload → review → apply) | `stepper` | @diceui or @reui | |
@@ -138,8 +140,11 @@ section. Not borrowed: its offset-shadow theme (we use the lip/depth system).
 4. ✅ Audio tracks list + track editor, topics; **New entry** and **New track** on
    the editors. The editor layout, publish checklist and gate type are shared
    (`features/content`).
-5. Hubs, sources, overview. The entry editor gets source-credit editing here: until
-   then a new entry can't pass the "Source credits" gate.
+5. ✅ Hubs, sources, overview, and source-credit editing in the entry editor (a new
+   entry can now pass every gate). The fixture stores moved to the root providers so
+   Overview and the hub editor read across Library, Audio and Imports. Save, Discard
+   and Publish/Retire are shared (`features/content/editor-actions.tsx`), as is the
+   name + slug dialog behind New hub and New source.
 6. Then backend: `adminQuery`/`adminMutation`, `content.ingest`, swap providers.
    Compare warns when a Changed item was last edited in the admin, so an old file
    can't quietly overwrite it.
@@ -159,6 +164,18 @@ diff review**. The tables, shell and overview follow existing patterns.
   in place to its field diffs (long text as a folded line diff) and has an include
   checkbox; Unchanged folds away at the end. All three variants are on the local
   branch `prototype/admin-import-review-layouts` (commit `f1c4f516`).
+- **Hubs:** a hub can hold an item that isn't live (readers skip it), so "every item
+  is live" and "cover" are soft gates; title, intro and at least one existing item
+  are required. Overview flags live hubs that are hiding items.
+- **Sources:** no publish step; Save writes straight through. New source is a dialog
+  (it's also reached mid-task from an entry's credits). A source is stale when it has
+  `refreshDays` and a credit was retrieved longer ago than that; the entry gate stays
+  soft and only applies to verbatim entries, but the source list and Overview show
+  every stale credit.
+- **Overview "Needs attention"** groups: failed processing (tracks, narrations, import
+  runs), awaiting safety review (explainers, tier 3+ support tracks), stories missing
+  consent, stale sources, pending permission, live hubs with hidden items. The rules
+  are the editors' gates, read across everything (`features/overview/attention.ts`).
 - **Convex is the master copy of content, not the repo files.** Once entries and
   tracks are created and edited in the admin, the JSON trees in
   `packages/backend/scripts/{library,kindling}/` are history, not something to
