@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 
 import Providers from "@/components/providers";
 import { requireAdmin } from "@/features/auth/guards";
+import { StoresReady } from "@/features/content/stores-ready";
 import { AdminShell } from "@/features/shell/admin-shell";
 
-/** Every signed-in admin screen: Convex, the fixture stores and the sidebar shell. */
+/** Every signed-in admin screen: Convex, the content stores and the sidebar shell. */
 export default async function ConsoleLayout({
 	children,
 }: {
@@ -14,7 +15,9 @@ export default async function ConsoleLayout({
 
 	return (
 		<Providers>
-			<AdminShell>{children}</AdminShell>
+			<AdminShell>
+				<StoresReady>{children}</StoresReady>
+			</AdminShell>
 		</Providers>
 	);
 }

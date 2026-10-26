@@ -40,6 +40,7 @@ import {
 	EditorRail,
 } from "@/features/content/editor-layout";
 import { GateItem, GateList, GateSummary } from "@/features/content/gate-list";
+import { UPLOADS_PENDING } from "@/features/content/run-action";
 import { StatusBadge } from "@/features/content/status-badge";
 import { EmptyState } from "@/features/flux/empty-state";
 import {
@@ -104,6 +105,7 @@ function HubEditor() {
 		meta: { canPublish, dirty },
 		state: { blocking, gates, items, saved },
 	} = useHubEditor();
+	const { uploads } = useLibrary().meta;
 
 	return (
 		<>
@@ -168,8 +170,10 @@ function HubEditor() {
 										{gate.id === "cover" ? (
 											<Button
 												className="w-fit"
+												disabled={!uploads}
 												onClick={actions.replaceCover}
 												size="xs"
+												title={uploads ? undefined : UPLOADS_PENDING}
 												variant="outline"
 											>
 												<UploadIcon />
@@ -250,6 +254,7 @@ function HubCover() {
 		actions,
 		state: { hub },
 	} = useHubEditor();
+	const { uploads } = useLibrary().meta;
 
 	return (
 		<div className="flex flex-col gap-3">
@@ -261,7 +266,13 @@ function HubCover() {
 					</span>
 				</div>
 			</div>
-			<Button onClick={actions.replaceCover} size="sm" variant="outline">
+			<Button
+				disabled={!uploads}
+				onClick={actions.replaceCover}
+				size="sm"
+				title={uploads ? undefined : UPLOADS_PENDING}
+				variant="outline"
+			>
 				<UploadIcon />
 				{hub.hasCover ? "Replace cover" : "Upload cover"}
 			</Button>

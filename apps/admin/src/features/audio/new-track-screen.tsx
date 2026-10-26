@@ -59,6 +59,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { runAction, UPLOADS_PENDING } from "@/features/content/run-action";
 import { isReservedSlug, isSlug, slugify } from "@/features/content/slug";
 import { formatDuration } from "@/features/library/types";
 import {
@@ -97,6 +98,7 @@ const MAX_AUDIO_BYTES = 200 * 1024 * 1024;
 export function NewTrackScreen() {
 	const {
 		actions,
+		meta: { uploads },
 		state: { topics, tracks },
 	} = useAudio();
 	const router = useRouter();
@@ -160,22 +162,27 @@ export function NewTrackScreen() {
 		}
 	};
 
-	const create = (event: FormEvent) => {
+	const create = async (event: FormEvent) => {
 		event.preventDefault();
 		setSubmitted(true);
 		if (!(valid && topic && durationSec !== null && files.length > 0)) {
 			return;
 		}
-		actions.create({
-			durationSec,
-			family,
-			hasThumb: false,
-			slug,
-			title: title.trim(),
-			topic,
-		});
-		toast.success(`“${title.trim()}” saved as a draft`);
-		router.push(`/audio/${slug}`);
+		const created = await runAction(
+			() =>
+				actions.create({
+					durationSec,
+					family,
+					hasThumb: false,
+					slug,
+					title: title.trim(),
+					topic,
+				}),
+			`“${title.trim()}” saved as a draft`
+		);
+		if (created) {
+			router.push(`/audio/${slug}`);
+		}
 	};
 
 	// Errors show once the field has a value or after the first Create.
@@ -374,7 +381,11 @@ export function NewTrackScreen() {
 						>
 							Cancel
 						</Link>
-						<Button type="submit">
+						<Button
+							disabled={!uploads}
+							title={uploads ? undefined : UPLOADS_PENDING}
+							type="submit"
+						>
 							<PlusIcon />
 							Create draft
 						</Button>
