@@ -1,0 +1,6 @@
+// Admin functions are for apps/admin only (workspace plan §3a). Convex still
+// rejects non-admins; this keeps other clients from depending on them at all.
+`$api.admin` where {
+	$api <: `api`,
+	register_diagnostic(span=$api, message="api.admin.* is admin-only: call it from apps/admin, never from web, mobile, desktop, cli or docs.")
+}
