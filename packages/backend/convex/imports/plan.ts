@@ -1,4 +1,9 @@
-import { ConvexError, type Infer, type Validator } from "convex/values";
+import {
+	ConvexError,
+	type GenericValidator,
+	type Infer,
+	type Validator,
+} from "convex/values";
 import { ValidationError, validate } from "convex-helpers/validators";
 import type { MutationCtx } from "../_generated/server";
 import type schema from "../schema";
@@ -65,10 +70,48 @@ export function parseRecord<V extends Validator<unknown, "required", string>>(
 	validator: V,
 	value: unknown
 ): Infer<V> {
-	if (!validate(validator, value, { throw: true })) {
-		return reject("doesn't match the record shape");
+	try {
+		if (!validate(validator, value, { throw: true })) {
+			return reject("doesn't match the record shape");
+		}
+	} catch (error) {
+		// A union reports only the last member it tried ("story"), so name them all.
+		const allowed =
+			error instanceof ValidationError && error.path
+				? literalsAt(validator, error.path)
+				: undefined;
+		if (allowed && error instanceof ValidationError) {
+			return reject(`"${error.path}" should be ${allowed}, not ${error.got}`);
+		}
+		throw error;
 	}
 	return value;
+}
+
+/** "advice, explainer or story" when the field at `path` (`a.b[0].c`) is a union of literals. */
+function literalsAt(validator: GenericValidator, path: string) {
+	let field: GenericValidator | undefined = validator;
+	for (const part of path.split(".")) {
+		const name = part.replace(/\[\d+\]$/, "");
+		if (field?.kind !== "object") {
+			return;
+		}
+		field = field.fields[name];
+		if (part !== name) {
+			field = field?.kind === "array" ? field.element : undefined;
+		}
+	}
+	if (
+		field?.kind !== "union" ||
+		!field.members.every((member) => member.kind === "literal")
+	) {
+		return;
+	}
+	const values = field.members.map((member) =>
+		member.kind === "literal" ? String(member.value) : ""
+	);
+	const last = values.pop();
+	return values.length > 0 ? `${values.join(", ")} or ${last}` : last;
 }
 
 /** The row's own name prefix (`library entry "x": `) is noise in a list of that row's items. */

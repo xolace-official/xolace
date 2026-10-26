@@ -160,6 +160,8 @@ async function readRecord(
 			return {
 				bytes: file.size,
 				name: file.name,
+				// Lets compare keep a stored WebP made from this same file.
+				sourceSha256: await sha256Hex(await file.arrayBuffer()),
 				thumbhash: processed.thumbhash,
 				webp: processed.webp.map(({ file: webp, px, sha256 }) => ({
 					bytes: webp.size,

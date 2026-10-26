@@ -18,6 +18,7 @@ import {
 	showTime,
 	type View,
 } from "./diff";
+import { unlessSameSource } from "./imageSources";
 import {
 	type CompareScope,
 	needUpload,
@@ -299,7 +300,13 @@ export async function compareEntry(
 				: "An explainer can't go live until its body is safety-reviewed. Import it with active: false, review it in the admin, then publish."
 		);
 	}
-	const { cover, uploads } = entryCover(scope, d, index, coverPath, stored);
+	const { cover, uploads } = entryCover(
+		scope,
+		await unlessSameSource(scope, d, stored?.cover1280Key),
+		index,
+		coverPath,
+		stored
+	);
 	const entry = { ...fields, ...cover };
 	assertPublishable({ ...entry, safetyReviewedAt });
 
@@ -433,7 +440,10 @@ export async function compareHub(
 	let cover: Partial<CoverKeys> = {};
 	let upload: UploadNeed | undefined;
 	if (coverPath) {
-		const webp = webpsFor(d, "hub")?.get(1280);
+		const webp = webpsFor(
+			await unlessSameSource(scope, d, stored?.cover1280Key),
+			"hub"
+		)?.get(1280);
 		if (webp) {
 			const key = `hub-cover/${webp.sha256}.webp`;
 			cover = { cover1280Key: key, coverThumbhash: d.image?.thumbhash };

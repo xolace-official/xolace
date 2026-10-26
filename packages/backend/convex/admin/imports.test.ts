@@ -294,7 +294,9 @@ describe("admin/imports compare", () => {
 		expect(rejection("no-body")).toMatch(
 			/bodies\/no-body\.md isn't in the drop/
 		);
-		expect(rejection("bad-kind")).toMatch(/"kind"/);
+		expect(rejection("bad-kind")).toBe(
+			'"kind" should be explainer, advice or story, not "poem"'
+		);
 		expect(rejection("stored")).toMatch(/narration still goes through/i);
 		expect(rejection("mind")).toMatch(/in the drop twice/);
 
@@ -639,6 +641,52 @@ describe("admin/imports audio", () => {
 			expect.anything(),
 			"support/calm/live.mp3"
 		);
+	});
+
+	it("keeps a stored thumbnail made from the dropped source, and the stored length", async () => {
+		const { t } = setup();
+		await t.mutation(internal.ai.paths.audioTracks.upsertTrack, {
+			track: {
+				durationSec: 96,
+				family: "support",
+				key: "support/calm/live.mp3",
+				narrators: ["Sage"],
+				sha256: SHA("a"),
+				slug: "calm",
+				sourceTags: [],
+				tags: ["calm"],
+				thumbhash: THUMBHASH,
+				thumbKey: `thumb/${SHA("b")}.webp`,
+				thumbSha256: SHA("b"),
+				tier: 1,
+				title: "Calm",
+				topic: "audio_topic_grief",
+			},
+		});
+		// The script noted that its WebP (b) came from source c.
+		await t.mutation(internal.imports.imageSources.note, {
+			pairs: [{ sourceSha256: SHA("c"), webpSha256: SHA("b") }],
+		});
+		const drop = (source: string) => [
+			{
+				// The browser reads the same audio as 97s, and encodes c as WebP d.
+				audio: audioFile(SHA("a")),
+				image: { ...thumbFile(SHA("d")), sourceSha256: source },
+				record: track("calm", { title: "Calm" }),
+				role: "tracks" as const,
+			},
+		];
+
+		const same = await compare(t, "audio", drop(SHA("c")));
+		expect(same.uploads).toEqual([]);
+		expect(item(await run(t, same.number), "calm").action).toBe("unchanged");
+
+		// Another source is a new thumbnail, at the browser's key.
+		const other = await compare(t, "audio", drop(SHA("e")));
+		expect(other.uploads.map((u) => u.part)).toEqual([1080]);
+		expect(
+			item(await run(t, other.number), "calm").changes?.map((c) => c.field)
+		).toEqual(["Thumbnail"]);
 	});
 
 	it("rejects a changed track whose audio hash moved without its file", async () => {

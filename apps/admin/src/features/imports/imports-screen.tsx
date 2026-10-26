@@ -11,7 +11,12 @@ import {
 	TableHeader,
 	TableRow,
 } from "@xolace/ui/components/table";
-import { CircleSlashIcon, EyeIcon, UploadIcon } from "lucide-react";
+import {
+	CircleCheckIcon,
+	CircleSlashIcon,
+	EyeIcon,
+	UploadIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 import { StatusBadge } from "@/features/content/status-badge";
@@ -161,7 +166,10 @@ function RunsTable({ runs }: { runs: readonly ImportRunSummary[] }) {
 	);
 }
 
-/** Review and discarded have no item status, so they get their own badge. */
+/**
+ * Review, discarded and applied describe the run, not an item, so they get
+ * their own badges: an applied run can leave items in review or as drafts.
+ */
 export function RunStateBadge({
 	run,
 }: {
@@ -194,5 +202,13 @@ export function RunStateBadge({
 	if (run.state === "applying") {
 		return <StatusBadge status="processing" />;
 	}
-	return <StatusBadge status={run.failed > 0 ? "failed" : "live"} />;
+	if (run.failed > 0) {
+		return <StatusBadge status="failed" />;
+	}
+	return (
+		<Badge variant="mint">
+			<CircleCheckIcon />
+			Applied
+		</Badge>
+	);
 }

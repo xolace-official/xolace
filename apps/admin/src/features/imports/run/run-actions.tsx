@@ -14,8 +14,14 @@ import {
 import { Button } from "@xolace/ui/components/button";
 import { PlayIcon, Trash2Icon } from "lucide-react";
 
-import { TARGET_LABEL } from "../types";
+import { type ImportTarget, TARGET_LABEL } from "../types";
 import { useImportRun } from "./import-run-provider";
+
+/** How apply orders each target's items (`PHASE` in convex/imports/records.ts). */
+const APPLY_ORDER: Record<ImportTarget, string> = {
+	audio: "Tracks and topics go in together.",
+	library: "Sources go first, then entries, then hubs.",
+};
 
 const plural = (count: number, word: string) =>
 	`${count} ${word}${count === 1 ? "" : "s"}`;
@@ -60,10 +66,9 @@ export function ApplyButton() {
 						Apply {plural(applicable, "item")} to {TARGET_LABEL[run.target]}?
 					</AlertDialogTitle>
 					<AlertDialogDescription>
-						Sources go first, then entries, then hubs. Each item checks its
-						uploaded files, then writes, and live items update for readers as
-						soon as their own item finishes. Rejected and left-out items aren't
-						touched.
+						{APPLY_ORDER[run.target]} Each item checks its uploaded files, then
+						writes, and live items update for readers as soon as their own item
+						finishes. Rejected and left-out items aren't touched.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>

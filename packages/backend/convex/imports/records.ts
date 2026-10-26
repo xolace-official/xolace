@@ -106,6 +106,8 @@ export const dropRecord = v.object({
 		v.object({
 			bytes: v.number(),
 			name: v.string(),
+			/** Hex SHA-256 of the dropped file, before processing; see `imageSources.ts`. */
+			sourceSha256: v.optional(v.string()),
 			thumbhash: v.string(),
 			webp: v.array(
 				v.object({ bytes: v.number(), px: v.number(), sha256: v.string() })

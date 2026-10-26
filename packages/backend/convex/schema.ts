@@ -1077,6 +1077,15 @@ export default defineSchema({
 		"dayKey",
 	]),
 
+	// Which source image a processed WebP was made from, noted by import
+	// compare (convex/imports/imageSources.ts). The browser's encoder makes
+	// different bytes than the scripts' sharp, so a re-dropped source would
+	// otherwise always look like a new image. Staff-only, no client reads.
+	image_sources: defineTable({
+		sourceSha256: v.string(), // hex SHA-256 of the dropped file
+		webpSha256: v.string(), // hex SHA-256 of the WebP, as in its R2 key
+	}).index("by_webpSha256_and_sourceSha256", ["webpSha256", "sourceSha256"]),
+
 	import_items: defineTable({
 		action: v.union(
 			v.literal("rejected"),

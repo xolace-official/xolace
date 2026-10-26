@@ -225,6 +225,11 @@ diff review**. The tables, shell and overview follow existing patterns.
   - Compare keeps a fingerprint of each stored row. An item whose row changed in
     any way since then fails at apply ("compare again") rather than overwriting
     it. Imported rows drop `editedBy`, as script runs do.
+  - The browser's WebP bytes differ from sharp's, so `image_sources` notes which
+    source file each WebP came from (compare and both ingest scripts write it). A
+    dropped image whose source made the stored WebP is Unchanged. Rows stored
+    before this need one script run (`--thumbs-only` for Kindling) to be noted.
+    The same audio file keeps its stored length, not the browser's reading.
   - Narration records are Rejected for now: the 30-second preview needs ffmpeg,
     so narration stays in `scripts/library/ingest.ts`.
   - The workflow component's own modules don't load under the repo's Vite in

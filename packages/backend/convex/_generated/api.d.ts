@@ -127,6 +127,7 @@ import type * as imports_compare from "../imports/compare.js";
 import type * as imports_compareAudio from "../imports/compareAudio.js";
 import type * as imports_compareLibrary from "../imports/compareLibrary.js";
 import type * as imports_diff from "../imports/diff.js";
+import type * as imports_imageSources from "../imports/imageSources.js";
 import type * as imports_plan from "../imports/plan.js";
 import type * as imports_records from "../imports/records.js";
 import type * as intake from "../intake.js";
@@ -370,6 +371,7 @@ declare const fullApi: ApiFromModules<{
   "imports/compareAudio": typeof imports_compareAudio;
   "imports/compareLibrary": typeof imports_compareLibrary;
   "imports/diff": typeof imports_diff;
+  "imports/imageSources": typeof imports_imageSources;
   "imports/plan": typeof imports_plan;
   "imports/records": typeof imports_records;
   intake: typeof intake;

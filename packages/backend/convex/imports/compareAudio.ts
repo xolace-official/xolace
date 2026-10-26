@@ -26,6 +26,7 @@ import {
 	showTime,
 	type View,
 } from "./diff";
+import { unlessSameSource } from "./imageSources";
 import {
 	type CompareScope,
 	needUpload,
@@ -156,7 +157,15 @@ export async function compareTrack(
 		const key = same
 			? (stored?.key ?? "")
 			: `${audioKeyPrefix(family, slug)}${crypto.randomUUID()}.${d.audio.ext}`;
-		audio = { durationSec: d.audio.durationSec, key, sha256: d.audio.sha256 };
+		audio = {
+			// The same file keeps its stored length: the browser rounds its own
+			// reading, which can differ by a second from the script's.
+			durationSec: same
+				? (stored?.durationSec ?? d.audio.durationSec)
+				: d.audio.durationSec,
+			key,
+			sha256: d.audio.sha256,
+		};
 		if (!same) {
 			audioUpload = { bytes: d.audio.bytes, index, key, part: "audio" };
 		}
@@ -174,7 +183,7 @@ export async function compareTrack(
 					: `${audioPath ?? "Its audio file"} isn't in the drop.`)
 		);
 	}
-	const dropped = thumbOf(d);
+	const dropped = thumbOf(await unlessSameSource(scope, d, stored?.thumbKey));
 	let thumb: Pick<TrackUpsert, "thumbhash" | "thumbKey" | "thumbSha256">;
 	if (dropped) {
 		thumb = dropped.thumb;
@@ -271,7 +280,7 @@ export async function compareTopic(
 		.query("topics")
 		.withIndex("by_slug", (q) => q.eq("slug", slug))
 		.unique();
-	const dropped = thumbOf(d);
+	const dropped = thumbOf(await unlessSameSource(scope, d, stored?.thumbKey));
 	const thumb =
 		dropped?.thumb ??
 		(stored

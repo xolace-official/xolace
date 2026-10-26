@@ -198,6 +198,16 @@ async function uploadCoverVariant(file: Buffer, px: number, prefix: string) {
 		.webp({ effort: 6, quality: 78 })
 		.toBuffer();
 	const key = await uploadContent(prefix, webp, ".webp");
+	// So an admin import of this same source keeps this WebP rather than
+	// re-encoding it (convex/imports/imageSources.ts).
+	convexRun("imports/imageSources:note", {
+		pairs: [
+			{
+				sourceSha256: createHash("sha256").update(file).digest("hex"),
+				webpSha256: createHash("sha256").update(webp).digest("hex"),
+			},
+		],
+	});
 	console.log(
 		`  ${px}px ${key}: ${webp.length} bytes (original ${file.length} bytes)`
 	);
