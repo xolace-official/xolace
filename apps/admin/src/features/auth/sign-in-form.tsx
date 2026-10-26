@@ -1,6 +1,6 @@
 "use client";
 
-import { useSignIn } from "@clerk/nextjs";
+import { useAuth, useSignIn } from "@clerk/nextjs";
 import { Alert, AlertDescription } from "@xolace/ui/components/alert";
 import { Button } from "@xolace/ui/components/button";
 import {
@@ -13,9 +13,8 @@ import {
 import { Input } from "@xolace/ui/components/input";
 import { Spinner } from "@xolace/ui/components/spinner";
 import { ArrowLeftIcon, LogInIcon } from "lucide-react";
-import type { Route } from "next";
-import { useRouter, useSearchParams } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 
 import { PasswordInput } from "./password-input";
 
@@ -31,29 +30,38 @@ const UNSUPPORTED_STEP =
  */
 export function SignInForm() {
 	const { signIn, errors, fetchStatus } = useSignIn();
-	const router = useRouter();
+	const { isLoaded, isSignedIn } = useAuth();
 	const redirectUrl = useSearchParams().get("redirect_url");
 	const [step, setStep] = useState<Step>("password");
 	const [email, setEmail] = useState("");
 	const [failure, setFailure] = useState<string | null>(null);
+	// `finalize` navigates itself, with Clerk's decorated URL.
+	const finishing = useRef(false);
+
+	// The server rendered this page signed out, but Clerk has a session (its
+	// cookie had expired and was refreshed here). Submitting would only say
+	// "already signed in", so leave with a full load the guards can see.
+	useEffect(() => {
+		if (isLoaded && isSignedIn && !finishing.current) {
+			window.location.replace(safeRedirect(redirectUrl));
+		}
+	}, [isLoaded, isSignedIn, redirectUrl]);
 
 	const busy = fetchStatus === "fetching";
 	const alert = failure ?? errors.global?.[0]?.message;
 
 	const finish = async () => {
+		finishing.current = true;
 		const { error } = await signIn.finalize({
 			navigate: ({ decorateUrl }) => {
-				const url = decorateUrl(safeRedirect(redirectUrl));
-				// Safari ITP can hand back an absolute Clerk URL that must be a full load.
-				if (url.startsWith("http")) {
-					window.location.href = url;
-					return;
-				}
-				// A same-site path from safeRedirect, decorated by Clerk.
-				router.replace(url as Route);
+				// A full load, not router.replace: the client router can replay the
+				// cached redirect back to /sign-in from before the session existed.
+				// decorateUrl may also hand back an absolute Clerk URL (Safari ITP).
+				window.location.replace(decorateUrl(safeRedirect(redirectUrl)));
 			},
 		});
 		if (error) {
+			finishing.current = false;
 			setFailure(error.message);
 		}
 	};
