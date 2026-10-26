@@ -49,6 +49,9 @@ const stringField = (record: Record<string, unknown>, key: string) => {
 const messageOf = (error: unknown) =>
 	error instanceof Error ? error.message : String(error);
 
+/** A file the record names that isn't in the drop: compare decides if it's needed. */
+class MissingFile extends Error {}
+
 type FindFile = (path: string) => File;
 type ImageOf = (
 	file: File,
@@ -67,7 +70,7 @@ function fileFinder(files: readonly File[]): FindFile {
 		const matches = byName.get(baseName(path)) ?? [];
 		const [file] = matches;
 		if (!file) {
-			throw new Error(`${path} isn't in the drop`);
+			throw new MissingFile(`${path} isn't in the drop`);
 		}
 		if (matches.length > 1) {
 			throw new Error(
@@ -108,7 +111,11 @@ async function readAudio(
 	};
 }
 
-/** Runs `read`, keeping its result, or its error for compare to judge. */
+/**
+ * Runs `read`, keeping its result. A missing file is left for compare to
+ * judge (a copy edit keeps the stored one); a file that's there but can't be
+ * read is an error compare rejects.
+ */
 async function attempt<T>(
 	errors: NonNullable<DropRecord["fileErrors"]>,
 	part: "audio" | "body" | "image",
@@ -117,7 +124,9 @@ async function attempt<T>(
 	try {
 		return await read();
 	} catch (error) {
-		errors[part] = messageOf(error);
+		if (!(error instanceof MissingFile)) {
+			errors[part] = messageOf(error);
+		}
 	}
 }
 
@@ -196,9 +205,9 @@ function labelOf(files: readonly File[]) {
 }
 
 /**
- * Reads the dropped records and the files they name. A file that's missing or
- * unreadable is reported, not thrown: compare decides whether the record needs it
- * (a copy edit can leave its cover out).
+ * Reads the dropped records and the files they name. Nothing is thrown: a
+ * missing file is left out for compare to judge (a copy edit can leave its
+ * cover out), and an unreadable one is reported, which rejects its record.
  */
 export async function prepareDrop(
 	target: ImportTarget,

@@ -15,8 +15,13 @@ export interface FieldChange {
 	long?: boolean;
 }
 
-/** One field as the reviewer sees it. `long` text is shown as a line diff. */
+/**
+ * One field as the reviewer sees it. `long` text is shown as a line diff.
+ * `exact` is the whole value when `value` shows less of it (a date without
+ * its time): it's what's compared, and what's shown when the `value`s match.
+ */
 export interface ViewField {
+	exact?: string;
 	long?: boolean;
 	value: string | undefined;
 }
@@ -35,6 +40,22 @@ export const showTime = (ms: number | undefined) =>
 	ms === undefined
 		? undefined
 		: `${new Date(ms).toISOString().slice(0, 16).replace("T", " ")} UTC`;
+
+/** `2026-05-03T14:20:07.123Z`: to the millisecond. */
+export const showInstant = (ms: number | undefined) =>
+	ms === undefined ? undefined : new Date(ms).toISOString();
+
+/** A date field, compared to the millisecond. */
+export const dateField = (ms: number | undefined): ViewField => ({
+	exact: showInstant(ms),
+	value: showDate(ms),
+});
+
+/** A time field, compared to the millisecond. */
+export const timeField = (ms: number | undefined): ViewField => ({
+	exact: showInstant(ms),
+	value: showTime(ms),
+});
 
 export const showBool = (value: boolean | undefined) =>
 	value === undefined ? undefined : value ? "Yes" : "No";
@@ -67,21 +88,28 @@ const SHORT_HASH = 8;
 export const showHash = (sha256: string | undefined) =>
 	sha256 ? `file ${sha256.slice(0, SHORT_HASH)}…` : undefined;
 
-/** Every field whose display value differs, labelled for the review. */
+const whole = (f: ViewField | undefined) => f?.exact ?? f?.value;
+
+/**
+ * Every field whose whole value differs, labelled for the review: a change
+ * the display rounds away still counts, or the record would read Unchanged
+ * and never be written.
+ */
 export function diffViews(before: View, after: View): FieldChange[] {
 	const changes: FieldChange[] = [];
 	for (const field of new Set([
 		...Object.keys(after),
 		...Object.keys(before),
 	])) {
-		const was = before[field]?.value;
-		const now = after[field]?.value;
-		if (was === now) {
+		const was = before[field];
+		const now = after[field];
+		if (whole(was) === whole(now)) {
 			continue;
 		}
+		const precise = was?.value === now?.value;
 		changes.push({
-			after: now,
-			before: was,
+			after: precise ? whole(now) : now?.value,
+			before: precise ? whole(was) : was?.value,
 			field,
 			...((before[field]?.long || after[field]?.long) && { long: true }),
 		});

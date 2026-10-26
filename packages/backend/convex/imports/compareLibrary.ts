@@ -8,14 +8,16 @@ import { assertPublishable } from "../library/publishGates";
 import { assertSourcesFit, type manifestSource } from "../library/sources";
 import { assertHubLive, facetPairs, reviewAfterWrite } from "../library/write";
 import {
+	dateField,
 	daysSince,
 	diffViews,
 	showBool,
 	showDate,
 	showDays,
 	showHash,
+	showInstant,
 	showText,
-	showTime,
+	timeField,
 	type View,
 } from "./diff";
 import { unlessSameSource } from "./imageSources";
@@ -124,8 +126,8 @@ export async function compareSource(
 
 // --- Entries ---
 
-const showCredit = (c: ManifestSource) =>
-	[c.source, c.pageTitle, c.author, showDate(c.retrievedAt), c.pageUrl]
+const showCredit = (c: ManifestSource, at = showDate) =>
+	[c.source, c.pageTitle, c.author, at(c.retrievedAt), c.pageUrl]
 		.filter(Boolean)
 		.join(" · ");
 
@@ -165,19 +167,23 @@ interface EntryParts {
 
 function entryView({ credits, entry: e, facets, markdown }: EntryParts): View {
 	const view: View = {
-		"Consent recorded": { value: showTime(e.consentRecordedAt) },
+		"Consent recorded": timeField(e.consentRecordedAt),
 		"Content note": { value: showText(e.contentNote) },
 		Cover: { value: showCover(e) },
-		Credits: { value: credits.map(showCredit).join("\n") || undefined },
+		Credits: {
+			exact:
+				credits.map((c) => showCredit(c, showInstant)).join("\n") || undefined,
+			value: credits.map((c) => showCredit(c)).join("\n") || undefined,
+		},
 		Dek: { value: e.dek },
 		Kind: { value: e.kind },
-		"Last reviewed": { value: showDate(e.lastReviewedAt) },
+		"Last reviewed": dateField(e.lastReviewedAt),
 		Live: { value: showBool(e.active) },
-		"New until": { value: showDate(e.newUntil) },
+		"New until": dateField(e.newUntil),
 		"Primary subject": { value: e.primarySubject },
-		Published: { value: showDate(e.publishedAt) },
+		Published: dateField(e.publishedAt),
 		"Reflect prompt": { value: showText(e.reflectPrompt) },
-		Retrieved: { value: showDate(e.retrievedAt) },
+		Retrieved: dateField(e.retrievedAt),
 		Reuse: { value: e.reuse },
 		"Story descriptor": { value: showText(e.storyDescriptor) },
 		Title: { value: e.title },

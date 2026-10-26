@@ -130,24 +130,40 @@ export function ImportsProvider({ children }: { children: ReactNode }) {
 				try {
 					let done = 0;
 					const queue = [...uploads];
+					let failed = false;
 					const worker = async () => {
-						for (let next = queue.shift(); next; next = queue.shift()) {
-							const blob = drop.blobs.get(blobKey(next.index, next.part));
-							if (!blob) {
-								throw new Error("A file compare asked for wasn't read");
+						try {
+							for (
+								let next = queue.shift();
+								next && !failed;
+								next = queue.shift()
+							) {
+								const blob = drop.blobs.get(blobKey(next.index, next.part));
+								if (!blob) {
+									throw new Error("A file compare asked for wasn't read");
+								}
+								// biome-ignore lint/performance/noAwaitInLoops: a fixed pool of workers, not one await per item
+								await putObject(next.url, blob);
+								done += 1;
+								onProgress(`Uploaded ${done} of ${uploads.length} files…`);
 							}
-							// biome-ignore lint/performance/noAwaitInLoops: a fixed pool of workers, not one await per item
-							await putObject(next.url, blob);
-							done += 1;
-							onProgress(`Uploaded ${done} of ${uploads.length} files…`);
+						} catch (error) {
+							// The other workers take no more files.
+							failed = true;
+							throw error;
 						}
 					};
-					await Promise.all(
+					// Settled, not `all`: no upload is still running when the run is discarded.
+					const settled = await Promise.allSettled(
 						Array.from(
 							{ length: Math.min(UPLOAD_WORKERS, uploads.length) },
 							worker
 						)
 					);
+					const failure = settled.find((s) => s.status === "rejected");
+					if (failure) {
+						throw failure.reason;
+					}
 					if (uploads.length > 0) {
 						await uploaded({ number });
 					}

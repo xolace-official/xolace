@@ -90,7 +90,7 @@ export const dropRecord = v.object({
 	),
 	/** The entry's markdown body (`bodyPath`). */
 	body: v.optional(v.string()),
-	/** Why a file the record names couldn't be read: missing from the drop, not an image… */
+	/** Why a file the record names couldn't be read (not an image, in the drop twice…): rejects the record. A missing file isn't listed. */
 	fileErrors: v.optional(
 		v.object({
 			audio: v.optional(v.string()),

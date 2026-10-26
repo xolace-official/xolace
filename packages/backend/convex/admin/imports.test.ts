@@ -432,6 +432,45 @@ describe("admin/imports covers", () => {
 		expect(
 			item(await run(t, second.number), "a").changes?.map((c) => c.field)
 		).toEqual(["Dek"]);
+
+		// A cover in the drop that couldn't be read never falls back to the stored one.
+		const third = await compare(t, "library", [
+			{
+				body: "A",
+				fileErrors: { image: "cover.png isn't an image" },
+				record: entryRecord("a", { coverPath: "cover.png", dek: "New dek" }),
+				role: "entries",
+			},
+		]);
+		expect(item(await run(t, third.number), "a")).toMatchObject({
+			action: "rejected",
+			rejection: "cover.png isn't an image",
+		});
+	});
+
+	it("rejects only the record too big to store, and asks for none of its uploads", async () => {
+		const { t } = setup();
+		await t.mutation(internal.library.ingest.upsertSource, {
+			sha256: "seed",
+			source: nhs,
+		});
+		// Multi-byte text under MAX_TEXT_CHARS, stored as before, after and payload.
+		const long = "心".repeat(150_000);
+		await ingestEntry(t, "long", long);
+		const { number, uploads } = await compare(t, "library", [
+			{
+				body: `${long}。`,
+				image: cover(SHA("1"), SHA("2")),
+				record: entryRecord("long", { coverPath: "cover.png" }),
+				role: "entries",
+			},
+			{ body: "Short", record: entryRecord("short"), role: "entries" },
+		]);
+		const r = await run(t, number);
+		expect(item(r, "long")).toMatchObject({ action: "rejected" });
+		expect(item(r, "long").rejection).toMatch(/Too big to review/);
+		expect(item(r, "short").action).toBe("new");
+		expect(uploads).toEqual([]);
 	});
 });
 
@@ -641,6 +680,60 @@ describe("admin/imports audio", () => {
 			expect.anything(),
 			"support/calm/live.mp3"
 		);
+	});
+
+	it("counts a licence correction the summary line doesn't show", async () => {
+		const { t } = setup();
+		const licence = {
+			acquiredAt: 1_780_000_000_000,
+			artist: "Lo",
+			attributionRequired: true,
+			attributionText: "Music by Lo",
+			licenceName: "CC BY 4.0",
+			licenceUrl: "https://creativecommons.org/licenses/by/4.0/",
+			source: "Free Music Archive",
+			sourceUrl: "https://fma.test/lo",
+		};
+		const music = {
+			family: "music" as const,
+			licence,
+			slug: "rain",
+			sourceTags: [],
+			tags: ["calm"],
+			title: "Rain",
+			topic: "music_topic_confidence_empowerment",
+		};
+		await t.mutation(internal.ai.paths.audioTracks.upsertTrack, {
+			track: {
+				...music,
+				durationSec: 60,
+				key: "music/rain/live.mp3",
+				sha256: SHA("a"),
+				thumbhash: THUMBHASH,
+				thumbKey: `thumb/${SHA("b")}.webp`,
+				thumbSha256: SHA("b"),
+			},
+		});
+		const { number } = await compare(t, "audio", [
+			{
+				record: {
+					...music,
+					licence: { ...licence, attributionText: "Music by Lo (CC BY)" },
+					sha256: SHA("a"),
+				},
+				role: "tracks",
+			},
+		]);
+		expect(item(await run(t, number), "rain")).toMatchObject({
+			action: "changed",
+			changes: [
+				{
+					after: "Music by Lo (CC BY) (required)",
+					before: "Music by Lo (required)",
+					field: "Licence attribution",
+				},
+			],
+		});
 	});
 
 	it("keeps a stored thumbnail made from the dropped source, and the stored length", async () => {

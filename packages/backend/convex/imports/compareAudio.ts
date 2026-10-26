@@ -17,13 +17,13 @@ import type { trackUpsertValidator } from "../ai/paths/audioTracks";
 import { TOPIC_SLUGS, topicTitle } from "../ai/paths/catalog";
 import type { licenceValidator } from "../lib/validators";
 import {
+	dateField,
 	diffViews,
-	showDate,
 	showDuration,
 	showHash,
 	showList,
 	showText,
-	showTime,
+	timeField,
 	type View,
 } from "./diff";
 import { unlessSameSource } from "./imageSources";
@@ -77,10 +77,27 @@ function thumbOf(d: DropRecord) {
 	};
 }
 
-const showLicence = (licence: Infer<typeof licenceValidator> | undefined) =>
-	licence
-		? [licence.artist, licence.licenceName, licence.source].join(" · ")
-		: undefined;
+type Licence = Infer<typeof licenceValidator>;
+
+/** Every licence field, so a corrected credit or link is a change. */
+const licenceView = (l: Licence | undefined): View => ({
+	Licence: {
+		value: l ? [l.artist, l.licenceName, l.source].join(" · ") : undefined,
+	},
+	"Licence acquired": dateField(l?.acquiredAt),
+	"Licence attribution": {
+		value: l
+			? `${l.attributionText}${l.attributionRequired ? " (required)" : ""}`
+			: undefined,
+	},
+	"Licence proof": {
+		exact: l?.licenceProofStorageId,
+		value: l?.licenceProofStorageId ? "Attached" : undefined,
+	},
+	"Licence ref": { value: showText(l?.licenceRef) },
+	"Licence URL": { value: showText(l?.licenceUrl) },
+	"Source URL": { value: showText(l?.sourceUrl) },
+});
 
 function trackView(t: TrackUpsert | Doc<"audio_tracks">): View {
 	const support = t.family === "support";
@@ -93,18 +110,22 @@ function trackView(t: TrackUpsert | Doc<"audio_tracks">): View {
 			? {
 					Episode: { value: t.episodeNumber?.toString() },
 					Narrators: { value: showList(t.narrators) },
-					"Safety review": { value: showTime(t.safetyReviewedAt) },
-					Series: { value: showText(t.seriesTitle ?? t.series) },
+					"Safety review": timeField(t.safetyReviewedAt),
+					Series: { value: showText(t.series) },
+					"Series title": { value: showText(t.seriesTitle) },
 					Tier: { value: t.tier?.toString() },
 					Transcript: { long: true, value: showText(t.transcript) },
 				}
 			: {
-					Licence: { value: showLicence(t.licence) },
+					...licenceView(t.licence),
 					"What it's for": { value: showText(t.whatItsFor) },
 				}),
 		Audio: { value: showHash(t.sha256) },
-		Length: { value: showDuration(t.durationSec) },
-		"New until": { value: showDate(t.newUntil) },
+		Length: {
+			exact: t.durationSec.toString(),
+			value: showDuration(t.durationSec),
+		},
+		"New until": dateField(t.newUntil),
 		Thumbnail: { value: showHash(t.thumbSha256) },
 	};
 }
