@@ -48,7 +48,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import { runAction } from "@/features/content/run-action";
-import { isSlug, slugify } from "@/features/content/slug";
+import { isReservedSlug, isSlug, slugify } from "@/features/content/slug";
 import {
 	PageHeader,
 	PageHeaderBreadcrumbs,
@@ -102,6 +102,9 @@ export function NewEntryScreen() {
 		slug: (() => {
 			if (!isSlug(slug)) {
 				return "Lowercase letters, numbers and dashes only.";
+			}
+			if (isReservedSlug("entry", slug)) {
+				return `“${slug}” is taken by an admin page.`;
 			}
 			return entries.some((entry) => entry.slug === slug)
 				? "Another entry already has this slug."

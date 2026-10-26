@@ -104,9 +104,9 @@ export function NewImportScreen() {
 	const [files, setFiles] = useState<File[]>([]);
 	const [comparing, startCompare] = useTransition();
 	const [detections, setDetections] = useState<readonly JsonDetection[]>([]);
-	const hasManifest = detections.some(
-		(detection) => detection.role && roleSpec(detection.role).required
-	);
+	// A drop holds only what it adds or changes, so any record list is enough;
+	// references are checked against what's stored when comparing.
+	const hasRecords = detections.some((detection) => detection.role !== null);
 
 	// Files are recognised by their records, so reading them is async.
 	useEffect(() => {
@@ -157,16 +157,17 @@ export function NewImportScreen() {
 			<Stepper
 				className="max-w-3xl"
 				nonInteractive={comparing}
-				onValidate={(next) => next !== "review" || hasManifest}
-				onValueChange={setStep}
+				onValidate={(next) => next !== "review" || hasRecords}
+				// Review is where the comparison runs: reaching it any way starts one.
+				onValueChange={(next) =>
+					next === "review" ? compare() : setStep(next)
+				}
 				value={step}
 			>
 				<StepperList>
 					{STEPS.map((item) => (
 						<StepperItem key={item.value} value={item.value}>
-							<StepperTrigger
-								disabled={item.value === "review" && !hasManifest}
-							>
+							<StepperTrigger disabled={item.value === "review" && !hasRecords}>
 								<StepperIndicator />
 								<span className="flex flex-col">
 									<StepperTitle>{item.title}</StepperTitle>
@@ -293,7 +294,7 @@ export function NewImportScreen() {
 								<ArrowLeftIcon />
 								Back
 							</Button>
-							<Button disabled={!hasManifest || comparing} onClick={compare}>
+							<Button disabled={!hasRecords || comparing} onClick={compare}>
 								{comparing ? <Spinner /> : <GitCompareArrowsIcon />}
 								{comparing ? "Comparing" : "Compare"}
 							</Button>
@@ -335,7 +336,7 @@ function ExpectedFiles({
 				className="flex flex-wrap gap-x-5 gap-y-2"
 			>
 				{TARGET_ROLES[target].map((role) => {
-					const { label, required } = roleSpec(role);
+					const { label } = roleSpec(role);
 					const matches = detections.filter(
 						(detection) => detection.role === role
 					);
@@ -359,9 +360,7 @@ function ExpectedFiles({
 									{matches.map((match) => match.file.name).join(", ")}
 								</code>
 							) : (
-								<span className="text-ink-muted">
-									{required ? "(required)" : "(optional)"}
-								</span>
+								<span className="text-ink-muted">(optional)</span>
 							)}
 							<span className="sr-only">{present ? "added" : "not added"}</span>
 						</li>
