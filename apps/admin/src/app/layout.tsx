@@ -1,9 +1,11 @@
 import { ClerkProvider } from "@clerk/nextjs";
+import { TooltipProvider } from "@xolace/ui/components/tooltip";
 import type { Metadata } from "next";
 import { Nunito, Space_Grotesk } from "next/font/google";
 
 import "../index.css";
 import Providers from "@/components/providers";
+import { AdminShell } from "@/features/shell/admin-shell";
 
 // Nunito for headings, buttons and labels; Space Grotesk for body and data.
 // @xolace/ui/globals.css reads these two variables.
@@ -32,7 +34,11 @@ export default function RootLayout({
 		<html className={`${nunito.variable} ${spaceGrotesk.variable}`} lang="en">
 			<body className="antialiased">
 				<ClerkProvider>
-					<Providers>{children}</Providers>
+					<Providers>
+						<TooltipProvider>
+							<AdminShell>{children}</AdminShell>
+						</TooltipProvider>
+					</Providers>
 				</ClerkProvider>
 			</body>
 		</html>
