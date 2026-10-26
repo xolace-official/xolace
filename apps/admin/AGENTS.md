@@ -45,9 +45,10 @@ bundled into the user web app or desktop.
   off Vercel's Git deploys of `main`; Production comes from the release workflow's
   deploy hook. `next.config.ts` fails the build if `CONVEX_DEPLOY_KEY` is set.
   Topology: `packages/backend/AGENTS.md`.
-- Content ingestion uploads straight from the browser to storage, then one upsert
-  mutation keyed by `slug` + `contentHash`; unchanged items are no-ops. Don't
-  reintroduce "re-upload everything" flows.
+- Media uploads go straight from the browser to R2 under keys Convex picks. An
+  import uploads only what compare says changed (unchanged items and media are
+  skipped), and apply writes server-side. Don't reintroduce "re-upload everything"
+  flows.
 - Next.js 16 differs from training data; read `node_modules/next/dist/docs/` first.
 - The managed block below is re-added by `next dev` if missing; keep it verbatim.
 
