@@ -115,7 +115,7 @@ type TrackRules = Pick<
 >;
 
 /** Rules that hold for every saved row, live or not. */
-function assertTrackShape(t: TrackRules) {
+export function assertTrackShape(t: TrackRules) {
 	// The catalogue entry itself, not just the suffix: some topics exist for one family only.
 	const prefix = t.family === "music" ? "music_topic_" : "audio_topic_";
 	if (!(t.topic.startsWith(prefix) && CATALOG_BY_KEY.has(t.topic))) {
@@ -130,7 +130,7 @@ function assertTrackShape(t: TrackRules) {
 }
 
 /** What a live track needs on top of its shape. A draft can wait for its licence. */
-function assertTrackLive(t: TrackRules) {
+export function assertTrackLive(t: TrackRules) {
 	if (!t.title.trim()) {
 		throw trackError(t, "needs a title");
 	}
@@ -164,7 +164,7 @@ type Licence = Infer<typeof licenceValidator>;
  * licence name). A different licence starts without the old proof, even when
  * the client echoes it back from the read.
  */
-function withStoredProof(
+export function withStoredProof(
 	incoming: Licence,
 	stored: Licence | undefined
 ): Licence {

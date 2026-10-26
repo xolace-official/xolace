@@ -1077,6 +1077,116 @@ export default defineSchema({
 		"dayKey",
 	]),
 
+	import_items: defineTable({
+		action: v.union(
+			v.literal("rejected"),
+			v.literal("changed"),
+			v.literal("new"),
+			v.literal("unchanged")
+		),
+		attempt: v.optional(v.number()), // 1 on the first apply; Retry bumps it
+		// A fingerprint of the stored row at compare (imports/plan.ts versionOf);
+		// absent for a new item. Apply fails the item if the row has moved on since.
+		baseVersion: v.optional(v.string()),
+		// Fields that differ from what's stored, as display strings.
+		changes: v.optional(
+			v.array(
+				v.object({
+					after: v.optional(v.string()),
+					before: v.optional(v.string()),
+					field: v.string(),
+					long: v.optional(v.boolean()), // a body or transcript: shown as a line diff
+				})
+			)
+		),
+		failure: v.optional(v.object({ message: v.string(), step: v.string() })),
+		media: v.optional(
+			v.array(
+				v.object({
+					bytes: v.number(),
+					kind: v.union(
+						v.literal("audio"),
+						v.literal("cover"),
+						v.literal("thumb")
+					),
+					name: v.string(),
+				})
+			)
+		),
+		// What the upsert writes, as JSON, re-validated when it runs: a run can
+		// sit in review across a deploy that changes the record shapes.
+		payload: v.optional(v.string()),
+		phase: v.number(), // applied in phase order: sources, then entries, then hubs
+		rejection: v.optional(v.string()), // the hard gate that blocks it
+		runId: v.id("import_runs"),
+		skipped: v.boolean(), // left out by the reviewer
+		slug: v.string(),
+		status: v.optional(
+			v.union(
+				v.literal("queued"),
+				v.literal("processing"),
+				v.literal("live"),
+				v.literal("needs_review"),
+				v.literal("draft"),
+				v.literal("retired"),
+				v.literal("failed")
+			)
+		),
+		step: v.optional(v.string()), // the workflow step running now
+		title: v.string(),
+		type: v.union(
+			v.literal("source"),
+			v.literal("entry"),
+			v.literal("hub"),
+			v.literal("narration"),
+			v.literal("topic"),
+			v.literal("track")
+		),
+		// R2 objects compare minted upload URLs for; apply checks they arrived.
+		uploads: v.optional(
+			v.array(v.object({ bytes: v.number(), key: v.string() }))
+		),
+		warnings: v.optional(v.array(v.string())), // soft gates: applied anyway
+		workflowId: v.optional(vWorkflowId), // set once the item's workflow starts
+	}).index("by_runId_and_status_and_phase", ["runId", "status", "phase"]),
+
+	// ===========================================================
+	// ADMIN IMPORTS (admin v1 step 6c, docs/plan/admin-v1.md)
+	// ===========================================================
+	//
+	// A batch of records dropped into the admin, compared against what's
+	// stored, reviewed, then applied one workflow per item
+	// (convex/imports/apply.ts). Staff-only: read and written only through
+	// convex/admin/imports.ts.
+	import_runs: defineTable({
+		appliedAt: v.optional(v.number()),
+		// Per diff action, fixed at compare.
+		counts: v.object({
+			changed: v.number(),
+			new: v.number(),
+			rejected: v.number(),
+			unchanged: v.number(),
+		}),
+		createdBy: v.string(), // Clerk subject of the staff member
+		createdByName: v.string(), // their name as the token had it, for the list
+		failed: v.number(), // items failed right now; Retry takes one off
+		files: v.string(), // what was dropped, e.g. "2 JSON, 3 markdown, 4 media"
+		finishedAt: v.optional(v.number()),
+		// Item workflows started and not yet finished. When it reaches 0 the
+		// next phase starts, so finishing items never read the whole run.
+		inFlight: v.number(),
+		number: v.number(), // 1, 2, 3…: the run's name and its link
+		// uploading → review → applying → done, or discarded before applying.
+		state: v.union(
+			v.literal("uploading"),
+			v.literal("review"),
+			v.literal("applying"),
+			v.literal("done"),
+			v.literal("discarded")
+		),
+		target: v.union(v.literal("library"), v.literal("audio")),
+	}).index("by_number", ["number"]),
+
 	// Intent-only premium teaser waitlist. During the pre-billing phase, tapping a
 	// blurred insight teaser records a "notify me" intent here (no price, no IAP).
 	// One row per profile per feature; idempotent on re-tap.

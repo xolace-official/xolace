@@ -86,6 +86,15 @@ const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 	"admin/hubs:replaceCover": { sha256: "x", slug: "x", thumbhash: "x" },
 	"admin/hubs:retire": { slug: "x" },
 	"admin/hubs:save": { intro: "", items: [], slug: "x", title: "x" },
+	"admin/imports:apply": { number: 1 },
+	"admin/imports:compare": { files: "", records: [], target: "library" },
+	"admin/imports:discard": { number: 1 },
+	"admin/imports:get": { number: 1 },
+	"admin/imports:list": {},
+	// convex-test reads an id's table from its suffix.
+	"admin/imports:retry": { itemId: "1import_items", number: 1 },
+	"admin/imports:setSkipped": { itemIds: [], number: 1, skipped: true },
+	"admin/imports:uploaded": { number: 1 },
 	"admin/library:bodies": {},
 	"admin/library:create": {
 		kind: "advice",
@@ -122,9 +131,11 @@ interface Registered {
 
 /** Every public function exported from `convex/admin/*`, as `admin/<file>:<name>`. */
 function publicAdminFunctions() {
-	const modules = import.meta.glob<Record<string, unknown>>("./*.ts", {
-		eager: true,
-	});
+	// Eager imports run a module, so other test files stay out of the glob.
+	const modules = import.meta.glob<Record<string, unknown>>(
+		["./*.ts", "!./*.test.ts"],
+		{ eager: true }
+	);
 	const found: { kind: "query" | "mutation" | "action"; path: string }[] = [];
 	for (const [file, exports] of Object.entries(modules)) {
 		if (file.includes(".test.")) {

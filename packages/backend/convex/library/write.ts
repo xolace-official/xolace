@@ -68,7 +68,7 @@ export function retiredAtAfter(
 }
 
 /** Facet pairs, canonical and checked against the Understanding vocabulary, plus the primary subject. */
-function facetPairs(
+export function facetPairs(
 	slug: string,
 	primarySubject: string,
 	facets: Record<string, string[]>
@@ -90,6 +90,13 @@ function facetPairs(
 	}
 	return [...pairs.values()];
 }
+
+/** A review covers one body: any edit clears it (#392). */
+export const reviewAfterWrite = (
+	existing: Pick<Doc<"library_entries">, "safetyReviewedAt"> | null,
+	storedBody: string | undefined,
+	markdown: string
+) => (storedBody === markdown ? existing?.safetyReviewedAt : undefined);
 
 /**
  * Everything a live entry needs, checked by the admin on Publish and on any
@@ -157,9 +164,7 @@ export async function writeEntry(
 		editedBy: opts.editedBy,
 		readMin: readMinOf(markdown),
 		retiredAt: retiredAtAfter(existing, fields.active, now),
-		// A review covers one body: any edit clears it (#392).
-		safetyReviewedAt:
-			body?.markdown === markdown ? existing?.safetyReviewedAt : undefined,
+		safetyReviewedAt: reviewAfterWrite(existing, body?.markdown, markdown),
 		searchText: searchTextOf(fields, pairs),
 		sha256: opts.sha256,
 		updatedAt: now,
@@ -241,7 +246,9 @@ export async function resolveHubItems(
 
 /** What a live hub needs. Items that aren't live are allowed: readers skip them. */
 export function assertHubLive(
-	h: Pick<Doc<"library_hubs">, "slug" | "title" | "intro" | "items">
+	h: Pick<Doc<"library_hubs">, "slug" | "title" | "intro"> & {
+		items: readonly unknown[];
+	}
 ) {
 	if (!(h.title.trim() && h.intro.trim())) {
 		throw new ConvexError(`library hub "${h.slug}": needs a title and intro`);
@@ -249,4 +256,75 @@ export function assertHubLive(
 	if (h.items.length === 0) {
 		throw new ConvexError(`library hub "${h.slug}": needs at least one item`);
 	}
+}
+
+/** A source as files name it: the row minus what writes derive. */
+export type SourceFields = Omit<
+	Doc<"library_sources">,
+	"_id" | "_creationTime" | "editedBy" | "sha256" | "updatedAt"
+>;
+
+/**
+ * Inserts or replaces a source from a file (ingest, imports). Replacing drops
+ * `editedBy`: the file is now the latest word.
+ */
+export async function upsertSourceRecord(
+	ctx: MutationCtx,
+	source: SourceFields,
+	sha256?: string
+) {
+	const existing = await ctx.db
+		.query("library_sources")
+		.withIndex("by_slug", (q) => q.eq("slug", source.slug))
+		.unique();
+	const doc = { ...source, sha256, updatedAt: Date.now() };
+	if (!existing) {
+		await ctx.db.insert("library_sources", doc);
+		return "inserted" as const;
+	}
+	await ctx.db.replace("library_sources", existing._id, doc);
+	return "updated" as const;
+}
+
+/** A hub as files name it: items by slug, covers already uploaded. */
+export type HubRecord = Pick<
+	Doc<"library_hubs">,
+	| "active"
+	| "cover1280Key"
+	| "coverKey"
+	| "coverThumbhash"
+	| "coverUrl"
+	| "intro"
+	| "slug"
+	| "title"
+> & { items: HubItemRef[] };
+
+/**
+ * Inserts or replaces a hub from a file (ingest, imports). Items must already
+ * exist. The ingest never checked `assertHubLive`; an import's compare does.
+ */
+export async function upsertHubRecord(
+	ctx: MutationCtx,
+	hub: HubRecord,
+	sha256?: string
+) {
+	const existing = await ctx.db
+		.query("library_hubs")
+		.withIndex("by_slug", (q) => q.eq("slug", hub.slug))
+		.unique();
+	const items = await resolveHubItems(ctx, hub.slug, hub.items);
+	const now = Date.now();
+	const doc = {
+		...hub,
+		items,
+		retiredAt: retiredAtAfter(existing, hub.active, now),
+		sha256,
+		updatedAt: now,
+	};
+	if (!existing) {
+		await ctx.db.insert("library_hubs", doc);
+		return "inserted" as const;
+	}
+	await ctx.db.replace("library_hubs", existing._id, doc);
+	return "updated" as const;
 }
