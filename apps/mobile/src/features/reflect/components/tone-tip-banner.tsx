@@ -53,7 +53,7 @@ export const ToneTipBanner = () => {
 
 	return (
 		<>
-			<View className="flex-row items-start gap-3 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3">
+			<View className="mt-2 mb-4 flex-row items-start gap-3 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3">
 				{confirmedLabel ? (
 					<AppText className="flex-1 text-foreground/60 text-sm leading-5">
 						Your next reflection will use {confirmedLabel} tone.
