@@ -126,10 +126,10 @@ section. Not borrowed: its offset-shadow theme (we use the lip/depth system).
 
 ## Build order
 
-1. Install and restyle shadcn `sidebar` (+ `breadcrumb`, `pagination`, `field`,
+1. ✅ Install and restyle shadcn `sidebar` (+ `breadcrumb`, `pagination`, `field`,
    `select`, `alert-dialog`, `sheet`, `spinner`) in `packages/ui`; rebuild the shell
    on it with the env pill; `StatusBadge`, `PageHeader`, fixtures.
-2. Library entries list + entry editor.
+2. ✅ Library entries list + entry editor (fixtures; facets read-only, uploads stubbed).
 3. Bulk import (diff + run status).
 4. Audio tracks list + track editor, topics.
 5. Hubs, sources, overview.
@@ -137,3 +137,11 @@ section. Not borrowed: its offset-shadow theme (we use the lip/depth system).
 
 Prototype before building (2–3 variants each): **entry editor layout** and **import
 diff review**. The tables, shell and overview follow existing patterns.
+
+### Decided
+
+- **Entry editor layout: "Document + rail"** (prototype A, picked over B "Tabs" and
+  C "Live preview"). Copy, body and details run down one column; a sticky right rail
+  holds the publish checklist and Publish, then narration, cover, facets and sources.
+  Save sits in the page header. All three variants are kept on the local branch
+  `prototype/admin-entry-editor-layouts` (commit `c6fe9a9b`), not in the main line.
