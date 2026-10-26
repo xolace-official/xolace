@@ -138,7 +138,7 @@ function RunsTable({ runs }: { runs: readonly ImportRun[] }) {
 }
 
 /** Review and discarded have no item status, so they get their own badge. */
-function RunStateBadge({ run }: { run: ImportRun }) {
+export function RunStateBadge({ run }: { run: ImportRun }) {
 	if (run.state === "review") {
 		return (
 			<Badge variant="lavender">
