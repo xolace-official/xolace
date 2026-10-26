@@ -3,7 +3,7 @@
 
 declare module 'uniwind' {
     export interface UniwindConfig {
-        themes: readonly ['light', 'dark', 'quiet-light', 'quiet-dark', 'reverie-light', 'reverie-dark', 'human-light', 'human-dark', 'nightly-light', 'nightly-dark', 'emerald-light', 'emerald-dark', 'rose-light', 'rose-dark', 'platinum-light', 'platinum-dark', 'velvet-light', 'velvet-dark', 'noir-light', 'noir-dark']
+        themes: readonly ['light', 'dark', 'quiet-light', 'quiet-dark', 'reverie-light', 'reverie-dark', 'human-light', 'human-dark', 'nightly-light', 'nightly-dark', 'emerald-light', 'emerald-dark', 'rose-light', 'rose-dark', 'platinum-light', 'platinum-dark', 'velvet-light', 'velvet-dark', 'noir-light', 'noir-dark', 'playful-light', 'playful-dark']
     }
 }
 

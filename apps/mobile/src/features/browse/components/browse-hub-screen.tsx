@@ -14,12 +14,16 @@ import { useMiniPlayerInset } from "@/src/features/browse/now-playing/now-playin
 import { useUtcDay } from "@/src/features/browse/use-utc-day";
 import { playSoftPress } from "@/src/lib/haptics";
 import { imageSource } from "@/src/lib/image-source";
+import { PlayfulLip } from "@/src/lib/playful/playful-lip";
+import { useIsPlayful, usePlayfulPress } from "@/src/lib/playful/use-playful";
 
 type Entry = {
 	id: "support" | "music" | "topics" | "lantern";
 	label: string;
 	icon: SymbolViewProps["name"];
 	bg: string;
+	/** Playful's lip under the circle: the tint, solid enough to read as an edge. */
+	lip: string;
 	fg:
 		| "--color-browse-audio-foreground"
 		| "--color-browse-music-foreground"
@@ -35,6 +39,7 @@ const ENTRIES: Entry[] = [
 		icon: { android: "graphic_eq", ios: "waveform", web: "graphic_eq" },
 		id: "support",
 		label: "Support audio",
+		lip: "bg-browse-audio-foreground/45",
 	},
 	{
 		bg: "bg-browse-music",
@@ -43,6 +48,7 @@ const ENTRIES: Entry[] = [
 		icon: { android: "music_note", ios: "music.note", web: "music_note" },
 		id: "music",
 		label: "Music",
+		lip: "bg-browse-music-foreground/45",
 	},
 	{
 		bg: "bg-browse-topics",
@@ -51,6 +57,7 @@ const ENTRIES: Entry[] = [
 		icon: { android: "grid_view", ios: "square.grid.2x2", web: "grid_view" },
 		id: "topics",
 		label: "Topics",
+		lip: "bg-browse-topics-foreground/45",
 	},
 	// The Library's home, inside Browse (#393, #409); branded Lantern (#394).
 	{
@@ -60,11 +67,24 @@ const ENTRIES: Entry[] = [
 		icon: { android: "menu_book", ios: "book", web: "menu_book" },
 		id: "lantern",
 		label: "Lantern",
+		lip: "bg-browse-topics-foreground/45",
 	},
 ];
 
+const ENTRY_RADIUS = 32;
+
 function EntryButton({ entry }: { entry: Entry }) {
 	const tint = useCSSVariable(entry.fg);
+	const isPlayful = useIsPlayful();
+	const press = usePlayfulPress();
+
+	const circle = (
+		<View
+			className={`h-16 w-16 items-center justify-center rounded-full ${entry.bg}`}
+		>
+			<SymbolView name={entry.icon} size={26} tintColor={String(tint)} />
+		</View>
+	);
 
 	return (
 		<Pressable
@@ -77,12 +97,21 @@ function EntryButton({ entry }: { entry: Entry }) {
 				// the hub to point at the right destination.
 				router.push(entry.href as never);
 			}}
+			onPressIn={isPlayful ? press.onPressIn : undefined}
+			onPressOut={isPlayful ? press.onPressOut : undefined}
 		>
-			<View
-				className={`h-16 w-16 items-center justify-center rounded-full ${entry.bg}`}
-			>
-				<SymbolView name={entry.icon} size={26} tintColor={String(tint)} />
-			</View>
+			{isPlayful ? (
+				<PlayfulLip
+					lipClassName={entry.lip}
+					pressed={press.pressed}
+					radius={ENTRY_RADIUS}
+				>
+					{/* The tints are translucent: back the face so the lip can't show through. */}
+					<View className="rounded-full bg-background">{circle}</View>
+				</PlayfulLip>
+			) : (
+				circle
+			)}
 			<AppText className="font-medium text-xs">{entry.label}</AppText>
 		</Pressable>
 	);

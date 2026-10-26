@@ -1,10 +1,12 @@
 import { Image } from "expo-image";
-import { Button, Spinner, useThemeColor } from "heroui-native";
+import { Spinner, useThemeColor } from "heroui-native";
 import { Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
+import { Button } from "@/src/components/shared/playful-button";
 import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
 import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { useIsPlayful } from "@/src/lib/playful/use-playful";
 import { cn } from "@/src/lib/utils";
 import {
 	TWIG_PRESENTATION,
@@ -41,11 +43,15 @@ export function TwigSheet({
 	const browsable = twigBrowseHref(twig) !== null;
 	const reduced = useEffectiveReducedMotion();
 	const accentForeground = useThemeColor("accent-foreground") as string;
+	const isPlayful = useIsPlayful();
 
 	return (
 		<EaseView
 			animate={{ opacity: 1, translateY: 0 }}
-			className="absolute right-3 left-3 rounded-3xl border border-border bg-surface p-5 shadow-lg"
+			className={cn(
+				"absolute right-3 left-3 rounded-3xl border border-border bg-surface p-5",
+				isPlayful ? "border-2 shadow-surface" : "shadow-lg"
+			)}
 			// Remounts per twig, and switching stops is a frequent tap: short and
 			// ease-out so the new card is readable at once, not a 300ms ease-in-out.
 			initialAnimate={{ opacity: 0, translateY: reduced ? 0 : 10 }}

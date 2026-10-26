@@ -160,6 +160,19 @@ export const THEMES: ThemeEntry[] = [
 		tier: "premium",
 		variants: { dark: "noir-dark", light: "noir-light" },
 	},
+	{
+		id: "playful",
+		name: "Playful",
+		preview: {
+			accent: "#6fd31f",
+			bg: "#121c21",
+			border: "#37464f",
+			fg: "#f1f7fb",
+			surface: "#1b2a31",
+		},
+		tier: "premium",
+		variants: { dark: "playful-dark", light: "playful-light" },
+	},
 ];
 
 export const FREE_THEMES = THEMES.filter(

@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
-import { PressableFeedback, useThemeColor } from "heroui-native";
+import { PressableFeedback, Surface, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useCSSVariable } from "uniwind";
@@ -119,10 +119,10 @@ export function TrailStop({
 						)}
 					</View>
 
-					<View
+					<Surface
 						className={cn(
-							"max-w-[190px] rounded-2xl bg-surface px-3.5 py-2.5 shadow-sm",
-							done && "border border-ember",
+							"max-w-[190px] rounded-2xl px-3.5 py-2.5",
+							done && "border-ember",
 							skipped && "opacity-40"
 						)}
 					>
@@ -156,7 +156,7 @@ export function TrailStop({
 						>
 							{title}
 						</AppText>
-					</View>
+					</Surface>
 				</PressableFeedback>
 			</EaseView>
 		</EaseView>
