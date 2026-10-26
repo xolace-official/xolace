@@ -35,6 +35,7 @@ import {
 	CircleCheckIcon,
 	OctagonAlertIcon,
 	RefreshCwIcon,
+	Trash2Icon,
 	TriangleAlertIcon,
 } from "lucide-react";
 
@@ -56,15 +57,19 @@ export function IndexCard({
 	status,
 	now,
 	onBackfill,
+	onRemoveStale,
 }: {
 	status: IndexStatus;
 	now: number;
 	onBackfill: () => void;
+	onRemoveStale: () => void;
 }) {
 	const copy = INDEX_COPY[status.index];
 	const state = runState(status, now);
 	const empty = status.namespaces.some(isEmptyGap);
 	const gaps = status.namespaces.filter(hasGap);
+	const truncated = status.namespaces.some((ns) => ns.truncated);
+	const stale = status.namespaces.reduce((n, ns) => n + ns.staleCount, 0);
 	return (
 		<Card className={cn(empty && "border-coral")}>
 			<CardHeader>
@@ -79,7 +84,14 @@ export function IndexCard({
 					) : null}
 				</CardTitle>
 				<CardDescription>{copy.description}</CardDescription>
-				<CardAction>
+				<CardAction className="flex flex-wrap justify-end gap-2">
+					{stale > 0 && !truncated ? (
+						<RemoveStaleButton
+							count={stale}
+							onRemoveStale={onRemoveStale}
+							title={copy.title}
+						/>
+					) : null}
 					<BackfillButton
 						busy={state === "backfilling"}
 						onBackfill={onBackfill}
@@ -89,6 +101,12 @@ export function IndexCard({
 			</CardHeader>
 			<CardContent className="flex flex-col gap-5">
 				<RunDetails status={status} />
+				{truncated ? (
+					<p className="type-small text-ember-text">
+						Too many rows to read whole here: missing and stale are a partial
+						view, so check before backfilling to fix them.
+					</p>
+				) : null}
 				<NamespaceTable namespaces={status.namespaces} />
 				{gaps.length > 0 ? (
 					<div className="flex flex-col gap-3">
@@ -160,6 +178,45 @@ function BackfillButton({
 					<AlertDialogAction onClick={onBackfill}>
 						<RefreshCwIcon />
 						Backfill
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	);
+}
+
+/** Stale keys need removing, not embedding: a backfill only visits rows that belong. */
+function RemoveStaleButton({
+	title,
+	count,
+	onRemoveStale,
+}: {
+	title: string;
+	count: number;
+	onRemoveStale: () => void;
+}) {
+	return (
+		<AlertDialog>
+			<AlertDialogTrigger render={<Button size="sm" variant="ghost" />}>
+				<Trash2Icon />
+				Remove {count} stale
+			</AlertDialogTrigger>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>
+						Remove {count} stale {count === 1 ? "key" : "keys"} from {title}?
+					</AlertDialogTitle>
+					<AlertDialogDescription>
+						They're still searchable though their row was retired, deleted or
+						moved to another topic. Removing them embeds nothing. A row that
+						comes back is indexed again when it's published.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancel</AlertDialogCancel>
+					<AlertDialogAction onClick={onRemoveStale} variant="destructive">
+						<Trash2Icon />
+						Remove
 					</AlertDialogAction>
 				</AlertDialogFooter>
 			</AlertDialogContent>

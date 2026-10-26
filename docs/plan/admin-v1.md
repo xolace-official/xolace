@@ -235,11 +235,15 @@ diff review**. The tables, shell and overview follow existing patterns.
   - The workflow component's own modules don't load under the repo's Vite in
     convex-test. The tests fake `workflow.start` and drive the real steps
     (`runItem`) and `finished`.
-  - Not yet: a cleanup for runs left in Uploading or Review.
-  - A failed search re-index (the write helpers schedule it outside the
-    workflow) shows on the Search index page (`/search-index`,
-    `convex/admin/searchIndex.ts`) as a key missing from its namespace, and that
-    index's Backfill re-runs it. The page also starts a deployment's first
+  - Not yet: a cleanup for runs left in Uploading or Review, and surfacing a
+    failed search re-index of a row that's already indexed. The write helpers
+    schedule it outside the workflow, and if it fails the old text stays
+    indexed under the same key, so nothing looks wrong. Closing it needs the
+    last indexed version per row, or the failure recorded.
+  - The Search index page (`/search-index`, `convex/admin/searchIndex.ts`)
+    covers the other failures: a first index that never landed shows as a
+    missing key (Backfill re-runs it), and a removal that never landed shows as
+    a stale key (Remove stale drops it). It also starts a deployment's first
     backfills, which no pipeline runs.
 - **Convex is the master copy of content, not the repo files.** Once entries and
   tracks are created and edited in the admin, the JSON trees in

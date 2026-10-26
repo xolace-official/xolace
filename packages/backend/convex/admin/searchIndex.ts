@@ -1,10 +1,12 @@
+import type { NamespaceId } from "@convex-dev/rag";
 import { getFunctionName } from "convex/server";
 import { ConvexError, type Infer, v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { QueryCtx } from "../_generated/server";
 import { EXERCISE_NAMESPACE } from "../ai/exercises/embed";
 import { LIBRARY_NAMESPACE } from "../ai/library/embed";
-import { trackNamespaces } from "../ai/paths/trackSearch";
+import { CATALOG } from "../ai/paths/catalog";
+import { namespaceFor, trackNamespaces } from "../ai/paths/trackSearch";
 import { XOLACER_NAMESPACE } from "../ai/xolacers/embed";
 import { adminMutation, adminQuery } from "../lib/adminAuth";
 import { BACKFILL_SPREAD_MS, migrations } from "../migrations";
@@ -72,7 +74,7 @@ const namespaceRow = v.object({
 	/** Keys in it whose row is gone or retired, up to KEY_SAMPLE. */
 	stale: v.array(keyRow),
 	staleCount: v.number(),
-	/** The namespace has more entries than were read; its counts are a floor. */
+	/** The index or its source had more rows than were read: missing and stale are unreliable. */
 	truncated: v.boolean(),
 });
 type NamespaceRow = Infer<typeof namespaceRow>;
@@ -126,24 +128,57 @@ const indexRow = v.object({
 	namespaces: v.array(namespaceRow),
 });
 
-/** Ready keys in one namespace, read in one page. */
-async function indexedKeys(ctx: QueryCtx, namespace: string) {
-	const found = await rag.getNamespace(ctx, { namespace });
-	if (!found) {
-		return { keys: new Set<string>(), truncated: false };
-	}
-	const { page, isDone } = await rag.list(ctx, {
-		limit: ADMIN_LIST_LIMIT,
-		namespaceId: found.namespaceId,
-	});
-	const keys = new Set<string>();
-	for (const { key } of page) {
-		if (key) {
-			keys.add(key);
-		}
-	}
-	return { keys, truncated: !isDone };
+/**
+ * One namespace against its source. `source` holds the keys that belong in it;
+ * `labels` names every key a row still has (retired ones too), so a stale key
+ * reads as a slug rather than an id where it can. `truncated`: either side was
+ * cut at its read cap, so missing and stale can't be trusted.
+ */
+interface Comparison {
+	indexed: Set<string>;
+	labels: ReadonlyMap<string, string>;
+	namespace: string;
+	namespaceId: NamespaceId | null;
+	source: ReadonlySet<string>;
+	truncated: boolean;
 }
+
+async function compare(
+	ctx: QueryCtx,
+	namespace: string,
+	source: ReadonlySet<string>,
+	labels: ReadonlyMap<string, string>,
+	sourceTruncated: boolean
+): Promise<Comparison> {
+	const found = await rag.getNamespace(ctx, { namespace });
+	const indexed = new Set<string>();
+	let indexTruncated = false;
+	if (found) {
+		const { page, isDone } = await rag.list(ctx, {
+			limit: ADMIN_LIST_LIMIT,
+			namespaceId: found.namespaceId,
+		});
+		for (const { key } of page) {
+			if (key) {
+				indexed.add(key);
+			}
+		}
+		indexTruncated = !isDone;
+	}
+	return {
+		indexed,
+		labels,
+		namespace,
+		namespaceId: found?.namespaceId ?? null,
+		source,
+		truncated: sourceTruncated || indexTruncated,
+	};
+}
+
+const missingOf = (c: Comparison) =>
+	[...c.source].filter((key) => !c.indexed.has(key));
+const staleOf = (c: Comparison) =>
+	[...c.indexed].filter((key) => !c.source.has(key));
 
 const sample = (keys: string[], labels: ReadonlyMap<string, string>) =>
 	keys
@@ -151,40 +186,44 @@ const sample = (keys: string[], labels: ReadonlyMap<string, string>) =>
 		.sort((a, b) => a.label.localeCompare(b.label))
 		.slice(0, KEY_SAMPLE);
 
-/**
- * One namespace against its source. `source` holds the keys that belong in it;
- * `labels` names every key a row still has (retired ones too), so a stale key
- * reads as a slug rather than an id where it can.
- */
-async function compareNamespace(
-	ctx: QueryCtx,
-	namespace: string,
-	source: ReadonlySet<string>,
-	labels: ReadonlyMap<string, string>
-): Promise<NamespaceRow> {
-	const { keys, truncated } = await indexedKeys(ctx, namespace);
-	const missing = [...source].filter((key) => !keys.has(key));
-	const stale = [...keys].filter((key) => !source.has(key));
+function toRow(c: Comparison): NamespaceRow {
+	const missing = missingOf(c);
+	const stale = staleOf(c);
 	return {
-		indexed: keys.size,
-		missing: sample(missing, labels),
+		indexed: c.indexed.size,
+		missing: sample(missing, c.labels),
 		missingCount: missing.length,
-		namespace,
-		source: source.size,
-		stale: sample(stale, labels),
+		namespace: c.namespace,
+		source: c.source.size,
+		stale: sample(stale, c.labels),
 		staleCount: stale.length,
-		truncated,
+		truncated: c.truncated,
 	};
 }
 
+/**
+ * Every namespace a track can live in: each catalog topic and the reframe
+ * series, plus any topic a stored track names. A namespace a track moved out
+ * of still shows while its key lingers.
+ */
+const CATALOG_TRACK_NAMESPACES = [
+	...CATALOG.map((e) => namespaceFor(e.actionType)),
+	namespaceFor("episode_reframe"),
+].filter((ns) => ns !== null);
+
 /** `track:<topic>` per topic, plus `track:reality-not-false-hope`; keyed on the slug. */
-async function trackNamespaceRows(ctx: QueryCtx) {
+async function trackComparisons(ctx: QueryCtx) {
 	const tracks = await ctx.db.query("audio_tracks").take(ADMIN_LIST_LIMIT);
+	const cut = tracks.length === ADMIN_LIST_LIMIT;
 	const labels = new Map(tracks.map((t) => [t.slug, t.title]));
+	const source = new Map<string, Set<string>>(
+		CATALOG_TRACK_NAMESPACES.map((ns) => [ns, new Set<string>()])
+	);
 	// Retired tracks' namespaces too, so a topic that lost every track still shows its leftovers.
-	const source = new Map<string, Set<string>>();
+	const named = new Set<string>();
 	for (const t of tracks) {
 		for (const namespace of trackNamespaces(t)) {
+			named.add(namespace);
 			const slugs = source.get(namespace) ?? new Set<string>();
 			if (t.active) {
 				slugs.add(t.slug);
@@ -192,38 +231,38 @@ async function trackNamespaceRows(ctx: QueryCtx) {
 			source.set(namespace, slugs);
 		}
 	}
-	const namespaces = [...source.keys()].sort();
-	return await Promise.all(
-		namespaces.map((namespace) =>
-			compareNamespace(
-				ctx,
-				namespace,
-				source.get(namespace) ?? new Set(),
-				labels
+	const all = await Promise.all(
+		[...source.keys()]
+			.sort()
+			.map((namespace) =>
+				compare(ctx, namespace, source.get(namespace) ?? new Set(), labels, cut)
 			)
-		)
 	);
+	// A catalog topic no track has ever used, with nothing indexed, is noise.
+	return all.filter((c) => named.has(c.namespace) || c.indexed.size > 0);
 }
 
 /** Keyed on the entry id; labelled with its slug. */
-async function libraryNamespaceRow(ctx: QueryCtx) {
+async function libraryComparison(ctx: QueryCtx) {
 	const entries = await ctx.db.query("library_entries").take(ADMIN_LIST_LIMIT);
-	return await compareNamespace(
+	return await compare(
 		ctx,
 		LIBRARY_NAMESPACE,
 		new Set(entries.filter((e) => e.active).map((e) => e._id)),
-		new Map(entries.map((e) => [e._id, e.slug]))
+		new Map(entries.map((e) => [e._id, e.slug])),
+		entries.length === ADMIN_LIST_LIMIT
 	);
 }
 
 /** Keyed on the title. */
-async function exerciseNamespaceRow(ctx: QueryCtx) {
+async function exerciseComparison(ctx: QueryCtx) {
 	const exercises = await ctx.db.query("exercises").take(EXERCISE_LIMIT);
-	return await compareNamespace(
+	return await compare(
 		ctx,
 		EXERCISE_NAMESPACE,
 		new Set(exercises.filter((e) => e.active).map((e) => e.title)),
-		new Map(exercises.map((e) => [e.title, e.title.replaceAll("_", " ")]))
+		new Map(exercises.map((e) => [e.title, e.title.replaceAll("_", " ")])),
+		exercises.length === EXERCISE_LIMIT
 	);
 }
 
@@ -231,11 +270,11 @@ async function exerciseNamespaceRow(ctx: QueryCtx) {
  * Keyed on the emotional profile id. Belongs = what `xolacers/embed.textForIndex`
  * indexes: complete, active, with a bio.
  */
-async function xolacerNamespaceRow(ctx: QueryCtx) {
+async function xolacerComparison(ctx: QueryCtx) {
 	const xolacers = await ctx.db
 		.query("xolacer_profiles")
 		.take(ADMIN_LIST_LIMIT);
-	return await compareNamespace(
+	return await compare(
 		ctx,
 		XOLACER_NAMESPACE,
 		new Set(
@@ -248,8 +287,25 @@ async function xolacerNamespaceRow(ctx: QueryCtx) {
 				x.emotionalProfileId,
 				x.displayName ?? x.emotionalProfileId,
 			])
-		)
+		),
+		xolacers.length === ADMIN_LIST_LIMIT
 	);
+}
+
+async function comparisonsFor(
+	ctx: QueryCtx,
+	index: IndexName
+): Promise<Comparison[]> {
+	if (index === "tracks") {
+		return await trackComparisons(ctx);
+	}
+	if (index === "library") {
+		return [await libraryComparison(ctx)];
+	}
+	if (index === "exercises") {
+		return [await exerciseComparison(ctx)];
+	}
+	return [await xolacerComparison(ctx)];
 }
 
 /** The series' steps in run order (the component returns them reversed). */
@@ -296,12 +352,11 @@ const isRunning = (state: JobRow["state"]) =>
 export const status = adminQuery({
 	args: {},
 	handler: async (ctx) => {
-		const [tracks, library, exercises, xolacers] = await Promise.all([
-			trackNamespaceRows(ctx),
-			libraryNamespaceRow(ctx),
-			exerciseNamespaceRow(ctx),
-			xolacerNamespaceRow(ctx),
-		]);
+		const [tracks, library, exercises, xolacers] = await Promise.all(
+			(["tracks", "library", "exercises", "xolacers"] as const).map(
+				async (index) => (await comparisonsFor(ctx, index)).map(toRow)
+			)
+		);
 		const [trackSeries, librarySeries, exerciseJob, xolacerJob] =
 			await Promise.all([
 				seriesStatus(ctx, "tracks"),
@@ -327,19 +382,19 @@ export const status = adminQuery({
 				index: "library" as const,
 				job: null,
 				migrations: librarySeries,
-				namespaces: [library],
+				namespaces: library,
 			},
 			{
 				index: "exercises" as const,
 				job: exerciseJob,
 				migrations: [],
-				namespaces: [exercises],
+				namespaces: exercises,
 			},
 			{
 				index: "xolacers" as const,
 				job: xolacerJob,
 				migrations: [],
-				namespaces: [xolacers],
+				namespaces: xolacers,
 			},
 		];
 	},
@@ -387,4 +442,36 @@ export const start = adminMutation({
 		return null;
 	},
 	returns: v.null(),
+});
+
+/**
+ * Drops every stale key of one index: keys still searchable after their row
+ * was retired, deleted or moved to another topic. A backfill can't: library
+ * and track backfills only visit active rows, and the xolacer one can't reach
+ * a deleted profile. Removal needs no embed, so it costs nothing. Refused
+ * while a read was capped, since a key past the cap would look stale.
+ */
+export const removeStale = adminMutation({
+	args: { index: indexName },
+	handler: async (ctx, { index }) => {
+		const comparisons = await comparisonsFor(ctx, index);
+		if (comparisons.some((c) => c.truncated)) {
+			throw new ConvexError(
+				`The ${index} index is too large to read whole here; nothing was removed`
+			);
+		}
+		let removed = 0;
+		for (const c of comparisons) {
+			const { namespaceId } = c;
+			if (namespaceId === null) {
+				continue;
+			}
+			for (const key of staleOf(c)) {
+				await rag.deleteByKeyAsync(ctx, { key, namespaceId });
+				removed += 1;
+			}
+		}
+		return removed;
+	},
+	returns: v.number(),
 });

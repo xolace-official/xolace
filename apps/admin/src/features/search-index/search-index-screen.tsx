@@ -43,6 +43,7 @@ export function SearchIndexScreen() {
 		isAuthenticated ? {} : "skip"
 	);
 	const start = useMutation(api.admin.searchIndex.start);
+	const removeStale = useMutation(api.admin.searchIndex.removeStale);
 	const now = useNow();
 
 	const empty = (indexes ?? []).flatMap((s) =>
@@ -95,6 +96,12 @@ export function SearchIndexScreen() {
 								runAction(
 									() => start({ index: status.index }),
 									`${INDEX_COPY[status.index].title} backfill started`
+								);
+							}}
+							onRemoveStale={() => {
+								runAction(
+									() => removeStale({ index: status.index }),
+									`Stale ${INDEX_COPY[status.index].title} keys removed`
 								);
 							}}
 							status={status}

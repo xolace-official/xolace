@@ -28,12 +28,18 @@ vi.mock("../lib/aggregates", async () =>
 
 /** namespace → its ready keys. */
 let indexed: Map<string, string[]>;
+/** Namespaces whose read hits the cap. */
+let capped: Set<string>;
+/** Keys `deleteByKeyAsync` was asked to drop, as `namespace/key`. */
+let deleted: string[];
 /** migration name → status; anything unset has never run. */
 let migrationState: Map<string, Partial<MigrationStatus>>;
 
 beforeEach(() => {
 	vi.useFakeTimers();
 	indexed = new Map();
+	capped = new Set();
+	deleted = [];
 	migrationState = new Map();
 	vi.spyOn(rag, "getNamespace").mockImplementation(
 		async (_ctx, { namespace }) =>
@@ -49,7 +55,7 @@ beforeEach(() => {
 		async (_ctx, args) =>
 			await Promise.resolve({
 				continueCursor: "",
-				isDone: true,
+				isDone: !capped.has(args.namespaceId ?? ""),
 				page: (indexed.get(args.namespaceId ?? "") ?? []).map((key) => ({
 					entryId: `entry-${key}` as EntryId,
 					filterValues: [],
@@ -58,6 +64,12 @@ beforeEach(() => {
 					status: "ready" as const,
 				})),
 			})
+	);
+	vi.spyOn(rag, "deleteByKeyAsync").mockImplementation(
+		async (_ctx, { key, namespaceId }) => {
+			deleted.push(`${namespaceId}/${key}`);
+			await Promise.resolve();
+		}
 	);
 	vi.spyOn(rag, "add").mockResolvedValue(
 		{} as Awaited<ReturnType<typeof rag.add>>
@@ -384,5 +396,57 @@ describe("admin/searchIndex start", () => {
 		const rows = await statusOf(t);
 		expect(byIndex(rows, "xolacers").job?.state).toBe("pending");
 		expect(byIndex(rows, "exercises").job).toBeNull();
+	});
+});
+
+describe("admin/searchIndex stale keys", () => {
+	it("still lists a topic every track moved out of while its key lingers", async () => {
+		const { t } = await seed();
+		indexed.set("track:audio_topic_anxiety_relief", ["calm-one"]);
+
+		const tracks = byIndex(await statusOf(t), "tracks").namespaces;
+		expect(
+			tracks.find((n) => n.namespace === "track:audio_topic_anxiety_relief")
+		).toMatchObject({ source: 0, stale: [{ key: "calm-one" }] });
+		// Catalog topics with nothing in them stay off the page.
+		expect(tracks).toHaveLength(4);
+	});
+
+	it("removes every stale key, and only those", async () => {
+		const { t, live, retired, listening, paused } = await seed();
+		indexed.set("track:audio_topic_grief", ["calm-one", "calm-two"]);
+		indexed.set("track:audio_topic_anger", ["old"]);
+		indexed.set("track:audio_topic_anxiety_relief", ["calm-one"]);
+		indexed.set("library", [live, retired, "gone-entry-id"]);
+		indexed.set("xolacer", [listening, paused]);
+
+		const remove = (index: "tracks" | "library" | "xolacers") =>
+			t.mutation(api.admin.searchIndex.removeStale, { index });
+		expect(await remove("tracks")).toBe(2);
+		expect(await remove("library")).toBe(2);
+		expect(await remove("xolacers")).toBe(1);
+		expect(deleted.sort()).toEqual(
+			[
+				"track:audio_topic_anger/old",
+				"track:audio_topic_anxiety_relief/calm-one",
+				`library/${retired}`,
+				"library/gone-entry-id",
+				`xolacer/${paused}`,
+			].sort()
+		);
+	});
+
+	it("flags a capped read and won't remove from it", async () => {
+		const { t, retired } = await seed();
+		indexed.set("library", [retired]);
+		capped.add("library");
+
+		expect(byIndex(await statusOf(t), "library").namespaces[0]?.truncated).toBe(
+			true
+		);
+		await expect(
+			t.mutation(api.admin.searchIndex.removeStale, { index: "library" })
+		).rejects.toThrow(/too large/);
+		expect(deleted).toEqual([]);
 	});
 });
