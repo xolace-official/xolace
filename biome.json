@@ -134,6 +134,16 @@
       }
     },
     {
+      "includes": [
+        "apps/web/**",
+        "apps/mobile/**",
+        "apps/cli/**",
+        "apps/docs/**",
+        "packages/ui/**"
+      ],
+      "plugins": ["./tools/biome/no-admin-api.grit"]
+    },
+    {
       "includes": ["apps/cli/**"],
       "linter": {
         "rules": {

@@ -1,8 +1,12 @@
 import { R2 } from "@convex-dev/r2";
 import { ConvexError, v } from "convex/values";
 import { components, internal } from "../../_generated/api";
-import type { Id } from "../../_generated/dataModel";
-import { internalMutation, internalQuery } from "../../_generated/server";
+import type { Doc, Id } from "../../_generated/dataModel";
+import {
+	internalMutation,
+	internalQuery,
+	type MutationCtx,
+} from "../../_generated/server";
 import { licenceValidator } from "../../lib/validators";
 import { trackSearchTextOf } from "../../library/searchText";
 import { TOPIC_SLUGS } from "./catalog";
@@ -116,6 +120,24 @@ export const listTopicThumbKeys = internalQuery({
 });
 
 /**
+ * Re-embed a track into the meaning index (#572), but only when what it
+ * embeds changed: `before` is the row as it was (null for a new track).
+ */
+export async function reindexTrack(
+	ctx: MutationCtx,
+	before: Doc<"audio_tracks"> | null,
+	trackId: Id<"audio_tracks">
+) {
+	const after = await ctx.db.get("audio_tracks", trackId);
+	if (after && (!before || indexSignature(before) !== indexSignature(after))) {
+		await ctx.scheduler.runAfter(0, internal.ai.paths.trackSearch.indexTrack, {
+			trackId,
+			...(before && { previousNamespaces: trackNamespaces(before) }),
+		});
+	}
+}
+
+/**
  * Idempotent upsert keyed on `slug`, per docs/paths-v1.md §3.4:
  * - unchanged `sha256` → delete the freshly-uploaded audio blob, no-op the row
  * - changed `sha256` → replace the row, delete the *old* audio blob
@@ -162,29 +184,16 @@ export const upsertTrack = internalMutation({
 			.unique();
 		const searchText = trackSearchTextOf(track);
 
-		// The meaning index (#572) re-embeds only when what it embeds changed.
-		const reindex = async (trackId: Id<"audio_tracks">) => {
-			const after = await ctx.db.get("audio_tracks", trackId);
-			if (
-				after &&
-				(!existing || indexSignature(existing) !== indexSignature(after))
-			) {
-				await ctx.scheduler.runAfter(
-					0,
-					internal.ai.paths.trackSearch.indexTrack,
-					{
-						trackId,
-						...(existing && { previousNamespaces: trackNamespaces(existing) }),
-					}
-				);
-			}
-		};
+		const reindex = (trackId: Id<"audio_tracks">) =>
+			reindexTrack(ctx, existing, trackId);
+		const now = Date.now();
 
 		if (!existing) {
 			const trackId = await ctx.db.insert("audio_tracks", {
 				...track,
 				active: true,
 				searchText,
+				updatedAt: now,
 			});
 			await reindex(trackId);
 			return { action: "inserted" as const, trackId };
@@ -198,7 +207,9 @@ export const upsertTrack = internalMutation({
 				...track,
 				active: existing.active,
 				key: existing.key,
+				retiredAt: existing.retiredAt,
 				searchText,
+				updatedAt: now,
 			});
 			await reindex(existing._id);
 			const action =
@@ -212,7 +223,9 @@ export const upsertTrack = internalMutation({
 		await ctx.db.replace("audio_tracks", existing._id, {
 			...track,
 			active: existing.active,
+			retiredAt: existing.retiredAt,
 			searchText,
+			updatedAt: now,
 		});
 		await r2.deleteObject(ctx, oldKey);
 		await reindex(existing._id);

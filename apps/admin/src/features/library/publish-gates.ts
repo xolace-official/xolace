@@ -52,6 +52,14 @@ export function publishGates({
 		},
 	];
 
+	gates.push({
+		help: "Write the body readers open the entry to.",
+		id: "body",
+		label: "Body",
+		required: true,
+		state: body.trim() ? "pass" : "fail",
+	});
+
 	const missingAlt = imagesMissingAlt(body);
 	gates.push({
 		help:

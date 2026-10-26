@@ -5,8 +5,8 @@ import { Button } from "@xolace/ui/components/button";
 import { cn } from "@xolace/ui/lib/utils";
 import { ImageOffIcon, ShapesIcon, UploadIcon } from "lucide-react";
 import Link from "next/link";
-import { toast } from "sonner";
 
+import { runAction, UPLOADS_PENDING } from "@/features/content/run-action";
 import {
 	PageHeader,
 	PageHeaderDescription,
@@ -78,11 +78,12 @@ function TopicCard({
 	support: number;
 	tint: string;
 }) {
-	const { actions } = useAudio();
-	const replace = () => {
-		actions.replaceTopicCover(topic.slug);
-		toast.success(`Cover for ${topic.title} replaced (fixture)`);
-	};
+	const { actions, meta } = useAudio();
+	const replace = () =>
+		runAction(
+			() => actions.replaceTopicCover(topic.slug),
+			`Cover for ${topic.title} replaced`
+		);
 
 	return (
 		<li className="lip depth-md flex flex-col overflow-hidden rounded-xl border-2 border-line bg-surface">
@@ -115,8 +116,10 @@ function TopicCard({
 				</div>
 				<Button
 					className="mt-auto"
+					disabled={!meta.uploads}
 					onClick={replace}
 					size="sm"
+					title={meta.uploads ? undefined : UPLOADS_PENDING}
 					variant="outline"
 				>
 					<UploadIcon />

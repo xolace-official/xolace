@@ -10,6 +10,9 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 
 const MAX_SOURCES = 50;
 
+const sourceError = (e: Pick<Doc<"library_entries">, "slug">, why: string) =>
+	new ConvexError(`library entry "${e.slug}": ${why}`);
+
 /** One pair as the manifest lists it; `source` is the source's slug. */
 export const manifestSource = v.object({
 	author: v.optional(v.string()),
@@ -32,42 +35,60 @@ export const entrySource = v.object({
 	url: v.optional(v.string()),
 });
 
-/**
- * Resolves the manifest's slugs and gates them on `reuse`: verbatim is one
- * publisher's words, adapted draws on at least one, original is ours alone.
- */
-export async function resolveSources(
+/** Looks up each credited source by slug; an unknown slug is always an error. */
+export async function resolveSourceSlugs(
 	ctx: MutationCtx,
-	e: Pick<Doc<"library_entries">, "slug" | "reuse">,
+	e: Pick<Doc<"library_entries">, "slug">,
 	sources: Infer<typeof manifestSource>[]
 ) {
-	const fail = (why: string) =>
-		new ConvexError(`library entry "${e.slug}": ${why}`);
 	if (sources.length > MAX_SOURCES) {
-		throw fail(`over ${MAX_SOURCES} sources`);
+		throw sourceError(e, `over ${MAX_SOURCES} sources`);
 	}
-	const resolved = await Promise.all(
+	return await Promise.all(
 		sources.map(async ({ source: slug }) => {
 			const s = await ctx.db
 				.query("library_sources")
 				.withIndex("by_slug", (q) => q.eq("slug", slug))
 				.unique();
 			if (!s) {
-				throw fail(`unknown source "${slug}"`);
+				throw sourceError(e, `unknown source "${slug}"`);
 			}
 			return s;
 		})
 	);
+}
+
+/**
+ * Gates the credits on `reuse`: verbatim is one publisher's words, adapted
+ * draws on at least one, original is ours alone.
+ */
+export function assertSourcesFit(
+	e: Pick<Doc<"library_entries">, "slug" | "reuse">,
+	resolved: Pick<Doc<"library_sources">, "name">[]
+) {
 	if (e.reuse === "verbatim" && resolved.length !== 1) {
-		throw fail(`verbatim needs exactly 1 source, has ${resolved.length}`);
+		throw sourceError(
+			e,
+			`verbatim needs exactly 1 source, has ${resolved.length}`
+		);
 	}
 	if (e.reuse === "adapted" && resolved.length === 0) {
-		throw fail("adapted needs at least 1 source");
+		throw sourceError(e, "adapted needs at least 1 source");
 	}
 	const other = resolved.find((s) => s.name !== "Xolace");
 	if (e.reuse === "original" && other) {
-		throw fail(`original can only credit Xolace, not ${other.name}`);
+		throw sourceError(e, `original can only credit Xolace, not ${other.name}`);
 	}
+}
+
+/** Resolves the manifest's slugs and gates them on `reuse` (ingest). */
+export async function resolveSources(
+	ctx: MutationCtx,
+	e: Pick<Doc<"library_entries">, "slug" | "reuse">,
+	sources: Infer<typeof manifestSource>[]
+) {
+	const resolved = await resolveSourceSlugs(ctx, e, sources);
+	assertSourcesFit(e, resolved);
 	return resolved;
 }
 

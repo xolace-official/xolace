@@ -1,16 +1,9 @@
-import { ConvexError, v } from "convex/values";
-import { internal } from "../_generated/api";
-import type { Doc } from "../_generated/dataModel";
+import { v } from "convex/values";
 import { internalMutation } from "../_generated/server";
-import {
-	canonicalFacet,
-	PRIMARY_EMOTIONS,
-	THEMATIC_TAGS,
-} from "../lib/understandingVocab";
 import schema from "../schema";
 import { assertImageAlts } from "./imageAlts";
-import { searchTextOf } from "./searchText";
-import { manifestSource, replaceSources, resolveSources } from "./sources";
+import { manifestSource } from "./sources";
+import { resolveHubItems, retiredAtAfter, writeEntry } from "./write";
 
 /**
  * Curator ingest for the Library (#406, decisions in #392), driven by
@@ -30,55 +23,22 @@ const upsertResult = v.object({
 });
 
 // Manifest records are the table rows minus what ingest derives itself.
-const { sha256: _sourceSha, ...sourceFields } =
-	schema.tables.library_sources.validator.fields;
 const {
+	editedBy: _sourceEditedBy,
+	sha256: _sourceSha,
+	updatedAt: _sourceUpdatedAt,
+	...sourceFields
+} = schema.tables.library_sources.validator.fields;
+const {
+	editedBy: _editedBy,
 	readMin: _readMin,
+	retiredAt: _retiredAt,
 	safetyReviewedAt: _safetyReviewedAt,
 	sha256: _entrySha,
 	searchText: _searchText,
+	updatedAt: _updatedAt,
 	...entryManifestFields
 } = schema.tables.library_entries.validator.fields;
-
-const FACET_VOCAB: Record<string, ReadonlySet<string>> = {
-	emotion: new Set(PRIMARY_EMOTIONS),
-	lifeArea: new Set(THEMATIC_TAGS),
-};
-
-const WORDS_PER_MIN = 200;
-
-/**
- * Hard publish gates (#392, #404), shared with the one-off `setActive`:
- * a first-hand story needs recorded consent to exist at all; an explainer
- * needs a safety review of its current body to be active.
- */
-export function assertPublishable(
-	e: Pick<
-		Doc<"library_entries">,
-		| "slug"
-		| "kind"
-		| "reuse"
-		| "active"
-		| "consentRecordedAt"
-		| "safetyReviewedAt"
-	>
-) {
-	if (
-		e.kind === "story" &&
-		e.reuse === "original" &&
-		e.consentRecordedAt === undefined
-	) {
-		throw new ConvexError(
-			`library entry "${e.slug}": first-hand story has no consentRecordedAt`
-		);
-	}
-	if (e.kind === "explainer" && e.active && e.safetyReviewedAt === undefined) {
-		throw new ConvexError(
-			`library entry "${e.slug}": explainer has no safetyReviewedAt for its current body — ingest it ` +
-				"with active: false, then run library/admin:markSafetyReviewed"
-		);
-	}
-}
 
 export const upsertSource = internalMutation({
 	args: { sha256: v.string(), source: v.object(sourceFields) },
@@ -88,7 +48,11 @@ export const upsertSource = internalMutation({
 			.withIndex("by_slug", (q) => q.eq("slug", source.slug))
 			.unique();
 		if (!existing) {
-			await ctx.db.insert("library_sources", { ...source, sha256 });
+			await ctx.db.insert("library_sources", {
+				...source,
+				sha256,
+				updatedAt: Date.now(),
+			});
 			return { action: "inserted" as const };
 		}
 		if (existing.sha256 === sha256) {
@@ -97,6 +61,7 @@ export const upsertSource = internalMutation({
 		await ctx.db.replace("library_sources", existing._id, {
 			...source,
 			sha256,
+			updatedAt: Date.now(),
 		});
 		return { action: "updated" as const };
 	},
@@ -127,70 +92,12 @@ export const upsertEntry = internalMutation({
 		}
 
 		const { sources, facets, ...fields } = entry;
-		const resolved = await resolveSources(ctx, entry, sources);
-
-		const pairs = new Map<string, { axis: string; slug: string }>();
-		for (const [axis, slugs] of [
-			...Object.entries(facets),
-			["subject", [entry.primarySubject]] as const,
-		]) {
-			for (const authored of slugs) {
-				const slug = canonicalFacet(axis, authored);
-				if (FACET_VOCAB[axis] && !FACET_VOCAB[axis].has(slug)) {
-					throw new ConvexError(
-						`library entry "${entry.slug}": ${axis} "${slug}" is not in the Understanding vocabulary`
-					);
-				}
-				pairs.set(`${axis}\u0000${slug}`, { axis, slug });
-			}
-		}
-
-		const body = existing
-			? await ctx.db
-					.query("library_entry_bodies")
-					.withIndex("by_entryId", (q) => q.eq("entryId", existing._id))
-					.unique()
-			: null;
-		const doc = {
-			...fields,
-			readMin: Math.max(
-				1,
-				Math.ceil(markdown.split(/\s+/).filter(Boolean).length / WORDS_PER_MIN)
-			),
-			// A review covers one body: any edit clears it (#392).
-			safetyReviewedAt:
-				body?.markdown === markdown ? existing?.safetyReviewedAt : undefined,
-			searchText: searchTextOf(fields, pairs.values()),
-			sha256,
-		};
-		assertPublishable(doc);
-
-		let entryId = existing?._id;
-		if (entryId) {
-			await ctx.db.replace("library_entries", entryId, doc);
-			const old = await ctx.db
-				.query("library_entry_facets")
-				.withIndex("by_entryId", (q) => q.eq("entryId", entryId!))
-				.take(500);
-			await Promise.all(
-				old.map((f) => ctx.db.delete("library_entry_facets", f._id))
-			);
-		} else {
-			entryId = await ctx.db.insert("library_entries", doc);
-		}
-		if (body) {
-			await ctx.db.patch("library_entry_bodies", body._id, { markdown });
-		} else {
-			await ctx.db.insert("library_entry_bodies", { entryId, markdown });
-		}
-		for (const f of pairs.values()) {
-			await ctx.db.insert("library_entry_facets", { entryId, ...f });
-		}
-		await replaceSources(ctx, entryId, sources, resolved);
-		// Re-embed (or drop, if inactive) off the transaction: embedding is network.
-		await ctx.scheduler.runAfter(0, internal.ai.library.embed.indexEntry, {
-			entryId,
-		});
+		await writeEntry(
+			ctx,
+			existing,
+			{ facets, fields, markdown, sources },
+			{ sha256, strict: true }
+		);
 
 		return { action: existing ? ("updated" as const) : ("inserted" as const) };
 	},
@@ -227,32 +134,15 @@ export const upsertHub = internalMutation({
 			return { action: "unchanged" as const };
 		}
 
-		const items: Doc<"library_hubs">["items"] = [];
-		for (const { kind, ref } of hub.items) {
-			const missing = () =>
-				new ConvexError(`library hub "${hub.slug}": unknown ${kind} "${ref}"`);
-			if (kind === "entry") {
-				const e = await ctx.db
-					.query("library_entries")
-					.withIndex("by_slug", (q) => q.eq("slug", ref))
-					.unique();
-				if (!e) {
-					throw missing();
-				}
-				items.push({ entryId: e._id, kind });
-			} else {
-				const t = await ctx.db
-					.query("audio_tracks")
-					.withIndex("by_slug", (q) => q.eq("slug", ref))
-					.unique();
-				if (!t) {
-					throw missing();
-				}
-				items.push({ audioTrackId: t._id, kind });
-			}
-		}
-
-		const doc = { ...hub, items, sha256 };
+		const items = await resolveHubItems(ctx, hub.slug, hub.items);
+		const now = Date.now();
+		const doc = {
+			...hub,
+			items,
+			retiredAt: retiredAtAfter(existing, hub.active, now),
+			sha256,
+			updatedAt: now,
+		};
 		if (!existing) {
 			await ctx.db.insert("library_hubs", doc);
 			return { action: "inserted" as const };

@@ -16,10 +16,11 @@ import {
 import { useRef } from "react";
 import { toast } from "sonner";
 
+import { UPLOADS_PENDING } from "@/features/content/run-action";
 import { StatusBadge } from "@/features/content/status-badge";
 import { formatDate, formatDuration } from "@/features/library/types";
-
 import { readAudioDuration } from "../audio-file";
+import { useAudio } from "../audio-provider";
 import { FAMILY_LABEL, topicSlug } from "../types";
 import { useTrackEditor } from "./track-editor-provider";
 
@@ -29,6 +30,7 @@ export function AudioPanel() {
 		state: { saved },
 		actions,
 	} = useTrackEditor();
+	const { uploads } = useAudio().meta;
 	const input = useRef<HTMLInputElement>(null);
 
 	const replace = async (file: File | undefined) => {
@@ -36,7 +38,7 @@ export function AudioPanel() {
 			return;
 		}
 		try {
-			actions.replaceAudio(await readAudioDuration(file));
+			await actions.replaceAudio(await readAudioDuration(file));
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : "Can't read file");
 		}
@@ -84,8 +86,10 @@ export function AudioPanel() {
 				type="file"
 			/>
 			<Button
+				disabled={!uploads}
 				onClick={() => input.current?.click()}
 				size="sm"
+				title={uploads ? undefined : UPLOADS_PENDING}
 				variant="outline"
 			>
 				<UploadIcon />
@@ -95,12 +99,13 @@ export function AudioPanel() {
 	);
 }
 
-/** Square Browse thumbnail. Upload is stubbed until R2 lands (admin step 6). */
+/** Square Browse thumbnail. Upload is disabled until R2 lands (admin step 6b). */
 export function ThumbPanel() {
 	const {
 		state: { saved },
 		actions,
 	} = useTrackEditor();
+	const { uploads } = useAudio().meta;
 
 	return (
 		<div className="flex flex-col gap-3">
@@ -112,7 +117,13 @@ export function ThumbPanel() {
 					</span>
 				</div>
 			</div>
-			<Button onClick={actions.replaceThumb} size="sm" variant="outline">
+			<Button
+				disabled={!uploads}
+				onClick={actions.replaceThumb}
+				size="sm"
+				title={uploads ? undefined : UPLOADS_PENDING}
+				variant="outline"
+			>
 				<UploadIcon />
 				{saved.hasThumb ? "Replace thumbnail" : "Upload thumbnail"}
 			</Button>
