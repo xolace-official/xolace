@@ -102,7 +102,7 @@ export function HubEditorScreen({ slug }: { slug: string }) {
 function HubEditor() {
 	const {
 		actions,
-		meta: { canPublish, dirty },
+		meta: { canPublish, coverUploading, dirty },
 		state: { blocking, gates, items, saved },
 	} = useHubEditor();
 	return (
@@ -168,6 +168,7 @@ function HubEditor() {
 										{gate.id === "cover" ? (
 											<PickFileButton
 												accept="image/*"
+												busy={coverUploading}
 												className="w-fit"
 												onPick={actions.replaceCover}
 											>
@@ -246,6 +247,7 @@ function HubCopyFields() {
 function HubCover() {
 	const {
 		actions,
+		meta: { coverUploading },
 		state: { hub },
 	} = useHubEditor();
 	const coverUrl = useHubCover(hub.slug);
@@ -271,7 +273,11 @@ function HubCover() {
 					</div>
 				)}
 			</div>
-			<PickFileButton accept="image/*" onPick={actions.replaceCover}>
+			<PickFileButton
+				accept="image/*"
+				busy={coverUploading}
+				onPick={actions.replaceCover}
+			>
 				{hub.hasCover ? "Replace cover" : "Upload cover"}
 			</PickFileButton>
 		</div>

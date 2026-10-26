@@ -4,30 +4,36 @@ import { Button } from "@xolace/ui/components/button";
 import { LoaderCircleIcon, UploadIcon } from "lucide-react";
 import { useRef, useState } from "react";
 
-/** A hidden file input and the button that opens it, busy while `onPick` runs. */
+/**
+ * A hidden file input and the button that opens it, busy while `onPick` runs.
+ * `busy` also disables it, for buttons that share one upload.
+ */
 export function PickFileButton({
 	accept,
+	busy: sharedBusy = false,
 	children,
 	className,
 	onPick,
 }: {
 	accept: string;
+	busy?: boolean;
 	children: string;
 	className?: string;
 	onPick: (file: File) => Promise<unknown>;
 }) {
 	const input = useRef<HTMLInputElement>(null);
-	const [busy, setBusy] = useState(false);
+	const [picking, setPicking] = useState(false);
+	const busy = picking || sharedBusy;
 
 	const pick = async (file: File | undefined) => {
 		if (!file) {
 			return;
 		}
-		setBusy(true);
+		setPicking(true);
 		try {
 			await onPick(file);
 		} finally {
-			setBusy(false);
+			setPicking(false);
 		}
 	};
 

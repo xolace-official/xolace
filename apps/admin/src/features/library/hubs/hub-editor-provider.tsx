@@ -33,6 +33,8 @@ interface HubEditorContextValue {
 	meta: {
 		/** Publish is allowed: saved, and every required gate passes. */
 		canPublish: boolean;
+		/** A cover is uploading; both cover buttons wait, so an older pick can't land last. */
+		coverUploading: boolean;
 		dirty: boolean;
 	};
 	state: {
@@ -67,6 +69,7 @@ export function HubEditorProvider({
 		state: { tracks },
 	} = useAudio();
 	const [patch, setPatch] = useState<HubPatch>({});
+	const [coverUploading, setCoverUploading] = useState(false);
 
 	const hub = { ...saved, ...patch };
 	const dirty = Object.keys(patch).length > 0;
@@ -95,11 +98,20 @@ export function HubEditorProvider({
 					"items",
 					items.filter((i) => i.id !== id).map((i) => i.item)
 				),
-			replaceCover: (file) =>
-				runAction(
-					() => library.actions.replaceHubCover(saved.slug, file),
-					"Cover uploaded"
-				),
+			replaceCover: async (file) => {
+				if (coverUploading) {
+					return false;
+				}
+				setCoverUploading(true);
+				try {
+					return await runAction(
+						() => library.actions.replaceHubCover(saved.slug, file),
+						"Cover uploaded"
+					);
+				} finally {
+					setCoverUploading(false);
+				}
+			},
 			retire: () =>
 				runAction(
 					() => library.actions.retireHub(saved.slug),
@@ -120,6 +132,7 @@ export function HubEditorProvider({
 		},
 		meta: {
 			canPublish: !dirty && blocking.length === 0 && saved.status !== "live",
+			coverUploading,
 			dirty,
 		},
 		state: { blocking, gates, hub, items, saved },
