@@ -14,7 +14,8 @@ import {
 	BreadcrumbSeparator,
 } from "@xolace/ui/components/breadcrumb";
 import { buttonVariants } from "@xolace/ui/components/button";
-import { FlaskConicalIcon } from "lucide-react";
+import { Spinner } from "@xolace/ui/components/spinner";
+import { UploadIcon } from "lucide-react";
 import Link from "next/link";
 
 import { EmptyState } from "@/features/flux/empty-state";
@@ -28,8 +29,8 @@ import {
 	PageHeaderTitle,
 } from "@/features/shell/page-header";
 
-import { useImports } from "../imports-provider";
-import { DIFF_ACTIONS, TARGET_LABEL } from "../types";
+import { useImportRunQuery } from "../imports-provider";
+import { DIFF_ACTIONS, runLabel, TARGET_LABEL } from "../types";
 import { ActionBadge } from "./diff-parts";
 import { ImportRunProvider, useImportRun } from "./import-run-provider";
 import { ReviewList } from "./review-list";
@@ -38,12 +39,21 @@ import { RunStatus } from "./run-status";
 
 /** `/imports/[id]`: review a run's diff and apply it, then watch it process. */
 export function ImportRunScreen({ id }: { id: string }) {
-	const {
-		state: { runs },
-	} = useImports();
-	const run = runs.find((r) => r.id === id);
+	const run = useImportRunQuery(Number(id));
 
-	if (!run) {
+	if (run === undefined) {
+		return (
+			<div
+				aria-live="polite"
+				className="flex min-h-64 items-center justify-center gap-3 text-muted-foreground"
+			>
+				<Spinner />
+				Loading import…
+			</div>
+		);
+	}
+
+	if (run === null) {
 		return (
 			<div className="lip depth-md rounded-xl border-2 border-line bg-surface">
 				<EmptyState
@@ -55,11 +65,7 @@ export function ImportRunScreen({ id }: { id: string }) {
 							Back to imports
 						</Link>
 					}
-					description={
-						<>
-							No import has the id <code>{id}</code>.
-						</>
-					}
+					description={<>There's no import #{id}.</>}
 					pose="map"
 					title="Import not found"
 				/>
@@ -91,17 +97,17 @@ function RunHeader() {
 						</BreadcrumbItem>
 						<BreadcrumbSeparator />
 						<BreadcrumbItem>
-							<BreadcrumbPage>{run.id}</BreadcrumbPage>
+							<BreadcrumbPage>{runLabel(run)}</BreadcrumbPage>
 						</BreadcrumbItem>
 					</BreadcrumbList>
 				</Breadcrumb>
 			</PageHeaderBreadcrumbs>
 			<PageHeaderHeading>
 				<PageHeaderTitle>{TARGET_LABEL[run.target]} import</PageHeaderTitle>
-				{run.state === "review" ? (
+				{run.state === "review" || run.state === "uploading" ? (
 					<PageHeaderActions>
 						<DiscardRunButton />
-						<ApplyButton />
+						{run.state === "review" ? <ApplyButton /> : null}
 					</PageHeaderActions>
 				) : null}
 			</PageHeaderHeading>
@@ -128,9 +134,6 @@ function RunBody() {
 	const {
 		state: { run },
 	} = useImportRun();
-	const {
-		meta: { backend },
-	} = useImports();
 
 	if (run.state === "discarded") {
 		return (
@@ -144,22 +147,26 @@ function RunBody() {
 		);
 	}
 
+	if (run.state === "uploading") {
+		return (
+			<Alert variant="ember">
+				<UploadIcon />
+				<AlertTitle>Waiting for its files</AlertTitle>
+				<AlertDescription>
+					The browser that started this import is still uploading them, and it
+					opens for review when they're all in. If that tab was closed, discard
+					this import and start again.
+				</AlertDescription>
+			</Alert>
+		);
+	}
+
 	if (run.state !== "review") {
 		return <RunStatus />;
 	}
 
 	return (
 		<div className="flex flex-col gap-6">
-			{backend === "fixtures" ? (
-				<Alert variant="lavender">
-					<FlaskConicalIcon />
-					<AlertTitle>Sample diff</AlertTitle>
-					<AlertDescription>
-						The compare isn't wired to Convex yet, so every import shows this
-						sample of the library tree.
-					</AlertDescription>
-				</Alert>
-			) : null}
 			<ApplySummary />
 			<ReviewList />
 		</div>

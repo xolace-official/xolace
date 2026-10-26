@@ -1,10 +1,12 @@
+import type { Id } from "@xolace/backend/dataModel";
+
 import type { ContentStatus } from "@/features/content/status-badge";
 import type { ProcessingFailure } from "@/features/library/types";
 
-// The admin's view of a bulk import: a manifest (plus bodies and media) compared
-// against what the deployment holds, reviewed, then applied item by item. Mirrors
-// the ingest scripts: every record is keyed by slug + a content hash, so an
-// unchanged record is a no-op and a rejected one never reaches the tables.
+// The admin's view of a bulk import (`api.admin.imports`): records (plus bodies and
+// media) compared field by field against what the deployment holds, reviewed, then
+// applied item by item. Every record is keyed by slug: an unchanged record is
+// skipped and a rejected one never reaches the tables.
 
 export const IMPORT_TARGETS = ["library", "audio"] as const;
 export type ImportTarget = (typeof IMPORT_TARGETS)[number];
@@ -16,9 +18,9 @@ export const TARGET_LABEL: Record<ImportTarget, string> = {
 
 /** What the target's script reads, in upsert order. */
 export const TARGET_FILES: Record<ImportTarget, string> = {
-	audio: "tracks and any new topics, with their audio and thumbnails",
+	audio: "tracks and topic covers, with their audio and thumbnails",
 	library:
-		"entries plus any sources, hubs and narration they need, with bodies, covers and audio",
+		"entries plus any sources and hubs they need, with bodies and covers. Narration stays in the script for now",
 };
 
 export type RecordType =
@@ -57,15 +59,15 @@ export interface FieldChange {
 
 export interface MediaFile {
 	bytes: number;
-	kind: "audio" | "cover" | "thumb" | "transcript";
+	kind: "audio" | "cover" | "thumb";
 	name: string;
 }
 
 export interface ImportItem {
 	action: DiffAction;
 	changes?: FieldChange[];
-	/** Stable per run: `${type}:${slug}`. */
-	id: string;
+	/** What Retry and leaving it out name. */
+	id: Id<"import_items">;
 	media?: MediaFile[];
 	/** Why it can't be applied (a hard gate). Only on `rejected`. */
 	rejection?: string;
@@ -87,19 +89,36 @@ export interface ImportItem {
 	warnings?: string[];
 }
 
-export type RunState = "review" | "applying" | "done" | "discarded";
+/** `uploading` until the browser has PUT the files compare asked for. */
+export type RunState =
+	| "uploading"
+	| "review"
+	| "applying"
+	| "done"
+	| "discarded";
 
-export interface ImportRun {
+/** A run as the list shows it; its items load with the run. */
+export interface ImportRunSummary {
 	appliedAt?: number;
+	counts: Record<DiffAction, number>;
 	createdAt: number;
 	createdBy: string;
-	/** What was dropped in, e.g. "manifest.json + 14 files". */
+	/** Items failed right now. */
+	failed: number;
+	/** What was dropped in, e.g. "4 JSON, 6 markdown, 6 media". */
 	files: string;
-	id: string;
-	items: ImportItem[];
+	/** 1, 2, 3…: the run's name and its link. */
+	number: number;
 	state: RunState;
 	target: ImportTarget;
 }
+
+export interface ImportRun extends ImportRunSummary {
+	items: ImportItem[];
+}
+
+export const runLabel = (run: Pick<ImportRunSummary, "number">) =>
+	`Import #${run.number}`;
 
 /** Items that do something when applied. */
 export function isApplicable(item: ImportItem) {

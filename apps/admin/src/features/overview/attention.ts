@@ -1,5 +1,5 @@
 import type { AudioTrack } from "@/features/audio/types";
-import type { ImportRun } from "@/features/imports/types";
+import { type ImportRunSummary, runLabel } from "@/features/imports/types";
 import { citationsOf } from "@/features/library/citations";
 import type {
 	LibraryEntry,
@@ -45,7 +45,7 @@ interface ContentSnapshot {
 	entries: readonly LibraryEntry[];
 	hubs: readonly LibraryHub[];
 	now: number;
-	runs: readonly ImportRun[];
+	runs: readonly ImportRunSummary[];
 	sources: readonly LibrarySource[];
 	tracks: readonly AudioTrack[];
 }
@@ -87,22 +87,15 @@ function failedItems({
 				: "Narration processing failed",
 			title: entry.title,
 		}));
-	const runsFailed = runs.flatMap((run) => {
-		const failed = run.items.filter(
-			(item) => item.run?.status === "failed"
-		).length;
-		return failed === 0
-			? []
-			: [
-					{
-						href: `/imports/${run.id}`,
-						id: `run-failed:${run.id}`,
-						kind: "failed" as const,
-						reason: `${failed} item${failed === 1 ? "" : "s"} failed in this import`,
-						title: run.id,
-					},
-				];
-	});
+	const runsFailed = runs
+		.filter((run) => run.failed > 0)
+		.map((run) => ({
+			href: `/imports/${run.number}`,
+			id: `run-failed:${run.number}`,
+			kind: "failed" as const,
+			reason: `${run.failed} item${run.failed === 1 ? "" : "s"} failed in this import`,
+			title: runLabel(run),
+		}));
 	return [...tracksFailed, ...narrationsFailed, ...runsFailed];
 }
 

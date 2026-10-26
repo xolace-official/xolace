@@ -3,9 +3,10 @@
 import { createContext, type ReactNode, use } from "react";
 import { toast } from "sonner";
 
+import { errorMessage, runAction } from "@/features/content/run-action";
+
 import { useImports } from "../imports-provider";
 import {
-	countByAction,
 	countByStatus,
 	type DiffAction,
 	type ImportItem,
@@ -16,10 +17,13 @@ import {
 /** One run, with its actions bound, for the review and status screens. */
 interface ImportRunContextValue {
 	actions: {
-		apply: () => void;
-		discard: () => void;
-		retry: (itemId: string) => void;
-		setSkipped: (itemIds: readonly string[], skipped: boolean) => void;
+		apply: () => Promise<void>;
+		discard: () => Promise<void>;
+		retry: (itemId: ImportItem["id"]) => Promise<void>;
+		setSkipped: (
+			itemIds: readonly ImportItem["id"][],
+			skipped: boolean
+		) => Promise<void>;
 	};
 	meta: {
 		/** New/changed items that will run when applied. */
@@ -67,23 +71,32 @@ export function ImportRunProvider({
 		byAction[item.action].push(item);
 	}
 
+	// Convex re-checks everything, so each action can fail: runAction toasts either way.
 	const value: ImportRunContextValue = {
 		actions: {
-			apply: () => {
-				actions.apply(run.id);
-				toast.success("Import started", {
-					description: "Each item goes live as it finishes processing.",
-				});
+			apply: async () => {
+				await runAction(
+					() => actions.apply(run.number),
+					"Import started. Each item goes live as it finishes processing."
+				);
 			},
-			discard: () => {
-				actions.discard(run.id);
-				toast("Import discarded", {
-					description: "Nothing was written. The files are kept for 7 days.",
-				});
+			discard: async () => {
+				await runAction(
+					() => actions.discard(run.number),
+					"Import discarded. Nothing was written."
+				);
 			},
-			retry: (itemId) => actions.retry(run.id, itemId),
-			setSkipped: (itemIds, skipped) =>
-				actions.setSkipped(run.id, itemIds, skipped),
+			retry: async (itemId) => {
+				await runAction(() => actions.retry(run.number, itemId), "Retrying");
+			},
+			setSkipped: async (itemIds, skipped) => {
+				try {
+					await actions.setSkipped(run.number, itemIds, skipped);
+				} catch (error) {
+					// Only a failure gets a toast: the checkbox shows the change.
+					toast.error(errorMessage(error));
+				}
+			},
 		},
 		meta: {
 			applicable: run.items.filter(isApplicable).length,
@@ -91,7 +104,7 @@ export function ImportRunProvider({
 		},
 		state: {
 			byAction,
-			counts: countByAction(run.items),
+			counts: run.counts,
 			processed: run.items.filter((item) => item.run),
 			run,
 			statusCounts: countByStatus(run.items),

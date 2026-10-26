@@ -13,7 +13,6 @@ import {
 	EqualIcon,
 	FileAudioIcon,
 	FileImageIcon,
-	FileTextIcon,
 	PencilIcon,
 	PlusIcon,
 	TriangleAlertIcon,
@@ -112,7 +111,7 @@ export function ItemDetail({ item }: { item: ImportItem }) {
 			) : null}
 			{item.action === "unchanged" ? (
 				<p className="type-body text-ink-muted">
-					Same content hash as the stored record. Applying skips it.
+					Every field matches what's stored. Applying skips it.
 				</p>
 			) : null}
 			{item.media?.length ? <MediaList media={item.media} /> : null}
@@ -247,10 +246,9 @@ const MEDIA_ICON: Record<MediaFile["kind"], ReactNode> = {
 	audio: <FileAudioIcon />,
 	cover: <FileImageIcon />,
 	thumb: <FileImageIcon />,
-	transcript: <FileTextIcon />,
 };
 
-/** Files this item uploads when applied. */
+/** Files uploaded for this item, written when it's applied. */
 export function MediaList({ media }: { media: readonly MediaFile[] }) {
 	return (
 		<div className="flex flex-col gap-2">

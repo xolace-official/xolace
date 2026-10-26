@@ -60,9 +60,10 @@ export function ApplyButton() {
 						Apply {plural(applicable, "item")} to {TARGET_LABEL[run.target]}?
 					</AlertDialogTitle>
 					<AlertDialogDescription>
-						Media uploads first, then each record is upserted and processed.
-						Live items update for readers as soon as their own processing
-						finishes. Rejected and left-out items aren't touched.
+						Sources go first, then entries, then hubs. Each item checks its
+						uploaded files, then writes, and live items update for readers as
+						soon as their own item finishes. Rejected and left-out items aren't
+						touched.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
@@ -89,8 +90,8 @@ export function DiscardRunButton() {
 				<AlertDialogHeader>
 					<AlertDialogTitle>Discard this import?</AlertDialogTitle>
 					<AlertDialogDescription>
-						Nothing has been written yet. To import these files later, start a
-						new import.
+						Nothing has been written yet, and the audio it uploaded is deleted.
+						To import these files later, start a new import.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>

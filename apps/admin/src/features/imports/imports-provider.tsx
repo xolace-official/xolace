@@ -1,46 +1,53 @@
 "use client";
 
-import { createContext, type ReactNode, use, useEffect, useState } from "react";
+import { api } from "@xolace/backend/api";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
+import { createContext, type ReactNode, use, useState } from "react";
 
-import {
-	FAILS_FIRST_TIME,
-	FIXTURE_RUNS,
-	SETTLES_AS,
-	WORKFLOW_STEPS,
-} from "./fixtures";
-import {
-	type ImportItem,
-	type ImportRun,
-	type ImportTarget,
-	isApplicable,
+import { putObject } from "@/features/media/put-object";
+
+import { blobKey, prepareDrop } from "./prepare-drop";
+import type {
+	ImportItem,
+	ImportRun,
+	ImportRunSummary,
+	ImportTarget,
 } from "./types";
 
 /**
- * What every Imports screen reads and calls. The fixture provider below fakes the
- * compare and the ingest workflow in memory; the Convex provider (admin step 6) uploads
- * to R2, compares hashes server-side and reads per-item workflow status.
+ * What every Imports screen reads and calls, implemented on `api.admin.imports`.
+ * Compare reads the drop in the browser, has Convex diff it, then PUTs the media it
+ * asks for straight to R2. Apply runs server-side, one workflow per item, so a run
+ * keeps going after this tab closes.
  */
 export interface ImportsContextValue {
 	actions: {
-		/** Starts processing every new/changed item that isn't skipped. */
-		apply: (runId: string) => void;
-		/** Uploads and compares the files; resolves to the new run's id. */
-		compare: (target: ImportTarget, files: readonly File[]) => Promise<string>;
-		discard: (runId: string) => void;
-		retry: (runId: string, itemId: string) => void;
+		/** Starts processing every new/changed item that isn't left out. */
+		apply: (number: number) => Promise<void>;
+		/** Reads, compares and uploads the files; resolves to the new run's number. */
+		compare: (
+			target: ImportTarget,
+			files: readonly File[],
+			onProgress: (message: string) => void
+		) => Promise<number>;
+		discard: (number: number) => Promise<void>;
+		retry: (number: number, itemId: ImportItem["id"]) => Promise<void>;
 		setSkipped: (
-			runId: string,
-			itemIds: readonly string[],
+			number: number,
+			itemIds: readonly ImportItem["id"][],
 			skipped: boolean
-		) => void;
+		) => Promise<void>;
 	};
 	meta: {
-		backend: "fixtures" | "convex";
 		/** Taken once per mount, for "3 days ago". */
 		now: number;
+		/** The list has arrived; until then it's empty. */
+		ready: boolean;
 	};
 	state: {
-		runs: readonly ImportRun[];
+		/** The latest runs, newest first. */
+		runs: readonly ImportRunSummary[];
 	};
 }
 
@@ -49,149 +56,120 @@ const ImportsContext = createContext<ImportsContextValue | null>(null);
 export function useImports() {
 	const value = use(ImportsContext);
 	if (!value) {
-		throw new Error("useImports must be used inside an Imports provider");
+		throw new Error("useImports must be used inside ImportsProvider");
 	}
 	return value;
 }
 
-const TICK_MS = 650;
-const COMPARE_MS = 900;
-/** How many items the fake workflow runs at once. */
-const PARALLEL = 3;
+type SummaryRow = FunctionReturnType<typeof api.admin.imports.list>[number];
+type RunRow = NonNullable<FunctionReturnType<typeof api.admin.imports.get>>;
 
-/** One tick of the fake workflow for one item. */
-function advance(item: ImportItem): ImportItem {
-	const { run } = item;
-	if (!run || (run.status !== "queued" && run.status !== "processing")) {
-		return item;
-	}
-	const steps = WORKFLOW_STEPS[item.type];
-	const next = run.status === "queued" ? 0 : steps.indexOf(run.step ?? "") + 1;
-	const step = steps[next];
-	if (!step) {
-		return {
-			...item,
-			run: { attempt: run.attempt, status: SETTLES_AS[item.id] ?? "live" },
-		};
-	}
-	if (FAILS_FIRST_TIME[item.id] === step && (run.attempt ?? 1) === 1) {
-		return {
-			...item,
-			run: {
-				attempt: run.attempt,
-				failure: {
-					message: "ffmpeg exited with code 1: unexpected end of stream.",
-					step,
-				},
-				status: "failed",
-			},
-		};
-	}
-	return { ...item, run: { ...run, status: "processing", step } };
+function toSummary(row: SummaryRow): ImportRunSummary {
+	const { createdByName, finishedAt: _finishedAt, ...fields } = row;
+	return { ...fields, createdBy: createdByName };
 }
 
-function tickRun(run: ImportRun): ImportRun {
-	if (run.state !== "applying") {
-		return run;
-	}
-	let slots = PARALLEL;
-	const items = run.items.map((item) => {
-		const active =
-			item.run?.status === "queued" || item.run?.status === "processing";
-		if (!active || slots === 0) {
-			return item;
-		}
-		slots -= 1;
-		return advance(item);
-	});
-	const settled = items.every(
-		(item) => item.run?.status !== "queued" && item.run?.status !== "processing"
+function toItem(row: RunRow["items"][number]): ImportItem {
+	const { attempt, failure, status, step, ...fields } = row;
+	return {
+		...fields,
+		run: status ? { attempt, failure, status, step } : undefined,
+	};
+}
+
+const EMPTY: readonly never[] = [];
+
+/** PUTs in flight at once while a drop uploads. */
+const UPLOAD_WORKERS = 3;
+
+/** One run with its items; `undefined` while loading, `null` when there's no such run. */
+export function useImportRunQuery(
+	number: number
+): ImportRun | null | undefined {
+	const { isAuthenticated } = useConvexAuth();
+	const row = useQuery(
+		api.admin.imports.get,
+		isAuthenticated && Number.isInteger(number) ? { number } : "skip"
 	);
-	return { ...run, items, state: settled ? "done" : "applying" };
+	if (!Number.isInteger(number)) {
+		return null;
+	}
+	if (!row) {
+		return row;
+	}
+	const { items, ...summary } = row;
+	return { ...toSummary(summary), items: items.map(toItem) };
 }
 
-/** In-memory imports over sample runs. Every compare returns the same sample diff. */
-export function ImportsFixtureProvider({ children }: { children: ReactNode }) {
-	const [runs, setRuns] = useState(FIXTURE_RUNS);
+export function ImportsProvider({ children }: { children: ReactNode }) {
 	const [now] = useState(Date.now);
-	const applying = runs.some((run) => run.state === "applying");
+	// Skipped until Convex has the Clerk token (see LibraryProvider).
+	const { isAuthenticated } = useConvexAuth();
+	const rows = useQuery(api.admin.imports.list, isAuthenticated ? {} : "skip");
 
-	useEffect(() => {
-		if (!applying) {
-			return;
-		}
-		const timer = setInterval(
-			() => setRuns((current) => current.map(tickRun)),
-			TICK_MS
-		);
-		return () => clearInterval(timer);
-	}, [applying]);
-
-	const update = (runId: string, change: (run: ImportRun) => ImportRun) =>
-		setRuns((current) =>
-			current.map((run) => (run.id === runId ? change(run) : run))
-		);
+	const compare = useMutation(api.admin.imports.compare);
+	const uploaded = useMutation(api.admin.imports.uploaded);
+	const apply = useMutation(api.admin.imports.apply);
+	const discard = useMutation(api.admin.imports.discard);
+	const retry = useMutation(api.admin.imports.retry);
+	const setSkipped = useMutation(api.admin.imports.setSkipped);
 
 	const value: ImportsContextValue = {
 		actions: {
-			apply: (runId) =>
-				update(runId, (run) => ({
-					...run,
-					appliedAt: Date.now(),
-					items: run.items.map((item) =>
-						isApplicable(item)
-							? { ...item, run: { attempt: 1, status: "queued" } }
-							: item
-					),
-					state: "applying",
-				})),
-			compare: async (target, files) => {
-				await new Promise((resolve) => setTimeout(resolve, COMPARE_MS));
-				const template = FIXTURE_RUNS.find((run) => run.state === "review");
-				const id = `run-${Date.now().toString(36)}`;
-				const json = files.filter((file) => file.name.endsWith(".json")).length;
-				setRuns((current) => [
-					{
-						createdAt: Date.now(),
-						createdBy: "You",
-						files: `${json} JSON, ${files.length - json} other files`,
-						id,
-						items: template?.items ?? [],
-						state: "review",
-						target,
-					},
-					...current,
-				]);
-				return id;
+			apply: async (number) => {
+				await apply({ number });
 			},
-			discard: (runId) =>
-				update(runId, (run) => ({ ...run, state: "discarded" })),
-			retry: (runId, itemId) =>
-				update(runId, (run) => ({
-					...run,
-					items: run.items.map((item) =>
-						item.id === itemId
-							? {
-									...item,
-									run: {
-										attempt: (item.run?.attempt ?? 1) + 1,
-										status: "queued",
-									},
-								}
-							: item
-					),
-					state: "applying",
-				})),
-			setSkipped: (runId, itemIds, skipped) =>
-				update(runId, (run) => ({
-					...run,
-					items: run.items.map((item) =>
-						itemIds.includes(item.id) ? { ...item, skipped } : item
-					),
-				})),
+			compare: async (target, files, onProgress) => {
+				const drop = await prepareDrop(target, files, onProgress);
+				onProgress("Comparing with what's stored…");
+				const { number, uploads } = await compare({
+					files: drop.label,
+					records: drop.records,
+					target,
+				});
+				try {
+					let done = 0;
+					const queue = [...uploads];
+					const worker = async () => {
+						for (let next = queue.shift(); next; next = queue.shift()) {
+							const blob = drop.blobs.get(blobKey(next.index, next.part));
+							if (!blob) {
+								throw new Error("A file compare asked for wasn't read");
+							}
+							// biome-ignore lint/performance/noAwaitInLoops: a fixed pool of workers, not one await per item
+							await putObject(next.url, blob);
+							done += 1;
+							onProgress(`Uploaded ${done} of ${uploads.length} files…`);
+						}
+					};
+					await Promise.all(
+						Array.from(
+							{ length: Math.min(UPLOAD_WORKERS, uploads.length) },
+							worker
+						)
+					);
+					if (uploads.length > 0) {
+						await uploaded({ number });
+					}
+				} catch (error) {
+					// Half-uploaded runs can't be applied: drop it and its staged audio.
+					await discard({ number }).catch(() => undefined);
+					throw error;
+				}
+				return number;
+			},
+			discard: async (number) => {
+				await discard({ number });
+			},
+			retry: async (number, itemId) => {
+				await retry({ itemId, number });
+			},
+			setSkipped: async (number, itemIds, skipped) => {
+				await setSkipped({ itemIds: [...itemIds], number, skipped });
+			},
 		},
-		meta: { backend: "fixtures", now },
-		state: { runs },
+		meta: { now, ready: rows !== undefined },
+		state: { runs: rows?.map(toSummary) ?? EMPTY },
 	};
 
 	return <ImportsContext value={value}>{children}</ImportsContext>;
