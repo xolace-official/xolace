@@ -57,7 +57,7 @@ const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 	},
 	"admin/audio:list": {},
 	"admin/audio:markSafetyReviewed": { slug: "x" },
-	"admin/audio:media": { slug: "x" },
+	"admin/audio:media": { linkWindow: 0, slug: "x" },
 	"admin/audio:publish": { slug: "x" },
 	"admin/audio:replaceAudio": {
 		durationSec: 1,
@@ -78,8 +78,8 @@ const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 		slug: "x",
 		track: { featured: false, tags: [], title: "x", topic: "x" },
 	},
-	"admin/audio:topics": {},
-	"admin/hubs:cover": { slug: "x" },
+	"admin/audio:topics": { linkWindow: 0 },
+	"admin/hubs:cover": { linkWindow: 0, slug: "x" },
 	"admin/hubs:create": { slug: "x", title: "x" },
 	"admin/hubs:list": {},
 	"admin/hubs:publish": { slug: "x" },
@@ -109,6 +109,7 @@ const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 	"admin/sources:list": {},
 	"admin/sources:save": { slug: "x", source: source() },
 	"admin/uploads:audioUploadUrl": { ext: "mp3", family: "music", slug: "x" },
+	"admin/uploads:discardAudio": { key: "x" },
 	"admin/uploads:imageUploadUrl": { sha256: "x", use: "thumb" },
 };
 
@@ -628,7 +629,7 @@ describe("admin/audio", () => {
 				title: "Grief and loss",
 			})
 		);
-		const topics = await t.query(api.admin.audio.topics, {});
+		const topics = await t.query(api.admin.audio.topics, { linkWindow: 0 });
 		expect(topics.find((x) => x.slug === "grief")).toEqual({
 			coverUrl: "https://r2.test/thumb/g.webp",
 			hasCover: true,
@@ -784,18 +785,18 @@ describe("admin media", () => {
 			thumb: THUMB,
 		});
 		expect((await stored(t))?.thumbKey).toBe(`thumb/${SHA}.webp`);
-		expect(await t.query(api.admin.audio.media, { slug: "grounding" })).toEqual(
-			{
-				audioUrl: "https://r2.test/support/grounding/old.m4a",
-				thumbUrl: `https://r2.test/thumb/${SHA}.webp`,
-			}
-		);
+		expect(
+			await t.query(api.admin.audio.media, { linkWindow: 0, slug: "grounding" })
+		).toEqual({
+			audioUrl: "https://r2.test/support/grounding/old.m4a",
+			thumbUrl: `https://r2.test/thumb/${SHA}.webp`,
+		});
 
 		await t.mutation(api.admin.audio.replaceTopicCover, {
 			slug: "grief",
 			thumb: THUMB,
 		});
-		const topics = await t.query(api.admin.audio.topics, {});
+		const topics = await t.query(api.admin.audio.topics, { linkWindow: 0 });
 		expect(topics.find((x) => x.slug === "grief")).toMatchObject({
 			coverUrl: `https://r2.test/thumb/${SHA}.webp`,
 			hasCover: true,
@@ -814,10 +815,41 @@ describe("admin media", () => {
 		).rejects.toThrow(/ThumbHash/);
 	});
 
+	it("discards a rejected audio upload, never the track's own file", async () => {
+		const t = await withSupportTrack();
+		const discard = (key: string) =>
+			t.mutation(api.admin.uploads.discardAudio, { key });
+		const uuid = "0f8fad5b-d9cb-469f-a165-70867728950e";
+		await discard(`support/grounding/${uuid}.m4a`);
+		expect(r2.deleteObject).toHaveBeenCalledWith(
+			expect.anything(),
+			`support/grounding/${uuid}.m4a`
+		);
+		vi.mocked(r2.deleteObject).mockClear();
+		await t.run(async (ctx) => {
+			const row = await ctx.db.query("audio_tracks").first();
+			if (row) {
+				await ctx.db.patch("audio_tracks", row._id, {
+					key: `support/grounding/${uuid}.m4a`,
+				});
+			}
+		});
+		await discard(`support/grounding/${uuid}.m4a`);
+		expect(r2.deleteObject).not.toHaveBeenCalled();
+		await expect(discard(`thumb/${SHA}.webp`)).rejects.toThrow(
+			/isn't an admin audio upload/
+		);
+		await expect(discard("support/grounding/old.m4a")).rejects.toThrow(
+			/isn't an admin audio upload/
+		);
+	});
+
 	it("sets a hub's 1280 cover over an older one", async () => {
 		const t = asAdmin();
 		await t.mutation(api.admin.hubs.create, { slug: "sleep", title: "Sleep" });
-		expect(await t.query(api.admin.hubs.cover, { slug: "sleep" })).toBeNull();
+		expect(
+			await t.query(api.admin.hubs.cover, { linkWindow: 0, slug: "sleep" })
+		).toBeNull();
 		await t.run(async (ctx) => {
 			const h = await ctx.db.query("library_hubs").first();
 			if (h) {
@@ -830,9 +862,9 @@ describe("admin media", () => {
 			slug: "sleep",
 			...THUMB,
 		});
-		expect(await t.query(api.admin.hubs.cover, { slug: "sleep" })).toBe(
-			`https://r2.test/hub-cover/${SHA}.webp`
-		);
+		expect(
+			await t.query(api.admin.hubs.cover, { linkWindow: 0, slug: "sleep" })
+		).toBe(`https://r2.test/hub-cover/${SHA}.webp`);
 		const [hub] = await t.query(api.admin.hubs.list, {});
 		expect(hub.hasCover).toBe(true);
 	});

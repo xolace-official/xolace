@@ -5,7 +5,12 @@ import { r2 } from "../ai/paths/audioTracks";
 import { adminMutation, adminQuery } from "../lib/adminAuth";
 import { assertHubLive, resolveHubItems } from "../library/write";
 import { ADMIN_LIST_LIMIT, adminStamp, assertSlug, notFound } from "./edits";
-import { assertThumbhash, imageKey } from "./uploads";
+import {
+	assertThumbhash,
+	imageKey,
+	linkWindow,
+	PREVIEW_URL_TTL_SEC,
+} from "./uploads";
 
 /**
  * Library hubs for the admin (admin v1 step 6): an editor's ordered reading
@@ -163,17 +168,14 @@ export const retire = adminMutation({
 	returns: v.null(),
 });
 
-/** Signed cover links last an hour: long enough for an editing session. */
-const COVER_URL_TTL_SEC = 60 * 60;
-
 /** The hub's cover as readers pick it: the 1280 WebP, else the original upload, else a plain URL. */
 export const cover = adminQuery({
-	args: { slug: v.string() },
+	args: { linkWindow, slug: v.string() },
 	handler: async (ctx, { slug }) => {
 		const h = await hubBySlug(ctx, slug);
 		const key = h.cover1280Key ?? h.coverKey;
 		if (key) {
-			return await r2.getUrl(key, { expiresIn: COVER_URL_TTL_SEC });
+			return await r2.getUrl(key, { expiresIn: PREVIEW_URL_TTL_SEC });
 		}
 		return h.coverUrl ?? null;
 	},

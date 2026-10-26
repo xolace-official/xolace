@@ -13,6 +13,7 @@ import {
 	RotateCwIcon,
 } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { StatusBadge } from "@/features/content/status-badge";
@@ -30,6 +31,8 @@ export function AudioPanel() {
 		actions,
 	} = useTrackEditor();
 	const media = useTrackMedia(saved.slug);
+	// A fresh link every 30 minutes would restart playback; keep the one playing.
+	const [playingSrc, setPlayingSrc] = useState<string | null>(null);
 
 	const replace = async (file: File) => {
 		let durationSec: number;
@@ -63,8 +66,10 @@ export function AudioPanel() {
 					aria-label={`Play ${saved.title}`}
 					className="w-full"
 					controls
+					onPause={() => setPlayingSrc(null)}
+					onPlay={(event) => setPlayingSrc(event.currentTarget.currentSrc)}
 					preload="none"
-					src={media.audioUrl}
+					src={playingSrc ?? media.audioUrl}
 				/>
 			) : null}
 			{saved.failure ? (

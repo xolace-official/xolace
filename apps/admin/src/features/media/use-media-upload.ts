@@ -50,17 +50,29 @@ async function putObject(url: string, body: Blob) {
 export function useMediaUpload() {
 	const imageUploadUrl = useMutation(api.admin.uploads.imageUploadUrl);
 	const audioUploadUrl = useMutation(api.admin.uploads.audioUploadUrl);
+	const discardAudio = useMutation(api.admin.uploads.discardAudio);
 
 	return {
+		/**
+		 * Upload a track's audio, then `save` it to the row. Audio keys are unique per
+		 * upload, so if the save is rejected the file would be orphaned: it's discarded.
+		 */
 		audio: async (
 			file: File,
-			track: Pick<AudioArgs, "family" | "slug">
-		): Promise<{ key: string; sha256: string }> => {
+			track: Pick<AudioArgs, "family" | "slug">,
+			save: (uploaded: { key: string; sha256: string }) => Promise<unknown>
+		) => {
 			const ext = audioExtension(file.name);
 			const sha256 = await sha256Hex(await file.arrayBuffer());
 			const { key, url } = await audioUploadUrl({ ...track, ext });
 			await putObject(url, file);
-			return { key, sha256 };
+			try {
+				await save({ key, sha256 });
+			} catch (error) {
+				// Best effort: the save's error is the one to show.
+				await discardAudio({ key }).catch(() => undefined);
+				throw error;
+			}
 		},
 		image: async (
 			file: File,

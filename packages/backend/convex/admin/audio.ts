@@ -14,6 +14,8 @@ import {
 	assertThumbhash,
 	audioKeyPrefix,
 	imageKey,
+	linkWindow,
+	PREVIEW_URL_TTL_SEC,
 } from "./uploads";
 
 /**
@@ -54,9 +56,6 @@ const trackRow = v.object({
 	updatedAt: v.number(),
 	whatItsFor: v.optional(v.string()),
 });
-
-/** Signed media links last an hour: long enough for an editing session. */
-const MEDIA_URL_TTL_SEC = 60 * 60;
 
 const topicRow = v.object({
 	coverUrl: v.optional(v.string()),
@@ -224,7 +223,8 @@ export const list = adminQuery({
 
 /** Every catalogued topic, with its cover and title where a `topics` row has them. */
 export const topics = adminQuery({
-	args: {},
+	// Only keys the cache: see `linkWindow`.
+	args: { linkWindow },
 	handler: async (ctx) => {
 		const rows = new Map(
 			(await ctx.db.query("topics").take(ADMIN_LIST_LIMIT)).map((r) => [
@@ -238,7 +238,7 @@ export const topics = adminQuery({
 				return {
 					coverUrl:
 						row &&
-						(await r2.getUrl(row.thumbKey, { expiresIn: MEDIA_URL_TTL_SEC })),
+						(await r2.getUrl(row.thumbKey, { expiresIn: PREVIEW_URL_TTL_SEC })),
 					hasCover: row !== undefined,
 					slug,
 					title: row?.title || topicTitle(slug),
@@ -359,12 +359,12 @@ export const markSafetyReviewed = adminMutation({
 
 /** Signed links to a track's audio and thumbnail, for the editor's player and preview. */
 export const media = adminQuery({
-	args: { slug: v.string() },
+	args: { linkWindow, slug: v.string() },
 	handler: async (ctx, { slug }) => {
 		const t = await trackBySlug(ctx, slug);
 		const [audioUrl, thumbUrl] = await Promise.all([
-			r2.getUrl(t.key, { expiresIn: MEDIA_URL_TTL_SEC }),
-			r2.getUrl(t.thumbKey, { expiresIn: MEDIA_URL_TTL_SEC }),
+			r2.getUrl(t.key, { expiresIn: PREVIEW_URL_TTL_SEC }),
+			r2.getUrl(t.thumbKey, { expiresIn: PREVIEW_URL_TTL_SEC }),
 		]);
 		return { audioUrl, thumbUrl };
 	},

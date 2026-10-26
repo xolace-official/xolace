@@ -6,6 +6,7 @@ import type { FunctionReturnType } from "convex/server";
 import { createContext, type ReactNode, use, useState } from "react";
 
 import { deriveStatus } from "@/features/content/derive-status";
+import { useLinkWindow } from "@/features/media/link-window";
 import { useMediaUpload } from "@/features/media/use-media-upload";
 
 import { trackGates } from "./track-gates";
@@ -100,16 +101,26 @@ const EMPTY: readonly never[] = [];
 /** Signed links to a track's audio and thumbnail; `undefined` while loading. */
 export function useTrackMedia(slug: string) {
 	const { isAuthenticated } = useConvexAuth();
-	return useQuery(api.admin.audio.media, isAuthenticated ? { slug } : "skip");
+	const linkWindow = useLinkWindow();
+	return useQuery(
+		api.admin.audio.media,
+		isAuthenticated ? { linkWindow, slug } : "skip"
+	);
 }
 
 export function AudioProvider({ children }: { children: ReactNode }) {
 	const [now] = useState(Date.now);
 	// Skipped until Convex has the Clerk token (see LibraryProvider).
 	const { isAuthenticated } = useConvexAuth();
-	const args = isAuthenticated ? {} : "skip";
-	const trackRows = useQuery(api.admin.audio.list, args);
-	const topics = useQuery(api.admin.audio.topics, args);
+	const linkWindow = useLinkWindow();
+	const trackRows = useQuery(
+		api.admin.audio.list,
+		isAuthenticated ? {} : "skip"
+	);
+	const topics = useQuery(
+		api.admin.audio.topics,
+		isAuthenticated ? { linkWindow } : "skip"
+	);
 
 	const saveTrack = useMutation(api.admin.audio.save);
 	const publish = useMutation(api.admin.audio.publish);
@@ -133,17 +144,17 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 	const value: AudioContextValue = {
 		actions: {
 			create: async ({ audio, durationSec, family, slug, thumb, ...rest }) => {
-				const [uploadedAudio, uploadedThumb] = await Promise.all([
-					upload.audio(audio, { family, slug }),
-					upload.image(thumb, "thumb"),
-				]);
-				await createTrack({
-					...rest,
-					audio: { ...uploadedAudio, durationSec },
-					family,
-					slug,
-					thumb: uploadedThumb,
-				});
+				// Thumbnail first, as the ingest does: a failed audio upload leaves no orphan.
+				const uploadedThumb = await upload.image(thumb, "thumb");
+				await upload.audio(audio, { family, slug }, (uploaded) =>
+					createTrack({
+						...rest,
+						audio: { ...uploaded, durationSec },
+						family,
+						slug,
+						thumb: uploadedThumb,
+					})
+				);
 			},
 			markSafetyReviewed: async (slug) => {
 				await markReviewed({ slug });
@@ -153,8 +164,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 			},
 			replaceAudio: async (slug, file, durationSec) => {
 				const { family } = find(slug);
-				const uploaded = await upload.audio(file, { family, slug });
-				await replaceAudio({ ...uploaded, durationSec, slug });
+				await upload.audio(file, { family, slug }, (uploaded) =>
+					replaceAudio({ ...uploaded, durationSec, slug })
+				);
 			},
 			replaceThumb: async (slug, file) => {
 				await replaceThumb({ slug, thumb: await upload.image(file, "thumb") });

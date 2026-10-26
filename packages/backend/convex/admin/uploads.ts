@@ -56,6 +56,17 @@ export const audioKeyPrefix = (family: string, slug: string) =>
 
 const uploadUrl = v.object({ key: v.string(), url: v.string() });
 
+/**
+ * Signed preview links (players, thumbnails, covers). Convex can serve a
+ * cached query result for as long as its reads are unchanged, so a link may
+ * reach the client long after it was signed. The client passes the current
+ * `linkWindow` (`floor(Date.now() / 30 min)`) and moves to the next one on
+ * time: each window is a new query, and a link signed in it stays valid two
+ * hours, well past the window's end.
+ */
+export const linkWindow = v.number();
+export const PREVIEW_URL_TTL_SEC = 2 * 60 * 60;
+
 /** Upload URL for a processed WebP, keyed by its hash. Re-uploading the same image overwrites identical bytes. */
 export const imageUploadUrl = adminMutation({
 	args: { sha256: v.string(), use: imageUse },
@@ -74,4 +85,32 @@ export const audioUploadUrl = adminMutation({
 		);
 	},
 	returns: uploadUrl,
+});
+
+/** Exactly what `audioUploadUrl` mints, so nothing else can be named for deletion. */
+const UPLOADED_AUDIO_KEY =
+	/^(?:support|music)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/[0-9a-f-]{36}\.(?:mp3|m4a|wav)$/;
+
+/**
+ * Drop an audio upload whose save was rejected (a gate failed, a slug was
+ * taken), so retries don't pile up files in R2. The key names its track, and
+ * the key a track points at is never deleted.
+ */
+export const discardAudio = adminMutation({
+	args: { key: v.string() },
+	handler: async (ctx, { key }) => {
+		const slug = UPLOADED_AUDIO_KEY.exec(key)?.[1];
+		if (!slug) {
+			throw new ConvexError(`"${key}" isn't an admin audio upload`);
+		}
+		const track = await ctx.db
+			.query("audio_tracks")
+			.withIndex("by_slug", (q) => q.eq("slug", slug))
+			.unique();
+		if (track?.key !== key) {
+			await r2.deleteObject(ctx, key);
+		}
+		return null;
+	},
+	returns: v.null(),
 });

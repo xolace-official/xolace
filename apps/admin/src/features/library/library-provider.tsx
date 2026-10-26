@@ -6,6 +6,7 @@ import type { FunctionReturnType } from "convex/server";
 import { createContext, type ReactNode, use, useState } from "react";
 
 import { deriveStatus } from "@/features/content/derive-status";
+import { useLinkWindow } from "@/features/media/link-window";
 import { useMediaUpload } from "@/features/media/use-media-upload";
 
 import { publishGates } from "./publish-gates";
@@ -92,7 +93,11 @@ const LibraryContext = createContext<LibraryContextValue | null>(null);
 /** Signed link to the cover readers show for a hub; `null` without one, `undefined` while loading. */
 export function useHubCover(slug: string) {
 	const { isAuthenticated } = useConvexAuth();
-	return useQuery(api.admin.hubs.cover, isAuthenticated ? { slug } : "skip");
+	const linkWindow = useLinkWindow();
+	return useQuery(
+		api.admin.hubs.cover,
+		isAuthenticated ? { linkWindow, slug } : "skip"
+	);
 }
 
 export function useLibrary() {
