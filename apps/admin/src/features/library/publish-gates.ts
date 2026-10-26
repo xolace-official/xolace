@@ -1,11 +1,10 @@
 import type { PublishGate } from "@/features/content/publish-gate";
 
+import { isStale } from "./citations";
 import type { LibraryEntry, LibrarySource } from "./types";
 
 // The rules `library/ingest.ts` and `library/admin.ts` already enforce, checked in the
 // UI so an editor sees what blocks Publish before the mutation rejects it.
-
-const DAY_MS = 86_400_000;
 
 // Same pattern as packages/backend/convex/library/imageAlts.ts.
 const MD_IMAGE = /!\[([^\]]*)\](?:\(\s*<?([^)\s>]+)|\[([^\]]*)\])/g;
@@ -86,11 +85,14 @@ export function publishGates({
 	}
 
 	if (entry.reuse === "verbatim") {
-		const stale = entry.credits.some((credit) => {
-			const days = sources.find((s) => s.slug === credit.source)?.refreshDays;
-			const retrieved = credit.retrievedAt ?? entry.retrievedAt;
-			return days && retrieved && now - retrieved > days * DAY_MS;
-		});
+		const stale = entry.credits.some((credit) =>
+			isStale(
+				credit,
+				entry,
+				sources.find((s) => s.slug === credit.source),
+				now
+			)
+		);
 		gates.push({
 			help: "A verbatim source is past its refresh window. Re-check the page before publishing.",
 			id: "refresh",

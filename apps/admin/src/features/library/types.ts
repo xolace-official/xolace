@@ -56,14 +56,48 @@ export interface LibraryEntry {
 	updatedAt: number;
 }
 
+export const SOURCE_PERMISSIONS = [
+	"not_required",
+	"granted",
+	"pending",
+] as const;
+export type SourcePermission = (typeof SOURCE_PERMISSIONS)[number];
+
+export const PERMISSION_LABEL: Record<SourcePermission, string> = {
+	granted: "Granted",
+	not_required: "Not required",
+	pending: "Pending",
+};
+
+/** One `library_sources` row: a publisher we credit, and the terms we reuse it under. */
 export interface LibrarySource {
 	attributionText: string;
+	/** No logo on an adapted entry's credit. */
+	dropBrandingIfAdapted: boolean;
 	licence: string;
 	name: string;
-	permission: "not_required" | "granted" | "pending";
+	permission: SourcePermission;
 	refreshDays?: number;
 	slug: string;
 	url?: string;
+}
+
+/** One stop in a hub's running order: an entry or an audio track, by slug. */
+export interface HubItem {
+	kind: "entry" | "audio";
+	ref: string;
+}
+
+/** One `library_hubs` row: an editor's ordered reading list. */
+export interface LibraryHub {
+	active: boolean;
+	hasCover: boolean;
+	intro: string;
+	items: HubItem[];
+	slug: string;
+	status: ContentStatus;
+	title: string;
+	updatedAt: number;
 }
 
 export const KIND_LABEL: Record<EntryKind, string> = {

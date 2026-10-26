@@ -5,20 +5,36 @@ import {
 	AlertDescription,
 	AlertTitle,
 } from "@xolace/ui/components/alert";
+import { Badge } from "@xolace/ui/components/badge";
 import { Button } from "@xolace/ui/components/button";
 import {
 	BookOpenTextIcon,
+	ClockAlertIcon,
 	ExternalLinkIcon,
 	ImageIcon,
 	OctagonAlertIcon,
+	PencilIcon,
+	PlusIcon,
 	RotateCwIcon,
+	Trash2Icon,
 	UploadIcon,
 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { StatusBadge } from "@/features/content/status-badge";
 
-import { formatDate, formatDuration, humanize, KIND_LABEL } from "../types";
+import { isStale } from "../citations";
+import { useLibrary } from "../library-provider";
+import {
+	type EntryCredit,
+	formatDate,
+	formatDuration,
+	humanize,
+	KIND_LABEL,
+} from "../types";
+import { CreditDialog } from "./credit-dialog";
 import { useEntryEditor } from "./entry-editor-provider";
 
 /** Cover thumbnail with Replace. Uploads land with diceui file-upload (admin step 3). */
@@ -106,54 +122,129 @@ export function NarrationPanel() {
 	);
 }
 
-/** Pages this entry draws on, with the publisher's credit line. */
+/** Pages this entry draws on, with the publisher's credit line. Add, edit, remove. */
 export function CreditsList() {
 	const {
+		actions: { setField },
 		state: { entry, sources },
 	} = useEntryEditor();
+	const {
+		meta: { now },
+	} = useLibrary();
+	// Which credit the dialog is open for: an index, "new", or closed.
+	const [editing, setEditing] = useState<number | "new" | null>(null);
 
-	if (entry.credits.length === 0) {
-		return <p className="type-small text-coral-text">No sources credited.</p>;
-	}
+	const submit = (credit: EntryCredit) =>
+		setField(
+			"credits",
+			editing === "new" || editing === null
+				? [...entry.credits, credit]
+				: entry.credits.map((c, i) => (i === editing ? credit : c))
+		);
 
 	return (
-		<ol className="flex flex-col gap-3">
-			{entry.credits.map((credit) => {
-				const source = sources.find((s) => s.slug === credit.source);
-				return (
-					<li
-						className="flex flex-col gap-0.5 rounded-md border-2 border-line bg-surface p-3"
-						// A publisher can repeat, but not with the same page.
-						key={`${credit.source}:${credit.pageUrl ?? credit.pageTitle}`}
-					>
-						<span className="type-eyebrow text-ink-muted">
-							{source?.name ?? credit.source}
-						</span>
-						{credit.pageUrl ? (
-							<a
-								className="type-body-strong inline-flex items-start gap-1 text-ink hover:underline"
-								href={credit.pageUrl}
-								rel="noreferrer"
-								target="_blank"
+		<div className="flex flex-col gap-3">
+			{entry.credits.length === 0 ? (
+				<p className="type-small text-coral-text">
+					No sources credited. Every entry needs at least one, even originals
+					(credit Xolace).
+				</p>
+			) : (
+				<ol className="flex flex-col gap-3">
+					{entry.credits.map((credit, index) => {
+						const source = sources.find((s) => s.slug === credit.source);
+						return (
+							<li
+								className="flex flex-col gap-1 rounded-md border-2 border-line bg-surface p-3"
+								// A publisher can repeat, but not with the same page.
+								key={`${credit.source}:${credit.pageUrl ?? credit.pageTitle}`}
 							>
-								{credit.pageTitle}
-								<ExternalLinkIcon
-									aria-hidden
-									className="mt-1 size-3.5 shrink-0"
-								/>
-							</a>
-						) : (
-							<span className="type-body-strong text-ink">
-								{credit.pageTitle}
-							</span>
-						)}
-						{credit.author ? (
-							<span className="type-small text-ink-muted">{credit.author}</span>
-						) : null}
-					</li>
-				);
-			})}
-		</ol>
+								<span className="flex items-center justify-between gap-2">
+									<Link
+										className="type-eyebrow text-ink-muted hover:underline"
+										href={`/library/sources/${credit.source}`}
+									>
+										{source?.name ?? credit.source}
+									</Link>
+									{isStale(credit, entry, source, now) ? (
+										<Badge variant="ember">
+											<ClockAlertIcon />
+											Stale
+										</Badge>
+									) : null}
+								</span>
+								{credit.pageUrl ? (
+									<a
+										className="type-body-strong inline-flex items-start gap-1 text-ink hover:underline"
+										href={credit.pageUrl}
+										rel="noreferrer"
+										target="_blank"
+									>
+										{credit.pageTitle}
+										<ExternalLinkIcon
+											aria-hidden
+											className="mt-1 size-3.5 shrink-0"
+										/>
+									</a>
+								) : (
+									<span className="type-body-strong text-ink">
+										{credit.pageTitle}
+									</span>
+								)}
+								{credit.author ? (
+									<span className="type-small text-ink-muted">
+										{credit.author}
+									</span>
+								) : null}
+								<span className="mt-1 flex gap-2">
+									<Button
+										onClick={() => setEditing(index)}
+										size="xs"
+										variant="outline"
+									>
+										<PencilIcon />
+										Edit
+									</Button>
+									<Button
+										aria-label={`Remove ${credit.pageTitle}`}
+										onClick={() =>
+											setField(
+												"credits",
+												entry.credits.filter((_, i) => i !== index)
+											)
+										}
+										size="xs"
+										variant="ghost"
+									>
+										<Trash2Icon />
+										Remove
+									</Button>
+								</span>
+							</li>
+						);
+					})}
+				</ol>
+			)}
+			<Button onClick={() => setEditing("new")} size="sm" variant="outline">
+				<PlusIcon />
+				Add credit
+			</Button>
+			{editing === null ? null : (
+				<CreditDialog
+					credit={editing === "new" ? undefined : entry.credits[editing]}
+					key={String(editing)}
+					now={now}
+					onOpenChange={(open) => {
+						if (!open) {
+							setEditing(null);
+						}
+					}}
+					onSubmit={submit}
+					open
+					sources={sources}
+				/>
+			)}
+		</div>
 	);
 }
 

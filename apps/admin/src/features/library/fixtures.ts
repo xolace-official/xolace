@@ -1,12 +1,13 @@
 // Generated from packages/backend/scripts/library/prod (manifest, sources, audio) for the
 // admin v1 UI. Statuses marked in DEMO of the generator are invented so every badge
 // and publish gate shows up; prod has all 20 entries live. Replaced by Convex reads.
-import type { LibraryEntry, LibrarySource } from "./types";
+import type { LibraryEntry, LibraryHub, LibrarySource } from "./types";
 
 export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Adapted in part from guidance by Student Minds (studentminds.org.uk).",
+		dropBrandingIfAdapted: true,
 		licence: "© Student Minds; adapted in our own words, not reproduced",
 		name: "Student Minds",
 		permission: "not_required",
@@ -16,6 +17,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Holley, Varga, Boorman and Fox (2024), Computational Psychiatry (CC BY 4.0). Findings summarised in our own words.",
+		dropBrandingIfAdapted: true,
 		licence: "CC BY 4.0",
 		name: "Computational Psychiatry (Ubiquity Press)",
 		permission: "not_required",
@@ -25,6 +27,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Findings summarised from Kappes & Oettingen (2011), Journal of Experimental Social Psychology.",
+		dropBrandingIfAdapted: true,
 		licence: "© Elsevier; findings paraphrased, not reproduced",
 		name: "Journal of Experimental Social Psychology (Elsevier)",
 		permission: "not_required",
@@ -34,6 +37,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Findings summarised, in our own words, from open-access articles in Frontiers in Psychology (CC BY).",
+		dropBrandingIfAdapted: true,
 		licence:
 			"CC BY (open-access Frontiers in Psychology articles); findings paraphrased",
 		name: "Frontiers in Psychology",
@@ -43,6 +47,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	},
 	{
 		attributionText: "Adapted from advice by the Mental Health Foundation.",
+		dropBrandingIfAdapted: true,
 		licence:
 			"© Mental Health Foundation; advice paraphrased, not reproduced (no reuse licence found)",
 		name: "Mental Health Foundation",
@@ -53,6 +58,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Findings from de Berker et al. (2016), Nature Communications, paraphrased.",
+		dropBrandingIfAdapted: true,
 		licence: "© Springer Nature; findings paraphrased, not reproduced",
 		name: "Nature Communications (Springer Nature)",
 		permission: "not_required",
@@ -62,6 +68,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Adapted from Newcastle University disability support pages.",
+		dropBrandingIfAdapted: true,
 		licence: "© Newcastle University; findings paraphrased, not reproduced",
 		name: "Newcastle University",
 		permission: "not_required",
@@ -71,15 +78,19 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Contains public sector information licensed under the Open Government Licence v3.0",
+		dropBrandingIfAdapted: true,
 		licence: "Open Government Licence v3.0",
 		name: "NHS",
 		permission: "not_required",
+		// DEMO: NHS pages refresh weekly (schema example), so its credits show as stale.
+		refreshDays: 7,
 		slug: "nhs",
 		url: "https://www.nhs.uk",
 	},
 	{
 		attributionText:
 			"Bravata et al., Journal of General Internal Medicine (CC BY 4.0). Findings summarised in our own words.",
+		dropBrandingIfAdapted: true,
 		licence: "CC BY 4.0",
 		name: "Journal of General Internal Medicine (Springer Nature)",
 		permission: "not_required",
@@ -89,6 +100,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Information adapted from University of Greenwich library guides.",
+		dropBrandingIfAdapted: true,
 		licence:
 			"© University of Greenwich; information paraphrased, not reproduced",
 		name: "University of Greenwich",
@@ -99,6 +111,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Adapted from University of Salford web pages and the Salford Pedagogy journal.",
+		dropBrandingIfAdapted: true,
 		licence: "© University of Salford; findings paraphrased, not reproduced",
 		name: "University of Salford",
 		permission: "not_required",
@@ -108,6 +121,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Adapted from University of Southampton student support pages.",
+		dropBrandingIfAdapted: true,
 		licence:
 			"© University of Southampton; findings paraphrased, not reproduced",
 		name: "University of Southampton",
@@ -118,15 +132,18 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Findings summarised from Dai, Milkman & Riis (2014), Management Science.",
+		dropBrandingIfAdapted: true,
 		licence: "© INFORMS; findings paraphrased, not reproduced",
 		name: "Management Science (INFORMS)",
-		permission: "not_required",
+		// DEMO: permission still being asked for.
+		permission: "pending",
 		slug: "informs",
 		url: "https://pubsonline.informs.org/journal/mnsc",
 	},
 	{
 		attributionText:
 			"Findings summarised from Lally et al. (2010), European Journal of Social Psychology.",
+		dropBrandingIfAdapted: true,
 		licence: "© authors / Wiley; findings paraphrased, not reproduced",
 		name: "University of Surrey Open Research (European Journal of Social Psychology)",
 		permission: "not_required",
@@ -135,6 +152,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	},
 	{
 		attributionText: "Adapted from information by Mind (mind.org.uk).",
+		dropBrandingIfAdapted: true,
 		licence:
 			"© Mind; advice paraphrased, not reproduced (no reuse licence checked)",
 		name: "Mind",
@@ -145,6 +163,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Adapted from guidance by the American Psychological Association (apa.org).",
+		dropBrandingIfAdapted: true,
 		licence:
 			"© American Psychological Association; advice paraphrased, not reproduced (no reuse licence checked)",
 		name: "American Psychological Association",
@@ -155,6 +174,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Adapted from information by the World Health Organization (who.int).",
+		dropBrandingIfAdapted: true,
 		licence:
 			"© World Health Organization; advice paraphrased, not reproduced (no reuse licence checked)",
 		name: "World Health Organization",
@@ -165,6 +185,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	{
 		attributionText:
 			"Adapted from information by the National Institute of Mental Health (nimh.nih.gov).",
+		dropBrandingIfAdapted: true,
 		licence:
 			"© NIMH / US National Institutes of Health; advice paraphrased, not reproduced (no reuse licence checked)",
 		name: "National Institute of Mental Health",
@@ -174,6 +195,7 @@ export const FIXTURE_SOURCES: LibrarySource[] = [
 	},
 	{
 		attributionText: "Shared with Xolace, with permission",
+		dropBrandingIfAdapted: false,
 		licence: "Xolace original",
 		name: "Xolace",
 		permission: "not_required",
@@ -1236,5 +1258,70 @@ export const FIXTURE_ENTRIES: LibraryEntry[] = [
 		storyDescriptor: "Emmanuel Somuah, Xolace CTO",
 		title: "What they don't put on the transcript",
 		updatedAt: 1_790_913_600_000,
+	},
+];
+
+// From packages/backend/scripts/library/prod/hubs.json. The last hub is DEMO: a draft
+// with no cover, mixing an entry and a support track, so the hub gates show up.
+export const FIXTURE_HUBS: LibraryHub[] = [
+	{
+		active: true,
+		hasCover: true,
+		intro:
+			"A short reading list for the weeks before university starts. It covers the nerves, the unknowns and the new language, so you can arrive a little steadier.",
+		items: [
+			{ kind: "entry", ref: "not-knowing-feels-so-stressful-why" },
+			{ kind: "entry", ref: "setting-expectations-you-can-adjust" },
+			{ kind: "entry", ref: "am-i-good-enough-for-this" },
+			{ kind: "entry", ref: "decoding-the-place-words-and-people" },
+		],
+		slug: "before-you-arrive",
+		status: "live",
+		title: "Before you arrive",
+		updatedAt: 1_790_812_800_000,
+	},
+	{
+		active: true,
+		hasCover: true,
+		intro:
+			"A short reading list for the days before a new term at a university you already know. It covers looking back at last year, easing back into your studies, and the friendships that may have changed over the break.",
+		items: [
+			{ kind: "entry", ref: "picking-up-where-you-left-off" },
+			{ kind: "entry", ref: "why-this-years-social-life-feels-different" },
+		],
+		slug: "back-at-university",
+		status: "live",
+		title: "Back at university",
+		updatedAt: 1_790_812_800_000,
+	},
+	{
+		active: true,
+		hasCover: true,
+		intro:
+			"A short reading list for the nights and weeks when your body is tired but your mind keeps running. It covers what stress does, why sleep and mood pull on each other, and small ways to ease both.",
+		items: [
+			{ kind: "entry", ref: "stress-what-it-is" },
+			{ kind: "entry", ref: "sleep-why-it-matters" },
+			{ kind: "entry", ref: "stress-what-helps" },
+			{ kind: "entry", ref: "sleep-what-helps" },
+		],
+		slug: "when-you-cant-switch-off",
+		status: "live",
+		title: "When you can't switch off",
+		updatedAt: 1_790_812_800_000,
+	},
+	{
+		active: false,
+		hasCover: false,
+		intro: "",
+		items: [
+			{ kind: "entry", ref: "depression-what-it-is" },
+			{ kind: "audio", ref: "support-depression-non-crisis-01" },
+			{ kind: "entry", ref: "depression-what-helps" },
+		],
+		slug: "when-everything-feels-heavy",
+		status: "draft",
+		title: "When everything feels heavy",
+		updatedAt: 1_791_244_800_000,
 	},
 ];
