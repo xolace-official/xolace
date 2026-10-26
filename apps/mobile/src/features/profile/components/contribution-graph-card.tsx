@@ -1,5 +1,6 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
+import { Surface } from "heroui-native";
 import { useRef, useState } from "react";
 import type { ScrollViewInstance } from "react-native";
 import { ScrollView, View } from "react-native";
@@ -128,7 +129,7 @@ export function ContributionGraphCard({
 				type: "timing",
 			}}
 		>
-			<View className="rounded-3xl border border-border/65 bg-surface p-4">
+			<Surface className="p-4">
 				<HeldReadout dayKey={heldDay} indexed={indexed} />
 
 				<View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
@@ -164,7 +165,7 @@ export function ContributionGraphCard({
 						</ScrollView>
 					)}
 				</View>
-			</View>
+			</Surface>
 		</EaseView>
 	);
 }

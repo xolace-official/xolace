@@ -6,7 +6,7 @@
 import AccountCircle from "@expo/material-symbols/account_circle.xml";
 import { Stack } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
+import { Surface, useThemeColor } from "heroui-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -28,7 +28,7 @@ export function ReadingAsCard({
 	const muted = useThemeColor("muted");
 
 	return (
-		<View className="mx-4 mt-4 gap-3 rounded-[24px] bg-surface p-4">
+		<Surface className="mx-4 mt-4 gap-3 p-4">
 			<View className="flex-row items-start justify-between">
 				<View className="flex-1 gap-0.5">
 					<AppText className="font-semibold text-[17px]">Reading as…</AppText>
@@ -86,7 +86,7 @@ export function ReadingAsCard({
 					</AppText>
 				</Pressable>
 			)}
-		</View>
+		</Surface>
 	);
 }
 

@@ -6,7 +6,7 @@
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
+import { Surface, useThemeColor } from "heroui-native";
 import { type PostHog, usePostHog } from "posthog-react-native";
 import { Pressable, Share, StyleSheet, View } from "react-native";
 import { useCSSVariable } from "uniwind";
@@ -47,11 +47,12 @@ const DAY_MS = 86_400_000;
 export function ContentNote({ note }: { note: string }) {
 	const muted = useThemeColor("muted");
 	return (
-		<View
+		<Surface
 			accessibilityLabel={`Content note: ${note}`}
 			accessible
-			className="mb-6 flex-row gap-3 rounded-2xl bg-surface-secondary p-4"
+			className="mb-6 flex-row gap-3 rounded-2xl p-4"
 			style={{ borderCurve: "continuous" }}
+			variant="secondary"
 		>
 			<SymbolView name={NOTE_ICON} size={16} tintColor={muted} />
 			<View className="flex-1 gap-1">
@@ -60,7 +61,7 @@ export function ContentNote({ note }: { note: string }) {
 				</AppText>
 				<AppText className="text-sm">{note}</AppText>
 			</View>
-		</View>
+		</Surface>
 	);
 }
 
@@ -74,10 +75,7 @@ export function ReflectOnThis({
 	const posthog = usePostHog();
 	const prompt = entry.reflectPrompt ?? REFLECT_PROMPT;
 	return (
-		<View
-			className="mt-10 gap-4 rounded-3xl bg-surface p-5"
-			style={{ borderCurve: "continuous" }}
-		>
+		<Surface className="mt-10 gap-4 p-5" style={{ borderCurve: "continuous" }}>
 			<AppText className="font-semibold text-lg">{prompt}</AppText>
 			<Pressable
 				accessibilityRole="button"
@@ -100,7 +98,7 @@ export function ReflectOnThis({
 					Reflect on this
 				</AppText>
 			</Pressable>
-		</View>
+		</Surface>
 	);
 }
 

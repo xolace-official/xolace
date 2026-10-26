@@ -2,7 +2,13 @@ import CheckIcon from "@expo/material-symbols/check.xml";
 import CloseIcon from "@expo/material-symbols/close.xml";
 import { Stack, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { Skeleton, Switch, useThemeColor, useToast } from "heroui-native";
+import {
+	Skeleton,
+	Surface,
+	Switch,
+	useThemeColor,
+	useToast,
+} from "heroui-native";
 import { useState } from "react";
 import { Keyboard, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
@@ -190,8 +196,8 @@ function ListedToggle({
 	const muted = useThemeColor("muted") as string;
 
 	return (
-		<View
-			className="mt-4 flex-row items-center gap-3 rounded-3xl border border-border/40 bg-surface p-4"
+		<Surface
+			className="mt-4 flex-row items-center gap-3 p-4"
 			style={styles.borderCurve}
 		>
 			<SymbolView
@@ -220,7 +226,7 @@ function ListedToggle({
 			>
 				<Switch.Thumb />
 			</Switch>
-		</View>
+		</Surface>
 	);
 }
 

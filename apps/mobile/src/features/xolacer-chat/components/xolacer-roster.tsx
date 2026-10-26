@@ -1,7 +1,7 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
-import { PressableFeedback } from "heroui-native";
+import { PressableFeedback, Surface } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/shared/app-text";
 import type { ConversationList } from "@/src/features/xolacer-chat/components/chats-list";
@@ -127,8 +127,8 @@ export function XolacerRoster({
 							});
 						}}
 					>
-						<View
-							className="flex-row items-start gap-3 rounded-3xl border border-border/40 bg-surface p-3.5"
+						<Surface
+							className="flex-row items-start gap-3 p-3.5"
 							style={styles.borderCurve}
 						>
 							<View>
@@ -190,7 +190,7 @@ export function XolacerRoster({
 									specialties={xolacer.specialties}
 								/>
 							</View>
-						</View>
+						</Surface>
 					</PressableFeedback>
 				);
 			})}

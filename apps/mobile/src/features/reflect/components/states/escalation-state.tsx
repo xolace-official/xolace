@@ -1,3 +1,4 @@
+import { Surface } from "heroui-native";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
@@ -72,11 +73,11 @@ function ResourceItem({
 				initialAnimate={EASE_INITIAL_SLIDE}
 				transition={transition}
 			>
-				<View className="rounded-xl border border-foreground/10 bg-surface px-4 py-3.5">
+				<Surface className="rounded-xl px-4 py-3.5">
 					<AppText className="font-light text-foreground/70 text-sm">
 						{resource}
 					</AppText>
-				</View>
+				</Surface>
 			</EaseView>
 		);
 	}

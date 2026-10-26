@@ -1,4 +1,4 @@
-import { useThemeColor } from "heroui-native";
+import { Surface, useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { SegmentedControl } from "@/src/components/shared/segmented-control";
@@ -109,8 +109,8 @@ export function PaywallPeriodPicker({
 				</SegmentedControl.Item>
 			</SegmentedControl>
 
-			<View
-				className="flex-row items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3.5"
+			<Surface
+				className="flex-row items-center justify-between rounded-2xl px-4 py-3.5"
 				style={styles.borderCurve}
 			>
 				{intro ? (
@@ -145,7 +145,7 @@ export function PaywallPeriodPicker({
 						</AppText>
 					</View>
 				)}
-			</View>
+			</Surface>
 		</View>
 	);
 }
