@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
 
-import { PlannedPage } from "@/features/shell/planned-page";
+import { TopicsScreen } from "@/features/audio/topics-screen";
 
 export const metadata: Metadata = { title: "Topics · Xolace Admin" };
 
 export default function AudioTopicsPage() {
-	return (
-		<PlannedPage
-			description="Topic titles and cover art."
-			replaces="scripts/kindling/*/topics.json"
-			title="Topics"
-		/>
-	);
+	return <TopicsScreen />;
 }

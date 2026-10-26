@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
-import { PlannedPage } from "@/features/shell/planned-page";
+import { TracksScreen } from "@/features/audio/tracks-screen";
+import { EntriesSkeleton } from "@/features/library/entries-skeleton";
 
 export const metadata: Metadata = { title: "Tracks · Xolace Admin" };
 
 export default function AudioTracksPage() {
 	return (
-		<PlannedPage
-			description="Kindling support audio and music: files, tags and licences."
-			replaces="scripts/kindling/ingest.ts"
-			title="Tracks"
-		/>
+		<Suspense fallback={<EntriesSkeleton />}>
+			<TracksScreen />
+		</Suspense>
 	);
 }
