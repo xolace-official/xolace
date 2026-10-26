@@ -60,6 +60,8 @@ export interface AudioTrack {
 
 /** A `topics` row: the cover and title shared by `audio_topic_x` and `music_topic_x`. */
 export interface AudioTopic {
+	/** Signed link to the cover, while `hasCover`. */
+	coverUrl?: string;
 	hasCover: boolean;
 	/** The shared suffix, `sleep_rest`. */
 	slug: string;

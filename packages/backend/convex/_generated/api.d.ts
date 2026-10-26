@@ -13,6 +13,7 @@ import type * as admin_edits from "../admin/edits.js";
 import type * as admin_hubs from "../admin/hubs.js";
 import type * as admin_library from "../admin/library.js";
 import type * as admin_sources from "../admin/sources.js";
+import type * as admin_uploads from "../admin/uploads.js";
 import type * as admin_xolacers from "../admin/xolacers.js";
 import type * as ai_bridge from "../ai/bridge.js";
 import type * as ai_cached from "../ai/cached.js";
@@ -247,6 +248,7 @@ declare const fullApi: ApiFromModules<{
   "admin/hubs": typeof admin_hubs;
   "admin/library": typeof admin_library;
   "admin/sources": typeof admin_sources;
+  "admin/uploads": typeof admin_uploads;
   "admin/xolacers": typeof admin_xolacers;
   "ai/bridge": typeof ai_bridge;
   "ai/cached": typeof ai_cached;

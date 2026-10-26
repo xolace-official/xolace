@@ -6,7 +6,8 @@ import type { FunctionReturnType } from "convex/server";
 import { createContext, type ReactNode, use, useState } from "react";
 
 import { deriveStatus } from "@/features/content/derive-status";
-import { UploadsPendingError } from "@/features/content/run-action";
+import { useLinkWindow } from "@/features/media/link-window";
+import { useMediaUpload } from "@/features/media/use-media-upload";
 
 import { publishGates } from "./publish-gates";
 import type {
@@ -65,7 +66,7 @@ export interface LibraryContextValue {
 		publish: (slug: string) => Promise<void>;
 		publishHub: (slug: string) => Promise<void>;
 		recordConsent: (slug: string) => Promise<void>;
-		replaceHubCover: (slug: string) => Promise<void>;
+		replaceHubCover: (slug: string, file: File) => Promise<void>;
 		retire: (slug: string) => Promise<void>;
 		retireHub: (slug: string) => Promise<void>;
 		save: (slug: string, patch: EntryPatch, body?: string) => Promise<void>;
@@ -78,8 +79,6 @@ export interface LibraryContextValue {
 		now: number;
 		/** Every list has arrived; until then the lists are empty. */
 		ready: boolean;
-		/** Cover uploads arrive with R2 (admin step 6b). */
-		uploads: boolean;
 	};
 	state: {
 		bodies: Readonly<Record<string, string>>;
@@ -90,6 +89,16 @@ export interface LibraryContextValue {
 }
 
 const LibraryContext = createContext<LibraryContextValue | null>(null);
+
+/** Signed link to the cover readers show for a hub; `null` without one, `undefined` while loading. */
+export function useHubCover(slug: string) {
+	const { isAuthenticated } = useConvexAuth();
+	const linkWindow = useLinkWindow();
+	return useQuery(
+		api.admin.hubs.cover,
+		isAuthenticated ? { linkWindow, slug } : "skip"
+	);
+}
 
 export function useLibrary() {
 	const value = use(LibraryContext);
@@ -161,6 +170,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 	const markReviewed = useMutation(api.admin.library.markSafetyReviewed);
 	const recordConsent = useMutation(api.admin.library.recordConsent);
 	const createHub = useMutation(api.admin.hubs.create);
+	const replaceHubCover = useMutation(api.admin.hubs.replaceCover);
+	const upload = useMediaUpload();
 	const saveHub = useMutation(api.admin.hubs.save);
 	const publishHub = useMutation(api.admin.hubs.publish);
 	const retireHub = useMutation(api.admin.hubs.retire);
@@ -211,7 +222,10 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 			recordConsent: async (slug) => {
 				await recordConsent({ slug });
 			},
-			replaceHubCover: () => Promise.reject(new UploadsPendingError()),
+			replaceHubCover: async (slug, file) => {
+				const cover = await upload.image(file, "hubCover");
+				await replaceHubCover({ ...cover, slug });
+			},
 			retire: async (slug) => {
 				await retireEntry({ slug });
 			},
@@ -249,7 +263,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 				await saveSource({ slug, source });
 			},
 		},
-		meta: { backend: "convex", now, ready, uploads: false },
+		meta: { backend: "convex", now, ready },
 		state: { bodies: bodies ?? {}, entries, hubs, sources },
 	};
 

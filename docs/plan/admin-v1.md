@@ -149,8 +149,14 @@ section. Not borrowed: its offset-shadow theme (we use the lip/depth system).
    - **6a** ✅ `convex/admin/{library,hubs,sources,audio}.ts` on `adminQuery` /
      `adminMutation`; the Library and Audio stores read and write Convex. Metadata
      only: New track, media replacement and covers are disabled until 6b.
-   - **6b** Uploads to R2 (`r2.clientApi` with `checkUpload` = the admin check,
-     `useUploadFile`), with image resizing and ThumbHash.
+   - **6b** ✅ Uploads straight from the browser to R2 for New track, track audio and
+     thumbnails, topic covers and hub covers (`convex/admin/uploads.ts`). Images are
+     processed in the browser with jSquash (Lanczos3, WebP q78 effort 6, as the
+     scripts' sharp) plus a ThumbHash; if quality falls short, the fallback is sharp
+     in a `"use node"` action. Convex picks every key, keeping the scripts'
+     content-addressed `thumb/<sha256>.webp`, so not `r2.clientApi` (random keys,
+     public read/delete functions). Each bucket needs a CORS rule allowing `PUT`
+     from the admin's origins. Entry covers and narration stay in the script.
    - **6c** Imports on Convex: `import_runs` / `import_items`, compare, apply as a
      `@convex-dev/workflow` per item, retry. Compare warns when a Changed item was
      last edited in the admin (`editedBy` set), so an old file can't quietly

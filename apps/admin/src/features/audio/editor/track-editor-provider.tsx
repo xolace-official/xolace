@@ -22,8 +22,9 @@ interface TrackEditorContextValue {
 		discard: () => void;
 		markSafetyReviewed: () => void;
 		publish: () => void;
-		replaceAudio: (durationSec: number) => void;
-		replaceThumb: () => void;
+		/** Uploads first; `true` once the track points at the new file. */
+		replaceAudio: (file: File, durationSec: number) => Promise<boolean>;
+		replaceThumb: (file: File) => Promise<boolean>;
 		retire: () => void;
 		retry: () => void;
 		save: () => void;
@@ -86,14 +87,14 @@ export function TrackEditorProvider({
 					() => audio.actions.publish(saved.slug),
 					`“${saved.title}” is live`
 				),
-			replaceAudio: (durationSec) =>
+			replaceAudio: (file, durationSec) =>
 				runAction(
-					() => audio.actions.replaceAudio(saved.slug, durationSec),
-					"Audio replaced. It's processed when you publish."
+					() => audio.actions.replaceAudio(saved.slug, file, durationSec),
+					"Audio replaced"
 				),
-			replaceThumb: () =>
+			replaceThumb: (file) =>
 				runAction(
-					() => audio.actions.replaceThumb(saved.slug),
+					() => audio.actions.replaceThumb(saved.slug, file),
 					"Thumbnail replaced"
 				),
 			retire: () =>
