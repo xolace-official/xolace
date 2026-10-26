@@ -6,7 +6,7 @@ import type { FunctionReturnType } from "convex/server";
 import { createContext, type ReactNode, use, useState } from "react";
 
 import { deriveStatus } from "@/features/content/derive-status";
-import { UploadsPendingError } from "@/features/content/run-action";
+import { useMediaUpload } from "@/features/media/use-media-upload";
 
 import { trackGates } from "./track-gates";
 import type { AudioTopic, AudioTrack, TrackFamily } from "./types";
@@ -30,10 +30,11 @@ export type TrackPatch = Partial<
 
 /** What New track collects before the editor opens. */
 export interface NewTrack {
+	audio: File;
 	durationSec: number;
 	family: TrackFamily;
-	hasThumb: boolean;
 	slug: string;
+	thumb: File;
 	title: string;
 	topic: string;
 }
@@ -41,16 +42,20 @@ export interface NewTrack {
 /**
  * What every Audio screen reads and calls, implemented on `api.admin.audio`. Every
  * action can reject (Convex re-checks the publish gates), so editors run them through
- * `runAction`. Creating a track and replacing media need uploads (admin step 6b).
+ * `runAction`. Media actions upload to R2 first, then point the row at it.
  */
 export interface AudioContextValue {
 	actions: {
 		create: (track: NewTrack) => Promise<void>;
 		markSafetyReviewed: (slug: string) => Promise<void>;
 		publish: (slug: string) => Promise<void>;
-		replaceAudio: (slug: string, durationSec: number) => Promise<void>;
-		replaceThumb: (slug: string) => Promise<void>;
-		replaceTopicCover: (slug: string) => Promise<void>;
+		replaceAudio: (
+			slug: string,
+			file: File,
+			durationSec: number
+		) => Promise<void>;
+		replaceThumb: (slug: string, file: File) => Promise<void>;
+		replaceTopicCover: (slug: string, file: File) => Promise<void>;
 		retire: (slug: string) => Promise<void>;
 		retry: (slug: string) => Promise<void>;
 		save: (slug: string, patch: TrackPatch) => Promise<void>;
@@ -61,8 +66,6 @@ export interface AudioContextValue {
 		now: number;
 		/** Every list has arrived; until then the lists are empty. */
 		ready: boolean;
-		/** New tracks and media replacement arrive with R2 (admin step 6b). */
-		uploads: boolean;
 	};
 	state: {
 		topics: readonly AudioTopic[];
@@ -94,7 +97,11 @@ function toTrack(row: TrackRow): AudioTrack {
 
 const EMPTY: readonly never[] = [];
 
-const uploadsPending = () => Promise.reject(new UploadsPendingError());
+/** Signed links to a track's audio and thumbnail; `undefined` while loading. */
+export function useTrackMedia(slug: string) {
+	const { isAuthenticated } = useConvexAuth();
+	return useQuery(api.admin.audio.media, isAuthenticated ? { slug } : "skip");
+}
 
 export function AudioProvider({ children }: { children: ReactNode }) {
 	const [now] = useState(Date.now);
@@ -108,32 +115,66 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 	const publish = useMutation(api.admin.audio.publish);
 	const retire = useMutation(api.admin.audio.retire);
 	const markReviewed = useMutation(api.admin.audio.markSafetyReviewed);
+	const createTrack = useMutation(api.admin.audio.create);
+	const replaceAudio = useMutation(api.admin.audio.replaceAudio);
+	const replaceThumb = useMutation(api.admin.audio.replaceThumb);
+	const replaceTopicCover = useMutation(api.admin.audio.replaceTopicCover);
+	const upload = useMediaUpload();
 
 	const tracks = trackRows?.map(toTrack) ?? EMPTY;
+	const find = (slug: string) => {
+		const track = tracks.find((t) => t.slug === slug);
+		if (!track) {
+			throw new Error(`"${slug}" isn't loaded`);
+		}
+		return track;
+	};
 
 	const value: AudioContextValue = {
 		actions: {
-			create: uploadsPending,
+			create: async ({ audio, durationSec, family, slug, thumb, ...rest }) => {
+				const [uploadedAudio, uploadedThumb] = await Promise.all([
+					upload.audio(audio, { family, slug }),
+					upload.image(thumb, "thumb"),
+				]);
+				await createTrack({
+					...rest,
+					audio: { ...uploadedAudio, durationSec },
+					family,
+					slug,
+					thumb: uploadedThumb,
+				});
+			},
 			markSafetyReviewed: async (slug) => {
 				await markReviewed({ slug });
 			},
 			publish: async (slug) => {
 				await publish({ slug });
 			},
-			replaceAudio: uploadsPending,
-			replaceThumb: uploadsPending,
-			replaceTopicCover: uploadsPending,
+			replaceAudio: async (slug, file, durationSec) => {
+				const { family } = find(slug);
+				const uploaded = await upload.audio(file, { family, slug });
+				await replaceAudio({ ...uploaded, durationSec, slug });
+			},
+			replaceThumb: async (slug, file) => {
+				await replaceThumb({ slug, thumb: await upload.image(file, "thumb") });
+			},
+			replaceTopicCover: async (slug, file) => {
+				await replaceTopicCover({
+					slug,
+					thumb: await upload.image(file, "thumb"),
+				});
+			},
 			retire: async (slug) => {
 				await retire({ slug });
 			},
-			// Processing failures arrive with uploads; until then nothing fails.
-			retry: uploadsPending,
+			// Media is processed before it's saved, so nothing fails until imports (step 6c).
+			retry: () =>
+				Promise.reject(
+					new Error("Retry arrives with imports (admin step 6c).")
+				),
 			save: async (slug, patch) => {
-				const saved = tracks.find((track) => track.slug === slug);
-				if (!saved) {
-					throw new Error(`"${slug}" isn't loaded`);
-				}
-				const t = { ...saved, ...patch };
+				const t = { ...find(slug), ...patch };
 				const support = t.family === "support";
 				await saveTrack({
 					slug,
@@ -156,7 +197,6 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 			backend: "convex",
 			now,
 			ready: trackRows !== undefined && topics !== undefined,
-			uploads: false,
 		},
 		state: { topics: topics ?? EMPTY, tracks },
 	};

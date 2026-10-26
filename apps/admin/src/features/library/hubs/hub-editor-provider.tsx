@@ -24,7 +24,8 @@ interface HubEditorContextValue {
 		discard: () => void;
 		publish: () => void;
 		removeItem: (id: string) => void;
-		replaceCover: () => void;
+		/** Uploads first; `true` once the hub points at the new cover. */
+		replaceCover: (file: File) => Promise<boolean>;
 		retire: () => void;
 		save: () => void;
 		setField: <K extends keyof HubPatch>(key: K, value: HubPatch[K]) => void;
@@ -94,9 +95,9 @@ export function HubEditorProvider({
 					"items",
 					items.filter((i) => i.id !== id).map((i) => i.item)
 				),
-			replaceCover: () =>
+			replaceCover: (file) =>
 				runAction(
-					() => library.actions.replaceHubCover(saved.slug),
+					() => library.actions.replaceHubCover(saved.slug, file),
 					"Cover uploaded"
 				),
 			retire: () =>

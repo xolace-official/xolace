@@ -38,14 +38,3 @@ export function errorMessage(error: unknown): string {
 	}
 	return error instanceof Error ? error.message : "Something went wrong";
 }
-
-/** Tooltip on controls that need uploads until admin step 6b. */
-export const UPLOADS_PENDING = "Uploads arrive with R2 (admin step 6b).";
-
-/** Thrown by store actions that need uploads, which arrive with R2 (admin step 6b). */
-export class UploadsPendingError extends Error {
-	constructor() {
-		super("Uploads aren't wired to Convex yet (admin step 6b).");
-		this.name = "UploadsPendingError";
-	}
-}

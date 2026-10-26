@@ -8,7 +8,7 @@ import {
 	BreadcrumbPage,
 	BreadcrumbSeparator,
 } from "@xolace/ui/components/breadcrumb";
-import { Button, buttonVariants } from "@xolace/ui/components/button";
+import { buttonVariants } from "@xolace/ui/components/button";
 import {
 	Card,
 	CardContent,
@@ -25,7 +25,8 @@ import {
 } from "@xolace/ui/components/field";
 import { Input } from "@xolace/ui/components/input";
 import { Textarea } from "@xolace/ui/components/textarea";
-import { ImageIcon, UploadIcon } from "lucide-react";
+import { ImageIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import {
@@ -40,9 +41,9 @@ import {
 	EditorRail,
 } from "@/features/content/editor-layout";
 import { GateItem, GateList, GateSummary } from "@/features/content/gate-list";
-import { UPLOADS_PENDING } from "@/features/content/run-action";
 import { StatusBadge } from "@/features/content/status-badge";
 import { EmptyState } from "@/features/flux/empty-state";
+import { PickFileButton } from "@/features/media/pick-file-button";
 import {
 	PageHeader,
 	PageHeaderActions,
@@ -51,8 +52,7 @@ import {
 	PageHeaderMeta,
 	PageHeaderTitle,
 } from "@/features/shell/page-header";
-
-import { useLibrary } from "../library-provider";
+import { useHubCover, useLibrary } from "../library-provider";
 import { formatDate } from "../types";
 import { HubEditorProvider, useHubEditor } from "./hub-editor-provider";
 import { AddHubItem, HubItemList } from "./hub-item-list";
@@ -105,8 +105,6 @@ function HubEditor() {
 		meta: { canPublish, dirty },
 		state: { blocking, gates, items, saved },
 	} = useHubEditor();
-	const { uploads } = useLibrary().meta;
-
 	return (
 		<>
 			<PageHeader>
@@ -168,17 +166,13 @@ function HubEditor() {
 								{gates.map((gate) => (
 									<GateItem gate={gate} key={gate.id}>
 										{gate.id === "cover" ? (
-											<Button
+											<PickFileButton
+												accept="image/*"
 												className="w-fit"
-												disabled={!uploads}
-												onClick={actions.replaceCover}
-												size="xs"
-												title={uploads ? undefined : UPLOADS_PENDING}
-												variant="outline"
+												onPick={actions.replaceCover}
 											>
-												<UploadIcon />
 												Upload cover
-											</Button>
+											</PickFileButton>
 										) : null}
 									</GateItem>
 								))}
@@ -248,34 +242,38 @@ function HubCopyFields() {
 	);
 }
 
-/** Cover placeholder with Upload/Replace. Real uploads go to R2 in admin step 6. */
+/** The cover readers show, and Upload/Replace (resized to a 1280 WebP first). */
 function HubCover() {
 	const {
 		actions,
 		state: { hub },
 	} = useHubEditor();
-	const { uploads } = useLibrary().meta;
+	const coverUrl = useHubCover(hub.slug);
 
 	return (
 		<div className="flex flex-col gap-3">
-			<div className="grid aspect-[16/10] place-items-center rounded-lg border-2 border-line border-dashed bg-surface-sunken text-ink-muted">
-				<div className="flex flex-col items-center gap-2">
-					<ImageIcon aria-hidden className="size-8 stroke-2" />
-					<span className="type-small">
-						{hub.hasCover ? "Cover uploaded" : "No cover"}
-					</span>
-				</div>
+			<div className="relative grid aspect-[16/10] place-items-center overflow-hidden rounded-lg border-2 border-line border-dashed bg-surface-sunken text-ink-muted">
+				{coverUrl ? (
+					<Image
+						alt={`${hub.title} cover`}
+						className="object-cover"
+						fill
+						sizes="320px"
+						src={coverUrl}
+						unoptimized
+					/>
+				) : (
+					<div className="flex flex-col items-center gap-2">
+						<ImageIcon aria-hidden className="size-8 stroke-2" />
+						<span className="type-small">
+							{hub.hasCover ? "Loading cover" : "No cover"}
+						</span>
+					</div>
+				)}
 			</div>
-			<Button
-				disabled={!uploads}
-				onClick={actions.replaceCover}
-				size="sm"
-				title={uploads ? undefined : UPLOADS_PENDING}
-				variant="outline"
-			>
-				<UploadIcon />
+			<PickFileButton accept="image/*" onPick={actions.replaceCover}>
 				{hub.hasCover ? "Replace cover" : "Upload cover"}
-			</Button>
+			</PickFileButton>
 		</div>
 	);
 }
