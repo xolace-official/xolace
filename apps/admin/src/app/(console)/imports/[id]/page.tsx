@@ -8,7 +8,9 @@ export const metadata: Metadata = { title: "Import · Xolace Admin" };
 
 export default async function ImportRunPage({
 	params,
-}: PageProps<"/imports/[id]">) {
+}: {
+	params: Promise<{ id: string }>;
+}) {
 	const { id } = await params;
 	return (
 		<Suspense fallback={<EntriesSkeleton />}>
