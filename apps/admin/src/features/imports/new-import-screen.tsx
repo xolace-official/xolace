@@ -159,15 +159,15 @@ export function NewImportScreen() {
 				nonInteractive={comparing}
 				onValidate={(next) => next !== "review" || hasRecords}
 				// Review is where the comparison runs: reaching it any way starts one.
-				onValueChange={(next) => (next === "review" ? compare() : setStep(next))}
+				onValueChange={(next) =>
+					next === "review" ? compare() : setStep(next)
+				}
 				value={step}
 			>
 				<StepperList>
 					{STEPS.map((item) => (
 						<StepperItem key={item.value} value={item.value}>
-							<StepperTrigger
-								disabled={item.value === "review" && !hasRecords}
-							>
+							<StepperTrigger disabled={item.value === "review" && !hasRecords}>
 								<StepperIndicator />
 								<span className="flex flex-col">
 									<StepperTitle>{item.title}</StepperTitle>
