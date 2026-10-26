@@ -1,13 +1,14 @@
 "use client";
 
 import { createContext, type ReactNode, use, useState } from "react";
-import { toast } from "sonner";
 
 import { useAudio } from "@/features/audio/audio-provider";
+import { unsavedSince } from "@/features/content/draft-patch";
 import {
 	blockingGates,
 	type PublishGate,
 } from "@/features/content/publish-gate";
+import { runAction } from "@/features/content/run-action";
 
 import { type HubPatch, useLibrary } from "../library-provider";
 import type { HubItem, LibraryHub } from "../types";
@@ -23,7 +24,8 @@ interface HubEditorContextValue {
 		discard: () => void;
 		publish: () => void;
 		removeItem: (id: string) => void;
-		replaceCover: () => void;
+		/** Uploads first; `true` once the hub points at the new cover. */
+		replaceCover: (file: File) => Promise<boolean>;
 		retire: () => void;
 		save: () => void;
 		setField: <K extends keyof HubPatch>(key: K, value: HubPatch[K]) => void;
@@ -31,6 +33,8 @@ interface HubEditorContextValue {
 	meta: {
 		/** Publish is allowed: saved, and every required gate passes. */
 		canPublish: boolean;
+		/** A cover is uploading; both cover buttons wait, so an older pick can't land last. */
+		coverUploading: boolean;
 		dirty: boolean;
 	};
 	state: {
@@ -65,6 +69,7 @@ export function HubEditorProvider({
 		state: { tracks },
 	} = useAudio();
 	const [patch, setPatch] = useState<HubPatch>({});
+	const [coverUploading, setCoverUploading] = useState(false);
 
 	const hub = { ...saved, ...patch };
 	const dirty = Object.keys(patch).length > 0;
@@ -83,32 +88,51 @@ export function HubEditorProvider({
 		actions: {
 			addItem: (item) => setField("items", [...hub.items, item]),
 			discard: () => setPatch({}),
-			publish: () => {
-				library.actions.publishHub(saved.slug);
-				toast.success(`“${saved.title}” is live`);
-			},
+			publish: () =>
+				runAction(
+					() => library.actions.publishHub(saved.slug),
+					`“${saved.title}” is live`
+				),
 			removeItem: (id) =>
 				setField(
 					"items",
 					items.filter((i) => i.id !== id).map((i) => i.item)
 				),
-			replaceCover: () => {
-				library.actions.replaceHubCover(saved.slug);
-				toast.success("Cover uploaded (fixture)");
+			replaceCover: async (file) => {
+				if (coverUploading) {
+					return false;
+				}
+				setCoverUploading(true);
+				try {
+					return await runAction(
+						() => library.actions.replaceHubCover(saved.slug, file),
+						"Cover uploaded"
+					);
+				} finally {
+					setCoverUploading(false);
+				}
 			},
-			retire: () => {
-				library.actions.retireHub(saved.slug);
-				toast.success(`“${saved.title}” retired`);
-			},
-			save: () => {
-				library.actions.saveHub(saved.slug, patch);
-				setPatch({});
-				toast.success("Saved");
+			retire: () =>
+				runAction(
+					() => library.actions.retireHub(saved.slug),
+					`“${saved.title}” retired`
+				),
+			save: async () => {
+				const submitted = patch;
+				if (
+					await runAction(
+						() => library.actions.saveHub(saved.slug, submitted),
+						"Saved"
+					)
+				) {
+					setPatch((current) => unsavedSince(current, submitted));
+				}
 			},
 			setField,
 		},
 		meta: {
 			canPublish: !dirty && blocking.length === 0 && saved.status !== "live",
+			coverUploading,
 			dirty,
 		},
 		state: { blocking, gates, hub, items, saved },

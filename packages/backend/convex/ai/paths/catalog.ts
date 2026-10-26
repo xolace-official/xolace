@@ -35,6 +35,12 @@ const BOTH: Exclude<SupportNeed, "none">[] = ["light", "active"];
 export const TOPIC_PREFIX = /^(audio|music)_topic_/;
 export const topicSlug = (topic: string) => topic.replace(TOPIC_PREFIX, "");
 
+/** A topic's display title when its `topics` row has none: `sleep_rest` → "Sleep rest". */
+export const topicTitle = (slug: string) => {
+	const words = slug.replace(/_/g, " ");
+	return words.charAt(0).toUpperCase() + words.slice(1);
+};
+
 function audioTopic(
 	topic: string,
 	emotions: string[],

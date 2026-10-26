@@ -11,35 +11,38 @@ import {
 	ImageIcon,
 	OctagonAlertIcon,
 	RotateCwIcon,
-	UploadIcon,
 } from "lucide-react";
-import { useRef } from "react";
+import Image from "next/image";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { StatusBadge } from "@/features/content/status-badge";
 import { formatDate, formatDuration } from "@/features/library/types";
-
+import { PickFileButton } from "@/features/media/pick-file-button";
 import { readAudioDuration } from "../audio-file";
+import { useTrackMedia } from "../audio-provider";
 import { FAMILY_LABEL, topicSlug } from "../types";
 import { useTrackEditor } from "./track-editor-provider";
 
-/** The audio file: length, processing state, Retry, Replace. */
+/** The audio file: a player, processing state, Retry, Replace. */
 export function AudioPanel() {
 	const {
 		state: { saved },
 		actions,
 	} = useTrackEditor();
-	const input = useRef<HTMLInputElement>(null);
+	const media = useTrackMedia(saved.slug);
+	// A fresh link every 30 minutes would restart playback; keep the one playing.
+	const [playingSrc, setPlayingSrc] = useState<string | null>(null);
 
-	const replace = async (file: File | undefined) => {
-		if (!file) {
-			return;
-		}
+	const replace = async (file: File) => {
+		let durationSec: number;
 		try {
-			actions.replaceAudio(await readAudioDuration(file));
+			durationSec = await readAudioDuration(file);
 		} catch (error) {
 			toast.error(error instanceof Error ? error.message : "Can't read file");
+			return;
 		}
+		await actions.replaceAudio(file, durationSec);
 	};
 
 	return (
@@ -57,6 +60,18 @@ export function AudioPanel() {
 					</span>
 				</span>
 			</div>
+			{media ? (
+				// biome-ignore lint/a11y/useMediaCaption: a preview for staff; the transcript is in the editor
+				<audio
+					aria-label={`Play ${saved.title}`}
+					className="w-full"
+					controls
+					onPause={() => setPlayingSrc(null)}
+					onPlay={(event) => setPlayingSrc(event.currentTarget.currentSrc)}
+					preload="none"
+					src={playingSrc ?? media.audioUrl}
+				/>
+			) : null}
 			{saved.failure ? (
 				<Alert variant="coral">
 					<OctagonAlertIcon />
@@ -72,50 +87,45 @@ export function AudioPanel() {
 					Retry
 				</Button>
 			) : null}
-			<input
-				accept="audio/*"
-				className="sr-only"
-				onChange={(event) => {
-					replace(event.target.files?.[0]);
-					event.target.value = "";
-				}}
-				ref={input}
-				tabIndex={-1}
-				type="file"
-			/>
-			<Button
-				onClick={() => input.current?.click()}
-				size="sm"
-				variant="outline"
-			>
-				<UploadIcon />
+			<PickFileButton accept="audio/*" onPick={replace}>
 				Replace audio
-			</Button>
+			</PickFileButton>
 		</div>
 	);
 }
 
-/** Square Browse thumbnail. Upload is stubbed until R2 lands (admin step 6). */
+/** Square Browse thumbnail, resized to a 1080 WebP before upload. */
 export function ThumbPanel() {
 	const {
 		state: { saved },
 		actions,
 	} = useTrackEditor();
+	const media = useTrackMedia(saved.slug);
 
 	return (
 		<div className="flex flex-col gap-3">
-			<div className="grid aspect-square place-items-center rounded-lg border-2 border-line border-dashed bg-surface-sunken text-ink-muted">
-				<div className="flex flex-col items-center gap-2">
-					<ImageIcon aria-hidden className="size-8 stroke-2" />
-					<span className="type-small">
-						{saved.hasThumb ? "Thumbnail uploaded" : "No thumbnail"}
-					</span>
-				</div>
+			<div className="relative grid aspect-square place-items-center overflow-hidden rounded-lg border-2 border-line border-dashed bg-surface-sunken text-ink-muted">
+				{media ? (
+					<Image
+						alt={`Thumbnail for ${saved.title}`}
+						className="object-cover"
+						fill
+						sizes="320px"
+						src={media.thumbUrl}
+						unoptimized
+					/>
+				) : (
+					<div className="flex flex-col items-center gap-2">
+						<ImageIcon aria-hidden className="size-8 stroke-2" />
+						<span className="type-small">
+							{saved.hasThumb ? "Loading thumbnail" : "No thumbnail"}
+						</span>
+					</div>
+				)}
 			</div>
-			<Button onClick={actions.replaceThumb} size="sm" variant="outline">
-				<UploadIcon />
+			<PickFileButton accept="image/*" onPick={actions.replaceThumb}>
 				{saved.hasThumb ? "Replace thumbnail" : "Upload thumbnail"}
-			</Button>
+			</PickFileButton>
 		</div>
 	);
 }

@@ -145,14 +145,44 @@ section. Not borrowed: its offset-shadow theme (we use the lip/depth system).
    Overview and the hub editor read across Library, Audio and Imports. Save, Discard
    and Publish/Retire are shared (`features/content/editor-actions.tsx`), as is the
    name + slug dialog behind New hub and New source.
-6. Then backend: `adminQuery`/`adminMutation`, `content.ingest`, swap providers.
-   Compare warns when a Changed item was last edited in the admin, so an old file
-   can't quietly overwrite it.
+6. Backend, in three PRs:
+   - **6a** ✅ `convex/admin/{library,hubs,sources,audio}.ts` on `adminQuery` /
+     `adminMutation`; the Library and Audio stores read and write Convex. Metadata
+     only: New track, media replacement and covers are disabled until 6b.
+   - **6b** ✅ Uploads straight from the browser to R2 for New track, track audio and
+     thumbnails, topic covers and hub covers (`convex/admin/uploads.ts`). Images are
+     processed in the browser with jSquash (Lanczos3, WebP q78 effort 6, as the
+     scripts' sharp) plus a ThumbHash; if quality falls short, the fallback is sharp
+     in a `"use node"` action. Convex picks every key, keeping the scripts'
+     content-addressed `thumb/<sha256>.webp`, so not `r2.clientApi` (random keys,
+     public read/delete functions). Each bucket needs a CORS rule allowing `PUT`
+     from the admin's origins. Entry covers and narration stay in the script.
+   - **6c** Imports on Convex: `import_runs` / `import_items`, compare, apply as a
+     `@convex-dev/workflow` per item, retry. Compare warns when a Changed item was
+     last edited in the admin (`editedBy` set), so an old file can't quietly
+     overwrite it.
 
 Prototype before building (2–3 variants each): **entry editor layout** and **import
 diff review**. The tables, shell and overview follow existing patterns.
 
 ### Decided
+
+- **One write path per content type (6a).** `library/write.ts` (`writeEntry`,
+  `resolveHubItems`) and `ai/paths/audioTracks.ts` (`reindexTrack`) are shared by the
+  ingest and `convex/admin/*`, so the editor and the scripts enforce the same gates.
+  Ingest stays strict (every gate on drafts too); the admin writes drafts half-done
+  and checks every gate on Publish and on any save of a live item. That relaxes one
+  rule for admin drafts only: a first-hand story can be saved before consent is
+  recorded, but not published.
+- **Status is derived, not stored (6a).** Rows carry `active`, plus new optional
+  `retiredAt`, `updatedAt` and `editedBy`. The app maps them with `deriveStatus`
+  (`features/content/derive-status.ts`): live, retired, needs review (a failing
+  safety, consent or alt gate), else draft. Every admin write stamps `editedBy` and
+  clears the entry/hub/source import `sha256`; a track's `sha256` is its audio hash
+  and stays.
+- **Only `apps/admin` may call `api.admin.*`.** A Biome GritQL plugin
+  (`tools/biome/no-admin-api.grit`) fails lint in web, mobile, cli, docs and
+  `packages/ui`. Convex is still the real check.
 
 - **Entry editor layout: "Document + rail"** (prototype A, picked over B "Tabs" and
   C "Live preview"). Copy, body and details run down one column; a sticky right rail

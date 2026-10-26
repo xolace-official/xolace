@@ -138,7 +138,7 @@ The plan for `./convex/*`:
 - Every admin function sits in `packages/backend/convex/admin/*`.
 - Each is built with `adminQuery`, `adminMutation` and `adminAction`. These are custom function builders that check the `role` claim and throw if it's missing.
 - A Biome rule stops `apps/web`, `apps/mobile` and `apps/cli` from importing `api.admin.*`.
-- The existing `convex/admin.ts` is folded into this.
+- The existing `convex/admin.ts` is folded into this (now `convex/admin/xolacers.ts`).
 
 **Content ingestion replaces the scripts that re-upload everything.** Today `scripts/kindling` and `scripts/library` push the whole manifest every run. The new design is one deep module, `content.ingest`, with a small interface:
 - **Upload.** Admin requests an upload URL and the file goes straight from the browser to R2 (`@convex-dev/r2`, already a dependency) or Convex storage.

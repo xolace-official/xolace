@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
 import { r2 } from "./ai/paths/audioTracks";
-import { topicSlug } from "./ai/paths/catalog";
+import { topicSlug, topicTitle } from "./ai/paths/catalog";
 import { requireAuth } from "./lib/auth";
 
 /**
@@ -188,11 +188,6 @@ export async function toTrackItem(t: Doc<"audio_tracks">) {
 		title: t.title,
 	};
 }
-
-const topicTitle = (slug: string) => {
-	const words = slug.replace(/_/g, " ");
-	return words.charAt(0).toUpperCase() + words.slice(1);
-};
 
 /** Per-family list — `active` rows only, page size chosen by the client (30). */
 export const listByFamily = query({

@@ -5,7 +5,7 @@
  * deploy key (`bunx convex run --prod`) or from the dashboard.
  */
 import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
+import { internalMutation } from "../_generated/server";
 
 /**
  * Grant xolacer eligibility. Sets the flag and nothing else — the person
@@ -16,7 +16,7 @@ import { internalMutation } from "./_generated/server";
  * the Clerk dashboard. We deliberately never store emails, so Clerk is the
  * only place that mapping exists.
  *
- *   bunx convex run --prod admin:promoteXolacer '{"clerkUserId":"user_..."}'
+ *   bunx convex run --prod admin/xolacers:promoteXolacer '{"clerkUserId":"user_..."}'
  */
 export const promoteXolacer = internalMutation({
 	args: { clerkUserId: v.string(), isXolacer: v.optional(v.boolean()) },

@@ -3,6 +3,9 @@
 import { createContext, type ReactNode, use, useState } from "react";
 import { toast } from "sonner";
 
+import { unsavedSince } from "@/features/content/draft-patch";
+import { runAction } from "@/features/content/run-action";
+
 import { type Citation, citationsOf } from "../citations";
 import { type SourcePatch, useLibrary } from "../library-provider";
 import type { LibrarySource } from "../types";
@@ -77,14 +80,20 @@ export function SourceEditorProvider({
 	const value: SourceEditorContextValue = {
 		actions: {
 			discard: () => setPatch({}),
-			save: () => {
+			save: async () => {
+				const submitted = patch;
 				if (Object.keys(errors).length > 0) {
 					toast.error("Fill in the required fields first");
 					return;
 				}
-				library.actions.saveSource(saved.slug, patch);
-				setPatch({});
-				toast.success("Saved");
+				if (
+					await runAction(
+						() => library.actions.saveSource(saved.slug, submitted),
+						"Saved"
+					)
+				) {
+					setPatch((current) => unsavedSince(current, submitted));
+				}
 			},
 			setField: (key, fieldValue) =>
 				setPatch((current) => ({ ...current, [key]: fieldValue })),

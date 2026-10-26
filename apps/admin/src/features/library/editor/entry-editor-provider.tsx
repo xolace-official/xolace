@@ -1,12 +1,12 @@
 "use client";
 
 import { createContext, type ReactNode, use, useState } from "react";
-import { toast } from "sonner";
-
+import { unsavedSince } from "@/features/content/draft-patch";
 import {
 	blockingGates,
 	type PublishGate,
 } from "@/features/content/publish-gate";
+import { runAction } from "@/features/content/run-action";
 
 import { type EntryPatch, useLibrary } from "../library-provider";
 import { publishGates } from "../publish-gates";
@@ -20,11 +20,11 @@ import type { LibraryEntry, LibrarySource } from "../types";
 interface EntryEditorContextValue {
 	actions: {
 		discard: () => void;
-		markSafetyReviewed: () => void;
-		publish: () => void;
-		recordConsent: () => void;
-		retire: () => void;
-		save: () => void;
+		markSafetyReviewed: () => Promise<unknown>;
+		publish: () => Promise<unknown>;
+		recordConsent: () => Promise<unknown>;
+		retire: () => Promise<unknown>;
+		save: () => Promise<unknown>;
 		setBody: (body: string) => void;
 		setField: <K extends keyof EntryPatch>(
 			key: K,
@@ -92,26 +92,46 @@ export function EntryEditorProvider({
 	const value: EntryEditorContextValue = {
 		actions: {
 			discard: reset,
-			markSafetyReviewed: () => {
-				library.actions.markSafetyReviewed(saved.slug);
-				toast.success("Safety review recorded");
-			},
-			publish: () => {
-				library.actions.publish(saved.slug);
-				toast.success(`“${saved.title}” is live`);
-			},
-			recordConsent: () => {
-				library.actions.recordConsent(saved.slug);
-				toast.success("Consent recorded");
-			},
-			retire: () => {
-				library.actions.retire(saved.slug);
-				toast.success(`“${saved.title}” retired`);
-			},
-			save: () => {
-				library.actions.save(saved.slug, patch, draftBody ?? undefined);
-				reset();
-				toast.success("Saved");
+			markSafetyReviewed: () =>
+				runAction(
+					() => library.actions.markSafetyReviewed(saved.slug),
+					"Safety review recorded"
+				),
+			publish: () =>
+				runAction(
+					() => library.actions.publish(saved.slug),
+					`“${saved.title}” is live`
+				),
+			recordConsent: () =>
+				runAction(
+					() => library.actions.recordConsent(saved.slug),
+					"Consent recorded"
+				),
+			retire: () =>
+				runAction(
+					() => library.actions.retire(saved.slug),
+					`“${saved.title}” retired`
+				),
+			save: async () => {
+				// Keep the draft when Convex rejects it, and on success keep what was
+				// typed while the save was in flight, so nothing typed is lost.
+				const submitted = { body: draftBody, patch };
+				if (
+					await runAction(
+						() =>
+							library.actions.save(
+								saved.slug,
+								submitted.patch,
+								submitted.body ?? undefined
+							),
+						"Saved"
+					)
+				) {
+					setPatch((current) => unsavedSince(current, submitted.patch));
+					setDraftBody((current) =>
+						current === submitted.body ? null : current
+					);
+				}
 			},
 			setBody: setDraftBody,
 			setField: (key, fieldValue) =>

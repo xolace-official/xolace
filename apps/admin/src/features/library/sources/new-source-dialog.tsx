@@ -1,9 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-
 import { NewNamedDialog } from "@/features/content/new-named-dialog";
+import { runAction } from "@/features/content/run-action";
 
 import { useLibrary } from "../library-provider";
 
@@ -22,17 +21,23 @@ export function NewSourceDialog() {
 			namePlaceholder="NHS"
 			nameRequired="Name the publisher as credited."
 			noun="source"
-			onCreate={(name, slug) => {
-				actions.createSource({
-					attributionText: "",
-					dropBrandingIfAdapted: true,
-					licence: "",
-					name,
-					permission: "not_required",
-					slug,
-				});
-				toast.success(`“${name}” added`);
-				router.push(`/library/sources/${slug}`);
+			onCreate={async (name, slug) => {
+				const created = await runAction(
+					() =>
+						actions.createSource({
+							attributionText: "",
+							dropBrandingIfAdapted: true,
+							licence: "",
+							name,
+							permission: "not_required",
+							slug,
+						}),
+					`“${name}” added`
+				);
+				if (created) {
+					router.push(`/library/sources/${slug}`);
+				}
+				return created;
 			}}
 			slugHelp="Entry credits point at it, so it can't change after this."
 			slugTaken={(slug) => sources.some((source) => source.slug === slug)}

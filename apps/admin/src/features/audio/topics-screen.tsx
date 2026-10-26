@@ -1,12 +1,13 @@
 "use client";
 
 import { Badge } from "@xolace/ui/components/badge";
-import { Button } from "@xolace/ui/components/button";
 import { cn } from "@xolace/ui/lib/utils";
-import { ImageOffIcon, ShapesIcon, UploadIcon } from "lucide-react";
+import { ImageOffIcon, ShapesIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { toast } from "sonner";
 
+import { runAction } from "@/features/content/run-action";
+import { PickFileButton } from "@/features/media/pick-file-button";
 import {
 	PageHeader,
 	PageHeaderDescription,
@@ -17,7 +18,7 @@ import {
 import { useAudio } from "./audio-provider";
 import { type AudioTopic, type TrackFamily, topicSlug } from "./types";
 
-// Placeholder tints until real covers load from R2 (admin step 6).
+// Tints behind each cover while it loads.
 const TINTS = [
 	"bg-lavender-soft text-lavender-text",
 	"bg-sky-soft text-sky-text",
@@ -79,22 +80,34 @@ function TopicCard({
 	tint: string;
 }) {
 	const { actions } = useAudio();
-	const replace = () => {
-		actions.replaceTopicCover(topic.slug);
-		toast.success(`Cover for ${topic.title} replaced (fixture)`);
-	};
+	const replace = (file: File) =>
+		runAction(
+			() => actions.replaceTopicCover(topic.slug, file),
+			`Cover for ${topic.title} replaced`
+		);
 
 	return (
 		<li className="lip depth-md flex flex-col overflow-hidden rounded-xl border-2 border-line bg-surface">
 			<div
 				className={cn(
-					"grid aspect-square place-items-center border-line border-b-2",
+					"relative grid aspect-square place-items-center overflow-hidden border-line border-b-2",
 					topic.hasCover ? tint : "bg-surface-sunken text-ink-muted"
 				)}
 			>
-				{topic.hasCover ? (
+				{topic.coverUrl ? (
+					<Image
+						alt={`${topic.title} cover`}
+						className="object-cover"
+						fill
+						sizes="240px"
+						src={topic.coverUrl}
+						unoptimized
+					/>
+				) : null}
+				{topic.hasCover && !topic.coverUrl ? (
 					<ShapesIcon aria-hidden className="size-12 stroke-[2]" />
-				) : (
+				) : null}
+				{topic.hasCover ? null : (
 					<span className="flex flex-col items-center gap-2">
 						<ImageOffIcon aria-hidden className="size-10 stroke-[2]" />
 						<Badge variant="ember">No cover</Badge>
@@ -113,15 +126,9 @@ function TopicCard({
 						{music} music · {support} support
 					</span>
 				</div>
-				<Button
-					className="mt-auto"
-					onClick={replace}
-					size="sm"
-					variant="outline"
-				>
-					<UploadIcon />
+				<PickFileButton accept="image/*" className="mt-auto" onPick={replace}>
 					{topic.hasCover ? "Replace cover" : "Upload cover"}
-				</Button>
+				</PickFileButton>
 			</div>
 		</li>
 	);

@@ -1,12 +1,12 @@
 "use client";
 
 import { createContext, type ReactNode, use, useState } from "react";
-import { toast } from "sonner";
-
+import { unsavedSince } from "@/features/content/draft-patch";
 import {
 	blockingGates,
 	type PublishGate,
 } from "@/features/content/publish-gate";
+import { runAction } from "@/features/content/run-action";
 
 import { type TrackPatch, useAudio } from "../audio-provider";
 import { trackGates } from "../track-gates";
@@ -22,8 +22,9 @@ interface TrackEditorContextValue {
 		discard: () => void;
 		markSafetyReviewed: () => void;
 		publish: () => void;
-		replaceAudio: (durationSec: number) => void;
-		replaceThumb: () => void;
+		/** Uploads first; `true` once the track points at the new file. */
+		replaceAudio: (file: File, durationSec: number) => Promise<boolean>;
+		replaceThumb: (file: File) => Promise<boolean>;
 		retire: () => void;
 		retry: () => void;
 		save: () => void;
@@ -76,34 +77,46 @@ export function TrackEditorProvider({
 	const value: TrackEditorContextValue = {
 		actions: {
 			discard: () => setPatch({}),
-			markSafetyReviewed: () => {
-				audio.actions.markSafetyReviewed(saved.slug);
-				toast.success("Safety review recorded");
-			},
-			publish: () => {
-				audio.actions.publish(saved.slug);
-				toast.success(`“${saved.title}” is live`);
-			},
-			replaceAudio: (durationSec) => {
-				audio.actions.replaceAudio(saved.slug, durationSec);
-				toast.success("Audio replaced. It's processed when you publish.");
-			},
-			replaceThumb: () => {
-				audio.actions.replaceThumb(saved.slug);
-				toast.success("Thumbnail replaced");
-			},
-			retire: () => {
-				audio.actions.retire(saved.slug);
-				toast.success(`“${saved.title}” retired`);
-			},
-			retry: () => {
-				audio.actions.retry(saved.slug);
-				toast.success("Processing ran again (fixture)");
-			},
-			save: () => {
-				audio.actions.save(saved.slug, patch);
-				setPatch({});
-				toast.success("Saved");
+			markSafetyReviewed: () =>
+				runAction(
+					() => audio.actions.markSafetyReviewed(saved.slug),
+					"Safety review recorded"
+				),
+			publish: () =>
+				runAction(
+					() => audio.actions.publish(saved.slug),
+					`“${saved.title}” is live`
+				),
+			replaceAudio: (file, durationSec) =>
+				runAction(
+					() => audio.actions.replaceAudio(saved.slug, file, durationSec),
+					"Audio replaced"
+				),
+			replaceThumb: (file) =>
+				runAction(
+					() => audio.actions.replaceThumb(saved.slug, file),
+					"Thumbnail replaced"
+				),
+			retire: () =>
+				runAction(
+					() => audio.actions.retire(saved.slug),
+					`“${saved.title}” retired`
+				),
+			retry: () =>
+				runAction(
+					() => audio.actions.retry(saved.slug),
+					"Processing ran again"
+				),
+			save: async () => {
+				const submitted = patch;
+				if (
+					await runAction(
+						() => audio.actions.save(saved.slug, submitted),
+						"Saved"
+					)
+				) {
+					setPatch((current) => unsavedSince(current, submitted));
+				}
 			},
 			setField: (key, fieldValue) =>
 				setPatch((current) => ({ ...current, [key]: fieldValue })),
