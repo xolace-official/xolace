@@ -9,6 +9,7 @@ import { useStreamConnection } from "../providers/stream-chat-provider";
 import { useDismissThreadNotifications } from "../use-dismiss-thread-notifications";
 import { useThreadConversation } from "../use-thread-conversation";
 import { rateCtaState } from "../utils";
+import { ChatBodyFrame } from "./chat-body-frame";
 import { ComposerPlaceholder } from "./composer-placeholder";
 import { SafetyStrip } from "./safety-strip";
 import { ThreadHeader } from "./thread-header";
@@ -45,7 +46,11 @@ export function ThreadScreen({ conversationId }: { conversationId: string }) {
 	useDismissThreadNotifications(conversationId);
 
 	if (conversation === undefined) {
-		return <ThreadSkeleton />;
+		return (
+			<ChatBodyFrame>
+				<ThreadSkeleton />
+			</ChatBodyFrame>
+		);
 	}
 	if (conversation === null) {
 		return <ThreadUnavailable />;
@@ -144,7 +149,7 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
 	return (
 		<>
 			{header}
-			{body()}
+			<ChatBodyFrame>{body()}</ChatBodyFrame>
 		</>
 	);
 }
