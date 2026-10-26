@@ -50,6 +50,8 @@ import {
 import {
 	AudioLinesIcon,
 	HeadphonesIcon,
+	ImageIcon,
+	LoaderCircleIcon,
 	MusicIcon,
 	PlusIcon,
 	XIcon,
@@ -59,7 +61,7 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { runAction, UPLOADS_PENDING } from "@/features/content/run-action";
+import { runAction } from "@/features/content/run-action";
 import { isReservedSlug, isSlug, slugify } from "@/features/content/slug";
 import { formatDuration } from "@/features/library/types";
 import {
@@ -90,15 +92,16 @@ const FAMILY_HINT: Record<TrackFamily, string> = {
 };
 
 const MAX_AUDIO_BYTES = 200 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 25 * 1024 * 1024;
 
 /**
- * `/audio/new`: the few things a track can't exist without (family, audio file, title,
- * slug, topic). Create saves it as a draft and opens the track editor for the rest.
+ * `/audio/new`: the few things a track can't exist without (family, audio file,
+ * thumbnail, title, slug, topic). Create uploads both files, saves a draft and opens
+ * the track editor for the rest.
  */
 export function NewTrackScreen() {
 	const {
 		actions,
-		meta: { uploads },
 		state: { topics, tracks },
 	} = useAudio();
 	const router = useRouter();
@@ -110,7 +113,9 @@ export function NewTrackScreen() {
 	const [title, setTitle] = useState("");
 	const [slugInput, setSlugInput] = useState<string | null>(null);
 	const [topic, setTopic] = useState<string | null>(null);
+	const [thumbs, setThumbs] = useState<File[]>([]);
 	const [submitted, setSubmitted] = useState(false);
+	const [creating, setCreating] = useState(false);
 
 	// The slug follows the title until someone edits it by hand.
 	const slug = slugInput ?? (title ? `${family}-${slugify(title)}` : "");
@@ -127,6 +132,7 @@ export function NewTrackScreen() {
 			}
 			return slugTaken ? "Another track already has this slug." : null;
 		})(),
+		thumb: thumbs.length === 0 ? "Add the square thumbnail." : null,
 		title: title.trim() ? null : "Every track needs a title.",
 		topic: topic ? null : "Pick the topic it sits under.",
 	};
@@ -165,21 +171,26 @@ export function NewTrackScreen() {
 	const create = async (event: FormEvent) => {
 		event.preventDefault();
 		setSubmitted(true);
-		if (!(valid && topic && durationSec !== null && files.length > 0)) {
+		const [audio] = files;
+		const [thumb] = thumbs;
+		if (!(valid && topic && durationSec !== null && audio && thumb)) {
 			return;
 		}
+		setCreating(true);
 		const created = await runAction(
 			() =>
 				actions.create({
+					audio,
 					durationSec,
 					family,
-					hasThumb: false,
 					slug,
+					thumb,
 					title: title.trim(),
 					topic,
 				}),
 			`“${title.trim()}” saved as a draft`
 		);
+		setCreating(false);
 		if (created) {
 			router.push(`/audio/${slug}`);
 		}
@@ -211,8 +222,8 @@ export function NewTrackScreen() {
 					<PageHeaderTitle>New track</PageHeaderTitle>
 				</PageHeaderHeading>
 				<PageHeaderDescription>
-					Saved as a draft. Tags, licence or transcript, and the thumbnail come
-					next, in the editor.
+					Saved as a draft. Tags, and the licence or transcript, come next, in
+					the editor.
 				</PageHeaderDescription>
 			</PageHeader>
 
@@ -315,6 +326,60 @@ export function NewTrackScreen() {
 								<FieldError>{shown("audio", false)}</FieldError>
 							</Field>
 
+							<Field data-invalid={shown("thumb", false) ? true : undefined}>
+								<FieldLabel>Thumbnail</FieldLabel>
+								<FileUpload
+									accept="image/*"
+									invalid={Boolean(shown("thumb", false))}
+									maxFiles={1}
+									maxSize={MAX_IMAGE_BYTES}
+									onFileReject={(file, message) =>
+										toast.error(message, { description: file.name })
+									}
+									onValueChange={setThumbs}
+									value={thumbs}
+								>
+									{thumbs.length === 0 ? (
+										<FileUploadDropzone>
+											<span className="grid size-12 place-items-center rounded-full bg-lavender-soft text-lavender-text">
+												<ImageIcon className="size-6 stroke-[2.5]" />
+											</span>
+											<span className="type-body-strong text-ink">
+												Drop the thumbnail here
+											</span>
+											<span className="type-small">
+												Square works best. Saved as a WebP up to 1080 px
+											</span>
+											<FileUploadTrigger
+												render={<Button size="sm" variant="outline" />}
+											>
+												Browse files
+											</FileUploadTrigger>
+										</FileUploadDropzone>
+									) : null}
+									<FileUploadList>
+										{thumbs.map((file) => (
+											<FileUploadItem key={file.name} value={file}>
+												<FileUploadItemPreview />
+												<FileUploadItemMetadata />
+												<FileUploadItemDelete
+													render={
+														<Button
+															aria-label={`Remove ${file.name}`}
+															size="icon-sm"
+															variant="ghost"
+														/>
+													}
+												>
+													<XIcon />
+												</FileUploadItemDelete>
+											</FileUploadItem>
+										))}
+									</FileUploadList>
+								</FileUpload>
+								<FieldError>{shown("thumb", false)}</FieldError>
+							</Field>
+
 							<Field
 								data-invalid={shown("title", title !== "") ? true : undefined}
 							>
@@ -381,13 +446,13 @@ export function NewTrackScreen() {
 						>
 							Cancel
 						</Link>
-						<Button
-							disabled={!uploads}
-							title={uploads ? undefined : UPLOADS_PENDING}
-							type="submit"
-						>
-							<PlusIcon />
-							Create draft
+						<Button disabled={creating} type="submit">
+							{creating ? (
+								<LoaderCircleIcon className="animate-spin" />
+							) : (
+								<PlusIcon />
+							)}
+							{creating ? "Uploading…" : "Create draft"}
 						</Button>
 					</CardFooter>
 				</Card>

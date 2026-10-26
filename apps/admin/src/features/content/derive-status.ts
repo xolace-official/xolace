@@ -5,7 +5,7 @@ import type { ContentStatus } from "./status-badge";
  * Status is derived from the row, never stored (docs/plan/admin-v1.md, "Item status"):
  * live while `active`, retired once taken down after being live, and otherwise a
  * draft, or "needs review" when one of the review gates (safety review, consent, alt
- * text) blocks it. Queued / processing / failed come from processing, with uploads.
+ * text) blocks it. Queued / processing / failed come from imports (admin step 6c).
  */
 export function deriveStatus(
 	row: { active: boolean; retiredAt?: number },
