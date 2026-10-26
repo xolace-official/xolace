@@ -1,7 +1,9 @@
 import { ClerkProvider } from "@clerk/nextjs";
+import { Toaster } from "@xolace/ui/components/sonner";
 import { TooltipProvider } from "@xolace/ui/components/tooltip";
 import type { Metadata } from "next";
 import { Nunito, Space_Grotesk } from "next/font/google";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import "../index.css";
 import Providers from "@/components/providers";
@@ -35,9 +37,12 @@ export default function RootLayout({
 			<body className="antialiased">
 				<ClerkProvider>
 					<Providers>
-						<TooltipProvider>
-							<AdminShell>{children}</AdminShell>
-						</TooltipProvider>
+						<NuqsAdapter>
+							<TooltipProvider>
+								<AdminShell>{children}</AdminShell>
+								<Toaster />
+							</TooltipProvider>
+						</NuqsAdapter>
 					</Providers>
 				</ClerkProvider>
 			</body>
