@@ -16,8 +16,13 @@ import {
 	CardTitle,
 } from "@xolace/ui/components/card";
 import Link from "next/link";
-import type { ReactNode } from "react";
 
+import {
+	EditorLayout,
+	EditorMain,
+	EditorPanel,
+	EditorRail,
+} from "@/features/content/editor-layout";
 import {
 	PageHeader,
 	PageHeaderActions,
@@ -86,8 +91,8 @@ export function EntryEditor() {
 				</PageHeaderMeta>
 			</PageHeader>
 
-			<div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
-				<div className="flex min-w-0 flex-col gap-8">
+			<EditorLayout>
+				<EditorMain>
 					<EditorPanel title="Copy">
 						<EntryCopyFields />
 					</EditorPanel>
@@ -97,12 +102,9 @@ export function EntryEditor() {
 					<EditorPanel title="Details">
 						<EntryDetailFields />
 					</EditorPanel>
-				</div>
+				</EditorMain>
 
-				<aside
-					aria-label="Publishing"
-					className="flex flex-col gap-6 lg:sticky lg:top-24"
-				>
+				<EditorRail>
 					<Card size="sm">
 						<CardHeader>
 							<CardTitle>Publish</CardTitle>
@@ -127,27 +129,8 @@ export function EntryEditor() {
 					<EditorPanel size="sm" title="Sources">
 						<CreditsList />
 					</EditorPanel>
-				</aside>
-			</div>
+				</EditorRail>
+			</EditorLayout>
 		</>
-	);
-}
-
-function EditorPanel({
-	title,
-	size,
-	children,
-}: {
-	title: string;
-	size?: "sm";
-	children: ReactNode;
-}) {
-	return (
-		<Card size={size}>
-			<CardHeader>
-				<CardTitle>{title}</CardTitle>
-			</CardHeader>
-			<CardContent>{children}</CardContent>
-		</Card>
 	);
 }

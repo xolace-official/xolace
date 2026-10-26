@@ -3,12 +3,13 @@
 import { createContext, type ReactNode, use, useState } from "react";
 import { toast } from "sonner";
 
-import { type EntryPatch, useLibrary } from "../library-provider";
 import {
 	blockingGates,
 	type PublishGate,
-	publishGates,
-} from "../publish-gates";
+} from "@/features/content/publish-gate";
+
+import { type EntryPatch, useLibrary } from "../library-provider";
+import { publishGates } from "../publish-gates";
 import type { LibraryEntry, LibrarySource } from "../types";
 
 /**

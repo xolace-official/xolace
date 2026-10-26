@@ -1,17 +1,9 @@
+import type { PublishGate } from "@/features/content/publish-gate";
+
 import type { LibraryEntry, LibrarySource } from "./types";
 
 // The rules `library/ingest.ts` and `library/admin.ts` already enforce, checked in the
 // UI so an editor sees what blocks Publish before the mutation rejects it.
-
-export interface PublishGate {
-	/** Shown under the label when the gate fails. */
-	help: string;
-	id: string;
-	label: string;
-	/** `false` = a soft warning; Publish still works. */
-	required: boolean;
-	state: "pass" | "fail";
-}
 
 const DAY_MS = 86_400_000;
 
@@ -109,8 +101,4 @@ export function publishGates({
 	}
 
 	return gates;
-}
-
-export function blockingGates(gates: readonly PublishGate[]) {
-	return gates.filter((gate) => gate.required && gate.state === "fail");
 }
