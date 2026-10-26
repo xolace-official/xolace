@@ -56,10 +56,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { isSlug, slugify } from "@/features/content/slug";
+import { isReservedSlug, isSlug, slugify } from "@/features/content/slug";
 import { formatDuration } from "@/features/library/types";
 import {
 	PageHeader,
@@ -103,6 +103,8 @@ export function NewTrackScreen() {
 	const [family, setFamily] = useState<TrackFamily>("music");
 	const [files, setFiles] = useState<File[]>([]);
 	const [durationSec, setDurationSec] = useState<number | null>(null);
+	// The file being read: a read that finishes after another pick (or a removal) is stale.
+	const picked = useRef<File | undefined>(undefined);
 	const [title, setTitle] = useState("");
 	const [slugInput, setSlugInput] = useState<string | null>(null);
 	const [topic, setTopic] = useState<string | null>(null);
@@ -112,10 +114,14 @@ export function NewTrackScreen() {
 	const slug = slugInput ?? (title ? `${family}-${slugify(title)}` : "");
 	const slugTaken = tracks.some((track) => track.slug === slug);
 	const errors = {
-		audio: durationSec === null ? "Add the audio file." : null,
+		audio:
+			files.length === 0 || durationSec === null ? "Add the audio file." : null,
 		slug: (() => {
 			if (!isSlug(slug)) {
 				return "Lowercase letters, numbers and dashes only.";
+			}
+			if (isReservedSlug("track", slug)) {
+				return `“${slug}” is taken by an admin page.`;
 			}
 			return slugTaken ? "Another track already has this slug." : null;
 		})(),
@@ -130,17 +136,25 @@ export function NewTrackScreen() {
 
 	const pickAudio = async (next: File[]) => {
 		setFiles(next);
+		setDurationSec(null);
 		const [file] = next;
+		picked.current = file;
 		if (!file) {
-			setDurationSec(null);
 			return;
 		}
 		try {
-			setDurationSec(await readAudioDuration(file));
+			const duration = await readAudioDuration(file);
+			if (picked.current !== file) {
+				return;
+			}
+			setDurationSec(duration);
 			if (!title) {
 				setTitle(titleFromFileName(file.name));
 			}
 		} catch (error) {
+			if (picked.current !== file) {
+				return;
+			}
 			setFiles([]);
 			toast.error(error instanceof Error ? error.message : "Can't read file");
 		}
@@ -149,7 +163,7 @@ export function NewTrackScreen() {
 	const create = (event: FormEvent) => {
 		event.preventDefault();
 		setSubmitted(true);
-		if (!(valid && topic && durationSec !== null)) {
+		if (!(valid && topic && durationSec !== null && files.length > 0)) {
 			return;
 		}
 		actions.create({

@@ -16,15 +16,12 @@ interface RoleSpec {
 	/** Keys every record of this role has; the first role whose keys all match wins. */
 	keys: readonly string[];
 	label: string;
-	/** The import can't run without it. */
-	required?: boolean;
 }
 
 const ROLES: Record<JsonRole, RoleSpec> = {
 	entries: {
 		keys: ["slug", "kind", "title", "bodyPath"],
 		label: "Entries",
-		required: true,
 	},
 	hubs: {
 		keys: ["slug", "title", "intro", "items"],
@@ -45,7 +42,6 @@ const ROLES: Record<JsonRole, RoleSpec> = {
 	tracks: {
 		keys: ["slug", "title", "audioPath", "topic"],
 		label: "Tracks",
-		required: true,
 	},
 };
 
