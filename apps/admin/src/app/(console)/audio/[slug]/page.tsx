@@ -8,7 +8,9 @@ export const metadata: Metadata = { title: "Edit track · Xolace Admin" };
 
 export default async function TrackPage({
 	params,
-}: PageProps<"/audio/[slug]">) {
+}: {
+	params: Promise<{ slug: string }>;
+}) {
 	const { slug } = await params;
 	return (
 		<Suspense fallback={<EntriesSkeleton />}>

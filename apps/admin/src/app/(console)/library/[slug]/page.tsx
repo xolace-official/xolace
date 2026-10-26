@@ -7,7 +7,9 @@ export const metadata: Metadata = { title: "Edit entry · Xolace Admin" };
 
 export default async function EntryPage({
 	params,
-}: PageProps<"/library/[slug]">) {
+}: {
+	params: Promise<{ slug: string }>;
+}) {
 	const { slug } = await params;
 	return (
 		<Suspense fallback={<EntriesSkeleton />}>

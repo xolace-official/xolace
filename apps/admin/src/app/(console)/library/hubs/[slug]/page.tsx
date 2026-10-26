@@ -6,7 +6,9 @@ export const metadata: Metadata = { title: "Edit hub · Xolace Admin" };
 
 export default async function HubPage({
 	params,
-}: PageProps<"/library/hubs/[slug]">) {
+}: {
+	params: Promise<{ slug: string }>;
+}) {
 	const { slug } = await params;
 	return <HubEditorScreen slug={slug} />;
 }
