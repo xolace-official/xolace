@@ -22,7 +22,9 @@ Rules the UI must surface, because the backend already enforces them:
 - Every non-decorative image in a body needs alt text.
 - A verbatim entry whose source has `refreshDays` and an old `retrievedAt` gets a
   "refresh" warning (soft).
-- Music tracks need a licence; support tracks need narrators.
+- Music tracks need a licence; a support track at tier 3 or above needs a safety
+  review. Narrators, transcripts and curated tags are soft warnings: prod has live
+  tracks without them (32 music tracks have no curated tags).
 
 ## Screens
 
@@ -37,7 +39,7 @@ only show the visual style; the shell itself is rebuilt on shadcn `Sidebar`.
 | 3 | `/library/[slug]`, `/library/new` | **Entry editor** | New entry opens the same editor empty, after picking the kind. Metadata, markdown body + preview, cover, source credits, facets, narration + transcript, publish checklist (the gates above), Publish/Retire, Mark safety reviewed |
 | 4 | `/library/hubs`, `/library/hubs/[slug]` | **Hubs** | List + editor: intro, cover, ordered items (entries and audio), reorder by drag |
 | 5 | `/library/sources`, `/library/sources/[slug]` | **Sources** | Licence, permission, attribution, `refreshDays`; which entries cite it; stale badge |
-| 6 | `/audio` | **Audio tracks** | 442 rows: paginated table with family, topic, series, duration, tags, status. Inline player |
+| 6 | `/audio` | **Audio tracks** | 442 rows: paginated table with family, topic, duration, tags, status, Featured/New. Inline player later (needs R2 URLs) |
 | 7 | `/audio/[slug]`, `/audio/new` | **Track editor** | New track opens the same editor empty, after picking the family. Audio + thumb upload, curated tags vs source tags, licence (music), narrators/series (support), `featured`, `newUntil` |
 | 8 | `/audio/topics` | **Topics** | Grid of covers; replace a cover |
 | 9 | `/imports`, `/imports/new`, `/imports/[id]` | **Bulk import** | Drop only the records a batch adds or changes, under any file names (+ media); see a diff (new / changed / unchanged / rejected with reason), apply, then watch per-item status: queued → processing → live / failed, with retry |
@@ -70,7 +72,9 @@ a Base UI build. diceui and reui do (`@base-ui/react`); kibo-ui is plain React.
 
 Already in `packages/ui`: alert, avatar, badge, button, card, checkbox, dialog,
 dropdown-menu, empty, input, input-group, label, progress, separator, skeleton,
-sonner, switch, table, tabs, textarea, tooltip.
+sonner, switch, table, tabs, textarea, tooltip (plus everything installed in steps
+1–4: sidebar, breadcrumb, pagination, field, select, sheet, spinner, collapsible,
+file-upload, stepper, toggle-group, tags-input).
 
 | Need | Use | Registry | Notes |
 |---|---|---|---|
@@ -78,11 +82,11 @@ sonner, switch, table, tabs, textarea, tooltip.
 | Breadcrumbs in editors | `breadcrumb` | @shadcn | |
 | Page header | custom `PageHeader` compound | none | Layout only, composes our type scale + `Button` |
 | Content tables | `table` + TanStack Table (shadcn data-table guide) | @shadcn | Library lists are ≤ 20 rows |
-| Audio tracks (442 rows) | `data-grid` (TanStack + virtual + column controls) | @reui (Base UI) | Alternative: `@tablecn/data-table` (URL-synced sort/pages) — decide in the tracks PR |
+| Audio tracks (442 rows) | `table` + `pagination`, filters and page in the URL (nuqs) | @shadcn | Decided in step 4: 25 rows a page needs no grid. `@reui/data-grid` stays the option if we want column controls or sorting |
 | Filters | `toggle-group`, `select`, `combobox`, `input-group` | @shadcn | `@reui/filters` only if we need a filter builder; it's heavy |
 | Pagination | `pagination` | @shadcn | |
 | Forms | `field`, `select`, `combobox`, `radio-group`, `native-select` | @shadcn | `field` for layout, react-hook-form + zod |
-| Tags (curated tags, facets) | `tags-input` | @diceui | |
+| Tags (curated tags, facets) | `tags-input` | @diceui | Installed in step 4 (track tags, narrators) |
 | File upload (cover, audio, manifest) | `file-upload` | @diceui (Base UI) | Over kibo `dropzone` (react-dropzone, not Base UI) |
 | Hub item reorder | `sortable` | @diceui (Base UI, dnd-kit) | |
 | Narration / track preview | `media-player` | @diceui (Base UI, media-chrome) | Or a plain `<audio>` if it's too heavy |
@@ -131,9 +135,11 @@ section. Not borrowed: its offset-shadow theme (we use the lip/depth system).
    on it with the env pill; `StatusBadge`, `PageHeader`, fixtures.
 2. ✅ Library entries list + entry editor (fixtures; facets read-only, uploads stubbed).
 3. ✅ Bulk import (diff + run status; JSON files recognised by their records).
-4. Audio tracks list + track editor, topics; **New entry** and **New track** on the
-   editors.
-5. Hubs, sources, overview.
+4. ✅ Audio tracks list + track editor, topics; **New entry** and **New track** on
+   the editors. The editor layout, publish checklist and gate type are shared
+   (`features/content`).
+5. Hubs, sources, overview. The entry editor gets source-credit editing here: until
+   then a new entry can't pass the "Source credits" gate.
 6. Then backend: `adminQuery`/`adminMutation`, `content.ingest`, swap providers.
    Compare warns when a Changed item was last edited in the admin, so an old file
    can't quietly overwrite it.
