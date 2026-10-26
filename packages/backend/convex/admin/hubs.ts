@@ -1,9 +1,11 @@
 import { ConvexError, type Infer, v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
+import { r2 } from "../ai/paths/audioTracks";
 import { adminMutation, adminQuery } from "../lib/adminAuth";
 import { assertHubLive, resolveHubItems } from "../library/write";
 import { ADMIN_LIST_LIMIT, adminStamp, assertSlug, notFound } from "./edits";
+import { assertThumbhash, imageKey } from "./uploads";
 
 /**
  * Library hubs for the admin (admin v1 step 6): an editor's ordered reading
@@ -155,6 +157,42 @@ export const retire = adminMutation({
 			...adminStamp(ctx.identity),
 			active: false,
 			retiredAt: h.active ? Date.now() : h.retiredAt,
+		});
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** Signed cover links last an hour: long enough for an editing session. */
+const COVER_URL_TTL_SEC = 60 * 60;
+
+/** The hub's cover as readers pick it: the 1280 WebP, else the original upload, else a plain URL. */
+export const cover = adminQuery({
+	args: { slug: v.string() },
+	handler: async (ctx, { slug }) => {
+		const h = await hubBySlug(ctx, slug);
+		const key = h.cover1280Key ?? h.coverKey;
+		if (key) {
+			return await r2.getUrl(key, { expiresIn: COVER_URL_TTL_SEC });
+		}
+		return h.coverUrl ?? null;
+	},
+	returns: v.union(v.string(), v.null()),
+});
+
+/**
+ * Point a hub at an uploaded 1280 WebP cover, as `--cover-variants` does.
+ * It wins over an older `coverKey` or `coverUrl`, which stay as they were.
+ */
+export const replaceCover = adminMutation({
+	args: { sha256: v.string(), slug: v.string(), thumbhash: v.string() },
+	handler: async (ctx, { sha256, slug, thumbhash }) => {
+		assertThumbhash(thumbhash);
+		const h = await hubBySlug(ctx, slug);
+		await ctx.db.patch("library_hubs", h._id, {
+			...adminStamp(ctx.identity),
+			cover1280Key: imageKey("hubCover", sha256),
+			coverThumbhash: thumbhash,
 		});
 		return null;
 	},

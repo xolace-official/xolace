@@ -2,21 +2,27 @@ import type { UserIdentity } from "convex/server";
 import { ConvexError, type Infer, v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
-import { reindexTrack } from "../ai/paths/audioTracks";
+import { r2, reindexTrack } from "../ai/paths/audioTracks";
 import { CATALOG_BY_KEY, TOPIC_SLUGS, topicTitle } from "../ai/paths/catalog";
 import { adminMutation, adminQuery } from "../lib/adminAuth";
 import { licenceValidator } from "../lib/validators";
 import { trackSearchTextOf } from "../library/searchText";
 import schema from "../schema";
-import { ADMIN_LIST_LIMIT, adminStamp, notFound } from "./edits";
+import { ADMIN_LIST_LIMIT, adminStamp, assertSlug, notFound } from "./edits";
+import {
+	assertSha256,
+	assertThumbhash,
+	audioKeyPrefix,
+	imageKey,
+} from "./uploads";
 
 /**
- * Audio tracks and topics for the admin (admin v1 step 6). Metadata only:
- * creating a track, and replacing its audio or thumbnail, need uploads
- * (step 6b). The rules match `ai/paths/audioTracks.ts upsertTrack`: the topic
- * prefix fits the family, music carries a licence, and a support track at
- * tier 3 or above needs a safety review, here enforced once it's live so a
- * draft can wait for its reviewer.
+ * Audio tracks and topics for the admin (admin v1 step 6). Media arrives
+ * already in R2 (`./uploads.ts`); these mutations point rows at it. The rules
+ * match `ai/paths/audioTracks.ts upsertTrack`: the topic prefix fits the
+ * family, music carries a licence, and a support track at tier 3 or above
+ * needs a safety review. The last two are enforced once it's live, so a draft
+ * can wait for its licence and its reviewer.
  */
 
 /** Support tiers from here up are acute enough to need a human safety review (§8). */
@@ -49,7 +55,11 @@ const trackRow = v.object({
 	whatItsFor: v.optional(v.string()),
 });
 
+/** Signed media links last an hour: long enough for an editing session. */
+const MEDIA_URL_TTL_SEC = 60 * 60;
+
 const topicRow = v.object({
+	coverUrl: v.optional(v.string()),
 	hasCover: v.boolean(),
 	slug: v.string(),
 	title: v.string(),
@@ -94,15 +104,23 @@ async function trackBySlug(ctx: QueryCtx, slug: string) {
 const trackError = (t: Pick<Doc<"audio_tracks">, "slug">, why: string) =>
 	new ConvexError(`audio track "${t.slug}": ${why}`);
 
+type TrackRules = Pick<
+	Doc<"audio_tracks">,
+	| "family"
+	| "licence"
+	| "safetyReviewedAt"
+	| "slug"
+	| "tier"
+	| "title"
+	| "topic"
+>;
+
 /** Rules that hold for every saved row, live or not. */
-function assertTrackShape(t: Doc<"audio_tracks">) {
+function assertTrackShape(t: TrackRules) {
 	// The catalogue entry itself, not just the suffix: some topics exist for one family only.
 	const prefix = t.family === "music" ? "music_topic_" : "audio_topic_";
 	if (!(t.topic.startsWith(prefix) && CATALOG_BY_KEY.has(t.topic))) {
 		throw trackError(t, `topic "${t.topic}" is not a ${t.family} topic`);
-	}
-	if (t.family === "music" && !t.licence) {
-		throw trackError(t, "music needs a licence");
 	}
 	if (
 		t.tier !== undefined &&
@@ -112,10 +130,13 @@ function assertTrackShape(t: Doc<"audio_tracks">) {
 	}
 }
 
-/** What a live track needs on top of its shape. */
-function assertTrackLive(t: Doc<"audio_tracks">) {
+/** What a live track needs on top of its shape. A draft can wait for its licence. */
+function assertTrackLive(t: TrackRules) {
 	if (!t.title.trim()) {
 		throw trackError(t, "needs a title");
+	}
+	if (t.family === "music" && !t.licence) {
+		throw trackError(t, "music needs a licence");
 	}
 	if (
 		t.licence &&
@@ -186,7 +207,7 @@ async function writeTrack(
 		...adminStamp(identity),
 		// `sha256` is the audio's hash on tracks, not the record's: keep it.
 		searchText: trackSearchTextOf(next),
-		sha256: before.sha256,
+		sha256: next.sha256,
 	});
 	await reindexTrack(ctx, before, before._id);
 }
@@ -211,14 +232,19 @@ export const topics = adminQuery({
 				r,
 			])
 		);
-		return [...TOPIC_SLUGS].sort().map((slug) => {
-			const row = rows.get(slug);
-			return {
-				hasCover: row !== undefined,
-				slug,
-				title: row?.title || topicTitle(slug),
-			};
-		});
+		return await Promise.all(
+			[...TOPIC_SLUGS].sort().map(async (slug) => {
+				const row = rows.get(slug);
+				return {
+					coverUrl:
+						row &&
+						(await r2.getUrl(row.thumbKey, { expiresIn: MEDIA_URL_TTL_SEC })),
+					hasCover: row !== undefined,
+					slug,
+					title: row?.title || topicTitle(slug),
+				};
+			})
+		);
 	},
 	returns: v.array(topicRow),
 });
@@ -326,6 +352,170 @@ export const markSafetyReviewed = adminMutation({
 			...t,
 			safetyReviewedAt: Date.now(),
 		});
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** Signed links to a track's audio and thumbnail, for the editor's player and preview. */
+export const media = adminQuery({
+	args: { slug: v.string() },
+	handler: async (ctx, { slug }) => {
+		const t = await trackBySlug(ctx, slug);
+		const [audioUrl, thumbUrl] = await Promise.all([
+			r2.getUrl(t.key, { expiresIn: MEDIA_URL_TTL_SEC }),
+			r2.getUrl(t.thumbKey, { expiresIn: MEDIA_URL_TTL_SEC }),
+		]);
+		return { audioUrl, thumbUrl };
+	},
+	returns: v.object({ audioUrl: v.string(), thumbUrl: v.string() }),
+});
+
+function assertDuration(durationSec: number) {
+	if (!(Number.isInteger(durationSec) && durationSec > 0)) {
+		throw new ConvexError(`${durationSec} is not a length in whole seconds`);
+	}
+}
+
+/** The audio key must be one `audioUploadUrl` minted for this track. */
+function assertAudioKey(family: string, slug: string, key: string) {
+	if (!key.startsWith(audioKeyPrefix(family, slug))) {
+		throw new ConvexError(`"${key}" wasn't uploaded for ${family}/${slug}`);
+	}
+}
+
+const uploadedThumb = v.object({ sha256: v.string(), thumbhash: v.string() });
+
+function thumbFields({ sha256, thumbhash }: Infer<typeof uploadedThumb>) {
+	assertThumbhash(thumbhash);
+	return {
+		thumbhash,
+		thumbKey: imageKey("thumb", sha256),
+		thumbSha256: sha256,
+	};
+}
+
+/**
+ * A new draft from New track, its audio and thumbnail already uploaded.
+ * Tags, the licence or transcript and the rest come from the editor.
+ */
+export const create = adminMutation({
+	args: {
+		audio: v.object({
+			durationSec: v.number(),
+			key: v.string(),
+			sha256: v.string(),
+		}),
+		family: familyValidator,
+		slug: v.string(),
+		thumb: uploadedThumb,
+		title: v.string(),
+		topic: v.string(),
+	},
+	handler: async (ctx, { audio, family, slug, thumb, title, topic }) => {
+		assertSlug(slug);
+		assertDuration(audio.durationSec);
+		assertSha256(audio.sha256);
+		assertAudioKey(family, slug, audio.key);
+		const taken = await ctx.db
+			.query("audio_tracks")
+			.withIndex("by_slug", (q) => q.eq("slug", slug))
+			.unique();
+		if (taken) {
+			throw new ConvexError(`audio track "${slug}" already exists`);
+		}
+		const track = {
+			...adminStamp(ctx.identity),
+			...thumbFields(thumb),
+			active: false,
+			durationSec: audio.durationSec,
+			family,
+			key: audio.key,
+			sha256: audio.sha256,
+			slug,
+			sourceTags: [],
+			tags: [],
+			title,
+			topic,
+		};
+		assertTrackShape(track);
+		const id = await ctx.db.insert("audio_tracks", {
+			...track,
+			searchText: trackSearchTextOf(track),
+		});
+		await reindexTrack(ctx, null, id);
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Point a track at newly uploaded audio and drop the old file, as the ingest
+ * does. New audio is new content, so a support track's safety review goes
+ * with it: a live track that needs one can't take new audio until retired.
+ */
+export const replaceAudio = adminMutation({
+	args: {
+		durationSec: v.number(),
+		key: v.string(),
+		sha256: v.string(),
+		slug: v.string(),
+	},
+	handler: async (ctx, { durationSec, key, sha256, slug }) => {
+		const t = await trackBySlug(ctx, slug);
+		assertDuration(durationSec);
+		assertSha256(sha256);
+		assertAudioKey(t.family, t.slug, key);
+		if (sha256 === t.sha256) {
+			// The same file again: keep the stored copy.
+			await r2.deleteObject(ctx, key);
+			return null;
+		}
+		await writeTrack(ctx, ctx.identity, t, {
+			...t,
+			durationSec,
+			key,
+			safetyReviewedAt: t.family === "support" ? undefined : t.safetyReviewedAt,
+			sha256,
+		});
+		await r2.deleteObject(ctx, t.key);
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** Point a track at an uploaded thumbnail. Thumbnails are shared by hash, so the old one stays. */
+export const replaceThumb = adminMutation({
+	args: { slug: v.string(), thumb: uploadedThumb },
+	handler: async (ctx, { slug, thumb }) => {
+		const t = await trackBySlug(ctx, slug);
+		await writeTrack(ctx, ctx.identity, t, { ...t, ...thumbFields(thumb) });
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** Set a topic's cover, creating its `topics` row on the first upload. */
+export const replaceTopicCover = adminMutation({
+	args: { slug: v.string(), thumb: uploadedThumb },
+	handler: async (ctx, { slug, thumb }) => {
+		if (!TOPIC_SLUGS.has(slug)) {
+			throw notFound("topic", slug);
+		}
+		const fields = {
+			...thumbFields(thumb),
+			editedBy: ctx.identity.subject,
+			updatedAt: Date.now(),
+		};
+		const row = await ctx.db
+			.query("topics")
+			.withIndex("by_slug", (q) => q.eq("slug", slug))
+			.unique();
+		if (row) {
+			await ctx.db.patch("topics", row._id, fields);
+		} else {
+			await ctx.db.insert("topics", { ...fields, slug });
+		}
 		return null;
 	},
 	returns: v.null(),

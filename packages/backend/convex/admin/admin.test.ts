@@ -8,6 +8,7 @@ import { makeFunctionReference } from "convex/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
+import { r2 } from "../ai/paths/audioTracks";
 import {
 	asAdmin,
 	asUnauthed,
@@ -15,9 +16,27 @@ import {
 	makeIdentity,
 } from "../test/harness.helpers";
 
-// Writes schedule index jobs; on fake timers they never run.
-beforeEach(() => vi.useFakeTimers());
-afterEach(() => vi.useRealTimers());
+// Writes schedule index jobs; on fake timers they never run. R2 is faked at
+// the `r2` seam: signing needs credentials and deletes run in a component.
+beforeEach(() => {
+	vi.useFakeTimers();
+	vi.spyOn(r2, "getUrl").mockImplementation(
+		async (key) => `https://r2.test/${key}`
+	);
+	vi.spyOn(r2, "generateUploadUrl").mockImplementation(async (key) => ({
+		key: key ?? "random",
+		url: `https://r2.test/put/${key}`,
+	}));
+	vi.spyOn(r2, "deleteObject").mockResolvedValue(undefined);
+});
+afterEach(() => {
+	vi.useRealTimers();
+	vi.restoreAllMocks();
+});
+
+const SHA = "a".repeat(64);
+const OTHER_SHA = "b".repeat(64);
+const THUMB = { sha256: SHA, thumbhash: "1QcSHQRnh493V4dIh4eXh1h4kJUI" };
 
 const NOT_AUTHENTICATED = /not_authenticated|Not authenticated/;
 const FORBIDDEN = /forbidden|Admin role required/;
@@ -28,18 +47,43 @@ const FORBIDDEN = /forbidden|Admin role required/;
  * when a new function has no entry here.
  */
 const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
+	"admin/audio:create": {
+		audio: { durationSec: 1, key: "x", sha256: "x" },
+		family: "music",
+		slug: "x",
+		thumb: { sha256: "x", thumbhash: "x" },
+		title: "x",
+		topic: "x",
+	},
 	"admin/audio:list": {},
 	"admin/audio:markSafetyReviewed": { slug: "x" },
+	"admin/audio:media": { slug: "x" },
 	"admin/audio:publish": { slug: "x" },
+	"admin/audio:replaceAudio": {
+		durationSec: 1,
+		key: "x",
+		sha256: "x",
+		slug: "x",
+	},
+	"admin/audio:replaceThumb": {
+		slug: "x",
+		thumb: { sha256: "x", thumbhash: "x" },
+	},
+	"admin/audio:replaceTopicCover": {
+		slug: "x",
+		thumb: { sha256: "x", thumbhash: "x" },
+	},
 	"admin/audio:retire": { slug: "x" },
 	"admin/audio:save": {
 		slug: "x",
 		track: { featured: false, tags: [], title: "x", topic: "x" },
 	},
 	"admin/audio:topics": {},
+	"admin/hubs:cover": { slug: "x" },
 	"admin/hubs:create": { slug: "x", title: "x" },
 	"admin/hubs:list": {},
 	"admin/hubs:publish": { slug: "x" },
+	"admin/hubs:replaceCover": { sha256: "x", slug: "x", thumbhash: "x" },
 	"admin/hubs:retire": { slug: "x" },
 	"admin/hubs:save": { intro: "", items: [], slug: "x", title: "x" },
 	"admin/library:bodies": {},
@@ -64,6 +108,8 @@ const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 	"admin/sources:create": { slug: "x", source: source() },
 	"admin/sources:list": {},
 	"admin/sources:save": { slug: "x", source: source() },
+	"admin/uploads:audioUploadUrl": { ext: "mp3", family: "music", slug: "x" },
+	"admin/uploads:imageUploadUrl": { sha256: "x", use: "thumb" },
 };
 
 interface Registered {
@@ -584,10 +630,210 @@ describe("admin/audio", () => {
 		);
 		const topics = await t.query(api.admin.audio.topics, {});
 		expect(topics.find((x) => x.slug === "grief")).toEqual({
+			coverUrl: "https://r2.test/thumb/g.webp",
 			hasCover: true,
 			slug: "grief",
 			title: "Grief and loss",
 		});
 		expect(topics.filter((x) => x.hasCover)).toHaveLength(1);
+	});
+});
+
+describe("admin media", () => {
+	async function withSupportTrack(extra: Partial<Doc<"audio_tracks">> = {}) {
+		const t = asAdmin();
+		await t.run((ctx) =>
+			ctx.db.insert("audio_tracks", {
+				active: false,
+				durationSec: 300,
+				family: "support",
+				key: "support/grounding/old.m4a",
+				safetyReviewedAt: 1,
+				sha256: OTHER_SHA,
+				slug: "grounding",
+				sourceTags: [],
+				tags: [],
+				thumbKey: "thumb/x.webp",
+				thumbSha256: "x",
+				tier: 2,
+				title: "Grounding",
+				topic: "audio_topic_grief",
+				...extra,
+			})
+		);
+		return t;
+	}
+
+	const stored = (t: Admin) =>
+		t.run((ctx) => ctx.db.query("audio_tracks").first());
+
+	it("picks the image key from the hash and the audio key from the track", async () => {
+		const t = asAdmin();
+		expect(
+			await t.mutation(api.admin.uploads.imageUploadUrl, {
+				sha256: SHA,
+				use: "hubCover",
+			})
+		).toEqual({
+			key: `hub-cover/${SHA}.webp`,
+			url: `https://r2.test/put/hub-cover/${SHA}.webp`,
+		});
+		await expect(
+			t.mutation(api.admin.uploads.imageUploadUrl, {
+				sha256: "../../etc",
+				use: "thumb",
+			})
+		).rejects.toThrow(/not a hex SHA-256/);
+		const { key } = await t.mutation(api.admin.uploads.audioUploadUrl, {
+			ext: "mp3",
+			family: "music",
+			slug: "rain",
+		});
+		expect(key).toMatch(/^music\/rain\/[0-9a-f-]{36}\.mp3$/);
+		await expect(
+			t.mutation(api.admin.uploads.audioUploadUrl, {
+				ext: "mp3",
+				family: "music",
+				slug: "../rain",
+			})
+		).rejects.toThrow(/not a valid slug/);
+	});
+
+	it("creates a music draft without its licence, but won't publish it", async () => {
+		const t = asAdmin();
+		const create = (key: string) =>
+			t.mutation(api.admin.audio.create, {
+				audio: { durationSec: 118, key, sha256: SHA },
+				family: "music",
+				slug: "rain",
+				thumb: THUMB,
+				title: "Rain",
+				topic: "music_topic_sleep_rest",
+			});
+		await expect(create("support/rain/a.mp3")).rejects.toThrow(
+			/wasn't uploaded for music\/rain/
+		);
+		await create("music/rain/a.mp3");
+		expect(await stored(t)).toMatchObject({
+			active: false,
+			editedBy: makeIdentity().subject,
+			key: "music/rain/a.mp3",
+			sha256: SHA,
+			thumbhash: THUMB.thumbhash,
+			thumbKey: `thumb/${SHA}.webp`,
+			thumbSha256: SHA,
+		});
+		await expect(create("music/rain/b.mp3")).rejects.toThrow(/already exists/);
+		await expect(
+			t.mutation(api.admin.audio.publish, { slug: "rain" })
+		).rejects.toThrow(/music needs a licence/);
+	});
+
+	it("swaps in new audio, dropping the old file and the safety review", async () => {
+		const t = await withSupportTrack();
+		await t.mutation(api.admin.audio.replaceAudio, {
+			durationSec: 240,
+			key: "support/grounding/new.m4a",
+			sha256: SHA,
+			slug: "grounding",
+		});
+		expect(await stored(t)).toMatchObject({
+			durationSec: 240,
+			key: "support/grounding/new.m4a",
+			sha256: SHA,
+		});
+		expect((await stored(t))?.safetyReviewedAt).toBeUndefined();
+		expect(r2.deleteObject).toHaveBeenCalledWith(
+			expect.anything(),
+			"support/grounding/old.m4a"
+		);
+	});
+
+	it("keeps the stored audio when the same file comes back", async () => {
+		const t = await withSupportTrack();
+		await t.mutation(api.admin.audio.replaceAudio, {
+			durationSec: 300,
+			key: "support/grounding/again.m4a",
+			sha256: OTHER_SHA,
+			slug: "grounding",
+		});
+		expect((await stored(t))?.key).toBe("support/grounding/old.m4a");
+		expect(r2.deleteObject).toHaveBeenCalledWith(
+			expect.anything(),
+			"support/grounding/again.m4a"
+		);
+	});
+
+	it("won't swap the audio of a live track that then needs a review", async () => {
+		const t = await withSupportTrack({ active: true, tier: 3 });
+		await expect(
+			t.mutation(api.admin.audio.replaceAudio, {
+				durationSec: 240,
+				key: "support/grounding/new.m4a",
+				sha256: SHA,
+				slug: "grounding",
+			})
+		).rejects.toThrow(/needs a safety review/);
+		expect((await stored(t))?.key).toBe("support/grounding/old.m4a");
+	});
+
+	it("points a track and a topic at an uploaded thumbnail", async () => {
+		const t = await withSupportTrack();
+		await t.mutation(api.admin.audio.replaceThumb, {
+			slug: "grounding",
+			thumb: THUMB,
+		});
+		expect((await stored(t))?.thumbKey).toBe(`thumb/${SHA}.webp`);
+		expect(await t.query(api.admin.audio.media, { slug: "grounding" })).toEqual(
+			{
+				audioUrl: "https://r2.test/support/grounding/old.m4a",
+				thumbUrl: `https://r2.test/thumb/${SHA}.webp`,
+			}
+		);
+
+		await t.mutation(api.admin.audio.replaceTopicCover, {
+			slug: "grief",
+			thumb: THUMB,
+		});
+		const topics = await t.query(api.admin.audio.topics, {});
+		expect(topics.find((x) => x.slug === "grief")).toMatchObject({
+			coverUrl: `https://r2.test/thumb/${SHA}.webp`,
+			hasCover: true,
+		});
+		await expect(
+			t.mutation(api.admin.audio.replaceTopicCover, {
+				slug: "not-a-topic",
+				thumb: THUMB,
+			})
+		).rejects.toThrow(/not found/);
+		await expect(
+			t.mutation(api.admin.audio.replaceThumb, {
+				slug: "grounding",
+				thumb: { ...THUMB, thumbhash: "<script>" },
+			})
+		).rejects.toThrow(/ThumbHash/);
+	});
+
+	it("sets a hub's 1280 cover over an older one", async () => {
+		const t = asAdmin();
+		await t.mutation(api.admin.hubs.create, { slug: "sleep", title: "Sleep" });
+		expect(await t.query(api.admin.hubs.cover, { slug: "sleep" })).toBeNull();
+		await t.run(async (ctx) => {
+			const h = await ctx.db.query("library_hubs").first();
+			if (h) {
+				await ctx.db.patch("library_hubs", h._id, {
+					coverKey: "hub-cover/o.png",
+				});
+			}
+		});
+		await t.mutation(api.admin.hubs.replaceCover, {
+			slug: "sleep",
+			...THUMB,
+		});
+		expect(await t.query(api.admin.hubs.cover, { slug: "sleep" })).toBe(
+			`https://r2.test/hub-cover/${SHA}.webp`
+		);
+		const [hub] = await t.query(api.admin.hubs.list, {});
+		expect(hub.hasCover).toBe(true);
 	});
 });

@@ -2490,11 +2490,13 @@ export default defineSchema({
 	// across both families; membership stays "≥ 1 active track" — a row here
 	// never adds a tile. Cascade-exempt for the same reason as `audio_tracks`.
 	topics: defineTable({
+		editedBy: v.optional(v.string()), // Clerk subject of the staff member who last changed it in the admin
 		slug: v.string(), // the shared suffix, validated against the model catalogue at write
 		thumbhash: v.optional(v.string()), // base64 ThumbHash of the cover
 		thumbKey: v.string(), // R2 key, content-addressed: `thumb/${thumbSha256}.<ext>`
 		thumbSha256: v.string(),
 		title: v.optional(v.string()), // curated display title; else derived from the slug
+		updatedAt: v.optional(v.number()), // last write by the admin
 	})
 		.index("by_slug", ["slug"])
 		.index("by_thumbKey", ["thumbKey"]), // discardUpload: is this blob still referenced?
