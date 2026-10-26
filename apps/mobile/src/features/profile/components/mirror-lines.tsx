@@ -137,7 +137,7 @@ export function MirrorLines({
 			<AppText className="mb-3.5 text-[11px] text-muted uppercase tracking-widest">
 				your patterns
 			</AppText>
-			<Surface className="p-0 px-4">
+			<Surface className="px-4 py-0">
 				{rows.map((row, i) => (
 					<View
 						className={`flex-row items-center gap-3.5 py-4 ${i > 0 ? "border-border/50 border-t" : ""}`}
