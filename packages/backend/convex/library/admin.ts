@@ -1,7 +1,8 @@
 import { ConvexError, v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation, type MutationCtx } from "../_generated/server";
-import { assertPublishable } from "./ingest";
+import { assertPublishable } from "./publishGates";
+import { retiredAtAfter } from "./write";
 
 /**
  * One-off curator mutations (#406), run by hand — never part of ingest and
@@ -34,8 +35,16 @@ export const setActive = internalMutation({
 	args: { active: v.boolean(), slug: v.string() },
 	handler: async (ctx, { slug, active }) => {
 		const e = await bySlug(ctx, slug);
-		assertPublishable({ ...e, active });
-		await ctx.db.patch("library_entries", e._id, { active });
+		// Taking an entry down is never gated: it's the urgent path (#404).
+		if (active) {
+			assertPublishable({ ...e, active });
+		}
+		const now = Date.now();
+		await ctx.db.patch("library_entries", e._id, {
+			active,
+			retiredAt: retiredAtAfter(e, active, now),
+			updatedAt: now,
+		});
 		// Retired leaves the meaning index; republished comes back (#568).
 		await ctx.scheduler.runAfter(0, internal.ai.library.embed.indexEntry, {
 			entryId: e._id,

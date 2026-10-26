@@ -80,6 +80,10 @@ export default defineSchema({
 	audio_tracks: defineTable({
 		active: v.boolean(), // retire (licence lapse) without deleting
 		durationSec: v.number(),
+		// Admin edits (admin v1 step 6): the staff member's Clerk subject on the
+		// latest admin write, and when. A file import replaces the row and drops
+		// editedBy, so its presence means "last changed in the admin".
+		editedBy: v.optional(v.string()),
 		episodeNumber: v.optional(v.number()),
 		family: v.union(v.literal("support"), v.literal("music")),
 		featured: v.optional(v.boolean()), // hand-picked Browse hero; set from the Convex dashboard
@@ -91,6 +95,7 @@ export default defineSchema({
 		// support-family
 		narrators: v.optional(v.array(v.string())), // display strings: ["Sage"], ["Sage","Ash"]
 		newUntil: v.optional(v.number()), // ms epoch; in the Browse "New" shelf while > now
+		retiredAt: v.optional(v.number()), // set when taken down after being live; tells Retired from Draft
 		safetyReviewedAt: v.optional(v.number()),
 
 		// Browse search (#550): lowercase title, topic, tags, narrators, series
@@ -112,6 +117,7 @@ export default defineSchema({
 		title: v.string(),
 		topic: v.string(), // the audio_topic_* / music_topic_* catalog entry
 		transcript: v.optional(v.string()), // what the track says; its meaning-index text (#572)
+		updatedAt: v.optional(v.number()), // last write by the admin or an import
 		whatItsFor: v.optional(v.string()), // one curated line; embedded with title + tags (#572)
 	})
 		.index("by_slug", ["slug"])
@@ -1125,6 +1131,7 @@ export default defineSchema({
 		coverThumbhash: v.optional(v.string()), // ingest --cover-variants (#507): base64 ThumbHash, the cover's load placeholder
 		coverUrl: v.optional(v.string()), // else the primary subject's cover
 		dek: v.string(),
+		editedBy: v.optional(v.string()), // Clerk subject of the last admin edit; see audio_tracks
 		kind: v.union(
 			v.literal("explainer"),
 			v.literal("advice"),
@@ -1136,6 +1143,7 @@ export default defineSchema({
 		publishedAt: v.optional(v.number()),
 		readMin: v.number(), // computed at ingest
 		reflectPrompt: v.optional(v.string()), // curator's "Reflect on this" opener; else a plain default (#413)
+		retiredAt: v.optional(v.number()), // set when taken down after being live; tells Retired from Draft
 		retrievedAt: v.optional(v.number()),
 		reuse: v.union(
 			v.literal("verbatim"),
@@ -1150,6 +1158,7 @@ export default defineSchema({
 		slug: v.string(),
 		storyDescriptor: v.optional(v.string()), // stories: "a second-year student, 20"
 		title: v.string(),
+		updatedAt: v.optional(v.number()), // last write by the admin or an import
 	})
 		.index("by_slug", ["slug"])
 		.index("by_active_and_kind", ["active", "kind"])
@@ -1226,6 +1235,7 @@ export default defineSchema({
 		coverKey: v.optional(v.string()), // ingest: R2 key of an uploaded cover, `hub-cover/<sha>.<ext>`; signed at read, wins over coverUrl
 		coverThumbhash: v.optional(v.string()), // ingest --cover-variants (#508): base64 ThumbHash, the cover's load placeholder
 		coverUrl: v.optional(v.string()),
+		editedBy: v.optional(v.string()), // Clerk subject of the last admin edit; see audio_tracks
 		intro: v.string(),
 		items: v.array(
 			v.union(
@@ -1239,9 +1249,11 @@ export default defineSchema({
 				})
 			)
 		), // bounded by editorial practice (a hub is a short running order)
+		retiredAt: v.optional(v.number()), // set when taken down after being live; tells Retired from Draft
 		sha256: v.optional(v.string()), // ingest no-op gate (#406)
 		slug: v.string(),
 		title: v.string(),
+		updatedAt: v.optional(v.number()), // last write by the admin or an import
 	})
 		.index("by_slug", ["slug"])
 		.index("by_active", ["active"]),
@@ -1283,6 +1295,7 @@ export default defineSchema({
 		attributionText: v.string(), // required credit line, shown on every entry
 		dropBrandingIfAdapted: v.boolean(), // no logo on an adapted entry's credit
 		// Reuse terms belong to the source (#384).
+		editedBy: v.optional(v.string()), // Clerk subject of the last admin edit; see audio_tracks
 		licence: v.string(), // e.g. "OGL v3.0", "US public domain", "Xolace original"
 		logoUrl: v.optional(v.string()), // stable URL (#386), not a signed one
 		name: v.string(), // publisher, as credited: "NHS", "NIMH", "Xolace"
@@ -1294,6 +1307,7 @@ export default defineSchema({
 		refreshDays: v.optional(v.number()), // verbatim refresh SLA, e.g. NHS = 7
 		sha256: v.optional(v.string()), // ingest no-op gate (#406)
 		slug: v.string(),
+		updatedAt: v.optional(v.number()), // last write by the admin or an import
 		url: v.optional(v.string()),
 	}).index("by_slug", ["slug"]),
 
