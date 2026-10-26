@@ -23,3 +23,20 @@ export function useLinkWindow() {
 	}, [current]);
 	return current;
 }
+
+/**
+ * `result`, or while the next window's query loads, the last one for the same
+ * `key`: its links stay valid well past the window's end. Without it a query
+ * would go back to loading every 30 minutes, and `StoresReady` would unmount
+ * an open editor with its unsaved changes.
+ */
+export function useHeldLinks<T>(result: T | undefined, key = "") {
+	const [held, setHeld] = useState<{ key: string; result: T } | null>(null);
+	if (result === undefined) {
+		return held !== null && held.key === key ? held.result : undefined;
+	}
+	if (held === null || held.result !== result || held.key !== key) {
+		setHeld({ key, result });
+	}
+	return result;
+}

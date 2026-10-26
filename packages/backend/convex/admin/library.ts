@@ -184,8 +184,10 @@ export const list = adminQuery({
 export const bodies = adminQuery({
 	args: {},
 	handler: async (ctx) => {
+		// The same rows as `list`, so every listed entry has its body.
 		const entries = await ctx.db
 			.query("library_entries")
+			.order("desc")
 			.take(ADMIN_LIST_LIMIT);
 		const out: Record<string, string> = {};
 		for (const e of entries) {
