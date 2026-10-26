@@ -114,6 +114,8 @@ const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 		markdown: "",
 		slug: "x",
 	},
+	"admin/searchIndex:start": { index: "exercises" },
+	"admin/searchIndex:status": {},
 	"admin/sources:create": { slug: "x", source: source() },
 	"admin/sources:list": {},
 	"admin/sources:save": { slug: "x", source: source() },

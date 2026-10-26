@@ -13,6 +13,7 @@ import type * as admin_edits from "../admin/edits.js";
 import type * as admin_hubs from "../admin/hubs.js";
 import type * as admin_imports from "../admin/imports.js";
 import type * as admin_library from "../admin/library.js";
+import type * as admin_searchIndex from "../admin/searchIndex.js";
 import type * as admin_sources from "../admin/sources.js";
 import type * as admin_uploads from "../admin/uploads.js";
 import type * as admin_xolacers from "../admin/xolacers.js";
@@ -257,6 +258,7 @@ declare const fullApi: ApiFromModules<{
   "admin/hubs": typeof admin_hubs;
   "admin/imports": typeof admin_imports;
   "admin/library": typeof admin_library;
+  "admin/searchIndex": typeof admin_searchIndex;
   "admin/sources": typeof admin_sources;
   "admin/uploads": typeof admin_uploads;
   "admin/xolacers": typeof admin_xolacers;
