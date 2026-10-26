@@ -4,7 +4,7 @@ import { createContext, type ReactNode, use, useState } from "react";
 
 import { FIXTURE_BODIES } from "./fixture-bodies";
 import { FIXTURE_ENTRIES, FIXTURE_SOURCES } from "./fixtures";
-import type { LibraryEntry, LibrarySource } from "./types";
+import type { EntryKind, LibraryEntry, LibrarySource } from "./types";
 
 /** Fields an editor can change from the entry screen. */
 export type EntryPatch = Partial<
@@ -21,6 +21,14 @@ export type EntryPatch = Partial<
 	>
 >;
 
+/** What New entry collects before the editor opens. */
+export interface NewEntry {
+	kind: EntryKind;
+	primarySubject: string;
+	slug: string;
+	title: string;
+}
+
 /**
  * What every Library screen reads and calls. The fixture provider below implements it
  * in memory; the Convex provider (admin step 6) implements it with `api.admin.library.*`
@@ -28,6 +36,7 @@ export type EntryPatch = Partial<
  */
 export interface LibraryContextValue {
 	actions: {
+		create: (entry: NewEntry) => void;
 		markSafetyReviewed: (slug: string) => void;
 		publish: (slug: string) => void;
 		recordConsent: (slug: string) => void;
@@ -82,6 +91,27 @@ export function LibraryFixtureProvider({ children }: { children: ReactNode }) {
 
 	const value: LibraryContextValue = {
 		actions: {
+			create: (entry) => {
+				const createdAt = Date.now();
+				setEntries((current) => [
+					{
+						...entry,
+						active: false,
+						credits: [],
+						dek: "",
+						facets: {},
+						hasCover: false,
+						lastReviewedAt: createdAt,
+						readMin: 0,
+						// Stories are first-person accounts; the rest start as our own adaptation.
+						reuse: entry.kind === "story" ? "original" : "adapted",
+						status: "draft",
+						updatedAt: createdAt,
+					},
+					...current,
+				]);
+				setBodies((current) => ({ ...current, [entry.slug]: "" }));
+			},
 			markSafetyReviewed: (slug) =>
 				update(slug, (entry) =>
 					unblock({ ...entry, safetyReviewedAt: Date.now() })

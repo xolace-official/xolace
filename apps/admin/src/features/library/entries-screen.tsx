@@ -26,7 +26,7 @@ import {
 	ToggleGroup,
 	ToggleGroupItem,
 } from "@xolace/ui/components/toggle-group";
-import { HeadphonesIcon, SearchIcon, UploadIcon } from "lucide-react";
+import { HeadphonesIcon, PlusIcon, SearchIcon, UploadIcon } from "lucide-react";
 import Link from "next/link";
 
 import { StatusBadge } from "@/features/content/status-badge";
@@ -86,6 +86,10 @@ export function EntriesScreen() {
 							<UploadIcon />
 							Import
 						</Link>
+						<Link className={buttonVariants()} href="/library/new">
+							<PlusIcon />
+							New entry
+						</Link>
 					</PageHeaderActions>
 				</PageHeaderHeading>
 				<PageHeaderDescription>
@@ -111,7 +115,7 @@ export function EntriesScreen() {
 							description={
 								filtered
 									? "No entry matches these filters."
-									: "Import a manifest to add the first entries."
+									: "Import a batch or add an entry to start the Library."
 							}
 							pose="writer"
 							title={filtered ? "Nothing matches" : "No entries yet"}
