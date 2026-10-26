@@ -6,8 +6,7 @@ import { Nunito, Space_Grotesk } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import "../index.css";
-import Providers from "@/components/providers";
-import { AdminShell } from "@/features/shell/admin-shell";
+import { SIGN_IN_PATH } from "@/features/auth/access";
 
 // Nunito for headings, buttons and labels; Space Grotesk for body and data.
 // @xolace/ui/globals.css reads these two variables.
@@ -35,15 +34,13 @@ export default function RootLayout({
 	return (
 		<html className={`${nunito.variable} ${spaceGrotesk.variable}`} lang="en">
 			<body className="antialiased">
-				<ClerkProvider>
-					<Providers>
-						<NuqsAdapter>
-							<TooltipProvider>
-								<AdminShell>{children}</AdminShell>
-								<Toaster />
-							</TooltipProvider>
-						</NuqsAdapter>
-					</Providers>
+				<ClerkProvider signInUrl={SIGN_IN_PATH}>
+					<NuqsAdapter>
+						<TooltipProvider>
+							{children}
+							<Toaster />
+						</TooltipProvider>
+					</NuqsAdapter>
 				</ClerkProvider>
 			</body>
 		</html>

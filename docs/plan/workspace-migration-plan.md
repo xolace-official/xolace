@@ -109,7 +109,7 @@ The plan for `./convex/*`:
 |---|---|---|
 | Mobile | `@clerk/expo` + `ConvexProviderWithClerk`. Keep the existing `useResilientClerkAuth`, `AuthSyncGuard` and `AccountBootstrapBoundary`. | Clerk session JWT, `aud=convex` |
 | Web | `@clerk/nextjs` + `clerkMiddleware`, server build on Vercel | Clerk session JWT, `aud=convex` |
-| Admin | Same as web, same Clerk instance. Access requires `role: "admin"` in Clerk `publicMetadata`, which the `convex` JWT template puts into the token. The middleware also blocks non-admins, but that only affects the UI; Convex is the actual security check (see §3a). | Clerk session JWT, `aud=convex`, with a `role` claim |
+| Admin | Same as web, same Clerk instance. Staff sign in with work email + password (no sign-up). Access requires `role: "admin"` in Clerk `publicMetadata`, which the customized session token copies into a `role` claim. The admin layout also blocks non-admins, but that only affects the UI; Convex is the actual security check (see §3a). | Clerk session JWT, `aud=convex`, with a `role` claim |
 | TUI/CLI | `xolace login` opens the browser to the web app's `/connect` page. That page signs the user in, sends them to Clerk's `/oauth/authorize` (PKCE), and Clerk redirects back to a local port on the machine (the t3code pattern). The refresh token is stored in the OS keychain (`@napi-rs/keyring`), falling back to a 0600 file. | Clerk OAuth **ID token**, `aud=<oauth client id>` |
 | Desktop (Tauri) | Same OAuth + PKCE flow as the CLI, in the system browser. It returns through a local port or the `xolace://` deep link, and Rust stores the refresh token in the keychain. The webview uses `ConvexProviderWithAuth`. Clerk's normal web components are not used there. | Same as the CLI |
 

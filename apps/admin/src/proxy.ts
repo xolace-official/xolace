@@ -1,6 +1,10 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+import { SIGN_IN_PATH } from "@/features/auth/access";
+
+// Session handling only. Who may see which page is decided in the route-group
+// layouts (features/auth/guards.ts), as Clerk recommends over path matching here.
+export default clerkMiddleware({ signInUrl: SIGN_IN_PATH });
 
 export const config = {
 	matcher: [

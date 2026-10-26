@@ -7,6 +7,7 @@
     "check-types": "tsc --noEmit",
     "codegen": "varlock codegen",
     "dev": "next dev --port 3002",
+    "grant-admin": "varlock run -- bun scripts/grant-admin.ts",
     "lint": "biome check .",
     "start": "next start --port 3002"
   },
