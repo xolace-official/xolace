@@ -1,19 +1,12 @@
 "use client";
 
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from "@xolace/ui/components/alert-dialog";
 import { Button } from "@xolace/ui/components/button";
-import { ArchiveIcon, RocketIcon, SaveIcon, Undo2Icon } from "lucide-react";
 
+import {
+	DiscardButton as ContentDiscardButton,
+	SaveButton as ContentSaveButton,
+	PublishOrRetire,
+} from "@/features/content/editor-actions";
 import { GateItem, GateList, GateSummary } from "@/features/content/gate-list";
 
 import { useTrackEditor } from "./track-editor-provider";
@@ -23,12 +16,7 @@ export function SaveButton() {
 		actions,
 		meta: { dirty },
 	} = useTrackEditor();
-	return (
-		<Button disabled={!dirty} onClick={actions.save} variant="secondary">
-			<SaveIcon />
-			Save
-		</Button>
-	);
+	return <ContentSaveButton dirty={dirty} onSave={actions.save} />;
 }
 
 export function DiscardButton() {
@@ -36,15 +24,7 @@ export function DiscardButton() {
 		actions,
 		meta: { dirty },
 	} = useTrackEditor();
-	if (!dirty) {
-		return null;
-	}
-	return (
-		<Button onClick={actions.discard} variant="ghost">
-			<Undo2Icon />
-			Discard
-		</Button>
-	);
+	return <ContentDiscardButton dirty={dirty} onDiscard={actions.discard} />;
 }
 
 /** Gates with their fixes; only the safety review can be cleared from here. */
@@ -88,71 +68,16 @@ export function PublishButton() {
 		meta: { canPublish, dirty },
 	} = useTrackEditor();
 
-	if (saved.status === "live") {
-		return <RetireButton />;
-	}
-
 	return (
-		<AlertDialog>
-			<AlertDialogTrigger
-				render={
-					<Button
-						disabled={!canPublish}
-						title={dirty ? "Save your changes first." : undefined}
-					/>
-				}
-			>
-				<RocketIcon />
-				{saved.status === "retired" ? "Publish again" : "Publish"}
-			</AlertDialogTrigger>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>Publish “{saved.title}”?</AlertDialogTitle>
-					<AlertDialogDescription>
-						It appears in Browse and recommendations for every listener on the
-						next app refresh.
-					</AlertDialogDescription>
-				</AlertDialogHeader>
-				<AlertDialogFooter>
-					<AlertDialogCancel>Cancel</AlertDialogCancel>
-					<AlertDialogAction onClick={actions.publish}>
-						<RocketIcon />
-						Publish
-					</AlertDialogAction>
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
-	);
-}
-
-function RetireButton() {
-	const {
-		actions,
-		state: { saved },
-	} = useTrackEditor();
-
-	return (
-		<AlertDialog>
-			<AlertDialogTrigger render={<Button variant="destructive" />}>
-				<ArchiveIcon />
-				Retire
-			</AlertDialogTrigger>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>Retire “{saved.title}”?</AlertDialogTitle>
-					<AlertDialogDescription>
-						It leaves Browse and recommendations, for example when a licence
-						lapses. Listening history stays. You can publish it again later.
-					</AlertDialogDescription>
-				</AlertDialogHeader>
-				<AlertDialogFooter>
-					<AlertDialogCancel>Cancel</AlertDialogCancel>
-					<AlertDialogAction onClick={actions.retire} variant="destructive">
-						<ArchiveIcon />
-						Retire
-					</AlertDialogAction>
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
+		<PublishOrRetire
+			canPublish={canPublish}
+			dirty={dirty}
+			name={saved.title}
+			onPublish={actions.publish}
+			onRetire={actions.retire}
+			publishEffect="It appears in Browse and recommendations for every listener on the next app refresh."
+			retireEffect="It leaves Browse and recommendations, for example when a licence lapses. Listening history stays. You can publish it again later."
+			status={saved.status}
+		/>
 	);
 }
