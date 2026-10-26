@@ -46,8 +46,8 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
-import { toast } from "sonner";
 
+import { runAction } from "@/features/content/run-action";
 import { isSlug, slugify } from "@/features/content/slug";
 import {
 	PageHeader,
@@ -114,20 +114,25 @@ export function NewEntryScreen() {
 	const shown = (key: keyof typeof errors, touched: boolean) =>
 		submitted || touched ? errors[key] : null;
 
-	const create = (event: FormEvent) => {
+	const create = async (event: FormEvent) => {
 		event.preventDefault();
 		setSubmitted(true);
 		if (!(valid && subject)) {
 			return;
 		}
-		actions.create({
-			kind,
-			primarySubject: subject,
-			slug,
-			title: title.trim(),
-		});
-		toast.success(`“${title.trim()}” saved as a draft`);
-		router.push(`/library/${slug}`);
+		const created = await runAction(
+			() =>
+				actions.create({
+					kind,
+					primarySubject: subject,
+					slug,
+					title: title.trim(),
+				}),
+			`“${title.trim()}” saved as a draft`
+		);
+		if (created) {
+			router.push(`/library/${slug}`);
+		}
 	};
 
 	return (

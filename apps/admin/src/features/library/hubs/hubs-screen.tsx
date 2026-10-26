@@ -11,9 +11,8 @@ import {
 import { AudioLinesIcon, BookOpenTextIcon, ImageOffIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-
 import { NewNamedDialog } from "@/features/content/new-named-dialog";
+import { runAction } from "@/features/content/run-action";
 import { StatusBadge } from "@/features/content/status-badge";
 import {
 	PageHeader,
@@ -46,10 +45,14 @@ export function HubsScreen() {
 							namePlaceholder="Before you arrive"
 							nameRequired="Every hub needs a title."
 							noun="hub"
-							onCreate={(title, slug) => {
-								actions.createHub({ slug, title });
-								toast.success(`“${title}” saved as a draft`);
-								router.push(`/library/hubs/${slug}`);
+							onCreate={async (title, slug) => {
+								const created = await runAction(
+									() => actions.createHub({ slug, title }),
+									`“${title}” saved as a draft`
+								);
+								if (created) {
+									router.push(`/library/hubs/${slug}`);
+								}
 							}}
 							slugHelp="The hub's permanent id and link. Imports match on it."
 							slugTaken={(slug) => hubs.some((hub) => hub.slug === slug)}

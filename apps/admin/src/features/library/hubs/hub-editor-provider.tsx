@@ -1,13 +1,13 @@
 "use client";
 
 import { createContext, type ReactNode, use, useState } from "react";
-import { toast } from "sonner";
 
 import { useAudio } from "@/features/audio/audio-provider";
 import {
 	blockingGates,
 	type PublishGate,
 } from "@/features/content/publish-gate";
+import { runAction } from "@/features/content/run-action";
 
 import { type HubPatch, useLibrary } from "../library-provider";
 import type { HubItem, LibraryHub } from "../types";
@@ -83,27 +83,35 @@ export function HubEditorProvider({
 		actions: {
 			addItem: (item) => setField("items", [...hub.items, item]),
 			discard: () => setPatch({}),
-			publish: () => {
-				library.actions.publishHub(saved.slug);
-				toast.success(`“${saved.title}” is live`);
-			},
+			publish: () =>
+				runAction(
+					() => library.actions.publishHub(saved.slug),
+					`“${saved.title}” is live`
+				),
 			removeItem: (id) =>
 				setField(
 					"items",
 					items.filter((i) => i.id !== id).map((i) => i.item)
 				),
-			replaceCover: () => {
-				library.actions.replaceHubCover(saved.slug);
-				toast.success("Cover uploaded (fixture)");
-			},
-			retire: () => {
-				library.actions.retireHub(saved.slug);
-				toast.success(`“${saved.title}” retired`);
-			},
-			save: () => {
-				library.actions.saveHub(saved.slug, patch);
-				setPatch({});
-				toast.success("Saved");
+			replaceCover: () =>
+				runAction(
+					() => library.actions.replaceHubCover(saved.slug),
+					"Cover uploaded"
+				),
+			retire: () =>
+				runAction(
+					() => library.actions.retireHub(saved.slug),
+					`“${saved.title}” retired`
+				),
+			save: async () => {
+				if (
+					await runAction(
+						() => library.actions.saveHub(saved.slug, patch),
+						"Saved"
+					)
+				) {
+					setPatch({});
+				}
 			},
 			setField,
 		},
