@@ -498,7 +498,7 @@ describe("admin/audio", () => {
 			tier: undefined,
 			topic: "music_topic_sleep_rest",
 		});
-		const save = (l: typeof licence) =>
+		const save = (l: typeof licence & { licenceRef?: string }) =>
 			t.mutation(api.admin.audio.save, {
 				slug: "grounding",
 				track: {
@@ -513,10 +513,50 @@ describe("admin/audio", () => {
 		expect(
 			(await t.query(api.admin.audio.list, {}))[0].licence?.licenceRef
 		).toBe("receipt-1");
-		await save({ ...licence, artist: "Someone else" });
+		// The client echoes the old proof back from the read: a new licence still drops it.
+		await save({ ...licence, artist: "Someone else", licenceRef: "receipt-1" });
 		expect(
 			(await t.query(api.admin.audio.list, {}))[0].licence?.licenceRef
 		).toBeUndefined();
+	});
+
+	it("won't keep a music track live with a blank licence artist or name", async () => {
+		const licence = {
+			acquiredAt: 1,
+			artist: "Ana",
+			attributionRequired: false,
+			attributionText: "Music by Ana",
+			licenceName: "Pixabay",
+			licenceUrl: "https://pixabay.com/service/license/",
+			source: "pixabay",
+			sourceUrl: "https://pixabay.com/music/1",
+		};
+		const t = await withTrack({
+			active: true,
+			family: "music",
+			licence,
+			tier: undefined,
+			topic: "music_topic_sleep_rest",
+		});
+		await expect(
+			t.mutation(api.admin.audio.save, {
+				slug: "grounding",
+				track: {
+					featured: false,
+					licence: { ...licence, artist: " " },
+					tags: [],
+					title: "Grounding",
+					topic: "music_topic_sleep_rest",
+				},
+			})
+		).rejects.toThrow(/licence's artist, name and source/);
+	});
+
+	it("clears the New shelf date when a save leaves it out", async () => {
+		const t = await withTrack({ newUntil: 1 });
+		await t.mutation(api.admin.audio.save, saveArgs);
+		const [row] = await t.query(api.admin.audio.list, {});
+		expect(row.newUntil).toBeUndefined();
 	});
 
 	it("keeps a tier 3 track down until it is safety-reviewed", async () => {

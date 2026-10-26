@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, type ReactNode, use, useState } from "react";
-
+import { unsavedSince } from "@/features/content/draft-patch";
 import {
 	blockingGates,
 	type PublishGate,
@@ -107,10 +107,14 @@ export function TrackEditorProvider({
 					"Processing ran again"
 				),
 			save: async () => {
+				const submitted = patch;
 				if (
-					await runAction(() => audio.actions.save(saved.slug, patch), "Saved")
+					await runAction(
+						() => audio.actions.save(saved.slug, submitted),
+						"Saved"
+					)
 				) {
-					setPatch({});
+					setPatch((current) => unsavedSince(current, submitted));
 				}
 			},
 			setField: (key, fieldValue) =>

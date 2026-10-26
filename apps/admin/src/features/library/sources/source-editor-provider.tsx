@@ -3,6 +3,7 @@
 import { createContext, type ReactNode, use, useState } from "react";
 import { toast } from "sonner";
 
+import { unsavedSince } from "@/features/content/draft-patch";
 import { runAction } from "@/features/content/run-action";
 
 import { type Citation, citationsOf } from "../citations";
@@ -80,17 +81,18 @@ export function SourceEditorProvider({
 		actions: {
 			discard: () => setPatch({}),
 			save: async () => {
+				const submitted = patch;
 				if (Object.keys(errors).length > 0) {
 					toast.error("Fill in the required fields first");
 					return;
 				}
 				if (
 					await runAction(
-						() => library.actions.saveSource(saved.slug, patch),
+						() => library.actions.saveSource(saved.slug, submitted),
 						"Saved"
 					)
 				) {
-					setPatch({});
+					setPatch((current) => unsavedSince(current, submitted));
 				}
 			},
 			setField: (key, fieldValue) =>

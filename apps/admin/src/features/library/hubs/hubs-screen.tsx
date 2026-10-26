@@ -53,6 +53,7 @@ export function HubsScreen() {
 								if (created) {
 									router.push(`/library/hubs/${slug}`);
 								}
+								return created;
 							}}
 							slugHelp="The hub's permanent id and link. Imports match on it."
 							slugTaken={(slug) => hubs.some((hub) => hub.slug === slug)}

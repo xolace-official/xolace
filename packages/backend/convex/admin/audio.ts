@@ -118,6 +118,16 @@ function assertTrackLive(t: Doc<"audio_tracks">) {
 		throw trackError(t, "needs a title");
 	}
 	if (
+		t.licence &&
+		!(
+			t.licence.artist.trim() &&
+			t.licence.licenceName.trim() &&
+			t.licence.source.trim()
+		)
+	) {
+		throw trackError(t, "needs the licence's artist, name and source");
+	}
+	if (
 		t.family === "support" &&
 		(t.tier ?? 0) >= SAFETY_REVIEW_TIER &&
 		t.safetyReviewedAt === undefined
@@ -131,12 +141,14 @@ type Licence = Infer<typeof licenceValidator>;
 /**
  * The editor doesn't show a licence's proof upload or ref, so a save keeps the
  * stored ones, but only while it's the same licence (same source, artist and
- * licence name). A different licence starts without the old proof.
+ * licence name). A different licence starts without the old proof, even when
+ * the client echoes it back from the read.
  */
 function withStoredProof(
-	licence: Licence,
+	incoming: Licence,
 	stored: Licence | undefined
 ): Licence {
+	const { licenceProofStorageId, licenceRef, ...licence } = incoming;
 	const same =
 		stored &&
 		stored.source === licence.source &&
@@ -146,9 +158,8 @@ function withStoredProof(
 	return same
 		? {
 				...licence,
-				licenceProofStorageId:
-					licence.licenceProofStorageId ?? stored.licenceProofStorageId,
-				licenceRef: licence.licenceRef ?? stored.licenceRef,
+				licenceProofStorageId: stored.licenceProofStorageId,
+				licenceRef: stored.licenceRef,
 			}
 		: licence;
 }
@@ -234,8 +245,15 @@ export const save = adminMutation({
 	},
 	handler: async (ctx, { slug, track }) => {
 		const t = await trackBySlug(ctx, slug);
-		const { licence, narrators, tier, transcript, whatItsFor, ...shared } =
-			track;
+		const {
+			licence,
+			narrators,
+			newUntil,
+			tier,
+			transcript,
+			whatItsFor,
+			...shared
+		} = track;
 		if (t.family === "music" && (narrators || tier || transcript)) {
 			throw trackError(
 				t,
@@ -248,6 +266,7 @@ export const save = adminMutation({
 		await writeTrack(ctx, ctx.identity, t, {
 			...t,
 			...shared,
+			newUntil,
 			...(t.family === "music"
 				? {
 						licence: licence && withStoredProof(licence, t.licence),

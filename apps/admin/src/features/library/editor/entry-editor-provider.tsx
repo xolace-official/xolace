@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, type ReactNode, use, useState } from "react";
-
+import { unsavedSince } from "@/features/content/draft-patch";
 import {
 	blockingGates,
 	type PublishGate,
@@ -113,15 +113,24 @@ export function EntryEditorProvider({
 					`“${saved.title}” retired`
 				),
 			save: async () => {
-				// Keep the draft when Convex rejects it, so nothing typed is lost.
+				// Keep the draft when Convex rejects it, and on success keep what was
+				// typed while the save was in flight, so nothing typed is lost.
+				const submitted = { body: draftBody, patch };
 				if (
 					await runAction(
 						() =>
-							library.actions.save(saved.slug, patch, draftBody ?? undefined),
+							library.actions.save(
+								saved.slug,
+								submitted.patch,
+								submitted.body ?? undefined
+							),
 						"Saved"
 					)
 				) {
-					reset();
+					setPatch((current) => unsavedSince(current, submitted.patch));
+					setDraftBody((current) =>
+						current === submitted.body ? null : current
+					);
 				}
 			},
 			setBody: setDraftBody,

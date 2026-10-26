@@ -37,6 +37,7 @@ export function NewSourceDialog() {
 				if (created) {
 					router.push(`/library/sources/${slug}`);
 				}
+				return created;
 			}}
 			slugHelp="Entry credits point at it, so it can't change after this."
 			slugTaken={(slug) => sources.some((source) => source.slug === slug)}

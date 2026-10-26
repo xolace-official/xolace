@@ -3,6 +3,7 @@
 import { createContext, type ReactNode, use, useState } from "react";
 
 import { useAudio } from "@/features/audio/audio-provider";
+import { unsavedSince } from "@/features/content/draft-patch";
 import {
 	blockingGates,
 	type PublishGate,
@@ -104,13 +105,14 @@ export function HubEditorProvider({
 					`“${saved.title}” retired`
 				),
 			save: async () => {
+				const submitted = patch;
 				if (
 					await runAction(
-						() => library.actions.saveHub(saved.slug, patch),
+						() => library.actions.saveHub(saved.slug, submitted),
 						"Saved"
 					)
 				) {
-					setPatch({});
+					setPatch((current) => unsavedSince(current, submitted));
 				}
 			},
 			setField,

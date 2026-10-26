@@ -26,7 +26,8 @@ import { isSlug, slugify } from "./slug";
 
 /**
  * "New hub", "New source": the two things an item can't exist without (a name and a
- * permanent slug) in a dialog. `onCreate` saves the draft and navigates to its editor.
+ * permanent slug) in a dialog. `onCreate` saves the draft and navigates to its editor;
+ * the dialog keeps what was typed until it reports success.
  */
 export function NewNamedDialog({
 	noun,
@@ -47,12 +48,13 @@ export function NewNamedDialog({
 	nameRequired: string;
 	slugHelp: string;
 	slugTaken: (slug: string) => boolean;
-	onCreate: (name: string, slug: string) => void;
+	onCreate: (name: string, slug: string) => Promise<boolean>;
 }) {
 	const [open, setOpen] = useState(false);
 	const [name, setName] = useState("");
 	const [slugInput, setSlugInput] = useState<string | null>(null);
 	const [submitted, setSubmitted] = useState(false);
+	const [creating, setCreating] = useState(false);
 
 	// The slug follows the name until someone edits it by hand.
 	const slug = slugInput ?? slugify(name);
@@ -74,15 +76,21 @@ export function NewNamedDialog({
 		setSubmitted(false);
 	};
 
-	const create = (event: FormEvent) => {
+	const create = async (event: FormEvent) => {
 		event.preventDefault();
 		setSubmitted(true);
-		if (errors.name || errors.slug) {
+		if (creating || errors.name || errors.slug) {
 			return;
 		}
-		onCreate(name.trim(), slug);
-		setOpen(false);
-		reset();
+		setCreating(true);
+		try {
+			if (await onCreate(name.trim(), slug)) {
+				setOpen(false);
+				reset();
+			}
+		} finally {
+			setCreating(false);
+		}
 	};
 
 	return (
@@ -134,7 +142,7 @@ export function NewNamedDialog({
 						<DialogClose render={<Button variant="outline" />}>
 							Cancel
 						</DialogClose>
-						<Button type="submit">
+						<Button disabled={creating} type="submit">
 							<PlusIcon />
 							Create {noun}
 						</Button>
