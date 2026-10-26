@@ -467,8 +467,10 @@ export const replaceAudio = adminMutation({
 		assertSha256(sha256);
 		assertAudioKey(t.family, t.slug, key);
 		if (sha256 === t.sha256) {
-			// The same file again: keep the stored copy.
-			await r2.deleteObject(ctx, key);
+			// The same file again: keep the stored copy, and never delete it.
+			if (key !== t.key) {
+				await r2.deleteObject(ctx, key);
+			}
 			return null;
 		}
 		await writeTrack(ctx, ctx.identity, t, {

@@ -123,6 +123,10 @@ export function assertEntryLive(
 	if (!markdown.trim()) {
 		throw new ConvexError(`library entry "${e.slug}": needs a body`);
 	}
+	// Originals too: they credit Xolace, as the editor's checklist asks.
+	if (sources.length === 0) {
+		throw new ConvexError(`library entry "${e.slug}": needs at least 1 source`);
+	}
 	assertSourcesFit(e, sources);
 	assertImageAlts(e.slug, markdown);
 	assertPublishable({ ...e, active: true });

@@ -380,6 +380,21 @@ describe("admin/library", () => {
 		await t.mutation(api.admin.library.recordConsent, { slug: "first-term" });
 		await t.mutation(api.admin.library.publish, { slug: "first-term" });
 		expect((await entryRow(t, "first-term")).active).toBe(true);
+
+		// A live original keeps its Xolace credit.
+		await expect(
+			t.mutation(api.admin.library.save, {
+				credits: [],
+				entry: {
+					dek: "A student's story",
+					primarySubject: "loneliness",
+					title: "My first term",
+				},
+				facets: {},
+				markdown: "It was quiet.",
+				slug: "first-term",
+			})
+		).rejects.toThrow(/needs at least 1 source/);
 	});
 
 	it("retires a live entry and remembers that it was live", async () => {
@@ -774,6 +789,18 @@ describe("admin media", () => {
 			expect.anything(),
 			"support/grounding/again.m4a"
 		);
+	});
+
+	it("never deletes the stored audio when the same upload is sent again", async () => {
+		const t = await withSupportTrack();
+		await t.mutation(api.admin.audio.replaceAudio, {
+			durationSec: 300,
+			key: "support/grounding/old.m4a",
+			sha256: OTHER_SHA,
+			slug: "grounding",
+		});
+		expect((await stored(t))?.key).toBe("support/grounding/old.m4a");
+		expect(r2.deleteObject).not.toHaveBeenCalled();
 	});
 
 	it("won't swap the audio of a live track that then needs a review", async () => {

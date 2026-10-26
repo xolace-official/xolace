@@ -6,7 +6,7 @@ import type { FunctionReturnType } from "convex/server";
 import { createContext, type ReactNode, use, useState } from "react";
 
 import { deriveStatus } from "@/features/content/derive-status";
-import { useLinkWindow } from "@/features/media/link-window";
+import { useHeldLinks, useLinkWindow } from "@/features/media/link-window";
 import { useMediaUpload } from "@/features/media/use-media-upload";
 
 import { trackGates } from "./track-gates";
@@ -102,9 +102,12 @@ const EMPTY: readonly never[] = [];
 export function useTrackMedia(slug: string) {
 	const { isAuthenticated } = useConvexAuth();
 	const linkWindow = useLinkWindow();
-	return useQuery(
-		api.admin.audio.media,
-		isAuthenticated ? { linkWindow, slug } : "skip"
+	return useHeldLinks(
+		useQuery(
+			api.admin.audio.media,
+			isAuthenticated ? { linkWindow, slug } : "skip"
+		),
+		slug
 	);
 }
 
@@ -117,9 +120,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 		api.admin.audio.list,
 		isAuthenticated ? {} : "skip"
 	);
-	const topics = useQuery(
-		api.admin.audio.topics,
-		isAuthenticated ? { linkWindow } : "skip"
+	const topics = useHeldLinks(
+		useQuery(api.admin.audio.topics, isAuthenticated ? { linkWindow } : "skip")
 	);
 
 	const saveTrack = useMutation(api.admin.audio.save);
