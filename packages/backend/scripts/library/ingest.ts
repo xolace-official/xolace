@@ -115,7 +115,8 @@ function convexRun<T = { action: string }>(fn: string, jsonArgs: unknown): T {
 		],
 		{ encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] }
 	);
-	return JSON.parse(out);
+	// A `null` return (imageSources:note) prints nothing.
+	return (out.trim() ? JSON.parse(out) : null) as T;
 }
 
 let failures = 0;
