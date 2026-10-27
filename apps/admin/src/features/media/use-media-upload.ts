@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import type { FunctionArgs } from "convex/server";
 
 import { processImage, sha256Hex } from "./process-image";
+import { putObject } from "./put-object";
 
 type ImageUse = FunctionArgs<typeof api.admin.uploads.imageUploadUrl>["use"];
 type AudioArgs = FunctionArgs<typeof api.admin.uploads.audioUploadUrl>;
@@ -21,26 +22,6 @@ function audioExtension(name: string): AudioArgs["ext"] {
 		throw new Error(`${name}: use an MP3, M4A or WAV file`);
 	}
 	return known;
-}
-
-/** PUT to a signed R2 URL. A network error here is almost always the bucket's CORS. */
-async function putObject(url: string, body: Blob) {
-	let response: Response;
-	try {
-		response = await fetch(url, {
-			body,
-			headers: { "Content-Type": body.type },
-			method: "PUT",
-		});
-	} catch (error) {
-		throw new Error(
-			"Couldn't reach storage. Check the R2 bucket's CORS allows this site.",
-			{ cause: error }
-		);
-	}
-	if (!response.ok) {
-		throw new Error(`Upload failed (${response.status})`);
-	}
 }
 
 /**

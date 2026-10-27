@@ -45,7 +45,7 @@ import { StatCard } from "@/features/dashboard/stat-card";
 import { EmptyState } from "@/features/flux/empty-state";
 import { useImports } from "@/features/imports/imports-provider";
 import { RunStateBadge } from "@/features/imports/imports-screen";
-import { TARGET_LABEL } from "@/features/imports/types";
+import { runLabel, TARGET_LABEL } from "@/features/imports/types";
 import { useLibrary } from "@/features/library/library-provider";
 import { formatDate } from "@/features/library/types";
 import {
@@ -178,14 +178,14 @@ export function OverviewScreen() {
 							) : (
 								<ItemGroup>
 									{runs.slice(0, RECENT_RUNS).map((run) => (
-										<li key={run.id}>
+										<li key={run.number}>
 											<Item
-												render={<Link href={`/imports/${run.id}`} />}
+												render={<Link href={`/imports/${run.number}`} />}
 												size="sm"
 												variant="outline"
 											>
 												<ItemContent>
-													<ItemTitle>{run.id}</ItemTitle>
+													<ItemTitle>{runLabel(run)}</ItemTitle>
 													<ItemDescription>
 														{TARGET_LABEL[run.target]} ·{" "}
 														{formatDate(run.createdAt)}

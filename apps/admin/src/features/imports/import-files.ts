@@ -76,7 +76,7 @@ export function detectRole(
 }
 
 export type JsonDetection =
-	| { file: File; role: JsonRole }
+	| { file: File; records: Record<string, unknown>[]; role: JsonRole }
 	| { file: File; problem: string; role: null };
 
 /** Reads and sorts the dropped JSON files; markdown and media are matched later, by path. */
@@ -96,8 +96,8 @@ export async function detectJsonFiles(
 				return { file, problem: "Not valid JSON", role: null };
 			}
 			const role = detectRole(target, value);
-			return role
-				? { file, role }
+			return role && Array.isArray(value)
+				? { file, records: value.filter(isRecord), role }
 				: { file, problem: "No records this target reads", role: null };
 		})
 	);

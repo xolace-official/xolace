@@ -115,7 +115,8 @@ function convexRun<T = { action: string }>(fn: string, jsonArgs: unknown): T {
 		],
 		{ encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] }
 	);
-	return JSON.parse(out);
+	// A `null` return (imageSources:note) prints nothing.
+	return (out.trim() ? JSON.parse(out) : null) as T;
 }
 
 let failures = 0;
@@ -198,6 +199,16 @@ async function uploadCoverVariant(file: Buffer, px: number, prefix: string) {
 		.webp({ effort: 6, quality: 78 })
 		.toBuffer();
 	const key = await uploadContent(prefix, webp, ".webp");
+	// So an admin import of this same source keeps this WebP rather than
+	// re-encoding it (convex/imports/imageSources.ts).
+	convexRun("imports/imageSources:note", {
+		pairs: [
+			{
+				sourceSha256: createHash("sha256").update(file).digest("hex"),
+				webpSha256: createHash("sha256").update(webp).digest("hex"),
+			},
+		],
+	});
 	console.log(
 		`  ${px}px ${key}: ${webp.length} bytes (original ${file.length} bytes)`
 	);

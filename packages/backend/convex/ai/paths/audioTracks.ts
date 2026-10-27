@@ -1,5 +1,5 @@
 import { R2 } from "@convex-dev/r2";
-import { ConvexError, v } from "convex/values";
+import { ConvexError, type Infer, v } from "convex/values";
 import { components, internal } from "../../_generated/api";
 import type { Doc, Id } from "../../_generated/dataModel";
 import {
@@ -137,108 +137,122 @@ export async function reindexTrack(
 	}
 }
 
+const upsertTrackResult = v.object({
+	action: v.union(
+		v.literal("inserted"),
+		v.literal("updated"),
+		v.literal("unchanged")
+	),
+	trackId: v.id("audio_tracks"),
+});
+
 /**
- * Idempotent upsert keyed on `slug`, per docs/paths-v1.md §3.4:
+ * Idempotent upsert keyed on `slug`, per docs/paths-v1.md §3.4, shared by the
+ * Kindling script (`upsertTrack`) and admin imports (`imports/apply.ts`):
  * - unchanged `sha256` → delete the freshly-uploaded audio blob, no-op the row
  * - changed `sha256` → replace the row, delete the *old* audio blob
  * - a thumbnail blob is NEVER deleted (content-addressed key, shared across
  *   rows); an unchanged `thumbSha256` re-uploads to the same key (harmless
  *   overwrite), a changed one just repoints `thumbKey`.
  *
- * The audio `key` passed in must be unique per upload attempt (the script
- * mints a fresh one every run) — unlike `thumbKey`, it is not content
- * addressed, so an unchanged-sha256 duplicate really is safe to delete.
+ * The audio `key` passed in is either the stored one (an import that didn't
+ * re-upload the audio) or unique per upload attempt (the script mints a fresh
+ * one every run) — unlike `thumbKey`, it is not content addressed, so an
+ * unchanged-sha256 duplicate really is safe to delete.
+ *
+ * The row is replaced, so `editedBy` drops (the file is now the latest
+ * word); `featured` is curated outside files and kept.
  */
-export const upsertTrack = internalMutation({
-	args: { track: trackUpsertValidator },
-	handler: async (ctx, { track }) => {
-		// Browse (#339) derives the shared topic slug by stripping this prefix and
-		// rebuilds it per family — a mismatch would count on a grid tile but never
-		// list on the topic screen.
-		const prefix = track.family === "music" ? "music_topic_" : "audio_topic_";
-		if (!track.topic.startsWith(prefix)) {
+export async function upsertTrackRecord(
+	ctx: MutationCtx,
+	track: Infer<typeof trackUpsertValidator>
+): Promise<Infer<typeof upsertTrackResult>> {
+	const dropUpload = async (existingKey?: string) => {
+		if (track.key !== existingKey) {
 			await r2.deleteObject(ctx, track.key);
-			throw new ConvexError(
-				`audio_tracks upsert rejected: slug "${track.slug}" topic "${track.topic}" must start with "${prefix}"`
-			);
 		}
+	};
+	// Browse (#339) derives the shared topic slug by stripping this prefix and
+	// rebuilds it per family — a mismatch would count on a grid tile but never
+	// list on the topic screen.
+	const prefix = track.family === "music" ? "music_topic_" : "audio_topic_";
+	if (!track.topic.startsWith(prefix)) {
+		await dropUpload();
+		throw new ConvexError(
+			`audio_tracks upsert rejected: slug "${track.slug}" topic "${track.topic}" must start with "${prefix}"`
+		);
+	}
 
-		// Editorial safeguard (§8): a tier >= 3 support row must be human-reviewed.
-		// Enforced here too, not just in the script — this mutation is the real
-		// trust boundary. Only the audio blob is ever cleaned up on rejection;
-		// the thumb key may be shared with an already-live row and must survive.
-		if (
-			track.family === "support" &&
-			(track.tier ?? 0) >= 3 &&
-			!track.safetyReviewedAt
-		) {
-			await r2.deleteObject(ctx, track.key);
-			throw new ConvexError(
-				`audio_tracks upsert rejected: slug "${track.slug}" has tier ${track.tier} with no safetyReviewedAt`
-			);
-		}
+	// Editorial safeguard (§8): a tier >= 3 support row must be human-reviewed.
+	// Enforced here too, not just in the script — this is the real trust
+	// boundary. Only the audio blob is ever cleaned up on rejection; the thumb
+	// key may be shared with an already-live row and must survive.
+	if (
+		track.family === "support" &&
+		(track.tier ?? 0) >= 3 &&
+		!track.safetyReviewedAt
+	) {
+		await dropUpload();
+		throw new ConvexError(
+			`audio_tracks upsert rejected: slug "${track.slug}" has tier ${track.tier} with no safetyReviewedAt`
+		);
+	}
 
-		const existing = await ctx.db
-			.query("audio_tracks")
-			.withIndex("by_slug", (q) => q.eq("slug", track.slug))
-			.unique();
-		const searchText = trackSearchTextOf(track);
+	const existing = await ctx.db
+		.query("audio_tracks")
+		.withIndex("by_slug", (q) => q.eq("slug", track.slug))
+		.unique();
+	const searchText = trackSearchTextOf(track);
 
-		const reindex = (trackId: Id<"audio_tracks">) =>
-			reindexTrack(ctx, existing, trackId);
-		const now = Date.now();
+	const reindex = (trackId: Id<"audio_tracks">) =>
+		reindexTrack(ctx, existing, trackId);
+	const now = Date.now();
 
-		if (!existing) {
-			const trackId = await ctx.db.insert("audio_tracks", {
-				...track,
-				active: true,
-				searchText,
-				updatedAt: now,
-			});
-			await reindex(trackId);
-			return { action: "inserted" as const, trackId };
-		}
-
-		if (existing.sha256 === track.sha256) {
-			await r2.deleteObject(ctx, track.key);
-			// Audio blob unchanged: keep the live key, but persist every other
-			// field (title, tags, thumb, licence, ...) — metadata edits must land.
-			await ctx.db.replace("audio_tracks", existing._id, {
-				...track,
-				active: existing.active,
-				key: existing.key,
-				retiredAt: existing.retiredAt,
-				searchText,
-				updatedAt: now,
-			});
-			await reindex(existing._id);
-			const action =
-				existing.thumbSha256 === track.thumbSha256
-					? ("unchanged" as const)
-					: ("updated" as const);
-			return { action, trackId: existing._id };
-		}
-
-		const oldKey = existing.key;
-		await ctx.db.replace("audio_tracks", existing._id, {
+	if (!existing) {
+		const trackId = await ctx.db.insert("audio_tracks", {
 			...track,
-			active: existing.active,
-			retiredAt: existing.retiredAt,
+			active: true,
 			searchText,
 			updatedAt: now,
 		});
-		await r2.deleteObject(ctx, oldKey);
+		await reindex(trackId);
+		return { action: "inserted", trackId };
+	}
+
+	const kept = {
+		active: existing.active,
+		featured: existing.featured,
+		retiredAt: existing.retiredAt,
+		searchText,
+		updatedAt: now,
+	};
+	if (existing.sha256 === track.sha256) {
+		await dropUpload(existing.key);
+		// Audio blob unchanged: keep the live key, but persist every other
+		// field (title, tags, thumb, licence, ...) — metadata edits must land.
+		await ctx.db.replace("audio_tracks", existing._id, {
+			...track,
+			...kept,
+			key: existing.key,
+		});
 		await reindex(existing._id);
-		return { action: "updated" as const, trackId: existing._id };
-	},
-	returns: v.object({
-		action: v.union(
-			v.literal("inserted"),
-			v.literal("updated"),
-			v.literal("unchanged")
-		),
-		trackId: v.id("audio_tracks"),
-	}),
+		const action =
+			existing.thumbSha256 === track.thumbSha256 ? "unchanged" : "updated";
+		return { action, trackId: existing._id };
+	}
+
+	const oldKey = existing.key;
+	await ctx.db.replace("audio_tracks", existing._id, { ...track, ...kept });
+	await r2.deleteObject(ctx, oldKey);
+	await reindex(existing._id);
+	return { action: "updated", trackId: existing._id };
+}
+
+/** The Kindling script's upsert; see `upsertTrackRecord`. */
+export const upsertTrack = internalMutation({
+	args: { track: trackUpsertValidator },
+	handler: (ctx, { track }) => upsertTrackRecord(ctx, track),
+	returns: upsertTrackResult,
 });
 
 /**
@@ -269,43 +283,50 @@ export const setTrackThumb = internalMutation({
 	returns: v.null(),
 });
 
+export const topicUpsertValidator = v.object({
+	slug: v.string(),
+	thumbhash: v.optional(v.string()),
+	thumbKey: v.string(),
+	thumbSha256: v.string(),
+	title: v.optional(v.string()),
+});
+
 /**
  * Topic decoration (#353): the shared suffix's cover + display title for the
  * Browse topic grid. The model catalogue stays the only source of valid
  * topics — an unknown slug is rejected so presentation data can never invent
  * one. Keyed on `slug`: insert when absent, replace otherwise. Thumb blobs are
  * content-addressed and possibly shared with `audio_tracks`, so none is ever
- * deleted here; a changed cover just repoints `thumbKey`.
+ * deleted here; a changed cover just repoints `thumbKey`. Shared by the
+ * script and admin imports.
  */
+export async function upsertTopicRecord(
+	ctx: MutationCtx,
+	topic: Infer<typeof topicUpsertValidator>
+) {
+	if (!TOPIC_SLUGS.has(topic.slug)) {
+		throw new ConvexError(
+			`topics upsert rejected: slug "${topic.slug}" is not a catalogued topic`
+		);
+	}
+	const existing = await ctx.db
+		.query("topics")
+		.withIndex("by_slug", (q) => q.eq("slug", topic.slug))
+		.unique();
+	const row = { ...topic, updatedAt: Date.now() };
+	if (!existing) {
+		return {
+			action: "inserted" as const,
+			topicId: await ctx.db.insert("topics", row),
+		};
+	}
+	await ctx.db.replace("topics", existing._id, row);
+	return { action: "updated" as const, topicId: existing._id };
+}
+
 export const upsertTopic = internalMutation({
-	args: {
-		topic: v.object({
-			slug: v.string(),
-			thumbhash: v.optional(v.string()),
-			thumbKey: v.string(),
-			thumbSha256: v.string(),
-			title: v.optional(v.string()),
-		}),
-	},
-	handler: async (ctx, { topic }) => {
-		if (!TOPIC_SLUGS.has(topic.slug)) {
-			throw new ConvexError(
-				`topics upsert rejected: slug "${topic.slug}" is not a catalogued topic`
-			);
-		}
-		const existing = await ctx.db
-			.query("topics")
-			.withIndex("by_slug", (q) => q.eq("slug", topic.slug))
-			.unique();
-		if (!existing) {
-			return {
-				action: "inserted" as const,
-				topicId: await ctx.db.insert("topics", topic),
-			};
-		}
-		await ctx.db.replace("topics", existing._id, topic);
-		return { action: "updated" as const, topicId: existing._id };
-	},
+	args: { topic: topicUpsertValidator },
+	handler: (ctx, { topic }) => upsertTopicRecord(ctx, topic),
 	returns: v.object({
 		action: v.union(v.literal("inserted"), v.literal("updated")),
 		topicId: v.id("topics"),

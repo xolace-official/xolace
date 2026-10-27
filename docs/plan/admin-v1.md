@@ -157,10 +157,10 @@ section. Not borrowed: its offset-shadow theme (we use the lip/depth system).
      content-addressed `thumb/<sha256>.webp`, so not `r2.clientApi` (random keys,
      public read/delete functions). Each bucket needs a CORS rule allowing `PUT`
      from the admin's origins. Entry covers and narration stay in the script.
-   - **6c** Imports on Convex: `import_runs` / `import_items`, compare, apply as a
-     `@convex-dev/workflow` per item, retry. Compare warns when a Changed item was
-     last edited in the admin (`editedBy` set), so an old file can't quietly
-     overwrite it.
+   - **6c** ✅ Imports on Convex (`convex/admin/imports.ts`, `convex/imports/*`):
+     `import_runs` / `import_items`, compare, apply as a `@convex-dev/workflow` per
+     item, retry. Compare warns when a Changed item was last edited in the admin
+     (`editedBy` set) and leaves it out, so an old file can't quietly overwrite it.
 
 Prototype before building (2–3 variants each): **entry editor layout** and **import
 diff review**. The tables, shell and overview follow existing patterns.
@@ -206,6 +206,38 @@ diff review**. The tables, shell and overview follow existing patterns.
   runs), awaiting safety review (explainers, tier 3+ support tracks), stories missing
   consent, stale sources, pending permission, live hubs with hidden items. The rules
   are the editors' gates, read across everything (`features/overview/attention.ts`).
+- **Imports (6c).**
+  - The browser reads the drop: it matches records' paths to dropped files by name,
+    reads bodies, hashes and probes audio, and processes images as in 6b.
+  - One `compare` mutation then checks each record on its own (a malformed record
+    is Rejected, not the whole drop), runs the ingest's strict gates, and diffs it
+    field by field against what's stored. A record with no differing field is
+    Unchanged, whatever its hash.
+  - Compare mints upload URLs only for media that changed, and the browser PUTs
+    them before review. Apply needs no open tab.
+  - A copy edit may leave its audio and images out: the stored ones stay. A track
+    whose `sha256` differs from what's stored must bring its audio file.
+  - Apply runs one workflow per item, a phase at a time (sources, then entries,
+    then hubs), so references within a drop resolve. Each item checks its uploads
+    reached R2, then writes through the ingest's own functions (`writeEntry`,
+    `upsertSourceRecord`, `upsertHubRecord`, `upsertTrackRecord`,
+    `upsertTopicRecord`).
+  - Compare keeps a fingerprint of each stored row. An item whose row changed in
+    any way since then fails at apply ("compare again") rather than overwriting
+    it. Imported rows drop `editedBy`, as script runs do.
+  - The browser's WebP bytes differ from sharp's, so `image_sources` notes which
+    source file each WebP came from (compare and both ingest scripts write it). A
+    dropped image whose source made the stored WebP is Unchanged. Rows stored
+    before this need one script run (`--thumbs-only` for Kindling) to be noted.
+    The same audio file keeps its stored length, not the browser's reading.
+  - Narration records are Rejected for now: the 30-second preview needs ffmpeg,
+    so narration stays in `scripts/library/ingest.ts`.
+  - The workflow component's own modules don't load under the repo's Vite in
+    convex-test. The tests fake `workflow.start` and drive the real steps
+    (`runItem`) and `finished`.
+  - Not yet: a cleanup for runs left in Uploading or Review, and surfacing a
+    failed search re-index, which the write helpers still schedule outside the
+    workflow.
 - **Convex is the master copy of content, not the repo files.** Once entries and
   tracks are created and edited in the admin, the JSON trees in
   `packages/backend/scripts/{library,kindling}/` are history, not something to

@@ -152,6 +152,16 @@ function thumbOf(thumbPath: string): Promise<Thumb> {
 				.raw()
 				.toBuffer({ resolveWithObject: true });
 			const sha256 = createHash("sha256").update(file).digest("hex");
+			// So an admin import of this same source keeps this WebP rather than
+			// re-encoding it (convex/imports/imageSources.ts).
+			convexRun("imports/imageSources:note", {
+				pairs: [
+					{
+						sourceSha256: createHash("sha256").update(source).digest("hex"),
+						webpSha256: sha256,
+					},
+				],
+			});
 			const thumbhash = Buffer.from(
 				rgbaToThumbHash(info.width, info.height, data)
 			).toString("base64");

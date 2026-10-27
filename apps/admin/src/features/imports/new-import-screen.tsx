@@ -60,6 +60,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { errorMessage } from "@/features/content/run-action";
 import {
 	PageHeader,
 	PageHeaderBreadcrumbs,
@@ -121,11 +122,21 @@ export function NewImportScreen() {
 		};
 	}, [target, files]);
 
+	const [progress, setProgress] = useState("Reading files…");
+
 	const compare = () =>
 		startCompare(async () => {
 			setStep("review");
-			const id = await actions.compare(target, files);
-			router.push(`/imports/${id}`);
+			setProgress("Reading files…");
+			try {
+				const number = await actions.compare(target, files, setProgress);
+				router.push(`/imports/${number}`);
+			} catch (error) {
+				toast.error("Couldn't compare these files", {
+					description: errorMessage(error),
+				});
+				setStep("files");
+			}
 		});
 
 	return (
@@ -234,8 +245,9 @@ export function NewImportScreen() {
 							<CardTitle>Add the {TARGET_LABEL[target]} files</CardTitle>
 							<CardDescription>
 								Drop only what this batch adds or changes, under any file names,
-								with the bodies and media it points at. Anything already stored
-								and not in your files is left alone.
+								with the bodies and media it points at. A copy edit can leave
+								its audio and images out: what's stored stays. Anything already
+								stored and not in your files is left alone.
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="flex flex-col gap-5">
@@ -306,9 +318,8 @@ export function NewImportScreen() {
 					<Card>
 						<CardContent className="flex items-center gap-3 py-6">
 							<Spinner />
-							<span className="type-body text-ink">
-								Hashing {files.length} files and comparing them with what's
-								stored…
+							<span aria-live="polite" className="type-body text-ink">
+								{progress}
 							</span>
 						</CardContent>
 					</Card>

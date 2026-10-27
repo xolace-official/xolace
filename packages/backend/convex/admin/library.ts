@@ -68,7 +68,7 @@ async function entryBySlug(ctx: QueryCtx, slug: string) {
 	return e;
 }
 
-async function bodyOf(ctx: QueryCtx, entryId: Id<"library_entries">) {
+export async function bodyOf(ctx: QueryCtx, entryId: Id<"library_entries">) {
 	const body = await ctx.db
 		.query("library_entry_bodies")
 		.withIndex("by_entryId", (q) => q.eq("entryId", entryId))
@@ -77,7 +77,7 @@ async function bodyOf(ctx: QueryCtx, entryId: Id<"library_entries">) {
 }
 
 /** The entry's credits in order, as the manifest names them (source slugs). */
-async function creditsOf(
+export async function creditsOf(
 	ctx: QueryCtx,
 	entryId: Id<"library_entries">,
 	sourceSlugs: Map<Id<"library_sources">, string>
@@ -101,7 +101,7 @@ async function creditsOf(
 }
 
 /** Facets as authored: by axis, minus the `subject` facet ingest derives from `primarySubject`. */
-async function facetsOf(ctx: QueryCtx, e: Doc<"library_entries">) {
+export async function facetsOf(ctx: QueryCtx, e: Doc<"library_entries">) {
 	const rows = await ctx.db
 		.query("library_entry_facets")
 		.withIndex("by_entryId", (q) => q.eq("entryId", e._id))
