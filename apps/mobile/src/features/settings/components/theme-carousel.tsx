@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, {
-	interpolateColor,
 	scrollTo,
 	useAnimatedRef,
 	useAnimatedScrollHandler,
-	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
 import { getInitialThemeCarouselIndex } from "@/src/features/settings/components/get-initial-theme-carousel-index";
+import { ThemeCarouselGlow } from "@/src/features/settings/components/theme-carousel-glow";
 import { ThemeCarouselItem } from "@/src/features/settings/components/theme-carousel-item";
 import { ThemePreviewCard } from "@/src/features/settings/components/theme-preview-card";
 import { FREE_THEMES, PREMIUM_THEMES } from "@/src/lib/themes";
@@ -21,7 +20,6 @@ const DIVIDER_WIDTH = 28;
 const SECTION_INSET = 20;
 
 const ALL_THEMES = [...FREE_THEMES, ...PREMIUM_THEMES];
-const ACCENT_COLORS = ALL_THEMES.map((t) => t.preview.accent);
 
 /** Center-x offset (content-local, including left padding) of every card,
  *  plus the side padding needed so the first/last card can reach the
@@ -110,23 +108,20 @@ export const ThemeCarousel = ({
 		scrollTo(scrollRef, initialScrollX, 0, false);
 	}, [viewportWidth, initialScrollX, scrollRef, scrollX]);
 
-	const glowStyle = useAnimatedStyle(() => {
-		const backgroundColor = interpolateColor(
-			scrollX.get() + viewportWidth / 2,
-			cardCenters,
-			ACCENT_COLORS
-		);
-		return { backgroundColor };
-	});
-
 	return (
 		<View className="mx-5 overflow-hidden rounded-3xl bg-surface/30">
-			{!reducedMotion && (
-				<Animated.View
-					pointerEvents="none"
-					style={[StyleSheet.absoluteFill, styles.glow, glowStyle]}
-				/>
-			)}
+			{!reducedMotion &&
+				ALL_THEMES.map((theme, i) => (
+					<ThemeCarouselGlow
+						center={cardCenters[i]}
+						key={theme.id}
+						nextCenter={cardCenters[i + 1]}
+						prevCenter={cardCenters[i - 1]}
+						scrollX={scrollX}
+						theme={theme}
+						viewportWidth={viewportWidth}
+					/>
+				))}
 			<Animated.ScrollView
 				contentContainerStyle={[
 					styles.content,
@@ -196,5 +191,4 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		width: DIVIDER_WIDTH,
 	},
-	glow: { opacity: 0.16 },
 });
