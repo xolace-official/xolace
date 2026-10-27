@@ -18,14 +18,15 @@
 
 			--radius: 0.333rem; /* radius-3xl = 16px: buttons and cards */
 
-			--background: #ffffff;
+			/* Off-white page so white cards and setting groups read as shapes. */
+			--background: #f4f5f6;
 			--foreground: #3c3c3c;
 
 			--surface: #ffffff;
 			--surface-foreground: #3c3c3c;
-			--surface-secondary: #f7f7f7;
+			--surface-secondary: #eef0f1;
 			--surface-secondary-foreground: #3c3c3c;
-			--surface-tertiary: #efefef;
+			--surface-tertiary: #e7e9ea;
 			--surface-tertiary-foreground: #3c3c3c;
 
 			--overlay: #ffffff;
@@ -33,14 +34,14 @@
 
 			--muted: #6b6b6b;
 
-			--default: #f2f2f2;
+			--default: #eceef0;
 			--default-foreground: #3c3c3c;
 
 			/* Labels on the green are dark ink: white on it fails contrast. */
 			--accent: #58c418;
 			--accent-foreground: #0f2600;
 
-			--field-background: #f7f7f7;
+			--field-background: #ffffff;
 			--field-foreground: #3c3c3c;
 			--field-placeholder: var(--muted);
 			--field-border: #8a8a8a;
