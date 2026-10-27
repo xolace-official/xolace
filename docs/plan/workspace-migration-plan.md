@@ -130,6 +130,17 @@ The plan for `./convex/*`:
 5. Confirm `convex/react` hooks work under the `@opentui/react` renderer on Bun.
 6. Confirm `@napi-rs/keyring` works under Bun.
 
+**Results (2026-10-27, Bun 1.3.14, macOS):** all six pass. Spikes 1–4 ran `apps/cli/spikes/oauth.ts` (prints claims, never tokens) against the Clerk **development** instance, OAuth app `Xolace CLI (spike)`: public client (PKCE, no secret), scopes `openid profile email offline_access`, consent screen and device authorization grant on, redirect URI `http://127.0.0.1:53682/callback` (+ `localhost`). Each token was also checked by a throwaway local Convex backend whose `auth.config.ts` had the 4b shape (same Clerk domain, `applicationID` = the client ID).
+- **1 ✅** The `id_token` has `iss` = `https://curious-kingfish-86.clerk.accounts.dev` (the apps' Clerk dev domain), `sub` = the Clerk user ID, `aud` = `[<client id>]`, lifetime 24 h. Convex accepted it and derived `tokenIdentifier` = `<iss>|user_…`, the same `iss|sub` the session JWT gives web and mobile, so a CLI sign-in is the same user. It carries no `role` claim (that comes from the customized session token), so admin functions never work over OAuth, as intended.
+- **2 ✅** `grant_type=refresh_token` with only `client_id` (auth method `none`) returns a new `id_token` that Convex accepts. The refresh token **rotates** on every use: the CLI and desktop must store the new one after each refresh.
+- **3 ✅** A sign-in on unregistered port 53999 succeeded with only port 53682 registered: Clerk ignores the port on loopback redirects (RFC 8252 §7.3), so the CLI can bind any free port. A redirect URI that isn't registered at all fails after sign-in with `invalid_request` ("does not match any of the OAuth 2.0 Client's pre-registered redirect urls"), not before.
+- **4 ✅** Device authorization (RFC 8628) is offered: it's in discovery (`device_authorization_endpoint`, grant `urn:ietf:params:oauth:grant-type:device_code`), is a per-app toggle in the dashboard with no beta label, and a full run returned an `id_token` Convex resolves to the same `tokenIdentifier`. Codes last 10 minutes; the verification page is `https://<frontend api>/device`. Use it for `xolace login` over SSH or when no browser can open. Not yet checked on the production instance.
+- **5 ✅** `ConvexProvider` + `useQuery` + `useMutation` render under `@opentui/react` 0.6.6: a query renders, a mutation from inside the tree re-renders it, and a write from another client reaches it (`apps/cli/spikes/convex-react.test.tsx`, run against a local anonymous Convex backend with `SPIKE_CONVEX_URL`; skipped without one). Two things for 4d:
+  - **Types:** OpenTUI's JSX namespace has no `ElementType`, so TS rejects any `React.FC`-typed component, `ConvexProvider` included ("cannot be used as a JSX component"). Runtime is fine; re-type it once as a plain function component.
+  - **Tests:** `testRender` turns on React's act environment and its `waitForFrame` counts render passes, not time. Tests that wait on the network poll on a clock with the pause inside `act()`.
+- **6 ✅** `@napi-rs/keyring` 2.1.2 writes, reads and deletes a keychain entry under Bun (`apps/cli/spikes/keyring.ts`). macOS only so far; Linux (Secret Service, often missing on servers and over SSH) and Windows are untested, which is why the `0600` file fallback stays.
+- The CLI tsconfig now lists `"types": ["bun"]`: TypeScript 6 loads no `@types` packages unless listed, so `bun:test` and `process` didn't resolve.
+
 ### 3a. Admin dashboard and content pipeline
 
 **Why a separate app.** Admin-only code, admin dependencies and admin routes never reach the user bundle or the desktop app. Admin gets its own deploy, its own domain, and its own entry in CODEOWNERS. It shares `packages/ui` with web, which means `packages/ui` now has two real users and is worth having as a package.
@@ -244,8 +255,9 @@ Steps 4c, 4d, 4e and 4f can run in parallel. 4f needs only 4b's role claim, not 
 
 **Status 2026-10-27:**
 - **4f admin v1: done.** The `adminQuery`/`adminMutation`/`adminAction` builders, the role claim, the content UI on Convex, R2 uploads, bulk import and the search index page shipped in #642–#645, #647 and #650. Build order, decisions and what's still open: `docs/plan/admin-v1.md`. The later admin views (users and support, moderation and feedback queues, feature flags, job health) are not started.
-- **4a–4e: not started.** `auth.config.ts` still has only the Clerk provider, there is no `getMe` query, and web and the CLI are still the scaffold placeholders. 4e stays blocked on the `ClerkProvider` static-export problem (see Phase 3 "Left").
-- Next: the 4a spikes, then 4b, which unblocks 4c, 4d and 4e.
+- **4a: done** (2026-10-27): all six spikes pass; results under §3 "Results".
+- **4b–4e: not started.** `auth.config.ts` still has only the Clerk provider, there is no `getMe` query, and web and the CLI are still the scaffold placeholders. 4e stays blocked on the `ClerkProvider` static-export problem (see Phase 3 "Left").
+- Next: 4b, which unblocks 4c, 4d and 4e. It needs a production OAuth app too (the spike used the development instance).
 
 ### Phase 5: Deeper refactors, later and one PR each
 

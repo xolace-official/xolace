@@ -8,6 +8,8 @@
     "jsx": "react-jsx",
     "jsxImportSource": "@opentui/react",
     "allowJs": true,
+    // TS 6 loads no @types packages unless listed.
+    "types": ["bun"],
 
     // Bundler mode
     "moduleResolution": "bundler",
