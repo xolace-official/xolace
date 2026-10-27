@@ -1,8 +1,9 @@
 # Admin v1: content management UI
 
-Status: **draft, UI first.** The screens below are built against fixture data first.
-Convex wiring (`convex/admin/*` with `adminQuery`/`adminMutation`, R2 uploads, the
-ingest workflow) comes after, behind the same interfaces. Parent plan:
+Status: **done · 2026-10-27.** Every step in "Build order" has shipped: the UI on
+fixtures (#642), then the Convex wiring behind the same interfaces: Library and Audio
+on `convex/admin/*` (6a, #643), R2 uploads (6b, #644), imports (6c, #650), plus the
+Search index page (#647). What v1 leaves open is under "After v1". Parent plan:
 `workspace-migration-plan.md` §3a and Phase 4f.
 
 ## What v1 replaces
@@ -259,3 +260,18 @@ diff review**. The tables, shell and overview follow existing patterns.
     stays a deliberate action in the editor.
   - Later, if files are wanted back: an Export that writes the current catalogue out
     in the manifest format. Not in v1.
+
+## After v1
+
+Not done, each its own PR:
+
+- **Imports:** a cleanup for runs left in Uploading or Review, and surfacing a failed
+  search re-index of a row that's already indexed (see "Imports (6c)" above).
+- **Narration** imports: still Rejected; narration goes through
+  `scripts/library/ingest.ts` until the 30-second preview can be made without ffmpeg
+  in the browser.
+- **Entry covers** are still uploaded by the script, not the editor.
+- **Inline audio player** on `/audio` and a **command palette**.
+- **Export** of the catalogue in the manifest format, if files are wanted back.
+- The other admin views: users and support, moderation and feedback queues, feature
+  flags, job health.
