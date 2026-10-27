@@ -6,8 +6,13 @@
  */
 import { describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
-import { allScheduledCalls, scheduled } from "./fixtures.helpers";
-import { asNewUser, asUserWithStatus } from "./harness.helpers";
+import { allScheduledCalls, expectCode, scheduled } from "./fixtures.helpers";
+import {
+	asNewUser,
+	asUnauthed,
+	asUserWithStatus,
+	makeIdentity,
+} from "./harness.helpers";
 import { aggregatesMock, noopJob } from "./mocks.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
@@ -62,5 +67,29 @@ describe("users.getOrCreate", () => {
 		);
 		expect(calls).toHaveLength(2);
 		expect(calls.every((c) => c.args.profileId === user.profileId)).toBe(true);
+	});
+});
+
+describe("users.getMe", () => {
+	it("returns only the narrow who-am-i fields for an onboarded user", async () => {
+		const user = await asNewUser();
+
+		const me = await user.t.query(api.users.getMe, {});
+
+		expect(Object.keys(me).sort()).toEqual([
+			"createdAt",
+			"displayName",
+			"isXolacer",
+			"userId",
+		]);
+		expect(me.userId).toBe(user.userId);
+		expect(me.isXolacer).toBe(false);
+		// getOrCreate seeds a generated display name in preferences.
+		expect(me.displayName).toEqual(expect.any(String));
+	});
+
+	it("throws user_not_found for a Clerk account that never onboarded", async () => {
+		const t = asUnauthed().withIdentity(makeIdentity(99));
+		await expectCode(() => t.query(api.users.getMe, {}), "user_not_found");
 	});
 });

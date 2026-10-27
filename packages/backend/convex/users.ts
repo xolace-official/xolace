@@ -202,6 +202,35 @@ export const getCurrent = query({
 });
 
 /**
+ * Who is signed in, for the CLI and desktop to confirm a login worked. Narrow on
+ * purpose: no token identifier or Clerk ids, which a terminal would print.
+ * Throws `user_not_found` for a Clerk account that never onboarded on mobile or
+ * web, since only those clients create the `users` row today.
+ */
+export const getMe = query({
+	args: {},
+	handler: async (ctx) => {
+		const { user, profile } = await requireAuth(ctx);
+		const preferences = await ctx.db
+			.query("preferences")
+			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+			.unique();
+		return {
+			createdAt: user.createdAt,
+			displayName: preferences?.displayName ?? null,
+			isXolacer: user.isXolacer ?? false,
+			userId: user._id,
+		};
+	},
+	returns: v.object({
+		createdAt: v.number(),
+		displayName: v.union(v.string(), v.null()),
+		isXolacer: v.boolean(),
+		userId: v.id("users"),
+	}),
+});
+
+/**
  * Narrow query for the session-end screen's ReachFeedbackCard. Avoids pulling
  * getFullContext into a leaf screen just for one number.
  */

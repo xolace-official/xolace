@@ -1,6 +1,6 @@
 # Xolace Workspace: Structure & Migration Plan
 
-**Status:** Decisions agreed 2026-10-21 · updated 2026-10-27: Phases 1–3 done, Phase 4 has admin v1 (4f) done and 4a–4e not started, Phase 5 not started. Each phase below carries its own status.
+**Status:** Decisions agreed 2026-10-21 · updated 2026-10-27: Phases 1–3 done, Phase 4 has admin v1 (4f) and the auth spikes (4a) done, 4b in progress and 4c–4e not started, Phase 5 not started. Each phase below carries its own status.
 
 The goal is one repository holding the mobile app, the user web app (which also becomes the desktop app), an admin dashboard and a TUI/CLI, all running on one Convex backend. Many people and agents should be able to work in it at the same time without stepping on each other.
 
@@ -256,8 +256,9 @@ Steps 4c, 4d, 4e and 4f can run in parallel. 4f needs only 4b's role claim, not 
 **Status 2026-10-27:**
 - **4f admin v1: done.** The `adminQuery`/`adminMutation`/`adminAction` builders, the role claim, the content UI on Convex, R2 uploads, bulk import and the search index page shipped in #642–#645, #647 and #650. Build order, decisions and what's still open: `docs/plan/admin-v1.md`. The later admin views (users and support, moderation and feedback queues, feature flags, job health) are not started.
 - **4a: done** (2026-10-27): all six spikes pass; results under §3 "Results".
-- **4b–4e: not started.** `auth.config.ts` still has only the Clerk provider, there is no `getMe` query, and web and the CLI are still the scaffold placeholders. 4e stays blocked on the `ClerkProvider` static-export problem (see Phase 3 "Left").
-- Next: 4b, which unblocks 4c, 4d and 4e. It needs a production OAuth app too (the spike used the development instance).
+- **4b: in progress.** Backend done: `auth.config.ts` adds the OAuth provider when `CLERK_OAUTH_CLIENT_ID` is set, and `users.getMe` returns who is signed in. Left: create the OAuth apps in both Clerk instances and set the variable on dev, staging, previews and prod (`docs/setup/oauth-clients.md`). OAuth tokens carry no `role` claim, so admin stays web-only.
+- **4c–4e: not started.** Web and the CLI are still the scaffold placeholders. 4e stays blocked on the `ClerkProvider` static-export problem (see Phase 3 "Left").
+- Next: finish 4b's Clerk setup, then 4d (the CLI) and 4c can run in parallel.
 
 ### Phase 5: Deeper refactors, later and one PR each
 
