@@ -98,6 +98,24 @@
 				0 0 1px 0 rgba(0, 0, 0, 0.06);
 
 			--backdrop: oklch(0% 0 0 / 20%);
+			/* Playful-only controls (see xolace-plus/playful.css); off here. */
+			--field-border-width: 0px;
+			--playful-lip: 0px;
+			--playful-lip-chip: 0px;
+			--playful-stroke: 0px;
+			--outline-stroke: 1px;
+			--outline-lip: 1px;
+			--accent-lip: transparent;
+			--default-lip: transparent;
+			--danger-lip: transparent;
+			--warning-lip: transparent;
+			/* Surface (card) outline: a hairline here, Playful's 2px stroke there. */
+			--surface-stroke: 1px;
+			--surface-stroke-color: color-mix(
+				in oklab,
+				var(--border) 65%,
+				transparent
+			);
 		}
 
 		@variant alpha-dark {
@@ -192,6 +210,24 @@
 			--field-shadow: 0 0 0 0 transparent inset; /* Transparent shadow to allow ring utilities to work */
 
 			--backdrop: oklch(0% 0 0 / 20%);
+			/* Playful-only controls (see xolace-plus/playful.css); off here. */
+			--field-border-width: 0px;
+			--playful-lip: 0px;
+			--playful-lip-chip: 0px;
+			--playful-stroke: 0px;
+			--outline-stroke: 1px;
+			--outline-lip: 1px;
+			--accent-lip: transparent;
+			--default-lip: transparent;
+			--danger-lip: transparent;
+			--warning-lip: transparent;
+			/* Surface (card) outline: a hairline here, Playful's 2px stroke there. */
+			--surface-stroke: 1px;
+			--surface-stroke-color: color-mix(
+				in oklab,
+				var(--border) 65%,
+				transparent
+			);
 		}
 	}
 }

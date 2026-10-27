@@ -6,6 +6,7 @@ import {
 	Paint,
 	Text,
 } from "@shopify/react-native-skia";
+import { Surface } from "heroui-native";
 import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
@@ -123,7 +124,7 @@ export function WordsTeaserCard({
 				accessibilityRole="button"
 				onPress={onUnlock}
 			>
-				<View className="overflow-hidden rounded-3xl border border-border/65 bg-surface">
+				<Surface className="p-0">
 					{/* Header — no padlock. The teaser sells what's true about them. */}
 					<View className="flex-row items-center gap-1.5 px-5 pt-5 pb-3">
 						<AppText className="font-medium text-[11px] text-muted uppercase tracking-widest">
@@ -166,7 +167,7 @@ export function WordsTeaserCard({
 							See every word and how often it returns
 						</AppText>
 					</View>
-				</View>
+				</Surface>
 			</Pressable>
 		</EaseView>
 	);

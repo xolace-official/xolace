@@ -10,6 +10,12 @@ import "@/src/lib/theme-bootstrap";
 
 import { useAuth } from "@clerk/expo";
 import {
+	Nunito_500Medium,
+	Nunito_700Bold,
+	Nunito_800ExtraBold,
+	Nunito_900Black,
+} from "@expo-google-fonts/nunito";
+import {
 	SpaceGrotesk_400Regular,
 	SpaceGrotesk_500Medium,
 	SpaceGrotesk_600SemiBold,
@@ -244,6 +250,11 @@ function RootLayout() {
 	});
 
 	const [fontsLoaded, fontError] = useFonts({
+		// Playful (xolace+) theme
+		Nunito_500Medium,
+		Nunito_700Bold,
+		Nunito_800ExtraBold,
+		Nunito_900Black,
 		SpaceGrotesk_400Regular,
 		SpaceGrotesk_500Medium,
 		SpaceGrotesk_600SemiBold,

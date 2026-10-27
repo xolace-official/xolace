@@ -1,3 +1,4 @@
+import { Surface } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
@@ -27,7 +28,7 @@ export function WordsTeaserEmpty({ staggerDelay = 360 }: Props) {
 				type: "timing",
 			}}
 		>
-			<View className="overflow-hidden rounded-3xl border border-border/65 bg-surface">
+			<Surface className="p-0">
 				<View className="flex-row items-center gap-1.5 px-5 pt-5 pb-3">
 					<AppText className="font-medium text-[11px] text-muted uppercase tracking-widest">
 						Words that keep finding you
@@ -46,7 +47,7 @@ export function WordsTeaserEmpty({ staggerDelay = 360 }: Props) {
 						The ones that keep returning rise to the top.
 					</AppText>
 				</View>
-			</View>
+			</Surface>
 		</EaseView>
 	);
 }

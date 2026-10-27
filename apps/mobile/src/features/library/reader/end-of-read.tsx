@@ -2,7 +2,7 @@ import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
+import { Surface, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { Pressable, View } from "react-native";
 
@@ -99,7 +99,7 @@ export function EndOfRead({
 			</View>
 
 			{helpedCount !== null && (
-				<View className="flex-row items-center gap-4 rounded-3xl bg-surface p-4">
+				<Surface className="flex-row items-center gap-4 p-4">
 					<Image
 						contentFit="contain"
 						source={FLUX_PAIR}
@@ -113,7 +113,7 @@ export function EndOfRead({
 							You&apos;re not the only one.
 						</AppText>
 					</View>
-				</View>
+				</Surface>
 			)}
 
 			<UpNext entryId={entryId} />

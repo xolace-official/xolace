@@ -7,7 +7,7 @@ import type { Doc, Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { PressableFeedback } from "heroui-native";
+import { PressableFeedback, Surface } from "heroui-native";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
@@ -74,7 +74,7 @@ export function UnlockBeat({ sessionId, unlock }: Props) {
 				initialAnimate={{ opacity: 0 }}
 				transition={TRANSITION}
 			>
-				<View className="mx-5 mt-6 flex-row gap-3 rounded-2xl border border-border/65 bg-surface p-4">
+				<Surface className="mx-5 mt-6 flex-row gap-3 rounded-2xl p-4">
 					<View className="size-9 items-center justify-center rounded-xl bg-accent/12">
 						<SymbolView name={meta.icon} size={17} tintColor={accent} />
 					</View>
@@ -96,7 +96,7 @@ export function UnlockBeat({ sessionId, unlock }: Props) {
 							</AppText>
 						</PressableFeedback>
 					</View>
-				</View>
+				</Surface>
 			</EaseView>
 		);
 	}

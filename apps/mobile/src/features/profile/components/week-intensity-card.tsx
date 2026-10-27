@@ -1,5 +1,5 @@
 import { SymbolView } from "expo-symbols";
-import { PressableFeedback } from "heroui-native";
+import { PressableFeedback, Surface } from "heroui-native";
 import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
@@ -270,7 +270,7 @@ export function WeekIntensityCard({
 				type: "timing",
 			}}
 		>
-			<View className="overflow-hidden rounded-3xl border border-border/65 bg-surface">
+			<Surface className="p-0">
 				<View className="px-5 pt-5 pb-4">
 					<View className="mb-5 flex-row items-center gap-1.5">
 						<AppText className="font-medium text-[11px] text-muted uppercase tracking-widest">
@@ -355,7 +355,7 @@ export function WeekIntensityCard({
 					/* The only gated element for free tier: paging into earlier weeks. */
 					<EarlierWeeksGate onPress={onUnlock} width={width - CARD_INSET} />
 				)}
-			</View>
+			</Surface>
 		</EaseView>
 	);
 }

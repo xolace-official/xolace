@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { PressableFeedback } from "heroui-native";
+import { PressableFeedback, Surface } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 
 import { AppText } from "@/src/components/shared/app-text";
@@ -73,10 +73,7 @@ export function DailyQuotesCard() {
 			accessibilityRole="button"
 			onPress={goToQuotes}
 		>
-			<View
-				className="flex-row items-center overflow-hidden rounded-3xl border border-border/60 bg-surface"
-				style={styles.card}
-			>
+			<Surface className="flex-row items-center p-0" style={styles.card}>
 				<View className="flex-1 py-6 pr-3 pl-5">
 					<AppText className="font-semibold text-foreground text-lg">
 						Daily Quotes
@@ -98,7 +95,7 @@ export function DailyQuotesCard() {
 						style={styles.art}
 					/>
 				</View>
-			</View>
+			</Surface>
 		</PressableFeedback>
 	);
 }

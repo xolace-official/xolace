@@ -1,0 +1,72 @@
+/*
+ * xolace+ — Playful component layer.
+ *
+ * Restyles HeroUI Native's own component classes with the Playful lip and
+ * stroke. Every value reads a Playful control variable; every other theme
+ * sets those to HeroUI's own defaults (0px lips, transparent lip colors,
+ * 1px outline), so there these rules draw what HeroUI already draws.
+ * Corners come from Playful's --radius, not from here.
+ *
+ * Imported after heroui-native/styles in global.css so it wins in
+ * @layer components. Native controls (headers, NativeTabs, glass, blur,
+ * system sheets) have no HeroUI class and are never touched here.
+ */
+@layer components {
+	/* Button: solid lip under the fill */
+	.button__root--variant-primary {
+		border-bottom-color: var(--accent-lip, transparent);
+		border-bottom-width: var(--playful-lip, 0px);
+	}
+	.button__root--variant-secondary,
+	.button__root--variant-tertiary {
+		border-bottom-color: var(--default-lip, transparent);
+		border-bottom-width: var(--playful-lip, 0px);
+	}
+	.button__root--variant-outline {
+		border-width: var(--outline-stroke);
+		border-bottom-width: var(--outline-lip);
+	}
+	.button__root--variant-danger {
+		border-bottom-color: var(--danger-lip, transparent);
+		border-bottom-width: var(--playful-lip, 0px);
+	}
+
+	/* Surface / Card. Default cards always carry the theme's outline (a
+	 * hairline, or Playful's 2px stroke), so call sites don't set their own
+	 * border and Playful can restyle them. Secondary and tertiary get the
+	 * stroke under Playful only. The lip comes from --surface-shadow. */
+	.surface__root--variant-default {
+		border-color: var(--surface-stroke-color);
+		border-width: var(--surface-stroke);
+	}
+	.surface__root--variant-secondary,
+	.surface__root--variant-tertiary {
+		border-color: var(--color-border);
+		border-width: var(--playful-stroke, 0px);
+	}
+
+	/* Chip: pill with a 2px lip */
+	.chip__root--variant-primary--color-accent,
+	.chip__root--variant-soft--color-accent,
+	.chip__root--variant-primary--color-success,
+	.chip__root--variant-soft--color-success {
+		border-bottom-color: var(--accent-lip, transparent);
+		border-bottom-width: var(--playful-lip-chip, 0px);
+	}
+	.chip__root--variant-secondary,
+	.chip__root--variant-primary--color-default,
+	.chip__root--variant-soft--color-default {
+		border-bottom-color: var(--default-lip, transparent);
+		border-bottom-width: var(--playful-lip-chip, 0px);
+	}
+	.chip__root--variant-primary--color-warning,
+	.chip__root--variant-soft--color-warning {
+		border-bottom-color: var(--warning-lip, transparent);
+		border-bottom-width: var(--playful-lip-chip, 0px);
+	}
+	.chip__root--variant-primary--color-danger,
+	.chip__root--variant-soft--color-danger {
+		border-bottom-color: var(--danger-lip, transparent);
+		border-bottom-width: var(--playful-lip-chip, 0px);
+	}
+}

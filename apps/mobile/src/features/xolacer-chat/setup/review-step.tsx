@@ -1,3 +1,4 @@
+import { Surface } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "@/src/components/shared/app-text";
 import { SpecialtyChips } from "../components/specialty-chips";
@@ -15,10 +16,7 @@ const styles = StyleSheet.create({
 export function ReviewStep({ draft }: { draft: SetupDraft }) {
 	return (
 		<View className="gap-3 pt-4">
-			<View
-				className="items-center gap-2 rounded-3xl border border-border/40 bg-surface p-5"
-				style={styles.borderCurve}
-			>
+			<Surface className="items-center gap-2 p-5" style={styles.borderCurve}>
 				<XolacerAvatar
 					name={draft.displayName || "?"}
 					photoUrl={draft.photoUrl}
@@ -34,7 +32,7 @@ export function ReviewStep({ draft }: { draft: SetupDraft }) {
 					className="justify-center"
 					specialties={draft.specialties}
 				/>
-			</View>
+			</Surface>
 			<AppText className="text-center text-[11px] text-muted leading-4">
 				Publishing puts you on the roster. You can edit any of this later, and
 				people only reach you by sending a request you can decline.

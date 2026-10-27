@@ -33,7 +33,9 @@ type ThemeName =
 	| "velvet-light"
 	| "velvet-dark"
 	| "noir-light"
-	| "noir-dark";
+	| "noir-dark"
+	| "playful-light"
+	| "playful-dark";
 
 interface AppThemeContextType {
 	currentTheme: string;
@@ -126,6 +128,12 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 					break;
 				case "noir-dark":
 					Uniwind.setTheme("noir-light");
+					break;
+				case "playful-light":
+					Uniwind.setTheme("playful-dark");
+					break;
+				case "playful-dark":
+					Uniwind.setTheme("playful-light");
 					break;
 			}
 		};

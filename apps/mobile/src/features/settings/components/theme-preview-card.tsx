@@ -1,7 +1,9 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
+import { ScopedTheme } from "uniwind";
 import { AppText } from "@/src/components/shared/app-text";
 import type { ThemeEntry } from "@/src/lib/themes";
+import { cn } from "@/src/lib/utils";
 
 type Props = {
 	theme: ThemeEntry;
@@ -25,8 +27,8 @@ const EASE_TRANSITION = {
 
 /**
  * Mini preview card showing a snapshot of the reflect idle screen.
- * Uses theme.preview hex colors as inline styles — no CSS variable
- * resolution needed, works regardless of the active global theme.
+ * The card renders inside a ScopedTheme of the theme's dark variant, so it
+ * shows that theme's own tokens whatever the active global theme is.
  *
  * Active: accent ring + "Active" micro-label.
  * Premium/unavailable: lock glyph overlay; tap is handled by parent.
@@ -38,115 +40,63 @@ export const ThemePreviewCard = ({
 	isLocked: lockedOverride,
 	width = 130,
 }: Props) => {
-	const { preview } = theme;
 	const isLocked =
 		lockedOverride ?? (theme.tier === "premium" && theme.available === false);
-
-	const outerRingStyle = {
-		borderColor: isActive ? preview.accent : "transparent",
-		borderRadius: 16,
-		borderWidth: isActive ? 1.5 : 0,
-		padding: isActive ? 2 : 0,
-	};
-	const cardBodyStyle = {
-		backgroundColor: preview.bg,
-		borderRadius: isActive ? 14 : 16,
-		minHeight: 140,
-		overflow: "hidden" as const,
-		padding: 14,
-	};
-	const encouragementStyle = {
-		color: preview.fg + "50",
-		fontSize: 9,
-		fontStyle: "italic" as const,
-		marginBottom: 8,
-	};
-	const separatorStyle = {
-		backgroundColor: preview.border,
-		height: 0.5,
-		marginBottom: 8,
-	};
-	const headlineStyle = {
-		color: preview.fg,
-		fontSize: 12,
-		fontWeight: "600" as const,
-		lineHeight: 17,
-		marginBottom: 12,
-	};
-	const chipStyle = {
-		alignSelf: "flex-start" as const,
-		backgroundColor: preview.accent + "18",
-		borderColor: preview.accent + "60",
-		borderRadius: 20,
-		borderWidth: 1,
-		paddingHorizontal: 8,
-		paddingVertical: 3,
-	};
-	const chipLabelStyle = {
-		color: preview.accent,
-		fontSize: 9,
-		fontWeight: "500" as const,
-	};
-	const accentDotStyle = {
-		backgroundColor: preview.accent + "80",
-		borderRadius: 2.5,
-		bottom: 10,
-		height: 5,
-		position: "absolute" as const,
-		right: 10,
-		width: 5,
-	};
-	const lockOverlayStyle = {
-		alignItems: "center" as const,
-		backgroundColor: preview.bg + "cc",
-		borderRadius: 16,
-		bottom: 0,
-		justifyContent: "center" as const,
-		left: 0,
-		position: "absolute" as const,
-		right: 0,
-		top: 0,
-	};
-	const activeLabelStyle = { color: preview.accent, fontSize: 9 };
 
 	return (
 		<Pressable
 			accessibilityLabel={`${theme.name} theme${isActive ? ", active" : ""}`}
 			accessibilityRole="button"
 			onPress={onPress}
-			style={[styles.card, { width }]}
+			style={{ width }}
 		>
-			{/* Outer ring — only visible when active */}
-			<View style={outerRingStyle}>
-				{/* Card body */}
-				<View style={cardBodyStyle}>
-					{/* Encouragement line */}
-					<AppText style={encouragementStyle}>
-						{"What's here right now..."}
-					</AppText>
-
-					{/* Faux separator */}
-					<View style={separatorStyle} />
-
-					{/* Headline */}
-					<AppText style={headlineStyle}>{"What's here\nright now?"}</AppText>
-
-					{/* Texture chip */}
-					<View style={chipStyle}>
-						<AppText style={chipLabelStyle}>heavy</AppText>
-					</View>
-
-					{/* Accent dot bottom-right */}
-					<View style={accentDotStyle} />
-
-					{/* Lock overlay for premium */}
-					{isLocked && (
-						<View style={lockOverlayStyle}>
-							<AppText style={styles.lockIcon}>🔒</AppText>
-						</View>
+			<ScopedTheme theme={theme.variants.dark}>
+				{/* Outer ring — only visible when active */}
+				<View
+					className={cn(
+						"rounded-[16px]",
+						isActive && "border-[1.5px] border-accent p-0.5"
 					)}
+				>
+					{/* Card body */}
+					<View
+						className={cn(
+							"min-h-[140px] overflow-hidden bg-background p-3.5",
+							isActive ? "rounded-[14px]" : "rounded-[16px]"
+						)}
+					>
+						{/* Encouragement line */}
+						<AppText className="mb-2 text-[9px] text-foreground/30 italic">
+							{"What's here right now..."}
+						</AppText>
+
+						{/* Faux separator */}
+						<View className="mb-2 h-[0.5px] bg-border" />
+
+						{/* Headline */}
+						<AppText className="mb-3 font-semibold text-[12px] text-foreground leading-[17px]">
+							{"What's here\nright now?"}
+						</AppText>
+
+						{/* Texture chip */}
+						<View className="self-start rounded-full border border-accent/40 bg-accent/10 px-2 py-[3px]">
+							<AppText className="font-medium text-[9px] text-accent">
+								heavy
+							</AppText>
+						</View>
+
+						{/* Accent dot bottom-right */}
+						<View className="absolute right-2.5 bottom-2.5 size-[5px] rounded-full bg-accent/50" />
+
+						{/* Lock overlay for premium */}
+						{isLocked && (
+							<View className="absolute inset-0 items-center justify-center rounded-[16px] bg-background/80">
+								<AppText style={styles.lockIcon}>🔒</AppText>
+							</View>
+						)}
+					</View>
 				</View>
-			</View>
+			</ScopedTheme>
 
 			{/* Label row */}
 			<View style={styles.labelRow}>
@@ -157,7 +107,9 @@ export const ThemePreviewCard = ({
 						initialAnimate={EASE_INITIAL}
 						transition={EASE_TRANSITION}
 					>
-						<AppText style={activeLabelStyle}>· Active</AppText>
+						<ScopedTheme theme={theme.variants.dark}>
+							<AppText className="text-[9px] text-accent">· Active</AppText>
+						</ScopedTheme>
 					</EaseView>
 				)}
 			</View>
@@ -166,7 +118,6 @@ export const ThemePreviewCard = ({
 };
 
 const styles = StyleSheet.create({
-	card: {},
 	labelRow: {
 		alignItems: "center",
 		flexDirection: "row",

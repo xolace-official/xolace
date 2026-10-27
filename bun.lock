@@ -103,6 +103,7 @@
         "@elevenlabs/react-native": "1.2.30",
         "@expo-google-fonts/atkinson-hyperlegible-next": "^0.4.1",
         "@expo-google-fonts/literata": "^0.4.3",
+        "@expo-google-fonts/nunito": "^0.4.2",
         "@expo-google-fonts/space-grotesk": "^0.4.1",
         "@expo/material-symbols": "^0.1.1",
         "@expo/metro-runtime": "~58.0.14",
@@ -733,6 +734,8 @@
     "@expo-google-fonts/literata": ["@expo-google-fonts/literata@0.4.3", "", {}, "sha512-AuxE7NB6Ae1laRK8uTcap5xI2MYTZOXrAWul4SNGBiq4igP7r/q8IO3vdvO/P1MGiRczuyZ1zhTwSm/CaYeq9A=="],
 
     "@expo-google-fonts/material-symbols": ["@expo-google-fonts/material-symbols@0.4.51", "", {}, "sha512-QkNQK848WG/vHFqfBqYcX/vM8dweAR/ORRK1r6qii5V/hdaqn4eYKxmKGj6mg61ty70SPgG1R5uP9XX9jJ3ehQ=="],
+
+    "@expo-google-fonts/nunito": ["@expo-google-fonts/nunito@0.4.2", "", {}, "sha512-1KCWphw/I2ugqfs9iRHUCkPTnomNgGPtF4AvqVquoEKxr0EL+mcLNLgeixsslbaSFevRR6/KJAE3sc8g0VaY0Q=="],
 
     "@expo-google-fonts/space-grotesk": ["@expo-google-fonts/space-grotesk@0.4.1", "", {}, "sha512-ZVQYw4Ok/pgcSJiufP8oRZE3AVxS9xtmKEUfsurbHkHNdMc/GA1gDXP9G4Cr7KL4KqSc0haexR2TuMigotCn4Q=="],
 

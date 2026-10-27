@@ -1,3 +1,4 @@
+import { Surface } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
@@ -45,7 +46,7 @@ export function RankCard({ rank, staggerDelay = 300 }: Props) {
 				type: "timing",
 			}}
 		>
-			<View className="rounded-3xl border border-border/65 bg-surface p-5">
+			<Surface className="p-5">
 				<View className="flex-row items-center gap-2">
 					<AppText className="text-[10px] text-muted uppercase tracking-widest">
 						among the fires
@@ -86,7 +87,7 @@ export function RankCard({ rank, staggerDelay = 300 }: Props) {
 								? "Lights up after 5 moments. Your first one starts it."
 								: `Lights up after ${rank.threshold} moments — ${rank.remaining} to go.`}
 				</AppText>
-			</View>
+			</Surface>
 		</EaseView>
 	);
 }

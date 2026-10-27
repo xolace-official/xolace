@@ -1,7 +1,7 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
-import { PressableFeedback } from "heroui-native";
+import { PressableFeedback, Surface } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
 import { View } from "react-native";
@@ -64,7 +64,7 @@ export const GaveUpFeedbackCard = ({ sessionId }: Props) => {
 			}}
 			transition={EASE_TRANSITION}
 		>
-			<View className="mx-5 mt-4 rounded-2xl border border-overlay/20 bg-surface p-4">
+			<Surface className="mx-5 mt-4 rounded-2xl p-4">
 				<AppText className="mb-3 text-foreground/60 text-sm">
 					What happened?
 				</AppText>
@@ -83,7 +83,7 @@ export const GaveUpFeedbackCard = ({ sessionId }: Props) => {
 						</PressableFeedback>
 					))}
 				</View>
-			</View>
+			</Surface>
 		</EaseView>
 	);
 };

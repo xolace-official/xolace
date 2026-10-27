@@ -14,6 +14,7 @@ import {
 	Button,
 	PressableFeedback,
 	Skeleton,
+	Surface,
 	useThemeColor,
 } from "heroui-native";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -378,8 +379,8 @@ function RateCard({
 			accessibilityRole="button"
 			onPress={onPress}
 		>
-			<View
-				className="flex-row items-center gap-3 rounded-3xl border border-border/40 bg-surface p-3"
+			<Surface
+				className="flex-row items-center gap-3 p-3"
 				style={styles.borderCurve}
 			>
 				{/* Contained rather than overflowing: the card sits directly under two
@@ -411,7 +412,7 @@ function RateCard({
 						</View>
 					</View>
 				</View>
-			</View>
+			</Surface>
 		</PressableFeedback>
 	);
 }
@@ -556,12 +557,8 @@ function Block({
 	const muted = useThemeColor("muted") as string;
 
 	return (
-		<View
-			className={
-				accent
-					? "rounded-3xl border border-accent/25 bg-accent/8 p-5"
-					: "rounded-3xl border border-border/40 bg-surface p-5"
-			}
+		<Surface
+			className={accent ? "border-accent/25 bg-accent/8 p-5" : "p-5"}
 			style={styles.borderCurve}
 		>
 			{onPress ? (
@@ -584,7 +581,7 @@ function Block({
 				</AppText>
 			)}
 			<View className="gap-3.5">{children}</View>
-		</View>
+		</Surface>
 	);
 }
 

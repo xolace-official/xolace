@@ -1,4 +1,4 @@
-import { Button, Spinner, useThemeColor } from "heroui-native";
+import { Button, Spinner, Surface, useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { FadeIn, LinearTransition } from "react-native-reanimated";
 import { AppText } from "@/src/components/shared/app-text";
@@ -22,8 +22,8 @@ export function PaywallPlansUnavailable({ isRetrying, onRetry }: Props) {
 
 	return (
 		<View className="gap-4">
-			<View
-				className="items-center gap-1 rounded-2xl border border-border bg-surface px-4 py-4"
+			<Surface
+				className="items-center gap-1 rounded-2xl px-4 py-4"
 				style={styles.borderCurve}
 			>
 				<AppText className="font-semibold text-[15px] text-foreground">
@@ -33,7 +33,7 @@ export function PaywallPlansUnavailable({ isRetrying, onRetry }: Props) {
 					We couldn&apos;t reach the App Store. Check your connection and try
 					again.
 				</AppText>
-			</View>
+			</Surface>
 
 			<Button
 				accessibilityLabel="Try again"

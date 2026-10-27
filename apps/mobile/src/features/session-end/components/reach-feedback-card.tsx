@@ -1,6 +1,7 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
+import { Surface } from "heroui-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
@@ -83,7 +84,7 @@ export const ReachFeedbackCard = ({ sessionCount }: Props) => {
 			}}
 			transition={visible ? SHOW_TRANSITION : HIDE_TRANSITION}
 		>
-			<View className="mx-5 mt-6 rounded-2xl border border-overlay/20 bg-surface p-4">
+			<Surface className="mx-5 mt-6 rounded-2xl p-4">
 				<AppText className="mb-2 text-foreground/60 text-sm">
 					When I reached out, what landed?
 				</AppText>
@@ -119,7 +120,7 @@ export const ReachFeedbackCard = ({ sessionCount }: Props) => {
 						Couldn&apos;t save that. Tap again to retry.
 					</AppText>
 				)}
-			</View>
+			</Surface>
 		</EaseView>
 	);
 };

@@ -1,7 +1,7 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Doc } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { PressableFeedback } from "heroui-native";
+import { PressableFeedback, Surface } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/src/components/shared/app-text";
@@ -59,11 +59,7 @@ function FollowUpRow({ card, onDismiss }: RowProps) {
 	}
 
 	const body = (
-		<View
-			className={`rounded-2xl border border-overlay/20 bg-surface px-4 py-3.5 ${
-				muted ? "opacity-80" : ""
-			}`}
-		>
+		<Surface className={`rounded-2xl px-4 py-3.5 ${muted ? "opacity-80" : ""}`}>
 			<AppText
 				className="text-[13px] text-foreground/75 leading-5"
 				numberOfLines={2}
@@ -76,7 +72,7 @@ function FollowUpRow({ card, onDismiss }: RowProps) {
 					<AppText className="text-foreground/35 text-xs">tap to close</AppText>
 				)}
 			</View>
-		</View>
+		</Surface>
 	);
 
 	if (!tappable) {
