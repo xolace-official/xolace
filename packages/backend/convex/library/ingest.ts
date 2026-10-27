@@ -3,7 +3,7 @@ import { internalMutation } from "../_generated/server";
 import schema from "../schema";
 import { assertImageAlts } from "./imageAlts";
 import { manifestSource } from "./sources";
-import { resolveHubItems, retiredAtAfter, writeEntry } from "./write";
+import { upsertHubRecord, upsertSourceRecord, writeEntry } from "./write";
 
 /**
  * Curator ingest for the Library (#406, decisions in #392), driven by
@@ -47,23 +47,10 @@ export const upsertSource = internalMutation({
 			.query("library_sources")
 			.withIndex("by_slug", (q) => q.eq("slug", source.slug))
 			.unique();
-		if (!existing) {
-			await ctx.db.insert("library_sources", {
-				...source,
-				sha256,
-				updatedAt: Date.now(),
-			});
-			return { action: "inserted" as const };
-		}
-		if (existing.sha256 === sha256) {
+		if (existing?.sha256 === sha256) {
 			return { action: "unchanged" as const };
 		}
-		await ctx.db.replace("library_sources", existing._id, {
-			...source,
-			sha256,
-			updatedAt: Date.now(),
-		});
-		return { action: "updated" as const };
+		return { action: await upsertSourceRecord(ctx, source, sha256) };
 	},
 	returns: upsertResult,
 });
@@ -133,22 +120,7 @@ export const upsertHub = internalMutation({
 		if (existing?.sha256 === sha256) {
 			return { action: "unchanged" as const };
 		}
-
-		const items = await resolveHubItems(ctx, hub.slug, hub.items);
-		const now = Date.now();
-		const doc = {
-			...hub,
-			items,
-			retiredAt: retiredAtAfter(existing, hub.active, now),
-			sha256,
-			updatedAt: now,
-		};
-		if (!existing) {
-			await ctx.db.insert("library_hubs", doc);
-			return { action: "inserted" as const };
-		}
-		await ctx.db.replace("library_hubs", existing._id, doc);
-		return { action: "updated" as const };
+		return { action: await upsertHubRecord(ctx, hub, sha256) };
 	},
 	returns: upsertResult,
 });

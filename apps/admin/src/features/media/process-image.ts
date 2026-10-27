@@ -77,14 +77,49 @@ export async function processImage(
 	file: File,
 	maxPx: number
 ): Promise<ProcessedImage> {
-	const image = await shrink(await decode(file), maxPx);
+	const {
+		thumbhash,
+		webp: [first],
+	} = await processImageSizes(file, [maxPx]);
+	if (!first) {
+		throw new Error(`Couldn't process ${file.name}`);
+	}
+	return { file: first.file, sha256: first.sha256, thumbhash };
+}
+
+/**
+ * One WebP per size, from a single decode (an entry cover is uploaded at 512 and
+ * 1280), and one ThumbHash from the largest.
+ */
+export async function processImageSizes(
+	file: File,
+	sizes: readonly number[]
+): Promise<{
+	thumbhash: string;
+	webp: { file: Blob; px: number; sha256: string }[];
+}> {
+	const source = await decode(file);
 	const { default: encode } = await import("@jsquash/webp/encode");
-	const webp = await encode(image, WEBP_OPTIONS);
-	const small = await shrink(image, THUMBHASH_PX);
+	const resized = await Promise.all(
+		[...sizes]
+			.sort((a, b) => b - a)
+			.map(async (px) => ({ image: await shrink(source, px), px }))
+	);
+	const [largest] = resized;
+	if (!largest) {
+		throw new Error("No image sizes asked for");
+	}
+	const webp = await Promise.all(
+		resized.map(async ({ image, px }) => {
+			const bytes = await encode(image, WEBP_OPTIONS);
+			return {
+				file: new Blob([bytes], { type: "image/webp" }),
+				px,
+				sha256: await sha256Hex(bytes),
+			};
+		})
+	);
+	const small = await shrink(largest.image, THUMBHASH_PX);
 	const hash = rgbaToThumbHash(small.width, small.height, small.data);
-	return {
-		file: new Blob([webp], { type: "image/webp" }),
-		sha256: await sha256Hex(webp),
-		thumbhash: btoa(String.fromCharCode(...hash)),
-	};
+	return { thumbhash: btoa(String.fromCharCode(...hash)), webp };
 }

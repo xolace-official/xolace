@@ -13,7 +13,11 @@ export type JsonRole =
 	| "topics";
 
 interface RoleSpec {
-	/** Keys every record of this role has; the first role whose keys all match wins. */
+	/**
+	 * Keys every record of this role has; the first role whose keys all match wins.
+	 * Only required fields: a copy edit may leave out an optional path such as
+	 * `audioPath`, and compare checks the rest of each record.
+	 */
 	keys: readonly string[];
 	label: string;
 }
@@ -36,16 +40,16 @@ const ROLES: Record<JsonRole, RoleSpec> = {
 		label: "Sources",
 	},
 	topics: {
-		keys: ["slug", "title", "thumbPath"],
+		keys: ["slug"],
 		label: "Topics",
 	},
 	tracks: {
-		keys: ["slug", "title", "audioPath", "topic"],
+		keys: ["slug", "title", "topic", "family"],
 		label: "Tracks",
 	},
 };
 
-/** Roles each target reads, most specific first (tracks before topics: both have `thumbPath`). */
+/** Roles each target reads, most specific first (tracks before topics: a track has a `slug` too). */
 export const TARGET_ROLES: Record<ImportTarget, readonly JsonRole[]> = {
 	audio: ["tracks", "topics"],
 	library: ["entries", "sources", "hubs", "narration"],
@@ -76,7 +80,7 @@ export function detectRole(
 }
 
 export type JsonDetection =
-	| { file: File; role: JsonRole }
+	| { file: File; records: Record<string, unknown>[]; role: JsonRole }
 	| { file: File; problem: string; role: null };
 
 /** Reads and sorts the dropped JSON files; markdown and media are matched later, by path. */
@@ -96,8 +100,8 @@ export async function detectJsonFiles(
 				return { file, problem: "Not valid JSON", role: null };
 			}
 			const role = detectRole(target, value);
-			return role
-				? { file, role }
+			return role && Array.isArray(value)
+				? { file, records: value.filter(isRecord), role }
 				: { file, problem: "No records this target reads", role: null };
 		})
 	);

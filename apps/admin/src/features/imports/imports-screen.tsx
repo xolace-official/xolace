@@ -2,6 +2,7 @@
 
 import { Badge } from "@xolace/ui/components/badge";
 import { buttonVariants } from "@xolace/ui/components/button";
+import { Spinner } from "@xolace/ui/components/spinner";
 import {
 	Table,
 	TableBody,
@@ -10,7 +11,12 @@ import {
 	TableHeader,
 	TableRow,
 } from "@xolace/ui/components/table";
-import { CircleSlashIcon, EyeIcon, UploadIcon } from "lucide-react";
+import {
+	CircleCheckIcon,
+	CircleSlashIcon,
+	EyeIcon,
+	UploadIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 import { StatusBadge } from "@/features/content/status-badge";
@@ -27,16 +33,16 @@ import {
 import { useImports } from "./imports-provider";
 import { ActionBadge } from "./run/diff-parts";
 import {
-	countByAction,
-	countByStatus,
 	DIFF_ACTIONS,
-	type ImportRun,
+	type ImportRunSummary,
+	runLabel,
 	TARGET_LABEL,
 } from "./types";
 
 /** `/imports`: every bulk import, newest first, with what it changed and how it went. */
 export function ImportsScreen() {
 	const {
+		meta: { ready },
 		state: { runs },
 	} = useImports();
 
@@ -53,33 +59,56 @@ export function ImportsScreen() {
 					</PageHeaderActions>
 				</PageHeaderHeading>
 				<PageHeaderDescription>
-					Drop a manifest and its files, review what changes, then apply it.
-					Unchanged items are skipped, so re-importing a whole tree is safe.
+					Drop a batch of records and their files, review what changes, then
+					apply it. Unchanged items are skipped, and nothing missing from the
+					files is retired.
 				</PageHeaderDescription>
 			</PageHeader>
 
-			{runs.length > 0 ? (
-				<RunsTable runs={runs} />
-			) : (
-				<div className="lip depth-md rounded-xl border-2 border-line bg-surface">
-					<EmptyState
-						action={
-							<Link className={buttonVariants()} href="/imports/new">
-								<UploadIcon />
-								New import
-							</Link>
-						}
-						description="Imports you start show up here with their diff and status."
-						pose="peek"
-						title="No imports yet"
-					/>
-				</div>
-			)}
+			<RunsBody ready={ready} runs={runs} />
 		</>
 	);
 }
 
-function RunsTable({ runs }: { runs: readonly ImportRun[] }) {
+function RunsBody({
+	ready,
+	runs,
+}: {
+	ready: boolean;
+	runs: readonly ImportRunSummary[];
+}) {
+	if (!ready) {
+		return (
+			<div
+				aria-live="polite"
+				className="flex min-h-64 items-center justify-center gap-3 text-muted-foreground"
+			>
+				<Spinner />
+				Loading imports…
+			</div>
+		);
+	}
+	if (runs.length > 0) {
+		return <RunsTable runs={runs} />;
+	}
+	return (
+		<div className="lip depth-md rounded-xl border-2 border-line bg-surface">
+			<EmptyState
+				action={
+					<Link className={buttonVariants()} href="/imports/new">
+						<UploadIcon />
+						New import
+					</Link>
+				}
+				description="Imports you start show up here with their diff and status."
+				pose="peek"
+				title="No imports yet"
+			/>
+		</div>
+	);
+}
+
+function RunsTable({ runs }: { runs: readonly ImportRunSummary[] }) {
 	return (
 		<Table>
 			<TableHeader>
@@ -93,16 +122,16 @@ function RunsTable({ runs }: { runs: readonly ImportRun[] }) {
 			</TableHeader>
 			<TableBody>
 				{runs.map((run) => {
-					const counts = countByAction(run.items);
+					const { counts } = run;
 					return (
-						<TableRow className="relative" key={run.id}>
+						<TableRow className="relative" key={run.number}>
 							<TableCell>
 								{/* The link's ::after covers the row, so the whole row opens the run. */}
 								<Link
 									className="block font-semibold text-ink outline-none after:absolute after:inset-0 hover:underline focus-visible:after:outline-2 focus-visible:after:outline-focus focus-visible:after:-outline-offset-2"
-									href={`/imports/${run.id}`}
+									href={`/imports/${run.number}`}
 								>
-									{run.id}
+									{runLabel(run)}
 								</Link>
 								<span className="type-small block text-ink-muted">
 									{run.files}
@@ -137,8 +166,23 @@ function RunsTable({ runs }: { runs: readonly ImportRun[] }) {
 	);
 }
 
-/** Review and discarded have no item status, so they get their own badge. */
-export function RunStateBadge({ run }: { run: ImportRun }) {
+/**
+ * Review, discarded and applied describe the run, not an item, so they get
+ * their own badges: an applied run can leave items in review or as drafts.
+ */
+export function RunStateBadge({
+	run,
+}: {
+	run: Pick<ImportRunSummary, "failed" | "state">;
+}) {
+	if (run.state === "uploading") {
+		return (
+			<Badge variant="sky">
+				<UploadIcon />
+				Uploading
+			</Badge>
+		);
+	}
 	if (run.state === "review") {
 		return (
 			<Badge variant="lavender">
@@ -158,7 +202,13 @@ export function RunStateBadge({ run }: { run: ImportRun }) {
 	if (run.state === "applying") {
 		return <StatusBadge status="processing" />;
 	}
+	if (run.failed > 0) {
+		return <StatusBadge status="failed" />;
+	}
 	return (
-		<StatusBadge status={countByStatus(run.items).failed ? "failed" : "live"} />
+		<Badge variant="mint">
+			<CircleCheckIcon />
+			Applied
+		</Badge>
 	);
 }

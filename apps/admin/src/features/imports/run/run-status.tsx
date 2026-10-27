@@ -26,12 +26,20 @@ import type { ImportItem } from "../types";
 import { ActionBadge, ItemKey } from "./diff-parts";
 import { useImportRun } from "./import-run-provider";
 
-const SETTLED: readonly ContentStatus[] = ["live", "failed", "needs_review"];
+const SETTLED: readonly ContentStatus[] = [
+	"live",
+	"failed",
+	"needs_review",
+	"draft",
+	"retired",
+];
 const STATUS_ORDER: readonly ContentStatus[] = [
 	"failed",
 	"processing",
 	"queued",
 	"needs_review",
+	"draft",
+	"retired",
 	"live",
 ];
 

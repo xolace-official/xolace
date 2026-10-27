@@ -7,6 +7,7 @@ import {
 	LibraryBigIcon,
 	type LucideIcon,
 	PaletteIcon,
+	ScanSearchIcon,
 	ShapesIcon,
 } from "lucide-react";
 import type { Route } from "next";
@@ -49,7 +50,10 @@ export const NAV: NavGroup[] = [
 		title: "Ingest",
 	},
 	{
-		items: [{ href: "/design", icon: PaletteIcon, label: "Design system" }],
+		items: [
+			{ href: "/search-index", icon: ScanSearchIcon, label: "Search index" },
+			{ href: "/design", icon: PaletteIcon, label: "Design system" },
+		],
 		title: "System",
 	},
 ];
