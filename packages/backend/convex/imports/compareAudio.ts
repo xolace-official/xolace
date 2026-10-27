@@ -19,9 +19,9 @@ import type { licenceValidator } from "../lib/validators";
 import {
 	dateField,
 	diffViews,
+	hashField,
+	listField,
 	showDuration,
-	showHash,
-	showList,
 	showText,
 	timeField,
 	type View,
@@ -82,6 +82,7 @@ type Licence = Infer<typeof licenceValidator>;
 /** Every licence field, so a corrected credit or link is a change. */
 const licenceView = (l: Licence | undefined): View => ({
 	Licence: {
+		exact: l ? JSON.stringify([l.artist, l.licenceName, l.source]) : undefined,
 		value: l ? [l.artist, l.licenceName, l.source].join(" · ") : undefined,
 	},
 	"Licence acquired": dateField(l?.acquiredAt),
@@ -102,14 +103,14 @@ const licenceView = (l: Licence | undefined): View => ({
 function trackView(t: TrackUpsert | Doc<"audio_tracks">): View {
 	const support = t.family === "support";
 	return {
-		"Source tags": { value: showList(t.sourceTags) },
-		Tags: { value: showList(t.tags) },
+		"Source tags": listField(t.sourceTags),
+		Tags: listField(t.tags),
 		Title: { value: t.title },
 		Topic: { value: t.topic },
 		...(support
 			? {
 					Episode: { value: t.episodeNumber?.toString() },
-					Narrators: { value: showList(t.narrators) },
+					Narrators: listField(t.narrators),
 					"Safety review": timeField(t.safetyReviewedAt),
 					Series: { value: showText(t.series) },
 					"Series title": { value: showText(t.seriesTitle) },
@@ -120,13 +121,13 @@ function trackView(t: TrackUpsert | Doc<"audio_tracks">): View {
 					...licenceView(t.licence),
 					"What it's for": { value: showText(t.whatItsFor) },
 				}),
-		Audio: { value: showHash(t.sha256) },
+		Audio: hashField(t.sha256),
 		Length: {
 			exact: t.durationSec.toString(),
 			value: showDuration(t.durationSec),
 		},
 		"New until": dateField(t.newUntil),
-		Thumbnail: { value: showHash(t.thumbSha256) },
+		Thumbnail: hashField(t.thumbSha256),
 	};
 }
 
@@ -284,7 +285,7 @@ export async function compareTrack(
 }
 
 const topicView = (t: { thumbSha256?: string; title?: string }): View => ({
-	Cover: { value: showHash(t.thumbSha256) },
+	Cover: hashField(t.thumbSha256),
 	Title: { value: showText(t.title) },
 });
 

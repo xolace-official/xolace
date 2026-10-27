@@ -19,6 +19,7 @@ import {
 	showText,
 	timeField,
 	type View,
+	type ViewField,
 } from "./diff";
 import { unlessSameSource } from "./imageSources";
 import {
@@ -54,13 +55,17 @@ type CoverKeys = Pick<
 
 const DAY_MS = 86_400_000;
 
-/** A cover as the review shows it: the image's hash, else its hosted URL. */
-function showCover(c: Partial<CoverKeys>) {
+/**
+ * A cover as the review shows it: the image's hash, else its hosted URL.
+ * Compared on the whole file name, which is the image's hash.
+ */
+function coverField(c: Partial<CoverKeys>): ViewField {
 	const key = c.cover1280Key ?? c.coverKey;
 	if (key) {
-		return showHash(key.slice(key.lastIndexOf("/") + 1));
+		const name = key.slice(key.lastIndexOf("/") + 1);
+		return { exact: name, value: showHash(name) };
 	}
-	return showText(c.coverUrl);
+	return { value: showText(c.coverUrl) };
 }
 
 /** The processed WebPs at exactly the sizes `use` needs, by size. */
@@ -169,7 +174,7 @@ function entryView({ credits, entry: e, facets, markdown }: EntryParts): View {
 	const view: View = {
 		"Consent recorded": timeField(e.consentRecordedAt),
 		"Content note": { value: showText(e.contentNote) },
-		Cover: { value: showCover(e) },
+		Cover: coverField(e),
 		Credits: {
 			exact:
 				credits.map((c) => showCredit(c, showInstant)).join("\n") || undefined,
@@ -382,7 +387,7 @@ const hubView = (
 		Partial<CoverKeys>,
 	items: HubItemRef[]
 ): View => ({
-	Cover: { value: showCover(h) },
+	Cover: coverField(h),
 	Intro: { value: h.intro },
 	Items: {
 		value: items.map((i) => `${i.kind} ${i.ref}`).join(" · ") || undefined,

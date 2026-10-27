@@ -63,6 +63,14 @@ export const showBool = (value: boolean | undefined) =>
 export const showList = (values: readonly string[] | undefined) =>
 	values && values.length > 0 ? values.join(", ") : undefined;
 
+/** A list field, compared item by item: `["a, b"]` isn't `["a", "b"]`. */
+export const listField = (
+	values: readonly string[] | undefined
+): ViewField => ({
+	exact: values && values.length > 0 ? JSON.stringify(values) : undefined,
+	value: showList(values),
+});
+
 const SECONDS_PER_MIN = 60;
 
 /** `3:58` */
@@ -87,6 +95,12 @@ const SHORT_HASH = 8;
 /** A content-addressed image or audio file, named by the start of its hash. */
 export const showHash = (sha256: string | undefined) =>
 	sha256 ? `file ${sha256.slice(0, SHORT_HASH)}…` : undefined;
+
+/** A file field, compared on its whole hash. */
+export const hashField = (sha256: string | undefined): ViewField => ({
+	exact: sha256 || undefined,
+	value: showHash(sha256),
+});
 
 const whole = (f: ViewField | undefined) => f?.exact ?? f?.value;
 
