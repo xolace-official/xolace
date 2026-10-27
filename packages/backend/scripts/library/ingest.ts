@@ -200,15 +200,20 @@ async function uploadCoverVariant(file: Buffer, px: number, prefix: string) {
 		.toBuffer();
 	const key = await uploadContent(prefix, webp, ".webp");
 	// So an admin import of this same source keeps this WebP rather than
-	// re-encoding it (convex/imports/imageSources.ts).
-	convexRun("imports/imageSources:note", {
-		pairs: [
-			{
-				sourceSha256: createHash("sha256").update(file).digest("hex"),
-				webpSha256: createHash("sha256").update(webp).digest("hex"),
-			},
-		],
-	});
+	// re-encoding it (convex/imports/imageSources.ts). Only an optimisation, so
+	// a failure warns and the uploaded cover still counts.
+	try {
+		convexRun("imports/imageSources:note", {
+			pairs: [
+				{
+					sourceSha256: createHash("sha256").update(file).digest("hex"),
+					webpSha256: createHash("sha256").update(webp).digest("hex"),
+				},
+			],
+		});
+	} catch (err) {
+		console.warn(`  image source not noted: ${(err as Error).message}`);
+	}
 	console.log(
 		`  ${px}px ${key}: ${webp.length} bytes (original ${file.length} bytes)`
 	);
