@@ -72,10 +72,10 @@ export const login = async ({
 			"Clerk issued no refresh token. Check the OAuth app has the offline_access scope."
 		);
 	}
-	await store.save({
-		idToken: tokens.idToken,
-		refreshToken: tokens.refreshToken,
-	});
+	const { idToken, refreshToken } = tokens;
+	// Under the lock so a refresh running in another `xolace` process can't
+	// overwrite this new sign-in with the old one.
+	await store.lock(() => store.save({ idToken, refreshToken }));
 
 	try {
 		write(`${describeMe(await fetchMe(config.convexUrl, tokens.idToken))}\n`);

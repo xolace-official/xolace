@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readConfig } from "./config";
+import { readConfig, readIssuer } from "./config";
 
 describe("readConfig", () => {
 	test("reads the three values and trims the issuer's trailing slash", () => {
@@ -14,6 +14,13 @@ describe("readConfig", () => {
 			clerkIssuer: "https://x.clerk.accounts.dev",
 			convexUrl: "https://x.convex.cloud",
 		});
+	});
+
+	test("readIssuer needs only the issuer, so logout works without the rest", () => {
+		expect(
+			readIssuer({ XOLACE_CLERK_ISSUER: "https://x.clerk.accounts.dev/" })
+		).toBe("https://x.clerk.accounts.dev");
+		expect(() => readIssuer({})).toThrow("Missing XOLACE_CLERK_ISSUER");
 	});
 
 	test("names every missing variable", () => {

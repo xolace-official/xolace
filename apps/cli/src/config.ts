@@ -16,22 +16,34 @@ const ENV_NAMES = {
 
 const TRAILING_SLASHES = /\/+$/;
 
-export const readConfig = (
-	env: Record<string, string | undefined> = process.env
-): CliConfig => {
-	const missing = Object.values(ENV_NAMES).filter((name) => !env[name]);
+type Env = Record<string, string | undefined>;
+
+const requireEnv = (env: Env, keys: (keyof CliConfig)[]) => {
+	const missing = keys
+		.map((key) => ENV_NAMES[key])
+		.filter((name) => !env[name]);
 	if (missing.length > 0) {
 		throw new Error(
 			`Missing ${missing.join(", ")}. Copy apps/cli/.env.example to .env and fill it in.`
 		);
 	}
+};
+
+/**
+ * Just the issuer, which keys the stored sign-in. Enough for `logout`, which must
+ * work even when the rest of the config is missing.
+ */
+export const readIssuer = (env: Env = process.env) => {
+	requireEnv(env, ["clerkIssuer"]);
+	// Convex compares `iss` to the issuer exactly, and Clerk's has no slash.
+	return (env[ENV_NAMES.clerkIssuer] ?? "").replace(TRAILING_SLASHES, "");
+};
+
+export const readConfig = (env: Env = process.env): CliConfig => {
+	requireEnv(env, ["clerkClientId", "clerkIssuer", "convexUrl"]);
 	return {
 		clerkClientId: env[ENV_NAMES.clerkClientId] ?? "",
-		// Convex compares `iss` to the issuer exactly, and Clerk's has no slash.
-		clerkIssuer: (env[ENV_NAMES.clerkIssuer] ?? "").replace(
-			TRAILING_SLASHES,
-			""
-		),
+		clerkIssuer: readIssuer(env),
 		convexUrl: env[ENV_NAMES.convexUrl] ?? "",
 	};
 };

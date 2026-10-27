@@ -6,7 +6,7 @@ import { createSession } from "./auth/session";
 import { createTokenStore } from "./auth/token-store";
 import { login } from "./commands/login";
 import { whoami } from "./commands/whoami";
-import { readConfig } from "./config";
+import { readConfig, readIssuer } from "./config";
 import { App, authHookFor } from "./tui/app";
 
 const USAGE = `Usage: xolace [command]
@@ -43,6 +43,12 @@ const main = async ([command, ...flags]: string[]) => {
 		write(USAGE);
 		return;
 	}
+	if (command === "logout") {
+		const store = createTokenStore({ account: readIssuer() });
+		await store.lock(store.clear);
+		write("Signed out on this machine.\n");
+		return;
+	}
 	const config = readConfig();
 	const store = createTokenStore({ account: config.clerkIssuer });
 	const session = createSession({ config, store });
@@ -54,9 +60,6 @@ const main = async ([command, ...flags]: string[]) => {
 			write,
 			...(flags.includes("--device") ? { device: true } : {}),
 		});
-	} else if (command === "logout") {
-		await store.clear();
-		write("Signed out on this machine.\n");
 	} else if (command === "whoami") {
 		await whoami({ config, session, write });
 	} else if (command === undefined) {

@@ -2,11 +2,15 @@
  * Where the signed-in session lives between runs: the OS keychain, or a `0600`
  * file when there is no keychain (Linux servers and SSH often lack Secret
  * Service). One entry per Clerk issuer, so dev and prod sign-ins don't collide.
+ *
+ * `load`, `save` and `clear` don't lock: callers that read, decide and write wrap
+ * the whole sequence in `lock`, so another `xolace` process can't interleave.
  */
-import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { Entry } from "@napi-rs/keyring";
+import { withFileLock } from "./file-lock";
 
 export interface StoredSession {
 	/** Cached so each command doesn't spend (and rotate) the refresh token. */
@@ -15,8 +19,11 @@ export interface StoredSession {
 }
 
 export interface TokenStore {
+	/** Throws if the keychain entry survives; reporting "signed out" would be a lie. */
 	clear: () => Promise<void>;
 	load: () => Promise<StoredSession | null>;
+	/** Runs `action` holding a lock shared by every `xolace` process on the machine. */
+	lock: <T>(action: () => Promise<T>) => Promise<T>;
 	save: (session: StoredSession) => Promise<void>;
 }
 
@@ -90,11 +97,13 @@ const writeFileSessions = async (
 	sessions: Record<string, unknown>
 ) => {
 	await mkdir(dirname(path), { mode: DIR_MODE, recursive: true });
-	await writeFile(path, `${JSON.stringify(sessions, null, 2)}\n`, {
+	// Write a fresh 0600 file and rename it over the old one, so a reader never
+	// sees half a file and the mode never depends on what was there before.
+	const temporary = `${path}.${process.pid}.tmp`;
+	await writeFile(temporary, `${JSON.stringify(sessions, null, 2)}\n`, {
 		mode: FILE_MODE,
 	});
-	// writeFile's mode applies only when it creates the file.
-	await chmod(path, FILE_MODE);
+	await rename(temporary, path);
 };
 
 const tryKeyring = <T>(
@@ -128,6 +137,14 @@ export const createTokenStore = ({
 		clear: async () => {
 			tryKeyring(keyring.delete);
 			await removeFromFile();
+			// A failed delete is fine when there's no keychain at all (get throws
+			// too), not when the entry is still there to sign the next command in.
+			const left = tryKeyring(keyring.get);
+			if (left.ok && left.value) {
+				throw new Error(
+					"Couldn't remove the sign-in from the OS keychain. Unlock it and run `xolace logout` again."
+				);
+			}
 		},
 		load: async () => {
 			const fromKeyring = tryKeyring(keyring.get);
@@ -136,6 +153,8 @@ export const createTokenStore = ({
 			}
 			return parseSession((await readFileSessions(filePath))[account]);
 		},
+		// One lock for every issuer: the file fallback holds them all in one file.
+		lock: (action) => withFileLock(`${filePath}.lock`, action),
 		save: async (session) => {
 			if (tryKeyring(() => keyring.set(JSON.stringify(session))).ok) {
 				await removeFromFile();

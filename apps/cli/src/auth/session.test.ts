@@ -87,15 +87,53 @@ describe("createSession", () => {
 		expect(state.saves).toBe(1);
 	});
 
-	test("takes another process's newer sign-in when ours was rotated away", async () => {
+	test("uses another process's refresh instead of spending the rotated token", async () => {
 		const { state, store } = memoryStore({ refreshToken: "rt-1" });
-		const { fetchImpl } = fakeFetch(() => {
-			// The other process saved its rotated token while our refresh was in flight.
+		// Another process refreshed while we waited for the lock.
+		state.beforeLock = () => {
 			state.saved = { idToken: freshToken, refreshToken: "rt-other" };
-			return { body: { error: "invalid_grant" }, status: 400 };
-		});
+		};
+		const { calls, fetchImpl } = refreshed();
 		const session = createSession({ config: CONFIG, fetchImpl, now, store });
 		expect(await session.getIdToken()).toBe(freshToken);
+		expect(calls).toHaveLength(0);
+	});
+
+	test("refreshes a newer sign-in that's also stale, not the one we read", async () => {
+		const { state, store } = memoryStore({ refreshToken: "rt-1" });
+		state.beforeLock = () => {
+			state.saved = { idToken: staleToken, refreshToken: "rt-other" };
+		};
+		const { calls, fetchImpl } = refreshed();
+		const session = createSession({ config: CONFIG, fetchImpl, now, store });
+		expect(await session.getIdToken()).toBe(newToken);
+		expect(calls[0]?.form.refresh_token).toBe("rt-other");
+	});
+
+	test("a logout while waiting for the lock wins: nothing is refreshed or saved", async () => {
+		const { state, store } = memoryStore({ refreshToken: "rt-1" });
+		state.beforeLock = () => {
+			state.saved = null;
+		};
+		const { calls, fetchImpl } = refreshed();
+		const session = createSession({ config: CONFIG, fetchImpl, now, store });
+		await expect(session.getIdToken()).rejects.toBeInstanceOf(NotSignedInError);
+		expect(calls).toHaveLength(0);
+		expect(state.saved).toBeNull();
+	});
+
+	test("a logout queued behind a refresh lands after it, not before", async () => {
+		const { state, store } = memoryStore({ refreshToken: "rt-1" });
+		let loggingOut: Promise<void> | undefined;
+		const { fetchImpl } = fakeFetch(() => {
+			// `xolace logout` in another terminal while the refresh holds the lock.
+			loggingOut = store.lock(store.clear);
+			return { body: { id_token: newToken, refresh_token: "rt-2" } };
+		});
+		const session = createSession({ config: CONFIG, fetchImpl, now, store });
+		expect(await session.getIdToken()).toBe(newToken);
+		await loggingOut;
+		expect(state.saved).toBeNull();
 	});
 
 	test("a revoked sign-in becomes NotSignedInError", async () => {

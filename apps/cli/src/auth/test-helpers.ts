@@ -35,13 +35,28 @@ export const fakeFetch = (
 };
 
 export const memoryStore = (initial: StoredSession | null = null) => {
-	const state = { saved: initial, saves: 0 };
+	const state: {
+		/** Runs as the lock is taken: stands in for another process that held it first. */
+		beforeLock?: () => void;
+		saved: StoredSession | null;
+		saves: number;
+	} = { saved: initial, saves: 0 };
+	// Serializes lock holders like the real cross-process file lock.
+	let tail: Promise<unknown> = Promise.resolve();
 	const store: TokenStore = {
 		clear: () => {
 			state.saved = null;
 			return Promise.resolve();
 		},
 		load: () => Promise.resolve(state.saved),
+		lock: (action) => {
+			const run = tail.then(() => {
+				state.beforeLock?.();
+				return action();
+			});
+			tail = run.catch(() => undefined);
+			return run;
+		},
 		save: (session) => {
 			state.saved = session;
 			state.saves += 1;

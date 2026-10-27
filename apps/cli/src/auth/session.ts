@@ -1,7 +1,8 @@
 /**
  * The CLI's `fetchToken`: hands Convex a Clerk OAuth ID token, refreshing it when
  * it's near expiry or Convex asks. Clerk rotates the refresh token on every use, so
- * each refresh saves the new one, and concurrent refreshes share one request.
+ * each refresh saves the new one under a lock all `xolace` processes share, and
+ * concurrent callers in one process share one request.
  */
 import type { CliConfig } from "../config";
 import { type FetchLike, OAuthError, refreshTokens } from "./oauth";
@@ -57,7 +58,9 @@ export const createSession = ({
 }): Session => {
 	let inFlight: Promise<string> | null = null;
 
-	const isFresh = (session: StoredSession) => {
+	const isFresh = (
+		session: StoredSession
+	): session is StoredSession & { idToken: string } => {
 		if (!session.idToken) {
 			return false;
 		}
@@ -65,40 +68,37 @@ export const createSession = ({
 		return expiresAt !== null && expiresAt - EXPIRY_MARGIN_MS > now();
 	};
 
-	const refresh = async (
-		from: StoredSession,
-		retried = false
-	): Promise<string> => {
-		try {
-			const tokens = await refreshTokens(config, from.refreshToken, fetchImpl);
+	const signedOutOnRevoke = (error: unknown) =>
+		error instanceof OAuthError && error.code === "invalid_grant"
+			? new NotSignedInError({ cause: error })
+			: error;
+
+	// Read, refresh and save under the store's lock, so no other `xolace` process
+	// can refresh the same token (Clerk would reject the loser), log out, or sign
+	// in as someone else in between. `seen` is what this process last read.
+	const refresh = (seen: StoredSession) =>
+		store.lock(async () => {
+			const current = await store.load();
+			if (!current) {
+				throw new NotSignedInError();
+			}
+			// Another process refreshed or signed in since we looked: use its token.
+			if (current.refreshToken !== seen.refreshToken && isFresh(current)) {
+				return current.idToken;
+			}
+			const tokens = await refreshTokens(
+				config,
+				current.refreshToken,
+				fetchImpl
+			).catch((error: unknown) => {
+				throw signedOutOnRevoke(error);
+			});
 			await store.save({
 				idToken: tokens.idToken,
-				refreshToken: tokens.refreshToken ?? from.refreshToken,
+				refreshToken: tokens.refreshToken ?? current.refreshToken,
 			});
 			return tokens.idToken;
-		} catch (error) {
-			if (!(error instanceof OAuthError && error.code === "invalid_grant")) {
-				throw error;
-			}
-			return recoverFromRotation(from, retried, error);
-		}
-	};
-
-	// Another `xolace` process may have refreshed first and rotated our token away.
-	// Take what it saved; otherwise the sign-in is gone.
-	const recoverFromRotation = async (
-		from: StoredSession,
-		retried: boolean,
-		cause: OAuthError
-	): Promise<string> => {
-		const latest = await store.load();
-		if (retried || !latest || latest.refreshToken === from.refreshToken) {
-			throw new NotSignedInError({ cause });
-		}
-		return latest.idToken && isFresh(latest)
-			? latest.idToken
-			: refresh(latest, true);
-	};
+		});
 
 	const getIdToken: Session["getIdToken"] = async ({
 		forceRefresh = false,
@@ -110,7 +110,7 @@ export const createSession = ({
 		if (!stored) {
 			throw new NotSignedInError();
 		}
-		if (!forceRefresh && stored.idToken && isFresh(stored)) {
+		if (!forceRefresh && isFresh(stored)) {
 			return stored.idToken;
 		}
 		inFlight ??= refresh(stored).finally(() => {
