@@ -112,6 +112,7 @@ means you can copy the value from the dev deployment `groovy-mandrill-892`.
 | Name | Purpose | Value for staging |
 |---|---|---|
 | `CLERK_JWT_ISSUER_DOMAIN` | Which Clerk instance's tokens are accepted (`auth.config.ts`). **Required to deploy.** | Clerk dev issuer (Step 3) |
+| `CLERK_OAUTH_CLIENT_ID` | Accepts the CLI and desktop's OAuth ID tokens (`auth.config.ts`). Optional: unset, they get "Unauthenticated" | Client ID of the dev instance's OAuth app ([oauth-clients.md](./oauth-clients.md)) |
 | `POSTHOG_PROJECT_TOKEN` | PostHog component project token. **Required to deploy.** | Dev value OK (or a staging PostHog project) |
 | `POSTHOG_HOST` | PostHog API host. Optional | Dev value OK |
 | `POSTHOG_PERSONAL_API_KEY` | PostHog feature-flag evaluation. Optional | Dev value OK |
