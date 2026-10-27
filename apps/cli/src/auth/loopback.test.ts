@@ -31,11 +31,12 @@ describe("listenForCode", () => {
 		expect(await listener.code).toBe("abc");
 	});
 
-	test("rejects a mismatched state", async () => {
+	test("refuses a mismatched state but keeps waiting for the real redirect", async () => {
 		listener = listenForCode({ port: 0, state: "s1", timeoutMs: TIMEOUT_MS });
-		const settled = listener.code.catch((error: unknown) => error);
-		expect((await callback("code=abc&state=evil")).status).toBe(400);
-		expect(String(await settled)).toContain("different state");
+		expect((await callback("code=evil&state=evil")).status).toBe(400);
+		expect((await callback("error=access_denied&state=x")).status).toBe(400);
+		await callback("code=abc&state=s1");
+		expect(await listener.code).toBe("abc");
 	});
 
 	test("rejects when Clerk returns an error", async () => {

@@ -46,11 +46,10 @@ export const listenForCode = ({
 		}
 		const error = url.searchParams.get("error");
 		const received = url.searchParams.get("code");
+		// Not our redirect: any page in the browser can hit this known port. Refuse
+		// it but keep waiting, so a stray request can't cancel the real sign-in.
 		if (url.searchParams.get("state") !== state) {
-			reject(
-				new Error("Sign-in failed: the browser returned a different state.")
-			);
-			return page("Sign-in failed. Return to the terminal.", HTTP_BAD_REQUEST);
+			return page("Unexpected sign-in request.", HTTP_BAD_REQUEST);
 		}
 		if (error || !received) {
 			reject(new Error(`Sign-in failed: ${error ?? "no code returned"}.`));

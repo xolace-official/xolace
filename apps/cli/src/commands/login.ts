@@ -73,16 +73,22 @@ export const login = async ({
 		);
 	}
 	const { idToken, refreshToken } = tokens;
+
+	// Check with Convex before replacing the stored sign-in, so a login that
+	// fails here (deployment down, token rejected) leaves the previous one alone.
+	// A Clerk user with no Xolace account yet still counts as signed in.
+	const summary = await fetchMe(config.convexUrl, idToken).then(
+		describeMe,
+		(error: unknown) => {
+			if (convexErrorCode(error) !== "user_not_found") {
+				throw error;
+			}
+			return `Signed in. ${NO_ACCOUNT_MESSAGE}`;
+		}
+	);
+
 	// Under the lock so a refresh running in another `xolace` process can't
 	// overwrite this new sign-in with the old one.
 	await store.lock(() => store.save({ idToken, refreshToken }));
-
-	try {
-		write(`${describeMe(await fetchMe(config.convexUrl, tokens.idToken))}\n`);
-	} catch (error) {
-		if (convexErrorCode(error) !== "user_not_found") {
-			throw error;
-		}
-		write(`Signed in. ${NO_ACCOUNT_MESSAGE}\n`);
-	}
+	write(`${summary}\n`);
 };
