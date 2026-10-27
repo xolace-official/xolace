@@ -1,6 +1,6 @@
 # Xolace Workspace: Structure & Migration Plan
 
-**Status:** Decisions agreed · Phase 0 output · 2026-10-21
+**Status:** Decisions agreed 2026-10-21 · updated 2026-10-27: Phases 1–3 done, Phase 4 has admin v1 (4f) done and 4a–4e not started, Phase 5 not started. Each phase below carries its own status.
 
 The goal is one repository holding the mobile app, the user web app (which also becomes the desktop app), an admin dashboard and a TUI/CLI, all running on one Convex backend. Many people and agents should be able to work in it at the same time without stepping on each other.
 
@@ -195,6 +195,7 @@ Run it in a fresh clone of `xolace_app` (e.g. `repos/xolace`), on a `migration/m
    - Merge `.gitignore` and `.easignore`.
 4. **Commit D: format only** with `ultracite fix`, recorded in `.git-blame-ignore-revs`. Lint problems that can't be auto-fixed go into a tracked list and get fixed in later PRs; they don't block the move.
 5. **Version bumps**, each in its own PR with device testing: expo patch versions; uniwind 1.11 → 1.12 (re-cut or drop the patch); `@clerk/expo` 4.6 → 4.12; backend `ai` 6 → 7. Remove the unused `@tanstack/react-query`, `@convex-dev/react-query` and `@convex-dev/agent`.
+   *Status 2026-10-27:* uniwind is at 1.13.0 (#617), `@clerk/expo` at 4.14, `ai` at 7 (root catalog), and the three unused packages are gone. Expo is on 58.0.16.
 
 **Done when:**
 - all of the roughly 1,158 tests pass
@@ -214,8 +215,9 @@ Run it in a fresh clone of `xolace_app` (e.g. `repos/xolace`), on a `migration/m
 - #629 `docs: compare React Native desktop and Tauri for the desktop app` (verdict: keep Tauri; `docs/research/desktop-platform.md`)
 - #630 `docs(repo): fix the dev Convex URL in the release guide`
 
+**First release:** the first `dev` → `main` release went out on 2026-10-25 (#638). Its `release.yml` run deployed prod Convex, then web and admin to Vercel Production, and started the EAS mobile release (mobile 1.15.0, the first store build on the fingerprint runtime). Whether that build cleared store review is tracked in EAS, not here.
+
 **Left:**
-- **The first `dev` → `main` release** (merge commit, owner-run) hasn't happened. It deploys prod Convex for the first time from `release.yml`, ships mobile 1.15.0 as the first store build on the fingerprint runtime (1.14.0 is what's in the stores), and does the first Production deploys of web and admin.
 - **Desktop releases are dormant** until 4e: the static export is blocked by `@clerk/nextjs`'s `ClerkProvider`, which uses server actions. Tagging also needs the signing secrets listed in `desktop-release.yml` (Tauri updater, Apple, Windows).
 - **Deferred edge case:** deploy hooks build the tip of `main`, not the commit that was released. Two quick merges can build web/admin from a commit whose backend hasn't deployed yet. Later fix: deploy with the Vercel CLI (`VERCEL_TOKEN`) at an explicit SHA.
 
@@ -240,7 +242,14 @@ Run it in a fresh clone of `xolace_app` (e.g. `repos/xolace`), on a `migration/m
 
 Steps 4c, 4d, 4e and 4f can run in parallel. 4f needs only 4b's role claim, not the OAuth spikes, so it can start first.
 
+**Status 2026-10-27:**
+- **4f admin v1: done.** The `adminQuery`/`adminMutation`/`adminAction` builders, the role claim, the content UI on Convex, R2 uploads, bulk import and the search index page shipped in #642–#645, #647 and #650. Build order, decisions and what's still open: `docs/plan/admin-v1.md`. The later admin views (users and support, moderation and feedback queues, feature flags, job health) are not started.
+- **4a–4e: not started.** `auth.config.ts` still has only the Clerk provider, there is no `getMe` query, and web and the CLI are still the scaffold placeholders. 4e stays blocked on the `ClerkProvider` static-export problem (see Phase 3 "Left").
+- Next: the 4a spikes, then 4b, which unblocks 4c, 4d and 4e.
+
 ### Phase 5: Deeper refactors, later and one PR each
+
+**Status 2026-10-27:** not started.
 
 - `@/*` alias → `./src/*`.
 - Untangle the feature cycles: `purchases` ↔ `talk` ↔ `settings` and `library` ↔ `browse` / `kindling`. Turn `purchases` into an entitlements module.
