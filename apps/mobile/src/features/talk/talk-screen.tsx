@@ -7,7 +7,9 @@ import { ConversationProvider } from "@elevenlabs/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useConvex } from "convex/react";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { useLocalSearchParams } from "expo-router";
+import { useIsFocused } from "expo-router/react-navigation";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
@@ -23,11 +25,23 @@ import { TalkThread } from "@/src/features/talk/talk-thread";
 import { useTalk } from "@/src/features/talk/use-talk";
 import type { ThreadLine } from "@/src/features/talk/use-thread";
 
+const KEEP_AWAKE_TAG = "talk";
+
 function Talk({
 	reopen,
 }: {
 	reopen?: { sessionId: Id<"sessions">; thread: ThreadLine[] };
 }) {
+	// A voice talk has long stretches without a touch; keep the screen on while
+	// it is in front. Released when help covers it or the user leaves.
+	const focused = useIsFocused();
+	useEffect(() => {
+		if (!focused) {
+			return;
+		}
+		void activateKeepAwakeAsync(KEEP_AWAKE_TAG);
+		return () => void deactivateKeepAwake(KEEP_AWAKE_TAG);
+	}, [focused]);
 	const talk = useTalk(reopen);
 	const insets = useSafeAreaInsets();
 	// Once, on open.
