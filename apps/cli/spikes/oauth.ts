@@ -157,7 +157,13 @@ const login = async (port: number) => {
 	process.stdout.write(
 		`Opening the browser to sign in (port ${port}). If no tab opens, visit:\n${url.toString()}\n`
 	);
-	spawn("open", [url.toString()], { stdio: "ignore" });
+	// Opening the browser is a convenience: if `open` is missing, keep waiting for
+	// a sign-in through the printed URL.
+	spawn("open", [url.toString()], { stdio: "ignore" }).on("error", () => {
+		process.stdout.write(
+			"Could not open the browser. Visit the URL above to sign in.\n"
+		);
+	});
 
 	const exchanged = await postForm("/oauth/token", {
 		client_id: clientId,

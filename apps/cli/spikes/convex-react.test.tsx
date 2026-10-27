@@ -36,17 +36,16 @@ const Provider = ConvexProvider as (props: {
 	children?: ReactNode;
 }) => ReactNode;
 
-let mutationFired = false;
+// The tree's useMutation, handed out so the test fires it only after it has read
+// the starting count.
+let incrementFromTree: (() => Promise<null>) | undefined;
 
 function Counter() {
 	const value = useQuery(counter.get);
 	const increment = useMutation(counter.increment);
 	useEffect(() => {
-		if (value !== undefined && !mutationFired) {
-			mutationFired = true;
-			increment().catch(() => undefined);
-		}
-	}, [value, increment]);
+		incrementFromTree = () => increment({});
+	}, [increment]);
 	return (
 		<text>{value === undefined ? "count: loading" : `count: ${value}`}</text>
 	);
@@ -98,17 +97,26 @@ describe.skipIf(!url)("convex/react under OpenTUI", () => {
 				{ height: 5, width: 40 }
 			);
 
-			const start = await waitForCount(setup, () => true);
+			try {
+				const start = await waitForCount(setup, () => true);
 
-			// useMutation from inside the tree; the subscription pushes the new value.
-			await waitForCount(setup, (n) => n === start + 1);
+				// useMutation from inside the tree; the subscription pushes the new value.
+				if (!incrementFromTree) {
+					throw new Error("Counter never exposed its mutation");
+				}
+				const fire = incrementFromTree;
+				await act(async () => {
+					await fire();
+				});
+				await waitForCount(setup, (n) => n === start + 1);
 
-			// A write from another client still reaches this renderer.
-			await new ConvexHttpClient(url ?? "").mutation(counter.increment, {});
-			const last = await waitForCount(setup, (n) => n === start + 2);
-			expect(last).toBe(start + 2);
-
-			setup.renderer.destroy();
+				// A write from another client still reaches this renderer.
+				await new ConvexHttpClient(url ?? "").mutation(counter.increment, {});
+				const last = await waitForCount(setup, (n) => n === start + 2);
+				expect(last).toBe(start + 2);
+			} finally {
+				setup.renderer.destroy();
+			}
 		},
 		TEST_TIMEOUT_MS
 	);
