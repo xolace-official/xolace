@@ -7,6 +7,7 @@ import { ConversationProvider } from "@elevenlabs/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useConvex } from "convex/react";
+import { useKeepAwake } from "expo-keep-awake";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
@@ -28,6 +29,9 @@ function Talk({
 }: {
 	reopen?: { sessionId: Id<"sessions">; thread: ThreadLine[] };
 }) {
+	// A voice talk has long stretches without a touch; keep the screen on until
+	// the user leaves. Released on unmount, like the vent screen.
+	useKeepAwake();
 	const talk = useTalk(reopen);
 	const insets = useSafeAreaInsets();
 	// Once, on open.

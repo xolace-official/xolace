@@ -1,3 +1,4 @@
+import { useKeepAwake } from "expo-keep-awake";
 import { useEffect, useReducer } from "react";
 import { StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
@@ -51,6 +52,9 @@ export function ExerciseRunner({
 	onExitEarly,
 	onSwap,
 }: Props) {
+	// Beats run on timers without a touch, and the pre-roll waits for one; keep
+	// the screen on for the whole exercise. Released on unmount.
+	useKeepAwake();
 	const steps = [...exercise.exercise.steps].sort((a, b) => a.order - b.order);
 	const totalBeats = steps.length;
 
