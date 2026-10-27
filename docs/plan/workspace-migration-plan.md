@@ -1,6 +1,6 @@
 # Xolace Workspace: Structure & Migration Plan
 
-**Status:** Decisions agreed 2026-10-21 · updated 2026-10-27: Phases 1–3 done, Phase 4 has admin v1 (4f) and the auth spikes (4a) done, 4b in progress and 4c–4e not started, Phase 5 not started. Each phase below carries its own status.
+**Status:** Decisions agreed 2026-10-21 · updated 2026-10-27: Phases 1–3 done, Phase 4 has admin v1 (4f), the auth spikes (4a) and the backend auth (4b) done, the CLI (4d) in progress and 4c and 4e not started, Phase 5 not started. Each phase below carries its own status.
 
 The goal is one repository holding the mobile app, the user web app (which also becomes the desktop app), an admin dashboard and a TUI/CLI, all running on one Convex backend. Many people and agents should be able to work in it at the same time without stepping on each other.
 
@@ -256,9 +256,10 @@ Steps 4c, 4d, 4e and 4f can run in parallel. 4f needs only 4b's role claim, not 
 **Status 2026-10-27:**
 - **4f admin v1: done.** The `adminQuery`/`adminMutation`/`adminAction` builders, the role claim, the content UI on Convex, R2 uploads, bulk import and the search index page shipped in #642–#645, #647 and #650. Build order, decisions and what's still open: `docs/plan/admin-v1.md`. The later admin views (users and support, moderation and feedback queues, feature flags, job health) are not started.
 - **4a: done** (2026-10-27): all six spikes pass; results under §3 "Results".
-- **4b: in progress.** Backend done: `auth.config.ts` adds the OAuth provider when `CLERK_OAUTH_CLIENT_ID` is set, and `users.getMe` returns who is signed in. Left: create the OAuth apps in both Clerk instances and set the variable on dev, staging, previews and prod (`docs/setup/oauth-clients.md`). OAuth tokens carry no `role` claim, so admin stays web-only.
-- **4c–4e: not started.** Web and the CLI are still the scaffold placeholders. 4e stays blocked on the `ClerkProvider` static-export problem (see Phase 3 "Left").
-- Next: finish 4b's Clerk setup, then 4d (the CLI) and 4c can run in parallel.
+- **4b: done.** `auth.config.ts` adds the OAuth provider when `CLERK_OAUTH_CLIENT_ID` is set, and `users.getMe` returns who is signed in (#653). The OAuth apps exist in both Clerk instances and the variable is set on dev, staging, previews and prod (`docs/setup/oauth-clients.md`). OAuth tokens carry no `role` claim, so admin stays web-only.
+- **4d: in progress.** `xolace login` (browser + PKCE on a loopback port, `--device` and the default over SSH), `logout` and `whoami`, the session in the keychain with a `0600` file fallback, a refreshing `fetchToken` for `ConvexReactClient`, and a first live view of `getMe`. Login goes straight to Clerk; the web `/connect` page waits for 4c. Left: more views, and shipping the binary with built-in prod config (today it reads `XOLACE_*` env).
+- **4c, 4e: not started.** Web is still the scaffold placeholder. 4e stays blocked on the `ClerkProvider` static-export problem (see Phase 3 "Left").
+- Next: 4c (web) can start alongside the rest of 4d.
 
 ### Phase 5: Deeper refactors, later and one PR each
 
