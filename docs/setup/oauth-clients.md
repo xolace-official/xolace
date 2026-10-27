@@ -54,17 +54,19 @@ Without it, the deployment accepts web and mobile tokens only.
 
 ## Step 3: Check it
 
-Until `xolace login` exists (Phase 4d), the spike script checks the Clerk side: it
-signs in through the OAuth app, refreshes, and prints the token's claims (never the
-token). `iss` must equal `CLERK_JWT_ISSUER_DOMAIN` and `aud` the Client ID.
+Sign in with the CLI against a deployment that has the variable. In `apps/cli`, copy
+`.env.example` to `.env` and fill in the issuer, the Client ID and the deployment's
+URL, then:
 
 ```sh
-cd apps/cli
-SPIKE_CLERK_ISSUER=<issuer> SPIKE_CLERK_CLIENT_ID=<client id> bun spikes/oauth.ts login
+bun run start login
+bun run start whoami
 ```
 
-On the Convex side, a signed-in client calls `users.getMe`; it returns the user ID and
-display name.
+`login` signs in through the OAuth app and calls `users.getMe`; "Signed in as …"
+means Clerk and Convex both accept the token. Add `--device` to check the device
+grant too. To see the raw claims instead (never the token), the 4a spike still works:
+`SPIKE_CLERK_ISSUER=<issuer> SPIKE_CLERK_CLIENT_ID=<client id> bun spikes/oauth.ts login`.
 
 ## Limits
 

@@ -21,7 +21,9 @@
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
+    // Off: `@xolace/backend/api` pulls the backend's sources into this program, and
+    // they're written without it (as web and admin compile them).
+    "noUncheckedIndexedAccess": false,
     "noImplicitOverride": true,
 
     // Some stricter flags (disabled by default)

@@ -3,15 +3,21 @@
   "private": true,
   "type": "module",
   "module": "src/index.tsx",
+  "bin": {
+    "xolace": "src/index.tsx"
+  },
   "scripts": {
     "check-types": "tsc --noEmit",
     "dev": "bun run --watch src/index.tsx",
-    "lint": "biome check ."
+    "lint": "biome check .",
+    "start": "bun run src/index.tsx",
+    "test": "bun test ./src"
   },
   "dependencies": {
     "@napi-rs/keyring": "^2.1.2",
     "@opentui/core": "^0.6.6",
     "@opentui/react": "^0.6.6",
+    "@xolace/backend": "workspace:*",
     "convex": "catalog:",
     "react": "catalog:"
   },
