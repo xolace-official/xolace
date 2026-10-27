@@ -1,6 +1,6 @@
 # Xolace Workspace: Structure & Migration Plan
 
-**Status:** Decisions agreed 2026-10-21 · updated 2026-10-27: Phases 1–3 done, Phase 4 has admin v1 (4f) done and 4a–4e not started, Phase 5 not started. Each phase below carries its own status.
+**Status:** Decisions agreed 2026-10-21 · updated 2026-10-27: Phases 1–3 done, Phase 4 has admin v1 (4f) and the auth spikes (4a) done, 4b in progress and 4c–4e not started, Phase 5 not started. Each phase below carries its own status.
 
 The goal is one repository holding the mobile app, the user web app (which also becomes the desktop app), an admin dashboard and a TUI/CLI, all running on one Convex backend. Many people and agents should be able to work in it at the same time without stepping on each other.
 
