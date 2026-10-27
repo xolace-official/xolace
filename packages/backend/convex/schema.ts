@@ -2028,6 +2028,22 @@ export default defineSchema({
 		.index("by_seed_displayText", ["isSeed", "displayText"]),
 
 	// ===========================================================
+	// ADMIN SEARCH INDEX JOBS (convex/admin/searchIndex.ts)
+	// ===========================================================
+	//
+	// One row per re-index a staff member starts from the admin's Search
+	// index page, for the meaning indexes that backfill in one action
+	// (exercises, xolacers). The migration-run ones keep their state in the
+	// migrations component. The scheduled function's own state says whether
+	// the job is still running.
+	search_index_jobs: defineTable({
+		index: v.union(v.literal("exercises"), v.literal("xolacers")),
+		jobId: v.id("_scheduled_functions"),
+		startedBy: v.string(), // Clerk subject of the staff member
+		startedByName: v.string(), // their name as the token had it
+	}).index("by_index", ["index"]),
+
+	// ===========================================================
 	// 21. SEMANTIC PROFILES (Cognition Layer §1.2)
 	// ===========================================================
 	//

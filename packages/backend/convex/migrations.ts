@@ -5,6 +5,7 @@ import { Migrations } from "@convex-dev/migrations";
 //   bunx convex run migrations:runAll            (includes both index backfills)
 //   bunx convex run ai/exercises/embed:indexExercises
 //   bunx convex run ai/xolacers/embed:indexAll
+// Or from the admin's Search index page, which also shows what's missing.
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { reflectionRank } from "./lib/aggregates";
@@ -193,7 +194,7 @@ export const backfillTrackSearchText = migrations.define({
 // ponytail: random spread, not a rate limiter — ~200 rows over 5 min stays well
 // under OpenAI's embedding limits; move to @convex-dev/workpool if the corpus
 // grows past a few thousand. A failed embed logs its id; re-running is the fix.
-const BACKFILL_SPREAD_MS = 5 * 60 * 1000;
+export const BACKFILL_SPREAD_MS = 5 * 60 * 1000;
 const spread = () => Math.random() * BACKFILL_SPREAD_MS;
 
 // Library meaning index (#568): embeds every active entry ingested before the
