@@ -68,12 +68,16 @@ export function StatBand({
 		</View>
 	));
 
+	// Glass stops rendering under an animated opacity, so the fade only runs
+	// where there is no glass. Playful's solid Surface always fades.
+	const fadeIn = isPlayful ? { opacity: 0 } : FADE_IN;
+	const fadeOut = isPlayful ? { opacity: 1 } : FADE_OUT;
+
 	return (
-		// Glass stops rendering under an animated opacity, so the fade only runs where there is no glass.
 		<EaseView
-			animate={{ translateY: 0, ...FADE_OUT }}
+			animate={{ translateY: 0, ...fadeOut }}
 			className="mt-7 px-5"
-			initialAnimate={{ translateY: 8, ...FADE_IN }}
+			initialAnimate={{ translateY: 8, ...fadeIn }}
 			transition={{
 				delay: staggerDelay,
 				duration: 300,
