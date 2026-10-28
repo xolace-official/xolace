@@ -9,12 +9,8 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 type Props = { height?: number };
 
-/**
- * Soft warm "aurora" sweep behind the profile hero.
- * Two overlapping radial gradients (ember + accent) that fade to
- * transparent — static, no animation. Sits absolutely at the top of
- * the screen, behind the transparent header and hero.
- */
+/** Static warm "aurora" sweep behind the profile hero: two radial gradients fading to
+ * transparent. */
 export function AuroraArc({ height = 320 }: Props) {
 	const { width } = useWindowDimensions();
 	const ember = useTokenColor("ember");

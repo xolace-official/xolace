@@ -1,16 +1,5 @@
-/**
- * The intake offer screen (T4, issue #235) — step 4 of intake, fired once at
- * session 0, right after Q11.
- *
- * Strictly an offer, not a checkout: there is no price on this screen and no
- * package to select. "I'm ready" pushes the real paywall (`(intake)/plans`),
- * which is where pricing, the period picker and the store call live. Splitting
- * the two keeps the first-run pitch from opening on a number.
- *
- * Deliberately NOT wired into `src/features/purchases/plus-offer-policy.ts`:
- * declining here is not a proactive-offer dismissal and must never spend the
- * dismissal budget. Do not connect them.
- */
+/** Intake offer (T4, #235): no price; "I'm ready" pushes plans. Never wire into
+ * plus-offer-policy.ts: declining must not spend the dismissal budget. */
 
 import { useFocusEffect, useRouter } from "expo-router";
 import { Button, useThemeColor } from "heroui-native";
@@ -72,28 +61,23 @@ export default function IntakeOffer() {
 	const skipping = useRef(false);
 	const [skipFailed, setSkipFailed] = useState(false);
 
-	// Treatment is the enabled arm; an unresolved flag falls back to control, so
-	// a slow flag load can never show a half-personalized screen.
+	// An unresolved flag falls back to control.
 	const arm = useFeatureFlag(INTAKE_PERSONALIZED_LINE_FLAG);
 	const personalized = arm === true || arm === "test";
 
-	// The arm is frozen at the instant the impression fires, and the line renders
-	// from the frozen value — never from the live flag. A flag landing after mount
-	// would otherwise show the treatment line against a control impression, which
-	// contaminates both arms. `null` = the impression hasn't fired yet.
+	// The arm is frozen when the impression fires and the line renders from the
+	// frozen value, never the live flag. `null` = the impression has not fired yet.
 	const [shownArm, setShownArm] = useState<boolean | null>(null);
-	// Latched during render, not in an effect: the deck and the impression have
-	// to agree, and an effect would let one frame of the deck render against a
-	// still-null arm.
+	// Latched during render so the deck and the impression agree; an effect
+	// would let one frame of the deck render against a still-null arm.
 	if (shownArm === null && isResolved && !isPlus) {
 		setShownArm(personalized);
 	}
 	const line = intentLine(answers, shownArm === true);
 
-	// The peek on the right is what says "there is more" — the deck has no dots.
+	// The peek on the right is what says "there is more"; the deck has no dots.
 	const cardWidth = Math.min(width - EDGE * 2 - 44, 320);
-	// Tuned to the fullest card (Insights) and clamped so a short device gives
-	// the deck the room it has rather than pushing the CTA off-screen.
+	// Tuned to the fullest card (Insights); clamped so a short device keeps the CTA on screen.
 	const deckHeight = Math.min(430, height * 0.54);
 
 	// Session 0 by construction: intake runs once, before any session exists.
@@ -106,47 +90,30 @@ export default function IntakeOffer() {
 		});
 
 	useEffect(() => {
-		// Keyed on the latch above, so "shown" and "counted as shown" are the same
-		// moment. `isPlus` is false until *both* entitlement sources answer, so an
-		// on-mount capture counted subscribers who are pushed straight back out by
-		// the focus effect below and never see this screen.
+		// Keyed on the latch, so "shown" and "counted as shown" are the same moment;
+		// an on-mount capture would count subscribers the focus effect pushes back out.
 		if (shownArm === null) {
 			return;
 		}
-		// Its own event, not `paywall_opened`: on the other three surfaces that
-		// event means "saw pricing", and there is no price on this screen. The
-		// pricing impression fires from `(intake)/plans`, so intake's opened →
-		// purchased rate stays comparable to the rest. This is the A/B impression
-		// — it is where the personalized line is or isn't shown.
+		// Not `paywall_opened`: that means "saw pricing" elsewhere, and this screen
+		// has no price. This is the A/B impression.
 		track("intake_offer_opened", shownArm);
-		// The last step of the funnel's paged flow (T7 §2.3) — this deck is what
-		// `step_key: "paywall"` means, not the pricing screen behind it.
+		// `step_key: "paywall"` (T7 §2.3) means this deck, not the pricing screen behind it.
 		trackStepViewed(posthog, "paywall");
 		// `track` is re-created every render; `shownArm` only ever flips once.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [shownArm]);
 
 	const handleDismiss = () => {
-		// Paired with `intake_offer_opened`, not `paywall_dismissed`: on the other
-		// three surfaces a dismissal is a dismissal of *pricing*, and this screen
-		// carries none. Firing `paywall_dismissed{surface:"intake"}` here would let
-		// intake's dismissals outnumber its `paywall_opened`s — that event fires on
-		// `(intake)/plans`, which a deck-dismisser never reaches. The pricing screen
-		// still fires it, so intake's dismissal rate means what it does elsewhere.
+		// Paired with `intake_offer_opened`, not `paywall_dismissed`: that one is a
+		// dismissal of pricing, which fires from `(intake)/plans`.
 		track("intake_offer_dismissed", shownArm === true);
 		void completeIntake("dismissed_paywall");
 	};
 
-	/*
-	 * A current subscriber must never be pitched (T4, #235). The questionnaire's
-	 * skip branch reads `isPlus`, which is false until both entitlement sources
-	 * answer — so a subscriber whose SDK was still loading gets pushed here
-	 * anyway. Finish intake the moment it resolves, and hold a blank frame
-	 * meanwhile so the deck is never *shown* to them.
-	 *
-	 * Focus-scoped: a purchase completing on `(intake)/plans` also flips `isPlus`,
-	 * and this screen is still mounted underneath it.
-	 */
+	// A subscriber must never be pitched (T4, #235): `isPlus` can resolve late, so
+	// finish intake the moment it does, behind a blank frame. Focus-scoped because
+	// a purchase on `(intake)/plans` also flips `isPlus` while this is mounted.
 	const skipForSubscriber = useCallback(() => {
 		if (skipping.current) {
 			return;
@@ -157,10 +124,8 @@ export default function IntakeOffer() {
 			if (written) {
 				return;
 			}
-			// The write was swallowed (toast + stay put) and this screen renders
-			// nothing while `isPlus`. Unlatch and put a retry on it, or the blank
-			// frame becomes a room with no door and force-quitting — which wipes the
-			// non-persisted answers — is the only way out.
+			// The write was swallowed and this screen renders nothing while `isPlus`;
+			// unlatch and offer a retry, or the blank frame has no way out.
 			skipping.current = false;
 			setSkipFailed(true);
 		});
@@ -201,10 +166,8 @@ export default function IntakeOffer() {
 		);
 	}
 
-	// Hold a blank frame until the impression has fired. The deck must not be on
-	// screen before entitlement resolves: a subscriber whose SDK was still
-	// loading would get a flash of the pitch the focus effect above exists to
-	// spare them, and the arm would be logged against a screen nobody saw.
+	// Blank until the impression has fired: the deck must not show before
+	// entitlement resolves, and the arm must not log against an unseen screen.
 	if (shownArm === null) {
 		return <IntakeBlank />;
 	}
@@ -212,9 +175,8 @@ export default function IntakeOffer() {
 	return (
 		<IntakeScreen>
 			<View className="flex-1 gap-4 pt-2">
-				{/* The headline carries the top of the screen deliberately: it is the
-            only thing above the deck, and at this size it seats the cards low
-            enough that the deck reads as one row rather than as the page. */}
+				{/* The headline is the only thing above the deck; at this size it seats the
+				    deck low enough to read as one row. */}
 				<View className="gap-2 px-5 pt-1">
 					{line ? (
 						<Animated.View
@@ -242,10 +204,8 @@ export default function IntakeOffer() {
 					</AppText>
 				</View>
 
-				{/* The deck is explicitly sized rather than left to fill the column:
-            stretched to the full height the lighter cards open a hole under
-            their title, and a horizontal ScrollView that sizes to its own
-            content collapses to nothing. */}
+				{/* Explicitly sized: stretched, the lighter cards open a hole under their
+            title, and a horizontal ScrollView sized to its content collapses. */}
 				<View className="flex-1 justify-center">
 					<ScrollView
 						contentContainerStyle={styles.deck}
@@ -273,8 +233,8 @@ export default function IntakeOffer() {
 					>
 						<Button.Label>I&apos;m ready</Button.Label>
 					</Button>
-					{/* A recessive text link, not a button: dismissing is allowed, but it
-              is not the thing being offered. */}
+					{/* A recessive text link, not a button: dismissing is not the thing being
+					    offered. */}
 					<AppText
 						accessibilityRole="button"
 						className="py-1 text-center font-[Poppins-Regular] text-[14px] text-foreground/40"

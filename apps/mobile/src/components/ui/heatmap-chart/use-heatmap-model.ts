@@ -39,14 +39,8 @@ export function useHeatmapModel({
 	const [width, setWidth] = useState(0);
 	const [activeCell, setActiveCellState] = useState<HeatmapCell | null>(null);
 
-	/*
-	 * `color` and `emptyColor` take a token name as readily as a literal. A
-	 * literal is a colour frozen at the moment it was written — it cannot follow
-	 * the theme into dark mode — so naming the token is almost always what the
-	 * caller meant, and having to resolve it themselves is the reason they did
-	 * not. The hooks run unconditionally; which of the two answers is used is
-	 * decided after.
-	 */
+	// `color` and `emptyColor` take a token name or a literal. Both hooks run
+	// unconditionally; which answer is used is decided after.
 	const baseToken = useCSSVariable(isToken(color) ? color : "--color-chart-1");
 	const emptyToken = useCSSVariable(
 		isToken(emptyColor) ? emptyColor : "--color-muted"
@@ -85,11 +79,7 @@ export function useHeatmapModel({
 		[levels, data]
 	);
 
-	/*
-	 * One colour at five opacities, unless the caller supplied five colours — in
-	 * which case the opacities are dropped, since dimming a colour someone chose
-	 * on purpose is not a ramp, it is a bug.
-	 */
+	// One colour at five opacities, unless five colours were supplied, which are used as-is.
 	const { ramp, opacities } = useMemo(
 		() =>
 			levelColors

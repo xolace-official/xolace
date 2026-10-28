@@ -41,11 +41,7 @@ export type ShimmerAnimationConfig =
 			config?: WithSpringConfig;
 	  });
 
-/**
- * Overlay width value.
- * - `number` — absolute pixels (e.g. `64`)
- * - `` `${number}%` `` — percentage of container width (e.g. `"50%"`)
- */
+/** Overlay width: absolute pixels, or a percentage of container width. */
 export type ShimmerOverlayWidth = number | `${number}%`;
 
 /** Props for the Shimmer.Overlay component. */
@@ -54,42 +50,25 @@ export interface ShimmerOverlayProps {
 	animation?: ShimmerAnimationConfig;
 	/** Content rendered inside the animated highlight. */
 	children: React.ReactNode;
-	/**
-	 * Shorthand for animation duration (ms).
-	 * Ignored when `animation.config.duration` is set.
-	 * @default 2000
-	 */
+	/** Animation duration in ms; ignored when `animation.config.duration` is set. @default 2000 */
 	duration?: number;
 	/** Delay before the first animation cycle (ms). @default 500 */
 	initialDelay?: number;
-	/**
-	 * SharedValue that mirrors current progress on the UI thread.
-	 * Useful for deriving synced animations (e.g. opacity from progress).
-	 */
+	/** SharedValue mirroring current progress on the UI thread, for synced animations. */
 	onProgress?: SharedValue<number>;
 	/** Rotation applied to the overlay content (degrees). @default 0 */
 	overlayAngle?: number;
-	/**
-	 * External progress SharedValue (0–1) for controlled mode.
-	 * Disables auto-play; overlay position is driven entirely by this value.
-	 */
+	/** External progress (0–1) for controlled mode; disables auto-play. */
 	progress?: SharedValue<number>;
 	/** Delay between repeat cycles (ms). @default 0 */
 	repeatDelay?: number;
-	/**
-	 * Track direction in degrees (0–360).
-	 * 0° = right, 90° = down, 180° = left, 270° = up.
-	 * @default 0
-	 */
+	/** Track direction in degrees: 0 right, 90 down, 180 left, 270 up. @default 0 */
 	trackAngle?: number;
 	/** Width of the overlay highlight — pixels or percentage of container. */
 	width: ShimmerOverlayWidth;
 }
 
-/**
- * Props for Shimmer.Mask — clips the overlay to children's alpha channel.
- * Children must use opaque colors (e.g. `text-black`, `bg-black`) for the mask to work.
- */
+/** Props for Shimmer.Mask, which clips the overlay to the children's alpha channel. */
 export interface ShimmerMaskProps {
 	/** Base fill rendered behind the overlay, clipped to the mask shape. */
 	background?: React.ReactNode;
@@ -99,10 +78,7 @@ export interface ShimmerMaskProps {
 	overlay: React.ReactNode;
 }
 
-/**
- * Config for useShimmerAnimation hook.
- * Reuses fields from ShimmerContextValue and ShimmerOverlayProps.
- */
+/** Config for useShimmerAnimation. */
 export interface UseShimmerAnimationConfig
 	extends Pick<ShimmerContextValue, "containerWidth" | "containerHeight">,
 		Required<Pick<ShimmerOverlayProps, "trackAngle" | "overlayAngle">>,

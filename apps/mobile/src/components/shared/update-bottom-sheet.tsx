@@ -45,10 +45,9 @@ export const UpdateBottomSheet: FC<Props> = ({
 			}
 			return;
 		}
-		// No Updates.reloadAsync() here: the relaunch destroys the JS runtime while pending
-		// JSI promises are still in flight on expo's async-function queue, and their
-		// JavaScriptPromise destructors then deref the dead runtime (EXC_BAD_ACCESS on iOS).
-		// The already-fetched update applies on the next cold start instead.
+		// No Updates.reloadAsync() here: the relaunch destroys the JS runtime while JSI promises
+		// are in flight and their destructors deref it (EXC_BAD_ACCESS on iOS). The fetched
+		// update applies on the next cold start instead.
 		onOpenChange(false);
 	};
 

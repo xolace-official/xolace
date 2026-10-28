@@ -3,11 +3,8 @@ import { Stack, useRouter } from "expo-router";
 import { playSoftPress } from "@/lib/haptics";
 import { useLargeHeaderOptions } from "@/lib/navigation-options";
 
-/**
- * Settings stack layout with a large transparent header. Only the root gets a
- * custom back control (a nested stack root has no native one); inner screens
- * keep the native back button.
- */
+/** Settings stack with a large transparent header. Only the root gets a custom back control: a
+ * nested stack root has no native one. */
 const SETTINGS_OPTIONS = { title: "Settings" };
 const APPEARANCE_OPTIONS = { title: "Appearance" };
 const MIRROR_OPTIONS = { title: "Mirror" };

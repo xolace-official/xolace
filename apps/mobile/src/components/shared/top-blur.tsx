@@ -1,7 +1,6 @@
-// Progressive blur under the transparent header (from
-// clarity-main glass-tabs/progressive-blur): one BlurView alpha-masked by an
-// eased gradient, plus a --background scrim so the title stays legible.
-// Android gets the scrim only (BlurView under a MaskedView is unreliable there).
+// Progressive blur under the transparent header (from clarity-main progressive-blur):
+// one BlurView alpha-masked by an eased gradient plus a --background scrim.
+// Android gets the scrim only; BlurView under a MaskedView is unreliable there.
 
 import MaskedView from "@react-native-masked-view/masked-view";
 import { BlurView } from "expo-blur";

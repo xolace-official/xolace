@@ -15,10 +15,7 @@ type Props = {
 	isLoading?: boolean;
 };
 
-/**
- * Reusable confirmation dialog following the same pattern as ThemePickerDialog.
- * Supports destructive styling and a loading state on the confirm button.
- */
+/** Confirmation dialog with destructive styling and a loading state on the confirm button. */
 export const ConfirmationDialog = ({
 	isOpen,
 	onOpenChange,
@@ -60,9 +57,8 @@ export const ConfirmationDialog = ({
 						<Button
 							isDisabled={isLoading}
 							onPress={() => {
-								// Backing out stays soft; committing carries weight. This is the
-								// last touch before an irreversible action (wipe data, delete
-								// account), and it should not feel like any other button.
+								// Backing out stays soft; committing carries weight on the last
+								// touch before an irreversible action.
 								playAffirmativePress();
 								onConfirm();
 							}}

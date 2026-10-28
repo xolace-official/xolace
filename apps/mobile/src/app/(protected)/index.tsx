@@ -109,43 +109,33 @@ export default function ProtectedIndex() {
 	const awarenessEvent = useAwarenessEvent();
 	const { markInteractive } = useObserve();
 
-	// Snapshot, not live read. The awareness sheet waits for a launch where the
-	// tour is already behind the user — reading the version live would pop the
-	// sheet the instant the tour completed, stacking a third interruption onto a
-	// first run. Persisted state hydrates synchronously (unified-storage), so this
-	// is the real value on the very first render.
+	// Snapshot, not live read: the awareness sheet waits for a launch where the
+	// tour is already behind the user. Persisted state hydrates synchronously,
+	// so this is the real value on the first render.
 	const [tourSeenAtMount] = useState(
 		!shouldShowReflectTour(reflectTourVersion)
 	);
 
-	// Same getFullContext query ReflectScreen subscribes to — Convex dedupes it,
-	// so this is a cached read, not a second round-trip.
+	// Same getFullContext query ReflectScreen subscribes to; Convex dedupes it.
 	const fullContext = useFullContext();
 	const profile = fullContext?.profile;
 	const hasPendingFollowUp = fullContext?.hasPendingFollowUp ?? false;
 
-	// Follow-up check-in surfaces on reopen when a session left something
-	// unresolved. It OUT-PRIORITIZES ReturnWelcomeSheet (reopen precedence): when
-	// a follow-up is pending/ready we suppress the return-welcome for this reopen.
+	// A pending or ready follow-up suppresses the return-welcome for this reopen.
 	const followUp = useFollowUpCheckIn({
 		active: isFocused && !!profile,
 		hasPendingFollowUp,
 	});
 
-	// App open is the read-time recompute that makes a freeze-bridged gap
-	// durable (frozen_days). Best-effort: every streak read derives the same
-	// answer without it.
-	// It also returns freeze-bridged days not yet acknowledged (#436) — shown in
-	// the streak-held screen, never a push.
+	// Best-effort recompute that makes a freeze-bridged gap durable; it also
+	// returns unacknowledged freeze-bridged days (#436) for the streak-held screen.
 	const settleStreak = useMutation(api.streaks.state.settle);
 	const [frozenDays, setFrozenDays] = useState(0);
 	const freezeShown = useRef(false);
 	const profileId = profile?._id;
-	// On every focus and every return to the foreground: an app left mounted can
-	// cross days without a remount. Home is unfocused while streak-held is up, so
-	// this re-runs on its close — after its acknowledgeFreezes, which the client
-	// sends first — and only a fresh count re-arms the screen. Results landing
-	// after blur are dropped.
+	// On every focus and foreground: a mounted app can cross days. Re-runs when
+	// streak-held closes, after its acknowledgeFreezes, and only a fresh count
+	// re-arms the screen. Results landing after blur are dropped.
 	useEffect(() => {
 		if (!(profileId && isFocused)) {
 			return;
@@ -176,19 +166,15 @@ export default function ProtectedIndex() {
 		};
 	}, [profileId, isFocused, settleStreak]);
 
-	// Per-route TTI for the reflect home: the screen is genuinely ready once the
-	// user context query resolves, not at mount. markInteractive emits telemetry
-	// (a side effect), so it must run in an effect — only the first call per
-	// navigation is recorded, so the gate effectively fires it once.
+	// Per-route TTI: ready once the user context query resolves, not at mount.
+	// Only the first markInteractive call per navigation is recorded.
 	useEffect(() => {
 		if (profile) {
 			markInteractive();
 		}
 	}, [profile, markInteractive]);
 
-	// The lapsed-user greeting sits ahead of the awareness event in the home
-	// sheet chain: ReturnWelcome → MonthlyEvent. It only arms once the screen is
-	// focused.
+	// Home sheet chain: ReturnWelcome, then MonthlyEvent. Arms only once focused.
 	const returnWelcome = useReturnWelcome({
 		active: isFocused && !!profile && !followUp.blocking,
 		lastSessionAt: profile?.lastSessionAt,
@@ -198,9 +184,8 @@ export default function ProtectedIndex() {
 			: { kind: "first-time" },
 	});
 
-	// ReturnWelcome → FollowUp → MonthlyEvent. It
-	// additionally waits for the tour, which owns the idle screen on a first run
-	// — see tourSeenAtMount.
+	// ReturnWelcome, FollowUp, then MonthlyEvent; also waits for the tour, which
+	// owns the idle screen on a first run (see tourSeenAtMount).
 	const awarenessOpen =
 		tourSeenAtMount &&
 		isFocused &&
@@ -209,9 +194,8 @@ export default function ProtectedIndex() {
 
 	const awarenessShowing = awarenessOpen && awarenessEvent !== null;
 
-	// After MonthlyEvent: ReturnWelcome → FollowUp → MonthlyEvent → Starter
-	// suggestions. It waits for the tour itself (see useStarterSuggestions), and
-	// for the reflect card underneath to have loaded and arrived.
+	// After MonthlyEvent. Waits for the tour (see useStarterSuggestions) and
+	// for the reflect card underneath to have arrived.
 	const starter = useStarterSuggestions({
 		active:
 			isFocused &&

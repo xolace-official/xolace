@@ -49,13 +49,8 @@ const CONTENT: Record<
 	},
 };
 
-/**
- * Browse family welcome, presented as a full-screen modal so neither the tab
- * bar nor the underlying screen's header shows through. Opened by
- * `FamilyListScreen` (Music/Support, keyed on `?family=`) or
- * `LibraryHomeScreen` (Lantern, keyed on mount) — each surface's intro flag
- * is independent.
- */
+/** Browse family welcome, full-screen modal. Opened by `FamilyListScreen` (`?family=`) or
+ * `LibraryHomeScreen`; each intro flag is independent. */
 export default function BrowseIntroRoute() {
 	const { family: rawFamily } = useLocalSearchParams<{ family?: string }>();
 	const family: Family =
@@ -71,8 +66,8 @@ export default function BrowseIntroRoute() {
 	);
 	const setLibraryIntroSeen = useAppStore((s) => s.setLibraryIntroSeen);
 	const { title, subtitle, event } = CONTENT[family];
-	// gestureEnabled:false doesn't cover Android back — swallow it so the hold
-	// stays the only way out (and the seen flag always gets set).
+	// gestureEnabled:false does not cover Android back; swallow it so the hold
+	// stays the only way out.
 	useBackHandler(true, () => {});
 
 	return (

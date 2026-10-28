@@ -3,10 +3,7 @@ import Svg, { Path } from "react-native-svg";
 import { withUniwind } from "uniwind";
 import type { IconProps } from "@/types";
 
-/**
- * Check icon — React Native SVG implementation.
- * Wrapped with withUniwind to enable className-based styling.
- */
+/** Check SVG icon, wrapped with withUniwind for className styling. */
 const CheckIconComponent: React.FC<IconProps> = ({
 	size = 20,
 	color = "currentColor",

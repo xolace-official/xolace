@@ -81,22 +81,15 @@ export const TourOverlay = ({
 
 	const [cardHeight, setCardHeight] = useState<number | null>(null);
 
-	// The card is keyed on the step and remounts with it, but its height lives
-	// here — so without this the next step is placed by the previous card's
-	// height, visible at full opacity, until its own layout lands a frame later.
-	// Dropped during render for the same reason TourRoot resets the step there.
+	// The card remounts per step but its height lives here; reset during render so the
+	// next step is not placed by the previous card's height for a frame.
 	const [measuredOrder, setMeasuredOrder] = useState(active?.order);
 	if (measuredOrder !== active?.order) {
 		setMeasuredOrder(active?.order);
 		setCardHeight(null);
 	}
 
-	/*
-	 * A step with no measurable target — a welcome card, or one whose control has
-	 * gone — gets no hole and a card in the middle of the screen. Dimming the
-	 * whole screen and saying nothing about where to look is honest; cutting a
-	 * hole at the origin is not.
-	 */
+	// A step with no measurable target gets no hole and a card in the middle of the screen.
 	const card = cardFrame({
 		cardHeight,
 		insets,
@@ -115,13 +108,8 @@ export const TourOverlay = ({
 
 	return (
 		<View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
-			{/*
-        The dim is one path with a hole in it and takes no touches, so what
-        handles them is the layer under it. That layer is a full-screen
-        responder normally and a ring of four around the cutout when the target
-        is meant to stay usable — the hole is the gap between them, which is
-        the only way to leave a rectangle of the screen pressable.
-      */}
+			{/* The dim takes no touches; the backdrop under it is one responder, or four around
+			    a usable target. */}
 			<TourBackdrop
 				dismissible={dismissible}
 				interactive={interactive}
@@ -146,14 +134,9 @@ export const TourOverlay = ({
 				</Svg>
 			</Animated.View>
 
-			{/*
-			 * Two views, and the split is not cosmetic. The entering animation drives
-			 * opacity, and so does the gate that hides the card for the frame it is
-			 * being measured in — put on one view they fight, and Reanimated says so:
-			 * a layout animation may overwrite a property the style also sets, and
-			 * which of them wins is not something to rely on. The outer view owns the
-			 * animation and the placement; the card owns the measurement and the gate.
-			 */}
+			{/* Two views on purpose: the entering animation and the measurement gate both drive
+			    opacity and would fight on one view. Outer owns placement; the card owns the
+			    gate. */}
 			<Animated.View
 				entering={reducedMotion ? undefined : FadeIn.duration(200)}
 				key={active?.order ?? "none"}

@@ -4,10 +4,8 @@ import { Stack, useRouter } from "expo-router";
 import { playSoftPress } from "@/lib/haptics";
 import { useLargeHeaderOptions } from "@/lib/navigation-options";
 
-/**
- * Timeline stack layout: large header with a back control on the left (a
- * nested stack root has no native one) and a settings control on the right.
- */
+/** Timeline stack: large header, custom back control (a nested stack root has no native one),
+ * settings on the right. */
 const TIMELINE_OPTIONS = { title: "Your Timeline" };
 
 export default function TimelineLayout() {

@@ -42,8 +42,8 @@ export const HeatmapChartRoot = forwardRef<ViewInstance, HeatmapChartProps>(
 		ref
 	) {
 		const parts = useMemo(() => splitParts(children), [children]);
-		// The y-axis is laid out beside the grid rather than over it, so its width
-		// has to come out of the grid's before the cells are sized.
+		// The y-axis sits beside the grid, so its width comes out of the grid's before the
+		// cells are sized.
 		const axisWidth = parts.y ? (parts.y.props.width ?? DEFAULT_AXIS_WIDTH) : 0;
 
 		const {
@@ -115,8 +115,7 @@ export const HeatmapChartRoot = forwardRef<ViewInstance, HeatmapChartProps>(
 					onLayout={onLayout}
 					ref={ref}
 				>
-					{/* Above the axis gutter as well as the grid: the header is about the
-            whole chart, so it starts at the chart's edge, not the grid's. */}
+					{/* Above the axis gutter too: the header is about the whole chart. */}
 					{parts.header}
 
 					<ChartAccessibilityData
@@ -154,13 +153,8 @@ export const HeatmapChartRoot = forwardRef<ViewInstance, HeatmapChartProps>(
 						<View style={{ height: grid.height, width: grid.width }}>
 							{grid.width > 0 ? (
 								<>
-									{/*
-									 * A native fade, not a Reanimated clip. The grid used to sit
-									 * in a view whose width animated from 0, and on some TestFlight
-									 * devices that animation never landed, so it stayed at 0 and
-									 * the grid never showed. A missed fade still ends at opacity 1,
-									 * so the grid can't stay hidden.
-									 */}
+									{/* A native fade, not a width clip: on some TestFlight
+									    devices the clip never landed and nothing showed. */}
 									<EaseView
 										animate={{ opacity: 1 }}
 										initialAnimate={{ opacity: 0 }}

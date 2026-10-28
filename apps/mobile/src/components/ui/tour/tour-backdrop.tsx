@@ -15,14 +15,8 @@ type Props = {
 	onDismiss: () => void;
 };
 
-/**
- * The layer that takes the touches the dim does not.
- *
- * One full-screen responder, or four around the cutout when the target has to
- * stay usable. Four rather than one with a hole, because a view cannot have a
- * hole — the gap between them is the hole, and it is the only construction
- * that leaves a rectangle of the screen reachable.
- */
+/** Takes the touches the dim does not: one full-screen responder, or four around a usable
+ * target. */
 export const TourBackdrop = ({
 	interactive,
 	dismissible,

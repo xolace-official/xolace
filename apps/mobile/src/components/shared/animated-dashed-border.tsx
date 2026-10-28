@@ -26,7 +26,7 @@ export const AnimatedDashedBorder: React.FC<Props> = ({
 	strokeWidth = 2,
 	dashLength = 12,
 	gapLength = 6,
-	// Anim speed in ms. Lower = faster dash travel. 1500ms chosen to feel calm but noticeable.
+	// Milliseconds per cycle; lower is faster.
 	animationSpeed = 1500,
 	borderRadius = 8,
 	strokeColor,
@@ -39,55 +39,50 @@ export const AnimatedDashedBorder: React.FC<Props> = ({
 	const borderColor = useThemeColor("border") as string;
 	const resolvedStrokeColor = strokeColor ?? borderColor;
 
-	// Reanimated phase (pixels). Skia's DashPathEffect expects phase in device px along the path.
-	// We drive this with a linear, infinite timing to create continuous motion.
+	// Dash phase in device px along the path, driven by a linear infinite timing.
 	const rPhase = useSharedValue(0);
 
-	// Compute a dash length that evenly distributes around the rounded-rect perimeter.
-	// Why: prevents a "broken" last segment and keeps dash rhythm consistent regardless of size.
-	// Math:
-	//  - Rounded-rect perimeter = 2*(w + h - 2r) + 2*π*r
-	//  - Choose number of dashes, then infer dash length = (perimeter/num) - gap
+	// A dash length that divides the rounded-rect perimeter evenly, so the seam has no broken
+	// segment.
 	const adjustedDashLength = useMemo(() => {
 		if (!(size.w && size.h)) {
 			return Math.max(3, dashLength);
 		}
 
-		// Subtract stroke to draw inside bounds (avoids clipping) and +1 to mitigate half-pixel rounding.
+		// Stroke subtracted to draw inside bounds; +1 mitigates half-pixel rounding.
 		const w = Math.max(0, size.w - strokeWidth) + 1;
 		const h = Math.max(0, size.h - strokeWidth);
 		const r = Math.min(borderRadius, Math.min(w, h) / 2);
 
 		const perimeter = 2 * (w + h - 2 * r) + 2 * Math.PI * r;
 
-		// Floor to avoid partial dash at the seam. Enforce a min of 8 to prevent sparse look on small views.
+		// Floored to avoid a partial dash at the seam; at least 8 so small views are not sparse.
 		const targetNumDashes = Math.floor(perimeter / (dashLength + gapLength));
 		const actualNumDashes = Math.max(8, targetNumDashes);
 
 		const totalDashLength = perimeter / actualNumDashes;
 		const calculatedDashLength = totalDashLength - gapLength;
 
-		// Clamp to >=3px so dashes don’t become nearly dots on very small sizes.
+		// At least 3px so dashes do not become dots on small sizes.
 		return Math.max(3, calculatedDashLength);
 	}, [size, strokeWidth, borderRadius, dashLength, gapLength]);
 
-	// Ensure gaps don’t collapse visually on dense perimeters.
+	// Gaps must not collapse visually on dense perimeters.
 	const adjustedGapLength = Math.max(3, gapLength);
 	const dashCycle = adjustedDashLength + adjustedGapLength;
 
 	useEffect(() => {
 		rPhase.set(0);
-		// Phase direction: Skia advances the dash with negative phase for clockwise feel on this path.
-		// We step by one full dash+gap cycle so the pattern appears to scroll seamlessly.
+		// Negative phase reads as clockwise on this path; one full dash+gap cycle scrolls
+		// seamlessly.
 		const targetValue = direction === "clockwise" ? -dashCycle : dashCycle;
 		rPhase.set(
 			withRepeat(
 				withTiming(targetValue, {
-					// Linear to maintain constant speed around corners; easing would visually "breathe" at joints.
+					// Linear keeps constant speed around corners.
 					duration: animationSpeed,
 					easing: Easing.linear,
 				}),
-				// -1 = infinite loop
 				-1,
 				false
 			)
@@ -95,15 +90,13 @@ export const AnimatedDashedBorder: React.FC<Props> = ({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [animationSpeed, dashCycle, adjustedDashLength, direction]);
 
-	// Bridge Reanimated → Skia: keep Skia value in sync without crossing the JS bridge.
-	// Using derived value keeps updates on the UI thread for 60fps.
+	// Bridges Reanimated to Skia on the UI thread.
 	const skPhase = useSharedValue(0);
 	useDerivedValue(() => {
 		skPhase.set(rPhase.get());
 	});
 
-	// Build rounded-rect path once per layout change.
-	// Inset by strokeWidth/2 so the stroke is fully visible within the view’s bounds.
+	// Rounded-rect path, inset by strokeWidth/2 so the stroke stays inside the view.
 	const path = useMemo(() => {
 		if (!(size.w && size.h)) {
 			return null;
@@ -138,7 +131,7 @@ export const AnimatedDashedBorder: React.FC<Props> = ({
 						pointerEvents: "none",
 						position: "absolute",
 						top: 0,
-						// +1 to width/height combats antialias clipping on the far edge when caps are round.
+						// +1 combats antialias clipping on the far edge with round caps.
 						width: size.w + 1,
 					}}
 				>
@@ -146,12 +139,10 @@ export const AnimatedDashedBorder: React.FC<Props> = ({
 						color={resolvedStrokeColor}
 						path={path}
 						strokeCap="round"
-						// Round joins/caps keep dash ends visually soft at corners.
 						strokeJoin="round"
 						strokeWidth={strokeWidth}
 						style="stroke"
 					>
-						{/* DashPathEffect: intervals=[dash,gap]; phase in px shifts pattern along the path. */}
 						<DashPathEffect
 							intervals={[adjustedDashLength, adjustedGapLength]}
 							phase={skPhase}

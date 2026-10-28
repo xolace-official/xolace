@@ -12,10 +12,8 @@ import {
 } from "react-native-reanimated";
 import type { UseShimmerAnimationConfig } from "./types";
 
-/**
- * Drives shimmer animation: builds the repeat/delay sequence,
- * computes geometry for angled overlays, and returns an animated style.
- */
+/** Drives the shimmer: repeat/delay sequence, geometry for angled overlays, and the animated
+ * style. */
 export const useShimmerAnimation = (config: UseShimmerAnimationConfig) => {
 	const {
 		trackAngle,
@@ -32,7 +30,7 @@ export const useShimmerAnimation = (config: UseShimmerAnimationConfig) => {
 		autoPlay = true,
 	} = config;
 
-	// Resolve animation params — animation.config takes precedence over duration shorthand
+	// animation.config takes precedence over the duration shorthand.
 	const animationType = animation?.type ?? "timing";
 	const defaultDuration = duration ?? 2000;
 	const animationConfig =
@@ -40,7 +38,6 @@ export const useShimmerAnimation = (config: UseShimmerAnimationConfig) => {
 	const numberOfReps = animation?.numberOfReps ?? -1;
 	const reverse = animation?.reverse ?? false;
 
-	// Start/restart animation once both container and overlay widths are measured
 	useAnimatedReaction(
 		() => ({
 			containerW: containerWidth.get(),
@@ -66,8 +63,7 @@ export const useShimmerAnimation = (config: UseShimmerAnimationConfig) => {
 			let repeatedAnimation;
 
 			if (reverse) {
-				// Ping-pong: 0→1→0. Manual round-trip because withRepeat's built-in
-				// reverse doesn't compose correctly with withSequence.
+				// Ping-pong 0→1→0 by hand: withRepeat's reverse does not compose with withSequence.
 				const animateBack =
 					animationType === "spring"
 						? withSpring(0, animationConfig as WithSpringConfig)
@@ -84,7 +80,6 @@ export const useShimmerAnimation = (config: UseShimmerAnimationConfig) => {
 
 				repeatedAnimation = withRepeat(fullCycle, numberOfReps, false);
 			} else {
-				// Default: 0→1, snap to 0, repeat
 				const animationSequence =
 					repeatDelay > 0
 						? withSequence(
@@ -104,9 +99,8 @@ export const useShimmerAnimation = (config: UseShimmerAnimationConfig) => {
 		}
 	);
 
-	// ── Geometry ──────────────────────────────────────────────────────────
-	// Three derived values compute the overlay's bounding dimensions so that
-	// a rotated overlay fully covers the container at any track/overlay angle.
+	// Geometry: the overlay's bounding dimensions so a rotated overlay covers the
+	// container at any track/overlay angle.
 
 	const trackAngleRad = (trackAngle * Math.PI) / 180;
 	const overlayAngleRad = (overlayAngle * Math.PI) / 180;
@@ -122,9 +116,8 @@ export const useShimmerAnimation = (config: UseShimmerAnimationConfig) => {
 		return containerW * sinTrack + containerH * cosTrack;
 	});
 
-	// Rotate container height (pre-rotation by overlayAngle β).
-	// Must fully cover the translate container after rotation:
-	//   h ≥ (translateHeight + overlayW · |sin β|) / |cos β|
+	// Rotate container height, pre-rotation by β: h ≥ (translateHeight + overlayW·|sin β|) /
+	// |cos β|.
 	const rotateContainerHeight = useDerivedValue(() => {
 		const tch = translateContainerHeight.get();
 		const highlightW = overlayWidth.get();
@@ -137,15 +130,13 @@ export const useShimmerAnimation = (config: UseShimmerAnimationConfig) => {
 		return (tch + highlightW * sinOverlay) / cosOverlay;
 	});
 
-	// AABB width of the rotated overlay: w·|cos β| + h·|sin β|.
-	// Used as the start offset so the overlay begins fully off-screen.
+	// AABB width of the rotated overlay (w·|cos β| + h·|sin β|), the start offset so it begins
+	// off-screen.
 	const translateContainerWidth = useDerivedValue(() => {
 		const highlightW = overlayWidth.get();
 		const rch = rotateContainerHeight.get();
 		return highlightW * cosOverlay + rch * sinOverlay;
 	});
-
-	// ── Animated style ────────────────────────────────────────────────────
 
 	const animatedStyle = useAnimatedStyle(() => {
 		const containerW = containerWidth.get();

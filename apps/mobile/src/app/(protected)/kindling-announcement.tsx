@@ -16,12 +16,8 @@ type Params = {
 	sessionId: string;
 };
 
-/**
- * The beat between a finished path and session-end (#458). Only reached via
- * `useSessionEndHref`, which already decided the session qualifies; the
- * session is completed before we get here, so both exits land on the exact
- * session-end route the path would have taken.
- */
+/** The beat between a finished path and session-end (#458). Reached only via
+ * `useSessionEndHref`; the session is already completed. */
 export default function KindlingAnnouncement() {
 	const { variant, path, sessionId } = useLocalSearchParams<Params>();
 	const { isPlus } = usePlusEntitlement();

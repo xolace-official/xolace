@@ -7,16 +7,8 @@ import {
 	type TourShape,
 } from "@/components/ui/tour/types";
 
-/**
- * The screen with a rounded rectangle taken out of it, as one path.
- *
- * Two subpaths and `fillRule="evenodd"`: the outer one covers the screen, the
- * inner one falls inside it, and even-odd makes the overlap a hole regardless
- * of which way either is wound. That last part is why the inner rectangle is
- * written in the natural direction rather than reversed — the winding is not
- * load-bearing, and a reversed path is the kind of thing that gets tidied up
- * by someone who cannot see why it was backwards.
- */
+/** The screen with a rounded rectangle cut out, as one path: two subpaths with
+ * `fillRule="evenodd"`. */
 export function cutoutPath(
 	screenWidth: number,
 	screenHeight: number,
@@ -41,14 +33,8 @@ export function cutoutPath(
 	);
 }
 
-/**
- * The target's bounds grown into the shape the hole will take.
- *
- * A circle is squared around the target's centre rather than drawn inside its
- * bounds, because the controls that want one — an avatar, a floating action
- * button — are square already, and squaring off the longer side is what keeps
- * a hole round instead of letting it collapse to a slot.
- */
+/** The target's bounds grown into the hole's shape. A circle is squared around the centre to
+ * stay round. */
 export function spotlightFor(
 	rect: Rect,
 	shape: TourShape,
@@ -75,14 +61,7 @@ export function spotlightFor(
 	};
 }
 
-/**
- * Where the card goes, given the hole and the card's own height.
- *
- * Below the target when below fits, above it when it does not, and centred on
- * the screen when there is no target at all. The card is as wide as the safe
- * area allows up to a ceiling, because a card narrower than that on a phone
- * only means a shorter line length and one more thing to get wrong.
- */
+/** Where the card goes: below the target when that fits, else above; centred with no target. */
 export function cardFrame({
 	spot,
 	cardHeight,
@@ -123,9 +102,7 @@ export function cardFrame({
 				? !fitsAbove
 				: fitsBelow;
 
-	// Neither side fits — a target taller than the room around it. Clamping keeps
-	// the card on screen and lets it overlap the dim rather than the other way
-	// round, which is the lesser of the two failures.
+	// Neither side fits (target taller than the room): clamp so the card stays on screen.
 	const top = goBelow ? Math.min(below, maxY - height) : Math.max(above, minY);
 
 	return { left, top: Math.max(minY, top), width };

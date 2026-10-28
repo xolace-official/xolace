@@ -1,9 +1,4 @@
-/**
- * Root layout — wraps the entire app in providers and renders the tab navigation.
- *
- * Provider order: RootProvider (gestures, keyboard, theme, HeroUI) → NavThemeProvider (React Navigation).
- * See src/providers/root-provider.tsx to add your own providers (auth, analytics, etc.).
- */
+/** Root layout: providers (RootProvider, then NavThemeProvider) around the route groups. */
 import "@/lib/clerk-online-polyfill";
 import "@/global.css";
 import "@/lib/theme-bootstrap";
@@ -48,7 +43,6 @@ import { useAppStore } from "@/store/store";
 Sentry.init({
 	dsn: process.env.EXPO_PUBLIC_SENTRY_DNS,
 
-	// Enable Logs
 	enableLogs: true,
 
 	// Label events so dev traffic never mixes with production in the dashboard.
@@ -56,21 +50,16 @@ Sentry.init({
 	integrations: __DEV__ ? [] : [Sentry.mobileReplayIntegration()],
 	replaysOnErrorSampleRate: __DEV__ ? 0 : 1,
 
-	// Session Replay — production only, so dev sessions don't pollute prod data.
+	// Session Replay in production only.
 	replaysSessionSampleRate: __DEV__ ? 0 : 0.1,
 
-	// Don't auto-collect IP/cookies/device PII. We attach only the userId we
-	// need for the auth-guard breadcrumb trail via Sentry.setUser below.
+	// No auto-collected PII; only the userId for the auth-guard breadcrumbs via Sentry.setUser.
 	sendDefaultPii: false,
-
-	// uncomment the line below to enable Spotlight (https://spotlightjs.com)
-	// spotlight: __DEV__,
 });
 
-// Per-route navigation metrics (cold_ttr / warm_ttr / per-route tti). Must run
-// at module scope before any screen mounts — toggling it after mount throws.
-// `q` is the raw Browse search query (may be a crisis term, never logged —
-// see crisisTerms.ts); keep it out of exported navigation metrics.
+// Must run at module scope before any screen mounts; toggling after mount throws.
+// `q` is the raw Browse search query (may be a crisis term, see crisisTerms.ts);
+// keep it out of exported navigation metrics.
 Observe.configure({
 	integrations: { "expo-router": { filteredParams: ["q"] } },
 });
@@ -79,13 +68,13 @@ SplashScreen.preventAutoHideAsync();
 
 Settings.enableSound(false);
 Settings.preloadPresets([
-	"Herald", // mirrorArrival — peak haptic, must be instant
+	"Herald", // mirrorArrival, must be instant
 	"Bloom", // sessionComplete
 	"Feather", // gentlePresence, onboarding transitions
 	"Propel", // form submit
 	"Strike", // affirmativePress
 	"Cascade", // onboardingEntrance
-	"BellToll", // followUpEntrance — plays on mount, must not lag
+	"BellToll", // followUpEntrance, plays on mount
 	"Wobble", // errorNotice, clarifyState mount
 	"Peal", // escalationState mount
 	"Flick", // carousel advance, textureSelect
@@ -93,20 +82,17 @@ Settings.preloadPresets([
 	"Chirp", // resonanceToggle, lighter mood
 	"Murmur", // peerReflections mount, unsure mood
 	"Breath", // processingBreath fallback
-	"Swell", // insights overall dial fill — plays on mount
+	"Swell", // insights overall dial fill, plays on mount
 ]);
 
-// Root route error fallback. Expo Router's boundary swallows render crashes
-// (nothing auto-reports them), so RouteError reports to Sentry and Observe
-// itself, then shows a calm themed screen instead of the raw error text.
+// Expo Router's boundary swallows render crashes, so RouteError reports to
+// Sentry and Observe itself before showing a themed screen.
 export { RouteError as ErrorBoundary } from "@/components/shared/route-error";
 
 const NO_HEADER = { headerShown: false };
-// The root stack only ever swaps route groups, and its state is computed from
-// the URL before the guards settle: on a cold start it already holds the first
-// group that matches `/` when the loader lifts, and Stack.Protected then
-// replaces it with the right one. Animating that replacement reads as a push
-// into the home screen, so group swaps cut instead.
+// The root stack only swaps route groups, and on a cold start Stack.Protected
+// replaces the first group matching `/` with the right one; animating that
+// replacement reads as a push into home, so group swaps cut instead.
 const ROOT_SCREEN_OPTIONS = { animation: "none", headerShown: false } as const;
 
 const AppContent = () => {
@@ -115,18 +101,15 @@ const AppContent = () => {
 	const { isSignedIn, isLoaded: isClerkLoaded, userId } = useAuth();
 	const posthog = usePostHog();
 
-	// The intake gate (T6, issue #263). Hoisted to the root — with
-	// usePostHogIdentity, which reads the same query — so the root is the single
-	// subscriber and Convex dedupes every downstream read.
+	// The intake gate (T6, #263), hoisted so the root is the single subscriber
+	// and Convex dedupes every downstream read.
 	const context = useFullContext(!isAuthenticated);
 	usePostHogIdentity();
 	const onboardingComplete = context?.profile.onboardingComplete === true;
 	const intakeGateLoading = isAuthenticated && context === undefined;
 
-	// Record the exact inputs to the route-group guard on every change. On a prod
-	// cold start where the user is wrongly sent to (auth), this breadcrumb trail
-	// shows whether Clerk loaded signed-out (cache miss) or Clerk is signed-in
-	// while Convex never authenticated (desync) — the two have different fixes.
+	// Breadcrumb the route-group guard's inputs: a wrong (auth) landing on a cold
+	// start is either a Clerk cache miss or a Clerk/Convex desync.
 	useEffect(() => {
 		Sentry.setUser(userId ? { id: userId } : null);
 		const group = isAuthenticated
@@ -182,14 +165,14 @@ const AppContent = () => {
 		}
 	}, [pathname, params, posthog]);
 
-	// Hold the loader while the gate query is in flight rather than rendering
-	// (protected) optimistically and bouncing the user out of it a frame later.
+	// Hold the loader while the gate query is in flight rather than bouncing
+	// the user out of (protected) a frame later.
 	if (isAuthLoading || intakeGateLoading) {
 		return <FullRippleLoader />;
 	}
 	return (
 		<>
-			{/* Above every route group so it outlives (protected) — see the component. */}
+			{/* Above every route group so it outlives (protected); see the component. */}
 			<ChatLocalDataGuard />
 			<ReflectDraftGuard />
 			<Stack screenOptions={ROOT_SCREEN_OPTIONS}>
@@ -210,13 +193,7 @@ const AppContent = () => {
 	);
 };
 
-/**
- * Wraps the app content with root providers and a navigation theme built from the active app palette.
- *
- * `NavThemeProvider` must sit inside `RootProvider`, which owns the theme context it reads from.
- *
- * @returns The root layout element that provides app-wide context and a navigation theme.
- */
+/** `NavThemeProvider` must sit inside `RootProvider`, which owns the theme context it reads. */
 function RootLayout() {
 	const setIsVersionChecked = useAppStore((s) => s.setIsVersionChecked);
 	const setIsNewVersionAvailable = useAppStore(

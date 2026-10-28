@@ -10,13 +10,7 @@ type UseTrackDistanceParams = {
 	trackAngle: number;
 };
 
-/**
- * Total distance the overlay must travel to fully traverse the container at a given angle.
- * Equals the projection span of the rectangle onto the track direction:
- *   W·|cos α| + H·|sin α|
- *
- * 0° → W, 90° → H, diagonal → √(W² + H²).
- */
+/** Distance the overlay travels to traverse the container at an angle: W·|cos α| + H·|sin α|. */
 export const useTrackDistance = ({
 	containerWidth,
 	containerHeight,

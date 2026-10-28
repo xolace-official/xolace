@@ -17,11 +17,8 @@ const LIP_BY_VARIANT: Record<string, string> = {
 // HeroUI's button corner (radius-3xl) under Playful's --radius.
 const BUTTON_RADIUS = 16;
 
-/**
- * HeroUI's Button, plus the Playful press-down: under Playful the lip moves
- * out of the button's border into a PlayfulLip slab, and the face sinks onto
- * it while held. Every other theme gets HeroUI's Button untouched.
- */
+/** HeroUI's Button plus the Playful press-down: the lip becomes a PlayfulLip slab and the face
+ * sinks onto it. */
 function PlayfulAwareButton(props: ButtonProps) {
 	const isPlayful = useIsPlayful();
 	const press = usePlayfulPress();

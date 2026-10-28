@@ -58,16 +58,8 @@ export type SettingsRowProps =
 	| ActionProps
 	| NavProps;
 
-/**
- * A single settings row supporting four display variants:
- * - `value`   — label on the left, muted text value on the right (optionally tappable)
- * - `toggle`  — label on the left, animated Switch on the right
- * - `chevron` — label on the left, chevron arrow on the right (always tappable)
- * - `action`  — full-width pressable label (e.g. "Log out")
- *
- * Pass `isLast` to suppress the bottom separator on the final row of a section.
- * Pass `danger` to render the label in the danger/error color.
- */
+/** One settings row: `value`, `toggle`, `chevron` or `action` variant. `isLast` drops the
+ * separator. */
 export const SettingsRow = (props: SettingsRowProps) => {
 	const { label, icon, danger = false, isLast = false, className } = props;
 	const mutedColor = useThemeColor("muted") as string;
@@ -96,8 +88,7 @@ export const SettingsRow = (props: SettingsRowProps) => {
 		}
 
 		if (props.variant === "toggle") {
-			// On and off are deliberately distinguishable: a toggle that feels
-			// identical in both directions tells you it moved but not where it landed.
+			// On and off are distinguishable so the haptic says where the toggle landed.
 			return (
 				<Switch
 					accessibilityLabel={label}
@@ -169,8 +160,8 @@ export const SettingsRow = (props: SettingsRowProps) => {
 						props.variant === "action" ||
 						props.variant === "nav"
 							? () => {
-									// A `danger` row only opens a confirmation — the weight
-									// belongs on the confirm, not on reaching for it.
+									// A `danger` row only opens a confirmation; the weight belongs
+									// on the confirm.
 									playSoftPress();
 									props.onPress?.();
 								}
