@@ -16,6 +16,7 @@ import {
 	supportNeedValidator,
 	talkIssueValidator,
 	talkPeakValidator,
+	trackSoundValidator,
 	triggerTypeValidator,
 } from "./lib/validators";
 import {
@@ -111,6 +112,8 @@ export default defineSchema({
 		seriesTitle: v.optional(v.string()), // denormalised for browse tiles
 		sha256: v.string(), // audio re-ingest idempotency
 		slug: v.string(), // stable id: binding + idempotent re-ingest
+		// music-family: what a listening review heard (lib/validators.ts trackSoundValidator)
+		sound: v.optional(trackSoundValidator),
 		sourceTags: v.array(v.string()), // raw, unedited source tags (e.g. Pixabay), preserved losslessly
 		tags: v.array(v.string()), // curated: shared emotion/theme vocab, binder-scored, both families
 		thumbhash: v.optional(v.string()), // base64 ThumbHash of the thumb, the blurred placeholder while it loads

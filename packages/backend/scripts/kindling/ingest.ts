@@ -73,6 +73,7 @@ type MusicTrack = SharedFields & {
 	family: "music";
 	licence: Record<string, unknown>;
 	secondaryTopic?: string; // another music_topic_* it also lists under in Browse
+	sound?: Record<string, unknown>; // what a listening review heard (describe-music.ts)
 	whatItsFor?: string; // one line, embedded with title + tags (#572)
 };
 type ManifestTrack = SupportTrack | MusicTrack;

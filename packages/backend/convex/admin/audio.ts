@@ -5,7 +5,7 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { r2, reindexTrack } from "../ai/paths/audioTracks";
 import { CATALOG_BY_KEY, TOPIC_SLUGS, topicTitle } from "../ai/paths/catalog";
 import { adminMutation, adminQuery } from "../lib/adminAuth";
-import { licenceValidator } from "../lib/validators";
+import { licenceValidator, trackSoundValidator } from "../lib/validators";
 import { trackSearchTextOf } from "../library/searchText";
 import schema from "../schema";
 import { ADMIN_LIST_LIMIT, adminStamp, assertSlug, notFound } from "./edits";
@@ -48,6 +48,7 @@ const trackRow = v.object({
 	series: v.optional(v.string()),
 	seriesTitle: v.optional(v.string()),
 	slug: v.string(),
+	sound: v.optional(trackSoundValidator),
 	sourceTags: v.array(v.string()),
 	tags: v.array(v.string()),
 	tier: v.optional(v.number()),
@@ -81,6 +82,7 @@ const toRow = (t: Doc<"audio_tracks">): Infer<typeof trackRow> => ({
 	series: t.series,
 	seriesTitle: t.seriesTitle,
 	slug: t.slug,
+	sound: t.sound,
 	sourceTags: t.sourceTags,
 	tags: t.tags,
 	tier: t.tier,

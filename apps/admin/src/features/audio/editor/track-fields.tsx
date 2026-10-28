@@ -27,7 +27,7 @@ import {
 } from "@xolace/ui/components/tags-input";
 import { Textarea } from "@xolace/ui/components/textarea";
 
-import type { TrackLicence } from "../types";
+import type { TrackLicence, TrackSound } from "../types";
 import { topicId, topicSlug } from "../types";
 import { useTrackEditor } from "./track-editor-provider";
 
@@ -139,7 +139,50 @@ export function TrackTagFields() {
 					As the source published them. Kept for search, never edited.
 				</FieldDescription>
 			</Field>
+			{track.sound ? <SoundFacts sound={track.sound} /> : null}
 		</FieldGroup>
+	);
+}
+
+/** What the listening review heard. Read-only: the review file is its source. */
+function SoundFacts({ sound }: { sound: TrackSound }) {
+	const facts = [
+		`Vocals: ${sound.vocals}`,
+		`Energy ${sound.energy}/5`,
+		sound.valence === undefined ? undefined : `Brightness ${sound.valence}/5`,
+		sound.beat && `Beat: ${sound.beat}`,
+		sound.arc && `Shape: ${sound.arc.replaceAll("_", " ")}`,
+		sound.jolts ? "Has a sudden loud moment" : undefined,
+		sound.lyrics && sound.lyrics !== "none"
+			? `Lyrics: ${sound.lyrics}`
+			: undefined,
+		sound.instruments?.length
+			? `Instruments: ${sound.instruments.join(", ")}`
+			: undefined,
+		sound.natureSounds?.length
+			? `Nature: ${sound.natureSounds.join(", ")}`
+			: undefined,
+		sound.alsoFits?.length
+			? `Also fits: ${sound.alsoFits.map((t) => t.replaceAll("_", " ")).join(", ")}`
+			: undefined,
+	].filter((fact): fact is string => !!fact);
+
+	return (
+		<Field>
+			<FieldLabel>What it sounds like</FieldLabel>
+			<p className="type-body text-ink">{sound.heard}</p>
+			<span className="flex flex-wrap gap-1.5">
+				{facts.map((fact) => (
+					<Badge key={fact} variant="neutral">
+						{fact}
+					</Badge>
+				))}
+			</span>
+			<FieldDescription>
+				From the listening review (describe-music.ts). Edit the review file, not
+				here.
+			</FieldDescription>
+		</Field>
 	);
 }
 

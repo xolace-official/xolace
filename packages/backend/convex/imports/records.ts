@@ -224,6 +224,7 @@ export const trackRecord = v.union(
 		family: v.literal("music"),
 		licence: licenceValidator,
 		secondaryTopic: musicUpsert.fields.secondaryTopic,
+		sound: musicUpsert.fields.sound,
 		whatItsFor: musicUpsert.fields.whatItsFor,
 	})
 );

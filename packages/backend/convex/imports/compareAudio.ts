@@ -15,7 +15,7 @@ import {
 } from "../admin/uploads";
 import type { trackUpsertValidator } from "../ai/paths/audioTracks";
 import { TOPIC_SLUGS, topicTitle } from "../ai/paths/catalog";
-import type { licenceValidator } from "../lib/validators";
+import type { licenceValidator, trackSoundValidator } from "../lib/validators";
 import {
 	dateField,
 	diffViews,
@@ -100,6 +100,26 @@ const licenceView = (l: Licence | undefined): View => ({
 	"Source URL": { value: showText(l?.sourceUrl) },
 });
 
+/** The listening facts in a line, compared on every field (keys sorted, so stored order can't differ). */
+function soundField(sound: Infer<typeof trackSoundValidator> | undefined) {
+	if (!sound) {
+		return { value: undefined };
+	}
+	const sorted = Object.fromEntries(
+		Object.entries(sound).sort(([a], [b]) => a.localeCompare(b))
+	);
+	return {
+		exact: JSON.stringify(sorted),
+		value: [
+			`vocals ${sound.vocals}`,
+			`energy ${sound.energy}`,
+			sound.jolts ? "jolts" : undefined,
+		]
+			.filter(Boolean)
+			.join(", "),
+	};
+}
+
 function trackView(t: TrackUpsert | Doc<"audio_tracks">): View {
 	const support = t.family === "support";
 	return {
@@ -120,6 +140,7 @@ function trackView(t: TrackUpsert | Doc<"audio_tracks">): View {
 			: {
 					...licenceView(t.licence),
 					"Secondary topic": { value: showText(t.secondaryTopic) },
+					Sound: soundField(t.sound),
 					"What it's for": { value: showText(t.whatItsFor) },
 				}),
 		Audio: hashField(t.sha256),

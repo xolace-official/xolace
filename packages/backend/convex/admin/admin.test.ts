@@ -547,9 +547,11 @@ describe("admin/audio", () => {
 	});
 
 	it("saves a music track's secondary topic, only when it is another music topic", async () => {
+		const sound = { energy: 1, heard: "Soft piano.", vocals: "none" as const };
 		const t = await withTrack({
 			family: "music",
 			slug: "grounding",
+			sound,
 			tier: undefined,
 			topic: "music_topic_calm_peace",
 		});
@@ -568,6 +570,8 @@ describe("admin/audio", () => {
 		});
 		const [row] = await t.query(api.admin.audio.list, {});
 		expect(row.secondaryTopic).toBe("music_topic_meditation");
+		// The editor never sends the listening facts; a save keeps them.
+		expect(row.sound).toEqual(sound);
 		for (const secondaryTopic of [
 			"music_topic_calm_peace",
 			"audio_topic_grief",

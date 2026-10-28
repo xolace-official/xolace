@@ -7,7 +7,7 @@ import {
 	internalQuery,
 	type MutationCtx,
 } from "../../_generated/server";
-import { licenceValidator } from "../../lib/validators";
+import { licenceValidator, trackSoundValidator } from "../../lib/validators";
 import { trackSearchTextOf } from "../../library/searchText";
 import { TOPIC_SLUGS } from "./catalog";
 import { indexSignature, trackNamespaces } from "./trackSearch";
@@ -56,6 +56,7 @@ export const trackUpsertValidator = v.union(
 		...sharedFields,
 		licence: licenceValidator,
 		secondaryTopic: v.optional(v.string()),
+		sound: v.optional(trackSoundValidator),
 		whatItsFor: v.optional(v.string()),
 	})
 );

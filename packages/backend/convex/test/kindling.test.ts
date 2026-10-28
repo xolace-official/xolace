@@ -2003,6 +2003,12 @@ describe("tracks bind on meaning inside the picked topic (#572)", () => {
 			},
 			sha256: "a",
 			slug: "m1",
+			sound: {
+				energy: 1,
+				heard: "Soft solo piano.",
+				jolts: false,
+				vocals: "none" as const,
+			},
 			sourceTags: [],
 			tags: [],
 			thumbKey: "t",
@@ -2020,6 +2026,7 @@ describe("tracks bind on meaning inside the picked topic (#572)", () => {
 			ctx.db.query("audio_tracks").first()
 		);
 		expect(row?.secondaryTopic).toBe("music_topic_meditation");
+		expect(row?.sound).toEqual(track.sound);
 		await expect(upsert("audio_topic_grief")).rejects.toThrow(/secondaryTopic/);
 		await expect(upsert("music_topic_calm_peace")).rejects.toThrow(
 			/secondaryTopic/

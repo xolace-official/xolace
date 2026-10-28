@@ -114,6 +114,7 @@ type Track = {
 	durationSec: number;
 	active?: boolean;
 	secondaryTopic?: string;
+	sound?: Sound;
 	whatItsFor?: string;
 };
 
@@ -150,6 +151,12 @@ type Facts = {
 	/** Language and theme in a few words, or "none". */
 	lyrics: string;
 };
+
+/** What the manifest keeps of a review: `trackSoundValidator` in convex/lib/validators.ts. */
+type Sound = Pick<Answer, "heard" | "vocals" | "energy"> &
+	Partial<Omit<Facts, "lyrics">> & {
+		lyrics?: string;
+	};
 
 /** `audio`: the part of `input` that was audio, when the API says. */
 type Usage = { audio?: number; input: number; output: number; thought: number };
@@ -645,12 +652,35 @@ const ownerCalls = (slug: string) => ({
 	secondaryTopic: reviews[slug]?.secondaryTopic,
 });
 
+/** The review's facts, in a fixed key order so an unchanged one compares equal. */
+function soundOf(r: Review): Sound {
+	return {
+		alsoFits: r.alsoFits,
+		arc: r.arc,
+		beat: r.beat,
+		energy: r.energy,
+		heard: r.heard,
+		instruments: r.instruments,
+		jolts: r.jolts,
+		lyrics: r.lyrics,
+		natureSounds: r.natureSounds,
+		valence: r.valence,
+		vocals: r.vocals,
+	};
+}
+
 function applyReviews() {
 	let changed = 0;
 	for (const t of music) {
-		const line = reviews[t.slug]?.whatItsFor.trim();
+		const r = reviews[t.slug];
+		const line = r?.whatItsFor.trim();
 		if (line && line !== t.whatItsFor) {
 			t.whatItsFor = line;
+			changed++;
+		}
+		const sound = r && soundOf(r);
+		if (sound && JSON.stringify(sound) !== JSON.stringify(t.sound)) {
+			t.sound = sound;
 			changed++;
 		}
 		// The owner's secondary topic, decided at the moves.

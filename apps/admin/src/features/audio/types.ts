@@ -24,6 +24,23 @@ export interface TrackLicence {
 	sourceUrl: string;
 }
 
+/** `trackSoundValidator`: what a listening review heard in a music track. */
+export interface TrackSound {
+	alsoFits?: string[];
+	arc?: string;
+	beat?: string;
+	/** 1 still to 5 intense. */
+	energy: number;
+	heard: string;
+	instruments?: string[];
+	jolts?: boolean;
+	lyrics?: string;
+	natureSounds?: string[];
+	/** 1 dark to 5 bright. */
+	valence?: number;
+	vocals: string;
+}
+
 export interface AudioTrack {
 	active: boolean;
 	durationSec: number;
@@ -45,6 +62,8 @@ export interface AudioTrack {
 	series?: string;
 	seriesTitle?: string;
 	slug: string;
+	/** Music only, read-only here: written by the listening review. */
+	sound?: TrackSound;
 	/** Raw tags from the source (Pixabay), kept as they came. */
 	sourceTags: string[];
 	status: ContentStatus;
