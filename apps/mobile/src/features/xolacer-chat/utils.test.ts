@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sortByPresence } from "@/src/features/xolacer-chat/presence-ordering";
+import { sortByPresence } from "@/features/xolacer-chat/presence-ordering";
 import {
 	type ConversationStatus,
 	daysUntil,
@@ -7,7 +7,7 @@ import {
 	hasSpoken,
 	resolveMessageIdentity,
 	unreadBadge,
-} from "@/src/features/xolacer-chat/utils";
+} from "@/features/xolacer-chat/utils";
 
 describe("declineCooldownActive", () => {
 	const DAY = 86_400_000;

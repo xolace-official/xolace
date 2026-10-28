@@ -5,11 +5,11 @@ import Animated, {
 	FadeIn,
 	FadeOut,
 } from "react-native-reanimated";
-import { PillButton } from "@/src/components/shared/pill-button";
-import { Tour } from "@/src/components/ui/tour";
-import { MicButton } from "@/src/features/reflect/components/mic-button";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
-import { a11yHidden } from "@/src/lib/utils";
+import { PillButton } from "@/components/shared/pill-button";
+import { Tour } from "@/components/ui/tour";
+import { MicButton } from "@/features/reflect/components/mic-button";
+import { TOUR_STEPS } from "@/features/reflect/tour-copy";
+import { a11yHidden } from "@/lib/utils";
 
 const SLOT_IN = FadeIn.duration(220);
 const SLOT_OUT = FadeOut.duration(140);

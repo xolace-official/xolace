@@ -6,17 +6,17 @@ import { Stack } from "expo-router";
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { TopBlur } from "@/src/components/shared/top-blur";
-import { UpsellScrollContext } from "@/src/features/insights/compounding-upsell";
-import { CAVEAT, type InsightsView } from "@/src/features/insights/domains";
-import { InsightsSkeleton } from "@/src/features/insights/insights-skeleton";
-import { OverallDial } from "@/src/features/insights/overall-dial";
-import { PartsOfLife } from "@/src/features/insights/parts-of-life";
-import { useHour } from "@/src/features/insights/use-hour";
-import { AuroraArc } from "@/src/features/profile/components/aurora-arc";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { useStableQuery } from "@/src/lib/convex/use-stable-query";
+import { AppText } from "@/components/shared/app-text";
+import { TopBlur } from "@/components/shared/top-blur";
+import { UpsellScrollContext } from "@/features/insights/compounding-upsell";
+import { CAVEAT, type InsightsView } from "@/features/insights/domains";
+import { InsightsSkeleton } from "@/features/insights/insights-skeleton";
+import { OverallDial } from "@/features/insights/overall-dial";
+import { PartsOfLife } from "@/features/insights/parts-of-life";
+import { useHour } from "@/features/insights/use-hour";
+import { AuroraArc } from "@/features/profile/components/aurora-arc";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { useStableQuery } from "@/lib/convex/use-stable-query";
 
 export function InsightsScreen() {
 	const insets = useSafeAreaInsets();

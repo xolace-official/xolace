@@ -6,12 +6,12 @@ import { EaseView } from "react-native-ease/uniwind";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { DuskDriftBackdrop } from "@/src/features/onboarding/components/dusk-drift-backdrop";
-import { MoodMarquee } from "@/src/features/onboarding/components/mood-marquee";
-import { MOODS } from "@/src/features/onboarding/moods";
-import { playGentlePresence, playOnboardingEntrance } from "@/src/lib/haptics";
-import { useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { DuskDriftBackdrop } from "@/features/onboarding/components/dusk-drift-backdrop";
+import { MoodMarquee } from "@/features/onboarding/components/mood-marquee";
+import { MOODS } from "@/features/onboarding/moods";
+import { playGentlePresence, playOnboardingEntrance } from "@/lib/haptics";
+import { useAppStore } from "@/store/store";
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const EASE_INITIAL_SLIDE = { opacity: 0, translateY: 20 };

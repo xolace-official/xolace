@@ -6,8 +6,8 @@ import Animated, {
 	useDerivedValue,
 	withTiming,
 } from "react-native-reanimated";
-import { AnimatedBlurView } from "@/src/components/animated-blur-view";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { AnimatedBlurView } from "@/components/animated-blur-view";
+import { useAppTheme } from "@/context/app-theme-context";
 import { TrayContext } from "./tray-context";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);

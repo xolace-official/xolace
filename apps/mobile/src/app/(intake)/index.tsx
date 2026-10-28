@@ -5,14 +5,14 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { trackIntakeStarted } from "@/src/features/intake/analytics";
-import { FounderMarquee } from "@/src/features/intake/founder-message/founder-marquee";
-import { LetterBody } from "@/src/features/intake/founder-message/letter-body";
-import { FOUNDER_MESSAGE } from "@/src/features/intake/founder-message/letter-copy";
-import { IntakeBlank } from "@/src/features/intake/questionnaire/intake-screen";
-import { GateFade } from "@/src/features/profile/components/gate-fade";
-import { useFullContext } from "@/src/lib/convex/use-full-context";
+import { AppText } from "@/components/shared/app-text";
+import { trackIntakeStarted } from "@/features/intake/analytics";
+import { FounderMarquee } from "@/features/intake/founder-message/founder-marquee";
+import { LetterBody } from "@/features/intake/founder-message/letter-body";
+import { FOUNDER_MESSAGE } from "@/features/intake/founder-message/letter-copy";
+import { IntakeBlank } from "@/features/intake/questionnaire/intake-screen";
+import { GateFade } from "@/features/profile/components/gate-fade";
+import { useFullContext } from "@/lib/convex/use-full-context";
 
 /**
  * The founder message — first screen of intake, and where a cold kill mid-intake

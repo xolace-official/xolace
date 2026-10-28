@@ -2,12 +2,12 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback, Spinner, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
-import { AppText } from "@/src/components/shared/app-text";
-import { useRevenueCat } from "@/src/features/purchases/revenuecat-context";
+import { AppText } from "@/components/shared/app-text";
+import { useRevenueCat } from "@/features/purchases/revenuecat-context";
 import {
 	type PaywallSurface,
 	usePaywall,
-} from "@/src/features/purchases/use-paywall";
+} from "@/features/purchases/use-paywall";
 
 const CLOSE_ICON_NAME = {
 	android: "close",

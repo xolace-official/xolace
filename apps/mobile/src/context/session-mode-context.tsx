@@ -10,7 +10,7 @@ import {
 } from "react";
 import { AppState, type AppStateStatus } from "react-native";
 import { Uniwind } from "uniwind";
-import { useAppStore } from "@/src/store/store";
+import { useAppStore } from "@/store/store";
 
 export type SessionMode = "day" | "night";
 

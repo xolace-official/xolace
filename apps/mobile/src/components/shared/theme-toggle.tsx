@@ -4,9 +4,9 @@ import { useThemeColor } from "heroui-native";
 import type { FC } from "react";
 import { TouchableOpacity } from "react-native";
 import Animated, { FadeOut, ZoomIn } from "react-native-reanimated";
-import { useAppTheme } from "@/src/context/app-theme-context";
-import { playSoftPress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+import { useAppTheme } from "@/context/app-theme-context";
+import { playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 const MOON_ICON = {
 	android: "dark_mode",

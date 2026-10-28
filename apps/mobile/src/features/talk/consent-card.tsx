@@ -4,18 +4,18 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
+import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
 import {
 	MIN_TALK_S,
 	PRIVACY_LINE,
 	TALK_TIME_RESETS,
 	talkTimeLine,
-} from "@/src/features/talk/talk-copy";
-import { TalkVoicePicker } from "@/src/features/talk/talk-voice-picker";
-import { useCompanionName } from "@/src/features/talk/use-companion-name";
-import type { Talk } from "@/src/features/talk/use-talk";
-import { useTalkTime } from "@/src/features/talk/use-talk-time";
+} from "@/features/talk/talk-copy";
+import { TalkVoicePicker } from "@/features/talk/talk-voice-picker";
+import { useCompanionName } from "@/features/talk/use-companion-name";
+import type { Talk } from "@/features/talk/use-talk";
+import { useTalkTime } from "@/features/talk/use-talk-time";
 
 function Row({
 	icon,

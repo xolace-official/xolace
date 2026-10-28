@@ -7,7 +7,7 @@
  * who declined to say what brought them here has not handed us permission to
  * tell them what they came for.
  */
-import type { IntakeAnswers } from "@/src/store/intake-slice";
+import type { IntakeAnswers } from "@/store/intake-slice";
 
 type Intent = NonNullable<IntakeAnswers["intent"]>;
 

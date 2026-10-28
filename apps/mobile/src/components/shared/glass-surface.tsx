@@ -5,7 +5,7 @@ import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { useThemeColor } from "heroui-native";
 import type { ReactNode } from "react";
 import { View, type ViewStyle } from "react-native";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { useAppTheme } from "@/context/app-theme-context";
 
 // heroui-native's token union only knows built-ins; custom tokens (ember, …) resolve fine at runtime.
 const useToken = useThemeColor as (t: string) => string;

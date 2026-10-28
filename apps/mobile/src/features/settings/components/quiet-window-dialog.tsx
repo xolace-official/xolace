@@ -1,8 +1,8 @@
 import { Button, Dialog, Radio, RadioGroup, Separator } from "heroui-native";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
-import { AppText } from "@/src/components/shared/app-text";
+import { DialogBlurBackdrop } from "@/components/dialog-blur-backdrop";
+import { AppText } from "@/components/shared/app-text";
 
 const BEFORE_OPTIONS = [
 	{ label: "5 am", value: 5 },

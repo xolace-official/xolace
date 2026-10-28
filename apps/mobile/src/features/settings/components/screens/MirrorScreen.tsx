@@ -2,19 +2,19 @@ import { SymbolView } from "expo-symbols";
 import { RadioGroup, Separator, useThemeColor } from "heroui-native";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
-import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
-import { VoiceSection } from "@/src/features/settings/components/voice-section";
+import { AppText } from "@/components/shared/app-text";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
+import type { CrossPlatformSymbol } from "@/features/settings/components/settings-icons";
+import { SettingsSection } from "@/features/settings/components/settings-section";
+import { VoiceSection } from "@/features/settings/components/voice-section";
 import {
 	type MirrorTone,
 	useMirrorSettings,
-} from "@/src/features/settings/hooks/use-mirror-settings";
-import { TalkStyleSection } from "@/src/features/talk/talk-style-section";
-import { cn } from "@/src/lib/utils";
+} from "@/features/settings/hooks/use-mirror-settings";
+import { TalkStyleSection } from "@/features/talk/talk-style-section";
+import { cn } from "@/lib/utils";
 
 type ToneOption = {
 	value: MirrorTone;

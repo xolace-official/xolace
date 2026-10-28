@@ -4,9 +4,9 @@ import { LinkButton } from "heroui-native";
 import { useEffect } from "react";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { GaveUpFeedbackCard } from "@/src/features/reflect/components/gave-up-feedback-card";
-import { playCompassionateHold } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { GaveUpFeedbackCard } from "@/features/reflect/components/gave-up-feedback-card";
+import { playCompassionateHold } from "@/lib/haptics";
 
 type Props = {
 	onPathSelection: () => void;

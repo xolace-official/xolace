@@ -1,4 +1,4 @@
-import type { ReflectionStateName } from "@/src/features/reflect/types";
+import type { ReflectionStateName } from "@/features/reflect/types";
 
 /** Reanimated's default easing: Easing.inOut(Easing.quad) as cubic bezier */
 const QUAD_EASE_IN_OUT: [number, number, number, number] = [

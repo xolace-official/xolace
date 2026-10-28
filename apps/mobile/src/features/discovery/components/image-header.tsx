@@ -4,15 +4,15 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { AppText } from "@/components/shared/app-text";
+import { useAppTheme } from "@/context/app-theme-context";
 import {
 	DISPLAY_LEAD,
 	DISPLAY_TAIL,
 	getDateStamp,
 	getGreeting,
-} from "@/src/features/discovery/greeting";
-import { useProfileSummary } from "@/src/features/profile/hooks/use-profile-summary";
+} from "@/features/discovery/greeting";
+import { useProfileSummary } from "@/features/profile/hooks/use-profile-summary";
 
 const ART = require("@/assets/images/illustrations/discovery-image-bg.png");
 

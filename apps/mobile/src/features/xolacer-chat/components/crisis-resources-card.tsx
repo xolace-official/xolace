@@ -2,9 +2,9 @@ import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { MessageSystem, type MessageSystemProps } from "stream-chat-expo";
-import { AppText } from "@/src/components/shared/app-text";
-import { ResourceItem } from "@/src/components/shared/resource-item";
-import type { Resource } from "@/src/features/crisis-resources/types";
+import { AppText } from "@/components/shared/app-text";
+import { ResourceItem } from "@/components/shared/resource-item";
+import type { Resource } from "@/features/crisis-resources/types";
 import { useConversationIdentity } from "./message-author";
 
 /** Mirrors `CRISIS_RESOURCES_KIND` in `convex/ai/chat/moderate.ts`. */

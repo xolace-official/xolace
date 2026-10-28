@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 type Props = {
 	tags: string[];

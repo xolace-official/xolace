@@ -3,7 +3,7 @@ import { BlurView, type BlurViewProps } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useThemeColor } from "heroui-native";
 import { Platform, StyleSheet, View } from "react-native";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
 type Props = {
 	position?: "top" | "bottom";

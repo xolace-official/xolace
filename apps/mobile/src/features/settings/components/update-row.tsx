@@ -3,8 +3,8 @@ import { SymbolView } from "expo-symbols";
 import * as Updates from "expo-updates";
 import { useThemeColor } from "heroui-native";
 import { useState } from "react";
-import { REPLAY_ICON } from "@/src/features/settings/components/settings-icons";
-import { SettingsRow } from "@/src/features/settings/components/settings-row";
+import { REPLAY_ICON } from "@/features/settings/components/settings-icons";
+import { SettingsRow } from "@/features/settings/components/settings-row";
 
 // Dev clients load JS from Metro, so there is nothing for EAS Update to swap in.
 const updatesEnabled = Updates.isEnabled && !__DEV__;

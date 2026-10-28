@@ -9,23 +9,23 @@ import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	type BrowseFrom,
 	FAMILY_LABEL,
-} from "@/src/features/browse/components/track-row";
+} from "@/features/browse/components/track-row";
 import {
 	clearNowPlaying,
 	releaseMiniPlayerAttention,
 	setNowPlaying,
 	togglePlayback,
 	useNowPlayingPlayback,
-} from "@/src/features/browse/now-playing/now-playing-store";
-import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { playSoftPress } from "@/src/lib/haptics";
-import { imageSource } from "@/src/lib/image-source";
-import { cn } from "@/src/lib/utils";
+} from "@/features/browse/now-playing/now-playing-store";
+import type { PaywallSurface } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { playSoftPress } from "@/lib/haptics";
+import { imageSource } from "@/lib/image-source";
+import { cn } from "@/lib/utils";
 import { formatTime } from "./format-time";
 import {
 	CrisisLine,

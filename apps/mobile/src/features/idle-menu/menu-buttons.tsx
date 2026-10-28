@@ -3,11 +3,11 @@ import { type SFSymbol, SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { AnimatedRow } from "@/src/features/idle-menu/animated-row";
-import { GlowIcon } from "@/src/features/idle-menu/glow-icon";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { AnimatedRow } from "@/features/idle-menu/animated-row";
+import { GlowIcon } from "@/features/idle-menu/glow-icon";
+import { playSoftPress } from "@/lib/haptics";
+import { useAppStore } from "@/store/store";
 
 type MenuButtonItem = {
 	label: string;

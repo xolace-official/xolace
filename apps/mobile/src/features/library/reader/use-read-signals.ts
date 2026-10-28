@@ -24,10 +24,7 @@ import {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
-import {
-	type ReaderFrom,
-	trackLibrary,
-} from "@/src/features/library/analytics";
+import { type ReaderFrom, trackLibrary } from "@/features/library/analytics";
 
 type EntryId = Id<"library_entries">;
 

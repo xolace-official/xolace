@@ -1,3 +1,3 @@
-import { LibraryHomeScreen } from "@/src/features/library/home/library-home-screen";
+import { LibraryHomeScreen } from "@/features/library/home/library-home-screen";
 
 export default LibraryHomeScreen;

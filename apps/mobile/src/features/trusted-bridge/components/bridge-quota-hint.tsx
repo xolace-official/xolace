@@ -2,8 +2,8 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { PressableFeedback } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
+import { AppText } from "@/components/shared/app-text";
+import { usePaywall } from "@/features/purchases/use-paywall";
 
 /**
  * The quiet line under "Write this together" telling the user how many drafts

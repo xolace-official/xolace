@@ -12,25 +12,25 @@ import {
 import Animated from "react-native-reanimated";
 import { useCSSVariable } from "uniwind";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { CoverImage } from "@/src/features/library/cover-image";
+import { AppText } from "@/components/shared/app-text";
+import { CoverImage } from "@/features/library/cover-image";
 import {
 	COVER_BUTTON,
 	CoverGlass,
-} from "@/src/features/library/reader/cover-glass";
-import { COVER_SCRIM } from "@/src/features/library/reader/cover-palette";
+} from "@/features/library/reader/cover-glass";
+import { COVER_SCRIM } from "@/features/library/reader/cover-palette";
 import {
 	headerCredit,
 	metaLabel,
 	metaLine,
 	prepareBody,
-} from "@/src/features/library/reader/reader-copy";
-import type { ReaderEntry } from "@/src/features/library/reader/reader-screen";
+} from "@/features/library/reader/reader-copy";
+import type { ReaderEntry } from "@/features/library/reader/reader-screen";
 import {
 	logDropped,
 	useRecord,
-} from "@/src/features/library/reader/use-read-signals";
-import { cn } from "@/src/lib/utils";
+} from "@/features/library/reader/use-read-signals";
+import { cn } from "@/lib/utils";
 
 const BACK_ICON = {
 	android: "arrow_back",

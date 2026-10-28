@@ -7,7 +7,7 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { tap } from "@/src/lib/haptics";
+import { tap } from "@/lib/haptics";
 import { AnimatedCarouselCard } from "./animated-carousel-card";
 import { CarouselPaginator } from "./carousel-paginator";
 

@@ -1,13 +1,13 @@
 // Settings → Mirror → Talk (#603): the companion's voice, pace and
 // directness. Each applies from the next talk.
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
-import { TalkChips } from "@/src/features/talk/talk-chips";
-import { TalkVoicePicker } from "@/src/features/talk/talk-voice-picker";
-import { useCompanionName } from "@/src/features/talk/use-companion-name";
-import { useTalkStyle } from "@/src/features/talk/use-talk-style";
+import { AppText } from "@/components/shared/app-text";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { SettingsSection } from "@/features/settings/components/settings-section";
+import { TalkChips } from "@/features/talk/talk-chips";
+import { TalkVoicePicker } from "@/features/talk/talk-voice-picker";
+import { useCompanionName } from "@/features/talk/use-companion-name";
+import { useTalkStyle } from "@/features/talk/use-talk-style";
 
 function Row({
 	label,

@@ -27,24 +27,24 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { AX_FONT_SCALE } from "@/src/features/library/home/entry-cards";
+import { AppText } from "@/components/shared/app-text";
+import { AX_FONT_SCALE } from "@/features/library/home/entry-cards";
 import {
 	AudioDock,
 	BAR_MAX_SCALE,
 	ListenPill,
-} from "@/src/features/library/reader/audio-dock";
-import { BackToTop } from "@/src/features/library/reader/back-to-top";
-import { EndOfRead } from "@/src/features/library/reader/end-of-read";
-import { EntryCredits } from "@/src/features/library/reader/entry-credits";
+} from "@/features/library/reader/audio-dock";
+import { BackToTop } from "@/features/library/reader/back-to-top";
+import { EndOfRead } from "@/features/library/reader/end-of-read";
+import { EntryCredits } from "@/features/library/reader/entry-credits";
 import {
 	ContentNote,
 	FireDim,
 	HelplineLink,
 	ReflectOnThis,
 	ShareButton,
-} from "@/src/features/library/reader/reader-extras";
-import { ReaderPageScope } from "@/src/features/library/reader/reader-page";
+} from "@/features/library/reader/reader-extras";
+import { ReaderPageScope } from "@/features/library/reader/reader-page";
 import {
 	AaButton,
 	BackButton,
@@ -54,16 +54,16 @@ import {
 	SaveButton,
 	SourceCredit,
 	useSaveToggle,
-} from "@/src/features/library/reader/reader-parts";
+} from "@/features/library/reader/reader-parts";
 import {
 	READING_MODES,
 	useReadingFonts,
-} from "@/src/features/library/reader/reading-mode";
-import { useEntryAudio } from "@/src/features/library/reader/use-entry-audio";
-import { useMarkdownStyle } from "@/src/features/library/reader/use-markdown-style";
-import { useReadSignals } from "@/src/features/library/reader/use-read-signals";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/library/reader/reading-mode";
+import { useEntryAudio } from "@/features/library/reader/use-entry-audio";
+import { useMarkdownStyle } from "@/features/library/reader/use-markdown-style";
+import { useReadSignals } from "@/features/library/reader/use-read-signals";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useAppStore } from "@/store/store";
 
 export type ReaderEntry = NonNullable<
 	FunctionReturnType<typeof api.library.entries.getEntry>

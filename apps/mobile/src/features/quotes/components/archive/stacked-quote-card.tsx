@@ -8,10 +8,10 @@ import Animated, {
 	cubicBezier,
 } from "react-native-reanimated";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { formatDate } from "@/src/features/quotes/components/archive/archive-date";
-import { canSeedReflection } from "@/src/features/quotes/components/archive/reply-seed";
-import { ARCHIVE_TINT_VARS } from "@/src/features/quotes/poster-palette";
+import { AppText } from "@/components/shared/app-text";
+import { formatDate } from "@/features/quotes/components/archive/archive-date";
+import { canSeedReflection } from "@/features/quotes/components/archive/reply-seed";
+import { ARCHIVE_TINT_VARS } from "@/features/quotes/poster-palette";
 
 /** The peek band: how much of a closed card the card below it leaves showing. */
 export const PEEK = 146;

@@ -7,23 +7,23 @@ import { useAuth } from "@clerk/expo";
 import { AppMetrics } from "expo-observe";
 import { usePostHog } from "posthog-react-native";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { useDictation } from "@/src/features/reflect/hooks/use-dictation";
-import { useSession } from "@/src/features/reflect/hooks/use-session";
+import { useDictation } from "@/features/reflect/hooks/use-dictation";
+import { useSession } from "@/features/reflect/hooks/use-session";
 import {
 	clearReflectDraft,
 	onReflectDraftWiped,
 	readReflectDraft,
 	usePersistReflectDraft,
-} from "@/src/features/reflect/reflect-draft";
+} from "@/features/reflect/reflect-draft";
 import {
 	extractErrorMessage,
 	isMaxRefinementError,
 	projectScreen,
-} from "@/src/features/reflect/session-service";
+} from "@/features/reflect/session-service";
 import type {
 	FeedbackType,
 	ReflectionStateName,
-} from "@/src/features/reflect/types";
+} from "@/features/reflect/types";
 import { initialState, MAX_TURNS, reducer } from "./reflection-reducer";
 
 // Screens that show a server session's mirror. Processing and error aren't

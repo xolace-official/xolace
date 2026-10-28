@@ -5,10 +5,10 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { ScrollView, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { ShelfTile } from "@/src/features/browse/components/shelf-tile";
-import { useUtcDay } from "@/src/features/browse/use-utc-day";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { ShelfTile } from "@/features/browse/components/shelf-tile";
+import { useUtcDay } from "@/features/browse/use-utc-day";
+import { playSoftPress } from "@/lib/haptics";
 import { LibraryStripSkeleton } from "./skeletons";
 
 const TILE = 132;

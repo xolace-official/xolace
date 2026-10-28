@@ -2,12 +2,12 @@
 // with the date it was written (ADR 0019). Overall ones sit under the overall
 // dial; with a `domain`, that domain's own ones in its detail card.
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	type DomainItem,
 	type Insight,
 	lastSeen,
-} from "@/src/features/insights/domains";
+} from "@/features/insights/domains";
 
 const EYEBROW: Record<Insight["kind"], string> = {
 	absence: "What never comes up",

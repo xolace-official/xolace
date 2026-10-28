@@ -1,4 +1,4 @@
-import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
+import type { PaywallSurface } from "@/features/purchases/use-paywall";
 
 /** Feature row ids rendered by paywall-feature-section.tsx. */
 export type PaywallFeatureId =

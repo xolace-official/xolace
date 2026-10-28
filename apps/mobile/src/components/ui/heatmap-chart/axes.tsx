@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { View } from "react-native";
-import { Text } from "@/src/components/ui/text";
-import { cn } from "@/src/lib/cn";
+import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/cn";
 import {
 	DAYS_IN_WEEK,
 	DEFAULT_AXIS_WIDTH,

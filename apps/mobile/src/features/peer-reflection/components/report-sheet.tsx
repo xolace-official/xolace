@@ -6,7 +6,7 @@ import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 type ReportReason = "offensive" | "self_harm" | "spam" | "other";
 

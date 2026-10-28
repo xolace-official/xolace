@@ -6,18 +6,18 @@ import { ScrollView, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { Presets } from "react-native-pulsar";
-import { AppText } from "@/src/components/shared/app-text";
-import { PillButton } from "@/src/components/shared/pill-button";
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+import { AppText } from "@/components/shared/app-text";
+import { PillButton } from "@/components/shared/pill-button";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
 import {
 	closingQuestion,
 	MISS_REASON_PLACEHOLDER,
-} from "@/src/features/reflect/clarify-copy";
+} from "@/features/reflect/clarify-copy";
 import type {
 	FeedbackType,
 	MissReason,
 	ReflectionAction,
-} from "@/src/features/reflect/types";
+} from "@/features/reflect/types";
 
 type Props = {
 	previousMirror: string;

@@ -4,9 +4,9 @@ import { PressableFeedback, Surface, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { cn } from "@/lib/utils";
 import { CLEAN_POSES, POSE } from "../announcement-poses";
 import { TWIG_PRESENTATION, type Twig } from "../twig-presentation";
 

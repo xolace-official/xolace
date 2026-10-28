@@ -1,6 +1,6 @@
 import { useThemeColor } from "heroui-native";
 import { type DeepPartial, mergeThemes, type Theme } from "stream-chat-expo";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { useAppTheme } from "@/context/app-theme-context";
 
 /**
  * Bridges Xolace theme tokens into Stream's design-token layer.

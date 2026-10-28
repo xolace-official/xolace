@@ -10,38 +10,38 @@
 import { useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
-import type { QuestionnaireAnswers } from "@/src/components/ui/questionnaire";
+import type { QuestionnaireAnswers } from "@/components/ui/questionnaire";
 import {
 	type IntakeStepKey,
 	trackPaywallSkipped,
 	trackQuestionAnswered,
 	trackQuestionnaireCompleted,
 	trackStepViewed,
-} from "@/src/features/intake/analytics";
-import { suggestHandle } from "@/src/features/intake/answer-rules";
-import { BeatStep } from "@/src/features/intake/questionnaire/beat-step";
-import { CompoundingStep } from "@/src/features/intake/questionnaire/compounding-step";
-import { CountStep } from "@/src/features/intake/questionnaire/count-step";
-import { FindingStep } from "@/src/features/intake/questionnaire/finding-step";
-import { IntakeBlank } from "@/src/features/intake/questionnaire/intake-screen";
+} from "@/features/intake/analytics";
+import { suggestHandle } from "@/features/intake/answer-rules";
+import { BeatStep } from "@/features/intake/questionnaire/beat-step";
+import { CompoundingStep } from "@/features/intake/questionnaire/compounding-step";
+import { CountStep } from "@/features/intake/questionnaire/count-step";
+import { FindingStep } from "@/features/intake/questionnaire/finding-step";
+import { IntakeBlank } from "@/features/intake/questionnaire/intake-screen";
 import {
 	PrivacyStep,
 	ShakeStep,
-} from "@/src/features/intake/questionnaire/interstitials";
+} from "@/features/intake/questionnaire/interstitials";
 import {
 	MASCOT_WAVE,
 	MASCOT_WRITING,
-} from "@/src/features/intake/questionnaire/mascot";
-import { NameStep } from "@/src/features/intake/questionnaire/name-step";
+} from "@/features/intake/questionnaire/mascot";
+import { NameStep } from "@/features/intake/questionnaire/name-step";
 import {
 	CarryStep,
 	YouStep,
-} from "@/src/features/intake/questionnaire/section-steps";
-import { useIntakeComplete } from "@/src/features/intake/use-intake-complete";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { useFullContext } from "@/src/lib/convex/use-full-context";
-import type { IntakeAnswers } from "@/src/store/intake-slice";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/intake/questionnaire/section-steps";
+import { useIntakeComplete } from "@/features/intake/use-intake-complete";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { useFullContext } from "@/lib/convex/use-full-context";
+import type { IntakeAnswers } from "@/store/intake-slice";
+import { useAppStore } from "@/store/store";
 
 type Step =
 	| "name"

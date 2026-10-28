@@ -7,13 +7,13 @@
  */
 import { useState } from "react";
 import { Pressable, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	Questionnaire,
 	type QuestionnaireAnswers,
-} from "@/src/components/ui/questionnaire";
-import { MASCOT_MAP } from "@/src/features/intake/questionnaire/mascot";
-import { SectionScreen } from "@/src/features/intake/questionnaire/section-screen";
+} from "@/components/ui/questionnaire";
+import { MASCOT_MAP } from "@/features/intake/questionnaire/mascot";
+import { SectionScreen } from "@/features/intake/questionnaire/section-screen";
 import {
 	SECTION_FINDING,
 	SERIES_BRANCH_VALUE,
@@ -21,9 +21,9 @@ import {
 	SERIES_SEEN_RATINGS,
 	SERIES_WANT_CHOICES,
 	SERIES_WANT_QUESTION,
-} from "@/src/features/intake/questions";
-import { playTextureSelect } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+} from "@/features/intake/questions";
+import { playTextureSelect } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 const BASE = SECTION_FINDING.map((q) => ({ name: q.name, required: true }));
 

@@ -3,13 +3,13 @@ import { PressableFeedback, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	type MirrorTone,
 	MirrorTonePickerDialog,
-} from "@/src/features/settings/components/mirror-tone-picker-dialog";
-import { useSettings } from "@/src/features/settings/hooks/use-settings";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/settings/components/mirror-tone-picker-dialog";
+import { useSettings } from "@/features/settings/hooks/use-settings";
+import { useAppStore } from "@/store/store";
 
 const CLOSE_ICON = { android: "close", ios: "xmark", web: "close" } as const;
 

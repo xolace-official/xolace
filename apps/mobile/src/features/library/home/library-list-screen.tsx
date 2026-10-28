@@ -10,17 +10,17 @@ import { Stack, useIsPreview } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { TrackRow } from "@/src/features/browse/components/track-row";
-import { trackLibrary } from "@/src/features/library/analytics";
-import { CoverImage } from "@/src/features/library/cover-image";
-import { EntryRow } from "@/src/features/library/home/entry-cards";
+import { AppText } from "@/components/shared/app-text";
+import { TrackRow } from "@/features/browse/components/track-row";
+import { trackLibrary } from "@/features/library/analytics";
+import { CoverImage } from "@/features/library/cover-image";
+import { EntryRow } from "@/features/library/home/entry-cards";
 import {
 	facetLabel,
 	KINDS,
 	type Kind,
-} from "@/src/features/library/home/library-copy";
-import { HubSkeleton, RowsSkeleton } from "@/src/features/library/skeletons";
+} from "@/features/library/home/library-copy";
+import { HubSkeleton, RowsSkeleton } from "@/features/library/skeletons";
 
 export type ListBy = { hub: string } | { kind: Kind } | { subject: string };
 

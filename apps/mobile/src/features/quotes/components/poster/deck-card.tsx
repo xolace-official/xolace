@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const ARCHIVE_ICON = {
 	android: "open_in_new",

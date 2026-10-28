@@ -1,8 +1,8 @@
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 
 // Empty stars are the same glyph washed out, not an outline — an outlined
 // star next to filled ones reads as a rating scale, which is what it is.

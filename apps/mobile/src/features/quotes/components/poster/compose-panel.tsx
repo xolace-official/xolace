@@ -6,7 +6,7 @@ import type { TextInputInstance } from "react-native";
 import { StyleSheet, TextInput, View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 /** Mirrors `REPLY_MAX_LENGTH` in convex/dailyQuotes.ts, which is the fence. */
 const REPLY_MAX_LENGTH = 500;

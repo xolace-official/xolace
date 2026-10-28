@@ -8,9 +8,9 @@ import { useWindowDimensions, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { requestPushToken } from "@/src/lib/push-token";
-import { useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { requestPushToken } from "@/lib/push-token";
+import { useAppStore } from "@/store/store";
 
 const NUDGE_EASING: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 const NUDGE_TRANSITION = {

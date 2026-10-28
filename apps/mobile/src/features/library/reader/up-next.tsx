@@ -3,10 +3,10 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useWindowDimensions } from "react-native";
 
-import { PhotoCard, readerHref } from "@/src/features/library/home/entry-cards";
-import { readTimeLine } from "@/src/features/library/home/library-copy";
-import { capitalise } from "@/src/features/library/reader/reader-copy";
-import { useReaderParams } from "@/src/features/library/reader/use-read-signals";
+import { PhotoCard, readerHref } from "@/features/library/home/entry-cards";
+import { readTimeLine } from "@/features/library/home/library-copy";
+import { capitalise } from "@/features/library/reader/reader-copy";
+import { useReaderParams } from "@/features/library/reader/use-read-signals";
 
 // The reader sheet's side padding (`px-6`).
 const GUTTER = 48;

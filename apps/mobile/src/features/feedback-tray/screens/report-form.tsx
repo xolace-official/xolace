@@ -5,9 +5,9 @@ import { Button, PressableFeedback, TextArea, useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { useStableQuery } from "@/src/lib/convex/use-stable-query";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { useStableQuery } from "@/lib/convex/use-stable-query";
+import { cn } from "@/lib/utils";
 import { useTray } from "../engine/tray-provider";
 import { useFeedbackContext } from "../use-feedback-context";
 

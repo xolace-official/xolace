@@ -4,9 +4,9 @@ import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
 
-import { trackLibrary } from "@/src/features/library/analytics";
-import { logDropped } from "@/src/features/library/reader/use-read-signals";
-import { usePlayback } from "@/src/lib/audio/use-playback";
+import { trackLibrary } from "@/features/library/analytics";
+import { logDropped } from "@/features/library/reader/use-read-signals";
+import { usePlayback } from "@/lib/audio/use-playback";
 
 /** The dock's height above the safe area — what the page and Back to top clear. */
 const DOCK_H = 80;

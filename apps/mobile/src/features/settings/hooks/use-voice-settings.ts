@@ -1,7 +1,7 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
-import type { VoiceValue } from "@/src/features/settings/voice-options";
+import type { VoiceValue } from "@/features/settings/voice-options";
 import { usePreferenceMutation } from "./use-preference-mutation";
 
 /**

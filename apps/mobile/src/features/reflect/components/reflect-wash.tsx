@@ -6,8 +6,8 @@ import {
 	vec,
 } from "@shopify/react-native-skia";
 import { StyleSheet, useWindowDimensions } from "react-native";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { buildSweepStops } from "@/src/features/reflect/components/sweep-stops";
+import { useTokenColor } from "@/features/profile/hooks/use-token-color";
+import { buildSweepStops } from "@/features/reflect/components/sweep-stops";
 
 /** Themed sweep wash behind the reflect idle/typing canvas. */
 export const ReflectWash = () => {

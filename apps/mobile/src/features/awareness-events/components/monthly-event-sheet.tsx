@@ -14,10 +14,10 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { posthog } from "@/src/config/posthog";
-import { cn } from "@/src/lib/utils";
-import { useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { posthog } from "@/config/posthog";
+import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/store";
 
 const CTA_ROUTE_ALLOWLIST = ["/(protected)/crisis-resources"] as const;
 

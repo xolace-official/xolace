@@ -3,7 +3,7 @@ import { type PropsWithChildren, useState } from "react";
 import { Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const CONTENT_INITIAL_ANIMATE = { opacity: 0 };
 const CONTENT_ANIMATE = { opacity: 1 };

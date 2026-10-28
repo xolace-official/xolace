@@ -11,10 +11,10 @@ import { useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { Pressable, SectionList, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { trackLibrary } from "@/src/features/library/analytics";
-import { facetLabel } from "@/src/features/library/home/library-copy";
-import { SubjectsSkeleton } from "@/src/features/library/skeletons";
+import { AppText } from "@/components/shared/app-text";
+import { trackLibrary } from "@/features/library/analytics";
+import { facetLabel } from "@/features/library/home/library-copy";
+import { SubjectsSkeleton } from "@/features/library/skeletons";
 
 type Subject = { slug: string; count: number };
 

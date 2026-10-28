@@ -24,26 +24,26 @@ import {
 } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { trackStepViewed } from "@/src/features/intake/analytics";
-import { intentLine } from "@/src/features/intake/paywall/intent-line";
+import { AppText } from "@/components/shared/app-text";
+import { trackStepViewed } from "@/features/intake/analytics";
+import { intentLine } from "@/features/intake/paywall/intent-line";
 import {
 	InsightsOfferCard,
 	KindlingBrowseOfferCard,
 	LimitsOfferCard,
 	XolacersOfferCard,
-} from "@/src/features/intake/paywall/offer-cards";
-import { VoiceOfferCard } from "@/src/features/intake/paywall/voice-offer-card";
+} from "@/features/intake/paywall/offer-cards";
+import { VoiceOfferCard } from "@/features/intake/paywall/voice-offer-card";
 import {
 	IntakeBlank,
 	IntakeScreen,
-} from "@/src/features/intake/questionnaire/intake-screen";
-import { useIntakeComplete } from "@/src/features/intake/use-intake-complete";
-import { GradientText } from "@/src/features/purchases/screens/gradient-text";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/intake/questionnaire/intake-screen";
+import { useIntakeComplete } from "@/features/intake/use-intake-complete";
+import { GradientText } from "@/features/purchases/screens/gradient-text";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { playSoftPress } from "@/lib/haptics";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useAppStore } from "@/store/store";
 
 /** The A/B: the Q2 line on (treatment) vs off (control). */
 export const INTAKE_PERSONALIZED_LINE_FLAG = "intake-paywall-personalized-line";

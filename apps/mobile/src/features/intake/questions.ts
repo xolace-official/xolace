@@ -16,7 +16,7 @@
  * escape hatch.
  */
 import { Platform } from "react-native";
-import type { IntakeAnswers } from "@/src/store/intake-slice";
+import type { IntakeAnswers } from "@/store/intake-slice";
 
 /** Cap on a multi-select question, mirrored server-side in `intake.complete`. */
 export const MAX_SELECTIONS = 3;

@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
-import { posthog } from "@/src/config/posthog";
+import { posthog } from "@/config/posthog";
 import {
 	REFLECT_TOUR_VERSION,
 	shouldShowReflectTour,
-} from "@/src/features/reflect/tour-copy";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/reflect/tour-copy";
+import { useAppStore } from "@/store/store";
 
 /**
  * When the first-install walkthrough runs, and what to record about it.

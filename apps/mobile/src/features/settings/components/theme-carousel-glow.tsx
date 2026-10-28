@@ -6,7 +6,7 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { ScopedTheme } from "uniwind";
-import type { ThemeEntry } from "@/src/lib/themes";
+import type { ThemeEntry } from "@/lib/themes";
 
 const GLOW_OPACITY = 0.16;
 

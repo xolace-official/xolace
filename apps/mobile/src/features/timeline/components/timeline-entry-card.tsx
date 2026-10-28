@@ -2,15 +2,15 @@ import { Link } from "expo-router";
 import { Card, cn, PressableFeedback } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { Presets } from "react-native-pulsar";
-import { AppText } from "@/src/components/shared/app-text";
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+import { AppText } from "@/components/shared/app-text";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
 import {
 	getEmotionEmoji,
 	getEmotionLabel,
 	getPathLabel,
-} from "@/src/features/timeline/emotions";
-import type { TimelineEntry } from "@/src/features/timeline/types";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+} from "@/features/timeline/emotions";
+import type { TimelineEntry } from "@/features/timeline/types";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 type Props = {
 	entry: TimelineEntry;

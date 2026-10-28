@@ -1,6 +1,6 @@
 import * as Notifications from "expo-notifications";
 import { useEffect } from "react";
-import { useUnreadBadge } from "@/src/features/xolacer-chat/use-unread-badge";
+import { useUnreadBadge } from "@/features/xolacer-chat/use-unread-badge";
 
 /**
  * Mirrors Stream's unread total onto the app icon. Renders nothing; mounted

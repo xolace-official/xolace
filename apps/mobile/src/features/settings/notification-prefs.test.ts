@@ -6,7 +6,7 @@ import {
 	gentleRemindersOn,
 	type NotificationPrefs,
 	nextNotificationPrefs,
-} from "@/src/features/settings/notification-prefs";
+} from "@/features/settings/notification-prefs";
 
 const prefs = (
 	partial: Partial<NotificationPrefs> = {}

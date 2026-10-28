@@ -9,16 +9,16 @@ import {
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-import { cardFrame } from "@/src/components/ui/tour/geometry";
-import { TourBackdrop } from "@/src/components/ui/tour/tour-backdrop";
-import { TourCard } from "@/src/components/ui/tour/tour-card";
+import { cardFrame } from "@/components/ui/tour/geometry";
+import { TourBackdrop } from "@/components/ui/tour/tour-backdrop";
+import { TourCard } from "@/components/ui/tour/tour-card";
 import type {
 	TourLabels,
 	TourPlacement,
 	TourShape,
 	TourStepEntry,
-} from "@/src/components/ui/tour/types";
-import { useSpotlight } from "@/src/components/ui/tour/use-spotlight";
+} from "@/components/ui/tour/types";
+import { useSpotlight } from "@/components/ui/tour/use-spotlight";
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 

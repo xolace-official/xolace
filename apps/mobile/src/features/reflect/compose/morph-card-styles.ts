@@ -9,8 +9,8 @@ import {
 import {
 	HANDOFF,
 	useMorphGeometry,
-} from "@/src/features/reflect/compose/morph-geometry";
-import type { CardContent } from "@/src/features/reflect/compose/resolve-card-content";
+} from "@/features/reflect/compose/morph-geometry";
+import type { CardContent } from "@/features/reflect/compose/resolve-card-content";
 
 /** Prompt type scale, resting → composing, per card content scale. */
 const PROMPT_SIZE = {

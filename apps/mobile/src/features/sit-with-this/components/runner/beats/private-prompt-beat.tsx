@@ -2,8 +2,8 @@ import { TextArea, TextField } from "heroui-native";
 import { useRef, useState } from "react";
 import { EaseView } from "react-native-ease/uniwind";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { AppText } from "@/src/components/shared/app-text";
-import { PillButton } from "@/src/components/shared/pill-button";
+import { AppText } from "@/components/shared/app-text";
+import { PillButton } from "@/components/shared/pill-button";
 
 // Input never leaves the device. It is never stored, logged, or sent.
 type Props = {

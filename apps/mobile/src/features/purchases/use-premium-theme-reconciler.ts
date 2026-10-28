@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Uniwind } from "uniwind";
-import { usePreferenceMutation } from "@/src/features/settings/hooks/use-preference-mutation";
-import { useAppStore } from "@/src/store/store";
+import { usePreferenceMutation } from "@/features/settings/hooks/use-preference-mutation";
+import { useAppStore } from "@/store/store";
 import { planPremiumThemeReset } from "./premium-theme-reset";
 import { usePlusEntitlement } from "./use-plus-entitlement";
 

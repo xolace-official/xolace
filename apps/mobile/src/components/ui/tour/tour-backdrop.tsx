@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { type GestureResponderEvent, StyleSheet, View } from "react-native";
 
-import type { Rect } from "@/src/components/ui/tour/types";
+import type { Rect } from "@/components/ui/tour/types";
 
 /** How far a touch may travel and still count as a tap, not a swipe. */
 const TAP_SLOP = 10;

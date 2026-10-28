@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
 /**
  * "Here now", as a dot on the corner of an avatar.

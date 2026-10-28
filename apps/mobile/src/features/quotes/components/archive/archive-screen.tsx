@@ -5,8 +5,8 @@ import { Stack } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { QuoteStack } from "@/src/features/quotes/components/archive/quote-stack";
+import { AppText } from "@/components/shared/app-text";
+import { QuoteStack } from "@/features/quotes/components/archive/quote-stack";
 
 const SCREEN_OPTIONS = {
 	animation: "slide_from_bottom",

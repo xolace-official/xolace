@@ -12,8 +12,8 @@ import Animated, {
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { PillButton } from "@/src/components/shared/pill-button";
+import { AppText } from "@/components/shared/app-text";
+import { PillButton } from "@/components/shared/pill-button";
 
 type ParticleConfig = {
 	x: number;

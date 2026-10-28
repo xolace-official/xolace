@@ -2,19 +2,19 @@ import { Image } from "expo-image";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { PlusValue } from "@/src/features/purchases/components/plus-offer-card";
-import { PLUS_OFFER_DECLINE_LABEL } from "@/src/features/purchases/plus-offer-copy";
+import { AppText } from "@/components/shared/app-text";
+import { PlusValue } from "@/features/purchases/components/plus-offer-card";
+import { PLUS_OFFER_DECLINE_LABEL } from "@/features/purchases/plus-offer-copy";
 import type {
 	PlusOfferMoment,
 	PlusOfferVariant,
-} from "@/src/features/purchases/plus-offer-policy";
-import { usePlusOfferPresence } from "@/src/features/purchases/use-plus-offer-presence";
+} from "@/features/purchases/plus-offer-policy";
+import { usePlusOfferPresence } from "@/features/purchases/use-plus-offer-presence";
 import {
 	riseFrom,
 	riseTransition,
-} from "@/src/features/reflect/components/states/path-choice-card";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+} from "@/features/reflect/components/states/path-choice-card";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const MASCOT = require("@/assets/images/flux/plus-mascot.png");
 const MASCOT_STYLE = {

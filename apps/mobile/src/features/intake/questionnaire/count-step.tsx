@@ -23,9 +23,9 @@ import { useQuery } from "convex/react";
 import { Button } from "heroui-native";
 import { View } from "react-native";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { IntakeScreen } from "@/src/features/intake/questionnaire/intake-screen";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
+import { playSoftPress } from "@/lib/haptics";
 
 export function CountStep({ onDone }: { onDone: () => void }) {
 	const stats = useQuery(api.intake.campfireStats);

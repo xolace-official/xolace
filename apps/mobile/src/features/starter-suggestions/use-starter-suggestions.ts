@@ -1,5 +1,5 @@
-import { shouldShowReflectTour } from "@/src/features/reflect/tour-copy";
-import { useAppStore } from "@/src/store/store";
+import { shouldShowReflectTour } from "@/features/reflect/tour-copy";
+import { useAppStore } from "@/store/store";
 
 type Args = {
 	/** Home is focused and no earlier link of the home sheet chain is up. */

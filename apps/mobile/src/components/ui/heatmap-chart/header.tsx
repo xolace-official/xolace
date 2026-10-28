@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { View, type ViewProps } from "react-native";
-import { Text } from "@/src/components/ui/text";
-import { cn } from "@/src/lib/cn";
+import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/cn";
 import type { Slot } from "./context";
 import { RampKey } from "./legend";
 

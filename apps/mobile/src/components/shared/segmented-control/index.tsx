@@ -11,7 +11,7 @@ import Animated, {
 	withSpring,
 	withTiming,
 } from "react-native-reanimated";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 import type {
 	ItemMeasurements,
 	SegmentedControlContextValue,

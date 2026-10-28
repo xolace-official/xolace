@@ -1,4 +1,4 @@
-import { VentScreen } from "@/src/features/vent/components/screen/vent-screen";
+import { VentScreen } from "@/features/vent/components/screen/vent-screen";
 
 export default function VoiceVentRoute() {
 	return <VentScreen />;

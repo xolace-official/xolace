@@ -1,4 +1,4 @@
-import { XolacerSetupScreen } from "@/src/features/xolacer-chat/setup/xolacer-setup-screen";
+import { XolacerSetupScreen } from "@/features/xolacer-chat/setup/xolacer-setup-screen";
 
 export default function XolacerSetupRoute() {
 	return <XolacerSetupScreen />;

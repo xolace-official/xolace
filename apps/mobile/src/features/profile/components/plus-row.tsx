@@ -2,10 +2,10 @@ import { Image } from "expo-image";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AnimatedDashedBorder } from "@/src/components/shared/animated-dashed-border";
-import { AppText } from "@/src/components/shared/app-text";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AnimatedDashedBorder } from "@/components/shared/animated-dashed-border";
+import { AppText } from "@/components/shared/app-text";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { playSoftPress } from "@/lib/haptics";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const MASCOT = require("@/assets/images/flux/plus-mascot.png");

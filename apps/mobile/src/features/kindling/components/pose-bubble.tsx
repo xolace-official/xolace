@@ -7,8 +7,8 @@ import {
 	POSE,
 	RING_ACCENT,
 	RING_ARC,
-} from "@/src/features/kindling/announcement-poses";
-import { TWIG_PRESENTATION } from "@/src/features/kindling/twig-presentation";
+} from "@/features/kindling/announcement-poses";
+import { TWIG_PRESENTATION } from "@/features/kindling/twig-presentation";
 
 /**
  * One Flux pose in a tinted circle with a decorative partial ring.

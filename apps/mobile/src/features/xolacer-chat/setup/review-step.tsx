@@ -1,6 +1,6 @@
 import { Surface } from "heroui-native";
 import { StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import { SpecialtyChips } from "../components/specialty-chips";
 import { XolacerAvatar } from "../components/xolacer-avatar";
 import type { SetupDraft } from "./steps";

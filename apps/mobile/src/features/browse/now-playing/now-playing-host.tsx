@@ -4,9 +4,9 @@ import {
 	clearNowPlaying,
 	publishPlayback,
 	useNowPlaying,
-} from "@/src/features/browse/now-playing/now-playing-store";
-import { useTrackPlayback } from "@/src/features/browse/use-track-playback";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
+} from "@/features/browse/now-playing/now-playing-store";
+import { useTrackPlayback } from "@/features/browse/use-track-playback";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 
 /**
  * Owns the Browse track's audio above every screen (S4), so closing the

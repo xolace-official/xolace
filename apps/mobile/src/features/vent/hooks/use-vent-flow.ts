@@ -6,19 +6,19 @@ import { useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SharedValue } from "react-native-reanimated";
-import { useVoiceProcessingConsent } from "@/src/features/consent/use-voice-processing-consent";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
+import { useVoiceProcessingConsent } from "@/features/consent/use-voice-processing-consent";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import {
 	claimAudioSession,
 	holdsAudioFocus,
 	releaseAudioFocus,
-} from "@/src/lib/audio/session";
-import { useMeteringRecorder } from "@/src/lib/audio/use-metering-recorder";
+} from "@/lib/audio/session";
+import { useMeteringRecorder } from "@/lib/audio/use-metering-recorder";
 import {
 	playAffirmativePress,
 	playErrorNotice,
 	playSoftPress,
-} from "@/src/lib/haptics";
+} from "@/lib/haptics";
 
 export type VentState =
 	| "idle"

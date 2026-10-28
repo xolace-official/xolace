@@ -6,9 +6,9 @@ import { Button, PressableFeedback, Skeleton, useToast } from "heroui-native";
 import { useState } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { XolacerAvatar } from "@/src/features/xolacer-chat/components/xolacer-avatar";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { XolacerAvatar } from "@/features/xolacer-chat/components/xolacer-avatar";
+import { playSoftPress } from "@/lib/haptics";
 import { RatingPicker } from "./rating-stars";
 
 const HEADER_OPTIONS = {

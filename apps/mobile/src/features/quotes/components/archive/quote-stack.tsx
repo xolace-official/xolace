@@ -5,15 +5,15 @@ import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { canSeedReflection } from "@/src/features/quotes/components/archive/reply-seed";
+import { AppText } from "@/components/shared/app-text";
+import { canSeedReflection } from "@/features/quotes/components/archive/reply-seed";
 import {
 	PEEK,
 	StackedQuoteCard,
-} from "@/src/features/quotes/components/archive/stacked-quote-card";
-import { useSavedQuotes } from "@/src/features/quotes/hooks/use-saved-quotes";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/quotes/components/archive/stacked-quote-card";
+import { useSavedQuotes } from "@/features/quotes/hooks/use-saved-quotes";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useAppStore } from "@/store/store";
 
 /**
  * The kept quotes, one card per row.

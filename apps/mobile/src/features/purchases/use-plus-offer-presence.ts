@@ -1,13 +1,13 @@
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
-import { plusOfferCopy } from "@/src/features/purchases/plus-offer-copy";
+import { plusOfferCopy } from "@/features/purchases/plus-offer-copy";
 import {
 	type PlusOfferMoment,
 	type PlusOfferVariant,
 	plusOfferSurfaceForMoment,
-} from "@/src/features/purchases/plus-offer-policy";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/purchases/plus-offer-policy";
+import { playSoftPress } from "@/lib/haptics";
+import { useAppStore } from "@/store/store";
 
 type Options = {
 	moment: PlusOfferMoment;

@@ -5,13 +5,13 @@
 // side effects execute in import order. Primary install is the first import in
 // app/_layout.tsx; this keeps the provider correct if it is ever loaded
 // independently. See module doc.
-import "@/src/lib/clerk-online-polyfill";
+import "@/lib/clerk-online-polyfill";
 
 import { ClerkProvider } from "@clerk/expo";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import type { ReactNode } from "react";
-import { instrumentedTokenCache } from "@/src/lib/instrumented-token-cache";
+import { instrumentedTokenCache } from "@/lib/instrumented-token-cache";
 import { AccountBootstrapBoundary } from "./account-bootstrap-boundary";
 import { AuthSyncGuard } from "./auth-sync-guard";
 import { useResilientClerkAuth } from "./use-resilient-clerk-auth";

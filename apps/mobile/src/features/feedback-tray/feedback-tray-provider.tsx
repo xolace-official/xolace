@@ -3,7 +3,7 @@ import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useCallback, useEffect } from "react";
 import { DevSettings, Platform } from "react-native";
-import { useAppStore } from "@/src/store/store";
+import { useAppStore } from "@/store/store";
 import { TrayProvider, useTray } from "./engine/tray-provider";
 import { type Trays, trays } from "./screens/registry";
 import { useShakeToOpen } from "./trigger/use-shake-to-open";

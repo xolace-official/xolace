@@ -19,7 +19,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
-import { STORY_BEATS } from "@/src/features/onboarding/story-beats";
+import { STORY_BEATS } from "@/features/onboarding/story-beats";
 
 const GAP = 4;
 

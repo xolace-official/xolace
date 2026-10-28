@@ -4,12 +4,12 @@ import { useRouter } from "expo-router";
 import { Button, PressableFeedback, useToast } from "heroui-native";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	acceptFailureLabel,
 	chatLimitError,
-} from "@/src/features/xolacer-chat/utils";
-import { playSoftPress } from "@/src/lib/haptics";
+} from "@/features/xolacer-chat/utils";
+import { playSoftPress } from "@/lib/haptics";
 import type { ThreadConversation } from "./thread-screen";
 
 /**

@@ -1,4 +1,4 @@
-import type { TimelineEntry } from "@/src/features/timeline/types";
+import type { TimelineEntry } from "@/features/timeline/types";
 
 const now = Date.now();
 const daysAgo = (n: number) => now - n * 24 * 60 * 60 * 1000;

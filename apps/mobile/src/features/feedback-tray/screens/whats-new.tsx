@@ -4,8 +4,8 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect } from "react";
 import { Dimensions, ScrollView, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { useAppStore } from "@/store/store";
 import { LATEST_WHATS_NEW_ID, WHATS_NEW } from "../constants/whats-new";
 
 const LIST_MAX_HEIGHT = Dimensions.get("window").height * 0.5;

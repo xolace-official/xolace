@@ -1,6 +1,6 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
-import { useAccessibilityInfo } from "@/src/helpers/hooks/use-accessability-info";
+import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
 
 /**
  * Tri-state motion preference. Mirrors the light/dark/system shape of `theme`.

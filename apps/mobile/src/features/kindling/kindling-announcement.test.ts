@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shouldOfferKindlingAnnouncement } from "@/src/features/kindling/kindling-announcement";
+import { shouldOfferKindlingAnnouncement } from "@/features/kindling/kindling-announcement";
 
 /**
  * Ways this can fail (written before the function):

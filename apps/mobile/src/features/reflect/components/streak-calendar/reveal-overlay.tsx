@@ -23,9 +23,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { getStreakCopy } from "@/src/features/reflect/streak-copy";
-import { playSessionComplete } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { getStreakCopy } from "@/features/reflect/streak-copy";
+import { playSessionComplete } from "@/lib/haptics";
 import { BlastParticles, type BlastParticlesRef } from "./blast-particles";
 import {
 	BLAST_SPRING,

@@ -17,7 +17,7 @@ import { useMutation } from "convex/react";
 import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useCallback, useState } from "react";
-import { playSoftPress } from "@/src/lib/haptics";
+import { playSoftPress } from "@/lib/haptics";
 
 export type AuthProvider = "apple" | "google";
 

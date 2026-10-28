@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 import { usePathname } from "expo-router";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { useAppTheme } from "@/context/app-theme-context";
 
 /** Submission context for a `product_feedback` row — triage without content. */
 export function useFeedbackContext() {

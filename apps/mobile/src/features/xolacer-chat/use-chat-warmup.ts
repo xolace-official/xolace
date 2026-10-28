@@ -3,7 +3,7 @@ import {
 	chatLocalDataGeneration,
 	chatLocalDataSettled,
 	hydrateChannelsFromCache,
-} from "@/src/features/xolacer-chat/offline-db";
+} from "@/features/xolacer-chat/offline-db";
 import type { ConversationList } from "./components/chats-list";
 import { useStreamConnection } from "./providers/stream-chat-provider";
 

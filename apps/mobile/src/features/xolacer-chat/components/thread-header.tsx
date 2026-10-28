@@ -1,9 +1,9 @@
 import { useRouter } from "expo-router";
 import { PressableFeedback } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { XolacerAvatar } from "@/src/features/xolacer-chat/components/xolacer-avatar";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { XolacerAvatar } from "@/features/xolacer-chat/components/xolacer-avatar";
+import { playSoftPress } from "@/lib/haptics";
 import { formatLongAgo } from "../format-time";
 import type { ThreadConversation } from "./thread-screen";
 import {

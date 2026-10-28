@@ -6,7 +6,7 @@ import {
 	StyleSheet,
 	type TextInstance,
 } from "react-native";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
 /**
  * Drop-in replacement for React Native's Text with default font and theme color applied.

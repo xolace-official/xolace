@@ -16,8 +16,8 @@ import Animated, {
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { CoverImage } from "@/src/features/library/cover-image";
+import { AppText } from "@/components/shared/app-text";
+import { CoverImage } from "@/features/library/cover-image";
 
 type Hub = FunctionReturnType<typeof api.library.home.getHome>["hubs"][number];
 

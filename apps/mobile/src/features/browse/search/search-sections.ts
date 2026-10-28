@@ -1,5 +1,5 @@
 /** Browse search's result sections (#550, #551), shared by the results and each See all. */
-import { FAMILY_LABEL } from "@/src/features/browse/components/track-row";
+import { FAMILY_LABEL } from "@/features/browse/components/track-row";
 
 export type SearchSection = "lantern" | "support" | "music" | "places";
 

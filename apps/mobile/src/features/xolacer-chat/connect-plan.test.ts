@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	type ConnectPlanInput,
 	connectPlan,
-} from "@/src/features/xolacer-chat/connect-plan";
+} from "@/features/xolacer-chat/connect-plan";
 
 const ME = "user_me";
 const OTHER = "user_other";

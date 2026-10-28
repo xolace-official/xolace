@@ -41,7 +41,7 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
 - **Convex reads with user-driven args** (paging, filters, tabs): `useStableQuery` /
   `useStablePaginatedQuery`, so the UI doesn't blank while new args load.
 - **Reanimated:** `.get()` / `.set()` on shared values, never `.value`.
-- **Files** under ~200 lines; imports via the `@/src/` alias.
+- **Files** under ~200 lines; imports via the `@/` alias (`@/*` → `./src/*`; `@/assets/*` and `@/modules/*` keep their top-level folders).
 - **Variants:** `APP_VARIANT` (development/preview/production) picks the bundle id
   (`com.xolaceincorg.xolace.dev` / `.preview` / base). Plain `ios`/`android` builds the
   production id; use the variant scripts.

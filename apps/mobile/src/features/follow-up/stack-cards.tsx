@@ -3,9 +3,9 @@ import { PressableFeedback, useThemeColor } from "heroui-native";
 import { type ComponentProps, useRef, useState } from "react";
 import { View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 // Per card, counted from mount: a chip tap swaps in the next step's cards at
 // the same spot, so a double tap's second half lands on a card that just

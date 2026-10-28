@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSweepStops } from "@/src/features/reflect/components/sweep-stops";
+import { buildSweepStops } from "@/features/reflect/components/sweep-stops";
 
 const TOKENS = {
 	accent: "#ff8844",

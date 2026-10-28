@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useCallback, useEffect, useRef } from "react";
-import { useAppStore } from "@/src/store/store";
+import { useAppStore } from "@/store/store";
 
 type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
 

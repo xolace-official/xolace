@@ -1,8 +1,8 @@
 import { useState } from "react";
-import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
-import type { ReturnWelcomeTier } from "@/src/features/reflect/return-welcome-copy";
-import type { UserVariant } from "@/src/features/reflect/types";
-import { useAppStore } from "@/src/store/store";
+import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
+import type { ReturnWelcomeTier } from "@/features/reflect/return-welcome-copy";
+import type { UserVariant } from "@/features/reflect/types";
+import { useAppStore } from "@/store/store";
 
 type Args = {
 	/** Gate: true only once loaded and sitting on the idle canvas. */

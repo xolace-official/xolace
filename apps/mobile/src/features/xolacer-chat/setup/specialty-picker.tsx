@@ -13,8 +13,8 @@ import Animated, {
 	useAnimatedStyle,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 
 const AnimatedText = Animated.createAnimatedComponent(AppText);
 

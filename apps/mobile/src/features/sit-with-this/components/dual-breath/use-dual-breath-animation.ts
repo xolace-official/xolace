@@ -4,7 +4,7 @@ import {
 	GAP,
 	SHAPE,
 	TOP_CORNERS,
-} from "@/src/features/sit-with-this/components/dual-breath/dual-breath.constants";
+} from "@/features/sit-with-this/components/dual-breath/dual-breath.constants";
 
 function lerp(a: number, b: number, t: number): number {
 	"worklet";

@@ -6,25 +6,25 @@ import { EaseView } from "react-native-ease/uniwind";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Presets } from "react-native-pulsar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
+import { usePaywall } from "@/features/purchases/use-paywall";
 import {
 	HeartBurst,
 	useHeartBurst,
-} from "@/src/features/quotes/components/heart-burst";
-import { ActionRow } from "@/src/features/quotes/components/poster/action-row";
-import { ComposePanel } from "@/src/features/quotes/components/poster/compose-panel";
-import { DeckCard } from "@/src/features/quotes/components/poster/deck-card";
-import { HeroCard } from "@/src/features/quotes/components/poster/hero-card";
-import { PosterBody } from "@/src/features/quotes/components/poster/poster-body";
-import { PosterSourceLine } from "@/src/features/quotes/components/poster/poster-source-line";
-import { StarButton } from "@/src/features/quotes/components/poster/star-button";
-import { PreferenceSetupSheet } from "@/src/features/quotes/components/preference-setup-sheet";
-import { QuoteLoadingAndError } from "@/src/features/quotes/components/quote-loading-and-error";
-import { QuoteShareSheet } from "@/src/features/quotes/components/quote-share-sheet";
-import { SharingCard } from "@/src/features/quotes/components/sharing-card";
-import { useQuoteSharing } from "@/src/features/quotes/hooks/use-quote-sharing";
-import { useTodayQuote } from "@/src/features/quotes/hooks/use-today-quote";
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+} from "@/features/quotes/components/heart-burst";
+import { ActionRow } from "@/features/quotes/components/poster/action-row";
+import { ComposePanel } from "@/features/quotes/components/poster/compose-panel";
+import { DeckCard } from "@/features/quotes/components/poster/deck-card";
+import { HeroCard } from "@/features/quotes/components/poster/hero-card";
+import { PosterBody } from "@/features/quotes/components/poster/poster-body";
+import { PosterSourceLine } from "@/features/quotes/components/poster/poster-source-line";
+import { StarButton } from "@/features/quotes/components/poster/star-button";
+import { PreferenceSetupSheet } from "@/features/quotes/components/preference-setup-sheet";
+import { QuoteLoadingAndError } from "@/features/quotes/components/quote-loading-and-error";
+import { QuoteShareSheet } from "@/features/quotes/components/quote-share-sheet";
+import { SharingCard } from "@/features/quotes/components/sharing-card";
+import { useQuoteSharing } from "@/features/quotes/hooks/use-quote-sharing";
+import { useTodayQuote } from "@/features/quotes/hooks/use-today-quote";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
 
 const EASE_INITIAL = { opacity: 0, translateY: 20 };
 const EASE_ANIMATE = { opacity: 1, translateY: 0 };

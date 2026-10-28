@@ -1,3 +1,3 @@
-import { TopicGridScreen } from "@/src/features/browse/components/topic-grid-screen";
+import { TopicGridScreen } from "@/features/browse/components/topic-grid-screen";
 
 export default TopicGridScreen;

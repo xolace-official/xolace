@@ -8,13 +8,13 @@ import { Button, Dialog } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
 import { View } from "react-native";
-import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
-import { AppText } from "@/src/components/shared/app-text";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { TALK_TIME_RESETS } from "@/src/features/talk/talk-copy";
-import { useCompanionName } from "@/src/features/talk/use-companion-name";
-import { useTalkTime } from "@/src/features/talk/use-talk-time";
+import { DialogBlurBackdrop } from "@/components/dialog-blur-backdrop";
+import { AppText } from "@/components/shared/app-text";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { TALK_TIME_RESETS } from "@/features/talk/talk-copy";
+import { useCompanionName } from "@/features/talk/use-companion-name";
+import { useTalkTime } from "@/features/talk/use-talk-time";
 
 export function useTalkDoor() {
 	const { isPlus, isResolved } = usePlusEntitlement();

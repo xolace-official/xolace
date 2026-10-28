@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
-import { MenuButtons } from "@/src/features/idle-menu/menu-buttons";
+import { MenuButtons } from "@/features/idle-menu/menu-buttons";
 
 type Props = {
 	isOpen: SharedValue<boolean>;

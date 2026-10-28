@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 /**
  * Root route error fallback (exported as `ErrorBoundary` from the root layout).

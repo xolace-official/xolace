@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { useFitFontSize } from "@/src/features/quotes/use-fit-font-size";
+import { AppText } from "@/components/shared/app-text";
+import { useFitFontSize } from "@/features/quotes/use-fit-font-size";
 
 /** the body box is a fraction of the screen, not a literal 300 (SE 233, 17 Pro 306) */
 const BODY_BOX_RATIO = 0.35;

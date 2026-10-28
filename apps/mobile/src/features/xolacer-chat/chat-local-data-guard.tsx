@@ -1,8 +1,8 @@
 import { useAuth } from "@clerk/expo";
 import { useEffect } from "react";
-import { connectPlan } from "@/src/features/xolacer-chat/connect-plan";
-import { resetChatLocalData } from "@/src/features/xolacer-chat/offline-db";
-import { readStreamCredential } from "@/src/features/xolacer-chat/stream-credential";
+import { connectPlan } from "@/features/xolacer-chat/connect-plan";
+import { resetChatLocalData } from "@/features/xolacer-chat/offline-db";
+import { readStreamCredential } from "@/features/xolacer-chat/stream-credential";
 
 /**
  * The single reset choke point for on-device chat data.

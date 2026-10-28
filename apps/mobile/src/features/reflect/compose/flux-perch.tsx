@@ -20,7 +20,7 @@ import {
 	FLUX_SIZE,
 	HANDOFF,
 	useMorphGeometry,
-} from "@/src/features/reflect/compose/morph-geometry";
+} from "@/features/reflect/compose/morph-geometry";
 
 const FLUX = require("@/assets/images/flux/flux-whisper.png");
 

@@ -10,7 +10,7 @@ import Animated, {
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
-import { playSoftPress } from "@/src/lib/haptics";
+import { playSoftPress } from "@/lib/haptics";
 
 type Props = {
 	size: "sm" | "md";

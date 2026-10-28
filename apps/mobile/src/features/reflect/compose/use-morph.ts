@@ -8,7 +8,7 @@ import {
 	withSpring,
 	withTiming,
 } from "react-native-reanimated";
-import { MORPH_SPRING } from "@/src/features/reflect/compose/morph-geometry";
+import { MORPH_SPRING } from "@/features/reflect/compose/morph-geometry";
 
 type Args = {
 	/** True from the moment the reducer leaves `idle`. */

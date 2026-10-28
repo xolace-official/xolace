@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate } from "@/src/features/quotes/components/archive/archive-date";
+import { formatDate } from "@/features/quotes/components/archive/archive-date";
 
 describe("formatDate", () => {
 	it("reads the UTC date string as a local day, not a UTC instant", () => {

@@ -1,10 +1,10 @@
-import { joinDictation } from "@/src/features/reflect/hooks/dictation-transcript";
-import { MAX_TEXTURES } from "@/src/features/reflect/texture-sets";
+import { joinDictation } from "@/features/reflect/hooks/dictation-transcript";
+import { MAX_TEXTURES } from "@/features/reflect/texture-sets";
 import type {
 	EntryType,
 	ReflectionAction,
 	ReflectionState,
-} from "@/src/features/reflect/types";
+} from "@/features/reflect/types";
 
 export const MAX_TURNS = 2;
 

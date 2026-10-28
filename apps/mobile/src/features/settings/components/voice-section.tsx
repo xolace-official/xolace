@@ -7,19 +7,19 @@ import {
 } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
-import { useVoicePreview } from "@/src/features/settings/hooks/use-voice-preview";
-import { useVoiceSettings } from "@/src/features/settings/hooks/use-voice-settings";
+import { AppText } from "@/components/shared/app-text";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
+import { SettingsSection } from "@/features/settings/components/settings-section";
+import { useVoicePreview } from "@/features/settings/hooks/use-voice-preview";
+import { useVoiceSettings } from "@/features/settings/hooks/use-voice-settings";
 import {
 	VOICE_OPTIONS,
 	type VoiceValue,
-} from "@/src/features/settings/voice-options";
-import { playSoftPress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+} from "@/features/settings/voice-options";
+import { playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 

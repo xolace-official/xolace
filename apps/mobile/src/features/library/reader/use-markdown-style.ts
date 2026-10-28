@@ -2,7 +2,7 @@ import { useThemeColor } from "heroui-native";
 import type { MarkdownStyle } from "react-native-enriched-markdown";
 import { useCSSVariable } from "uniwind";
 
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { useAppTheme } from "@/context/app-theme-context";
 import { READING_MODES, type ReadingModeKey } from "./reading-mode";
 
 /**

@@ -8,15 +8,15 @@ import { useEffect, useRef, useState } from "react";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { appConfig } from "@/src/config/app";
-import { useRevenueCat } from "@/src/features/purchases/revenuecat-context";
-import { useIntroEligibility } from "@/src/features/purchases/use-intro-eligibility";
+import { appConfig } from "@/config/app";
+import { useRevenueCat } from "@/features/purchases/revenuecat-context";
+import { useIntroEligibility } from "@/features/purchases/use-intro-eligibility";
 import {
 	type PaywallSurface,
 	usePaywall,
-} from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { useCompanionName } from "@/src/features/talk/use-companion-name";
+} from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { useCompanionName } from "@/features/talk/use-companion-name";
 import { PaywallCta } from "./paywall-cta";
 import { hasFreeTrial, paywallCtaLabel } from "./paywall-cta-label";
 import { PaywallFeatureItem } from "./paywall-feature-item";

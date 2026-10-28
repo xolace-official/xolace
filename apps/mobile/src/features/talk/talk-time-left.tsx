@@ -3,9 +3,9 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { AppText } from "@/src/components/shared/app-text";
-import { talkTimeLine } from "@/src/features/talk/talk-copy";
-import { useTalkTime } from "@/src/features/talk/use-talk-time";
+import { AppText } from "@/components/shared/app-text";
+import { talkTimeLine } from "@/features/talk/talk-copy";
+import { useTalkTime } from "@/features/talk/use-talk-time";
 
 export function TalkTimeLeft({
 	sessionId,

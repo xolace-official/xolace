@@ -7,18 +7,18 @@ import Animated, {
 	type SharedValue,
 	useAnimatedStyle,
 } from "react-native-reanimated";
-import { IdleMenu } from "@/src/features/idle-menu/menu";
-import { ComposeChrome } from "@/src/features/reflect/compose/compose-chrome";
+import { IdleMenu } from "@/features/idle-menu/menu";
+import { ComposeChrome } from "@/features/reflect/compose/compose-chrome";
 import {
 	ComposeSlot,
 	SLOT_BAND_GAP,
 	SLOT_H,
-} from "@/src/features/reflect/compose/compose-slot";
-import { useMorphGeometry } from "@/src/features/reflect/compose/morph-geometry";
-import { TalkTourStep } from "@/src/features/reflect/compose/talk-tour-step";
-import { TextureBand } from "@/src/features/reflect/compose/texture-band";
-import type { ReflectionAction } from "@/src/features/reflect/types";
-import { a11yHidden } from "@/src/lib/utils";
+} from "@/features/reflect/compose/compose-slot";
+import { useMorphGeometry } from "@/features/reflect/compose/morph-geometry";
+import { TalkTourStep } from "@/features/reflect/compose/talk-tour-step";
+import { TextureBand } from "@/features/reflect/compose/texture-band";
+import type { ReflectionAction } from "@/features/reflect/types";
+import { a11yHidden } from "@/lib/utils";
 
 type Props = {
 	progress: SharedValue<number>;

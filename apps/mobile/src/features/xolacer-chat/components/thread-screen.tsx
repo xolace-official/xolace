@@ -4,7 +4,7 @@ import { Stack } from "expo-router";
 import { Button } from "heroui-native";
 import { View } from "react-native";
 import { useOverlayContext } from "stream-chat-expo";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import { useStreamConnection } from "../providers/stream-chat-provider";
 import { useDismissThreadNotifications } from "../use-dismiss-thread-notifications";
 import { useThreadConversation } from "../use-thread-conversation";

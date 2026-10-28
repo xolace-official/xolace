@@ -10,8 +10,8 @@ import { useQuery } from "convex/react";
 import { BottomSheet } from "heroui-native";
 import { ActivityIndicator, useWindowDimensions, View } from "react-native";
 
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
-import { AppText } from "@/src/components/shared/app-text";
+import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
+import { AppText } from "@/components/shared/app-text";
 
 type Props = {
 	entryId: Id<"library_entries">;

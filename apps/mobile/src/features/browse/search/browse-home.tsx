@@ -14,31 +14,28 @@ import { useQuery } from "convex/react";
 import { router, Stack } from "expo-router";
 import { type ReactNode, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { BrowseHubScreen } from "@/src/features/browse/components/browse-hub-screen";
-import { TrackRow } from "@/src/features/browse/components/track-row";
-import { useMiniPlayerInset } from "@/src/features/browse/now-playing/now-playing-store";
-import { PlaceRow } from "@/src/features/browse/search/place-row";
+import { AppText } from "@/components/shared/app-text";
+import { BrowseHubScreen } from "@/features/browse/components/browse-hub-screen";
+import { TrackRow } from "@/features/browse/components/track-row";
+import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
+import { PlaceRow } from "@/features/browse/search/place-row";
 import {
 	useSearchShape,
 	useSearchTap,
-} from "@/src/features/browse/search/search-analytics";
+} from "@/features/browse/search/search-analytics";
 import {
 	NeedSomeoneRow,
 	NoResults,
-} from "@/src/features/browse/search/search-edges";
+} from "@/features/browse/search/search-edges";
 import {
 	SECTION_TITLE,
 	type SearchSection,
-} from "@/src/features/browse/search/search-sections";
-import {
-	EntryRow,
-	SectionTitle,
-} from "@/src/features/library/home/entry-cards";
-import { RowsSkeleton } from "@/src/features/library/skeletons";
-import { useStableQuery } from "@/src/lib/convex/use-stable-query";
-import { useDebounce } from "@/src/lib/use-debounce";
-import { cn } from "@/src/lib/utils";
+} from "@/features/browse/search/search-sections";
+import { EntryRow, SectionTitle } from "@/features/library/home/entry-cards";
+import { RowsSkeleton } from "@/features/library/skeletons";
+import { useStableQuery } from "@/lib/convex/use-stable-query";
+import { useDebounce } from "@/lib/use-debounce";
+import { cn } from "@/lib/utils";
 
 const DEBOUNCE_MS = 250;
 const PREVIEW = 5;

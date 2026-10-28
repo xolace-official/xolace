@@ -1,7 +1,7 @@
 import type React from "react";
 import Svg, { Path } from "react-native-svg";
 import { withUniwind } from "uniwind";
-import type { IconProps } from "@/src/types";
+import type { IconProps } from "@/types";
 
 /**
  * Chevron icons — React Native SVG implementations.

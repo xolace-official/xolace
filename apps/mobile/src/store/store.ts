@@ -8,9 +8,9 @@
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { create } from "zustand";
 import { createJSONStorage, devtools, persist } from "zustand/middleware";
-import type { ReadingModeKey } from "@/src/features/library/reader/reading-mode";
-import type { TextureSetId } from "@/src/features/reflect/texture-sets";
-import { zustandJSONStorage } from "@/src/lib/storage/unified-storage";
+import type { ReadingModeKey } from "@/features/library/reader/reading-mode";
+import type { TextureSetId } from "@/features/reflect/texture-sets";
+import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 import { createIntakeSlice, type IntakeSlice } from "./intake-slice";
 import {
 	createPlusOfferSlice,

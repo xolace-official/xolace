@@ -28,11 +28,11 @@ vi.mock("convex/react", () => ({ useQuery: () => stats.current }));
 vi.mock("@xolace/backend/convex/_generated/api", () => ({
 	api: { intake: { campfireStats: "stats" } },
 }));
-vi.mock("@/src/components/shared/app-text", () => ({ AppText: "AppText" }));
-vi.mock("@/src/lib/haptics", () => ({ playSoftPress: vi.fn() }));
+vi.mock("@/components/shared/app-text", () => ({ AppText: "AppText" }));
+vi.mock("@/lib/haptics", () => ({ playSoftPress: vi.fn() }));
 
 const { CountStep } = await import(
-	"@/src/features/intake/questionnaire/count-step"
+	"@/features/intake/questionnaire/count-step"
 );
 
 /** Every string in the returned tree, flattened. */

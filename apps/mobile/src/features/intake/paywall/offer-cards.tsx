@@ -11,15 +11,15 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	OFFER_MASCOT,
 	OfferCard,
 	OfferMock,
 	OfferPill,
-} from "@/src/features/intake/paywall/offer-card";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { cn } from "@/src/lib/utils";
+} from "@/features/intake/paywall/offer-card";
+import { useTokenColor } from "@/features/profile/hooks/use-token-color";
+import { cn } from "@/lib/utils";
 
 const MUSIC_NOTE = {
 	android: "music_note",

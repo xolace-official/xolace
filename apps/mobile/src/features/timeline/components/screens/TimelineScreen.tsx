@@ -2,13 +2,13 @@ import { LegendList } from "@legendapp/list/react-native";
 import { useObserve } from "expo-observe";
 import { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { FullMorphLoader as ActiveLoader } from "@/src/components/shared/loader/morph/full-morph-loader";
-import { TimelineEntryCard } from "@/src/features/timeline/components/timeline-entry-card";
-import { TimelineSectionHeader } from "@/src/features/timeline/components/timeline-section-header";
-import { TimelineUpgradeBanner } from "@/src/features/timeline/components/timeline-upgrade-banner";
-import { useTimeline } from "@/src/features/timeline/hooks/use-timeline";
-import type { TimelineFlatItem } from "@/src/features/timeline/types";
+import { AppText } from "@/components/shared/app-text";
+import { FullMorphLoader as ActiveLoader } from "@/components/shared/loader/morph/full-morph-loader";
+import { TimelineEntryCard } from "@/features/timeline/components/timeline-entry-card";
+import { TimelineSectionHeader } from "@/features/timeline/components/timeline-section-header";
+import { TimelineUpgradeBanner } from "@/features/timeline/components/timeline-upgrade-banner";
+import { useTimeline } from "@/features/timeline/hooks/use-timeline";
+import type { TimelineFlatItem } from "@/features/timeline/types";
 
 const renderItem = ({
 	item,

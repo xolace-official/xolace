@@ -2,7 +2,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import type { MoodItem } from "@/src/features/onboarding/components/mood-card";
+import type { MoodItem } from "@/features/onboarding/components/mood-card";
 
 type Props = {
 	mood: MoodItem;

@@ -12,7 +12,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 // 60% cream-white — more muted than the acknowledgement words (design spec).
 const GONE_STYLE = { color: "#F5F0E899" };

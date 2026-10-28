@@ -11,10 +11,10 @@ import { Button } from "heroui-native";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { IntakeScreen } from "@/src/features/intake/questionnaire/intake-screen";
-import { MascotSays } from "@/src/features/intake/questionnaire/mascot";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
+import { MascotSays } from "@/features/intake/questionnaire/mascot";
+import { playSoftPress } from "@/lib/haptics";
 
 export interface ConversationLine {
 	/** Waits for `gateOpen` rather than for a tap. */

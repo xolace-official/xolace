@@ -8,8 +8,8 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 
 export function NeedSomeoneRow() {
 	const tint = useCSSVariable("--color-accent");

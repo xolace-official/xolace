@@ -2,8 +2,8 @@ import * as Linking from "expo-linking";
 import { BottomSheet, Button } from "heroui-native";
 import type { FC } from "react";
 import { View } from "react-native";
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
-import { STORE_URL } from "@/src/lib/constants/links";
+import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
+import { STORE_URL } from "@/lib/constants/links";
 
 export type UpdateBottomSheetMode = "new-version" | "ota-update";
 

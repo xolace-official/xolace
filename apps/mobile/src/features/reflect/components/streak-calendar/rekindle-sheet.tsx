@@ -2,8 +2,8 @@ import { BottomSheet, PressableFeedback } from "heroui-native";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
-import { AppText } from "@/src/components/shared/app-text";
+import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
+import { AppText } from "@/components/shared/app-text";
 
 type Props = {
 	isOpen: boolean;

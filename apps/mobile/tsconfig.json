@@ -6,8 +6,9 @@
     // Expo's config loader only resolves a TS import written that way.
     "allowImportingTsExtensions": true,
     "paths": {
-      "@/*": ["./*"],
-      "@/assets/*": ["./assets/*"]
+      "@/*": ["./src/*"],
+      "@/assets/*": ["./assets/*"],
+      "@/modules/*": ["./modules/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],

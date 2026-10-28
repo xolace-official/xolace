@@ -1,4 +1,4 @@
-import type { ThemeEntry } from "@/src/lib/themes";
+import type { ThemeEntry } from "@/lib/themes";
 
 /**
  * Which index the theme carousel should center on at mount, given the

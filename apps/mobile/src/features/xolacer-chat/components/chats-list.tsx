@@ -4,8 +4,8 @@ import { useRouter } from "expo-router";
 import { PressableFeedback } from "heroui-native";
 import type { ReactNode } from "react";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 import { ConversationRow } from "./conversation-row";
 import {
 	type ArchiveHandler,

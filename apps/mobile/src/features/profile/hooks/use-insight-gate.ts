@@ -3,8 +3,8 @@ import { useCallback } from "react";
 import {
 	type PaywallSurface,
 	usePaywall,
-} from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
+} from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 
 // Which blurred insight teaser drove the tap. Mapped onto paywall surfaces
 // for funnel attribution.

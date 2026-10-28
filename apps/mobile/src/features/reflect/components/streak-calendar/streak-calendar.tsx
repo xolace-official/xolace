@@ -24,10 +24,10 @@ import Animated, {
 	useReducedMotion,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { AppText } from "@/src/components/shared/app-text";
-import { posthog } from "@/src/config/posthog";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { posthog } from "@/config/posthog";
+import { playSoftPress } from "@/lib/haptics";
+import { useAppStore } from "@/store/store";
 import {
 	type CardColors,
 	getCardMetrics,

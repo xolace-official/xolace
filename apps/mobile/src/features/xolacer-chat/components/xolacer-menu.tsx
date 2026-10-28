@@ -7,11 +7,11 @@ import { useAction } from "convex/react";
 import { useRouter } from "expo-router";
 import { useToast } from "heroui-native";
 import { useState } from "react";
-import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
-import { OverflowMenu } from "@/src/components/shared/overflow-menu";
-import { useTray } from "@/src/features/feedback-tray/engine/tray-provider";
-import type { Trays } from "@/src/features/feedback-tray/screens/registry";
-import { playSoftPress } from "@/src/lib/haptics";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { OverflowMenu } from "@/components/shared/overflow-menu";
+import { useTray } from "@/features/feedback-tray/engine/tray-provider";
+import type { Trays } from "@/features/feedback-tray/screens/registry";
+import { playSoftPress } from "@/lib/haptics";
 
 /**
  * The overflow menu for a xolacer — mounted in the thread and on the profile:

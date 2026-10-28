@@ -2,7 +2,7 @@ import { useAuth } from "@clerk/expo";
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useRef } from "react";
-import { wipeReflectDraft } from "@/src/features/reflect/reflect-draft";
+import { wipeReflectDraft } from "@/features/reflect/reflect-draft";
 import { usePreferenceMutation } from "./use-preference-mutation";
 
 export type RetentionOption = "indefinite" | "6_months" | "1_year";

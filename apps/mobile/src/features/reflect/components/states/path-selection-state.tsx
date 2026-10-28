@@ -9,15 +9,15 @@ import Animated, {
 	LinearTransition,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { useSessionEndHref } from "@/src/features/kindling/use-session-end-href";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusOffer } from "@/src/features/purchases/use-plus-offer";
-import { PathChoiceCard } from "@/src/features/reflect/components/states/path-choice-card";
-import { PathOfferLayer } from "@/src/features/reflect/components/states/path-offer-layer";
-import { playPathChoice } from "@/src/lib/haptics";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { useSessionEndHref } from "@/features/kindling/use-session-end-href";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusOffer } from "@/features/purchases/use-plus-offer";
+import { PathChoiceCard } from "@/features/reflect/components/states/path-choice-card";
+import { PathOfferLayer } from "@/features/reflect/components/states/path-offer-layer";
+import { playPathChoice } from "@/lib/haptics";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { cn } from "@/lib/utils";
 
 type Props = {
 	sessionId: string | null;

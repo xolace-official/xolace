@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { Pressable, StyleSheet, View } from "react-native";
-import { playSoftPress } from "@/src/lib/haptics";
+import { playSoftPress } from "@/lib/haptics";
 
 const TIMELINE_ICON_NAME = { android: "history", ios: "clock" } as const;
 

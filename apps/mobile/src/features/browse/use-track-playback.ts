@@ -3,8 +3,8 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useConvex, useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef } from "react";
-import { getLockScreenMetadata } from "@/src/features/browse/track-lock-screen-metadata";
-import { type PlaybackReturn, usePlayback } from "@/src/lib/audio/use-playback";
+import { getLockScreenMetadata } from "@/features/browse/track-lock-screen-metadata";
+import { type PlaybackReturn, usePlayback } from "@/lib/audio/use-playback";
 
 export type BoundTrack = NonNullable<
 	FunctionReturnType<typeof api.paths.getBoundAudioTrack>

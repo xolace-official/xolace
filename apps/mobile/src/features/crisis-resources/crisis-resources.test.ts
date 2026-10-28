@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { COUNTRY_RESOURCES } from "@/src/features/crisis-resources/data";
-import type { Resource } from "@/src/features/crisis-resources/types";
+import { COUNTRY_RESOURCES } from "@/features/crisis-resources/data";
+import type { Resource } from "@/features/crisis-resources/types";
 
 const VALID_TYPES = new Set<Resource["type"]>([
 	"phone",

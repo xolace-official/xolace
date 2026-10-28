@@ -13,9 +13,9 @@ import Animated, {
 	withSpring,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { TextAnimation } from "@/src/components/ui/text-animation";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { AppText } from "@/components/shared/app-text";
+import { TextAnimation } from "@/components/ui/text-animation";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { FluxStage, MOUTH_Y } from "./flux-stage";
 
 const FLUX_W = 53;

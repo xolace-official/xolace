@@ -12,8 +12,8 @@ import {
 import { useState } from "react";
 import { Keyboard, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 import { PhotoStep } from "./photo-step";
 import { SpecialtyPicker } from "./specialty-picker";
 import { firstIncompleteStep } from "./steps";

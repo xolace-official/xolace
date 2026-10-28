@@ -1,7 +1,7 @@
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const HELP_ICON_NAME = {
 	android: "sos",

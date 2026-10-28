@@ -2,7 +2,7 @@ import {
 	STARTER_ROWS,
 	type StarterRow,
 	type StarterRowId,
-} from "@/src/features/starter-suggestions/starter-rows";
+} from "@/features/starter-suggestions/starter-rows";
 
 // Plain strings, not the validator unions: an older build must fall back to
 // the default order when a newer backend sends a value it doesn't know.

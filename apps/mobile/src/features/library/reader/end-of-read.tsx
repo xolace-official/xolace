@@ -6,10 +6,10 @@ import { Surface, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { Pressable, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { trackLibrary } from "@/src/features/library/analytics";
-import { playResonanceToggle, playSoftPress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { trackLibrary } from "@/features/library/analytics";
+import { playResonanceToggle, playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 import type { ReaderEntry } from "./reader-screen";
 import { UpNext } from "./up-next";
 import { useRecord } from "./use-read-signals";

@@ -1,7 +1,7 @@
 import { Dialog, Radio, RadioGroup, Separator } from "heroui-native";
 import { View } from "react-native";
-import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
-import { AppText } from "@/src/components/shared/app-text";
+import { DialogBlurBackdrop } from "@/components/dialog-blur-backdrop";
+import { AppText } from "@/components/shared/app-text";
 
 export type RetentionOption = "indefinite" | "6_months" | "1_year";
 

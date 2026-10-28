@@ -3,13 +3,13 @@ import { PressableFeedback } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { type IconKey, OptionCard } from "@/src/features/follow-up/stack-cards";
+import { AppText } from "@/components/shared/app-text";
+import { type IconKey, OptionCard } from "@/features/follow-up/stack-cards";
 import {
 	STILL_HERE_LINKS,
 	STILL_HERE_MESSAGE,
 	STILL_HERE_SKIP,
-} from "@/src/features/reflect/follow-up-copy";
+} from "@/features/reflect/follow-up-copy";
 
 type LinkKey = (typeof STILL_HERE_LINKS)[number]["key"];
 

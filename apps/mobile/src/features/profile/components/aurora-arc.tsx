@@ -5,7 +5,7 @@ import {
 	vec,
 } from "@shopify/react-native-skia";
 import { StyleSheet, useWindowDimensions } from "react-native";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
+import { useTokenColor } from "@/features/profile/hooks/use-token-color";
 
 type Props = { height?: number };
 

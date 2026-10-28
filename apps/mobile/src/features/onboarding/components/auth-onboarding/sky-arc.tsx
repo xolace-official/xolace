@@ -7,7 +7,7 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 
-import { STORY_BEATS } from "@/src/features/onboarding/story-beats";
+import { STORY_BEATS } from "@/features/onboarding/story-beats";
 
 /** Cool and nearly black. The base layer — never fades, so nothing shows through. */
 const NIGHT = ["#070912", "#04050A", "#000000"] as const;

@@ -1,4 +1,4 @@
-import type { BreathPhase } from "@/src/lib/haptics";
+import type { BreathPhase } from "@/lib/haptics";
 
 // Fixed gap between the two shapes in pixels
 export const GAP = 14;

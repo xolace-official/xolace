@@ -16,19 +16,19 @@ import Animated, {
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	PHASE_LABELS,
 	WOBBLE_AMPLITUDE,
 	WOBBLE_DURATION_MS,
-} from "@/src/features/sit-with-this/components/dual-breath/dual-breath.constants";
-import { useDualBreathAnimation } from "@/src/features/sit-with-this/components/dual-breath/use-dual-breath-animation";
+} from "@/features/sit-with-this/components/dual-breath/dual-breath.constants";
+import { useDualBreathAnimation } from "@/features/sit-with-this/components/dual-breath/use-dual-breath-animation";
 import type {
 	BreathPattern,
 	PacedOrbHandle,
-} from "@/src/features/sit-with-this/components/paced-orb";
-import { TIMINGS } from "@/src/features/sit-with-this/components/paced-orb";
-import type { BreathPhase } from "@/src/lib/haptics";
+} from "@/features/sit-with-this/components/paced-orb";
+import { TIMINGS } from "@/features/sit-with-this/components/paced-orb";
+import type { BreathPhase } from "@/lib/haptics";
 
 const INHALE_EASE = Easing.bezier(0.4, 0, 0.2, 1);
 const EXHALE_EASE = Easing.bezier(0.2, 0, 0.1, 1);

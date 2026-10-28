@@ -2,8 +2,8 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { usePostHog } from "posthog-react-native";
-import { patchSaved } from "@/src/features/quotes/hooks/use-today-quote";
-import { useStablePaginatedQuery } from "@/src/lib/convex/use-stable-query";
+import { patchSaved } from "@/features/quotes/hooks/use-today-quote";
+import { useStablePaginatedQuery } from "@/lib/convex/use-stable-query";
 
 /**
  * The archive: kept quotes, newest first, paginated.

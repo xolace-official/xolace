@@ -6,8 +6,8 @@ import {
 	useMessageContext,
 	useStateStore,
 } from "stream-chat-expo";
-import { useConversationIdentity } from "@/src/features/xolacer-chat/components/message-author";
-import { resolveMessageIdentity } from "@/src/features/xolacer-chat/utils";
+import { useConversationIdentity } from "@/features/xolacer-chat/components/message-author";
+import { resolveMessageIdentity } from "@/features/xolacer-chat/utils";
 
 const quotedMessageSelector = (state: MessageComposerState) => ({
 	quotedMessage: state.quotedMessage,

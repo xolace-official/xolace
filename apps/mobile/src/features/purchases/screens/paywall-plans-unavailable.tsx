@@ -1,7 +1,7 @@
 import { Button, Spinner, Surface, useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { FadeIn, LinearTransition } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const SPINNER_ENTERING = FadeIn.delay(50);
 

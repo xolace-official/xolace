@@ -19,28 +19,28 @@ import {
 } from "heroui-native";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { TopBlur } from "@/src/components/shared/top-blur";
-import { ExpandableAvatar } from "@/src/features/xolacer-chat/components/expandable-avatar";
-import { Fact } from "@/src/features/xolacer-chat/components/fact-row";
-import { PresenceDot } from "@/src/features/xolacer-chat/components/presence-dot";
+import { AppText } from "@/components/shared/app-text";
+import { TopBlur } from "@/components/shared/top-blur";
+import { ExpandableAvatar } from "@/features/xolacer-chat/components/expandable-avatar";
+import { Fact } from "@/features/xolacer-chat/components/fact-row";
+import { PresenceDot } from "@/features/xolacer-chat/components/presence-dot";
 import {
 	NewXolacerChip,
 	RatingStars,
-} from "@/src/features/xolacer-chat/components/rating-stars";
-import { SpecialtyChips } from "@/src/features/xolacer-chat/components/specialty-chips";
-import { XolacerAvatar } from "@/src/features/xolacer-chat/components/xolacer-avatar";
-import { XolacerMenu } from "@/src/features/xolacer-chat/components/xolacer-menu";
-import { XolacerPrimerSheet } from "@/src/features/xolacer-chat/components/xolacer-primer-sheet";
-import { formatMonthYear } from "@/src/features/xolacer-chat/format-time";
-import { useAskFlow } from "@/src/features/xolacer-chat/use-ask-flow";
+} from "@/features/xolacer-chat/components/rating-stars";
+import { SpecialtyChips } from "@/features/xolacer-chat/components/specialty-chips";
+import { XolacerAvatar } from "@/features/xolacer-chat/components/xolacer-avatar";
+import { XolacerMenu } from "@/features/xolacer-chat/components/xolacer-menu";
+import { XolacerPrimerSheet } from "@/features/xolacer-chat/components/xolacer-primer-sheet";
+import { formatMonthYear } from "@/features/xolacer-chat/format-time";
+import { useAskFlow } from "@/features/xolacer-chat/use-ask-flow";
 import {
 	declineCooldownActive,
 	declineCooldownNote,
 	hasSpoken,
 	rateCtaState,
-} from "@/src/features/xolacer-chat/utils";
-import { playSoftPress } from "@/src/lib/haptics";
+} from "@/features/xolacer-chat/utils";
+import { playSoftPress } from "@/lib/haptics";
 
 type Profile = NonNullable<
 	FunctionReturnType<typeof api.xolacerChat.xolacerProfile>

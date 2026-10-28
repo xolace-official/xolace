@@ -2,9 +2,9 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
 import { useToast } from "heroui-native";
 import { useEffect, useState } from "react";
-import { useAccessibilityInfo } from "@/src/helpers/hooks/use-accessability-info";
-import { playAffirmativePress } from "@/src/lib/haptics";
-import { setTabBarHidden } from "@/src/lib/tab-bar";
+import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
+import { playAffirmativePress } from "@/lib/haptics";
+import { setTabBarHidden } from "@/lib/tab-bar";
 import type { PairConversation } from "./components/chats-list";
 
 /**

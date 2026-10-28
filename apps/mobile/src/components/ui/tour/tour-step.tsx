@@ -7,7 +7,7 @@ import {
 	type TourShape,
 	type TourStepEntry,
 	useTourContext,
-} from "@/src/components/ui/tour/types";
+} from "@/components/ui/tour/types";
 
 export type TourStepProps = Omit<ViewProps, "children"> & {
 	/**

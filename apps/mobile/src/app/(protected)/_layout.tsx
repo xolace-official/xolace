@@ -2,15 +2,15 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Stack } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
-import { NowPlayingHost } from "@/src/features/browse/now-playing/now-playing-host";
-import { UnreadIconBadge } from "@/src/features/xolacer-chat/components/unread-icon-badge";
+import { NowPlayingHost } from "@/features/browse/now-playing/now-playing-host";
+import { UnreadIconBadge } from "@/features/xolacer-chat/components/unread-icon-badge";
 import {
 	StreamChatProvider,
 	StreamOverlayProvider,
-} from "@/src/features/xolacer-chat/providers/stream-chat-provider";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { useNotifications } from "@/src/lib/use-notifications";
-import { AppPresence } from "@/src/providers/app-presence";
+} from "@/features/xolacer-chat/providers/stream-chat-provider";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useNotifications } from "@/lib/use-notifications";
+import { AppPresence } from "@/providers/app-presence";
 
 /**
  * Provides the navigation layout used by protected routes.

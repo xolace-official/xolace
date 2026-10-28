@@ -4,9 +4,9 @@
  * Provider order: RootProvider (gestures, keyboard, theme, HeroUI) → NavThemeProvider (React Navigation).
  * See src/providers/root-provider.tsx to add your own providers (auth, analytics, etc.).
  */
-import "@/src/lib/clerk-online-polyfill";
-import "@/src/global.css";
-import "@/src/lib/theme-bootstrap";
+import "@/lib/clerk-online-polyfill";
+import "@/global.css";
+import "@/lib/theme-bootstrap";
 
 import { useAuth } from "@clerk/expo";
 import {
@@ -30,20 +30,20 @@ import * as SplashScreen from "expo-splash-screen";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
 import { Settings } from "react-native-pulsar";
-import { FullRippleLoader } from "@/src/components/shared/loader/ripple/full-ripple-loader";
+import { FullRippleLoader } from "@/components/shared/loader/ripple/full-ripple-loader";
 import {
 	UpdateBottomSheet,
 	type UpdateBottomSheetMode,
-} from "@/src/components/shared/update-bottom-sheet";
-import { ReflectDraftGuard } from "@/src/features/reflect/reflect-draft";
-import { ChatLocalDataGuard } from "@/src/features/xolacer-chat/chat-local-data-guard";
-import { useOtaUpdate } from "@/src/helpers/hooks/use-ota-update";
-import { useVersionCheck } from "@/src/helpers/hooks/use-version-check";
-import { useFullContext } from "@/src/lib/convex/use-full-context";
-import { usePostHogIdentity } from "@/src/lib/use-posthog-identity";
-import { NavThemeProvider } from "@/src/providers/nav-theme-provider";
-import { RootProvider } from "@/src/providers/root-provider";
-import { useAppStore } from "@/src/store/store";
+} from "@/components/shared/update-bottom-sheet";
+import { ReflectDraftGuard } from "@/features/reflect/reflect-draft";
+import { ChatLocalDataGuard } from "@/features/xolacer-chat/chat-local-data-guard";
+import { useOtaUpdate } from "@/helpers/hooks/use-ota-update";
+import { useVersionCheck } from "@/helpers/hooks/use-version-check";
+import { useFullContext } from "@/lib/convex/use-full-context";
+import { usePostHogIdentity } from "@/lib/use-posthog-identity";
+import { NavThemeProvider } from "@/providers/nav-theme-provider";
+import { RootProvider } from "@/providers/root-provider";
+import { useAppStore } from "@/store/store";
 
 Sentry.init({
 	dsn: process.env.EXPO_PUBLIC_SENTRY_DNS,
@@ -99,7 +99,7 @@ Settings.preloadPresets([
 // Root route error fallback. Expo Router's boundary swallows render crashes
 // (nothing auto-reports them), so RouteError reports to Sentry and Observe
 // itself, then shows a calm themed screen instead of the raw error text.
-export { RouteError as ErrorBoundary } from "@/src/components/shared/route-error";
+export { RouteError as ErrorBoundary } from "@/components/shared/route-error";
 
 const NO_HEADER = { headerShown: false };
 // The root stack only ever swaps route groups, and its state is computed from

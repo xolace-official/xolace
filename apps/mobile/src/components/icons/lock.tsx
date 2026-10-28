@@ -1,7 +1,7 @@
 import type React from "react";
 import Svg, { Path, Rect } from "react-native-svg";
 import { withUniwind } from "uniwind";
-import type { IconProps } from "@/src/types";
+import type { IconProps } from "@/types";
 
 /**
  * Lock icon component - React Native SVG implementation

@@ -1,8 +1,8 @@
 import { Children, forwardRef, type ReactElement, type ReactNode } from "react";
 import type { TextProps as RNTextProps, TextInstance } from "react-native";
 import { tv, type VariantProps } from "tailwind-variants";
-import { AppText } from "@/src/components/shared/app-text";
-import { useDirection } from "@/src/helpers/hooks/use-direction";
+import { AppText } from "@/components/shared/app-text";
+import { useDirection } from "@/helpers/hooks/use-direction";
 
 const textVariants = tv({
 	base: "text-foreground",

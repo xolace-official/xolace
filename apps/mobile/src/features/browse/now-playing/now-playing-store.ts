@@ -2,10 +2,10 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import type { PostHog } from "posthog-react-native";
 import { useSyncExternalStore } from "react";
-import type { BrowseFrom } from "@/src/features/browse/use-open-track";
-import type { BoundTrack } from "@/src/features/browse/use-track-playback";
-import type { PlaybackReturn } from "@/src/lib/audio/use-playback";
-import { useTabBarHidden } from "@/src/lib/tab-bar";
+import type { BrowseFrom } from "@/features/browse/use-open-track";
+import type { BoundTrack } from "@/features/browse/use-track-playback";
+import type { PlaybackReturn } from "@/lib/audio/use-playback";
+import { useTabBarHidden } from "@/lib/tab-bar";
 
 export type NowPlaying = {
 	slug: string;

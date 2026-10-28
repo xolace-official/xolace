@@ -4,11 +4,11 @@ import { LinkButton, ScrollShadow } from "heroui-native";
 import { useEffect } from "react";
 import { ScrollView, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { isRateLimitMessage } from "@/src/features/reflect/session-service";
-import { playErrorNotice } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { isRateLimitMessage } from "@/features/reflect/session-service";
+import { playErrorNotice } from "@/lib/haptics";
 
 type Props = {
 	errorMessage: string;

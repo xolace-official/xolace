@@ -4,7 +4,7 @@ import type { OptimisticLocalStore } from "convex/browser";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
-import { useQuoteNotifications } from "@/src/features/quotes/hooks/use-quote-notifications";
+import { useQuoteNotifications } from "@/features/quotes/hooks/use-quote-notifications";
 
 /**
  * The line above the quote on the paper card. It *is* the Xolace+ gate — a locked user

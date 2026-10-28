@@ -10,9 +10,9 @@ import { Surface, useThemeColor } from "heroui-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { facetLabel } from "@/src/features/library/home/library-copy";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { facetLabel } from "@/features/library/home/library-copy";
+import { cn } from "@/lib/utils";
 
 const toggle = (list: string[], slug: string) =>
 	list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug];

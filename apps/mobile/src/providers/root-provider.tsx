@@ -5,12 +5,12 @@ import {
 	KeyboardAvoidingView,
 	KeyboardProvider,
 } from "react-native-keyboard-controller";
-import { posthog } from "@/src/config/posthog";
-import { AppThemeProvider } from "@/src/context/app-theme-context";
-import { SessionModeProvider } from "@/src/context/session-mode-context";
-import { FeedbackTrayProvider } from "@/src/features/feedback-tray/feedback-tray-provider";
-import { PremiumThemeReconciler } from "@/src/features/purchases/premium-theme-reconciler";
-import { RevenueCatProvider } from "@/src/features/purchases/revenuecat-context";
+import { posthog } from "@/config/posthog";
+import { AppThemeProvider } from "@/context/app-theme-context";
+import { SessionModeProvider } from "@/context/session-mode-context";
+import { FeedbackTrayProvider } from "@/features/feedback-tray/feedback-tray-provider";
+import { PremiumThemeReconciler } from "@/features/purchases/premium-theme-reconciler";
+import { RevenueCatProvider } from "@/features/purchases/revenuecat-context";
 import { ConvexClientProvider } from "./convex-provider";
 
 /**

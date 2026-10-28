@@ -3,23 +3,23 @@ import { useState } from "react";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
-import { AppText } from "@/src/components/shared/app-text";
-import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { ProfileCardsSection } from "@/src/features/settings/components/profile-cards-section";
-import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
-import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
-import { SettingsRow } from "@/src/features/settings/components/settings-row";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
-import { ThemeCarousel } from "@/src/features/settings/components/theme-carousel";
+import { AppText } from "@/components/shared/app-text";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { ProfileCardsSection } from "@/features/settings/components/profile-cards-section";
+import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
+import type { CrossPlatformSymbol } from "@/features/settings/components/settings-icons";
+import { SettingsRow } from "@/features/settings/components/settings-row";
+import { SettingsSection } from "@/features/settings/components/settings-section";
+import { ThemeCarousel } from "@/features/settings/components/theme-carousel";
 import {
 	type ThemeMode,
 	useAppearanceSettings,
-} from "@/src/features/settings/hooks/use-appearance-settings";
-import type { MotionPreference } from "@/src/lib/motion/use-effective-reduced-motion";
-import { cn } from "@/src/lib/utils";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/settings/hooks/use-appearance-settings";
+import type { MotionPreference } from "@/lib/motion/use-effective-reduced-motion";
+import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/store";
 
 const MODE_OPTIONS: {
 	value: ThemeMode;

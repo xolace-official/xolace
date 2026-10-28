@@ -2,13 +2,13 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { PLUS_OFFER_DECLINE_LABEL } from "@/src/features/purchases/plus-offer-copy";
+import { AppText } from "@/components/shared/app-text";
+import { PLUS_OFFER_DECLINE_LABEL } from "@/features/purchases/plus-offer-copy";
 import type {
 	PlusOfferMoment,
 	PlusOfferVariant,
-} from "@/src/features/purchases/plus-offer-policy";
-import { usePlusOfferPresence } from "@/src/features/purchases/use-plus-offer-presence";
+} from "@/features/purchases/plus-offer-policy";
+import { usePlusOfferPresence } from "@/features/purchases/use-plus-offer-presence";
 
 const BG = require("@/assets/images/flux/plus-postcard-bg.png");
 const ABS_FILL = {

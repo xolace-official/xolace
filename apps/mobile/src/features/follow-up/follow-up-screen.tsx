@@ -9,16 +9,16 @@ import { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { HeavierStep } from "@/src/features/follow-up/heavier-step";
-import { ReflectiveStep } from "@/src/features/follow-up/reflective-step";
+import { AppText } from "@/components/shared/app-text";
+import { HeavierStep } from "@/features/follow-up/heavier-step";
+import { ReflectiveStep } from "@/features/follow-up/reflective-step";
 import {
 	Icon,
 	type IconKey,
 	OptionCard,
-} from "@/src/features/follow-up/stack-cards";
-import { StillHereStep } from "@/src/features/follow-up/still-here-step";
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+} from "@/features/follow-up/stack-cards";
+import { StillHereStep } from "@/features/follow-up/still-here-step";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
 import {
 	chipsForTier,
 	FOLLOW_UP_FALLBACK_HEADLINE,
@@ -31,10 +31,10 @@ import {
 	VENT_A11Y_LABEL,
 	VENT_LABEL,
 	VENT_SUBLABEL,
-} from "@/src/features/reflect/follow-up-copy";
-import { useFullContext } from "@/src/lib/convex/use-full-context";
-import { playFollowUpEntrance } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+} from "@/features/reflect/follow-up-copy";
+import { useFullContext } from "@/lib/convex/use-full-context";
+import { playFollowUpEntrance } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 // Dev/preview storage buckets differ from prod (Convex deploys are per-env).
 const FLUX = {

@@ -10,8 +10,8 @@ import Svg, {
 	RadialGradient,
 	Stop,
 } from "react-native-svg";
-import type { Icon, Tone } from "@/src/features/insights/domains";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
+import type { Icon, Tone } from "@/features/insights/domains";
+import { useTokenColor } from "@/features/profile/hooks/use-token-color";
 
 const SWEEP = 300; // degrees of arc; the remaining 60° is the bottom gap
 const START = 90 + (360 - SWEEP) / 2; // svg angles run clockwise from +x

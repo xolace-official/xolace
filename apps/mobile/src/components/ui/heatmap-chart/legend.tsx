@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import Svg, { Rect } from "react-native-svg";
-import { Text } from "@/src/components/ui/text";
-import { cn } from "@/src/lib/cn";
+import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/cn";
 import { type Slot, useHeatmap } from "./context";
 
 /** `Less ▢▢▢▢▢ More` — the ramp as swatches. Shared by the legend and the header. */

@@ -4,14 +4,14 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	MINI_PLAYER_CLEARANCE,
 	useMiniPlayerShown,
-} from "@/src/features/browse/now-playing/now-playing-store";
-import { playSoftPress } from "@/src/lib/haptics";
-import { PlayfulLip } from "@/src/lib/playful/playful-lip";
-import { useIsPlayful, usePlayfulPress } from "@/src/lib/playful/use-playful";
+} from "@/features/browse/now-playing/now-playing-store";
+import { playSoftPress } from "@/lib/haptics";
+import { PlayfulLip } from "@/lib/playful/playful-lip";
+import { useIsPlayful, usePlayfulPress } from "@/lib/playful/use-playful";
 
 // iOS: the native tab bar is translucent and content runs underneath it, so the
 // dock has to clear the whole bar. Android: the native BottomNavigationView is

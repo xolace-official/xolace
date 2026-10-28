@@ -6,7 +6,7 @@ import {
 	PLUS_OFFER_DISMISSAL_LIMIT,
 	PLUS_OFFER_FULL_STOP_MS,
 	type PlusOfferSurface,
-} from "@/src/features/purchases/plus-offer-policy";
+} from "@/features/purchases/plus-offer-policy";
 
 export type PlusOfferSlice = {
 	/**

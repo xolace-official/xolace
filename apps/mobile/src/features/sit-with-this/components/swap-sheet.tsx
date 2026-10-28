@@ -2,9 +2,9 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { BottomSheet } from "heroui-native";
 import { useState } from "react";
 import { EaseView } from "react-native-ease/uniwind";
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
-import { AppText } from "@/src/components/shared/app-text";
-import { PillButton } from "@/src/components/shared/pill-button";
+import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
+import { AppText } from "@/components/shared/app-text";
+import { PillButton } from "@/components/shared/pill-button";
 
 type Props = {
 	isOpen: boolean;

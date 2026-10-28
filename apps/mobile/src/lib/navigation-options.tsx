@@ -2,7 +2,7 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import type { NativeStackNavigationOptions } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { Platform } from "react-native";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { useAppTheme } from "@/context/app-theme-context";
 
 /**
  * Return navigation options for a styled header.

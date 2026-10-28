@@ -7,7 +7,7 @@ import {
 import { useThemeColor } from "heroui-native";
 import { Platform, View, type ViewStyle } from "react-native";
 
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
 import { createFounderClipPath } from "./clip-paths";
 import type { FounderMarqueeCard } from "./marquee-data";

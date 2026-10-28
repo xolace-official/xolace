@@ -12,7 +12,7 @@ import {
 	useMessageContext,
 	useOwnCapabilitiesContext,
 } from "stream-chat-expo";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const LOCK_ICON = { android: "lock", ios: "lock.fill", web: "lock" } as const;
 

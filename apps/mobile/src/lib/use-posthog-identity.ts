@@ -1,8 +1,8 @@
 import { useConvexAuth } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
-import { intakePersonProperties } from "@/src/features/intake/analytics";
-import { useFullContext } from "@/src/lib/convex/use-full-context";
+import { intakePersonProperties } from "@/features/intake/analytics";
+import { useFullContext } from "@/lib/convex/use-full-context";
 
 /**
  * Identify the client on the pseudonymous `emotional_profiles._id`.

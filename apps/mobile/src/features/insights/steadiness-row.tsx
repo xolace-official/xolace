@@ -5,11 +5,11 @@ import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { GAUGE, icon } from "@/src/features/insights/domains";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
+import { GAUGE, icon } from "@/features/insights/domains";
+import { useTokenColor } from "@/features/profile/hooks/use-token-color";
+import { playSoftPress } from "@/lib/haptics";
 
 const CHEVRON = icon("chevron.right", "chevron_right");
 const GLASS = isLiquidGlassAvailable();

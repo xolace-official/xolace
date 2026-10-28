@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { PosterSurface } from "@/src/features/quotes/components/poster/poster-surface";
+import { AppText } from "@/components/shared/app-text";
+import { PosterSurface } from "@/features/quotes/components/poster/poster-surface";
 
 const BACK_ICON = { android: "chevron_left", ios: "chevron.left" } as const;
 

@@ -5,10 +5,10 @@ import { Skeleton } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { useMiniPlayerInset } from "@/src/features/browse/now-playing/now-playing-store";
-import { useStablePaginatedQuery } from "@/src/lib/convex/use-stable-query";
-import { useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
+import { useStablePaginatedQuery } from "@/lib/convex/use-stable-query";
+import { useAppStore } from "@/store/store";
 import { BrowseFilterMenu, type FilterOption } from "./browse-filter-menu";
 import { FAMILY_LABEL, type TrackItem, TrackRow } from "./track-row";
 

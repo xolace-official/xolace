@@ -1,6 +1,6 @@
 import { useSharedValue, withTiming } from "react-native-reanimated";
-import { useAppTheme } from "@/src/context/app-theme-context";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { useAppTheme } from "@/context/app-theme-context";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 /** The Playful lip height in px; matches `--playful-lip` in playful.css. */
 export const PLAYFUL_LIP = 4;

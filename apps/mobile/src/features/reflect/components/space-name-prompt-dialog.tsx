@@ -12,7 +12,7 @@ import {
 } from "heroui-native";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, View } from "react-native";
-import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
+import { DialogBlurBackdrop } from "@/components/dialog-blur-backdrop";
 
 function extractErrorMessage(e: unknown): string {
 	if (!(e instanceof Error)) {

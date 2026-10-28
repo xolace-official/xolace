@@ -14,8 +14,8 @@ import { Image, type ImageProps } from "expo-image";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { cn } from "@/lib/utils";
 
 /** One Flux pose per card, bleeding off the top-right corner. */
 export const OFFER_MASCOT = {

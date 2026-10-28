@@ -2,7 +2,7 @@ import type { ImageSource } from "expo-image";
 import {
 	TWIG_PRESENTATION,
 	type Twig,
-} from "@/src/features/kindling/twig-presentation";
+} from "@/features/kindling/twig-presentation";
 
 /** The announcement's six. Try-this has no pose of its own yet, so it isn't one (#567). */
 export type AnnouncementKind = Exclude<Twig["kind"], "try">;

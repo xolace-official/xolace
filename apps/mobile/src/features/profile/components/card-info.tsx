@@ -1,7 +1,7 @@
 import { SymbolView } from "expo-symbols";
 import { Popover } from "heroui-native";
 import { Pressable } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import { useTokenColor } from "../hooks/use-token-color";
 
 type Props = {

@@ -1,7 +1,7 @@
 import { useIsFocused } from "expo-router/react-navigation";
 import { useState } from "react";
 import { View } from "react-native";
-import { BrowseHome } from "@/src/features/browse/search/browse-home";
+import { BrowseHome } from "@/features/browse/search/browse-home";
 
 /**
  * NativeTabs mounts every tab eagerly (see connect/index.tsx's ConnectRoute) —

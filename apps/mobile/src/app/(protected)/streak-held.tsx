@@ -6,7 +6,7 @@ import { PressableFeedback } from "heroui-native";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 // Placeholder until the freeze illustration lands.
 const ART = require("@/assets/images/flux/flux-campfire.png");

@@ -116,14 +116,11 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import { tv } from "tailwind-variants";
 import { useCSSVariable } from "uniwind";
-import { CheckIcon } from "@/src/components/icons/check";
-import {
-	ChevronLeftIcon,
-	ChevronRightIcon,
-} from "@/src/components/icons/chevron";
-import { Text, textChildren } from "@/src/components/ui/text";
-import { cn } from "@/src/lib/cn";
-import { playSoftPress, playTextureSelect } from "@/src/lib/haptics";
+import { CheckIcon } from "@/components/icons/check";
+import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons/chevron";
+import { Text, textChildren } from "@/components/ui/text";
+import { cn } from "@/lib/cn";
+import { playSoftPress, playTextureSelect } from "@/lib/haptics";
 
 /*
  * HeroUI types `Button`'s props as a union discriminated on `feedbackVariant`,

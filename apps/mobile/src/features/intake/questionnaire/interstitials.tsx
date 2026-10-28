@@ -4,9 +4,9 @@
  * you tap on.
  */
 import { useState } from "react";
-import { useShakeToOpen } from "@/src/features/feedback-tray/trigger/use-shake-to-open";
-import { MascotConversation } from "@/src/features/intake/questionnaire/conversation";
-import { MASCOT_SHAKE } from "@/src/features/intake/questionnaire/mascot";
+import { useShakeToOpen } from "@/features/feedback-tray/trigger/use-shake-to-open";
+import { MascotConversation } from "@/features/intake/questionnaire/conversation";
+import { MASCOT_SHAKE } from "@/features/intake/questionnaire/mascot";
 
 const PRIVACY_LINES = [
 	{ text: "Quick one before we go on, about the name you just picked." },

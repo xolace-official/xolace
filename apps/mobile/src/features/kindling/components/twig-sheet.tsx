@@ -2,12 +2,12 @@ import { Image } from "expo-image";
 import { Spinner, useThemeColor } from "heroui-native";
 import { Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { Button } from "@/src/components/shared/playful-button";
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { useIsPlayful } from "@/src/lib/playful/use-playful";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { Button } from "@/components/shared/playful-button";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useIsPlayful } from "@/lib/playful/use-playful";
+import { cn } from "@/lib/utils";
 import {
 	TWIG_PRESENTATION,
 	type Twig,

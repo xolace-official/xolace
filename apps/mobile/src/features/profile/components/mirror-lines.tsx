@@ -2,7 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { Surface, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 type MoodDelta = "lighter" | "same" | "heavier" | "unsure" | "mixed" | null;
 

@@ -1,6 +1,6 @@
 import { View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 import {
 	type AudienceKey,
@@ -8,7 +8,7 @@ import {
 	RETURNING_CALLOUT,
 	RETURNING_CALLOUT_LABEL,
 	type Segment,
-} from "@/src/features/intake/founder-message/letter-copy";
+} from "@/features/intake/founder-message/letter-copy";
 
 const PARAGRAPH_CLASS =
 	"text-foreground/80 text-[15px] leading-6.5 font-[Poppins-Regular]";

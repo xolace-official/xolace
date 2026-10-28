@@ -14,16 +14,16 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { ConsentCard } from "@/src/features/talk/consent-card";
-import { TalkAurora } from "@/src/features/talk/talk-aurora";
-import { TalkComposer } from "@/src/features/talk/talk-composer";
-import { TalkHeader } from "@/src/features/talk/talk-header";
-import { TalkHelp } from "@/src/features/talk/talk-help";
-import { TalkLeaveDialog } from "@/src/features/talk/talk-leave-dialog";
-import { TalkThread } from "@/src/features/talk/talk-thread";
-import { useTalk } from "@/src/features/talk/use-talk";
-import type { ThreadLine } from "@/src/features/talk/use-thread";
+import { AppText } from "@/components/shared/app-text";
+import { ConsentCard } from "@/features/talk/consent-card";
+import { TalkAurora } from "@/features/talk/talk-aurora";
+import { TalkComposer } from "@/features/talk/talk-composer";
+import { TalkHeader } from "@/features/talk/talk-header";
+import { TalkHelp } from "@/features/talk/talk-help";
+import { TalkLeaveDialog } from "@/features/talk/talk-leave-dialog";
+import { TalkThread } from "@/features/talk/talk-thread";
+import { useTalk } from "@/features/talk/use-talk";
+import type { ThreadLine } from "@/features/talk/use-thread";
 
 const KEEP_AWAKE_TAG = "talk";
 

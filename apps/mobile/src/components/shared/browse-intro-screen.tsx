@@ -4,8 +4,8 @@ import { StyleSheet, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
-import { AppText } from "@/src/components/shared/app-text";
-import { HoldToContinueButton } from "@/src/components/shared/hold-to-continue-button";
+import { AppText } from "@/components/shared/app-text";
+import { HoldToContinueButton } from "@/components/shared/hold-to-continue-button";
 
 type Props = {
 	heroImage: ImageSource;

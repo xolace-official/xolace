@@ -1,7 +1,7 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const styles = StyleSheet.create({
 	icon: { marginTop: 2 },

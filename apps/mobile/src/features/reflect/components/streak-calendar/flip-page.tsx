@@ -13,7 +13,7 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import type { CardColors, CardMetrics } from "./constants";
 
 type FaceVariant = "front" | "back";

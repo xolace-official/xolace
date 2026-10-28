@@ -45,7 +45,7 @@ import Animated, {
 import Svg, { Path } from "react-native-svg";
 import { scheduleOnUI } from "react-native-worklets";
 import { useCSSVariable } from "uniwind";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 import { BUCKETS, type Profile } from "./thinking-orb-geometry";
 import { renderFrame, type ThinkingOrbState } from "./thinking-orb-states";
 

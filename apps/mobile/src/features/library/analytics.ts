@@ -5,8 +5,8 @@
  */
 import type { PostHog } from "posthog-react-native";
 
-import type { Twig } from "@/src/features/kindling/twig-presentation";
-import type { Kind } from "@/src/features/library/home/library-copy";
+import type { Twig } from "@/features/kindling/twig-presentation";
+import type { Kind } from "@/features/library/home/library-copy";
 
 /**
  * Where a reader open came from. Every way in sets it, the share sheet's link

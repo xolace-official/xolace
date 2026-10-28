@@ -1,6 +1,4 @@
 import { Presets } from "react-native-pulsar";
-import type { HapticPatternData } from "@/modules/native-core-haptics";
-import CoreHaptics from "@/modules/native-core-haptics";
 import {
 	affirmativePress,
 	breathExhalePattern,
@@ -20,7 +18,9 @@ import {
 	softPress,
 	textureSelect,
 	typingBegin,
-} from "@/src/lib/haptics/haptics-patterns.ios";
+} from "@/lib/haptics/haptics-patterns.ios";
+import type { HapticPatternData } from "@/modules/native-core-haptics";
+import CoreHaptics from "@/modules/native-core-haptics";
 import type { BreathPhase, HapticName } from "./haptics.types";
 
 // ── Generic helpers ──────────────────────────────────────────────────

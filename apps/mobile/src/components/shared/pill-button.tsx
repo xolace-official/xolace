@@ -1,7 +1,7 @@
 import { Pressable } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playAffirmativePress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { playAffirmativePress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 type Props = {
 	label: string;

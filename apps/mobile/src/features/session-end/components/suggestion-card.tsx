@@ -2,12 +2,12 @@ import { specialtyListensTo } from "@xolace/backend/convex/lib/specialties";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	NewXolacerChip,
 	RatingStars,
-} from "@/src/features/xolacer-chat/components/rating-stars";
-import { XolacerAvatar } from "@/src/features/xolacer-chat/components/xolacer-avatar";
+} from "@/features/xolacer-chat/components/rating-stars";
+import { XolacerAvatar } from "@/features/xolacer-chat/components/xolacer-avatar";
 
 type Props = {
 	displayName: string;

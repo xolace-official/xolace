@@ -13,8 +13,8 @@
  * has its own pair, `intake_offer_opened` / `intake_offer_dismissed`; keeping
  * them apart is what keeps intake's dismissal rate inside [0, 1].
  */
-import { useIntakeComplete } from "@/src/features/intake/use-intake-complete";
-import { PaywallScreen } from "@/src/features/purchases/screens/paywall-screen";
+import { useIntakeComplete } from "@/features/intake/use-intake-complete";
+import { PaywallScreen } from "@/features/purchases/screens/paywall-screen";
 
 export default function IntakePlans() {
 	const completeIntake = useIntakeComplete();

@@ -1,8 +1,8 @@
 import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { useRef, useState } from "react";
-import { VOICE_PREVIEWS } from "@/src/features/settings/voice-options";
-import { claimAudioSession, holdsAudioFocus } from "@/src/lib/audio/session";
+import { VOICE_PREVIEWS } from "@/features/settings/voice-options";
+import { claimAudioSession, holdsAudioFocus } from "@/lib/audio/session";
 
 type UseVoicePreviewReturn = {
 	playingSlug: VoiceSlug | null;

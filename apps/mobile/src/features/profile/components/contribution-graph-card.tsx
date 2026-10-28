@@ -5,13 +5,13 @@ import { useRef, useState } from "react";
 import type { ScrollViewInstance } from "react-native";
 import { ScrollView, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	buildHeatmapCalendar,
 	type HeatmapCell,
 	HeatmapChart,
-} from "@/src/components/ui/heatmap-chart";
-import { CardInfo } from "@/src/features/profile/components/card-info";
+} from "@/components/ui/heatmap-chart";
+import { CardInfo } from "@/features/profile/components/card-info";
 import {
 	cellState,
 	dayKeyOf,
@@ -22,9 +22,9 @@ import {
 	parseDayKey,
 	readout,
 	todayIn,
-} from "@/src/features/profile/contribution-graph";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { tap } from "@/src/lib/haptics";
+} from "@/features/profile/contribution-graph";
+import { useTokenColor } from "@/features/profile/hooks/use-token-color";
+import { tap } from "@/lib/haptics";
 
 const GAP = 3;
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];

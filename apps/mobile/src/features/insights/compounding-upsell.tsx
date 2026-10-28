@@ -20,13 +20,13 @@ import {
 } from "react";
 import type { ViewInstance } from "react-native";
 import { useWindowDimensions, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { DOMAIN_META } from "@/src/features/insights/domains";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
+import { DOMAIN_META } from "@/features/insights/domains";
+import { useTokenColor } from "@/features/profile/hooks/use-token-color";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { playSoftPress } from "@/lib/haptics";
 
 export type Upsell = NonNullable<
 	FunctionReturnType<typeof api.compounding.upsell.get>

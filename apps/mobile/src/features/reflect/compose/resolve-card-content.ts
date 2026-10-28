@@ -1,8 +1,8 @@
-import { NIGHT_HEADLINE } from "@/src/features/reflect/night-copy";
+import { NIGHT_HEADLINE } from "@/features/reflect/night-copy";
 import {
 	QUIET_RETURN_PROMPTS,
 	type QuietReturnTier,
-} from "@/src/features/reflect/quiet-return-copy";
+} from "@/features/reflect/quiet-return-copy";
 
 /**
  * What the reflect card says, and how big it says it.

@@ -2,9 +2,9 @@ import { SymbolView } from "expo-symbols";
 import { Separator, Switch, useThemeColor } from "heroui-native";
 import type { ReactNode } from "react";
 import { Pressable, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress, playTextureSelect } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress, playTextureSelect } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 const CHEVRON_NAME = {
 	android: "chevron_right",

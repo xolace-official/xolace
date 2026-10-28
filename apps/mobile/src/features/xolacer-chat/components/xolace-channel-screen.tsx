@@ -17,7 +17,7 @@ import {
 	useOverlayContext,
 	WithComponents,
 } from "stream-chat-expo";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import { useStreamConnection } from "../providers/stream-chat-provider";
 import { ChatBodyFrame } from "./chat-body-frame";
 import { OfflineStrip } from "./offline-strip";

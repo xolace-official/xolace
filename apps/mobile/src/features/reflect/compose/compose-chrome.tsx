@@ -5,12 +5,12 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { Tour } from "@/src/components/ui/tour";
-import { StreakCalendar } from "@/src/features/reflect/components/streak-calendar";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
-import { useFullContext } from "@/src/lib/convex/use-full-context";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { Tour } from "@/components/ui/tour";
+import { StreakCalendar } from "@/features/reflect/components/streak-calendar";
+import { TOUR_STEPS } from "@/features/reflect/tour-copy";
+import { useFullContext } from "@/lib/convex/use-full-context";
+import { playSoftPress } from "@/lib/haptics";
 
 const QUOTE_ICON_NAME = { android: "auto_awesome", ios: "sparkles" } as const;
 const EVENT_ICON_NAME = {

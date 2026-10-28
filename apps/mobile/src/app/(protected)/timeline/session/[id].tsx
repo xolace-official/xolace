@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { SessionDetailsScreen } from "@/src/features/timeline/components/screens/SessionDetailsScreen";
+import { SessionDetailsScreen } from "@/features/timeline/components/screens/SessionDetailsScreen";
 
 const NO_HEADER = { headerShown: false };
 

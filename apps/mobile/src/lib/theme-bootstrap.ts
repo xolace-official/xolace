@@ -9,7 +9,7 @@
  */
 import { Appearance } from "react-native";
 import { Uniwind } from "uniwind";
-import { useAppStore } from "@/src/store/store";
+import { useAppStore } from "@/store/store";
 
 const { theme, colorThemeId } = useAppStore.getState();
 

@@ -12,9 +12,9 @@ import { useEffect, useRef } from "react";
 import { Pressable } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { IntakeScreen } from "@/src/features/intake/questionnaire/intake-screen";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { AppText } from "@/components/shared/app-text";
+import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 /**
  * Long enough to actually read the line and look at him. 1400 was a flicker —

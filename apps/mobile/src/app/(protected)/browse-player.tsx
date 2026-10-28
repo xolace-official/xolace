@@ -1,3 +1,3 @@
-import { PlayerScreen } from "@/src/features/browse/player/player-screen";
+import { PlayerScreen } from "@/features/browse/player/player-screen";
 
 export default PlayerScreen;

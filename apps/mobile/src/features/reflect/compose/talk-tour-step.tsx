@@ -1,9 +1,9 @@
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { Tour } from "@/src/components/ui/tour";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
-import { a11yHidden } from "@/src/lib/utils";
+import { Tour } from "@/components/ui/tour";
+import { TOUR_STEPS } from "@/features/reflect/tour-copy";
+import { a11yHidden } from "@/lib/utils";
 
 const WAVEFORM_NAME = {
 	android: "graphic_eq",

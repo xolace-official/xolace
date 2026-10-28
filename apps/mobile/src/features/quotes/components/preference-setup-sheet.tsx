@@ -4,9 +4,9 @@ import { useState } from "react";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
-import { AppText } from "@/src/components/shared/app-text";
-import { PillButton } from "@/src/components/shared/pill-button";
-import { CircleProgress } from "@/src/features/quotes/components/circle-progress";
+import { AppText } from "@/components/shared/app-text";
+import { PillButton } from "@/components/shared/pill-button";
+import { CircleProgress } from "@/features/quotes/components/circle-progress";
 
 const THEME_SLUGS = [
 	"resilience",

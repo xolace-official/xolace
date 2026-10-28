@@ -1,6 +1,6 @@
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useLocalSearchParams } from "expo-router";
-import { SessionEndScreen } from "@/src/features/session-end/components/session-end-screen";
+import { SessionEndScreen } from "@/features/session-end/components/session-end-screen";
 
 type Params = {
 	path: "solo" | "peers" | "exit";

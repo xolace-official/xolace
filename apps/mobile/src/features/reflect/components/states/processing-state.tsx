@@ -3,11 +3,11 @@ import { useThemeColor } from "heroui-native";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import Shimmer from "@/src/components/shared/shimmer";
-import { SparkleStars } from "@/src/components/shared/sparkle-stars";
-import { ThinkingOrb } from "@/src/components/ui/thinking-orb";
-import { useProcessingBreathHaptic } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import Shimmer from "@/components/shared/shimmer";
+import { SparkleStars } from "@/components/shared/sparkle-stars";
+import { ThinkingOrb } from "@/components/ui/thinking-orb";
+import { useProcessingBreathHaptic } from "@/lib/haptics";
 
 // Chosen by what the pipeline is actually doing, never cycled (rule 12):
 // a line only claims memory when one connected (convex/ai/process.ts).

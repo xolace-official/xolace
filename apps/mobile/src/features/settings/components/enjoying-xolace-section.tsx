@@ -1,8 +1,8 @@
 import { SymbolView } from "expo-symbols";
 import { Accordion, PressableFeedback, useThemeColor } from "heroui-native";
 import { Linking, Platform, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
+import { AppText } from "@/components/shared/app-text";
+import { SettingsSection } from "@/features/settings/components/settings-section";
 
 const IOS_STORE_URL =
 	"https://apps.apple.com/app/apple-store/id6761601429?action=write-review";

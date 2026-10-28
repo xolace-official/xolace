@@ -6,8 +6,8 @@ import { Skeleton } from "heroui-native";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { CARD_RADIUS } from "@/src/features/library/home/entry-cards";
-import { BackButton } from "@/src/features/library/reader/reader-parts";
+import { CARD_RADIUS } from "@/features/library/home/entry-cards";
+import { BackButton } from "@/features/library/reader/reader-parts";
 
 const Title = () => <Skeleton className="mx-4 mt-8 mb-3 h-6 w-40 rounded-md" />;
 

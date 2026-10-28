@@ -6,10 +6,10 @@ import { PressableFeedback, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { playSoftPress } from "@/lib/haptics";
 
 type Props = {
 	sessionId?: Id<"sessions">;

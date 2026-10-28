@@ -7,12 +7,12 @@ import Animated, {
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	playCompassionateHold,
 	playGentlePresence,
 	playSoftenPulse,
-} from "@/src/lib/haptics";
+} from "@/lib/haptics";
 
 // This beat's own pulsing dot, not the BreathBeat orb (that one is imperative,
 // driven by PacedOrb.playCycle with its own per-phase haptics). The dot below

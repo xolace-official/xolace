@@ -1,4 +1,4 @@
-import { TimelineScreen } from "@/src/features/timeline/components/screens/TimelineScreen";
+import { TimelineScreen } from "@/features/timeline/components/screens/TimelineScreen";
 
 const Timeline = () => <TimelineScreen />;
 

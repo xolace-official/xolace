@@ -4,9 +4,9 @@ import {
 } from "@xolace/backend/convex/lib/specialties";
 import { PressableFeedback } from "heroui-native";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 const styles = StyleSheet.create({
 	borderCurve: { borderCurve: "continuous" },

@@ -11,7 +11,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 import { FounderCard } from "./founder-card";
 import { FOUNDER_MARQUEE_CARDS } from "./marquee-data";
