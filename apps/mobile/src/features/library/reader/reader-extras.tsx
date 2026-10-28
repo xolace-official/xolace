@@ -11,19 +11,19 @@ import { type PostHog, usePostHog } from "posthog-react-native";
 import { Pressable, Share, StyleSheet, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { detectCountry } from "@/src/features/crisis-resources/use-crisis-resources";
-import { trackLibrary } from "@/src/features/library/analytics";
+import { AppText } from "@/components/shared/app-text";
+import { detectCountry } from "@/features/crisis-resources/use-crisis-resources";
+import { trackLibrary } from "@/features/library/analytics";
 import {
 	COVER_BUTTON,
 	CoverGlass,
-} from "@/src/features/library/reader/cover-glass";
+} from "@/features/library/reader/cover-glass";
 import {
 	REFLECT_PROMPT,
 	shareMessage,
-} from "@/src/features/library/reader/reader-copy";
-import type { ReaderEntry } from "@/src/features/library/reader/reader-screen";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/library/reader/reader-copy";
+import type { ReaderEntry } from "@/features/library/reader/reader-screen";
+import { useAppStore } from "@/store/store";
 
 const NOTE_ICON = {
 	android: "info",

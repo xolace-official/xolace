@@ -12,8 +12,8 @@ import {
 	View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { useQuoteShareActions } from "@/src/features/quotes/hooks/use-quote-share-actions";
+import { AppText } from "@/components/shared/app-text";
+import { useQuoteShareActions } from "@/features/quotes/hooks/use-quote-share-actions";
 import { QuickAction } from "./quick-action";
 import { SocialIcon } from "./social-icon";
 

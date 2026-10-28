@@ -1,7 +1,7 @@
 import { Radio, RadioGroup } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { cn } from "@/lib/utils";
 
 type Props = {
 	label: string;

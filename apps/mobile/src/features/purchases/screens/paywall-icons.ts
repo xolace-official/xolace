@@ -1,8 +1,4 @@
-import type { SymbolView } from "expo-symbols";
-import type { ComponentProps } from "react";
-
-type SymbolName = ComponentProps<typeof SymbolView>["name"];
-export type CrossPlatformSymbol = Exclude<SymbolName, string>;
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 
 export const INSIGHTS_ICON: CrossPlatformSymbol = {
 	android: "trending_up",

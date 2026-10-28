@@ -9,9 +9,9 @@ import type { FunctionReturnType } from "convex/server";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Pressable, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
-import { imageSource } from "@/src/lib/image-source";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
+import { imageSource } from "@/lib/image-source";
 
 type Place = FunctionReturnType<typeof api.library.search.searchPlaces>[number];
 

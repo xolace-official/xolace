@@ -11,12 +11,12 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	useMiniPlayerAttention,
 	useMiniPlayerShown,
-} from "@/src/features/browse/now-playing/now-playing-store";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+} from "@/features/browse/now-playing/now-playing-store";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 /**
  * A one-shot lift when a new track's player closes, so the eye finds the

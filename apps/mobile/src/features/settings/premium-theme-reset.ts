@@ -1,4 +1,4 @@
-import { THEME_BY_ID } from "@/src/lib/themes";
+import { THEME_BY_ID } from "@/lib/themes";
 
 export type PremiumThemeReset = {
 	/** Night mode stashed a premium theme in `previousTheme` — drop it so the

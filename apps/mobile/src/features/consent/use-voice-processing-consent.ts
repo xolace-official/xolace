@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import {
 	hasCurrentVoiceConsent,
 	VOICE_PROCESSING_CONSENT_VERSION,
-} from "@/src/features/consent/voice-processing-consent";
+} from "@/features/consent/voice-processing-consent";
 
 /**
  * The gate in front of anything that sends recorded audio to ElevenLabs.

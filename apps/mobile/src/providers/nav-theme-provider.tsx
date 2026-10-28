@@ -9,7 +9,7 @@ import { useThemeColor } from "heroui-native";
 import { type ReactNode, useEffect } from "react";
 import { Appearance } from "react-native";
 import { useUniwind } from "uniwind";
-import { useAppStore } from "@/src/store/store";
+import { useAppStore } from "@/store/store";
 
 // Single source of truth for the native route background. The navigator paints
 // every screen container (and opaque / formSheet headers) with the nav theme's

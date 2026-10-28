@@ -4,20 +4,20 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	MINI_PLAYER_CLEARANCE,
 	useMiniPlayerShown,
-} from "@/src/features/browse/now-playing/now-playing-store";
-import { playSoftPress } from "@/src/lib/haptics";
-import { PlayfulLip } from "@/src/lib/playful/playful-lip";
-import { useIsPlayful, usePlayfulPress } from "@/src/lib/playful/use-playful";
+} from "@/features/browse/now-playing/now-playing-store";
+import { playSoftPress } from "@/lib/haptics";
+import { PlayfulLip } from "@/lib/playful/playful-lip";
+import { useIsPlayful, usePlayfulPress } from "@/lib/playful/use-playful";
 
 // iOS: the native tab bar is translucent and content runs underneath it, so the
 // dock has to clear the whole bar. Android: the native BottomNavigationView is
 // opaque and the content view already stops above it, so the same number
 // stranded the dock ~90dp in mid-air — there it only needs a breathing margin.
-export const TAB_BAR_CLEARANCE = process.env.EXPO_OS === "android" ? 16 : 90;
+const TAB_BAR_CLEARANCE = process.env.EXPO_OS === "android" ? 16 : 90;
 
 // Dock height + its clearance — how much scroll tail the screen must reserve.
 export const DOCK_CLEARANCE = 56 + TAB_BAR_CLEARANCE;

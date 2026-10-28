@@ -12,13 +12,13 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
-import { AppText } from "@/src/components/shared/app-text";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { cn } from "@/src/lib/utils";
+import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
+import { AppText } from "@/components/shared/app-text";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { useTokenColor } from "@/lib/use-token-color";
+import { cn } from "@/lib/utils";
 import { type AvatarOption, resolveAvatar } from "../hooks/use-avatars";
-import { useTokenColor } from "../hooks/use-token-color";
 
 type Props = {
 	isOpen: boolean;

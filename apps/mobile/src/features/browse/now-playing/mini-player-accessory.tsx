@@ -7,22 +7,22 @@ import { usePostHog } from "posthog-react-native";
 import { Pressable, View } from "react-native";
 import Animated from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { FAMILY_LABEL } from "@/src/features/browse/components/track-row";
+import { AppText } from "@/components/shared/app-text";
+import { FAMILY_LABEL } from "@/features/browse/components/track-row";
 import {
 	MarqueeTitle,
 	useAttentionPulse,
-} from "@/src/features/browse/now-playing/mini-player-motion";
+} from "@/features/browse/now-playing/mini-player-motion";
 import {
 	clearNowPlaying,
 	togglePlayback,
 	useNowPlaying,
 	useNowPlayingPlayback,
-} from "@/src/features/browse/now-playing/now-playing-store";
-import { useAccessibilityInfo } from "@/src/helpers/hooks/use-accessability-info";
-import { playSoftPress } from "@/src/lib/haptics";
-import { imageSource } from "@/src/lib/image-source";
-import { cn } from "@/src/lib/utils";
+} from "@/features/browse/now-playing/now-playing-store";
+import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
+import { playSoftPress } from "@/lib/haptics";
+import { imageSource } from "@/lib/image-source";
+import { cn } from "@/lib/utils";
 
 // Object form: a bare SF name renders nothing on Android.
 const PLAY = {

@@ -6,13 +6,13 @@ import * as Notifications from "expo-notifications";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Platform } from "react-native";
-import { suppressedInForeground } from "@/src/lib/notification-suppression";
+import { suppressedInForeground } from "@/lib/notification-suppression";
 import {
 	notificationTapPlan,
 	subscribeToNotificationTaps,
-} from "@/src/lib/notification-tap";
-import { requestPushToken } from "@/src/lib/push-token";
-import { useAppStore } from "@/src/store/store";
+} from "@/lib/notification-tap";
+import { requestPushToken } from "@/lib/push-token";
+import { useAppStore } from "@/store/store";
 
 // Configure how notifications appear when the app is in the foreground.
 //

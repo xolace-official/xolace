@@ -1,8 +1,8 @@
 import { Button, Dialog, Spinner, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
-import { AppText } from "@/src/components/shared/app-text";
-import { playAffirmativePress, playSoftPress } from "@/src/lib/haptics";
+import { DialogBlurBackdrop } from "@/components/dialog-blur-backdrop";
+import { AppText } from "@/components/shared/app-text";
+import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
 
 type Props = {
 	isOpen: boolean;

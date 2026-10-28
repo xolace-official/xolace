@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
-import { useStreamStatus } from "@/src/features/xolacer-chat/providers/stream-chat-provider";
+import { useStreamStatus } from "@/features/xolacer-chat/providers/stream-chat-provider";
 
 /**
  * Live unread count for a `ConversationRow`. Reads `channel.countUnread()`,

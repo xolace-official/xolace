@@ -12,10 +12,10 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { DOMAIN_META } from "@/src/features/insights/domains";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { DOMAIN_META } from "@/features/insights/domains";
+import { playSoftPress } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 type Unlock = NonNullable<Doc<"sessions">["domainUnlock"]>;
 

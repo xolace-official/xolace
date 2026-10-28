@@ -6,7 +6,7 @@ import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const OPTIONS = [
 	{ key: "mirror_kept_missing", label: "The mirror kept missing" },

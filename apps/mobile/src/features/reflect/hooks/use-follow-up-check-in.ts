@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
-import type { FollowUpParams } from "@/src/features/follow-up/follow-up-screen";
+import type { FollowUpParams } from "@/features/follow-up/follow-up-screen";
 
 type Args = {
 	/** Gate: only arm once the reflect screen is focused + context has loaded. */

@@ -6,7 +6,7 @@ import {
 	useChannelContext,
 	useChatContext,
 } from "stream-chat-expo";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const OFFLINE_ICON = {
 	android: "wifi_off",

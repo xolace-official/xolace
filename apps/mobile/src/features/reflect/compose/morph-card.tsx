@@ -6,16 +6,16 @@ import Animated, {
 	FadeOut,
 	type SharedValue,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { MorphCardBody } from "@/src/features/reflect/compose/morph-card-body";
-import { MorphCardHeader } from "@/src/features/reflect/compose/morph-card-header";
-import { useMorphCardStyles } from "@/src/features/reflect/compose/morph-card-styles";
-import { CARD_PAD } from "@/src/features/reflect/compose/morph-geometry";
-import type { CardContent } from "@/src/features/reflect/compose/resolve-card-content";
-import { SelectionEcho } from "@/src/features/reflect/compose/selection-echo";
-import type { PlusDictationView } from "@/src/features/reflect/hooks/use-plus-dictation";
-import { playSoftPress } from "@/src/lib/haptics";
-import { a11yHidden } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { MorphCardBody } from "@/features/reflect/compose/morph-card-body";
+import { MorphCardHeader } from "@/features/reflect/compose/morph-card-header";
+import { useMorphCardStyles } from "@/features/reflect/compose/morph-card-styles";
+import { CARD_PAD } from "@/features/reflect/compose/morph-geometry";
+import type { CardContent } from "@/features/reflect/compose/resolve-card-content";
+import { SelectionEcho } from "@/features/reflect/compose/selection-echo";
+import type { PlusDictationView } from "@/features/reflect/hooks/use-plus-dictation";
+import { playSoftPress } from "@/lib/haptics";
+import { a11yHidden } from "@/lib/utils";
 
 type Props = {
 	progress: SharedValue<number>;

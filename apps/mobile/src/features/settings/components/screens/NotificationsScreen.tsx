@@ -2,23 +2,23 @@ import { SymbolView } from "expo-symbols";
 import { RadioGroup, useThemeColor } from "heroui-native";
 import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
-import { HourRadioGroup } from "@/src/features/settings/components/hour-radio-group";
-import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
+import { AppText } from "@/components/shared/app-text";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
+import { HourRadioGroup } from "@/features/settings/components/hour-radio-group";
+import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
 import {
 	CHAT_NOTIFICATIONS_ICON,
-	type CrossPlatformSymbol,
 	NOTIFICATIONS_ICON,
 	QUIET_HOURS_ICON,
-} from "@/src/features/settings/components/settings-icons";
-import { SettingsRow } from "@/src/features/settings/components/settings-row";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
+} from "@/features/settings/components/settings-icons";
 import {
 	type NotificationReach,
 	useNotificationSettings,
-} from "@/src/features/settings/hooks/use-notification-settings";
-import { cn } from "@/src/lib/utils";
+} from "@/features/settings/hooks/use-notification-settings";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
+import { cn } from "@/lib/utils";
 
 const REACH_OPTIONS: {
 	value: NotificationReach;

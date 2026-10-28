@@ -26,12 +26,12 @@ import Animated, {
 	SlideOutDown,
 } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { formatTime } from "@/src/features/browse/player/format-time";
-import { trackLibrary } from "@/src/features/library/analytics";
-import { CoverImage } from "@/src/features/library/cover-image";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { AppText } from "@/components/shared/app-text";
+import { trackLibrary } from "@/features/library/analytics";
+import { CoverImage } from "@/features/library/cover-image";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { formatTime } from "@/lib/format-time";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { TranscriptSheet } from "./transcript-sheet";
 import type { EntryAudio } from "./use-entry-audio";
 

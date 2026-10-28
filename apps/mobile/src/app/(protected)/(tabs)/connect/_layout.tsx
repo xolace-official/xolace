@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
+import { useLargeHeaderOptions } from "@/lib/navigation-options";
 
 const CONNECT_OPTIONS = { title: "Connect" };
 const ARCHIVED_OPTIONS = {

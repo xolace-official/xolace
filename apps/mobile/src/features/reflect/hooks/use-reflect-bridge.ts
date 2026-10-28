@@ -3,8 +3,8 @@ import { useEffect } from "react";
 import type {
 	ReflectionAction,
 	ReflectionStateName,
-} from "@/src/features/reflect/types";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/reflect/types";
+import { useAppStore } from "@/store/store";
 
 /**
  * The reflect screen's link to what is laid over home (the starter bubble).

@@ -5,9 +5,9 @@ import {
 	useChatContext,
 	useMessageContext,
 } from "stream-chat-expo";
-import { AppText } from "@/src/components/shared/app-text";
-import { useConversationIdentity } from "@/src/features/xolacer-chat/components/message-author";
-import { resolveMessageIdentity } from "@/src/features/xolacer-chat/utils";
+import { AppText } from "@/components/shared/app-text";
+import { useConversationIdentity } from "@/features/xolacer-chat/components/message-author";
+import { resolveMessageIdentity } from "@/features/xolacer-chat/utils";
 
 type Reaction = NonNullable<MessageUserReactionsProps["reactions"]>[number];
 

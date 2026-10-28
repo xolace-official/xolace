@@ -4,7 +4,7 @@ import { useMutation } from "convex/react";
 import { useToast } from "heroui-native";
 import type { LocalMessage } from "stream-chat";
 import { useChatContext } from "stream-chat-expo";
-import { useFeedbackContext } from "@/src/features/feedback-tray/use-feedback-context";
+import { useFeedbackContext } from "@/features/feedback-tray/use-feedback-context";
 
 /**
  * Flag one message — the long-press action that replaces the SDK's own. Two

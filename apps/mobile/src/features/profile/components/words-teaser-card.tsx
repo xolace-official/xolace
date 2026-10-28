@@ -10,8 +10,8 @@ import { Surface } from "heroui-native";
 import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { useTokenColor } from "../hooks/use-token-color";
+import { AppText } from "@/components/shared/app-text";
+import { useTokenColor } from "@/lib/use-token-color";
 import { CardInfo } from "./card-info";
 import { FrostedCount } from "./frosted-count";
 

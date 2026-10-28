@@ -9,8 +9,8 @@ import {
 import { usePostHog } from "posthog-react-native";
 import { Linking, ScrollView, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { ResourceItem } from "@/src/components/shared/resource-item";
+import { AppText } from "@/components/shared/app-text";
+import { ResourceItem } from "@/components/shared/resource-item";
 import { COUNTRY_RESOURCES, LAST_UPDATED } from "./data";
 import type { CountryCode } from "./types";
 import { useCrisisResources } from "./use-crisis-resources";

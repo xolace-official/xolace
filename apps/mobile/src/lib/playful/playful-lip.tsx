@@ -4,7 +4,7 @@ import Animated, {
 	type SharedValue,
 	useAnimatedStyle,
 } from "react-native-reanimated";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 import { PLAYFUL_LIP } from "./use-playful";
 
 /**

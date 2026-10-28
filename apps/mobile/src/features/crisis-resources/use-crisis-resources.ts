@@ -2,11 +2,11 @@ import * as Localization from "expo-localization";
 import { useLocalSearchParams } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useState } from "react";
-import { COUNTRY_RESOURCES } from "@/src/features/crisis-resources/data";
+import { COUNTRY_RESOURCES } from "@/features/crisis-resources/data";
 import type {
 	CountryCode,
 	CountryData,
-} from "@/src/features/crisis-resources/types";
+} from "@/features/crisis-resources/types";
 
 type UseCrisisResourcesResult = {
 	selectedCountry: CountryCode | null;

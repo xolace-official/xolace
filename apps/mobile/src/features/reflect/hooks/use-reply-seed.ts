@@ -2,8 +2,8 @@ import { useEffect } from "react";
 import type {
 	ReflectionAction,
 	ReflectionStateName,
-} from "@/src/features/reflect/types";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/reflect/types";
+import { useAppStore } from "@/store/store";
 
 /**
  * Arriving with a reply seed (#316) opens the composer for the user; leaving the

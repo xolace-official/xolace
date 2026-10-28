@@ -4,9 +4,9 @@ import Animated, {
 	FadeOut,
 	LinearTransition,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { TEXTURE_PILL, textureHue } from "@/src/features/reflect/texture-sets";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { TEXTURE_PILL, textureHue } from "@/features/reflect/texture-sets";
+import { cn } from "@/lib/utils";
 
 // Barely-there overshoot: the word settles into the card, it doesn't land on a
 // trampoline.

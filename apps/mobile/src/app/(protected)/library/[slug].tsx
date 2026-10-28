@@ -9,10 +9,10 @@ import { useLocalSearchParams } from "expo-router";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { BackButton } from "@/src/features/library/reader/reader-parts";
-import { ReaderScreen } from "@/src/features/library/reader/reader-screen";
-import { ReaderSkeleton } from "@/src/features/library/skeletons";
+import { AppText } from "@/components/shared/app-text";
+import { BackButton } from "@/features/library/reader/reader-parts";
+import { ReaderScreen } from "@/features/library/reader/reader-screen";
+import { ReaderSkeleton } from "@/features/library/skeletons";
 
 export default function LibraryReaderRoute() {
 	const { slug } = useLocalSearchParams<{ slug: string }>();

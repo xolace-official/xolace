@@ -1,6 +1,6 @@
 # Xolace Workspace: Structure & Migration Plan
 
-**Status:** Decisions agreed 2026-10-21 · updated 2026-10-27: Phases 1–3 done, Phase 4 has the auth spikes (4a), the backend auth (4b), the CLI (4d) and admin v1 (4f) done, and web (4c), desktop (4e) and the later admin views deferred, Phase 5 not started. Each phase below carries its own status.
+**Status:** Decisions agreed 2026-10-21 · updated 2026-10-27: Phases 1–3 done, Phase 4 has the auth spikes (4a), the backend auth (4b), the CLI (4d) and admin v1 (4f) done, and web (4c), desktop (4e) and the later admin views deferred, Phase 5 in review. Each phase below carries its own status.
 
 The goal is one repository holding the mobile app, the user web app (which also becomes the desktop app), an admin dashboard and a TUI/CLI, all running on one Convex backend. Many people and agents should be able to work in it at the same time without stepping on each other.
 
@@ -263,9 +263,9 @@ Steps 4c, 4d, 4e and 4f can run in parallel. 4f needs only 4b's role claim, not 
 
 ### Phase 5: Deeper refactors, later and one PR each
 
-**Status 2026-10-27:** not started.
+**Status 2026-10-28:** in review, as one PR on `refactor/mobile-phase-5` (one commit per item).
 
-- `@/*` alias → `./src/*`.
+- `@/*` alias → `./src/*`. `@/assets/*` and `@/modules/*` keep their top-level folders.
 - Untangle the feature cycles: `purchases` ↔ `talk` ↔ `settings` and `library` ↔ `browse` / `kindling`. Turn `purchases` into an entitlements module.
 - Add an import-cycle test and knip with `includeEntryExports`.
 
@@ -357,7 +357,7 @@ Also:
 3. **Branches in flight.** Handled by the freeze in D7.
 4. **Formatting churn hiding real diffs.** Handled by D5, a separate commit listed in the blame-ignore file.
 5. **The Tauri sign-in trap.** It works against a Clerk dev instance and fails in prod. Test against prod early (spike 4a).
-6. **Feature cycles in mobile.** Left alone during the move and fixed in Phase 5.
+6. **Feature cycles in mobile.** Left alone during the move and fixed in Phase 5; `src/features/import-cycles.test.ts` keeps them out.
 
 ---
 

@@ -4,9 +4,9 @@ import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { interpolate, interpolateColor } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { useTokenColor } from "../hooks/use-token-color";
+import { AppText } from "@/components/shared/app-text";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useTokenColor } from "@/lib/use-token-color";
 import { CardInfo } from "./card-info";
 import { GateFade } from "./gate-fade";
 

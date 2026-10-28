@@ -8,7 +8,7 @@ import {
 	claimAudioSession,
 	holdsAudioFocus,
 	releaseAudioFocus,
-} from "@/src/lib/audio/session";
+} from "@/lib/audio/session";
 
 type UseMirrorAudioReturn = {
 	isReady: boolean;

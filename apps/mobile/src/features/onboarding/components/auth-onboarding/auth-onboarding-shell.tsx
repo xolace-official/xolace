@@ -14,8 +14,8 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScopedTheme } from "uniwind";
 
-import { useAppTheme } from "@/src/context/app-theme-context";
-import type { StoryBeat } from "@/src/features/onboarding/story-beats";
+import { useAppTheme } from "@/context/app-theme-context";
+import type { StoryBeat } from "@/features/onboarding/story-beats";
 import { AuthSheetBlock, MorphingSeatButton } from "./auth-sheet";
 import { HearthBackdrop } from "./hearth-backdrop";
 import { StoryBeatSlide } from "./story-beat";

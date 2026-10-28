@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hasCurrentVoiceConsent } from "@/src/features/consent/voice-processing-consent";
+import { hasCurrentVoiceConsent } from "@/features/consent/voice-processing-consent";
 
 const record = (
 	status: "granted" | "revoked",

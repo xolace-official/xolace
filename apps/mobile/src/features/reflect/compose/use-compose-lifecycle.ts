@@ -1,6 +1,6 @@
 import { useNavigation } from "expo-router";
 import { useEffect, useRef } from "react";
-import { playHomeEntrance } from "@/src/lib/haptics";
+import { playHomeEntrance } from "@/lib/haptics";
 
 /**
  * The screen's two mount-and-leave concerns.

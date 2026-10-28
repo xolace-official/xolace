@@ -16,10 +16,10 @@ import { useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { suggestHandle } from "@/src/features/intake/answer-rules";
-import { IntakeScreen } from "@/src/features/intake/questionnaire/intake-screen";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { suggestHandle } from "@/features/intake/answer-rules";
+import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
+import { playSoftPress } from "@/lib/haptics";
 
 interface NameStepProps {
 	initialName: string;

@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { PressableFeedback, Surface } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 

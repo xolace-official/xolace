@@ -12,21 +12,21 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import type { ScrollViewInstance } from "react-native";
 import { ScrollView, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	Questionnaire,
 	type QuestionnaireAnswers,
 	type QuestionnaireItemDefinition,
-} from "@/src/components/ui/questionnaire";
+} from "@/components/ui/questionnaire";
 import {
 	stepKeyOfAnswer,
 	trackQuestionAnswered,
 	trackStepViewed,
-} from "@/src/features/intake/analytics";
-import { applyCap } from "@/src/features/intake/answer-rules";
-import { IntakeScreen } from "@/src/features/intake/questionnaire/intake-screen";
-import { MascotSays } from "@/src/features/intake/questionnaire/mascot";
-import type { IntakeQuestion } from "@/src/features/intake/questions";
+} from "@/features/intake/analytics";
+import { applyCap } from "@/features/intake/answer-rules";
+import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
+import { MascotSays } from "@/features/intake/questionnaire/mascot";
+import type { IntakeQuestion } from "@/features/intake/questions";
 
 const NO_CAPS: readonly string[] = [];
 

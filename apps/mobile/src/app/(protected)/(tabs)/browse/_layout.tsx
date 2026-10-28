@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
+import { useLargeHeaderOptions } from "@/lib/navigation-options";
 
 // The hub sits under every deep jump into Browse that passes `withAnchor`,
 // so Library / Music / a topic always has a back button and a tab re-tap pops

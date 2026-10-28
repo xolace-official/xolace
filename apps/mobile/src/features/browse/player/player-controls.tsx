@@ -4,7 +4,7 @@ import { Slider } from "heroui-native";
 import { Pressable, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 export function usePlayerInk() {
 	return String(useCSSVariable("--color-player-ink"));

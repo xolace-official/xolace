@@ -2,7 +2,7 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import type { Doc } from "@xolace/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { useEffect } from "react";
-import { useAppStore } from "@/src/store/store";
+import { useAppStore } from "@/store/store";
 
 export function useAwarenessEvent(): Doc<"monthlyEvents"> | null {
 	const events = useQuery(api.monthlyEvents.getActive);

@@ -9,7 +9,7 @@ import {
 	useFetchReactions,
 	useMessagesContext,
 } from "stream-chat-expo";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 type Reaction = NonNullable<MessageUserReactionsProps["reactions"]>[number];
 

@@ -13,25 +13,22 @@ import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
-import { trackLibrary } from "@/src/features/library/analytics";
-import {
-	KindRows,
-	LetterStrip,
-} from "@/src/features/library/home/browse-sections";
+import { trackLibrary } from "@/features/library/analytics";
+import { KindRows, LetterStrip } from "@/features/library/home/browse-sections";
 import {
 	PhotoCard,
 	readerHref,
 	SectionTitle,
-} from "@/src/features/library/home/entry-cards";
-import { ForYouCarousel } from "@/src/features/library/home/for-you-carousel";
-import { HubCarousel } from "@/src/features/library/home/hub-carousel";
-import { reasonLine } from "@/src/features/library/home/library-copy";
+} from "@/features/library/home/entry-cards";
+import { ForYouCarousel } from "@/features/library/home/for-you-carousel";
+import { HubCarousel } from "@/features/library/home/hub-carousel";
+import { reasonLine } from "@/features/library/home/library-copy";
 import {
 	ReadingAsCard,
 	ReadingAsMenu,
-} from "@/src/features/library/home/reading-as";
-import { HomeSkeleton } from "@/src/features/library/skeletons";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/library/home/reading-as";
+import { HomeSkeleton } from "@/features/library/skeletons";
+import { useAppStore } from "@/store/store";
 
 export function LibraryHomeScreen() {
 	const posthog = usePostHog();

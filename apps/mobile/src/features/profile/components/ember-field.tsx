@@ -10,7 +10,7 @@ import {
 	withSpring,
 	withTiming,
 } from "react-native-reanimated";
-import { useTokenColor } from "../hooks/use-token-color";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const DOT_COUNT = 56;
 const CANVAS_H = 30;

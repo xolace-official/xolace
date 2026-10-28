@@ -18,10 +18,10 @@ import { I18nManager } from "react-native";
 export type DirectionValue = "ltr" | "rtl";
 
 /** What the device is set to, for anything outside a provider. */
-export const deviceDirection = (): DirectionValue =>
+const deviceDirection = (): DirectionValue =>
 	I18nManager.isRTL ? "rtl" : "ltr";
 
-export const DirectionContext = createContext<DirectionValue | null>(null);
+const DirectionContext = createContext<DirectionValue | null>(null);
 
 /**
  * The reading direction in force, for a component that has to flip maths Yoga
@@ -30,16 +30,4 @@ export const DirectionContext = createContext<DirectionValue | null>(null);
  */
 export function useDirection(): DirectionValue {
 	return useContext(DirectionContext) ?? deviceDirection();
-}
-
-/**
- * `-1` in a right-to-left subtree, `1` otherwise.
- *
- * The form most of the pixel maths actually wants. A drag translation, an
- * indicator offset and a sweep are all a number that has to change sign, and
- * writing `dir === 'rtl' ? -x : x` at every one of them is where the sign
- * errors live.
- */
-export function useDirectionSign(): 1 | -1 {
-	return useDirection() === "rtl" ? -1 : 1;
 }

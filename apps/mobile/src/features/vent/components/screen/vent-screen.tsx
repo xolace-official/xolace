@@ -17,10 +17,10 @@ import Animated, {
 	withSequence,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { useVentFlow } from "@/src/features/vent/hooks/use-vent-flow";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { useVentFlow } from "@/features/vent/hooks/use-vent-flow";
+import { playSoftPress } from "@/lib/haptics";
+import { useAppStore } from "@/store/store";
 import { useVentSounds } from "../../hooks/use-vent-sounds";
 import { ParticleField, type ParticleStage } from "../particles/particle-field";
 import { VentAcknowledgement } from "../vent-acknowledgement";

@@ -1,11 +1,11 @@
 import { PressableFeedback, SkeletonGroup } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	PLATE_GAP,
 	PLATE_HEIGHT,
 	usePosterBoxHeight,
-} from "@/src/features/quotes/components/poster/poster-body";
+} from "@/features/quotes/components/poster/poster-body";
 
 /**
  * Cold start and error render as the poster box, not as a takeover: the body

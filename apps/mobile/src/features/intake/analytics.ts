@@ -12,8 +12,8 @@
 
 import { INTAKE_VERSION } from "@xolace/backend/convex/lib/validators";
 import type { PostHog } from "posthog-react-native";
-import { SERIES_BRANCH_VALUE } from "@/src/features/intake/questions";
-import type { IntakeAnswers } from "@/src/store/intake-slice";
+import { SERIES_BRANCH_VALUE } from "@/features/intake/questions";
+import type { IntakeAnswers } from "@/store/intake-slice";
 
 type StepType = "founder" | "question" | "interstitial" | "paywall";
 type Section = "you" | "how_you_carry_it" | "finding_us" | null;
@@ -66,7 +66,7 @@ export const STEP_KEY_BY_ANSWER = {
 export const stepKeyOfAnswer = (name: string): IntakeStepKey | undefined =>
 	STEP_KEY_BY_ANSWER[name as keyof typeof STEP_KEY_BY_ANSWER];
 
-export const DECLINED_VALUE = "prefer_not_to_say";
+const DECLINED_VALUE = "prefer_not_to_say";
 
 const indexOf = (key: IntakeStepKey) =>
 	STEPS.findIndex((step) => step.key === key);

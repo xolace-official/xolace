@@ -1,6 +1,6 @@
 import { useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import { GradientText } from "./gradient-text";
 
 const DEFAULT_LINE =

@@ -1,11 +1,11 @@
 import { PressableFeedback } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	TEXTURE_SET_IDS,
 	TEXTURE_SET_LABELS,
 	type TextureSetId,
-} from "@/src/features/reflect/texture-sets";
+} from "@/features/reflect/texture-sets";
 
 type Props = {
 	activeSet: TextureSetId;

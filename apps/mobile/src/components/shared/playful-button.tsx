@@ -1,8 +1,8 @@
 import { Button as HeroButton } from "heroui-native";
 import type { ComponentProps } from "react";
-import { PlayfulLip } from "@/src/lib/playful/playful-lip";
-import { useIsPlayful, usePlayfulPress } from "@/src/lib/playful/use-playful";
-import { cn } from "@/src/lib/utils";
+import { PlayfulLip } from "@/lib/playful/playful-lip";
+import { useIsPlayful, usePlayfulPress } from "@/lib/playful/use-playful";
+import { cn } from "@/lib/utils";
 
 type ButtonProps = ComponentProps<typeof HeroButton>;
 

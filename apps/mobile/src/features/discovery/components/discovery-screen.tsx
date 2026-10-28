@@ -2,17 +2,17 @@ import { ScrollView, View } from "react-native";
 import {
 	MINI_PLAYER_CLEARANCE,
 	useMiniPlayerShown,
-} from "@/src/features/browse/now-playing/now-playing-store";
-import { CohortCard } from "@/src/features/discovery/components/cohort-card";
-import { DailyQuotesCard } from "@/src/features/discovery/components/daily-quotes-card";
-import { DiscoveryHeader } from "@/src/features/discovery/components/discovery-header";
-import { DiscoveryTimelineSection } from "@/src/features/discovery/components/discovery-timeline-section";
-import { KindlingTodayCard } from "@/src/features/discovery/components/kindling-today-card";
-import { LibraryStrip } from "@/src/features/discovery/components/library-strip";
+} from "@/features/browse/now-playing/now-playing-store";
+import { CohortCard } from "@/features/discovery/components/cohort-card";
+import { DailyQuotesCard } from "@/features/discovery/components/daily-quotes-card";
+import { DiscoveryHeader } from "@/features/discovery/components/discovery-header";
+import { DiscoveryTimelineSection } from "@/features/discovery/components/discovery-timeline-section";
+import { KindlingTodayCard } from "@/features/discovery/components/kindling-today-card";
+import { LibraryStrip } from "@/features/discovery/components/library-strip";
 import {
 	DOCK_CLEARANCE,
 	ReflectDock,
-} from "@/src/features/discovery/components/reflect-dock";
+} from "@/features/discovery/components/reflect-dock";
 
 /**
  * First tab. The masthead runs under the status bar, so this screen opts out of

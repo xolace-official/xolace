@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 // Cream-white from the design spec — fixed artwork color on the dark ritual screen.
 const TEXT_STYLE = { color: "#F5F0E8" };

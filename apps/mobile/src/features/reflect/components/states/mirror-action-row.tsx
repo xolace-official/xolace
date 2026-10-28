@@ -2,8 +2,8 @@ import type { ClaimStrength } from "@xolace/backend/convex/ai/routing";
 import { Button, LinkButton, PressableFeedback } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { playAffirmativePress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playAffirmativePress } from "@/lib/haptics";
 
 type Props = {
 	/** Derived server-side; "reaching"/"holding" means this mirror named a gap. */

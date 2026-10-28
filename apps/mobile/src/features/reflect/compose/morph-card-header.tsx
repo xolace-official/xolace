@@ -1,14 +1,14 @@
 import type { TextStyle, ViewStyle } from "react-native";
 import { Pressable, View } from "react-native";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { Tour } from "@/src/components/ui/tour";
-import { MicButton } from "@/src/features/reflect/components/mic-button";
-import { PresenceDot } from "@/src/features/reflect/components/presence-dot";
-import type { CardContent } from "@/src/features/reflect/compose/resolve-card-content";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
-import { playSoftPress } from "@/src/lib/haptics";
-import { a11yHidden } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { Tour } from "@/components/ui/tour";
+import { MicButton } from "@/features/reflect/components/mic-button";
+import { PresenceDot } from "@/features/reflect/components/presence-dot";
+import type { CardContent } from "@/features/reflect/compose/resolve-card-content";
+import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
+import { playSoftPress } from "@/lib/haptics";
+import { a11yHidden } from "@/lib/utils";
 
 /**
  * The resting card is a fixed 3:4 page with `overflow: hidden`, so a long

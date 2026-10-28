@@ -1,4 +1,4 @@
-import { zustandJSONStorage } from "@/src/lib/storage/unified-storage";
+import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 
 /** What `xolacerChat.getStreamToken` returns, plus who it was minted for. */
 export type StreamCredential = {

@@ -1,6 +1,6 @@
 import { PressableFeedback } from "heroui-native";
-import { AppText } from "@/src/components/shared/app-text";
-import type { SourceLine } from "@/src/features/quotes/hooks/use-today-quote";
+import { AppText } from "@/components/shared/app-text";
+import type { SourceLine } from "@/features/quotes/hooks/use-today-quote";
 
 const CLASSES =
 	"mb-2 text-center font-poster-body text-[12.5px] text-poster-ink-faint";

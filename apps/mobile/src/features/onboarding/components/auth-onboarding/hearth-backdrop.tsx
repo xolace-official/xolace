@@ -32,7 +32,7 @@ import Animated, {
 	useReducedMotion,
 } from "react-native-reanimated";
 
-import { STORY_BEATS } from "@/src/features/onboarding/story-beats";
+import { STORY_BEATS } from "@/features/onboarding/story-beats";
 import { HearthVideo } from "./hearth-video";
 import { SkyArc } from "./sky-arc";
 

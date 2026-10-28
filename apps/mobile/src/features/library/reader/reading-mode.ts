@@ -70,7 +70,7 @@ export const READING_MODE_KEYS = Object.keys(READING_MODES) as ReadingModeKey[];
 
 /** Base sizes before the OS text size multiplies them; the body is never capped. */
 export const TEXT_SIZES = [16, 17, 18, 20, 22, 24] as const;
-export const DEFAULT_TEXT_SIZE = 18;
+const DEFAULT_TEXT_SIZE = 18;
 
 export function stepTextSize(size: number, by: 1 | -1): number {
 	const i = TEXT_SIZES.indexOf(size as (typeof TEXT_SIZES)[number]);

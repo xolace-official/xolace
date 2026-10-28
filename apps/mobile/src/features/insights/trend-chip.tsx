@@ -3,9 +3,9 @@
 
 import { SymbolView } from "expo-symbols";
 import { Chip } from "heroui-native";
-import { icon, trendBasis } from "@/src/features/insights/domains";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
+import { icon, trendBasis } from "@/features/insights/domains";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const UP = icon("arrow.up", "arrow_upward");
 const DOWN = icon("arrow.down", "arrow_downward");

@@ -15,7 +15,7 @@ import Animated, {
 	useReducedMotion,
 } from "react-native-reanimated";
 
-import type { StoryBeat } from "@/src/features/onboarding/story-beats";
+import type { StoryBeat } from "@/features/onboarding/story-beats";
 import { CoverBeat } from "./cover-beat";
 import { MirrorBeat } from "./mirror-beat";
 import { PlusBeat } from "./plus-beat";

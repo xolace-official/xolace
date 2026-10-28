@@ -11,7 +11,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import type { CardColors, CardMetrics } from "./constants";
 import { FlipPage } from "./flip-page";
 

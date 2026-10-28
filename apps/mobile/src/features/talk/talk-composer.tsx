@@ -13,11 +13,11 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { useCompanionName } from "@/src/features/talk/use-companion-name";
-import type { Talk } from "@/src/features/talk/use-talk";
-import { playSoftPress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+import { GlassSurface } from "@/components/shared/glass-surface";
+import { useCompanionName } from "@/features/talk/use-companion-name";
+import type { Talk } from "@/features/talk/use-talk";
+import { playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 const hasGlass = isLiquidGlassAvailable();
 const BAR_SHAPE = [0.5, 0.85, 1, 0.75, 0.45];

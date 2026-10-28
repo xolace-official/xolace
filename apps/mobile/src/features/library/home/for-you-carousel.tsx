@@ -20,8 +20,8 @@ import {
 	CARD_RADIUS,
 	type EntryItem,
 	PhotoCard,
-} from "@/src/features/library/home/entry-cards";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+} from "@/features/library/home/entry-cards";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 const GAP = 10;

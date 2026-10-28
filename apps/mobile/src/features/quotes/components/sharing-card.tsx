@@ -2,9 +2,9 @@ import { Image } from "expo-image";
 import { forwardRef, useEffect, useState } from "react";
 import type { ViewInstance } from "react-native";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { PosterBody } from "@/src/features/quotes/components/poster/poster-body";
-import { PosterSurface } from "@/src/features/quotes/components/poster/poster-surface";
+import { AppText } from "@/components/shared/app-text";
+import { PosterBody } from "@/features/quotes/components/poster/poster-body";
+import { PosterSurface } from "@/features/quotes/components/poster/poster-surface";
 
 /** Flux at the fire — the mascot the card carried before the rebuild (#317) */
 const MASCOT = require("@/assets/images/flux/campfire-mini.jpeg");

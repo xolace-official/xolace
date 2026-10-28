@@ -3,22 +3,22 @@ import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { PressableFeedback, Surface } from "heroui-native";
 import { StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import type { ConversationList } from "@/src/features/xolacer-chat/components/chats-list";
-import { PresenceDot } from "@/src/features/xolacer-chat/components/presence-dot";
+import { AppText } from "@/components/shared/app-text";
+import type { ConversationList } from "@/features/xolacer-chat/components/chats-list";
+import { PresenceDot } from "@/features/xolacer-chat/components/presence-dot";
 import {
 	NewXolacerChip,
 	RatingStars,
-} from "@/src/features/xolacer-chat/components/rating-stars";
+} from "@/features/xolacer-chat/components/rating-stars";
 import {
 	SpecialtyChips,
 	SpecialtyFilter,
-} from "@/src/features/xolacer-chat/components/specialty-chips";
-import { usePresenceSnapshot } from "@/src/features/xolacer-chat/components/use-presence-snapshot";
-import { XolacerAvatar } from "@/src/features/xolacer-chat/components/xolacer-avatar";
-import { sortByPresence } from "@/src/features/xolacer-chat/presence-ordering";
-import { playSoftPress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+} from "@/features/xolacer-chat/components/specialty-chips";
+import { usePresenceSnapshot } from "@/features/xolacer-chat/components/use-presence-snapshot";
+import { XolacerAvatar } from "@/features/xolacer-chat/components/xolacer-avatar";
+import { sortByPresence } from "@/features/xolacer-chat/presence-ordering";
+import { playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 const styles = StyleSheet.create({
 	borderCurve: { borderCurve: "continuous" },

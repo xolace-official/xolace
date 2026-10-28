@@ -6,11 +6,11 @@ import Animated, {
 	useAnimatedScrollHandler,
 	useSharedValue,
 } from "react-native-reanimated";
-import { getInitialThemeCarouselIndex } from "@/src/features/settings/components/get-initial-theme-carousel-index";
-import { ThemeCarouselGlow } from "@/src/features/settings/components/theme-carousel-glow";
-import { ThemeCarouselItem } from "@/src/features/settings/components/theme-carousel-item";
-import { ThemePreviewCard } from "@/src/features/settings/components/theme-preview-card";
-import { FREE_THEMES, PREMIUM_THEMES } from "@/src/lib/themes";
+import { getInitialThemeCarouselIndex } from "@/features/settings/components/get-initial-theme-carousel-index";
+import { ThemeCarouselGlow } from "@/features/settings/components/theme-carousel-glow";
+import { ThemeCarouselItem } from "@/features/settings/components/theme-carousel-item";
+import { ThemePreviewCard } from "@/features/settings/components/theme-preview-card";
+import { FREE_THEMES, PREMIUM_THEMES } from "@/lib/themes";
 
 const CARD_WIDTH = 164;
 const CARD_GAP = 14;

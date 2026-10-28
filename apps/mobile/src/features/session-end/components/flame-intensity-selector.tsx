@@ -12,7 +12,7 @@ import Animated, {
 	withSpring,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const FLAME_COUNT = 5;
 const { width: SCREEN_WIDTH } = Dimensions.get("window");

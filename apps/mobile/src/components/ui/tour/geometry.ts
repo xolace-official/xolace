@@ -5,7 +5,7 @@ import {
 	SCREEN_MARGIN,
 	type TourPlacement,
 	type TourShape,
-} from "@/src/components/ui/tour/types";
+} from "@/components/ui/tour/types";
 
 /**
  * The screen with a rounded rectangle taken out of it, as one path.

@@ -7,10 +7,10 @@ import { Skeleton } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect } from "react";
 import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { useMiniPlayerInset } from "@/src/features/browse/now-playing/now-playing-store";
-import { CoverImage } from "@/src/features/library/cover-image";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
+import { CoverImage } from "@/features/library/cover-image";
+import { playSoftPress } from "@/lib/haptics";
 
 type Topic = FunctionReturnType<typeof api.browse.getTopics>[number];
 

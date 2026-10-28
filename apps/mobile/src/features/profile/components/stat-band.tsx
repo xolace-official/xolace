@@ -1,13 +1,13 @@
 import { Surface } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	FADE_IN,
 	FADE_OUT,
 	GlassSurface,
-} from "@/src/components/shared/glass-surface";
-import { useIsPlayful } from "@/src/lib/playful/use-playful";
+} from "@/components/shared/glass-surface";
+import { useIsPlayful } from "@/lib/playful/use-playful";
 
 type Stat = { value: string; label: string; sub?: string; amber?: boolean };
 

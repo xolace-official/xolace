@@ -19,7 +19,7 @@ export type ThemeEntry = {
 	available?: boolean;
 };
 
-export const THEMES: ThemeEntry[] = [
+const THEMES: ThemeEntry[] = [
 	{
 		id: "default",
 		name: "Default",

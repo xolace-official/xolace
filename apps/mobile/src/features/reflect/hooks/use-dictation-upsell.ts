@@ -1,9 +1,9 @@
 import { useIsFocused } from "expo-router/react-navigation";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { useAppStore } from "@/src/store/store";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { useAppStore } from "@/store/store";
 
 /** The one-time Plus dictation upsell's modal (#559). */
 export type DictationUpsell = {

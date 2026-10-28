@@ -1,6 +1,6 @@
 import { tokenCache as clerkTokenCache } from "@clerk/expo/token-cache";
 import * as Sentry from "@sentry/react-native";
-import { zustandJSONStorage } from "@/src/lib/storage/unified-storage";
+import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 
 type TokenCache = NonNullable<typeof clerkTokenCache>;
 

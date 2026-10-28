@@ -8,22 +8,22 @@ import { useEffect, useRef, useState } from "react";
 import { AppState, Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { MonthlyEventSheet } from "@/src/features/awareness-events/components/monthly-event-sheet";
-import { useAwarenessEvent } from "@/src/features/awareness-events/hooks/use-awareness-event";
-import { ReflectScreen } from "@/src/features/reflect/components/reflect-screen";
-import { ReturnWelcomeSheet } from "@/src/features/reflect/components/return-welcome-sheet";
-import { useFollowUpCheckIn } from "@/src/features/reflect/hooks/use-follow-up-check-in";
-import { useReturnWelcome } from "@/src/features/reflect/hooks/use-return-welcome";
-import { shouldShowReflectTour } from "@/src/features/reflect/tour-copy";
-import { StarterSuggestionsBubble } from "@/src/features/starter-suggestions/starter-suggestions-bubble";
-import { useStarterSuggestions } from "@/src/features/starter-suggestions/use-starter-suggestions";
+import { AppText } from "@/components/shared/app-text";
+import { MonthlyEventSheet } from "@/features/awareness-events/components/monthly-event-sheet";
+import { useAwarenessEvent } from "@/features/awareness-events/hooks/use-awareness-event";
+import { ReflectScreen } from "@/features/reflect/components/reflect-screen";
+import { ReturnWelcomeSheet } from "@/features/reflect/components/return-welcome-sheet";
+import { useFollowUpCheckIn } from "@/features/reflect/hooks/use-follow-up-check-in";
+import { useReturnWelcome } from "@/features/reflect/hooks/use-return-welcome";
+import { shouldShowReflectTour } from "@/features/reflect-tour/tour-copy";
+import { StarterSuggestionsBubble } from "@/features/starter-suggestions/starter-suggestions-bubble";
+import { useStarterSuggestions } from "@/features/starter-suggestions/use-starter-suggestions";
 import {
 	computeQuietReturn,
 	computeUserVariant,
-} from "@/src/helpers/utils/user-variant";
-import { useFullContext } from "@/src/lib/convex/use-full-context";
-import { useAppStore } from "@/src/store/store";
+} from "@/helpers/utils/user-variant";
+import { useFullContext } from "@/lib/convex/use-full-context";
+import { useAppStore } from "@/store/store";
 
 const BANNER_INITIAL = { opacity: 0 };
 

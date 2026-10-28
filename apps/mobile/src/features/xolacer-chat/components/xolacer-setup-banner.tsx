@@ -2,8 +2,8 @@ import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 
 const styles = StyleSheet.create({
 	borderCurve: { borderCurve: "continuous" },

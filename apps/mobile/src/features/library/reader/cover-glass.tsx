@@ -1,7 +1,7 @@
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import type { ReactNode } from "react";
 
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
 const GLASS = isLiquidGlassAvailable();
 // Sized to the button so every touch inside the circle lands on the glass (its press swell).

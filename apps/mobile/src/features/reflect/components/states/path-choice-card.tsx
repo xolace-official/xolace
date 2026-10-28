@@ -2,10 +2,10 @@ import { Image, type ImageSource } from "expo-image";
 import { PressableFeedback } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { Icon } from "@/src/features/follow-up/stack-cards";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { Icon } from "@/features/follow-up/stack-cards";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { cn } from "@/lib/utils";
 
 // Overrides heroui's `.pressable-feedback__root { overflow: hidden }`; a
 // className doesn't reliably beat the component class, a style does.
@@ -20,7 +20,7 @@ const PEEK_STYLE = {
 };
 const SETTLED = { opacity: 1, translateY: 0 };
 /** Strong ease-out: an entrance nobody's finger started, so no overshoot. */
-export const RISE_EASING: [number, number, number, number] = [0.23, 1, 0.32, 1];
+const RISE_EASING: [number, number, number, number] = [0.23, 1, 0.32, 1];
 export const riseFrom = (reduced: boolean) => ({
 	opacity: 0,
 	translateY: reduced ? 0 : 48,

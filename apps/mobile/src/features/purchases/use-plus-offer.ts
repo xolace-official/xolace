@@ -7,8 +7,8 @@ import {
 	type PlusOfferSurface,
 	type PlusOfferVariant,
 	plusOfferCandidates,
-} from "@/src/features/purchases/plus-offer-policy";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/purchases/plus-offer-policy";
+import { useAppStore } from "@/store/store";
 
 export type ActivePlusOffer = {
 	moment: PlusOfferMoment;

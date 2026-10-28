@@ -5,10 +5,7 @@
 
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
-import {
-	capitalise,
-	type Kind,
-} from "@/src/features/library/reader/reader-copy";
+import { capitalise, type Kind } from "@/features/library/reader/reader-copy";
 
 export type { Kind };
 

@@ -12,7 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { useCSSVariable } from "uniwind";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import type { Twig } from "../twig-presentation";
 import { STOP_NODE, TrailStop } from "./trail-stop";
 

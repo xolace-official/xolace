@@ -1,6 +1,6 @@
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { Redirect, useLocalSearchParams } from "expo-router";
-import { BridgeScreen } from "@/src/features/trusted-bridge/components/screen/bridge-screen";
+import { BridgeScreen } from "@/features/trusted-bridge/components/screen/bridge-screen";
 
 type Params = {
 	sessionId: string;

@@ -8,7 +8,7 @@ import {
 	Text,
 } from "@shopify/react-native-skia";
 import { View } from "react-native";
-import { useTokenColor } from "../hooks/use-token-color";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const W = 44;
 const H = 24;

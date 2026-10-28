@@ -8,8 +8,8 @@ import Animated, {
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import Shimmer from "@/src/components/shared/shimmer-v2";
+import { AppText } from "@/components/shared/app-text";
+import Shimmer from "@/components/shared/shimmer-v2";
 
 type Props = {
 	name: string;

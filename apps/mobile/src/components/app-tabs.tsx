@@ -2,12 +2,12 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { MiniPlayerAccessory } from "@/src/features/browse/now-playing/mini-player-accessory";
-import { MiniPlayerOverlay } from "@/src/features/browse/now-playing/mini-player-overlay";
-import { useMiniPlayerShown } from "@/src/features/browse/now-playing/now-playing-store";
-import { useUnreadBadge } from "@/src/features/xolacer-chat/use-unread-badge";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useTabBarHidden } from "@/src/lib/tab-bar";
+import { MiniPlayerAccessory } from "@/features/browse/now-playing/mini-player-accessory";
+import { MiniPlayerOverlay } from "@/features/browse/now-playing/mini-player-overlay";
+import { useMiniPlayerShown } from "@/features/browse/now-playing/now-playing-store";
+import { useUnreadBadge } from "@/features/xolacer-chat/use-unread-badge";
+import { playSoftPress } from "@/lib/haptics";
+import { useTabBarHidden } from "@/lib/tab-bar";
 
 /**
  * Tab surface — a sibling stack entry to the reflect (index) screen, not the

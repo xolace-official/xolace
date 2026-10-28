@@ -2,8 +2,8 @@ import { SymbolView } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { BridgeIntroMascot } from "@/src/features/trusted-bridge/components/bridge-intro-mascot";
+import { AppText } from "@/components/shared/app-text";
+import { BridgeIntroMascot } from "@/features/trusted-bridge/components/bridge-intro-mascot";
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const FADE_OUT = { opacity: 0 };

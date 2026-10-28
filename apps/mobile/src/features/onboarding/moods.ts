@@ -1,4 +1,4 @@
-import type { MoodItem } from "@/src/features/onboarding/components/mood-card";
+import type { MoodItem } from "@/features/onboarding/components/mood-card";
 
 /**
  * Mood cards for the onboarding marquee.

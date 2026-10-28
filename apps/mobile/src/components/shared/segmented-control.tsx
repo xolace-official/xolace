@@ -15,7 +15,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import type { WithSpringConfig } from "react-native-reanimated/lib/typescript/animation/spring";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
 type ItemMeasurements = { width: number; height: number; x: number };
 

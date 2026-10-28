@@ -1,7 +1,7 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
-import { usePreferenceMutation } from "./use-preference-mutation";
+import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
 export type MirrorTone =
 	| "adaptive"

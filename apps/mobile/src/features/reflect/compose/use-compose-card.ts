@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { resolveCardContent } from "@/src/features/reflect/compose/resolve-card-content";
-import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
-import { useAppStore } from "@/src/store/store";
+import { resolveCardContent } from "@/features/reflect/compose/resolve-card-content";
+import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
+import { useAppStore } from "@/store/store";
 
 const NUDGE_MESSAGES = [
 	"There's no rush. Let it come.",

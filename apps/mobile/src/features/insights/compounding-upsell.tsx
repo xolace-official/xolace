@@ -20,20 +20,20 @@ import {
 } from "react";
 import type { ViewInstance } from "react-native";
 import { useWindowDimensions, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { DOMAIN_META } from "@/src/features/insights/domains";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
+import { DOMAIN_META } from "@/features/insights/domains";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { playSoftPress } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 export type Upsell = NonNullable<
 	FunctionReturnType<typeof api.compounding.upsell.get>
 >;
 
 /** Session end's: upsell.get for its session. Null until there's one to show. */
-export function useCompoundingUpsell(
+function useCompoundingUpsell(
 	args: { sessionId: Id<"sessions"> } | "skip"
 ): Upsell | null {
 	const { isPlus, isResolved } = usePlusEntitlement();

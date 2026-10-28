@@ -7,21 +7,21 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
-import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
-import { KindlingTrail } from "@/src/features/kindling/components/kindling-trail";
-import { TwigSheet } from "@/src/features/kindling/components/twig-sheet";
+import { AppText } from "@/components/shared/app-text";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { MorphLoader } from "@/components/shared/loader/morph/morph-loader";
+import { KindlingTrail } from "@/features/kindling/components/kindling-trail";
+import { TwigSheet } from "@/features/kindling/components/twig-sheet";
 import {
 	type Twig,
 	twigBrowseHref,
 	twigHref,
 	twigSlug,
-} from "@/src/features/kindling/twig-presentation";
-import { useXolacerTwigHref } from "@/src/features/kindling/use-xolacer-twig-href";
-import { trackLibrary } from "@/src/features/library/analytics";
-import { playSoftPress, playTextureSelect } from "@/src/lib/haptics";
-import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
+} from "@/features/kindling/twig-presentation";
+import { useXolacerTwigHref } from "@/features/kindling/use-xolacer-twig-href";
+import { trackLibrary } from "@/features/library/analytics";
+import { playSoftPress, playTextureSelect } from "@/lib/haptics";
+import { useLargeHeaderOptions } from "@/lib/navigation-options";
 
 /**
  * The active-kindling screen (docs/paths-v1.md §9.1, #333) — the Lantern

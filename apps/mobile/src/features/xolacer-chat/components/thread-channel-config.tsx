@@ -5,7 +5,7 @@ import type {
 	ReactionData,
 } from "stream-chat-expo";
 import { messageActions as defaultMessageActions } from "stream-chat-expo";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import { ConversationMessageSystem } from "./crisis-resources-card";
 import { ConversationMessageAuthor } from "./message-author";
 import { ChannelErrorIndicator } from "./offline-strip";

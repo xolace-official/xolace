@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { spokenWords, withoutTags } from "@/src/features/talk/spoken-words";
+import { spokenWords, withoutTags } from "@/features/talk/spoken-words";
 
 const chunk = (text: string, step = 50) => ({
 	char_durations_ms: [...text].map(() => step),

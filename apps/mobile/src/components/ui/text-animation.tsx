@@ -62,8 +62,8 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import { tv } from "tailwind-variants";
 import { useCSSVariable } from "uniwind";
-import { Text, type TextProps } from "@/src/components/ui/text";
-import { cn } from "@/src/lib/cn";
+import { Text, type TextProps } from "@/components/ui/text";
+import { cn } from "@/lib/cn";
 
 const AnimatedText = Animated.createAnimatedComponent(RNText);
 

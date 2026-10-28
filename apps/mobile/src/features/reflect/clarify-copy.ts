@@ -1,5 +1,5 @@
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
-import type { MissReason } from "@/src/features/reflect/types";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
+import type { MissReason } from "@/features/reflect/types";
 
 /**
  * The question a reaching mirror closes on, or null. The articulator puts it

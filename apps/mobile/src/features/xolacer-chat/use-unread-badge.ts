@@ -1,7 +1,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 import type { StreamChat } from "stream-chat";
-import { useStreamStatus } from "@/src/features/xolacer-chat/providers/stream-chat-provider";
-import { badgeFromEvents } from "@/src/features/xolacer-chat/unread-badge";
+import { useStreamStatus } from "@/features/xolacer-chat/providers/stream-chat-provider";
+import { badgeFromEvents } from "@/features/xolacer-chat/unread-badge";
 
 /**
  * Held beside the client rather than read off `client.user`: the SDK only

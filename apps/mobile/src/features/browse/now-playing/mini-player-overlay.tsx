@@ -6,7 +6,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { MiniPlayerContent } from "@/src/features/browse/now-playing/mini-player-accessory";
+import { MiniPlayerContent } from "@/features/browse/now-playing/mini-player-accessory";
 
 const GAP = 8;
 const ENTER = FadeInDown.duration(240).easing(Easing.bezier(0.23, 1, 0.32, 1));

@@ -2,30 +2,30 @@ import { PressableFeedback } from "heroui-native";
 import { useRef } from "react";
 import type { TextInputInstance } from "react-native";
 import { StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { Tour } from "@/src/components/ui/tour";
-import { useSessionMode } from "@/src/context/session-mode-context";
-import { ComposeSurround } from "@/src/features/reflect/compose/compose-surround";
-import { FluxPerch } from "@/src/features/reflect/compose/flux-perch";
-import { MorphCard } from "@/src/features/reflect/compose/morph-card";
-import { useComposeCard } from "@/src/features/reflect/compose/use-compose-card";
-import { useComposeLifecycle } from "@/src/features/reflect/compose/use-compose-lifecycle";
-import { useMorph } from "@/src/features/reflect/compose/use-morph";
-import type { PlusDictationView } from "@/src/features/reflect/hooks/use-plus-dictation";
-import { useReflectTour } from "@/src/features/reflect/hooks/use-reflect-tour";
-import { useTypingPause } from "@/src/features/reflect/hooks/use-typing-pause";
+import { AppText } from "@/components/shared/app-text";
+import { Tour } from "@/components/ui/tour";
+import { useSessionMode } from "@/context/session-mode-context";
 import {
 	DAY_NUDGE_DELAY_MS,
 	NIGHT_NUDGE_DELAY_MS,
-} from "@/src/features/reflect/night-copy";
-import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
+} from "@/features/night-mode/night-copy";
+import { ComposeSurround } from "@/features/reflect/compose/compose-surround";
+import { FluxPerch } from "@/features/reflect/compose/flux-perch";
+import { MorphCard } from "@/features/reflect/compose/morph-card";
+import { useComposeCard } from "@/features/reflect/compose/use-compose-card";
+import { useComposeLifecycle } from "@/features/reflect/compose/use-compose-lifecycle";
+import { useMorph } from "@/features/reflect/compose/use-morph";
+import type { PlusDictationView } from "@/features/reflect/hooks/use-plus-dictation";
+import { useReflectTour } from "@/features/reflect/hooks/use-reflect-tour";
+import { useTypingPause } from "@/features/reflect/hooks/use-typing-pause";
+import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
 import type {
 	ReflectionAction,
 	ReflectionStateName,
-} from "@/src/features/reflect/types";
-import { playTypingBegin } from "@/src/lib/haptics";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/reflect/types";
+import { playTypingBegin } from "@/lib/haptics";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useAppStore } from "@/store/store";
 
 type Props = {
 	screen: ReflectionStateName;

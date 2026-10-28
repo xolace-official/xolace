@@ -1,7 +1,7 @@
 import { SymbolView } from "expo-symbols";
 import { Radio, useThemeColor } from "heroui-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
-import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 
 type Props = {
 	symbol: CrossPlatformSymbol;

@@ -6,9 +6,9 @@ import ReanimatedSwipeable, {
 	type SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import type { PairConversation } from "@/src/features/xolacer-chat/components/chats-list";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import type { PairConversation } from "@/features/xolacer-chat/components/chats-list";
+import { playSoftPress } from "@/lib/haptics";
 
 const ARCHIVE_ICON = {
 	android: "archive",

@@ -8,13 +8,13 @@ import {
 	gentleChoice,
 	gentleRemindersOn,
 	nextNotificationPrefs,
-} from "@/src/features/settings/notification-prefs";
+} from "@/features/settings/notification-prefs";
 import {
 	getGrantedPushToken,
 	getPushPermissionState,
 	requestPushToken,
-} from "@/src/lib/push-token";
-import { usePreferenceMutation } from "./use-preference-mutation";
+} from "@/lib/push-token";
+import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
 export type NotificationReach = "warm" | "direct" | "quiet";
 export type QuietWindow = { dontReachBefore: number; dontReachAfter: number };

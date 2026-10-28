@@ -1,5 +1,5 @@
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import { completedCount, SETUP_STEPS, type SetupDraft } from "./steps";
 
 /**

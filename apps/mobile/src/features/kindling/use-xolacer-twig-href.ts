@@ -6,7 +6,7 @@ import {
 	type Kindling,
 	type Twig,
 	twigHref,
-} from "@/src/features/kindling/twig-presentation";
+} from "@/features/kindling/twig-presentation";
 
 /**
  * Where a xolacer twig goes (#570): straight to the person closest in meaning,

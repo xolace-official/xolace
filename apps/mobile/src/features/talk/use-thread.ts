@@ -7,7 +7,7 @@ import {
 	spokenWords,
 	type TagState,
 	withoutTags,
-} from "@/src/features/talk/spoken-words";
+} from "@/features/talk/spoken-words";
 
 export type Turn = {
 	id: number;

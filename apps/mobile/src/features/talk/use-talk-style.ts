@@ -9,7 +9,7 @@ import {
 	type VoiceSlug,
 } from "@xolace/backend/convex/lib/voices";
 import { useQuery } from "convex/react";
-import { usePreferenceMutation } from "@/src/features/settings/hooks/use-preference-mutation";
+import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
 export type Directness = TalkDirectness | "balanced";
 

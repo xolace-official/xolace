@@ -3,8 +3,8 @@ import { useRouter } from "expo-router";
 import { PressableFeedback, Surface } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 
 // TODO(asset): placeholder — swap for the dedicated quotes illustration when it
 // lands, and drop the oversize/offset trick with it.

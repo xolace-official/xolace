@@ -10,7 +10,7 @@ import {
 	claimAudioFocus,
 	claimAudioSession,
 	holdsAudioFocus,
-} from "@/src/lib/audio/session";
+} from "@/lib/audio/session";
 
 /** What any signed-URL player needs from its server read. */
 export type Playable = { url: string; expiresAt: number; durationSec: number };

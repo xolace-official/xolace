@@ -38,8 +38,8 @@ import Purchases, {
 	type PurchasesOfferings,
 	type PurchasesPackage,
 } from "react-native-purchases";
-import { appConfig } from "@/src/config/app";
-import { playAffirmativePress, playErrorNotice } from "@/src/lib/haptics";
+import { appConfig } from "@/config/app";
+import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
 
 function hasActiveEntitlement(customerInfo: CustomerInfo | null): boolean {
 	if (!customerInfo) {
@@ -67,7 +67,7 @@ type RevenueCatContextType = {
 	refreshOfferings: () => Promise<boolean>;
 };
 
-export const RevenueCatContext = createContext<RevenueCatContextType>({
+const RevenueCatContext = createContext<RevenueCatContextType>({
 	customerInfo: null,
 	isLoading: true,
 	isProUser: false,

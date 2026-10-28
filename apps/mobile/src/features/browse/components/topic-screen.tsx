@@ -6,8 +6,8 @@ import { Skeleton } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { useMiniPlayerInset } from "@/src/features/browse/now-playing/now-playing-store";
+import { AppText } from "@/components/shared/app-text";
+import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
 import { type Segment, type TopicRow, topicRows } from "../topic-sections";
 import { BrowseFilterMenu, type FilterOption } from "./browse-filter-menu";
 import {

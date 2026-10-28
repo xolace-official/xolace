@@ -2,7 +2,7 @@ import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import type { SymbolViewProps } from "expo-symbols";
 import { BottomSheet, Button } from "heroui-native";
 import { useWindowDimensions, View } from "react-native";
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
+import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
 import { Fact } from "./fact-row";
 
 /**

@@ -8,12 +8,12 @@ import Animated, {
 	useAnimatedStyle,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	COUNTDOWN_FROM_MS,
 	type PlusDictationView,
-} from "@/src/features/reflect/hooks/use-plus-dictation";
-import { playSoftPress } from "@/src/lib/haptics";
+} from "@/features/reflect/hooks/use-plus-dictation";
+import { playSoftPress } from "@/lib/haptics";
 
 const BAR_COUNT = 24;
 const BAR_MAX = 28;

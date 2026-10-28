@@ -11,8 +11,8 @@ import Animated, {
 	useReducedMotion,
 } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
-import type { StoryBeat } from "@/src/features/onboarding/story-beats";
+import { AppText } from "@/components/shared/app-text";
+import type { StoryBeat } from "@/features/onboarding/story-beats";
 import { useDeckColor } from "./deck-color";
 import { PatternLine } from "./pattern-line";
 

@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import { ThreadScreen } from "@/src/features/xolacer-chat/components/thread-screen";
+import { ThreadScreen } from "@/features/xolacer-chat/components/thread-screen";
 
 /**
  * No layout and no provider between this screen and the protected stack.

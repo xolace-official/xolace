@@ -1,7 +1,7 @@
 import ArrowBack from "@expo/material-symbols/arrow_back.xml";
 import { Stack, useRouter } from "expo-router";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
+import { playSoftPress } from "@/lib/haptics";
+import { useLargeHeaderOptions } from "@/lib/navigation-options";
 
 const INDEX_OPTIONS = { title: "Get Help Now" };
 

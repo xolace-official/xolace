@@ -13,27 +13,24 @@ import { SymbolView } from "expo-symbols";
 import { usePostHog } from "posthog-react-native";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import type { ReaderFrom } from "@/src/features/library/analytics";
-import { CoverImage } from "@/src/features/library/cover-image";
-import {
-	facetLabel,
-	readTimeLine,
-} from "@/src/features/library/home/library-copy";
-import { COVER_SCRIM } from "@/src/features/library/reader/cover-palette";
-import { capitalise } from "@/src/features/library/reader/reader-copy";
+import { AppText } from "@/components/shared/app-text";
+import type { ReaderFrom } from "@/features/library/analytics";
+import { CoverImage } from "@/features/library/cover-image";
+import { facetLabel, readTimeLine } from "@/features/library/home/library-copy";
+import { COVER_SCRIM } from "@/features/library/reader/cover-palette";
+import { capitalise } from "@/features/library/reader/reader-copy";
 import {
 	SHARE_ICON,
 	shareEntry,
-} from "@/src/features/library/reader/reader-extras";
+} from "@/features/library/reader/reader-extras";
 import {
 	SAVE_ICON,
 	SAVED_ICON,
 	SaveButton,
 	useSaveToggle,
-} from "@/src/features/library/reader/reader-parts";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { cn } from "@/src/lib/utils";
+} from "@/features/library/reader/reader-parts";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { cn } from "@/lib/utils";
 
 export type EntryItem = FunctionReturnType<
 	typeof api.library.entries.listEntries

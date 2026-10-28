@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import { LibraryListScreen } from "@/src/features/library/home/library-list-screen";
+import { LibraryListScreen } from "@/features/browse/components/library-list-screen";
 
 export default function LibrarySubjectRoute() {
 	const { slug } = useLocalSearchParams<{ slug: string }>();

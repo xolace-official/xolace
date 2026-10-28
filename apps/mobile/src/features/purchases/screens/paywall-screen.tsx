@@ -8,15 +8,14 @@ import { useEffect, useRef, useState } from "react";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { appConfig } from "@/src/config/app";
-import { useRevenueCat } from "@/src/features/purchases/revenuecat-context";
-import { useIntroEligibility } from "@/src/features/purchases/use-intro-eligibility";
+import { appConfig } from "@/config/app";
+import { useRevenueCat } from "@/features/purchases/revenuecat-context";
+import { useIntroEligibility } from "@/features/purchases/use-intro-eligibility";
 import {
 	type PaywallSurface,
 	usePaywall,
-} from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { useCompanionName } from "@/src/features/talk/use-companion-name";
+} from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { PaywallCta } from "./paywall-cta";
 import { hasFreeTrial, paywallCtaLabel } from "./paywall-cta-label";
 import { PaywallFeatureItem } from "./paywall-feature-item";
@@ -63,6 +62,11 @@ export type PaywallExitReason = "purchased" | "dismissed";
 type Props = {
 	surface?: PaywallSurface;
 	/**
+	 * What the person calls their companion, for the `{name}` in a surface line.
+	 * Passed in by the route so purchases never reaches into talk.
+	 */
+	companionName: string;
+	/**
 	 * The just-completed session a purchase should fulfil kindling for
 	 * (session-end's `kindling` surface, docs/paths-v1.md §12). Sent to
 	 * `paths.requestKindling` once the purchase confirms.
@@ -80,9 +84,13 @@ type Props = {
 	onExit?: (reason: PaywallExitReason) => void | Promise<boolean>;
 };
 
-export function PaywallScreen({ surface, sessionId, onExit }: Props) {
+export function PaywallScreen({
+	surface,
+	sessionId,
+	onExit,
+	companionName,
+}: Props) {
 	const posthog = usePostHog();
-	const companionName = useCompanionName();
 	const defaultClose = usePaywall((s) => s.close);
 	const closePaywall = onExit ?? (() => defaultClose());
 	const insets = useSafeAreaInsets();

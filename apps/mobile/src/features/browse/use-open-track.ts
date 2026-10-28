@@ -1,9 +1,9 @@
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { playSoftPress } from "@/src/lib/haptics";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { playSoftPress } from "@/lib/haptics";
 
 /** Where a browse play was reached from (docs/paths-v1.md §13). */
 export type BrowseFrom =

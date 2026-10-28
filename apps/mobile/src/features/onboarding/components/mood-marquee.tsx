@@ -12,7 +12,7 @@ import {
 	getCardWidth,
 	MoodCard,
 	type MoodItem,
-} from "@/src/features/onboarding/components/mood-card";
+} from "@/features/onboarding/components/mood-card";
 
 const AUTO_SCROLL_SPEED = 18;
 const ROW_STYLE = { flexDirection: "row" as const, height: "100%" as const };

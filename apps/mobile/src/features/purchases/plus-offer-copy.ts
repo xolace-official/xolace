@@ -1,7 +1,7 @@
 import type {
 	PlusOfferMoment,
 	PlusOfferVariant,
-} from "@/src/features/purchases/plus-offer-policy";
+} from "@/features/purchases/plus-offer-policy";
 
 /**
  * Copy for the five proactive Plus moments (#221 §4).

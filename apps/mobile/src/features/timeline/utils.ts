@@ -1,7 +1,7 @@
 import type {
 	TimelineEntry,
 	TimelineFlatItem,
-} from "@/src/features/timeline/types";
+} from "@/features/timeline/types";
 
 /** Shape returned by `sessions.listForTimeline` per enriched session. */
 type TimelineSession = {

@@ -8,7 +8,7 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useThemeColor } from "heroui-native";
 import { Platform, StyleSheet, View } from "react-native";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { useAppTheme } from "@/context/app-theme-context";
 
 const MASK =
 	"linear-gradient(to bottom, rgb(0,0,0) 0%, rgb(0,0,0) 35%, rgba(0,0,0,0.8) 55%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0) 100%)";

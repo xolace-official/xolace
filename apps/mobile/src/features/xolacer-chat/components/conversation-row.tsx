@@ -2,16 +2,16 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { type ColorValue, View } from "react-native";
 import { useCSSVariable, withUniwind } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import type { rowAccessibilityActions } from "@/src/features/xolacer-chat/components/swipeable-conversation-row";
-import { formatCompactTime } from "@/src/features/xolacer-chat/format-time";
-import { useConversationUnreadCount } from "@/src/features/xolacer-chat/use-conversation-unread-count";
+import { AppText } from "@/components/shared/app-text";
+import type { rowAccessibilityActions } from "@/features/xolacer-chat/components/swipeable-conversation-row";
+import { formatCompactTime } from "@/features/xolacer-chat/format-time";
+import { useConversationUnreadCount } from "@/features/xolacer-chat/use-conversation-unread-count";
 import {
 	canHoldUnread,
 	formatUnreadBadge,
 	unreadBadge,
-} from "@/src/features/xolacer-chat/utils";
-import { cn } from "@/src/lib/utils";
+} from "@/features/xolacer-chat/utils";
+import { cn } from "@/lib/utils";
 import type { ConversationList } from "./chats-list";
 import { rowPresentation } from "./conversation-row-labels";
 import { PresenceDot } from "./presence-dot";

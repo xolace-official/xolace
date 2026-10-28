@@ -3,12 +3,12 @@ import { useThemeColor } from "heroui-native";
 import { useState } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { EnjoyingXolaceSection } from "@/src/features/settings/components/enjoying-xolace-section";
-import { FeedbackDialog } from "@/src/features/settings/components/feedback-dialog";
-import { FollowUsSection } from "@/src/features/settings/components/follow-us-section";
-import { FEEDBACK_ICON } from "@/src/features/settings/components/settings-icons";
-import { SettingsRow } from "@/src/features/settings/components/settings-row";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
+import { EnjoyingXolaceSection } from "@/features/settings/components/enjoying-xolace-section";
+import { FeedbackDialog } from "@/features/settings/components/feedback-dialog";
+import { FollowUsSection } from "@/features/settings/components/follow-us-section";
+import { FEEDBACK_ICON } from "@/features/settings/components/settings-icons";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 

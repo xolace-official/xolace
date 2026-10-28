@@ -5,28 +5,28 @@ import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
+import { AppText } from "@/components/shared/app-text";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import {
 	ACCOUNT_ICON,
 	APPEARANCE_ICON,
-	type CrossPlatformSymbol,
 	HEART_ICON,
 	MIRROR_ICON,
 	NOTIFICATIONS_ICON,
 	PLUS_TIER_ICON,
 	SHIELD_ICON,
 	TALK_TIME_ICON,
-} from "@/src/features/settings/components/settings-icons";
-import { SettingsRow } from "@/src/features/settings/components/settings-row";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
+} from "@/features/settings/components/settings-icons";
 import {
 	UpdateRow,
 	useVersionLabel,
-} from "@/src/features/settings/components/update-row";
-import { useTalkTime } from "@/src/features/talk/use-talk-time";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/settings/components/update-row";
+import { useTalkTime } from "@/features/talk/use-talk-time";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
+import { useAppStore } from "@/store/store";
 
 const styles = StyleSheet.create({
 	contentContainer: { paddingBottom: 48, paddingTop: 20 },

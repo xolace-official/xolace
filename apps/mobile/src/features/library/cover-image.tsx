@@ -1,5 +1,5 @@
 import { Image, type ImageProps } from "expo-image";
-import { imageSource } from "@/src/lib/image-source";
+import { imageSource } from "@/lib/image-source";
 
 type CoverImageProps = Omit<ImageProps, "source" | "placeholder"> & {
 	uri?: string;

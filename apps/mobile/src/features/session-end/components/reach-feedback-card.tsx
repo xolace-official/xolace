@@ -5,7 +5,7 @@ import { Surface } from "heroui-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const MILESTONE_COUNTS = new Set([5, 15, 30]);
 

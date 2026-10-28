@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canSeedReflection } from "@/src/features/quotes/components/archive/reply-seed";
+import { canSeedReflection } from "@/features/quotes/components/archive/reply-seed";
 
 const replied = {
 	reply: "I kept thinking about this all day",

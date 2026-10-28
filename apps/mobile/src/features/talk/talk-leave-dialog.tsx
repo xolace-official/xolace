@@ -5,10 +5,10 @@ import { usePreventRemove } from "expo-router";
 import { Button, Dialog } from "heroui-native";
 import { useState } from "react";
 import { View } from "react-native";
-import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
-import { AppText } from "@/src/components/shared/app-text";
-import { JUST_END, MIRROR_LATER } from "@/src/features/talk/talk-copy";
-import type { Talk } from "@/src/features/talk/use-talk";
+import { DialogBlurBackdrop } from "@/components/dialog-blur-backdrop";
+import { AppText } from "@/components/shared/app-text";
+import { JUST_END, MIRROR_LATER } from "@/features/talk/talk-copy";
+import type { Talk } from "@/features/talk/use-talk";
 
 export function TalkLeaveDialog({ talk }: { talk: Talk }) {
 	const [open, setOpen] = useState(false);

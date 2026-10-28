@@ -41,7 +41,17 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
 - **Convex reads with user-driven args** (paging, filters, tabs): `useStableQuery` /
   `useStablePaginatedQuery`, so the UI doesn't blank while new args load.
 - **Reanimated:** `.get()` / `.set()` on shared values, never `.value`.
-- **Files** under ~200 lines; imports via the `@/src/` alias.
+- **Feature layering:** feature folders never import each other in a loop.
+  Hubs (`settings`, `reflect`) import the features they compose; those features
+  never import back. A piece two features share moves down: to the feature that owns
+  the concept, or to `src/lib` / `src/components/shared`. `purchases` is the
+  entitlements module (`usePlusEntitlement`, `usePaywall`) and imports no other
+  feature; a paywall that needs feature data gets it as a prop from its route.
+  `src/features/import-cycles.test.ts` enforces all three, and its failure lists
+  the imports to move.
+- **Unused code:** `bun run knip` from the root (config in `knip.jsonc`). An
+  export kept on purpose before anything uses it gets a `/** @public <why> */` tag.
+- **Files** under ~200 lines; imports via the `@/` alias (`@/*` → `./src/*`; `@/assets/*` and `@/modules/*` keep their top-level folders).
 - **Variants:** `APP_VARIANT` (development/preview/production) picks the bundle id
   (`com.xolaceincorg.xolace.dev` / `.preview` / base). Plain `ios`/`android` builds the
   production id; use the variant scripts.

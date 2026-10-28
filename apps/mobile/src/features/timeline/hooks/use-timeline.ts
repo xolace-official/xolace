@@ -1,10 +1,10 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { usePaginatedQuery, useQuery } from "convex/react";
-import type { TimelineEntry } from "@/src/features/timeline/types";
+import type { TimelineEntry } from "@/features/timeline/types";
 import {
 	buildTimelineSections,
 	toTimelineEntry,
-} from "@/src/features/timeline/utils";
+} from "@/features/timeline/utils";
 
 const PAGE_SIZE = 15;
 

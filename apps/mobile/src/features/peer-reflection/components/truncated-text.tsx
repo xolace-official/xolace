@@ -6,7 +6,7 @@ import {
 	View,
 } from "react-native";
 import Animated, { LinearTransition } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const MAX_LINES = 4;
 

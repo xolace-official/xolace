@@ -3,12 +3,12 @@ import { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Tour } from "@/src/components/ui/tour";
-import { useMenuState } from "@/src/features/idle-menu/hooks/use-menu-state";
-import { MenuButtonsWrapper } from "@/src/features/idle-menu/menu-buttons-wrapper";
-import { MenuTrigger } from "@/src/features/idle-menu/menu-trigger";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
-import { useAppStore } from "@/src/store/store";
+import { Tour } from "@/components/ui/tour";
+import { useMenuState } from "@/features/idle-menu/hooks/use-menu-state";
+import { MenuButtonsWrapper } from "@/features/idle-menu/menu-buttons-wrapper";
+import { MenuTrigger } from "@/features/idle-menu/menu-trigger";
+import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
+import { useAppStore } from "@/store/store";
 
 const EASE_INITIAL = { opacity: 0 };
 const EASE_ANIMATE = { opacity: 1 };

@@ -4,11 +4,11 @@
 import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
-import { useVoicePreview } from "@/src/features/settings/hooks/use-voice-preview";
-import { VOICE_OPTIONS } from "@/src/features/settings/voice-options";
-import { TalkChips } from "@/src/features/talk/talk-chips";
-import { useTalkStyle } from "@/src/features/talk/use-talk-style";
-import { playSoftPress } from "@/src/lib/haptics";
+import { TalkChips } from "@/features/talk/talk-chips";
+import { useTalkStyle } from "@/features/talk/use-talk-style";
+import { useVoicePreview } from "@/features/talk/use-voice-preview";
+import { VOICE_OPTIONS } from "@/features/talk/voice-options";
+import { playSoftPress } from "@/lib/haptics";
 
 const CAST = VOICE_OPTIONS.filter(
 	(o): o is typeof o & { value: VoiceSlug } => o.value !== "auto"

@@ -2,11 +2,11 @@ import { TagGroup } from "heroui-native";
 import { useState } from "react";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { Tour } from "@/src/components/ui/tour";
-import { posthog } from "@/src/config/posthog";
-import { TextureSetTabs } from "@/src/features/reflect/components/texture-set-tabs";
-import { NIGHT_TEXTURE_WORDS } from "@/src/features/reflect/night-copy";
+import { AppText } from "@/components/shared/app-text";
+import { Tour } from "@/components/ui/tour";
+import { posthog } from "@/config/posthog";
+import { NIGHT_TEXTURE_WORDS } from "@/features/night-mode/night-copy";
+import { TextureSetTabs } from "@/features/reflect/components/texture-set-tabs";
 import {
 	MAX_TEXTURES,
 	resolveTextureSetId,
@@ -14,12 +14,12 @@ import {
 	TEXTURE_SETS,
 	type TextureSetId,
 	textureHue,
-} from "@/src/features/reflect/texture-sets";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
-import type { ReflectionAction } from "@/src/features/reflect/types";
-import { playSoftPress, playTextureSelect } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/reflect/texture-sets";
+import type { ReflectionAction } from "@/features/reflect/types";
+import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
+import { playSoftPress, playTextureSelect } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/store";
 
 /**
  * Words tipped onto a table, not filed into a form.

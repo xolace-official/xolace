@@ -1,7 +1,7 @@
 import { StreamChat } from "stream-chat";
 import { OfflineDB, SqliteClient } from "stream-chat-expo";
-import { clearStreamCredential } from "@/src/features/xolacer-chat/stream-credential";
-import { useAppStore } from "@/src/store/store";
+import { clearStreamCredential } from "@/features/xolacer-chat/stream-credential";
+import { useAppStore } from "@/store/store";
 
 /**
  * Gives the client its sqlite-backed store before anything can connect.

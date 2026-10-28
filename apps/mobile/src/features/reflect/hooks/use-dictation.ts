@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { useDictationUpsell } from "@/src/features/reflect/hooks/use-dictation-upsell";
-import { usePlusDictation } from "@/src/features/reflect/hooks/use-plus-dictation";
-import { useVoiceInput } from "@/src/features/reflect/hooks/use-voice-input";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { useDictationUpsell } from "@/features/reflect/hooks/use-dictation-upsell";
+import { usePlusDictation } from "@/features/reflect/hooks/use-plus-dictation";
+import { useVoiceInput } from "@/features/reflect/hooks/use-voice-input";
 
 /**
  * Dictation for the Reflect composer, on whichever engine the person has:

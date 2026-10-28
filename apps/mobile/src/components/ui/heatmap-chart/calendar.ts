@@ -1,4 +1,4 @@
-import { normalizeWeekStart, startOfDay } from "@/src/lib/date";
+import { normalizeWeekStart, startOfDay } from "@/lib/date";
 import { DAYS_IN_WEEK } from "./constants";
 import type { HeatmapBin, HeatmapColumn } from "./context";
 

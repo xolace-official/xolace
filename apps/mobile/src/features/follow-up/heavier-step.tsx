@@ -6,14 +6,14 @@ import { PressableFeedback } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useRef } from "react";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { type IconKey, OptionCard } from "@/src/features/follow-up/stack-cards";
-import { LINK } from "@/src/features/follow-up/still-here-step";
+import { AppText } from "@/components/shared/app-text";
 import {
 	HEAVIER_MESSAGE,
 	HEAVIER_OPTIONS,
 	HEAVIER_SKIP,
-} from "@/src/features/reflect/follow-up-copy";
+} from "@/features/follow-up/follow-up-copy";
+import { type IconKey, OptionCard } from "@/features/follow-up/stack-cards";
+import { LINK } from "@/features/follow-up/still-here-step";
 
 // Keyed on the schema union, so a copy key the server would reject fails typecheck.
 type Choice = NonNullable<Doc<"follow_up_responses">["heavierChoice"]>;

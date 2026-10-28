@@ -15,9 +15,9 @@ import {
 	View,
 } from "react-native";
 
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
-import { AppText } from "@/src/components/shared/app-text";
-import { useAppStore } from "@/src/store/store";
+import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
+import { AppText } from "@/components/shared/app-text";
+import { useAppStore } from "@/store/store";
 import { attributionLines } from "./reader-copy";
 import { CHEVRON } from "./reader-extras";
 import { ReaderPageScope } from "./reader-page";

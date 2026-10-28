@@ -4,13 +4,13 @@ import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import { useToast } from "heroui-native";
 import { useRef, useState } from "react";
-import { posthog } from "@/src/config/posthog";
+import { posthog } from "@/config/posthog";
 import {
 	chatLimitError,
 	declineCooldownNote,
-} from "@/src/features/xolacer-chat/utils";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/xolacer-chat/utils";
+import { playSoftPress } from "@/lib/haptics";
+import { useAppStore } from "@/store/store";
 
 /** `gate` stands in front of a request; `reference` is the same content pulled
  *  up from "What to expect" and sends nothing. */

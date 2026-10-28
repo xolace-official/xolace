@@ -7,8 +7,8 @@ import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor, useToast } from "heroui-native";
 
-import { SettingsRow } from "@/src/features/settings/components/settings-row";
-import { useAppStore } from "@/src/store/store";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { useAppStore } from "@/store/store";
 
 const MAP_ICON = { android: "map", ios: "map", web: "map" } as const;
 

@@ -9,8 +9,8 @@ import { SymbolView } from "expo-symbols";
 import { useEffect } from "react";
 import { Pressable, View } from "react-native";
 import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
+import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
 import {
 	DOMAIN_META,
 	type DomainItem,
@@ -19,12 +19,12 @@ import {
 	subOf,
 	type Tone,
 	toneOf,
-} from "@/src/features/insights/domains";
-import { gaugeSize, TickGauge } from "@/src/features/insights/glass";
-import { SteadinessInsights } from "@/src/features/insights/steadiness-insights";
-import { TrendChip } from "@/src/features/insights/trend-chip";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { playSoftPress } from "@/src/lib/haptics";
+} from "@/features/insights/domains";
+import { gaugeSize, TickGauge } from "@/features/insights/glass";
+import { SteadinessInsights } from "@/features/insights/steadiness-insights";
+import { TrendChip } from "@/features/insights/trend-chip";
+import { playSoftPress } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const RADIUS = 120;
 const TICK = 30;

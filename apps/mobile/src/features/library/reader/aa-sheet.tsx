@@ -10,17 +10,17 @@ import { Switch } from "heroui-native";
 import type { ReactNode } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { ReaderPageScope } from "@/src/features/library/reader/reader-page";
+import { AppText } from "@/components/shared/app-text";
+import { ReaderPageScope } from "@/features/library/reader/reader-page";
 import {
 	READING_MODE_KEYS,
 	READING_MODES,
 	type ReadingModeKey,
 	stepTextSize,
 	TEXT_SIZES,
-} from "@/src/features/library/reader/reading-mode";
-import { cn } from "@/src/lib/utils";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/library/reader/reading-mode";
+import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/store";
 
 export function AaSheet() {
 	return (

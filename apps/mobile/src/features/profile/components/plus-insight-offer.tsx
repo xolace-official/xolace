@@ -1,7 +1,7 @@
 import { View } from "react-native";
-import { PlusOfferCard } from "@/src/features/purchases/components/plus-offer-card";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusOffer } from "@/src/features/purchases/use-plus-offer";
+import { PlusOfferCard } from "@/features/purchases/components/plus-offer-card";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusOffer } from "@/features/purchases/use-plus-offer";
 
 /**
  * Moment 3 (#221 §4): the week-pattern insight, offered where it lands.

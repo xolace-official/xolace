@@ -1,5 +1,5 @@
 import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
-import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 
 /**
  * Client mirror of the custom-voice catalog. Server-authoritative catalog and

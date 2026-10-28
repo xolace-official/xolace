@@ -83,9 +83,9 @@ for (let i = 0; i < PARTICLE_COUNT; i++) {
 // Precomputed color ramp: ash gray → ember → amber. The render worklet indexes
 // into this instead of interpolating colors per particle per frame.
 export const RAMP_STEPS = 32;
-export const RAMP_R: number[] = [];
-export const RAMP_G: number[] = [];
-export const RAMP_B: number[] = [];
+const RAMP_R: number[] = [];
+const RAMP_G: number[] = [];
+const RAMP_B: number[] = [];
 // Normalized Float32 colors (RGBA 0–1) for each ramp step — eliminates
 // Float32Array.of(...) allocations inside the per-particle setRampColor worklet.
 export const RAMP_COLORS: Float32Array[] = [];

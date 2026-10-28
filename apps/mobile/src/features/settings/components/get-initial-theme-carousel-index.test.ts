@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ThemeEntry } from "@/src/lib/themes";
+import type { ThemeEntry } from "@/lib/themes";
 import { getInitialThemeCarouselIndex } from "./get-initial-theme-carousel-index";
 
 const STUB_VARIANTS: Pick<ThemeEntry, "id" | "variants">[] = [

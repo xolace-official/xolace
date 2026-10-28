@@ -3,7 +3,7 @@ import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { Pressable, StyleSheet } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 // Gentle overshoot so it "lands" — a small reward for having reached out.
 const EASING: [number, number, number, number] = [0.34, 1.56, 0.64, 1];

@@ -2,13 +2,13 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { router, useLocalSearchParams } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect } from "react";
-import { KindlingAnnouncementScreen } from "@/src/features/kindling/components/kindling-announcement-screen";
+import { KindlingAnnouncementScreen } from "@/features/kindling/components/kindling-announcement-screen";
 import {
 	type SessionEndPath,
 	sessionEndHref,
-} from "@/src/features/kindling/use-session-end-href";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
+} from "@/features/kindling/use-session-end-href";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 
 type Params = {
 	variant: "plus" | "free";

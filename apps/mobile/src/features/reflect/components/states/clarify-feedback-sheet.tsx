@@ -3,8 +3,8 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { Presets } from "react-native-pulsar";
-import type { MissReason } from "@/src/features/reflect/types";
-import { FeedbackSheet } from "@/src/features/session-end/components/feedback-sheet";
+import type { MissReason } from "@/features/reflect/types";
+import { FeedbackSheet } from "@/features/session-end/components/feedback-sheet";
 
 const CHIPS = [
 	{ key: "wrong_emotion", label: "Wrong emotion" },

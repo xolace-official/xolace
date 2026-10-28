@@ -6,13 +6,13 @@ import {
 	withSpring,
 } from "react-native-reanimated";
 
-import { cutoutPath, spotlightFor } from "@/src/components/ui/tour/geometry";
+import { cutoutPath, spotlightFor } from "@/components/ui/tour/geometry";
 import {
 	type Rect,
 	SPRING,
 	type TourShape,
 	type TourStepEntry,
-} from "@/src/components/ui/tour/types";
+} from "@/components/ui/tour/types";
 
 type Spot = Rect & { radius: number };
 

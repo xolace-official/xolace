@@ -1,5 +1,5 @@
 // Kept local (not imported from track-row.tsx) so this stays a pure, RN-free
-// module — the same testable shape as format-time.ts.
+// module — the same testable shape as src/lib/format-time.ts.
 const FAMILY_LABEL = { music: "Music", support: "Support audio" } as const;
 
 type TrackLike = {

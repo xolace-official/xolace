@@ -1,4 +1,4 @@
-import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import type { useConversationRowActions } from "../use-conversation-row-actions";
 import { ChatActionSheet } from "./chat-action-sheet";
 

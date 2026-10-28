@@ -1,9 +1,9 @@
 import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { ScopedTheme } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import type { ThemeEntry } from "@/src/lib/themes";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import type { ThemeEntry } from "@/lib/themes";
+import { cn } from "@/lib/utils";
 
 type Props = {
 	theme: ThemeEntry;

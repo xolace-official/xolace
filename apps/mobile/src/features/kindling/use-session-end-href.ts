@@ -2,8 +2,8 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import type { Href } from "expo-router";
-import { shouldOfferKindlingAnnouncement } from "@/src/features/kindling/kindling-announcement";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
+import { shouldOfferKindlingAnnouncement } from "@/features/kindling/kindling-announcement";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 
 export type SessionEndPath = "solo" | "peers" | "exit";
 

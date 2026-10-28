@@ -5,8 +5,8 @@ import {
 } from "expo-web-browser";
 import { BottomSheet } from "heroui-native";
 import { StyleSheet, View } from "react-native";
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
-import { AppText } from "@/src/components/shared/app-text";
+import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
+import { AppText } from "@/components/shared/app-text";
 import type { LegalDocument } from "./legal-content";
 
 type Props = {

@@ -11,7 +11,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const SHARE_ICON = { android: "share", ios: "square.and.arrow.up" } as const;
 const SHARING_ICON = { android: "refresh", ios: "arrow.2.circlepath" } as const;

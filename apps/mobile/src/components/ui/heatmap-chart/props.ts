@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { ViewProps } from "react-native";
-import type { ChartAccessibilityProps } from "@/src/components/ui/chart-accessibility";
+import type { ChartAccessibilityProps } from "@/components/ui/chart-accessibility";
 import type { HeatmapCell, HeatmapColumn, HeatmapLayout } from "./context";
 
 export interface HeatmapChartProps

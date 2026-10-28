@@ -15,22 +15,22 @@ import {
 	useChatContext,
 	WithComponents,
 } from "stream-chat-expo";
-import { ComposerPlaceholder } from "@/src/features/xolacer-chat/components/composer-placeholder";
-import { ConversationIdentityProvider } from "@/src/features/xolacer-chat/components/message-author";
-import { OfflineStrip } from "@/src/features/xolacer-chat/components/offline-strip";
-import { SafetyStrip } from "@/src/features/xolacer-chat/components/safety-strip";
+import { ComposerPlaceholder } from "@/features/xolacer-chat/components/composer-placeholder";
+import { ConversationIdentityProvider } from "@/features/xolacer-chat/components/message-author";
+import { OfflineStrip } from "@/features/xolacer-chat/components/offline-strip";
+import { SafetyStrip } from "@/features/xolacer-chat/components/safety-strip";
 import {
 	CHANNEL_ROOT_PROPS,
 	COMPONENT_OVERRIDES,
 	minimalMessageActions,
 	SUPPORTED_REACTIONS,
 	TEXT_ONLY_CAPABILITIES,
-} from "@/src/features/xolacer-chat/components/thread-channel-config";
-import type { ThreadConversation } from "@/src/features/xolacer-chat/components/thread-screen";
-import { ThreadSkeleton } from "@/src/features/xolacer-chat/components/thread-skeleton";
-import { ThreadStatusBar } from "@/src/features/xolacer-chat/components/thread-status-bar";
-import { hydrateChannelsFromCache } from "@/src/features/xolacer-chat/offline-db";
-import { useFlagMessage } from "@/src/features/xolacer-chat/use-flag-message";
+} from "@/features/xolacer-chat/components/thread-channel-config";
+import type { ThreadConversation } from "@/features/xolacer-chat/components/thread-screen";
+import { ThreadSkeleton } from "@/features/xolacer-chat/components/thread-skeleton";
+import { ThreadStatusBar } from "@/features/xolacer-chat/components/thread-status-bar";
+import { hydrateChannelsFromCache } from "@/features/xolacer-chat/offline-db";
+import { useFlagMessage } from "@/features/xolacer-chat/use-flag-message";
 
 /**
  * The message surface, mounted once `Chat` holds a usable client — one with a

@@ -1,4 +1,4 @@
-import { AuthOnboardingScreen } from "@/src/features/onboarding/components/screens/AuthOnboardingScreen";
+import { AuthOnboardingScreen } from "@/features/onboarding/components/screens/AuthOnboardingScreen";
 
 const OnboardingAuth = () => <AuthOnboardingScreen />;
 

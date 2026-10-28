@@ -8,12 +8,12 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, RadialGradient, Stop } from "react-native-svg";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	ANNOUNCEMENT_KINDS,
 	type AnnouncementKind,
-} from "@/src/features/kindling/announcement-poses";
-import { PoseBubble } from "@/src/features/kindling/components/pose-bubble";
+} from "@/features/kindling/announcement-poses";
+import { PoseBubble } from "@/features/kindling/components/pose-bubble";
 
 const COPY = {
 	continue: "Continue",

@@ -5,16 +5,16 @@ import { useIsFocused } from "expo-router/react-navigation";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { AppState } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
-import { useVoiceProcessingConsent } from "@/src/features/consent/use-voice-processing-consent";
+import { useVoiceProcessingConsent } from "@/features/consent/use-voice-processing-consent";
 import {
 	fallbackNote,
 	takeFailedNote,
-} from "@/src/features/reflect/hooks/dictation-fallback";
-import { useMeteringRecorder } from "@/src/lib/audio/use-metering-recorder";
-import { playAffirmativePress, playErrorNotice } from "@/src/lib/haptics";
+} from "@/features/reflect/hooks/dictation-fallback";
+import { useMeteringRecorder } from "@/lib/audio/use-metering-recorder";
+import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
 
 /** One take's ceiling; the server rejects anything larger (convex/dictation/plus.ts). */
-export const MAX_TAKE_MS = 180_000;
+const MAX_TAKE_MS = 180_000;
 /** The waveform counts down over the last stretch of a take. */
 export const COUNTDOWN_FROM_MS = 15_000;
 // Mono 32kbps AAC ≈ 4KB/s → a full take is ~720KB, under Convex's 1MB v.bytes().

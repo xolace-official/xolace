@@ -8,15 +8,12 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import {
-	OFFER_MASCOT,
-	OfferCard,
-} from "@/src/features/intake/paywall/offer-card";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { useVoicePreview } from "@/src/features/settings/hooks/use-voice-preview";
-import { VOICE_OPTIONS } from "@/src/features/settings/voice-options";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { OFFER_MASCOT, OfferCard } from "@/features/intake/paywall/offer-card";
+import { useVoicePreview } from "@/features/talk/use-voice-preview";
+import { VOICE_OPTIONS } from "@/features/talk/voice-options";
+import { playSoftPress } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const PLAY = {
 	android: "play_arrow",

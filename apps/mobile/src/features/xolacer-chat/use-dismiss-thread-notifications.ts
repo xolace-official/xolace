@@ -6,7 +6,7 @@ import {
 	clearActiveNotificationConversation,
 	conversationNotificationIds,
 	setActiveNotificationConversation,
-} from "@/src/lib/notification-suppression";
+} from "@/lib/notification-suppression";
 
 /**
  * Clears the tray of anything still sitting there for a conversation the user

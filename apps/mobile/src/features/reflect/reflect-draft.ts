@@ -1,8 +1,8 @@
 import { useAuth } from "@clerk/expo";
 import { useEffect } from "react";
 import { AppState } from "react-native";
-import type { ReflectionStateName } from "@/src/features/reflect/types";
-import { zustandJSONStorage } from "@/src/lib/storage/unified-storage";
+import type { ReflectionStateName } from "@/features/reflect/types";
+import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 
 /**
  * The unsent reflection, kept on the device so an app kill mid-paragraph

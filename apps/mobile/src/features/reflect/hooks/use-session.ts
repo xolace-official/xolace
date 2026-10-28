@@ -2,10 +2,10 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useCallback, useState } from "react";
-import { useSessionMode } from "@/src/context/session-mode-context";
-import { mapEntryType } from "@/src/features/reflect/session-service";
-import type { EntryType } from "@/src/features/reflect/types";
-import { useAppStore } from "@/src/store/store";
+import { useSessionMode } from "@/context/session-mode-context";
+import { mapEntryType } from "@/features/reflect/session-service";
+import type { EntryType } from "@/features/reflect/types";
+import { useAppStore } from "@/store/store";
 
 // States where turns are relevant (mirror has been delivered at least once)
 const TURN_RELEVANT_STATES = new Set([

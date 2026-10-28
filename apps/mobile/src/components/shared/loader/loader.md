@@ -80,7 +80,7 @@ Each dot uses the same timeline but peaks at a different moment, creating a stag
 ### Basic bounce
 
 ```tsx
-import Loader from "@/src/shared/components/loader";
+import Loader from "@/shared/components/loader";
 
 <Loader duration={1000}>
   <Loader.KeyframeView

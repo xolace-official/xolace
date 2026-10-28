@@ -2,9 +2,9 @@
 
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useEffect, useState } from "react";
-import { WEEKLY_TALK_S } from "@/src/features/talk/talk-copy";
-import { useTimeLeft } from "@/src/features/talk/use-time-left";
-import { useStableQuery } from "@/src/lib/convex/use-stable-query";
+import { WEEKLY_TALK_S } from "@/features/talk/talk-copy";
+import { useTimeLeft } from "@/features/talk/use-time-left";
+import { useStableQuery } from "@/lib/convex/use-stable-query";
 
 const HOUR_MS = 60 * 60 * 1000;
 

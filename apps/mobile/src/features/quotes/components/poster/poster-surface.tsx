@@ -12,7 +12,7 @@ import { useCSSVariable } from "uniwind";
 import {
 	POSTER_GRADIENT,
 	POSTER_GRAIN_OPACITY,
-} from "@/src/features/quotes/poster-palette";
+} from "@/features/quotes/poster-palette";
 
 /**
  * The poster surface: fixed gradient, Skia grain, radius, and a fixed edge.

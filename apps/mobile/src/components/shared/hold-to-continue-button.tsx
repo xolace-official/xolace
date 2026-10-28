@@ -13,9 +13,9 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { AppText } from "@/src/components/shared/app-text";
-import { playAffirmativePress, playSoftPress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 /** Time user must hold to complete; drives fill progress 0→1 */
 const DEFAULT_HOLD_DURATION_MS = 3000;

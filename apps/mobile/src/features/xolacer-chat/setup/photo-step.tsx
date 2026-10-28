@@ -2,8 +2,8 @@ import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, Spinner, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 
 const CAMERA_ICON = {
 	android: "photo_camera",

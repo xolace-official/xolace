@@ -20,9 +20,9 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { AnimatedBlurView } from "@/src/components/animated-blur-view";
-import { useAppTheme } from "@/src/context/app-theme-context";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AnimatedBlurView } from "@/components/animated-blur-view";
+import { useAppTheme } from "@/context/app-theme-context";
+import { playSoftPress } from "@/lib/haptics";
 
 const TIMING = { duration: 250, easing: Easing.out(Easing.quad) };
 

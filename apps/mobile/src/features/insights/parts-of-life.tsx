@@ -8,28 +8,28 @@ import { Chip } from "heroui-native";
 import { useState } from "react";
 import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
-import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
+import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
 import {
 	CompoundingUpsellLine,
 	type Upsell,
 	useHeldUpsell,
 	useOpenUpsell,
-} from "@/src/features/insights/compounding-upsell";
-import { DetailCard } from "@/src/features/insights/detail-card";
+} from "@/features/insights/compounding-upsell";
+import { DetailCard } from "@/features/insights/detail-card";
 import {
 	DomainCell,
 	DomainRow,
 	type DomainView,
 	ViewToggle,
-} from "@/src/features/insights/domain-list";
+} from "@/features/insights/domain-list";
 import {
 	type DomainItem,
 	type Insight,
 	icon,
-} from "@/src/features/insights/domains";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
+} from "@/features/insights/domains";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const LOCK = icon("lock", "lock");
 

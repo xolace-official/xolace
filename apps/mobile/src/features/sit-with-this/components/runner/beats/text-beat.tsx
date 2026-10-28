@@ -1,13 +1,13 @@
 import { useEffect, useRef } from "react";
 import { AppState } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	BREATH_CYCLE_MS,
 	type BreathPattern,
 	PacedOrb,
 	type PacedOrbHandle,
-} from "@/src/features/sit-with-this/components/paced-orb";
+} from "@/features/sit-with-this/components/paced-orb";
 
 type Props = {
 	content: string;

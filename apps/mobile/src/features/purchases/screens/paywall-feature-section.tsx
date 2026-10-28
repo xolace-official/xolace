@@ -1,7 +1,7 @@
 import { Separator, Surface } from "heroui-native";
 import type { ReactElement } from "react";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import type { PaywallFeatureId } from "./paywall-surface-map";
 
 type Props = {

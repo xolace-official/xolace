@@ -1,8 +1,8 @@
 import { Image } from "expo-image";
 import { StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { getInitials } from "@/src/helpers/utils/strings";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { getInitials } from "@/helpers/utils/strings";
+import { cn } from "@/lib/utils";
 
 const SIZES = {
 	lg: { box: "h-[76px] w-[76px]", text: "text-2xl" },

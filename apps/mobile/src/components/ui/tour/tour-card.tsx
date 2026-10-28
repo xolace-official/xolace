@@ -2,9 +2,9 @@ import { SymbolView } from "expo-symbols";
 import { Button, CloseButton, useThemeColor } from "heroui-native";
 import { type LayoutChangeEvent, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import type { TourLabels, TourStepEntry } from "@/src/components/ui/tour/types";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import type { TourLabels, TourStepEntry } from "@/components/ui/tour/types";
+import { cn } from "@/lib/utils";
 
 const CHEVRON_LEFT_NAME = {
 	android: "chevron_left",

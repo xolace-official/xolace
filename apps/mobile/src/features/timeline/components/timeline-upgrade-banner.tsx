@@ -3,13 +3,13 @@ import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	FADE_IN,
 	FADE_OUT,
 	GlassSurface,
-} from "@/src/components/shared/glass-surface";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
+} from "@/components/shared/glass-surface";
+import { usePaywall } from "@/features/purchases/use-paywall";
 
 const styles = StyleSheet.create({
 	wrapper: { left: 20, position: "absolute", right: 20 },

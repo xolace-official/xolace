@@ -3,8 +3,8 @@ import { Card, Chip, cn, PressableFeedback } from "heroui-native";
 import { type ColorValue, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useCSSVariable, withUniwind } from "uniwind";
-import { TruncatedText } from "@/src/features/peer-reflection/components/truncated-text";
-import { playResonanceToggle } from "@/src/lib/haptics";
+import { TruncatedText } from "@/features/peer-reflection/components/truncated-text";
+import { playResonanceToggle } from "@/lib/haptics";
 
 const StyledSymbolView = withUniwind(SymbolView);
 

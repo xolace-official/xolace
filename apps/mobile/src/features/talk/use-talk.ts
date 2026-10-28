@@ -15,9 +15,9 @@ import { AudioModule } from "expo-audio";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useSharedValue, withTiming } from "react-native-reanimated";
-import { endWithRetry } from "@/src/features/talk/end-with-retry";
-import { TALK_TIME_RESETS } from "@/src/features/talk/talk-copy";
-import { type ThreadLine, useThread } from "@/src/features/talk/use-thread";
+import { endWithRetry } from "@/features/talk/end-with-retry";
+import { TALK_TIME_RESETS } from "@/features/talk/talk-copy";
+import { type ThreadLine, useThread } from "@/features/talk/use-thread";
 
 export type Presence =
 	| "Connecting…"

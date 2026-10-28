@@ -1,8 +1,8 @@
 import ArrowBack from "@expo/material-symbols/arrow_back.xml";
 import Settings from "@expo/material-symbols/settings.xml";
 import { Stack, useRouter } from "expo-router";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
+import { playSoftPress } from "@/lib/haptics";
+import { useLargeHeaderOptions } from "@/lib/navigation-options";
 
 /**
  * Timeline stack layout: large header with a back control on the left (a

@@ -8,8 +8,8 @@ import {
 } from "heroui-native";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
-import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
-import { AppText } from "@/src/components/shared/app-text";
+import { DialogBlurBackdrop } from "@/components/dialog-blur-backdrop";
+import { AppText } from "@/components/shared/app-text";
 
 function extractErrorMessage(e: unknown): string {
 	if (!(e instanceof Error)) {

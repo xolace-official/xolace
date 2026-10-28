@@ -6,7 +6,7 @@
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 
-import type { SearchSection } from "@/src/features/browse/search/search-sections";
+import type { SearchSection } from "@/features/browse/search/search-sections";
 
 /**
  * One `browse_search_results` per settled query. Pass the *fresh* results

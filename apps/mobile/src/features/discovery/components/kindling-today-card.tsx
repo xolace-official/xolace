@@ -4,11 +4,11 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { PressableFeedback, Surface } from "heroui-native";
 import { StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
-import { PlayfulLip } from "@/src/lib/playful/playful-lip";
-import { useIsPlayful, usePlayfulPress } from "@/src/lib/playful/use-playful";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
+import { PlayfulLip } from "@/lib/playful/playful-lip";
+import { useIsPlayful, usePlayfulPress } from "@/lib/playful/use-playful";
+import { cn } from "@/lib/utils";
 import { KindlingCardSkeleton } from "./skeletons";
 
 const ART_URL = __DEV__

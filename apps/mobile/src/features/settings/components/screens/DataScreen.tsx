@@ -2,24 +2,24 @@ import { SymbolView } from "expo-symbols";
 import { RadioGroup, useThemeColor, useToast } from "heroui-native";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
-import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
+import { AppText } from "@/components/shared/app-text";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
+import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
 import {
-	type CrossPlatformSymbol,
 	DELETE_ACCOUNT_ICON,
 	DELETE_DATA_ICON,
 	MEMORY_ICON,
 	SHARE_ICON,
-} from "@/src/features/settings/components/settings-icons";
-import { SettingsRow } from "@/src/features/settings/components/settings-row";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
-import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
+} from "@/features/settings/components/settings-icons";
+import { useConfirmAction } from "@/features/settings/hooks/use-confirm-action";
 import {
 	type RetentionOption,
 	useDataSettings,
-} from "@/src/features/settings/hooks/use-data-settings";
-import { cn } from "@/src/lib/utils";
+} from "@/features/settings/hooks/use-data-settings";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
+import { cn } from "@/lib/utils";
 
 const RETENTION_OPTIONS: {
 	value: RetentionOption;

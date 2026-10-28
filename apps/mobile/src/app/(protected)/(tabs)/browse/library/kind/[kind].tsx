@@ -1,6 +1,6 @@
 import { Redirect, useLocalSearchParams } from "expo-router";
-import { KINDS } from "@/src/features/library/home/library-copy";
-import { LibraryListScreen } from "@/src/features/library/home/library-list-screen";
+import { LibraryListScreen } from "@/features/browse/components/library-list-screen";
+import { KINDS } from "@/features/library/home/library-copy";
 
 export default function LibraryKindRoute() {
 	const { kind } = useLocalSearchParams<{ kind: string }>();

@@ -7,8 +7,8 @@ import {
 } from "expo-speech-recognition";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Platform } from "react-native";
-import { joinDictation } from "@/src/features/reflect/hooks/dictation-transcript";
-import { yieldAudioFocus } from "@/src/lib/audio/session";
+import { joinDictation } from "@/features/reflect/hooks/dictation-transcript";
+import { yieldAudioFocus } from "@/lib/audio/session";
 
 export function useVoiceInput() {
 	const [isRecording, setIsRecording] = useState(false);

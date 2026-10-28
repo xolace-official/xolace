@@ -1,6 +1,4 @@
 import { Presets } from "react-native-pulsar";
-import type { HapticPatternData } from "@/modules/native-core-haptics";
-import CoreHaptics from "@/modules/native-core-haptics";
 import {
 	affirmativePress,
 	breathExhalePattern,
@@ -20,7 +18,9 @@ import {
 	softPress,
 	textureSelect,
 	typingBegin,
-} from "@/src/lib/haptics/haptics-patterns.ios";
+} from "@/lib/haptics/haptics-patterns.ios";
+import type { HapticPatternData } from "@/modules/native-core-haptics";
+import CoreHaptics from "@/modules/native-core-haptics";
 import type { BreathPhase, HapticName } from "./haptics.types";
 
 // ── Generic helpers ──────────────────────────────────────────────────
@@ -117,6 +117,7 @@ export function playFollowUpEntrance(): void {
 // Called per PacedOrb phase transition. The continuous patterns breathe
 // *with* the orb rather than ticking at boundaries.
 
+/** @public Not wired yet: kept in step with haptics.ts for the PacedOrb runner. */
 export function playBreathPhase(phase: BreathPhase, durationMs: number): void {
 	const seconds = durationMs / 1000;
 	switch (phase) {
@@ -155,8 +156,7 @@ const patternMap: Record<
 	typingBegin,
 };
 
-export type { BreathPhase, HapticName };
-
+/** @public Not wired yet: kept in step with haptics.ts for the PacedOrb runner. */
 export function playHaptic(name: HapticName): void {
 	if (name === "followUpEntrance") {
 		return playFollowUpEntrance();

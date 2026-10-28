@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { NIGHT_HEADLINE } from "@/features/night-mode/night-copy";
 import {
 	DEFAULT_PROMPT,
 	resolveCardContent,
-} from "@/src/features/reflect/compose/resolve-card-content";
-import { NIGHT_HEADLINE } from "@/src/features/reflect/night-copy";
-import { QUIET_RETURN_PROMPTS } from "@/src/features/reflect/quiet-return-copy";
+} from "@/features/reflect/compose/resolve-card-content";
+import { QUIET_RETURN_PROMPTS } from "@/features/reflect/quiet-return-copy";
 
 const EVENT_PROMPT = "It's Pride month. What are you carrying about that?";
 

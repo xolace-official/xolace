@@ -7,7 +7,7 @@ import {
 } from "expo-audio";
 import { useEffect } from "react";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
-import { AUDIO_SESSION, yieldAudioFocus } from "@/src/lib/audio/session";
+import { AUDIO_SESSION, yieldAudioFocus } from "@/lib/audio/session";
 
 export type UseMeteringRecorderReturn = {
 	// Resolves true only when recording actually began (permission granted and

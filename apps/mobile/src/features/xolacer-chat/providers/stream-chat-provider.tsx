@@ -12,18 +12,18 @@ import {
 } from "react";
 import { StreamChat } from "stream-chat";
 import { Chat, OverlayProvider } from "stream-chat-expo";
-import { connectPlan } from "@/src/features/xolacer-chat/connect-plan";
+import { connectPlan } from "@/features/xolacer-chat/connect-plan";
 import {
 	attachOfflineDb,
 	chatLocalDataGeneration,
 	chatLocalDataSettled,
-} from "@/src/features/xolacer-chat/offline-db";
+} from "@/features/xolacer-chat/offline-db";
 import {
 	readStreamCredential,
 	type StreamCredential,
 	writeStreamCredential,
-} from "@/src/features/xolacer-chat/stream-credential";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/xolacer-chat/stream-credential";
+import { useAppStore } from "@/store/store";
 import { useStreamTheme } from "./stream-theme";
 
 /**

@@ -17,7 +17,7 @@
  * a hand reaching back toward the fire.
  */
 
-import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
+import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
 
 export type ReturnWelcomeTier = QuietReturnTier | "recent";
 

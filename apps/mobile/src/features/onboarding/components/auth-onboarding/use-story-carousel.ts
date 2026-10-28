@@ -24,11 +24,8 @@ import {
 	withSpring,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import {
-	STORY_BEATS,
-	type StoryBeat,
-} from "@/src/features/onboarding/story-beats";
-import { playSoftPress } from "@/src/lib/haptics";
+import { STORY_BEATS, type StoryBeat } from "@/features/onboarding/story-beats";
+import { playSoftPress } from "@/lib/haptics";
 
 const SWIPE_THRESHOLD = 24;
 const DRAG_DAMPING = 260;
@@ -208,5 +205,3 @@ export const useStoryCarousel = () => {
 		width,
 	};
 };
-
-export type StoryCarousel = ReturnType<typeof useStoryCarousel>;

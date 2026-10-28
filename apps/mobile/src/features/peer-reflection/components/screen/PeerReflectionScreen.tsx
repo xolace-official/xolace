@@ -8,12 +8,12 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
-import { PillButton } from "@/src/components/shared/pill-button";
-import { useSessionEndHref } from "@/src/features/kindling/use-session-end-href";
-import { ReflectionCard } from "@/src/features/peer-reflection/components/reflection-card";
-import { usePathSession } from "@/src/features/sit-with-this/hooks/use-path-session";
+import { AppText } from "@/components/shared/app-text";
+import { MorphLoader } from "@/components/shared/loader/morph/morph-loader";
+import { PillButton } from "@/components/shared/pill-button";
+import { useSessionEndHref } from "@/features/kindling/use-session-end-href";
+import { ReflectionCard } from "@/features/peer-reflection/components/reflection-card";
+import { usePathSession } from "@/features/sit-with-this/hooks/use-path-session";
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const EASE_INITIAL_FADE = { opacity: 0 };

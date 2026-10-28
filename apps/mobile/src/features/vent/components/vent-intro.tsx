@@ -1,8 +1,8 @@
 import { Button } from "heroui-native";
 import { View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 import { ParticleField } from "./particles/particle-field";
 
 const LINES = [

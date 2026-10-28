@@ -6,12 +6,12 @@ import { useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
 import { EaseView } from "react-native-ease/uniwind";
-import { PlusOfferCard } from "@/src/features/purchases/components/plus-offer-card";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusOffer } from "@/src/features/purchases/use-plus-offer";
-import { chooseCloseOffer } from "@/src/features/session-end/close-offer-rule";
-import { SuggestionCard } from "@/src/features/session-end/components/suggestion-card";
-import { playSoftPress } from "@/src/lib/haptics";
+import { PlusOfferCard } from "@/features/purchases/components/plus-offer-card";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusOffer } from "@/features/purchases/use-plus-offer";
+import { chooseCloseOffer } from "@/features/session-end/close-offer-rule";
+import { SuggestionCard } from "@/features/session-end/components/suggestion-card";
+import { playSoftPress } from "@/lib/haptics";
 
 /**
  * How long the close slot stays empty waiting for a suggestion. Long enough

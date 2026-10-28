@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/react-native";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { ErrorBoundary, type FallbackProps } from "react-error-boundary";
 
-import { FullRippleLoader } from "@/src/components/shared/loader/ripple/full-ripple-loader";
+import { FullRippleLoader } from "@/components/shared/loader/ripple/full-ripple-loader";
 import { isBootstrapError } from "./bootstrap-error";
 import { attemptsFor, MAX_RETRIES, RETRY_DELAY_MS } from "./bootstrap-retry";
 

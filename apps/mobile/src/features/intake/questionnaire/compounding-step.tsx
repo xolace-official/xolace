@@ -12,11 +12,11 @@ import { Button } from "heroui-native";
 import { ScrollView } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { IntakeScreen } from "@/src/features/intake/questionnaire/intake-screen";
-import { MASCOT_COMPOUND } from "@/src/features/intake/questionnaire/mascot";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { AppText } from "@/components/shared/app-text";
+import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
+import { MASCOT_COMPOUND } from "@/features/intake/questionnaire/mascot";
+import { playSoftPress } from "@/lib/haptics";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 export function CompoundingStep({ onDone }: { onDone: () => void }) {
 	const reduced = useEffectiveReducedMotion();

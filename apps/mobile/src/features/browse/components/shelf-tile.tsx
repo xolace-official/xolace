@@ -3,18 +3,18 @@ import type { FunctionReturnType } from "convex/server";
 import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	type BrowseFrom,
 	useOpenTrack,
-} from "@/src/features/browse/use-open-track";
-import { CoverImage } from "@/src/features/library/cover-image";
+} from "@/features/browse/use-open-track";
+import { CoverImage } from "@/features/library/cover-image";
 
 export type ShelfItem = FunctionReturnType<
 	typeof api.browse.getNewShelf
 >[number];
 
-export const TILE = 170;
+const TILE = 170;
 
 /**
  * One square tile of the newest-4 shelf — the hub's New shelf and the

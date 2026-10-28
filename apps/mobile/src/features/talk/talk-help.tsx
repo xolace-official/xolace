@@ -9,9 +9,9 @@ import { useQuery } from "convex/react";
 import { router } from "expo-router";
 import { Button } from "heroui-native";
 import { ScrollView, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { ResourceItem } from "@/src/components/shared/resource-item";
+import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
+import { ResourceItem } from "@/components/shared/resource-item";
 
 const openHelp = () => router.push("/crisis-resources?from=talk");
 

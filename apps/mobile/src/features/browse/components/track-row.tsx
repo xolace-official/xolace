@@ -3,12 +3,12 @@ import type { FunctionReturnType } from "convex/server";
 import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	type BrowseFrom,
 	useOpenTrack,
-} from "@/src/features/browse/use-open-track";
-import { CoverImage } from "@/src/features/library/cover-image";
+} from "@/features/browse/use-open-track";
+import { CoverImage } from "@/features/library/cover-image";
 
 export type { BrowseFrom };
 export type TrackItem = FunctionReturnType<typeof api.browse.getTopic>[number];

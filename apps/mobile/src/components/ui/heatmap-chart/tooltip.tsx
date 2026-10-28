@@ -3,8 +3,8 @@ import { StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { Text } from "@/src/components/ui/text";
-import { cn } from "@/src/lib/cn";
+import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/cn";
 import { DEFAULT_HOLD, MONTHS, TOOLTIP_HEIGHT } from "./constants";
 import { type HeatmapCell, type Slot, useHeatmap } from "./context";
 

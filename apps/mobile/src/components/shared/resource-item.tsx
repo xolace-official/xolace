@@ -1,9 +1,9 @@
 import { PressableFeedback, useToast } from "heroui-native";
 import { Linking, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import type { Resource } from "@/src/features/crisis-resources/types";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import type { Resource } from "@/features/crisis-resources/types";
+import { playSoftPress } from "@/lib/haptics";
 
 type Props = {
 	resource: Resource;

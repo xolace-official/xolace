@@ -1,7 +1,7 @@
 import { Portal } from "heroui-native/portal";
 import { useMemo, useState } from "react";
 
-import { TourOverlay } from "@/src/components/ui/tour/tour-overlay";
+import { TourOverlay } from "@/components/ui/tour/tour-overlay";
 import {
 	DEFAULT_LABELS,
 	DEFAULT_OVERLAY,
@@ -10,9 +10,9 @@ import {
 	TourContext,
 	type TourProps,
 	type TourStepEntry,
-} from "@/src/components/ui/tour/types";
-import { useBackHandler } from "@/src/components/ui/tour/use-back-handler";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+} from "@/components/ui/tour/types";
+import { useBackHandler } from "@/components/ui/tour/use-back-handler";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 /**
  * Tour — the walkthrough that introduces a screen one control at a time.

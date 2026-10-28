@@ -8,8 +8,8 @@ import { usePostHog } from "posthog-react-native";
 import {
 	type IntakeOutcome,
 	trackIntakeCompleted,
-} from "@/src/features/intake/analytics";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/intake/analytics";
+import { useAppStore } from "@/store/store";
 
 type CompleteArgs = FunctionArgs<typeof api.intake.complete>;
 
