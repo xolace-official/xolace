@@ -18,9 +18,13 @@
 //   bun scripts/kindling/curate-tags.ts --manifest path/to/manifest.json
 //
 // Idempotent by default: a track that already has `sourceTags` is treated as
-// already curated and skipped. Pass --force to re-curate every track anyway.
+// already curated and skipped. Pass --force to re-curate every track anyway,
+// or --moved for just the tracks whose topic changed since their listening
+// review (`what-its-for.review.json`), whose old tags came from the old rack,
+// plus any track still without a tag.
+// Where a review exists, the model also reads what the track sounds like.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { CATALOG_BY_KEY } from "../../convex/ai/paths/catalog";
 import {
@@ -47,9 +51,18 @@ const flag = (name: string, fallback: string) => {
 };
 const prod = args.includes("--prod");
 const force = args.includes("--force");
+const moved = args.includes("--moved");
 const manifestPath = path.resolve(
 	flag("manifest", `scripts/kindling/${prod ? "prod" : "dev"}/manifest.json`)
 );
+type Review = { heard: string; topic: string; whatItsFor: string };
+const reviewPath = path.join(
+	path.dirname(manifestPath),
+	"what-its-for.review.json"
+);
+const reviews: Record<string, Review> = existsSync(reviewPath)
+	? JSON.parse(readFileSync(reviewPath, "utf8"))
+	: {};
 const CONCURRENCY = 5;
 
 function vocabFor(topic: string): string[] {
@@ -84,19 +97,23 @@ async function curateOne(track: ManifestTrack): Promise<string[]> {
 	const vocab = vocabFor(track.topic);
 	const vocabSet = new Set(vocab);
 	const rawTags = track.sourceTags ?? track.tags;
+	const review = reviews[track.slug];
+	const heard = review
+		? `\nWhat it sounds like: ${review.heard}\nWhat it's for: ${review.whatItsFor}`
+		: "";
 
 	const response = await getAnthropicClient().messages.create({
 		max_tokens: 200,
 		messages: [
 			{
-				content: `Title: ${track.title}\nRaw tags: ${JSON.stringify(rawTags)}`,
+				content: `Title: ${track.title}\nRaw tags: ${JSON.stringify(rawTags)}${heard}`,
 				role: "user",
 			},
 		],
 		model: CLASSIFIER_MODEL,
 		system:
-			"You curate mood/theme tags for instrumental music tracks in a mental-health app. " +
-			"Given a track's title and its raw source tags, pick the subset of the CANDIDATE " +
+			"You curate mood/theme tags for music tracks in a mental-health app. " +
+			"Given a track's title, its raw source tags and, when given, what it sounds like, pick the subset of the CANDIDATE " +
 			"list below that genuinely fits the track. Only choose words from the candidate " +
 			"list — never invent a new word. Return ONLY a JSON array of strings (0 or more), " +
 			"no prose.\n\nCandidate list: " +
@@ -138,7 +155,14 @@ async function main() {
 	// flip-flopping tags that already landed. --force re-curates everyone.
 	const toCurate = force
 		? musicTracks
-		: musicTracks.filter((t) => t.sourceTags === undefined);
+		: musicTracks.filter(
+				(t) =>
+					t.sourceTags === undefined ||
+					(moved &&
+						(t.tags.length === 0 ||
+							(reviews[t.slug] !== undefined &&
+								`music_topic_${reviews[t.slug].topic}` !== t.topic)))
+			);
 	const skipped = musicTracks.length - toCurate.length;
 	if (skipped > 0) {
 		console.log(
