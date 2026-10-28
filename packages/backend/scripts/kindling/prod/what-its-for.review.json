@@ -20,7 +20,16 @@
     },
     "decision": "stay in mindfulness (owner)",
     "secondaryTopic": "meditation",
-    "pickedTitle": "Warm Swelling Drone"
+    "pickedTitle": "Warm Swelling Drone",
+    "instruments": ["synth pads", "bells", "drone"],
+    "natureSounds": ["birdsong"],
+    "beat": "none",
+    "valence": 3,
+    "arc": "fades_out",
+    "jolts": false,
+    "alsoFits": ["meditation", "deep_relaxation", "calm_peace"],
+    "lyrics": "none",
+    "suggestedTitle": "Shimmering Glass Horizon"
   },
   "music-mindfulness-02": {
     "audioPath": "support/mindfulness/meditativecalmbuddha-sacred-fire-of-mindfulness-389028.mp3",
@@ -42,7 +51,16 @@
       "thought": 573
     },
     "decision": "stay in mindfulness (owner)",
-    "pickedTitle": "Guitar and Birdsong"
+    "pickedTitle": "Guitar and Birdsong",
+    "instruments": ["synth pads", "vocal pads"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "calm_peace", "breathing_meditation"],
+    "lyrics": "none",
+    "suggestedTitle": "Drifting In Stillness"
   },
   "music-mindfulness-03": {
     "audioPath": "support/mindfulness/higheruniversalman-cultivation-music-for-growth-mindfulness-amp-nature-videos-291781.mp3",
@@ -65,7 +83,16 @@
     },
     "decision": "move to happiness_joy (owner)",
     "secondaryTopic": "motivation",
-    "pickedTitle": "Handclap Morning"
+    "pickedTitle": "Handclap Morning",
+    "instruments": ["acoustic guitar", "drums"],
+    "natureSounds": [],
+    "beat": "driving",
+    "valence": 5,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["motivation", "hope_positivity"],
+    "lyrics": "none",
+    "suggestedTitle": "Sunlit Strumming"
   },
   "music-mindfulness-04": {
     "audioPath": "support/mindfulness/pink_sound-path-of-mindfulness-relax-instrumental-background-music-short-1-565366.mp3",
@@ -87,7 +114,16 @@
       "thought": 0
     },
     "decision": "stay in mindfulness (owner)",
-    "pickedTitle": "Sweeping Atmosphere"
+    "pickedTitle": "Sweeping Atmosphere",
+    "instruments": ["synth pads", "synth strings", "piano"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 4,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["calm_peace", "deep_relaxation", "breathing_meditation"],
+    "lyrics": "none",
+    "suggestedTitle": "Warm Horizon Drift"
   },
   "music-mindfulness-05": {
     "audioPath": "support/mindfulness/allicante-ethereal-ambient-for-mindfulness-332283.mp3",
@@ -109,7 +145,16 @@
       "thought": 168
     },
     "decision": "stay in mindfulness (owner)",
-    "pickedTitle": "Low Drone, Faint Shimmer"
+    "pickedTitle": "Low Drone, Faint Shimmer",
+    "instruments": ["synth pads", "drone"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["meditation", "deep_relaxation", "calm_peace"],
+    "lyrics": "none",
+    "suggestedTitle": "Warm Shimmering Stillness"
   },
   "music-mindfulness-06": {
     "audioPath": "support/mindfulness/meditativetiger-mindfulness-chimes-being-present-489163.mp3",
@@ -131,7 +176,16 @@
       "thought": 0
     },
     "decision": "stay in mindfulness (owner)",
-    "pickedTitle": "Chimes Over Drone"
+    "pickedTitle": "Chimes Over Drone",
+    "instruments": ["chimes", "synth drone", "bells", "synth pads"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["meditation", "overthinking", "calm_peace"],
+    "lyrics": "none",
+    "suggestedTitle": "Bronze Chimes In Stillness"
   },
   "music-mindfulness-07": {
     "audioPath": "support/mindfulness/meditativecalmbuddha-river-of-mindfulness-490264.mp3",
@@ -153,7 +207,16 @@
       "thought": 0
     },
     "decision": "move to nature_mindfulness (owner)",
-    "pickedTitle": "River and Pads"
+    "pickedTitle": "River and Pads",
+    "instruments": ["synth arpeggio", "synth pads", "synth bass"],
+    "natureSounds": ["flowing water"],
+    "beat": "soft",
+    "valence": 3,
+    "arc": "fades_out",
+    "jolts": false,
+    "alsoFits": ["overthinking", "focus_concentration", "calm_peace"],
+    "lyrics": "none",
+    "suggestedTitle": "Stream and Looping Synths"
   },
   "music-mindfulness-08": {
     "audioPath": "support/mindfulness/vividillustrate-zen-garden-ambience-japanese-flute-amp-waterfall-mindfulness-361112.mp3",
@@ -175,7 +238,16 @@
       "thought": 0
     },
     "decision": "move to motivation (owner)",
-    "pickedTitle": "Racing Strings"
+    "pickedTitle": "Racing Strings",
+    "instruments": ["strings", "piano", "cinematic drums", "harp"],
+    "natureSounds": [],
+    "beat": "driving",
+    "valence": 3,
+    "arc": "varied",
+    "jolts": true,
+    "alsoFits": ["confidence_empowerment", "emotional_release"],
+    "lyrics": "none",
+    "suggestedTitle": "Urgent Horizon"
   },
   "music-mindfulness-09": {
     "audioPath": "support/mindfulness/meditativetiger-morning-mindfulness-reset-meditation-511822.mp3",
@@ -198,7 +270,16 @@
     },
     "decision": "move to sadness (owner)",
     "secondaryTopic": "emotional_release",
-    "pickedTitle": "Reedy Melody in Pads"
+    "pickedTitle": "Reedy Melody in Pads",
+    "instruments": ["synth pads", "synth lead", "white noise swells"],
+    "natureSounds": ["ocean waves"],
+    "beat": "none",
+    "valence": 1,
+    "arc": "fades_out",
+    "jolts": true,
+    "alsoFits": ["emotional_release", "loneliness"],
+    "lyrics": "none",
+    "suggestedTitle": "Mournful Reed and Swells"
   },
   "music-mindfulness-10": {
     "audioPath": "support/mindfulness/pavetraxx-mindfulness-meditation-268622.mp3",
@@ -221,7 +302,16 @@
     },
     "decision": "stay in mindfulness (owner)",
     "secondaryTopic": "nature_mindfulness",
-    "pickedTitle": "Singing Bowl Drone"
+    "pickedTitle": "Singing Bowl Drone",
+    "instruments": ["synth pads", "drone"],
+    "natureSounds": ["flowing water"],
+    "beat": "none",
+    "valence": 3,
+    "arc": "fades_out",
+    "jolts": false,
+    "alsoFits": ["meditation", "deep_relaxation", "calm_peace"],
+    "lyrics": "none",
+    "suggestedTitle": "Brookside Synth Drift"
   },
   "music-mindfulness-11": {
     "audioPath": "support/mindfulness/light_music-mindfulness-meditation-195494.mp3",
@@ -243,7 +333,16 @@
       "thought": 0
     },
     "decision": "stay in mindfulness (owner)",
-    "pickedTitle": "Sparse Piano in Space"
+    "pickedTitle": "Sparse Piano in Space",
+    "instruments": ["electric guitar", "synth pads", "electric piano"],
+    "natureSounds": ["birdsong", "flowing water"],
+    "beat": "none",
+    "valence": 4,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["calm_peace", "deep_relaxation", "meditation"],
+    "lyrics": "none",
+    "suggestedTitle": "Stream and Soft Guitar"
   },
   "music-mindfulness-12": {
     "audioPath": "support/mindfulness/meditativetiger-mindfulness-bell-practice-388613.mp3",
@@ -264,7 +363,16 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "switch off: active false (owner)"
+    "decision": "switch off: active false (owner)",
+    "instruments": ["metallic percussion", "synth drone", "sound effects"],
+    "natureSounds": ["flowing water"],
+    "beat": "none",
+    "valence": 1,
+    "arc": "steady",
+    "jolts": true,
+    "alsoFits": [],
+    "lyrics": "none",
+    "suggestedTitle": "Echoes in the Cavern"
   },
   "music-mindfulness-13": {
     "audioPath": "support/mindfulness/alvarosegura-relaxing-meditation-music-yoga-relaxation-and-mindfulness-260549.mp3",
@@ -288,7 +396,15 @@
     },
     "secondaryTopic": "meditation",
     "decision": "stay in mindfulness; meditation as a secondary topic (owner)",
-    "pickedTitle": "Drifting Warm Horizons"
+    "pickedTitle": "Drifting Warm Horizons",
+    "instruments": ["synth pads", "drone"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["meditation", "deep_relaxation", "sleep_rest"],
+    "lyrics": "none"
   },
   "music-mindfulness-14": {
     "audioPath": "support/mindfulness/the_mountain-mindfulness-149939.mp3",
@@ -311,7 +427,15 @@
       "thought": 0
     },
     "decision": "move to overthinking (owner)",
-    "pickedTitle": "Circling Piano in Gray"
+    "pickedTitle": "Circling Piano in Gray",
+    "instruments": ["piano", "synth pad"],
+    "natureSounds": [],
+    "beat": "soft",
+    "valence": 2,
+    "arc": "builds",
+    "jolts": false,
+    "alsoFits": ["sadness", "focus_concentration", "loneliness"],
+    "lyrics": "none"
   },
   "music-mindfulness-15": {
     "audioPath": "support/mindfulness/john_kensy_music-mindfulness-relaxation-amp-meditation-music-22174.mp3",
@@ -335,7 +459,15 @@
     },
     "decision": "stay in mindfulness (owner)",
     "secondaryTopic": "nature_mindfulness",
-    "pickedTitle": "Soft Echoes on Still Water"
+    "pickedTitle": "Soft Echoes on Still Water",
+    "instruments": ["piano", "synth pads", "electric guitar"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "fades_out",
+    "jolts": false,
+    "alsoFits": ["meditation", "deep_relaxation", "calm_peace"],
+    "lyrics": "none"
   },
   "music-mindfulness-16": {
     "audioPath": "support/mindfulness/mindfulnessyt-mindfulness-443486.mp3",
@@ -359,7 +491,15 @@
     },
     "decision": "stay in mindfulness (owner)",
     "secondaryTopic": "calm_peace",
-    "pickedTitle": "Still Water Zither"
+    "pickedTitle": "Still Water Zither",
+    "instruments": ["zither", "synth pads"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["calm_peace", "meditation", "stress_relief"],
+    "lyrics": "none"
   },
   "music-mindfulness-17": {
     "audioPath": "support/mindfulness/higheruniversalman-mindfulness-meditation-180198.mp3",
@@ -383,7 +523,15 @@
     },
     "secondaryTopic": "meditation",
     "decision": "stay in mindfulness; meditation as a secondary topic (owner)",
-    "pickedTitle": "Warm Pads and Sparse Chimes"
+    "pickedTitle": "Warm Pads and Sparse Chimes",
+    "instruments": ["synth pads", "electric piano", "chimes"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["meditation", "deep_relaxation", "calm_peace"],
+    "lyrics": "none"
   },
   "music-mindfulness-18": {
     "audioPath": "support/mindfulness/breakzstudios-radiant-mindfulness-165866.mp3",
@@ -406,7 +554,15 @@
       "thought": 0
     },
     "decision": "move to overthinking (owner)",
-    "pickedTitle": "Quiet Looping Thoughts"
+    "pickedTitle": "Quiet Looping Thoughts",
+    "instruments": ["piano"],
+    "natureSounds": [],
+    "beat": "soft",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["calm_peace", "focus_concentration", "mindfulness"],
+    "lyrics": "none"
   },
   "music-mindfulness-19": {
     "audioPath": "support/mindfulness/natureseye-hatha-meditation-for-mindfulness-9798.mp3",
@@ -430,7 +586,21 @@
     },
     "secondaryTopic": "meditation",
     "decision": "stay in mindfulness; meditation as a secondary topic (owner)",
-    "pickedTitle": "Resonant Stillness and Chimes"
+    "pickedTitle": "Resonant Stillness and Chimes",
+    "instruments": [
+      "piano",
+      "synth pads",
+      "plucked strings",
+      "chimes",
+      "vocal pads"
+    ],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["meditation", "deep_relaxation", "calm_peace"],
+    "lyrics": "none"
   },
   "music-mindfulness-20": {
     "audioPath": "support/mindfulness/allicante-gentle-ambient-texture-for-mindfulness-332295.mp3",
@@ -454,7 +624,15 @@
     },
     "decision": "stay in mindfulness (owner)",
     "secondaryTopic": "meditation",
-    "pickedTitle": "Warm Drifting Horizon"
+    "pickedTitle": "Warm Drifting Horizon",
+    "instruments": ["synth pads", "synth drone"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["meditation", "deep_relaxation", "sleep_rest"],
+    "lyrics": "none"
   },
   "music-sleep-rest-01": {
     "audioPath": "support/Sleep & Rest/the_mountain-lofi-sleep-lofi-sleep-music-587590.mp3",
@@ -477,7 +655,21 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Dusty Midnight Piano Loop"
+    "pickedTitle": "Dusty Midnight Piano Loop",
+    "instruments": [
+      "electric guitar",
+      "lo-fi drums",
+      "bass",
+      "vinyl crackle",
+      "synth pad"
+    ],
+    "natureSounds": [],
+    "beat": "steady",
+    "valence": 2,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["focus_concentration", "loneliness", "sadness"],
+    "lyrics": "none"
   },
   "music-sleep-rest-02": {
     "audioPath": "support/Sleep & Rest/the_mountain-deep-sleep-deep-sleep-music-587578.mp3",
@@ -500,7 +692,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Velvet Night Guitar Drift"
+    "pickedTitle": "Velvet Night Guitar Drift",
+    "instruments": ["electric guitar", "synth pads", "lo-fi drums", "bass"],
+    "natureSounds": [],
+    "beat": "soft",
+    "valence": 2,
+    "arc": "swells_and_settles",
+    "jolts": false,
+    "alsoFits": ["stress_relief", "loneliness", "focus_concentration"],
+    "lyrics": "none"
   },
   "music-sleep-rest-03": {
     "audioPath": "support/Sleep & Rest/marlowemusic-sleep-sounds-588918.mp3",
@@ -523,7 +723,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Warm Midnight Keys"
+    "pickedTitle": "Warm Midnight Keys",
+    "instruments": ["electric piano", "synth pads"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "fades_out",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "meditation", "calm_peace"],
+    "lyrics": "none"
   },
   "music-sleep-rest-04": {
     "audioPath": "support/Sleep & Rest/velariomusic-sleep-music-583326.mp3",
@@ -546,7 +754,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Quiet Pulse At Dusk"
+    "pickedTitle": "Quiet Pulse At Dusk",
+    "instruments": ["piano", "synth pads", "electronic drums", "sub-bass"],
+    "natureSounds": [],
+    "beat": "steady",
+    "valence": 3,
+    "arc": "fades_out",
+    "jolts": false,
+    "alsoFits": ["focus_concentration", "stress_relief", "overthinking"],
+    "lyrics": "none"
   },
   "music-sleep-rest-05": {
     "audioPath": "support/Sleep & Rest/atlasaudio-sleep-music-562633.mp3",
@@ -569,7 +785,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Drifting Warmth in Stillness"
+    "pickedTitle": "Drifting Warmth in Stillness",
+    "instruments": ["synth pads"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "meditation", "calm_peace"],
+    "lyrics": "none"
   },
   "music-sleep-rest-06": {
     "audioPath": "support/Sleep & Rest/marlowemusic-meditation-sleep-580201.mp3",
@@ -592,7 +816,21 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Velvet Hums and Chimes"
+    "pickedTitle": "Velvet Hums and Chimes",
+    "instruments": [
+      "synth pads",
+      "chimes",
+      "vocal pads",
+      "electronic percussion",
+      "synth plucks"
+    ],
+    "natureSounds": [],
+    "beat": "soft",
+    "valence": 3,
+    "arc": "fades_out",
+    "jolts": false,
+    "alsoFits": ["calm_peace", "stress_relief", "anxiety_relief"],
+    "lyrics": "none"
   },
   "music-sleep-rest-07": {
     "audioPath": "support/Sleep & Rest/leberch-sleep-music-587996.mp3",
@@ -615,7 +853,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Distant Thunder and Still Water"
+    "pickedTitle": "Distant Thunder and Still Water",
+    "instruments": ["synth pads", "drone"],
+    "natureSounds": ["rain", "thunder", "water"],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "calm_peace", "nature_mindfulness"],
+    "lyrics": "none"
   },
   "music-sleep-rest-08": {
     "audioPath": "support/Sleep & Rest/atlasaudio-sleep-music-586396.mp3",
@@ -638,7 +884,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Weightless Midnight Drone"
+    "pickedTitle": "Weightless Midnight Drone",
+    "instruments": ["synth drone", "choir pad", "synth pads"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "meditation", "calm_peace"],
+    "lyrics": "none"
   },
   "music-sleep-rest-09": {
     "audioPath": "support/Sleep & Rest/atlasaudio-relaxing-sleep-583152.mp3",
@@ -661,7 +915,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Drifting Tide Horizons"
+    "pickedTitle": "Drifting Tide Horizons",
+    "instruments": ["synth pads", "drone"],
+    "natureSounds": ["wind"],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "meditation", "calm_peace"],
+    "lyrics": "none"
   },
   "music-sleep-rest-10": {
     "audioPath": "support/Sleep & Rest/leberch-piano-for-sleep-587330.mp3",
@@ -685,7 +947,15 @@
     },
     "decision": "stay in sleep_rest (owner)",
     "secondaryTopic": "healing_recovery",
-    "pickedTitle": "Quiet Nightfall Piano"
+    "pickedTitle": "Quiet Nightfall Piano",
+    "instruments": ["piano", "synth pads"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "fades_out",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "calm_peace", "anxiety_relief"],
+    "lyrics": "none"
   },
   "music-sleep-rest-11": {
     "audioPath": "support/Sleep & Rest/marlowemusic-sleep-577897.mp3",
@@ -708,7 +978,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Music Box Dusk"
+    "pickedTitle": "Music Box Dusk",
+    "instruments": ["music box", "synth pads", "lo-fi drums", "sub-bass"],
+    "natureSounds": [],
+    "beat": "soft",
+    "valence": 3,
+    "arc": "fades_out",
+    "jolts": false,
+    "alsoFits": ["focus_concentration", "stress_relief", "overthinking"],
+    "lyrics": "none"
   },
   "music-sleep-rest-12": {
     "audioPath": "support/Sleep & Rest/verclub_music-sleep-music-571041.mp3",
@@ -731,7 +1009,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Drifting Piano and Warm Pads"
+    "pickedTitle": "Drifting Piano and Warm Pads",
+    "instruments": ["piano", "synth pads"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "calm_peace", "meditation"],
+    "lyrics": "none"
   },
   "music-sleep-rest-13": {
     "audioPath": "support/Sleep & Rest/leberch-sleep-hypnosis-586804.mp3",
@@ -753,7 +1039,15 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "switch off: active false (owner)"
+    "decision": "switch off: active false (owner)",
+    "instruments": ["synth drone", "metallic percussion", "sound effects"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 1,
+    "arc": "steady",
+    "jolts": true,
+    "alsoFits": ["loneliness"],
+    "lyrics": "none"
   },
   "music-sleep-rest-14": {
     "audioPath": "support/Sleep & Rest/atlasaudio-rest-586393.mp3",
@@ -776,7 +1070,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Drifting Into Stillness"
+    "pickedTitle": "Drifting Into Stillness",
+    "instruments": ["synth pads", "synth drone"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "meditation", "calm_peace"],
+    "lyrics": "none"
   },
   "music-sleep-rest-15": {
     "audioPath": "support/Sleep & Rest/atlasaudio-rest-587602.mp3",
@@ -800,7 +1102,15 @@
     },
     "decision": "stay in sleep_rest (owner)",
     "secondaryTopic": "healing_recovery",
-    "pickedTitle": "Wistful Evening Piano"
+    "pickedTitle": "Wistful Evening Piano",
+    "instruments": ["piano", "synth pads"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 2,
+    "arc": "swells_and_settles",
+    "jolts": false,
+    "alsoFits": ["loneliness", "overthinking", "calm_peace"],
+    "lyrics": "none"
   },
   "music-sleep-rest-16": {
     "audioPath": "support/Sleep & Rest/leberch-sleep-583079.mp3",
@@ -823,7 +1133,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Fading Chimes and Drone"
+    "pickedTitle": "Fading Chimes and Drone",
+    "instruments": ["chimes", "synth drone", "synth pads"],
+    "natureSounds": [],
+    "beat": "soft",
+    "valence": 2,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "meditation", "overthinking"],
+    "lyrics": "none"
   },
   "music-sleep-rest-17": {
     "audioPath": "support/Sleep & Rest/leberch-relaxing-sleep-586414.mp3",
@@ -846,7 +1164,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Deep Midnight Drone"
+    "pickedTitle": "Deep Midnight Drone",
+    "instruments": ["synth drone", "synth pads", "vinyl crackle"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 2,
+    "arc": "steady",
+    "jolts": true,
+    "alsoFits": ["deep_relaxation", "meditation", "overthinking"],
+    "lyrics": "none"
   },
   "music-sleep-rest-18": {
     "audioPath": "support/Sleep & Rest/atlasaudio-sleep-music-583148.mp3",
@@ -869,7 +1195,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Deep Cavern Drone"
+    "pickedTitle": "Deep Cavern Drone",
+    "instruments": ["synth drone", "synth pads", "sub-bass"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 2,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "meditation", "overthinking"],
+    "lyrics": "none"
   },
   "music-sleep-rest-19": {
     "audioPath": "support/Sleep & Rest/luceris-sleep-music-590396.mp3",
@@ -892,7 +1226,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Weightless Night Drift"
+    "pickedTitle": "Weightless Night Drift",
+    "instruments": ["synth pads", "drone"],
+    "natureSounds": ["rain", "crickets"],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "calm_peace", "nature_mindfulness"],
+    "lyrics": "none"
   },
   "music-sleep-rest-20": {
     "audioPath": "support/Sleep & Rest/leberch-sleep-music-586417.mp3",
@@ -915,7 +1257,15 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "pickedTitle": "Shimmering Night Horizon"
+    "pickedTitle": "Shimmering Night Horizon",
+    "instruments": ["synth pads", "synth drone"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["deep_relaxation", "meditation", "calm_peace"],
+    "lyrics": "none"
   },
   "music-self-love-01": {
     "audioPath": "support/Self-Love/konstantinpazuzustudio-old-photo-album-neoclassical-piano-514667.mp3",
@@ -938,7 +1288,15 @@
       "thought": 0
     },
     "decision": "move to sadness (owner)",
-    "pickedTitle": "Faded Sepia Pages"
+    "pickedTitle": "Faded Sepia Pages",
+    "instruments": ["felt piano"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 2,
+    "arc": "swells_and_settles",
+    "jolts": false,
+    "alsoFits": ["loneliness", "overthinking", "emotional_release"],
+    "lyrics": "none"
   },
   "music-self-love-02": {
     "audioPath": "support/Self-Love/lavillia-liebe-in-mir-liebe-in-dir-413451.mp3",
@@ -961,7 +1319,21 @@
       "thought": 0
     },
     "decision": "move to happiness_joy (owner)",
-    "pickedTitle": "Liebe in mir, Liebe in dir"
+    "pickedTitle": "Liebe in mir, Liebe in dir",
+    "instruments": [
+      "electric guitar",
+      "bongos",
+      "guira",
+      "bass guitar",
+      "male vocals"
+    ],
+    "natureSounds": [],
+    "beat": "steady",
+    "valence": 5,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["self_love", "hope_positivity", "motivation"],
+    "lyrics": "German lyrics about self-love, romantic connection, dancing, and feeling the light."
   },
   "music-self-love-03": {
     "audioPath": "support/Self-Love/leberch-love-song-590429.mp3",
@@ -984,7 +1356,15 @@
       "thought": 0
     },
     "decision": "stay in self_love (owner)",
-    "pickedTitle": "Tender Piano Embrace"
+    "pickedTitle": "Tender Piano Embrace",
+    "instruments": ["piano", "synth pads"],
+    "natureSounds": [],
+    "beat": "soft",
+    "valence": 4,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["healing_recovery", "calm_peace", "hope_positivity"],
+    "lyrics": "none"
   },
   "music-self-love-04": {
     "audioPath": "support/Self-Love/atlasaudio-love-background-594868.mp3",
@@ -1007,7 +1387,15 @@
       "thought": 0
     },
     "decision": "stay in self_love (owner)",
-    "pickedTitle": "Warm Flowing Piano Tenderness"
+    "pickedTitle": "Warm Flowing Piano Tenderness",
+    "instruments": ["piano", "synth pads"],
+    "natureSounds": [],
+    "beat": "soft",
+    "valence": 3,
+    "arc": "swells_and_settles",
+    "jolts": false,
+    "alsoFits": ["healing_recovery", "emotional_release", "overthinking"],
+    "lyrics": "none"
   },
   "music-self-love-05": {
     "audioPath": "support/Self-Love/atlasaudio-love-522433.mp3",
@@ -1031,7 +1419,21 @@
     },
     "secondaryTopic": "self_love",
     "decision": "move to emotional_release; self_love as a secondary topic (owner)",
-    "pickedTitle": "Through the Storm to Stillness"
+    "pickedTitle": "Through the Storm to Stillness",
+    "instruments": [
+      "piano",
+      "strings",
+      "orchestral percussion",
+      "brass",
+      "vocal pads"
+    ],
+    "natureSounds": [],
+    "beat": "driving",
+    "valence": 2,
+    "arc": "swells_and_settles",
+    "jolts": true,
+    "alsoFits": ["confidence_empowerment", "motivation"],
+    "lyrics": "none"
   },
   "music-self-love-06": {
     "audioPath": "support/Self-Love/the_mountain-love-591389.mp3",
@@ -1054,7 +1456,15 @@
       "thought": 0
     },
     "decision": "stay in self_love (owner)",
-    "pickedTitle": "Tender Piano Stillness"
+    "pickedTitle": "Tender Piano Stillness",
+    "instruments": ["piano", "synth pads"],
+    "natureSounds": [],
+    "beat": "none",
+    "valence": 3,
+    "arc": "steady",
+    "jolts": false,
+    "alsoFits": ["healing_recovery", "calm_peace", "loneliness"],
+    "lyrics": "none"
   },
   "music-self-love-07": {
     "audioPath": "support/Self-Love/paulyudin-love-love-music-573988.mp3",
@@ -1078,7 +1488,15 @@
     },
     "secondaryTopic": "self_love",
     "decision": "move to hope_positivity; self_love as a secondary topic (owner)",
-    "pickedTitle": "Rising Piano and Strings"
+    "pickedTitle": "Rising Piano and Strings",
+    "instruments": ["piano", "strings", "cello", "synth pads", "cymbals"],
+    "natureSounds": [],
+    "beat": "soft",
+    "valence": 4,
+    "arc": "swells_and_settles",
+    "jolts": false,
+    "alsoFits": ["motivation", "confidence_empowerment", "emotional_release"],
+    "lyrics": "none"
   },
   "music-self-love-08": {
     "audioPath": "support/Self-Love/leberch-love-love-music-583085.mp3",
@@ -1101,7 +1519,15 @@
       "thought": 0
     },
     "decision": "stay in self_love (owner)",
-    "pickedTitle": "Tender Felt Piano Waltz"
+    "pickedTitle": "Tender Felt Piano Waltz",
+    "instruments": ["felt piano"],
+    "natureSounds": [],
+    "beat": "soft",
+    "valence": 3,
+    "arc": "fades_out",
+    "jolts": false,
+    "alsoFits": ["healing_recovery", "calm_peace", "loneliness"],
+    "lyrics": "none"
   },
   "music-self-love-09": {
     "audioPath": "support/Self-Love/atlasaudio-love-love-music-576644.mp3",
@@ -1124,7 +1550,15 @@
       "thought": 0
     },
     "decision": "stay in self_love (owner)",
-    "pickedTitle": "Warm String Embrace"
+    "pickedTitle": "Warm String Embrace",
+    "instruments": ["piano", "strings", "cymbal swells"],
+    "natureSounds": [],
+    "beat": "soft",
+    "valence": 4,
+    "arc": "swells_and_settles",
+    "jolts": false,
+    "alsoFits": ["healing_recovery", "hope_positivity", "emotional_release"],
+    "lyrics": "none"
   },
   "music-self-love-10": {
     "audioPath": "support/Self-Love/lilex-it-is-just-me-simply-me-415669.mp3",
@@ -1147,7 +1581,20 @@
       "thought": 0
     },
     "decision": "move to confidence_empowerment (owner)",
-    "pickedTitle": "It is just me, simply me"
+    "pickedTitle": "It is just me, simply me",
+    "instruments": [
+      "synthesizer",
+      "electronic drums",
+      "synth bass",
+      "synth pads"
+    ],
+    "natureSounds": [],
+    "beat": "driving",
+    "valence": 5,
+    "arc": "builds",
+    "jolts": true,
+    "alsoFits": ["motivation", "happiness_joy", "hope_positivity"],
+    "lyrics": "English lyrics about breaking free from self-doubt, rising above, and feeling unstoppable."
   },
   "music-self-love-11": {
     "audioPath": "support/Self-Love/maksymmalko-love-love-music-590406.mp3",

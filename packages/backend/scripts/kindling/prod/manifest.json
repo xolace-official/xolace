@@ -24,8 +24,16 @@
     "sourceTags": ["ambient", "meditation", "instrumental"],
     "whatItsFor": "soft swelling ambient pads for bringing your attention gently back to the room",
     "sound": {
+      "alsoFits": ["meditation", "deep_relaxation", "calm_peace"],
+      "arc": "fades_out",
+      "beat": "none",
       "energy": 1,
       "heard": "Warm, slow-swelling ambient synthesizer pads wash over a soft, steady low drone. The texture remains motionless, peaceful, and unbroken by melody or percussion.",
+      "instruments": ["synth pads", "bells", "drone"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": ["birdsong"],
+      "valence": 3,
       "vocals": "none"
     },
     "secondaryTopic": "music_topic_meditation",
@@ -60,8 +68,16 @@
     "sourceTags": ["meditation", "spiritual", "instrumental"],
     "whatItsFor": "warm acoustic guitar and soft birdsong for gently resting in the present moment",
     "sound": {
+      "alsoFits": ["deep_relaxation", "calm_peace", "breathing_meditation"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 2,
       "heard": "Gentle fingerpicked acoustic guitar accompanied by warm synth pads and subtle birdsong, maintaining a peaceful, unhurried pace throughout.",
+      "instruments": ["synth pads", "vocal pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -95,8 +111,16 @@
     "sourceTags": ["acoustic", "growth", "instrumental"],
     "whatItsFor": "upbeat acoustic strumming and lively percussion for enjoying a bright, carefree moment",
     "sound": {
+      "alsoFits": ["motivation", "hope_positivity"],
+      "arc": "steady",
+      "beat": "driving",
       "energy": 3,
       "heard": "Brisk, cheerful acoustic guitar strumming driven by lively handclaps, shakers, and a steady rhythmic beat. The mood is sunny, upbeat, and consistently energetic throughout.",
+      "instruments": ["acoustic guitar", "drums"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 5,
       "vocals": "none"
     },
     "secondaryTopic": "music_topic_motivation",
@@ -131,8 +155,16 @@
     "sourceTags": ["jazz", "instrumental", "relaxation"],
     "whatItsFor": "expansive ambient pads and subtle chimes for resting in open awareness and quiet presence",
     "sound": {
+      "alsoFits": ["calm_peace", "deep_relaxation", "breathing_meditation"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Gently sweeping ambient synth pads and warm atmospheric drones move slowly alongside occasional soft, glistening chimes. The energy remains extremely low, peaceful, and still throughout without any drums or vocals.",
+      "instruments": ["synth pads", "synth strings", "piano"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 4,
       "vocals": "none"
     },
     "loudness": {
@@ -166,8 +198,16 @@
     "sourceTags": ["ambient", "ethereal", "meditation"],
     "whatItsFor": "warm ambient synth pads for sitting quietly and observing what comes and goes",
     "sound": {
+      "alsoFits": ["meditation", "deep_relaxation", "calm_peace"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Slow, sustained ambient synth pads with gentle low-frequency drones and delicate shimmers. The energy is minimal and meditative, drifting smoothly without rhythm, melody shifts, or percussion.",
+      "instruments": ["synth pads", "drone"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -201,8 +241,16 @@
     "sourceTags": ["ambient", "meditation", "instrumental"],
     "whatItsFor": "resonant chimes and soft drones for anchoring attention back to the present moment",
     "sound": {
+      "alsoFits": ["meditation", "overthinking", "calm_peace"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Gentle, repetitive acoustic chimes and bells ring out over a subtle, warm synth drone. The mood is calm, unhurried, and remains very consistent throughout.",
+      "instruments": ["chimes", "synth drone", "bells", "synth pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -236,8 +284,16 @@
     "sourceTags": ["ambient", "water", "meditation"],
     "whatItsFor": "flowing river water and warm looping synth arpeggios for grounding yourself in the present moment",
     "sound": {
+      "alsoFits": ["overthinking", "focus_concentration", "calm_peace"],
+      "arc": "fades_out",
+      "beat": "soft",
       "energy": 1,
       "heard": "Continuous, realistic sounds of flowing river water run throughout the track, joined after a few seconds by a slow, warm, repeating arpeggiated synth melody and soft ambient pads. The energy stays low, steady, and soothing with no vocals, gradually fading out to just the water at the end.",
+      "instruments": ["synth arpeggio", "synth pads", "synth bass"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": ["flowing water"],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -271,8 +327,16 @@
     "sourceTags": ["classical", "zen", "nature"],
     "whatItsFor": "driving cinematic strings and heavy drums for pushing forward when you feel stuck",
     "sound": {
+      "alsoFits": ["confidence_empowerment", "emotional_release"],
+      "arc": "varied",
+      "beat": "driving",
       "energy": 4,
       "heard": "A driving, dramatic orchestral piece built on rapid string arpeggios, booming cinematic percussion, and intense brass swells. It builds continuously with urgent momentum and heavy trailer-style drum hits.",
+      "instruments": ["strings", "piano", "cinematic drums", "harp"],
+      "jolts": true,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -306,8 +370,16 @@
     "sourceTags": ["meditation", "spiritual", "morning"],
     "whatItsFor": "sombre synth pads and crashing ocean swells for sitting with heavy, lonely feelings",
     "sound": {
+      "alsoFits": ["emotional_release", "loneliness"],
+      "arc": "fades_out",
+      "beat": "none",
       "energy": 2,
       "heard": "Slow, beatless ambient synth pads and a bright, reedy synth lead play a melancholic melody, periodically interrupted by loud, rushing waves of white noise and ocean surf before fading into silence at 01:50. There are no vocals, and the mood is sombre, vast, and slightly tense rather than bright or easy.",
+      "instruments": ["synth pads", "synth lead", "white noise swells"],
+      "jolts": true,
+      "lyrics": "none",
+      "natureSounds": ["ocean waves"],
+      "valence": 1,
       "vocals": "none"
     },
     "secondaryTopic": "music_topic_emotional_release",
@@ -342,8 +414,16 @@
     "sourceTags": ["meditation", "spiritual", "instrumental"],
     "whatItsFor": "resonant singing bowls and deep ambient drone for grounding attention in the present moment",
     "sound": {
+      "alsoFits": ["meditation", "deep_relaxation", "calm_peace"],
+      "arc": "fades_out",
+      "beat": "none",
       "energy": 1,
       "heard": "A slow, resonant ambient drone layered with low singing-bowl tones and subtle shimmers that sustain without rhythmic percussion. It remains sparse, gentle, and steadily tranquil throughout.",
+      "instruments": ["synth pads", "drone"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": ["flowing water"],
+      "valence": 3,
       "vocals": "none"
     },
     "secondaryTopic": "music_topic_nature_mindfulness",
@@ -378,8 +458,16 @@
     "sourceTags": ["meditation", "space", "ambient"],
     "whatItsFor": "spacious ambient pads and gentle piano notes for settling into quiet, unhurried awareness",
     "sound": {
+      "alsoFits": ["calm_peace", "deep_relaxation", "meditation"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Slow, expansive ambient synth pads drift beneath sparse, ringing piano notes with no rhythm or sudden shifts. The mood remains completely still, open, and meditative across the entire duration.",
+      "instruments": ["electric guitar", "synth pads", "electric piano"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": ["birdsong", "flowing water"],
+      "valence": 4,
       "vocals": "none"
     },
     "loudness": {
@@ -413,8 +501,16 @@
     "sourceTags": ["meditation", "bells", "practice"],
     "whatItsFor": "eerie metallic clangs and dark cavernous drones for an unsettling horror atmosphere",
     "sound": {
+      "alsoFits": [],
+      "arc": "steady",
+      "beat": "none",
       "energy": 3,
       "heard": "This is a dark, ominous soundscape featuring deep metallic bangs, distorted screeching noises, watery gurgles, and haunting chimes over a low, cavernous drone. The mood is tense, eerie, and unsettling rather than peaceful or meditative.",
+      "instruments": ["metallic percussion", "synth drone", "sound effects"],
+      "jolts": true,
+      "lyrics": "none",
+      "natureSounds": ["flowing water"],
+      "valence": 1,
       "vocals": "none"
     },
     "loudness": {
@@ -449,8 +545,16 @@
     "whatItsFor": "warm, beatless synth pads for sitting still and noticing what is here right now",
     "secondaryTopic": "music_topic_meditation",
     "sound": {
+      "alsoFits": ["meditation", "deep_relaxation", "sleep_rest"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Very slow, beatless warm synthesizer pads drift through gentle, unhurried chord changes with no percussion or vocals. The energy stays minimal and enveloping throughout, creating a spacious, weightless mood.",
+      "instruments": ["synth pads", "drone"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -484,8 +588,16 @@
     "sourceTags": ["classical", "meditation", "instrumental"],
     "whatItsFor": "looping minor-key solo piano for sitting with a heavy mood or circling thoughts",
     "sound": {
+      "alsoFits": ["sadness", "focus_concentration", "loneliness"],
+      "arc": "builds",
+      "beat": "soft",
       "energy": 2,
       "heard": "A solo piano opens with slow, heavy, sombre chords over a low ambient drone, then shifts at 0:21 into a steady, repetitive minor-key arpeggio that climbs into a higher, faster-moving melodic pattern at 0:54. The mood is melancholic, brooding, and introspective rather than serene.",
+      "instruments": ["piano", "synth pad"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 2,
       "vocals": "none"
     },
     "loudness": {
@@ -519,8 +631,16 @@
     "sourceTags": ["ambient", "relaxation", "meditation"],
     "whatItsFor": "sparse reverberant piano and warm pads for slowing down and noticing how you actually feel",
     "sound": {
+      "alsoFits": ["meditation", "deep_relaxation", "calm_peace"],
+      "arc": "fades_out",
+      "beat": "none",
       "energy": 1,
       "heard": "A slow, low-energy ambient piece featuring sparse, reverberant piano notes over warm, swelling synth pads and subtle vinyl crackle. There are no vocals, and the mood remains steady, quiet, and introspective throughout.",
+      "instruments": ["piano", "synth pads", "electric guitar"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "secondaryTopic": "music_topic_nature_mindfulness",
@@ -555,8 +675,16 @@
     "sourceTags": ["ambient", "meditation", "instrumental"],
     "whatItsFor": "gentle plucked zither and warm pads for settling into the present moment",
     "sound": {
+      "alsoFits": ["calm_peace", "meditation", "stress_relief"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 2,
       "heard": "A slow, unhurried pentatonic melody played on a plucked zither (guzheng) over a soft, continuous synthesizer pad, with no percussion or vocals. The piece cycles gently between sparse, deliberate plucking and sections with expressive pitch bends and shimmering tremolo, maintaining a calm and contemplative mood throughout.",
+      "instruments": ["zither", "synth pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "secondaryTopic": "music_topic_calm_peace",
@@ -592,8 +720,16 @@
     "whatItsFor": "warm synth pads and sparse chimes for sitting still and noticing the present moment",
     "secondaryTopic": "music_topic_meditation",
     "sound": {
+      "alsoFits": ["meditation", "deep_relaxation", "calm_peace"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Very slow, low-energy ambient synth pads with sparse bell-like chimes and periodic reversed-sound swells. There are no vocals, and the mood remains calm, spacious, and unhurried from start to finish.",
+      "instruments": ["synth pads", "electric piano", "chimes"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -627,8 +763,16 @@
     "sourceTags": ["piano", "meditation", "instrumental"],
     "whatItsFor": "repetitive, melancholic solo piano for sitting quietly when your thoughts keep looping",
     "sound": {
+      "alsoFits": ["calm_peace", "focus_concentration", "mindfulness"],
+      "arc": "steady",
+      "beat": "soft",
       "energy": 2,
       "heard": "A solo piano plays a steady, repetitive pulsing accompaniment in a minor key with a melancholic, contemplative melody that alternates between sparse, lingering notes and slightly more active phrases, repeating its main sections in the middle register and an octave higher. There are no vocals, and the energy remains low and introspective throughout.",
+      "instruments": ["piano"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -663,8 +807,22 @@
     "whatItsFor": "gentle plucked notes, soft piano, and airy pads for a long, grounded sit",
     "secondaryTopic": "music_topic_meditation",
     "sound": {
+      "alsoFits": ["meditation", "deep_relaxation", "calm_peace"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "A slow, tranquil ambient piece featuring a repeating, resonant plucked melody, delicate high piano notes, warm synth pads, and gentle shaker swells. Wordless choir-like vocal pads add a spacious, floating warmth throughout the seventeen-minute runtime without any sudden shifts in energy.",
+      "instruments": [
+        "piano",
+        "synth pads",
+        "plucked strings",
+        "chimes",
+        "vocal pads"
+      ],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "wordless"
     },
     "loudness": {
@@ -698,8 +856,16 @@
     "sourceTags": ["ambient", "light", "meditation"],
     "whatItsFor": "warm, slow-drifting synth pads for quietly landing back in the present moment",
     "sound": {
+      "alsoFits": ["meditation", "deep_relaxation", "sleep_rest"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "A beatless, slow-evolving synthesizer drone made of warm, enveloping pads that gently swell and recede without any percussion or vocals. Around the three-minute mark, a brighter, shimmering high-register synth layer briefly emerges before everything fades back into a quiet, spacious stillness.",
+      "instruments": ["synth pads", "synth drone"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "secondaryTopic": "music_topic_meditation",
@@ -734,8 +900,22 @@
     "sourceTags": ["lofi", "beats", "sleep"],
     "whatItsFor": "muffled lo-fi piano and dusty beats for settling a busy mind late at night",
     "sound": {
+      "alsoFits": ["focus_concentration", "loneliness", "sadness"],
+      "arc": "steady",
+      "beat": "steady",
       "energy": 2,
       "heard": "A slow, low-energy lo-fi track featuring a warm, repeating muted piano melody over a dusty vinyl crackle and a steady, laid-back drum beat. The drums drop out briefly in the middle for a quiet piano interlude before returning and ending with bare percussive clicks.",
+      "instruments": [
+        "electric guitar",
+        "lo-fi drums",
+        "bass",
+        "vinyl crackle",
+        "synth pad"
+      ],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 2,
       "vocals": "none"
     },
     "loudness": {
@@ -769,8 +949,16 @@
     "sourceTags": ["lullaby", "sleep", "instrumental"],
     "whatItsFor": "dreamy electric guitar and soft lo-fi beats for quieting a busy mind at night",
     "sound": {
+      "alsoFits": ["stress_relief", "loneliness", "focus_concentration"],
+      "arc": "swells_and_settles",
+      "beat": "soft",
       "energy": 2,
       "heard": "A slow, dreamy chillhop track that opens with warm synthesizer pads and a bell-like keyboard melody before a soft, muffled lo-fi beat and reverbed electric guitar enter. Near the end, the beat and guitar drop out, leaving the gentle synth pads and keyboard to fade away.",
+      "instruments": ["electric guitar", "synth pads", "lo-fi drums", "bass"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 2,
       "vocals": "none"
     },
     "loudness": {
@@ -804,8 +992,16 @@
     "sourceTags": ["meditation", "sleep", "ambient"],
     "whatItsFor": "hushed electric piano and warm synth pads for drifting off when you are worn out",
     "sound": {
+      "alsoFits": ["deep_relaxation", "meditation", "calm_peace"],
+      "arc": "fades_out",
+      "beat": "none",
       "energy": 1,
       "heard": "Very slow, soft electric piano notes drift over warm, sustained synthesizer pads with no percussion. The energy stays hushed and unhurried from start to finish, creating a peaceful, drowsy mood.",
+      "instruments": ["electric piano", "synth pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -839,8 +1035,16 @@
     "sourceTags": ["ambient", "sleep", "instrumental"],
     "whatItsFor": "soft piano and a gentle chill beat for unwinding when your mind is still awake",
     "sound": {
+      "alsoFits": ["focus_concentration", "stress_relief", "overthinking"],
+      "arc": "fades_out",
+      "beat": "steady",
       "energy": 2,
       "heard": "A slow, gentle piano melody over warm synthesizer pads starts sparsely before a soft, steady electronic beat enters around 0:34. The mood is calm, contemplative, and unhurried, briefly dropping the beat around 2:20 before resuming and fading out.",
+      "instruments": ["piano", "synth pads", "electronic drums", "sub-bass"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -874,8 +1078,16 @@
     "sourceTags": ["meditation", "spiritual", "sleep"],
     "whatItsFor": "warm, drifting synth pads for letting the mind settle and drifting into sleep",
     "sound": {
+      "alsoFits": ["deep_relaxation", "meditation", "calm_peace"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Very slow, continuous warm synthesizer pads drift through a gentle, repeating four-chord progression with no percussion or vocals. The mood is serene, weightless, and completely unchanging throughout, fading out softly at the end.",
+      "instruments": ["synth pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -909,8 +1121,22 @@
     "sourceTags": ["meditation", "deep-sleep", "ambient"],
     "whatItsFor": "warm synth pads, gentle chimes, and soft hums for letting your body unclench",
     "sound": {
+      "alsoFits": ["calm_peace", "stress_relief", "anxiety_relief"],
+      "arc": "fades_out",
+      "beat": "soft",
       "energy": 2,
       "heard": "Warm synthesizer pads and delicate bell-like tones open at a very slow tempo before a soft electronic beat and breathy wordless female hums join in. The energy stays low and soothing, briefly dropping the beat in the middle before gently returning and fading out.",
+      "instruments": [
+        "synth pads",
+        "chimes",
+        "vocal pads",
+        "electronic percussion",
+        "synth plucks"
+      ],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "wordless"
     },
     "loudness": {
@@ -944,8 +1170,16 @@
     "sourceTags": ["meditation", "sleep", "ambient"],
     "whatItsFor": "warm synth pads, gentle water and distant thunder for drifting off when you are exhausted",
     "sound": {
+      "alsoFits": ["deep_relaxation", "calm_peace", "nature_mindfulness"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Slow, beatless synthesizer pads drift over gentle water sounds, quiet birdsong, and distant thunder, with a few sparse piano notes near the end. The energy is very low and unchanging, creating a calm, spacious, and restful mood with no vocals.",
+      "instruments": ["synth pads", "drone"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": ["rain", "thunder", "water"],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -979,8 +1213,16 @@
     "sourceTags": ["meditation", "sleep", "instrumental"],
     "whatItsFor": "slow, weightless synth drones and soft choir swells for drifting off when worn out",
     "sound": {
+      "alsoFits": ["deep_relaxation", "meditation", "calm_peace"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "A beatless, slow-moving drone of warm, airy synthesizer pads and soft choir-like swells that gradually build from a low hum and then gently fade back out. There is no melody or percussion, keeping a hushed, weightless mood throughout.",
+      "instruments": ["synth drone", "choir pad", "synth pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "wordless"
     },
     "loudness": {
@@ -1014,8 +1256,16 @@
     "sourceTags": ["classical", "relaxation", "sleep"],
     "whatItsFor": "warm synth pads and gentle ocean waves for drifting off when you are worn out",
     "sound": {
+      "alsoFits": ["deep_relaxation", "meditation", "calm_peace"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Very slow, sustained warm synth pads with gentle ocean waves washing in the background and occasional soft, bell-like tones. The track maintains a barely-there, floating energy throughout, creating a serene and drowsy atmosphere before fading out.",
+      "instruments": ["synth pads", "drone"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": ["wind"],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -1049,8 +1299,16 @@
     "sourceTags": ["piano", "sleep", "instrumental"],
     "whatItsFor": "slow, gentle piano and warm pads for lying down and drifting off to sleep",
     "sound": {
+      "alsoFits": ["deep_relaxation", "calm_peace", "anxiety_relief"],
+      "arc": "fades_out",
+      "beat": "none",
       "energy": 1,
       "heard": "A slow, gentle piano plays a repeating arpeggiated melody over a warm, sustained synth pad. The mood is peaceful and soothing, maintaining a steady, very low energy throughout without any sudden changes or vocals.",
+      "instruments": ["piano", "synth pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "secondaryTopic": "music_topic_healing_recovery",
@@ -1085,8 +1343,16 @@
     "sourceTags": ["meditation", "sleep", "ambient"],
     "whatItsFor": "music-box bells and a soft lo-fi beat for unwinding at the end of the day",
     "sound": {
+      "alsoFits": ["focus_concentration", "stress_relief", "overthinking"],
+      "arc": "fades_out",
+      "beat": "soft",
       "energy": 2,
       "heard": "A slow, gentle lo-fi beat pairs with soft, music-box-like bell melodies and warm synthesizer pads. The energy stays low and soothing throughout, briefly stripping away the drums around the two-minute mark before easing back in and fading out on pure chimes.",
+      "instruments": ["music box", "synth pads", "lo-fi drums", "sub-bass"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -1120,8 +1386,16 @@
     "sourceTags": ["meditation", "sleep", "instrumental"],
     "whatItsFor": "sparse piano and warm synth pads for drifting off when you are ready to rest",
     "sound": {
+      "alsoFits": ["deep_relaxation", "calm_peace", "meditation"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Very slow, sparse piano notes drift over a warm, continuous synthesizer pad with no percussion or vocals. The mood is deeply peaceful and drowsy, maintaining a low, unchanging energy throughout the entire piece.",
+      "instruments": ["piano", "synth pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -1155,8 +1429,16 @@
     "sourceTags": ["hypnosis", "meditation", "sleep"],
     "whatItsFor": "dark, cavernous synth drone and metallic washes for sitting inside a heavy, bleak mood",
     "sound": {
+      "alsoFits": ["loneliness"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 2,
       "heard": "A beatless, dark synthesizer drone holds a low, ominous hum, punctuated every thirty seconds by a harsh, metallic crash and static sweep. There is no melody or warmth, only a tense, cavernous atmosphere that shifts slightly in pitch before fading out.",
+      "instruments": ["synth drone", "metallic percussion", "sound effects"],
+      "jolts": true,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 1,
       "vocals": "none"
     },
     "loudness": {
@@ -1190,8 +1472,16 @@
     "sourceTags": ["meditation", "rest", "ambient"],
     "whatItsFor": "slow, weightless synth drones for closing your eyes when you are worn out",
     "sound": {
+      "alsoFits": ["deep_relaxation", "meditation", "calm_peace"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Beatless, very slow ambient synthesizer drones drift and swell with no percussion or vocals. The mood is hushed, spacious, and somnolent, gradually warming with soft harmonic layers around the midpoint before fading back into near silence.",
+      "instruments": ["synth pads", "synth drone"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -1225,8 +1515,16 @@
     "sourceTags": ["meditation", "rest", "instrumental"],
     "whatItsFor": "wistful piano and warm pads for sitting quietly with a heavy or reflective mood",
     "sound": {
+      "alsoFits": ["loneliness", "overthinking", "calm_peace"],
+      "arc": "swells_and_settles",
+      "beat": "none",
       "energy": 2,
       "heard": "A gentle, melancholic piano plays a slow, reflective melody over soft, warm synthesizer pads. The energy rises slightly in the middle with flowing, repetitive piano arpeggios before settling back into a quiet, contemplative close.",
+      "instruments": ["piano", "synth pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 2,
       "vocals": "none"
     },
     "secondaryTopic": "music_topic_healing_recovery",
@@ -1261,8 +1559,16 @@
     "sourceTags": ["meditation", "sleep", "ambient"],
     "whatItsFor": "soft repeating chimes and deep synth drones for drifting off to sleep",
     "sound": {
+      "alsoFits": ["deep_relaxation", "meditation", "overthinking"],
+      "arc": "steady",
+      "beat": "soft",
       "energy": 1,
       "heard": "A slow, minimal ambient drone with soft, repeating bell-like synth chimes and warm, swelling pads. Around the five-minute mark, the chimes fade away, leaving a deep, resonant synth drone that slowly decays into silence.",
+      "instruments": ["chimes", "synth drone", "synth pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 2,
       "vocals": "none"
     },
     "loudness": {
@@ -1296,8 +1602,16 @@
     "sourceTags": ["ambient", "relaxation", "sleep"],
     "whatItsFor": "deep motionless synth drones and soft static for drifting off when completely worn out",
     "sound": {
+      "alsoFits": ["deep_relaxation", "meditation", "overthinking"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Very slow, continuous synthesizer drone pads with no beat, melody, or vocals. Around 00:40, a faint rhythmic static hiss enters in the background until fading out near 04:15, leaving the deep, dark, motionless synth drone to fade at the end.",
+      "instruments": ["synth drone", "synth pads", "vinyl crackle"],
+      "jolts": true,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 2,
       "vocals": "none"
     },
     "loudness": {
@@ -1331,8 +1645,16 @@
     "sourceTags": ["meditation", "sleep", "instrumental"],
     "whatItsFor": "deep synthesizer drones and slow pads for drifting into sleep when you are worn out",
     "sound": {
+      "alsoFits": ["deep_relaxation", "meditation", "overthinking"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "A beatless, ultra-slow drone built from deep sub-bass hums and sustained, airy synthesizer pads with no percussion or vocals. The mood is dark, cavernous, and suspended, shifting very gradually between low rumbling textures and slightly brighter, shimmering harmonic layers before fading out.",
+      "instruments": ["synth drone", "synth pads", "sub-bass"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 2,
       "vocals": "none"
     },
     "loudness": {
@@ -1366,8 +1688,16 @@
     "sourceTags": ["ambient", "sleep", "instrumental"],
     "whatItsFor": "deep, weightless synth drones and soft shimmering pads for drifting into sleep when worn out",
     "sound": {
+      "alsoFits": ["deep_relaxation", "calm_peace", "nature_mindfulness"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "Very slow, low-energy soundscape built on deep, sustained synthesizer drones and gentle, shimmering pads with no percussion or vocals. The mood is weightless, quiet, and spacious, drifting steadily throughout before fading into silence at the end.",
+      "instruments": ["synth pads", "drone"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": ["rain", "crickets"],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -1401,8 +1731,16 @@
     "sourceTags": ["ambient", "sleep", "instrumental"],
     "whatItsFor": "deep shimmering synth drones for letting go of the day and drifting into sleep",
     "sound": {
+      "alsoFits": ["deep_relaxation", "meditation", "calm_peace"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 1,
       "heard": "This beatless, very slow drone piece opens with a deep, warm synthesizer pad that swells into a rich, shimmering wash of layered synth chords by 0:38. The sustained, floating textures hold a serene, weightless mood for several minutes before gradually thinning out around 5:50 into a low, resonant hum with subtle crackles that fades to silence.",
+      "instruments": ["synth pads", "synth drone"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -1436,8 +1774,16 @@
     "sourceTags": ["modern-classical", "piano", "instrumental"],
     "whatItsFor": "wistful felt piano with rolling arpeggios for sitting quietly with nostalgic or heavy feelings",
     "sound": {
+      "alsoFits": ["loneliness", "overthinking", "emotional_release"],
+      "arc": "swells_and_settles",
+      "beat": "none",
       "energy": 2,
       "heard": "A slow, melancholic solo piano piece with a soft felt tone and audible mechanical key clicks. It begins sparsely and builds around 0:50 into rolling arpeggios with a subtle, low atmospheric pad before receding back into quiet reflection.",
+      "instruments": ["felt piano"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 2,
       "vocals": "none"
     },
     "loudness": {
@@ -1471,8 +1817,22 @@
     "sourceTags": ["reggae", "affirmation", "self-love"],
     "whatItsFor": "sunny bachata guitar and german vocals for swaying along and lifting your mood",
     "sound": {
+      "alsoFits": ["self_love", "hope_positivity", "motivation"],
+      "arc": "steady",
+      "beat": "steady",
       "energy": 3,
       "heard": "A mid-tempo Bachata-inspired Latin pop groove featuring syncopated bongos, guira percussion, bright arpeggiated electric guitar, bass, and prominent autotuned male vocals singing romantic lyrics in German. The mood is sunny, danceable, and upbeat throughout, with an instrumental guitar solo break before the final verse.",
+      "instruments": [
+        "electric guitar",
+        "bongos",
+        "guira",
+        "bass guitar",
+        "male vocals"
+      ],
+      "jolts": false,
+      "lyrics": "German lyrics about self-love, romantic connection, dancing, and feeling the light.",
+      "natureSounds": [],
+      "valence": 5,
       "vocals": "lyrics"
     },
     "loudness": {
@@ -1506,8 +1866,16 @@
     "sourceTags": ["wedding", "acoustic", "romantic"],
     "whatItsFor": "warm arpeggiated piano for being gentle with yourself when your inner voice is harsh",
     "sound": {
+      "alsoFits": ["healing_recovery", "calm_peace", "hope_positivity"],
+      "arc": "steady",
+      "beat": "soft",
       "energy": 2,
       "heard": "A slow, gentle solo piano plays warm arpeggiated chords and a simple, tender melody throughout, supported by a faint atmospheric synth pad in the background. The mood is consistently peaceful, warm, and reassuring, with the melody shifting to a slightly higher register midway before repeating and softly fading out.",
+      "instruments": ["piano", "synth pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 4,
       "vocals": "none"
     },
     "loudness": {
@@ -1541,8 +1909,16 @@
     "sourceTags": ["wedding", "instrumental", "ambient"],
     "whatItsFor": "warm flowing piano arpeggios and soft pads for softening a harsh inner voice",
     "sound": {
+      "alsoFits": ["healing_recovery", "emotional_release", "overthinking"],
+      "arc": "swells_and_settles",
+      "beat": "soft",
       "energy": 2,
       "heard": "A gentle, moderately paced instrumental featuring warm piano arpeggios and soft atmospheric synth pads. It builds mildly with higher, faster piano notes in the second half while maintaining a tender, reflective, and soothing mood throughout.",
+      "instruments": ["piano", "synth pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -1577,8 +1953,22 @@
     "whatItsFor": "delicate piano building to sweeping orchestral climaxes for letting big pent-up feelings out",
     "secondaryTopic": "music_topic_self_love",
     "sound": {
+      "alsoFits": ["confidence_empowerment", "motivation"],
+      "arc": "swells_and_settles",
+      "beat": "driving",
       "energy": 4,
       "heard": "A gentle, melancholic piano arpeggio opens at a moderate tempo, joined by warm strings and wordless choir pads before erupting at 1:05 and 2:10 into a dramatic cinematic orchestral climax with booming percussion, soaring brass, and driving strings. It settles back down to the quiet solo piano at the very end.",
+      "instruments": [
+        "piano",
+        "strings",
+        "orchestral percussion",
+        "brass",
+        "vocal pads"
+      ],
+      "jolts": true,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 2,
       "vocals": "wordless"
     },
     "loudness": {
@@ -1612,8 +2002,16 @@
     "sourceTags": ["modern-classical", "instrumental", "love"],
     "whatItsFor": "tender piano and warm synth pads for softening a harsh inner voice",
     "sound": {
+      "alsoFits": ["healing_recovery", "calm_peace", "loneliness"],
+      "arc": "steady",
+      "beat": "none",
       "energy": 2,
       "heard": "A slow, gentle piano melody plays over warm, sustained ambient synthesizer pads in a minor key. The mood is wistful, tender, and reflective, flowing steadily with subtle shifts in the piano arpeggios before fading out softly.",
+      "instruments": ["piano", "synth pads"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -1648,8 +2046,16 @@
     "whatItsFor": "arpeggiated piano and swelling cinematic strings for when you need a wave of hope",
     "secondaryTopic": "music_topic_self_love",
     "sound": {
+      "alsoFits": ["motivation", "confidence_empowerment", "emotional_release"],
+      "arc": "swells_and_settles",
+      "beat": "soft",
       "energy": 3,
       "heard": "A bright, arpeggiated piano opens at a steady, flowing tempo, joined by warm cello and swelling orchestral strings at 0:14. By 0:27, cymbal swells and soaring strings build into a grand, cinematic peak before dropping back to the gentle solo piano at 0:54.",
+      "instruments": ["piano", "strings", "cello", "synth pads", "cymbals"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 4,
       "vocals": "none"
     },
     "loudness": {
@@ -1683,8 +2089,16 @@
     "sourceTags": ["modern-jazz", "romantic", "instrumental"],
     "whatItsFor": "intimate felt piano waltz for offering yourself a quiet moment of tenderness",
     "sound": {
+      "alsoFits": ["healing_recovery", "calm_peace", "loneliness"],
+      "arc": "fades_out",
+      "beat": "soft",
       "energy": 2,
       "heard": "A solo felt piano plays a slow, gentle waltz-like arpeggio with a tender, wistful melody in the upper register. It is neoclassical rather than jazz, remaining quiet and unhurried from start to finish before fading on a soft chord.",
+      "instruments": ["felt piano"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 3,
       "vocals": "none"
     },
     "loudness": {
@@ -1718,8 +2132,16 @@
     "sourceTags": ["wedding", "romantic", "instrumental"],
     "whatItsFor": "arpeggiated piano and swelling strings for softening a harsh inner voice with warmth",
     "sound": {
+      "alsoFits": ["healing_recovery", "hope_positivity", "emotional_release"],
+      "arc": "swells_and_settles",
+      "beat": "soft",
       "energy": 3,
       "heard": "A gentle, steady arpeggiated piano opens the piece at a moderate tempo, joined at 0:18 by lush, swelling orchestral strings that build into a warm, tender climax before receding back to solo piano.",
+      "instruments": ["piano", "strings", "cymbal swells"],
+      "jolts": false,
+      "lyrics": "none",
+      "natureSounds": [],
+      "valence": 4,
       "vocals": "none"
     },
     "loudness": {
@@ -1753,8 +2175,21 @@
     "sourceTags": ["pop", "acoustic", "self-love"],
     "whatItsFor": "euphoric dance pop with soaring vocals and synths for shaking off self-doubt and feeling unstoppable",
     "sound": {
+      "alsoFits": ["motivation", "happiness_joy", "hope_positivity"],
+      "arc": "builds",
+      "beat": "driving",
       "energy": 5,
       "heard": "This is a high-energy EDM and dance-pop anthem with a fast four-on-the-floor beat, bright soaring synthesizers, and powerful female vocals singing lyrics about breaking free from self-doubt and feeling unstoppable. It builds from atmospheric synth pads in the intro to explosive, euphoric drops and choruses.",
+      "instruments": [
+        "synthesizer",
+        "electronic drums",
+        "synth bass",
+        "synth pads"
+      ],
+      "jolts": true,
+      "lyrics": "English lyrics about breaking free from self-doubt, rising above, and feeling unstoppable.",
+      "natureSounds": [],
+      "valence": 5,
       "vocals": "lyrics"
     },
     "loudness": {

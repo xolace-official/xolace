@@ -22,7 +22,8 @@
 // instead: no key, it signs in as `gcloud auth application-default login` and
 // bills the project from `gcloud config get-value project` (or
 // GOOGLE_CLOUD_PROJECT).
-// Resumes: tracks already in the review file are skipped (`--redo` to redo).
+// Resumes: tracks already in the review file are skipped (`--redo` to redo;
+// `--facts-only` hears the early reviews that lack the facts and adds only those).
 //
 //   bun scripts/kindling/describe-music.ts --estimate      # cost from track lengths, no calls
 //   bun scripts/kindling/describe-music.ts --limit 5       # a sample, prints what it cost
@@ -744,9 +745,31 @@ if (recordSlug) {
 	process.exit(0);
 }
 
+/**
+ * `--facts-only`: hear the tracks reviewed before the facts were asked for and
+ * add just the facts, leaving the reviewed line, verdict and owner's calls.
+ */
+const FACTS_ONLY = flag("--facts-only");
+const FACT_KEYS = [
+	"instruments",
+	"natureSounds",
+	"beat",
+	"valence",
+	"arc",
+	"jolts",
+	"alsoFits",
+	"lyrics",
+] as const;
+const lacksFacts = (r: Review | undefined) =>
+	r !== undefined && r.instruments === undefined;
+
 const todo = music
 	.filter((t) => (ONLY ? ONLY.includes(t.slug) : true))
-	.filter((t) => flag("--redo") || !reviews[t.slug])
+	.filter((t) =>
+		FACTS_ONLY
+			? lacksFacts(reviews[t.slug])
+			: flag("--redo") || !reviews[t.slug]
+	)
 	.slice(0, LIMIT);
 
 if (flag("--prompt")) {
@@ -841,7 +864,15 @@ async function worker() {
 			failed = true;
 			throw error;
 		}
-		reviews[t.slug] = { ...review, ...ownerCalls(t.slug) };
+		const before = reviews[t.slug];
+		reviews[t.slug] =
+			FACTS_ONLY && before
+				? {
+						...before,
+						...Object.fromEntries(FACT_KEYS.map((k) => [k, review[k]])),
+						suggestedTitle: before.suggestedTitle ?? review.suggestedTitle,
+					}
+				: { ...review, ...ownerCalls(t.slug) };
 		done.push(review);
 		saveReviews();
 		writeReport();
