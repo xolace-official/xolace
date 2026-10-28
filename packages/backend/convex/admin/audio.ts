@@ -5,7 +5,7 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { r2, reindexTrack } from "../ai/paths/audioTracks";
 import { CATALOG_BY_KEY, TOPIC_SLUGS, topicTitle } from "../ai/paths/catalog";
 import { adminMutation, adminQuery } from "../lib/adminAuth";
-import { licenceValidator } from "../lib/validators";
+import { licenceValidator, trackSoundValidator } from "../lib/validators";
 import { trackSearchTextOf } from "../library/searchText";
 import schema from "../schema";
 import { ADMIN_LIST_LIMIT, adminStamp, assertSlug, notFound } from "./edits";
@@ -44,9 +44,11 @@ const trackRow = v.object({
 	newUntil: v.optional(v.number()),
 	retiredAt: v.optional(v.number()),
 	safetyReviewedAt: v.optional(v.number()),
+	secondaryTopic: v.optional(v.string()),
 	series: v.optional(v.string()),
 	seriesTitle: v.optional(v.string()),
 	slug: v.string(),
+	sound: v.optional(trackSoundValidator),
 	sourceTags: v.array(v.string()),
 	tags: v.array(v.string()),
 	tier: v.optional(v.number()),
@@ -76,9 +78,11 @@ const toRow = (t: Doc<"audio_tracks">): Infer<typeof trackRow> => ({
 	newUntil: t.newUntil,
 	retiredAt: t.retiredAt,
 	safetyReviewedAt: t.safetyReviewedAt,
+	secondaryTopic: t.secondaryTopic,
 	series: t.series,
 	seriesTitle: t.seriesTitle,
 	slug: t.slug,
+	sound: t.sound,
 	sourceTags: t.sourceTags,
 	tags: t.tags,
 	tier: t.tier,
@@ -108,6 +112,7 @@ type TrackRules = Pick<
 	| "family"
 	| "licence"
 	| "safetyReviewedAt"
+	| "secondaryTopic"
 	| "slug"
 	| "tier"
 	| "title"
@@ -120,6 +125,21 @@ export function assertTrackShape(t: TrackRules) {
 	const prefix = t.family === "music" ? "music_topic_" : "audio_topic_";
 	if (!(t.topic.startsWith(prefix) && CATALOG_BY_KEY.has(t.topic))) {
 		throw trackError(t, `topic "${t.topic}" is not a ${t.family} topic`);
+	}
+	const second = t.secondaryTopic;
+	if (
+		second !== undefined &&
+		!(
+			t.family === "music" &&
+			second !== t.topic &&
+			second.startsWith(prefix) &&
+			CATALOG_BY_KEY.has(second)
+		)
+	) {
+		throw trackError(
+			t,
+			`secondary topic "${second}" is not another music topic`
+		);
 	}
 	if (
 		t.tier !== undefined &&
@@ -261,6 +281,7 @@ export const save = adminMutation({
 			licence: v.optional(licenceValidator),
 			narrators: v.optional(v.array(v.string())),
 			newUntil: v.optional(v.number()),
+			secondaryTopic: v.optional(v.string()),
 			tags: v.array(v.string()),
 			tier: v.optional(v.number()),
 			title: v.string(),
@@ -275,6 +296,7 @@ export const save = adminMutation({
 			licence,
 			narrators,
 			newUntil,
+			secondaryTopic,
 			tier,
 			transcript,
 			whatItsFor,
@@ -286,8 +308,11 @@ export const save = adminMutation({
 				"narrators, tier and transcript are for support tracks"
 			);
 		}
-		if (t.family === "support" && (licence || whatItsFor)) {
-			throw trackError(t, "licence and what-it's-for are for music tracks");
+		if (t.family === "support" && (licence || secondaryTopic || whatItsFor)) {
+			throw trackError(
+				t,
+				"licence, secondary topic and what-it's-for are for music tracks"
+			);
 		}
 		await writeTrack(ctx, ctx.identity, t, {
 			...t,
@@ -296,6 +321,7 @@ export const save = adminMutation({
 			...(t.family === "music"
 				? {
 						licence: licence && withStoredProof(licence, t.licence),
+						secondaryTopic,
 						whatItsFor,
 					}
 				: { narrators, tier, transcript }),
@@ -477,6 +503,8 @@ export const replaceAudio = adminMutation({
 			...t,
 			durationSec,
 			key,
+			// Measured for the old audio; measure-loudness.ts fills it again.
+			loudness: undefined,
 			safetyReviewedAt: t.family === "support" ? undefined : t.safetyReviewedAt,
 			sha256,
 		});

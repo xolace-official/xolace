@@ -15,7 +15,7 @@ import {
 } from "../admin/uploads";
 import type { trackUpsertValidator } from "../ai/paths/audioTracks";
 import { TOPIC_SLUGS, topicTitle } from "../ai/paths/catalog";
-import type { licenceValidator } from "../lib/validators";
+import type { licenceValidator, trackSoundValidator } from "../lib/validators";
 import {
 	dateField,
 	diffViews,
@@ -100,6 +100,26 @@ const licenceView = (l: Licence | undefined): View => ({
 	"Source URL": { value: showText(l?.sourceUrl) },
 });
 
+/** The listening facts in a line, compared on every field (keys sorted, so stored order can't differ). */
+function soundField(sound: Infer<typeof trackSoundValidator> | undefined) {
+	if (!sound) {
+		return { value: undefined };
+	}
+	const sorted = Object.fromEntries(
+		Object.entries(sound).sort(([a], [b]) => a.localeCompare(b))
+	);
+	return {
+		exact: JSON.stringify(sorted),
+		value: [
+			`vocals ${sound.vocals}`,
+			`energy ${sound.energy}`,
+			sound.jolts ? "jolts" : undefined,
+		]
+			.filter(Boolean)
+			.join(", "),
+	};
+}
+
 function trackView(t: TrackUpsert | Doc<"audio_tracks">): View {
 	const support = t.family === "support";
 	return {
@@ -119,12 +139,19 @@ function trackView(t: TrackUpsert | Doc<"audio_tracks">): View {
 				}
 			: {
 					...licenceView(t.licence),
+					"Secondary topic": { value: showText(t.secondaryTopic) },
+					Sound: soundField(t.sound),
 					"What it's for": { value: showText(t.whatItsFor) },
 				}),
 		Audio: hashField(t.sha256),
 		Length: {
 			exact: t.durationSec.toString(),
 			value: showDuration(t.durationSec),
+		},
+		Loudness: {
+			value:
+				t.loudness &&
+				`${t.loudness.lufs} LUFS, peak ${t.loudness.truePeak} dBTP`,
 		},
 		"New until": dateField(t.newUntil),
 		Thumbnail: hashField(t.thumbSha256),
@@ -140,6 +167,7 @@ export async function compareTrack(
 	const {
 		audioPath,
 		durationSec: _manifestDuration, // the file's own length wins
+		loudness: measured,
 		sha256: fileSha,
 		thumbPath,
 		thumbSha256: _staleThumbSha,
@@ -222,6 +250,14 @@ export async function compareTrack(
 		);
 	}
 
+	// Loudness counts only when it was measured on the audio the track ends up
+	// with. Without a fresh one, the upsert keeps the stored one for unchanged audio.
+	const loudness =
+		measured?.sha256 === audio.sha256
+			? { lufs: measured.lufs, truePeak: measured.truePeak }
+			: stored?.sha256 === audio.sha256
+				? stored.loudness
+				: undefined;
 	const track: TrackUpsert =
 		fields.family === "music"
 			? {
@@ -232,8 +268,9 @@ export async function compareTrack(
 						fields.licence,
 						stored?.family === "music" ? stored.licence : undefined
 					),
+					loudness,
 				}
-			: { ...fields, ...audio, ...thumb };
+			: { ...fields, ...audio, ...thumb, loudness };
 	const willBeLive = stored ? stored.active : true;
 	assertTrackShape(track);
 	if (willBeLive) {

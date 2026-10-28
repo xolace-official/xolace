@@ -27,7 +27,7 @@ import {
 } from "@xolace/ui/components/tags-input";
 import { Textarea } from "@xolace/ui/components/textarea";
 
-import type { TrackLicence } from "../types";
+import type { TrackLicence, TrackSound } from "../types";
 import { topicId, topicSlug } from "../types";
 import { useTrackEditor } from "./track-editor-provider";
 
@@ -139,7 +139,50 @@ export function TrackTagFields() {
 					As the source published them. Kept for search, never edited.
 				</FieldDescription>
 			</Field>
+			{track.sound ? <SoundFacts sound={track.sound} /> : null}
 		</FieldGroup>
+	);
+}
+
+/** What the listening review heard. Read-only: the review file is its source. */
+function SoundFacts({ sound }: { sound: TrackSound }) {
+	const facts = [
+		`Vocals: ${sound.vocals}`,
+		`Energy ${sound.energy}/5`,
+		sound.valence === undefined ? undefined : `Brightness ${sound.valence}/5`,
+		sound.beat && `Beat: ${sound.beat}`,
+		sound.arc && `Shape: ${sound.arc.replaceAll("_", " ")}`,
+		sound.jolts ? "Has a sudden loud moment" : undefined,
+		sound.lyrics && sound.lyrics !== "none"
+			? `Lyrics: ${sound.lyrics}`
+			: undefined,
+		sound.instruments?.length
+			? `Instruments: ${sound.instruments.join(", ")}`
+			: undefined,
+		sound.natureSounds?.length
+			? `Nature: ${sound.natureSounds.join(", ")}`
+			: undefined,
+		sound.alsoFits?.length
+			? `Also fits: ${sound.alsoFits.map((t) => t.replaceAll("_", " ")).join(", ")}`
+			: undefined,
+	].filter((fact): fact is string => !!fact);
+
+	return (
+		<Field>
+			<FieldLabel>What it sounds like</FieldLabel>
+			<p className="type-body text-ink">{sound.heard}</p>
+			<span className="flex flex-wrap gap-1.5">
+				{facts.map((fact) => (
+					<Badge key={fact} variant="neutral">
+						{fact}
+					</Badge>
+				))}
+			</span>
+			<FieldDescription>
+				From the listening review (describe-music.ts). Edit the review file, not
+				here.
+			</FieldDescription>
+		</Field>
 	);
 }
 
@@ -331,6 +374,10 @@ export function ShelfFields() {
 		label: topic.title,
 		value: topicId(track.family, topic.slug),
 	}));
+	const secondaryItems = [
+		{ label: "None", value: null },
+		...topicItems.filter((item) => item.value !== track.topic),
+	];
 	const isNew = track.newUntil !== undefined && track.newUntil > now;
 
 	return (
@@ -342,6 +389,10 @@ export function ShelfFields() {
 					onValueChange={(value) => {
 						if (value) {
 							setField("topic", value);
+							// A topic can't be its own secondary.
+							if (value === track.secondaryTopic) {
+								setField("secondaryTopic", undefined);
+							}
 						}
 					}}
 					value={track.topic}
@@ -363,6 +414,37 @@ export function ShelfFields() {
 					</SelectContent>
 				</Select>
 			</Field>
+			{track.family === "music" ? (
+				<Field>
+					<FieldLabel htmlFor="track-secondary-topic">
+						Secondary topic
+					</FieldLabel>
+					<Select
+						items={secondaryItems}
+						onValueChange={(value) =>
+							setField("secondaryTopic", value ?? undefined)
+						}
+						value={track.secondaryTopic ?? null}
+					>
+						<SelectTrigger className="w-full" id="track-secondary-topic">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								{secondaryItems.map((item) => (
+									<SelectItem key={item.label} value={item.value}>
+										{item.label}
+									</SelectItem>
+								))}
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+					<FieldDescription>
+						It also lists under this topic in Browse, after the topic's own
+						tracks.
+					</FieldDescription>
+				</Field>
+			) : null}
 			<Field orientation="horizontal">
 				<Switch
 					checked={track.featured}

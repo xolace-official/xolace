@@ -209,6 +209,63 @@ export const licenceValidator = v.object({
 	sourceUrl: v.string(),
 });
 
+/**
+ * A track's measured loudness (EBU R128, scripts/kindling/measure-loudness.ts),
+ * so a player can even out volume between tracks. It belongs to the audio:
+ * new audio drops it until it is measured again.
+ */
+export const trackLoudnessValidator = v.object({
+	/** Integrated loudness, LUFS. */
+	lufs: v.number(),
+	/** True peak, dBTP. */
+	truePeak: v.number(),
+});
+
+/**
+ * Music-family: what a listening review heard in the track
+ * (scripts/kindling/describe-music.ts), kept for features to come: filters,
+ * a mood map, safer sleep picks. Reviews from before the facts were asked
+ * for carry only `heard`, `vocals` and `energy`.
+ */
+export const trackSoundValidator = v.object({
+	/** Other music topic slugs it also serves (`overthinking`), the model's suggestion. */
+	alsoFits: v.optional(v.array(v.string())),
+	arc: v.optional(
+		v.union(
+			v.literal("steady"),
+			v.literal("builds"),
+			v.literal("swells_and_settles"),
+			v.literal("fades_out"),
+			v.literal("varied")
+		)
+	),
+	beat: v.optional(
+		v.union(
+			v.literal("none"),
+			v.literal("soft"),
+			v.literal("steady"),
+			v.literal("driving")
+		)
+	),
+	/** 1 still to 5 intense. */
+	energy: v.number(),
+	/** Two or three sentences on what it sounds like. */
+	heard: v.string(),
+	instruments: v.optional(v.array(v.string())),
+	/** A sudden loud hit or startling moment somewhere in it. */
+	jolts: v.optional(v.boolean()),
+	/** Language and theme in a few words, or "none". */
+	lyrics: v.optional(v.string()),
+	natureSounds: v.optional(v.array(v.string())),
+	/** 1 dark or heavy to 5 bright. */
+	valence: v.optional(v.number()),
+	vocals: v.union(
+		v.literal("none"),
+		v.literal("wordless"),
+		v.literal("lyrics")
+	),
+});
+
 //
 // The answer columns of `intake_responses`, shared by the schema and by the
 // `intake.complete` mutation args so the two can never drift.

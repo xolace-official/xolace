@@ -14,7 +14,7 @@ import { isTryThis } from "./tryThis";
 
 export type BindTrack = Pick<
 	Doc<"audio_tracks">,
-	"slug" | "family" | "topic" | "tags" | "active" | "series"
+	"slug" | "family" | "topic" | "secondaryTopic" | "tags" | "active" | "series"
 > & {
 	/** Best-chunk similarity to tonight's text (#572); absent when the topic wasn't searched or didn't reach it. */
 	similarity?: number;
@@ -122,6 +122,8 @@ function bindTrack(
 	}
 
 	// The topic is the gate (ADR 0021): the model's `why` was written for it.
+	// A music track listed under it as a secondary topic is in it too, and
+	// competes with its own tracks as one.
 	// Acuity `tier` is editorial (tone, review process, Browse grouping) — it
 	// never gates binding. Standalones and episodes of a topic compete as one.
 	const family = actionType.startsWith("music_topic_") ? "music" : "support";
@@ -131,7 +133,7 @@ function bindTrack(
 			t.family === family &&
 			(actionType === "episode_reframe"
 				? t.series === REFRAME_SERIES
-				: t.topic === actionType)
+				: t.topic === actionType || t.secondaryTopic === actionType)
 	);
 	if (candidates.length === 0) {
 		return null;

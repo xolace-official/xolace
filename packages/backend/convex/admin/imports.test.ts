@@ -638,13 +638,14 @@ describe("admin/imports audio", () => {
 		});
 	});
 
-	it("keeps the stored audio for a metadata-only change, and never deletes it", async () => {
+	it("keeps the stored audio and loudness for a metadata-only change, and never deletes it", async () => {
 		const { root, t } = setup();
 		await t.mutation(internal.ai.paths.audioTracks.upsertTrack, {
 			track: {
 				durationSec: 60,
 				family: "support",
 				key: "support/calm/live.mp3",
+				loudness: { lufs: -14, truePeak: -1 },
 				narrators: ["Sage"],
 				sha256: SHA("a"),
 				slug: "calm",
@@ -743,6 +744,7 @@ describe("admin/imports audio", () => {
 				durationSec: 96,
 				family: "support",
 				key: "support/calm/live.mp3",
+				loudness: { lufs: -14, truePeak: -1 },
 				narrators: ["Sage"],
 				sha256: SHA("a"),
 				slug: "calm",

@@ -16,6 +16,8 @@ import {
 	supportNeedValidator,
 	talkIssueValidator,
 	talkPeakValidator,
+	trackLoudnessValidator,
+	trackSoundValidator,
 	triggerTypeValidator,
 } from "./lib/validators";
 import {
@@ -91,6 +93,7 @@ export default defineSchema({
 
 		// music-family
 		licence: v.optional(licenceValidator), // required at write for family="music"
+		loudness: v.optional(trackLoudnessValidator), // of the audio at `sha256`; for evening out volume
 
 		// support-family
 		narrators: v.optional(v.array(v.string())), // display strings: ["Sage"], ["Sage","Ash"]
@@ -102,12 +105,17 @@ export default defineSchema({
 		// title (+ raw source tags for music), written by upsertTrack
 		// (library/searchText.ts trackSearchTextOf).
 		searchText: v.optional(v.string()),
+		// music-family: a second music_topic_* it also lists under in Browse
+		// (owner's call after listening; the primary `topic` still leads).
+		secondaryTopic: v.optional(v.string()),
 
 		// episode (support-family with a series) — Track 1 "The Spectrum" / Track 2
 		series: v.optional(v.string()), // series slug
 		seriesTitle: v.optional(v.string()), // denormalised for browse tiles
 		sha256: v.string(), // audio re-ingest idempotency
 		slug: v.string(), // stable id: binding + idempotent re-ingest
+		// music-family: what a listening review heard (lib/validators.ts trackSoundValidator)
+		sound: v.optional(trackSoundValidator),
 		sourceTags: v.array(v.string()), // raw, unedited source tags (e.g. Pixabay), preserved losslessly
 		tags: v.array(v.string()), // curated: shared emotion/theme vocab, binder-scored, both families
 		thumbhash: v.optional(v.string()), // base64 ThumbHash of the thumb, the blurred placeholder while it loads
@@ -122,6 +130,7 @@ export default defineSchema({
 	})
 		.index("by_slug", ["slug"])
 		.index("by_family_and_topic", ["family", "topic"])
+		.index("by_family_and_secondaryTopic", ["family", "secondaryTopic"])
 		.index("by_family_and_active", ["family", "active"]) // Browse per-family list (#339)
 		.index("by_thumbKey", ["thumbKey"])
 		.searchIndex("search_searchText", {

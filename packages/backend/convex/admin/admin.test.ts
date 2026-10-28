@@ -546,6 +546,46 @@ describe("admin/audio", () => {
 		).rejects.toThrow(/not a support topic/);
 	});
 
+	it("saves a music track's secondary topic, only when it is another music topic", async () => {
+		const sound = { energy: 1, heard: "Soft piano.", vocals: "none" as const };
+		const t = await withTrack({
+			family: "music",
+			slug: "grounding",
+			sound,
+			tier: undefined,
+			topic: "music_topic_calm_peace",
+		});
+		const music = {
+			...saveArgs,
+			track: {
+				featured: false,
+				tags: [],
+				title: "Soft piano",
+				topic: "music_topic_calm_peace",
+			},
+		};
+		await t.mutation(api.admin.audio.save, {
+			...music,
+			track: { ...music.track, secondaryTopic: "music_topic_meditation" },
+		});
+		const [row] = await t.query(api.admin.audio.list, {});
+		expect(row.secondaryTopic).toBe("music_topic_meditation");
+		// The editor never sends the listening facts; a save keeps them.
+		expect(row.sound).toEqual(sound);
+		for (const secondaryTopic of [
+			"music_topic_calm_peace",
+			"audio_topic_grief",
+			"music_topic_not_catalogued",
+		]) {
+			await expect(
+				t.mutation(api.admin.audio.save, {
+					...music,
+					track: { ...music.track, secondaryTopic },
+				})
+			).rejects.toThrow(/secondary topic/);
+		}
+	});
+
 	it("can retire a live track whose stored topic is no longer catalogued", async () => {
 		const t = await withTrack({
 			active: true,
@@ -759,8 +799,8 @@ describe("admin media", () => {
 		).rejects.toThrow(/music needs a licence/);
 	});
 
-	it("swaps in new audio, dropping the old file and the safety review", async () => {
-		const t = await withSupportTrack();
+	it("swaps in new audio, dropping the old file, the safety review and the old loudness", async () => {
+		const t = await withSupportTrack({ loudness: { lufs: -14, truePeak: -1 } });
 		await t.mutation(api.admin.audio.replaceAudio, {
 			durationSec: 240,
 			key: "support/grounding/new.m4a",
@@ -773,6 +813,7 @@ describe("admin media", () => {
 			sha256: SHA,
 		});
 		expect((await stored(t))?.safetyReviewedAt).toBeUndefined();
+		expect((await stored(t))?.loudness).toBeUndefined();
 		expect(r2.deleteObject).toHaveBeenCalledWith(
 			expect.anything(),
 			"support/grounding/old.m4a"

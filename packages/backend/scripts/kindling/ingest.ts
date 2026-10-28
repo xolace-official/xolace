@@ -58,6 +58,8 @@ type SharedFields = {
 	durationSec: number;
 	sha256: string;
 	newUntil?: number;
+	// measure-loudness.ts; sent only while it was measured on this audio
+	loudness?: { lufs: number; sha256: string; truePeak: number };
 };
 type SupportTrack = SharedFields & {
 	family: "support";
@@ -72,6 +74,8 @@ type SupportTrack = SharedFields & {
 type MusicTrack = SharedFields & {
 	family: "music";
 	licence: Record<string, unknown>;
+	secondaryTopic?: string; // another music_topic_* it also lists under in Browse
+	sound?: Record<string, unknown>; // what a listening review heard (describe-music.ts)
 	whatItsFor?: string; // one line, embedded with title + tags (#572)
 };
 type ManifestTrack = SupportTrack | MusicTrack;
@@ -226,11 +230,19 @@ async function ingestOne(
 		});
 		await putFile(audioUpload.url, path.resolve(mediaDir, track.audioPath));
 
-		const { audioPath: _audioPath, thumbPath: _thumbPath, ...rest } = track;
+		const {
+			audioPath: _audioPath,
+			loudness,
+			thumbPath: _thumbPath,
+			...rest
+		} = track;
 		const result = convexRun("ai/paths/audioTracks:upsertTrack", {
 			track: {
 				...rest,
 				key: audioUpload.key,
+				...(loudness?.sha256 === track.sha256 && {
+					loudness: { lufs: loudness.lufs, truePeak: loudness.truePeak },
+				}),
 				thumbhash: thumb.thumbhash,
 				thumbKey: thumbUpload.key,
 				thumbSha256: thumb.sha256,

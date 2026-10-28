@@ -32,7 +32,8 @@ export const searchTextOf = (
 /**
  * Title, topic, curated tags, narrators and series title. Only Music adds its
  * raw source tags (Pixabay mood/instrument words) — Support's are not curated
- * enough to match on.
+ * enough to match on — plus its secondary topic, what it's for, and the
+ * instruments and nature sounds the listening review heard.
  */
 export const trackSearchTextOf = (
 	t: Pick<
@@ -44,6 +45,9 @@ export const trackSearchTextOf = (
 		| "sourceTags"
 		| "narrators"
 		| "seriesTitle"
+		| "secondaryTopic"
+		| "sound"
+		| "whatItsFor"
 	>
 ) =>
 	joinWords([
@@ -52,5 +56,13 @@ export const trackSearchTextOf = (
 		...t.tags,
 		...(t.narrators ?? []),
 		t.seriesTitle,
-		...(t.family === "music" ? t.sourceTags : []),
+		...(t.family === "music"
+			? [
+					...t.sourceTags,
+					t.secondaryTopic && topicSlug(t.secondaryTopic),
+					t.whatItsFor,
+					...(t.sound?.instruments ?? []),
+					...(t.sound?.natureSounds ?? []),
+				]
+			: []),
 	]);

@@ -7,7 +7,11 @@ import {
 	internalQuery,
 	type MutationCtx,
 } from "../../_generated/server";
-import { licenceValidator } from "../../lib/validators";
+import {
+	licenceValidator,
+	trackLoudnessValidator,
+	trackSoundValidator,
+} from "../../lib/validators";
 import { trackSearchTextOf } from "../../library/searchText";
 import { TOPIC_SLUGS } from "./catalog";
 import { indexSignature, trackNamespaces } from "./trackSearch";
@@ -21,6 +25,7 @@ export const r2 = new R2(components.r2);
 const sharedFields = {
 	durationSec: v.number(),
 	key: v.string(),
+	loudness: v.optional(trackLoudnessValidator),
 	newUntil: v.optional(v.number()),
 	sha256: v.string(),
 	slug: v.string(),
@@ -55,6 +60,8 @@ export const trackUpsertValidator = v.union(
 		family: v.literal("music"),
 		...sharedFields,
 		licence: licenceValidator,
+		secondaryTopic: v.optional(v.string()),
+		sound: v.optional(trackSoundValidator),
 		whatItsFor: v.optional(v.string()),
 	})
 );
@@ -182,6 +189,16 @@ export async function upsertTrackRecord(
 			`audio_tracks upsert rejected: slug "${track.slug}" topic "${track.topic}" must start with "${prefix}"`
 		);
 	}
+	const secondary = track.family === "music" ? track.secondaryTopic : undefined;
+	if (
+		secondary !== undefined &&
+		!(secondary.startsWith(prefix) && secondary !== track.topic)
+	) {
+		await dropUpload();
+		throw new ConvexError(
+			`audio_tracks upsert rejected: slug "${track.slug}" secondaryTopic "${secondary}" must be another "${prefix}" topic`
+		);
+	}
 
 	// Editorial safeguard (§8): a tier >= 3 support row must be human-reviewed.
 	// Enforced here too, not just in the script — this is the real trust
@@ -230,10 +247,13 @@ export async function upsertTrackRecord(
 		await dropUpload(existing.key);
 		// Audio blob unchanged: keep the live key, but persist every other
 		// field (title, tags, thumb, licence, ...) — metadata edits must land.
+		// Its measured loudness stays too when the record doesn't carry one
+		// (an admin import never does).
 		await ctx.db.replace("audio_tracks", existing._id, {
 			...track,
 			...kept,
 			key: existing.key,
+			loudness: track.loudness ?? existing.loudness,
 		});
 		await reindex(existing._id);
 		const action =
