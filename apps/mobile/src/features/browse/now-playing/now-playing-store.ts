@@ -131,7 +131,7 @@ export function useNowPlayingPlayback(slug?: string): Playback {
 	return pb && (slug === undefined || np?.slug === slug) ? pb : IDLE;
 }
 /** A boolean snapshot, so the tab layout doesn't re-render on every status tick. */
-export const useNowPlayingLoaded = () =>
+const useNowPlayingLoaded = () =>
 	useSyncExternalStore(subscribe, getLoaded, getLoaded);
 
 /** The mini-player capsule plus its gap above the tab bar — what floating UI over the tabs must clear. */

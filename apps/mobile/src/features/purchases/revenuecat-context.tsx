@@ -67,7 +67,7 @@ type RevenueCatContextType = {
 	refreshOfferings: () => Promise<boolean>;
 };
 
-export const RevenueCatContext = createContext<RevenueCatContextType>({
+const RevenueCatContext = createContext<RevenueCatContextType>({
 	customerInfo: null,
 	isLoading: true,
 	isProUser: false,

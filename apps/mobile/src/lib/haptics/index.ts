@@ -1,16 +1,18 @@
-export type { BreathPhase, HapticName } from "./haptics";
 export {
 	playAffirmativePress,
+	/** @public */
 	playBreathPhase,
 	playCompassionateHold,
 	playErrorNotice,
 	playFollowUpEntrance,
 	playGentlePresence,
+	/** @public */
 	playHaptic,
 	playHomeEntrance,
 	playMirrorArrival,
 	playOnboardingEntrance,
 	playPathChoice,
+	/** @public */
 	playProcessingBreath,
 	playResonanceToggle,
 	playSessionComplete,
@@ -21,3 +23,8 @@ export {
 	tap,
 	useProcessingBreathHaptic,
 } from "./haptics";
+export type {
+	BreathPhase,
+	/** @public */
+	HapticName,
+} from "./haptics.types";

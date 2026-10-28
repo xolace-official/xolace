@@ -17,7 +17,7 @@ import { useIsPlayful, usePlayfulPress } from "@/lib/playful/use-playful";
 // dock has to clear the whole bar. Android: the native BottomNavigationView is
 // opaque and the content view already stops above it, so the same number
 // stranded the dock ~90dp in mid-air — there it only needs a breathing margin.
-export const TAB_BAR_CLEARANCE = process.env.EXPO_OS === "android" ? 16 : 90;
+const TAB_BAR_CLEARANCE = process.env.EXPO_OS === "android" ? 16 : 90;
 
 // Dock height + its clearance — how much scroll tail the screen must reserve.
 export const DOCK_CLEARANCE = 56 + TAB_BAR_CLEARANCE;

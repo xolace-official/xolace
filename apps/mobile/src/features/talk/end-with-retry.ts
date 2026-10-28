@@ -6,7 +6,7 @@
 import { ConvexError } from "convex/values";
 
 /** Waits before each retry; all well inside the talk's idle window. */
-export const END_RETRY_MS = [1000, 3000, 10_000];
+const END_RETRY_MS = [1000, 3000, 10_000];
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

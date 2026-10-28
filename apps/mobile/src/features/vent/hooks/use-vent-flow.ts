@@ -34,7 +34,7 @@ export type VentState =
 const FREE_MAX_VENT_DURATION_MS = 120_000;
 const PLUS_MAX_VENT_DURATION_MS = 150_000;
 
-export function getMaxVentDurationMs(isPremium: boolean): number {
+function getMaxVentDurationMs(isPremium: boolean): number {
 	return isPremium ? PLUS_MAX_VENT_DURATION_MS : FREE_MAX_VENT_DURATION_MS;
 }
 

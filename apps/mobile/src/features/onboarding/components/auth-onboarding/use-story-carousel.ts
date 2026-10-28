@@ -205,5 +205,3 @@ export const useStoryCarousel = () => {
 		width,
 	};
 };
-
-export type StoryCarousel = ReturnType<typeof useStoryCarousel>;

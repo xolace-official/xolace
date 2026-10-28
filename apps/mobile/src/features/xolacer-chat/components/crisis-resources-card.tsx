@@ -8,7 +8,7 @@ import type { Resource } from "@/features/crisis-resources/types";
 import { useConversationIdentity } from "./message-author";
 
 /** Mirrors `CRISIS_RESOURCES_KIND` in `convex/ai/chat/moderate.ts`. */
-export const CRISIS_RESOURCES_KIND = "crisis_resources";
+const CRISIS_RESOURCES_KIND = "crisis_resources";
 
 const LIFERING_ICON = {
 	android: "support",

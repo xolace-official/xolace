@@ -117,6 +117,7 @@ export function playFollowUpEntrance(): void {
 // Called per PacedOrb phase transition. The continuous patterns breathe
 // *with* the orb rather than ticking at boundaries.
 
+/** @public Not wired yet: kept in step with haptics.ts for the PacedOrb runner. */
 export function playBreathPhase(phase: BreathPhase, durationMs: number): void {
 	const seconds = durationMs / 1000;
 	switch (phase) {
@@ -155,8 +156,7 @@ const patternMap: Record<
 	typingBegin,
 };
 
-export type { BreathPhase, HapticName };
-
+/** @public Not wired yet: kept in step with haptics.ts for the PacedOrb runner. */
 export function playHaptic(name: HapticName): void {
 	if (name === "followUpEntrance") {
 		return playFollowUpEntrance();

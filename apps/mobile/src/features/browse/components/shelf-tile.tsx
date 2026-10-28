@@ -14,7 +14,7 @@ export type ShelfItem = FunctionReturnType<
 	typeof api.browse.getNewShelf
 >[number];
 
-export const TILE = 170;
+const TILE = 170;
 
 /**
  * One square tile of the newest-4 shelf — the hub's New shelf and the

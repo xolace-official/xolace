@@ -111,8 +111,7 @@ export function streakNod(streak: number): string | null {
  * The `still_here` next step (#451): an acknowledgment, nothing to fill in,
  * and a few static places to go if they want company while it sits.
  */
-export const STILL_HERE_HEADLINE =
-	"That's okay. Some things take longer to set down.";
+const STILL_HERE_HEADLINE = "That's okay. Some things take longer to set down.";
 export const STILL_HERE_MESSAGE =
 	"Nothing to do here. If you want something beside you while it sits, these are close.";
 export const STILL_HERE_LINKS = [
@@ -130,7 +129,7 @@ export const STILL_HERE_SKIP = "Not now";
  * The `heavier` next step (#452): a menu of places to turn, support first.
  * Keys match `follow_up_responses.heavierChoice`. Picking none is fine.
  */
-export const HEAVIER_HEADLINE =
+const HEAVIER_HEADLINE =
 	"Thank you for telling me. You don't have to carry it alone.";
 export const HEAVIER_MESSAGE =
 	"If something would help right now, pick one. Or just close this.";

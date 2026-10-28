@@ -123,7 +123,6 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@vitest/coverage-v8": "^4.1.11",
-    "@xolace/config": "workspace:*",
     "expo-atlas": "^0.4.0",
     "react-reconciler": "0.31.0",
     "typescript": "catalog:",

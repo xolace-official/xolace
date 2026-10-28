@@ -20,7 +20,7 @@ import {
 	parseKeyframes,
 } from "@/components/shared/loader/utils";
 
-export const LoaderContext = createContext<LoaderContextValue | null>(null);
+const LoaderContext = createContext<LoaderContextValue | null>(null);
 
 // ------------------------------------------
 
@@ -157,5 +157,4 @@ const Loader = Object.assign(LoaderRoot, {
 	KeyframeView: LoaderKeyframeView,
 });
 
-export { useLoader };
 export default Loader;

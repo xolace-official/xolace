@@ -33,7 +33,7 @@ export type Upsell = NonNullable<
 >;
 
 /** Session end's: upsell.get for its session. Null until there's one to show. */
-export function useCompoundingUpsell(
+function useCompoundingUpsell(
 	args: { sessionId: Id<"sessions"> } | "skip"
 ): Upsell | null {
 	const { isPlus, isResolved } = usePlusEntitlement();

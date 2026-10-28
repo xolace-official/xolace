@@ -66,7 +66,7 @@ export const STEP_KEY_BY_ANSWER = {
 export const stepKeyOfAnswer = (name: string): IntakeStepKey | undefined =>
 	STEP_KEY_BY_ANSWER[name as keyof typeof STEP_KEY_BY_ANSWER];
 
-export const DECLINED_VALUE = "prefer_not_to_say";
+const DECLINED_VALUE = "prefer_not_to_say";
 
 const indexOf = (key: IntakeStepKey) =>
 	STEPS.findIndex((step) => step.key === key);

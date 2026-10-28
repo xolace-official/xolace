@@ -20,7 +20,7 @@ const PEEK_STYLE = {
 };
 const SETTLED = { opacity: 1, translateY: 0 };
 /** Strong ease-out: an entrance nobody's finger started, so no overshoot. */
-export const RISE_EASING: [number, number, number, number] = [0.23, 1, 0.32, 1];
+const RISE_EASING: [number, number, number, number] = [0.23, 1, 0.32, 1];
 export const riseFrom = (reduced: boolean) => ({
 	opacity: 0,
 	translateY: reduced ? 0 : 48,

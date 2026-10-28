@@ -14,20 +14,10 @@ export const SPACE_NAME_ICON: CrossPlatformSymbol = {
 	ios: "person.text.rectangle",
 	web: "badge",
 };
-export const MODE_ICON: CrossPlatformSymbol = {
-	android: "contrast",
-	ios: "circle.lefthalf.filled",
-	web: "contrast",
-};
 export const APPEARANCE_ICON: CrossPlatformSymbol = {
 	android: "palette",
 	ios: "paintbrush.pointed",
 	web: "palette",
-};
-export const MOTION_ICON: CrossPlatformSymbol = {
-	android: "motion_photos_paused",
-	ios: "figure.walk.motion",
-	web: "motion_photos_paused",
 };
 export const REPLAY_ICON: CrossPlatformSymbol = {
 	android: "replay",
@@ -43,11 +33,6 @@ export const NOTIFICATIONS_ICON: CrossPlatformSymbol = {
 	android: "notifications",
 	ios: "bell",
 	web: "notifications",
-};
-export const REACH_ICON: CrossPlatformSymbol = {
-	android: "send",
-	ios: "paperplane",
-	web: "send",
 };
 export const CHAT_NOTIFICATIONS_ICON: CrossPlatformSymbol = {
 	android: "forum",
@@ -73,11 +58,6 @@ export const MEMORY_ICON: CrossPlatformSymbol = {
 	android: "auto_awesome",
 	ios: "brain",
 	web: "auto_awesome",
-};
-export const RETENTION_ICON: CrossPlatformSymbol = {
-	android: "history",
-	ios: "clock.arrow.circlepath",
-	web: "history",
 };
 export const DELETE_DATA_ICON: CrossPlatformSymbol = {
 	android: "delete",

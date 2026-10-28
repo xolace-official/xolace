@@ -1,0 +1,32 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    "apps/mobile": {
+      // Entry files' exports count too: an unused export in a route or a
+      // config file is still dead code.
+      "includeEntryExports": true,
+      // Read by @expo/fingerprint, and by path from metro.config.js: their
+      // exports are consumed by tools knip can't follow.
+      "ignore": ["fingerprint.config.js", "metro-stubs/**"],
+      // A props or state type exported beside its component is that
+      // component's API, even before another file imports it.
+      "ignoreExportsUsedInFile": { "interface": true, "type": true },
+      // Component kits whose barrels export a full API (props types, hooks)
+      // ahead of the app using all of it. Unused files there still count.
+      "ignoreIssues": {
+        "src/components/ui/**": ["exports", "types"]
+      },
+      "ignoreDependencies": [
+        // Peer dependencies of stream-chat-react-native-core (stream-chat-expo).
+        "@op-engineering/op-sqlite",
+        "@react-native-community/netinfo",
+        "react-native-teleport",
+        // Turned on with EXPO_ATLAS=1; never imported.
+        "expo-atlas",
+        // Native module with no JS import. Removing it changes the native
+        // fingerprint, so it goes out with the next store build.
+        "react-native-purchases-ui"
+      ]
+    }
+  }
+}

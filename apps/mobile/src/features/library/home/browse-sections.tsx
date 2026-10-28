@@ -22,7 +22,7 @@ const KIND_FLUX: Record<Kind, number> = {
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-export const openSubjects = (letter?: string) =>
+const openSubjects = (letter?: string) =>
 	router.push({
 		params: letter ? { letter } : {},
 		pathname: "/browse/library/subjects",

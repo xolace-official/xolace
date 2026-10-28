@@ -141,6 +141,28 @@ jobs:
           ignore-scripts: "true"
       - run: bun run check
 
+  # Unused files, exports and dependencies (knip.jsonc). Mobile only for now.
+  knip:
+    name: Knip (mobile)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          turbo-cache: "false"
+          ignore-scripts: "true"
+      - run: bun run knip
+        env:
+          # Knip finds the routes and config plugins by evaluating
+          # apps/mobile/app.config.ts, which throws on missing EAS env only when
+          # CI=true. Nothing is built here, so the warnings are enough.
+          CI: "false"
+
   typecheck:
     name: Typecheck
     needs: changes
@@ -296,7 +318,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [changes, lint, typecheck, test, build, codegen, desktop]
+    needs: [changes, lint, knip, typecheck, test, build, codegen, desktop]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

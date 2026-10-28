@@ -5,8 +5,6 @@ import type { Pattern } from "react-native-pulsar";
 import { Presets, usePatternComposer } from "react-native-pulsar";
 import type { BreathPhase, HapticName } from "./haptics.types";
 
-export type { BreathPhase, HapticName };
-
 const isWeb = process.env.EXPO_OS === "web";
 
 function run(fn: () => void): void {
@@ -23,6 +21,7 @@ export function tap(_intensity?: number, _sharpness?: number): void {
 
 // ── Named pattern functions ──────────────────────────────────────────
 
+/** @public Not wired yet: kept in step with haptics.ios.ts for the PacedOrb runner. */
 export function playProcessingBreath(): void {
 	run(() => Presets.breath());
 }
@@ -145,6 +144,7 @@ export function playFollowUpEntrance(): void {
 // (matching the iOS CoreHaptics implementation) are a planned Phase 2 upgrade
 // using usePatternComposer inside BreathBeat.
 
+/** @public Not wired yet: kept in step with haptics.ios.ts for the PacedOrb runner. */
 export function playBreathPhase(phase: BreathPhase, _durationMs: number): void {
 	run(() => {
 		switch (phase) {
@@ -182,6 +182,7 @@ const handlerMap: Record<HapticName, () => void> = {
 	typingBegin: playTypingBegin,
 };
 
+/** @public Not wired yet: kept in step with haptics.ios.ts for the PacedOrb runner. */
 export function playHaptic(name: HapticName): void {
 	handlerMap[name]();
 }

@@ -5,7 +5,7 @@
 
 export type DayPart = "morning" | "afternoon" | "evening" | "late";
 
-export function getDayPart(now = new Date()): DayPart {
+function getDayPart(now = new Date()): DayPart {
 	const hour = now.getHours();
 	if (hour < 5) {
 		return "late";
@@ -44,7 +44,7 @@ export function getGreeting(displayName?: string | null): string {
  * Copy only — it does not navigate. Xolacer setup is gated on `isXolacer`,
  * so it is not the destination; this stays inert until there is one.
  */
-export const DISPLAY_LINES = [
+const DISPLAY_LINES = [
 	{ lead: "Be the support someone needs.", tail: "Become a Xolacer." },
 	{ lead: "Listen. Connect. Support.", tail: "Become a Xolacer." },
 	{ lead: "Your story, your empathy, your impact.", tail: "Become a Xolacer." },

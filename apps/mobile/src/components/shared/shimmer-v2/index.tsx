@@ -17,7 +17,7 @@ import type {
 import { useShimmerAnimation } from "./use-shimmer-animation";
 import { useTrackDistance } from "./use-track-distance";
 
-export const ShimmerContext = createContext<ShimmerContextValue | null>(null);
+const ShimmerContext = createContext<ShimmerContextValue | null>(null);
 
 // ------------------------------------------
 

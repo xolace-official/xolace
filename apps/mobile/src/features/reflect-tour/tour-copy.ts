@@ -47,5 +47,3 @@ export const TOUR_STEPS = [
 		title: "The rest lives here.",
 	},
 ] as const;
-
-export type TourStep = (typeof TOUR_STEPS)[number];
