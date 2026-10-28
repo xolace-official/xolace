@@ -134,6 +134,31 @@ describe("bindTwig", () => {
 		expect(bind("music_topic_sadness", [tracks[0]])).toBeNull();
 	});
 
+	it("a music track binds under its secondary topic too, on tags and on meaning", () => {
+		const own = track({
+			family: "music",
+			slug: "own",
+			topic: "music_topic_sadness",
+		});
+		const borrowed = track({
+			family: "music",
+			secondaryTopic: "music_topic_sadness",
+			slug: "borrowed",
+			tags: ["grief"],
+			topic: "music_topic_calm_peace",
+		});
+		expect(bind("music_topic_sadness", [own, borrowed])).toEqual({
+			slug: "borrowed",
+		});
+		expect(
+			bind("music_topic_sadness", [
+				{ ...own, similarity: 0.7 },
+				{ ...borrowed, similarity: 0.4 },
+			])
+		).toEqual({ slug: "own" });
+		expect(bind("music_topic_calm_peace", [own])).toBeNull();
+	});
+
 	it("episode_reframe binds only to reframe-series rows, across topics", () => {
 		const tracks = [
 			track({ series: "the-spectrum", slug: "spectrum" }),

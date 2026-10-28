@@ -6,7 +6,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
-import { trackIndexText } from "../ai/paths/trackSearch";
+import { trackIndexText, trackNamespaces } from "../ai/paths/trackSearch";
 import { asNewUser } from "../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../test/mocks.helpers";
 import { trackSearchTextOf } from "./searchText";
@@ -129,6 +129,17 @@ describe("trackSearchTextOf", () => {
 		).toBe(
 			"low tide sadness calm peace a slow piano for a heavy evening piano rain"
 		);
+	});
+});
+
+describe("trackNamespaces", () => {
+	it("puts a track in its secondary topic's namespace too", () => {
+		expect(
+			trackNamespaces({
+				secondaryTopic: "music_topic_calm_peace",
+				topic: "music_topic_sadness",
+			})
+		).toEqual(["track:music_topic_sadness", "track:music_topic_calm_peace"]);
 	});
 });
 

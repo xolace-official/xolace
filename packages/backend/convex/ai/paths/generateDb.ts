@@ -187,9 +187,10 @@ export const getContext = internalQuery({
 		const history = await loadHistory(ctx, profile._id, matchKeys, now);
 		const tracks = (await ctx.db.query("audio_tracks").take(MAX_TRACKS))
 			.filter((t) => t.active)
-			.map(({ slug, family, topic, tags, active, series }) => ({
+			.map(({ slug, family, topic, secondaryTopic, tags, active, series }) => ({
 				active,
 				family,
+				secondaryTopic,
 				series,
 				slug,
 				tags,
