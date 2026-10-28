@@ -4,23 +4,9 @@ import {
 	type QuietReturnTier,
 } from "@/features/reflect/quiet-return-copy";
 
-/**
- * What the reflect card says, and how big it says it.
- *
- * Pure so the priority order is testable without a renderer: the card is the
- * only place a prompt lives now (#246), so exactly one source may win and the
- * user's own unfinished words must outrank anything the space would say.
- *
- * Type scale is card-local: the card is a fixed size, so long text scales down
- * within it rather than pushing the page around.
- */
 export const DEFAULT_PROMPT = "What’s sitting with you right now?";
 
-/**
- * Above this many characters the card drops to the smaller scale. The large
- * scale fits ~36 characters in the resting card's four lines; anything longer
- * was clipped mid-word (#413).
- */
+/** Above this the card drops to the smaller scale; the large one fits ~36 chars (#413). */
 const LONG_TEXT_CHARS = 36;
 
 /** A reply runs to 500 chars; the card is a fixed size. One line, clipped. */
@@ -60,10 +46,8 @@ export function resolveCardContent({
 		return withScale(opening, "draft");
 	}
 
-	// Under a live draft, over everything the space would say: what is on the
-	// card is the user's own sentence, and the space has nothing better to open
-	// with than the words they came here from. The composer stays empty — this
-	// seeds the screen, never `rawInput` (#316).
+	// Under a live draft, over everything the space would say. The composer stays
+	// empty: this seeds the screen, never `rawInput` (#316).
 	const seed = replySeed?.trim().split("\n")[0]?.trim();
 	if (seed) {
 		return withScale(`You wrote: “${clip(seed)}”`, "reply-seed");

@@ -11,10 +11,7 @@ type Props = {
 	className?: string;
 };
 
-/**
- * A labelled list of hours to pick one from — the "not before" / "not after"
- * halves of the quiet window, which are the same control twice.
- */
+/** Labelled list of hours to pick one from; both halves of the quiet window use it. */
 export const HourRadioGroup = ({
 	label,
 	value,

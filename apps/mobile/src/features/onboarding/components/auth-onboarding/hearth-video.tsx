@@ -1,15 +1,6 @@
-/**
- * The fire behind the whole deck: a graded, seamlessly looping clip.
- *
- * The load gap: `useVideoPlayer` decodes asynchronously, so for ~200-600ms
- * `VideoView` is a black rectangle. Fix is the oldest one in video: a poster
- * (literally frame 0 of this clip, so the swap is invisible) sits underneath,
- * and the video crossfades in once the player reports `readyToPlay`.
- *
- * Backgrounding pauses the player and it does not resume on its own, so an app
- * that was left in recents comes back to a frozen frame. Hence the AppState
- * listener.
- */
+// The looping fire clip behind the deck. A poster (frame 0) sits under the ~200-600ms
+// black `VideoView` until `readyToPlay`; the AppState listener resumes the player,
+// which backgrounding pauses without resuming.
 
 import { useEvent } from "expo";
 import { Image } from "expo-image";

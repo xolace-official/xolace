@@ -1,19 +1,5 @@
-/**
- * What a notification tap does — and how the tap reaches us at all.
- *
- * The delivery half is the bug this file exists for.
- * `addNotificationResponseReceivedListener` only fires for taps that happen
- * *while it is subscribed*. On a cold start the OS hands the launch tap to the
- * native module during startup, long before `(protected)` mounts — that layout
- * waits on fonts, Clerk, Convex auth and the intake-gate query, which on a cold
- * launch is seconds of network. By the time the listener subscribes the event
- * has been and gone, so the tap was silently dropped and the app just opened on
- * the home screen. Warm taps worked because the listener was already there,
- * which is why this looked like a cold-start-only bug.
- *
- * The launch tap survives in `getLastNotificationResponse()`, so subscribing
- * reads that first and dedupes it against the listener.
- */
+/** Tap handling. The listener misses the cold-start launch tap, so
+ * `getLastNotificationResponse()` is read first and deduped. */
 import {
 	chatNotificationRoute,
 	isChatNotificationType,
@@ -29,11 +15,8 @@ export type TapResponse = {
 	};
 };
 
-/**
- * The emitter surface, injected so the cold-start ordering is testable without
- * a device: a real cold start is `getLast` returning a response that `subscribe`
- * will never emit.
- */
+/** Emitter surface, injected so the cold-start ordering (`getLast` returns what `subscribe`
+ * never emits) is testable. */
 export type TapSource<R extends TapResponse = TapResponse> = {
 	getLast: () => R | null;
 	subscribe: (listener: (response: R) => void) => { remove: () => void };
@@ -41,12 +24,8 @@ export type TapSource<R extends TapResponse = TapResponse> = {
 	clear: () => void;
 };
 
-/**
- * Deliver every notification tap to `onTap` — including the one that launched
- * the process, which the listener alone never sees.
- *
- * Returns an unsubscribe function.
- */
+/** Delivers every tap to `onTap`, including the launch tap the listener never sees. Returns an
+ * unsubscribe. */
 export function subscribeToNotificationTaps<R extends TapResponse>(
 	source: TapSource<R>,
 	onTap: (response: R) => void
@@ -54,20 +33,15 @@ export function subscribeToNotificationTaps<R extends TapResponse>(
 	const launch = source.getLast();
 	const launchId = launch?.notification.request.identifier ?? null;
 
-	// Every tap is cleared once acted on, warm ones included. The native cache
-	// holds the *most recent* response, not just the launch one, so a tap left
-	// sitting there is replayed to the next subscriber — and this resubscribes
-	// whenever `(protected)` remounts (sign out → sign in) or Clerk's signed-in
-	// flag flips. Without this, coming back would yank the user into a thread
-	// they already read.
+	// The native cache holds the most recent response, warm taps included, and is
+	// replayed to the next subscriber (every `(protected)` remount). Clear it once acted on.
 	const consume = (response: R) => {
 		source.clear();
 		onTap(response);
 	};
 
 	const subscription = source.subscribe((response) => {
-		// A tap that landed while we were subscribing arrives through both paths.
-		// Handling it twice would navigate twice.
+		// A tap that landed during subscription arrives through both paths; skip the duplicate.
 		if (response.notification.request.identifier === launchId) {
 			return;
 		}
@@ -101,12 +75,7 @@ export type NotificationTapPlan = {
 	navigation?: TapNavigation;
 };
 
-/**
- * Everything a tap should cause, derived from its payload alone.
- *
- * Conversation notifications carry a `conversationId` rather than a `logId` —
- * there is no analytics row to mark — so they never produce one.
- */
+/** Everything a tap should cause, from its payload alone. Chat notifications carry no `logId`. */
 export function notificationTapPlan(
 	data: Record<string, any> | null | undefined,
 	body: string | null | undefined,
@@ -125,9 +94,8 @@ export function notificationTapPlan(
 	if (isChatNotificationType(data?.type)) {
 		const conversationId =
 			typeof data?.conversationId === "string" ? data.conversationId : "";
-		// Only accept and message open a thread by id; the other three land on
-		// Connect and ignore it. Without a real id there is no thread to open, so
-		// drop the navigation rather than pushing `/chat/undefined`.
+		// Only accept and message open a thread by id; the others land on Connect.
+		// Without a real id, drop the navigation rather than pushing `/chat/undefined`.
 		const opensThread =
 			data!.type === "chat_accepted" || data!.type === "chat_message";
 		if (conversationId || !opensThread) {

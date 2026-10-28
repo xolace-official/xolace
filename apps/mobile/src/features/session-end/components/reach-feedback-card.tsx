@@ -30,10 +30,8 @@ const HIDE_TRANSITION = {
 	type: "timing",
 } as const;
 
-/**
- * Shown after milestone sessions (5, 15, 30) if the user has received
- * at least one delivered notification. Asks how the last notification landed.
- */
+/** Shown after milestone sessions (5, 15, 30) when at least one notification
+ * was delivered. Asks how the last one landed. */
 export const ReachFeedbackCard = ({ sessionCount }: Props) => {
 	const [visible, setVisible] = useState(true);
 	const [mounted, setMounted] = useState(true);

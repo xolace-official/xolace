@@ -1,11 +1,6 @@
 import type { HapticPatternData } from "@/modules/native-core-haptics";
 
-/**
- * Xolace haptic patterns — designed for emotional processing.
- * Warm and present, never aggressive or gamified.
- */
-
-// ── Presence Patterns ────────────────────────────────────────────────
+/** Xolace haptic patterns: warm and present, never aggressive or gamified. */
 
 /** Mirrors BreathingOrb's inhale/exhale. Plays once on processing-state mount. */
 export const processingBreath: HapticPatternData = {
@@ -48,8 +43,6 @@ export const gentlePresence: HapticPatternData = {
 		},
 	],
 };
-
-// ── Validation Patterns ──────────────────────────────────────────────
 
 /** Three-beat crescendo. "You've been heard." Peak haptic moment. Mirror-state mount. */
 export const mirrorArrival: HapticPatternData = {
@@ -128,8 +121,6 @@ export const resonanceToggle: HapticPatternData = {
 	],
 };
 
-// ── Transition Patterns ──────────────────────────────────────────────
-
 /** Two-beat commitment. Path-selection button presses. */
 export const pathChoice: HapticPatternData = {
 	events: [
@@ -180,8 +171,6 @@ export const typingBegin: HapticPatternData = {
 	],
 };
 
-// ── Micro-interactions ───────────────────────────────────────────────
-
 /** Default button press. Dismiss, navigation, secondary actions. */
 export const softPress: HapticPatternData = {
 	events: [
@@ -209,8 +198,6 @@ export const affirmativePress: HapticPatternData = {
 		},
 	],
 };
-
-// ── Utility Patterns ─────────────────────────────────────────────────
 
 /** Sharp double-tap. Error-state mount. Distinct from emotional vocabulary. */
 export const errorNotice: HapticPatternData = {
@@ -286,8 +273,6 @@ export const softenPulse: HapticPatternData = {
 	],
 };
 
-// ── Entrance Patterns ───────────────────────────────────────────────
-
 /** Synced with PromiseScreen's staggered FadeInDown. First thing the user feels. */
 export const onboardingEntrance: HapticPatternData = {
 	events: [
@@ -337,10 +322,7 @@ export const onboardingEntrance: HapticPatternData = {
 	],
 };
 
-// ── Breath Patterns ─────────────────────────────────────────────────
-// Sync with PacedOrb phases. Continuous intensity curves swell with the
-// inhale and release with the exhale; the physiological-sigh "top-up"
-// is the only transient — it's the pattern's defining feature.
+// Synced with PacedOrb phases; the physiological-sigh top-up is the only transient.
 
 /** Warm swell matching orb expansion. Duration matches the inhale phase. */
 export function breathInhalePattern(

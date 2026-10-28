@@ -32,14 +32,8 @@ import { ThreadStatusBar } from "@/features/xolacer-chat/components/thread-statu
 import { hydrateChannelsFromCache } from "@/features/xolacer-chat/offline-db";
 import { useFlagMessage } from "@/features/xolacer-chat/use-flag-message";
 
-/**
- * The message surface, mounted once `Chat` holds a usable client — one with a
- * user and an open offline database, online or not.
- *
- * Split out from the thread screen so the screen's Convex-driven chrome —
- * header, safety strip, status bar — can render before that. Everything here
- * needs `ChatContext`.
- */
+/** The message surface, mounted once `Chat` holds a usable client; split out so the screen's
+ * Convex chrome renders first. */
 export function ThreadMessages({
 	conversation,
 }: {
@@ -51,12 +45,9 @@ export function ThreadMessages({
 	const { height: windowHeight } = useWindowDimensions();
 	const [contentHeight, setContentHeight] = useState(0);
 
-	// Stream's KeyboardCompatibleView compares its own layout height — which
-	// starts below the native header — against the keyboard's absolute screen Y,
-	// so the shift under-shoots by exactly the header height and the composer
-	// ends up behind the keyboard. Handing that height back as the offset closes
-	// the gap. Measured rather than assumed: the header grows with the subtitle,
-	// the notch and Dynamic Island, and no constant survives all three.
+	// Stream's KeyboardCompatibleView compares its own layout height (starting
+	// below the native header) with the keyboard's screen Y, so the shift under-shoots
+	// by the header height. Measured: the header grows with subtitle, notch and island.
 	const headerOffset = contentHeight ? windowHeight - contentHeight : 0;
 	const onContentLayout = (event: LayoutChangeEvent) =>
 		setContentHeight(event.nativeEvent.layout.height);
@@ -73,12 +64,9 @@ export function ThreadMessages({
 	useTouchOnSend(channel, conversation, client.userID);
 	const flagMessage = useFlagMessage(conversation.id);
 
-	// `client.channel()` returns an *empty* handle: no messages, and no
-	// `own_capabilities`. `<Channel>` renders its children immediately and only
-	// watches inside an effect, so mounting it now guarantees one paint of
-	// "No chats here yet" over "You can't send messages in this channel" before
-	// the real state arrives. The skeleton holds until the channel has state
-	// from somewhere — the warmup, the device, or a first-ever watch.
+	// `client.channel()` returns an empty handle and `<Channel>` renders before it
+	// watches, so mounting now paints "No chats here yet" and "can't send" for a
+	// frame. The skeleton holds until the channel has state from somewhere.
 	if (!hasLocalState) {
 		return (
 			<View className="flex-1 bg-background">
@@ -93,12 +81,9 @@ export function ThreadMessages({
 		// Wrapper exists to measure the content box; Channel's own root is the
 		// view whose height Stream mis-compares against the keyboard frame.
 		<View className="flex-1" onLayout={onContentLayout}>
-			{/* Component overrides arrive through this, not through Channel props.
-        Module-level constant because WithComponents reads `overrides` once at
-        mount and never again — a fresh object each render would be silently
-        ignored, which is worse than a crash — and why the message-avatar
-        override reads its conversation from the context below rather than
-        from a closure. */}
+			{/* Module-level constant: WithComponents reads `overrides` once at mount
+        and silently ignores a fresh object each render, which is why the avatar
+        override reads its conversation from the context below. */}
 			<WithComponents overrides={COMPONENT_OVERRIDES}>
 				<ConversationIdentityProvider conversation={conversation}>
 					<Channel
@@ -139,20 +124,11 @@ export function ThreadMessages({
 	);
 }
 
-/**
- * Resolves once the channel holds state, so `<Channel>` never mounts over an
- * empty one. Sources, in order of what's cheapest: already live (the warmup
- * watched it), the offline database (the thread paints its last known
- * messages instantly, offline included — `<Channel>` then reconciles with its
- * own `watch()`), and finally a network watch for a conversation this device
- * has never held. Failure resolves too: Stream's own `LoadingErrorIndicator`
- * is a better place to land than a skeleton that never ends.
- */
+/** True once the channel holds state: already live, hydrated from the offline db, or watched.
+ * Failure resolves too, so Stream's error indicator shows instead of an endless skeleton. */
 export function useLocalChannelState(channel: StreamChannel) {
-	// Records only the settled cid. Success needs no state of its own —
-	// `channel.initialized` / `offlineMode` already carry it — but it does need
-	// a re-render, which is the whole reason this lands in state at all. Stored
-	// with the cid so a channel swap re-gates instead of inheriting the verdict.
+	// Only the settled cid: success just needs the re-render, and the cid makes
+	// a channel swap re-gate instead of inheriting the verdict.
 	const [settledCid, setSettledCid] = useState<string | null>(null);
 
 	useEffect(() => {
@@ -186,22 +162,12 @@ export function useLocalChannelState(channel: StreamChannel) {
 	);
 }
 
-/**
- * Keeps `lastMessageAt` current so the resting sweep measures real silence.
- * Each client touches on its own sends, so both sides stay covered.
- *
- * The Stream `message.new` webhook added since does not replace this: it fires
- * on the notification path and stamps the recipient's own notified-at, which is
- * suppressed for two minutes at a time and so cannot stand in for a sweep that
- * has to measure every message. (ponytail: fold the touch into the webhook only
- * if client drift shows up.)
- */
+/** Keeps `lastMessageAt` current so the resting sweep measures real silence; the `message.new`
+ * webhook only stamps a throttled notified-at and cannot replace it. */
 function useTouchOnSend(
 	channel: StreamChannel,
 	conversation: ThreadConversation,
-	// The connected user's id, from the socket rather than from Convex — same
-	// value (the profile id signs the token), one less field the screen has to
-	// have loaded before it can mount this.
+	// From the socket, not Convex: same value, one less field to load before mount.
 	myUserId: string | undefined
 ) {
 	const touchConversation = useMutation(api.xolacerChat.touchConversation);

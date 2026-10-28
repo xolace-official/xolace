@@ -1,21 +1,13 @@
-/**
- * Lantern instrumentation (#416). Every Library event lives here, in its own
- * `library_*` namespace (not `browse_*`, #399). Reading is coarse on purpose:
- * opened and finished, no scroll depth.
- */
+// Lantern instrumentation (#416) in its own `library_*` namespace (#399).
+// Reading is coarse on purpose: opened and finished, no scroll depth.
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import type { PostHog } from "posthog-react-native";
 
 import type { Kind } from "@/features/library/home/library-copy";
 
-/**
- * Where a reader open came from. Every way in sets it, the share sheet's link
- * included; a link that forgets it lands as `unknown` so the gap shows.
- * `today` is reserved for Tonight's reading, which has no surface yet;
- * `next` is the Up next card at the end of a read (#417); `continue` is the
- * home's Continue reading card (#420).
- */
+/** Where a reader open came from; a forgotten one lands as `unknown`. `today` has no surface
+ * yet; `next` is Up next (#417). */
 export type ReaderFrom =
 	| "twig"
 	| "home"

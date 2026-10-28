@@ -33,7 +33,7 @@ type Props = {
 	toneUsed: MirrorTone | null;
 	/** Derived server-side; "reaching"/"holding" means this mirror named a gap. */
 	claimStrength: ClaimStrength | null;
-	/** Refinement turns are exhausted — the row collapses to "That's it". */
+	/** Refinement turns are exhausted; the row collapses to "That's it". */
 	atCap: boolean;
 	onThatsIt: () => void;
 	onNotQuite: () => void;
@@ -87,12 +87,11 @@ export const MirrorState = ({
 	const mirrorRef = useRef<TextInstance>(null);
 
 	// No audio cleanup here: useAudioPlayer releases the native player on unmount,
-	// which stops playback. Pausing it ourselves races that release and crashes
-	// (see ba00535 "fix timeline crash").
+	// and pausing it by hand races that release and crashes (ba00535).
 	useEffect(() => {
 		playMirrorArrival();
-		// Move the screen reader onto the mirror so it reads it aloud. Delayed so the
-		// processing → mirror swap settles first, or iOS drops the focus move.
+		// Move the screen reader onto the mirror. Delayed so the processing to
+		// mirror swap settles first, or iOS drops the focus move.
 		const t = setTimeout(() => {
 			if (mirrorRef.current) {
 				AccessibilityInfo.sendAccessibilityEvent(mirrorRef.current, "focus");
@@ -109,12 +108,10 @@ export const MirrorState = ({
 
 	return (
 		<View className="flex-1 px-6">
-			{/* In the flow, not floating: a floating banner covered the label, the
-          tone badge and the top of a long mirror. */}
+			{/* In the flow, not floating: a floating banner covered the label and tone badge. */}
 			<ToneTipBanner />
 
 			<View className="flex-1 justify-center">
-				{/* Texture pills from scaffold */}
 				{showTextures && (
 					<EaseView
 						animate={EASE_ANIMATE_FADE}
@@ -167,12 +164,9 @@ export const MirrorState = ({
 				<TalkWith sessionId={sessionId} />
 				<MirrorToneBadge toneUsed={toneUsed} />
 
-				{/* The fade says "more below": a long mirror cut at a line break looks
-          finished. Height cap lives on the wrapper — a % maxHeight on the
-          ScrollView would resolve against the wrapper's undefined height.
-          flexShrink lets it give up height when the cap plus the rows around
-          it don't fit; RN defaults to 0, so a centered column overflowed both
-          edges instead of scrolling. */}
+				{/* The height cap lives on the wrapper: a % maxHeight on the ScrollView would
+				    resolve against an undefined height. flexShrink (RN defaults to 0) lets it
+				    give up height instead of overflowing a centered column. */}
 				<ScrollShadow
 					LinearGradientComponent={LinearGradient}
 					size={32}

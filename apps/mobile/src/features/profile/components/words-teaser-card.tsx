@@ -30,18 +30,16 @@ type Props = {
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
-// Representative counts for locked rows — never real values. Unlocked rows
-// use the real count that shipped alongside their word.
+// Representative counts for locked rows, never real values.
 const PLACEHOLDER_COUNTS = [12, 7, 4];
 const FALLBACK_WORDS = ["still", "here", "quiet"];
-// Stable positional keys — rows are fixed slots (clear → fogged), never reordered.
+// Rows are fixed slots (clear → fogged), never reordered.
 const ROW_SLOTS = ["primary", "secondary", "tertiary"] as const;
 
 const WORD_W = 190;
 const WORD_H = 22;
 
-// A real recurring word rendered behind a static Skia blur — clearly a word,
-// just out of reach. Only the top word reads clear; the rest are fogged.
+// A real recurring word behind a static Skia blur. Only the top word reads clear.
 function BlurredWord({ text, color }: { text: string; color: string }) {
 	const font = matchFont({
 		fontFamily: "Poppins",
@@ -85,10 +83,9 @@ export function WordsTeaserCard({
 		onView();
 	}, [onView]);
 
-	// Three rows. Plus: all real words + real counts, all clear. Free: only the
-	// hook word is real (the server never sends the 2nd/3rd word or their
-	// counts to a free tier) — the remaining rows are local decoys with
-	// placeholder counts, always blurred/frosted.
+	// Plus: all real words and counts, clear. Free: only the hook word is real
+	// (the server never sends the 2nd/3rd word to free); the rest are local
+	// decoys with placeholder counts, always blurred.
 	const rows = isPlus
 		? ROW_SLOTS.map((slot, i) => ({
 				blurred: !words[i],
@@ -125,7 +122,7 @@ export function WordsTeaserCard({
 				onPress={onUnlock}
 			>
 				<Surface className="p-0">
-					{/* Header — no padlock. The teaser sells what's true about them. */}
+					{/* No padlock: the teaser sells what's true about them. */}
 					<View className="flex-row items-center gap-1.5 px-5 pt-5 pb-3">
 						<AppText className="font-medium text-[11px] text-muted uppercase tracking-widest">
 							Words that keep finding you
@@ -136,8 +133,7 @@ export function WordsTeaserCard({
 						/>
 					</View>
 
-					{/* Rows: unlocked rows show word + real count clear; locked rows
-              stay blurred/frosted with decoy word + placeholder count. */}
+					{/* Locked rows stay blurred with a decoy word and placeholder count. */}
 					<View className="gap-2.5 px-5 pb-4">
 						{rows.map(({ slot, word, count, blurred }) => (
 							<View

@@ -22,10 +22,7 @@ import { cn } from "@/lib/utils";
 type Props = {
 	sessionId: string | null;
 	/**
-	 * The mirror this was affirmed on actually named something. False when it
-	 * only reached for what the words did not hold, or when the turn cap
-	 * collapsed the row so "That's it" was the only thing left to press —
-	 * neither is a landing, and moment 2 is only for a landing.
+	 * The affirmed mirror named something; false on a reach or a capped row. Moment 2 needs it.
 	 */
 	mirrorLanded: boolean;
 	onSelectSolo: () => Promise<void>;
@@ -87,18 +84,16 @@ export const PathSelectionState = ({
 	const busyRef = useRef(false);
 	const openPaywall = usePaywall((s) => s.open);
 	const afterPath = useSessionEndHref(sessionId);
-	// Moment 2 (#221 §4). This screen IS the beat — the user has just said the
-	// mirror landed. It runs on its own call site rather than waiting for
-	// session end, and spends the same one-offer-per-session budget, so a
-	// session that offers here offers nothing at its close.
+	// Moment 2 (#221 §4): spends the one-offer-per-session budget here, so a
+	// session that offers now offers nothing at its close.
 	const [declined, setDeclined] = useState(false);
 	const plusOffer = usePlusOffer("mirror_landed", {
 		enabled: mirrorLanded,
 		sessionId,
 	});
 
-	// `href` is read by the caller before `select` runs: exit's must be, since
-	// completing the session nulls getActive (see useSessionEndHref).
+	// `href` is read before `select` runs: completing an exit session nulls
+	// getActive (see useSessionEndHref).
 	const choose = async (select: () => Promise<void>, href: Href) => {
 		if (busyRef.current) {
 			return;
@@ -124,8 +119,7 @@ export const PathSelectionState = ({
 	};
 
 	const select = {
-		// Exit has no activity, so the kindling announcement (when due) sits
-		// right after the path choice.
+		// Exit has no activity, so a due kindling announcement sits right after the choice.
 		exit: () => choose(onSelectExit, afterPath("exit")),
 		peers: () => choose(onSelectPeers, "/peer-reflections"),
 		solo: () => choose(onSelectSolo, "/sit-with-this"),
@@ -133,8 +127,8 @@ export const PathSelectionState = ({
 
 	const offering = plusOffer !== null && !declined;
 
-	// Scrolls only when the stack outgrows the screen (short device, large
-	// text, offer on top); otherwise flexGrow keeps Flux filling the space.
+	// Scrolls only when the stack outgrows the screen; otherwise flexGrow keeps
+	// Flux filling the space.
 	return (
 		<ScrollView
 			bounces={false}
@@ -142,8 +136,7 @@ export const PathSelectionState = ({
 			overScrollMode="never"
 			showsVerticalScrollIndicator={false}
 		>
-			{/* Flux asks; the question floats up-right of his head with a tail back
-          to him, so it reads as him speaking, not a card beside him. */}
+			{/* The question floats up-right of Flux with a tail back to him. */}
 			<View
 				className={cn(
 					"flex-1 flex-row items-end px-5 pt-2",
@@ -187,8 +180,7 @@ export const PathSelectionState = ({
 				</Animated.View>
 			</View>
 
-			{/* The offer is the stack's top layer, not a replacement for the
-          question: the three paths stay on screen and one tap away. */}
+			{/* The offer is the stack's top layer; the three paths stay one tap away. */}
 			{offering ? (
 				<Animated.View exiting={reduced ? OFFER_OUT_REDUCED : OFFER_OUT}>
 					<PathOfferLayer

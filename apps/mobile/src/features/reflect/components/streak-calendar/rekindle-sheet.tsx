@@ -13,9 +13,7 @@ type Props = {
 };
 
 /**
- * The one ask for a revive (#437): spend a streak saver to bring back the run
- * a missed day cut. The window reads as "until tonight" — no clock, nothing
- * ticking; when it closes the offer simply isn't there any more.
+ * The one ask for a revive (#437). No clock; when the window closes the offer simply isn't there.
  */
 export const RekindleSheet = ({
 	isOpen,

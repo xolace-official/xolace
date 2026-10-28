@@ -13,12 +13,8 @@ import { TWIG_PRESENTATION, type Twig } from "../twig-presentation";
 export const STOP_NODE = 84;
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
-/**
- * One stop on the trail: Flux's pose for the twig, and a signpost label.
- * Tended → ember halo, ring, check badge and a "Tended" eyebrow. Skipped →
- * dimmed, struck through; the image dims over an opaque backing so the
- * marching dashes don't show through it.
- */
+/** One stop on the trail: Flux's pose and a signpost label. Tended gets a halo
+ * and check badge; skipped dims over an opaque backing so the dashes don't show through. */
 export function TrailStop({
 	twig,
 	index,

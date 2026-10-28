@@ -16,7 +16,7 @@ export const useDataSettings = () => {
 	const deletionRequested = useRef(false);
 
 	const contributeAnonymously = preferences?.contributeByDefault ?? false;
-	// On by default (undefined = true) — see Cognition Layer §1.1b.
+	// On by default (undefined = true), see Cognition Layer §1.1b.
 	const personalMemory = preferences?.personalMemoryEnabled !== false;
 	const retention: RetentionOption =
 		preferences?.dataRetentionPreference ?? "indefinite";
@@ -46,15 +46,14 @@ export const useDataSettings = () => {
 	};
 
 	const performDeleteAccount = async () => {
-		// Deletion already landed on a previous attempt that failed at sign-out —
-		// re-running it would only throw account_inactive from requireAuth.
+		// A previous attempt may have deleted and then failed at sign-out;
+		// re-running would throw account_inactive from requireAuth.
 		if (!deletionRequested.current) {
 			await requestDeletion();
 			deletionRequested.current = true;
 		}
-		// The patch invalidates every requireAuth-gated subscription immediately,
-		// so the session has to go or they all re-run against a dead row. Let a
-		// failure propagate so the confirm dialog surfaces its danger toast.
+		// The patch invalidates every requireAuth-gated subscription, so the
+		// session must go. A failure propagates to the confirm dialog's toast.
 		await signOut();
 	};
 

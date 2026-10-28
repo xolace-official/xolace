@@ -13,11 +13,8 @@ export function useIsPlayful() {
 	return currentTheme.startsWith("playful-");
 }
 
-/**
- * Press-down state for a Playful lip: 0 at rest, 1 while held. Spread
- * `onPressIn` / `onPressOut` on the pressable and hand `pressed` to
- * PlayfulLip. Reduce Motion snaps instead of easing.
- */
+/** Press-down state for a Playful lip: 0 at rest, 1 while held. Spread the handlers on the
+ * pressable; Reduce Motion snaps. */
 export function usePlayfulPress() {
 	const pressed = useSharedValue(0);
 	const reduced = useEffectiveReducedMotion();

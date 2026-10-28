@@ -20,11 +20,8 @@ import { cn } from "@/lib/utils";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
-/**
- * Plus-gated custom-voice picker. Mirrors the Tone section's RadioGroup, with
- * two additions: named voices are locked for free users (tap → paywall), and
- * each carries a play/stop preview that works even when locked.
- */
+/** Plus-gated custom-voice picker. Named voices are locked for free users (tap
+ * opens the paywall); each carries a preview that works even when locked. */
 export const VoiceSection = () => {
 	const { voice, setVoice } = useVoiceSettings();
 	const { isPlus, isLoading: isPlusLoading } = usePlusEntitlement();
@@ -55,8 +52,7 @@ export const VoiceSection = () => {
 				<RadioGroup onValueChange={handleValueChange} value={voice}>
 					{VOICE_OPTIONS.map((opt, index) => {
 						const locked = opt.premium && !isPlus && !isPlusLoading;
-						// null for "auto" (no preview); a VoiceSlug otherwise. A const so
-						// the narrowing survives into the preview callback below.
+						// A const so the narrowing survives into the preview callback.
 						const slug = opt.value === "auto" ? null : opt.value;
 						return (
 							<View key={opt.value}>

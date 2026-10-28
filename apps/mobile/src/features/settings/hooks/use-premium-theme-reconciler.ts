@@ -5,17 +5,8 @@ import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 import { useAppStore } from "@/store/store";
 import { planPremiumThemeReset } from "../premium-theme-reset";
 
-/**
- * Drops a lapsed subscriber off a premium theme.
- *
- * `colorThemeId` is persisted locally and re-applied by theme-bootstrap.ts on
- * every cold start, long before the entitlement is known — so without this, a
- * user who picked a Plus theme and then let their subscription lapse would keep
- * it forever. Once the entitlement resolves to not-Plus, reset to `default`.
- *
- * The decision (whether/how to reset) lives in `planPremiumThemeReset`; this
- * hook only applies the store + Uniwind writes it returns.
- */
+/** Drops a lapsed subscriber off a premium theme. `colorThemeId` is re-applied
+ * on cold start before the entitlement is known; `planPremiumThemeReset` decides. */
 export function usePremiumThemeReconciler() {
 	const { isPlus, isResolved } = usePlusEntitlement();
 	const colorThemeId = useAppStore((s) => s.colorThemeId);

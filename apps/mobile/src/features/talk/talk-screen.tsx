@@ -1,7 +1,6 @@
-// The Hearth talk screen (#584, #593): the talk as a transcript under the
-// native header, with an aurora rising behind the composer that brightens when
-// either side speaks. Consent comes before the first word. "Say more" opens it
-// again on its thread (#604), straight into the talk: consent was given.
+// The Hearth talk screen (#584, #593): the transcript under the native header,
+// an aurora behind the composer. Consent comes before the first word; "Say
+// more" reopens on its thread (#604) straight into the talk.
 
 import { ConversationProvider } from "@elevenlabs/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";
@@ -33,7 +32,7 @@ function Talk({
 	reopen?: { sessionId: Id<"sessions">; thread: ThreadLine[] };
 }) {
 	// A voice talk has long stretches without a touch; keep the screen on while
-	// it is in front. Released when help covers it or the user leaves.
+	// it is in front.
 	const focused = useIsFocused();
 	useEffect(() => {
 		if (!focused) {

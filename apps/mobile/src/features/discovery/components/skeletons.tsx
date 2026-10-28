@@ -1,7 +1,4 @@
-/**
- * Discovery's loading shapes: each mirrors the section it stands in for, so a
- * cold start reads as "arriving" rather than sections popping in one by one.
- */
+/** Discovery's loading shapes; each mirrors the section it stands in for. */
 import { Skeleton } from "heroui-native";
 import { View } from "react-native";
 

@@ -1,11 +1,4 @@
-/**
- * The one screen in intake that says what Xolace is *for*.
- *
- * Not a beat: there is something to read, so it waits for a press. The pile is
- * the render's job, not the layout's — Flux is already steadying a stack that
- * has gone one slab past comfortable, so a second stack drawn in cards would
- * only say the same thing twice and shrink him doing it.
- */
+/** The one screen in intake that says what Xolace is for. Not a beat: it waits for a press. */
 
 import { Image } from "expo-image";
 import { Button } from "heroui-native";
@@ -38,8 +31,7 @@ export function CompoundingStep({ onDone }: { onDone: () => void }) {
 					</AppText>
 				</Animated.View>
 
-				{/* He takes everything the copy leaves: biggest thing on the screen on
-            a tall device, and simply smaller on a short one. */}
+				{/* Flux takes everything the copy leaves, so he shrinks on a short device. */}
 				<Animated.View
 					className="min-h-[260px] flex-1"
 					entering={FadeIn.duration(360).delay(after(180))}
@@ -56,10 +48,7 @@ export function CompoundingStep({ onDone }: { onDone: () => void }) {
 					className="pb-2"
 					entering={FadeIn.duration(320).delay(after(420))}
 				>
-					{/* Foreground, not accent: the button below is already accent, and
-              two saturated blocks touching read as one mistake. The payoff wins
-              on weight and full opacity instead — the setup line is the muted
-              one. */}
+					{/* Foreground, not accent: the button below is already accent. */}
 					<AppText className="font-[Poppins-SemiBold] text-[23px] text-foreground leading-8">
 						Xolace&apos;s whole mission is to never lose sight of what&apos;s
 						compounding for you.

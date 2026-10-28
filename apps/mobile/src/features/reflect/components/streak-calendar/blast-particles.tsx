@@ -1,8 +1,5 @@
 /**
- * Skia particle blast — adapted from the particles-button sample.
- * Differences: accepts a `color` prop (sample hardcoded white) and
- * higher particle opacity so it reads over the reveal backdrop.
- * Only mounted while the reveal overlay is up.
+ * Skia particle blast from the particles-button sample, with a `color` prop and higher opacity.
  */
 
 import {
@@ -26,15 +23,11 @@ import {
 } from "react-native-reanimated";
 
 type BlastParticlesProps = {
-	/** The size of the container canvas */
 	size: number;
-	/** Number of particles */
 	count: number;
-	/** Radius of each particle */
 	circleRadius: number;
-	/** Particle color (theme accent) */
 	color: string;
-	/** How far particles travel from center */
+	/** How far particles travel from the centre. */
 	blastRadius?: number;
 };
 

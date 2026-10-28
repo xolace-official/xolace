@@ -1,11 +1,6 @@
-/**
- * The reader's audio (#411), built from #395's variant A. A Listen pill beside
- * the source credit starts it; only then does a one-row dock slide up flush
- * with the bottom edge, audio progress on its top edge. Free readers hear the
- * server's 30s preview; once it's spent the transport swaps in place for
- * "Keep listening", which pushes the paywall over the reader. The transcript
- * opens from the dock, for Plus only — never during the preview.
- */
+// Reader audio (#411): the Listen pill starts it, then a one-row dock slides
+// up. Free readers get the server's 30s preview, then "Keep listening" opens
+// the paywall. The transcript is Plus only, never during the preview.
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { BlurView } from "expo-blur";
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
@@ -35,7 +30,7 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 import { TranscriptSheet } from "./transcript-sheet";
 import type { EntryAudio } from "./use-entry-audio";
 
-// One-row bar: capped so it stays one row; the full text is in the labels (#400).
+// Capped so the bar stays one row; the full text is in the labels (#400).
 export const BAR_MAX_SCALE = 1.5;
 
 const ICON = {
@@ -119,7 +114,6 @@ export function AudioDock({
 			// Its own group, reached after the body; appearing never takes focus.
 			accessibilityRole="toolbar"
 			className="absolute inset-x-0 bottom-0 overflow-hidden rounded-t-[28px] border-border border-t"
-			// Timed, not sprung: straight up into place, nothing to settle. Reduced motion: just there.
 			entering={
 				reduced
 					? undefined
@@ -255,16 +249,16 @@ function KeepListening({ slug }: { slug: string }) {
 	const accentInk = useThemeColor("accent-foreground");
 	const openPaywall = usePaywall((s) => s.open);
 	const posthog = usePostHog();
-	// Mounts the moment the preview ends: say so, and put focus on the way on.
+	// Mounts the moment the preview ends: announce it and focus the way on.
 	const ref = useRef<ViewInstance>(null);
 	useEffect(() => {
-		// A beat after mount: focus set before the first layout is dropped.
+		// Focus set before the first layout is dropped.
 		const t = setTimeout(() => {
 			const node = findNodeHandle(ref.current);
 			if (node) {
 				AccessibilityInfo.setAccessibilityFocus(node);
 			}
-			// Queued, so the focus move doesn't cut it off (iOS).
+			// Queued so the focus move does not cut it off (iOS).
 			AccessibilityInfo.announceForAccessibilityWithOptions(
 				"Preview ended. Xolace+ unlocks the full listen",
 				{ queue: true }

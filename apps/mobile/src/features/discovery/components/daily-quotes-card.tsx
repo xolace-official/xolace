@@ -6,26 +6,15 @@ import { StyleSheet, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { playSoftPress } from "@/lib/haptics";
 
-// TODO(asset): placeholder — swap for the dedicated quotes illustration when it
-// lands, and drop the oversize/offset trick with it.
-//
-// The source is a 2×2 grid of figures, so it has to be zoomed and offset to
-// isolate one; `contentFit`/`contentPosition` alone only pan, they don't zoom.
-// Source is 1200×1000; the bottom-left figure sits at roughly x 230–580,
-// y 470–1000, and 0.40 is the scale that lands that region in a 132pt window.
-//
-// The crop starts at y 500, not the nominal 470 seam. The lavender blob behind
-// the figure above dips to ~490 and showed as a stray arc along the card's top
-// edge at anything higher — and it overlaps this figure's hair bun (~480), so
-// there is no gutter that clears both. 500 clears the blob and lets the bun
-// bleed off the top edge, which reads as intentional; the alternative reads as
-// a rendering artifact. Goes away with the dedicated asset above.
+// TODO(asset): placeholder until the dedicated quotes illustration lands. The
+// source is a 1200×1000 2×2 grid; the bottom-left figure is zoomed and offset
+// into a 132pt window. Crop starts at y 500 so the blob above never shows.
 const ART = require("@/assets/images/illustrations/discovery-image-bg.png");
 const ART_SCALE = 0.4;
 const ART_CROP_X = 230;
 const ART_CROP_Y = 500;
 
-// rounded-3xl, as px — the art window has to match the card's own radius.
+// rounded-3xl in px; the art window must match the card's radius.
 const CARD_RADIUS = 24;
 
 const styles = StyleSheet.create({
@@ -36,11 +25,8 @@ const styles = StyleSheet.create({
 		top: -ART_CROP_Y * ART_SCALE,
 		width: 1200 * ART_SCALE,
 	},
-	// Android only honours `overflow: 'hidden'` on a view that has a border
-	// radius — without one it never sets up the clip and the oversized art below
-	// spills out past the card. Only the right corners are rounded, so the window
-	// still meets the card's right edge exactly and the art reads as bleeding
-	// into it; the left corners stay square and invisible mid-card.
+	// Android only honours `overflow: 'hidden'` on a view with a border radius.
+	// Right corners only, so the window meets the card's right edge exactly.
 	artWindow: {
 		borderBottomRightRadius: CARD_RADIUS,
 		borderCurve: "continuous",
@@ -51,14 +37,7 @@ const styles = StyleSheet.create({
 	card: { borderCurve: "continuous" },
 });
 
-/**
- * Entry point to the quotes screen. Deliberately fetches nothing — it names
- * where it leads rather than previewing a quote, so discovery stays a cheap
- * screen and the quote itself keeps its impact where it actually lives.
- *
- * Copy sits left, art bleeds into the card's right edge and is clipped by the
- * card radius.
- */
+/** Entry point to the quotes screen. Deliberately fetches nothing so discovery stays cheap. */
 export function DailyQuotesCard() {
 	const router = useRouter();
 
@@ -83,9 +62,7 @@ export function DailyQuotesCard() {
 						behind.
 					</AppText>
 				</View>
-				{/* Stretches to the card's height rather than carrying its own, so the
-            rounded corners land on the card's corners instead of floating a
-            few points inside them. */}
+				{/* Stretches to the card's height so the rounded corners land on the card's. */}
 				<View className="self-stretch" style={styles.artWindow}>
 					<Image
 						accessibilityElementsHidden

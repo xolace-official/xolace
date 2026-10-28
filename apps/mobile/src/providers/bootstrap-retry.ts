@@ -8,15 +8,8 @@ export type RetryBudget = {
 	attempt: number;
 };
 
-/**
- * Attempts already spent against `session`. A different session — including a
- * re-sign-in after sign-out — starts fresh, so a slow sign-in that burned the
- * budget does not leave the next one with none. Tagging is also what makes a
- * retry timer that fires after sign-out harmless: it writes a budget stamped
- * with the dead session, which the next session ignores.
- *
- * See src/providers/account-bootstrap-boundary.tsx for how it is used.
- */
+/** Attempts spent against `session`; another session starts fresh, and a timer firing after
+ * sign-out stamps the dead one. */
 export function attemptsFor(
 	budget: RetryBudget,
 	session: string | null | undefined

@@ -2,16 +2,7 @@ import { useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /**
- * Where the one card sits at rest and where it sits composing (#256).
- *
- * Shared by the card and by Flux, who has to land exactly on the composer's
- * presence dot — two copies of these numbers is two chances for the handoff to
- * miss by a few points.
- *
- * Coordinates are local to the compose overlay, which starts at the top safe
- * inset (the reflect canvas pads itself by the insets), while the sizes are
- * proportions of the whole screen — the card's resting size is a fraction of
- * the phone, not of whatever is left after the notch.
+ * Card geometry at rest and composing (#256), shared with Flux. Local to the compose overlay.
  */
 
 /** The morph. Slow and overshoot-free: the space opening, not a modal. */
@@ -19,7 +10,7 @@ export const MORPH_SPRING = { damping: 26, mass: 1.1, stiffness: 90 } as const;
 
 export const FLUX_SIZE = 104;
 export const DOT_SIZE = 12;
-/** The expanded card's own padding — where its header row starts. */
+/** The expanded card's own padding, where its header row starts. */
 export const CARD_PAD = 20;
 /** Progress at which Flux has fully become the presence dot. */
 export const HANDOFF = 0.55;
@@ -42,7 +33,7 @@ export function useMorphGeometry() {
 		expLeft: EXP_LEFT,
 		expTop: EXP_TOP,
 		expW: W - EXP_LEFT * 2,
-		/** Flux's resting frame — he leans on the card's top-left shoulder. */
+		/** Flux's resting frame: he leans on the card's top-left shoulder. */
 		fluxLeft: (W - restW) / 2 + 8,
 		/** Perch: he straddles the card's top edge and the card paints his legs. */
 		fluxPerch: { dy: 56, scale: 0.8 },

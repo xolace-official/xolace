@@ -1,9 +1,6 @@
 import { useAuth } from "@clerk/expo";
-// AppMetrics, not Observe: `logEvent` lives on the ExpoAppMetrics native module,
-// and Observe only reaches it via a Proxy fallback keyed on `!(prop in target)`.
-// On Android the ExpoObserve host object answers `'logEvent' in target` with
-// true while exposing no such method, so the fallback never fires and
-// `Observe.logEvent` resolves to undefined — crashing the mirror render.
+// AppMetrics, not Observe: on Android `Observe.logEvent` resolves to undefined
+// (the host object answers `'logEvent' in target` without exposing the method).
 import { AppMetrics } from "expo-observe";
 import { usePostHog } from "posthog-react-native";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
@@ -26,8 +23,8 @@ import type {
 } from "@/features/reflect/types";
 import { initialState, MAX_TURNS, reducer } from "./reflection-reducer";
 
-// Screens that show a server session's mirror. Processing and error aren't
-// here: both also stand before a session exists (a typed submit, a failed one).
+// Screens that show a server session's mirror. Processing and error also
+// stand before a session exists, so they are not here.
 const MIRROR_SCREENS: ReadonlySet<ReflectionStateName> = new Set([
 	"mirror",
 	"clarify",
@@ -36,37 +33,15 @@ const MIRROR_SCREENS: ReadonlySet<ReflectionStateName> = new Set([
 	"escalation",
 ]);
 
-/**
- * Manages the reflection UI state machine and bridges it to the session API.
- *
- * Provides the current reflection state, a reducer dispatch, loading status, and a set of actions that submit reflections, handle clarifications and confirmations, select paths, and control or reset the session.
- *
- * @returns An object with:
- * - `state` — the current `ReflectionState` for the UI.
- * - `dispatch` — reducer dispatch function for local state actions.
- * - `isLoading` — `true` while session data is loading.
- * - `submitReflection` — submit the current typed entry to the session.
- * - `submitScaffold` — submit a scaffolded entry built from selected textures.
- * - `submitClarification` — submit a clarification/refinement for the last mirror.
- * - `handleThatsIt` — confirm the mirror as final (or refined when applicable).
- * - `handleNotQuite` — transition to the "not quite" clarification flow or give up when turns exhausted.
- * - `handleSayMore` — transition to the "say more" clarification flow or give up when turns exhausted.
- * - `handleGaveUpPathSelection` — confirm a "gave up" path and advance to completion.
- * - `handleSelectExit` — select the "exit" path for session-end navigation.
- * - `handleSelectSolo` — select the "solo" path.
- * - `handleSelectPeers` — select the "peers" path.
- * - `handleReset` — abandon the current session and reset local state.
- * - `handleRetry` — request the session to retry the last action.
- */
+/** Drives the reflection UI state machine and bridges it to the session API. */
 export function useReflectionMachine() {
 	const { userId } = useAuth();
 	const [state, dispatch] = useReducer(reducer, initialState, (s) => ({
 		...s,
 		entryText: readReflectDraft(userId),
 	}));
-	// Reset during render, not in an effect: an effect would let
-	// usePersistReflectDraft commit once with the new userId and the old text,
-	// saving the previous account's words under the new one.
+	// Reset during render, not in an effect: an effect would let usePersistReflectDraft
+	// save the previous account's words under the new userId.
 	const [draftOwner, setDraftOwner] = useState(userId);
 	if (draftOwner !== userId) {
 		setDraftOwner(userId);
@@ -136,7 +111,6 @@ export function useReflectionMachine() {
 		[posthog]
 	);
 
-	// Forward live transcript to entryText
 	useEffect(() => {
 		if (!partialTranscript) {
 			return;
@@ -146,23 +120,19 @@ export function useReflectionMachine() {
 		dispatch({ text, type: "VOICE_TRANSCRIPT" });
 	}, [partialTranscript]);
 
-	// --- Reconcile server state edges into the UI ---
-	// The screen policy lives in projectScreen (session-service.ts); this effect
-	// is a thin applier plus edge telemetry. It fires once per server-state
-	// change — between edges, local dispatches own the screen.
+	// Applies projectScreen (session-service.ts) once per server-state change;
+	// between edges, local dispatches own the screen.
 	useEffect(() => {
 		if (!serverState || serverState === prevServerStateRef.current) {
 			return;
 		}
-		// Mirror not readable yet — keep current screen and retry when mirrorText
-		// arrives (don't mark handled, or the re-fire short-circuits above).
+		// Mirror not readable yet: leave unhandled so the effect re-fires when mirrorText arrives.
 		if (serverState === "mirror_delivered" && !mirrorText) {
 			return;
 		}
 		prevServerStateRef.current = serverState;
 
 		if (serverState === "completed" || serverState === "abandoned") {
-			// Terminal states — reset UI for a fresh session
 			abortRecording();
 			resetSession();
 			clearRefs();
@@ -176,15 +146,8 @@ export function useReflectionMachine() {
 				: undefined;
 			submitTimestampRef.current = null;
 			posthog.capture("mirror_arrived", { duration_ms: durationMs ?? null });
-			// EAS Observe perf signal: felt AI round-trip, correlated with app
-			// version/release in the Observe dashboard. Only log a real measurement.
-			//
-			// Telemetry must never be able to reach the dispatch below it. This call
-			// threw on Android once already (`Observe.logEvent` resolved to undefined),
-			// and since it runs *before* the screen dispatch it took the mirror down
-			// with it — on 1.6.0, which shipped without an error boundary, the throw
-			// unmounted the whole tree and left users on a blank screen they could only
-			// escape by force-quitting. A perf event is never worth a dead session.
+			// Observe perf signal for the felt AI round-trip. Wrapped in try/catch: a throw
+			// here runs before the screen dispatch and would take the mirror down (1.6.0 Android).
 			if (durationMs !== undefined) {
 				try {
 					AppMetrics.logEvent("mirror.generated", {
@@ -225,10 +188,8 @@ export function useReflectionMachine() {
 		abortRecording,
 	]);
 
-	// The session on screen left getActive without a terminal state reaching
-	// us: a talk ended with "Just end" from its "Say more" (#636) is hidden
-	// while its mirror is remade. Reset, as for a terminal state, rather than
-	// leave a mirror with no session behind it.
+	// The session on screen left getActive without a terminal state (a talk ended
+	// with "Just end" from "Say more", #636). Reset rather than show a mirror with no session.
 	useEffect(() => {
 		if (sessionId) {
 			shownSessionRef.current = sessionId;
@@ -244,7 +205,6 @@ export function useReflectionMachine() {
 		}
 	}, [sessionId, isLoading, state.screen, clearRefs]);
 
-	// Track freeze (typing-nudge = user paused)
 	useEffect(() => {
 		if (state.screen === "typing-nudge") {
 			freezeOccurredRef.current = true;
@@ -257,7 +217,6 @@ export function useReflectionMachine() {
 		}
 	}, [state.screen]);
 
-	// Track typing start
 	useEffect(() => {
 		if (state.screen === "typing" && !typingStartRef.current) {
 			typingStartRef.current = Date.now();
@@ -429,9 +388,8 @@ export function useReflectionMachine() {
 		}
 		busyRef.current = true;
 		try {
-			// Exit has no activity: selection and completion collapse into one
-			// terminal transition here, so the session is durably complete before
-			// the "Heard." screen renders (which reads it by id, not getActive).
+			// Exit has no activity: one terminal transition, so the session is complete
+			// before the "Heard." screen reads it by id.
 			await completeAsExit();
 			posthog.capture("path_selected", { path: "exit" });
 		} catch (error) {
@@ -479,7 +437,6 @@ export function useReflectionMachine() {
 		try {
 			await recordEscalationResponse("engaged");
 			posthog.capture("escalation_engaged");
-			// Resources phase is shown inline — component manages local state.
 		} catch (error) {
 			dispatchError(extractErrorMessage(error));
 		} finally {
@@ -560,10 +517,8 @@ export function useReflectionMachine() {
 		}
 	}, [abandon, resetSession, clearRefs, abortRecording]);
 
-	// A live mic would re-fill the draft with its next transcript.
-	// Stable on purpose: `dispatch` sits in effect dependency arrays downstream
-	// (reflect-screen's variant effect, useReplySeed, useReflectBridge), and a
-	// per-render identity re-ran them every render — an infinite update loop.
+	// DISCARD_DRAFT must also stop a live mic, or its next transcript refills the draft.
+	// Stable identity on purpose: downstream effects depend on `dispatch`.
 	const abortRecordingRef = useRef(abortRecording);
 	useEffect(() => {
 		abortRecordingRef.current = abortRecording;
@@ -611,11 +566,11 @@ export function useReflectionMachine() {
 		isRecording,
 		mirrorText,
 		plusDictation,
-		// Gated on the server state: the processing screen shows optimistically,
-		// while the row still carries the previous run's stage (retry, refinement).
+		// Gated on the server state: the processing screen shows optimistically while
+		// the row still carries the previous run's stage.
 		processingStage:
 			serverState === "processing" ? session?.processingStage : undefined,
-		// What retry reprocesses — present after a cold resume, unlike entryText.
+		// What retry reprocesses; present after a cold resume, unlike entryText.
 		rawInput: session?.rawInput ?? "",
 		sessionId,
 		startVoiceFromIdle,

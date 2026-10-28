@@ -24,16 +24,9 @@ type TrayProviderProps<
 	screens: TrayScreens<T>;
 }>;
 
-/**
- * Engine provider: owns the internal navigation stack + the imperative tray
- * ref, exposes `show`/`dismiss`/`goBack` via context, and floats the
- * <ActionTray> above {children}. Stripped of the sample's
- * GestureHandlerRootView — RootProvider already provides one.
- *
- * useMemo/useCallback are kept here intentionally: the context value object and
- * its members must stay reference-stable across context boundaries (a
- * documented React Compiler exception).
- */
+/** Engine provider: owns the navigation stack and the tray ref, exposes
+ * `show`/`dismiss`/`goBack`. useMemo/useCallback stay: the context value must
+ * be reference-stable (a documented React Compiler exception). */
 export const TrayProvider = <
 	T extends Record<string, (props?: any) => React.ReactElement>,
 >({
@@ -140,10 +133,7 @@ export const TrayProvider = <
 	);
 };
 
-/**
- * Access the tray's imperative actions (`show`, `dismiss`, `goBack`).
- * Must be used within a TrayProvider.
- */
+/** The tray's imperative actions; must be used within a TrayProvider. */
 export const useTray = <
 	T extends Record<string, (props?: any) => React.ReactElement>,
 >() => {

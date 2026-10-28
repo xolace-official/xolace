@@ -47,13 +47,7 @@ type Props = {
 };
 
 /**
- * Idle and composing, as one screen (#256).
- *
- * The reducer still distinguishes `idle`, `typing` and `typing-nudge`; what
- * changed is that none of them mounts a different tree. A single progress value
- * — 0 at rest, 1 composing — is the only thing separating the two readings, so
- * tapping the card opens the page already in front of the user instead of
- * replacing the screen with another one.
+ * Idle and composing as one screen (#256): one tree, separated only by the morph progress value.
  */
 export const ComposeScreen = ({
 	screen,
@@ -95,8 +89,7 @@ export const ComposeScreen = ({
 		expanded,
 		focusOnExpand,
 		inputRef,
-		// The nudge is a thing that happens while writing; closing the card ends
-		// the sentence, so the pending countdown goes with it.
+		// Closing the card ends the sentence, so the pending nudge countdown goes with it.
 		onCollapse: clearTimer,
 		reduceMotion,
 	});
@@ -131,9 +124,8 @@ export const ComposeScreen = ({
 			open={tourActive}
 		>
 			<View className="flex-1">
-				{/* The card and its mascot live over the page, so their geometry is
-            independent of everything around them. The surround renders after,
-            so an opened menu is not painted over by the card beneath it. */}
+				{/* The card and its mascot live over the page. The surround renders after,
+				    so an opened menu is not painted over by the card beneath it. */}
 				<View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
 					<FluxPerch
 						expanded={expanded}
@@ -180,7 +172,7 @@ export const ComposeScreen = ({
 					spaceName={spaceName}
 				/>
 
-				{/* DEV ONLY — tap to restart tour for testing */}
+				{/* Dev only: tap to restart the tour. */}
 				{__DEV__ && !tourActive && !expanded && (
 					<PressableFeedback
 						className="absolute right-4 bottom-5 p-3"

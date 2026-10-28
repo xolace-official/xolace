@@ -46,11 +46,8 @@ type Props = {
 	onBurnComplete?: () => void;
 };
 
-/**
- * Skia particle field for the vent ritual. All per-frame work happens on the
- * UI thread: a frame callback advances the clock and smooths metering into
- * radius/warmth, and a derived Picture re-records the scene each frame.
- */
+/** Skia particle field for the vent ritual. All per-frame work runs on the UI
+ * thread: a frame callback smooths metering into radius/warmth, a derived Picture re-records. */
 export function ParticleField({
 	stage,
 	metering,
@@ -101,8 +98,7 @@ export function ParticleField({
 			return;
 		}
 
-		// Smooth metering → radius/warmth targets. The radius naturally stops at
-		// MAX_RADIUS — the soft duration ceiling from the design spec.
+		// The radius stops at MAX_RADIUS, the soft duration ceiling from the design spec.
 		const m = metering ? metering.get() : 0;
 		smMeter.set(smMeter.get() + (m - smMeter.get()) * 0.12);
 		const recording = ph === PHASES.recording;
@@ -114,7 +110,7 @@ export function ParticleField({
 		warmth.set(warmth.get() + (targetW - warmth.get()) * 0.08);
 
 		if (ph === PHASES.burning) {
-			// Pinch-spread accelerant: they chose to release — honor it instantly.
+			// Pinch-spread accelerant: they chose to release, honor it instantly.
 			if (burnSkip && burnSkip.get() > 0 && skipAt.get() < 0) {
 				const bt = ts - phaseStart.get();
 				if (bt < COMPRESS_MS) {
@@ -179,10 +175,8 @@ export function ParticleField({
 					h
 				);
 			} else {
-				// Afterglow: the burn finished but the pipeline result hasn't arrived.
-				// A handful of stray sparks keep rising off the spot where the paper
-				// burned — flickering, drifting, dying out — so the wait reads as the
-				// fire settling rather than a frozen screen.
+				// Afterglow while the pipeline result is pending: stray sparks rise
+				// off the burn spot so the wait reads as the fire settling.
 				const wt = bt - burnEnd;
 				const fadeIn = Math.min(wt / 800, 1);
 				const cx = w / 2;
@@ -193,7 +187,6 @@ export function ParticleField({
 					const x = cx + DIR_X[i] * 30 + Math.sin(p * 6.283 + PHASE0[i]) * 12;
 					const y = cy + 16 - p * 110; // born low, rises ~110px, dies
 					const flicker = 0.55 + 0.45 * Math.sin(wt * 0.013 + PHASE0[i] * 7);
-					// Lifetime envelope peaks mid-rise, fades at birth/death.
 					const life = 4 * p * (1 - p);
 					paint.setColor(Skia.Color(i % 3 === 0 ? "#E8A84C" : "#C4883F"));
 					paint.setAlphaf(Math.min(fadeIn * life * flicker, 0.85));

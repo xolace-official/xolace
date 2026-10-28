@@ -91,7 +91,6 @@ export const SettingsScreen = () => {
 			contentInsetAdjustmentBehavior="automatic"
 			showsVerticalScrollIndicator={false}
 		>
-			{/* ── XOLACE+ ─────────────────────────────────────────── */}
 			<SettingsSection title="Xolace+">
 				{isPlus ? (
 					<>
@@ -124,7 +123,6 @@ export const SettingsScreen = () => {
 				)}
 			</SettingsSection>
 
-			{/* ── PREFERENCES ─────────────────────────────────────── */}
 			<SettingsSection title="Preferences">
 				<SettingsRow
 					icon={icon(APPEARANCE_ICON)}
@@ -150,7 +148,6 @@ export const SettingsScreen = () => {
 				/>
 			</SettingsSection>
 
-			{/* ── PERSONAL ────────────────────────────────────────── */}
 			<SettingsSection title="Personal">
 				<SettingsRow
 					icon={icon(SHIELD_ICON)}
@@ -174,7 +171,6 @@ export const SettingsScreen = () => {
 				<UpdateRow isLast />
 			</SettingsSection>
 
-			{/* ── VERSION FOOTER ──────────────────────────────────── */}
 			<View className="items-center gap-1 pt-8">
 				<AppText
 					className="font-semibold text-foreground/20 text-sm tracking-widest"

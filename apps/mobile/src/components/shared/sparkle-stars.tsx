@@ -72,12 +72,9 @@ const STARS: StarConfig[] = [
 
 const STAR_CHARACTER = "✦";
 
-// Worklet-driven, NOT a Reanimated CSS animation (`animationName` keyframes).
-// A view carrying a running CSS animation that unmounts mid-flight throws
-// "Attempt to unmount a view which is mounted inside a different view" in
-// Fabric's mounting transaction, which hard-crashes the app (SIGABRT). The
-// processing state unmounts exactly that way whenever a reflection errors
-// fast (e.g. a rate-limit rejection). See docs/bug-log.md.
+// Worklet-driven, not a Reanimated CSS animation: a view with a running CSS animation
+// that unmounts mid-flight throws "Attempt to unmount a view which is mounted inside a
+// different view" in Fabric and hard-crashes (SIGABRT). See docs/bug-log.md.
 const Star = ({ star, color }: { star: StarConfig; color: string }) => {
 	const progress = useSharedValue(0);
 
@@ -112,8 +109,7 @@ const Star = ({ star, color }: { star: StarConfig; color: string }) => {
 		};
 	});
 
-	// The plain View is what the parent reconciles; the animated node is nested
-	// one level down and is never itself a child Fabric has to index into.
+	// The plain View is what the parent reconciles; the animated node is nested one level down.
 	return (
 		<View pointerEvents="none" style={[starStyles.star, star.position]}>
 			<Animated.View pointerEvents="none" style={animatedStyle}>
@@ -145,9 +141,7 @@ const SparkleStarsComponent = ({ color }: Props) => (
 export const SparkleStars = SparkleStarsComponent;
 
 const starStyles = StyleSheet.create({
-	// No `opacity: 0` here — opacity is driven on the animated child below.
-	// Setting it on this static parent would multiply the child's animated
-	// opacity by zero and the stars would never appear.
+	// No `opacity: 0` here: it would multiply the child's animated opacity by zero.
 	star: {
 		position: "absolute",
 	},

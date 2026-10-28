@@ -15,8 +15,6 @@ import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
 import { AppText } from "@/components/shared/app-text";
 
-// ─── Frame ────────────────────────────────────────────────────────────────────
-
 type FrameProps = {
 	snapPoints?: string[];
 	isOpen: boolean;
@@ -37,11 +35,9 @@ function FeedbackSheetFrame({
 	const dynamic = !snapPoints;
 	const { height: windowHeight } = useWindowDimensions();
 
-	// When the sheet has an input, we need a BottomSheetScrollView so content can
-	// scroll into view after the sheet shifts up in "interactive" keyboard mode.
-	// maxHeight bounds the scroll container so gorhom's dynamic sizing stays compact
-	// initially (small content < maxHeight) but becomes scrollable once full content
-	// (chips + input) exceeds it.
+	// With an input, a BottomSheetScrollView lets content scroll into view after
+	// the sheet shifts up; maxHeight keeps gorhom's dynamic sizing compact until
+	// the full content exceeds it.
 	const maxScrollHeight = windowHeight * 0.6;
 
 	const innerContent = keyboardBehavior ? (
@@ -84,14 +80,11 @@ function FeedbackSheetFrame({
 	);
 }
 
-// ─── Header ───────────────────────────────────────────────────────────────────
-
 type HeaderProps = {
 	children: ReactNode;
 	subtitle?: string;
-	// Renders an explicit close affordance. Pass it on any sheet the user can
-	// reach without another exit — the backdrop and pan-down are the only other
-	// ways out, and if the sheet ever mis-snaps low neither is obvious.
+	// Explicit close affordance for sheets with no other obvious exit; backdrop
+	// and pan-down are not obvious if the sheet mis-snaps low.
 	onDismiss?: () => void;
 };
 
@@ -123,16 +116,13 @@ function FeedbackSheetHeader({ children, subtitle, onDismiss }: HeaderProps) {
 	);
 }
 
-// ─── Chips ────────────────────────────────────────────────────────────────────
-
 type Chip = { key: string; label: string };
 
 type ChipsProps = {
 	chips: readonly Chip[];
 	selected: string | null;
 	onSelect: (key: string) => void;
-	// One-shot pick: once something is selected, the rest dim and stop
-	// responding, so the choice reads as final while the sheet closes.
+	// One-shot pick: after a selection the rest dim and stop responding.
 	lockOnSelect?: boolean;
 };
 
@@ -179,8 +169,6 @@ function FeedbackSheetChips({
 	);
 }
 
-// ─── Input ────────────────────────────────────────────────────────────────────
-
 type InputProps = {
 	value: string;
 	onChangeText: (text: string) => void;
@@ -211,8 +199,6 @@ function FeedbackSheetInput({
 		/>
 	);
 }
-
-// ─── Submit ───────────────────────────────────────────────────────────────────
 
 type SubmitProps = {
 	onPress: () => void;
@@ -245,8 +231,6 @@ const styles = StyleSheet.create({
 	input: { fontSize: 14, paddingHorizontal: 4, paddingVertical: 8 },
 	scrollView: { flexGrow: 0 },
 });
-
-// ─── Export ───────────────────────────────────────────────────────────────────
 
 export const FeedbackSheet = {
 	Chips: FeedbackSheetChips,

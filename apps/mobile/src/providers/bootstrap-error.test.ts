@@ -1,11 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { isBootstrapError } from "./bootstrap-error";
 
-/**
- * Guards the branch that decides "hold and retry" vs "crash to the root
- * boundary". A false negative red-screens the app on every sign-in; a false
- * positive swallows a real crash behind an infinite loader.
- */
+/** A false negative red-screens every sign-in; a false positive hides a real crash behind a
+ * loader. */
 describe("isBootstrapError", () => {
 	it("matches the typed requireAuth codes", () => {
 		for (const code of ["user_not_found", "account_inactive"]) {

@@ -14,11 +14,8 @@ type Props = {
 	staggerDelay?: number;
 };
 
-/**
- * A door, not an offer (#221 §5): always here, user-initiated, and exempt from
- * every proactive-offer cooldown — the same treatment the settings row gets.
- * Deliberately not the shared PlusOfferCard: there's nothing to decline.
- */
+/** A door, not an offer (#221 §5): always here and exempt from every proactive-
+ * offer cooldown. Not the shared PlusOfferCard: there is nothing to decline. */
 export function PlusRow({ staggerDelay = 500 }: Props) {
 	const accentColor = useThemeColor("accent") as string;
 	const openPaywall = usePaywall((s) => s.open);
@@ -35,8 +32,7 @@ export function PlusRow({ staggerDelay = 500 }: Props) {
 				type: "timing",
 			}}
 		>
-			{/* The dashes travel slowly — this is a standing door, not an alert. The
-          border lives on the wrapper, so the pressable carries none of its own. */}
+			{/* The border lives on the wrapper, so the pressable carries none of its own. */}
 			<AnimatedDashedBorder
 				animationSpeed={4000}
 				borderRadius={24}

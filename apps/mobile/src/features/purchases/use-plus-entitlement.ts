@@ -2,12 +2,8 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import { useConvexAuth, useQuery } from "convex/react";
 import { useRevenueCat } from "./revenuecat-context";
 
-/**
- * The single entitlement read for all gated UI — client counterpart of the
- * server's hasPremium(). Server truth (reactive: flips the instant the
- * RevenueCat webhook lands) OR'd with the local SDK state as an optimistic
- * hint covering webhook lag right after a purchase.
- */
+/** The single entitlement read for all gated UI: server truth OR'd with local SDK state, which
+ * covers webhook lag. */
 export function usePlusEntitlement(): {
 	isPlus: boolean;
 	isLoading: boolean;
@@ -23,10 +19,8 @@ export function usePlusEntitlement(): {
 	return {
 		isLoading: (isAuthenticated && entitlement === undefined) || sdkLoading,
 		isPlus: (entitlement?.isPlus ?? false) || isProUser,
-		// True only once BOTH sources have actually answered. `isPlus: false` is the
-		// default for a signed-out or still-authenticating user — safe for locking UI,
-		// but indistinguishable from a real lapse. Anything that *revokes* on the
-		// strength of a negative (see usePremiumThemeReconciler) must wait for this.
+		// True once both sources have answered. A default `isPlus: false` is indistinguishable
+		// from a real lapse, so anything that revokes on a negative must wait for this.
 		isResolved:
 			!authLoading &&
 			isAuthenticated &&

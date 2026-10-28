@@ -8,10 +8,7 @@ type Props = {
 	className?: string;
 };
 
-/**
- * A settings section container with an uppercase muted title label
- * followed by its row children below.
- */
+/** A settings section: an uppercase muted title above its row children. */
 export const SettingsSection = ({ title, children, className }: Props) => (
 	<View className={cn("mb-8", className)}>
 		<AppText className="px-5 pb-3 font-semibold text-accent text-xs uppercase tracking-widest">

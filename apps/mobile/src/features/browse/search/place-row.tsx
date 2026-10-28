@@ -1,8 +1,4 @@
-/**
- * A Hubs & topics result in Browse search (#550): a Lantern hub or a Browse
- * topic, laid out like a TrackRow so the sections read as one list. A tap opens
- * that screen — neither is Plus-gated, so there's no lock.
- */
+/** A Hubs & topics search result (#550), laid out like a TrackRow. Neither is Plus-gated. */
 
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";

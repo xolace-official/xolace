@@ -1,21 +1,11 @@
-/**
- * The one personalized line on the intake offer screen, keyed on Q2 (`intent`)
- * and nothing else (T4, issue #235).
- *
- * Only the four committal answers get a line. `just_looking` and
- * `prefer_not_to_say` — and a missing answer — are deliberately static: someone
- * who declined to say what brought them here has not handed us permission to
- * tell them what they came for.
- */
+// The one personalized line on the intake offer screen, keyed on Q2 `intent` (T4, #235).
+// Only the four committal answers get a line; `just_looking`, `prefer_not_to_say` and a
+// missing answer stay static on purpose.
 import type { IntakeAnswers } from "@/store/intake-slice";
 
 type Intent = NonNullable<IntakeAnswers["intent"]>;
 
-/**
- * Keyed off the `intent` enum rather than `string`: renaming a literal in
- * `intakeAnswerValidators` then fails to compile here, instead of silently
- * dropping the line for everyone who picked it.
- */
+/** Keyed off the `intent` enum so a renamed validator literal fails to compile here. */
 const INTENT_LINE: Partial<Record<Intent, string>> = {
 	feel_less_alone: "You came to feel less alone.",
 	get_through_hard_moment: "You came to get through something hard.",

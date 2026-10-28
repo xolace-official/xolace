@@ -1,38 +1,6 @@
-/**
- * ThinkingOrb — a dotted orb that says what an agent is doing.
- *
- * A spinner says "busy". These say *which kind of busy*: particles running
- * tilted orbits for work in flight, a scan meridian sweeping a globe for a
- * search, bands that scramble and click back for a solve. Six states, each a
- * distinct silhouette in motion, so a glance at the orb is enough — which is
- * the whole point of putting one next to a streaming reply.
- *
- * ```tsx
- * <ThinkingOrb state="searching" />
- * <ThinkingOrb state="working" size={20} />
- * ```
- *
- * ## How it is drawn
- *
- * The geometry is honestly three-dimensional — points on a sphere, rotated and
- * tilted, projected orthographically, with depth carried by dot size and ink
- * weight. React Native has no 2D canvas to paint that into, and one animated
- * SVG node per dot would be two hundred native prop writes a frame, which no
- * amount of tuning survives.
- *
- * So the dots are quantised into eight ink buckets and each bucket is emitted
- * as a *single* path of circle arcs. Eight animated props a frame, whatever the
- * dot count, and depth ordering falls out of bucket order for free — depth is
- * what drives the ink in the first place, so painting faint to strong paints
- * far to near. Everything from the trigonometry to the path strings runs in one
- * worklet on the UI thread; React renders once and then never again.
- *
- * The maths lives in `thinking-orb-geometry.ts` and the six per-state drawing
- * routines in `thinking-orb-states.ts`; this file is the profiles and the view.
- *
- * Strictly monochrome, from `--color-foreground`, so the orb inverts with the
- * theme and needs no palette of its own.
- */
+// ThinkingOrb: a monochrome dotted orb whose six states show what an agent is doing.
+// Dots are quantised into BUCKETS ink levels, each emitted as one animated path, so a
+// frame costs eight prop writes. Maths in thinking-orb-geometry.ts, states in -states.ts.
 import { useEffect } from "react";
 import { View, type ViewProps } from "react-native";
 import Animated, {
@@ -98,14 +66,7 @@ const BUCKET_INDICES = Array.from(
 	(_unused, index) => index
 );
 
-/**
- * One ink level's worth of dots, as a single path.
- *
- * It is a component rather than a loop of `useAnimatedProps` in the parent so
- * that each bucket owns exactly one hook — the count is a module constant, but
- * hooks in a loop is still a rule waiting to be broken by the next person who
- * makes it configurable.
- */
+/** One ink level's worth of dots as a single path; a component so each bucket owns one hook. */
 function Bucket({
 	index,
 	paths,
@@ -136,13 +97,8 @@ export interface ThinkingOrbProps extends Omit<ViewProps, "children"> {
 	color?: string;
 	/** Freeze on the current frame. */
 	paused?: boolean;
-	/**
-	 * Side of the orb in pixels.
-	 *
-	 * Two tunings ship, and they are separate designs rather than one scaled:
-	 * at or below 32 the orb switches to far fewer, proportionally much larger
-	 * dots moving faster, because a faithful lattice at that size is grey mush.
-	 */
+	/** Side in pixels. At or below 32 the orb switches to a separate small tuning: fewer,
+	 * larger, faster dots. */
 	size?: number;
 	/** Multiplier on the state's own speed. */
 	speed?: number;
@@ -174,10 +130,8 @@ export function ThinkingOrb({
 
 	const frame = useFrameCallback((info) => {
 		"worklet";
-		// Elapsed time is accumulated rather than derived from the total, so
-		// `speed` can change mid-animation without the orb jumping to wherever the
-		// new rate would have put it by now. A dropped frame is clamped rather than
-		// honoured — a 300ms hitch played back at full rate is a lurch.
+		// Accumulated so `speed` can change mid-animation without a jump; a dropped
+		// frame is clamped so a hitch does not play back as a lurch.
 		const delta = Math.min(info.timeSincePreviousFrame ?? 16, 48) / 1000;
 		clock.value += delta * profile.speed * speed;
 		paths.value = renderFrame(state, size, clock.value, profile);
@@ -189,9 +143,7 @@ export function ThinkingOrb({
 		return () => setActive(false);
 	}, [still, setActive]);
 
-	// A still orb is not an empty one: reduced motion and `paused` both get a
-	// representative frame rather than nothing, which is the difference between
-	// "not animating" and "broken".
+	// Reduced motion and `paused` show a representative frame, not an empty orb.
 	useEffect(() => {
 		if (still) {
 			return;
@@ -216,8 +168,7 @@ export function ThinkingOrb({
 			style={[{ height: size, width: size }, style]}
 		>
 			<Svg height={size} viewBox={`0 0 ${size} ${size}`} width={size}>
-				{/* Faint to strong, which is also far to near — depth is what drives
-            the ink, so bucket order is depth order and no sort is needed. */}
+				{/* Bucket order is depth order (faint is far), so no sort is needed. */}
 				{BUCKET_INDICES.map((index) => (
 					<Bucket index={index} ink={ink} key={index} paths={paths} />
 				))}

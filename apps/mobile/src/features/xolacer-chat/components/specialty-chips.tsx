@@ -51,14 +51,8 @@ export function SpecialtyChips({
 	);
 }
 
-/**
- * Roster filter. Only tags somebody on the roster actually declared are
- * offered — a filter that returns nothing is worse than no filter, and with
- * six xolacers most of the taxonomy is empty on any given day.
- *
- * Filtering happens client-side over the already-loaded directory, so tapping
- * a chip costs no round trip and can't blank the list mid-interaction.
- */
+/** Roster filter over tags somebody actually declared; client-side over the loaded directory,
+ * so no round trip. */
 export function SpecialtyFilter({
 	available,
 	selected,

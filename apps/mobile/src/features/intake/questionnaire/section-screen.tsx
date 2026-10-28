@@ -1,13 +1,7 @@
 import type { ImageProps } from "expo-image";
 import { usePostHog } from "posthog-react-native";
-/**
- * One section of questions, one step.
- *
- * The questionnaire card is *only* the questions: mascot bubble above it says
- * why this section is being asked, the card pages through the section's own
- * questions, and the screen ends when the section does. Interstitials are
- * their own screens (see `conversation.tsx`), never pages in here.
- */
+// One section of questions, one step. The card pages through the section's own
+// questions; interstitials are their own screens (`conversation.tsx`), never pages here.
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import type { ScrollViewInstance } from "react-native";
@@ -33,9 +27,9 @@ const NO_CAPS: readonly string[] = [];
 interface SectionScreenProps {
 	/** Multi-selects to hold at MAX_SELECTIONS. */
 	capped?: readonly string[];
-	/** Extra `Questionnaire.Item`s after the section's own — the series branch. */
+	/** Extra `Questionnaire.Item`s after the section's own (the series branch). */
 	children?: ReactNode;
-	/** "Section 1 of 3 · You" — the only place the section is named. */
+	/** "Section 1 of 3 · You": the only place the section is named. */
 	eyebrow: string;
 	items: readonly QuestionnaireItemDefinition[];
 	/** The pose for this section. Defaults to the talking one. */
@@ -51,11 +45,8 @@ interface SectionScreenProps {
 	value?: QuestionnaireAnswers;
 }
 
-/*
- * A plain function, not a component: the root finds its questions by
- * `child.type === Questionnaire.Item` in one shallow pass, so a wrapper
- * component would hide the whole set from it.
- */
+// A plain function, not a component: the root finds its questions by
+// `child.type === Questionnaire.Item` in one shallow pass.
 function renderQuestion(question: IntakeQuestion) {
 	return (
 		<Questionnaire.Item
@@ -103,19 +94,14 @@ export function SectionScreen({
 	const setAnswers = onChange ?? setOwn;
 	const scroller = useRef<ScrollViewInstance>(null);
 
-	/*
-	 * The funnel's per-question steps (T7, #267) are only visible from in here:
-	 * a section is one route, and the questions inside it are paged by the
-	 * questionnaire itself.
-	 */
+	// The funnel's per-question steps (T7, #267) are only visible from in here.
 	const posthog = usePostHog();
 	const active = useRef<string | null>(null);
 	const orderOf = (name: string) =>
 		items.findIndex((item) => item.name === name);
 
 	useEffect(() => {
-		// The first question — the only one `onItemChange` never reports, since
-		// nothing moved to it.
+		// The first question is the only one `onItemChange` never reports.
 		const first = items.find((item) => !item.disabled)?.name;
 		const key = first ? stepKeyOfAnswer(first) : undefined;
 		if (!(first && key)) {
@@ -123,8 +109,7 @@ export function SectionScreen({
 		}
 		active.current = first;
 		trackStepViewed(posthog, key);
-		// Mount only: `items` is rebuilt every render, and the branch can only
-		// ever append questions after this one.
+		// Mount only: `items` is rebuilt every render and the branch only appends after this one.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -159,9 +144,8 @@ export function SectionScreen({
 					answers={answers}
 					items={items}
 					onAnswersChange={(next) => setAnswers(applyCap(next, capped))}
-					// Only the active question is mounted, but the scroller is ours and
-					// keeps its offset — so a long list like Q3 would drop the next
-					// question in mid-page with its own text scrolled off the top.
+					// The scroller keeps its offset across questions, so a long list like Q3
+					// would open the next question with its text scrolled off the top.
 					onItemChange={(name) => {
 						scroller.current?.scrollTo({ animated: true, y: 0 });
 						const previous = active.current;
@@ -170,9 +154,8 @@ export function SectionScreen({
 						if (key) {
 							trackStepViewed(posthog, key);
 						}
-						// Only a forward move is an answer being committed: the way on is
-						// gated on an answer, the way back isn't, and the answer a back
-						// step leaves behind was recorded on the way in.
+						// Only a forward move commits an answer; a back step's answer was
+						// recorded on the way in.
 						if (previous && orderOf(name) > orderOf(previous)) {
 							trackCommit(previous, answers);
 						}

@@ -53,15 +53,13 @@ function extractErrorMessage(e: unknown): string {
 export type ReportSubject = {
 	/** Stable identity of the person being reported. */
 	profileId: Id<"emotional_profiles">;
-	/** Form copy only — never sent to the backend. Names repeat and change. */
+	/** Form copy only, never sent to the backend. */
 	name: string;
 	/** Present when the concern was raised inside a thread. */
 	conversationId?: Id<"xolacer_conversations">;
 };
 
-/**
- * Bug | idea report form, plus a concern mode for reporting a person.
- */
+/** Bug | idea report form, plus a concern mode for reporting a person. */
 export const ReportForm = ({
 	kind: initialKind,
 	subject,
@@ -81,9 +79,8 @@ export const ReportForm = ({
 	const context = useFeedbackContext();
 
 	const submit = useMutation(api.productFeedback.submit);
-	// Stable: `kind` changes on a Bug/Idea tap, and a plain `useQuery` returns
-	// `undefined` while the new budget loads — long enough for `isRateLimited` to
-	// fall back to false, dropping the notice and re-enabling submit mid-tap.
+	// Stable: a plain `useQuery` returns `undefined` while the new budget loads,
+	// which would drop the notice and re-enable submit mid-tap.
 	const canSubmit = useStableQuery(api.productFeedback.canSubmit, { kind });
 
 	const isRateLimited = canSubmit === false;
@@ -122,8 +119,7 @@ export const ReportForm = ({
 				{COPY[kind].title}
 			</AppText>
 
-			{/* Names the person so the reporter can confirm the subject before
-          sending. The name is display-only — the id is what gets submitted. */}
+			{/* The name is display-only; the id is what gets submitted. */}
 			{isConcern && subject && (
 				<AppText className="text-foreground/65 text-sm">
 					About {subject.name}

@@ -5,8 +5,7 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 
-// Distance (px) from a card's centered position before its scale/opacity
-// falloff is fully maxed out — roughly one neighboring card away.
+// Distance (px) from center at which the scale/opacity falloff maxes out.
 const FALLOFF_RANGE = 178;
 
 type Props = {
@@ -17,10 +16,8 @@ type Props = {
 	children: React.ReactNode;
 };
 
-/** Scroll-driven scale/opacity falloff for a single carousel card — the
- *  centered card grows and its neighbors recede, distance-based off the
- *  card's fixed center offset so it holds up regardless of the divider's
- *  irregular width breaking a uniform per-index interpolation range. */
+/** Scroll-driven scale/opacity falloff for one card, based on the card's fixed
+ * center offset because the divider's width breaks a per-index interpolation. */
 export const ThemeCarouselItem = ({
 	scrollX,
 	center,

@@ -7,11 +7,7 @@ const styles = StyleSheet.create({
 	icon: { marginTop: 2 },
 });
 
-/**
- * One icon-and-sentence line. Shared by the profile's expectation blocks and
- * the primer sheet so the two surfaces stay visually identical — they say
- * related things about the same relationship and should look like it.
- */
+/** One icon-and-sentence line, shared by the profile's expectation blocks and the primer sheet. */
 export function Fact({
 	icon,
 	children,

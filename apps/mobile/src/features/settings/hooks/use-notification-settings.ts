@@ -27,10 +27,8 @@ export const useNotificationSettings = () => {
 	const [permissionBlocked, setPermissionBlocked] = useState(false);
 	const [osBlocked, setOsBlocked] = useState(false);
 
-	// Permission can be revoked in device settings, which no preference knows
-	// about — that is the state where a toggle reads ON and delivers nothing.
-	// Re-checked on every foreground, so returning from the Settings app (our
-	// own "Open Settings" included) settles the toggles without a relaunch.
+	// Permission can be revoked in device settings without any preference knowing.
+	// Re-checked on every foreground so returning from Settings settles the toggles.
 	useEffect(() => {
 		let cancelled = false;
 
@@ -56,9 +54,7 @@ export const useNotificationSettings = () => {
 
 	const notifications = preferences?.notifications;
 
-	// What each toggle shows: what actually gets delivered. A blocked OS makes
-	// both read off, so flipping one runs the enable path and explains itself
-	// rather than leaving a switch that promises delivery.
+	// A blocked OS makes both toggles read off, so flipping one runs the enable path.
 	const gentleReminders = !osBlocked && gentleRemindersOn(notifications);
 	const chatNotifications =
 		!osBlocked && chatNotificationsAllowed(notifications);
@@ -85,18 +81,8 @@ export const useNotificationSettings = () => {
 		}
 	};
 
-	/**
-	 * Move both toggles to a new position at once.
-	 *
-	 * Only turning something on has to clear the OS, and only from a state that
-	 * isn't already delivering: a user who granted permission and merely muted
-	 * one family is not re-prompted. Turning something off never consults the OS
-	 * at all, so a blocked device can still mute what it isn't delivering.
-	 *
-	 * Nothing is written when the permission route runs out — the toggle is
-	 * driven off the stored preference, so it stays where it was rather than
-	 * flipping to a promise the device can't keep.
-	 */
+	/** Moves both toggles at once. Only turning on from a non-delivering state
+	 * consults the OS; nothing is written when the permission route runs out. */
 	const applyToggles = async (next: { gentle: boolean; chat: boolean }) => {
 		const turningOn =
 			(next.gentle && !gentleReminders) || (next.chat && !chatNotifications);
@@ -111,8 +97,7 @@ export const useNotificationSettings = () => {
 			}
 			setOsBlocked(false);
 
-			// The token is dropped whenever both families go quiet, so coming back
-			// from that needs a fresh registration even though permission stands.
+			// The token is dropped when both families go quiet, so re-register here.
 			if (permission === "undetermined" || !alreadyDelivering) {
 				const token = await requestPushToken();
 				if (!token) {
@@ -121,9 +106,7 @@ export const useNotificationSettings = () => {
 				try {
 					await registerToken({ pushToken: token });
 				} catch {
-					// Same answer as no token at all: nothing is written, so the toggle
-					// stays where it was rather than promising delivery to a server that
-					// has no token to deliver against.
+					// Nothing is written, so the toggle stays where it was.
 					return;
 				}
 				await syncTimezone();
@@ -136,9 +119,7 @@ export const useNotificationSettings = () => {
 
 		if (!(next.gentle || next.chat)) {
 			try {
-				// Scoped to this installation. The preference above is what silences
-				// the account; dropping another device's token here would mute a phone
-				// the user never touched.
+				// Scoped to this installation; another device's token must stay.
 				const token = await getGrantedPushToken();
 				if (token) {
 					await removeToken({ pushToken: token });
@@ -149,9 +130,8 @@ export const useNotificationSettings = () => {
 		}
 	};
 
-	// Each setter carries the other family's *stored choice*, never its
-	// displayed value: from all-off, or with the OS blocking, both read off, and
-	// writing that back would mute a family the user never touched.
+	// Each setter carries the other family's stored choice, never its displayed
+	// value, which reads off whenever the master or the OS blocks delivery.
 	const setGentleReminders = (enabled: boolean) =>
 		applyToggles({ chat: chatChoice(notifications), gentle: enabled });
 

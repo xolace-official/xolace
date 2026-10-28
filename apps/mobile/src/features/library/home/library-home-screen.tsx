@@ -1,10 +1,5 @@
-/**
- * The Lantern home (#409): the Library's front page inside Browse, built from
- * #396's variant A. Top to bottom: Continue reading → Reading as… card (first
- * visit) → For you → Hubs → What kind of light → A–Z.
- *
- * Search was ruled out of v1 (#397).
- */
+// The Lantern home (#409): Continue reading, Reading as… (first visit), For
+// you, Hubs, What kind of light, A–Z. Search was ruled out of v1 (#397).
 
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
@@ -42,8 +37,7 @@ export function LibraryHomeScreen() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	// One-time Lantern welcome (#444), keyed on mount rather than a route
-	// param since Library home has no family query string.
+	// One-time Lantern welcome (#444), keyed on mount: Library home has no family query string.
 	useEffect(() => {
 		if (!libraryIntroSeen) {
 			router.push({ params: { family: "library" }, pathname: "/browse-intro" });
@@ -56,7 +50,7 @@ export function LibraryHomeScreen() {
 
 	return (
 		<>
-			{/* first child, so the iOS large title collapses with this scroll view */}
+			{/* First child, so the iOS large title collapses with this scroll view. */}
 			<ScrollView
 				className="flex-1 bg-background"
 				contentContainerStyle={{ paddingBottom: 120 }}

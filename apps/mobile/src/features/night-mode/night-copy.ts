@@ -1,9 +1,4 @@
-/**
- * Copy for 3am Mode — sessions started between 10pm and 4am.
- *
- * These constants are purely data. They are wired in by
- * IdleState, TypingState, and the session-end variants.
- */
+/** Copy for 3am Mode: sessions started between 10pm and 4am. */
 
 export const NIGHT_HEADLINE = "What's carrying over?";
 
@@ -25,7 +20,7 @@ export const NIGHT_SESSION_END_ACTIVITY =
 /** Exit variant: replaces "Heard." */
 export const NIGHT_SESSION_END_EXIT = "Heard. Rest if you can.";
 
-/** Typing nudge delay — slower cadence for late-night sessions. */
+/** Typing nudge delay; slower cadence for late-night sessions. */
 export const NIGHT_NUDGE_DELAY_MS = 14_000;
 
 /** Day nudge delay for reference. */

@@ -6,10 +6,8 @@ type CoverImageProps = Omit<ImageProps, "source" | "placeholder"> & {
 	thumbhash?: string;
 };
 
-/**
- * Every Lantern cover renders through here, so cache and placeholder changes land in one place.
- * A `thumbhash` (#507) shows as a blurred preview until the cover loads; `transition` fades between them.
- */
+/** Every Lantern cover renders through here. A `thumbhash` (#507) previews until the cover
+ * loads. */
 export function CoverImage({
 	uri,
 	thumbhash,

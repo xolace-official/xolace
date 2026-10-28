@@ -7,15 +7,13 @@ import { AppText } from "@/components/shared/app-text";
 import { playSoftPress } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
-// Per card, counted from mount: a chip tap swaps in the next step's cards at
-// the same spot, so a double tap's second half lands on a card that just
-// mounted, and is dropped. A card also drops its own repeat within the window
-// (double navigation). Taps on other, already-settled cards always go through.
+// Per card, counted from mount: a double tap's second half lands on the next
+// step's freshly mounted card at the same spot, and is dropped.
 const DOUBLE_TAP_MS = 500;
 
 type Symbol = Exclude<ComponentProps<typeof SymbolView>["name"], string>;
 
-// Placeholder SF Symbols / Material icons — 3D clay icons are planned (#446).
+// Placeholder SF Symbols / Material icons; 3D clay icons are planned (#446).
 const ICONS = {
 	arrow: { android: "arrow_forward", ios: "arrow.right", web: "arrow_forward" },
 	book: { android: "menu_book", ios: "book", web: "menu_book" },
@@ -57,11 +55,8 @@ type OptionProps = {
 	onPress: () => void;
 };
 
-/**
- * One tappable layer of the check-in stack: a tinted, top-rounded card that
- * slides under the next one (-mb-8 over pb-12). Keep this shape exactly — two
- * corner restyles were rejected in the #446 prototype.
- */
+/** One layer of the check-in stack, sliding under the next (-mb-8 over pb-12). Keep the shape:
+ * restyles were rejected in #446. */
 export function OptionCard({
 	icon,
 	tint,

@@ -91,10 +91,8 @@ describe("nextNotificationPrefs", () => {
 		}
 	});
 
-	// The server merges notification writes, so what this object leaves out is
-	// what survives untouched. Restating a value read at the last render is how
-	// the timezone `applyToggles` had just synced got erased by the toggle write
-	// that followed it.
+	// The server merges notification writes; an echoed stale value erased the
+	// timezone `applyToggles` had just synced.
 	it("says nothing about reach, quiet window, or timezone", () => {
 		const next = nextNotificationPrefs({ chat: true, gentle: false });
 		expect("reach" in next).toBe(false);
@@ -103,11 +101,7 @@ describe("nextNotificationPrefs", () => {
 	});
 });
 
-/**
- * The settings screen composes the helpers exactly this way. These cases are
- * the ones a wrong composition gets wrong, so they run against the same shape
- * the hook uses rather than against the pieces alone.
- */
+/** Runs the same composition the settings hook uses, not the pieces alone. */
 const enableGentle = (p: NotificationPrefs) =>
 	nextNotificationPrefs({ chat: chatChoice(p), gentle: true });
 const enableChat = (p: NotificationPrefs) =>
@@ -115,8 +109,7 @@ const enableChat = (p: NotificationPrefs) =>
 
 describe("toggling one family from a cold start", () => {
 	it("leaves chat on when a fresh user turns on gentle reminders", () => {
-		// The whole point of absent-means-enabled: granting permission for one
-		// gets the other, without hunting for a setting.
+		// Absent means enabled: granting permission for one gets the other.
 		expect(chatNotificationsAllowed(enableGentle(allOff))).toBe(true);
 	});
 

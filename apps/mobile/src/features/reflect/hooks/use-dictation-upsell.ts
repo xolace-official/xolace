@@ -15,16 +15,11 @@ export type DictationUpsell = {
 	onDismiss: () => void;
 };
 
-// Where the upsell's paywall round trip is: opened, then this screen blurs
-// ('left'), then it's focused again.
+// The upsell's paywall round trip: opened, then this screen blurs, then it's focused again.
 type PaywallTrip = "none" | "opened" | "left";
 
 /**
- * A free person's first mic tap introduces Plus dictation instead of starting
- * (#559). `intercept` returns true when it took the tap. `start` is the mic's
- * own start, run on "Not now" and on returning from the paywall as Plus; the
- * tap's `openComposer` is held until then, so the modal shows over the screen
- * the person tapped from and a cancel leaves them there.
+ * A free first mic tap gets the Plus upsell (#559); `start` runs on "Not now" or on return as Plus.
  */
 export function useDictationUpsell(
 	start: (openComposer?: () => void) => Promise<void>
@@ -39,8 +34,8 @@ export function useDictationUpsell(
 	const openComposerRef = useRef<(() => void) | undefined>(undefined);
 	const isFocused = useIsFocused();
 
-	// Back from the paywall: Plus now means a purchase, so the take they asked
-	// for starts on Plus; still free means they cancelled, so nothing starts.
+	// Back from the paywall: Plus means a purchase, so the take starts; still
+	// free means they cancelled, so nothing starts.
 	const returnFromPaywall = useEffectEvent(() => {
 		if (isPlus) {
 			void start(openComposerRef.current);

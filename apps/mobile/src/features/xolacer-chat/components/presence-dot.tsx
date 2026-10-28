@@ -1,16 +1,8 @@
 import { View } from "react-native";
 import { cn } from "@/lib/utils";
 
-/**
- * "Here now", as a dot on the corner of an avatar.
- *
- * Decorative on purpose: every surface that renders it already says the same
- * thing in its own accessibility label, and a second announcement on a
- * dot with no text is noise a screen reader can't act on.
- *
- * The ring is `border-surface` because every caller sits on a surface card;
- * without it the dot disappears into a photo of the same colour.
- */
+/** "Here now" dot on an avatar corner. Decorative: every caller already says it in its own
+ * accessibility label. The `border-surface` ring keeps it visible over a same-colour photo. */
 export function PresenceDot({ large = false }: { large?: boolean }) {
 	return (
 		<View

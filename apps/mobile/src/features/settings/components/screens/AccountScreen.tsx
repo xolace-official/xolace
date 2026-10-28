@@ -74,7 +74,6 @@ export const AccountScreen = () => {
 				contentInsetAdjustmentBehavior="automatic"
 				showsVerticalScrollIndicator={false}
 			>
-				{/* ── SIGN-IN ──────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -92,7 +91,6 @@ export const AccountScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── USERNAME ─────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -115,7 +113,6 @@ export const AccountScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── YOUR SPACE ───────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -138,10 +135,8 @@ export const AccountScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── DEV TOOLS (dev builds only) ──────────────────────── */}
 				{__DEV__ && <DevToolsSection />}
 
-				{/* ── LOG OUT ──────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}

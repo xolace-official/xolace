@@ -9,10 +9,8 @@ import { DictationStrip } from "@/features/reflect/compose/dictation-strip";
 import type { PlusDictationView } from "@/features/reflect/hooks/use-plus-dictation";
 import { a11yHidden } from "@/lib/utils";
 
-// Mirror of MAX_RAW_INPUT in convex/sessions.ts. The input simply stops
-// accepting past this, so a user never hits the server's anti-tamper throw.
-// No visible counter: a live count under an emotional freeform field reads as
-// "your feelings must fit," and ~800 words is unreachable in normal use.
+// Mirror of MAX_RAW_INPUT in convex/sessions.ts: the input stops accepting past
+// this so a user never hits the server's anti-tamper throw. No visible counter.
 const MAX_RAW_INPUT = 5000;
 
 type Props = {

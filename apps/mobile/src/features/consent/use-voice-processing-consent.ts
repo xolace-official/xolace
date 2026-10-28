@@ -5,12 +5,8 @@ import {
 	VOICE_PROCESSING_CONSENT_VERSION,
 } from "@/features/consent/voice-processing-consent";
 
-/**
- * The gate in front of anything that sends recorded audio to ElevenLabs.
- * `ensureConsent` resolves once current `voice_processing` consent is on
- * record and rejects if it can't be written — so audio must not be sent
- * until it resolves.
- */
+/** Gate before any audio goes to ElevenLabs: `ensureConsent` resolves once consent is on
+ * record; send nothing before then. */
 export function useVoiceProcessingConsent() {
 	const current = useQuery(api.consent.getCurrentStatus, {
 		consentType: "voice_processing",

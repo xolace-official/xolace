@@ -23,8 +23,6 @@ import type { HapticPatternData } from "@/modules/native-core-haptics";
 import CoreHaptics from "@/modules/native-core-haptics";
 import type { BreathPhase, HapticName } from "./haptics.types";
 
-// ── Generic helpers ──────────────────────────────────────────────────
-
 function play(pattern: HapticPatternData): void {
 	CoreHaptics.playPattern(pattern).catch((e: unknown) => {
 		console.warn("[haptics] playPattern failed:", e);
@@ -37,16 +35,12 @@ export function tap(intensity = 0.5, sharpness = 0.3): void {
 	});
 }
 
-// ── Named pattern functions ──────────────────────────────────────────
-
 export function playProcessingBreath(): void {
 	play(processingBreath);
 }
 
-/**
- * Platform-parity counterpart to the Android composer hook. iOS already has an
- * amplitude-controlled envelope in `processingBreath`, so this just wraps it.
- */
+/** Platform-parity counterpart to the Android composer hook; iOS's `processingBreath` already
+ * has the envelope. */
 export function useProcessingBreathHaptic(): () => void {
 	return playProcessingBreath;
 }
@@ -113,9 +107,7 @@ export function playFollowUpEntrance(): void {
 	Presets.bellToll();
 }
 
-// ── Breath phase haptics ─────────────────────────────────────────────
-// Called per PacedOrb phase transition. The continuous patterns breathe
-// *with* the orb rather than ticking at boundaries.
+// Called per PacedOrb phase transition; the continuous patterns breathe with the orb.
 
 /** @public Not wired yet: kept in step with haptics.ts for the PacedOrb runner. */
 export function playBreathPhase(phase: BreathPhase, durationMs: number): void {
@@ -132,8 +124,6 @@ export function playBreathPhase(phase: BreathPhase, durationMs: number): void {
 			return;
 	}
 }
-
-// ── Dynamic play-by-name ─────────────────────────────────────────────
 
 const patternMap: Record<
 	Exclude<HapticName, "followUpEntrance">,

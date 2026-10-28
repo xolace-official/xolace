@@ -5,11 +5,6 @@ import { useWindowDimensions, View } from "react-native";
 import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
 import { Fact } from "./fact-row";
 
-/**
- * The four things a seeker needs to hold before they ask. Deliberately not
- * split into a constants module: this sheet is the only place they render, so
- * a second file would be a second source to keep honest.
- */
 const LINES: { id: string; icon: SymbolViewProps["name"]; body: string }[] = [
 	{
 		body: "A real person, not a therapist. They choose whether to accept, it may not be right away and replies won’t always be quick. No diagnoses, no clinical advice.",
@@ -33,13 +28,8 @@ const LINES: { id: string; icon: SymbolViewProps["name"]; body: string }[] = [
 	},
 ];
 
-/**
- * The Xolacer primer. Gate mode (`onConfirm` given) is the one-time sheet
- * before a seeker's first request — its button both acknowledges and sends, so
- * one decision costs one tap. Without `onConfirm` it is the same content opened
- * from the profile as reference, where there is nothing to confirm and the
- * close button is the only way out. Dismissal sends nothing either way.
- */
+/** The Xolacer primer. With `onConfirm` it gates a seeker's first request and the button both
+ * acknowledges and sends; without it, reference only. */
 export function XolacerPrimerSheet({
 	isOpen,
 	onClose,

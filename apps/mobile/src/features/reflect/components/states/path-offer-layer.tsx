@@ -35,11 +35,7 @@ type Props = {
 };
 
 /**
- * Moment 2 as the top layer of the path stack: the same top-rounded shape as a
- * PathChoiceCard, at night, with the telescope Flux climbing out over its edge.
- * It is an option among the paths, not a sheet over them — the three paths stay
- * one tap away the whole time. Not pressable as a whole: only the CTA opens the
- * paywall, so a tap meant for the card below can't land on a sell.
+ * Moment 2 as a path-stack layer. Only the CTA opens the paywall, so no stray tap lands on a sell.
  */
 export function PathOfferLayer({
 	moment,

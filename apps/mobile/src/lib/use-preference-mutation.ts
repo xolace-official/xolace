@@ -1,12 +1,8 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
 
-/**
- * Single-sourced optimistic-update mutation for preferences.
- * Every sub-screen hook calls this instead of wiring its own copy.
- * Convex deduplicates the underlying `useQuery(api.preferences.get)` across
- * all components, so subscribing in multiple hooks adds zero extra network cost.
- */
+/** The one optimistic-update mutation for preferences; Convex dedupes the underlying
+ * `useQuery`, so sharing is free. */
 export const usePreferenceMutation = () =>
 	useMutation(api.preferences.update).withOptimisticUpdate(
 		(localStore, args) => {

@@ -8,15 +8,11 @@ import { trackLibrary } from "@/features/library/analytics";
 import { logDropped } from "@/features/library/reader/use-read-signals";
 import { usePlayback } from "@/lib/audio/use-playback";
 
-/** The dock's height above the safe area — what the page and Back to top clear. */
+/** The dock's height above the safe area; the page and Back to top clear it. */
 const DOCK_H = 80;
 
-/**
- * The reader's audio (#411), shared by the Listen pill and the dock (#395
- * variant A). `started` is the dock's presence: the first Listen raises it,
- * close lowers it. Free readers are minted the 30s preview; `previewEnded`
- * latches when it runs out and swaps the dock's transport for the upsell.
- */
+/** Reader audio (#411). `started` is the dock's presence; `previewEnded` latches when the free
+ * 30s preview runs out. */
 export function useEntryAudio(
 	entryId: Id<"library_entries">,
 	slug: string,
@@ -24,8 +20,8 @@ export function useEntryAudio(
 ) {
 	const convex = useConvex();
 	const posthog = usePostHog();
-	// Keyed on server entitlement: buying Plus from the upsell re-mints the full
-	// asset. Nothing mints until it resolves, so a Plus reader never mints the preview first.
+	// Keyed on server entitlement so buying Plus re-mints the full asset. Nothing
+	// mints until it resolves, so a Plus reader never mints the preview first.
 	const entitlement = useQuery(api.premium.getEntitlement);
 	const isPlus = entitlement?.isPlus ?? false;
 	const p = usePlayback(
@@ -41,14 +37,14 @@ export function useEntryAudio(
 	const [started, setStarted] = useState(false);
 	const [played, setPlayed] = useState(false); // once per open, not per resume
 
-	// Latched per URL, so a re-mint (expiry, or the full asset after buying) clears it.
-	// didJustFinish is one status tick wide, so latch it during render.
+	// Latched per URL so a re-mint clears it. didJustFinish is one status tick
+	// wide, so latch it during render.
 	const [endedUrl, setEndedUrl] = useState<string>();
 	if (p.didJustFinish && p.track?.preview && endedUrl !== p.track.url) {
 		setEndedUrl(p.track.url);
 	}
 	const previewEnded = !!p.track && endedUrl === p.track.url;
-	// The upsell replaces the transport the moment the preview ends, so it's shown here, once per preview.
+	// The upsell replaces the transport the moment the preview ends: shown here, once per preview.
 	useEffect(() => {
 		if (!endedUrl) {
 			return;
@@ -60,7 +56,7 @@ export function useEntryAudio(
 		});
 	}, [endedUrl, posthog, slug]);
 
-	// Hearing the full asset to the end finishes the entry, same as reading it (#410, #412).
+	// Hearing the full asset to the end finishes the entry (#410, #412).
 	const record = useMutation(api.library.reads.record);
 	const [listened, setListened] = useState(false);
 	if (p.didJustFinish && p.track && !p.track.preview && !listened) {
@@ -93,7 +89,7 @@ export function useEntryAudio(
 			}
 			setStarted(false);
 		},
-		/** Room to leave for the dock: 0 until it's up. */
+		/** Room to leave for the dock: 0 until it is up. */
 		dockH: started ? DOCK_H : 0,
 		preview: p.track?.preview ?? false,
 		previewEnded,
@@ -103,7 +99,7 @@ export function useEntryAudio(
 		toggle: () => {
 			setStarted(true);
 			if (previewEnded) {
-				return; // preview spent — the dock shows the upsell
+				return; // preview spent; the dock shows the upsell
 			}
 			if (!played) {
 				setPlayed(true);

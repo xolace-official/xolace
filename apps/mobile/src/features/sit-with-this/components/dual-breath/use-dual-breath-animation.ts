@@ -16,7 +16,7 @@ export function useDualBreathAnimation() {
 	// 1 = inhale peak (small top, tall bottom)
 	const progress = useSharedValue(0);
 
-	// Oscillates during hold — applied to corner radii for organic "alive" quality
+	// Oscillates during hold; applied to corner radii for an organic quality
 	const wobbleAmt = useSharedValue(0);
 
 	// Updated by Skia's onSize as the canvas dimensions are known
@@ -41,13 +41,13 @@ export function useDualBreathAnimation() {
 		);
 	});
 
-	// Center the pair vertically — both shapes move as a unit so they stay close together
+	// Both shapes move as a unit so they stay close together
 	const pairStartY = useDerivedValue(() => {
 		const { height } = canvasSize.get();
 		return (height - topH.get() - GAP - botH.get()) / 2;
 	});
 
-	// Top shape RRect — per-corner radii give the organic stone quality
+	// Per-corner radii give the organic stone quality
 	const topRRect = useDerivedValue(() => {
 		const { width } = canvasSize.get();
 		const p = progress.get();
@@ -79,7 +79,7 @@ export function useDualBreathAnimation() {
 		};
 	});
 
-	// Bottom shape RRect — anchored just below the top shape via the fixed GAP
+	// Anchored just below the top shape via the fixed GAP
 	const botRRect = useDerivedValue(() => {
 		const { width } = canvasSize.get();
 		const p = progress.get();

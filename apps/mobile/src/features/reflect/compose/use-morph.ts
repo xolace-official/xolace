@@ -17,19 +17,12 @@ type Args = {
 	/** False for the outgoing copy during a cross-fade to another state. */
 	focusOnExpand: boolean;
 	inputRef: RefObject<TextInputInstance | null>;
-	/** Runs when the card closes — the pending pause nudge goes with it. */
+	/** Runs when the card closes; the pending pause nudge goes with it. */
 	onCollapse: () => void;
 };
 
 /**
- * The one value the compose screen is made of: 0 at rest, 1 composing.
- *
- * Full motion runs a single spring, so every dimension of the card arrives
- * together. Reduced motion cross-fades the two geometries instead — no travel,
- * no rotation, but the same one-object-at-two-sizes story. `ReduceMotion.Never`
- * on both timings is required, not optional: with the system flag on,
- * Reanimated otherwise resolves the cross-fade to its end value in a single
- * frame, which is the hard cut the fallback exists to avoid.
+ * 0 at rest, 1 composing. Reduced motion cross-fades; needs `ReduceMotion.Never` or it's one frame.
  */
 export function useMorph({
 	expanded,
@@ -54,10 +47,8 @@ export function useMorph({
 			// Whatever the screen resumed into is where the card already is.
 			progress.set(to);
 		} else if (!morphed) {
-			// `reduceMotion` resolves asynchronously (Convex preferences + the OS
-			// a11y flag), so it flips under a settled card. That is not a morph —
-			// replaying one here cross-fades the whole screen out and back for no
-			// reason, and only ever for reduced-motion users.
+			// `reduceMotion` resolves asynchronously and flips under a settled card;
+			// that is not a morph, so no cross-fade.
 			progress.set(to);
 			return;
 		} else if (reduceMotion) {

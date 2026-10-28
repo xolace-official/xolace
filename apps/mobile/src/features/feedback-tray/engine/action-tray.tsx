@@ -22,11 +22,10 @@ import { useKeyboardOffset } from "./use-keyboard-offset";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-// Spacing/radius constants (replaces the sample's theme-object indirection).
 const SPACING_XXL = 48;
 const RADIUS_LG = 32;
 
-// Spring + keyframe constants — keep consistent across open/close/layout.
+// Spring + keyframe constants, shared across open/close/layout.
 const SPRING_DAMPING = 25;
 const SPRING_STIFFNESS = 300;
 const SPRING_MASS = 0.6;
@@ -54,11 +53,8 @@ type ActionTrayProps = {
 	maxHeight?: number;
 };
 
-/**
- * The floating reanimated sheet. Drag-to-dismiss + spring open/close, rides up
- * with the keyboard, and animates height between a short menu and a tall form.
- * Theme is read from `useThemeColor("surface")` rather than a static palette.
- */
+/** The floating reanimated sheet: drag-to-dismiss, spring open/close, rides up
+ * with the keyboard, animates height between a short menu and a tall form. */
 export const ActionTray = ({
 	children,
 	maxHeight = SCREEN_HEIGHT,

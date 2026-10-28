@@ -1,19 +1,5 @@
-/**
- * Guards the feature layering (Phase 5 of docs/plan/workspace-migration-plan.md).
- *
- * - No feature folder may reach itself through other features. Hubs (settings,
- *   reflect) import the features they compose; shared pieces live in
- *   `src/lib`, `src/components/shared`, or the one feature that owns them.
- * - `purchases` is the entitlements module: features ask it "is this person
- *   Plus?" (`usePlusEntitlement`) or open its door (`usePaywall`). It never
- *   imports another feature.
- * - No runtime import cycle between files anywhere in `src`; those can hand a
- *   module `undefined` at load time. Type-only imports are erased, so they
- *   don't count there.
- *
- * Imports are read with the TypeScript compiler API against tsconfig.json, so
- * `@/` aliases resolve exactly as `tsc` sees them.
- */
+/** Feature layering guard (migration plan Phase 5): no feature cycles, `purchases` imports no
+ * feature, no runtime file cycles. */
 import path from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
@@ -207,9 +193,8 @@ describe("import graph", () => {
 		...new Set([...graph.keys()].map(featureOf).filter((f) => f !== undefined)),
 	];
 
-	// The three checks below all pass trivially on an empty graph, which is what
-	// a drifted tsconfig `include`, a moved `src/` or a path-separator mismatch
-	// would produce. Pin the inputs so a silent pass can't hide behind them.
+	// The checks below pass trivially on an empty graph (drifted tsconfig
+	// `include`, moved `src/`); pin the inputs so a silent pass cannot hide.
 	it("sees the source tree it is checking", () => {
 		expect(graph.size).toBeGreaterThan(0);
 		expect(features).toContain(ENTITLEMENTS_FEATURE);
@@ -221,8 +206,7 @@ describe("import graph", () => {
 			[...pairs.keys()]
 				.filter((k) => k.startsWith(`${f} -> `))
 				.map((k) => k.slice(`${f} -> `.length));
-		// Each cycle comes with the file imports inside it, so a failure names the
-		// lines to move rather than just the features.
+		// A failure names the file imports inside each cycle, not just the features.
 		const report = findCycles(features, next).map((cycle) => ({
 			cycle,
 			imports: [...pairs]

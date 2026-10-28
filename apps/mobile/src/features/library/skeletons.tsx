@@ -1,7 +1,4 @@
-/**
- * Lantern's loading shapes: each mirrors the screen it stands in for, so a
- * slow `getHome` / `getEntry` / list query reads as "arriving", not blank.
- */
+/** Lantern's loading shapes; each mirrors the screen it stands in for. */
 import { Skeleton } from "heroui-native";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";

@@ -1,8 +1,4 @@
-/**
- * The home's last two sections (#396, carried over from variant C): "What
- * kind of light" kind rows and the A–Z letter strip. Letters with no
- * subject are dimmed.
- */
+/** The home's last two sections (#396): "What kind of light" kind rows and the A–Z letter strip. */
 
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";

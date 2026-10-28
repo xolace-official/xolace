@@ -36,10 +36,8 @@ export function AnimatedCarouselCard({
 	];
 
 	const animatedStyle = useAnimatedStyle(() => {
-		// Softened from the original demo's [0.7,0.8,1,1.5,1.5] / translateY -100 —
-		// this lives in a compact home-screen widget, not a full-bleed showcase, so
-		// the "exiting" card shouldn't grow past the card above it or fly up into
-		// the section title.
+		// Softened: the exiting card must not grow past the card above or fly into the section
+		// title.
 		const scale = interpolate(
 			scrollX.get(),
 			extendedInputRange,

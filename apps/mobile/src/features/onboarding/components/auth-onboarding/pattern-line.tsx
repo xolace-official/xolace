@@ -1,14 +1,4 @@
-/**
- * The Xolace+ beat's visual: scattered points, then the line through them.
- *
- *        ·        ·                              ·
- *     ●                                       ●
- *        ●     ●                        ●
- *              ·     ●     ●      ·
- *
- *     → then a line finds the seven that were never noise
- *
- */
+/** The Xolace+ beat's visual: scattered points, then the line through the seven that are signal. */
 import { View } from "react-native";
 import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import Svg, { Circle, Polyline } from "react-native-svg";
@@ -19,11 +9,7 @@ import { useDeckColor } from "./deck-color";
 const W = 100;
 const H = 40;
 
-/**
- * The seven that turn out to be a shape — a dip and a recovery, read left to
- * right. Hand-placed: an even curve reads as a function plot, and the point is
- * that this came out of a life, not a formula.
- */
+/** A dip and a recovery, hand-placed: an even curve reads as a function plot. */
 const SIGNAL = [
 	[6, 14],
 	[20, 22],
@@ -34,7 +20,7 @@ const SIGNAL = [
 	[88, 9],
 ];
 
-/** Off the curve, and they stay that way. See the note above. */
+/** Off the curve, and they stay that way. */
 const NOISE = [
 	[14, 34],
 	[40, 8],

@@ -49,10 +49,7 @@ export type NotifSetupState =
 	| "denied"
 	| "scheduled";
 
-/**
- * Handles requesting permission and scheduling the daily quote notification.
- * Returns a setup function to call after preference setup completes.
- */
+/** Requests permission and schedules the daily quote notification after preference setup. */
 export function useQuoteNotifications() {
 	const [state, setState] = useState<NotifSetupState>("idle");
 	const updateQuotePrefs = useMutation(api.preferences.updateQuotePreferences);
@@ -62,7 +59,6 @@ export function useQuoteNotifications() {
 		notificationEnabled: boolean,
 		notificationTime?: string
 	) => {
-		// Always save preferences first
 		await updateQuotePrefs({ notificationEnabled, notificationTime, themes });
 
 		if (
@@ -74,7 +70,7 @@ export function useQuoteNotifications() {
 		}
 
 		if (!Device.isDevice) {
-			// Simulator — skip permission, just save
+			// Simulator: no permission prompt.
 			setState("scheduled");
 			return { granted: false };
 		}
@@ -92,7 +88,6 @@ export function useQuoteNotifications() {
 
 		if (finalStatus !== "granted") {
 			setState("denied");
-			// Preferences already saved with notificationEnabled=false effective
 			await updateQuotePrefs({
 				notificationEnabled: false,
 				notificationTime,
@@ -103,7 +98,6 @@ export function useQuoteNotifications() {
 
 		setState("granted");
 
-		// Cancel any previously scheduled daily quote notifications
 		const scheduled = await Notifications.getAllScheduledNotificationsAsync();
 		const existing = scheduled.filter((n) =>
 			n.identifier.startsWith("daily-quote-")
@@ -114,7 +108,7 @@ export function useQuoteNotifications() {
 
 		const timeConfig = TIME_MAP[notificationTime] ?? { hour: 8, minute: 0 };
 
-		// Schedule one notification per weekday (1=Sun…7=Sat), each with distinct copy.
+		// One notification per weekday, each with distinct copy.
 		await Promise.all(
 			WEEKLY_MESSAGES.map((msg, i) =>
 				Notifications.scheduleNotificationAsync({

@@ -1,9 +1,5 @@
-/**
- * In-flight post-signup intake answers. Deliberately NOT persisted (the store's
- * partialize whitelist covers theme/toggles only): a cold kill mid-intake
- * restarts at the founder message with an empty slice — no step cursor, no
- * half-written answers (T6, issue #263).
- */
+/** In-flight intake answers. Not persisted: a cold kill mid-intake restarts with an empty slice
+ * (T6, #263). */
 
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionArgs } from "convex/server";

@@ -47,15 +47,8 @@ function source(launch: TapResponse | null) {
 	return src;
 }
 
-/**
- * The bug: tapping a message notification on a cold start opened the app but
- * never navigated to the thread.
- *
- * The OS emits the launch tap during native startup. `(protected)` — which owns
- * the listener — mounts only after fonts, Clerk, Convex auth and the intake-gate
- * query resolve, so the listener subscribed long after the event fired and the
- * tap was dropped. Only `getLast` still holds it.
- */
+/** The cold-start bug: the launch tap fires before `(protected)` subscribes, so only `getLast`
+ * still holds it. */
 describe("subscribeToNotificationTaps", () => {
 	it("delivers the launch tap the listener never fires for (cold start)", () => {
 		const onTap = vi.fn();

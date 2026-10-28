@@ -9,9 +9,8 @@ vi.mock("../providers/stream-chat-provider", () => ({
 }));
 
 describe("useCounterpartActivity", () => {
-	// Cold-start deep link into a thread: the native header mounts before
-	// anything has called `connectUser`. The provider hands out `client: null`
-	// until then, and the hook has to idle on it rather than reach for a channel.
+	// Cold-start deep link: the header mounts before `connectUser`, the provider
+	// hands out `client: null`, and the hook has to idle on it.
 	it("idles until the provider hands out a connected client", () => {
 		expect(() =>
 			mountHook(() => useCounterpartActivity("conv_1", "xolacer_1"))

@@ -1,11 +1,8 @@
 import type { PurchasesStoreProduct } from "react-native-purchases";
 import type { PlanId } from "./paywall-period-picker";
 
-/**
- * The line under a live plan's price. Yearly breaks down to a monthly price
- * from the store's own localized string, so it matches the price above it in
- * every currency; without one it just says how it's billed.
- */
+/** The line under a live plan's price. Yearly derives a monthly price from the store's
+ * localized string. */
 export function planDetail(
 	plan: PlanId,
 	product: Pick<PurchasesStoreProduct, "pricePerMonthString">

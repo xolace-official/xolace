@@ -23,12 +23,8 @@ import { trackLibrary } from "@/features/library/analytics";
 import { playSoftPress, playTextureSelect } from "@/lib/haptics";
 import { useLargeHeaderOptions } from "@/lib/navigation-options";
 
-/**
- * The active-kindling screen (docs/paths-v1.md §9.1, #333) — the Lantern
- * trail: header progress line, then one stop per twig down a winding trail
- * to Flux's fire, with the open twig floating over the bottom.
- * Only ever waits on its own query; generation runs off `completeSession`.
- */
+/** The active-kindling screen (docs/paths-v1.md §9.1, #333): the Lantern trail
+ * with the open twig floating over the bottom. Waits only on its own query. */
 export function KindlingScreen() {
 	const insets = useSafeAreaInsets();
 	const router = useRouter();
@@ -115,8 +111,8 @@ export function KindlingScreen() {
 		router.push(href);
 	};
 
-	// One-off listening (§9.6): no `step_started`, no `stepId` — the binding
-	// stays as it is and only "Not for me" says the track was wrong.
+	// One-off listening (§9.6): no `step_started`, no `stepId`; only "Not for me"
+	// says the track was wrong.
 	const handleBrowseMore = (twig: Twig) => {
 		const href = twigBrowseHref(twig);
 		if (!href) {
@@ -166,9 +162,9 @@ export function KindlingScreen() {
 			kindling.twigs[0])
 		: undefined;
 
-	// One ScrollView as the root for every state: UIKit collapses the large
-	// title only when the screen's first native child is the scroll view, and
-	// it binds once — swapping a loading View for it later leaves it unbound.
+	// One ScrollView as the root for every state: UIKit binds the large title
+	// collapse once, to the screen's first native child, so swapping a loading
+	// View for it later leaves it unbound.
 	return (
 		<>
 			<Stack.Screen options={headerOptions} />

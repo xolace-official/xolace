@@ -53,18 +53,14 @@ const STATUS_LOOK: Record<StatusResponse, { icon: IconKey; tint: string }> = {
 
 export type FollowUpParams = {
 	cardId: Id<"follow_up_cards">;
-	/** Absent on restored or deep-linked routes — falls back to generic copy. */
+	/** Absent on restored or deep-linked routes; falls back to generic copy. */
 	cardText?: string;
 	tier: FollowUpTier;
-	/** "1" when the card came out of an escalation — shows the resources link. */
+	/** "1" when the card came out of an escalation; shows the resources link. */
 	escalation?: string;
 };
 
-/**
- * The full-screen follow-up check-in (#448). Picker → per-answer next step.
- * `lighter` and `processed` share the reflective step (#449, #450), `still_here`
- * and `heavier` get their own (#451, #452).
- */
+/** Full-screen follow-up check-in (#448): picker, then a per-answer next step (#449-#452). */
 export function FollowUpScreen() {
 	const { cardId, cardText, tier, escalation } =
 		useLocalSearchParams<FollowUpParams>();
@@ -77,11 +73,10 @@ export function FollowUpScreen() {
 	const answered = useRef(false);
 	const escalationDerived = escalation === "1";
 
-	// One cue per open, same for every tier — the screen is the single trigger.
+	// One cue per open, same for every tier.
 	useEffect(() => playFollowUpEntrance(), []);
 
-	// Leaving before an answer — close, Android back, anything that unmounts the
-	// route — is today's no-guilt dismiss. An answer, once given, stands.
+	// Leaving before an answer (close, Android back, any unmount) is a dismiss.
 	useEffect(
 		() => () => {
 			if (answered.current) {

@@ -1,8 +1,5 @@
-/**
- * "Reading as…" (#393, #409): the one-time inline card, then a native header
- * menu to change the same answer. Dismissing is a valid answer — For you
- * then reads the Understanding alone.
- */
+// "Reading as…" (#393, #409): a one-time inline card, then a header menu for the
+// same answer. Dismissing is a valid answer; For you then reads the Understanding alone.
 import AccountCircle from "@expo/material-symbols/account_circle.xml";
 import { Stack } from "expo-router";
 import { SymbolView } from "expo-symbols";

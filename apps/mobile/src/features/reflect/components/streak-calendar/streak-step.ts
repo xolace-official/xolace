@@ -1,9 +1,5 @@
 /**
- * What the mini calendar does with the streak it's handed, against the last
- * one the person saw. `undefined` is a streak not loaded yet: a fresh reflect
- * screen (the one a finished talk lands on, or a cold start) renders before
- * its context arrives. Read as 0, it looked like a break, the acknowledged
- * day dropped to 0, and the real streak then replayed the reveal.
+ * The mini calendar's step for a streak. `undefined` is not loaded; as 0 it replayed the reveal.
  */
 export type StreakStep = "wait" | "reset" | "reveal" | "settled";
 

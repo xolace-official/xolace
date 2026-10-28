@@ -52,18 +52,16 @@ export function ProfileScreen() {
 
 	const sessionCount = summary?.sessionCount ?? 0;
 	const gate = useInsightGate(sessionCount);
-	// Lapsed Plus mid-navigation shouldn't strand the query on a locked week —
-	// derive the effective offset from current entitlement instead of syncing
-	// it back into state.
+	// Lapsed Plus mid-navigation must not strand the query on a locked week:
+	// derive the effective offset from the current entitlement.
 	const weekIntensity = useWeekIntensity(gate.isPlus ? weekOffset : 0);
 	const hasEnoughForChips =
 		sessionCount >= 1 && (summary?.dominantEmotionTags?.length ?? 0) > 0;
 	const hasEnoughForMirrorLines = sessionCount >= 3;
 	const hasEnoughForRhythm = sessionCount >= 5;
 	const hasEnoughForChart = sessionCount >= 1;
-	// Need 3 distinct recurring words so every teaser row is genuine — no
-	// fabricated fallbacks. Below that, show the honest empty state once the
-	// user has at least one session (their language just hasn't repeated yet).
+	// Three distinct recurring words make every teaser row genuine; below that,
+	// the honest empty state once the user has at least one session.
 	const wordCount = summary?.wordCount ?? 0;
 	const hasEnoughForWords = wordCount >= 3;
 	const showWordsEmpty = sessionCount >= 1 && !hasEnoughForWords;
@@ -136,9 +134,8 @@ export function ProfileScreen() {
 					<ContributionGraphCard staggerDelay={150} />
 				)}
 
-				{/* A standing door, never rate-limited — but pointless once they're in.
-            `isPlus` is false while entitlement resolves, so waiting on the read
-            keeps a subscriber from watching an upsell mount and disappear. */}
+				{/* `isPlus` is false while entitlement resolves; waiting on the read keeps
+            a subscriber from watching an upsell mount and disappear. */}
 				{!(gate.isLoading || gate.isPlus) && <PlusRow staggerDelay={160} />}
 
 				{hasEnoughForChips && summary && (
@@ -155,8 +152,7 @@ export function ProfileScreen() {
 					/>
 				)}
 
-				{/* The rank card renders from session zero, so the section header must
-            too — otherwise a new user sees a lone card with no heading. */}
+				{/* The rank card renders from session zero, so the header must too. */}
 				{(hasEnoughForChart || rank) && (
 					<EaseView
 						animate={{ opacity: 1 }}
@@ -180,8 +176,7 @@ export function ProfileScreen() {
 
 				{hasEnoughForChart && <SteadinessRow />}
 
-				{/* Widest lens first: you among everyone, then your week, then your
-            words. Always rendered — the card carries its own pending state. */}
+				{/* Widest lens first. Always rendered: the card carries its own pending state. */}
 				{rank && (
 					<View className="mb-4">
 						<RankCard rank={rank} staggerDelay={300} />

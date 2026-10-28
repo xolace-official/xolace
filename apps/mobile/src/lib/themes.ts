@@ -1,7 +1,4 @@
-/**
- * Single source of truth for all available themes.
- * Used by the Appearance screen, preview cards, and SessionModeProvider.
- */
+/** Single source of truth for all available themes. */
 
 import type { ThemeName } from "uniwind";
 
@@ -51,10 +48,7 @@ const THEMES: ThemeEntry[] = [
 		tier: "free",
 		variants: { dark: "nightly-dark", light: "nightly-light" },
 	},
-	// ── xolace+ premium themes ──────────────────────────────────────
-	// Preview hexes are the theme's own dark-variant oklch tokens
-	// (--background / --foreground / --accent / --surface / --border)
-	// converted to sRGB, so the card matches what the theme actually renders.
+	// xolace+ premium themes
 	{
 		id: "emerald",
 		name: "Emerald",

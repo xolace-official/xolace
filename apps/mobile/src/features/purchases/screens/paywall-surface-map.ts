@@ -11,17 +11,12 @@ export type PaywallFeatureId =
 	| "caps"
 	| "audio";
 
-/**
- * Which feature row to visually highlight, keyed by the surface that opened
- * the paywall. `null` surfaces are generic entry points (settings, profile)
- * with no single matching feature.
- */
+/** Which feature row to highlight per opening surface; `null` for generic entry points. */
 export const PAYWALL_SURFACE_FEATURE: Record<
 	PaywallSurface,
 	PaywallFeatureId | null
 > = {
-	// Bridge has no feature row of its own — its cap lives under "Higher daily
-	// limits" alongside reflections and vents.
+	// Bridge's cap lives under "Higher daily limits".
 	bridge_draft: "caps",
 	browse: "audio",
 	compounding_upsell: "insights",
@@ -29,24 +24,20 @@ export const PAYWALL_SURFACE_FEATURE: Record<
 	// No feature row for dictation; the surface line below carries it.
 	dictation: null,
 	insight_teaser: "insights",
-	// Intake sells all four offers on its own card deck first; by the time the
-	// feature list renders there is no single row to single out.
+	// Intake sells all four offers on its own card deck first.
 	intake: null,
 	// Kindling binds to curated audio/music twigs (docs/paths-v1.md §0).
 	kindling: "audio",
 	library_audio: "audio",
 	mirror_landed: "insights",
 	mirror_tone: "mirror_tone",
-	// Voice picker reuses the existing "Mirror voice & tone" row — that row's
-	// copy already covers voice, so no separate feature row is added.
 	mirror_voice: "mirror_tone",
 	premium_avatar: "avatars",
 	premium_theme: "themes",
 	profile_insight: "insights",
 	profile_row: null,
 	rate_limit: "caps",
-	// Every proactive moment sells the same capability — the thing that keeps
-	// coming back, shown early — so they all highlight the insights row.
+	// Every proactive moment sells the same capability, so all highlight insights.
 	session_close: "insights",
 	settings_row: null,
 	steadiness_numbers: "insights",

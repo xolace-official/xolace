@@ -1,8 +1,4 @@
-/**
- * Card 1 of the offer deck — its own file because it is the only card that
- * does anything: it really plays the premium voices. The other three are
- * static miniatures and live together in `offer-cards.tsx`.
- */
+/** Card 1 of the offer deck, the only interactive one: it really plays the premium voices. */
 
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
@@ -26,7 +22,7 @@ const PREMIUM_VOICES = VOICE_OPTIONS.filter(
 	(o) => o.premium && o.value !== "auto"
 );
 
-/** Card 1 — the only interactive one. Hearing the voice is the whole sell. */
+/** Hearing the voice is the whole sell. */
 export function VoiceOfferCard({ width }: { width: number }) {
 	const preview = useVoicePreview();
 	const ink = useTokenColor("offer-ink");

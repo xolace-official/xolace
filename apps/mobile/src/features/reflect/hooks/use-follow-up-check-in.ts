@@ -7,29 +7,19 @@ import { useEffect, useRef } from "react";
 import type { FollowUpParams } from "@/features/follow-up/follow-up-screen";
 
 type Args = {
-	/** Gate: only arm once the reflect screen is focused + context has loaded. */
+	/** Only arm once the reflect screen is focused and context has loaded. */
 	active: boolean;
-	/** From getFullContext — is there any active follow-up card for this user? */
+	/** From getFullContext: any active follow-up card for this user. */
 	hasPendingFollowUp: boolean;
 };
 
 type Result = {
-	/**
-	 * True whenever a follow-up is pending/ready — used by the reflect screen to
-	 * suppress ReturnWelcomeSheet on this reopen (the follow-up wins precedence).
-	 */
+	/** True while a follow-up is pending or ready; suppresses ReturnWelcomeSheet. */
 	blocking: boolean;
 };
 
 /**
- * Drives the follow-up check-in on app reopen.
- *
- * On activation (reflect-screen load with a pending card) it calls `markReturn`
- * exactly once — the server-side gap guard decides whether to emit the
- * `userReturned` event, so this is safe to fire on every qualifying reopen. The
- * workflow then flips the card to `ready`, which arrives reactively via
- * `getReadyCard`. The card is then marked `shown` and the full-screen
- * `/follow-up` route opened, which owns resolve/dismiss from there.
+ * Follow-up check-in on reopen: `markReturn` once per activation, then `/follow-up` per ready card.
  */
 export function useFollowUpCheckIn({
 	active,
@@ -40,15 +30,13 @@ export function useFollowUpCheckIn({
 	const markReturn = useMutation(api.followUps.markReturn);
 	const markShown = useMutation(api.followUps.markShown);
 
-	// Only subscribe to the card once there is something to surface. Any card
-	// `getReadyCard` returns is one the server has decided is surfaceable now (a
-	// fresh `ready` card, or a `shown` card past its re-show cooldown).
+	// Any card `getReadyCard` returns is surfaceable now (fresh `ready`, or `shown`
+	// past its re-show cooldown).
 	const card = useQuery(
 		api.followUps.getReadyCard,
 		active && hasPendingFollowUp ? {} : "skip"
 	);
 
-	// Fire markReturn once per activation when a pending follow-up exists.
 	const returnedRef = useRef(false);
 	useEffect(() => {
 		if (!(active && hasPendingFollowUp)) {
@@ -62,10 +50,8 @@ export function useFollowUpCheckIn({
 		void markReturn({});
 	}, [active, hasPendingFollowUp, markReturn]);
 
-	// Open each surfaced card once per mount. The route resolves the card on any
-	// exit, so it never comes back — unless the app dies with it open, and then
-	// this ref is fresh on the next launch and the card re-opens after its
-	// cooldown. markShown re-stamps `shownAt` so that cooldown restarts here.
+	// Open each surfaced card once per mount. If the app dies with it open, the
+	// card re-opens after its cooldown; markShown re-stamps `shownAt` so it restarts here.
 	const openedRef = useRef<Id<"follow_up_cards"> | null>(null);
 	useEffect(() => {
 		if (!card || openedRef.current === card._id) {

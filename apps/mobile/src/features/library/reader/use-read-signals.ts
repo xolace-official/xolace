@@ -1,9 +1,6 @@
-/**
- * What a reader leaves behind on an entry (#410, CONTEXT.md "Library:
- * finished, helped, saved"): the view on open, finished (end reached AND
- * dwelt ≥30% of the read time — never a button), and the resume position.
- * Reached from a read twig (#412), `stepId` rides along and a finish tends it.
- */
+// Read signals on an entry (#410): the view on open, finished (end reached and
+// dwelt ≥30% of the read time, never a button), the resume position, and the
+// read twig's `stepId` (#412), which a finish tends.
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
@@ -28,11 +25,8 @@ import { type ReaderFrom, trackLibrary } from "@/features/library/analytics";
 
 type EntryId = Id<"library_entries">;
 
-/**
- * The reader's route params beyond the slug, read in one place: `from` for
- * analytics (#416), `stepId` from a read twig (#412), `hub` so Up next
- * follows a hub's order (#417).
- */
+/** Reader route params: `from` for analytics (#416), `stepId` (#412), `hub` for Up next order
+ * (#417). */
 export const useReaderParams = () =>
 	useLocalSearchParams<{
 		stepId?: Id<"path_steps">;
@@ -73,7 +67,8 @@ export function useRecord() {
 				{
 					...cur,
 					helped: args.helped ?? cur.helped,
-					// Only a shown total can move locally; crossing up to the floor waits for the server.
+					// Only a shown total can move locally; crossing up to the floor waits for
+					// the server.
 					helpedCount: nudgeHelped(cur.helpedCount, cur.helped, args.helped),
 					saved: args.saved ?? cur.saved,
 				}
@@ -114,8 +109,7 @@ export function useReadSignals({
 	// A long-press preview mounts the real reader: it leaves nothing behind.
 	const isPreview = useIsPreview();
 
-	// Every way in sets `from` (shared links too); missing means a link forgot it.
-	// Once per entry, counted when a preview becomes the real reader.
+	// Every way in sets `from`; missing means a link forgot it. Once per entry.
 	const trackedFor = useRef<EntryId | null>(null);
 	useEffect(() => {
 		if (isPreview || trackedFor.current === entryId) {
@@ -184,10 +178,10 @@ export function useReadSignals({
 		wasFinished.current = finished;
 	}, [finished, posthog, slug, isPreview]);
 
-	// A read twig is tended by the finish alone (reading or listening), once.
-	// A rejection frees it to try again when the connection comes back, a few times at most.
+	// A read twig is tended by the finish alone, once; a rejection allows a few retries.
 	const completeStep = useMutation(api.paths.completeStep);
-	// Only the boolean: useConvexConnectionState re-renders the reader on every request start/finish.
+	// Only the boolean: useConvexConnectionState re-renders the reader on every request
+	// start/finish.
 	const convex = useConvex();
 	const subscribeConnection = useCallback(
 		(cb: () => void) => convex.subscribeToConnectionState(cb),
@@ -248,10 +242,9 @@ export function useReadSignals({
 	}, [maxScroll]);
 	useEffect(
 		() => () => {
-			// Unrestored, scrollY is still 0 — saving would wipe the real position.
-			// Losing auth unmounts the reader (the protected-route guard) before it re-renders,
-			// so `isAuthenticated` is stale here; ask the client. Unmounted, there's no later
-			// to retry in, so that position is dropped. `sync` is @internal to convex/react (1.45).
+			// Unrestored, scrollY is still 0 and would wipe the real position. Losing
+			// auth unmounts the reader before it re-renders, so `isAuthenticated` is
+			// stale here; `sync` is @internal to convex/react (1.45).
 			const { sync } = convex as unknown as { sync: { hasAuth(): boolean } };
 			if (
 				isPreview ||

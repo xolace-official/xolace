@@ -1,10 +1,5 @@
 /**
- * Copy for The Quiet Return — acknowledgment without performance when
- * a user returns after a significant gap, or on the one-year anniversary
- * of their first session.
- *
- * Anniversary takes priority over gap tier. Night mode (see night-copy.ts)
- * takes priority over both — evaluated in IdleState.
+ * Copy for The Quiet Return (a long gap, or the first-session anniversary). Night beats both.
  */
 
 export type QuietReturnTier =

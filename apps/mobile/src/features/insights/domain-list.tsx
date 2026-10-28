@@ -182,8 +182,7 @@ export function DomainRow({ d, selected, onPress }: ItemProps) {
 	);
 }
 
-/** Unfilled in the free view: the meter's shape, never its value. For Xolace+
- * the first `fill` share is inked and the person's usual stands taller in --foreground. */
+/** Unfilled in the free view. For Xolace+ the `fill` share is inked and the usual stands taller. */
 function TickBar({
 	fill,
 	mark,

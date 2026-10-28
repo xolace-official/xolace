@@ -7,17 +7,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/shared/app-text";
 
-/**
- * Root route error fallback (exported as `ErrorBoundary` from the root layout).
- *
- * Renders OUTSIDE RootProvider — no HeroUI, Clerk, Convex or theme context — so
- * it uses only global Uniwind tokens and plain RN primitives. ExpoRoot's own
- * SafeAreaProvider is still above it.
- *
- * Expo Router's boundary swallows the error, so this reports it itself. The
- * message is never shown in production: it is written for us, and on a
- * mental-health journal raw error text is both noise and a possible leak.
- */
+// Root route error fallback, rendered outside RootProvider: no HeroUI, Clerk, Convex or
+// theme context, so plain RN and global tokens only. Reports the error itself; the
+// message is never shown in production.
 export function RouteError({ error, retry }: ErrorBoundaryProps) {
 	const insets = useSafeAreaInsets();
 

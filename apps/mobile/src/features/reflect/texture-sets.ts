@@ -7,12 +7,7 @@ export const TEXTURE_SET_IDS: readonly TextureSetId[] = [
 	"charged",
 ];
 
-/**
- * How many words one answer can hold.
- *
- * Nobody is feeling eight things at once — past four it stops being an answer
- * and starts being a shopping list, and the card can't hold it either.
- */
+/** How many words one answer can hold; the card can't hold more. */
 export const MAX_TEXTURES = 4;
 
 export const TEXTURE_SETS: Record<TextureSetId, readonly string[]> = {
@@ -66,26 +61,12 @@ export const TEXTURE_SET_LABELS: Record<TextureSetId, string> = {
 };
 
 /**
- * The four hue families, borrowed from the mirror tone badges.
- *
- * Every theme already defines these four (`--tone-poetic` violet,
- * `--tone-gentle` rose, `--tone-direct` blue, `--tone-witnessed` amber) and
- * they are tuned per theme for light and dark — so they are the app's hue
- * families, not the badge's private colours. Retuning one there retunes the
- * pills here, which is the intent.
+ * The four hue families, borrowed from the mirror tone badges (`--tone-*`).
  */
 export type TextureHue = "violet" | "rose" | "blue" | "amber";
 
-/**
- * Which words are kin.
- *
- * Colour groups words by what they actually feel like — weight, absence,
- * unclarity, exposure — so the grid reads as a handful of related moods rather
- * than eight equal options. Two or three to a family; a word keeps its family
- * wherever it appears (`aching` is the same ache in Tender and at 3am).
- */
+/** Colour groups words by what they feel like; a word keeps its family wherever it appears. */
 const HUE_BY_WORD: Record<string, TextureHue> = {
-	// tender — hurt, yearning, loss, withdrawal
 	aching: "rose",
 	bereft: "violet",
 	bracing: "blue",
@@ -99,7 +80,6 @@ const HUE_BY_WORD: Record<string, TextureHue> = {
 	glowing: "amber",
 	grateful: "rose",
 	grinding: "violet",
-	// flat — weight, unclarity, absence, exposure
 	heavy: "blue",
 	"heavy-hearted": "rose",
 	hollow: "violet",
@@ -111,7 +91,6 @@ const HUE_BY_WORD: Record<string, TextureHue> = {
 	open: "blue",
 	pressed: "blue",
 
-	// charged — speed, edge, pressure, tension
 	racing: "rose",
 	raw: "rose",
 	"replaying it": "violet",
@@ -124,11 +103,9 @@ const HUE_BY_WORD: Record<string, TextureHue> = {
 	tight: "blue",
 	"too much": "rose",
 
-	// bright — warmth, fullness, lift, clarity
 	warm: "amber",
 	"weeping inside": "blue",
 
-	// night — the 3am set runs cool; no amber here on purpose
 	"wide awake": "blue",
 	"wound up": "violet",
 };
@@ -137,8 +114,7 @@ export const textureHue = (word: string): TextureHue =>
 	HUE_BY_WORD[word] ?? "violet";
 
 /**
- * Pill skins per hue. Written out rather than composed, because Tailwind can
- * only see class names that appear literally in the source.
+ * Pill skins per hue, written out because Tailwind only sees class names that appear literally.
  */
 export const TEXTURE_PILL: Record<
 	TextureHue,

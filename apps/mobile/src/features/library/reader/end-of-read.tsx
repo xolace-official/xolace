@@ -29,13 +29,8 @@ const FLUX_PAIR = require("@/assets/images/flux/flux-pair-listening.png");
 
 type ReaderState = FunctionReturnType<typeof api.library.reads.getReaderState>;
 
-/**
- * The end of an entry (#410), from #395's "magazine close": a small
- * finished row with "This helped" (positive-only, undoable), then the
- * "you're not the only one" strip — shown only once the server lets the
- * total out (≥15, ADR 0016; below that `helpedCount` is null) — then
- * the next entry (#417).
- */
+/** The end of an entry (#410): finished row with "This helped", the "you're not the only one"
+ * strip once `helpedCount` is non-null (≥15, ADR 0016), then Up next (#417). */
 export function EndOfRead({
 	entry: { _id: entryId, slug },
 	signals: { finished, helped, helpedCount },

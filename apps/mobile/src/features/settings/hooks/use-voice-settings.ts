@@ -4,11 +4,8 @@ import { usePostHog } from "posthog-react-native";
 import type { VoiceValue } from "@/features/talk/voice-options";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
-/**
- * Reads/writes the Plus custom-voice preference. "auto" (the free default)
- * maps to clearing the stored slug (null); a named voice stores its slug.
- * The write is Plus-gated server-side — callers must guard the UI themselves.
- */
+/** Reads/writes the Plus custom-voice preference; "auto" clears the stored slug.
+ * The write is Plus-gated server-side, so callers guard the UI themselves. */
 export const useVoiceSettings = () => {
 	const preferences = useQuery(api.preferences.get);
 	const updatePreferences = usePreferenceMutation();

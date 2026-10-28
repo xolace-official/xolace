@@ -1,7 +1,6 @@
-// The talk's composer (#593): [mic mute] [field] [action]. The mic is open the
-// whole talk and typing is just another way in. The action shows the live mic
-// level while the field is empty and becomes send once there is text. Glass on
-// iOS 26; HeroUI's InputGroup on older iOS and Android.
+// The talk's composer (#593): [mic mute] [field] [action]. The action shows the
+// live mic level while the field is empty and becomes send once there is text.
+// Glass on iOS 26; HeroUI's InputGroup on older iOS and Android.
 
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { SymbolView } from "expo-symbols";

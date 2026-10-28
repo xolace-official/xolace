@@ -13,7 +13,7 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 const CHEVRON = icon("chevron.right", "chevron_right");
 const GLASS = isLiquidGlassAvailable();
-// HeroUI's pressable root clips (`overflow: hidden`), which shears the glass as it swells on press.
+// HeroUI's pressable root clips (`overflow: hidden`), shearing the glass as it swells on press.
 const UNCLIPPED = { overflow: "visible" } as const;
 
 export function SteadinessRow() {

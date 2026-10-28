@@ -1,8 +1,5 @@
-/**
- * What the narration says, as plain text (CONTEXT.md "Library: transcript") —
- * not a synced caption, not the entry body. Plus only: the dock never opens
- * it during the preview, and the server read is behind `requirePremium`.
- */
+/** The narration as plain text, not a synced caption. Plus only; the server read is behind
+ * `requirePremium`. */
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
@@ -30,7 +27,8 @@ export function TranscriptSheet({ entryId, isOpen, onClose }: Props) {
 			<BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
 				<BottomSheetBlurOverlay />
 				<BottomSheet.Content
-					// gorhom makes the sheet one accessible element, which reads the title and text as one blob.
+					// gorhom makes the sheet one accessible element, reading title and text as one
+					// blob.
 					accessible={false}
 					backgroundClassName="bg-background"
 					enableDynamicSizing

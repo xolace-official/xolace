@@ -70,7 +70,7 @@ export function SessionEndNotifNudge() {
 				}
 			}
 		} catch {
-			// Non-blocking — permission UX is best-effort
+			// Permission UX is best-effort
 		}
 		dismiss();
 	};
@@ -103,10 +103,8 @@ export function SessionEndNotifNudge() {
 			transition={NUDGE_TRANSITION}
 		>
 			<View className="flex-1 justify-between px-6">
-				{/* Top spacer */}
 				<View />
 
-				{/* Mascot + copy */}
 				<View className="items-center gap-8">
 					<Image
 						contentFit="contain"
@@ -123,7 +121,6 @@ export function SessionEndNotifNudge() {
 					</View>
 				</View>
 
-				{/* Buttons */}
 				<View className="gap-3">
 					<PressableFeedback
 						accessibilityLabel="Enable reminders"

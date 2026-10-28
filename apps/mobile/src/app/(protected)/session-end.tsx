@@ -9,9 +9,8 @@ type Params = {
 
 export default function SessionEnd() {
 	const { path, sessionId } = useLocalSearchParams<Params>();
-	// The session is already completed before we get here; the path screens carry
-	// its id so this screen reads it directly (getActive is now null) and only
-	// records optional post-session feedback.
+	// The session is already completed, so getActive is null; the path screens
+	// carry its id and this screen only records optional feedback.
 	return (
 		<SessionEndScreen
 			path={path ?? "exit"}

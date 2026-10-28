@@ -5,11 +5,11 @@ import type { UserVariant } from "@/features/reflect/types";
 import { useAppStore } from "@/store/store";
 
 type Args = {
-	/** Gate: true only once loaded and sitting on the idle canvas. */
+	/** True only once loaded and sitting on the idle canvas. */
 	active: boolean;
 	variant: UserVariant;
 	quietReturn: QuietReturnTier | null;
-	/** Timestamp of the user's last completed session — keys the "episode". */
+	/** Timestamp of the last completed session; keys the return episode. */
 	lastSessionAt?: number;
 };
 
@@ -18,26 +18,13 @@ type Result = {
 	tier: ReturnWelcomeTier;
 	dismiss: () => void;
 	/**
-	 * True while this greeting owns the stage — from the moment it becomes
-	 * eligible until it is dismissed. Other auto-presenting sheets on the home
-	 * screen (e.g. the monthly awareness event) gate on `!blocking` so they wait
-	 * their turn instead of stacking. `eligible` is true synchronously on the
-	 * first render, so there's no one-frame window where another sheet sneaks in.
+	 * True from eligibility (synchronously, on first render) until dismissed; other sheets wait.
 	 */
 	blocking: boolean;
 };
 
 /**
- * Decides whether the Return Welcome sheet should greet a lapsed user, and with
- * which tier of copy. Shows once per return *episode*: the greeting is keyed to
- * `lastSessionAt`, so re-opening the app during the same gap won't re-trigger
- * it, but a future lapse (which advances `lastSessionAt`) will.
- *
- * Tier resolution mirrors the header: a meaningful gap (14d+ / anniversary)
- * uses its quiet-return tier; a shorter lapse falls back to "recent".
- *
- * State is adjusted during render (not via effect) — same one-shot pattern as
- * the space-name dialog in reflect-screen.
+ * Whether the Return Welcome sheet greets a lapsed user, and which tier. Once per `lastSessionAt`.
  */
 export function useReturnWelcome({
 	active,

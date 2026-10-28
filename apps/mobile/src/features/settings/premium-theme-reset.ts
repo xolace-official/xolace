@@ -1,11 +1,9 @@
 import { THEME_BY_ID } from "@/lib/themes";
 
 export type PremiumThemeReset = {
-	/** Night mode stashed a premium theme in `previousTheme` — drop it so the
-	 *  morning restore falls through to `default`. */
+	/** Drop the premium theme night mode stashed in `previousTheme`. */
 	clearPreviousTheme: boolean;
-	/** Base theme to re-apply on screen, or null to leave the live theme alone
-	 *  (e.g. nightly is currently applied, not the premium one). */
+	/** Base theme to re-apply, or null to leave the live theme alone. */
 	applyBaseTheme: string | null;
 };
 
@@ -18,11 +16,8 @@ function isPremiumVariant(variant: string | null): boolean {
 	return THEME_BY_ID[id]?.tier === "premium";
 }
 
-/**
- * Pure decision for dropping a lapsed subscriber off a premium theme. Returns
- * null for the "do nothing" cases (entitlement not resolved yet, still Plus, or
- * not on a premium theme), else the reset plan the hook applies.
- */
+/** Pure decision for dropping a lapsed subscriber off a premium theme. Null
+ * means do nothing (entitlement unresolved, still Plus, or not on a premium theme). */
 export function planPremiumThemeReset(input: {
 	isPlus: boolean;
 	isResolved: boolean;
@@ -31,8 +26,7 @@ export function planPremiumThemeReset(input: {
 	currentTheme: string;
 	storedTheme: string;
 }): PremiumThemeReset | null {
-	// Only revoke on a definitive not-Plus answer. isPlus=false before the
-	// entitlement resolves is a signed-out/loading default, not a lapse.
+	// isPlus=false before the entitlement resolves is a loading default, not a lapse.
 	if (!input.isResolved || input.isPlus) {
 		return null;
 	}

@@ -9,7 +9,7 @@ import Animated, {
 
 import { STORY_BEATS } from "@/features/onboarding/story-beats";
 
-/** Cool and nearly black. The base layer — never fades, so nothing shows through. */
+/** The base layer; never fades, so nothing shows through. */
 const NIGHT = ["#070912", "#04050A", "#000000"] as const;
 /** Indigo creeping up from the horizon, where the fire already is. */
 const PREDAWN = ["#080A14", "#101528", "#1C1A2A"] as const;
@@ -27,7 +27,7 @@ export const SkyArc = ({
 }: {
 	scrollX: SharedValue<number>;
 	width: number;
-	/** 1 = full sunrise (they're headed into a light app). Lower holds it at dusk. */
+	/** 1 = full sunrise. Lower holds it at dusk. */
 	dawnCeiling?: number;
 }) => {
 	// The looped list repeats beat 0 at the tail, so every ramp must return home.

@@ -30,15 +30,14 @@ type Props = {
 const PREVIEW = 140;
 const THUMB = 60;
 
-// Carousel swap feel (ported from the source ChooseProfilePicture flow):
-// the current avatar shrinks and slides out toward the travel direction, then
-// the incoming avatar enters from the opposite side and springs back to center.
+// Carousel swap: the current avatar shrinks and slides out toward the travel
+// direction, then the incoming one enters from the opposite side and springs to center.
 const DIP_SCALE = 0.55;
 const SLIDE_OUT_MS = 150;
 const SPRING = { damping: 18, mass: 1, stiffness: 150 } as const;
 
 // Inner content is remounted on each open (keyed by currentKey in the parent),
-// so the local draft selection always starts from the user's current avatar.
+// so the draft selection always starts from the user's current avatar.
 function AvatarPickerContent({
 	avatars,
 	currentKey,
@@ -83,7 +82,7 @@ function AvatarPickerContent({
 
 		setAnimating(true);
 
-		// Phase 1: shrink + slide the current avatar out toward the travel direction.
+		// Phase 1: shrink + slide the current avatar out.
 		translateX.set(
 			withTiming(-direction * width * 0.32, { duration: SLIDE_OUT_MS })
 		);
@@ -93,8 +92,7 @@ function AvatarPickerContent({
 				if (!finished) {
 					return;
 				}
-				// Phase 2: swap the image, drop the incoming one in on the far side,
-				// then spring it back to center at full scale.
+				// Phase 2: swap the image, drop it in on the far side, spring back to center.
 				scheduleOnRN(setSelectedKey, key);
 				translateX.set(direction * width * 0.4);
 				translateX.set(withSpring(0, SPRING));
@@ -130,7 +128,6 @@ function AvatarPickerContent({
 				Pick the one that feels like you today.
 			</AppText>
 
-			{/* Large preview — current avatar slides out and the new one springs in. */}
 			<View className="mt-6 mb-7 items-center overflow-hidden">
 				<Animated.View
 					style={[previewStyle, styles.previewFrame, accentSoftStyle]}
@@ -149,7 +146,6 @@ function AvatarPickerContent({
 				</AppText>
 			</View>
 
-			{/* Thumbnail grid. */}
 			<View className="flex-row flex-wrap justify-center gap-4">
 				{avatars.map((a) => {
 					const isSelected = a.key === selectedKey;
@@ -169,8 +165,8 @@ function AvatarPickerContent({
 									handleSelect(a.key);
 									return;
 								}
-								// Close the picker first — two stacked bottom sheets fight
-								// over gestures — then surface the paywall.
+								// Close the picker first: two stacked bottom sheets fight over
+								// gestures.
 								onClose();
 								openPaywall("premium_avatar");
 							}}

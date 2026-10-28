@@ -126,7 +126,6 @@ export const ActivityVariant = ({
 	const handleMoodPress = (mood: PostSessionMood) => {
 		MOOD_HAPTICS[mood]();
 		setSelectedMood(mood);
-		// Open feedback sheets without blocking phase flow
 		if (mood === "heavier" && canAsk === true) {
 			setHeavierSheetOpen(true);
 		}
@@ -148,10 +147,11 @@ export const ActivityVariant = ({
 
 	return (
 		<View className="flex-1">
-			{/* ── Phase 1: Acknowledgment ── */}
 			{phase === "acknowledge" && (
 				<Pressable className="flex-1 px-8 pb-8" onPress={advancePhase}>
-					{/* TODO(mascot-video): Replace Image with VideoView once expo-video is installed in a store release. See TODOS.md — "Looping Mascot Video on Acknowledge Phase". */}
+					{/* TODO(mascot-video): Replace Image with VideoView once expo-video is
+					    installed in a store release. See TODOS.md — "Looping Mascot Video on
+					    Acknowledge Phase". */}
 					<Image
 						contentFit="contain"
 						source={require("@/assets/images/flux/jump-love-bgremove.png")}
@@ -171,7 +171,6 @@ export const ActivityVariant = ({
 				</Pressable>
 			)}
 
-			{/* ── Phase 2: Mood Check ── */}
 			{phase === "mood" && (
 				<ScrollView
 					className="flex-1"
@@ -184,7 +183,6 @@ export const ActivityVariant = ({
 						initialAnimate={SLIDE_OUT}
 						transition={EASE_IN}
 					>
-						{/* Header */}
 						<View className="px-8 pt-14 pb-8">
 							<AppText className="mb-2 font-serif text-3xl text-foreground">
 								How do you feel now?
@@ -195,7 +193,6 @@ export const ActivityVariant = ({
 							</AppText>
 						</View>
 
-						{/* Mood pills */}
 						<View className="gap-4 px-8">
 							{MOODS.map((mood) => (
 								<PressableFeedback
@@ -221,10 +218,8 @@ export const ActivityVariant = ({
 							))}
 						</View>
 
-						{/* Spacer pushes CTA to bottom */}
 						<View className="flex-1" />
 
-						{/* Pinned CTA */}
 						<View className="px-8 pt-6 pb-12">
 							<Button
 								accessibilityLabel={selectedMood ? "Continue" : "Skip for now"}
@@ -250,7 +245,6 @@ export const ActivityVariant = ({
 				</ScrollView>
 			)}
 
-			{/* ── Phase 3: The Offer ── */}
 			{phase === "offer" && distilledText && (
 				<View className="flex-1">
 					<EaseView
@@ -259,7 +253,6 @@ export const ActivityVariant = ({
 						initialAnimate={SLIDE_OUT}
 						transition={EASE_IN}
 					>
-						{/* Header */}
 						<View className="px-8 pt-14 pb-8">
 							<AppText className="mb-2 font-serif text-3xl text-foreground">
 								Leave it for someone.
@@ -269,17 +262,14 @@ export const ActivityVariant = ({
 							</AppText>
 						</View>
 
-						{/* Distilled text card */}
 						<View className="mx-8 mb-6 rounded-2xl border border-foreground/55 bg-surface/40 px-8 py-4">
 							<AppText className="font-light text-foreground/55 text-sm italic leading-6">
 								{`"${distilledText}"`}
 							</AppText>
 						</View>
 
-						{/* Spacer */}
 						<View className="flex-1" />
 
-						{/* Action buttons pinned at bottom */}
 						<View className="gap-3 px-8 pb-12">
 							<Button
 								accessibilityLabel="Yes, share anonymously"
@@ -317,7 +307,6 @@ export const ActivityVariant = ({
 				</View>
 			)}
 
-			{/* ── Phase 4: Close ── */}
 			{phase === "close" && (
 				<View className="flex-1 items-center justify-center px-8">
 					<EaseView

@@ -3,12 +3,8 @@ import { ScopedTheme, ScopedVariables, useCSSVariable } from "uniwind";
 
 import type { ReaderPage } from "./reading-mode";
 
-/**
- * A reading mode's page, reader-local (#401): the light/dark base theme (so
- * accent, surfaces and borders stay coherent) with background / foreground /
- * muted swapped for the page's warm tokens. Everything token-driven inside
- * follows with no per-component wiring. The app theme is untouched.
- */
+/** A reading mode's page, reader-local (#401): the light/dark base theme with background /
+ * foreground / muted swapped for the page's tokens. */
 export function ReaderPageScope({
 	page,
 	children,
@@ -16,7 +12,7 @@ export function ReaderPageScope({
 	page: ReaderPage;
 	children: ReactNode;
 }) {
-	// Classic ('app') has no page tokens; read paper's so the hook still runs (values unused).
+	// Classic ('app') has no page tokens; read paper's so the hook still runs.
 	const key = page === "app" ? "paper" : page;
 	const [bg, ink, muted] = (
 		useCSSVariable([
@@ -30,9 +26,8 @@ export function ReaderPageScope({
 	}
 	return (
 		<ScopedTheme theme={page === "night" ? "dark" : "light"}>
-			{/* Themes define `--background` etc.; `--color-*` is HeroUI's alias over
-          them. Class names resolve through the source names, hooks through the
-          alias — so override both. */}
+			{/* Class names resolve through `--background`, hooks through HeroUI's
+			 * `--color-*` alias, so both are overridden. */}
 			<ScopedVariables
 				variables={{
 					"--background": bg,

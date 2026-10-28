@@ -3,19 +3,8 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useCallback, useRef } from "react";
 
-/**
- * Provides the active session and helpers to start and complete a path for path screens.
- *
- * Exposes the current active session state and two actions that serialize mutation calls
- * to avoid concurrent updates.
- *
- * @returns An object with:
- *  - `sessionId` - the active session's Id or `null` when no active session exists.
- *  - `session` - the full active session object or `undefined` while loading.
- *  - `isLoading` - `true` when the active session is still being fetched, `false` otherwise.
- *  - `startPath` - a function `(exerciseId?: Id<'exercises'>) => Promise<void>` that starts the path for the active session when the session state is `'path_selected'`; no-op if there is no active session or another mutation is in progress.
- *  - `completePath` - a function `(pathCompleted: boolean) => Promise<boolean>` that flips the session terminal (→ completed) the moment the activity ends, before navigating to session-end; no-op if there is no active session or another mutation is in progress.
- */
+/** Active session plus `startPath` / `completePath`. Both are serialized through one busy flag;
+ * a call while busy returns false. */
 export function usePathSession() {
 	const activeSession = useQuery(api.sessions.getActive);
 	const startPathMutation = useMutation(api.sessions.startPath);
@@ -26,10 +15,7 @@ export function usePathSession() {
 	const session = activeSession;
 	const isLoading = activeSession === undefined;
 
-	/**
-	 * Start the path. Called on mount from path screens.
-	 * selectPath was already called from PathSelectionState before navigation.
-	 */
+	/** Called on mount from path screens; selectPath already ran before navigation. */
 	const startPath = useCallback(
 		async (exerciseId?: Id<"exercises">): Promise<boolean> => {
 			if (!sessionId || busyRef.current) {
@@ -51,13 +37,8 @@ export function usePathSession() {
 		[sessionId, session?.state, startPathMutation]
 	);
 
-	/**
-	 * Flip the session terminal (→ completed). Called from the activity screen
-	 * the moment the exercise/peer view is done, before navigating to
-	 * session-end — so completion is durable even if the user closes the app on
-	 * the session-end screen. Post-session mood + contribution are recorded
-	 * separately from session-end via recordPostSessionFeedback.
-	 */
+	/** Marks the session completed before navigating to session-end, so it survives the app
+	 * closing there. */
 	const completePath = useCallback(
 		async (pathCompleted: boolean): Promise<boolean> => {
 			if (!sessionId || busyRef.current) {

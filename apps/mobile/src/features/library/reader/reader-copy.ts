@@ -1,7 +1,5 @@
-/**
- * The reader's copy and body prep, kept pure so it can be tested without a
- * renderer. Reader-facing prose says "Lantern", never "library" (CONTEXT.md).
- */
+/** Reader copy and body prep, kept pure for tests. Reader-facing prose says "Lantern", never
+ * "library". */
 
 import type { Doc } from "@xolace/backend/convex/_generated/dataModel";
 import type { entrySource } from "@xolace/backend/convex/library/sources";
@@ -11,9 +9,8 @@ export type Kind = Doc<"library_entries">["kind"];
 type Reuse = Doc<"library_entries">["reuse"];
 
 const LEADING_H1 = /^#[ \t]+[^\n]*\n*/;
-// ponytail: enriched-markdown 1.0.2 has no GFM admonitions (#386) — the
-// marker would render as literal "[!TIP]". Delete this once we're on 1.1.0
-// and style `blockquote.admonitions` instead.
+// enriched-markdown 1.0.2 has no GFM admonitions (#386); the marker would render
+// as literal "[!TIP]". Delete on 1.1.0 and style `blockquote.admonitions` instead.
 const ALERT_MARKER =
 	/^>[ \t]*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][ \t]*$/gim;
 
@@ -36,11 +33,7 @@ type Credited = { reuse: Reuse; sources: Source[] };
 const XOLACE = "Xolace";
 const XOLACE_ATTRIBUTION = "© Xolace";
 
-/**
- * The header credit follows `reuse`, never the source count (CONTEXT.md
- * "Most entries are adapted from several sources"): only verbatim words
- * carry a publisher's name — an adapted entry is our wording.
- */
+/** Follows `reuse`, never the source count: only verbatim words carry a publisher's name. */
 export function headerCredit({ reuse, sources }: Credited) {
 	const s = sources[0];
 	if (reuse === "verbatim" && s) {
@@ -83,10 +76,7 @@ export function metaLine(
 		.join(" · ");
 }
 
-/**
- * The meta line as a screen reader hears it (#400): kind · who it's from ·
- * the times. An adapted entry names no publisher. Commas, since "·" is read aloud.
- */
+/** The meta line as a screen reader hears it (#400). Commas, since "·" is read aloud. */
 export function metaLabel(
 	e: Credited & {
 		kind: Kind;

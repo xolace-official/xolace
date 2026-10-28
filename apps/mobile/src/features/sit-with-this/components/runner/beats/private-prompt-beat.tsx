@@ -30,7 +30,7 @@ export function PrivatePromptBeat({ content, placeholder, onComplete }: Props) {
 			return;
 		}
 		clearedRef.current = true;
-		// Clear before advancing to ensure text is not held in memory.
+		// Clear before advancing so the text is not held in memory.
 		setText("");
 		onComplete();
 	};

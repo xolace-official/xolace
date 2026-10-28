@@ -25,8 +25,7 @@ const styles = StyleSheet.create({
 	},
 });
 
-// Static shimmer layers — hoisted so they aren't re-created per render and
-// aren't flagged as JSX-as-prop (react-perf/jsx-no-jsx-as-prop).
+// Hoisted so they are not re-created per render (react-perf/jsx-no-jsx-as-prop).
 const BACKGROUND = <View className="flex-1 bg-foreground/25" />;
 const OVERLAY = (
 	<Shimmer.Overlay
@@ -43,7 +42,7 @@ const OVERLAY = (
 export function ShimmerLoadingText({ name }: Props) {
 	const recipient = name.trim() || "them";
 
-	// Gentle float — signals the mascot is "thinking it over" while the draft loads.
+	// Gentle float while the draft loads.
 	const bob = useSharedValue(0);
 	useEffect(() => {
 		bob.set(

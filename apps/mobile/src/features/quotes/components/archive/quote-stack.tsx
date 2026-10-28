@@ -15,14 +15,8 @@ import { useSavedQuotes } from "@/features/quotes/hooks/use-saved-quotes";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useAppStore } from "@/store/store";
 
-/**
- * The kept quotes, one card per row.
- *
- * Normal flow with a negative bottom margin — the peek is `PEEK - COLLAPSED`,
- * so opening a card is only that card's own height changing and the list
- * reflows everything below it. That is what makes the rows virtualisable, so
- * 24+ kept quotes need no "View all" cap (#296).
- */
+/** Kept quotes, one card per row with a negative bottom margin, so opening a card only changes
+ * its own height (#296). */
 export function QuoteStack({
 	openId,
 	onToggle,
@@ -36,9 +30,8 @@ export function QuoteStack({
 	const setReplySeed = useAppStore((s) => s.setReplySeed);
 	const posthog = usePostHog();
 
-	// One query for the whole stack, not one per card. `undefined` while it
-	// loads counts as active, so the offer appears only once we know it is safe
-	// — accepting into a waiting mirror is the failure it guards (#316).
+	// One query for the whole stack. `undefined` while loading counts as active,
+	// so the offer appears only once it is known to be safe (#316).
 	const activeSession = useQuery(api.sessions.getActive);
 	const hasActiveSession = activeSession !== null;
 
@@ -46,8 +39,6 @@ export function QuoteStack({
 		return null;
 	}
 
-	// Empty is its own composition, not the stack at n=0. One card, by contrast,
-	// is the ordinary stack with one row — no peek band, no code path.
 	if (results.length === 0) {
 		return (
 			<View className="items-center gap-2 py-20">
@@ -76,11 +67,8 @@ export function QuoteStack({
 					hasActiveSession={hasActiveSession}
 					index={index}
 					isOpen={item._id === openId}
-					// The reply seeds the screen, never `rawInput` (#316): it becomes the
-					// reflect card's line and the composer opens empty under it, so the
-					// ordinary typed path initiates with `open_prompt`. Through the store
-					// rather than a route param — this is raw user text, and params ride
-					// in navigation state and history.
+					// Seeds the reflect card's line, never `rawInput` (#316). Through the
+					// store, not a route param: raw user text must not ride in navigation history.
 					onSeed={() => {
 						if (!item.reply) {
 							return;
@@ -94,9 +82,8 @@ export function QuoteStack({
 					}}
 					onToggle={() => {
 						const opening = item._id !== openId;
-						// Only the open counts: a close is the same tap and would double
-						// every card. `seedable` rides along so the offer has an
-						// impression denominator without a second event (#316).
+						// Only the open counts; `seedable` gives the offer an impression
+						// denominator (#316).
 						if (opening) {
 							posthog.capture("quote_archive_card_opened", {
 								has_reply: Boolean(item.reply?.trim()),

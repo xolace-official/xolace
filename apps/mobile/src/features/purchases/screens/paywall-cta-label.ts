@@ -3,21 +3,8 @@ import type { PlanId } from "./paywall-period-picker";
 
 const SEVEN_DAYS = ["P1W", "P7D"];
 
-/**
- * The one place in the whole Plus surface area where a trial claim may appear
- * (#221 §6/§7). The constraint is term, not platform: annual carries the free
- * week on both stores, monthly carries it on neither — but the claim is still
- * read off the actual product, so a store that stops offering it stops us
- * saying it.
- *
- * `introPrice` is the App Store path; `defaultOption.freePhase` is Google Play,
- * where the trial is a base-plan offer rather than an intro price. Either way the
- * offer's own period has to be seven days — the copy says "week", so a store
- * configured for three days or a month must not light the claim up.
- *
- * `isEligible` is this user's eligibility (`useIntroEligibility`), so a lapsed
- * subscriber who already spent their free week isn't promised another one.
- */
+/** The one place a trial claim may appear (#221 §6/§7), read off the product; the period must
+ * be seven days since the copy says "week". */
 export function hasFreeTrial(
 	pkg: PurchasesPackage | null,
 	isEligible: boolean

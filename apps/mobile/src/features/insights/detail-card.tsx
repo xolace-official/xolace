@@ -1,8 +1,6 @@
 // Xolace+ detail for the selected domain (#491): a half tick-gauge whose ring
-// centre sits on the card's top edge, so the card's rounded clip cuts the top
-// arc (from clarity-main daily-goal-card). The taller tick is the person's usual.
-// Compounding and easing read ember, and hand off to the kindling a session
-// about this domain lit (#520). Its own steadiness insights sit under the name (#525, #526).
+// centre sits on the card's top edge, so the rounded clip cuts the top arc.
+// Compounding and easing hand off to the kindling (#520); insights under the name (#525).
 
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
@@ -65,7 +63,8 @@ export function DetailCard({
 	);
 }
 
-/** Kindling is per session: offered only when the active one came from a session about this domain. */
+/** Kindling is per session: offered only when the active one came from a session about this
+ * domain. */
 function KindlingRow() {
 	const router = useRouter();
 	const [ember, muted] = [useTokenColor("ember"), useTokenColor("muted")];

@@ -4,20 +4,14 @@ import { useConvexAuth } from "convex/react";
 import { useEffect, useRef, useState } from "react";
 import { requestConvexReauth } from "./use-resilient-clerk-auth";
 
-/**
- * How long to tolerate a Clerk⇄Convex auth desync before recovering. Convex
- * normally validates a token within a second or two of Clerk reporting a session,
- * so anything past this window is a genuine failure, not settling.
- */
+/** Grace before recovering a Clerk⇄Convex desync; Convex normally validates a token within a
+ * second or two. */
 const DESYNC_GRACE_MS = 4000;
 
 /** How many forced re-auths to try before concluding the session is unusable. */
 const MAX_REAUTH_ATTEMPTS = 2;
 
-/**
- * What to do once the grace window expires, given the token probe's outcome.
- * Pure so the policy is testable without a renderer.
- */
+/** Recovery once the grace window expires, given the token probe's outcome. Pure, so testable. */
 export function desyncRecovery(probe: {
 	token: string | null;
 	threw: boolean;
@@ -43,23 +37,8 @@ export function desyncRecovery(probe: {
 	};
 }
 
-/**
- * Safety net for a Clerk⇄Convex auth desync.
- *
- * The cold-start desync that dropped users to auth is fixed upstream in
- * {@link useResilientClerkAuth} (it retries getToken so Convex's init fetch
- * succeeds). This guard only matters for the rare case that still gets through:
- * Clerk reports a session (`isSignedIn`) but Convex never validates a token past
- * {@link DESYNC_GRACE_MS}. We then check whether a token is actually mintable:
- *   - mintable → force Convex to re-authenticate via {@link requestConvexReauth}.
- *     Convex has latched `noAuth` and will never retry on its own, so merely
- *     keeping the session (what this branch used to do) hung forever.
- *   - not mintable, or still desynced after {@link MAX_REAUTH_ATTEMPTS} → sign out
- *     so the user can cleanly re-authenticate instead of being trapped on
- *     "you're already signed in".
- *
- * Renders nothing — mount once inside the Clerk + Convex provider tree.
- */
+/** Safety net for a Clerk⇄Convex desync past the grace window: forces a re-auth if a token is
+ * mintable, else signs out. */
 export function AuthSyncGuard() {
 	const { isSignedIn, getToken, signOut } = useAuth();
 	const { isAuthenticated, isLoading } = useConvexAuth();

@@ -7,11 +7,8 @@ import Animated, {
 import { cn } from "@/lib/utils";
 import { PLAYFUL_LIP } from "./use-playful";
 
-/**
- * The Playful lip as its own layer: a slab of `lipClassName` sits PLAYFUL_LIP
- * below the face, and the face sinks onto it while `pressed` is 1. Only
- * render this under Playful; callers keep their usual markup otherwise.
- */
+/** The Playful lip as its own layer: a slab PLAYFUL_LIP below the face, which sinks onto it
+ * while `pressed` is 1. Playful only. */
 export function PlayfulLip({
 	children,
 	className,

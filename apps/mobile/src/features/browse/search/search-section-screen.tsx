@@ -1,9 +1,5 @@
-/**
- * A Browse search section's See all (#551, `search?section=…&q=…`): every
- * match for that query, in the rows Browse already uses. Lantern, Support
- * audio and Music page in on scroll; Hubs & topics is a small bounded list,
- * so it shows whole. Taps report only section and position (#552).
- */
+// A search section's See all (#551): every match, paged on scroll except Hubs
+// & topics, which shows whole. Taps report only section and position (#552).
 
 import { LegendList } from "@legendapp/list/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";

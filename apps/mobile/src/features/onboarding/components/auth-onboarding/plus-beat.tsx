@@ -1,8 +1,4 @@
-/**
- * The Xolace+ beat — the deck's fifth bespoke composition, and the only one
- * with a job outside the story: it has to sell, in a product that deliberately
- * refuses to put a paywall in front of anything.
- */
+/** The Xolace+ beat: the only one that sells. */
 
 import { SymbolView } from "expo-symbols";
 import { View } from "react-native";

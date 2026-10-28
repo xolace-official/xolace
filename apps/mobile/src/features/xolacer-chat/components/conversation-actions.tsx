@@ -2,17 +2,9 @@ import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import type { useConversationRowActions } from "../use-conversation-row-actions";
 import { ChatActionSheet } from "./chat-action-sheet";
 
-/**
- * The long-press sheet and the delete confirmation, together.
- *
- * Rendered as a sibling of a screen's scroll view rather than inside its list —
- * on Android the bottom toolbar bottom-aligns to whatever it is mounted in, and
- * inside a scroll view that lands it over the middle of the screen. Every
- * screen showing conversation rows mounts its own; this component is so both of
- * them say it the same way. Close is the xolacer wrapping an open conversation
- * up early, the same `resting` the quiet sweep would reach in 14 days, so it
- * runs on the tap with no confirmation and nothing is lost either way.
- */
+/** The long-press sheet and delete confirmation, rendered as a sibling of the scroll view
+ * (Android's bottom toolbar bottom-aligns to its mount). Close is the `resting` transition, so
+ * no confirmation. */
 export function ConversationActions({
 	actions,
 }: {

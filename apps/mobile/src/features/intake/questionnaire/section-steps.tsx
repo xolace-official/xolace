@@ -1,4 +1,4 @@
-/** §1 You (Q2–Q3) and §2 How you carry it (Q4–Q7) — a card each. */
+/** §1 You (Q2–Q3) and §2 How you carry it (Q4–Q7), a card each. */
 import type { QuestionnaireAnswers } from "@/components/ui/questionnaire";
 import {
 	MASCOT_BUNDLE,

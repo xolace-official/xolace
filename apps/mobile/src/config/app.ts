@@ -1,14 +1,7 @@
 import Constants from "expo-constants";
 
-/**
- * App-level feature configuration.
- *
- * `features.payments` is the master switch for RevenueCat: while false the
- * purchases layer stays inert (no SDK configure, no network) and
- * `devIsPlus` acts as the local free/plus switch so the whole paywall +
- * gating UI is buildable and testable before the RC dashboard exists.
- * Flip to true once RC dashboard + store products + API keys are configured.
- */
+/** App-level feature configuration. `features.payments` is the RevenueCat master switch; while
+ * false, `devIsPlus` is the local free/plus switch. */
 const extra = Constants.expoConfig?.extra as
 	| {
 			revenueCat?: {
@@ -24,7 +17,6 @@ export const appConfig = {
 	/** Local free/plus switch while payments=false (client gates only). */
 	devIsPlus: false,
 	features: {
-		/** ← flip true once RC dashboard + store products are configured. */
 		payments: true,
 	},
 	monetization: {

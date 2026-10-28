@@ -1,20 +1,7 @@
-/**
- * Figure sizing shared by the Mirror and Vent beats.
- *
- * The two slides are a matched pair (see the note in `story-beats.ts`), and the
- * character has to read as the SAME character at the SAME size when you swipe
- * between them. That only holds if one formula drives both — duplicating a
- * tuned expression across two files is how a pair silently drifts apart.
- *
- * The MIRROR sets the size, because it has the tighter budget: it must fit a
- * figure AND its reflection above the pagination. Vent, with only a figure,
- * follows it.
- */
+// Figure sizing shared by the Mirror and Vent beats, so the pair's character stays
+// one size across the swipe. The Mirror sets it (figure plus reflection must fit).
 
-/**
- * Slide area as a fraction of screen height, once the safe areas, the sign-in
- * block and the pagination row are taken out. Measured on device.
- */
+/** Slide area as a fraction of screen height after safe areas, sign-in and pagination. */
 const SLIDE_FRACTION = 0.764;
 
 const TEXT_BLOCK = 270;
@@ -25,12 +12,8 @@ const BREATHING_ROOM = 30;
 /** How much of the flipped figure stays visible before the mask takes it. */
 export const REFLECT_RATIO = 0.42;
 
-/**
- * The pair's figure height. Figure + reflection together cost
- * (1 + REFLECT_RATIO) x this, so the figure takes whatever the text block
- * leaves. The floor matters more than the ceiling: below ~118 the reflection
- * stops reading as a reflection.
- */
+/** The pair's figure height: what the text block leaves, split with the reflection. Below ~118
+ * the reflection stops reading. */
 export const deckFigureHeight = (screenHeight: number) =>
 	Math.max(
 		118,
@@ -41,24 +24,10 @@ export const deckFigureHeight = (screenHeight: number) =>
 		)
 	);
 
-/**
- * The Xolacers beat's figure, as a multiple of the pair's.
- *
- * The 0.95 inside it is the same framing correction VENT_SCALE_MATCH applies —
- * `flux-sad.png` is drawn 0.602 wide-for-tall against the mirror's
- * 0.535, so at equal heights it would look wider than the same character on the
- * two beats either side of it.
- */
+/** The Xolacers figure as a multiple of the pair's; 0.95 corrects framing like VENT_SCALE_MATCH
+ * (0.602 vs 0.535 wide-for-tall). */
 export const XOLACERS_SCALE = 1.28 * 0.95;
 
-/**
- * `vent-bg.png` was generated in a later pass than `mirror-v2-bg.png` and is
- * framed slightly chunkier — its drawn content is 0.616 wide-for-tall against
- * the mirror's 0.535. Rendered at equal heights the Vent character looks ~15%
- * wider; at equal widths it looks ~13% shorter. This splits the difference, so
- * each dimension is off by ~7% instead of one being off by 15% — below the
- * threshold where the swipe reads as the character changing size.
- *
- * Delete this the day both poses are re-rendered from one framing.
- */
+/** `vent-bg.png` is framed chunkier (0.616 vs 0.535 wide-for-tall); this splits the ~15%
+ * difference. Delete once both poses share one framing. */
 export const VENT_SCALE_MATCH = 0.945;

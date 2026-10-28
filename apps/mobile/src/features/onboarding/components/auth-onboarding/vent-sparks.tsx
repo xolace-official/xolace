@@ -1,23 +1,6 @@
-/**
- * The breath leaving the character on the Vent beat: a slow plume of embers
- * that rises, drifts right, and is gone before it reaches the copy.
- *
- * THE VANISHING IS THE PROMISE. The beat says nothing is stored and it goes
- * when you close it — so nothing here is allowed to arrive anywhere. Every
- * spark fades to zero mid-flight. If one ever lands on the text the slide is
- * saying the opposite of the words above it.
- *
- * NOT `features/vent/particles/ParticleField`, deliberately. That one is a
- * full-screen Skia canvas driven by `useFrameCallback` and the vent ritual's
- * stage machine (mic metering, compress, burn). It redraws every frame for as
- * long as it is mounted, and this deck keeps all seven slides mounted inside a
- * carousel — it would burn frames behind six slides nobody is looking at. It
- * also has no notion of a plume from a point, which is the only thing needed
- * here. Eighteen transform-only views cost nothing by comparison.
- *
- * Jitter comes from a fixed table rather than `Math.random()`: a random value
- * read during render would reshuffle the plume on every re-render.
- */
+// The breath leaving the Vent figure: a plume of embers that fades to zero before
+// reaching the copy. Not `features/vent/particles/ParticleField`: that Skia canvas
+// redraws every frame while mounted, and the deck keeps all seven slides mounted.
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
@@ -30,15 +13,8 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 
-/**
- * x/bottom offsets from the plume origin, dot size, rightward drift, ms, start delay.
- *
- * Sizes and stagger are set by what actually reads on device, not by what looks
- * reasonable in the table: an earlier pass ran twelve 1.5–3pt dots staggered
- * across 3.8s, and at any instant only three or four were in their bright
- * window — the plume read as sensor dust rather than as breath. Eighteen larger
- * dots over a 2.2s stagger keeps roughly a dozen visible at once.
- */
+// Fixed jitter table (`Math.random()` in render would reshuffle the plume). Eighteen
+// dots over a 2.2s stagger keep about a dozen visible at once; fewer reads as dust.
 const PLUME = [
 	{ delay: 0, drift: 34, dur: 4200, dx: 0, dy: 0, size: 4.2 },
 	{ delay: 130, drift: 48, dur: 4700, dx: 7, dy: 9, size: 3.2 },
@@ -60,13 +36,7 @@ const PLUME = [
 	{ delay: 2170, drift: 69, dur: 5400, dx: 8, dy: -6, size: 2.0 },
 ];
 
-/**
- * How far a spark climbs before it is fully gone. It must die short of the
- * copy — see the note above about never arriving. The plume starts clear of the
- * character's head, which leaves ~157pt between it and the tag line, so the
- * climb is sized to fill that gap and stop inside it. At 150 the highest sparks
- * grazed the tag on device; 130 keeps the whole plume under it.
- */
+/** Climb before a spark is gone. ~157pt sits between origin and tag; 150 grazed the tag. */
 const RISE = 130;
 
 const Spark = ({
@@ -104,8 +74,7 @@ const Spark = ({
 	const rStyle = useAnimatedStyle(() => {
 		const v = progress.get();
 		return {
-			// Bright fast, then a long decay: an ember is at its most visible just
-			// after it leaves, and the slow tail is what reads as "letting go".
+			// Bright fast, then a long decay.
 			opacity: interpolate(v, [0, 0.08, 0.55, 1], [0, 1, 0.6, 0]),
 			transform: [
 				{ translateY: -v * RISE },
@@ -133,13 +102,8 @@ const Spark = ({
 	);
 };
 
-/**
- * `originX` / `originBottom` place the plume just above the character's head,
- * on the mouth's axis — see the note on `PLUME_Y` in `vent-beat.tsx` for why it
- * is not on the mouth itself. Both are measured from the slide's left and
- * bottom edges so the plume stays married to the figure, which is
- * bottom-anchored too.
- */
+/** Origin is measured from the slide's left and bottom edges, like the bottom-anchored figure
+ * (see `PLUME_Y` in `vent-beat.tsx`). */
 export const VentSparks = ({
 	originX,
 	originBottom,

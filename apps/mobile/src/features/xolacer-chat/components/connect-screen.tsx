@@ -39,12 +39,8 @@ function SegmentLabel({ label, active }: { label: string; active: boolean }) {
 	);
 }
 
-/**
- * The Connect tab: Chats (conversations in every lifecycle state, including a
- * xolacer's incoming requests) and Xolacers (the roster). Auto-lands on
- * Chats when any conversation exists, on Xolacers otherwise — a first-time
- * user meets the roster, a returning user meets their thread.
- */
+/** The Connect tab: Chats and Xolacers. Lands on Chats when any conversation exists, on the
+ * roster otherwise. */
 export function ConnectScreen({
 	specialty,
 	view,
@@ -76,12 +72,9 @@ export function ConnectScreen({
 	const actions = useConversationRowActions();
 	const { sheetFor, setSheetFor } = actions;
 
-	// Arriving with a specialty (from a profile's "others listen to this too")
-	// snaps to the roster filtered to it; arriving from a notification snaps to
-	// the segment that notification is about. The tab stays mounted across
-	// navigations, so the params are latched and re-applied when they change
-	// rather than only read at mount — and `navToken` differs per tap, so a
-	// second notification for the same segment still lands.
+	// Route params are latched and re-applied when they change, since the tab
+	// stays mounted across navigations; `navToken` differs per tap so a second
+	// notification for the same segment still lands.
 	const routed = `${specialty ?? ""}|${view ?? ""}|${navToken ?? ""}`;
 	const [routedParams, setRoutedParams] = useState(routed);
 	if (routed !== routedParams) {
@@ -89,9 +82,8 @@ export function ConnectScreen({
 		if (isSpecialty(specialty)) {
 			setFilter(specialty);
 		}
-		// Sent to the roster without a specialty — a decline, whose copy promises
-		// "other xolacers are available". A filter left over from earlier browsing
-		// would answer that with a narrowed, possibly empty list.
+		// A decline sends here without a specialty; a filter left over from
+		// browsing would answer with a narrowed, possibly empty list.
 		else if (routedSegment === "xolacers") {
 			setFilter(null);
 		}
@@ -100,22 +92,19 @@ export function ConnectScreen({
 		}
 	}
 
-	// Opens the Stream connection and warms every channel in the list, so tapping
-	// a row lands on messages instead of a skeleton. Held off until `status`
-	// confirms the feature is on — a disabled deployment has no token to mint.
+	// Warms the Stream connection and every listed channel; held off until
+	// `status` confirms the feature is on.
 	useChatWarmup(conversations, status?.enabled ?? false);
 
 	const loading = status === undefined || conversations === undefined;
 	const archivedChats = (conversations ?? []).filter((c) => c.archived);
 	const activeChats = (conversations ?? []).filter((c) => !c.archived);
-	// Archived ones count: archiving your last active chat shouldn't bounce you
-	// to the roster, it should leave you on Chats with the Archived row in front
-	// of you. Only someone with no conversations at all meets the roster.
+	// Archived ones count: archiving the last active chat leaves you on Chats
+	// with the Archived row, not on the roster.
 	const segment: Segment =
 		selected ?? ((conversations ?? []).length > 0 ? "chats" : "xolacers");
-	// The sheet outlives the list it was raised from now that it renders out
-	// here, so leaving Chats — by the segment control or by a notification —
-	// would strand it over the roster with the tab bar still hidden.
+	// The sheet renders out here and outlives the list; leaving Chats would
+	// strand it over the roster with the tab bar still hidden.
 	if (segment !== "chats" && sheetFor) {
 		setSheetFor(null);
 	}
@@ -133,22 +122,17 @@ export function ConnectScreen({
 		);
 	}
 
-	// A published xolacer's way to their own profile — the self-preview everyone
-	// else sees, and from there the edit sheet. Before publishing, the setup
-	// banner still owns that job and no button renders.
+	// Published xolacers reach their own profile from here; before that the
+	// setup banner owns it.
 	const published =
 		status?.enabled === true &&
 		status.isXolacer &&
 		status.xolacerProfileComplete;
-	// Paused is a state someone can forget they're in now that the status card
-	// is gone, so the icon itself carries it: a moon instead of a face, on the
-	// one control that leads to the switch.
+	// The icon carries paused: a moon instead of a face.
 	const paused = published && !status.xolacerActive;
 
-	// Archived is a screen in this stack rather than a filter swapped in under a
-	// text link: it gets a title, a back button and a place in the history, and
-	// you can leave for another tab from it without backing out first. All that
-	// is left here is the way in, and only once there is something behind it.
+	// Archived is a screen in this stack; only the way in lives here, and only
+	// once there is something behind it.
 	const archivedEntry =
 		archivedChats.length > 0 ? (
 			<ArchivedEntryRow

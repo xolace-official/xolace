@@ -46,8 +46,8 @@ export const PeerReflectionScreen = () => {
 		usePathSession();
 	const posthog = usePostHog();
 	const afterPath = useSessionEndHref(sessionId);
-	// Once we complete + navigate to session-end, getActive goes null. Claim the
-	// finish so the "no active session" guard below doesn't race us home.
+	// getActive goes null once completed; claim the finish so the guard below
+	// does not race the navigation home.
 	const finishingRef = useRef(false);
 
 	useEffect(() => {
@@ -72,21 +72,18 @@ export const PeerReflectionScreen = () => {
 		}
 	}, [sessionId, session, startPath]);
 
-	// Guard: no active session (e.g. completed or abandoned externally). Skipped
-	// once we're deliberately finishing — that null is our own completion.
+	// No active session (completed or abandoned externally); skipped while finishing.
 	useEffect(() => {
 		if (!(isLoading || sessionId || finishingRef.current)) {
 			router.replace("/");
 		}
 	}, [isLoading, sessionId, router]);
 
-	// Try matching reflections for this session
 	const matchedReflections = useQuery(
 		api.reflections.matchForSession,
 		sessionId ? { sessionId } : "skip"
 	);
 
-	// Fallback: recent reflections when match returns empty
 	const recentReflections = useQuery(
 		api.reflections.listRecent,
 		matchedReflections !== undefined && matchedReflections.length === 0
@@ -94,7 +91,6 @@ export const PeerReflectionScreen = () => {
 			: "skip"
 	);
 
-	// True when matched returned empty and fallback is still loading
 	const awaitingFallback =
 		matchedReflections !== undefined &&
 		matchedReflections.length === 0 &&
@@ -111,7 +107,6 @@ export const PeerReflectionScreen = () => {
 			: (recentReflections ?? [])
 	) as NonNullable<typeof matchedReflections>;
 
-	// Batch check resonance state from server
 	const reflectionIds = reflections.map((r) => r._id);
 	const resonatedMap = useQuery(
 		api.reflections.hasResonated,
@@ -125,9 +120,8 @@ export const PeerReflectionScreen = () => {
 			return;
 		}
 		finishingRef.current = true;
-		// Complete before navigating so the session is durably terminal even if the
-		// user closes the app on session-end. `afterPath` carries the id — getActive
-		// is null once completed — and routes via the kindling announcement if due.
+		// Complete before navigating so the session is terminal even if the app closes on
+		// session-end. `afterPath` carries the id, since getActive is null once completed.
 		const href = afterPath("peers");
 		await completePath(true);
 		router.replace(href);

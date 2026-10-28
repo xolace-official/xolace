@@ -12,11 +12,8 @@ export type TopicRow<T extends Track> =
 	| { type: "header"; key: string; title: string }
 	| { type: "track"; key: string; track: T };
 
-/**
- * Flatten one topic's tracks into list rows for a segment: standalone tracks
- * first, then each series as a header followed by its episodes in episode
- * order. Client-side only — there is no series landing screen in v1 (§9.3).
- */
+/** Flattens one topic's tracks into rows: standalone first, then each series header with its
+ * episodes. Client-side only (§9.3). */
 export function topicRows<T extends Track>(
 	tracks: T[],
 	segment: Segment

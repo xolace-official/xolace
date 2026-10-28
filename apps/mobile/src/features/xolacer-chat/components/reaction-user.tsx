@@ -11,14 +11,8 @@ import { resolveMessageIdentity } from "@/features/xolacer-chat/utils";
 
 type Reaction = NonNullable<MessageUserReactionsProps["reactions"]>[number];
 
-/**
- * One row of the "who reacted" sheet (tap a reaction chip). Stream's row reads
- * `reaction.name` / `reaction.image` straight off the shared user record — see
- * `resolveMessageIdentity` for why that can't be shown — and the SDK doesn't
- * export it, so this is a rebuild rather than a patched delegate like
- * `ConversationMessageAuthor`. Own reactions render as "You"; anyone who is
- * neither self nor the counterpart gets no row rather than a guessed name.
- */
+/** One row of the "who reacted" sheet, rebuilt since the SDK does not export its row. Own
+ * reactions read "You"; a sender who is neither self nor counterpart gets no row. */
 export function ConversationReactionUser({
 	reaction,
 	supportedReactions,

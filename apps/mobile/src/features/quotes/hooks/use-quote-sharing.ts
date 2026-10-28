@@ -5,16 +5,8 @@ import type { LayoutChangeEvent, ViewInstance } from "react-native";
 import { PixelRatio, Platform } from "react-native";
 import { captureRef } from "react-native-view-shot";
 
-/**
- * The export's width in device pixels. The twin lays out in the hero's own pt
- * geometry, so the height is whatever that width times the twin's aspect comes
- * to — aspect is a consequence of the poster, never a chosen frame (#317).
- *
- * Both natives ignore `width` unless `height` comes with it (iOS falls back to
- * the view's bounds, Android skips the rescale), and iOS multiplies the size it
- * is given by the device scale — so the pt/px conversion below is what actually
- * lands 1080 pixels.
- */
+// Export width in device pixels; height follows the twin's aspect (#317). Both
+// natives ignore `width` without `height`, and iOS multiplies by the device scale.
 const EXPORT_WIDTH_PX = 1080;
 
 const exportWidth = Math.round(
@@ -38,8 +30,7 @@ export function useQuoteSharing(
 
 	const layoutTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-	// Called from the off-screen wrapper's onLayout — signals the card is ready to
-	// capture, and hands over the twin's laid-out size so the export keeps its aspect.
+	// Off-screen wrapper's onLayout: hands over the twin's size so the export keeps its aspect.
 	const onSharingCardLayout = (e: LayoutChangeEvent) => {
 		const { width, height } = e.nativeEvent.layout;
 		if (width > 0 && height > 0) {
@@ -70,7 +61,6 @@ export function useQuoteSharing(
 		imageLoadedRef.current = false;
 		setShowSharingCard(true);
 		try {
-			// Wait until the off-screen card reports its layout before capturing.
 			await new Promise<void>((resolve) => {
 				layoutResolverRef.current = resolve;
 				layoutTimeoutRef.current = setTimeout(() => {
@@ -80,9 +70,7 @@ export function useQuoteSharing(
 				}, 4000);
 			});
 
-			// Ensure the twin is painted before capture — its mascot decoded and its
-			// fit search landed. The fallback is generous because that search costs a
-			// few frames: cut short, the export is a blank paper card (#317).
+			// Wait for the mascot and the fit search; cut short, the export is blank (#317).
 			if (!imageLoadedRef.current) {
 				await new Promise<void>((resolve) => {
 					const timeoutId = setTimeout(resolve, 1200);

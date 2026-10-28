@@ -20,27 +20,14 @@ export type ActivePlusOffer = {
 };
 
 type Options = {
-	/**
-	 * The surface's own precondition. Moment 2 has no server-side data
-	 * condition — its condition is the tap that just happened — so the mirror
-	 * beat passes it in. Elsewhere it just holds the offer until the screen is
-	 * ready to carry one.
-	 */
+	/** The surface's own precondition. Moment 2's condition is the tap that just happened. */
 	enabled?: boolean;
 	/** The session in play, when the caller knows it better than the server does. */
 	sessionId?: string | null;
 };
 
-/**
- * The one hook every proactive Plus moment asks. Reads the facts once, runs
- * them through the policy module, and hands back a moment or nothing.
- *
- * Deliberately does not record that the offer was shown: a decision is not an
- * appearance. The session-end slot can decide "plus" and still lose the slot
- * to a Xolacer suggestion, and marking that as shown would spend the user's
- * one-per-session budget on a card they never saw. `PlusOfferCard` records it
- * on mount instead — the moment it is actually on screen.
- */
+/** Runs the facts through the policy and hands back a moment or nothing. Does not record it
+ * shown; `PlusOfferCard` does on mount. */
 export function usePlusOffer(
 	surface: PlusOfferSurface,
 	{ enabled = true, sessionId }: Options = {}
@@ -51,8 +38,7 @@ export function usePlusOffer(
 	const fullStopSince = useAppStore((s) => s.plusOfferFullStopAt);
 	const shownSessionId = useAppStore((s) => s.plusOfferShownSessionId);
 
-	// `null` is a subscriber — nothing to offer. `undefined` is in flight; an
-	// offer that arrives late is fine, one decided on absent facts is not.
+	// `null` is a subscriber; `undefined` is in flight and must not be decided on.
 	const activeSessionId = context ? (sessionId ?? context.sessionId) : null;
 
 	const decision =
@@ -60,11 +46,8 @@ export function usePlusOffer(
 			? choosePlusOffer({
 					candidates: plusOfferCandidates(surface, {
 						1: context.firstSession,
-						// Moment 2's condition is the tap the caller just handled, which
-						// is what `enabled` carries. It stands down inside the user's
-						// first session: moment 1 outranks it and comes later in the same
-						// session, so firing here would spend the budget and moment 1 —
-						// the only moment every user passes through — would never ship.
+						// Moment 2 stands down in the first session: moment 1 outranks it and comes
+						// later in the same session, and firing here would spend the budget.
 						2: enabled && context.completedCount > 0,
 						3: context.patternObservation !== null,
 						4: context.gapObservation !== null,
@@ -79,9 +62,7 @@ export function usePlusOffer(
 					shownLastSession:
 						context.previousSessionId !== null &&
 						shownSessionId === context.previousSessionId,
-					// Both cadence rules key off the same recorded id: it is this
-					// session, so the budget is spent; it is the one before, so
-					// back-to-back is refused.
+					// Both cadence rules key off the same recorded session id.
 					shownThisSession:
 						activeSessionId !== null && shownSessionId === activeSessionId,
 					surface,
@@ -104,10 +85,8 @@ export function usePlusOffer(
 				}
 			: null;
 
-	// Latched on first yes. The card records itself as shown the moment it
-	// mounts, which immediately makes `shownThisSession` true — without this the
-	// offer would take itself back one frame after making it. "May we speak" is
-	// settled once, when the beat happens.
+	// Latched on first yes: the card records itself as shown on mount, which flips
+	// `shownThisSession` and would otherwise retract the offer one frame later.
 	const [latched, setLatched] = useState<ActivePlusOffer | null>(null);
 	if (latched === null && next !== null) {
 		setLatched(next);

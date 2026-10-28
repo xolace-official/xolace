@@ -64,11 +64,8 @@ export interface ChartAccessibilityDataProps<Datum>
 	valueOf: (datum: Datum) => [string, unknown][];
 }
 
-/**
- * Whether VoiceOver / TalkBack is on. Per-datum elements cost one native view
- * and one spoken label per datum, so they are only built for someone who can
- * hear them.
- */
+/** Whether VoiceOver / TalkBack is on; per-datum elements cost a native view each, so they are
+ * gated on it. */
 function useScreenReaderEnabled(): boolean {
 	const [enabled, setEnabled] = useState(false);
 	useEffect(() => {
@@ -97,12 +94,8 @@ function useScreenReaderEnabled(): boolean {
 	return enabled;
 }
 
-/**
- * A compact semantic sibling to the visual plot. The SVG remains one
- * decorative subtree while screen readers receive one summary and one entry
- * per datum, rather than every path, grid line and marker. The summary is
- * always present; the per-datum entries only while a screen reader is on.
- */
+/** Semantic sibling to the plot: one summary, plus one entry per datum while a screen reader is
+ * on. */
 export function ChartAccessibilityData<Datum>({
 	chart,
 	data,

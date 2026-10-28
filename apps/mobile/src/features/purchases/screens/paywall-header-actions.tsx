@@ -17,18 +17,11 @@ const CLOSE_ICON_NAME = {
 
 type CloseProps = {
 	surface?: PaywallSurface;
-	/**
-	 * Paired with `paywall_opened`'s, so a dismissal can be attributed to where
-	 * in the life of the account it happened. `null` while the summary is still
-	 * loading — never silently 0, which is a real cohort (intake).
-	 */
+	/** Paired with `paywall_opened`'s. `null` while loading, never 0 (a real cohort: intake). */
 	sessionCount?: number | null;
-	/** Overrides the route close — see PaywallScreen's `onExit`. */
+	/** Overrides the route close; see PaywallScreen's `onExit`. */
 	onClose?: () => void;
-	/**
-	 * Set once an exit is already in flight. Blocks the press *here* rather than
-	 * in the handler, so a second tap can't fire a second `paywall_dismissed`.
-	 */
+	/** Set once an exit is in flight, so a second tap cannot fire a second `paywall_dismissed`. */
 	isDisabled?: boolean;
 };
 
@@ -72,14 +65,9 @@ export function PaywallRestoreButton() {
 		restorePurchases().finally(() => setIsRestoring(false));
 	};
 
-	// The width slack is Android-only. Android's native header sizes this view to
-	// the label's measured width with no slack, which truncates the trailing glyph
-	// ("Restor"), so there it gets a fixed width plus trailing padding to keep the
-	// text box wider than the glyphs. iOS must stay intrinsically sized — its
-	// toolbar renders a glass capsule around the child, and a fixed width there
-	// inflates the capsule and strands the label against its edge. Swapping to a
-	// spinner rather than a longer label keeps the width constant across states on
-	// both platforms, so the header never re-measures.
+	// Android's native header truncates the label ("Restor") without a fixed width; iOS
+	// must stay intrinsic or its glass capsule inflates. The spinner keeps the width
+	// constant so the header never re-measures.
 	return (
 		<PressableFeedback
 			accessibilityLabel="Restore purchases"

@@ -5,11 +5,8 @@ import {
 	NoEventPriority,
 } from "react-reconciler/constants";
 
-/**
- * Mounts a hook once (effects included) and unmounts it, with no DOM — the
- * test runner has no jsdom, and a hook whose effect throws is exactly what
- * this is for — it propagates out of `act`.
- */
+/** Mounts a hook once (effects included) and unmounts it, with no DOM. A throwing effect
+ * propagates out of `act`. */
 export function mountHook(hook: () => unknown): void {
 	(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 	const Probe = () => {

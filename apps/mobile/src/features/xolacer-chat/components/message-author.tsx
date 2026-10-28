@@ -7,15 +7,8 @@ import {
 import { resolveMessageIdentity } from "../utils";
 import type { ThreadConversation } from "./thread-screen";
 
-/**
- * The conversation the message list is rendering, reachable from a component
- * mounted through Stream's override registry.
- *
- * A context rather than a closure because `WithComponents` memoizes its
- * overrides on mount and never re-reads them — an override that closed over
- * the conversation would be frozen at the first render's value. The override
- * component stays module-level and stable; the data moves through here.
- */
+/** The conversation behind the mounted override tree. A context, because `WithComponents` never
+ * re-reads its overrides, so a closure would freeze at the first render. */
 const ConversationIdentityContext = createContext<{
 	conversation: ThreadConversation;
 } | null>(null);
@@ -43,17 +36,8 @@ export function ConversationIdentityProvider({
 	);
 }
 
-/**
- * The per-message avatar, sourced from the conversation instead of from
- * Stream's globally-shared user record — see `resolveMessageIdentity` for why
- * that record can't be trusted for display.
- *
- * Delegates to the SDK's own `MessageAuthor` with a patched `message`, rather
- * than reimplementing it: `message` is an explicit prop that wins over the
- * context value, so grouping, spacing, theming and memoization all stay the
- * SDK's. Importing the component directly (not via the override registry)
- * means no recursion back into this one.
- */
+/** Per-message avatar sourced from the conversation (see `resolveMessageIdentity`), via the
+ * SDK's `MessageAuthor` with a patched `message`; the explicit prop wins over context. */
 export function ConversationMessageAuthor(props: MessageAuthorProps) {
 	const { message } = useMessageContext();
 	const identity = useConversationIdentity();

@@ -14,11 +14,8 @@ import {
 	twigBrowseHref,
 } from "../twig-presentation";
 
-/**
- * The open twig, floating over the bottom of the trail: why, "Browse more
- * like this" for a bound track, then "Not for me" and the primary action.
- * Tended collapses the actions to a "Tended" line; skipped to "Not for you".
- */
+/** The open twig, floating over the trail: why, "Browse more like this" for a
+ * bound track, then "Not for me" and the primary action. */
 export function TwigSheet({
 	twig,
 	bottom,
@@ -52,8 +49,8 @@ export function TwigSheet({
 				"absolute right-3 left-3 rounded-3xl border border-border bg-surface p-5",
 				isPlayful ? "border-2 shadow-surface" : "shadow-lg"
 			)}
-			// Remounts per twig, and switching stops is a frequent tap: short and
-			// ease-out so the new card is readable at once, not a 300ms ease-in-out.
+			// Remounts per twig and switching stops is frequent: short and ease-out
+			// so the new card is readable at once.
 			initialAnimate={{ opacity: 0, translateY: reduced ? 0 : 10 }}
 			key={twig._id}
 			onLayout={(e) => onHeight(e.nativeEvent.layout.height)}

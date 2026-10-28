@@ -10,8 +10,7 @@ type Params = {
 export default function TrustedBridge() {
 	const { sessionId, stepId } = useLocalSearchParams<Params>();
 
-	// Guard the route boundary: a deep link or malformed navigation can arrive
-	// with no id. Bail home rather than cast undefined into requestBridgeDraft.
+	// A deep link can arrive with no id; bail home rather than cast undefined.
 	if (typeof sessionId !== "string" || sessionId.trim().length === 0) {
 		return <Redirect href="/" />;
 	}

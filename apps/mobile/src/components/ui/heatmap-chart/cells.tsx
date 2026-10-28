@@ -4,11 +4,8 @@ import { useCSSVariable } from "uniwind";
 import { type HeatmapCell, type Slot, useHeatmap } from "./context";
 
 export interface HeatmapCellsProps {
-	/**
-	 * Per-cell override on top of the ramp — for cell states the count can't
-	 * carry (a frozen day, today, the future). Return `undefined` to keep the
-	 * ramp's paint.
-	 */
+	/** Per-cell override on top of the ramp (a frozen day, today). `undefined` keeps the ramp's
+	 * paint. */
 	cellStyle?: (cell: HeatmapCell) => HeatmapCellStyle | undefined;
 	/** Corner radius of a cell. Falls back to the chart's. */
 	cornerRadius?: number;
@@ -22,17 +19,8 @@ export interface HeatmapCellStyle {
 	strokeWidth?: number;
 }
 
-/**
- * The grid itself. Every row of every column is drawn, including the ones with
- * nothing in them — a calendar with holes in it stops being a calendar.
- *
- * Holding the grid changes `activeCell` once per cell the finger crosses, and
- * the only thing that depends on it is whether a cell is dimmed. So each cell
- * is built twice up front — lit and dimmed — off everything *but* the held
- * cell, and a hold just picks one of the two. Moving from A to B hands React a
- * new element for A and B only; every other cell gets back the exact element
- * it had, and React skips it without diffing a prop.
- */
+/** The grid, every row of every column. Each cell is built lit and dimmed up front; a hold
+ * picks one, so only the cells entering and leaving the hold get a new element. */
 export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
 	const chart = useHeatmap("HeatmapChart.Cells");
 	const { grid, data, ramp, opacities, levelOf, activeCell, inactiveOpacity } =
@@ -40,9 +28,8 @@ export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
 	const radius = cornerRadius ?? chart.cornerRadius;
 	const step = grid.size + grid.gap;
 
-	// Manual on purpose: the compiler folds `cells` into the same cache block as
-	// the `activeCell` pick below (it is only read there), so it would rebuild
-	// every element on every held cell and none would ever be reused.
+	// Manual on purpose: the compiler folds `cells` into the `activeCell` pick's cache
+	// block, which would rebuild every element on every held cell.
 	const cells = useMemo(
 		() =>
 			data.flatMap((column, columnIndex) =>
@@ -58,8 +45,7 @@ export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
 						row,
 					});
 					const opacity = override?.fillOpacity ?? opacities[level]!;
-					// Only the fill dims. A frozen day's outline is still a frozen day
-					// while another one is held.
+					// Only the fill dims; an override's outline stays.
 					const paint = (fillOpacity: number) => (
 						<Rect
 							fill={override?.fill ?? ramp[level]}
@@ -77,8 +63,7 @@ export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
 						/>
 					);
 					const lit = paint(opacity);
-					// At an inactive opacity of 1 dimming is a no-op: one element, and a
-					// hold re-renders no cell at all.
+					// At an inactive opacity of 1 dimming is a no-op, so a hold re-renders nothing.
 					const dim =
 						inactiveOpacity === 1 ? lit : paint(opacity * inactiveOpacity);
 					return { column: columnIndex, dim, lit, row };
@@ -110,18 +95,13 @@ export function HeatmapCells({ cornerRadius, cellStyle }: HeatmapCellsProps) {
 }
 HeatmapCells.slot = "cells" as Slot;
 
-/* -------------------------------------------------------------------------- */
-/* Rules                                                                      */
-/* -------------------------------------------------------------------------- */
+/* Rules */
 
 export interface HeatmapSeparatorProps {
 	color?: string;
 	/** Dash pattern, e.g. `"2,4"`. Omit for a solid rule. */
 	dashArray?: string;
-	/**
-	 * `quarter` draws a rule every thirteen columns; a number draws one every
-	 * that many columns.
-	 */
+	/** `quarter` draws a rule every thirteen columns; a number draws one every that many. */
 	every?: "quarter" | number;
 }
 

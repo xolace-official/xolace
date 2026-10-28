@@ -10,17 +10,12 @@ import { LATEST_WHATS_NEW_ID, WHATS_NEW } from "../constants/whats-new";
 
 const LIST_MAX_HEIGHT = Dimensions.get("window").height * 0.5;
 
-/**
- * Read-only changelog. Opening it marks the newest entry as seen (clears the
- * menu badge) and records the structural open event — no content captured.
- */
+/** Read-only changelog. Opening marks the newest entry seen and records the open event. */
 export const WhatsNew = () => {
 	const setLastSeenVersion = useAppStore((s) => s.setLastSeenVersion);
 	const posthog = usePostHog();
 	const accentColor = useThemeColor("accent") as string;
 
-	// Marking-as-seen + analytics is a genuine side effect on open, not state
-	// mirroring — an effect is the right tool here.
 	useEffect(() => {
 		posthog.capture("whats_new_opened");
 		if (LATEST_WHATS_NEW_ID) {

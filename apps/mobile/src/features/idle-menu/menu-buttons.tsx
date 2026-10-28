@@ -14,7 +14,7 @@ type MenuButtonItem = {
 	iconName: { ios: SFSymbol; android: string };
 	onPress: () => void;
 	accessibilityLabel: string;
-	/** Newly added item — icon glows until the item is opened once. */
+	/** Newly added item; icon glows until the item is opened once. */
 	newKey?: string;
 };
 
@@ -33,7 +33,7 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
 	const seenMenuItems = useAppStore((s) => s.seenMenuItems);
 	const markMenuItemSeen = useAppStore((s) => s.markMenuItemSeen);
 
-	// Primary actions — what you came to do. Full rows.
+	// Primary actions, full rows.
 	const primaryItems: MenuButtonItem[] = [
 		{
 			accessibilityLabel: "Open discovery",
@@ -42,7 +42,7 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
 			newKey: "discovery",
 			onPress: () => {
 				onClose();
-				// replace, not push — reflect stays the "/" landing with no back stack.
+				// replace, not push: reflect stays the "/" landing with no back stack.
 				// Cast until typedRoutes regenerates on next expo start (see /quotes).
 				router.replace("/discovery" as any);
 			},
@@ -59,7 +59,7 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
 		},
 	];
 
-	// Housekeeping — shares one compact row.
+	// Housekeeping, one compact row.
 	const compactItems: MenuButtonItem[] = [
 		{
 			accessibilityLabel: "Open settings",

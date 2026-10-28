@@ -1,10 +1,5 @@
-/**
- * ThinkingOrb — the six states.
- *
- * Each `draw*` writes one frame's dots into the bucket array it is handed; none
- * of them own any state, so a frame is a pure function of `(state, size, t)`.
- * The maths they lean on lives in `thinking-orb-geometry.ts`.
- */
+/** ThinkingOrb states. Each `draw*` writes one frame's dots into the bucket array, pure in
+ * (state, size, t). */
 import {
 	angleDelta,
 	BUCKETS,
@@ -23,13 +18,8 @@ export type ThinkingOrbState =
 	| "composing"
 	| "shaping";
 
-/**
- * `working` — particles running tilted orbits, each on a faint ghost path.
- *
- * The ghosts are what make it read as orbits rather than as loose specks: three
- * bright particles alone look random, and the same three on a visible track
- * look like work being done.
- */
+/** `working`: particles running tilted orbits, each on a faint ghost path that makes it read as
+ * orbits. */
 function drawWorking(out: string[], size: number, t: number, p: Profile): void {
 	"worklet";
 	const c = size / 2;
@@ -106,13 +96,8 @@ function drawWorking(out: string[], size: number, t: number, p: Profile): void {
 	}
 }
 
-/**
- * `searching` — a scan meridian sweeping a dotted globe.
- *
- * The scan is a ripple in dot *size*, not a highlight. A brightness sweep on a
- * monochrome orb reads as a lighting effect; a size ripple reads as something
- * passing over the surface, which is what a search is.
- */
+/** `searching`: a scan meridian sweeping a dotted globe. The scan is a ripple in dot size, not
+ * brightness. */
 function drawSearching(
 	out: string[],
 	size: number,
@@ -168,14 +153,8 @@ function drawSearching(
 	}
 }
 
-/**
- * `solving` — bands twist in quarter turns, then replay in reverse and click
- * back to solved.
- *
- * The palindrome is the whole trick. A scramble that never resolves reads as
- * confusion; one that comes apart and goes back together reads as an answer
- * being found, and it loops seamlessly because it ends where it began.
- */
+/** `solving`: bands twist in quarter turns, then replay in reverse. The palindrome loops
+ * seamlessly. */
 function drawSolving(out: string[], size: number, t: number, p: Profile): void {
 	"worklet";
 	const c = size / 2;
@@ -195,8 +174,7 @@ function drawSolving(out: string[], size: number, t: number, p: Profile): void {
 	const cycle = 2 * moves * slot + rest;
 	const tc = t % cycle;
 
-	// How far through each move we are: all the way for the ones already made,
-	// eased for the one under way, nothing for the ones still to come.
+	// Progress per move: full for moves made, eased for the active one, zero for the rest.
 	const amount: number[] = [];
 	let active = -1;
 	for (let i = 0; i < moves; i++) {
@@ -283,12 +261,7 @@ function drawSolving(out: string[], size: number, t: number, p: Profile): void {
 	}
 }
 
-/**
- * `listening` — a waveform rolling through the latitude rings.
- *
- * Two waves at unrelated tempi, so the surface never quite repeats. One wave
- * gives a pulse, which reads as a heartbeat rather than as listening.
- */
+/** `listening`: two waves at unrelated tempi rolling through the latitude rings. */
 function drawListening(
 	out: string[],
 	size: number,
@@ -343,15 +316,8 @@ function drawListening(
 	}
 }
 
-/**
- * `composing` — an undulating sash of parallel strands on a great circle,
- * inside a faint dotted shell.
- *
- * The band's own tumble is frozen. Left spinning it competes with the
- * undulation and the two motions cancel into noise; held still, the wave
- * travelling along it is the only thing moving, and it reads as a line of
- * something being written.
- */
+/** `composing`: an undulating sash of strands on a great circle in a faint shell. The tumble is
+ * frozen. */
 function drawComposing(
 	out: string[],
 	size: number,
@@ -366,8 +332,7 @@ function drawComposing(
 	const ct = Math.cos(0.3);
 	const v = [0, 0, 0];
 
-	// The shell: a Fibonacci lattice, which is the only way to scatter points on
-	// a sphere evenly without them lining up into visible seams.
+	// Fibonacci lattice: the only even scatter on a sphere without visible seams.
 	const shell = 70;
 	const golden = Math.PI * (3 - Math.sqrt(5));
 	for (let i = 0; i < shell; i++) {
@@ -435,7 +400,7 @@ function drawComposing(
 
 /** The three outlines `shaping` cycles through, as closed paths. */
 const SHAPES: number[][] = [
-	// A circle is sampled, not listed — the marker below says so.
+	// Empty marks the circle, which is sampled in shapePoint.
 	[],
 	[0, -0.26, 0.24, 0.16, -0.24, 0.16],
 	[0, -0.2, 0.2, -0.2, 0.2, 0.2, -0.2, 0.2, -0.2, -0.2],
@@ -446,8 +411,8 @@ function shapePoint(out: number[], index: number, f: number): void {
 	"worklet";
 	const verts = SHAPES[index]!;
 	if (!verts.length) {
-		// Started at top-centre and walked clockwise, so every shape's dot zero is
-		// in the same place and the morph has nothing to unwind.
+		// Starts at top-centre, clockwise, so every shape's dot zero matches and the morph has
+		// nothing to unwind.
 		const a = -Math.PI / 2 + f * 2 * Math.PI;
 		out[0] = Math.cos(a) * 0.24;
 		out[1] = Math.sin(a) * 0.24;
@@ -482,15 +447,8 @@ function shapePoint(out: number[], index: number, f: number): void {
 	}
 }
 
-/**
- * `shaping` — a dotted outline morphing circle → triangle → square.
- *
- * The two outlines are blended first and the dots laid evenly along the
- * *result*, rather than each dot being tweened from its old place to its new
- * one. Tweening per dot bunches them at the corners halfway through the morph;
- * re-spacing every frame keeps the outline uniform at every instant, which is
- * what makes the shape read as a shape while it is changing.
- */
+/** `shaping`: an outline morphing circle, triangle, square. Dots are re-spaced on the blended
+ * outline. */
 function drawShaping(out: string[], size: number, t: number, p: Profile): void {
 	"worklet";
 	const c = size / 2;

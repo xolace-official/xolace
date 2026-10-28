@@ -11,11 +11,7 @@ export interface HeatmapHeaderProps extends ViewProps {
 	/** Trailing slot — a control, a badge, a range picker. Wins over `legend`. */
 	children?: ReactNode;
 	className?: string;
-	/**
-	 * Draw the ramp along the trailing edge, `Less ▢▢▢▢▢ More`. The key for a
-	 * grid that scrolls sideways, where `HeatmapChart.Legend` under the cells
-	 * would scroll away with them.
-	 */
+	/** Draw the ramp at the trailing edge: the key for a grid that scrolls sideways. */
 	legend?: boolean;
 	/** Text at the low end of the ramp, when `legend` is set. */
 	lessLabel?: string;
@@ -27,19 +23,8 @@ export interface HeatmapHeaderProps extends ViewProps {
 	value?: string;
 }
 
-/**
- * The strip above the grid: what the chart is of, what it currently reads, and
- * what the shading means.
- *
- * It belongs to the chart rather than to the card around it because it is about
- * the *grid* — the number changes as a finger moves across the cells, and the
- * ramp is the scale the chart itself derived. The card's header is a caption on
- * the tray the chart sits in; this is the chart introducing itself.
- *
- * The value is not derived here. Take it from `onActiveCellChange` and pass the
- * formatted string down, so one header can show a total when nothing is held
- * and a day's own count when something is.
- */
+/** The strip above the grid: title, readout and ramp key. Pass the value from
+ * `onActiveCellChange`. */
 export function HeatmapHeader({
 	className,
 	title,
@@ -90,8 +75,7 @@ export function HeatmapHeader({
 					</Text>
 				) : null}
 			</View>
-			{/* Shrinkable, unlike a view's default in React Native — held rigid, the
-          ramp takes the width it wants and the caption wraps around it. */}
+			{/* Shrinkable, unlike RN's default, so the caption wraps around the ramp. */}
 			{trailing ? <View className="shrink pt-1">{trailing}</View> : null}
 		</View>
 	);

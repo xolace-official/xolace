@@ -16,18 +16,13 @@ type Props = {
 const SELECTED_A11Y_STATE = { selected: true } as const;
 const UNSELECTED_A11Y_STATE = { selected: false } as const;
 
-/** Matches the pills below — see MAX_PILL_FONT_SCALE in texture-band. */
+/** Matches the pills below; see MAX_PILL_FONT_SCALE in texture-band. */
 const MAX_TAB_FONT_SCALE = 1.3;
 
 const CONTINUOUS = { borderCurve: "continuous" } as const;
 
 /**
- * A solid segmented track, deliberately unlike the words it filters.
- *
- * The pills below are translucent, tone-tinted and scattered, and half of them
- * already carry the accent's violet — so a translucent accent-tinted tab read
- * as a ninth word rather than the switch above them. Opaque fill on a recessed
- * track, square-ish against their capsules: two different kinds of thing.
+ * A solid segmented track, unlike the translucent pills, so a tab never reads as a ninth word.
  */
 export const TextureSetTabs = ({ activeSet, onSelect, disabled }: Props) => (
 	<View

@@ -48,19 +48,13 @@ export type TourProps = {
 	/** Whether it is running when uncontrolled. */
 	defaultOpen?: boolean;
 	onOpenChange?: (open: boolean) => void;
-	/**
-	 * The current step's `order`, controlled. Note that this is the author's
-	 * numbering and not a position in the sequence — the two differ as soon as a
-	 * step is conditional.
-	 */
+	/** The current step's `order`, controlled. The author's numbering, not a position in the
+	 * sequence. */
 	step?: number;
 	/** Where an uncontrolled tour starts. Defaults to the lowest `order`. */
 	defaultStep?: number;
-	/**
-	 * Fires with the `order` about to be shown, before it is. This is where a
-	 * target inside a scroller is brought back into view: the step is measured
-	 * on the next frame, so a `scrollTo` issued here lands first.
-	 */
+	/** Fires with the `order` about to be shown; measured next frame, so a `scrollTo` issued
+	 * here lands first. */
 	onStepChange?: (step: number) => void;
 	/** The last step was acknowledged. */
 	onFinish?: () => void;
@@ -72,11 +66,7 @@ export type TourProps = {
 	radius?: number;
 	/** Shape of every cutout. A step may override it. */
 	shape?: TourShape;
-	/**
-	 * Which side of the target the card prefers. `auto` puts it below when below
-	 * fits and above when it does not, which is the only behaviour that survives
-	 * a target near an edge.
-	 */
+	/** Side the card prefers. `auto` puts it below when that fits, else above. */
 	placement?: TourPlacement;
 	/** Ending the tour by pressing the dimmed area, or Android back. Default true. */
 	dismissible?: boolean;
@@ -84,21 +74,9 @@ export type TourProps = {
 	showProgress?: boolean;
 	/** Show the skip control. Default true. */
 	showSkip?: boolean;
-	/**
-	 * Leave the spotlit control pressable.
-	 *
-	 * Off by default: a tour is usually read rather than used, and a control that
-	 * reacts under the dim invites people to start doing the thing before they
-	 * have been told what it does. Turn it on for the walkthrough that asks you
-	 * to try the step — the target keeps its own `onPress`, so advancing the tour
-	 * from it is the app's call.
-	 */
+	/** Leave the spotlit control pressable. Off by default; the target keeps its own `onPress`. */
 	interactive?: boolean;
-	/**
-	 * The dim laid over everything outside the cutout. Black at 66% by default —
-	 * dark enough that the hole reads as the only lit thing, light enough that
-	 * the screen behind it is still recognisable as the screen you were on.
-	 */
+	/** The dim laid over everything outside the cutout. Black at 66% by default. */
 	overlayColor?: string;
 	/** The words on the card's controls. */
 	labels?: TourLabels;
@@ -113,11 +91,8 @@ export type Rect = {
 	height: number;
 };
 
-/**
- * One step as the root sees it: what to draw the hole around, and what to say
- * about it. The ref rather than a measured rect, because a rect taken at
- * registration is stale by the time the step comes up.
- */
+/** One step as the root sees it. Holds the ref, not a rect: a rect taken at registration goes
+ * stale. */
 export type TourStepEntry = {
 	order: number;
 	title?: string;

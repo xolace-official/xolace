@@ -10,7 +10,7 @@ export function usePlayerInk() {
 	return String(useCSSVariable("--color-player-ink"));
 }
 
-/** Secondary (speaker) glyphs — `text-player-ink/60`'s twin for a tintColor. */
+/** Secondary glyphs: `text-player-ink/60`'s twin for a tintColor. */
 const DIM = { opacity: 0.6 };
 
 export function GlyphButton({

@@ -33,17 +33,14 @@ type Props = {
 	answer: ReflectiveAnswer;
 	cardId: Id<"follow_up_cards">;
 	streak: number;
-	/** False on acute / escalation cards (presence-first); the server also refuses acute and crisis. */
+	/** False on acute / escalation cards (presence-first); the server also refuses acute and
+	 * crisis. */
 	canShare: boolean;
 	onClose: () => void;
 };
 
-/**
- * The reflective next step for `lighter` (#449) and `processed` (#450): an
- * optional note on what helped, an optional anonymous share, and a nod to the
- * streak — `processed` adds a milestone line. Done persists the note (private
- * unless shared); Skip and X just leave — the chip answer already stands.
- */
+/** Reflective step for `lighter` (#449) and `processed` (#450). Done persists the note; Skip
+ * and X just leave. */
 export function ReflectiveStep({
 	answer,
 	cardId,
@@ -85,8 +82,8 @@ export function ReflectiveStep({
 			has_text: hasText,
 			shared: share,
 		});
-		// An empty Done closes quietly — nothing was saved to acknowledge. The
-		// toast provider sits above the route, so the toast outlives the close.
+		// An empty Done closes quietly. The toast provider sits above the route,
+		// so the toast outlives the close.
 		if (hasText) {
 			playAffirmativePress();
 			toast.show({ label: share ? REFLECTIVE_SAVED_SHARED : REFLECTIVE_SAVED });

@@ -54,8 +54,7 @@ export const TimelineScreen = () => {
 	const { markInteractive } = useObserve();
 
 	// Per-route TTI for /timeline: ready once the first page resolves, not at
-	// mount. Hook stays above the early return to satisfy rules-of-hooks; the
-	// metric is recorded only on the first call per navigation.
+	// mount. Recorded only on the first call per navigation.
 	useEffect(() => {
 		if (!isLoading) {
 			markInteractive();
@@ -66,8 +65,7 @@ export const TimelineScreen = () => {
 		return <ActiveLoader />;
 	}
 
-	// Narrows windowDays to a number for the banner. Free users always get a
-	// number back with hasOlderSessions; the null check is the type proof.
+	// Free users always get a number with hasOlderSessions; the null check narrows the type.
 	const showNudge = showUpgradeNudge && windowDays !== null;
 
 	return (

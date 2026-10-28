@@ -37,8 +37,6 @@ const useShimmer = (): ShimmerContextValue => {
 	return ctx;
 };
 
-// ── Root ────────────────────────────────────────────────────────────────
-
 const ShimmerRoot = React.forwardRef<ViewInstance, ShimmerProps>(
 	({ debug = false, children, style, onLayout, ...props }, ref) => {
 		const containerWidth = useSharedValue(0);
@@ -83,8 +81,6 @@ const ShimmerRoot = React.forwardRef<ViewInstance, ShimmerProps>(
 );
 
 ShimmerRoot.displayName = "Shimmer";
-
-// ── Overlay ─────────────────────────────────────────────────────────────
 
 const ShimmerOverlay = React.forwardRef<Animated.View, ShimmerOverlayProps>(
 	(
@@ -180,8 +176,6 @@ const ShimmerOverlay = React.forwardRef<Animated.View, ShimmerOverlayProps>(
 
 ShimmerOverlay.displayName = "Shimmer.Overlay";
 
-// ── Mask ────────────────────────────────────────────────────────────────
-
 const ShimmerMask = ({ children, overlay, background }: ShimmerMaskProps) => {
 	const { debug } = useShimmer();
 
@@ -208,8 +202,6 @@ const ShimmerMask = ({ children, overlay, background }: ShimmerMaskProps) => {
 };
 
 ShimmerMask.displayName = "Shimmer.Mask";
-
-// ── Export ───────────────────────────────────────────────────────────────
 
 const Shimmer = Object.assign(ShimmerRoot, {
 	Mask: ShimmerMask,

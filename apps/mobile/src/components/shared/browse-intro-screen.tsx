@@ -17,12 +17,8 @@ type Props = {
 
 const enter = (i: number) => FadeInDown.delay(250 + i * 90).duration(500);
 
-/**
- * One-time welcome shared by every Browse surface (Music, Support audio,
- * Lantern): hero art dipping into the themed surface, title, subtitle, and a
- * hold-to-continue CTA. No surface-specific logic — copy, art, and the
- * completion callback are props.
- */
+/** One-time welcome shared by every Browse surface: hero art, title, subtitle, hold-to-continue
+ * CTA. */
 export function BrowseIntroScreen({
 	heroImage,
 	title,

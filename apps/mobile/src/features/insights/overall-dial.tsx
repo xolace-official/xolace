@@ -42,8 +42,8 @@ export function OverallDial({
 		if (overall === null) {
 			return;
 		}
-		// A rising swell as the ticks first fill: the number arriving, not a reward.
-		// Once per visit — a reactive update just moves the ticks.
+		// A rising swell as the ticks first fill, once per visit; a reactive update
+		// just moves the ticks.
 		if (!swelled.current) {
 			Presets.swell();
 		}

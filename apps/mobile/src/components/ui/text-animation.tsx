@@ -1,40 +1,6 @@
-/**
- * TextAnimation — the five ways a piece of text arrives.
- *
- * ```tsx
- * <TextAnimation.Typing text="Everything ships with its accessibility done" />
- * <TextAnimation.Rotating text={['fast', 'native', 'yours']} />
- * <TextAnimation.Counting value={2048} />
- * <TextAnimation.Sliding value={price} decimals={2} />
- * <TextAnimation.Scrolling value={120} step={10} />
- * ```
- *
- * ## Why one component with five parts
- *
- * They are one idea — a value that changes and wants to be seen changing —
- * and they share every prop that says *how*: `duration`, `delay`, `loop`,
- * `enabled`. Put on the `TextAnimation` root, those become the defaults for
- * everything inside it, so a hero with three of these in it is configured once
- * rather than three times.
- *
- * ## What React Native forces
- *
- * Nested `Text` is the only thing that gets real line-breaking, and it cannot
- * be transformed — a `translateY` on it is ignored. So the two parts that
- * animate a whole string, `Typing` and `Counting`, stay real text and keep
- * wrapping; the three that slide glyphs past each other lay out as rows of
- * views, which buys the transform and costs line-breaking. None of the three
- * is ever a paragraph, so the trade only ever falls the right way.
- *
- * ## Why the digits are drawn rather than measured
- *
- * A number animated as React state is a re-render per frame. `Counting` runs
- * the value on the UI thread and only crosses back when the *rounded* number
- * changes, which for a whole number is a couple of dozen times rather than
- * sixty a second. The sliding and scrolling parts do not cross back at all:
- * every digit is already rendered, and the animation is a transform on a
- * column of them.
- */
+// TextAnimation: five ways text arrives, sharing duration/delay/loop/enabled
+// defaults from the root. Typing and Counting stay nested Text (wraps, cannot be
+// transformed); Rotating, Sliding and Scrolling are rows of views for transforms.
 
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -78,20 +44,13 @@ const textAnimationVariants = tv({
 	slots: {
 		caret: "text-foreground",
 		column: "items-center",
-		/*
-		 * `tabular-nums` on everything numeric, without exception. Proportional
-		 * digits are different widths, so a rolling number changes width as it
-		 * rolls and shoves whatever is beside it back and forth — which reads as
-		 * the layout being broken rather than as the number being alive.
-		 */
+		// tabular-nums on everything numeric: proportional digits change width as they roll.
 		digits: "flex-row items-center tabular-nums",
 		highlight: "rounded-lg bg-secondary",
 	},
 });
 
-/* -------------------------------------------------------------------------- */
-/* Root                                                                       */
-/* -------------------------------------------------------------------------- */
+/* Root */
 
 interface TextAnimationContextValue {
 	delay?: number;
@@ -107,27 +66,16 @@ export interface TextAnimationProps extends ViewProps {
 	className?: string;
 	/** How long to wait before starting, in milliseconds. */
 	delay?: number;
-	/**
-	 * How long one pass takes, in milliseconds. What that measures depends on
-	 * the part: a keystroke for `Typing`, a phrase's turn on screen for
-	 * `Rotating`, the whole journey for the three that count.
-	 */
+	/** Milliseconds per pass: a keystroke for Typing, a phrase's turn for Rotating, the run for
+	 * counters. */
 	duration?: number;
-	/**
-	 * Animate at all. `false` draws the finished text or the final number
-	 * immediately, which is also what a reduced-motion setting does.
-	 */
+	/** `false` draws the finished state immediately, as reduced motion also does. */
 	enabled?: boolean;
 	/** Start again from the beginning when the run finishes. */
 	loop?: boolean;
 }
 
-/**
- * Shared configuration, and a row to lay the parts out in.
- *
- * Optional in every case — each part works standalone with its own props, and
- * this is only here so a line with three of them in it says `duration` once.
- */
+/** Shared defaults and a row to lay the parts out in. Optional: each part works standalone. */
 function TextAnimationRoot({
 	className,
 	duration,
@@ -152,13 +100,7 @@ function TextAnimationRoot({
 }
 TextAnimationRoot.displayName = "TextAnimation";
 
-/**
- * The part's own prop, then the root's, then the part's own default.
- *
- * Written out because `??` alone would take the root's value over an explicit
- * `false` on the part, and "the root says loop, this one does not" is the
- * whole reason the root's values are defaults rather than settings.
- */
+/** The part's own prop, then the root's, then the part's default. */
 function useShared<K extends keyof TextAnimationContextValue>(
 	key: K,
 	own: TextAnimationContextValue[K],
@@ -170,13 +112,7 @@ function useShared<K extends keyof TextAnimationContextValue>(
 	>;
 }
 
-/**
- * The same colour at a given alpha.
- *
- * A gradient stop of `transparent` is black at zero alpha on Android, so a
- * fade to it arrives through a grey smear on the way — it has to be the same
- * colour, faded.
- */
+/** Same colour at a given alpha: on Android a `transparent` gradient stop fades through black. */
 function withAlpha(color: string, alpha: number): string {
 	if (color.startsWith("#")) {
 		const hex = color.slice(1);
@@ -210,9 +146,7 @@ function useStill(enabled: boolean): boolean {
 	return useReducedMotion() || !enabled;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Typing                                                                     */
-/* -------------------------------------------------------------------------- */
+/* Typing */
 
 export interface TextAnimationTypingProps extends Omit<TextProps, "children"> {
 	/** Draw a blinking caret after the text. */
@@ -231,25 +165,12 @@ export interface TextAnimationTypingProps extends Omit<TextProps, "children"> {
 	loop?: boolean;
 	/** Called once the last string has finished being typed. */
 	onDone?: () => void;
-	/**
-	 * What to type. An array is typed, held, erased and replaced by the next,
-	 * which is the shape a rotating headline wants.
-	 */
+	/** What to type. An array is typed, held, erased and replaced by the next. */
 	text: string | string[];
 }
 
-/**
- * A string arriving one character at a time.
- *
- * The text is React state rather than anything on the UI thread, and it has
- * to be: a character is a different string, and a string is a re-render
- * whichever thread decided on it. That is fine at a keystroke every 50-odd
- * milliseconds, which is three orders of magnitude slower than a frame.
- *
- * It reserves no space. A line that grows as it types pushes whatever is under
- * it down the screen on every keystroke, so give the container a height, or
- * type into a block that has one already.
- */
+/** A string typed one character at a time. Reserves no height: size the container or content
+ * below shifts. */
 function TextAnimationTyping({
 	className,
 	text,
@@ -275,15 +196,13 @@ function TextAnimationTyping({
 	const [shown, setShown] = useState("");
 	const [typing, setTyping] = useState(false);
 
-	// Held in a ref so the effect below does not restart the whole run every
-	// time the caller passes a new inline arrow function.
+	// Ref so a new inline onDone does not restart the run.
 	const done = useRef(onDone);
 	useEffect(() => {
 		done.current = onDone;
 	}, [onDone]);
 
 	useEffect(() => {
-		// Still: nothing to schedule — the render below shows the finished string.
 		if (still) {
 			return;
 		}
@@ -351,14 +270,8 @@ function TextAnimationTyping({
 	}, [hold, repeat, step, still, strings, wait]);
 
 	return (
-		/*
-		 * The caret is nested *inside* the text rather than laid out beside it. As
-		 * a sibling in a row it sits against the right of the whole block, so the
-		 * moment a line wraps it stops being after the last character and starts
-		 * floating at the end of the paragraph — which is exactly where a caret
-		 * should never be. Nested, it is one more glyph in the flow and lands
-		 * wherever typing has got to, on whichever line that is.
-		 */
+		// Nested in the text rather than beside it: a sibling caret sits at the end of
+		// the whole block once a line wraps; nested, it follows the last character.
 		<Text className={className} {...props}>
 			{still ? (strings[0] ?? "") : shown}
 			{caret ? (
@@ -373,16 +286,8 @@ function TextAnimationTyping({
 }
 TextAnimationTyping.displayName = "TextAnimation.Typing";
 
-/**
- * The caret. Solid while characters are arriving, blinking while they are not
- * — which is what a real one does, and what says "waiting" rather than
- * "finished".
- *
- * A glyph rather than a view, because only a glyph takes part in line-breaking
- * — and because a character is sized by the font it is in, so it is the right
- * height at every text size without being told any of them. Nested text can be
- * faded but not transformed, which the opacity here is well inside.
- */
+/** Solid while characters arrive, blinking while idle. A glyph, so it line-breaks and sizes
+ * with the font. */
 function TypingCaret({
 	blinking,
 	still,
@@ -427,9 +332,7 @@ function TypingCaret({
 	);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Rotating                                                                   */
-/* -------------------------------------------------------------------------- */
+/* Rotating */
 
 export interface TextAnimationRotatingProps
 	extends Omit<TextProps, "children"> {
@@ -443,21 +346,8 @@ export interface TextAnimationRotatingProps
 	text: string | string[];
 }
 
-/**
- * One phrase replaced by the next, the outgoing one leaving upward and the
- * incoming one arriving from below.
- *
- * The box is sized by the longest phrase and not by the current one. A box
- * that resizes as the words change makes the line around it jump, which is
- * more distracting than the effect is interesting — and a box sized by the
- * *first* phrase clips every longer one that follows, which is worse than
- * either.
- *
- * So the width comes from a sizer: every phrase, laid out invisibly in a view
- * with no height. Yoga still takes a column's width from its children when
- * their height is fixed at zero, so the box ends up as wide as the longest
- * phrase and as tall as one line of them.
- */
+/** One phrase leaves upward as the next arrives from below. A zero-height sizer holding every
+ * phrase gives the box the longest phrase's width, so it never resizes or clips. */
 function TextAnimationRotating({
 	className,
 	text,
@@ -499,8 +389,7 @@ function TextAnimationRotating({
 
 	return (
 		<View className={cn("overflow-hidden", className)}>
-			{/* The sizer. No height, so it contributes nothing but width, and
-          invisible, so what it contributes is only a measurement. */}
+			{/* Sizer: zero height, invisible, contributes only the longest phrase's width. */}
 			<View
 				accessibilityElementsHidden
 				pointerEvents="none"
@@ -517,9 +406,7 @@ function TextAnimationRotating({
 				<RotatingPhrase
 					active={at === index}
 					key={at}
-					// The first is laid out in flow and gives the box its height; the
-					// rest are stacked over it, so one line is the height whichever
-					// phrase is showing.
+					// The first is in flow and gives the box its height; the rest stack over it.
 					measured={at === 0}
 					phrase={phrase}
 					still={still}
@@ -554,8 +441,7 @@ function RotatingPhrase({
 			return;
 		}
 		if (active) {
-			// From below, not from wherever it was left: a phrase coming back after
-			// a full cycle should arrive the same way it did the first time.
+			// Reset so a phrase coming back arrives from below again.
 			travel.value = ROTATE_DISTANCE;
 			travel.value = withTiming(0, {
 				duration: 300,
@@ -578,8 +464,7 @@ function RotatingPhrase({
 
 	return (
 		<Animated.View
-			// Only the phrase on screen is announced. All of them are laid out, and
-			// a screen reader reading the whole list is the cost of that.
+			// Only the phrase on screen is announced.
 			accessibilityElementsHidden={!active}
 			importantForAccessibility={active ? "auto" : "no-hide-descendants"}
 			style={[
@@ -592,9 +477,7 @@ function RotatingPhrase({
 	);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Counting                                                                   */
-/* -------------------------------------------------------------------------- */
+/* Counting */
 
 /** Formats a number the way both counting parts agree to. */
 function useFormatter(
@@ -624,11 +507,7 @@ export interface TextAnimationCountingProps
 	/** How long the whole journey takes, in milliseconds. */
 	duration?: number;
 	enabled?: boolean;
-	/**
-	 * Formatting for the number, as `Intl.NumberFormat` options — a currency, a
-	 * percentage, grouped thousands. Falls back to a plain fixed-point string on
-	 * an engine whose `Intl` cannot do it.
-	 */
+	/** `Intl.NumberFormat` options; falls back to fixed-point where Intl cannot. */
 	formatOptions?: Intl.NumberFormatOptions;
 	/** Where it starts from. Defaults to zero. */
 	from?: number;
@@ -636,15 +515,8 @@ export interface TextAnimationCountingProps
 	value: number;
 }
 
-/**
- * A number counting up to itself.
- *
- * The text is rewritten from a Reanimated reaction rather than from state:
- * sixty re-renders a second for a number that is only ever a string is the
- * kind of thing that makes an otherwise still screen drop frames. Only the
- * rounded value crosses back to JavaScript, so the work per frame is one
- * comparison and, at most, one `setState` on a value that actually changed.
- */
+/** A number counting up to itself. Progress runs on the UI thread; only the rounded value
+ * reaches state. */
 function TextAnimationCounting({
 	className,
 	value,
@@ -674,8 +546,7 @@ function TextAnimationCounting({
 		const timer = setTimeout(() => {
 			progress.value = withTiming(value, {
 				duration: span,
-				// Fast at first and settling at the end, which is what makes the last
-				// few digits readable instead of a blur that stops.
+				// Settles at the end so the last digits are readable.
 				easing: Easing.out(Easing.cubic),
 			});
 		}, wait);
@@ -699,8 +570,7 @@ function TextAnimationCounting({
 
 	return (
 		<Text
-			// The final value, always: a screen reader should be told the number,
-			// not read a slot machine.
+			// Screen readers get the final value, not a slot machine.
 			accessibilityLabel={format(value)}
 			className={cn("tabular-nums", className)}
 			{...props}
@@ -711,9 +581,7 @@ function TextAnimationCounting({
 }
 TextAnimationCounting.displayName = "TextAnimation.Counting";
 
-/* -------------------------------------------------------------------------- */
-/* Sliding                                                                    */
-/* -------------------------------------------------------------------------- */
+/* Sliding */
 
 export interface TextAnimationSlidingProps extends ViewProps {
 	className?: string;
@@ -738,17 +606,8 @@ export interface TextAnimationSlidingProps extends ViewProps {
 	weight?: TextProps["weight"];
 }
 
-/**
- * An odometer: every digit is a column of ten, and each column rolls to the
- * one it should be showing.
- *
- * Nothing here is measured at runtime. A column is ten stacked digits and the
- * whole thing is moved by a fraction of its own height, so the roll needs no
- * `onLayout`, no first frame at the wrong offset, and no re-render per digit
- * per frame. The height comes from one hidden `0` in flow, which is what makes
- * the column as tall as the font is rather than as tall as a number happens to
- * be.
- */
+/** An odometer: each digit is a column of ten moved by a fraction of its own height, so nothing
+ * is measured. A hidden `0` in flow gives the height. */
 function TextAnimationSliding({
 	className,
 	value,
@@ -831,8 +690,7 @@ function TextAnimationSliding({
 	return (
 		<View
 			accessibilityLabel={`${negative ? "-" : ""}${whole}${fraction ? decimalSeparator + fraction : ""}`}
-			// The number as one thing, so a screen reader says "1,024" rather than
-			// reading four columns of ten digits each.
+			// One accessible node, so a screen reader says the number, not ten digits per column.
 			accessibilityRole="text"
 			className={digits({ className })}
 			{...props}
@@ -883,19 +741,14 @@ function SlidingColumn({
 		};
 	}, [delay, digit, offset, still]);
 
-	/*
-	 * A percentage of the column's own height, so nothing has to be measured.
-	 * The column is ten digits tall; moving it by `-n/10` of that puts the nth
-	 * one in the window, whatever the font size turns out to be.
-	 */
+	// Percentage of the column's own height: -n/10 puts the nth digit in the window, unmeasured.
 	const style = useAnimatedStyle(() => ({
 		transform: [{ translateY: `${(-offset.value / TEN.length) * 100}%` }],
 	}));
 
 	return (
 		<View className="overflow-hidden">
-			{/* In flow and invisible: it is what gives the window a digit's height
-          and a digit's width without either being a number in the source. */}
+			{/* In flow and invisible: gives the window a digit's height and width. */}
 			<Text className={cn("opacity-0", className)} size={size} weight={weight}>
 				0
 			</Text>
@@ -918,9 +771,7 @@ function SlidingColumn({
 	);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Scrolling                                                                  */
-/* -------------------------------------------------------------------------- */
+/* Scrolling */
 
 export interface TextAnimationScrollingProps extends ViewProps {
 	/** How many values to show above and below the one in the window. */
@@ -931,22 +782,12 @@ export interface TextAnimationScrollingProps extends ViewProps {
 	/** How long the run takes, in milliseconds. */
 	duration?: number;
 	enabled?: boolean;
-	/**
-	 * What the top and bottom of the window fade into — a theme token name, or
-	 * any colour. It has to be told: the fade is painted, so it can only be the
-	 * right colour if it is the colour of whatever is behind the window.
-	 * Defaults to `--color-background`; pass `--color-card` inside a card.
-	 *
-	 * `false` turns the fade off, for a window on a surface that is not one flat
-	 * colour.
-	 */
+	/** Colour the window edges fade into, a token or any colour matching the surface. `false`
+	 * disables. */
 	fadeColor?: string | false;
 	/** Formatting for each value, as `Intl.NumberFormat` options. */
 	formatOptions?: Intl.NumberFormatOptions;
-	/**
-	 * Draw a band behind the value in the window, so the one being chosen is
-	 * told apart from the scale around it.
-	 */
+	/** Draw a band behind the value in the window. */
 	highlight?: boolean;
 	/** Styles that band. */
 	highlightClassName?: string;
@@ -962,15 +803,8 @@ export interface TextAnimationScrollingProps extends ViewProps {
 	weight?: TextProps["weight"];
 }
 
-/**
- * A column of values scrolling past a window, coming to rest on one.
- *
- * The difference from `Sliding` is what the reader is being told. An odometer
- * says *this number changed*; a column that scrolls past its neighbours says
- * *this number was chosen from a scale*, and the values either side of it are
- * the scale. Reach for it for a target, a threshold, a picked quantity — and
- * for a plain change of value, reach for the other one.
- */
+/** A column of values scrolling past a window to rest on one: "chosen from a scale", not
+ * "changed". */
 function TextAnimationScrolling({
 	className,
 	value,
@@ -1027,12 +861,7 @@ function TextAnimationScrolling({
 	}, [around, step, value]);
 
 	const rows = around * 2 + 1;
-	/*
-	 * The window shows `rows` values and the chosen one belongs in the middle of
-	 * them, so the column comes to rest `around` short of the target's own index.
-	 * Landing on the index itself would put the answer against the top edge with
-	 * the whole scale below it, which reads as having overshot.
-	 */
+	// Rest `around` short of the target's index so the answer sits mid-window, not at the top edge.
 	const found = values.indexOf(value);
 	const target = Math.max(0, (found >= 0 ? found : values.length - 1) - around);
 
@@ -1068,8 +897,7 @@ function TextAnimationScrolling({
 			className={cn("overflow-hidden", className)}
 			{...props}
 		>
-			{/* `rows` invisible values in flow: the window is as tall as the number
-          of rows asked for, at whatever height the font makes them. */}
+			{/* `rows` invisible values in flow size the window. */}
 			<View className="opacity-0">
 				{Array.from({ length: rows }, (_, i) => (
 					<Text className={textClassName} key={i} size={size} weight={weight}>
@@ -1078,9 +906,7 @@ function TextAnimationScrolling({
 				))}
 			</View>
 
-			{/* Behind the column, so the value reads on top of it rather than
-          through it. One row tall and in the middle, which is where the run
-          comes to rest. */}
+			{/* One row tall, mid-window, behind the column. */}
 			{highlight ? (
 				<View
 					className={band({ className: highlightClassName })}
@@ -1111,13 +937,8 @@ function TextAnimationScrolling({
 				))}
 			</Animated.View>
 
-			{/*
-			 * The neighbours have to recede or the window is a list of five numbers
-			 * with no answer in it. Fading the edges into the surface is what says
-			 * the column continues past them — and it is painted rather than masked
-			 * because a mask needs a native module this component would otherwise
-			 * not want.
-			 */}
+			{/* Edges fade into the surface so the column reads as continuing. Painted: a mask
+			    needs a native module. */}
 			{fade ? (
 				<>
 					<LinearGradient

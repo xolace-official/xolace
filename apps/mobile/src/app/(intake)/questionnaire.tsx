@@ -1,11 +1,5 @@
-/**
- * The intake questionnaire (T5, issue #265) — 11 questions across 3 sections,
- * 2 info interstitials, one branch, paged internally.
- *
- * Internally paged rather than one route per step: intake is forward-only with
- * no back edge, so the step cursor is state, not history, and a cold kill lands
- * back at the start with the (non-persisted) answers slice already empty.
- */
+/** The intake questionnaire (T5, #265), paged internally: forward-only, so the step cursor is
+ * state and a cold kill restarts it. */
 
 import { useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
@@ -55,22 +49,15 @@ type Step =
 	| "finding"
 	| "count";
 
-/**
- * The steps this screen owns a funnel entry for (T7 §2.3). The section screens
- * fire their own per-question steps; the beats, the compounding screen and the
- * camper count carry no answer and are not in the taxonomy.
- */
+/** Steps this screen owns a funnel entry for (T7 §2.3); section screens fire their own
+ * per-question steps. */
 const STEP_KEYS: Partial<Record<Step, IntakeStepKey>> = {
 	name: "username",
 	privacy: "interstitial_privacy",
 	shake: "interstitial_feedback_awareness",
 };
 
-/**
- * Q11 is presented as Yes/No, so the questionnaire holds it as a string; the
- * mutation takes a boolean. Nothing else needs translating — every other value
- * is already the enum `intake.complete` accepts.
- */
+/** Q11 is held as a Yes/No string; the mutation takes a boolean. */
 function toIntakeAnswers(answers: QuestionnaireAnswers): IntakeAnswers {
 	const { seriesWantInApp, ...rest } = answers;
 	return {
@@ -84,14 +71,11 @@ function toIntakeAnswers(answers: QuestionnaireAnswers): IntakeAnswers {
 export default function IntakeQuestionnaire() {
 	const router = useRouter();
 	const [step, setStep] = useState<Step>("name");
-	// The name is echoed back on the beat after it's picked, and threaded into
-	// each section's mascot line after that. Local, not from the store: the
-	// store's copy is the submission payload, not screen state.
+	// Local, not from the store: the store's copy is the submission payload.
 	const [name, setName] = useState("");
 	const setIntakeAnswers = useAppStore((s) => s.setIntakeAnswers);
 
-	// Deduped against the root's subscription. An existing user already has a
-	// name, and Q1 pre-fills from it rather than suggesting a new handle.
+	// An existing user already has a name; Q1 pre-fills from it.
 	const context = useFullContext();
 	const { isPlus } = usePlusEntitlement();
 	const completeIntake = useIntakeComplete();
@@ -112,29 +96,17 @@ export default function IntakeQuestionnaire() {
 		setStep(next);
 	};
 
-	/*
-	 * Entitlement skip lives here, at the completion handler — not as a guard
-	 * around the paywall screen (T4, issue #235): someone who already pays never
-	 * sees the offer, but still gets the message and the questions.
-	 *
-	 * `isPlus` is false until both entitlement sources answer, so a subscriber
-	 * whose SDK is still loading eleven questions later is pushed anyway.
-	 * Waiting on `isResolved` here would trade that for a Done button that
-	 * silently does nothing, so the offer screen catches it instead: it holds a
-	 * blank frame and finishes intake the moment entitlement resolves, and the
-	 * deck is never shown to someone already paying.
-	 */
+	// The entitlement skip lives here (T4, #235): a payer still gets the
+	// questions, never the offer. `isPlus` can resolve late; the offer screen
+	// catches that behind a blank frame rather than an inert Done here.
 	const finish = (answers: QuestionnaireAnswers) => {
 		if (finishing.current) {
 			return;
 		}
 		finishing.current = true;
 		setIntakeAnswers(toIntakeAnswers(answers));
-		// Read back rather than reusing `answers`: this event carries the whole
-		// set — Q1 included — and the person-property dual-write with it. Its own
-		// latch, because the one above comes off again after a failed write and
-		// the questionnaire is only finished once however many times Done is
-		// pressed after that.
+		// Read back from the store so the event carries the whole set, Q1 included.
+		// Own latch: the one above comes off after a failed write.
 		if (!completed.current) {
 			completed.current = true;
 			trackQuestionnaireCompleted(
@@ -147,9 +119,8 @@ export default function IntakeQuestionnaire() {
 			return;
 		}
 		trackPaywallSkipped(posthog);
-		// `completeIntake` swallows a failed write (toast + stay put), so the latch
-		// has to come off or Done is inert for the rest of the flow — and intake
-		// has no back edge to escape through.
+		// `completeIntake` swallows a failed write, so the latch must come off or
+		// Done is inert for the rest of the flow.
 		void completeIntake("skipped_paywall").finally(() => {
 			finishing.current = false;
 		});
@@ -157,8 +128,7 @@ export default function IntakeQuestionnaire() {
 
 	switch (step) {
 		case "name": {
-			// Held until the query answers so the field isn't seeded with a
-			// suggestion the user's own saved name is about to replace.
+			// Held until the query answers so a saved name is never replaced by a suggestion.
 			if (context === undefined) {
 				return <IntakeBlank />;
 			}
@@ -167,10 +137,8 @@ export default function IntakeQuestionnaire() {
 				<NameStep
 					initialName={saved || suggestHandle()}
 					onDone={(displayName, edited) => {
-						// The handle itself never leaves the device — only whether the
-						// one already in the field was kept (T7 §2.3). `had_saved_name`
-						// is what tells the two apart: an existing user was never shown a
-						// suggestion, so their "kept it" says nothing about suggestions.
+						// The handle never leaves the device, only whether it was kept
+						// (T7 §2.3). `had_saved_name` separates a saved name from a suggestion.
 						trackQuestionAnswered(
 							posthog,
 							"username",
@@ -228,9 +196,8 @@ export default function IntakeQuestionnaire() {
 				/>
 			);
 		case "count":
-			// The count reads real numbers, so it can't be the screen that submits —
-			// a slow or failed stats read must never hold the answers hostage. They
-			// are already in the store by now; this only walks on.
+			// The count reads real numbers, so it never submits: a slow stats read
+			// must not hold the answers hostage. They are already in the store.
 			return <CountStep onDone={() => finish(finalAnswers.current ?? {})} />;
 	}
 }

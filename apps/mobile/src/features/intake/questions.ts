@@ -1,27 +1,13 @@
-/**
- * The intake questionnaire, as data (T1, issue #232 · T2, issue #233).
- *
- * Question text, option labels and enum values are the T1 resolution table
- * verbatim — this file is the single place they live, so the screen renders
- * them and never restates them. The two interstitials are not here — they
- * carry no answer and no enum, so their copy lives with the screen that says
- * it (`questionnaire/interstitials.tsx`). Values are the
- * `intakeAnswerValidators` enums
- * (`convex/lib/validators.ts`), which is what lets an answer go to
- * `intake.complete` untranslated.
- *
- * "I'd rather not say" is a real last option with the same tap target, and it
- * appears only where T1 says it does — Q2, Q3, Q4, Q6, Q8. Q5 and Q7 already
- * carry a native neutral ("depends on the day", "Not sure") and get no second
- * escape hatch.
- */
+// The intake questionnaire as data (T1 #232, T2 #233): the T1 resolution table verbatim.
+// Values are the `intakeAnswerValidators` enums (`convex/lib/validators.ts`), so answers
+// reach `intake.complete` untranslated. "I'd rather not say" appears only on Q2, Q3, Q4, Q6, Q8.
 import { Platform } from "react-native";
 import type { IntakeAnswers } from "@/store/intake-slice";
 
 /** Cap on a multi-select question, mirrored server-side in `intake.complete`. */
 export const MAX_SELECTIONS = 3;
 
-/** The one answer that opens the series branch (Q10 → Q11). */
+/** The one answer that opens the series branch (Q10, Q11). */
 export const SERIES_BRANCH_VALUE = "short_form_video";
 
 export interface IntakeChoice {
@@ -48,7 +34,7 @@ const PREFER_NOT_TO_SAY: IntakeChoice = {
 	value: "prefer_not_to_say",
 };
 
-/** §1 — You. Q1 (username) is its own screen; these are Q2 and Q3. */
+/** §1 You. Q1 (username) is its own screen; these are Q2 and Q3. */
 export const SECTION_YOU: readonly IntakeQuestion[] = [
 	{
 		choices: [
@@ -87,7 +73,7 @@ export const SECTION_YOU: readonly IntakeQuestion[] = [
 	},
 ];
 
-/** §2 — How you carry it. Q4 → Q7. */
+/** §2 How you carry it. Q4 to Q7. */
 export const SECTION_CARRY: readonly IntakeQuestion[] = [
 	{
 		choices: [
@@ -157,7 +143,7 @@ export const SECTION_CARRY: readonly IntakeQuestion[] = [
 	},
 ];
 
-/** §3 — Finding us. Q8 → Q9, then the series branch. */
+/** §3 Finding us. Q8 to Q9, then the series branch. */
 export const SECTION_FINDING: readonly IntakeQuestion[] = [
 	{
 		choices: [
@@ -201,13 +187,8 @@ export const SECTION_FINDING: readonly IntakeQuestion[] = [
 	},
 ];
 
-/**
- * Q10 — the series question, reached only from `short_form_video`.
- *
- * "Yes" is not an answer on its own: it reveals the rating sub-tap inline, and
- * the rating is what gets recorded. So the three ratings and `not_seen` are the
- * four values `seriesSeen` accepts, and the Yes/No above them is presentation.
- */
+/** Q10, reached only from `short_form_video`. "Yes" reveals the rating inline; these plus
+ * `not_seen` are `seriesSeen`'s values. */
 export const SERIES_SEEN_RATINGS: readonly IntakeChoice[] = [
 	{ label: "Loved it", value: "loved_it" },
 	{ label: "It was okay", value: "it_was_okay" },
@@ -216,7 +197,7 @@ export const SERIES_SEEN_RATINGS: readonly IntakeChoice[] = [
 
 export const SERIES_NOT_SEEN = "not_seen";
 
-/** Q11 — always asked if the branch fired. */
+/** Q11, always asked if the branch fired. */
 export const SERIES_WANT_QUESTION = "Want the series in Xolace?";
 export const SERIES_WANT_CHOICES: readonly IntakeChoice[] = [
 	{ label: "Yes, put the series and new episodes here", value: "true" },

@@ -17,9 +17,9 @@ import { AppText } from "@/components/shared/app-text";
 import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
-/** Time user must hold to complete; drives fill progress 0→1 */
+/** Time the user must hold to complete. */
 const DEFAULT_HOLD_DURATION_MS = 3000;
-/** Scale on press for tactile feedback; subtle enough to feel responsive */
+/** Scale on press, for tactile feedback. */
 const PRESS_SCALE = 0.96;
 const PRESS_SCALE_IN = 250;
 const PRESS_SCALE_OUT = 200;
@@ -36,11 +36,8 @@ type Props = {
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const AnimatedAppText = Animated.createAnimatedComponent(AppText);
 
-/**
- * Press-and-hold CTA: a left-to-right fill sweeps across the button as the
- * user holds, revealing an inverse-color copy of the label underneath.
- * Releasing before the fill completes cancels and resets it.
- */
+/** Press-and-hold CTA: a fill sweeps across while held, revealing an inverse label; releasing
+ * early resets. */
 export function HoldToContinueButton({
 	label,
 	onComplete,
@@ -50,7 +47,7 @@ export function HoldToContinueButton({
 	const foreground = useThemeColor("foreground") as string;
 	const background = useThemeColor("background") as string;
 
-	/** 0→1 over hold duration; drives fill width and reveal-text translation */
+	/** 0→1 over the hold; drives fill width and reveal-text translation. */
 	const fillProgress = useSharedValue(0);
 	const pressScale = useSharedValue(1);
 	const textXShared = useSharedValue(0);
@@ -94,7 +91,7 @@ export function HoldToContinueButton({
 		pressScale.set(withTiming(PRESS_SCALE, { duration: PRESS_SCALE_IN }));
 	}, [fillProgress, pressScale, holdDurationMs]);
 
-	/** On release: if complete (progress=1) run onComplete; else cancel fill and reset */
+	/** On release: run onComplete when the fill finished, else cancel and reset. */
 	const handlePressOut = useCallback(() => {
 		if (fillProgress.get() === 1) {
 			pressScale.set(
@@ -181,7 +178,7 @@ export function HoldToContinueButton({
 				{label}
 			</AppText>
 
-			{/* overflow-hidden clips fill row; enables left-to-right reveal as translateX animates */}
+			{/* overflow-hidden clips the fill row for the left-to-right reveal. */}
 			<Animated.View
 				className="absolute h-full flex-row items-center overflow-hidden"
 				style={[fillRowAnimatedStyle, { width: buttonWidthShared }]}

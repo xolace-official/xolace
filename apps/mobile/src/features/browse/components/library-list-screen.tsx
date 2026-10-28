@@ -1,8 +1,5 @@
-/**
- * The one Lantern list (#393 routes): a hub in the editor's order (cover and
- * intro on top, entries numbered, audio rows inline), or every active entry
- * of a kind or subject. Filter/sort menu from #396 is not built yet.
- */
+// The one Lantern list (#393): a hub in the editor's order, or every active
+// entry of a kind or subject. The #396 filter/sort menu is not built yet.
 
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
@@ -120,7 +117,7 @@ export function LibraryListScreen({ by }: { by: ListBy }) {
 	const { title, rows } = listOf(by);
 	const posthog = usePostHog();
 	const key = "hub" in by ? by.hub : "kind" in by ? by.kind : by.subject;
-	const isPreview = useIsPreview(); // a long-press preview isn't an open
+	const isPreview = useIsPreview(); // a long-press preview is not an open
 
 	const trackedFor = useRef<string | null>(null);
 	useEffect(() => {
@@ -135,7 +132,7 @@ export function LibraryListScreen({ by }: { by: ListBy }) {
 		} else {
 			trackLibrary(posthog, "library_subject_opened", { subject: by.subject });
 		}
-		// Once per list, not per render of the `by` object; a preview counts once it becomes the real screen.
+		// Once per list; a preview counts once it becomes the real screen.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [key, isPreview]);
 

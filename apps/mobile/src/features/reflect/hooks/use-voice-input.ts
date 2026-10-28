@@ -37,9 +37,8 @@ export function useVoiceInput() {
 	useSpeechRecognitionEvent("end", () => {
 		setIsRecording(false);
 		isRecordingRef.current = false;
-		// Don't clear the transcript here: stop()'s final result can land in the
-		// same render batch as 'end', and clearing would drop the tail. 'start'
-		// clears it instead.
+		// The transcript is cleared on 'start', not here: stop()'s final result can
+		// land in the same render batch as 'end'.
 	});
 
 	useSpeechRecognitionEvent("result", (event) => {
@@ -63,8 +62,7 @@ export function useVoiceInput() {
 		isRecordingRef.current = false;
 	});
 
-	// Continuous recognition never ends on its own — stop it when the person
-	// leaves the screen, backgrounds the app, or the hook unmounts.
+	// Continuous recognition never ends on its own.
 	useFocusEffect(
 		useCallback(() => {
 			isFocusedRef.current = true;
@@ -119,9 +117,8 @@ export function useVoiceInput() {
 		});
 	};
 
-	// stop() delivers a final result for words still in flight, so the tail of
-	// the sentence isn't lost. abort() drops them — for when the text must not
-	// change any more (dismiss, submit).
+	// stop() delivers a final result for words still in flight; abort() drops
+	// them, for when the text must not change any more.
 	const stopRecording = () => {
 		ExpoSpeechRecognitionModule.stop();
 	};

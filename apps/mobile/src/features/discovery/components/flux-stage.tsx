@@ -14,22 +14,14 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 
-// Trimmed to its alpha bounding box (492x964). The delivered cutout was
-// 928x1152 with 56% empty canvas, which made him render at half his slot.
+// Trimmed to its alpha bounding box (492x964); the raw cutout rendered at half size.
 const FLUX = require("@/assets/images/flux/flux-whisper.png");
 
-/**
- * Where his mouth sits, as a fraction of the trimmed sprite — measured on the
- * PNG (327,417 of 492x964), not eyeballed. The speech tail is placed off this.
- */
+/** Mouth position as a fraction of the trimmed sprite (417 of 964px). The speech tail sits here. */
 export const MOUTH_Y = 0.433;
 
-/**
- * Eye boxes as fractions of the sprite, plus the skin tone sampled from the
- * pixels directly above each one. These are properties of the PNG, not of the
- * theme — that's why they're literals and not CSS variables. Re-measure if the
- * asset is ever regenerated.
- */
+// Eye boxes as sprite fractions plus the skin tone sampled above each. These are
+// properties of the PNG, not the theme, hence literals. Re-measure if regenerated.
 const EYES = [
 	{ cx: 0.457, cy: 0.355, h: 0.099, skin: "#F6CE94", w: 0.122 },
 	{ cx: 0.817, cy: 0.344, h: 0.088, skin: "#FAC4B1", w: 0.085 },
@@ -40,19 +32,14 @@ const GLOW_PAD = 14;
 
 const styles = StyleSheet.create({
 	glow: { bottom: 0, height: 30, position: "absolute" },
-	// The lid closes downward from the top of the eye.
 	lid: { position: "absolute", transformOrigin: "50% 0%" },
-	// He's a flame — he leans from his feet, he doesn't pivot mid-body.
-	// Percentages, not keywords: transformOrigin is x-then-y, so 'bottom center'
-	// is rejected outright and the sway silently pivots mid-body instead.
+	// Sway pivots at the feet. Percentages, not keywords: transformOrigin is
+	// x-then-y, so "bottom center" is rejected and the sway pivots mid-body.
 	sprite: { transformOrigin: "50% 100%" },
 });
 
-/**
- * One eyelid, closing downward. Each gets its own `useAnimatedStyle` — a single
- * animated style binds to a single view, so sharing one across both lids
- * renders neither.
- */
+/** One eyelid. Each needs its own `useAnimatedStyle`: one style shared by two views renders
+ * neither. */
 function Lid({
 	eye,
 	w,
@@ -64,7 +51,7 @@ function Lid({
 	h: number;
 	lid: SharedValue<number>;
 }) {
-	// Slightly oversized so no sliver of eye survives the closed frame.
+	// Oversized so no sliver of eye survives the closed frame.
 	const ew = eye.w * w * 1.14;
 	const eh = eye.h * h * 1.12;
 	const style = useAnimatedStyle(() => ({
@@ -89,17 +76,8 @@ function Lid({
 	);
 }
 
-/**
- * Flux, standing on his own firelight.
- *
- * Three things move, none of them the sprite as a whole: a slow sway rooted at
- * his feet, an ember glow underneath that breathes in sync (this is what gives
- * him contact with the ground — the render itself floats), and a blink drawn in
- * code over his eyes. Translating or scaling a flat PNG reads as a sticker,
- * which is the one thing this can't look like.
- *
- * `reduced` freezes all three at their resting frame.
- */
+/** Flux sprite with a foot-rooted sway, a breathing glow and a coded blink; never moved as a
+ * whole (reads as a sticker). `reduced` freezes all three. */
 export function FluxStage({
 	w = 53,
 	h = 104,
@@ -109,8 +87,7 @@ export function FluxStage({
 	h?: number;
 	reduced?: boolean;
 }) {
-	// `--ember` is a project variable, outside heroui's own key union — the cast
-	// is the only reason this isn't just useThemeColor('ember').
+	// `--ember` is a project variable outside heroui's key union, hence the cast.
 	const ember = useThemeColor("ember" as never) as string;
 	const t = useSharedValue(0);
 	const lid = useSharedValue(0);
@@ -138,7 +115,7 @@ export function FluxStage({
 		}
 		let id: ReturnType<typeof setTimeout>;
 		const schedule = () => {
-			// Irregular on purpose — a metronome blink is worse than none.
+			// Irregular on purpose; a metronome blink is worse than none.
 			id = setTimeout(
 				() => {
 					lid.set(
@@ -163,8 +140,7 @@ export function FluxStage({
 
 	return (
 		<View style={{ height: h + 10, width: w }}>
-			{/* Padded well past the oval: a blur clipped to its canvas smears the
-			 * edge sample across the whole rect and reads as a grey box, not a glow. */}
+			{/* Padded past the oval: a blur clipped to its canvas reads as a grey box. */}
 			<Canvas
 				opaque={false}
 				style={[styles.glow, { left: -GLOW_PAD, width: w + GLOW_PAD * 2 }]}

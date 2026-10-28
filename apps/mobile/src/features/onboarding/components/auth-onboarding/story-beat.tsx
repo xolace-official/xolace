@@ -1,11 +1,5 @@
-/**
- * One beat of the tale: chapter mark, the line, and the aside, laid out by
- * whichever bespoke composition its `kind` owns. Cardless by #198 — words on
- * the dark, with the fire behind them.
- *
- * The slide's own translate is deliberately slower than the list's (0.8x), so
- * the copy trails the swipe rather than moving locked to the finger.
- */
+// One beat of the tale, laid out by the bespoke composition its `kind` owns.
+// Cardless by #198. The slide's own translate is 0.8x the list's so copy trails the swipe.
 import type { ReactElement } from "react";
 import Animated, {
 	Extrapolation,
@@ -23,7 +17,7 @@ import { ProofBeat } from "./proof-beat";
 import { VentBeat } from "./vent-beat";
 import { XolacersBeat } from "./xolacers-beat";
 
-/** Every `kind` owns its own composition — no generic fallback. */
+/** Every `kind` owns its own composition; no generic fallback. */
 const BESPOKE: Record<
 	StoryBeat["kind"],
 	(p: { beat: StoryBeat }) => ReactElement
@@ -47,8 +41,7 @@ export const StoryBeatSlide = ({
 	width: number;
 	scrollX: SharedValue<number>;
 }) => {
-	// Reduced motion keeps the crossfade (it explains which beat you're on) and
-	// drops the trailing parallax, which is the part that reads as movement.
+	// Reduced motion keeps the crossfade and drops the parallax.
 	const reduced = useReducedMotion();
 
 	const rStyle = useAnimatedStyle(() => {
@@ -85,18 +78,9 @@ export const StoryBeatSlide = ({
 		};
 	});
 
-	// KNOWN, ACCEPTED: every beat's `entering` fires at deck MOUNT, because the
-	// six-item FlatList mounts all slides at once — so a beat reached 19s later
-	// is reached with its choreography already finished. Gating the mount on
-	// scroll position fixes that and was tried; it also leaves the whole deck
-	// blank whenever `scrollX` and the list's real offset disagree (a Fast
-	// Refresh with the deck parked off index 0 reproduces it every time). A
-	// blank deck in the sign-up funnel is not a trade worth an unseen fade, and
-	// every beat's FINAL state is complete on its own. Fix it by driving the
-	// reveals off `scrollX` instead of `entering` — never by unmounting slides.
-
-	// Beats that own their own composition still ride the deck's shared
-	// parallax, so the swipe feels the same leaving them as on every other beat.
+	// Known: every beat's `entering` fires at deck mount because the FlatList mounts all
+	// slides at once. Gating the mount on scroll position blanks the deck whenever
+	// `scrollX` and the real offset disagree; fix by driving reveals off `scrollX` instead.
 	const Bespoke = BESPOKE[beat.kind];
 	return (
 		<Animated.View className="flex-1" style={[{ width }, rStyle]}>

@@ -1,12 +1,5 @@
-/**
- * The count screen is the last thing between eleven answers and the offer, and
- * it is the only intake step that reads the network. A stats read that is slow,
- * offline or never resolves must still leave Continue reachable (#277).
- *
- * Invoked, not rendered: there is no React Native renderer in this suite, so
- * the component is called as the plain function it is and the returned element
- * tree is walked for the button label.
- */
+// A slow, offline or unresolved stats read must leave Continue reachable (#277).
+// Invoked, not rendered: no RN renderer here, so the element tree is walked directly.
 import { describe, expect, it, vi } from "vitest";
 
 const stats = vi.hoisted(() => ({ current: undefined as unknown }));

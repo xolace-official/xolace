@@ -9,10 +9,7 @@ const styles = StyleSheet.create({
 	borderCurve: { borderCurve: "continuous" },
 });
 
-/**
- * A preview of the roster row and profile header, so nobody publishes without
- * having seen the thing other people will actually read.
- */
+/** Preview of the roster row and profile header before publishing. */
 export function ReviewStep({ draft }: { draft: SetupDraft }) {
 	return (
 		<View className="gap-3 pt-4">

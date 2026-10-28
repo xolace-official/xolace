@@ -14,9 +14,7 @@ export type UseMeteringRecorderReturn = {
 	// the recorder started); false on denial or any setup failure.
 	startRecording: () => Promise<boolean>;
 	stopRecording: () => Promise<string | null>;
-	// SharedValue so animations (vent particles, dictation waveform) read it on the UI thread via
-	// useDerivedValue — no JS bridge overhead on every animation frame.
-	// 0 = silence, 1 = max volume.
+	// SharedValue so animations read it on the UI thread without bridging. 0 = silence, 1 = max.
 	metering: SharedValue<number>;
 	isRecording: boolean;
 	durationMs: number;

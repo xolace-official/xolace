@@ -1,7 +1,4 @@
-/**
- * Web fallback for the tab bar. Uses expo-router/ui Tabs instead of NativeTabs.
- * This file is loaded automatically on web via Expo platform extensions (.web.tsx).
- */
+/** Web tab bar: expo-router/ui Tabs instead of NativeTabs, picked up via the .web.tsx extension. */
 import {
 	TabList,
 	type TabListProps,

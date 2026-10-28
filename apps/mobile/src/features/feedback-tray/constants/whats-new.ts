@@ -10,11 +10,7 @@ export type WhatsNewHighlight = {
 };
 
 export type WhatsNewEntry = {
-	/**
-	 * Stable unique key used for seen-tracking. NOT the same as the version number
-	 * — OTA updates keep the store version, so each entry needs its own id
-	 * ([[feedback_ota_versioning]]).
-	 */
+	/** Seen-tracking key, not the version: OTA updates keep the store version. */
 	id: string;
 	/** Display label, e.g. "Version 1.6.0" or "OTA Update". */
 	label: string;
@@ -23,11 +19,7 @@ export type WhatsNewEntry = {
 	highlights: WhatsNewHighlight[];
 };
 
-/**
- * User-facing release notes, newest first. Kept warm and plain-language — this
- * is what the user sees, not the engineering CHANGELOG.md. Local for now;
- * a Convex-driven changelog is a P3 TODO.
- */
+/** User-facing release notes, newest first, in plain language; a Convex changelog is a P3 TODO. */
 export const WHATS_NEW: WhatsNewEntry[] = [
 	{
 		date: "October 2026",

@@ -16,11 +16,8 @@ const CLOSE_ICON: CrossPlatformSymbol = {
 	ios: "xmark",
 };
 
-/**
- * Chrome for the tray: a back chevron (only when there's somewhere to go back
- * to) on the left and a close button on the right. Each screen renders its own
- * heading in its body, so the header carries no center title.
- */
+/** Tray chrome: a back chevron when there is somewhere to go back to, and a
+ * close button. Screens render their own headings, so no center title. */
 export const TrayHeader = () => {
 	const { state, actions } = use(TrayContext);
 	const accentColor = useThemeColor("accent") as string;

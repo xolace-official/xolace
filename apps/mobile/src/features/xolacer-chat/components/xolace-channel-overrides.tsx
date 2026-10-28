@@ -16,13 +16,8 @@ import { AppText } from "@/components/shared/app-text";
 
 const LOCK_ICON = { android: "lock", ios: "lock.fill", web: "lock" } as const;
 
-/**
- * Replaces the bare `<MessageComposer>` for anyone but the broadcast sender.
- * Left alone, Stream renders its own generic "You can't send messages in this
- * channel" for that case — technically correct, and reads like an error. This
- * says the same thing in the channel's own voice: reactions still work, this
- * seat just doesn't have a mic.
- */
+/** Replaces `<MessageComposer>` for anyone but the sender, in the channel's own voice instead
+ * of Stream's generic "can't send". */
 export function BroadcastComposerBar() {
 	const { sendMessage: canSendMessage } = useOwnCapabilitiesContext();
 	const muted = useThemeColor("muted") as string;
@@ -46,19 +41,9 @@ export function BroadcastComposerBar() {
 	);
 }
 
-/**
- * Every message here is Xolace's — only the broadcaster's membership carries
- * `create-message` — so the author is a constant, not read off the message.
- * It can't come from the Stream user record: the broadcaster is a real
- * account that also chats 1:1 as a pseudonymous "Camper", and `getStreamToken`
- * re-upserts that record (name + catalog avatar) on every connect, which is
- * what left "Camper" and a personal avatar under an announcement. Same
- * campfire mark as `XolacerAvatar campfire`, as a URI the SDK's avatar takes.
- *
- * Two SDK components read the author: `MessageAuthor` draws the avatar,
- * `MessageFooter` prints the name (only in channels with >2 members, which is
- * why the 1:1 `ConversationMessageAuthor` never needed the footer half).
- */
+/** The author is a constant: `getStreamToken` re-upserts the broadcaster's Stream record as a
+ * pseudonymous "Camper" on every connect. `MessageAuthor` draws the avatar, `MessageFooter`
+ * the name (>2 members only). */
 const CAMPFIRE_URI = Asset.fromModule(
 	require("@/assets/images/flux/campfire-mini.jpeg")
 ).uri;

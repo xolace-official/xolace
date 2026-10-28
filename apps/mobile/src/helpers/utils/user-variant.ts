@@ -9,11 +9,8 @@ type ProfileFields = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/**
- * `streak` is getFullContext's server-derived, freeze-aware streak (#434) —
- * 0 once lapsed. Never recompute expiry here: lastSessionAt only moves on
- * reflect, so it can't see a vent/library/twig day extending the streak.
- */
+/** `streak` is getFullContext's freeze-aware streak (#434), 0 once lapsed; never recompute
+ * expiry from lastSessionAt here. */
 export function computeUserVariant(
 	profile: ProfileFields,
 	streak: number
@@ -30,13 +27,8 @@ export function computeUserVariant(
 	return { kind: "active" };
 }
 
-/**
- * Classify a returning user's gap-since-last-visit (or first-session anniversary)
- * for the Quiet Return prompt. Anniversary wins over gap tier.
- *
- * Returns null when no tier applies — first-timers, active users, and gaps
- * under 14 days all fall through to default idle copy.
- */
+/** Quiet Return tier from the gap since last visit, or the first-session anniversary (which
+ * wins). Null when none applies. */
 export function computeQuietReturn(
 	profile: ProfileFields,
 	now: number = Date.now()

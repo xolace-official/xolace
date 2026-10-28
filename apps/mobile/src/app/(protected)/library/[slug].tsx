@@ -1,8 +1,5 @@
-/**
- * The Lantern reader (#407, route per #393): one route for every way into an
- * entry — Browse, a twig, Tonight's reading, `xolace://library/<slug>`.
- * Full-screen at the protected root, no tab bar.
- */
+/** The Lantern reader (#407, #393): one route for every way into an entry, incl.
+ * `xolace://library/<slug>`. Full-screen, no tab bar. */
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { useLocalSearchParams } from "expo-router";

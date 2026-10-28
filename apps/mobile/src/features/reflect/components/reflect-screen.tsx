@@ -42,8 +42,7 @@ import { useAppStore } from "@/store/store";
 const EASE_ANIMATE_OUT = { opacity: 0 };
 
 const WASH_FADE_IN = FadeIn.duration(300);
-// Matches the compose screen's exit (SCREEN_TRANSITIONS.typing.exit) so the
-// wash leaves with the card instead of as a second darkening after it.
+// Matches SCREEN_TRANSITIONS.typing.exit so the wash leaves with the card.
 const WASH_FADE_OUT = FadeOut.duration(500);
 
 const WASH_SCREENS: ReflectionStateName[] = ["idle", "typing", "typing-nudge"];
@@ -89,22 +88,16 @@ export const ReflectScreen = () => {
 	} = useReflectionMachine();
 	const insets = useSafeAreaInsets();
 	const safeAreaStyle = { paddingTop: insets.top };
-	// Warm amber 'warning' tint sets the crisis button apart without the alarm of
-	// a hard red — gentle but present, in keeping with the campfire palette.
 	const crisisTint = useThemeColor("warning") as string;
 
-	// Shake-to-feedback on the reflect canvas: suppressed only during active
-	// articulation (typing / nudge / processing). Allowed in idle, mirror, and
-	// every other state — a shake there is signal, not noise. `enabled` is
-	// pure-derived from machine state, no syncing effect.
+	// Shake-to-feedback is suppressed only during active articulation.
 	useFeedbackShake({
 		enabled:
 			state.screen !== "typing" &&
 			state.screen !== "typing-nudge" &&
 			state.screen !== "processing",
 	});
-	// A reply the user chose to start from (#316). It is the card's line, never
-	// the input's contents — the composer opens empty.
+	// A reply the user chose to start from (#316): the card's line, never the input's contents.
 	const clearReplySeed = useAppStore((s) => s.clearReplySeed);
 	const idleMenuOpen = useAppStore((s) => s.idleMenuOpen);
 
@@ -120,9 +113,8 @@ export const ReflectScreen = () => {
 	);
 	const [mirrorFeedbackShown, setMirrorFeedbackShown] = useState(false);
 
-	// Visible only while clarify is settled and on top. Derived, so leaving
-	// clarify — "← Back to mirror", give-up on the last turn, escalation, an
-	// error — closes the sheet instead of stranding it over another screen.
+	// Derived, so leaving clarify for any reason closes the sheet instead of
+	// stranding it over another screen.
 	const mirrorFeedbackOpen =
 		mirrorFeedbackTurn !== null &&
 		current === "clarify" &&
@@ -130,11 +122,8 @@ export const ReflectScreen = () => {
 		sessionId !== null;
 
 	const [prevScreen, setPrevScreen] = useState(state.screen);
-	// The last idle/typing/typing-nudge screen the reducer was on. Once it has
-	// moved on (processing, error, ...) the compose screen is only ever the
-	// outgoing copy, and it must keep reading as the screen the user actually
-	// left — not as `state.screen`, which no longer names a compose screen and
-	// would flip a collapsed idle card to fully expanded for its fade-out.
+	// The last compose screen the reducer was on. The outgoing compose copy keeps
+	// reading as it, or a collapsed idle card would expand for its fade-out.
 	const [lastComposeScreen, setLastComposeScreen] =
 		useState<ReflectionStateName>(
 			isWashScreen(state.screen) ? state.screen : "idle"
@@ -150,10 +139,8 @@ export const ReflectScreen = () => {
 		if (mirrorFeedbackTurn !== null && state.screen !== "clarify") {
 			setMirrorFeedbackTurn(null);
 		}
-		// Idle is the start of a session, so re-arm the one-per-session feedback
-		// sheet here — the screen stays mounted across sessions ("Start fresh",
-		// "Have more? I'm here."), and without this the sheet would only ever be
-		// offered for the first session of the mount.
+		// Idle starts a session: re-arm the one-per-session feedback sheet, since the
+		// screen stays mounted across sessions.
 		if (state.screen === "idle" && mirrorFeedbackShown) {
 			setMirrorFeedbackShown(false);
 		}
@@ -193,8 +180,8 @@ export const ReflectScreen = () => {
 
 	const renderScreen = (screen: ReflectionStateName, isOutgoing = false) => {
 		switch (screen) {
-			// idle normalizes to typing (#256): one compose screen renders both, and
-			// which one it is reading as comes from state.screen, not from `screen`.
+			// idle normalizes to typing (#256): one compose screen renders both, reading
+			// which from state.screen, not `screen`.
 			case "idle":
 			case "typing":
 			case "typing-nudge":
@@ -202,13 +189,11 @@ export const ReflectScreen = () => {
 					<ComposeScreen
 						dispatch={dispatch}
 						entryText={state.entryText}
-						// The outgoing copy is a fading picture of the screen being left;
-						// it must not pull focus from the one arriving.
+						// The outgoing copy must not pull focus from the arriving screen.
 						focusOnExpand={!isOutgoing}
 						isRecording={isRecording}
 						onDismiss={() => {
-							// Closing the composer spends the offer: the draft survives
-							// (#258), but the card goes back to its own voice.
+							// Closing the composer spends the offer; the draft survives (#258).
 							clearReplySeed();
 							handleDismissTyping();
 						}}
@@ -244,8 +229,7 @@ export const ReflectScreen = () => {
 			case "clarify":
 				return (
 					<ClarifyState
-						// Armed, not open: the sheet is still transitioning in at mount
-						// time, and autoFocus would raise the keyboard underneath it.
+						// Armed, not open: autoFocus would raise the keyboard under the sheet.
 						autoFocus={!isOutgoing && mirrorFeedbackTurn === null}
 						clarifyText={state.clarifyText}
 						dispatch={dispatch}
@@ -299,16 +283,12 @@ export const ReflectScreen = () => {
 		}
 	};
 
-	// Outgoing screens first so the arriving one paints on top of them. Keyed
-	// by screen name: a screen that turns outgoing keeps its React instance —
-	// and with it everything it settled at mount (the frozen header height,
-	// Flux's perch, the morph's progress) — instead of being re-mounted as a
-	// fresh copy that lays itself out differently while it fades.
+	// Outgoing first so the arriving screen paints on top. Keyed by screen name so
+	// a screen turning outgoing keeps its React instance and settled layout.
 	const screens = [...outgoing, current];
 
-	// The same box the settled screen fills — `bottom: 0`, not the bottom
-	// inset, because the host only pads the top and each screen handles its own
-	// bottom. Any difference here reflows the outgoing screen at t=0.
+	// The same box the settled screen fills (`bottom: 0`: the host pads only the
+	// top). Any difference reflows the outgoing screen at t=0.
 	const absoluteFill: ViewStyle = {
 		bottom: 0,
 		left: 0,
@@ -317,13 +297,10 @@ export const ReflectScreen = () => {
 		top: insets.top,
 	};
 
-	// The settled screen name is `typing` for both idle and composing since #256,
-	// so the header follows the reducer's own state: it belongs to the resting
-	// card, and it gets out of the way the moment the composer opens.
+	// `current` is `typing` for both idle and composing (#256), so the header
+	// follows the reducer's state and hides the moment the composer opens.
 	const isIdle = state.screen === "idle";
-	// The wash belongs to the idle/typing canvas and fades out on the same
-	// clock as the outgoing compose screen. Keeping it until that screen had
-	// unmounted made it a second, later darkening behind the arriving state.
+	// The wash fades out on the same clock as the outgoing compose screen.
 	const showWash = isWashScreen(current);
 	const stackScreenOptions = {
 		headerBackVisible: false,
@@ -352,20 +329,15 @@ export const ReflectScreen = () => {
 					entering={WASH_FADE_IN}
 					exiting={WASH_FADE_OUT}
 					pointerEvents="none"
-					// Absolute children lay out against the border box, so this ignores
-					// the host's safe-area padding and the wash runs edge to edge —
-					// under the status bar and the home indicator.
+					// Absolute children ignore the host's safe-area padding: edge to edge.
 					style={StyleSheet.absoluteFill}
 				>
 					<ReflectWash />
 				</Animated.View>
 			)}
-			{/* Mounted only while idle. A `hidden` toolbar button still leaves its
-          transparent host view laid out across the top of the screen on
-          Android, where (unlike UIKit) an invisible view still consumes
-          touches — that band swallowed the typing screen's mic and close.
-          Down, too, while the idle menu is open: its scrim can't reach over
-          the native header, so the buttons would sit sharp above the blur. */}
+			{/* Mounted, not `hidden`: on Android a hidden toolbar button's host view still
+			    eats touches (it swallowed the typing screen's mic and close). Down while the
+			    idle menu is open too, since its scrim cannot cover the native header. */}
 			{isIdle && !idleMenuOpen && (
 				<>
 					<Stack.Toolbar placement="left">
@@ -397,18 +369,15 @@ export const ReflectScreen = () => {
 				const isOutgoing = screen !== current;
 				const config = SCREEN_TRANSITIONS[screen] ?? DEFAULT_SCREEN_TRANSITION;
 				return (
-					// On mount EaseView runs initialAnimate → animate (the enter). When
-					// `animate` later flips to the exit values it animates the change
-					// on the same native view and emits onTransitionEnd once settled,
-					// so the exit is a prop change, not a remount.
+					// EaseView animates `animate` changes on the same native view and emits
+					// onTransitionEnd once settled, so the exit is a prop change, not a remount.
 					<EaseView
 						animate={isOutgoing ? EASE_ANIMATE_OUT : config.enter.animate}
 						initialAnimate={config.enter.initialAnimate}
 						key={screen}
 						onTransitionEnd={
 							isOutgoing
-								? // A batch cut short by a newer one reports finished: false;
-									// only a fade that ran to the end releases the screen.
+								? // A batch cut short by a newer one reports finished: false.
 									(e) => e.finished && onOutgoingComplete(screen)
 								: undefined
 						}
@@ -422,7 +391,6 @@ export const ReflectScreen = () => {
 				);
 			})}
 
-			{/* Mirror feedback — fires when user rejects a mirror, persists through screen transition */}
 			<ClarifyFeedbackSheet
 				isOpen={mirrorFeedbackOpen}
 				onClose={() => setMirrorFeedbackTurn(null)}
@@ -434,7 +402,6 @@ export const ReflectScreen = () => {
 			<DictationUpsellDialog {...dictationUpsell} />
 			<TalkDoorDialog door={talkDoor} />
 
-			{/* Space naming — fires once on first path-selection when unnamed */}
 			<SpaceNamePromptDialog
 				isOpen={showSpaceNameDialog}
 				onDismiss={async () => {

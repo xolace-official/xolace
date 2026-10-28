@@ -20,10 +20,8 @@ type Props = {
 	nextCenter: number | undefined;
 };
 
-/** One theme's accent wash behind the carousel. Each card has its own layer,
- *  scoped to its theme, faded in as that card nears the viewport center, so
- *  neighbouring layers crossfade into each other while scrolling. The first
- *  and last layers stay full past the ends. */
+/** One theme's accent wash behind the carousel, faded in as its card nears the
+ * viewport center so neighbouring layers crossfade. End layers stay full past the ends. */
 export const ThemeCarouselGlow = ({
 	theme,
 	scrollX,

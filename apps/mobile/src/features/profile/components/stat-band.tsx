@@ -37,8 +37,7 @@ export function StatBand({
 		{
 			amber: currentStreak > 0,
 			label: "Day streak",
-			// Show the personal best only when it beats the current run — when the
-			// current streak is the record, the big number already says it.
+			// The personal best shows only when it beats the current run.
 			sub: longestStreak > currentStreak ? `Best ${longestStreak}` : undefined,
 			value: currentStreak > 0 ? String(currentStreak) : "—",
 		},
@@ -69,7 +68,7 @@ export function StatBand({
 	));
 
 	// Glass stops rendering under an animated opacity, so the fade only runs
-	// where there is no glass. Playful's solid Surface always fades.
+	// where there is no glass.
 	const fadeIn = isPlayful ? { opacity: 0 } : FADE_IN;
 	const fadeOut = isPlayful ? { opacity: 1 } : FADE_OUT;
 
