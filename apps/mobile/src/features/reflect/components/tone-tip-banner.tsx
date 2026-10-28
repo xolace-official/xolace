@@ -7,15 +7,15 @@ import { AppText } from "@/components/shared/app-text";
 import {
 	type MirrorTone,
 	MirrorTonePickerDialog,
-} from "@/features/settings/components/mirror-tone-picker-dialog";
-import { useSettings } from "@/features/settings/hooks/use-settings";
+} from "@/features/reflect/components/mirror-tone-picker-dialog";
+import { useMirrorSettings } from "@/features/reflect/hooks/use-mirror-settings";
 import { useAppStore } from "@/store/store";
 
 const CLOSE_ICON = { android: "close", ios: "xmark", web: "close" } as const;
 
 export const ToneTipBanner = () => {
 	const { toneTipSeen, setToneTipSeen } = useAppStore();
-	const { mirrorTone, setMirrorTone } = useSettings();
+	const { mirrorTone, setMirrorTone } = useMirrorSettings();
 	const posthog = usePostHog();
 	const [pickerOpen, setPickerOpen] = useState(false);
 	const [confirmedLabel, setConfirmedLabel] = useState<string | null>(null);

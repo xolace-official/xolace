@@ -15,12 +15,15 @@
  */
 import { useIntakeComplete } from "@/features/intake/use-intake-complete";
 import { PaywallScreen } from "@/features/purchases/screens/paywall-screen";
+import { useCompanionName } from "@/features/talk/use-companion-name";
 
 export default function IntakePlans() {
 	const completeIntake = useIntakeComplete();
+	const companionName = useCompanionName();
 
 	return (
 		<PaywallScreen
+			companionName={companionName}
 			// Returned, not fire-and-forget: `false` (a swallowed write) is what
 			// unlatches the paywall's single-flight exit guard.
 			onExit={(reason) =>

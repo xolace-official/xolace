@@ -2,7 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { Tour } from "@/components/ui/tour";
-import { TOUR_STEPS } from "@/features/reflect/tour-copy";
+import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
 import { a11yHidden } from "@/lib/utils";
 
 const WAVEFORM_NAME = {

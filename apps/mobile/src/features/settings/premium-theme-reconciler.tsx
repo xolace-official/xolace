@@ -1,4 +1,4 @@
-import { usePremiumThemeReconciler } from "./use-premium-theme-reconciler";
+import { usePremiumThemeReconciler } from "./hooks/use-premium-theme-reconciler";
 
 /**
  * Headless mount point for usePremiumThemeReconciler.

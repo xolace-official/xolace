@@ -4,10 +4,10 @@
 import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
-import { useVoicePreview } from "@/features/settings/hooks/use-voice-preview";
-import { VOICE_OPTIONS } from "@/features/settings/voice-options";
 import { TalkChips } from "@/features/talk/talk-chips";
 import { useTalkStyle } from "@/features/talk/use-talk-style";
+import { useVoicePreview } from "@/features/talk/use-voice-preview";
+import { VOICE_OPTIONS } from "@/features/talk/voice-options";
 import { playSoftPress } from "@/lib/haptics";
 
 const CAST = VOICE_OPTIONS.filter(

@@ -3,12 +3,12 @@ import { useState } from "react";
 import { View } from "react-native";
 import { FadeIn, LinearTransition } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
-import { LegalBottomSheet } from "@/features/auth/components/legal-bottom-sheet";
+import { LegalBottomSheet } from "@/components/shared/legal-bottom-sheet";
 import {
 	type LegalDocument,
 	PRIVACY_POLICY,
 	TERMS_OF_SERVICE,
-} from "@/features/auth/components/legal-content";
+} from "@/components/shared/legal-content";
 
 const SPINNER_ENTERING = FadeIn.delay(50);
 

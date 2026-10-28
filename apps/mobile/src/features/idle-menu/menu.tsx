@@ -7,7 +7,7 @@ import { Tour } from "@/components/ui/tour";
 import { useMenuState } from "@/features/idle-menu/hooks/use-menu-state";
 import { MenuButtonsWrapper } from "@/features/idle-menu/menu-buttons-wrapper";
 import { MenuTrigger } from "@/features/idle-menu/menu-trigger";
-import { TOUR_STEPS } from "@/features/reflect/tour-copy";
+import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
 import { useAppStore } from "@/store/store";
 
 const EASE_INITIAL = { opacity: 0 };

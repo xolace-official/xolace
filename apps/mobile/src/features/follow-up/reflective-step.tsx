@@ -6,7 +6,6 @@ import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { Icon, OptionCard } from "@/features/follow-up/stack-cards";
 import {
 	REFLECTIVE_COPY,
 	REFLECTIVE_DONE,
@@ -17,7 +16,8 @@ import {
 	REFLECTIVE_SKIP,
 	type ReflectiveAnswer,
 	streakNod,
-} from "@/features/reflect/follow-up-copy";
+} from "@/features/follow-up/follow-up-copy";
+import { Icon, OptionCard } from "@/features/follow-up/stack-cards";
 import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
 
 // Mirrors REFLECTION_MAX_LENGTH in convex/followUpResponses.ts (not imported:

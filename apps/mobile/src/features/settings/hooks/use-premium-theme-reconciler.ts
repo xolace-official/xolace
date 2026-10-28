@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { Uniwind } from "uniwind";
-import { usePreferenceMutation } from "@/features/settings/hooks/use-preference-mutation";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 import { useAppStore } from "@/store/store";
-import { planPremiumThemeReset } from "./premium-theme-reset";
-import { usePlusEntitlement } from "./use-plus-entitlement";
+import { planPremiumThemeReset } from "../premium-theme-reset";
 
 /**
  * Drops a lapsed subscriber off a premium theme.

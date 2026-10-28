@@ -5,6 +5,10 @@ import { StyleSheet, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Tour } from "@/components/ui/tour";
 import { useSessionMode } from "@/context/session-mode-context";
+import {
+	DAY_NUDGE_DELAY_MS,
+	NIGHT_NUDGE_DELAY_MS,
+} from "@/features/night-mode/night-copy";
 import { ComposeSurround } from "@/features/reflect/compose/compose-surround";
 import { FluxPerch } from "@/features/reflect/compose/flux-perch";
 import { MorphCard } from "@/features/reflect/compose/morph-card";
@@ -14,10 +18,6 @@ import { useMorph } from "@/features/reflect/compose/use-morph";
 import type { PlusDictationView } from "@/features/reflect/hooks/use-plus-dictation";
 import { useReflectTour } from "@/features/reflect/hooks/use-reflect-tour";
 import { useTypingPause } from "@/features/reflect/hooks/use-typing-pause";
-import {
-	DAY_NUDGE_DELAY_MS,
-	NIGHT_NUDGE_DELAY_MS,
-} from "@/features/reflect/night-copy";
 import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
 import type {
 	ReflectionAction,

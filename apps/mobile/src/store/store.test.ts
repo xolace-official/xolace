@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	REFLECT_TOUR_VERSION,
 	shouldShowReflectTour,
-} from "@/features/reflect/tour-copy";
+} from "@/features/reflect-tour/tour-copy";
 import { useAppStore } from "./store";
 
 type State = ReturnType<typeof useAppStore.getState>;

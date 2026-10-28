@@ -14,7 +14,7 @@ import {
 	getPushPermissionState,
 	requestPushToken,
 } from "@/lib/push-token";
-import { usePreferenceMutation } from "./use-preference-mutation";
+import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
 export type NotificationReach = "warm" | "direct" | "quiet";
 export type QuietWindow = { dontReachBefore: number; dontReachAfter: number };

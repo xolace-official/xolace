@@ -8,7 +8,7 @@ import Animated, {
 import { PillButton } from "@/components/shared/pill-button";
 import { Tour } from "@/components/ui/tour";
 import { MicButton } from "@/features/reflect/components/mic-button";
-import { TOUR_STEPS } from "@/features/reflect/tour-copy";
+import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
 import { a11yHidden } from "@/lib/utils";
 
 const SLOT_IN = FadeIn.duration(220);

@@ -11,13 +11,13 @@ import { useMutation } from "convex/react";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor, useToast } from "heroui-native";
 import { useState } from "react";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
 import { ReturnWelcomeSheet } from "@/features/reflect/components/return-welcome-sheet";
 import type { ReturnWelcomeTier } from "@/features/reflect/return-welcome-copy";
 import { StarterSuggestionsDevRows } from "@/features/starter-suggestions/starter-dev-rows";
 import { useAppStore } from "@/store/store";
 import type { CrossPlatformSymbol } from "./settings-icons";
-import { SettingsRow } from "./settings-row";
-import { SettingsSection } from "./settings-section";
 
 const BUMP_ICON: CrossPlatformSymbol = {
 	android: "local_fire_department",

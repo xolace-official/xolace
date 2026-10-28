@@ -19,7 +19,7 @@ import {
 } from "@/features/insights/domains";
 import { SteadinessRing } from "@/features/insights/steadiness-ring";
 import { TrendChip } from "@/features/insights/trend-chip";
-import { useTokenColor } from "@/features/profile/hooks/use-token-color";
+import { useTokenColor } from "@/lib/use-token-color";
 
 export type DomainView = "grid" | "list";
 

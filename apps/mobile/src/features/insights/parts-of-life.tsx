@@ -28,8 +28,8 @@ import {
 	type Insight,
 	icon,
 } from "@/features/insights/domains";
-import { useTokenColor } from "@/features/profile/hooks/use-token-color";
 import { usePaywall } from "@/features/purchases/use-paywall";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const LOCK = icon("lock", "lock");
 

@@ -23,8 +23,8 @@ import {
 	readout,
 	todayIn,
 } from "@/features/profile/contribution-graph";
-import { useTokenColor } from "@/features/profile/hooks/use-token-color";
 import { tap } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const GAP = 3;
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];

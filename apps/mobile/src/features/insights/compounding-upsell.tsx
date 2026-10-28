@@ -23,10 +23,10 @@ import { useWindowDimensions, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { GlassSurface } from "@/components/shared/glass-surface";
 import { DOMAIN_META } from "@/features/insights/domains";
-import { useTokenColor } from "@/features/profile/hooks/use-token-color";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 export type Upsell = NonNullable<
 	FunctionReturnType<typeof api.compounding.upsell.get>

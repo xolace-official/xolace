@@ -1,4 +1,4 @@
-import { NIGHT_HEADLINE } from "@/features/reflect/night-copy";
+import { NIGHT_HEADLINE } from "@/features/night-mode/night-copy";
 import {
 	QUIET_RETURN_PROMPTS,
 	type QuietReturnTier,

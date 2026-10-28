@@ -5,8 +5,8 @@ import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { Tour } from "@/components/ui/tour";
 import { posthog } from "@/config/posthog";
+import { NIGHT_TEXTURE_WORDS } from "@/features/night-mode/night-copy";
 import { TextureSetTabs } from "@/features/reflect/components/texture-set-tabs";
-import { NIGHT_TEXTURE_WORDS } from "@/features/reflect/night-copy";
 import {
 	MAX_TEXTURES,
 	resolveTextureSetId,
@@ -15,8 +15,8 @@ import {
 	type TextureSetId,
 	textureHue,
 } from "@/features/reflect/texture-sets";
-import { TOUR_STEPS } from "@/features/reflect/tour-copy";
 import type { ReflectionAction } from "@/features/reflect/types";
+import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
 import { playSoftPress, playTextureSelect } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/store";

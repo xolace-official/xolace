@@ -1,5 +1,11 @@
 import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
-import type { CrossPlatformSymbol } from "@/features/settings/components/settings-icons";
+import type { SymbolView } from "expo-symbols";
+import type { ComponentProps } from "react";
+
+type CrossPlatformSymbol = Exclude<
+	ComponentProps<typeof SymbolView>["name"],
+	string
+>;
 
 /**
  * Client mirror of the custom-voice catalog. Server-authoritative catalog and

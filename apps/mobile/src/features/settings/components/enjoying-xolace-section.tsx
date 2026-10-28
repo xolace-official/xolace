@@ -2,7 +2,7 @@ import { SymbolView } from "expo-symbols";
 import { Accordion, PressableFeedback, useThemeColor } from "heroui-native";
 import { Linking, Platform, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { SettingsSection } from "@/features/settings/components/settings-section";
+import { SettingsSection } from "@/components/shared/settings-section";
 
 const IOS_STORE_URL =
 	"https://apps.apple.com/app/apple-store/id6761601429?action=write-review";

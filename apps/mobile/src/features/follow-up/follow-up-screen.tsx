@@ -10,15 +10,6 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
-import { HeavierStep } from "@/features/follow-up/heavier-step";
-import { ReflectiveStep } from "@/features/follow-up/reflective-step";
-import {
-	Icon,
-	type IconKey,
-	OptionCard,
-} from "@/features/follow-up/stack-cards";
-import { StillHereStep } from "@/features/follow-up/still-here-step";
-import { removeEmDash } from "@/features/quotes/utils/text-utils";
 import {
 	chipsForTier,
 	FOLLOW_UP_FALLBACK_HEADLINE,
@@ -31,7 +22,16 @@ import {
 	VENT_A11Y_LABEL,
 	VENT_LABEL,
 	VENT_SUBLABEL,
-} from "@/features/reflect/follow-up-copy";
+} from "@/features/follow-up/follow-up-copy";
+import { HeavierStep } from "@/features/follow-up/heavier-step";
+import { ReflectiveStep } from "@/features/follow-up/reflective-step";
+import {
+	Icon,
+	type IconKey,
+	OptionCard,
+} from "@/features/follow-up/stack-cards";
+import { StillHereStep } from "@/features/follow-up/still-here-step";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { playFollowUpEntrance } from "@/lib/haptics";
 import { cn } from "@/lib/utils";

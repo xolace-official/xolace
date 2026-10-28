@@ -1,7 +1,7 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { SettingsRow } from "@/features/settings/components/settings-row";
-import { SettingsSection } from "@/features/settings/components/settings-section";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
 import { type ProfileCardId, useAppStore } from "@/store/store";
 
 const CARDS: { id: ProfileCardId; label: string }[] = [

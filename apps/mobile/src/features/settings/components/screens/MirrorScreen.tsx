@@ -3,16 +3,16 @@ import { RadioGroup, Separator, useThemeColor } from "heroui-native";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/components/shared/app-text";
+import { SettingsSection } from "@/components/shared/settings-section";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
-import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
-import type { CrossPlatformSymbol } from "@/features/settings/components/settings-icons";
-import { SettingsSection } from "@/features/settings/components/settings-section";
-import { VoiceSection } from "@/features/settings/components/voice-section";
 import {
 	type MirrorTone,
 	useMirrorSettings,
-} from "@/features/settings/hooks/use-mirror-settings";
+} from "@/features/reflect/hooks/use-mirror-settings";
+import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
+import type { CrossPlatformSymbol } from "@/features/settings/components/settings-icons";
+import { VoiceSection } from "@/features/settings/components/voice-section";
 import { TalkStyleSection } from "@/features/talk/talk-style-section";
 import { cn } from "@/lib/utils";
 

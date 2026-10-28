@@ -14,8 +14,8 @@ import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { DOMAIN_META } from "@/features/insights/domains";
-import { useTokenColor } from "@/features/profile/hooks/use-token-color";
 import { playSoftPress } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 type Unlock = NonNullable<Doc<"sessions">["domainUnlock"]>;
 

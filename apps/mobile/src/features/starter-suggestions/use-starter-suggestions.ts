@@ -1,4 +1,4 @@
-import { shouldShowReflectTour } from "@/features/reflect/tour-copy";
+import { shouldShowReflectTour } from "@/features/reflect-tour/tour-copy";
 import { useAppStore } from "@/store/store";
 
 type Args = {

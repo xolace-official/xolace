@@ -10,7 +10,7 @@ import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
 import { SessionEndUpsell } from "@/features/insights/compounding-upsell";
-import { NIGHT_SESSION_END_ACTIVITY } from "@/features/reflect/night-copy";
+import { NIGHT_SESSION_END_ACTIVITY } from "@/features/night-mode/night-copy";
 import { CloseOffer } from "@/features/session-end/components/close-offer";
 import { ContributedConfirmation } from "@/features/session-end/components/contributed-confirmation";
 import { HeavierFeedbackPrompt } from "@/features/session-end/components/heavier-feedback-prompt";

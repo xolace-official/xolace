@@ -7,6 +7,7 @@ import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { AuroraArc } from "@/components/shared/aurora-arc";
 import { TopBlur } from "@/components/shared/top-blur";
 import { UpsellScrollContext } from "@/features/insights/compounding-upsell";
 import { CAVEAT, type InsightsView } from "@/features/insights/domains";
@@ -14,7 +15,6 @@ import { InsightsSkeleton } from "@/features/insights/insights-skeleton";
 import { OverallDial } from "@/features/insights/overall-dial";
 import { PartsOfLife } from "@/features/insights/parts-of-life";
 import { useHour } from "@/features/insights/use-hour";
-import { AuroraArc } from "@/features/profile/components/aurora-arc";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useStableQuery } from "@/lib/convex/use-stable-query";
 

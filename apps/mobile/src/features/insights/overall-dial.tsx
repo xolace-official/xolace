@@ -13,7 +13,7 @@ import { GAUGE, type Insight } from "@/features/insights/domains";
 import { TickGauge } from "@/features/insights/glass";
 import { SteadinessInsights } from "@/features/insights/steadiness-insights";
 import { LockedTrendChip, TrendChip } from "@/features/insights/trend-chip";
-import { useTokenColor } from "@/features/profile/hooks/use-token-color";
+import { useTokenColor } from "@/lib/use-token-color";
 
 type Props = {
 	overall: number | null;

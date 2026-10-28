@@ -4,7 +4,7 @@ import { PressableFeedback } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/components/shared/app-text";
-import { useTokenColor } from "../hooks/use-token-color";
+import { useTokenColor } from "@/lib/use-token-color";
 
 type Props = {
 	displayName: string;

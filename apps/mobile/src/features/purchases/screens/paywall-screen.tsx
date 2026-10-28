@@ -16,7 +16,6 @@ import {
 	usePaywall,
 } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
-import { useCompanionName } from "@/features/talk/use-companion-name";
 import { PaywallCta } from "./paywall-cta";
 import { hasFreeTrial, paywallCtaLabel } from "./paywall-cta-label";
 import { PaywallFeatureItem } from "./paywall-feature-item";
@@ -63,6 +62,11 @@ export type PaywallExitReason = "purchased" | "dismissed";
 type Props = {
 	surface?: PaywallSurface;
 	/**
+	 * What the person calls their companion, for the `{name}` in a surface line.
+	 * Passed in by the route so purchases never reaches into talk.
+	 */
+	companionName: string;
+	/**
 	 * The just-completed session a purchase should fulfil kindling for
 	 * (session-end's `kindling` surface, docs/paths-v1.md §12). Sent to
 	 * `paths.requestKindling` once the purchase confirms.
@@ -80,9 +84,13 @@ type Props = {
 	onExit?: (reason: PaywallExitReason) => void | Promise<boolean>;
 };
 
-export function PaywallScreen({ surface, sessionId, onExit }: Props) {
+export function PaywallScreen({
+	surface,
+	sessionId,
+	onExit,
+	companionName,
+}: Props) {
 	const posthog = usePostHog();
-	const companionName = useCompanionName();
 	const defaultClose = usePaywall((s) => s.close);
 	const closePaywall = onExit ?? (() => defaultClose());
 	const insets = useSafeAreaInsets();

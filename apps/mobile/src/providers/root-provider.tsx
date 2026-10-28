@@ -9,8 +9,8 @@ import { posthog } from "@/config/posthog";
 import { AppThemeProvider } from "@/context/app-theme-context";
 import { SessionModeProvider } from "@/context/session-mode-context";
 import { FeedbackTrayProvider } from "@/features/feedback-tray/feedback-tray-provider";
-import { PremiumThemeReconciler } from "@/features/purchases/premium-theme-reconciler";
 import { RevenueCatProvider } from "@/features/purchases/revenuecat-context";
+import { PremiumThemeReconciler } from "@/features/settings/premium-theme-reconciler";
 import { ConvexClientProvider } from "./convex-provider";
 
 /**

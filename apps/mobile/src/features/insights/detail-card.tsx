@@ -23,8 +23,8 @@ import {
 import { gaugeSize, TickGauge } from "@/features/insights/glass";
 import { SteadinessInsights } from "@/features/insights/steadiness-insights";
 import { TrendChip } from "@/features/insights/trend-chip";
-import { useTokenColor } from "@/features/profile/hooks/use-token-color";
 import { playSoftPress } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const RADIUS = 120;
 const TICK = 30;

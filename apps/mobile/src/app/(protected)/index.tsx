@@ -15,7 +15,7 @@ import { ReflectScreen } from "@/features/reflect/components/reflect-screen";
 import { ReturnWelcomeSheet } from "@/features/reflect/components/return-welcome-sheet";
 import { useFollowUpCheckIn } from "@/features/reflect/hooks/use-follow-up-check-in";
 import { useReturnWelcome } from "@/features/reflect/hooks/use-return-welcome";
-import { shouldShowReflectTour } from "@/features/reflect/tour-copy";
+import { shouldShowReflectTour } from "@/features/reflect-tour/tour-copy";
 import { StarterSuggestionsBubble } from "@/features/starter-suggestions/starter-suggestions-bubble";
 import { useStarterSuggestions } from "@/features/starter-suggestions/use-starter-suggestions";
 import {

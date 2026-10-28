@@ -3,9 +3,10 @@
  * `library_*` namespace (not `browse_*`, #399). Reading is coarse on purpose:
  * opened and finished, no scroll depth.
  */
+import type { api } from "@xolace/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 import type { PostHog } from "posthog-react-native";
 
-import type { Twig } from "@/features/kindling/twig-presentation";
 import type { Kind } from "@/features/library/home/library-copy";
 
 /**
@@ -30,6 +31,11 @@ export type ReaderFrom =
 
 type Entry = { slug: string };
 
+/** A Kindling twig's state, read off the backend so library never imports kindling. */
+type TwigState = NonNullable<
+	FunctionReturnType<typeof api.paths.getActive>
+>["twigs"][number]["state"];
+
 type LibraryEvents = {
 	// Navigation (#409)
 	library_home_opened: undefined;
@@ -51,7 +57,7 @@ type LibraryEvents = {
 	library_paywall_shown: Entry & { trigger: "audio_preview" };
 	library_paywall_tapped: Entry & { trigger: "audio_preview" };
 	// Read twig (#412); its open is `library_entry_opened{from:'twig'}`
-	library_twig_shown: Entry & { state: Twig["state"] };
+	library_twig_shown: Entry & { state: TwigState };
 };
 
 export function trackLibrary<E extends keyof LibraryEvents>(

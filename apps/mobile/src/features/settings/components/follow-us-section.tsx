@@ -2,8 +2,8 @@ import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import type { ComponentProps } from "react";
 import { Linking } from "react-native";
-import { SettingsRow } from "@/features/settings/components/settings-row";
-import { SettingsSection } from "@/features/settings/components/settings-section";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
 
 const WEBSITE_ICON = {
 	android: "language",

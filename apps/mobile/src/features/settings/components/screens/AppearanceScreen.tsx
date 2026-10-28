@@ -5,13 +5,13 @@ import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { ProfileCardsSection } from "@/features/settings/components/profile-cards-section";
 import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
 import type { CrossPlatformSymbol } from "@/features/settings/components/settings-icons";
-import { SettingsRow } from "@/features/settings/components/settings-row";
-import { SettingsSection } from "@/features/settings/components/settings-section";
 import { ThemeCarousel } from "@/features/settings/components/theme-carousel";
 import {
 	type ThemeMode,

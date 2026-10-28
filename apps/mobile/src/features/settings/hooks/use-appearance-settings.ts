@@ -10,8 +10,8 @@ import {
 	resolveMotionPreference,
 } from "@/lib/motion/use-effective-reduced-motion";
 import { THEME_BY_ID } from "@/lib/themes";
+import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 import { useAppStore } from "@/store/store";
-import { usePreferenceMutation } from "./use-preference-mutation";
 
 export type ThemeMode = "system" | "light" | "dark";
 

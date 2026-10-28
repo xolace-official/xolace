@@ -8,16 +8,13 @@ import {
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/components/shared/app-text";
+import { SettingsSection } from "@/components/shared/settings-section";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
-import { SettingsSection } from "@/features/settings/components/settings-section";
-import { useVoicePreview } from "@/features/settings/hooks/use-voice-preview";
 import { useVoiceSettings } from "@/features/settings/hooks/use-voice-settings";
-import {
-	VOICE_OPTIONS,
-	type VoiceValue,
-} from "@/features/settings/voice-options";
+import { useVoicePreview } from "@/features/talk/use-voice-preview";
+import { VOICE_OPTIONS, type VoiceValue } from "@/features/talk/voice-options";
 import { playSoftPress } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 

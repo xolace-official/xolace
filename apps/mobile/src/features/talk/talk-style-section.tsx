@@ -2,8 +2,8 @@
 // directness. Each applies from the next talk.
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { SettingsSection } from "@/components/shared/settings-section";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
-import { SettingsSection } from "@/features/settings/components/settings-section";
 import { TalkChips } from "@/features/talk/talk-chips";
 import { TalkVoicePicker } from "@/features/talk/talk-voice-picker";
 import { useCompanionName } from "@/features/talk/use-companion-name";

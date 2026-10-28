@@ -4,12 +4,12 @@ import { usePostHog } from "posthog-react-native";
 import { View } from "react-native";
 
 import { AppText } from "@/components/shared/app-text";
-import { type IconKey, OptionCard } from "@/features/follow-up/stack-cards";
 import {
 	STILL_HERE_LINKS,
 	STILL_HERE_MESSAGE,
 	STILL_HERE_SKIP,
-} from "@/features/reflect/follow-up-copy";
+} from "@/features/follow-up/follow-up-copy";
+import { type IconKey, OptionCard } from "@/features/follow-up/stack-cards";
 
 type LinkKey = (typeof STILL_HERE_LINKS)[number]["key"];
 

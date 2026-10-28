@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { Uniwind } from "uniwind";
 import { useAppTheme } from "@/context/app-theme-context";
-import type { MirrorTone } from "@/features/settings/components/mirror-tone-picker-dialog";
+import type { MirrorTone } from "@/features/reflect/components/mirror-tone-picker-dialog";
 import type { RetentionOption } from "@/features/settings/components/retention-picker-dialog";
 import { useAppStore } from "@/store/store";
 

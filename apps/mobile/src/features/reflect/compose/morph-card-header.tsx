@@ -6,7 +6,7 @@ import { Tour } from "@/components/ui/tour";
 import { MicButton } from "@/features/reflect/components/mic-button";
 import { PresenceDot } from "@/features/reflect/components/presence-dot";
 import type { CardContent } from "@/features/reflect/compose/resolve-card-content";
-import { TOUR_STEPS } from "@/features/reflect/tour-copy";
+import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
 import { playSoftPress } from "@/lib/haptics";
 import { a11yHidden } from "@/lib/utils";
 

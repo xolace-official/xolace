@@ -27,10 +27,10 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { AppText } from "@/components/shared/app-text";
-import { formatTime } from "@/features/browse/player/format-time";
 import { trackLibrary } from "@/features/library/analytics";
 import { CoverImage } from "@/features/library/cover-image";
 import { usePaywall } from "@/features/purchases/use-paywall";
+import { formatTime } from "@/lib/format-time";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { TranscriptSheet } from "./transcript-sheet";
 import type { EntryAudio } from "./use-entry-audio";

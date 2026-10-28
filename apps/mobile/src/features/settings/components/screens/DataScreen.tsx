@@ -4,6 +4,8 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
 import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
 import {
 	type CrossPlatformSymbol,
@@ -12,8 +14,6 @@ import {
 	MEMORY_ICON,
 	SHARE_ICON,
 } from "@/features/settings/components/settings-icons";
-import { SettingsRow } from "@/features/settings/components/settings-row";
-import { SettingsSection } from "@/features/settings/components/settings-section";
 import { useConfirmAction } from "@/features/settings/hooks/use-confirm-action";
 import {
 	type RetentionOption,

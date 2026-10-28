@@ -10,7 +10,7 @@ import Animated, {
 	useAnimatedProps,
 } from "react-native-reanimated";
 import Svg, { Line } from "react-native-svg";
-import { useTokenColor } from "@/features/profile/hooks/use-token-color";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const AnimatedLine = Animated.createAnimatedComponent(Line);
 

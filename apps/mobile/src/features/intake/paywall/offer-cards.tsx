@@ -18,7 +18,7 @@ import {
 	OfferMock,
 	OfferPill,
 } from "@/features/intake/paywall/offer-card";
-import { useTokenColor } from "@/features/profile/hooks/use-token-color";
+import { useTokenColor } from "@/lib/use-token-color";
 import { cn } from "@/lib/utils";
 
 const MUSIC_NOTE = {

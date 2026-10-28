@@ -23,10 +23,10 @@ import {
 } from "@/features/browse/now-playing/now-playing-store";
 import type { PaywallSurface } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { formatTime } from "@/lib/format-time";
 import { playSoftPress } from "@/lib/haptics";
 import { imageSource } from "@/lib/image-source";
 import { cn } from "@/lib/utils";
-import { formatTime } from "./format-time";
 import {
 	CrisisLine,
 	GlyphButton,

@@ -8,7 +8,7 @@ import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { Tour } from "@/components/ui/tour";
 import { StreakCalendar } from "@/features/reflect/components/streak-calendar";
-import { TOUR_STEPS } from "@/features/reflect/tour-copy";
+import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { playSoftPress } from "@/lib/haptics";
 

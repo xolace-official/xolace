@@ -6,6 +6,8 @@ import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import {
@@ -19,8 +21,6 @@ import {
 	SHIELD_ICON,
 	TALK_TIME_ICON,
 } from "@/features/settings/components/settings-icons";
-import { SettingsRow } from "@/features/settings/components/settings-row";
-import { SettingsSection } from "@/features/settings/components/settings-section";
 import {
 	UpdateRow,
 	useVersionLabel,

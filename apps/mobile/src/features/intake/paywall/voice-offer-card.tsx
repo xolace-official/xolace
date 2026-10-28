@@ -10,10 +10,10 @@ import { View } from "react-native";
 
 import { AppText } from "@/components/shared/app-text";
 import { OFFER_MASCOT, OfferCard } from "@/features/intake/paywall/offer-card";
-import { useTokenColor } from "@/features/profile/hooks/use-token-color";
-import { useVoicePreview } from "@/features/settings/hooks/use-voice-preview";
-import { VOICE_OPTIONS } from "@/features/settings/voice-options";
+import { useVoicePreview } from "@/features/talk/use-voice-preview";
+import { VOICE_OPTIONS } from "@/features/talk/voice-options";
 import { playSoftPress } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const PLAY = {
 	android: "play_arrow",

@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { SessionEndUpsell } from "@/features/insights/compounding-upsell";
-import { NIGHT_SESSION_END_EXIT } from "@/features/reflect/night-copy";
+import { NIGHT_SESSION_END_EXIT } from "@/features/night-mode/night-copy";
 import { CloseOffer } from "@/features/session-end/components/close-offer";
 import { KindlingCloseSlot } from "@/features/session-end/components/kindling-close-slot";
 

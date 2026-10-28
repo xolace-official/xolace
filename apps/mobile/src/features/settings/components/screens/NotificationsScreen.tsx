@@ -4,6 +4,8 @@ import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
 import { HourRadioGroup } from "@/features/settings/components/hour-radio-group";
 import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
 import {
@@ -12,8 +14,6 @@ import {
 	NOTIFICATIONS_ICON,
 	QUIET_HOURS_ICON,
 } from "@/features/settings/components/settings-icons";
-import { SettingsRow } from "@/features/settings/components/settings-row";
-import { SettingsSection } from "@/features/settings/components/settings-section";
 import {
 	type NotificationReach,
 	useNotificationSettings,

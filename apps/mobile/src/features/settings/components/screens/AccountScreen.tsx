@@ -6,6 +6,8 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
 import { AppleIcon } from "@/features/auth/components/apple-icon";
 import { GoogleIcon } from "@/features/auth/components/google-icon";
 import { DevToolsSection } from "@/features/settings/components/dev-tools-section";
@@ -17,8 +19,6 @@ import {
 	LOG_OUT_ICON,
 	SPACE_NAME_ICON,
 } from "@/features/settings/components/settings-icons";
-import { SettingsRow } from "@/features/settings/components/settings-row";
-import { SettingsSection } from "@/features/settings/components/settings-section";
 import { useAccountSettings } from "@/features/settings/hooks/use-account-settings";
 import { useConfirmAction } from "@/features/settings/hooks/use-confirm-action";
 import { COMPANION_FALLBACK_NAME } from "@/features/talk/talk-copy";
