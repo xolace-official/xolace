@@ -13,7 +13,6 @@ import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import {
 	ACCOUNT_ICON,
 	APPEARANCE_ICON,
-	type CrossPlatformSymbol,
 	HEART_ICON,
 	MIRROR_ICON,
 	NOTIFICATIONS_ICON,
@@ -26,6 +25,7 @@ import {
 	useVersionLabel,
 } from "@/features/settings/components/update-row";
 import { useTalkTime } from "@/features/talk/use-talk-time";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 import { useAppStore } from "@/store/store";
 
 const styles = StyleSheet.create({

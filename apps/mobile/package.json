@@ -12,6 +12,7 @@
     "ios": "expo run:ios",
     "ios:dev": "APP_VARIANT=development expo run:ios",
     "ios:preview": "APP_VARIANT=preview expo run:ios",
+    "knip": "bun run --cwd ../.. knip",
     "lint": "biome check .",
     "prebuild": "expo prebuild",
     "prebuild:dev": "APP_VARIANT=development expo prebuild --clean",

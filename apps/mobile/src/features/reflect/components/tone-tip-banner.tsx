@@ -4,11 +4,11 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { MirrorTonePickerDialog } from "@/features/reflect/components/mirror-tone-picker-dialog";
 import {
 	type MirrorTone,
-	MirrorTonePickerDialog,
-} from "@/features/reflect/components/mirror-tone-picker-dialog";
-import { useMirrorSettings } from "@/features/reflect/hooks/use-mirror-settings";
+	useMirrorSettings,
+} from "@/features/reflect/hooks/use-mirror-settings";
 import { useAppStore } from "@/store/store";
 
 const CLOSE_ICON = { android: "close", ios: "xmark", web: "close" } as const;

@@ -11,9 +11,9 @@ import {
 	useMirrorSettings,
 } from "@/features/reflect/hooks/use-mirror-settings";
 import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
-import type { CrossPlatformSymbol } from "@/features/settings/components/settings-icons";
 import { VoiceSection } from "@/features/settings/components/voice-section";
 import { TalkStyleSection } from "@/features/talk/talk-style-section";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 import { cn } from "@/lib/utils";
 
 type ToneOption = {

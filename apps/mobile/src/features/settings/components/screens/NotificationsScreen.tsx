@@ -10,7 +10,6 @@ import { HourRadioGroup } from "@/features/settings/components/hour-radio-group"
 import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
 import {
 	CHAT_NOTIFICATIONS_ICON,
-	type CrossPlatformSymbol,
 	NOTIFICATIONS_ICON,
 	QUIET_HOURS_ICON,
 } from "@/features/settings/components/settings-icons";
@@ -18,6 +17,7 @@ import {
 	type NotificationReach,
 	useNotificationSettings,
 } from "@/features/settings/hooks/use-notification-settings";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 import { cn } from "@/lib/utils";
 
 const REACH_OPTIONS: {

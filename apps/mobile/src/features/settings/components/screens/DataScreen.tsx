@@ -8,7 +8,6 @@ import { SettingsRow } from "@/components/shared/settings-row";
 import { SettingsSection } from "@/components/shared/settings-section";
 import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
 import {
-	type CrossPlatformSymbol,
 	DELETE_ACCOUNT_ICON,
 	DELETE_DATA_ICON,
 	MEMORY_ICON,
@@ -19,6 +18,7 @@ import {
 	type RetentionOption,
 	useDataSettings,
 } from "@/features/settings/hooks/use-data-settings";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 import { cn } from "@/lib/utils";
 
 const RETENTION_OPTIONS: {

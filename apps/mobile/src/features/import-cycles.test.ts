@@ -203,13 +203,20 @@ function featureEdges(graph: Map<string, Edge[]>): Map<string, string[]> {
 describe("import graph", () => {
 	const graph = buildGraph();
 	const pairs = featureEdges(graph);
+	const features = [
+		...new Set([...graph.keys()].map(featureOf).filter((f) => f !== undefined)),
+	];
+
+	// The three checks below all pass trivially on an empty graph, which is what
+	// a drifted tsconfig `include`, a moved `src/` or a path-separator mismatch
+	// would produce. Pin the inputs so a silent pass can't hide behind them.
+	it("sees the source tree it is checking", () => {
+		expect(graph.size).toBeGreaterThan(0);
+		expect(features).toContain(ENTITLEMENTS_FEATURE);
+		expect(pairs.size).toBeGreaterThan(0);
+	});
 
 	it("has no cycles between feature folders", () => {
-		const features = [
-			...new Set(
-				[...graph.keys()].map(featureOf).filter((f) => f !== undefined)
-			),
-		];
 		const next = (f: string) =>
 			[...pairs.keys()]
 				.filter((k) => k.startsWith(`${f} -> `))

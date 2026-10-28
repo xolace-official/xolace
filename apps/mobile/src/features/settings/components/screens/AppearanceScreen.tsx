@@ -11,12 +11,12 @@ import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { ProfileCardsSection } from "@/features/settings/components/profile-cards-section";
 import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
-import type { CrossPlatformSymbol } from "@/features/settings/components/settings-icons";
 import { ThemeCarousel } from "@/features/settings/components/theme-carousel";
 import {
 	type ThemeMode,
 	useAppearanceSettings,
 } from "@/features/settings/hooks/use-appearance-settings";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 import type { MotionPreference } from "@/lib/motion/use-effective-reduced-motion";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/store";

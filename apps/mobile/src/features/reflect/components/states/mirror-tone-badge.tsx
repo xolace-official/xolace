@@ -1,6 +1,6 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import type { MirrorTone } from "@/features/reflect/components/mirror-tone-picker-dialog";
+import type { MirrorTone } from "@/features/reflect/hooks/use-mirror-settings";
 
 const TONE_BADGE: Partial<Record<string, { text: string; border: string }>> = {
 	direct: { border: "border-tone-direct/40", text: "text-tone-direct" },
