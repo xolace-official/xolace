@@ -176,6 +176,31 @@ describe("browse.getTopic", () => {
 	});
 });
 
+describe("secondary topics", () => {
+	it("list a music track under its secondary topic after the topic's own, and count it there", async () => {
+		const user = await asNewUser();
+		await seed(user, [
+			base("m1", "music", "music_topic_sadness"),
+			base("m2", "music", "music_topic_calm_peace", {
+				secondaryTopic: "music_topic_sadness",
+			}),
+			base("m3", "music", "music_topic_calm_peace", {
+				active: false,
+				secondaryTopic: "music_topic_sadness",
+			}),
+		]);
+
+		const tracks = await user.t.query(api.browse.getTopic, { slug: "sadness" });
+		expect(tracks.map((t) => t.slug)).toEqual(["m1", "m2"]);
+
+		const topics = await user.t.query(api.browse.getTopics, {});
+		expect(topics.map((t) => [t.slug, t.musicCount])).toEqual([
+			["calm_peace", 1],
+			["sadness", 2],
+		]);
+	});
+});
+
 describe("browse.getTopicTitle", () => {
 	it("uses the curated title, else the one derived from the slug", async () => {
 		const user = await asNewUser();

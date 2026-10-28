@@ -20,6 +20,7 @@ export type TrackPatch = Partial<
 		| "licence"
 		| "narrators"
 		| "newUntil"
+		| "secondaryTopic"
 		| "tags"
 		| "tier"
 		| "title"
@@ -197,6 +198,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 						licence: support ? undefined : t.licence,
 						narrators: support && t.narrators?.length ? t.narrators : undefined,
 						newUntil: t.newUntil,
+						secondaryTopic: support ? undefined : t.secondaryTopic,
 						tags: t.tags,
 						tier: support ? t.tier : undefined,
 						title: t.title,

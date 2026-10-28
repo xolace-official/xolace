@@ -113,6 +113,7 @@ type Track = {
 	audioPath: string;
 	durationSec: number;
 	active?: boolean;
+	secondaryTopic?: string;
 	whatItsFor?: string;
 };
 
@@ -162,6 +163,10 @@ type Review = Answer & {
 	draft?: string;
 	model: string;
 	usage: Usage;
+	/** The owner's call at the moves, in words: kept when a track is heard again. */
+	decision?: string | null;
+	/** The owner's second topic slug (`meditation`); `--apply` writes it to the manifest. */
+	secondaryTopic?: string | null;
 };
 
 const manifest: Track[] = JSON.parse(readFileSync(manifestPath, "utf8"));
@@ -634,6 +639,12 @@ const saveReviews = () =>
 	writeFileSync(reviewPath, `${JSON.stringify(reviews, null, 2)}\n`);
 
 /** Writes every review's line into the manifest; topic moves stay suggestions. */
+/** The owner's calls on a track, which hearing it again must not drop. */
+const ownerCalls = (slug: string) => ({
+	decision: reviews[slug]?.decision,
+	secondaryTopic: reviews[slug]?.secondaryTopic,
+});
+
 function applyReviews() {
 	let changed = 0;
 	for (const t of music) {
@@ -642,17 +653,24 @@ function applyReviews() {
 			t.whatItsFor = line;
 			changed++;
 		}
+		// The owner's secondary topic, decided at the moves.
+		const secondary = reviews[t.slug]?.secondaryTopic;
+		const secondaryTopic = secondary ? `music_topic_${secondary}` : undefined;
+		if (secondaryTopic !== t.secondaryTopic) {
+			t.secondaryTopic = secondaryTopic;
+			changed++;
+		}
 	}
 	writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 	// Back to the repo's layout (short arrays on one line), so the diff is the lines alone.
 	execFileSync("bunx", ["biome", "format", "--write", manifestPath], {
 		stdio: "ignore",
 	});
-	const moves = Object.values(reviews).filter(
-		(r) => r.betterTopic !== "none" && r.betterTopic !== r.topic
+	const open = Object.values(reviews).filter(
+		(r) => !r.decision && r.betterTopic !== "none" && r.betterTopic !== r.topic
 	);
 	console.log(
-		`Wrote ${changed} lines into ${path.relative(process.cwd(), manifestPath)}. ${moves.length} suggested topic moves are listed in the review, not applied.`
+		`Wrote ${changed} changes into ${path.relative(process.cwd(), manifestPath)}. ${open.length} suggested topic moves wait for the owner's call.`
 	);
 }
 
@@ -678,6 +696,7 @@ if (recordSlug) {
 		...answer,
 		model: `${MODEL} (AI Studio)`,
 		usage: { input: 0, output: 0, thought: 0 },
+		...ownerCalls(t.slug),
 	};
 	saveReviews();
 	writeReport();
@@ -785,7 +804,7 @@ async function worker() {
 			failed = true;
 			throw error;
 		}
-		reviews[t.slug] = review;
+		reviews[t.slug] = { ...review, ...ownerCalls(t.slug) };
 		done.push(review);
 		saveReviews();
 		writeReport();

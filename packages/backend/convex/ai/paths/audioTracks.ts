@@ -55,6 +55,7 @@ export const trackUpsertValidator = v.union(
 		family: v.literal("music"),
 		...sharedFields,
 		licence: licenceValidator,
+		secondaryTopic: v.optional(v.string()),
 		whatItsFor: v.optional(v.string()),
 	})
 );
@@ -180,6 +181,16 @@ export async function upsertTrackRecord(
 		await dropUpload();
 		throw new ConvexError(
 			`audio_tracks upsert rejected: slug "${track.slug}" topic "${track.topic}" must start with "${prefix}"`
+		);
+	}
+	const secondary = track.family === "music" ? track.secondaryTopic : undefined;
+	if (
+		secondary !== undefined &&
+		!(secondary.startsWith(prefix) && secondary !== track.topic)
+	) {
+		await dropUpload();
+		throw new ConvexError(
+			`audio_tracks upsert rejected: slug "${track.slug}" secondaryTopic "${secondary}" must be another "${prefix}" topic`
 		);
 	}
 

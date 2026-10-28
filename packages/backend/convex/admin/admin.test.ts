@@ -546,6 +546,42 @@ describe("admin/audio", () => {
 		).rejects.toThrow(/not a support topic/);
 	});
 
+	it("saves a music track's secondary topic, only when it is another music topic", async () => {
+		const t = await withTrack({
+			family: "music",
+			slug: "grounding",
+			tier: undefined,
+			topic: "music_topic_calm_peace",
+		});
+		const music = {
+			...saveArgs,
+			track: {
+				featured: false,
+				tags: [],
+				title: "Soft piano",
+				topic: "music_topic_calm_peace",
+			},
+		};
+		await t.mutation(api.admin.audio.save, {
+			...music,
+			track: { ...music.track, secondaryTopic: "music_topic_meditation" },
+		});
+		const [row] = await t.query(api.admin.audio.list, {});
+		expect(row.secondaryTopic).toBe("music_topic_meditation");
+		for (const secondaryTopic of [
+			"music_topic_calm_peace",
+			"audio_topic_grief",
+			"music_topic_not_catalogued",
+		]) {
+			await expect(
+				t.mutation(api.admin.audio.save, {
+					...music,
+					track: { ...music.track, secondaryTopic },
+				})
+			).rejects.toThrow(/secondary topic/);
+		}
+	});
+
 	it("can retire a live track whose stored topic is no longer catalogued", async () => {
 		const t = await withTrack({
 			active: true,

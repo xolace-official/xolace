@@ -102,6 +102,9 @@ export default defineSchema({
 		// title (+ raw source tags for music), written by upsertTrack
 		// (library/searchText.ts trackSearchTextOf).
 		searchText: v.optional(v.string()),
+		// music-family: a second music_topic_* it also lists under in Browse
+		// (owner's call after listening; the primary `topic` still leads).
+		secondaryTopic: v.optional(v.string()),
 
 		// episode (support-family with a series) — Track 1 "The Spectrum" / Track 2
 		series: v.optional(v.string()), // series slug
@@ -122,6 +125,7 @@ export default defineSchema({
 	})
 		.index("by_slug", ["slug"])
 		.index("by_family_and_topic", ["family", "topic"])
+		.index("by_family_and_secondaryTopic", ["family", "secondaryTopic"])
 		.index("by_family_and_active", ["family", "active"]) // Browse per-family list (#339)
 		.index("by_thumbKey", ["thumbKey"])
 		.searchIndex("search_searchText", {

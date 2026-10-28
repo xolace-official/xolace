@@ -119,6 +119,7 @@ function trackView(t: TrackUpsert | Doc<"audio_tracks">): View {
 				}
 			: {
 					...licenceView(t.licence),
+					"Secondary topic": { value: showText(t.secondaryTopic) },
 					"What it's for": { value: showText(t.whatItsFor) },
 				}),
 		Audio: hashField(t.sha256),

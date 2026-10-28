@@ -1979,6 +1979,54 @@ describe("tracks bind on meaning inside the picked topic (#572)", () => {
 		deleteObject.mockRestore();
 	});
 
+	it("upsertTrack keeps a music track's secondary topic and rejects one that isn't another music topic", async () => {
+		const actual = await vi.importActual<
+			typeof import("../ai/paths/audioTracks")
+		>("../ai/paths/audioTracks");
+		const deleteObject = vi
+			.spyOn(actual.r2, "deleteObject")
+			.mockResolvedValue(undefined);
+		const user = await asNewUser();
+		const track = {
+			durationSec: 60,
+			family: "music" as const,
+			key: "k1",
+			licence: {
+				acquiredAt: 0,
+				artist: "Artist",
+				attributionRequired: false,
+				attributionText: "Music by Artist",
+				licenceName: "Pixabay",
+				licenceUrl: "https://pixabay.com/service/license-summary/",
+				source: "Pixabay",
+				sourceUrl: "https://pixabay.com",
+			},
+			sha256: "a",
+			slug: "m1",
+			sourceTags: [],
+			tags: [],
+			thumbKey: "t",
+			thumbSha256: "ta",
+			title: "Soft piano",
+			topic: "music_topic_calm_peace",
+		};
+		const upsert = (secondaryTopic: string) =>
+			user.root.mutation(internal.ai.paths.audioTracks.upsertTrack, {
+				track: { ...track, secondaryTopic },
+			});
+
+		await upsert("music_topic_meditation");
+		const row = await user.root.run((ctx) =>
+			ctx.db.query("audio_tracks").first()
+		);
+		expect(row?.secondaryTopic).toBe("music_topic_meditation");
+		await expect(upsert("audio_topic_grief")).rejects.toThrow(/secondaryTopic/);
+		await expect(upsert("music_topic_calm_peace")).rejects.toThrow(
+			/secondaryTopic/
+		);
+		deleteObject.mockRestore();
+	});
+
 	it("indexes each track's own text in its topic (and the reframe series); retiring one removes it", async () => {
 		const user = await asNewUser();
 		const ids = await seedTracks(user, [

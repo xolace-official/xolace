@@ -40,6 +40,8 @@ export interface AudioTrack {
 	/** In the Browse "New" shelf while this is in the future. */
 	newUntil?: number;
 	safetyReviewedAt?: number;
+	/** Music only: another music topic it also lists under in Browse. */
+	secondaryTopic?: string;
 	series?: string;
 	seriesTitle?: string;
 	slug: string;

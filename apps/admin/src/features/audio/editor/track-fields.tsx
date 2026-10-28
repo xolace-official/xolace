@@ -331,6 +331,10 @@ export function ShelfFields() {
 		label: topic.title,
 		value: topicId(track.family, topic.slug),
 	}));
+	const secondaryItems = [
+		{ label: "None", value: null },
+		...topicItems.filter((item) => item.value !== track.topic),
+	];
 	const isNew = track.newUntil !== undefined && track.newUntil > now;
 
 	return (
@@ -342,6 +346,10 @@ export function ShelfFields() {
 					onValueChange={(value) => {
 						if (value) {
 							setField("topic", value);
+							// A topic can't be its own secondary.
+							if (value === track.secondaryTopic) {
+								setField("secondaryTopic", undefined);
+							}
 						}
 					}}
 					value={track.topic}
@@ -363,6 +371,37 @@ export function ShelfFields() {
 					</SelectContent>
 				</Select>
 			</Field>
+			{track.family === "music" ? (
+				<Field>
+					<FieldLabel htmlFor="track-secondary-topic">
+						Secondary topic
+					</FieldLabel>
+					<Select
+						items={secondaryItems}
+						onValueChange={(value) =>
+							setField("secondaryTopic", value ?? undefined)
+						}
+						value={track.secondaryTopic ?? null}
+					>
+						<SelectTrigger className="w-full" id="track-secondary-topic">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectGroup>
+								{secondaryItems.map((item) => (
+									<SelectItem key={item.label} value={item.value}>
+										{item.label}
+									</SelectItem>
+								))}
+							</SelectGroup>
+						</SelectContent>
+					</Select>
+					<FieldDescription>
+						It also lists under this topic in Browse, after the topic's own
+						tracks.
+					</FieldDescription>
+				</Field>
+			) : null}
 			<Field orientation="horizontal">
 				<Switch
 					checked={track.featured}

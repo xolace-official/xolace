@@ -322,7 +322,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["ambient", "yoga", "relaxation"],
-    "whatItsFor": "warm, beatless synth pads for sitting still and noticing what is here right now"
+    "whatItsFor": "warm, beatless synth pads for sitting still and noticing what is here right now",
+    "secondaryTopic": "music_topic_meditation"
   },
   {
     "slug": "music-mindfulness-14",
@@ -422,7 +423,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["meditation", "yoga", "instrumental"],
-    "whatItsFor": "warm synth pads and sparse chimes for sitting still and noticing the present moment"
+    "whatItsFor": "warm synth pads and sparse chimes for sitting still and noticing the present moment",
+    "secondaryTopic": "music_topic_meditation"
   },
   {
     "slug": "music-mindfulness-18",
@@ -472,7 +474,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["meditation", "spiritual", "nature"],
-    "whatItsFor": "gentle plucked notes, soft piano, and airy pads for a long, grounded sit"
+    "whatItsFor": "gentle plucked notes, soft piano, and airy pads for a long, grounded sit",
+    "secondaryTopic": "music_topic_meditation"
   },
   {
     "slug": "music-mindfulness-20",
@@ -1122,7 +1125,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["cinematic", "acoustic", "romantic"],
-    "whatItsFor": "delicate piano building to sweeping orchestral climaxes for letting big pent-up feelings out"
+    "whatItsFor": "delicate piano building to sweeping orchestral climaxes for letting big pent-up feelings out",
+    "secondaryTopic": "music_topic_self_love"
   },
   {
     "slug": "music-self-love-06",
@@ -1172,7 +1176,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["soft-piano", "romantic", "instrumental"],
-    "whatItsFor": "arpeggiated piano and swelling cinematic strings for when you need a wave of hope"
+    "whatItsFor": "arpeggiated piano and swelling cinematic strings for when you need a wave of hope",
+    "secondaryTopic": "music_topic_self_love"
   },
   {
     "slug": "music-self-love-08",
@@ -1422,7 +1427,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["wedding", "acoustic", "romantic"],
-    "whatItsFor": "wistful, looping piano and warm pads for sitting with heavy thoughts or quiet ache"
+    "whatItsFor": "wistful, looping piano and warm pads for sitting with heavy thoughts or quiet ache",
+    "secondaryTopic": "music_topic_sadness"
   },
   {
     "slug": "music-self-love-18",
@@ -1472,7 +1478,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["modern-jazz", "romantic", "instrumental"],
-    "whatItsFor": "delicate looping piano arpeggios for sitting quietly when your thoughts keep circling"
+    "whatItsFor": "delicate looping piano arpeggios for sitting quietly when your thoughts keep circling",
+    "secondaryTopic": "music_topic_self_love"
   },
   {
     "slug": "music-self-love-20",
@@ -1572,7 +1579,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["corporate", "uplifting", "instrumental"],
-    "whatItsFor": "interlocking delay guitars and warm pads for finding a steady rhythm when you feel stuck"
+    "whatItsFor": "interlocking delay guitars and warm pads for finding a steady rhythm when you feel stuck",
+    "secondaryTopic": "music_topic_focus_concentration"
   },
   {
     "slug": "music-motivation-04",
@@ -2197,7 +2205,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["orchestral", "strings", "classical"],
-    "whatItsFor": "soaring bansuri flute, plucked strings and gentle tabla for lifting a heavy heart toward hope"
+    "whatItsFor": "soaring bansuri flute, plucked strings and gentle tabla for lifting a heavy heart toward hope",
+    "secondaryTopic": "music_topic_hope_positivity"
   },
   {
     "slug": "music-emotional-release-09",
@@ -2522,7 +2531,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["ambient", "light", "instrumental"],
-    "whatItsFor": "warm, motionless synth drone for sitting still and resting a busy mind"
+    "whatItsFor": "warm, motionless synth drone for sitting still and resting a busy mind",
+    "secondaryTopic": "music_topic_nature_mindfulness"
   },
   {
     "slug": "music-nature-mindfulness-02",
@@ -2622,7 +2632,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["ambient", "nature", "meditation"],
-    "whatItsFor": "sparse bell tones and warm synth pads for sitting still and quieting a busy mind"
+    "whatItsFor": "sparse bell tones and warm synth pads for sitting still and quieting a busy mind",
+    "secondaryTopic": "music_topic_nature_mindfulness"
   },
   {
     "slug": "music-nature-mindfulness-06",
@@ -2722,7 +2733,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["meditation", "yoga", "spiritual"],
-    "whatItsFor": "floating synth pads and sparse chimes for sitting still with eyes closed"
+    "whatItsFor": "floating synth pads and sparse chimes for sitting still with eyes closed",
+    "secondaryTopic": "music_topic_nature_mindfulness"
   },
   {
     "slug": "music-nature-mindfulness-10",
@@ -2797,7 +2809,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["electronic", "ambient", "meditation"],
-    "whatItsFor": "spacious synth pads and gentle chimes for sitting still and clearing your head"
+    "whatItsFor": "spacious synth pads and gentle chimes for sitting still and clearing your head",
+    "secondaryTopic": "music_topic_nature_mindfulness"
   },
   {
     "slug": "music-nature-mindfulness-13",
@@ -2822,7 +2835,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["meditation", "spiritual", "morning"],
-    "whatItsFor": "dramatic synth swells and roaring waves for letting heavy feelings move through"
+    "whatItsFor": "dramatic synth swells and roaring waves for letting heavy feelings move through",
+    "secondaryTopic": "music_topic_nature_mindfulness"
   },
   {
     "slug": "music-nature-mindfulness-14",
@@ -3172,7 +3186,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["meditation", "spiritual", "ambient"],
-    "whatItsFor": "spacious, drifting synth pads for letting your body unclench when you feel stretched thin"
+    "whatItsFor": "spacious, drifting synth pads for letting your body unclench when you feel stretched thin",
+    "secondaryTopic": "music_topic_stress_relief"
   },
   {
     "slug": "music-stress-relief-08",
@@ -3247,7 +3262,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["ambient", "relaxation", "instrumental"],
-    "whatItsFor": "slow, warm synth swells for letting your shoulders drop when you've been stretched thin"
+    "whatItsFor": "slow, warm synth swells for letting your shoulders drop when you've been stretched thin",
+    "secondaryTopic": "music_topic_stress_relief"
   },
   {
     "slug": "music-stress-relief-11",
@@ -3672,7 +3688,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["classical", "piano", "sadness"],
-    "whatItsFor": "solo piano swelling with strings and choir for letting heavy feelings out"
+    "whatItsFor": "solo piano swelling with strings and choir for letting heavy feelings out",
+    "secondaryTopic": "music_topic_emotional_release"
   },
   {
     "slug": "music-loneliness-08",
@@ -4647,7 +4664,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["self-love", "pop", "affirmation"],
-    "whatItsFor": "warm neo-soul vocals and a steady groove for setting boundaries and putting yourself first"
+    "whatItsFor": "warm neo-soul vocals and a steady groove for setting boundaries and putting yourself first",
+    "secondaryTopic": "music_topic_self_love"
   },
   {
     "slug": "music-confidence-empowerment-08",
@@ -5047,7 +5065,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["yoga", "relaxation", "mindfulness"],
-    "whatItsFor": "gentle spoken guidance and warm synth pads for grounding yourself when your mind is racing"
+    "whatItsFor": "gentle spoken guidance and warm synth pads for grounding yourself when your mind is racing",
+    "secondaryTopic": "music_topic_mindfulness"
   },
   {
     "slug": "music-anxiety-relief-04",
@@ -5147,7 +5166,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["soundbath", "963hz", "pineal gland"],
-    "whatItsFor": "slow, resonant chimes and singing bowls for sitting still and quieting a racing mind"
+    "whatItsFor": "slow, resonant chimes and singing bowls for sitting still and quieting a racing mind",
+    "secondaryTopic": "music_topic_meditation"
   },
   {
     "slug": "music-anxiety-relief-08",
@@ -5247,7 +5267,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["yoga", "ending yoga practice", "yoga practice"],
-    "whatItsFor": "flowing piano arpeggios and warm pads for settling a looping mind"
+    "whatItsFor": "flowing piano arpeggios and warm pads for settling a looping mind",
+    "secondaryTopic": "music_topic_overthinking"
   },
   {
     "slug": "music-overthinking-01",
@@ -6878,7 +6899,8 @@
       "mindfulness",
       "spa"
     ],
-    "whatItsFor": "warm synth pads and a steady hand-drum pulse for grounding and quiet focus"
+    "whatItsFor": "warm synth pads and a steady hand-drum pulse for grounding and quiet focus",
+    "secondaryTopic": "music_topic_breathing_meditation"
   },
   {
     "slug": "music-breathing-meditation-07",
@@ -6940,7 +6962,8 @@
       "nature elements",
       "relaxing"
     ],
-    "whatItsFor": "flute, swelling strings, and forest stream sounds for stepping out of the mental noise"
+    "whatItsFor": "flute, swelling strings, and forest stream sounds for stepping out of the mental noise",
+    "secondaryTopic": "music_topic_breathing_meditation"
   },
   {
     "slug": "music-breathing-meditation-09",
@@ -7062,7 +7085,8 @@
       "stress relief",
       "chill"
     ],
-    "whatItsFor": "cascading piano arpeggios and warm synth pads for slowing down and taking deep breaths"
+    "whatItsFor": "cascading piano arpeggios and warm synth pads for slowing down and taking deep breaths",
+    "secondaryTopic": "music_topic_calm_peace"
   },
   {
     "slug": "music-breathing-meditation-13",
@@ -8871,7 +8895,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["ambient", "serene horizon", "gentle flow", "sleep aid"],
-    "whatItsFor": "bright fingerpicked guitar and steady percussion for finding gentle forward motion when you feel stuck"
+    "whatItsFor": "bright fingerpicked guitar and steady percussion for finding gentle forward motion when you feel stuck",
+    "secondaryTopic": "music_topic_healing_recovery"
   },
   {
     "slug": "music-healing-recovery-27",
@@ -8927,7 +8952,8 @@
       "optimistic",
       "commercial background"
     ],
-    "whatItsFor": "groovy electric guitar and upbeat pop drums for a quick burst of good mood"
+    "whatItsFor": "groovy electric guitar and upbeat pop drums for a quick burst of good mood",
+    "secondaryTopic": "music_topic_hope_positivity"
   },
   {
     "slug": "music-hope-positivity-02",
@@ -9146,7 +9172,8 @@
       "modern lifestyle",
       "review intro"
     ],
-    "whatItsFor": "upbeat funk guitar and bright brass for a fun, energetic boost"
+    "whatItsFor": "upbeat funk guitar and bright brass for a fun, energetic boost",
+    "secondaryTopic": "music_topic_hope_positivity"
   },
   {
     "slug": "music-hope-positivity-09",
@@ -9345,7 +9372,8 @@
       "presentation",
       "clean backdrop"
     ],
-    "whatItsFor": "pulsing synth arpeggios and steady piano chords for locking into a single task"
+    "whatItsFor": "pulsing synth arpeggios and steady piano chords for locking into a single task",
+    "secondaryTopic": "music_topic_focus_concentration"
   },
   {
     "slug": "music-hope-positivity-16",
@@ -9948,7 +9976,8 @@
       "soft melody",
       "calm"
     ],
-    "whatItsFor": "slow tender solo piano for sitting quietly when you need a peaceful moment"
+    "whatItsFor": "slow tender solo piano for sitting quietly when you need a peaceful moment",
+    "secondaryTopic": "music_topic_meditation"
   },
   {
     "slug": "music-meditation-02",
@@ -10416,7 +10445,8 @@
       "study aid",
       "cognitive enhancement"
     ],
-    "whatItsFor": "gentle solo piano melody for quiet focus or settling a busy mind"
+    "whatItsFor": "gentle solo piano melody for quiet focus or settling a busy mind",
+    "secondaryTopic": "music_topic_meditation"
   },
   {
     "slug": "music-meditation-17",
@@ -10848,7 +10878,8 @@
       "soft piano music",
       "peaceful"
     ],
-    "whatItsFor": "flowing piano and warm strings for tender reflection and gentle emotional release"
+    "whatItsFor": "flowing piano and warm strings for tender reflection and gentle emotional release",
+    "secondaryTopic": "music_topic_sadness"
   },
   {
     "slug": "music-sadness-03",
@@ -10940,7 +10971,8 @@
       "emotional story",
       "cinematic piano"
     ],
-    "whatItsFor": "mournful piano and cello building to a sweeping orchestral climax for letting heavy feelings out"
+    "whatItsFor": "mournful piano and cello building to a sweeping orchestral climax for letting heavy feelings out",
+    "secondaryTopic": "music_topic_emotional_release"
   },
   {
     "slug": "music-sadness-06",
@@ -10971,7 +11003,8 @@
       "soft piano",
       "quiet goodbye"
     ],
-    "whatItsFor": "gentle piano, acoustic guitar and a slow ballad beat for letting tender feelings out"
+    "whatItsFor": "gentle piano, acoustic guitar and a slow ballad beat for letting tender feelings out",
+    "secondaryTopic": "music_topic_emotional_release"
   },
   {
     "slug": "music-sadness-07",
@@ -11578,7 +11611,8 @@
       "suspense",
       "epic tension"
     ],
-    "whatItsFor": "sweeping orchestral strings and mournful solo violin for letting heavy feelings move through you"
+    "whatItsFor": "sweeping orchestral strings and mournful solo violin for letting heavy feelings move through you",
+    "secondaryTopic": "music_topic_emotional_release"
   },
   {
     "slug": "music-sadness-27",
@@ -11608,7 +11642,8 @@
       "soft backdrop",
       "minimal elements"
     ],
-    "whatItsFor": "rolling piano arpeggios and swelling strings for letting heavy feelings move through you"
+    "whatItsFor": "rolling piano arpeggios and swelling strings for letting heavy feelings move through you",
+    "secondaryTopic": "music_topic_emotional_release"
   },
   {
     "slug": "music-sadness-28",
@@ -11699,7 +11734,8 @@
       "emotional transition",
       "brief sorrow"
     ],
-    "whatItsFor": "somber synth pads, strings, and a slow beat for sitting with heavy feelings"
+    "whatItsFor": "somber synth pads, strings, and a slow beat for sitting with heavy feelings",
+    "secondaryTopic": "music_topic_emotional_release"
   },
   {
     "slug": "music-sadness-31",
@@ -11815,7 +11851,8 @@
       "acquiredAt": 1789087800000
     },
     "sourceTags": ["ambient", "somber skies", "heavy heart", "zen melancholy"],
-    "whatItsFor": "sweeping strings, piano, and wordless vocals for letting heavy feelings move through you"
+    "whatItsFor": "sweeping strings, piano, and wordless vocals for letting heavy feelings move through you",
+    "secondaryTopic": "music_topic_emotional_release"
   },
   {
     "slug": "music-sadness-35",
