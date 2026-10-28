@@ -1,22 +1,12 @@
-/**
- * Keeping the app from talking over itself.
- *
- * Suppression is client-side and lives here rather than in the sender, because
- * the notification handler only runs while the app is foregrounded. It stays
- * quiet only when the matching thread is focused; conversation events from any
- * other thread still need to reach the user. Stream sends push irrespective of
- * online status, so server-side eligibility cannot make that distinction.
- */
+/** Client-side suppression for the focused thread only; Stream sends push regardless of online
+ * status, so the server can't. */
 import { isChatNotificationType } from "@xolace/backend/convex/lib/chatNotifications";
 
 /** A push payload as it actually arrives: an open bag, nothing guaranteed. */
 type NotificationData = Record<string, unknown> | undefined | null;
 
-/**
- * Shape of a delivered notification, narrowed to what the tray sweep reads —
- * which is also what keeps this module free of `expo-notifications`, and so
- * runnable under Vitest.
- */
+/** A delivered notification, narrowed to what the tray sweep reads; keeps this module free of
+ * `expo-notifications`. */
 type PresentedNotification = {
 	request: { identifier: string; content: { data?: NotificationData } };
 };
@@ -33,10 +23,8 @@ export function clearActiveNotificationConversation(conversationId: string) {
 	}
 }
 
-/**
- * The open thread already shows its own events. A different thread does not,
- * so its foreground arrival must still use the OS notification surfaces.
- */
+/** The open thread shows its own events; a different thread's foreground arrival still uses the
+ * OS surfaces. */
 export function suppressedInForeground(data: NotificationData): boolean {
 	return (
 		isChatNotificationType(data?.type) &&
@@ -45,11 +33,8 @@ export function suppressedInForeground(data: NotificationData): boolean {
 	);
 }
 
-/**
- * Which already-delivered notifications belong to one conversation. Matched on
- * both type and id so a nudge that happens to carry a conversation id is never
- * swept out of the tray with them.
- */
+/** Delivered notification ids for one conversation. Matched on type and id, so a nudge carrying
+ * a conversation id survives. */
 export function conversationNotificationIds(
 	presented: PresentedNotification[],
 	conversationId: string

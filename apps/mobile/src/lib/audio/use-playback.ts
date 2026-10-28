@@ -36,15 +36,8 @@ export type PlaybackReturn<T> = {
 	setVolume: (volume: number) => void;
 };
 
-/**
- * Signed-URL playback shared by every player — Browse / kindling
- * (`useTrackPlayback`) and the Lantern reader's dock (#411). Shaped like
- * `useMirrorAudio` with **refetch-on-expiry**: signed R2 URLs die after an
- * hour, so a track paused and resumed later re-mints transparently, rebuilds
- * the player on the fresh URL, and picks up where it left off.
- *
- * `key` identifies what `fetchTrack` returns; a new key mints afresh.
- */
+/** Signed-URL playback shared by every player (#411). R2 URLs expire hourly, so a late resume
+ * re-mints and rebuilds the player. */
 export function usePlayback<T extends Playable>(
 	key: string,
 	fetchTrack: () => Promise<T | null>,
@@ -160,10 +153,8 @@ export function usePlayback<T extends Playable>(
 	// native player first, and its `sharedObjectWillRelease` already clears the
 	// active lock-screen player. Calling into the released object throws.
 
-	/**
-	 * Past `expiresAt`, re-mint and queue the action for the rebuilt player.
-	 * Returns true when the caller should stop — the queued action will run.
-	 */
+	/** Past `expiresAt`, re-mints and queues the action for the rebuilt player; true means the
+	 * caller stops. */
 	const remintIfExpired = async (seek: number, play: boolean) => {
 		// `expiresAt` is server time; the margin absorbs a slow device clock.
 		if (!track || Date.now() + EXPIRY_MARGIN_MS < track.expiresAt) {

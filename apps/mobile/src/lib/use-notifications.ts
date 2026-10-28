@@ -14,11 +14,8 @@ import {
 import { requestPushToken } from "@/lib/push-token";
 import { useAppStore } from "@/store/store";
 
-// Configure how notifications appear when the app is in the foreground.
-//
-// This handler runs *only* while the app is foregrounded. The currently focused
-// thread handles its own events, but chat arrivals for other threads still need
-// the OS banner, list entry, and sound. Backgrounded arrivals display as normal.
+// Foreground-only handler. The focused thread handles its own events, but chat
+// arrivals for other threads still need the OS banner, list entry and sound.
 Notifications.setNotificationHandler({
 	handleNotification: async (notification) => {
 		const show = !suppressedInForeground(notification.request.content.data);
@@ -33,13 +30,8 @@ Notifications.setNotificationHandler({
 	},
 });
 
-/**
- * Manages push notification permissions, token registration,
- * and notification response handling.
- *
- * Must be rendered inside an authenticated Convex context
- * (i.e. within the protected route group).
- */
+/** Push permissions, token registration and tap handling. Must render inside an authenticated
+ * Convex context. */
 export function useNotifications() {
 	const { isSignedIn } = useAuth();
 	const registerToken = useMutation(api.notifications.registerToken);
@@ -61,15 +53,9 @@ export function useNotifications() {
 		let cancelled = false;
 
 		async function register() {
-			// This path is token *refresh* for someone already opted in — never an
-			// opt-in of its own. The contextual moments (session end, quote setup,
-			// Settings) each register their own token, and that first registration
-			// is what auto-enables the preferences.
-			//
-			// Without the switch check, turning notifications off did not survive a
-			// relaunch: `removeToken` drops the token but the OS grant remains, so
-			// the next launch re-registered and `registerToken` flipped every
-			// preference back on. The master switch has to mean what it says.
+			// Token refresh for someone already opted in, never an opt-in. Without the switch
+			// check the OS grant re-registers on relaunch and `registerToken` flips every
+			// preference back on.
 			if (notificationsEnabled !== true) {
 				return;
 			}
@@ -103,23 +89,16 @@ export function useNotifications() {
 		};
 	}, [isSignedIn, notificationsEnabled, registerToken, updatePreferences]);
 
-	// Tap handling, deliberately its own effect. It must not be torn down and
-	// re-subscribed every time a preference query resolves, and it must not be
-	// gated on `notificationsEnabled` — a tap means the notification was already
-	// delivered, so refusing to act on it only strands the user.
-	//
-	// `subscribeToNotificationTaps` is what makes cold starts work: the tap that
-	// launched the app fired natively long before this layout mounted, so it
-	// reaches us through `getLastNotificationResponse` rather than the listener.
+	// Own effect: not torn down per preference resolve, not gated on `notificationsEnabled` (a
+	// tap means the notification was delivered). `subscribeToNotificationTaps` covers cold
+	// starts.
 	useEffect(() => {
 		if (!isSignedIn) {
 			return;
 		}
 
-		// Web resolves the emitter stub, which implements neither of these and
-		// throws UnavailabilityError synchronously — from inside an effect body,
-		// that takes the whole protected layout down. The listener is the only
-		// part of this the stub tolerates.
+		// Web's emitter stub throws UnavailabilityError synchronously for these two, which
+		// would take the whole protected layout down; it tolerates only the listener.
 		const native = Platform.OS !== "web";
 
 		return subscribeToNotificationTaps(

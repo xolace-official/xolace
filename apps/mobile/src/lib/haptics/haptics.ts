@@ -13,35 +13,18 @@ function run(fn: () => void): void {
 	}
 }
 
-// ── Generic tap ──────────────────────────────────────────────────────
-
 export function tap(_intensity?: number, _sharpness?: number): void {
 	run(() => Presets.flick());
 }
-
-// ── Named pattern functions ──────────────────────────────────────────
 
 /** @public Not wired yet: kept in step with haptics.ios.ts for the PacedOrb runner. */
 export function playProcessingBreath(): void {
 	run(() => Presets.breath());
 }
 
-// Android's `Presets.breath()` is a fixed preset with no intensity parameter,
-// and lands far heavier than the iOS CoreHaptics envelope (which peaks at
-// intensity 0.6 and decays to zero). Processing is ambient, not an event — it
-// should register as presence, not as an alert.
-//
-// Duration carries most of the reduction here, deliberately. Pulsar's Android
-// tiers degrade: ADVANCED_SUPPORT (API 36+) renders both envelopes,
-// STANDARD_SUPPORT amplitude only, and LIMITED_SUPPORT (API 26+) is
-// timing-based waveform with no amplitude modulation at all — there this
-// collapses to a flat buzz for however long it runs. Shortening the pattern is
-// the only lever that quiets it at every tier.
-//
-// The ceiling stays well clear of silence on purpose: per the Sonar note in
-// AppearanceScreen, this team measured ~0.35 amplitude sitting under most LRAs'
-// perceptual floor (our observation, not a documented Pulsar threshold).
-// Undershooting reads as "broken", not "gentle".
+// Android's `Presets.breath()` is far heavier than the iOS envelope, and Pulsar's LIMITED_SUPPORT tier
+// (API 26+) ignores amplitude, so duration is the only lever that quiets it at every tier. Amplitude
+// stays above ~0.35: under most LRAs' perceptual floor it reads as "broken", not "gentle".
 const PROCESSING_BREATH_MS = 1600;
 
 const PROCESSING_BREATH_PATTERN: Pattern = {
@@ -62,11 +45,7 @@ const PROCESSING_BREATH_PATTERN: Pattern = {
 	discretePattern: [],
 };
 
-/**
- * Processing-state breath, amplitude-controlled. Returns a `play` callback so
- * the pattern is parsed once on mount rather than per call — `playProcessingBreath`
- * stays exported for any non-component caller.
- */
+/** Processing-state breath. Returns a `play` callback so the pattern is parsed once on mount. */
 export function useProcessingBreathHaptic(): () => void {
 	// Passing `undefined` on web skips Pulsar's parse effect — there is no
 	// native module to parse against, and `run()` would no-op the playback anyway.
@@ -139,10 +118,7 @@ export function playFollowUpEntrance(): void {
 	run(() => Presets.bellToll());
 }
 
-// ── Breath phase haptics ─────────────────────────────────────────────
-// Best-effort preset approximations. Duration-matched continuous envelopes
-// (matching the iOS CoreHaptics implementation) are a planned Phase 2 upgrade
-// using usePatternComposer inside BreathBeat.
+// Best-effort preset approximations of the iOS duration-matched envelopes.
 
 /** @public Not wired yet: kept in step with haptics.ios.ts for the PacedOrb runner. */
 export function playBreathPhase(phase: BreathPhase, _durationMs: number): void {
@@ -160,8 +136,6 @@ export function playBreathPhase(phase: BreathPhase, _durationMs: number): void {
 		}
 	});
 }
-
-// ── Dynamic play-by-name ─────────────────────────────────────────────
 
 const handlerMap: Record<HapticName, () => void> = {
 	affirmativePress: playAffirmativePress,

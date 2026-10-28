@@ -10,7 +10,8 @@ function localDay(): string {
 	return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-/** Today's local day, rolled at midnight and re-checked on foreground (timers sleep in background). */
+/** Today's local day, rolled at midnight and re-checked on foreground (timers sleep in
+ * background). */
 function useLocalDay(): string {
 	const [day, setDay] = useState(localDay);
 	useEffect(() => {
@@ -33,13 +34,8 @@ function useLocalDay(): string {
 	return day;
 }
 
-/**
- * `users.getFullContext`, keyed by the local day. Convex caches a query by its
- * args, so the server's Date.now() never re-runs on its own — the day arg
- * rolls the subscription at midnight, re-deriving the live streak and revive
- * offer. Holds the previous day's result while the new one loads (no blank
- * frame); `skip` drops it so a sign-out never shows stale context.
- */
+/** `users.getFullContext` keyed by local day so the subscription rolls at midnight. Holds the
+ * previous result while loading; `skip` drops it. */
 export function useFullContext(skip = false) {
 	const day = useLocalDay();
 	const result = useQuery(api.users.getFullContext, skip ? "skip" : { day });

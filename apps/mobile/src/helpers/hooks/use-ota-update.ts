@@ -8,11 +8,8 @@ type UseOtaUpdateOptions = {
 	onUpdateReady: () => void;
 };
 
-/**
- * Manages EAS OTA updates. Fetches available updates and notifies the layout
- * when one is ready to apply. Re-checks when the app returns to the foreground.
- * Skipped entirely in development builds.
- */
+/** EAS OTA updates: fetches and notifies when one is ready; re-checks on foreground. Skipped in
+ * dev builds. */
 export function useOtaUpdate({
 	isVersionChecked,
 	isNewVersionAvailable,

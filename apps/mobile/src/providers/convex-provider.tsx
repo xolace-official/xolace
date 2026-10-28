@@ -1,10 +1,7 @@
 "use client";
 
-// Force navigator.onLine=true so Clerk's offline gate doesn't block JWT minting
-// in React Native. Must run before @clerk/expo is imported below, since module
-// side effects execute in import order. Primary install is the first import in
-// app/_layout.tsx; this keeps the provider correct if it is ever loaded
-// independently. See module doc.
+// Forces navigator.onLine=true before @clerk/expo is imported (module side effects run in
+// import order).
 import "@/lib/clerk-online-polyfill";
 
 import { ClerkProvider } from "@clerk/expo";
@@ -18,11 +15,8 @@ import { useResilientClerkAuth } from "./use-resilient-clerk-auth";
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!);
 
-/**
- * Provides Clerk and Convex contexts configured for the app, injecting Clerk's publishable key and token cache and passing the `useAuth` hook to Convex.
- *
- * @unmemoized
- */
+/** Clerk and Convex providers for the app, with the instrumented token cache and resilient
+ * `useAuth`. */
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
 	return (
 		<ClerkProvider
@@ -34,9 +28,8 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
 		>
 			<ConvexProviderWithClerk client={convex} useAuth={useResilientClerkAuth}>
 				<AuthSyncGuard />
-				{/* Wraps everything below Convex — the crash it catches came from
-            RevenueCatProvider's premium.getEntitlement, which lives above the
-            route guard and so is unreachable by any boundary inside a group. */}
+				{/* Catches premium.getEntitlement's crash from RevenueCatProvider, which sits
+				    above the route guard. */}
 				<AccountBootstrapBoundary>{children}</AccountBootstrapBoundary>
 			</ConvexProviderWithClerk>
 		</ClerkProvider>

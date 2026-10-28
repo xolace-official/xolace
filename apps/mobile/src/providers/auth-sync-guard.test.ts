@@ -14,11 +14,7 @@ vi.mock("@clerk/expo", () => ({ useAuth: () => ({}) }));
 vi.mock("@sentry/react-native", () => ({ captureMessage: () => {} }));
 vi.mock("convex/react", () => ({ useConvexAuth: () => ({}) }));
 
-/**
- * The bug this replaced: a mintable token meant "keep the session and let Convex
- * re-authenticate", but Convex had already latched noAuth and never retries — so
- * the branch we most want to work silently hung forever.
- */
+/** A mintable token must force a re-auth: Convex latches noAuth and never retries on its own. */
 describe("desyncRecovery", () => {
 	it("forces a re-auth while a token still mints", () => {
 		expect(
@@ -45,11 +41,8 @@ describe("desyncRecovery", () => {
 	});
 });
 
-/**
- * The nonce is the only thing that moves Convex: `ConvexProviderWithClerk` keys
- * `fetchAccessToken` on `[orgId, orgRole, sessionId]`, so a changed sessionId is
- * what re-runs `setAuth`.
- */
+/** `ConvexProviderWithClerk` keys `fetchAccessToken` on `sessionId`, so a changed sessionId is
+ * what re-runs `setAuth`. */
 describe("reauth nonce", () => {
 	it("reports Clerk sessionId untouched before any recovery", () => {
 		expect(sessionIdWithEpoch("sess_a", 0)).toBe("sess_a");

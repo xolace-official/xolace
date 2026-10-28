@@ -1,10 +1,7 @@
 import type { ImageSource } from "expo-image";
 
-/**
- * An `expo-image` source for a hosted image. A signed R2 link changes its signature on every
- * read, so it's cached by its path instead — safe because R2 keys are content-addressed
- * (`<prefix>/<sha256>.<ext>`). Any other link is cached as itself.
- */
+/** `expo-image` source; a signed R2 link is cached by its path (signature changes per read;
+ * keys are content-addressed). */
 export function imageSource(uri: string): ImageSource {
 	const q = uri.indexOf("?");
 	return q !== -1 && uri.includes("X-Amz-Signature", q)

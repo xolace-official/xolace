@@ -1,11 +1,5 @@
-/**
- * Unified storage adapter for Zustand's createJSONStorage.
- * Uses localStorage on web and expo-sqlite/kv-store on native.
- *
- * getItem is **synchronous** so Zustand hydrates on the very first render
- * (no blank frame, no _hasHydrated check needed).
- * setItem/removeItem stay async — writes don't block the UI.
- */
+/** Zustand storage adapter: localStorage on web, expo-sqlite/kv-store on native. `getItem` is
+ * synchronous so hydration lands on first render. */
 
 import Storage from "expo-sqlite/kv-store";
 import { Platform } from "react-native";

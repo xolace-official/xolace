@@ -1,9 +1,4 @@
-/**
- * Global app store using Zustand with synchronous persistence.
- *
- * Storage uses expo-sqlite/kv-store (sync reads) so the store is
- * hydrated at creation time — no loading state needed.
- */
+/** Global Zustand store, hydrated synchronously at creation from expo-sqlite/kv-store. */
 
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { create } from "zustand";
@@ -32,26 +27,16 @@ type ThemeSlice = {
 type OnboardingSlice = {
 	introSeen: boolean;
 	setIntroSeen: (v: boolean) => void;
-	/**
-	 * True while any home sheet (return welcome, follow-up,
-	 * monthly event, starter suggestions) is open or armed to open. Transient — never persisted.
-	 * The reflect tour reads this so its coach marks don't render underneath a
-	 * sheet that is about to cover them.
-	 */
+	/** True while any home sheet is open or armed to open. Transient; the reflect tour hides
+	 * its coach marks while set. */
 	homeSheetBlocking: boolean;
 	setHomeSheetBlocking: (v: boolean) => void;
-	/**
-	 * A home sheet (return welcome, monthly event, starter suggestions) is on
-	 * screen right now. Transient — the streak reveal waits on it. Unlike
-	 * homeSheetBlocking it drops while a follow-up is merely pending.
-	 */
+	/** A home sheet is on screen right now. Transient; unlike homeSheetBlocking it drops while
+	 * a follow-up is merely pending. */
 	homeSheetOpen: boolean;
 	setHomeSheetOpen: (v: boolean) => void;
-	/**
-	 * The first-run tour is on screen right now. Transient — the streak reveal
-	 * waits on it, not on the persisted version (a pending tour that can't start
-	 * yet would otherwise park the reveal).
-	 */
+	/** The first-run tour is on screen. Transient; the streak reveal waits on this, not on the
+	 * persisted version. */
 	reflectTourActive: boolean;
 	setReflectTourActive: (v: boolean) => void;
 };
@@ -79,7 +64,8 @@ type TogglesSlice = {
 	/** One-time flag — once true, bridge first-run intro modal never shows again. */
 	bridgeIntroSeen: boolean;
 	setBridgeIntroSeen: (v: boolean) => void;
-	/** One-time flag — once true, the Plus dictation upsell never shows again on this device (#559). */
+	/** One-time flag — once true, the Plus dictation upsell never shows again on this device
+	 * (#559). */
 	dictationUpsellSeen: boolean;
 	setDictationUpsellSeen: (v: boolean) => void;
 	/** One-time flag — once true, vent first-run intro never shows again. */
@@ -100,15 +86,18 @@ type TogglesSlice = {
 	/** One-time flag — once true, the home Starter suggestions bubble never shows again (#460). */
 	starterSuggestionsSeen: boolean;
 	setStarterSuggestionsSeen: (v: boolean) => void;
-	/** Dev tools only (honoured under `__DEV__`): treat this account as zero-session for Starter suggestions (#465). */
+	/** Dev tools only (honoured under `__DEV__`): treat this account as zero-session for
+	 * Starter suggestions (#465). */
 	devStarterEligible: boolean;
-	/** Last resolved `xolacerChat.status().enabled` — lets a returning chat user connect before the live query answers (#342). */
+	/** Last resolved `xolacerChat.status().enabled` — lets a returning chat user connect before
+	 * the live query answers (#342). */
 	chatEnabledCached: boolean;
 	setChatEnabledCached: (v: boolean) => void;
 	/** One-time flag — once true, the "shake to send feedback" hint toast never shows again. */
 	shakeHintSeen: boolean;
 	setShakeHintSeen: (v: boolean) => void;
-	/** `lastSessionAt` value the Return Welcome greeting was last shown against. Keys "once per return episode". */
+	/** `lastSessionAt` value the Return Welcome greeting was last shown against. Keys "once per
+	 * return episode". */
 	returnWelcomeSeenAt: number | null;
 	setReturnWelcomeSeenAt: (n: number) => void;
 	/** Id of the newest What's New entry the user has opened. Drives the menu's unseen badge. */
@@ -119,11 +108,8 @@ type TogglesSlice = {
 	markMenuItemSeen: (key: string) => void;
 	/** Highest streak day each account (by Clerk user id) has seen the calendar reveal for. */
 	acknowledgedStreaks: Record<string, number>;
-	/**
-	 * The acknowledged day from before it was kept per account. It stands in
-	 * for any account without its own entry, until the first write claims it
-	 * (zeroed then).
-	 */
+	/** Pre-per-account acknowledged day; stands in for accounts without an entry until the
+	 * first write zeroes it. */
 	lastAcknowledgedStreak: number;
 	setLastAcknowledgedStreak: (n: number, owner: string) => void;
 	/** Awareness event slugs the user has already seen, with timestamps for pruning. */
@@ -131,11 +117,8 @@ type TogglesSlice = {
 	addToSeenEventIds: (slug: string) => void;
 	/** Drops entries older than 13 months. Called on hook mount, not during render. */
 	pruneSeenEventIds: () => void;
-	/**
-	 * Session prompt the next reflect session opens on: a monthly event's
-	 * sessionPrompt (7 days), or a Library entry's "Reflect on this" (#413),
-	 * which also carries the entry the session records.
-	 */
+	/** Prompt the next reflect session opens on: a monthly event's sessionPrompt (7 days) or a
+	 * Library entry's "Reflect on this" (#413). */
 	pendingEventPrompt: PendingEventPrompt | null;
 	setPendingEventPrompt: (prompt: PendingEventPrompt | null) => void;
 };
@@ -178,23 +161,16 @@ type LastNotificationSlice = {
 	clearLastNotification: () => void;
 };
 
-/**
- * Ephemeral, not persisted. A kept quote reply the user chose to start a
- * session from (#316) — the reflect card reads it, the composer never does.
- * Not a route param: this is raw user text, and params ride in navigation
- * state and history.
- */
+/** Ephemeral. A kept quote reply to start a session from (#316); raw user text, so never a
+ * route param. */
 type ReplySeedSlice = {
 	replySeed: string | null;
 	setReplySeed: (reply: string) => void;
 	clearReplySeed: () => void;
 };
 
-/**
- * Ephemeral, not persisted. Something outside the reflect screen (the Reflect
- * starter suggestion, #462) asking it to open the card — see
- * useReflectBridge.
- */
+/** Ephemeral. Something outside the reflect screen (#462) asking it to open the card; see
+ * useReflectBridge. */
 type ComposerOpenSlice = {
 	/** The reflect screen has loaded and its card has finished arriving. */
 	reflectSettled: boolean;
@@ -202,11 +178,8 @@ type ComposerOpenSlice = {
 	composerOpenRequested: boolean;
 	requestComposerOpen: () => void;
 	clearComposerOpenRequest: () => void;
-	/**
-	 * The idle menu's scrim is on screen. It lives in the screen's content, so
-	 * it can't cover the native header — the reflect screen takes its toolbar
-	 * buttons down instead while this is true.
-	 */
+	/** The idle menu's scrim is on screen; it can't cover the native header, so the reflect
+	 * screen hides its toolbar buttons. */
 	idleMenuOpen: boolean;
 	setIdleMenuOpen: (v: boolean) => void;
 };
