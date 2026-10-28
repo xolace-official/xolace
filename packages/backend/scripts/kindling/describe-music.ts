@@ -699,6 +699,15 @@ function applyReviews() {
 		const secondaryTopic = r.secondaryTopic
 			? `music_topic_${r.secondaryTopic}`
 			: undefined;
+		if (
+			secondaryTopic &&
+			(!CATALOG.some((e) => e.actionType === secondaryTopic) ||
+				secondaryTopic === t.topic)
+		) {
+			throw new Error(
+				`${t.slug}: secondary topic "${r.secondaryTopic}" isn't another music topic`
+			);
+		}
 		if (secondaryTopic !== t.secondaryTopic) {
 			t.secondaryTopic = secondaryTopic;
 			changed++;
