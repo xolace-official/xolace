@@ -2021,10 +2021,15 @@ describe("tracks bind on meaning inside the picked topic (#572)", () => {
 				track: { ...track, secondaryTopic },
 			});
 
+		await user.root.mutation(internal.ai.paths.audioTracks.upsertTrack, {
+			track: { ...track, loudness: { lufs: -14, truePeak: -1 } },
+		});
+		// Same audio, no loudness in the record (an admin import): the measured one stays.
 		await upsert("music_topic_meditation");
 		const row = await user.root.run((ctx) =>
 			ctx.db.query("audio_tracks").first()
 		);
+		expect(row?.loudness).toEqual({ lufs: -14, truePeak: -1 });
 		expect(row?.secondaryTopic).toBe("music_topic_meditation");
 		expect(row?.sound).toEqual(track.sound);
 		await expect(upsert("audio_topic_grief")).rejects.toThrow(/secondaryTopic/);

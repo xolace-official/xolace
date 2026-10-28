@@ -28,7 +28,12 @@
       "heard": "Warm, slow-swelling ambient synthesizer pads wash over a soft, steady low drone. The texture remains motionless, peaceful, and unbroken by melody or percussion.",
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_meditation"
+    "secondaryTopic": "music_topic_meditation",
+    "loudness": {
+      "lufs": -18.9,
+      "sha256": "785cb074777a9991c529abfae4ddb7abcb3a651c8303d2851c78db07d05dee1f",
+      "truePeak": -5.2
+    }
   },
   {
     "slug": "music-mindfulness-02",
@@ -58,6 +63,11 @@
       "energy": 2,
       "heard": "Gentle fingerpicked acoustic guitar accompanied by warm synth pads and subtle birdsong, maintaining a peaceful, unhurried pace throughout.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -20,
+      "sha256": "193ced66362c9975c328de95f9fe33874e829b4eed6c6df71cf52d976605967b",
+      "truePeak": -6.5
     }
   },
   {
@@ -89,7 +99,12 @@
       "heard": "Brisk, cheerful acoustic guitar strumming driven by lively handclaps, shakers, and a steady rhythmic beat. The mood is sunny, upbeat, and consistently energetic throughout.",
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_motivation"
+    "secondaryTopic": "music_topic_motivation",
+    "loudness": {
+      "lufs": -11.5,
+      "sha256": "c47a448dcb7acc94136a5eb32e3aeb4e2bec2e638028c677a1c2d4f0ff31f5c3",
+      "truePeak": 1.2
+    }
   },
   {
     "slug": "music-mindfulness-04",
@@ -119,6 +134,11 @@
       "energy": 1,
       "heard": "Gently sweeping ambient synth pads and warm atmospheric drones move slowly alongside occasional soft, glistening chimes. The energy remains extremely low, peaceful, and still throughout without any drums or vocals.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.3,
+      "sha256": "e7db1da580bd363acffe31309da1b3115edcbffd547318c4118ef9152095aaff",
+      "truePeak": -0.9
     }
   },
   {
@@ -149,6 +169,11 @@
       "energy": 1,
       "heard": "Slow, sustained ambient synth pads with gentle low-frequency drones and delicate shimmers. The energy is minimal and meditative, drifting smoothly without rhythm, melody shifts, or percussion.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -18.1,
+      "sha256": "d151a79fe182344982ffe9701c03b53a40430c36ee9e550a28fea38b5e38f848",
+      "truePeak": -4.7
     }
   },
   {
@@ -179,6 +204,11 @@
       "energy": 1,
       "heard": "Gentle, repetitive acoustic chimes and bells ring out over a subtle, warm synth drone. The mood is calm, unhurried, and remains very consistent throughout.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.9,
+      "sha256": "7b9e852fb39ca9c3d8a7fcbd33db86714db8db4471237dad9d1afcab974a6935",
+      "truePeak": -0.4
     }
   },
   {
@@ -209,6 +239,11 @@
       "energy": 1,
       "heard": "Continuous, realistic sounds of flowing river water run throughout the track, joined after a few seconds by a slow, warm, repeating arpeggiated synth melody and soft ambient pads. The energy stays low, steady, and soothing with no vocals, gradually fading out to just the water at the end.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.3,
+      "sha256": "3b6048b2e7e294bddf12b98c0f5ae88c5ee92dd80f43b94a5e3aa88afe0640e3",
+      "truePeak": -0.1
     }
   },
   {
@@ -239,6 +274,11 @@
       "energy": 4,
       "heard": "A driving, dramatic orchestral piece built on rapid string arpeggios, booming cinematic percussion, and intense brass swells. It builds continuously with urgent momentum and heavy trailer-style drum hits.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.9,
+      "sha256": "092925f97eda8157caded7bd00dee2ae1368ecd388c13127966cb4caf9f3adb2",
+      "truePeak": -0.8
     }
   },
   {
@@ -270,7 +310,12 @@
       "heard": "Slow, beatless ambient synth pads and a bright, reedy synth lead play a melancholic melody, periodically interrupted by loud, rushing waves of white noise and ocean surf before fading into silence at 01:50. There are no vocals, and the mood is sombre, vast, and slightly tense rather than bright or easy.",
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_emotional_release"
+    "secondaryTopic": "music_topic_emotional_release",
+    "loudness": {
+      "lufs": -10.7,
+      "sha256": "5bd2adefbc8a0e39e22b18bdfba6525abe9c07a51cc63e2ad775fcbc97ac338d",
+      "truePeak": -0.2
+    }
   },
   {
     "slug": "music-mindfulness-10",
@@ -301,7 +346,12 @@
       "heard": "A slow, resonant ambient drone layered with low singing-bowl tones and subtle shimmers that sustain without rhythmic percussion. It remains sparse, gentle, and steadily tranquil throughout.",
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_nature_mindfulness"
+    "secondaryTopic": "music_topic_nature_mindfulness",
+    "loudness": {
+      "lufs": -13.4,
+      "sha256": "d4d5f1a8f297bd4889d0c65a39480d984cd7e0b4ef448b27cf2254e83de3b3e6",
+      "truePeak": -0.9
+    }
   },
   {
     "slug": "music-mindfulness-11",
@@ -331,6 +381,11 @@
       "energy": 1,
       "heard": "Slow, expansive ambient synth pads drift beneath sparse, ringing piano notes with no rhythm or sudden shifts. The mood remains completely still, open, and meditative across the entire duration.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -32.2,
+      "sha256": "6c366a28a998026af315e0f81a856e4e31e51aa981ea5f0b33786825abcea2eb",
+      "truePeak": -17.2
     }
   },
   {
@@ -361,6 +416,11 @@
       "energy": 3,
       "heard": "This is a dark, ominous soundscape featuring deep metallic bangs, distorted screeching noises, watery gurgles, and haunting chimes over a low, cavernous drone. The mood is tense, eerie, and unsettling rather than peaceful or meditative.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -23,
+      "sha256": "45826d83ee1e70c526b8025773e32d035b66b5a015b0be1378de6bcd3e0874fd",
+      "truePeak": -2.1
     }
   },
   {
@@ -392,6 +452,11 @@
       "energy": 1,
       "heard": "Very slow, beatless warm synthesizer pads drift through gentle, unhurried chord changes with no percussion or vocals. The energy stays minimal and enveloping throughout, creating a spacious, weightless mood.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.4,
+      "sha256": "0b6c866df5664e268de28a3d3bd2f1ac33a4f02b3ca206fee3a33de8453a21bd",
+      "truePeak": -4
     }
   },
   {
@@ -422,6 +487,11 @@
       "energy": 2,
       "heard": "A solo piano opens with slow, heavy, sombre chords over a low ambient drone, then shifts at 0:21 into a steady, repetitive minor-key arpeggio that climbs into a higher, faster-moving melodic pattern at 0:54. The mood is melancholic, brooding, and introspective rather than serene.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.9,
+      "sha256": "83144b3a2345695590055e2cf229d914616b92ee68d2904533dad4cf0c683ee9",
+      "truePeak": -4.4
     }
   },
   {
@@ -453,7 +523,12 @@
       "heard": "A slow, low-energy ambient piece featuring sparse, reverberant piano notes over warm, swelling synth pads and subtle vinyl crackle. There are no vocals, and the mood remains steady, quiet, and introspective throughout.",
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_nature_mindfulness"
+    "secondaryTopic": "music_topic_nature_mindfulness",
+    "loudness": {
+      "lufs": -17.6,
+      "sha256": "f271e246edb0530a388c52e063d230517b5d9a81e1a8ed8f15bb6d35e317a3b1",
+      "truePeak": 0
+    }
   },
   {
     "slug": "music-mindfulness-16",
@@ -484,7 +559,12 @@
       "heard": "A slow, unhurried pentatonic melody played on a plucked zither (guzheng) over a soft, continuous synthesizer pad, with no percussion or vocals. The piece cycles gently between sparse, deliberate plucking and sections with expressive pitch bends and shimmering tremolo, maintaining a calm and contemplative mood throughout.",
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_calm_peace"
+    "secondaryTopic": "music_topic_calm_peace",
+    "loudness": {
+      "lufs": -14.3,
+      "sha256": "46b9df823bbc13a21957bb48a6e526c0df7e75286236b4764c3225e5a83d8d32",
+      "truePeak": -0.1
+    }
   },
   {
     "slug": "music-mindfulness-17",
@@ -515,6 +595,11 @@
       "energy": 1,
       "heard": "Very slow, low-energy ambient synth pads with sparse bell-like chimes and periodic reversed-sound swells. There are no vocals, and the mood remains calm, spacious, and unhurried from start to finish.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.5,
+      "sha256": "172b2822208ea71b16908e45bd1d36968028335226d837e185bf37a88eeb58f5",
+      "truePeak": -5
     }
   },
   {
@@ -545,6 +630,11 @@
       "energy": 2,
       "heard": "A solo piano plays a steady, repetitive pulsing accompaniment in a minor key with a melancholic, contemplative melody that alternates between sparse, lingering notes and slightly more active phrases, repeating its main sections in the middle register and an octave higher. There are no vocals, and the energy remains low and introspective throughout.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.7,
+      "sha256": "85be6a49de0e603231de1de5f77af852012bfa6203963b6b574cd0a2c8bdf27a",
+      "truePeak": 0
     }
   },
   {
@@ -576,6 +666,11 @@
       "energy": 1,
       "heard": "A slow, tranquil ambient piece featuring a repeating, resonant plucked melody, delicate high piano notes, warm synth pads, and gentle shaker swells. Wordless choir-like vocal pads add a spacious, floating warmth throughout the seventeen-minute runtime without any sudden shifts in energy.",
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -13.6,
+      "sha256": "81d25e35e5b4cb484f5f6bb84256c2fd266173d990057d1861f13453c2105014",
+      "truePeak": -0.9
     }
   },
   {
@@ -607,7 +702,12 @@
       "heard": "A beatless, slow-evolving synthesizer drone made of warm, enveloping pads that gently swell and recede without any percussion or vocals. Around the three-minute mark, a brighter, shimmering high-register synth layer briefly emerges before everything fades back into a quiet, spacious stillness.",
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_meditation"
+    "secondaryTopic": "music_topic_meditation",
+    "loudness": {
+      "lufs": -21.1,
+      "sha256": "da9a793aae0e56b4cb826644ff7d8714ada2ea0ef382b0748b8a26ed46b3a2c9",
+      "truePeak": -5.9
+    }
   },
   {
     "slug": "music-sleep-rest-01",
@@ -637,6 +737,11 @@
       "energy": 2,
       "heard": "A slow, low-energy lo-fi track featuring a warm, repeating muted piano melody over a dusty vinyl crackle and a steady, laid-back drum beat. The drums drop out briefly in the middle for a quiet piano interlude before returning and ending with bare percussive clicks.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -9.5,
+      "sha256": "c6966df703bb0012077378b3f38d1f080c090e36a136b7a6d28ba7a81004e285",
+      "truePeak": -0.1
     }
   },
   {
@@ -667,6 +772,11 @@
       "energy": 2,
       "heard": "A slow, dreamy chillhop track that opens with warm synthesizer pads and a bell-like keyboard melody before a soft, muffled lo-fi beat and reverbed electric guitar enter. Near the end, the beat and guitar drop out, leaving the gentle synth pads and keyboard to fade away.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -9.2,
+      "sha256": "2202614a83de97d060c40356315a419895d74c56dcbad0c7cb0df141377f82eb",
+      "truePeak": -0.5
     }
   },
   {
@@ -697,6 +807,11 @@
       "energy": 1,
       "heard": "Very slow, soft electric piano notes drift over warm, sustained synthesizer pads with no percussion. The energy stays hushed and unhurried from start to finish, creating a peaceful, drowsy mood.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.1,
+      "sha256": "85954bec669227c6178a07961bc751fad08f5970bc7dd401ac1f05f6462772a4",
+      "truePeak": -4
     }
   },
   {
@@ -727,6 +842,11 @@
       "energy": 2,
       "heard": "A slow, gentle piano melody over warm synthesizer pads starts sparsely before a soft, steady electronic beat enters around 0:34. The mood is calm, contemplative, and unhurried, briefly dropping the beat around 2:20 before resuming and fading out.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.7,
+      "sha256": "8bcd08047a53ce5c1c9ceb47b5207948dfe37f1a18abc779337255caf8a5d886",
+      "truePeak": -2.7
     }
   },
   {
@@ -757,6 +877,11 @@
       "energy": 1,
       "heard": "Very slow, continuous warm synthesizer pads drift through a gentle, repeating four-chord progression with no percussion or vocals. The mood is serene, weightless, and completely unchanging throughout, fading out softly at the end.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.3,
+      "sha256": "e500197f988815bc436b94ba092675f3bd6288c86b7d46bf690dd13f5dccdbfb",
+      "truePeak": -0.3
     }
   },
   {
@@ -787,6 +912,11 @@
       "energy": 2,
       "heard": "Warm synthesizer pads and delicate bell-like tones open at a very slow tempo before a soft electronic beat and breathy wordless female hums join in. The energy stays low and soothing, briefly dropping the beat in the middle before gently returning and fading out.",
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -13.7,
+      "sha256": "c14b24c17a85f3883bd81ae83ebc01e5feaae67eb16b853136df46c106021f10",
+      "truePeak": -2.6
     }
   },
   {
@@ -817,6 +947,11 @@
       "energy": 1,
       "heard": "Slow, beatless synthesizer pads drift over gentle water sounds, quiet birdsong, and distant thunder, with a few sparse piano notes near the end. The energy is very low and unchanging, creating a calm, spacious, and restful mood with no vocals.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -25.1,
+      "sha256": "a1caaaa3c544995b19fb3430cbede8fb943a8cfbd3f429d5700efe42a6630b0a",
+      "truePeak": -11.1
     }
   },
   {
@@ -847,6 +982,11 @@
       "energy": 1,
       "heard": "A beatless, slow-moving drone of warm, airy synthesizer pads and soft choir-like swells that gradually build from a low hum and then gently fade back out. There is no melody or percussion, keeping a hushed, weightless mood throughout.",
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -19.2,
+      "sha256": "864cb3463d9d0a0b9c3923991d158f5bb31f09fcf1e1ca67b6f5a4eeec123157",
+      "truePeak": -6.3
     }
   },
   {
@@ -877,6 +1017,11 @@
       "energy": 1,
       "heard": "Very slow, sustained warm synth pads with gentle ocean waves washing in the background and occasional soft, bell-like tones. The track maintains a barely-there, floating energy throughout, creating a serene and drowsy atmosphere before fading out.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -21.9,
+      "sha256": "b097aeb39e6797bea650614c4bb66f685effb3bc5d53f81235e2729498e4100f",
+      "truePeak": -9.7
     }
   },
   {
@@ -908,7 +1053,12 @@
       "heard": "A slow, gentle piano plays a repeating arpeggiated melody over a warm, sustained synth pad. The mood is peaceful and soothing, maintaining a steady, very low energy throughout without any sudden changes or vocals.",
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_healing_recovery"
+    "secondaryTopic": "music_topic_healing_recovery",
+    "loudness": {
+      "lufs": -27.7,
+      "sha256": "9286741f65b2e318b39f950a1ddff0c4d8fa009c6331e9355d6563ee77ee2688",
+      "truePeak": -10.3
+    }
   },
   {
     "slug": "music-sleep-rest-11",
@@ -938,6 +1088,11 @@
       "energy": 2,
       "heard": "A slow, gentle lo-fi beat pairs with soft, music-box-like bell melodies and warm synthesizer pads. The energy stays low and soothing throughout, briefly stripping away the drums around the two-minute mark before easing back in and fading out on pure chimes.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.2,
+      "sha256": "4b1de64fba0f8601eae75dd1fe87c5f6e7341a9dbf75be4d79eacda372512522",
+      "truePeak": -2.6
     }
   },
   {
@@ -968,6 +1123,11 @@
       "energy": 1,
       "heard": "Very slow, sparse piano notes drift over a warm, continuous synthesizer pad with no percussion or vocals. The mood is deeply peaceful and drowsy, maintaining a low, unchanging energy throughout the entire piece.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -18,
+      "sha256": "95a4cb02c6b426dabb8818eea791a9cb0f6ab64ab71aaa05362ff1bb296fcd43",
+      "truePeak": -3
     }
   },
   {
@@ -998,6 +1158,11 @@
       "energy": 2,
       "heard": "A beatless, dark synthesizer drone holds a low, ominous hum, punctuated every thirty seconds by a harsh, metallic crash and static sweep. There is no melody or warmth, only a tense, cavernous atmosphere that shifts slightly in pitch before fading out.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.8,
+      "sha256": "bc03a5b620d1934c15b306d2d38505bfc24890b413300f03a8470b36d7a22a08",
+      "truePeak": -1
     }
   },
   {
@@ -1028,6 +1193,11 @@
       "energy": 1,
       "heard": "Beatless, very slow ambient synthesizer drones drift and swell with no percussion or vocals. The mood is hushed, spacious, and somnolent, gradually warming with soft harmonic layers around the midpoint before fading back into near silence.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -23.9,
+      "sha256": "557ac5c4d0f0e61b69a8e20492f12e95dcd101a2d595b68498fc4dd8215bc232",
+      "truePeak": -10
     }
   },
   {
@@ -1059,7 +1229,12 @@
       "heard": "A gentle, melancholic piano plays a slow, reflective melody over soft, warm synthesizer pads. The energy rises slightly in the middle with flowing, repetitive piano arpeggios before settling back into a quiet, contemplative close.",
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_healing_recovery"
+    "secondaryTopic": "music_topic_healing_recovery",
+    "loudness": {
+      "lufs": -13.3,
+      "sha256": "d9b2fd412e54ffa9c193d48486d0f34fd2582e3903aadff7f72c4c7a50c98a2d",
+      "truePeak": -0.9
+    }
   },
   {
     "slug": "music-sleep-rest-16",
@@ -1089,6 +1264,11 @@
       "energy": 1,
       "heard": "A slow, minimal ambient drone with soft, repeating bell-like synth chimes and warm, swelling pads. Around the five-minute mark, the chimes fade away, leaving a deep, resonant synth drone that slowly decays into silence.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.3,
+      "sha256": "335b3473af35c60068d0b21182fb885f16bda0901ca11dc11ef7065c716c2289",
+      "truePeak": -1
     }
   },
   {
@@ -1119,6 +1299,11 @@
       "energy": 1,
       "heard": "Very slow, continuous synthesizer drone pads with no beat, melody, or vocals. Around 00:40, a faint rhythmic static hiss enters in the background until fading out near 04:15, leaving the deep, dark, motionless synth drone to fade at the end.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -24.2,
+      "sha256": "45669c8ce87ae1de3eaec926d3cf937d71be25a40f55977dce85a45a06ff5903",
+      "truePeak": -11.4
     }
   },
   {
@@ -1149,6 +1334,11 @@
       "energy": 1,
       "heard": "A beatless, ultra-slow drone built from deep sub-bass hums and sustained, airy synthesizer pads with no percussion or vocals. The mood is dark, cavernous, and suspended, shifting very gradually between low rumbling textures and slightly brighter, shimmering harmonic layers before fading out.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.1,
+      "sha256": "344d14155539cc754597dabf15256dd0c0c66e08a99170155e396d1e1685b77b",
+      "truePeak": -5.1
     }
   },
   {
@@ -1179,6 +1369,11 @@
       "energy": 1,
       "heard": "Very slow, low-energy soundscape built on deep, sustained synthesizer drones and gentle, shimmering pads with no percussion or vocals. The mood is weightless, quiet, and spacious, drifting steadily throughout before fading into silence at the end.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -29.3,
+      "sha256": "490a7f2c711e8434f888143ed4506575217c4446f6fd40a5d3b8899c0cbc7633",
+      "truePeak": -15.3
     }
   },
   {
@@ -1209,6 +1404,11 @@
       "energy": 1,
       "heard": "This beatless, very slow drone piece opens with a deep, warm synthesizer pad that swells into a rich, shimmering wash of layered synth chords by 0:38. The sustained, floating textures hold a serene, weightless mood for several minutes before gradually thinning out around 5:50 into a low, resonant hum with subtle crackles that fades to silence.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -20.8,
+      "sha256": "67be20be75e82f60c4e33899c11d4d3dc7e4e811714797ef1e6b72262cb36cc3",
+      "truePeak": -6.6
     }
   },
   {
@@ -1239,6 +1439,11 @@
       "energy": 2,
       "heard": "A slow, melancholic solo piano piece with a soft felt tone and audible mechanical key clicks. It begins sparsely and builds around 0:50 into rolling arpeggios with a subtle, low atmospheric pad before receding back into quiet reflection.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -18.8,
+      "sha256": "809b261171d912e4239e51d59be55820e4c26b9f8643571a689385460c3f169e",
+      "truePeak": -3.3
     }
   },
   {
@@ -1269,6 +1474,11 @@
       "energy": 3,
       "heard": "A mid-tempo Bachata-inspired Latin pop groove featuring syncopated bongos, guira percussion, bright arpeggiated electric guitar, bass, and prominent autotuned male vocals singing romantic lyrics in German. The mood is sunny, danceable, and upbeat throughout, with an instrumental guitar solo break before the final verse.",
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.8,
+      "sha256": "405faec03ba020e199862a3bf37bf8dda5878ac8bb752aa05861434b2b10e5c4",
+      "truePeak": -3.2
     }
   },
   {
@@ -1299,6 +1509,11 @@
       "energy": 2,
       "heard": "A slow, gentle solo piano plays warm arpeggiated chords and a simple, tender melody throughout, supported by a faint atmospheric synth pad in the background. The mood is consistently peaceful, warm, and reassuring, with the melody shifting to a slightly higher register midway before repeating and softly fading out.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -23,
+      "sha256": "313bb024e416606f8846140f15d8374717ac2672027b2fce91a6f6d840fd7cb8",
+      "truePeak": -6.6
     }
   },
   {
@@ -1329,6 +1544,11 @@
       "energy": 2,
       "heard": "A gentle, moderately paced instrumental featuring warm piano arpeggios and soft atmospheric synth pads. It builds mildly with higher, faster piano notes in the second half while maintaining a tender, reflective, and soothing mood throughout.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -18.2,
+      "sha256": "445b8b75007cbeaa03b78cf30538f4b92341e3b60d55e4ebbc106cd588926673",
+      "truePeak": -0.5
     }
   },
   {
@@ -1360,6 +1580,11 @@
       "energy": 4,
       "heard": "A gentle, melancholic piano arpeggio opens at a moderate tempo, joined by warm strings and wordless choir pads before erupting at 1:05 and 2:10 into a dramatic cinematic orchestral climax with booming percussion, soaring brass, and driving strings. It settles back down to the quiet solo piano at the very end.",
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -15.4,
+      "sha256": "66648cd0dda95c1c6760f49a94123f0e6d66c2ef89f1cba9a2b0dd7a0b901962",
+      "truePeak": 0
     }
   },
   {
@@ -1390,6 +1615,11 @@
       "energy": 2,
       "heard": "A slow, gentle piano melody plays over warm, sustained ambient synthesizer pads in a minor key. The mood is wistful, tender, and reflective, flowing steadily with subtle shifts in the piano arpeggios before fading out softly.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -21.6,
+      "sha256": "ed97bb4d813ca18d42cc3567227e1098f6b2e094bd1fc35c0a7bedda4539746f",
+      "truePeak": -3.9
     }
   },
   {
@@ -1421,6 +1651,11 @@
       "energy": 3,
       "heard": "A bright, arpeggiated piano opens at a steady, flowing tempo, joined by warm cello and swelling orchestral strings at 0:14. By 0:27, cymbal swells and soaring strings build into a grand, cinematic peak before dropping back to the gentle solo piano at 0:54.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.4,
+      "sha256": "bfb4fa915d96171b62b6daf18021e1068b64030fcda5f8e8cfb10dfa5b35bc3e",
+      "truePeak": 0.2
     }
   },
   {
@@ -1451,6 +1686,11 @@
       "energy": 2,
       "heard": "A solo felt piano plays a slow, gentle waltz-like arpeggio with a tender, wistful melody in the upper register. It is neoclassical rather than jazz, remaining quiet and unhurried from start to finish before fading on a soft chord.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -23.6,
+      "sha256": "19564b53e8f9beec36a6d34c81564f3170e4548da5dd855614a35f78e7679d53",
+      "truePeak": -5.8
     }
   },
   {
@@ -1481,6 +1721,11 @@
       "energy": 3,
       "heard": "A gentle, steady arpeggiated piano opens the piece at a moderate tempo, joined at 0:18 by lush, swelling orchestral strings that build into a warm, tender climax before receding back to solo piano.",
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.1,
+      "sha256": "7ea149632959d63da74a1e51e52bd0821f046817afe200633ae45533d3817b5e",
+      "truePeak": 0
     }
   },
   {
@@ -1511,6 +1756,11 @@
       "energy": 5,
       "heard": "This is a high-energy EDM and dance-pop anthem with a fast four-on-the-floor beat, bright soaring synthesizers, and powerful female vocals singing lyrics about breaking free from self-doubt and feeling unstoppable. It builds from atmospheric synth pads in the intro to explosive, euphoric drops and choruses.",
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.5,
+      "sha256": "3a22cda6ed35e90a37c2e70f8dd792efbb559b91c9933e139427b62d857a72ec",
+      "truePeak": -2.9
     }
   },
   {
@@ -1549,6 +1799,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.7,
+      "sha256": "8b4a4342430735313eb7acfd75e7fd26e5b3bc63a764969cbdd99a7f12dfc6ec",
+      "truePeak": -1.5
     }
   },
   {
@@ -1593,6 +1848,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -15,
+      "sha256": "3dbbae4590763cf8589f3148ff6f77081188d65c6e368b82da6e95243b11d643",
+      "truePeak": -2.7
     }
   },
   {
@@ -1637,6 +1897,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -18.7,
+      "sha256": "4537e163aeb52f50ef12f5d504778804c28b37052edb565860a03bd623856876",
+      "truePeak": -0.9
     }
   },
   {
@@ -1675,6 +1940,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.9,
+      "sha256": "cf2b56c7402fcc3d4dd82e3686ca95f04f77b6b942797b8e20486ab3fefc0410",
+      "truePeak": -3.5
     }
   },
   {
@@ -1719,6 +1989,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15,
+      "sha256": "615b48aafff36d587c56edab2270fecdd0bf18b2a1f0e128a810c0ec36d7b7aa",
+      "truePeak": 0.2
     }
   },
   {
@@ -1757,6 +2032,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.8,
+      "sha256": "4bead174f40c43ad3cb1bfb71a578a831b1b5b65ca2aa212f752c0c532f8a6fa",
+      "truePeak": -1.9
     }
   },
   {
@@ -1796,6 +2076,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.8,
+      "sha256": "460810e4897d256321f43f995a342c387883feecaafb1d1e13cfb8b7a1646842",
+      "truePeak": -5.4
     }
   },
   {
@@ -1843,6 +2128,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17,
+      "sha256": "65e22a7c46a45fa41d314ecc6a9c828bce7d3f09fa78f1a0a51f6abe7674cb13",
+      "truePeak": -0.5
     }
   },
   {
@@ -1882,6 +2172,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -24.1,
+      "sha256": "9397980aa93904059c99740784acf2f9c479ac58cb19cfdd73a2b8aa0586ce6c",
+      "truePeak": -8
     }
   },
   {
@@ -1926,6 +2221,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -15.6,
+      "sha256": "31a4c3248d6d5d4449b8799165c6935279d5381d3ea0a4eac78f96510990f1d8",
+      "truePeak": -3.3
     }
   },
   {
@@ -1964,6 +2264,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.9,
+      "sha256": "fb0908f3e1ce5649d3371594f7aa1d8eb06b0afe2ccc99e0583c2e7b9a1b8409",
+      "truePeak": -2.7
     }
   },
   {
@@ -2008,6 +2313,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -8.5,
+      "sha256": "8c0ca6c396c93aa3d92bf0d29ce9f2b7c52f4e5790883a585597fd1b6c6b579f",
+      "truePeak": 0.3
     }
   },
   {
@@ -2047,6 +2357,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.9,
+      "sha256": "c8cd16eebf23b15bc3bf5be03e718379c85175085e6d85bb17e0f5a9107ef345",
+      "truePeak": -0.3
     }
   },
   {
@@ -2089,6 +2404,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.4,
+      "sha256": "f0933a268b0e0a4b74a7824a18d45d0b8dfe377973ea8790c00be863785bfbb3",
+      "truePeak": 0.5
     }
   },
   {
@@ -2133,6 +2453,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -9.9,
+      "sha256": "369b3db5b4646e0201781083e02c01aaf17cfe86736651b5d88d154f9411d266",
+      "truePeak": 1
     }
   },
   {
@@ -2177,6 +2502,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10.1,
+      "sha256": "f8efb4ee1e820556efa066449228f47bf2ef4dc7c3fff80f59ec779d2c5eb545",
+      "truePeak": 0.4
     }
   },
   {
@@ -2215,6 +2545,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -6.3,
+      "sha256": "cf426cd01b6c75fd470dc77435d38a444503b257612fd4b24dc4a776cff77d1b",
+      "truePeak": 1.8
     }
   },
   {
@@ -2253,6 +2588,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.7,
+      "sha256": "56498fbf82be2ffdaa7bc6cc84f0938328561597244688bf70ff73c4f81d9641",
+      "truePeak": 0.5
     }
   },
   {
@@ -2291,6 +2631,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.4,
+      "sha256": "31ea9cf157ba17a18a66fcdd08f66370523e9c6353530759494ab171dd28a102",
+      "truePeak": -3.7
     }
   },
   {
@@ -2335,6 +2680,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -6.2,
+      "sha256": "f19045cbacbbee4e4125ec9edc12a6c827bbc2040cca039dfb70b1ef51c5d8e0",
+      "truePeak": 3
     }
   },
   {
@@ -2377,6 +2727,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11,
+      "sha256": "84dfc9f604d0a67f8d616bfe0371a0e65c35f9ff2e1da4a8d41bc7e68b49f060",
+      "truePeak": -0.3
     }
   },
   {
@@ -2425,6 +2780,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -7.9,
+      "sha256": "d77a5f69814652435f27662c18043ab206bbcba64d6f6f316e8c5ab96686aa14",
+      "truePeak": 0.9
     }
   },
   {
@@ -2463,6 +2823,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -21,
+      "sha256": "e559661eb6ee12e398b0bc20942ad1ace3aa1b130d86f4562cb8f4bcc68c2f6f",
+      "truePeak": -6.4
     }
   },
   {
@@ -2511,6 +2876,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12,
+      "sha256": "85f71305c7f3863da9c2cf43ba01245d3e56b9ad0506e8164a7699ed521ef1da",
+      "truePeak": 0.8
     }
   },
   {
@@ -2549,6 +2919,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.6,
+      "sha256": "20f4397200921f02b2ab1fe50190533a558f1b0b848e614d9804a8b41f7424cf",
+      "truePeak": -2.2
     }
   },
   {
@@ -2597,6 +2972,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -9.8,
+      "sha256": "0b45272c1b880fad6df345588bde0a17a6a3ec7362f321b80091f02dbf890810",
+      "truePeak": 0.2
     }
   },
   {
@@ -2641,6 +3021,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.8,
+      "sha256": "30c9ce7910ea586824b21494c779782dbb38591d68157ef037219309c61ef0f4",
+      "truePeak": 0.6
     }
   },
   {
@@ -2679,6 +3064,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -7.8,
+      "sha256": "886d76d4fdfa1880c7b435b4bde9659f3bb424027ebf04be3607530fd6d6634e",
+      "truePeak": 0.5
     }
   },
   {
@@ -2727,6 +3117,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -12.9,
+      "sha256": "07bdfed2cf0e8f5fdc76f833b7298ac30985f15b32f6e79d4ca336586b53a49c",
+      "truePeak": 0.2
     }
   },
   {
@@ -2770,6 +3165,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -6.6,
+      "sha256": "fa5976d80d67c1dc0e2991b787243e558368b700aa138599c09cfa966703e8f7",
+      "truePeak": 0.4
     }
   },
   {
@@ -2818,6 +3218,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -9.5,
+      "sha256": "c0f3579da4550ff794553ad4e14956b64312f105a8d1f4a79a9daadf2eade75c",
+      "truePeak": -0.3
     }
   },
   {
@@ -2862,6 +3267,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.3,
+      "sha256": "288e00b6443ae4ffca01b507b6e1f5131bede75a8789e0ac7b26f64b6fa6e7c0",
+      "truePeak": 1.4
     }
   },
   {
@@ -2906,6 +3316,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -11,
+      "sha256": "9a05c3b9cf456295e4e47ef6dcb0caffa8a245275c0de5a164c1d81de7ea1fb9",
+      "truePeak": -1.2
     }
   },
   {
@@ -2950,6 +3365,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.6,
+      "sha256": "111476c9c74980e55afb18c4bfc4f0022cff9ba5ad0906bfe3215cd72b0e72b7",
+      "truePeak": -1.8
     }
   },
   {
@@ -2994,6 +3414,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -13.3,
+      "sha256": "72bee3ce8aab1635a13309dbe68dae24890717d13b693cf7a73eaa005141d8fc",
+      "truePeak": -1.5
     }
   },
   {
@@ -3038,6 +3463,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -14.5,
+      "sha256": "78203f613e765941dd0d54ea2995a4eefb21ade2349071e2b3a9d28f841cfdda",
+      "truePeak": -1.9
     }
   },
   {
@@ -3082,6 +3512,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.8,
+      "sha256": "ccefe0333704c56e97f4ce819a7913ba92dfc559246d1da89c6a7906ac72e91c",
+      "truePeak": -0.6
     }
   },
   {
@@ -3121,6 +3556,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14,
+      "sha256": "404589522c20eec23ad14583b170c56bed3c9560ee72c45f8d12296bde0189d5",
+      "truePeak": -2.5
     }
   },
   {
@@ -3159,6 +3599,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.2,
+      "sha256": "4aacac4e4bf2937a4763b7aeb75794ac34628bfc29821197194850d5c2501541",
+      "truePeak": 0.3
     }
   },
   {
@@ -3197,6 +3642,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.3,
+      "sha256": "2a05b8a1e07b80bd447876619c3402e0baff2a1fecd1e82752261e20a8c30e11",
+      "truePeak": -0.1
     }
   },
   {
@@ -3241,6 +3691,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -12.7,
+      "sha256": "744e384cacf5f55eb94bbc52ca4b67b7fd41a937138cf385ce6b4c0267f57fcd",
+      "truePeak": -1.6
     }
   },
   {
@@ -3285,6 +3740,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -16.2,
+      "sha256": "b148d0920c568667a50196d57ab39de7aae1be74b9fe8ae40b716662d0ee3a5f",
+      "truePeak": -4.7
     }
   },
   {
@@ -3323,6 +3783,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -12.9,
+      "sha256": "81c93bf3aea4b63571ca6a300d7e0a43dfe3ed11f8df2e7b933abedc8ed3e36a",
+      "truePeak": -0.7
     }
   },
   {
@@ -3361,6 +3826,11 @@
       "natureSounds": ["flowing water"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -24,
+      "sha256": "866eba5d365d53cb164b949674eadeab050f30d99cb0d6c4b2b530d8329b52c7",
+      "truePeak": -0.9
     }
   },
   {
@@ -3399,6 +3869,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.3,
+      "sha256": "c50c4b72da27bfcd98a6392982a7b2a35ed20c78984ed822771575912a6eec27",
+      "truePeak": -0.1
     }
   },
   {
@@ -3443,6 +3918,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -12.4,
+      "sha256": "770a032f3c3ed522aeaa89a5e6a3bc232846d4c5d47fe2d4ba5f4569a5954c8a",
+      "truePeak": 1.5
     }
   },
   {
@@ -3487,6 +3967,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -15.2,
+      "sha256": "e1bc45dc32a0af1bacb87bef6aed0fd4a026fe07b61bbf92e6ae759cd561d2f9",
+      "truePeak": -2
     }
   },
   {
@@ -3525,6 +4010,11 @@
       "natureSounds": ["ocean waves"],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -13.6,
+      "sha256": "af401e4cc5ee1c68a09e6926ac14f0bb59bc800a56766cc3763bb90a9d589633",
+      "truePeak": -2.3
     }
   },
   {
@@ -3569,6 +4059,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -14.8,
+      "sha256": "8bc7cb0d6237f804a200fa9bc5d3f9819f34cd5cd138b6d91c1451a0e31e8430",
+      "truePeak": 0
     }
   },
   {
@@ -3613,6 +4108,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -12.6,
+      "sha256": "d2118abea27b8bb5513358389bc8f4319e727007b646fcdcabe13e0975181331",
+      "truePeak": -0.3
     }
   },
   {
@@ -3652,6 +4152,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -21.1,
+      "sha256": "da9a793aae0e56b4cb826644ff7d8714ada2ea0ef382b0748b8a26ed46b3a2c9",
+      "truePeak": -5.9
     }
   },
   {
@@ -3696,6 +4201,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.7,
+      "sha256": "fac1670ddf9d41ce57324de1ce40d91465724c713f2f6661b2212d92fb3f940f",
+      "truePeak": 0.1
     }
   },
   {
@@ -3734,6 +4244,11 @@
       "natureSounds": ["birdsong", "flowing water"],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.9,
+      "sha256": "caa01928c03511e9a9c57d8d7af5ef247fdadfea22898062d3941955075b674d",
+      "truePeak": -1.2
     }
   },
   {
@@ -3782,6 +4297,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.4,
+      "sha256": "16ebf19c872980d63e91faf2353f1da950d3128e3d5d8248183250707a4a8026",
+      "truePeak": -0.1
     }
   },
   {
@@ -3821,6 +4341,11 @@
       "natureSounds": ["water"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.1,
+      "sha256": "8d1e99c97d3a1874b13f0dfc368e9355fb567d277adce3ca342f9c1897a206f2",
+      "truePeak": -3.2
     }
   },
   {
@@ -3859,6 +4384,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14,
+      "sha256": "1669ebbc697ff94b4cdd14e5a1849ecb661189f5ebcfeee3c165f9aaa506c35d",
+      "truePeak": -0.9
     }
   },
   {
@@ -3897,6 +4427,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.3,
+      "sha256": "ae6a0d591d247fa2a3edcc4635c5de64597905904749f5934e5c4caed07016cb",
+      "truePeak": -1.9
     }
   },
   {
@@ -3935,6 +4470,11 @@
       "natureSounds": ["flowing water"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.4,
+      "sha256": "d4d5f1a8f297bd4889d0c65a39480d984cd7e0b4ef448b27cf2254e83de3b3e6",
+      "truePeak": -0.9
     }
   },
   {
@@ -3974,6 +4514,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.5,
+      "sha256": "172b2822208ea71b16908e45bd1d36968028335226d837e185bf37a88eeb58f5",
+      "truePeak": -5
     }
   },
   {
@@ -4012,6 +4557,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.7,
+      "sha256": "85be6a49de0e603231de1de5f77af852012bfa6203963b6b574cd0a2c8bdf27a",
+      "truePeak": 0
     }
   },
   {
@@ -4050,6 +4600,11 @@
       "natureSounds": ["flowing water", "stream"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.3,
+      "sha256": "3b6048b2e7e294bddf12b98c0f5ae88c5ee92dd80f43b94a5e3aa88afe0640e3",
+      "truePeak": -0.1
     }
   },
   {
@@ -4089,6 +4644,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -18.9,
+      "sha256": "785cb074777a9991c529abfae4ddb7abcb3a651c8303d2851c78db07d05dee1f",
+      "truePeak": -5.2
     }
   },
   {
@@ -4128,6 +4688,11 @@
       "natureSounds": ["ocean waves"],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.7,
+      "sha256": "5bd2adefbc8a0e39e22b18bdfba6525abe9c07a51cc63e2ad775fcbc97ac338d",
+      "truePeak": -0.2
     }
   },
   {
@@ -4166,6 +4731,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.9,
+      "sha256": "83144b3a2345695590055e2cf229d914616b92ee68d2904533dad4cf0c683ee9",
+      "truePeak": -4.4
     }
   },
   {
@@ -4204,6 +4774,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15,
+      "sha256": "5df32511ba74a4314c9c19321cb7ee00f73b7faec656df3ec922a96092a6747f",
+      "truePeak": -1.6
     }
   },
   {
@@ -4242,6 +4817,11 @@
       "natureSounds": ["water"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.6,
+      "sha256": "f271e246edb0530a388c52e063d230517b5d9a81e1a8ed8f15bb6d35e317a3b1",
+      "truePeak": 0
     }
   },
   {
@@ -4280,6 +4860,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.3,
+      "sha256": "46b9df823bbc13a21957bb48a6e526c0df7e75286236b4764c3225e5a83d8d32",
+      "truePeak": -0.1
     }
   },
   {
@@ -4318,6 +4903,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.6,
+      "sha256": "81d25e35e5b4cb484f5f6bb84256c2fd266173d990057d1861f13453c2105014",
+      "truePeak": -0.9
     }
   },
   {
@@ -4356,6 +4946,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.9,
+      "sha256": "092925f97eda8157caded7bd00dee2ae1368ecd388c13127966cb4caf9f3adb2",
+      "truePeak": -0.8
     }
   },
   {
@@ -4398,6 +4993,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.5,
+      "sha256": "c47a448dcb7acc94136a5eb32e3aeb4e2bec2e638028c677a1c2d4f0ff31f5c3",
+      "truePeak": 1.2
     }
   },
   {
@@ -4436,6 +5036,11 @@
       "natureSounds": ["rain", "thunder"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -22.7,
+      "sha256": "d7de5ed4ab369d009bca562e8d05e09574d6c720fbb42d2687c6fac7a3e0737b",
+      "truePeak": -3.8
     }
   },
   {
@@ -4474,6 +5079,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16,
+      "sha256": "e3c5feca3e6c3b9683429a50661c70a1620b812ee4ae78e0fe25f0d502319e9a",
+      "truePeak": -2.1
     }
   },
   {
@@ -4512,6 +5122,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.4,
+      "sha256": "922e3828cfb78812a49efdc55d712a0211a99558da3f6d629301761392ec5c58",
+      "truePeak": -0.5
     }
   },
   {
@@ -4550,6 +5165,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.3,
+      "sha256": "5bc6e4b7a36220868de0a3b26501d33861575befae96f1a2d5932fbd72feeca3",
+      "truePeak": -0.9
     }
   },
   {
@@ -4588,6 +5208,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11,
+      "sha256": "fb553734f74aca0fef8662cebbadebb2bba34ffc2734cdc6adc4c5a3e80ee0c7",
+      "truePeak": 1.4
     }
   },
   {
@@ -4626,6 +5251,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -15.2,
+      "sha256": "9d1844b07a977cb8cd39e47c6c3bb17a541a7292aa7587da0c62779deaeccb32",
+      "truePeak": -2.1
     }
   },
   {
@@ -4665,6 +5295,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -26.5,
+      "sha256": "2b6340687b51fdb58be5eaa34e181e93639ce478be0482cfbe8369dbc5d8321c",
+      "truePeak": -10.8
     }
   },
   {
@@ -4709,6 +5344,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -8.7,
+      "sha256": "4761574eeb5b348d711298a670d22f1f2ac0f3836627bb213a7144a580b98fc9",
+      "truePeak": -0.4
     }
   },
   {
@@ -4747,6 +5387,11 @@
       "natureSounds": ["flowing water"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13,
+      "sha256": "8c67baf70be9333fea39a134c5274268c3751fe0a6861b520a3f9517c2801d66",
+      "truePeak": -0.1
     }
   },
   {
@@ -4786,6 +5431,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.7,
+      "sha256": "15e8c74b052782657027ec2650c95b0b2df913780f55ad7a6cdb48333e44a7af",
+      "truePeak": -2.7
     }
   },
   {
@@ -4824,6 +5474,11 @@
       "natureSounds": ["wind"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.7,
+      "sha256": "833b0bc981ab022771955b28a574d840eb1a9db919062f3a6c8941a9f18ac463",
+      "truePeak": -6.5
     }
   },
   {
@@ -4867,6 +5522,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.4,
+      "sha256": "b01edd0a47d9a79bda11bbd1184a4c8fdd4fafc83e72310aa91cd9004d55f186",
+      "truePeak": -3.4
     }
   },
   {
@@ -4911,6 +5571,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -8.3,
+      "sha256": "f93c08982c75bb9496410db67329cbcd48108fbb5de2c52b3911be58377730ca",
+      "truePeak": -0.4
     }
   },
   {
@@ -4955,6 +5620,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -8.5,
+      "sha256": "7f63defb6a063576281ac0826befdec360ea3d9d4ee484b01c2cf05f3c997b84",
+      "truePeak": -0.3
     }
   },
   {
@@ -4999,6 +5669,11 @@
       "natureSounds": ["water"],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -24.5,
+      "sha256": "15e66f26b41a04efa8ddb8b08bf3b3ce3afc90cdf3ed71e632b81ee5759ce788",
+      "truePeak": -2.3
     }
   },
   {
@@ -5037,6 +5712,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.3,
+      "sha256": "c5bfa2f01eba2815f4fc935576b51aa0f8ead41f237d46e143b409b5451cdb93",
+      "truePeak": -1.6
     }
   },
   {
@@ -5080,6 +5760,11 @@
       "natureSounds": ["ocean waves", "seagulls", "whale calls"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19,
+      "sha256": "4d573f85303d26e658acb417108e7891a69020f3a639a662b0ea145294acf8fb",
+      "truePeak": -4.3
     }
   },
   {
@@ -5118,6 +5803,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.9,
+      "sha256": "2477fb6f3c417cb04fd82e31c36b0207c943eaf3c94ae836c4c92e8cb83622e6",
+      "truePeak": -1.5
     }
   },
   {
@@ -5156,6 +5846,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.5,
+      "sha256": "87a8c52c6ec53205248053c6fadc0c291bb1ba469fee32d7875c8f2f46f90641",
+      "truePeak": -1.6
     }
   },
   {
@@ -5194,6 +5889,11 @@
       "natureSounds": ["birdsong", "water"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -18.9,
+      "sha256": "6d98e9665d23c4ed04f7b6dd484e90725f976664a3c5102b5bddbf3d27edf4f6",
+      "truePeak": -0.1
     }
   },
   {
@@ -5232,6 +5932,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.4,
+      "sha256": "f3b427ae6cf9877419ca91fe92a341a4e5429084d6cab5774922fce041fc9a5e",
+      "truePeak": -2.2
     }
   },
   {
@@ -5270,6 +5975,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.9,
+      "sha256": "e62f69eb4ead32c3f7826d734da1f654208d4249b2dd661c35dadc0f6ccdb95b",
+      "truePeak": -0.2
     }
   },
   {
@@ -5308,6 +6018,11 @@
       "natureSounds": ["rain"],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.9,
+      "sha256": "450800d03fe4383685d6af1fcaad86bb472120c0fd749370afdca7f625406403",
+      "truePeak": 0.9
     }
   },
   {
@@ -5352,6 +6067,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -11.4,
+      "sha256": "49fc9d48d05b76ce30af1fc4a7603a9ffb1cbf66ab7f4c860f3b3bf50df22c95",
+      "truePeak": -0.1
     }
   },
   {
@@ -5390,6 +6110,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.4,
+      "sha256": "ef167fa52336adf633a446eababc50daf256bf6cce75fe22e482462500004e4e",
+      "truePeak": 0.1
     }
   },
   {
@@ -5428,6 +6153,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -8,
+      "sha256": "d3648ee0a568999c9c94981ddd7717cc1fc2b97be1e89b7ec8475a722a5f01bb",
+      "truePeak": 1
     }
   },
   {
@@ -5467,6 +6197,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -17.7,
+      "sha256": "60b0b20c925f1660ca4e4bca7072269365899aa798a1c0bfdc73e358dbfbeed3",
+      "truePeak": -0.1
     }
   },
   {
@@ -5505,6 +6240,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -15.8,
+      "sha256": "77dba18c9dad65b10e512cf73aa9d7bbd6b24c0b79729b0614ed5a88eae826f3",
+      "truePeak": -3.1
     }
   },
   {
@@ -5543,6 +6283,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -21.3,
+      "sha256": "f81fa160effdf8c5ef49be5801074117a22ce264ed26f26e5d64f75498fe8f7e",
+      "truePeak": -0.1
     }
   },
   {
@@ -5581,6 +6326,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.5,
+      "sha256": "fecefb5b75a76d0d14cc6e1682d49dff275c95d5e4a7e415276b05306493bbf7",
+      "truePeak": -0.1
     }
   },
   {
@@ -5619,6 +6369,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -22.6,
+      "sha256": "eddbfd23a885f25550825b3ff1700b8d06b73caa6fcbd8cbad6bf16aa61acdc6",
+      "truePeak": -0.1
     }
   },
   {
@@ -5657,6 +6412,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -20.6,
+      "sha256": "8a3526f506b5e6c9c4ae311e74c2fbf71a51a7c3bc43a457b28f22cfb062779b",
+      "truePeak": -0.1
     }
   },
   {
@@ -5695,6 +6455,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.1,
+      "sha256": "b74650d4bb7cd2c342f1c95fa0e84a68d7d7977aae73b2018046f549ca98406a",
+      "truePeak": -0.1
     }
   },
   {
@@ -5738,6 +6503,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.3,
+      "sha256": "32c79308b80f8fa1b77ed5a36f9faa809f9094580243992702e7e623576c7721",
+      "truePeak": -3.7
     }
   },
   {
@@ -5782,6 +6552,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -14.9,
+      "sha256": "fc936dd900ab562a341db16ffcad40cabd36f394ba286bc87fa678798d9825d3",
+      "truePeak": -1.4
     }
   },
   {
@@ -5824,6 +6599,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12,
+      "sha256": "af6e8d188808d186d5b2056667180b09487cc4285c2673094248fbe1dc045c26",
+      "truePeak": 0.1
     }
   },
   {
@@ -5862,6 +6642,11 @@
       "natureSounds": ["rain"],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.9,
+      "sha256": "df6e556ecb112fad7ce1c472253e2b67f0e9a41a7d3c7f037c47f69d516c9225",
+      "truePeak": -0.9
     }
   },
   {
@@ -5900,6 +6685,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -20.5,
+      "sha256": "bf42ac800cede32eabb3b491e5213e84f33342897287c62a5ce71593a87549cc",
+      "truePeak": -0.1
     }
   },
   {
@@ -5938,6 +6728,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -14.8,
+      "sha256": "c531ee8057e929b8849b05e7d97c520d28a6ff9d34b8f68b85c57ce44b86bac3",
+      "truePeak": -0.9
     }
   },
   {
@@ -5976,6 +6771,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -22.3,
+      "sha256": "8de1cfbd869fa3e5cfe5f505698fbb8f94859dbf1b3f08da2b11292ec8dc144d",
+      "truePeak": -5.8
     }
   },
   {
@@ -6014,6 +6814,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.9,
+      "sha256": "2e2c204ab3763463e3e326f8b74f1fc0cb9094287f7dcd5a6a6b9b9e6c8da708",
+      "truePeak": -0.7
     }
   },
   {
@@ -6053,7 +6858,12 @@
       "valence": 3,
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_healing_recovery"
+    "secondaryTopic": "music_topic_healing_recovery",
+    "loudness": {
+      "lufs": -19.6,
+      "sha256": "0919e231f2eba96106d62904350b3b3d08f16ccc5cd22156a02d0c8220bbc4a3",
+      "truePeak": -5.4
+    }
   },
   {
     "slug": "music-calm-peace-04",
@@ -6091,6 +6901,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -13.8,
+      "sha256": "a5a44753827f16729b1c73bda253924f463afa7df4edda4dd92e7aa7e5b263d3",
+      "truePeak": 0
     }
   },
   {
@@ -6129,6 +6944,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -22.1,
+      "sha256": "742092c8393c13e2211e5d3012c0c89639b643b3a2adfe2e456034813dce4829",
+      "truePeak": -5.6
     }
   },
   {
@@ -6167,6 +6987,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.4,
+      "sha256": "e6af380ea9dfa0a39eab1d4e523f96cf9b7ddcd831751ef5bde516e8f9e159fa",
+      "truePeak": -1.4
     }
   },
   {
@@ -6205,6 +7030,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.1,
+      "sha256": "454d53f2d2e7027f4dfa145a39cc8e779fc965dc2cbcddbcbc69d83ad0227e0a",
+      "truePeak": -4.3
     }
   },
   {
@@ -6243,6 +7073,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -22.9,
+      "sha256": "573c049ef32eedf575a3b02bd5e2e006f442d3ebc87ffc10484312b44cd5c7de",
+      "truePeak": -4
     }
   },
   {
@@ -6287,6 +7122,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.1,
+      "sha256": "141929a4d25b43ca69b6f8c0f70b33aee460ae5ccf11e77784530f341d0aa9be",
+      "truePeak": 0.3
     }
   },
   {
@@ -6325,6 +7165,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.5,
+      "sha256": "435d7edac8e49c85561597021d1b3c84027f9357abbc77243d43217f3a3fda35",
+      "truePeak": 0
     }
   },
   {
@@ -6363,6 +7208,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.2,
+      "sha256": "37b0fbad534fa707ea2d5c05e60ce6b98eed3a702f47951d42970bb904ad7a3e",
+      "truePeak": -1.2
     }
   },
   {
@@ -6401,6 +7251,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -20.4,
+      "sha256": "4dd1a1d75f905a6f21dde25f5ac88f6c8f89da1f054e87c79170799643bf3c99",
+      "truePeak": -4.4
     }
   },
   {
@@ -6439,6 +7294,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.1,
+      "sha256": "5fd169c379c688a97741c82ad2a0946c65951a5012cec32fba7c33d6ab58417a",
+      "truePeak": 0
     }
   },
   {
@@ -6487,6 +7347,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.1,
+      "sha256": "0306b2db49d37e4a717f2d77459536b238623e20c51ebb1825a17c256a1ca34c",
+      "truePeak": -0.3
     }
   },
   {
@@ -6535,6 +7400,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.7,
+      "sha256": "ee505d4fdfd6e0b57b3ec627b08a05d59785ea027e1aa8a5de77457bc5cbf47a",
+      "truePeak": -0.3
     }
   },
   {
@@ -6573,6 +7443,11 @@
       "natureSounds": ["birdsong", "flowing water"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.7,
+      "sha256": "69c2a620de349cb2ea7aa7db6cb2890fa3aa6958dffd59ce192b46b226c1ade3",
+      "truePeak": -4.3
     }
   },
   {
@@ -6621,6 +7496,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.2,
+      "sha256": "6de690a16999ced2f3790162a13004b760ed4440a7069f2607d945b7535eeeff",
+      "truePeak": 0.6
     }
   },
   {
@@ -6659,6 +7539,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10,
+      "sha256": "2fe0f5ac074cf84b60e45d514976c9f2939c84793b20dcfb7a7f8d8fc100af51",
+      "truePeak": 0.1
     }
   },
   {
@@ -6697,6 +7582,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -21.5,
+      "sha256": "2c78d4984b62bdc36a5e8af7f1c3a5f15f4d11ada862feed23a6b42bea140d09",
+      "truePeak": -5.4
     }
   },
   {
@@ -6735,6 +7625,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.8,
+      "sha256": "368178a85afd4dc402e7114a9ce6237af5c8c0f402831234ee1246638987a0d4",
+      "truePeak": -0.4
     }
   },
   {
@@ -6779,6 +7674,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -11.3,
+      "sha256": "50c22fbffa8a1457186dfe87dde4856cd9e4eed5e7ff3b6e112a1fba08617907",
+      "truePeak": -0.3
     }
   },
   {
@@ -6823,6 +7723,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -14.2,
+      "sha256": "b611120e8fe129d931bbc652d8dfcf835f8677298cf130eb220fa2923cf9858f",
+      "truePeak": -3.7
     }
   },
   {
@@ -6867,6 +7772,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.6,
+      "sha256": "c3419924ed52fd01c902c224e4bca447ff01fea086d5736fda6c18e412d47d75",
+      "truePeak": 1.1
     }
   },
   {
@@ -6911,6 +7821,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.1,
+      "sha256": "370d65507b349f742bc9f98c1adccdeabc716f5468b170583f43bd813cba8298",
+      "truePeak": 2.4
     }
   },
   {
@@ -6954,6 +7869,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -12,
+      "sha256": "5d11dbc9426d0b042dff0163476a5aacb3be22d4570dde9b0565bb7d1628bcc3",
+      "truePeak": 0.1
     }
   },
   {
@@ -6998,6 +7918,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13,
+      "sha256": "8329fe5f7485a7db0e38ec183769313fa7aeefe5b6061013fab43d5a6823b274",
+      "truePeak": -1.6
     }
   },
   {
@@ -7043,6 +7968,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -14.8,
+      "sha256": "9a5a2c59e18013510b4ae5ee79ac8630a774f8c8db1f4e06f0391b8a15e26d1e",
+      "truePeak": -3.2
     }
   },
   {
@@ -7087,6 +8017,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -12.4,
+      "sha256": "180180efcfef59e6c89ff3b3828f1188a74514d8551f58be7c24e435c3bf0e35",
+      "truePeak": -0.6
     }
   },
   {
@@ -7131,6 +8066,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -12.9,
+      "sha256": "cbeaf813d7b8134b3a57e587f6c96d8e27507c48f10f7ab7073d2c09eac2ffa2",
+      "truePeak": -2.9
     }
   },
   {
@@ -7175,6 +8115,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -11.1,
+      "sha256": "19f57352dd5818ddded4047b83b91ef1aeaabe713f5faea69451cc4d3965e0a7",
+      "truePeak": 1.9
     }
   },
   {
@@ -7218,6 +8163,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -12.4,
+      "sha256": "95b54b90d3862f8c5240d803a2a6ad9eb6fb527c99852b685670442bf30bb029",
+      "truePeak": -0.9
     }
   },
   {
@@ -7262,6 +8212,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.5,
+      "sha256": "533ceade5393a595ae05398bb15536bb6a58fc7149c09190e7a99aea83d9b057",
+      "truePeak": 0.7
     }
   },
   {
@@ -7306,6 +8261,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -14.1,
+      "sha256": "3c64a5ef715ac9045203b0baccbef0ea2a260d0ba546eba7362efcf90da4875e",
+      "truePeak": -2.9
     }
   },
   {
@@ -7344,6 +8304,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.9,
+      "sha256": "a22349339efdda83257f358fab42b7cb580be7ab992c86bfe13a6796929a4588",
+      "truePeak": -0.1
     }
   },
   {
@@ -7387,6 +8352,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -14.5,
+      "sha256": "a01401d223c438b4b8f9f0819f637436e79c75603b7ab05ef398e0cdcf2b348f",
+      "truePeak": -3.2
     }
   },
   {
@@ -7431,6 +8401,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.7,
+      "sha256": "9715b5d7e8c3566fe79f60538a065348a711a447a5dff6e2727209e3fcb9c4bb",
+      "truePeak": -0.5
     }
   },
   {
@@ -7475,6 +8450,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -17.1,
+      "sha256": "c414d6de493af0ad5ad6968f01e664a0068dfcabceee4716c26374742a07a41a",
+      "truePeak": -6.3
     }
   },
   {
@@ -7519,6 +8499,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.7,
+      "sha256": "864420cbb0e75f3c211107cad289f4b47db895c41fb06dc127c7d411b4b49394",
+      "truePeak": -2.3
     }
   },
   {
@@ -7563,6 +8548,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -9.2,
+      "sha256": "0c8503a5ccc17e7d449f2ec8027c2b3d12d50bd2b1aed2e8de4e290c1ba0f144",
+      "truePeak": 0.9
     }
   },
   {
@@ -7606,6 +8596,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.2,
+      "sha256": "410385ceee66fb5c73bfc7691c6d12290a59d91997f2489cefd71f19110ff83d",
+      "truePeak": 0.5
     }
   },
   {
@@ -7644,6 +8639,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -25,
+      "sha256": "d65301928a49692b45d6c9f4aed5b6cea30f664732afcee916f5aa744b73f531",
+      "truePeak": -13.5
     }
   },
   {
@@ -7687,6 +8687,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.6,
+      "sha256": "0821031b52a92fbd889a871d46f97b748ef521106988d139e777548e85889c62",
+      "truePeak": 0
     }
   },
   {
@@ -7726,6 +8731,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.1,
+      "sha256": "380c334d80a17869f07069dd03527683dd4ecce3dff9940d59f07c985d04274d",
+      "truePeak": -0.4
     }
   },
   {
@@ -7774,6 +8784,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -11.9,
+      "sha256": "698e62c53d20baf443aab93e3a8500864f30de575cef8d4f1072906c5529d8ca",
+      "truePeak": -1.4
     }
   },
   {
@@ -7818,6 +8833,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -11.6,
+      "sha256": "29e1f08f0f347fbaf8ecc04f3cb5f3a26a93fd53662f705f58a4b2791ea12f2b",
+      "truePeak": -0.1
     }
   },
   {
@@ -7862,6 +8882,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -11.5,
+      "sha256": "75fb2c5e886f1bf6c680180ed19e11593dd7334e253c3ddf2eb721dbf62f33cf",
+      "truePeak": 0.1
     }
   },
   {
@@ -7901,6 +8926,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15,
+      "sha256": "7fa70e41201fd99fac506bb29e588e093cfba8300bc4ea2fc024fa0dc8f318e6",
+      "truePeak": -0.9
     }
   },
   {
@@ -7939,6 +8969,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.9,
+      "sha256": "0187b3c611052e19b3678ec4c1f5b91215607480e6265ac6aefb7c11ac0bfe21",
+      "truePeak": -0.9
     }
   },
   {
@@ -7977,6 +9012,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.7,
+      "sha256": "2f427371ca22ac2b701dc530be101ea75c10fd7b8df3cdd977bb67eca4280fca",
+      "truePeak": -3.7
     }
   },
   {
@@ -8021,6 +9061,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -15,
+      "sha256": "f5e2319a34a15d32ccd38801195069583b83ba1e114415de2ed15b02ccd77b97",
+      "truePeak": -2.9
     }
   },
   {
@@ -8060,6 +9105,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.7,
+      "sha256": "73ce703a3dbe15020668dba4f28b8d89fe7afceec99b22f6977809b31cd3dc5f",
+      "truePeak": 0
     }
   },
   {
@@ -8104,6 +9154,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -11.9,
+      "sha256": "74873742f3aec8c6f270d42f674f95e37b1a09bc890153e96c0f1f756a58cfa3",
+      "truePeak": 1.9
     }
   },
   {
@@ -8142,6 +9197,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.2,
+      "sha256": "dc92b2e8568cc56be33acd3b89f2b7c8a9e3c917c7f51b71490ce0bf20358258",
+      "truePeak": -4.3
     }
   },
   {
@@ -8186,6 +9246,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -14.3,
+      "sha256": "d0058ad7bcedfcabeee0c35bf9c3666813fabd550be835172038c00b59b99155",
+      "truePeak": 0.5
     }
   },
   {
@@ -8224,6 +9289,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.8,
+      "sha256": "43e1103534282efa19289936b3df7e3637396f27e02986e58055f176f87bce14",
+      "truePeak": -2.6
     }
   },
   {
@@ -8268,6 +9338,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -14.2,
+      "sha256": "5d4bf2cf7c469b33d163c15c009d6e8edff8f96a29b9aab42ff70681e095fa76",
+      "truePeak": -2.9
     }
   },
   {
@@ -8306,6 +9381,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -15.9,
+      "sha256": "b12a00d806fcb246318e1c1eb8c46a6a7f5754e83f4be5c2ee778ed58b31e707",
+      "truePeak": -2.4
     }
   },
   {
@@ -8344,6 +9424,11 @@
       "natureSounds": ["rain", "wind"],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -20.4,
+      "sha256": "66ab887564c553e3f15c3cca56acd2baae1b6346e92cc4c5943fa9454a4af383",
+      "truePeak": -3.1
     }
   },
   {
@@ -8388,6 +9473,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -13.2,
+      "sha256": "c832d454552ce46c36170e3626904110e1558682351ca77623dce3a48f1d29e2",
+      "truePeak": -1.3
     }
   },
   {
@@ -8432,6 +9522,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.6,
+      "sha256": "771436ae25b5e5cd5e19c531cffca3455b16a8aebb3820b743683c1f8cf9e6dd",
+      "truePeak": 0.1
     }
   },
   {
@@ -8470,6 +9565,11 @@
       "natureSounds": ["birdsong", "water"],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.3,
+      "sha256": "315171a68cca5d644431df4793e7879a2b14fecd1530bb942351f04dcd748393",
+      "truePeak": 0.3
     }
   },
   {
@@ -8508,6 +9608,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -18.1,
+      "sha256": "c69888e686bf19b4a2d1e8851a2b005d7fad4f6bd2c72b34386e4656030e1a46",
+      "truePeak": -4.8
     }
   },
   {
@@ -8552,6 +9657,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.3,
+      "sha256": "7575040e8cbe1d980baed1f2d60906b4b49811790c2022ccbdafccc926f7076a",
+      "truePeak": 0.3
     }
   },
   {
@@ -8590,6 +9700,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.2,
+      "sha256": "d8b0015a448d84d84963f68ed424468e72cfe6e63f0bee244533cba60f4c295b",
+      "truePeak": 1.2
     }
   },
   {
@@ -8634,6 +9749,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.5,
+      "sha256": "eeb4b84bbfd1883b1999f856acdd43cf1c40943989fdabd2d5d24193ad38fed1",
+      "truePeak": 0
     }
   },
   {
@@ -8672,6 +9792,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.6,
+      "sha256": "ece0b179e4a0c5c3f3cdba79b5da74e1020efc01daa8e7aaf58c735a89517aea",
+      "truePeak": -1.1
     }
   },
   {
@@ -8715,6 +9840,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.1,
+      "sha256": "d07b30e7ee05222437dfb2adcbb9710f9f51ce35566dcc1755b41daeb2bafd38",
+      "truePeak": 0.3
     }
   },
   {
@@ -8759,6 +9889,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.8,
+      "sha256": "38bb5a62db69ddecda5dd5db093a3c4fb02599bcd8c0cd99892c31ce3d7affd4",
+      "truePeak": 0.3
     }
   },
   {
@@ -8803,6 +9938,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -7.8,
+      "sha256": "433cc8716ef97ae8ab34fe5bee9af465e1678ad970e68dae21cebf0bdbae3458",
+      "truePeak": 0.7
     }
   },
   {
@@ -8853,6 +9993,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -8,
+      "sha256": "0649fdb38422056a4d028de4d40892c10b72344ba4070c2c05bf1e58c1358801",
+      "truePeak": 0.4
     }
   },
   {
@@ -8897,7 +10042,12 @@
       "valence": 3,
       "vocals": "wordless"
     },
-    "secondaryTopic": "music_topic_motivation"
+    "secondaryTopic": "music_topic_motivation",
+    "loudness": {
+      "lufs": -10.7,
+      "sha256": "1791d9e33592ed6624a503fc7ae1ba88034963984c67c875b5fca6ff6e303d26",
+      "truePeak": 0.2
+    }
   },
   {
     "slug": "music-focus-concentration-07",
@@ -8941,6 +10091,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.2,
+      "sha256": "e3aa3b73d966d37b1cbbb42af4b87158403d56d77f93ddb54be22015927d041f",
+      "truePeak": 0.4
     }
   },
   {
@@ -8979,6 +10134,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.7,
+      "sha256": "b724ddd31216c28e1deb917a753e9725a54fa38688cba65bc3a7bc6e2c568bc7",
+      "truePeak": 0
     }
   },
   {
@@ -9017,6 +10177,11 @@
       "natureSounds": ["birdsong"],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.6,
+      "sha256": "c6ed0480972f6d8593e90b2cffbbcf1bde8df172859853d9a2d69bcc57dc03f8",
+      "truePeak": 0
     }
   },
   {
@@ -9061,6 +10226,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10.6,
+      "sha256": "55b07617be4d470f371fd997c42f37cbe19dfbb91a32b7d3559fbbb3932d3497",
+      "truePeak": 0.6
     }
   },
   {
@@ -9105,6 +10275,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10.1,
+      "sha256": "a28a93cc264010781e99d4b88fbd53a3071bf05518abfb8a2181f87ca42b69d0",
+      "truePeak": 0.5
     }
   },
   {
@@ -9154,6 +10329,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -8.3,
+      "sha256": "f08911402aa1c177104d0ba85ecd5bef48d967c5d3eecd4135b9cadac9e79a6a",
+      "truePeak": 1.2
     }
   },
   {
@@ -9203,6 +10383,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.1,
+      "sha256": "e550a36bf645c2d15ee4f3c0f6ae7614fedada6a27b98203f6adbc33840bc024",
+      "truePeak": 1.4
     }
   },
   {
@@ -9241,6 +10426,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.3,
+      "sha256": "a200f86df0acd1d69d8b9400df2563ffa9599908f17385921e369f5a5d375cce",
+      "truePeak": 0.9
     }
   },
   {
@@ -9290,6 +10480,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -8.8,
+      "sha256": "e5bc69bacff5f28e4803bb420ad93e1670fa7b694a8ad5628c632eab2aee9d36",
+      "truePeak": 1.7
     }
   },
   {
@@ -9328,6 +10523,11 @@
       "natureSounds": ["birdsong"],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.8,
+      "sha256": "13188a047df005b64ce300bf2203c2302d11c4d9b76ffe395292d89f1e0e4243",
+      "truePeak": -4.4
     }
   },
   {
@@ -9367,7 +10567,12 @@
       "valence": 2,
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_overthinking"
+    "secondaryTopic": "music_topic_overthinking",
+    "loudness": {
+      "lufs": -13.7,
+      "sha256": "905b687fcc7ea0da11b12384fe98eeef6ae46ae13907ddf70768fe5b2d7f56bf",
+      "truePeak": -0.4
+    }
   },
   {
     "slug": "music-focus-concentration-18",
@@ -9405,6 +10610,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.7,
+      "sha256": "1c75e9bc783230fedcca71e5d064bca2f70f35c40d391a2f1a988396cfa5a44c",
+      "truePeak": -0.4
     }
   },
   {
@@ -9455,6 +10665,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -9.1,
+      "sha256": "6c9f70e554262f62337ca3472ae9730f8ef2dfd3ddb3e9b22e3d5ed333cbae79",
+      "truePeak": 2.3
     }
   },
   {
@@ -9499,6 +10714,11 @@
       "natureSounds": ["ocean waves"],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.9,
+      "sha256": "17f361bd7dec79e434bfbaac1b37c294e81a0e76c60e640d562129e31e9640ad",
+      "truePeak": 0.2
     }
   },
   {
@@ -9543,6 +10763,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.4,
+      "sha256": "f28f054bc4f0dcbbf437228658a18e88a4f7d945a805934accc12432c1be37d2",
+      "truePeak": 0.1
     }
   },
   {
@@ -9587,6 +10812,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10,
+      "sha256": "36ac17151fffe045f3341f903221d7c9023e73b7f412ab8201465ecdaa1ca723",
+      "truePeak": 1.6
     }
   },
   {
@@ -9637,6 +10867,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -10.6,
+      "sha256": "92a6d75bd734cba8a129842b2f7f4297cbc09c6ddfded9cbcb22cd97de6a8c9e",
+      "truePeak": 0.1
     }
   },
   {
@@ -9682,6 +10917,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.7,
+      "sha256": "408e9b25445cb28a5a261dc9df9c3da6b3f453c0b25edc3865edd302a714c8f9",
+      "truePeak": -0.4
     }
   },
   {
@@ -9732,6 +10972,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -12.1,
+      "sha256": "c07fc6c6496a0bf3817a96ccabadaf145a7ca54e69c8241dc1095d1863413dfd",
+      "truePeak": 1.2
     }
   },
   {
@@ -9783,6 +11028,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.9,
+      "sha256": "484ac0fcb822304d9a287520cc4791144f11f1af8d09d9696855bc0e48aaec85",
+      "truePeak": 0.2
     }
   },
   {
@@ -9827,6 +11077,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -8.9,
+      "sha256": "4be42c8d31ab8fe17d8cc7fa1f10ce92978825779e26337375b8e7b7f4d57e2e",
+      "truePeak": 0.7
     }
   },
   {
@@ -9872,6 +11127,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -8.7,
+      "sha256": "7d589be68f5b69d2025c13a4014fa3bd7260db75739284b71e594723402d0808",
+      "truePeak": 0.4
     }
   },
   {
@@ -9916,6 +11176,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -8.9,
+      "sha256": "525c292549e5975666d9cd5dc7dadab794dcb1a6d14790971e136691c814f6ea",
+      "truePeak": 0.9
     }
   },
   {
@@ -9960,6 +11225,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -8.4,
+      "sha256": "f8a6d659a919222b27b1ee54dc9903ce757606a2c405c4d9ecfaebfaec0cd1b3",
+      "truePeak": 0.9
     }
   },
   {
@@ -10004,6 +11274,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.6,
+      "sha256": "e339f55aac925fc7d27a399153f0ea854526b3dd0d80b4deb3584b4eecd2bfde",
+      "truePeak": 0.7
     }
   },
   {
@@ -10053,6 +11328,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.9,
+      "sha256": "9f08403b1de2a7d504a73c7b4c18300b7c68d89cd052ecbd9ea29e533f610d9b",
+      "truePeak": -0.1
     }
   },
   {
@@ -10098,6 +11378,11 @@
       "natureSounds": ["birdsong"],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -22,
+      "sha256": "853d87425d1b51578bb99db262a26b75645a0c7400e11028b3117df48d21bc79",
+      "truePeak": -8.6
     }
   },
   {
@@ -10143,6 +11428,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10.2,
+      "sha256": "a2734ea606908f000d5d836befeae6409b776e086bfb3b4bec942a35483f9295",
+      "truePeak": -0.1
     }
   },
   {
@@ -10188,6 +11478,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.4,
+      "sha256": "0c684d5e3a4a7748660321e8ad62d8cab0a8a9b9564464294428048ae85ddd6f",
+      "truePeak": 1.9
     }
   },
   {
@@ -10240,7 +11535,12 @@
       "valence": 2,
       "vocals": "lyrics"
     },
-    "secondaryTopic": "music_topic_hope_positivity"
+    "secondaryTopic": "music_topic_hope_positivity",
+    "loudness": {
+      "lufs": -12.1,
+      "sha256": "cba49b87c9a721099bfb34fb3e5344ee275f4120db9ff4142cb0d1ed9e0eddae",
+      "truePeak": 0.4
+    }
   },
   {
     "slug": "music-happiness-joy-19",
@@ -10290,6 +11590,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -8.4,
+      "sha256": "b1ce0a50a3bf19ca15ead59e0a30637a835a4c6a79b2ffddfc71a0bf24d6693c",
+      "truePeak": 1.4
     }
   },
   {
@@ -10335,6 +11640,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.7,
+      "sha256": "987a0a01878946c4d6ef26a7814056b7e0099266cd9c5af8562ca0d4e74a766c",
+      "truePeak": -1.4
     }
   },
   {
@@ -10385,6 +11695,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -8.2,
+      "sha256": "02e72a5825f93ec8c0bde113923e72563fd4f95a9ca3082d1cca9b865cfe9fe0",
+      "truePeak": 1.1
     }
   },
   {
@@ -10429,6 +11744,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -20.8,
+      "sha256": "b5e52b26cd18093238849664d85fb8ad62106b65522b8728375c7412a8150af7",
+      "truePeak": 0
     }
   },
   {
@@ -10474,6 +11794,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.3,
+      "sha256": "ac584f24159377243771512d64d61c89ed322baa54b456df0c1d5ad43a49840a",
+      "truePeak": 0.6
     }
   },
   {
@@ -10525,6 +11850,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.5,
+      "sha256": "edb89d605c00220d3ab0f48b3fcf07260c87e04921080e49dfc36925b00d0efe",
+      "truePeak": 0.8
     }
   },
   {
@@ -10574,6 +11904,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -7.7,
+      "sha256": "1f11df13caf1825710fd1a11e68b1560076de79679f4f83c65487700a35be2a9",
+      "truePeak": -0.4
     }
   },
   {
@@ -10620,6 +11955,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.2,
+      "sha256": "7d01734c1d9046f8fed725d3c7ee3fbb4228e890b41b3b883080747cee4beaba",
+      "truePeak": 0
     }
   },
   {
@@ -10664,6 +12004,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -8.6,
+      "sha256": "76e6fc6ebf2a06c0c3ea4b77e763abdf7cc4a70c49d0283674998b7b63bd786f",
+      "truePeak": 0
     }
   },
   {
@@ -10709,6 +12054,11 @@
       "natureSounds": ["birdsong", "flowing water"],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.7,
+      "sha256": "c93f17a784fffc830a9835246cd441e9c79f3f7514f15baaa983a35cc9125869",
+      "truePeak": -2.8
     }
   },
   {
@@ -10758,6 +12108,11 @@
       "natureSounds": ["birdsong"],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -14.7,
+      "sha256": "16cd4e518cc53f80e1d1615639f6768fd381b4fc9caec15d409f882175908ce7",
+      "truePeak": -0.2
     }
   },
   {
@@ -10807,6 +12162,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.4,
+      "sha256": "240f2daad1c9602358c18af5fb45339c5f67434e092516959152fdfb2015e34b",
+      "truePeak": 0
     }
   },
   {
@@ -10851,6 +12211,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -21.5,
+      "sha256": "6cd973eed8c471626dd8901cb6728ebb2033aff379175170be92ab083068aa2b",
+      "truePeak": -7.7
     }
   },
   {
@@ -10896,6 +12261,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.3,
+      "sha256": "49bd98317c649d420215bca109baa6811365a976ff722034238a4bd32dc36349",
+      "truePeak": -1.1
     }
   },
   {
@@ -10939,6 +12309,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.6,
+      "sha256": "e9e6411e2b5e364e9a5adcc608930051293acc84f6fffc94f98ddae4448ef5f6",
+      "truePeak": 0
     }
   },
   {
@@ -10983,6 +12358,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.3,
+      "sha256": "2a03667bbd2b48322357be7cf050fe870eb694f7884443b174142f6bc8c247fd",
+      "truePeak": -4.8
     }
   },
   {
@@ -11028,6 +12408,11 @@
       "natureSounds": ["flowing water"],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -17.8,
+      "sha256": "921e2c0ec7ce67415ebd5676017f392845190adbae7b3ea0aceffcde6028fda7",
+      "truePeak": -5.1
     }
   },
   {
@@ -11072,6 +12457,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.7,
+      "sha256": "4c50f56fd44e66dbbb114a44822517bc7379a6fdaa36d333b47b74e8a181573a",
+      "truePeak": -3.9
     }
   },
   {
@@ -11116,6 +12506,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.3,
+      "sha256": "1c629aa608de8fbdd1ee0de7364cb73d0f093183c46b9770664c9b58e97932e9",
+      "truePeak": 0.5
     }
   },
   {
@@ -11164,6 +12559,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.4,
+      "sha256": "149a332dc52025c8fcc3a1bb13d8775f8ca674985dcd7a2f9f0b44a303dfa713",
+      "truePeak": 0.5
     }
   },
   {
@@ -11202,6 +12602,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.9,
+      "sha256": "83144b3a2345695590055e2cf229d914616b92ee68d2904533dad4cf0c683ee9",
+      "truePeak": -4.4
     }
   },
   {
@@ -11245,6 +12650,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.9,
+      "sha256": "9f31af2f60dc6dfc7d6840645ffaf1c25ecac10012c3aa7712b1c2980eeaa33e",
+      "truePeak": -0.1
     }
   },
   {
@@ -11289,6 +12699,11 @@
       "natureSounds": ["flowing water"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.6,
+      "sha256": "6fcc30008dc610da72f01c04fd396693dac37b556b19b0036ed68f50e9246aa7",
+      "truePeak": -1.2
     }
   },
   {
@@ -11333,6 +12748,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.7,
+      "sha256": "47bbcec350333a7961c775e501c5939d525275f6be22a43f492ed1ea3021868a",
+      "truePeak": -2.1
     }
   },
   {
@@ -11377,6 +12797,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19,
+      "sha256": "c7734c671ba06e2fdb647167d9780641afb49a6bac610d36b406208c14eda259",
+      "truePeak": -2.5
     }
   },
   {
@@ -11432,6 +12857,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -8.9,
+      "sha256": "7bbe9793a0461ee97a0bef643ae88206983be7a3a5e8e558275fa92cb6925946",
+      "truePeak": 1.1
     }
   },
   {
@@ -11481,6 +12911,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -8.9,
+      "sha256": "33b75b14927d4a898f23429a21666a4bd18f7040ef515edc540b725e26b5e5fc",
+      "truePeak": 1.1
     }
   },
   {
@@ -11525,6 +12960,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.2,
+      "sha256": "b29a4a65438817809e61ff09f793847a73b9fd5222d9c6fd9922f2f19cbd0135",
+      "truePeak": -0.2
     }
   },
   {
@@ -11580,6 +13020,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.9,
+      "sha256": "be644e75fabe89f33c21161655c4c2040d032f647346430392893d1592e5f50b",
+      "truePeak": 1.3
     }
   },
   {
@@ -11630,6 +13075,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -8.8,
+      "sha256": "aeba18fa92ddf79463b85d316cd997ca5b0e06f20dac299aa259e03bb076fa0b",
+      "truePeak": 0.8
     }
   },
   {
@@ -11680,6 +13130,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -8.9,
+      "sha256": "970f5ed68c9d32e2362b0039966e697b34b571a8cd0dd684faff43dae7e278d0",
+      "truePeak": 0.9
     }
   },
   {
@@ -11733,6 +13188,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -11.1,
+      "sha256": "41b7766e0d784d3020c658f7f1d463b66b656c521a9a57fc4bd41c5a405c5ede",
+      "truePeak": 0.8
     }
   },
   {
@@ -11787,6 +13247,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10.8,
+      "sha256": "c500c4a6242e840b8eb86a99b0cd00b21b8b7f9f9f263564757d4051a8696f56",
+      "truePeak": 0.6
     }
   },
   {
@@ -11841,6 +13306,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10.9,
+      "sha256": "59beb8ccfa322d93de9303ebd4ffebe08cd4d591e7df917d1d6a065ee9de8a6d",
+      "truePeak": 0.7
     }
   },
   {
@@ -11896,6 +13366,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -9.8,
+      "sha256": "0849a194d5307e0ee6875e43b4cc30a33682e87d868e7c2fc842ac4e06c5e943",
+      "truePeak": 1
     }
   },
   {
@@ -11944,6 +13419,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10.7,
+      "sha256": "1791d9e33592ed6624a503fc7ae1ba88034963984c67c875b5fca6ff6e303d26",
+      "truePeak": 0.2
     }
   },
   {
@@ -11995,6 +13475,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10.2,
+      "sha256": "9999a8fc9fad911e4e95c4d5c0153d3c1e761368c0c1fa22b91c0ccd086eb652",
+      "truePeak": 0
     }
   },
   {
@@ -12049,6 +13534,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -7.8,
+      "sha256": "142acdf579e4c87c7bd42c653a5dffb759ca30ea0ff88abb2d2a936dc0d0486a",
+      "truePeak": 1.5
     }
   },
   {
@@ -12104,6 +13594,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10,
+      "sha256": "3f064aae259d7873f2ac329f3ebcc4950f1c983c0dbfee79ddcc04552d0092f8",
+      "truePeak": 1.3
     }
   },
   {
@@ -12148,6 +13643,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -22.2,
+      "sha256": "35ecfde058fc65a581424143d4d41c65cd28244f6cb5d22e9dec56b35d4d6ae6",
+      "truePeak": -8
     }
   },
   {
@@ -12191,6 +13691,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.9,
+      "sha256": "91a0f38c58d3b5013f2d66c6b45f328aeeabe084c52d7e82e681aaaa5be4978b",
+      "truePeak": -8
     }
   },
   {
@@ -12234,6 +13739,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.5,
+      "sha256": "3fc89e618a9948f502cc2561a9ac72c2092d18fa52f1abd269549f8c7d454e6e",
+      "truePeak": -0.1
     }
   },
   {
@@ -12278,6 +13788,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.1,
+      "sha256": "d6fe8205dfbe211532f93ef573fb36d73c013abdd2c066827e2e791a31903bb8",
+      "truePeak": -0.4
     }
   },
   {
@@ -12321,6 +13836,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.8,
+      "sha256": "8b4e82ee2f95e6276a7512e60a6b83e3c9f87bad252f0fd819d13d6b89400a71",
+      "truePeak": 0.5
     }
   },
   {
@@ -12359,6 +13879,11 @@
       "natureSounds": ["birdsong", "water"],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.5,
+      "sha256": "d0d6d6a7ad1dea3fb11ff1521d43d73785ecf582f033c386ffcaed4020961841",
+      "truePeak": 0
     }
   },
   {
@@ -12408,6 +13933,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -8.7,
+      "sha256": "0faf7d4abb9520705a2d8e39a43854a6059ee91e9598feafe4d8abf22087d176",
+      "truePeak": -2.1
     }
   },
   {
@@ -12456,6 +13986,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.7,
+      "sha256": "905b687fcc7ea0da11b12384fe98eeef6ae46ae13907ddf70768fe5b2d7f56bf",
+      "truePeak": -0.4
     }
   },
   {
@@ -12499,6 +14034,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.9,
+      "sha256": "9f31af2f60dc6dfc7d6840645ffaf1c25ecac10012c3aa7712b1c2980eeaa33e",
+      "truePeak": -0.1
     }
   },
   {
@@ -12543,6 +14083,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -27.5,
+      "sha256": "218271fbfdbb4a632d37212944da3e1f8ea076f284fa48415300be3bb01c0421",
+      "truePeak": -12.3
     }
   },
   {
@@ -12597,6 +14142,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.8,
+      "sha256": "53036e7525417ad9f107f237dfabfdaa15fd291a41c50d4c0bf56aa987560f38",
+      "truePeak": 0.8
     }
   },
   {
@@ -12641,7 +14191,12 @@
       "valence": 4,
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_hope_positivity"
+    "secondaryTopic": "music_topic_hope_positivity",
+    "loudness": {
+      "lufs": -20.1,
+      "sha256": "51d6f52eb6a9191da1c2b214ca4a27e3e199b6ece3843ae0a261ebff44e62cdc",
+      "truePeak": -4.9
+    }
   },
   {
     "slug": "music-healing-recovery-04",
@@ -12686,7 +14241,12 @@
       "valence": 3,
       "vocals": "none"
     },
-    "secondaryTopic": "music_topic_sadness"
+    "secondaryTopic": "music_topic_sadness",
+    "loudness": {
+      "lufs": -17.6,
+      "sha256": "6d491e67ae0cfd59df5cee388490429fa9365252e0f0024aa291cf1be6c54687",
+      "truePeak": -3
+    }
   },
   {
     "slug": "music-healing-recovery-05",
@@ -12724,6 +14284,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.3,
+      "sha256": "d9b2fd412e54ffa9c193d48486d0f34fd2582e3903aadff7f72c4c7a50c98a2d",
+      "truePeak": -0.9
     }
   },
   {
@@ -12768,6 +14333,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.7,
+      "sha256": "4fcf3552434d32b10ec33f5c0d625d43397d9dc371752c25974cce2bb18c59fc",
+      "truePeak": -1.4
     }
   },
   {
@@ -12817,6 +14387,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -8.2,
+      "sha256": "905b849d1bb3eb5177575d6e97424938d31452eb72621f36a66dba7fc0f3637c",
+      "truePeak": -0.4
     }
   },
   {
@@ -12868,6 +14443,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -8.5,
+      "sha256": "21710117d369870b33fb5755a59d4d1197c886fbcaf8d955d8d2ab35e9b2220f",
+      "truePeak": 0.2
     }
   },
   {
@@ -12911,6 +14491,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.6,
+      "sha256": "0919e231f2eba96106d62904350b3b3d08f16ccc5cd22156a02d0c8220bbc4a3",
+      "truePeak": -5.4
     }
   },
   {
@@ -12954,6 +14539,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -20.5,
+      "sha256": "41d3fde8587ba1a4b3e49ab9c7e1379b9e7f017403667c17ffd8f2ef874681e0",
+      "truePeak": -2.2
     }
   },
   {
@@ -12998,6 +14588,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.5,
+      "sha256": "468c9819b48cd92689686424085d0240eab0d1015908c2f57765b3c0d8f4e688",
+      "truePeak": -0.5
     }
   },
   {
@@ -13042,6 +14637,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.9,
+      "sha256": "a0e55a1ce44fb3a2f56933fbadfb6281004abcb86df2f0cc08cf285d145327ab",
+      "truePeak": -2.5
     }
   },
   {
@@ -13085,6 +14685,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -16.2,
+      "sha256": "8545e7fa9d14fa03c1e38643dc1ef7a64016e7ef88965bf1c30ec081a518c842",
+      "truePeak": -1.7
     }
   },
   {
@@ -13129,6 +14734,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -20.8,
+      "sha256": "fb2531febfd7e0ee64945804518021c1cc1e37162ac1f811d35eda07baa62493",
+      "truePeak": -4.1
     }
   },
   {
@@ -13173,6 +14783,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.7,
+      "sha256": "e0d3db198748803bb497d7191675c08e1e6c35dee76b5efdf949887d3c68e96f",
+      "truePeak": -4.1
     }
   },
   {
@@ -13217,6 +14832,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -27.7,
+      "sha256": "9286741f65b2e318b39f950a1ddff0c4d8fa009c6331e9355d6563ee77ee2688",
+      "truePeak": -10.3
     }
   },
   {
@@ -13261,6 +14881,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -17.5,
+      "sha256": "2570bb338ccc068244b35c46a9d7a7fb84e5531b8e631696fdcd69464d272458",
+      "truePeak": -3.4
     }
   },
   {
@@ -13304,6 +14929,11 @@
       "natureSounds": ["water"],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -21.8,
+      "sha256": "a1238602171fbb86c6f98bc8174895dfad13c945df5a6afd05d04c3e2badeada",
+      "truePeak": -8.2
     }
   },
   {
@@ -13348,6 +14978,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.9,
+      "sha256": "41e9e308a5000228438f6669f6428a195328006c8ad2a515f84c414de3c3790a",
+      "truePeak": -0.1
     }
   },
   {
@@ -13392,6 +15027,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.9,
+      "sha256": "23c33d3eb62a0fd7bb8cd58c46d067fa3d69fef88880628c155bf161bd26f465",
+      "truePeak": -3.1
     }
   },
   {
@@ -13436,6 +15076,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.1,
+      "sha256": "14644a96b59a2b3dbf10dbbbd8801370571f44565c0615c581d80632b7ddae1f",
+      "truePeak": -2.6
     }
   },
   {
@@ -13479,6 +15124,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -8.6,
+      "sha256": "4165bbf0476d70da31a5d99031947ddb776711035364190bcbd8e56830363d5b",
+      "truePeak": 0.4
     }
   },
   {
@@ -13529,6 +15179,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -13.3,
+      "sha256": "7391bbf9a0ab62893e4484f4c5b503a1cb19bbb1c31f74df7312881fc030055a",
+      "truePeak": -0.3
     }
   },
   {
@@ -13576,6 +15231,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.9,
+      "sha256": "ea920d29f5953e9a4397cf11a9932d73861b96a0f828683347cdcb018d2b92d7",
+      "truePeak": 0.6
     }
   },
   {
@@ -13619,6 +15279,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.7,
+      "sha256": "9c20a32dd699d477b629a6014fc248d3ebf3b9990c1af3f45a77301677193391",
+      "truePeak": -3.3
     }
   },
   {
@@ -13658,6 +15323,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -9.4,
+      "sha256": "768a03debf84cff89bc5be108d057c896a6c68f0e5c0b304e4817d32d0ed2be5",
+      "truePeak": 0.2
     }
   },
   {
@@ -13702,6 +15372,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.4,
+      "sha256": "1f57c3866dadc11f3a08a9134190b086bdda62e758bb170cb4598c8400f0288c",
+      "truePeak": -0.5
     }
   },
   {
@@ -13747,6 +15422,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -9.6,
+      "sha256": "61f8ce0ae9ee35abee17c0ddefd8e1a8fc40af83a4732d4fe62ab48cd6ed3acd",
+      "truePeak": 0.3
     }
   },
   {
@@ -13797,6 +15477,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.5,
+      "sha256": "c533c0fe4f5e3a569aebf0089406d4b80ec13cc8679ad74c1e4a6080391cf03f",
+      "truePeak": 0.3
     }
   },
   {
@@ -13841,6 +15526,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -20.1,
+      "sha256": "51d6f52eb6a9191da1c2b214ca4a27e3e199b6ece3843ae0a261ebff44e62cdc",
+      "truePeak": -4.9
     }
   },
   {
@@ -13885,6 +15575,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.6,
+      "sha256": "6d491e67ae0cfd59df5cee388490429fa9365252e0f0024aa291cf1be6c54687",
+      "truePeak": -3
     }
   },
   {
@@ -13936,6 +15631,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -12.4,
+      "sha256": "33b0c083b007b870d3f0d549c46ef40e45a1fcd6d466e53d7569047cffe4056d",
+      "truePeak": 0.5
     }
   },
   {
@@ -13986,6 +15686,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -8.6,
+      "sha256": "5c10fac88229038324e110e1a4504b7e9eaedd545251d9c039012ea8ba012c44",
+      "truePeak": 0.6
     }
   },
   {
@@ -14030,6 +15735,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -21.7,
+      "sha256": "4fcd0feaa0448a82b9f28487a7df372e09948d824bee5c673fc8f428c399a187",
+      "truePeak": -4.3
     }
   },
   {
@@ -14081,6 +15791,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -9.4,
+      "sha256": "e103e96e3d4eeb283ee9df3927012911d9554064fc4d472e949af111e63bac8a",
+      "truePeak": 0.9
     }
   },
   {
@@ -14124,6 +15839,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -8.2,
+      "sha256": "1fac99b19f0a9514f18dfd86bfd1e04ed42244fe53a2a66dd8e2f263bb6d0d64",
+      "truePeak": 0.6
     }
   },
   {
@@ -14162,6 +15882,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -7.6,
+      "sha256": "a18cff16da84df0e46655216a2b5fdaec5f4d93842b30be5da565160f5da32b8",
+      "truePeak": 0.7
     }
   },
   {
@@ -14200,6 +15925,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -7.5,
+      "sha256": "b8f2aba372f4f717f43611d9fd0933c7243d99b7477dff323f1051734fe1ed24",
+      "truePeak": 0.7
     }
   },
   {
@@ -14244,6 +15974,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -22.9,
+      "sha256": "82b7c603cb96d9d8eb9c11b86910677df2650e46e59bb83cfd2a2398ecb0ad0f",
+      "truePeak": -3
     }
   },
   {
@@ -14288,6 +16023,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -22,
+      "sha256": "ba276c18f342b683f9ac78aff243fc12a70189162a308471a1ed0b9ee1101333",
+      "truePeak": -6
     }
   },
   {
@@ -14332,6 +16072,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -19.3,
+      "sha256": "a721b7c49378b7bf789b266ac383c8c40bdc1d2b664c25c71c66a695460c5723",
+      "truePeak": -2.8
     }
   },
   {
@@ -14383,6 +16128,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -21.7,
+      "sha256": "009abd867a91e26ab326fb7796afa25be4f94796014575ebf1ec5e481ee6e465",
+      "truePeak": -3.2
     }
   },
   {
@@ -14433,6 +16183,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12,
+      "sha256": "85f71305c7f3863da9c2cf43ba01245d3e56b9ad0506e8164a7699ed521ef1da",
+      "truePeak": 0.8
     }
   },
   {
@@ -14486,6 +16241,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.3,
+      "sha256": "186bec774faccb23884098970b298c785959543009685a405455d7e35b1becd6",
+      "truePeak": -0.6
     }
   },
   {
@@ -14536,6 +16296,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10,
+      "sha256": "1199193816ce681317ca94bfc08cd4b99dfed62db8490243005bf324c4cdd23b",
+      "truePeak": 1.8
     }
   },
   {
@@ -14587,6 +16352,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -12.1,
+      "sha256": "cba49b87c9a721099bfb34fb3e5344ee275f4120db9ff4142cb0d1ed9e0eddae",
+      "truePeak": 0.4
     }
   },
   {
@@ -14637,6 +16407,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -8.4,
+      "sha256": "2b0390acc0cc481c227c8369f16fa91fa2abfe0e9052ef1db4a13947017b0f44",
+      "truePeak": 1.4
     }
   },
   {
@@ -14686,6 +16461,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.1,
+      "sha256": "e550a36bf645c2d15ee4f3c0f6ae7614fedada6a27b98203f6adbc33840bc024",
+      "truePeak": 1.4
     }
   },
   {
@@ -14735,6 +16515,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -8.8,
+      "sha256": "e5bc69bacff5f28e4803bb420ad93e1670fa7b694a8ad5628c632eab2aee9d36",
+      "truePeak": 1.7
     }
   },
   {
@@ -14785,6 +16570,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -8,
+      "sha256": "8ae318c509ad0a6a2035acb1d41836e96718b1c2e3226624fcf00aeaa17ae4d5",
+      "truePeak": 1.2
     }
   },
   {
@@ -14835,6 +16625,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -11.5,
+      "sha256": "25a9ffc8b554e434e1f5a913749a73f94a1c7b0122e9be9c6be203139029d484",
+      "truePeak": 0.6
     }
   },
   {
@@ -14885,6 +16680,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -7.2,
+      "sha256": "4f551eee7ad7ceeed7e1201604f569526fe6a57c2b64052966676e32af72c775",
+      "truePeak": 0.9
     }
   },
   {
@@ -14929,6 +16729,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.9,
+      "sha256": "be8d0760060d497f556f63a43e6a80f63fe42ee488e6bc046e6189abc72657a2",
+      "truePeak": 0.2
     }
   },
   {
@@ -14980,6 +16785,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.6,
+      "sha256": "99f3856aa8bd092335f9730b76ca14384a11383aa20e2256c8b5094dd1a86687",
+      "truePeak": 0.9
     }
   },
   {
@@ -15024,6 +16834,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.3,
+      "sha256": "f7e8440cfaa6f957f336a2e0b0cb0cdaab2a7b2d41f42f4efac8893ed44d7682",
+      "truePeak": 0.8
     }
   },
   {
@@ -15068,6 +16883,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.1,
+      "sha256": "b682fe86b183022f262889c77bb0d6508770d49d96e8123a81797eb6b01e0365",
+      "truePeak": 1.3
     }
   },
   {
@@ -15112,6 +16932,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10.5,
+      "sha256": "ffd619fac2edebae4d8f92a8371fe893c1c19a2a1117e1a1d0bd29ffb17c3e30",
+      "truePeak": 1
     }
   },
   {
@@ -15162,6 +16987,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.9,
+      "sha256": "560d3898b261aa84dd51ff99fabb277e943bc5adb841bb89dddd478480a90cec",
+      "truePeak": 1.2
     }
   },
   {
@@ -15206,6 +17036,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -11.2,
+      "sha256": "668ddf47419fba6e2be56660106bc013cc7d2cec3cd2a2a4335ab69d446be3b5",
+      "truePeak": 0.5
     }
   },
   {
@@ -15256,6 +17091,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -10.2,
+      "sha256": "d180e9ce8cad7dc46a0aaedb71826161cb7f4c767cfb838061535dbf77da3324",
+      "truePeak": 1.1
     }
   },
   {
@@ -15306,6 +17146,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.9,
+      "sha256": "eec7515dff03699173abc6f1b460ac79d51cb155c2364f880247770362746435",
+      "truePeak": -3.4
     }
   },
   {
@@ -15351,6 +17196,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -34.1,
+      "sha256": "82bb189e25ccd35353d7fe5f2eb61d55d7f7ce0b23b61d6143c37fcb9d4fc006",
+      "truePeak": -15.7
     }
   },
   {
@@ -15395,6 +17245,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -31.2,
+      "sha256": "7bba54494b6d12155573b7a8b9668f3e6e3da0d53513fc112d303935fc21fa57",
+      "truePeak": -13.8
     }
   },
   {
@@ -15445,6 +17300,11 @@
       "natureSounds": ["flowing water"],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -14.6,
+      "sha256": "c866886aa52b2060a517bc3aca36c9f74c119c601de22f916da6078f39499bd3",
+      "truePeak": -1
     }
   },
   {
@@ -15496,6 +17356,11 @@
       "natureSounds": ["wind"],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -14.4,
+      "sha256": "5daeffd392a5826299536523d3beb0777fe2b8456788411dc739f655e0b64ab6",
+      "truePeak": -1.1
     }
   },
   {
@@ -15541,6 +17406,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.3,
+      "sha256": "719d1a4ca539b14b0109bd9aad40f724734fe87ee5ec0b850970bc61b03657d3",
+      "truePeak": -2.2
     }
   },
   {
@@ -15590,6 +17460,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -11.8,
+      "sha256": "50fa1c308035e7a04e824b8dfb946eed637f6236d8288f07f1638424b6a6b846",
+      "truePeak": 0.8
     }
   },
   {
@@ -15634,6 +17509,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -11.9,
+      "sha256": "12ecddd10c92b6f508ecc5229237ac43c130c807f364002c728940cad3c906dd",
+      "truePeak": 0.8
     }
   },
   {
@@ -15685,6 +17565,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.2,
+      "sha256": "28ad49877d08afb0c357a514604526f4448860b5d414e69464bcef18d90eeda4",
+      "truePeak": 4.8
     }
   },
   {
@@ -15738,6 +17623,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -7.8,
+      "sha256": "9e10ce89be0679fb3f7bf13201dc9ba9ba3d0b4778b39f4402896a5996781f24",
+      "truePeak": 1.3
     }
   },
   {
@@ -15792,6 +17682,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -11.9,
+      "sha256": "37fca123f8a8fad085c83a3808d6a4b8a92328a21e5ba3eb31ff0a390cf82f11",
+      "truePeak": -0.8
     }
   },
   {
@@ -15841,6 +17736,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.5,
+      "sha256": "d564f1cf1e73e2a7a412cbc537c7c255b4eccd5732723f480590532ecbb17931",
+      "truePeak": -0.7
     }
   },
   {
@@ -15885,6 +17785,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.6,
+      "sha256": "efabdb9cee4fb44fc8d6b8fda04e12062efd0d4e1e5e69886b59b166cc777cdf",
+      "truePeak": 1.4
     }
   },
   {
@@ -15935,6 +17840,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -9.6,
+      "sha256": "aae3042cadc80a7d5741b099a89337d0f2d0d9b69365c21c2defaaabb79c0379",
+      "truePeak": -0.1
     }
   },
   {
@@ -15985,6 +17895,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -14.3,
+      "sha256": "6c83d0672a104ddfe98b96b03e097899d1e914bf0f38aa389125325678d4de6f",
+      "truePeak": -0.1
     }
   },
   {
@@ -16029,6 +17944,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.5,
+      "sha256": "118c34e735ddb9dc4a818eb355cfcee35bfcb449a51a81c00a7d0f22587a74ad",
+      "truePeak": -0.5
     }
   },
   {
@@ -16074,6 +17994,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17,
+      "sha256": "23a635e8196853302f2a3fa06c338e6dab424b496127f3e82f0a38df15745e62",
+      "truePeak": -1.4
     }
   },
   {
@@ -16123,6 +18048,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.1,
+      "sha256": "5d0929526c8ba2597c4e09456baa65e2dd49aaec42271e105280984a786293af",
+      "truePeak": -6.2
     }
   },
   {
@@ -16168,6 +18098,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16,
+      "sha256": "a405604c02044e46c1c15522a5a82b6d0e3f76bf04cd631daae2204d3c22b83c",
+      "truePeak": -0.1
     }
   },
   {
@@ -16217,6 +18152,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.2,
+      "sha256": "2069cb76fe88f37b8396590004ce4c218f85b9c3871e21e4188f5387adf9a5ea",
+      "truePeak": -1.1
     }
   },
   {
@@ -16261,6 +18201,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.6,
+      "sha256": "19083949a4c70ba13de58f47b983a296da4b18880032136041e5132cc2574b65",
+      "truePeak": -1.9
     }
   },
   {
@@ -16304,6 +18249,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.6,
+      "sha256": "9d4887e1ac1c163de73d587a97749ba24ab95524e92c050a82828ecf225c57d0",
+      "truePeak": -1
     }
   },
   {
@@ -16348,6 +18298,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13,
+      "sha256": "917329bbc3e626cebda9fd5184c89317edba7d700e5893b5a3c95af5aff707c6",
+      "truePeak": 0
     }
   },
   {
@@ -16398,6 +18353,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -17.8,
+      "sha256": "353633b1dc98c0333e739b0cdfbfbcfaaa4525925713224be3032cd46482b731",
+      "truePeak": 0.1
     }
   },
   {
@@ -16449,6 +18409,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.8,
+      "sha256": "ae97d2da7cecff43c84d79d2876f16b5e5292594d095c48468f1621eaaab8c64",
+      "truePeak": -0.7
     }
   },
   {
@@ -16499,6 +18464,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15,
+      "sha256": "184f390216296b652d7201dd202bb9125c2db4824eac055746e13fb5bc9173ef",
+      "truePeak": -1.9
     }
   },
   {
@@ -16542,6 +18512,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -16.6,
+      "sha256": "aa1465030494373cd41347dfea8b626d6812713004227d49fe60c9c2cce9397d",
+      "truePeak": -3.3
     }
   },
   {
@@ -16586,6 +18561,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -7,
+      "sha256": "bc6ace0bda960b30d9fc696e7753b3092c33b21882841250ef2c2ad0c200c29a",
+      "truePeak": 0
     }
   },
   {
@@ -16629,6 +18609,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -15.8,
+      "sha256": "1ab7878e0524079877852bd10f9633863faaac4bdd22ebce2e4822efeee75b3f",
+      "truePeak": 0
     }
   },
   {
@@ -16683,6 +18668,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -9.5,
+      "sha256": "57c0d731e135b0e85e51f2be5a6f0bd1c315e12222d6be0f0a9489280fc6df40",
+      "truePeak": 0.1
     }
   },
   {
@@ -16727,6 +18717,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.5,
+      "sha256": "bef26af34faf3cf7a778a170fe9b4414fa961af168a85c2d449c75257670ff99",
+      "truePeak": -0.4
     }
   },
   {
@@ -16778,6 +18773,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.6,
+      "sha256": "bdbb906e7c381f35e84ab87fb606c1ae7057d44ff2c41696a2040d0609cdd640",
+      "truePeak": -0.1
     }
   },
   {
@@ -16821,6 +18821,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.4,
+      "sha256": "efda6aacb09f2641d30950f808174c53da2eb4fe09f9c48c8085e11f9c6b60ef",
+      "truePeak": -0.2
     }
   },
   {
@@ -16865,6 +18870,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -11.3,
+      "sha256": "8029e4b2b0cdf72a10760a84a66d1ccc29c50d169d271e7dc8d182086c532811",
+      "truePeak": -0.1
     }
   },
   {
@@ -16916,6 +18926,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.1,
+      "sha256": "e9cef8b727ed29578d57b8f455f0bc58ee96a200760b14fbd1218f4d85642821",
+      "truePeak": 0
     }
   },
   {
@@ -16960,6 +18975,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.9,
+      "sha256": "fea014dcb513bf8f39c78774b4012db0d669d5a352b01f48257d18d253ae3891",
+      "truePeak": -0.2
     }
   },
   {
@@ -17004,6 +19024,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -10.6,
+      "sha256": "c627b4eb88a84788ce943761d4a0d44ce9274ca346e16f9031f7ff38df72e0f0",
+      "truePeak": -0.1
     }
   },
   {
@@ -17048,6 +19073,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.7,
+      "sha256": "4219afd3747a8949946ba7df4a53e297073f134b1a404c9d59faa94b3d7837ef",
+      "truePeak": 0
     }
   },
   {
@@ -17091,6 +19121,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.5,
+      "sha256": "44dd8c1afc2c3d5cf4164721ba90df544b6cebcc86c8fcb90c370253aaf14b8d",
+      "truePeak": -0.1
     }
   },
   {
@@ -17134,6 +19169,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.3,
+      "sha256": "a0f4272e22eb595935db4be305f7cc6c9e6f330fac47a573ca53aa83c62f689d",
+      "truePeak": -1.4
     }
   },
   {
@@ -17177,6 +19217,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -18.7,
+      "sha256": "44cd9d485b1453c0f2498f64f51efbb00ab177c63031a40d428c7a59faf0276a",
+      "truePeak": -6.2
     }
   },
   {
@@ -17226,6 +19271,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.5,
+      "sha256": "6c907cb0276e75d9aa70942685224894666b1365c58a018f6b53237c2c54c927",
+      "truePeak": -6
     }
   },
   {
@@ -17270,6 +19320,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -18,
+      "sha256": "22dee1e8ddbc2be25e0895a53343ee362e7e4e7488149149564ce93b2eacbab5",
+      "truePeak": -1.8
     }
   },
   {
@@ -17314,6 +19369,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -15.4,
+      "sha256": "0311084316b7d3f587de3daa14dc09197e89bc5e3ff8ef8f7a0a90fe64f99df4",
+      "truePeak": -1.7
     }
   },
   {
@@ -17358,6 +19418,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -18.6,
+      "sha256": "f7f0461d55ab2aa21b48f9a4b341dcf886f4826de776b0607223f2b94e2f0101",
+      "truePeak": -3.7
     }
   },
   {
@@ -17402,6 +19467,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.7,
+      "sha256": "79816d7c007dd32f2da0d850b7c15d0fc2e63c20e7f939186c2dde2d5c147e46",
+      "truePeak": -2
     }
   },
   {
@@ -17445,6 +19515,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.3,
+      "sha256": "9f5fed5ca3be89c59a99d1cbeafbac30a140bba3ee4e46979b6caf25cb0027a3",
+      "truePeak": 0
     }
   },
   {
@@ -17488,6 +19563,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -17.5,
+      "sha256": "f0f823337996dae3a9bafb6787de176598d7ff262cab339ab0afbc61066db05f",
+      "truePeak": -0.7
     }
   },
   {
@@ -17526,6 +19606,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -18.7,
+      "sha256": "e5124b0cc7a32d4bc0a9d7d152634787de4425655324b788c3fad76e175b4d34",
+      "truePeak": -1.7
     }
   },
   {
@@ -17570,6 +19655,11 @@
       "natureSounds": [],
       "valence": 1,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.8,
+      "sha256": "9e3c57a50cca32fd7a5f0d247f4123fc3ed2f4f98aeea59f4aa5755ae868a66c",
+      "truePeak": 0
     }
   },
   {
@@ -17613,6 +19703,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -13.4,
+      "sha256": "118e7d402810b6844a467b4fc61436bd40dc5688dfbd994fce836470a1410989",
+      "truePeak": 0
     }
   },
   {
@@ -17656,6 +19751,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.9,
+      "sha256": "fd4bb29bdff4ccdf2fe1bf03a89f5035197f20381fd2e5ca70a8d176dfc39a38",
+      "truePeak": 0
     }
   },
   {
@@ -17699,6 +19799,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14.2,
+      "sha256": "88900d24818c72924cf769a62398daa49995f70b9d3b1e533b7db765647fb02b",
+      "truePeak": 0
     }
   },
   {
@@ -17750,6 +19855,11 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.1,
+      "sha256": "f8e11d58d7e62755421b9c8744fca39f43f4aa66eaf65acbdaab6145cb05d127",
+      "truePeak": -0.2
     }
   },
   {
@@ -17796,6 +19906,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -12.1,
+      "sha256": "4174d80f4596ba81f136be9bc867c42eb95e3186fdf03796323cffb6ece58c26",
+      "truePeak": 0.1
     }
   },
   {
@@ -17840,6 +19955,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -14,
+      "sha256": "08f5d5087c4de9a1bf4c6602d1c9db2d651e6d4229e37999739d0eb470672812",
+      "truePeak": -0.5
     }
   },
   {
@@ -17890,6 +20010,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -9.9,
+      "sha256": "60e3dc83ab6e29a96267eba1f3b033b9c43b9f11107a45234af84fd14034cf75",
+      "truePeak": 0.6
     }
   },
   {
@@ -17933,6 +20058,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -8.3,
+      "sha256": "14f448c2a583de77ba596ee8ea94dacfb3fe5e4d2c341e9ee55a5881499ee4b2",
+      "truePeak": 1.7
     }
   },
   {
@@ -17983,6 +20113,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -9.7,
+      "sha256": "4b59074e2702b4cecd046f9b9605fb2d16b05ef4d154ec81102bf78a750422f9",
+      "truePeak": 0.2
     }
   },
   {
@@ -18033,6 +20168,11 @@
       "natureSounds": ["rain"],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -12.5,
+      "sha256": "517f560ae2a860c8942d08990adc13e4989c2641cae02d23633f3cfc72f99e00",
+      "truePeak": 0.5
     }
   },
   {
@@ -18082,6 +20222,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -8.9,
+      "sha256": "7f4cfb3ebcb6a8252e3a87962135d4ebdc31b2bc25cf700ff839336ba5584aca",
+      "truePeak": 1.8
     }
   },
   {
@@ -18130,6 +20275,11 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
+    },
+    "loudness": {
+      "lufs": -12.8,
+      "sha256": "9f3b49b28555fecf172102c42368f8906879e682de9817ddd1a2356a01713d1b",
+      "truePeak": -0.2
     }
   },
   {
@@ -18175,6 +20325,11 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "wordless"
+    },
+    "loudness": {
+      "lufs": -13.9,
+      "sha256": "eb5574d36dbd4f7bf459303847f5697a93d8e965db73e83db895959e078a5439",
+      "truePeak": -0.7
     }
   },
   {
@@ -18225,6 +20380,11 @@
       "natureSounds": [],
       "valence": 5,
       "vocals": "lyrics"
+    },
+    "loudness": {
+      "lufs": -11.6,
+      "sha256": "6ca7133603eb804c2ea2d06e03b087d023785b2f58fdf49d8c680b26353ec670",
+      "truePeak": -0.7
     }
   },
   {
@@ -18245,7 +20405,12 @@
     "durationSec": 114,
     "sha256": "027c7a3408da0e841170ebc339e1ae3b056413e4d7d7f9d06e10ea0dd1d10540",
     "thumbSha256": "5028ee904ff938e05750ab4bbf55880a93607a5f2426754501a47c45d799c65c",
-    "transcript": "You know there's nothing wrong. Not really. And your chest is tight anyway. Your mind's already three steps ahead, rehearsing conversations that haven't happened, building arguments for problems that don't exist yet. That's anxiety. Not the \"I'm a little nervous\" kind everyone experiences sometimes. The kind that doesn't need a reason to show up. It just arrives. And once it does, it doesn't seem to care that you know logically that you're safe. Your nervous system is running a threat detection system that's a little too generous with what counts as a threat. An email, a silence in a conversation, a thought that crossed your mind at 2:00 AM. None of it is dangerous, but your body doesn't always get that memo in time. And if you've been carrying this a while, you've probably learned to hide it well, function through it, smile through it. That takes something out of you that most people never see. So what actually helps? Not \"Just calm down.\" If that worked, you'd have done it already. It's learning to notice the spiral starting before it takes you all the way up. A tight chest, racing thoughts. That's the early signal, not the emergency itself. Small things. One slow breath. Naming what you're feeling out loud. Putting your feet flat on the ground. They don't fix anxiety, but they interrupt it. Sometimes that's enough for a moment. And if this is more than a passing wave for you, if it's most days, most hours, that's worth saying out loud to someone. A therapist, a doctor, someone who can actually help carry it. You're not broken for feeling this. You're just tired of carrying something loud alone."
+    "transcript": "You know there's nothing wrong. Not really. And your chest is tight anyway. Your mind's already three steps ahead, rehearsing conversations that haven't happened, building arguments for problems that don't exist yet. That's anxiety. Not the \"I'm a little nervous\" kind everyone experiences sometimes. The kind that doesn't need a reason to show up. It just arrives. And once it does, it doesn't seem to care that you know logically that you're safe. Your nervous system is running a threat detection system that's a little too generous with what counts as a threat. An email, a silence in a conversation, a thought that crossed your mind at 2:00 AM. None of it is dangerous, but your body doesn't always get that memo in time. And if you've been carrying this a while, you've probably learned to hide it well, function through it, smile through it. That takes something out of you that most people never see. So what actually helps? Not \"Just calm down.\" If that worked, you'd have done it already. It's learning to notice the spiral starting before it takes you all the way up. A tight chest, racing thoughts. That's the early signal, not the emergency itself. Small things. One slow breath. Naming what you're feeling out loud. Putting your feet flat on the ground. They don't fix anxiety, but they interrupt it. Sometimes that's enough for a moment. And if this is more than a passing wave for you, if it's most days, most hours, that's worth saying out loud to someone. A therapist, a doctor, someone who can actually help carry it. You're not broken for feeling this. You're just tired of carrying something loud alone.",
+    "loudness": {
+      "lufs": -18.8,
+      "sha256": "027c7a3408da0e841170ebc339e1ae3b056413e4d7d7f9d06e10ea0dd1d10540",
+      "truePeak": -1
+    }
   },
   {
     "slug": "support-decision-fatigue-01",
@@ -18259,7 +20424,12 @@
     "durationSec": 89,
     "sha256": "81e1199885f5827aaf844608ef8d858eba159b3cfd5caff70c3aa73838c21953",
     "thumbSha256": "4c7b014c9442637cf9d2b6d393cb724df8dba0c30d93bdc227c9296b9300bad8",
-    "transcript": "What to wear, what to eat, which email to answer first. By two PM, you can't even decide what you want for lunch, and it's not because the decision is hard. It's a sandwich. It shouldn't take this much out of you, but it does. That's decision fatigue. And here's the part that surprises people. It has nothing to do with how smart you are or how capable. It's about volume. Your brain treats every choice, big or small, as a trainee withdrawal from the same account. What to wear, what to say back, which task to start first. None of them cost much on their own, but by the end of the day, that account is running on empty. And the last decisions you make are always the worst ones, which is why you end up eating the same thing you always eat, or snapping at someone over something small, or just standing in front of the fridge, unable to choose anything at all. That's not a character flaw. That's just what a depleted brain does. So what actually helps? Not more discipline. You don't need to want to decide better. It's removing decisions you don't need to be making in the first place. The same breakfast most days, clothes picked the night before. One less thing to negotiate with yourself about. Save your real decisions for when you actually have something left to decide with. You're not indecisive. You're just out of decisions for today, and that's allowed."
+    "transcript": "What to wear, what to eat, which email to answer first. By two PM, you can't even decide what you want for lunch, and it's not because the decision is hard. It's a sandwich. It shouldn't take this much out of you, but it does. That's decision fatigue. And here's the part that surprises people. It has nothing to do with how smart you are or how capable. It's about volume. Your brain treats every choice, big or small, as a trainee withdrawal from the same account. What to wear, what to say back, which task to start first. None of them cost much on their own, but by the end of the day, that account is running on empty. And the last decisions you make are always the worst ones, which is why you end up eating the same thing you always eat, or snapping at someone over something small, or just standing in front of the fridge, unable to choose anything at all. That's not a character flaw. That's just what a depleted brain does. So what actually helps? Not more discipline. You don't need to want to decide better. It's removing decisions you don't need to be making in the first place. The same breakfast most days, clothes picked the night before. One less thing to negotiate with yourself about. Save your real decisions for when you actually have something left to decide with. You're not indecisive. You're just out of decisions for today, and that's allowed.",
+    "loudness": {
+      "lufs": -17.7,
+      "sha256": "81e1199885f5827aaf844608ef8d858eba159b3cfd5caff70c3aa73838c21953",
+      "truePeak": -1.1
+    }
   },
   {
     "slug": "support-depression-non-crisis-01",
@@ -18273,7 +20443,12 @@
     "durationSec": 118,
     "sha256": "4320a2e3281ae8c432beb7fc54c3276028c1003298a2117ada0c561ffdbec7d5",
     "thumbSha256": "a644c2cffca56a03047a6cba44c04f944e2cc4edd0d2e7c311cbb68509bcc536",
-    "transcript": "Nothing's technically wrong. You're not crying. You're not falling apart. You're just gray, like someone turned the color down on everything. Food doesn't taste like much. Things you used to enjoy just feel like effort now. Not sad exactly, just flat. That's depression too. Even without the version everyone pictures, the dramatic collapse, the visible tears. This kind is quieter, harder to name, easier to miss. It's not really about sadness. It's about a kind of numbness, a loss of interest in things that used to pull you in. Low energy that sleep doesn't fix. A sense that you're just going through the motions of your own life. And because it doesn't look like a crisis, people, including you, often just call it being tired, being busy, needing a break. Sometimes it's none of those things. Sometimes it's this. If this sounds familiar, I want to say something plainly. You don't need to be in crisis for this to be worth taking seriously. You don't have to wait until it gets unbearable before it counts. So what actually helps? Not forcing yourself to feel grateful. Not just get outside more. Though movement can help, it isn't a fix on its own. It's naming it first. Saying, even just to yourself, \"I think this is more than tired.\" And letting that be enough reason to talk to someone. A doctor, a therapist, someone trained to help carry this kind of weight, not just witness it. You don't have to earn the right to ask for help. Flat isn't fine. It's just quiet. And quiet still deserves attention."
+    "transcript": "Nothing's technically wrong. You're not crying. You're not falling apart. You're just gray, like someone turned the color down on everything. Food doesn't taste like much. Things you used to enjoy just feel like effort now. Not sad exactly, just flat. That's depression too. Even without the version everyone pictures, the dramatic collapse, the visible tears. This kind is quieter, harder to name, easier to miss. It's not really about sadness. It's about a kind of numbness, a loss of interest in things that used to pull you in. Low energy that sleep doesn't fix. A sense that you're just going through the motions of your own life. And because it doesn't look like a crisis, people, including you, often just call it being tired, being busy, needing a break. Sometimes it's none of those things. Sometimes it's this. If this sounds familiar, I want to say something plainly. You don't need to be in crisis for this to be worth taking seriously. You don't have to wait until it gets unbearable before it counts. So what actually helps? Not forcing yourself to feel grateful. Not just get outside more. Though movement can help, it isn't a fix on its own. It's naming it first. Saying, even just to yourself, \"I think this is more than tired.\" And letting that be enough reason to talk to someone. A doctor, a therapist, someone trained to help carry this kind of weight, not just witness it. You don't have to earn the right to ask for help. Flat isn't fine. It's just quiet. And quiet still deserves attention.",
+    "loudness": {
+      "lufs": -24.7,
+      "sha256": "4320a2e3281ae8c432beb7fc54c3276028c1003298a2117ada0c561ffdbec7d5",
+      "truePeak": -4.1
+    }
   },
   {
     "slug": "support-grief-01",
@@ -18287,7 +20462,12 @@
     "durationSec": 118,
     "sha256": "36bea7e747f8c9e948cbb200c27b417cfaf13d1773c20db0da121b9c876bf52f",
     "thumbSha256": "2750bd5900121346a358fffdd86e45d82efc11e21a6c145acd9e8d5d3e2bbacd",
-    "transcript": "Nobody sent flowers. Nobody asked how you're doing. Because on paper, nothing died. But something ended. A friendship that just stopped without an explanation. A version of your life you thought you'd have. A relationship that's technically still there but isn't what it was anymore. That's grief too. Even without a funeral, even without a name people recognize. Grief isn't really about death, not at its core. It's about loss, the end of something you were attached to, whether the world agrees it was significant or not. And when there's no ceremony for it, no one bringing food, no one saying, \"I'm sorry for your loss,\" it can feel like you're not even allowed to grieve it. Like you have to just get over something nobody agreed was worth grieving in the first place. You are allowed. This counts. The friendship that faded, the dream that quietly closed, the parent who's still alive but isn't who they were, the body that used to work differently. All of it is loss. All of it deserves space. So what actually helps? Not rushing to feel better, not comparing your loss to someone else's, deciding yours doesn't measure up. It's letting yourself name it as grief out loud, even if no one else calls it that. Grief without a ritual still needs somewhere to go. Write it down. Say it to one person who won't minimize it. Light a candle for something that has no headstone. You don't need permission to mourn something real. Not everything that ends gets a funeral, but everything that mattered deserves to be grieved."
+    "transcript": "Nobody sent flowers. Nobody asked how you're doing. Because on paper, nothing died. But something ended. A friendship that just stopped without an explanation. A version of your life you thought you'd have. A relationship that's technically still there but isn't what it was anymore. That's grief too. Even without a funeral, even without a name people recognize. Grief isn't really about death, not at its core. It's about loss, the end of something you were attached to, whether the world agrees it was significant or not. And when there's no ceremony for it, no one bringing food, no one saying, \"I'm sorry for your loss,\" it can feel like you're not even allowed to grieve it. Like you have to just get over something nobody agreed was worth grieving in the first place. You are allowed. This counts. The friendship that faded, the dream that quietly closed, the parent who's still alive but isn't who they were, the body that used to work differently. All of it is loss. All of it deserves space. So what actually helps? Not rushing to feel better, not comparing your loss to someone else's, deciding yours doesn't measure up. It's letting yourself name it as grief out loud, even if no one else calls it that. Grief without a ritual still needs somewhere to go. Write it down. Say it to one person who won't minimize it. Light a candle for something that has no headstone. You don't need permission to mourn something real. Not everything that ends gets a funeral, but everything that mattered deserves to be grieved.",
+    "loudness": {
+      "lufs": -18.7,
+      "sha256": "36bea7e747f8c9e948cbb200c27b417cfaf13d1773c20db0da121b9c876bf52f",
+      "truePeak": -1.7
+    }
   },
   {
     "slug": "support-mild-burnout-01",
@@ -18301,7 +20481,12 @@
     "durationSec": 84,
     "sha256": "b0b8cb0bc72d8f1503eb2eef18a2164c944b1b402153d8a15d5d4115ce8d26f8",
     "thumbSha256": "56b7c005c435996ea2c0d2fecb9a0c9ddfbc2132d7db961fa713e131633247ad",
-    "transcript": "You're not sick. You're not sad exactly. You're just done, and you can't remember the last day you didn't feel that way. That flatness has a name, even if it doesn't always get taken seriously. Burnout. Not the dramatic quit your job kind people picture. The quieter kind. The kind that creeps in slowly enough that you almost don't notice it arriving. Burnout researchers describe it as a mix of three things. Exhaustion that rest doesn't fix, a growing distance from things you used to care about, and a nagging sense that nothing you do really matters anyway. It's not the same as being tired. Tired goes away with sleep. This doesn't. And because it builds so slowly, most people don't catch it until they're already deep in it. So what actually helps? Not a vacation. Vacations end. This doesn't. The first step isn't fixing it. It's just recognizing it. Honestly, no performance. Ask yourself, when did you last feel like yourself doing something you actually used to enjoy? If the answer is 'I can't remember,' that's information, not failure. Naming it isn't giving up. It's the first honest thing you've done about it in a while."
+    "transcript": "You're not sick. You're not sad exactly. You're just done, and you can't remember the last day you didn't feel that way. That flatness has a name, even if it doesn't always get taken seriously. Burnout. Not the dramatic quit your job kind people picture. The quieter kind. The kind that creeps in slowly enough that you almost don't notice it arriving. Burnout researchers describe it as a mix of three things. Exhaustion that rest doesn't fix, a growing distance from things you used to care about, and a nagging sense that nothing you do really matters anyway. It's not the same as being tired. Tired goes away with sleep. This doesn't. And because it builds so slowly, most people don't catch it until they're already deep in it. So what actually helps? Not a vacation. Vacations end. This doesn't. The first step isn't fixing it. It's just recognizing it. Honestly, no performance. Ask yourself, when did you last feel like yourself doing something you actually used to enjoy? If the answer is 'I can't remember,' that's information, not failure. Naming it isn't giving up. It's the first honest thing you've done about it in a while.",
+    "loudness": {
+      "lufs": -17.8,
+      "sha256": "b0b8cb0bc72d8f1503eb2eef18a2164c944b1b402153d8a15d5d4115ce8d26f8",
+      "truePeak": -0.8
+    }
   },
   {
     "slug": "support-mild-stress-01",
@@ -18321,7 +20506,12 @@
     "durationSec": 91,
     "sha256": "f15539982ab0f7819c344f7fae32c1b68c5336cb53f39be635c929b466226460",
     "thumbSha256": "d37abc04338ae0ffcdd94813d8509c086f6fcf2b5adf3999be6b9600822bde99",
-    "transcript": "Your jaw's tight, your shoulders are up by your ears, and you didn't even notice until just now. That's mild stress, the kind that doesn't announce itself. No crisis, no big moment, just tension quietly building in the background of an ordinary day. Here's the thing about mild stress: it's not the enemy. A little bit of it is just your body responding to normal demands. A deadline, a full inbox, too many small decisions before noon. The problem isn't that it shows up. The problem is when it never fully leaves. Because stress that doesn't get released just stacks. One tight shoulders day becomes a tight shoulders week. And most people don't notice the buildup. They just start calling it normal. So what actually helps? Not a vacation, not just relax. It's noticing the signal early. The jaw, the shoulders, the shallow breathing, and doing something small about it right then, not later, not after the to-do list is done. Try this. Right now, drop your shoulders. Unclench your jaw. Take one slow breath all the way down. That's it. That's the whole intervention sometimes. Small, repeated, on time. Not one big reset at the end of the week. Your body's been holding on to something. You're allowed to put it down, even for a few seconds."
+    "transcript": "Your jaw's tight, your shoulders are up by your ears, and you didn't even notice until just now. That's mild stress, the kind that doesn't announce itself. No crisis, no big moment, just tension quietly building in the background of an ordinary day. Here's the thing about mild stress: it's not the enemy. A little bit of it is just your body responding to normal demands. A deadline, a full inbox, too many small decisions before noon. The problem isn't that it shows up. The problem is when it never fully leaves. Because stress that doesn't get released just stacks. One tight shoulders day becomes a tight shoulders week. And most people don't notice the buildup. They just start calling it normal. So what actually helps? Not a vacation, not just relax. It's noticing the signal early. The jaw, the shoulders, the shallow breathing, and doing something small about it right then, not later, not after the to-do list is done. Try this. Right now, drop your shoulders. Unclench your jaw. Take one slow breath all the way down. That's it. That's the whole intervention sometimes. Small, repeated, on time. Not one big reset at the end of the week. Your body's been holding on to something. You're allowed to put it down, even for a few seconds.",
+    "loudness": {
+      "lufs": -18,
+      "sha256": "f15539982ab0f7819c344f7fae32c1b68c5336cb53f39be635c929b466226460",
+      "truePeak": -1.1
+    }
   },
   {
     "slug": "support-procrastination-01",
@@ -18335,7 +20525,12 @@
     "durationSec": 97,
     "sha256": "b86a413779c66cad3c34c21fac82b834ff480734730957e6a118bb724a48c22f",
     "thumbSha256": "8b6846bef5f5ada835d73525440c60d4c453e7d85d8f9db6921a7361360d494f",
-    "transcript": "You know the assignment's due tomorrow. You know exactly what to do, and somehow you're bed rotting instead. That's procrastination, and if you've spent your life calling it laziness, here's some good news. It's probably not. Procrastination isn't usually about the task itself. It's about the feeling the task brings up. Researchers who study procrastination describe it less as a time management problem and more as an emotion management problem. When a task feels boring, overwhelming, or tied to fear of failing, your brain looks for relief, and relief is one click away. Bed rotting isn't the point. It's just easier than the discomfort. And here's the trap. The relief is real, but it's short. The task is still there. Now it's closer, and so is the deadline. That's why procrastination so often ends in a late night, fueled by panic instead of choice. So what actually helps? It's not more willpower. It's making the task feel less threatening. Try shrinking it. Not write the report. Open the document and write one sentence. Momentum tends to follow action, not the other way around. And if the avoidance is about fear, fear of doing it badly, it helps to say that part out loud, even just to yourself. \"I'm avoiding this because I'm scared it won't be good enough.\" Naming the real reason often loosens its grip. You don't have to feel ready to start. You just have to start, smaller than you think you need to."
+    "transcript": "You know the assignment's due tomorrow. You know exactly what to do, and somehow you're bed rotting instead. That's procrastination, and if you've spent your life calling it laziness, here's some good news. It's probably not. Procrastination isn't usually about the task itself. It's about the feeling the task brings up. Researchers who study procrastination describe it less as a time management problem and more as an emotion management problem. When a task feels boring, overwhelming, or tied to fear of failing, your brain looks for relief, and relief is one click away. Bed rotting isn't the point. It's just easier than the discomfort. And here's the trap. The relief is real, but it's short. The task is still there. Now it's closer, and so is the deadline. That's why procrastination so often ends in a late night, fueled by panic instead of choice. So what actually helps? It's not more willpower. It's making the task feel less threatening. Try shrinking it. Not write the report. Open the document and write one sentence. Momentum tends to follow action, not the other way around. And if the avoidance is about fear, fear of doing it badly, it helps to say that part out loud, even just to yourself. \"I'm avoiding this because I'm scared it won't be good enough.\" Naming the real reason often loosens its grip. You don't have to feel ready to start. You just have to start, smaller than you think you need to.",
+    "loudness": {
+      "lufs": -17.6,
+      "sha256": "b86a413779c66cad3c34c21fac82b834ff480734730957e6a118bb724a48c22f",
+      "truePeak": -0.7
+    }
   },
   {
     "slug": "support-relationship-strain-01",
@@ -18349,7 +20544,12 @@
     "durationSec": 106,
     "sha256": "9a9fe520b4bfcb51ec25b4788a866fa33a826da9d529330740ab0ad3e14872e3",
     "thumbSha256": "0c9a8366fbc417dd19a4c05c49dd36751a8e778ff40ae3a73a4219b18decef7c",
-    "transcript": "Nobody yelled. Nobody left. But something's different, and you can't quite point to when it started. You still talk, you still share a life, but it feels more like coexisting than actually being together. That's relationship strain, and it rarely arrives as one big rupture. It's slower than that, quieter. It's the conversations that used to run long now running short, the inside jokes that don't come up as often, the small check-ins that used to happen without thinking now requiring effort. None of it looks like a crisis from the outside, which is exactly why it's so easy to ignore. Until one day you look up and realize you've been living next to each other more than with each other. And here's the part people don't wanna hear: strain doesn't always mean something's broken beyond repair. Sometimes it just means something's been running on autopilot for too long. So what actually helps? Not a big dramatic conversation you've been avoiding for months thrown at someone with no warning. It's naming the distance plainly without blame. \"I've missed us lately\" lands very differently than, \"You never make time for me.\" Repair usually starts small. One real conversation, one evening without the phones, one honest, \"I noticed we've drifted,\" said gently, not as an accusation. It won't undo months of distance in one sitting, but it can be the first thread pulling you back toward each other. Strain isn't proof it's over. Sometimes it's just proof something needs tending to before it's forgotten how."
+    "transcript": "Nobody yelled. Nobody left. But something's different, and you can't quite point to when it started. You still talk, you still share a life, but it feels more like coexisting than actually being together. That's relationship strain, and it rarely arrives as one big rupture. It's slower than that, quieter. It's the conversations that used to run long now running short, the inside jokes that don't come up as often, the small check-ins that used to happen without thinking now requiring effort. None of it looks like a crisis from the outside, which is exactly why it's so easy to ignore. Until one day you look up and realize you've been living next to each other more than with each other. And here's the part people don't wanna hear: strain doesn't always mean something's broken beyond repair. Sometimes it just means something's been running on autopilot for too long. So what actually helps? Not a big dramatic conversation you've been avoiding for months thrown at someone with no warning. It's naming the distance plainly without blame. \"I've missed us lately\" lands very differently than, \"You never make time for me.\" Repair usually starts small. One real conversation, one evening without the phones, one honest, \"I noticed we've drifted,\" said gently, not as an accusation. It won't undo months of distance in one sitting, but it can be the first thread pulling you back toward each other. Strain isn't proof it's over. Sometimes it's just proof something needs tending to before it's forgotten how.",
+    "loudness": {
+      "lufs": -18.7,
+      "sha256": "9a9fe520b4bfcb51ec25b4788a866fa33a826da9d529330740ab0ad3e14872e3",
+      "truePeak": -1.8
+    }
   },
   {
     "slug": "support-sleep-hygiene-01",
@@ -18363,7 +20563,12 @@
     "durationSec": 108,
     "sha256": "57e201f175c5ffa99513ce86d9fcf07a7c25c62a281f751ca21cfba95714deab",
     "thumbSha256": "a2d2a8f9ec94f4684ea819e6130bcb1ed95137319b16689c13d63c883fd15fb7",
-    "transcript": "It's one AM. You're tired. You're also somehow still scrolling. Sound familiar? That gap between being tired and actually going to sleep has a name most people never hear outside of a doctor's office, sleep hygiene. Not how clean your sheets are. It's the habits around sleep that either help your body wind down or quietly work against it. Here's what's actually happening. Your brain doesn't have an off switch. It has a dimmer. Bright screens, late caffeine, and inconsistent bedtime, they all keep that dimmer turned up even when you feel exhausted. So you end up wired and tired at the same time, which is its own special kind of miserable. And the irony is, most people try to fix bad sleep by controlling the one thing they can't control directly, falling asleep itself, instead of the habits leading up to it. So what actually helps? Not a perfect routine, just a few honest adjustments. Dim the lights an hour before bed if you can. Put the phone somewhere that isn't arm's reach. And try to wake up at roughly the same time daily. That one habit alone does more for your sleep than almost anything else. You don't have to overhaul your whole night. Just interrupt the pattern in one place. Pick one thing. Do it tonight. Rest isn't a reward you earn. It's just something your body needs every day, no exceptions."
+    "transcript": "It's one AM. You're tired. You're also somehow still scrolling. Sound familiar? That gap between being tired and actually going to sleep has a name most people never hear outside of a doctor's office, sleep hygiene. Not how clean your sheets are. It's the habits around sleep that either help your body wind down or quietly work against it. Here's what's actually happening. Your brain doesn't have an off switch. It has a dimmer. Bright screens, late caffeine, and inconsistent bedtime, they all keep that dimmer turned up even when you feel exhausted. So you end up wired and tired at the same time, which is its own special kind of miserable. And the irony is, most people try to fix bad sleep by controlling the one thing they can't control directly, falling asleep itself, instead of the habits leading up to it. So what actually helps? Not a perfect routine, just a few honest adjustments. Dim the lights an hour before bed if you can. Put the phone somewhere that isn't arm's reach. And try to wake up at roughly the same time daily. That one habit alone does more for your sleep than almost anything else. You don't have to overhaul your whole night. Just interrupt the pattern in one place. Pick one thing. Do it tonight. Rest isn't a reward you earn. It's just something your body needs every day, no exceptions.",
+    "loudness": {
+      "lufs": -17.3,
+      "sha256": "57e201f175c5ffa99513ce86d9fcf07a7c25c62a281f751ca21cfba95714deab",
+      "truePeak": -1.1
+    }
   },
   {
     "slug": "support-social-awkwardness-01",
@@ -18377,6 +20582,11 @@
     "durationSec": 106,
     "sha256": "09fe9facaf609c7195078326150fd74d323a2d5e30e65b25711a9c03bf112bbd",
     "thumbSha256": "8c3d4ba31509243eaee535c6df6a96eaec1cc27daa656cf354fa64bcf08ccf1f",
-    "transcript": "You open the app for thirty seconds. You put it down forty-five minutes later, feeling worse than when you picked it up. Nothing bad happened. No one said anything unkind. You just scrolled, and somehow that was enough. That's comparison fatigue, and it's sneaky because it doesn't feel like comparing. It feels like just looking, just checking in, just seeing what people are up to. But here's what's actually happening. You're watching everyone else's highlight reel. The vacation, the promotion, the relationship that looks effortless from the outside, and you're comparing that highlight reel to your own behind-the-scenes footage. That's not a fair fight. It was never going to be. Nobody posts the argument they had that morning or the bills they're stressed about or the three hours they spent doubting themselves before they took that one good photo. You're not behind. You're just seeing a fraction, edited, chosen on purpose. So what actually helps? It's not deleting the apps forever. For most people, that's not realistic, and it doesn't have to be the answer. It's noticing the feeling, not just the content. If you close the app and feel smaller than you did before, that's information. That's worth paying attention to. You can mute an account without owing anyone an explanation. You can put the phone down mid-scroll. No ceremony required. Your life was never supposed to be measured against someone else's highlight reel. It was only ever supposed to be lived as your own"
+    "transcript": "You open the app for thirty seconds. You put it down forty-five minutes later, feeling worse than when you picked it up. Nothing bad happened. No one said anything unkind. You just scrolled, and somehow that was enough. That's comparison fatigue, and it's sneaky because it doesn't feel like comparing. It feels like just looking, just checking in, just seeing what people are up to. But here's what's actually happening. You're watching everyone else's highlight reel. The vacation, the promotion, the relationship that looks effortless from the outside, and you're comparing that highlight reel to your own behind-the-scenes footage. That's not a fair fight. It was never going to be. Nobody posts the argument they had that morning or the bills they're stressed about or the three hours they spent doubting themselves before they took that one good photo. You're not behind. You're just seeing a fraction, edited, chosen on purpose. So what actually helps? It's not deleting the apps forever. For most people, that's not realistic, and it doesn't have to be the answer. It's noticing the feeling, not just the content. If you close the app and feel smaller than you did before, that's information. That's worth paying attention to. You can mute an account without owing anyone an explanation. You can put the phone down mid-scroll. No ceremony required. Your life was never supposed to be measured against someone else's highlight reel. It was only ever supposed to be lived as your own",
+    "loudness": {
+      "lufs": -17.8,
+      "sha256": "09fe9facaf609c7195078326150fd74d323a2d5e30e65b25711a9c03bf112bbd",
+      "truePeak": -1.2
+    }
   }
 ]

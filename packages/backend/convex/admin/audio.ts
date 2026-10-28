@@ -503,6 +503,8 @@ export const replaceAudio = adminMutation({
 			...t,
 			durationSec,
 			key,
+			// Measured for the old audio; measure-loudness.ts fills it again.
+			loudness: undefined,
 			safetyReviewedAt: t.family === "support" ? undefined : t.safetyReviewedAt,
 			sha256,
 		});

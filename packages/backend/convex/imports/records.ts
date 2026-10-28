@@ -193,6 +193,14 @@ export const narrationRecord = v.object({
 const trackFileFields = {
 	audioPath: v.optional(v.string()),
 	durationSec: v.optional(v.number()),
+	/** measure-loudness.ts, with the hash of the audio it measured. */
+	loudness: v.optional(
+		v.object({
+			lufs: v.number(),
+			sha256: v.string(),
+			truePeak: v.number(),
+		})
+	),
 	newUntil: v.optional(v.number()),
 	sha256: v.optional(v.string()),
 	slug: v.string(),

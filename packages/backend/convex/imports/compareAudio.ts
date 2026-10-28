@@ -148,6 +148,11 @@ function trackView(t: TrackUpsert | Doc<"audio_tracks">): View {
 			exact: t.durationSec.toString(),
 			value: showDuration(t.durationSec),
 		},
+		Loudness: {
+			value:
+				t.loudness &&
+				`${t.loudness.lufs} LUFS, peak ${t.loudness.truePeak} dBTP`,
+		},
 		"New until": dateField(t.newUntil),
 		Thumbnail: hashField(t.thumbSha256),
 	};
@@ -162,6 +167,7 @@ export async function compareTrack(
 	const {
 		audioPath,
 		durationSec: _manifestDuration, // the file's own length wins
+		loudness: measured,
 		sha256: fileSha,
 		thumbPath,
 		thumbSha256: _staleThumbSha,
@@ -244,6 +250,11 @@ export async function compareTrack(
 		);
 	}
 
+	// Loudness counts only when it was measured on the audio the track ends up with.
+	const loudness =
+		measured?.sha256 === audio.sha256
+			? { lufs: measured.lufs, truePeak: measured.truePeak }
+			: undefined;
 	const track: TrackUpsert =
 		fields.family === "music"
 			? {
@@ -254,8 +265,9 @@ export async function compareTrack(
 						fields.licence,
 						stored?.family === "music" ? stored.licence : undefined
 					),
+					loudness,
 				}
-			: { ...fields, ...audio, ...thumb };
+			: { ...fields, ...audio, ...thumb, loudness };
 	const willBeLive = stored ? stored.active : true;
 	assertTrackShape(track);
 	if (willBeLive) {

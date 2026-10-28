@@ -7,7 +7,11 @@ import {
 	internalQuery,
 	type MutationCtx,
 } from "../../_generated/server";
-import { licenceValidator, trackSoundValidator } from "../../lib/validators";
+import {
+	licenceValidator,
+	trackLoudnessValidator,
+	trackSoundValidator,
+} from "../../lib/validators";
 import { trackSearchTextOf } from "../../library/searchText";
 import { TOPIC_SLUGS } from "./catalog";
 import { indexSignature, trackNamespaces } from "./trackSearch";
@@ -21,6 +25,7 @@ export const r2 = new R2(components.r2);
 const sharedFields = {
 	durationSec: v.number(),
 	key: v.string(),
+	loudness: v.optional(trackLoudnessValidator),
 	newUntil: v.optional(v.number()),
 	sha256: v.string(),
 	slug: v.string(),
@@ -242,10 +247,13 @@ export async function upsertTrackRecord(
 		await dropUpload(existing.key);
 		// Audio blob unchanged: keep the live key, but persist every other
 		// field (title, tags, thumb, licence, ...) — metadata edits must land.
+		// Its measured loudness stays too when the record doesn't carry one
+		// (an admin import never does).
 		await ctx.db.replace("audio_tracks", existing._id, {
 			...track,
 			...kept,
 			key: existing.key,
+			loudness: track.loudness ?? existing.loudness,
 		});
 		await reindex(existing._id);
 		const action =

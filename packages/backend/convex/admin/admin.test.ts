@@ -799,8 +799,8 @@ describe("admin media", () => {
 		).rejects.toThrow(/music needs a licence/);
 	});
 
-	it("swaps in new audio, dropping the old file and the safety review", async () => {
-		const t = await withSupportTrack();
+	it("swaps in new audio, dropping the old file, the safety review and the old loudness", async () => {
+		const t = await withSupportTrack({ loudness: { lufs: -14, truePeak: -1 } });
 		await t.mutation(api.admin.audio.replaceAudio, {
 			durationSec: 240,
 			key: "support/grounding/new.m4a",
@@ -813,6 +813,7 @@ describe("admin media", () => {
 			sha256: SHA,
 		});
 		expect((await stored(t))?.safetyReviewedAt).toBeUndefined();
+		expect((await stored(t))?.loudness).toBeUndefined();
 		expect(r2.deleteObject).toHaveBeenCalledWith(
 			expect.anything(),
 			"support/grounding/old.m4a"

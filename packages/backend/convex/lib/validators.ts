@@ -210,6 +210,18 @@ export const licenceValidator = v.object({
 });
 
 /**
+ * A track's measured loudness (EBU R128, scripts/kindling/measure-loudness.ts),
+ * so a player can even out volume between tracks. It belongs to the audio:
+ * new audio drops it until it is measured again.
+ */
+export const trackLoudnessValidator = v.object({
+	/** Integrated loudness, LUFS. */
+	lufs: v.number(),
+	/** True peak, dBTP. */
+	truePeak: v.number(),
+});
+
+/**
  * Music-family: what a listening review heard in the track
  * (scripts/kindling/describe-music.ts), kept for features to come: filters,
  * a mood map, safer sleep picks. Reviews from before the facts were asked

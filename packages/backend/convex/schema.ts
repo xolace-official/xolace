@@ -16,6 +16,7 @@ import {
 	supportNeedValidator,
 	talkIssueValidator,
 	talkPeakValidator,
+	trackLoudnessValidator,
 	trackSoundValidator,
 	triggerTypeValidator,
 } from "./lib/validators";
@@ -92,6 +93,7 @@ export default defineSchema({
 
 		// music-family
 		licence: v.optional(licenceValidator), // required at write for family="music"
+		loudness: v.optional(trackLoudnessValidator), // of the audio at `sha256`; for evening out volume
 
 		// support-family
 		narrators: v.optional(v.array(v.string())), // display strings: ["Sage"], ["Sage","Ash"]
