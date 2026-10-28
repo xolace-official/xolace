@@ -6,6 +6,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
+import { trackIndexText } from "../ai/paths/trackSearch";
 import { asNewUser } from "../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../test/mocks.helpers";
 import { trackSearchTextOf } from "./searchText";
@@ -109,6 +110,52 @@ describe("trackSearchTextOf", () => {
 			track("m", "music", { sourceTags: ["Piano", "rain"], title: "Low Tide" })
 				.searchText
 		).toBe("low tide sadness piano rain");
+	});
+
+	it("adds Music's secondary topic, what it's for and what the review heard", () => {
+		expect(
+			track("m", "music", {
+				secondaryTopic: "music_topic_calm_peace",
+				sound: {
+					energy: 2,
+					heard: "Soft piano over rain.",
+					instruments: ["piano"],
+					natureSounds: ["rain"],
+					vocals: "none",
+				},
+				title: "Low Tide",
+				whatItsFor: "a slow piano for a heavy evening",
+			}).searchText
+		).toBe(
+			"low tide sadness calm peace a slow piano for a heavy evening piano rain"
+		);
+	});
+});
+
+describe("trackIndexText", () => {
+	it("embeds a music track's line, what the review heard and what its lyrics are about", () => {
+		expect(
+			trackIndexText({
+				family: "music",
+				sound: {
+					energy: 4,
+					heard: "Bright guitar and a female voice.",
+					lyrics: "English lyrics about starting over.",
+					vocals: "lyrics",
+				},
+				tags: ["hope", "renewal"],
+				title: "New Leaf",
+				whatItsFor: "a bright song for a fresh start",
+			})
+		).toBe(
+			"New Leaf\n\nhope, renewal\n\na bright song for a fresh start\n\nBright guitar and a female voice.\n\nEnglish lyrics about starting over."
+		);
+	});
+
+	it("keeps title and tags alone for a track without them", () => {
+		expect(
+			trackIndexText({ family: "music", tags: ["calm"], title: "Still" })
+		).toBe("Still\n\ncalm");
 	});
 });
 

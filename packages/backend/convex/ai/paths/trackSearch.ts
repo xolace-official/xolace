@@ -38,21 +38,30 @@ export function namespaceFor(actionType: string): string | null {
 		: null;
 }
 
-/** Support audio embeds its transcript; music its title, tags and what it's for; either without them, title + tags. */
+/**
+ * Support audio embeds its transcript; music its title, tags, what it's for
+ * and what the listening review heard (a song adds what its lyrics are about);
+ * either without them, title + tags.
+ */
 export function trackIndexText(
 	t: Pick<
 		Doc<"audio_tracks">,
-		"family" | "title" | "tags" | "transcript" | "whatItsFor"
+		"family" | "sound" | "title" | "tags" | "transcript" | "whatItsFor"
 	>
 ): string {
 	if (t.family === "support" && t.transcript) {
 		return t.transcript;
 	}
+	const music = t.family === "music";
 	return [
 		t.title,
 		t.tags.join(", "),
-		...(t.family === "music" && t.whatItsFor ? [t.whatItsFor] : []),
-	].join("\n\n");
+		music && t.whatItsFor,
+		music && t.sound?.heard,
+		music && t.sound?.lyrics,
+	]
+		.filter((s): s is string => !!s)
+		.join("\n\n");
 }
 
 /** What `indexTrack` writes, so a re-ingest only re-embeds on a difference. */
