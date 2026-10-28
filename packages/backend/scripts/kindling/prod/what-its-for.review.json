@@ -19,7 +19,8 @@
       "thought": 448
     },
     "decision": "stay in mindfulness (owner)",
-    "secondaryTopic": "meditation"
+    "secondaryTopic": "meditation",
+    "pickedTitle": "Warm Swelling Drone"
   },
   "music-mindfulness-02": {
     "audioPath": "support/mindfulness/meditativecalmbuddha-sacred-fire-of-mindfulness-389028.mp3",
@@ -40,7 +41,8 @@
       "output": 121,
       "thought": 573
     },
-    "decision": "stay in mindfulness (owner)"
+    "decision": "stay in mindfulness (owner)",
+    "pickedTitle": "Guitar and Birdsong"
   },
   "music-mindfulness-03": {
     "audioPath": "support/mindfulness/higheruniversalman-cultivation-music-for-growth-mindfulness-amp-nature-videos-291781.mp3",
@@ -62,7 +64,8 @@
       "thought": 455
     },
     "decision": "move to happiness_joy (owner)",
-    "secondaryTopic": "motivation"
+    "secondaryTopic": "motivation",
+    "pickedTitle": "Handclap Morning"
   },
   "music-mindfulness-04": {
     "audioPath": "support/mindfulness/pink_sound-path-of-mindfulness-relax-instrumental-background-music-short-1-565366.mp3",
@@ -83,7 +86,8 @@
       "output": 129,
       "thought": 0
     },
-    "decision": "stay in mindfulness (owner)"
+    "decision": "stay in mindfulness (owner)",
+    "pickedTitle": "Sweeping Atmosphere"
   },
   "music-mindfulness-05": {
     "audioPath": "support/mindfulness/allicante-ethereal-ambient-for-mindfulness-332283.mp3",
@@ -104,7 +108,8 @@
       "output": 124,
       "thought": 168
     },
-    "decision": "stay in mindfulness (owner)"
+    "decision": "stay in mindfulness (owner)",
+    "pickedTitle": "Low Drone, Faint Shimmer"
   },
   "music-mindfulness-06": {
     "audioPath": "support/mindfulness/meditativetiger-mindfulness-chimes-being-present-489163.mp3",
@@ -125,7 +130,8 @@
       "output": 129,
       "thought": 0
     },
-    "decision": "stay in mindfulness (owner)"
+    "decision": "stay in mindfulness (owner)",
+    "pickedTitle": "Chimes Over Drone"
   },
   "music-mindfulness-07": {
     "audioPath": "support/mindfulness/meditativecalmbuddha-river-of-mindfulness-490264.mp3",
@@ -146,7 +152,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to nature_mindfulness (owner)"
+    "decision": "move to nature_mindfulness (owner)",
+    "pickedTitle": "River and Pads"
   },
   "music-mindfulness-08": {
     "audioPath": "support/mindfulness/vividillustrate-zen-garden-ambience-japanese-flute-amp-waterfall-mindfulness-361112.mp3",
@@ -167,7 +174,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Racing Strings"
   },
   "music-mindfulness-09": {
     "audioPath": "support/mindfulness/meditativetiger-morning-mindfulness-reset-meditation-511822.mp3",
@@ -189,7 +197,8 @@
       "thought": 0
     },
     "decision": "move to sadness (owner)",
-    "secondaryTopic": "emotional_release"
+    "secondaryTopic": "emotional_release",
+    "pickedTitle": "Reedy Melody in Pads"
   },
   "music-mindfulness-10": {
     "audioPath": "support/mindfulness/pavetraxx-mindfulness-meditation-268622.mp3",
@@ -211,7 +220,8 @@
       "thought": 0
     },
     "decision": "stay in mindfulness (owner)",
-    "secondaryTopic": "nature_mindfulness"
+    "secondaryTopic": "nature_mindfulness",
+    "pickedTitle": "Singing Bowl Drone"
   },
   "music-mindfulness-11": {
     "audioPath": "support/mindfulness/light_music-mindfulness-meditation-195494.mp3",
@@ -232,7 +242,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in mindfulness (owner)"
+    "decision": "stay in mindfulness (owner)",
+    "pickedTitle": "Sparse Piano in Space"
   },
   "music-mindfulness-12": {
     "audioPath": "support/mindfulness/meditativetiger-mindfulness-bell-practice-388613.mp3",
@@ -276,7 +287,8 @@
       "thought": 0
     },
     "secondaryTopic": "meditation",
-    "decision": "stay in mindfulness; meditation as a secondary topic (owner)"
+    "decision": "stay in mindfulness; meditation as a secondary topic (owner)",
+    "pickedTitle": "Drifting Warm Horizons"
   },
   "music-mindfulness-14": {
     "audioPath": "support/mindfulness/the_mountain-mindfulness-149939.mp3",
@@ -298,7 +310,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to overthinking (owner)"
+    "decision": "move to overthinking (owner)",
+    "pickedTitle": "Circling Piano in Gray"
   },
   "music-mindfulness-15": {
     "audioPath": "support/mindfulness/john_kensy_music-mindfulness-relaxation-amp-meditation-music-22174.mp3",
@@ -321,7 +334,8 @@
       "thought": 0
     },
     "decision": "stay in mindfulness (owner)",
-    "secondaryTopic": "nature_mindfulness"
+    "secondaryTopic": "nature_mindfulness",
+    "pickedTitle": "Soft Echoes on Still Water"
   },
   "music-mindfulness-16": {
     "audioPath": "support/mindfulness/mindfulnessyt-mindfulness-443486.mp3",
@@ -344,7 +358,8 @@
       "thought": 0
     },
     "decision": "stay in mindfulness (owner)",
-    "secondaryTopic": "calm_peace"
+    "secondaryTopic": "calm_peace",
+    "pickedTitle": "Still Water Zither"
   },
   "music-mindfulness-17": {
     "audioPath": "support/mindfulness/higheruniversalman-mindfulness-meditation-180198.mp3",
@@ -367,7 +382,8 @@
       "thought": 0
     },
     "secondaryTopic": "meditation",
-    "decision": "stay in mindfulness; meditation as a secondary topic (owner)"
+    "decision": "stay in mindfulness; meditation as a secondary topic (owner)",
+    "pickedTitle": "Warm Pads and Sparse Chimes"
   },
   "music-mindfulness-18": {
     "audioPath": "support/mindfulness/breakzstudios-radiant-mindfulness-165866.mp3",
@@ -389,7 +405,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to overthinking (owner)"
+    "decision": "move to overthinking (owner)",
+    "pickedTitle": "Quiet Looping Thoughts"
   },
   "music-mindfulness-19": {
     "audioPath": "support/mindfulness/natureseye-hatha-meditation-for-mindfulness-9798.mp3",
@@ -412,7 +429,8 @@
       "thought": 0
     },
     "secondaryTopic": "meditation",
-    "decision": "stay in mindfulness; meditation as a secondary topic (owner)"
+    "decision": "stay in mindfulness; meditation as a secondary topic (owner)",
+    "pickedTitle": "Resonant Stillness and Chimes"
   },
   "music-mindfulness-20": {
     "audioPath": "support/mindfulness/allicante-gentle-ambient-texture-for-mindfulness-332295.mp3",
@@ -435,7 +453,8 @@
       "thought": 0
     },
     "decision": "stay in mindfulness (owner)",
-    "secondaryTopic": "meditation"
+    "secondaryTopic": "meditation",
+    "pickedTitle": "Warm Drifting Horizon"
   },
   "music-sleep-rest-01": {
     "audioPath": "support/Sleep & Rest/the_mountain-lofi-sleep-lofi-sleep-music-587590.mp3",
@@ -457,7 +476,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Dusty Midnight Piano Loop"
   },
   "music-sleep-rest-02": {
     "audioPath": "support/Sleep & Rest/the_mountain-deep-sleep-deep-sleep-music-587578.mp3",
@@ -479,7 +499,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Velvet Night Guitar Drift"
   },
   "music-sleep-rest-03": {
     "audioPath": "support/Sleep & Rest/marlowemusic-sleep-sounds-588918.mp3",
@@ -501,7 +522,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Warm Midnight Keys"
   },
   "music-sleep-rest-04": {
     "audioPath": "support/Sleep & Rest/velariomusic-sleep-music-583326.mp3",
@@ -523,7 +545,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Quiet Pulse At Dusk"
   },
   "music-sleep-rest-05": {
     "audioPath": "support/Sleep & Rest/atlasaudio-sleep-music-562633.mp3",
@@ -545,7 +568,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Drifting Warmth in Stillness"
   },
   "music-sleep-rest-06": {
     "audioPath": "support/Sleep & Rest/marlowemusic-meditation-sleep-580201.mp3",
@@ -567,7 +591,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Velvet Hums and Chimes"
   },
   "music-sleep-rest-07": {
     "audioPath": "support/Sleep & Rest/leberch-sleep-music-587996.mp3",
@@ -589,7 +614,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Distant Thunder and Still Water"
   },
   "music-sleep-rest-08": {
     "audioPath": "support/Sleep & Rest/atlasaudio-sleep-music-586396.mp3",
@@ -611,7 +637,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Weightless Midnight Drone"
   },
   "music-sleep-rest-09": {
     "audioPath": "support/Sleep & Rest/atlasaudio-relaxing-sleep-583152.mp3",
@@ -633,7 +660,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Drifting Tide Horizons"
   },
   "music-sleep-rest-10": {
     "audioPath": "support/Sleep & Rest/leberch-piano-for-sleep-587330.mp3",
@@ -656,7 +684,8 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "secondaryTopic": "healing_recovery"
+    "secondaryTopic": "healing_recovery",
+    "pickedTitle": "Quiet Nightfall Piano"
   },
   "music-sleep-rest-11": {
     "audioPath": "support/Sleep & Rest/marlowemusic-sleep-577897.mp3",
@@ -678,7 +707,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Music Box Dusk"
   },
   "music-sleep-rest-12": {
     "audioPath": "support/Sleep & Rest/verclub_music-sleep-music-571041.mp3",
@@ -700,7 +730,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Drifting Piano and Warm Pads"
   },
   "music-sleep-rest-13": {
     "audioPath": "support/Sleep & Rest/leberch-sleep-hypnosis-586804.mp3",
@@ -744,7 +775,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Drifting Into Stillness"
   },
   "music-sleep-rest-15": {
     "audioPath": "support/Sleep & Rest/atlasaudio-rest-587602.mp3",
@@ -767,7 +799,8 @@
       "thought": 0
     },
     "decision": "stay in sleep_rest (owner)",
-    "secondaryTopic": "healing_recovery"
+    "secondaryTopic": "healing_recovery",
+    "pickedTitle": "Wistful Evening Piano"
   },
   "music-sleep-rest-16": {
     "audioPath": "support/Sleep & Rest/leberch-sleep-583079.mp3",
@@ -789,7 +822,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Fading Chimes and Drone"
   },
   "music-sleep-rest-17": {
     "audioPath": "support/Sleep & Rest/leberch-relaxing-sleep-586414.mp3",
@@ -811,7 +845,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Deep Midnight Drone"
   },
   "music-sleep-rest-18": {
     "audioPath": "support/Sleep & Rest/atlasaudio-sleep-music-583148.mp3",
@@ -833,7 +868,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Deep Cavern Drone"
   },
   "music-sleep-rest-19": {
     "audioPath": "support/Sleep & Rest/luceris-sleep-music-590396.mp3",
@@ -855,7 +891,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Weightless Night Drift"
   },
   "music-sleep-rest-20": {
     "audioPath": "support/Sleep & Rest/leberch-sleep-music-586417.mp3",
@@ -877,7 +914,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "pickedTitle": "Shimmering Night Horizon"
   },
   "music-self-love-01": {
     "audioPath": "support/Self-Love/konstantinpazuzustudio-old-photo-album-neoclassical-piano-514667.mp3",
@@ -899,7 +937,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Faded Sepia Pages"
   },
   "music-self-love-02": {
     "audioPath": "support/Self-Love/lavillia-liebe-in-mir-liebe-in-dir-413451.mp3",
@@ -921,7 +960,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to happiness_joy (owner)"
+    "decision": "move to happiness_joy (owner)",
+    "pickedTitle": "Liebe in mir, Liebe in dir"
   },
   "music-self-love-03": {
     "audioPath": "support/Self-Love/leberch-love-song-590429.mp3",
@@ -943,7 +983,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in self_love (owner)"
+    "decision": "stay in self_love (owner)",
+    "pickedTitle": "Tender Piano Embrace"
   },
   "music-self-love-04": {
     "audioPath": "support/Self-Love/atlasaudio-love-background-594868.mp3",
@@ -965,7 +1006,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in self_love (owner)"
+    "decision": "stay in self_love (owner)",
+    "pickedTitle": "Warm Flowing Piano Tenderness"
   },
   "music-self-love-05": {
     "audioPath": "support/Self-Love/atlasaudio-love-522433.mp3",
@@ -988,7 +1030,8 @@
       "thought": 0
     },
     "secondaryTopic": "self_love",
-    "decision": "move to emotional_release; self_love as a secondary topic (owner)"
+    "decision": "move to emotional_release; self_love as a secondary topic (owner)",
+    "pickedTitle": "Through the Storm to Stillness"
   },
   "music-self-love-06": {
     "audioPath": "support/Self-Love/the_mountain-love-591389.mp3",
@@ -1010,7 +1053,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in self_love (owner)"
+    "decision": "stay in self_love (owner)",
+    "pickedTitle": "Tender Piano Stillness"
   },
   "music-self-love-07": {
     "audioPath": "support/Self-Love/paulyudin-love-love-music-573988.mp3",
@@ -1033,7 +1077,8 @@
       "thought": 0
     },
     "secondaryTopic": "self_love",
-    "decision": "move to hope_positivity; self_love as a secondary topic (owner)"
+    "decision": "move to hope_positivity; self_love as a secondary topic (owner)",
+    "pickedTitle": "Rising Piano and Strings"
   },
   "music-self-love-08": {
     "audioPath": "support/Self-Love/leberch-love-love-music-583085.mp3",
@@ -1055,7 +1100,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in self_love (owner)"
+    "decision": "stay in self_love (owner)",
+    "pickedTitle": "Tender Felt Piano Waltz"
   },
   "music-self-love-09": {
     "audioPath": "support/Self-Love/atlasaudio-love-love-music-576644.mp3",
@@ -1077,7 +1123,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in self_love (owner)"
+    "decision": "stay in self_love (owner)",
+    "pickedTitle": "Warm String Embrace"
   },
   "music-self-love-10": {
     "audioPath": "support/Self-Love/lilex-it-is-just-me-simply-me-415669.mp3",
@@ -1099,7 +1146,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "It is just me, simply me"
   },
   "music-self-love-11": {
     "audioPath": "support/Self-Love/maksymmalko-love-love-music-590406.mp3",
@@ -1129,7 +1177,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in self_love (owner)"
+    "decision": "stay in self_love (owner)",
+    "pickedTitle": "Ripples of Kindness"
   },
   "music-self-love-12": {
     "audioPath": "support/Self-Love/dascent-awaken-within-atanata-389095.mp3",
@@ -1165,7 +1214,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Awaken Within"
   },
   "music-self-love-13": {
     "audioPath": "support/Self-Love/meditativetiger-meditation-bowl-for-self-love-388612.mp3",
@@ -1195,7 +1245,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Echoes in the Low Dark"
   },
   "music-self-love-14": {
     "audioPath": "support/Self-Love/leberch-self-healing-262607.mp3",
@@ -1225,7 +1276,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in self_love (owner)"
+    "decision": "stay in self_love (owner)",
+    "pickedTitle": "Shimmering Stillness"
   },
   "music-self-love-15": {
     "audioPath": "support/Self-Love/theorienvibes-self-love-meditation-371136.mp3",
@@ -1261,7 +1313,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Pulse Through The Quiet"
   },
   "music-self-love-16": {
     "audioPath": "support/Self-Love/atlasaudio-love-594867.mp3",
@@ -1275,7 +1328,7 @@
     "heard": "A gentle solo piano plays flowing, hopeful arpeggios at a moderate tempo over a soft, warm ambient pad. The mood is tender, affectionate, and reassuring, shifting slightly into a warmer progression in the middle before returning to the calm opening theme.",
     "suggestedTitle": "Warmth in the Quiet",
     "vocals": "none",
-    "whatItsFor": "tender flowing piano arpeggios and warm pads for softening a harsh inner voice",
+    "whatItsFor": "hopeful piano arpeggios that grow tender for speaking to yourself more kindly",
     "why": "The warm, tender piano melody feels comforting and accepting, ideal for softening a harsh inner critic.",
     "alsoFits": ["healing_recovery", "hope_positivity", "calm_peace"],
     "arc": "steady",
@@ -1291,7 +1344,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in self_love (owner)"
+    "decision": "stay in self_love (owner)",
+    "pickedTitle": "Warmth in the Quiet"
   },
   "music-self-love-17": {
     "audioPath": "support/Self-Love/leberch-love-595796.mp3",
@@ -1322,7 +1376,8 @@
       "thought": 0
     },
     "decision": "stay in self_love; sadness as a secondary topic (owner)",
-    "secondaryTopic": "sadness"
+    "secondaryTopic": "sadness",
+    "pickedTitle": "Fragile Octave Reflections"
   },
   "music-self-love-18": {
     "audioPath": "support/Self-Love/the_mountain-self-reflection-131418.mp3",
@@ -1361,7 +1416,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Neon Horizon Pulse"
   },
   "music-self-love-19": {
     "audioPath": "support/Self-Love/leberch-love-love-music-583383.mp3",
@@ -1392,7 +1448,8 @@
       "thought": 0
     },
     "secondaryTopic": "self_love",
-    "decision": "move to overthinking; self_love as a secondary topic (owner)"
+    "decision": "move to overthinking; self_love as a secondary topic (owner)",
+    "pickedTitle": "Circling Glass Piano"
   },
   "music-self-love-20": {
     "audioPath": "support/Self-Love/theorienvibes-once-more-one-life-233087.mp3",
@@ -1428,7 +1485,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to happiness_joy (owner)"
+    "decision": "move to happiness_joy (owner)",
+    "pickedTitle": "Love - Acoustic (1m)"
   },
   "music-motivation-01": {
     "audioPath": "support/Motivation/leberch-piano-motivation-584477.mp3",
@@ -1458,7 +1516,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to overthinking (owner)"
+    "decision": "move to overthinking (owner)",
+    "pickedTitle": "Rippling Glass and Ivory"
   },
   "music-motivation-02": {
     "audioPath": "support/Motivation/sub_clair-motivation-587050.mp3",
@@ -1494,7 +1553,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Motivation (2:11)"
   },
   "music-motivation-03": {
     "audioPath": "support/Motivation/tape-echo-motivation-567717.mp3",
@@ -1525,7 +1585,8 @@
       "thought": 0
     },
     "secondaryTopic": "focus_concentration",
-    "decision": "stay in motivation; focus_concentration as a secondary topic (owner)"
+    "decision": "stay in motivation; focus_concentration as a secondary topic (owner)",
+    "pickedTitle": "Cascading Tape Echoes"
   },
   "music-motivation-04": {
     "audioPath": "support/Motivation/atlasaudio-motivation-522436.mp3",
@@ -1559,7 +1620,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Electric Forward Stride"
   },
   "music-motivation-05": {
     "audioPath": "support/Motivation/prettyjohn1-motivation-526516.mp3",
@@ -1595,7 +1657,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Motivation - prettyjohn1"
   },
   "music-motivation-06": {
     "audioPath": "support/Motivation/bombinsound-motivation-motivation-music-feel-good-566563.mp3",
@@ -1631,7 +1694,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Bright Brass Rise"
   },
   "music-motivation-07": {
     "audioPath": "support/Motivation/gr0za-motivation-motivation-music-596485.mp3",
@@ -1661,7 +1725,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Dark Brass Trap"
   },
   "music-motivation-08": {
     "audioPath": "support/Motivation/paulyudin-motivation-485931.mp3",
@@ -1691,7 +1756,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Rising Brass Horizon"
   },
   "music-motivation-09": {
     "audioPath": "support/Motivation/atlasaudio-motivation-motivation-music-576647.mp3",
@@ -1721,7 +1787,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Harp in the Mist"
   },
   "music-motivation-10": {
     "audioPath": "support/Motivation/gr0za-motivation-motivation-music-591727.mp3",
@@ -1757,7 +1824,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Grind and Drive"
   },
   "music-motivation-11": {
     "audioPath": "support/Motivation/sub_clair-motivation-591705.mp3",
@@ -1791,7 +1859,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Stepping Into Stride"
   },
   "music-motivation-12": {
     "audioPath": "support/Motivation/jonasblakewood-motivation-557634.mp3",
@@ -1827,7 +1896,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Chasing the Horizon"
   },
   "music-motivation-13": {
     "audioPath": "support/Motivation/leberch-inspiring-motivation-578723.mp3",
@@ -1857,7 +1927,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Wistful Piano Reflections"
   },
   "music-motivation-14": {
     "audioPath": "support/Motivation/paulyudin-motivation-motivation-music-573993.mp3",
@@ -1897,7 +1968,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Ignite the Momentum"
   },
   "music-motivation-15": {
     "audioPath": "support/Motivation/leberch-motivation-motivation-music-580531.mp3",
@@ -1927,7 +1999,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Rippling Piano Arpeggios"
   },
   "music-motivation-16": {
     "audioPath": "support/Motivation/atlasaudio-motivation-518088.mp3",
@@ -1967,7 +2040,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Rising Momentum"
   },
   "music-motivation-17": {
     "audioPath": "support/Motivation/the_mountain-motivation-487018.mp3",
@@ -2003,7 +2077,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Summit Ascent"
   },
   "music-motivation-18": {
     "audioPath": "support/Motivation/verclub_music-motivation-571038.mp3",
@@ -2033,7 +2108,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Full Throttle Surge"
   },
   "music-motivation-19": {
     "audioPath": "support/Motivation/atlasaudio-motivation-593054.mp3",
@@ -2063,7 +2139,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Anthemic Acoustic Momentum"
   },
   "music-motivation-20": {
     "audioPath": "support/Motivation/alexgrohl-motivation-sport-rock-trailer-478796.mp3",
@@ -2098,7 +2175,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in motivation (owner)"
+    "decision": "stay in motivation (owner)",
+    "pickedTitle": "Stadium Riff Drive"
   },
   "music-emotional-release-01": {
     "audioPath": "support/Emotional-release/alanajordan-nothing-left-to-regret-343810.mp3",
@@ -2138,7 +2216,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "Nothing Left to Regret"
   },
   "music-emotional-release-02": {
     "audioPath": "support/Emotional-release/alanajordan-dark-ambient-instrumental-01-481918.mp3",
@@ -2174,7 +2253,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "From Ash To Thunder"
   },
   "music-emotional-release-03": {
     "audioPath": "support/Emotional-release/alanajordan-out-in-the-open-492106.mp3",
@@ -2210,7 +2290,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "Out in the Open"
   },
   "music-emotional-release-04": {
     "audioPath": "support/Emotional-release/psyai-duduk-cry-sad-emotional-background-for-drama-and-trauma-content-460074.mp3",
@@ -2246,7 +2327,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "Weeping Duduk and Rainlight"
   },
   "music-emotional-release-05": {
     "audioPath": "support/Emotional-release/psyai-duduk-echo-atmospheric-ethnic-background-for-film-and-documentary-460075.mp3",
@@ -2282,7 +2364,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "Weeping Reed and Horizon"
   },
   "music-emotional-release-06": {
     "audioPath": "support/Emotional-release/alanajordan-in-the-morning-481925.mp3",
@@ -2312,7 +2395,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "In the Morning"
   },
   "music-emotional-release-07": {
     "audioPath": "support/Emotional-release/alanajordan-aftermath-521171.mp3",
@@ -2348,7 +2432,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "Aftermath"
   },
   "music-emotional-release-08": {
     "audioPath": "support/Emotional-release/boopul-raag-yaman-orchestral-strings-for-releasing-emotional-heaviness-510562.mp3",
@@ -2379,7 +2464,8 @@
       "thought": 0
     },
     "secondaryTopic": "hope_positivity",
-    "decision": "stay in emotional_release; hope_positivity as a secondary topic (owner)"
+    "decision": "stay in emotional_release; hope_positivity as a secondary topic (owner)",
+    "pickedTitle": "Yaman Flute and Strings"
   },
   "music-emotional-release-09": {
     "audioPath": "support/Emotional-release/toddmagnuson-the-courage-to-let-go-589716.mp3",
@@ -2409,7 +2495,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "Through the Storm's Crest"
   },
   "music-emotional-release-10": {
     "audioPath": "support/Emotional-release/juraganvisi-emotional-touching-cinematic-strings-uplifting-hopeful-419656.mp3",
@@ -2439,7 +2526,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to self_love (owner)"
+    "decision": "move to self_love (owner)",
+    "pickedTitle": "Warm Afternoon Acoustic"
   },
   "music-emotional-release-11": {
     "audioPath": "support/Emotional-release/alanajordan-not-playing-along-466979.mp3",
@@ -2475,7 +2563,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "Not Playing Along"
   },
   "music-emotional-release-12": {
     "audioPath": "support/Emotional-release/alanajordan-playing-for-keeps-512413.mp3",
@@ -2505,7 +2594,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "Playing for Keeps"
   },
   "music-emotional-release-13": {
     "audioPath": "support/Emotional-release/alanajordan-about-to-break-509082.mp3",
@@ -2535,7 +2625,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "About to Break"
   },
   "music-emotional-release-14": {
     "audioPath": "support/Emotional-release/meditativetiger-healing-bowl-for-emotional-release-388621.mp3",
@@ -2565,7 +2656,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to meditation (owner)"
+    "decision": "move to meditation (owner)",
+    "pickedTitle": "Chimes by Flowing Water"
   },
   "music-emotional-release-15": {
     "audioPath": "support/Emotional-release/meditativetiger-sacral-flow-417-hz-emotional-balance-489176.mp3",
@@ -2631,7 +2723,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "Out of My Control"
   },
   "music-emotional-release-17": {
     "audioPath": "support/Emotional-release/psyai-duduk-voice-emotional-ethnic-background-for-film-and-meditation-460042.mp3",
@@ -2667,7 +2760,8 @@
       "output": 312,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "Duduk and Distant Voice"
   },
   "music-emotional-release-19": {
     "audioPath": "support/Emotional-release/psyai-duduk-emotional-deep-emotional-background-for-film-and-healing-460040.mp3",
@@ -2681,7 +2775,7 @@
     "heard": "A mournful duduk melody plays over sparse piano notes, atmospheric synth pads, and ethereal wordless vocals. The piece gradually builds with strings and a steady, cinematic percussion beat before fading out on a quiet piano motif.",
     "suggestedTitle": "Duduk and Falling Rain",
     "vocals": "wordless",
-    "whatItsFor": "mournful duduk, piano, and soaring wordless vocals for letting heavy feelings move through you",
+    "whatItsFor": "duduk rising into strings and a steady drum for grief that needs somewhere to go",
     "why": "The mournful duduk, wordless vocals, and swelling cinematic rhythm carry deep emotional weight and movement, giving heavy feelings a clear outlet.",
     "alsoFits": ["sadness", "healing_recovery", "loneliness"],
     "arc": "swells_and_settles",
@@ -2703,7 +2797,8 @@
       "output": 273,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "Duduk and Falling Rain"
   },
   "music-emotional-release-18": {
     "audioPath": "support/Emotional-release/petkovmusic-417-hz-emotional-release-amp-energy-clearing-digital-pharmacy-526145.mp3",
@@ -2733,7 +2828,8 @@
       "output": 292,
       "thought": 0
     },
-    "decision": "move to meditation (owner)"
+    "decision": "move to meditation (owner)",
+    "pickedTitle": "Tide and Deep Drone"
   },
   "music-emotional-release-20": {
     "audioPath": "support/Emotional-release/alanajordan-let-it-happen-473569.mp3",
@@ -2769,7 +2865,8 @@
       "output": 310,
       "thought": 0
     },
-    "decision": "stay in emotional_release (owner)"
+    "decision": "stay in emotional_release (owner)",
+    "pickedTitle": "Let It Happen"
   },
   "music-nature-mindfulness-01": {
     "audioPath": "support/Nature & Mindfulness/allicante-gentle-ambient-texture-for-mindfulness-332295.mp3",
@@ -2836,7 +2933,8 @@
       "output": 292,
       "thought": 0
     },
-    "decision": "move to hope_positivity (owner)"
+    "decision": "move to hope_positivity (owner)",
+    "pickedTitle": "Light Through the Canopy"
   },
   "music-nature-mindfulness-03": {
     "audioPath": "support/Nature & Mindfulness/danamusic-nature-meditation-399558.mp3",
@@ -2866,7 +2964,8 @@
       "output": 246,
       "thought": 0
     },
-    "decision": "stay in nature_mindfulness (owner)"
+    "decision": "stay in nature_mindfulness (owner)",
+    "pickedTitle": "Canopy Stream Stillness"
   },
   "music-nature-mindfulness-04": {
     "audioPath": "support/Nature & Mindfulness/atlasaudio-nature-nature-music-576648.mp3",
@@ -2900,7 +2999,8 @@
       "output": 265,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Rolling Piano Momentum"
   },
   "music-nature-mindfulness-05": {
     "audioPath": "support/Nature & Mindfulness/megisss-nature-meditation-457984.mp3",
@@ -2931,7 +3031,8 @@
       "thought": 0
     },
     "secondaryTopic": "nature_mindfulness",
-    "decision": "move to meditation; nature_mindfulness as a secondary topic (owner)"
+    "decision": "move to meditation; nature_mindfulness as a secondary topic (owner)",
+    "pickedTitle": "Drifting Chimes in Stillness"
   },
   "music-nature-mindfulness-06": {
     "audioPath": "support/Nature & Mindfulness/wings_of_freedom-nature-sounds-slow-meditation-healing-frequency-432hz-368787.mp3",
@@ -2961,7 +3062,8 @@
       "output": 281,
       "thought": 0
     },
-    "decision": "move to calm_peace (owner)"
+    "decision": "move to calm_peace (owner)",
+    "pickedTitle": "Flowing Piano Reflections"
   },
   "music-nature-mindfulness-07": {
     "audioPath": "support/Nature & Mindfulness/atlasaudio-ambient-nature-518687.mp3",
@@ -2991,7 +3093,8 @@
       "output": 264,
       "thought": 0
     },
-    "decision": "move to meditation (owner)"
+    "decision": "move to meditation (owner)",
+    "pickedTitle": "Still Horizon Drone"
   },
   "music-nature-mindfulness-11": {
     "audioPath": "support/Nature & Mindfulness/meditativecalmbuddha-river-of-mindfulness-490264.mp3",
@@ -3324,7 +3427,8 @@
       "output": 276,
       "thought": 0
     },
-    "decision": "move to deep_relaxation (owner)"
+    "decision": "move to deep_relaxation (owner)",
+    "pickedTitle": "Warm Horizon Drift"
   },
   "music-stress-relief-02": {
     "audioPath": "support/Stress Relief/crystaleyeofficial-stress-relief-background-music-track-312874.mp3",
@@ -3354,7 +3458,8 @@
       "output": 291,
       "thought": 0
     },
-    "decision": "stay in stress_relief (owner)"
+    "decision": "stay in stress_relief (owner)",
+    "pickedTitle": "Ripples On Still Water"
   },
   "music-stress-relief-03": {
     "audioPath": "support/Stress Relief/crystaleyeofficial-stress-relief-background-music-track-312875.mp3",
@@ -3384,7 +3489,8 @@
       "output": 295,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Crisp Arpeggios in Motion"
   },
   "music-stress-relief-04": {
     "audioPath": "support/Stress Relief/vividillustrate-instant-stress-relief-nature-sounds-amp-tibetan-singing-bowls-361111.mp3",
@@ -3414,7 +3520,8 @@
       "output": 274,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Through the Stormwall"
   },
   "music-nature-mindfulness-20": {
     "audioPath": "support/Nature & Mindfulness/higheruniversalman-cultivation-music-for-growth-mindfulness-amp-nature-videos-291781.mp3",
@@ -3504,7 +3611,8 @@
       "output": 270,
       "thought": 0
     },
-    "decision": "stay in stress_relief (owner)"
+    "decision": "stay in stress_relief (owner)",
+    "pickedTitle": "Easy Blues Groove"
   },
   "music-stress-relief-01": {
     "audioPath": "support/Stress Relief/celeronbeats-rain-sounds-for-stress-amp-anxiety-relief-574996.mp3",
@@ -3534,7 +3642,8 @@
       "output": 285,
       "thought": 0
     },
-    "decision": "stay in stress_relief (owner)"
+    "decision": "stay in stress_relief (owner)",
+    "pickedTitle": "Thunder and Warm Piano"
   },
   "music-stress-relief-08": {
     "audioPath": "support/Stress Relief/atlasaudio-stress-relief-587612.mp3",
@@ -3570,7 +3679,8 @@
       "output": 315,
       "thought": 0
     },
-    "decision": "move to overthinking (owner)"
+    "decision": "move to overthinking (owner)",
+    "pickedTitle": "Late Night Loop"
   },
   "music-stress-relief-07": {
     "audioPath": "support/Stress Relief/rockot-stress-relief-music-184577.mp3",
@@ -3601,7 +3711,8 @@
       "thought": 0
     },
     "secondaryTopic": "stress_relief",
-    "decision": "move to deep_relaxation; stress_relief as a secondary topic (owner)"
+    "decision": "move to deep_relaxation; stress_relief as a secondary topic (owner)",
+    "pickedTitle": "Weightless Horizon"
   },
   "music-stress-relief-06": {
     "audioPath": "support/Stress Relief/music-for-videos-stress-relief-meditation-187695.mp3",
@@ -3631,7 +3742,8 @@
       "output": 288,
       "thought": 0
     },
-    "decision": "move to meditation (owner)"
+    "decision": "move to meditation (owner)",
+    "pickedTitle": "Cathedral Of Stillness"
   },
   "music-stress-relief-11": {
     "audioPath": "support/Stress Relief/leberch-stress-relief-586415.mp3",
@@ -3661,7 +3773,8 @@
       "output": 270,
       "thought": 0
     },
-    "decision": "stay in stress_relief (owner)"
+    "decision": "stay in stress_relief (owner)",
+    "pickedTitle": "Drifting Through Stillness"
   },
   "music-stress-relief-12": {
     "audioPath": "support/Stress Relief/marlowemusic-stress-relief-596434.mp3",
@@ -3696,7 +3809,8 @@
       "output": 278,
       "thought": 0
     },
-    "decision": "stay in stress_relief (owner)"
+    "decision": "stay in stress_relief (owner)",
+    "pickedTitle": "Echoing Piano Haze"
   },
   "music-stress-relief-13": {
     "audioPath": "support/Stress Relief/the_mountain-anxiety-relief-587570.mp3",
@@ -3732,7 +3846,8 @@
       "output": 268,
       "thought": 0
     },
-    "decision": "stay in stress_relief (owner)"
+    "decision": "stay in stress_relief (owner)",
+    "pickedTitle": "Warm Vinyl Unwind"
   },
   "music-stress-relief-15": {
     "audioPath": "support/Stress Relief/meditativetiger-meditation-bells-for-anxiety-relief-echoes-388624.mp3",
@@ -3798,7 +3913,8 @@
       "output": 281,
       "thought": 0
     },
-    "decision": "stay in stress_relief (owner)"
+    "decision": "stay in stress_relief (owner)",
+    "pickedTitle": "Stream of Stillness"
   },
   "music-stress-relief-10": {
     "audioPath": "support/Stress Relief/leberch-stress-relief-586402.mp3",
@@ -3829,7 +3945,8 @@
       "thought": 0
     },
     "secondaryTopic": "stress_relief",
-    "decision": "move to deep_relaxation; stress_relief as a secondary topic (owner)"
+    "decision": "move to deep_relaxation; stress_relief as a secondary topic (owner)",
+    "pickedTitle": "Open Chord Drift"
   },
   "music-stress-relief-17": {
     "audioPath": "support/Stress Relief/bouncyrunner-stress-relief-water-world-398622.mp3",
@@ -3864,7 +3981,8 @@
       "output": 301,
       "thought": 0
     },
-    "decision": "move to nature_mindfulness (owner)"
+    "decision": "move to nature_mindfulness (owner)",
+    "pickedTitle": "Whale Song and Waves"
   },
   "music-stress-relief-16": {
     "audioPath": "support/Stress Relief/crystaleyeofficial-stress-relief-background-music-track-312876.mp3",
@@ -3894,7 +4012,8 @@
       "output": 303,
       "thought": 0
     },
-    "decision": "stay in stress_relief (owner)"
+    "decision": "stay in stress_relief (owner)",
+    "pickedTitle": "Lo-fi Ripple"
   },
   "music-stress-relief-18": {
     "audioPath": "support/Stress Relief/crystaleyeofficial-stress-relief-background-music-track-309939.mp3",
@@ -3924,7 +4043,8 @@
       "output": 270,
       "thought": 0
     },
-    "decision": "stay in stress_relief (owner)"
+    "decision": "stay in stress_relief (owner)",
+    "pickedTitle": "Drifting Through Quiet Thoughts"
   },
   "music-stress-relief-20": {
     "audioPath": "support/Stress Relief/paccagnellastudios-mywillowcare-144243.mp3",
@@ -3954,7 +4074,8 @@
       "output": 292,
       "thought": 0
     },
-    "decision": "stay in stress_relief (owner)"
+    "decision": "stay in stress_relief (owner)",
+    "pickedTitle": "Under the Quiet Willow"
   },
   "music-loneliness-02": {
     "audioPath": "support/Loneliness/soulprodmusic-loneliness-155854.mp3",
@@ -3984,7 +4105,8 @@
       "output": 276,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Echoes in an Empty Room"
   },
   "music-loneliness-03": {
     "audioPath": "support/Loneliness/soulprodmusic-urban-loneliness-216682.mp3",
@@ -4014,7 +4136,8 @@
       "output": 313,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Rain on the Windowpane"
   },
   "music-stress-relief-19": {
     "audioPath": "support/Stress Relief/crystaleyeofficial-stress-relief-background-music-track-309940.mp3",
@@ -4044,7 +4167,8 @@
       "output": 262,
       "thought": 0
     },
-    "decision": "stay in stress_relief (owner)"
+    "decision": "stay in stress_relief (owner)",
+    "pickedTitle": "Quiet Arpeggios at Dusk"
   },
   "music-loneliness-05": {
     "audioPath": "support/Loneliness/welc0mei0-180106-sad-scene-emotional-piano-20560.mp3",
@@ -4074,7 +4198,8 @@
       "output": 261,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Quiet Solitary Keys"
   },
   "music-loneliness-01": {
     "audioPath": "support/Loneliness/harumachimusic-loneliness-156734.mp3",
@@ -4104,7 +4229,8 @@
       "output": 266,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Empty Chair Waltz"
   },
   "music-loneliness-06": {
     "audioPath": "support/Loneliness/twotwice-loneliness-emotional-piano-and-strings-music-172242.mp3",
@@ -4134,7 +4260,8 @@
       "output": 275,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Solitary Violin and Piano"
   },
   "music-loneliness-07": {
     "audioPath": "support/Loneliness/junseolim-sadness-491794.mp3",
@@ -4165,7 +4292,8 @@
       "thought": 0
     },
     "secondaryTopic": "emotional_release",
-    "decision": "stay in loneliness; emotional_release as a secondary topic (owner)"
+    "decision": "stay in loneliness; emotional_release as a secondary topic (owner)",
+    "pickedTitle": "When the Weight Lifts"
   },
   "music-loneliness-09": {
     "audioPath": "support/Loneliness/tomomi_kato-improvisation_215-543421.mp3",
@@ -4195,7 +4323,8 @@
       "output": 246,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Wandering Solitude on Piano"
   },
   "music-loneliness-04": {
     "audioPath": "support/Loneliness/sergepavkinmusic-no-place-to-go-216744.mp3",
@@ -4231,7 +4360,8 @@
       "output": 309,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Drifting Through Night"
   },
   "music-loneliness-11": {
     "audioPath": "support/Loneliness/tomomi_kato-spiral-256792.mp3",
@@ -4261,7 +4391,8 @@
       "output": 249,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Echoes of One Note"
   },
   "music-loneliness-10": {
     "audioPath": "support/Loneliness/tomomi_kato-smoke-282291.mp3",
@@ -4275,7 +4406,7 @@
     "heard": "A slow, expressive solo piano piece in a minor key with a melancholic and solitary mood. It shifts between lower, steady arpeggios and delicate, high-register notes, swelling gently in the middle before settling into quiet, lingering chords.",
     "suggestedTitle": "Drifting in the Quiet",
     "vocals": "none",
-    "whatItsFor": "intimate, melancholic solo piano for sitting quietly with feelings of loneliness and longing",
+    "whatItsFor": "minor-key piano drifting between low and high notes for missing someone at night",
     "why": "The solitary, intimate solo piano has a wistful, aching quality that sits gently with the feeling of being alone.",
     "alsoFits": ["sadness", "emotional_release", "overthinking"],
     "arc": "swells_and_settles",
@@ -4291,7 +4422,8 @@
       "output": 272,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Drifting in the Quiet"
   },
   "music-loneliness-13": {
     "audioPath": "support/Loneliness/loveforest3167-destiny-311930.mp3",
@@ -4321,7 +4453,8 @@
       "output": 278,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Strings in the Quiet"
   },
   "music-loneliness-08": {
     "audioPath": "support/Loneliness/u_zykznjgzya-canx27t-start-my-day-without-you-244731.mp3",
@@ -4351,7 +4484,8 @@
       "output": 300,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Can't Start My Day Without You"
   },
   "music-loneliness-14": {
     "audioPath": "support/Loneliness/u_dpvlweewdw-quiet-perseverance-206907.mp3",
@@ -4386,7 +4520,8 @@
       "output": 294,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Strings of Quiet Longing"
   },
   "music-loneliness-15": {
     "audioPath": "support/Loneliness/starlight_music-living-in-solitude-474828.mp3",
@@ -4422,7 +4557,8 @@
       "output": 314,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Living In Solitude"
   },
   "music-loneliness-17": {
     "audioPath": "support/Loneliness/softsuicide-a-time-of-fall-149809.mp3",
@@ -4452,7 +4588,8 @@
       "output": 264,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Rainlight Chords"
   },
   "music-loneliness-18": {
     "audioPath": "support/Loneliness/tomomi_kato-barcarolle-285211.mp3",
@@ -4482,7 +4619,8 @@
       "output": 263,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Solitary Evening Barcarolle"
   },
   "music-loneliness-16": {
     "audioPath": "support/Loneliness/elijah_k-lost-here-374334.mp3",
@@ -4516,7 +4654,8 @@
       "output": 271,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Neon Night Drive"
   },
   "music-loneliness-19": {
     "audioPath": "support/Loneliness/fidelfortune-mistery-dark-mellow-melody-voice-and-sound-female-voice-228191.mp3",
@@ -4546,7 +4685,8 @@
       "output": 292,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Distant Echoing Voice"
   },
   "music-calm-peace-01": {
     "audioPath": "support/Calm & Peace/leberch-calm-509384.mp3",
@@ -4576,7 +4716,8 @@
       "output": 283,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Four Slow Chords"
   },
   "music-calm-peace-02": {
     "audioPath": "support/Calm & Peace/the_mountain-inner-peace-587587.mp3",
@@ -4606,7 +4747,8 @@
       "output": 268,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Warm Evening Keys"
   },
   "music-calm-peace-04": {
     "audioPath": "support/Calm & Peace/paulyudin-calm-calm-music-573990.mp3",
@@ -4636,7 +4778,8 @@
       "output": 260,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Rising Through the Heavy"
   },
   "music-loneliness-12": {
     "audioPath": "support/Loneliness/tomomi_kato-alone-238544.mp3",
@@ -4666,7 +4809,8 @@
       "output": 263,
       "thought": 0
     },
-    "decision": "stay in loneliness (owner)"
+    "decision": "stay in loneliness (owner)",
+    "pickedTitle": "Quiet Room Piano"
   },
   "music-calm-peace-03": {
     "audioPath": "support/Calm & Peace/leberch-calm-589817.mp3",
@@ -4697,7 +4841,8 @@
       "thought": 0
     },
     "decision": "stay in calm_peace (owner)",
-    "secondaryTopic": "healing_recovery"
+    "secondaryTopic": "healing_recovery",
+    "pickedTitle": "Rippling Piano Reflections"
   },
   "music-calm-peace-05": {
     "audioPath": "support/Calm & Peace/leberch-calm-595679.mp3",
@@ -4727,7 +4872,8 @@
       "output": 277,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Drifting Piano Light"
   },
   "music-calm-peace-08": {
     "audioPath": "support/Calm & Peace/leberch-calm-589656.mp3",
@@ -4757,7 +4903,8 @@
       "output": 248,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Quiet Evening Keys"
   },
   "music-calm-peace-09": {
     "audioPath": "support/Calm & Peace/atlasaudio-calm-calm-music-576616.mp3",
@@ -4787,7 +4934,8 @@
       "output": 322,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Sunlight on the Desk"
   },
   "music-calm-peace-10": {
     "audioPath": "support/Calm & Peace/leberch-calm-calm-music-580525.mp3",
@@ -4817,7 +4965,8 @@
       "output": 269,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Soft Evening Waltz"
   },
   "music-calm-peace-07": {
     "audioPath": "support/Calm & Peace/atlasaudio-calm-583147.mp3",
@@ -4847,7 +4996,8 @@
       "output": 264,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Slow Tide Drone"
   },
   "music-calm-peace-06": {
     "audioPath": "support/Calm & Peace/leberch-calm-583078.mp3",
@@ -4877,7 +5027,8 @@
       "output": 291,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Drifting Chimes and Drone"
   },
   "music-calm-peace-12": {
     "audioPath": "support/Calm & Peace/leberch-calm-piano-589818.mp3",
@@ -4907,7 +5058,8 @@
       "output": 283,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Slow Piano Circle"
   },
   "music-calm-peace-14": {
     "audioPath": "support/Calm & Peace/sub_clair-calm-587830.mp3",
@@ -4947,7 +5099,8 @@
       "output": 302,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Rising Horizon Pulse"
   },
   "music-calm-peace-11": {
     "audioPath": "support/Calm & Peace/andriig-calm-calm-music-566899.mp3",
@@ -4977,7 +5130,8 @@
       "output": 256,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Quiet Fingerpicked Thoughts"
   },
   "music-stress-relief-14": {
     "audioPath": "support/Stress Relief/the_mountain-insomnia-relief-587588.mp3",
@@ -5013,7 +5167,8 @@
       "output": 315,
       "thought": 0
     },
-    "decision": "stay in stress_relief (owner)"
+    "decision": "stay in stress_relief (owner)",
+    "pickedTitle": "Dusty Strings at Dusk"
   },
   "music-calm-peace-13": {
     "audioPath": "support/Calm & Peace/andriig-calm-calm-music-572282.mp3",
@@ -5043,7 +5198,8 @@
       "output": 254,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Porch Light Acoustic"
   },
   "music-calm-peace-17": {
     "audioPath": "support/Calm & Peace/sub_clair-calm-591733.mp3",
@@ -5083,7 +5239,8 @@
       "output": 302,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Velvet Groove House"
   },
   "music-calm-peace-15": {
     "audioPath": "support/Calm & Peace/sub_clair-calm-585426.mp3",
@@ -5119,7 +5276,8 @@
       "output": 299,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Forward Stride"
   },
   "music-calm-peace-18": {
     "audioPath": "support/Calm & Peace/alex-morgan-calm-still-water-breathing-578483.mp3",
@@ -5149,7 +5307,8 @@
       "output": 320,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Warm Rhodes Afternoon Groove"
   },
   "music-calm-peace-16": {
     "audioPath": "support/Calm & Peace/prettyjohn1-calm-537656.mp3",
@@ -5179,7 +5338,8 @@
       "output": 279,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Canopy of Quiet"
   },
   "music-calm-peace-19": {
     "audioPath": "support/Calm & Peace/the_mountain-concentration-peace-380686.mp3",
@@ -5193,7 +5353,7 @@
     "heard": "Very slow, low-energy warm synth pads and sustained string textures drift gently without any beat. Halfway through, a soft, bell-like synth arpeggio enters, adding a subtle, twinkling movement while keeping the mood deeply calm and steady.",
     "suggestedTitle": "Drifting Warmth and Bells",
     "vocals": "none",
-    "whatItsFor": "warm synth pads and gentle bell tones for sitting quietly and letting your mind settle",
+    "whatItsFor": "beatless strings and pads that gain a soft bell arpeggio for winding down slowly",
     "why": "The slow, warm, beatless synth pads create a weightless, unhurried space where the listener has nothing to do but sit and rest.",
     "alsoFits": ["deep_relaxation", "meditation", "anxiety_relief"],
     "arc": "steady",
@@ -5209,7 +5369,8 @@
       "output": 287,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Drifting Warmth and Bells"
   },
   "music-calm-peace-20": {
     "audioPath": "support/Calm & Peace/andriig-calm-calm-music-581022.mp3",
@@ -5239,7 +5400,8 @@
       "output": 263,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "pickedTitle": "Sunlight Through Leaves"
   },
   "music-confidence-empowerment-04": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-high-class-heart-431333.mp3",
@@ -5275,7 +5437,8 @@
       "output": 284,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "High Class Heart"
   },
   "music-confidence-empowerment-03": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-the-way-you-stare-488741.mp3",
@@ -5311,7 +5474,8 @@
       "output": 331,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "The Way You Stare"
   },
   "music-confidence-empowerment-06": {
     "audioPath": "support/Confidence & Empowerment/moonpetalmedia-karmas-got-receipts-dark-pop-female-vocals-attitude-527656.mp3",
@@ -5347,7 +5511,8 @@
       "output": 304,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Karma's Got Receipts"
   },
   "music-confidence-empowerment-02": {
     "audioPath": "support/Confidence & Empowerment/poorartistt-emotional-female-song-on-feminism-no-copyright-578973.mp3",
@@ -5383,7 +5548,8 @@
       "output": 324,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Emotional Female Song on Feminism"
   },
   "music-confidence-empowerment-07": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-love-yourself-first-497413.mp3",
@@ -5420,7 +5586,8 @@
       "thought": 0
     },
     "secondaryTopic": "self_love",
-    "decision": "stay in confidence_empowerment; self_love as a secondary topic (owner)"
+    "decision": "stay in confidence_empowerment; self_love as a secondary topic (owner)",
+    "pickedTitle": "Love Yourself First"
   },
   "music-confidence-empowerment-08": {
     "audioPath": "support/Confidence & Empowerment/openmindaudio-female-empowerment-dancehall-music-she-rules-551620.mp3",
@@ -5456,7 +5623,8 @@
       "output": 306,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Female Empowerment Dancehall"
   },
   "music-confidence-empowerment-05": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-the-words-are-mine-443092.mp3",
@@ -5491,7 +5659,8 @@
       "output": 319,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "The Words Are Mine"
   },
   "music-confidence-empowerment-09": {
     "audioPath": "support/Confidence & Empowerment/moonpetalmedia-quiet-wars-emotional-empowerment-pop-soul-female-vocals-500233.mp3",
@@ -5521,7 +5690,8 @@
       "output": 291,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Quiet Wars - Emotional Empowerment"
   },
   "music-confidence-empowerment-10": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-donx27t-mess-with-magic-425109.mp3",
@@ -5557,7 +5727,8 @@
       "output": 292,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Don't Mess With Magic"
   },
   "music-confidence-empowerment-11": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-kick-up-a-fuss-495783.mp3",
@@ -5587,7 +5758,8 @@
       "output": 281,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Kick Up A Fuss"
   },
   "music-confidence-empowerment-12": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-let-me-out-434430.mp3",
@@ -5623,7 +5795,8 @@
       "output": 283,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Let Me Out"
   },
   "music-confidence-empowerment-13": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-busy-being-free-496720.mp3",
@@ -5659,7 +5832,8 @@
       "output": 313,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Busy Being Free"
   },
   "music-confidence-empowerment-14": {
     "audioPath": "support/Confidence & Empowerment/meditativetiger-solar-plexus-empowerment-528-hz-confidence-489174.mp3",
@@ -5689,7 +5863,8 @@
       "output": 279,
       "thought": 0
     },
-    "decision": "move to meditation (owner)"
+    "decision": "move to meditation (owner)",
+    "pickedTitle": "Amber Bowl Drone"
   },
   "music-confidence-empowerment-15": {
     "audioPath": "support/Confidence & Empowerment/musicmeowwdotcom-iron-in-heels-aggresive-female-rap-on-women-empowerment-589080.mp3",
@@ -5724,7 +5899,8 @@
       "output": 312,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Iron in Heels - Aggressive Rap"
   },
   "music-confidence-empowerment-17": {
     "audioPath": "support/Confidence & Empowerment/nickpanek-burning-bridges-empowering-breakup-anthem-306116.mp3",
@@ -5760,7 +5936,8 @@
       "output": 305,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Burning Bridges - Empowering Breakup Anthem"
   },
   "music-confidence-empowerment-16": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-enough-of-that-547696.mp3",
@@ -5796,7 +5973,8 @@
       "output": 297,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Enough of That"
   },
   "music-confidence-empowerment-19": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-no-apologies-342500.mp3",
@@ -5832,7 +6010,8 @@
       "output": 321,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "No Apologies"
   },
   "music-anxiety-relief-01": {
     "audioPath": "support/Anxiety Relief/boopul-golden-dawn-sitar-amp-sacred-chant-anxiety-relief-music-538720.mp3",
@@ -5862,7 +6041,8 @@
       "output": 310,
       "thought": 0
     },
-    "decision": "stay in anxiety_relief (owner)"
+    "decision": "stay in anxiety_relief (owner)",
+    "pickedTitle": "Golden Dawn Sitar & Sacred Chant - Anxiety Relief Music"
   },
   "music-anxiety-relief-02": {
     "audioPath": "support/Anxiety Relief/electroanimals-dream-588266.mp3",
@@ -5897,7 +6077,8 @@
       "output": 267,
       "thought": 0
     },
-    "decision": "stay in anxiety_relief (owner)"
+    "decision": "stay in anxiety_relief (owner)",
+    "pickedTitle": "Drifting Through Starlight"
   },
   "music-confidence-empowerment-18": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-not-today-498132.mp3",
@@ -5933,7 +6114,8 @@
       "output": 321,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Not Today"
   },
   "music-anxiety-relief-03": {
     "audioPath": "support/Anxiety Relief/inhaleexhalestudio-youx27re-here-583965.mp3",
@@ -5964,7 +6146,8 @@
       "thought": 0
     },
     "secondaryTopic": "mindfulness",
-    "decision": "stay in anxiety_relief; mindfulness as a secondary topic (owner)"
+    "decision": "stay in anxiety_relief; mindfulness as a secondary topic (owner)",
+    "pickedTitle": "You're Here"
   },
   "music-anxiety-relief-04": {
     "audioPath": "support/Anxiety Relief/innovations4u-track-3-do-one-thing-well-by-christian-scholl-aka-tangere-mundi-541043.mp3",
@@ -6004,7 +6187,8 @@
       "output": 324,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Do One Thing Well"
   },
   "music-confidence-empowerment-20": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-middle-finger-483444.mp3",
@@ -6039,7 +6223,8 @@
       "output": 298,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Middle Finger"
   },
   "music-anxiety-relief-06": {
     "audioPath": "support/Anxiety Relief/innovations4u-track-11-ask-for-help-early-by-christian-scholl-aka-tangere-mundi-541051.mp3",
@@ -6075,7 +6260,8 @@
       "output": 315,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Ask for Help Early"
   },
   "music-anxiety-relief-07": {
     "audioPath": "support/Anxiety Relief/meditativetiger-the-meditative-tiger-963hz-pineal-gland-activator-soundbath-535932.mp3",
@@ -6106,7 +6292,8 @@
       "thought": 0
     },
     "secondaryTopic": "meditation",
-    "decision": "stay in anxiety_relief; meditation as a secondary topic (owner)"
+    "decision": "stay in anxiety_relief; meditation as a secondary topic (owner)",
+    "pickedTitle": "Resonant Bell Stillness"
   },
   "music-anxiety-relief-08": {
     "audioPath": "support/Anxiety Relief/petrushkasound-anxiety-relief-music-438225.mp3",
@@ -6136,7 +6323,8 @@
       "output": 264,
       "thought": 0
     },
-    "decision": "stay in anxiety_relief (owner)"
+    "decision": "stay in anxiety_relief (owner)",
+    "pickedTitle": "Echoes in Warm Pads"
   },
   "music-anxiety-relief-09": {
     "audioPath": "support/Anxiety Relief/poorartistt-a-relaxing-flute-to-lower-your-heartbeat-567227.mp3",
@@ -6166,7 +6354,8 @@
       "output": 269,
       "thought": 0
     },
-    "decision": "stay in anxiety_relief (owner)"
+    "decision": "stay in anxiety_relief (owner)",
+    "pickedTitle": "Breathy Flute Stillness"
   },
   "music-anxiety-relief-10": {
     "audioPath": "support/Anxiety Relief/tideblue-sunset-between-us-solo-ver-mellow-neo-soul-rampb-520359.mp3",
@@ -6202,7 +6391,8 @@
       "output": 331,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Sunset Between Us"
   },
   "music-overthinking-01": {
     "audioPath": "support/Overthinking/alanajordan-accidental-text-488723.mp3",
@@ -6238,7 +6428,8 @@
       "output": 315,
       "thought": 0
     },
-    "decision": "stay in overthinking (owner)"
+    "decision": "stay in overthinking (owner)",
+    "pickedTitle": "Accidental Text"
   },
   "music-anxiety-relief-11": {
     "audioPath": "support/Anxiety Relief/bearstockmusic-ending-yoga-practice-586684.mp3",
@@ -6269,7 +6460,8 @@
       "thought": 0
     },
     "secondaryTopic": "overthinking",
-    "decision": "stay in anxiety_relief; overthinking as a secondary topic (owner)"
+    "decision": "stay in anxiety_relief; overthinking as a secondary topic (owner)",
+    "pickedTitle": "Hopeful Flowing Keys"
   },
   "music-overthinking-02": {
     "audioPath": "support/Overthinking/alanajordan-everything-is-under-control-378204.mp3",
@@ -6299,7 +6491,8 @@
       "output": 311,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Everything is Under Control"
   },
   "music-overthinking-03": {
     "audioPath": "support/Overthinking/alanajordan-overthinking-373465.mp3",
@@ -6335,7 +6528,8 @@
       "output": 324,
       "thought": 0
     },
-    "decision": "stay in overthinking (owner)"
+    "decision": "stay in overthinking (owner)",
+    "pickedTitle": "Overthinking Reflections"
   },
   "music-anxiety-relief-05": {
     "audioPath": "support/Anxiety Relief/innovations4u-track-7-say-it-out-loud-by-christian-scholl-aka-tangere-mundi-541050.mp3",
@@ -6371,7 +6565,8 @@
       "output": 343,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Say It Out Loud"
   },
   "music-overthinking-04": {
     "audioPath": "support/Overthinking/alanajordan-worries-372746.mp3",
@@ -6401,7 +6596,8 @@
       "output": 279,
       "thought": 0
     },
-    "decision": "stay in overthinking (owner)"
+    "decision": "stay in overthinking (owner)",
+    "pickedTitle": "Worries"
   },
   "music-overthinking-06": {
     "audioPath": "support/Overthinking/evolutionguru-sunset-dreams-real-evolution-255234.mp3",
@@ -6431,7 +6627,8 @@
       "output": 284,
       "thought": 0
     },
-    "decision": "stay in overthinking (owner)"
+    "decision": "stay in overthinking (owner)",
+    "pickedTitle": "Sunset Dreams - Real Evolution"
   },
   "music-overthinking-05": {
     "audioPath": "support/Overthinking/crimsonaudio-overthinking-446950.mp3",
@@ -6467,7 +6664,8 @@
       "output": 346,
       "thought": 0
     },
-    "decision": "stay in overthinking (owner)"
+    "decision": "stay in overthinking (owner)",
+    "pickedTitle": "Overthinking Dance Mix"
   },
   "music-overthinking-08": {
     "audioPath": "support/Overthinking/openmindaudio-chill-emo-rock-song-stay-awake-580669 (1).mp3",
@@ -6503,7 +6701,8 @@
       "output": 315,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Chill Emo Rock Song - Stay Awake"
   },
   "music-overthinking-09": {
     "audioPath": "support/Overthinking/poorartistt-surreal-downtempo-song-about-overthinking-everything-441232.mp3",
@@ -6539,7 +6738,8 @@
       "output": 312,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Neon Pulse Horizon"
   },
   "music-overthinking-10": {
     "audioPath": "support/Overthinking/saavane-stop-overthinking-calming-meditation-231869 (1).mp3",
@@ -6569,7 +6769,8 @@
       "output": 285,
       "thought": 0
     },
-    "decision": "stay in overthinking (owner)"
+    "decision": "stay in overthinking (owner)",
+    "pickedTitle": "Canopy of Stillness"
   },
   "music-overthinking-12": {
     "audioPath": "support/Overthinking/sunnyscy-midnight-overthinking-138937.mp3",
@@ -6605,7 +6806,8 @@
       "output": 298,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Neon Horizon"
   },
   "music-overthinking-11": {
     "audioPath": "support/Overthinking/siarhei_korbut-stop-overthinking-short-387150.mp3",
@@ -6635,7 +6837,8 @@
       "output": 273,
       "thought": 0
     },
-    "decision": "stay in overthinking (owner)"
+    "decision": "stay in overthinking (owner)",
+    "pickedTitle": "Drifting Beyond Thought"
   },
   "music-confidence-empowerment-01": {
     "audioPath": "support/Confidence & Empowerment/alanajordan-let-it-be-enough-455294.mp3",
@@ -6671,7 +6874,8 @@
       "output": 291,
       "thought": 0
     },
-    "decision": "stay in confidence_empowerment (owner)"
+    "decision": "stay in confidence_empowerment (owner)",
+    "pickedTitle": "Let It Be Enough"
   },
   "music-overthinking-13": {
     "audioPath": "support/Overthinking/thisisbeatkitchen-ix27m-overthinking-140-bpm-instrumental-235161.mp3",
@@ -6701,7 +6905,8 @@
       "output": 296,
       "thought": 0
     },
-    "decision": "stay in overthinking (owner)"
+    "decision": "stay in overthinking (owner)",
+    "pickedTitle": "Midnight Thought Loop"
   },
   "music-focus-concentration-01": {
     "audioPath": "support/Focus & Concentration/arpmedia-relaxing-relaxing-music-577813.mp3",
@@ -6731,7 +6936,8 @@
       "output": 274,
       "thought": 0
     },
-    "decision": "stay in focus_concentration (owner)"
+    "decision": "stay in focus_concentration (owner)",
+    "pickedTitle": "Warm Synth Focus Loop"
   },
   "music-overthinking-14": {
     "audioPath": "support/Overthinking/tim_kulig_free_music-stop-overthinking-it-206250.mp3",
@@ -6767,7 +6973,8 @@
       "output": 292,
       "thought": 0
     },
-    "decision": "stay in overthinking (owner)"
+    "decision": "stay in overthinking (owner)",
+    "pickedTitle": "Late Night Guitar Loop"
   },
   "music-focus-concentration-02": {
     "audioPath": "support/Focus & Concentration/jonasblakewood-atmospheric-ambient-546970.mp3",
@@ -6797,7 +7004,8 @@
       "output": 271,
       "thought": 0
     },
-    "decision": "stay in focus_concentration (owner)"
+    "decision": "stay in focus_concentration (owner)",
+    "pickedTitle": "Midnight Neon Drift"
   },
   "music-focus-concentration-03": {
     "audioPath": "support/Focus & Concentration/jonasblakewood-atmospheric-chill-546969.mp3",
@@ -6833,7 +7041,8 @@
       "output": 290,
       "thought": 0
     },
-    "decision": "stay in focus_concentration (owner)"
+    "decision": "stay in focus_concentration (owner)",
+    "pickedTitle": "Velvet Horizon"
   },
   "music-focus-concentration-04": {
     "audioPath": "support/Focus & Concentration/jonasblakewood-chill-vibe-573480.mp3",
@@ -6869,7 +7078,8 @@
       "output": 289,
       "thought": 0
     },
-    "decision": "stay in focus_concentration (owner)"
+    "decision": "stay in focus_concentration (owner)",
+    "pickedTitle": "Looped Afternoon Groove"
   },
   "music-focus-concentration-05": {
     "audioPath": "support/Focus & Concentration/joyinsound-lofi-background-music-391712.mp3",
@@ -6899,7 +7109,8 @@
       "output": 317,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Gritty Boom Bap Groove"
   },
   "music-focus-concentration-06": {
     "audioPath": "support/Focus & Concentration/kulakovka-hypnotic-295873.mp3",
@@ -6935,7 +7146,8 @@
       "thought": 0
     },
     "decision": "stay in focus_concentration (owner)",
-    "secondaryTopic": "motivation"
+    "secondaryTopic": "motivation",
+    "pickedTitle": "Late Night Pulse"
   },
   "music-focus-concentration-08": {
     "audioPath": "support/Focus & Concentration/leberch-study-580088.mp3",
@@ -6965,7 +7177,8 @@
       "output": 275,
       "thought": 0
     },
-    "decision": "move to calm_peace (owner)"
+    "decision": "move to calm_peace (owner)",
+    "pickedTitle": "Warm Horizon Chords"
   },
   "music-focus-concentration-09": {
     "audioPath": "support/Focus & Concentration/prettyjohn1-calm-495675.mp3",
@@ -6995,7 +7208,8 @@
       "output": 286,
       "thought": 0
     },
-    "decision": "move to calm_peace (owner)"
+    "decision": "move to calm_peace (owner)",
+    "pickedTitle": "Choir Over Birdsong"
   },
   "music-focus-concentration-10": {
     "audioPath": "support/Focus & Concentration/prettyjohn1-lofi-lofi-music_35sec-587183.mp3",
@@ -7031,7 +7245,8 @@
       "output": 300,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Late Night Snap"
   },
   "music-focus-concentration-11": {
     "audioPath": "support/Focus & Concentration/prettyjohn1-lofi-lofi-music-587176.mp3",
@@ -7067,7 +7282,8 @@
       "output": 293,
       "thought": 0
     },
-    "decision": "stay in focus_concentration (owner)"
+    "decision": "stay in focus_concentration (owner)",
+    "pickedTitle": "Late Night Vinyl Groove"
   },
   "music-focus-concentration-12": {
     "audioPath": "support/Focus & Concentration/prettyjohn1-motivational_47sec-530635.mp3",
@@ -7102,7 +7318,8 @@
       "output": 276,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Neon Rush"
   },
   "music-focus-concentration-13": {
     "audioPath": "support/Focus & Concentration/prettyjohn1-motivational_54sec-530634.mp3",
@@ -7137,7 +7354,8 @@
       "output": 292,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Neon Pulse Rush"
   },
   "music-focus-concentration-14": {
     "audioPath": "support/Focus & Concentration/prettyjohn1-motivational-526517.mp3",
@@ -7167,7 +7385,8 @@
       "output": 289,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Bright Momentum"
   },
   "music-focus-concentration-15": {
     "audioPath": "support/Focus & Concentration/prettyjohn1-motivational-530632.mp3",
@@ -7181,7 +7400,7 @@
     "heard": "This is an intense, fast-paced hardstyle electronic track with a pounding kick drum, aggressive off-beat synth bass, and chopped female vocal loops. It alternates between brief vocal build-ups and heavy, high-energy club drops.",
     "suggestedTitle": "Hardstyle Rush",
     "vocals": "lyrics",
-    "whatItsFor": "high-energy hardstyle beats and driving synth bass for shaking off sluggishness and getting moving",
+    "whatItsFor": "pounding hardstyle kicks and chopped vocals for an all-out workout surge",
     "why": "The aggressive hardstyle beat, heavy bass drops, and repetitive vocal chops are far too intense and distracting for concentration, making it much better suited for high-energy physical motivation.",
     "alsoFits": ["confidence_empowerment", "emotional_release"],
     "arc": "varied",
@@ -7202,7 +7421,8 @@
       "output": 307,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Motivational"
   },
   "music-focus-concentration-16": {
     "audioPath": "support/Focus & Concentration/prettyjohn1-relaxing-537660.mp3",
@@ -7232,7 +7452,8 @@
       "output": 245,
       "thought": 0
     },
-    "decision": "move to nature_mindfulness (owner)"
+    "decision": "move to nature_mindfulness (owner)",
+    "pickedTitle": "Canopy of Quiet Light"
   },
   "music-focus-concentration-17": {
     "audioPath": "support/Focus & Concentration/tape-echo-reflection-reflections_58sec-567726.mp3",
@@ -7263,7 +7484,8 @@
       "thought": 0
     },
     "decision": "stay in focus_concentration (owner)",
-    "secondaryTopic": "overthinking"
+    "secondaryTopic": "overthinking",
+    "pickedTitle": "Drifting Tape Echoes"
   },
   "music-focus-concentration-18": {
     "audioPath": "support/Focus & Concentration/tape-echo-reflection-reflections_75sec-567724.mp3",
@@ -7293,7 +7515,8 @@
       "output": 270,
       "thought": 0
     },
-    "decision": "stay in focus_concentration (owner)"
+    "decision": "stay in focus_concentration (owner)",
+    "pickedTitle": "Tape Echo Drift"
   },
   "music-happiness-joy-02": {
     "audioPath": "support/Happiness & Joy/audiodollar-elevator-music-elevator-background-532033.mp3",
@@ -7323,7 +7546,8 @@
       "output": 298,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Stormy Seas Uprising"
   },
   "music-happiness-joy-01": {
     "audioPath": "support/Happiness & Joy/atlasaudio-dance-518070.mp3",
@@ -7358,7 +7582,8 @@
       "output": 341,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Dance"
   },
   "music-happiness-joy-03": {
     "audioPath": "support/Happiness & Joy/bombinsound-kids-happy-background-music-89-second-495404.mp3",
@@ -7388,7 +7613,8 @@
       "output": 305,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Brass Stride Beat"
   },
   "music-happiness-joy-04": {
     "audioPath": "support/Happiness & Joy/bombinsound-summer-motivation-version-3-554575.mp3",
@@ -7418,7 +7644,8 @@
       "output": 288,
       "thought": 0
     },
-    "decision": "stay in happiness_joy (owner)"
+    "decision": "stay in happiness_joy (owner)",
+    "pickedTitle": "Sunlit Bass Drop"
   },
   "music-happiness-joy-06": {
     "audioPath": "support/Happiness & Joy/bombinsound-the-motherx27s-day-491968.mp3",
@@ -7448,7 +7675,8 @@
       "output": 294,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Bittersweet Strings and Piano"
   },
   "music-happiness-joy-05": {
     "audioPath": "support/Happiness & Joy/bombinsound-summer-version-4-with-you-564679.mp3",
@@ -7484,7 +7712,8 @@
       "output": 317,
       "thought": 0
     },
-    "decision": "stay in happiness_joy (owner)"
+    "decision": "stay in happiness_joy (owner)",
+    "pickedTitle": "Summer Version 4 With You"
   },
   "music-happiness-joy-07": {
     "audioPath": "support/Happiness & Joy/bombinsound-vlog-future-bass-547231.mp3",
@@ -7520,7 +7749,8 @@
       "output": 273,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Electric Surge Drop"
   },
   "music-happiness-joy-08": {
     "audioPath": "support/Happiness & Joy/good_b_music-uplifting-christmas-background-orchestra-no-jingle-128844.mp3",
@@ -7556,7 +7786,8 @@
       "output": 287,
       "thought": 0
     },
-    "decision": "stay in happiness_joy (owner)"
+    "decision": "stay in happiness_joy (owner)",
+    "pickedTitle": "Sparkling Winter Strings"
   },
   "music-happiness-joy-10": {
     "audioPath": "support/Happiness & Joy/joyinsound-birthday-398319.mp3",
@@ -7586,7 +7817,8 @@
       "output": 288,
       "thought": 0
     },
-    "decision": "stay in happiness_joy (owner)"
+    "decision": "stay in happiness_joy (owner)",
+    "pickedTitle": "Sunny Ukulele Celebration"
   },
   "music-happiness-joy-09": {
     "audioPath": "support/Happiness & Joy/jonasblakewood-weakness-for-sweets-300526.mp3",
@@ -7622,7 +7854,8 @@
       "output": 303,
       "thought": 0
     },
-    "decision": "stay in happiness_joy (owner)"
+    "decision": "stay in happiness_joy (owner)",
+    "pickedTitle": "Bright Summer Rush"
   },
   "music-happiness-joy-11": {
     "audioPath": "support/Happiness & Joy/joyinsound-pop-paradise-389316.mp3",
@@ -7658,7 +7891,8 @@
       "output": 299,
       "thought": 0
     },
-    "decision": "stay in happiness_joy (owner)"
+    "decision": "stay in happiness_joy (owner)",
+    "pickedTitle": "Sunlit Festival Rush"
   },
   "music-happiness-joy-13": {
     "audioPath": "support/Happiness & Joy/kulakovka-pop-positive-268399.mp3",
@@ -7694,7 +7928,8 @@
       "output": 294,
       "thought": 0
     },
-    "decision": "stay in happiness_joy (owner)"
+    "decision": "stay in happiness_joy (owner)",
+    "pickedTitle": "Sunlit House Groove"
   },
   "music-happiness-joy-14": {
     "audioPath": "support/Happiness & Joy/monume-vlog-vlogs-background-music-570686.mp3",
@@ -7724,7 +7959,8 @@
       "output": 286,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Bubbling Synth Groove"
   },
   "music-happiness-joy-15": {
     "audioPath": "support/Happiness & Joy/musicword-hope-that-always-remains-515620.mp3",
@@ -7754,7 +7990,8 @@
       "output": 288,
       "thought": 0
     },
-    "decision": "move to nature_mindfulness (owner)"
+    "decision": "move to nature_mindfulness (owner)",
+    "pickedTitle": "Canopy Piano and Birdsong"
   },
   "music-happiness-joy-12": {
     "audioPath": "support/Happiness & Joy/joyinsound-theme-of-pure-joy-387946.mp3",
@@ -7784,7 +8021,8 @@
       "output": 288,
       "thought": 0
     },
-    "decision": "stay in happiness_joy (owner)"
+    "decision": "stay in happiness_joy (owner)",
+    "pickedTitle": "Sunny Ukulele Bounce"
   },
   "music-happiness-joy-16": {
     "audioPath": "support/Happiness & Joy/paulyudin-happy-happy-music-477929.mp3",
@@ -7814,7 +8052,8 @@
       "output": 297,
       "thought": 0
     },
-    "decision": "stay in happiness_joy (owner)"
+    "decision": "stay in happiness_joy (owner)",
+    "pickedTitle": "Sunny Ukulele & Brass"
   },
   "music-happiness-joy-17": {
     "audioPath": "support/Happiness & Joy/paulyudin-happy-happy-music-513014.mp3",
@@ -7844,7 +8083,8 @@
       "output": 267,
       "thought": 0
     },
-    "decision": "stay in happiness_joy (owner)"
+    "decision": "stay in happiness_joy (owner)",
+    "pickedTitle": "Glockenspiel Skip"
   },
   "music-happiness-joy-18": {
     "audioPath": "support/Happiness & Joy/prettyjohn1-spring-508139.mp3",
@@ -7881,7 +8121,8 @@
       "thought": 0
     },
     "decision": "move to sadness (owner)",
-    "secondaryTopic": "hope_positivity"
+    "secondaryTopic": "hope_positivity",
+    "pickedTitle": "Spring"
   },
   "music-happiness-joy-20": {
     "audioPath": "support/Happiness & Joy/the_mountain-happy-violins-167606.mp3",
@@ -7911,7 +8152,8 @@
       "output": 253,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Weight of the Cello"
   },
   "music-breathing-meditation-01": {
     "audioPath": "support/Breathing & Meditation/alisiabeats-dark-and-light-171712.mp3",
@@ -7946,7 +8188,8 @@
       "output": 289,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Shadows And Voltage"
   },
   "music-overthinking-07": {
     "audioPath": "support/Overthinking/freemusiclab-stop-overthinking-meditate-i-free-background-music-i-free-music-lab-release-357503 (2).mp3",
@@ -7976,7 +8219,8 @@
       "output": 302,
       "thought": 0
     },
-    "decision": "stay in overthinking (owner)"
+    "decision": "stay in overthinking (owner)",
+    "pickedTitle": "Rain Through Still Air"
   },
   "music-happiness-joy-19": {
     "audioPath": "support/Happiness & Joy/sonican-energetic-sport-music-loop-545752.mp3",
@@ -8011,7 +8255,8 @@
       "output": 275,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Relentless Percussion Drive"
   },
   "music-breathing-meditation-02": {
     "audioPath": "support/Breathing & Meditation/atlasaudio-cinematic-softness-511863.mp3",
@@ -8041,7 +8286,8 @@
       "output": 252,
       "thought": 0
     },
-    "decision": "stay in breathing_meditation (owner)"
+    "decision": "stay in breathing_meditation (owner)",
+    "pickedTitle": "Warm Piano Breath"
   },
   "music-breathing-meditation-04": {
     "audioPath": "support/Breathing & Meditation/brightestavenue-claps-stomp-and-trappy-hats-short-version-2-the-energy-of-claps-112971.mp3",
@@ -8071,7 +8317,8 @@
       "output": 275,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Stomp and Clap Strut"
   },
   "music-breathing-meditation-05": {
     "audioPath": "support/Breathing & Meditation/diamond_tunes-meditation-nature-music-20683.mp3",
@@ -8107,7 +8354,8 @@
       "output": 263,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Rising Through the Storm"
   },
   "music-breathing-meditation-03": {
     "audioPath": "support/Breathing & Meditation/brightestavenue-claps-and-stomp-trailer-music-medium-version-the-energy-of-claps-112973.mp3",
@@ -8137,7 +8385,8 @@
       "output": 275,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Stomp and Clap Cadence"
   },
   "music-breathing-meditation-06": {
     "audioPath": "support/Breathing & Meditation/freemusicforvideo-meditation-504885.mp3",
@@ -8168,7 +8417,8 @@
       "thought": 0
     },
     "secondaryTopic": "breathing_meditation",
-    "decision": "move to focus_concentration; breathing_meditation as a secondary topic (owner)"
+    "decision": "move to focus_concentration; breathing_meditation as a secondary topic (owner)",
+    "pickedTitle": "Warm Pulse Grounding"
   },
   "music-breathing-meditation-08": {
     "audioPath": "support/Breathing & Meditation/juliush-earth-and-nature-ambient-cinematic-music-with-forest-sounds-509017.mp3",
@@ -8199,7 +8449,8 @@
       "thought": 0
     },
     "secondaryTopic": "breathing_meditation",
-    "decision": "move to nature_mindfulness; breathing_meditation as a secondary topic (owner)"
+    "decision": "move to nature_mindfulness; breathing_meditation as a secondary topic (owner)",
+    "pickedTitle": "Forest Stream and Flute"
   },
   "music-breathing-meditation-09": {
     "audioPath": "support/Breathing & Meditation/kulakovka-cinematic-ambient-274889.mp3",
@@ -8213,7 +8464,7 @@
     "heard": "A slow, atmospheric cinematic piece starting with a muted synth pulse and reflective piano chords, accompanied by subtle birdsong and airy wordless vocal pads. Lush strings swell into a wide, emotional peak before receding back into the quiet opening pulse.",
     "suggestedTitle": "Where the Horizon Opens",
     "vocals": "wordless",
-    "whatItsFor": "swelling strings and pensive piano for letting heavy feelings rise and move through",
+    "whatItsFor": "a muted pulse, piano and faint birdsong opening into wordless vocals for letting feelings surface",
     "why": "The dramatic orchestral swells and ticking pulse build too much cinematic tension for a steady breathing exercise, making it much better suited for emotional release.",
     "alsoFits": ["healing_recovery", "hope_positivity", "overthinking"],
     "arc": "swells_and_settles",
@@ -8235,7 +8486,8 @@
       "output": 307,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Where the Horizon Opens"
   },
   "music-breathing-meditation-10": {
     "audioPath": "support/Breathing & Meditation/kulakovka-documentary-ambient-274888.mp3",
@@ -8271,7 +8523,8 @@
       "output": 313,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Clockwork Marimba"
   },
   "music-breathing-meditation-12": {
     "audioPath": "support/Breathing & Meditation/music_for_videos-relaxing-145038.mp3",
@@ -8302,7 +8555,8 @@
       "thought": 0
     },
     "secondaryTopic": "calm_peace",
-    "decision": "stay in breathing_meditation; calm_peace as a secondary topic (owner)"
+    "decision": "stay in breathing_meditation; calm_peace as a secondary topic (owner)",
+    "pickedTitle": "Cascading Stillness"
   },
   "music-breathing-meditation-13": {
     "audioPath": "support/Breathing & Meditation/psyai-calm-and-magic-tune-relaxing-ambient-551370.mp3",
@@ -8332,7 +8586,8 @@
       "output": 289,
       "thought": 0
     },
-    "decision": "move to overthinking (owner)"
+    "decision": "move to overthinking (owner)",
+    "pickedTitle": "Quiet Pulse in the Dark"
   },
   "music-focus-concentration-07": {
     "audioPath": "support/Focus & Concentration/kulakovka-lofi-295911.mp3",
@@ -8368,7 +8623,8 @@
       "output": 294,
       "thought": 0
     },
-    "decision": "stay in focus_concentration (owner)"
+    "decision": "stay in focus_concentration (owner)",
+    "pickedTitle": "Vinyl Scratch Groove"
   },
   "music-breathing-meditation-11": {
     "audioPath": "support/Breathing & Meditation/meditativetiger-pure-immersive-yoga-and-meditation-by-meditative-tiger-432230.mp3",
@@ -8398,7 +8654,8 @@
       "output": 281,
       "thought": 0
     },
-    "decision": "move to meditation (owner)"
+    "decision": "move to meditation (owner)",
+    "pickedTitle": "Distant Singing Bowl"
   },
   "music-breathing-meditation-14": {
     "audioPath": "support/Breathing & Meditation/psyai-calm-background-minimal-music-for-video-and-presentation-451141.mp3",
@@ -8428,7 +8685,8 @@
       "output": 266,
       "thought": 0
     },
-    "decision": "move to stress_relief (owner)"
+    "decision": "move to stress_relief (owner)",
+    "pickedTitle": "Evening Saxophone Lounge"
   },
   "music-breathing-meditation-16": {
     "audioPath": "support/Breathing & Meditation/sigmamusicart-the-inspiring-and-motivation-epic-trailer-152847.mp3",
@@ -8458,7 +8716,8 @@
       "output": 276,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Rising Brass and Valor"
   },
   "music-breathing-meditation-18": {
     "audioPath": "support/Breathing & Meditation/the_mountain-health-186331.mp3",
@@ -8472,7 +8731,7 @@
     "heard": "An upbeat, driving instrumental track that starts with muted electric guitar plucks and builds steadily with a four-on-the-floor kick drum, claps, strummed acoustic guitar, piano, and uplifting strings. The mood is energetic, forward-moving, and optimistic.",
     "suggestedTitle": "Rising Momentum",
     "vocals": "none",
-    "whatItsFor": "driving guitar, piano, and strings for finding momentum when you feel stuck",
+    "whatItsFor": "claps, kick drum and strummed guitar building steadily for a morning that needs a push",
     "why": "The fast tempo and driving four-on-the-floor beat are far too energetic for slow breathing exercises, making it much better suited for motivation and forward momentum.",
     "alsoFits": [
       "confidence_empowerment",
@@ -8498,7 +8757,8 @@
       "output": 302,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Muted Guitar Climb"
   },
   "music-breathing-meditation-07": {
     "audioPath": "support/Breathing & Meditation/joyinsound-reflections-about-eternity-398334.mp3",
@@ -8528,7 +8788,8 @@
       "output": 301,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Strings Before the Surge"
   },
   "music-breathing-meditation-15": {
     "audioPath": "support/Breathing & Meditation/siarhei_korbut-meditation-and-sleep-coherent-breathing-520866.mp3",
@@ -8558,7 +8819,8 @@
       "output": 311,
       "thought": 0
     },
-    "decision": "stay in breathing_meditation (owner)"
+    "decision": "stay in breathing_meditation (owner)",
+    "pickedTitle": "Meditation and Sleep Coherent Breathing"
   },
   "music-breathing-meditation-17": {
     "audioPath": "support/Breathing & Meditation/spirographsounds-hard-hitting-rock-and-hip-hop-cinematic-trailer-epic-energetic-191766.mp3",
@@ -8588,7 +8850,8 @@
       "output": 299,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Iron Grit and Fire"
   },
   "music-breathing-meditation-19": {
     "audioPath": "support/Breathing & Meditation/the_mountain-mindfulness-149939.mp3",
@@ -8648,7 +8911,8 @@
       "output": 272,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Unresolved Piano Chords"
   },
   "music-deep-relaxation-02": {
     "audioPath": "support/Deep Relaxation/grand_project-chasing-sunshine_short-1-378266.mp3",
@@ -8678,7 +8942,8 @@
       "output": 299,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Bright Forward Motion"
   },
   "music-breathing-meditation-22": {
     "audioPath": "support/Breathing & Meditation/viramiller-inspiring-orchestral-music-with-majestic-and-uplifting-themes-279441.mp3",
@@ -8708,7 +8973,8 @@
       "output": 243,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "March of Resolve"
   },
   "music-deep-relaxation-03": {
     "audioPath": "support/Deep Relaxation/jonasblakewood-tropical-lounge-533860.mp3",
@@ -8743,7 +9009,8 @@
       "output": 305,
       "thought": 0
     },
-    "decision": "move to happiness_joy (owner)"
+    "decision": "move to happiness_joy (owner)",
+    "pickedTitle": "Sunlit Island Groove"
   },
   "music-deep-relaxation-04": {
     "audioPath": "support/Deep Relaxation/joyinsound-dream-state-echoes-385090.mp3",
@@ -8773,7 +9040,8 @@
       "output": 256,
       "thought": 0
     },
-    "decision": "stay in deep_relaxation (owner)"
+    "decision": "stay in deep_relaxation (owner)",
+    "pickedTitle": "Warm Drifting Chords"
   },
   "music-deep-relaxation-05": {
     "audioPath": "support/Deep Relaxation/kulakovka-chill-deep-house-295875.mp3",
@@ -8787,7 +9055,7 @@
     "heard": "An upbeat, bright deep house track featuring a driving four-on-the-floor beat, warm synth chords, a bouncy bassline, and pitched-up female vocal chops. It builds into energetic dance sections with a soaring synth lead before stripping back to soft chords at the end.",
     "suggestedTitle": "Sunlight Groove",
     "vocals": "wordless",
-    "whatItsFor": "upbeat house rhythms and bright synths for getting moving when you feel stuck",
+    "whatItsFor": "warm synth chords and a bouncy bassline for a sunny, easy lift in energy",
     "why": "With its driving dance beat and high energy, this track is far too stimulating for deep relaxation and works much better for motivation or lifting a flat mood.",
     "alsoFits": ["happiness_joy", "confidence_empowerment", "hope_positivity"],
     "arc": "swells_and_settles",
@@ -8809,7 +9077,8 @@
       "output": 312,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Sunlight Groove"
   },
   "music-deep-relaxation-06": {
     "audioPath": "support/Deep Relaxation/kulakovka-deep-house-277109.mp3",
@@ -8844,7 +9113,8 @@
       "output": 291,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Nightclub Bassline Groove"
   },
   "music-breathing-meditation-21": {
     "audioPath": "support/Breathing & Meditation/verclub_music-meditation-music-550885.mp3",
@@ -8874,7 +9144,8 @@
       "output": 241,
       "thought": 0
     },
-    "decision": "stay in breathing_meditation (owner)"
+    "decision": "stay in breathing_meditation (owner)",
+    "pickedTitle": "Clear Stream Stillness"
   },
   "music-deep-relaxation-07": {
     "audioPath": "support/Deep Relaxation/kulakovka-deep-house-283180.mp3",
@@ -8904,7 +9175,8 @@
       "output": 296,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Neon Runway Pulse"
   },
   "music-deep-relaxation-08": {
     "audioPath": "support/Deep Relaxation/kulakovka-deep-house-291446.mp3",
@@ -8918,7 +9190,7 @@
     "heard": "An upbeat, driving deep house track with a prominent four-on-the-floor kick drum, deep synth bass, bright arpeggiated synths, and recurring wordless vocal chops. It alternates between smoother percussive grooves and high-energy dance drops.",
     "suggestedTitle": "Neon Pulse Groove",
     "vocals": "wordless",
-    "whatItsFor": "driving deep house beat and bright synths for getting moving when you feel stuck",
+    "whatItsFor": "four-on-the-floor kick and chopped vocal hooks for a burst of get-up energy",
     "why": "A pulsing, high-energy dance beat with electronic drops is the exact opposite of soft music for letting the body unclench.",
     "alsoFits": [
       "confidence_empowerment",
@@ -8943,7 +9215,8 @@
       "output": 292,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Neon Pulse Groove"
   },
   "music-breathing-meditation-20": {
     "audioPath": "support/Breathing & Meditation/the_mountain-space-438391.mp3",
@@ -8978,7 +9251,8 @@
       "output": 285,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Dark Orbit Pulse"
   },
   "music-deep-relaxation-10": {
     "audioPath": "support/Deep Relaxation/kulakovka-deep-house-instrumental-295867.mp3",
@@ -9018,7 +9292,8 @@
       "output": 300,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Velvet Saxophone Groove"
   },
   "music-deep-relaxation-09": {
     "audioPath": "support/Deep Relaxation/kulakovka-deep-house-295874.mp3",
@@ -9032,7 +9307,7 @@
     "heard": "This is an upbeat, driving deep house track with a heavy four-on-the-floor kick drum, bouncy synth bass, and chopped wordless vocal samples. The energy stays high and danceable throughout before stripping back to the basic beat at the end.",
     "suggestedTitle": "Velvet Groove Pulse",
     "vocals": "wordless",
-    "whatItsFor": "bouncy deep house beat and synth bass for getting moving when you feel stuck",
+    "whatItsFor": "bouncy synth bass and chopped vocal samples for a playful, loose groove to move to",
     "why": "A punchy, club-ready house beat is far too energetic and stimulating for deep relaxation, serving much better to get someone moving when they feel stuck.",
     "alsoFits": [
       "confidence_empowerment",
@@ -9057,7 +9332,8 @@
       "output": 302,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Velvet Groove Pulse"
   },
   "music-deep-relaxation-11": {
     "audioPath": "support/Deep Relaxation/kulakovka-fashion-chill-277106.mp3",
@@ -9097,7 +9373,8 @@
       "output": 315,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Fashion Chill"
   },
   "music-deep-relaxation-14": {
     "audioPath": "support/Deep Relaxation/kulakovka-lounge-intro-277107.mp3",
@@ -9137,7 +9414,8 @@
       "output": 312,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Vinyl Crackle Drop"
   },
   "music-deep-relaxation-12": {
     "audioPath": "support/Deep Relaxation/kulakovka-hypnotic-295873.mp3",
@@ -9208,7 +9486,8 @@
       "output": 290,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Velvet Glitch Groove"
   },
   "music-deep-relaxation-15": {
     "audioPath": "support/Deep Relaxation/kulakovka-spa-relaxed-fashion-268396.mp3",
@@ -9248,7 +9527,8 @@
       "output": 317,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Lounge Floor Pulse"
   },
   "music-deep-relaxation-16": {
     "audioPath": "support/Deep Relaxation/nesrality-peter-tchaikovsky-dance-of-the-sugar-plum-fairy-classical-remix-7688.mp3",
@@ -9278,7 +9558,8 @@
       "output": 247,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Sugar Plum Piano"
   },
   "music-deep-relaxation-18": {
     "audioPath": "support/Deep Relaxation/newmusic-soft-192476.mp3",
@@ -9338,7 +9619,8 @@
       "output": 293,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Tide of Strings"
   },
   "music-deep-relaxation-20": {
     "audioPath": "support/Deep Relaxation/prettyjohn1-chillout-525761.mp3",
@@ -9368,7 +9650,8 @@
       "output": 272,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Late Night Jazz Beat"
   },
   "music-deep-relaxation-21": {
     "audioPath": "support/Deep Relaxation/prettyjohn1-meditation-495676.mp3",
@@ -9398,7 +9681,8 @@
       "output": 278,
       "thought": 0
     },
-    "decision": "stay in deep_relaxation (owner)"
+    "decision": "stay in deep_relaxation (owner)",
+    "pickedTitle": "Canopy Light and Birdsong"
   },
   "music-deep-relaxation-17": {
     "audioPath": "support/Deep Relaxation/nesrality-peter-tchaikovsky-neapolitan-song-opus-39-18-classical-remix-7693.mp3",
@@ -9428,7 +9712,8 @@
       "output": 262,
       "thought": 0
     },
-    "decision": "move to happiness_joy (owner)"
+    "decision": "move to happiness_joy (owner)",
+    "pickedTitle": "Brisk Neapolitan Piano Dance"
   },
   "music-deep-relaxation-22": {
     "audioPath": "support/Deep Relaxation/souravdasix0ii-phonk-250412.mp3",
@@ -9463,7 +9748,8 @@
       "output": 310,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Phonk"
   },
   "music-healing-recovery-01": {
     "audioPath": "support/Healing & Recovery/atlasaudio-harp-587446.mp3",
@@ -9493,7 +9779,8 @@
       "output": 254,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "pickedTitle": "Quiet Harp Strings"
   },
   "music-deep-relaxation-24": {
     "audioPath": "support/Deep Relaxation/the_mountain-space-438391.mp3",
@@ -9559,7 +9846,8 @@
       "thought": 0
     },
     "decision": "stay in healing_recovery (owner)",
-    "secondaryTopic": "hope_positivity"
+    "secondaryTopic": "hope_positivity",
+    "pickedTitle": "First Warm Light"
   },
   "music-healing-recovery-05": {
     "audioPath": "support/Healing & Recovery/atlasaudio-rest-587602.mp3",
@@ -9619,7 +9907,8 @@
       "output": 238,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "pickedTitle": "Quiet After"
   },
   "music-healing-recovery-02": {
     "audioPath": "support/Healing & Recovery/atlasaudio-health-522424.mp3",
@@ -9633,7 +9922,7 @@
     "heard": "This track opens with soft synth arpeggios and wordless vocal chops, then suddenly drops at 0:20 into an upbeat, driving four-on-the-floor electronic dance beat with pulsing bass and bright synths. It builds in energy before dropping the drums at the end to return to the quiet intro.",
     "suggestedTitle": "Electric Momentum",
     "vocals": "wordless",
-    "whatItsFor": "driving electronic beats and bright synths for shaking off a sluggish mood and getting moving",
+    "whatItsFor": "a soft vocal-chop intro that drops into a dance beat for lifting yourself out of a slump",
     "why": "Despite the misleading title, this is an energetic corporate house track with a sudden, driving beat drop that is completely the opposite of gentle recovery music.",
     "alsoFits": [
       "confidence_empowerment",
@@ -9659,7 +9948,8 @@
       "output": 323,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Electric Momentum"
   },
   "music-healing-recovery-04": {
     "audioPath": "support/Healing & Recovery/atlasaudio-hopeful-590152.mp3",
@@ -9690,7 +9980,8 @@
       "thought": 0
     },
     "decision": "stay in healing_recovery (owner)",
-    "secondaryTopic": "sadness"
+    "secondaryTopic": "sadness",
+    "pickedTitle": "Quiet Mending Piano"
   },
   "music-healing-recovery-08": {
     "audioPath": "support/Healing & Recovery/kulakovka-drum-and-bass-277921.mp3",
@@ -9726,7 +10017,8 @@
       "output": 310,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Drum and Bass"
   },
   "music-deep-relaxation-23": {
     "audioPath": "support/Deep Relaxation/tape-echo-reflection-reflections_58sec-567726.mp3",
@@ -9820,7 +10112,8 @@
       "output": 268,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "pickedTitle": "Soft Light Returning"
   },
   "music-healing-recovery-12": {
     "audioPath": "support/Healing & Recovery/leberch-christian-439968.mp3",
@@ -9850,7 +10143,8 @@
       "output": 276,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "pickedTitle": "Light Returning Slowly"
   },
   "music-healing-recovery-07": {
     "audioPath": "support/Healing & Recovery/atlasaudio-slow-music-587606.mp3",
@@ -9886,7 +10180,8 @@
       "output": 300,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Weeping Strings and Vinyl"
   },
   "music-healing-recovery-13": {
     "audioPath": "support/Healing & Recovery/leberch-gospel-590160.mp3",
@@ -9916,7 +10211,8 @@
       "output": 283,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Somber Choir and Piano"
   },
   "music-healing-recovery-15": {
     "audioPath": "support/Healing & Recovery/leberch-kalimba-587280.mp3",
@@ -9946,7 +10242,8 @@
       "output": 251,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "pickedTitle": "Warm Kalimba Drift"
   },
   "music-healing-recovery-16": {
     "audioPath": "support/Healing & Recovery/leberch-piano-for-sleep-587330.mp3",
@@ -10006,7 +10303,8 @@
       "output": 298,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Echoing Vocal Cries"
   },
   "music-healing-recovery-18": {
     "audioPath": "support/Healing & Recovery/leberch-therapy-525090.mp3",
@@ -10036,7 +10334,8 @@
       "output": 296,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "pickedTitle": "Piano by Trickling Water"
   },
   "music-healing-recovery-19": {
     "audioPath": "support/Healing & Recovery/leberch-uplifting-inspirational-262900.mp3",
@@ -10066,7 +10365,8 @@
       "output": 272,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "pickedTitle": "Quiet Steps Forward"
   },
   "music-healing-recovery-20": {
     "audioPath": "support/Healing & Recovery/marlowemusic-christmas-lullaby-582292.mp3",
@@ -10096,7 +10396,8 @@
       "output": 293,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "pickedTitle": "Music Box Winter Lullaby"
   },
   "music-healing-recovery-21": {
     "audioPath": "support/Healing & Recovery/monume-meditation-music-577979.mp3",
@@ -10126,7 +10427,8 @@
       "output": 284,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Slow Amber Chords"
   },
   "music-healing-recovery-14": {
     "audioPath": "support/Healing & Recovery/leberch-inspirational-calm-375197.mp3",
@@ -10156,7 +10458,8 @@
       "output": 265,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "pickedTitle": "Ripples of Quiet Renewal"
   },
   "music-healing-recovery-24": {
     "audioPath": "support/Healing & Recovery/the_mountain-calm-507994.mp3",
@@ -10195,7 +10498,8 @@
       "output": 300,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Warm Horizon Pulse"
   },
   "music-healing-recovery-25": {
     "audioPath": "support/Healing & Recovery/the_mountain-mental-health-587593.mp3",
@@ -10225,7 +10529,8 @@
       "output": 267,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "pickedTitle": "Quiet Aftermath"
   },
   "music-healing-recovery-22": {
     "audioPath": "support/Healing & Recovery/prettyjohn1-nature-486809.mp3",
@@ -10255,7 +10560,8 @@
       "output": 301,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Soulful Piano Groove"
   },
   "music-healing-recovery-23": {
     "audioPath": "support/Healing & Recovery/tape-echo-dream-dreaming_36sec-567735.mp3",
@@ -10291,7 +10597,8 @@
       "output": 284,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "pickedTitle": "Tape Echo Reverie"
   },
   "music-healing-recovery-26": {
     "audioPath": "support/Healing & Recovery/the_mountain-peaceful-587597.mp3",
@@ -10322,7 +10629,8 @@
       "thought": 0
     },
     "secondaryTopic": "healing_recovery",
-    "decision": "move to hope_positivity; healing_recovery as a secondary topic (owner)"
+    "decision": "move to hope_positivity; healing_recovery as a secondary topic (owner)",
+    "pickedTitle": "Sunlit Mountain Trail"
   },
   "music-healing-recovery-27": {
     "audioPath": "support/Healing & Recovery/the_mountain-relax-relax-music-587598.mp3",
@@ -10358,7 +10666,8 @@
       "output": 331,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Dusty Midnight Chords"
   },
   "music-hope-positivity-01": {
     "audioPath": "support/Hope & Positivity/alex-morgan-upbeat-591314.mp3",
@@ -10389,7 +10698,8 @@
       "thought": 0
     },
     "secondaryTopic": "hope_positivity",
-    "decision": "move to happiness_joy; hope_positivity as a secondary topic (owner)"
+    "decision": "move to happiness_joy; hope_positivity as a secondary topic (owner)",
+    "pickedTitle": "Sunny Side Strut"
   },
   "music-hope-positivity-03": {
     "audioPath": "support/Hope & Positivity/atlasaudio-hope-590153.mp3",
@@ -10455,7 +10765,8 @@
       "output": 297,
       "thought": 0
     },
-    "decision": "stay in hope_positivity (owner)"
+    "decision": "stay in hope_positivity (owner)",
+    "pickedTitle": "Steps Toward Tomorrow"
   },
   "music-hope-positivity-04": {
     "audioPath": "support/Hope & Positivity/atlasaudio-hopeful-590152.mp3",
@@ -10521,7 +10832,8 @@
       "output": 336,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Stylish Funk"
   },
   "music-hope-positivity-07": {
     "audioPath": "support/Hope & Positivity/atlasaudio-uplifting-background-582204.mp3",
@@ -10551,7 +10863,8 @@
       "output": 261,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Wistful Piano Waltz"
   },
   "music-hope-positivity-06": {
     "audioPath": "support/Hope & Positivity/atlasaudio-summer-party-590004.mp3",
@@ -10586,7 +10899,8 @@
       "output": 273,
       "thought": 0
     },
-    "decision": "stay in hope_positivity (owner)"
+    "decision": "stay in hope_positivity (owner)",
+    "pickedTitle": "Neon Dance Floor"
   },
   "music-hope-positivity-08": {
     "audioPath": "support/Hope & Positivity/atlasaudio-vlogging-590007.mp3",
@@ -10623,7 +10937,8 @@
       "thought": 0
     },
     "secondaryTopic": "hope_positivity",
-    "decision": "move to happiness_joy; hope_positivity as a secondary topic (owner)"
+    "decision": "move to happiness_joy; hope_positivity as a secondary topic (owner)",
+    "pickedTitle": "Funky Brass Strut"
   },
   "music-hope-positivity-09": {
     "audioPath": "support/Hope & Positivity/jonasblakewood-energy-rock-action-567332.mp3",
@@ -10653,7 +10968,8 @@
       "output": 265,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Stomp and Grit"
   },
   "music-hope-positivity-10": {
     "audioPath": "support/Hope & Positivity/jonasblakewood-powerful-rock-573487.mp3",
@@ -10667,7 +10983,7 @@
     "heard": "This is a fast, high-energy pop-rock instrumental driven by distorted electric guitars, punchy drums, and bright, upbeat synth leads. It starts loud right away, dips briefly into a rhythmic bridge in the middle, and blasts back into the full anthemic chorus until a sudden final hit.",
     "suggestedTitle": "Electric Rush",
     "vocals": "none",
-    "whatItsFor": "driving electric guitars and bright synths for shaking off a flat mood and getting moving",
+    "whatItsFor": "loud, bright pop-rock guitars from the first second for a fast jolt of energy",
     "why": "While bright and upbeat, its intense, hard-charging rock energy is much better suited for a burst of motivation or joy than the gentle openness needed when the future feels closed.",
     "alsoFits": ["happiness_joy", "confidence_empowerment"],
     "arc": "steady",
@@ -10683,7 +10999,8 @@
       "output": 299,
       "thought": 0
     },
-    "decision": "stay in hope_positivity (owner)"
+    "decision": "stay in hope_positivity (owner)",
+    "pickedTitle": "Electric Rush"
   },
   "music-hope-positivity-12": {
     "audioPath": "support/Hope & Positivity/leberch-inspirational-584481.mp3",
@@ -10713,7 +11030,8 @@
       "output": 278,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Quiet Reflections in Grey"
   },
   "music-hope-positivity-13": {
     "audioPath": "support/Hope & Positivity/leberch-inspire-585271.mp3",
@@ -10743,7 +11061,8 @@
       "output": 298,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Quiet Reflections in Minor"
   },
   "music-hope-positivity-14": {
     "audioPath": "support/Hope & Positivity/leberch-travel-adventure-586187.mp3",
@@ -10757,7 +11076,7 @@
     "heard": "A continuous, flowing piano arpeggio plays over warm synth pads at a moderate tempo. It is purely instrumental with a steady, contemplative mood that stays consistent throughout before gently fading out.",
     "suggestedTitle": "Rippling Piano Reflections",
     "vocals": "none",
-    "whatItsFor": "flowing piano arpeggios and warm pads for settling a busy, looping mind",
+    "whatItsFor": "a steady, unbroken piano current over pads for staying with one thought at a time",
     "why": "Rather than being an open, lifting piece, its hypnotic, minor-tinged looping piano pattern is much better suited for holding a busy, looping mind or aiding concentration.",
     "alsoFits": ["focus_concentration", "mindfulness", "calm_peace"],
     "arc": "steady",
@@ -10773,7 +11092,8 @@
       "output": 270,
       "thought": 0
     },
-    "decision": "stay in hope_positivity (owner)"
+    "decision": "stay in hope_positivity (owner)",
+    "pickedTitle": "Steady Piano Current"
   },
   "music-hope-positivity-11": {
     "audioPath": "support/Hope & Positivity/jonasblakewood-upbeat-summer-rock-573486.mp3",
@@ -10803,7 +11123,8 @@
       "output": 278,
       "thought": 0
     },
-    "decision": "stay in hope_positivity (owner)"
+    "decision": "stay in hope_positivity (owner)",
+    "pickedTitle": "Full Throttle Sunlight"
   },
   "music-hope-positivity-15": {
     "audioPath": "support/Hope & Positivity/paulyudin-minimal-164833.mp3",
@@ -10840,7 +11161,8 @@
       "thought": 0
     },
     "secondaryTopic": "focus_concentration",
-    "decision": "stay in hope_positivity; focus_concentration as a secondary topic (owner)"
+    "decision": "stay in hope_positivity; focus_concentration as a secondary topic (owner)",
+    "pickedTitle": "Steady Pulse in Motion"
   },
   "music-hope-positivity-16": {
     "audioPath": "support/Hope & Positivity/paulyudin-motivation-motivation-music-573993.mp3",
@@ -10906,7 +11228,8 @@
       "output": 295,
       "thought": 0
     },
-    "decision": "move to happiness_joy (owner)"
+    "decision": "move to happiness_joy (owner)",
+    "pickedTitle": "Sunlit Coastline Bounce"
   },
   "music-hope-positivity-19": {
     "audioPath": "support/Hope & Positivity/prettyjohn1-easter-490466.mp3",
@@ -10956,7 +11279,7 @@
     "heard": "An upbeat, driving corporate pop instrumental featuring muted electric guitar plucks, bright synth pads, piano, and a four-on-the-floor electronic drum beat. It builds through several energetic sections with acoustic guitar strumming and synth risers, maintaining a cheerful, forward-moving pace.",
     "suggestedTitle": "Forward Stride",
     "vocals": "none",
-    "whatItsFor": "upbeat guitar and a driving electronic beat for getting moving when you feel stuck",
+    "whatItsFor": "muted guitar plucks and a four-on-the-floor pulse for an easy, forward-looking start",
     "why": "Its driving electronic beat and upbeat corporate pop energy are much better suited for getting moving and feeling motivated than for gentle, open-hearted hope.",
     "alsoFits": [
       "happiness_joy",
@@ -10982,7 +11305,8 @@
       "output": 303,
       "thought": 0
     },
-    "decision": "stay in hope_positivity (owner)"
+    "decision": "stay in hope_positivity (owner)",
+    "pickedTitle": "Bright Pop Stride"
   },
   "music-hope-positivity-21": {
     "audioPath": "support/Hope & Positivity/prettyjohn1-motivational_54sec-530634.mp3",
@@ -11053,7 +11377,8 @@
       "output": 316,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Chill Hop Routine"
   },
   "music-hope-positivity-23": {
     "audioPath": "support/Hope & Positivity/prettyjohn1-promo-promo-music-503917.mp3",
@@ -11089,7 +11414,8 @@
       "output": 269,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Brass Strut"
   },
   "music-hope-positivity-24": {
     "audioPath": "support/Hope & Positivity/prettyjohn1-promo-promo-music-595666.mp3",
@@ -11125,7 +11451,8 @@
       "output": 322,
       "thought": 0
     },
-    "decision": "stay in hope_positivity (owner)"
+    "decision": "stay in hope_positivity (owner)",
+    "pickedTitle": "Warm Guitar Groove"
   },
   "music-hope-positivity-25": {
     "audioPath": "support/Hope & Positivity/soundsurfer-energy-591346.mp3",
@@ -11161,7 +11488,8 @@
       "output": 291,
       "thought": 0
     },
-    "decision": "stay in hope_positivity (owner)"
+    "decision": "stay in hope_positivity (owner)",
+    "pickedTitle": "Workout Impact"
   },
   "music-hope-positivity-26": {
     "audioPath": "support/Hope & Positivity/soundsurfer-restaurant-580476.mp3",
@@ -11191,7 +11519,8 @@
       "output": 297,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Late Night Study Beat"
   },
   "music-hope-positivity-27": {
     "audioPath": "support/Hope & Positivity/soundsurfer-streetball-582112.mp3",
@@ -11227,7 +11556,8 @@
       "output": 289,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Concrete Court Swagger"
   },
   "music-hope-positivity-22": {
     "audioPath": "support/Hope & Positivity/prettyjohn1-motivational-530632.mp3",
@@ -11287,7 +11617,8 @@
       "output": 298,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Brass Stride Groove"
   },
   "music-hope-positivity-30": {
     "audioPath": "support/Hope & Positivity/the_mountain-summer-pop-593072.mp3",
@@ -11323,7 +11654,8 @@
       "output": 299,
       "thought": 0
     },
-    "decision": "move to happiness_joy (owner)"
+    "decision": "move to happiness_joy (owner)",
+    "pickedTitle": "Sunlit Tropical Bounce"
   },
   "music-hope-positivity-29": {
     "audioPath": "support/Hope & Positivity/the_mountain-summer-beach-593071.mp3",
@@ -11359,7 +11691,8 @@
       "output": 328,
       "thought": 0
     },
-    "decision": "move to happiness_joy (owner)"
+    "decision": "move to happiness_joy (owner)",
+    "pickedTitle": "Sunlight on the Coast"
   },
   "music-hope-positivity-31": {
     "audioPath": "support/Hope & Positivity/the_mountain-travel-funk-593080.mp3",
@@ -11395,7 +11728,8 @@
       "output": 291,
       "thought": 0
     },
-    "decision": "move to happiness_joy (owner)"
+    "decision": "move to happiness_joy (owner)",
+    "pickedTitle": "Sunny Funk Strut"
   },
   "music-hope-positivity-33": {
     "audioPath": "support/Hope & Positivity/the_mountain-uplifting-song-593085.mp3",
@@ -11431,7 +11765,8 @@
       "output": 303,
       "thought": 0
     },
-    "decision": "stay in hope_positivity (owner)"
+    "decision": "stay in hope_positivity (owner)",
+    "pickedTitle": "Sunlight on the Trail"
   },
   "music-hope-positivity-34": {
     "audioPath": "support/Hope & Positivity/zephiramusic-positive-lofi-587548.mp3",
@@ -11467,7 +11802,8 @@
       "output": 301,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Jazzy Afternoon Loop"
   },
   "music-meditation-01": {
     "audioPath": "support/Meditation/29605581-relaxing-piano-1-118623.mp3",
@@ -11498,7 +11834,8 @@
       "thought": 0
     },
     "secondaryTopic": "meditation",
-    "decision": "move to calm_peace; meditation as a secondary topic (owner)"
+    "decision": "move to calm_peace; meditation as a secondary topic (owner)",
+    "pickedTitle": "Soft Touch Keys"
   },
   "music-meditation-02": {
     "audioPath": "support/Meditation/34910776-free-royalty-zen-calm-deep-meditation-and-sleep-music-191592.mp3",
@@ -11528,7 +11865,8 @@
       "output": 273,
       "thought": 0
     },
-    "decision": "stay in meditation (owner)"
+    "decision": "stay in meditation (owner)",
+    "pickedTitle": "Deep Stillness Drone"
   },
   "music-meditation-03": {
     "audioPath": "support/Meditation/alan_frijns-cooper-creek-flowing-heart-of-the-forest-meditation-for-mental-health-409967.mp3",
@@ -11564,7 +11902,8 @@
       "output": 324,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Creek To Anthem"
   },
   "music-hope-positivity-32": {
     "audioPath": "support/Hope & Positivity/the_mountain-upbeat-acoustic-593084.mp3",
@@ -11600,7 +11939,8 @@
       "output": 308,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Stomp and Swagger"
   },
   "music-meditation-05": {
     "audioPath": "support/Meditation/deltax-music-breakers-skyroom-meditation-music-413831.mp3",
@@ -11630,7 +11970,8 @@
       "output": 326,
       "thought": 0
     },
-    "decision": "stay in meditation (owner)"
+    "decision": "stay in meditation (owner)",
+    "pickedTitle": "Breathy Flute and Lo-Fi"
   },
   "music-healing-recovery-11": {
     "audioPath": "support/Healing & Recovery/leberch-calm-uplifting-313610.mp3",
@@ -11660,7 +12001,8 @@
       "output": 262,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "pickedTitle": "Quiet Piano Aftermath"
   },
   "music-meditation-04": {
     "audioPath": "support/Meditation/alan_frijns-thornton-peak-the-shrouded-summit-zen-garden-mystic-flute-409963.mp3",
@@ -11696,7 +12038,8 @@
       "output": 307,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Winds on the Summit"
   },
   "music-meditation-06": {
     "audioPath": "support/Meditation/deltax-music-destiny-meditation-music-413829.mp3",
@@ -11731,7 +12074,8 @@
       "output": 311,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Echoes in the Bass"
   },
   "music-meditation-07": {
     "audioPath": "support/Meditation/deltax-music-hella-bands-meditation-music-413813.mp3",
@@ -11761,7 +12105,8 @@
       "output": 322,
       "thought": 0
     },
-    "decision": "move to overthinking (owner)"
+    "decision": "move to overthinking (owner)",
+    "pickedTitle": "Laid Back Meditation"
   },
   "music-meditation-09": {
     "audioPath": "support/Meditation/deltax-music-lottery-meditation-music-413860.mp3",
@@ -11800,7 +12145,8 @@
       "output": 302,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Kinetic Midnight Drift"
   },
   "music-meditation-08": {
     "audioPath": "support/Meditation/deltax-music-kundalini-s3x-magik-meditation-music-413834.mp3",
@@ -11836,7 +12182,8 @@
       "output": 296,
       "thought": 0
     },
-    "decision": "move to confidence_empowerment (owner)"
+    "decision": "move to confidence_empowerment (owner)",
+    "pickedTitle": "Slow Blues Groove"
   },
   "music-meditation-10": {
     "audioPath": "support/Meditation/deltax-music-prophetic-meditation-music-413830.mp3",
@@ -11876,7 +12223,8 @@
       "output": 330,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Soaring Chants and Stillness"
   },
   "music-meditation-12": {
     "audioPath": "support/Meditation/deltax-music-root-meditation-music-413814.mp3",
@@ -11906,7 +12254,8 @@
       "output": 309,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Midnight Sub Drift"
   },
   "music-meditation-11": {
     "audioPath": "support/Meditation/deltax-music-red-light-district-meditation-music-413862.mp3",
@@ -11941,7 +12290,8 @@
       "output": 305,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Dark Hypnotic Synth Pulse"
   },
   "music-meditation-14": {
     "audioPath": "support/Meditation/deltax-music-somewhere-foreign-meditation-music-413823.mp3",
@@ -11977,7 +12327,8 @@
       "output": 318,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Warm Guitar Lo-Fi Loop"
   },
   "music-meditation-17": {
     "audioPath": "support/Meditation/drmseq-crystal-tides-562217.mp3",
@@ -12042,7 +12393,8 @@
       "output": 300,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "pickedTitle": "Midnight Piano Loop"
   },
   "music-meditation-16": {
     "audioPath": "support/Meditation/drmekhan-soft-study-focus-deep-266120.mp3",
@@ -12073,7 +12425,8 @@
       "thought": 0
     },
     "secondaryTopic": "meditation",
-    "decision": "move to focus_concentration; meditation as a secondary topic (owner)"
+    "decision": "move to focus_concentration; meditation as a secondary topic (owner)",
+    "pickedTitle": "Pages In Quiet Light"
   },
   "music-meditation-19": {
     "audioPath": "support/Meditation/drmseq-face-the-endless-574458.mp3",
@@ -12138,7 +12491,8 @@
       "output": 311,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Tide in the Rockpool"
   },
   "music-meditation-18": {
     "audioPath": "support/Meditation/drmseq-dreamcatcher-544492.mp3",
@@ -12234,7 +12588,8 @@
       "output": 323,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Shiva's Blossom"
   },
   "music-meditation-24": {
     "audioPath": "support/Meditation/mysticbloom-what-did-byrd-find-in-antarctica-302092.mp3",
@@ -12270,7 +12625,8 @@
       "output": 305,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Dusty Keys and Rain"
   },
   "music-meditation-20": {
     "audioPath": "support/Meditation/drmseq-rebirth-569959.mp3",
@@ -12300,7 +12656,8 @@
       "output": 293,
       "thought": 0
     },
-    "decision": "move to overthinking (owner)"
+    "decision": "move to overthinking (owner)",
+    "pickedTitle": "Drifting Guitar Echoes"
   },
   "music-meditation-25": {
     "audioPath": "support/Meditation/premiummusicodyssey-sunrise-231181.mp3",
@@ -12336,7 +12693,8 @@
       "output": 336,
       "thought": 0
     },
-    "decision": "move to calm_peace (owner)"
+    "decision": "move to calm_peace (owner)",
+    "pickedTitle": "Chiming Lo-Fi Drift"
   },
   "music-meditation-28": {
     "audioPath": "support/Meditation/tim_kulig_free_music-seeing-the-light-132426.mp3",
@@ -12366,7 +12724,8 @@
       "output": 275,
       "thought": 0
     },
-    "decision": "move to breathing_meditation (owner)"
+    "decision": "move to breathing_meditation (owner)",
+    "pickedTitle": "Tidal Choir Drone"
   },
   "music-meditation-26": {
     "audioPath": "support/Meditation/samsabt-calm-instrumental-atmosphere-478781.mp3",
@@ -12396,7 +12755,8 @@
       "output": 285,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Tide of Quiet Strings"
   },
   "music-sadness-01": {
     "audioPath": "support/Sadness/alex-morgan-anime-opening-emotional-journey-573645.mp3",
@@ -12436,7 +12796,8 @@
       "output": 302,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Soaring Horizon Drive"
   },
   "music-sadness-03": {
     "audioPath": "support/Sadness/alex-morgan-lofi-study-rainy-night-568166.mp3",
@@ -12472,7 +12833,8 @@
       "output": 302,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "move to focus_concentration (owner)",
+    "pickedTitle": "Late Night Lo-Fi Piano"
   },
   "music-sadness-04": {
     "audioPath": "support/Sadness/alex-morgan-sad-instrumental-music-579473.mp3",
@@ -12502,7 +12864,8 @@
       "output": 280,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Quiet Weight of Rain"
   },
   "music-meditation-27": {
     "audioPath": "support/Meditation/tabbiesmanz-nature-amp-universe-188689.mp3",
@@ -12532,7 +12895,8 @@
       "output": 243,
       "thought": 0
     },
-    "decision": "move to calm_peace (owner)"
+    "decision": "move to calm_peace (owner)",
+    "pickedTitle": "Cathedral Of Light"
   },
   "music-sadness-05": {
     "audioPath": "support/Sadness/alex-morgan-sad-piano-emotional-rain-story-575883.mp3",
@@ -12563,7 +12927,8 @@
       "thought": 0
     },
     "secondaryTopic": "emotional_release",
-    "decision": "stay in sadness; emotional_release as a secondary topic (owner)"
+    "decision": "stay in sadness; emotional_release as a secondary topic (owner)",
+    "pickedTitle": "When the Strings Break Through"
   },
   "music-sadness-06": {
     "audioPath": "support/Sadness/alex-morgan-sad-quiet-goodbye-letter-578495.mp3",
@@ -12594,7 +12959,8 @@
       "thought": 0
     },
     "secondaryTopic": "emotional_release",
-    "decision": "stay in sadness; emotional_release as a secondary topic (owner)"
+    "decision": "stay in sadness; emotional_release as a secondary topic (owner)",
+    "pickedTitle": "Pages Left Unsent"
   },
   "music-sadness-07": {
     "audioPath": "support/Sadness/alex-morgan-sentimental-poetry-background-music-583286.mp3",
@@ -12624,7 +12990,8 @@
       "output": 275,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Cello for Quiet Sorrow"
   },
   "music-sadness-02": {
     "audioPath": "support/Sadness/alex-morgan-calm-piano-541028.mp3",
@@ -12655,7 +13022,8 @@
       "thought": 0
     },
     "secondaryTopic": "sadness",
-    "decision": "move to healing_recovery; sadness as a secondary topic (owner)"
+    "decision": "move to healing_recovery; sadness as a secondary topic (owner)",
+    "pickedTitle": "Warm Light Returning"
   },
   "music-sadness-09": {
     "audioPath": "support/Sadness/andriig-no-copyright-music-568209.mp3",
@@ -12669,7 +13037,7 @@
     "heard": "A solo acoustic guitar fingerpicks a gentle, warm, and steady melody at a relaxed tempo. Despite the title, there are no orchestral strings or epic swells, just an intimate and comforting acoustic progression throughout.",
     "suggestedTitle": "Warm Acoustic Afternoon",
     "vocals": "none",
-    "whatItsFor": "warm fingerpicked acoustic guitar for sitting quietly and letting the day slow down",
+    "whatItsFor": "a lone fingerpicked guitar melody for quiet evenings when sadness sits close",
     "why": "The title is completely mismatched to the audio, which is actually a warm, comforting solo acoustic guitar piece rather than something heavy or sad.",
     "alsoFits": ["healing_recovery", "self_love", "stress_relief"],
     "arc": "steady",
@@ -12685,7 +13053,8 @@
       "output": 262,
       "thought": 0
     },
-    "decision": "move to calm_peace (owner)"
+    "decision": "move to calm_peace (owner)",
+    "pickedTitle": "Warm Acoustic Afternoon"
   },
   "music-sadness-10": {
     "audioPath": "support/Sadness/andriih-classical-classical-piano-590653.mp3",
@@ -12715,7 +13084,8 @@
       "output": 277,
       "thought": 0
     },
-    "decision": "move to healing_recovery (owner)"
+    "decision": "move to healing_recovery (owner)",
+    "pickedTitle": "Wistful Afternoon Waltz"
   },
   "music-sadness-08": {
     "audioPath": "support/Sadness/alex-morgan-slow-motion-emotional-beat-583273.mp3",
@@ -12745,7 +13115,8 @@
       "output": 307,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Quiet Weight of Longing"
   },
   "music-sadness-11": {
     "audioPath": "support/Sadness/andriih-instrumental-instrumental-music-585963.mp3",
@@ -12775,7 +13146,8 @@
       "output": 257,
       "thought": 0
     },
-    "decision": "move to calm_peace (owner)"
+    "decision": "move to calm_peace (owner)",
+    "pickedTitle": "Quiet Afternoon Waltz"
   },
   "music-sadness-12": {
     "audioPath": "support/Sadness/arpmedia-piano-background-music-577850.mp3",
@@ -12805,7 +13177,8 @@
       "output": 261,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Circling Piano Thoughts"
   },
   "music-sadness-13": {
     "audioPath": "support/Sadness/arpmedia-sad-sad-music-577848.mp3",
@@ -12841,7 +13214,8 @@
       "output": 298,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Worn Piano and Strings"
   },
   "music-sadness-14": {
     "audioPath": "support/Sadness/atlasaudio-emotional-583306.mp3",
@@ -12855,7 +13229,7 @@
     "heard": "A gentle, melancholic piano plays over warm, atmospheric synth pads. It alternates between slow, sparse melodies and faster, flowing arpeggio sections before settling quietly at the end.",
     "suggestedTitle": "Quiet Falling Rainlight",
     "vocals": "none",
-    "whatItsFor": "gentle melancholic piano and warm pads for sitting with a heavy heart",
+    "whatItsFor": "melancholic piano moving between sparse melody and flowing runs for sitting with sorrow",
     "why": "The minor-key piano and subdued pads keep company with a heavy, reflective mood without trying to force cheerfulness.",
     "alsoFits": ["emotional_release", "overthinking", "loneliness"],
     "arc": "swells_and_settles",
@@ -12871,7 +13245,8 @@
       "output": 260,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Quiet Falling Rainlight"
   },
   "music-sadness-15": {
     "audioPath": "support/Sadness/atlasaudio-emotional-piano-510218.mp3",
@@ -12901,7 +13276,8 @@
       "output": 277,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Tender Waltz in Grey"
   },
   "music-sadness-16": {
     "audioPath": "support/Sadness/atlasaudio-nostalgic-piano-520047.mp3",
@@ -12931,7 +13307,8 @@
       "output": 282,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Wistful Felt Waltz"
   },
   "music-sadness-17": {
     "audioPath": "support/Sadness/atlasaudio-sad-dramatic-519649.mp3",
@@ -12961,7 +13338,8 @@
       "output": 289,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Fragile Glass Piano"
   },
   "music-sadness-18": {
     "audioPath": "support/Sadness/leberch-emotional-584027.mp3",
@@ -12991,7 +13369,8 @@
       "output": 271,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Quiet Glass Memories"
   },
   "music-sadness-19": {
     "audioPath": "support/Sadness/leberch-emotional-emotional-music-584028.mp3",
@@ -13021,7 +13400,8 @@
       "output": 277,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Resonant Piano Sorrow"
   },
   "music-meditation-13": {
     "audioPath": "support/Meditation/deltax-music-silence-meditation-music-413865.mp3",
@@ -13057,7 +13437,8 @@
       "output": 337,
       "thought": 0
     },
-    "decision": "move to loneliness (owner)"
+    "decision": "move to loneliness (owner)",
+    "pickedTitle": "Silent Meditation"
   },
   "music-sadness-23": {
     "audioPath": "support/Sadness/leberch-sad-emotional-509537.mp3",
@@ -13087,7 +13468,8 @@
       "output": 272,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Waltz That Opens Up"
   },
   "music-sadness-22": {
     "audioPath": "support/Sadness/leberch-sad-510083.mp3",
@@ -13117,7 +13499,8 @@
       "output": 261,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Cascading Quiet Sorrow"
   },
   "music-sadness-20": {
     "audioPath": "support/Sadness/leberch-melancholy-595794.mp3",
@@ -13131,7 +13514,7 @@
     "heard": "A slow, melancholic piano plays a gentle, looping arpeggio and a sparse high melody over warm, spacious synth pads. The mood is pensive and sorrowful, staying quiet and steady throughout before fading out at the end.",
     "suggestedTitle": "Windowpane In Winter",
     "vocals": "none",
-    "whatItsFor": "gentle melancholic piano and warm pads for sitting quietly with a heavy heart",
+    "whatItsFor": "a looping piano arpeggio under a sparse high melody for an aching, pensive quiet",
     "why": "The slow, minor-key piano melody and spacious pads hold a gentle, somber mood that keeps quiet company with sorrow without trying to force cheer.",
     "alsoFits": ["loneliness", "overthinking", "healing_recovery"],
     "arc": "fades_out",
@@ -13147,7 +13530,8 @@
       "output": 274,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Windowpane In Winter"
   },
   "music-sadness-24": {
     "audioPath": "support/Sadness/leberch-sad-piano-578733.mp3",
@@ -13177,7 +13561,8 @@
       "output": 297,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Weight of Quiet Sorrow"
   },
   "music-sadness-21": {
     "audioPath": "support/Sadness/leberch-sad-509532.mp3",
@@ -13207,7 +13592,8 @@
       "output": 298,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Waltz For Quiet Sorrow"
   },
   "music-sadness-25": {
     "audioPath": "support/Sadness/lexin_music-inspiring-cinematic-ambient-116199.mp3",
@@ -13243,7 +13629,8 @@
       "output": 290,
       "thought": 0
     },
-    "decision": "move to emotional_release (owner)"
+    "decision": "move to emotional_release (owner)",
+    "pickedTitle": "Rising Through the Mist"
   },
   "music-sadness-27": {
     "audioPath": "support/Sadness/paulyudin-sad-sad-music-508961.mp3",
@@ -13274,7 +13661,8 @@
       "thought": 0
     },
     "secondaryTopic": "emotional_release",
-    "decision": "stay in sadness; emotional_release as a secondary topic (owner)"
+    "decision": "stay in sadness; emotional_release as a secondary topic (owner)",
+    "pickedTitle": "Tears in Motion"
   },
   "music-sadness-28": {
     "audioPath": "support/Sadness/prettyjohn1-background-music-537170-1.mp3",
@@ -13310,7 +13698,8 @@
       "output": 295,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Neon Street Groove"
   },
   "music-sadness-26": {
     "audioPath": "support/Sadness/music_for_creators-best-dramatic-music-136824.mp3",
@@ -13341,7 +13730,8 @@
       "thought": 0
     },
     "secondaryTopic": "emotional_release",
-    "decision": "stay in sadness; emotional_release as a secondary topic (owner)"
+    "decision": "stay in sadness; emotional_release as a secondary topic (owner)",
+    "pickedTitle": "Mournful Violin and Strings"
   },
   "music-sadness-29": {
     "audioPath": "support/Sadness/prettyjohn1-background-music-591305.mp3",
@@ -13371,7 +13761,8 @@
       "output": 275,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Brass and Sample Strut"
   },
   "music-sadness-30": {
     "audioPath": "support/Sadness/prettyjohn1-sad-background-music_48sec-489883.mp3",
@@ -13408,7 +13799,8 @@
       "thought": 0
     },
     "secondaryTopic": "emotional_release",
-    "decision": "stay in sadness; emotional_release as a secondary topic (owner)"
+    "decision": "stay in sadness; emotional_release as a secondary topic (owner)",
+    "pickedTitle": "Weight of the Quiet"
   },
   "music-sadness-31": {
     "audioPath": "support/Sadness/prettyjohn1-sad-lofi-533422.mp3",
@@ -13444,7 +13836,8 @@
       "output": 323,
       "thought": 0
     },
-    "decision": "stay in sadness (owner)"
+    "decision": "stay in sadness (owner)",
+    "pickedTitle": "Rain on Muffled Keys"
   },
   "music-sadness-35": {
     "audioPath": "support/Sadness/vibemode-background-music-581673.mp3",
@@ -13480,7 +13873,8 @@
       "output": 313,
       "thought": 0
     },
-    "decision": "move to happiness_joy (owner)"
+    "decision": "move to happiness_joy (owner)",
+    "pickedTitle": "Smooth Minimal Loop"
   },
   "music-sadness-34": {
     "audioPath": "support/Sadness/the_mountain-sad-490012.mp3",
@@ -13517,7 +13911,8 @@
       "thought": 0
     },
     "secondaryTopic": "emotional_release",
-    "decision": "stay in sadness; emotional_release as a secondary topic (owner)"
+    "decision": "stay in sadness; emotional_release as a secondary topic (owner)",
+    "pickedTitle": "Echoes Of The Mountain"
   },
   "music-sadness-33": {
     "audioPath": "support/Sadness/tape-echo-background-music-567733.mp3",
@@ -13552,7 +13947,8 @@
       "output": 302,
       "thought": 0
     },
-    "decision": "move to hope_positivity (owner)"
+    "decision": "move to hope_positivity (owner)",
+    "pickedTitle": "Echoing Guitar Horizon"
   },
   "music-sadness-32": {
     "audioPath": "support/Sadness/sub_clair-background-music-550483.mp3",
@@ -13588,6 +13984,7 @@
       "output": 305,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "move to motivation (owner)",
+    "pickedTitle": "Documentary Ambient Flow"
   }
 }

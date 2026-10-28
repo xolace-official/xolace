@@ -174,6 +174,8 @@ type Review = Answer & {
 	decision?: string | null;
 	/** The owner's second topic slug (`meditation`); `--apply` writes it to the manifest. */
 	secondaryTopic?: string | null;
+	/** The title chosen for the track; `--apply` writes it to the manifest. */
+	pickedTitle?: string;
 };
 
 const manifest: Track[] = JSON.parse(readFileSync(manifestPath, "utf8"));
@@ -649,6 +651,7 @@ const saveReviews = () =>
 /** The owner's calls on a track, which hearing it again must not drop. */
 const ownerCalls = (slug: string) => ({
 	decision: reviews[slug]?.decision,
+	pickedTitle: reviews[slug]?.pickedTitle,
 	secondaryTopic: reviews[slug]?.secondaryTopic,
 });
 
@@ -676,6 +679,10 @@ function applyReviews() {
 		const line = r?.whatItsFor.trim();
 		if (line && line !== t.whatItsFor) {
 			t.whatItsFor = line;
+			changed++;
+		}
+		if (r?.pickedTitle && r.pickedTitle !== t.title) {
+			t.title = r.pickedTitle;
 			changed++;
 		}
 		const sound = r && soundOf(r);
