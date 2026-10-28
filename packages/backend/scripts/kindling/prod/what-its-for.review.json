@@ -18,7 +18,8 @@
       "output": 122,
       "thought": 448
     },
-    "decision": "stay in mindfulness (owner)"
+    "decision": "stay in mindfulness (owner)",
+    "secondaryTopic": "meditation"
   },
   "music-mindfulness-02": {
     "audioPath": "support/mindfulness/meditativecalmbuddha-sacred-fire-of-mindfulness-389028.mp3",
@@ -60,7 +61,8 @@
       "output": 127,
       "thought": 455
     },
-    "decision": "move to happiness_joy (owner)"
+    "decision": "move to happiness_joy (owner)",
+    "secondaryTopic": "motivation"
   },
   "music-mindfulness-04": {
     "audioPath": "support/mindfulness/pink_sound-path-of-mindfulness-relax-instrumental-background-music-short-1-565366.mp3",
@@ -186,7 +188,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "secondaryTopic": "emotional_release"
   },
   "music-mindfulness-10": {
     "audioPath": "support/mindfulness/pavetraxx-mindfulness-meditation-268622.mp3",
@@ -207,7 +210,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in mindfulness (owner)"
+    "decision": "stay in mindfulness (owner)",
+    "secondaryTopic": "nature_mindfulness"
   },
   "music-mindfulness-11": {
     "audioPath": "support/mindfulness/light_music-mindfulness-meditation-195494.mp3",
@@ -316,7 +320,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in mindfulness (owner)"
+    "decision": "stay in mindfulness (owner)",
+    "secondaryTopic": "nature_mindfulness"
   },
   "music-mindfulness-16": {
     "audioPath": "support/mindfulness/mindfulnessyt-mindfulness-443486.mp3",
@@ -338,7 +343,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in mindfulness (owner)"
+    "decision": "stay in mindfulness (owner)",
+    "secondaryTopic": "calm_peace"
   },
   "music-mindfulness-17": {
     "audioPath": "support/mindfulness/higheruniversalman-mindfulness-meditation-180198.mp3",
@@ -428,7 +434,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in mindfulness (owner)"
+    "decision": "stay in mindfulness (owner)",
+    "secondaryTopic": "meditation"
   },
   "music-sleep-rest-01": {
     "audioPath": "support/Sleep & Rest/the_mountain-lofi-sleep-lofi-sleep-music-587590.mp3",
@@ -648,7 +655,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "secondaryTopic": "healing_recovery"
   },
   "music-sleep-rest-11": {
     "audioPath": "support/Sleep & Rest/marlowemusic-sleep-577897.mp3",
@@ -758,7 +766,8 @@
       "output": 0,
       "thought": 0
     },
-    "decision": "stay in sleep_rest (owner)"
+    "decision": "stay in sleep_rest (owner)",
+    "secondaryTopic": "healing_recovery"
   },
   "music-sleep-rest-16": {
     "audioPath": "support/Sleep & Rest/leberch-sleep-583079.mp3",
@@ -2791,7 +2800,7 @@
       "thought": 0
     },
     "secondaryTopic": "nature_mindfulness",
-    "decision": "move to meditation; nature_mindfulness as a secondary topic (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-20 (owner)"
   },
   "music-nature-mindfulness-02": {
     "audioPath": "support/Nature & Mindfulness/paulyudin-nature-nature-music-573985.mp3",
@@ -3012,7 +3021,7 @@
       "output": 281,
       "thought": 0
     },
-    "decision": "stay in nature_mindfulness (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-07 (owner)"
   },
   "music-nature-mindfulness-12": {
     "audioPath": "support/Nature & Mindfulness/databend-meditation-mindfulness-ambient-546937.mp3",
@@ -3043,7 +3052,7 @@
       "thought": 0
     },
     "secondaryTopic": "nature_mindfulness",
-    "decision": "move to meditation; nature_mindfulness as a secondary topic (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-01 (owner)"
   },
   "music-nature-mindfulness-13": {
     "audioPath": "support/Nature & Mindfulness/meditativetiger-morning-mindfulness-reset-meditation-511822.mp3",
@@ -3074,7 +3083,7 @@
       "thought": 0
     },
     "secondaryTopic": "nature_mindfulness",
-    "decision": "move to emotional_release; nature_mindfulness as a secondary topic (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-09 (owner)"
   },
   "music-nature-mindfulness-08": {
     "audioPath": "support/Nature & Mindfulness/pavetraxx-mindfulness-meditation-268622.mp3",
@@ -3104,7 +3113,7 @@
       "output": 288,
       "thought": 0
     },
-    "decision": "stay in nature_mindfulness (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-10 (owner)"
   },
   "music-nature-mindfulness-14": {
     "audioPath": "support/Nature & Mindfulness/the_mountain-mindfulness-149939.mp3",
@@ -3134,7 +3143,7 @@
       "output": 289,
       "thought": 0
     },
-    "decision": "move to overthinking (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-14 (owner)"
   },
   "music-nature-mindfulness-10": {
     "audioPath": "support/Nature & Mindfulness/breakzstudios-radiant-mindfulness-165866.mp3",
@@ -3164,7 +3173,7 @@
       "output": 289,
       "thought": 0
     },
-    "decision": "move to overthinking (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-18 (owner)"
   },
   "music-nature-mindfulness-16": {
     "audioPath": "support/Nature & Mindfulness/john_kensy_music-mindfulness-relaxation-amp-meditation-music-22174.mp3",
@@ -3194,7 +3203,7 @@
       "output": 275,
       "thought": 0
     },
-    "decision": "stay in nature_mindfulness (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-15 (owner)"
   },
   "music-nature-mindfulness-17": {
     "audioPath": "support/Nature & Mindfulness/mindfulnessyt-mindfulness-443486.mp3",
@@ -3224,7 +3233,7 @@
       "output": 283,
       "thought": 0
     },
-    "decision": "move to calm_peace (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-16 (owner)"
   },
   "music-nature-mindfulness-18": {
     "audioPath": "support/Nature & Mindfulness/natureseye-hatha-meditation-for-mindfulness-9798.mp3",
@@ -3254,7 +3263,7 @@
       "output": 265,
       "thought": 0
     },
-    "decision": "move to meditation (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-19 (owner)"
   },
   "music-nature-mindfulness-09": {
     "audioPath": "support/Nature & Mindfulness/higheruniversalman-mindfulness-meditation-180198.mp3",
@@ -3285,7 +3294,7 @@
       "thought": 0
     },
     "secondaryTopic": "nature_mindfulness",
-    "decision": "move to meditation; nature_mindfulness as a secondary topic (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-17 (owner)"
   },
   "music-nature-mindfulness-15": {
     "audioPath": "support/Nature & Mindfulness/leberch-nature-584950.mp3",
@@ -3435,7 +3444,7 @@
       "output": 277,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-03 (owner)"
   },
   "music-nature-mindfulness-19": {
     "audioPath": "support/Nature & Mindfulness/vividillustrate-zen-garden-ambience-japanese-flute-amp-waterfall-mindfulness-361112.mp3",
@@ -3465,7 +3474,7 @@
       "output": 294,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-08 (owner)"
   },
   "music-stress-relief-05": {
     "audioPath": "support/Stress Relief/musicalmix2020-soul-for-stress-relief-8956.mp3",
@@ -4687,7 +4696,8 @@
       "output": 267,
       "thought": 0
     },
-    "decision": "stay in calm_peace (owner)"
+    "decision": "stay in calm_peace (owner)",
+    "secondaryTopic": "healing_recovery"
   },
   "music-calm-peace-05": {
     "audioPath": "support/Calm & Peace/leberch-calm-595679.mp3",
@@ -6924,7 +6934,8 @@
       "output": 294,
       "thought": 0
     },
-    "decision": "stay in focus_concentration (owner)"
+    "decision": "stay in focus_concentration (owner)",
+    "secondaryTopic": "motivation"
   },
   "music-focus-concentration-08": {
     "audioPath": "support/Focus & Concentration/leberch-study-580088.mp3",
@@ -7251,7 +7262,8 @@
       "output": 271,
       "thought": 0
     },
-    "decision": "stay in focus_concentration (owner)"
+    "decision": "stay in focus_concentration (owner)",
+    "secondaryTopic": "overthinking"
   },
   "music-focus-concentration-18": {
     "audioPath": "support/Focus & Concentration/tape-echo-reflection-reflections_75sec-567724.mp3",
@@ -7868,7 +7880,8 @@
       "output": 335,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "move to sadness (owner)",
+    "secondaryTopic": "hope_positivity"
   },
   "music-happiness-joy-20": {
     "audioPath": "support/Happiness & Joy/the_mountain-happy-violins-167606.mp3",
@@ -8605,7 +8618,7 @@
       "output": 281,
       "thought": 0
     },
-    "decision": "move to overthinking (owner)"
+    "decision": "switch off: duplicate audio of music-mindfulness-14 (owner)"
   },
   "music-deep-relaxation-01": {
     "audioPath": "support/Deep Relaxation/delosound-emotional-piano-480198.mp3",
@@ -9159,7 +9172,7 @@
       "output": 292,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "switch off: duplicate audio of music-focus-concentration-06 (owner)"
   },
   "music-deep-relaxation-13": {
     "audioPath": "support/Deep Relaxation/kulakovka-lounge-chill-266590.mp3",
@@ -9515,7 +9528,7 @@
       "output": 293,
       "thought": 0
     },
-    "decision": "move to focus_concentration (owner)"
+    "decision": "switch off: duplicate audio of music-breathing-meditation-20 (owner)"
   },
   "music-healing-recovery-03": {
     "audioPath": "support/Healing & Recovery/atlasaudio-hope-590153.mp3",
@@ -9545,7 +9558,8 @@
       "output": 283,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "secondaryTopic": "hope_positivity"
   },
   "music-healing-recovery-05": {
     "audioPath": "support/Healing & Recovery/atlasaudio-rest-587602.mp3",
@@ -9575,7 +9589,7 @@
       "output": 254,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "switch off: duplicate audio of music-sleep-rest-15 (owner)"
   },
   "music-healing-recovery-06": {
     "audioPath": "support/Healing & Recovery/atlasaudio-serenity-587605.mp3",
@@ -9675,7 +9689,8 @@
       "output": 271,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "stay in healing_recovery (owner)",
+    "secondaryTopic": "sadness"
   },
   "music-healing-recovery-08": {
     "audioPath": "support/Healing & Recovery/kulakovka-drum-and-bass-277921.mp3",
@@ -9745,7 +9760,7 @@
       "output": 284,
       "thought": 0
     },
-    "decision": "move to overthinking (owner)"
+    "decision": "switch off: duplicate audio of music-focus-concentration-17 (owner)"
   },
   "music-healing-recovery-09": {
     "audioPath": "support/Healing & Recovery/leberch-calm-589817.mp3",
@@ -9775,7 +9790,7 @@
       "output": 270,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "switch off: duplicate audio of music-calm-peace-03 (owner)"
   },
   "music-healing-recovery-10": {
     "audioPath": "support/Healing & Recovery/leberch-calm-piano-586711.mp3",
@@ -9961,7 +9976,7 @@
       "output": 246,
       "thought": 0
     },
-    "decision": "stay in healing_recovery (owner)"
+    "decision": "switch off: duplicate audio of music-sleep-rest-10 (owner)"
   },
   "music-healing-recovery-17": {
     "audioPath": "support/Healing & Recovery/leberch-shamanic-587282.mp3",
@@ -10404,7 +10419,7 @@
       "output": 257,
       "thought": 0
     },
-    "decision": "stay in hope_positivity (owner)"
+    "decision": "switch off: duplicate audio of music-healing-recovery-03 (owner)"
   },
   "music-hope-positivity-02": {
     "audioPath": "support/Hope & Positivity/atlasaudio-family-day-589982.mp3",
@@ -10470,7 +10485,7 @@
       "output": 277,
       "thought": 0
     },
-    "decision": "move to sadness (owner)"
+    "decision": "switch off: duplicate audio of music-healing-recovery-04 (owner)"
   },
   "music-hope-positivity-05": {
     "audioPath": "support/Hope & Positivity/atlasaudio-stylish-funk-590002.mp3",
@@ -10855,7 +10870,7 @@
       "output": 298,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "switch off: duplicate audio of music-motivation-14 (owner)"
   },
   "music-hope-positivity-18": {
     "audioPath": "support/Hope & Positivity/prettyjohn1-background-background-music-581651.mp3",
@@ -10927,7 +10942,7 @@
       "output": 324,
       "thought": 0
     },
-    "decision": "stay in hope_positivity (owner)"
+    "decision": "switch off: duplicate audio of music-happiness-joy-18 (owner)"
   },
   "music-hope-positivity-17": {
     "audioPath": "support/Hope & Positivity/paulyudin-upbeat-corporate-corporate-music-595943.mp3",
@@ -11002,7 +11017,7 @@
       "output": 268,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "switch off: duplicate audio of music-focus-concentration-13 (owner)"
   },
   "music-hope-positivity-20": {
     "audioPath": "support/Hope & Positivity/prettyjohn1-lifestyle-500587.mp3",
@@ -11242,7 +11257,7 @@
       "output": 305,
       "thought": 0
     },
-    "decision": "move to motivation (owner)"
+    "decision": "switch off: duplicate audio of music-focus-concentration-15 (owner)"
   },
   "music-hope-positivity-28": {
     "audioPath": "support/Hope & Positivity/soundsurfer-stylish-582113.mp3",

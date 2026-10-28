@@ -27,7 +27,8 @@
       "energy": 1,
       "heard": "Warm, slow-swelling ambient synthesizer pads wash over a soft, steady low drone. The texture remains motionless, peaceful, and unbroken by melody or percussion.",
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_meditation"
   },
   {
     "slug": "music-mindfulness-02",
@@ -87,7 +88,8 @@
       "energy": 3,
       "heard": "Brisk, cheerful acoustic guitar strumming driven by lively handclaps, shakers, and a steady rhythmic beat. The mood is sunny, upbeat, and consistently energetic throughout.",
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_motivation"
   },
   {
     "slug": "music-mindfulness-04",
@@ -267,7 +269,8 @@
       "energy": 2,
       "heard": "Slow, beatless ambient synth pads and a bright, reedy synth lead play a melancholic melody, periodically interrupted by loud, rushing waves of white noise and ocean surf before fading into silence at 01:50. There are no vocals, and the mood is sombre, vast, and slightly tense rather than bright or easy.",
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_emotional_release"
   },
   {
     "slug": "music-mindfulness-10",
@@ -297,7 +300,8 @@
       "energy": 1,
       "heard": "A slow, resonant ambient drone layered with low singing-bowl tones and subtle shimmers that sustain without rhythmic percussion. It remains sparse, gentle, and steadily tranquil throughout.",
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_nature_mindfulness"
   },
   {
     "slug": "music-mindfulness-11",
@@ -448,7 +452,8 @@
       "energy": 1,
       "heard": "A slow, low-energy ambient piece featuring sparse, reverberant piano notes over warm, swelling synth pads and subtle vinyl crackle. There are no vocals, and the mood remains steady, quiet, and introspective throughout.",
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_nature_mindfulness"
   },
   {
     "slug": "music-mindfulness-16",
@@ -478,7 +483,8 @@
       "energy": 2,
       "heard": "A slow, unhurried pentatonic melody played on a plucked zither (guzheng) over a soft, continuous synthesizer pad, with no percussion or vocals. The piece cycles gently between sparse, deliberate plucking and sections with expressive pitch bends and shimmering tremolo, maintaining a calm and contemplative mood throughout.",
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_calm_peace"
   },
   {
     "slug": "music-mindfulness-17",
@@ -600,7 +606,8 @@
       "energy": 1,
       "heard": "A beatless, slow-evolving synthesizer drone made of warm, enveloping pads that gently swell and recede without any percussion or vocals. Around the three-minute mark, a brighter, shimmering high-register synth layer briefly emerges before everything fades back into a quiet, spacious stillness.",
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_meditation"
   },
   {
     "slug": "music-sleep-rest-01",
@@ -900,7 +907,8 @@
       "energy": 1,
       "heard": "A slow, gentle piano plays a repeating arpeggiated melody over a warm, sustained synth pad. The mood is peaceful and soothing, maintaining a steady, very low energy throughout without any sudden changes or vocals.",
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_healing_recovery"
   },
   {
     "slug": "music-sleep-rest-11",
@@ -1050,7 +1058,8 @@
       "energy": 2,
       "heard": "A gentle, melancholic piano plays a slow, reflective melody over soft, warm synthesizer pads. The energy rises slightly in the middle with flowing, repetitive piano arpeggios before settling back into a quiet, contemplative close.",
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_healing_recovery"
   },
   {
     "slug": "music-sleep-rest-16",
@@ -6043,7 +6052,8 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_healing_recovery"
   },
   {
     "slug": "music-calm-peace-04",
@@ -8886,7 +8896,8 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "wordless"
-    }
+    },
+    "secondaryTopic": "music_topic_motivation"
   },
   {
     "slug": "music-focus-concentration-07",
@@ -9355,7 +9366,8 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_overthinking"
   },
   {
     "slug": "music-focus-concentration-18",
@@ -10227,7 +10239,8 @@
       "natureSounds": [],
       "valence": 2,
       "vocals": "lyrics"
-    }
+    },
+    "secondaryTopic": "music_topic_hope_positivity"
   },
   {
     "slug": "music-happiness-joy-19",
@@ -12627,7 +12640,8 @@
       "natureSounds": [],
       "valence": 4,
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_hope_positivity"
   },
   {
     "slug": "music-healing-recovery-04",
@@ -12671,7 +12685,8 @@
       "natureSounds": [],
       "valence": 3,
       "vocals": "none"
-    }
+    },
+    "secondaryTopic": "music_topic_sadness"
   },
   {
     "slug": "music-healing-recovery-05",
