@@ -266,12 +266,21 @@ export async function activeTopics(ctx: QueryCtx) {
 		}
 		byTopic.set(slug, entry);
 	}
-	// A music track also lists under its secondary topic (getTopic), so it counts there too.
+	// A music track also lists under its secondary topic (getTopic), so it counts
+	// there too, and its cover stands in when the topic has no track of its own.
 	for (const t of tracks) {
-		const entry = t.secondaryTopic && byTopic.get(topicSlug(t.secondaryTopic));
-		if (entry) {
-			entry.musicCount += 1;
+		if (!t.secondaryTopic) {
+			continue;
 		}
+		const slug = topicSlug(t.secondaryTopic);
+		const entry = byTopic.get(slug) ?? {
+			musicCount: 0,
+			supportCount: 0,
+			thumbhash: t.thumbhash,
+			thumbKey: t.thumbKey,
+		};
+		entry.musicCount += 1;
+		byTopic.set(slug, entry);
 	}
 
 	const rows = new Map(

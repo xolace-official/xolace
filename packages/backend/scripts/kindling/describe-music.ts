@@ -677,23 +677,28 @@ function applyReviews() {
 	let changed = 0;
 	for (const t of music) {
 		const r = reviews[t.slug];
-		const line = r?.whatItsFor.trim();
+		// A track this review file doesn't cover (a --limit sample) keeps what it has.
+		if (!r) {
+			continue;
+		}
+		const line = r.whatItsFor.trim();
 		if (line && line !== t.whatItsFor) {
 			t.whatItsFor = line;
 			changed++;
 		}
-		if (r?.pickedTitle && r.pickedTitle !== t.title) {
+		if (r.pickedTitle && r.pickedTitle !== t.title) {
 			t.title = r.pickedTitle;
 			changed++;
 		}
-		const sound = r && soundOf(r);
-		if (sound && JSON.stringify(sound) !== JSON.stringify(t.sound)) {
+		const sound = soundOf(r);
+		if (JSON.stringify(sound) !== JSON.stringify(t.sound)) {
 			t.sound = sound;
 			changed++;
 		}
-		// The owner's secondary topic, decided at the moves.
-		const secondary = reviews[t.slug]?.secondaryTopic;
-		const secondaryTopic = secondary ? `music_topic_${secondary}` : undefined;
+		// The owner's secondary topic, decided at the moves; none on a reviewed track clears it.
+		const secondaryTopic = r.secondaryTopic
+			? `music_topic_${r.secondaryTopic}`
+			: undefined;
 		if (secondaryTopic !== t.secondaryTopic) {
 			t.secondaryTopic = secondaryTopic;
 			changed++;

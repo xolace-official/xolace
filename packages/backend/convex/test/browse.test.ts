@@ -199,6 +199,22 @@ describe("secondary topics", () => {
 			["sadness", 2],
 		]);
 	});
+
+	it("show a topic whose only active tracks are listed under it as a secondary", async () => {
+		const user = await asNewUser();
+		await seed(user, [
+			base("m1", "music", "music_topic_sadness", { active: false }),
+			base("m2", "music", "music_topic_calm_peace", {
+				secondaryTopic: "music_topic_sadness",
+			}),
+		]);
+
+		const topics = await user.t.query(api.browse.getTopics, {});
+		expect(topics.map((t) => [t.slug, t.musicCount])).toEqual([
+			["calm_peace", 1],
+			["sadness", 1],
+		]);
+	});
 });
 
 describe("browse.getTopicTitle", () => {

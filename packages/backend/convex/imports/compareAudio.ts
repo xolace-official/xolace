@@ -250,11 +250,14 @@ export async function compareTrack(
 		);
 	}
 
-	// Loudness counts only when it was measured on the audio the track ends up with.
+	// Loudness counts only when it was measured on the audio the track ends up
+	// with. Without a fresh one, the upsert keeps the stored one for unchanged audio.
 	const loudness =
 		measured?.sha256 === audio.sha256
 			? { lufs: measured.lufs, truePeak: measured.truePeak }
-			: undefined;
+			: stored?.sha256 === audio.sha256
+				? stored.loudness
+				: undefined;
 	const track: TrackUpsert =
 		fields.family === "music"
 			? {
