@@ -6,8 +6,7 @@ import { Platform } from "react-native";
 import { Presets } from "react-native-pulsar";
 import RNShare, { Social } from "react-native-share";
 
-// Required for Instagram Stories since Jan 2023.
-// Set EXPO_PUBLIC_FB_APP_ID in your .env to enable Stories sharing.
+// Required for Instagram Stories since Jan 2023; unset disables Stories sharing.
 const FB_APP_ID = process.env.EXPO_PUBLIC_FB_APP_ID ?? "";
 
 export function useQuoteShareActions(
@@ -49,8 +48,7 @@ export function useQuoteShareActions(
 			platform: "whatsapp",
 			quote_type: quoteType,
 		});
-		// WhatsApp's iOS URL scheme only accepts text — it silently ignores files.
-		// UI hides this button on iOS; fall back defensively for any stray callers.
+		// WhatsApp's iOS URL scheme silently ignores files; the UI hides this on iOS.
 		if (Platform.OS === "ios") {
 			await shareGeneric();
 			return;
@@ -75,8 +73,7 @@ export function useQuoteShareActions(
 			platform: "telegram",
 			quote_type: quoteType,
 		});
-		// Telegram's iOS URL scheme stringifies the file path into the chat — not
-		// an actual image. UI hides this button on iOS; defensive fallback here.
+		// Telegram's iOS URL scheme pastes the file path as text; the UI hides this on iOS.
 		if (Platform.OS === "ios") {
 			await shareGeneric();
 			return;
@@ -106,8 +103,7 @@ export function useQuoteShareActions(
 			quote_type: quoteType,
 		});
 
-		// Instagram Feed on iOS reads the latest item from the camera roll rather
-		// than the URL we pass — so we save first so it picks up our quote image.
+		// Instagram Feed on iOS reads the latest camera-roll item, not the URL, so save first.
 		if (Platform.OS === "ios" && !FB_APP_ID) {
 			try {
 				const { status } = await MediaLibrary.requestPermissionsAsync(false);
@@ -127,7 +123,7 @@ export function useQuoteShareActions(
 					label: "Saved to Photos",
 					variant: "default",
 				});
-				// Give the toast time to render before the app switches to Instagram.
+				// Lets the toast render before the app switches to Instagram.
 				await new Promise<void>((r) => setTimeout(r, 700));
 				await RNShare.shareSingle({
 					social: Social.Instagram,
@@ -148,7 +144,6 @@ export function useQuoteShareActions(
 					social: Social.InstagramStories,
 				});
 			} else {
-				// Android: Instagram Feed share works directly with the file URI.
 				await RNShare.shareSingle({
 					social: Social.Instagram,
 					type: "image/*",

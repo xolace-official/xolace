@@ -35,22 +35,8 @@ const ICON = {
 	paused: { android: "bedtime", ios: "moon.zzz.fill", web: "bedtime" },
 } as const;
 
-/**
- * Editing an already-published profile: one page, every field at once — the
- * opposite of the setup wizard, because someone fixing a typo shouldn't have to
- * walk five steps to reach it. The draft state is the setup flow's, so the two
- * can never disagree about what a valid profile is.
- *
- * Cancel and Save sit in the sheet's own header rather than in the body, so the
- * form scrolls under a bar that stays put, and Save can be visibly disabled
- * while the draft is short of what the server will publish.
- *
- * Two controls here write immediately rather than waiting on Save — the photo
- * (it uploads on pick) and the listed/paused switch (the thing someone reaches
- * for when they're too drained to be found). Both say so on screen, because
- * "Cancel" otherwise promises to undo them and can't: replacing a photo keeps
- * only the new URL, so there is no old one to put back.
- */
+/** Edits a published profile on one page, sharing the setup flow's draft. The photo and the
+ * listed switch write immediately and say so, since Cancel cannot undo them. */
 export function XolacerEditScreen() {
 	const router = useRouter();
 	const { toast } = useToast();
@@ -122,9 +108,8 @@ export function XolacerEditScreen() {
 				<Unavailable />
 			) : (
 				<KeyboardAwareScrollView
-					// Clears the bio's character counter and the line under it, so the
-					// field a xolacer is typing in is never the last thing on screen
-					// with its own feedback hidden behind the keyboard.
+					// Clears the bio's character counter so its feedback never hides behind the
+					// keyboard.
 					bottomOffset={140}
 					className="flex-1 bg-background"
 					contentContainerClassName="px-5 pb-10 gap-2"
@@ -166,11 +151,8 @@ export function XolacerEditScreen() {
 	);
 }
 
-/**
- * The route is reachable by deep link, and a profile can stop existing between
- * the sheet opening and this render (chat switched off, xolacer status
- * revoked). Saying so beats a form whose Save can never light up.
- */
+/** Reachable by deep link; the profile can stop existing between open and render (chat off,
+ * status revoked). */
 function Unavailable() {
 	return (
 		<View className="flex-1 items-center justify-center gap-2 bg-background px-10">

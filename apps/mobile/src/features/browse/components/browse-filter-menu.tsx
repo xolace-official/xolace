@@ -8,11 +8,8 @@ export type FilterOption<T extends string> = {
 	disabled?: boolean;
 };
 
-/**
- * The header-right native filter menu shared by the Browse lists: one inline
- * radio group (`isOn` marks the current pick). SF Symbol action icons are
- * iOS-only — Android silently drops them, which is fine for a text menu.
- */
+/** Header-right native filter menu for the Browse lists. SF Symbol icons are iOS-only; Android
+ * drops them. */
 export function BrowseFilterMenu<T extends string>({
 	title,
 	value,

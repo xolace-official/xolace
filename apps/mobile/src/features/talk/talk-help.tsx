@@ -1,7 +1,6 @@
-// Help on the talk screen (#599): at elevated a help button, at crisis the
-// resources pinned above the composer for the rest of the talk. The level is
-// the server's; the companion's crisis line says help is on screen, and this
-// is what makes that true.
+// Help on the talk screen (#599): a help button at elevated, resources pinned
+// above the composer at crisis. The level is the server's; the companion's
+// crisis line says help is on screen, and this makes that true.
 
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";

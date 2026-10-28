@@ -1,18 +1,11 @@
-/**
- * Browse search analytics (#552, CONTEXT.md "Browse search"): only a search's
- * shape — query length, results per section, and which section and position
- * was tapped. Never the words, and nothing about the search is stored.
- */
+/** Browse search analytics (#552): only the search's shape, never the words. */
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 
 import type { SearchSection } from "@/features/browse/search/search-sections";
 
-/**
- * One `browse_search_results` per settled query. Pass the *fresh* results
- * (plain `useQuery`, undefined while a query loads), never held ones, so a
- * count is never the previous query's. Counts stop at the server's 6 per section.
- */
+/** One `browse_search_results` per settled query. Pass fresh results (plain `useQuery`), never
+ * held ones. */
 export function useSearchShape(
 	query: string,
 	counts: Record<SearchSection, number> | undefined

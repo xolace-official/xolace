@@ -26,14 +26,8 @@ function formatWindow(days: number) {
 	return `${days} days`;
 }
 
-/**
- * Floating nudge shown once a free user scrolls to the end of the free-tier
- * timeline window and older sessions exist. Mirrors the teaser_viewed /
- * premium_gate_hit funnel used by other locked-insight surfaces.
- *
- * windowDays comes from the server (getTimelineWindowInfo) — never hardcode the
- * window length here, or the copy lies the next time the window is retuned.
- */
+/** Floating nudge at the end of the free-tier window. `windowDays` comes from the server; never
+ * hardcode it here. */
 export function TimelineUpgradeBanner({ windowDays }: { windowDays: number }) {
 	const insets = useSafeAreaInsets();
 	const posthog = usePostHog();
@@ -54,7 +48,8 @@ export function TimelineUpgradeBanner({ windowDays }: { windowDays: number }) {
 	};
 
 	return (
-		// Glass stops rendering under an animated opacity, so the fade only runs where there is no glass.
+		// Glass stops rendering under an animated opacity, so the fade only runs where there is
+		// no glass.
 		<EaseView
 			animate={{ translateY: 0, ...FADE_OUT }}
 			initialAnimate={{ translateY: 12, ...FADE_IN }}

@@ -23,13 +23,8 @@ const styles = StyleSheet.create({
 // rounded-3xl under Playful's --radius (16px).
 const PLAYFUL_CARD_RADIUS = 16;
 
-/**
- * Today's entry point to the active-kindling screen (docs/paths-v1.md §9.2,
- * #336). Renders nothing until `getActive` resolves a kindling — no
- * "generating" state here, since generation runs off `completeSession` and
- * the row only appears once it's written. Same reason it needs no premium
- * check of its own: `getActive` already returns `null` for a free user.
- */
+/** Entry point to the active-kindling screen (docs/paths-v1.md §9.2, #336). Renders nothing
+ * until `getActive` resolves. */
 export function KindlingTodayCard() {
 	const router = useRouter();
 	const isPlayful = useIsPlayful();
@@ -57,7 +52,7 @@ export function KindlingTodayCard() {
 		<Surface
 			className={cn(
 				"flex-row items-center p-0",
-				// The press-down below brings its own lip.
+				// The press-down brings its own lip.
 				isPlayful && "shadow-none"
 			)}
 			style={styles.card}
@@ -71,10 +66,8 @@ export function KindlingTodayCard() {
 					last session.
 				</AppText>
 			</View>
-			{/* Stretches to the card's height so its corners land on the card's.
-            rounded-r-3xl tracks the card's rounded-3xl, which each theme scales
-            off its own --radius. Android only honours `overflow: 'hidden'` on a
-            view with a border radius, so the radius also sets up the clip. */}
+			{/* Stretches to the card's height. Android only honours `overflow: 'hidden'`
+			 * on a view with a border radius, so the radius also sets up the clip. */}
 			<View
 				className="self-stretch overflow-hidden rounded-r-3xl"
 				style={styles.artWindow}

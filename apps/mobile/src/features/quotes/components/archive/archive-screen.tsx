@@ -18,15 +18,12 @@ const SCREEN_OPTIONS = {
 	headerTransparent: true,
 } as const;
 
-/**
- * The archive: a themed screen holding fixed-tint cards
- */
+/** The archive: a themed screen holding fixed-tint cards. */
 export function ArchiveScreen() {
 	const { top } = useSafeAreaInsets();
 	const [openId, setOpenId] = useState<Id<"daily_quotes"> | null>(null);
 
-	// The count strip rides on `getToday` — the same query the poster's star
-	// patches optimistically, so an unsave here moves it without a round trip.
+	// Rides on `getToday`, which the star patches optimistically, so an unsave moves it at once.
 	const savedCount = useQuery(api.dailyQuotes.getToday)?.savedCount ?? 0;
 
 	return (
@@ -34,9 +31,6 @@ export function ArchiveScreen() {
 			<Stack.Screen options={SCREEN_OPTIONS} />
 
 			<View className="gap-1 px-5 pb-2" style={{ paddingTop: top + 48 }}>
-				{/*<AppText className="font-poster-display text-[22px] tracking-[1.6px] text-foreground">
-          OLD QUOTES
-        </AppText>*/}
 				<AppText className="pt-3 font-poster-body text-[12.5px] text-foreground/65">
 					{savedCount} kept
 				</AppText>

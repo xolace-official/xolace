@@ -8,15 +8,8 @@ export type StreamCredential = {
 	userId: string;
 };
 
-/**
- * Not in the Zustand store on purpose: the store is devtools-visible app
- * state, and this is a bearer credential. Same storage underneath, same
- * synchronous read, so a returning chat user connects on the first render.
- *
- * Same class of secret as the Clerk session the device already holds; the
- * token's server-side `exp` is what bounds a lost device (see
- * `convex/integrations/stream.ts`).
- */
+/** Not in the Zustand store: that is devtools-visible state and this is a bearer credential.
+ * The token's server-side `exp` bounds a lost device (`convex/integrations/stream.ts`). */
 const KEY = "xolace-stream-credential";
 
 export function readStreamCredential(): StreamCredential | null {

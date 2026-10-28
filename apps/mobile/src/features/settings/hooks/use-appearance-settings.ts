@@ -67,7 +67,7 @@ export const useAppearanceSettings = () => {
 	};
 
 	const setColorTheme = (themeId: string) => {
-		// Premium themes need an active Xolace+ entitlement (and shipped CSS) —
+		// Premium themes need an active Xolace+ entitlement and shipped CSS;
 		// the picker gates the tap, this guards any other caller.
 		const entry = THEME_BY_ID[themeId];
 		if (entry?.tier === "premium" && (!isPlus || entry.available === false)) {

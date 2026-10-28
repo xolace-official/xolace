@@ -1,13 +1,5 @@
-/**
- * The Clerk sign-in flow behind the two provider buttons, lifted verbatim out
- * of the retired `AuthScreen` when the carousel-to-auth screen took over as
- * the only sign-in surface (#204). Behaviour is deliberately unchanged: the
- * stale-session guard, the cancelled-flow short-circuits, the PostHog capture
- * and the error serialization are all the shipped, tested logic.
- *
- * `useCallback` here is not memoization (the React Compiler handles that) —
- * the compiler skips functions with `try/finally` bodies, and these have one.
- */
+/** Clerk sign-in behind the provider buttons (#204). `useCallback` stays: the React Compiler
+ * skips `try/finally` bodies. */
 
 import { useAuth } from "@clerk/expo";
 import { useSignInWithApple } from "@clerk/expo/apple";
@@ -21,11 +13,8 @@ import { playSoftPress } from "@/lib/haptics";
 
 export type AuthProvider = "apple" | "google";
 
-/**
- * What we can safely say about an unknown throw, for the exception capture.
- * Only these fields — a thrown SDK error can carry the whole response body,
- * the request payload, or a token, and this string ships to PostHog.
- */
+/** Only these fields reach PostHog: a thrown SDK error can carry the response body, the request
+ * payload, or a token. */
 const SAFE_ERROR_KEYS = [
 	"name",
 	"message",
@@ -55,13 +44,8 @@ const errorCode = (error: unknown) =>
 		? (error as { code: string | number }).code
 		: undefined;
 
-/**
- * Backing out of the native sheet is not a failure. The provider SDKs report
- * it with a code, but Clerk's web-based fallback (what the simulator and any
- * device without the Google app take) throws a plain Error with no code at
- * all — which is why a cancel used to surface a red error toast and land in
- * PostHog as an exception.
- */
+/** Backing out of the native sheet is not a failure. SDKs report it with a code; Clerk's web
+ * fallback throws a plain Error. */
 const isCancellation = (error: unknown) => {
 	const code = errorCode(error);
 	if (
@@ -92,9 +76,8 @@ export const useProviderSignIn = () => {
 		try {
 			setLoadingProvider("apple");
 
-			// A stale Clerk session (active client-side but never validated by
-			// Convex) makes the SSO flow throw "You're already signed in" and
-			// dead-ends the user here. Clear it first so a fresh sign-in proceeds.
+			// A stale Clerk session (never validated by Convex) makes the SSO flow
+			// throw "You're already signed in". Clear it first.
 			if (isSignedIn) {
 				await signOut();
 			}
@@ -110,9 +93,7 @@ export const useProviderSignIn = () => {
 					authProviderAccountId: signUp?.createdUserId ?? "apple-user",
 				});
 
-				// Identify happens on app open against the emotional profile id
-				// (usePostHogIdentity), not here — this event lands on the anonymous
-				// id and is merged by that identify call.
+				// Lands on the anonymous id; usePostHogIdentity merges it on app open.
 				posthog.capture("user_signed_in", {
 					auth_provider: "apple",
 					is_new_user: !!signUp?.createdUserId,

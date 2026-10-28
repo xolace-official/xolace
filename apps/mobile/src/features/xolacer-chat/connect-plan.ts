@@ -1,8 +1,5 @@
-/**
- * The connection policy for `StreamChatProvider`, as a pure function so the
- * provider stays a thin shell and the decisions are table-testable without a
- * renderer or a Stream client. See `connect-plan.test.ts` for the cases.
- */
+/** The connection policy for `StreamChatProvider`, pure so it is table-testable
+ * (`connect-plan.test.ts`). */
 export type ConnectPlanInput = {
 	/** Last resolved "chat is enabled for me", from the persisted toggles. */
 	cachedEnabled: boolean;

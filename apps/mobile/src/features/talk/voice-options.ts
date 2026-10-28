@@ -1,12 +1,8 @@
 import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
 import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 
-/**
- * Client mirror of the custom-voice catalog. Server-authoritative catalog and
- * naming rationale live in convex/lib/voices.ts + docs/voice-naming.md.
- * "auto" is the free default (tone-mapped mirror / Witnessed vent); every
- * named voice is Plus-only.
- */
+/** Client mirror of the custom-voice catalog (convex/lib/voices.ts,
+ * docs/voice-naming.md). "auto" is the free default; every named voice is Plus-only. */
 export type VoiceValue = VoiceSlug | "auto";
 
 export type VoiceOption = {
@@ -68,11 +64,8 @@ export const VOICE_OPTIONS: VoiceOption[] = [
 	},
 ];
 
-/**
- * Static require map for bundled preview clips — dynamic require paths don't
- * bundle in Metro. Keyed by slug (not "auto"; the default has no preview).
- * Regenerate with scratchpad/generate-voice-previews.mjs.
- */
+/** Static require map for bundled preview clips (dynamic paths don't bundle in
+ * Metro). Regenerate with scratchpad/generate-voice-previews.mjs. */
 export const VOICE_PREVIEWS: Record<VoiceSlug, number> = {
 	ash: require("@/assets/sounds/voice-previews/ash.mp3"),
 	sage: require("@/assets/sounds/voice-previews/sage.mp3"),

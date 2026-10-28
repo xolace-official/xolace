@@ -17,10 +17,8 @@ const ACTION_LABELS: Record<ActionType, string> = {
 	vent: "Vented",
 };
 
-/**
- * Today in the user's stored timezone — the same clock the server keys days
- * with. Derived here, not by the query, whose cached result can't see midnight.
- */
+/** Today in the user's stored timezone, the clock the server keys days with.
+ * Derived here because the query's cached result can't see midnight. */
 export function todayIn(timezone: string, now = Date.now()): string {
 	const format = (timeZone: string) => {
 		const parts = dayKeyFormat(timeZone).formatToParts(now);
@@ -34,8 +32,8 @@ export function todayIn(timezone: string, now = Date.now()): string {
 	}
 }
 
-// Building an Intl.DateTimeFormat is the expensive part (ICU setup on
-// Hermes), so each zone's formatter is made once and reused.
+// Building an Intl.DateTimeFormat is expensive on Hermes (ICU setup), so each
+// zone's formatter is made once and reused.
 const dayKeyFormats = new Map<string, Intl.DateTimeFormat>();
 
 function dayKeyFormat(timeZone: string): Intl.DateTimeFormat {
@@ -64,11 +62,8 @@ export function dayKeyOf(date: Date): string {
 	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-/**
- * Join day to the last day of the later of: the current week, or the join
- * week's 16th. A new user sees 16 weeks ahead of them; a longer history
- * ends on today's week and scrolls back to join.
- */
+/** Join day to the end of the later of the current week or the join week's
+ * 16th: a new user sees 16 weeks ahead, a longer history ends on today's week. */
 export function graphRange(
 	joinDay: string,
 	today: string

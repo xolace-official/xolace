@@ -11,13 +11,8 @@ import {
 	useCounterpartActivity,
 } from "./use-counterpart-activity";
 
-/**
- * Once a thread is `open` the chat socket is already live, so a real dot
- * replaces the response-norm copy that used to stand in for it — that norm
- * was written against a promise six volunteers couldn't honour, and a live
- * socket signal is a fact, not a promise. Every other status keeps its own
- * copy; Stream has nothing to say about a request that hasn't been accepted.
- */
+/** Once a thread is `open` the socket is live, so a real presence signal replaces the
+ * response-norm copy. */
 function openSubtitle(
 	role: ThreadConversation["role"],
 	activity: {
@@ -67,14 +62,8 @@ function subtitleFor(conversation: ThreadConversation): string {
 	return "";
 }
 
-/**
- * Rendered into the native stack header's title slot, so it carries identity
- * only — the back affordance, safe area and background are the platform's.
- *
- * Also a sibling of `<Channel>`, not a descendant of it (see thread-screen.tsx)
- * — `useCounterpartActivity` reads the channel directly rather than through
- * Channel-scoped context for that reason.
- */
+/** Rendered into the native header's title slot; a sibling of `<Channel>`, so
+ * `useCounterpartActivity` reads the channel directly. */
 export function ThreadHeader({
 	conversation,
 }: {

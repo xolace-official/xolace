@@ -1,7 +1,6 @@
-// The Hearth aurora (#584, #593): the aurora-curtain shader from
-// react-native-motion (apps/expo/components/animations/aurora-curtain), made
-// transparent, tinted from the theme and fed the voice level: louder voice →
-// brighter, longer rays. Time is never touched, so the 14 s loop stays seamless.
+// The Hearth aurora (#584, #593): react-native-motion's aurora-curtain shader,
+// made transparent, theme-tinted and fed the voice level. Time is never
+// touched, so the 14 s loop stays seamless.
 import { Canvas, Fill, Shader, Skia } from "@shopify/react-native-skia";
 import { useThemeColor } from "heroui-native";
 import { useEffect } from "react";

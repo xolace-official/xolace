@@ -11,19 +11,9 @@ type Props = {
 	blurViewProps?: BlurViewProps;
 };
 
-/**
- * ProgressiveBlurView — top/bottom fade-to-blur edge, e.g. under a status bar
- * or behind a sticky CTA. The iOS mask gradient (black/transparent) is a
- * luminance mask, not visible UI color, so it stays hardcoded.
- *
- * Android has no working backdrop blur for this: expo-blur's default method is a
- * flat translucent overlay, and `experimentalBlurMethod="dimezisBlurView"` still
- * leaves the content behind it perfectly sharp (verified on API 35). So Android
- * gets an opaque scrim instead — it reaches full background opacity across the
- * band that sits behind content (the sticky CTA / legal links) and only fades out
- * at the edge facing the scroll. A weak fade here is what let the feature rows
- * show through the legal copy.
- */
+// Top/bottom fade-to-blur edge. The iOS mask gradient is a luminance mask, not UI
+// colour. Android gets an opaque scrim: expo-blur has no working backdrop blur there
+// (`dimezisBlurView` leaves content sharp on API 35).
 export function ProgressiveBlurView({
 	position = "top",
 	height = 100,

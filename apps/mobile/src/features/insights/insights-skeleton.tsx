@@ -1,10 +1,8 @@
 import { SkeletonGroup } from "heroui-native";
 import { View } from "react-native";
 
-/**
- * Mirrors OverallDial + PartsOfLife (grid view) proportions so the
- * loading -> loaded swap doesn't jump.
- */
+/** Mirrors OverallDial + PartsOfLife (grid) proportions so the loading -> loaded swap doesn't
+ * jump. */
 export function InsightsSkeleton() {
 	return (
 		<SkeletonGroup className="gap-8 px-5">

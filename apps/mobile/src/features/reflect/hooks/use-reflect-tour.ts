@@ -7,27 +7,21 @@ import {
 import { useAppStore } from "@/store/store";
 
 /**
- * When the first-install walkthrough runs, and what to record about it.
- *
- * Stepping belongs to `<Tour>` — this only decides whether it is open, and
- * stamps the current tour version once it closes either way.
+ * Whether the first-install walkthrough is open; stamps the tour version once it closes either way.
  */
 export function useReflectTour() {
 	const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
 	const setReflectTourVersion = useAppStore((s) => s.setReflectTourVersion);
 	const homeSheetBlocking = useAppStore((s) => s.homeSheetBlocking);
 
-	// Lives in the store so the streak reveal can wait on the tour actually
-	// being on screen rather than on the persisted version flag.
+	// In the store so the streak reveal can wait on the tour being on screen.
 	const isActive = useAppStore((s) => s.reflectTourActive);
 	const setIsActive = useAppStore((s) => s.setReflectTourActive);
-	// Only read when the tour is abandoned, so a ref rather than state: the
-	// number the event wants is the last step shown, not a render input.
+	// A ref: only read when the tour is abandoned, never a render input.
 	const lastStep = useRef(0);
 
-	// Start after the idle screen settles, once no other home sheet is covering
-	// the screen — without the homeSheetBlocking gate the spotlight would render
-	// under the return-welcome or awareness sheet.
+	// Starts after the idle screen settles; without the homeSheetBlocking gate the
+	// spotlight would render under the return-welcome or awareness sheet.
 	useEffect(() => {
 		if (!shouldShowReflectTour(reflectTourVersion) || homeSheetBlocking) {
 			return;

@@ -11,11 +11,8 @@ import { useReaderParams } from "@/features/library/reader/use-read-signals";
 // The reader sheet's side padding (`px-6`).
 const GUTTER = 48;
 
-/**
- * The next entry as a photo card, #395's magazine close (#417). The server
- * picks it by rule (`library.next.getNext`); nothing qualifies, no card.
- * The hub rides along so a hub reads through in order.
- */
+/** The next entry as a photo card (#417), picked by `library.next.getNext`; no card when
+ * nothing qualifies. */
 export function UpNext({ entryId }: { entryId: Id<"library_entries"> }) {
 	const { hub } = useReaderParams();
 	const next = useQuery(api.library.next.getNext, { entryId, hub });

@@ -16,9 +16,8 @@ import { useProfileSummary } from "@/features/profile/hooks/use-profile-summary"
 
 const ART = require("@/assets/images/illustrations/discovery-image-bg.png");
 
-// The source is a 2×2 grid of figures, so it has to be zoomed and offset to
-// isolate one; `contentFit`/`contentPosition` alone only pan, they don't zoom.
-// Source is 1200×1000; the top-right figure sits at roughly x 620–980, y 40–470.
+// The 1200×1000 source is a 2×2 grid; the top-right figure (x 620–980, y 40–470)
+// is zoomed and offset out of it, since `contentPosition` only pans.
 const ART_SCALE = 0.36;
 
 const styles = StyleSheet.create({
@@ -30,36 +29,25 @@ const styles = StyleSheet.create({
 		width: 1200 * ART_SCALE,
 	},
 	artWindow: { height: 138, width: 128 },
-	// Space Grotesk needs negative tracking to hold together at display size.
-	// letterSpacing is px in RN, so it can't live in a Tailwind class.
+	// Space Grotesk needs negative tracking at display size; letterSpacing is px in RN.
 	display: { letterSpacing: -1.1 },
 	eyebrow: { letterSpacing: 1.4 },
-	// Only the bottom corners round — the field runs off the top of the screen.
+	// Only the bottom corners round; the field runs off the top of the screen.
 	field: { borderBottomLeftRadius: 34, borderBottomRightRadius: 34 },
 });
 
-/**
- * Variant A — solid poster masthead. The accent field runs full-bleed under the
- * status bar and closes with a rounded bottom edge, so the brand owns the top of
- * the screen. The illustration sits as a cropped art tile, the way the reference
- * poster offsets its product photo against the type block. No animation.
- *
- * Swap variants in `discovery-header.tsx` — in code, not in the UI.
- */
+/** Solid poster masthead: full-bleed accent field under the status bar, cropped art tile. */
 export function PosterHeader() {
 	const insets = useSafeAreaInsets();
-	// Same name the profile screen shows — the user-set displayName from
-	// preferences, not the Clerk account name.
+	// The user-set displayName from preferences, not the Clerk account name.
 	const summary = useProfileSummary();
 	const { isDark } = useAppTheme();
-	// NativeTabs keeps every tab mounted, so an unconditional override here
-	// would keep winning even after the user switches away from Discovery.
+	// NativeTabs keeps every tab mounted; an unconditional override would outlive the tab.
 	const isFocused = useIsFocused();
 
 	return (
 		<View className="overflow-hidden bg-accent" style={styles.field}>
-			{/* --accent is dark in light theme and light in dark theme, so the status
-          bar content inverts against the app theme on this screen only. */}
+			{/* --accent inverts against the theme, so the status bar does too, here only. */}
 			{isFocused && <StatusBar style={isDark ? "dark" : "light"} />}
 
 			<View className="px-6 pb-7" style={{ paddingTop: insets.top + 12 }}>

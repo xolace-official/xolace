@@ -74,8 +74,7 @@ export function QuotesScreen() {
 
 	const heartBurst = useHeartBurst();
 
-	// the burst fires on the way *to* resonating, never on clearing it — and
-	// only once the write landed, so a rejected tap doesn't celebrate nothing
+	// The burst fires only on resonating, and only once the write landed.
 	const handleReact = (next: "resonates" | null) => {
 		void react(next).then((ok) => {
 			if (ok && next === "resonates") {
@@ -89,7 +88,6 @@ export function QuotesScreen() {
 		router.back();
 	};
 
-	// First visit is its own themed takeover — no hero behind it.
 	if (isFirstVisit) {
 		return (
 			<>
@@ -121,10 +119,8 @@ export function QuotesScreen() {
 	}
 
 	const hasQuote = quote !== null && sourceLine !== null && !isColdStarting;
-	// An unavailable moderation check is not a clean one, so the reply is fed
-	// nowhere — neither tomorrow's quote (quotesDistiller) nor the semantic
-	// profile (ADR 0007). It is not flagged either, so no crisis panel replaces
-	// the confirmation and the subline is the only place that can be honest.
+	// An unavailable moderation check feeds the reply nowhere (quotesDistiller,
+	// ADR 0007) without flagging it, so the subline is the only honest place.
 	const replyUnmoderated = quote?.replyModeration?.unavailable ?? false;
 
 	return (
@@ -134,8 +130,7 @@ export function QuotesScreen() {
 				<HeartBurst opacity={heartBurst.opacity} scale={heartBurst.scale} />
 				<KeyboardAwareScrollView
 					contentContainerStyle={{ paddingBottom: bottom + 16 }}
-					// Without this the first tap on the composer's send pill is eaten
-					// dismissing the keyboard, and the user has to tap Share twice.
+					// Otherwise the first tap on the send pill only dismisses the keyboard.
 					keyboardShouldPersistTaps="handled"
 					showsVerticalScrollIndicator={false}
 				>
@@ -149,8 +144,8 @@ export function QuotesScreen() {
 									resonates={quote.reaction === "resonates"}
 								/>
 							) : (
-								// holds the row's space so the hero does not grow when the
-								// quote lands — the poster box is only half of that promise
+								// Holds the row's space so the hero does not grow when the
+								// quote lands.
 								<View className="mt-4 h-12" />
 							)
 						}
@@ -160,10 +155,8 @@ export function QuotesScreen() {
 								<StarButton
 									locked={saveLocked && quote.savedAt === undefined}
 									onToggle={(next) => {
-										// The star still taps for a free user — it opens the door
-										// rather than doing nothing. Unsaving is never gated
-										// (`dailyQuotes.unsave`): a lapsed subscriber must still
-										// be able to let go of what they kept.
+										// A locked star opens the paywall. Unsaving is never gated:
+										// a lapsed subscriber must still be able to let go.
 										if (saveLocked && next) {
 											posthog.capture("premium_gate_hit", {
 												feature: "quote_save",
@@ -230,7 +223,6 @@ export function QuotesScreen() {
 					visible={showShareSheet}
 				/>
 
-				{/* Off-screen sharing card for capture */}
 				{showSharingCard && quote && (
 					<View
 						onLayout={onSharingCardLayout}

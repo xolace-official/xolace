@@ -1,8 +1,7 @@
 import { Skia, type SkPath } from "@shopify/react-native-skia";
 
-// Card silhouettes for the founder-message marquee (#264, direction #236).
-// Constraint from the direction review: no shape may eat the photo — no pointed
-// ovals, no crescents. One card per shape, no duplicates. Five shapes, five cards.
+// Card silhouettes for the founder-message marquee (#264, direction #236). No shape may
+// eat the photo (no pointed ovals, no crescents); one card per shape, no duplicates.
 
 export type FounderCardShape =
 	| "circle"
@@ -46,7 +45,7 @@ const portalPath = (w: number, h: number): SkPath => {
 	return p.build();
 };
 
-/** Organic squircle — a slightly lopsided soft blob, no two corners alike. */
+/** Organic squircle: a slightly lopsided soft blob, no two corners alike. */
 const blobPath = (w: number, h: number): SkPath => {
 	const p = Skia.PathBuilder.Make();
 	p.moveTo(w * 0.5, h * 0.02);
@@ -58,7 +57,7 @@ const blobPath = (w: number, h: number): SkPath => {
 	return p.build();
 };
 
-/** Scalloped rose — nine shallow lobes, kept shallow so the photo stays readable. */
+/** Scalloped rose: nine lobes, kept shallow so the photo stays readable. */
 const flowerPath = (w: number, h: number): SkPath => {
 	const p = Skia.PathBuilder.Make();
 	const cx = w / 2;

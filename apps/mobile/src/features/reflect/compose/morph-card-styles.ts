@@ -12,17 +12,14 @@ import {
 } from "@/features/reflect/compose/morph-geometry";
 import type { CardContent } from "@/features/reflect/compose/resolve-card-content";
 
-/** Prompt type scale, resting → composing, per card content scale. */
+/** Prompt font size, resting then composing, per card content scale. */
 const PROMPT_SIZE = {
 	large: [21, 14],
 	small: [17, 13],
 } as const;
 
 /**
- * Every animated style the card reads off `progress` (#256).
- *
- * The bottom edge tracks the keyboard's real animated height rather than a
- * guessed endpoint, so the card never grows under it.
+ * Every animated style the card reads off `progress` (#256); the bottom edge tracks the keyboard.
  */
 export const useMorphCardStyles = (
 	progress: SharedValue<number>,

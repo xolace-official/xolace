@@ -1,9 +1,5 @@
-/**
- * Per-day streak messages shown beneath the calendar reveal.
- * Tone: honest acknowledgment, never cheerleader. Close to the fire,
- * not a push notification. Days without an entry show nothing —
- * the flip itself is the acknowledgment.
- */
+/** Per-day streak messages beneath the calendar reveal; honest acknowledgment, never
+ * cheerleader. No entry, no line. */
 const STREAK_COPY: Record<number, string> = {
 	1: "You showed up. That's everything.",
 	2: "Back again. It counts.",

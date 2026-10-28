@@ -13,8 +13,7 @@ type Props = {
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
-// Honest placeholder for users without enough distinct language yet.
-// No fabricated words, no blur — just the promise of what will surface.
+// Honest placeholder: no fabricated words, no blur.
 export function WordsTeaserEmpty({ staggerDelay = 360 }: Props) {
 	return (
 		<EaseView

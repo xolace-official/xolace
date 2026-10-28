@@ -14,11 +14,11 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import { AppText } from "@/components/shared/app-text";
 
-// 60% cream-white — more muted than the acknowledgement words (design spec).
+// 60% cream-white, more muted than the acknowledgement words (design spec).
 const GONE_STYLE = { color: "#F5F0E899" };
-// Quieter still — the cap notice is a footnote, not a second headline.
+// Quieter still: the cap notice is a footnote.
 const CAP_STYLE = { color: "#F5F0E866" };
-// Full cream — the crisis CTA must read as a button, not a statement.
+// Full cream: the crisis CTA must read as a button.
 const CRISIS_CREAM = "#F5F0E8";
 
 const HEART_NAME = {
@@ -31,15 +31,12 @@ type Props = {
 	isCrisis: boolean;
 	/** True when the daily cap is why no acknowledgement came back. */
 	capReached: boolean;
-	/** Called after "Gone." has fully faded (non-crisis path → auto-dismiss). */
+	/** Called after "Gone." has fully faded (non-crisis path auto-dismisses). */
 	onDone: () => void;
 };
 
-/**
- * The period: "Gone." materializes where the words were, holds 2s, fades
- * over 1s, then auto-dismisses. In the crisis path it stays put and offers
- * the crisis resources screen instead of auto-dismissing.
- */
+/** The period: "Gone." materializes, holds 2s, fades over 1s, then auto-dismisses.
+ * In the crisis path it stays put and offers the crisis resources screen. */
 export function VentGone({ isCrisis, capReached, onDone }: Props) {
 	const router = useRouter();
 	const opacity = useSharedValue(0);

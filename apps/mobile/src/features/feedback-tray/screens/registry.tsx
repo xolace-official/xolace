@@ -2,9 +2,7 @@ import { ReportForm, type ReportSubject } from "./report-form";
 import { TrayMenu } from "./tray-menu";
 import { WhatsNew } from "./whats-new";
 
-/**
- * Typed registry of tray screens. Keys are screen names passed to `show()`.
- */
+/** Typed registry of tray screens. Keys are screen names passed to `show()`. */
 export const trays = {
 	menu: () => <TrayMenu />,
 	report: (props?: {

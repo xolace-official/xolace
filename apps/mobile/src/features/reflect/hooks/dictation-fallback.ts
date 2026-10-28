@@ -1,8 +1,7 @@
 import { startOfTodayUTC } from "@xolace/backend/convex/lib/timeOfDay";
 import { ConvexError } from "convex/values";
 
-// Plus dictation never strands the person (#558): these say, in one line, why
-// the mic is on the phone's own dictation or that a take was lost.
+// Why the mic is on the phone's own dictation, or that a take was lost (#558).
 // Each must fit one line of the composer strip on the narrowest phone.
 const NOTE_CAPPED = "Sharper dictation is back tomorrow.";
 const NOTE_UNAVAILABLE = "Sharper dictation isn't available right now.";
@@ -28,10 +27,7 @@ export function fallbackNote({
 	return null;
 }
 
-/**
- * A lost take's note, and whether later takes should go on device. Only a
- * failure at Scribe counts; over the cap, the status query handles the next tap.
- */
+/** A lost take's note, and whether later takes go on device (only a failure at Scribe counts). */
 export function takeFailedNote(err: unknown, reachedScribe: boolean) {
 	const capped =
 		err instanceof ConvexError &&

@@ -125,7 +125,6 @@ export function ProfileHero({
 						)}
 					</View>
 
-					{/* Small edit affordance — only when the picker is wired up. */}
 					{onAvatarPress && (
 						<View
 							className="absolute right-0 bottom-0 h-6 w-6 items-center justify-center rounded-full border-2 border-background"

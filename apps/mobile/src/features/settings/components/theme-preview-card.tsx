@@ -25,14 +25,8 @@ const EASE_TRANSITION = {
 	type: "timing" as const,
 };
 
-/**
- * Mini preview card showing a snapshot of the reflect idle screen.
- * The card renders inside a ScopedTheme of the theme's dark variant, so it
- * shows that theme's own tokens whatever the active global theme is.
- *
- * Active: accent ring + "Active" micro-label.
- * Premium/unavailable: lock glyph overlay; tap is handled by parent.
- */
+/** Mini preview of the reflect idle screen, rendered inside a ScopedTheme of the
+ * theme's dark variant so it shows that theme's own tokens. */
 export const ThemePreviewCard = ({
 	theme,
 	isActive,
@@ -51,44 +45,36 @@ export const ThemePreviewCard = ({
 			style={{ width }}
 		>
 			<ScopedTheme theme={theme.variants.dark}>
-				{/* Outer ring — only visible when active */}
 				<View
 					className={cn(
 						"rounded-[16px]",
 						isActive && "border-[1.5px] border-accent p-0.5"
 					)}
 				>
-					{/* Card body */}
 					<View
 						className={cn(
 							"min-h-[140px] overflow-hidden bg-background p-3.5",
 							isActive ? "rounded-[14px]" : "rounded-[16px]"
 						)}
 					>
-						{/* Encouragement line */}
 						<AppText className="mb-2 text-[9px] text-foreground/30 italic">
 							{"What's here right now..."}
 						</AppText>
 
-						{/* Faux separator */}
 						<View className="mb-2 h-[0.5px] bg-border" />
 
-						{/* Headline */}
 						<AppText className="mb-3 font-semibold text-[12px] text-foreground leading-[17px]">
 							{"What's here\nright now?"}
 						</AppText>
 
-						{/* Texture chip */}
 						<View className="self-start rounded-full border border-accent/40 bg-accent/10 px-2 py-[3px]">
 							<AppText className="font-medium text-[9px] text-accent">
 								heavy
 							</AppText>
 						</View>
 
-						{/* Accent dot bottom-right */}
 						<View className="absolute right-2.5 bottom-2.5 size-[5px] rounded-full bg-accent/50" />
 
-						{/* Lock overlay for premium */}
 						{isLocked && (
 							<View className="absolute inset-0 items-center justify-center rounded-[16px] bg-background/80">
 								<AppText style={styles.lockIcon}>🔒</AppText>
@@ -98,7 +84,6 @@ export const ThemePreviewCard = ({
 				</View>
 			</ScopedTheme>
 
-			{/* Label row */}
 			<View style={styles.labelRow}>
 				<AppText className="text-foreground/70 text-xs">{theme.name}</AppText>
 				{isActive && (

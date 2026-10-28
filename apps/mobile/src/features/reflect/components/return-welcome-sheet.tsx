@@ -18,12 +18,7 @@ type Props = {
 	onClose: () => void;
 };
 
-/**
- * Detached, no-guilt greeting for a lapsed user's first reopen. The mascot
- * points down toward the copy — a hand reaching back toward the fire. Copy
- * varies by how long they've been away (see return-welcome-copy.ts). Dismissed
- * by the CTA or by tapping the blurred backdrop; there is no wrong way to close.
- */
+/** Greeting for a lapsed user's first reopen; copy varies by gap (return-welcome-copy.ts). */
 export const ReturnWelcomeSheet = ({ isOpen, tier, onClose }: Props) => {
 	const insets = useSafeAreaInsets();
 	const copy = RETURN_WELCOME[tier];

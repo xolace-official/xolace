@@ -37,18 +37,9 @@ function KindlingIconTile({ locked }: { locked: boolean }) {
 	);
 }
 
-/**
- * Session-end's two kindling slots (docs/paths-v1.md §11-§12, #337) — a
- * premium "your kindling is being set up" card, and the free-user upsell in
- * the same spot. Both are gated on the session actually qualifying for
- * kindling (`supportNeed` light/active, §1) — ADR 0009 scopes the free-user
- * upsell to "a qualifying session," not every session-end, and the premium
- * card would otherwise promise setup that never runs. Independent of
- * `CloseOffer`'s proactive-moment picker: no cooldown, no budget.
- *
- * Renders nothing while entitlement or qualification is still resolving —
- * flashing the wrong state for a frame is worse than a beat late.
- */
+/** Session-end's two kindling slots (docs/paths-v1.md §11-§12, #337): the premium
+ * setup card and the free upsell, both gated on a qualifying session (ADR 0009).
+ * Independent of `CloseOffer`; renders nothing while entitlement or qualification resolves. */
 export const KindlingCloseSlot = ({ sessionId }: Props) => {
 	const { isPlus, isResolved } = usePlusEntitlement();
 	const qualifies = useQuery(

@@ -14,19 +14,8 @@ const OFFLINE_ICON = {
 	web: "wifi_off",
 } as const;
 
-/**
- * Says out loud what a dead socket otherwise says silently.
- *
- * `streamStatus` only reports how the *connection attempt* went; once it
- * reaches `ready` the thread looks identical whether the socket is alive or
- * has since dropped, and a send just fails. This reads the live state instead.
- *
- * Sits directly above the composer rather than in the header, because
- * `useChatContext` throws outside a mounted `<Chat>` — which is every frame
- * before the client connects, and every `requested` thread, neither of which
- * mounts this component at all.
- *
- */
+/** Reports the live socket state; `streamStatus` only says how the connect attempt went. Must
+ * sit under a mounted `<Chat>`, since `useChatContext` throws outside one. */
 export function OfflineStrip() {
 	const { connectionRecovering, isOnline } = useChatContext();
 	const muted = useThemeColor("muted") as string;
@@ -47,18 +36,8 @@ export function OfflineStrip() {
 	);
 }
 
-/**
- * Stream's own `NetworkDownIndicator`, with its offline half removed.
- *
- * That component covers two unrelated states: the socket being down, and the
- * channel failing to load. `OfflineStrip` now owns the first — better placed,
- * and it doesn't fire during the `null` window before NetInfo first answers,
- * which is why the stock one flashes "Reconnecting…" over the top of the list
- * on an ordinary open. The channel-error half has nowhere else to live, so it
- * stays, rendered by Stream so it keeps Stream's styling.
- *
- * Passed to `<Channel>` as the `NetworkDownIndicator` override.
- */
+/** Stream's `NetworkDownIndicator` with its offline half removed: `OfflineStrip` owns that, and
+ * the stock one flashes during NetInfo's initial `null` window. */
 export function ChannelErrorIndicator() {
 	const { error } = useChannelContext();
 	const { isOnline } = useChatContext();

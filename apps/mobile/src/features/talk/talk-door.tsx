@@ -1,6 +1,5 @@
-// The talk door on Reflect home (#586, #594): Plus goes to the talk screen,
-// free sees the same button as a Plus door, and Plus with the week's talk
-// time used gets a dialog saying when it's back (#596). The server fences
+// The talk door on Reflect home (#586, #594): Plus goes to the talk screen, free
+// sees a Plus door, Plus out of talk time gets a dialog (#596). The server fences
 // are requirePremium and the talk-time reserve in talk.session.start.
 
 import { router } from "expo-router";

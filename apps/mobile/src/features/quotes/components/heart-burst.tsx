@@ -12,11 +12,8 @@ import Animated, {
 
 const HEART_ICON = { android: "favorite", ios: "heart.fill" } as const;
 
-/**
- * The full-screen burst on resonate. It survives the redesign unchanged (#303)
- * — and it is the one part of this screen that is deliberately *themed*: it
- * fires over the whole window, not on the poster, so it takes `--accent`.
- */
+/** Full-screen burst on resonate (#303). Deliberately themed (`--accent`): it fires over the
+ * window, not the poster. */
 export function useHeartBurst() {
 	const scale = useSharedValue(0);
 	const opacity = useSharedValue(0);

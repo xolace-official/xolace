@@ -1,11 +1,5 @@
 /**
- * Sizing + animation constants for the streak calendar.
- *
- * The card renders at two sizes: a mini version that lives in the Perch strip
- * and a full-size version used during the reveal.
- * All inner dimensions derive proportionally from the card size so
- * the morph between the two is a pure transform (translate + scale)
- * — no layout animation.
+ * Streak calendar constants; inner sizes scale with the card, so the morph is a pure transform.
  */
 export const FULL_SIZE = 190;
 export const MINI_SIZE = 62;
@@ -14,17 +8,17 @@ export const MORPH_SPRING = { dampingRatio: 1, duration: 520 } as const;
 export const FLIP_SPRING = { dampingRatio: 1, duration: 1100 } as const;
 export const BLAST_SPRING = { damping: 20, mass: 1, stiffness: 100 } as const;
 
-/** Delay after idle mount before measuring + starting the reveal. */
+/** Delay after idle mount before measuring and starting the reveal. */
 export const REVEAL_START_DELAY_MS = 700;
 
 export type CardColors = {
-	/** Card header strip — --accent */
+	/** --accent */
 	header: string;
-	/** Header label text — --accent-foreground */
+	/** --accent-foreground */
 	headerText: string;
-	/** Page body — --surface */
+	/** --surface */
 	body: string;
-	/** Day number — --foreground */
+	/** --foreground */
 	number: string;
 };
 

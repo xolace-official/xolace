@@ -11,11 +11,8 @@ const UP = icon("arrow.up", "arrow_upward");
 const DOWN = icon("arrow.down", "arrow_downward");
 const LOCK = icon("lock", "lock");
 
-/**
- * `short` drops "vs last week" where the row already says what it is. `since`
- * is set when the domain was quiet a week ago: the delta then runs from its
- * last reading, so the chip says "since April" rather than claim a week.
- */
+/** `short` drops "vs last week". `since` is set when the domain was quiet a week ago: the delta
+ * runs from its last reading ("since April"). */
 export function TrendChip({
 	delta,
 	short,
@@ -58,7 +55,8 @@ export function TrendChip({
 	);
 }
 
-/** The free view's upsell: no direction, no value — a locked ↓ would sell "find out how bad it is". */
+/** The free view's upsell: no direction, no value. A locked ↓ would sell "find out how bad it
+ * is". */
 export function LockedTrendChip() {
 	const accent = useTokenColor("accent");
 	const openPaywall = usePaywall((s) => s.open);

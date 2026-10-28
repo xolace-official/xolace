@@ -1,8 +1,4 @@
-/**
- * The other person on the Xolacers beat: one small ember across the dark, at
- * the character's eye height.
- *
- */
+/** The other person on the Xolacers beat: one small ember at the figure's eye height. */
 import { useEffect } from "react";
 import { View } from "react-native";
 import Animated, {

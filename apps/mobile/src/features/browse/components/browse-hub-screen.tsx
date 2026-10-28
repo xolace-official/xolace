@@ -59,7 +59,7 @@ const ENTRIES: Entry[] = [
 		label: "Topics",
 		lip: "bg-browse-topics-foreground/45",
 	},
-	// The Library's home, inside Browse (#393, #409); branded Lantern (#394).
+	// The Library's home inside Browse (#393, #409), branded Lantern (#394).
 	{
 		bg: "bg-browse-topics",
 		fg: "--color-browse-topics-foreground",
@@ -93,8 +93,7 @@ function EntryButton({ entry }: { entry: Entry }) {
 			className="items-center gap-2"
 			onPress={() => {
 				playSoftPress();
-				// #339 hasn't landed these routes yet — this slice (#338) only needs
-				// the hub to point at the right destination.
+				// #339 has not landed these routes yet (#338).
 				router.push(entry.href as never);
 			}}
 			onPressIn={isPlayful ? press.onPressIn : undefined}
@@ -106,7 +105,7 @@ function EntryButton({ entry }: { entry: Entry }) {
 					pressed={press.pressed}
 					radius={ENTRY_RADIUS}
 				>
-					{/* The tints are translucent: back the face so the lip can't show through. */}
+					{/* The tints are translucent: back the face so the lip cannot show through. */}
 					<View className="rounded-full bg-background">{circle}</View>
 				</PlayfulLip>
 			) : (
@@ -117,10 +116,8 @@ function EntryButton({ entry }: { entry: Entry }) {
 	);
 }
 
-/**
- * Browse hub (#338, docs/paths-v1.md §9.3) — entry row + New shelf. Open to
- * every signed-in user; the free-user gate is on playback, not browsing.
- */
+/** Browse hub (#338, docs/paths-v1.md §9.3). Open to everyone; the free-user gate is on
+ * playback. */
 export function BrowseHubScreen() {
 	// Clears the floating mini-player off the last row (none on iOS 26).
 	const playerInset = useMiniPlayerInset();

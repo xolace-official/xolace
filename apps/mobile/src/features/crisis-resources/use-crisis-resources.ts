@@ -14,7 +14,7 @@ type UseCrisisResourcesResult = {
 	countryData: CountryData | null;
 };
 
-/** The device's market if we have resources for it, else null. */
+/** The device's market if there are resources for it, else null. */
 export function detectCountry(): CountryCode | null {
 	const region = Localization.getLocales()[0]?.regionCode;
 	return region && COUNTRY_RESOURCES[region as CountryCode]

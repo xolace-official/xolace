@@ -18,7 +18,7 @@ type Props = {
 	onReset: () => void;
 };
 
-// ponytail: copy pending safety review — never name the category or imply fault.
+// Copy pending safety review: never name the category or imply fault.
 const REJECTED_COPY =
 	"This is something I can't reflect back here. If it's weighing on you, talking to someone can help.";
 
@@ -52,11 +52,10 @@ export const ErrorState = ({
 }: Props) => {
 	const { isPlus } = usePlusEntitlement();
 	const openPaywall = usePaywall((s) => s.open);
-	// The hourly cap is the free/Plus gate — the one place the ceiling is
-	// unmissable — so free users get the door instead of a dead end.
+	// The hourly cap is the free/Plus gate, so free users get the door instead of a dead end.
 	const showUpgrade = !isPlus && isRateLimitMessage(errorMessage);
-	// The safeguard's rejection code (convex/ai/safeguard.ts). Retry reprocesses
-	// the same stored input, so it can only fail again — offer support instead.
+	// The safeguard's rejection code (convex/ai/safeguard.ts). Retry would only
+	// fail again, so offer support instead.
 	const rejected = errorMessage === "content_policy_violation";
 	const router = useRouter();
 
@@ -85,8 +84,8 @@ export const ErrorState = ({
 				</AppText>
 			) : null}
 
-			{/* A failure must never look like the writing vanished. Literally true:
-          the text shown is the stored session input that retry reprocesses. */}
+			{/* A failure must never look like the writing vanished: this is the stored
+			    session input that retry reprocesses. */}
 			{rawInput ? (
 				<View className="mt-8">
 					<AppText className="mb-2 text-foreground/40 text-sm">

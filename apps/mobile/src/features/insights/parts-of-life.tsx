@@ -1,7 +1,6 @@
 // Every touched domain, as a ring grid or tick-meter list on glass (#491).
-// Free users get unfilled rings and the "Unlock numbers" pill (#513);
-// Xolace+ gets numbers, and tapping a domain opens its detail card (#518).
-// A free domain compounding may carry the upsell (#524): no number, just the word.
+// Free users get unfilled rings and the "Unlock numbers" pill (#513); Xolace+
+// gets numbers and a detail card per domain (#518). Compounding may carry the upsell (#524).
 
 import { SymbolView } from "expo-symbols";
 import { Chip } from "heroui-native";

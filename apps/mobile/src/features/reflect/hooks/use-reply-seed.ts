@@ -6,9 +6,7 @@ import type {
 import { useAppStore } from "@/store/store";
 
 /**
- * Arriving with a reply seed (#316) opens the composer for the user; leaving the
- * compose screens by any other route (submitted, a session resumed under them)
- * spends it, so the card cannot re-open itself on a later visit to idle.
+ * A reply seed (#316) opens the composer on arrival; leaving compose any other way spends it.
  */
 export function useReplySeed(
 	screen: ReflectionStateName,

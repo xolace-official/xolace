@@ -138,11 +138,7 @@ export function XolacerSetupScreen() {
 	);
 }
 
-/**
- * Every step stays mounted inside an `Activity`; only the current one is
- * visible. Hidden steps keep their input state and cursor position, so moving
- * back and forth never costs a xolacer what they already typed.
- */
+/** Every step stays mounted in an `Activity`, so hidden steps keep their input state and cursor. */
 function StepBodies({ setup }: { setup: ReturnType<typeof useXolacerSetup> }) {
 	const { draft, index, setField } = setup;
 

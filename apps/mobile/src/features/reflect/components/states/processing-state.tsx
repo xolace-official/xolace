@@ -9,8 +9,8 @@ import { SparkleStars } from "@/components/shared/sparkle-stars";
 import { ThinkingOrb } from "@/components/ui/thinking-orb";
 import { useProcessingBreathHaptic } from "@/lib/haptics";
 
-// Chosen by what the pipeline is actually doing, never cycled (rule 12):
-// a line only claims memory when one connected (convex/ai/process.ts).
+// Chosen by what the pipeline is doing, never cycled (rule 12): a line only
+// claims memory when one connected (convex/ai/process.ts).
 const LINES = {
 	connecting: "Holding this next to what you've shared before...",
 	reading: "Taking this in...",
@@ -38,9 +38,8 @@ type Props = {
 export const ProcessingState = ({ stage }: Props) => {
 	const accentColor = useThemeColor("accent");
 	const playBreath = useProcessingBreathHaptic();
-	// Stages only move forward within a mount. The server leaves "processing"
-	// before this screen finishes fading out, which un-gates `stage` to
-	// undefined — without the latch the line flicks back to "Taking this in...".
+	// Stages only move forward within a mount: the server leaves "processing" before
+	// this screen finishes fading out, and `stage` goes undefined.
 	const [shown, setShown] = useState(stage);
 	if (stage && stage !== shown) {
 		setShown(stage);

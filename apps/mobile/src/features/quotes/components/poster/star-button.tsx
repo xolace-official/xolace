@@ -16,13 +16,7 @@ const STAR_ICON = { android: "star_border", ios: "star" } as const;
 const STAR_ON_ICON = { android: "star", ios: "star.fill" } as const;
 const SPRING = { damping: 18, mass: 0.9, stiffness: 160 };
 
-/**
- * Keep this quote. It owns the hero's top-right corner alone — save is not
- * resonate: it means "I want this back", and it is what fills the archive.
- *
- * Same plate circle as the back button opposite it, so the two corners read as
- * one row of chrome printed on the poster.
- */
+/** Keep this quote; it fills the archive. Same plate circle as the back button opposite. */
 export function StarButton({
 	saved,
 	onToggle,
@@ -30,12 +24,11 @@ export function StarButton({
 }: {
 	saved: boolean;
 	onToggle: (next: boolean) => void;
-	/** Xolace+ gate (#317) — the tap opens the paywall instead of saving. */
+	/** Xolace+ gate (#317): the tap opens the paywall instead of saving. */
 	locked?: boolean;
 }) {
 	const ink = useCSSVariable("--color-poster-ink") as string;
 
-	// the corner answers the tap itself, like the Resonate pill does
 	const pop = useSharedValue(1);
 	const isFirst = useSharedValue(true);
 	useEffect(() => {

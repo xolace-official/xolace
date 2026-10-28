@@ -96,7 +96,6 @@ export const DataScreen = () => {
 				contentInsetAdjustmentBehavior="automatic"
 				showsVerticalScrollIndicator={false}
 			>
-				{/* ── SHARING ──────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -114,7 +113,6 @@ export const DataScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── MEMORY ───────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -142,7 +140,6 @@ export const DataScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── RETENTION ────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -190,7 +187,6 @@ export const DataScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── DANGER ZONE ──────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}

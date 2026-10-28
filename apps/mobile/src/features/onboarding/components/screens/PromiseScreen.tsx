@@ -70,9 +70,8 @@ export const PromiseScreen = () => {
 
 	const handlePress = () => {
 		playGentlePresence();
-		// Flips the root `(onboarding)` / `(auth)` guard — Stack.Protected swaps
-		// the active group on its own, so no explicit navigation call is needed
-		// (and none would be reliable: `(auth)` isn't mounted until this flips).
+		// Flips the root `(onboarding)` / `(auth)` guard; Stack.Protected swaps the group.
+		// No explicit navigation: `(auth)` is not mounted until this flips.
 		posthog?.capture("onboarding_completed");
 		setIntroSeen(true);
 	};
@@ -86,12 +85,10 @@ export const PromiseScreen = () => {
 			<View className="flex-1 bg-background" style={rootStyle}>
 				<DuskDriftBackdrop />
 
-				{/* Marquee — top portion */}
 				<View style={marqueeStyle}>
 					<MoodMarquee moods={MOODS} scrollOffsetX={scrollOffsetX} />
 				</View>
 
-				{/* Promise content — bottom portion */}
 				<View style={styles.contentArea}>
 					<EaseView
 						animate={EASE_ANIMATE_SLIDE}

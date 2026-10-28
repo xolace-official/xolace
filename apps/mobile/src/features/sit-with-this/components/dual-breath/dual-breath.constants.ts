@@ -3,7 +3,7 @@ import type { BreathPhase } from "@/lib/haptics";
 // Fixed gap between the two shapes in pixels
 export const GAP = 14;
 
-// Shape geometry — ratios of canvas dimensions
+// Shape geometry, as ratios of canvas dimensions
 export const SHAPE = {
 	bot: {
 		peak: { baseR: 56, hRatio: 0.54, wRatio: 0.86 },
@@ -15,22 +15,21 @@ export const SHAPE = {
 	},
 } as const;
 
-// Per-corner radius multipliers.
-// Outer corners (away from the gap) are large and organic.
-// Inner corners (facing the gap) are dramatically tighter — like two stones pressing together.
-// Left/right values differ slightly on each corner for the imperfect stone quality.
+// Per-corner radius multipliers. Corners facing the gap are much tighter, like
+// two stones pressing together; left/right differ slightly for an imperfect
+// stone quality.
 export const TOP_CORNERS = {
-	bottomLeft: { x: 0.26, y: 0.32 }, // inner — very tight, slightly different
-	bottomRight: { x: 0.3, y: 0.26 }, // inner — very tight
-	topLeft: { x: 1.02, y: 1.08 }, // outer — large
-	topRight: { x: 1.1, y: 0.98 }, // outer — large, slightly wide
+	bottomLeft: { x: 0.26, y: 0.32 },
+	bottomRight: { x: 0.3, y: 0.26 },
+	topLeft: { x: 1.02, y: 1.08 },
+	topRight: { x: 1.1, y: 0.98 },
 } as const;
 
 export const BOT_CORNERS = {
-	bottomLeft: { x: 0.98, y: 1.1 }, // outer — large, slightly tall
-	bottomRight: { x: 1.08, y: 1.02 }, // outer — large
-	topLeft: { x: 0.28, y: 0.3 }, // inner — very tight
-	topRight: { x: 0.32, y: 0.26 }, // inner — very tight, slightly different
+	bottomLeft: { x: 0.98, y: 1.1 },
+	bottomRight: { x: 1.08, y: 1.02 },
+	topLeft: { x: 0.28, y: 0.3 },
+	topRight: { x: 0.32, y: 0.26 },
 } as const;
 
 // Corner wobble during hold phase

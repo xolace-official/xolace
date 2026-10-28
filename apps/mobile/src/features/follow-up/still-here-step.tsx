@@ -13,7 +13,7 @@ import { type IconKey, OptionCard } from "@/features/follow-up/stack-cards";
 
 type LinkKey = (typeof STILL_HERE_LINKS)[number]["key"];
 
-// Same entry points as the Browse hub's tiles — static on purpose, no Kindling twig.
+// Same entry points as the Browse hub's tiles; static on purpose, no Kindling twig.
 export const LINK: Record<
 	LinkKey,
 	{ icon: IconKey; tint: string; href: Href }
@@ -31,11 +31,7 @@ export const LINK: Record<
 	},
 };
 
-/**
- * The `still_here` next step (#451): an acknowledgment and three optional
- * doorways. Nothing to fill in, nothing to earn — the chip answer already
- * stands, so every way out (a link, Not now, X) is equally fine.
- */
+/** The `still_here` next step (#451): an acknowledgment and three optional doorways. */
 export function StillHereStep({ onClose }: { onClose: () => void }) {
 	const router = useRouter();
 	const posthog = usePostHog();
@@ -57,8 +53,8 @@ export function StillHereStep({ onClose }: { onClose: () => void }) {
 						posthog.capture("follow_up_still_here_link_tapped", {
 							destination: key,
 						});
-						// Close the modal, then swap reflect for the tab — the idle menu's
-						// replace, so reflect stays the "/" landing with no back stack.
+						// Close the modal, then replace reflect with the tab (as the idle menu
+						// does) so reflect stays the "/" landing with no back stack.
 						router.back();
 						router.replace(LINK[key].href, { withAnchor: true });
 					}}

@@ -28,9 +28,9 @@ export type VentState =
 	| "gone"
 	| "error";
 
-// Hard recording ceilings — keep the m4a payload safely under Convex's 1MB
-// v.bytes() limit (mono 48kbps AAC ≈ 6KB/s, so ~166s is the hard limit).
-// The daily cap is charged by actual duration server-side.
+// Recording ceilings keep the m4a under Convex's 1MB v.bytes() limit (mono
+// 48kbps AAC ≈ 6KB/s, so ~166s is the hard limit). The daily cap is charged
+// by actual duration server-side.
 const FREE_MAX_VENT_DURATION_MS = 120_000;
 const PLUS_MAX_VENT_DURATION_MS = 150_000;
 
@@ -47,24 +47,22 @@ type VentResult = {
 
 export type UseVentFlowReturn = {
 	state: VentState;
-	/** Words for on-screen display — ElevenLabs audio tags ([sighs] etc.) stripped. */
+	/** Words for on-screen display, ElevenLabs audio tags ([sighs] etc.) stripped. */
 	displayWords: string | null;
 	isCrisis: boolean;
 	/** True when the daily cap (not a failure) is why there's no acknowledgement. */
 	capReached: boolean;
 	startVent: () => Promise<void>;
 	stopVent: () => Promise<void>;
-	// Screen calls this when the burn animation (scatter + silence) finishes.
-	// 'heard' is gated on BOTH the server result and this — the dissolution is
-	// the emotional peak; the words are a quiet coda after it.
+	// Called when the burn animation finishes; 'heard' is gated on both this and
+	// the server result, so the words come as a coda after the dissolution.
 	onBurnComplete: () => void;
-	// Screen calls this when the 'gone' animation finishes — triggers router.back()
+	// Called when the 'gone' animation finishes; triggers router.back()
 	onGoneComplete: () => void;
-	// Forwarded from use-metering-recorder for the Skia particle system
 	metering: SharedValue<number>;
 	isRecording: boolean;
 	durationMs: number;
-	// Tier-aware recording ceiling — screen uses this for the auto-stop effect.
+	// Tier-aware recording ceiling for the screen's auto-stop effect.
 	maxDurationMs: number;
 };
 
@@ -76,8 +74,7 @@ export function useVentFlow(): UseVentFlowReturn {
 	const busyRef = useRef(false);
 	const resultRef = useRef<VentResult | "error" | null>(null);
 	const burnDoneRef = useRef(false);
-	// Snapshot of durationMs at stop time — used in post-stop events where
-	// the recorder state has already been cleared.
+	// Snapshot of durationMs at stop time, for events after the recorder state clears.
 	const durationAtStopRef = useRef(0);
 	// Consent write started with the vent; the upload waits on it.
 	const consentRef = useRef<Promise<void> | null>(null);
@@ -93,20 +90,20 @@ export function useVentFlow(): UseVentFlowReturn {
 	const processVentAudio = useAction(api.vent.processVentAudio);
 	const { ensureConsent } = useVoiceProcessingConsent();
 
-	// TTS audio player — source swapped in via player.replace() when playback starts
+	// TTS audio player; source swapped in via player.replace() when playback starts
 	const player = useAudioPlayer(null);
 	const focus = useRef(null);
 	const playerStatus = useAudioPlayerStatus(player);
 
-	// Advance out of 'processing' only when the burn animation has finished AND
-	// the server result (or its failure) is known.
+	// Advance out of 'processing' only when the burn has finished and the
+	// server result (or its failure) is known.
 	const tryAdvance = useCallback(() => {
 		if (!burnDoneRef.current) {
 			return;
 		}
 		const result = resultRef.current;
 		if (result === null) {
-			return; // pipeline still in flight — dark screen waits
+			return;
 		}
 
 		if (result === "error" || !result.words) {
@@ -133,7 +130,7 @@ export function useVentFlow(): UseVentFlowReturn {
 		setState((prev) => (prev === "processing" ? "heard" : prev));
 	}, [posthog]);
 
-	// Play TTS simultaneously with the text reveal (design spec: the coda).
+	// TTS plays alongside the text reveal (design spec: the coda).
 	useEffect(() => {
 		if (state !== "heard" || !audioUrl) {
 			return;
@@ -183,17 +180,15 @@ export function useVentFlow(): UseVentFlowReturn {
 			return;
 		}
 
-		// Haptics live here rather than on the button: the press is a request, and
-		// this is where it's known to have succeeded. A denied mic permission
-		// returns silently with no UI, so confirming the press there told the user
-		// it was recording when it wasn't.
+		// Haptics live here, not on the button: a denied mic permission returns
+		// silently, so confirming the press there said recording when it wasn't.
 		const started = await startRecording();
 		if (!started) {
 			playErrorNotice();
 			return;
 		}
 		playAffirmativePress();
-		// Started here so the write lands while they speak, not after.
+		// Started here so the write lands while they speak.
 		const consent = ensureConsent();
 		consent.catch(() => {}); // surfaced when the upload awaits it
 		consentRef.current = consent;
@@ -205,8 +200,7 @@ export function useVentFlow(): UseVentFlowReturn {
 		if (state !== "recording" || busyRef.current) {
 			return;
 		}
-		// Softer than the start — stopping is a release, not a commitment, and the
-		// two directions should not feel identical.
+		// Softer than the start: stopping is a release, not a commitment.
 		playSoftPress();
 		busyRef.current = true;
 		burnDoneRef.current = false;
@@ -222,7 +216,7 @@ export function useVentFlow(): UseVentFlowReturn {
 		const uri = await stopRecording();
 
 		if (!uri) {
-			// Recording failed — destruction plays anyway, then straight to gone
+			// Recording failed: destruction plays anyway, then straight to gone
 			resultRef.current = "error";
 			busyRef.current = false;
 			tryAdvance();
@@ -230,10 +224,9 @@ export function useVentFlow(): UseVentFlowReturn {
 		}
 
 		const run = async () => {
-			// No audio reaches ElevenLabs before voice_processing consent is on record.
-			// A write that failed at start gets one retry rather than sinking the vent.
+			// No audio reaches ElevenLabs before voice_processing consent is on record;
+			// a write that failed at start gets one retry.
 			await (consentRef.current?.catch(ensureConsent) ?? ensureConsent());
-			// Convert local file URI → ArrayBuffer for Convex v.bytes().
 			// RN's fetch Blob has no arrayBuffer(), so read via expo-file-system.
 			const bytes = await new File(uri).bytes();
 			const audioBytes = bytes.buffer.slice(
@@ -266,7 +259,7 @@ export function useVentFlow(): UseVentFlowReturn {
 		router.back();
 	}, [router]);
 
-	// Audio tags like [sighs] are for the TTS voice only — never shown on screen.
+	// Audio tags like [sighs] are for the TTS voice only, never shown on screen.
 	const displayWords = words
 		? words
 				.replace(/\[[^\]]*\]/g, " ")

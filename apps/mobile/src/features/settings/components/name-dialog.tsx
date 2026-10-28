@@ -33,7 +33,7 @@ type Props = {
 	validate: (name: string) => Validation;
 	currentName?: string;
 	autoCapitalize?: "none" | "words";
-	/** Omit to hide the "Remove name" affordance — i.e. the name is required. */
+	/** Omit to hide the "Remove name" affordance, making the name required. */
 	onClear?: () => Promise<void>;
 	/** Label for the clear affordance. Defaults to "Remove name". */
 	clearLabel?: string;

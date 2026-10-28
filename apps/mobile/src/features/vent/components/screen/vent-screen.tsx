@@ -72,7 +72,7 @@ export function VentScreen() {
 	const burnSkip = useSharedValue(0);
 	const labelOpacity = useSharedValue(0);
 
-	// "Speak your weight" — fades in once the sphere settles, fades out 3s later.
+	// "Speak your weight": fades in once the sphere settles, out 3s later.
 	useEffect(() => {
 		if (state === "idle") {
 			labelOpacity.set(
@@ -89,8 +89,7 @@ export function VentScreen() {
 		}
 	}, [state, labelOpacity]);
 
-	// Soft ceiling: auto-release at the max duration. No visible timer —
-	// the field simply stops expanding at max radius (handled by the engine).
+	// Soft ceiling: auto-release at the max duration, no visible timer.
 	useEffect(() => {
 		if (state === "recording" && durationMs >= maxDurationMs) {
 			stopVent();
@@ -99,8 +98,7 @@ export function VentScreen() {
 
 	const labelStyle = useAnimatedStyle(() => ({ opacity: labelOpacity.get() }));
 
-	// Pinch-spread accelerant: spreading two fingers during the burn jumps
-	// straight to the explosion. Inactive in every other state.
+	// Pinch-spread accelerant: spreading two fingers during the burn jumps to the explosion.
 	const pinch = Gesture.Pinch()
 		.enabled(state === "processing")
 		.onUpdate((e) => {
@@ -145,7 +143,6 @@ export function VentScreen() {
 					stage={STAGE_FOR_STATE[state] ?? "enter"}
 				/>
 
-				{/* Close — top-right, hidden while recording/burning */}
 				{showChrome && (
 					<Animated.View
 						className="absolute top-16 right-6 z-10"
@@ -170,7 +167,6 @@ export function VentScreen() {
 					</Animated.View>
 				)}
 
-				{/* "Speak your weight" — below the sphere */}
 				<Animated.View
 					className="absolute inset-x-0 top-[68%] items-center"
 					pointerEvents="none"
@@ -181,7 +177,6 @@ export function VentScreen() {
 					</AppText>
 				</Animated.View>
 
-				{/* Mic / stop — fades out the moment the burn begins */}
 				{(state === "idle" || state === "recording") && (
 					<Animated.View
 						className="absolute inset-x-0 bottom-25 items-center"
@@ -195,12 +190,10 @@ export function VentScreen() {
 					</Animated.View>
 				)}
 
-				{/* The coda */}
 				{state === "heard" && displayWords && (
 					<VentAcknowledgement words={displayWords} />
 				)}
 
-				{/* The period */}
 				{state === "gone" && (
 					<VentGone
 						capReached={capReached}
@@ -209,7 +202,7 @@ export function VentScreen() {
 					/>
 				)}
 
-				{/* DEV ONLY — tap to re-activate the first-run intro for testing */}
+				{/* DEV ONLY: re-activates the first-run intro for testing */}
 				{__DEV__ && state === "idle" && (
 					<PressableFeedback
 						className="absolute bottom-5 left-4 p-3"

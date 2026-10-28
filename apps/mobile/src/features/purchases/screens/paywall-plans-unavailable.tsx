@@ -10,13 +10,8 @@ type Props = {
 	onRetry: () => void;
 };
 
-/**
- * Shown in place of the period picker + purchase CTA when payments are live
- * but the store returned no packages (offerings fetch failed or products
- * unresolvable). Never present a purchasable-looking button that does
- * nothing — that reads as a bug (App Review Guideline 2.1) and strands real
- * users on transient App Store / network failures.
- */
+/** Replaces the picker and CTA when the store returned no packages; a dead purchase button
+ * fails App Review 2.1. */
 export function PaywallPlansUnavailable({ isRetrying, onRetry }: Props) {
 	const accentForeground = useThemeColor("accent-foreground") as string;
 

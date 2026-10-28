@@ -1,10 +1,5 @@
-/**
- * Particle system data for the vent screen — all values precomputed once at
- * module load so the per-frame worklet only reads plain number arrays.
- *
- * Colors are fixed artwork constants from docs/vent-design.md (the ritual is
- * intentionally identical across themes), not theme tokens.
- */
+/** Particle data precomputed at module load so the per-frame worklet reads
+ * plain arrays. Colors are fixed artwork constants (docs/vent-design.md), not theme tokens. */
 
 export const PARTICLE_COUNT = 100;
 export const SPARSE_COUNT = 26;
@@ -38,19 +33,17 @@ function mulberry32(seed: number) {
 const rand = mulberry32(20_260_610);
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
-// Unit sphere directions (fibonacci lattice) — the orbital home of each particle.
+// Unit sphere directions (fibonacci lattice): each particle's orbital home.
 export const DIR_X: number[] = [];
 export const DIR_Y: number[] = [];
 export const DIR_Z: number[] = [];
-// Visual + motion seeds.
 export const SIZE: number[] = []; // 2–4 px (design spec)
 export const SPEED: number[] = []; // signed orbit speed multiplier
 export const PHASE0: number[] = []; // per-particle phase offset
 export const DELAY: number[] = []; // entry stagger, ms
 export const ENTRY_X: number[] = []; // unit direction toward screen edge
 export const ENTRY_Y: number[] = [];
-// Scatter: per-particle velocity (px/ms) + gravity so the burst is non-uniform —
-// some fly up, some drift sideways, some fall (design spec).
+// Scatter: per-particle velocity (px/ms) + gravity so the burst is non-uniform (design spec).
 export const SCAT_VX: number[] = [];
 export const SCAT_VY: number[] = [];
 export const SCAT_G: number[] = [];
@@ -80,14 +73,12 @@ for (let i = 0; i < PARTICLE_COUNT; i++) {
 	SCAT_G.push(0.0001 + rand() * 0.0004);
 }
 
-// Precomputed color ramp: ash gray → ember → amber. The render worklet indexes
-// into this instead of interpolating colors per particle per frame.
+// Color ramp ash gray → ember → amber, indexed instead of interpolated per frame.
 export const RAMP_STEPS = 32;
 const RAMP_R: number[] = [];
 const RAMP_G: number[] = [];
 const RAMP_B: number[] = [];
-// Normalized Float32 colors (RGBA 0–1) for each ramp step — eliminates
-// Float32Array.of(...) allocations inside the per-particle setRampColor worklet.
+// Normalized Float32 RGBA per ramp step, avoiding allocations in the setRampColor worklet.
 export const RAMP_COLORS: Float32Array[] = [];
 
 const STOPS = [

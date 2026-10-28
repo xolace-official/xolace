@@ -1,8 +1,5 @@
-/**
- * The Lantern home's atoms (#409, from #396 variant A): the photo card, the
- * thumbnail row and the section title. Every entry tap opens the one reader,
- * `library/[slug]` (#407).
- */
+/** Lantern home atoms (#409): photo card, thumbnail row, section title. Every tap opens
+ * `library/[slug]` (#407). */
 
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
@@ -48,11 +45,8 @@ export const readerHref = (slug: string, from: ReaderFrom, hub?: string) =>
 		pathname: "/library/[slug]",
 	}) as const;
 
-/**
- * Full-bleed cover photo, kicker, title, meta, and a play mark when the entry
- * has audio. Ink is the reader cover's fixed palette. At accessibility text
- * sizes the title is uncapped and the card grows to fit (#400).
- */
+/** Full-bleed cover photo, kicker, title, meta and a play mark for audio. At accessibility
+ * sizes the title is uncapped (#400). */
 export function PhotoCard({
 	entry,
 	kicker,
@@ -152,7 +146,7 @@ function HasAudio() {
 			importantForAccessibility="no-hide-descendants"
 			pointerEvents="none"
 		>
-			{/* Over the photo, a fixed palette: dark clear glass, not the themed GlassSurface. */}
+			{/* Fixed palette over the photo: dark clear glass, not the themed GlassSurface. */}
 			{glass && (
 				<GlassView
 					colorScheme="dark"

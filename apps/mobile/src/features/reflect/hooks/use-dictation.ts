@@ -5,11 +5,7 @@ import { usePlusDictation } from "@/features/reflect/hooks/use-plus-dictation";
 import { useVoiceInput } from "@/features/reflect/hooks/use-voice-input";
 
 /**
- * Dictation for the Reflect composer, on whichever engine the person has:
- * Plus dictation (Scribe, one transcript at the end of a take, delivered to
- * `onPlusTranscript`) or on-device dictation (live `partialTranscript`). A
- * Plus take Scribe can't serve falls back to on-device (#558). A free
- * person's first mic tap opens the Plus dictation upsell instead (#559).
+ * Dictation on Plus (Scribe, one transcript) or on-device (live); Plus falls back on device (#558).
  */
 export function useDictation(onPlusTranscript: (text: string) => void) {
 	const { isPlus } = usePlusEntitlement();

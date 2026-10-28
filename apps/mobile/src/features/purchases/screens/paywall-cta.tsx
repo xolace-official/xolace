@@ -19,13 +19,8 @@ type Props = {
 	isDisabled: boolean;
 };
 
-/**
- * Sticky bottom CTA block — primary button, renewal legal line, and
- * Terms/Privacy links that reuse the existing LegalBottomSheet (same
- * pattern as the auth screen's LegalLinks) instead of duplicating copy.
- * While busy, the button shrinks to an icon-only spinner via the same
- * layout={LinearTransition.springify()} + isIconOnly pattern as AuthScreen.
- */
+/** Sticky bottom CTA block: primary button, renewal legal line and Terms/Privacy links via
+ * LegalBottomSheet. */
 export function PaywallCta({ label, onPress, isBusy, isDisabled }: Props) {
 	const [activeDocument, setActiveDocument] = useState<LegalDocument | null>(
 		null

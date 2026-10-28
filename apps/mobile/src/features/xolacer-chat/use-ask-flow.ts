@@ -12,19 +12,12 @@ import {
 import { playSoftPress } from "@/lib/haptics";
 import { useAppStore } from "@/store/store";
 
-/** `gate` stands in front of a request; `reference` is the same content pulled
- *  up from "What to expect" and sends nothing. */
+/** `gate` stands in front of a request; `reference` is the same content from "What to expect"
+ * and sends nothing. */
 export type PrimerMode = "gate" | "reference" | null;
 
-/**
- * Everything behind "Ask to talk": the request itself, its limit-error toast,
- * and the one-time primer that gates a seeker's first ask.
- *
- * The primer's flag and the request are written on the same success path —
- * acknowledging is only meaningful once something was actually sent, so a
- * request that fails a limit check leaves the sheet open, the flag unset, and
- * the seeker able to try again.
- */
+/** Everything behind "Ask to talk": the request, its limit toast, and the first-ask primer,
+ * whose flag is written only on a successful send. */
 export function useAskFlow({
 	xolacerProfileId,
 	displayName,
@@ -58,9 +51,6 @@ export function useAskFlow({
 		setSending(true);
 		requestConversation({ xolacerProfileId })
 			.then((conversationId) => {
-				// Only the success path acknowledges and closes — a limit error leaves
-				// the seeker exactly where they were, reading the toast, with the
-				// primer unacknowledged so nothing half-commits.
 				if (fromGate) {
 					setPrimerSeen(true);
 					posthog.capture("xolacer_primer_resolved", { outcome: "sent" });
@@ -109,10 +99,8 @@ export function useAskFlow({
 		sendRequest(true);
 	};
 
-	// Dismissing a gate — swipe, backdrop or close button — is an abandonment
-	// whether or not a send was attempted first, and writes no flag. A send
-	// already in flight owns the sheet: closing under it would strand the
-	// acknowledgment while the request still succeeds.
+	// Dismissing a gate is an abandonment and writes no flag. A send in flight
+	// owns the sheet: closing under it would strand the acknowledgment.
 	const handlePrimerClose = () => {
 		if (inFlight.current) {
 			return;

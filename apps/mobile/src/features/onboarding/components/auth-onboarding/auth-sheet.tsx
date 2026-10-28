@@ -1,7 +1,4 @@
-/**
- * The sign-in half of the screen, revealed as the deck lifts off it.
- *
- */
+/** The sign-in half of the screen, revealed as the deck lifts off it. */
 
 import { SymbolView } from "expo-symbols";
 import { Button, PressableFeedback, Spinner } from "heroui-native";
@@ -161,10 +158,7 @@ export const AuthSheetBlock = ({
 	);
 };
 
-/**
- * two-row morph. Row one exits upward, row two enters from below,
- * both driven off the same expansion progress.
- */
+/** Two-row morph: row one exits upward, row two enters from below, off one progress. */
 export const MorphingSeatButton = ({
 	progress,
 	onExpand,

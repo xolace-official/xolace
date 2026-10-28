@@ -1,8 +1,5 @@
-/**
- * Paged hub carousel (#396): photo cards with HeroUI ScrollShadow on the
- * edges, and dots whose active one stretches and fades with the scroll
- * instead of snapping.
- */
+/** Paged hub carousel (#396): photo cards with edge shadows and dots that stretch with the
+ * scroll. */
 
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
@@ -37,7 +34,7 @@ function Dot({
 	color: string;
 }) {
 	const style = useAnimatedStyle(() => {
-		// 0 → 1 → 2 as the page approaches, centres on, then leaves this dot
+		// 0 → 1 → 2 as the page approaches, centres on, then leaves this dot.
 		const p = Math.max(
 			0,
 			Math.min(2, (scrollX.get() - (index - 1) * page) / page)

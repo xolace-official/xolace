@@ -10,14 +10,8 @@ type UseVoicePreviewReturn = {
 	stop: () => void;
 };
 
-/**
- * Plays bundled voice-preview clips, one at a time. Previews are playable even
- * when the voice is locked — hearing the voice is the sell. Mirrors the
- * expo-audio pattern in use-mirror-audio.ts, but swaps sources per slug.
- *
- * `playingSlug` is derived from live playback status (not synced via an
- * effect), so it clears itself the moment a clip finishes.
- */
+/** Plays bundled voice-preview clips one at a time, even for locked voices.
+ * `playingSlug` is derived from live playback status, so it clears itself. */
 export function useVoicePreview(): UseVoicePreviewReturn {
 	const player = useAudioPlayer(null);
 	const focus = useRef(null);

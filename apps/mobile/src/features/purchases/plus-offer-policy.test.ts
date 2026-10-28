@@ -33,8 +33,6 @@ describe("choosePlusOffer", () => {
 		});
 	});
 
-	// The one rule that has no exception, including for a surface the user
-	// tapped themselves.
 	it("vetoes on an active safeguard flow regardless of every other input", () => {
 		expect(
 			choosePlusOffer(
@@ -79,8 +77,6 @@ describe("choosePlusOffer", () => {
 		).toEqual({ moment: 1, show: true, variant: "default" });
 	});
 
-	// The cooldown belongs to the slot, not the moment that happened to win it.
-	// Rotating to the next-ranked moment in the same place is the same ask again.
 	it("silences every moment at a dismissed surface, not just the one dismissed", () => {
 		expect(
 			choosePlusOffer(
@@ -89,8 +85,6 @@ describe("choosePlusOffer", () => {
 		).toEqual({ reason: "cooldown", show: false });
 	});
 
-	// Per-surface, not global: a week of silence on the close slot says nothing
-	// about the profile.
 	it("still offers at another surface while one is cooling down", () => {
 		expect(
 			choosePlusOffer(
@@ -122,9 +116,7 @@ describe("choosePlusOffer", () => {
 		).toEqual({ moment: 1, show: true, variant: "default" });
 	});
 
-	// "No stop recorded" must read as not stopped, not as a stop that started at
-	// the epoch and never ends — a caller that persists the count without the
-	// timestamp would otherwise silently suppress every offer forever.
+	// A caller persisting the count without the timestamp must not suppress every offer forever.
 	it("treats a missing full-stop timestamp as no stop at all", () => {
 		expect(
 			choosePlusOffer(base({ dismissalCount: 5, fullStopSince: null }))
@@ -141,8 +133,6 @@ describe("choosePlusOffer", () => {
 		});
 	});
 
-	// If they tapped the locked thing, they asked — cadence governs what the app
-	// says unprompted, not what the user opens.
 	it("lets a user-initiated surface through every cadence and cooldown check", () => {
 		expect(
 			choosePlusOffer(
@@ -188,8 +178,6 @@ describe("plusOfferCandidates", () => {
 		expect(plusOfferCandidates("session_close", { 5: true })).toEqual([5]);
 	});
 
-	// A moment can only be raised where it belongs — moment 3 is a profile
-	// moment, and passing it to the close slot must not smuggle it in.
 	it("never raises a moment at a surface it does not belong to", () => {
 		expect(plusOfferCandidates("session_close", { 3: true })).toEqual([]);
 		expect(plusOfferCandidates("mirror_landed", { 2: true })).toEqual([2]);

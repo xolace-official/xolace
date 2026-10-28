@@ -39,34 +39,20 @@ import {
 } from "./xolace-channel-overrides";
 import { XolacerAvatar } from "./xolacer-avatar";
 
-/**
- * The one fixed, no-lifecycle channel every camper is a member of (#372-#375).
- * Unlike a xolacer thread there is no `xolacer_conversations` row, no
- * request/accept/rest/close status, and no per-pair identity to resolve —
- * every author is Xolace, see `BroadcastMessageAuthor`. Composer visibility for
- * everyone else is entirely Stream's own doing — only the sender's channel
- * membership carries the `create-message` grant (see `DESIRED_XOLACE_BROADCAST`),
- * so `<MessageComposer>` renders its stock "can't send" state for anyone else
- * with no client-side check to maintain, and a send that somehow reaches the
- * server the same way any other rejected send does — the SDK's own error
- * handling, not a bespoke path.
- */
+// The fixed, no-lifecycle channel every camper is a member of (#372-#375): no
+// `xolacer_conversations` row, every author is Xolace. Only the sender's membership
+// carries `create-message` (`DESIRED_XOLACE_BROADCAST`); Stream hides the composer for others.
 
-// Reactors here are every camper, not a resolved counterpart — showing the
-// "who reacted" sheet with no identity override renders Stream's own
-// (pseudonymous) reactor names instead of hiding every non-self row, which is
-// what `ConversationReactionUser` does with no `ConversationIdentityProvider`
-// mounted. Everything else in the map is a safe no-op without one.
+// Reactors here are every camper, not a resolved counterpart: without the
+// identity override the "who reacted" sheet shows Stream's pseudonymous names
+// instead of hiding every non-self row. The rest of the map is a safe no-op.
 const {
 	MessageUserReactionsItem: _reactionIdentityOverride,
 	...BROADCAST_OVERRIDES_BASE
 } = COMPONENT_OVERRIDES;
 
-/**
- * Same identity as the chats-list row (#377) — campfire mark, "Camp
- * announcements" subtitle — rendered into the native header's title slot
- * instead of a plain string, same pattern as `ThreadHeader`.
- */
+/** Same identity as the chats-list row (#377), rendered into the native header's title slot
+ * like `ThreadHeader`. */
 function XolaceChannelHeader() {
 	return (
 		<View className="flex-row items-center gap-2.5">

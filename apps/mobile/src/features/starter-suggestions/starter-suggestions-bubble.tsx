@@ -78,8 +78,7 @@ export function StarterSuggestionsBubble({ intake, onResolve }: Props) {
 		}
 		playSoftPress();
 		// Reflect is the screen under the bubble: ask it to open the card (#462).
-		// Tab destinations replace, like the idle menu's Discovery, so reflect
-		// stays the "/" landing with no back stack.
+		// Tab destinations replace, so reflect stays the "/" landing with no back stack.
 		if (row.id === "reflect") {
 			requestComposerOpen();
 		} else if (row.id === "vent") {
@@ -89,9 +88,8 @@ export function StarterSuggestionsBubble({ intake, onResolve }: Props) {
 		} else if (row.id === "listen") {
 			router.replace("/browse");
 		}
-		// The roster, not a conversation: the request (and its "Before you ask"
-		// primer) stays the user's own tap. `t` re-applies the segment if the
-		// tab is already mounted on Chats.
+		// The roster, not a conversation. `t` re-applies the segment if the tab
+		// is already mounted on Chats.
 		else if (row.id === "xolacer") {
 			router.replace({
 				params: { t: navToken(), view: "xolacers" },

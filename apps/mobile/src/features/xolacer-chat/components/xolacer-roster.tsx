@@ -24,12 +24,8 @@ const styles = StyleSheet.create({
 	borderCurve: { borderCurve: "continuous" },
 });
 
-/**
- * The roster: every published, active xolacer. A capped xolacer stays
- * visible but dimmed ("Full right now") — vanishing from a six-person list
- * would read as a bug. "Talking" marks xolacers you already have an open
- * thread with.
- */
+/** The roster: every published, active xolacer. Capped ones stay visible but dimmed; "Talking"
+ * marks open threads. */
 export function XolacerRoster({
 	conversations,
 	filter,
@@ -82,10 +78,8 @@ export function XolacerRoster({
 			)
 		: xolacers;
 
-	// Specialty first, presence only as the tie-break *within* it: the filter is
-	// applied above, so this can never lift someone who doesn't relate to what
-	// the seeker is carrying. Ranked on the snapshot, not on the live flag, so
-	// rows hold their position — the badge below still reads live.
+	// Specialty first (filtered above), presence only as the tie-break. Ranked on
+	// the snapshot so rows hold position; the dot below still reads live.
 	const ranked = presentSnapshot
 		? sortByPresence(
 				visible.map((xolacer) => ({
@@ -97,9 +91,8 @@ export function XolacerRoster({
 
 	return (
 		<View className="gap-2.5">
-			{/* An active filter is always offered, even if nobody declares it right
-          now — otherwise a routed specialty no xolacer has leaves an empty
-          list with no way back to everyone. */}
+			{/* An active filter is always offered, or a routed specialty nobody
+          declares leaves an empty list with no way back. */}
 			<SpecialtyFilter
 				available={filter ? [...offered, filter] : offered}
 				onSelect={onFilterChange}
@@ -137,8 +130,6 @@ export function XolacerRoster({
 									name={xolacer.displayName}
 									photoUrl={xolacer.photoUrl}
 								/>
-								{/* Live, unlike the ordering: someone arriving lights up where
-                    they already are rather than jumping the list. */}
 								{xolacer.present && <PresenceDot />}
 							</View>
 							<View className="min-w-0 flex-1 gap-1">
@@ -159,8 +150,6 @@ export function XolacerRoster({
 											</AppText>
 										</View>
 									)}
-									{/* Scores share one right-hand column so the eye reads down
-                      it instead of hunting; capacity outranks the score. */}
 									<View className="ml-auto shrink-0 pl-2">
 										{xolacer.atCapacity ? (
 											<View className="rounded-full bg-surface-tertiary px-2 py-0.5">

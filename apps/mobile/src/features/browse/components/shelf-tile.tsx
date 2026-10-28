@@ -16,11 +16,8 @@ export type ShelfItem = FunctionReturnType<
 
 const TILE = 170;
 
-/**
- * One square tile of the newest-4 shelf — the hub's New shelf and the
- * Discovery "From the library" strip (§9.3, §9.5) render the same query
- * through this. Tap → player, or the paywall for a free user (§9.4).
- */
+/** One tile of the newest-4 shelf (§9.3, §9.5). Tap opens the player, or the paywall for a free
+ * user (§9.4). */
 export function ShelfTile({
 	item,
 	from,

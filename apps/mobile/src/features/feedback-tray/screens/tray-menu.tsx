@@ -32,10 +32,7 @@ const ROWS: Row[] = [
 	},
 ];
 
-/**
- * Tray root: report a bug, suggest an idea, or see what's new. Each row pushes
- * the matching screen.
- */
+/** Tray root: report a bug, suggest an idea, or see what's new. */
 export const TrayMenu = () => {
 	const { show } = useTray<Trays>();
 	const accentColor = useThemeColor("accent") as string;

@@ -15,10 +15,8 @@ type Props = {
 	onUnderstand: () => void;
 };
 
-/**
- * First-time intro: sparse, barely-visible particle drift behind three quiet
- * lines and a text-only "I understand" button. Shown once per device.
- */
+/** First-time intro: sparse, barely-visible particle drift behind three quiet
+ * lines and a text-only "I understand" button. Shown once per device. */
 export function VentIntro({ onUnderstand }: Props) {
 	const handlePress = () => {
 		playSoftPress();

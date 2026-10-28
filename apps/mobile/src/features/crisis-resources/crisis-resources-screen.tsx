@@ -41,7 +41,7 @@ export function CrisisResourcesScreen() {
 	const warningColor = useThemeColor("warning") as string;
 	const { toast } = useToast();
 	const posthog = usePostHog();
-	// Which screen sent the person here (talk, library, quote_reply, ...).
+	// Which screen sent the person here (talk, library, quote_reply, ...)
 	const { from } = useLocalSearchParams<{ from?: string }>();
 
 	const selectValue = selectedCountry

@@ -13,13 +13,8 @@ import { LibraryStripSkeleton } from "./skeletons";
 
 const TILE = 132;
 
-/**
- * "Something to listen to" (docs/paths-v1.md §9.5, #341; was "From the library" —
- * that name now belongs to Lantern, #409) — the same query
- * as the hub's New shelf (rotating daily), ending in "See all" into the Browse tab. Hidden
- * entirely below one item, never padded. Recently-played and
- * recommended-for-you are fog (§11).
- */
+/** "Something to listen to" (docs/paths-v1.md §9.5, #341): the hub's New shelf query. Hidden
+ * below one item, never padded. */
 export function LibraryStrip() {
 	const router = useRouter();
 	const posthog = usePostHog();

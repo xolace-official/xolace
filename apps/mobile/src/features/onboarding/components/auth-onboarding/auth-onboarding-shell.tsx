@@ -1,9 +1,5 @@
-/**
- * The screen's frame, laid out the way superlist does it: the sign-in block
- * and the morphing pill sit in the bottom stack, and the carousel is
- * absolutely positioned ON TOP of them, sliding up out of the way as the
- * sheet opens.
- */
+// The screen's frame: sign-in block and morphing pill in the bottom stack, with the
+// carousel absolutely positioned on top and sliding up as the sheet opens.
 import { useWindowDimensions, View } from "react-native";
 import { FlatList, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -29,14 +25,11 @@ const LIFT = 250;
 export const AuthOnboardingShell = () => {
 	const insets = useSafeAreaInsets();
 	const { height: screenHeight } = useWindowDimensions();
-	// The deck itself is pinned dark, but the app the user lands in after
-	// sign-in is not: a light-theme user gets the full sunrise so the hand-off
-	// is seamless, a dark-theme one stops at a pre-dawn glow for the same
-	// reason in the other direction.
+	// The deck is pinned dark; a light-theme user gets the full sunrise so the hand-off
+	// into the app is seamless, a dark-theme one stops at a pre-dawn glow.
 	const { isDark } = useAppTheme();
-	// Destructured rather than kept as one object: the hook's animated list ref
-	// rides along in that object, and every read off it then looks like a ref
-	// access during render to the compiler's ref pass.
+	// Destructured: reads off the hook's object would look like render-time ref access
+	// to the compiler's ref pass.
 	const {
 		listRef,
 		width,
@@ -96,7 +89,7 @@ export const AuthOnboardingShell = () => {
 					width={width}
 				/>
 
-				{/* Bottom stack — revealed as the deck lifts off it. */}
+				{/* Bottom stack, revealed as the deck lifts off it. */}
 				<View className="mt-auto">
 					<AuthSheetBlock onCollapse={collapse} progress={progress} />
 					<MorphingSeatButton
@@ -129,8 +122,8 @@ export const AuthOnboardingShell = () => {
 							keyExtractor={(item) => item.id}
 							onScroll={scrollHandler}
 							pagingEnabled
-							// gesture-handler's FlatList doesn't line up with Reanimated's
-							// animated-ref type, but it is the scrollable `scrollTo` drives.
+							// gesture-handler's FlatList does not match Reanimated's
+							// animated-ref type.
 							ref={listRef as never}
 							renderItem={({ item, index }) => (
 								<StoryBeatSlide
@@ -154,8 +147,8 @@ export const AuthOnboardingShell = () => {
 							/>
 						</Animated.View>
 
-						{/* Darkens the tale itself as the sheet takes over. Lives inside the
-                deck so it can never dim the sign-in block behind it. */}
+						{/* Darkens the tale as the sheet takes over; inside the deck so it
+						    never dims the sign-in block. */}
 						<Animated.View
 							className="absolute inset-0 bg-background"
 							pointerEvents="none"

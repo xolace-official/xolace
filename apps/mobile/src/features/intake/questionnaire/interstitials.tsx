@@ -1,8 +1,4 @@
-/**
- * The two info slots between the three sections. Neither carries an answer, so
- * neither gets a questionnaire card — the mascot says one thing at a time and
- * you tap on.
- */
+/** The two info slots between the three sections. Neither carries an answer. */
 import { useState } from "react";
 import { useShakeToOpen } from "@/features/feedback-tray/trigger/use-shake-to-open";
 import { MascotConversation } from "@/features/intake/questionnaire/conversation";
@@ -18,15 +14,8 @@ const PRIVACY_LINES = [
 	},
 ];
 
-/**
- * Shake-to-tell-us, learned by doing it: the screen asks for a shake and
- * nothing else is on it, so the thing you're told about is a thing you already
- * did.
- *
- * The gate runs the *same* detector as the feedback tray's global shake trigger,
- * so a shake that opens the gate is by definition a shake that opens the tray —
- * the promise on this screen can't drift from the behaviour it describes.
- */
+// The gate runs the same detector as the feedback tray's global shake trigger, so
+// the promise on this screen cannot drift from the behaviour it describes.
 const SHAKE_LINES = [
 	{ gated: true, text: "Last thing. Give your phone a shake." },
 	{ text: "That works anywhere in the app." },

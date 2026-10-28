@@ -3,30 +3,19 @@ import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
 import { createShakeDetector } from "./shake-detector";
 
-/**
- * Explicit, because the platform defaults disagree — Android gates at 100ms
- * while iOS leaves CoreMotion at its ~100Hz default. At 50ms a 4Hz shake
- * aliases badly — samples land off the peaks and read ~40% low, so a real
- * shake has to be much harder than the threshold implies. 25ms lands close
- * enough to the peaks and is still cheap enough to leave running.
- */
+/** Explicit because platform defaults disagree (Android 100ms, iOS ~100Hz).
+ * At 50ms a 4Hz shake aliases and reads ~40% low; 25ms lands near the peaks. */
 const SAMPLE_INTERVAL_MS = 25;
 
 type Options = {
-	/** Pure-derived per call-site. When false, no accelerometer subscription. */
+	/** When false, no accelerometer subscription. */
 	enabled: boolean;
 	/** Fired on a qualifying shake. */
 	onShake: () => void;
 };
 
-/**
- * Subscribes to the accelerometer only while `enabled`, and tears the
- * subscription down when disabled or on unmount (covers navigating away from a
- * screen-scoped call site). Shake qualification lives in `createShakeDetector`
- * — see its tests for the motion it does and does not accept. The dev-menu
- * fallback is registered once globally (see useDevMenuTrigger), not here, to
- * avoid duplicate menu items.
- */
+/** Subscribes to the accelerometer only while `enabled`. Qualification lives in
+ * `createShakeDetector`; the dev-menu fallback is registered once globally. */
 export const useShakeToOpen = ({ enabled, onShake }: Options) => {
 	const onShakeRef = useRef(onShake);
 	useEffect(() => {

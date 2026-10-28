@@ -26,26 +26,7 @@ type Props = {
 };
 
 /**
- * The Perch strip: one thin row above the card (#257).
- *
- * Who the user is here — streak, space name, the event they're inside — and the
- * one other way in, collected onto a single line so the chrome informs without
- * competing with the card. There is no encouragement line any more: Flux and
- * the prompt carry that, and a second reassuring sentence only said it twice.
- *
- * The strip is identity, so it no longer defers to whatever the card is
- * saying. The event pill tracks the event period rather than the card: the
- * card shows one prompt and night or a quiet return may outrank the event's,
- * but the user is still inside the event either way. The streak card is always
- * present, reading 0 when there is no live streak: it anchors the left of the
- * strip, and a counter that vanishes the moment it lapses hides exactly the
- * fact it exists to report.
- *
- * Beside the calendar the strip is two lines: space name and "A word for
- * today" on top, the event pill alone underneath. In one row they split the
- * width and a long event label ("Breast Cancer Awareness Month") truncated;
- * on its own line the event gets the full width, and the two lines fit in the
- * calendar's height, so the strip is no taller.
+ * The Perch strip above the card (#257). The event pill tracks the event period, not the prompt.
  */
 export const ComposeChrome = ({
 	eventPrompt,

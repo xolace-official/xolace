@@ -1,11 +1,7 @@
 import { useReanimatedKeyboardAnimation } from "react-native-keyboard-controller";
 import { useDerivedValue, withSpring } from "react-native-reanimated";
 
-/**
- * Spring-smoothed keyboard height as a reanimated offset, so the tray can ride
- * up with the keyboard. `react-native-keyboard-controller` is already provided
- * by RootProvider.
- */
+/** Spring-smoothed keyboard height as a reanimated offset, so the tray rides up with it. */
 export const useKeyboardOffset = () => {
 	const { height } = useReanimatedKeyboardAnimation();
 

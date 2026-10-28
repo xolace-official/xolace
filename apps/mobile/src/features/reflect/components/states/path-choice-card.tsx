@@ -43,10 +43,7 @@ type Props = {
 };
 
 /**
- * One layer of the path stack. Same tinted, top-rounded shape as the follow-up
- * check-in's OptionCard (slides under the next one: -mb-8 over pb-14), but its
- * Flux climbs out over the top edge and sits on the card above. The last one
- * sits lower — at full height it touches the pair on the card above.
+ * One layer of the path stack (slides under the next: -mb-8 over pb-14); Flux climbs over the top.
  */
 export function PathChoiceCard({
 	index,
@@ -66,7 +63,7 @@ export function PathChoiceCard({
 			transition={riseTransition(index, reduced)}
 		>
 			{/* Flux rides inside the pressable so the press scale takes him with the
-          card. The rounded clip lives on the inner View, so he can climb out. */}
+			    card. The rounded clip lives on the inner View, so he can climb out. */}
 			<PressableFeedback
 				accessibilityLabel={`${title}. ${sub}`}
 				accessibilityRole="button"

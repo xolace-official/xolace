@@ -1,8 +1,5 @@
-/**
- * Dev-only settings section for manual testing. Render it behind a
- * `__DEV__` check at the call site — it has no production guard of its
- * own (the Convex mutation it calls is gated server-side instead).
- */
+/** Dev-only settings section. Render it behind `__DEV__` at the call site; the
+ * Convex mutation it calls is gated server-side. */
 
 import { useAuth } from "@clerk/expo";
 import * as Sentry from "@sentry/react-native";
@@ -159,8 +156,7 @@ export const DevToolsSection = () => {
 			return;
 		}
 		setBusy(true);
-		// No navigation of our own: `onboardingComplete` is the root guard, so the
-		// subscription that reads it swaps the whole group out from under us.
+		// No navigation here: `onboardingComplete` is the root guard and swaps the group.
 		resetIntake()
 			.catch((e) => {
 				toast.show({

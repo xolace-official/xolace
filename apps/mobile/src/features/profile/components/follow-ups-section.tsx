@@ -90,11 +90,8 @@ function FollowUpRow({ card, onDismiss }: RowProps) {
 	);
 }
 
-/**
- * Profile Follow-Ups section. Built from the profile card vocabulary
- * (rounded-2xl bg-surface rows). Only renders when the user has follow-up
- * history. Superseded rows stay visible/tappable until an explicit dismiss.
- */
+/** Profile Follow-Ups section; renders only with follow-up history. Superseded
+ * rows stay visible until an explicit dismiss. */
 export function FollowUpsSection({
 	staggerDelay = 420,
 }: {

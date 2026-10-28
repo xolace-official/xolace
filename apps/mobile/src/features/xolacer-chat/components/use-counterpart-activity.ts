@@ -13,28 +13,8 @@ type CounterpartActivity = {
 
 const IDLE: CounterpartActivity = { presence: null, typing: false };
 
-/**
- * The Stream side of presence, read straight off the channel's cached state
- * rather than through `<Channel>` context — the thread header renders in
- * React Navigation's header slot, a sibling of `<Channel>` in the tree, not a
- * descendant, so `useChannelStateContext`/`useTypingContext` aren't reachable
- * there. `client.channel(type, id)` returns the same cached instance
- * `<Channel>` watches, and `useChatWarmup` already opens it with
- * `presence: true` before a thread is ever tapped open, so member data is
- * normally populated on first render.
- *
- * Convex's `presentProfileIds` (convex/presence.ts) is "the accessor" for
- * every other surface; this is its Stream-routed counterpart for the one
- * surface where the chat socket already knows the answer first-hand.
- *
- * Typing takes the same treatment so the header can prefer it over the
- * online dot — the stronger signal wins.
- *
- * The client comes from `useStreamStatus`, which hands it out only once it
- * has a user: the header is mounted from the thread's first frame, before
- * that on a cold-start deep link, and `client.channel()` throws on a client
- * with no user set.
- */
+/** Presence and typing read off the cached channel state, since the header is a sibling of
+ * `<Channel>`; needs a client with a user, as `client.channel()` throws otherwise. */
 export function useCounterpartActivity(
 	streamChannelId: string | undefined,
 	counterpartUserId: string

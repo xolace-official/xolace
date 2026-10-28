@@ -1,14 +1,6 @@
-/**
- * The card shell for the intake offer deck — one saturated panel per offer.
- *
- * Every card is the same three-part stack (tag → title → the thing itself), so
- * the deck reads as one set rather than four posters. Colour is the only
- * variable, and it comes from the four `--tone-*` hues the app already owns.
- *
- * Text sits on `--offer-ink`, not `--foreground`: the panel is a light surface
- * in both schemes, so the foreground token would invert to white on dark and
- * disappear.
- */
+// The card shell for the intake offer deck: tag, title, then the mock, tinted by a
+// `--tone-*` hue. Text sits on `--offer-ink`, not `--foreground`: the panel is light
+// in both schemes, so the foreground token would invert to white on dark.
 
 import { Image, type ImageProps } from "expo-image";
 import type { ReactNode } from "react";
@@ -31,14 +23,13 @@ const TINT: Record<OfferTint, string> = {
 	direct: "bg-tone-direct",
 	gentle: "bg-tone-gentle",
 	poetic: "bg-tone-poetic",
-	// Reuses browse hub's fixed green hue (#338) — not a mirror `--tone-*`, so
-	// Kindling & Browse can stand apart from the deck's other four tones.
+	// Browse hub's fixed green hue (#338), so Kindling & Browse stands apart from the mirror tones.
 	topics: "bg-browse-topics-foreground",
 	witnessed: "bg-tone-witnessed",
 };
 
 interface OfferCardProps {
-	/** The mock — what the feature actually looks like, not a decoration. */
+	/** The mock: what the feature looks like, not a decoration. */
 	children: ReactNode;
 	mascot: ImageProps["source"];
 	tag: string;
@@ -47,11 +38,8 @@ interface OfferCardProps {
 	width: number;
 }
 
-/**
- * The tag chip is a different hue from the card it sits on — that jump is what
- * makes it read as a label rather than as more card. Amber everywhere except
- * the amber card, which takes rose.
- */
+/** The tag chip is a different hue from its card: amber everywhere except the amber card, which
+ * takes rose. */
 const CHIP: Record<OfferTint, string> = {
 	direct: TINT.witnessed,
 	gentle: TINT.witnessed,
@@ -68,9 +56,7 @@ export function OfferCard({
 	mascot,
 	children,
 }: OfferCardProps) {
-	// Flux sits in the top-right and the title wraps beside him, so the corner
-	// never reads as an empty margin. Sized off the card, not the screen — the
-	// deck is the only thing that changes width.
+	// Sized off the card, not the screen; the deck is the only thing that changes width.
 	const mascotSize = width * 0.5;
 
 	return (
@@ -85,8 +71,7 @@ export function OfferCard({
 					height: mascotSize,
 					position: "absolute",
 					right: -14,
-					// Positive top on purpose: Flux's flame tip is the top of every pose,
-					// and a negative offset clips it against the card's own overflow.
+					// Positive: a negative top clips the flame tip against the card's overflow.
 					top: 6,
 					width: mascotSize,
 				}}
@@ -95,22 +80,16 @@ export function OfferCard({
 			<OfferPill className={CHIP[tint]}>{tag}</OfferPill>
 			<AppText
 				className="font-[Poppins-SemiBold] text-[22px] text-offer-ink leading-7"
-				// The mascot's visible left edge sits at `width - mascotSize + 14` (its
-				// own -14 bleed pulls it back toward the card). Reserving only half its
-				// width left the title free to wrap under it — Xolacers' longer title
-				// was the one that actually reached that far. Subtracting the card's
-				// own 20px edge padding (p-5) gives the real clearance the text needs.
+				// Clearance to the mascot's visible left edge (`width - mascotSize + 14`),
+				// less the card's own p-5 padding; a long title otherwise wraps under it.
 				style={{ paddingRight: mascotSize - 34 }}
 			>
 				{title}
 			</AppText>
-			{/* Bottom-anchored. The deck stretches every card to the tallest one, so
-          the slack has to go somewhere; pooled under the title it reads as air
-          around the headline, split above and below it reads as a hole. */}
-			{/* `overflow-hidden`: if a mock stack still outgrows the deck's fixed
-          height on some device, it clips at the title instead of painting up
-          over it — Android measures every text block taller than iOS unless
-          `includeFontPadding` is off, which is what caused the overlap. */}
+			{/* Bottom-anchored: the deck stretches every card to the tallest, and the slack
+			    pools under the title. */}
+			{/* `overflow-hidden`: a mock stack that outgrows the deck clips here instead of
+			    painting over the title (Android measures text taller than iOS). */}
 			<View className="flex-1 justify-end gap-2.5 overflow-hidden">
 				{children}
 			</View>
@@ -140,7 +119,7 @@ export function OfferPill({
 	);
 }
 
-/** A panel inside a card — the mock's own surface, one step lighter. */
+/** A panel inside a card: the mock's own surface, one step lighter. */
 export function OfferMock({
 	children,
 	className,

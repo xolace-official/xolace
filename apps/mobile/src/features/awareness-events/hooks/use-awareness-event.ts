@@ -9,17 +9,17 @@ export function useAwarenessEvent(): Doc<"monthlyEvents"> | null {
 	const seenEventIds = useAppStore((s) => s.seenEventIds);
 	const pruneSeenEventIds = useAppStore((s) => s.pruneSeenEventIds);
 
-	// Prune stale seen entries on mount — NOT during render
+	// Prune stale seen entries on mount, not during render
 	useEffect(() => {
 		pruneSeenEventIds();
 	}, [pruneSeenEventIds]);
 
 	if (events === undefined) {
-		return null; // loading or offline — show nothing
+		return null; // loading or offline
 	}
 
 	const today = new Date();
-	// en-CA locale produces "YYYY-MM-DD" in local timezone — avoids UTC midnight parse bug
+	// en-CA produces "YYYY-MM-DD" in the local timezone, avoiding the UTC midnight bug
 	const todayStr = today.toLocaleDateString("en-CA");
 
 	const active = events

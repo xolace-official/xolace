@@ -7,7 +7,7 @@ import { mapEntryType } from "@/features/reflect/session-service";
 import type { EntryType } from "@/features/reflect/types";
 import { useAppStore } from "@/store/store";
 
-// States where turns are relevant (mirror has been delivered at least once)
+// States where the mirror has been delivered at least once.
 const TURN_RELEVANT_STATES = new Set([
 	"mirror_delivered",
 	"confirmed",
@@ -16,28 +16,14 @@ const TURN_RELEVANT_STATES = new Set([
 	"completed",
 ]);
 
-/**
- * Maintain a client-side session identifier and expose server-backed session data, derived state, and actions to drive a session lifecycle.
- *
- * @returns An object with session identifiers and state (`sessionId`, `session`, `serverState`, `mirrorText`, `errorMessage`, `isLoading`), turn data (`turns`, `turnsCount`), and action creators for the session lifecycle:
- * - `initiateAndSubmit(rawText, entryType, inputDuration?, freezeOccurred?, freezeDuration?)`
- * - `confirmMirror(confirmationState)`
- * - `completeAsExit()`
- * - `selectPath(pathChosen)`
- * - `startPath(exerciseId?)`
- * - `completePath(pathCompleted)`
- * - `submitRefinement(userFeedback, additionalRawText?)`
- * - `abandon()`
- * - `retry()`
- * - `resetSession()`
- */
+/** Holds the client-side session id and exposes server session data plus lifecycle actions. */
 export function useSession() {
 	const [localSessionId, setLocalSessionId] = useState<Id<"sessions"> | null>(
 		null
 	);
 	const { mode: sessionModeAtHook } = useSessionMode();
 
-	// Derive sessionId: prefer explicitly-set local ID, fall back to server active session
+	// Prefer the local id; fall back to the server's active session.
 	const activeSession = useQuery(
 		api.sessions.getActive,
 		localSessionId ? "skip" : undefined
@@ -49,7 +35,6 @@ export function useSession() {
 		sessionId ? { sessionId } : "skip"
 	);
 
-	// Only subscribe to turns when the session is in a state where turns matter
 	const shouldQueryTurns =
 		sessionId != null &&
 		session?.state != null &&
@@ -60,7 +45,6 @@ export function useSession() {
 		shouldQueryTurns ? { sessionId: sessionId! } : "skip"
 	);
 
-	// --- Mutations ---
 	const initiateMutation = useMutation(api.sessions.initiate);
 	const submitInputMutation = useMutation(api.sessions.submitInput);
 	const confirmMirrorMutation = useMutation(api.sessions.confirmMirror);
@@ -75,14 +59,11 @@ export function useSession() {
 		api.escalation.recordUserResponse
 	);
 
-	// --- Derived state ---
 	const turnsCount = turns?.length ?? 0;
 	const isLoading = !sessionId && activeSession === undefined;
 	const serverState = session?.state ?? null;
 	const mirrorText = session?.mirrorText ?? null;
 	const errorMessage = session?.errorMessage ?? null;
-
-	// --- Actions ---
 
 	const initiateAndSubmit = useCallback(
 		async (
@@ -93,10 +74,8 @@ export function useSession() {
 			freezeDuration?: number
 		) => {
 			const serverEntryType = mapEntryType(entryType);
-			// "Reflect on this" (#413): the session remembers the entry it opened on.
-			// One session per tap: once a session takes the entry, the prompt is spent.
-			// A quote-reply seed outranks the prompt on the card, so that session
-			// opened on the reply, not the entry.
+			// "Reflect on this" (#413): one session per tap takes the entry and spends
+			// the prompt. A quote-reply seed outranks the prompt on the card.
 			const { pendingEventPrompt: pending, replySeed } = useAppStore.getState();
 			const fromEntryId =
 				pending && pending.expiresAt > Date.now() && !replySeed
@@ -123,7 +102,7 @@ export function useSession() {
 					sessionId: newSessionId,
 				});
 			} catch (error) {
-				// Roll back the dangling initiated session
+				// Roll back the dangling initiated session.
 				try {
 					await abandonMutation({ sessionId: newSessionId });
 				} catch {
@@ -211,12 +190,12 @@ export function useSession() {
 		try {
 			await abandonMutation({ sessionId });
 		} catch {
-			// best-effort — session may already be terminal
+			// best-effort: the session may already be terminal
 		}
 	}, [sessionId, abandonMutation]);
 
 	// The server reprocesses the input it stored, so this works for a session
-	// picked up from getActive too (a talk, or after a restart).
+	// picked up from getActive too.
 	const retry = useCallback(async () => {
 		if (!sessionId) {
 			return;

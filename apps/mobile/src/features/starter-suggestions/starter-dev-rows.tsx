@@ -1,8 +1,4 @@
-/**
- * Dev tools rows for Starter suggestions (#465). Rendered inside the `__DEV__`
- * DevToolsSection; the store flag they set is itself honoured only under
- * `__DEV__` (see useStarterSuggestions).
- */
+/** Dev tools rows for Starter suggestions (#465); the flag is honoured only under `__DEV__`. */
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor, useToast } from "heroui-native";
@@ -18,10 +14,8 @@ export function StarterSuggestionsDevRows() {
 	const muted = useThemeColor("muted") as string;
 	const icon = <SymbolView name={MAP_ICON} size={17} tintColor={muted} />;
 
-	// Idempotent pair, so an E2E flow gets the same state whatever it started
-	// from. "As new user" is a fresh device too: the tour replays and the bubble
-	// follows it. Straight home, since the home tour draws over whatever screen
-	// is on top.
+	// Idempotent, so an E2E flow gets the same state whatever it started from.
+	// "As new user" is a fresh device too: the tour replays and the bubble follows.
 	const arm = (asNewUser: boolean) => {
 		useAppStore.setState({
 			devStarterEligible: asNewUser,

@@ -11,12 +11,8 @@ const LIFERING_ICON = {
 	web: "support",
 } as const;
 
-/**
- * Persistent, non-dismissible link to crisis resources inside every thread.
- * The post-delivery moderation lane (#344) sends a resources card when a
- * message reads as a crisis; this is the always-there path for everything it
- * misses.
- */
+/** Persistent link to crisis resources in every thread, for whatever the moderation lane (#344)
+ * misses. */
 export function SafetyStrip() {
 	const router = useRouter();
 	const accent = useThemeColor("accent") as string;

@@ -26,14 +26,8 @@ import { playSoftPress } from "@/lib/haptics";
 
 const TIMING = { duration: 250, easing: Easing.out(Easing.quad) };
 
-/**
- * Tap the avatar and its photo lifts out of the page to the centre of the
- * screen over a blur; tap anywhere, Android back, or drag it away to put it
- * back. Adapted from the Threads profile-picture sample.
- *
- * The anchor is measured at tap time rather than tracked through scroll: the
- * Modal blocks scrolling while open, so the origin can't move under it.
- */
+/** Lifts the avatar photo to screen centre over a blur; tap, Android back or drag dismisses.
+ * The anchor is measured at tap time, since the Modal blocks scrolling while open. */
 export function ExpandableAvatar({
 	photoUrl,
 	name,

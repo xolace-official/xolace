@@ -70,9 +70,6 @@ export function PreferenceSetupSheet({ onComplete, isLoading }: Props) {
 	const [selectedThemes, setSelectedThemes] = useState<Set<string>>(new Set());
 	const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
-	// const accentColor = useThemeColor("accent") as string;
-	// const foregroundColor = useThemeColor("foreground") as string;
-
 	const canAdvanceStep0 = selectedThemes.size >= 2 && selectedThemes.size <= 4;
 	const canAdvanceStep1 = selectedTime !== null;
 
@@ -125,7 +122,6 @@ export function PreferenceSetupSheet({ onComplete, isLoading }: Props) {
 
 	return (
 		<View className="flex-1 justify-between px-6 pt-12 pb-10">
-			{/* Progress indicator */}
 			<View className="mb-6 items-end">
 				<EaseView
 					accessibilityLabel={stepAccessibilityLabel}
@@ -137,7 +133,6 @@ export function PreferenceSetupSheet({ onComplete, isLoading }: Props) {
 				</EaseView>
 			</View>
 
-			{/* Step content */}
 			<EaseView
 				animate={stepContentAnimate}
 				className="flex-1"
@@ -154,7 +149,6 @@ export function PreferenceSetupSheet({ onComplete, isLoading }: Props) {
 				)}
 			</EaseView>
 
-			{/* CTA */}
 			<View className="mt-8">
 				{step === 0 ? (
 					<>

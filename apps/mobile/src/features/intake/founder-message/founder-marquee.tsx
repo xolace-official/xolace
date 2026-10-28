@@ -23,14 +23,9 @@ import {
 	slotLeft,
 } from "./marquee-geometry";
 
-// Horizontal auto-drift belt with pan-to-nudge — the same mechanic as the
-// onboarding MoodMarquee (useFrameCallback + per-item modulo positioning), but
-// the cards are Skia-clipped silhouettes rather than plain rounded rects. The
-// two belts are deliberately not shared: MoodMarquee centres its track and hands
-// its offset up for background parallax, which this band has no use for.
-//
-// Motion budget: drift is the whole point of the band, so reduced motion stops
-// the drift rather than the screen — the belt still pans by hand.
+// Auto-drift belt with pan-to-nudge, the same mechanic as the onboarding MoodMarquee but
+// with Skia-clipped cards. Not shared: MoodMarquee centres its track and hands its offset
+// up for parallax. Reduced motion stops the drift; the belt still pans by hand.
 
 const AUTO_SPEED = 16; // px/s
 const ROTATIONS = [-4, 3, -2, 4, -3];
@@ -47,8 +42,7 @@ const FounderMarqueeComponent = ({ viewport }: Props) => {
 	const offset = useSharedValue(0);
 	const speed = useSharedValue(restSpeed);
 
-	// Wide screens (tablets, unfolded foldables) get extra slots so the belt is
-	// always wider than the track; the card set repeats to fill them.
+	// Wide screens get extra slots so the belt is always wider than the track.
 	const slots = beltSlots(viewport, FOUNDER_MARQUEE_CARDS.length);
 	const beltWidth = slots * CARD_STRIDE;
 

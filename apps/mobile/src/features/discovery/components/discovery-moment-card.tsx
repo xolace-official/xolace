@@ -16,12 +16,8 @@ type Props = {
 	entry: TimelineEntry;
 };
 
-/**
- * Presentational only — no PressableFeedback here. The stacked carousel's
- * animated card wrapper is pointerEvents:"none" (the invisible scroll layer
- * on top is the real touch target), so this component just renders content;
- * StackedCarousel's `onCardPress` handles the tap.
- */
+/** Presentational only: the carousel wrapper is pointerEvents:"none" and `onCardPress` handles
+ * the tap. */
 export function DiscoveryMomentCard({ entry }: Props) {
 	const accentColor = useThemeColor("accent");
 	const emoji = getEmotionEmoji(entry.granularLabel ?? entry.primaryEmotion);

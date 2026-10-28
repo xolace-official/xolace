@@ -37,7 +37,6 @@ export function ActionRow({
 		"--color-poster-shadow",
 	]) as string[];
 
-	// the pill answers the tap itself; the full-screen burst is the screen's
 	const pop = useSharedValue(1);
 	const isFirst = useSharedValue(true);
 	useEffect(() => {
@@ -118,7 +117,6 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.1,
 		shadowRadius: 16,
 	},
-	/* the design gives Resonate the wider half of the row */
 	resonate: { flex: 1.15 },
 	share: { flex: 1 },
 });

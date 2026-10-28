@@ -16,12 +16,8 @@ const styles = StyleSheet.create({
 	layer: StyleSheet.absoluteFill,
 });
 
-/**
- * Crossfades the two intro frames as a single beat of story:
- * intro-2 (holding the paper boat) dissolves into intro-1 (the boat lifting
- * off and sailing away). One-shot on mount — it settles on the "sent" frame,
- * never loops, to stay quiet and on-brand.
- */
+/** Crossfades intro-2 (holding the paper boat) into intro-1 (the boat sailing away). One-shot
+ * on mount, never loops. */
 export function BridgeIntroMascot() {
 	// 0 = holding the boat (intro-2) · 1 = boat sailing away (intro-1)
 	const progress = useSharedValue(0);

@@ -16,12 +16,8 @@ const LIFERING_ICON = {
 	web: "support",
 } as const;
 
-/**
- * The silent resources card the post-delivery moderation lane sends into a
- * thread when a message reads as a crisis (#344). It is the app speaking, not
- * either person, so it renders as a card with no author, worded for whoever
- * is looking at it. Every other system message falls through to the SDK's own.
- */
+/** The resources card the moderation lane sends when a message reads as a crisis (#344); other
+ * system messages fall through to the SDK's. */
 export function ConversationMessageSystem(props: MessageSystemProps) {
 	const { message } = props;
 	const identity = useConversationIdentity();

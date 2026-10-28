@@ -13,12 +13,8 @@ type Props = {
 	flip?: boolean;
 };
 
-/**
- * A vertical gradient "veil" that dissolves live content into a frosted edge —
- * no hard border, no hard cutoff. Mirrors the aurora-arc alpha-fade technique
- * (color + "XX" → color + "00"). Position it absolutely over the seam where a
- * readable region meets a gated one so the two blend instead of butting up.
- */
+/** Vertical gradient veil that dissolves live content into a frosted edge
+ * (color + "XX" → color + "00"). Position it absolutely over the seam. */
 export function GateFade({
 	width,
 	height,

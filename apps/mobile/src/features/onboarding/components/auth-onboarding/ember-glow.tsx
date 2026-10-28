@@ -1,7 +1,4 @@
-/**
- * A soft radial ember, drawn with `react-native-svg`.
- *
- */
+/** A soft radial ember, drawn with `react-native-svg`. */
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 export const EmberGlow = ({
@@ -18,9 +15,8 @@ export const EmberGlow = ({
 }) => (
 	<Svg height={size} pointerEvents="none" width={size}>
 		<Defs>
-			{/* Three stops, not two: a straight centre-to-edge ramp reads as a hard
-          disc with a fringe. The mid stop pulls the falloff in so the light has
-          a small hot core and a long tail, which is how a real one behaves. */}
+			{/* Three stops: a straight ramp reads as a hard disc; the mid stop gives a hot core
+			    and long tail. */}
 			<RadialGradient cx="50%" cy="50%" id={id} r="50%">
 				<Stop offset="0" stopColor={color} stopOpacity={opacity} />
 				<Stop offset="0.42" stopColor={color} stopOpacity={opacity * 0.4} />

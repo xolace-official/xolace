@@ -2,10 +2,7 @@ import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { completedCount, SETUP_STEPS, type SetupDraft } from "./steps";
 
-/**
- * The label names the missing field rather than just counting, so nobody has
- * to scan the form to find what's blocking Publish.
- */
+/** The label names the missing field rather than just counting. */
 export function SetupProgress({
 	draft,
 	blockingLabel,

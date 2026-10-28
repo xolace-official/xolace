@@ -30,10 +30,7 @@ function countLine(t: Topic) {
 	return parts.join(" · ");
 }
 
-/**
- * Topic grid (`topics`, §9.3) — a grid of *topics*, one tile per shared topic
- * with ≥ 1 active track in either family. Two-up, square artwork.
- */
+/** Topic grid (`topics`, §9.3): one tile per topic with an active track in either family. */
 export function TopicGridScreen() {
 	// Clears the floating mini-player off the last row (none on iOS 26).
 	const playerInset = useMiniPlayerInset();

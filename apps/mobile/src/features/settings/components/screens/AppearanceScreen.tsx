@@ -81,15 +81,8 @@ const MOTION_OPTIONS: {
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
-/**
- * Sonar is a 2s sweep: three 0.35-amplitude pings 600ms apart, then a 0.855 burst
- * at 1.66s. CoreHaptics renders its sharpness (frequency) channel, so even the quiet
- * pings read as crisp on iOS. Android has no frequency channel below API 36, so
- * Pulsar falls back to VibrationEffect.createWaveform() with sharpness dropped —
- * 0.35 amplitude sits under most LRAs' perceptual floor, and the one beat you might
- * feel lands 1.66s after the tap. Result: it reads as "nothing happened".
- * Strike (80ms, 0.72 amplitude) survives the amplitude-only path and fires at once.
- */
+/** Android below API 36 has no haptic sharpness channel, so Sonar's quiet pings
+ * fall under the LRA floor and read as nothing; Strike survives amplitude-only. */
 const playThemeSelect =
 	Platform.OS === "android" ? Presets.strike : Presets.sonar;
 
@@ -111,9 +104,7 @@ export const AppearanceScreen = () => {
 		setNightModeEnabled,
 	} = useAppearanceSettings();
 
-	// Contextual line under the motion picker — spells out what the current
-	// choice actually does, and specifically warns when fluid motion (the
-	// breathing at "sit with this") will stop following.
+	// Warns when fluid motion (the breathing at "sit with this") stops following.
 	const motionHint = effectiveReducedMotion
 		? "Fluid motion is calmed — the breathing exercise won't expand and contract; it guides you with words and a steady haptic instead."
 		: motionPreference === "full" && osReduceMotion
@@ -136,14 +127,13 @@ export const AppearanceScreen = () => {
 			return;
 		}
 		if (!available) {
-			return; // Plus, but this theme's CSS hasn't shipped yet
+			return;
 		}
 		playThemeSelect();
 		setColorTheme(themeId);
 	};
 
-	// No haptic here — SettingsRow's toggle variant now plays one, and firing
-	// both stacked two vibrations on a single flip.
+	// No haptic here: SettingsRow's toggle variant already plays one.
 	const handleNightModeToggle = (v: boolean) => {
 		setNightModeEnabled(v);
 	};
@@ -156,7 +146,6 @@ export const AppearanceScreen = () => {
 				contentInsetAdjustmentBehavior="automatic"
 				showsVerticalScrollIndicator={false}
 			>
-				{/* ── MODE ─────────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					className="mb-8"
@@ -200,7 +189,6 @@ export const AppearanceScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── THEMES ──────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					className="mb-8"
@@ -224,7 +212,6 @@ export const AppearanceScreen = () => {
 					/>
 				</EaseView>
 
-				{/* ── MOTION ───────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					className="mb-8"
@@ -280,7 +267,6 @@ export const AppearanceScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── VISUAL ───────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					className="mx-5 mb-8 overflow-hidden rounded-2xl bg-surface"
@@ -308,7 +294,6 @@ export const AppearanceScreen = () => {
 
 				<ProfileCardsSection />
 
-				{/* ── GENERAL ──────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}

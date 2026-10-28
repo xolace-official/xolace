@@ -1,15 +1,6 @@
-/**
- * The carousel half of the auth-onboarding screen: horizontal beat paging,
- * an infinite wrap, and the vertical expand/collapse of the sign-in sheet.
- *
- * `progress`: 0 = telling the tale, 1 = sign-in open.
- *
- * Scrolling is driven from the UI thread via `useAnimatedRef` + `scrollTo`,
- * not by calling `scrollToIndex` on a ref captured in a render-time closure
- * (which is what the prototype did, and what forced a `react-hooks/refs`
- * suppression). Everything that moves the list is a worklet, so a tap or an
- * auto-advance never has to round-trip through the RN runtime.
- */
+// Carousel half of the auth-onboarding screen: beat paging, infinite wrap and the
+// sign-in sheet's expand/collapse (`progress`: 0 = tale, 1 = sign-in open). Everything
+// that moves the list is a worklet via `useAnimatedRef` + `scrollTo`.
 import { useEffect, useState } from "react";
 import { AppState, useWindowDimensions } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
@@ -29,11 +20,9 @@ import { playSoftPress } from "@/lib/haptics";
 
 const SWIPE_THRESHOLD = 24;
 const DRAG_DAMPING = 260;
-/** A flick past this commits the sheet whichever way it was thrown, however
- *  little ground it covered. Distance alone would eat every fast gesture. */
+/** A flick past this commits the sheet regardless of distance covered. */
 const FLICK_VELOCITY = 450;
-/** One spring for every path into the sheet — press, flick, auto-advance — so
- *  interrupting one mid-flight continues rather than restarts. */
+/** One spring for every path into the sheet, so an interruption continues rather than restarts. */
 const SHEET_SPRING = {
 	dampingRatio: 0.82,
 	duration: 340,
@@ -57,17 +46,9 @@ export const useStoryCarousel = () => {
 	const progress = useSharedValue(0);
 	const startProgress = useSharedValue(0);
 
-	/**
-	 * Which beat we are on, derived from the offset we already track.
-	 *
-	 * This replaces FlatList's `onViewableItemsChanged`, which silently stalled
-	 * the tale on Android: the deck's slide width is fractional (411.43px on a
-	 * Pixel 7 Pro), so a paged offset lands on a sub-pixel boundary and the slide
-	 * measures ~99.9% visible — never the 100% the viewability config demanded.
-	 * The beat scrolled into view, `currentIndex` never followed, and the bar for
-	 * that beat was therefore never started, so the tale sat there forever while
-	 * swiping still worked. Rounding the offset has no threshold to miss.
-	 */
+	// Current beat from the rounded offset, not `onViewableItemsChanged`: fractional slide
+	// widths on Android (411.43px on a Pixel 7 Pro) never reach 100% visibility, which
+	// stalled the tale.
 	useAnimatedReaction(
 		() => Math.round(animatedIndex.get()),
 		(index, previous) => {
@@ -79,7 +60,7 @@ export const useStoryCarousel = () => {
 		}
 	);
 
-	/** Worklet — the one way the deck moves. Callable from any UI-thread code. */
+	/** Worklet: the one way the deck moves. */
 	const scrollToIndex = (index: number) => {
 		"worklet";
 		scrollTo(listRef, index * width, 0, true);
@@ -88,11 +69,8 @@ export const useStoryCarousel = () => {
 	const scrollHandler = useAnimatedScrollHandler({
 		onBeginDrag: () => isDragging.set(true),
 		onEndDrag: () => isDragging.set(false),
-		// The list ends on a duplicate of beat 0; once momentum has settled on it,
-		// jump back to the real beat 0 so the tale loops instead of dead-ending.
-		// Waiting for momentum (rather than onEndReached) means the jump never
-		// fights an in-flight scroll — which is what the Android setTimeout in the
-		// prototype was working around.
+		// Once momentum settles on the tail duplicate, jump to the real beat 0. Waiting for
+		// momentum (not onEndReached) keeps the jump from fighting an in-flight scroll.
 		onMomentumEnd: (e) => {
 			if (e.contentOffset.x >= width * STORY_BEATS.length - 1) {
 				scrollTo(listRef, 0, 0, false);
@@ -104,12 +82,9 @@ export const useStoryCarousel = () => {
 		},
 	});
 
-	// A backgrounded app leaves the beat timer running on wall-clock time, so
-	// reopening it fast-forwards the tale — three beats in the time it takes the
-	// screen to come back. `isDragging` is already the "hold the tale" signal
-	// every bar listens to, so background borrows it and the fill restarts on
-	// the beat you left. Skipped while the sheet is open: there the hold is the
-	// sheet's, and clearing it would start the tale running underneath.
+	// The beat timer runs on wall-clock time, so a backgrounded app would fast-forward the
+	// tale. Background borrows `isDragging` as the hold; it is not cleared while the sheet
+	// is open because that hold belongs to the sheet.
 	useEffect(() => {
 		const sub = AppState.addEventListener("change", (state) => {
 			if (state !== "active") {
@@ -131,8 +106,7 @@ export const useStoryCarousel = () => {
 	};
 
 	const panGesture = Gesture.Pan()
-		// Vertical only — the same detector wraps the paging list, so an
-		// unconstrained pan would swallow horizontal swipes.
+		// Vertical only: the same detector wraps the paging list.
 		.activeOffsetY([-10, 10])
 		.failOffsetX([-10, 10])
 		.onBegin(() => {
@@ -160,8 +134,7 @@ export const useStoryCarousel = () => {
 						: moved < -SWIPE_THRESHOLD
 							? 0
 							: from;
-			// The finger's speed carries into the spring, so releasing mid-flick
-			// continues the throw instead of restarting from a standstill.
+			// The finger's velocity carries into the spring.
 			if (target !== from) {
 				scheduleOnRN(playSoftPress);
 			}
@@ -178,7 +151,7 @@ export const useStoryCarousel = () => {
 			);
 		});
 
-	// Tap advances the tale, but only while it's still being told.
+	// Tap advances the tale only while the sheet is closed.
 	const tapGesture = Gesture.Tap()
 		.maxDuration(250)
 		.onStart(() => {

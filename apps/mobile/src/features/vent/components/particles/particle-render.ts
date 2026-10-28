@@ -31,10 +31,8 @@ function setRampColor(paint: SkPaint, warm: number, alpha: number) {
 	paint.setAlphaf(Math.min(1, Math.max(0, alpha)));
 }
 
-/**
- * Orbit position of particle i at absolute time t (ms): unit sphere direction
- * rotated about Y per-particle, with a gentle vertical bob.
- */
+/** Orbit position of particle i at time t (ms): unit sphere direction rotated about Y, with a
+ * bob. */
 function orbitPoint(i: number, t: number): { x: number; y: number; z: number } {
 	"worklet";
 	const rot = t * 0.0003 * SPEED[i] + PHASE0[i];
@@ -47,7 +45,7 @@ function orbitPoint(i: number, t: number): { x: number; y: number; z: number } {
 	};
 }
 
-/** Sparse, lazy backdrop for the intro screen — 20–30 dim ash particles. */
+/** Sparse backdrop for the intro screen: 20–30 dim ash particles. */
 export function drawSparse(
 	canvas: SkCanvas,
 	paint: SkPaint,
@@ -72,11 +70,8 @@ export function drawSparse(
 	}
 }
 
-/**
- * Main field: entry assembly (first ~2s after mount), settle pulse, then
- * continuous orbit. `radius` and `warmth` are pre-smoothed by the frame
- * callback — recording expansion and color warming fall out of them.
- */
+/** Main field: entry assembly (~2s), settle pulse, then continuous orbit.
+ * `radius` and `warmth` are pre-smoothed by the frame callback. */
 export function drawField(
 	canvas: SkCanvas,
 	paint: SkPaint,
@@ -127,11 +122,8 @@ export function drawField(
 	}
 }
 
-/**
- * Burn sequence: compression → flash → non-uniform scatter → fade.
- * `explodeStart` is COMPRESS_MS normally, or earlier when the pinch-spread
- * accelerant fired. Returns nothing drawn after the scatter fully fades.
- */
+/** Burn sequence: compression → flash → scatter → fade. `explodeStart` is
+ * COMPRESS_MS, or earlier when the pinch-spread accelerant fired. */
 export function drawBurn(
 	canvas: SkCanvas,
 	paint: SkPaint,
@@ -178,7 +170,7 @@ export function drawBurn(
 	}
 
 	if (te >= SCATTER_MS) {
-		return; // faded out — silence
+		return;
 	}
 
 	// Explosion from the compressed core, each particle on its own vector.

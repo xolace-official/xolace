@@ -1,9 +1,6 @@
-/**
- * The pagination row, ported from superlist's behaviour to Xolace tokens: the
- * ACTIVE bar is ~3x the width of the others and fills left-to-right over the
- * beat's duration, then auto-advances. Dragging cancels the fill and restarts
- * it on release. Completing the last beat expands the auth sheet on its own.
- */
+// Pagination row: the active bar is ~3x wider, fills over the beat's duration, then
+// auto-advances. Dragging cancels the fill and restarts it on release; completing
+// the last beat expands the auth sheet.
 import { useEffect } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
@@ -32,7 +29,7 @@ type ItemProps = {
 	total: number;
 	duration: number;
 	isDragging: SharedValue<boolean>;
-	/** Worklet — moves the deck straight from the UI thread. */
+	/** Worklet: moves the deck from the UI thread. */
 	onAdvance: (index: number) => void;
 	onFinish: () => void;
 };
@@ -60,8 +57,7 @@ const PaginationItem = ({
 			Extrapolation.CLAMP
 		);
 
-		// Infinite loop: the list duplicates beat 0 at the end, so index `total`
-		// is really beat 0 — the first bar must grow and the last must shrink.
+		// The list duplicates beat 0 at the end, so index `total` is really beat 0.
 		if (index === 0) {
 			width = Math.max(
 				width,
@@ -86,8 +82,7 @@ const PaginationItem = ({
 
 	const rBarStyle = useAnimatedStyle(() => ({ width: barWidth.get() }));
 
-	// Width-in-percent is a layout property, but the fill is absolute and
-	// childless, so nothing else re-lays-out behind it.
+	// Percent width is a layout property, but the fill is absolute and childless.
 	const rFillStyle = useAnimatedStyle(() => ({
 		opacity: interpolate(
 			barWidth.get(),
@@ -98,14 +93,9 @@ const PaginationItem = ({
 		width: `${interpolate(fill.get(), [0, 1], [0, 100], Extrapolation.CLAMP)}%`,
 	}));
 
-	// The beat ends when the fill's own animation ends. This has to be the
-	// timing callback and not a reaction on `fill >= 1`: a reaction re-registers
-	// whenever this component re-renders, and re-registration both resets its
-	// "previous" to null and runs the body immediately — so a bar sitting at
-	// fill 1, waiting for the reset, fired a SECOND advance. That put
-	// `currentIndex` ahead of the list, leaving the visible beat with a bar that
-	// never moves while the deck still swiped fine. A callback fires once, only
-	// when the animation truly finishes, and `finished` is false when cancelled.
+	// The beat ends in the timing callback, not a reaction on `fill >= 1`: a reaction
+	// re-registers on every render and runs immediately, which fired a second advance
+	// from a bar parked at 1. The callback fires once and `finished` is false when cancelled.
 	const startFill = () => {
 		"worklet";
 		fill.set(0);
@@ -114,8 +104,7 @@ const PaginationItem = ({
 				if (!finished) {
 					return;
 				}
-				// Keyed off this bar's OWN index, never the rendered `currentIndex` —
-				// only the active bar is ever filling, and `index` cannot go stale.
+				// Keyed off this bar's own index, which cannot go stale.
 				if (index === total - 1) {
 					scheduleOnRN(onFinish);
 				} else {
@@ -130,14 +119,12 @@ const PaginationItem = ({
 		if (currentIndex === index) {
 			startFill();
 		}
-		// `startFill` is recreated every render by design — the effect must run on
-		// beat changes only, or every unrelated render restarts the bar.
+		// `startFill` is recreated every render; the effect must run on beat changes only.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [currentIndex, index, duration, fill]);
 
-	// Cancel on touch, restart once the finger lifts — rather than resuming
-	// mid-bar. Cancelling belongs here and not in the style worklet: a style is
-	// evaluated every frame and must not have side effects.
+	// Cancel on touch, restart on release. Not in the style worklet: a style runs every
+	// frame and must not have side effects.
 	useAnimatedReaction(
 		() => isDragging.get(),
 		(dragging, wasDragging) => {
@@ -145,12 +132,9 @@ const PaginationItem = ({
 				cancelAnimation(fill);
 				return;
 			}
-			// `wasDragging === true` and not just "not dragging": this reaction
-			// re-registers on every render with a null previous, and an unguarded
-			// restart there meant any re-render sent the active bar back to 0.
-			// No `fill > 0` guard either — a hold that begins the instant a beat
-			// starts leaves the fill at exactly 0, and skipping the restart there
-			// would stall the tale on that beat forever.
+			// `wasDragging === true`, not `!dragging`: the reaction re-registers on every render
+			// with a null previous. No `fill > 0` guard either: a hold begun the instant a beat
+			// starts leaves the fill at 0 and would stall the tale.
 			if (wasDragging === true && currentIndex === index) {
 				startFill();
 			}

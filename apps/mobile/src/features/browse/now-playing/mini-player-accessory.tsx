@@ -41,27 +41,20 @@ const ART = {
 	width: 32,
 } as const;
 
-/**
- * The Browse mini-player in the iOS 26 tab bar (S4). The tab bar mounts this
- * twice (regular + inline placement), so it holds no state: both copies read
- * the one now-playing store.
- */
+/** Mini-player in the iOS 26 tab bar (S4). Mounted twice (regular + inline), so it holds no
+ * state. */
 export function MiniPlayerAccessory() {
 	const placement = NativeTabs.BottomAccessory.usePlacement();
 	return <MiniPlayerContent inline={placement === "inline"} />;
 }
 
-/**
- * The mini-player's row, shared by the iOS 26 accessory and the overlay capsule
- * elsewhere. The body opens the full player, which re-checks the Plus gate
- * like every other way in.
- */
+/** The mini-player's row, shared by the iOS 26 accessory and the overlay capsule. */
 export function MiniPlayerContent({ inline }: { inline: boolean }) {
 	const np = useNowPlaying();
 	const p = useNowPlayingPlayback();
 	const posthog = usePostHog();
 	const [foreground, muted] = useThemeColor(["foreground", "muted"]);
-	// Under Reduce Transparency the bar's glass goes flat; give the content a solid fill.
+	// Under Reduce Transparency the bar's glass goes flat, so the content gets a solid fill.
 	const { reduceTransparencyEnabled } = useAccessibilityInfo();
 	const pulse = useAttentionPulse();
 	const track = p.track;

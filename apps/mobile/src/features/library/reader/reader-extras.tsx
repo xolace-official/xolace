@@ -1,8 +1,4 @@
-/**
- * The reader's small moves (#413, CONTEXT.md "Library: what reading can lead
- * to"): the content note, "Reflect on this", sharing, the helpline link and
- * the "Read by the fire" ambience.
- */
+/** The reader's small moves (#413): content note, Reflect on this, sharing, helpline, fire dim. */
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
@@ -65,7 +61,8 @@ export function ContentNote({ note }: { note: string }) {
 	);
 }
 
-/** Leaves the entry for a reflect session that opens on its prompt; the session records the entry. */
+/** Leaves the entry for a reflect session that opens on its prompt; the session records the
+ * entry. */
 export function ReflectOnThis({
 	entry,
 }: {
@@ -102,7 +99,7 @@ export function ReflectOnThis({
 	);
 }
 
-/** Standard share sheet with a deep link to the entry — the reader's button and the cards' menu. */
+/** Share sheet with a deep link to the entry; used by the reader's button and the cards' menu. */
 export async function shareEntry(
 	entry: Pick<ReaderEntry, "slug" | "title">,
 	posthog: PostHog
@@ -118,7 +115,7 @@ export async function shareEntry(
 			trackLibrary(posthog, "library_entry_shared", { slug: entry.slug });
 		}
 	} catch {
-		// The sheet failed to open; nothing was shared and there's nothing to undo.
+		// The sheet failed to open; nothing was shared.
 	}
 }
 
@@ -150,7 +147,7 @@ export function ShareButton({
 	);
 }
 
-/** Explainers end on a way to the crisis-resources screen — only where we have resources (#403). */
+/** Explainers end on a link to crisis resources, only where there are resources (#403). */
 export function HelplineLink({ kind }: { kind: ReaderEntry["kind"] }) {
 	const muted = useThemeColor("muted");
 	if (kind !== "explainer" || !detectCountry()) {
@@ -173,11 +170,8 @@ export function HelplineLink({ kind }: { kind: ReaderEntry["kind"] }) {
 	);
 }
 
-/**
- * "Read by the fire": the night page's warm dark laid over the whole reader,
- * whatever the Aa mode. Atmosphere only — narration is the audio. 30%, not
- * more: past that the dimmest light theme (nightly) drops body text below AA.
- */
+/** "Read by the fire" overlay. 30% at most: past that the nightly theme drops body text below
+ * AA. */
 export function FireDim() {
 	const on = useAppStore((s) => s.readByFire);
 	if (!on) {

@@ -25,8 +25,7 @@ export const useMirrorSettings = () => {
 	};
 
 	/**
-	 * They reached for a tone they don't have. The mutation can't infer this one
-	 * — it throws before the write — so the register signal is sent explicitly.
+	 * The mutation throws before the write for a tone they lack, so the signal is sent explicitly.
 	 */
 	const flagRegisterComplaint = () =>
 		updatePreferences({ registerComplaint: true });

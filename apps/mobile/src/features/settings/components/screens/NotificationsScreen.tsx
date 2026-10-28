@@ -133,7 +133,6 @@ export const NotificationsScreen = () => {
 				contentInsetAdjustmentBehavior="automatic"
 				showsVerticalScrollIndicator={false}
 			>
-				{/* ── REMINDERS ───────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -151,7 +150,6 @@ export const NotificationsScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── HOW I REACH OUT ─────────────────────────────────────── */}
 				{gentleReminders && (
 					<>
 						<EaseView
@@ -201,7 +199,6 @@ export const NotificationsScreen = () => {
 							</SettingsSection>
 						</EaseView>
 
-						{/* ── QUIET HOURS ───────────────────────────────────────── */}
 						<EaseView
 							animate={{ opacity: 1, translateY: 0 }}
 							initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -243,7 +240,6 @@ export const NotificationsScreen = () => {
 						</EaseView>
 					</>
 				)}
-				{/* ── CONVERSATIONS ───────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -271,11 +267,7 @@ export const NotificationsScreen = () => {
 				</EaseView>
 			</ScrollView>
 
-			{/*
-        The one state a toggle cannot resolve itself: the OS has stopped
-        asking. Flipping the switch here would promise delivery the device
-        won't make, so it stays put and this points at the only route back.
-      */}
+			{/* The OS has stopped asking: the toggle stays put and this points at Settings. */}
 			<ConfirmationDialog
 				confirmLabel="Open Settings"
 				description="Your device is blocking notifications, so this can't be turned on from here. You can allow them in device settings."

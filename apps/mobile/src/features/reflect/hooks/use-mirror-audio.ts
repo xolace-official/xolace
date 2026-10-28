@@ -25,24 +25,22 @@ export function useMirrorAudio(
 		sessionId ? { sessionId } : "skip"
 	);
 
-	// The native player is only built on the first tap: `new AudioPlayer(url)` runs
-	// synchronously during render and loading the file cost 34.7ms of MirrorState's
-	// render when the URL arrived. Most mirrors are never played.
+	// The native player is only built on the first tap: `new AudioPlayer(url)` loads
+	// the file synchronously during render, and most mirrors are never played.
 	const [activated, setActivated] = useState(false);
 	const player = useAudioPlayer(activated ? (audioUrl ?? null) : null);
 	const status = useAudioPlayerStatus(player);
 	const awaitingFirstPlay = useRef(false);
 	const focus = useRef(null);
 
-	// Ready once a playable URL has loaded (undefined while the query is in flight,
-	// null when the session has no mirror audio).
+	// Undefined while the query is in flight, null when the session has no mirror audio.
 	const isReady = !!audioUrl;
 
 	// A claim can resolve after the person left the app or another player took focus.
 	const canPlay = () =>
 		AppState.currentState === "active" && holdsAudioFocus(focus);
 
-	// First tap only marks intent — playback starts once the player finishes loading.
+	// The first tap only marks intent; playback starts once the player finishes loading.
 	useEffect(() => {
 		if (!(awaitingFirstPlay.current && status.isLoaded)) {
 			return;
@@ -62,9 +60,8 @@ export function useMirrorAudio(
 		};
 	}, [status.isLoaded, player]);
 
-	// A mirror is the person's feelings spoken aloud: stop it once they lock the
-	// phone or leave the app (rule 8). The shared session keeps background play
-	// on for Browse, and the mirror has no lock-screen control to pause it from.
+	// Stop once they lock the phone or leave the app (rule 8): the shared session
+	// keeps background play on for Browse, and the mirror has no lock-screen control.
 	// `background`, not `inactive`, so Control Center or a banner doesn't cut it off.
 	useEffect(() => {
 		const sub = AppState.addEventListener("change", (state) => {
