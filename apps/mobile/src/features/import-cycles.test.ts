@@ -20,7 +20,13 @@ import { describe, expect, it } from "vitest";
 
 const APP_ROOT = path.resolve(import.meta.dirname, "../..");
 const SRC = path.join(APP_ROOT, "src");
-const PLATFORM_SUFFIXES = [".ios", ".android", ".native", ".web"];
+// Metro's lookup order per platform: `foo.ios.tsx`, then `foo.native.tsx`, then
+// `foo.tsx`. An import is an edge to whatever each platform would load.
+const PLATFORM_SUFFIXES = [
+	[".ios", ".native", ""],
+	[".android", ".native", ""],
+	[".web", ""],
+];
 const ENTITLEMENTS_FEATURE = "purchases";
 
 type Edge = { to: string; typeOnly: boolean };
@@ -35,16 +41,6 @@ function readConfig(): ts.ParsedCommandLine {
 		throw new Error("Could not read apps/mobile/tsconfig.json");
 	}
 	return config;
-}
-
-/** Metro picks `foo.ios.tsx` over `foo.tsx`, so an import of one is an edge to all. */
-function withPlatformVariants(file: string): string[] {
-	const ext = path.extname(file);
-	const stem = file.slice(0, -ext.length);
-	const variants = PLATFORM_SUFFIXES.map((s) => `${stem}${s}${ext}`).filter(
-		(v) => ts.sys.fileExists(v)
-	);
-	return [file, ...variants];
 }
 
 function isTypeOnlyImport(node: ts.ImportDeclaration): boolean {
@@ -68,6 +64,12 @@ function isTypeOnlyImport(node: ts.ImportDeclaration): boolean {
 function buildGraph(): Map<string, Edge[]> {
 	const config = readConfig();
 	const host = ts.createCompilerHost(config.options);
+	// Resolving per platform also catches an import backed only by
+	// `foo.ios.tsx` + `foo.android.tsx`, which plain resolution drops.
+	const platformOptions = PLATFORM_SUFFIXES.map((moduleSuffixes) => ({
+		...config.options,
+		moduleSuffixes,
+	}));
 	const files = config.fileNames.filter(
 		(f) =>
 			f.startsWith(`${SRC}/`) &&
@@ -83,16 +85,19 @@ function buildGraph(): Map<string, Edge[]> {
 		);
 		const edges: Edge[] = [];
 		const add = (specifier: string, typeOnly: boolean) => {
-			const resolved = ts.resolveModuleName(
-				specifier,
-				file,
-				config.options,
-				host
-			).resolvedModule;
-			if (!resolved || resolved.isExternalLibraryImport) {
-				return;
+			const targets = new Set<string>();
+			for (const options of platformOptions) {
+				const resolved = ts.resolveModuleName(
+					specifier,
+					file,
+					options,
+					host
+				).resolvedModule;
+				if (resolved && !resolved.isExternalLibraryImport) {
+					targets.add(resolved.resolvedFileName);
+				}
 			}
-			for (const to of withPlatformVariants(resolved.resolvedFileName)) {
+			for (const to of targets) {
 				edges.push({ to, typeOnly });
 			}
 		};
