@@ -58,6 +58,28 @@ describe("withFileLock", () => {
 		expect(await readFile(lockPath, "utf8")).toBe(other);
 	});
 
+	test("waits while a live waiter is breaking the lock, however long", async () => {
+		await writeFile(lockPath, `${deadPid()} crashed-owner`);
+		// A breaker that is still running but paused mid-break.
+		const breaker = `${process.pid} paused-breaker`;
+		await writeFile(`${lockPath}.break`, breaker);
+		const old = (Date.now() - AN_HOUR_MS) / MS_PER_SECOND;
+		await utimes(`${lockPath}.break`, old, old);
+		await expect(
+			withFileLock(lockPath, () => Promise.resolve(), 100)
+		).rejects.toThrow("Another xolace process");
+		expect(await readFile(`${lockPath}.break`, "utf8")).toBe(breaker);
+	});
+
+	test("clears a break lock left by a process that has exited", async () => {
+		await writeFile(lockPath, `${deadPid()} crashed-owner`);
+		await writeFile(`${lockPath}.break`, `${deadPid()} crashed-breaker`);
+		expect(await withFileLock(lockPath, () => Promise.resolve("ran"))).toBe(
+			"ran"
+		);
+		await expect(stat(`${lockPath}.break`)).rejects.toThrow();
+	});
+
 	test("waiters breaking the same dead lock never overlap", async () => {
 		await writeFile(lockPath, `${deadPid()} crashed-owner`);
 		let holders = 0;

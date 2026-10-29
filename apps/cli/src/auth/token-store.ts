@@ -3,8 +3,8 @@
  * file when there is no keychain (Linux servers and SSH often lack Secret
  * Service). One entry per Clerk issuer, so dev and prod sign-ins don't collide.
  *
- * A file entry is authoritative over the keychain until a later `save` moves it
- * back into the keychain.
+ * Each entry carries `savedAt`, and `load` takes the newer of the two places, so a
+ * failed write or cleanup on one side never leaves an older refresh token in charge.
  *
  * `load`, `save` and `clear` don't lock: callers that read, decide and write wrap
  * the whole sequence in `lock`, so another `xolace` process can't interleave.
@@ -75,6 +75,15 @@ const parseSession = (raw: unknown): StoredSession | null => {
 		? { idToken, refreshToken }
 		: { refreshToken };
 };
+
+/** When `save` wrote this entry; 0 for entries written before it was recorded. */
+const savedAtOf = (raw: unknown) =>
+	typeof raw === "object" &&
+	raw !== null &&
+	"savedAt" in raw &&
+	typeof raw.savedAt === "number"
+		? raw.savedAt
+		: 0;
 
 const parseJson = (text: string): unknown => {
 	try {
@@ -149,28 +158,39 @@ export const createTokenStore = ({
 				);
 			}
 		},
-		// The file wins when it has an entry: `save` writes there only when the
-		// keychain refused, so the keychain may still hold an older, already-spent
-		// refresh token. The next `save` that reaches the keychain removes it.
+		// Both places can hold an entry: `save` falls back to the file when the
+		// keychain refuses, and its cleanup of the other place can fail. The newer
+		// save wins; on a tie (or entries from before `savedAt`) the file does,
+		// since it's only written when the keychain wasn't.
 		load: async () => {
-			const fromFile = (await readFileSessions(filePath))[account];
-			if (fromFile !== undefined) {
-				return parseSession(fromFile);
+			const fromFile: unknown = (await readFileSessions(filePath))[account];
+			const keyringRead = tryKeyring(keyring.get);
+			const fromKeyring =
+				keyringRead.ok && keyringRead.value
+					? parseJson(keyringRead.value)
+					: undefined;
+			if (fromFile === undefined || fromKeyring === undefined) {
+				return parseSession(fromFile ?? fromKeyring ?? null);
 			}
-			const fromKeyring = tryKeyring(keyring.get);
-			return fromKeyring.ok && fromKeyring.value
-				? parseSession(parseJson(fromKeyring.value))
-				: null;
+			return parseSession(
+				savedAtOf(fromKeyring) > savedAtOf(fromFile) ? fromKeyring : fromFile
+			);
 		},
 		// One lock for every issuer: the file fallback holds them all in one file.
 		lock: (action) => withFileLock(`${filePath}.lock`, action),
 		save: async (session) => {
-			if (tryKeyring(() => keyring.set(JSON.stringify(session))).ok) {
-				await removeFromFile();
+			const sessions = await readFileSessions(filePath);
+			// Strictly newer than the file entry it replaces, so `load` can tell.
+			const savedAt = Math.max(Date.now(), savedAtOf(sessions[account]) + 1);
+			const stamped = { ...session, savedAt };
+			if (tryKeyring(() => keyring.set(JSON.stringify(stamped))).ok) {
+				if (account in sessions) {
+					delete sessions[account];
+					await writeFileSessions(filePath, sessions);
+				}
 				return;
 			}
-			const sessions = await readFileSessions(filePath);
-			sessions[account] = session;
+			sessions[account] = stamped;
 			await writeFileSessions(filePath, sessions);
 		},
 	};

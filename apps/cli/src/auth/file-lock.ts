@@ -8,7 +8,7 @@
  * file only while it still carries its own token.
  */
 import { randomUUID } from "node:crypto";
-import { mkdir, open, readFile, rm, stat } from "node:fs/promises";
+import { mkdir, open, readFile, rm } from "node:fs/promises";
 import { dirname } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
@@ -19,8 +19,6 @@ const POLL_MS = 50;
 // and writing its pid; give a live holder this long to finish that write.
 const UNREADABLE_LOCK_MS = 5000;
 export const LOCK_WAIT_MS = 15_000;
-// A breaker holds its lock for one read and one delete, so an older one crashed.
-const BREAK_LOCK_STALE_MS = 5000;
 
 const errorCode = (error: unknown) =>
 	typeof error === "object" && error !== null && "code" in error
@@ -77,59 +75,64 @@ const tryCreate = async (path: string, token: string) => {
 	}
 };
 
-const ageOf = async (path: string, now: number) => {
-	try {
-		return now - (await stat(path)).mtimeMs;
-	} catch {
-		return null;
+const releaseIfOwned = async (path: string, mine: string) => {
+	if ((await readLock(path)) === mine) {
+		await rm(path, { force: true });
 	}
 };
 
-/**
- * Deletes an abandoned lock that still reads `expected`. Breakers take turns
- * through a second lock file, and only a breaker or the dead owner ever removes
- * the lock, so the check-then-delete can't hit a lock a live process just took.
- * Returns false when another waiter is breaking it.
- */
-const breakAbandoned = async (path: string, expected: string, now: number) => {
-	const breakPath = `${path}.break`;
-	if (!(await tryCreate(breakPath, randomUUID()))) {
-		const age = await ageOf(breakPath, now);
-		if (age !== null && age > BREAK_LOCK_STALE_MS) {
-			await rm(breakPath, { force: true });
-		}
-		return false;
-	}
-	try {
-		if ((await readLock(path)) === expected) {
-			await rm(path, { force: true });
-		}
-		return true;
-	} finally {
-		await rm(breakPath, { force: true });
-	}
-};
+/** First sighting of each unreadable lock text, per file, to time it out. */
+interface Sightings {
+	break: Map<string, number>;
+	lock: Map<string, number>;
+}
 
-const isAbandoned = (
-	text: string,
-	firstSeen: Map<string, number>,
-	now: number
-) => {
+const isAbandoned = (text: string, seen: Map<string, number>, now: number) => {
 	const owner = parseOwner(text);
 	if (owner) {
 		return !isProcessAlive(owner.pid);
 	}
-	const seen = firstSeen.get(text) ?? now;
-	firstSeen.set(text, seen);
-	return now - seen > UNREADABLE_LOCK_MS;
+	const first = seen.get(text) ?? now;
+	seen.set(text, first);
+	return now - first > UNREADABLE_LOCK_MS;
+};
+
+/**
+ * Deletes an abandoned lock that still reads `expected`. Breakers take turns
+ * through a second lock file with the same owner rules, and only a breaker or the
+ * dead owner ever removes the lock, so the check-then-delete can't hit a lock a
+ * live process just took. Returns false when another waiter is breaking it.
+ */
+const breakAbandoned = async (
+	path: string,
+	expected: string,
+	sightings: Sightings,
+	now: number
+) => {
+	const breakPath = `${path}.break`;
+	const token = randomUUID();
+	if (!(await tryCreate(breakPath, token))) {
+		const held = await readLock(breakPath);
+		// A breaker that exited mid-break. Two waiters clearing it at once is the
+		// one race left, and it needs a crash inside a break to start.
+		if (held !== null && isAbandoned(held, sightings.break, now)) {
+			await releaseIfOwned(breakPath, held);
+		}
+		return false;
+	}
+	try {
+		await releaseIfOwned(path, expected);
+		return true;
+	} finally {
+		await releaseIfOwned(breakPath, `${process.pid} ${token}`);
+	}
 };
 
 const acquire = async (
 	path: string,
 	token: string,
 	deadline: number,
-	// When each unreadable lock text was first seen, to time it out.
-	firstSeen = new Map<string, number>()
+	sightings: Sightings = { break: new Map(), lock: new Map() }
 ): Promise<void> => {
 	if (await tryCreate(path, token)) {
 		return;
@@ -138,13 +141,13 @@ const acquire = async (
 	const now = Date.now();
 	if (text === null) {
 		// Released between our create attempt and now: retry straight away.
-		return acquire(path, token, deadline, firstSeen);
+		return acquire(path, token, deadline, sightings);
 	}
 	if (
-		isAbandoned(text, firstSeen, now) &&
-		(await breakAbandoned(path, text, now))
+		isAbandoned(text, sightings.lock, now) &&
+		(await breakAbandoned(path, text, sightings, now))
 	) {
-		return acquire(path, token, deadline, firstSeen);
+		return acquire(path, token, deadline, sightings);
 	}
 	if (now > deadline) {
 		throw new Error(
@@ -152,7 +155,7 @@ const acquire = async (
 		);
 	}
 	await sleep(POLL_MS);
-	return acquire(path, token, deadline, firstSeen);
+	return acquire(path, token, deadline, sightings);
 };
 
 export const withFileLock = async <T>(
@@ -167,8 +170,6 @@ export const withFileLock = async <T>(
 		return await action();
 	} finally {
 		// Never delete a lock some other holder has taken since.
-		if ((await readLock(path)) === `${process.pid} ${token}`) {
-			await rm(path, { force: true });
-		}
+		await releaseIfOwned(path, `${process.pid} ${token}`);
 	}
 };
