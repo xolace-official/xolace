@@ -112,6 +112,9 @@ const only = args.includes("--only")
 		)
 	: undefined;
 const CONCURRENCY = Number(flag("concurrency", "5"));
+if (!Number.isInteger(CONCURRENCY) || CONCURRENCY < 1) {
+	throw new Error("--concurrency must be a positive whole number");
+}
 const UPLOAD_TIMEOUT_MS = 10 * 60_000; // audio files can be tens of MB
 const UPLOAD_ATTEMPTS = 4;
 const RETRY_BASE_MS = 2000;
