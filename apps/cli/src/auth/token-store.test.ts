@@ -1,13 +1,15 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { chmod, mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { createTokenStore, type Keyring } from "./token-store";
 
 const ACCOUNT = "https://test.clerk.accounts.dev";
 const SESSION = { idToken: "id", refreshToken: "rt" };
 const OWNER_ONLY = 0o600;
 const PERMISSION_BITS = 0o777;
+const READ_ONLY_DIR = 0o500;
+const OWNER_DIR = 0o700;
 
 const memoryKeyring = () => {
 	const state: { value: string | null } = { value: null };
@@ -89,7 +91,7 @@ describe("createTokenStore", () => {
 		await devStore.clear();
 		expect(await prodStore.load()).toEqual({ refreshToken: "prod-rt" });
 		expect(JSON.parse(await readFile(filePath, "utf8"))).toEqual({
-			prod: { refreshToken: "prod-rt" },
+			prod: { refreshToken: "prod-rt", savedAt: expect.any(Number) },
 		});
 	});
 
@@ -105,6 +107,77 @@ describe("createTokenStore", () => {
 		await store.save(SESSION);
 		expect(state.value).not.toBeNull();
 		expect(JSON.parse(await readFile(filePath, "utf8"))).toEqual({});
+	});
+
+	test("a refresh saved to the file while the keychain is down wins over the keychain", async () => {
+		const { keyring, state } = memoryKeyring();
+		const keychain: { down: boolean } = { down: false };
+		const flaky: Keyring = {
+			...keyring,
+			set: (value) => {
+				if (keychain.down) {
+					throw new Error("keychain locked");
+				}
+				keyring.set(value);
+			},
+		};
+		const store = createTokenStore({
+			account: ACCOUNT,
+			filePath,
+			keyring: flaky,
+		});
+		await store.save({ refreshToken: "spent" });
+		keychain.down = true;
+		await store.save({ idToken: "id-2", refreshToken: "fresh" });
+		// The keychain still holds the spent token; the file's must win.
+		expect(JSON.parse(state.value ?? "{}")).toMatchObject({
+			refreshToken: "spent",
+		});
+		expect(await store.load()).toEqual({
+			idToken: "id-2",
+			refreshToken: "fresh",
+		});
+		// Keychain back: the next save moves the session in and empties the file.
+		keychain.down = false;
+		await store.save({ idToken: "id-3", refreshToken: "fresher" });
+		expect(JSON.parse(await readFile(filePath, "utf8"))).toEqual({});
+		expect(await store.load()).toEqual({
+			idToken: "id-3",
+			refreshToken: "fresher",
+		});
+	});
+
+	test("a keychain save whose file cleanup failed still wins", async () => {
+		const { keyring } = memoryKeyring();
+		const keychain: { down: boolean } = { down: true };
+		const flaky: Keyring = {
+			...keyring,
+			set: (value) => {
+				if (keychain.down) {
+					throw new Error("keychain locked");
+				}
+				keyring.set(value);
+			},
+		};
+		const store = createTokenStore({
+			account: ACCOUNT,
+			filePath,
+			keyring: flaky,
+		});
+		await store.save({ refreshToken: "spent" });
+		keychain.down = false;
+		// The file can't be rewritten (say, a full disk), so the spent entry stays.
+		const directory = dirname(filePath);
+		await chmod(directory, READ_ONLY_DIR);
+		try {
+			await expect(store.save({ refreshToken: "fresh" })).rejects.toThrow();
+		} finally {
+			await chmod(directory, OWNER_DIR);
+		}
+		expect(JSON.parse(await readFile(filePath, "utf8"))).toMatchObject({
+			[ACCOUNT]: { refreshToken: "spent" },
+		});
+		expect(await store.load()).toEqual({ refreshToken: "fresh" });
 	});
 
 	test("treats a corrupt entry as signed out", async () => {

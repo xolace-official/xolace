@@ -12,6 +12,8 @@ const MS_PER_SECOND = 1000;
 const DEFAULT_DEVICE_INTERVAL_SECONDS = 5;
 // RFC 8628 §3.5: on slow_down, add 5 seconds to the polling interval.
 const SLOW_DOWN_STEP_SECONDS = 5;
+// A refresh runs while holding the cross-process lock, so it must not hang forever.
+export const REQUEST_TIMEOUT_MS = 15 * MS_PER_SECOND;
 
 export interface Tokens {
 	idToken: string;
@@ -35,6 +37,7 @@ export type FetchLike = (
 		body: URLSearchParams;
 		headers: Record<string, string>;
 		method: "POST";
+		signal?: AbortSignal;
 	}
 ) => Promise<{ json: () => Promise<unknown>; status: number }>;
 
@@ -57,6 +60,7 @@ const postForm = async (
 		body: new URLSearchParams({ client_id: config.clerkClientId, ...form }),
 		headers: { "content-type": "application/x-www-form-urlencoded" },
 		method: "POST",
+		signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 	});
 	const parsed = await response.json();
 	const body: Record<string, unknown> =
