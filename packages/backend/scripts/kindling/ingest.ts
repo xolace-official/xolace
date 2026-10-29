@@ -27,6 +27,11 @@
 //   bun scripts/kindling/ingest.ts --manifest scripts/kindling/dev/manifest.json   # topics.json is read from the same dir
 //
 //   bun scripts/kindling/ingest.ts --thumbs-only [--prod]   # re-upload thumbs only, no audio
+//   bun scripts/kindling/ingest.ts --prod --only a,b,c        # just these track slugs, no topics
+//   bun scripts/kindling/ingest.ts --prod --concurrency 2     # fewer uploads at once (default 5)
+//
+// Uploads retry a dropped connection or a 429/5xx with backoff. A run that
+// still has failures prints an `--only` list of just those tracks to rerun.
 //
 // Thumbnails are never uploaded as-is: each source is resized to a 1080px
 // WebP (sharp: lanczos3, q78, effort 6 — the library cover settings) and
@@ -98,8 +103,20 @@ const topicsPath = path.join(path.dirname(manifestPath), "topics.json");
 const mediaDir = path.resolve(
 	flag("media", `scripts/kindling/${catalogueDir}/media`)
 );
-const CONCURRENCY = 5;
+const only = args.includes("--only")
+	? new Set(
+			flag("only", "")
+				.split(",")
+				.map((slug) => slug.trim())
+				.filter(Boolean)
+		)
+	: undefined;
+const CONCURRENCY = Number(flag("concurrency", "5"));
 const UPLOAD_TIMEOUT_MS = 10 * 60_000; // audio files can be tens of MB
+const UPLOAD_ATTEMPTS = 4;
+const RETRY_BASE_MS = 2000;
+const TOO_MANY_REQUESTS = 429;
+const SERVER_ERROR = 500;
 
 function sha256File(filePath: string): Promise<string> {
 	return new Promise((resolve, reject) => {
@@ -174,17 +191,40 @@ function thumbOf(thumbPath: string): Promise<Thumb> {
 	return thumb;
 }
 
+// Retries what a busy link or R2 throttling causes: a dropped connection
+// (fetch rejects) and 429/5xx. The presigned URL is reused, so a retry PUTs
+// to the same key.
 async function putFile(url: string, filePath: string | Buffer): Promise<void> {
-	const res = await fetch(url, {
-		body: new Uint8Array(
-			typeof filePath === "string" ? readFileSync(filePath) : filePath
-		),
-		method: "PUT",
-		signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
-	});
-	if (!res.ok) {
-		throw new Error(
-			`upload failed (${res.status})${typeof filePath === "string" ? `: ${filePath}` : ""}`
+	const body = new Uint8Array(
+		typeof filePath === "string" ? readFileSync(filePath) : filePath
+	);
+	for (let attempt = 1; ; attempt++) {
+		let res: Response | undefined;
+		let dropped: Error | undefined;
+		try {
+			res = await fetch(url, {
+				body,
+				method: "PUT",
+				signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
+			});
+		} catch (err) {
+			dropped = err as Error;
+		}
+		if (res?.ok) {
+			return;
+		}
+		const error =
+			dropped ??
+			new Error(
+				`upload failed (${res?.status})${typeof filePath === "string" ? `: ${filePath}` : ""}`
+			);
+		const retryable =
+			!res || res.status === TOO_MANY_REQUESTS || res.status >= SERVER_ERROR;
+		if (!retryable || attempt === UPLOAD_ATTEMPTS) {
+			throw error;
+		}
+		await new Promise((resolve) =>
+			setTimeout(resolve, RETRY_BASE_MS * 2 ** (attempt - 1))
 		);
 	}
 }
@@ -335,6 +375,18 @@ async function main() {
 	);
 	const topics: ManifestTopic[] = JSON.parse(readFileSync(topicsPath, "utf8"));
 
+	// `--only` reruns named tracks (usually a failed run's list); topics are
+	// left alone.
+	const tracks = only
+		? manifest.filter((track) => only.has(track.slug))
+		: manifest;
+	const unknown = [...(only ?? [])].filter(
+		(slug) => !manifest.some((track) => track.slug === slug)
+	);
+	if (unknown.length > 0) {
+		throw new Error(`--only: not in the manifest: ${unknown.join(", ")}`);
+	}
+
 	if (updateHashes) {
 		for (const track of manifest) {
 			track.sha256 = await sha256File(path.resolve(mediaDir, track.audioPath));
@@ -380,7 +432,8 @@ async function main() {
 		"ai/paths/audioTracks:listTopicThumbKeys",
 		{}
 	);
-	await pool(topics, CONCURRENCY, async (topic) => {
+	const failedSlugs: string[] = [];
+	await pool(only ? [] : topics, CONCURRENCY, async (topic) => {
 		try {
 			await ingestTopic(topic, liveThumbKeys, sharedThumbKeys);
 		} catch (err) {
@@ -388,14 +441,20 @@ async function main() {
 			console.error(`topic ${topic.slug}: FAILED — ${(err as Error).message}`);
 		}
 	});
-	await pool(manifest, CONCURRENCY, async (track) => {
+	await pool(tracks, CONCURRENCY, async (track) => {
 		try {
 			await ingestOne(track, sharedThumbKeys);
 		} catch (err) {
 			failures++;
+			failedSlugs.push(track.slug);
 			console.error(`${track.slug}: FAILED — ${(err as Error).message}`);
 		}
 	});
+	if (failedSlugs.length > 0) {
+		console.error(
+			`\n${failedSlugs.length} track(s) failed. Rerun just those with:\n  --only ${failedSlugs.join(",")}`
+		);
+	}
 	if (failures > 0) {
 		process.exit(1);
 	}
