@@ -701,11 +701,27 @@ describe("admin/audio", () => {
 		const topics = await t.query(api.admin.audio.topics, { linkWindow: 0 });
 		expect(topics.find((x) => x.slug === "grief")).toEqual({
 			coverUrl: "https://r2.test/thumb/g.webp",
+			families: ["support"],
 			hasCover: true,
 			slug: "grief",
 			title: "Grief and loss",
 		});
 		expect(topics.filter((x) => x.hasCover)).toHaveLength(1);
+	});
+
+	it("lists only the families a topic is catalogued for", async () => {
+		const topics = await asAdmin().query(api.admin.audio.topics, {
+			linkWindow: 0,
+		});
+		const families = (slug: string) =>
+			topics.find((x) => x.slug === slug)?.families;
+		expect(families("sleep_rest")).toEqual(["music"]);
+		expect(families("grief")).toEqual(["support"]);
+		expect(families("sadness")).toEqual(["music", "support"]);
+		// Every listed topic is usable by at least one family.
+		for (const topic of topics) {
+			expect(topic.families.length).toBeGreaterThan(0);
+		}
 	});
 });
 

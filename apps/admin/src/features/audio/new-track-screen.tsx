@@ -137,10 +137,12 @@ export function NewTrackScreen() {
 		topic: topic ? null : "Pick the topic it sits under.",
 	};
 	const valid = Object.values(errors).every((error) => error === null);
-	const topicItems = topics.map((t) => ({
-		label: t.title,
-		value: topicId(family, t.slug),
-	}));
+	const topicItems = topics
+		.filter((t) => t.families.includes(family))
+		.map((t) => ({
+			label: t.title,
+			value: topicId(family, t.slug),
+		}));
 
 	const pickAudio = async (next: File[]) => {
 		setFiles(next);

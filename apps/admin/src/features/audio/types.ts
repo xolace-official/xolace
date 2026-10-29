@@ -83,6 +83,8 @@ export interface AudioTrack {
 export interface AudioTopic {
 	/** Signed link to the cover, while `hasCover`. */
 	coverUrl?: string;
+	/** The families the catalogue has this topic for: a track can only use it in these. */
+	families: TrackFamily[];
 	hasCover: boolean;
 	/** The shared suffix, `sleep_rest`. */
 	slug: string;
