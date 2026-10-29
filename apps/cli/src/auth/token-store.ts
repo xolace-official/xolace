@@ -3,6 +3,9 @@
  * file when there is no keychain (Linux servers and SSH often lack Secret
  * Service). One entry per Clerk issuer, so dev and prod sign-ins don't collide.
  *
+ * A file entry is authoritative over the keychain until a later `save` moves it
+ * back into the keychain.
+ *
  * `load`, `save` and `clear` don't lock: callers that read, decide and write wrap
  * the whole sequence in `lock`, so another `xolace` process can't interleave.
  */
@@ -146,12 +149,18 @@ export const createTokenStore = ({
 				);
 			}
 		},
+		// The file wins when it has an entry: `save` writes there only when the
+		// keychain refused, so the keychain may still hold an older, already-spent
+		// refresh token. The next `save` that reaches the keychain removes it.
 		load: async () => {
-			const fromKeyring = tryKeyring(keyring.get);
-			if (fromKeyring.ok && fromKeyring.value) {
-				return parseSession(parseJson(fromKeyring.value));
+			const fromFile = (await readFileSessions(filePath))[account];
+			if (fromFile !== undefined) {
+				return parseSession(fromFile);
 			}
-			return parseSession((await readFileSessions(filePath))[account]);
+			const fromKeyring = tryKeyring(keyring.get);
+			return fromKeyring.ok && fromKeyring.value
+				? parseSession(parseJson(fromKeyring.value))
+				: null;
 		},
 		// One lock for every issuer: the file fallback holds them all in one file.
 		lock: (action) => withFileLock(`${filePath}.lock`, action),

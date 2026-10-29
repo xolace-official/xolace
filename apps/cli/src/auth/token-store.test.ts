@@ -107,6 +107,42 @@ describe("createTokenStore", () => {
 		expect(JSON.parse(await readFile(filePath, "utf8"))).toEqual({});
 	});
 
+	test("a refresh saved to the file while the keychain is down wins over the keychain", async () => {
+		const { keyring, state } = memoryKeyring();
+		const keychain: { down: boolean } = { down: false };
+		const flaky: Keyring = {
+			...keyring,
+			set: (value) => {
+				if (keychain.down) {
+					throw new Error("keychain locked");
+				}
+				keyring.set(value);
+			},
+		};
+		const store = createTokenStore({
+			account: ACCOUNT,
+			filePath,
+			keyring: flaky,
+		});
+		await store.save({ refreshToken: "spent" });
+		keychain.down = true;
+		await store.save({ idToken: "id-2", refreshToken: "fresh" });
+		// The keychain still holds the spent token; the file's must win.
+		expect(JSON.parse(state.value ?? "{}")).toEqual({ refreshToken: "spent" });
+		expect(await store.load()).toEqual({
+			idToken: "id-2",
+			refreshToken: "fresh",
+		});
+		// Keychain back: the next save moves the session in and empties the file.
+		keychain.down = false;
+		await store.save({ idToken: "id-3", refreshToken: "fresher" });
+		expect(JSON.parse(await readFile(filePath, "utf8"))).toEqual({});
+		expect(await store.load()).toEqual({
+			idToken: "id-3",
+			refreshToken: "fresher",
+		});
+	});
+
 	test("treats a corrupt entry as signed out", async () => {
 		const { keyring, state } = memoryKeyring();
 		state.value = "not json";
