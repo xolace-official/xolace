@@ -41,7 +41,7 @@ What triggers what:
 | Open or push a PR | nothing | Preview deploy (against staging) | `native-change` label only |
 | Add the `preview-backend` label to a PR | its own Convex preview `pr-<n>` ([pr-previews.md](./pr-previews.md)) | extra CLI previews against it | nothing |
 | Merge into `dev` | **staging** deployed ([staging.md](./staging.md)) | Preview deploy (against staging) | preview OTA, if opted in |
-| Merge `dev` into `main` (a release) | **prod deployed** | **Production** deploy | release, if mobile files changed |
+| Merge `dev` into `main` (a release) | **prod deployed** | **Production** deploy | release, if mobile files changed (or per `RELEASE_MOBILE_DEFAULT`) |
 
 Merging `dev` into `main` **is** the release. The first one also replaces whatever the
 old repo deployed to prod Convex; after that, never deploy Convex from the old
@@ -163,6 +163,21 @@ path, so both give the same runtime.
 To re-run a release by hand: **Actions → Release → Run workflow** on `main`. The
 `mobile` input picks `auto` (only if mobile files changed), `always` or `skip`.
 
+### Releasing without mobile
+
+A merge into `main` has no inputs, so it uses the repository **variable**
+`RELEASE_MOBILE_DEFAULT` (Settings → Secrets and variables → Actions → **Variables**),
+or `auto` when it isn't set. To ship the backend, web and admin but not mobile:
+
+```sh
+gh variable set RELEASE_MOBILE_DEFAULT --body skip
+# merge dev into main; the release runs with mobile skipped
+gh variable delete RELEASE_MOBILE_DEFAULT
+```
+
+Delete it afterwards, or the next release skips mobile too. `always` works the same
+way. A manual Run workflow ignores the variable and uses its own `mobile` input.
+
 ## Troubleshooting
 
 | Symptom | Fix |
@@ -174,5 +189,7 @@ To re-run a release by hand: **Actions → Release → Run workflow** on `main`.
 | Vercel deployed Production straight from a push | Production branch isn't `main`, or `git.deploymentEnabled` was removed from that app's `vercel.json`. |
 | `VERCEL_DEPLOY_HOOK_… is not set` warning | Step 6. |
 | Mobile job says "no mobile-relevant changes" | Expected for backend- or web-only releases. Use Run workflow with `mobile: always` to force one. |
+| Mobile job says "Mobile release skipped" on a merge | The `RELEASE_MOBILE_DEFAULT` variable is `skip`; delete it once that release is done. |
+| `Mobile mode '…' is not auto, always or skip` | Fix or delete the `RELEASE_MOBILE_DEFAULT` variable. |
 | Clerk sign-in fails on the production domain | The domain isn't allowed in the Clerk production instance (Step 4). |
 | Android EAS build: `"google-services.json" is missing` | The `GOOGLE_SERVICES_JSON` file env var isn't set in that EAS environment (Step 6). |
