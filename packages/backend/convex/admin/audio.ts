@@ -32,6 +32,13 @@ export const SAFETY_REVIEW_TIER = 3;
 
 const { family: familyValidator } = schema.tables.audio_tracks.validator.fields;
 
+const TOPIC_PREFIX_BY_FAMILY = {
+	music: "music_topic_",
+	support: "audio_topic_",
+} as const satisfies Record<Doc<"audio_tracks">["family"], string>;
+
+const FAMILIES = ["music", "support"] as const;
+
 const trackRow = v.object({
 	active: v.boolean(),
 	durationSec: v.number(),
@@ -61,6 +68,8 @@ const trackRow = v.object({
 
 const topicRow = v.object({
 	coverUrl: v.optional(v.string()),
+	/** The families with a catalogue entry for this topic: the only ones a track can use it in. */
+	families: v.array(familyValidator),
 	hasCover: v.boolean(),
 	slug: v.string(),
 	title: v.string(),
@@ -122,7 +131,7 @@ type TrackRules = Pick<
 /** Rules that hold for every saved row, live or not. */
 export function assertTrackShape(t: TrackRules) {
 	// The catalogue entry itself, not just the suffix: some topics exist for one family only.
-	const prefix = t.family === "music" ? "music_topic_" : "audio_topic_";
+	const prefix = TOPIC_PREFIX_BY_FAMILY[t.family];
 	if (!(t.topic.startsWith(prefix) && CATALOG_BY_KEY.has(t.topic))) {
 		throw trackError(t, `topic "${t.topic}" is not a ${t.family} topic`);
 	}
@@ -259,6 +268,9 @@ export const topics = adminQuery({
 					coverUrl:
 						row &&
 						(await r2.getUrl(row.thumbKey, { expiresIn: PREVIEW_URL_TTL_SEC })),
+					families: FAMILIES.filter((family) =>
+						CATALOG_BY_KEY.has(`${TOPIC_PREFIX_BY_FAMILY[family]}${slug}`)
+					),
 					hasCover: row !== undefined,
 					slug,
 					title: row?.title || topicTitle(slug),

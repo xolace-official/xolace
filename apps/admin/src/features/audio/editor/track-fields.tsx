@@ -370,10 +370,12 @@ export function ShelfFields() {
 		actions: { setField },
 		meta: { now },
 	} = useTrackEditor();
-	const topicItems = topics.map((topic) => ({
-		label: topic.title,
-		value: topicId(track.family, topic.slug),
-	}));
+	const topicItems = topics
+		.filter((topic) => topic.families.includes(track.family))
+		.map((topic) => ({
+			label: topic.title,
+			value: topicId(track.family, topic.slug),
+		}));
 	const secondaryItems = [
 		{ label: "None", value: null },
 		...topicItems.filter((item) => item.value !== track.topic),
