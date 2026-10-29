@@ -3,12 +3,12 @@ import { BottomSheet, PressableFeedback } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
-import { AppText } from "@/src/components/shared/app-text";
+import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
+import { AppText } from "@/components/shared/app-text";
 import {
 	RETURN_WELCOME,
 	type ReturnWelcomeTier,
-} from "@/src/features/reflect/return-welcome-copy";
+} from "@/features/reflect/return-welcome-copy";
 
 const MASCOT = require("@/assets/images/flux/flux-point-down-removebg-preview.png");
 
@@ -18,12 +18,7 @@ type Props = {
 	onClose: () => void;
 };
 
-/**
- * Detached, no-guilt greeting for a lapsed user's first reopen. The mascot
- * points down toward the copy — a hand reaching back toward the fire. Copy
- * varies by how long they've been away (see return-welcome-copy.ts). Dismissed
- * by the CTA or by tapping the blurred backdrop; there is no wrong way to close.
- */
+/** Greeting for a lapsed user's first reopen; copy varies by gap (return-welcome-copy.ts). */
 export const ReturnWelcomeSheet = ({ isOpen, tier, onClose }: Props) => {
 	const insets = useSafeAreaInsets();
 	const copy = RETURN_WELCOME[tier];

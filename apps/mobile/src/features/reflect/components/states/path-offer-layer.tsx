@@ -2,19 +2,19 @@ import { Image } from "expo-image";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { PlusValue } from "@/src/features/purchases/components/plus-offer-card";
-import { PLUS_OFFER_DECLINE_LABEL } from "@/src/features/purchases/plus-offer-copy";
+import { AppText } from "@/components/shared/app-text";
+import { PlusValue } from "@/features/purchases/components/plus-offer-card";
+import { PLUS_OFFER_DECLINE_LABEL } from "@/features/purchases/plus-offer-copy";
 import type {
 	PlusOfferMoment,
 	PlusOfferVariant,
-} from "@/src/features/purchases/plus-offer-policy";
-import { usePlusOfferPresence } from "@/src/features/purchases/use-plus-offer-presence";
+} from "@/features/purchases/plus-offer-policy";
+import { usePlusOfferPresence } from "@/features/purchases/use-plus-offer-presence";
 import {
 	riseFrom,
 	riseTransition,
-} from "@/src/features/reflect/components/states/path-choice-card";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+} from "@/features/reflect/components/states/path-choice-card";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const MASCOT = require("@/assets/images/flux/plus-mascot.png");
 const MASCOT_STYLE = {
@@ -35,11 +35,7 @@ type Props = {
 };
 
 /**
- * Moment 2 as the top layer of the path stack: the same top-rounded shape as a
- * PathChoiceCard, at night, with the telescope Flux climbing out over its edge.
- * It is an option among the paths, not a sheet over them — the three paths stay
- * one tap away the whole time. Not pressable as a whole: only the CTA opens the
- * paywall, so a tap meant for the card below can't land on a sell.
+ * Moment 2 as a path-stack layer. Only the CTA opens the paywall, so no stray tap lands on a sell.
  */
 export function PathOfferLayer({
 	moment,

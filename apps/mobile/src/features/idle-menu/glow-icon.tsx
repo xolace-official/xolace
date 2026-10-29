@@ -15,15 +15,11 @@ import Animated, {
 type Props = {
 	name: { ios: SFSymbol; android: string };
 	size: number;
-	/** Resolved accent hex (from useThemeColor) — drives both icon tint and halo. */
+	/** Resolved accent hex; drives both icon tint and halo. */
 	color: string;
 };
 
-/**
- * "Lit" icon for a newly added menu item: accent-tinted with a soft halo
- * behind it that slowly breathes — a light left on for you, not a badge.
- * The parent swaps back to the plain dimmed icon once the item is opened.
- */
+/** "Lit" icon for a newly added menu item: accent tint with a breathing halo. */
 export function GlowIcon({ name, size, color }: Props) {
 	const breath = useSharedValue(0.4);
 	// Off-screen it would keep committing every frame under the pushed screen.

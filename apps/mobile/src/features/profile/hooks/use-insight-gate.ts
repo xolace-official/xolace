@@ -3,11 +3,10 @@ import { useCallback } from "react";
 import {
 	type PaywallSurface,
 	usePaywall,
-} from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
+} from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 
-// Which blurred insight teaser drove the tap. Mapped onto paywall surfaces
-// for funnel attribution.
+// Which blurred insight teaser drove the tap, mapped onto paywall surfaces.
 export type TeaserFeature = "intensity_history" | "words_language";
 
 const SURFACE: Record<TeaserFeature, PaywallSurface> = {
@@ -15,11 +14,7 @@ const SURFACE: Record<TeaserFeature, PaywallSurface> = {
 	words_language: "insight_teaser",
 };
 
-/**
- * Gated-insight plumbing for the profile screen. Replaces the pre-billing
- * insight_waitlist flow: a teaser tap now records the gate hit and opens
- * the real paywall instead of a "notify me" sheet.
- */
+/** Gated-insight plumbing: a teaser tap records the gate hit and opens the paywall. */
 export function useInsightGate(sessionCount: number) {
 	const posthog = usePostHog();
 	const { isPlus, isLoading } = usePlusEntitlement();
@@ -35,10 +30,10 @@ export function useInsightGate(sessionCount: number) {
 
 	const open = (feature: TeaserFeature) => {
 		if (isLoading) {
-			return; // entitlement unresolved — don't gate a maybe-Plus user
+			return;
 		}
 		if (isPlus) {
-			return; // nothing locked — unlocked depth views are a follow-up
+			return;
 		}
 		posthog.capture("premium_gate_hit", {
 			feature,

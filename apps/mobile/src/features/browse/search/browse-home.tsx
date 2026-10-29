@@ -1,44 +1,34 @@
-/**
- * The Browse home with Browse search (#549, CONTEXT.md "Browse search"): the
- * native header bar swaps the hub for results while there's a query. The hub
- * stays mounted underneath, so clearing or cancelling brings it back as it was.
- * Sections run Lantern, Support audio, Music, Hubs & topics, each ranked on its
- * own (#550); a section with no matches is hidden. Each shows its first few,
- * with a See all for the rest when there are more (#551). A crisis-term query
- * gets the Need someone now? row above its results; no results gets way-outs;
- * analytics carry only the search's shape (#552).
- */
+// Browse home with search (#549). The hub stays mounted under the results so
+// clearing restores it. Sections rank on their own (#550), show a few with See
+// all (#551); a crisis-term query gets Need someone now?; analytics carry only shape (#552).
 
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { router, Stack } from "expo-router";
 import { type ReactNode, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { BrowseHubScreen } from "@/src/features/browse/components/browse-hub-screen";
-import { TrackRow } from "@/src/features/browse/components/track-row";
-import { useMiniPlayerInset } from "@/src/features/browse/now-playing/now-playing-store";
-import { PlaceRow } from "@/src/features/browse/search/place-row";
+import { AppText } from "@/components/shared/app-text";
+import { BrowseHubScreen } from "@/features/browse/components/browse-hub-screen";
+import { TrackRow } from "@/features/browse/components/track-row";
+import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
+import { PlaceRow } from "@/features/browse/search/place-row";
 import {
 	useSearchShape,
 	useSearchTap,
-} from "@/src/features/browse/search/search-analytics";
+} from "@/features/browse/search/search-analytics";
 import {
 	NeedSomeoneRow,
 	NoResults,
-} from "@/src/features/browse/search/search-edges";
+} from "@/features/browse/search/search-edges";
 import {
 	SECTION_TITLE,
 	type SearchSection,
-} from "@/src/features/browse/search/search-sections";
-import {
-	EntryRow,
-	SectionTitle,
-} from "@/src/features/library/home/entry-cards";
-import { RowsSkeleton } from "@/src/features/library/skeletons";
-import { useStableQuery } from "@/src/lib/convex/use-stable-query";
-import { useDebounce } from "@/src/lib/use-debounce";
-import { cn } from "@/src/lib/utils";
+} from "@/features/browse/search/search-sections";
+import { EntryRow, SectionTitle } from "@/features/library/home/entry-cards";
+import { RowsSkeleton } from "@/features/library/skeletons";
+import { useStableQuery } from "@/lib/convex/use-stable-query";
+import { useDebounce } from "@/lib/use-debounce";
+import { cn } from "@/lib/utils";
 
 const DEBOUNCE_MS = 250;
 const PREVIEW = 5;
@@ -50,7 +40,8 @@ function Section<T>({
 	row,
 }: {
 	section: SearchSection;
-	/** Undefined while the rows are held from the last query: See all would open different words. */
+	/** Undefined while the rows are held from the last query: See all would open different
+	 * words. */
 	query: string | undefined;
 	items: T[];
 	row: (item: T, onOpen: () => void) => ReactNode;
@@ -76,7 +67,7 @@ function Section<T>({
 function SearchResults({ query }: { query: string }) {
 	const playerInset = useMiniPlayerInset();
 	const args = query ? { query } : "skip";
-	// Holds the last results while the next keystroke's load, so nothing blanks.
+	// Holds the last results while the next keystroke's load.
 	const lantern = useStableQuery(api.library.search.searchEntries, args);
 	const catalogue = useStableQuery(api.library.search.searchCatalogue, args);
 	// The same subscriptions, unheld: analytics count only this query's results.

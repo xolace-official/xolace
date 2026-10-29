@@ -1,10 +1,8 @@
 import { setAudioModeAsync } from "expo-audio";
 import type { RefObject } from "react";
 
-/**
- * The one audio-session mode every playback hook should apply (#367). `doNotMix`
- * is required for lock-screen controls to associate with the active player.
- */
+/** The one audio-session mode every playback hook applies (#367). `doNotMix` is required for
+ * lock-screen controls. */
 export const AUDIO_SESSION = {
 	interruptionMode: "doNotMix",
 	playsInSilentMode: true,
@@ -22,11 +20,8 @@ export const audioFocusEpoch = () => epoch;
 export const holdsAudioFocus = (owner: RefObject<unknown>) =>
 	active?.owner === owner;
 
-/**
- * One sound at a time (S4). The player about to make sound claims focus and
- * whoever held it is paused — in every direction, Browse included. `owner` is
- * the hook's ref object, stable across re-minted players.
- */
+/** One sound at a time (S4): the claimant pauses whoever held focus. `owner` is the hook's ref
+ * object, stable across re-mints. */
 export function claimAudioFocus(owner: RefObject<unknown>, pause: () => void) {
 	if (active?.owner !== owner) {
 		epoch++;
@@ -41,10 +36,8 @@ export function claimAudioFocus(owner: RefObject<unknown>, pause: () => void) {
 	active = { owner, pause };
 }
 
-/**
- * A hook going away drops focus it still holds, so nobody later "pauses" a
- * released player. No epoch bump: nothing new is audible.
- */
+/** A hook going away drops focus it still holds, so nobody later pauses a released player. No
+ * epoch bump. */
 export function releaseAudioFocus(owner: RefObject<unknown>) {
 	if (active?.owner === owner) {
 		active = null;

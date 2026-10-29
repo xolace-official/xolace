@@ -1,7 +1,6 @@
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 
-/** Resolved bundle/package identifier per platform */
 const bundleInfo = Platform.select({
 	android: {
 		id: Constants.expoConfig?.android?.package ?? "com.your-app-name.android",
@@ -11,16 +10,12 @@ const bundleInfo = Platform.select({
 	},
 });
 
-/** Shape returned by both store-lookup helpers */
 interface AppInfoFromStore {
 	storeUrl: string;
 	version: string;
 }
 
-/**
- * Fetches the latest app info from the iOS App Store via the iTunes lookup API.
- * @param country - optional ISO country code for regional lookups
- */
+/** Latest app info from the iTunes lookup API. */
 async function getInfoFromAppStore(
 	country = ""
 ): Promise<AppInfoFromStore | null> {
@@ -48,10 +43,7 @@ async function getInfoFromAppStore(
 	}
 }
 
-/**
- * Fetches the latest app info from the Google Play Store by scraping the
- * store page HTML. Tries two known layout patterns.
- */
+/** Latest app info scraped from the Play Store page HTML; tries two known layout patterns. */
 async function getInfoFromPlayStore(
 	_country = ""
 ): Promise<AppInfoFromStore | null> {
@@ -74,10 +66,7 @@ async function getInfoFromPlayStore(
 	}
 }
 
-/**
- * Platform-aware wrapper that delegates to the correct store lookup function.
- * @param country - optional ISO country code for regional lookups
- */
+/** Platform-aware store lookup. */
 export async function getAppInfoFromTheStore(
 	country = ""
 ): Promise<AppInfoFromStore | null> {
@@ -93,10 +82,7 @@ export async function getAppInfoFromTheStore(
 	return null;
 }
 
-/**
- * Compares two semver-style version strings (e.g. "1.2.3") and returns `true`
- * when `newestVersion` is strictly greater than `installedVersion`.
- */
+/** True when `newestVersion` is strictly greater than `installedVersion` (semver-style). */
 export function shouldUpdateApp(
 	installedVersion: string,
 	newestVersion: string

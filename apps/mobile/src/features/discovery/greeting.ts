@@ -1,11 +1,8 @@
-/**
- * Clock-driven copy for the discovery masthead. Pure functions, no state —
- * the screen re-renders on focus, which is often enough for a day part.
- */
+/** Clock-driven copy for the discovery masthead. Pure; the screen re-renders on focus. */
 
 export type DayPart = "morning" | "afternoon" | "evening" | "late";
 
-export function getDayPart(now = new Date()): DayPart {
+function getDayPart(now = new Date()): DayPart {
 	const hour = now.getHours();
 	if (hour < 5) {
 		return "late";
@@ -22,29 +19,21 @@ export function getDayPart(now = new Date()): DayPart {
 	return "late";
 }
 
-/** Eyebrow datestamp — "Tuesday · evening". Rendered uppercase + tracked. */
+/** Eyebrow datestamp, e.g. "Tuesday · evening". */
 export function getDateStamp(now = new Date()): string {
 	const weekday = now.toLocaleDateString(undefined, { weekday: "long" });
 	return `${weekday} · ${getDayPart(now)}`;
 }
 
-/**
- * Quiet, non-time-worded greeting so it doesn't echo the eyebrow above it.
- * Takes the preferences displayName (same source as the profile screen), not
- * the Clerk account name.
- */
+/** Non-time-worded so it does not echo the eyebrow. Takes the preferences displayName, not
+ * Clerk's. */
 export function getGreeting(displayName?: string | null): string {
 	return displayName ? `Welcome back, ${displayName}` : "Welcome back";
 }
 
-/**
- * Masthead display copy. Split lead/tail so the tail can drop to a lighter
- * weight — the reference's trick for giving a type block internal rhythm.
- *
- * Copy only — it does not navigate. Xolacer setup is gated on `isXolacer`,
- * so it is not the destination; this stays inert until there is one.
- */
-export const DISPLAY_LINES = [
+// Split lead/tail so the tail can drop to a lighter weight. Copy only, no
+// navigation: Xolacer setup is gated on `isXolacer`.
+const DISPLAY_LINES = [
 	{ lead: "Be the support someone needs.", tail: "Become a Xolacer." },
 	{ lead: "Listen. Connect. Support.", tail: "Become a Xolacer." },
 	{ lead: "Your story, your empathy, your impact.", tail: "Become a Xolacer." },

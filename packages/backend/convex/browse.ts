@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { type QueryCtx, query } from "./_generated/server";
 import { r2 } from "./ai/paths/audioTracks";
-import { topicSlug } from "./ai/paths/catalog";
+import { topicSlug, topicTitle } from "./ai/paths/catalog";
 import { requireAuth } from "./lib/auth";
 
 /**
@@ -189,11 +189,6 @@ export async function toTrackItem(t: Doc<"audio_tracks">) {
 	};
 }
 
-const topicTitle = (slug: string) => {
-	const words = slug.replace(/_/g, " ");
-	return words.charAt(0).toUpperCase() + words.slice(1);
-};
-
 /** Per-family list — `active` rows only, page size chosen by the client (30). */
 export const listByFamily = query({
 	args: { family: familyValidator, paginationOpts: paginationOptsValidator },
@@ -271,6 +266,22 @@ export async function activeTopics(ctx: QueryCtx) {
 		}
 		byTopic.set(slug, entry);
 	}
+	// A music track also lists under its secondary topic (getTopic), so it counts
+	// there too, and its cover stands in when the topic has no track of its own.
+	for (const t of tracks) {
+		if (!t.secondaryTopic) {
+			continue;
+		}
+		const slug = topicSlug(t.secondaryTopic);
+		const entry = byTopic.get(slug) ?? {
+			musicCount: 0,
+			supportCount: 0,
+			thumbhash: t.thumbhash,
+			thumbKey: t.thumbKey,
+		};
+		entry.musicCount += 1;
+		byTopic.set(slug, entry);
+	}
 
 	const rows = new Map(
 		(await ctx.db.query("topics").take(1000)).map((r) => [r.slug, r])
@@ -331,7 +342,8 @@ export const getTopic = query({
 	args: { slug: v.string() },
 	handler: async (ctx, args) => {
 		await requireAuth(ctx);
-		const [support, music] = await Promise.all([
+		const musicTopic = `music_topic_${args.slug}`;
+		const [support, music, alsoMusic] = await Promise.all([
 			ctx.db
 				.query("audio_tracks")
 				.withIndex("by_family_and_topic", (q) =>
@@ -341,12 +353,21 @@ export const getTopic = query({
 			ctx.db
 				.query("audio_tracks")
 				.withIndex("by_family_and_topic", (q) =>
-					q.eq("family", "music").eq("topic", `music_topic_${args.slug}`)
+					q.eq("family", "music").eq("topic", musicTopic)
+				)
+				.take(1000),
+			// Tracks whose secondary topic this is list after the topic's own.
+			ctx.db
+				.query("audio_tracks")
+				.withIndex("by_family_and_secondaryTopic", (q) =>
+					q.eq("family", "music").eq("secondaryTopic", musicTopic)
 				)
 				.take(1000),
 		]);
 		return await Promise.all(
-			[...support, ...music].filter((t) => t.active).map(toTrackItem)
+			[...support, ...music, ...alsoMusic]
+				.filter((t) => t.active)
+				.map(toTrackItem)
 		);
 	},
 	returns: v.array(trackItemValidator),

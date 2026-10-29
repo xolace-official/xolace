@@ -10,11 +10,12 @@ import Animated, {
 	useAnimatedProps,
 } from "react-native-reanimated";
 import Svg, { Line } from "react-native-svg";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const AnimatedLine = Animated.createAnimatedComponent(Line);
 
-/** TickGauge's box. Room for the taller mark only when there is one, so the overall dial keeps its size. */
+/** TickGauge's box. Room for the taller mark only when there is one, so the overall dial keeps
+ * its size. */
 export const gaugeSize = (
 	radius: number,
 	tickWidth: number,
@@ -34,7 +35,7 @@ type GaugeProps = {
 	progress: SharedValue<number>;
 	fill: string;
 	track: string;
-	/** 0..1 — the person's usual, drawn taller in --foreground. */
+	/** 0..1, the person's usual, drawn taller in --foreground. */
 	mark?: number | null;
 	children?: ReactNode;
 };

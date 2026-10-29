@@ -6,25 +6,25 @@ import { EaseView } from "react-native-ease/uniwind";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Presets } from "react-native-pulsar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
+import { usePaywall } from "@/features/purchases/use-paywall";
 import {
 	HeartBurst,
 	useHeartBurst,
-} from "@/src/features/quotes/components/heart-burst";
-import { ActionRow } from "@/src/features/quotes/components/poster/action-row";
-import { ComposePanel } from "@/src/features/quotes/components/poster/compose-panel";
-import { DeckCard } from "@/src/features/quotes/components/poster/deck-card";
-import { HeroCard } from "@/src/features/quotes/components/poster/hero-card";
-import { PosterBody } from "@/src/features/quotes/components/poster/poster-body";
-import { PosterSourceLine } from "@/src/features/quotes/components/poster/poster-source-line";
-import { StarButton } from "@/src/features/quotes/components/poster/star-button";
-import { PreferenceSetupSheet } from "@/src/features/quotes/components/preference-setup-sheet";
-import { QuoteLoadingAndError } from "@/src/features/quotes/components/quote-loading-and-error";
-import { QuoteShareSheet } from "@/src/features/quotes/components/quote-share-sheet";
-import { SharingCard } from "@/src/features/quotes/components/sharing-card";
-import { useQuoteSharing } from "@/src/features/quotes/hooks/use-quote-sharing";
-import { useTodayQuote } from "@/src/features/quotes/hooks/use-today-quote";
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+} from "@/features/quotes/components/heart-burst";
+import { ActionRow } from "@/features/quotes/components/poster/action-row";
+import { ComposePanel } from "@/features/quotes/components/poster/compose-panel";
+import { DeckCard } from "@/features/quotes/components/poster/deck-card";
+import { HeroCard } from "@/features/quotes/components/poster/hero-card";
+import { PosterBody } from "@/features/quotes/components/poster/poster-body";
+import { PosterSourceLine } from "@/features/quotes/components/poster/poster-source-line";
+import { StarButton } from "@/features/quotes/components/poster/star-button";
+import { PreferenceSetupSheet } from "@/features/quotes/components/preference-setup-sheet";
+import { QuoteLoadingAndError } from "@/features/quotes/components/quote-loading-and-error";
+import { QuoteShareSheet } from "@/features/quotes/components/quote-share-sheet";
+import { SharingCard } from "@/features/quotes/components/sharing-card";
+import { useQuoteSharing } from "@/features/quotes/hooks/use-quote-sharing";
+import { useTodayQuote } from "@/features/quotes/hooks/use-today-quote";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
 
 const EASE_INITIAL = { opacity: 0, translateY: 20 };
 const EASE_ANIMATE = { opacity: 1, translateY: 0 };
@@ -74,8 +74,7 @@ export function QuotesScreen() {
 
 	const heartBurst = useHeartBurst();
 
-	// the burst fires on the way *to* resonating, never on clearing it — and
-	// only once the write landed, so a rejected tap doesn't celebrate nothing
+	// The burst fires only on resonating, and only once the write landed.
 	const handleReact = (next: "resonates" | null) => {
 		void react(next).then((ok) => {
 			if (ok && next === "resonates") {
@@ -89,7 +88,6 @@ export function QuotesScreen() {
 		router.back();
 	};
 
-	// First visit is its own themed takeover — no hero behind it.
 	if (isFirstVisit) {
 		return (
 			<>
@@ -121,10 +119,8 @@ export function QuotesScreen() {
 	}
 
 	const hasQuote = quote !== null && sourceLine !== null && !isColdStarting;
-	// An unavailable moderation check is not a clean one, so the reply is fed
-	// nowhere — neither tomorrow's quote (quotesDistiller) nor the semantic
-	// profile (ADR 0007). It is not flagged either, so no crisis panel replaces
-	// the confirmation and the subline is the only place that can be honest.
+	// An unavailable moderation check feeds the reply nowhere (quotesDistiller,
+	// ADR 0007) without flagging it, so the subline is the only honest place.
 	const replyUnmoderated = quote?.replyModeration?.unavailable ?? false;
 
 	return (
@@ -134,8 +130,7 @@ export function QuotesScreen() {
 				<HeartBurst opacity={heartBurst.opacity} scale={heartBurst.scale} />
 				<KeyboardAwareScrollView
 					contentContainerStyle={{ paddingBottom: bottom + 16 }}
-					// Without this the first tap on the composer's send pill is eaten
-					// dismissing the keyboard, and the user has to tap Share twice.
+					// Otherwise the first tap on the send pill only dismisses the keyboard.
 					keyboardShouldPersistTaps="handled"
 					showsVerticalScrollIndicator={false}
 				>
@@ -149,8 +144,8 @@ export function QuotesScreen() {
 									resonates={quote.reaction === "resonates"}
 								/>
 							) : (
-								// holds the row's space so the hero does not grow when the
-								// quote lands — the poster box is only half of that promise
+								// Holds the row's space so the hero does not grow when the
+								// quote lands.
 								<View className="mt-4 h-12" />
 							)
 						}
@@ -160,10 +155,8 @@ export function QuotesScreen() {
 								<StarButton
 									locked={saveLocked && quote.savedAt === undefined}
 									onToggle={(next) => {
-										// The star still taps for a free user — it opens the door
-										// rather than doing nothing. Unsaving is never gated
-										// (`dailyQuotes.unsave`): a lapsed subscriber must still
-										// be able to let go of what they kept.
+										// A locked star opens the paywall. Unsaving is never gated:
+										// a lapsed subscriber must still be able to let go.
 										if (saveLocked && next) {
 											posthog.capture("premium_gate_hit", {
 												feature: "quote_save",
@@ -230,7 +223,6 @@ export function QuotesScreen() {
 					visible={showShareSheet}
 				/>
 
-				{/* Off-screen sharing card for capture */}
 				{showSharingCard && quote && (
 					<View
 						onLayout={onSharingCardLayout}

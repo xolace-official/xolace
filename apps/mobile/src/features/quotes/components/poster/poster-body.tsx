@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { useFitFontSize } from "@/src/features/quotes/use-fit-font-size";
+import { AppText } from "@/components/shared/app-text";
+import { useFitFontSize } from "@/features/quotes/use-fit-font-size";
 
-/** the body box is a fraction of the screen, not a literal 300 (SE 233, 17 Pro 306) */
+/** Fraction of the screen height (SE 233, 17 Pro 306). */
 const BODY_BOX_RATIO = 0.35;
 
 /** The box the quote fills. Shared so the skeleton is the same shape (#309). */
@@ -14,25 +14,13 @@ export function usePosterBoxHeight() {
 }
 const LINE_HEIGHT_RATIO = 1.5;
 
-/**
- * The plate's height and the gap under it, fixed so the cold-start skeleton can
- * reserve the same space (#310). The title carries an explicit `leading-[34px]`
- * to make the height deterministic under `adjustsFontSizeToFit`.
- */
+/** Fixed so the cold-start skeleton reserves the same space (#310); the title's explicit
+ * leading keeps it deterministic. */
 export const PLATE_HEIGHT = 58;
 export const PLATE_GAP = 16;
 
-/**
- * The poster's body: a title plate over a fit-to-fill quote in a fixed box.
- *
- * The box height never depends on the text — a short quote grows to fill it and
- * a long one shrinks — so the poster is the same object at every quote length.
- * A titleless quote omits the plate and nothing else moves.
- *
- * `onSettled` fires once the fit search has landed. Nothing on screen needs it —
- * the search costs a few frames and the body is simply invisible until then. The
- * share export does: captured mid-search it comes back a blank paper card (#317).
- */
+/** Title plate over a fit-to-fill quote in a fixed box. `onSettled` fires once the fit lands;
+ * an export captured earlier is blank (#317). */
 export function PosterBody({
 	title,
 	body,
@@ -88,10 +76,8 @@ export function PosterBody({
 				>
 					{body}
 				</AppText>
-				{/* Unclipped twin: the visible Text is height-capped, so its own
-            onTextLayout only ever reports the lines that already fit and the
-            search settles at the ceiling with the text overflowing. Remounted
-            per candidate so onTextLayout re-fires. */}
+				{/* Unclipped twin: the capped Text only reports lines that fit.
+				 * Remounted per candidate so onTextLayout re-fires. */}
 				{fit.settled ? null : (
 					<AppText
 						className="font-poster-body"
@@ -116,7 +102,7 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.07,
 		shadowRadius: 14,
 	},
-	/* the first candidate is the ceiling — don't paint it clipped before it settles */
+	/* The first candidate is the ceiling; never paint it clipped before it settles. */
 	searching: { opacity: 0 },
 	twin: { left: 0, opacity: 0, position: "absolute", right: 0, top: 0 },
 });

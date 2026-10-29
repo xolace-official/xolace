@@ -1,8 +1,5 @@
-/**
- * Dev-only settings section for manual testing. Render it behind a
- * `__DEV__` check at the call site — it has no production guard of its
- * own (the Convex mutation it calls is gated server-side instead).
- */
+/** Dev-only settings section. Render it behind `__DEV__` at the call site; the
+ * Convex mutation it calls is gated server-side. */
 
 import { useAuth } from "@clerk/expo";
 import * as Sentry from "@sentry/react-native";
@@ -11,13 +8,13 @@ import { useMutation } from "convex/react";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor, useToast } from "heroui-native";
 import { useState } from "react";
-import { ReturnWelcomeSheet } from "@/src/features/reflect/components/return-welcome-sheet";
-import type { ReturnWelcomeTier } from "@/src/features/reflect/return-welcome-copy";
-import { StarterSuggestionsDevRows } from "@/src/features/starter-suggestions/starter-dev-rows";
-import { useAppStore } from "@/src/store/store";
-import type { CrossPlatformSymbol } from "./settings-icons";
-import { SettingsRow } from "./settings-row";
-import { SettingsSection } from "./settings-section";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
+import { ReturnWelcomeSheet } from "@/features/reflect/components/return-welcome-sheet";
+import type { ReturnWelcomeTier } from "@/features/reflect/return-welcome-copy";
+import { StarterSuggestionsDevRows } from "@/features/starter-suggestions/starter-dev-rows";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
+import { useAppStore } from "@/store/store";
 
 const BUMP_ICON: CrossPlatformSymbol = {
 	android: "local_fire_department",
@@ -159,8 +156,7 @@ export const DevToolsSection = () => {
 			return;
 		}
 		setBusy(true);
-		// No navigation of our own: `onboardingComplete` is the root guard, so the
-		// subscription that reads it swaps the whole group out from under us.
+		// No navigation here: `onboardingComplete` is the root guard and swaps the group.
 		resetIntake()
 			.catch((e) => {
 				toast.show({

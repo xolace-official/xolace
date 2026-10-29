@@ -2,37 +2,24 @@ import { Image } from "expo-image";
 import { forwardRef, useEffect, useState } from "react";
 import type { ViewInstance } from "react-native";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { PosterBody } from "@/src/features/quotes/components/poster/poster-body";
-import { PosterSurface } from "@/src/features/quotes/components/poster/poster-surface";
+import { AppText } from "@/components/shared/app-text";
+import { PosterBody } from "@/features/quotes/components/poster/poster-body";
+import { PosterSurface } from "@/features/quotes/components/poster/poster-surface";
 
-/** Flux at the fire — the mascot the card carried before the rebuild (#317) */
 const MASCOT = require("@/assets/images/flux/campfire-mini.jpeg");
 
-/** the hero's own gutter (`hero-card`'s margin), so the twin lays out at its width */
+/** `hero-card`'s margin, so the twin lays out at the hero's width. */
 const HERO_GUTTER = 10;
 
 type Props = {
 	title?: string;
 	text: string;
-	/** fired once the twin is safe to capture: mascot decoded and the fit landed */
+	/** Fired once the twin is safe to capture: mascot decoded and the fit landed. */
 	onReady?: () => void;
 };
 
-/**
- * The poster twin: what gets exported when the quote is shared (#317).
- *
- * A rebuild, not a capture of the hero — the hero sits in a ScrollView and
- * carries the back button, the star and the action row, none of which belong on
- * a posted image. So the twin composes the same primitives (`PosterSurface` +
- * `PosterBody`) in the hero's own pt geometry, and the export is the hero's
- * aspect scaled up rather than a second, re-laid-out composition.
- *
- * It is always the fixed bright palette, never the sharer's theme: the poster
- * is the one surface where a per-user palette actively costs recognisability
- * (#295). It never carries the source line either — provenance is the screen's
- * Xolace+ entry point, and an export is not a place to sell.
- */
+/** The poster twin exported on share (#317): the hero's primitives without its chrome, always
+ * the fixed palette (#295), never the source line. */
 export const SharingCard = forwardRef<ViewInstance, Props>(function SharingCard(
 	{ title, text, onReady },
 	ref
@@ -41,8 +28,7 @@ export const SharingCard = forwardRef<ViewInstance, Props>(function SharingCard(
 	const [mascotLoaded, setMascotLoaded] = useState(false);
 	const [fitSettled, setFitSettled] = useState(false);
 
-	// The fit search takes a few frames and paints nothing until it lands, so a
-	// capture on layout alone exports a blank paper card.
+	// The fit search paints nothing for a few frames; a capture on layout alone exports blank.
 	useEffect(() => {
 		if (mascotLoaded && fitSettled) {
 			onReady?.();
@@ -72,8 +58,8 @@ export const SharingCard = forwardRef<ViewInstance, Props>(function SharingCard(
 						/>
 					</View>
 
-					{/* the wordmark the screen doesn't need: on an export it is the only
-              thing saying where the poster came from */}
+					{/* On an export the wordmark is the only thing saying where the poster came
+					    from. */}
 					<View className="mt-5 flex-row items-center gap-2">
 						<Image
 							contentFit="cover"
@@ -92,6 +78,5 @@ export const SharingCard = forwardRef<ViewInstance, Props>(function SharingCard(
 });
 
 const styles = StyleSheet.create({
-	/* the source is a lilac-backed render, so it is worn as a round badge */
 	mascot: { borderRadius: 19, height: 38, width: 38 },
 });

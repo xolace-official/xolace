@@ -1,8 +1,4 @@
-/**
- * Reading modes (#401, CONTEXT.md "Library: reading mode"). A mode fixes the
- * typeface, line spacing and page at once; text size is the one control
- * outside them.
- */
+/** Reading modes (#401): a mode fixes typeface, line spacing and page; text size is separate. */
 import {
 	AtkinsonHyperlegibleNext_400Regular,
 	AtkinsonHyperlegibleNext_400Regular_Italic,
@@ -32,7 +28,7 @@ export const READING_MODES: Record<
 > = {
 	classic: {
 		blurb: "The app’s own face and theme",
-		// Space Grotesk whatever the app theme's face; it has no italic, so emphasis is a synthesized slant.
+		// Space Grotesk has no italic, so emphasis is a synthesized slant.
 		face: {
 			bold: "SpaceGrotesk_700Bold",
 			italic: "SpaceGrotesk_400Regular",
@@ -70,7 +66,7 @@ export const READING_MODE_KEYS = Object.keys(READING_MODES) as ReadingModeKey[];
 
 /** Base sizes before the OS text size multiplies them; the body is never capped. */
 export const TEXT_SIZES = [16, 17, 18, 20, 22, 24] as const;
-export const DEFAULT_TEXT_SIZE = 18;
+const DEFAULT_TEXT_SIZE = 18;
 
 export function stepTextSize(size: number, by: 1 | -1): number {
 	const i = TEXT_SIZES.indexOf(size as (typeof TEXT_SIZES)[number]);
@@ -78,7 +74,7 @@ export function stepTextSize(size: number, by: 1 | -1): number {
 	return TEXT_SIZES[Math.min(Math.max(from + by, 0), TEXT_SIZES.length - 1)];
 }
 
-/** Loaded at runtime on first open; the native markdown view picks them up without a rebuild (#401). */
+/** Loaded at runtime; the native markdown view picks them up without a rebuild (#401). */
 export function useReadingFonts(): boolean {
 	const [loaded] = useFonts({
 		AtkinsonHyperlegibleNext_400Regular,

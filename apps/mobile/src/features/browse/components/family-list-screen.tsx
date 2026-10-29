@@ -5,10 +5,10 @@ import { Skeleton } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { useMiniPlayerInset } from "@/src/features/browse/now-playing/now-playing-store";
-import { useStablePaginatedQuery } from "@/src/lib/convex/use-stable-query";
-import { useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
+import { useStablePaginatedQuery } from "@/lib/convex/use-stable-query";
+import { useAppStore } from "@/store/store";
 import { BrowseFilterMenu, type FilterOption } from "./browse-filter-menu";
 import { FAMILY_LABEL, type TrackItem, TrackRow } from "./track-row";
 
@@ -34,12 +34,8 @@ function Empty() {
 	);
 }
 
-/**
- * Per-family list (`list?family=…`, §9.3). The family is swappable from the
- * header toolbar menu; the stable paginated wrapper keeps the previous page
- * on screen while the new family's first page loads, so the swap happens in
- * place instead of blanking the list.
- */
+/** Per-family list (`list?family=…`, §9.3). The stable wrapper keeps the previous page on
+ * screen while a swapped family loads. */
 export function FamilyListScreen() {
 	// Clears the floating mini-player off the last row (none on iOS 26).
 	const playerInset = useMiniPlayerInset();
@@ -56,9 +52,8 @@ export function FamilyListScreen() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [family]);
 
-	// Keyed on the live family, not route mount: toggling the toolbar to a
-	// family whose welcome hasn't been seen opens it, even mid-session. Music
-	// and Support audio are independently keyed. The modal sets its own flag.
+	// Keyed on the live family, not route mount, so a toolbar swap to an unseen
+	// family opens its welcome mid-session. The modal sets its own flag.
 	useEffect(() => {
 		const introSeen =
 			family === "music" ? musicIntroSeen : supportAudioIntroSeen;

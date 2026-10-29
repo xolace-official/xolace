@@ -10,7 +10,7 @@ import {
 	withSpring,
 	withTiming,
 } from "react-native-reanimated";
-import { useTokenColor } from "../hooks/use-token-color";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const DOT_COUNT = 56;
 const CANVAS_H = 30;
@@ -19,31 +19,19 @@ const EMBER_R = 4.6;
 const IGNITE_DELAY = 420;
 
 type Props = {
-	/**
-	 * 0–99 drives the horizontal position of the lit ember. `null` draws the
-	 * field unlit — no ember anywhere. That is the honest form of "not yet":
-	 * there is no number to fog, because the number does not exist. (Contrast
-	 * with the paywalled cards, which blur real content behind a gate.)
-	 */
+	/** 0–99 positions the lit ember; `null` draws the field unlit (no number exists yet). */
 	percentile: number | null;
 };
 
-/**
- * The field of embers: a band of dim, uniform dots — other people's fires in
- * the dark — with the user's own ember lit at their percentile position.
- *
- * Deliberately unlabelled: no axis, no ticks, no brighter-is-better gradient.
- * Every other fire is drawn identically, so the field never ranks anyone; the
- * only thing that carries the number is *where* the lit ember sits.
- */
+/** A band of dim, uniform dots with the user's own ember lit at their
+ * percentile. Unlabelled on purpose: only the lit ember's position carries the number. */
 export function EmberField({ percentile }: Props) {
 	const [width, setWidth] = useState(0);
 	const muted = useTokenColor("muted");
 	const ember = useTokenColor("ember");
 	const reduceMotion = useReducedMotion();
 
-	// The ember ignites rather than travels — a moving dot would read as a
-	// progress bar, i.e. as a race against the other fires.
+	// The ember ignites rather than travels: a moving dot would read as a race.
 	const emberR = useSharedValue(reduceMotion ? EMBER_R : EMBER_R * 0.35);
 	const breath = useSharedValue(1);
 

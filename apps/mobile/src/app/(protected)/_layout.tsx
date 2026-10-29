@@ -2,20 +2,16 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Stack } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
-import { NowPlayingHost } from "@/src/features/browse/now-playing/now-playing-host";
-import { UnreadIconBadge } from "@/src/features/xolacer-chat/components/unread-icon-badge";
+import { NowPlayingHost } from "@/features/browse/now-playing/now-playing-host";
+import { UnreadIconBadge } from "@/features/xolacer-chat/components/unread-icon-badge";
 import {
 	StreamChatProvider,
 	StreamOverlayProvider,
-} from "@/src/features/xolacer-chat/providers/stream-chat-provider";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { useNotifications } from "@/src/lib/use-notifications";
-import { AppPresence } from "@/src/providers/app-presence";
+} from "@/features/xolacer-chat/providers/stream-chat-provider";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useNotifications } from "@/lib/use-notifications";
+import { AppPresence } from "@/providers/app-presence";
 
-/**
- * Provides the navigation layout used by protected routes.
- * Initializes push notification registration for authenticated users.
- */
 const SCREEN_OPTIONS = {
 	contentStyle: { backgroundColor: "transparent" },
 	headerShown: false,
@@ -29,11 +25,7 @@ const RATE_OPTIONS = {
 	sheetGrabberVisible: true,
 } as const;
 
-/**
- * Same dismissal feel as the rating sheet, but opened at full height: every
- * field (photo, name, bio, specialties, listed) is reachable immediately
- * instead of behind a manual drag, and Cancel/Save live in the native header.
- */
+/** Like the rating sheet, but full height so every field is reachable without a drag. */
 const EDIT_PROFILE_OPTIONS = {
 	headerShown: true,
 	presentation: "formSheet" as const,
@@ -41,7 +33,8 @@ const EDIT_PROFILE_OPTIONS = {
 	sheetCornerRadius: 28,
 };
 
-/** Native header kept (transparent, untitled) so the screen's Stack.Toolbar buttons have somewhere to land. */
+/** Native header kept (transparent, untitled) so the screen's Stack.Toolbar buttons have
+ * somewhere to land. */
 const PAYWALL_OPTIONS = {
 	gestureEnabled: true,
 	headerShadowVisible: false,
@@ -63,19 +56,14 @@ const CHAT_OPTIONS = {
 } as const;
 
 export default function ProtectedLayout() {
-	// Stays here, not at the root: an unfinished user shouldn't pay for push.
-	// "Intake wins, a pending deep link is not preserved" (T3, issue #234) is no
-	// longer a free consequence of that — the launch tap now survives in the
-	// native cache rather than being dropped — so `(intake)`'s layout discards it
-	// explicitly. Change one of those two and you change the invariant.
-	// usePostHogIdentity is hoisted to the root — it must run during intake.
+	// Here, not at the root: an unfinished user should not pay for push. The
+	// launch tap survives in the native cache, so `(intake)`'s layout discards it
+	// explicitly to keep "intake wins, a pending deep link is not preserved" (T3, #234).
 	useNotifications();
 	const reducedMotion = useEffectiveReducedMotion();
 	const background = useThemeColor("background");
 	// Small native sheets sized to their rows. iOS 26 paints its own glass behind
-	// a transparent screen (tinted to the app theme by NavThemeProvider's
-	// appearance sync); iOS 18 and Android show transparent literally, so they
-	// get the theme fill.
+	// a transparent screen; iOS 18 and Android show transparent literally.
 	const fitSheetOptions = {
 		contentStyle: isLiquidGlassAvailable()
 			? undefined
@@ -87,18 +75,16 @@ export default function ProtectedLayout() {
 
 	return (
 		// Above the Stack so the message overlay can lay itself out against the
-		// whole window, header included — see StreamOverlayProvider.
+		// whole window, header included (see StreamOverlayProvider).
 		<StreamOverlayProvider>
 			<StreamChatProvider>
-				{/* Renders nothing — it is here, above the Stack, so presence keeps
-            reporting whichever screen the user is on. */}
+				{/* Above the Stack so presence keeps reporting whichever screen is up. */}
 				<AppPresence />
 				{/* The Browse track's audio, outliving the player screen (S4). */}
 				<NowPlayingHost />
 				<UnreadIconBadge />
-				{/* Points Reanimated's "System" at the in-app tri-state, so every
-            withSpring/withTiming/entering that doesn't opt out follows it, not
-            just the OS flag. Here, not the root: preferences.get needs auth. */}
+				{/* Points Reanimated's "System" at the in-app tri-state. Here, not the
+            root: preferences.get needs auth. */}
 				<ReducedMotionConfig
 					mode={reducedMotion ? ReduceMotion.Always : ReduceMotion.Never}
 				/>
@@ -126,18 +112,20 @@ export default function ProtectedLayout() {
 					<Stack.Screen name="kindling/index" />
 					{/* Outside `(tabs)` on purpose: the player is full-bleed, no tab bar. */}
 					<Stack.Screen name="browse-player" options={PLAYER_OPTIONS} />
-					{/* Lives here, not in its own root group: a sibling group beside
-              (protected) competes for `/` and expo-router ≥ 58 picks it first. */}
+					{/* Not its own root group: a sibling of (protected) competes for `/` and
+					    expo-router 58+ picks it first. */}
 					<Stack.Screen name="upgrade" options={PAYWALL_OPTIONS} />
 					<Stack.Screen name="streak-held" options={PLAYER_OPTIONS} />
 					{/* The close button (or Android back) is the no-guilt dismiss. */}
 					<Stack.Screen name="follow-up" options={PLAYER_OPTIONS} />
-					{/* Hold-to-continue is the only way out: no swipe-dismiss here, Android back swallowed in the route. */}
+					{/* Hold-to-continue is the only way out: no swipe-dismiss here, Android
+					    back swallowed in the route. */}
 					<Stack.Screen
 						name="browse-intro"
 						options={{ ...PLAYER_OPTIONS, gestureEnabled: false }}
 					/>
-					{/* Reduced motion: the Lantern reader crossfades in instead of sliding (#400). */}
+					{/* Reduced motion: the Lantern reader crossfades in instead of sliding
+					    (#400). */}
 					<Stack.Screen
 						name="library/[slug]"
 						options={{ animation: reducedMotion ? "fade" : "default" }}
@@ -150,7 +138,8 @@ export default function ProtectedLayout() {
 					<Stack.Screen name="xolacer-edit" options={EDIT_PROFILE_OPTIONS} />
 					<Stack.Screen name="rate/[conversationId]" options={RATE_OPTIONS} />
 					<Stack.Screen name="report-reflection" options={fitSheetOptions} />
-					{/* The reader stays undimmed behind it, so mode and size changes show on the page live. */}
+					{/* The reader stays undimmed behind it, so mode and size changes show on
+					    the page live. */}
 					<Stack.Screen
 						name="reader-appearance"
 						options={{

@@ -3,18 +3,11 @@ import { useEffect } from "react";
 import type {
 	ReflectionAction,
 	ReflectionStateName,
-} from "@/src/features/reflect/types";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/reflect/types";
+import { useAppStore } from "@/store/store";
 
 /**
- * The reflect screen's link to what is laid over home (the starter bubble).
- *
- * Out: `reflectSettled`, once the screen has loaded and its card has arrived.
- *
- * In: a request to open the card (#462). From idle it opens the composer the
- * way a tap would; already composing, there is nothing to do; anywhere else
- * the card is not there to open, so the user is told how to get to it rather
- * than left with nothing happening. Spent either way.
+ * Sets `reflectSettled` for the starter bubble; opens the composer on request (#462), or toasts.
  */
 export function useReflectBridge(
 	screen: ReflectionStateName,
@@ -22,8 +15,8 @@ export function useReflectBridge(
 	dispatch: (action: ReflectionAction) => void
 ) {
 	const setSettled = useAppStore((s) => s.setReflectSettled);
-	// Anything laid over home (the starter bubble) waits for this, so it never
-	// arrives over the loader or ahead of the card's own 400ms fade-in.
+	// The starter bubble waits for this, so it never arrives over the loader or
+	// ahead of the card's own 400ms fade-in.
 	useEffect(() => {
 		if (isLoading) {
 			return;

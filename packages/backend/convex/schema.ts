@@ -16,6 +16,8 @@ import {
 	supportNeedValidator,
 	talkIssueValidator,
 	talkPeakValidator,
+	trackLoudnessValidator,
+	trackSoundValidator,
 	triggerTypeValidator,
 } from "./lib/validators";
 import {
@@ -80,6 +82,10 @@ export default defineSchema({
 	audio_tracks: defineTable({
 		active: v.boolean(), // retire (licence lapse) without deleting
 		durationSec: v.number(),
+		// Admin edits (admin v1 step 6): the staff member's Clerk subject on the
+		// latest admin write, and when. A file import replaces the row and drops
+		// editedBy, so its presence means "last changed in the admin".
+		editedBy: v.optional(v.string()),
 		episodeNumber: v.optional(v.number()),
 		family: v.union(v.literal("support"), v.literal("music")),
 		featured: v.optional(v.boolean()), // hand-picked Browse hero; set from the Convex dashboard
@@ -87,22 +93,29 @@ export default defineSchema({
 
 		// music-family
 		licence: v.optional(licenceValidator), // required at write for family="music"
+		loudness: v.optional(trackLoudnessValidator), // of the audio at `sha256`; for evening out volume
 
 		// support-family
 		narrators: v.optional(v.array(v.string())), // display strings: ["Sage"], ["Sage","Ash"]
 		newUntil: v.optional(v.number()), // ms epoch; in the Browse "New" shelf while > now
+		retiredAt: v.optional(v.number()), // set when taken down after being live; tells Retired from Draft
 		safetyReviewedAt: v.optional(v.number()),
 
 		// Browse search (#550): lowercase title, topic, tags, narrators, series
 		// title (+ raw source tags for music), written by upsertTrack
 		// (library/searchText.ts trackSearchTextOf).
 		searchText: v.optional(v.string()),
+		// music-family: a second music_topic_* it also lists under in Browse
+		// (owner's call after listening; the primary `topic` still leads).
+		secondaryTopic: v.optional(v.string()),
 
 		// episode (support-family with a series) — Track 1 "The Spectrum" / Track 2
 		series: v.optional(v.string()), // series slug
 		seriesTitle: v.optional(v.string()), // denormalised for browse tiles
 		sha256: v.string(), // audio re-ingest idempotency
 		slug: v.string(), // stable id: binding + idempotent re-ingest
+		// music-family: what a listening review heard (lib/validators.ts trackSoundValidator)
+		sound: v.optional(trackSoundValidator),
 		sourceTags: v.array(v.string()), // raw, unedited source tags (e.g. Pixabay), preserved losslessly
 		tags: v.array(v.string()), // curated: shared emotion/theme vocab, binder-scored, both families
 		thumbhash: v.optional(v.string()), // base64 ThumbHash of the thumb, the blurred placeholder while it loads
@@ -112,10 +125,12 @@ export default defineSchema({
 		title: v.string(),
 		topic: v.string(), // the audio_topic_* / music_topic_* catalog entry
 		transcript: v.optional(v.string()), // what the track says; its meaning-index text (#572)
+		updatedAt: v.optional(v.number()), // last write by the admin or an import
 		whatItsFor: v.optional(v.string()), // one curated line; embedded with title + tags (#572)
 	})
 		.index("by_slug", ["slug"])
 		.index("by_family_and_topic", ["family", "topic"])
+		.index("by_family_and_secondaryTopic", ["family", "secondaryTopic"])
 		.index("by_family_and_active", ["family", "active"]) // Browse per-family list (#339)
 		.index("by_thumbKey", ["thumbKey"])
 		.searchIndex("search_searchText", {
@@ -1071,6 +1086,125 @@ export default defineSchema({
 		"dayKey",
 	]),
 
+	// Which source image a processed WebP was made from, noted by import
+	// compare (convex/imports/imageSources.ts). The browser's encoder makes
+	// different bytes than the scripts' sharp, so a re-dropped source would
+	// otherwise always look like a new image. Staff-only, no client reads.
+	image_sources: defineTable({
+		sourceSha256: v.string(), // hex SHA-256 of the dropped file
+		webpSha256: v.string(), // hex SHA-256 of the WebP, as in its R2 key
+	}).index("by_webpSha256_and_sourceSha256", ["webpSha256", "sourceSha256"]),
+
+	import_items: defineTable({
+		action: v.union(
+			v.literal("rejected"),
+			v.literal("changed"),
+			v.literal("new"),
+			v.literal("unchanged")
+		),
+		attempt: v.optional(v.number()), // 1 on the first apply; Retry bumps it
+		// A fingerprint of the stored row at compare (imports/plan.ts versionOf);
+		// absent for a new item. Apply fails the item if the row has moved on since.
+		baseVersion: v.optional(v.string()),
+		// Fields that differ from what's stored, as display strings.
+		changes: v.optional(
+			v.array(
+				v.object({
+					after: v.optional(v.string()),
+					before: v.optional(v.string()),
+					field: v.string(),
+					long: v.optional(v.boolean()), // a body or transcript: shown as a line diff
+				})
+			)
+		),
+		failure: v.optional(v.object({ message: v.string(), step: v.string() })),
+		media: v.optional(
+			v.array(
+				v.object({
+					bytes: v.number(),
+					kind: v.union(
+						v.literal("audio"),
+						v.literal("cover"),
+						v.literal("thumb")
+					),
+					name: v.string(),
+				})
+			)
+		),
+		// What the upsert writes, as JSON, re-validated when it runs: a run can
+		// sit in review across a deploy that changes the record shapes.
+		payload: v.optional(v.string()),
+		phase: v.number(), // applied in phase order: sources, then entries, then hubs
+		rejection: v.optional(v.string()), // the hard gate that blocks it
+		runId: v.id("import_runs"),
+		skipped: v.boolean(), // left out by the reviewer
+		slug: v.string(),
+		status: v.optional(
+			v.union(
+				v.literal("queued"),
+				v.literal("processing"),
+				v.literal("live"),
+				v.literal("needs_review"),
+				v.literal("draft"),
+				v.literal("retired"),
+				v.literal("failed")
+			)
+		),
+		step: v.optional(v.string()), // the workflow step running now
+		title: v.string(),
+		type: v.union(
+			v.literal("source"),
+			v.literal("entry"),
+			v.literal("hub"),
+			v.literal("narration"),
+			v.literal("topic"),
+			v.literal("track")
+		),
+		// R2 objects compare minted upload URLs for; apply checks they arrived.
+		uploads: v.optional(
+			v.array(v.object({ bytes: v.number(), key: v.string() }))
+		),
+		warnings: v.optional(v.array(v.string())), // soft gates: applied anyway
+		workflowId: v.optional(vWorkflowId), // set once the item's workflow starts
+	}).index("by_runId_and_status_and_phase", ["runId", "status", "phase"]),
+
+	// ===========================================================
+	// ADMIN IMPORTS (admin v1 step 6c, docs/plan/admin-v1.md)
+	// ===========================================================
+	//
+	// A batch of records dropped into the admin, compared against what's
+	// stored, reviewed, then applied one workflow per item
+	// (convex/imports/apply.ts). Staff-only: read and written only through
+	// convex/admin/imports.ts.
+	import_runs: defineTable({
+		appliedAt: v.optional(v.number()),
+		// Per diff action, fixed at compare.
+		counts: v.object({
+			changed: v.number(),
+			new: v.number(),
+			rejected: v.number(),
+			unchanged: v.number(),
+		}),
+		createdBy: v.string(), // Clerk subject of the staff member
+		createdByName: v.string(), // their name as the token had it, for the list
+		failed: v.number(), // items failed right now; Retry takes one off
+		files: v.string(), // what was dropped, e.g. "2 JSON, 3 markdown, 4 media"
+		finishedAt: v.optional(v.number()),
+		// Item workflows started and not yet finished. When it reaches 0 the
+		// next phase starts, so finishing items never read the whole run.
+		inFlight: v.number(),
+		number: v.number(), // 1, 2, 3…: the run's name and its link
+		// uploading → review → applying → done, or discarded before applying.
+		state: v.union(
+			v.literal("uploading"),
+			v.literal("review"),
+			v.literal("applying"),
+			v.literal("done"),
+			v.literal("discarded")
+		),
+		target: v.union(v.literal("library"), v.literal("audio")),
+	}).index("by_number", ["number"]),
+
 	// Intent-only premium teaser waitlist. During the pre-billing phase, tapping a
 	// blurred insight teaser records a "notify me" intent here (no price, no IAP).
 	// One row per profile per feature; idempotent on re-tap.
@@ -1125,6 +1259,7 @@ export default defineSchema({
 		coverThumbhash: v.optional(v.string()), // ingest --cover-variants (#507): base64 ThumbHash, the cover's load placeholder
 		coverUrl: v.optional(v.string()), // else the primary subject's cover
 		dek: v.string(),
+		editedBy: v.optional(v.string()), // Clerk subject of the last admin edit; see audio_tracks
 		kind: v.union(
 			v.literal("explainer"),
 			v.literal("advice"),
@@ -1136,6 +1271,7 @@ export default defineSchema({
 		publishedAt: v.optional(v.number()),
 		readMin: v.number(), // computed at ingest
 		reflectPrompt: v.optional(v.string()), // curator's "Reflect on this" opener; else a plain default (#413)
+		retiredAt: v.optional(v.number()), // set when taken down after being live; tells Retired from Draft
 		retrievedAt: v.optional(v.number()),
 		reuse: v.union(
 			v.literal("verbatim"),
@@ -1150,6 +1286,7 @@ export default defineSchema({
 		slug: v.string(),
 		storyDescriptor: v.optional(v.string()), // stories: "a second-year student, 20"
 		title: v.string(),
+		updatedAt: v.optional(v.number()), // last write by the admin or an import
 	})
 		.index("by_slug", ["slug"])
 		.index("by_active_and_kind", ["active", "kind"])
@@ -1226,6 +1363,7 @@ export default defineSchema({
 		coverKey: v.optional(v.string()), // ingest: R2 key of an uploaded cover, `hub-cover/<sha>.<ext>`; signed at read, wins over coverUrl
 		coverThumbhash: v.optional(v.string()), // ingest --cover-variants (#508): base64 ThumbHash, the cover's load placeholder
 		coverUrl: v.optional(v.string()),
+		editedBy: v.optional(v.string()), // Clerk subject of the last admin edit; see audio_tracks
 		intro: v.string(),
 		items: v.array(
 			v.union(
@@ -1239,9 +1377,11 @@ export default defineSchema({
 				})
 			)
 		), // bounded by editorial practice (a hub is a short running order)
+		retiredAt: v.optional(v.number()), // set when taken down after being live; tells Retired from Draft
 		sha256: v.optional(v.string()), // ingest no-op gate (#406)
 		slug: v.string(),
 		title: v.string(),
+		updatedAt: v.optional(v.number()), // last write by the admin or an import
 	})
 		.index("by_slug", ["slug"])
 		.index("by_active", ["active"]),
@@ -1283,6 +1423,7 @@ export default defineSchema({
 		attributionText: v.string(), // required credit line, shown on every entry
 		dropBrandingIfAdapted: v.boolean(), // no logo on an adapted entry's credit
 		// Reuse terms belong to the source (#384).
+		editedBy: v.optional(v.string()), // Clerk subject of the last admin edit; see audio_tracks
 		licence: v.string(), // e.g. "OGL v3.0", "US public domain", "Xolace original"
 		logoUrl: v.optional(v.string()), // stable URL (#386), not a signed one
 		name: v.string(), // publisher, as credited: "NHS", "NIMH", "Xolace"
@@ -1294,6 +1435,7 @@ export default defineSchema({
 		refreshDays: v.optional(v.number()), // verbatim refresh SLA, e.g. NHS = 7
 		sha256: v.optional(v.string()), // ingest no-op gate (#406)
 		slug: v.string(),
+		updatedAt: v.optional(v.number()), // last write by the admin or an import
 		url: v.optional(v.string()),
 	}).index("by_slug", ["slug"]),
 
@@ -1895,6 +2037,22 @@ export default defineSchema({
 		.index("by_seed_displayText", ["isSeed", "displayText"]),
 
 	// ===========================================================
+	// ADMIN SEARCH INDEX JOBS (convex/admin/searchIndex.ts)
+	// ===========================================================
+	//
+	// One row per re-index a staff member starts from the admin's Search
+	// index page, for the meaning indexes that backfill in one action
+	// (exercises, xolacers). The migration-run ones keep their state in the
+	// migrations component. The scheduled function's own state says whether
+	// the job is still running.
+	search_index_jobs: defineTable({
+		index: v.union(v.literal("exercises"), v.literal("xolacers")),
+		jobId: v.id("_scheduled_functions"),
+		startedBy: v.string(), // Clerk subject of the staff member
+		startedByName: v.string(), // their name as the token had it
+	}).index("by_index", ["index"]),
+
+	// ===========================================================
 	// 21. SEMANTIC PROFILES (Cognition Layer §1.2)
 	// ===========================================================
 	//
@@ -2476,11 +2634,13 @@ export default defineSchema({
 	// across both families; membership stays "≥ 1 active track" — a row here
 	// never adds a tile. Cascade-exempt for the same reason as `audio_tracks`.
 	topics: defineTable({
+		editedBy: v.optional(v.string()), // Clerk subject of the staff member who last changed it in the admin
 		slug: v.string(), // the shared suffix, validated against the model catalogue at write
 		thumbhash: v.optional(v.string()), // base64 ThumbHash of the cover
 		thumbKey: v.string(), // R2 key, content-addressed: `thumb/${thumbSha256}.<ext>`
 		thumbSha256: v.string(),
 		title: v.optional(v.string()), // curated display title; else derived from the slug
+		updatedAt: v.optional(v.number()), // last write by the admin
 	})
 		.index("by_slug", ["slug"])
 		.index("by_thumbKey", ["thumbKey"]), // discardUpload: is this blob still referenced?

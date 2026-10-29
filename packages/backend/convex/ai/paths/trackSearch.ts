@@ -12,7 +12,7 @@ import { type BindTrack, REFRAME_SERIES, SIMILARITY_FLOOR } from "./bind";
 
 /**
  * The tracks' meaning index (#572, ADR 0021): a namespace per topic
- * (`track:<topic>`), plus `track:reality-not-false-hope` for the reframe
+ * (`track:<topic>`, a track's secondary topic included), plus `track:reality-not-false-hope` for the reframe
  * series, keyed on the slug so a re-index replaces. The topic stays the gate:
  * a search only ever runs inside the namespace of the topic the model picked.
  * `upsertTrack` and `setTrackActive` (below) schedule `indexTrack` when what it
@@ -22,8 +22,11 @@ import { type BindTrack, REFRAME_SERIES, SIMILARITY_FLOOR } from "./bind";
 const ns = (scope: string) => `track:${scope}`;
 
 /** Every namespace a track lives in. */
-export const trackNamespaces = (t: Pick<BindTrack, "topic" | "series">) => [
+export const trackNamespaces = (
+	t: Pick<BindTrack, "topic" | "secondaryTopic" | "series">
+) => [
 	ns(t.topic),
+	...(t.secondaryTopic ? [ns(t.secondaryTopic)] : []),
 	...(t.series === REFRAME_SERIES ? [ns(REFRAME_SERIES)] : []),
 ];
 
@@ -38,21 +41,30 @@ export function namespaceFor(actionType: string): string | null {
 		: null;
 }
 
-/** Support audio embeds its transcript; music its title, tags and what it's for; either without them, title + tags. */
+/**
+ * Support audio embeds its transcript; music its title, tags, what it's for
+ * and what the listening review heard (a song adds what its lyrics are about);
+ * either without them, title + tags.
+ */
 export function trackIndexText(
 	t: Pick<
 		Doc<"audio_tracks">,
-		"family" | "title" | "tags" | "transcript" | "whatItsFor"
+		"family" | "sound" | "title" | "tags" | "transcript" | "whatItsFor"
 	>
 ): string {
 	if (t.family === "support" && t.transcript) {
 		return t.transcript;
 	}
+	const music = t.family === "music";
 	return [
 		t.title,
 		t.tags.join(", "),
-		...(t.family === "music" && t.whatItsFor ? [t.whatItsFor] : []),
-	].join("\n\n");
+		music && t.whatItsFor,
+		music && t.sound?.heard,
+		music && t.sound?.lyrics,
+	]
+		.filter((s): s is string => !!s)
+		.join("\n\n");
 }
 
 /** What `indexTrack` writes, so a re-ingest only re-embeds on a difference. */

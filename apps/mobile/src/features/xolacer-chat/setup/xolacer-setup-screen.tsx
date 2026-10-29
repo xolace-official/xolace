@@ -11,8 +11,8 @@ import { Activity } from "react";
 import { ScrollView, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 import { PhotoStep } from "./photo-step";
 import { ReviewStep } from "./review-step";
 import { SetupProgress } from "./setup-progress";
@@ -138,11 +138,7 @@ export function XolacerSetupScreen() {
 	);
 }
 
-/**
- * Every step stays mounted inside an `Activity`; only the current one is
- * visible. Hidden steps keep their input state and cursor position, so moving
- * back and forth never costs a xolacer what they already typed.
- */
+/** Every step stays mounted in an `Activity`, so hidden steps keep their input state and cursor. */
 function StepBodies({ setup }: { setup: ReturnType<typeof useXolacerSetup> }) {
 	const { draft, index, setField } = setup;
 

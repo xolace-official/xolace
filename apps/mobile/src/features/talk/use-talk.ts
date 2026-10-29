@@ -1,8 +1,6 @@
-// One live talk (#593): the ElevenLabs conversation, the thread it writes and
-// the voice levels the aurora and composer read. A talk is a session (#592):
-// ending it hands off to the reflect screens' processing → mirror, or with
-// "Just end" files the mirror in the timeline instead. "Say more" on its
-// mirror opens it again (#604): `reopen`, with the thread so far.
+// One live talk (#593): the ElevenLabs conversation, its thread and the voice
+// levels. Ending hands off to reflect's processing → mirror, or "Just end" files
+// the mirror in the timeline. "Say more" reopens it with its thread (#604).
 
 import { useConversation } from "@elevenlabs/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";
@@ -15,9 +13,9 @@ import { AudioModule } from "expo-audio";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useSharedValue, withTiming } from "react-native-reanimated";
-import { endWithRetry } from "@/src/features/talk/end-with-retry";
-import { TALK_TIME_RESETS } from "@/src/features/talk/talk-copy";
-import { type ThreadLine, useThread } from "@/src/features/talk/use-thread";
+import { endWithRetry } from "@/features/talk/end-with-retry";
+import { TALK_TIME_RESETS } from "@/features/talk/talk-copy";
+import { type ThreadLine, useThread } from "@/features/talk/use-thread";
 
 export type Presence =
 	| "Connecting…"
@@ -55,7 +53,8 @@ export function useTalk(reopen?: {
 	const [wasLive, setWasLive] = useState(false);
 	/** When the talk's time runs out, on this device's clock (#597). */
 	const [endsAt, setEndsAt] = useState<number | null>(null);
-	/** Seconds left when the clock shows: with the wrap-up cue, compressed to the talk's ceiling. */
+	/** Seconds left when the clock shows: with the wrap-up cue, compressed to the talk's
+	 * ceiling. */
 	const [clockFromS, setClockFromS] = useState(
 		wrapUpMs(TALK_CEILING_MS) / 1000
 	);
@@ -87,9 +86,8 @@ export function useTalk(reopen?: {
 		}
 		const later = mirrorLater.current;
 		try {
-			// Back to the home underneath, not a new one on top of it: its reflect
-			// screen picks the session up via getActive and takes it through
-			// processing → mirror. Ended with "Just end", it doesn't.
+			// Back to the home underneath: its reflect screen picks the session up
+			// via getActive. Ended with "Just end", it doesn't.
 			if (
 				(await endWithRetry(() =>
 					endTalk(later ? { mirrorLater: true, sessionId } : { sessionId })
@@ -133,8 +131,8 @@ export function useTalk(reopen?: {
 				return;
 			}
 			setError(message);
-			// A talk that never connected goes back to the card, so it can be
-			// retried; closing its session gives the reserved talk time back.
+			// A talk that never connected goes back to the card for a retry;
+			// closing its session gives the reserved talk time back.
 			if (status !== "connected") {
 				setStarted(false);
 				const sessionId = sessionRef.current;
@@ -269,12 +267,11 @@ export function useTalk(reopen?: {
 				setClockFromS(wrapUpMs(ceilingS * 1000) / 1000);
 				convo.startSession({
 					conversationToken: token,
-					// Relayed to our endpoint on every turn (#591), binding it to this
-					// talk's session. Needs the agent's `custom_llm_extra_body` override on.
+					// Relayed to our endpoint on every turn (#591); needs the agent's
+					// `custom_llm_extra_body` override on.
 					customLlmExtraBody: { sessionId, talkKey },
-					// This talk's voice and pace, fixed until it ends (#603). Needs the
-					// agent's voice and speed overrides on. The greeting names this
-					// talk's companion (#583); needs the first message override on.
+					// Voice and pace fixed until the talk ends (#603); the greeting names
+					// the companion (#583). Needs the voice, speed and first message overrides on.
 					overrides: { agent: { firstMessage }, tts: { speed, voiceId } },
 				});
 			} catch (e) {

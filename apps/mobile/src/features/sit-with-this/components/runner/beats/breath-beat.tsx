@@ -3,14 +3,14 @@ import { StyleSheet } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import type { Pattern } from "react-native-pulsar";
 import { usePatternComposer } from "react-native-pulsar";
-import { AppText } from "@/src/components/shared/app-text";
-import { DualBreathCanvas } from "@/src/features/sit-with-this/components/dual-breath/dual-breath-canvas";
+import { AppText } from "@/components/shared/app-text";
+import { DualBreathCanvas } from "@/features/sit-with-this/components/dual-breath/dual-breath-canvas";
 import {
 	type BreathPattern,
 	type PacedOrbHandle,
 	TIMINGS,
-} from "@/src/features/sit-with-this/components/paced-orb";
-import type { BreathPhase } from "@/src/lib/haptics";
+} from "@/features/sit-with-this/components/paced-orb";
+import type { BreathPhase } from "@/lib/haptics";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const INITIAL_FADE = { opacity: 0 };

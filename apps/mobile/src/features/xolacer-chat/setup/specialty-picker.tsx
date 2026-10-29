@@ -13,8 +13,8 @@ import Animated, {
 	useAnimatedStyle,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 
 const AnimatedText = Animated.createAnimatedComponent(AppText);
 
@@ -44,11 +44,7 @@ const styles = StyleSheet.create({
 	},
 });
 
-/**
- * Fixed taxonomy, hard cap of four. Past the cap the unpicked chips dim
- * rather than disappear, so a xolacer can see what they didn't pick and swap
- * — a list that shrinks as you use it feels broken.
- */
+/** Fixed taxonomy, hard cap of four; past the cap unpicked chips dim rather than disappear. */
 export function SpecialtyPicker({
 	selected,
 	onToggle,

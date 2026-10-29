@@ -1,11 +1,7 @@
-import type { ThemeEntry } from "@/src/lib/themes";
+import type { ThemeEntry } from "@/lib/themes";
 
-/**
- * Which index the theme carousel should center on at mount, given the
- * combined ordered theme list and the currently active theme id.
- * Falls back to the first card if the id isn't found (e.g. a stale
- * persisted id for a theme that no longer exists).
- */
+/** Index the theme carousel centers on at mount; the first card when the active
+ * id is not in the list (a stale persisted id). */
 export function getInitialThemeCarouselIndex(
 	themes: ThemeEntry[],
 	activeThemeId: string

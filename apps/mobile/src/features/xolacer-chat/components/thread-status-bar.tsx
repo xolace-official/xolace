@@ -4,19 +4,16 @@ import { useRouter } from "expo-router";
 import { Button, PressableFeedback, useToast } from "heroui-native";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	acceptFailureLabel,
 	chatLimitError,
-} from "@/src/features/xolacer-chat/utils";
-import { playSoftPress } from "@/src/lib/haptics";
+} from "@/features/xolacer-chat/utils";
+import { playSoftPress } from "@/lib/haptics";
 import type { ThreadConversation } from "./thread-screen";
 
-/**
- * The composer is the state indicator: when a conversation can take a message
- * there's a composer, otherwise this bar takes its place and says plainly
- * whether tapping will just work. History always renders identically above.
- */
+/** Takes the composer's place when a conversation cannot take a message and says what tapping
+ * will do. */
 export function ThreadStatusBar({
 	conversation,
 }: {
@@ -72,8 +69,7 @@ export function ThreadStatusBar({
 
 	const goToRoster = () => {
 		playSoftPress();
-		// Same pattern as the idle menu's Discovery entry — the tab surface is a
-		// sibling stack entry, so replace rather than stacking another screen.
+		// The tab surface is a sibling stack entry, so replace rather than stack.
 		router.replace("/connect");
 	};
 
@@ -107,10 +103,6 @@ export function ThreadStatusBar({
 						</View>
 					</>
 				) : (
-					// A wait with no shape is the thing this feature exists to fix. Present
-					// says the answer could come in the next minute; away says why it
-					// won't, and that the request will still reach them — otherwise
-					// "stepped away" reads as the request having landed nowhere.
 					<Copy>
 						{conversation.counterpartPresent ? (
 							<>
@@ -135,9 +127,6 @@ export function ThreadStatusBar({
 	}
 
 	if (conversation.status === "resting" && conversation.resumable) {
-		// Wrapped up on purpose reads differently from drifted quiet — the door is
-		// equally open either way, but "gone quiet" would misdescribe a deliberate
-		// ending, and on the xolacer's own side it would misdescribe their own tap.
 		const manual = conversation.restingReason === "manual";
 		return (
 			<Bar padBottom={padBottom}>
@@ -169,20 +158,9 @@ export function ThreadStatusBar({
 		);
 	}
 
-	// Resting-but-not-resumable and closed share one screen: inactive,
-	// unpublished, at cap, declined, or blocked. Deliberately identical for every
-	// one of those — a blocked person is never told they were blocked, and a
-	// declined seeker is not told which of the two it was.
-	//
-	// Role-aware, because a xolacer reaches this too: they may have blocked the
-	// seeker themselves, and offering them "find another Xolacer" would be
-	// nonsense. No-guilt framing on the seeker side, and the promise that nothing
-	// was deleted comes before the redirect — losing the conversation is the fear.
-	//
-	// That promise is only made where there is something to keep. A request that
-	// was declined, blocked or left to expire never opened a channel, so "every-
-	// thing you two wrote is still here" would be reassuring someone about a
-	// history that was never written.
+	// Resting-but-not-resumable and closed share one screen, identical for every
+	// reason: a blocked person is never told, and a declined seeker never learns
+	// which. "Still here" is only promised where a channel ever opened.
 	const hasHistory = Boolean(conversation.streamChannelId);
 
 	if (conversation.role === "xolacer") {
@@ -226,16 +204,8 @@ export function ThreadStatusBar({
 	);
 }
 
-/**
- * The wind-down entry to the rating prompt: a conversation that goes quiet on
- * its own is still a natural moment to ask, so this stays exactly as it was.
- *
- * It is no longer the *only* entry, and no longer the prominent one — the
- * profile screen's rate card is, and it deliberately pushes until the seeker
- * has scored once. Here it stays a link, in keeping with the surface: this bar
- * is already delivering the news that the conversation ended. An unrated
- * conversation still just never enters anyone's denominator.
- */
+/** Wind-down entry to the rating prompt; the profile's rate card is the prominent one, so this
+ * stays a link. */
 function RatePrompt({ conversation }: { conversation: ThreadConversation }) {
 	const router = useRouter();
 	if (!conversation.canRate) {

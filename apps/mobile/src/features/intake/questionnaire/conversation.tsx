@@ -1,20 +1,14 @@
 import type { ImageProps } from "expo-image";
 import { Button } from "heroui-native";
-/**
- * An info slot as a conversation.
- *
- * The interstitials between sections carry no answer, so they get no
- * questionnaire card. The mascot says one thing at a time and you tap on; a
- * line can be *gated* on something happening in the world (the shake screen
- * waits for an actual shake) instead of on a tap.
- */
+// An info slot as a conversation: the mascot says one line at a time and you tap on.
+// A line can be gated on something happening in the world instead of on a tap.
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { IntakeScreen } from "@/src/features/intake/questionnaire/intake-screen";
-import { MascotSays } from "@/src/features/intake/questionnaire/mascot";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
+import { MascotSays } from "@/features/intake/questionnaire/mascot";
+import { playSoftPress } from "@/lib/haptics";
 
 export interface ConversationLine {
 	/** Waits for `gateOpen` rather than for a tap. */
@@ -33,7 +27,7 @@ interface MascotConversationProps {
 	/** The pose for this slot. Defaults to the talking one. */
 	mascot?: ImageProps["source"];
 	onDone: () => void;
-	/** Opens the gate by tap — a simulator has no accelerometer to shake. */
+	/** Opens the gate by tap; a simulator has no accelerometer to shake. */
 	onGateBypass?: () => void;
 }
 
@@ -49,9 +43,7 @@ export function MascotConversation({
 }: MascotConversationProps) {
 	const [tapped, setTapped] = useState(1);
 
-	// The gate is the tap: once the world does the thing, the conversation moves
-	// on by itself rather than asking for a press it already earned. Derived, not
-	// an effect — the open gate is simply worth one more line.
+	// An open gate is worth one more line, derived rather than an effect.
 	const opened =
 		!!lines[tapped - 1]?.gated && gateOpen && tapped < lines.length;
 	const shown = opened ? tapped + 1 : tapped;

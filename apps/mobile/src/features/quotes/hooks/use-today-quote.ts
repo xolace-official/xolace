@@ -4,25 +4,14 @@ import type { OptimisticLocalStore } from "convex/browser";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
-import { useQuoteNotifications } from "@/src/features/quotes/hooks/use-quote-notifications";
+import { useQuoteNotifications } from "@/features/quotes/hooks/use-quote-notifications";
 
-/**
- * The line above the quote on the paper card. It *is* the Xolace+ gate — a locked user
- * sees the curated quote in full; what is withheld is provenance, not the
- * quote. One precedence chain, first match wins (#309).
- */
+/** Line above the quote; doubles as the Xolace+ gate. A locked user sees the curated quote and
+ * is withheld only provenance (#309). */
 export type SourceLine = { text: string; isGate: boolean };
 
-/**
- * Move the star before the round-trip. Both of today's quotes are checked by
- * id because either one can be the poster's, and `savedCount` moves with the
- * flag so the archive's count strip doesn't lag a tap behind.
- *
- * Exported because the archive's unsave chip needs the same patch. It passes
- * `countDelta` explicitly: the guard below reads the flag off today's two
- * quotes, and an archive row from a past day is neither, so the inferred delta
- * would be 0 for exactly the rows the archive is full of.
- */
+/** Optimistic star patch on `getToday`. The archive passes `countDelta`: a past day's row is
+ * neither of today's quotes. */
 export function patchSaved(
 	store: OptimisticLocalStore,
 	quoteId: Id<"daily_quotes">,
@@ -56,11 +45,7 @@ export function patchSaved(
 	);
 }
 
-/**
- * Everything today's poster needs: the quote, its one derived source line, and
- * the cold-start / first-visit machinery around it. The screen composes; it
- * does not decide.
- */
+/** Today's quote, its derived source line and the cold-start / first-visit machinery. */
 export function useTodayQuote() {
 	const posthog = usePostHog();
 
@@ -84,11 +69,8 @@ export function useTodayQuote() {
 	const viewedTrackedRef = useRef(false);
 	const gateViewedTrackedRef = useRef(false);
 
-	/**
-	 * Invariant: one cold start per mount. It is reset **only** on an explicit
-	 * retry — never on the error path, or a failing action re-arms the effect
-	 * that failed and loops.
-	 */
+	// One cold start per mount. Reset only on explicit retry, never on the error
+	// path, or a failing action re-arms the effect and loops.
 	const coldStartIssuedRef = useRef(false);
 
 	const isLoading = todayQuotes === undefined || quotePrefs === undefined;
@@ -181,12 +163,9 @@ export function useTodayQuote() {
 		await runColdStart();
 	};
 
-	/**
-	 * `not_today` is gone from the UI (#303) — resonate is a toggle to null.
-	 * Returns whether the write landed: a rejection must not escape (the row is
-	 * fired with `void`), and the event is counted only after the round trip so
-	 * a failed tap isn't scored as a reaction.
-	 */
+	// `not_today` is gone from the UI (#303); resonate toggles to null. Returns
+	// whether the write landed (callers fire it with `void`); the event is
+	// captured only after the round trip.
 	const setReaction = async (next: "resonates" | null) => {
 		if (!quote) {
 			return false;
@@ -213,11 +192,8 @@ export function useTodayQuote() {
 		}
 	};
 
-	/**
-	 * The star is optimistic, so a rejection un-fills it with nothing said. Log
-	 * it, and count the event only once the write actually landed — capturing
-	 * first would score every failed save as a save.
-	 */
+	// The star is optimistic, so a rejection un-fills it silently; capture the
+	// event only once the write landed.
 	const setSaved = async (next: boolean) => {
 		if (!quote) {
 			return;
@@ -234,11 +210,8 @@ export function useTodayQuote() {
 		}
 	};
 
-	/**
-	 * Write back to today's thought. The action moderates before it stores, so
-	 * this is a real round trip with no optimistic patch — the panel keeps the
-	 * text on screen until it lands, and a flagged reply comes back saying so.
-	 */
+	// The action moderates before it stores, so no optimistic patch: the panel
+	// keeps the text until it lands, and a flagged reply comes back saying so.
 	const sendReply = async (text: string) => {
 		if (!quote) {
 			return;
@@ -270,18 +243,13 @@ export function useTodayQuote() {
 		isSendingReply,
 		quote,
 		react: setReaction,
-		/** Premium AND session-in-window — what makes the reach sub-line true. */
+		/** Premium and session-in-window: what makes the reach sub-line true. */
 		replyReaches: todayQuotes?.replyReaches ?? false,
-		/** Personal memory on — the reply also lands in the semantic profile. */
+		/** Personal memory on: the reply also lands in the semantic profile. */
 		replyRemembered: todayQuotes?.replyRemembered ?? false,
 		retry,
-		/** The archive's count strip — rides on `getToday`, so a star moves it. */
 		savedCount: todayQuotes?.savedCount ?? 0,
-		/**
-		 * Keeping quotes is Xolace+ (#317). Defaults to locked while `getToday`
-		 * loads so the first tap on a cold screen can never fire a write the
-		 * server would reject.
-		 */
+		/** Keeping quotes is Xolace+ (#317). Locked while loading so a cold tap never writes. */
 		saveLocked: todayQuotes?.saveLocked ?? true,
 		sendReply,
 		setSaved,

@@ -1,8 +1,8 @@
 import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
+import { Surface, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 type MoodDelta = "lighter" | "same" | "heavier" | "unsure" | "mixed" | null;
 
@@ -137,7 +137,7 @@ export function MirrorLines({
 			<AppText className="mb-3.5 text-[11px] text-muted uppercase tracking-widest">
 				your patterns
 			</AppText>
-			<View className="rounded-3xl border border-border/60 bg-surface px-4">
+			<Surface className="px-4 py-0">
 				{rows.map((row, i) => (
 					<View
 						className={`flex-row items-center gap-3.5 py-4 ${i > 0 ? "border-border/50 border-t" : ""}`}
@@ -154,7 +154,7 @@ export function MirrorLines({
 						</AppText>
 					</View>
 				))}
-			</View>
+			</Surface>
 		</EaseView>
 	);
 }

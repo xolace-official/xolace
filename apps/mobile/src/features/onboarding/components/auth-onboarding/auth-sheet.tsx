@@ -1,7 +1,4 @@
-/**
- * The sign-in half of the screen, revealed as the deck lifts off it.
- *
- */
+/** The sign-in half of the screen, revealed as the deck lifts off it. */
 
 import { SymbolView } from "expo-symbols";
 import { Button, PressableFeedback, Spinner } from "heroui-native";
@@ -16,17 +13,17 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { AppleIcon } from "@/src/features/auth/components/apple-icon";
-import { GoogleIcon } from "@/src/features/auth/components/google-icon";
-import { LegalBottomSheet } from "@/src/features/auth/components/legal-bottom-sheet";
+import { AppText } from "@/components/shared/app-text";
+import { LegalBottomSheet } from "@/components/shared/legal-bottom-sheet";
 import {
 	type LegalDocument,
 	PRIVACY_POLICY,
 	TERMS_OF_SERVICE,
-} from "@/src/features/auth/components/legal-content";
-import { useProviderSignIn } from "@/src/features/auth/use-provider-sign-in";
-import { playSoftPress } from "@/src/lib/haptics";
+} from "@/components/shared/legal-content";
+import { AppleIcon } from "@/features/auth/components/apple-icon";
+import { GoogleIcon } from "@/features/auth/components/google-icon";
+import { useProviderSignIn } from "@/features/auth/use-provider-sign-in";
+import { playSoftPress } from "@/lib/haptics";
 import { useDeckColor } from "./deck-color";
 
 const SPINNER_ENTERING = FadeIn.delay(50);
@@ -161,10 +158,7 @@ export const AuthSheetBlock = ({
 	);
 };
 
-/**
- * two-row morph. Row one exits upward, row two enters from below,
- * both driven off the same expansion progress.
- */
+/** Two-row morph: row one exits upward, row two enters from below, off one progress. */
 export const MorphingSeatButton = ({
 	progress,
 	onExpand,

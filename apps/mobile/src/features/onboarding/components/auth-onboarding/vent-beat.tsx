@@ -7,8 +7,8 @@ import Animated, {
 	useReducedMotion,
 } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
-import type { StoryBeat } from "@/src/features/onboarding/story-beats";
+import { AppText } from "@/components/shared/app-text";
+import type { StoryBeat } from "@/features/onboarding/story-beats";
 import { useDeckColor } from "./deck-color";
 import { deckFigureHeight, VENT_SCALE_MATCH } from "./figure-metrics";
 import { VentSparks } from "./vent-sparks";
@@ -19,32 +19,19 @@ const SRC_W = 562;
 const SRC_H = 883;
 const ASPECT = SRC_W / SRC_H;
 
-/**
- * Where the plume starts, as a fraction of the source frame.
- *
- * X is the open mouth. Y is NOT — it sits just above the head's silhouette at
- * that x, and this is a device finding rather than a preference: an ember-
- * coloured spark drawn over the character's own peach-lit face is invisible.
- * Started at the mouth, the first ~100pt of every spark's climb was spent
- * crossing the head, so the only ones that ever showed against the dark were
- * the ones that had already faded out. Starting clear of the silhouette puts
- * the whole plume on the background it was drawn to be seen against, and it
- * still reads as breath — it leaves from directly above the mouth.
- *
- * Both move with the asset if the pose is ever re-rendered.
- */
+// Plume origin as a fraction of the source frame. X is the mouth; Y sits just above
+// the head's silhouette because ember sparks over the peach-lit face are invisible.
 const PLUME_X = 0.632;
 const PLUME_Y = 0.09;
 
-/** Left inset of the figure inside the slide's own padding, and the clearance
- *  kept under it so the character never touches the pagination row. */
+/** Left inset of the figure, and the clearance under it above the pagination row. */
 const FIGURE_INSET = 4;
 const FIGURE_FLOOR = 12;
 
 /** Matches the cover and the Mirror so all three bespoke slides share a cadence. */
 const STEP = 95;
 const DUR = 520;
-/** The breath starts after the character has settled, never with it. */
+/** The breath starts after the figure has settled. */
 const BREATH_IN = 520;
 
 export const VentBeat = ({ beat }: { beat: StoryBeat }) => {
@@ -55,8 +42,7 @@ export const VentBeat = ({ beat }: { beat: StoryBeat }) => {
 	const figH = deckFigureHeight(height) * VENT_SCALE_MATCH;
 	const figW = figH * ASPECT;
 
-	// Both measured from the slide's content box, matching the bottom-anchored
-	// figure, so the plume stays with the character at every screen size.
+	// Measured from the content box like the bottom-anchored figure, so the plume stays with it.
 	const plumeX = FIGURE_INSET + PLUME_X * figW;
 	const plumeBottom = FIGURE_FLOOR + (1 - PLUME_Y) * figH;
 

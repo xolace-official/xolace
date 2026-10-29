@@ -2,30 +2,30 @@ import { PressableFeedback } from "heroui-native";
 import { useRef } from "react";
 import type { TextInputInstance } from "react-native";
 import { StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { Tour } from "@/src/components/ui/tour";
-import { useSessionMode } from "@/src/context/session-mode-context";
-import { ComposeSurround } from "@/src/features/reflect/compose/compose-surround";
-import { FluxPerch } from "@/src/features/reflect/compose/flux-perch";
-import { MorphCard } from "@/src/features/reflect/compose/morph-card";
-import { useComposeCard } from "@/src/features/reflect/compose/use-compose-card";
-import { useComposeLifecycle } from "@/src/features/reflect/compose/use-compose-lifecycle";
-import { useMorph } from "@/src/features/reflect/compose/use-morph";
-import type { PlusDictationView } from "@/src/features/reflect/hooks/use-plus-dictation";
-import { useReflectTour } from "@/src/features/reflect/hooks/use-reflect-tour";
-import { useTypingPause } from "@/src/features/reflect/hooks/use-typing-pause";
+import { AppText } from "@/components/shared/app-text";
+import { Tour } from "@/components/ui/tour";
+import { useSessionMode } from "@/context/session-mode-context";
 import {
 	DAY_NUDGE_DELAY_MS,
 	NIGHT_NUDGE_DELAY_MS,
-} from "@/src/features/reflect/night-copy";
-import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
+} from "@/features/night-mode/night-copy";
+import { ComposeSurround } from "@/features/reflect/compose/compose-surround";
+import { FluxPerch } from "@/features/reflect/compose/flux-perch";
+import { MorphCard } from "@/features/reflect/compose/morph-card";
+import { useComposeCard } from "@/features/reflect/compose/use-compose-card";
+import { useComposeLifecycle } from "@/features/reflect/compose/use-compose-lifecycle";
+import { useMorph } from "@/features/reflect/compose/use-morph";
+import type { PlusDictationView } from "@/features/reflect/hooks/use-plus-dictation";
+import { useReflectTour } from "@/features/reflect/hooks/use-reflect-tour";
+import { useTypingPause } from "@/features/reflect/hooks/use-typing-pause";
+import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
 import type {
 	ReflectionAction,
 	ReflectionStateName,
-} from "@/src/features/reflect/types";
-import { playTypingBegin } from "@/src/lib/haptics";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/reflect/types";
+import { playTypingBegin } from "@/lib/haptics";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useAppStore } from "@/store/store";
 
 type Props = {
 	screen: ReflectionStateName;
@@ -47,13 +47,7 @@ type Props = {
 };
 
 /**
- * Idle and composing, as one screen (#256).
- *
- * The reducer still distinguishes `idle`, `typing` and `typing-nudge`; what
- * changed is that none of them mounts a different tree. A single progress value
- * — 0 at rest, 1 composing — is the only thing separating the two readings, so
- * tapping the card opens the page already in front of the user instead of
- * replacing the screen with another one.
+ * Idle and composing as one screen (#256): one tree, separated only by the morph progress value.
  */
 export const ComposeScreen = ({
 	screen,
@@ -95,8 +89,7 @@ export const ComposeScreen = ({
 		expanded,
 		focusOnExpand,
 		inputRef,
-		// The nudge is a thing that happens while writing; closing the card ends
-		// the sentence, so the pending countdown goes with it.
+		// Closing the card ends the sentence, so the pending nudge countdown goes with it.
 		onCollapse: clearTimer,
 		reduceMotion,
 	});
@@ -131,9 +124,8 @@ export const ComposeScreen = ({
 			open={tourActive}
 		>
 			<View className="flex-1">
-				{/* The card and its mascot live over the page, so their geometry is
-            independent of everything around them. The surround renders after,
-            so an opened menu is not painted over by the card beneath it. */}
+				{/* The card and its mascot live over the page. The surround renders after,
+				    so an opened menu is not painted over by the card beneath it. */}
 				<View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
 					<FluxPerch
 						expanded={expanded}
@@ -180,7 +172,7 @@ export const ComposeScreen = ({
 					spaceName={spaceName}
 				/>
 
-				{/* DEV ONLY — tap to restart tour for testing */}
+				{/* Dev only: tap to restart the tour. */}
 				{__DEV__ && !tourActive && !expanded && (
 					<PressableFeedback
 						className="absolute right-4 bottom-5 p-3"

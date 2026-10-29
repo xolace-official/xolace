@@ -6,8 +6,8 @@ import { Skeleton } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { useMiniPlayerInset } from "@/src/features/browse/now-playing/now-playing-store";
+import { AppText } from "@/components/shared/app-text";
+import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
 import { type Segment, type TopicRow, topicRows } from "../topic-sections";
 import { BrowseFilterMenu, type FilterOption } from "./browse-filter-menu";
 import {
@@ -28,22 +28,14 @@ const titleFor = (slug: string) => {
 	return words.charAt(0).toUpperCase() + words.slice(1);
 };
 
-/**
- * Topic screen (`topic/[slug]`, §9.3) — both families for one topic behind
- * an All / Music / Support audio header filter; a zero-count option is
- * disabled, not empty. The only list both families share, so rows carry the
- * family glyph. Episodes group under their series client-side.
- *
- * `?family=` preselects a segment and `?from=` tags the plays — this is how a
- * twig's "Browse more like this" lands on its topic filtered to its family
- * (§9.6) and its plays read `twig-more-like-this` in analytics.
- */
+/** Topic screen (`topic/[slug]`, §9.3): both families behind a header filter. `?family=`
+ * preselects a segment and `?from=` tags the plays (§9.6). */
 export function TopicScreen() {
 	// Clears the floating mini-player off the last row (none on iOS 26).
 	const playerInset = useMiniPlayerInset();
 	const params = useLocalSearchParams<Params>();
 	const { slug, family } = params;
-	// URL params are untyped strings; only the two values that can land here are trusted.
+	// URL params are untyped strings; only known values are trusted.
 	const from: BrowseFrom =
 		params.from && FROM_VALUES.has(params.from) ? params.from : "topic";
 	const posthog = usePostHog();

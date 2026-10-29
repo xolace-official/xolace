@@ -6,16 +6,16 @@ import { SymbolView } from "expo-symbols";
 import { Card, PressableFeedback, useThemeColor } from "heroui-native";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { MorphLoader } from "@/src/components/shared/loader/morph/morph-loader";
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
-import { useMirrorAudio } from "@/src/features/reflect/hooks/use-mirror-audio";
-import { TalkTranscript } from "@/src/features/talk/talk-thread";
+import { AppText } from "@/components/shared/app-text";
+import { MorphLoader } from "@/components/shared/loader/morph/morph-loader";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
+import { useMirrorAudio } from "@/features/reflect/hooks/use-mirror-audio";
+import { TalkTranscript } from "@/features/talk/talk-thread";
 import {
 	getEmotionEmoji,
 	getEmotionLabel,
 	getPathLabel,
-} from "@/src/features/timeline/emotions";
+} from "@/features/timeline/emotions";
 
 const formatDate = (timestamp: number) => {
 	const date = new Date(timestamp);

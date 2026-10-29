@@ -13,12 +13,8 @@ import { firstIncompleteStep, SETUP_STEPS, type SetupDraft } from "./steps";
 
 type TextDraft = Pick<SetupDraft, "displayName" | "bio">;
 
-/**
- * Draft state for the setup flow. Text fields stay local until the step is
- * left (one write per step instead of one per keystroke); the photo is not
- * drafted at all — it's uploaded on pick, and the reactive query carries the
- * new URL back rather than an effect mirroring it into state.
- */
+/** Draft state for the setup flow: text stays local until the step is left; the photo uploads
+ * on pick and the query carries the URL back. */
 export function useXolacerSetup() {
 	const { toast } = useToast();
 	const saved = useQuery(api.xolacerChat.myXolacerProfile);
@@ -45,13 +41,8 @@ export function useXolacerSetup() {
 		specialties: specialtyEdits ?? saved?.specialties ?? [],
 	};
 
-	/**
-	 * Open on the first thing still missing instead of always step 1. For a new
-	 * xolacer that IS step 1, so nothing changes for them — it only saves a
-	 * returning xolacer from tapping Continue past steps they already finished.
-	 * Seeded once, in render rather than an effect, so it never fights the user:
-	 * after this runs, `index` is theirs and filling a field can't move them.
-	 */
+	// Opens on the first incomplete step; seeded once in render so filling a
+	// field never moves the user afterwards.
 	if (!resumed && saved !== undefined) {
 		setResumed(true);
 		const blocking = firstIncompleteStep(draft);
@@ -64,11 +55,8 @@ export function useXolacerSetup() {
 		[]
 	);
 
-	/**
-	 * Toggling stays local until the step is left, same as the text fields —
-	 * a chip that waits on a round trip to fill in feels broken. The cap is
-	 * enforced here and again server-side.
-	 */
+	/** Local until the step is left, like the text fields; the cap is enforced here and
+	 * server-side. */
 	const toggleSpecialty = useCallback(
 		(slug: string) =>
 			setSpecialtyEdits((prev) => {
@@ -123,13 +111,8 @@ export function useXolacerSetup() {
 		[toast]
 	);
 
-	/**
-	 * Written straight through rather than drafted — the edit form's only
-	 * immediate control, same as the Connect card it replaced. The thumb moves
-	 * on tap and the write follows: a switch that waits on a round trip reads as
-	 * dead and invites a second tap that undoes the first. A failed write drops
-	 * the local value, so the server's answer is what shows.
-	 */
+	/** Written straight through; a failed write drops the local value so the server's answer
+	 * shows. */
 	const setActive = useCallback(
 		(next: boolean) => {
 			setActiveEdit(next);
@@ -146,9 +129,8 @@ export function useXolacerSetup() {
 	);
 
 	const pickPhoto = useCallback(async () => {
-		// The picker can reject on its own (permission denied, native failure), and
-		// PhotoStep calls this fire-and-forget — so it needs the same catch as the
-		// upload or the rejection surfaces nowhere.
+		// The picker can reject on its own and PhotoStep calls this fire-and-forget,
+		// so it needs the same catch as the upload.
 		const picked = await ImagePicker.launchImageLibraryAsync({
 			allowsEditing: true,
 			aspect: [1, 1],
@@ -199,13 +181,8 @@ export function useXolacerSetup() {
 	};
 }
 
-/**
- * The picked file streams to Convex natively rather than through
- * `fetch(uri).blob()`. Reading a `file://` URI back through RN's fetch fails
- * outright on Android, and where it does work it yields a blob with an empty
- * `type`, so the upload lands with a blank Content-Type. `File.upload` reads
- * the file on the native side and sends the picker's own mime type.
- */
+/** Streams the file natively: `fetch(uri).blob()` fails on Android and yields an empty `type`
+ * elsewhere. */
 async function uploadPhoto(
 	uri: string,
 	mimeType: string | undefined,

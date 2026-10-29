@@ -6,18 +6,18 @@ import { ScrollView, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { Presets } from "react-native-pulsar";
-import { AppText } from "@/src/components/shared/app-text";
-import { PillButton } from "@/src/components/shared/pill-button";
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+import { AppText } from "@/components/shared/app-text";
+import { PillButton } from "@/components/shared/pill-button";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
 import {
 	closingQuestion,
 	MISS_REASON_PLACEHOLDER,
-} from "@/src/features/reflect/clarify-copy";
+} from "@/features/reflect/clarify-copy";
 import type {
 	FeedbackType,
 	MissReason,
 	ReflectionAction,
-} from "@/src/features/reflect/types";
+} from "@/features/reflect/types";
 
 type Props = {
 	previousMirror: string;
@@ -26,10 +26,7 @@ type Props = {
 	onSubmit: () => void;
 	autoFocus?: boolean;
 	/**
-	 * Which button opened this screen. "not_quite" is a correction; "say_more"
-	 * is an answer — and since the reach closes on a question, a mirror that
-	 * just asked something must not be followed by a screen accusing it of
-	 * missing. Defaults to the correction copy, which is the older behaviour.
+	 * Which button opened this: a correction (default) or an answer to the mirror's question.
 	 */
 	feedbackType?: FeedbackType | null;
 	/** The chip picked in the "What didn't land?" sheet, if any. */
@@ -72,11 +69,8 @@ export const ClarifyState = ({
 	}, []);
 
 	const inputRef = useRef<TextInputInstance>(null);
-	// React Native honors `autoFocus` only at mount. When the feedback sheet is
-	// open the input mounts unfocused on purpose (the keyboard would rise behind
-	// the sheet), so once the sheet closes and `autoFocus` flips true we have to
-	// raise the keyboard ourselves — otherwise the user lands on a clarify screen
-	// whose input never takes focus.
+	// React Native honours `autoFocus` only at mount. The input mounts unfocused
+	// while the feedback sheet is open, so focus by hand once `autoFocus` flips true.
 	const autoFocusedAtMount = useRef(autoFocus);
 	useEffect(() => {
 		if (autoFocus && !autoFocusedAtMount.current) {
@@ -163,7 +157,7 @@ export const ClarifyState = ({
 							dispatch({ text, type: "CLARIFY_TEXT_CHANGE" })
 						}
 						placeholder={placeholder}
-						// heroui-native still types `ref` as the pre-0.87 TextInput class; the runtime value is the instance.
+						// heroui-native types `ref` as the old class; the value is the instance.
 						ref={inputRef as never}
 						value={clarifyText}
 						variant="secondary"

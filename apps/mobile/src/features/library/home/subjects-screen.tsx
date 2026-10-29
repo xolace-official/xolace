@@ -1,7 +1,4 @@
-/**
- * Lantern A–Z (#396): every subject with active entries, grouped by letter,
- * with counts. `?letter=` jumps to that letter.
- */
+/** Lantern A–Z (#396): subjects with active entries, grouped by letter. `?letter=` jumps to one. */
 
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
@@ -11,10 +8,10 @@ import { useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { Pressable, SectionList, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { trackLibrary } from "@/src/features/library/analytics";
-import { facetLabel } from "@/src/features/library/home/library-copy";
-import { SubjectsSkeleton } from "@/src/features/library/skeletons";
+import { AppText } from "@/components/shared/app-text";
+import { trackLibrary } from "@/features/library/analytics";
+import { facetLabel } from "@/features/library/home/library-copy";
+import { SubjectsSkeleton } from "@/features/library/skeletons";
 
 type Subject = { slug: string; count: number };
 
@@ -23,7 +20,7 @@ export function SubjectsScreen() {
 	const loaded = useQuery(api.library.home.getSubjects, {});
 	const subjects = loaded ?? [];
 	const ref = useRef<SectionList<Subject>>(null);
-	// Jump to `?letter=` once; later content-size changes (virtualized rows mounting) must not snap back.
+	// Jump to `?letter=` once; later content-size changes must not snap back.
 	const jumped = useRef(false);
 	const muted = useThemeColor("muted");
 	const posthog = usePostHog();

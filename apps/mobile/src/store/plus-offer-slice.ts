@@ -1,18 +1,13 @@
-/**
- * Proactive Plus offer cadence state — inputs to `choosePlusOffer`. Device-local
- * like every other frequency cap in this app (resets on reinstall; accepted).
- */
+/** Proactive Plus offer cadence state, the inputs to `choosePlusOffer`. Device-local; resets on
+ * reinstall. */
 import {
 	PLUS_OFFER_DISMISSAL_LIMIT,
 	PLUS_OFFER_FULL_STOP_MS,
 	type PlusOfferSurface,
-} from "@/src/features/purchases/plus-offer-policy";
+} from "@/features/purchases/plus-offer-policy";
 
 export type PlusOfferSlice = {
-	/**
-	 * Last-dismissed epoch ms keyed by surface: a "no" silences the whole slot,
-	 * not just the moment that happened to be ranked first in it.
-	 */
+	/** Last-dismissed epoch ms keyed by surface: a "no" silences the whole slot. */
 	plusOfferLastDismissedAt: Partial<Record<PlusOfferSurface, number>>;
 	/** Lifetime dismissals across all proactive surfaces. */
 	plusOfferDismissalCount: number;
@@ -20,12 +15,8 @@ export type PlusOfferSlice = {
 	plusOfferFullStopAt: number | null;
 	/** Records a dismissal against one surface and rolls the full stop if it's the third. */
 	recordPlusOfferDismissal: (surface: PlusOfferSurface) => void;
-	/**
-	 * The session an offer was last shown in. The whole of "max one offer per
-	 * session" and "never two sessions in a row" rides on this one id: all three
-	 * trigger points write it and all three read it, so a moment that already
-	 * fired mid-session cannot also take the close-of-session slot.
-	 */
+	/** Session an offer was last shown in. All three trigger points read and write it, so one
+	 * offer per session holds. */
 	plusOfferShownSessionId: string | null;
 	recordPlusOfferShown: (sessionId: string | null) => void;
 };

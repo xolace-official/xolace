@@ -2,13 +2,13 @@ import { Button, Spinner, useThemeColor } from "heroui-native";
 import { useState } from "react";
 import { View } from "react-native";
 import { FadeIn, LinearTransition } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { LegalBottomSheet } from "@/src/features/auth/components/legal-bottom-sheet";
+import { AppText } from "@/components/shared/app-text";
+import { LegalBottomSheet } from "@/components/shared/legal-bottom-sheet";
 import {
 	type LegalDocument,
 	PRIVACY_POLICY,
 	TERMS_OF_SERVICE,
-} from "@/src/features/auth/components/legal-content";
+} from "@/components/shared/legal-content";
 
 const SPINNER_ENTERING = FadeIn.delay(50);
 
@@ -19,13 +19,8 @@ type Props = {
 	isDisabled: boolean;
 };
 
-/**
- * Sticky bottom CTA block — primary button, renewal legal line, and
- * Terms/Privacy links that reuse the existing LegalBottomSheet (same
- * pattern as the auth screen's LegalLinks) instead of duplicating copy.
- * While busy, the button shrinks to an icon-only spinner via the same
- * layout={LinearTransition.springify()} + isIconOnly pattern as AuthScreen.
- */
+/** Sticky bottom CTA block: primary button, renewal legal line and Terms/Privacy links via
+ * LegalBottomSheet. */
 export function PaywallCta({ label, onPress, isBusy, isDisabled }: Props) {
 	const [activeDocument, setActiveDocument] = useState<LegalDocument | null>(
 		null

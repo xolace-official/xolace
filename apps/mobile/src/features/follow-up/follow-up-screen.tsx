@@ -9,16 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { HeavierStep } from "@/src/features/follow-up/heavier-step";
-import { ReflectiveStep } from "@/src/features/follow-up/reflective-step";
-import {
-	Icon,
-	type IconKey,
-	OptionCard,
-} from "@/src/features/follow-up/stack-cards";
-import { StillHereStep } from "@/src/features/follow-up/still-here-step";
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
+import { AppText } from "@/components/shared/app-text";
 import {
 	chipsForTier,
 	FOLLOW_UP_FALLBACK_HEADLINE,
@@ -31,10 +22,19 @@ import {
 	VENT_A11Y_LABEL,
 	VENT_LABEL,
 	VENT_SUBLABEL,
-} from "@/src/features/reflect/follow-up-copy";
-import { useFullContext } from "@/src/lib/convex/use-full-context";
-import { playFollowUpEntrance } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+} from "@/features/follow-up/follow-up-copy";
+import { HeavierStep } from "@/features/follow-up/heavier-step";
+import { ReflectiveStep } from "@/features/follow-up/reflective-step";
+import {
+	Icon,
+	type IconKey,
+	OptionCard,
+} from "@/features/follow-up/stack-cards";
+import { StillHereStep } from "@/features/follow-up/still-here-step";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
+import { useFullContext } from "@/lib/convex/use-full-context";
+import { playFollowUpEntrance } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 // Dev/preview storage buckets differ from prod (Convex deploys are per-env).
 const FLUX = {
@@ -53,18 +53,14 @@ const STATUS_LOOK: Record<StatusResponse, { icon: IconKey; tint: string }> = {
 
 export type FollowUpParams = {
 	cardId: Id<"follow_up_cards">;
-	/** Absent on restored or deep-linked routes — falls back to generic copy. */
+	/** Absent on restored or deep-linked routes; falls back to generic copy. */
 	cardText?: string;
 	tier: FollowUpTier;
-	/** "1" when the card came out of an escalation — shows the resources link. */
+	/** "1" when the card came out of an escalation; shows the resources link. */
 	escalation?: string;
 };
 
-/**
- * The full-screen follow-up check-in (#448). Picker → per-answer next step.
- * `lighter` and `processed` share the reflective step (#449, #450), `still_here`
- * and `heavier` get their own (#451, #452).
- */
+/** Full-screen follow-up check-in (#448): picker, then a per-answer next step (#449-#452). */
 export function FollowUpScreen() {
 	const { cardId, cardText, tier, escalation } =
 		useLocalSearchParams<FollowUpParams>();
@@ -77,11 +73,10 @@ export function FollowUpScreen() {
 	const answered = useRef(false);
 	const escalationDerived = escalation === "1";
 
-	// One cue per open, same for every tier — the screen is the single trigger.
+	// One cue per open, same for every tier.
 	useEffect(() => playFollowUpEntrance(), []);
 
-	// Leaving before an answer — close, Android back, anything that unmounts the
-	// route — is today's no-guilt dismiss. An answer, once given, stands.
+	// Leaving before an answer (close, Android back, any unmount) is a dismiss.
 	useEffect(
 		() => () => {
 			if (answered.current) {

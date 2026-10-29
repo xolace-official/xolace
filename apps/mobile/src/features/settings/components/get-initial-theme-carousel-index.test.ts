@@ -1,25 +1,20 @@
 import { describe, expect, it } from "vitest";
-import type { ThemeEntry } from "@/src/lib/themes";
+import type { ThemeEntry } from "@/lib/themes";
 import { getInitialThemeCarouselIndex } from "./get-initial-theme-carousel-index";
 
-const THEME_STUBS: ThemeEntry[] = [
-	"default",
-	"quiet",
-	"reverie",
-	"emerald",
-	"noir",
-].map((id) => ({
+const STUB_VARIANTS: Pick<ThemeEntry, "id" | "variants">[] = [
+	{ id: "default", variants: { dark: "dark", light: "light" } },
+	{ id: "quiet", variants: { dark: "quiet-dark", light: "quiet-light" } },
+	{ id: "reverie", variants: { dark: "reverie-dark", light: "reverie-light" } },
+	{ id: "emerald", variants: { dark: "emerald-dark", light: "emerald-light" } },
+	{ id: "noir", variants: { dark: "noir-dark", light: "noir-light" } },
+];
+
+const THEME_STUBS: ThemeEntry[] = STUB_VARIANTS.map(({ id, variants }) => ({
 	id,
 	name: id,
-	preview: {
-		accent: "#000",
-		bg: "#000",
-		border: "#000",
-		fg: "#fff",
-		surface: "#000",
-	},
 	tier: id === "emerald" || id === "noir" ? "premium" : "free",
-	variants: { dark: `${id}-dark`, light: `${id}-light` },
+	variants,
 }));
 
 describe("getInitialThemeCarouselIndex", () => {

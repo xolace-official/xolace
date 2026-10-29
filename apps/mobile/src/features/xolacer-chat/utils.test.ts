@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sortByPresence } from "@/src/features/xolacer-chat/presence-ordering";
+import { sortByPresence } from "@/features/xolacer-chat/presence-ordering";
 import {
 	type ConversationStatus,
 	daysUntil,
@@ -7,7 +7,7 @@ import {
 	hasSpoken,
 	resolveMessageIdentity,
 	unreadBadge,
-} from "@/src/features/xolacer-chat/utils";
+} from "@/features/xolacer-chat/utils";
 
 describe("declineCooldownActive", () => {
 	const DAY = 86_400_000;
@@ -16,11 +16,8 @@ describe("declineCooldownActive", () => {
 	const cases: { inMs?: number; expected: boolean; label: string }[] = [
 		{ expected: false, label: "no cooldown on the row" },
 		{ expected: true, inMs: 1000, label: "a second left" },
-		// The dead-end this guard exists for: the server stamps this timestamp
-		// inside a reactive query, and nothing writes when the window elapses — so
-		// a stale, already-past value arrives from cache. Reading it as "a cooldown
-		// exists" would disable the CTA forever, since a disabled button never
-		// writes anything that could refresh the cache.
+		// The dead-end this guards: a stale, already-past timestamp arrives from the
+		// reactive query's cache and would disable the CTA forever.
 		{ expected: false, inMs: 0, label: "exactly now" },
 		{ expected: false, inMs: -30 * DAY, label: "long expired, still cached" },
 	];
@@ -195,10 +192,8 @@ describe("resolveMessageIdentity", () => {
 		expected: { name: string; image?: string } | null;
 		label: string;
 	}[] = [
-		// Also the reconnect/relogin case, where the client's own user id is
-		// momentarily unset: the resolver has no knowledge of who "I" am, only of
-		// who the counterpart is, so an unset client id cannot reach it and my
-		// bubbles stay mine on the same single assertion.
+		// Also the reconnect case where the client's own id is unset: the resolver
+		// never asks who "I" am, so my bubbles stay mine.
 		{
 			conversation: asSeeker,
 			expected: null,
@@ -219,11 +214,8 @@ describe("resolveMessageIdentity", () => {
 			label: "counterpart in a seeker-role conversation is the real xolacer",
 			sender: THEM,
 		},
-		// The regression this exists for. The counterpart is a complete, active
-		// xolacer somewhere else in the app — their real identity is right there
-		// on the object, next to the anonymous one — and their role in *this*
-		// conversation is seeker. The resolver reads only the counterpart fields,
-		// so the real name and photo can't reach the bubble however they arrive.
+		// The regression this exists for: the counterpart is an active xolacer
+		// elsewhere, real identity right on the object; only counterpart fields are read.
 		{
 			conversation: {
 				...asXolacer,

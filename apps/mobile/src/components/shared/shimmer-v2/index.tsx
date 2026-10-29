@@ -17,9 +17,7 @@ import type {
 import { useShimmerAnimation } from "./use-shimmer-animation";
 import { useTrackDistance } from "./use-track-distance";
 
-export const ShimmerContext = createContext<ShimmerContextValue | null>(null);
-
-// ------------------------------------------
+const ShimmerContext = createContext<ShimmerContextValue | null>(null);
 
 const useShimmer = (): ShimmerContextValue => {
 	const context = useContext(ShimmerContext);
@@ -28,8 +26,6 @@ const useShimmer = (): ShimmerContextValue => {
 	}
 	return context;
 };
-
-// ------------------------------------------
 
 /** Root component. Measures its own dimensions and provides context to children. */
 const ShimmerRoot = React.forwardRef<ViewInstance, ShimmerProps>(
@@ -83,8 +79,6 @@ const ShimmerRoot = React.forwardRef<ViewInstance, ShimmerProps>(
 
 ShimmerRoot.displayName = "Shimmer";
 
-// ------------------------------------------
-
 /** Animated overlay that sweeps across the Shimmer container. */
 const ShimmerOverlay = React.forwardRef<Animated.View, ShimmerOverlayProps>(
 	(
@@ -104,7 +98,7 @@ const ShimmerOverlay = React.forwardRef<Animated.View, ShimmerOverlayProps>(
 	) => {
 		const { containerWidth, containerHeight, debug } = useShimmer();
 
-		// Resolve width prop to pixels (handles both absolute and percentage values)
+		// Width prop to pixels, absolute or percentage.
 		const overlayWidth = useDerivedValue(() => {
 			if (typeof width === "number") {
 				return width;
@@ -138,7 +132,6 @@ const ShimmerOverlay = React.forwardRef<Animated.View, ShimmerOverlayProps>(
 			trackDistance,
 		});
 
-		// Mirror progress to onProgress SharedValue (UI thread only)
 		useAnimatedReaction(
 			() => activeProgress.get(),
 			(currentProgress) => {
@@ -188,12 +181,8 @@ const ShimmerOverlay = React.forwardRef<Animated.View, ShimmerOverlayProps>(
 
 ShimmerOverlay.displayName = "Shimmer.Overlay";
 
-// ------------------------------------------
-
-/**
- * Clips the overlay to children's alpha channel via MaskedView.
- * Children must use opaque colors (e.g. text-black) for the mask to work.
- */
+/** Clips the overlay to the children's alpha channel via MaskedView; children must use opaque
+ * colours. */
 const ShimmerMask = ({ children, overlay, background }: ShimmerMaskProps) => {
 	const { debug } = useShimmer();
 	const maskElement = React.isValidElement(children) ? (
@@ -205,7 +194,7 @@ const ShimmerMask = ({ children, overlay, background }: ShimmerMaskProps) => {
 	return (
 		<>
 			<MaskedView maskElement={maskElement}>
-				{/* Hidden duplicate for layout sizing — MaskedView sizes from children, not maskElement */}
+				{/* Hidden duplicate for sizing: MaskedView sizes from children, not maskElement. */}
 				<View
 					accessibilityElementsHidden={true}
 					accessible={false}
@@ -226,8 +215,6 @@ const ShimmerMask = ({ children, overlay, background }: ShimmerMaskProps) => {
 };
 
 ShimmerMask.displayName = "Shimmer.Mask";
-
-// ------------------------------------------
 
 const Shimmer = Object.assign(ShimmerRoot, {
 	Mask: ShimmerMask,

@@ -12,19 +12,11 @@ import { useCSSVariable } from "uniwind";
 import {
 	POSTER_GRADIENT,
 	POSTER_GRAIN_OPACITY,
-} from "@/src/features/quotes/poster-palette";
+} from "@/features/quotes/poster-palette";
 
-/**
- * The poster surface: fixed gradient, Skia grain, radius, and a fixed edge.
- * `style` positions the card (margin, width); padding belongs to `children`.
- *
- * The edge (hairline + shadow) is deliberately the same on every chrome. It
- * reads as unnecessary on near-black chrome and holds the card together on a
- * light one — do not simplify it away having checked only dark (#302).
- *
- * The shadow lives on an outer view because the clipping one cannot cast it:
- * `overflow: 'hidden'` maps to `masksToBounds` on iOS, which clips the shadow away.
- */
+// Poster surface: fixed gradient, Skia grain, radius and edge. The edge holds the
+// card together on light chrome; do not drop it having checked only dark (#302).
+// The shadow sits on an outer view since `overflow: hidden` clips it on iOS.
 export function PosterSurface({
 	children,
 	style,
@@ -51,7 +43,7 @@ export function PosterSurface({
 					<Group opacity={POSTER_GRAIN_OPACITY}>
 						<Fill>
 							<Turbulence freqX={0.85} freqY={0.85} octaves={3} seed={7} />
-							{/* desaturate the coloured noise to film grain */}
+							{/* Desaturates the coloured noise to film grain. */}
 							<ColorMatrix
 								// biome-ignore format: 4x5 colour matrix, one row per line
 								matrix={[

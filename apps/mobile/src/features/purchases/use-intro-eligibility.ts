@@ -4,18 +4,9 @@ import Purchases, { INTRO_ELIGIBILITY_STATUS } from "react-native-purchases";
 
 type Status = "pending" | "eligible" | "ineligible";
 
-/**
- * Whether the user can still take this product's intro offer, so someone who
- * has already subscribed isn't shown "50% off".
- *
- * iOS asks RevenueCat, and only an explicit "eligible" counts: an unknown
- * answer, no offer, a missing result or a failed check all mean no, so we never
- * advertise a discount the user can't get (Apple's payment sheet still applies
- * one they can). Until it answers we say no, so the discount appears late
- * rather than vanishing.
- * Android always answers "unknown" here, but Play only lists offers the user
- * can take, so the product itself already carries the answer.
- */
+// Whether the user can still take this product's intro offer. iOS asks RevenueCat and
+// only an explicit "eligible" counts (pending, unknown and failed all mean no). Android
+// always answers "unknown", but Play only lists offers the user can take.
 export function useIntroEligibility(productId: string | null): boolean {
 	const [status, setStatus] = useState<Status>("pending");
 

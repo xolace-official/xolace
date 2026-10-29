@@ -4,8 +4,8 @@ import { useRouter } from "expo-router";
 import { PressableFeedback } from "heroui-native";
 import type { ReactNode } from "react";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 import { ConversationRow } from "./conversation-row";
 import {
 	type ArchiveHandler,
@@ -22,20 +22,8 @@ export type PairConversation = Extract<
 	{ kind: "pair" }
 >;
 
-/**
- * All lifecycle states live in one flat list — one continuous run of rows the
- * way every messaging app reads, so a request or a resting thread is never a
- * screen to remember.
- *
- * Archive is the one thing that does hide a row, and it is a route rather than
- * a filter over this list: a place with an address, reached from an entry row
- * passed in as `header`, so it inherits the stack's header and back button and
- * the tab bar keeps working. This component only ever renders the list it was
- * handed — both screens hand it the same kind of rows.
- *
- * The long-press action sheet is deliberately not rendered here — see
- * `useConversationRowActions` for where it has to live instead.
- */
+/** One flat list of every lifecycle state. Archive is a route reached via `header`; the
+ * long-press sheet lives in `useConversationRowActions`. */
 export function ChatsList({
 	conversations,
 	empty,
@@ -46,11 +34,8 @@ export function ChatsList({
 	onOpen,
 }: {
 	conversations: ConversationList;
-	/**
-	 * Copy for the empty state. Defaults to the never-had-a-chat one; a caller
-	 * that filtered the list (Connect hides archived rows) has to say so itself,
-	 * or someone whose chats are all archived is told they have none.
-	 */
+	/** Empty-state copy; a caller that filtered the list (Connect hides archived rows) must say
+	 * so. */
 	empty?: { title: string; body: string };
 	/** Rendered above the rows, full-bleed like them. */
 	header?: ReactNode;
@@ -105,9 +90,8 @@ export function ChatsList({
 			{conversations.map((conversation, index) => {
 				const onPress = () => {
 					playSoftPress();
-					// Opening a thread leaves this screen mounted, so a sheet raised on
-					// another row would still be waiting — over the wrong row, with the
-					// tab bar still hidden — when you come back.
+					// This screen stays mounted under the thread, so a sheet raised on
+					// another row would still be waiting, tab bar hidden, on return.
 					onOpen();
 					if (conversation.kind === "broadcast") {
 						router.push("/xolace-channel");
@@ -119,9 +103,8 @@ export function ChatsList({
 					});
 				};
 				const showSeparator = index < conversations.length - 1;
-				// Archive/close/delete are xolacer_conversations operations — the
-				// broadcast row has no such row behind it, so it gets no long-press
-				// sheet, no swipe and no accessibility actions.
+				// The broadcast row has no xolacer_conversations row behind it, so no
+				// long-press sheet, swipe or accessibility actions.
 				if (conversation.kind === "broadcast") {
 					return (
 						<ConversationRow

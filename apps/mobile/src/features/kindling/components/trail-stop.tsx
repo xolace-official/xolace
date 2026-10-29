@@ -1,24 +1,20 @@
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
-import { PressableFeedback, useThemeColor } from "heroui-native";
+import { PressableFeedback, Surface, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { cn } from "@/lib/utils";
 import { CLEAN_POSES, POSE } from "../announcement-poses";
 import { TWIG_PRESENTATION, type Twig } from "../twig-presentation";
 
 export const STOP_NODE = 84;
 const EASE_OUT: [number, number, number, number] = [0.23, 1, 0.32, 1];
 
-/**
- * One stop on the trail: Flux's pose for the twig, and a signpost label.
- * Tended → ember halo, ring, check badge and a "Tended" eyebrow. Skipped →
- * dimmed, struck through; the image dims over an opaque backing so the
- * marching dashes don't show through it.
- */
+/** One stop on the trail: Flux's pose and a signpost label. Tended gets a halo
+ * and check badge; skipped dims over an opaque backing so the dashes don't show through. */
 export function TrailStop({
 	twig,
 	index,
@@ -119,10 +115,10 @@ export function TrailStop({
 						)}
 					</View>
 
-					<View
+					<Surface
 						className={cn(
-							"max-w-[190px] rounded-2xl bg-surface px-3.5 py-2.5 shadow-sm",
-							done && "border border-ember",
+							"max-w-[190px] rounded-2xl px-3.5 py-2.5",
+							done && "border-ember",
 							skipped && "opacity-40"
 						)}
 					>
@@ -156,7 +152,7 @@ export function TrailStop({
 						>
 							{title}
 						</AppText>
-					</View>
+					</Surface>
 				</PressableFeedback>
 			</EaseView>
 		</EaseView>

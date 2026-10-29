@@ -8,14 +8,14 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
 	return (
 		<CheckboxPrimitive.Root
 			className={cn(
-				"peer relative flex size-4 shrink-0 items-center justify-center rounded-none border border-input outline-none transition-colors after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 group-has-disabled/field:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 aria-invalid:aria-checked:border-primary data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:bg-input/30 dark:data-checked:bg-primary dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+				"peer pressable lip lip-line-strong depth-sm data-checked:lip-lavender-lip relative flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-sm border-2 border-line-strong bg-surface text-transparent outline-none after:absolute after:-inset-x-3 after:-inset-y-2 disabled:cursor-not-allowed disabled:opacity-55 group-has-disabled/field:opacity-55 aria-invalid:border-coral data-disabled:cursor-not-allowed data-checked:border-lavender data-checked:bg-lavender data-checked:text-on-lavender data-disabled:opacity-55",
 				className
 			)}
 			data-slot="checkbox"
 			{...props}
 		>
 			<CheckboxPrimitive.Indicator
-				className="grid place-content-center text-current transition-none [&>svg]:size-3.5"
+				className="grid place-content-center text-current transition-none [&>svg]:size-4 [&>svg]:stroke-[3.5]"
 				data-slot="checkbox-indicator"
 			>
 				<CheckIcon />

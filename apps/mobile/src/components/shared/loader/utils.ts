@@ -43,14 +43,9 @@ const TRANSFORM_DEFAULTS: Record<string, number> = {
 	translateY: 0,
 };
 
-// ──────────────────────────────────────────
 // Value parsing helpers
-// ──────────────────────────────────────────
 
-/**
- * Extracts the leading numeric value from a string (e.g. "45deg" → 45).
- * Returns 0 when the string contains no number.
- */
+/** Leading numeric value of a string ("45deg" → 45), or 0 when there is none. */
 const parseAngleValue = (value: string | number): number => {
 	if (typeof value === "number") {
 		return value;
@@ -59,10 +54,7 @@ const parseAngleValue = (value: string | number): number => {
 	return match ? Number.parseFloat(match[1]) : 0;
 };
 
-/**
- * Reads the numeric value for a given transform key from a single
- * transform entry object. Angle keys are parsed from strings like "45deg".
- */
+/** Numeric value for a transform key from one transform entry; angle keys parse "45deg". */
 const extractTransformEntryValue = (
 	entry: Record<string, unknown>,
 	key: string
@@ -77,9 +69,7 @@ const extractTransformEntryValue = (
 	return typeof raw === "number" ? raw : undefined;
 };
 
-// ──────────────────────────────────────────
 // Parsed result type
-// ──────────────────────────────────────────
 
 /** Pre-computed interpolation config produced by parseKeyframes. */
 export interface ParsedKeyframes {
@@ -95,14 +85,10 @@ export interface ParsedKeyframes {
 	transformRanges: Record<string, number[]>;
 }
 
-// ──────────────────────────────────────────
 // Main parser
-// ──────────────────────────────────────────
 
-/**
- * Parses a LoaderKeyframes map into interpolation-ready ranges.
- * Keys 0-100 are auto-normalized to 0-1. Requires >= 2 keyframes.
- */
+/** Parses LoaderKeyframes into interpolation ranges. Keys 0-100 normalise to 0-1; needs 2+
+ * keyframes. */
 export const parseKeyframes = (keyframes: LoaderKeyframes): ParsedKeyframes => {
 	const rawKeys = Object.keys(keyframes)
 		.map(Number)

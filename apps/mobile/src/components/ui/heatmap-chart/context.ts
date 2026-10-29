@@ -1,10 +1,6 @@
 import { createContext, useContext } from "react";
 
-/**
- * Where a part belongs in the layout. Read off the component itself, so
- * composition stays a flat list of children instead of four nested slots the
- * caller has to remember the order of.
- */
+/** Where a part belongs in the layout, read off the component so children stay a flat list. */
 export type Slot =
 	| "cells"
 	| "x-axis"
@@ -78,11 +74,8 @@ export function useHeatmap(component: string): HeatmapContextValue {
 	return context;
 }
 
-/**
- * The cell under the finger, for something rendered *inside* the chart. A
- * readout in the card's header is outside this provider — use
- * `onActiveCellChange` for that.
- */
+/** The cell under the finger, for something rendered inside the chart. Outside it, use
+ * `onActiveCellChange`. */
 export function useHeatmapChart() {
 	const { activeCell } = useHeatmap("useHeatmapChart");
 	return { activeCell };

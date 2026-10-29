@@ -1,4 +1,6 @@
-/** Canonical list of haptic pattern names — single source of truth. */
+/**
+ * @public Read by `playHaptic`, which nothing calls yet.
+ */
 export const hapticNames = [
 	"processingBreath",
 	"gentlePresence",

@@ -1,11 +1,6 @@
-import type { MoodItem } from "@/src/features/onboarding/components/mood-card";
+import type { MoodItem } from "@/features/onboarding/components/mood-card";
 
-/**
- * Mood cards for the onboarding marquee.
- * Each mood represents a feeling someone might carry to Xolace.
- * Colors are muted, warm gradients — twilight palette, not clinical.
- * Images take priority; colors serve as fallback for moods without an image.
- */
+/** Mood cards for the onboarding marquee. Colors are the fallback for moods without an image. */
 export const MOODS: MoodItem[] = [
 	{
 		colors: ["#2d2340", "#3b2f5c", "#1e1a2e"],

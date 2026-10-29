@@ -14,12 +14,11 @@ import Animated, {
 const MIC_ICON = { android: "mic", ios: "mic.fill", web: "mic" } as const;
 const STOP_ICON = { android: "stop", ios: "stop.fill", web: "stop" } as const;
 
-// Fixed artwork colors from the vent design spec — the ritual screen is dark
-// in every theme, so these don't track theme tokens.
+// Fixed artwork colors from the vent design spec; the ritual screen is dark in every theme.
 const RECORDING_AMBER = "#C4883F";
 const IDLE_RING = "#9399A8";
 const ICON_COLOR = "#F5F0E8";
-// Matches VENT_BG — punches the hole in the donut ring.
+// Matches VENT_BG; punches the hole in the donut ring.
 const RING_HOLE = { backgroundColor: "#0A0A0D" };
 
 type Props = {
@@ -27,11 +26,8 @@ type Props = {
 	onPress: () => void;
 };
 
-/**
- * The mic button: 60px circle, ~100px from the bottom edge. Idle shows a
- * slow pulsing ring; recording swaps to a solid warm-amber ring with a stop
- * square. The parent fades the whole button out when the burn begins.
- */
+/** The mic button: idle shows a slow pulsing ring; recording swaps to a solid
+ * warm-amber ring with a stop square. The parent fades it out when the burn begins. */
 export function VentMicButton({ recording, onPress }: Props) {
 	const ringPulse = useSharedValue(0);
 
@@ -64,8 +60,8 @@ export function VentMicButton({ recording, onPress }: Props) {
 		transform: [{ scale: recording ? 1.12 : 1 }],
 	}));
 
-	// No haptic here — startVent/stopVent own it, so the feel can differ by
-	// direction and can report a failed mic permission instead of confirming it.
+	// No haptic here: startVent/stopVent own it, so a failed mic permission
+	// can be reported instead of confirmed.
 	const handlePress = () => {
 		onPress();
 	};
@@ -78,8 +74,8 @@ export function VentMicButton({ recording, onPress }: Props) {
 			onPress={handlePress}
 		>
 			<View className="h-15 w-15 items-center justify-center">
-				{/* Ring drawn as a solid donut (disc + screen-bg hole) — a 2px border
-            on a scaled/fading view renders with gaps on iOS. */}
+				{/* Solid donut (disc + screen-bg hole): a 2px border on a scaled/fading
+            view renders with gaps on iOS. */}
 				<Animated.View
 					className="absolute h-15 w-15 items-center justify-center rounded-full"
 					style={ringStyle}

@@ -1,12 +1,7 @@
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
-import type { MissReason } from "@/src/features/reflect/types";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
+import type { MissReason } from "@/features/reflect/types";
 
-/**
- * The question a reaching mirror closes on, or null. The articulator puts it
- * last, in the same paragraph (articulator.ts, Claim Strength: Reaching), so
- * the tail after the last sentence end is the question. Too long to read as
- * a heading → null, and the caller keeps "Say more".
- */
+/** The question a reaching mirror closes on (articulator.ts puts it last), or null. */
 export function closingQuestion(mirror: string): string | null {
 	const match = mirror.trim().match(/([^.!?\n"“”]+\?)["”’]?$/);
 	const question = match?.[1].trim();

@@ -1,0 +1,218 @@
+/*
+ * xolace+ — Playful (trial)
+ * Chunky and bright: heavy rounded type (Nunito), a saturated green accent
+ * and a solid "lip" under pressable things. The lip and stroke variables
+ * below are Playful-only; playful-components.css reads them with a zero
+ * fallback, so every other theme renders as before.
+ *
+ * Trial palette, to be replaced with Xolace's own playful colors.
+ * Design system: https://claude.ai/artifact/JYmU15g2rCbGunBMnXFe2v
+ */
+@layer theme {
+	:root {
+		@variant playful-light {
+			--font-normal: "Nunito_500Medium";
+			--font-medium: "Nunito_700Bold";
+			--font-semibold: "Nunito_800ExtraBold";
+			--font-bold: "Nunito_900Black";
+
+			--radius: 0.333rem; /* radius-3xl = 16px: buttons and cards */
+
+			/* Off-white page so white cards and setting groups read as shapes. */
+			--background: #f4f5f6;
+			--foreground: #3c3c3c;
+
+			--surface: #ffffff;
+			--surface-foreground: #3c3c3c;
+			--surface-secondary: #eef0f1;
+			--surface-secondary-foreground: #3c3c3c;
+			--surface-tertiary: #e7e9ea;
+			--surface-tertiary-foreground: #3c3c3c;
+
+			--overlay: #ffffff;
+			--overlay-foreground: #3c3c3c;
+
+			--muted: #6b6b6b;
+
+			--default: #eceef0;
+			--default-foreground: #3c3c3c;
+
+			/* Labels on the green are dark ink: white on it fails contrast. */
+			--accent: #58c418;
+			--accent-foreground: #0f2600;
+
+			--field-background: #ffffff;
+			--field-foreground: #3c3c3c;
+			--field-placeholder: var(--muted);
+			--field-border: #8a8a8a;
+
+			--resonance: oklch(0.796 0.0347 167.72 / 15%);
+			--resonance-foreground: oklch(0.796 0.0347 167.72);
+
+			--offer-ink: oklch(18% 0.02 285);
+
+			--tone-poetic: oklch(70% 0.18 305);
+			--tone-gentle: oklch(68% 0.17 15);
+			--tone-direct: oklch(68% 0.15 225);
+			--tone-witnessed: oklch(72% 0.15 75);
+			--tone-poetic-text: oklch(48% 0.18 305);
+			--tone-gentle-text: oklch(46% 0.17 15);
+			--tone-direct-text: oklch(46% 0.15 225);
+			--tone-witnessed-text: oklch(48% 0.15 75);
+			--browse-audio: oklch(70% 0.15 25 / 16%);
+			--browse-audio-foreground: oklch(70% 0.15 25);
+			--browse-music: oklch(68% 0.12 230 / 16%);
+			--browse-music-foreground: oklch(68% 0.12 230);
+			--browse-topics: oklch(72% 0.13 300 / 16%);
+			--browse-topics-foreground: oklch(72% 0.13 300);
+
+			--event: oklch(60% 0.15 350);
+			--event-foreground: oklch(99% 0.005 350);
+
+			--success: #58c418;
+			--success-foreground: #0f2600;
+
+			--warning: #ffc12e;
+			--warning-foreground: #3b2a00;
+			--ember: #ff9600;
+
+			--danger: #d93a3a;
+			--danger-foreground: #ffffff;
+
+			--segment: #ffffff;
+			--segment-foreground: #3c3c3c;
+
+			--border: #e5e5e5;
+			--separator: #e5e5e5;
+			--focus: #1985cc;
+			--link: #0b78c2;
+
+			/* Hard lips, no blur. The surface lip is inset so wrappers that clip
+			 * to bounds (Link zoom, press feedback) can't cut it off. */
+			--surface-shadow: inset 0 -4px 0 0 #d4d4d4;
+			--overlay-shadow: 0 6px 0 0 #e5e5e5;
+			--field-shadow: 0 0 0 0 transparent inset;
+
+			--backdrop: oklch(0% 0 0 / 30%);
+
+			/* Playful-only */
+			--field-border-width: 2px;
+			--playful-stroke: 2px;
+			--playful-lip: 4px;
+			--playful-lip-chip: 2px;
+			--outline-stroke: 2px;
+			--outline-lip: 4px;
+			--accent-lip: #3f9a0b;
+			--default-lip: #d4d4d4;
+			--danger-lip: #a82727;
+			--warning-lip: #ff9600;
+			--surface-stroke: 2px;
+			--surface-stroke-color: var(--border);
+		}
+
+		@variant playful-dark {
+			--font-normal: "Nunito_500Medium";
+			--font-medium: "Nunito_700Bold";
+			--font-semibold: "Nunito_800ExtraBold";
+			--font-bold: "Nunito_900Black";
+
+			--radius: 0.333rem; /* radius-3xl = 16px: buttons and cards */
+
+			--background: #121c21;
+			--foreground: #f1f7fb;
+
+			--surface: #1b2a31;
+			--surface-foreground: #f1f7fb;
+			--surface-secondary: #22343c;
+			--surface-secondary-foreground: #f1f7fb;
+			--surface-tertiary: #2b3f48;
+			--surface-tertiary-foreground: #f1f7fb;
+
+			--overlay: #1b2a31;
+			--overlay-foreground: #f1f7fb;
+
+			--muted: #9db0ba;
+
+			--default: #22343c;
+			--default-foreground: #f1f7fb;
+
+			--accent: #6fd31f;
+			--accent-foreground: #0f2600;
+
+			--field-background: #1b2a31;
+			--field-foreground: #f1f7fb;
+			--field-placeholder: var(--muted);
+			--field-border: #648390;
+
+			--resonance: oklch(0.796 0.0347 167.72 / 15%);
+			--resonance-foreground: oklch(0.796 0.0347 167.72);
+
+			--offer-ink: oklch(18% 0.02 285);
+
+			--tone-poetic: oklch(74% 0.18 305);
+			--tone-gentle: oklch(72% 0.17 15);
+			--tone-direct: oklch(72% 0.15 225);
+			--tone-witnessed: oklch(76% 0.15 75);
+			--tone-poetic-text: var(--tone-poetic);
+			--tone-gentle-text: var(--tone-gentle);
+			--tone-direct-text: var(--tone-direct);
+			--tone-witnessed-text: var(--tone-witnessed);
+			--browse-audio: oklch(74% 0.15 25 / 14%);
+			--browse-audio-foreground: oklch(74% 0.15 25);
+			--browse-music: oklch(72% 0.12 230 / 14%);
+			--browse-music-foreground: oklch(72% 0.12 230);
+			--browse-topics: oklch(76% 0.13 300 / 14%);
+			--browse-topics-foreground: oklch(76% 0.13 300);
+
+			--event: oklch(76% 0.12 350);
+			--event-foreground: oklch(15% 0.01 350);
+
+			--success: #6fd31f;
+			--success-foreground: #0f2600;
+
+			--warning: #ffc12e;
+			--warning-foreground: #2a1a00;
+			--ember: #ff9f1a;
+
+			--danger: #ff7a7a;
+			--danger-foreground: #3a0000;
+
+			--segment: #2b3f48;
+			--segment-foreground: #f1f7fb;
+
+			--border: #37464f;
+			--separator: #37464f;
+			--focus: #49b8f5;
+			--link: #49b8f5;
+
+			--surface-shadow: inset 0 -4px 0 0 #4b6370;
+			--overlay-shadow: 0 6px 0 0 #0b1216;
+			--field-shadow: 0 0 0 0 transparent inset;
+
+			--backdrop: oklch(0% 0 0 / 40%);
+
+			/* Playful-only */
+			--field-border-width: 2px;
+			--playful-stroke: 2px;
+			--playful-lip: 4px;
+			--playful-lip-chip: 2px;
+			--outline-stroke: 2px;
+			--outline-lip: 4px;
+			--accent-lip: #4a9c12;
+			--default-lip: #37464f;
+			--danger-lip: #c94b4b;
+			--warning-lip: #ff9f1a;
+			--surface-stroke: 2px;
+			--surface-stroke-color: var(--border);
+		}
+	}
+}
+
+/* Lip colors as utilities (bg-accent-lip, border-b-default-lip, …). Only
+ * Playful defines these variables, so use them only under Playful. */
+@theme inline {
+	--color-accent-lip: var(--accent-lip);
+	--color-default-lip: var(--default-lip);
+	--color-danger-lip: var(--danger-lip);
+	--color-warning-lip: var(--warning-lip);
+}

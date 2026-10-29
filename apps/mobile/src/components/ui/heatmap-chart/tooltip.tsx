@@ -3,37 +3,22 @@ import { StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { Text } from "@/src/components/ui/text";
-import { cn } from "@/src/lib/cn";
+import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/cn";
 import { DEFAULT_HOLD, MONTHS, TOOLTIP_HEIGHT } from "./constants";
 import { type HeatmapCell, type Slot, useHeatmap } from "./context";
 
 export interface HeatmapTooltipProps {
-	/**
-	 * How long a press has to be held before the readout takes over, in
-	 * milliseconds.
-	 *
-	 * It is not zero, and cannot be: a full year of columns lives inside a
-	 * horizontal scroller, and a readout that claims the touch on the first pixel
-	 * of movement means the chart can never be scrolled. Holding first is what
-	 * separates "I am moving the chart" from "I am reading it". Set `0` only for
-	 * a chart that is not inside a scroll view at all.
-	 */
+	/** Hold before the readout claims the touch; non-zero so a chart in a horizontal scroller
+	 * can scroll. */
 	activateAfterLongPress?: number;
 	className?: string;
 	/** The line shown for a cell. Defaults to the count and the date. */
 	formatLabel?: (cell: HeatmapCell) => string;
 }
 
-/**
- * A readout following the finger across the grid.
- *
- * It lives in the view layer, over the SVG: a gesture handler cannot be
- * attached to an SVG node, and SVG text ignores the platform's text scaling.
- * The cell under the finger is resolved on the UI thread and only crosses back
- * into JS when it changes, so a drag across a year costs a handful of
- * re-renders rather than one per frame.
- */
+/** A readout following the finger, in the view layer over the SVG: gesture handlers cannot
+ * attach to SVG nodes and SVG text ignores text scaling. */
 export function HeatmapTooltip({
 	className,
 	formatLabel,
@@ -53,12 +38,7 @@ export function HeatmapTooltip({
 	);
 	const clear = useMemo(() => () => setActiveCell(null), [setActiveCell]);
 
-	/*
-	 * The cell is resolved here, on the UI thread, and only crosses into JS when
-	 * it *changes*. Sending every frame's coordinates over and picking the cell
-	 * in React would cost a re-render per frame for a value that changes maybe
-	 * fifty times across a whole drag.
-	 */
+	// Resolved on the UI thread; crosses into JS only when the cell changes.
 	const pick = (x: number, y: number) => {
 		"worklet";
 		const column = Math.floor(x / step);
@@ -74,14 +54,8 @@ export function HeatmapTooltip({
 		scheduleOnRN(resolve, column, row);
 	};
 
-	/*
-	 * The readout takes over only once the press has been held.
-	 *
-	 * `onStart` rather than `onBegin` is the other half of it: `onBegin` fires on
-	 * touch-down whatever happens next, so picking there would light a cell and
-	 * dim the rest of the grid for the first moment of every scroll swipe — the
-	 * gesture would yield correctly and still leave a flicker behind it.
-	 */
+	// `onStart`, not `onBegin`: `onBegin` fires on touch-down, which would light a
+	// cell for the first moment of every scroll swipe.
 	const pan = Gesture.Pan()
 		.minDistance(0)
 		.activateAfterLongPress(activateAfterLongPress)
@@ -110,9 +84,7 @@ export function HeatmapTooltip({
 			: defaultTooltipLabel(activeCell)
 		: null;
 
-	// Flipped to the left of the finger past the halfway mark, so the readout
-	// never runs off the edge it is closest to — and dropped below the cell in
-	// the top two rows, where there is no room above it inside the chart.
+	// Flipped left of the finger past halfway, and dropped below the cell in the top two rows.
 	const anchorX = activeCell ? activeCell.column * step + grid.size / 2 : 0;
 	const flipped = anchorX > grid.width / 2;
 	const below = (activeCell?.row ?? 0) < 2;
@@ -152,13 +124,8 @@ export function HeatmapTooltip({
 }
 HeatmapTooltip.slot = "tooltip" as Slot;
 
-/*
- * A cell with no date is not a cell with no data — it is a cell in a grid that
- * is not a calendar, and it has a count like any other. Saying "No data" over
- * it reports a hole in the data that is not there. Without a date there is
- * simply nothing to say after the number, so the number is the whole label,
- * and a grid that wants a noun for it passes `formatLabel`.
- */
+// A cell without a date is a non-calendar cell, not missing data: the count alone is
+// the label, and a grid that wants a noun passes `formatLabel`.
 function defaultTooltipLabel(cell: HeatmapCell) {
 	if (!cell.date) {
 		return `${cell.count}`;

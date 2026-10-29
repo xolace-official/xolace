@@ -16,13 +16,7 @@ export type SetupStep = {
 	isComplete: (draft: SetupDraft) => boolean;
 };
 
-/**
- * Config-driven steps: the container renders whichever body matches `id`, and
- * the progress meter + Publish button both read `isComplete` rather than
- * carrying their own copy of the rule. The gate mirrors the server's
- * `publishProfile` check exactly — displayName + bio + photoUrl + at least
- * one specialty.
- */
+/** Config-driven steps; `isComplete` mirrors the server's `publishProfile` gate exactly. */
 export const SETUP_STEPS: SetupStep[] = [
 	{
 		description: "A face makes it easier for someone to reach out.",

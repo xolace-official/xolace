@@ -5,16 +5,16 @@ import { useIsFocused } from "expo-router/react-navigation";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { AppState } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
-import { useVoiceProcessingConsent } from "@/src/features/consent/use-voice-processing-consent";
+import { useVoiceProcessingConsent } from "@/features/consent/use-voice-processing-consent";
 import {
 	fallbackNote,
 	takeFailedNote,
-} from "@/src/features/reflect/hooks/dictation-fallback";
-import { useMeteringRecorder } from "@/src/lib/audio/use-metering-recorder";
-import { playAffirmativePress, playErrorNotice } from "@/src/lib/haptics";
+} from "@/features/reflect/hooks/dictation-fallback";
+import { useMeteringRecorder } from "@/lib/audio/use-metering-recorder";
+import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
 
 /** One take's ceiling; the server rejects anything larger (convex/dictation/plus.ts). */
-export const MAX_TAKE_MS = 180_000;
+const MAX_TAKE_MS = 180_000;
 /** The waveform counts down over the last stretch of a take. */
 export const COUNTDOWN_FROM_MS = 15_000;
 // Mono 32kbps AAC ≈ 4KB/s → a full take is ~720KB, under Convex's 1MB v.bytes().
@@ -48,21 +48,12 @@ const deleteRecording = (uri: string | null) => {
 };
 
 /**
- * Plus dictation (#557): record on device, then Scribe transcribes the take
- * server-side. The transcript goes to `onTranscript` once, at the end. The
- * recording file is deleted once the take is transcribed or abandoned.
- *
- * Never strands the person (#558): `start` declines (returns false) when the
- * daily cap is spent, the app is offline, or Scribe already failed on this
- * screen, so the caller dictates on device instead; the view's `note` says
- * why. A take that fails to transcribe leaves the composer untouched and asks
- * them to try again.
+ * Plus dictation (#557): record on device, Scribe transcribes. `start` is false (#558): on device.
  */
 export function usePlusDictation(onTranscript: (text: string) => void) {
 	const [phase, setPhase] = useState<PlusDictationPhase>("idle");
 	const [note, setNote] = useState<string | null>(null);
-	// ponytail: once Scribe fails, on-device for the rest of this screen; retry
-	// per take if Scribe outages turn out to be short blips.
+	// Once Scribe fails, on-device for the rest of this screen.
 	const [scribeFailed, setScribeFailed] = useState(false);
 	const cappedOn = useQuery(api.dictation.plus.status)?.cappedOn ?? null;
 	// Loading reads as under the cap; the server refuses an over-cap take anyway.
@@ -209,9 +200,8 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 	// effects below reach it through an effect event rather than depending on it.
 	const endTake = useEffectEvent(() => void stop());
 
-	// A full take stops itself and is transcribed — nothing is discarded. Timed
-	// from the start rather than from durationMs, which still holds the last
-	// take's length for a poll after the next one starts.
+	// A full take stops itself and is transcribed. Timed from the start: durationMs
+	// still holds the last take's length just after the next one starts.
 	useEffect(() => {
 		if (phase !== "listening") {
 			return;
@@ -220,8 +210,8 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 		return () => clearTimeout(t);
 	}, [phase]);
 
-	// Leaving the screen or backgrounding the app ends the take but keeps what
-	// was said — including a take that began after they'd already gone.
+	// Leaving the screen ends the take but keeps what was said, including a take
+	// that began after they had already gone.
 	useEffect(() => {
 		if (!isFocused && phase === "listening") {
 			endTake();

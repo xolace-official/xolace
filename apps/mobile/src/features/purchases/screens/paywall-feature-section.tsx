@@ -1,7 +1,7 @@
 import { Separator, Surface } from "heroui-native";
 import type { ReactElement } from "react";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import type { PaywallFeatureId } from "./paywall-surface-map";
 
 type Props = {
@@ -9,11 +9,7 @@ type Props = {
 	children: ReactElement<{ id: PaywallFeatureId }>[];
 };
 
-/**
- * One titled group of feature rows inside the paywall, e.g. "New Level
- * Unlocked". Reinterprets the raycast sample's neutral BlurView card as a
- * themed HeroUI Surface, with Separator between rows instead of a hairline.
- */
+/** One titled group of feature rows inside the paywall. */
 export function PaywallFeatureSection({ title, children }: Props) {
 	return (
 		<View className="gap-3">

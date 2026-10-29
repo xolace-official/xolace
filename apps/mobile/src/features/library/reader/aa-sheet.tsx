@@ -1,30 +1,25 @@
-/**
- * The reader's Aa sheet (#408, Variant C from #401): three reading modes, each
- * drawn as a small page in its own look, plus text size. No separate font or
- * colour controls. Writes straight to the persisted store.
- *
- * A native formSheet route (`reader-appearance`) sized to its contents, with
- * the reader left undimmed behind it so each change shows on the page live.
- */
+// The reader's Aa sheet (#408): three reading modes plus text size, written
+// straight to the persisted store. A formSheet route with the reader left
+// undimmed so each change shows live.
 import { Switch } from "heroui-native";
 import type { ReactNode } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { ReaderPageScope } from "@/src/features/library/reader/reader-page";
+import { AppText } from "@/components/shared/app-text";
+import { ReaderPageScope } from "@/features/library/reader/reader-page";
 import {
 	READING_MODE_KEYS,
 	READING_MODES,
 	type ReadingModeKey,
 	stepTextSize,
 	TEXT_SIZES,
-} from "@/src/features/library/reader/reading-mode";
-import { cn } from "@/src/lib/utils";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/library/reader/reading-mode";
+import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/store";
 
 export function AaSheet() {
 	return (
-		// Sizes to its content; at accessibility text sizes the sheet caps out and this scrolls.
+		// At accessibility text sizes the sheet caps out and this scrolls.
 		<ScrollView
 			bounces={false}
 			contentContainerClassName="gap-6 px-6 pb-12 pt-8"
@@ -141,7 +136,7 @@ function FireToggle() {
 	);
 }
 
-/** A− ●●●○○○ A+ — steps the base size; the phone's text size still multiplies it. */
+/** A− ●●●○○○ A+: steps the base size; the phone's text size still multiplies it. */
 function SizeStepper() {
 	const size = useAppStore((s) => s.readerTextSize);
 	const setSize = useAppStore((s) => s.setReaderTextSize);

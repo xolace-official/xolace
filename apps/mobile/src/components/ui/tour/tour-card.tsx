@@ -2,9 +2,9 @@ import { SymbolView } from "expo-symbols";
 import { Button, CloseButton, useThemeColor } from "heroui-native";
 import { type LayoutChangeEvent, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import type { TourLabels, TourStepEntry } from "@/src/components/ui/tour/types";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import type { TourLabels, TourStepEntry } from "@/components/ui/tour/types";
+import { cn } from "@/lib/utils";
 
 const CHEVRON_LEFT_NAME = {
 	android: "chevron_left",
@@ -55,9 +55,8 @@ export const TourCard = ({
 		<View
 			accessibilityLiveRegion="polite"
 			accessibilityViewIsModal
-			// Held off the first frame's opacity rather than off the screen: the
-			// card has to be laid out to be measured, and its height is what decides
-			// whether it goes above the target or below it.
+			// Held at zero opacity, not off screen: the card must lay out to be measured,
+			// and its height decides whether it goes above or below the target.
 			className={cn(
 				"gap-3 rounded-2xl border border-border bg-overlay p-4",
 				measured ? "opacity-100" : "opacity-0",

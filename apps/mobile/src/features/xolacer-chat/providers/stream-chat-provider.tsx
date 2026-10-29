@@ -12,41 +12,26 @@ import {
 } from "react";
 import { StreamChat } from "stream-chat";
 import { Chat, OverlayProvider } from "stream-chat-expo";
-import { connectPlan } from "@/src/features/xolacer-chat/connect-plan";
+import { connectPlan } from "@/features/xolacer-chat/connect-plan";
 import {
 	attachOfflineDb,
 	chatLocalDataGeneration,
 	chatLocalDataSettled,
-} from "@/src/features/xolacer-chat/offline-db";
+} from "@/features/xolacer-chat/offline-db";
 import {
 	readStreamCredential,
 	type StreamCredential,
 	writeStreamCredential,
-} from "@/src/features/xolacer-chat/stream-credential";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/xolacer-chat/stream-credential";
+import { useAppStore } from "@/store/store";
 import { useStreamTheme } from "./stream-theme";
 
-/**
- * Public Stream key — the same one that ships inside every Stream client app.
- * Read here rather than only off the token action so `Chat` can be mounted from
- * the first frame; see `StreamChatProvider` for why that matters. The token,
- * which is the part that actually grants access, is still minted server-side
- * per user and never lives in the bundle.
- *
- * Must exist in the build environment (`.env.local` locally, EAS environment
- * variables for cloud builds) alongside the other `EXPO_PUBLIC_*` keys.
- */
+/** Public Stream key, read at build time so `Chat` mounts from the first frame; the token is
+ * still minted server-side. */
 const STREAM_API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY;
 
-/**
- * `ready` — the client is usable: its user is set and its offline database is
- * open, whether or not the socket is up yet. Screens render from the local
- * copy and the `OfflineStrip` reports the socket. `unavailable` — no client is
- * possible: no key, a key the token wasn't signed for, or a token that could
- * not be fetched and was not on the device. `connecting` is the few
- * milliseconds between activation and the database opening, and no screen
- * blocks on it for longer than that.
- */
+/** `ready`: user set and offline db open, socket or not. `unavailable`: no client possible (no
+ * key, key mismatch, no token). `connecting`: the gap before the db opens. */
 export type StreamStatus = "connecting" | "ready" | "unavailable";
 
 type StreamStatusValue = {
@@ -71,23 +56,8 @@ const StreamStatusContext = createContext<StreamStatusValue>(DISCONNECTED);
 
 export const useStreamStatus = () => use(StreamStatusContext);
 
-/**
- * Declares "this screen needs Stream", and returns the same value as
- * `useStreamStatus`.
- *
- * The provider connects to nothing on its own for a user who has never opened
- * chat. Chat is server-gated (`chatEnabled()`), so an unconditional connect
- * would put a token action and a WS handshake on every user's cold start —
- * competing with Clerk and Convex on the reflect screen — and would log a
- * failed token fetch for everyone when the flag is off. A returning chat user
- * is the exception: their cached gate and credential let `connectPlan` start
- * the connection at mount, before any surface asks.
- *
- * Pass `enabled: false` while a caller still doesn't know whether it needs chat
- * — the Connect tab holds it off until `xolacerChat.status` confirms the
- * feature is on, so a disabled deployment never fetches a token that would
- * throw.
- */
+/** Declares that this screen needs Stream and returns `useStreamStatus`. Pass `enabled: false`
+ * until the caller knows chat is on, so a disabled deployment never fetches a token. */
 export function useStreamConnection(enabled = true) {
 	const value = use(StreamStatusContext);
 	const { activate } = value;
@@ -99,12 +69,8 @@ export function useStreamConnection(enabled = true) {
 	return value;
 }
 
-/**
- * Overlay host for the long-press message menu and image gallery.
- *
- * Cheap to hoist: it renders context, a portal host, and nothing else until an
- * overlay is actually open. No Stream connection is involved.
- */
+/** Overlay host for the long-press message menu and image gallery; no Stream connection
+ * involved. */
 export function StreamOverlayProvider({
 	children,
 }: {
@@ -116,22 +82,8 @@ export function StreamOverlayProvider({
 	);
 }
 
-/**
- * Connects the authenticated user to Stream. The Stream user id is minted
- * server-side from the authed profile; the client never names it.
- *
- * `Chat` is mounted unconditionally, from the first frame, and that is
- * load-bearing. It wraps the entire protected navigator, so a version of this
- * that only mounted it once a client existed changed the element type sitting
- * above `children` — which unmounts and rebuilds every screen in the app.
- * Keeping the shape fixed means only the context value moves. The same
- * concern is why the offline database is opened *before* `connectUser` sets
- * `client.userID`: with offline support on, `Chat` renders nothing for a user
- * whose database isn't open yet, and that gap would blank every screen.
- *
- * Mounting `Chat` early costs no network. `new StreamChat()` opens nothing —
- * `connectUser` is what does, and that still waits for `activate()`.
- */
+/** Connects the authed user to Stream. `Chat` wraps the whole protected navigator and mounts
+ * from the first frame: changing its element type would remount every screen. */
 export function StreamChatProvider({
 	children,
 }: {
@@ -153,23 +105,20 @@ export function StreamChatProvider({
 	const [offlineReady, setOfflineReady] = useState(false);
 	const streamTheme = useStreamTheme();
 
-	// Serializes connect/disconnect. `disconnectUser` is async, so an unawaited
-	// teardown can still be closing the socket when the next effect run calls
-	// `connectUser` — the close then lands on the new connection. Every op chains
-	// onto the previous one instead.
+	// Serializes connect/disconnect: `disconnectUser` is async, so an unawaited
+	// teardown can close the socket of the next `connectUser`. Every op chains
+	// onto the previous one.
 	const streamOp = useRef<Promise<unknown>>(Promise.resolve());
 
-	// One instance for the life of the app. `getInstance` is idempotent per key
-	// and so is the attach, so a plain call each render is correct and a remount
-	// above this can never leave two sockets racing.
+	// `getInstance` and the attach are idempotent per key, so a plain call each
+	// render is correct and a remount above this never races two sockets.
 	const client = STREAM_API_KEY ? StreamChat.getInstance(STREAM_API_KEY) : null;
 	if (client) {
 		attachOfflineDb(client);
 	}
 
-	// Only chat users pay for this subscription. It keeps the cached gate honest:
-	// a kill-switch flip lands here, the cache flips, and the next cold start
-	// stays quiet. The credential is kept — see `connectPlan`.
+	// Only chat users pay for this subscription; a kill-switch flip updates the
+	// cached gate so the next cold start stays quiet. Credential kept: see `connectPlan`.
 	const liveStatus = useQuery(
 		api.xolacerChat.status,
 		activated || cachedEnabled ? {} : "skip"
@@ -245,10 +194,8 @@ export function StreamChatProvider({
 		}
 
 		let alive = true;
-		// The stored token first, so a cold start costs no round trip; Stream
-		// calls back in on expiry or rejection and the refreshed token is stored
-		// for the next launch. Offline, the refresh fails and so does the
-		// handshake — the client keeps its user and serves the local copy.
+		// Stored token first so a cold start costs no round trip; Stream calls back
+		// on expiry or rejection and the refreshed token is stored for next launch.
 		let storedToken: string | null = credential.token;
 		const tokenProvider = async () => {
 			if (storedToken) {
@@ -264,14 +211,11 @@ export function StreamChatProvider({
 		const opening = streamOp.current
 			.catch(() => {})
 			.then(async () => {
-				// A reset still dropping the previous owner's tables must finish before
-				// this opens them; one that starts while `init` runs means this
-				// credential is already gone, so the handshake is skipped. See
-				// `chatLocalDataSettled`.
+				// A reset still dropping the previous owner's tables must finish first;
+				// one that starts during `init` skips the handshake. See `chatLocalDataSettled`.
 				const generation = await chatLocalDataSettled();
 				// Opened before `connectUser` so `Chat` never sees a user without a
-				// database — see the component comment. A database that fails to open
-				// degrades to today's online-only chat rather than blocking it.
+				// database; a failed open degrades to online-only chat.
 				await client.offlineDb?.init(credential.userId);
 				const dbOpen =
 					client.offlineDb?.shouldInitialize(credential.userId) ?? false;
@@ -280,22 +224,17 @@ export function StreamChatProvider({
 				}
 				setOfflineReady(dbOpen);
 				// `Chat` sets this too, but in an effect that may land after a fast
-				// failure. Without it a refused handshake wipes the user off the client
-				// and the local copy is unreachable.
+				// failure, and a refused handshake would then wipe the user off the client.
 				client.persistUserOnConnectionFailure = dbOpen;
-				// Not awaited here: `connectUser` sets the user synchronously and
-				// resolves only once the socket is up, which is exactly the wait the
-				// thread no longer pays. Failure isn't `unavailable` — the client is
-				// still usable against the local copy, and the SDK reconnects when the
-				// network is back. The handshake is still chained below so a teardown
-				// never lands mid-handshake.
+				// Not awaited: `connectUser` sets the user synchronously and resolves only
+				// once the socket is up. Failure is not `unavailable` (the local copy stays
+				// readable); still chained so a teardown never lands mid-handshake.
 				const handshake = client
 					.connectUser({ id: credential.userId }, tokenProvider)
 					.catch((err) => {
 						console.warn("[xolacer-chat] Stream connect failed", err);
-						// Without a database the SDK drops the user on failure, and a
-						// client with no user throws from `channel()` — so it can't stay
-						// handed out. With one, the local copy is still readable.
+						// Without a database the SDK drops the user on failure and `channel()`
+						// then throws, so the client cannot stay handed out.
 						if (!dbOpen && alive) {
 							setReady(false);
 							setError(true);

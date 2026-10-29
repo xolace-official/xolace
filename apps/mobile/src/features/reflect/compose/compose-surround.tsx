@@ -7,18 +7,18 @@ import Animated, {
 	type SharedValue,
 	useAnimatedStyle,
 } from "react-native-reanimated";
-import { IdleMenu } from "@/src/features/idle-menu/menu";
-import { ComposeChrome } from "@/src/features/reflect/compose/compose-chrome";
+import { IdleMenu } from "@/features/idle-menu/menu";
+import { ComposeChrome } from "@/features/reflect/compose/compose-chrome";
 import {
 	ComposeSlot,
 	SLOT_BAND_GAP,
 	SLOT_H,
-} from "@/src/features/reflect/compose/compose-slot";
-import { useMorphGeometry } from "@/src/features/reflect/compose/morph-geometry";
-import { TalkTourStep } from "@/src/features/reflect/compose/talk-tour-step";
-import { TextureBand } from "@/src/features/reflect/compose/texture-band";
-import type { ReflectionAction } from "@/src/features/reflect/types";
-import { a11yHidden } from "@/src/lib/utils";
+} from "@/features/reflect/compose/compose-slot";
+import { useMorphGeometry } from "@/features/reflect/compose/morph-geometry";
+import { TalkTourStep } from "@/features/reflect/compose/talk-tour-step";
+import { TextureBand } from "@/features/reflect/compose/texture-band";
+import type { ReflectionAction } from "@/features/reflect/types";
+import { a11yHidden } from "@/lib/utils";
 
 type Props = {
 	progress: SharedValue<number>;
@@ -38,12 +38,7 @@ type Props = {
 };
 
 /**
- * The page the card rests on: identity strip above, chips below, mic beside.
- *
- * All of it recedes as the card takes the screen — it is one object growing,
- * not a page gaining a panel. `fade` carries the surround through the
- * reduced-motion cross-fade too, where progress jumps rather than travels and
- * would otherwise cut these out in a single frame.
+ * The page the card rests on; recedes as the card expands. `fade` covers reduced motion.
  */
 export const ComposeSurround = ({
 	progress,
@@ -63,8 +58,7 @@ export const ComposeSurround = ({
 	const geo = useMorphGeometry();
 	const rawHeaderHeight = useHeaderHeight();
 	// Freeze the last known header height so it doesn't jump when the header
-	// hides for the composer. Adjusting state during render (not in an effect) is
-	// the supported pattern for retaining a value seen on a previous render.
+	// hides for the composer.
 	const [stableHeaderHeight, setStableHeaderHeight] = useState(0);
 	if (rawHeaderHeight > 0 && rawHeaderHeight !== stableHeaderHeight) {
 		setStableHeaderHeight(rawHeaderHeight);
@@ -91,18 +85,15 @@ export const ComposeSurround = ({
 
 	const inFlow = expanded ? "none" : "auto";
 	const overlay = expanded ? "none" : "box-none";
-	// `recede` takes these to opacity 0, which a screen reader does not honour —
-	// without this the whole texture band and a second mic stay swipe-reachable
-	// behind the open composer.
+	// A screen reader does not honour opacity 0: without this the band and a
+	// second mic stay swipe-reachable behind the open composer.
 	const receded = a11yHidden(expanded);
 	const chromeStyle = {
 		paddingTop: Math.max(0, stableHeaderHeight - geo.insetTop),
 	};
 
-	// The band is bottom-anchored and grows upward with the reader's text size,
-	// so at large accessibility sizes it climbs into the slot parked under the
-	// card. The card's geometry is where the slot wants to be; the band's
-	// measured top is where it is still allowed to be — take whichever is higher.
+	// At large text sizes the band climbs into the slot under the card, so the
+	// slot sits at the card's geometry or above the band's top, whichever is higher.
 	const [bandTop, setBandTop] = useState(0);
 	const restingTop = geo.restTop + geo.restH + 20;
 	const micStyle = {

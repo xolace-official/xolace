@@ -7,10 +7,10 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { useSessionEndHref } from "@/src/features/kindling/use-session-end-href";
-import { usePathSession } from "@/src/features/sit-with-this/hooks/use-path-session";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { AppText } from "@/components/shared/app-text";
+import { useSessionEndHref } from "@/features/kindling/use-session-end-href";
+import { usePathSession } from "@/features/sit-with-this/hooks/use-path-session";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { ExerciseRunner } from "./runner/exercise-runner";
 import type { ExerciseData } from "./runner/exercise-runner.types";
 import { SwapSheet } from "./swap-sheet";
@@ -30,9 +30,8 @@ export function SitWithThisScreen() {
 		{ paddingBottom: insets.bottom, paddingTop: insets.top },
 	];
 
-	// A kindling twig (#333) replays a *completed* session's exercise: the
-	// session id rides in on the route, no session state moves, and finishing
-	// returns to the kindling instead of session-end.
+	// A kindling twig (#333) replays a completed session's exercise: no session
+	// state moves, and finishing returns to the kindling instead of session-end.
 	const params = useLocalSearchParams<{
 		from?: string;
 		sessionId?: string;
@@ -77,10 +76,8 @@ export function SitWithThisScreen() {
 		}
 	}, [standalone, sessionId, session, startPath]);
 
-	// Complete the session the moment the exercise ends — before navigating — so
-	// it's durably terminal even if the user closes the app on session-end.
-	// session-end fetches the session by id (not getActive), so it renders fine
-	// on a completed session and only records optional post-session feedback.
+	// Complete the session before navigating, so it is terminal even if the app
+	// closes on session-end. session-end fetches by id, not getActive.
 	const goToSessionEnd = async (pathCompleted: boolean) => {
 		if (standalone) {
 			// Finishing tends the kindling twig; bailing early leaves it untouched.
@@ -184,7 +181,7 @@ export function SitWithThisScreen() {
 	}
 
 	const swapsUsed = standalone ? 0 : (session?.swappedExerciseIds?.length ?? 0);
-	// Derive from session: if any swaps have happened, skip pre-roll on remount.
+	// Any swap so far skips the pre-roll on remount.
 	const hasSwapped = swapsUsed > 0;
 
 	return (

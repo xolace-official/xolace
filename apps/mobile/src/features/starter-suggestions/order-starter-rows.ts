@@ -2,7 +2,7 @@ import {
 	STARTER_ROWS,
 	type StarterRow,
 	type StarterRowId,
-} from "@/src/features/starter-suggestions/starter-rows";
+} from "@/features/starter-suggestions/starter-rows";
 
 // Plain strings, not the validator unions: an older build must fall back to
 // the default order when a newer backend sends a value it doesn't know.
@@ -22,12 +22,8 @@ const NO_WORDS = new Set([
 	"numb_or_cant_tell",
 ]);
 
-/**
- * ADR-0017: intake may reorder the five rows and nothing else. `intent` picks
- * the first row; a no-words `emotionAwareness` then sends Reflect to the
- * bottom (it wins over intent, so a writing prompt is never first for them).
- * Only these two fields are read.
- */
+/** ADR-0017: intake only reorders rows. `intent` picks the first; a no-words `emotionAwareness`
+ * sends Reflect last and wins. */
 export function orderStarterRows(
 	intake: Intake | null | undefined
 ): StarterRow[] {

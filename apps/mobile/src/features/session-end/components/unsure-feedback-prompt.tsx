@@ -3,7 +3,7 @@ import { EaseView } from "react-native-ease/uniwind";
 import {
 	UNSURE_CHIPS,
 	useUnsureFeedback,
-} from "@/src/features/session-end/hooks/use-unsure-feedback";
+} from "@/features/session-end/hooks/use-unsure-feedback";
 import { FeedbackSheet } from "./feedback-sheet";
 
 type Props = {

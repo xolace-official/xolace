@@ -1,9 +1,9 @@
 import { Button, Dialog } from "heroui-native";
 import { View } from "react-native";
-import { DialogBlurBackdrop } from "@/src/components/dialog-blur-backdrop";
-import { AppText } from "@/src/components/shared/app-text";
-import type { DictationUpsell } from "@/src/features/reflect/hooks/use-dictation-upsell";
-import { playAffirmativePress, playSoftPress } from "@/src/lib/haptics";
+import { DialogBlurBackdrop } from "@/components/dialog-blur-backdrop";
+import { AppText } from "@/components/shared/app-text";
+import type { DictationUpsell } from "@/features/reflect/hooks/use-dictation-upsell";
+import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
 
 /** A free person's one introduction to Plus dictation, on their first mic tap (#559). */
 export const DictationUpsellDialog = ({

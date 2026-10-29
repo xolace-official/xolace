@@ -3,25 +3,21 @@ import { usePaginatedQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { PressableFeedback } from "heroui-native";
 import { useWindowDimensions, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import type { TimelineEntry } from "@/src/features/timeline/types";
-import { toTimelineEntry } from "@/src/features/timeline/utils";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import type { TimelineEntry } from "@/features/timeline/types";
+import { toTimelineEntry } from "@/features/timeline/utils";
+import { playSoftPress } from "@/lib/haptics";
 import { DiscoveryMomentCard } from "./discovery-moment-card";
 import { MomentsSkeleton } from "./skeletons";
 import { StackedCarousel } from "./stacked-carousel";
 
 const MOMENT_COUNT = 4;
 const CARD_HEIGHT = 166;
-// Matches the horizontal px-4 the rest of the screen (e.g. DailyQuotesCard)
-// uses, so the centered card's edges line up with everything above it.
+// Matches the screen's px-4 so the centered card's edges line up.
 const SCREEN_PADDING_X = 32;
 
-/**
- * Teaser for the full timeline — reuses `listForTimeline` capped to the first
- * page (never calls loadMore), so it inherits the same free-tier window gate
- * as the real timeline rather than duplicating that logic in a second query.
- */
+/** Timeline teaser: `listForTimeline`'s first page only, so it inherits the free-tier window
+ * gate. */
 export function DiscoveryTimelineSection() {
 	const router = useRouter();
 	const { width } = useWindowDimensions();

@@ -7,17 +7,17 @@ import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { posthog } from "@/src/config/posthog";
+import { AppText } from "@/components/shared/app-text";
+import { posthog } from "@/config/posthog";
 import {
 	type Intake,
 	orderStarterRows,
-} from "@/src/features/starter-suggestions/order-starter-rows";
-import type { StarterRow } from "@/src/features/starter-suggestions/starter-rows";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { cn } from "@/src/lib/utils";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/starter-suggestions/order-starter-rows";
+import type { StarterRow } from "@/features/starter-suggestions/starter-rows";
+import { playSoftPress } from "@/lib/haptics";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/store";
 
 const FLUX = require("@/assets/images/flux/flux-map.png");
 const FLUX_W = 72;
@@ -78,8 +78,7 @@ export function StarterSuggestionsBubble({ intake, onResolve }: Props) {
 		}
 		playSoftPress();
 		// Reflect is the screen under the bubble: ask it to open the card (#462).
-		// Tab destinations replace, like the idle menu's Discovery, so reflect
-		// stays the "/" landing with no back stack.
+		// Tab destinations replace, so reflect stays the "/" landing with no back stack.
 		if (row.id === "reflect") {
 			requestComposerOpen();
 		} else if (row.id === "vent") {
@@ -89,9 +88,8 @@ export function StarterSuggestionsBubble({ intake, onResolve }: Props) {
 		} else if (row.id === "listen") {
 			router.replace("/browse");
 		}
-		// The roster, not a conversation: the request (and its "Before you ask"
-		// primer) stays the user's own tap. `t` re-applies the segment if the
-		// tab is already mounted on Chats.
+		// The roster, not a conversation. `t` re-applies the segment if the tab
+		// is already mounted on Chats.
 		else if (row.id === "xolacer") {
 			router.replace({
 				params: { t: navToken(), view: "xolacers" },

@@ -3,12 +3,12 @@ import type { FunctionReturnType } from "convex/server";
 import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	type BrowseFrom,
 	useOpenTrack,
-} from "@/src/features/browse/use-open-track";
-import { CoverImage } from "@/src/features/library/cover-image";
+} from "@/features/browse/use-open-track";
+import { CoverImage } from "@/features/library/cover-image";
 
 export type { BrowseFrom };
 export type TrackItem = FunctionReturnType<typeof api.browse.getTopic>[number];
@@ -20,14 +20,8 @@ export const FAMILY_LABEL = {
 
 const THUMB = 56;
 
-/**
- * One catalogue row (§9.3): square artwork, title, one subtitle line. No
- * inline play — a tap opens the player (#340). `glyph` marks the family and
- * is only shown on the topic screen, the one list both families share.
- *
- * Free users (§9.4): the thumbnail wears a lock and the tap opens the paywall
- * instead of the player (`useOpenTrack`).
- */
+/** One catalogue row (§9.3); a tap opens the player (#340) or the paywall (§9.4). `glyph` marks
+ * the family on the topic screen only. */
 export function TrackRow({
 	track,
 	from,

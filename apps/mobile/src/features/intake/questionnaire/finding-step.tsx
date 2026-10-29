@@ -1,19 +1,14 @@
-/**
- * §3 Finding us — Q8, Q9 and the one branch.
- *
- * The only step that lifts its answers out of `SectionScreen`: Q9 decides
- * whether Q10/Q11 exist at all, and the progress count has to know that as it
- * happens.
- */
+// §3 Finding us: Q8, Q9 and the one branch. The only step that lifts its answers out
+// of `SectionScreen`, because Q9 decides whether Q10/Q11 exist.
 import { useState } from "react";
 import { Pressable, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	Questionnaire,
 	type QuestionnaireAnswers,
-} from "@/src/components/ui/questionnaire";
-import { MASCOT_MAP } from "@/src/features/intake/questionnaire/mascot";
-import { SectionScreen } from "@/src/features/intake/questionnaire/section-screen";
+} from "@/components/ui/questionnaire";
+import { MASCOT_MAP } from "@/features/intake/questionnaire/mascot";
+import { SectionScreen } from "@/features/intake/questionnaire/section-screen";
 import {
 	SECTION_FINDING,
 	SERIES_BRANCH_VALUE,
@@ -21,9 +16,9 @@ import {
 	SERIES_SEEN_RATINGS,
 	SERIES_WANT_CHOICES,
 	SERIES_WANT_QUESTION,
-} from "@/src/features/intake/questions";
-import { playTextureSelect } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+} from "@/features/intake/questions";
+import { playTextureSelect } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 const BASE = SECTION_FINDING.map((q) => ({ name: q.name, required: true }));
 
@@ -33,9 +28,8 @@ export function FindingStep({
 	onDone: (answers: QuestionnaireAnswers) => void;
 }) {
 	const [answers, setAnswers] = useState<QuestionnaireAnswers>({});
-	// Q10's "Yes" reveals the ratings; the rating is the answer, so Yes is local.
-	// The two have to clear each other, or both read as selected and a screen
-	// reader announces two chosen radios in one group.
+	// Q10's "Yes" reveals the ratings; the rating is the answer, so Yes is local. The two
+	// must clear each other or a screen reader announces two chosen radios in one group.
 	const [seen, setSeen] = useState(false);
 
 	const chooseYes = () => {

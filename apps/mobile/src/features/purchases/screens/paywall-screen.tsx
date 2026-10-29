@@ -8,15 +8,14 @@ import { useEffect, useRef, useState } from "react";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { appConfig } from "@/src/config/app";
-import { useRevenueCat } from "@/src/features/purchases/revenuecat-context";
-import { useIntroEligibility } from "@/src/features/purchases/use-intro-eligibility";
+import { appConfig } from "@/config/app";
+import { useRevenueCat } from "@/features/purchases/revenuecat-context";
+import { useIntroEligibility } from "@/features/purchases/use-intro-eligibility";
 import {
 	type PaywallSurface,
 	usePaywall,
-} from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { useCompanionName } from "@/src/features/talk/use-companion-name";
+} from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { PaywallCta } from "./paywall-cta";
 import { hasFreeTrial, paywallCtaLabel } from "./paywall-cta-label";
 import { PaywallFeatureItem } from "./paywall-feature-item";
@@ -46,8 +45,7 @@ import {
 } from "./paywall-surface-map";
 import { ProgressiveBlurView } from "./progressive-blur-view";
 
-// Fallback display prices while offerings are unavailable
-// (appConfig.features.payments=false, or RC still loading).
+// Display prices while offerings are unavailable (payments off, or RC still loading).
 const FALLBACK = {
 	annual: {
 		detail: "$4.17/mo, billed yearly",
@@ -57,32 +55,28 @@ const FALLBACK = {
 	monthly: { detail: "billed monthly", numericPrice: 9.99, price: "$9.99/mo" },
 } as const;
 
-/** Why the paywall is closing — intake's `intake_completed` outcome hangs on it. */
+/** Why the paywall is closing; intake's `intake_completed` outcome hangs on it. */
 export type PaywallExitReason = "purchased" | "dismissed";
 
 type Props = {
 	surface?: PaywallSurface;
-	/**
-	 * The just-completed session a purchase should fulfil kindling for
-	 * (session-end's `kindling` surface, docs/paths-v1.md §12). Sent to
-	 * `paths.requestKindling` once the purchase confirms.
-	 */
+	/** The companion's name for `{name}` in a surface line; passed by the route so purchases
+	 * never imports talk. */
+	companionName: string;
+	/** Session to fulfil kindling for via `paths.requestKindling` (docs/paths-v1.md §12). */
 	sessionId?: Id<"sessions">;
-	/**
-	 * Where a dismiss or a completed purchase goes. Defaults to closing the
-	 * paywall route; intake overrides it to run its terminal step, since it has
-	 * no back edge to pop to.
-	 *
-	 * Called at most once per mount. Resolve `false` if the exit was swallowed
-	 * (intake's write can fail and leave the user on this screen) — that unlatches
-	 * the guard so the close button works again.
-	 */
+	/** Where a dismiss or purchase goes. Called at most once per mount; resolve `false` if
+	 * swallowed to unlatch the guard. */
 	onExit?: (reason: PaywallExitReason) => void | Promise<boolean>;
 };
 
-export function PaywallScreen({ surface, sessionId, onExit }: Props) {
+export function PaywallScreen({
+	surface,
+	sessionId,
+	onExit,
+	companionName,
+}: Props) {
 	const posthog = usePostHog();
-	const companionName = useCompanionName();
 	const defaultClose = usePaywall((s) => s.close);
 	const closePaywall = onExit ?? (() => defaultClose());
 	const insets = useSafeAreaInsets();
@@ -99,11 +93,8 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 	const [busy, setBusy] = useState(false);
 	const [retrying, setRetrying] = useState(false);
 	const [ctaHeight, setCtaHeight] = useState(0);
-	// Single-flight exit. Intake hangs its terminal step (the answers write, the
-	// `intake_completed` event) off `onExit`, so a second call would persist and
-	// track a second outcome — a dismiss racing the purchase that just landed, or
-	// two taps on close. The ref is what actually guards: two presses in one frame
-	// both read stale state.
+	// Single-flight exit: a second `onExit` call would persist and track a second intake
+	// outcome. The ref guards; two presses in one frame both read stale state.
 	const exiting = useRef(false);
 	const [isExiting, setIsExiting] = useState(false);
 
@@ -118,14 +109,12 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 	);
 	const highlightedFeature = surface ? PAYWALL_SURFACE_FEATURE[surface] : null;
 
-	// Payments are live but the store gave us nothing to sell — the cold-start
-	// fetch failed or the products didn't resolve. Never show a purchasable-
-	// looking CTA in this state (App Review 2.1 "unresponsive button").
+	// Payments live but nothing to sell. Never show a purchasable-looking CTA here
+	// (App Review 2.1 "unresponsive button").
 	const plansUnavailable =
 		appConfig.features.payments && !annualPkg && !monthlyPkg;
 
-	// Recover from a failed cold-start offerings fetch as soon as the paywall
-	// opens, instead of waiting for the user to tap "Try again".
+	// Retry a failed cold-start offerings fetch as soon as the paywall opens.
 	useEffect(() => {
 		if (!plansUnavailable || isLoading) {
 			return;
@@ -143,7 +132,7 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 			session_count: summary?.sessionCount ?? null,
 			surface: surface ?? null,
 		});
-		// Fire once on mount — summary is attribution detail, not a re-fire trigger.
+		// Fire once on mount; summary is attribution detail, not a re-fire trigger.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
@@ -174,9 +163,8 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 		exiting.current = true;
 		setIsExiting(true);
 		Promise.resolve(closePaywall(reason)).then((written) => {
-			// Only intake reports back, and only to say the write was swallowed
-			// (toast + stay put). Unlatch, or the close button is inert on a screen
-			// with no back edge.
+			// Only intake reports back, and only to say the write was swallowed. Unlatch,
+			// or the close button is inert on a screen with no back edge.
 			if (written !== false) {
 				return;
 			}
@@ -187,7 +175,7 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 
 	const handleContinue = () => {
 		if (!selectedPkg) {
-			return; // payments not live yet — CTA is a visual placeholder
+			return; // payments not live; the CTA is a visual placeholder
 		}
 		setBusy(true);
 		purchase(selectedPkg, surface ?? undefined)
@@ -195,8 +183,7 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 				if (!ok) {
 					return;
 				}
-				// Best-effort: the server parks it until the webhook lands, so a
-				// failure here only costs this one kindling, never the purchase.
+				// Best-effort: a failure here costs this one kindling, never the purchase.
 				if (sessionId) {
 					requestKindling({ sessionId }).catch(console.error);
 				}
@@ -233,8 +220,8 @@ export function PaywallScreen({ surface, sessionId, onExit }: Props) {
 						styles.scrollContent,
 						{
 							paddingBottom: ctaHeight + 24,
-							// contentInsetAdjustmentBehavior handles this on iOS; Android's
-							// ScrollView has no equivalent for a transparent native header.
+							// Android's ScrollView has no contentInsetAdjustmentBehavior for a
+							// transparent header.
 							paddingTop: Platform.OS === "android" ? headerHeight + 16 : 0,
 						},
 					]}

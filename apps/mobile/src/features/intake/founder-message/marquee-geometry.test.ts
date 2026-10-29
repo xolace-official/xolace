@@ -35,8 +35,7 @@ const worstGap = (viewport: number) => {
 };
 
 describe("founder marquee belt", () => {
-	// #280: the belt was pinned to the card count (615px), so anything wider
-	// never recycled and the right of the band stayed empty.
+	// #280: a belt pinned to the card count (615px) never recycled on wider screens.
 	it.each([320, 614, 615, 1280, 2000])(
 		"covers the whole track at viewport %ipx",
 		(viewport) => {

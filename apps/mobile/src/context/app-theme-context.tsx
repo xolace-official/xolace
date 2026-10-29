@@ -2,16 +2,8 @@ import type React from "react";
 import { createContext, useContext, useMemo } from "react";
 import { Uniwind, useUniwind } from "uniwind";
 
-/**
- * All available theme variants. Each custom theme needs a light and dark variant.
- *
- * To add your own theme:
- *   1. Create a CSS file in src/themes/ (copy an existing one as a template)
- *   2. Import it in src/global.css
- *   3. Register both variants in metro.config.js `extraThemes`
- *   4. Add the variant names to this union type
- *   5. Add the toggle cases in `toggleTheme` below
- */
+/** All theme variants; each custom theme has a light and dark variant. Adding one:
+ * apps/mobile/AGENTS.md, "Themes". */
 type ThemeName =
 	| "light"
 	| "dark"
@@ -33,7 +25,9 @@ type ThemeName =
 	| "velvet-light"
 	| "velvet-dark"
 	| "noir-light"
-	| "noir-dark";
+	| "noir-dark"
+	| "playful-light"
+	| "playful-dark";
 
 interface AppThemeContextType {
 	currentTheme: string;
@@ -47,10 +41,7 @@ const AppThemeContext = createContext<AppThemeContextType | undefined>(
 	undefined
 );
 
-/**
- * Provides theme state and switching to the entire app.
- * Wraps Uniwind's theme system with convenience helpers (isLight, isDark, toggleTheme).
- */
+/** Theme state and switching for the app, wrapping Uniwind with isLight/isDark/toggleTheme. */
 export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
@@ -64,7 +55,8 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 			Uniwind.setTheme(newTheme);
 		};
 
-		/** Toggles between light/dark within the current color theme. Add cases here for new themes. */
+		/** Toggles between light/dark within the current color theme. Add cases here for new
+		 * themes. */
 		const toggleTheme = () => {
 			switch (theme) {
 				case "light":
@@ -126,6 +118,12 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 					break;
 				case "noir-dark":
 					Uniwind.setTheme("noir-light");
+					break;
+				case "playful-light":
+					Uniwind.setTheme("playful-dark");
+					break;
+				case "playful-dark":
+					Uniwind.setTheme("playful-light");
 					break;
 			}
 		};

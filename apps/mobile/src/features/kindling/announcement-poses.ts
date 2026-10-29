@@ -2,21 +2,17 @@ import type { ImageSource } from "expo-image";
 import {
 	TWIG_PRESENTATION,
 	type Twig,
-} from "@/src/features/kindling/twig-presentation";
+} from "@/features/kindling/twig-presentation";
 
-/** The announcement's six. Try-this has no pose of its own yet, so it isn't one (#567). */
+/** The announcement's six. Try-this has no pose of its own yet (#567). */
 export type AnnouncementKind = Exclude<Twig["kind"], "try">;
 
-/** All six, always — the announcement is the concept, not this session's twigs (#455). */
+/** All six, always: the announcement is the concept, not this session's twigs (#455). */
 export const ANNOUNCEMENT_KINDS = (
 	Object.keys(TWIG_PRESENTATION) as Twig["kind"][]
 ).filter((kind): kind is AnnouncementKind => kind !== "try");
 
-/**
- * Flux, one pose per twig kind (prompts: docs/kindling-flux-poses.md), hosted
- * in Convex storage like the `TWIG_PRESENTATION` images. Replacing a pose is a
- * URL swap here.
- */
+/** Flux, one pose per twig kind (prompts: docs/kindling-flux-poses.md), in Convex storage. */
 const STORAGE = "https://energetic-guineapig-283.convex.cloud/api/storage";
 const BREATHING_POSE = {
 	uri: `${STORAGE}/379966f6-e54e-45f9-97d1-b2897230e3b2`,
@@ -32,13 +28,11 @@ export const POSE: Record<Twig["kind"], ImageSource> = {
 	xolacer: { uri: `${STORAGE}/c3517525-fd5a-43f6-859f-a6744e283344` },
 };
 
-/** Transparent poses: shown whole on the circle's tint. The rest carry a scene and fill the circle. */
+/** Transparent poses: shown whole on the circle's tint. The rest carry a scene and fill the
+ * circle. */
 export const CLEAN_POSES = new Set<Twig["kind"]>(["audio", "xolacer"]);
 
-/**
- * Ring accents — decorative, deliberately outside the theme tokens (#457), so
- * they read the same in every theme. Tentative.
- */
+/** Ring accents, deliberately outside the theme tokens (#457) so they read the same everywhere. */
 export const RING_ACCENT: Record<AnnouncementKind, string> = {
 	audio: "#F4A261",
 	breathing: "#7DD3C0",
@@ -48,7 +42,7 @@ export const RING_ACCENT: Record<AnnouncementKind, string> = {
 	xolacer: "#F28CB1",
 };
 
-/** How much of each ring is drawn. Arbitrary — no data behind it. */
+/** How much of each ring is drawn. Arbitrary, no data behind it. */
 export const RING_ARC: Record<AnnouncementKind, number> = {
 	audio: 0.72,
 	breathing: 1,

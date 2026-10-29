@@ -1,12 +1,20 @@
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useLocalSearchParams } from "expo-router";
-import { PaywallScreen } from "@/src/features/purchases/screens/paywall-screen";
-import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
+import { PaywallScreen } from "@/features/purchases/screens/paywall-screen";
+import type { PaywallSurface } from "@/features/purchases/use-paywall";
+import { useCompanionName } from "@/features/talk/use-companion-name";
 
 export default function Route() {
 	const { surface, sessionId } = useLocalSearchParams<{
 		surface?: PaywallSurface;
 		sessionId?: Id<"sessions">;
 	}>();
-	return <PaywallScreen sessionId={sessionId} surface={surface} />;
+	const companionName = useCompanionName();
+	return (
+		<PaywallScreen
+			companionName={companionName}
+			sessionId={sessionId}
+			surface={surface}
+		/>
+	);
 }

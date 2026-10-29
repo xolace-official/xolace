@@ -1,8 +1,4 @@
-/**
- * Single page flip for the streak calendar — adapted from the
- * calendar-days sample (Page + PageFace + DepthShadow), reduced to
- * one flip (front = old day, back = new day) and theme-aware colors.
- */
+/** Single page flip from the calendar-days sample: front is the old day, back the new. */
 
 import { LinearGradient } from "expo-linear-gradient";
 import { Platform, StyleSheet, View } from "react-native";
@@ -13,7 +9,7 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import type { CardColors, CardMetrics } from "./constants";
 
 type FaceVariant = "front" | "back";

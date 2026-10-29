@@ -16,10 +16,10 @@ import {
 	View,
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { useCompanionName } from "@/src/features/talk/use-companion-name";
-import type { Turn } from "@/src/features/talk/use-thread";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { useCompanionName } from "@/features/talk/use-companion-name";
+import type { Turn } from "@/features/talk/use-thread";
+import { cn } from "@/lib/utils";
 
 function TurnBubble({ turn, name: named }: { turn: Turn; name?: string }) {
 	const current = useCompanionName();

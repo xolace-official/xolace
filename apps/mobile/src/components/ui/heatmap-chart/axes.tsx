@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { View } from "react-native";
-import { Text } from "@/src/components/ui/text";
-import { cn } from "@/src/lib/cn";
+import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/cn";
 import {
 	DAYS_IN_WEEK,
 	DEFAULT_AXIS_WIDTH,
@@ -12,27 +12,15 @@ import { type Slot, useHeatmap } from "./context";
 
 export interface HeatmapXAxisProps {
 	className?: string;
-	/**
-	 * Label a column. Given the first dated bin in it, so a month name can be
-	 * derived. Return an empty string to leave the column unlabelled.
-	 */
+	/** Label a column from its first dated bin. Return an empty string to leave it unlabelled. */
 	formatLabel?: (date: Date, column: number) => string;
-	/**
-	 * Column labels, left to right. Overrides the month names — for a grid whose
-	 * columns are not weeks, where there is no month to change and so nothing to
-	 * emit a label on.
-	 */
+	/** Column labels, left to right, overriding month names for a grid whose columns are not
+	 * weeks. */
 	labels?: string[];
 }
 
-/**
- * Month labels above the grid.
- *
- * A label is emitted where the month changes rather than at a fixed interval,
- * because months are not the same length — spacing them evenly puts "Mar" over
- * a week in February. A grid whose columns are not weeks has no such signal, so
- * it passes `labels` and gets one over every column.
- */
+/** Month labels above the grid, emitted where the month changes; `labels` gives one per column
+ * instead. */
 export function HeatmapXAxis({
 	className,
 	formatLabel,
@@ -68,8 +56,8 @@ export function HeatmapXAxis({
 			}
 		});
 
-		// The first month is usually a stub of a week or two, and a label over it
-		// collides with the next one. Drop it when it has no room.
+		// The first month is usually a stub and its label collides with the next; drop it when
+		// cramped.
 		if (out.length > 1 && out[1]!.column - out[0]!.column < 3) {
 			out.shift();
 		}
@@ -98,10 +86,7 @@ export interface HeatmapYAxisProps {
 	className?: string;
 	/** `initial` is the single letter; `full` is the abbreviated name. */
 	labelFormat?: "initial" | "full";
-	/**
-	 * Row labels, top to bottom. Overrides the weekday names — for a grid whose
-	 * rows are not days.
-	 */
+	/** Row labels, top to bottom, overriding weekday names for a grid whose rows are not days. */
 	labels?: string[];
 	/** Which rows get a label. Every other row is the usual choice. */
 	tickFilter?: "all" | "odd" | "even";
@@ -139,8 +124,7 @@ export function HeatmapYAxis({
 						key={row}
 						muted
 						size="xs"
-						// Centred on the cell rather than aligned to its top edge, so a
-						// label reads as belonging to the row it sits beside.
+						// Centred on the cell so the label reads as belonging to its row.
 						style={{ top: row * step + grid.size / 2 - 7 }}
 					>
 						{labels

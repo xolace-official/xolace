@@ -1,17 +1,12 @@
 /**
- * The desk-calendar card. Renders at whatever size `metrics` describes.
- *
- * Static mode (mini in header): both halves show the same day — plain
- * Views, no shared values, no animation cost on the idle screen.
- * Flip mode (reveal overlay): pass `flipProgress` + `previousDay` and a
- * FlipPage animates old day → new day.
+ * The desk-calendar card; static plain Views unless `flipProgress` and `previousDay` are given.
  */
 
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import type { CardColors, CardMetrics } from "./constants";
 import { FlipPage } from "./flip-page";
 
@@ -86,11 +81,10 @@ const StaticHalf = ({ day, position, metrics, colors }: StaticHalfProps) => {
 };
 
 type StreakFlipCardProps = {
-	/** The (new) day shown on the card */
 	day: number;
-	/** Old day — required for flip mode */
+	/** Required for flip mode. */
 	previousDay?: number;
-	/** When provided, the card renders the animated flip page */
+	/** When provided, the card renders the animated flip page. */
 	flipProgress?: SharedValue<number>;
 	metrics: CardMetrics;
 	colors: CardColors;

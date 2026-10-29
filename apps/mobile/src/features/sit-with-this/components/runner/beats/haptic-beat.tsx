@@ -7,17 +7,15 @@ import Animated, {
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	playCompassionateHold,
 	playGentlePresence,
 	playSoftenPulse,
-} from "@/src/lib/haptics";
+} from "@/lib/haptics";
 
-// This beat's own pulsing dot, not the BreathBeat orb (that one is imperative,
-// driven by PacedOrb.playCycle with its own per-phase haptics). The dot below
-// runs withRepeat(1400ms, reverse), so a full cycle is 2800ms — the haptic
-// rides that same period to stay in phase with what the eye sees.
+// The dot runs withRepeat(1400ms, reverse), so a full cycle is 2800ms; the
+// haptic repeats on the same period to stay in phase with it.
 const PULSE_CYCLE_MS = 2800;
 
 const INTENSITY_HAPTIC = {
@@ -52,17 +50,12 @@ export function HapticBeat({
 	useEffect(() => {
 		const endsAt = Date.now() + durationSeconds * 1000;
 
-		// Gate haptic on reducedMotion per plan §4.2 — dissociated states can be startled.
+		// Gate haptic on reducedMotion per plan §4.2: dissociated states can be startled.
 		if (!reducedMotion) {
 			const playPulse = INTENSITY_HAPTIC[hapticIntensity];
-			// This beat *is* the haptic. Firing once on mount left the dot pulsing
-			// for the rest of the step with nothing under the finger — the one beat
-			// whose whole point is touch went quiet first. Repeat on the dot's cycle
-			// and stop with it.
+			// Repeat on the dot's cycle, and skip a tick with less than half a cycle
+			// left: a buzz right before the end reads as the next beat starting.
 			playPulse();
-			// The cycle is the dot's, not the step's, so the last tick can land
-			// moments before the beat ends — a buzz that reads as the *next* beat
-			// starting. Drop any pulse with less than half a cycle left to breathe.
 			pulseIntervalRef.current = setInterval(() => {
 				if (endsAt - Date.now() < PULSE_CYCLE_MS / 2) {
 					return;
@@ -79,9 +72,8 @@ export function HapticBeat({
 			);
 		}
 
-		// Stop buzzing the moment the beat is over, not whenever the parent gets
-		// around to unmounting us — a transition animation would otherwise carry
-		// the pulse into the next beat.
+		// Stop the pulse when the beat ends, not on unmount: a transition animation
+		// would otherwise carry it into the next beat.
 		timerRef.current = setTimeout(() => {
 			if (pulseIntervalRef.current) {
 				clearInterval(pulseIntervalRef.current);
@@ -107,8 +99,7 @@ export function HapticBeat({
 		transform: [{ scale: 0.85 + pulse.get() * 0.3 }],
 	}));
 
-	// With no haptic or pulse, reduced-motion users need a text anchor so the
-	// beat isn't silent + blank.
+	// Reduced-motion users get no haptic or pulse, so they need a text anchor.
 	const displayContent =
 		content || (reducedMotion ? (fallbackContent ?? "") : "");
 

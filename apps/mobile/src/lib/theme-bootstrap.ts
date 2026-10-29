@@ -1,15 +1,8 @@
-/**
- * Applies the persisted theme + colorThemeId to Uniwind before React renders.
- *
- * Imported for side effects from app/_layout.tsx. Because zustandJSONStorage
- * is synchronous (see unified-storage.ts), useAppStore.getState() returns
- * hydrated values immediately — no cold-start flicker.
- *
- * Mirrors the resolution logic in use-settings.ts (setColorTheme/setThemeMode).
- */
+/** Applies the persisted theme to Uniwind before React renders; storage is synchronous so
+ * `getState()` is hydrated. Mirrors use-appearance-settings.ts. */
 import { Appearance } from "react-native";
 import { Uniwind } from "uniwind";
-import { useAppStore } from "@/src/store/store";
+import { useAppStore } from "@/store/store";
 
 const { theme, colorThemeId } = useAppStore.getState();
 

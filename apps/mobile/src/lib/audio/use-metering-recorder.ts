@@ -7,16 +7,14 @@ import {
 } from "expo-audio";
 import { useEffect } from "react";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
-import { AUDIO_SESSION, yieldAudioFocus } from "@/src/lib/audio/session";
+import { AUDIO_SESSION, yieldAudioFocus } from "@/lib/audio/session";
 
 export type UseMeteringRecorderReturn = {
 	// Resolves true only when recording actually began (permission granted and
 	// the recorder started); false on denial or any setup failure.
 	startRecording: () => Promise<boolean>;
 	stopRecording: () => Promise<string | null>;
-	// SharedValue so animations (vent particles, dictation waveform) read it on the UI thread via
-	// useDerivedValue — no JS bridge overhead on every animation frame.
-	// 0 = silence, 1 = max volume.
+	// SharedValue so animations read it on the UI thread without bridging. 0 = silence, 1 = max.
 	metering: SharedValue<number>;
 	isRecording: boolean;
 	durationMs: number;

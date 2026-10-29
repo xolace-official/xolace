@@ -1,8 +1,8 @@
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { SettingsRow } from "@/src/features/settings/components/settings-row";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
-import { type ProfileCardId, useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
+import { type ProfileCardId, useAppStore } from "@/store/store";
 
 const CARDS: { id: ProfileCardId; label: string }[] = [
 	{ id: "calendar", label: "Reflection calendar" },

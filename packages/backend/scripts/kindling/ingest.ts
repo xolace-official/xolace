@@ -58,6 +58,8 @@ type SharedFields = {
 	durationSec: number;
 	sha256: string;
 	newUntil?: number;
+	// measure-loudness.ts; sent only while it was measured on this audio
+	loudness?: { lufs: number; sha256: string; truePeak: number };
 };
 type SupportTrack = SharedFields & {
 	family: "support";
@@ -72,6 +74,8 @@ type SupportTrack = SharedFields & {
 type MusicTrack = SharedFields & {
 	family: "music";
 	licence: Record<string, unknown>;
+	secondaryTopic?: string; // another music_topic_* it also lists under in Browse
+	sound?: Record<string, unknown>; // what a listening review heard (describe-music.ts)
 	whatItsFor?: string; // one line, embedded with title + tags (#572)
 };
 type ManifestTrack = SupportTrack | MusicTrack;
@@ -132,6 +136,8 @@ type Thumb = { key: string; sha256: string; thumbhash: string; file: Buffer };
 // Resized WebP + ThumbHash of a source thumb, memoised by path: shared art
 // is processed once and every entry using it gets the same key.
 const thumbs = new Map<string, Promise<Thumb>>();
+// Which source made each WebP, noted in one call after every thumb is made.
+const sourcePairs: { sourceSha256: string; webpSha256: string }[] = [];
 function thumbOf(thumbPath: string): Promise<Thumb> {
 	let thumb = thumbs.get(thumbPath);
 	if (!thumb) {
@@ -152,6 +158,12 @@ function thumbOf(thumbPath: string): Promise<Thumb> {
 				.raw()
 				.toBuffer({ resolveWithObject: true });
 			const sha256 = createHash("sha256").update(file).digest("hex");
+			// So an admin import of this same source keeps this WebP rather than
+			// re-encoding it (convex/imports/imageSources.ts). Sent once, in main.
+			sourcePairs.push({
+				sourceSha256: createHash("sha256").update(source).digest("hex"),
+				webpSha256: sha256,
+			});
 			const thumbhash = Buffer.from(
 				rgbaToThumbHash(info.width, info.height, data)
 			).toString("base64");
@@ -218,11 +230,19 @@ async function ingestOne(
 		});
 		await putFile(audioUpload.url, path.resolve(mediaDir, track.audioPath));
 
-		const { audioPath: _audioPath, thumbPath: _thumbPath, ...rest } = track;
+		const {
+			audioPath: _audioPath,
+			loudness,
+			thumbPath: _thumbPath,
+			...rest
+		} = track;
 		const result = convexRun("ai/paths/audioTracks:upsertTrack", {
 			track: {
 				...rest,
 				key: audioUpload.key,
+				...(loudness?.sha256 === track.sha256 && {
+					loudness: { lufs: loudness.lufs, truePeak: loudness.truePeak },
+				}),
 				thumbhash: thumb.thumbhash,
 				thumbKey: thumbUpload.key,
 				thumbSha256: thumb.sha256,
@@ -345,6 +365,15 @@ async function main() {
 	const sharedThumbKeys = new Set(
 		[...thumbKeyCounts].filter(([, count]) => count > 1).map(([key]) => key)
 	);
+	// Only spares a later admin import a re-encode, so a failure warns and the
+	// ingest goes on.
+	if (sourcePairs.length > 0) {
+		try {
+			convexRun("imports/imageSources:note", { pairs: sourcePairs });
+		} catch (err) {
+			console.warn(`Image sources not noted: ${(err as Error).message}`);
+		}
+	}
 
 	let failures = 0;
 	const liveThumbKeys = convexRun(

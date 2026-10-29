@@ -1,7 +1,7 @@
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient, type LinearGradientProps } from "expo-linear-gradient";
 import { StyleSheet, Text, type TextProps } from "react-native";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
 type GradientTextProps = {
 	text: string;
@@ -16,8 +16,8 @@ export const GradientText = ({
 	className,
 	textProps,
 }: GradientTextProps) => {
-	// The mask and the hidden Text must resolve to identical text metrics — the
-	// mask clips the gradient, the hidden Text establishes layout size.
+	// The mask and the hidden Text must share identical text metrics: the mask clips
+	// the gradient, the hidden Text sets the layout size.
 	const { className: textClassName, ...restTextProps } = textProps ?? {};
 	const textClasses = cn(className, textClassName);
 

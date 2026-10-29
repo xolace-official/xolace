@@ -1,8 +1,8 @@
 import { Image } from "expo-image";
 import { StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { getInitials } from "@/src/helpers/utils/strings";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { getInitials } from "@/helpers/utils/strings";
+import { cn } from "@/lib/utils";
 
 const SIZES = {
 	lg: { box: "h-[76px] w-[76px]", text: "text-2xl" },
@@ -12,13 +12,8 @@ const SIZES = {
 
 const CAMPFIRE_IMAGE = require("@/assets/images/flux/campfire-mini.jpeg");
 
-/**
- * Initial-or-photo avatar. `muted` renders the resting/unavailable look
- * (grey surface instead of accent) per the mockup. `campfire` is the Xolace
- * broadcast channel's identity specifically — no person, no photo, so it
- * gets the campfire mark instead of an "X" initial. Not a general fallback:
- * every other row still falls through to initials.
- */
+/** Initial-or-photo avatar. `muted` is the resting/unavailable look; `campfire` is the Xolace
+ * broadcast identity only, never a general fallback. */
 export function XolacerAvatar({
 	name,
 	photoUrl,

@@ -10,7 +10,7 @@ import {
 } from "react";
 import { AppState, type AppStateStatus } from "react-native";
 import { Uniwind } from "uniwind";
-import { useAppStore } from "@/src/store/store";
+import { useAppStore } from "@/store/store";
 
 export type SessionMode = "day" | "night";
 
@@ -32,17 +32,8 @@ function computeMode(): SessionMode {
 	return isNightHour(new Date().getHours()) ? "night" : "day";
 }
 
-/**
- * Provides time-aware session mode to the app.
- *
- * - Computes initial mode from the device clock.
- * - Listens to AppState 'active' events to recompute on foreground.
- * - When entering the night window: stashes the current theme and
- *   switches to `nightly-dark` (or `nightly-light` if the user is
- *   in light mode). When exiting: restores the previous theme.
- * - Does NOT flip mid-session; callers that need the mode at session
- *   start should capture it via a ref.
- */
+/** Session mode from the device clock, recomputed on foreground. Night stashes the theme and
+ * sets `nightly-dark`; day restores it. */
 export function SessionModeProvider({
 	children,
 }: {
@@ -51,13 +42,11 @@ export function SessionModeProvider({
 	const nightModeEnabled = useAppStore((s) => s.nightModeEnabled);
 	const setPreviousTheme = useAppStore((s) => s.setPreviousTheme);
 
-	// mode always reflects the actual time of day regardless of nightModeEnabled.
-	// forceRefresh handles time-based foreground refreshes.
+	// mode always reflects the clock regardless of nightModeEnabled.
 	const [, forceRefresh] = useReducer((n: number) => n + 1, 0);
 	const mode: SessionMode = computeMode();
 
-	// Track whether we've already applied the nightly theme swap so we
-	// don't double-stash on repeated AppState events within the window.
+	// Guards against double-stashing on repeated AppState events within the window.
 	const nightAppliedRef = useRef(false);
 
 	const applyNightTheme = useCallback(() => {

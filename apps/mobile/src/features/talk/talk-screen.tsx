@@ -1,33 +1,46 @@
-// The Hearth talk screen (#584, #593): the talk as a transcript under the
-// native header, with an aurora rising behind the composer that brightens when
-// either side speaks. Consent comes before the first word. "Say more" opens it
-// again on its thread (#604), straight into the talk: consent was given.
+// The Hearth talk screen (#584, #593): the transcript under the native header,
+// an aurora behind the composer. Consent comes before the first word; "Say
+// more" reopens on its thread (#604) straight into the talk.
 
 import { ConversationProvider } from "@elevenlabs/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useConvex } from "convex/react";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { useLocalSearchParams } from "expo-router";
+import { useIsFocused } from "expo-router/react-navigation";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { ConsentCard } from "@/src/features/talk/consent-card";
-import { TalkAurora } from "@/src/features/talk/talk-aurora";
-import { TalkComposer } from "@/src/features/talk/talk-composer";
-import { TalkHeader } from "@/src/features/talk/talk-header";
-import { TalkHelp } from "@/src/features/talk/talk-help";
-import { TalkLeaveDialog } from "@/src/features/talk/talk-leave-dialog";
-import { TalkThread } from "@/src/features/talk/talk-thread";
-import { useTalk } from "@/src/features/talk/use-talk";
-import type { ThreadLine } from "@/src/features/talk/use-thread";
+import { AppText } from "@/components/shared/app-text";
+import { ConsentCard } from "@/features/talk/consent-card";
+import { TalkAurora } from "@/features/talk/talk-aurora";
+import { TalkComposer } from "@/features/talk/talk-composer";
+import { TalkHeader } from "@/features/talk/talk-header";
+import { TalkHelp } from "@/features/talk/talk-help";
+import { TalkLeaveDialog } from "@/features/talk/talk-leave-dialog";
+import { TalkThread } from "@/features/talk/talk-thread";
+import { useTalk } from "@/features/talk/use-talk";
+import type { ThreadLine } from "@/features/talk/use-thread";
+
+const KEEP_AWAKE_TAG = "talk";
 
 function Talk({
 	reopen,
 }: {
 	reopen?: { sessionId: Id<"sessions">; thread: ThreadLine[] };
 }) {
+	// A voice talk has long stretches without a touch; keep the screen on while
+	// it is in front.
+	const focused = useIsFocused();
+	useEffect(() => {
+		if (!focused) {
+			return;
+		}
+		void activateKeepAwakeAsync(KEEP_AWAKE_TAG);
+		return () => void deactivateKeepAwake(KEEP_AWAKE_TAG);
+	}, [focused]);
 	const talk = useTalk(reopen);
 	const insets = useSafeAreaInsets();
 	// Once, on open.

@@ -1,8 +1,4 @@
-/**
- * The Xolace+ beat — the deck's fifth bespoke composition, and the only one
- * with a job outside the story: it has to sell, in a product that deliberately
- * refuses to put a paywall in front of anything.
- */
+/** The Xolace+ beat: the only one that sells. */
 
 import { SymbolView } from "expo-symbols";
 import { View } from "react-native";
@@ -11,8 +7,8 @@ import Animated, {
 	useReducedMotion,
 } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
-import type { StoryBeat } from "@/src/features/onboarding/story-beats";
+import { AppText } from "@/components/shared/app-text";
+import type { StoryBeat } from "@/features/onboarding/story-beats";
 import { useDeckColor } from "./deck-color";
 import { PatternLine } from "./pattern-line";
 

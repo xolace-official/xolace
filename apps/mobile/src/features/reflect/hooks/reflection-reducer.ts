@@ -1,10 +1,10 @@
-import { joinDictation } from "@/src/features/reflect/hooks/dictation-transcript";
-import { MAX_TEXTURES } from "@/src/features/reflect/texture-sets";
+import { joinDictation } from "@/features/reflect/hooks/dictation-transcript";
+import { MAX_TEXTURES } from "@/features/reflect/texture-sets";
 import type {
 	EntryType,
 	ReflectionAction,
 	ReflectionState,
-} from "@/src/features/reflect/types";
+} from "@/features/reflect/types";
 
 export const MAX_TURNS = 2;
 
@@ -20,13 +20,7 @@ export const initialState: ReflectionState = {
 	selectedTextures: [],
 };
 
-/**
- * Produces the next reflection UI state given the current state and an action.
- *
- * @param state - Current reflection state
- * @param action - Action describing the update to apply
- * @returns The next ReflectionState after applying the provided action
- */
+/** Produces the next reflection UI state for an action. */
 export function reducer(
 	state: ReflectionState,
 	action: ReflectionAction
@@ -39,8 +33,7 @@ export function reducer(
 				screen: "typing",
 			};
 
-		// Closing the composer is not a decision to throw the writing away — the
-		// draft survives on the resting card and is discarded explicitly (#258).
+		// Closing the composer keeps the draft; it is discarded explicitly (#258).
 		case "DISMISS_TYPING":
 			return { ...state, screen: "idle" };
 

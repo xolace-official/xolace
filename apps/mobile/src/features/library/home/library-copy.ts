@@ -1,14 +1,8 @@
-/**
- * Lantern home copy (#409). Reader-facing prose says "Lantern", never
- * "library" (CONTEXT.md). Facet slugs are stored lowercase-hyphenated.
- */
+/** Lantern home copy (#409). Reader-facing prose says "Lantern", never "library". */
 
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
-import {
-	capitalise,
-	type Kind,
-} from "@/src/features/library/reader/reader-copy";
+import { capitalise, type Kind } from "@/features/library/reader/reader-copy";
 
 export type { Kind };
 
@@ -30,12 +24,11 @@ export const KINDS: { kind: Kind; label: string; line: string }[] = [
 	{ kind: "story", label: "Stories", line: "People who’ve felt it too" },
 ];
 
-// ponytail: #409's Plus mark on audio cards isn't drawn yet — needs a design pass.
-// ponytail: hand-rolled compact count; Hermes' Intl lacks `notation: 'compact'` on some Android builds.
+// Hand-rolled compact count: Hermes' Intl lacks `notation: 'compact'` on some Android builds.
 const compact = (n: number) =>
 	n < 1000 ? `${n}` : `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
 
-/** "4 min read", "· 6 min listen" when it has audio (#411), "· 1.2k views" once anyone has opened it (#410). */
+/** "4 min read", "· 6 min listen" with audio (#411), "· 1.2k views" once opened (#410). */
 export const readTimeLine = (readMin: number, views = 0, listenMin?: number) =>
 	[
 		`${readMin} min read`,
@@ -45,9 +38,9 @@ export const readTimeLine = (readMin: number, views = 0, listenMin?: number) =>
 		.filter(Boolean)
 		.join(" · ");
 
-/** Why For you picked an entry — the card's kicker. */
+/** Why For you picked an entry: the card's kicker. */
 export function reasonLine({ axis, slug }: Reason) {
-	// ponytail: naive plural; audience slugs are simple nouns (student, parent)
+	// Naive plural; audience slugs are simple nouns (student, parent).
 	if (axis === "audience") {
 		return `For ${words(slug)}s`;
 	}

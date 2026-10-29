@@ -2,21 +2,11 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { PressableFeedback } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
+import { AppText } from "@/components/shared/app-text";
+import { usePaywall } from "@/features/purchases/use-paywall";
 
-/**
- * The quiet line under "Write this together" telling the user how many drafts
- * they have left, and — for free users — what Xolace+ would give them.
- *
- * This is UI only. The cap is enforced in `ai.bridge.requestBridgeDraft`, which
- * refuses the model call regardless of what this component believes; a stale or
- * tampered quota buys nothing.
- *
- * Deliberately silent for a Plus user with drafts to spare: they've paid, and a
- * permanent "4 of 5 left" counter would turn a message to someone they love
- * into a metered resource.
- */
+/** Drafts-left line. UI only: the cap is enforced in `ai.bridge.requestBridgeDraft`. Silent for
+ * a Plus user with drafts to spare. */
 export function BridgeQuotaHint() {
 	const quota = useQuery(api.ai.bridge.getQuota);
 	const openPaywall = usePaywall((s) => s.open);

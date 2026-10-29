@@ -1,7 +1,7 @@
 import { Description, Input, Label, TextArea, TextField } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { cn } from "@/lib/utils";
 import { BIO_MAX_LENGTH, NAME_MAX_LENGTH } from "./steps";
 
 export function NameStep({

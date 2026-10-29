@@ -5,11 +5,11 @@ import { Button, LinkButton } from "heroui-native";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { SessionEndUpsell } from "@/src/features/insights/compounding-upsell";
-import { NIGHT_SESSION_END_EXIT } from "@/src/features/reflect/night-copy";
-import { CloseOffer } from "@/src/features/session-end/components/close-offer";
-import { KindlingCloseSlot } from "@/src/features/session-end/components/kindling-close-slot";
+import { AppText } from "@/components/shared/app-text";
+import { SessionEndUpsell } from "@/features/insights/compounding-upsell";
+import { NIGHT_SESSION_END_EXIT } from "@/features/night-mode/night-copy";
+import { CloseOffer } from "@/features/session-end/components/close-offer";
+import { KindlingCloseSlot } from "@/features/session-end/components/kindling-close-slot";
 
 type Phase = "acknowledge" | "close";
 

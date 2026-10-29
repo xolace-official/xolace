@@ -9,24 +9,24 @@ import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	type BrowseFrom,
 	FAMILY_LABEL,
-} from "@/src/features/browse/components/track-row";
+} from "@/features/browse/components/track-row";
 import {
 	clearNowPlaying,
 	releaseMiniPlayerAttention,
 	setNowPlaying,
 	togglePlayback,
 	useNowPlayingPlayback,
-} from "@/src/features/browse/now-playing/now-playing-store";
-import type { PaywallSurface } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { playSoftPress } from "@/src/lib/haptics";
-import { imageSource } from "@/src/lib/image-source";
-import { cn } from "@/src/lib/utils";
-import { formatTime } from "./format-time";
+} from "@/features/browse/now-playing/now-playing-store";
+import type { PaywallSurface } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { formatTime } from "@/lib/format-time";
+import { playSoftPress } from "@/lib/haptics";
+import { imageSource } from "@/lib/image-source";
+import { cn } from "@/lib/utils";
 import {
 	CrisisLine,
 	GlyphButton,
@@ -39,7 +39,7 @@ type Params = { slug: string; from?: BrowseFrom; stepId?: Id<"path_steps"> };
 
 const ABSOLUTE_FILL = { inset: 0, position: "absolute" } as const;
 const TILE = 72;
-// Sized to the pill and wrapping the icon, so every touch inside lands on the glass (its press swell).
+// Sized to the pill so every touch inside lands on the glass and its press swell.
 const CLOSE_GLASS = {
 	alignItems: "center",
 	borderCurve: "continuous",
@@ -50,13 +50,9 @@ const CLOSE_GLASS = {
 	width: 36,
 } as const;
 
-/**
- * The Browse player (#340, §9.3) — and the second half of the free-user gate
- * (§9.4). The row tap already intercepts a free user before navigation; this
- * catches every other way in (deep link, a kindling twig, a lapsed
- * entitlement) and swaps to the paywall without mounting the player, so no
- * half-loaded player ever sits behind a sheet.
- */
+// The Browse player (#340, §9.3) and the second half of the free-user gate
+// (§9.4): every way in other than the row tap swaps to the paywall without
+// mounting the player.
 export function PlayerScreen() {
 	const { slug, from } = useLocalSearchParams<Params>();
 	const { isPlus, isLoading } = usePlusEntitlement();
@@ -70,8 +66,7 @@ export function PlayerScreen() {
 		// A lapsed entitlement takes the mini-player down with the player.
 		clearNowPlaying();
 		posthog.capture("browse_paywall_shown", { from: from ?? null, slug });
-		// Replace, not push: the paywall's close pops back to wherever the player
-		// was opened from, and the player never re-enters the stack.
+		// Replace, not push, so the paywall's close pops back past the player.
 		router.replace({
 			params: { surface: "browse" satisfies PaywallSurface },
 			pathname: "/upgrade",
@@ -86,9 +81,8 @@ export function PlayerScreen() {
 
 function Player() {
 	const { slug, from, stepId } = useLocalSearchParams<Params>();
-	// The audio lives in NowPlayingHost; opening for the loaded slug (e.g. from
-	// the mini-player) keeps playing, another slug swaps the track.
-	// Closing the player leaves it playing; the mini-player keeps it reachable.
+	// The audio lives in NowPlayingHost: the loaded slug keeps playing, another
+	// slug swaps the track, and closing the player leaves it playing.
 	useEffect(() => {
 		setNowPlaying({ from, slug, stepId });
 	}, [slug, stepId, from]);
@@ -148,7 +142,8 @@ function Player() {
 				onPress={() => router.back()}
 				style={{ top: insets.top + 8 }}
 			>
-				{/* Fixed palette over the artwork: dark clear glass; its own press response replaces the opacity dip. */}
+				{/* Fixed palette over the artwork: dark clear glass with its own press
+				    response. */}
 				{glass ? (
 					<GlassView
 						colorScheme="dark"

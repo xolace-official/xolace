@@ -1,22 +1,15 @@
-/**
- * Card 1 of the offer deck — its own file because it is the only card that
- * does anything: it really plays the premium voices. The other three are
- * static miniatures and live together in `offer-cards.tsx`.
- */
+/** Card 1 of the offer deck, the only interactive one: it really plays the premium voices. */
 
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import {
-	OFFER_MASCOT,
-	OfferCard,
-} from "@/src/features/intake/paywall/offer-card";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { useVoicePreview } from "@/src/features/settings/hooks/use-voice-preview";
-import { VOICE_OPTIONS } from "@/src/features/settings/voice-options";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { OFFER_MASCOT, OfferCard } from "@/features/intake/paywall/offer-card";
+import { useVoicePreview } from "@/features/talk/use-voice-preview";
+import { VOICE_OPTIONS } from "@/features/talk/voice-options";
+import { playSoftPress } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const PLAY = {
 	android: "play_arrow",
@@ -29,7 +22,7 @@ const PREMIUM_VOICES = VOICE_OPTIONS.filter(
 	(o) => o.premium && o.value !== "auto"
 );
 
-/** Card 1 — the only interactive one. Hearing the voice is the whole sell. */
+/** Hearing the voice is the whole sell. */
 export function VoiceOfferCard({ width }: { width: number }) {
 	const preview = useVoicePreview();
 	const ink = useTokenColor("offer-ink");

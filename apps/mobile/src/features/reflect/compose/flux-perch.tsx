@@ -20,14 +20,14 @@ import {
 	FLUX_SIZE,
 	HANDOFF,
 	useMorphGeometry,
-} from "@/src/features/reflect/compose/morph-geometry";
+} from "@/features/reflect/compose/morph-geometry";
 
 const FLUX = require("@/assets/images/flux/flux-whisper.png");
 
-/** Composed arrival: he settles onto the card rather than popping onto it. */
+/** He settles onto the card rather than popping onto it. */
 const ENTRANCE_SPRING = { damping: 20, mass: 1, stiffness: 80 } as const;
 const ENTRANCE_RISE = 22;
-/** Long enough for the entrance — and for the morph — to have settled. */
+/** Long enough for the entrance and the morph to have settled. */
 const BREATH_DELAY_MS = 700;
 const BREATH_HALF_MS = 2600;
 
@@ -40,17 +40,7 @@ type Props = {
 };
 
 /**
- * Flux, perched on the resting card — and the same object, shrunk, once the
- * card has become the composer.
- *
- * He is one image doing two jobs: at rest he leans on the page and whispers at
- * it, and as the card takes over he scales and fades into the presence dot the
- * composer already had. The dot is drawn by the card; Flux simply disappears
- * into where it will be, which is why both read this screen's geometry.
- *
- * The breathing loop is transform-only and pauses while the card is expanding
- * or expanded — a loop running underneath the morph spring is the classic way
- * to lose frames on the most-opened screen in the app.
+ * Flux on the resting card, fading into the presence dot as it opens. Breathing pauses when open.
  */
 export const FluxPerch = ({
 	progress,
@@ -61,8 +51,7 @@ export const FluxPerch = ({
 	const geo = useMorphGeometry();
 	const entrance = useSharedValue(reduceMotion ? 1 : 0);
 	const breath = useSharedValue(0);
-	// A loop under a pushed screen still commits every frame and steals the
-	// top screen's scroll budget: breathe only while this screen is in front.
+	// A loop under a pushed screen still commits every frame: breathe only in front.
 	const isFocused = useIsFocused();
 
 	useEffect(() => {

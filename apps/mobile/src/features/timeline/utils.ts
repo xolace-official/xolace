@@ -1,7 +1,7 @@
 import type {
 	TimelineEntry,
 	TimelineFlatItem,
-} from "@/src/features/timeline/types";
+} from "@/features/timeline/types";
 
 /** Shape returned by `sessions.listForTimeline` per enriched session. */
 type TimelineSession = {
@@ -33,12 +33,7 @@ export function toTimelineEntry(session: TimelineSession): TimelineEntry {
 	};
 }
 
-/**
- * Produce a human-friendly relative day label for a timestamp.
- *
- * @param timestamp - Millisecond UNIX timestamp (milliseconds since 1970-01-01 UTC)
- * @returns `Today` if the timestamp is the current day, `Yesterday` if it was one day ago, `X days ago` for 2–6 days ago, or a short month/day string (for example, `Jan 3`) for dates 7 or more days ago
- */
+/** Relative day label: Today, Yesterday, "X days ago" under a week, else "Jan 3". */
 function getRelativeLabel(timestamp: number): string {
 	const now = new Date();
 	const date = new Date(timestamp);
@@ -62,12 +57,7 @@ function getRelativeLabel(timestamp: number): string {
 	}).format(date);
 }
 
-/**
- * Group a pre-sorted timeline into flat items where each relative-date section precedes its entries.
- *
- * @param entries - A pre-sorted (newest-first) array of TimelineEntry objects to group by their relative date.
- * @returns An array of TimelineFlatItem containing section items (type `'section'`) followed by the corresponding entry items (type `'entry'`) for each relative date.
- */
+/** Groups newest-first entries into flat items, a section item before each relative-date run. */
 export function buildTimelineSections(
 	entries: TimelineEntry[]
 ): TimelineFlatItem[] {

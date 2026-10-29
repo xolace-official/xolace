@@ -5,7 +5,10 @@
 # repeats the .gitignore rules that matter, and it deliberately does NOT list
 # the mobile build secrets (apps/mobile/google-services.json,
 # apps/mobile/google-services-preview/, apps/mobile/xolace-*.json): they are
-# gitignored but the build needs them until they move to EAS file env vars.
+# gitignored, and a build started from a laptop still uploads and uses them.
+# The release workflow uploads a GitHub checkout that has none of them, so
+# there google-services.json comes from the GOOGLE_SERVICES_JSON EAS file env
+# var (docs/setup/release.md, Step 6).
 # node_modules and .git are always excluded by EAS CLI.
 
 # Dependencies

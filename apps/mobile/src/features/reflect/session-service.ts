@@ -1,7 +1,4 @@
-import type {
-	EntryType,
-	ReflectionStateName,
-} from "@/src/features/reflect/types";
+import type { EntryType, ReflectionStateName } from "@/features/reflect/types";
 
 type ServerEntryType =
 	| "open_prompt"
@@ -30,25 +27,13 @@ const ENTRY_TYPE_MAP: Record<EntryType, ServerEntryType> = {
 	voice: "voice",
 };
 
-/**
- * Translate a client entry type into the corresponding server-side entry type.
- *
- * @param clientType - The client-facing entry type to map
- * @returns The corresponding `ServerEntryType` value from `ENTRY_TYPE_MAP`
- */
+/** Maps a client entry type to the server-side entry type. */
 export function mapEntryType(clientType: EntryType): ServerEntryType {
 	return ENTRY_TYPE_MAP[clientType];
 }
 
 /**
- * The one authority for "server state → which screen". Edge semantics: the
- * machine applies this only when `serverState` *changes*, so the ambiguous
- * pair (mirror_delivered, processing) is unambiguous here — at that edge the
- * server just delivered, so the mirror wins. Between edges, local dispatches
- * own the screen.
- *
- * @returns The screen the server mandates, or `null` when the local screen
- * wins (pre-processing states, mirror-phase sub-modes, terminal states).
+ * Server state to screen, applied only on a `serverState` change; null means local wins.
  */
 export function projectScreen(
 	serverState: ServerSessionState,
@@ -58,13 +43,13 @@ export function projectScreen(
 	switch (serverState) {
 		case "initiated":
 		case "input_received":
-			// Pre-processing — local owns idle / typing / nudge / optimistic processing
+			// Local owns idle / typing / nudge / optimistic processing.
 			return null;
 		case "processing":
 			return "processing";
 		case "mirror_delivered":
-			// Local sub-modes (clarify, gave-up) and the optimistic That's-it advance
-			// all happen while the server sits in mirror_delivered — local wins.
+			// Local sub-modes and the optimistic That's-it advance all happen while the
+			// server sits in mirror_delivered.
 			if (
 				localScreen === "clarify" ||
 				localScreen === "gave-up" ||
@@ -77,24 +62,18 @@ export function projectScreen(
 			return "path-selection";
 		case "path_selected":
 		case "path_in_progress":
-			// In-path sessions are owned by the path screens (sit-with-this /
-			// peer-reflections), never projected onto reflect. Mapping these to
-			// path-selection resurrects stale sessions getActive picks up after
-			// the current one ends.
+			// In-path sessions belong to the path screens. Mapping these to path-selection
+			// resurrects stale sessions getActive picks up after the current one ends.
 			return null;
 		case "error":
 			return "error";
 		case "completed":
 		case "abandoned":
-			return null; // terminal — machine resets instead of showing a screen
+			return null; // terminal: the machine resets instead of showing a screen
 	}
 }
 
-/**
- * True when the error is the server's "maximum refinement turns" rejection.
- * Prefers the typed ConvexError code; falls back to message matching for
- * responses from a backend deployed before the code existed.
- */
+/** True when the error is the server's "maximum refinement turns" rejection. */
 export function isMaxRefinementError(error: unknown): boolean {
 	const data = (error as { data?: { code?: string } } | null)?.data;
 	if (data?.code === "max_refinement_turns") {
@@ -108,10 +87,7 @@ export function isMaxRefinementError(error: unknown): boolean {
 }
 
 /**
- * True when a user-facing error message is a rate-limit rejection — either the
- * session-initiate limit (extractErrorMessage above) or the AI-mirror limit the
- * backend writes into the session via failSession (convex/ai/process.ts). Both
- * are the free/Plus cap, so the error screen offers the upgrade.
+ * True for either rate-limit rejection: session-initiate (extractErrorMessage) or failSession.
  */
 export function isRateLimitMessage(message: string): boolean {
 	return (
@@ -120,22 +96,11 @@ export function isRateLimitMessage(message: string): boolean {
 	);
 }
 
-/**
- * Produce a user-facing message derived from an error value.
- *
- * @param error - The value to inspect for generating a friendly message
- * @returns A string appropriate for the error:
- * - A rate-limit hint when the error is a RateLimited ConvexError
- * - A session-expired prompt when the error message contains 'Not authenticated'
- * - A generic retry prompt for other Error instances
- * - A generic unexpected-error message for non-Error inputs
- */
+/** Produces a user-facing message for an error value. */
 export function extractErrorMessage(error: unknown): string {
 	if (error instanceof Error) {
-		// Production scrubs the error *message* to "Server Error" — only
-		// ConvexError `data` crosses the wire — so the typed data is the only
-		// reliable signal. The message check stays for dev and for a
-		// non-ConvexError rate-limit throw.
+		// Production scrubs the message to "Server Error"; only ConvexError `data`
+		// crosses the wire. The message check stays for dev.
 		const raw = (error as { data?: unknown }).data;
 		const data: { kind?: string; retryAfter?: number; code?: string } =
 			typeof raw === "object" && raw !== null ? raw : {};

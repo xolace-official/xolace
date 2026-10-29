@@ -1,7 +1,6 @@
-// Help on the talk screen (#599): at elevated a help button, at crisis the
-// resources pinned above the composer for the rest of the talk. The level is
-// the server's; the companion's crisis line says help is on screen, and this
-// is what makes that true.
+// Help on the talk screen (#599): a help button at elevated, resources pinned
+// above the composer at crisis. The level is the server's; the companion's
+// crisis line says help is on screen, and this makes that true.
 
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
@@ -9,9 +8,9 @@ import { useQuery } from "convex/react";
 import { router } from "expo-router";
 import { Button } from "heroui-native";
 import { ScrollView, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { ResourceItem } from "@/src/components/shared/resource-item";
+import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
+import { ResourceItem } from "@/components/shared/resource-item";
 
 const openHelp = () => router.push("/crisis-resources?from=talk");
 

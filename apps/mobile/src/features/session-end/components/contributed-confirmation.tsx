@@ -12,8 +12,8 @@ import Animated, {
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { PillButton } from "@/src/components/shared/pill-button";
+import { AppText } from "@/components/shared/app-text";
+import { PillButton } from "@/components/shared/pill-button";
 
 type ParticleConfig = {
 	x: number;
@@ -111,9 +111,7 @@ export const ContributedConfirmation = ({ onDone }: Props) => {
 
 	return (
 		<View className="flex-1 items-center justify-center px-8 pb-20">
-			{/* Ember particle field */}
 			<View style={styles.emberContainer}>
-				{/* Soft glow source at base */}
 				<View
 					className="absolute rounded-full bg-accent/8"
 					style={styles.glowSource}

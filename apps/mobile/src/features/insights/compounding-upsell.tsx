@@ -6,10 +6,9 @@ import { useIsFocused } from "expo-router/react-navigation";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
-// The compounding upsell (#524, #496 §4): a free user learns a named domain
-// has been heavier than their usual, with no number, on Insights and at
-// session end. Once per stretch: seeing the line spends it, so the first
-// one found is held for the mount.
+// Compounding upsell (#524, #496 §4): a free user learns a named domain has
+// been heavier than usual, with no number. Seeing the line spends it, once per
+// stretch, so the first one found is held for the mount.
 import {
 	createContext,
 	use,
@@ -20,20 +19,20 @@ import {
 } from "react";
 import type { ViewInstance } from "react-native";
 import { useWindowDimensions, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { DOMAIN_META } from "@/src/features/insights/domains";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
+import { DOMAIN_META } from "@/features/insights/domains";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { playSoftPress } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 export type Upsell = NonNullable<
 	FunctionReturnType<typeof api.compounding.upsell.get>
 >;
 
 /** Session end's: upsell.get for its session. Null until there's one to show. */
-export function useCompoundingUpsell(
+function useCompoundingUpsell(
 	args: { sessionId: Id<"sessions"> } | "skip"
 ): Upsell | null {
 	const { isPlus, isResolved } = usePlusEntitlement();
@@ -44,12 +43,8 @@ export function useCompoundingUpsell(
 	return useHeldUpsell(live, args === "skip" ? null : args.sessionId);
 }
 
-/**
- * The first upsell, held: once marked, the query moves on underneath. A
- * null isn't held, since the stretch can open a moment after mount (#529).
- * Held per key (session, or "" on Insights), so a new one starts clean;
- * gone once the user upgrades. Insights passes freeView's (#524).
- */
+/** Holds the first upsell per key (session id, or "" on Insights) since the query moves on once
+ * marked. A null is not held (#529). */
 export function useHeldUpsell(
 	live: Upsell | null | undefined,
 	key: string | null
@@ -65,7 +60,6 @@ export function useHeldUpsell(
 	return isPlus ? null : current;
 }
 
-/** The tap, from the line or the domain's row. */
 export function useOpenUpsell() {
 	const openPaywall = usePaywall((s) => s.open);
 	const posthog = usePostHog();
@@ -76,17 +70,11 @@ export function useOpenUpsell() {
 	};
 }
 
-/**
- * Scroll listeners from a screen where the line can mount below the fold
- * (Insights): there it's spent only once on screen. Without one (session
- * end) it's spent on mount.
- */
+/** Scroll listeners where the line can mount below the fold; there it is spent once on screen,
+ * else on mount. */
 export const UpsellScrollContext = createContext<Set<() => void> | null>(null);
 
-/**
- * Glass on Insights, like the cards around it. Session end fades its close
- * phase in, and the blur stops rendering under animated opacity: solid there.
- */
+/** `glass` on Insights only: the blur stops rendering under session end's animated opacity. */
 export function CompoundingUpsellLine({
 	upsell,
 	glass = false,
@@ -96,8 +84,7 @@ export function CompoundingUpsellLine({
 }) {
 	const markShown = useMutation(api.compounding.upsell.markShown);
 	const posthog = usePostHog();
-	// Shown means seen (CONTEXT.md): spent when the line is on screen on the
-	// focused page, not when found or merely mounted.
+	// Shown means seen (CONTEXT.md): spent when on screen on the focused page, not on mount.
 	const scroll = use(UpsellScrollContext);
 	const isFocused = useIsFocused();
 	const { height } = useWindowDimensions();

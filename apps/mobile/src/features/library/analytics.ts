@@ -1,20 +1,13 @@
-/**
- * Lantern instrumentation (#416). Every Library event lives here, in its own
- * `library_*` namespace (not `browse_*`, #399). Reading is coarse on purpose:
- * opened and finished, no scroll depth.
- */
+// Lantern instrumentation (#416) in its own `library_*` namespace (#399).
+// Reading is coarse on purpose: opened and finished, no scroll depth.
+import type { api } from "@xolace/backend/convex/_generated/api";
+import type { FunctionReturnType } from "convex/server";
 import type { PostHog } from "posthog-react-native";
 
-import type { Twig } from "@/src/features/kindling/twig-presentation";
-import type { Kind } from "@/src/features/library/home/library-copy";
+import type { Kind } from "@/features/library/home/library-copy";
 
-/**
- * Where a reader open came from. Every way in sets it, the share sheet's link
- * included; a link that forgets it lands as `unknown` so the gap shows.
- * `today` is reserved for Tonight's reading, which has no surface yet;
- * `next` is the Up next card at the end of a read (#417); `continue` is the
- * home's Continue reading card (#420).
- */
+/** Where a reader open came from; a forgotten one lands as `unknown`. `today` has no surface
+ * yet; `next` is Up next (#417). */
 export type ReaderFrom =
 	| "twig"
 	| "home"
@@ -29,6 +22,11 @@ export type ReaderFrom =
 	| "unknown";
 
 type Entry = { slug: string };
+
+/** A Kindling twig's state, read off the backend so library never imports kindling. */
+type TwigState = NonNullable<
+	FunctionReturnType<typeof api.paths.getActive>
+>["twigs"][number]["state"];
 
 type LibraryEvents = {
 	// Navigation (#409)
@@ -51,7 +49,7 @@ type LibraryEvents = {
 	library_paywall_shown: Entry & { trigger: "audio_preview" };
 	library_paywall_tapped: Entry & { trigger: "audio_preview" };
 	// Read twig (#412); its open is `library_entry_opened{from:'twig'}`
-	library_twig_shown: Entry & { state: Twig["state"] };
+	library_twig_shown: Entry & { state: TwigState };
 };
 
 export function trackLibrary<E extends keyof LibraryEvents>(

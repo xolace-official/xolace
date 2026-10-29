@@ -1,20 +1,17 @@
 import type { TextStyle, ViewStyle } from "react-native";
 import { Pressable, View } from "react-native";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { Tour } from "@/src/components/ui/tour";
-import { MicButton } from "@/src/features/reflect/components/mic-button";
-import { PresenceDot } from "@/src/features/reflect/components/presence-dot";
-import type { CardContent } from "@/src/features/reflect/compose/resolve-card-content";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
-import { playSoftPress } from "@/src/lib/haptics";
-import { a11yHidden } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { Tour } from "@/components/ui/tour";
+import { MicButton } from "@/features/reflect/components/mic-button";
+import { PresenceDot } from "@/features/reflect/components/presence-dot";
+import type { CardContent } from "@/features/reflect/compose/resolve-card-content";
+import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
+import { playSoftPress } from "@/lib/haptics";
+import { a11yHidden } from "@/lib/utils";
 
 /**
- * The resting card is a fixed 3:4 page with `overflow: hidden`, so a long
- * prompt — or a retained draft's opening line, which is arbitrary user text —
- * ran under the selection echo and was cut mid-glyph. Capped only at rest:
- * open, the card is full-width and the line has room to say everything.
+ * The resting card has `overflow: hidden`, so a long prompt ran under the echo. Uncapped once open.
  */
 const REST_PROMPT_LINES = 4;
 
@@ -28,10 +25,7 @@ type Props = {
 	onVoiceTap: () => void;
 };
 
-/**
- * The card's top row: the prompt, with the composer's controls arriving
- * around it as the card opens.
- */
+/** The card's top row: the prompt, with the composer's controls arriving as it opens. */
 export const MorphCardHeader = ({
 	card,
 	expanded,
@@ -41,13 +35,12 @@ export const MorphCardHeader = ({
 	onDismiss,
 	onVoiceTap,
 }: Props) => {
-	// The card is one object at two sizes, so both readings are always mounted.
-	// Whichever one `progress` has faded out has to leave the a11y tree with it,
-	// or a screen reader finds a close button for a composer that isn't open.
+	// Both readings are always mounted; the faded-out one must leave the a11y
+	// tree, or a screen reader finds a close button for a composer that isn't open.
 	const composerA11y = a11yHidden(!expanded);
 	const pointer = expanded ? "auto" : "none";
-	// A retained draft is the user's own words, not the space's — italic and
-	// dimmer so the card never reads as if it asked the question.
+	// A retained draft is the user's own words: italic and dimmer so the card
+	// never reads as if it asked the question.
 	const isDraft = card.source === "draft";
 
 	return (
@@ -55,8 +48,7 @@ export const MorphCardHeader = ({
 			<Animated.View style={controlsStyle}>
 				<PresenceDot />
 			</Animated.View>
-			{/* The prompt is the card's own voice and stays visible while writing,
-          so the tour's first step is about the line rather than the page. */}
+			{/* The prompt stays visible while writing, so the tour's first step is the line. */}
 			<Tour.Step
 				className="flex-1"
 				description={TOUR_STEPS[0].description}

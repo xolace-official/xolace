@@ -2,23 +2,23 @@ import { SymbolView } from "expo-symbols";
 import { RadioGroup, useThemeColor } from "heroui-native";
 import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
-import { HourRadioGroup } from "@/src/features/settings/components/hour-radio-group";
-import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
+import { AppText } from "@/components/shared/app-text";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
+import { HourRadioGroup } from "@/features/settings/components/hour-radio-group";
+import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
 import {
 	CHAT_NOTIFICATIONS_ICON,
-	type CrossPlatformSymbol,
 	NOTIFICATIONS_ICON,
 	QUIET_HOURS_ICON,
-} from "@/src/features/settings/components/settings-icons";
-import { SettingsRow } from "@/src/features/settings/components/settings-row";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
+} from "@/features/settings/components/settings-icons";
 import {
 	type NotificationReach,
 	useNotificationSettings,
-} from "@/src/features/settings/hooks/use-notification-settings";
-import { cn } from "@/src/lib/utils";
+} from "@/features/settings/hooks/use-notification-settings";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
+import { cn } from "@/lib/utils";
 
 const REACH_OPTIONS: {
 	value: NotificationReach;
@@ -133,7 +133,6 @@ export const NotificationsScreen = () => {
 				contentInsetAdjustmentBehavior="automatic"
 				showsVerticalScrollIndicator={false}
 			>
-				{/* ── REMINDERS ───────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -151,7 +150,6 @@ export const NotificationsScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── HOW I REACH OUT ─────────────────────────────────────── */}
 				{gentleReminders && (
 					<>
 						<EaseView
@@ -201,7 +199,6 @@ export const NotificationsScreen = () => {
 							</SettingsSection>
 						</EaseView>
 
-						{/* ── QUIET HOURS ───────────────────────────────────────── */}
 						<EaseView
 							animate={{ opacity: 1, translateY: 0 }}
 							initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -243,7 +240,6 @@ export const NotificationsScreen = () => {
 						</EaseView>
 					</>
 				)}
-				{/* ── CONVERSATIONS ───────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -271,11 +267,7 @@ export const NotificationsScreen = () => {
 				</EaseView>
 			</ScrollView>
 
-			{/*
-        The one state a toggle cannot resolve itself: the OS has stopped
-        asking. Flipping the switch here would promise delivery the device
-        won't make, so it stays put and this points at the only route back.
-      */}
+			{/* The OS has stopped asking: the toggle stays put and this points at Settings. */}
 			<ConfirmationDialog
 				confirmLabel="Open Settings"
 				description="Your device is blocking notifications, so this can't be turned on from here. You can allow them in device settings."

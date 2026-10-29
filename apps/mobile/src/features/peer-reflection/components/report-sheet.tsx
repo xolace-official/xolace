@@ -6,7 +6,7 @@ import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 type ReportReason = "offensive" | "self_harm" | "spam" | "other";
 
@@ -17,11 +17,8 @@ const REASONS: { label: string; value: ReportReason }[] = [
 	{ label: "Something else", value: "other" },
 ];
 
-/**
- * Native formSheet (`report-reflection` route) sized to its rows. Owns the
- * report: it closes first, then sends — the toast lands on the reflections
- * screen underneath.
- */
+/** Native formSheet (`report-reflection` route). Closes first, then sends, so the toast lands
+ * on the screen underneath. */
 export const ReportSheet = () => {
 	const { reflectionId } = useLocalSearchParams<{ reflectionId?: string }>();
 	const router = useRouter();

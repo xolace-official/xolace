@@ -1,8 +1,8 @@
-import { useThemeColor } from "heroui-native";
+import { Surface, useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { SegmentedControl } from "@/src/components/shared/segmented-control";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { SegmentedControl } from "@/components/shared/segmented-control";
+import { cn } from "@/lib/utils";
 import type { IntroOffer } from "./paywall-intro-offer";
 
 export type PlanId = "annual" | "monthly";
@@ -14,11 +14,7 @@ type Props = {
 	monthly: PlanPrice;
 	/** Whole-number percent saved by choosing annual over monthly, e.g. 58. */
 	discountPercent: number | null;
-	/**
-	 * Whether the *selected* package actually carries a free week. Same gate as
-	 * the CTA label — the badge is a trial claim too, and an ungated one would
-	 * promise a free week the CTA underneath it refuses to.
-	 */
+	/** Whether the selected package carries a free week. Same gate as the CTA label. */
 	hasFreeTrial: boolean;
 	/** Monthly's intro discount when this user can take it; null shows the plain price. */
 	monthlyIntro: IntroOffer | null;
@@ -26,12 +22,7 @@ type Props = {
 	onSelect: (plan: PlanId) => void;
 };
 
-/**
- * Pinned segmented control (Monthly / Yearly) + a single price card that
- * updates to the selected plan. Replaces the old side-by-side two-card
- * grid — there's only one product tier, so the segment itself carries the
- * period choice instead of duplicating it across cards.
- */
+/** Segmented control (Monthly / Yearly) plus one price card for the selected plan. */
 export function PaywallPeriodPicker({
 	annual,
 	monthly,
@@ -109,8 +100,8 @@ export function PaywallPeriodPicker({
 				</SegmentedControl.Item>
 			</SegmentedControl>
 
-			<View
-				className="flex-row items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3.5"
+			<Surface
+				className="flex-row items-center justify-between rounded-2xl px-4 py-3.5"
 				style={styles.borderCurve}
 			>
 				{intro ? (
@@ -145,7 +136,7 @@ export function PaywallPeriodPicker({
 						</AppText>
 					</View>
 				)}
-			</View>
+			</Surface>
 		</View>
 	);
 }
@@ -175,10 +166,8 @@ function SegmentBadge({
 	);
 }
 
-/**
- * Intro price with the full price struck through, and the renewal price spelled
- * out: Apple rejects paywalls that hide what the plan renews at.
- */
+/** Intro price with the full price struck through and the renewal spelled out: Apple rejects
+ * paywalls that hide it. */
 function IntroPrice({ intro }: { intro: IntroOffer }) {
 	const renewal = `for your first ${intro.term}, then ${intro.fullPrice}/mo`;
 	return (

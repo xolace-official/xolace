@@ -8,45 +8,33 @@ import Animated, {
 	cubicBezier,
 } from "react-native-reanimated";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { formatDate } from "@/src/features/quotes/components/archive/archive-date";
-import { canSeedReflection } from "@/src/features/quotes/components/archive/reply-seed";
-import { ARCHIVE_TINT_VARS } from "@/src/features/quotes/poster-palette";
+import { AppText } from "@/components/shared/app-text";
+import { formatDate } from "@/features/quotes/components/archive/archive-date";
+import { canSeedReflection } from "@/features/quotes/components/archive/reply-seed";
+import { ARCHIVE_TINT_VARS } from "@/features/quotes/poster-palette";
 
-/** The peek band: how much of a closed card the card below it leaves showing. */
+/** How much of a closed card the card below leaves showing. */
 export const PEEK = 146;
 const COLLAPSED = 172;
-/** Floor for an open card — a two-line quote still reads as a card, not a strip. */
+/** Floor for an open card so a two-line quote still reads as a card. */
 const MIN_EXPANDED = 288;
 const GAP = 16;
-/**
- * Constant, never a `flex: 1` spacer. A flexed gap takes its size from the
- * animated-height box, so the title rides the shrink every frame and travels
- * (#296). Nothing inside the box may derive its position from flex.
- */
+// Constant, never a `flex: 1` spacer: a flexed gap tracks the animated-height
+// box, so the title travels every frame (#296).
 const TITLE_GAP = 44;
 const CARD_PAD_V = 18;
 
 const CARD_EASE = cubicBezier(0.4, 0, 0.2, 1);
-/**
- * A CSS transition, not `withSpring(height)` (a Yoga pass per frame for this
- * card and every row below it) and not a layout animation (asymmetric here —
- * on close LegendList reclaims the row's extent in the same commit, so the
- * close snapped). One declarative pair of values, so open and close are the
- * same animation in opposite directions.
- *
- * The curve is load-bearing: a quint-out put 85% of the travel in the first
- * 100ms and read as no animation at all. Reanimated 4.5 has no spring easing
- * for CSS transitions, so a spring feel would have to be sampled into
- * `linear(...)`.
- */
+// A CSS transition, not `withSpring(height)` (a Yoga pass per frame) and not a
+// layout animation (LegendList reclaims the row on close, so it snapped). The
+// curve matters: a quint-out read as no animation at all.
 const CARD_TRANSITION: CSSTransitionProperties = {
 	transitionDuration: 340,
 	transitionProperty: ["height", "marginBottom"],
 	transitionTimingFunction: CARD_EASE,
 };
-/** Not FadeIn/FadeOut: an exiting child runs its own unmount clock while the
- *  parent shrinks. The body stays mounted at opacity 0. */
+// Not FadeIn/FadeOut: an exiting child runs its own unmount clock while the
+// parent shrinks. The body stays mounted at opacity 0.
 const BODY_TRANSITION: CSSTransitionProperties = {
 	transitionDuration: 220,
 	transitionProperty: ["opacity"],
@@ -77,13 +65,9 @@ export function StackedQuoteCard({
 		...ARCHIVE_TINT_VARS,
 	]) as string[];
 
-	// Measured, not estimated: the content is laid out at its natural height even
-	// while the box clips it, so onLayout is the exact open height. A CSS
-	// transition cannot animate to `auto` — this is what supplies the number.
-	//
-	// Keyed by the quote, because `recycleItems` hands this instance a different
-	// one: an unkeyed height would open the next card at the last card's size for
-	// the frame before onLayout lands.
+	// A CSS transition cannot animate to `auto`, so onLayout supplies the open
+	// height. Keyed by the quote: `recycleItems` reuses this instance, and an
+	// unkeyed height would open the next card at the last card's size for a frame.
 	const [measured, setMeasured] = useState({ height: 0, id: quote._id });
 	const contentHeight = measured.id === quote._id ? measured.height : 0;
 	const expanded = Math.max(MIN_EXPANDED, contentHeight + CARD_PAD_V * 2);
@@ -99,8 +83,7 @@ export function StackedQuoteCard({
 			style={{
 				height: isOpen ? expanded : COLLAPSED,
 				marginBottom: isOpen ? GAP : PEEK - COLLAPSED,
-				// From the item index: the list paints earlier rows above later ones,
-				// so without this the peek band covers the next card's date line.
+				// Without this the peek band covers the next card's date line.
 				zIndex: isOpen ? 9999 : index,
 				...(reduced ? null : CARD_TRANSITION),
 			}}
@@ -152,11 +135,8 @@ export function StackedQuoteCard({
 						<AppText className="mb-3.5 font-poster-body text-[14px] text-poster-ink-soft leading-5.5">
 							{quote.text}
 						</AppText>
-						{/* The reply, and one onward ask beside it (#316). Fixed copy plus
-                the stored reply — no LLM call, no new query: `reply` is a
-                field on the row this card already reads. Accepting opens the
-                ordinary composer empty; nothing carries over, because #300
-                already embeds these words once. */}
+						{/* The reply and one onward ask (#316). Accepting opens the composer
+						 * empty: #300 already embeds these words once. */}
 						{seedable && (
 							<View className="mb-3.5 rounded-2xl border border-poster-hairline px-4 py-3">
 								<AppText className="font-poster-display text-[12.5px] text-poster-ink tracking-[1px]">

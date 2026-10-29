@@ -1,9 +1,8 @@
 import { Stack } from "expo-router";
-import { useLargeHeaderOptions } from "@/src/lib/navigation-options";
+import { useLargeHeaderOptions } from "@/lib/navigation-options";
 
-// The hub sits under every deep jump into Browse that passes `withAnchor`,
-// so Library / Music / a topic always has a back button and a tab re-tap pops
-// to the hub instead of being the stack's root.
+// The hub sits under every deep jump that passes `withAnchor`, so sub-screens
+// always have a back button and a tab re-tap pops to the hub.
 export const unstable_settings = { anchor: "index" };
 
 const BROWSE_OPTIONS = { title: "Browse" };

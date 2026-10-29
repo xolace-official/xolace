@@ -1,35 +1,34 @@
 // Every touched domain, as a ring grid or tick-meter list on glass (#491).
-// Free users get unfilled rings and the "Unlock numbers" pill (#513);
-// Xolace+ gets numbers, and tapping a domain opens its detail card (#518).
-// A free domain compounding may carry the upsell (#524): no number, just the word.
+// Free users get unfilled rings and the "Unlock numbers" pill (#513); Xolace+
+// gets numbers and a detail card per domain (#518). Compounding may carry the upsell (#524).
 
 import { SymbolView } from "expo-symbols";
 import { Chip } from "heroui-native";
 import { useState } from "react";
 import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
-import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
+import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
 import {
 	CompoundingUpsellLine,
 	type Upsell,
 	useHeldUpsell,
 	useOpenUpsell,
-} from "@/src/features/insights/compounding-upsell";
-import { DetailCard } from "@/src/features/insights/detail-card";
+} from "@/features/insights/compounding-upsell";
+import { DetailCard } from "@/features/insights/detail-card";
 import {
 	DomainCell,
 	DomainRow,
 	type DomainView,
 	ViewToggle,
-} from "@/src/features/insights/domain-list";
+} from "@/features/insights/domain-list";
 import {
 	type DomainItem,
 	type Insight,
 	icon,
-} from "@/src/features/insights/domains";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
+} from "@/features/insights/domains";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const LOCK = icon("lock", "lock");
 

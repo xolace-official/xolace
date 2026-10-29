@@ -2,15 +2,11 @@ import { useThemeColor } from "heroui-native";
 import type { MarkdownStyle } from "react-native-enriched-markdown";
 import { useCSSVariable } from "uniwind";
 
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { useAppTheme } from "@/context/app-theme-context";
 import { READING_MODES, type ReadingModeKey } from "./reading-mode";
 
-/**
- * The entry body's look for a reading mode (#401) at a base text size. Colours
- * come from tokens, so called inside `ReaderPageScope` they follow the page.
- * Sizes are base sizes: the OS text size still multiplies them, uncapped.
- * Until a mode's runtime fonts load it falls back to the theme's own face.
- */
+/** The entry body's look for a reading mode (#401). Colours come from tokens, so inside
+ * `ReaderPageScope` they follow the page. */
 export function useMarkdownStyle(
 	mode: ReadingModeKey,
 	size: number,
@@ -28,9 +24,8 @@ export function useMarkdownStyle(
 	).map(String);
 	const { face, lineHeight, page } = READING_MODES[mode];
 	const { isLight } = useAppTheme();
-	// Accent links clear AA (4.5:1) on every dark page and miss it on every light
-	// one, Paper included (#415, measured per theme); there the underlined ink
-	// carries the link. Re-measure when a theme's accent changes.
+	// Accent links clear AA on every dark page and miss it on every light one
+	// (#415, measured per theme); there the underlined ink carries the link.
 	const darkPage = page === "night" || (page === "app" && !isLight);
 	// Clear and By the fire load at runtime; until then, the theme's face.
 	const ready = fontsLoaded || mode === "classic";

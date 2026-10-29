@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { resolveCardContent } from "@/src/features/reflect/compose/resolve-card-content";
-import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
-import { useAppStore } from "@/src/store/store";
+import { resolveCardContent } from "@/features/reflect/compose/resolve-card-content";
+import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
+import { useAppStore } from "@/store/store";
 
 const NUDGE_MESSAGES = [
 	"There's no rush. Let it come.",
@@ -25,9 +25,7 @@ export const useComposeCard = ({
 }: Args) => {
 	const pendingEventPrompt = useAppStore((s) => s.pendingEventPrompt);
 	const replySeed = useAppStore((s) => s.replySeed);
-	// Read the clock once at mount (lazy init keeps the call out of the render
-	// body so React Compiler can still optimize this). The prompt has a
-	// multi-day expiry, so mount-time accuracy is sufficient.
+	// Read once at mount: the prompt has a multi-day expiry.
 	const [now] = useState(() => Date.now());
 	const eventPromptActive =
 		!!pendingEventPrompt && pendingEventPrompt.expiresAt > now;
@@ -41,11 +39,8 @@ export const useComposeCard = ({
 	const fromEntry = eventPromptActive && !!pendingEventPrompt.fromEntryId;
 
 	const card = resolveCardContent({
-		// Dismissing the composer keeps the writing (#258), so the resting card
-		// shows the draft's opening line rather than a prompt over the top of it.
-		// Only at rest: open, the line is the card's own voice above what you are
-		// writing, and swapping it for your own first line as you type would make
-		// the composer echo you back at yourself.
+		// Dismissing keeps the writing (#258), so the resting card shows the draft's
+		// opening line. Only at rest: open, the line is the card's own voice.
 		draft: expanded ? null : entryText,
 		eventPrompt,
 		isNight: isNight && !fromEntry,

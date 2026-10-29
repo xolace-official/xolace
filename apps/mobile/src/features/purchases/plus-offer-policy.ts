@@ -1,12 +1,6 @@
-/**
- * The one place that decides whether a proactive Xolace+ offer fires, for which
- * moment, and with which copy variant.
- *
- * Pure by design — plain data in, decision out, no db/ctx — so the rules that
- * matter (a safeguard flow is never monetized; a "no" is honored) are testable
- * without a renderer and cannot drift between the five call sites that will
- * eventually read this. Cadence numbers come from #220 §3.
- */
+// Decides whether a proactive Xolace+ offer fires, for which moment and with which
+// copy variant. Pure (data in, decision out) so the rules cannot drift between call
+// sites. Cadence numbers from #220 §3.
 
 /** The five ranked proactive moments (#220 §5). */
 export type PlusOfferMoment = 1 | 2 | 3 | 4 | 5;
@@ -45,7 +39,7 @@ export type PlusOfferInput = {
 	candidates?: PlusOfferMoment[];
 	/** An active safeguard/escalation flow. Hard veto, checked first (#220 rule 4). */
 	safeguardActive: boolean;
-	/** They tapped the locked thing themselves — never rate-limited (#220 rule 5). */
+	/** They tapped the locked thing themselves; never rate-limited (#220 rule 5). */
 	userInitiated?: boolean;
 	/** The surface asking. Cooldown is keyed by it, not by moment. */
 	surface: PlusOfferSurface;
@@ -75,16 +69,14 @@ export function choosePlusOffer({
 	registerComplaint = false,
 	now,
 }: PlusOfferInput): PlusOfferDecision {
-	// First and unconditional. The moment where escalation is genuinely
-	// happening is the one moment the app is forbidden to sell in.
+	// First and unconditional: the app never sells during an escalation.
 	if (safeguardActive) {
 		return { reason: "safeguard", show: false };
 	}
 
 	const variant: PlusOfferVariant = registerComplaint ? "register" : "default";
 
-	// They asked. Cadence, cooldown and the full stop all govern offers the app
-	// makes unprompted — none of them apply to a door the user opened.
+	// Cadence, cooldown and the full stop govern unprompted offers only.
 	if (userInitiated) {
 		return { moment: null, show: true, variant };
 	}
@@ -108,9 +100,8 @@ export function choosePlusOffer({
 		return { reason: "no_candidate", show: false };
 	}
 
-	// Keyed by surface, not by moment: a "no" here is a no to this place, and
-	// rotating to the next-ranked moment in the same slot would be the same ask
-	// wearing a different hat.
+	// Keyed by surface, not by moment: a "no" is a no to this place, so the next-ranked
+	// moment in the same slot must not re-ask.
 	const dismissedAt = lastDismissedAt[surface];
 	if (dismissedAt !== undefined && now - dismissedAt < PLUS_OFFER_COOLDOWN_MS) {
 		return { reason: "cooldown", show: false };
@@ -119,26 +110,15 @@ export function choosePlusOffer({
 	return { moment: candidates[0], show: true, variant };
 }
 
-/**
- * Which moments can even be raised at a given surface, in rank order.
- *
- * Moments 1/4/5 all land in the session-end slot, so they compete there and
- * nowhere else; 2 fires mid-session and 3 on the profile. Kept here rather
- * than at the call sites so "which moment belongs where" is one table instead
- * of three conditionals that can drift apart.
- */
+/** Which moments a surface may raise, in rank order. One table, so it cannot drift. */
 const SURFACE_MOMENTS: Record<PlusOfferSurface, PlusOfferMoment[]> = {
 	mirror_landed: [2],
 	profile_insight: [3],
 	session_close: [1, 4, 5],
 };
 
-/**
- * Narrows a surface's moments to the ones whose data condition actually holds,
- * preserving the #220 §5 ranking. Separate from `choosePlusOffer` because this
- * answers "what is true right now" and that answers "may we speak" — the
- * cadence rules must not be re-derivable from a call site's own conditions.
- */
+/** Narrows a surface's moments to those whose data condition holds, in #220 §5 rank order;
+ * `choosePlusOffer` decides "may we speak". */
 export function plusOfferCandidates(
 	surface: PlusOfferSurface,
 	conditionMet: Partial<Record<PlusOfferMoment, boolean>>
@@ -146,11 +126,7 @@ export function plusOfferCandidates(
 	return SURFACE_MOMENTS[surface].filter((m) => conditionMet[m] === true);
 }
 
-/**
- * The surface a moment belongs to. Every moment lives at exactly one surface,
- * so the card can name its own cooldown bucket without every call site
- * threading a surface prop that the table above already knows.
- */
+/** The surface a moment belongs to. Every moment lives at exactly one surface. */
 export function plusOfferSurfaceForMoment(
 	moment: PlusOfferMoment
 ): PlusOfferSurface {

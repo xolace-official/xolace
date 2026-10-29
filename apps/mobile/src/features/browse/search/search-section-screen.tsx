@@ -1,9 +1,5 @@
-/**
- * A Browse search section's See all (#551, `search?section=…&q=…`): every
- * match for that query, in the rows Browse already uses. Lantern, Support
- * audio and Music page in on scroll; Hubs & topics is a small bounded list,
- * so it shows whole. Taps report only section and position (#552).
- */
+// A search section's See all (#551): every match, paged on scroll except Hubs
+// & topics, which shows whole. Taps report only section and position (#552).
 
 import { LegendList } from "@legendapp/list/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";
@@ -12,17 +8,17 @@ import { usePaginatedQuery, useQuery } from "convex/react";
 import { Stack, useLocalSearchParams } from "expo-router";
 import type { ReactElement } from "react";
 import { ActivityIndicator, ScrollView } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { TrackRow } from "@/src/features/browse/components/track-row";
-import { useMiniPlayerInset } from "@/src/features/browse/now-playing/now-playing-store";
-import { PlaceRow } from "@/src/features/browse/search/place-row";
-import { useSearchTap } from "@/src/features/browse/search/search-analytics";
+import { AppText } from "@/components/shared/app-text";
+import { TrackRow } from "@/features/browse/components/track-row";
+import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
+import { PlaceRow } from "@/features/browse/search/place-row";
+import { useSearchTap } from "@/features/browse/search/search-analytics";
 import {
 	SECTION_TITLE,
 	type SearchSection,
-} from "@/src/features/browse/search/search-sections";
-import { EntryRow } from "@/src/features/library/home/entry-cards";
-import { RowsSkeleton } from "@/src/features/library/skeletons";
+} from "@/features/browse/search/search-sections";
+import { EntryRow } from "@/features/library/home/entry-cards";
+import { RowsSkeleton } from "@/features/library/skeletons";
 
 const PAGE_SIZE = 20;
 

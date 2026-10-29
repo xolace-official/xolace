@@ -7,12 +7,8 @@ const utcClock = () => {
 	return { day: Math.floor(hour / 24), hour };
 };
 
-/**
- * UTC days and hours since epoch — the `day` (daily rotation) and `hour`
- * (`newUntil` expiry) args of `api.browse.getNewShelf`. Re-read on every return to the foreground:
- * tab screens stay mounted and a backgrounded app can live for days, so a
- * mount-time value would pin the shelf to the day the app was opened.
- */
+/** UTC days and hours since epoch for `api.browse.getNewShelf`. Re-read on every return to the
+ * foreground: a backgrounded app can live for days. */
 export function useUtcDay() {
 	const [clock, setClock] = useState(utcClock);
 

@@ -1,13 +1,7 @@
 import { ImageHeader } from "./image-header";
 import { PosterHeader } from "./poster-header";
 
-/**
- * Which masthead the discovery screen renders. Flip this constant to compare
- * the two on device — there is deliberately no UI switch for it.
- *
- *   'poster' — solid accent field, illustration as a cropped art tile.
- *   'image'  — illustration full-bleed behind an accent scrim.
- */
+// Which masthead discovery renders; flipped in code, deliberately no UI switch.
 const HEADER_VARIANT: "poster" | "image" = "poster";
 
 export function DiscoveryHeader() {

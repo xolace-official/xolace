@@ -13,9 +13,9 @@ import Animated, {
 	withSpring,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { TextAnimation } from "@/src/components/ui/text-animation";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { AppText } from "@/components/shared/app-text";
+import { TextAnimation } from "@/components/ui/text-animation";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { FluxStage, MOUTH_Y } from "./flux-stage";
 
 const FLUX_W = 53;
@@ -27,36 +27,25 @@ const TAIL = 12;
 const WORD_MS = 62;
 /** Held after a comma or full stop. Without it, 62ms/word reads as a ticker. */
 const BREATH_MS = 200;
-/** How long a word takes to come up once it's his turn to say it. */
+/** Fade time of one word once it is its turn. */
 const FADE_MS = 90;
-/** How long a bubble takes to arrive. Words wait for it to land. */
+/** Bubble arrival time. Words wait for it to land. */
 const BUBBLE_MS = 420;
-/** Lead-in before he starts talking, and the pause between the two beats. */
+/** Lead-in before the first word. */
 const OPENING_MS = BUBBLE_MS - 100;
-/**
- * The pause between the two beats. The whole card is this pause — said in one
- * breath, "campers sat with this" and "you are not alone" is a statistic.
- */
+/** Pause between the two beats. Said in one breath, the card reads as a statistic. */
 const BEAT_MS = 900;
-/**
- * A bubble lands with a bounce — it was thrown from his mouth, not faded up.
- * 0.55 is the overshoot that reads as spoken; anything past ~0.8 arrives dead.
- */
+/** 0.55 overshoots enough to read as spoken; past ~0.8 the bubble arrives dead. */
 const BUBBLE_SPRING = { dampingRatio: 0.55, duration: BUBBLE_MS } as const;
-/**
- * The closer is the one people watch, because the pause told them to. It gets
- * a slower spring, a looser one, and further to travel — an overshoot is only
- * visible in proportion to the distance it overshoots.
- */
+/** Slower, looser and further-travelling so the overshoot stays visible. */
 const CLOSER_SPRING = { dampingRatio: 0.45, duration: 560 } as const;
 const CLOSER_TRAVEL = 22;
 
 const styles = StyleSheet.create({
 	bubble: { borderCurve: "continuous" },
 	flux: { marginTop: FLUX_TOP },
-	// The tail is the bubble's own corner, rotated 45° and tucked behind its left
-	// edge — so it inherits the fill and border without a second color. Its top
-	// is his mouth, which sits lower than instinct says: his head is most of him.
+	// A rotated corner tucked behind the bubble's left edge so it inherits fill and
+	// border; its top sits at Flux's mouth.
 	tail: {
 		height: TAIL,
 		left: -5,
@@ -66,8 +55,6 @@ const styles = StyleSheet.create({
 		width: TAIL,
 	},
 });
-
-/* ---------------------------------------------------------------- helpers */
 
 /** Cumulative start time per word, with a beat held at punctuation. */
 function wordOffsets(words: string[]) {
@@ -84,19 +71,10 @@ const spokenMs = (text: string) => {
 	return o[o.length - 1] + WORD_MS;
 };
 
-/**
- * Reveals a sentence word by word — Flux is speaking it, not printing it.
- *
- * Every word is laid out from the first frame and only its opacity moves, off
- * one shared clock on the UI thread. The obvious version — slicing the string
- * as a counter goes up — is a React render *and* a fresh text measurement per
- * word, and on a cold start the JS thread is contended enough that those land
- * late and clumped, which is the stutter this replaces. It also means the
- * bubble is its final size immediately instead of growing a line at a time.
- */
+// One UI-thread clock that every word's opacity reads from. Slicing the string
+// per word would re-render and re-measure on a contended JS thread and stutter.
 function useSpokenClock(total: number, reduced: boolean) {
-	// The last word starts at total - WORD_MS and fades for FADE_MS, which
-	// outruns a clock that stops at total — it would land short of full opacity.
+	// The last word fades until total + FADE_MS; a clock stopping at total lands short.
 	const end = total + FADE_MS;
 	const clock = useSharedValue(reduced ? end : 0);
 
@@ -150,9 +128,8 @@ function useBubbleIn(
 	}, [delay, reduced, p, spring]);
 
 	return useAnimatedStyle(() => ({
-		// Opacity is clamped and the transforms are not: the bubble must not flash
-		// brighter than solid on the overshoot, but it should visibly travel past
-		// where it lands and come back. That overshoot is the whole spring.
+		// Opacity is clamped so the overshoot never flashes brighter than solid;
+		// the transforms are not, so the bubble visibly travels past and comes back.
 		opacity: Math.min(p.get(), 1),
 		transform: [
 			{ translateX: (1 - p.get()) * -travel },
@@ -161,21 +138,8 @@ function useBubbleIn(
 	}));
 }
 
-/* ------------------------------------------------------------------- card */
-
-/**
- * Once a week, a real number of other campers who carried what the viewer last
- * carried. Flux says it — this is the app speaking to you, not a stat readout —
- * which is why it's a speech bubble and not a metric tile.
- *
- * He delivers it in two beats: the fact, then a pause, then "You are not
- * alone." The pause is the whole point; said in one breath it's a statistic.
- *
- * Deliberately inert: no onPress, no destination. It's a moment of "you are not
- * alone," not an entry point to a feed that doesn't exist.
- *
- * Renders nothing until there's something honest to say (see convex/cohort.ts).
- */
+/** Weekly speech bubble from Flux: how many campers carried the viewer's last emotion, then
+ * "You are not alone." Inert; renders nothing without an honest number (convex/cohort.ts). */
 export function CohortCard() {
 	const card = useQuery(api.cohort.getWeeklyCohortCard);
 	const reduced = useEffectiveReducedMotion();
@@ -184,13 +148,8 @@ export function CohortCard() {
 		return null;
 	}
 
-	/*
-	 * The speech is a separate component so every timer and spring in it starts
-	 * when the card actually appears. Run in here, they start at mount — which on
-	 * a cold start is while the query is still in flight, so both bubbles finish
-	 * springing in unseen and snap into place fully formed the instant the data
-	 * lands, with the words only then beginning to arrive behind them.
-	 */
+	// Separate component so the timers and springs start when the card appears,
+	// not at mount while the query is still in flight.
 	return <CohortSpeech card={card} reduced={reduced} />;
 }
 
@@ -244,9 +203,7 @@ function CohortSpeech({
 							style={styles.tail}
 						/>
 						<AppText className="px-4 py-4 text-[15px] text-foreground leading-6">
-							{/* The count lands with the last word of the sentence he says it
-							 * in — a number still ticking under the next bubble reads as two
-							 * things happening rather than one thing being said. */}
+							{/* The count finishes with the last word of its sentence. */}
 							{card.status === "count" && (
 								<>
 									<TextAnimation.Counting
@@ -260,8 +217,7 @@ function CohortSpeech({
 									<AppText> </AppText>
 								</>
 							)}
-							{/* Keyed by the moment it's spoken: offsets strictly increase,
-							 * so it identifies a position in a sentence that repeats words. */}
+							{/* Offsets strictly increase, so they key repeated words safely. */}
 							{words.map((word, i) => (
 								<SpokenWord at={offsets[i]} clock={clock} key={offsets[i]}>
 									{i === words.length - 1 ? word : `${word} `}
@@ -271,8 +227,7 @@ function CohortSpeech({
 					</View>
 				</Animated.View>
 
-				{/* No tail on the closer — one from here would cross the bubble above.
-				 * It reads as an aside, which is what the pause set it up to be. */}
+				{/* No tail on the closer: it would cross the bubble above. */}
 				<Animated.View className="self-start" style={bubble2}>
 					<View
 						className="rounded-3xl border border-border/60 bg-surface px-4 py-2.5"

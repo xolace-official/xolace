@@ -3,24 +3,21 @@ import type { FunctionReturnType } from "convex/server";
 import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	type BrowseFrom,
 	useOpenTrack,
-} from "@/src/features/browse/use-open-track";
-import { CoverImage } from "@/src/features/library/cover-image";
+} from "@/features/browse/use-open-track";
+import { CoverImage } from "@/features/library/cover-image";
 
 export type ShelfItem = FunctionReturnType<
 	typeof api.browse.getNewShelf
 >[number];
 
-export const TILE = 170;
+const TILE = 170;
 
-/**
- * One square tile of the newest-4 shelf — the hub's New shelf and the
- * Discovery "From the library" strip (§9.3, §9.5) render the same query
- * through this. Tap → player, or the paywall for a free user (§9.4).
- */
+/** One tile of the newest-4 shelf (§9.3, §9.5). Tap opens the player, or the paywall for a free
+ * user (§9.4). */
 export function ShelfTile({
 	item,
 	from,

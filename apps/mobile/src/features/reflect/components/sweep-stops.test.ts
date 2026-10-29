@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSweepStops } from "@/src/features/reflect/components/sweep-stops";
+import { buildSweepStops } from "@/features/reflect/components/sweep-stops";
 
 const TOKENS = {
 	accent: "#ff8844",
@@ -14,8 +14,7 @@ const alphaOf = (stop: string) =>
 
 describe("buildSweepStops", () => {
 	it("builds every stop from a theme token, never a literal", () => {
-		// #246 story 19: cycling palettes must change the wash. A stop that isn't
-		// derived from a token is a fixed orange in all eleven themes.
+		// #246 story 19: a stop not derived from a token is the same in all eleven themes.
 		const tokens = Object.values(TOKENS);
 		for (const stop of buildSweepStops(TOKENS)) {
 			expect(tokens.some((t) => stop.startsWith(t))).toBe(true);

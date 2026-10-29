@@ -7,27 +7,21 @@ import {
 } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { usePaywall } from "@/src/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { RadioIconIndicator } from "@/src/features/settings/components/radio-icon-indicator";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
-import { useVoicePreview } from "@/src/features/settings/hooks/use-voice-preview";
-import { useVoiceSettings } from "@/src/features/settings/hooks/use-voice-settings";
-import {
-	VOICE_OPTIONS,
-	type VoiceValue,
-} from "@/src/features/settings/voice-options";
-import { playSoftPress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { SettingsSection } from "@/components/shared/settings-section";
+import { usePaywall } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
+import { useVoiceSettings } from "@/features/settings/hooks/use-voice-settings";
+import { useVoicePreview } from "@/features/talk/use-voice-preview";
+import { VOICE_OPTIONS, type VoiceValue } from "@/features/talk/voice-options";
+import { playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
-/**
- * Plus-gated custom-voice picker. Mirrors the Tone section's RadioGroup, with
- * two additions: named voices are locked for free users (tap → paywall), and
- * each carries a play/stop preview that works even when locked.
- */
+/** Plus-gated custom-voice picker. Named voices are locked for free users (tap
+ * opens the paywall); each carries a preview that works even when locked. */
 export const VoiceSection = () => {
 	const { voice, setVoice } = useVoiceSettings();
 	const { isPlus, isLoading: isPlusLoading } = usePlusEntitlement();
@@ -58,8 +52,7 @@ export const VoiceSection = () => {
 				<RadioGroup onValueChange={handleValueChange} value={voice}>
 					{VOICE_OPTIONS.map((opt, index) => {
 						const locked = opt.premium && !isPlus && !isPlusLoading;
-						// null for "auto" (no preview); a VoiceSlug otherwise. A const so
-						// the narrowing survives into the preview callback below.
+						// A const so the narrowing survives into the preview callback.
 						const slug = opt.value === "auto" ? null : opt.value;
 						return (
 							<View key={opt.value}>

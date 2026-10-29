@@ -11,18 +11,15 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	useMiniPlayerAttention,
 	useMiniPlayerShown,
-} from "@/src/features/browse/now-playing/now-playing-store";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+} from "@/features/browse/now-playing/now-playing-store";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/**
- * A one-shot lift when a new track's player closes, so the eye finds the
- * capsule (Oyelo `PlayerView.swift` attention keyframes). Only a bump after
- * mount plays, so a remount never replays it. Reduced motion: a brief dim.
- */
+/** One-shot lift when a new track's player closes (Oyelo `PlayerView.swift`). Only a bump after
+ * mount plays, so a remount never replays it. */
 export function useAttentionPulse() {
 	const attention = useMiniPlayerAttention();
 	const reduced = useEffectiveReducedMotion();
@@ -67,12 +64,8 @@ function useAppActive() {
 	return active;
 }
 
-/**
- * A title that, when it overflows, rests then reads leftward in a loop — only
- * while the capsule is shown, the app is active and motion is allowed
- * (Oyelo `MarqueeTitle`). Otherwise it truncates like any one-line title.
- * ponytail: hard clip at the edges, no fade mask; add MaskedView if it reads harsh.
- */
+/** Overflowing title that rests then scrolls leftward while shown, active and motion is allowed
+ * (Oyelo `MarqueeTitle`); otherwise it truncates. */
 export function MarqueeTitle({
 	title,
 	className,

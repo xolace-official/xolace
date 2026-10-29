@@ -3,19 +3,19 @@ import { PressableFeedback, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
+import { MirrorTonePickerDialog } from "@/features/reflect/components/mirror-tone-picker-dialog";
 import {
 	type MirrorTone,
-	MirrorTonePickerDialog,
-} from "@/src/features/settings/components/mirror-tone-picker-dialog";
-import { useSettings } from "@/src/features/settings/hooks/use-settings";
-import { useAppStore } from "@/src/store/store";
+	useMirrorSettings,
+} from "@/features/reflect/hooks/use-mirror-settings";
+import { useAppStore } from "@/store/store";
 
 const CLOSE_ICON = { android: "close", ios: "xmark", web: "close" } as const;
 
 export const ToneTipBanner = () => {
 	const { toneTipSeen, setToneTipSeen } = useAppStore();
-	const { mirrorTone, setMirrorTone } = useSettings();
+	const { mirrorTone, setMirrorTone } = useMirrorSettings();
 	const posthog = usePostHog();
 	const [pickerOpen, setPickerOpen] = useState(false);
 	const [confirmedLabel, setConfirmedLabel] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export const ToneTipBanner = () => {
 
 	return (
 		<>
-			<View className="flex-row items-start gap-3 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3">
+			<View className="mt-2 mb-4 flex-row items-start gap-3 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3">
 				{confirmedLabel ? (
 					<AppText className="flex-1 text-foreground/60 text-sm leading-5">
 						Your next reflection will use {confirmedLabel} tone.

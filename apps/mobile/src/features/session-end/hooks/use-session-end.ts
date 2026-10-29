@@ -4,30 +4,13 @@ import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useCallback, useEffect, useRef } from "react";
-import { useAppStore } from "@/src/store/store";
+import { useAppStore } from "@/store/store";
 
 type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
 
-/**
- * Drive the session-end screen for an already-completed session.
- *
- * The path screens complete the session before navigating here and pass its id.
- * This hook reads that session by id (not `getActive`, which is now null) and
- * exposes callbacks that record optional post-session enrichment (mood +
- * peer-pool contribution) onto the completed session, then navigate. Because
- * completion already happened, closing the app on this screen loses nothing but
- * the optional feedback — the session is already terminal and on the timeline.
- *
- * @returns An object containing:
- * - `sessionId` — the current session identifier, if any
- * - `isLoading` — `true` while session data is loading
- * - `distilledText` — the session's distilled text, or `null` if unavailable
- * - `contributeByDefault` — whether contributions are enabled by default (defaults to `false`)
- * - `sessionCount` — the user's completed-session count
- * - `domainUnlock` — the domains this session brought into focus, if any (#523)
- * - `dismiss` — record feedback and navigate home
- * - `haveMore` — record feedback and navigate home
- */
+/** Drives the session-end screen for an already-completed session, read by id
+ * (`getActive` is null by now). Feedback is optional enrichment, so closing
+ * the app here loses nothing but that. */
 export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 	const router = useRouter();
 	const session = useQuery(
@@ -54,15 +37,14 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 		router.replace("/");
 	}, [router]);
 
-	// Guard: no session id, or it resolved to nothing (not owned / not found).
+	// No session id, or it resolved to nothing (not owned / not found).
 	useEffect(() => {
 		if (!sessionId || session === null) {
 			navigateHome();
 		}
 	}, [sessionId, session, navigateHome]);
 
-	// Record optional feedback onto the already-completed session. Best-effort:
-	// failures never block navigation, since completion already happened.
+	// Best-effort: failures never block navigation, since completion already happened.
 	const record = useCallback(
 		async (
 			contributedReflection: boolean | null,
@@ -78,7 +60,7 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 					sessionId,
 				});
 			} catch {
-				// best-effort enrichment — session is already terminal
+				// best-effort enrichment
 			}
 		},
 		[sessionId, recordFeedback]

@@ -1,10 +1,4 @@
-/**
- * The opening title card — the one beat that is not a page of the tale but the
- * front of the book, so it deliberately breaks the deck's grid.
- *
- * This slide owns only its own composition. The fire, sky and scrims belong to
- * `HearthBackdrop` and are untouched here.
- */
+/** The opening title card. It deliberately breaks the deck's grid. */
 
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
@@ -15,8 +9,8 @@ import Animated, {
 	useReducedMotion,
 } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
-import type { StoryBeat } from "@/src/features/onboarding/story-beats";
+import { AppText } from "@/components/shared/app-text";
+import type { StoryBeat } from "@/features/onboarding/story-beats";
 import { useDeckColor } from "./deck-color";
 
 /** Staged so the card assembles rather than snapping in all at once. */
@@ -25,15 +19,14 @@ const DUR = 520;
 
 export const CoverBeat = ({ beat }: { beat: StoryBeat }) => {
 	const ember = useDeckColor("ember");
-	// The entrance is the first motion in the product. Reduced motion drops it
-	// entirely — the card is fully legible without it.
+	// Reduced motion drops the entrance entirely.
 	const reduced = useReducedMotion();
 	const enter = (index: number) =>
 		reduced ? undefined : FadeInDown.delay(index * STEP).duration(DUR);
 
 	return (
 		<View className="flex-1 px-9 pt-6">
-			{/* Wordmark. The gateway slide is the only one that carries it. */}
+			{/* Wordmark. Only the cover carries it. */}
 			<Animated.View
 				className="mb-9 flex-row items-center gap-2"
 				entering={enter(0)}
@@ -55,9 +48,7 @@ export const CoverBeat = ({ beat }: { beat: StoryBeat }) => {
 				</AppText>
 			</Animated.View>
 
-			{/* The horizon line — short, ember, sits on the same left axis as
-          everything else. It is what makes the block read as composed rather
-          than as two paragraphs that happen to be stacked. */}
+			{/* The horizon line, on the same left axis as everything else. */}
 			<Animated.View
 				className="mt-7 mb-6 h-px w-9 bg-ember/60"
 				entering={enter(2)}
@@ -77,9 +68,8 @@ export const CoverBeat = ({ beat }: { beat: StoryBeat }) => {
 				entering={reduced ? undefined : FadeIn.delay(4 * STEP).duration(700)}
 				pointerEvents="none"
 			>
-				{/* Sized and dropped to the floor so the figure's own drawn fire lands
-            in the band where the real footage is still bright, rather than
-            floating in the dark gap above it. */}
+				{/* Dropped to the floor so the drawn fire lands where the footage is still
+				    bright. */}
 				<Image
 					contentFit="contain"
 					source={require("@/assets/images/flux/flux-campfire.png")}

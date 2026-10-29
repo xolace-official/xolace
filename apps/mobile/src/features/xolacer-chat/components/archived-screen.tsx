@@ -2,17 +2,14 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Skeleton } from "heroui-native";
 import { ScrollView, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { useMiniPlayerInset } from "@/src/features/browse/now-playing/now-playing-store";
+import { AppText } from "@/components/shared/app-text";
+import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
 import { useConversationRowActions } from "../use-conversation-row-actions";
 import { ChatsList } from "./chats-list";
 import { ConversationActions } from "./conversation-actions";
 
-/**
- * The same list, somewhere else. It reads the same `myConversations` query the
- * Connect tab does — Convex dedupes the subscription, so this costs no server
- * work — and renders the same rows with the same long-press sheet.
- */
+/** The same list elsewhere; reads the same `myConversations` query (Convex dedupes the
+ * subscription). */
 export function ArchivedScreen() {
 	// Clears the floating mini-player off the last row (none on iOS 26).
 	const playerInset = useMiniPlayerInset();
@@ -38,9 +35,8 @@ export function ArchivedScreen() {
 						<Skeleton className="h-[68px] rounded-none" />
 					</View>
 				) : archived.length === 0 ? (
-					// Unarchiving the last row lands here rather than popping the screen
-					// out from under the gesture, so the empty state has to say what this
-					// place is for, not just that it's empty.
+					// Unarchiving the last row lands here instead of popping the screen, so
+					// the empty state says what this place is for.
 					<View className="min-h-95 items-center justify-center gap-2.5 px-8">
 						<View className="h-12 w-12 items-center justify-center rounded-2xl bg-surface-secondary">
 							<AppText className="text-lg">🗂️</AppText>

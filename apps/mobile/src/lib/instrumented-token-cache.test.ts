@@ -25,10 +25,8 @@ const KEY = "__clerk_client_jwt";
 // The marker write is fire-and-forget; let it land before the next read.
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-/**
- * The alert exists for one case: a token we stored is gone on a later read.
- * Warning on every miss buried that under fresh installs and signed-out users.
- */
+/** The alert exists for one case: a stored token gone on a later read. Warning on every miss
+ * buried it under fresh installs. */
 describe("instrumentedTokenCache miss warning", () => {
 	beforeEach(() => {
 		store.clear();

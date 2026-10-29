@@ -2,8 +2,8 @@ import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 
 const ARCHIVE_ICON_NAME = {
 	android: "archive",
@@ -11,18 +11,14 @@ const ARCHIVE_ICON_NAME = {
 	web: "archive",
 } as const;
 
-/**
- * The way into the Archived screen: shaped like a conversation row so it reads
- * as part of the list rather than a control above it — icon in the avatar slot,
- * count in muted text where a timestamp would sit, no chevron.
- */
+/** The way into the Archived screen, shaped like a conversation row so it reads as part of the
+ * list. */
 export function ArchivedEntryRow({
 	count,
 	showSeparator,
 }: {
 	count: number;
-	/** Omitted when no conversations follow, so the hairline never divides
-      the row from nothing. */
+	/** Omitted when no conversations follow. */
 	showSeparator: boolean;
 }) {
 	const router = useRouter();
@@ -53,8 +49,7 @@ export function ArchivedEntryRow({
 						<AppText className="text-[13px] text-muted">{count}</AppText>
 					</View>
 				</View>
-				{/* Inset to the text column: avatar (44) + gap (12) — the same hairline
-            the conversation rows below draw. */}
+				{/* Inset to the text column: avatar (44) + gap (12), like the rows below. */}
 				{showSeparator && <View className="ml-14 h-px bg-border/40" />}
 			</View>
 		</PressableFeedback>

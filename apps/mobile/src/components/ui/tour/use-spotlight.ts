@@ -6,27 +6,18 @@ import {
 	withSpring,
 } from "react-native-reanimated";
 
-import { cutoutPath, spotlightFor } from "@/src/components/ui/tour/geometry";
+import { cutoutPath, spotlightFor } from "@/components/ui/tour/geometry";
 import {
 	type Rect,
 	SPRING,
 	type TourShape,
 	type TourStepEntry,
-} from "@/src/components/ui/tour/types";
+} from "@/components/ui/tour/types";
 
 type Spot = Rect & { radius: number };
 
-/**
- * The hole in the dim: where it is, and the animated path that draws it.
- *
- * `spot` is where the target is, and places the card; `hole` is what gets cut,
- * and is null for a step with `cutout` off.
- *
- * Two halves that have to stay together. The rect is measured from the target
- * on the JS side; the path that cuts it out lives on the UI thread, so
- * travelling between two targets is one spring rather than a state update per
- * frame. Returning both keeps the overlay from having to know that.
- */
+/** The hole in the dim. `spot` is the measured target rect (places the card); `hole` is null
+ * for a step with `cutout` off. The path lives on the UI thread so travel is one spring. */
 export function useSpotlight({
 	active,
 	shape,
@@ -44,12 +35,8 @@ export function useSpotlight({
 	screenWidth: number;
 	screenHeight: number;
 }) {
-	/*
-	 * The measurement carries the order it was taken for, so a step whose target
-	 * has not been measured yet reads as no spot rather than as the previous
-	 * step's. Deriving that is what keeps the effect below from having to clear
-	 * the state synchronously, which is a cascading render.
-	 */
+	// The measurement carries its step's order, so an unmeasured step reads as no spot
+	// rather than the previous step's, without clearing state in an effect.
 	const [measurement, setMeasurement] = useState<{
 		order: number;
 		spot: Spot;
@@ -59,13 +46,8 @@ export function useSpotlight({
 			? measurement.spot
 			: null;
 
-	/*
-	 * Measured when the step becomes current and again whenever the window
-	 * changes size. The second half is the part that is easy to leave out and
-	 * impossible to miss once it is wrong: a rect taken in portrait describes
-	 * nothing after a rotation, and the hole ends up over the wrong half of a
-	 * screen the target is no longer on.
-	 */
+	// Measured when the step becomes current and again on window resize: a portrait
+	// rect describes nothing after a rotation.
 	useEffect(() => {
 		const target = active?.target.current;
 		if (!target) {
@@ -74,8 +56,7 @@ export function useSpotlight({
 		const order = active.order;
 
 		let cancelled = false;
-		// A frame late on purpose: a step whose target was just scrolled back into
-		// view is measured where it lands, not where it was leaving.
+		// A frame late on purpose: a target just scrolled into view is measured where it lands.
 		const frame = requestAnimationFrame(() => {
 			target.measureInWindow((x, y, width, height) => {
 				if (cancelled || (width === 0 && height === 0)) {
@@ -94,8 +75,7 @@ export function useSpotlight({
 		};
 	}, [active, shape, padding, radius, screenWidth, screenHeight]);
 
-	// `settled` distinguishes the first target — which appears where it belongs —
-	// from every later one, which slides there.
+	// `settled` distinguishes the first target, which appears in place, from later ones that slide.
 	const x = useSharedValue(0);
 	const y = useSharedValue(0);
 	const width = useSharedValue(0);
@@ -103,14 +83,11 @@ export function useSpotlight({
 	const cornerRadius = useSharedValue(0);
 	const settled = useSharedValue(false);
 
-	// A step with `cutout` off is measured, so the card has somewhere to go,
-	// but cuts nothing.
+	// A step with `cutout` off is still measured so the card has somewhere to go.
 	const hole = active?.cutout === false ? null : spot;
 
 	useEffect(() => {
-		// A step with nothing to point at collapses the hole rather than leaving
-		// the last one open: the previous target is no longer what is being talked
-		// about, and a hole over it says it is.
+		// A step with nothing to point at collapses the hole rather than leaving the last one open.
 		if (!hole) {
 			width.set(0);
 			height.set(0);

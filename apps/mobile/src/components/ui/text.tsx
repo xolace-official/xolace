@@ -1,8 +1,8 @@
 import { Children, forwardRef, type ReactElement, type ReactNode } from "react";
 import type { TextProps as RNTextProps, TextInstance } from "react-native";
 import { tv, type VariantProps } from "tailwind-variants";
-import { AppText } from "@/src/components/shared/app-text";
-import { useDirection } from "@/src/helpers/hooks/use-direction";
+import { AppText } from "@/components/shared/app-text";
+import { useDirection } from "@/helpers/hooks/use-direction";
 
 const textVariants = tv({
 	base: "text-foreground",
@@ -40,18 +40,9 @@ export interface TextProps
 
 export const Text = forwardRef<TextInstance, TextProps>(
 	({ className, size, weight, muted, style, ...props }, ref) => {
-		/*
-		 * `direction` is a Yoga *layout* property, and React Native resolves a
-		 * paragraph's own alignment from the process-wide `I18nManager.isRTL`
-		 * instead — so a `<Direction dir="rtl">` mirrors the furniture around this
-		 * text and leaves the text itself left-aligned inside it. Setting
-		 * `writingDirection` is what closes that gap, and it also puts bidi
-		 * punctuation on the correct end of a mixed line.
-		 *
-		 * Only the direction, not the alignment: `textAlign` stays whatever the
-		 * caller asked for, or unset. A component that centres its label means it
-		 * in both directions.
-		 */
+		// `direction` is a Yoga layout property; RN aligns a paragraph from the global
+		// `I18nManager.isRTL`, so `writingDirection` is what makes text follow `<Direction>`.
+		// Only the direction: `textAlign` stays whatever the caller asked for.
 		const direction = useDirection();
 
 		return (
@@ -67,24 +58,8 @@ export const Text = forwardRef<TextInstance, TextProps>(
 
 Text.displayName = "Text";
 
-/**
- * Wraps the bare text among `children` so it can live in a plain view.
- *
- * React Native will not render a string outside a `<Text>`, and a component
- * that takes `children` has no say in whether it is handed one — so anything
- * putting `children` into a `View`, a `Pressable` or a scroller has to allow
- * for it. Every part in the library that does runs its children through here.
- *
- * Per child, and not all-or-nothing. A part is nearly always given an element
- * and some text together — an icon and a label, an arrow and a line of text —
- * which makes `children` an *array*, so a `typeof children === 'string'` check
- * never matches and the text underneath reaches the view bare. That is the
- * shape this exists to make impossible.
- *
- * `render` is there because the wrapper is rarely the plain default: a button
- * wants its own label variant, a sheet header wants a heading. Pass one, and
- * the text arrives dressed the way the part would have dressed it anyway.
- */
+/** Wraps bare strings among `children` in `<Text>` so a View can hold them. Per child, since
+ * children is usually an array. `render` picks the wrapper. */
 export function textChildren(
 	children: ReactNode,
 	render: (text: string | number) => ReactElement = (text) => (

@@ -1,6 +1,6 @@
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import type { MirrorTone } from "@/src/features/settings/components/mirror-tone-picker-dialog";
+import { AppText } from "@/components/shared/app-text";
+import type { MirrorTone } from "@/features/reflect/hooks/use-mirror-settings";
 
 const TONE_BADGE: Partial<Record<string, { text: string; border: string }>> = {
 	direct: { border: "border-tone-direct/40", text: "text-tone-direct" },
@@ -13,7 +13,7 @@ const TONE_BADGE: Partial<Record<string, { text: string; border: string }>> = {
 };
 const FALLBACK = { border: "border-foreground/20", text: "text-foreground/40" };
 
-/** Renders nothing for the adaptive tone — there's no named tone to show. */
+/** Renders nothing for the adaptive tone: there's no named tone to show. */
 export const MirrorToneBadge = ({
 	toneUsed,
 }: {

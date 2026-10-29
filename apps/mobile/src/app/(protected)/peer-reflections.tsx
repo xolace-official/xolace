@@ -1,10 +1,4 @@
-import { PeerReflectionScreen } from "@/src/features/peer-reflection/components/screen/PeerReflectionScreen";
-
-/**
- * Renders the Peer Reflections screen.
- *
- * @returns A JSX.Element representing the Peer Reflections screen layout.
- */
+import { PeerReflectionScreen } from "@/features/peer-reflection/components/screen/PeerReflectionScreen";
 
 export default function PeerReflections() {
 	return <PeerReflectionScreen />;

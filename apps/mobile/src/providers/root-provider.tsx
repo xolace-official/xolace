@@ -5,25 +5,15 @@ import {
 	KeyboardAvoidingView,
 	KeyboardProvider,
 } from "react-native-keyboard-controller";
-import { posthog } from "@/src/config/posthog";
-import { AppThemeProvider } from "@/src/context/app-theme-context";
-import { SessionModeProvider } from "@/src/context/session-mode-context";
-import { FeedbackTrayProvider } from "@/src/features/feedback-tray/feedback-tray-provider";
-import { PremiumThemeReconciler } from "@/src/features/purchases/premium-theme-reconciler";
-import { RevenueCatProvider } from "@/src/features/purchases/revenuecat-context";
+import { posthog } from "@/config/posthog";
+import { AppThemeProvider } from "@/context/app-theme-context";
+import { SessionModeProvider } from "@/context/session-mode-context";
+import { FeedbackTrayProvider } from "@/features/feedback-tray/feedback-tray-provider";
+import { RevenueCatProvider } from "@/features/purchases/revenuecat-context";
+import { PremiumThemeReconciler } from "@/features/settings/premium-theme-reconciler";
 import { ConvexClientProvider } from "./convex-provider";
 
-/**
- * Root provider that composes all app-wide providers in the correct order.
- *
- * Provider hierarchy:
- *   GestureHandlerRootView → KeyboardProvider → AppThemeProvider → SessionModeProvider → PostHogProvider → ConvexClientProvider → HeroUINativeProvider
- *
- * Customize this for your app:
- * - Add your own providers (e.g. auth, analytics, query client) inside the chain
- * - Adjust the HeroUINativeConfig to configure toast behavior, dev info, etc.
- * - The KeyboardAvoidingView wraps toast content — modify keyboardVerticalOffset as needed
- */
+/** Composes every app-wide provider in order. */
 const FLEX_1 = { flex: 1 };
 const AUTO_CAPTURE = {
 	captureScreens: false,

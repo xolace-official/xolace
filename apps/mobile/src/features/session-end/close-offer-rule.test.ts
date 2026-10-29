@@ -33,9 +33,7 @@ describe("chooseCloseOffer", () => {
 		).toBe("pending");
 	});
 
-	// Offline, or auth not yet hydrated: the query never resolves. Holding the
-	// slot forever would offer the user nothing at all, and once waited out
-	// there is no fallback left but none.
+	// Offline, or auth not yet hydrated: the query never resolves.
 	it("falls back to none once the wait is out", () => {
 		expect(
 			chooseCloseOffer({
@@ -46,8 +44,7 @@ describe("chooseCloseOffer", () => {
 		).toBe("none");
 	});
 
-	// A late arrival still wins — waiting out bounds the hold, it doesn't
-	// discard a suggestion that lands afterwards.
+	// Waiting out bounds the hold; it doesn't discard a suggestion that lands afterwards.
 	it("still prefers a suggestion that arrives after the wait is out", () => {
 		expect(
 			chooseCloseOffer({

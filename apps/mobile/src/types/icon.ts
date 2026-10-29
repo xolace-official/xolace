@@ -1,20 +1,9 @@
-/**
- * Common props for icon components
- */
+/** Common props for icon components. */
 export interface IconProps {
-	/**
-	 * Color of the icon (fill)
-	 * @default "currentColor"
-	 */
+	/** Fill color. Defaults to "currentColor". */
 	color?: string;
-	/**
-	 * ClassName prop for color (mapped to color via withUniwind)
-	 * Example: "accent-blue-500" maps to color prop with resolved color value
-	 */
+	/** Color class name, mapped to `color` via withUniwind. */
 	colorClassName?: string;
-	/**
-	 * Size of the icon in pixels
-	 * @default 20
-	 */
+	/** Size in pixels. Defaults to 20. */
 	size?: number;
 }

@@ -4,9 +4,9 @@ import {
 } from "@xolace/backend/convex/lib/specialties";
 import { PressableFeedback } from "heroui-native";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 const styles = StyleSheet.create({
 	borderCurve: { borderCurve: "continuous" },
@@ -51,14 +51,8 @@ export function SpecialtyChips({
 	);
 }
 
-/**
- * Roster filter. Only tags somebody on the roster actually declared are
- * offered — a filter that returns nothing is worse than no filter, and with
- * six xolacers most of the taxonomy is empty on any given day.
- *
- * Filtering happens client-side over the already-loaded directory, so tapping
- * a chip costs no round trip and can't blank the list mid-interaction.
- */
+/** Roster filter over tags somebody actually declared; client-side over the loaded directory,
+ * so no round trip. */
 export function SpecialtyFilter({
 	available,
 	selected,

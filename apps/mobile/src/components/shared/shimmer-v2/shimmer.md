@@ -134,7 +134,7 @@ const opacityStyle = useAnimatedStyle(() => ({
 Button with a three-stripe shimmer highlight sweeping across.
 
 ```tsx
-import Shimmer from "@/src/shared/components/shimmer";
+import Shimmer from "@/shared/components/shimmer";
 
 <Shimmer className="flex-row items-center justify-center gap-1 py-3.5 px-6 rounded-full overflow-hidden border-[0.5px] border-[#C7C8CE]/20">
   <Shimmer.Overlay

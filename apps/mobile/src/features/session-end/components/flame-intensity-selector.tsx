@@ -12,11 +12,11 @@ import Animated, {
 	withSpring,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const FLAME_COUNT = 5;
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-// Account for FeedbackSheet.Frame px-6 (24px * 2) padding
+// Accounts for FeedbackSheet.Frame px-6 padding.
 const CONTAINER_WIDTH = SCREEN_WIDTH - 48;
 const FLAME_WIDTH = CONTAINER_WIDTH / FLAME_COUNT;
 
@@ -72,9 +72,8 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
 		const sv = [s1, s2, s3, s4, s5][index];
 		sv.set(
 			withSpring(1.35, SPRING_BOUNCE, (finished) => {
-				// Guard: since reanimated 4.5 a cancelled animation's callback fires
-				// synchronously inside valueSetter before _animation is cleared, so an
-				// unconditional sv.set() here re-enters the same callback infinitely.
+				// Since reanimated 4.5 a cancelled animation's callback fires synchronously
+				// before _animation is cleared, so an unconditional sv.set() re-enters forever.
 				if (finished) {
 					sv.set(withSpring(1.0, SPRING_SETTLE));
 				}
@@ -82,9 +81,8 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
 		);
 	};
 
-	// useMemo keeps the gesture object stable across re-renders so GestureDetector
-	// never swaps handlers mid-gesture. All captured values are stable:
-	// shared values never change identity; notifyDragEnd is a stable ref function.
+	// useMemo keeps the gesture stable so GestureDetector never swaps handlers
+	// mid-gesture; every captured value is stable.
 	const panGesture = useMemo(
 		() =>
 			Gesture.Pan()
@@ -164,7 +162,6 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
 		<View className="gap-2">
 			<GestureDetector gesture={panGesture}>
 				<Animated.View className="h-14 overflow-hidden rounded-2xl bg-default-soft-hover">
-					{/* Gradient fill bar */}
 					<Animated.View
 						className="absolute inset-y-0 left-0"
 						style={gradientStyle}
@@ -178,7 +175,6 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
 						/>
 					</Animated.View>
 
-					{/* Flames row */}
 					<Animated.View className="h-full flex-row items-center justify-around px-2">
 						{Array.from({ length: FLAME_COUNT }, (_, i) => {
 							const intensity = i + 1;
@@ -210,7 +206,6 @@ export function FlameIntensitySelector({ value, onChange }: Props) {
 				</Animated.View>
 			</GestureDetector>
 
-			{/* Slider affordance hint */}
 			<View className="flex-row items-center justify-center gap-1.5">
 				<SymbolView
 					name={{

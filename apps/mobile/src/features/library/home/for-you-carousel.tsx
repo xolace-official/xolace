@@ -1,9 +1,5 @@
-/**
- * For you as a centre-focus carousel (#396, from the opal sample): cards snap
- * to centre; away from it they shrink to 0.88 and blur (iOS BlurView, up to
- * 15). One scroll value on the UI thread drives both; transforms only.
- * Reduced motion (the app's `motionPreference`): a plain snapping row.
- */
+// Centre-focus carousel (#396): cards snap to centre and shrink and blur away
+// from it, driven by one UI-thread scroll value. Reduced motion: a plain snapping row.
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet, useWindowDimensions } from "react-native";
 import Animated, {
@@ -20,8 +16,8 @@ import {
 	CARD_RADIUS,
 	type EntryItem,
 	PhotoCard,
-} from "@/src/features/library/home/entry-cards";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+} from "@/features/library/home/entry-cards";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const AnimatedBlurView = Animated.createAnimatedComponent(BlurView);
 const GAP = 10;

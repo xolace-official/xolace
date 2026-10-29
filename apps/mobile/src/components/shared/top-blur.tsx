@@ -1,14 +1,13 @@
-// Progressive blur under the transparent header (from
-// clarity-main glass-tabs/progressive-blur): one BlurView alpha-masked by an
-// eased gradient, plus a --background scrim so the title stays legible.
-// Android gets the scrim only (BlurView under a MaskedView is unreliable there).
+// Progressive blur under the transparent header (from clarity-main progressive-blur):
+// one BlurView alpha-masked by an eased gradient plus a --background scrim.
+// Android gets the scrim only; BlurView under a MaskedView is unreliable there.
 
 import MaskedView from "@react-native-masked-view/masked-view";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { useThemeColor } from "heroui-native";
 import { Platform, StyleSheet, View } from "react-native";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { useAppTheme } from "@/context/app-theme-context";
 
 const MASK =
 	"linear-gradient(to bottom, rgb(0,0,0) 0%, rgb(0,0,0) 35%, rgba(0,0,0,0.8) 55%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0) 100%)";

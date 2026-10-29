@@ -34,6 +34,9 @@
 @import "./themes/xolace-plus/platinum.css";
 @import "./themes/xolace-plus/velvet.css";
 @import "./themes/xolace-plus/noir.css";
+@import "./themes/xolace-plus/playful.css";
+/* Playful restyles HeroUI component classes; must come after heroui-native/styles. */
+@import "./themes/xolace-plus/playful-components.css";
 
 /* @theme {
   --font-sans: 'SpaceGrotesk-Regular';
@@ -248,6 +251,24 @@
 				0 1px 3px 0 rgba(60, 40, 80, 0.04), 0 0 1px 0 rgba(60, 40, 80, 0.06);
 
 			--backdrop: oklch(0% 0 0 / 20%);
+			/* Playful-only controls (see xolace-plus/playful.css); off here. */
+			--field-border-width: 0px;
+			--playful-lip: 0px;
+			--playful-lip-chip: 0px;
+			--playful-stroke: 0px;
+			--outline-stroke: 1px;
+			--outline-lip: 1px;
+			--accent-lip: transparent;
+			--default-lip: transparent;
+			--danger-lip: transparent;
+			--warning-lip: transparent;
+			/* Surface (card) outline: a hairline here, Playful's 2px stroke there. */
+			--surface-stroke: 1px;
+			--surface-stroke-color: color-mix(
+				in oklab,
+				var(--border) 65%,
+				transparent
+			);
 		}
 
 		/* ============================================================
@@ -400,6 +421,24 @@
 			--field-shadow: 0 0 0 0 transparent inset;
 
 			--backdrop: oklch(0% 0 0 / 20%);
+			/* Playful-only controls (see xolace-plus/playful.css); off here. */
+			--field-border-width: 0px;
+			--playful-lip: 0px;
+			--playful-lip-chip: 0px;
+			--playful-stroke: 0px;
+			--outline-stroke: 1px;
+			--outline-lip: 1px;
+			--accent-lip: transparent;
+			--default-lip: transparent;
+			--danger-lip: transparent;
+			--warning-lip: transparent;
+			/* Surface (card) outline: a hairline here, Playful's 2px stroke there. */
+			--surface-stroke: 1px;
+			--surface-stroke-color: color-mix(
+				in oklab,
+				var(--border) 65%,
+				transparent
+			);
 		}
 	}
 }

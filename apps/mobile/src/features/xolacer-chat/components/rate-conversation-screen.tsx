@@ -6,9 +6,9 @@ import { Button, PressableFeedback, Skeleton, useToast } from "heroui-native";
 import { useState } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { XolacerAvatar } from "@/src/features/xolacer-chat/components/xolacer-avatar";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { XolacerAvatar } from "@/features/xolacer-chat/components/xolacer-avatar";
+import { playSoftPress } from "@/lib/haptics";
 import { RatingPicker } from "./rating-stars";
 
 const HEADER_OPTIONS = {
@@ -19,17 +19,8 @@ const HEADER_OPTIONS = {
 	headerTransparent: true,
 } as const;
 
-/**
- * Where a rating is actually given, whatever pointed here: the profile's rate
- * card (the prominent one), the thread overflow menu, or the post-quiet prompt
- * in the status bar.
- *
- * No longer gated on the conversation having wound down — a real back-and-forth
- * is rateable while it is still live (see `canRate`). What has not changed is
- * the promise this screen makes before any star is picked: only the seeker and
- * Xolace ever see the number, and the xolacer sees an aggregate that names no
- * conversation.
- */
+/** Where a rating is given, from the profile card, thread menu or status bar. Rateable while
+ * live (`canRate`); only the seeker and Xolace see the number. */
 export function RateConversationScreen({
 	conversationId,
 }: {
@@ -55,8 +46,7 @@ export function RateConversationScreen({
 		);
 	}
 
-	// Either the conversation vanished, or there is not enough of it to judge —
-	// no honest thing to ask about, so say so rather than show an empty prompt.
+	// Gone, or not enough of it to judge: say so rather than show an empty prompt.
 	if (conversation === null || !conversation.canRate) {
 		return (
 			<View className="flex-1 items-center justify-center gap-2 bg-background px-10">
@@ -107,8 +97,6 @@ export function RateConversationScreen({
 				How was this conversation?
 			</AppText>
 
-			{/* The privacy rule is stated before the stars, not after, so nobody
-          answers without knowing what the xolacer will see. */}
 			<AppText className="max-w-65 text-center text-[13px] text-muted leading-5">
 				Only you and Xolace see this. {conversation.counterpartName} sees an
 				overall score, never which conversation it came from.

@@ -6,17 +6,11 @@ import {
 } from "../utils/version-check";
 
 type UseVersionCheckOptions = {
-	/**
-	 * Called when the version check completes.
-	 * @param isNewVersionAvailable - `true` when the store has a newer version
-	 */
+	/** Called when the check completes, with whether the store has a newer version. */
 	onVersionChecked: (isNewVersionAvailable: boolean) => void;
 };
 
-/**
- * Checks the App Store for a newer version on mount.
- * Skipped entirely in development builds.
- */
+/** Checks the store for a newer version on mount. Skipped in development builds. */
 export function useVersionCheck({ onVersionChecked }: UseVersionCheckOptions) {
 	useEffect(() => {
 		if (__DEV__) {

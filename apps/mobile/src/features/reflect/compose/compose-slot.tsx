@@ -5,16 +5,16 @@ import Animated, {
 	FadeIn,
 	FadeOut,
 } from "react-native-reanimated";
-import { PillButton } from "@/src/components/shared/pill-button";
-import { Tour } from "@/src/components/ui/tour";
-import { MicButton } from "@/src/features/reflect/components/mic-button";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
-import { a11yHidden } from "@/src/lib/utils";
+import { PillButton } from "@/components/shared/pill-button";
+import { Tour } from "@/components/ui/tour";
+import { MicButton } from "@/features/reflect/components/mic-button";
+import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
+import { a11yHidden } from "@/lib/utils";
 
 const SLOT_IN = FadeIn.duration(220);
 const SLOT_OUT = FadeOut.duration(140);
 
-/** The mic/send slot's fixed height — `h-10` below. */
+/** The mic/send slot's fixed height; `h-10` below. */
 export const SLOT_H = 40;
 /** The least room the slot will accept between itself and the first word. */
 export const SLOT_BAND_GAP = 12;
@@ -30,14 +30,7 @@ type Props = {
 };
 
 /**
- * One slot under the card, for whichever way out is live.
- *
- * Empty-handed it is the mic; once words are chosen the card is already
- * holding the answer, so the same spot becomes the way to send it. Swapping in
- * place is what keeps the band's frame fixed — nothing below the card grows,
- * and the mic is never crowded out of its own position. It rides the band down
- * rather than just fading: either way it is the way out that isn't the card,
- * and a user who has committed to writing is not offered one.
+ * One slot under the card: the mic, or the send button once words are chosen. Fixed band frame.
  */
 export const ComposeSlot = ({
 	expanded,

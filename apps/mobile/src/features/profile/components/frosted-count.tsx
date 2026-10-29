@@ -8,15 +8,13 @@ import {
 	Text,
 } from "@shopify/react-native-skia";
 import { View } from "react-native";
-import { useTokenColor } from "../hooks/use-token-color";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const W = 44;
 const H = 24;
 
-// A count badge, same footprint whether locked or unlocked. Locked rows show
-// a representative value behind a static blur — readable as "a number lives
-// here" without revealing it. Unlocked rows (row's real word already crossed
-// the wire) show the real count in the clear.
+// A count badge with the same footprint locked or unlocked. Locked rows show a
+// representative value behind a static blur; unlocked rows show the real count.
 export function FrostedCount({
 	value,
 	locked = true,

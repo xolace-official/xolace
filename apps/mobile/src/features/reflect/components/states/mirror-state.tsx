@@ -12,16 +12,16 @@ import { useEffect, useRef } from "react";
 import type { TextInstance } from "react-native";
 import { AccessibilityInfo, ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
-import { ToneTipBanner } from "@/src/features/reflect/components/tone-tip-banner";
-import { useMirrorAudio } from "@/src/features/reflect/hooks/use-mirror-audio";
-import type { EntryType } from "@/src/features/reflect/types";
-import type { MirrorTone } from "@/src/features/settings/components/mirror-tone-picker-dialog";
-import { TalkTimeLeft } from "@/src/features/talk/talk-time-left";
-import { TalkWith } from "@/src/features/talk/talk-with";
-import { useTalkSayMore } from "@/src/features/talk/use-talk-say-more";
-import { playMirrorArrival } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
+import { ToneTipBanner } from "@/features/reflect/components/tone-tip-banner";
+import { useMirrorAudio } from "@/features/reflect/hooks/use-mirror-audio";
+import type { MirrorTone } from "@/features/reflect/hooks/use-mirror-settings";
+import type { EntryType } from "@/features/reflect/types";
+import { TalkTimeLeft } from "@/features/talk/talk-time-left";
+import { TalkWith } from "@/features/talk/talk-with";
+import { useTalkSayMore } from "@/features/talk/use-talk-say-more";
+import { playMirrorArrival } from "@/lib/haptics";
 import { MirrorActionRow } from "./mirror-action-row";
 import { MirrorToneBadge } from "./mirror-tone-badge";
 
@@ -33,7 +33,7 @@ type Props = {
 	toneUsed: MirrorTone | null;
 	/** Derived server-side; "reaching"/"holding" means this mirror named a gap. */
 	claimStrength: ClaimStrength | null;
-	/** Refinement turns are exhausted — the row collapses to "That's it". */
+	/** Refinement turns are exhausted; the row collapses to "That's it". */
 	atCap: boolean;
 	onThatsIt: () => void;
 	onNotQuite: () => void;
@@ -87,12 +87,11 @@ export const MirrorState = ({
 	const mirrorRef = useRef<TextInstance>(null);
 
 	// No audio cleanup here: useAudioPlayer releases the native player on unmount,
-	// which stops playback. Pausing it ourselves races that release and crashes
-	// (see ba00535 "fix timeline crash").
+	// and pausing it by hand races that release and crashes (ba00535).
 	useEffect(() => {
 		playMirrorArrival();
-		// Move the screen reader onto the mirror so it reads it aloud. Delayed so the
-		// processing → mirror swap settles first, or iOS drops the focus move.
+		// Move the screen reader onto the mirror. Delayed so the processing to
+		// mirror swap settles first, or iOS drops the focus move.
 		const t = setTimeout(() => {
 			if (mirrorRef.current) {
 				AccessibilityInfo.sendAccessibilityEvent(mirrorRef.current, "focus");
@@ -108,107 +107,99 @@ export const MirrorState = ({
 	const speakerName = isPlaying ? SPEAKER_PLAYING : SPEAKER_MUTED;
 
 	return (
-		<View className="flex-1 justify-center px-6">
-			{/* Banner floats above content — absolute so it doesn't shift the mirror */}
-			<View style={styles.bannerContainer}>
-				<ToneTipBanner />
-			</View>
+		<View className="flex-1 px-6">
+			{/* In the flow, not floating: a floating banner covered the label and tone badge. */}
+			<ToneTipBanner />
 
-			{/* Texture pills from scaffold */}
-			{showTextures && (
+			<View className="flex-1 justify-center">
+				{showTextures && (
+					<EaseView
+						animate={EASE_ANIMATE_FADE}
+						className="mb-5 flex-row flex-wrap gap-1.5"
+						initialAnimate={EASE_INITIAL_FADE}
+						transition={EASE_TEXTURE_TRANSITION}
+					>
+						{selectedTextures.map((word) => (
+							<Chip
+								animation="disable-all"
+								color="accent"
+								key={word}
+								size="sm"
+								variant="primary"
+							>
+								<Chip.Label>{word}</Chip.Label>
+							</Chip>
+						))}
+					</EaseView>
+				)}
+
 				<EaseView
 					animate={EASE_ANIMATE_FADE}
-					className="mb-5 flex-row flex-wrap gap-1.5"
+					className="mb-3 flex-row items-center gap-3"
 					initialAnimate={EASE_INITIAL_FADE}
-					transition={EASE_TEXTURE_TRANSITION}
+					transition={EASE_LABEL_TRANSITION}
 				>
-					{selectedTextures.map((word) => (
-						<Chip
-							animation="disable-all"
-							color="accent"
-							key={word}
-							size="sm"
-							variant="primary"
-						>
-							<Chip.Label>{word}</Chip.Label>
-						</Chip>
-					))}
-				</EaseView>
-			)}
-
-			<EaseView
-				animate={EASE_ANIMATE_FADE}
-				className="mb-3 flex-row items-center gap-3"
-				initialAnimate={EASE_INITIAL_FADE}
-				transition={EASE_LABEL_TRANSITION}
-			>
-				<AppText className="text-accent text-xs uppercase tracking-widest">
-					The Mirror
-				</AppText>
-				{isReady && (
-					<PressableFeedback
-						accessibilityHint="Toggles playback of the mirror response"
-						accessibilityLabel={
-							isPlaying ? "Pause mirror audio" : "Play mirror audio"
-						}
-						accessibilityRole="button"
-						accessibilityState={isPlaying ? A11Y_SELECTED : A11Y_UNSELECTED}
-						animation={AUDIO_ANIMATION}
-						hitSlop={8}
-						onPress={() => {
-							toggle();
-						}}
-					>
-						<SymbolView name={speakerName} size={16} tintColor={accent} />
-					</PressableFeedback>
-				)}
-			</EaseView>
-
-			<TalkWith sessionId={sessionId} />
-			<MirrorToneBadge toneUsed={toneUsed} />
-
-			{/* The fade says "more below": a long mirror cut at a line break looks
-          finished. Height cap lives on the wrapper — a % maxHeight on the
-          ScrollView would resolve against the wrapper's undefined height. */}
-			<ScrollShadow
-				LinearGradientComponent={LinearGradient}
-				size={32}
-				style={styles.mirrorScroll}
-			>
-				<ScrollView
-					className="border-accent/40 border-l-2 pl-4"
-					showsVerticalScrollIndicator={false}
-				>
-					<AppText
-						className="text-foreground text-xl italic leading-8"
-						ref={mirrorRef}
-						selectable
-					>
-						{removeEmDash(mirror)}
+					<AppText className="text-accent text-xs uppercase tracking-widest">
+						The Mirror
 					</AppText>
-				</ScrollView>
-			</ScrollShadow>
+					{isReady && (
+						<PressableFeedback
+							accessibilityHint="Toggles playback of the mirror response"
+							accessibilityLabel={
+								isPlaying ? "Pause mirror audio" : "Play mirror audio"
+							}
+							accessibilityRole="button"
+							accessibilityState={isPlaying ? A11Y_SELECTED : A11Y_UNSELECTED}
+							animation={AUDIO_ANIMATION}
+							hitSlop={8}
+							onPress={() => {
+								toggle();
+							}}
+						>
+							<SymbolView name={speakerName} size={16} tintColor={accent} />
+						</PressableFeedback>
+					)}
+				</EaseView>
 
-			<MirrorActionRow
-				atCap={atCap}
-				claimStrength={claimStrength}
-				onNotQuite={onNotQuite}
-				onSayMore={talkSayMore?.open ?? onSayMore}
-				onThatsIt={onThatsIt}
-				sayMore={talkSayMore?.offered ?? true}
-			/>
-			<TalkTimeLeft sessionId={sessionId} />
+				<TalkWith sessionId={sessionId} />
+				<MirrorToneBadge toneUsed={toneUsed} />
+
+				{/* The height cap lives on the wrapper: a % maxHeight on the ScrollView would
+				    resolve against an undefined height. flexShrink (RN defaults to 0) lets it
+				    give up height instead of overflowing a centered column. */}
+				<ScrollShadow
+					LinearGradientComponent={LinearGradient}
+					size={32}
+					style={styles.mirrorScroll}
+				>
+					<ScrollView
+						className="border-accent/40 border-l-2 pl-4"
+						showsVerticalScrollIndicator={false}
+					>
+						<AppText
+							className="text-foreground text-xl italic leading-8"
+							ref={mirrorRef}
+							selectable
+						>
+							{removeEmDash(mirror)}
+						</AppText>
+					</ScrollView>
+				</ScrollShadow>
+
+				<MirrorActionRow
+					atCap={atCap}
+					claimStrength={claimStrength}
+					onNotQuite={onNotQuite}
+					onSayMore={talkSayMore?.open ?? onSayMore}
+					onThatsIt={onThatsIt}
+					sayMore={talkSayMore?.offered ?? true}
+				/>
+				<TalkTimeLeft sessionId={sessionId} />
+			</View>
 		</View>
 	);
 };
 
 const styles = StyleSheet.create({
-	bannerContainer: {
-		left: 24,
-		position: "absolute",
-		right: 24,
-		top: 8,
-		zIndex: 1,
-	},
-	mirrorScroll: { flexGrow: 0, maxHeight: "60%" },
+	mirrorScroll: { flexGrow: 0, flexShrink: 1, maxHeight: "60%" },
 });

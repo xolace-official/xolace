@@ -1,12 +1,12 @@
+import { Surface } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import { CardInfo } from "./card-info";
 import { EmberField } from "./ember-field";
 
-// Answers the two questions the number actually raises — who am I counted
-// against, and when does it show up. The tie-breaking rule and the population
-// floor are true but not the user's problem; they live in the code, not here.
+// Answers who the number is counted against and when it shows up; the
+// tie-breaking rule and the population floor stay in the code.
 const RANK_INFO =
 	"Counted against everyone who has reflected at least once — not everyone who signed up. Appears after 5 moments.";
 
@@ -27,11 +27,8 @@ type Props = {
 	staggerDelay?: number;
 };
 
-/**
- * Percentile card. Renders from the first launch — before the rank exists it
- * shows the unlit field and names what it's waiting for, so a new user sees a
- * promise rather than an absent card.
- */
+/** Percentile card. Renders from first launch: before the rank exists it shows
+ * the unlit field and names what it is waiting for. */
 export function RankCard({ rank, staggerDelay = 300 }: Props) {
 	return (
 		<EaseView
@@ -45,7 +42,7 @@ export function RankCard({ rank, staggerDelay = 300 }: Props) {
 				type: "timing",
 			}}
 		>
-			<View className="rounded-3xl border border-border/65 bg-surface p-5">
+			<Surface className="p-5">
 				<View className="flex-row items-center gap-2">
 					<AppText className="text-[10px] text-muted uppercase tracking-widest">
 						among the fires
@@ -55,9 +52,8 @@ export function RankCard({ rank, staggerDelay = 300 }: Props) {
 
 				{rank.status === "ranked" ? (
 					<View className="mt-3">
-						{/* The figure gets its own line rather than sitting inline: a 46px
-                glyph nested inside a 15px line box is clipped at the ascender
-                by RN's text layout, and the number is the point of the card. */}
+						{/* Own line: a 46px glyph inside a 15px line box is clipped at the
+                ascender by RN's text layout. */}
 						<AppText className="font-bold text-[46px] text-ember leading-13 tracking-tight">
 							{rank.percentile}%
 						</AppText>
@@ -86,7 +82,7 @@ export function RankCard({ rank, staggerDelay = 300 }: Props) {
 								? "Lights up after 5 moments. Your first one starts it."
 								: `Lights up after ${rank.threshold} moments — ${rank.remaining} to go.`}
 				</AppText>
-			</View>
+			</Surface>
 		</EaseView>
 	);
 }

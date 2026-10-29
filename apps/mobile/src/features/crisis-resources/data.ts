@@ -2,7 +2,7 @@ import type { CountryCode, CountryData } from "./types";
 
 export const LAST_UPDATED = "2026-05-19";
 
-// Resources are in display order; priority field documents the rank. Keep sorted when adding new entries.
+// Resources are in display order; keep sorted by priority when adding entries.
 export const COUNTRY_RESOURCES: Record<CountryCode, CountryData> = {
 	AU: {
 		emergencyNumber: "000",

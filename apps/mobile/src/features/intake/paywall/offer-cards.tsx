@@ -1,25 +1,18 @@
-/**
- * Four of the five offers on the intake deck, each drawn as the thing itself
- * rather than as an illustration of it — miniatures of the surfaces they
- * unlock. The fifth, the voice card, is interactive and lives in
- * `voice-offer-card.tsx`.
- *
- * Five is the cap. A sixth card is a sixth thing to weigh at the exact moment
- * the user is deciding whether any of it is for them.
- */
+// Four of the five intake offer cards, each a miniature of the surface it unlocks.
+// The fifth (voice) is interactive and lives in `voice-offer-card.tsx`. Five is the cap.
 
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	OFFER_MASCOT,
 	OfferCard,
 	OfferMock,
 	OfferPill,
-} from "@/src/features/intake/paywall/offer-card";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { cn } from "@/src/lib/utils";
+} from "@/features/intake/paywall/offer-card";
+import { useTokenColor } from "@/lib/use-token-color";
+import { cn } from "@/lib/utils";
 
 const MUSIC_NOTE = {
 	android: "music_note",
@@ -35,16 +28,14 @@ const PEOPLE = {
 const CHECK = { android: "check", ios: "checkmark", web: "check" } as const;
 const kindlingMascot = require("@/assets/images/flux/flux-curiosity.png");
 
-// Real twig copy (kindling/twig-presentation.ts), not placeholder text — the
-// first is always the just-finished breathing step, done; the next two are
-// what a path actually hands off to next.
+// Real twig copy (kindling/twig-presentation.ts), not placeholder text.
 const KINDLING_STEPS = [
 	{ done: true, symbol: WIND, title: "Sit with this" },
 	{ done: false, symbol: MUSIC_NOTE, title: "Low sound for the quiet" },
 	{ done: false, symbol: PEOPLE, title: "Someone who has been here" },
 ] as const;
 
-/** A step row inside the mini rail — done steps get a filled check, the rest a plain glyph. */
+/** A step row inside the mini rail; done steps get a filled check. */
 function KindlingStepRow({
 	symbol,
 	title,
@@ -54,8 +45,7 @@ function KindlingStepRow({
 	title: string;
 	done: boolean;
 }) {
-	// `--offer-ink` is deliberately theme-invariant and always dark (see
-	// offer-card.tsx) — a done step's check always needs a light glyph on it.
+	// `--offer-ink` is theme-invariant and always dark, so a done check needs a light glyph.
 	const ink = useTokenColor("offer-ink");
 	return (
 		<View className="flex-row items-center gap-2.5">
@@ -77,12 +67,8 @@ function KindlingStepRow({
 	);
 }
 
-/**
- * Card 5 — Kindling & Browse. Two distinct panels in one card: Kindling's
- * step rail (checkmark/step circles) and Browse's playback rows, each
- * keeping its own icon language so the panel boundary reads as "these are
- * two things," not just a gap between them.
- */
+/** Card 5, Kindling & Browse: the step rail and the playback rows, each with its own icon
+ * language. */
 export function KindlingBrowseOfferCard({ width }: { width: number }) {
 	const ink = useTokenColor("offer-ink");
 	return (
@@ -151,7 +137,7 @@ export function KindlingBrowseOfferCard({ width }: { width: number }) {
 	);
 }
 
-/** Card 2 — Xolacers. Two bubbles is the product; anything more is decoration. */
+/** Card 2, Xolacers. */
 export function XolacersOfferCard({ width }: { width: number }) {
 	return (
 		<OfferCard
@@ -182,8 +168,7 @@ export function XolacersOfferCard({ width }: { width: number }) {
 						Honestly? Saying it out loud.
 					</AppText>
 				</View>
-				{/* Someone is still there — the one thing a static mock can say about
-            a live conversation. */}
+				{/* Typing indicator. */}
 				<View className="flex-row gap-1.5 self-start rounded-2xl rounded-bl-md bg-offer-ink/10 px-3.5 py-3.5">
 					<View className="h-1.5 w-1.5 rounded-full bg-offer-ink/40" />
 					<View className="h-1.5 w-1.5 rounded-full bg-offer-ink/40" />
@@ -197,11 +182,8 @@ export function XolacersOfferCard({ width }: { width: number }) {
 	);
 }
 
-/**
- * Card 3 — insights. Two panels because Plus ships two of them: the week's
- * intensity history and the words/language map (`TeaserFeature` in
- * use-insight-gate.ts). One panel would sell insights as a word cloud.
- */
+/** Card 3, insights: the week's intensity and the language map (`TeaserFeature` in
+ * use-insight-gate.ts). */
 const WEEK = [
 	{ day: "M", level: "h-2.5 opacity-30" },
 	{ day: "T", level: "h-5 opacity-55" },
@@ -225,8 +207,7 @@ export function InsightsOfferCard({ width }: { width: number }) {
 				<AppText className="font-[Poppins-Medium] text-[12px] text-offer-ink/50 uppercase tracking-widest">
 					This week
 				</AppText>
-				{/* Seven days, one block each — how heavy the day ran. Blocks, not a
-            plotted line: this is a week, not a trend. */}
+				{/* Seven days, one block each. Blocks, not a plotted line: a week, not a trend. */}
 				<View className="flex-row items-end justify-between pt-0.5">
 					{WEEK.map((d, i) => (
 						<View className="items-center gap-1.5" key={`${d.day}-${i}`}>
@@ -259,11 +240,8 @@ export function InsightsOfferCard({ width }: { width: number }) {
 	);
 }
 
-/**
- * The rest of Plus in one table — the caps it lifts, and the two things it
- * swaps from generic to yours (quotes and mirror tone). The `free` column is
- * struck through, so every row has to read as a real before/after.
- */
+/** The rest of Plus in one table. The `free` column is struck through, so every row must read
+ * as a real before/after. */
 const CAPS = [
 	{ free: "3 an hour", label: "Reflections", plus: "No cap" },
 	{ free: "1 a day", label: "Voice vents", plus: "No cap" },
@@ -272,7 +250,7 @@ const CAPS = [
 	{ free: "Auto", label: "Mirror tone", plus: "You pick" },
 ];
 
-/** Card 4 — the ceiling, lifted. Shows the actual numbers it lifts. */
+/** Card 4, the ceiling lifted, with the actual numbers. */
 export function LimitsOfferCard({ width }: { width: number }) {
 	return (
 		<OfferCard

@@ -3,17 +3,14 @@ import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useCallback, useEffect } from "react";
 import { DevSettings, Platform } from "react-native";
-import { useAppStore } from "@/src/store/store";
+import { useAppStore } from "@/store/store";
 import { TrayProvider, useTray } from "./engine/tray-provider";
 import { type Trays, trays } from "./screens/registry";
 import { useShakeToOpen } from "./trigger/use-shake-to-open";
 
 const REFLECT_ROUTE = "/";
 
-/**
- * Opens the feedback tray (menu screen) and records the structural open event.
- * No free-text content is captured — structural only ([[project_posthog_convex]]).
- */
+/** Opens the tray menu and records the open event; structural only, no free text. */
 function useOpenFeedbackTray() {
 	const { show } = useTray<Trays>();
 	const posthog = usePostHog();
@@ -28,11 +25,7 @@ function useOpenFeedbackTray() {
 	);
 }
 
-/**
- * One-time discoverability toast — fires the first time the shake trigger is
- * eligible on this device, then never again. Firing a toast is a genuine side
- * effect (not state mirroring), so a guarded effect is appropriate here.
- */
+/** One-time discoverability toast, fired the first time the shake trigger is eligible. */
 function useShakeHint(eligible: boolean) {
 	const { toast } = useToast();
 	const shakeHintSeen = useAppStore((s) => s.shakeHintSeen);
@@ -49,23 +42,16 @@ function useShakeHint(eligible: boolean) {
 	}, [eligible, shakeHintSeen, setShakeHintSeen, toast]);
 }
 
-/**
- * Wires the shake trigger to the tray for one call site, with `enabled`
- * pure-derived by the caller (no state-syncing effects). Use this from the
- * reflect screen (gated by machine state) — the global default is mounted by
- * FeedbackTrayProvider.
- */
+/** Wires the shake trigger to the tray for one call site; the caller derives
+ * `enabled`. The global default is mounted by FeedbackTrayProvider. */
 export function useFeedbackShake({ enabled }: { enabled: boolean }) {
 	const open = useOpenFeedbackTray();
 	useShakeHint(enabled);
 	useShakeToOpen({ enabled, onShake: () => open("shake") });
 }
 
-/**
- * Dev-only fallback so the tray is testable without physically shaking a
- * simulator. Registered once (here, not per call site) to avoid duplicate
- * menu items. Always opens regardless of route/state — it's a manual trigger.
- */
+/** Dev-only fallback so the tray is testable without shaking a simulator.
+ * Registered once here to avoid duplicate menu items; always opens. */
 function useDevMenuTrigger() {
 	const open = useOpenFeedbackTray();
 	useEffect(() => {
@@ -85,11 +71,8 @@ function GlobalFeedbackShake() {
 	return null;
 }
 
-/**
- * Mounts the feedback tray engine + screen registry and the global shake
- * listener. Mount as the innermost wrapper in RootProvider (needs heroui toast,
- * Convex, and the keyboard/gesture providers above it).
- */
+/** Mounts the tray engine, screen registry and global shake listener. Mount as
+ * the innermost RootProvider wrapper (needs toast, Convex, keyboard and gesture providers). */
 export function FeedbackTrayProvider({
 	children,
 }: {

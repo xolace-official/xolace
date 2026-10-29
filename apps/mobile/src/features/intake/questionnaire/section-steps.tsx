@@ -1,11 +1,11 @@
-/** §1 You (Q2–Q3) and §2 How you carry it (Q4–Q7) — a card each. */
-import type { QuestionnaireAnswers } from "@/src/components/ui/questionnaire";
+/** §1 You (Q2–Q3) and §2 How you carry it (Q4–Q7), a card each. */
+import type { QuestionnaireAnswers } from "@/components/ui/questionnaire";
 import {
 	MASCOT_BUNDLE,
 	MASCOT_CURIOUS,
-} from "@/src/features/intake/questionnaire/mascot";
-import { SectionScreen } from "@/src/features/intake/questionnaire/section-screen";
-import { SECTION_CARRY, SECTION_YOU } from "@/src/features/intake/questions";
+} from "@/features/intake/questionnaire/mascot";
+import { SectionScreen } from "@/features/intake/questionnaire/section-screen";
+import { SECTION_CARRY, SECTION_YOU } from "@/features/intake/questions";
 
 const toItems = (questions: typeof SECTION_YOU) =>
 	questions.map((q) => ({

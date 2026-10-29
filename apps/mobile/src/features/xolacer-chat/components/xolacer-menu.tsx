@@ -7,40 +7,14 @@ import { useAction } from "convex/react";
 import { useRouter } from "expo-router";
 import { useToast } from "heroui-native";
 import { useState } from "react";
-import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
-import { OverflowMenu } from "@/src/components/shared/overflow-menu";
-import { useTray } from "@/src/features/feedback-tray/engine/tray-provider";
-import type { Trays } from "@/src/features/feedback-tray/screens/registry";
-import { playSoftPress } from "@/src/lib/haptics";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { OverflowMenu } from "@/components/shared/overflow-menu";
+import { useTray } from "@/features/feedback-tray/engine/tray-provider";
+import type { Trays } from "@/features/feedback-tray/screens/registry";
+import { playSoftPress } from "@/lib/haptics";
 
-/**
- * The overflow menu for a xolacer — mounted in the thread and on the profile:
- * Report and Block, together on purpose, since someone reaching for one usually
- * wants the other.
- *
- * Block sits behind a confirmation because it cannot be undone — the server
- * refuses to reopen a conversation closed this way, and that refusal is the
- * point. The confirmation says so out loud. Both roles get it: a xolacer's
- * only other exit stops working the moment they accept a request.
- *
- * Report opens the feedback tray in concern mode, carrying the subject's
- * profile id and — from a thread only — that conversation's id. A report from a
- * profile is about the person, not an exchange: the bio or the display name can
- * itself be what is being reported, and the profile is reachable from the
- * roster with no conversation at all. `origin` is what decides that, not the
- * presence of `conversationId`, which is also the block target. The display
- * name goes no further than the form's copy.
- *
- * Rate is the secondary entry to the rating screen — the primary one is the
- * card on the xolacer's profile. Offered on any status once the seeker is
- * eligible, which the caller decides with `rateCtaState`; this component only
- * picks the wording.
- *
- * Block is conditionally *mounted*, never `hidden`: a profile reached from the
- * roster may have no conversation row, and there is no channel and nothing to
- * escape. (A hidden toolbar item also leaves a transparent touch-eating band
- * across the top on Android.)
- */
+/** Overflow menu for a xolacer (thread and profile): Rate, Report, Block. Block is
+ * conditionally mounted, never `hidden`: a hidden toolbar item eats touches on Android. */
 export function XolacerMenu({
 	profileId,
 	name,
@@ -113,6 +87,8 @@ export function XolacerMenu({
 					icon={process.env.EXPO_OS === "ios" ? "flag" : FlagIcon}
 					onPress={() => {
 						playSoftPress();
+						// A report from a profile is about the person, not an exchange, so
+						// `origin` decides whether the conversation is attached.
 						show("report", {
 							kind: "concern",
 							subject: {

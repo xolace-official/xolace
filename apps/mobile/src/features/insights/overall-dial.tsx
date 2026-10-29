@@ -7,13 +7,13 @@ import { useEffect, useRef } from "react";
 import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { Easing, useSharedValue, withTiming } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { GAUGE, type Insight } from "@/src/features/insights/domains";
-import { TickGauge } from "@/src/features/insights/glass";
-import { SteadinessInsights } from "@/src/features/insights/steadiness-insights";
-import { LockedTrendChip, TrendChip } from "@/src/features/insights/trend-chip";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
+import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
+import { GAUGE, type Insight } from "@/features/insights/domains";
+import { TickGauge } from "@/features/insights/glass";
+import { SteadinessInsights } from "@/features/insights/steadiness-insights";
+import { LockedTrendChip, TrendChip } from "@/features/insights/trend-chip";
+import { useTokenColor } from "@/lib/use-token-color";
 
 type Props = {
 	overall: number | null;
@@ -42,8 +42,8 @@ export function OverallDial({
 		if (overall === null) {
 			return;
 		}
-		// A rising swell as the ticks first fill: the number arriving, not a reward.
-		// Once per visit — a reactive update just moves the ticks.
+		// A rising swell as the ticks first fill, once per visit; a reactive update
+		// just moves the ticks.
 		if (!swelled.current) {
 			Presets.swell();
 		}

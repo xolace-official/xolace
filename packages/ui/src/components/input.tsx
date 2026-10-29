@@ -6,7 +6,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
 	return (
 		<InputPrimitive
 			className={cn(
-				"h-8 w-full min-w-0 rounded-none border border-input bg-transparent px-2.5 py-1 text-xs outline-none transition-colors file:inline-flex file:h-6 file:border-0 file:bg-transparent file:font-medium file:text-foreground file:text-xs placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 md:text-xs dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 dark:disabled:bg-input/80",
+				"type-body h-12 w-full min-w-0 rounded-md border-2 border-line bg-surface-sunken px-3 py-2 text-ink outline-none transition-[border-color,background-color,box-shadow] file:inline-flex file:h-8 file:border-0 file:bg-transparent file:font-semibold file:text-ink placeholder:text-ink-muted hover:border-line-strong focus-visible:border-focus focus-visible:bg-surface focus-visible:shadow-[0_var(--depth-sm)_0_var(--focus)] focus-visible:outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-coral aria-invalid:bg-coral-soft aria-invalid:focus-visible:shadow-[0_var(--depth-sm)_0_var(--coral-lip)]",
 				className
 			)}
 			data-slot="input"

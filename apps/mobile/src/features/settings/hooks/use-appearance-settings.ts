@@ -1,17 +1,17 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Uniwind } from "uniwind";
-import { useAppTheme } from "@/src/context/app-theme-context";
-import { usePlusEntitlement } from "@/src/features/purchases/use-plus-entitlement";
-import { useAccessibilityInfo } from "@/src/helpers/hooks/use-accessability-info";
+import { useAppTheme } from "@/context/app-theme-context";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
 import {
 	isReducedMotion,
 	type MotionPreference,
 	resolveMotionPreference,
-} from "@/src/lib/motion/use-effective-reduced-motion";
-import { THEME_BY_ID } from "@/src/lib/themes";
-import { useAppStore } from "@/src/store/store";
-import { usePreferenceMutation } from "./use-preference-mutation";
+} from "@/lib/motion/use-effective-reduced-motion";
+import { THEME_BY_ID } from "@/lib/themes";
+import { usePreferenceMutation } from "@/lib/use-preference-mutation";
+import { useAppStore } from "@/store/store";
 
 export type ThemeMode = "system" | "light" | "dark";
 
@@ -67,7 +67,7 @@ export const useAppearanceSettings = () => {
 	};
 
 	const setColorTheme = (themeId: string) => {
-		// Premium themes need an active Xolace+ entitlement (and shipped CSS) —
+		// Premium themes need an active Xolace+ entitlement and shipped CSS;
 		// the picker gates the tap, this guards any other caller.
 		const entry = THEME_BY_ID[themeId];
 		if (entry?.tier === "premium" && (!isPlus || entry.available === false)) {

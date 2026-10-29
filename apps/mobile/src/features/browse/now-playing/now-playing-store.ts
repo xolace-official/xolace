@@ -2,10 +2,10 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import type { PostHog } from "posthog-react-native";
 import { useSyncExternalStore } from "react";
-import type { BrowseFrom } from "@/src/features/browse/use-open-track";
-import type { BoundTrack } from "@/src/features/browse/use-track-playback";
-import type { PlaybackReturn } from "@/src/lib/audio/use-playback";
-import { useTabBarHidden } from "@/src/lib/tab-bar";
+import type { BrowseFrom } from "@/features/browse/use-open-track";
+import type { BoundTrack } from "@/features/browse/use-track-playback";
+import type { PlaybackReturn } from "@/lib/audio/use-playback";
+import { useTabBarHidden } from "@/lib/tab-bar";
 
 export type NowPlaying = {
 	slug: string;
@@ -14,14 +14,9 @@ export type NowPlaying = {
 };
 type Playback = PlaybackReturn<BoundTrack>;
 
-/**
- * The one Browse track loaded outside any screen (S4). Module-level like
- * `src/lib/tab-bar.ts`: the writers (player screen, accessory) and readers
- * (host, player, both accessory copies) sit in unrelated subtrees.
- *
- * `current` is what to play; `playback` is the live `useTrackPlayback` result
- * the host publishes, so every reader drives the same audio player.
- */
+// The one Browse track loaded outside any screen (S4). Module-level because
+// writers and readers sit in unrelated subtrees. `current` is what to play;
+// `playback` is the live `useTrackPlayback` result the host publishes.
 let current: NowPlaying | null = null;
 let playback: Playback | null = null;
 // One `browse_track_played` per loaded track, however often the player reopens.
@@ -44,7 +39,7 @@ const getPlayback = () => playback;
 const getLoaded = () => !!playback?.track;
 
 const noop = () => {};
-/** What a reader sees before the host has published: the same as minting. */
+/** What a reader sees before the host has published. */
 const IDLE: Playback = {
 	currentTime: 0,
 	didJustFinish: false,
@@ -106,10 +101,8 @@ export function publishPlayback(next: Playback | null) {
 	emit();
 }
 
-/**
- * Play/pause for every control (player, mini-player): the first start of the
- * loaded track records `browse_track_played`, whichever control started it.
- */
+/** Play/pause for every control; the first start of a loaded track records
+ * `browse_track_played`. */
 export function togglePlayback(p: Playback, posthog: PostHog) {
 	if (!p.isPlaying && p.track && current?.from && !played) {
 		played = true;
@@ -131,25 +124,20 @@ export function useNowPlayingPlayback(slug?: string): Playback {
 	return pb && (slug === undefined || np?.slug === slug) ? pb : IDLE;
 }
 /** A boolean snapshot, so the tab layout doesn't re-render on every status tick. */
-export const useNowPlayingLoaded = () =>
+const useNowPlayingLoaded = () =>
 	useSyncExternalStore(subscribe, getLoaded, getLoaded);
 
-/** The mini-player capsule plus its gap above the tab bar — what floating UI over the tabs must clear. */
+/** Mini-player capsule plus its gap above the tab bar; floating UI over the tabs must clear it. */
 export const MINI_PLAYER_CLEARANCE = 64;
-/**
- * Whether the mini-player is on screen — the tab-bar accessory on iOS 26, the
- * overlay capsule everywhere else — and it yields with the bar.
- */
+/** Whether the mini-player (accessory on iOS 26, overlay elsewhere) is on screen; it yields
+ * with the bar. */
 export function useMiniPlayerShown() {
 	const loaded = useNowPlayingLoaded();
 	const hidden = useTabBarHidden();
 	return loaded && !hidden;
 }
-/**
- * Scroll tail a tab screen reserves for the overlay; iOS 26 insets its
- * accessory natively. Not tied to the bar hiding: a sheet that hides the bar
- * is momentary, and dropping the tail with it jumps a list sitting at its end.
- */
+/** Scroll tail a tab screen reserves for the overlay (iOS 26 insets natively). Not tied to the
+ * bar hiding: dropping it jumps a list at its end. */
 export function useMiniPlayerInset() {
 	return useNowPlayingLoaded() && !isLiquidGlassAvailable()
 		? MINI_PLAYER_CLEARANCE

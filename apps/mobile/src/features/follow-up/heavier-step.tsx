@@ -6,20 +6,19 @@ import { PressableFeedback } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useRef } from "react";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { type IconKey, OptionCard } from "@/src/features/follow-up/stack-cards";
-import { LINK } from "@/src/features/follow-up/still-here-step";
+import { AppText } from "@/components/shared/app-text";
 import {
 	HEAVIER_MESSAGE,
 	HEAVIER_OPTIONS,
 	HEAVIER_SKIP,
-} from "@/src/features/reflect/follow-up-copy";
+} from "@/features/follow-up/follow-up-copy";
+import { type IconKey, OptionCard } from "@/features/follow-up/stack-cards";
+import { LINK } from "@/features/follow-up/still-here-step";
 
 // Keyed on the schema union, so a copy key the server would reject fails typecheck.
 type Choice = NonNullable<Doc<"follow_up_responses">["heavierChoice"]>;
 
-// The content doorways are the still-here ones — their screens open the
-// first-time intro themselves when the flag is unset, from any entry point.
+// Content doorways reuse still-here's; their screens open the first-time intro themselves.
 const DOORWAY: Record<Choice, { icon: IconKey; tint: string; href: Href }> = {
 	crisis_resources: {
 		href: "/crisis-resources",
@@ -31,11 +30,8 @@ const DOORWAY: Record<Choice, { icon: IconKey; tint: string; href: Href }> = {
 	support_audio: LINK.support,
 };
 
-/**
- * The `heavier` next step (#452): support first, then three places to turn.
- * A tap records the choice (#447 table); leaving without one is fine — the
- * chip answer already stands. Never routes to sit-with-this.
- */
+/** The `heavier` next step (#452). A tap records the choice (#447); leaving without one is
+ * fine. Never routes to sit-with-this. */
 export function HeavierStep({
 	cardId,
 	onClose,
@@ -56,7 +52,7 @@ export function HeavierStep({
 		void record({ cardId, heavierChoice: choice, shareRequested: false });
 		posthog.capture("follow_up_heavier_choice", { choice });
 		if (choice === "crisis_resources") {
-			// Pushed over the check-in, like the acute resources link — back returns here.
+			// Pushed over the check-in, like the acute resources link; back returns here.
 			router.push(DOORWAY.crisis_resources.href);
 			return;
 		}

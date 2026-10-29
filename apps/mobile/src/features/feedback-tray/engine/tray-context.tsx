@@ -2,10 +2,7 @@ import { createContext } from "react";
 
 import type { SharedValue } from "react-native-reanimated";
 
-/**
- * Typed registry of tray screens. Each key is a screen name; each value is a
- * render function that may take a single props argument.
- */
+/** Typed registry of tray screens: name to render function taking one props argument. */
 export type TrayScreens<
 	T extends Record<string, (props?: any) => React.ReactElement>,
 > = T;

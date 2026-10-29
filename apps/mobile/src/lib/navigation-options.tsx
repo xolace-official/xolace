@@ -2,13 +2,9 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import type { NativeStackNavigationOptions } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { Platform } from "react-native";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { useAppTheme } from "@/context/app-theme-context";
 
-/**
- * Return navigation options for a styled header.
- * iOS: large transparent header with blur/glass effect.
- * Android: standard header with themed background color.
- */
+/** Header options: iOS large transparent header with blur/glass; Android standard themed header. */
 export function useLargeHeaderOptions(): NativeStackNavigationOptions {
 	const headerTintColor = useThemeColor("foreground");
 	const backgroundColor = useThemeColor("background");
@@ -26,10 +22,8 @@ export function useLargeHeaderOptions(): NativeStackNavigationOptions {
 	const isGlassAvailable = isLiquidGlassAvailable();
 
 	return {
-		// Opaque, not transparent: on iOS 18 (no liquid glass) react-native-screens
-		// honours a transparent contentStyle literally, so the outgoing screen
-		// bleeds through the pushed one for the whole transition — it reads as a
-		// laggy/ghosted push on an iPhone XR. iOS 26 paints it opaque regardless.
+		// Opaque: on iOS 18 react-native-screens honours a transparent contentStyle literally,
+		// so the outgoing screen bleeds through the pushed one for the whole transition.
 		contentStyle: { backgroundColor },
 		// Chevron only — matches the icon-only toolbar back on each stack root.
 		headerBackButtonDisplayMode: "minimal",

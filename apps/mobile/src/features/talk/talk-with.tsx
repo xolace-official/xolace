@@ -3,7 +3,7 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 export function TalkWith({ sessionId }: { sessionId: Id<"sessions"> | null }) {
 	// The reflect screen already holds this subscription.

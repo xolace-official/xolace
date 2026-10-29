@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { orderStarterRows } from "@/src/features/starter-suggestions/order-starter-rows";
-import { STARTER_ROWS } from "@/src/features/starter-suggestions/starter-rows";
+import { orderStarterRows } from "@/features/starter-suggestions/order-starter-rows";
+import { STARTER_ROWS } from "@/features/starter-suggestions/starter-rows";
 
 const ids = (intake: Parameters<typeof orderStarterRows>[0]) =>
 	orderStarterRows(intake).map((r) => r.id);

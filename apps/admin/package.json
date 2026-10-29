@@ -7,19 +7,28 @@
     "check-types": "tsc --noEmit",
     "codegen": "varlock codegen",
     "dev": "next dev --port 3002",
+    "grant-admin": "varlock run -- bun scripts/grant-admin.ts",
     "lint": "biome check .",
     "start": "next start --port 3002"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.15",
+    "@jsquash/resize": "^2.1.1",
+    "@jsquash/webp": "^1.5.0",
     "@varlock/nextjs-integration": "1.2.2",
     "@xolace/backend": "workspace:*",
     "@xolace/ui": "workspace:*",
     "babel-plugin-react-compiler": "^1.0.0",
     "convex": "catalog:",
+    "lucide-react": "catalog:",
     "next": "catalog:",
+    "nuqs": "^2.10.2",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "sonner": "catalog:",
+    "thumbhash": "catalog:",
     "varlock": "catalog:"
   },
   "devDependencies": {

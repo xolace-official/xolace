@@ -1,13 +1,13 @@
-// Liquid-glass card, ported from sample-codes/clarity-main (ui/glass-surface)
-// onto Xolace tokens (#491).
+// Liquid-glass card ported from sample-codes/clarity-main onto Xolace tokens (#491).
 
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { useThemeColor } from "heroui-native";
 import type { ReactNode } from "react";
 import { View, type ViewStyle } from "react-native";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { useAppTheme } from "@/context/app-theme-context";
 
-// heroui-native's token union only knows built-ins; custom tokens (ember, …) resolve fine at runtime.
+// heroui-native's token union only knows built-ins; custom tokens (ember, …) resolve fine at
+// runtime.
 const useToken = useThemeColor as (t: string) => string;
 
 // Entrance fade for a surface wrapping GlassSurface. Glass stops rendering
@@ -28,10 +28,8 @@ type SurfaceProps = {
 	interactive?: boolean;
 };
 
-/**
- * Frosted surface; `tint` is a token name washed faintly into the glass.
- * Never put it under an animated opacity — the blur stops rendering.
- */
+/** Frosted surface; `tint` is a token name washed faintly into the glass. Never put it under
+ * an animated opacity: the blur stops rendering. */
 export function GlassSurface({
 	children,
 	radius = 32,

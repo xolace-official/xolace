@@ -1,12 +1,11 @@
 import type { FounderCardShape } from "./clip-paths";
 
-// On-brand twilight imagery served from Convex file storage. One card per shape,
-// no duplicates (#236). Frame colours are theme tokens, never hex, so the band
-// re-tints with the active theme.
+// Twilight imagery served from Convex file storage. One card per shape, no duplicates
+// (#236). Frame colours are theme tokens, never hex, so the band re-tints with the theme.
 
 export type FounderMarqueeCard = {
 	id: string;
-	/** Convex serving URL — accepted by both Skia `useImage` and expo-image. */
+	/** Convex serving URL, accepted by both Skia `useImage` and expo-image. */
 	image: string;
 	/** Uniwind background class for the card frame. */
 	frameClassName: string;

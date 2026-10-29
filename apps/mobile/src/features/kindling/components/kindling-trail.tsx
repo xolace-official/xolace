@@ -12,7 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { useCSSVariable } from "uniwind";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import type { Twig } from "../twig-presentation";
 import { STOP_NODE, TrailStop } from "./trail-stop";
 
@@ -22,12 +22,8 @@ const ROW = 150;
 const EDGE = 20;
 const FIRE_SIZE = 140;
 
-/**
- * The Lantern trail: one stop per twig, alternating sides,
- * down a winding trail of marching dashes to Flux's fire. The trail runs
- * solid ember up to the last tended stop. Tapping a stop opens it in the
- * floating card — the trail itself never starts anything.
- */
+/** The Lantern trail: one stop per twig down a winding trail of marching dashes, solid ember up
+ * to the last tended stop. Tapping a stop opens it; the trail never starts anything. */
 export function KindlingTrail({
 	twigs,
 	openId,

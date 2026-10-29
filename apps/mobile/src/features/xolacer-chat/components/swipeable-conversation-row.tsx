@@ -6,9 +6,9 @@ import ReanimatedSwipeable, {
 	type SwipeableMethods,
 } from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import type { PairConversation } from "@/src/features/xolacer-chat/components/chats-list";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import type { PairConversation } from "@/features/xolacer-chat/components/chats-list";
+import { playSoftPress } from "@/lib/haptics";
 
 const ARCHIVE_ICON = {
 	android: "archive",
@@ -27,11 +27,7 @@ export type ArchiveHandler = (
 	options?: { haptic?: boolean }
 ) => Promise<boolean>;
 
-/**
- * The swipe's mirror for assistive tech: the same archive the gesture does,
- * plus the long-press sheet as a named action, so a swipe is never the only
- * way to anything.
- */
+/** The swipe's mirror for assistive tech: archive plus the long-press sheet as named actions. */
 export function rowAccessibilityActions(
 	conversation: PairConversation,
 	onArchive: ArchiveHandler,
@@ -56,15 +52,8 @@ export function rowAccessibilityActions(
 	};
 }
 
-/**
- * Trailing swipe on a pair row: archive on Connect, unarchive on the Archived
- * screen. Mail-style — releasing past the threshold commits, so a row is never
- * left sitting open; tapping the revealed action commits too. Undo lives in
- * the toast `onArchive` raises, not here.
- *
- * Rightward drags never activate, which keeps the left edge free for the
- * stack's back swipe.
- */
+/** Trailing swipe: archive on Connect, unarchive on Archived. Releasing past the threshold
+ * commits; rightward drags never activate, so the stack's back swipe stays free. */
 export function SwipeableConversationRow({
 	conversation,
 	onArchive,
@@ -76,17 +65,14 @@ export function SwipeableConversationRow({
 }) {
 	const swipeable = useRef<SwipeableMethods>(null);
 	const accent = useCSSVariable("--color-accent-foreground");
-	// RNGH 3 keeps the actions mounted behind the row (absoluteFill), so the row
-	// must be opaque or the action shows through at rest. Matches the host
-	// screens' `bg-background`.
+	// RNGH 3 keeps the actions mounted behind the row, so the row must be opaque
+	// or the action shows through at rest.
 	const background = useCSSVariable("--color-background");
 	const label = conversation.archived ? "Unarchive" : "Archive";
 
-	// The revealed action's `openRight()` re-fires `onSwipeableWillOpen` while
-	// the row is already open, so this ref is the latch: one haptic, one
-	// mutation. Usually the row leaves the list, but a row can survive the call:
-	// it failed, or activity after the archive stamp keeps `isArchivedFor` false.
-	// A surviving row slides shut and unlatches once the call settles.
+	// `openRight()` re-fires `onSwipeableWillOpen` on an already-open row, so this
+	// latches to one haptic and one mutation. A row that survives the call
+	// (failure, or activity keeping `isArchivedFor` false) slides shut and unlatches.
 	const committed = useRef(false);
 	const commit = () => {
 		if (committed.current) {

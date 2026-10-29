@@ -13,7 +13,7 @@ import Animated, {
 	withSequence,
 	withTiming,
 } from "react-native-reanimated";
-import type { BreathPhase } from "@/src/lib/haptics";
+import type { BreathPhase } from "@/lib/haptics";
 
 export type BreathPattern =
 	| "physiological_sigh"

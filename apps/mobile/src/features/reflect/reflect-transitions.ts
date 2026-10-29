@@ -1,4 +1,4 @@
-import type { ReflectionStateName } from "@/src/features/reflect/types";
+import type { ReflectionStateName } from "@/features/reflect/types";
 
 /** Reanimated's default easing: Easing.inOut(Easing.quad) as cubic bezier */
 const QUAD_EASE_IN_OUT: [number, number, number, number] = [
@@ -44,12 +44,7 @@ export type ScreenTransitionConfig = {
 };
 
 /**
- * Normalizes screen names onto the screen that actually renders them.
- *
- * `typing-nudge` is `typing` with a line added, and since #256 `idle` is the
- * same compose screen at rest — one card at two sizes, told apart by a progress
- * value rather than by mounting a different tree. Cross-fading between any of
- * the three would destroy the object the morph is moving.
+ * Maps idle, typing and typing-nudge onto one compose screen (#256); a cross-fade breaks the morph.
  */
 export function normalizeScreen(
 	screen: ReflectionStateName

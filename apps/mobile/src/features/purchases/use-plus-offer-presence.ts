@@ -1,13 +1,13 @@
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
-import { plusOfferCopy } from "@/src/features/purchases/plus-offer-copy";
+import { plusOfferCopy } from "@/features/purchases/plus-offer-copy";
 import {
 	type PlusOfferMoment,
 	type PlusOfferVariant,
 	plusOfferSurfaceForMoment,
-} from "@/src/features/purchases/plus-offer-policy";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/purchases/plus-offer-policy";
+import { playSoftPress } from "@/lib/haptics";
+import { useAppStore } from "@/store/store";
 
 type Options = {
 	moment: PlusOfferMoment;
@@ -17,13 +17,8 @@ type Options = {
 	onDismiss?: () => void;
 };
 
-/**
- * What every rendering of a proactive Plus offer owes the policy, whatever it
- * looks like: it records itself shown on mount (an appearance spends the
- * one-per-session budget, a decision does not), and a decline spends the
- * surface's cooldown and takes the ask off screen. A second-ask-after-"no" is
- * the bug this keeps out of every call site.
- */
+/** What every proactive Plus offer owes the policy: records itself shown on mount; a decline
+ * spends the cooldown and hides the ask. */
 export function usePlusOfferPresence({
 	moment,
 	variant = "default",

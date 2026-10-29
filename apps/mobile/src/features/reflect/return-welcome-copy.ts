@@ -1,23 +1,8 @@
 /**
- * Copy for the Return Welcome sheet — a one-shot greeting shown the first time
- * a lapsed user reopens the app after their streak window expired.
- *
- * Intent: acknowledge that the app *knows* them and knows they were away, then
- * warmly encourage them back in. Not guilt, not indifference — recognition.
- * The longer the gap, the more the wording leans into "glad you walked back."
- *
- * Varies by gap, mirroring the inline header tiers in quiet-return-copy.ts:
- *   recent        — returning, but under 14 days
- *   away-14-30    — a couple of weeks
- *   away-30-90    — a month-plus
- *   away-90-plus  — months
- *   anniversary   — one year since first session
- *
- * The mascot points down toward this copy — it should read as "come sit",
- * a hand reaching back toward the fire.
+ * Copy for the Return Welcome sheet. Tiers mirror quiet-return-copy.ts plus `recent` (under 14d).
  */
 
-import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
+import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
 
 export type ReturnWelcomeTier = QuietReturnTier | "recent";
 

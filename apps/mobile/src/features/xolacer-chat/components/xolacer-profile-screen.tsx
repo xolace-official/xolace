@@ -14,32 +14,33 @@ import {
 	Button,
 	PressableFeedback,
 	Skeleton,
+	Surface,
 	useThemeColor,
 } from "heroui-native";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { TopBlur } from "@/src/components/shared/top-blur";
-import { ExpandableAvatar } from "@/src/features/xolacer-chat/components/expandable-avatar";
-import { Fact } from "@/src/features/xolacer-chat/components/fact-row";
-import { PresenceDot } from "@/src/features/xolacer-chat/components/presence-dot";
+import { AppText } from "@/components/shared/app-text";
+import { TopBlur } from "@/components/shared/top-blur";
+import { ExpandableAvatar } from "@/features/xolacer-chat/components/expandable-avatar";
+import { Fact } from "@/features/xolacer-chat/components/fact-row";
+import { PresenceDot } from "@/features/xolacer-chat/components/presence-dot";
 import {
 	NewXolacerChip,
 	RatingStars,
-} from "@/src/features/xolacer-chat/components/rating-stars";
-import { SpecialtyChips } from "@/src/features/xolacer-chat/components/specialty-chips";
-import { XolacerAvatar } from "@/src/features/xolacer-chat/components/xolacer-avatar";
-import { XolacerMenu } from "@/src/features/xolacer-chat/components/xolacer-menu";
-import { XolacerPrimerSheet } from "@/src/features/xolacer-chat/components/xolacer-primer-sheet";
-import { formatMonthYear } from "@/src/features/xolacer-chat/format-time";
-import { useAskFlow } from "@/src/features/xolacer-chat/use-ask-flow";
+} from "@/features/xolacer-chat/components/rating-stars";
+import { SpecialtyChips } from "@/features/xolacer-chat/components/specialty-chips";
+import { XolacerAvatar } from "@/features/xolacer-chat/components/xolacer-avatar";
+import { XolacerMenu } from "@/features/xolacer-chat/components/xolacer-menu";
+import { XolacerPrimerSheet } from "@/features/xolacer-chat/components/xolacer-primer-sheet";
+import { formatMonthYear } from "@/features/xolacer-chat/format-time";
+import { useAskFlow } from "@/features/xolacer-chat/use-ask-flow";
 import {
 	declineCooldownActive,
 	declineCooldownNote,
 	hasSpoken,
 	rateCtaState,
-} from "@/src/features/xolacer-chat/utils";
-import { playSoftPress } from "@/src/lib/haptics";
+} from "@/features/xolacer-chat/utils";
+import { playSoftPress } from "@/lib/haptics";
 
 type Profile = NonNullable<
 	FunctionReturnType<typeof api.xolacerChat.xolacerProfile>
@@ -200,9 +201,6 @@ function ProfileBody({
 							{profile.displayName}
 						</AppText>
 						<ProfileRating profile={profile} />
-						{/* Presence replaces the response norm rather than sitting beside
-                it: "here now · replies within a day" answers the question the
-                seeker is asking and then immediately hedges it. */}
 						<AppText className="text-muted text-xs">
 							Xolacer since {formatMonthYear(profile.xolacerSince)} ·{" "}
 							{profile.present ? "here now" : "replies within a day"}
@@ -232,9 +230,8 @@ function ProfileBody({
 						</Block>
 					)}
 
-					{/* Suppressed under a cooldown: the CTA already names the real
-              reason and its end date, and "isn't taking new conversations"
-              alongside it reads as a second, different no. */}
+					{/* Suppressed under a cooldown: the CTA already names the reason, and
+              "isn't taking new conversations" beside it reads as a second no. */}
 					{!(profile.available || hasThread || coolingDown) && (
 						<Block accent title="Not right now">
 							<Fact icon={MOON_ICON}>
@@ -305,12 +302,8 @@ function ProfileBody({
 	);
 }
 
-/**
- * The denominator is always visible next to the score — "23 conversations
- * rated" is what stops 4.9 reading as an absolute verdict on a person. Under
- * the display threshold the reason is spelled out rather than showing an empty
- * row of stars, which would read as a bad score.
- */
+/** Always shows the denominator next to the score; under the display threshold says why instead
+ * of empty stars. */
 function ProfileRating({ profile }: { profile: Profile }) {
 	if (profile.rating === undefined) {
 		return (
@@ -334,15 +327,7 @@ function ProfileRating({ profile }: { profile: Profile }) {
 	);
 }
 
-/**
- * The primary place a xolacer gets rated.
- *
- * Deliberately prominent, and deliberately not waiting for the conversation to
- * wind down: the old underlined link in the post-quiet status bar was reachable
- * only after a fortnight of silence, which is why almost nothing was ever
- * rated. Once the seeker has scored this xolacer the card collapses to a quiet
- * line — the app has its answer and stops asking for it.
- */
+/** The primary place a xolacer gets rated; collapses to a quiet line once the seeker has scored. */
 function RateCard({
 	profile,
 	onPress,
@@ -378,13 +363,10 @@ function RateCard({
 			accessibilityRole="button"
 			onPress={onPress}
 		>
-			<View
-				className="flex-row items-center gap-3 rounded-3xl border border-border/40 bg-surface p-3"
+			<Surface
+				className="flex-row items-center gap-3 p-3"
 				style={styles.borderCurve}
 			>
-				{/* Contained rather than overflowing: the card sits directly under two
-            bordered blocks, and a mascot breaking its edge would read as a
-            different kind of surface. */}
 				<View
 					className="h-14 w-14 overflow-hidden rounded-2xl bg-accent/10"
 					style={styles.borderCurve}
@@ -411,16 +393,13 @@ function RateCard({
 						</View>
 					</View>
 				</View>
-			</View>
+			</Surface>
 		</PressableFeedback>
 	);
 }
 
-/**
- * The CTA names the request/accept reality instead of implying a chat opens on
- * tap, and is driven straight off the conversation row's existence + status so
- * there is no extra state to compute.
- */
+/** Names the request/accept reality, driven straight off the conversation row's existence and
+ * status. */
 function ProfileCta({
 	profile,
 	onAsk,
@@ -455,12 +434,9 @@ function ProfileCta({
 		);
 	}
 
-	// Ahead of the availability branch: this xolacer having space is not the
-	// reason, and "not taking conversations" would be the app telling a seeker
-	// something untrue about the person who turned them down.
-	// Compared, never merely present: a cached timestamp already in the past
-	// would disable the button on a request the server would accept, and a
-	// disabled button writes nothing, so the cache would never refresh.
+	// Before the availability branch: "not taking conversations" would be untrue
+	// about someone who declined. Compared, not merely present: a cached past
+	// timestamp would disable the button and nothing would ever refresh the cache.
 	if (declineCooldownActive(retryAt)) {
 		return (
 			<>
@@ -495,11 +471,7 @@ function ProfileCta({
 	);
 }
 
-/**
- * The way out that keeps the thread: not this person, but the roster narrowed
- * to the same thing they listen to. Only shown when the route carried a
- * specialty — which anyone can do by filtering the roster themselves.
- */
+/** The roster narrowed to the same specialty; shown only when the route carried one. */
 function OtherListeners({
 	specialty,
 	onPress,
@@ -556,12 +528,8 @@ function Block({
 	const muted = useThemeColor("muted") as string;
 
 	return (
-		<View
-			className={
-				accent
-					? "rounded-3xl border border-accent/25 bg-accent/8 p-5"
-					: "rounded-3xl border border-border/40 bg-surface p-5"
-			}
+		<Surface
+			className={accent ? "border-accent/25 bg-accent/8 p-5" : "p-5"}
 			style={styles.borderCurve}
 		>
 			{onPress ? (
@@ -584,7 +552,7 @@ function Block({
 				</AppText>
 			)}
 			<View className="gap-3.5">{children}</View>
-		</View>
+		</Surface>
 	);
 }
 

@@ -1,33 +1,6 @@
-/**
- * The Xolacers beat — the deck's fourth bespoke composition, and the only one
- * where a second person is present.
- *
- *     ◇ XOLACERS
- *     the line
- *     the aside
- *     TRAINED PEERS · NOT THERAPISTS
- *
- *          [figure, mask in hand]        ·   ← their ember, at eye height
- *                    ↑ warmth arrives on the face, after the ember does
- *
- * THE MASK STAYS IN THE HAND. It would have been easy to fade it out and call
- * that the transformation — and it would have said the opposite of the beat.
- * The promise here is that you can stop performing WITHOUT being identified:
- * the mask comes down, but you keep hold of it. The asset is used exactly as
- * drawn for that reason; nothing is animated off the character.
- *
- * THE ORDER IS THE MEANING. Their ember arrives first, the warmth on the face
- * lands ~420ms later. That gap is the whole slide: it is cause and effect, not
- * two things fading in. Play them together and it reads as a lighting choice.
- *
- * WHY THE CHARACTER IS CENTRED. Mirror pushes its figure right of the text
- * axis, Vent pushes it left; that flip is what tells you those two are
- * alternatives rather than steps (see the pair note in `story-beats.ts`). This
- * beat must not join that argument, so it sits on the axis and lets the empty
- * quadrant to its right belong to somebody else.
- *
- * The fire, sky and scrims belong to `HearthBackdrop` and are untouched here.
- */
+// The Xolacers beat: figure centred on the axis (Mirror/Vent flip sides, this one
+// must not), another person's ember at eye height arriving first, and warmth on
+// the face ~420ms later. The mask stays in the hand; nothing animates off the figure.
 
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
@@ -38,8 +11,8 @@ import Animated, {
 	useReducedMotion,
 } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
-import type { StoryBeat } from "@/src/features/onboarding/story-beats";
+import { AppText } from "@/components/shared/app-text";
+import type { StoryBeat } from "@/features/onboarding/story-beats";
 import { CompanionEmber } from "./companion-ember";
 import { useDeckColor } from "./deck-color";
 import { EmberGlow } from "./ember-glow";
@@ -51,28 +24,15 @@ const SRC_W = 635;
 const SRC_H = 1054;
 const ASPECT = SRC_W / SRC_H;
 
-/**
- * The face, as a fraction of the source frame — measured off the asset, not
- * chosen. Both the warmth on the character and the companion's eye-height are
- * hung off this, so a re-rendered pose only needs these two numbers changed.
- */
+/** The face as a fraction of the source frame, measured off the asset. */
 const FACE_X = 0.44;
 const FACE_Y = 0.35;
-/** Wide enough to spill past the head, so it reads as light falling on the
- *  character rather than as a disc parked on its face. */
+/** Wide enough to spill past the head, so it reads as light falling on the figure. */
 const FACE_GLOW = 0.95;
-/**
- * The warmth is pushed off the face toward the companion, because light has a
- * direction and theirs is the only source on this slide. Centred, it reads as
- * the character glowing on its own — which is the one thing the beat is not
- * saying. Small number, but it is the difference between "lit by someone" and
- * "lit from within".
- */
+/** Warmth pushed toward the companion: centred, the figure reads as lit from within. */
 const LIGHT_BIAS = 0.13;
 
-/** How far the ember wash carries the grey figure toward the deck's palette.
- *  Above ~0.4 the sculpt flattens into a silhouette; below ~0.25 the character
- *  still reads as stone next to the peach one on the beat before it. */
+/** Ember wash on the grey figure. Above ~0.4 it flattens; below ~0.25 it reads as stone. */
 const WASH_ALPHA = 0.32;
 
 /** Clearance kept under the figure so it never touches the pagination row. */
@@ -81,15 +41,15 @@ const FIGURE_FLOOR = 12;
 const FIGURE_NUDGE = 40;
 
 const COMPANION = 78;
-/** Held off the right edge — an ember flush to the frame reads as a crop. */
+/** Held off the right edge; an ember flush to the frame reads as a crop. */
 const COMPANION_RIGHT = 6;
 
 /** Matches the cover, the Mirror and Vent so all four share a cadence. */
 const STEP = 95;
 const DUR = 520;
-/** After the character settles, someone sits down across from it. */
+/** Companion ember arrives after the figure settles. */
 const ARRIVE = 560;
-/** And only then does their light reach the face. */
+/** Their light reaches the face only after that. */
 const WARMTH = 420;
 
 export const XolacersBeat = ({ beat }: { beat: StoryBeat }) => {
@@ -101,8 +61,7 @@ export const XolacersBeat = ({ beat }: { beat: StoryBeat }) => {
 	const figW = figH * ASPECT;
 
 	const faceGlow = figW * FACE_GLOW;
-	// Their ember sits at the character's eye height, measured from the same
-	// floor the figure is anchored to, so the two stay level at every size.
+	// Eye height measured from the figure's floor, so the two stay level at every size.
 	const companionBottom = FIGURE_FLOOR + figH * (1 - FACE_Y) - COMPANION / 2;
 
 	const enter = (index: number) =>

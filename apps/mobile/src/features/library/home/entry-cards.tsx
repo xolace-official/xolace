@@ -1,8 +1,5 @@
-/**
- * The Lantern home's atoms (#409, from #396 variant A): the photo card, the
- * thumbnail row and the section title. Every entry tap opens the one reader,
- * `library/[slug]` (#407).
- */
+/** Lantern home atoms (#409): photo card, thumbnail row, section title. Every tap opens
+ * `library/[slug]` (#407). */
 
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
@@ -13,27 +10,24 @@ import { SymbolView } from "expo-symbols";
 import { usePostHog } from "posthog-react-native";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import type { ReaderFrom } from "@/src/features/library/analytics";
-import { CoverImage } from "@/src/features/library/cover-image";
-import {
-	facetLabel,
-	readTimeLine,
-} from "@/src/features/library/home/library-copy";
-import { COVER_SCRIM } from "@/src/features/library/reader/cover-palette";
-import { capitalise } from "@/src/features/library/reader/reader-copy";
+import { AppText } from "@/components/shared/app-text";
+import type { ReaderFrom } from "@/features/library/analytics";
+import { CoverImage } from "@/features/library/cover-image";
+import { facetLabel, readTimeLine } from "@/features/library/home/library-copy";
+import { COVER_SCRIM } from "@/features/library/reader/cover-palette";
+import { capitalise } from "@/features/library/reader/reader-copy";
 import {
 	SHARE_ICON,
 	shareEntry,
-} from "@/src/features/library/reader/reader-extras";
+} from "@/features/library/reader/reader-extras";
 import {
 	SAVE_ICON,
 	SAVED_ICON,
 	SaveButton,
 	useSaveToggle,
-} from "@/src/features/library/reader/reader-parts";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { cn } from "@/src/lib/utils";
+} from "@/features/library/reader/reader-parts";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { cn } from "@/lib/utils";
 
 export type EntryItem = FunctionReturnType<
 	typeof api.library.entries.listEntries
@@ -51,11 +45,8 @@ export const readerHref = (slug: string, from: ReaderFrom, hub?: string) =>
 		pathname: "/library/[slug]",
 	}) as const;
 
-/**
- * Full-bleed cover photo, kicker, title, meta, and a play mark when the entry
- * has audio. Ink is the reader cover's fixed palette. At accessibility text
- * sizes the title is uncapped and the card grows to fit (#400).
- */
+/** Full-bleed cover photo, kicker, title, meta and a play mark for audio. At accessibility
+ * sizes the title is uncapped (#400). */
 export function PhotoCard({
 	entry,
 	kicker,
@@ -155,7 +146,7 @@ function HasAudio() {
 			importantForAccessibility="no-hide-descendants"
 			pointerEvents="none"
 		>
-			{/* Over the photo, a fixed palette: dark clear glass, not the themed GlassSurface. */}
+			{/* Fixed palette over the photo: dark clear glass, not the themed GlassSurface. */}
 			{glass && (
 				<GlassView
 					colorScheme="dark"

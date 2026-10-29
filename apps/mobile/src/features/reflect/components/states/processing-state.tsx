@@ -3,14 +3,14 @@ import { useThemeColor } from "heroui-native";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import Shimmer from "@/src/components/shared/shimmer";
-import { SparkleStars } from "@/src/components/shared/sparkle-stars";
-import { ThinkingOrb } from "@/src/components/ui/thinking-orb";
-import { useProcessingBreathHaptic } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import Shimmer from "@/components/shared/shimmer";
+import { SparkleStars } from "@/components/shared/sparkle-stars";
+import { ThinkingOrb } from "@/components/ui/thinking-orb";
+import { useProcessingBreathHaptic } from "@/lib/haptics";
 
-// Chosen by what the pipeline is actually doing, never cycled (rule 12):
-// a line only claims memory when one connected (convex/ai/process.ts).
+// Chosen by what the pipeline is doing, never cycled (rule 12): a line only
+// claims memory when one connected (convex/ai/process.ts).
 const LINES = {
 	connecting: "Holding this next to what you've shared before...",
 	reading: "Taking this in...",
@@ -38,9 +38,8 @@ type Props = {
 export const ProcessingState = ({ stage }: Props) => {
 	const accentColor = useThemeColor("accent");
 	const playBreath = useProcessingBreathHaptic();
-	// Stages only move forward within a mount. The server leaves "processing"
-	// before this screen finishes fading out, which un-gates `stage` to
-	// undefined — without the latch the line flicks back to "Taking this in...".
+	// Stages only move forward within a mount: the server leaves "processing" before
+	// this screen finishes fading out, and `stage` goes undefined.
 	const [shown, setShown] = useState(stage);
 	if (stage && stage !== shown) {
 		setShown(stage);

@@ -2,16 +2,16 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { type ColorValue, View } from "react-native";
 import { useCSSVariable, withUniwind } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import type { rowAccessibilityActions } from "@/src/features/xolacer-chat/components/swipeable-conversation-row";
-import { formatCompactTime } from "@/src/features/xolacer-chat/format-time";
-import { useConversationUnreadCount } from "@/src/features/xolacer-chat/use-conversation-unread-count";
+import { AppText } from "@/components/shared/app-text";
+import type { rowAccessibilityActions } from "@/features/xolacer-chat/components/swipeable-conversation-row";
+import { formatCompactTime } from "@/features/xolacer-chat/format-time";
+import { useConversationUnreadCount } from "@/features/xolacer-chat/use-conversation-unread-count";
 import {
 	canHoldUnread,
 	formatUnreadBadge,
 	unreadBadge,
-} from "@/src/features/xolacer-chat/utils";
-import { cn } from "@/src/lib/utils";
+} from "@/features/xolacer-chat/utils";
+import { cn } from "@/lib/utils";
 import type { ConversationList } from "./chats-list";
 import { rowPresentation } from "./conversation-row-labels";
 import { PresenceDot } from "./presence-dot";
@@ -35,11 +35,8 @@ export function ConversationRow(props: {
 	/** Omitted after the last row, so the list ends rather than stops. */
 	showSeparator: boolean;
 }) {
-	// Dispatching to a whole other component, rather than branching after
-	// calling some hooks unconditionally — `PairRow` and `BroadcastRow` each
-	// call their own hooks unconditionally too, but the two sets differ, and a
-	// row's `kind` is fixed for its lifetime (a fresh `myConversations` id),
-	// so this never changes which one mounts under an existing row's spot.
+	// Two components rather than conditional hooks: `kind` is fixed for a row's
+	// lifetime, so which one mounts never changes under an existing row.
 	if (props.conversation.kind === "broadcast") {
 		return <BroadcastRow {...props} conversation={props.conversation} />;
 	}
@@ -102,9 +99,8 @@ function PairRow({
 							>
 								{conversation.counterpartName}
 							</AppText>
-							{/* Beside the name rather than above the sentence: on line 2 the
-                  pill ate half the width and truncated the one line that
-                  explains the state. The name gives up space for it instead. */}
+							{/* Beside the name, not on line 2, where the pill truncated the
+							    status line. */}
 							{chip && (
 								<View
 									className={cn(
@@ -157,12 +153,8 @@ function PairRow({
 	);
 }
 
-/**
- * The synthetic Xolace-channel row (#377). No status/role/counterpart — it's
- * not a xolacer_conversations row — so it doesn't share `rowPresentation`.
- * Unread reads live off Stream's own channel state, same mechanism as every
- * other row, just pointed at the broadcast channel's type/id.
- */
+/** The synthetic Xolace-channel row (#377): no status, role or counterpart, so it skips
+ * `rowPresentation`. */
 function BroadcastRow({
 	conversation,
 	onPress,
@@ -196,8 +188,6 @@ function BroadcastRow({
 							>
 								Xolace
 							</AppText>
-							{/* Founder-account sender, not a role a camper can hold — the
-                  same distinction a platform's verified checkmark makes. */}
 							<StyledSymbolView
 								accessibilityElementsHidden
 								name={VERIFIED_ICON}

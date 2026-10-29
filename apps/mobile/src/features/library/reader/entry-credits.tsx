@@ -1,8 +1,5 @@
-/**
- * What follows the body (#469): an adapted entry's "View sources" row and the
- * sheet it opens; verbatim and original entries keep their licence lines.
- * The sheet sits on the reading mode's page, like the reader under it.
- */
+// After the body (#469): an adapted entry's "View sources" row and sheet;
+// verbatim and original entries keep their licence lines.
 import { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { SymbolView } from "expo-symbols";
 import { BottomSheet, useThemeColor } from "heroui-native";
@@ -15,9 +12,9 @@ import {
 	View,
 } from "react-native";
 
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
-import { AppText } from "@/src/components/shared/app-text";
-import { useAppStore } from "@/src/store/store";
+import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
+import { AppText } from "@/components/shared/app-text";
+import { useAppStore } from "@/store/store";
 import { attributionLines } from "./reader-copy";
 import { CHEVRON } from "./reader-extras";
 import { ReaderPageScope } from "./reader-page";
@@ -98,19 +95,21 @@ function SourcesSheet({
 	const page = READING_MODES[useAppStore((s) => s.readingMode)].page;
 	return (
 		<BottomSheet isOpen={isOpen} onOpenChange={(o) => !o && onClose()}>
-			{/* Modal container: VoiceOver stays in the sheet instead of reaching the reader behind it. */}
+			{/* Modal container: VoiceOver stays in the sheet. */}
 			<BottomSheet.Portal unstable_accessibilityContainerViewIsModal>
-				{/* Inside the portal: the scope is context, and the portal leaves the reader's tree. */}
+				{/* Inside the portal, which leaves the reader's tree and its scope. */}
 				<ReaderPageScope page={page}>
 					<BottomSheetBlurOverlay />
 					<BottomSheet.Content
-						// gorhom makes the sheet one accessible element, which hides its rows and links.
+						// gorhom makes the sheet one accessible element, which hides its rows
+						// and links.
 						accessible={false}
 						backgroundClassName="bg-background"
 						enableDynamicSizing
 						handleIndicatorClassName="bg-foreground/20"
 					>
-						{/* Header inside the scroller: dynamic sizing measures only the scroller's content. */}
+						{/* Header inside the scroller: dynamic sizing measures only its
+						    content. */}
 						<BottomSheetScrollView
 							contentContainerStyle={{ paddingBottom: 48 }}
 							style={{ maxHeight: height * 0.7 }}
@@ -129,7 +128,6 @@ function SourcesSheet({
 							{sources.map((s, i) => (
 								<SourceRow key={i} source={s} />
 							))}
-							{/* Each publisher's licence once, however many of its pages are cited. */}
 							<AppText className="mx-6 mt-4 border-separator border-t pt-4 text-muted text-xs">
 								{attributionLines(sources).join("\n")}
 							</AppText>
@@ -158,7 +156,6 @@ function SourceRow({ source: s }: { source: Source }) {
 			accessibilityRole={href ? "link" : "text"}
 			className="flex-row items-center gap-3 px-6 py-3 active:opacity-60"
 			disabled={!href}
-			// A failed open leaves the list as it was: the credit never depends on the network.
 			onPress={() => href && Linking.openURL(href).catch(() => {})}
 		>
 			<AppText className="flex-1 text-foreground text-sm">

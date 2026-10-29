@@ -2,8 +2,8 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { useAppStore } from "@/store/store";
 import { hasUnseenWhatsNew } from "../constants/whats-new";
 import { useTray } from "../engine/tray-provider";
 import type { Trays } from "./registry";
@@ -32,10 +32,7 @@ const ROWS: Row[] = [
 	},
 ];
 
-/**
- * Tray root: report a bug, suggest an idea, or see what's new. Each row pushes
- * the matching screen.
- */
+/** Tray root: report a bug, suggest an idea, or see what's new. */
 export const TrayMenu = () => {
 	const { show } = useTray<Trays>();
 	const accentColor = useThemeColor("accent") as string;

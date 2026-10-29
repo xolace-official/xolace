@@ -1,13 +1,10 @@
 import { type SFSymbol, SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { removeEmDash } from "@/src/features/quotes/utils/text-utils";
-import {
-	getEmotionEmoji,
-	getEmotionLabel,
-} from "@/src/features/timeline/emotions";
-import type { TimelineEntry } from "@/src/features/timeline/types";
+import { AppText } from "@/components/shared/app-text";
+import { removeEmDash } from "@/features/quotes/utils/text-utils";
+import { getEmotionEmoji, getEmotionLabel } from "@/features/timeline/emotions";
+import type { TimelineEntry } from "@/features/timeline/types";
 
 const SPEAKER_ICON: { ios: SFSymbol; android: string; web: string } = {
 	android: "volume_up",
@@ -19,12 +16,8 @@ type Props = {
 	entry: TimelineEntry;
 };
 
-/**
- * Presentational only — no PressableFeedback here. The stacked carousel's
- * animated card wrapper is pointerEvents:"none" (the invisible scroll layer
- * on top is the real touch target), so this component just renders content;
- * StackedCarousel's `onCardPress` handles the tap.
- */
+/** Presentational only: the carousel wrapper is pointerEvents:"none" and `onCardPress` handles
+ * the tap. */
 export function DiscoveryMomentCard({ entry }: Props) {
 	const accentColor = useThemeColor("accent");
 	const emoji = getEmotionEmoji(entry.granularLabel ?? entry.primaryEmotion);

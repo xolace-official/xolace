@@ -2,13 +2,13 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { PLUS_OFFER_DECLINE_LABEL } from "@/src/features/purchases/plus-offer-copy";
+import { AppText } from "@/components/shared/app-text";
+import { PLUS_OFFER_DECLINE_LABEL } from "@/features/purchases/plus-offer-copy";
 import type {
 	PlusOfferMoment,
 	PlusOfferVariant,
-} from "@/src/features/purchases/plus-offer-policy";
-import { usePlusOfferPresence } from "@/src/features/purchases/use-plus-offer-presence";
+} from "@/features/purchases/plus-offer-policy";
+import { usePlusOfferPresence } from "@/features/purchases/use-plus-offer-presence";
 
 const BG = require("@/assets/images/flux/plus-postcard-bg.png");
 const ABS_FILL = {
@@ -18,33 +18,22 @@ const ABS_FILL = {
 	right: 0,
 	top: 0,
 };
-/** The scene's own night, not a theme color — the art is dark in every theme. */
+/** The scene's own night, not a theme color: the art is dark in every theme. */
 const NIGHT = "#0b0716";
 
 type Props = {
 	moment: PlusOfferMoment;
 	variant?: PlusOfferVariant;
-	/**
-	 * A true line about this user's own week, from data the Understanding already
-	 * holds. Omit it when there isn't one — a fabricated observation is the one
-	 * thing this card must never print.
-	 */
+	/** A true line from this user's own data. Never fabricated; omit when there is none. */
 	observation?: string;
-	/**
-	 * The session this offer belongs to. Recorded on mount so the one-per-session
-	 * cap is spent by an appearance, not by a decision.
-	 */
+	/** Recorded on mount so the one-per-session cap is spent by an appearance, not a decision. */
 	sessionId?: string | null;
 	onOpen: () => void;
 	onDismiss?: () => void;
 };
 
-/**
- * Value line with "Xolace+" in accent. Text is explicitly `text-white` — the
- * card art is always dark, so it must not follow the theme foreground, which is
- * what makes it vanish in light mode. AppText defaults to `text-foreground`, so
- * any bare nested <AppText> would re-inherit it; keep this flat.
- */
+/** Value line with "Xolace+" in accent. `text-white` because the art is always dark; a bare
+ * nested <AppText> would re-inherit `text-foreground`. */
 export const PlusValue = ({
 	text,
 	accent,
@@ -64,17 +53,8 @@ export const PlusValue = ({
 	);
 };
 
-/**
- * The one card every proactive Plus moment renders: a fixed 16:10 night-scene
- * postcard with the copy on a scrim pinned to the bottom, over the mascot's
- * lower body — sky, head and telescope stay in the clear upper zone.
- *
- * Shared rather than per-moment so the two things that are not a call site's
- * business stay uniform — the decline is always present, always literally
- * "I'm good," and dismissing always spends the 7-day cooldown.
- *
- * This is the product's voice standing next to the fire, never the mirror's.
- */
+/** The one card every proactive Plus moment renders. Shared so the decline is always present
+ * and always spends the 7-day cooldown. */
 export const PlusOfferCard = ({
 	moment,
 	variant = "default",
@@ -84,7 +64,6 @@ export const PlusOfferCard = ({
 	onDismiss,
 }: Props) => {
 	const accentColor = useThemeColor("accent") as string;
-	// The card takes itself off screen on a decline — see usePlusOfferPresence.
 	const { copy, declined, open, dismiss } = usePlusOfferPresence({
 		moment,
 		onDismiss,
@@ -114,8 +93,8 @@ export const PlusOfferCard = ({
 				source={BG}
 				style={ABS_FILL}
 			/>
-			{/* Positioned in `style`, not `className`: uniwind's `bottom-0` on a
-          LinearGradient leaves the scrim stuck at the top. */}
+			{/* Positioned in `style`: uniwind's `bottom-0` on a LinearGradient leaves it at the
+			    top. */}
 			<LinearGradient
 				colors={[`${NIGHT}00`, `${NIGHT}e0`, NIGHT]}
 				end={{ x: 0, y: 1 }}
@@ -132,8 +111,7 @@ export const PlusOfferCard = ({
 				}}
 			>
 				{observation ? (
-					// Capped: the scrim grows upward, and an unbounded observation would
-					// climb over the mascot's head.
+					// Capped: the scrim grows upward and would climb over the mascot's head.
 					<AppText
 						className="mb-1.5 font-serif text-[15px] text-white/70 italic leading-5"
 						numberOfLines={2}

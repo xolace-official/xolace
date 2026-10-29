@@ -1,29 +1,25 @@
-/**
- * The reader's small moves (#413, CONTEXT.md "Library: what reading can lead
- * to"): the content note, "Reflect on this", sharing, the helpline link and
- * the "Read by the fire" ambience.
- */
+/** The reader's small moves (#413): content note, Reflect on this, sharing, helpline, fire dim. */
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
+import { Surface, useThemeColor } from "heroui-native";
 import { type PostHog, usePostHog } from "posthog-react-native";
 import { Pressable, Share, StyleSheet, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { detectCountry } from "@/src/features/crisis-resources/use-crisis-resources";
-import { trackLibrary } from "@/src/features/library/analytics";
+import { AppText } from "@/components/shared/app-text";
+import { detectCountry } from "@/features/crisis-resources/use-crisis-resources";
+import { trackLibrary } from "@/features/library/analytics";
 import {
 	COVER_BUTTON,
 	CoverGlass,
-} from "@/src/features/library/reader/cover-glass";
+} from "@/features/library/reader/cover-glass";
 import {
 	REFLECT_PROMPT,
 	shareMessage,
-} from "@/src/features/library/reader/reader-copy";
-import type { ReaderEntry } from "@/src/features/library/reader/reader-screen";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/library/reader/reader-copy";
+import type { ReaderEntry } from "@/features/library/reader/reader-screen";
+import { useAppStore } from "@/store/store";
 
 const NOTE_ICON = {
 	android: "info",
@@ -47,11 +43,12 @@ const DAY_MS = 86_400_000;
 export function ContentNote({ note }: { note: string }) {
 	const muted = useThemeColor("muted");
 	return (
-		<View
+		<Surface
 			accessibilityLabel={`Content note: ${note}`}
 			accessible
-			className="mb-6 flex-row gap-3 rounded-2xl bg-surface-secondary p-4"
+			className="mb-6 flex-row gap-3 rounded-2xl p-4"
 			style={{ borderCurve: "continuous" }}
+			variant="secondary"
 		>
 			<SymbolView name={NOTE_ICON} size={16} tintColor={muted} />
 			<View className="flex-1 gap-1">
@@ -60,11 +57,12 @@ export function ContentNote({ note }: { note: string }) {
 				</AppText>
 				<AppText className="text-sm">{note}</AppText>
 			</View>
-		</View>
+		</Surface>
 	);
 }
 
-/** Leaves the entry for a reflect session that opens on its prompt; the session records the entry. */
+/** Leaves the entry for a reflect session that opens on its prompt; the session records the
+ * entry. */
 export function ReflectOnThis({
 	entry,
 }: {
@@ -74,10 +72,7 @@ export function ReflectOnThis({
 	const posthog = usePostHog();
 	const prompt = entry.reflectPrompt ?? REFLECT_PROMPT;
 	return (
-		<View
-			className="mt-10 gap-4 rounded-3xl bg-surface p-5"
-			style={{ borderCurve: "continuous" }}
-		>
+		<Surface className="mt-10 gap-4 p-5" style={{ borderCurve: "continuous" }}>
 			<AppText className="font-semibold text-lg">{prompt}</AppText>
 			<Pressable
 				accessibilityRole="button"
@@ -100,11 +95,11 @@ export function ReflectOnThis({
 					Reflect on this
 				</AppText>
 			</Pressable>
-		</View>
+		</Surface>
 	);
 }
 
-/** Standard share sheet with a deep link to the entry — the reader's button and the cards' menu. */
+/** Share sheet with a deep link to the entry; used by the reader's button and the cards' menu. */
 export async function shareEntry(
 	entry: Pick<ReaderEntry, "slug" | "title">,
 	posthog: PostHog
@@ -120,7 +115,7 @@ export async function shareEntry(
 			trackLibrary(posthog, "library_entry_shared", { slug: entry.slug });
 		}
 	} catch {
-		// The sheet failed to open; nothing was shared and there's nothing to undo.
+		// The sheet failed to open; nothing was shared.
 	}
 }
 
@@ -152,7 +147,7 @@ export function ShareButton({
 	);
 }
 
-/** Explainers end on a way to the crisis-resources screen — only where we have resources (#403). */
+/** Explainers end on a link to crisis resources, only where there are resources (#403). */
 export function HelplineLink({ kind }: { kind: ReaderEntry["kind"] }) {
 	const muted = useThemeColor("muted");
 	if (kind !== "explainer" || !detectCountry()) {
@@ -175,11 +170,8 @@ export function HelplineLink({ kind }: { kind: ReaderEntry["kind"] }) {
 	);
 }
 
-/**
- * "Read by the fire": the night page's warm dark laid over the whole reader,
- * whatever the Aa mode. Atmosphere only — narration is the audio. 30%, not
- * more: past that the dimmest light theme (nightly) drops body text below AA.
- */
+/** "Read by the fire" overlay. 30% at most: past that the nightly theme drops body text below
+ * AA. */
 export function FireDim() {
 	const on = useAppStore((s) => s.readByFire);
 	if (!on) {

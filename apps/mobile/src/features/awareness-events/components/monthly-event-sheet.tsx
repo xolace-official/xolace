@@ -14,10 +14,10 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { posthog } from "@/src/config/posthog";
-import { cn } from "@/src/lib/utils";
-import { useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { posthog } from "@/config/posthog";
+import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/store";
 
 const CTA_ROUTE_ALLOWLIST = ["/(protected)/crisis-resources"] as const;
 
@@ -42,13 +42,11 @@ export const MonthlyEventSheet = ({ event }: Props) => {
 	const hasCta = !!(event?.ctaLabel && event?.ctaRoute);
 	const hasLink = !!event?.linkUrl?.startsWith("https://");
 
-	// Footer overlays the scroll content (gorhom footers are not part of the
-	// measured content height), so we pad the scroll content by its height.
+	// gorhom footers overlay the scroll content, so pad it by the footer height.
 	const [footerHeight, setFooterHeight] = useState(hasCta ? 132 : 76);
 
-	// Reset image state when a new event arrives. Adjusting during render (with a
-	// prev-slug comparison) instead of in an effect avoids an extra render that
-	// would briefly show the previous event's image state.
+	// Reset image state during render when a new event arrives; an effect would
+	// briefly show the previous event's image state.
 	const [prevSlug, setPrevSlug] = useState<string | null>(null);
 	if (event?.imageUrl && event.slug !== prevSlug) {
 		setPrevSlug(event.slug);
@@ -165,8 +163,8 @@ export const MonthlyEventSheet = ({ event }: Props) => {
 					footerComponent={renderFooter}
 					handleIndicatorClassName="opacity-0"
 				>
-					{/* Pinned header: title stays visible while long content scrolls.
-              The external-link button opens the full article when linkUrl is set. */}
+					{/* Pinned header; the external-link button opens the full article when
+					    linkUrl is set. */}
 					<View className="flex-row items-center justify-between gap-3 px-5 pb-3">
 						<BottomSheet.Title
 							className="flex-1 text-left font-semibold text-foreground text-xl leading-7"
@@ -196,14 +194,13 @@ export const MonthlyEventSheet = ({ event }: Props) => {
 					</View>
 					<View className="h-px bg-foreground/10" />
 
-					{/* Cap the scrollable itself so short content keeps a snug dynamic
-              height while long content scrolls under the pinned footer. */}
+					{/* Capped so short content keeps a snug height and long content scrolls
+					    under the footer. */}
 					<BottomSheetScrollView
 						contentContainerStyle={{ paddingBottom: footerHeight + 50 }}
 						showsVerticalScrollIndicator={false}
 						style={{ maxHeight: screenHeight * 0.65 }}
 					>
-						{/* Image slot */}
 						{showImage && (
 							<View className="h-45 overflow-hidden">
 								{imageLoading && (
@@ -220,7 +217,6 @@ export const MonthlyEventSheet = ({ event }: Props) => {
 							</View>
 						)}
 
-						{/* Content */}
 						<AppText className="px-5 pt-4 text-left font-[Poppins-Regular] text-foreground/80 text-sm leading-5.5">
 							{event?.body}
 						</AppText>

@@ -1,7 +1,6 @@
-// The talk's composer (#593): [mic mute] [field] [action]. The mic is open the
-// whole talk and typing is just another way in. The action shows the live mic
-// level while the field is empty and becomes send once there is text. Glass on
-// iOS 26; HeroUI's InputGroup on older iOS and Android.
+// The talk's composer (#593): [mic mute] [field] [action]. The action shows the
+// live mic level while the field is empty and becomes send once there is text.
+// Glass on iOS 26; HeroUI's InputGroup on older iOS and Android.
 
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { SymbolView } from "expo-symbols";
@@ -13,11 +12,11 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { useCompanionName } from "@/src/features/talk/use-companion-name";
-import type { Talk } from "@/src/features/talk/use-talk";
-import { playSoftPress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+import { GlassSurface } from "@/components/shared/glass-surface";
+import { useCompanionName } from "@/features/talk/use-companion-name";
+import type { Talk } from "@/features/talk/use-talk";
+import { playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 const hasGlass = isLiquidGlassAvailable();
 const BAR_SHAPE = [0.5, 0.85, 1, 0.75, 0.45];

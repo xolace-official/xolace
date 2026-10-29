@@ -8,7 +8,15 @@
  * @module
  */
 
-import type * as admin from "../admin.js";
+import type * as admin_audio from "../admin/audio.js";
+import type * as admin_edits from "../admin/edits.js";
+import type * as admin_hubs from "../admin/hubs.js";
+import type * as admin_imports from "../admin/imports.js";
+import type * as admin_library from "../admin/library.js";
+import type * as admin_searchIndex from "../admin/searchIndex.js";
+import type * as admin_sources from "../admin/sources.js";
+import type * as admin_uploads from "../admin/uploads.js";
+import type * as admin_xolacers from "../admin/xolacers.js";
 import type * as ai_bridge from "../ai/bridge.js";
 import type * as ai_cached from "../ai/cached.js";
 import type * as ai_cachedActions from "../ai/cachedActions.js";
@@ -115,6 +123,14 @@ import type * as feedback from "../feedback.js";
 import type * as followUpResponses from "../followUpResponses.js";
 import type * as followUps from "../followUps.js";
 import type * as http from "../http.js";
+import type * as imports_apply from "../imports/apply.js";
+import type * as imports_compare from "../imports/compare.js";
+import type * as imports_compareAudio from "../imports/compareAudio.js";
+import type * as imports_compareLibrary from "../imports/compareLibrary.js";
+import type * as imports_diff from "../imports/diff.js";
+import type * as imports_imageSources from "../imports/imageSources.js";
+import type * as imports_plan from "../imports/plan.js";
+import type * as imports_records from "../imports/records.js";
 import type * as intake from "../intake.js";
 import type * as integrations_stream from "../integrations/stream.js";
 import type * as jobs_accountDeletion from "../jobs/accountDeletion.js";
@@ -170,10 +186,12 @@ import type * as library_hubs from "../library/hubs.js";
 import type * as library_imageAlts from "../library/imageAlts.js";
 import type * as library_ingest from "../library/ingest.js";
 import type * as library_next from "../library/next.js";
+import type * as library_publishGates from "../library/publishGates.js";
 import type * as library_reads from "../library/reads.js";
 import type * as library_search from "../library/search.js";
 import type * as library_searchText from "../library/searchText.js";
 import type * as library_sources from "../library/sources.js";
+import type * as library_write from "../library/write.js";
 import type * as migrations from "../migrations.js";
 import type * as monthlyEvents from "../monthlyEvents.js";
 import type * as notifications from "../notifications.js";
@@ -235,7 +253,15 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  admin: typeof admin;
+  "admin/audio": typeof admin_audio;
+  "admin/edits": typeof admin_edits;
+  "admin/hubs": typeof admin_hubs;
+  "admin/imports": typeof admin_imports;
+  "admin/library": typeof admin_library;
+  "admin/searchIndex": typeof admin_searchIndex;
+  "admin/sources": typeof admin_sources;
+  "admin/uploads": typeof admin_uploads;
+  "admin/xolacers": typeof admin_xolacers;
   "ai/bridge": typeof ai_bridge;
   "ai/cached": typeof ai_cached;
   "ai/cachedActions": typeof ai_cachedActions;
@@ -342,6 +368,14 @@ declare const fullApi: ApiFromModules<{
   followUpResponses: typeof followUpResponses;
   followUps: typeof followUps;
   http: typeof http;
+  "imports/apply": typeof imports_apply;
+  "imports/compare": typeof imports_compare;
+  "imports/compareAudio": typeof imports_compareAudio;
+  "imports/compareLibrary": typeof imports_compareLibrary;
+  "imports/diff": typeof imports_diff;
+  "imports/imageSources": typeof imports_imageSources;
+  "imports/plan": typeof imports_plan;
+  "imports/records": typeof imports_records;
   intake: typeof intake;
   "integrations/stream": typeof integrations_stream;
   "jobs/accountDeletion": typeof jobs_accountDeletion;
@@ -397,10 +431,12 @@ declare const fullApi: ApiFromModules<{
   "library/imageAlts": typeof library_imageAlts;
   "library/ingest": typeof library_ingest;
   "library/next": typeof library_next;
+  "library/publishGates": typeof library_publishGates;
   "library/reads": typeof library_reads;
   "library/search": typeof library_search;
   "library/searchText": typeof library_searchText;
   "library/sources": typeof library_sources;
+  "library/write": typeof library_write;
   migrations: typeof migrations;
   monthlyEvents: typeof monthlyEvents;
   notifications: typeof notifications;

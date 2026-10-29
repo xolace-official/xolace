@@ -1,6 +1,7 @@
+import { Surface } from "heroui-native";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import { CardInfo } from "./card-info";
 
 const WORDS_INFO =
@@ -12,8 +13,7 @@ type Props = {
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
-// Honest placeholder for users without enough distinct language yet.
-// No fabricated words, no blur — just the promise of what will surface.
+// Honest placeholder: no fabricated words, no blur.
 export function WordsTeaserEmpty({ staggerDelay = 360 }: Props) {
 	return (
 		<EaseView
@@ -27,7 +27,7 @@ export function WordsTeaserEmpty({ staggerDelay = 360 }: Props) {
 				type: "timing",
 			}}
 		>
-			<View className="overflow-hidden rounded-3xl border border-border/65 bg-surface">
+			<Surface className="p-0">
 				<View className="flex-row items-center gap-1.5 px-5 pt-5 pb-3">
 					<AppText className="font-medium text-[11px] text-muted uppercase tracking-widest">
 						Words that keep finding you
@@ -46,7 +46,7 @@ export function WordsTeaserEmpty({ staggerDelay = 360 }: Props) {
 						The ones that keep returning rise to the top.
 					</AppText>
 				</View>
-			</View>
+			</Surface>
 		</EaseView>
 	);
 }

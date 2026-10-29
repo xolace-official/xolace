@@ -1,7 +1,7 @@
 import { Portal } from "heroui-native/portal";
 import { useMemo, useState } from "react";
 
-import { TourOverlay } from "@/src/components/ui/tour/tour-overlay";
+import { TourOverlay } from "@/components/ui/tour/tour-overlay";
 import {
 	DEFAULT_LABELS,
 	DEFAULT_OVERLAY,
@@ -10,33 +10,12 @@ import {
 	TourContext,
 	type TourProps,
 	type TourStepEntry,
-} from "@/src/components/ui/tour/types";
-import { useBackHandler } from "@/src/components/ui/tour/use-back-handler";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
+} from "@/components/ui/tour/types";
+import { useBackHandler } from "@/components/ui/tour/use-back-handler";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/**
- * Tour — the walkthrough that introduces a screen one control at a time.
- *
- * It dims everything, cuts a hole around one control and puts a card beside
- * it, then moves the hole to the next control. What makes that work is the
- * hole: a caption alone has to describe where to look, and "the button at the
- * top right" is a sentence people read twice and still get wrong.
- *
- * ```tsx
- * <Tour open={onboarding} onOpenChange={setOnboarding}>
- *   <Tour.Step order={0} title="Your library" description="Everything you save lands here.">
- *     <IconButton icon={<BookmarkIcon />} onPress={openLibrary} />
- *   </Tour.Step>
- * </Tour>
- * ```
- *
- * A step wraps the control it is about, so the two live together in the tree
- * and cannot drift apart — a step whose target has been deleted goes with it
- * rather than pointing at empty space. `order` is what puts the steps in a
- * sequence, and it is the author's numbering rather than the tree's, because a
- * walkthrough usually crosses a header, a list and a tab bar in an order the
- * layout knows nothing about.
- */
+/** Tour: dims the screen, cuts a hole around one control and puts a card beside it. Steps wrap
+ * their targets. */
 export const TourRoot = ({
 	children,
 	open,
@@ -72,14 +51,8 @@ export const TourRoot = ({
 
 	const words = { ...DEFAULT_LABELS, ...labels };
 
-	/*
-	 * Steps sort themselves by `order` rather than arriving in it, because the
-	 * tree decides when each one mounts and a tour that crosses a header, a list
-	 * and a tab bar mounts them in whatever order those render.
-	 *
-	 * Memoized because it is the context value every step subscribes to — the
-	 * one case React Compiler does not stabilize for us.
-	 */
+	// Steps sort by `order` since the tree mounts them in render order. Memoized: it is
+	// the context value every step subscribes to.
 	const context = useMemo(
 		() => ({
 			register: (entry: TourStepEntry) =>
@@ -115,11 +88,8 @@ export const TourRoot = ({
 		}
 	};
 
-	// Reopening starts the tour over rather than resuming where it was ended.
-	// Somebody who dismissed a walkthrough and asked for it again wants it from
-	// the top; resuming a half-read tour is a state nobody asked to be in.
-	// Adjusted during render rather than in an effect — the supported way to
-	// reset state when a prop changes, and it avoids a frame on the old step.
+	// Reopening restarts from the top. Adjusted during render, not in an effect, so
+	// the old step never gets a frame.
 	const [wasOpen, setWasOpen] = useState(resolvedOpen);
 	if (wasOpen !== resolvedOpen) {
 		setWasOpen(resolvedOpen);

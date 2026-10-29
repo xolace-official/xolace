@@ -1,8 +1,8 @@
 import { Button } from "heroui-native";
 import { View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 import { ParticleField } from "./particles/particle-field";
 
 const LINES = [
@@ -15,10 +15,8 @@ type Props = {
 	onUnderstand: () => void;
 };
 
-/**
- * First-time intro: sparse, barely-visible particle drift behind three quiet
- * lines and a text-only "I understand" button. Shown once per device.
- */
+/** First-time intro: sparse, barely-visible particle drift behind three quiet
+ * lines and a text-only "I understand" button. Shown once per device. */
 export function VentIntro({ onUnderstand }: Props) {
 	const handlePress = () => {
 		playSoftPress();

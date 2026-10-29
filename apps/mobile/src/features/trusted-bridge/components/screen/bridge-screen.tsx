@@ -23,13 +23,13 @@ import {
 	KeyboardStickyView,
 } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { BridgeDoneButton } from "@/src/features/trusted-bridge/components/bridge-done-button";
-import { BridgeIntro } from "@/src/features/trusted-bridge/components/bridge-intro";
-import { BridgeQuotaHint } from "@/src/features/trusted-bridge/components/bridge-quota-hint";
-import { ShimmerLoadingText } from "@/src/features/trusted-bridge/components/shimmer-loading-text";
-import { useBridgeDraft } from "@/src/features/trusted-bridge/hooks/use-bridge-draft";
-import { useAppStore } from "@/src/store/store";
+import { AppText } from "@/components/shared/app-text";
+import { BridgeDoneButton } from "@/features/trusted-bridge/components/bridge-done-button";
+import { BridgeIntro } from "@/features/trusted-bridge/components/bridge-intro";
+import { BridgeQuotaHint } from "@/features/trusted-bridge/components/bridge-quota-hint";
+import { ShimmerLoadingText } from "@/features/trusted-bridge/components/shimmer-loading-text";
+import { useBridgeDraft } from "@/features/trusted-bridge/hooks/use-bridge-draft";
+import { useAppStore } from "@/store/store";
 
 type Step = "recipient" | "draft";
 type Relationship = "parent" | "partner" | "friend" | "sibling";

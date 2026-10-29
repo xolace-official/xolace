@@ -6,22 +6,20 @@ import { PressableFeedback } from "heroui-native";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 // Placeholder until the freeze illustration lands.
 const ART = require("@/assets/images/flux/flux-campfire.png");
 
-/**
- * Shown once after a streak freeze covered missed days (#436). Opened by the
- * home screen with the count settle() returned.
- */
+/** Shown once after a streak freeze covered missed days (#436); opened by home with the count
+ * settle() returned. */
 export default function StreakHeld() {
 	const insets = useSafeAreaInsets();
 	const days = Number(useLocalSearchParams<{ days: string }>().days) || 1;
 	const acknowledgeFreezes = useMutation(api.streaks.state.acknowledgeFreezes);
 
-	// Acknowledge on the way out (the CTA or Android back), not on open: an app
-	// killed while this is up shows it again next launch.
+	// Acknowledge on the way out, not on open: an app killed while this is up
+	// shows it again next launch.
 	useEffect(
 		() => () => void acknowledgeFreezes().catch(() => {}),
 		[acknowledgeFreezes]

@@ -42,5 +42,3 @@ export const posthog = new PostHog(apiKey || "placeholder_key", {
 if (__DEV__) {
 	posthog.debug();
 }
-
-export const isPostHogEnabled = isPostHogConfigured;

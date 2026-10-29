@@ -4,7 +4,7 @@ import {
 	declinedCount,
 	intakePersonProperties,
 	questionAnsweredProps,
-} from "@/src/features/intake/analytics";
+} from "@/features/intake/analytics";
 
 describe("questionAnsweredProps", () => {
 	it("omits selection_count for a single-select", () => {

@@ -1,9 +1,10 @@
+import { useKeepAwake } from "expo-keep-awake";
 import { useEffect, useReducer } from "react";
 import { StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { PillButton } from "@/src/components/shared/pill-button";
-import { PreRollCard } from "@/src/features/sit-with-this/components/pre-roll-card";
+import { AppText } from "@/components/shared/app-text";
+import { PillButton } from "@/components/shared/pill-button";
+import { PreRollCard } from "@/features/sit-with-this/components/pre-roll-card";
 import { BeatRenderer } from "./beat-renderer";
 import { runnerReducer } from "./exercise-runner.reducer";
 import type { ExerciseData, RunnerPhase } from "./exercise-runner.types";
@@ -51,6 +52,9 @@ export function ExerciseRunner({
 	onExitEarly,
 	onSwap,
 }: Props) {
+	// Beats run on timers without a touch, and the pre-roll waits for one; keep
+	// the screen on for the whole exercise. Released on unmount.
+	useKeepAwake();
 	const steps = [...exercise.exercise.steps].sort((a, b) => a.order - b.order);
 	const totalBeats = steps.length;
 

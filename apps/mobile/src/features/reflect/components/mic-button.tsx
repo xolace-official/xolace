@@ -10,7 +10,7 @@ import Animated, {
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
-import { playSoftPress } from "@/src/lib/haptics";
+import { playSoftPress } from "@/lib/haptics";
 
 type Props = {
 	size: "sm" | "md";
@@ -98,8 +98,7 @@ export const MicButton = ({ size, isRecording, onPress }: Props) => {
 			hitSlop={10}
 			onPress={handlePress}
 		>
-			{/* A bordered surface, not a bare glyph: the way out that isn't the card
-          has to read as something you can press. */}
+			{/* A bordered surface, not a bare glyph: it has to read as pressable. */}
 			<Animated.View
 				className="border border-border bg-surface-secondary"
 				style={containerStyle}

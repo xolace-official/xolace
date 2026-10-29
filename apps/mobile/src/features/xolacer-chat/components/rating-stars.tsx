@@ -1,19 +1,15 @@
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 
-// Empty stars are the same glyph washed out, not an outline — an outlined
-// star next to filled ones reads as a rating scale, which is what it is.
+// Empty stars are the same glyph washed out, not an outline.
 const FILLED = { android: "star", ios: "star.fill", web: "star" } as const;
 const VALUES = [1, 2, 3, 4, 5];
 
-/**
- * Stars use the `warning` token rather than a new `--star` one: it's already
- * the amber every theme defines, and adding a token to eleven theme files for
- * one component is not worth the drift risk.
- */
+/** Stars use the `warning` token rather than a new `--star` one every theme would have to
+ * define. */
 function useStarColors() {
 	// useThemeColor resolves oklch tokens to 6-digit hex, so appending an alpha
 	// pair is a valid colour — that's how the empty star gets its wash.
@@ -21,12 +17,8 @@ function useStarColors() {
 	return { off: `${muted}30`, on: useThemeColor("warning") as string };
 }
 
-/**
- * Read-only rating for roster rows. Renders nothing without an average — the
- * 5-rating display threshold is enforced server-side, so an absent `rating`
- * means "not enough yet" and the caller shows a "New xolacer" chip instead.
- * A row of grey stars would read as a bad score, which is the opposite of true.
- */
+/** Read-only rating for roster rows. Renders nothing without an average (the threshold is
+ * server-side); the caller shows `NewXolacerChip` instead. */
 export function RatingStars({
 	rating,
 	ratingCount,

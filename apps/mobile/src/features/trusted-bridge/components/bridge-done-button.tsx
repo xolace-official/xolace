@@ -3,9 +3,9 @@ import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { Pressable, StyleSheet } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
-// Gentle overshoot so it "lands" — a small reward for having reached out.
+// Gentle overshoot so it "lands": a small reward for having reached out.
 const EASING: [number, number, number, number] = [0.34, 1.56, 0.64, 1];
 const ENTER = { duration: 360, easing: EASING, type: "timing" as const };
 const FROM = { opacity: 0, scale: 0.85 };
@@ -15,11 +15,7 @@ type Props = {
 	onPress: () => void;
 };
 
-/**
- * Liquid-glass "Done" pill. Appears in the draft nav only after a share has
- * actually completed — a calm, positive way out, distinct from the "Not right
- * now" dismissal below.
- */
+/** Liquid-glass "Done" pill, shown in the draft nav only after a share completed. */
 export function BridgeDoneButton({ onPress }: Props) {
 	const foreground = useThemeColor("foreground") as string;
 	const glass = isLiquidGlassAvailable();
@@ -34,8 +30,8 @@ export function BridgeDoneButton({ onPress }: Props) {
 		</>
 	);
 
-	// Glass path: the label sits inside the glass so every touch on the pill
-	// reaches it (its press swell), and nothing clips the swell.
+	// The label sits inside the glass so every touch reaches its press swell,
+	// and nothing clips the swell.
 	return (
 		<EaseView animate={TO} initialAnimate={FROM} transition={ENTER}>
 			<Pressable

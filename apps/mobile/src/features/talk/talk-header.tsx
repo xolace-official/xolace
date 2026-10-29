@@ -7,13 +7,13 @@ import { router, Stack } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { Platform, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { GlassSurface } from "@/src/components/shared/glass-surface";
-import { useAppTheme } from "@/src/context/app-theme-context";
-import { JUST_END, MIRROR_LATER } from "@/src/features/talk/talk-copy";
-import { useCompanionName } from "@/src/features/talk/use-companion-name";
-import type { Talk } from "@/src/features/talk/use-talk";
-import { useTimeLeft } from "@/src/features/talk/use-time-left";
+import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
+import { useAppTheme } from "@/context/app-theme-context";
+import { JUST_END, MIRROR_LATER } from "@/features/talk/talk-copy";
+import { useCompanionName } from "@/features/talk/use-companion-name";
+import type { Talk } from "@/features/talk/use-talk";
+import { useTimeLeft } from "@/features/talk/use-time-left";
 
 const ios = Platform.OS === "ios";
 // Only iOS 26 paints glass behind a transparent header; older iOS gets a blur.

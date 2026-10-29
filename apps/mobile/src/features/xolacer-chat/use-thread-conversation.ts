@@ -3,13 +3,8 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import type { ThreadConversation } from "./components/thread-screen";
 
-/**
- * The thread's conversation, seeded from the list the user tapped it in.
- *
- * Returns `undefined` when there is nothing to seed from — a push-notification
- * deep link, or a cold launch straight into this route — and the skeleton is
- * then telling the truth.
- */
+/** The thread's conversation, seeded from the list it was tapped in; `undefined` when there is
+ * nothing to seed from (deep link, cold launch). */
 export function useThreadConversation(
 	conversationId: string
 ): ThreadConversation | null | undefined {
@@ -26,9 +21,7 @@ export function useThreadConversation(
 		return conversation;
 	}
 
-	// Broadcast row never matches: it routes through `/xolace-channel`, not
-	// this `/chat/[conversationId]` route, and carries no `xolacer_conversations`
-	// id to seed a `ThreadConversation` from.
+	// The broadcast row routes through `/xolace-channel` and has no `xolacer_conversations` id.
 	const row = rows
 		?.filter((candidate) => candidate.kind === "pair")
 		.find((candidate) => candidate.id === conversationId);
@@ -36,11 +29,8 @@ export function useThreadConversation(
 		return undefined;
 	}
 
-	// `resumable`, `canRate` and `myRating` are per-conversation reads the list
-	// doesn't make. Rather than gate the whole thread on them, the seed is
-	// marked and the status bar alone waits — every resting or closed
-	// conversation used to sit on the skeleton for the round trip, and the
-	// messages never needed it (#342).
+	// `resumable`, `canRate` and `myRating` are reads the list does not make; the
+	// seed is marked so only the status bar waits for them (#342).
 	return {
 		...row,
 		canRate: false,

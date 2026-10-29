@@ -1,10 +1,10 @@
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AnimatedText } from "@/src/components/shared/animated-text";
-import { FeedbackSheet } from "@/src/features/session-end/components/feedback-sheet";
-import { FlameIntensitySelector } from "@/src/features/session-end/components/flame-intensity-selector";
-import { useHeavierFeedback } from "@/src/features/session-end/hooks/use-heavier-feedback";
+import { AnimatedText } from "@/components/shared/animated-text";
+import { FeedbackSheet } from "@/features/session-end/components/feedback-sheet";
+import { FlameIntensitySelector } from "@/features/session-end/components/flame-intensity-selector";
+import { useHeavierFeedback } from "@/features/session-end/hooks/use-heavier-feedback";
 
 type Props = {
 	sessionId?: Id<"sessions">;

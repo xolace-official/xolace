@@ -1,20 +1,15 @@
 import { SymbolView } from "expo-symbols";
 import { Radio, useThemeColor } from "heroui-native";
 import Animated, { ZoomIn } from "react-native-reanimated";
-import type { CrossPlatformSymbol } from "@/src/features/settings/components/settings-icons";
+import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 
 type Props = {
 	symbol: CrossPlatformSymbol;
 	isSelected: boolean;
 };
 
-/**
- * A radio indicator that reveals an icon when its option is selected.
- *
- * When a HeroUI Radio is selected, the indicator fills with the `accent`
- * color, so the symbol sitting on top uses `accent-foreground` (the contrast
- * color) to stay legible.
- */
+/** Radio indicator that reveals an icon when selected. The selected fill is
+ * `accent`, so the symbol uses `accent-foreground` to stay legible. */
 export const RadioIconIndicator = ({ symbol, isSelected }: Props) => {
 	const accentForeground = useThemeColor("accent-foreground") as string;
 

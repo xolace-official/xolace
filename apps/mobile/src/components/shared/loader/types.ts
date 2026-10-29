@@ -23,15 +23,9 @@ export interface LoaderProps extends ViewProps {
 	initialDelay?: number;
 	/** Repeat count. Use `-1` for infinite. @default -1 */
 	numberOfReps?: number;
-	/**
-	 * SharedValue that mirrors current progress on the UI thread.
-	 * Useful for deriving synced animations (e.g. translateY from progress).
-	 */
+	/** SharedValue mirroring current progress on the UI thread, for synced animations. */
 	onProgress?: SharedValue<number>;
-	/**
-	 * External progress SharedValue (0–1) for controlled mode.
-	 * Disables auto-play; animation is driven entirely by this value.
-	 */
+	/** External progress (0–1) for controlled mode; disables auto-play. */
 	progress?: SharedValue<number>;
 	/** Delay between repeat cycles in ms. @default 0 */
 	repeatDelay?: number;

@@ -1,7 +1,7 @@
 import { Radio, RadioGroup } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { cn } from "@/lib/utils";
 
 type Props = {
 	label: string;
@@ -11,10 +11,7 @@ type Props = {
 	className?: string;
 };
 
-/**
- * A labelled list of hours to pick one from — the "not before" / "not after"
- * halves of the quiet window, which are the same control twice.
- */
+/** Labelled list of hours to pick one from; both halves of the quiet window use it. */
 export const HourRadioGroup = ({
 	label,
 	value,

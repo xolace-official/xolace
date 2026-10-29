@@ -9,12 +9,10 @@ import { useThemeColor } from "heroui-native";
 import { type ReactNode, useEffect } from "react";
 import { Appearance } from "react-native";
 import { useUniwind } from "uniwind";
-import { useAppStore } from "@/src/store/store";
+import { useAppStore } from "@/store/store";
 
-// Single source of truth for the native route background. The navigator paints
-// every screen container (and opaque / formSheet headers) with the nav theme's
-// colors, so feeding it the active app palette themes all nested stacks at once
-// and paints the container before JS content mounts — no stock grey/white edge.
+// Single source of truth for the native route background: the navigator paints every screen
+// container with the nav theme's colors before JS content mounts, so no stock grey/white edge.
 export function NavThemeProvider({ children }: { children: ReactNode }) {
 	const { theme } = useUniwind();
 	const [background, foreground, border, accent] = useThemeColor([
@@ -52,13 +50,9 @@ export function NavThemeProvider({ children }: { children: ReactNode }) {
 		SystemUI.setBackgroundColorAsync(background);
 	}, [background]);
 
-	// Native chrome (liquid glass sheets/headers/tabs, alerts, keyboards) reads
-	// the OS appearance, not our theme — a dark theme on a light-mode phone got
-	// light glass under light text. Force it to match an explicit choice. In
-	// "system" mode leave it unspecified: forcing would freeze the OS listener
-	// that the system theme follows. A colour theme in system mode is already
-	// frozen (theme-bootstrap resolves `<id>-<mode>` once at launch), so force
-	// it there too or an OS flip leaves native chrome on the wrong side.
+	// Native chrome (glass sheets, alerts, keyboards) follows the OS appearance, not the theme. Force it for an
+	// explicit choice; "system" with the default palette stays unspecified so the OS listener keeps working. A
+	// colour theme in system mode is already frozen at launch (theme-bootstrap), so force it too.
 	const mode = useAppStore((s) => s.theme);
 	const colorThemeId = useAppStore((s) => s.colorThemeId);
 	const followsOS = mode === "system" && colorThemeId === "default";

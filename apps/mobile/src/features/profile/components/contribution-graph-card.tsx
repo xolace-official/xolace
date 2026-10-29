@@ -1,16 +1,17 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
+import { Surface } from "heroui-native";
 import { useRef, useState } from "react";
 import type { ScrollViewInstance } from "react-native";
 import { ScrollView, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	buildHeatmapCalendar,
 	type HeatmapCell,
 	HeatmapChart,
-} from "@/src/components/ui/heatmap-chart";
-import { CardInfo } from "@/src/features/profile/components/card-info";
+} from "@/components/ui/heatmap-chart";
+import { CardInfo } from "@/features/profile/components/card-info";
 import {
 	cellState,
 	dayKeyOf,
@@ -21,9 +22,9 @@ import {
 	parseDayKey,
 	readout,
 	todayIn,
-} from "@/src/features/profile/contribution-graph";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { tap } from "@/src/lib/haptics";
+} from "@/features/profile/contribution-graph";
+import { tap } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const GAP = 3;
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -34,12 +35,8 @@ const LEVEL_OPACITY = [1, 0.45, 0.65, 0.85, 1];
 const GRAPH_INFO =
 	"Every square is a day since you joined. The brighter it glows, the more ways you showed up. Press and hold any day to see what you did.";
 
-/**
- * The contribution graph (#438): every day since join, shaded by breadth in
- * ember. Cell size is set so the first 16 weeks fill the card, then held — a
- * longer history scrolls back to join instead of shrinking. Hold a cell and
- * the header reads that day out.
- */
+/** The contribution graph (#438): every day since join, shaded by breadth. Cell
+ * size fills the first 16 weeks, then holds; longer histories scroll back to join. */
 export function ContributionGraphCard({
 	staggerDelay = 150,
 }: {
@@ -48,8 +45,8 @@ export function ContributionGraphCard({
 	const history = useQuery(api.streaks.history.get);
 	const [width, setWidth] = useState(0);
 	const [heldDay, setHeldDay] = useState<string | null>(null);
-	// Read by the gesture callback rather than closing over heldDay, so the
-	// callback (and the chart's props) stay put while a hold drags across days.
+	// Read by the gesture callback rather than closed over, so the callback and
+	// the chart's props stay put while a hold drags across days.
 	const holding = useRef(false);
 	const scrollRef = useRef<ScrollViewInstance>(null);
 	const frost = useTokenColor("frost");
@@ -128,7 +125,7 @@ export function ContributionGraphCard({
 				type: "timing",
 			}}
 		>
-			<View className="rounded-3xl border border-border/65 bg-surface p-4">
+			<Surface className="p-4">
 				<HeldReadout dayKey={heldDay} indexed={indexed} />
 
 				<View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
@@ -164,15 +161,12 @@ export function ContributionGraphCard({
 						</ScrollView>
 					)}
 				</View>
-			</View>
+			</Surface>
 		</EaseView>
 	);
 }
 
-/**
- * The header, split out so only it re-renders as a hold moves between days —
- * in the card, `readout(heldDay, indexed)` tied every derived prop to heldDay.
- */
+/** Split out so only the header re-renders as a hold moves between days. */
 function HeldReadout({
 	dayKey,
 	indexed,
@@ -189,7 +183,8 @@ function HeldReadout({
 			{caption ? (
 				<AppText className="mt-0.5 text-[12px] text-muted">{caption}</AppText>
 			) : (
-				// At rest the caption slot carries the hold hint, so nothing shifts when a day is held.
+				// At rest the caption slot carries the hold hint, so nothing shifts when a day
+				// is held.
 				<View className="mt-0.5 flex-row items-center gap-1.5">
 					<CardInfo description={GRAPH_INFO} title="Your days" />
 					<AppText className="text-[11px] text-muted">

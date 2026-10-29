@@ -4,7 +4,7 @@
 import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";
 import { Presets } from "react-native-pulsar";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	COMPOUNDING_SHORT,
 	COMPOUNDING_WORD,
@@ -16,10 +16,10 @@ import {
 	subOf,
 	toneOf,
 	trendBasis,
-} from "@/src/features/insights/domains";
-import { SteadinessRing } from "@/src/features/insights/steadiness-ring";
-import { TrendChip } from "@/src/features/insights/trend-chip";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
+} from "@/features/insights/domains";
+import { SteadinessRing } from "@/features/insights/steadiness-ring";
+import { TrendChip } from "@/features/insights/trend-chip";
+import { useTokenColor } from "@/lib/use-token-color";
 
 export type DomainView = "grid" | "list";
 
@@ -182,8 +182,7 @@ export function DomainRow({ d, selected, onPress }: ItemProps) {
 	);
 }
 
-/** Unfilled in the free view: the meter's shape, never its value. For Xolace+
- * the first `fill` share is inked and the person's usual stands taller in --foreground. */
+/** Unfilled in the free view. For Xolace+ the `fill` share is inked and the usual stands taller. */
 function TickBar({
 	fill,
 	mark,

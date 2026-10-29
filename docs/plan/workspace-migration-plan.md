@@ -1,6 +1,6 @@
 # Xolace Workspace: Structure & Migration Plan
 
-**Status:** Decisions agreed · Phase 0 output · 2026-10-21
+**Status:** Decisions agreed 2026-10-21 · updated 2026-10-27: Phases 1–3 done, Phase 4 has the auth spikes (4a), the backend auth (4b), the CLI (4d) and admin v1 (4f) done, and web (4c), desktop (4e) and the later admin views deferred, Phase 5 in review. Each phase below carries its own status.
 
 The goal is one repository holding the mobile app, the user web app (which also becomes the desktop app), an admin dashboard and a TUI/CLI, all running on one Convex backend. Many people and agents should be able to work in it at the same time without stepping on each other.
 
@@ -109,7 +109,7 @@ The plan for `./convex/*`:
 |---|---|---|
 | Mobile | `@clerk/expo` + `ConvexProviderWithClerk`. Keep the existing `useResilientClerkAuth`, `AuthSyncGuard` and `AccountBootstrapBoundary`. | Clerk session JWT, `aud=convex` |
 | Web | `@clerk/nextjs` + `clerkMiddleware`, server build on Vercel | Clerk session JWT, `aud=convex` |
-| Admin | Same as web, same Clerk instance. Access requires `role: "admin"` in Clerk `publicMetadata`, which the `convex` JWT template puts into the token. The middleware also blocks non-admins, but that only affects the UI; Convex is the actual security check (see §3a). | Clerk session JWT, `aud=convex`, with a `role` claim |
+| Admin | Same as web, same Clerk instance. Staff sign in with work email + password (no sign-up). Access requires `role: "admin"` in Clerk `publicMetadata`, which the customized session token copies into a `role` claim. The admin layout also blocks non-admins, but that only affects the UI; Convex is the actual security check (see §3a). | Clerk session JWT, `aud=convex`, with a `role` claim |
 | TUI/CLI | `xolace login` opens the browser to the web app's `/connect` page. That page signs the user in, sends them to Clerk's `/oauth/authorize` (PKCE), and Clerk redirects back to a local port on the machine (the t3code pattern). The refresh token is stored in the OS keychain (`@napi-rs/keyring`), falling back to a 0600 file. | Clerk OAuth **ID token**, `aud=<oauth client id>` |
 | Desktop (Tauri) | Same OAuth + PKCE flow as the CLI, in the system browser. It returns through a local port or the `xolace://` deep link, and Rust stores the refresh token in the keychain. The webview uses `ConvexProviderWithAuth`. Clerk's normal web components are not used there. | Same as the CLI |
 
@@ -130,6 +130,17 @@ The plan for `./convex/*`:
 5. Confirm `convex/react` hooks work under the `@opentui/react` renderer on Bun.
 6. Confirm `@napi-rs/keyring` works under Bun.
 
+**Results (2026-10-27, Bun 1.3.14, macOS):** all six pass. Spikes 1–4 ran `apps/cli/spikes/oauth.ts` (prints claims, never tokens) against the Clerk **development** instance, OAuth app `Xolace CLI (spike)`: public client (PKCE, no secret), scopes `openid profile email offline_access`, consent screen and device authorization grant on, redirect URI `http://127.0.0.1:53682/callback` (+ `localhost`). Each token was also checked by a throwaway local Convex backend whose `auth.config.ts` had the 4b shape (same Clerk domain, `applicationID` = the client ID).
+- **1 ✅** The `id_token` has `iss` = `https://curious-kingfish-86.clerk.accounts.dev` (the apps' Clerk dev domain), `sub` = the Clerk user ID, `aud` = `[<client id>]`, lifetime 24 h. Convex accepted it and derived `tokenIdentifier` = `<iss>|user_…`, the same `iss|sub` the session JWT gives web and mobile, so a CLI sign-in is the same user. It carries no `role` claim (that comes from the customized session token), so admin functions never work over OAuth, as intended.
+- **2 ✅** `grant_type=refresh_token` with only `client_id` (auth method `none`) returns a new `id_token` that Convex accepts. The refresh token **rotates** on every use: the CLI and desktop must store the new one after each refresh.
+- **3 ✅** A sign-in on unregistered port 53999 succeeded with only port 53682 registered: Clerk ignores the port on loopback redirects (RFC 8252 §7.3), so the CLI can bind any free port. A redirect URI that isn't registered at all fails after sign-in with `invalid_request` ("does not match any of the OAuth 2.0 Client's pre-registered redirect urls"), not before.
+- **4 ✅** Device authorization (RFC 8628) is offered: it's in discovery (`device_authorization_endpoint`, grant `urn:ietf:params:oauth:grant-type:device_code`), is a per-app toggle in the dashboard with no beta label, and a full run returned an `id_token` Convex resolves to the same `tokenIdentifier`. Codes last 10 minutes; the verification page is `https://<frontend api>/device`. Use it for `xolace login` over SSH or when no browser can open. Not yet checked on the production instance.
+- **5 ✅** `ConvexProvider` + `useQuery` + `useMutation` render under `@opentui/react` 0.6.6: a query renders, a mutation from inside the tree re-renders it, and a write from another client reaches it (`apps/cli/spikes/convex-react.test.tsx`, run against a local anonymous Convex backend with `SPIKE_CONVEX_URL`; skipped without one). Two things for 4d:
+  - **Types:** OpenTUI's JSX namespace has no `ElementType`, so TS rejects any `React.FC`-typed component, `ConvexProvider` included ("cannot be used as a JSX component"). Runtime is fine; re-type it once as a plain function component.
+  - **Tests:** `testRender` turns on React's act environment and its `waitForFrame` counts render passes, not time. Tests that wait on the network poll on a clock with the pause inside `act()`.
+- **6 ✅** `@napi-rs/keyring` 2.1.2 writes, reads and deletes a keychain entry under Bun (`apps/cli/spikes/keyring.ts`). macOS only so far; Linux (Secret Service, often missing on servers and over SSH) and Windows are untested, which is why the `0600` file fallback stays.
+- The CLI tsconfig now lists `"types": ["bun"]`: TypeScript 6 loads no `@types` packages unless listed, so `bun:test` and `process` didn't resolve.
+
 ### 3a. Admin dashboard and content pipeline
 
 **Why a separate app.** Admin-only code, admin dependencies and admin routes never reach the user bundle or the desktop app. Admin gets its own deploy, its own domain, and its own entry in CODEOWNERS. It shares `packages/ui` with web, which means `packages/ui` now has two real users and is worth having as a package.
@@ -138,7 +149,7 @@ The plan for `./convex/*`:
 - Every admin function sits in `packages/backend/convex/admin/*`.
 - Each is built with `adminQuery`, `adminMutation` and `adminAction`. These are custom function builders that check the `role` claim and throw if it's missing.
 - A Biome rule stops `apps/web`, `apps/mobile` and `apps/cli` from importing `api.admin.*`.
-- The existing `convex/admin.ts` is folded into this.
+- The existing `convex/admin.ts` is folded into this (now `convex/admin/xolacers.ts`).
 
 **Content ingestion replaces the scripts that re-upload everything.** Today `scripts/kindling` and `scripts/library` push the whole manifest every run. The new design is one deep module, `content.ingest`, with a small interface:
 - **Upload.** Admin requests an upload URL and the file goes straight from the browser to R2 (`@convex-dev/r2`, already a dependency) or Convex storage.
@@ -195,6 +206,7 @@ Run it in a fresh clone of `xolace_app` (e.g. `repos/xolace`), on a `migration/m
    - Merge `.gitignore` and `.easignore`.
 4. **Commit D: format only** with `ultracite fix`, recorded in `.git-blame-ignore-revs`. Lint problems that can't be auto-fixed go into a tracked list and get fixed in later PRs; they don't block the move.
 5. **Version bumps**, each in its own PR with device testing: expo patch versions; uniwind 1.11 → 1.12 (re-cut or drop the patch); `@clerk/expo` 4.6 → 4.12; backend `ai` 6 → 7. Remove the unused `@tanstack/react-query`, `@convex-dev/react-query` and `@convex-dev/agent`.
+   *Status 2026-10-27:* uniwind is at 1.13.0 (#617), `@clerk/expo` at 4.14, `ai` at 7 (root catalog), and the three unused packages are gone. Expo is on 58.0.16.
 
 **Done when:**
 - all of the roughly 1,158 tests pass
@@ -214,8 +226,9 @@ Run it in a fresh clone of `xolace_app` (e.g. `repos/xolace`), on a `migration/m
 - #629 `docs: compare React Native desktop and Tauri for the desktop app` (verdict: keep Tauri; `docs/research/desktop-platform.md`)
 - #630 `docs(repo): fix the dev Convex URL in the release guide`
 
+**First release:** the first `dev` → `main` release went out on 2026-10-25 (#638). Its `release.yml` run deployed prod Convex, then web and admin to Vercel Production, and started the EAS mobile release (mobile 1.15.0, the first store build on the fingerprint runtime). Whether that build cleared store review is tracked in EAS, not here.
+
 **Left:**
-- **The first `dev` → `main` release** (merge commit, owner-run) hasn't happened. It deploys prod Convex for the first time from `release.yml`, ships mobile 1.15.0 as the first store build on the fingerprint runtime (1.14.0 is what's in the stores), and does the first Production deploys of web and admin.
 - **Desktop releases are dormant** until 4e: the static export is blocked by `@clerk/nextjs`'s `ClerkProvider`, which uses server actions. Tagging also needs the signing secrets listed in `desktop-release.yml` (Tauri updater, Apple, Windows).
 - **Deferred edge case:** deploy hooks build the tip of `main`, not the commit that was released. Two quick merges can build web/admin from a commit whose backend hasn't deployed yet. Later fix: deploy with the Vercel CLI (`VERCEL_TOKEN`) at an explicit SHA.
 
@@ -240,9 +253,19 @@ Run it in a fresh clone of `xolace_app` (e.g. `repos/xolace`), on a `migration/m
 
 Steps 4c, 4d, 4e and 4f can run in parallel. 4f needs only 4b's role claim, not the OAuth spikes, so it can start first.
 
+**Status 2026-10-27:**
+- **4f admin v1: done.** The `adminQuery`/`adminMutation`/`adminAction` builders, the role claim, the content UI on Convex, R2 uploads, bulk import and the search index page shipped in #642–#645, #647 and #650. Build order, decisions and what's still open: `docs/plan/admin-v1.md`. The later admin views (users and support, moderation and feedback queues, feature flags, job health) are **deferred** until we pick them up.
+- **4a: done** (2026-10-27): all six spikes pass; results under §3 "Results".
+- **4b: done.** `auth.config.ts` adds the OAuth provider when `CLERK_OAUTH_CLIENT_ID` is set, and `users.getMe` returns who is signed in (#653). The OAuth apps exist in both Clerk instances and the variable is set on dev, staging, previews and prod (`docs/setup/oauth-clients.md`). OAuth tokens carry no `role` claim, so admin stays web-only.
+- **4d: done** (#654). `xolace login` (browser + PKCE on a loopback port, `--device` and the default over SSH), `logout` and `whoami`, the session in the keychain with a `0600` file fallback, a refreshing `fetchToken` for `ConvexReactClient`, and a first live view of `getMe`. Login goes straight to Clerk's hosted OAuth page, so it doesn't need `/connect`. Not done, and only needed if the CLI ships to users: more views, and a packaged binary with the prod config built in (today it reads `XOLACE_*` env).
+- **4c: deferred**, with the `/connect` page, until we pick it up later. Web stays the scaffold placeholder.
+- **4e: deferred** with 4c, since desktop wraps web's static export. When it resumes it still has to solve the `ClerkProvider` static-export problem and add the signing secrets (see Phase 3 "Left").
+
 ### Phase 5: Deeper refactors, later and one PR each
 
-- `@/*` alias → `./src/*`.
+**Status 2026-10-28:** in review, as one PR on `refactor/mobile-phase-5` (one commit per item).
+
+- `@/*` alias → `./src/*`. `@/assets/*` and `@/modules/*` keep their top-level folders.
 - Untangle the feature cycles: `purchases` ↔ `talk` ↔ `settings` and `library` ↔ `browse` / `kindling`. Turn `purchases` into an entitlements module.
 - Add an import-cycle test and knip with `includeEntryExports`.
 
@@ -334,7 +357,7 @@ Also:
 3. **Branches in flight.** Handled by the freeze in D7.
 4. **Formatting churn hiding real diffs.** Handled by D5, a separate commit listed in the blame-ignore file.
 5. **The Tauri sign-in trap.** It works against a Clerk dev instance and fails in prod. Test against prod early (spike 4a).
-6. **Feature cycles in mobile.** Left alone during the move and fixed in Phase 5.
+6. **Feature cycles in mobile.** Left alone during the move and fixed in Phase 5; `src/features/import-cycles.test.ts` keeps them out.
 
 ---
 

@@ -94,7 +94,8 @@ Staging uses the Clerk **development** instance. Its JWT issuer (the "Frontend A
 URL") is `https://curious-kingfish-86.clerk.accounts.dev`; confirm it in the Clerk
 dashboard → dev instance → **Configure → API keys** (or the Convex integration page).
 You set it as `CLERK_JWT_ISSUER_DOMAIN` in Step 4. The Clerk dev instance already has
-the `convex` JWT template (the dev deployment uses it), so nothing changes in Clerk.
+the Convex integration: its customized session token sets `aud: "convex"` and a
+`role` claim (the dev deployment uses it), so nothing changes in Clerk.
 
 ## Step 4: Staging Convex environment variables
 
@@ -111,6 +112,7 @@ means you can copy the value from the dev deployment `groovy-mandrill-892`.
 | Name | Purpose | Value for staging |
 |---|---|---|
 | `CLERK_JWT_ISSUER_DOMAIN` | Which Clerk instance's tokens are accepted (`auth.config.ts`). **Required to deploy.** | Clerk dev issuer (Step 3) |
+| `CLERK_OAUTH_CLIENT_ID` | Accepts the CLI and desktop's OAuth ID tokens (`auth.config.ts`). Optional: unset, they get "Unauthenticated" | Client ID of the dev instance's OAuth app ([oauth-clients.md](./oauth-clients.md)) |
 | `POSTHOG_PROJECT_TOKEN` | PostHog component project token. **Required to deploy.** | Dev value OK (or a staging PostHog project) |
 | `POSTHOG_HOST` | PostHog API host. Optional | Dev value OK |
 | `POSTHOG_PERSONAL_API_KEY` | PostHog feature-flag evaluation. Optional | Dev value OK |

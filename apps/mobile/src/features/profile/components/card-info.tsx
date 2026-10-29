@@ -1,19 +1,16 @@
 import { SymbolView } from "expo-symbols";
 import { Popover } from "heroui-native";
 import { Pressable } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { useTokenColor } from "../hooks/use-token-color";
+import { AppText } from "@/components/shared/app-text";
+import { useTokenColor } from "@/lib/use-token-color";
 
 type Props = {
 	title: string;
 	description: string;
 };
 
-/**
- * Small info affordance beside a card title. Tapping the icon opens a popover
- * explaining what the card shows. The trigger is its own Pressable so it claims
- * the touch and never fires the surrounding card's press handler.
- */
+/** Info affordance beside a card title that opens a popover. Its own Pressable
+ * claims the touch so the surrounding card's press never fires. */
 export function CardInfo({ title, description }: Props) {
 	const muted = useTokenColor("muted");
 

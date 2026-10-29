@@ -3,18 +3,14 @@ import { SymbolView } from "expo-symbols";
 import * as Updates from "expo-updates";
 import { useThemeColor } from "heroui-native";
 import { useState } from "react";
-import { REPLAY_ICON } from "@/src/features/settings/components/settings-icons";
-import { SettingsRow } from "@/src/features/settings/components/settings-row";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { REPLAY_ICON } from "@/features/settings/components/settings-icons";
 
 // Dev clients load JS from Metro, so there is nothing for EAS Update to swap in.
 const updatesEnabled = Updates.isEnabled && !__DEV__;
 
-/**
- * Manual EAS Update check. Only *checks*: once `isUpdateAvailable` flips,
- * `useOtaUpdate` in the root layout fetches it and shows the "Update Ready"
- * sheet, so there is one fetch path. No `reloadAsync` here, for the same
- * crash reason documented in `update-bottom-sheet.tsx` — it applies on next open.
- */
+/** Manual EAS Update check. Only checks: `useOtaUpdate` in the root layout does
+ * the one fetch. No `reloadAsync` here (crash, see `update-bottom-sheet.tsx`). */
 export const UpdateRow = ({ isLast }: { isLast?: boolean }) => {
 	const mutedColor = useThemeColor("muted") as string;
 	const { isChecking, isDownloading, isUpdateAvailable, isUpdatePending } =
@@ -60,7 +56,7 @@ export const UpdateRow = ({ isLast }: { isLast?: boolean }) => {
 	);
 };
 
-/** "Version 1.14.0 · Update Oct 12, 2026 · preview" — channel omitted on production. */
+/** "Version 1.14.0 · Update Oct 12, 2026 · preview"; channel omitted on production. */
 export function useVersionLabel() {
 	const { currentlyRunning } = Updates.useUpdates();
 	const update =

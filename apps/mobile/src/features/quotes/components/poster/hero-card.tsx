@@ -4,19 +4,13 @@ import type { ReactNode } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { PosterSurface } from "@/src/features/quotes/components/poster/poster-surface";
+import { AppText } from "@/components/shared/app-text";
+import { PosterSurface } from "@/features/quotes/components/poster/poster-surface";
 
 const BACK_ICON = { android: "chevron_left", ios: "chevron.left" } as const;
 
-/**
- * The hero: the poster with the screen's chrome printed on it.
- *
- * The back button lives *inside* the card, on the fixed palette — a `GlassView`
- * would read the themed background behind the poster instead. That placement is
- * also what keeps it reachable during a cold start that hits the network, since
- * `children` is a slot the skeleton and error render into (#309).
- */
+/** The poster with the screen's chrome printed on it; the back button sits inside so a cold
+ * start keeps it reachable (#309). */
 export function HeroCard({
 	onBack,
 	star,

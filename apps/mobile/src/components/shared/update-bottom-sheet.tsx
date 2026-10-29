@@ -2,8 +2,8 @@ import * as Linking from "expo-linking";
 import { BottomSheet, Button } from "heroui-native";
 import type { FC } from "react";
 import { View } from "react-native";
-import { BottomSheetBlurOverlay } from "@/src/components/bottom-sheet-blur-overlay";
-import { STORE_URL } from "@/src/lib/constants/links";
+import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
+import { STORE_URL } from "@/lib/constants/links";
 
 export type UpdateBottomSheetMode = "new-version" | "ota-update";
 
@@ -45,10 +45,9 @@ export const UpdateBottomSheet: FC<Props> = ({
 			}
 			return;
 		}
-		// No Updates.reloadAsync() here: the relaunch destroys the JS runtime while pending
-		// JSI promises are still in flight on expo's async-function queue, and their
-		// JavaScriptPromise destructors then deref the dead runtime (EXC_BAD_ACCESS on iOS).
-		// The already-fetched update applies on the next cold start instead.
+		// No Updates.reloadAsync() here: the relaunch destroys the JS runtime while JSI promises
+		// are in flight and their destructors deref it (EXC_BAD_ACCESS on iOS). The fetched
+		// update applies on the next cold start instead.
 		onOpenChange(false);
 	};
 

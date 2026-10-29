@@ -12,8 +12,8 @@ import {
 	View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { useQuoteShareActions } from "@/src/features/quotes/hooks/use-quote-share-actions";
+import { AppText } from "@/components/shared/app-text";
+import { useQuoteShareActions } from "@/features/quotes/hooks/use-quote-share-actions";
 import { QuickAction } from "./quick-action";
 import { SocialIcon } from "./social-icon";
 
@@ -24,9 +24,8 @@ type Props = {
 	onClose: () => void;
 };
 
-// WhatsApp / Telegram deep-link image sharing is broken on iOS at the OS level
-// (their URL schemes only accept text). On iOS we surface Instagram + More,
-// and users can reach WhatsApp/Telegram from the system share sheet via More.
+// WhatsApp and Telegram URL schemes only accept text on iOS, so iOS surfaces
+// Instagram + More; the system sheet under More still reaches them.
 const SOCIAL_ITEMS = (
 	Platform.OS === "ios"
 		? [
@@ -65,9 +64,8 @@ export function QuoteShareSheet({
 		saveToLibrary,
 	} = useQuoteShareActions(imageUri, quoteType);
 
-	// The poster has no chosen frame — its aspect is whatever the hero's own
-	// geometry comes to (#317) — so the preview takes the exported image's aspect
-	// rather than a fixed 9:16 box that crops the title and the wordmark off.
+	// The preview takes the exported image's aspect (#317); a fixed 9:16 box
+	// crops the title and the wordmark off.
 	const [aspect, setAspect] = useState<number | null>(null);
 	const previewWidth = width * 0.72;
 	const previewHeight = aspect
@@ -113,7 +111,7 @@ export function QuoteShareSheet({
 			visible={visible}
 		>
 			<View className="flex-1" style={backdropStyle}>
-				{/* Gradient layers — give GlassView content to refract */}
+				{/* Gives GlassView content to refract. */}
 				<LinearGradient
 					colors={gradientTopColors}
 					end={GRADIENT_TOP_END}
@@ -127,7 +125,6 @@ export function QuoteShareSheet({
 					style={styles.gradientBottom}
 				/>
 
-				{/* Header */}
 				<View
 					className="flex-row items-center justify-between px-6"
 					style={headerStyle}
@@ -151,7 +148,6 @@ export function QuoteShareSheet({
 					<View style={styles.spacer} />
 				</View>
 
-				{/* Image preview */}
 				<View className="items-center">
 					<View style={previewContainerStyle}>
 						{imageUri ? (
@@ -173,7 +169,6 @@ export function QuoteShareSheet({
 					</View>
 				</View>
 
-				{/* Quick actions */}
 				<View
 					className="flex-row justify-center gap-8"
 					style={styles.quickActionsRow}
@@ -194,7 +189,6 @@ export function QuoteShareSheet({
 					/>
 				</View>
 
-				{/* Social row */}
 				<View className="flex-row justify-center gap-6" style={socialRowStyle}>
 					{SOCIAL_ITEMS.map((item) => (
 						<SocialIcon

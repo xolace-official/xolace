@@ -13,16 +13,14 @@ import type {
 	LoaderContextValue,
 	LoaderKeyframeViewProps,
 	LoaderProps,
-} from "@/src/components/shared/loader/types";
-import { useLoaderAnimation } from "@/src/components/shared/loader/use-loader-animation";
+} from "@/components/shared/loader/types";
+import { useLoaderAnimation } from "@/components/shared/loader/use-loader-animation";
 import {
 	ANGLE_TRANSFORM_KEYS,
 	parseKeyframes,
-} from "@/src/components/shared/loader/utils";
+} from "@/components/shared/loader/utils";
 
-export const LoaderContext = createContext<LoaderContextValue | null>(null);
-
-// ------------------------------------------
+const LoaderContext = createContext<LoaderContextValue | null>(null);
 
 const useLoader = (): LoaderContextValue => {
 	const context = useContext(LoaderContext);
@@ -31,8 +29,6 @@ const useLoader = (): LoaderContextValue => {
 	}
 	return context;
 };
-
-// ------------------------------------------
 
 /** Root component. Provides progress SharedValue (0–1) to children via context. */
 const LoaderRoot = React.forwardRef<ViewInstance, LoaderProps>(
@@ -93,8 +89,6 @@ const LoaderRoot = React.forwardRef<ViewInstance, LoaderProps>(
 
 LoaderRoot.displayName = "Loader";
 
-// ------------------------------------------
-
 /** Animated.View driven by loader progress and keyframes. Keys 0-1 or 0-100. */
 const LoaderKeyframeView = React.forwardRef<
 	Animated.View,
@@ -151,11 +145,8 @@ const LoaderKeyframeView = React.forwardRef<
 
 LoaderKeyframeView.displayName = "Loader.KeyframeView";
 
-// ------------------------------------------
-
 const Loader = Object.assign(LoaderRoot, {
 	KeyframeView: LoaderKeyframeView,
 });
 
-export { useLoader };
 export default Loader;

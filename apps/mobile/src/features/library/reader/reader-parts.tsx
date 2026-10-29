@@ -12,25 +12,25 @@ import {
 import Animated from "react-native-reanimated";
 import { useCSSVariable } from "uniwind";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { CoverImage } from "@/src/features/library/cover-image";
+import { AppText } from "@/components/shared/app-text";
+import { CoverImage } from "@/features/library/cover-image";
 import {
 	COVER_BUTTON,
 	CoverGlass,
-} from "@/src/features/library/reader/cover-glass";
-import { COVER_SCRIM } from "@/src/features/library/reader/cover-palette";
+} from "@/features/library/reader/cover-glass";
+import { COVER_SCRIM } from "@/features/library/reader/cover-palette";
 import {
 	headerCredit,
 	metaLabel,
 	metaLine,
 	prepareBody,
-} from "@/src/features/library/reader/reader-copy";
-import type { ReaderEntry } from "@/src/features/library/reader/reader-screen";
+} from "@/features/library/reader/reader-copy";
+import type { ReaderEntry } from "@/features/library/reader/reader-screen";
 import {
 	logDropped,
 	useRecord,
-} from "@/src/features/library/reader/use-read-signals";
-import { cn } from "@/src/lib/utils";
+} from "@/features/library/reader/use-read-signals";
+import { cn } from "@/lib/utils";
 
 const BACK_ICON = {
 	android: "arrow_back",
@@ -58,7 +58,7 @@ const SOURCE_ICON = {
 	web: "account_balance",
 } as const;
 const XOLACE_LOGO = require("@/assets/images/icon.png");
-// Callouts arrive as quotes led by their kind in bold (`prepareBody`), so the kind is read first.
+// Callouts arrive as quotes led by their kind in bold (`prepareBody`), so the kind reads first.
 const A11Y_LABELS = { blockquote: { quote: "Quote" } };
 
 // A share link opens the reader with nothing under it.
@@ -117,15 +117,8 @@ export function AaButton({ onPress }: { onPress: () => void }) {
 	);
 }
 
-/**
- * "I want this back" (#410): a plain toggle on the entry, same on the cards
- * and in the reader. On a cover photo it takes the fixed cover ink.
- */
-/**
- * Cards' `saved` comes from list queries the optimistic update can't reach:
- * hold the tapped value until the server answers, and take no second toggle.
- * One per row, shared by every control that flips it (button, context menu).
- */
+/** Save toggle (#410), one per row. Holds the tapped value until the server answers: list
+ * queries miss the optimistic update. */
 export function useSaveToggle(entryId: ReaderEntry["_id"], saved: boolean) {
 	const record = useRecord();
 	const [pending, setPending] = useState<boolean | null>(null);
@@ -179,11 +172,8 @@ export function SaveButton({
 	);
 }
 
-/**
- * The entry's title and meta line — on the cover photo, or at the top of the
- * sheet at accessibility text sizes. First thing a screen reader lands on
- * (#400); focus never jumps to the resume point on its own, it's an action.
- */
+/** Title and meta line. First thing a screen reader lands on (#400); resume is an action, never
+ * automatic. */
 export function ReaderTitle({
 	entry,
 	onCover,
@@ -193,7 +183,7 @@ export function ReaderTitle({
 	entry: ReaderEntry;
 	onCover: boolean;
 	onBackToTop: () => void;
-	/** Only when there's a place to resume. */
+	/** Only when there is a place to resume. */
 	onResume?: () => void;
 }) {
 	return (
@@ -234,10 +224,7 @@ export function ReaderTitle({
 	);
 }
 
-/**
- * Who wrote it and how it reached this page, keyed on `reuse`. Every entry
- * shows it (#383); `aside` sits at its trailing edge (the Listen pill, #411).
- */
+/** Source credit keyed on `reuse`, on every entry (#383); `aside` is the Listen pill (#411). */
 export function SourceCredit({
 	entry,
 	aside,
@@ -291,7 +278,7 @@ export function CoverPhoto({
 }) {
 	return (
 		<Animated.View className="bg-cover-scrim" style={style}>
-			{/* ponytail: no cover → the plain scrim; the subject's cover lands when subjects get art */}
+			{/* No cover: the plain scrim until subjects get art. */}
 			<CoverImage
 				contentFit="cover"
 				style={StyleSheet.absoluteFill}
@@ -308,7 +295,8 @@ export function CoverPhoto({
 	);
 }
 
-/** The entry body. The renderer handles headings, links, alt text, lists and quotes for screen readers. */
+/** The entry body. The renderer handles headings, links, alt text, lists and quotes for screen
+ * readers. */
 export function ReaderBody({
 	markdown,
 	style,

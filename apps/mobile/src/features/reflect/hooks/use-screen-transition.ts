@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Keyboard } from "react-native";
-import { normalizeScreen } from "@/src/features/reflect/reflect-transitions";
-import type { ReflectionStateName } from "@/src/features/reflect/types";
+import { normalizeScreen } from "@/features/reflect/reflect-transitions";
+import type { ReflectionStateName } from "@/features/reflect/types";
 
 type TransitionState = {
 	current: ReflectionStateName;
@@ -10,13 +10,7 @@ type TransitionState = {
 };
 
 /**
- * Manages cross-fade transitions between reflect state screens.
- *
- * When the screen changes, the old screen is kept mounted (fading out)
- * while the new screen mounts and fades in. Once the outgoing fade
- * completes, the old screen is unmounted. A screen that changes again
- * mid-fade (processing → error on a rate limit) joins the outgoing list
- * rather than cutting the earlier fade short.
+ * Cross-fades reflect screens; a change mid-fade joins the outgoing list, never cuts it short.
  */
 export function useScreenTransition(screen: ReflectionStateName) {
 	const normalized = normalizeScreen(screen);
@@ -25,8 +19,7 @@ export function useScreenTransition(screen: ReflectionStateName) {
 		outgoing: [],
 	});
 
-	// Mirror the latest committed state into a ref so the screen-change effect
-	// below can read the previous value without re-running on every state change.
+	// Lets the screen-change effect read the previous value without depending on state.
 	const stateRef = useRef(state);
 	useEffect(() => {
 		stateRef.current = state;

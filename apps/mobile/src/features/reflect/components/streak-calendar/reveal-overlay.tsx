@@ -1,12 +1,5 @@
 /**
- * Full-screen reveal: an absolute-positioned clone of the mini card
- * springs from the measured header position to screen center, flips
- * to the new day, blasts particles at the flip apex, shows the
- * per-day message, then collapses back on tap.
- *
- * The morph is transform-only (translate + scale from the measured
- * rect) — the card always lays out at FULL_SIZE, so no layout work
- * happens per frame.
+ * Full-screen reveal: spring to centre, flip, blast, collapse on tap. Transform-only at FULL_SIZE.
  */
 import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
@@ -23,9 +16,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { getStreakCopy } from "@/src/features/reflect/streak-copy";
-import { playSessionComplete } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { getStreakCopy } from "@/features/streak/streak-copy";
+import { playSessionComplete } from "@/lib/haptics";
 import { BlastParticles, type BlastParticlesRef } from "./blast-particles";
 import {
 	BLAST_SPRING,
@@ -41,12 +34,10 @@ const FULL_METRICS = getCardMetrics(FULL_SIZE);
 const BLAST_CANVAS_SIZE = FULL_SIZE * 2.4;
 
 type Props = {
-	/** The new streak day being revealed */
 	day: number;
-	/** Measured screen rect of the mini card */
 	miniLayout: MeasuredDimensions;
 	colors: CardColors;
-	/** Called after the collapse spring completes */
+	/** Called after the collapse spring completes. */
 	onDismissed: () => void;
 };
 
@@ -64,30 +55,25 @@ export const RevealOverlay = ({
 
 	const [canDismiss, setCanDismiss] = useState(false);
 	const [showMessage, setShowMessage] = useState(false);
-	// Skia canvas + texture are expensive to mount — deferred until the
-	// morph completes so they don't steal frames from the expand spring.
-	// The blast isn't needed until the flip apex, well after that.
+	// The Skia canvas is expensive to mount, so it waits for the morph to
+	// complete rather than steal frames from the expand spring.
 	const [blastReady, setBlastReady] = useState(false);
 
 	const message = getStreakCopy(day);
 	const previousDay = Math.max(day - 1, 0);
 
-	// Final resting place of the full-size card (slightly above center
-	// so the message has room below).
+	// Slightly above centre so the message has room below.
 	const targetX = (windowWidth - FULL_SIZE) / 2;
 	const targetY = windowHeight * 0.5 - FULL_SIZE * 0.65;
 
-	// Transform deltas from the measured mini rect to the target rect
 	const startScale = miniLayout.width / FULL_SIZE;
 	const deltaX =
 		miniLayout.pageX + miniLayout.width / 2 - (targetX + FULL_SIZE / 2);
 	const deltaY =
 		miniLayout.pageY + miniLayout.height / 2 - (targetY + FULL_SIZE / 2);
 
-	// Expand, then flip. The expand spring callback runs on the UI
-	// thread, so chaining the flip there avoids a JS round-trip.
-	// The spring start is pushed past the overlay's first paint (double
-	// rAF) — kicking it off on the mount frame drops the early frames.
+	// Expand, then flip, chained on the UI thread. The double rAF pushes the
+	// spring past the overlay's first paint; starting on the mount frame drops frames.
 	useEffect(() => {
 		const onFlipDone = () => {
 			setShowMessage(true);
@@ -117,12 +103,8 @@ export const RevealOverlay = ({
 		return () => cancelAnimationFrame(rafId);
 	}, [morphProgress, flipProgress, setBlastReady]);
 
-	// Fire blast + haptic exactly once at the flip apex
 	const handleApex = () => {
 		blastRef.current?.blast(BLAST_SPRING);
-		// A streak reveal is the app's celebration moment — particle blast and all.
-		// It used to share resonanceToggle with starring a quote and toggling a peer
-		// resonance, so the milestone landed no heavier than a list tap.
 		playSessionComplete();
 	};
 

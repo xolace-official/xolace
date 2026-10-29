@@ -6,77 +6,206 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Xolace web theme: the chunky, pressable "Duolingo-style" system.
+ * Source of truth: the Xolace Admin design system artifact (tokens.json).
+ * Raised things sit on a solid lip (`lip` utility, in a family's `-lip`
+ * colour) and sink flush when pressed (`pressable`). Every border is 2px.
+ *
+ * shadcn's semantic names (--primary, --border, ...) are mapped onto the
+ * Xolace tokens below so stock shadcn classes keep working.
+ */
 :root {
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.145 0 0);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.145 0 0);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.145 0 0);
-	--primary: oklch(0.205 0 0);
-	--primary-foreground: oklch(0.985 0 0);
-	--secondary: oklch(0.97 0 0);
-	--secondary-foreground: oklch(0.205 0 0);
-	--muted: oklch(0.97 0 0);
-	--muted-foreground: oklch(0.556 0 0);
-	--accent: oklch(0.97 0 0);
-	--accent-foreground: oklch(0.205 0 0);
-	--destructive: oklch(0.58 0.22 27);
-	--border: oklch(0.922 0 0);
-	--input: oklch(0.922 0 0);
-	--ring: oklch(0.708 0 0);
-	--chart-1: oklch(0.809 0.105 251.813);
-	--chart-2: oklch(0.623 0.214 259.815);
-	--chart-3: oklch(0.546 0.245 262.881);
-	--chart-4: oklch(0.488 0.243 264.376);
-	--chart-5: oklch(0.424 0.199 265.638);
-	--radius: 0.625rem;
-	--sidebar: oklch(0.985 0 0);
-	--sidebar-foreground: oklch(0.145 0 0);
-	--sidebar-primary: oklch(0.205 0 0);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.97 0 0);
-	--sidebar-accent-foreground: oklch(0.205 0 0);
-	--sidebar-border: oklch(0.922 0 0);
-	--sidebar-ring: oklch(0.708 0 0);
+	/* Grounds and ink */
+	--bg: oklch(97.5% 0.006 285);
+	--surface: oklch(99.5% 0.003 285);
+	--surface-sunken: oklch(95.5% 0.008 285);
+	--line: oklch(90% 0.008 285);
+	--line-strong: oklch(84% 0.01 285);
+	--ink: oklch(16.5% 0.02 285);
+	--ink-muted: oklch(52% 0.02 285);
+
+	/* Families: fill, lip (3D edge), soft tint, ink on the fill, coloured text */
+	--lavender: oklch(55% 0.16 285);
+	--lavender-lip: oklch(45% 0.16 285);
+	--lavender-soft: oklch(95% 0.0352 285);
+	--on-lavender: oklch(99% 0.005 285);
+	--lavender-text: oklch(50% 0.16 285);
+
+	--sky: oklch(52% 0.13 232);
+	--sky-lip: oklch(42% 0.13 232);
+	--sky-soft: oklch(95% 0.0286 232);
+	--on-sky: oklch(99% 0.005 285);
+	--sky-text: oklch(50% 0.13 232);
+
+	--mint: oklch(52% 0.13 160);
+	--mint-lip: oklch(42% 0.13 160);
+	--mint-soft: oklch(95% 0.0286 160);
+	--on-mint: oklch(99% 0.005 285);
+	--mint-text: oklch(50% 0.13 160);
+
+	--ember: oklch(80% 0.14 70);
+	--ember-lip: oklch(66% 0.14 62);
+	--ember-soft: oklch(95% 0.0308 70);
+	--on-ember: #19151f;
+	--ember-text: oklch(48% 0.14 60);
+
+	--coral: oklch(56% 0.17 22);
+	--coral-lip: oklch(46% 0.17 22);
+	--coral-soft: oklch(95% 0.0374 22);
+	--on-coral: oklch(99% 0.005 285);
+	--coral-text: oklch(50% 0.17 22);
+
+	--pink: oklch(56% 0.16 350);
+	--pink-lip: oklch(46% 0.16 350);
+	--pink-soft: oklch(95% 0.0352 350);
+	--on-pink: oklch(99% 0.005 285);
+	--pink-text: oklch(50% 0.16 350);
+
+	--focus: oklch(55% 0.15 245);
+	--scrim: oklch(16.5% 0.02 285 / 45%);
+	--shadow-overlay: 0 6px 0 #c9cad1, 0 24px 48px rgba(40, 30, 70, 0.18);
+
+	/* shadcn semantic names */
+	--background: var(--bg);
+	--foreground: var(--ink);
+	--card: var(--surface);
+	--card-foreground: var(--ink);
+	--popover: var(--surface);
+	--popover-foreground: var(--ink);
+	--primary: var(--lavender);
+	--primary-foreground: var(--on-lavender);
+	--secondary: var(--sky);
+	--secondary-foreground: var(--on-sky);
+	--muted: var(--surface-sunken);
+	--muted-foreground: var(--ink-muted);
+	--accent: var(--lavender-soft);
+	--accent-foreground: var(--lavender-text);
+	--destructive: var(--coral);
+	--border: var(--line);
+	--input: var(--line);
+	--ring: var(--focus);
+	--chart-1: var(--lavender);
+	--chart-2: var(--sky);
+	--chart-3: var(--mint);
+	--chart-4: var(--ember);
+	--chart-5: var(--pink);
+	--radius: 0.75rem;
+	--sidebar: var(--surface);
+	--sidebar-foreground: var(--ink);
+	--sidebar-primary: var(--lavender);
+	--sidebar-primary-foreground: var(--on-lavender);
+	--sidebar-accent: var(--lavender-soft);
+	--sidebar-accent-foreground: var(--lavender-text);
+	--sidebar-border: var(--line);
+	--sidebar-ring: var(--focus);
 }
 
+/* The Xolace app's default dark theme: deep warm indigo. */
 .dark {
-	--background: oklch(0.145 0 0);
-	--foreground: oklch(0.985 0 0);
-	--card: oklch(0.205 0 0);
-	--card-foreground: oklch(0.985 0 0);
-	--popover: oklch(0.205 0 0);
-	--popover-foreground: oklch(0.985 0 0);
-	--primary: oklch(0.87 0 0);
-	--primary-foreground: oklch(0.205 0 0);
-	--secondary: oklch(0.269 0 0);
-	--secondary-foreground: oklch(0.985 0 0);
-	--muted: oklch(0.269 0 0);
-	--muted-foreground: oklch(0.708 0 0);
-	--accent: oklch(0.371 0 0);
-	--accent-foreground: oklch(0.985 0 0);
-	--destructive: oklch(0.704 0.191 22.216);
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 15%);
-	--ring: oklch(0.556 0 0);
-	--chart-1: oklch(0.809 0.105 251.813);
-	--chart-2: oklch(0.623 0.214 259.815);
-	--chart-3: oklch(0.546 0.245 262.881);
-	--chart-4: oklch(0.488 0.243 264.376);
-	--chart-5: oklch(0.424 0.199 265.638);
-	--sidebar: oklch(0.205 0 0);
-	--sidebar-foreground: oklch(0.985 0 0);
-	--sidebar-primary: oklch(0.488 0.243 264.376);
-	--sidebar-primary-foreground: oklch(0.985 0 0);
-	--sidebar-accent: oklch(0.269 0 0);
-	--sidebar-accent-foreground: oklch(0.985 0 0);
-	--sidebar-border: oklch(1 0 0 / 10%);
-	--sidebar-ring: oklch(0.556 0 0);
+	--bg: #19151f;
+	--surface: #201c2e;
+	--surface-sunken: #2a2539;
+	--line: #352f48;
+	--line-strong: #463e5e;
+	--ink: #ede9f5;
+	--ink-muted: #a69fbb;
+
+	--lavender: #b3a0e0;
+	--lavender-lip: oklch(59% 0.128 285);
+	--lavender-soft: oklch(30% 0.056 285);
+	--on-lavender: #19151f;
+	--lavender-text: #c1b2ea;
+
+	--sky: oklch(76% 0.104 232);
+	--sky-lip: oklch(60% 0.104 232);
+	--sky-soft: oklch(30% 0.0455 232);
+	--on-sky: #19151f;
+	--sky-text: oklch(80% 0.104 232);
+
+	--mint: oklch(78% 0.104 160);
+	--mint-lip: oklch(62% 0.104 160);
+	--mint-soft: oklch(30% 0.0455 160);
+	--on-mint: #19151f;
+	--mint-text: oklch(82% 0.104 160);
+
+	--ember: oklch(80% 0.112 70);
+	--ember-lip: oklch(64% 0.112 70);
+	--ember-soft: oklch(30% 0.049 70);
+	--on-ember: #19151f;
+	--ember-text: oklch(82% 0.112 70);
+
+	--coral: oklch(72% 0.136 22);
+	--coral-lip: oklch(56% 0.136 22);
+	--coral-soft: oklch(30% 0.0595 22);
+	--on-coral: #19151f;
+	--coral-text: oklch(76% 0.136 22);
+
+	--pink: oklch(76% 0.128 350);
+	--pink-lip: oklch(60% 0.128 350);
+	--pink-soft: oklch(30% 0.056 350);
+	--on-pink: #19151f;
+	--pink-text: oklch(80% 0.128 350);
+
+	--focus: oklch(78% 0.12 235);
+	--scrim: oklch(5% 0.01 285 / 70%);
+	--shadow-overlay: 0 6px 0 #463e5e, 0 24px 48px rgba(0, 0, 0, 0.5);
+}
+
+@theme {
+	/* Lip heights for the `lip` / `depth-*` utilities. */
+	--depth-sm: 2px;
+	--depth-md: 4px;
+	--depth-lg: 6px;
 }
 
 @theme inline {
-	--font-sans: "Inter Variable", sans-serif;
+	/* Apps load the faces with next/font and set these two variables. */
+	--font-sans:
+		var(--font-space-grotesk), "Space Grotesk", system-ui, sans-serif;
+	--font-display: var(--font-nunito), Nunito, system-ui, sans-serif;
+
+	--color-bg: var(--bg);
+	--color-surface: var(--surface);
+	--color-surface-sunken: var(--surface-sunken);
+	--color-line: var(--line);
+	--color-line-strong: var(--line-strong);
+	--color-ink: var(--ink);
+	--color-ink-muted: var(--ink-muted);
+	--color-lavender: var(--lavender);
+	--color-lavender-lip: var(--lavender-lip);
+	--color-lavender-soft: var(--lavender-soft);
+	--color-on-lavender: var(--on-lavender);
+	--color-lavender-text: var(--lavender-text);
+	--color-sky: var(--sky);
+	--color-sky-lip: var(--sky-lip);
+	--color-sky-soft: var(--sky-soft);
+	--color-on-sky: var(--on-sky);
+	--color-sky-text: var(--sky-text);
+	--color-mint: var(--mint);
+	--color-mint-lip: var(--mint-lip);
+	--color-mint-soft: var(--mint-soft);
+	--color-on-mint: var(--on-mint);
+	--color-mint-text: var(--mint-text);
+	--color-ember: var(--ember);
+	--color-ember-lip: var(--ember-lip);
+	--color-ember-soft: var(--ember-soft);
+	--color-on-ember: var(--on-ember);
+	--color-ember-text: var(--ember-text);
+	--color-coral: var(--coral);
+	--color-coral-lip: var(--coral-lip);
+	--color-coral-soft: var(--coral-soft);
+	--color-on-coral: var(--on-coral);
+	--color-coral-text: var(--coral-text);
+	--color-pink: var(--pink);
+	--color-pink-lip: var(--pink-lip);
+	--color-pink-soft: var(--pink-soft);
+	--color-on-pink: var(--on-pink);
+	--color-pink-text: var(--pink-text);
+	--color-focus: var(--focus);
+	--color-scrim: var(--scrim);
+	--shadow-overlay: var(--shadow-overlay);
+
 	--color-sidebar-ring: var(--sidebar-ring);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -108,23 +237,148 @@
 	--color-card: var(--card);
 	--color-foreground: var(--foreground);
 	--color-background: var(--background);
-	--radius-sm: calc(var(--radius) - 4px);
-	--radius-md: calc(var(--radius) - 2px);
-	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) + 4px);
-	--radius-2xl: calc(var(--radius) + 8px);
-	--radius-3xl: calc(var(--radius) + 12px);
-	--radius-4xl: calc(var(--radius) + 16px);
+
+	/* Radii from the design system, not derived from --radius. */
+	--radius-sm: 8px;
+	--radius-md: 12px;
+	--radius-lg: 16px;
+	--radius-xl: 24px;
+	--radius-2xl: 28px;
+	--radius-3xl: 32px;
+	--radius-4xl: 36px;
+}
+
+/* ---------- 3D lip ----------
+ * `lip` draws the solid edge: 0 <depth> 0 <colour>.
+ * `lip-<color>` picks the colour (e.g. lip-lavender-lip), `depth-<sm|md|lg>`
+ * the height. `pressable` sinks the element by its lip while active. */
+@utility lip {
+	box-shadow: 0 var(--lip-depth, var(--depth-md)) 0
+		var(--lip-color, var(--line));
+}
+@utility lip-* {
+	--lip-color: --value(--color-*);
+}
+@utility depth-* {
+	--lip-depth: --value(--depth-*);
+}
+@utility pressable {
+	transition:
+		transform 80ms ease-out,
+		box-shadow 80ms ease-out,
+		filter 120ms ease-out,
+		background-color 120ms ease-out;
+	&:active:not(:disabled, [data-disabled], [aria-disabled="true"]) {
+		box-shadow: 0 0 0 transparent;
+		transform: translateY(var(--lip-depth, var(--depth-md)));
+	}
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+}
+
+/* ---------- Type styles (design system names) ---------- */
+@utility type-display {
+	font-family: var(--font-display);
+	font-size: 40px;
+	font-weight: 800;
+	line-height: 44px;
+	letter-spacing: -0.01em;
+}
+@utility type-stat {
+	font-family: var(--font-display);
+	font-size: 32px;
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+	line-height: 36px;
+	letter-spacing: -0.01em;
+}
+@utility type-h1 {
+	font-family: var(--font-display);
+	font-size: 28px;
+	font-weight: 800;
+	line-height: 34px;
+	letter-spacing: -0.005em;
+}
+@utility type-h2 {
+	font-family: var(--font-display);
+	font-size: 22px;
+	font-weight: 800;
+	line-height: 28px;
+}
+@utility type-h3 {
+	font-family: var(--font-display);
+	font-size: 18px;
+	font-weight: 700;
+	line-height: 24px;
+}
+@utility type-button {
+	font-family: var(--font-display);
+	font-size: 15px;
+	font-weight: 800;
+	line-height: 20px;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+@utility type-eyebrow {
+	font-family: var(--font-display);
+	font-size: 12px;
+	font-weight: 800;
+	line-height: 16px;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+@utility type-body-lg {
+	font-family: var(--font-sans);
+	font-size: 17px;
+	font-weight: 400;
+	line-height: 26px;
+}
+@utility type-body {
+	font-family: var(--font-sans);
+	font-size: 15px;
+	font-weight: 400;
+	line-height: 22px;
+}
+@utility type-body-strong {
+	font-family: var(--font-sans);
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 22px;
+}
+@utility type-data {
+	font-family: var(--font-sans);
+	font-size: 14px;
+	font-weight: 500;
+	font-variant-numeric: tabular-nums;
+	line-height: 20px;
+}
+@utility type-small {
+	font-family: var(--font-sans);
+	font-size: 13px;
+	font-weight: 400;
+	line-height: 18px;
+}
+@utility type-caption {
+	font-family: var(--font-sans);
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 16px;
 }
 
 @layer base {
 	* {
-		@apply border-border outline-ring/50;
+		@apply border-border outline-ring;
 	}
 	body {
-		@apply font-sans bg-background text-foreground;
+		@apply bg-background font-sans text-foreground antialiased;
 	}
 	html {
 		@apply font-sans;
+	}
+	/* Focus: a 3px solid ring outside a 2px gap, on every interactive element. */
+	:focus-visible {
+		outline: 3px solid var(--focus);
+		outline-offset: 2px;
 	}
 }

@@ -4,20 +4,19 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { AppText } from "@/components/shared/app-text";
+import { useAppTheme } from "@/context/app-theme-context";
 import {
 	DISPLAY_LEAD,
 	DISPLAY_TAIL,
 	getDateStamp,
 	getGreeting,
-} from "@/src/features/discovery/greeting";
-import { useProfileSummary } from "@/src/features/profile/hooks/use-profile-summary";
+} from "@/features/discovery/greeting";
+import { useProfileSummary } from "@/features/profile/hooks/use-profile-summary";
 
 const ART = require("@/assets/images/illustrations/discovery-image-bg.png");
 
-// Anchor the crop low so the figures sit under the type block rather than
-// behind it — the display lines keep a near-flat field to read against.
+// Crop anchored low so the figures sit under the type block, not behind it.
 const ART_CROP = { bottom: 0 } as const;
 
 const styles = StyleSheet.create({
@@ -26,21 +25,13 @@ const styles = StyleSheet.create({
 	field: { borderBottomLeftRadius: 34, borderBottomRightRadius: 34 },
 });
 
-/**
- * Variant B — the illustration is the field. Same content as `PosterHeader`,
- * but the art runs full-bleed behind everything with a solid accent scrim over
- * it, so the poster keeps its brand colour while the illustration supplies the
- * warmth. Still no animation; the scrim is what holds text contrast.
- *
- * Swap variants in `discovery-header.tsx` — in code, not in the UI.
- */
+/** Same content as `PosterHeader` with the art full-bleed under an accent scrim. Swapped in
+ * `discovery-header.tsx`. */
 export function ImageHeader() {
 	const insets = useSafeAreaInsets();
-	// displayName from preferences, matching the profile screen.
 	const summary = useProfileSummary();
 	const { isDark } = useAppTheme();
-	// NativeTabs keeps every tab mounted, so an unconditional override here
-	// would keep winning even after the user switches away from Discovery.
+	// NativeTabs keeps every tab mounted; an unconditional override would outlive the tab.
 	const isFocused = useIsFocused();
 
 	return (
@@ -55,9 +46,7 @@ export function ImageHeader() {
 				source={ART}
 				style={StyleSheet.absoluteFill}
 			/>
-			{/* Scrim. The accent fill is what makes the type legible over a busy,
-          multi-hue illustration — thinning it below ~85% drops the eyebrow and
-          the greeting under 4.5:1. */}
+			{/* Scrim: below ~85% the eyebrow and greeting drop under 4.5:1. */}
 			<View className="absolute inset-0 bg-accent/90" />
 
 			<View className="px-6 pb-7" style={{ paddingTop: insets.top + 12 }}>

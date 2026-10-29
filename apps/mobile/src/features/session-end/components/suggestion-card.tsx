@@ -2,12 +2,12 @@ import { specialtyListensTo } from "@xolace/backend/convex/lib/specialties";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	NewXolacerChip,
 	RatingStars,
-} from "@/src/features/xolacer-chat/components/rating-stars";
-import { XolacerAvatar } from "@/src/features/xolacer-chat/components/xolacer-avatar";
+} from "@/features/xolacer-chat/components/rating-stars";
+import { XolacerAvatar } from "@/features/xolacer-chat/components/xolacer-avatar";
 
 type Props = {
 	displayName: string;
@@ -18,16 +18,9 @@ type Props = {
 	onPress: () => void;
 };
 
-/**
- * The close-phase offer when a session is suggestion-eligible: one named
- * xolacer, in the slot the Bridge card holds otherwise.
- *
- * Copy is deliberately a fact about what this person declared, never a claim
- * that they fit *this* user — at the current roster size a named suggestion is
- * close to "whoever declared this specialty", and the card must not overclaim.
- * It also avoids the Bridge card's "Suggested for you" sparkle chip: this must
- * not read as an algorithmic assignment of a human being.
- */
+/** The close-phase offer for a suggestion-eligible session: one named xolacer.
+ * Copy states what this person declared, never that they fit this user, and
+ * skips the Bridge card's "Suggested for you" chip so it doesn't read as assignment. */
 export const SuggestionCard = ({
 	displayName,
 	photoUrl,
@@ -40,10 +33,8 @@ export const SuggestionCard = ({
 
 	return (
 		<PressableFeedback
-			// Carries the disclosure, not just the name: PressableFeedback groups its
-			// children into one node, so the "trained peer, not a therapist" line
-			// below is never read otherwise — and that line is the whole basis for
-			// what someone is agreeing to walk into.
+			// Carries the disclosure too: PressableFeedback groups its children into
+			// one node, so the "trained peer, not a therapist" line is never read otherwise.
 			accessibilityLabel={`${displayName} listens to ${specialtyListensTo(specialty)}. A trained peer, not a therapist. Opens their profile — nothing is sent.`}
 			accessibilityRole="button"
 			className="w-full overflow-hidden rounded-3xl border border-accent/30 bg-accent/[0.07] p-5"
@@ -56,7 +47,7 @@ export const SuggestionCard = ({
 				}}
 			/>
 
-			{/* Face first — the card offers a person, not a category. */}
+			{/* Face first: the card offers a person, not a category. */}
 			<View className="mb-4 flex-row items-center justify-between">
 				<XolacerAvatar name={displayName} photoUrl={photoUrl} />
 				{rating === undefined ? (

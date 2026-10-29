@@ -1,10 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 
-/**
- * Pure in-memory navigation stack for the tray's internal screens.
- * The current screen is always the last entry in history; going back pops it.
- * Lifted from the sample engine (no external deps).
- */
+/** In-memory navigation stack for the tray; the current screen is the last entry. */
 export const useTrayNavigation = <
 	T extends Record<string, (props?: any) => React.ReactElement>,
 >() => {

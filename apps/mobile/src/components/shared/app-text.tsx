@@ -6,19 +6,10 @@ import {
 	StyleSheet,
 	type TextInstance,
 } from "react-native";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 
-/**
- * Drop-in replacement for React Native's Text with default font and theme color applied.
- * Use this instead of importing Text from 'react-native' directly.
- *
- * Default styles: `font-normal text-foreground` — override via className prop.
- *
- * `includeFontPadding: false` on Android: Android otherwise pads every Text
- * block with the font's ascent/descent slack, so the same copy measures taller
- * there than on iOS and wraps a line earlier. In a stack of a dozen texts (the
- * intake offer cards) that difference is enough to overflow a fixed-height box.
- */
+// Replacement for RN's Text with the default font and theme colour. Android gets
+// `includeFontPadding: false`: its ascent/descent padding otherwise wraps text earlier than iOS.
 const styles = StyleSheet.create({
 	android: { includeFontPadding: false },
 });

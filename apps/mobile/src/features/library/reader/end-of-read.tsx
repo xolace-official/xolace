@@ -2,14 +2,14 @@ import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
+import { Surface, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { Pressable, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { trackLibrary } from "@/src/features/library/analytics";
-import { playResonanceToggle, playSoftPress } from "@/src/lib/haptics";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { trackLibrary } from "@/features/library/analytics";
+import { playResonanceToggle, playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 import type { ReaderEntry } from "./reader-screen";
 import { UpNext } from "./up-next";
 import { useRecord } from "./use-read-signals";
@@ -29,13 +29,8 @@ const FLUX_PAIR = require("@/assets/images/flux/flux-pair-listening.png");
 
 type ReaderState = FunctionReturnType<typeof api.library.reads.getReaderState>;
 
-/**
- * The end of an entry (#410), from #395's "magazine close": a small
- * finished row with "This helped" (positive-only, undoable), then the
- * "you're not the only one" strip — shown only once the server lets the
- * total out (≥15, ADR 0016; below that `helpedCount` is null) — then
- * the next entry (#417).
- */
+/** The end of an entry (#410): finished row with "This helped", the "you're not the only one"
+ * strip once `helpedCount` is non-null (≥15, ADR 0016), then Up next (#417). */
 export function EndOfRead({
 	entry: { _id: entryId, slug },
 	signals: { finished, helped, helpedCount },
@@ -99,7 +94,7 @@ export function EndOfRead({
 			</View>
 
 			{helpedCount !== null && (
-				<View className="flex-row items-center gap-4 rounded-3xl bg-surface p-4">
+				<Surface className="flex-row items-center gap-4 p-4">
 					<Image
 						contentFit="contain"
 						source={FLUX_PAIR}
@@ -113,7 +108,7 @@ export function EndOfRead({
 							You&apos;re not the only one.
 						</AppText>
 					</View>
-				</View>
+				</Surface>
 			)}
 
 			<UpNext entryId={entryId} />

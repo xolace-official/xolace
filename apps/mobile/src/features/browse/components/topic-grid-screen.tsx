@@ -7,10 +7,10 @@ import { Skeleton } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect } from "react";
 import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { useMiniPlayerInset } from "@/src/features/browse/now-playing/now-playing-store";
-import { CoverImage } from "@/src/features/library/cover-image";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
+import { CoverImage } from "@/features/library/cover-image";
+import { playSoftPress } from "@/lib/haptics";
 
 type Topic = FunctionReturnType<typeof api.browse.getTopics>[number];
 
@@ -30,10 +30,7 @@ function countLine(t: Topic) {
 	return parts.join(" · ");
 }
 
-/**
- * Topic grid (`topics`, §9.3) — a grid of *topics*, one tile per shared topic
- * with ≥ 1 active track in either family. Two-up, square artwork.
- */
+/** Topic grid (`topics`, §9.3): one tile per topic with an active track in either family. */
 export function TopicGridScreen() {
 	// Clears the floating mini-player off the last row (none on iOS 26).
 	const playerInset = useMiniPlayerInset();

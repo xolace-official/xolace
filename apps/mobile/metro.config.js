@@ -65,5 +65,7 @@ module.exports = withUniwindConfig(config, {
 		"velvet-dark",
 		"noir-light",
 		"noir-dark",
+		"playful-light",
+		"playful-dark",
 	],
 });

@@ -3,8 +3,8 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { Presets } from "react-native-pulsar";
-import type { MissReason } from "@/src/features/reflect/types";
-import { FeedbackSheet } from "@/src/features/session-end/components/feedback-sheet";
+import type { MissReason } from "@/features/reflect/types";
+import { FeedbackSheet } from "@/features/session-end/components/feedback-sheet";
 
 const CHIPS = [
 	{ key: "wrong_emotion", label: "Wrong emotion" },
@@ -36,8 +36,7 @@ export function ClarifyFeedbackSheet({
 	const [selected, setSelected] = useState<MissReason | null>(null);
 	const submitFeedback = useMutation(api.feedback.submit);
 
-	// Reset the submitted latch each time the sheet (re)opens — adjusted during
-	// render with a prev-prop comparison rather than a useEffect.
+	// Reset the submitted latch each time the sheet (re)opens.
 	const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
 	if (isOpen !== prevIsOpen) {
 		setPrevIsOpen(isOpen);
@@ -47,9 +46,8 @@ export function ClarifyFeedbackSheet({
 		}
 	}
 
-	// `sessionId` is non-null whenever the sheet is open — the owner gates
-	// `isOpen` on it, so a tap can never be silently dropped. The check remains
-	// as a type narrowing and a backstop if it goes null mid-open.
+	// The owner gates `isOpen` on `sessionId`; the check below is type narrowing
+	// and a backstop if it goes null mid-open.
 	const handleChip = (key: string) => {
 		if (submitted) {
 			return;
@@ -73,8 +71,7 @@ export function ClarifyFeedbackSheet({
 		onClose();
 	};
 
-	// Content-sized, like the other feedback sheets. The old fixed "48%" snap
-	// point could leave the chips (and any exit) below the fold.
+	// Content-sized: a fixed snap point could leave the chips below the fold.
 	return (
 		<FeedbackSheet.Frame isOpen={isOpen} onClose={onClose}>
 			<FeedbackSheet.Header

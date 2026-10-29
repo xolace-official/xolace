@@ -4,7 +4,7 @@ import Animated, {
 	interpolate,
 	useDerivedValue,
 } from "react-native-reanimated";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { useAppTheme } from "@/context/app-theme-context";
 import { AnimatedBlurView } from "./animated-blur-view";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);

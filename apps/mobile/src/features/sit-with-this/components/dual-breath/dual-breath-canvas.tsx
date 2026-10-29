@@ -16,26 +16,26 @@ import Animated, {
 	withRepeat,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	PHASE_LABELS,
 	WOBBLE_AMPLITUDE,
 	WOBBLE_DURATION_MS,
-} from "@/src/features/sit-with-this/components/dual-breath/dual-breath.constants";
-import { useDualBreathAnimation } from "@/src/features/sit-with-this/components/dual-breath/use-dual-breath-animation";
+} from "@/features/sit-with-this/components/dual-breath/dual-breath.constants";
+import { useDualBreathAnimation } from "@/features/sit-with-this/components/dual-breath/use-dual-breath-animation";
 import type {
 	BreathPattern,
 	PacedOrbHandle,
-} from "@/src/features/sit-with-this/components/paced-orb";
-import { TIMINGS } from "@/src/features/sit-with-this/components/paced-orb";
-import type { BreathPhase } from "@/src/lib/haptics";
+} from "@/features/sit-with-this/components/paced-orb";
+import { TIMINGS } from "@/features/sit-with-this/components/paced-orb";
+import type { BreathPhase } from "@/lib/haptics";
 
 const INHALE_EASE = Easing.bezier(0.4, 0, 0.2, 1);
 const EXHALE_EASE = Easing.bezier(0.2, 0, 0.1, 1);
 const WOBBLE_EASE = Easing.inOut(Easing.sin);
 
-// Reduced motion: a single short, smooth transition to the phase's target pose —
-// legible as "breathe in / out" without the prolonged scaling or hold wobble.
+// Reduced motion: one short transition to the phase's target pose, legible as
+// "breathe in / out" without the prolonged scaling or hold wobble.
 const REDUCED_MOTION_SNAP_MS = 400;
 const REDUCED_MOTION_EASE = Easing.inOut(Easing.ease);
 
@@ -130,8 +130,8 @@ export const DualBreathCanvas = forwardRef<PacedOrbHandle, Props>(
 										onPhaseTransition?.(phase, step.duration);
 										changeLabel(phase);
 
-										// Gentle snap to the target pose — no hold wobble, no haptic
-										// (onPhaseTransition is undefined under reduced motion).
+										// Gentle snap to the target pose; no hold wobble, no
+										// haptic.
 										if (phase === "inhale") {
 											progress.set(
 												withTiming(1, {
@@ -219,7 +219,7 @@ export const DualBreathCanvas = forwardRef<PacedOrbHandle, Props>(
 					<RoundedRect color={accentColor} rect={botRRect} />
 				</Canvas>
 
-				{/* Phase label — floats inside the bottom shape, tracks it in real time */}
+				{/* Phase label, floating inside the bottom shape */}
 				<Animated.View style={labelContainerStyle}>
 					<Animated.View style={labelFadeStyle}>
 						{phaseLabel !== null && (

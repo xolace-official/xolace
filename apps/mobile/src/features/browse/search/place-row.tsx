@@ -1,17 +1,13 @@
-/**
- * A Hubs & topics result in Browse search (#550): a Lantern hub or a Browse
- * topic, laid out like a TrackRow so the sections read as one list. A tap opens
- * that screen — neither is Plus-gated, so there's no lock.
- */
+/** A Hubs & topics search result (#550), laid out like a TrackRow. Neither is Plus-gated. */
 
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Pressable, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
-import { imageSource } from "@/src/lib/image-source";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
+import { imageSource } from "@/lib/image-source";
 
 type Place = FunctionReturnType<typeof api.library.search.searchPlaces>[number];
 

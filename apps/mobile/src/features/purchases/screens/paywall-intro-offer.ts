@@ -31,12 +31,8 @@ type IntroPhase = {
 	period: string;
 };
 
-/**
- * The paid intro phase on either store. `introPrice` is the App Store path (a
- * free trial shows up there too, as price 0, so it's skipped). Google Play
- * puts the offer on the default subscription option, which RevenueCat only
- * lists when the user is eligible for it.
- */
+/** The paid intro phase on either store. `introPrice` is the App Store path (a free trial is
+ * price 0 there and skipped). */
 function introPhaseOf(product: PurchasesStoreProduct): IntroPhase | null {
 	const intro = product.introPrice;
 	if (intro && intro.price > 0) {
@@ -54,10 +50,7 @@ function introPhaseOf(product: PurchasesStoreProduct): IntroPhase | null {
 	};
 }
 
-/**
- * "2 months" from a period of P1M over 2 cycles; a lone period reads "month",
- * so the copy can say "your first month".
- */
+/** "2 months" from P1M over 2 cycles; a lone period reads "month". */
 function introTerm(period: string, cycles: number): string | null {
 	const match = /^P(\d+)([DWMY])$/i.exec(period);
 	if (!match) {
@@ -68,13 +61,8 @@ function introTerm(period: string, cycles: number): string | null {
 	return total === 1 ? unit : `${total} ${unit}s`;
 }
 
-/**
- * What the paywall shows for a discounted intro, or null for the plain price.
- * `isEligible` is the iOS eligibility check (Android lists only offers the user
- * can take, so it passes true). The store's payment sheet has the final say.
- * A pay-up-front intro (one P3M cycle, say) is one charge for the whole term,
- * not a monthly price, so it falls back to the plain price.
- */
+/** What the paywall shows for a discounted intro, or null for the plain price (a pay-up-front
+ * P3M intro also falls back). */
 export function introOfferOf(
 	product: PurchasesStoreProduct | null | undefined,
 	isEligible: boolean

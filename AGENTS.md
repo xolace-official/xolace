@@ -126,7 +126,7 @@ Desktop dev (`tauri dev`) still expects web on 3001; run it from one worktree at
 |---|---|
 | Iterating | `bun run check:changed` (Biome on changed files, `check-types`+`lint` for affected packages and dependents, sibling tests). `--base <ref>` to compare elsewhere, `--list` to dry-run |
 | One test file | `bunx vitest run <file>` inside the package, or `bunx turbo run test -F <pkg> -- <file>`; root scripts: `bun test scripts/` |
-| Before a PR | `bunx turbo run check-types lint test` and `bun run check` |
+| Before a PR | `bunx turbo run check-types lint test`, `bun run check` and `bun run knip` (unused files, exports and dependencies; mobile only for now) |
 
 `check:changed` prints a timed summary and what only CI covers (builds, E2E, codegen
 drift, evals). Tiers and commands: `.agents/rules/testing.md`.

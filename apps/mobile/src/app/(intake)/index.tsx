@@ -5,28 +5,17 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { trackIntakeStarted } from "@/src/features/intake/analytics";
-import { FounderMarquee } from "@/src/features/intake/founder-message/founder-marquee";
-import { LetterBody } from "@/src/features/intake/founder-message/letter-body";
-import { FOUNDER_MESSAGE } from "@/src/features/intake/founder-message/letter-copy";
-import { IntakeBlank } from "@/src/features/intake/questionnaire/intake-screen";
-import { GateFade } from "@/src/features/profile/components/gate-fade";
-import { useFullContext } from "@/src/lib/convex/use-full-context";
+import { AppText } from "@/components/shared/app-text";
+import { trackIntakeStarted } from "@/features/intake/analytics";
+import { FounderMarquee } from "@/features/intake/founder-message/founder-marquee";
+import { LetterBody } from "@/features/intake/founder-message/letter-body";
+import { FOUNDER_MESSAGE } from "@/features/intake/founder-message/letter-copy";
+import { IntakeBlank } from "@/features/intake/questionnaire/intake-screen";
+import { GateFade } from "@/features/profile/components/gate-fade";
+import { useFullContext } from "@/lib/convex/use-full-context";
 
-/**
- * The founder message — first screen of intake, and where a cold kill mid-intake
- * relaunches (no step cursor is kept). "Campfire Stack" (#236): a horizontal
- * marquee band of feeling-cards, the letter scrolling beneath it behind gradient
- * fades, a pinned solid CTA into the questionnaire. Commit-only — no skip.
- *
- * One message for everyone. Returning users get the same letter plus a callout,
- * keyed off sessionCount.
- *
- * Decision (#264 open question): the message is NOT re-readable later. It is a
- * once-per-account hand-off into the questions, not a document; a settings entry
- * would make it a keepsake it isn't written to be. Revisit if people ask for it.
- */
+/** The founder message, first screen of intake ("Campfire Stack", #236). No skip; not
+ * re-readable later (#264). */
 const BAND_HEIGHT = 220;
 const FADE_HEIGHT = 44;
 
@@ -36,15 +25,13 @@ export default function IntakeIndex() {
 	const { width } = useWindowDimensions();
 	const background = useThemeColor("background") as string;
 
-	// The root gate query (#263), not a narrow one: the root is already
-	// subscribed to it and Convex dedupes, so reading `sessionCount` off it costs
-	// nothing — whereas a second query is a second thing to be undefined.
+	// The root gate query (#263): already subscribed and deduped, so reading
+	// `sessionCount` off it costs nothing.
 	const context = useFullContext();
 
-	// Funnel entry (T7, #267). Held until the count resolves — `session_count`
-	// and `is_returning_user` are the funnel's two breakdowns, so firing early
-	// with a guessed zero would mislabel every returning user. The latch is what
-	// keeps a re-render from re-entering the funnel and restarting the clock.
+	// Funnel entry (T7, #267), held until the count resolves: firing with a
+	// guessed zero would mislabel every returning user. The latch keeps a
+	// re-render from restarting the clock.
 	const posthog = usePostHog();
 	const started = useRef(false);
 	useEffect(() => {
@@ -55,9 +42,8 @@ export default function IntakeIndex() {
 		trackIntakeStarted(posthog, context.profile.sessionCount);
 	}, [context, posthog]);
 
-	// Never guess the audience: an unresolved count would silently render a
-	// returning user the new-user letter. The root gate already blocks on this
-	// query, so this is a belt-and-braces frame, not a visible flash.
+	// An unresolved count would render a returning user the new-user letter;
+	// the root gate already blocks on this query, so this never flashes.
 	if (context === undefined) {
 		return <IntakeBlank />;
 	}

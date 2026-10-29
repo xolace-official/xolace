@@ -1,23 +1,6 @@
-/**
- * RevenueCatContext — manages in-app purchases via RevenueCat.
- *
- * Handles SDK initialization, subscription status, purchasing, and restore.
- * Only activates when `appConfig.features.payments` is true; while false the
- * provider is inert (no SDK configure, no network) and `appConfig.devIsPlus`
- * acts as the local free/plus switch.
- *
- * In development (__DEV__), uses the test store API key for quick testing.
- * In production, uses the platform-specific production API key.
- *
- * Entitlements are read from `appConfig.monetization.entitlements` — the user
- * is considered Plus if ANY of those entitlements is active.
- *
- * Identity: after Convex auth resolves we call `Purchases.logIn(appUserId)`
- * with `appUserId = emotionalProfileId` from api.premium.getEntitlement — the
- * same id the server checks entitlements with (see gating-plan ID convention).
- * On sign-out we call `Purchases.logOut()` (guarded by isAnonymous) so a
- * later sign-in on the same device starts from a clean anonymous SDK state.
- */
+// In-app purchases via RevenueCat: SDK init, entitlement status, purchase and restore.
+// Inert while `appConfig.features.payments` is false (`devIsPlus` is the switch).
+// RC appUserId is `emotionalProfileId` from api.premium.getEntitlement, as the server checks.
 
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useConvexAuth, useQuery } from "convex/react";
@@ -38,8 +21,8 @@ import Purchases, {
 	type PurchasesOfferings,
 	type PurchasesPackage,
 } from "react-native-purchases";
-import { appConfig } from "@/src/config/app";
-import { playAffirmativePress, playErrorNotice } from "@/src/lib/haptics";
+import { appConfig } from "@/config/app";
+import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
 
 function hasActiveEntitlement(customerInfo: CustomerInfo | null): boolean {
 	if (!customerInfo) {
@@ -67,7 +50,7 @@ type RevenueCatContextType = {
 	refreshOfferings: () => Promise<boolean>;
 };
 
-export const RevenueCatContext = createContext<RevenueCatContextType>({
+const RevenueCatContext = createContext<RevenueCatContextType>({
 	customerInfo: null,
 	isLoading: true,
 	isProUser: false,
@@ -97,19 +80,16 @@ export function RevenueCatProvider({
 
 	const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
 	const [offerings, setOfferings] = useState<PurchasesOfferings | null>(null);
-	// Only loading when the SDK will actually be configured (payments on AND a
-	// key exists for this build) — keeps the no-key branch effect-free.
+	// Loading only when the SDK will be configured (payments on and a key for this build).
 	const [isLoading, setIsLoading] = useState(
 		appConfig.features.payments && getApiKey() !== ""
 	);
 	const [configured, setConfigured] = useState(false);
 
-	// While payments are off the SDK is never touched — devIsPlus is the switch.
 	const isProUser = appConfig.features.payments
 		? hasActiveEntitlement(customerInfo)
 		: appConfig.devIsPlus;
 
-	// Initialize SDK once payments are enabled.
 	useEffect(() => {
 		if (!appConfig.features.payments) {
 			return;
@@ -150,7 +130,6 @@ export function RevenueCatProvider({
 		}
 		init();
 
-		// Listen for subscription changes (renewal, expiration, family sharing).
 		const listener = (info: CustomerInfo) => setCustomerInfo(info);
 		Purchases.addCustomerInfoUpdateListener(listener);
 		return () => {
@@ -159,7 +138,6 @@ export function RevenueCatProvider({
 		};
 	}, []);
 
-	// Identity: RC appUserId = emotionalProfileId, matching the server checks.
 	useEffect(() => {
 		if (!(configured && appUserId)) {
 			return;
@@ -169,8 +147,7 @@ export function RevenueCatProvider({
 			.catch((error) => console.error("[RevenueCat] logIn failed:", error));
 	}, [configured, appUserId]);
 
-	// Identity: on sign-out, detach the SDK from the previous user so their
-	// cached entitlements can't leak to whoever signs in next on this device.
+	// On sign-out, detach the SDK so cached entitlements cannot leak to the next sign-in.
 	useEffect(() => {
 		if (!configured || isAuthLoading || isAuthenticated) {
 			return;

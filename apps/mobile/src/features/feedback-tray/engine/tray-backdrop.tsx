@@ -6,18 +6,14 @@ import Animated, {
 	useDerivedValue,
 	withTiming,
 } from "react-native-reanimated";
-import { AnimatedBlurView } from "@/src/components/animated-blur-view";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { AnimatedBlurView } from "@/components/animated-blur-view";
+import { useAppTheme } from "@/context/app-theme-context";
 import { TrayContext } from "./tray-context";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const BACKDROP_DURATION = 250;
 
-/**
- * Blur scrim behind the tray. Driven by the tray's `isActive` shared value —
- * blur fades in when the tray opens, out when it closes. Uses the project's
- * AnimatedBlurView (blur should be felt, not a flat rgba scrim).
- */
+/** Blur scrim behind the tray, driven by the tray's `isActive` shared value. */
 export const TrayBackdrop = () => {
 	const { state, actions } = use(TrayContext);
 	const { isDark } = useAppTheme();

@@ -1,18 +1,15 @@
-/**
- * "Reading as…" (#393, #409): the one-time inline card, then a native header
- * menu to change the same answer. Dismissing is a valid answer — For you
- * then reads the Understanding alone.
- */
+// "Reading as…" (#393, #409): a one-time inline card, then a header menu for the
+// same answer. Dismissing is a valid answer; For you then reads the Understanding alone.
 import AccountCircle from "@expo/material-symbols/account_circle.xml";
 import { Stack } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { useThemeColor } from "heroui-native";
+import { Surface, useThemeColor } from "heroui-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { facetLabel } from "@/src/features/library/home/library-copy";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { facetLabel } from "@/features/library/home/library-copy";
+import { cn } from "@/lib/utils";
 
 const toggle = (list: string[], slug: string) =>
 	list.includes(slug) ? list.filter((s) => s !== slug) : [...list, slug];
@@ -28,7 +25,7 @@ export function ReadingAsCard({
 	const muted = useThemeColor("muted");
 
 	return (
-		<View className="mx-4 mt-4 gap-3 rounded-[24px] bg-surface p-4">
+		<Surface className="mx-4 mt-4 gap-3 p-4">
 			<View className="flex-row items-start justify-between">
 				<View className="flex-1 gap-0.5">
 					<AppText className="font-semibold text-[17px]">Reading as…</AppText>
@@ -86,7 +83,7 @@ export function ReadingAsCard({
 					</AppText>
 				</Pressable>
 			)}
-		</View>
+		</Surface>
 	);
 }
 

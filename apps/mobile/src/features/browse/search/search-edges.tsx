@@ -1,15 +1,11 @@
-/**
- * Browse search's edges (#552, CONTEXT.md "Browse search"): the Need someone
- * now? row a crisis-term query gets above its results, and the no-results
- * way-outs. Neither asks what the person was looking for.
- */
+/** Browse search's edges (#552): the Need someone now? row and the no-results way-outs. */
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 
 export function NeedSomeoneRow() {
 	const tint = useCSSVariable("--color-accent");

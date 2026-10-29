@@ -3,12 +3,12 @@ import { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Tour } from "@/src/components/ui/tour";
-import { useMenuState } from "@/src/features/idle-menu/hooks/use-menu-state";
-import { MenuButtonsWrapper } from "@/src/features/idle-menu/menu-buttons-wrapper";
-import { MenuTrigger } from "@/src/features/idle-menu/menu-trigger";
-import { TOUR_STEPS } from "@/src/features/reflect/tour-copy";
-import { useAppStore } from "@/src/store/store";
+import { Tour } from "@/components/ui/tour";
+import { useMenuState } from "@/features/idle-menu/hooks/use-menu-state";
+import { MenuButtonsWrapper } from "@/features/idle-menu/menu-buttons-wrapper";
+import { MenuTrigger } from "@/features/idle-menu/menu-trigger";
+import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
+import { useAppStore } from "@/store/store";
 
 const EASE_INITIAL = { opacity: 0 };
 const EASE_ANIMATE = { opacity: 1 };
@@ -21,17 +21,15 @@ const EASE_TRANSITION = {
 export const IdleMenu = () => {
 	const { isOpen, isOpenJS, toggle, close } = useMenuState();
 	// Publish the scrim's lifetime so the reflect screen can lower its header
-	// buttons, which sit above anything this screen draws. The cleanup covers
-	// an unmount mid-open, which would otherwise strand the header hidden.
+	// buttons; the cleanup covers an unmount mid-open.
 	const setIdleMenuOpen = useAppStore((s) => s.setIdleMenuOpen);
 	useEffect(() => {
 		setIdleMenuOpen(isOpenJS);
 		return () => setIdleMenuOpen(false);
 	}, [isOpenJS, setIdleMenuOpen]);
 	const absoluteFillStyle = StyleSheet.absoluteFill;
-	// The host screen pads its root by the top inset, so an absoluteFill here
-	// stops short of the status bar. Reach back over that padding: the scrim
-	// dims the whole window, the way a scrim should.
+	// The host screen pads its root by the top inset, so reach back over that
+	// padding to dim the whole window.
 	const insets = useSafeAreaInsets();
 	const scrimStyle = {
 		bottom: 0,
@@ -65,9 +63,7 @@ export const IdleMenu = () => {
 					isOpenJS={isOpenJS}
 					onClose={close}
 				/>
-				{/* Last step of the reflect tour. The trigger is a plain view, unlike
-            the profile and crisis controls in the header, so it can simply be
-            wrapped — see TOUR_STEPS for the ordering. */}
+				{/* Last step of the reflect tour; see TOUR_STEPS for the ordering. */}
 				<Tour.Step
 					description={TOUR_STEPS[5].description}
 					order={5}

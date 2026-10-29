@@ -4,34 +4,34 @@ import { useState } from "react";
 import { ScrollView, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { TopBlur } from "@/src/components/shared/top-blur";
-import { SteadinessRow } from "@/src/features/insights/steadiness-row";
-import { AuroraArc } from "@/src/features/profile/components/aurora-arc";
-import { AvatarPickerSheet } from "@/src/features/profile/components/avatar-picker-sheet";
-import { ContributionGraphCard } from "@/src/features/profile/components/contribution-graph-card";
-import { EmotionChips } from "@/src/features/profile/components/emotion-chips";
-import { FollowUpsSection } from "@/src/features/profile/components/follow-ups-section";
-import { MirrorLines } from "@/src/features/profile/components/mirror-lines";
-import { PlusInsightOffer } from "@/src/features/profile/components/plus-insight-offer";
-import { PlusRow } from "@/src/features/profile/components/plus-row";
-import { ProfileHero } from "@/src/features/profile/components/profile-hero";
-import { ProfileSkeleton } from "@/src/features/profile/components/profile-skeleton";
-import { RankCard } from "@/src/features/profile/components/rank-card";
-import { StatBand } from "@/src/features/profile/components/stat-band";
-import { WeekIntensityCard } from "@/src/features/profile/components/week-intensity-card";
-import { WordsTeaserCard } from "@/src/features/profile/components/words-teaser-card";
-import { WordsTeaserEmpty } from "@/src/features/profile/components/words-teaser-empty";
+import { AppText } from "@/components/shared/app-text";
+import { AuroraArc } from "@/components/shared/aurora-arc";
+import { TopBlur } from "@/components/shared/top-blur";
+import { SteadinessRow } from "@/features/insights/steadiness-row";
+import { AvatarPickerSheet } from "@/features/profile/components/avatar-picker-sheet";
+import { ContributionGraphCard } from "@/features/profile/components/contribution-graph-card";
+import { EmotionChips } from "@/features/profile/components/emotion-chips";
+import { FollowUpsSection } from "@/features/profile/components/follow-ups-section";
+import { MirrorLines } from "@/features/profile/components/mirror-lines";
+import { PlusInsightOffer } from "@/features/profile/components/plus-insight-offer";
+import { PlusRow } from "@/features/profile/components/plus-row";
+import { ProfileHero } from "@/features/profile/components/profile-hero";
+import { ProfileSkeleton } from "@/features/profile/components/profile-skeleton";
+import { RankCard } from "@/features/profile/components/rank-card";
+import { StatBand } from "@/features/profile/components/stat-band";
+import { WeekIntensityCard } from "@/features/profile/components/week-intensity-card";
+import { WordsTeaserCard } from "@/features/profile/components/words-teaser-card";
+import { WordsTeaserEmpty } from "@/features/profile/components/words-teaser-empty";
 import {
 	resolveAvatar,
 	useAvatars,
-} from "@/src/features/profile/hooks/use-avatars";
-import { useInsightGate } from "@/src/features/profile/hooks/use-insight-gate";
-import { useMoodDelta } from "@/src/features/profile/hooks/use-mood-delta";
-import { useProfileSummary } from "@/src/features/profile/hooks/use-profile-summary";
-import { useReflectionRank } from "@/src/features/profile/hooks/use-reflection-rank";
-import { useWeekIntensity } from "@/src/features/profile/hooks/use-week-intensity";
-import { useAppStore } from "@/src/store/store";
+} from "@/features/profile/hooks/use-avatars";
+import { useInsightGate } from "@/features/profile/hooks/use-insight-gate";
+import { useMoodDelta } from "@/features/profile/hooks/use-mood-delta";
+import { useProfileSummary } from "@/features/profile/hooks/use-profile-summary";
+import { useReflectionRank } from "@/features/profile/hooks/use-reflection-rank";
+import { useWeekIntensity } from "@/features/profile/hooks/use-week-intensity";
+import { useAppStore } from "@/store/store";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -52,18 +52,16 @@ export function ProfileScreen() {
 
 	const sessionCount = summary?.sessionCount ?? 0;
 	const gate = useInsightGate(sessionCount);
-	// Lapsed Plus mid-navigation shouldn't strand the query on a locked week —
-	// derive the effective offset from current entitlement instead of syncing
-	// it back into state.
+	// Lapsed Plus mid-navigation must not strand the query on a locked week:
+	// derive the effective offset from the current entitlement.
 	const weekIntensity = useWeekIntensity(gate.isPlus ? weekOffset : 0);
 	const hasEnoughForChips =
 		sessionCount >= 1 && (summary?.dominantEmotionTags?.length ?? 0) > 0;
 	const hasEnoughForMirrorLines = sessionCount >= 3;
 	const hasEnoughForRhythm = sessionCount >= 5;
 	const hasEnoughForChart = sessionCount >= 1;
-	// Need 3 distinct recurring words so every teaser row is genuine — no
-	// fabricated fallbacks. Below that, show the honest empty state once the
-	// user has at least one session (their language just hasn't repeated yet).
+	// Three distinct recurring words make every teaser row genuine; below that,
+	// the honest empty state once the user has at least one session.
 	const wordCount = summary?.wordCount ?? 0;
 	const hasEnoughForWords = wordCount >= 3;
 	const showWordsEmpty = sessionCount >= 1 && !hasEnoughForWords;
@@ -136,9 +134,8 @@ export function ProfileScreen() {
 					<ContributionGraphCard staggerDelay={150} />
 				)}
 
-				{/* A standing door, never rate-limited — but pointless once they're in.
-            `isPlus` is false while entitlement resolves, so waiting on the read
-            keeps a subscriber from watching an upsell mount and disappear. */}
+				{/* `isPlus` is false while entitlement resolves; waiting on the read keeps
+            a subscriber from watching an upsell mount and disappear. */}
 				{!(gate.isLoading || gate.isPlus) && <PlusRow staggerDelay={160} />}
 
 				{hasEnoughForChips && summary && (
@@ -155,8 +152,7 @@ export function ProfileScreen() {
 					/>
 				)}
 
-				{/* The rank card renders from session zero, so the section header must
-            too — otherwise a new user sees a lone card with no heading. */}
+				{/* The rank card renders from session zero, so the header must too. */}
 				{(hasEnoughForChart || rank) && (
 					<EaseView
 						animate={{ opacity: 1 }}
@@ -180,8 +176,7 @@ export function ProfileScreen() {
 
 				{hasEnoughForChart && <SteadinessRow />}
 
-				{/* Widest lens first: you among everyone, then your week, then your
-            words. Always rendered — the card carries its own pending state. */}
+				{/* Widest lens first. Always rendered: the card carries its own pending state. */}
 				{rank && (
 					<View className="mb-4">
 						<RankCard rank={rank} staggerDelay={300} />

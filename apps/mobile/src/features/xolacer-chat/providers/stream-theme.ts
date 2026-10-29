@@ -1,19 +1,9 @@
 import { useThemeColor } from "heroui-native";
 import { type DeepPartial, mergeThemes, type Theme } from "stream-chat-expo";
-import { useAppTheme } from "@/src/context/app-theme-context";
+import { useAppTheme } from "@/context/app-theme-context";
 
-/**
- * Bridges Xolace theme tokens into Stream's design-token layer.
- *
- * Stream v9 resolves every component colour from `theme.semantics`, and
- * `mergeThemes` deep-merges whatever we pass over its resolved defaults — so
- * overriding the semantic layer alone re-skins the whole chat surface without
- * touching per-component style keys.
- *
- * It must be applied to BOTH `OverlayProvider` and `Chat`: the long-press
- * message menu renders inside the overlay host, which sits above `Chat` in the
- * tree and therefore reads the provider's own ThemeProvider.
- */
+/** Bridges Xolace tokens into Stream's `theme.semantics`. Apply to BOTH `OverlayProvider` and
+ * `Chat`: the long-press menu reads the overlay host's own ThemeProvider. */
 export function useStreamTheme(): DeepPartial<Theme> {
 	const { isDark } = useAppTheme();
 
@@ -49,12 +39,9 @@ export function useStreamTheme(): DeepPartial<Theme> {
 		"field-placeholder",
 	]);
 
-	// Stream picks its light/dark base from RN's `useColorScheme()` — the system
-	// appearance — which knows nothing about our in-app theme switcher. A light
-	// Xolace theme on a dark phone got Stream's dark base, and every one of the
-	// ~500 tokens we don't name below fell through to it: that is why composer
-	// text (`inputTextDefault`) was unreadable. Resolving the base ourselves for
-	// OUR scheme makes the whole set consistent before the overrides tint it.
+	// Stream picks its light/dark base from the system `useColorScheme()`, not the
+	// in-app theme, so every token not named below would fall through to the wrong
+	// base (unreadable composer text). Resolve the base for our scheme first.
 	const base = mergeThemes({ scheme: isDark ? "dark" : "light" });
 
 	return {
@@ -84,8 +71,6 @@ export function useStreamTheme(): DeepPartial<Theme> {
 			chatBgAttachmentIncoming: surfaceTertiary,
 			chatBgAttachmentOutgoing: accent,
 
-			// Outgoing rides the accent; incoming stays on a surface so the two read
-			// as "me" and "them" without a second hue entering the palette.
 			chatBgIncoming: surfaceSecondary,
 			chatBgOutgoing: accent,
 			chatTextIncoming: foreground,

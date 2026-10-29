@@ -1,20 +1,12 @@
-/**
- * Fit-to-fill: binary-searches the largest font size at which the text still
- * fits its box, so a short quote grows to fill the card and a long one shrinks.
- * Measures with the real `onTextLayout` lines, so it costs one extra render per
- * search step (~6) and settles.
- *
- * The caller must render the measured Text as an unclipped, absolutely
- * positioned twin remounted on `measureKey` — measuring the height-capped
- * visible Text settles at the ceiling with the text overflowing.
- */
+// Binary-searches the largest font size at which the text fits its box, one
+// render per step. The caller must measure an unclipped, absolutely positioned
+// twin remounted on `measureKey`; the capped visible Text settles at the ceiling.
 import { useState } from "react";
 import type { LayoutChangeEvent, TextLayoutEvent } from "react-native";
 import { PixelRatio } from "react-native";
 
 const MAX_STEPS = 8;
 
-/** display type floor and ceiling for the poster body */
 const MIN_SIZE = 13;
 const MAX_SIZE = 56;
 
@@ -31,9 +23,7 @@ export function useFitFontSize(
 		steps: 0,
 	});
 
-	// restart the search whenever the text, the box it must fill, or the OS text
-	// size changes — `fontScale` multiplies every candidate, so a stale search
-	// settles on a size that no longer fits
+	// Restart on text, box or OS text size: `fontScale` multiplies every candidate.
 	const fontScale = PixelRatio.getFontScale();
 	const key = `${text}|${boxHeight}|${lo0}|${hi0}|${fontScale}`;
 	const [prevKey, setPrevKey] = useState(key);
@@ -76,7 +66,7 @@ export function useFitFontSize(
 	return {
 		debug: `${boxHeight}/${search.steps}`,
 		fontSize: search.size,
-		// remount the Text on every candidate so onTextLayout actually re-fires
+		// Remount the Text on every candidate so onTextLayout re-fires.
 		measureKey: `${key}|${search.size}`,
 		onBoxLayout,
 		onTextLayout,

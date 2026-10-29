@@ -4,7 +4,8 @@ name: Release
 #
 #   backend: convex deploy to prod  (the ONLY place that deploys Convex)
 #     ├─ mobile: start the EAS release workflow (OTA or store build),
-#     │          when mobile-relevant files changed
+#     │          when mobile-relevant files changed (on a push, the repo
+#     │          variable RELEASE_MOBILE_DEFAULT can force skip/always)
 #     └─ web, admin: trigger their Vercel Production deploy hooks
 #
 # Backend first, then clients: no client can go live against a backend that
@@ -92,11 +93,19 @@ jobs:
       - name: Decide whether mobile changed
         id: gate
         env:
-          MODE: ${{ inputs.mobile || 'auto' }}
+          # A manual run always passes its input. A push has none, so it uses the
+          # repo variable RELEASE_MOBILE_DEFAULT (set it to `skip` before merging
+          # a release that must not ship mobile), then `auto`.
+          MODE: ${{ inputs.mobile || vars.RELEASE_MOBILE_DEFAULT || 'auto' }}
           BEFORE: ${{ github.event.before }}
           SHA: ${{ github.sha }}
         run: |
+          if [[ "$MODE" != "auto" && "$MODE" != "always" && "$MODE" != "skip" ]]; then
+            echo "::error::Mobile mode '$MODE' is not auto, always or skip (check the RELEASE_MOBILE_DEFAULT repo variable)."
+            exit 1
+          fi
           if [[ "$MODE" == "skip" ]]; then
+            echo "::notice::Mobile release skipped (mode: skip)."
             echo "release=false" >> "$GITHUB_OUTPUT"; exit 0
           fi
           if [[ "$MODE" == "always" || -z "$BEFORE" || "$BEFORE" =~ ^0+$ ]]; then

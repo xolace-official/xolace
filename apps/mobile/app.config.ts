@@ -46,7 +46,14 @@ const getAppName = () => {
 	return "Xolace";
 };
 
+// EAS gets the file from the GOOGLE_SERVICES_JSON file env var: the release
+// workflow uploads a clean checkout, which has none of the gitignored copies.
+// Local builds fall back to those copies in apps/mobile.
 const getGoogleServicesPath = () => {
+	if (process.env.GOOGLE_SERVICES_JSON) {
+		return process.env.GOOGLE_SERVICES_JSON;
+	}
+
 	if (IS_DEV) {
 		return "./google-services.json";
 	}
@@ -277,11 +284,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 		[
 			"expo-notifications",
 			{
-				// Bundling is the only way a custom sound reaches either platform:
-				// iOS names the file in the payload but plays it from the binary, and
-				// Android copies it to res/raw where a channel can point at it.
-				// Basenames become Android resource names, so they must stay
-				// lowercase and free of dots beyond the extension.
+				// Bundling is the only way a custom sound reaches either platform. Basenames become
+				// Android resource names, so they stay lowercase with no dots beyond the extension.
 				sounds: [
 					"./assets/sounds/notifications/reach.wav",
 					"./assets/sounds/notifications/message.wav",
@@ -354,11 +358,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 			},
 		],
 	],
-	// Production OTAs only reach binaries with the same native fingerprint, so a
-	// JS update can never land on a build missing a native module it needs.
-	// Development and preview keep appVersion. Store builds made before this
-	// switch (the shipped 1.14.0, runtime "1.14.0") get no OTAs published under
-	// fingerprint runtimes; 1.15.0 ships as the first fingerprint store build.
+	// Production OTAs only reach binaries with the same native fingerprint. Development and
+	// preview keep appVersion; store builds from before the switch (1.14.0) get no
+	// fingerprint-runtime OTAs.
 	runtimeVersion: {
 		policy: IS_PRODUCTION ? "fingerprint" : "appVersion",
 	},

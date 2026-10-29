@@ -1,7 +1,4 @@
-/**
- * Web fallback for the tab bar. Uses expo-router/ui Tabs instead of NativeTabs.
- * This file is loaded automatically on web via Expo platform extensions (.web.tsx).
- */
+/** Web tab bar: expo-router/ui Tabs instead of NativeTabs, picked up via the .web.tsx extension. */
 import {
 	TabList,
 	type TabListProps,
@@ -14,8 +11,8 @@ import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import React from "react";
 import { Pressable, type PressableProps, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { MaxContentWidth } from "@/src/lib/theme";
+import { AppText } from "@/components/shared/app-text";
+import { MaxContentWidth } from "@/lib/theme";
 import { ExternalLink } from "./external-link";
 
 const TAB_CONTAINER_STYLE = { maxWidth: MaxContentWidth };

@@ -1,4 +1,4 @@
-import type { QuietReturnTier } from "@/src/features/reflect/quiet-return-copy";
+import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
 
 export type UserVariant =
 	| { kind: "first-time" }

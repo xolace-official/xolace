@@ -2,25 +2,22 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { MiniPlayerAccessory } from "@/src/features/browse/now-playing/mini-player-accessory";
-import { MiniPlayerOverlay } from "@/src/features/browse/now-playing/mini-player-overlay";
-import { useMiniPlayerShown } from "@/src/features/browse/now-playing/now-playing-store";
-import { useUnreadBadge } from "@/src/features/xolacer-chat/use-unread-badge";
-import { playSoftPress } from "@/src/lib/haptics";
-import { useTabBarHidden } from "@/src/lib/tab-bar";
+import { MiniPlayerAccessory } from "@/features/browse/now-playing/mini-player-accessory";
+import { MiniPlayerOverlay } from "@/features/browse/now-playing/mini-player-overlay";
+import { useMiniPlayerShown } from "@/features/browse/now-playing/now-playing-store";
+import { useUnreadBadge } from "@/features/xolacer-chat/use-unread-badge";
+import { playSoftPress } from "@/lib/haptics";
+import { useTabBarHidden } from "@/lib/tab-bar";
 
-/**
- * Tab surface — a sibling stack entry to the reflect (index) screen, not the
- * app entry. Reached via `router.replace('/discovery')` from the idle menu so
- * reflect stays the permanent "/" landing with no back-stack accumulation.
- */
+/** Tab surface: a sibling stack entry to reflect (index), reached via router.replace so "/"
+ * stays the landing. */
 export default function AppTabs() {
 	const background = useThemeColor("background");
 	const accent = useThemeColor("accent");
 	// Yielded to a screen raising a bottom toolbar — the two share the same strip.
 	const hidden = useTabBarHidden();
-	// Stream's total across every conversation — the same number the app icon
-	// shows, so the two never disagree. Null (no chat yet) reads as nothing.
+	// Stream's total across every conversation, the same number as the app icon. Null reads as
+	// nothing.
 	const unread = useUnreadBadge();
 	const showPlayer = useMiniPlayerShown();
 	// iOS 26 docks the player in the bar; elsewhere it floats above it.
@@ -54,8 +51,8 @@ export default function AppTabs() {
 					/>
 					<NativeTabs.Trigger.Label>Discovery</NativeTabs.Trigger.Label>
 				</NativeTabs.Trigger>
-				{/* Catalogue browse (#338, docs/paths-v1.md §9.3) — the one override of
-				 * the no-new-tab map rule (map decision 19), and only for this tab. */}
+				{/* Catalogue browse (#338, paths-v1.md §9.3): the one override of the no-new-tab
+			    map rule (decision 19). */}
 				<NativeTabs.Trigger name="browse">
 					<NativeTabs.Trigger.Icon
 						md="grid_view"

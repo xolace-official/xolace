@@ -1,12 +1,6 @@
-// Build-time guard for production mobile releases (plan §5.2).
-//
-// A production binary or OTA update must never inherit test configuration
-// (E2E/seed/mock flags, the dev Clerk instance, a dev or E2E Convex deployment)
-// or ship a secret in an EXPO_PUBLIC_* variable, which Metro inlines into the
-// public JS bundle. app.config.ts calls assertProductionEnvironment(), so
-// `eas build` and `eas update` fail before anything is built or published.
-//
-// Messages name the offending variables, never their values.
+// Build-time guard for production mobile releases (plan §5.2): a production binary or OTA must
+// never inherit test config or ship a secret in EXPO_PUBLIC_*. app.config.ts calls
+// assertProductionEnvironment(). Messages name the offending variables, never their values.
 
 type Env = Record<string, string | undefined>;
 
@@ -159,13 +153,8 @@ const RULE_MESSAGES: Record<Violation["rule"], string> = {
 	"test-flag": "is a test/E2E/seed/mock flag and is set",
 };
 
-/**
- * True for the runs that produce a production artifact: an EAS build
- * (`EAS_BUILD` is "true" on EAS servers and "1" for `eas build --local`) or an
- * export for `eas update` (`expo export` sets NODE_ENV=production before it
- * reads the config). `expo start`, fingerprinting and config reads in CI set
- * neither, so they are left alone.
- */
+/** True for a production artifact: an EAS build (`EAS_BUILD` "true"/"1") or an `eas update`
+ * export (NODE_ENV=production). */
 export function isProductionRelease(env: Env): boolean {
 	if (env.APP_VARIANT !== "production") {
 		return false;

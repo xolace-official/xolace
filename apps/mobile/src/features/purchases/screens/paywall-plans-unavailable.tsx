@@ -1,7 +1,7 @@
-import { Button, Spinner, useThemeColor } from "heroui-native";
+import { Button, Spinner, Surface, useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { FadeIn, LinearTransition } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const SPINNER_ENTERING = FadeIn.delay(50);
 
@@ -10,20 +10,15 @@ type Props = {
 	onRetry: () => void;
 };
 
-/**
- * Shown in place of the period picker + purchase CTA when payments are live
- * but the store returned no packages (offerings fetch failed or products
- * unresolvable). Never present a purchasable-looking button that does
- * nothing — that reads as a bug (App Review Guideline 2.1) and strands real
- * users on transient App Store / network failures.
- */
+/** Replaces the picker and CTA when the store returned no packages; a dead purchase button
+ * fails App Review 2.1. */
 export function PaywallPlansUnavailable({ isRetrying, onRetry }: Props) {
 	const accentForeground = useThemeColor("accent-foreground") as string;
 
 	return (
 		<View className="gap-4">
-			<View
-				className="items-center gap-1 rounded-2xl border border-border bg-surface px-4 py-4"
+			<Surface
+				className="items-center gap-1 rounded-2xl px-4 py-4"
 				style={styles.borderCurve}
 			>
 				<AppText className="font-semibold text-[15px] text-foreground">
@@ -33,7 +28,7 @@ export function PaywallPlansUnavailable({ isRetrying, onRetry }: Props) {
 					We couldn&apos;t reach the App Store. Check your connection and try
 					again.
 				</AppText>
-			</View>
+			</Surface>
 
 			<Button
 				accessibilityLabel="Try again"

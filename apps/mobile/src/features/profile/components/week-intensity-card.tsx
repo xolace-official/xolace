@@ -1,12 +1,12 @@
 import { SymbolView } from "expo-symbols";
-import { PressableFeedback } from "heroui-native";
+import { PressableFeedback, Surface } from "heroui-native";
 import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { interpolate, interpolateColor } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
-import { useEffectiveReducedMotion } from "@/src/lib/motion/use-effective-reduced-motion";
-import { useTokenColor } from "../hooks/use-token-color";
+import { AppText } from "@/components/shared/app-text";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useTokenColor } from "@/lib/use-token-color";
 import { CardInfo } from "./card-info";
 import { GateFade } from "./gate-fade";
 
@@ -43,11 +43,9 @@ const BAR_MIN_H = 5;
 const GATE_H = 64;
 const CARD_INSET = 40; // card is mx-5 → 20px each side
 
-// Height and colour are plain styles, so a bar is right on its first frame.
-// They used to be Reanimated shared values springing up from the 5px floor, and
-// on some TestFlight devices that spring never landed, so every bar stayed flat.
-// The grow-in is now a native scaleY that ends at 1, so a missed animation still
-// leaves the bar at its full height.
+// Height and colour are plain styles and the grow-in is a native scaleY ending
+// at 1: on some TestFlight devices a Reanimated spring never landed and every
+// bar stayed flat, so a missed animation must still leave the bar full height.
 function IntensityBar({
 	intensity,
 	isToday,
@@ -99,9 +97,8 @@ function IntensityBar({
 	);
 }
 
-// Frosted "earlier weeks" navigator — the single gated element (Model B). The
-// current week reads free above; only the control that pages into history is
-// blended behind a warm gradient fade, with no hard border. Tap → paywall.
+// Frosted "earlier weeks" navigator, the single gated element (Model B): the
+// current week reads free above. Tap opens the paywall.
 function EarlierWeeksGate({
 	width,
 	onPress,
@@ -119,13 +116,11 @@ function EarlierWeeksGate({
 			onPress={onPress}
 			style={{ height: GATE_H }}
 		>
-			{/* Warm gradient veil — transparent at top (blends from the chart) into a
-			 * soft accent frost at the bottom. No border, no hard cutoff. */}
+			{/* Transparent at top, soft accent frost at the bottom; no hard cutoff. */}
 			<View className="absolute inset-0">
 				<GateFade color={accent} endAlpha="42" height={GATE_H} width={width} />
 			</View>
 
-			{/* Dimmed navigator sitting in the frosted region. */}
 			<View className="flex-1 flex-row items-center justify-center gap-2.5 opacity-50">
 				<SymbolView
 					name={{
@@ -153,8 +148,7 @@ function EarlierWeeksGate({
 	);
 }
 
-// Real, functional week pager for Plus — same footprint as the free gate but
-// unfrosted, with independently-disableable prev/next chevrons.
+// Functional week pager for Plus: same footprint as the free gate, unfrosted.
 function WeekNav({
 	weekLabel,
 	canGoNext,
@@ -270,7 +264,7 @@ export function WeekIntensityCard({
 				type: "timing",
 			}}
 		>
-			<View className="overflow-hidden rounded-3xl border border-border/65 bg-surface">
+			<Surface className="p-0">
 				<View className="px-5 pt-5 pb-4">
 					<View className="mb-5 flex-row items-center gap-1.5">
 						<AppText className="font-medium text-[11px] text-muted uppercase tracking-widest">
@@ -282,10 +276,9 @@ export function WeekIntensityCard({
 						/>
 					</View>
 
-					{/* Chart — always rendered (flat baseline bars when the week is empty),
-					 * so the card never reads as fully gated. */}
+					{/* Always rendered (flat baseline bars when empty) so the card never reads
+					    as fully gated. */}
 					<View className="flex-row" style={{ height: BAR_MAX_H + 20 }}>
-						{/* Bars column */}
 						<View className="flex-1 flex-row items-end gap-1.5">
 							{days.map((d) => (
 								<View className="flex-1 items-center gap-1.5" key={d.dayName}>
@@ -308,8 +301,8 @@ export function WeekIntensityCard({
 							))}
 						</View>
 
-						{/* Qualitative y-axis — bottom inset reserves the day-label row so
-						 * "Minimal" lands on the bar baseline, not the M–S row. */}
+						{/* Bottom inset reserves the day-label row so "Minimal" lands on the
+						    bar baseline. */}
 						<View
 							className="justify-between pb-5 pl-3"
 							style={{ height: BAR_MAX_H + 20 }}
@@ -355,7 +348,7 @@ export function WeekIntensityCard({
 					/* The only gated element for free tier: paging into earlier weeks. */
 					<EarlierWeeksGate onPress={onUnlock} width={width - CARD_INSET} />
 				)}
-			</View>
+			</Surface>
 		</EaseView>
 	);
 }

@@ -8,12 +8,12 @@ import Animated, {
 	useAnimatedStyle,
 	withTiming,
 } from "react-native-reanimated";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import {
 	COUNTDOWN_FROM_MS,
 	type PlusDictationView,
-} from "@/src/features/reflect/hooks/use-plus-dictation";
-import { playSoftPress } from "@/src/lib/haptics";
+} from "@/features/reflect/hooks/use-plus-dictation";
+import { playSoftPress } from "@/lib/haptics";
 
 const BAR_COUNT = 24;
 const BAR_MAX = 28;
@@ -34,8 +34,7 @@ const WaveBar = ({
 }) => {
 	const style = useAnimatedStyle(() => {
 		// The recorder normalises -160..0 dB to 0..1, so room tone already sits
-		// around 0.7 — speech lives in the top of the range.
-		// ponytail: fixed floor; calibrate per device if quiet voices look flat.
+		// around 0.7 and speech lives in the top of the range.
 		const level = Math.min(1, Math.max(0, (metering.get() - 0.7) / 0.25));
 		return {
 			height: withTiming(BAR_MIN + (BAR_MAX - BAR_MIN) * level * weight, {
@@ -53,10 +52,7 @@ const STOP_NAME = { android: "stop", ios: "stop.fill", web: "stop" } as const;
 const formatRemaining = (ms: number) =>
 	`0:${String(Math.ceil(ms / 1000)).padStart(2, "0")}`;
 
-/**
- * A Plus dictation take in the composer: listening, then writing it down.
- * Between takes, the one-line note on a fallback or a lost take, if any.
- */
+/** A Plus dictation take in the composer; between takes, the note on a fallback or a lost take. */
 export const DictationStrip = ({
 	phase,
 	metering,
@@ -121,8 +117,8 @@ export const DictationStrip = ({
 					{formatRemaining(remainingMs)}
 				</AppText>
 			)}
-			{/* Its own stop, beside what it stops: the header mic sits next to the
-          composer's ✕, and a missed tap there closes the card. */}
+			{/* Its own stop: the header mic sits next to the composer's ✕, and a missed
+			    tap there closes the card. */}
 			<PressableFeedback
 				accessibilityLabel="Stop and write it down"
 				accessibilityRole="button"

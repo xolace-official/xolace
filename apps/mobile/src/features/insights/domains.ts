@@ -8,7 +8,8 @@ type FreeView = FunctionReturnType<typeof api.compounding.insights.freeView>;
 type PlusView = NonNullable<
 	FunctionReturnType<typeof api.compounding.insights.plusView>
 >;
-/** Free or Xolace+: the Xolace+ fields are simply absent from the free view, the upsell from Xolace+'s. */
+/** Free or Xolace+: the Xolace+ fields are simply absent from the free view, the upsell from
+ * Xolace+'s. */
 export type InsightsView = Omit<FreeView, "upsell"> &
 	Partial<Pick<FreeView, "upsell">> &
 	Partial<Pick<PlusView, "overallTrend" | "overallTrendSince" | "insights">>;
@@ -50,14 +51,14 @@ export const DOMAIN_META: Record<
 	work: { icon: icon("briefcase.fill", "work"), label: "Work & Studies" },
 };
 
-/** The free view's word for a domain's state — how well Xolace knows it, never a grade. */
+/** The free view's word for a domain's state: how well Xolace knows it, never a grade. */
 export const STAGE_WORD: Record<DomainItem["state"], string> = {
 	settled: "Known well",
 	unlocked: "Getting to know it",
 	warming: "Warming up",
 };
 
-/** Xolace+ only (#520): what Xolace saw, in the free upsell's words — never a grade. */
+/** Xolace+ only (#520): what Xolace saw, in the free upsell's words, never a grade. */
 export const COMPOUNDING_WORD = {
 	compounding: "Heavier than your usual",
 	easing: "Easing",
@@ -68,7 +69,8 @@ export const COMPOUNDING_SHORT = {
 	easing: "Easing",
 } as const;
 
-/** Colour is state, never domain (#491): quiet is muted, compounding and easing ember (amber, never red). */
+/** Colour is state, never domain (#491): quiet is muted, compounding and easing ember (amber,
+ * never red). */
 export type Tone = "accent" | "ember" | "muted";
 export const toneOf = (d: DomainItem): Tone =>
 	d.lastSeenAt === null ? (d.compounding ? "ember" : "accent") : "muted";
@@ -87,7 +89,8 @@ export const lastSeen = (at: number) =>
 		month: "short",
 	});
 
-/** What a trend is measured against: last week, or a quiet domain's last reading ("since April"). */
+/** What a trend is measured against: last week, or a quiet domain's last reading ("since
+ * April"). */
 export const trendBasis = (since?: number | null) => {
 	if (since == null) {
 		return "last week";

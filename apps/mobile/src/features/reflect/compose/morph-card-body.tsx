@@ -4,15 +4,13 @@ import type { TextInputInstance } from "react-native";
 import { TextInput, View, type ViewStyle } from "react-native";
 import { Presets } from "react-native-pulsar";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
-import { PillButton } from "@/src/components/shared/pill-button";
-import { DictationStrip } from "@/src/features/reflect/compose/dictation-strip";
-import type { PlusDictationView } from "@/src/features/reflect/hooks/use-plus-dictation";
-import { a11yHidden } from "@/src/lib/utils";
+import { PillButton } from "@/components/shared/pill-button";
+import { DictationStrip } from "@/features/reflect/compose/dictation-strip";
+import type { PlusDictationView } from "@/features/reflect/hooks/use-plus-dictation";
+import { a11yHidden } from "@/lib/utils";
 
-// Mirror of MAX_RAW_INPUT in convex/sessions.ts. The input simply stops
-// accepting past this, so a user never hits the server's anti-tamper throw.
-// No visible counter: a live count under an emotional freeform field reads as
-// "your feelings must fit," and ~800 words is unreachable in normal use.
+// Mirror of MAX_RAW_INPUT in convex/sessions.ts: the input stops accepting past
+// this so a user never hits the server's anti-tamper throw. No visible counter.
 const MAX_RAW_INPUT = 5000;
 
 type Props = {

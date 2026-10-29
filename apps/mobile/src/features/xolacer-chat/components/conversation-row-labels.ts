@@ -19,10 +19,7 @@ const NONE = {
 	statusLine: null,
 };
 
-/**
- * Everything a row decides, in one place: which pill, which sentence, whether
- * the request dot burns and whether the avatar is greyed.
- */
+/** Everything a row decides in one place: pill, sentence, request dot, greyed avatar. */
 export function rowPresentation(conversation: Conversation): RowPresentation {
 	if (conversation.status === "open") {
 		return NONE;
@@ -35,11 +32,7 @@ export function rowPresentation(conversation: Conversation): RowPresentation {
 			mutedAvatar: false,
 			requestDot: isXolacer,
 			statusLine: isXolacer
-				? // Freshness, never assignment. "Suggested" would read as the app
-					// dumping someone on a xolacer, which is exactly how the heaviest
-					// requests would end up deprioritised. It says when, and never what
-					// about — the first message is the user's to write.
-					conversation.origin === "suggestion"
+				? conversation.origin === "suggestion"
 					? "Just after a session"
 					: CHAT_REQUEST_SUBTITLE
 				: `Request sent, ${conversation.counterpartName} will reply when they can`,
@@ -47,8 +40,7 @@ export function rowPresentation(conversation: Conversation): RowPresentation {
 	}
 
 	if (conversation.status === "resting") {
-		// Same state, different story: one was wrapped up on purpose, the other
-		// just went quiet. Absent reason predates the field and reads as quiet.
+		// An absent reason predates the field and reads as quiet.
 		const manual = conversation.restingReason === "manual";
 		return {
 			chip: { label: manual ? "Wrapped up" : "Resting", tone: "muted" },
@@ -81,9 +73,8 @@ function closedLine(conversation: Conversation): string {
 	if (conversation.closedReason === "expired") {
 		return "This request quietly expired";
 	}
-	// Blocked rows are filtered out of the list server-side and left-xolacer rows
-	// aren't coming back, so neither can honestly be sold as still open to read —
-	// the fallthrough below is for a plain close with no reason recorded.
+	// Blocked and left-xolacer rows are never "still here to read"; the
+	// fallthrough is a plain close with no reason recorded.
 	if (
 		conversation.closedReason === "blocked" ||
 		conversation.closedReason === "xolacer_left"

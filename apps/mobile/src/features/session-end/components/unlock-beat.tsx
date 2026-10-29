@@ -7,15 +7,15 @@ import type { Doc, Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { PressableFeedback } from "heroui-native";
+import { PressableFeedback, Surface } from "heroui-native";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/src/components/shared/app-text";
-import { DOMAIN_META } from "@/src/features/insights/domains";
-import { useTokenColor } from "@/src/features/profile/hooks/use-token-color";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { DOMAIN_META } from "@/features/insights/domains";
+import { playSoftPress } from "@/lib/haptics";
+import { useTokenColor } from "@/lib/use-token-color";
 
 type Unlock = NonNullable<Doc<"sessions">["domainUnlock"]>;
 
@@ -42,7 +42,7 @@ export function UnlockBeat({ sessionId, unlock }: Props) {
 	const markSeen = useMutation(api.compounding.unlocks.markSeen);
 	const accent = useTokenColor("accent");
 	const insets = useSafeAreaInsets();
-	// The first unseen stamp, held: once seen, it changes underneath and must not
+	// The first unseen stamp, held: once seen it changes underneath and must not
 	// hide the beat. Not held on mount, since it lands a moment after (#529).
 	const [shown, setShown] = useState<Unlock | null>(null);
 	if (!shown && unlock && unlock.seenAt === undefined) {
@@ -74,7 +74,7 @@ export function UnlockBeat({ sessionId, unlock }: Props) {
 				initialAnimate={{ opacity: 0 }}
 				transition={TRANSITION}
 			>
-				<View className="mx-5 mt-6 flex-row gap-3 rounded-2xl border border-border/65 bg-surface p-4">
+				<Surface className="mx-5 mt-6 flex-row gap-3 rounded-2xl p-4">
 					<View className="size-9 items-center justify-center rounded-xl bg-accent/12">
 						<SymbolView name={meta.icon} size={17} tintColor={accent} />
 					</View>
@@ -96,7 +96,7 @@ export function UnlockBeat({ sessionId, unlock }: Props) {
 							</AppText>
 						</PressableFeedback>
 					</View>
-				</View>
+				</Surface>
 			</EaseView>
 		);
 	}

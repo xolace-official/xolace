@@ -1,21 +1,12 @@
 import { useAuth } from "@clerk/expo";
 import { useEffect } from "react";
 import { AppState } from "react-native";
-import type { ReflectionStateName } from "@/src/features/reflect/types";
-import { zustandJSONStorage } from "@/src/lib/storage/unified-storage";
+import type { ReflectionStateName } from "@/features/reflect/types";
+import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 
 /**
- * The unsent reflection, kept on the device so an app kill mid-paragraph
- * doesn't take the person's words with it. Only *unsent* text lives here: it
- * is cleared the moment the server holds it (submit resolved), so a restart
- * can never offer an already-sent reflection as if it were new.
- *
- * Not in the Zustand store: the store is devtools-visible app state, and this
- * is the most private text in the app. Never used for Vent, which is never
- * stored anywhere.
+ * The unsent reflection, cleared once the server holds it. Not in Zustand; never for Vent.
  */
-// TODO: account switch untested on a device — sign out, sign in as another
-// account, the previous draft must not appear.
 type StoredDraft = { userId: string; text: string; savedAt: number };
 
 const KEY = "xolace-reflect-draft";
@@ -45,8 +36,8 @@ export function readReflectDraft(userId: string | null | undefined): string {
 	return Date.now() - draft.savedAt < MAX_AGE_MS ? draft.text : "";
 }
 
-// One composer at a time, so one pending write — module-level so a clear from
-// outside the Reflect screen (Settings) can cancel it.
+// One composer at a time, so one pending write; module-level so a clear from
+// Settings can cancel it.
 let pendingWrite: ReturnType<typeof setTimeout> | undefined;
 const wipeListeners = new Set<() => void>();
 
@@ -57,8 +48,7 @@ export function clearReflectDraft(): Promise<void> {
 }
 
 /**
- * Delete-my-data: the stored draft *and* the words still on a mounted compose
- * screen — otherwise the next keystroke would write the deleted text back.
+ * Delete-my-data: the stored draft and the words on screen, or the next keystroke writes them back.
  */
 export function wipeReflectDraft(): Promise<void> {
 	const cleared = clearReflectDraft();
@@ -75,10 +65,7 @@ export function onReflectDraftWiped(listener: () => void) {
 }
 
 /**
- * Mirrors `entryText` to disk while the person is composing — debounced, but
- * flushed at once when the app leaves the foreground. Leaving the
- * compose screens cancels a pending write, so a debounce can't land after the
- * submit has cleared the draft.
+ * Saves `entryText` while composing: debounced, flushed on background, cancelled on leaving.
  */
 export function usePersistReflectDraft(
 	userId: string | null | undefined,
@@ -105,9 +92,8 @@ export function usePersistReflectDraft(
 		};
 		const timer = setTimeout(save, WRITE_DEBOUNCE_MS);
 		pendingWrite = timer;
-		// Typing then locking the phone: the debounce may never get to run before
-		// the OS kills the app. Only while this write is still pending — a clear
-		// (submit, discard, wipe) has already decided the text must not land.
+		// Locking the phone may kill the app before the debounce runs. Only while
+		// this write is still pending: a clear has decided the text must not land.
 		const sub = AppState.addEventListener("change", (next) => {
 			if (next !== "active" && pendingWrite === timer) {
 				save();
@@ -121,10 +107,7 @@ export function usePersistReflectDraft(
 }
 
 /**
- * Root-mounted, like `ChatLocalDataGuard`: sign-out, account deletion and an
- * account switch each leave the previous person's unsent words on the phone.
- * The stored draft names its owner, so a switch made while the app was closed
- * is caught on mount too.
+ * Root-mounted like `ChatLocalDataGuard`: clears another account's draft, even from a closed app.
  */
 export function ReflectDraftGuard() {
 	const { isLoaded, userId } = useAuth();

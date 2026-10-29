@@ -1,15 +1,12 @@
 import { PressableFeedback } from "heroui-native";
-import { AppText } from "@/src/components/shared/app-text";
-import type { SourceLine } from "@/src/features/quotes/hooks/use-today-quote";
+import { AppText } from "@/components/shared/app-text";
+import type { SourceLine } from "@/features/quotes/hooks/use-today-quote";
 
 const CLASSES =
 	"mb-2 text-center font-poster-body text-[12.5px] text-poster-ink-faint";
 
-/**
- * One line of provenance — and, when the session quote is gated, the whole
- * paywall entry point. There is no blur, no lock icon, no second card: the
- * curated quote above it is real and fully rendered (#309).
- */
+/** One line of provenance and, when the session quote is gated, the whole paywall entry point:
+ * no blur, no lock (#309). */
 export function PosterSourceLine({
 	line,
 	onUnlock,

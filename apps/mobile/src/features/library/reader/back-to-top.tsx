@@ -10,7 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 const UP_ICON = {
 	android: "arrow_upward",
@@ -18,11 +18,8 @@ const UP_ICON = {
 	web: "arrow_upward",
 } as const;
 
-/**
- * Absent while reading; fades in only once the reader reaches the end. Owns
- * its `show` state so crossing the end re-renders this and nothing else.
- * `bottom` is where it rests — the mini-player ticket raises it above the dock.
- */
+/** Fades in once the reader reaches the end. Owns its `show` state so crossing the end
+ * re-renders this and nothing else. */
 export function BackToTop({
 	scrollY,
 	endAt,

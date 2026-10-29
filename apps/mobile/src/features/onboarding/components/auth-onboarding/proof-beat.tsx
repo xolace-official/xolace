@@ -1,8 +1,4 @@
-/**
- * The proof beat — the deck's sixth bespoke composition, and the only one whose
- * subject is other people rather than the reader or the product.
- *
- */
+/** The proof beat: the only composition whose subject is other people. */
 
 import { SymbolView } from "expo-symbols";
 import { useWindowDimensions, View } from "react-native";
@@ -11,20 +7,13 @@ import Animated, {
 	useReducedMotion,
 } from "react-native-reanimated";
 
-import { AppText } from "@/src/components/shared/app-text";
-import type { StoryBeat } from "@/src/features/onboarding/story-beats";
+import { AppText } from "@/components/shared/app-text";
+import type { StoryBeat } from "@/features/onboarding/story-beats";
 import { useDeckColor } from "./deck-color";
 import { EmberField, VOICED } from "./ember-field";
 
-/**
- * `count` renders literally as embers, so it inherits Discovery's shipped rule
- * unchanged: real matches only, and below a floor of three there is no number
- * and no crowd to draw. The warm line runs alone in that case.
- *
- * ponytail: hardcoded until the real query lands — do not let the below-floor
- * branch ship as a fabricated field of embers.
- */
-// TODO(#200): real weekly cohort count.
+// TODO(#200): real weekly cohort count. Inherits Discovery's rule: real matches only,
+// and below a floor of three there is no number and no field of embers.
 const COUNT = 22;
 
 const REVIEW = {
@@ -41,7 +30,7 @@ const DUR = 520;
 
 const FIELD_MIN = 118;
 const FIELD_MAX = 168;
-/** Horizontal padding, doubled — px-9 on both sides. */
+/** px-9 on both sides. */
 const GUTTER = 36 * 2;
 /** Gap between the last ember and the top of the quote. */
 const DROP = 18;
@@ -52,12 +41,10 @@ export const ProofBeat = ({ beat }: { beat: StoryBeat }) => {
 	const { width, height } = useWindowDimensions();
 
 	const fieldW = width - GUTTER;
-	// Proportional, not fixed: this is the tallest beat in the deck and a short
-	// phone has to fit the quote and the caption under it without clipping.
+	// Proportional: the tallest beat in the deck must fit the quote on a short phone.
 	const fieldH = Math.min(FIELD_MAX, Math.max(FIELD_MIN, height * 0.17));
 
-	// Where the speaking ember actually landed, in points — the rule and the
-	// quote both hang off this, so the tether stays registered at every size.
+	// The voiced ember in points; the rule and the quote both hang off it.
 	const voicedX = VOICED.x * fieldW;
 	const voicedY = VOICED.y * fieldH;
 
@@ -95,9 +82,8 @@ export const ProofBeat = ({ beat }: { beat: StoryBeat }) => {
 					width={fieldW}
 				/>
 
-				{/* The rule. Starts at the ember's own centre and runs the whole way
-            down the quote, so there is one continuous line from the light to
-            the words. Faded at the top by sitting under the halo. */}
+				{/* The rule from the ember's centre down the quote, faded at the top by the
+				    halo. */}
 				<Animated.View
 					className="absolute bottom-0 w-px rounded-full"
 					entering={reduced ? undefined : FadeInDown.delay(1600).duration(700)}
@@ -114,18 +100,12 @@ export const ProofBeat = ({ beat }: { beat: StoryBeat }) => {
 					entering={reduced ? undefined : FadeInDown.delay(1700).duration(700)}
 					style={{ marginTop: DROP, paddingLeft: voicedX + 14 }}
 				>
-					{/* The review's own title, kept as a title. It is the only place on
-              this slide where someone says what Xolace became for them, and it
-              is three words long — quoting it costs a line and buys the whole
-              payoff the chosen sentence deliberately leaves out. */}
 					<AppText className="font-poppins-medium text-[14px] text-foreground/90 leading-5">
 						{REVIEW.title}
 					</AppText>
 
-					{/* Set a step smaller than the deck's other body copy. Three
-              sentences at 14px would run eleven lines and start reading as
-              terms and conditions; at 12.5 it reads as what it is — someone
-              typing more than they meant to. */}
+					{/* A step smaller than the deck's body copy: at 14px three sentences run
+					    eleven lines. */}
 					<AppText className="text-[12.5px] text-foreground/70 leading-4.75">
 						{`“${REVIEW.quote}”`}
 					</AppText>
@@ -136,9 +116,7 @@ export const ProofBeat = ({ beat }: { beat: StoryBeat }) => {
 				</Animated.View>
 			</View>
 
-			{/* The count arrives last and reads as a caption on a picture you have
-          already looked at — the opposite order to a stat card, where the
-          number arrives first and the visual decorates it. */}
+			{/* The count arrives last, as a caption on the picture. */}
 			<Animated.View className="mt-7" entering={enter(6)}>
 				<AppText className="text-[14px] text-foreground/70 leading-6">
 					<AppText

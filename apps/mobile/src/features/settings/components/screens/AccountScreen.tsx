@@ -5,23 +5,23 @@ import { useThemeColor, useToast } from "heroui-native";
 import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { ConfirmationDialog } from "@/src/components/shared/confirmation-dialog";
-import { AppleIcon } from "@/src/features/auth/components/apple-icon";
-import { GoogleIcon } from "@/src/features/auth/components/google-icon";
-import { DevToolsSection } from "@/src/features/settings/components/dev-tools-section";
-import { NameDialog } from "@/src/features/settings/components/name-dialog";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { SettingsRow } from "@/components/shared/settings-row";
+import { SettingsSection } from "@/components/shared/settings-section";
+import { AppleIcon } from "@/features/auth/components/apple-icon";
+import { GoogleIcon } from "@/features/auth/components/google-icon";
+import { DevToolsSection } from "@/features/settings/components/dev-tools-section";
+import { NameDialog } from "@/features/settings/components/name-dialog";
 import {
 	ACCOUNT_ICON,
 	DISPLAY_NAME_ICON,
 	EMAIL_ICON,
 	LOG_OUT_ICON,
 	SPACE_NAME_ICON,
-} from "@/src/features/settings/components/settings-icons";
-import { SettingsRow } from "@/src/features/settings/components/settings-row";
-import { SettingsSection } from "@/src/features/settings/components/settings-section";
-import { useAccountSettings } from "@/src/features/settings/hooks/use-account-settings";
-import { useConfirmAction } from "@/src/features/settings/hooks/use-confirm-action";
-import { COMPANION_FALLBACK_NAME } from "@/src/features/talk/talk-copy";
+} from "@/features/settings/components/settings-icons";
+import { useAccountSettings } from "@/features/settings/hooks/use-account-settings";
+import { useConfirmAction } from "@/features/settings/hooks/use-confirm-action";
+import { COMPANION_FALLBACK_NAME } from "@/features/talk/talk-copy";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 
@@ -74,7 +74,6 @@ export const AccountScreen = () => {
 				contentInsetAdjustmentBehavior="automatic"
 				showsVerticalScrollIndicator={false}
 			>
-				{/* ── SIGN-IN ──────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -92,7 +91,6 @@ export const AccountScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── USERNAME ─────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -115,7 +113,6 @@ export const AccountScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── YOUR SPACE ───────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}
@@ -138,10 +135,8 @@ export const AccountScreen = () => {
 					</SettingsSection>
 				</EaseView>
 
-				{/* ── DEV TOOLS (dev builds only) ──────────────────────── */}
 				{__DEV__ && <DevToolsSection />}
 
-				{/* ── LOG OUT ──────────────────────────────────────────── */}
 				<EaseView
 					animate={{ opacity: 1, translateY: 0 }}
 					initialAnimate={{ opacity: 0, translateY: 16 }}

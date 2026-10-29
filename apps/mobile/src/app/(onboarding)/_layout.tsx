@@ -1,11 +1,7 @@
 import { Stack } from "expo-router";
 
-/**
- * The promise screen — a signed-out user's very first mount, before
- * `introSeen` is set. Root-guarded (see `src/app/_layout.tsx`): once the
- * promise's CTA sets `introSeen`, this group's guard goes false and
- * Stack.Protected swaps straight to `(auth)` on its own.
- */
+/** The promise screen, before `introSeen` is set. Once the CTA sets it, Stack.Protected swaps
+ * to `(auth)` on its own. */
 const SCREEN_OPTIONS = {
 	animation: "fade" as const,
 	contentStyle: { backgroundColor: "transparent" },

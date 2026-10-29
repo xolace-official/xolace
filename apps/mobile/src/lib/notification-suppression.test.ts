@@ -4,7 +4,7 @@ import {
 	conversationNotificationIds,
 	setActiveNotificationConversation,
 	suppressedInForeground,
-} from "@/src/lib/notification-suppression";
+} from "@/lib/notification-suppression";
 
 describe("suppressedInForeground", () => {
 	it("suppresses a conversation notification for the active thread", () => {

@@ -1,19 +1,10 @@
 import * as Notifications from "expo-notifications";
 import { useEffect } from "react";
-import { useUnreadBadge } from "@/src/features/xolacer-chat/use-unread-badge";
+import { useUnreadBadge } from "@/features/xolacer-chat/use-unread-badge";
 
-/**
- * Mirrors Stream's unread total onto the app icon. Renders nothing; mounted
- * above the Stack so a read in a thread, on the list, or on another device
- * drops the badge whichever screen the user is on. Foreground only: the SDK
- * closes the socket in the background, so a read elsewhere lands on the next
- * handshake rather than the instant it happens. A chat push sets the same number
- * server-side (`chatNotifications.sendMessagePush`), so the two surfaces agree
- * and the badge means "messages" and only that — non-chat pushes never badge.
- *
- * Skipped while the number is unknown: clearing a push-set badge on a cold
- * start before Stream has spoken would be the stale-badge defect in reverse.
- */
+/** Mirrors Stream's unread total onto the app icon; mounted above the Stack. Skipped while
+ * unknown, so a push-set badge (`chatNotifications.sendMessagePush`) survives a cold start
+ * until Stream speaks. */
 export function UnreadIconBadge() {
 	const count = useUnreadBadge();
 	useEffect(() => {
@@ -22,9 +13,8 @@ export function UnreadIconBadge() {
 		}
 		Notifications.setBadgeCountAsync(count).catch(warn);
 	}, [count]);
-	// Unmount means the protected layout is gone (sign-out): a badge for the
-	// account that just left is stale, and queuing the clear after any in-flight
-	// write above keeps a late count from landing on the signed-out icon.
+	// Unmount means sign-out: clearing after any in-flight write above keeps a
+	// late count off the signed-out icon.
 	useEffect(
 		() => () => void Notifications.setBadgeCountAsync(0).catch(warn),
 		[]

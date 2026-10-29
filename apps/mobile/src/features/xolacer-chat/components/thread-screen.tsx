@@ -4,11 +4,12 @@ import { Stack } from "expo-router";
 import { Button } from "heroui-native";
 import { View } from "react-native";
 import { useOverlayContext } from "stream-chat-expo";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 import { useStreamConnection } from "../providers/stream-chat-provider";
 import { useDismissThreadNotifications } from "../use-dismiss-thread-notifications";
 import { useThreadConversation } from "../use-thread-conversation";
 import { rateCtaState } from "../utils";
+import { ChatBodyFrame } from "./chat-body-frame";
 import { ComposerPlaceholder } from "./composer-placeholder";
 import { SafetyStrip } from "./safety-strip";
 import { ThreadHeader } from "./thread-header";
@@ -17,23 +18,14 @@ import { ThreadSkeleton } from "./thread-skeleton";
 import { ThreadStatusBar } from "./thread-status-bar";
 import { XolacerMenu } from "./xolacer-menu";
 
-/**
- * `myStreamUserId` is dropped: it is the profile id, which is also the id the
- * Stream socket connects as, so `client.userID` carries the same value without
- * the round trip — and that lets `useThreadConversation` seed this shape from
- * the conversation list, which has no per-user field of its own. The server
- * still returns it for clients shipped before this change.
- */
+/** `myStreamUserId` is dropped: `client.userID` carries the same value, which lets the list
+ * seed this shape. The server still returns it for older clients. */
 export type ThreadConversation = Omit<
 	NonNullable<FunctionReturnType<typeof api.xolacerChat.getConversation>>,
 	"myStreamUserId"
 > & {
-	/**
-	 * Set only by `useThreadConversation`'s list seed: the per-conversation
-	 * fields (`resumable`, `canRate`, `myRating`) are placeholders until the
-	 * real row lands, so the status bar — the one surface that reads them —
-	 * holds its space instead of committing to a CTA it may have to retract.
-	 */
+	/** Set by the list seed: `resumable`, `canRate` and `myRating` are placeholders until the
+	 * real row lands, so the status bar holds its space. */
 	seeded?: true;
 };
 
@@ -45,7 +37,11 @@ export function ThreadScreen({ conversationId }: { conversationId: string }) {
 	useDismissThreadNotifications(conversationId);
 
 	if (conversation === undefined) {
-		return <ThreadSkeleton />;
+		return (
+			<ChatBodyFrame>
+				<ThreadSkeleton />
+			</ChatBodyFrame>
+		);
 	}
 	if (conversation === null) {
 		return <ThreadUnavailable />;
@@ -54,20 +50,15 @@ export function ThreadScreen({ conversationId }: { conversationId: string }) {
 }
 
 function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
-	// Usually a no-op — the Connect tab already opened the connection on the way
-	// here. It matters on the paths that skip that tab: a push-notification deep
-	// link, or a cold launch straight into this route.
+	// Usually a no-op (the Connect tab already connected); matters on paths that
+	// skip it: a push deep link or a cold launch into this route.
 	const { status: streamStatus, retry } = useStreamConnection();
 
 	const { overlay } = useOverlayContext();
 
-	// Identity lives in the native header's title slot; the back affordance,
-	// safe area and glass background are the platform's. Rendered as a sibling of
-	// every branch below rather than inside one, so the title is set on the first
-	// frame and survives the connecting → ready swap without the header
-	// re-mounting under it. The overflow menu is a sibling here for the same
-	// reason, and is mounted unconditionally — never `hidden`, which would leave
-	// a transparent touch-eating band across the top on Android.
+	// A sibling of every branch so the title is set on the first frame and
+	// survives the connecting → ready swap. The menu is mounted unconditionally,
+	// never `hidden`, which leaves a touch-eating band across the top on Android.
 	const header = (
 		<>
 			<Stack.Screen
@@ -90,9 +81,7 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
 	);
 
 	const body = () => {
-		// A request that hasn't been accepted has no channel yet — there is nothing
-		// to read, so the whole screen is header + waiting/accept bar. Independent
-		// of Stream: this state never needs a connection.
+		// No channel before accept: header plus waiting/accept bar, no Stream needed.
 		if (!conversation.streamChannelId) {
 			return (
 				<View className="flex-1 bg-background">
@@ -111,10 +100,8 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
 			);
 		}
 
-		// Chrome is Convex-driven and already loaded, so it stays put while the
-		// Stream client comes up underneath it. `ready` no longer waits on the
-		// socket — only on the offline database opening, milliseconds — so this
-		// skeleton is a flash, and `unavailable` is the one state that lingers.
+		// Chrome is Convex-driven and stays put while Stream comes up. `ready` waits
+		// only on the offline db, so the skeleton is a flash; `unavailable` lingers.
 		if (streamStatus !== "ready") {
 			return (
 				<View className="flex-1 bg-background">
@@ -125,9 +112,8 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
 						<MessagesUnavailable onRetry={retry} />
 					)}
 					{conversation.status === "open" ? (
-						// Only while connecting. On the error path the messages never
-						// arrive, so a composer stub would promise a send that cannot
-						// happen.
+						// Only while connecting: on the error path a composer stub would
+						// promise a send that cannot happen.
 						streamStatus === "connecting" ? (
 							<ComposerPlaceholder />
 						) : null
@@ -144,7 +130,7 @@ function ThreadBody({ conversation }: { conversation: ThreadConversation }) {
 	return (
 		<>
 			{header}
-			{body()}
+			<ChatBodyFrame>{body()}</ChatBodyFrame>
 		</>
 	);
 }

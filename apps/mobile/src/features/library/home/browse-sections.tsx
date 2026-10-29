@@ -1,18 +1,14 @@
-/**
- * The home's last two sections (#396, carried over from variant C): "What
- * kind of light" kind rows and the A–Z letter strip. Letters with no
- * subject are dimmed.
- */
+/** The home's last two sections (#396): "What kind of light" kind rows and the A–Z letter strip. */
 
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Pressable, View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
-import { SectionTitle } from "@/src/features/library/home/entry-cards";
-import { KINDS, type Kind } from "@/src/features/library/home/library-copy";
-import { cn } from "@/src/lib/utils";
+import { AppText } from "@/components/shared/app-text";
+import { SectionTitle } from "@/features/library/home/entry-cards";
+import { KINDS, type Kind } from "@/features/library/home/library-copy";
+import { cn } from "@/lib/utils";
 
 const KIND_FLUX: Record<Kind, number> = {
 	advice: require("@/assets/images/flux/flux-campfire.png"),
@@ -22,7 +18,7 @@ const KIND_FLUX: Record<Kind, number> = {
 
 const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-export const openSubjects = (letter?: string) =>
+const openSubjects = (letter?: string) =>
 	router.push({
 		params: letter ? { letter } : {},
 		pathname: "/browse/library/subjects",

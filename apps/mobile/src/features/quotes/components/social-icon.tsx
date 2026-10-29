@@ -2,7 +2,7 @@ import { GlassView } from "expo-glass-effect";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { View } from "react-native";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 type Props = {
 	label: string;

@@ -6,16 +6,11 @@ import {
 	type Kindling,
 	type Twig,
 	twigHref,
-} from "@/src/features/kindling/twig-presentation";
+} from "@/features/kindling/twig-presentation";
 
-/**
- * Where a xolacer twig goes (#570): straight to the person closest in meaning,
- * asked at tap time and never stored, else the roster filtered to the
- * specialty. `stepId` rides along either way so a sent request tends the twig.
- * `pendingId` is the twig whose match is in flight, so its sheet can say so.
- * It holds through the push and clears when this screen is back in focus, so
- * the button never flips back to its label mid-transition.
- */
+/** Where a xolacer twig goes (#570): the closest person by meaning (asked at
+ * tap, never stored), else the roster filtered to the specialty. `pendingId`
+ * holds through the push so the button never flips back mid-transition. */
 export function useXolacerTwigHref() {
 	const suggest = useAction(api.ai.xolacers.suggest.sessionSuggestion);
 	const [pendingId, setPendingId] = useState<Twig["_id"]>();

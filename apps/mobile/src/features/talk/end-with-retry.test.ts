@@ -1,6 +1,6 @@
 import { ConvexError } from "convex/values";
 import { describe, expect, it, vi } from "vitest";
-import { endWithRetry } from "@/src/features/talk/end-with-retry";
+import { endWithRetry } from "@/features/talk/end-with-retry";
 
 const noWait = () => Promise.resolve();
 

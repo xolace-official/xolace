@@ -9,18 +9,12 @@ import {
 	useFetchReactions,
 	useMessagesContext,
 } from "stream-chat-expo";
-import { AppText } from "@/src/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
 
 type Reaction = NonNullable<MessageUserReactionsProps["reactions"]>[number];
 
-/**
- * The "who reacted" sheet behind a reaction chip. A rebuild of Stream's
- * `MessageUserReactions` minus its "more emojis" button: that button opens the
- * full unicode picker, a second way past the curated seven (#345) — the pick
- * lands on the message as a type nothing here can render, so the chip shows
- * "?". The long-press row's "+" is hidden by theme; this one is an untitled
- * FlatList header with no theme key or prop, hence the rebuild.
- */
+/** Stream's `MessageUserReactions` rebuilt without its "more emojis" button, a second way past
+ * the curated seven (#345) that no theme key or prop hides. */
 export function ConversationReactionSheet({
 	message,
 	reactions: propReactions,
@@ -47,9 +41,8 @@ export function ConversationReactionSheet({
 		reactionType: selectedReaction,
 		sort: { created_at: -1 },
 	});
-	// Caller-supplied rows win over the fetch, as in the SDK's own sheet. Same
-	// shape and cast too: `Reaction.id` is typed as required though a reaction's
-	// user is optional on the wire.
+	// Caller-supplied rows win over the fetch, as in the SDK's sheet. The cast:
+	// `Reaction.id` is typed required though a reaction's user is optional on the wire.
 	const rows =
 		propReactions ??
 		(reactions.map((r) => ({

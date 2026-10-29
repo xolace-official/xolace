@@ -6,17 +6,10 @@ import {
 	clearActiveNotificationConversation,
 	conversationNotificationIds,
 	setActiveNotificationConversation,
-} from "@/src/lib/notification-suppression";
+} from "@/lib/notification-suppression";
 
-/**
- * Clears the tray of anything still sitting there for a conversation the user
- * has just opened — the thread itself has now said everything the banner was
- * for. Only that conversation's entries go: someone else waiting on you in
- * another thread is not answered by this one being read.
- *
- * Best-effort. A failure leaves a stale banner, which is not worth an error
- * surface of its own.
- */
+/** Clears the tray of this conversation's notifications once its thread is open; other threads'
+ * entries stay. Best-effort. */
 export function useDismissThreadNotifications(conversationId: string) {
 	const isFocused = useIsFocused();
 

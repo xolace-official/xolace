@@ -3,8 +3,8 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { AppText } from "@/src/components/shared/app-text";
-import { useTokenColor } from "../hooks/use-token-color";
+import { AppText } from "@/components/shared/app-text";
+import { useTokenColor } from "@/lib/use-token-color";
 
 type Props = {
 	displayName: string;
@@ -125,7 +125,6 @@ export function ProfileHero({
 						)}
 					</View>
 
-					{/* Small edit affordance — only when the picker is wired up. */}
 					{onAvatarPress && (
 						<View
 							className="absolute right-0 bottom-0 h-6 w-6 items-center justify-center rounded-full border-2 border-background"

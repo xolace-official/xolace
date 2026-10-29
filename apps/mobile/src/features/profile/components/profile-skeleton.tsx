@@ -1,10 +1,7 @@
 import { SkeletonGroup } from "heroui-native";
 import { View } from "react-native";
 
-/**
- * Mirrors ProfileHero + StatBand + chart layout proportions so the
- * loading -> loaded transition doesn't cause a layout jump.
- */
+/** Mirrors the ProfileHero + StatBand + chart proportions to avoid a layout jump. */
 export function ProfileSkeleton() {
 	return (
 		<SkeletonGroup className="px-6">

@@ -1,25 +1,16 @@
-/**
- * Q1 — the name, on its own step.
- *
- * Nothing but the question, bottom-weighted, one field and one pinned button.
- * No card, no progress, no mascot — the first thing asked shouldn't arrive
- * inside chrome.
- *
- * One-tap accept is the point: the handle is already in the field, so Continue
- * keeps it. Tapping the field edits it; the dice draws another. An existing
- * user's `preferences.displayName` arrives as `initialName` and is what sits
- * there instead of a fresh suggestion.
- */
+// Q1, the name, on its own step with no card, progress or mascot. The suggested
+// handle is already in the field so Continue keeps it; an existing user's
+// `preferences.displayName` arrives as `initialName` instead.
 
 import { Button, useThemeColor } from "heroui-native";
 import { useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 
-import { AppText } from "@/src/components/shared/app-text";
-import { suggestHandle } from "@/src/features/intake/answer-rules";
-import { IntakeScreen } from "@/src/features/intake/questionnaire/intake-screen";
-import { playSoftPress } from "@/src/lib/haptics";
+import { AppText } from "@/components/shared/app-text";
+import { suggestHandle } from "@/features/intake/answer-rules";
+import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
+import { playSoftPress } from "@/lib/haptics";
 
 interface NameStepProps {
 	initialName: string;
