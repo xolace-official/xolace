@@ -2,6 +2,7 @@ import { Button, Spinner, Surface, useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { FadeIn, LinearTransition } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { cn } from "@/lib/utils";
 
 const SPINNER_ENTERING = FadeIn.delay(50);
 
@@ -33,7 +34,7 @@ export function PaywallPlansUnavailable({ isRetrying, onRetry }: Props) {
 			<Button
 				accessibilityLabel="Try again"
 				accessibilityRole="button"
-				className={`rounded-2xl${isRetrying ? "self-center" : "w-full"}`}
+				className={cn("rounded-2xl", isRetrying ? "self-center" : "w-full")}
 				isDisabled={isRetrying}
 				isIconOnly={isRetrying}
 				layout={LinearTransition.springify()}

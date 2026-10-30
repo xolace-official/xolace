@@ -4,7 +4,13 @@ import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { File } from "expo-file-system";
 import { useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+	useCallback,
+	useEffect,
+	useEffectEvent,
+	useRef,
+	useState,
+} from "react";
 import type { SharedValue } from "react-native-reanimated";
 import { useVoiceProcessingConsent } from "@/features/consent/use-voice-processing-consent";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
@@ -60,10 +66,6 @@ export type UseVentFlowReturn = {
 	// Called when the 'gone' animation finishes; triggers router.back()
 	onGoneComplete: () => void;
 	metering: SharedValue<number>;
-	isRecording: boolean;
-	durationMs: number;
-	// Tier-aware recording ceiling for the screen's auto-stop effect.
-	maxDurationMs: number;
 };
 
 export function useVentFlow(): UseVentFlowReturn {
@@ -76,6 +78,8 @@ export function useVentFlow(): UseVentFlowReturn {
 	const burnDoneRef = useRef(false);
 	// Snapshot of durationMs at stop time, for events after the recorder state clears.
 	const durationAtStopRef = useRef(0);
+	// Set when the tier ceiling, not the person, ended the recording.
+	const maxReachedRef = useRef(false);
 	// Consent write started with the vent; the upload waits on it.
 	const consentRef = useRef<Promise<void> | null>(null);
 
@@ -85,7 +89,7 @@ export function useVentFlow(): UseVentFlowReturn {
 	const [isCrisis, setIsCrisis] = useState(false);
 	const [capReached, setCapReached] = useState(false);
 
-	const { startRecording, stopRecording, metering, isRecording, durationMs } =
+	const { startRecording, stopRecording, metering, getDurationMs } =
 		useMeteringRecorder();
 	const processVentAudio = useAction(api.vent.processVentAudio);
 	const { ensureConsent } = useVoiceProcessingConsent();
@@ -206,11 +210,13 @@ export function useVentFlow(): UseVentFlowReturn {
 		burnDoneRef.current = false;
 		resultRef.current = null;
 
+		const durationMs = getDurationMs();
 		durationAtStopRef.current = durationMs;
 		posthog.capture("vent_stopped", {
 			duration_ms: durationMs,
-			max_duration_reached: durationMs >= maxDurationMs,
+			max_duration_reached: maxReachedRef.current,
 		});
+		maxReachedRef.current = false;
 
 		setState("processing");
 		const uri = await stopRecording();
@@ -250,6 +256,25 @@ export function useVentFlow(): UseVentFlowReturn {
 			});
 	};
 
+	// Soft ceiling: auto-release at the max duration, no visible timer. Timed
+	// from the start so the recording never has to re-render this screen.
+	const releaseAtCeiling = useEffectEvent(() => {
+		maxReachedRef.current = true;
+		stopVent();
+	});
+	// Plus can resolve mid-take, re-running the effect below; only the time left
+	// counts, or the take outgrows the upload limit.
+	const msUntilCeiling = useEffectEvent((ceilingMs: number) =>
+		Math.max(0, ceilingMs - getDurationMs())
+	);
+	useEffect(() => {
+		if (state !== "recording") {
+			return;
+		}
+		const t = setTimeout(releaseAtCeiling, msUntilCeiling(maxDurationMs));
+		return () => clearTimeout(t);
+	}, [state, maxDurationMs]);
+
 	const onBurnComplete = useCallback(() => {
 		burnDoneRef.current = true;
 		tryAdvance();
@@ -270,10 +295,7 @@ export function useVentFlow(): UseVentFlowReturn {
 	return {
 		capReached,
 		displayWords,
-		durationMs,
 		isCrisis,
-		isRecording,
-		maxDurationMs,
 		metering,
 		onBurnComplete,
 		onGoneComplete,
