@@ -262,11 +262,16 @@ export function useVentFlow(): UseVentFlowReturn {
 		maxReachedRef.current = true;
 		stopVent();
 	});
+	// Plus can resolve mid-take, re-running the effect below; only the time left
+	// counts, or the take outgrows the upload limit.
+	const msUntilCeiling = useEffectEvent((ceilingMs: number) =>
+		Math.max(0, ceilingMs - getDurationMs())
+	);
 	useEffect(() => {
 		if (state !== "recording") {
 			return;
 		}
-		const t = setTimeout(releaseAtCeiling, maxDurationMs);
+		const t = setTimeout(releaseAtCeiling, msUntilCeiling(maxDurationMs));
 		return () => clearTimeout(t);
 	}, [state, maxDurationMs]);
 
