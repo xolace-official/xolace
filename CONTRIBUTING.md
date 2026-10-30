@@ -80,7 +80,7 @@ Never point tests or scripts at the production Convex deployment.
 ## Pull requests
 
 - **One problem per PR.** Unrelated fixes go in their own PR, however small.
-- **Fill in the template.** Problem, Change, Surfaces touched, Verification, and Model & harness if an agent wrote any of it.
+- **Fill in the template.** Problem, Change (lead with a small diagram or diff-sketch), Surfaces touched, Merge danger (one-way or two-way door, blast radius), Verification (before/after), and Model & harness if an agent wrote any of it.
 - **Evidence is required**, matched to the change:
   - visual change: before/after screenshots
   - timing or animation: a screen recording

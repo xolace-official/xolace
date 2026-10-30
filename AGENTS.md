@@ -178,7 +178,9 @@ Ultracite/Biome enforces the mechanics: run `bun run fix`. Full rules:
 - Conventional Commits (`feat(web): ...`, `fix(backend): ...`). One logical change per
   commit.
 - Work on a branch; nothing lands on `main` or touches prod Convex without review.
-- PR body: Problem / Change / Verification (with the proof above) / Model and harness.
+- PR body: the template in `.github/pull_request_template.md` (Problem / Change /
+  Surfaces touched / Merge danger / Verification / Model & harness). How to fill it:
+  `.agents/rules/pull-requests.md`.
 - Issues live in GitHub Issues; use `gh`.
 
 ### Merging a PR
