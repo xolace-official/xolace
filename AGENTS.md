@@ -197,3 +197,20 @@ Ultracite/Biome enforces the mechanics: run `bun run fix`. Full rules:
   rebase the next one. On a `bun.lock` conflict take the base's lockfile and re-run
   `bun install`; never hand-merge it. After force-pushing a rebase, check the PR
   still has its approval: the `dev` ruleset can ask for a new one after a push.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on `xolace-official/xolace`, via `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default roles (`needs-triage`, `needs-info`, `ready-for-agent`,
+`ready-for-human`, `wontfix`), label string = role name. See
+`docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one root `GLOSSARY.md` (for now, the Glossary section above) and
+`docs/adr/`. See `docs/agents/domain.md`.
