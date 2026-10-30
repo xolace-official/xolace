@@ -12,13 +12,6 @@ export type FollowUpListItem =
 	| { kind: "empty"; key: string };
 
 const PAGE_SIZE = 20;
-// Open cards are pinned in their own groups, so the history skips them.
-const OPEN = new Set<ProfileFollowUp["status"]>([
-	"pending",
-	"ready",
-	"shown",
-	"superseded",
-]);
 
 const monthTitle = (ts: number) =>
 	new Date(ts).toLocaleDateString(undefined, {
@@ -79,9 +72,13 @@ export function useProfileFollowUps() {
 		}
 	}
 
+	// The history skips cards already pinned above. The groups are capped per
+	// status, so older open cards fall through to the history instead of
+	// disappearing.
+	const pinned = new Set([...open.waiting, ...open.upcoming].map((c) => c._id));
 	let month: string | null = null;
 	for (const card of history.results) {
-		if (OPEN.has(card.status)) {
+		if (pinned.has(card._id)) {
 			continue;
 		}
 		const title = monthTitle(card.createdAt);
