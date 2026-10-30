@@ -4,6 +4,7 @@ import {
 	type WorkflowId,
 	WorkflowManager,
 } from "@convex-dev/workflow";
+import { paginationOptsValidator } from "convex/server";
 import { type Infer, v } from "convex/values";
 import { components, internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -42,6 +43,7 @@ import {
 	domainValidator,
 	type safeguardLevelValidator,
 } from "./lib/validators";
+import schema from "./schema";
 import { renderSemanticProfile } from "./semanticProfiles";
 
 const MAX_CARD_CHARS = 200;
@@ -671,6 +673,107 @@ export const listForProfile = query({
 			.order("desc")
 			.take(effectiveLimit);
 	},
+});
+
+// Profile Follow-ups tab: the slim row both queries below return.
+const cardFields = schema.tables.follow_up_cards.validator.fields;
+const profileCardValidator = v.object({
+	_id: v.id("follow_up_cards"),
+	cardText: cardFields.cardText,
+	createdAt: cardFields.createdAt,
+	escalationDerived: cardFields.escalationDerived,
+	status: cardFields.status,
+	tier: cardFields.tier,
+	userResponse: cardFields.userResponse,
+});
+
+function toProfileCard(
+	card: Doc<"follow_up_cards">
+): Infer<typeof profileCardValidator> {
+	return {
+		_id: card._id,
+		cardText: card.cardText,
+		createdAt: card.createdAt,
+		escalationDerived: card.escalationDerived,
+		status: card.status,
+		tier: card.tier,
+		userResponse: card.userResponse,
+	};
+}
+
+// Cards per open status on the tab's pinned groups. A profile holds at most a
+// handful open at once (one live workflow, supersedes resolve on dismiss).
+const OPEN_GROUP_LIMIT = 20;
+
+/**
+ * Profile Follow-ups tab, pinned groups: cards waiting on the user (ready,
+ * shown, superseded) and cards whose check-in hasn't come due (pending).
+ * Newest first within each group.
+ */
+export const profileOpenCards = query({
+	args: {},
+	handler: async (ctx) => {
+		const { profile } = await requireAuth(ctx);
+		const byStatus = (status: Doc<"follow_up_cards">["status"]) =>
+			ctx.db
+				.query("follow_up_cards")
+				.withIndex("by_profile_status", (q) =>
+					q.eq("emotionalProfileId", profile._id).eq("status", status)
+				)
+				.order("desc")
+				.take(OPEN_GROUP_LIMIT);
+
+		const [ready, shown, superseded, pending] = await Promise.all([
+			byStatus("ready"),
+			byStatus("shown"),
+			byStatus("superseded"),
+			byStatus("pending"),
+		]);
+		const waiting = [...ready, ...shown, ...superseded].sort(
+			(a, b) => b.createdAt - a.createdAt
+		);
+		return {
+			upcoming: pending.map(toProfileCard),
+			waiting: waiting.map(toProfileCard),
+		};
+	},
+	returns: v.object({
+		upcoming: v.array(profileCardValidator),
+		waiting: v.array(profileCardValidator),
+	}),
+});
+
+/**
+ * Profile Follow-ups tab, history: every card newest first, one page at a
+ * time. The client skips open statuses here; `profileOpenCards` pins those.
+ * Successor to `listForProfile`, which shipped builds still call.
+ */
+export const listForProfilePage = query({
+	args: { paginationOpts: paginationOptsValidator },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
+		const result = await ctx.db
+			.query("follow_up_cards")
+			.withIndex("by_profile_created", (q) =>
+				q.eq("emotionalProfileId", profile._id)
+			)
+			.order("desc")
+			.paginate(args.paginationOpts);
+		return { ...result, page: result.page.map(toProfileCard) };
+	},
+	returns: v.object({
+		continueCursor: v.string(),
+		isDone: v.boolean(),
+		page: v.array(profileCardValidator),
+		pageStatus: v.optional(
+			v.union(
+				v.literal("SplitRecommended"),
+				v.literal("SplitRequired"),
+				v.null()
+			)
+		),
+		splitCursor: v.optional(v.union(v.string(), v.null())),
+	}),
 });
 
 // =============================================================
