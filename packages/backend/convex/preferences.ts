@@ -12,7 +12,9 @@ import {
 } from "./lib/validators";
 import {
 	talkDirectnessValidator,
+	talkLookValidator,
 	talkPaceValidator,
+	talkViewValidator,
 	voiceSlugValidator,
 } from "./lib/voices";
 
@@ -183,7 +185,11 @@ export const update = mutation({
 		spaceName: v.optional(v.union(v.string(), v.null())),
 		spaceNamePromptDismissed: v.optional(v.boolean()),
 		talkDirectness: v.optional(v.union(talkDirectnessValidator, v.null())),
+		// The companion's look, by preset name.
+		talkLook: v.optional(talkLookValidator),
 		talkPace: v.optional(talkPaceValidator),
+		// The talk view they last chose; kept for every talk.
+		talkView: v.optional(talkViewValidator),
 		// The companion in a talk (#603); null clears back to the default.
 		talkVoice: v.optional(v.union(voiceSlugValidator, v.null())),
 		theme: v.optional(
@@ -295,6 +301,12 @@ export const update = mutation({
 		}
 		if (args.talkDirectness !== undefined) {
 			patch.talkDirectness = args.talkDirectness ?? undefined;
+		}
+		if (args.talkLook !== undefined) {
+			patch.talkLook = args.talkLook;
+		}
+		if (args.talkView !== undefined) {
+			patch.talkView = args.talkView;
 		}
 
 		if (Object.keys(patch).length > 0) {

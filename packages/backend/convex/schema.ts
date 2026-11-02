@@ -22,7 +22,9 @@ import {
 } from "./lib/validators";
 import {
 	talkDirectnessValidator,
+	talkLookValidator,
 	talkPaceValidator,
+	talkViewValidator,
 	voiceSlugValidator,
 } from "./lib/voices";
 
@@ -1776,10 +1778,14 @@ export default defineSchema({
 		// Prevents re-prompting; settings entry is the only other path.
 		spaceNamePromptDismissed: v.optional(v.boolean()),
 		talkDirectness: v.optional(talkDirectnessValidator),
+		// The companion's look, by preset name (unset = Xolace), and the talk view
+		// they last chose (unset = the transcript).
+		talkLook: v.optional(talkLookValidator),
 		// Set once they answer, or their first talk with words in it closes:
 		// the companion asks their name in one talk only.
 		talkNameAsked: v.optional(v.boolean()),
 		talkPace: v.optional(talkPaceValidator),
+		talkView: v.optional(talkViewValidator),
 		// How the companion speaks in a talk (#603): its voice (unset = their
 		// mirror voice, else Vesper), pace and directness (unset = in between).
 		// Read at talk start and fixed for the talk.
