@@ -191,6 +191,7 @@ async function applyPostSessionFeedback(
 	feedback: {
 		contributedReflection?: boolean;
 		postSessionMood?: Doc<"sessions">["postSessionMood"];
+		moodPosition?: number;
 	},
 	/** Completion already scheduled an evaluation that will read this mood. */
 	evaluating = false
@@ -202,6 +203,9 @@ async function applyPostSessionFeedback(
 		...(feedback.postSessionMood
 			? { postSessionMood: feedback.postSessionMood }
 			: {}),
+		...(feedback.moodPosition === undefined
+			? {}
+			: { moodPosition: feedback.moodPosition }),
 		updatedAt: Date.now(),
 	});
 
@@ -545,11 +549,20 @@ export const completePath = mutation({
 export const recordPostSessionFeedback = mutation({
 	args: {
 		contributedReflection: v.optional(v.boolean()),
+		/** The slider's exact position, 0 heavier … 1 lighter. Newer clients only. */
+		moodPosition: v.optional(v.number()),
 		postSessionMood: v.optional(postSessionMoodValidator),
 		sessionId: v.id("sessions"),
 	},
 	handler: async (ctx, args) => {
 		const { session } = await requireSessionOwnership(ctx, args.sessionId);
+
+		if (
+			args.moodPosition !== undefined &&
+			!(args.moodPosition >= 0 && args.moodPosition <= 1)
+		) {
+			throw new ConvexError({ code: "mood_position_out_of_range" });
+		}
 
 		if (session.state !== "completed") {
 			throw new Error(
@@ -559,6 +572,7 @@ export const recordPostSessionFeedback = mutation({
 
 		await applyPostSessionFeedback(ctx, session, {
 			contributedReflection: args.contributedReflection,
+			moodPosition: args.moodPosition,
 			postSessionMood: args.postSessionMood,
 		});
 

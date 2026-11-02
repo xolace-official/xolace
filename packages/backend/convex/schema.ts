@@ -2305,6 +2305,9 @@ export default defineSchema({
 		// The AI's articulation. 1-3 sentences.
 		// Optional: not set until mirror_delivered state.
 		mirrorText: v.optional(v.string()),
+		// Where on the heavier ↔ lighter slider the user let go: 0 heavier … 0.5 the
+		// same … 1 lighter. Optional: older clients send only the word above.
+		moodPosition: v.optional(v.number()),
 
 		// --- Path ---
 
