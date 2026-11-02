@@ -43,6 +43,15 @@ export const LOOKS: Record<TalkLook, { label: string; look: Look }> = {
 	},
 };
 
+/** A saved look this build doesn't know (one added after it shipped) shows as the default. */
+export function lookOf(name: string | undefined): TalkLook {
+	return name !== undefined && isLook(name) ? name : DEFAULT_LOOK;
+}
+
+function isLook(name: string): name is TalkLook {
+	return Object.hasOwn(LOOKS, name);
+}
+
 /** The order the sheet shows them in. */
 export const LOOK_ORDER: TalkLook[] = [
 	"xolace",
