@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect } from "react";
 import {
+	ReduceMotion,
 	useDerivedValue,
 	useFrameCallback,
 	useSharedValue,
@@ -110,9 +111,13 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 			from.set(lerpPose(from.get(), target.get(), t.get()));
 			target.set(next);
 			t.set(0);
+			// `ReduceMotion.Never`, or the app-wide reduced setting finishes the ease in one frame.
 			t.set(
 				reduced
-					? withTiming(1, { duration: REDUCED_MOVE_MS })
+					? withTiming(1, {
+							duration: REDUCED_MOVE_MS,
+							reduceMotion: ReduceMotion.Never,
+						})
 					: withSpring(1, MOVE_SPRING)
 			);
 		},
