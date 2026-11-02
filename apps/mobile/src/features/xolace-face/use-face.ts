@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect } from "react";
 import {
+	ReduceMotion,
 	useDerivedValue,
 	useFrameCallback,
 	useSharedValue,
@@ -10,12 +11,13 @@ import {
 	withSpring,
 	withTiming,
 } from "react-native-reanimated";
+import { isUIRuntime, scheduleOnUI } from "react-native-worklets";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { lerpPose, NEUTRAL, type Pose } from "./pose";
 
 // Tuned by feel in the prototypes (proto/xolace-face): underdamped on purpose, a character
 // settling rather than UI snapping.
-const MOVE_SPRING = { damping: 11, mass: 0.9, stiffness: 120 };
+export const MOVE_SPRING = { damping: 11, mass: 0.9, stiffness: 120 };
 const LOOK_SPRING = { damping: 16, stiffness: 260 };
 const REDUCED_MOVE_MS = 200;
 const BLINK_CLOSE_MS = 70;
@@ -101,22 +103,52 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		};
 	});
 
+	// Reads where the face is now, so it runs on the UI thread: from JS each read mid-spring
+	// would block on a sync hop, and the writes would land frames after that snapshot.
+	const move = useCallback(
+		(next: Pose) => {
+			"worklet";
+			from.set(lerpPose(from.get(), target.get(), t.get()));
+			target.set(next);
+			t.set(0);
+			// `ReduceMotion.Never`, or the app-wide reduced setting finishes the ease in one frame.
+			t.set(
+				reduced
+					? withTiming(1, {
+							duration: REDUCED_MOVE_MS,
+							reduceMotion: ReduceMotion.Never,
+						})
+					: withSpring(1, MOVE_SPRING)
+			);
+		},
+		[from, reduced, t, target]
+	);
+
 	// Stable, because placements call these from effects keyed on them.
 	/** Moves to a new pose from wherever the face is now. A worklet too, so a gesture can
 	 * drive it on the UI thread. */
 	const to = useCallback(
 		(next: Pose) => {
 			"worklet";
-			from.set(lerpPose(from.get(), target.get(), t.get()));
-			target.set(next);
-			t.set(0);
-			t.set(
-				reduced
-					? withTiming(1, { duration: REDUCED_MOVE_MS })
-					: withSpring(1, MOVE_SPRING)
-			);
+			if (isUIRuntime()) {
+				move(next);
+			} else {
+				scheduleOnUI(move, next);
+			}
 		},
-		[from, reduced, t, target]
+		[move]
+	);
+
+	/** Shows a pose exactly, cancelling any move. For a caller that springs the pose's input
+	 * itself every frame: `to` per frame restarts its spring from rest, so it lags. */
+	const hold = useCallback(
+		(next: Pose) => {
+			"worklet";
+			from.set(next);
+			target.set(next);
+			t.set(1);
+		},
+		[from, t, target]
 	);
 
 	/** Glances away from the pose's own gaze; `look(0, 0)` returns to it. */
@@ -143,7 +175,7 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		);
 	}, [nodAmount, reduced]);
 
-	return { clock, listen, look, nod, nodAmount, pose, to };
+	return { clock, hold, listen, look, nod, nodAmount, pose, to };
 }
 
 export type FaceHandle = ReturnType<typeof useFace>;

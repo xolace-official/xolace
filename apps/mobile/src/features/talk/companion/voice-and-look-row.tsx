@@ -11,7 +11,13 @@ import { VoiceOrb } from "./voice-orb";
 
 const ORB = 40;
 
-export function VoiceAndLookRow({ onPress }: { onPress: () => void }) {
+type Props = {
+	onPress: () => void;
+	/** `false` stops the orb turning while the sheet covers it. */
+	running: boolean;
+};
+
+export function VoiceAndLookRow({ onPress, running }: Props) {
 	const { voice } = useTalkStyle();
 	const muted = useThemeColor("muted");
 	const label = TALK_CAST.find((o) => o.value === voice)?.label ?? voice;
@@ -24,7 +30,7 @@ export function VoiceAndLookRow({ onPress }: { onPress: () => void }) {
 			onPress={onPress}
 			style={{ borderCurve: "continuous" }}
 		>
-			<VoiceOrb size={ORB} voice={voice} />
+			<VoiceOrb running={running} size={ORB} voice={voice} />
 			<View className="flex-1">
 				<AppText className="font-medium text-foreground text-sm">
 					Voice and look

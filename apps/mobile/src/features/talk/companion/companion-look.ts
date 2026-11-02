@@ -8,7 +8,7 @@ import type { PaletteName } from "@/features/xolace-face/face-palette";
 
 type Look = { body: BodyName; eyes: EyeStyle; palette: PaletteName };
 
-export const DEFAULT_LOOK: TalkLook = "xolace";
+const DEFAULT_LOOK: TalkLook = "xolace";
 
 export const LOOKS: Record<TalkLook, { label: string; look: Look }> = {
 	// The square is flat, in the theme's text colour (white in dark mode, ink in light), so
@@ -42,6 +42,15 @@ export const LOOKS: Record<TalkLook, { label: string; look: Look }> = {
 		look: { body: "flame", eyes: "round", palette: "brand" },
 	},
 };
+
+/** A saved look this build doesn't know (one added after it shipped) shows as the default. */
+export function lookOf(name: string | undefined): TalkLook {
+	return name !== undefined && isLook(name) ? name : DEFAULT_LOOK;
+}
+
+function isLook(name: string): name is TalkLook {
+	return Object.hasOwn(LOOKS, name);
+}
 
 /** The order the sheet shows them in. */
 export const LOOK_ORDER: TalkLook[] = [

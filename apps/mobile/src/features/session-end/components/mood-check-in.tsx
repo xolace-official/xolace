@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import { Presets } from "react-native-pulsar";
-import { useAnimatedReaction } from "react-native-reanimated";
+import {
+	useAnimatedReaction,
+	useSharedValue,
+	withSpring,
+} from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { useMoodSlider } from "@/features/session-end/hooks/use-mood-slider";
 import {
@@ -13,8 +17,9 @@ import {
 	wordsFor,
 } from "@/features/session-end/mood-scale";
 import { poseForCheckIn } from "@/features/xolace-face/pose";
-import { useFace } from "@/features/xolace-face/use-face";
+import { MOVE_SPRING, useFace } from "@/features/xolace-face/use-face";
 import { XolaceFace } from "@/features/xolace-face/xolace-face";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { cn } from "@/lib/utils";
 import { MoodTrack } from "./mood-track";
 
@@ -53,15 +58,27 @@ export function MoodCheckIn({ unsure, onAnswer, onUnsure }: Props) {
 		},
 	});
 
+	// The face follows a spring on the slider value, retargeted each drag frame so it keeps
+	// its speed and carries through when the finger stops. Reduced motion follows directly.
 	// Capture only the shared value and the worklet: the slider object holds a gesture,
 	// which a worklet can't copy.
+	const reduced = useEffectiveReducedMotion();
 	const { pos } = slider;
-	const { to } = face;
+	const { hold } = face;
+	const follow = useSharedValue(SAME);
 	useAnimatedReaction(
 		() => pos.get(),
 		(v, prev) => {
 			if (prev !== null && v !== prev) {
-				to(poseForCheckIn(v));
+				follow.set(reduced ? v : withSpring(v, MOVE_SPRING));
+			}
+		}
+	);
+	useAnimatedReaction(
+		() => follow.get(),
+		(v, prev) => {
+			if (prev !== null && v !== prev) {
+				hold(poseForCheckIn(v));
 			}
 		}
 	);

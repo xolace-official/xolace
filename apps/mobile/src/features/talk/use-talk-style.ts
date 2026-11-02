@@ -9,10 +9,11 @@ import {
 	type TalkLook,
 	type TalkPace,
 	type TalkView,
+	VOICE_CATALOG,
 	type VoiceSlug,
 } from "@xolace/backend/convex/lib/voices";
 import { useQuery } from "convex/react";
-import { DEFAULT_LOOK } from "@/features/talk/companion/companion-look";
+import { lookOf } from "@/features/talk/companion/companion-look";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
 export type Directness = TalkDirectness | "balanced";
@@ -22,7 +23,7 @@ export function useTalkStyle() {
 	const update = usePreferenceMutation();
 	return {
 		directness: prefs?.talkDirectness ?? ("balanced" as const),
-		look: prefs?.talkLook ?? DEFAULT_LOOK,
+		look: lookOf(prefs?.talkLook),
 		pace: prefs?.talkPace ?? "normal",
 		setDirectness: (d: Directness) =>
 			update({ talkDirectness: d === "balanced" ? null : d }),
@@ -32,6 +33,19 @@ export function useTalkStyle() {
 		setVoice: (talkVoice: VoiceSlug) => update({ talkVoice }),
 		view: prefs?.talkView ?? ("conversation" as const),
 		// Unpicked, it speaks in their mirror voice, else Vesper (the server's order).
-		voice: prefs?.talkVoice ?? prefs?.voice ?? TALK_FALLBACK_VOICE,
+		voice: talkVoiceOf(prefs?.talkVoice, prefs?.voice),
 	};
+}
+
+/** The talk's voice, else their mirror voice, else Vesper. A slug this build doesn't know
+ * (a voice added after it shipped) is skipped, so the orb and preview always have one. */
+export function talkVoiceOf(
+	talkVoice: string | undefined,
+	mirrorVoice: string | undefined
+): VoiceSlug {
+	return [talkVoice, mirrorVoice].find(isVoice) ?? TALK_FALLBACK_VOICE;
+}
+
+function isVoice(slug: string | undefined): slug is VoiceSlug {
+	return slug !== undefined && Object.hasOwn(VOICE_CATALOG, slug);
 }
