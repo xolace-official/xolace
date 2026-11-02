@@ -185,7 +185,12 @@ export function useTalk(reopen?: {
 				withTiming(Math.max(mic, lift(getOutputVolume())), { duration: 80 })
 			);
 		}, 80);
-		return () => clearInterval(id);
+		return () => {
+			clearInterval(id);
+			// A dropped line goes quiet: the face shouldn't stay leaned in while it ends.
+			micLevel.set(withTiming(0, { duration: 80 }));
+			level.set(withTiming(0, { duration: 80 }));
+		};
 	}, [connected, isMuted, getInputVolume, getOutputVolume, level, micLevel]);
 
 	const presence: Presence = connected
