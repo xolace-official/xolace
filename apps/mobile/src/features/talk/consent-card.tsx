@@ -1,18 +1,21 @@
 // The moment before the first word (#593): what a talk is, who the companion
-// is, what is kept. The microphone is asked for once, from here.
+// is, what is kept. The microphone is asked for once, from here. Its voice and look
+// open in a sheet.
 
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
+import { useState } from "react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { GlassSurface } from "@/components/shared/glass-surface";
+import { VoiceAndLookRow } from "@/features/talk/companion/voice-and-look-row";
+import { VoiceAndLookSheet } from "@/features/talk/companion/voice-and-look-sheet";
 import {
 	MIN_TALK_S,
 	PRIVACY_LINE,
 	TALK_TIME_RESETS,
 	talkTimeLine,
 } from "@/features/talk/talk-copy";
-import { TalkVoicePicker } from "@/features/talk/talk-voice-picker";
 import { useCompanionName } from "@/features/talk/use-companion-name";
 import type { Talk } from "@/features/talk/use-talk";
 import { useTalkTime } from "@/features/talk/use-talk-time";
@@ -38,6 +41,7 @@ function Row({
 export function ConsentCard({ talk }: { talk: Talk }) {
 	const name = useCompanionName();
 	const time = useTalkTime();
+	const [sheetOpen, setSheetOpen] = useState(false);
 	// Under the minimum, Start can't be pressed (#582); the server refuses it too.
 	const low = time != null && time.secondsLeft < MIN_TALK_S;
 	const label = low
@@ -69,10 +73,7 @@ export function ConsentCard({ talk }: { talk: Talk }) {
 						"A talk lasts up to 15 minutes."}
 				</Row>
 				<Row icon={{ android: "lock", ios: "lock" }}>{PRIVACY_LINE}</Row>
-				<View className="gap-2">
-					<AppText className="font-medium text-muted text-xs">{`${name}'s voice`}</AppText>
-					<TalkVoicePicker />
-				</View>
+				<VoiceAndLookRow onPress={() => setSheetOpen(true)} />
 				<Button isDisabled={talk.started || low} onPress={talk.start}>
 					<Button.Label>{label}</Button.Label>
 				</Button>
@@ -88,6 +89,7 @@ export function ConsentCard({ talk }: { talk: Talk }) {
 					</AppText>
 				)}
 			</View>
+			<VoiceAndLookSheet isOpen={sheetOpen} onOpenChange={setSheetOpen} />
 		</GlassSurface>
 	);
 }

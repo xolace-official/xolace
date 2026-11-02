@@ -2,7 +2,9 @@ import { v } from "convex/values";
 import { DOMAINS } from "./understandingVocab";
 import {
 	talkDirectnessValidator,
+	talkLookValidator,
 	talkPaceValidator,
+	talkViewValidator,
 	voiceSlugValidator,
 } from "./voices";
 
@@ -429,8 +431,10 @@ export const preferencesDocValidator = v.object({
 	spaceName: v.optional(v.string()),
 	spaceNamePromptDismissed: v.optional(v.boolean()),
 	talkDirectness: v.optional(talkDirectnessValidator),
+	talkLook: v.optional(talkLookValidator),
 	talkNameAsked: v.optional(v.boolean()),
 	talkPace: v.optional(talkPaceValidator),
+	talkView: v.optional(talkViewValidator),
 	talkVoice: v.optional(voiceSlugValidator),
 	theme: v.union(v.literal("light"), v.literal("dark"), v.literal("system")),
 	voice: v.optional(voiceSlugValidator),

@@ -80,6 +80,8 @@ export const usePreferenceMutation = () =>
 						talkVoice: args.talkVoice ?? undefined,
 					}),
 					...(args.talkPace !== undefined && { talkPace: args.talkPace }),
+					...(args.talkLook !== undefined && { talkLook: args.talkLook }),
+					...(args.talkView !== undefined && { talkView: args.talkView }),
 					...(args.talkDirectness !== undefined && {
 						talkDirectness: args.talkDirectness ?? undefined,
 					}),

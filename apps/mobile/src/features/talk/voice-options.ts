@@ -64,6 +64,11 @@ export const VOICE_OPTIONS: VoiceOption[] = [
 	},
 ];
 
+/** The cast a talk's companion speaks with: every named voice, no "Auto". */
+export const TALK_CAST = VOICE_OPTIONS.filter(
+	(o): o is VoiceOption & { value: VoiceSlug } => o.value !== "auto"
+);
+
 /** Static require map for bundled preview clips (dynamic paths don't bundle in
  * Metro). Regenerate with scratchpad/generate-voice-previews.mjs. */
 export const VOICE_PREVIEWS: Record<VoiceSlug, number> = {
