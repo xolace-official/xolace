@@ -7,6 +7,7 @@ import {
 	FADE_OUT,
 	GlassSurface,
 } from "@/components/shared/glass-surface";
+import { FreezeRow } from "@/features/profile/components/freeze-row";
 import { useIsPlayful } from "@/lib/playful/use-playful";
 
 type Stat = { value: string; label: string; sub?: string; amber?: boolean };
@@ -15,6 +16,7 @@ type Props = {
 	sessionCount: number;
 	currentStreak: number;
 	longestStreak: number;
+	streakFreezes: number;
 	usualDay: string | null;
 	staggerDelay?: number;
 };
@@ -25,6 +27,7 @@ export function StatBand({
 	sessionCount,
 	currentStreak,
 	longestStreak,
+	streakFreezes,
 	usualDay,
 	staggerDelay = 120,
 }: Props) {
@@ -46,7 +49,7 @@ export function StatBand({
 		stats.push({ label: "Usual day", value: usualDay });
 	}
 
-	const cells = stats.map((s, i) => (
+	const cellViews = stats.map((s, i) => (
 		<View
 			className={`flex-1 items-center px-1.5 ${i > 0 ? "border-separator/50 border-l" : ""}`}
 			key={s.label}
@@ -66,6 +69,12 @@ export function StatBand({
 			) : null}
 		</View>
 	));
+	const cells = (
+		<>
+			<View className="flex-row">{cellViews}</View>
+			<FreezeRow currentStreak={currentStreak} freezes={streakFreezes} />
+		</>
+	);
 
 	// Glass stops rendering under an animated opacity, so the fade only runs
 	// where there is no glass.
@@ -86,9 +95,9 @@ export function StatBand({
 		>
 			{isPlayful ? (
 				// Playful trades the glass for a solid Surface, which the theme lips.
-				<Surface className="flex-row px-3 py-5">{cells}</Surface>
+				<Surface className="px-3 py-5">{cells}</Surface>
 			) : (
-				<GlassSurface className="flex-row px-3 py-5" radius={24}>
+				<GlassSurface className="px-3 py-5" radius={24}>
 					{cells}
 				</GlassSurface>
 			)}

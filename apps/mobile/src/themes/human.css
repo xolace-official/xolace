@@ -50,6 +50,7 @@
 			--tone-direct: oklch(68% 0.15 225);
 			--tone-witnessed: oklch(72% 0.15 75);
 			--tone-poetic-text: oklch(48% 0.18 305);
+			--frost-text: oklch(52% 0.12 240);
 			--tone-gentle-text: oklch(46% 0.17 15);
 			--tone-direct-text: oklch(46% 0.15 225);
 			--tone-witnessed-text: oklch(48% 0.15 75);
@@ -161,6 +162,7 @@
 			--tone-direct: oklch(72% 0.15 225);
 			--tone-witnessed: oklch(76% 0.15 75);
 			--tone-poetic-text: var(--tone-poetic);
+			--frost-text: oklch(72% 0.12 240);
 			--tone-gentle-text: var(--tone-gentle);
 			--tone-direct-text: var(--tone-direct);
 			--tone-witnessed-text: var(--tone-witnessed);

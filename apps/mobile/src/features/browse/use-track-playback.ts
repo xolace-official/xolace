@@ -24,17 +24,22 @@ export function useTrackPlayback(
 		getLockScreenMetadata
 	);
 	const completed = useRef(false);
+	// Laps already played when this twig armed; only a later one finishes it.
+	const armedLaps = useRef(p.laps);
 
 	// A new twig re-arms the latch even on the same slug. `didJustFinish` stays
 	// true while the player sits finished, so a finish already on screen belongs
 	// to the previous twig.
 	useEffect(() => {
 		completed.current = p.didJustFinish;
+		armedLaps.current = p.laps;
 		// eslint-disable-next-line react-hooks/exhaustive-deps -- re-arm on identity only, never on the finish itself
 	}, [slug, options.stepId]);
 
 	useEffect(() => {
-		if (!p.didJustFinish || completed.current || !options.stepId) {
+		// Looping never reports `didJustFinish`; a completed lap is the natural finish then.
+		const finished = p.didJustFinish || p.laps > armedLaps.current;
+		if (!finished || completed.current || !options.stepId) {
 			return;
 		}
 		completed.current = true;
@@ -42,7 +47,7 @@ export function useTrackPlayback(
 			completed.current = false;
 			console.error("[useTrackPlayback] completeStep failed:", e);
 		});
-	}, [p.didJustFinish, options.stepId, completeStep]);
+	}, [p.didJustFinish, p.laps, options.stepId, completeStep]);
 
 	return p;
 }

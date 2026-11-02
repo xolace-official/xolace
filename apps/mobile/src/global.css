@@ -50,7 +50,8 @@
 	--resonance-foreground: oklch(0.796 0.0347 167.72);
 
 	--color-ember: oklch(78% 0.13 75);
-	/* Frost — a day a streak freeze held (contribution graph). */
+	/* Frost — a day a streak freeze held (contribution graph). Static, so text
+	 * uses the themed --frost-text instead: this one is 2.3:1 on light surfaces. */
 	--color-frost: oklch(72% 0.12 240);
 	/* Plus night — the Xolace+ offer's own sky (postcard art, path-stack
      * layer). Dark in every theme because the art is. */
@@ -225,6 +226,7 @@
 	     * text on a light background, so the texture pill labels need a deeper
 	     * pull of the same hue. Dark theme keeps the badge value (see below). */
 			--tone-poetic-text: oklch(48% 0.18 305);
+			--frost-text: oklch(52% 0.12 240);
 			--tone-gentle-text: oklch(46% 0.17 15);
 			--tone-direct-text: oklch(46% 0.15 225);
 			--tone-witnessed-text: oklch(48% 0.15 75);
@@ -395,6 +397,7 @@
 			/* Dark theme reads fine at the badge lightness, so the text variant is
 	     * the same value — unlike light theme, no deeper pull is needed. */
 			--tone-poetic-text: var(--tone-poetic);
+			--frost-text: oklch(72% 0.12 240);
 			--tone-gentle-text: var(--tone-gentle);
 			--tone-direct-text: var(--tone-direct);
 			--tone-witnessed-text: var(--tone-witnessed);
@@ -494,6 +497,8 @@
 	--color-tone-gentle: var(--tone-gentle);
 	--color-tone-direct: var(--tone-direct);
 	--color-tone-witnessed: var(--tone-witnessed);
+
+	--color-frost-text: var(--frost-text);
 
 	--color-tone-poetic-text: var(--tone-poetic-text);
 	--color-tone-gentle-text: var(--tone-gentle-text);

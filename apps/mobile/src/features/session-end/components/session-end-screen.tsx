@@ -40,6 +40,7 @@ export const SessionEndScreen = ({
 		domainUnlock,
 		dismiss,
 		haveMore,
+		openKindling,
 	} = useSessionEnd(routeSessionId);
 	const { isNight } = useSessionMode();
 	const insetsStyle = [
@@ -70,6 +71,7 @@ export const SessionEndScreen = ({
 				<ExitVariant
 					isNight={isNight}
 					onHaveMore={() => haveMore()}
+					onOpenKindling={(ready) => openKindling(ready)}
 					sessionId={sessionId ?? undefined}
 				/>
 			) : (
@@ -79,6 +81,7 @@ export const SessionEndScreen = ({
 					isNight={isNight}
 					onDismiss={dismiss}
 					onHaveMore={haveMore}
+					onOpenKindling={openKindling}
 					sessionId={sessionId ?? undefined}
 				/>
 			)}

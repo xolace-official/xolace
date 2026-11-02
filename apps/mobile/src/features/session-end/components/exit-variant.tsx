@@ -1,20 +1,21 @@
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
-import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Button, LinkButton } from "heroui-native";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { SessionEndUpsell } from "@/features/insights/compounding-upsell";
 import { NIGHT_SESSION_END_EXIT } from "@/features/night-mode/night-copy";
 import { CloseOffer } from "@/features/session-end/components/close-offer";
+import { JumpMascot } from "@/features/session-end/components/jump-mascot";
 import { KindlingCloseSlot } from "@/features/session-end/components/kindling-close-slot";
 
 type Phase = "acknowledge" | "close";
 
 type Props = {
 	onHaveMore: () => void;
+	onOpenKindling: (ready: boolean) => void;
 	isNight?: boolean;
 	sessionId?: Id<"sessions">;
 };
@@ -32,15 +33,9 @@ const FADE_IN = { opacity: 1 };
 const SLIDE_OUT = { opacity: 0, translateY: 20 };
 const SLIDE_IN = { opacity: 1, translateY: 0 };
 
-const styles = StyleSheet.create({
-	mascot: {
-		flex: 1,
-		width: "100%",
-	},
-});
-
 export const ExitVariant = ({
 	onHaveMore,
+	onOpenKindling,
 	isNight = false,
 	sessionId,
 }: Props) => {
@@ -66,12 +61,7 @@ export const ExitVariant = ({
 					className="flex-1 px-8 pb-8"
 					onPress={() => setPhase("close")}
 				>
-					{/* TODO(mascot-video): Replace Image with VideoView once expo-video is installed in a store release. See TODOS.md — "Looping Mascot Video on Acknowledge Phase". */}
-					<Image
-						contentFit="contain"
-						source={require("@/assets/images/flux/jump-love-bgremove.png")}
-						style={styles.mascot}
-					/>
+					<JumpMascot />
 					<EaseView
 						animate={FADE_IN}
 						initialAnimate={FADE_OUT}
@@ -108,7 +98,10 @@ export const ExitVariant = ({
 					>
 						<CloseOffer sessionId={sessionId} variant="exit" />
 						<SessionEndUpsell sessionId={sessionId} />
-						<KindlingCloseSlot sessionId={sessionId} />
+						<KindlingCloseSlot
+							onOpenKindling={onOpenKindling}
+							sessionId={sessionId}
+						/>
 
 						<Button
 							accessibilityLabel="Start another session"

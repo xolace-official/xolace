@@ -116,6 +116,40 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 		navigateHome();
 	};
 
+	/** Leaves for the kindling: Discovery replaces session-end, and when this
+	 * session's kindling has already landed it opens on top, so back returns to
+	 * Discovery rather than here. */
+	const openKindling = async (
+		ready: boolean,
+		contributedReflection: boolean | null = null,
+		postSessionMood?: PostSessionMood,
+		moodPosition?: number
+	) => {
+		if (busyRef.current || navigatedRef.current) {
+			return;
+		}
+		busyRef.current = true;
+		await record(contributedReflection, postSessionMood, moodPosition).finally(
+			() => {
+				busyRef.current = false;
+			}
+		);
+		setPendingEventPrompt(null);
+		posthog.capture("session_completed", {
+			action: "open_kindling",
+			contributed_reflection: contributedReflection,
+			kindling_ready: ready,
+			mood_position: moodPosition ?? null,
+			post_session_mood: postSessionMood ?? null,
+		});
+		navigatedRef.current = true;
+		// Cast until typedRoutes regenerates (see idle-menu's /discovery).
+		router.replace("/discovery" as never);
+		if (ready) {
+			router.push("/(protected)/kindling");
+		}
+	};
+
 	const sessionData = session as { distilledText?: string } | null | undefined;
 	const distilledText = sessionData?.distilledText ?? null;
 	const contributeByDefault = contributeByDefaultQuery ?? false;
@@ -128,6 +162,7 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 		domainUnlock: session?.domainUnlock,
 		haveMore,
 		isLoading,
+		openKindling,
 		sessionCount,
 		sessionId,
 	};

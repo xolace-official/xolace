@@ -58,12 +58,14 @@ export function ProfileHeader({
 				<ProfileSkeleton />
 			)}
 
-			{summary && summary.sessionCount > 0 && (
+			{/* Freezes can be earned by actions other than a session. */}
+			{summary && (summary.sessionCount > 0 || summary.streakFreezes > 0) && (
 				<StatBand
 					currentStreak={summary.currentStreak}
 					longestStreak={summary.longestStreak}
 					sessionCount={summary.sessionCount}
 					staggerDelay={120}
+					streakFreezes={summary.streakFreezes}
 					usualDay={usualDay}
 				/>
 			)}
