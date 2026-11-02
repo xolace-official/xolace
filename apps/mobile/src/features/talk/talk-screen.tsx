@@ -23,6 +23,8 @@ import { TalkLeaveDialog } from "@/features/talk/talk-leave-dialog";
 import { TalkThread } from "@/features/talk/talk-thread";
 import { useTalk } from "@/features/talk/use-talk";
 import type { ThreadLine } from "@/features/talk/use-thread";
+import { SWITCH_SPACE } from "@/features/talk/views/companion-stage";
+import { TalkViews } from "@/features/talk/views/talk-views";
 
 const KEEP_AWAKE_TAG = "talk";
 
@@ -66,7 +68,21 @@ function Talk({
 				keyboardVerticalOffset={8 - insets.bottom}
 			>
 				<TalkHeader talk={talk} />
-				<TalkThread footer={footer} turns={talk.turns} />
+				{/* Mid-talk, a switch shows the companion large instead of the transcript. */}
+				{talk.started ? (
+					<TalkViews
+						conversation={
+							<TalkThread
+								footer={footer}
+								inset={SWITCH_SPACE}
+								turns={talk.turns}
+							/>
+						}
+						talk={talk}
+					/>
+				) : (
+					<TalkThread footer={footer} turns={talk.turns} />
+				)}
 				<TalkHelp sessionId={talk.sessionId} />
 				{talk.connected && <TalkComposer talk={talk} />}
 			</KeyboardAvoidingView>

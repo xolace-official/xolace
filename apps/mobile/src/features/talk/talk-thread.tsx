@@ -65,14 +65,17 @@ function TurnBubble({ turn, name: named }: { turn: Turn; name?: string }) {
 export function TalkThread({
 	turns,
 	footer,
+	inset = 0,
 }: {
 	turns: Turn[];
 	footer?: ReactNode;
+	/** Extra room at the top, for the view switch mid-talk. */
+	inset?: number;
 }) {
 	const ref = useRef<ScrollViewInstance>(null);
 	const headerHeight = useHeaderHeight();
 	// iOS scrolls under its transparent header; Android's header is solid.
-	const top = Platform.OS === "ios" ? headerHeight + 16 : 16;
+	const top = (Platform.OS === "ios" ? headerHeight + 16 : 16) + inset;
 	return (
 		<ScrollView
 			className="flex-1"
