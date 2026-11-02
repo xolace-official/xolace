@@ -22,7 +22,13 @@ const hasGlass = isLiquidGlassAvailable();
 const clockOf = (s: number) =>
 	`${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
-function TitlePill({ talk }: { talk: Talk }) {
+type Props = {
+	talk: Talk;
+	/** `false` while the talk is out of sight: the face's clock stops. */
+	running: boolean;
+};
+
+function TitlePill({ talk, running }: Props) {
 	const name = useCompanionName();
 	const secondsLeft = useTimeLeft(talk.connected ? talk.endsAt : null, 1000);
 	// The clock shows only from the spoken wrap-up cue (#584).
@@ -30,7 +36,7 @@ function TitlePill({ talk }: { talk: Talk }) {
 	return (
 		<GlassSurface radius={22}>
 			<View className="flex-row items-center gap-2 py-1.5 pr-4 pl-1.5">
-				<HeaderFace talk={talk} />
+				<HeaderFace running={running} talk={talk} />
 				<View>
 					<AppText className="font-semibold text-[15px] text-foreground">
 						{name}
@@ -52,7 +58,7 @@ function TitlePill({ talk }: { talk: Talk }) {
 	);
 }
 
-export function TalkHeader({ talk }: { talk: Talk }) {
+export function TalkHeader({ talk, running }: Props) {
 	const name = useCompanionName();
 	const { isDark } = useAppTheme();
 	const background = useThemeColor("background");
@@ -71,7 +77,7 @@ export function TalkHeader({ talk }: { talk: Talk }) {
 					headerStyle: ios ? undefined : { backgroundColor: background },
 					headerTintColor: foreground,
 					// eslint-disable-next-line react/no-unstable-nested-components -- header render prop
-					headerTitle: () => <TitlePill talk={talk} />,
+					headerTitle: () => <TitlePill running={running} talk={talk} />,
 					// Android has no glass or blur behind a header, so it stays solid there.
 					headerTransparent: ios,
 					scrollEdgeEffects: hasGlass ? { top: "soft" } : undefined,

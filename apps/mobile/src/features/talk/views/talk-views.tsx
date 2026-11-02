@@ -25,9 +25,11 @@ type Props = {
 	talk: Talk;
 	/** The transcript, laid out to leave room for the switch. */
 	conversation: ReactNode;
+	/** `false` while the talk is out of sight: the stage's face stops too. */
+	running: boolean;
 };
 
-export function TalkViews({ talk, conversation }: Props) {
+export function TalkViews({ talk, conversation, running }: Props) {
 	const { view, setView } = useTalkStyle();
 	const reduced = useEffectiveReducedMotion();
 	const headerHeight = useHeaderHeight();
@@ -64,7 +66,7 @@ export function TalkViews({ talk, conversation }: Props) {
 				pointerEvents={onStage ? "box-none" : "none"}
 				style={[StyleSheet.absoluteFill, stageStyle]}
 			>
-				<CompanionStage talk={talk} visible={onStage} />
+				<CompanionStage talk={talk} visible={onStage && running} />
 			</Animated.View>
 			<View
 				className="absolute inset-x-0 items-center"

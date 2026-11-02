@@ -43,6 +43,10 @@ function Talk({
 		void activateKeepAwakeAsync(KEEP_AWAKE_TAG);
 		return () => void deactivateKeepAwake(KEEP_AWAKE_TAG);
 	}, [focused]);
+	// Its faces and aurora stop when nothing of the talk shows: a screen pushed over it, or
+	// the full-height voice-and-look sheet, which is a portal and leaves it focused.
+	const [styleOpen, setStyleOpen] = useState(false);
+	const running = focused && !styleOpen;
 	const talk = useTalk(reopen);
 	const insets = useSafeAreaInsets();
 	// Once, on open.
@@ -56,18 +60,27 @@ function Talk({
 				</AppText>
 			) : null
 		) : (
-			<ConsentCard talk={talk} />
+			<ConsentCard
+				onStyleOpenChange={setStyleOpen}
+				styleOpen={styleOpen}
+				talk={talk}
+			/>
 		);
 	return (
 		<View className="flex-1 bg-background">
-			<TalkAurora coverage={0.55} flip={1} level={talk.level} />
+			<TalkAurora
+				coverage={0.55}
+				flip={1}
+				level={talk.level}
+				running={running}
+			/>
 			{/* The thread and the composer lift together, so the latest line stays in view. */}
 			<KeyboardAvoidingView
 				behavior="padding"
 				className="flex-1"
 				keyboardVerticalOffset={8 - insets.bottom}
 			>
-				<TalkHeader talk={talk} />
+				<TalkHeader running={running} talk={talk} />
 				{/* Mid-talk, a switch shows the companion large instead of the transcript. */}
 				{talk.started ? (
 					<TalkViews
@@ -78,6 +91,7 @@ function Talk({
 								turns={talk.turns}
 							/>
 						}
+						running={running}
 						talk={talk}
 					/>
 				) : (

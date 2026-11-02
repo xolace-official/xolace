@@ -12,8 +12,14 @@ import { poseForPresence } from "./presence-pose";
 
 const SIZE = 34;
 
-export function HeaderFace({ talk }: { talk: Talk }) {
-	const face = useFace(NEUTRAL);
+type Props = {
+	talk: Talk;
+	/** `false` while the talk is out of sight: its clock and blinks stop. */
+	running: boolean;
+};
+
+export function HeaderFace({ talk, running }: Props) {
+	const face = useFace(NEUTRAL, running);
 	const { look } = useTalkStyle();
 	const target = talk.started ? poseForPresence(talk.presence) : NEUTRAL;
 	const heard = talk.turns.filter((t) => t.speaker === "person").length;

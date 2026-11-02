@@ -4,7 +4,6 @@
 
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
-import { useState } from "react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { GlassSurface } from "@/components/shared/glass-surface";
@@ -38,10 +37,16 @@ function Row({
 	);
 }
 
-export function ConsentCard({ talk }: { talk: Talk }) {
+type Props = {
+	talk: Talk;
+	/** The voice-and-look sheet; Talk holds it, since it pauses what's behind the sheet. */
+	styleOpen: boolean;
+	onStyleOpenChange: (open: boolean) => void;
+};
+
+export function ConsentCard({ talk, styleOpen, onStyleOpenChange }: Props) {
 	const name = useCompanionName();
 	const time = useTalkTime();
-	const [sheetOpen, setSheetOpen] = useState(false);
 	// Under the minimum, Start can't be pressed (#582); the server refuses it too.
 	const low = time != null && time.secondsLeft < MIN_TALK_S;
 	const label = low
@@ -73,7 +78,7 @@ export function ConsentCard({ talk }: { talk: Talk }) {
 						"A talk lasts up to 15 minutes."}
 				</Row>
 				<Row icon={{ android: "lock", ios: "lock" }}>{PRIVACY_LINE}</Row>
-				<VoiceAndLookRow onPress={() => setSheetOpen(true)} />
+				<VoiceAndLookRow onPress={() => onStyleOpenChange(true)} />
 				<Button isDisabled={talk.started || low} onPress={talk.start}>
 					<Button.Label>{label}</Button.Label>
 				</Button>
@@ -89,7 +94,7 @@ export function ConsentCard({ talk }: { talk: Talk }) {
 					</AppText>
 				)}
 			</View>
-			<VoiceAndLookSheet isOpen={sheetOpen} onOpenChange={setSheetOpen} />
+			<VoiceAndLookSheet isOpen={styleOpen} onOpenChange={onStyleOpenChange} />
 		</GlassSurface>
 	);
 }

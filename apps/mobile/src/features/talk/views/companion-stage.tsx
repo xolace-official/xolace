@@ -39,7 +39,8 @@ const GLAD_HOLD_MS = 1600;
 
 type Props = {
 	talk: Talk;
-	/** `false` while the Conversation view shows: the face's clock stops. */
+	/** `false` while the Conversation view shows or the talk is out of sight: the face's
+	 * clock stops. */
 	visible: boolean;
 };
 
