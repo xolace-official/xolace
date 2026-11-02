@@ -4,9 +4,15 @@
 // transcript that carries it is hidden.
 
 import { useHeaderHeight } from "expo-router/react-navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Platform, Pressable, useWindowDimensions, View } from "react-native";
-import Animated, { FadeIn, useAnimatedReaction } from "react-native-reanimated";
+import Animated, {
+	FadeIn,
+	useAnimatedReaction,
+	useAnimatedStyle,
+	useDerivedValue,
+	useSharedValue,
+} from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { LOOKS } from "@/features/talk/companion/companion-look";
 import { poseForPresence } from "@/features/talk/presence-pose";
@@ -44,12 +50,21 @@ export function CompanionStage({ talk, visible }: Props) {
 	const face = useFace(pose, visible);
 	const { width } = useWindowDimensions();
 	const reduced = useEffectiveReducedMotion();
-	// The height left for the face and its state word; the keyboard can take most of it.
-	const [room, setRoom] = useState<number>();
-	const size =
-		room === undefined
-			? width * FACE
-			: Math.max(MIN_FACE, Math.min(width * FACE, room - PRESENCE_ROOM));
+	// The height left for the face and its state word; the keyboard can take most of it. The
+	// keyboard changes it every frame, so it stays a shared value: the face is drawn once at
+	// full size and scaled to fit on the UI thread, with no render and no canvas resize.
+	const room = useSharedValue(Number.POSITIVE_INFINITY);
+	const full = width * FACE;
+	const size = useDerivedValue(() =>
+		Math.max(MIN_FACE, Math.min(full, room.get() - PRESENCE_ROOM))
+	);
+	const fitStyle = useAnimatedStyle(() => ({
+		height: size.get(),
+		width: size.get(),
+	}));
+	const scaleStyle = useAnimatedStyle(() => ({
+		transform: [{ scale: size.get() / full }],
+	}));
 	const headerHeight = useHeaderHeight();
 	const top = (Platform.OS === "ios" ? headerHeight : 0) + SWITCH_SPACE;
 	const latest = talk.turns.at(-1);
@@ -90,7 +105,7 @@ export function CompanionStage({ talk, visible }: Props) {
 		<View className="flex-1 items-center px-8" style={{ paddingTop: top }}>
 			<View
 				className="flex-1 items-center justify-center gap-4"
-				onLayout={(e) => setRoom(e.nativeEvent.layout.height)}
+				onLayout={(e) => room.set(e.nativeEvent.layout.height)}
 			>
 				<Pressable
 					accessibilityHint="Smiles back"
@@ -98,7 +113,14 @@ export function CompanionStage({ talk, visible }: Props) {
 					accessibilityRole="button"
 					onPress={smileBack}
 				>
-					<XolaceFace {...LOOKS[look].look} face={face} size={size} />
+					<Animated.View
+						className="items-center justify-center"
+						style={fitStyle}
+					>
+						<Animated.View style={scaleStyle}>
+							<XolaceFace {...LOOKS[look].look} face={face} size={full} />
+						</Animated.View>
+					</Animated.View>
 				</Pressable>
 				<AppText className="text-muted text-sm">{talk.presence}</AppText>
 			</View>
