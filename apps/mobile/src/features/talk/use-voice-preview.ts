@@ -25,14 +25,20 @@ export function useVoicePreview(): UseVoicePreviewReturn {
 	const status = useAudioPlayerStatus(player);
 	// The slug the user last started; the UI-facing value is derived below.
 	const [activeSlug, setActiveSlug] = useState<VoiceSlug | null>(null);
+	// Bumped by every play and stop, so a sample still waiting for the audio session
+	// doesn't start after a stop (the sheet closed) or a newer play.
+	const request = useRef(0);
 
 	const playingSlug = status.playing ? activeSlug : null;
 
 	const play = async (slug: VoiceSlug) => {
+		request.current += 1;
+		const id = request.current;
 		try {
 			await claimAudioSession(focus, () => player.pause());
-			// Another source (or a recorder) took focus during the await.
-			if (!holdsAudioFocus(focus)) {
+			// Stopped or replaced during the await, or another source (or a recorder)
+			// took focus.
+			if (id !== request.current || !holdsAudioFocus(focus)) {
 				return;
 			}
 			player.replace(VOICE_PREVIEWS[slug]);
@@ -45,6 +51,7 @@ export function useVoicePreview(): UseVoicePreviewReturn {
 	};
 
 	const stop = () => {
+		request.current += 1;
 		if (status.playing) {
 			player.pause();
 		}

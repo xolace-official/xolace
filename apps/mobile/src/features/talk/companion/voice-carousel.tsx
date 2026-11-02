@@ -59,8 +59,13 @@ export function VoiceCarousel({ voice, onPick, preview, running }: Props) {
 	// The voice last landed on, so a tap and the scroll that follows it pick it once.
 	const landed = useRef(chosen);
 
-	// The saved voice changed from elsewhere (it loaded, or settings): go to it.
+	// The saved voice changed from elsewhere (it loaded, or settings): go to it. A voice
+	// the carousel picked itself is already there or gliding there; a jump would cut
+	// the glide short.
 	useEffect(() => {
+		if (landed.current === chosen) {
+			return;
+		}
 		landed.current = chosen;
 		if (Math.round(x.get() / slot) !== chosen) {
 			ref.current?.scrollTo({ animated: false, x: chosen * slot });
