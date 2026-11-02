@@ -9,9 +9,9 @@ import { Migrations } from "@convex-dev/migrations";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { reflectionRank } from "./lib/aggregates";
+import { FREEZE_CAP } from "./lib/streakFreezes";
 import { searchTextOf, trackSearchTextOf } from "./library/searchText";
 import { localDayKey, shiftDayKey } from "./streaks/activityLog";
-import { FREEZE_CAP } from "./streaks/state";
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 

@@ -169,6 +169,7 @@ import type * as lib_reflectionMatching from "../lib/reflectionMatching.js";
 import type * as lib_sessionCascade from "../lib/sessionCascade.js";
 import type * as lib_spaceName from "../lib/spaceName.js";
 import type * as lib_specialties from "../lib/specialties.js";
+import type * as lib_streakFreezes from "../lib/streakFreezes.js";
 import type * as lib_streamSetup from "../lib/streamSetup.js";
 import type * as lib_timeOfDay from "../lib/timeOfDay.js";
 import type * as lib_timingSafeEqual from "../lib/timingSafeEqual.js";
@@ -414,6 +415,7 @@ declare const fullApi: ApiFromModules<{
   "lib/sessionCascade": typeof lib_sessionCascade;
   "lib/spaceName": typeof lib_spaceName;
   "lib/specialties": typeof lib_specialties;
+  "lib/streakFreezes": typeof lib_streakFreezes;
   "lib/streamSetup": typeof lib_streamSetup;
   "lib/timeOfDay": typeof lib_timeOfDay;
   "lib/timingSafeEqual": typeof lib_timingSafeEqual;
