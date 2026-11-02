@@ -51,6 +51,21 @@ describe("admin/monthlyEvents", () => {
 		expect(active?.imageUrl).toBe(row?.imageUrl);
 	});
 
+	it("treats optional fields of spaces as blank", async () => {
+		const t = asAdmin();
+		await t.mutation(api.admin.monthlyEvents.create, {
+			...EVENT,
+			ctaLabel: "   ",
+			linkUrl: "  ",
+			slug: "e",
+			title: "  Men's Mental Health Month ",
+		});
+		const [row] = await t.query(api.admin.monthlyEvents.list, {});
+		expect(row).not.toHaveProperty("ctaLabel");
+		expect(row).not.toHaveProperty("linkUrl");
+		expect(row?.title).toBe("Men's Mental Health Month");
+	});
+
 	it("rejects what the editor would have blocked", async () => {
 		const t = asAdmin();
 		const slug = "x";

@@ -1,7 +1,6 @@
 "use client";
 
 import { api } from "@xolace/backend/api";
-import type { Id } from "@xolace/backend/dataModel";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -65,7 +64,7 @@ import {
 	PageHeaderTitle,
 } from "@/features/shell/page-header";
 
-import { uploadEventImage } from "./event-image";
+import { prepareEventImage, uploadEventImage } from "./event-image";
 import { EventStatusBadge } from "./events-screen";
 import {
 	type AwarenessEvent,
@@ -163,7 +162,10 @@ function findProblems(draft: Draft): Problems {
 	if (draft.ctaRoute !== "" && draft.ctaLabel.trim() === "") {
 		problems.ctaLabel = "The button needs a label.";
 	}
-	if (draft.linkUrl.trim() !== "" && !draft.linkUrl.startsWith("https://")) {
+	if (
+		draft.linkUrl.trim() !== "" &&
+		!draft.linkUrl.trim().startsWith("https://")
+	) {
 		problems.linkUrl = "Use a full https:// link.";
 	}
 	return problems;
@@ -238,10 +240,11 @@ function EventEditor({
 	const saved = event ? toDraft(event) : BLANK;
 	const [draft, setDraft] = useState(saved);
 	const [slugInput, setSlugInput] = useState<string | null>(null);
-	// A new event's image is uploaded before the event exists, then sent with Create.
+	// A new event's image waits in the browser and is uploaded after Create, so
+	// an image picked and then replaced or abandoned never reaches storage.
 	const [pending, setPending] = useState<{
-		id: Id<"_storage">;
 		previewUrl: string;
+		webp: Blob;
 	} | null>(null);
 	const [submitted, setSubmitted] = useState(false);
 	const [saving, setSaving] = useState(false);
@@ -257,8 +260,9 @@ function EventEditor({
 		problems.slug = slugError;
 	}
 	const valid = Object.keys(problems).length === 0;
+	// Trimmed, as Convex stores it, so a save that only dropped spaces isn't dirty.
 	const dirty = (Object.keys(draft) as (keyof Draft)[]).some(
-		(key) => draft[key] !== saved[key]
+		(key) => draft[key].trim() !== saved[key]
 	);
 	const shown = (key: keyof Problems) =>
 		submitted ? problems[key] : undefined;
@@ -274,10 +278,13 @@ function EventEditor({
 		setSaving(true);
 		try {
 			if (isNew) {
-				const created = await runAction(
-					() => create({ ...toArgs(draft), imageStorageId: pending?.id, slug }),
-					`“${draft.title}” created`
-				);
+				const created = await runAction(async () => {
+					await create({ ...toArgs(draft), slug });
+					if (pending) {
+						const id = await uploadEventImage(pending.webp, () => uploadUrl());
+						await setImage({ imageStorageId: id, slug });
+					}
+				}, `“${draft.title}” created`);
 				if (created) {
 					router.push(`/events/${slug}`);
 				}
@@ -292,22 +299,35 @@ function EventEditor({
 	const onPickImage = async (file: File) => {
 		setUploading(true);
 		try {
-			await runAction(async () => {
-				const id = await uploadEventImage(file, () => uploadUrl());
-				if (isNew) {
-					setPending({ id, previewUrl: URL.createObjectURL(file) });
-				} else {
-					await setImage({ imageStorageId: id, slug });
-				}
-			}, "Image uploaded");
+			await runAction(
+				async () => {
+					const webp = await prepareEventImage(file);
+					if (isNew) {
+						replacePending({ previewUrl: URL.createObjectURL(webp), webp });
+					} else {
+						const id = await uploadEventImage(webp, () => uploadUrl());
+						await setImage({ imageStorageId: id, slug });
+					}
+				},
+				isNew
+					? "Image ready; it uploads when you create the event"
+					: "Image uploaded"
+			);
 		} finally {
 			setUploading(false);
 		}
 	};
 
+	const replacePending = (next: typeof pending) => {
+		if (pending) {
+			URL.revokeObjectURL(pending.previewUrl);
+		}
+		setPending(next);
+	};
+
 	const onRemoveImage = async () => {
 		if (isNew) {
-			setPending(null);
+			replacePending(null);
 			return;
 		}
 		await runAction(() => removeImage({ slug }), "Image removed");

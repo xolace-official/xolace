@@ -73,7 +73,10 @@ function assertEventFields(fields: EventFields) {
 	}
 }
 
-/** Empty optional strings are stored as absent, which is how the app reads "none". */
+/**
+ * Empty optional strings are stored as absent, which is how the app reads
+ * "none". Run before the checks, so a field of spaces counts as left blank.
+ */
 function clean(fields: EventFields) {
 	const optional = (value: string | undefined) => value?.trim() || undefined;
 	return {
@@ -170,7 +173,8 @@ export const create = adminMutation({
 	},
 	handler: async (ctx, { imageStorageId, slug, ...fields }) => {
 		assertSlug(slug);
-		assertEventFields(fields);
+		const cleaned = clean(fields);
+		assertEventFields(cleaned);
 		const taken = await ctx.db
 			.query("monthlyEvents")
 			.withIndex("by_slug", (q) => q.eq("slug", slug))
@@ -182,7 +186,7 @@ export const create = adminMutation({
 			await assertImage(ctx, imageStorageId);
 		}
 		await ctx.db.insert("monthlyEvents", {
-			...clean(fields),
+			...cleaned,
 			editedBy: ctx.identity.subject,
 			imageStorageId,
 			slug,
@@ -197,10 +201,11 @@ export const create = adminMutation({
 export const save = adminMutation({
 	args: { ...eventFields, slug: v.string() },
 	handler: async (ctx, { slug, ...fields }) => {
-		assertEventFields(fields);
+		const cleaned = clean(fields);
+		assertEventFields(cleaned);
 		const event = await eventBySlug(ctx, slug);
 		await ctx.db.patch("monthlyEvents", event._id, {
-			...clean(fields),
+			...cleaned,
 			editedBy: ctx.identity.subject,
 			updatedAt: Date.now(),
 		});
