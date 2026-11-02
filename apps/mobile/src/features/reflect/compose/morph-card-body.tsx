@@ -5,7 +5,9 @@ import { TextInput, View, type ViewStyle } from "react-native";
 import { Presets } from "react-native-pulsar";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
 import { PillButton } from "@/components/shared/pill-button";
+import type { Writing } from "@/features/reflect/compose/compose-face-gaze";
 import { DictationStrip } from "@/features/reflect/compose/dictation-strip";
+import { LineEndMeter } from "@/features/reflect/compose/line-end-meter";
 import type { PlusDictationView } from "@/features/reflect/hooks/use-plus-dictation";
 import { a11yHidden } from "@/lib/utils";
 
@@ -23,6 +25,8 @@ type Props = {
 	style: AnimatedStyle<ViewStyle>;
 	onChangeText: (text: string) => void;
 	onSubmit: () => void;
+	/** Where the writing ends, for the face's eyes. */
+	onWriting: (writing: Writing) => void;
 };
 
 /** What the card holds once it is the composer: the field and its way out. */
@@ -35,6 +39,7 @@ export const MorphCardBody = ({
 	style,
 	onChangeText,
 	onSubmit,
+	onWriting,
 }: Props) => {
 	const muted = useThemeColor("muted") as string;
 
@@ -44,17 +49,20 @@ export const MorphCardBody = ({
 			style={[{ flex: 1 }, style]}
 			{...a11yHidden(!expanded)}
 		>
-			<TextInput
-				className="flex-1 pt-4 text-foreground text-lg"
-				maxLength={MAX_RAW_INPUT}
-				multiline
-				onChangeText={onChangeText}
-				placeholder={isRecording ? "I'm listening..." : "Start typing..."}
-				placeholderTextColor={muted}
-				ref={inputRef}
-				style={{ textAlignVertical: "top" }}
-				value={entryText}
-			/>
+			<View className="flex-1">
+				{expanded && <LineEndMeter onWriting={onWriting} text={entryText} />}
+				<TextInput
+					className="flex-1 pt-4 text-foreground text-lg"
+					maxLength={MAX_RAW_INPUT}
+					multiline
+					onChangeText={onChangeText}
+					placeholder={isRecording ? "I'm listening..." : "Start typing..."}
+					placeholderTextColor={muted}
+					ref={inputRef}
+					style={{ textAlignVertical: "top" }}
+					value={entryText}
+				/>
+			</View>
 
 			{plusDictation && <DictationStrip {...plusDictation} />}
 

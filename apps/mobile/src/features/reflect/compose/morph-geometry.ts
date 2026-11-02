@@ -9,10 +9,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export const MORPH_SPRING = { damping: 26, mass: 1.1, stiffness: 90 } as const;
 
 export const FLUX_SIZE = 104;
+/** What Flux shrinks to as he hands off into the header's leading corner (the face's place). */
 export const DOT_SIZE = 12;
 /** The expanded card's own padding, where its header row starts. */
 export const CARD_PAD = 20;
-/** Progress at which Flux has fully become the presence dot. */
+/** Progress at which Flux has fully handed off to the header face. */
 export const HANDOFF = 0.55;
 
 /** The composing card's margins, in the overlay's local coordinates. */
@@ -27,7 +28,7 @@ export function useMorphGeometry() {
 	const restW = restH * 0.75;
 
 	return {
-		/** Centre of the presence dot inside the expanded card's header row. */
+		/** Flux's handoff point: the header row's leading corner, where the Xolace face sits. */
 		dotX: EXP_LEFT + CARD_PAD,
 		dotY: EXP_TOP + CARD_PAD + DOT_SIZE / 2,
 		expLeft: EXP_LEFT,
