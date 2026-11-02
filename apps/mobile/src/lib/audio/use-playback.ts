@@ -120,6 +120,7 @@ export function usePlayback<T extends Playable>(
 		pending.current = null;
 		(async () => {
 			if (seek > 0) {
+				lastTime.current = seek;
 				await player.seekTo(seek);
 			}
 			// Someone else started (or a recorder yielded) while this one loaded:
@@ -151,12 +152,19 @@ export function usePlayback<T extends Playable>(
 		player.loop = loop;
 	}, [player, loop]);
 
+	// A rebuilt player starts at 0; the old one's end-of-track time isn't a wrap.
+	useEffect(() => {
+		lastTime.current = 0;
+	}, [player]);
+
 	// Native looping wraps to 0 without a finish event; spot the wrap instead.
+	// Seeks set `lastTime` to their target first, so a jump back isn't a lap.
 	useEffect(() => {
 		const prev = lastTime.current;
 		lastTime.current = status.currentTime;
 		if (
 			loop &&
+			status.playing &&
 			status.duration > 0 &&
 			prev >= status.duration - LAP_WINDOW_SEC &&
 			status.currentTime < LAP_WINDOW_SEC
@@ -222,6 +230,7 @@ export function usePlayback<T extends Playable>(
 			}
 			await claimAudioSession(focus, () => player.pause());
 			if (status.didJustFinish) {
+				lastTime.current = 0;
 				await player.seekTo(0);
 			}
 			if (!holdsAudioFocus(focus)) {
@@ -247,6 +256,7 @@ export function usePlayback<T extends Playable>(
 			if (await remintIfExpired(clamped, status.playing)) {
 				return;
 			}
+			lastTime.current = clamped;
 			await player.seekTo(clamped);
 		} catch (e) {
 			console.error("[usePlayback] seek failed:", e);
