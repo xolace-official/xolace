@@ -114,6 +114,17 @@
 	--color-archive-tint-3: #e7e5e2;
 	--color-archive-tint-4: #dce6de;
 
+	/* The Xolace face is a printed brand object: its features are the logo's,
+     * whatever the theme, so a worried look reads the same everywhere. Fixed
+     * on purpose; see the fixed-palette convention in CLAUDE.md. The body
+     * gradients (stop arrays) live in src/features/xolace-face/face-palette.ts. */
+	--color-face-sclera: #ffffff;
+	--color-face-pupil: #1a1426;
+	--color-face-brow: rgba(110, 50, 40, 0.55);
+	--color-face-blush: rgba(255, 120, 140, 0.55);
+	--color-face-highlight: rgba(255, 255, 255, 0.55);
+	--color-face-highlight-clear: rgba(255, 255, 255, 0);
+
 	/* The poster's voice is fixed too: `--font-*` is a per-theme variable
      * (nightly swaps the whole family to SN Pro), and a printed object does not
      * change typeface with the chrome behind it. */
