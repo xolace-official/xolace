@@ -73,10 +73,12 @@ export function CompanionStage({ talk, visible }: Props) {
 	// What it had heard last time: a reopened talk starts with its thread and shouldn't nod.
 	const heardBefore = useRef(heard);
 	const glad = useRef<ReturnType<typeof setTimeout>>(undefined);
+	const smiling = useRef(false);
 
 	// The talk moved on: back to its pose now, even mid-smile.
 	useEffect(() => {
 		clearTimeout(glad.current);
+		smiling.current = false;
 		face.to(pose);
 	}, [face.to, pose]);
 	useEffect(() => () => clearTimeout(glad.current), []);
@@ -97,12 +99,29 @@ export function CompanionStage({ talk, visible }: Props) {
 		[visible]
 	);
 
+	// The smile starts as the finger lands and holds while it stays; the haptic and the nod
+	// wait for the tap. A second `to` mid-smile would restart its spring, so it poses once.
+	const smile = () => {
+		clearTimeout(glad.current);
+		if (!smiling.current) {
+			face.to(PRESETS.glad);
+		}
+		smiling.current = true;
+	};
+	// From the lift, or a touch that slid away: back to the talk after a moment.
+	const relaxLater = () => {
+		clearTimeout(glad.current);
+		glad.current = setTimeout(() => {
+			smiling.current = false;
+			face.to(pose);
+		}, GLAD_HOLD_MS);
+	};
+	// TalkBack's activate sends only this, with no press-in, so it smiles here too.
 	const smileBack = () => {
 		playSoftPress();
-		face.to(PRESETS.glad);
+		smile();
 		face.nod();
-		clearTimeout(glad.current);
-		glad.current = setTimeout(() => face.to(pose), GLAD_HOLD_MS);
+		relaxLater();
 	};
 
 	return (
@@ -116,6 +135,8 @@ export function CompanionStage({ talk, visible }: Props) {
 					accessibilityLabel={name}
 					accessibilityRole="button"
 					onPress={smileBack}
+					onPressIn={smile}
+					onPressOut={relaxLater}
 				>
 					<Animated.View
 						className="items-center justify-center"
