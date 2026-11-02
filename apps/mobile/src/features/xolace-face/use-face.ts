@@ -28,6 +28,8 @@ const NOD_GAZE = 0.6;
 const LISTEN_BROW = 0.35;
 const LISTEN_LEAN = 0.2;
 const MS_PER_S = 1000;
+const FRAME_MS = 16;
+const MAX_FRAME_MS = 48;
 
 /** `running: false` stops the clock and the blinks, so a hidden face costs nothing. */
 export function useFace(initial: Pose = NEUTRAL, running = true) {
@@ -44,9 +46,23 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 	// leans in and lifts the brows a little.
 	const listen = useSharedValue(0);
 
-	useFrameCallback((frame) => {
-		clock.set(frame.timeSinceFirstFrame / MS_PER_S);
-	}, running && !reduced);
+	// Accumulated from frame deltas, so stopping and starting again resumes where it left off;
+	// a dropped frame is clamped so a hitch doesn't play back as a lurch.
+	const frame = useFrameCallback((info) => {
+		const delta = Math.min(
+			info.timeSincePreviousFrame ?? FRAME_MS,
+			MAX_FRAME_MS
+		);
+		clock.set(clock.get() + delta / MS_PER_S);
+	}, false);
+	// `useFrameCallback` reads its autostart flag only on mount, and the motion preference can
+	// load or change after that.
+	const { setActive } = frame;
+	const animating = running && !reduced;
+	useEffect(() => {
+		setActive(animating);
+		return () => setActive(false);
+	}, [animating, setActive]);
 
 	useEffect(() => {
 		if (!running) {
