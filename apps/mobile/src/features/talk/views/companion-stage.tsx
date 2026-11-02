@@ -70,6 +70,8 @@ export function CompanionStage({ talk, visible }: Props) {
 	const top = (Platform.OS === "ios" ? headerHeight : 0) + SWITCH_SPACE;
 	const latest = talk.turns.at(-1);
 	const heard = talk.turns.filter((t) => t.speaker === "person").length;
+	// What it had heard last time: a reopened talk starts with its thread and shouldn't nod.
+	const heardBefore = useRef(heard);
 	const glad = useRef<ReturnType<typeof setTimeout>>(undefined);
 
 	// The talk moved on: back to its pose now, even mid-smile.
@@ -80,9 +82,10 @@ export function CompanionStage({ talk, visible }: Props) {
 	useEffect(() => () => clearTimeout(glad.current), []);
 	// You finished a line: a small "I heard you".
 	useEffect(() => {
-		if (heard > 0) {
+		if (heard > heardBefore.current) {
 			face.nod();
 		}
+		heardBefore.current = heard;
 	}, [face.nod, heard]);
 	// It leans in with your voice. Only shared values cross into the worklet. Hidden, it
 	// stops reading the mic, so the face isn't redrawn behind the Conversation view.
