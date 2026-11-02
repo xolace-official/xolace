@@ -89,6 +89,8 @@ export const KindlingCloseSlot = ({ sessionId, onOpenKindling }: Props) => {
 	}
 
 	if (isPlus) {
+		// Until `getActive` answers, a tap can't know where to go.
+		const activeLoading = active === undefined;
 		const kindlingReady = active?.sessionId === sessionId;
 		return (
 			<PressableFeedback
@@ -97,7 +99,7 @@ export const KindlingCloseSlot = ({ sessionId, onOpenKindling }: Props) => {
 				}
 				accessibilityRole="button"
 				className="w-full flex-row items-center gap-3 rounded-2xl border border-accent/25 bg-accent/10 px-5 py-4"
-				isDisabled={!onOpenKindling}
+				isDisabled={!onOpenKindling || activeLoading}
 				onPress={() => {
 					playSoftPress();
 					onOpenKindling?.(kindlingReady);
