@@ -39,6 +39,22 @@ function KindlingIconTile({ locked }: { locked: boolean }) {
 	);
 }
 
+/** Trailing affordance on the premium card: it leads somewhere. */
+function KindlingChevron() {
+	const accent = useThemeColor("accent") as string;
+	return (
+		<SymbolView
+			name={{
+				android: "chevron_right",
+				ios: "chevron.right",
+				web: "chevron_right",
+			}}
+			size={16}
+			tintColor={accent}
+		/>
+	);
+}
+
 /** Session-end's two kindling slots (docs/paths-v1.md §11-§12, #337): the premium
  * setup card and the free upsell, both gated on a qualifying session (ADR 0009).
  * Independent of `CloseOffer`; renders nothing while entitlement or qualification resolves.
@@ -100,6 +116,7 @@ export const KindlingCloseSlot = ({ sessionId, onOpenKindling }: Props) => {
 							: "It lands on Discovery when it's ready. Tap to head there."}
 					</AppText>
 				</View>
+				<KindlingChevron />
 			</PressableFeedback>
 		);
 	}
