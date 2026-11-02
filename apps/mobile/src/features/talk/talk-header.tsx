@@ -1,15 +1,15 @@
 // The talk's native header (#593): the system back button, a glass title pill
-// (flame · name · what the companion is doing) and a native ⋯ menu.
+// (face · name · what the companion is doing) and a native ⋯ menu.
 
 import MoreVert from "@expo/material-symbols/more_vert.xml";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { router, Stack } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { Platform, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { GlassSurface } from "@/components/shared/glass-surface";
 import { useAppTheme } from "@/context/app-theme-context";
+import { HeaderFace } from "@/features/talk/header-face";
 import { JUST_END, MIRROR_LATER } from "@/features/talk/talk-copy";
 import { useCompanionName } from "@/features/talk/use-companion-name";
 import type { Talk } from "@/features/talk/use-talk";
@@ -24,21 +24,13 @@ const clockOf = (s: number) =>
 
 function TitlePill({ talk }: { talk: Talk }) {
 	const name = useCompanionName();
-	const accent = useThemeColor("accent");
 	const secondsLeft = useTimeLeft(talk.connected ? talk.endsAt : null, 1000);
 	// The clock shows only from the spoken wrap-up cue (#584).
 	const late = secondsLeft !== null && secondsLeft <= talk.clockFromS;
 	return (
 		<GlassSurface radius={22}>
 			<View className="flex-row items-center gap-2 py-1.5 pr-4 pl-1.5">
-				{/* Placeholder: what the companion looks like is still open (#590). */}
-				<View className="size-8 items-center justify-center rounded-full bg-accent/20">
-					<SymbolView
-						name={{ android: "local_fire_department", ios: "flame.fill" }}
-						size={16}
-						tintColor={accent}
-					/>
-				</View>
+				<HeaderFace talk={talk} />
 				<View>
 					<AppText className="font-semibold text-[15px] text-foreground">
 						{name}
