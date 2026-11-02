@@ -1456,7 +1456,14 @@ export default defineSchema({
 		ctaLabel: v.optional(v.string()),
 		// Validated client-side against CTA_ROUTE_ALLOWLIST before router.push.
 		ctaRoute: v.optional(v.string()),
+
+		// Who last saved it from the admin, and when. Unset on seeded rows.
+		editedBy: v.optional(v.string()),
 		endDate: v.string(),
+
+		// Uploaded from the admin to Convex file storage. Wins over `imageUrl`:
+		// `getActive` resolves it into `imageUrl`, so shipped apps keep working.
+		imageStorageId: v.optional(v.id("_storage")),
 
 		// Optional: CDN or Expo asset URL. Recommended: 686×360px ≤200KB.
 		imageUrl: v.optional(v.string()),
@@ -1478,6 +1485,7 @@ export default defineSchema({
 		startDate: v.string(),
 
 		title: v.string(),
+		updatedAt: v.optional(v.number()),
 	})
 		.index("by_slug", ["slug"])
 		.index("by_priority", ["priority", "startDate"]),

@@ -1,6 +1,7 @@
 import {
 	AudioLinesIcon,
 	BookOpenTextIcon,
+	CalendarHeartIcon,
 	FileUpIcon,
 	LandmarkIcon,
 	LayoutDashboardIcon,
@@ -44,6 +45,10 @@ export const NAV: NavGroup[] = [
 			{ href: "/audio/topics", icon: ShapesIcon, label: "Topics" },
 		],
 		title: "Audio",
+	},
+	{
+		items: [{ href: "/events", icon: CalendarHeartIcon, label: "Events" }],
+		title: "App",
 	},
 	{
 		items: [{ href: "/imports", icon: FileUpIcon, label: "Imports" }],

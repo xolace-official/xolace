@@ -46,6 +46,14 @@ const FORBIDDEN = /forbidden|Admin role required/;
  * validation, so each needs real-shaped args; the coverage test below fails
  * when a new function has no entry here.
  */
+const EVENT = {
+	body: "x",
+	endDate: "2026-06-30",
+	priority: 1,
+	startDate: "2026-06-01",
+	title: "x",
+};
+
 const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 	"admin/audio:create": {
 		audio: { durationSec: 1, key: "x", sha256: "x" },
@@ -114,6 +122,13 @@ const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 		markdown: "",
 		slug: "x",
 	},
+	"admin/monthlyEvents:create": { ...EVENT, slug: "x" },
+	"admin/monthlyEvents:generateImageUploadUrl": {},
+	"admin/monthlyEvents:list": {},
+	"admin/monthlyEvents:remove": { slug: "x" },
+	"admin/monthlyEvents:removeImage": { slug: "x" },
+	"admin/monthlyEvents:save": { ...EVENT, slug: "x" },
+	"admin/monthlyEvents:setImage": { imageStorageId: "1_storage", slug: "x" },
 	"admin/searchIndex:removeStale": { index: "exercises" },
 	"admin/searchIndex:start": { index: "exercises" },
 	"admin/searchIndex:status": {},
