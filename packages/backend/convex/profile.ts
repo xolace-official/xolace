@@ -30,11 +30,13 @@ export const getSummary = query({
 		const allWords = profile.frequentWords ?? [];
 		const recentWords = premium ? allWords.slice(0, 4) : allWords.slice(0, 1);
 
+		// Derive live: the stored streak and freezes go stale once a gap opens
+		// (they're only rewritten on a qualifying action).
+		const streak = await streakState(ctx, profile);
+
 		return {
 			avatarId: prefs?.avatarId ?? "default",
-			// Derive live: the stored streak goes stale once a gap outruns the
-			// freezes (it's only rewritten on a qualifying action).
-			currentStreak: (await streakState(ctx, profile)).streak,
+			currentStreak: streak.streak,
 			displayName: prefs?.displayName ?? seededDisplayName(profile._id),
 			dominantEmotionTags: profile.dominantEmotionTags,
 			firstSessionAt: profile.firstSessionAt ?? null,
@@ -44,6 +46,8 @@ export const getSummary = query({
 			premiumRequired: !premium,
 			recentWords,
 			sessionCount: profile.sessionCount,
+			// Freezes left once any pending missed days are bridged (#434).
+			streakFreezes: streak.freezes,
 			typicalUsagePattern: profile.typicalUsagePattern ?? null,
 			// Genuine recurring-word count, independent of tier truncation — lets
 			// the client decide teaser vs. empty state without seeing locked words.
@@ -60,6 +64,7 @@ export const getSummary = query({
 		premiumRequired: v.boolean(),
 		recentWords: v.array(v.object({ count: v.number(), word: v.string() })),
 		sessionCount: v.number(),
+		streakFreezes: v.number(),
 		typicalUsagePattern: v.union(
 			v.object({ dayOfWeek: v.number(), hourOfDay: v.number() }),
 			v.null()

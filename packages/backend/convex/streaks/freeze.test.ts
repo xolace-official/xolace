@@ -194,6 +194,20 @@ describe("streak freeze (#434)", () => {
 		expect(context.streak).toBe(4);
 	});
 
+	it("getSummary reports the freezes left after a pending bridge", async () => {
+		// Fails if: the profile shows the stored count, which still includes a
+		// freeze the missed day has already spent (settle hasn't run yet).
+		const user = await asNewUser();
+		const now = Date.now();
+		await record(user, -3, "vent", now);
+		await record(user, -2, "vent", now);
+		await setFreezes(user, 2);
+		const summary = await user.t.query(api.profile.getSummary, {});
+		expect(summary.currentStreak).toBe(2);
+		expect(summary.streakFreezes).toBe(1);
+		expect((await profile(user)).streakFreezes).toBe(2);
+	});
+
 	it("app open surfaces a bridged gap until acknowledged, then never again (#436)", async () => {
 		// Fails if: the banner repeats after it showed, drops a bridge nobody saw
 		// (killed app, old client), misses one recordActivity wrote before the
