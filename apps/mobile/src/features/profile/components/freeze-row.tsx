@@ -17,7 +17,7 @@ export function FreezeRow({ freezes }: Props) {
 	const label =
 		freezes > 0
 			? `${freezes} ${freezes === 1 ? "freeze" : "freezes"} ready`
-			: "No freezes yet";
+			: "No freezes on hand";
 	const hint =
 		freezes > 0
 			? "Each one covers a missed day."
