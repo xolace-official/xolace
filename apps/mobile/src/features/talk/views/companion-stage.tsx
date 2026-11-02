@@ -68,12 +68,14 @@ export function CompanionStage({ talk, visible }: Props) {
 			face.nod();
 		}
 	}, [face.nod, heard]);
-	// It leans in with your voice. Only shared values cross into the worklet.
+	// It leans in with your voice. Only shared values cross into the worklet. Hidden, it
+	// stops reading the mic, so the face isn't redrawn behind the Conversation view.
 	const mic = talk.micLevel;
 	const listen = face.listen;
 	useAnimatedReaction(
-		() => mic.get(),
-		(level) => listen.set(level)
+		() => (visible ? mic.get() : 0),
+		(level) => listen.set(level),
+		[visible]
 	);
 
 	const smileBack = () => {
