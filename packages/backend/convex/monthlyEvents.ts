@@ -10,7 +10,18 @@ export const getActive = query({
 	args: {},
 	handler: async (ctx) => {
 		await requireAuth(ctx);
-		return await ctx.db.query("monthlyEvents").collect();
+		const events = await ctx.db.query("monthlyEvents").collect();
+		// An admin upload lives in file storage; hand it out as `imageUrl`, the
+		// field every shipped app already reads.
+		return await Promise.all(
+			events.map(async (event) => {
+				if (!event.imageStorageId) {
+					return event;
+				}
+				const url = await ctx.storage.getUrl(event.imageStorageId);
+				return { ...event, imageUrl: url ?? event.imageUrl };
+			})
+		);
 	},
 });
 
