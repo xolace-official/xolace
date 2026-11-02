@@ -48,7 +48,8 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 	const record = useCallback(
 		async (
 			contributedReflection: boolean | null,
-			postSessionMood?: PostSessionMood
+			postSessionMood?: PostSessionMood,
+			moodPosition?: number
 		) => {
 			if (!sessionId) {
 				return;
@@ -56,6 +57,7 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 			try {
 				await recordFeedback({
 					contributedReflection: contributedReflection ?? undefined,
+					moodPosition,
 					postSessionMood,
 					sessionId,
 				});
@@ -68,19 +70,23 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 
 	const dismiss = async (
 		contributedReflection: boolean | null = null,
-		postSessionMood?: PostSessionMood
+		postSessionMood?: PostSessionMood,
+		moodPosition?: number
 	) => {
 		if (busyRef.current) {
 			return;
 		}
 		busyRef.current = true;
-		await record(contributedReflection, postSessionMood).finally(() => {
-			busyRef.current = false;
-		});
+		await record(contributedReflection, postSessionMood, moodPosition).finally(
+			() => {
+				busyRef.current = false;
+			}
+		);
 		setPendingEventPrompt(null);
 		posthog.capture("session_completed", {
 			action: "dismiss",
 			contributed_reflection: contributedReflection,
+			mood_position: moodPosition ?? null,
 			post_session_mood: postSessionMood ?? null,
 		});
 		navigateHome();
@@ -88,19 +94,23 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 
 	const haveMore = async (
 		contributedReflection: boolean | null = null,
-		postSessionMood?: PostSessionMood
+		postSessionMood?: PostSessionMood,
+		moodPosition?: number
 	) => {
 		if (busyRef.current) {
 			return;
 		}
 		busyRef.current = true;
-		await record(contributedReflection, postSessionMood).finally(() => {
-			busyRef.current = false;
-		});
+		await record(contributedReflection, postSessionMood, moodPosition).finally(
+			() => {
+				busyRef.current = false;
+			}
+		);
 		setPendingEventPrompt(null);
 		posthog.capture("session_completed", {
 			action: "have_more",
 			contributed_reflection: contributedReflection,
+			mood_position: moodPosition ?? null,
 			post_session_mood: postSessionMood ?? null,
 		});
 		navigateHome();

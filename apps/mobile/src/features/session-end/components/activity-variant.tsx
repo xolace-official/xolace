@@ -3,19 +3,21 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { Image } from "expo-image";
 import * as StoreReview from "expo-store-review";
-import { Button, PressableFeedback } from "heroui-native";
+import { Button } from "heroui-native";
 import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
+import { Button as ThemedButton } from "@/components/shared/playful-button";
 import { SessionEndUpsell } from "@/features/insights/compounding-upsell";
 import { NIGHT_SESSION_END_ACTIVITY } from "@/features/night-mode/night-copy";
 import { CloseOffer } from "@/features/session-end/components/close-offer";
 import { ContributedConfirmation } from "@/features/session-end/components/contributed-confirmation";
 import { HeavierFeedbackPrompt } from "@/features/session-end/components/heavier-feedback-prompt";
 import { KindlingCloseSlot } from "@/features/session-end/components/kindling-close-slot";
+import { MoodCheckIn } from "@/features/session-end/components/mood-check-in";
 import { UnsureFeedbackPrompt } from "@/features/session-end/components/unsure-feedback-prompt";
+import { heavierIntensity, SAME } from "@/features/session-end/mood-scale";
 
 type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
 type Phase = "acknowledge" | "mood" | "offer" | "close" | "contributed";
@@ -26,29 +28,15 @@ type Props = {
 	contributeByDefault: boolean;
 	onDismiss: (
 		contributedReflection: boolean | null,
-		mood?: PostSessionMood
+		mood?: PostSessionMood,
+		moodPosition?: number
 	) => void;
 	onHaveMore: (
 		contributedReflection: boolean | null,
-		mood?: PostSessionMood
+		mood?: PostSessionMood,
+		moodPosition?: number
 	) => void;
 	isNight?: boolean;
-};
-
-const MOODS = ["lighter", "same", "heavier", "unsure"] as const;
-
-const MOOD_LABELS: Record<PostSessionMood, string> = {
-	heavier: "heavier",
-	lighter: "lighter",
-	same: "the same",
-	unsure: "not sure",
-};
-
-const MOOD_HAPTICS: Record<PostSessionMood, () => void> = {
-	heavier: () => Presets.plunk(),
-	lighter: () => Presets.chirp(),
-	same: () => Presets.plink(),
-	unsure: () => Presets.murmur(),
 };
 
 const EASING: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
@@ -85,17 +73,21 @@ export const ActivityVariant = ({
 	const [selectedMood, setSelectedMood] = useState<PostSessionMood | null>(
 		null
 	);
+	// Where the slider was let go, 0 heavier … 1 lighter; null for "not sure" or no answer.
+	const [moodPosition, setMoodPosition] = useState<number | null>(null);
 	const [contributed, setContributed] = useState<boolean | null>(null);
 	const [heavierSheetOpen, setHeavierSheetOpen] = useState(false);
 	const [unsureSheetOpen, setUnsureSheetOpen] = useState(false);
 	const canAsk = useQuery(api.feedback.canAskContextual);
 	const canAskUnsure = useQuery(api.feedback.canAskUnsureContextual);
 
+	const nextAfterMood = distilledText ? "offer" : "close";
+
 	const advancePhase = () => {
 		if (phase === "acknowledge") {
 			setPhase(isNight ? (distilledText ? "offer" : "close") : "mood");
 		} else if (phase === "mood") {
-			setPhase(distilledText ? "offer" : "close");
+			setPhase(nextAfterMood);
 		} else if (phase === "offer") {
 			setPhase("close");
 		}
@@ -123,15 +115,28 @@ export const ActivityVariant = ({
 		}
 	}, [phase, selectedMood]);
 
-	const handleMoodPress = (mood: PostSessionMood) => {
-		MOOD_HAPTICS[mood]();
-		setSelectedMood(mood);
-		if (mood === "heavier" && canAsk === true) {
-			setHeavierSheetOpen(true);
-		}
-		if (mood === "unsure" && canAskUnsure === true) {
+	const handleUnsure = () => {
+		setSelectedMood("unsure");
+		setMoodPosition(null);
+		if (canAskUnsure === true) {
 			setUnsureSheetOpen(true);
 		}
+	};
+
+	// "Heavier" asks its follow-up on Continue, not on release, so a drag can be changed.
+	const handleContinue = () => {
+		if (selectedMood === "heavier" && canAsk === true) {
+			setHeavierSheetOpen(true);
+		} else {
+			advancePhase();
+		}
+	};
+
+	// Closing the follow-up, answered or not, moves on; the answer can't be changed after.
+	// Idempotent: the sheet can report its close more than once.
+	const handleHeavierClose = () => {
+		setHeavierSheetOpen(false);
+		setPhase((p) => (p === "mood" ? nextAfterMood : p));
 	};
 
 	if (phase === "contributed") {
@@ -193,53 +198,28 @@ export const ActivityVariant = ({
 							</AppText>
 						</View>
 
-						<View className="gap-4 px-8">
-							{MOODS.map((mood) => (
-								<PressableFeedback
-									accessibilityLabel={MOOD_LABELS[mood]}
-									className={`w-full rounded-2xl border px-5 py-4 ${
-										selectedMood === mood
-											? "border-accent/40 bg-accent/10"
-											: "border-border/65 bg-surface/30"
-									}`}
-									key={mood}
-									onPress={() => handleMoodPress(mood)}
-								>
-									<AppText
-										className={`text-center text-base ${
-											selectedMood === mood
-												? "font-medium text-accent"
-												: "font-light text-foreground/55"
-										}`}
-									>
-										{MOOD_LABELS[mood]}
-									</AppText>
-								</PressableFeedback>
-							))}
-						</View>
+						<MoodCheckIn
+							onAnswer={(mood, position) => {
+								setSelectedMood(mood);
+								setMoodPosition(position);
+							}}
+							onUnsure={handleUnsure}
+							unsure={selectedMood === "unsure"}
+						/>
 
-						<View className="flex-1" />
-
-						<View className="px-8 pt-6 pb-12">
-							<Button
+						<View className="px-8 pt-3 pb-8">
+							{/* Playful's raised lip there, the theme's filled button elsewhere. */}
+							<ThemedButton
 								accessibilityLabel={selectedMood ? "Continue" : "Skip for now"}
-								className={`w-full rounded-2xl ${
-									selectedMood
-										? "border-foreground/20 bg-foreground/5"
-										: "border-border/40"
-								}`}
-								onPress={advancePhase}
+								className="w-full"
+								onPress={handleContinue}
 								size="lg"
-								variant="outline"
+								variant={selectedMood ? "primary" : "secondary"}
 							>
-								<Button.Label
-									className={`text-sm ${
-										selectedMood ? "text-foreground/70" : "text-foreground/25"
-									}`}
-								>
+								<ThemedButton.Label>
 									{selectedMood ? "Continue" : "Skip for now"}
-								</Button.Label>
-							</Button>
+								</ThemedButton.Label>
+							</ThemedButton>
 						</View>
 					</EaseView>
 				</ScrollView>
@@ -321,7 +301,13 @@ export const ActivityVariant = ({
 						<Button
 							accessibilityLabel="Start another session"
 							className="w-full rounded-2xl"
-							onPress={() => onHaveMore(contributed, selectedMood ?? undefined)}
+							onPress={() =>
+								onHaveMore(
+									contributed,
+									selectedMood ?? undefined,
+									moodPosition ?? undefined
+								)
+							}
 							size="lg"
 							variant="primary"
 						>
@@ -331,7 +317,13 @@ export const ActivityVariant = ({
 						<Button
 							accessibilityLabel="I'm done for now"
 							className="w-full rounded-2xl"
-							onPress={() => onDismiss(contributed, selectedMood ?? undefined)}
+							onPress={() =>
+								onDismiss(
+									contributed,
+									selectedMood ?? undefined,
+									moodPosition ?? undefined
+								)
+							}
 							size="lg"
 							variant="outline"
 						>
@@ -344,8 +336,9 @@ export const ActivityVariant = ({
 			)}
 
 			<HeavierFeedbackPrompt
+				intensity={Math.max(1, heavierIntensity(moodPosition ?? SAME))}
 				isOpen={heavierSheetOpen}
-				onClose={() => setHeavierSheetOpen(false)}
+				onClose={handleHeavierClose}
 				sessionId={sessionId}
 			/>
 
