@@ -1,11 +1,10 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
-import { Image } from "expo-image";
 import * as StoreReview from "expo-store-review";
 import { Button } from "heroui-native";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { Button as ThemedButton } from "@/components/shared/playful-button";
@@ -14,6 +13,7 @@ import { NIGHT_SESSION_END_ACTIVITY } from "@/features/night-mode/night-copy";
 import { CloseOffer } from "@/features/session-end/components/close-offer";
 import { ContributedConfirmation } from "@/features/session-end/components/contributed-confirmation";
 import { HeavierFeedbackPrompt } from "@/features/session-end/components/heavier-feedback-prompt";
+import { JumpMascot } from "@/features/session-end/components/jump-mascot";
 import { KindlingCloseSlot } from "@/features/session-end/components/kindling-close-slot";
 import { MoodCheckIn } from "@/features/session-end/components/mood-check-in";
 import { UnsureFeedbackPrompt } from "@/features/session-end/components/unsure-feedback-prompt";
@@ -59,13 +59,6 @@ const SLIDE_OUT = { opacity: 0, translateY: 24 };
 const SLIDE_IN = { opacity: 1, translateY: 0 };
 
 const SCROLL_CONTENT = { flexGrow: 1 as const };
-
-const styles = StyleSheet.create({
-	mascot: {
-		flex: 1,
-		width: "100%",
-	},
-});
 
 export const ActivityVariant = ({
 	sessionId,
@@ -161,14 +154,7 @@ export const ActivityVariant = ({
 		<View className="flex-1">
 			{phase === "acknowledge" && (
 				<Pressable className="flex-1 px-8 pb-8" onPress={advancePhase}>
-					{/* TODO(mascot-video): Replace Image with VideoView once expo-video is
-					    installed in a store release. See TODOS.md — "Looping Mascot Video on
-					    Acknowledge Phase". */}
-					<Image
-						contentFit="contain"
-						source={require("@/assets/images/flux/jump-love-bgremove.png")}
-						style={styles.mascot}
-					/>
+					<JumpMascot />
 					<EaseView
 						animate={FADE_IN}
 						initialAnimate={FADE_OUT}
