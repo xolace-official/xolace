@@ -18,7 +18,8 @@ export type Playable = { url: string; expiresAt: number; durationSec: number };
 const EXPIRY_MARGIN_MS = 5 * 60 * 1000;
 const MINT_RETRIES = 3;
 const MINT_BACKOFF_MS = 500;
-/** A loop wrap reads as the end of one status tick and the start of the next. */
+/** A loop wrap reads as the end of one status tick and the start of the next: the time
+ * left before the wrap plus the time played after it stays under this. */
 const LAP_WINDOW_SEC = 2;
 
 export type PlaybackReturn<T> = {
@@ -158,7 +159,8 @@ export function usePlayback<T extends Playable>(
 	}, [player]);
 
 	// Native looping wraps to 0 without a finish event; spot the wrap instead.
-	// Seeks set `lastTime` to their target first, so a jump back isn't a lap.
+	// Seeks set `lastTime` to their target first, so a jump back isn't a lap. A
+	// lock-screen seek bypasses that, but only one landing inside the window reads as a wrap.
 	useEffect(() => {
 		const prev = lastTime.current;
 		lastTime.current = status.currentTime;
@@ -166,8 +168,8 @@ export function usePlayback<T extends Playable>(
 			loop &&
 			status.playing &&
 			status.duration > 0 &&
-			prev >= status.duration - LAP_WINDOW_SEC &&
-			status.currentTime < LAP_WINDOW_SEC
+			status.currentTime < prev &&
+			status.duration - prev + status.currentTime < LAP_WINDOW_SEC
 		) {
 			setLaps((n) => n + 1);
 		}
