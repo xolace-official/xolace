@@ -154,7 +154,7 @@ export function VoiceCarousel({ voice, onPick, preview, running }: Props) {
 					/>
 				))}
 			</View>
-			<View className="min-h-12 items-center gap-1 px-8">
+			<View className="min-h-16 items-center gap-1 px-8">
 				<AppText className="text-center text-muted text-sm leading-5">
 					{centred?.description}
 				</AppText>
