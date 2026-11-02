@@ -1,3 +1,7 @@
+import {
+	FREEZE_CAP,
+	FREEZE_EARN_EVERY,
+} from "@xolace/backend/convex/lib/streakFreezes";
 import { Image } from "expo-image";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
@@ -10,18 +14,31 @@ const styles = StyleSheet.create({
 	empty: { opacity: 0.35 },
 });
 
-type Props = { freezes: number };
+type Props = { freezes: number; currentStreak: number };
 
 /** Streak freezes on hand (#434), shown like an inventory slot under the stats. */
-export function FreezeRow({ freezes }: Props) {
+export function FreezeRow({ freezes: stock, currentStreak }: Props) {
+	// A dev deployment that predates the field leaves it undefined ("×undefined").
+	const freezes = stock ?? 0;
+	const noun = freezes === 1 ? "freeze" : "freezes";
+	// A freeze only bridges a live streak, so with none running they're held,
+	// not about to save anything: a gap longer than the stock breaks the streak
+	// and keeps the freezes.
+	const lit = currentStreak > 0;
 	const label =
 		freezes > 0
-			? `${freezes} ${freezes === 1 ? "freeze" : "freezes"} ready`
+			? `${freezes} ${noun} ${lit ? "ready" : "on hand"}`
 			: "No freezes on hand";
+	const use = lit
+		? "Each one covers a missed day."
+		: "Saved for your next streak.";
+	// earnFreeze stops at the cap, so say so rather than let a full week pass silently.
 	const hint =
-		freezes > 0
-			? "Each one covers a missed day."
-			: "Earn one every 7 days in a row.";
+		freezes === 0
+			? `Earn one every ${FREEZE_EARN_EVERY} days in a row.`
+			: freezes >= FREEZE_CAP
+				? `${use} Max ${FREEZE_CAP} on hand.`
+				: use;
 
 	return (
 		<View

@@ -72,7 +72,7 @@ export function StatBand({
 	const cells = (
 		<>
 			<View className="flex-row">{cellViews}</View>
-			<FreezeRow freezes={streakFreezes} />
+			<FreezeRow currentStreak={currentStreak} freezes={streakFreezes} />
 		</>
 	);
 
