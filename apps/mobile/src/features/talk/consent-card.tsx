@@ -78,7 +78,10 @@ export function ConsentCard({ talk, styleOpen, onStyleOpenChange }: Props) {
 						"A talk lasts up to 15 minutes."}
 				</Row>
 				<Row icon={{ android: "lock", ios: "lock" }}>{PRIVACY_LINE}</Row>
-				<VoiceAndLookRow onPress={() => onStyleOpenChange(true)} />
+				<VoiceAndLookRow
+					onPress={() => onStyleOpenChange(true)}
+					running={!styleOpen}
+				/>
 				<Button isDisabled={talk.started || low} onPress={talk.start}>
 					<Button.Label>{label}</Button.Label>
 				</Button>

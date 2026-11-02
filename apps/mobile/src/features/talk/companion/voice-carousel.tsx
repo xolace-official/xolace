@@ -136,7 +136,8 @@ export function VoiceCarousel({ voice, onPick, preview, running }: Props) {
 							ref.current?.scrollTo({ animated: true, x: i * slot });
 							land(i);
 						}}
-						running={running}
+						// Only the centred orb turns; the dimmed neighbours hold still.
+						running={running && i === chosen}
 						selected={i === chosen}
 						slot={slot}
 						slug={o.value}

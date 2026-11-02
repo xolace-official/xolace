@@ -1,4 +1,5 @@
-// The companion's looks as a row of small live faces; the chosen one is ringed.
+// The companion's looks as a row of small faces; the chosen one is ringed and alive, the
+// rest hold still (seven live faces at once was the sheet's heaviest cost).
 
 import type { TalkLook } from "@xolace/backend/convex/lib/voices";
 import { PressableFeedback } from "heroui-native";
@@ -36,7 +37,7 @@ export function LookTiles({ value, onChange, running }: Props) {
 						playSoftPress();
 						onChange(name);
 					}}
-					running={running}
+					running={running && name === value}
 					selected={name === value}
 				/>
 			))}
