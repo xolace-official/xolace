@@ -1,18 +1,13 @@
-// The companion's voice from the Plus cast, with previews (#603): on the
-// consent card and in settings. Picking a voice plays it.
+// The companion's voice from the Plus cast, with previews (#603), in settings.
+// Picking a voice plays it. Before a talk, the voice-and-look sheet picks it.
 
-import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { TalkChips } from "@/features/talk/talk-chips";
 import { useTalkStyle } from "@/features/talk/use-talk-style";
 import { useVoicePreview } from "@/features/talk/use-voice-preview";
-import { VOICE_OPTIONS } from "@/features/talk/voice-options";
+import { TALK_CAST } from "@/features/talk/voice-options";
 import { playSoftPress } from "@/lib/haptics";
-
-const CAST = VOICE_OPTIONS.filter(
-	(o): o is typeof o & { value: VoiceSlug } => o.value !== "auto"
-);
 
 export function TalkVoicePicker() {
 	const { voice, setVoice } = useTalkStyle();
@@ -28,7 +23,7 @@ export function TalkVoicePicker() {
 				}
 				preview.toggle(slug);
 			}}
-			options={CAST.map((o) => ({
+			options={TALK_CAST.map((o) => ({
 				accessory: (
 					<SymbolView
 						name={

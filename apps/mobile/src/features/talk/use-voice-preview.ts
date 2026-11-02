@@ -1,11 +1,18 @@
 import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
-import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
+import {
+	type AudioPlayer,
+	useAudioPlayer,
+	useAudioPlayerStatus,
+} from "expo-audio";
 import { useRef, useState } from "react";
 import { VOICE_PREVIEWS } from "@/features/talk/voice-options";
 import { claimAudioSession, holdsAudioFocus } from "@/lib/audio/session";
 
 type UseVoicePreviewReturn = {
+	/** For a caller that also reads the clip (the voice orb's level). */
+	player: AudioPlayer;
 	playingSlug: VoiceSlug | null;
+	play: (slug: VoiceSlug) => Promise<void>;
 	toggle: (slug: VoiceSlug) => void;
 	stop: () => void;
 };
@@ -21,13 +28,8 @@ export function useVoicePreview(): UseVoicePreviewReturn {
 
 	const playingSlug = status.playing ? activeSlug : null;
 
-	const toggle = async (slug: VoiceSlug) => {
+	const play = async (slug: VoiceSlug) => {
 		try {
-			if (status.playing && activeSlug === slug) {
-				player.pause();
-				setActiveSlug(null);
-				return;
-			}
 			await claimAudioSession(focus, () => player.pause());
 			// Another source (or a recorder) took focus during the await.
 			if (!holdsAudioFocus(focus)) {
@@ -37,7 +39,7 @@ export function useVoicePreview(): UseVoicePreviewReturn {
 			player.play();
 			setActiveSlug(slug);
 		} catch (e) {
-			console.error("[useVoicePreview] toggle failed:", e);
+			console.error("[useVoicePreview] play failed:", e);
 			setActiveSlug(null);
 		}
 	};
@@ -49,5 +51,13 @@ export function useVoicePreview(): UseVoicePreviewReturn {
 		setActiveSlug(null);
 	};
 
-	return { playingSlug, stop, toggle };
+	const toggle = (slug: VoiceSlug) => {
+		if (playingSlug === slug) {
+			stop();
+			return;
+		}
+		void play(slug);
+	};
+
+	return { play, player, playingSlug, stop, toggle };
 }
