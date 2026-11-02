@@ -64,6 +64,7 @@ export function ProfileHeader({
 					longestStreak={summary.longestStreak}
 					sessionCount={summary.sessionCount}
 					staggerDelay={120}
+					streakFreezes={summary.streakFreezes}
 					usualDay={usualDay}
 				/>
 			)}
