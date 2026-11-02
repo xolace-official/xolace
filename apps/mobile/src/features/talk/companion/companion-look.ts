@@ -8,7 +8,7 @@ import type { PaletteName } from "@/features/xolace-face/face-palette";
 
 type Look = { body: BodyName; eyes: EyeStyle; palette: PaletteName };
 
-export const DEFAULT_LOOK: TalkLook = "xolace";
+const DEFAULT_LOOK: TalkLook = "xolace";
 
 export const LOOKS: Record<TalkLook, { label: string; look: Look }> = {
 	// The square is flat, in the theme's text colour (white in dark mode, ink in light), so
