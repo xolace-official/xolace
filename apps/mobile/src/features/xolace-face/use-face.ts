@@ -16,7 +16,7 @@ import { lerpPose, NEUTRAL, type Pose } from "./pose";
 
 // Tuned by feel in the prototypes (proto/xolace-face): underdamped on purpose, a character
 // settling rather than UI snapping.
-const MOVE_SPRING = { damping: 11, mass: 0.9, stiffness: 120 };
+export const MOVE_SPRING = { damping: 11, mass: 0.9, stiffness: 120 };
 const LOOK_SPRING = { damping: 16, stiffness: 260 };
 const REDUCED_MOVE_MS = 200;
 const BLINK_CLOSE_MS = 70;
@@ -124,6 +124,18 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		[from, reduced, t, target]
 	);
 
+	/** Shows a pose exactly, cancelling any move. For a caller that springs the pose's input
+	 * itself every frame: `to` per frame restarts its spring from rest, so it lags. */
+	const hold = useCallback(
+		(next: Pose) => {
+			"worklet";
+			from.set(next);
+			target.set(next);
+			t.set(1);
+		},
+		[from, t, target]
+	);
+
 	/** Glances away from the pose's own gaze; `look(0, 0)` returns to it. */
 	const look = useCallback(
 		(x: number, y: number) => {
@@ -148,7 +160,7 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		);
 	}, [nodAmount, reduced]);
 
-	return { clock, listen, look, nod, nodAmount, pose, to };
+	return { clock, hold, listen, look, nod, nodAmount, pose, to };
 }
 
 export type FaceHandle = ReturnType<typeof useFace>;
