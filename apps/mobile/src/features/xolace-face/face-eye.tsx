@@ -1,7 +1,7 @@
 // One eye: sclera, pupil, glints and lids, recomputed from the geometry on the UI thread.
 
 import { Circle, Oval, Path, Skia } from "@shopify/react-native-skia";
-import { useDerivedValue } from "react-native-reanimated";
+import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
 import {
 	clamp,
 	type EyeStyle,
@@ -58,9 +58,7 @@ export function FaceEye({ colors, eyes, geo, side, spread }: Props) {
 		const g = geo.get();
 		return g.ey + g.gy * GAZE_Y - 2.3;
 	});
-	const glint2X = useDerivedValue(() => glintX.get() + 4.2);
-	const glint2Y = useDerivedValue(() => glintY.get() + 4);
-	const glintOpacity = useDerivedValue(() =>
+	const glintOpacity = useDerivedValue<number>(() =>
 		geo.get().open > GLINT_MIN_OPEN ? 1 : 0
 	);
 	// The closed-eye line fades in as the eye shuts, so a blink reads as a lid, not a vanish.
@@ -75,17 +73,6 @@ export function FaceEye({ colors, eyes, geo, side, spread }: Props) {
 	const lidOpacity = useDerivedValue(() =>
 		clamp((0.35 - geo.get().open) / 0.2, 0, 1)
 	);
-	// A rounded lid that hugs the eye reads calm; a flat dark bar read as side-eye.
-	const heavyLid = useDerivedValue(() => {
-		const g = geo.get();
-		const x = g.cx + side * spread;
-		const ry = EYE_RY * g.open * openScale;
-		const top = g.ey - ry;
-		const path = Skia.PathBuilder.Make();
-		path.moveTo(x - EYE_RX, top + ry * 0.75);
-		path.quadTo(x, top - ry * 0.55, x + EYE_RX, top + ry * 0.75);
-		return path.detach();
-	});
 
 	return (
 		<>
@@ -99,22 +86,15 @@ export function FaceEye({ colors, eyes, geo, side, spread }: Props) {
 				r={glintR}
 			/>
 			{eyes === "sparkle" && (
-				<Circle
+				<SecondGlint
 					color={colors.highlight}
-					cx={glint2X}
-					cy={glint2Y}
+					glintX={glintX}
+					glintY={glintY}
 					opacity={glintOpacity}
-					r={SECOND_GLINT_R}
 				/>
 			)}
 			{eyes === "sleepy" && (
-				<Path
-					color={colors.brow}
-					path={heavyLid}
-					strokeCap="round"
-					strokeWidth={1.6}
-					style="stroke"
-				/>
+				<HeavyLid color={colors.brow} geo={geo} side={side} spread={spread} />
 			)}
 			<Path
 				color={colors.pupil}
@@ -125,5 +105,51 @@ export function FaceEye({ colors, eyes, geo, side, spread }: Props) {
 				style="stroke"
 			/>
 		</>
+	);
+}
+
+// Their own components, so a face without the style doesn't recompute them every frame.
+
+type SecondGlintProps = {
+	color: string;
+	glintX: DerivedValue<number>;
+	glintY: DerivedValue<number>;
+	opacity: DerivedValue<number>;
+};
+
+function SecondGlint({ color, glintX, glintY, opacity }: SecondGlintProps) {
+	const cx = useDerivedValue(() => glintX.get() + 4.2);
+	const cy = useDerivedValue(() => glintY.get() + 4);
+	return (
+		<Circle
+			color={color}
+			cx={cx}
+			cy={cy}
+			opacity={opacity}
+			r={SECOND_GLINT_R}
+		/>
+	);
+}
+
+// A rounded lid that hugs the eye reads calm; a flat dark bar read as side-eye.
+function HeavyLid({ color, geo, side, spread }: PartProps & { color: string }) {
+	const path = useDerivedValue(() => {
+		const g = geo.get();
+		const x = g.cx + side * spread;
+		const ry = EYE_RY * g.open * SLEEPY_OPEN;
+		const top = g.ey - ry;
+		const p = Skia.PathBuilder.Make();
+		p.moveTo(x - EYE_RX, top + ry * 0.75);
+		p.quadTo(x, top - ry * 0.55, x + EYE_RX, top + ry * 0.75);
+		return p.detach();
+	});
+	return (
+		<Path
+			color={color}
+			path={path}
+			strokeCap="round"
+			strokeWidth={1.6}
+			style="stroke"
+		/>
 	);
 }
