@@ -62,6 +62,7 @@ function Talk({
 		) : (
 			<ConsentCard
 				onStyleOpenChange={setStyleOpen}
+				running={running}
 				styleOpen={styleOpen}
 				talk={talk}
 			/>

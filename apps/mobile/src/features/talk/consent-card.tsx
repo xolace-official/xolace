@@ -42,9 +42,16 @@ type Props = {
 	/** The voice-and-look sheet; Talk holds it, since it pauses what's behind the sheet. */
 	styleOpen: boolean;
 	onStyleOpenChange: (open: boolean) => void;
+	/** False while Talk is covered (a pushed screen or the sheet), so the row's orb holds still. */
+	running: boolean;
 };
 
-export function ConsentCard({ talk, styleOpen, onStyleOpenChange }: Props) {
+export function ConsentCard({
+	talk,
+	styleOpen,
+	onStyleOpenChange,
+	running,
+}: Props) {
 	const name = useCompanionName();
 	const time = useTalkTime();
 	// Under the minimum, Start can't be pressed (#582); the server refuses it too.
@@ -80,7 +87,7 @@ export function ConsentCard({ talk, styleOpen, onStyleOpenChange }: Props) {
 				<Row icon={{ android: "lock", ios: "lock" }}>{PRIVACY_LINE}</Row>
 				<VoiceAndLookRow
 					onPress={() => onStyleOpenChange(true)}
-					running={!styleOpen}
+					running={running}
 				/>
 				<Button isDisabled={talk.started || low} onPress={talk.start}>
 					<Button.Label>{label}</Button.Label>
