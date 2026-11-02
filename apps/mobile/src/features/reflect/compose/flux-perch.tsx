@@ -40,7 +40,7 @@ type Props = {
 };
 
 /**
- * Flux on the resting card, fading into the presence dot as it opens. Breathing pauses when open.
+ * Flux on the resting card, fading into the header face as it opens. Breathing pauses when open.
  */
 export const FluxPerch = ({
 	progress,

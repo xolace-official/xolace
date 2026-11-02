@@ -14,6 +14,7 @@ import { AccessibilityInfo, ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { removeEmDash } from "@/features/quotes/utils/text-utils";
+import { MirrorFace } from "@/features/reflect/components/states/mirror-face";
 import { ToneTipBanner } from "@/features/reflect/components/tone-tip-banner";
 import { useMirrorAudio } from "@/features/reflect/hooks/use-mirror-audio";
 import type { MirrorTone } from "@/features/reflect/hooks/use-mirror-settings";
@@ -139,6 +140,7 @@ export const MirrorState = ({
 					initialAnimate={EASE_INITIAL_FADE}
 					transition={EASE_LABEL_TRANSITION}
 				>
+					<MirrorFace />
 					<AppText className="text-accent text-xs uppercase tracking-widest">
 						The Mirror
 					</AppText>
