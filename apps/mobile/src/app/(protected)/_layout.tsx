@@ -138,6 +138,7 @@ export default function ProtectedLayout() {
 					<Stack.Screen name="xolacer-edit" options={EDIT_PROFILE_OPTIONS} />
 					<Stack.Screen name="rate/[conversationId]" options={RATE_OPTIONS} />
 					<Stack.Screen name="report-reflection" options={fitSheetOptions} />
+					<Stack.Screen name="steadiness-face-info" options={fitSheetOptions} />
 					{/* The reader stays undimmed behind it, so mode and size changes show on
 					    the page live. */}
 					<Stack.Screen
