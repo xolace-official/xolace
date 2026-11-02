@@ -127,7 +127,7 @@
 
 	/* Talk's voice orbs are printed objects too: the same dark glass in either
      * theme, each voice in its own light → mid → deep colours. Fixed on purpose;
-     * see the fixed-palette convention in CLAUDE.md. */
+     * see the fixed-palette convention in apps/mobile/AGENTS.md. */
 	--color-orb-base: #1b1721;
 	--color-orb-rim: rgba(229, 229, 229, 0.13);
 	--color-orb-sheen: rgba(255, 255, 255, 0.1);

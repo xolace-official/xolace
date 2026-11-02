@@ -29,8 +29,8 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
 - **Colors:** CSS variables (`--background`, `--foreground`, `--accent`, ...), never
   hex, even inline. Every theme defines the same variables. `useThemeColor` from
   `heroui-native` for JS values. A fixed palette is allowed only for the listed
-  "printed object" surfaces (quotes poster, vent, auth, Lantern reader pages), still as
-  tokens in `global.css`.
+  "printed object" surfaces (quotes poster, vent, auth, Lantern reader pages, Talk's
+  voice orbs), still as tokens in `global.css`.
 - **Themes:** new theme = CSS file in `src/themes/` with `<name>-light`/`-dark`
   variants, import in `global.css`, register in `metro.config.js` `extraThemes`, add to
   the `ThemeName` union and `toggleTheme`.
