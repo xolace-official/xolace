@@ -53,7 +53,7 @@ export function FreezeRow({ freezes: stock, currentStreak }: Props) {
 				style={[styles.crystal, freezes === 0 && styles.empty]}
 			/>
 			<AppText
-				className={`font-bold text-[19px] tracking-tight ${freezes > 0 ? "text-frost" : "text-muted/60"}`}
+				className={`font-bold text-[19px] tracking-tight ${freezes > 0 ? "text-frost-text" : "text-muted/60"}`}
 			>
 				×{freezes}
 			</AppText>
