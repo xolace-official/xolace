@@ -11,6 +11,7 @@ import {
 	withSpring,
 	withTiming,
 } from "react-native-reanimated";
+import { isUIRuntime, scheduleOnUI } from "react-native-worklets";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { lerpPose, NEUTRAL, type Pose } from "./pose";
 
@@ -102,10 +103,9 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		};
 	});
 
-	// Stable, because placements call these from effects keyed on them.
-	/** Moves to a new pose from wherever the face is now. A worklet too, so a gesture can
-	 * drive it on the UI thread. */
-	const to = useCallback(
+	// Reads where the face is now, so it runs on the UI thread: from JS each read mid-spring
+	// would block on a sync hop, and the writes would land frames after that snapshot.
+	const move = useCallback(
 		(next: Pose) => {
 			"worklet";
 			from.set(lerpPose(from.get(), target.get(), t.get()));
@@ -122,6 +122,21 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 			);
 		},
 		[from, reduced, t, target]
+	);
+
+	// Stable, because placements call these from effects keyed on them.
+	/** Moves to a new pose from wherever the face is now. A worklet too, so a gesture can
+	 * drive it on the UI thread. */
+	const to = useCallback(
+		(next: Pose) => {
+			"worklet";
+			if (isUIRuntime()) {
+				move(next);
+			} else {
+				scheduleOnUI(move, next);
+			}
+		},
+		[move]
 	);
 
 	/** Shows a pose exactly, cancelling any move. For a caller that springs the pose's input
