@@ -208,6 +208,19 @@ describe("streak freeze (#434)", () => {
 		expect((await profile(user)).streakFreezes).toBe(2);
 	});
 
+	it("getSummary shows a lapsed streak with the stored freezes kept", async () => {
+		// Fails if: a gap wider than the stock spends freezes it can't bridge, or
+		// the lapse hides them (the profile's "on hand, saved for your next streak").
+		const user = await asNewUser();
+		const now = Date.now();
+		await record(user, -4, "vent", now);
+		await setFreezes(user, 1);
+		const summary = await user.t.query(api.profile.getSummary, {});
+		expect(summary.currentStreak).toBe(0);
+		expect(summary.streakFreezes).toBe(1);
+		expect((await profile(user)).streakFreezes).toBe(1);
+	});
+
 	it("app open surfaces a bridged gap until acknowledged, then never again (#436)", async () => {
 		// Fails if: the banner repeats after it showed, drops a bridge nobody saw
 		// (killed app, old client), misses one recordActivity wrote before the
