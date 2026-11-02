@@ -7,6 +7,7 @@ const MIC_OFF: Pose = { ...NEUTRAL, eyeOpen: 0.7 };
 
 const POSES: Record<Presence, Pose> = {
 	"Connecting…": NEUTRAL,
+	"Ending…": PRESETS.waiting,
 	Listening: PRESETS.attentive,
 	"Mic off": MIC_OFF,
 	Speaking: PRESETS.speaking,
