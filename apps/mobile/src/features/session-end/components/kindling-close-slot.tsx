@@ -13,6 +13,8 @@ import { playSoftPress } from "@/lib/haptics";
 
 type Props = {
 	sessionId?: Id<"sessions">;
+	/** Plus only. `ready` once this session's kindling has landed. */
+	onOpenKindling?: (ready: boolean) => void;
 };
 
 /** Rounded-square icon badge: flame for pro, lock for the free upsell. */
@@ -39,12 +41,18 @@ function KindlingIconTile({ locked }: { locked: boolean }) {
 
 /** Session-end's two kindling slots (docs/paths-v1.md §11-§12, #337): the premium
  * setup card and the free upsell, both gated on a qualifying session (ADR 0009).
- * Independent of `CloseOffer`; renders nothing while entitlement or qualification resolves. */
-export const KindlingCloseSlot = ({ sessionId }: Props) => {
+ * Independent of `CloseOffer`; renders nothing while entitlement or qualification resolves.
+ * The premium card leads to Discovery, or straight to the kindling once it has landed. */
+export const KindlingCloseSlot = ({ sessionId, onOpenKindling }: Props) => {
 	const { isPlus, isResolved } = usePlusEntitlement();
 	const qualifies = useQuery(
 		api.paths.isKindlingQualifyingSession,
 		sessionId ? { sessionId } : "skip"
+	);
+	// Same args as Discovery's card, so the subscription is shared and warm there.
+	const active = useQuery(
+		api.paths.getActive,
+		sessionId && isPlus ? { withRead: true, withTry: true } : "skip"
 	);
 	const posthog = usePostHog();
 	const openPaywall = usePaywall((s) => s.open);
@@ -65,19 +73,34 @@ export const KindlingCloseSlot = ({ sessionId }: Props) => {
 	}
 
 	if (isPlus) {
+		const kindlingReady = active?.sessionId === sessionId;
 		return (
-			<View className="w-full flex-row items-center gap-3 rounded-2xl border border-accent/25 bg-accent/10 px-5 py-4">
+			<PressableFeedback
+				accessibilityLabel={
+					kindlingReady ? "Open your kindling" : "Go to Discovery"
+				}
+				accessibilityRole="button"
+				className="w-full flex-row items-center gap-3 rounded-2xl border border-accent/25 bg-accent/10 px-5 py-4"
+				isDisabled={!onOpenKindling}
+				onPress={() => {
+					playSoftPress();
+					onOpenKindling?.(kindlingReady);
+				}}
+			>
 				<KindlingIconTile locked={false} />
 				<View className="flex-1">
 					<AppText className="font-medium text-base text-foreground">
-						Setting up your kindling…
+						{kindlingReady
+							? "Your kindling is ready"
+							: "Setting up your kindling…"}
 					</AppText>
 					<AppText className="mt-0.5 font-light text-foreground/55 text-xs">
-						What next? Check back soon on the discovery screen for the curated
-						support actions for you.
+						{kindlingReady
+							? "A few things from today, ready to tend. Tap to open."
+							: "It lands on Discovery when it's ready. Tap to head there."}
 					</AppText>
 				</View>
-			</View>
+			</PressableFeedback>
 		);
 	}
 

@@ -15,6 +15,7 @@ type Phase = "acknowledge" | "close";
 
 type Props = {
 	onHaveMore: () => void;
+	onOpenKindling: (ready: boolean) => void;
 	isNight?: boolean;
 	sessionId?: Id<"sessions">;
 };
@@ -41,6 +42,7 @@ const styles = StyleSheet.create({
 
 export const ExitVariant = ({
 	onHaveMore,
+	onOpenKindling,
 	isNight = false,
 	sessionId,
 }: Props) => {
@@ -108,7 +110,10 @@ export const ExitVariant = ({
 					>
 						<CloseOffer sessionId={sessionId} variant="exit" />
 						<SessionEndUpsell sessionId={sessionId} />
-						<KindlingCloseSlot sessionId={sessionId} />
+						<KindlingCloseSlot
+							onOpenKindling={onOpenKindling}
+							sessionId={sessionId}
+						/>
 
 						<Button
 							accessibilityLabel="Start another session"

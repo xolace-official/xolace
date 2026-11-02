@@ -36,6 +36,12 @@ type Props = {
 		mood?: PostSessionMood,
 		moodPosition?: number
 	) => void;
+	onOpenKindling: (
+		ready: boolean,
+		contributedReflection: boolean | null,
+		mood?: PostSessionMood,
+		moodPosition?: number
+	) => void;
 	isNight?: boolean;
 };
 
@@ -67,6 +73,7 @@ export const ActivityVariant = ({
 	contributeByDefault,
 	onDismiss,
 	onHaveMore,
+	onOpenKindling,
 	isNight = false,
 }: Props) => {
 	const [phase, setPhase] = useState<Phase>("acknowledge");
@@ -297,7 +304,17 @@ export const ActivityVariant = ({
 					>
 						<CloseOffer sessionId={sessionId} variant="activity" />
 						<SessionEndUpsell sessionId={sessionId} />
-						<KindlingCloseSlot sessionId={sessionId} />
+						<KindlingCloseSlot
+							onOpenKindling={(ready) =>
+								onOpenKindling(
+									ready,
+									contributed,
+									selectedMood ?? undefined,
+									moodPosition ?? undefined
+								)
+							}
+							sessionId={sessionId}
+						/>
 						<Button
 							accessibilityLabel="Start another session"
 							className="w-full rounded-2xl"
