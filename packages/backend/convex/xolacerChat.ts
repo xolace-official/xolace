@@ -11,6 +11,7 @@ import {
 	type QueryCtx,
 	query,
 } from "./_generated/server";
+import { awardAchievement } from "./achievements/award";
 import {
 	createXolacerChannel,
 	deleteStreamUser,
@@ -1361,6 +1362,9 @@ export const requestConversation = mutation({
 			userProfileId: profile._id,
 			xolacerProfileId: args.xolacerProfileId,
 		});
+		// Only a fresh pair's request (#696): a re-request reopens a row this
+		// seeker already asked on, so it has nothing new to earn.
+		await awardAchievement(ctx, profile._id, "asked-for-chat");
 		await captureRequestSent(ctx, profile._id, origin);
 		await notifyConversation(
 			ctx,
@@ -2041,6 +2045,22 @@ export const notifyNewMessage = internalMutation({
 					: null;
 		const delivery =
 			!alreadyCounted && senderRole ? { conversationId, senderRole } : null;
+
+		// The seeker's own first message once the Xolacer has accepted (#696),
+		// whatever the row's status now: a resting pair still talking counts.
+		// Never the Xolacer's side, whose accepting or reply earns the seeker
+		// nothing, and never a redelivery of an event already counted.
+		const seekerSpokeAfterAccept =
+			!alreadyCounted &&
+			senderRole === "user" &&
+			conversation.acceptedAt !== undefined;
+		if (seekerSpokeAfterAccept) {
+			await awardAchievement(
+				ctx,
+				conversation.userProfileId,
+				"first-xolacer-chat"
+			);
+		}
 
 		// Stream cannot deliver into a channel we consider shut, but a resting or
 		// blocked pair whose channel Stream has not frozen yet would still arrive
