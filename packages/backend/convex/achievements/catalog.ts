@@ -184,7 +184,7 @@ export type FixedAchievementId =
 export type AchievementId = FixedAchievementId | `streak-${number}`;
 
 /** The fixed rungs counting `counter`, in catalog (lowest-first) order. */
-function rungsCounting(counter: GoalCounter) {
+export function rungsCounting(counter: GoalCounter) {
 	return FIXED_ACHIEVEMENTS.flatMap((a) =>
 		"goal" in a && a.goal.counter === counter
 			? [{ achievementId: a.achievementId, target: a.goal.target }]

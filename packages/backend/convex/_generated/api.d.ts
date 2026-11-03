@@ -10,8 +10,10 @@
 
 import type * as achievements_art from "../achievements/art.js";
 import type * as achievements_award from "../achievements/award.js";
+import type * as achievements_backfill from "../achievements/backfill.js";
 import type * as achievements_catalog from "../achievements/catalog.js";
 import type * as achievements_display from "../achievements/display.js";
+import type * as achievements_firstSight from "../achievements/firstSight.js";
 import type * as achievements_ladders from "../achievements/ladders.js";
 import type * as achievements_pins from "../achievements/pins.js";
 import type * as achievements_push from "../achievements/push.js";
@@ -268,8 +270,10 @@ import type {
 declare const fullApi: ApiFromModules<{
   "achievements/art": typeof achievements_art;
   "achievements/award": typeof achievements_award;
+  "achievements/backfill": typeof achievements_backfill;
   "achievements/catalog": typeof achievements_catalog;
   "achievements/display": typeof achievements_display;
+  "achievements/firstSight": typeof achievements_firstSight;
   "achievements/ladders": typeof achievements_ladders;
   "achievements/pins": typeof achievements_pins;
   "achievements/push": typeof achievements_push;
