@@ -84,6 +84,38 @@ Memory the user can see and steer.
 **Consent-gated actions (R).** Tools are exempt, approval-required or unattended-safe; outbound verbs classified (`packages/core/src/action-approval.ts`); "Always allow" stored as a rule; an optional 1.5s LLM judge where uncertainty means ask (`packages/adapters/src/auto-review.ts`).
 → Foundation for "acts for you with consent": draft a message to a trusted contact, add a therapy appointment, share a reflection with a therapist. Allow once / Always / Deny. Routines get only the unattended-safe subset.
 
+## Connectors: what Xolace can see and do outside itself
+
+Rakazo has three different things that all get called "connectors". Only the third was skipped.
+
+1. **Messaging channels** (Telegram, WhatsApp, Slack, SMS): where the bot *talks*. Covered above under "Reach users outside the app".
+2. **Inbound webhooks**: an outside event *wakes* the bot (`apps/api/src/webhook-inbound.ts`, 64 KB body cap, per-bot secret). The payload is fenced as `<untrusted_delivery_payload>` with "not instructions", and the event name is reduced to a safe token (`formatUntrustedDeliveryPayload`, `inboundEventName`).
+3. **Tool connectors**: what the bot can *do*. Composio, Pipedream, GraphQL and remote MCP servers give it hundreds of third-party tools (`packages/adapters/src/composio-connector.ts`, `pipedream-connector.ts`, `mcp-connector.ts`, `installed-connectors.ts`).
+
+What we skipped is the open marketplace in (3): any user can plug any tool into the companion. What we can take:
+
+**Event-driven proactivity via inbound webhooks (R).** This is the piece that matters most for speaking first. Today our proactivity runs on our own schedules (`crons.ts`, `followUps.ts`). Webhooks let *the user's life* trigger a run: a Google Calendar event ends, a wearable reports a short night's sleep, Apple Health logs a high resting heart rate, a Spotify session runs to 3am. Each queues a background run that may speak or stay silent. Convex `http.ts` is already where this would live; keep the untrusted-payload fencing.
+
+**A curated catalog, not a marketplace.** Pick a handful of connectors that carry wellbeing signal (Calendar, Health/Google Fit, a wearable, maybe music) and make each read-only by default. Rakazo's split of tools into read-only vs write (`readOnly` on `CatalogSearchHit` in `lazy-tool-catalog.ts`) plus the approval classes in `packages/core/src/action-approval.ts` map well: reads are free, writes (send, post, book) always ask.
+
+**Lazy tool catalog (R).** At most 20 tools go to the model directly; the rest sit behind `__catalog_search` / `__catalog_load` / `__catalog_execute` with size caps (`lazy-tool-catalog.ts`). Keeps the companion's prompt small as integrations grow.
+
+**Redact secrets in connector errors (R).** `connector-safety.ts` strips bearer tokens and known secrets from errors and payloads before they reach logs or the model. Cheap to copy for any integration.
+
+**Build vs. buy.** Composio or Pipedream would save writing OAuth for each service, but the user's calendar and health data would pass through another processor. For mental health data that's a privacy-policy and consent question; record the choice in an ADR before picking.
+
+## Ideas from the multi-bot setup
+
+Rakazo lets bots spawn child bots and work tickets on a board (`packages/adapters/src/child-bots.ts`, `ticket-tools.ts`, `ticket-wake.ts`). Xolace should still show one companion, but parts of the machinery are useful:
+
+**One face, many specialists.** Behind the single Xolace persona, route to internal specialists: a sleep coach, a CBT reframer, a rehearsal partner, and the safeguard that always runs. The user never manages bots; the companion hands off and speaks with one voice. Rakazo asks the user to confirm a spawn by typing the bot's name (`confirmSpawnedBotName`): the analogue for us is asking before a specialist with a different style takes over ("want to work through this with a sleep-focused approach for a bit?").
+
+**Wake without a message (R).** Assigning a ticket queues a run in the bot's thread *without posting a chat message* (`wakeTicketAssignee` in `ticket-wake.ts`). That is the plumbing for silent runs and webhook triggers: a background turn that may end up saying nothing.
+
+**A shared goals board.** Tickets are long-lived work items both the user and bot can see, with progress in comments and a status the bot updates (`ticket_get` / `ticket_update` in `ticket-tools.ts`). For Xolace: multi-week goals ("back to sleeping by midnight", "one social plan a week") that the companion and user track together, outside the chat scroll. A bigger sibling of the open-loops scratchpad.
+
+**Archive a chapter, keep the memory (R).** Archiving a bot moves its memory to an archive directory rather than deleting it (`archivedMemoryDirectory` in `child-bots.ts`). For Xolace: close a "season" (a breakup, exam period) so it stops shaping daily check-ins, but stays readable and can be brought back.
+
 ## Xolace beyond the app
 
 **Browser sidebar (C).** A content script injects a 400px iframe of the Expo web export, with `postMessage` expand/collapse so modals can go full-screen (`apps/extension/entrypoints/content.ts`, `apps/extension/lib/sidebar-iframe.ts`); OAuth via `chrome.identity` in the background worker.

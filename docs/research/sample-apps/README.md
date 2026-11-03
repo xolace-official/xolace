@@ -35,16 +35,21 @@ If we only pick six, these give the most "proactive and different" for the effor
 
 ## Looked at and skipped
 
-- **Rakazo's sandboxed computers, browser takeover and multi-bot teams/tickets.** Desktop automation and org charts; one trusted companion is the right shape, and the security surface is large.
-- **Rakazo's BYO-model / connector marketplaces / self-hosting.** Open connector catalogs conflict with clinical safety on a managed product.
+- **Rakazo's sandboxed computers and browser takeover.** Desktop automation with a large security surface.
+- **Rakazo's multi-bot teams as a user feature.** Users shouldn't manage several bots. The parts worth taking (specialists behind one face, silent wakes, a goals board, archived chapters) are in [features.md](features.md#ideas-from-the-multi-bot-setup).
+- **Rakazo's open connector marketplace, BYO models and self-hosting.** Letting users plug any third-party tool into the companion conflicts with clinical safety. Messaging channels, inbound webhooks and a curated, read-mostly catalog are *not* skipped: see [features.md](features.md#connectors-what-xolace-can-see-and-do-outside-itself).
 - **Private Mind's model hub, custom model import and benchmark screen as user features.** Users shouldn't pick models; hide it all behind "Vault mode on/off".
 - **Private Mind's DuckDuckGo scraper and VLM photo understanding.** Fragile, anti-bot challenges, and vision models need ~7 GB RAM.
 - **Companion's OpenAPI-generated CLI, cookie web auth and LinkedIn DOM injection.** We have a typed Convex contract and Clerk; scraping social sites doesn't fit the brand.
 - **Monorepo/release tooling in all three.** Xolace's Turborepo, `check:changed`, worktree ports, fingerprint and preview workflows are already ahead.
 
-## Questions to settle before building any of this
+## Decisions so far (2026-11-03)
 
-1. **Vault mode vs. safety.** Are we willing to ship a mode where escalation runs only on-device? What's the minimum local crisis detection we'd accept?
-2. **Who may start a conversation?** Routines, silent runs, SMS and widgets all widen when Xolace speaks first. Do we want one "proactivity budget" per user (e.g. max N unprompted messages a week) that every channel draws from?
-3. **What can show on a lock screen or in a notification preview?** Needs one rule before widgets or actionable pushes.
-4. **Do companion-proposed instruction changes live in `semanticProfiles` or a new user-visible table?**
+1. **Vault mode: yes, as an informed opt-in.** Processing stays on the device; users are told plainly what that means (including that server-side escalation doesn't see Vault content) and choose it. A local crisis gate that opens `crisis-resources` is still worth building.
+2. **Xolace speaking first is the goal.** Routines, silent runs, webhook triggers, SMS and widgets all serve it. Silent runs and a per-user cap remain the guard against nagging.
+
+## Still open
+
+1. **What can show on a lock screen or in a notification preview?** Parked; needs one rule before widgets or actionable pushes ship.
+2. **Do companion-proposed instruction changes live in `semanticProfiles` or a new user-visible table?**
+3. **Connectors: build each OAuth ourselves or use Composio/Pipedream?** A data-processor and consent question as much as an engineering one.
