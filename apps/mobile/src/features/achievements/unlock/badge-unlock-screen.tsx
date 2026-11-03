@@ -5,7 +5,11 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { router } from "expo-router";
+import {
+	type NativeStackNavigationProp,
+	router,
+	useNavigation,
+} from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { useEffect, useRef, useState } from "react";
@@ -52,16 +56,21 @@ export function BadgeUnlockScreen() {
 		}
 	}, [empty]);
 
-	// Stamp on the way out, however it closes. An app killed while this is up shows it again.
-	useEffect(
-		() => () => {
+	// Stamp when a navigation action takes it off the stack (close, Lovely, a swipe, Android
+	// back), not on any unmount: Android rebuilding the tree on relaunch isn't a dismissal. An
+	// app killed while this is up shows it again.
+	const navigation =
+		useNavigation<NativeStackNavigationProp<Record<string, undefined>>>();
+	useEffect(() => {
+		const unsubscribe = navigation.addListener("removed", () => {
 			const ids = shownIds.current;
 			if (ids.length > 0) {
 				markSeen({ ids }).catch(() => undefined);
 			}
-		},
-		[markSeen]
-	);
+		});
+		// "removed" fires after this cleanup runs, so the unsubscribe waits a microtask.
+		return () => queueMicrotask(unsubscribe);
+	}, [navigation, markSeen]);
 
 	const badge = shown?.[step];
 	if (!(shown && badge)) {

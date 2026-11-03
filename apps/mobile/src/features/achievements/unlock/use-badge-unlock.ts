@@ -2,7 +2,8 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { router, usePathname } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { AppState } from "react-native";
 import { shouldShowReflectTour } from "@/features/reflect-tour/tour-copy";
 import { useAppStore } from "@/store/store";
 import { HOME, mayOpenUnlock } from "./unlock-gate";
@@ -15,6 +16,12 @@ import { HOME, mayOpenUnlock } from "./unlock-gate";
  */
 const SETTLE_MS = 800;
 
+const subscribeAppState = (onChange: () => void) => {
+	const sub = AppState.addEventListener("change", onChange);
+	return () => sub.remove();
+};
+const isForeground = () => AppState.currentState === "active";
+
 /**
  * The one subscription behind the badge unlock moment (#693), mounted in the
  * protected layout: opens `/badge-unlock` when unseen live badges appear and
@@ -22,6 +29,8 @@ const SETTLE_MS = 800;
  */
 export function useBadgeUnlock() {
 	const pathname = usePathname();
+	// Never from the background: Android can rebuild the screen tree before the user is back.
+	const foreground = useSyncExternalStore(subscribeAppState, isForeground);
 	const onHome = pathname === HOME;
 	const unseen = useQuery(api.achievements.unlock.unseen);
 	// Home is where a session runs; elsewhere a resumable one is just waiting.
@@ -30,17 +39,19 @@ export function useBadgeUnlock() {
 	const homeSheetOpen = useAppStore((s) => s.homeSheetOpen);
 	const reflectTourActive = useAppStore((s) => s.reflectTourActive);
 	const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
+	const streakRevealBusy = useAppStore((s) => s.streakRevealBusy);
 	// Still loading counts as busy.
 	const homeBusy =
 		activeSession !== null ||
 		homeSheetOpen ||
 		reflectTourActive ||
+		streakRevealBusy ||
 		shouldShowReflectTour(reflectTourVersion);
 
 	// Badges already handed to the route this run. If its markSeen never lands
 	// (offline), they come back on the next launch rather than in a loop now.
 	const opened = useRef(new Set<Id<"user_achievements">>());
-	const mayOpen = mayOpenUnlock({ homeBusy, pathname });
+	const mayOpen = foreground && mayOpenUnlock({ homeBusy, pathname });
 
 	useEffect(() => {
 		const fresh = unseen?.filter((b) => !opened.current.has(b.id)) ?? [];

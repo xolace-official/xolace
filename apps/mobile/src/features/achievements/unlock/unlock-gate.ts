@@ -27,7 +27,7 @@ export const HOME = "/";
 type Where = {
 	/** expo-router's pathname (groups stripped). */
 	pathname: string;
-	/** Home has a session in progress, a sheet on screen, or the first-run tour up. */
+	/** Home has a session in progress, a sheet on screen, the streak reveal or the first-run tour. */
 	homeBusy: boolean;
 };
 
