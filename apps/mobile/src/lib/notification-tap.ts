@@ -64,6 +64,7 @@ export type TapNavigation =
 				| "/(protected)/quotes"
 				| "/(protected)"
 				| "/(protected)/kindling"
+				| "/(protected)/achievements"
 				| "/profile/insights";
 	  };
 
@@ -110,6 +111,9 @@ export function notificationTapPlan(
 		plan.navigation = { action: "push", href: "/profile/insights" };
 	} else if (data?.type === "kindling_ready") {
 		plan.navigation = { action: "push", href: "/(protected)/kindling" };
+	} else if (data?.type === "achievement") {
+		// Off a held screen, so the unlock moment can open over the badges.
+		plan.navigation = { action: "push", href: "/(protected)/achievements" };
 	} else if (
 		data?.type === "gentle_return" ||
 		data?.type === "pattern_nudge" ||
