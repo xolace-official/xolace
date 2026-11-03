@@ -41,7 +41,7 @@ export default defineConfig({
 			...configDefaults.exclude,
 			...(RUN_EVALS ? [] : ["**/*.eval.test.ts"]),
 		],
-		include: ["convex/**/*.test.ts"],
+		include: ["convex/**/*.test.ts", "scripts/**/*.test.ts"],
 		// edge-runtime workers occasionally race their console.log RPC against
 		// worker teardown ("Closing rpc while onUserConsoleLog was pending"). One
 		// retry absorbs that flake in CI.

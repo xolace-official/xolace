@@ -1,0 +1,7 @@
+[
+  { "artKey": "fallback", "source": "master.png" },
+  { "artKey": "joined", "source": "joined.png" },
+  { "artKey": "streak-spark-1", "source": "streak-spark.png" },
+  { "artKey": "streak-spark-2", "source": "streak-spark.png" },
+  { "artKey": "streak-spark-3", "source": "streak-spark.png" }
+]

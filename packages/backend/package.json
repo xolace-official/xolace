@@ -19,6 +19,7 @@
     "./convex/*": "./convex/*.ts"
   },
   "scripts": {
+    "badges:upload": "bun scripts/badges/upload.ts",
     "check-types": "tsc --noEmit -p convex && tsc --noEmit -p tsconfig.json",
     "codegen": "node scripts/codegen.mjs",
     "dev": "convex dev",

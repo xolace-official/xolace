@@ -178,6 +178,19 @@ export default defineSchema({
 		.index("by_key", ["key"])
 		.index("by_tier_order", ["tier", "order"]),
 
+	// One image per badge artKey (#687, #690), filled per deployment by
+	// scripts/badges/upload.ts through convex/achievements/art.ts, since storage
+	// ids differ per deployment. Several achievements can share one artKey.
+	badge_art: defineTable({
+		artKey: v.string(),
+		// SHA-256 of the uploaded WebP: a re-run skips an image that hasn't changed.
+		sha256: v.string(),
+		storageId: v.id("_storage"),
+		// Base64 ThumbHash (keeps the cut-out's transparency), the placeholder while it loads.
+		thumbhash: v.string(),
+		updatedAt: v.number(),
+	}).index("by_artKey", ["artKey"]),
+
 	// ===========================================================
 	// CHAT MODERATION VERDICTS (#344)
 	// ===========================================================

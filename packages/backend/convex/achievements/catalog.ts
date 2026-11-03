@@ -268,3 +268,31 @@ export function findAchievement(
 	}
 	return FIXED_ACHIEVEMENTS.find((a) => a.achievementId === achievementId);
 }
+
+/**
+ * The generic badge (the pinned master), shown as a locked silhouette for any
+ * artKey whose image isn't uploaded to this deployment yet.
+ */
+export const BADGE_ART_FALLBACK = "fallback";
+
+/**
+ * Every distinct image an achievement can show (#687): one `badge_art` row
+ * each, so the upload script has a finite list however long the ladder runs.
+ */
+export const BADGE_ART_KEYS: readonly string[] = [
+	...FIXED_ACHIEVEMENTS.map((a) => a.artKey),
+	...STREAK_STAGES.flatMap(({ stage, rungs }) =>
+		rungs.map((_, pip) => `streak-${stage}-${pip + 1}`)
+	),
+	"streak-bonfire",
+	...Array.from(
+		{ length: STREAK_YEAR_ART_CAP },
+		(_, year) => `streak-year-${year + 1}`
+	),
+];
+
+/** What `badge_art` may hold: every badge's image plus the fallback. */
+export const UPLOADABLE_ART_KEYS: ReadonlySet<string> = new Set([
+	...BADGE_ART_KEYS,
+	BADGE_ART_FALLBACK,
+]);

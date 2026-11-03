@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	ACHIEVEMENT_CATEGORIES,
+	BADGE_ART_KEYS,
 	FIXED_ACHIEVEMENTS,
 	findAchievement,
 	isStreakRung,
@@ -160,5 +161,26 @@ describe("launch catalog (#683, #687)", () => {
 			sparks: 10,
 			title: "Joined Xolace",
 		});
+	});
+});
+
+describe("badge art keys (#687, #690)", () => {
+	it("name every image an achievement can show, so the upload script has a finite list", () => {
+		const shown = new Set(FIXED_ACHIEVEMENTS.map((a) => a.artKey));
+		// Ten years of streak covers every stage, the bonfire and every star count.
+		for (let days = 1; days <= 3650; days++) {
+			const art = findAchievement(`streak-${days}`)?.artKey;
+			if (art) {
+				shown.add(art);
+			}
+		}
+		expect(new Set(BADGE_ART_KEYS)).toEqual(shown);
+	});
+
+	it("count 27 fixed images, 18 streak stage rungs, the bonfire and 5 yearly", () => {
+		expect(BADGE_ART_KEYS).toHaveLength(51);
+		expect(BADGE_ART_KEYS).toContain("streak-hearth-5");
+		expect(BADGE_ART_KEYS).toContain("streak-year-5");
+		expect(BADGE_ART_KEYS).not.toContain("streak-year-6");
 	});
 });
