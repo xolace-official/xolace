@@ -1,0 +1,686 @@
+<!doctype html>
+<!--
+  PROTOTYPE — throwaway. Answers "Badge art direction: which look do we build?" (#682).
+  Three badge directions, switchable via ?variant=A|B|C (or ← →), each applied to
+  Joined, 5-day streak, 30-day streak and First reflection, plus locked rungs.
+  Badges are authored to the #679 constraints (square viewBox, presentation attributes,
+  no text/filters/masks, <g id="base"> + at most two <g id="fx-*">). The CSS animation on
+  fx-* here only previews motion; the app would drive those layers in Skia.
+  Colours approximate the app's dark/light tokens (src/global.css) and --color-ember.
+-->
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta content="width=device-width, initial-scale=1" name="viewport">
+		<title>Badge art prototype</title>
+		<style>
+		:root {
+			--bg: #0c0b11;
+			--surface: #15131c;
+			--surface-2: #1d1a26;
+			--fg: #ebe9f2;
+			--muted: #7d7890;
+			--border: #26232f;
+			--ember: #e8b45a;
+			--accent: #a9a3e6;
+		}
+		body.light {
+			--bg: #f6f5f9;
+			--surface: #fdfcfe;
+			--surface-2: #efedf4;
+			--fg: #26232f;
+			--muted: #6f6a80;
+			--border: #e2e0e8;
+			--accent: #6d64c9;
+		}
+		* {
+			box-sizing: border-box;
+		}
+		body {
+			padding: 24px 16px 120px;
+			margin: 0;
+			font:
+				15px / 1.4 -apple-system,
+				system-ui,
+				sans-serif;
+			color: var(--fg);
+			background: var(--bg);
+		}
+		main {
+			display: grid;
+			grid-template-columns: 1fr 380px;
+			gap: 28px;
+			max-width: 1080px;
+			margin: 0 auto;
+		}
+		@media (max-width: 860px) {
+			main {
+				grid-template-columns: 1fr;
+			}
+		}
+		h1 {
+			margin: 0 0 4px;
+			font-size: 20px;
+		}
+		h2 {
+			margin: 0 0 12px;
+			font-size: 13px;
+			font-weight: 600;
+			color: var(--muted);
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+		}
+		.pitch {
+			max-width: 640px;
+			margin: 0 0 20px;
+			color: var(--muted);
+		}
+		.phone {
+			padding: 20px 16px;
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 28px;
+		}
+		.cat {
+			padding: 14px 0;
+			border-top: 1px solid var(--border);
+		}
+		.cat:first-of-type {
+			border-top: 0;
+		}
+		.cat-head {
+			display: flex;
+			align-items: baseline;
+			justify-content: space-between;
+			margin-bottom: 10px;
+		}
+		.cat-head b {
+			font-size: 16px;
+		}
+		.cat-head span {
+			font-size: 13px;
+			color: var(--muted);
+		}
+		.row {
+			display: flex;
+			gap: 10px;
+			overflow-x: auto;
+		}
+		.cell {
+			flex: none;
+			width: 72px;
+			font-size: 11px;
+			color: var(--muted);
+			text-align: center;
+		}
+		.cell svg {
+			display: block;
+			width: 64px;
+			height: 64px;
+			margin: 0 auto 4px;
+		}
+		.progress {
+			margin-top: 10px;
+			font-size: 12px;
+			color: var(--muted);
+		}
+		.bar {
+			height: 6px;
+			margin-top: 4px;
+			overflow: hidden;
+			background: var(--surface-2);
+			border-radius: 3px;
+		}
+		.bar i {
+			display: block;
+			width: 70%;
+			height: 100%;
+			background: var(--ember);
+			border-radius: 3px;
+		}
+		.sheet {
+			padding: 28px 20px 20px;
+			margin-top: 16px;
+			text-align: center;
+			background: var(--surface-2);
+			border-radius: 28px;
+		}
+		.sheet svg {
+			width: 180px;
+			height: 180px;
+		}
+		.sheet h3 {
+			margin: 12px 0 4px;
+			font-size: 20px;
+		}
+		.sheet p {
+			margin: 0 0 6px;
+			color: var(--muted);
+		}
+		.sheet .sparks {
+			margin-bottom: 16px;
+			font-weight: 600;
+			color: var(--ember);
+		}
+		.sheet button {
+			width: 100%;
+			padding: 14px;
+			font-size: 15px;
+			font-weight: 600;
+			color: var(--bg);
+			background: var(--fg);
+			border: 0;
+			border-radius: 16px;
+		}
+		.sizes {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 18px;
+			align-items: end;
+			margin-top: 16px;
+		}
+		.sizes svg {
+			display: block;
+		}
+		.controls {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			margin-bottom: 16px;
+		}
+		.controls button {
+			padding: 6px 12px;
+			font-size: 13px;
+			color: var(--fg);
+			cursor: pointer;
+			background: var(--surface-2);
+			border: 1px solid var(--border);
+			border-radius: 999px;
+		}
+		.notes {
+			font-size: 13px;
+			color: var(--muted);
+		}
+		.notes li {
+			margin-bottom: 4px;
+		}
+		/* Floating variant switcher (prototype chrome, not part of the design) */
+		#switcher {
+			position: fixed;
+			bottom: 20px;
+			left: 50%;
+			z-index: 10;
+			display: flex;
+			gap: 4px;
+			align-items: center;
+			padding: 6px;
+			font: 600 14px system-ui;
+			color: #fff;
+			background: #ff3b7f;
+			border-radius: 999px;
+			box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+			transform: translateX(-50%);
+		}
+		#switcher button {
+			width: 36px;
+			height: 36px;
+			font-size: 18px;
+			color: #fff;
+			cursor: pointer;
+			background: rgba(255, 255, 255, 0.2);
+			border: 0;
+			border-radius: 999px;
+		}
+		#switcher span {
+			padding: 0 12px;
+			white-space: nowrap;
+		}
+		/* fx preview motion (Skia in the app) */
+		body:not(.still) .anim [id^="fx-shimmer"] {
+			transform-origin: 60px 60px;
+			animation: spin 5s linear infinite;
+		}
+		body:not(.still) .anim [id^="fx-flame"] {
+			transform-origin: 60px 80px;
+			animation: flicker 1.6s ease-in-out infinite;
+		}
+		body:not(.still) .anim [id^="fx-glow"] {
+			animation: breathe 3s ease-in-out infinite;
+		}
+		body:not(.still) .anim [id^="fx-sparkle"] > * {
+			transform-origin: center;
+			transform-box: fill-box;
+			animation: twinkle 2.4s ease-in-out infinite;
+		}
+		body:not(.still) .anim [id^="fx-sparkle"] > :nth-child(2) {
+			animation-delay: 0.8s;
+		}
+		body:not(.still) .anim [id^="fx-sparkle"] > :nth-child(3) {
+			animation-delay: 1.6s;
+		}
+		@keyframes spin {
+			to {
+				transform: rotate(360deg);
+			}
+		}
+		@keyframes flicker {
+			0%,
+			100% {
+				transform: scale(1, 1);
+			}
+			30% {
+				transform: scale(0.96, 1.06);
+			}
+			60% {
+				transform: scale(1.03, 0.97);
+			}
+		}
+		@keyframes breathe {
+			0%,
+			100% {
+				opacity: 0.35;
+			}
+			50% {
+				opacity: 0.8;
+			}
+		}
+		@keyframes twinkle {
+			0%,
+			100% {
+				opacity: 0;
+				transform: scale(0.4);
+			}
+			50% {
+				opacity: 1;
+				transform: scale(1);
+			}
+		}
+		@media (prefers-reduced-motion: reduce) {
+			.anim [id^="fx-"],
+			.anim [id^="fx-"] > * {
+				animation: none !important;
+			}
+		}
+		</style>
+	</head>
+	<body>
+		<main>
+			<section>
+				<h1 id="vname">Badge art</h1>
+				<p class="pitch" id="vpitch"></p>
+				<div class="controls">
+					<button id="theme" type="button">Toggle light / dark</button>
+					<button id="motion" type="button">Toggle motion</button>
+				</div>
+				<div class="phone" id="shelf"></div>
+				<h2 style="margin-top:24px">Scale check: 24 / 40 / 64 / 120 px</h2>
+				<div class="sizes" id="sizes"></div>
+				<h2 style="margin-top:24px">How it scales to 40+ badges</h2>
+				<ul class="notes" id="vnotes"></ul>
+			</section>
+			<section>
+				<h2>Unlock sheet (animated)</h2>
+				<div class="sheet anim" id="sheet"></div>
+			</section>
+		</main>
+		<div id="switcher">
+			<button aria-label="Previous variant" id="prev" type="button">←</button
+			><span id="label"></span
+			><button aria-label="Next variant" id="next" type="button">→</button>
+		</div>
+
+		<script>
+		"use strict";
+		// ---------- palette (fixed, like the face/orb printed objects) ----------
+		const P = {
+			ember: {
+				dark: "#4a2610",
+				deep: "#c7742a",
+				ink: "#3a1d0a",
+				light: "#ffe2a8",
+				mid: "#f0b453",
+			},
+			firsts: {
+				dark: "#241f45",
+				deep: "#6d64c9",
+				ink: "#1d1838",
+				light: "#e6e3ff",
+				mid: "#a9a3e6",
+			},
+			locked: {
+				dark: "#24212c",
+				deep: "#35323f",
+				ink: "#5e5a6b",
+				light: "#5e5a6b",
+				mid: "#46424f",
+			},
+		};
+		let uid = 0;
+
+		// ---------- shared shapes (centred on 60,60 in a 120 viewBox) ----------
+		const FLAME =
+			"M60 34 C66 44 76 50 74 64 C73 74 66 80 60 80 C54 80 47 74 46 64 C45 56 52 52 54 44 C56 50 58 52 60 52 C60 46 58 40 60 34 Z";
+		const FLAME_IN =
+			"M60 56 C64 62 68 66 66 72 C65 76 62 78 60 78 C57 78 54 76 54 71 C54 66 58 64 60 56 Z";
+		const MOON = "M80 30 A11 11 0 1 0 89 47 A8.5 8.5 0 1 1 80 30 Z";
+		const SPARK = (x, y, s) =>
+			`M${x} ${y - s} L${x + s * 0.28} ${y - s * 0.28} L${x + s} ${y} L${x + s * 0.28} ${y + s * 0.28} L${x} ${y + s} L${x - s * 0.28} ${y + s * 0.28} L${x - s} ${y} L${x - s * 0.28} ${y - s * 0.28} Z`;
+		const DOOR = "M47 82 V56 A13 13 0 0 1 73 56 V82 Z";
+		const NUM = {
+			0: "M10 2 C3 2 2 10 2 14 C2 18 3 26 10 26 C17 26 18 18 18 14 C18 10 17 2 10 2 Z",
+			1: "M6 6 L11 2 V26",
+			2: "M3 7 C4 2 15 1 16 8 C17 13 3 20 3 26 H17",
+			3: "M3 4 C8 0 17 2 16 8 C15 12 11 13 8 13 C13 13 18 15 17 21 C16 27 7 28 3 24",
+			5: "M16 2 H5 L3 13 C8 10 17 11 17 19 C17 26 9 28 3 24",
+		};
+
+		// Badges used in the shelf. rung = position on the streak ladder (5, 10, 20, 30).
+		const BADGES = {
+			joined: {
+				cat: "firsts",
+				copy: "You found your way here.",
+				kind: "joined",
+				name: "Joined Xolace",
+			},
+			reflect1: {
+				cat: "firsts",
+				copy: "You looked back, gently.",
+				kind: "reflect",
+				name: "First reflection",
+			},
+			s5: {
+				cat: "ember",
+				copy: "Five days of telling the truth.",
+				days: "5",
+				kind: "streak",
+				name: "5-day streak",
+				rung: 1,
+			},
+			s10: {
+				cat: "ember",
+				copy: "Ten days. This is a practice now.",
+				days: "10",
+				kind: "streak",
+				name: "10-day streak",
+				rung: 2,
+			},
+			s20: {
+				cat: "ember",
+				copy: "Twenty days.",
+				days: "20",
+				kind: "streak",
+				name: "20-day streak",
+				rung: 3,
+			},
+			s30: {
+				cat: "ember",
+				copy: "A month. You stayed.",
+				days: "30",
+				kind: "streak",
+				name: "30-day streak",
+				rung: 4,
+			},
+			vent1: {
+				cat: "firsts",
+				copy: "You let it out.",
+				kind: "vent",
+				name: "First vent",
+			},
+		};
+
+		const svg = (inner, defs = "") =>
+			`<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">${defs ? `<defs>${defs}</defs>` : ""}${inner}</svg>`;
+		const radial = (id, c, cx = 60, cy = 40, r = 70) =>
+			`<radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="${r}"><stop offset="0" stop-color="${c.light}"/><stop offset=".55" stop-color="${c.mid}"/><stop offset="1" stop-color="${c.deep}"/></radialGradient>`;
+		const linear = (id, c, y1 = 30, y2 = 90) =>
+			`<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="60" y1="${y1}" x2="60" y2="${y2}"><stop offset="0" stop-color="${c.light}"/><stop offset="1" stop-color="${c.mid}"/></linearGradient>`;
+		const numeral = (str, x, y, scale, stroke, w) => {
+			const width = str.length * 22 * scale;
+			return [...str]
+				.map(
+					(d, i) =>
+						`<path d="${NUM[d]}" transform="translate(${x - width / 2 + i * 22 * scale} ${y}) scale(${scale})" fill="none" stroke="${stroke}" stroke-width="${w / scale}" stroke-linecap="round" stroke-linejoin="round"/>`
+				)
+				.join("");
+		};
+
+		// ---------- A: Ember-ring medallion ----------
+		function medallion(b, locked) {
+			const c = locked ? P.locked : P[b.cat];
+			const g = `a${uid++}`;
+			const ring = locked ? P.locked : P.ember; // every ring is ember; the centre carries the category
+			const defs = radial(`${g}r`, ring) + linear(`${g}f`, c);
+			const beads = Array.from({ length: 20 }, (_, i) => {
+				const a = (i / 20) * Math.PI * 2;
+				return `<circle cx="${(60 + Math.cos(a) * 51.5).toFixed(2)}" cy="${(60 + Math.sin(a) * 51.5).toFixed(2)}" r="1.4" fill="${ring.light}" fill-opacity="${locked ? 0.35 : 0.8}"/>`;
+			}).join("");
+			const disc = locked ? "#2a2733" : "#1c1726";
+			let glyph = "";
+			if (b.kind === "streak") {
+				glyph = `<path d="${FLAME}" fill="url(#${g}f)"/>`;
+				if (b.rung === 4) {
+					glyph =
+						`<path d="${MOON}" fill="${c.light}" fill-opacity=".9"/>` + glyph;
+				}
+				const n = b.rung;
+				glyph += Array.from(
+					{ length: n },
+					(_, i) =>
+						`<circle cx="${60 + (i - (n - 1) / 2) * 7}" cy="90" r="2.4" fill="${c.light}"/>`
+				).join("");
+			} else if (b.kind === "joined") {
+				glyph = `<path d="${DOOR}" fill="url(#${g}f)"/><path d="M52 82 V58 A8 8 0 0 1 68 58 V82 Z" fill="${disc}"/><path d="${SPARK(60, 68, 6)}" fill="${c.light}"/>`;
+			} else if (b.kind === "reflect") {
+				glyph = `<g transform="translate(60 0) scale(.62 .62) translate(-60 18)"><path d="${FLAME}" fill="url(#${g}f)"/></g><path d="M38 70 H82" stroke="${c.light}" stroke-width="2" stroke-linecap="round"/><g transform="translate(60 140) scale(.62 -.62) translate(-60 18)"><path d="${FLAME}" fill="${c.mid}" fill-opacity=".35"/></g>`;
+			} else {
+				glyph = `<path d="M40 64 C46 52 54 70 60 58 C66 46 74 66 80 54" fill="none" stroke="url(#${g}f)" stroke-width="5" stroke-linecap="round"/><path d="M44 76 C50 68 56 80 62 72 C68 64 72 76 76 70" fill="none" stroke="${c.mid}" stroke-width="3" stroke-linecap="round"/>`;
+			}
+			const base = `<g id="base"><circle cx="60" cy="60" r="57" fill="url(#${g}r)"/><circle cx="60" cy="60" r="57" fill="none" stroke="${ring.deep}" stroke-width="1.5"/>${beads}<circle cx="60" cy="60" r="46" fill="${disc}"/><circle cx="60" cy="60" r="46" fill="none" stroke="${ring.dark}" stroke-width="2"/><circle cx="60" cy="60" r="44" fill="none" stroke="${ring.light}" stroke-opacity="${locked ? 0.15 : 0.3}" stroke-width="1"/>${glyph}</g>`;
+			if (locked) {
+				return svg(base, defs);
+			}
+			const fx =
+				`<g id="fx-shimmer"><path d="M60 3 A57 57 0 0 1 100 19" fill="none" stroke="#ffffff" stroke-opacity=".7" stroke-width="5" stroke-linecap="round"/></g>` +
+				(b.kind === "streak"
+					? `<g id="fx-flame"><path d="${FLAME_IN}" fill="${c.light}"/></g>`
+					: "");
+			return svg(base + fx, defs);
+		}
+
+		// ---------- B: Hearth emblem ----------
+		function hearth(b, locked) {
+			const c = locked ? P.locked : P[b.cat];
+			const stone = locked
+				? { deep: "#2a2733", light: "#4a4656", mid: "#3a3644" }
+				: { deep: "#2a2232", light: "#5a4a66", mid: "#3e3349" };
+			const g = `h${uid++}`;
+			const fireC = locked ? P.locked : P.ember;
+			const defs =
+				`<linearGradient id="${g}s" gradientUnits="userSpaceOnUse" x1="60" y1="6" x2="60" y2="114"><stop offset="0" stop-color="${stone.light}"/><stop offset="1" stop-color="${stone.deep}"/></linearGradient>` +
+				`<radialGradient id="${g}o" gradientUnits="userSpaceOnUse" cx="60" cy="100" r="50"><stop offset="0" stop-color="${locked ? "#24212c" : fireC.deep}" stop-opacity="${locked ? 1 : 0.55}"/><stop offset="1" stop-color="#120f18"/></radialGradient>` +
+				linear(`${g}f`, fireC, 40, 100);
+			const frame =
+				`<path d="M12 114 V54 A48 48 0 0 1 108 54 V114 Z" fill="url(#${g}s)"/><path d="M12 114 V54 A48 48 0 0 1 108 54 V114 Z" fill="none" stroke="${stone.deep}" stroke-width="2"/>` +
+				`<path d="M12 80 H28 M92 80 H108 M12 98 H28 M92 98 H108 M30 22 L38 34 M90 22 L82 34" stroke="${stone.deep}" stroke-width="1.5"/>` +
+				`<path d="M28 114 V62 A32 32 0 0 1 92 62 V114 Z" fill="url(#${g}o)"/>` +
+				`<path d="M54 8 L60 2 L66 8 L60 18 Z" fill="${locked ? stone.light : c.mid}" stroke="${locked ? stone.deep : c.deep}" stroke-width="1"/>` +
+				`<rect x="22" y="108" width="76" height="6" rx="2" fill="${stone.mid}"/>`;
+			const logs = `<rect x="38" y="98" width="44" height="8" rx="4" fill="${locked ? "#3a3644" : "#6b3f22"}" transform="rotate(-8 60 102)"/><rect x="38" y="98" width="44" height="8" rx="4" fill="${locked ? "#46424f" : "#7d4a28"}" transform="rotate(8 60 102)"/>`;
+			// fire grows with the rung; locked = cold ash
+			const scales = { 1: 0.5, 2: 0.65, 3: 0.8, 4: 0.95 };
+			let inner = "";
+			let fx = "";
+			if (locked) {
+				inner =
+					logs +
+					`<path d="M40 104 C46 96 54 100 60 96 C66 100 74 96 80 104 Z" fill="#4a4656"/>`;
+			} else if (b.kind === "streak") {
+				const s = scales[b.rung];
+				inner =
+					logs +
+					`<g transform="translate(60 100) scale(${s}) translate(-60 -80)"><path d="${FLAME}" fill="url(#${g}f)"/></g>`;
+				if (b.rung === 4) {
+					inner += `<path d="${MOON}" transform="translate(-18 -6) scale(.7) translate(30 6)" fill="${fireC.light}"/>`;
+				}
+				fx = `<g id="fx-flame"><g transform="translate(60 100) scale(${s}) translate(-60 -80)"><path d="${FLAME_IN}" fill="${fireC.light}"/></g></g>`;
+			} else if (b.kind === "joined") {
+				inner = logs + `<path d="${SPARK(60, 86, 9)}" fill="${fireC.light}"/>`;
+				fx = `<g id="fx-sparkle"><path d="${SPARK(48, 72, 3)}" fill="${fireC.light}"/><path d="${SPARK(72, 66, 2.5)}" fill="${fireC.light}"/><path d="${SPARK(62, 58, 2)}" fill="${fireC.light}"/></g>`;
+			} else if (b.kind === "reflect") {
+				inner = `<g transform="translate(60 0) scale(.55) translate(-60 70)"><path d="${FLAME}" fill="url(#${g}f)"/></g><path d="M36 92 H84" stroke="${c.light}" stroke-width="2" stroke-linecap="round"/><g transform="translate(60 184) scale(.55 -.55) translate(-60 70)"><path d="${FLAME}" fill="${c.mid}" fill-opacity=".4"/></g>`;
+				fx = `<g id="fx-glow"><ellipse cx="60" cy="92" rx="24" ry="3" fill="${c.light}"/></g>`;
+			} else {
+				inner =
+					logs +
+					`<path d="M42 84 C48 72 54 90 60 78 C66 66 72 86 78 74" fill="none" stroke="url(#${g}f)" stroke-width="5" stroke-linecap="round"/>`;
+			}
+			return svg(`<g id="base">${frame}${inner}</g>${fx}`, defs);
+		}
+
+		// ---------- C: Flat glyph token ----------
+		function token(b, locked) {
+			const c = locked ? P.locked : P[b.cat];
+			const fill = locked ? "none" : c.mid;
+			const ink = locked ? P.locked.light : c.ink;
+			const w = 5;
+			const st = `fill="none" stroke="${ink}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"`;
+			let glyph = "";
+			if (b.kind === "streak") {
+				// the number is the badge; a small flame tick says "streak"
+				glyph =
+					numeral(b.days, 60, 38, 1.35, ink, 6) +
+					`<path d="${FLAME}" transform="translate(84 14) scale(.32) translate(-60 -34)" fill="${ink}"/>`;
+			} else if (b.kind === "joined") {
+				glyph = `<path d="${DOOR}" ${st}/><path d="${SPARK(60, 70, 7)}" fill="${ink}"/>`;
+			} else if (b.kind === "reflect") {
+				glyph = `<path d="${FLAME}" transform="translate(60 26) scale(.55) translate(-60 -34)" ${st} stroke-width="${w / 0.55}"/><path d="M38 70 H82" ${st}/><path d="M48 80 H72 M54 88 H66" ${st} stroke-opacity=".5"/>`;
+			} else {
+				glyph = `<path d="M38 62 C45 50 52 72 60 58 C68 44 75 68 82 56" ${st}/><path d="M44 78 C50 70 56 84 62 76 C68 68 72 80 76 74" ${st} stroke-opacity=".5"/>`;
+			}
+			const shape = locked
+				? `<rect x="8" y="8" width="104" height="104" rx="34" fill="none" stroke="${P.locked.mid}" stroke-width="3" stroke-dasharray="6 6"/>`
+				: `<rect x="8" y="8" width="104" height="104" rx="34" fill="${fill}"/><rect x="8" y="8" width="104" height="52" rx="34" fill="#ffffff" fill-opacity=".12"/>`;
+			const base = `<g id="base">${shape}${glyph}</g>`;
+			if (locked) {
+				return svg(base);
+			}
+			const fx = `<g id="fx-sparkle"><path d="${SPARK(24, 26, 6)}" fill="#ffffff"/><path d="${SPARK(98, 92, 5)}" fill="#ffffff"/><path d="${SPARK(96, 28, 4)}" fill="#ffffff"/></g>`;
+			return svg(base + fx);
+		}
+
+		const VARIANTS = {
+			A: {
+				draw: medallion,
+				name: "Ember-ring medallion",
+				notes: [
+					"One ring for all 40+; only the centre glyph changes, so a new badge is one small glyph.",
+					"Category = glyph tint; the ring stays ember so the shelf reads as one family.",
+					"Rung pips run out past ~6; long ladders (100, 365) would need a different mark (a second ring, a crown on the bead row).",
+					"fx: a shimmer sweeping the ring + the inner flame flickering.",
+				],
+				pitch:
+					"Reddit's shape, Xolace's fire: one beaded ember ring frames every badge; the dark centre holds a unique glyph tinted by category (amber = showing up, lavender = firsts). Rungs show as pips under the glyph. Locked = the same art in flat grey.",
+			},
+			B: {
+				draw: hearth,
+				name: "Hearth emblem",
+				notes: [
+					"The ladder is a story: you watch one fire grow, which fits 'coming back' and the campfire mascot.",
+					"Most distinct at large sizes; at 24–40 px the fire sizes are hard to tell apart, so the shelf needs labels.",
+					"Non-streak badges need a scene that fits inside a hearth, which strains for things like 'first vent'.",
+					"Locked state is the most on-guardrail: nothing lost, just not lit yet. fx: flame flicker, or sparks drifting.",
+				],
+				pitch:
+					"Every badge is a stone hearth. Streak badges are one fire growing rung by rung (a spark at Joined, a full blaze with the moon at 30 days); other categories put their own scene in the opening. The keystone gem carries the category. Locked = a cold hearth with ash, not a grey silhouette.",
+			},
+			C: {
+				draw: token,
+				name: "Flat glyph token",
+				notes: [
+					"Cheapest to produce: a squircle + one line glyph; easy to template or generate.",
+					"Numbers make the ladder literal: 5, 10, 20, 30, 100, 365 all read at a glance, at any length.",
+					"Least 'trophy': feels like a UI chip, less of a moment on the unlock sheet.",
+					"fx: sparkles around the token; the tile itself stays still.",
+				],
+				pitch:
+					"No frame: a soft squircle in the category colour with a bold line glyph. Streak badges lead with the number itself (drawn as paths; SVG text isn't allowed). Locked = dashed outline, empty. Closest to the app's flat HeroUI chrome.",
+			},
+		};
+
+		// ---------- render ----------
+		const keys = Object.keys(VARIANTS);
+		const params = new URLSearchParams(location.search);
+		let current = keys.includes(params.get("variant"))
+			? params.get("variant")
+			: "A";
+
+		function cell(id, locked, draw) {
+			return `<div class="cell">${draw(BADGES[id], locked)}${BADGES[id].name}</div>`;
+		}
+		function render() {
+			const v = VARIANTS[current];
+			document.getElementById("vname").textContent = `${current}: ${v.name}`;
+			document.getElementById("vpitch").textContent = v.pitch;
+			document.getElementById("vnotes").innerHTML = v.notes
+				.map((n) => `<li>${n}</li>`)
+				.join("");
+			document.getElementById("label").textContent = `${current} (${v.name})`;
+			document.getElementById("shelf").innerHTML = `
+		<h2>Achievements</h2>
+		<div class="cat"><div class="cat-head"><b>Showing up</b><span>2 of 4 unlocked</span></div>
+			<div class="row">${cell("s5", false, v.draw)}${cell("s10", true, v.draw)}${cell("s20", true, v.draw)}${cell("s30", false, v.draw)}</div>
+			<div class="progress">Next: 10-day streak · 7 of 10 days<div class="bar"><i></i></div></div></div>
+		<div class="cat"><div class="cat-head"><b>Firsts</b><span>2 of 3 unlocked</span></div>
+			<div class="row">${cell("joined", false, v.draw)}${cell("reflect1", false, v.draw)}${cell("vent1", true, v.draw)}</div></div>`;
+			document.getElementById("sizes").innerHTML =
+				[24, 40, 64, 120]
+					.map(
+						(s) =>
+							`<div style="width:${s}px;height:${s}px">${v.draw(BADGES.s30, false)}</div>`
+					)
+					.join("") +
+				[24, 40, 64]
+					.map(
+						(s) =>
+							`<div style="width:${s}px;height:${s}px">${v.draw(BADGES.reflect1, false)}</div>`
+					)
+					.join("");
+			for (const el of document.querySelectorAll("#sizes svg")) {
+				el.style.width = "100%";
+				el.style.height = "100%";
+			}
+			const b = BADGES.s30;
+			document.getElementById("sheet").innerHTML =
+				`${v.draw(b, false)}<h3>${b.name}</h3><p>${b.copy}</p><div class="sparks">+30 sparks</div><button>Keep going</button>`;
+		}
+		function go(delta) {
+			current =
+				keys[(keys.indexOf(current) + delta + keys.length) % keys.length];
+			render();
+			params.set("variant", current);
+			// replaceState throws on file:// / data: snapshots; the switch still works
+			try {
+				history.replaceState(null, "", `?${params}`);
+			} catch {}
+		}
+		document.getElementById("prev").onclick = () => go(-1);
+		document.getElementById("next").onclick = () => go(1);
+		document.getElementById("theme").onclick = () =>
+			document.body.classList.toggle("light");
+		document.getElementById("motion").onclick = () =>
+			document.body.classList.toggle("still");
+		addEventListener("keydown", (e) => {
+			if (e.target.closest("input, textarea, [contenteditable]")) {
+				return;
+			}
+			if (e.key === "ArrowLeft") {
+				go(-1);
+			}
+			if (e.key === "ArrowRight") {
+				go(1);
+			}
+		});
+		render();
+		</script>
+	</body>
+</html>
