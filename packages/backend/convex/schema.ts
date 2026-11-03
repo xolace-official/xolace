@@ -666,6 +666,11 @@ export default defineSchema({
 		// Set to true when a data wipe is in progress.
 		// Prevents duplicate wipe jobs from being scheduled.
 		dataWipeInProgress: v.optional(v.boolean()),
+		// Days showed up (glossary): local days with at least one action that
+		// counts toward the streak, gaps allowed. Never resets; survives a data
+		// wipe. Raised by recordActivity (#694); the Showing up ladder reads it.
+		// Optional — rows predating it read as `?? 0`.
+		daysShowedUp: v.optional(v.number()),
 		dictationDailyResetAt: v.optional(v.number()),
 
 		// --- Plus Dictation Usage (#558) ---

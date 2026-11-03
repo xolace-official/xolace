@@ -30,6 +30,17 @@ export const ACHIEVEMENT_CATEGORIES: readonly {
 /** The only spark sizes an achievement awards, growing with how much showing up it took. */
 type Sparks = 10 | 25 | 50 | 100;
 
+/**
+ * What a ladder rung counts toward. Rungs sharing a counter in a category form
+ * one ladder; only its first unearned rung shows progress (#678).
+ */
+export type GoalCounter =
+	| "sessions"
+	| "streak"
+	| "days_showed_up"
+	| "pieces_read"
+	| "areas_unlocked";
+
 export type Achievement = {
 	achievementId: string;
 	artKey: string;
@@ -37,6 +48,8 @@ export type Achievement = {
 	title: string;
 	copy: string;
 	sparks: Sparks;
+	/** Absent on one-offs with nothing to count toward (Joined, First talk, …). */
+	goal?: { counter: GoalCounter; target: number };
 };
 
 const showingUp = (days: number, sparks: Sparks) =>
@@ -45,6 +58,7 @@ const showingUp = (days: number, sparks: Sparks) =>
 		artKey: `showing-up-${days}`,
 		category: "showing_up",
 		copy: `You've come back ${days} different days.`,
+		goal: { counter: "days_showed_up", target: days },
 		sparks,
 		title: `${days} days showing up`,
 	}) as const;
@@ -55,6 +69,7 @@ const read = (pieces: number, sparks: Sparks) =>
 		artKey: `read-${pieces}`,
 		category: "exploring",
 		copy: `${pieces} different pieces read.`,
+		goal: { counter: "pieces_read", target: pieces },
 		sparks,
 		title: `Read ${pieces}`,
 	}) as const;
@@ -74,6 +89,7 @@ const understanding = (areas: number, title: string, copy: string) =>
 		artKey: `understanding-${areas}`,
 		category: "understanding",
 		copy,
+		goal: { counter: "areas_unlocked", target: areas },
 		sparks: 50,
 		title,
 	}) as const;
@@ -96,6 +112,7 @@ export const FIXED_ACHIEVEMENTS = [
 		artKey: "first-session",
 		category: "getting_started",
 		copy: "You said what was there. That's the hardest part.",
+		goal: { counter: "sessions", target: 1 },
 		sparks: 10,
 		title: "First session",
 	},
@@ -108,11 +125,14 @@ export const FIXED_ACHIEVEMENTS = [
 	showingUp(500, 100),
 	showingUp(1000, 100),
 	exploring("first-talk", "First talk", "You talked it through out loud."),
-	exploring(
-		"first-read",
-		"First read",
-		"You finished something from the library."
-	),
+	{
+		...exploring(
+			"first-read",
+			"First read",
+			"You finished something from the library."
+		),
+		goal: { counter: "pieces_read", target: 1 },
+	},
 	read(5, 25),
 	read(10, 25),
 	read(25, 50),
@@ -251,9 +271,31 @@ function streakAchievement(days: number): Achievement | undefined {
 		artKey: streakArtKey(days),
 		category: "streak",
 		copy: EARLY_STREAK_COPY[days] ?? streakMilestoneCopy(days),
+		goal: { counter: "streak", target: days },
 		sparks: streakSparks(days),
 		title: streakTitle(days),
 	};
+}
+
+/** The first streak rung longer than `days`. */
+export function nextStreakRungAfter(days: number): number {
+	let next = Math.max(Math.floor(days), 0) + 1;
+	while (!isStreakRung(next)) {
+		next++;
+	}
+	return next;
+}
+
+/** Every streak rung up to and including `days`, shortest first. */
+export function streakAchievementsThrough(days: number): Achievement[] {
+	const rungs: Achievement[] = [];
+	for (let n = 1; n <= days; n++) {
+		const rung = streakAchievement(n);
+		if (rung) {
+			rungs.push(rung);
+		}
+	}
+	return rungs;
 }
 
 const STREAK_ID = /^streak-([1-9]\d*)$/;
