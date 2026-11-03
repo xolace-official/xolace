@@ -1,16 +1,18 @@
 // The badge unlock moment (#693): a full-screen route over wherever the user
 // is, one new badge at a time. Opened by useBadgeUnlock in the protected
-// layout; the close button, the last button and Android back all dismiss it.
+// layout; the toolbar's close, the last button and Android back all dismiss it.
 
+import CloseIcon from "@expo/material-symbols/close.xml";
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import {
 	type NativeStackNavigationProp,
 	router,
+	Stack,
 	useNavigation,
 } from "expo-router";
-import { SymbolView } from "expo-symbols";
+import { useHeaderHeight } from "expo-router/react-navigation";
 import { PressableFeedback } from "heroui-native";
 import { useEffect, useRef, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
@@ -25,7 +27,6 @@ import { Badge } from "@/features/achievements/badge";
 import { BadgeFx, FX_SPILL } from "@/features/achievements/fx/badge-fx";
 import type { UnlockedBadge } from "@/features/achievements/types";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
-import { useTokenColor } from "@/lib/use-token-color";
 import { cn } from "@/lib/utils";
 
 const SIDE_GUTTER = 72;
@@ -34,6 +35,7 @@ const ENTER_SPRING = { damping: 11, stiffness: 140 };
 
 export function BadgeUnlockScreen() {
 	const insets = useSafeAreaInsets();
+	const headerHeight = useHeaderHeight();
 	const live = useQuery(api.achievements.unlock.unseen);
 	const markSeen = useMutation(api.achievements.unlock.markSeen);
 	// What opened the moment, held still: a badge earned while it's up waits for the next one.
@@ -73,19 +75,27 @@ export function BadgeUnlockScreen() {
 	}, [navigation, markSeen]);
 
 	const badge = shown?.[step];
+	// The native header's close, so it gets the system's glass.
+	const toolbar = (
+		<Stack.Toolbar placement="right">
+			<Stack.Toolbar.Button
+				accessibilityLabel="Close"
+				icon={process.env.EXPO_OS === "ios" ? "xmark" : CloseIcon}
+				onPress={() => router.back()}
+			/>
+		</Stack.Toolbar>
+	);
 	if (!(shown && badge)) {
-		return <View className="flex-1 bg-background" />;
+		return <View className="flex-1 bg-background">{toolbar}</View>;
 	}
 	const last = step >= shown.length - 1;
 
 	return (
 		<View
 			className="flex-1 bg-background px-6"
-			style={{ paddingBottom: insets.bottom + 16, paddingTop: insets.top + 8 }}
+			style={{ paddingBottom: insets.bottom + 16, paddingTop: headerHeight }}
 		>
-			<View className="flex-row justify-end">
-				<CloseButton />
-			</View>
+			{toolbar}
 			<View className="flex-1 items-center justify-center">
 				<AppText className="text-[12px] text-ember uppercase tracking-widest">
 					{shown.length > 1 ? `${shown.length} new badges` : "New badge"}
@@ -167,24 +177,5 @@ function Dots({ ids, step }: { ids: string[]; step: number }) {
 				/>
 			))}
 		</View>
-	);
-}
-
-function CloseButton() {
-	const foreground = useTokenColor("foreground");
-	return (
-		<PressableFeedback
-			accessibilityLabel="Close"
-			accessibilityRole="button"
-			className="size-10 items-center justify-center rounded-full bg-foreground/10"
-			hitSlop={8}
-			onPress={() => router.back()}
-		>
-			<SymbolView
-				name={{ android: "close", ios: "xmark", web: "close" }}
-				size={14}
-				tintColor={foreground}
-			/>
-		</PressableFeedback>
 	);
 }

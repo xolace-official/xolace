@@ -49,6 +49,17 @@ const PLAYER_OPTIONS = {
 	presentation: "fullScreenModal",
 } as const;
 
+/** A transparent, untitled native header that only carries the screen's Stack.Toolbar
+ * buttons, so they get the system's glass. */
+const TOOLBAR_HEADER = {
+	// Android would add its own up arrow beside the close.
+	headerBackVisible: false,
+	headerShadowVisible: false,
+	headerShown: true,
+	headerTransparent: true,
+	title: "",
+} as const;
+
 const CHAT_OPTIONS = {
 	headerBackButtonDisplayMode: "minimal",
 	headerShadowVisible: false,
@@ -126,6 +137,7 @@ export default function ProtectedLayout() {
 						name="badge-unlock"
 						options={{
 							...PLAYER_OPTIONS,
+							...TOOLBAR_HEADER,
 							animation: reducedMotion ? "fade" : "slide_from_bottom",
 						}}
 					/>
