@@ -3,6 +3,7 @@ import { Stack, useLocalSearchParams } from "expo-router";
 import { ScrollView } from "react-native";
 import { byId } from "@/features/achievements/prototype/catalog.prototype";
 import { DetailBody } from "@/features/achievements/prototype/detail-body.prototype";
+import { DetailD } from "@/features/achievements/prototype/detail-d.prototype";
 
 export default function AchievementDetailPrototypeRoute() {
 	const { id, variant } = useLocalSearchParams<{
@@ -10,6 +11,9 @@ export default function AchievementDetailPrototypeRoute() {
 		variant?: string;
 	}>();
 	const item = byId(id);
+	if (item && variant === "D") {
+		return <DetailD item={item} />;
+	}
 	return (
 		<ScrollView
 			className="flex-1 bg-background"
