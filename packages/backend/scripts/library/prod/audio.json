@@ -24,6 +24,12 @@
     "active": true
   },
   {
+    "entrySlug": "im-still-showing-up",
+    "audioPath": "audios/stories/im-still-showing-up.mp3",
+    "transcriptPath": "audios/stories/im-still-showing-up.txt",
+    "active": true
+  },
+  {
     "entrySlug": "depression-what-it-is",
     "audioPath": "audios/explainer/depression-what-it-is.mp3",
     "transcriptPath": "audios/explainer/depression-what-it-is.txt",
