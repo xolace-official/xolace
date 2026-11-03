@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "check-types": "tsc --noEmit",
+    "check-types": "next typegen && tsc --noEmit",
     "codegen": "varlock codegen",
     "dev": "next dev --port 3002",
     "grant-admin": "varlock run -- bun scripts/grant-admin.ts",
