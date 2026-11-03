@@ -121,6 +121,11 @@ export async function recordActivity(
 	if (isSession) {
 		await awardAchievement(ctx, args.emotionalProfileId, "first-session", now);
 	}
+	// A tended breathing twig; a solo session's "Sit with this" logs reflect,
+	// so finalizeCompletion awards that one (#695).
+	if (args.actionType === "sit_with_this") {
+		await awardAchievement(ctx, args.emotionalProfileId, "sat-with-it", now);
+	}
 
 	// Zero-weight actions (quotes) log history but never touch the streak.
 	if (!countsTowardStreak(args.actionType)) {

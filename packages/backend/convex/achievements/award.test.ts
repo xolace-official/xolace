@@ -109,7 +109,8 @@ describe("First session", () => {
 			emotionalProfileId: user.profileId,
 		});
 
-		expect(await earned(user)).toEqual(["joined"]);
+		// It earns Sat with it, never First session.
+		expect((await earned(user)).sort()).toEqual(["joined", "sat-with-it"]);
 	});
 });
 

@@ -14,6 +14,7 @@ import {
 	type MutationCtx,
 	mutation,
 } from "../_generated/server";
+import { awardLadderRungs } from "../achievements/ladders";
 import { isInQuietWindow } from "../jobs/notificationTriggers";
 import { requireSessionOwnership } from "../lib/auth";
 import { loadReadings } from "./readings";
@@ -56,6 +57,14 @@ export async function recordUnlock(
 		await ctx.db.patch("emotional_profiles", session.emotionalProfileId, {
 			unlockedDomains: [...unlocked, ...fresh],
 		});
+		// dropColdUnlocks takes a stamp, never the badge (#695).
+		await awardLadderRungs(
+			ctx,
+			session.emotionalProfileId,
+			"areas_unlocked",
+			unlocked.length + fresh.length,
+			Date.now()
+		);
 	}
 
 	if (session.domainUnlock) {

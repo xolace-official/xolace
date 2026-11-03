@@ -3,6 +3,7 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
+import { awardAchievement } from "./achievements/award";
 import { r2 } from "./ai/paths/audioTracks";
 import { CATALOG_BY_KEY } from "./ai/paths/catalog";
 import { isTryThis } from "./ai/paths/tryThis";
@@ -299,6 +300,7 @@ async function settle(
 		return;
 	}
 	await ctx.db.patch("paths", path._id, { status: "completed" });
+	await awardAchievement(ctx, profileId, "first-kindling");
 	await posthog.capture(ctx, {
 		distinctId: profileId,
 		event: "path_completed",

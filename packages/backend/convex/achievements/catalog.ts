@@ -183,14 +183,34 @@ export type FixedAchievementId =
 /** Any id the catalog knows, checked at compile time at every award site. */
 export type AchievementId = FixedAchievementId | `streak-${number}`;
 
+/** The fixed rungs counting `counter`, in catalog (lowest-first) order. */
+function rungsCounting(counter: GoalCounter) {
+	return FIXED_ACHIEVEMENTS.flatMap((a) =>
+		"goal" in a && a.goal.counter === counter
+			? [{ achievementId: a.achievementId, target: a.goal.target }]
+			: []
+	);
+}
+
 /** The Showing up rung at exactly `days` days showed up, if it is one. */
 export function showingUpRungAt(days: number): FixedAchievementId | undefined {
-	return FIXED_ACHIEVEMENTS.find(
-		(a) =>
-			"goal" in a &&
-			a.goal.counter === "days_showed_up" &&
-			a.goal.target === days
-	)?.achievementId;
+	return rungsCounting("days_showed_up").find((r) => r.target === days)
+		?.achievementId;
+}
+
+/** Every fixed rung counting `counter` that `count` has reached, lowest first. */
+export function ladderRungsThrough(
+	counter: GoalCounter,
+	count: number
+): FixedAchievementId[] {
+	return rungsCounting(counter)
+		.filter((r) => r.target <= count)
+		.map((r) => r.achievementId);
+}
+
+/** The top fixed rung counting `counter`: past it, the count earns nothing new. */
+export function ladderTop(counter: GoalCounter): number {
+	return Math.max(0, ...rungsCounting(counter).map((r) => r.target));
 }
 
 // ── Streak ladder ────────────────────────────────────────────────

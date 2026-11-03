@@ -9,6 +9,7 @@ import {
 	mutation,
 	query,
 } from "./_generated/server";
+import { awardAchievement } from "./achievements/award";
 import { EPISODIC_CONNECT_FLOOR } from "./ai/routing";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { deriveClaimStrength } from "./lib/claimStrength";
@@ -123,6 +124,22 @@ async function finalizeCompletion(
 		timestamp: now,
 	});
 
+	// Exploring badges a completion can earn (#695), on the same sessions the
+	// backfill reads (#686). A solo path is the "Sit with this" choice.
+	const pathChosen = opts.pathChosen ?? session.pathChosen;
+	if (session.entryType === "talk") {
+		await awardAchievement(ctx, session.emotionalProfileId, "first-talk", now);
+	}
+	if (pathChosen === "solo" && opts.pathCompleted && session.exerciseId) {
+		await awardAchievement(ctx, session.emotionalProfileId, "sat-with-it", now);
+		await awardAchievement(
+			ctx,
+			session.emotionalProfileId,
+			"first-exercise",
+			now
+		);
+	}
+
 	const requiresFollowUp = computeRequiresFollowUp({
 		confirmationState: session.confirmationState,
 		escalationTriggered: session.escalationTriggered,
@@ -167,7 +184,6 @@ async function finalizeCompletion(
 	// peers, or exit — not the abandoned-session cron's stranded reconciliation
 	// (pathCompleted: false, no pathChosen). Premium gate lives inside
 	// `generate.run`; off the critical path.
-	const pathChosen = opts.pathChosen ?? session.pathChosen;
 	if (opts.pathCompleted && pathChosen) {
 		await ctx.scheduler.runAfter(0, internal.ai.paths.generate.run, {
 			emotionalProfileId: session.emotionalProfileId,
@@ -229,6 +245,13 @@ async function applyPostSessionFeedback(
 			{
 				sessionId: session._id,
 			}
+		);
+		// The opt-in, as the backfill reads it (#686): the pooled reflection
+		// keeps no link back to the profile.
+		await awardAchievement(
+			ctx,
+			session.emotionalProfileId,
+			"shared-reflection"
 		);
 	}
 }
