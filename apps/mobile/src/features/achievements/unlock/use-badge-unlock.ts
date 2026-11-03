@@ -23,9 +23,10 @@ const subscribeAppState = (onChange: () => void) => {
 const isForeground = () => AppState.currentState === "active";
 
 /**
- * The one subscription behind the badge unlock moment (#693), mounted in the
- * protected layout: opens `/badge-unlock` when unseen live badges appear and
- * the user is somewhere it may interrupt. The route stamps them seen on close.
+ * The one subscription behind the badge moments, mounted in the protected
+ * layout: opens `/badge-backfill` once for what the backfill already awarded
+ * (#701), else `/badge-unlock` when unseen live badges appear (#693), when the
+ * user is somewhere it may interrupt. Each route stamps its badges seen on close.
  */
 export function useBadgeUnlock() {
 	const pathname = usePathname();
@@ -33,6 +34,7 @@ export function useBadgeUnlock() {
 	const foreground = useSyncExternalStore(subscribeAppState, isForeground);
 	const onHome = pathname === HOME;
 	const unseen = useQuery(api.achievements.unlock.unseen);
+	const summary = useQuery(api.achievements.firstSight.summary);
 	// Home is where a session runs; elsewhere a resumable one is just waiting.
 	const activeSession = useQuery(api.sessions.getActive, onHome ? {} : "skip");
 	// A sheet on screen, not one merely armed: a pending follow-up arms for days.
@@ -54,16 +56,28 @@ export function useBadgeUnlock() {
 	const mayOpen = foreground && mayOpenUnlock({ homeBusy, pathname });
 
 	useEffect(() => {
-		const fresh = unseen?.filter((b) => !opened.current.has(b.id)) ?? [];
-		if (!mayOpen || fresh.length === 0) {
+		// The summary goes first, so wait until it's known whether there is one.
+		if (!mayOpen || summary === undefined) {
+			return;
+		}
+		const summaryDue = summary?.ids.some((id) => !opened.current.has(id));
+		const next = summaryDue
+			? { ids: summary?.ids ?? [], route: "/badge-backfill" as const }
+			: {
+					ids:
+						unseen?.flatMap((b) => (opened.current.has(b.id) ? [] : [b.id])) ??
+						[],
+					route: "/badge-unlock" as const,
+				};
+		if (next.ids.length === 0) {
 			return;
 		}
 		const timer = setTimeout(() => {
-			for (const b of fresh) {
-				opened.current.add(b.id);
+			for (const id of next.ids) {
+				opened.current.add(id);
 			}
-			router.push("/badge-unlock");
+			router.push(next.route);
 		}, SETTLE_MS);
 		return () => clearTimeout(timer);
-	}, [mayOpen, unseen]);
+	}, [mayOpen, unseen, summary]);
 }

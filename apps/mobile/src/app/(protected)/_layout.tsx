@@ -72,7 +72,8 @@ export default function ProtectedLayout() {
 	// launch tap survives in the native cache, so `(intake)`'s layout discards it
 	// explicitly to keep "intake wins, a pending deep link is not preserved" (T3, #234).
 	useNotifications();
-	// Opens the badge unlock moment over whatever is up, when it may interrupt (#693).
+	// Opens the backfill summary, then the badge unlock moment, over whatever is
+	// up, when it may interrupt (#693, #701).
 	useBadgeUnlock();
 	const reducedMotion = useEffectiveReducedMotion();
 	const background = useThemeColor("background");
@@ -135,6 +136,15 @@ export default function ProtectedLayout() {
 					{/* Same dismiss as follow-up; reduced motion fades it in instead (#693). */}
 					<Stack.Screen
 						name="badge-unlock"
+						options={{
+							...PLAYER_OPTIONS,
+							...TOOLBAR_HEADER,
+							animation: reducedMotion ? "fade" : "slide_from_bottom",
+						}}
+					/>
+					{/* The backfill's one-time summary, dismissed the same way (#701). */}
+					<Stack.Screen
+						name="badge-backfill"
 						options={{
 							...PLAYER_OPTIONS,
 							...TOOLBAR_HEADER,

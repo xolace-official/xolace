@@ -11,6 +11,9 @@ export type AchievementProgress = NonNullable<AchievementView["progress"]>;
 export type UnlockedBadge = FunctionReturnType<
 	typeof api.achievements.unlock.unseen
 >[number];
+export type BackfillSummary = NonNullable<
+	FunctionReturnType<typeof api.achievements.firstSight.summary>
+>;
 export type SparkShelf = FunctionReturnType<
 	typeof api.achievements.display.shelf
 >;

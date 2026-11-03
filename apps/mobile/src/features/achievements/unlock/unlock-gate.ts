@@ -14,6 +14,7 @@ const HOLD_ROUTES = [
 	"/session-end",
 	// Full-screen moments, this one included.
 	"/badge-unlock",
+	"/badge-backfill",
 	"/follow-up",
 	"/streak-held",
 	"/kindling-announcement",
