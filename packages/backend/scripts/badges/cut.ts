@@ -37,7 +37,7 @@ const RIM_MIDDLE = 0.9;
 const GEM_RADIUS = 0.05;
 const STAR_RADIUS = 0.06;
 /** Angle between neighbouring marks, centred on the bottom of the rim. */
-const MARK_STEP_RADIANS = 0.16;
+const MARK_STEP_RADIANS = 0.18;
 
 const STAGE_RUNG = /^streak-(?!year-)[a-z]+-([1-9]\d*)$/;
 const YEAR_RUNG = /^streak-year-([1-9]\d*)$/;

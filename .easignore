@@ -71,6 +71,7 @@ local.db
 local.db-*
 
 # Backend ingestion scripts and their local media (not part of the app build)
+packages/backend/scripts/badges/
 packages/backend/scripts/kindling/
 packages/backend/scripts/library/
 
