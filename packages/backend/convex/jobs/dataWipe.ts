@@ -16,8 +16,9 @@ const BATCH_SIZE = 100;
  *          frozen_days, compounding_stretches, steadiness_insights
  * Anonymizes: escalation_events (strip profileId for safety audit)
  * Resets: emotional_profile counters, the companion's preferred name
- * Keeps: user_achievements, both spark counters and achievementsBackfilledAt —
- *        they record showing up, not what was said (#685)
+ * Keeps: user_achievements, both spark counters, daysShowedUp and
+ *        achievementsBackfilledAt — they record showing up, not what was said
+ *        (#685, #694)
  *
  * Processes in batches and self-reschedules if more remain.
  */

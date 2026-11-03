@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { type MutationCtx, mutation } from "../_generated/server";
+import { awardStreakRungs } from "../achievements/ladders";
 import { requireAuth } from "../lib/auth";
 import { localDayKey } from "./activityLog";
 import { isStreakMilestone } from "./milestones";
@@ -42,18 +43,24 @@ export async function reviveStreak(
 		}
 	}
 
+	const previousLongestStreak = profile.longestStreak ?? profile.currentStreak;
+	const longestStreak = Math.max(revive.streak, previousLongestStreak);
 	await ctx.db.patch("emotional_profiles", profile._id, {
 		brokenStreak: undefined,
 		currentStreak: revive.streak,
-		longestStreak: Math.max(
-			revive.streak,
-			profile.longestStreak ?? profile.currentStreak
-		),
+		longestStreak,
 		streakFreezes,
 		streakRevivedDay: revive.gapDay,
 		streakSavers: savers,
 		updatedAt: now,
 	});
+	// A run restored onto a rung earns it (#694).
+	await awardStreakRungs(
+		ctx,
+		profile._id,
+		{ from: previousLongestStreak, to: longestStreak },
+		now
+	);
 	return revive.streak;
 }
 

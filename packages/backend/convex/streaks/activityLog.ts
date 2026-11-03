@@ -2,6 +2,7 @@ import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { awardAchievement } from "../achievements/award";
+import { awardShowingUpRung, awardStreakRungs } from "../achievements/ladders";
 import {
 	isStreakMilestone,
 	streakMilestoneAllowed,
@@ -22,6 +23,10 @@ export const ACTION_WEIGHTS: Record<ActivityActionType, number> = {
 	sit_with_this: 1,
 	vent: 1,
 };
+
+/** Does this action count toward the streak (and days showed up)? */
+const countsTowardStreak = (actionType: ActivityActionType) =>
+	ACTION_WEIGHTS[actionType] > 0;
 
 /**
  * Local calendar day ("YYYY-MM-DD") for a timestamp in an IANA timezone.
@@ -80,15 +85,19 @@ export async function recordActivity(
 	const dayKey = localDayKey(now, state.timezone);
 	const previousDayKey = state.lastCoveredDay;
 
-	const existing = await ctx.db
+	// At most one row per action type.
+	const dayRows = await ctx.db
 		.query("activity_log")
 		.withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) =>
-			q
-				.eq("emotionalProfileId", args.emotionalProfileId)
-				.eq("dayKey", dayKey)
-				.eq("actionType", args.actionType)
+			q.eq("emotionalProfileId", args.emotionalProfileId).eq("dayKey", dayKey)
 		)
-		.unique();
+		.collect();
+	const existing = dayRows.find((r) => r.actionType === args.actionType);
+	// The day's first row that counts toward the streak makes it a day showed
+	// up (#694). Several actions are still one day; quotes alone never are.
+	const firstShowedUp =
+		countsTowardStreak(args.actionType) &&
+		!dayRows.some((r) => countsTowardStreak(r.actionType));
 
 	if (existing) {
 		await ctx.db.patch("activity_log", existing._id, {
@@ -114,7 +123,7 @@ export async function recordActivity(
 	}
 
 	// Zero-weight actions (quotes) log history but never touch the streak.
-	if (ACTION_WEIGHTS[args.actionType] === 0) {
+	if (!countsTowardStreak(args.actionType)) {
 		return;
 	}
 
@@ -148,10 +157,9 @@ export async function recordActivity(
 		}
 	}
 
-	const newLongestStreak = Math.max(
-		newStreak,
-		profile.longestStreak ?? profile.currentStreak
-	);
+	const daysShowedUp = (profile.daysShowedUp ?? 0) + 1;
+	const previousLongestStreak = profile.longestStreak ?? profile.currentStreak;
+	const newLongestStreak = Math.max(newStreak, previousLongestStreak);
 
 	await ctx.db.patch("emotional_profiles", args.emotionalProfileId, {
 		currentStreak: newStreak,
@@ -159,6 +167,7 @@ export async function recordActivity(
 		streakFreezes: freezes,
 		...(savers !== (profile.streakSavers ?? 0) && { streakSavers: savers }),
 		...(brokenStreak && { brokenStreak }),
+		...(firstShowedUp && { daysShowedUp }),
 		// lastSessionAt keeps meaning "last completed reflect" (#426) — nudges,
 		// Return Welcome and plus-offers read it. Never moves backward.
 		...(args.actionType === "reflect" && {
@@ -166,6 +175,15 @@ export async function recordActivity(
 		}),
 		updatedAt: now,
 	});
+	await awardStreakRungs(
+		ctx,
+		args.emotionalProfileId,
+		{ from: previousLongestStreak, to: newLongestStreak },
+		now
+	);
+	if (firstShowedUp) {
+		await awardShowingUpRung(ctx, args.emotionalProfileId, daysShowedUp, now);
+	}
 }
 
 /**

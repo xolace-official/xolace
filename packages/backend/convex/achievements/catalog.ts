@@ -183,6 +183,16 @@ export type FixedAchievementId =
 /** Any id the catalog knows, checked at compile time at every award site. */
 export type AchievementId = FixedAchievementId | `streak-${number}`;
 
+/** The Showing up rung at exactly `days` days showed up, if it is one. */
+export function showingUpRungAt(days: number): FixedAchievementId | undefined {
+	return FIXED_ACHIEVEMENTS.find(
+		(a) =>
+			"goal" in a &&
+			a.goal.counter === "days_showed_up" &&
+			a.goal.target === days
+	)?.achievementId;
+}
+
 // ── Streak ladder ────────────────────────────────────────────────
 
 /** Rungs up to 200, each a fire stage with 1…n rim pips (#687). */

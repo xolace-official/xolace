@@ -12,6 +12,7 @@ import type * as achievements_art from "../achievements/art.js";
 import type * as achievements_award from "../achievements/award.js";
 import type * as achievements_catalog from "../achievements/catalog.js";
 import type * as achievements_display from "../achievements/display.js";
+import type * as achievements_ladders from "../achievements/ladders.js";
 import type * as achievements_unlock from "../achievements/unlock.js";
 import type * as admin_audio from "../admin/audio.js";
 import type * as admin_edits from "../admin/edits.js";
@@ -264,6 +265,7 @@ declare const fullApi: ApiFromModules<{
   "achievements/award": typeof achievements_award;
   "achievements/catalog": typeof achievements_catalog;
   "achievements/display": typeof achievements_display;
+  "achievements/ladders": typeof achievements_ladders;
   "achievements/unlock": typeof achievements_unlock;
   "admin/audio": typeof admin_audio;
   "admin/edits": typeof admin_edits;
