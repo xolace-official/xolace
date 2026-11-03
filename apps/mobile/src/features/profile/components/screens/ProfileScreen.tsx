@@ -1,10 +1,11 @@
 import Settings from "@expo/material-symbols/settings.xml";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useHeaderHeight } from "expo-router/react-navigation";
 import { useThemeColor } from "heroui-native";
 import { useState } from "react";
 import { View } from "react-native";
 import { Tabs } from "react-native-collapsible-tab";
+import { VariantSwitcher } from "@/features/achievements/prototype/variant-switcher.prototype";
 import { AvatarPickerSheet } from "@/features/profile/components/avatar-picker-sheet";
 import { FollowUpsTab } from "@/features/profile/components/follow-ups-tab";
 import { InsightsTab } from "@/features/profile/components/insights-tab";
@@ -23,6 +24,9 @@ const FOLLOW_UPS = "follow-ups";
 
 export function ProfileScreen() {
 	const router = useRouter();
+	const { variant: variantParam } = useLocalSearchParams<{
+		variant?: string;
+	}>();
 	const headerHeight = useHeaderHeight();
 	const background = useThemeColor("background") as string;
 	const summary = useProfileSummary();
@@ -89,6 +93,9 @@ export function ProfileScreen() {
 					<FollowUpsTab />
 				</Tabs.Tab>
 			</Tabs.Container>
+
+			{/* PROTOTYPE (#684), throwaway: never merge. */}
+			{__DEV__ && variantParam ? <VariantSwitcher /> : null}
 
 			<AvatarPickerSheet
 				avatars={avatars}

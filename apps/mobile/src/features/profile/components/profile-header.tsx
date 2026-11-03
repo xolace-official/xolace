@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from "expo-router";
 import { View } from "react-native";
 import {
 	useCollapseProgress,
@@ -11,6 +12,8 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { AuroraArc } from "@/components/shared/aurora-arc";
+import { ProfileShelf } from "@/features/achievements/prototype/profile-shelf.prototype";
+import { useVariant } from "@/features/achievements/prototype/variant-switcher.prototype";
 import { ProfileHero } from "@/features/profile/components/profile-hero";
 import { ProfileSkeleton } from "@/features/profile/components/profile-skeleton";
 import { StatBand } from "@/features/profile/components/stat-band";
@@ -40,6 +43,10 @@ export function ProfileHeader({
 	onAvatarPress,
 }: Props) {
 	const insets = useSafeAreaInsets();
+	const { variant: variantParam } = useLocalSearchParams<{
+		variant?: string;
+	}>();
+	const variant = useVariant();
 	return (
 		<View style={{ paddingBottom: 20, paddingTop: insets.top + 36 }}>
 			<AuroraArc height={insets.top + 280} />
@@ -69,6 +76,9 @@ export function ProfileHeader({
 					usualDay={usualDay}
 				/>
 			)}
+
+			{/* PROTOTYPE (#684), throwaway: never merge. */}
+			{__DEV__ && variantParam ? <ProfileShelf variant={variant} /> : null}
 
 			<TopBar height={topBarHeight} title={summary?.displayName} />
 		</View>
