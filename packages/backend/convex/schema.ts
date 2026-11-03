@@ -719,6 +719,9 @@ export default defineSchema({
 		// Used for streak calculation, nudge timing,
 		// and re-engagement logic.
 		lastSessionAt: v.optional(v.number()),
+		// The local day ("YYYY-MM-DD") daysShowedUp last counted. Survives a data
+		// wipe with it, so a day the wipe emptied of activity can't count again.
+		lastShowedUpDay: v.optional(v.string()),
 
 		// Longest streak ever reached. A record — it never decays, only grows
 		// via Math.max on session completion. Optional for rows created before

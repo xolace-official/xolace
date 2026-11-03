@@ -250,4 +250,17 @@ describe("days showed up", () => {
 		await record(user, 4);
 		expect(await daysShowedUp(user)).toBe(4);
 	});
+
+	it("a day that counted before a data wipe doesn't count again after it", async () => {
+		const user = await asNewUser();
+		await record(user, 0);
+		await user.root.mutation(internal.jobs.dataWipe.wipe, {
+			emotionalProfileId: user.profileId,
+		});
+
+		await record(user, 0, "daily_mood");
+		expect(await daysShowedUp(user)).toBe(1);
+		await record(user, 1);
+		expect(await daysShowedUp(user)).toBe(2);
+	});
 });

@@ -91,9 +91,11 @@ export async function recordActivity(
 	const existing = dayRows.find((r) => r.actionType === args.actionType);
 	// The day's first row that counts toward the streak makes it a day showed
 	// up (#694). Several actions are still one day; quotes alone never are.
+	// lastShowedUpDay catches a day a data wipe emptied after it counted.
 	const firstShowedUp =
 		countsTowardStreak(args.actionType) &&
-		!dayRows.some((r) => countsTowardStreak(r.actionType));
+		!dayRows.some((r) => countsTowardStreak(r.actionType)) &&
+		profile.lastShowedUpDay !== dayKey;
 
 	if (existing) {
 		await ctx.db.patch("activity_log", existing._id, {
@@ -172,7 +174,7 @@ export async function recordActivity(
 		streakFreezes: freezes,
 		...(savers !== (profile.streakSavers ?? 0) && { streakSavers: savers }),
 		...(brokenStreak && { brokenStreak }),
-		...(firstShowedUp && { daysShowedUp }),
+		...(firstShowedUp && { daysShowedUp, lastShowedUpDay: dayKey }),
 		// lastSessionAt keeps meaning "last completed reflect" (#426) — nudges,
 		// Return Welcome and plus-offers read it. Never moves backward.
 		...(args.actionType === "reflect" && {
