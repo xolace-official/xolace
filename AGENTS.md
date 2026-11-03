@@ -49,7 +49,7 @@ Put a dependency in the package that uses it; shared versions come from the root
   `e2e` one.
 - **achievement**: one specific thing a user has done that Xolace recognizes (joined,
   a 10-day streak). Rewards showing up and trying things, never how much someone
-  struggles. Not a streak **milestone**, which drives savers and pushes.
+  struggles. Not a streak **milestone**, which only drives savers.
 - **badge**: the visual mark of exactly one achievement. No tiers; each rung of a
   ladder (5-, 10-, 20-day streak) is its own achievement with its own badge.
 - **spark**: the points an achievement awards; sized by how much showing up it took,
