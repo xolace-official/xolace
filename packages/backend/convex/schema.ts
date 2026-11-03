@@ -2718,6 +2718,12 @@ export default defineSchema({
 		.index("by_emotionalProfileId_and_earnedAt", [
 			"emotionalProfileId",
 			"earnedAt",
+		])
+		// The unlock moment's read (#693): live rows not yet shown.
+		.index("by_emotionalProfileId_and_source_and_seenAt", [
+			"emotionalProfileId",
+			"source",
+			"seenAt",
 		]),
 	// ===========================================================
 	// 1. USERS
