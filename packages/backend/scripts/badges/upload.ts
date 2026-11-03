@@ -4,10 +4,11 @@
 // re-uploaded, and a changed one replaces its row (the old image is deleted).
 //
 // `manifest.json` beside this file records the approved generation per artKey
-// (`{ artKey, source }`); the sources (2K PNGs from the ElevenLabs flow) live
-// in `media/`, gitignored like the Kindling media. Streak rungs that share a
-// stage share a source: the cut-out adds their pips (see cut.ts). An artKey
-// with no entry shows the `fallback` image, locked, until one is added.
+// (`{ artKey, source, generationId }`, see manifest.ts); the sources (2K PNGs
+// from the ElevenLabs flow) live in `media/`, gitignored like the Kindling
+// media. Streak rungs that share a stage share a source: the cut-out adds
+// their pips (see cut.ts). An artKey with no entry shows the `fallback` image,
+// locked, until one is added.
 //
 // Usage (from packages/backend):
 //   bun run badges:upload                     # your dev deployment (.env.local)
@@ -27,14 +28,11 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { parseEnv } from "node:util";
-import {
-	BADGE_ART_KEYS,
-	UPLOADABLE_ART_KEYS,
-} from "../../convex/achievements/catalog";
+import { BADGE_ART_KEYS } from "../../convex/achievements/catalog";
 import { cutBadge, encodeBadge, markerFor, thumbhashOf } from "./cut";
+import { isRecord, type ManifestEntry, parseManifest } from "./manifest";
 import { resolveTarget } from "./target";
 
-type Entry = { artKey: string; source: string };
 type LiveArt = { artKey: string; sha256: string };
 
 const HERE = import.meta.dirname;
@@ -66,14 +64,6 @@ function convexRun(fn: string, jsonArgs: Record<string, unknown>): unknown {
 	return out.trim() ? JSON.parse(out) : null;
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null;
-
-const isEntry = (value: unknown): value is Entry =>
-	isRecord(value) &&
-	typeof value.artKey === "string" &&
-	typeof value.source === "string";
-
 const isLiveArt = (value: unknown): value is LiveArt =>
 	isRecord(value) &&
 	typeof value.artKey === "string" &&
@@ -82,31 +72,19 @@ const isLiveArt = (value: unknown): value is LiveArt =>
 const messageOf = (err: unknown) =>
 	err instanceof Error ? err.message : String(err);
 
-function readManifest(): Entry[] {
-	const manifest: unknown = JSON.parse(
-		readFileSync(path.join(HERE, "manifest.json"), "utf8")
+function readManifest(): ManifestEntry[] {
+	const manifest = parseManifest(
+		JSON.parse(readFileSync(path.join(HERE, "manifest.json"), "utf8"))
 	);
-	if (!(Array.isArray(manifest) && manifest.every(isEntry))) {
-		throw new Error("manifest.json must be a list of { artKey, source }");
-	}
-	const seen = new Set<string>();
-	for (const { artKey } of manifest) {
-		if (!UPLOADABLE_ART_KEYS.has(artKey)) {
-			throw new Error(`manifest: "${artKey}" isn't a badge artKey`);
-		}
-		if (seen.has(artKey)) {
-			throw new Error(`manifest: "${artKey}" is listed twice`);
-		}
-		seen.add(artKey);
-	}
-	const unknown = (only ?? []).filter((key) => !seen.has(key));
+	const listed = new Set(manifest.map((e) => e.artKey));
+	const unknown = (only ?? []).filter((key) => !listed.has(key));
 	if (unknown.length > 0) {
 		throw new Error(`--only: not in the manifest: ${unknown.join(", ")}`);
 	}
 	return only ? manifest.filter((e) => only.includes(e.artKey)) : manifest;
 }
 
-async function prepare({ artKey, source }: Entry) {
+async function prepare({ artKey, source }: ManifestEntry) {
 	const png = readFileSync(path.join(HERE, "media", source));
 	const webp = await encodeBadge(await cutBadge(png, markerFor(artKey)));
 	return {
@@ -117,7 +95,7 @@ async function prepare({ artKey, source }: Entry) {
 }
 
 async function uploadOne(
-	entry: Entry,
+	entry: ManifestEntry,
 	liveSha: ReadonlyMap<string, string>
 ): Promise<string> {
 	const { sha256, thumbhash, webp } = await prepare(entry);
