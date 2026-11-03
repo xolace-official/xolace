@@ -8,3 +8,6 @@ export type AchievementView = NonNullable<
 	FunctionReturnType<typeof api.achievements.display.get>
 >;
 export type AchievementProgress = NonNullable<AchievementView["progress"]>;
+export type UnlockedBadge = FunctionReturnType<
+	typeof api.achievements.unlock.unseen
+>[number];
