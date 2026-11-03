@@ -9,6 +9,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalMutation, mutation } from "./_generated/server";
 import { awardAchievement } from "./achievements/award";
+import { backfillProfile } from "./achievements/backfill";
 import type { AchievementId } from "./achievements/catalog";
 import { deleteResponsesForCard } from "./followUpResponses";
 import { workflow } from "./followUps";
@@ -279,19 +280,16 @@ const UNLOCK_REPLAY: readonly AchievementId[] = ["joined", "first-session"];
  * Arm the badge unlock moment (#693) for the caller with Joined and First
  * session: earns whichever they lack and swaps in a fresh unseen row for
  * the rest, live even if it was backfilled. A dev
- * account from before the backfill (#686) is marked backfilled first, since
- * live awards skip a profile until then.
+ * account from before the backfill (#686) is backfilled first, since live
+ * awards skip a profile until then; a bare stamp would make the migration
+ * skip it and lose everything else it earned.
  */
 export const seedBadgeUnlock = mutation({
 	args: {},
 	handler: async (ctx) => {
 		assertDevToolsEnabled();
 		const { profile } = await requireAuth(ctx);
-		if (profile.achievementsBackfilledAt === undefined) {
-			await ctx.db.patch("emotional_profiles", profile._id, {
-				achievementsBackfilledAt: Date.now(),
-			});
-		}
+		await backfillProfile(ctx, profile);
 		for (const achievementId of UNLOCK_REPLAY) {
 			const row = await ctx.db
 				.query("user_achievements")
@@ -315,6 +313,32 @@ export const seedBadgeUnlock = mutation({
 				await awardAchievement(ctx, profile._id, achievementId);
 			}
 		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Run the achievements backfill (#701) again for one profile, stamped or
+ * not: it only adds what's missing, so it repairs an account the migration
+ * skipped because something stamped it first.
+ *   bunx convex run devTools:rerunBackfill '{"emotionalProfileId":"..."}'
+ */
+export const rerunBackfill = internalMutation({
+	args: { emotionalProfileId: v.id("emotional_profiles") },
+	handler: async (ctx, args) => {
+		assertDevToolsEnabled();
+		const profile = await ctx.db.get(
+			"emotional_profiles",
+			args.emotionalProfileId
+		);
+		if (!profile) {
+			throw new Error("No such profile");
+		}
+		await backfillProfile(ctx, {
+			...profile,
+			achievementsBackfilledAt: undefined,
+		});
 		return null;
 	},
 	returns: v.null(),
