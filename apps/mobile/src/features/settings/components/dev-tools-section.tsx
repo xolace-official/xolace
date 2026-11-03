@@ -10,6 +10,7 @@ import { useThemeColor, useToast } from "heroui-native";
 import { useState } from "react";
 import { SettingsRow } from "@/components/shared/settings-row";
 import { SettingsSection } from "@/components/shared/settings-section";
+import { BadgeUnlockDevRow } from "@/features/achievements/unlock/unlock-dev-row";
 import { ReturnWelcomeSheet } from "@/features/reflect/components/return-welcome-sheet";
 import type { ReturnWelcomeTier } from "@/features/reflect/return-welcome-copy";
 import { StarterSuggestionsDevRows } from "@/features/starter-suggestions/starter-dev-rows";
@@ -232,6 +233,7 @@ export const DevToolsSection = () => {
 			/>
 
 			<StarterSuggestionsDevRows />
+			<BadgeUnlockDevRow />
 
 			<SettingsRow
 				icon={icon(SENTRY_ICON)}
