@@ -2707,13 +2707,16 @@ export default defineSchema({
 
 	// One row per achievement a profile has earned (#685). Locked achievements
 	// have no row: the code catalog (convex/achievements/catalog.ts) supplies
-	// them. Written only through convex/achievements/award.ts. Never taken
+	// them. Inserted only through convex/achievements/award.ts. Never taken
 	// back once earned; survives a data wipe, removed by account deletion.
 	user_achievements: defineTable({
 		// Permanent catalog id (`joined`, `streak-30`, …), never renamed.
 		achievementId: v.string(),
 		earnedAt: v.number(),
 		emotionalProfileId: v.id("emotional_profiles"),
+		// When the user pinned it to their profile row (#699); unset when not pinned.
+		// Set only through convex/achievements/pins.ts.
+		pinnedAt: v.optional(v.number()),
 		// When the missed-beat push went out for this unlock. Backfill rows never push.
 		pushedAt: v.optional(v.number()),
 		// When the in-app unlock moment showed it.

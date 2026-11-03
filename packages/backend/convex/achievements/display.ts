@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import { type QueryCtx, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
 import { FREEZE_CAP, FREEZE_SPARK_PRICE } from "../lib/streakFreezes";
@@ -45,6 +45,8 @@ const achievementViewValidator = v.object({
 	copy: v.string(),
 	// Set once earned; locked badges have none.
 	earnedAt: v.optional(v.number()),
+	// Pinned to the profile row (#699); never on a locked badge.
+	pinned: v.boolean(),
 	// Only on the next rung of a ladder: the first one not yet earned.
 	progress: v.optional(
 		v.object({ current: v.number(), target: v.number(), unit: v.string() })
@@ -99,15 +101,23 @@ function counterReader(ctx: QueryCtx, profile: Doc<"emotional_profiles">) {
 	};
 }
 
-/** The whole shelf: categories in screen order, each earned → next rungs → locked. */
-async function buildShelf(ctx: QueryCtx, profile: Doc<"emotional_profiles">) {
-	const rows = await ctx.db
+/** A profile's earned rows, latest first. */
+export function earnedRows(
+	ctx: QueryCtx,
+	emotionalProfileId: Id<"emotional_profiles">
+) {
+	return ctx.db
 		.query("user_achievements")
 		.withIndex("by_emotionalProfileId_and_earnedAt", (q) =>
-			q.eq("emotionalProfileId", profile._id)
+			q.eq("emotionalProfileId", emotionalProfileId)
 		)
 		.order("desc")
 		.take(EARNED_LIMIT);
+}
+
+/** The whole shelf: categories in screen order, each earned → next rungs → locked. */
+async function buildShelf(ctx: QueryCtx, profile: Doc<"emotional_profiles">) {
+	const rows = await earnedRows(ctx, profile._id);
 	const earned: Earned = new Map(rows.map((r) => [r.achievementId, r]));
 	// The best streak the rows or the profile record, whichever is further.
 	const bestStreak = Math.max(
@@ -136,6 +146,7 @@ async function buildShelf(ctx: QueryCtx, profile: Doc<"emotional_profiles">) {
 			art: await art,
 			copy: a.copy,
 			earnedAt: row?.earnedAt,
+			pinned: row?.pinnedAt !== undefined,
 			progress: goal && {
 				current: Math.min(await count(goal.counter), goal.target),
 				target: goal.target,
@@ -230,35 +241,41 @@ export const overview = query({
 });
 
 /** The badges the profile card shows. */
-const SHELF_BADGES = 3;
+export const SHELF_BADGES = 3;
+
+/** The rows the profile card shows: pins in the order pinned, then the latest earned. */
+function shelfOrder<T extends { row: Doc<"user_achievements"> }>(
+	latestFirst: T[]
+): T[] {
+	const pinned = latestFirst
+		.filter(({ row }) => row.pinnedAt !== undefined)
+		.sort((a, b) => (a.row.pinnedAt ?? 0) - (b.row.pinnedAt ?? 0));
+	const rest = latestFirst.filter(({ row }) => row.pinnedAt === undefined);
+	return [...pinned, ...rest].slice(0, SHELF_BADGES);
+}
 
 /**
  * The profile's spark card (#698): the counters, the freeze terms buyFreeze
- * checks, and the badges to show. The server picks those, the latest earned
- * first, so pinning can later put pins ahead without an app release.
+ * checks, and the badges to show. The server picks those, pins first (#699),
+ * so the fill can change without an app release.
  */
 export const shelf = query({
 	args: {},
 	handler: async (ctx) => {
 		const { profile } = await requireAuth(ctx);
-		const rows = await ctx.db
-			.query("user_achievements")
-			.withIndex("by_emotionalProfileId_and_earnedAt", (q) =>
-				q.eq("emotionalProfileId", profile._id)
-			)
-			.order("desc")
-			.take(EARNED_LIMIT);
+		const rows = await earnedRows(ctx, profile._id);
 		const earned = rows.flatMap((row) => {
 			const achievement = findAchievement(row.achievementId);
 			return achievement ? [{ achievement, row }] : [];
 		});
 		const badges = await Promise.all(
-			earned.slice(0, SHELF_BADGES).map(
+			shelfOrder(earned).map(
 				async ({ achievement, row }): Promise<AchievementView> => ({
 					achievementId: row.achievementId,
 					art: await badgeArt(ctx, achievement.artKey),
 					copy: achievement.copy,
 					earnedAt: row.earnedAt,
+					pinned: row.pinnedAt !== undefined,
 					sparks: row.sparks,
 					title: achievement.title,
 				})
