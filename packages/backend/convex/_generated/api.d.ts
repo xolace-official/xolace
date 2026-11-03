@@ -8,6 +8,8 @@
  * @module
  */
 
+import type * as achievements_award from "../achievements/award.js";
+import type * as achievements_catalog from "../achievements/catalog.js";
 import type * as admin_audio from "../admin/audio.js";
 import type * as admin_edits from "../admin/edits.js";
 import type * as admin_hubs from "../admin/hubs.js";
@@ -255,6 +257,8 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "achievements/award": typeof achievements_award;
+  "achievements/catalog": typeof achievements_catalog;
   "admin/audio": typeof admin_audio;
   "admin/edits": typeof admin_edits;
   "admin/hubs": typeof admin_hubs;

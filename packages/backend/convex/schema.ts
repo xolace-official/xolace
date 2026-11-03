@@ -619,6 +619,12 @@ export default defineSchema({
 	// Decoupled from auth so that a breach of this table
 	// reveals emotional patterns but NO real-world identities.
 	emotional_profiles: defineTable({
+		// --- Achievements (#685, #686) ---
+		// When this profile's achievements were last backfilled. Live awards
+		// (convex/achievements/award.ts) do nothing until it is set, so the
+		// one-off backfill can't race them. New profiles are stamped at creation:
+		// they have nothing to backfill. Survives a data wipe.
+		achievementsBackfilledAt: v.optional(v.number()),
 		// Rolling average session duration in seconds.
 		// Helps AI calibrate response length over time.
 		averageSessionDuration: v.optional(v.number()),
@@ -715,6 +721,13 @@ export default defineSchema({
 		// rankInsert/rankReplace/rankDelete helper, or the aggregate drifts and
 		// every user's percentile goes wrong with no error surfaced.
 		sessionCount: v.number(),
+
+		// Sparks (#680): credited by every achievement award in its own
+		// transaction. `sparksEarned` is lifetime and only grows; `sparkBalance`
+		// is what's left to spend. Optional — rows predating sparks read as
+		// `?? 0`. Both survive a data wipe: they record showing up, not what was said.
+		sparkBalance: v.optional(v.number()),
+		sparksEarned: v.optional(v.number()),
 
 		// Streak freezes on hand (#434): +1 per 7 consecutive qualifying days,
 		// capped at FREEZE_CAP. Spent lazily by settleStreak (convex/streaks/state.ts).
@@ -2661,6 +2674,33 @@ export default defineSchema({
 	})
 		.index("by_slug", ["slug"])
 		.index("by_thumbKey", ["thumbKey"]), // discardUpload: is this blob still referenced?
+
+	// One row per achievement a profile has earned (#685). Locked achievements
+	// have no row: the code catalog (convex/achievements/catalog.ts) supplies
+	// them. Written only through convex/achievements/award.ts. Never taken
+	// back once earned; survives a data wipe, removed by account deletion.
+	user_achievements: defineTable({
+		// Permanent catalog id (`joined`, `streak-30`, …), never renamed.
+		achievementId: v.string(),
+		earnedAt: v.number(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		// When the missed-beat push went out for this unlock. Backfill rows never push.
+		pushedAt: v.optional(v.number()),
+		// When the in-app unlock moment showed it.
+		seenAt: v.optional(v.number()),
+		source: v.union(v.literal("live"), v.literal("backfill")),
+		// Sparks credited at award time, so a later catalog change never
+		// rewrites what was earned.
+		sparks: v.number(),
+	})
+		.index("by_emotionalProfileId_and_achievementId", [
+			"emotionalProfileId",
+			"achievementId",
+		])
+		.index("by_emotionalProfileId_and_earnedAt", [
+			"emotionalProfileId",
+			"earnedAt",
+		]),
 	// ===========================================================
 	// 1. USERS
 	// ===========================================================

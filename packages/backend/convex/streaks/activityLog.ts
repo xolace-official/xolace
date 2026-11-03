@@ -1,6 +1,7 @@
 import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import { awardAchievement } from "../achievements/award";
 import {
 	isStreakMilestone,
 	streakMilestoneAllowed,
@@ -103,6 +104,13 @@ export async function recordActivity(
 			emotionalProfileId: args.emotionalProfileId,
 			updatedAt: now,
 		});
+	}
+
+	// Every completed reflect or vent lands here, so the first one earns it;
+	// the helper skips any after that.
+	const isSession = args.actionType === "reflect" || args.actionType === "vent";
+	if (isSession) {
+		await awardAchievement(ctx, args.emotionalProfileId, "first-session", now);
 	}
 
 	// Zero-weight actions (quotes) log history but never touch the streak.

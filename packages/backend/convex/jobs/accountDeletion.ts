@@ -10,6 +10,7 @@ import {
 	finalizePurge,
 } from "./accountDeletionFinalize";
 import {
+	drainAchievements,
 	drainActivityLog,
 	drainConsentRecords,
 	drainEscalations,
@@ -116,6 +117,7 @@ export const purgeUser = internalMutation({
 			drainFrozenDays,
 			drainStretches,
 			drainInsights,
+			drainAchievements,
 		];
 
 		let hasMore = false;
