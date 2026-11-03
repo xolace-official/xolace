@@ -9,6 +9,7 @@ import { AppText } from "@/components/shared/app-text";
 import { GlassSurface } from "@/components/shared/glass-surface";
 import { useIsPlayful } from "@/lib/playful/use-playful";
 import { Badge } from "./badge";
+import { PinMark } from "./pin-mark";
 import type { SparkShelf } from "./types";
 
 const BADGE_SIZE = 56;
@@ -49,7 +50,10 @@ function refusalFor(error: unknown, shelf: SparkShelf) {
 	}
 }
 
-/** The profile's spark card (#698), under the stat band: balance, a freeze to buy, the latest badges. */
+/**
+ * The profile's spark card (#698), under the stat band: balance, a freeze to
+ * buy, and three badges, pins first (#699).
+ */
 export function ProfileSparkCard() {
 	const shelf = useQuery(api.achievements.display.shelf);
 	const isPlayful = useIsPlayful();
@@ -139,10 +143,14 @@ function CardBody({ shelf }: { shelf: SparkShelf }) {
 						>
 							<Pressable
 								accessibilityHint="Opens the badge"
-								accessibilityLabel={badge.title}
+								accessibilityLabel={
+									badge.pinned ? `${badge.title}, pinned` : badge.title
+								}
 								accessibilityRole="button"
+								className="relative"
 							>
 								<Badge achievement={badge} size={BADGE_SIZE} />
+								{badge.pinned ? <PinMark /> : null}
 							</Pressable>
 						</Link>
 					))}

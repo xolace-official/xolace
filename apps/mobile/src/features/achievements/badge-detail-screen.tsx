@@ -1,6 +1,6 @@
 // The badge detail page (#692), Reddit's arrangement from #684: title and
 // copy up top, the badge large in the open middle, the date or progress under
-// it. Pin comes with #699; the empty foot is where Share will go.
+// it. Pin / Pinned sits in the header (#699); the empty foot is where Share will go.
 
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
@@ -9,6 +9,7 @@ import { ActivityIndicator, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { Badge } from "./badge";
+import { PinToolbar } from "./pin-toolbar";
 import { ProgressBar, progressLabel } from "./progress-bar";
 import type { AchievementView } from "./types";
 
@@ -86,6 +87,7 @@ function Detail({ achievement }: { achievement: AchievementView }) {
 	const { copy, earnedAt, progress, sparks, title } = achievement;
 	return (
 		<>
+			<PinToolbar achievement={achievement} />
 			<View className="items-center">
 				<AppText
 					accessibilityRole="header"
