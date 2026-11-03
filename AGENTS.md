@@ -56,6 +56,11 @@ Put a dependency in the package that uses it; shared versions come from the root
   never by struggle. A user has **sparks earned** (lifetime, only grows) and a
   **spark balance** (what's left to spend, e.g. on a streak freeze). Distinct from
   *ember*, *kindling*, and the vent's spark particles.
+- **showed up** (a day): a local day on which the user did at least one thing that
+  counts toward the streak. Several actions are still one day; a day a freeze or
+  revive covered is not one. **Days showed up** is the lifetime total, gaps
+  allowed, never resets. Same days as the **streak**, which counts them only in a
+  row.
 
 ## Hit every surface
 
