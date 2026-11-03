@@ -11,6 +11,7 @@ export const MIN_WEEKS = 16;
 const ACTION_LABELS: Record<ActionType, string> = {
 	daily_mood: "Checked in",
 	library: "Read",
+	listen: "Listened",
 	quotes: "Held a quote",
 	reflect: "Reflected",
 	sit_with_this: "Sat with it",
