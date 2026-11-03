@@ -18,7 +18,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { Badge } from "@/features/achievements/badge";
-import { BadgeFx } from "@/features/achievements/fx/badge-fx";
+import { BadgeFx, FX_SPILL } from "@/features/achievements/fx/badge-fx";
 import type { UnlockedBadge } from "@/features/achievements/types";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColor } from "@/lib/use-token-color";
@@ -84,7 +84,7 @@ export function BadgeUnlockScreen() {
 				<Hero badge={badge} key={badge.id} />
 				<AppText
 					accessibilityRole="header"
-					className="mt-6 text-center font-serif text-[30px] text-foreground leading-9"
+					className="text-center font-serif text-[30px] text-foreground leading-9"
 				>
 					{badge.title}
 				</AppText>
@@ -129,7 +129,8 @@ function Hero({ badge }: { badge: UnlockedBadge }) {
 	const { art, title } = badge;
 
 	return (
-		<Animated.View className="mt-8" style={style}>
+		// Room for the fx spill, so sparkles never land on the eyebrow or title.
+		<Animated.View style={[style, { marginVertical: size * FX_SPILL }]}>
 			{art.url && !art.fallback && !reduced ? (
 				<BadgeFx accessibilityLabel={title} size={size} url={art.url} />
 			) : (

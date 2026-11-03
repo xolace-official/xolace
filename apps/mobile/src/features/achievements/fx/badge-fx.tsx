@@ -29,6 +29,10 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 /** The canvas reaches past the badge so the glow and sparkles have room. */
 const STAGE = 1.5;
+/** How far past the badge, per side and as a share of its size, the fx draws. */
+export const FX_SPILL = (STAGE - 1) / 2;
+/** The glow is full from the centre to just inside the rim, then fades out. */
+const GLOW_STOPS = [0, 0.6, 0.8, 1];
 const GLOW_MS = 2800;
 const SHIMMER_MS = 3200;
 const SPARKLE_MS = 2400;
@@ -57,7 +61,7 @@ const SPARKLES = [
 type Props = {
 	/** The lit art; never the fallback, which is drawn unlit. */
 	url: string;
-	/** The badge's own size; the glow spills past it without taking layout. */
+	/** The badge's own size; the fx spill FX_SPILL past it without taking layout. */
 	size: number;
 	accessibilityLabel: string;
 };
@@ -106,7 +110,8 @@ export function BadgeFx({ accessibilityLabel, size, url }: Props) {
 			<Circle c={center} opacity={glowOpacity} r={stage / 2}>
 				<RadialGradient
 					c={center}
-					colors={[`${ember}99`, `${ember}33`, `${ember}00`]}
+					colors={[`${ember}AA`, `${ember}AA`, `${ember}44`, `${ember}00`]}
+					positions={GLOW_STOPS}
 					r={stage / 2}
 				/>
 			</Circle>
