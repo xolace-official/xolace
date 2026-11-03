@@ -448,5 +448,6 @@ export const activityActionTypeValidator = v.union(
 	v.literal("library"),
 	v.literal("sit_with_this"),
 	v.literal("daily_mood"),
-	v.literal("quotes")
+	v.literal("quotes"),
+	v.literal("listen")
 );

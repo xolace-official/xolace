@@ -230,6 +230,8 @@ export const getBoundAudioTrack = query({
 			slug: track.slug,
 			thumbUrl,
 			title: track.title,
+			// What the player hands back to audio.listens.recordListen (#697).
+			trackId: track._id,
 			url,
 		};
 	},
@@ -245,6 +247,7 @@ export const getBoundAudioTrack = query({
 			slug: v.string(),
 			thumbUrl: v.string(),
 			title: v.string(),
+			trackId: v.id("audio_tracks"),
 			url: v.string(),
 		})
 	),

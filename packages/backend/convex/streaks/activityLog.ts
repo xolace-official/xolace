@@ -18,6 +18,7 @@ export type ActivityActionType = Doc<"activity_log">["actionType"];
 export const ACTION_WEIGHTS: Record<ActivityActionType, number> = {
 	daily_mood: 1,
 	library: 1,
+	listen: 1,
 	quotes: 0,
 	reflect: 1,
 	sit_with_this: 1,
@@ -125,6 +126,9 @@ export async function recordActivity(
 	// so finalizeCompletion awards that one (#695).
 	if (args.actionType === "sit_with_this") {
 		await awardAchievement(ctx, args.emotionalProfileId, "sat-with-it", now);
+	}
+	if (args.actionType === "listen") {
+		await awardAchievement(ctx, args.emotionalProfileId, "first-listen", now);
 	}
 
 	// Zero-weight actions (quotes) log history but never touch the streak.
