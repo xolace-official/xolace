@@ -12,6 +12,7 @@ import {
 import { ScreenA } from "@/features/achievements/prototype/screen-a.prototype";
 import { ScreenB } from "@/features/achievements/prototype/screen-b.prototype";
 import { ScreenC } from "@/features/achievements/prototype/screen-c.prototype";
+import { ScreenD } from "@/features/achievements/prototype/screen-d.prototype";
 import { UnlockSheet } from "@/features/achievements/prototype/unlock-sheet.prototype";
 import {
 	useVariant,
@@ -39,6 +40,7 @@ export default function AchievementsPrototypeRoute() {
 			{variant === "A" ? <ScreenA /> : null}
 			{variant === "B" ? <ScreenB /> : null}
 			{variant === "C" ? <ScreenC /> : null}
+			{variant === "D" ? <ScreenD /> : null}
 			<VariantSwitcher onUnlock={(n) => setUnlocking(pick(n))} />
 			<UnlockSheet
 				items={unlocking}

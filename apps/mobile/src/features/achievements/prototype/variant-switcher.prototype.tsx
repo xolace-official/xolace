@@ -9,6 +9,7 @@ export const VARIANTS = {
 	A: "Shelf rows",
 	B: "Trophy case",
 	C: "Ladders",
+	D: "Case + rows",
 } as const;
 export type VariantKey = keyof typeof VARIANTS;
 const KEYS = Object.keys(VARIANTS) as VariantKey[];

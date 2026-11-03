@@ -6,7 +6,11 @@ import { AppText } from "@/components/shared/app-text";
 import { Badge } from "./badge.prototype";
 import { type Achievement, formatDate } from "./catalog.prototype";
 
-type Props = { item: Achievement; size?: number; locked?: "tint" | "dim" };
+type Props = {
+	item: Achievement;
+	size?: number;
+	locked?: "tint" | "dim" | "emboss";
+};
 
 export function DetailBody({ item, size = 220, locked }: Props) {
 	const [pinned, setPinned] = useState(false);

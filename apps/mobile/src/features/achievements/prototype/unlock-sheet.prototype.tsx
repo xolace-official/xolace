@@ -35,7 +35,8 @@ export function UnlockSheet({ items, variant, onClose }: Props) {
 	const shown = items.map((i) => ({ ...i, earnedAt: "2026-11-03" }));
 	const total = shown.reduce((s, i) => s + i.sparks, 0);
 	const many = shown.length > 1;
-	const lastPage = variant !== "A" || page >= shown.length - 1;
+	const paged = variant === "A" || variant === "D";
+	const lastPage = !paged || page >= shown.length - 1;
 
 	return (
 		<BottomSheet
@@ -63,9 +64,7 @@ export function UnlockSheet({ items, variant, onClose }: Props) {
 								{many ? `${shown.length} new badges` : "New badge"}
 							</AppText>
 
-							{variant === "A" ? (
-								<Hero item={shown[page]} key={shown[page].id} />
-							) : null}
+							{paged ? <Hero item={shown[page]} key={shown[page].id} /> : null}
 
 							{variant === "B" ? (
 								<>
@@ -110,7 +109,7 @@ export function UnlockSheet({ items, variant, onClose }: Props) {
 								</>
 							) : null}
 
-							{variant === "A" && many ? (
+							{paged && many ? (
 								<View className="mt-4 flex-row gap-1.5">
 									{shown.map((i, n) => (
 										<View
@@ -122,7 +121,7 @@ export function UnlockSheet({ items, variant, onClose }: Props) {
 							) : null}
 
 							<AppText className="mt-4 font-bold text-[15px] text-ember">
-								+{variant === "A" ? shown[page].sparks : total} sparks
+								+{paged ? shown[page].sparks : total} sparks
 							</AppText>
 
 							<PressableFeedback

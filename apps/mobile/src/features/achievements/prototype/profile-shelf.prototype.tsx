@@ -65,7 +65,7 @@ export function ProfileShelf({ variant }: { variant: VariantKey }) {
 		);
 	}
 
-	if (variant === "B") {
+	if (variant === "B" || variant === "D") {
 		return (
 			<View className="mx-5 mt-5 rounded-3xl bg-surface p-5">
 				<View className="flex-row items-center justify-between">

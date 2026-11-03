@@ -5,12 +5,16 @@ import { byId } from "@/features/achievements/prototype/catalog.prototype";
 import { DetailBody } from "@/features/achievements/prototype/detail-body.prototype";
 
 export default function AchievementDetailPrototypeRoute() {
-	const { id } = useLocalSearchParams<{ id: string }>();
+	const { id, variant } = useLocalSearchParams<{
+		id: string;
+		variant?: string;
+	}>();
 	const item = byId(id);
 	return (
 		<ScrollView
 			className="flex-1 bg-background"
 			contentContainerClassName="pt-10 pb-16"
+			contentInsetAdjustmentBehavior="automatic"
 		>
 			<Stack.Screen
 				options={{
@@ -20,7 +24,13 @@ export default function AchievementDetailPrototypeRoute() {
 					headerTitle: "",
 				}}
 			/>
-			{item ? <DetailBody item={item} size={240} /> : null}
+			{item ? (
+				<DetailBody
+					item={item}
+					locked={variant === "D" ? "emboss" : "tint"}
+					size={240}
+				/>
+			) : null}
 		</ScrollView>
 	);
 }
