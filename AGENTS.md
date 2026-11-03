@@ -52,6 +52,10 @@ Put a dependency in the package that uses it; shared versions come from the root
   struggles. Not a streak **milestone**, which drives savers and pushes.
 - **badge**: the visual mark of exactly one achievement. No tiers; each rung of a
   ladder (5-, 10-, 20-day streak) is its own achievement with its own badge.
+- **spark**: the points an achievement awards; sized by how much showing up it took,
+  never by struggle. A user has **sparks earned** (lifetime, only grows) and a
+  **spark balance** (what's left to spend, e.g. on a streak freeze). Distinct from
+  *ember*, *kindling*, and the vent's spark particles.
 
 ## Hit every surface
 
