@@ -223,3 +223,17 @@ export const drainAchievements: DrainStep = async (ctx, profileId) => {
 	}
 	return rows.length === BATCH_SIZE;
 };
+
+/** Sparks spent (#698). A data wipe keeps them with the counters; only deletion drops them. */
+export const drainSparkSpends: DrainStep = async (ctx, profileId) => {
+	const rows = await ctx.db
+		.query("spark_spends")
+		.withIndex("by_emotionalProfileId", (q) =>
+			q.eq("emotionalProfileId", profileId)
+		)
+		.take(BATCH_SIZE);
+	for (const r of rows) {
+		await ctx.db.delete("spark_spends", r._id);
+	}
+	return rows.length === BATCH_SIZE;
+};

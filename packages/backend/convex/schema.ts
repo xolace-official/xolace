@@ -2571,6 +2571,18 @@ export default defineSchema({
 		// After-talk review queue (#606): flagged talks, newest first.
 		.index("by_talkFlaggedAt", ["talkFlaggedAt"]),
 
+	// What a profile spent sparks on (#698), one row per purchase. Written only
+	// through convex/achievements/sparks.ts, in the transaction that lowers
+	// `sparkBalance`. Survives a data wipe like the counters; removed by
+	// account deletion.
+	spark_spends: defineTable({
+		emotionalProfileId: v.id("emotional_profiles"),
+		item: v.literal("streak_freeze"),
+		// The price paid, so a later price change never rewrites history.
+		sparks: v.number(),
+		spentAt: v.number(),
+	}).index("by_emotionalProfileId", ["emotionalProfileId"]),
+
 	// Steadiness insights (#525, #526, ADR 0019): written by the Reflection
 	// Agent's consolidation pass, only after the quality gate passes. Each run
 	// replaces the last run's set. Retention drops a row once its oldest cited

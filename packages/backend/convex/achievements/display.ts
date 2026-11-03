@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { type QueryCtx, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
-import { FREEZE_SPARK_PRICE } from "../lib/streakFreezes";
+import { FREEZE_CAP, FREEZE_SPARK_PRICE } from "../lib/streakFreezes";
 import { streakState } from "../streaks/state";
 import { type BadgeArt, badgeArt, badgeArtValidator } from "./art";
 import {
@@ -15,6 +15,7 @@ import {
 	nextStreakRungAfter,
 	streakAchievementsThrough,
 } from "./catalog";
+import { streakLapsed } from "./sparks";
 
 /**
  * What the achievements screen and badge detail page show (#692). The server
@@ -225,6 +226,67 @@ export const overview = query({
 			latest: v.union(achievementViewValidator, v.null()),
 			nextUp: v.union(achievementViewValidator, v.null()),
 		}),
+	}),
+});
+
+/** The badges the profile card shows. */
+const SHELF_BADGES = 3;
+
+/**
+ * The profile's spark card (#698): the counters, the freeze terms buyFreeze
+ * checks, and the badges to show. The server picks those, the latest earned
+ * first, so pinning can later put pins ahead without an app release.
+ */
+export const shelf = query({
+	args: {},
+	handler: async (ctx) => {
+		const { profile } = await requireAuth(ctx);
+		const rows = await ctx.db
+			.query("user_achievements")
+			.withIndex("by_emotionalProfileId_and_earnedAt", (q) =>
+				q.eq("emotionalProfileId", profile._id)
+			)
+			.order("desc")
+			.take(EARNED_LIMIT);
+		const earned = rows.flatMap((row) => {
+			const achievement = findAchievement(row.achievementId);
+			return achievement ? [{ achievement, row }] : [];
+		});
+		const badges = await Promise.all(
+			earned.slice(0, SHELF_BADGES).map(
+				async ({ achievement, row }): Promise<AchievementView> => ({
+					achievementId: row.achievementId,
+					art: await badgeArt(ctx, achievement.artKey),
+					copy: achievement.copy,
+					earnedAt: row.earnedAt,
+					sparks: row.sparks,
+					title: achievement.title,
+				})
+			)
+		);
+		// The stock as the profile and buyFreeze see it, after any missed day.
+		const state = await streakState(ctx, profile);
+		return {
+			badgeCount: earned.length,
+			badges,
+			balance: profile.sparkBalance ?? 0,
+			earned: profile.sparksEarned ?? 0,
+			freezeCap: FREEZE_CAP,
+			freezePrice: FREEZE_SPARK_PRICE,
+			freezes: state.freezes,
+			streakLapsed: streakLapsed(state, profile),
+		};
+	},
+	returns: v.object({
+		badgeCount: v.number(),
+		badges: v.array(achievementViewValidator),
+		balance: v.number(),
+		earned: v.number(),
+		freezeCap: v.number(),
+		freezePrice: v.number(),
+		freezes: v.number(),
+		// buyFreeze refuses while this holds (streak_lapsed).
+		streakLapsed: v.boolean(),
 	}),
 });
 
