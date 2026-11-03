@@ -1,13 +1,8 @@
-import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { awardAchievement } from "../achievements/award";
 import { awardShowingUpRung, awardStreakRungs } from "../achievements/ladders";
-import {
-	isStreakMilestone,
-	streakMilestoneAllowed,
-	streakMilestoneCopy,
-} from "./milestones";
+import { isStreakMilestone } from "./milestones";
 import { earnFreeze, SAVER_CAP, settleStreak } from "./state";
 
 export type ActivityActionType = Doc<"activity_log">["actionType"];
@@ -151,9 +146,10 @@ export async function recordActivity(
 	} else if (previousDayKey === shiftDayKey(dayKey, -1)) {
 		newStreak = profile.currentStreak + 1;
 		freezes = await earnFreeze(ctx, profile, dayKey, newStreak, freezes);
+		// Silently (#700): the streak badge's push stands in for the old
+		// milestone push, and a milestone with no rung (400) sends nothing.
 		if (isStreakMilestone(newStreak)) {
 			savers = Math.min(savers + 1, SAVER_CAP);
-			await notifyStreakMilestone(ctx, args.emotionalProfileId, newStreak, now);
 		}
 	} else {
 		newStreak = 1;
@@ -193,35 +189,6 @@ export async function recordActivity(
 	if (firstShowedUp) {
 		await awardShowingUpRung(ctx, args.emotionalProfileId, daysShowedUp, now);
 	}
-}
-
-/**
- * Streak milestone push (#439). Only reached on the day the streak first
- * steps onto a milestone, so a second action that day can't re-fire it.
- * Freezes and revives never push — milestones are the only interruption.
- */
-async function notifyStreakMilestone(
-	ctx: MutationCtx,
-	emotionalProfileId: Id<"emotional_profiles">,
-	streak: number,
-	now: number
-): Promise<void> {
-	const preferences = await ctx.db
-		.query("preferences")
-		.withIndex("by_profile", (q) =>
-			q.eq("emotionalProfileId", emotionalProfileId)
-		)
-		.unique();
-	if (!streakMilestoneAllowed(preferences?.notifications)) {
-		return;
-	}
-	await ctx.scheduler.runAfter(0, internal.notifications.schedule, {
-		content: streakMilestoneCopy(streak),
-		emotionalProfileId,
-		scheduledFor: now,
-		triggerReason: `Streak reached ${streak}`,
-		type: "streak_milestone",
-	});
 }
 
 /** The instant a local day begins. Two passes land right across a DST change. */

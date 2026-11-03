@@ -1,6 +1,6 @@
 /**
- * Streak milestone cadence (#435): 7, 30, 100, then every 100 after. The one
- * table both streak-saver earning and milestone notifications (#439) read.
+ * Streak milestone cadence (#435): 7, 30, 100, then every 100 after. Drives
+ * streak-saver earning only; badge pushes replaced the milestone push (#700).
  */
 export const STREAK_MILESTONES = [7, 30, 100] as const;
 /** Past the last fixed milestone, one lands every this many days. */
@@ -14,7 +14,10 @@ export function isStreakMilestone(streak: number): boolean {
 	);
 }
 
-/** Template-only push copy for a streak milestone (#439) — no model call. */
+/**
+ * Template-only copy for a streak milestone (#439) — no model call. The streak
+ * badges at those rungs carry it, so their push does too (#700).
+ */
 export function streakMilestoneCopy(streak: number): string {
 	if (streak === 7) {
 		return "7 days by the fire. The flame's holding steady.";
@@ -26,23 +29,4 @@ export function streakMilestoneCopy(streak: number): string {
 		return "100 days. The fire hasn't gone out once — not because you didn't stumble, but because you came back.";
 	}
 	return `${streak} days. Still here.`;
-}
-
-/**
- * May we push a streak milestone? `streakMilestone` is absent on rows written
- * before it existed; absent follows the session-count `milestone` flag, so
- * users who opted into milestones get these without finding a new toggle.
- * Nothing stamps it alongside `milestone`: an old binary only writes
- * `milestone`, and a stamped copy would outlive its mute.
- */
-export function streakMilestoneAllowed(
-	notifications:
-		| { enabled: boolean; milestone: boolean; streakMilestone?: boolean }
-		| null
-		| undefined
-): boolean {
-	if (!notifications?.enabled) {
-		return false;
-	}
-	return notifications.streakMilestone ?? notifications.milestone;
 }

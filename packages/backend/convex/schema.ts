@@ -632,6 +632,10 @@ export default defineSchema({
 	// Decoupled from auth so that a breach of this table
 	// reveals emotional patterns but NO real-world identities.
 	emotional_profiles: defineTable({
+		// The badge push's missed-beat check (#700), so an award schedules at
+		// most one per profile; once it has run, the next award schedules anew.
+		// Written only by convex/achievements/push.ts.
+		achievementPushCheck: v.optional(v.id("_scheduled_functions")),
 		// --- Achievements (#685, #686) ---
 		// When this profile's achievements were last backfilled. Live awards
 		// (convex/achievements/award.ts) do nothing until it is set, so the
@@ -1594,10 +1598,14 @@ export default defineSchema({
 			// Reach variant, and always sends in one voice.
 			v.literal("kindling_ready"),
 			// Streak hit 7/30/100/every 100 (#439). Template copy, own rate bucket.
+			// No longer sent: badge pushes replaced it (#700). Old rows keep it.
 			v.literal("streak_milestone"),
 			// A domain unlocked and the beat went unseen (#523). Generic text,
 			// never the domain; own weekly bucket.
-			v.literal("domain_unlock")
+			v.literal("domain_unlock"),
+			// Badges earned and the unlock moment went unseen (#700). Names the
+			// badge, never sparks; own daily bucket.
+			v.literal("achievement")
 		),
 	})
 		// Check: have we already nudged this user recently?
@@ -1734,6 +1742,9 @@ export default defineSchema({
 		// --- Notifications ---
 		// All default false. Permission requested after 3rd session.
 		notifications: v.object({
+			// Badge pushes (#700). Optional; absent follows `milestone` — see
+			// `achievementPushAllowed` (convex/achievements/push.ts).
+			achievement: v.optional(v.boolean()),
 			// Xolacer chat: requests, accepts, declines, messages. Optional because
 			// every row written before it existed has to keep working, and absent
 			// means enabled — see `chatNotificationsAllowed`. One toggle for the
@@ -1755,8 +1766,9 @@ export default defineSchema({
 			reach: v.optional(
 				v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))
 			),
-			// Streak milestones (#439). Optional; absent follows `milestone` — see
-			// `streakMilestoneAllowed` (convex/streaks/milestones.ts).
+			// Streak milestones (#439). DEPRECATED(remove-after: data): no longer
+			// read; badge pushes replaced the streak-milestone push (#700), and
+			// `achievement` governs those. See DEPRECATIONS.md.
 			streakMilestone: v.optional(v.boolean()),
 			// IANA timezone captured client-side so the server can gate by local hour.
 			timezone: v.optional(v.string()),
@@ -2717,7 +2729,8 @@ export default defineSchema({
 		// When the user pinned it to their profile row (#699); unset when not pinned.
 		// Set only through convex/achievements/pins.ts.
 		pinnedAt: v.optional(v.number()),
-		// When the missed-beat push went out for this unlock. Backfill rows never push.
+		// When the missed-beat check sent this unlock's push, or found it over the
+		// daily cap (#700). Backfill rows never push.
 		pushedAt: v.optional(v.number()),
 		// When the in-app unlock moment showed it.
 		seenAt: v.optional(v.number()),
@@ -2734,11 +2747,13 @@ export default defineSchema({
 			"emotionalProfileId",
 			"earnedAt",
 		])
-		// The unlock moment's read (#693): live rows not yet shown.
-		.index("by_emotionalProfileId_and_source_and_seenAt", [
+		// The unlock moment's read (#693): live rows not yet shown; and the
+		// missed-beat check's (#700): of those, the ones not yet pushed.
+		.index("by_emotionalProfileId_and_source_and_seenAt_and_pushedAt", [
 			"emotionalProfileId",
 			"source",
 			"seenAt",
+			"pushedAt",
 		]),
 	// ===========================================================
 	// 1. USERS

@@ -21,11 +21,13 @@ export const unseen = query({
 		const { profile } = await requireAuth(ctx);
 		const rows = await ctx.db
 			.query("user_achievements")
-			.withIndex("by_emotionalProfileId_and_source_and_seenAt", (q) =>
-				q
-					.eq("emotionalProfileId", profile._id)
-					.eq("source", "live")
-					.eq("seenAt", undefined)
+			.withIndex(
+				"by_emotionalProfileId_and_source_and_seenAt_and_pushedAt",
+				(q) =>
+					q
+						.eq("emotionalProfileId", profile._id)
+						.eq("source", "live")
+						.eq("seenAt", undefined)
 			)
 			.take(UNSEEN_LIMIT);
 		// Index order within a seenAt is creation order; earnedAt is what the user lived.

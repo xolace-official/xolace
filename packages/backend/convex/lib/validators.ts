@@ -398,6 +398,7 @@ export const preferencesDocValidator = v.object({
 	mirrorTone: mirrorToneValidator,
 	motionPreference: v.optional(motionPreferenceValidator),
 	notifications: v.object({
+		achievement: v.optional(v.boolean()),
 		chat: v.optional(v.boolean()),
 		enabled: v.boolean(),
 		gentleReturn: v.boolean(),

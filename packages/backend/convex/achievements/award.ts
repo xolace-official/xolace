@@ -1,6 +1,7 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { type AchievementId, findAchievement } from "./catalog";
+import { scheduleMissedBadgeCheck } from "./push";
 
 /**
  * Award one achievement live (#685): the single write path for
@@ -10,6 +11,7 @@ import { type AchievementId, findAchievement } from "./catalog";
  * to both counters only alongside an insert. Does nothing for a profile whose
  * `achievementsBackfilledAt` isn't set yet: existing profiles wait for the
  * one-off backfill (#686), so it can date their awards and keep them quiet.
+ * A live award schedules the profile's missed-beat push check (#700).
  *
  * @returns whether this call earned it.
  */
@@ -51,5 +53,6 @@ export async function awardAchievement(
 		sparkBalance: (profile.sparkBalance ?? 0) + achievement.sparks,
 		sparksEarned: (profile.sparksEarned ?? 0) + achievement.sparks,
 	});
+	await scheduleMissedBadgeCheck(ctx, profile);
 	return true;
 }
