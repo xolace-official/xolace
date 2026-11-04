@@ -28,6 +28,8 @@ const TAIL_LEFT = FLUX_W / 2 - 7;
 // Per-tap token for /connect; module-level so the purity lint sees no render-time clock.
 const navToken = () => String(Date.now());
 const EASING = [0.23, 1, 0.32, 1] as [number, number, number, number];
+// Under the pick-up card the rows are the second choice; the top few keep the card short.
+const ROWS_UNDER_PICK_UP = 3;
 
 const readyLine = (name: string) =>
 	name ? `Ready when you are, ${name}.` : "Ready when you are.";
@@ -125,6 +127,8 @@ export function StarterSuggestionsBubble({ intake, onResolve, pickUp }: Props) {
 	};
 
 	const fluxBottom = insets.bottom + 16;
+	const rows = orderStarterRows(intake);
+	const shownRows = pickUp ? rows.slice(0, ROWS_UNDER_PICK_UP) : rows;
 
 	return (
 		<View
@@ -231,7 +235,7 @@ export function StarterSuggestionsBubble({ intake, onResolve, pickUp }: Props) {
 					) : null}
 
 					<View className="mt-1">
-						{orderStarterRows(intake).map((row, i) => (
+						{shownRows.map((row, i) => (
 							<PressableFeedback
 								accessibilityLabel={`${row.title}. ${row.subtitle}`}
 								accessibilityRole="button"
