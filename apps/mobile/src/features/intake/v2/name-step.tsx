@@ -2,7 +2,7 @@
 // name" beat after it (#707).
 import { SymbolView } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
-import { Pressable, TextInput, View } from "react-native";
+import { TextInput, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { AppText } from "@/components/shared/app-text";
 import { suggestHandle } from "@/features/intake/answer-rules";
@@ -61,21 +61,22 @@ export function NameStep({ busy, name, onChange, onKeep, skipped }: Props) {
 						returnKeyType="go"
 						value={name}
 					/>
-					<Pressable
+					<Button
 						accessibilityLabel="Suggest another name"
-						accessibilityRole="button"
-						className="size-14 items-center justify-center rounded-2xl border border-border bg-surface"
+						className="size-14"
+						isIconOnly
 						onPress={() => {
 							playSoftPress();
 							onChange(suggestHandle());
 						}}
+						variant="outline"
 					>
 						<SymbolView
 							name={{ android: "casino", ios: "dice" } as never}
 							size={22}
 							tintColor={foreground}
 						/>
-					</Pressable>
+					</Button>
 				</View>
 			</View>
 

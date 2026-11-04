@@ -76,6 +76,7 @@ export function HeardStep({
 								{group.chips.map((chip) => {
 									const on = isOn(heard, chip);
 									return (
+										// A toggle chip, not a button.
 										<PressableFeedback
 											accessibilityRole="button"
 											accessibilityState={{ selected: on }}
@@ -124,13 +125,9 @@ export function HeardStep({
 				>
 					<Button.Label>That&apos;s me</Button.Label>
 				</Button>
-				<AppText
-					accessibilityRole="button"
-					className="self-center px-2 py-3 font-[Poppins-Medium] text-[15px] text-accent"
-					onPress={onSayAgain}
-				>
-					Say it again
-				</AppText>
+				<Button onPress={onSayAgain} variant="ghost">
+					<Button.Label>Say it again</Button.Label>
+				</Button>
 			</View>
 		</View>
 	);

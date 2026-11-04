@@ -1,8 +1,8 @@
 // `ask`: Flux asks the one question while it types out, then the ways to answer. Talk (the
 // mic) joins with the listen step; until then only quick replies, typing, or Skip.
-import { PressableFeedback } from "heroui-native";
+import { Button, PressableFeedback } from "heroui-native";
 import { useEffect, useState } from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { FluxStill } from "@/features/intake/v2/flux-still";
@@ -81,22 +81,21 @@ export function AskStep({ onQuickReply, onSkip, onType }: Props) {
 				>
 					<View className="flex-row flex-wrap justify-center gap-2">
 						{QUICK_REPLIES.map((reply) => (
-							<PressableFeedback
-								accessibilityRole="button"
-								className="min-h-11 justify-center rounded-full border border-border bg-surface px-4 py-2.5"
+							<Button
 								key={reply}
 								onPress={() => {
 									playSoftPress();
 									onQuickReply(reply);
 								}}
+								size="sm"
+								variant="outline"
 							>
-								<AppText className="font-[Poppins-Medium] text-[14px] text-foreground">
-									{reply}
-								</AppText>
-							</PressableFeedback>
+								<Button.Label>{reply}</Button.Label>
+							</Button>
 						))}
 					</View>
-					<Pressable
+					{/* Looks like the field it opens, not a button. */}
+					<PressableFeedback
 						accessibilityRole="button"
 						className="min-h-[52px] justify-center rounded-full border border-border bg-surface-secondary px-5"
 						onPress={onType}
@@ -104,15 +103,11 @@ export function AskStep({ onQuickReply, onSkip, onType }: Props) {
 						<AppText className="font-[Poppins-Regular] text-[16px] text-muted">
 							Tell Flux anything…
 						</AppText>
-					</Pressable>
+					</PressableFeedback>
 					<View className="flex-row justify-end">
-						<AppText
-							accessibilityRole="button"
-							className="px-1 py-2 font-[Poppins-Medium] text-[13px] text-muted"
-							onPress={onSkip}
-						>
-							Skip
-						</AppText>
+						<Button onPress={onSkip} size="sm" variant="ghost">
+							<Button.Label>Skip</Button.Label>
+						</Button>
 					</View>
 				</Animated.View>
 			) : null}
