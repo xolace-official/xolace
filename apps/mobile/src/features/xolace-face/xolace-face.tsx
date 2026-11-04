@@ -52,6 +52,7 @@ export function XolaceFace({
 	const bg = useTokenColor("background");
 	const accent = useTokenColor("accent");
 	const accentFg = useTokenColor("accent-foreground");
+	const muted = useTokenColor("muted");
 	const fixed: Omit<FeatureColors, "mouth"> = {
 		blush: useTokenColor("face-blush"),
 		brow: useTokenColor("face-brow"),
@@ -86,12 +87,16 @@ export function XolaceFace({
 	// Chalk (the square) is flat, in the theme's text colour, and ignores the palette.
 	const flat = body === "square";
 	const set = palette ?? (body === "orb" ? "theme" : "brand");
-	const gradient = flat || set === "theme" ? null : PALETTES[set];
+	const gradient =
+		flat || set === "theme" || set === "muted" ? null : PALETTES[set];
+	const solid = set === "muted" ? muted : accent;
 	let colors: FeatureColors;
 	if (flat) {
 		colors = { ...fixed, brow: bg, mouth: bg, pupil: fg, sclera: bg };
 	} else if (gradient) {
 		colors = { ...fixed, mouth: gradient.mouth };
+	} else if (set === "muted") {
+		colors = { ...fixed, brow: bg, mouth: bg };
 	} else {
 		colors = { ...fixed, brow: accentFg, mouth: accentFg };
 	}
@@ -115,7 +120,7 @@ export function XolaceFace({
 								/>
 							</Path>
 						) : (
-							<Path color={flat ? fg : accent} path={BODY_PATHS[body]} />
+							<Path color={flat ? fg : solid} path={BODY_PATHS[body]} />
 						)}
 						{!flat && (
 							<Path path={BODY_PATHS[body]}>

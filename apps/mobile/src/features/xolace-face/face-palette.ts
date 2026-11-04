@@ -9,7 +9,7 @@ export type GradientSet = {
 };
 
 /** Curated, never a free picker: every set keeps the face legible. "theme" (not here)
- * follows the app's accent instead. */
+ * follows the app's accent instead, and "muted" its muted grey: a face at rest, set aside. */
 export const PALETTES = {
 	/** bottom-left → top-right, the logo's peach → gold → pink → lilac → cyan */
 	brand: {
@@ -39,4 +39,4 @@ export const PALETTES = {
 	},
 } satisfies Record<string, GradientSet>;
 
-export type PaletteName = keyof typeof PALETTES | "theme";
+export type PaletteName = keyof typeof PALETTES | "theme" | "muted";
