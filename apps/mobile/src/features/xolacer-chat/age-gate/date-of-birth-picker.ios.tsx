@@ -3,9 +3,12 @@
 
 import { Host } from "@expo/ui";
 import { DatePicker } from "@expo/ui/swift-ui";
-import { datePickerStyle } from "@expo/ui/swift-ui/modifiers";
+import { datePickerStyle, labelsHidden } from "@expo/ui/swift-ui/modifiers";
 import { useAppTheme } from "@/context/app-theme-context";
 import { calendarDate } from "./age-gate-step";
+
+/** UIKit's standard wheel picker height, in points. */
+const WHEEL_HEIGHT = 216;
 
 /** Local midnight of a "YYYY-MM-DD" day, so the wheel shows that day in every timezone. */
 const toLocalDate = (day: string) => {
@@ -23,12 +26,15 @@ export function DateOfBirthPicker({
 	const { isDark } = useAppTheme();
 	const today = new Date();
 	return (
+		// A fixed height, not `matchContents`: inside the bottom sheet's scroll view the measured
+		// height never arrives and the wheel renders at zero height.
 		<Host
 			colorScheme={isDark ? "dark" : "light"}
-			matchContents={{ vertical: true }}
+			style={{ height: WHEEL_HEIGHT, width: "100%" }}
 		>
 			<DatePicker
-				modifiers={[datePickerStyle("wheel")]}
+				// The sheet's heading asks the question; the title stays as the accessibility label.
+				modifiers={[datePickerStyle("wheel"), labelsHidden()]}
 				onDateChange={(date) => onChange(calendarDate(date))}
 				range={{ end: today }}
 				selection={value ? toLocalDate(value) : today}
