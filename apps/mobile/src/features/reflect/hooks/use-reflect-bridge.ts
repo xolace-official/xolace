@@ -12,6 +12,7 @@ import { useAppStore } from "@/store/store";
  */
 export function useReflectBridge(
 	screen: ReflectionStateName,
+	wordsPicked: boolean,
 	isLoading: boolean,
 	dispatch: (action: ReflectionAction) => void
 ) {
@@ -31,8 +32,9 @@ export function useReflectBridge(
 
 	// Not just the compose screens: dropping the hold at submit would open a held badge over
 	// processing, or over the error screen, whenever the session lands later than the settle.
+	// Picking words on the idle card is a reflection started too; clearing them lets it go.
 	const setComposing = useAppStore((s) => s.setHomeComposing);
-	const composing = screen !== "idle";
+	const composing = screen !== "idle" || wordsPicked;
 	useEffect(() => {
 		setComposing(composing);
 		return () => setComposing(false);
