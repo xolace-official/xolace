@@ -38,7 +38,10 @@ const ENTRY: Record<string, string> = {
 	word_cloud: "a word-cloud reflection",
 };
 
-const DISCLOSURE: Record<IntakeSignals["disclosureStyle"], string> = {
+const DISCLOSURE: Record<
+	NonNullable<IntakeSignals["disclosureStyle"]>,
+	string
+> = {
 	all_at_once: "tend to share everything at once",
 	bit_at_a_time: "open up a bit at a time",
 	depends: "share differently depending on the day",
@@ -117,7 +120,10 @@ export function renderMemory(
 		parts.push("Nothing yet: this is the start.");
 	}
 	if (input.intake) {
-		const hints = [DISCLOSURE[input.intake.disclosureStyle]];
+		const hints: string[] = [];
+		if (input.intake.disclosureStyle) {
+			hints.push(DISCLOSURE[input.intake.disclosureStyle]);
+		}
 		if (input.intake.emotionAwareness) {
 			hints.push(AWARENESS[input.intake.emotionAwareness]);
 		}

@@ -8,7 +8,7 @@ import {
 	conversationRoleValidator,
 	domainValidator,
 	insightFeatureValidator,
-	intakeAnswerValidators,
+	intakeRowAnswerValidators,
 	licenceValidator,
 	motionPreferenceValidator,
 	resourceValidator,
@@ -1260,8 +1260,9 @@ export default defineSchema({
 	// ===========================================================
 	//
 	// The post-signup segmentation questionnaire (T3, issue #234). One row per
-	// profile, written once by `intake.complete` in the same transaction that
-	// flips `emotional_profiles.onboardingComplete`.
+	// profile, written by `intake.complete` (v1) or `intake.completeV2` in the
+	// same transaction that flips `emotional_profiles.onboardingComplete`; a v2
+	// row gains its deferred answers later through `intake.recordDeferredAnswer`.
 	//
 	// Named typed columns, not EAV and not a JSON blob: 11 fixed questions is
 	// not a dynamic form engine, and the consumers (ai/context.ts, follow-up
@@ -1283,9 +1284,11 @@ export default defineSchema({
 		// considered migration that flips `onboardingComplete` back to false.
 		intakeVersion: v.number(),
 
-		// The ten answer columns (Q2–Q11). Shared with the `intake.complete`
-		// mutation args so the two can never drift.
-		...intakeAnswerValidators,
+		// The ten answer columns (Q2–Q11), all optional on the row: a v2 intake
+		// (#715) saves only what the first answer told us and the deferred
+		// questions fill the rest later. Derived from the `intake.complete` args
+		// so the two can never drift.
+		...intakeRowAnswerValidators,
 	}).index("by_profile", ["emotionalProfileId"]),
 
 	library_entries: defineTable({

@@ -6,10 +6,7 @@ import { rankInsert } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
 import { generateDisplayName } from "./lib/displayName";
 import { rateLimiter } from "./lib/rateLimits";
-import {
-	intakeAnswerValidators,
-	preferencesDocValidator,
-} from "./lib/validators";
+import { preferencesDocValidator } from "./lib/validators";
 import schema from "./schema";
 import { streakState } from "./streaks/state";
 
@@ -41,14 +38,12 @@ const profileDocValidator = v.object({
 	...schema.tables.emotional_profiles.validator.fields,
 });
 
-// Full `intake_responses` document shape, mirroring schema.ts exactly.
+// Full `intake_responses` document shape, derived from schema.ts so the two
+// can't drift.
 const intakeResponseDocValidator = v.object({
 	_creationTime: v.number(),
 	_id: v.id("intake_responses"),
-	completedAt: v.number(),
-	emotionalProfileId: v.id("emotional_profiles"),
-	intakeVersion: v.number(),
-	...intakeAnswerValidators,
+	...schema.tables.intake_responses.validator.fields,
 });
 
 /**

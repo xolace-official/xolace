@@ -189,6 +189,13 @@ export const insightFeatureValidator = v.union(
  */
 export const INTAKE_VERSION = 1;
 
+/**
+ * Stamp for an intake completed through the one-answer flow (intake v2,
+ * #704): only what the first answer could tell, the rest asked later by the
+ * feature that needs it. Same rules as {@link INTAKE_VERSION}.
+ */
+export const INTAKE_V2_VERSION = 2;
+
 // ===========================================================
 // KINDLING — audio_tracks (#328, spec docs/paths-v1.md §3.2)
 // ===========================================================
@@ -363,6 +370,18 @@ export const intakeAnswerValidators = {
 		)
 	),
 };
+
+/**
+ * The same answer columns as stored on an `intake_responses` row, every one
+ * optional: a v2 intake saves only what the first answer told us, and the
+ * deferred questions fill the rest later, if ever (#715). A widening of
+ * {@link intakeAnswerValidators}, so every v1 row still validates. Absent
+ * means "not asked yet" (or, for the series pair, "the branch never fired"),
+ * never "declined".
+ */
+export const intakeRowAnswerValidators = v
+	.object(intakeAnswerValidators)
+	.partial().fields;
 
 // --- Xolacer chat (#344) ---
 
