@@ -43,6 +43,8 @@ export default function IntakeIndex() {
 	// re-render from restarting the clock.
 	const posthog = usePostHog();
 	const started = useRef(false);
+	// A ref, not the state: two taps in one frame would both read the state as false.
+	const beginningRef = useRef(false);
 	const [beginning, setBeginning] = useState(false);
 	useEffect(() => {
 		if (started.current || context === undefined) {
@@ -63,22 +65,28 @@ export default function IntakeIndex() {
 	// The flows part here, so the flag is read here. The reload queues behind the one `identify`
 	// started, so a quick tap reads this account's flag, not a missing or anonymous one.
 	const beginIntake = async () => {
-		if (beginning) {
+		if (beginningRef.current) {
 			return;
 		}
+		beginningRef.current = true;
 		setBeginning(true);
-		const account = context.profile._id;
-		await waitForIntakeFlag(account, () => posthog.reloadFeatureFlagsAsync());
-		const { arm, fresh } = freezeIntakeArm(account, () =>
-			posthog.getFeatureFlag(INTAKE_V2_FLAG)
-		);
-		if (fresh) {
-			trackIntakeArmAssigned(posthog, arm);
-		} else {
-			restoreIntakeArm(arm);
+		// A throw must not leave the only way forward disabled.
+		try {
+			const account = context.profile._id;
+			await waitForIntakeFlag(account, () => posthog.reloadFeatureFlagsAsync());
+			const { arm, fresh } = freezeIntakeArm(account, () =>
+				posthog.getFeatureFlag(INTAKE_V2_FLAG)
+			);
+			if (fresh) {
+				trackIntakeArmAssigned(posthog, arm);
+			} else {
+				restoreIntakeArm(arm);
+			}
+			router.push(arm === "v2" ? "/(intake)/flux" : "/(intake)/questionnaire");
+		} finally {
+			beginningRef.current = false;
+			setBeginning(false);
 		}
-		router.push(arm === "v2" ? "/(intake)/flux" : "/(intake)/questionnaire");
-		setBeginning(false);
 	};
 
 	return (
