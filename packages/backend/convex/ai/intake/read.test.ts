@@ -67,6 +67,18 @@ describe("ai/intake/read.firstAnswer", () => {
 		);
 	});
 
+	it("counts the echoed follow-up question toward the length cap", async () => {
+		const user = await asNewUser();
+		await expectCode(
+			() =>
+				user.t.action(api.ai.intake.read.firstAnswer, {
+					answer: "tired",
+					followUp: { question: "x".repeat(5000), reply: "work" },
+				}),
+			"invalid_answer"
+		);
+	});
+
 	it("reads the answer into fields", async () => {
 		const user = await asNewUser();
 		const reading = await user.t.action(api.ai.intake.read.firstAnswer, {

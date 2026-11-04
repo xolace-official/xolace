@@ -177,7 +177,11 @@ export const firstAnswer = action({
 			internal.ai.intake.read.readerProfileId,
 			{}
 		);
-		const length = args.answer.length + (args.followUp?.reply.length ?? 0);
+		// The question is the client's echo of ours: counted, so it can't carry a payload.
+		const length =
+			args.answer.length +
+			(args.followUp?.question.length ?? 0) +
+			(args.followUp?.reply.length ?? 0);
 		if (args.answer.trim().length === 0 || length > MAX_WORDS_CHARS) {
 			throw new ConvexError({
 				code: "invalid_answer",
