@@ -1260,9 +1260,9 @@ export default defineSchema({
 	// ===========================================================
 	//
 	// The post-signup segmentation questionnaire (T3, issue #234). One row per
-	// profile, written by `intake.complete` (v1) or `intake.completeV2` in the
+	// profile, written by `intake.complete` (v1) or `intake/v2.complete` in the
 	// same transaction that flips `emotional_profiles.onboardingComplete`; a v2
-	// row gains its deferred answers later through `intake.recordDeferredAnswer`.
+	// row gains its deferred answers later through `intake/deferred.record`.
 	//
 	// Named typed columns, not EAV and not a JSON blob: 11 fixed questions is
 	// not a dynamic form engine, and the consumers (ai/context.ts, follow-up
