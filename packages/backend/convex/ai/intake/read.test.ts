@@ -8,11 +8,16 @@ import {
 	anthropicMock,
 	rateLimiterMock,
 } from "../../test/mocks.helpers";
-import { MODERATION_UNAVAILABLE } from "../providers/moderation";
+import {
+	MODERATION_UNAVAILABLE,
+	type ModerationResult,
+} from "../providers/moderation";
 
 /** What every stubbed model call answers: the classifier and the reader alike. */
 const stub = {
 	limit: { ok: true },
+	moderation: (): Promise<ModerationResult> =>
+		Promise.resolve(MODERATION_UNAVAILABLE),
 	reply: JSON.stringify({
 		fields: { weighingOn: { confidence: 0.9, value: ["work"] } },
 	}) as string | Error,
@@ -29,11 +34,15 @@ vi.mock("../providers/anthropic", async (orig) => ({
 }));
 vi.mock("../providers/moderation", async (orig) => ({
 	...(await orig<typeof import("../providers/moderation")>()),
-	moderateInput: async () => MODERATION_UNAVAILABLE,
+	moderateInput: () => stub.moderation(),
 }));
+
+/** A provider call that never answers. */
+const hangs = () => new Promise<never>(() => undefined);
 
 beforeEach(() => {
 	stub.limit = { ok: true };
+	stub.moderation = () => Promise.resolve(MODERATION_UNAVAILABLE);
 	stub.reply = JSON.stringify({
 		fields: { weighingOn: { confidence: 0.9, value: ["work"] } },
 	});
@@ -78,6 +87,30 @@ describe("ai/intake/read.firstAnswer", () => {
 		expect(reading).toMatchObject({
 			route: "safety",
 			safeguardLevel: "crisis",
+		});
+	});
+
+	it("routes a crisis phrase to safety without waiting on a hung moderation call", async () => {
+		stub.moderation = hangs;
+		const user = await asNewUser();
+		const reading = await user.t.action(api.ai.intake.read.firstAnswer, {
+			answer: "I want to end my life",
+		});
+		expect(reading).toMatchObject({
+			route: "safety",
+			safeguardLevel: "crisis",
+		});
+	});
+
+	it("routes a loose distress phrase to safety even when moderation hangs", async () => {
+		stub.moderation = hangs;
+		const user = await asNewUser();
+		const reading = await user.t.action(api.ai.intake.read.firstAnswer, {
+			answer: "some days I want to die",
+		});
+		expect(reading).toMatchObject({
+			route: "safety",
+			safeguardLevel: "elevated",
 		});
 	});
 

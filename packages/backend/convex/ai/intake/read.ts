@@ -69,12 +69,13 @@ async function phraseFloor(words: string): Promise<SafetyVerdict> {
 }
 
 /**
- * The safeguard over a first answer: talk's phrase floor, then the engine over
- * moderation and the classifier. A new user has no history to escalate on. A
- * classifier failure leaves moderation and the phrase floor standing, so the
- * safety route never waits on a model answering.
+ * How long a loose distress phrase waits for moderation to raise it to crisis
+ * before it stands as elevated. Well inside the client's 12s wait.
  */
-export async function checkAnswerSafety(words: string): Promise<SafetyVerdict> {
+const PHRASE_WAIT_MS = 3000;
+
+/** Moderation and the classifier through the safeguard engine. Never rejects. */
+async function engineVerdict(words: string): Promise<SafetyVerdict> {
 	const [moderation, classification] = await Promise.all([
 		moderateInput(words),
 		classify(words).catch((err) => {
@@ -84,15 +85,38 @@ export async function checkAnswerSafety(words: string): Promise<SafetyVerdict> {
 	]);
 	const verdict = evaluateSafeguard(classification, moderation, []);
 	// A content-policy rejection turns a mirror away; here it just means no escalation.
-	const level = verdict.shouldReject ? "none" : verdict.level;
+	return verdict.shouldReject
+		? { level: "none", resources: [] }
+		: { level: verdict.level, resources: verdict.resourcesPresented };
+}
+
+/**
+ * The safeguard over a first answer: talk's phrase floor first, then the engine
+ * over moderation and the classifier. A new user has no history to escalate on.
+ * Support never waits on a provider: a clear crisis phrase answers at once, and
+ * a loose one gives moderation {@link PHRASE_WAIT_MS} to raise it before it
+ * stands. A classifier failure leaves moderation and the phrase floor standing.
+ */
+export async function checkAnswerSafety(words: string): Promise<SafetyVerdict> {
 	const floor = await phraseFloor(words);
-	if (levelAbove(floor.level, level)) {
+	if (floor.level === "crisis") {
 		return floor;
 	}
-	return {
-		level,
-		resources: verdict.shouldReject ? [] : verdict.resourcesPresented,
-	};
+	const engine = engineVerdict(words).then((verdict) =>
+		levelAbove(floor.level, verdict.level) ? floor : verdict
+	);
+	if (floor.level === "none") {
+		return await engine;
+	}
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const waited = new Promise<SafetyVerdict>((resolve) => {
+		timer = setTimeout(() => resolve(floor), PHRASE_WAIT_MS);
+	});
+	try {
+		return await Promise.race([engine, waited]);
+	} finally {
+		clearTimeout(timer);
+	}
 }
 
 async function classify(words: string) {
