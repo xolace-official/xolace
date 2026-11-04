@@ -1,8 +1,9 @@
 // The small visuals on the Plus side of the Xolace+ step (#713, README § I): Talk's voice-note
-// bar and Kindling's named feeling held by its three supports. Steadiness has its own file.
+// bar and Kindling's named feeling branching to its three supports. Steadiness has its own file.
 import { SymbolView } from "expo-symbols";
+import { useState } from "react";
 import { View } from "react-native";
-import Svg, { Circle } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { icon } from "@/features/insights/domains";
@@ -55,77 +56,85 @@ export function TalkBar() {
 }
 
 const SUPPORTS = [
-	{ icon: icon("clock", "schedule"), label: "Sit with it", x: -87, y: 58 },
-	{ icon: icon("waveform", "graphic_eq"), label: "A soft sound", x: 0, y: 108 },
-	{ icon: icon("person.fill", "person"), label: "A Xolacer", x: 87, y: 58 },
+	{ icon: icon("clock", "schedule"), label: "Sit with it" },
+	{ icon: icon("waveform", "graphic_eq"), label: "A soft sound" },
+	{ icon: icon("person.fill", "person"), label: "A Xolacer" },
 ] as const;
 
-const HOLD_HEIGHT = 172;
-const ARC_R = 100;
-const ARC_TOP = -70;
-const SUPPORT_WIDTH = 88;
-const ARC_STROKE = 1.5;
-const ARC_DASH = "4 5";
+// The feeling on top, its supports in a row below, joined by three curves: a branch,
+// read top to bottom as "named, then where it can go".
+const PILL_HEIGHT = 36;
+const BRANCH_DROP = 36;
+const ROW_TOP = PILL_HEIGHT + BRANCH_DROP;
+const BRANCH_STROKE = 1.5;
+const BRANCH_OPACITY = 0.45;
 
-/** "guilt", held by a dashed arc of Kindling's three supports. */
+/** Where a support's column centres, as a fraction of the row: three equal columns. */
+const columnCentre = (i: number) => (2 * i + 1) / (2 * SUPPORTS.length);
+
+/** One curve from under the pill down to a support's icon. */
+const branch = (width: number, i: number) => {
+	const from = width / 2;
+	const to = width * columnCentre(i);
+	const mid = PILL_HEIGHT + BRANCH_DROP / 2;
+	return `M ${from} ${PILL_HEIGHT} C ${from} ${mid}, ${to} ${mid}, ${to} ${ROW_TOP}`;
+};
+
+/** "guilt", and the three places Kindling can take it. */
 export function KindlingHold() {
-	const border = useTokenColor("border");
+	const ember = useTokenColor("ember");
 	const foreground = useTokenColor("foreground");
+	const [width, setWidth] = useState(0);
 	return (
 		<View
-			accessibilityLabel="The feeling it named, guilt, held by three supports: sit with it, a soft sound, a Xolacer."
+			accessibilityLabel="The feeling it named, guilt, and three ways to be with it: sit with it, a soft sound, a Xolacer."
 			accessible
-			className="overflow-hidden"
-			style={{ height: HOLD_HEIGHT }}
+			className="pt-1 pb-0.5"
+			onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
 		>
-			<Svg
-				height={ARC_R * 2}
-				style={{
-					alignSelf: "center",
-					position: "absolute",
-					top: ARC_TOP,
-				}}
-				width={ARC_R * 2}
+			{width > 0 && (
+				<Svg
+					height={ROW_TOP}
+					style={{ left: 0, position: "absolute", top: 0 }}
+					width={width}
+				>
+					{SUPPORTS.map((support, i) => (
+						<Path
+							d={branch(width, i)}
+							fill="none"
+							key={support.label}
+							stroke={ember}
+							strokeLinecap="round"
+							strokeOpacity={BRANCH_OPACITY}
+							strokeWidth={BRANCH_STROKE}
+						/>
+					))}
+				</Svg>
+			)}
+			<View
+				className="items-center justify-center self-center rounded-full border border-ember/50 bg-ember/12 px-5"
+				style={{ height: PILL_HEIGHT }}
 			>
-				<Circle
-					cx={ARC_R}
-					cy={ARC_R}
-					fill="none"
-					r={ARC_R - ARC_STROKE}
-					stroke={border}
-					strokeDasharray={ARC_DASH}
-					strokeWidth={ARC_STROKE}
-				/>
-			</Svg>
-			<View className="absolute top-0 size-20 self-center rounded-full bg-ember/15" />
-			<View className="mt-3 self-center rounded-full border border-ember/50 bg-surface-secondary px-[18px] py-[7px]">
 				<AppText className="font-[Poppins-SemiBold] text-[15px] text-foreground">
 					guilt
 				</AppText>
 			</View>
-			{SUPPORTS.map((support) => (
-				<View
-					className="absolute items-center gap-1"
-					key={support.label}
-					style={{
-						left: "50%",
-						marginLeft: support.x - SUPPORT_WIDTH / 2,
-						top: support.y,
-						width: SUPPORT_WIDTH,
-					}}
-				>
-					<View className="size-11 items-center justify-center rounded-full border border-border bg-surface">
-						<SymbolView
-							name={support.icon}
-							size={SUPPORT_ICON_SIZE}
-							tintColor={foreground}
-						/>
+			<View className="flex-row" style={{ marginTop: BRANCH_DROP }}>
+				{SUPPORTS.map((support) => (
+					<View className="flex-1 items-center gap-1.5" key={support.label}>
+						<View className="size-11 items-center justify-center rounded-full border border-border bg-surface-secondary">
+							<SymbolView
+								name={support.icon}
+								size={SUPPORT_ICON_SIZE}
+								tintColor={foreground}
+							/>
+						</View>
+						<AppText className="text-[12px] text-foreground/80">
+							{support.label}
+						</AppText>
 					</View>
-					<AppText className="text-[11px] text-foreground/80">
-						{support.label}
-					</AppText>
-				</View>
-			))}
+				))}
+			</View>
 		</View>
 	);
 }
