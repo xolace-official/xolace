@@ -244,6 +244,19 @@ export default defineSchema({
 		.index("by_messageId", ["streamMessageId"]),
 
 	// ===========================================================
+	// CLERK USER DELETIONS
+	// ===========================================================
+	//
+	// Accounts purged here whose Clerk user isn't confirmed gone yet. Written in
+	// the transaction that deletes the `users` row, which leaves this as the only
+	// record of who to delete; removed once Clerk confirms (jobs/clerkUserDeletion.ts).
+	//
+	clerk_user_deletions: defineTable({
+		lastAttemptAt: v.number(),
+		tokenIdentifier: v.string(),
+	}).index("by_last_attempt", ["lastAttemptAt"]),
+
+	// ===========================================================
 	// WEEKLY COHORT COUNTS
 	// ===========================================================
 	//

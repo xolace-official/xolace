@@ -52,8 +52,8 @@ export const useDataSettings = () => {
 		if (!deletionRequested.current) {
 			await requestDeletion();
 			deletionRequested.current = true;
-			// Deleting keeps the Clerk user, so coming back later is the same id on a fresh
-			// account, which should be asked everything again.
+			// Coming back before Clerk's copy is gone is this same id, and these flags
+			// shouldn't outlive the account they were asked on.
 			if (userId) {
 				useAppStore.getState().clearAccountFlags(userId);
 			}
