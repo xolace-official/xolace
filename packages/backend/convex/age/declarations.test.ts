@@ -152,3 +152,34 @@ describe("age.declarations", () => {
 		);
 	});
 });
+
+describe("devTools.clearAgeDeclarations", () => {
+	afterEach(() => {
+		process.env.DEV_TOOLS_ENABLED = undefined;
+	});
+
+	it("clears the caller's declarations so the gate asks again, and no one else's", async () => {
+		process.env.DEV_TOOLS_ENABLED = "true";
+		const user = await asNewUser(1);
+		const other = await asNewUser(2, user.root);
+		await declare(user, "1990-05-01");
+		await declare(other, "1990-05-01");
+
+		await user.t.mutation(api.devTools.clearAgeDeclarations, {});
+
+		expect(await status(user)).toBe("unknown");
+		expect(await status(other)).toBe("adult");
+		// Cleared, a different date is a first declaration again.
+		expect(await declare(user, "2010-05-01")).toEqual({ status: "13_17" });
+	});
+
+	it("does nothing without DEV_TOOLS_ENABLED", async () => {
+		const user = await asNewUser();
+		await declare(user, "1990-05-01");
+
+		await expect(
+			user.t.mutation(api.devTools.clearAgeDeclarations, {})
+		).rejects.toThrow("Dev tools are disabled");
+		expect(await status(user)).toBe("adult");
+	});
+});

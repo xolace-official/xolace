@@ -305,6 +305,32 @@ export const clearDeferredAnswers = mutation({
 	returns: v.null(),
 });
 
+/** Well past what one account holds: one row until corrections ship. */
+const MAX_AGE_DECLARATIONS = 100;
+
+/**
+ * Delete the caller's age declarations (#716) so the date-of-birth gate before a
+ * Xolacer chat asks again, and a different date can be tried. The one way a
+ * declaration is ever removed short of account deletion, which is why it is a
+ * dev tool and nothing more.
+ */
+export const clearAgeDeclarations = mutation({
+	args: {},
+	handler: async (ctx) => {
+		assertDevToolsEnabled();
+		const { user } = await requireAuth(ctx);
+		const declarations = await ctx.db
+			.query("age_declarations")
+			.withIndex("by_user_declared", (q) => q.eq("userId", user._id))
+			.take(MAX_AGE_DECLARATIONS);
+		for (const declaration of declarations) {
+			await ctx.db.delete("age_declarations", declaration._id);
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
 /** Two badges, so a replay shows the Next button and the dots. */
 const UNLOCK_REPLAY: readonly AchievementId[] = ["joined", "first-session"];
 
