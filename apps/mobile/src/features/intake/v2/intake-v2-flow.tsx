@@ -1,6 +1,6 @@
 // Intake v2 ("Talk to Flux", #704) on screen: the reducer's step, drawn. The typed (#707) or
-// spoken (#709) answer is read by Flux (#708): chips, one follow-up, or crisis support. `plus`
-// exists in the machine but nothing reaches it yet.
+// spoken (#709) answer is read by Flux (#708): chips, one follow-up, or crisis support. Then
+// the name, and Xolace+ once (#713).
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useReducer, useRef } from "react";
 import {
@@ -24,11 +24,13 @@ import {
 	voiceAnswer,
 } from "@/features/intake/v2/machine";
 import { NameStep } from "@/features/intake/v2/name-step";
+import { PlusStep } from "@/features/intake/v2/plus/plus-step";
 import { IntakeV2Progress } from "@/features/intake/v2/progress";
 import { SafetyStep } from "@/features/intake/v2/safety-step";
 import { TypeStep } from "@/features/intake/v2/type-step";
 import { useIntakeV2Complete } from "@/features/intake/v2/use-intake-v2-complete";
 import { useReadFirstAnswer } from "@/features/intake/v2/use-read-first-answer";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 
 export function IntakeV2Flow({ initialName }: { initialName: string }) {
 	const [state, dispatch] = useReducer(
@@ -39,6 +41,7 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 	const posthog = usePostHog();
 	const complete = useIntakeV2Complete();
 	const readAnswer = useReadFirstAnswer();
+	const { isPlus } = usePlusEntitlement();
 
 	// One read per arrival at `interpret`; a result after unmount is dropped.
 	useEffect(() => {
@@ -95,6 +98,11 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 		// `state` is read at the moment it reaches `done`; nothing after that changes it.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [state.step]);
+
+	// Xolace+ is its own screen, after the three stops the bar counts. `done` stays on the
+	// screen the save left from, busy, until it lands.
+	const offering =
+		state.step === "plus" || (state.step === "done" && state.plusShown);
 
 	const body = () => {
 		switch (state.step) {
@@ -189,26 +197,35 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 						readAs={state.readAs}
 					/>
 				);
+			case "plus":
+				return (
+					<PlusStep
+						busy={false}
+						onExit={(outcome) => dispatch({ outcome, type: "PLUS_EXIT" })}
+					/>
+				);
 			case "name":
 			case "done":
-				return (
+				return offering ? (
+					<PlusStep busy onExit={() => undefined} />
+				) : (
 					<NameStep
 						busy={state.step === "done"}
 						name={state.name}
 						onChange={(name) => dispatch({ name, type: "NAME_CHANGE" })}
-						onKeep={() => dispatch({ type: "KEEP_NAME" })}
+						// An unresolved entitlement reads as free; `plus` steps aside once it resolves.
+						onKeep={() => dispatch({ entitled: isPlus, type: "KEEP_NAME" })}
 						skipped={state.mode === "skipped"}
 					/>
 				);
 			default:
-				// The stubbed step: `plus`.
 				return null;
 		}
 	};
 
 	return (
 		<IntakeScreen>
-			<IntakeV2Progress step={state.step} />
+			{!offering && <IntakeV2Progress step={state.step} />}
 			{body()}
 		</IntakeScreen>
 	);

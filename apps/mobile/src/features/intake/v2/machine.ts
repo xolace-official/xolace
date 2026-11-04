@@ -38,6 +38,12 @@ export type HeardSource = "model" | "pick_list";
 /** The mic can't be used: no permission, or no recognizer. It stays off for the intake. */
 export type MicFailure = "denied" | "unavailable";
 
+/** How the Xolace+ step (#713) ended; `entitled` is skipped, never shown. */
+export type PlusOutcome = "purchased" | "dismissed" | "entitled";
+
+/** The side of the Xolace+ step: the week on free, or with Plus. */
+export type PlusSide = "free" | "plus";
+
 /** Why talking fell back to typing. */
 export type ListenFailure = MicFailure | "nothing_heard";
 
@@ -56,6 +62,10 @@ export type IntakeV2State = {
 	listenFailed: ListenFailure | null;
 	mode: AnswerMode | null;
 	name: string;
+	/** How the Xolace+ step ended; null on the safety path or before it. */
+	plusOutcome: PlusOutcome | null;
+	/** Xolace+ was on screen: shown once, and a failed save goes back to it. */
+	plusShown: boolean;
 	/** How `heard` was filled; null until the answer has been read. */
 	read: HeardSource | null;
 	/** `heard` as the model read it, before any tap: what the chip counts compare against. */
@@ -89,7 +99,9 @@ export type IntakeV2Action =
 	| { type: "SAY_AGAIN" }
 	/** An edit or a dice roll. */
 	| { type: "NAME_CHANGE"; name: string }
-	| { type: "KEEP_NAME" }
+	/** `entitled`: Xolace+ is already theirs, so `plus` is skipped. */
+	| { type: "KEEP_NAME"; entitled: boolean }
+	| { type: "PLUS_EXIT"; outcome: PlusOutcome }
 	| { type: "COMPLETE_FAILED" };
 
 export const initialIntakeV2State = (name: string): IntakeV2State => ({
@@ -102,6 +114,8 @@ export const initialIntakeV2State = (name: string): IntakeV2State => ({
 	listenFailed: null,
 	mode: null,
 	name,
+	plusOutcome: null,
+	plusShown: false,
 	read: null,
 	readAs: NOTHING_HEARD,
 	resources: [],
@@ -232,7 +246,7 @@ export function intakeV2Reducer(
 		}
 		case "FOLLOW_UP_SKIP":
 			return state.step === "followUp" ? { ...state, step: "heard" } : state;
-		// On to the name; `safetyRouted` keeps the Xolace+ step, once it exists, out of the way.
+		// On to the name; `safetyRouted` keeps the Xolace+ step out of the way.
 		case "SAFETY_CONTINUE":
 			return state.step === "safety" ? { ...state, step: "name" } : state;
 		case "TOGGLE_CHIP": {
@@ -258,18 +272,37 @@ export function intakeV2Reducer(
 			return state.step === "name"
 				? { ...state, name: action.name.slice(0, NAME_MAX_CHARS) }
 				: state;
-		// No "Hey, name" beat after it (#707). The Xolace+ screen (`plus`) goes in
-		// here once it exists, skipped when `safetyRouted`.
+		// No "Hey, name" beat after it (#707). Xolace+ once (#713): never on the safety path,
+		// never to someone who has it.
 		case "KEEP_NAME": {
 			const name = state.name.trim();
 			if (state.step !== "name" || name.length === 0) {
 				return state;
 			}
-			return { ...state, name, step: "done" };
+			// The safeguard veto first: nothing on the safety path is about Xolace+ at all.
+			if (state.safetyRouted || state.plusShown) {
+				return { ...state, name, step: "done" };
+			}
+			return action.entitled
+				? { ...state, name, plusOutcome: "entitled", step: "done" }
+				: { ...state, name, plusShown: true, step: "plus" };
 		}
-		// Intake has no back edge, so a failed write must leave a live button.
+		// The first way out stays the outcome: Continue after a failed save doesn't undo a
+		// purchase.
+		case "PLUS_EXIT":
+			return state.step === "plus"
+				? {
+						...state,
+						plusOutcome: state.plusOutcome ?? action.outcome,
+						step: "done",
+					}
+				: state;
+		// Intake has no back edge, so a failed write must leave a live button: back to the
+		// screen the write left from.
 		case "COMPLETE_FAILED":
-			return state.step === "done" ? { ...state, step: "name" } : state;
+			return state.step === "done"
+				? { ...state, step: state.plusShown ? "plus" : "name" }
+				: state;
 		default:
 			return state;
 	}

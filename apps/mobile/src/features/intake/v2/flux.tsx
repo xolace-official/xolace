@@ -14,6 +14,7 @@ import Animated, {
 	withSequence,
 	withTiming,
 } from "react-native-reanimated";
+import type { PaletteName } from "@/features/xolace-face/face-palette";
 import { MOOD_POSES, type Mood } from "@/features/xolace-face/pose";
 import { useFace } from "@/features/xolace-face/use-face";
 import { XolaceFace } from "@/features/xolace-face/xolace-face";
@@ -38,9 +39,9 @@ const DOTS = [
 /** How long each character of a line takes to say; `ask` types its question at this pace. */
 export const SAY_MS_PER_CHAR = 38;
 
-type Props = { mood: Mood; size: number };
+type Props = { mood: Mood; palette?: PaletteName; size: number };
 
-export function Flux({ mood, size }: Props) {
+export function Flux({ mood, palette, size }: Props) {
 	const reduced = useEffectiveReducedMotion();
 	const face = useFace(MOOD_POSES[mood]);
 
@@ -72,7 +73,7 @@ export function Flux({ mood, size }: Props) {
 						reduced={reduced}
 					/>
 				))}
-			<XolaceFace face={face} size={size} />
+			<XolaceFace face={face} palette={palette} size={size} />
 			{mood === "thinking" &&
 				DOTS.map((dot, i) => (
 					<ThoughtDot

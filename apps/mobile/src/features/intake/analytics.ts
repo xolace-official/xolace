@@ -7,7 +7,15 @@ import type { PostHog } from "posthog-react-native";
 import { SERIES_BRANCH_VALUE } from "@/features/intake/questions";
 import type { IntakeArm } from "@/features/intake/v2/arm";
 import type { FollowUp, Reading } from "@/features/intake/v2/heard";
-import type { AnswerMode, HeardSource } from "@/features/intake/v2/machine";
+import type {
+	AnswerMode,
+	HeardSource,
+	IntakeV2State,
+	PlusOutcome,
+	PlusSide,
+} from "@/features/intake/v2/machine";
+import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
+import type { PaywallSurface } from "@/features/purchases/use-paywall";
 import type { IntakeAnswers } from "@/store/intake-slice";
 
 type StepType = "founder" | "question" | "interstitial" | "paywall";
@@ -205,7 +213,7 @@ export type IntakeOutcome =
 	| "purchased"
 	| "dismissed_paywall"
 	| "skipped_paywall"
-	/** v2 before its Xolace+ screen exists: nothing was offered. */
+	/** v2 on the safety path: nothing was offered. */
 	| "no_offer";
 
 export function trackIntakeCompleted(
@@ -323,4 +331,60 @@ export function trackDeferredAnswered(
 		question,
 		surface,
 	});
+}
+
+const OUTCOME_OF_PLUS = {
+	dismissed: "dismissed_paywall",
+	entitled: "skipped_paywall",
+	purchased: "purchased",
+} as const satisfies Record<PlusOutcome, IntakeOutcome>;
+
+/** How a v2 intake ended, for `intake_completed`: nothing offered when there was no Xolace+
+ * step (the safety path). */
+export const intakeOutcomeOf = (state: IntakeV2State): IntakeOutcome =>
+	state.plusOutcome === null ? "no_offer" : OUTCOME_OF_PLUS[state.plusOutcome];
+
+/** v2's Xolace+ step, "Same week, two ways" (#713), as the paywall surfaces know it. */
+export const INTAKE_PLUS_SURFACE =
+	"intake_same_week" as const satisfies PaywallSurface;
+
+const plusProps = (props: Record<string, unknown>) => ({
+	...props,
+	...prune({ intake_arm: arm }),
+	surface: INTAKE_PLUS_SURFACE,
+});
+
+/** v2's Xolace+ step on screen, once; the paywall's own `paywall_opened` rides along, so the
+ * surface counts beside every other paywall. Session 0, as intake always is. */
+export function trackPlusShown(posthog: PostHog) {
+	posthog.capture("intake_plus_shown", plusProps({}));
+	posthog.capture("paywall_opened", {
+		session_count: 0,
+		surface: INTAKE_PLUS_SURFACE,
+	});
+}
+
+export function trackPlusSwitched(posthog: PostHog, side: PlusSide) {
+	posthog.capture("intake_plus_switched", plusProps({ side }));
+}
+
+export function trackPlusPlanPicked(posthog: PostHog, plan: PlanId) {
+	posthog.capture("intake_plus_plan_picked", plusProps({ plan }));
+}
+
+/** A purchase from the step; `intake_plus_trial_started` when it began the free week. */
+export function trackPlusPurchased(
+	posthog: PostHog,
+	plan: PlanId,
+	trial: boolean
+) {
+	posthog.capture(
+		trial ? "intake_plus_trial_started" : "intake_plus_purchased",
+		plusProps({ plan })
+	);
+}
+
+/** "Continue free", from whichever side it was tapped. */
+export function trackPlusContinuedFree(posthog: PostHog, side: PlusSide) {
+	posthog.capture("intake_plus_continued_free", plusProps({ side }));
 }

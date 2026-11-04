@@ -26,6 +26,8 @@ export const PAYWALL_SURFACE_FEATURE: Record<
 	insight_teaser: "insights",
 	// Intake sells all four offers on its own card deck first.
 	intake: null,
+	// Sells in place, never through this screen; here only to keep the record whole.
+	intake_same_week: null,
 	// Kindling binds to curated audio/music twigs (docs/paths-v1.md §0).
 	kindling: "audio",
 	library_audio: "audio",
