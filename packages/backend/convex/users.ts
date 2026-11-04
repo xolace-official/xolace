@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
+import { awardAchievement } from "./achievements/award";
 import { rankInsert } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
 import { generateDisplayName } from "./lib/displayName";
@@ -119,6 +120,8 @@ export const getOrCreate = mutation({
 
 		// Create emotional profile
 		const profileId = await ctx.db.insert("emotional_profiles", {
+			// A new profile has nothing to backfill, so live awards start now.
+			achievementsBackfilledAt: now,
 			createdAt: now,
 			currentStreak: 0,
 			dominantEmotionTags: [],
@@ -127,6 +130,7 @@ export const getOrCreate = mutation({
 			updatedAt: now,
 		});
 		await rankInsert(ctx, profileId);
+		await awardAchievement(ctx, profileId, "joined", now);
 
 		// Create preferences with defaults
 		await ctx.db.insert("preferences", {

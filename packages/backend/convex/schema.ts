@@ -178,6 +178,19 @@ export default defineSchema({
 		.index("by_key", ["key"])
 		.index("by_tier_order", ["tier", "order"]),
 
+	// One image per badge artKey (#687, #690), filled per deployment by
+	// scripts/badges/upload.ts through convex/achievements/art.ts, since storage
+	// ids differ per deployment. Several achievements can share one artKey.
+	badge_art: defineTable({
+		artKey: v.string(),
+		// SHA-256 of the uploaded WebP: a re-run skips an image that hasn't changed.
+		sha256: v.string(),
+		storageId: v.id("_storage"),
+		// Base64 ThumbHash (keeps the cut-out's transparency), the placeholder while it loads.
+		thumbhash: v.string(),
+		updatedAt: v.number(),
+	}).index("by_artKey", ["artKey"]),
+
 	// ===========================================================
 	// CHAT MODERATION VERDICTS (#344)
 	// ===========================================================
@@ -619,6 +632,16 @@ export default defineSchema({
 	// Decoupled from auth so that a breach of this table
 	// reveals emotional patterns but NO real-world identities.
 	emotional_profiles: defineTable({
+		// The badge push's missed-beat check (#700), so an award schedules at
+		// most one per profile; once it has run, the next award schedules anew.
+		// Written only by convex/achievements/push.ts.
+		achievementPushCheck: v.optional(v.id("_scheduled_functions")),
+		// --- Achievements (#685, #686) ---
+		// When this profile's achievements were last backfilled. Live awards
+		// (convex/achievements/award.ts) do nothing until it is set, so the
+		// one-off backfill can't race them. New profiles are stamped at creation:
+		// they have nothing to backfill. Survives a data wipe.
+		achievementsBackfilledAt: v.optional(v.number()),
 		// Rolling average session duration in seconds.
 		// Helps AI calibrate response length over time.
 		averageSessionDuration: v.optional(v.number()),
@@ -647,6 +670,11 @@ export default defineSchema({
 		// Set to true when a data wipe is in progress.
 		// Prevents duplicate wipe jobs from being scheduled.
 		dataWipeInProgress: v.optional(v.boolean()),
+		// Days showed up (glossary): local days with at least one action that
+		// counts toward the streak, gaps allowed. Never resets; survives a data
+		// wipe. Raised by recordActivity (#694); the Showing up ladder reads it.
+		// Optional — rows predating it read as `?? 0`.
+		daysShowedUp: v.optional(v.number()),
 		dictationDailyResetAt: v.optional(v.number()),
 
 		// --- Plus Dictation Usage (#558) ---
@@ -691,6 +719,9 @@ export default defineSchema({
 		// Used for streak calculation, nudge timing,
 		// and re-engagement logic.
 		lastSessionAt: v.optional(v.number()),
+		// The local day ("YYYY-MM-DD") daysShowedUp last counted. Survives a data
+		// wipe with it, so a day the wipe emptied of activity can't count again.
+		lastShowedUpDay: v.optional(v.string()),
 
 		// Longest streak ever reached. A record — it never decays, only grows
 		// via Math.max on session completion. Optional for rows created before
@@ -715,6 +746,13 @@ export default defineSchema({
 		// rankInsert/rankReplace/rankDelete helper, or the aggregate drifts and
 		// every user's percentile goes wrong with no error surfaced.
 		sessionCount: v.number(),
+
+		// Sparks (#680): credited by every achievement award in its own
+		// transaction. `sparksEarned` is lifetime and only grows; `sparkBalance`
+		// is what's left to spend. Optional — rows predating sparks read as
+		// `?? 0`. Both survive a data wipe: they record showing up, not what was said.
+		sparkBalance: v.optional(v.number()),
+		sparksEarned: v.optional(v.number()),
 
 		// Streak freezes on hand (#434): +1 per 7 consecutive qualifying days,
 		// capped at FREEZE_CAP. Spent lazily by settleStreak (convex/streaks/state.ts).
@@ -1563,10 +1601,14 @@ export default defineSchema({
 			// Reach variant, and always sends in one voice.
 			v.literal("kindling_ready"),
 			// Streak hit 7/30/100/every 100 (#439). Template copy, own rate bucket.
+			// No longer sent: badge pushes replaced it (#700). Old rows keep it.
 			v.literal("streak_milestone"),
 			// A domain unlocked and the beat went unseen (#523). Generic text,
 			// never the domain; own weekly bucket.
-			v.literal("domain_unlock")
+			v.literal("domain_unlock"),
+			// Badges earned and the unlock moment went unseen (#700). Names the
+			// badge, never sparks; own daily bucket.
+			v.literal("achievement")
 		),
 	})
 		// Check: have we already nudged this user recently?
@@ -1703,6 +1745,9 @@ export default defineSchema({
 		// --- Notifications ---
 		// All default false. Permission requested after 3rd session.
 		notifications: v.object({
+			// Badge pushes (#700). Optional; absent follows `milestone` — see
+			// `achievementPushAllowed` (convex/achievements/push.ts).
+			achievement: v.optional(v.boolean()),
 			// Xolacer chat: requests, accepts, declines, messages. Optional because
 			// every row written before it existed has to keep working, and absent
 			// means enabled — see `chatNotificationsAllowed`. One toggle for the
@@ -1724,8 +1769,9 @@ export default defineSchema({
 			reach: v.optional(
 				v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))
 			),
-			// Streak milestones (#439). Optional; absent follows `milestone` — see
-			// `streakMilestoneAllowed` (convex/streaks/milestones.ts).
+			// Streak milestones (#439). DEPRECATED(remove-after: data): no longer
+			// read; badge pushes replaced the streak-milestone push (#700), and
+			// `achievement` governs those. See DEPRECATIONS.md.
 			streakMilestone: v.optional(v.boolean()),
 			// IANA timezone captured client-side so the server can gate by local hour.
 			timezone: v.optional(v.string()),
@@ -2540,6 +2586,18 @@ export default defineSchema({
 		// After-talk review queue (#606): flagged talks, newest first.
 		.index("by_talkFlaggedAt", ["talkFlaggedAt"]),
 
+	// What a profile spent sparks on (#698), one row per purchase. Written only
+	// through convex/achievements/sparks.ts, in the transaction that lowers
+	// `sparkBalance`. Survives a data wipe like the counters; removed by
+	// account deletion.
+	spark_spends: defineTable({
+		emotionalProfileId: v.id("emotional_profiles"),
+		item: v.literal("streak_freeze"),
+		// The price paid, so a later price change never rewrites history.
+		sparks: v.number(),
+		spentAt: v.number(),
+	}).index("by_emotionalProfileId", ["emotionalProfileId"]),
+
 	// Steadiness insights (#525, #526, ADR 0019): written by the Reflection
 	// Agent's consolidation pass, only after the quality gate passes. Each run
 	// replaces the last run's set. Retention drops a row once its oldest cited
@@ -2661,6 +2719,45 @@ export default defineSchema({
 	})
 		.index("by_slug", ["slug"])
 		.index("by_thumbKey", ["thumbKey"]), // discardUpload: is this blob still referenced?
+
+	// One row per achievement a profile has earned (#685). Locked achievements
+	// have no row: the code catalog (convex/achievements/catalog.ts) supplies
+	// them. Inserted only through convex/achievements/award.ts. Never taken
+	// back once earned; survives a data wipe, removed by account deletion.
+	user_achievements: defineTable({
+		// Permanent catalog id (`joined`, `streak-30`, …), never renamed.
+		achievementId: v.string(),
+		earnedAt: v.number(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		// When the user pinned it to their profile row (#699); unset when not pinned.
+		// Set only through convex/achievements/pins.ts.
+		pinnedAt: v.optional(v.number()),
+		// When the missed-beat check sent this unlock's push, or found it over the
+		// daily cap (#700). Backfill rows never push.
+		pushedAt: v.optional(v.number()),
+		// When the in-app unlock moment showed it.
+		seenAt: v.optional(v.number()),
+		source: v.union(v.literal("live"), v.literal("backfill")),
+		// Sparks credited at award time, so a later catalog change never
+		// rewrites what was earned.
+		sparks: v.number(),
+	})
+		.index("by_emotionalProfileId_and_achievementId", [
+			"emotionalProfileId",
+			"achievementId",
+		])
+		.index("by_emotionalProfileId_and_earnedAt", [
+			"emotionalProfileId",
+			"earnedAt",
+		])
+		// The unlock moment's read (#693): live rows not yet shown; and the
+		// missed-beat check's (#700): of those, the ones not yet pushed.
+		.index("by_emotionalProfileId_and_source_and_seenAt_and_pushedAt", [
+			"emotionalProfileId",
+			"source",
+			"seenAt",
+			"pushedAt",
+		]),
 	// ===========================================================
 	// 1. USERS
 	// ===========================================================

@@ -2,6 +2,7 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Stack } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
+import { useBadgeUnlock } from "@/features/achievements/unlock/use-badge-unlock";
 import { NowPlayingHost } from "@/features/browse/now-playing/now-playing-host";
 import { UnreadIconBadge } from "@/features/xolacer-chat/components/unread-icon-badge";
 import {
@@ -48,6 +49,17 @@ const PLAYER_OPTIONS = {
 	presentation: "fullScreenModal",
 } as const;
 
+/** A transparent, untitled native header that only carries the screen's Stack.Toolbar
+ * buttons, so they get the system's glass. */
+const TOOLBAR_HEADER = {
+	// Android would add its own up arrow beside the close.
+	headerBackVisible: false,
+	headerShadowVisible: false,
+	headerShown: true,
+	headerTransparent: true,
+	title: "",
+} as const;
+
 const CHAT_OPTIONS = {
 	headerBackButtonDisplayMode: "minimal",
 	headerShadowVisible: false,
@@ -60,6 +72,9 @@ export default function ProtectedLayout() {
 	// launch tap survives in the native cache, so `(intake)`'s layout discards it
 	// explicitly to keep "intake wins, a pending deep link is not preserved" (T3, #234).
 	useNotifications();
+	// Opens the backfill summary, then the badge unlock moment, over whatever is
+	// up, when it may interrupt (#693, #701).
+	useBadgeUnlock();
 	const reducedMotion = useEffectiveReducedMotion();
 	const background = useThemeColor("background");
 	// Small native sheets sized to their rows. iOS 26 paints its own glass behind
@@ -118,6 +133,24 @@ export default function ProtectedLayout() {
 					<Stack.Screen name="streak-held" options={PLAYER_OPTIONS} />
 					{/* The close button (or Android back) is the no-guilt dismiss. */}
 					<Stack.Screen name="follow-up" options={PLAYER_OPTIONS} />
+					{/* Same dismiss as follow-up; reduced motion fades it in instead (#693). */}
+					<Stack.Screen
+						name="badge-unlock"
+						options={{
+							...PLAYER_OPTIONS,
+							...TOOLBAR_HEADER,
+							animation: reducedMotion ? "fade" : "slide_from_bottom",
+						}}
+					/>
+					{/* The backfill's one-time summary, dismissed the same way (#701). */}
+					<Stack.Screen
+						name="badge-backfill"
+						options={{
+							...PLAYER_OPTIONS,
+							...TOOLBAR_HEADER,
+							animation: reducedMotion ? "fade" : "slide_from_bottom",
+						}}
+					/>
 					{/* Hold-to-continue is the only way out: no swipe-dismiss here, Android
 					    back swallowed in the route. */}
 					<Stack.Screen

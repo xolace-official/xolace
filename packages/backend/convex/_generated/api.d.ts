@@ -8,6 +8,17 @@
  * @module
  */
 
+import type * as achievements_art from "../achievements/art.js";
+import type * as achievements_award from "../achievements/award.js";
+import type * as achievements_backfill from "../achievements/backfill.js";
+import type * as achievements_catalog from "../achievements/catalog.js";
+import type * as achievements_display from "../achievements/display.js";
+import type * as achievements_firstSight from "../achievements/firstSight.js";
+import type * as achievements_ladders from "../achievements/ladders.js";
+import type * as achievements_pins from "../achievements/pins.js";
+import type * as achievements_push from "../achievements/push.js";
+import type * as achievements_sparks from "../achievements/sparks.js";
+import type * as achievements_unlock from "../achievements/unlock.js";
 import type * as admin_audio from "../admin/audio.js";
 import type * as admin_edits from "../admin/edits.js";
 import type * as admin_hubs from "../admin/hubs.js";
@@ -88,6 +99,7 @@ import type * as ai_tts from "../ai/tts.js";
 import type * as ai_ventAcknowledge from "../ai/ventAcknowledge.js";
 import type * as ai_xolacers_embed from "../ai/xolacers/embed.js";
 import type * as ai_xolacers_suggest from "../ai/xolacers/suggest.js";
+import type * as audio_listens from "../audio/listens.js";
 import type * as avatars from "../avatars.js";
 import type * as browse from "../browse.js";
 import type * as chatNotifications from "../chatNotifications.js";
@@ -158,6 +170,7 @@ import type * as lib_conversationErasure from "../lib/conversationErasure.js";
 import type * as lib_conversationGating from "../lib/conversationGating.js";
 import type * as lib_displayName from "../lib/displayName.js";
 import type * as lib_followUpCadence from "../lib/followUpCadence.js";
+import type * as lib_missedBeat from "../lib/missedBeat.js";
 import type * as lib_notificationPrefs from "../lib/notificationPrefs.js";
 import type * as lib_notificationSounds from "../lib/notificationSounds.js";
 import type * as lib_plusOfferObservations from "../lib/plusOfferObservations.js";
@@ -255,6 +268,17 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "achievements/art": typeof achievements_art;
+  "achievements/award": typeof achievements_award;
+  "achievements/backfill": typeof achievements_backfill;
+  "achievements/catalog": typeof achievements_catalog;
+  "achievements/display": typeof achievements_display;
+  "achievements/firstSight": typeof achievements_firstSight;
+  "achievements/ladders": typeof achievements_ladders;
+  "achievements/pins": typeof achievements_pins;
+  "achievements/push": typeof achievements_push;
+  "achievements/sparks": typeof achievements_sparks;
+  "achievements/unlock": typeof achievements_unlock;
   "admin/audio": typeof admin_audio;
   "admin/edits": typeof admin_edits;
   "admin/hubs": typeof admin_hubs;
@@ -335,6 +359,7 @@ declare const fullApi: ApiFromModules<{
   "ai/ventAcknowledge": typeof ai_ventAcknowledge;
   "ai/xolacers/embed": typeof ai_xolacers_embed;
   "ai/xolacers/suggest": typeof ai_xolacers_suggest;
+  "audio/listens": typeof audio_listens;
   avatars: typeof avatars;
   browse: typeof browse;
   chatNotifications: typeof chatNotifications;
@@ -405,6 +430,7 @@ declare const fullApi: ApiFromModules<{
   "lib/conversationGating": typeof lib_conversationGating;
   "lib/displayName": typeof lib_displayName;
   "lib/followUpCadence": typeof lib_followUpCadence;
+  "lib/missedBeat": typeof lib_missedBeat;
   "lib/notificationPrefs": typeof lib_notificationPrefs;
   "lib/notificationSounds": typeof lib_notificationSounds;
   "lib/plusOfferObservations": typeof lib_plusOfferObservations;

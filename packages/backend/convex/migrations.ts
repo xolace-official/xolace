@@ -8,6 +8,7 @@ import { Migrations } from "@convex-dev/migrations";
 // Or from the admin's Search index page, which also shows what's missing.
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
+import { backfillProfile } from "./achievements/backfill";
 import { reflectionRank } from "./lib/aggregates";
 import { FREEZE_CAP } from "./lib/streakFreezes";
 import { searchTextOf, trackSearchTextOf } from "./library/searchText";
@@ -228,6 +229,22 @@ export const backfillTrackIndex = migrations.define({
 		}
 	},
 	table: "audio_tracks",
+});
+
+// Achievements backfill (#686, #701): each existing profile quietly gets what
+// it already earned, dated where a source has a date, sparks credited, and
+// `daysShowedUp` seeded; then `achievementsBackfilledAt` turns its live awards
+// on. One profile per batch: each reads every session it has. Idempotent —
+// stamped profiles are skipped. Run after the deploy, then the Stream pass:
+//   bunx convex run migrations:run '{"fn": "migrations:backfillAchievements"}'
+//   bunx convex run achievements/backfill:backfillXolacerChats
+// Add to runAll only once it has completed on prod.
+export const backfillAchievements = migrations.define({
+	batchSize: 1,
+	migrateOne: async (ctx, doc) => {
+		await backfillProfile(ctx, doc);
+	},
+	table: "emotional_profiles",
 });
 
 export const runAll = migrations.runner([

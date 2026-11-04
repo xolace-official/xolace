@@ -6,6 +6,7 @@ import {
 	type QueryCtx,
 	query,
 } from "../_generated/server";
+import { awardReadRungs } from "../achievements/ladders";
 import { requireAuth } from "../lib/auth";
 import { recordActivity } from "../streaks/activityLog";
 import { listenMin } from "./audio";
@@ -227,6 +228,10 @@ export const record = mutation({
 		}
 		if (Object.keys(patch).length > 0) {
 			await ctx.db.patch("library_reads", row._id, patch);
+		}
+		// Counted once the finish is written, so this piece is in the count.
+		if (patch.finishedAt !== undefined) {
+			await awardReadRungs(ctx, profile._id, patch.finishedAt);
 		}
 		return null;
 	},

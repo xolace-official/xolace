@@ -54,6 +54,8 @@
   },
   "overrides": {
     "@next/env": "npm:@varlock/nextjs-integration@1.2.2",
+    "follow-redirects": "^1.16.2",
+    "node-forge": "^1.4.1",
     "systeminformation": "^5.33.16"
   },
   "devDependencies": {

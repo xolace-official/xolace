@@ -153,6 +153,7 @@ export const update = mutation({
 				// Accepted so the object a client read back is still a legal argument.
 				// Without it, any caller that spreads the stored preferences instead of
 				// building a literal would fail argument validation outright.
+				achievement: v.optional(v.boolean()),
 				chat: v.optional(v.boolean()),
 				enabled: v.boolean(),
 				gentleReturn: v.boolean(),
@@ -164,6 +165,8 @@ export const update = mutation({
 				reach: v.optional(
 					v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))
 				),
+				// DEPRECATED(remove-after: data): value ignored since badge pushes
+				// replaced the streak-milestone push (#700); see DEPRECATIONS.md.
 				streakMilestone: v.optional(v.boolean()),
 				timezone: v.optional(v.string()),
 			})

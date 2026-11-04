@@ -886,5 +886,33 @@
     },
     "reflectPrompt": "What are you carrying that you haven't said out loud yet?",
     "bodyPath": "bodies/stories/what-they-dont-put-on-the-transcript.md"
+  },
+  {
+    "slug": "im-still-showing-up",
+    "coverPath": "stories/im-still-showing-up.png",
+    "kind": "story",
+    "title": "I'm still showing up",
+    "dek": "She's the one who makes everyone laugh. Behind that smile: a hard home, missing her mum, and showing up anyway.",
+    "primarySubject": "stress",
+    "sources": [
+      {
+        "source": "xolace",
+        "pageTitle": "I'm still showing up",
+        "author": "Rosemary Boahemaa Dwamena"
+      }
+    ],
+    "reuse": "original",
+    "active": true,
+    "storyDescriptor": "Rosemary Boahemaa Dwamena, Xolace Ambassador",
+    "consentRecordedAt": 1793664000000,
+    "lastReviewedAt": 1793664000000,
+    "facets": {
+      "audience": ["student"],
+      "emotion": ["exhaustion", "self-doubt", "grief", "hope"],
+      "lifeArea": ["family", "studies", "self-worth", "loss", "burnout"]
+    },
+    "reflectPrompt": "What does showing up look like for you on a hard day?",
+    "bodyPath": "bodies/stories/im-still-showing-up.md",
+    "contentNote": "Mentions being physically hurt at home and the loss of her mother. Nothing graphic."
   }
 ]

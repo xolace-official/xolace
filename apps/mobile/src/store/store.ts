@@ -39,6 +39,10 @@ type OnboardingSlice = {
 	 * persisted version. */
 	reflectTourActive: boolean;
 	setReflectTourActive: (v: boolean) => void;
+	/** The streak calendar reveal is due or playing on home. Transient; the badge unlock
+	 * moment waits on it, so the two never stack. */
+	streakRevealBusy: boolean;
+	setStreakRevealBusy: (v: boolean) => void;
 };
 
 type PendingEventPrompt = {
@@ -284,6 +288,7 @@ export const useAppStore = create<AppState>()(
 				setReturnWelcomeSeenAt: (n) => set({ returnWelcomeSeenAt: n }),
 				setShakeHintSeen: (v) => set({ shakeHintSeen: v }),
 				setStarterSuggestionsSeen: (v) => set({ starterSuggestionsSeen: v }),
+				setStreakRevealBusy: (v) => set({ streakRevealBusy: v }),
 				setSupportAudioIntroSeen: (v) => set({ supportAudioIntroSeen: v }),
 				setTheme: (t) => set({ theme: t }),
 				setToneTipSeen: (v) => set({ toneTipSeen: v }),
@@ -291,6 +296,7 @@ export const useAppStore = create<AppState>()(
 				setXolacerPrimerSeen: (v) => set({ xolacerPrimerSeen: v }),
 				shakeHintSeen: false,
 				starterSuggestionsSeen: false,
+				streakRevealBusy: false,
 				supportAudioIntroSeen: false,
 				theme: "system",
 

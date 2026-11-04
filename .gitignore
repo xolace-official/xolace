@@ -90,6 +90,7 @@ apps/web/out
 packages/backend/scripts/kindling/dev/media/
 packages/backend/scripts/kindling/prod/media/
 packages/backend/scripts/kindling/tmp/
+packages/backend/scripts/badges/media/
 packages/backend/scripts/library/dev/media/
 packages/backend/scripts/library/prod/media/
 packages/backend/scripts/library/dev/research/

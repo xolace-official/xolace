@@ -398,6 +398,7 @@ export const preferencesDocValidator = v.object({
 	mirrorTone: mirrorToneValidator,
 	motionPreference: v.optional(motionPreferenceValidator),
 	notifications: v.object({
+		achievement: v.optional(v.boolean()),
 		chat: v.optional(v.boolean()),
 		enabled: v.boolean(),
 		gentleReturn: v.boolean(),
@@ -448,5 +449,6 @@ export const activityActionTypeValidator = v.union(
 	v.literal("library"),
 	v.literal("sit_with_this"),
 	v.literal("daily_mood"),
-	v.literal("quotes")
+	v.literal("quotes"),
+	v.literal("listen")
 );

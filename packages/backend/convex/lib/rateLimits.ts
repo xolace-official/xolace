@@ -38,6 +38,11 @@ export const BRIDGE_DRAFT_LIMITS_PLUS = {
 } as const;
 
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
+	// achievement (#700) — at most one badge push in any 24h (a one-token
+	// bucket, so no window boundary lets two through), its own bucket so a
+	// same-day nudge can't swallow it. The check batches what's unseen into it.
+	achievement: { capacity: 1, kind: "token bucket", period: DAY, rate: 1 },
+
 	// AI mirror generation — main cost control
 	aiMirrorRequest: { capacity: 2, kind: "token bucket", period: HOUR, rate: 8 },
 

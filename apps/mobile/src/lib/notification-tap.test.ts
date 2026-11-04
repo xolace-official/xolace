@@ -209,6 +209,15 @@ describe("notificationTapPlan", () => {
 		});
 	});
 
+	it("routes achievement to the achievements screen", () => {
+		expect(
+			notificationTapPlan({ type: "achievement" }, null, 1).navigation
+		).toEqual({
+			action: "push",
+			href: "/(protected)/achievements",
+		});
+	});
+
 	it("carries the banner only when there is both a log id and a body", () => {
 		expect(
 			notificationTapPlan({ logId: "l1", type: "milestone" }, "Ten days", 1)

@@ -11,6 +11,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { AuroraArc } from "@/components/shared/aurora-arc";
+import { ProfileSparkCard } from "@/features/achievements/profile-spark-card";
 import { ProfileHero } from "@/features/profile/components/profile-hero";
 import { ProfileSkeleton } from "@/features/profile/components/profile-skeleton";
 import { StatBand } from "@/features/profile/components/stat-band";
@@ -69,6 +70,8 @@ export function ProfileHeader({
 					usualDay={usualDay}
 				/>
 			)}
+
+			{summary ? <ProfileSparkCard /> : null}
 
 			<TopBar height={topBarHeight} title={summary?.displayName} />
 		</View>
