@@ -14,6 +14,9 @@ import {
 /** The name field's cap, the same as v1's. */
 export const NAME_MAX_CHARS = 30;
 
+/** Room to say it, not to write an essay before the first reflection; a take is held to it too. */
+export const ANSWER_MAX_CHARS = 1000;
+
 export type IntakeV2Step =
 	| "ask" // Flux asks; quick replies, type, or talk
 	| "listen" // live transcript
@@ -26,11 +29,23 @@ export type IntakeV2Step =
 	| "plus" // the Xolace+ screen; skipped if entitled
 	| "done"; // intake.v2.complete, then the Mirror
 
-/** How the answer came in. Talk (`voice`) arrives with the listen step. */
+/** How the answer came in; `voice` is a take from `listen`. */
 export type AnswerMode = "quick_reply" | "typed" | "voice" | "skipped";
 
 /** Where the chips came from: the model's reading, or the pick-list it falls back to. */
 export type HeardSource = "model" | "pick_list";
+
+/** The mic can't be used: no permission, or no recognizer. It stays off for the intake. */
+export type MicFailure = "denied" | "unavailable";
+
+/** How the Xolace+ step (#713) ended; `entitled` is skipped, never shown. */
+export type PlusOutcome = "purchased" | "dismissed" | "entitled";
+
+/** The side of the Xolace+ step: the week on free, or with Plus. */
+export type PlusSide = "free" | "plus";
+
+/** Why talking fell back to typing. */
+export type ListenFailure = MicFailure | "nothing_heard";
 
 export type IntakeV2State = {
 	/** The user's own words; empty when skipped. Never leaves the device but to the reader. */
@@ -43,8 +58,14 @@ export type IntakeV2State = {
 	/** The reply, once sent: the next read carries it. */
 	followUpReply: string | null;
 	heard: Heard;
+	/** The last try at talking that ended in `type`, for the line it shows there. */
+	listenFailed: ListenFailure | null;
 	mode: AnswerMode | null;
 	name: string;
+	/** How the Xolace+ step ended; null on the safety path or before it. */
+	plusOutcome: PlusOutcome | null;
+	/** Xolace+ was on screen: shown once, and a failed save goes back to it. */
+	plusShown: boolean;
 	/** How `heard` was filled; null until the answer has been read. */
 	read: HeardSource | null;
 	/** `heard` as the model read it, before any tap: what the chip counts compare against. */
@@ -58,6 +79,11 @@ export type IntakeV2State = {
 
 export type IntakeV2Action =
 	| { type: "START_TYPING" }
+	/** The mic: the permission is asked as `listen` opens, never before. */
+	| { type: "START_LISTENING" }
+	/** Stopped, or the recognizer ended on its own: what it heard by then. */
+	| { type: "LISTEN_DONE"; transcript: string }
+	| { type: "MIC_UNAVAILABLE"; reason: MicFailure }
 	| { type: "QUICK_REPLY"; text: string }
 	| { type: "SKIP" }
 	| { type: "DRAFT_CHANGE"; text: string }
@@ -73,7 +99,9 @@ export type IntakeV2Action =
 	| { type: "SAY_AGAIN" }
 	/** An edit or a dice roll. */
 	| { type: "NAME_CHANGE"; name: string }
-	| { type: "KEEP_NAME" }
+	/** `entitled`: Xolace+ is already theirs, so `plus` is skipped. */
+	| { type: "KEEP_NAME"; entitled: boolean }
+	| { type: "PLUS_EXIT"; outcome: PlusOutcome }
 	| { type: "COMPLETE_FAILED" };
 
 export const initialIntakeV2State = (name: string): IntakeV2State => ({
@@ -83,14 +111,25 @@ export const initialIntakeV2State = (name: string): IntakeV2State => ({
 	followUpDraft: "",
 	followUpReply: null,
 	heard: NOTHING_HEARD,
+	listenFailed: null,
 	mode: null,
 	name,
+	plusOutcome: null,
+	plusShown: false,
 	read: null,
 	readAs: NOTHING_HEARD,
 	resources: [],
 	safetyRouted: false,
 	step: "ask",
 });
+
+/** A denied or missing mic stays off for the rest of the intake; asking again only bounces. */
+export const micOn = (state: IntakeV2State): boolean =>
+	state.listenFailed === null || state.listenFailed === "nothing_heard";
+
+/** A take as an answer: trimmed, and held to a typed answer's length. */
+export const voiceAnswer = (transcript: string): string =>
+	transcript.trim().slice(0, ANSWER_MAX_CHARS).trim();
 
 /** A new answer: nothing heard, and its own follow-up still to ask. */
 const FRESH_READ = {
@@ -133,6 +172,20 @@ export function intakeV2Reducer(
 	switch (action.type) {
 		case "START_TYPING":
 			return state.step === "ask" ? { ...state, step: "type" } : state;
+		case "START_LISTENING":
+			return (state.step === "ask" || state.step === "type") && micOn(state)
+				? { ...state, listenFailed: null, step: "listen" }
+				: state;
+		case "LISTEN_DONE": {
+			if (state.step !== "listen") {
+				return state;
+			}
+			const answer = voiceAnswer(action.transcript);
+			if (answer.length === 0) {
+				return { ...state, listenFailed: "nothing_heard", step: "type" };
+			}
+			return { ...state, answer, mode: "voice", step: "interpret" };
+		}
 		case "QUICK_REPLY":
 			return state.step === "ask"
 				? {
@@ -152,6 +205,11 @@ export function intakeV2Reducer(
 						mode: "skipped",
 						step: "name",
 					}
+				: state;
+		// Into typing with its draft intact: nothing said on the way is lost.
+		case "MIC_UNAVAILABLE":
+			return state.step === "listen"
+				? { ...state, listenFailed: action.reason, step: "type" }
 				: state;
 		case "DRAFT_CHANGE":
 			return state.step === "type" ? { ...state, draft: action.text } : state;
@@ -188,7 +246,7 @@ export function intakeV2Reducer(
 		}
 		case "FOLLOW_UP_SKIP":
 			return state.step === "followUp" ? { ...state, step: "heard" } : state;
-		// On to the name; `safetyRouted` keeps the Xolace+ step, once it exists, out of the way.
+		// On to the name; `safetyRouted` keeps the Xolace+ step out of the way.
 		case "SAFETY_CONTINUE":
 			return state.step === "safety" ? { ...state, step: "name" } : state;
 		case "TOGGLE_CHIP": {
@@ -200,27 +258,51 @@ export function intakeV2Reducer(
 		}
 		case "CONFIRM_HEARD":
 			return state.step === "heard" ? { ...state, step: "name" } : state;
-		// Talk arrives with the listen step; until then, again means typing it.
+		// Again the way it was said: a spoken answer goes back to `listen`, the rest to `type`.
 		case "SAY_AGAIN":
 			return state.step === "heard"
-				? { ...state, ...FRESH_READ, draft: "", step: "type" }
+				? {
+						...state,
+						...FRESH_READ,
+						draft: "",
+						step: state.mode === "voice" && micOn(state) ? "listen" : "type",
+					}
 				: state;
 		case "NAME_CHANGE":
 			return state.step === "name"
 				? { ...state, name: action.name.slice(0, NAME_MAX_CHARS) }
 				: state;
-		// No "Hey, name" beat after it (#707). The Xolace+ screen (`plus`) goes in
-		// here once it exists, skipped when `safetyRouted`.
+		// No "Hey, name" beat after it (#707). Xolace+ once (#713): never on the safety path,
+		// never to someone who has it.
 		case "KEEP_NAME": {
 			const name = state.name.trim();
 			if (state.step !== "name" || name.length === 0) {
 				return state;
 			}
-			return { ...state, name, step: "done" };
+			// The safeguard veto first: nothing on the safety path is about Xolace+ at all.
+			if (state.safetyRouted || state.plusShown) {
+				return { ...state, name, step: "done" };
+			}
+			return action.entitled
+				? { ...state, name, plusOutcome: "entitled", step: "done" }
+				: { ...state, name, plusShown: true, step: "plus" };
 		}
-		// Intake has no back edge, so a failed write must leave a live button.
+		// The first way out stays the outcome: Continue after a failed save doesn't undo a
+		// purchase.
+		case "PLUS_EXIT":
+			return state.step === "plus"
+				? {
+						...state,
+						plusOutcome: state.plusOutcome ?? action.outcome,
+						step: "done",
+					}
+				: state;
+		// Intake has no back edge, so a failed write must leave a live button: back to the
+		// screen the write left from.
 		case "COMPLETE_FAILED":
-			return state.step === "done" ? { ...state, step: "name" } : state;
+			return state.step === "done"
+				? { ...state, step: state.plusShown ? "plus" : "name" }
+				: state;
 		default:
 			return state;
 	}

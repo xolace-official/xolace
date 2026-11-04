@@ -4,6 +4,7 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import { View } from "react-native";
 
+import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
 import {
 	OFFER_MASCOT,
@@ -11,7 +12,6 @@ import {
 	OfferMock,
 	OfferPill,
 } from "@/features/intake/paywall/offer-card";
-import { useTokenColor } from "@/lib/use-token-color";
 import { cn } from "@/lib/utils";
 
 const MUSIC_NOTE = {
@@ -46,7 +46,8 @@ function KindlingStepRow({
 	done: boolean;
 }) {
 	// `--offer-ink` is theme-invariant and always dark, so a done check needs a light glyph.
-	const ink = useTokenColor("offer-ink");
+	// Themed, not in `@theme static`, so it is read through Uniwind.
+	const ink = useCSSVariable("--color-offer-ink") as string;
 	return (
 		<View className="flex-row items-center gap-2.5">
 			<View
@@ -70,7 +71,8 @@ function KindlingStepRow({
 /** Card 5, Kindling & Browse: the step rail and the playback rows, each with its own icon
  * language. */
 export function KindlingBrowseOfferCard({ width }: { width: number }) {
-	const ink = useTokenColor("offer-ink");
+	// Themed, not in `@theme static`, so it is read through Uniwind.
+	const ink = useCSSVariable("--color-offer-ink") as string;
 	return (
 		<OfferCard
 			mascot={kindlingMascot}

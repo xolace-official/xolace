@@ -74,6 +74,8 @@ export function chatLimitError(error: unknown): {
 	code?: string;
 	max?: number;
 	party?: "seeker" | "xolacer";
+	/** The age status an `age_restricted` refusal carries (#716). */
+	status?: string;
 	until?: number;
 } | null {
 	const data = (error as { data?: unknown } | null)?.data;
@@ -84,6 +86,7 @@ export function chatLimitError(error: unknown): {
 		code?: string;
 		max?: number;
 		party?: "seeker" | "xolacer";
+		status?: string;
 		until?: number;
 	};
 }

@@ -4,12 +4,12 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { View } from "react-native";
 
+import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { OFFER_MASCOT, OfferCard } from "@/features/intake/paywall/offer-card";
 import { useVoicePreview } from "@/features/talk/use-voice-preview";
 import { VOICE_OPTIONS } from "@/features/talk/voice-options";
 import { playSoftPress } from "@/lib/haptics";
-import { useTokenColor } from "@/lib/use-token-color";
 
 const PLAY = {
 	android: "play_arrow",
@@ -25,7 +25,8 @@ const PREMIUM_VOICES = VOICE_OPTIONS.filter(
 /** Hearing the voice is the whole sell. */
 export function VoiceOfferCard({ width }: { width: number }) {
 	const preview = useVoicePreview();
-	const ink = useTokenColor("offer-ink");
+	// Themed, not in `@theme static`, so it is read through Uniwind.
+	const ink = useCSSVariable("--color-offer-ink") as string;
 
 	return (
 		<OfferCard

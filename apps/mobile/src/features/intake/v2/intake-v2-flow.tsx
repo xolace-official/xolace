@@ -1,6 +1,6 @@
-// Intake v2 ("Talk to Flux", #704) on screen: the reducer's step, drawn. The typed answer
-// (#707) is read by Flux (#708): chips, one follow-up, or crisis support. `listen` and `plus`
-// exist in the machine but nothing reaches them yet.
+// Intake v2 ("Talk to Flux", #704) on screen: the reducer's step, drawn. The typed (#707) or
+// spoken (#709) answer is read by Flux (#708): chips, one follow-up, or crisis support. Then
+// the name, and Xolace+ once (#713).
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useReducer, useRef } from "react";
 import {
@@ -16,16 +16,21 @@ import { FollowUpStep } from "@/features/intake/v2/follow-up-step";
 import { chipChanges } from "@/features/intake/v2/heard";
 import { HeardStep } from "@/features/intake/v2/heard-step";
 import { InterpretStep } from "@/features/intake/v2/interpret-step";
+import { ListenStep } from "@/features/intake/v2/listen-step";
 import {
 	initialIntakeV2State,
 	intakeV2Reducer,
+	micOn,
+	voiceAnswer,
 } from "@/features/intake/v2/machine";
 import { NameStep } from "@/features/intake/v2/name-step";
+import { PlusStep } from "@/features/intake/v2/plus/plus-step";
 import { IntakeV2Progress } from "@/features/intake/v2/progress";
 import { SafetyStep } from "@/features/intake/v2/safety-step";
 import { TypeStep } from "@/features/intake/v2/type-step";
 import { useIntakeV2Complete } from "@/features/intake/v2/use-intake-v2-complete";
 import { useReadFirstAnswer } from "@/features/intake/v2/use-read-first-answer";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 
 export function IntakeV2Flow({ initialName }: { initialName: string }) {
 	const [state, dispatch] = useReducer(
@@ -36,6 +41,7 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 	const posthog = usePostHog();
 	const complete = useIntakeV2Complete();
 	const readAnswer = useReadFirstAnswer();
+	const { isPlus } = usePlusEntitlement();
 
 	// One read per arrival at `interpret`; a result after unmount is dropped.
 	useEffect(() => {
@@ -93,6 +99,11 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [state.step]);
 
+	// Xolace+ is its own screen, after the three stops the bar counts. `done` stays on the
+	// screen the save left from, busy, until it lands.
+	const offering =
+		state.step === "plus" || (state.step === "done" && state.plusShown);
+
 	const body = () => {
 		switch (state.step) {
 			case "ask":
@@ -106,18 +117,38 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 							trackAnswerGiven(posthog, "skipped", "");
 							dispatch({ type: "SKIP" });
 						}}
+						onTalk={() => dispatch({ type: "START_LISTENING" })}
 						onType={() => dispatch({ type: "START_TYPING" })}
+					/>
+				);
+			case "listen":
+				return (
+					<ListenStep
+						onDone={(transcript) => {
+							const answer = voiceAnswer(transcript);
+							if (answer) {
+								trackAnswerGiven(posthog, "voice", answer);
+							}
+							dispatch({ transcript, type: "LISTEN_DONE" });
+						}}
+						onUnavailable={(reason) =>
+							dispatch({ reason, type: "MIC_UNAVAILABLE" })
+						}
 					/>
 				);
 			case "type":
 				return (
 					<TypeStep
 						draft={state.draft}
+						listenFailed={state.listenFailed}
 						onChange={(text) => dispatch({ text, type: "DRAFT_CHANGE" })}
 						onSend={() => {
 							trackAnswerGiven(posthog, "typed", state.draft.trim());
 							dispatch({ type: "SEND" });
 						}}
+						onTalk={
+							micOn(state) ? () => dispatch({ type: "START_LISTENING" }) : null
+						}
 					/>
 				);
 			case "interpret":
@@ -166,26 +197,35 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 						readAs={state.readAs}
 					/>
 				);
+			case "plus":
+				return (
+					<PlusStep
+						busy={false}
+						onExit={(outcome) => dispatch({ outcome, type: "PLUS_EXIT" })}
+					/>
+				);
 			case "name":
 			case "done":
-				return (
+				return offering ? (
+					<PlusStep busy onExit={() => undefined} />
+				) : (
 					<NameStep
 						busy={state.step === "done"}
 						name={state.name}
 						onChange={(name) => dispatch({ name, type: "NAME_CHANGE" })}
-						onKeep={() => dispatch({ type: "KEEP_NAME" })}
+						// An unresolved entitlement reads as free; `plus` steps aside once it resolves.
+						onKeep={() => dispatch({ entitled: isPlus, type: "KEEP_NAME" })}
 						skipped={state.mode === "skipped"}
 					/>
 				);
 			default:
-				// The stubbed steps: `listen` and `plus`.
 				return null;
 		}
 	};
 
 	return (
 		<IntakeScreen>
-			<IntakeV2Progress step={state.step} />
+			{!offering && <IntakeV2Progress step={state.step} />}
 			{body()}
 		</IntakeScreen>
 	);

@@ -15,7 +15,7 @@ const CONFIRM_CONFIG = {
 	deleteData: {
 		confirmLabel: "Delete everything",
 		description:
-			"This will permanently erase all your sessions, reflections, and emotional history. Your account and preferences will be kept. This action cannot be undone.",
+			"This will permanently erase all your sessions, reflections, and emotional history. Your account, preferences and date of birth will be kept. This action cannot be undone.",
 		isDestructive: true,
 		showLoading: true,
 		title: "Delete all my data",

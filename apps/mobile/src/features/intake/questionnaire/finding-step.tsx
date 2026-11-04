@@ -13,6 +13,8 @@ import {
 	SECTION_FINDING,
 	SERIES_BRANCH_VALUE,
 	SERIES_NOT_SEEN,
+	SERIES_NOT_SEEN_LABEL,
+	SERIES_SEEN_QUESTION,
 	SERIES_SEEN_RATINGS,
 	SERIES_WANT_CHOICES,
 	SERIES_WANT_QUESTION,
@@ -68,9 +70,7 @@ export function FindingStep({
 			value={answers}
 		>
 			<Questionnaire.Item disabled={!branched} name="seriesSeen" required>
-				<Questionnaire.Question>
-					Have you seen the series?
-				</Questionnaire.Question>
+				<Questionnaire.Question>{SERIES_SEEN_QUESTION}</Questionnaire.Question>
 				<Questionnaire.Choices>
 					<Pressable
 						accessibilityRole="radio"
@@ -95,7 +95,10 @@ export function FindingStep({
 								</View>
 							))
 						: null}
-					<Questionnaire.Choice label="No, not yet" value={SERIES_NOT_SEEN} />
+					<Questionnaire.Choice
+						label={SERIES_NOT_SEEN_LABEL}
+						value={SERIES_NOT_SEEN}
+					/>
 				</Questionnaire.Choices>
 				<Questionnaire.Error />
 			</Questionnaire.Item>

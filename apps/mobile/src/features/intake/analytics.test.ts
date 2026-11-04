@@ -3,9 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
 	declinedCount,
+	intakeOutcomeOf,
 	intakePersonProperties,
 	questionAnsweredProps,
 } from "@/features/intake/analytics";
+import {
+	initialIntakeV2State,
+	type PlusOutcome,
+} from "@/features/intake/v2/machine";
 
 describe("questionAnsweredProps", () => {
 	it("omits selection_count for a single-select", () => {
@@ -185,5 +190,22 @@ describe("intake v2 arms (#704)", () => {
 			analytics.trackFirstReflection(posthog);
 			expect(captured("intake_first_reflection")).toEqual([]);
 		});
+	});
+});
+
+describe("intakeOutcomeOf (#713)", () => {
+	const endedWith = (plusOutcome: PlusOutcome | null) => ({
+		...initialIntakeV2State("Camper 4127"),
+		plusOutcome,
+	});
+
+	it("names each way the Xolace+ step can end", () => {
+		expect(intakeOutcomeOf(endedWith("purchased"))).toBe("purchased");
+		expect(intakeOutcomeOf(endedWith("dismissed"))).toBe("dismissed_paywall");
+		expect(intakeOutcomeOf(endedWith("entitled"))).toBe("skipped_paywall");
+	});
+
+	it("counts an intake with no Xolace+ step as nothing offered", () => {
+		expect(intakeOutcomeOf(endedWith(null))).toBe("no_offer");
 	});
 });

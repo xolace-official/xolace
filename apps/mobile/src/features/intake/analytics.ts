@@ -7,7 +7,15 @@ import type { PostHog } from "posthog-react-native";
 import { SERIES_BRANCH_VALUE } from "@/features/intake/questions";
 import type { IntakeArm } from "@/features/intake/v2/arm";
 import type { FollowUp, Reading } from "@/features/intake/v2/heard";
-import type { AnswerMode, HeardSource } from "@/features/intake/v2/machine";
+import type {
+	AnswerMode,
+	HeardSource,
+	IntakeV2State,
+	PlusOutcome,
+	PlusSide,
+} from "@/features/intake/v2/machine";
+import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
+import type { PaywallSurface } from "@/features/purchases/use-paywall";
 import type { IntakeAnswers } from "@/store/intake-slice";
 
 type StepType = "founder" | "question" | "interstitial" | "paywall";
@@ -108,6 +116,20 @@ const prune = <T extends Record<string, unknown>>(props: T): Partial<T> =>
 		Object.entries(props).filter(([, value]) => value !== undefined)
 	) as Partial<T>;
 
+/** How they found Xolace: facts a re-onboard must not overwrite, so `$set_once`. The series
+ * pair only when the branch ran. */
+const findingUsOnce = (
+	answers: Pick<
+		IntakeAnswers,
+		"acquisitionSource" | "seriesSeen" | "seriesWantInApp"
+	>
+) =>
+	prune({
+		acquisition_source: answers.acquisitionSource,
+		series_seen: answers.seriesSeen,
+		series_want_in_app: answers.seriesWantInApp,
+	});
+
 /** The person-property dual-write (T7 §3). `$set_once` holds facts a re-onboard must not
  * overwrite; `displayName` stays out. */
 export function intakePersonProperties(
@@ -125,11 +147,7 @@ export function intakePersonProperties(
 			support_frequency: answers.supportFrequency,
 			weighing_on: answers.weighingOn,
 		}),
-		$set_once: prune({
-			acquisition_source: answers.acquisitionSource,
-			series_seen: answers.seriesSeen,
-			series_want_in_app: answers.seriesWantInApp,
-		}),
+		$set_once: findingUsOnce(answers),
 	};
 }
 
@@ -205,7 +223,7 @@ export type IntakeOutcome =
 	| "purchased"
 	| "dismissed_paywall"
 	| "skipped_paywall"
-	/** v2 before its Xolace+ screen exists: nothing was offered. */
+	/** v2 on the safety path: nothing was offered. */
 	| "no_offer";
 
 export function trackIntakeCompleted(
@@ -308,4 +326,116 @@ export function trackFirstReflection(posthog: PostHog) {
 		...prune({ intake_arm: arm }),
 		ms_since_intake_started: durationMs(),
 	});
+}
+
+/** A question v2 deferred, answered where it's needed (#712). The answer also lands as the
+ * same person property the intake would have set. */
+export function trackDeferredAnswered(
+	posthog: PostHog,
+	question: "coping_style" | "support_frequency",
+	value: string | string[],
+	surface: "session_end" | "notification_nudge"
+) {
+	posthog.capture("intake_deferred_answered", {
+		$set: { [question]: value },
+		question,
+		surface,
+	});
+}
+
+/** "How did you find Xolace?", answered on Discovery's day-3 card (#711), set as the intake
+ * sets it. */
+export function trackAcquisitionAnswered(
+	posthog: PostHog,
+	answer: Pick<
+		IntakeAnswers,
+		"acquisitionSource" | "seriesSeen" | "seriesWantInApp"
+	>
+) {
+	posthog.capture("intake_deferred_answered", {
+		$set_once: findingUsOnce(answer),
+		question: "acquisition_source",
+		surface: "discovery_card",
+	});
+}
+
+const OUTCOME_OF_PLUS = {
+	dismissed: "dismissed_paywall",
+	entitled: "skipped_paywall",
+	purchased: "purchased",
+} as const satisfies Record<PlusOutcome, IntakeOutcome>;
+
+/** How a v2 intake ended, for `intake_completed`: nothing offered when there was no Xolace+
+ * step (the safety path). */
+export const intakeOutcomeOf = (state: IntakeV2State): IntakeOutcome =>
+	state.plusOutcome === null ? "no_offer" : OUTCOME_OF_PLUS[state.plusOutcome];
+
+/** v2's Xolace+ step, "Same week, two ways" (#713), as the paywall surfaces know it. */
+export const INTAKE_PLUS_SURFACE =
+	"intake_same_week" as const satisfies PaywallSurface;
+
+const plusProps = (props: Record<string, unknown>) => ({
+	...props,
+	...prune({ intake_arm: arm }),
+	surface: INTAKE_PLUS_SURFACE,
+});
+
+/** v2's Xolace+ step on screen, once; the paywall's own `paywall_opened` rides along, so the
+ * surface counts beside every other paywall. Session 0, as intake always is. */
+export function trackPlusShown(posthog: PostHog) {
+	posthog.capture("intake_plus_shown", plusProps({}));
+	posthog.capture("paywall_opened", {
+		session_count: 0,
+		surface: INTAKE_PLUS_SURFACE,
+	});
+}
+
+export function trackPlusSwitched(posthog: PostHog, side: PlusSide) {
+	posthog.capture("intake_plus_switched", plusProps({ side }));
+}
+
+export function trackPlusPlanPicked(posthog: PostHog, plan: PlanId) {
+	posthog.capture("intake_plus_plan_picked", plusProps({ plan }));
+}
+
+/** A purchase from the step; `intake_plus_trial_started` when it began the free week. */
+export function trackPlusPurchased(
+	posthog: PostHog,
+	plan: PlanId,
+	trial: boolean
+) {
+	posthog.capture(
+		trial ? "intake_plus_trial_started" : "intake_plus_purchased",
+		plusProps({ plan })
+	);
+}
+
+/** "Continue free", from whichever side it was tapped. */
+export function trackPlusContinuedFree(posthog: PostHog, side: PlusSide) {
+	posthog.capture("intake_plus_continued_free", plusProps({ side }));
+}
+
+/** "Try it" on the Talk card opened the Talk demo (#714). */
+export function trackTalkDemoOpened(posthog: PostHog) {
+	posthog.capture("intake_talk_demo_opened", plusProps({}));
+}
+
+/** The demo's one turn ended: Flux's question was said, or the safeguard ended it on support.
+ * `mode`: how the line was given. Never the words. */
+export function trackTalkDemoFinished(
+	posthog: PostHog,
+	props: {
+		endedBy: "reply" | "safety";
+		mode: "voice" | "type" | null;
+		voice: string;
+	}
+) {
+	posthog.capture(
+		"intake_talk_demo_finished",
+		plusProps({
+			ended_by: props.endedBy,
+			...prune({ mode: props.mode }),
+			voice: props.voice,
+		})
+	);
 }

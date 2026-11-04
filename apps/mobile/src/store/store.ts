@@ -68,6 +68,14 @@ type TogglesSlice = {
 	/** One-time flag — once dismissed, session-end notification nudge never shows again. */
 	notifNudgeDismissed: boolean;
 	setNotifNudgeDismissed: (v: boolean) => void;
+	/** One-time flag — once true, session end never asks "What usually helps after?" again on
+	 * this device, answered or not (#712). */
+	copingAskSeen: boolean;
+	setCopingAskSeen: (v: boolean) => void;
+	/** One-time flag — once true, Discovery's "How did you find Xolace?" card never shows
+	 * again on this device (#711). */
+	findingCardDismissed: boolean;
+	setFindingCardDismissed: (v: boolean) => void;
 	/** Version of the reflect tour this device last finished. `0` means none. */
 	reflectTourVersion: number;
 	setReflectTourVersion: (v: number) => void;
@@ -236,8 +244,11 @@ export const useAppStore = create<AppState>()(
 				chatEnabledCached: false,
 
 				colorThemeId: "default",
+
+				copingAskSeen: false,
 				devStarterEligible: false,
 				dictationUpsellSeen: false,
+				findingCardDismissed: false,
 
 				homeComposing: false,
 				homeSheetBlocking: false,
@@ -284,7 +295,9 @@ export const useAppStore = create<AppState>()(
 				setBridgeIntroSeen: (v) => set({ bridgeIntroSeen: v }),
 				setChatEnabledCached: (v) => set({ chatEnabledCached: v }),
 				setColorThemeId: (id) => set({ colorThemeId: id }),
+				setCopingAskSeen: (v) => set({ copingAskSeen: v }),
 				setDictationUpsellSeen: (v) => set({ dictationUpsellSeen: v }),
+				setFindingCardDismissed: (v) => set({ findingCardDismissed: v }),
 				setHomeComposing: (v) => set({ homeComposing: v }),
 				setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 				setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
@@ -375,8 +388,10 @@ export const useAppStore = create<AppState>()(
 					bridgeIntroSeen: s.bridgeIntroSeen,
 					chatEnabledCached: s.chatEnabledCached,
 					colorThemeId: s.colorThemeId,
+					copingAskSeen: s.copingAskSeen,
 					devStarterEligible: s.devStarterEligible,
 					dictationUpsellSeen: s.dictationUpsellSeen,
+					findingCardDismissed: s.findingCardDismissed,
 					hiddenProfileCards: s.hiddenProfileCards,
 					introSeen: s.introSeen,
 					lastAcknowledgedStreak: s.lastAcknowledgedStreak,

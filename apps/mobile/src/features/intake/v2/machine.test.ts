@@ -69,6 +69,106 @@ describe("type", () => {
 	});
 });
 
+describe("listen", () => {
+	it("opens from the mic in ask", () => {
+		expect(run(start(), { type: "START_LISTENING" }).step).toBe("listen");
+	});
+
+	it("reads what was said as a voice answer once stopped", () => {
+		expect(
+			run(
+				start(),
+				{ type: "START_LISTENING" },
+				{ transcript: "  work won't leave my head  ", type: "LISTEN_DONE" }
+			)
+		).toMatchObject({
+			answer: "work won't leave my head",
+			mode: "voice",
+			step: "interpret",
+		});
+	});
+
+	it("offers typing when nothing was heard", () => {
+		expect(
+			run(
+				start(),
+				{ type: "START_LISTENING" },
+				{ transcript: "  ", type: "LISTEN_DONE" }
+			)
+		).toMatchObject({
+			answer: "",
+			listenFailed: "nothing_heard",
+			mode: null,
+			step: "type",
+		});
+	});
+
+	it("drops into typing on a denied mic, keeping what was typed", () => {
+		expect(
+			run(
+				start(),
+				{ type: "START_TYPING" },
+				{ text: "half a thought", type: "DRAFT_CHANGE" },
+				{ type: "START_LISTENING" },
+				{ reason: "denied", type: "MIC_UNAVAILABLE" }
+			)
+		).toMatchObject({
+			draft: "half a thought",
+			listenFailed: "denied",
+			step: "type",
+		});
+	});
+
+	it("won't open again once the mic is off", () => {
+		const off = run(
+			start(),
+			{ type: "START_LISTENING" },
+			{ reason: "unavailable", type: "MIC_UNAVAILABLE" }
+		);
+		expect(run(off, { type: "START_LISTENING" })).toEqual(off);
+	});
+
+	it("says it again by talking, and the new take replaces the answer", () => {
+		const again = run(
+			start(),
+			{ type: "START_LISTENING" },
+			{ transcript: "rushed first try", type: "LISTEN_DONE" },
+			{ type: "READ_FAILED" },
+			{ field: "weighingOn", type: "TOGGLE_CHIP", value: "work" },
+			{ type: "SAY_AGAIN" }
+		);
+		expect(again).toMatchObject({
+			heard: { weighingOn: [] },
+			read: null,
+			step: "listen",
+		});
+		expect(
+			run(again, { transcript: "what I meant", type: "LISTEN_DONE" })
+		).toMatchObject({ answer: "what I meant", step: "interpret" });
+	});
+
+	it("can try again after hearing nothing, dropping the old note", () => {
+		expect(
+			run(
+				start(),
+				{ type: "START_LISTENING" },
+				{ transcript: "", type: "LISTEN_DONE" },
+				{ type: "START_LISTENING" }
+			)
+		).toMatchObject({ listenFailed: null, step: "listen" });
+	});
+
+	it("holds a long take to a typed answer's length", () => {
+		expect(
+			run(
+				start(),
+				{ type: "START_LISTENING" },
+				{ transcript: "a".repeat(1500), type: "LISTEN_DONE" }
+			).answer
+		).toHaveLength(1000);
+	});
+});
+
 const answered = () =>
 	run(start(), { text: "I can't name it", type: "QUICK_REPLY" });
 
@@ -118,9 +218,18 @@ describe("heard", () => {
 describe("name", () => {
 	const naming = () => run(start(), { type: "SKIP" });
 
-	it("keeps the prefilled name", () => {
-		expect(run(naming(), { type: "KEEP_NAME" })).toMatchObject({
-			name: "Camper 4127",
+	it("keeps the prefilled name and goes on to Xolace+", () => {
+		expect(run(naming(), { entitled: false, type: "KEEP_NAME" })).toMatchObject(
+			{
+				name: "Camper 4127",
+				step: "plus",
+			}
+		);
+	});
+
+	it("skips Xolace+ for someone who already has it", () => {
+		expect(run(naming(), { entitled: true, type: "KEEP_NAME" })).toMatchObject({
+			plusOutcome: "entitled",
 			step: "done",
 		});
 	});
@@ -140,7 +249,9 @@ describe("name", () => {
 
 	it("won't keep a blank name", () => {
 		const blank = run(naming(), { name: "  ", type: "NAME_CHANGE" });
-		expect(run(blank, { type: "KEEP_NAME" }).step).toBe("name");
+		expect(run(blank, { entitled: false, type: "KEEP_NAME" }).step).toBe(
+			"name"
+		);
 	});
 
 	it("keeps the name trimmed", () => {
@@ -148,9 +259,39 @@ describe("name", () => {
 			run(
 				naming(),
 				{ name: "  Night Owl  ", type: "NAME_CHANGE" },
-				{ type: "KEEP_NAME" }
+				{ entitled: false, type: "KEEP_NAME" }
 			).name
 		).toBe("Night Owl");
+	});
+});
+
+describe("plus", () => {
+	const atPlus = () =>
+		run(start(), { type: "SKIP" }, { entitled: false, type: "KEEP_NAME" });
+
+	it("completes the intake after a purchase", () => {
+		expect(
+			run(atPlus(), { outcome: "purchased", type: "PLUS_EXIT" })
+		).toMatchObject({ plusOutcome: "purchased", step: "done" });
+	});
+
+	it("completes the intake on Continue free", () => {
+		expect(
+			run(atPlus(), { outcome: "dismissed", type: "PLUS_EXIT" })
+		).toMatchObject({ plusOutcome: "dismissed", step: "done" });
+	});
+
+	it("steps aside when Xolace+ turns out to be owned already", () => {
+		expect(
+			run(atPlus(), { outcome: "entitled", type: "PLUS_EXIT" })
+		).toMatchObject({ plusOutcome: "entitled", step: "done" });
+	});
+
+	it("ignores an exit from anywhere but plus", () => {
+		const naming = run(start(), { type: "SKIP" });
+		expect(run(naming, { outcome: "dismissed", type: "PLUS_EXIT" })).toEqual(
+			naming
+		);
 	});
 });
 
@@ -161,13 +302,49 @@ describe("done", () => {
 			{ type: "READ_FAILED" },
 			{ field: "weighingOn", type: "TOGGLE_CHIP", value: "work" },
 			{ type: "CONFIRM_HEARD" },
-			{ type: "KEEP_NAME" }
+			{ entitled: true, type: "KEEP_NAME" }
 		);
 		expect(done.step).toBe("done");
 		expect(run(done, { type: "COMPLETE_FAILED" })).toEqual({
 			...done,
 			step: "name",
 		});
+	});
+
+	it("goes back to Xolace+ when the save after it fails", () => {
+		const done = run(
+			start(),
+			{ type: "SKIP" },
+			{ entitled: false, type: "KEEP_NAME" },
+			{ outcome: "dismissed", type: "PLUS_EXIT" }
+		);
+		expect(run(done, { type: "COMPLETE_FAILED" }).step).toBe("plus");
+	});
+
+	it("keeps the first outcome when Continue follows a failed save", () => {
+		expect(
+			run(
+				start(),
+				{ type: "SKIP" },
+				{ entitled: false, type: "KEEP_NAME" },
+				{ outcome: "entitled", type: "PLUS_EXIT" },
+				{ type: "COMPLETE_FAILED" },
+				{ outcome: "dismissed", type: "PLUS_EXIT" }
+			).plusOutcome
+		).toBe("entitled");
+	});
+
+	it("keeps a purchase as the outcome when Continue free follows a failed save", () => {
+		expect(
+			run(
+				start(),
+				{ type: "SKIP" },
+				{ entitled: false, type: "KEEP_NAME" },
+				{ outcome: "purchased", type: "PLUS_EXIT" },
+				{ type: "COMPLETE_FAILED" },
+				{ outcome: "dismissed", type: "PLUS_EXIT" }
+			).plusOutcome
+		).toBe("purchased");
 	});
 });
 
@@ -332,12 +509,23 @@ describe("followUp", () => {
 });
 
 describe("safety", () => {
+	it("offers nothing on the safety path, even to someone who has Xolace+", () => {
+		expect(
+			run(
+				answered(),
+				done(CRISIS),
+				{ type: "SAFETY_CONTINUE" },
+				{ entitled: true, type: "KEEP_NAME" }
+			)
+		).toMatchObject({ plusOutcome: null, step: "done" });
+	});
+
 	it("goes on to the name with nothing heard, and never past it to Xolace+", () => {
 		const named = run(
 			answered(),
 			done(CRISIS),
 			{ type: "SAFETY_CONTINUE" },
-			{ type: "KEEP_NAME" }
+			{ entitled: false, type: "KEEP_NAME" }
 		);
 		expect(named).toMatchObject({
 			heard: { weighingOn: [] },

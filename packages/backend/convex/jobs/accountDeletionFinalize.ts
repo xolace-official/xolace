@@ -149,6 +149,17 @@ export async function finalizePurge(
 		await ctx.db.delete("intake_responses", intake._id);
 	}
 
+	// Age declarations (#716) hang off the user, not the profile. Bounded with
+	// no drain step: a user has one row until corrections ship, and those are
+	// rate-limited.
+	const declarations = await ctx.db
+		.query("age_declarations")
+		.withIndex("by_user_declared", (q) => q.eq("userId", userId))
+		.take(BATCH_SIZE);
+	for (const declaration of declarations) {
+		await ctx.db.delete("age_declarations", declaration._id);
+	}
+
 	// A deleted user must never receive a follow-up nudge. Scheduled because
 	// it cancels component workflows and is independently bounded.
 	await ctx.scheduler.runAfter(0, internal.followUps.purgeForProfile, {

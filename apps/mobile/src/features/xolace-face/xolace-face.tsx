@@ -26,6 +26,8 @@ const BREATH_HZ = 1.7;
 const FIDGET_HZ = 4.7;
 const FIDGET_DEG = 2.5;
 const NOD_DROP = 0.03;
+const HOP_RISE = 0.08;
+const HOP_STRETCH = 0.05;
 const LEAN_DEG = 24;
 const TILT_DEG = 12;
 const SQUASH = 0.08;
@@ -50,6 +52,7 @@ export function XolaceFace({
 	const bg = useTokenColor("background");
 	const accent = useTokenColor("accent");
 	const accentFg = useTokenColor("accent-foreground");
+	const muted = useTokenColor("muted");
 	const fixed: Omit<FeatureColors, "mouth"> = {
 		blush: useTokenColor("face-blush"),
 		brow: useTokenColor("face-brow"),
@@ -64,14 +67,17 @@ export function XolaceFace({
 		const c = face.clock.get();
 		const breath = Math.sin(c * BREATH_HZ);
 		const fidget = Math.sin(c * FIDGET_HZ) * p.restless * FIDGET_DEG;
+		const hop = face.hopAmount.get();
 		return {
 			transform: [
 				{ perspective: 400 },
-				{ translateY: face.nodAmount.get() * size * NOD_DROP },
+				{
+					translateY: (face.nodAmount.get() * NOD_DROP - hop * HOP_RISE) * size,
+				},
 				{ rotateY: `${p.lean * LEAN_DEG}deg` },
 				{ rotateZ: `${p.tilt * TILT_DEG + fidget}deg` },
 				{ scaleX: 1 + p.squash * SQUASH - breath * 0.006 },
-				{ scaleY: 1 - p.squash * SQUASH + breath * 0.012 },
+				{ scaleY: 1 - p.squash * SQUASH + breath * 0.012 + hop * HOP_STRETCH },
 			],
 			// Turn and squash from the base, so it sits on its spot rather than spinning.
 			transformOrigin: "50% 92%",
@@ -81,12 +87,16 @@ export function XolaceFace({
 	// Chalk (the square) is flat, in the theme's text colour, and ignores the palette.
 	const flat = body === "square";
 	const set = palette ?? (body === "orb" ? "theme" : "brand");
-	const gradient = flat || set === "theme" ? null : PALETTES[set];
+	const gradient =
+		flat || set === "theme" || set === "muted" ? null : PALETTES[set];
+	const solid = set === "muted" ? muted : accent;
 	let colors: FeatureColors;
 	if (flat) {
 		colors = { ...fixed, brow: bg, mouth: bg, pupil: fg, sclera: bg };
 	} else if (gradient) {
 		colors = { ...fixed, mouth: gradient.mouth };
+	} else if (set === "muted") {
+		colors = { ...fixed, brow: bg, mouth: bg };
 	} else {
 		colors = { ...fixed, brow: accentFg, mouth: accentFg };
 	}
@@ -110,7 +120,7 @@ export function XolaceFace({
 								/>
 							</Path>
 						) : (
-							<Path color={flat ? fg : accent} path={BODY_PATHS[body]} />
+							<Path color={flat ? fg : solid} path={BODY_PATHS[body]} />
 						)}
 						{!flat && (
 							<Path path={BODY_PATHS[body]}>

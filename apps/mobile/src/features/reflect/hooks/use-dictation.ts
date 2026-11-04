@@ -2,7 +2,7 @@ import { useState } from "react";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useDictationUpsell } from "@/features/reflect/hooks/use-dictation-upsell";
 import { usePlusDictation } from "@/features/reflect/hooks/use-plus-dictation";
-import { useVoiceInput } from "@/features/reflect/hooks/use-voice-input";
+import { useVoiceInput } from "@/lib/speech/use-voice-input";
 
 /**
  * Dictation on Plus (Scribe, one transcript) or on-device (live); Plus falls back on device (#558).

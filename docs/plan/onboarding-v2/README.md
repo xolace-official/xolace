@@ -85,7 +85,8 @@ Chip groups map to intake fields:
 
 ## Live Flux
 
-The prototype draws Flux as one SVG so the moods could be tried quickly. In the app, build them
+The prototype draws Flux as one SVG so the moods could be tried quickly. `warm` is not in the
+prototype; it was added in the app. In the app, build them
 on the existing Skia + Reanimated Xolace face (`features/xolace-face`, see
 `docs/plan/xolace-face-placements.md`).
 
@@ -95,7 +96,8 @@ on the existing Skia + Reanimated Xolace face (`features/xolace-face`, see
 | talking | `ask` while the question types, the Talk demo reply | Mouth opens and closes, slight squash |
 | listening | `listen` | Leans in, eyes a little bigger, sound rings pulse out |
 | thinking | `interpret` | Eyes up and to the side, three thought dots |
-| happy | `heard`, `name`, the Plus side of I | Closed happy eyes, open smile, small bounce |
+| happy | `name`, the Plus side of I | Closed happy eyes, open smile, small bounce |
+| warm | `heard` | The Mirror's soft `nod` pose and one nod: it sits over the user's own words, which may be heavy, so no grin (#710) |
 
 Tints follow the Talk voices: Flux default, Sage green, Wren warm peach, Vesper violet, Ash cool
 grey.

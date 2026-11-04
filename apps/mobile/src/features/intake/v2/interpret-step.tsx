@@ -3,7 +3,7 @@
 import { View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
-import { FluxStill } from "@/features/intake/v2/flux-still";
+import { Flux } from "@/features/intake/v2/flux";
 import { echoOf } from "@/features/intake/v2/heard";
 
 const FLUX_SIZE = 160;
@@ -15,7 +15,7 @@ export function InterpretStep({ words }: { words: string }) {
 			accessibilityLiveRegion="polite"
 			className="flex-1 items-center justify-center gap-6 px-6"
 		>
-			<FluxStill mood="thinking" size={FLUX_SIZE} />
+			<Flux mood="thinking" size={FLUX_SIZE} />
 			<View className="items-center gap-2">
 				<AppText className="text-center font-[Poppins-Medium] text-[17px] text-foreground leading-6">
 					Hearing &ldquo;{echoOf(words)}&rdquo;

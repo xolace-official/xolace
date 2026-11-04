@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
-import { useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { usePaywall } from "@/features/purchases/use-paywall";
@@ -15,6 +15,8 @@ type Props = {
 	sessionId?: Id<"sessions">;
 	/** Plus only. `ready` once this session's kindling has landed. */
 	onOpenKindling?: (ready: boolean) => void;
+	/** Shown instead once the session is known not to qualify. */
+	fallback?: ReactNode;
 };
 
 /** Rounded-square icon badge: flame for pro, lock for the free upsell. */
@@ -59,7 +61,11 @@ function KindlingChevron() {
  * setup card and the free upsell, both gated on a qualifying session (ADR 0009).
  * Independent of `CloseOffer`; renders nothing while entitlement or qualification resolves.
  * The premium card leads to Discovery, or straight to the kindling once it has landed. */
-export const KindlingCloseSlot = ({ sessionId, onOpenKindling }: Props) => {
+export const KindlingCloseSlot = ({
+	sessionId,
+	onOpenKindling,
+	fallback = null,
+}: Props) => {
 	const { isPlus, isResolved } = usePlusEntitlement();
 	const qualifies = useQuery(
 		api.paths.isKindlingQualifyingSession,
@@ -84,8 +90,11 @@ export const KindlingCloseSlot = ({ sessionId, onOpenKindling }: Props) => {
 		posthog.capture("plus_upsell_shown", { surface: "kindling" });
 	}, [ready, isPlus, qualifies, posthog]);
 
-	if (!(ready && qualifies)) {
+	if (!ready) {
 		return null;
+	}
+	if (!qualifies) {
+		return fallback;
 	}
 
 	if (isPlus) {

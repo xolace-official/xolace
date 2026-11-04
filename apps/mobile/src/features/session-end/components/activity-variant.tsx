@@ -12,11 +12,12 @@ import { SessionEndUpsell } from "@/features/insights/compounding-upsell";
 import { NIGHT_SESSION_END_ACTIVITY } from "@/features/night-mode/night-copy";
 import { CloseOffer } from "@/features/session-end/components/close-offer";
 import { ContributedConfirmation } from "@/features/session-end/components/contributed-confirmation";
+import { CopingCloseSlot } from "@/features/session-end/components/coping-close-slot";
 import { HeavierFeedbackPrompt } from "@/features/session-end/components/heavier-feedback-prompt";
 import { JumpMascot } from "@/features/session-end/components/jump-mascot";
-import { KindlingCloseSlot } from "@/features/session-end/components/kindling-close-slot";
 import { MoodCheckIn } from "@/features/session-end/components/mood-check-in";
 import { UnsureFeedbackPrompt } from "@/features/session-end/components/unsure-feedback-prompt";
+import type { BrowseFamily } from "@/features/session-end/coping-suggestion";
 import { heavierIntensity, SAME } from "@/features/session-end/mood-scale";
 
 type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
@@ -38,6 +39,12 @@ type Props = {
 	) => void;
 	onOpenKindling: (
 		ready: boolean,
+		contributedReflection: boolean | null,
+		mood?: PostSessionMood,
+		moodPosition?: number
+	) => void;
+	onOpenBrowse: (
+		family: BrowseFamily,
 		contributedReflection: boolean | null,
 		mood?: PostSessionMood,
 		moodPosition?: number
@@ -67,6 +74,7 @@ export const ActivityVariant = ({
 	onDismiss,
 	onHaveMore,
 	onOpenKindling,
+	onOpenBrowse,
 	isNight = false,
 }: Props) => {
 	const [phase, setPhase] = useState<Phase>("acknowledge");
@@ -290,7 +298,15 @@ export const ActivityVariant = ({
 					>
 						<CloseOffer sessionId={sessionId} variant="activity" />
 						<SessionEndUpsell sessionId={sessionId} />
-						<KindlingCloseSlot
+						<CopingCloseSlot
+							onOpenBrowse={(family) =>
+								onOpenBrowse(
+									family,
+									contributed,
+									selectedMood ?? undefined,
+									moodPosition ?? undefined
+								)
+							}
 							onOpenKindling={(ready) =>
 								onOpenKindling(
 									ready,

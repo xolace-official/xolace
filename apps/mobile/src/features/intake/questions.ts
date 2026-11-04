@@ -196,6 +196,10 @@ export const SERIES_SEEN_RATINGS: readonly IntakeChoice[] = [
 ];
 
 export const SERIES_NOT_SEEN = "not_seen";
+export const SERIES_NOT_SEEN_LABEL = "No, not yet";
+
+/** Q10, asked only from `short_form_video`. */
+export const SERIES_SEEN_QUESTION = "Have you seen the series?";
 
 /** Q11, always asked if the branch fired. */
 export const SERIES_WANT_QUESTION = "Want the series in Xolace?";

@@ -6,7 +6,6 @@ import { capSelections, findIntake, seriesAnswers } from "./save";
 
 /** The questions v2 defers, in the order a client should prefer asking them. */
 const DEFERRED_QUESTIONS = [
-	"ageBracket",
 	"acquisitionSource",
 	"copingStyle",
 	"supportFrequency",
@@ -14,11 +13,18 @@ const DEFERRED_QUESTIONS = [
 
 /**
  * One question v2 no longer asks at intake, answered later in the feature
- * that needs it (#704): age before the first Xolacer chat, how they found
- * Xolace (with the series pair) on a day-3 card, coping style at session end,
- * support frequency with the notification ask.
+ * that needs it (#704): how they found Xolace (with the series pair) on a
+ * day-3 card, coping style at session end, support frequency with the
+ * notification ask.
  */
 const deferredAnswerValidator = v.union(
+	/**
+	 * @deprecated Age is a date of birth asked at the Xolacer gate
+	 * (`api.age.declarations.declare`, #716). Still accepted and written, never
+	 * read, and no longer listed by `missing`.
+	 */
+	// DEPRECATED(remove-after: app >= 1.15.0): reached staging before #716
+	// replaced it; replaced by `api.age.declarations.declare`.
 	v.object({
 		ageBracket: intakeAnswerValidators.ageBracket,
 		question: v.literal("ageBracket"),
