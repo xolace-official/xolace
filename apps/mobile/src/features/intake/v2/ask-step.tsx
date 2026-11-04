@@ -1,6 +1,7 @@
-// `ask`: Flux asks the one question while it types out, then the ways to answer. Talk (the
-// mic) joins with the listen step; until then only quick replies, typing, or Skip.
-import { Button, PressableFeedback } from "heroui-native";
+// `ask`: Flux asks the one question while it types out, then the ways to answer: a quick
+// reply, typing, talking (the mic, #709), or Skip.
+import { SymbolView } from "expo-symbols";
+import { Button, PressableFeedback, useThemeColor } from "heroui-native";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -20,6 +21,8 @@ const QUICK_REPLIES = [
 
 const TYPE_MS_PER_CHAR = 38;
 const FLUX_SIZE = 190;
+const MIC_ICON = { android: "mic", ios: "mic.fill", web: "mic" } as const;
+const MIC_ICON_SIZE = 22;
 
 /** How much of the line has typed out; all of it at once under reduced motion. */
 function useTypedLine(line: string) {
@@ -46,11 +49,13 @@ function useTypedLine(line: string) {
 type Props = {
 	onQuickReply: (text: string) => void;
 	onSkip: () => void;
+	onTalk: () => void;
 	onType: () => void;
 };
 
-export function AskStep({ onQuickReply, onSkip, onType }: Props) {
+export function AskStep({ onQuickReply, onSkip, onTalk, onType }: Props) {
 	const typed = useTypedLine(ASK_LINE);
+	const [micTint] = useThemeColor(["accent-foreground"]);
 
 	return (
 		<View className="flex-1 items-center px-5 pt-4">
@@ -94,17 +99,39 @@ export function AskStep({ onQuickReply, onSkip, onType }: Props) {
 							</Button>
 						))}
 					</View>
-					{/* Looks like the field it opens, not a button. */}
-					<PressableFeedback
-						accessibilityRole="button"
-						className="min-h-[52px] justify-center rounded-full border border-border bg-surface-secondary px-5"
-						onPress={onType}
-					>
-						<AppText className="font-[Poppins-Regular] text-[16px] text-muted">
-							Tell Flux anything…
+					<View className="flex-row items-center gap-1.5 rounded-full border border-border bg-surface-secondary p-1.5">
+						{/* Looks like the field it opens, not a button. */}
+						<PressableFeedback
+							accessibilityRole="button"
+							className="min-h-12 flex-1 justify-center px-3.5"
+							onPress={onType}
+						>
+							<AppText className="font-[Poppins-Regular] text-[16px] text-muted">
+								Tell Flux anything…
+							</AppText>
+						</PressableFeedback>
+						{/* The mic permission is asked only after this tap. */}
+						<PressableFeedback
+							accessibilityLabel="Talk instead of typing"
+							accessibilityRole="button"
+							className="size-12 items-center justify-center rounded-full bg-accent"
+							onPress={() => {
+								playSoftPress();
+								onTalk();
+							}}
+						>
+							<SymbolView
+								name={MIC_ICON}
+								size={MIC_ICON_SIZE}
+								tintColor={micTint}
+							/>
+						</PressableFeedback>
+					</View>
+					<View className="flex-row items-center justify-between gap-3">
+						{/* True of the speech recognizer used: no recording is kept, only the words reach Xolace (#709). */}
+						<AppText className="flex-1 font-[Poppins-Regular] text-[12px] text-muted">
+							Talk or type. Flux keeps the words, never the audio.
 						</AppText>
-					</PressableFeedback>
-					<View className="flex-row justify-end">
 						<Button onPress={onSkip} size="sm" variant="ghost">
 							<Button.Label>Skip</Button.Label>
 						</Button>

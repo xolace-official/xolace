@@ -14,6 +14,9 @@ import {
 /** The name field's cap, the same as v1's. */
 export const NAME_MAX_CHARS = 30;
 
+/** Room to say it, not to write an essay before the first reflection; a take is held to it too. */
+export const ANSWER_MAX_CHARS = 1000;
+
 export type IntakeV2Step =
 	| "ask" // Flux asks; quick replies, type, or talk
 	| "listen" // live transcript
@@ -26,11 +29,17 @@ export type IntakeV2Step =
 	| "plus" // the Xolace+ screen; skipped if entitled
 	| "done"; // intake.v2.complete, then the Mirror
 
-/** How the answer came in. Talk (`voice`) arrives with the listen step. */
+/** How the answer came in; `voice` is a take from `listen`. */
 export type AnswerMode = "quick_reply" | "typed" | "voice" | "skipped";
 
 /** Where the chips came from: the model's reading, or the pick-list it falls back to. */
 export type HeardSource = "model" | "pick_list";
+
+/** The mic can't be used: no permission, or no recognizer. It stays off for the intake. */
+export type MicFailure = "denied" | "unavailable";
+
+/** Why talking fell back to typing. */
+export type ListenFailure = MicFailure | "nothing_heard";
 
 export type IntakeV2State = {
 	/** The user's own words; empty when skipped. Never leaves the device but to the reader. */
@@ -43,6 +52,8 @@ export type IntakeV2State = {
 	/** The reply, once sent: the next read carries it. */
 	followUpReply: string | null;
 	heard: Heard;
+	/** The last try at talking that ended in `type`, for the line it shows there. */
+	listenFailed: ListenFailure | null;
 	mode: AnswerMode | null;
 	name: string;
 	/** How `heard` was filled; null until the answer has been read. */
@@ -58,6 +69,11 @@ export type IntakeV2State = {
 
 export type IntakeV2Action =
 	| { type: "START_TYPING" }
+	/** The mic: the permission is asked as `listen` opens, never before. */
+	| { type: "START_LISTENING" }
+	/** Stopped, or the recognizer ended on its own: what it heard by then. */
+	| { type: "LISTEN_DONE"; transcript: string }
+	| { type: "MIC_UNAVAILABLE"; reason: MicFailure }
 	| { type: "QUICK_REPLY"; text: string }
 	| { type: "SKIP" }
 	| { type: "DRAFT_CHANGE"; text: string }
@@ -83,6 +99,7 @@ export const initialIntakeV2State = (name: string): IntakeV2State => ({
 	followUpDraft: "",
 	followUpReply: null,
 	heard: NOTHING_HEARD,
+	listenFailed: null,
 	mode: null,
 	name,
 	read: null,
@@ -91,6 +108,14 @@ export const initialIntakeV2State = (name: string): IntakeV2State => ({
 	safetyRouted: false,
 	step: "ask",
 });
+
+/** A denied or missing mic stays off for the rest of the intake; asking again only bounces. */
+export const micOn = (state: IntakeV2State): boolean =>
+	state.listenFailed === null || state.listenFailed === "nothing_heard";
+
+/** A take as an answer: trimmed, and held to a typed answer's length. */
+export const voiceAnswer = (transcript: string): string =>
+	transcript.trim().slice(0, ANSWER_MAX_CHARS).trim();
 
 /** A new answer: nothing heard, and its own follow-up still to ask. */
 const FRESH_READ = {
@@ -133,6 +158,20 @@ export function intakeV2Reducer(
 	switch (action.type) {
 		case "START_TYPING":
 			return state.step === "ask" ? { ...state, step: "type" } : state;
+		case "START_LISTENING":
+			return (state.step === "ask" || state.step === "type") && micOn(state)
+				? { ...state, listenFailed: null, step: "listen" }
+				: state;
+		case "LISTEN_DONE": {
+			if (state.step !== "listen") {
+				return state;
+			}
+			const answer = voiceAnswer(action.transcript);
+			if (answer.length === 0) {
+				return { ...state, listenFailed: "nothing_heard", step: "type" };
+			}
+			return { ...state, answer, mode: "voice", step: "interpret" };
+		}
 		case "QUICK_REPLY":
 			return state.step === "ask"
 				? {
@@ -152,6 +191,11 @@ export function intakeV2Reducer(
 						mode: "skipped",
 						step: "name",
 					}
+				: state;
+		// Into typing with its draft intact: nothing said on the way is lost.
+		case "MIC_UNAVAILABLE":
+			return state.step === "listen"
+				? { ...state, listenFailed: action.reason, step: "type" }
 				: state;
 		case "DRAFT_CHANGE":
 			return state.step === "type" ? { ...state, draft: action.text } : state;
@@ -200,10 +244,15 @@ export function intakeV2Reducer(
 		}
 		case "CONFIRM_HEARD":
 			return state.step === "heard" ? { ...state, step: "name" } : state;
-		// Talk arrives with the listen step; until then, again means typing it.
+		// Again the way it was said: a spoken answer goes back to `listen`, the rest to `type`.
 		case "SAY_AGAIN":
 			return state.step === "heard"
-				? { ...state, ...FRESH_READ, draft: "", step: "type" }
+				? {
+						...state,
+						...FRESH_READ,
+						draft: "",
+						step: state.mode === "voice" && micOn(state) ? "listen" : "type",
+					}
 				: state;
 		case "NAME_CHANGE":
 			return state.step === "name"

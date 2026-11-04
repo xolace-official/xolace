@@ -69,6 +69,106 @@ describe("type", () => {
 	});
 });
 
+describe("listen", () => {
+	it("opens from the mic in ask", () => {
+		expect(run(start(), { type: "START_LISTENING" }).step).toBe("listen");
+	});
+
+	it("reads what was said as a voice answer once stopped", () => {
+		expect(
+			run(
+				start(),
+				{ type: "START_LISTENING" },
+				{ transcript: "  work won't leave my head  ", type: "LISTEN_DONE" }
+			)
+		).toMatchObject({
+			answer: "work won't leave my head",
+			mode: "voice",
+			step: "interpret",
+		});
+	});
+
+	it("offers typing when nothing was heard", () => {
+		expect(
+			run(
+				start(),
+				{ type: "START_LISTENING" },
+				{ transcript: "  ", type: "LISTEN_DONE" }
+			)
+		).toMatchObject({
+			answer: "",
+			listenFailed: "nothing_heard",
+			mode: null,
+			step: "type",
+		});
+	});
+
+	it("drops into typing on a denied mic, keeping what was typed", () => {
+		expect(
+			run(
+				start(),
+				{ type: "START_TYPING" },
+				{ text: "half a thought", type: "DRAFT_CHANGE" },
+				{ type: "START_LISTENING" },
+				{ reason: "denied", type: "MIC_UNAVAILABLE" }
+			)
+		).toMatchObject({
+			draft: "half a thought",
+			listenFailed: "denied",
+			step: "type",
+		});
+	});
+
+	it("won't open again once the mic is off", () => {
+		const off = run(
+			start(),
+			{ type: "START_LISTENING" },
+			{ reason: "unavailable", type: "MIC_UNAVAILABLE" }
+		);
+		expect(run(off, { type: "START_LISTENING" })).toEqual(off);
+	});
+
+	it("says it again by talking, and the new take replaces the answer", () => {
+		const again = run(
+			start(),
+			{ type: "START_LISTENING" },
+			{ transcript: "rushed first try", type: "LISTEN_DONE" },
+			{ type: "READ_FAILED" },
+			{ field: "weighingOn", type: "TOGGLE_CHIP", value: "work" },
+			{ type: "SAY_AGAIN" }
+		);
+		expect(again).toMatchObject({
+			heard: { weighingOn: [] },
+			read: null,
+			step: "listen",
+		});
+		expect(
+			run(again, { transcript: "what I meant", type: "LISTEN_DONE" })
+		).toMatchObject({ answer: "what I meant", step: "interpret" });
+	});
+
+	it("can try again after hearing nothing, dropping the old note", () => {
+		expect(
+			run(
+				start(),
+				{ type: "START_LISTENING" },
+				{ transcript: "", type: "LISTEN_DONE" },
+				{ type: "START_LISTENING" }
+			)
+		).toMatchObject({ listenFailed: null, step: "listen" });
+	});
+
+	it("holds a long take to a typed answer's length", () => {
+		expect(
+			run(
+				start(),
+				{ type: "START_LISTENING" },
+				{ transcript: "a".repeat(1500), type: "LISTEN_DONE" }
+			).answer
+		).toHaveLength(1000);
+	});
+});
+
 const answered = () =>
 	run(start(), { text: "I can't name it", type: "QUICK_REPLY" });
 

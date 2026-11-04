@@ -8,6 +8,7 @@ import { XolaceFace } from "@/features/xolace-face/xolace-face";
 const MOOD_POSES = {
 	happy: PRESETS.glad,
 	idle: PRESETS.neutral,
+	listening: PRESETS.attentive,
 	talking: PRESETS.speaking,
 	thinking: PRESETS.thinking,
 } as const;

@@ -10,6 +10,9 @@ import { AppState, Platform } from "react-native";
 import { yieldAudioFocus } from "@/lib/audio/session";
 import { joinDictation } from "@/lib/speech/dictation-transcript";
 
+/** How a mic tap went: listening, or why not. `left`: the screen lost focus during the prompt. */
+export type VoiceStart = "started" | "denied" | "unavailable" | "left";
+
 export function useVoiceInput() {
 	const [isRecording, setIsRecording] = useState(false);
 	const [partialTranscript, setPartialTranscript] = useState("");
@@ -84,12 +87,16 @@ export function useVoiceInput() {
 		return () => sub.remove();
 	}, []);
 
-	const startRecording = async () => {
+	const startRecording = async (): Promise<VoiceStart> => {
 		setError(null);
 		const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
 		if (!result.granted) {
 			setError("Microphone permission is required for voice input.");
-			return;
+			return "denied";
+		}
+		if (!ExpoSpeechRecognitionModule.isRecognitionAvailable()) {
+			setError("Speech recognition isn't available on this device.");
+			return "unavailable";
 		}
 
 		if (consentStatus?.status !== "granted") {
@@ -101,7 +108,7 @@ export function useVoiceInput() {
 
 		// The person may have left while the permission prompt was up.
 		if (!isFocusedRef.current || AppState.currentState === "background") {
-			return;
+			return "left";
 		}
 
 		// Recognition sets its own session, so it yields the Browse track itself.
@@ -115,6 +122,7 @@ export function useVoiceInput() {
 			lang: "en-US",
 			maxAlternatives: 1,
 		});
+		return "started";
 	};
 
 	// stop() delivers a final result for words still in flight; abort() drops

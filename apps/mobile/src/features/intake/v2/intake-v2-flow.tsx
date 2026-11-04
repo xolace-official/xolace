@@ -1,6 +1,6 @@
-// Intake v2 ("Talk to Flux", #704) on screen: the reducer's step, drawn. The typed answer
-// (#707) is read by Flux (#708): chips, one follow-up, or crisis support. `listen` and `plus`
-// exist in the machine but nothing reaches them yet.
+// Intake v2 ("Talk to Flux", #704) on screen: the reducer's step, drawn. The typed (#707) or
+// spoken (#709) answer is read by Flux (#708): chips, one follow-up, or crisis support. `plus`
+// exists in the machine but nothing reaches it yet.
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useReducer, useRef } from "react";
 import {
@@ -16,9 +16,12 @@ import { FollowUpStep } from "@/features/intake/v2/follow-up-step";
 import { chipChanges } from "@/features/intake/v2/heard";
 import { HeardStep } from "@/features/intake/v2/heard-step";
 import { InterpretStep } from "@/features/intake/v2/interpret-step";
+import { ListenStep } from "@/features/intake/v2/listen-step";
 import {
 	initialIntakeV2State,
 	intakeV2Reducer,
+	micOn,
+	voiceAnswer,
 } from "@/features/intake/v2/machine";
 import { NameStep } from "@/features/intake/v2/name-step";
 import { IntakeV2Progress } from "@/features/intake/v2/progress";
@@ -106,18 +109,38 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 							trackAnswerGiven(posthog, "skipped", "");
 							dispatch({ type: "SKIP" });
 						}}
+						onTalk={() => dispatch({ type: "START_LISTENING" })}
 						onType={() => dispatch({ type: "START_TYPING" })}
+					/>
+				);
+			case "listen":
+				return (
+					<ListenStep
+						onDone={(transcript) => {
+							const answer = voiceAnswer(transcript);
+							if (answer) {
+								trackAnswerGiven(posthog, "voice", answer);
+							}
+							dispatch({ transcript, type: "LISTEN_DONE" });
+						}}
+						onUnavailable={(reason) =>
+							dispatch({ reason, type: "MIC_UNAVAILABLE" })
+						}
 					/>
 				);
 			case "type":
 				return (
 					<TypeStep
 						draft={state.draft}
+						listenFailed={state.listenFailed}
 						onChange={(text) => dispatch({ text, type: "DRAFT_CHANGE" })}
 						onSend={() => {
 							trackAnswerGiven(posthog, "typed", state.draft.trim());
 							dispatch({ type: "SEND" });
 						}}
+						onTalk={
+							micOn(state) ? () => dispatch({ type: "START_LISTENING" }) : null
+						}
 					/>
 				);
 			case "interpret":
@@ -178,7 +201,7 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 					/>
 				);
 			default:
-				// The stubbed steps: `listen` and `plus`.
+				// The stubbed step: `plus`.
 				return null;
 		}
 	};
