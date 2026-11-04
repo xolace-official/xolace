@@ -74,7 +74,7 @@ export type IntakeV2State = {
 	readAs: Heard;
 	/** What `safety` shows: the safeguard's own resources for this answer. */
 	resources: SafetyResource[];
-	/** The answer went to `safety`: no Xolace+ on the way to the Mirror (#704). */
+	/** Crisis support was shown, for the answer or in the talk demo: no Xolace+ on the way to the Mirror (#704). */
 	safetyRouted: boolean;
 	step: IntakeV2Step;
 	/** Purchases and restores in flight at the store. */
@@ -110,6 +110,8 @@ export type IntakeV2Action =
 	/** `entitled`: Xolace+ is already theirs, so `plus` is skipped. */
 	| { type: "KEEP_NAME"; entitled: boolean }
 	| { type: "PLUS_EXIT"; outcome: PlusOutcome }
+	/** On from crisis support in the talk demo. */
+	| { type: "PLUS_SAFETY_EXIT" }
 	| { type: "COMPLETE_FAILED" };
 
 export const initialIntakeV2State = (name: string): IntakeV2State => ({
@@ -356,6 +358,18 @@ export function intakeV2Reducer(
 				? toSafety(exited, state.heldSafety)
 				: { ...exited, step: "done" };
 		}
+		// Support was already on screen in the demo, so straight to the save, a held verdict
+		// with it. Xolace+ was offered by then, so it counts as dismissed, as in `toSafety`.
+		case "PLUS_SAFETY_EXIT":
+			return state.step === "plus"
+				? {
+						...state,
+						heldSafety: null,
+						plusOutcome: state.plusOutcome ?? "dismissed",
+						safetyRouted: true,
+						step: "done",
+					}
+				: state;
 		// Intake has no back edge, so a failed write must leave a live button: back to the
 		// screen the write left from, but never back to Xolace+ after support.
 		case "COMPLETE_FAILED":

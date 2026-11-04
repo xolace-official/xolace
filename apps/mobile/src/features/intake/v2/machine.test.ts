@@ -547,6 +547,67 @@ describe("safety", () => {
 	});
 });
 
+// Support was on screen inside the demo, so the exit goes straight on to the save.
+describe("the talk demo's safety exit", () => {
+	const atPlus = () =>
+		run(start(), { type: "SKIP" }, { entitled: false, type: "KEEP_NAME" });
+	const exit: IntakeV2Action = { type: "PLUS_SAFETY_EXIT" };
+
+	it("takes the save off the Xolace+ screen", () => {
+		expect(run(atPlus(), exit)).toMatchObject({
+			safetyRouted: true,
+			step: "done",
+		});
+	});
+
+	it("never goes back to Xolace+ when the save fails", () => {
+		expect(run(atPlus(), exit, { type: "COMPLETE_FAILED" }).step).toBe("name");
+	});
+
+	it("saves again from the name without offering Xolace+", () => {
+		expect(
+			run(
+				atPlus(),
+				exit,
+				{ type: "COMPLETE_FAILED" },
+				{ entitled: false, type: "KEEP_NAME" }
+			).step
+		).toBe("done");
+	});
+
+	// Xolace+ was on screen, so this is a dismissal, the same as a late verdict leaving it.
+	it("counts as a dismissal, since Xolace+ was offered", () => {
+		expect(run(atPlus(), exit).plusOutcome).toBe("dismissed");
+	});
+
+	it("keeps a purchase made before it", () => {
+		expect(
+			run(
+				atPlus(),
+				{ outcome: "purchased", type: "PLUS_EXIT" },
+				{ type: "COMPLETE_FAILED" },
+				exit
+			).plusOutcome
+		).toBe("purchased");
+	});
+
+	it("doesn't show support twice for a verdict held behind a restore", () => {
+		const held = run(
+			atPlus(),
+			{ active: true, type: "STORE_CALL" },
+			{ resources: [], type: "LATE_SAFETY" },
+			exit
+		);
+		expect(held.step).toBe("done");
+		expect(run(held, { type: "COMPLETE_FAILED" }).step).toBe("name");
+	});
+
+	it("ignores the exit from anywhere but plus", () => {
+		const naming = run(start(), { type: "SKIP" });
+		expect(run(naming, exit)).toEqual(naming);
+	});
+});
+
 // A read that outlived the client's wait: the pick-list stood in, then the verdict landed.
 describe("a late safety verdict", () => {
 	const RESOURCES: SafetyResource[] = [

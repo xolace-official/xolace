@@ -49,7 +49,7 @@ const MOMENTS: Moment[] = [
 ];
 
 type Props = {
-	/** Opens the Talk demo; absent where nothing should reach the server (the dev preview). */
+	/** Opens the Talk demo; absent where it shouldn't open (the dev preview, during the save). */
 	onTryTalk?: () => void;
 	side: PlusSide;
 };

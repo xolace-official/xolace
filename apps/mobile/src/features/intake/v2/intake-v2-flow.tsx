@@ -221,13 +221,19 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 					<PlusStep
 						busy={false}
 						onExit={(outcome) => dispatch({ outcome, type: "PLUS_EXIT" })}
+						onSafetyExit={() => dispatch({ type: "PLUS_SAFETY_EXIT" })}
 						onStoreCall={onStoreCall}
 					/>
 				);
 			case "name":
 			case "done":
 				return offering ? (
-					<PlusStep busy onExit={() => undefined} onStoreCall={onStoreCall} />
+					<PlusStep
+						busy
+						onExit={() => undefined}
+						onSafetyExit={() => undefined}
+						onStoreCall={onStoreCall}
+					/>
 				) : (
 					<NameStep
 						busy={state.step === "done"}

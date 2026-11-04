@@ -29,11 +29,13 @@ type Props = {
 	/** The intake is being saved after this step. */
 	busy: boolean;
 	onExit: (outcome: PlusOutcome) => void;
+	/** On from crisis support in the talk demo: past this step, with nothing sold. */
+	onSafetyExit: () => void;
 	/** A purchase or restore starting or ending: nothing may interrupt one. */
 	onStoreCall: (active: boolean) => void;
 };
 
-export function PlusStep({ busy, onExit, onStoreCall }: Props) {
+export function PlusStep({ busy, onExit, onSafetyExit, onStoreCall }: Props) {
 	const posthog = usePostHog();
 	const { isPlus, isResolved } = usePlusEntitlement();
 	const { isLoading, plans, purchase, refreshOfferings, unavailable } =
@@ -52,12 +54,14 @@ export function PlusStep({ busy, onExit, onStoreCall }: Props) {
 	const shown = useRef(false);
 
 	// Entitlement can resolve after the name step read it: step aside the moment it does, and
-	// count the screen as shown only for someone it was really for.
+	// count the screen as shown only for someone it was really for. Not from under an open
+	// demo, which may be showing crisis support: leaving starts the save, and its landing
+	// leaves the intake. The demo's close lets this run.
 	useEffect(() => {
 		if (!isResolved) {
 			return;
 		}
-		if (isPlus && !settled.current) {
+		if (isPlus && !settled.current && !demoOpen) {
 			settled.current = true;
 			onExit("entitled");
 			return;
@@ -66,7 +70,7 @@ export function PlusStep({ busy, onExit, onStoreCall }: Props) {
 			shown.current = true;
 			trackPlusShown(posthog);
 		}
-	}, [isPlus, isResolved, onExit, posthog]);
+	}, [demoOpen, isPlus, isResolved, onExit, posthog]);
 
 	const switchTo = (next: PlusSide) => {
 		if (next === side) {
@@ -79,7 +83,8 @@ export function PlusStep({ busy, onExit, onStoreCall }: Props) {
 
 	const buy = async (chosen: PlanId) => {
 		const pkg = plans[chosen].pkg;
-		if (!pkg || buying) {
+		// Xolace+ can land while the demo is open: its "Keep talking" then sells nothing.
+		if (!pkg || buying || isPlus) {
 			return;
 		}
 		settled.current = true;
@@ -127,10 +132,16 @@ export function PlusStep({ busy, onExit, onStoreCall }: Props) {
 				onRestoring={onStoreCall}
 				onRetry={retry}
 				onSide={switchTo}
-				onTryTalk={() => {
-					trackTalkDemoOpened(posthog);
-					setDemoOpen(true);
-				}}
+				// Not during the save: this screen's exits are dead by then, so a purchase from the
+				// demo would go unrecorded, and the save's landing would leave from under it.
+				onTryTalk={
+					busy
+						? undefined
+						: () => {
+								trackTalkDemoOpened(posthog);
+								setDemoOpen(true);
+							}
+				}
 				owned={isPlus}
 				plan={plan}
 				plans={plans}
@@ -146,7 +157,7 @@ export function PlusStep({ busy, onExit, onStoreCall }: Props) {
 					setDemoOpen(false);
 					if (demoSafety.current) {
 						settled.current = true;
-						onExit("dismissed");
+						onSafetyExit();
 					}
 				}}
 				// Back on the step with the plan it names, its purchase sheet already up.
