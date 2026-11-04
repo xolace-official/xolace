@@ -9,6 +9,13 @@ import {
 } from "./voices";
 
 /** One of the 8 scored domains (CONTEXT.md). */
+/** The client platform a row came from. */
+export const platformValidator = v.union(
+	v.literal("ios"),
+	v.literal("android"),
+	v.literal("web")
+);
+
 export const domainValidator = v.union(...DOMAINS.map((d) => v.literal(d)));
 
 export const resourceValidator = v.object({
@@ -293,6 +300,13 @@ export const intakeAnswerValidators = {
 		v.literal("editorial"),
 		v.literal("other")
 	),
+	/**
+	 * @deprecated Nothing reads it. Age is a date of birth asked at the gate
+	 * that needs it (`api.age.declarations.declare`, #716).
+	 */
+	// DEPRECATED(remove-after: app >= first version without the v1 intake,
+	// #704): v1 binaries still send it to `intake.complete`, so the arg and the
+	// `intake_responses` column stay until then.
 	ageBracket: v.union(
 		v.literal("under_18"),
 		v.literal("18_24"),

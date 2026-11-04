@@ -11,6 +11,7 @@ import {
 	intakeRowAnswerValidators,
 	licenceValidator,
 	motionPreferenceValidator,
+	platformValidator,
 	resourceValidator,
 	safeguardLevelValidator,
 	supportNeedValidator,
@@ -66,6 +67,34 @@ export default defineSchema({
 		"dayKey",
 		"actionType",
 	]),
+
+	// ===========================================================
+	// AGE DECLARATIONS (#716)
+	// ===========================================================
+	//
+	// What each user said about their age, what we asked, and when: the record
+	// that shows a user declared their age before a gated feature unlocked.
+	// Append-only, like consent_records: rows are never edited.
+	//
+	// On the identity side (keyed on `users`, not `emotional_profiles`) on
+	// purpose. A full date of birth next to emotional answers makes the
+	// pseudonymous side easier to re-identify, and it is an eligibility
+	// record, not content: account deletion purges it, a data wipe keeps it,
+	// so a wipe never lets someone restate their age past a gate.
+	//
+	age_declarations: defineTable({
+		appVersion: v.optional(v.string()),
+		// A calendar date, "YYYY-MM-DD", with no timezone.
+		dateOfBirth: v.string(),
+		declaredAt: v.number(),
+		platform: platformValidator,
+		// The wording version shown, like consent_records.consentLanguageVersion.
+		promptVersion: v.string(),
+		source: v.literal("self"),
+		// Which gate asked.
+		surface: v.literal("xolacer_chat"),
+		userId: v.id("users"),
+	}).index("by_user_declared", ["userId", "declaredAt"]),
 
 	// ===========================================================
 	// KINDLING CATALOGUE — audio_tracks (#328)

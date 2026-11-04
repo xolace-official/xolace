@@ -172,7 +172,6 @@ describe("intake/deferred.missing", () => {
 	it("lists every deferred question after a v2 intake, minus those answered", async () => {
 		const user = await asV2User();
 		expect(await user.t.query(api.intake.deferred.missing, {})).toEqual([
-			"ageBracket",
 			"acquisitionSource",
 			"copingStyle",
 			"supportFrequency",
@@ -183,10 +182,17 @@ describe("intake/deferred.missing", () => {
 		});
 
 		expect(await user.t.query(api.intake.deferred.missing, {})).toEqual([
-			"ageBracket",
 			"acquisitionSource",
 			"supportFrequency",
 		]);
+	});
+
+	it("never lists the age bracket: a date of birth at the Xolacer gate replaced it (#716)", async () => {
+		const user = await asV2User();
+
+		expect(await user.t.query(api.intake.deferred.missing, {})).not.toContain(
+			"ageBracket"
+		);
 	});
 
 	it("is empty for a v1 user, who answered everything at intake", async () => {
