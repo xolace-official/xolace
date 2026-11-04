@@ -3,14 +3,16 @@
  * #701: the one-off backfill. What can go wrong: an award dated by run time
  * when a source has a real date, sparks not matching the rows, a day counted
  * twice (logged and pre-log), a re-run awarding or crediting again, a backfill
- * row reaching the push or the unlock moment, or the Stream pass overriding a
- * live award or awarding on a failed call.
+ * row reaching the push or the unlock moment, an award from before the stamp
+ * keeping a later date or splitting the summary, or the Stream pass overriding
+ * a live award or awarding on a failed call.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock } from "../test/mocks.helpers";
+import { awardAchievement } from "./award";
 import { backfillProfile } from "./backfill";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
@@ -293,6 +295,56 @@ describe("backfillProfile", () => {
 		expect((await profile(user)).sparksEarned).toBe(
 			backfilled.reduce((sum, r) => sum + r.sparks, 0)
 		);
+	});
+
+	it("moves an award from before the stamp back to its real date, crediting nothing again", async () => {
+		const user = await existingUser();
+		await completedSession(user, ago(40));
+		await user.root.run((ctx) =>
+			awardAchievement(ctx, user.profileId, "first-session", ago(1))
+		);
+
+		await backfill(user);
+
+		expect(await row(user, "first-session")).toMatchObject({
+			earnedAt: ago(40),
+			source: "backfill",
+		});
+		const total = (await rows(user)).reduce((sum, r) => sum + r.sparks, 0);
+		expect(await profile(user)).toMatchObject({
+			sparkBalance: total,
+			sparksEarned: total,
+		});
+	});
+
+	it("keeps the real date of an award from before the stamp over run time", async () => {
+		const user = await existingUser();
+		await user.root.run(async (ctx) => {
+			await ctx.db.patch("emotional_profiles", user.profileId, {
+				longestStreak: 7,
+			});
+			await awardAchievement(ctx, user.profileId, "streak-7", ago(1));
+		});
+
+		await backfill(user);
+
+		expect((await row(user, "streak-7"))?.earnedAt).toBe(ago(1));
+	});
+
+	it("holds the first-sight summary until the profile is stamped", async () => {
+		const user = await existingUser();
+		await completedSession(user, ago(40));
+		await user.root.run((ctx) =>
+			awardAchievement(ctx, user.profileId, "first-session", ago(1))
+		);
+		const summary = () => user.t.query(api.achievements.firstSight.summary, {});
+
+		expect(await summary()).toBeNull();
+
+		await backfill(user);
+
+		// One summary, counting the early award with the rest.
+		expect((await summary())?.badges).toBe((await rows(user)).length);
 	});
 });
 

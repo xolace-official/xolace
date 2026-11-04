@@ -637,10 +637,10 @@ export default defineSchema({
 		// Written only by convex/achievements/push.ts.
 		achievementPushCheck: v.optional(v.id("_scheduled_functions")),
 		// --- Achievements (#685, #686) ---
-		// When this profile's achievements were last backfilled. Live awards
-		// (convex/achievements/award.ts) do nothing until it is set, so the
-		// one-off backfill can't race them. New profiles are stamped at creation:
-		// they have nothing to backfill. Survives a data wipe.
+		// When this profile's achievements were last backfilled. Until it is set,
+		// awards (convex/achievements/award.ts) land quietly as backfill rows: no
+		// push, no unlock moment. New profiles are stamped at creation: they have
+		// nothing to backfill. Survives a data wipe.
 		achievementsBackfilledAt: v.optional(v.number()),
 		// Rolling average session duration in seconds.
 		// Helps AI calibrate response length over time.

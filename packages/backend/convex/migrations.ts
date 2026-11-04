@@ -233,9 +233,13 @@ export const backfillTrackIndex = migrations.define({
 
 // Achievements backfill (#686, #701): each existing profile quietly gets what
 // it already earned, dated where a source has a date, sparks credited, and
-// `daysShowedUp` seeded; then `achievementsBackfilledAt` turns its live awards
-// on. One profile per batch: each reads every session it has. Idempotent —
-// stamped profiles are skipped. Run after the deploy, then the Stream pass:
+// `daysShowedUp` seeded; then `achievementsBackfilledAt` makes its awards live.
+// One profile per batch: each reads every session it has, and one over the
+// transaction limits stops the run at that cursor. Idempotent — stamped profiles
+// are skipped. Do a full run on staging with prod-sized data first (`dryRun`
+// only tries one batch). On prod, run it right after the deploy, since until a
+// profile is stamped its awards land quietly, with no push or unlock moment.
+// Then the Stream pass:
 //   bunx convex run migrations:run '{"fn": "migrations:backfillAchievements"}'
 //   bunx convex run achievements/backfill:backfillXolacerChats
 // Add to runAll only once it has completed on prod.

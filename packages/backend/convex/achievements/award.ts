@@ -12,10 +12,14 @@ import { scheduleMissedBadgeCheck } from "./push";
  * `user_achievements`, called inline in the write site's own transaction.
  *
  * Idempotent: an existing row means nothing happens, and sparks are credited
- * to both counters only alongside an insert. Does nothing for a profile whose
- * `achievementsBackfilledAt` isn't set yet: existing profiles wait for the
- * one-off backfill (#686), so it can date their awards and keep them quiet.
- * A live award schedules the profile's missed-beat push check (#700).
+ * to both counters only alongside an insert. A live award schedules the
+ * profile's missed-beat push check (#700).
+ *
+ * A profile whose `achievementsBackfilledAt` isn't set yet is still waiting for
+ * the one-off backfill (#686), and a "first" may be years old, so its award is
+ * written quietly as `source: "backfill"`: kept even if the backfill never
+ * reaches it, but no push and no unlock moment. The backfill redates the row if
+ * its sources show an earlier date.
  *
  * @returns whether this call earned it.
  */
@@ -31,15 +35,16 @@ export async function awardAchievement(
 		return false;
 	}
 	const profile = await ctx.db.get("emotional_profiles", emotionalProfileId);
-	if (profile?.achievementsBackfilledAt === undefined) {
+	if (!profile) {
 		return false;
 	}
+	const backfilled = profile.achievementsBackfilledAt !== undefined;
 	const earned = await insertAward(ctx, profile, achievement, {
 		achievementId,
 		earnedAt,
-		source: "live",
+		source: backfilled ? "live" : "backfill",
 	});
-	if (earned) {
+	if (earned && backfilled) {
 		await scheduleMissedBadgeCheck(ctx, profile);
 	}
 	return earned;

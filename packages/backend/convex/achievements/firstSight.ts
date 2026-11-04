@@ -9,6 +9,8 @@ import { findAchievement } from "./catalog";
  * had already earned, shown once on the first open after it lands. Its own
  * route, never the one-at-a-time unlock moment. Dismissing it stamps every row
  * it counted seen; a row backfilled later (a new catalog entry) brings it back.
+ * Held until the profile is stamped: quiet awards can land before the backfill
+ * (award.ts), and the summary should count them along with the rest.
  */
 
 /** Far above any backfill: every rung of a long streak plus every one-off. */
@@ -20,6 +22,9 @@ export const summary = query({
 	args: {},
 	handler: async (ctx) => {
 		const { profile } = await requireAuth(ctx);
+		if (profile.achievementsBackfilledAt === undefined) {
+			return null;
+		}
 		const rows = await ctx.db
 			.query("user_achievements")
 			.withIndex(

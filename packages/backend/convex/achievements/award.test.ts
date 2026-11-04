@@ -2,8 +2,8 @@
 /**
  * #689: the award helper, proven through its first two write sites. What can
  * go wrong: an award lands twice (a second completion, a retry), sparks move
- * without a row or a row without sparks, an existing profile is awarded live
- * before its backfill has run, or a wipe takes badges away.
+ * without a row or a row without sparks, an existing profile's award is lost or
+ * pushed before its backfill has run, or a wipe takes badges away.
  */
 import { describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
@@ -128,6 +128,7 @@ async function asExistingUser(): Promise<SeededUser> {
 			await ctx.db.delete("user_achievements", row._id);
 		}
 		await ctx.db.patch("emotional_profiles", user.profileId, {
+			achievementPushCheck: undefined,
 			achievementsBackfilledAt: undefined,
 			sparkBalance: undefined,
 			sparksEarned: undefined,
@@ -137,16 +138,29 @@ async function asExistingUser(): Promise<SeededUser> {
 }
 
 describe("before the backfill", () => {
-	it("an existing profile earns nothing live, from either path", async () => {
+	it("an existing profile's awards land quietly, once, from either path", async () => {
 		const user = await asExistingUser();
 		await user.t.mutation(api.users.getOrCreate, { authProvider: "google" });
 		await completeSession(user);
 		await chargeVent(user);
 
-		expect(await earned(user)).toEqual([]);
+		const rows = await user.root.run((ctx) =>
+			ctx.db
+				.query("user_achievements")
+				.withIndex("by_emotionalProfileId_and_earnedAt", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.collect()
+		);
+		expect(rows.map((r) => [r.achievementId, r.source])).toEqual([
+			["first-session", "backfill"],
+		]);
 		const p = await profile(user);
-		expect(p.sparksEarned).toBeUndefined();
-		expect(p.sparkBalance).toBeUndefined();
+		expect(p.sparksEarned).toBe(10);
+		expect(p.sparkBalance).toBe(10);
+		// Never a push check, and never in the unlock moment.
+		expect(p.achievementPushCheck).toBeUndefined();
+		expect(await user.t.query(api.achievements.unlock.unseen, {})).toEqual([]);
 	});
 
 	it("live awards start once the profile is stamped", async () => {
