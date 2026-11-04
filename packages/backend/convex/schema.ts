@@ -250,11 +250,16 @@ export default defineSchema({
 	// Accounts purged here whose Clerk user isn't confirmed gone yet. Written in
 	// the transaction that deletes the `users` row, which leaves this as the only
 	// record of who to delete; removed once Clerk confirms (jobs/clerkUserDeletion.ts).
+	// `claimedAt` is set while a Clerk request is out, and `users.getOrCreate`
+	// makes no account for that identity until it lapses.
 	//
 	clerk_user_deletions: defineTable({
+		claimedAt: v.optional(v.number()),
 		lastAttemptAt: v.number(),
 		tokenIdentifier: v.string(),
-	}).index("by_last_attempt", ["lastAttemptAt"]),
+	})
+		.index("by_last_attempt", ["lastAttemptAt"])
+		.index("by_token", ["tokenIdentifier"]),
 
 	// ===========================================================
 	// WEEKLY COHORT COUNTS

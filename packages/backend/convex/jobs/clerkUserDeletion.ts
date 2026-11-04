@@ -3,10 +3,10 @@ import { internal } from "../_generated/api";
 import {
 	internalAction,
 	internalMutation,
-	internalQuery,
 	type MutationCtx,
+	type QueryCtx,
 } from "../_generated/server";
-import { deleteClerkUser } from "../integrations/clerk";
+import { CLERK_TIMEOUT_MS, deleteClerkUser } from "../integrations/clerk";
 
 /**
  * The last step of account deletion: removing the person from Clerk, where
@@ -21,6 +21,11 @@ import { deleteClerkUser } from "../integrations/clerk";
 // Long enough that the sweep leaves a just-queued row to its first attempt.
 const RETRY_AFTER_MS = 30 * 60 * 1000;
 const SWEEP_BATCH = 100;
+/**
+ * How long a claim holds off sign-in: past the Clerk request's own timeout, so
+ * it lapses only for an action that died without releasing it.
+ */
+const CLAIM_MS = 3 * CLERK_TIMEOUT_MS;
 
 /**
  * The Clerk user id from `iss|sub`. Not `users.authProviderAccountId`: rows
@@ -45,7 +50,31 @@ export async function queueClerkUserDeletion(
 	});
 }
 
-export const getPending = internalQuery({
+/**
+ * Whether a Clerk request for this identity may be out right now, so making it
+ * an account would hand that account a sign-in about to be deleted.
+ */
+export async function clerkDeletionInFlight(
+	ctx: QueryCtx,
+	tokenIdentifier: string
+): Promise<boolean> {
+	const rows = await ctx.db
+		.query("clerk_user_deletions")
+		.withIndex("by_token", (q) => q.eq("tokenIdentifier", tokenIdentifier))
+		.collect();
+	const now = Date.now();
+	return rows.some(
+		(row) => row.claimedAt !== undefined && now - row.claimedAt < CLAIM_MS
+	);
+}
+
+/**
+ * Takes the row for one Clerk request, in the same transaction that checks no
+ * account has come back on that identity: from here `users.getOrCreate` waits
+ * for the claim, so nothing new can be made under the deletion. Returns the
+ * identity to delete, or null when there is nothing to do.
+ */
+export const claim = internalMutation({
 	args: { deletionId: v.id("clerk_user_deletions") },
 	handler: async (ctx, { deletionId }) => {
 		const pending = await ctx.db.get("clerk_user_deletions", deletionId);
@@ -57,12 +86,35 @@ export const getPending = internalQuery({
 			.query("users")
 			.withIndex("by_token", (q) => q.eq("tokenIdentifier", tokenIdentifier))
 			.first();
-		return { hasAccount: account !== null, tokenIdentifier };
+		// They signed in again while this waited, which made a new account on the
+		// same Clerk user. Deleting it would lock them out of that account; if
+		// they delete that one too, its purge queues its own row.
+		if (account) {
+			await ctx.db.delete("clerk_user_deletions", deletionId);
+			return null;
+		}
+		const now = Date.now();
+		await ctx.db.patch("clerk_user_deletions", deletionId, {
+			claimedAt: now,
+			lastAttemptAt: now,
+		});
+		return tokenIdentifier;
 	},
-	returns: v.union(
-		v.null(),
-		v.object({ hasAccount: v.boolean(), tokenIdentifier: v.string() })
-	),
+	returns: v.union(v.null(), v.string()),
+});
+
+/** A request that failed: sign-in on that identity needn't wait for the retry. */
+export const release = internalMutation({
+	args: { deletionId: v.id("clerk_user_deletions") },
+	handler: async (ctx, { deletionId }) => {
+		if (await ctx.db.get("clerk_user_deletions", deletionId)) {
+			await ctx.db.patch("clerk_user_deletions", deletionId, {
+				claimedAt: undefined,
+			});
+		}
+		return null;
+	},
+	returns: v.null(),
 });
 
 export const settle = internalMutation({
@@ -79,28 +131,23 @@ export const settle = internalMutation({
 export const attempt = internalAction({
 	args: { deletionId: v.id("clerk_user_deletions") },
 	handler: async (ctx, { deletionId }) => {
-		const pending = await ctx.runQuery(
-			internal.jobs.clerkUserDeletion.getPending,
+		const tokenIdentifier = await ctx.runMutation(
+			internal.jobs.clerkUserDeletion.claim,
 			{ deletionId }
 		);
-		if (!pending) {
+		if (!tokenIdentifier) {
 			return null;
 		}
-		// They signed in again while this waited, which made a new account on the
-		// same Clerk user. Deleting it would lock them out of that account; if
-		// they delete that one too, its purge queues its own row.
-		if (pending.hasAccount) {
-			await ctx.runMutation(internal.jobs.clerkUserDeletion.settle, {
-				deletionId,
-			});
-			return null;
-		}
-		const clerkUserId = clerkUserIdOf(pending.tokenIdentifier);
+		const clerkUserId = clerkUserIdOf(tokenIdentifier);
 		if (!clerkUserId) {
 			console.error(`[clerk] not a Clerk user id, dropping ${deletionId}`);
 		}
 		if (!clerkUserId || (await deleteClerkUser(clerkUserId))) {
 			await ctx.runMutation(internal.jobs.clerkUserDeletion.settle, {
+				deletionId,
+			});
+		} else {
+			await ctx.runMutation(internal.jobs.clerkUserDeletion.release, {
 				deletionId,
 			});
 		}

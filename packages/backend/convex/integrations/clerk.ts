@@ -5,6 +5,9 @@
 
 const BASE_URL = "https://api.clerk.com/v1";
 
+/** A request still out after this is abandoned; the caller's claim outlasts it. */
+export const CLERK_TIMEOUT_MS = 10 * 1000;
+
 /**
  * True once the Clerk user is gone: deleted now, or already (404). A failure
  * rather than a throw, because the caller's retry is what keeps the promise.
@@ -19,7 +22,11 @@ export async function deleteClerkUser(clerkUserId: string): Promise<boolean> {
 	try {
 		const res = await fetch(
 			`${BASE_URL}/users/${encodeURIComponent(clerkUserId)}`,
-			{ headers: { Authorization: `Bearer ${secret}` }, method: "DELETE" }
+			{
+				headers: { Authorization: `Bearer ${secret}` },
+				method: "DELETE",
+				signal: AbortSignal.timeout(CLERK_TIMEOUT_MS),
+			}
 		);
 		if (res.ok || res.status === 404) {
 			return true;

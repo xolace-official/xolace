@@ -6,7 +6,7 @@
  * that was reactivated, or made afresh, loses its Clerk user.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { internal } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { allScheduledCalls } from "../test/fixtures.helpers";
 import {
@@ -98,12 +98,53 @@ describe("attempt", () => {
 		await attempt(user, row._id);
 		expect(clerk).toHaveBeenCalledWith(
 			`https://api.clerk.com/v1/users/${makeIdentity().subject}`,
-			{
+			expect.objectContaining({
 				headers: { Authorization: "Bearer sk_test_key" },
 				method: "DELETE",
-			}
+			})
 		);
 		expect(await queued(user)).toEqual([]);
+	});
+
+	it("holds off a new account on that identity while Clerk deletes it", async () => {
+		const { row, user } = await purged();
+		let signIn: Promise<unknown> | undefined;
+		clerk.mockImplementationOnce(() => {
+			signIn = user.t.mutation(api.users.getOrCreate, {
+				authProvider: "google",
+			});
+			// The rejection is asserted below, once the request has returned.
+			signIn.catch(() => {});
+			return Promise.resolve(new Response(null, { status: 200 }));
+		});
+		await attempt(user, row._id);
+		await expect(signIn).rejects.toThrow(/account_deleting/);
+		expect(await queued(user)).toEqual([]);
+	});
+
+	it("lets them sign up again once a failed request lets go", async () => {
+		const { row, user } = await purged();
+		clerk.mockResolvedValueOnce(new Response(null, { status: 500 }));
+		await attempt(user, row._id);
+		const [after] = await queued(user);
+		expect(after?.claimedAt).toBeUndefined();
+		await expect(
+			user.t.mutation(api.users.getOrCreate, { authProvider: "google" })
+		).resolves.toBeDefined();
+	});
+
+	it("lets a claim from a request that died lapse", async () => {
+		const { row, user } = await purged();
+		await user.root.run((ctx) =>
+			ctx.db.patch("clerk_user_deletions", row._id, { claimedAt: NOW })
+		);
+		await expect(
+			user.t.mutation(api.users.getOrCreate, { authProvider: "google" })
+		).rejects.toThrow(/account_deleting/);
+		vi.setSystemTime(NOW + HOUR);
+		await expect(
+			user.t.mutation(api.users.getOrCreate, { authProvider: "google" })
+		).resolves.toBeDefined();
 	});
 
 	it("uses the verified subject, not a legacy placeholder", async () => {

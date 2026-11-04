@@ -1,7 +1,8 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { awardAchievement } from "./achievements/award";
+import { clerkDeletionInFlight } from "./jobs/clerkUserDeletion";
 import { rankInsert } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
 import { generateDisplayName } from "./lib/displayName";
@@ -109,6 +110,15 @@ export const getOrCreate = mutation({
 				);
 			}
 			return existingUser._id;
+		}
+
+		// A purged account's Clerk user is being deleted right now. An account made
+		// here would lose its sign-in when that lands, so wait it out instead.
+		if (await clerkDeletionInFlight(ctx, identity.tokenIdentifier)) {
+			throw new ConvexError({
+				code: "account_deleting",
+				message: "This account is still being deleted",
+			});
 		}
 
 		const now = Date.now();
