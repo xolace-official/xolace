@@ -165,6 +165,14 @@ describe("intake v2 arms (#704)", () => {
 			]);
 		});
 
+		it("records a late safety verdict and where it found the person", () => {
+			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackSafetyLate(posthog, "elevated", "plus");
+			expect(captured("intake_safety_late")).toEqual([
+				{ intake_arm: "v2", safeguard_level: "elevated", step: "plus" },
+			]);
+		});
+
 		it("records why the pick-list stood in for a reading", () => {
 			analytics.trackIntakeArmAssigned(posthog, "v2");
 			analytics.trackReadFallback(posthog, "timeout");

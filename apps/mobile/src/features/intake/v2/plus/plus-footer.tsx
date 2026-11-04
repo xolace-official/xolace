@@ -39,6 +39,8 @@ export type PlusFooterProps = {
 	onBuy: () => void;
 	onContinueFree: () => void;
 	onPick: (plan: PlanId) => void;
+	/** A restore starting or ending; absent in the dev preview. */
+	onRestoring?: (active: boolean) => void;
 	onRetry: () => void;
 	onSeePlus: () => void;
 	plan: PlanId;
@@ -89,8 +91,17 @@ function FreeSideFooter({
 }
 
 function PlusSideFooter(props: PlusFooterProps) {
-	const { busy, buying, onBuy, onPick, owned, plan, plans, unavailable } =
-		props;
+	const {
+		busy,
+		buying,
+		onBuy,
+		onPick,
+		onRestoring,
+		owned,
+		plan,
+		plans,
+		unavailable,
+	} = props;
 	// Themed, not in `@theme static`, so it is read through Uniwind.
 	const ink = useCSSVariable("--color-offer-ink") as string;
 	if (unavailable) {
@@ -136,7 +147,7 @@ function PlusSideFooter(props: PlusFooterProps) {
 					{price}
 				</AppText>
 			)}
-			<LegalLinks />
+			<LegalLinks onRestoring={onRestoring} />
 		</View>
 	);
 }
@@ -175,7 +186,7 @@ function PlanOption({ onPress, selected, tag, title }: OptionProps) {
 
 /** Terms and Privacy where the subscription is sold (App Review 3.1.2), and Restore so
  * someone who already subscribed can get it back without leaving intake. */
-function LegalLinks() {
+function LegalLinks({ onRestoring }: Pick<PlusFooterProps, "onRestoring">) {
 	const [open, setOpen] = useState<LegalDocument | null>(null);
 	return (
 		<>
@@ -194,7 +205,7 @@ function LegalLinks() {
 				>
 					Privacy Policy
 				</AppText>
-				<PaywallRestoreButton />
+				<PaywallRestoreButton onRestoring={onRestoring} />
 			</View>
 			<LegalBottomSheet document={open} onClose={() => setOpen(null)} />
 		</>

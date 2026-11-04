@@ -11,6 +11,7 @@ import type {
 	AnswerMode,
 	HeardSource,
 	IntakeV2State,
+	IntakeV2Step,
 	PlusOutcome,
 	PlusSide,
 } from "@/features/intake/v2/machine";
@@ -297,6 +298,22 @@ export function trackSafetyRouted(
 	posthog.capture("intake_safety_routed", {
 		...prune({ intake_arm: arm }),
 		safeguard_level: level,
+	});
+}
+
+/**
+ * A safety verdict that landed after the pick-list stood in, and where the person had got
+ * to. `done` means support may never have been seen: the save was already on its way out.
+ */
+export function trackSafetyLate(
+	posthog: PostHog,
+	level: Reading["safeguardLevel"],
+	step: IntakeV2Step
+) {
+	posthog.capture("intake_safety_late", {
+		...prune({ intake_arm: arm }),
+		safeguard_level: level,
+		step,
 	});
 }
 

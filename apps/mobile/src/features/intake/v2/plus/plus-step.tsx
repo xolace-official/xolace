@@ -29,9 +29,11 @@ type Props = {
 	/** The intake is being saved after this step. */
 	busy: boolean;
 	onExit: (outcome: PlusOutcome) => void;
+	/** A purchase or restore starting or ending: nothing may interrupt one. */
+	onStoreCall: (active: boolean) => void;
 };
 
-export function PlusStep({ busy, onExit }: Props) {
+export function PlusStep({ busy, onExit, onStoreCall }: Props) {
 	const posthog = usePostHog();
 	const { isPlus, isResolved } = usePlusEntitlement();
 	const { isLoading, plans, purchase, refreshOfferings, unavailable } =
@@ -83,6 +85,7 @@ export function PlusStep({ busy, onExit }: Props) {
 		settled.current = true;
 		const trial = startsTrial(chosen, plans);
 		setBuying(true);
+		onStoreCall(true);
 		try {
 			if (await purchase(pkg, INTAKE_PLUS_SURFACE)) {
 				trackPlusPurchased(posthog, chosen, trial);
@@ -90,6 +93,7 @@ export function PlusStep({ busy, onExit }: Props) {
 			}
 		} finally {
 			setBuying(false);
+			onStoreCall(false);
 		}
 	};
 
@@ -120,6 +124,7 @@ export function PlusStep({ busy, onExit }: Props) {
 					}
 					setPicked(next);
 				}}
+				onRestoring={onStoreCall}
 				onRetry={retry}
 				onSide={switchTo}
 				onTryTalk={() => {

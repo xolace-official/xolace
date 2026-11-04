@@ -2,18 +2,19 @@
 // spoken (#709) answer is read by Flux (#708): chips, one follow-up, or crisis support. Then
 // the name, and Xolace+ once (#713).
 import { usePostHog } from "posthog-react-native";
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useEffectEvent, useReducer, useRef } from "react";
 import {
 	trackAnswerGiven,
 	trackFollowUpShown,
 	trackHeardConfirmed,
 	trackReadFallback,
+	trackSafetyLate,
 	trackSafetyRouted,
 } from "@/features/intake/analytics";
 import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
 import { AskStep } from "@/features/intake/v2/ask-step";
 import { FollowUpStep } from "@/features/intake/v2/follow-up-step";
-import { chipChanges } from "@/features/intake/v2/heard";
+import { chipChanges, type Reading } from "@/features/intake/v2/heard";
 import { HeardStep } from "@/features/intake/v2/heard-step";
 import { InterpretStep } from "@/features/intake/v2/interpret-step";
 import { ListenStep } from "@/features/intake/v2/listen-step";
@@ -43,6 +44,16 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 	const readAnswer = useReadFirstAnswer();
 	const { isPlus } = usePlusEntitlement();
 
+	// A fallback gave up waiting, not on the person: a safety verdict still counts, wherever
+	// they've got to (the reducer holds it through a purchase or a save).
+	const onLateRead = useEffectEvent((reading: Reading | null) => {
+		if (reading?.route !== "safety" || state.safetyRouted) {
+			return;
+		}
+		trackSafetyLate(posthog, reading.safeguardLevel, state.step);
+		dispatch({ resources: reading.resources, type: "LATE_SAFETY" });
+	});
+
 	// One read per arrival at `interpret`; a result after unmount is dropped.
 	useEffect(() => {
 		if (state.step !== "interpret") {
@@ -57,6 +68,9 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 			if ("fallback" in outcome) {
 				trackReadFallback(posthog, outcome.fallback);
 				dispatch({ type: "READ_FAILED" });
+				if ("late" in outcome) {
+					void outcome.late.then((reading) => onLateRead(reading));
+				}
 				return;
 			}
 			if (outcome.reading.route === "safety") {
@@ -102,7 +116,12 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 	// Xolace+ is its own screen, after the three stops the bar counts. `done` stays on the
 	// screen the save left from, busy, until it lands.
 	const offering =
-		state.step === "plus" || (state.step === "done" && state.plusShown);
+		state.step === "plus" ||
+		(state.step === "done" && state.plusShown && !state.safetyRouted);
+
+	// Dispatched before the store is called, so no verdict can land ahead of it.
+	const onStoreCall = (active: boolean) =>
+		dispatch({ active, type: "STORE_CALL" });
 
 	const body = () => {
 		switch (state.step) {
@@ -202,12 +221,13 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 					<PlusStep
 						busy={false}
 						onExit={(outcome) => dispatch({ outcome, type: "PLUS_EXIT" })}
+						onStoreCall={onStoreCall}
 					/>
 				);
 			case "name":
 			case "done":
 				return offering ? (
-					<PlusStep busy onExit={() => undefined} />
+					<PlusStep busy onExit={() => undefined} onStoreCall={onStoreCall} />
 				) : (
 					<NameStep
 						busy={state.step === "done"}
