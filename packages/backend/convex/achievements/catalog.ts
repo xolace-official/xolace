@@ -6,6 +6,10 @@ import { streakMilestoneCopy } from "../streaks/milestones";
  * (`user_achievements` rows hold it), so rename a title or copy freely but
  * never an id. `artKey` names the image in `badge_art`; several open-ended
  * streak rungs share one.
+ *
+ * If an id ever must go (dropping an entry, or a streak rung off the ladder),
+ * ship a migration that stamps its rows `seenAt`. The unlock moment skips ids it
+ * can't find, but the summary would still count them.
  */
 
 export type AchievementCategory =
