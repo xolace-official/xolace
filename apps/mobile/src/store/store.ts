@@ -27,6 +27,11 @@ type ThemeSlice = {
 type OnboardingSlice = {
 	introSeen: boolean;
 	setIntroSeen: (v: boolean) => void;
+	/** Home's reflect card has left idle: the composer is open (typing or a live mic), or a
+	 * submit is on its way and has no session yet. Transient; the badge unlock moment waits on
+	 * it, since it would close the keyboard over a half-written reflection. */
+	homeComposing: boolean;
+	setHomeComposing: (v: boolean) => void;
 	/** True while any home sheet is open or armed to open. Transient; the reflect tour hides
 	 * its coach marks while set. */
 	homeSheetBlocking: boolean;
@@ -223,6 +228,7 @@ export const useAppStore = create<AppState>()(
 				devStarterEligible: false,
 				dictationUpsellSeen: false,
 
+				homeComposing: false,
 				homeSheetBlocking: false,
 				homeSheetOpen: false,
 
@@ -268,6 +274,7 @@ export const useAppStore = create<AppState>()(
 				setChatEnabledCached: (v) => set({ chatEnabledCached: v }),
 				setColorThemeId: (id) => set({ colorThemeId: id }),
 				setDictationUpsellSeen: (v) => set({ dictationUpsellSeen: v }),
+				setHomeComposing: (v) => set({ homeComposing: v }),
 				setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 				setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
 				setIntroSeen: (v) => set({ introSeen: v }),
