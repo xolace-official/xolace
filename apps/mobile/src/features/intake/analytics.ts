@@ -5,6 +5,8 @@
 import { INTAKE_VERSION } from "@xolace/backend/convex/lib/validators";
 import type { PostHog } from "posthog-react-native";
 import { SERIES_BRANCH_VALUE } from "@/features/intake/questions";
+import type { IntakeArm } from "@/features/intake/v2/arm";
+import type { AnswerMode, HeardSource } from "@/features/intake/v2/machine";
 import type { IntakeAnswers } from "@/store/intake-slice";
 
 type StepType = "founder" | "question" | "interstitial" | "paywall";
@@ -144,10 +146,16 @@ let completedFired = false;
 
 const durationMs = () => (startedAt === 0 ? 0 : Date.now() - startedAt);
 
+/** The `intake-v2` arm (#704), once read. Every event after it carries it. */
+let arm: IntakeArm | undefined;
+
+let firstReflectionFired = false;
+
 export function trackIntakeStarted(posthog: PostHog, sessionCount: number) {
 	startedAt = Date.now();
 	returningUser = sessionCount > 0;
 	completedFired = false;
+	firstReflectionFired = false;
 	posthog.capture("intake_started", {
 		is_returning_user: sessionCount > 0,
 		session_count: sessionCount,
@@ -195,7 +203,9 @@ export function trackPaywallSkipped(posthog: PostHog) {
 export type IntakeOutcome =
 	| "purchased"
 	| "dismissed_paywall"
-	| "skipped_paywall";
+	| "skipped_paywall"
+	/** v2 before its Xolace+ screen exists: nothing was offered. */
+	| "no_offer";
 
 export function trackIntakeCompleted(
 	posthog: PostHog,
@@ -209,7 +219,60 @@ export function trackIntakeCompleted(
 	posthog.capture("intake_completed", {
 		branched_series: branchedSeries(answers),
 		duration_ms: durationMs(),
+		...prune({ intake_arm: arm }),
 		is_returning_user: returningUser,
 		outcome,
+	});
+}
+
+/**
+ * Fired once, when the founder letter's CTA freezes the arm: `intake_started` comes before
+ * the flag is read, so this is each arm's start.
+ */
+export function trackIntakeArmAssigned(posthog: PostHog, assigned: IntakeArm) {
+	arm = assigned;
+	posthog.capture("intake_arm_assigned", { intake_arm: assigned });
+}
+
+/** v2's one answer: how it came in and how long, never the words. */
+export function trackAnswerGiven(
+	posthog: PostHog,
+	mode: AnswerMode,
+	answer: string
+) {
+	posthog.capture("intake_answer_given", {
+		answer_length: answer.length,
+		answer_mode: mode,
+		...prune({ intake_arm: arm }),
+	});
+}
+
+/** "That's me" on v2's chips: counts against what the answer was read as. */
+export function trackHeardConfirmed(
+	posthog: PostHog,
+	read: HeardSource,
+	changes: { added: number; kept: number; removed: number }
+) {
+	posthog.capture("intake_heard_confirmed", {
+		chips_added: changes.added,
+		chips_kept: changes.kept,
+		chips_removed: changes.removed,
+		...prune({ intake_arm: arm }),
+		read,
+	});
+}
+
+/**
+ * The first reflection sent after an intake in this session, timed from intake start, for
+ * either arm. A cold kill in between loses it: the clock is per process.
+ */
+export function trackFirstReflection(posthog: PostHog) {
+	if (startedAt === 0 || firstReflectionFired) {
+		return;
+	}
+	firstReflectionFired = true;
+	posthog.capture("intake_first_reflection", {
+		...prune({ intake_arm: arm }),
+		ms_since_intake_started: durationMs(),
 	});
 }

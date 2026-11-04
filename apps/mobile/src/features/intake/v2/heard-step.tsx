@@ -1,0 +1,137 @@
+// `heard`: what Flux took from the answer, as chips. Until the answer is read (#704), and
+// whenever reading fails, it is the plain pick-list: every chip, none on.
+import { Button, PressableFeedback } from "heroui-native";
+import { ScrollView, View } from "react-native";
+import { AppText } from "@/components/shared/app-text";
+import { FluxStill } from "@/features/intake/v2/flux-still";
+import {
+	CHIP_GROUPS,
+	type Chip,
+	echoOf,
+	type Heard,
+	isOn,
+} from "@/features/intake/v2/heard";
+import type { HeardSource } from "@/features/intake/v2/machine";
+import { playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
+
+const FLUX_SIZE = 80;
+
+type Props = {
+	answer: string;
+	heard: Heard;
+	onConfirm: () => void;
+	onSayAgain: () => void;
+	onToggle: (chip: Chip) => void;
+	read: HeardSource | null;
+};
+
+export function HeardStep({
+	answer,
+	heard,
+	onConfirm,
+	onSayAgain,
+	onToggle,
+	read,
+}: Props) {
+	// A chip off after a reading was dropped by the user; on the pick-list it was never on.
+	const readByModel = read === "model";
+
+	return (
+		<View className="flex-1">
+			<ScrollView
+				contentContainerClassName="px-6 pt-5 pb-6"
+				showsVerticalScrollIndicator={false}
+			>
+				<View className="flex-row items-center gap-3">
+					<FluxStill mood="happy" size={FLUX_SIZE} />
+					<View className="flex-1">
+						<AppText className="font-[Poppins-SemiBold] text-[12px] text-ember uppercase tracking-[1.7px]">
+							Here&apos;s what I heard
+						</AppText>
+						<AppText
+							accessibilityRole="header"
+							className="mt-1.5 font-[Poppins-SemiBold] text-[24px] text-foreground leading-[28px]"
+						>
+							{readByModel
+								? "Tap anything that's off."
+								: "Tap anything that fits."}
+						</AppText>
+					</View>
+				</View>
+
+				<View className="mt-[18px] border-ember border-l-2 pl-3">
+					<AppText className="font-[Poppins-Regular] text-[14px] text-foreground/80 leading-5">
+						From &ldquo;{echoOf(answer)}&rdquo;
+					</AppText>
+				</View>
+
+				<View className="mt-[18px] gap-[18px]">
+					{CHIP_GROUPS.map((group) => (
+						<View className="gap-2" key={group.label}>
+							<AppText className="font-[Poppins-Regular] text-[13px] text-muted">
+								{group.label}
+							</AppText>
+							<View className="flex-row flex-wrap gap-2">
+								{group.chips.map((chip) => {
+									const on = isOn(heard, chip);
+									return (
+										<PressableFeedback
+											accessibilityRole="button"
+											accessibilityState={{ selected: on }}
+											className={cn(
+												"min-h-10 justify-center rounded-full border px-3.5 py-2",
+												on
+													? "border-accent bg-accent/20"
+													: "border-border border-dashed"
+											)}
+											key={`${chip.field}:${chip.value}`}
+											onPress={() => {
+												playSoftPress();
+												onToggle(chip);
+											}}
+										>
+											<AppText
+												className={cn(
+													"font-[Poppins-Medium] text-[14px]",
+													on ? "text-foreground" : "text-muted",
+													!on && readByModel && "line-through"
+												)}
+											>
+												{chip.label}
+											</AppText>
+										</PressableFeedback>
+									);
+								})}
+							</View>
+						</View>
+					))}
+				</View>
+
+				<View className="mt-[22px] rounded-[14px] bg-surface-secondary px-3.5 py-3">
+					<AppText className="font-[Poppins-Regular] text-[13px] text-muted leading-5">
+						This only shapes your first reflection.
+					</AppText>
+				</View>
+			</ScrollView>
+
+			<View className="gap-1 px-6 pt-2 pb-2">
+				<Button
+					onPress={() => {
+						playSoftPress();
+						onConfirm();
+					}}
+				>
+					<Button.Label>That&apos;s me</Button.Label>
+				</Button>
+				<AppText
+					accessibilityRole="button"
+					className="self-center px-2 py-3 font-[Poppins-Medium] text-[15px] text-accent"
+					onPress={onSayAgain}
+				>
+					Say it again
+				</AppText>
+			</View>
+		</View>
+	);
+}

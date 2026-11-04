@@ -6,11 +6,15 @@ import { useEffect, useRef } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
-import { trackIntakeStarted } from "@/features/intake/analytics";
+import {
+	trackIntakeArmAssigned,
+	trackIntakeStarted,
+} from "@/features/intake/analytics";
 import { FounderMarquee } from "@/features/intake/founder-message/founder-marquee";
 import { LetterBody } from "@/features/intake/founder-message/letter-body";
 import { FOUNDER_MESSAGE } from "@/features/intake/founder-message/letter-copy";
 import { IntakeBlank } from "@/features/intake/questionnaire/intake-screen";
+import { freezeIntakeArm, INTAKE_V2_FLAG } from "@/features/intake/v2/arm";
 import { GateFade } from "@/features/profile/components/gate-fade";
 import { useFullContext } from "@/lib/convex/use-full-context";
 
@@ -49,6 +53,17 @@ export default function IntakeIndex() {
 	}
 
 	const audience = context.profile.sessionCount > 0 ? "existing" : "new";
+
+	// The flows part here, so the flag is read here: after the letter, it has had time to load.
+	const beginIntake = () => {
+		const { arm, fresh } = freezeIntakeArm(() =>
+			posthog.getFeatureFlag(INTAKE_V2_FLAG)
+		);
+		if (fresh) {
+			trackIntakeArmAssigned(posthog, arm);
+		}
+		router.push(arm === "v2" ? "/(intake)/flux" : "/(intake)/questionnaire");
+	};
 
 	return (
 		<View
@@ -101,10 +116,7 @@ export default function IntakeIndex() {
 			</View>
 
 			<View className="px-6 pt-2">
-				<Button
-					onPress={() => router.push("/(intake)/questionnaire")}
-					variant="primary"
-				>
+				<Button onPress={beginIntake} variant="primary">
 					{FOUNDER_MESSAGE.cta}
 				</Button>
 			</View>

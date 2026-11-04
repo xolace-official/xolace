@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import type { PostHog } from "posthog-react-native";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
 	declinedCount,
@@ -76,6 +77,87 @@ describe("intakePersonProperties", () => {
 			acquisition_source: "short_form_video",
 			series_seen: "loved_it",
 			series_want_in_app: true,
+		});
+	});
+});
+
+describe("intake v2 arms (#704)", () => {
+	// Intake analytics keeps its clock and latches per process; each test gets a fresh module.
+	let analytics: typeof import("@/features/intake/analytics");
+	let capture: ReturnType<typeof vi.fn>;
+	let posthog: PostHog;
+
+	beforeEach(async () => {
+		vi.resetModules();
+		vi.useFakeTimers();
+		analytics = await import("@/features/intake/analytics");
+		capture = vi.fn();
+		posthog = { capture } as unknown as PostHog;
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	const captured = (event: string) =>
+		capture.mock.calls
+			.filter(([name]) => name === event)
+			.map(([, props]) => props);
+
+	describe("per-arm intake events", () => {
+		it("stamps intake_completed with the arm", () => {
+			analytics.trackIntakeStarted(posthog, 0);
+			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackIntakeCompleted(posthog, "no_offer", {});
+			expect(captured("intake_arm_assigned")).toEqual([{ intake_arm: "v2" }]);
+			expect(captured("intake_completed")[0]).toMatchObject({
+				intake_arm: "v2",
+				outcome: "no_offer",
+			});
+		});
+
+		it("sends how the answer came in and its length, never the words", () => {
+			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackAnswerGiven(posthog, "typed", "I'm not sleeping");
+			expect(captured("intake_answer_given")).toEqual([
+				{ answer_length: 16, answer_mode: "typed", intake_arm: "v2" },
+			]);
+		});
+
+		it("counts the chips tapped off and on", () => {
+			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackHeardConfirmed(posthog, "pick_list", {
+				added: 2,
+				kept: 0,
+				removed: 0,
+			});
+			expect(captured("intake_heard_confirmed")).toEqual([
+				{
+					chips_added: 2,
+					chips_kept: 0,
+					chips_removed: 0,
+					intake_arm: "v2",
+					read: "pick_list",
+				},
+			]);
+		});
+	});
+
+	describe("trackFirstReflection", () => {
+		it("times the first reflection from intake start, once", () => {
+			analytics.trackIntakeStarted(posthog, 0);
+			analytics.trackIntakeArmAssigned(posthog, "control");
+			vi.advanceTimersByTime(90_000);
+			analytics.trackFirstReflection(posthog);
+			analytics.trackFirstReflection(posthog);
+			expect(captured("intake_first_reflection")).toEqual([
+				{ intake_arm: "control", ms_since_intake_started: 90_000 },
+			]);
+		});
+
+		it("stays quiet when no intake ran in this session", () => {
+			analytics.trackFirstReflection(posthog);
+			expect(captured("intake_first_reflection")).toEqual([]);
 		});
 	});
 });

@@ -1,0 +1,121 @@
+// `ask`: Flux asks the one question while it types out, then the ways to answer. Talk (the
+// mic) joins with the listen step; until then only quick replies, typing, or Skip.
+import { PressableFeedback } from "heroui-native";
+import { useEffect, useState } from "react";
+import { Pressable, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { AppText } from "@/components/shared/app-text";
+import { FluxStill } from "@/features/intake/v2/flux-still";
+import { playSoftPress } from "@/lib/haptics";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+
+const ASK_LINE =
+	"Hey, I'm Flux. Before anything else… what's been sitting with you lately?";
+
+const QUICK_REPLIES = [
+	"Work's been a lot",
+	"I can't name it",
+	"I feel really alone lately",
+] as const;
+
+const TYPE_MS_PER_CHAR = 38;
+const FLUX_SIZE = 190;
+
+/** How much of the line has typed out; all of it at once under reduced motion. */
+function useTypedLine(line: string) {
+	const reduced = useEffectiveReducedMotion();
+	const [shown, setShown] = useState(reduced ? line.length : 0);
+	useEffect(() => {
+		if (reduced) {
+			setShown(line.length);
+			return;
+		}
+		const timer = setInterval(() => {
+			setShown((n) => {
+				if (n + 1 >= line.length) {
+					clearInterval(timer);
+				}
+				return Math.min(n + 1, line.length);
+			});
+		}, TYPE_MS_PER_CHAR);
+		return () => clearInterval(timer);
+	}, [line, reduced]);
+	return { done: shown >= line.length, text: line.slice(0, shown) };
+}
+
+type Props = {
+	onQuickReply: (text: string) => void;
+	onSkip: () => void;
+	onType: () => void;
+};
+
+export function AskStep({ onQuickReply, onSkip, onType }: Props) {
+	const typed = useTypedLine(ASK_LINE);
+
+	return (
+		<View className="flex-1 items-center px-5 pt-4">
+			<FluxStill
+				key={typed.done ? "idle" : "talking"}
+				mood={typed.done ? "idle" : "talking"}
+				size={FLUX_SIZE}
+			/>
+			<View className="mt-3.5 self-stretch rounded-3xl border border-border bg-surface px-5 py-4">
+				{/* Tail up at Flux. */}
+				<View className="absolute -top-2 left-1/2 -ml-2 size-4 rotate-45 border-border border-t border-l bg-surface" />
+				{/* The whole line for screen readers; the typing is for sighted users. */}
+				<AppText
+					accessibilityLabel={ASK_LINE}
+					className="min-h-[84px] font-[Poppins-Medium] text-[21px] text-foreground leading-[29px]"
+				>
+					{typed.text}
+					{typed.done ? null : <AppText className="text-ember">▍</AppText>}
+				</AppText>
+			</View>
+
+			<View className="flex-1" />
+
+			{typed.done ? (
+				<Animated.View
+					className="gap-3 self-stretch"
+					entering={FadeInDown.duration(400)}
+				>
+					<View className="flex-row flex-wrap justify-center gap-2">
+						{QUICK_REPLIES.map((reply) => (
+							<PressableFeedback
+								accessibilityRole="button"
+								className="min-h-11 justify-center rounded-full border border-border bg-surface px-4 py-2.5"
+								key={reply}
+								onPress={() => {
+									playSoftPress();
+									onQuickReply(reply);
+								}}
+							>
+								<AppText className="font-[Poppins-Medium] text-[14px] text-foreground">
+									{reply}
+								</AppText>
+							</PressableFeedback>
+						))}
+					</View>
+					<Pressable
+						accessibilityRole="button"
+						className="min-h-[52px] justify-center rounded-full border border-border bg-surface-secondary px-5"
+						onPress={onType}
+					>
+						<AppText className="font-[Poppins-Regular] text-[16px] text-muted">
+							Tell Flux anything…
+						</AppText>
+					</Pressable>
+					<View className="flex-row justify-end">
+						<AppText
+							accessibilityRole="button"
+							className="px-1 py-2 font-[Poppins-Medium] text-[13px] text-muted"
+							onPress={onSkip}
+						>
+							Skip
+						</AppText>
+					</View>
+				</Animated.View>
+			) : null}
+		</View>
+	);
+}
