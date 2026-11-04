@@ -13,6 +13,8 @@ import { useAppStore } from "@/store/store";
 export function useReflectBridge(
 	screen: ReflectionStateName,
 	wordsPicked: boolean,
+	/** An unsent draft is on the card: a pickup's words never replace it. */
+	hasDraft: boolean,
 	isLoading: boolean,
 	dispatch: (action: ReflectionAction) => void
 ) {
@@ -52,12 +54,15 @@ export function useReflectBridge(
 		clear();
 		if (screen === "idle") {
 			dispatch({ type: "TAP_INPUT" });
-			// Intake v2's "Pick up where you left off" (#707): their words, ready to send.
-			if (text) {
+			// Intake v2's "Pick up where you left off" (#707): their words, ready to send,
+			// unless a kept draft (#258) is already there; theirs wins.
+			if (text && hasDraft) {
+				toast.show({ label: "Your draft is still here" });
+			} else if (text) {
 				dispatch({ text, type: "TEXT_CHANGE" });
 			}
 		} else if (screen !== "typing" && screen !== "typing-nudge") {
 			toast.show({ label: "Tap the card to start reflecting" });
 		}
-	}, [requested, text, screen, dispatch, clear, toast]);
+	}, [requested, text, screen, hasDraft, dispatch, clear, toast]);
 }

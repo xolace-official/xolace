@@ -283,6 +283,7 @@ export function useReflectionMachine() {
 				freeze_occurred: false,
 				input_length: state.selectedTextures.length,
 			});
+			trackFirstReflection(posthog);
 			submitTimestampRef.current = Date.now();
 		} catch (error) {
 			dispatchError(extractErrorMessage(error));
