@@ -2,13 +2,12 @@
 // reply, typing, talking (the mic, #709), or Skip.
 import { SymbolView } from "expo-symbols";
 import { Button, PressableFeedback, useThemeColor } from "heroui-native";
-import { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
-import { Flux, SAY_MS_PER_CHAR } from "@/features/intake/v2/flux";
+import { Flux } from "@/features/intake/v2/flux";
+import { useTypedLine } from "@/features/intake/v2/use-typed-line";
 import { playSoftPress } from "@/lib/haptics";
-import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const ASK_LINE =
 	"Hey, I'm Flux. Before anything else… what's been sitting with you lately?";
@@ -22,28 +21,6 @@ const QUICK_REPLIES = [
 const FLUX_SIZE = 190;
 const MIC_ICON = { android: "mic", ios: "mic.fill", web: "mic" } as const;
 const MIC_ICON_SIZE = 22;
-
-/** How much of the line has typed out; all of it at once under reduced motion. */
-function useTypedLine(line: string) {
-	const reduced = useEffectiveReducedMotion();
-	const [shown, setShown] = useState(reduced ? line.length : 0);
-	useEffect(() => {
-		if (reduced) {
-			setShown(line.length);
-			return;
-		}
-		const timer = setInterval(() => {
-			setShown((n) => {
-				if (n + 1 >= line.length) {
-					clearInterval(timer);
-				}
-				return Math.min(n + 1, line.length);
-			});
-		}, SAY_MS_PER_CHAR);
-		return () => clearInterval(timer);
-	}, [line, reduced]);
-	return { done: shown >= line.length, text: line.slice(0, shown) };
-}
 
 type Props = {
 	onQuickReply: (text: string) => void;

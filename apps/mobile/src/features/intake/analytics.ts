@@ -388,3 +388,28 @@ export function trackPlusPurchased(
 export function trackPlusContinuedFree(posthog: PostHog, side: PlusSide) {
 	posthog.capture("intake_plus_continued_free", plusProps({ side }));
 }
+
+/** "Try it" on the Talk card opened the Talk demo (#714). */
+export function trackTalkDemoOpened(posthog: PostHog) {
+	posthog.capture("intake_talk_demo_opened", plusProps({}));
+}
+
+/** The demo's one turn ended: Flux's question was said, or the safeguard ended it on support.
+ * `mode`: how the line was given. Never the words. */
+export function trackTalkDemoFinished(
+	posthog: PostHog,
+	props: {
+		endedBy: "reply" | "safety";
+		mode: "voice" | "type" | null;
+		voice: string;
+	}
+) {
+	posthog.capture(
+		"intake_talk_demo_finished",
+		plusProps({
+			ended_by: props.endedBy,
+			...prune({ mode: props.mode }),
+			voice: props.voice,
+		})
+	);
+}

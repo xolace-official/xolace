@@ -15,9 +15,15 @@ const FLUX_SIZE = 80;
 
 export type PlusStepViewProps = Omit<PlusFooterProps, "onSeePlus"> & {
 	onSide: (side: PlusSide) => void;
+	/** "Try it" on the Talk card (#714); absent in the dev preview. */
+	onTryTalk?: () => void;
 };
 
-export function PlusStepView({ onSide, ...footer }: PlusStepViewProps) {
+export function PlusStepView({
+	onSide,
+	onTryTalk,
+	...footer
+}: PlusStepViewProps) {
 	const { side } = footer;
 	return (
 		<View className="flex-1">
@@ -50,7 +56,7 @@ export function PlusStepView({ onSide, ...footer }: PlusStepViewProps) {
 				contentContainerClassName="px-5 pb-2"
 				showsVerticalScrollIndicator={false}
 			>
-				<MomentCards side={side} />
+				<MomentCards onTryTalk={onTryTalk} side={side} />
 			</ScrollView>
 
 			<PlusFooter {...footer} onSeePlus={() => onSide("plus")} />

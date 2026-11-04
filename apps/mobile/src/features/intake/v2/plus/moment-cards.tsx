@@ -19,7 +19,8 @@ type Moment = {
 	benefit: string;
 	free: string;
 	title: string;
-	visual: () => ReactNode;
+	/** Only Talk's bar acts: it opens the demo. */
+	visual: (actions: { onTryTalk?: () => void }) => ReactNode;
 	when: string;
 };
 
@@ -28,7 +29,7 @@ const MOMENTS: Moment[] = [
 		benefit: "Talk it out before it's named.",
 		free: "You type it once and the Mirror names it.",
 		title: "Work won't leave your head.",
-		visual: () => <TalkBar />,
+		visual: ({ onTryTalk }) => <TalkBar onTry={onTryTalk} />,
 		when: "Tue night",
 	},
 	{
@@ -47,17 +48,28 @@ const MOMENTS: Moment[] = [
 	},
 ];
 
-export function MomentCards({ side }: { side: PlusSide }) {
+type Props = {
+	/** Opens the Talk demo; absent where nothing should reach the server (the dev preview). */
+	onTryTalk?: () => void;
+	side: PlusSide;
+};
+
+export function MomentCards({ onTryTalk, side }: Props) {
 	return (
 		<View className="gap-2.5">
 			{MOMENTS.map((moment) => (
-				<MomentCard key={moment.when} moment={moment} side={side} />
+				<MomentCard
+					key={moment.when}
+					moment={moment}
+					onTryTalk={onTryTalk}
+					side={side}
+				/>
 			))}
 		</View>
 	);
 }
 
-function MomentCard({ moment, side }: { moment: Moment; side: PlusSide }) {
+function MomentCard({ moment, onTryTalk, side }: Props & { moment: Moment }) {
 	const reduced = useEffectiveReducedMotion();
 	const plus = side === "plus";
 	return (
@@ -85,7 +97,7 @@ function MomentCard({ moment, side }: { moment: Moment; side: PlusSide }) {
 						<AppText className="font-[Poppins-SemiBold] text-[19px] text-ember leading-6">
 							{moment.benefit}
 						</AppText>
-						{moment.visual()}
+						{moment.visual({ onTryTalk })}
 					</>
 				) : (
 					<AppText className="text-[14px] text-muted leading-[21px]">

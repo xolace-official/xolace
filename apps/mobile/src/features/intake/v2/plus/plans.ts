@@ -64,3 +64,10 @@ export function planTag(plan: PlanId, plans: Plans): string | null {
 	const intro = discountOn(plan, plans);
 	return intro ? `${intro.percentOff}% off` : null;
 }
+
+/** The Talk demo's way on (#714): it buys the plan picked on the step, so it names that
+ * plan's week or discount, and only when the store will give it. */
+export const keepTalkingLabel = (plan: PlanId, plans: Plans): string => {
+	const tag = planTag(plan, plans);
+	return tag ? `Keep talking · ${tag}` : "Keep talking";
+};

@@ -2,6 +2,7 @@ import type { PurchasesPackage } from "react-native-purchases";
 import { describe, expect, it } from "vitest";
 import {
 	defaultPlan,
+	keepTalkingLabel,
 	type Plans,
 	planCta,
 	planPriceLine,
@@ -137,5 +138,28 @@ describe("planTag", () => {
 	it("marks nothing without an offer", () => {
 		expect(planTag("annual", plans(yearlyPlain, monthlyPlain))).toBeNull();
 		expect(planTag("monthly", plans(yearlyPlain, monthlyPlain))).toBeNull();
+	});
+});
+
+describe("keepTalkingLabel", () => {
+	it("names the free week on yearly when it has one", () => {
+		expect(
+			keepTalkingLabel("annual", plans(yearlyWithWeek, monthlyPlain))
+		).toBe("Keep talking · 7 days free");
+	});
+
+	it("promises no week the store won't give", () => {
+		expect(
+			keepTalkingLabel("annual", plans(yearlyWithWeek, monthlyPlain, false))
+		).toBe("Keep talking");
+		expect(keepTalkingLabel("annual", plans(yearlyPlain, monthlyPlain))).toBe(
+			"Keep talking"
+		);
+	});
+
+	it("follows the plan picked, with its discount", () => {
+		expect(
+			keepTalkingLabel("monthly", plans(yearlyWithWeek, monthlyDiscounted))
+		).toBe("Keep talking · 40% off");
 	});
 });

@@ -12,6 +12,8 @@ type Handlers = {
 	/** The take is over: stopped, timed out, or ended by the recognizer. */
 	onDone: (transcript: string) => void;
 	onUnavailable: (reason: MicFailure) => void;
+	/** Where the take stops itself; the intake's answer by default. */
+	maxSeconds?: number;
 };
 
 /**
@@ -19,7 +21,11 @@ type Handlers = {
  * no recording kept. The mic permission is asked as it mounts, so only once the user taps talk.
  * Exactly one of the handlers is called, once.
  */
-export function useListenTake({ onDone, onUnavailable }: Handlers) {
+export function useListenTake({
+	onDone,
+	onUnavailable,
+	maxSeconds = MAX_TAKE_SECONDS,
+}: Handlers) {
 	const voice = useVoiceInput();
 	const [seconds, setSeconds] = useState(0);
 	const [stopping, setStopping] = useState(false);
@@ -129,7 +135,7 @@ export function useListenTake({ onDone, onUnavailable }: Handlers) {
 	}, [voice.isRecording]);
 
 	const onTick = useEffectEvent((elapsed: number) => {
-		if (elapsed >= MAX_TAKE_SECONDS) {
+		if (elapsed >= maxSeconds) {
 			stop();
 		}
 	});

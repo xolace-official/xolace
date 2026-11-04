@@ -10,10 +10,16 @@ import {
 	trackPlusPurchased,
 	trackPlusShown,
 	trackPlusSwitched,
+	trackTalkDemoOpened,
 } from "@/features/intake/analytics";
 import type { PlusOutcome, PlusSide } from "@/features/intake/v2/machine";
-import { defaultPlan, startsTrial } from "@/features/intake/v2/plus/plans";
+import {
+	defaultPlan,
+	keepTalkingLabel,
+	startsTrial,
+} from "@/features/intake/v2/plus/plans";
 import { PlusStepView } from "@/features/intake/v2/plus/plus-step-view";
+import { TalkDemo } from "@/features/intake/v2/plus/talk-demo/talk-demo";
 import { usePlusPlans } from "@/features/intake/v2/plus/use-plus-plans";
 import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
@@ -34,6 +40,9 @@ export function PlusStep({ busy, onExit }: Props) {
 	const [picked, setPicked] = useState<PlanId | null>(null);
 	const [buying, setBuying] = useState(false);
 	const [retrying, setRetrying] = useState(false);
+	const [demoOpen, setDemoOpen] = useState(false);
+	// The demo's safeguard tripped: its close leaves the step.
+	const demoSafety = useRef(false);
 	// Until the store answers, the default follows what it sells; a tap pins it.
 	const plan = picked ?? defaultPlan(plans);
 	// Set once this step has acted on Xolace+: a late entitlement then never skips for it.
@@ -66,17 +75,17 @@ export function PlusStep({ busy, onExit }: Props) {
 		setSide(next);
 	};
 
-	const buy = async () => {
-		const pkg = plans[plan].pkg;
+	const buy = async (chosen: PlanId) => {
+		const pkg = plans[chosen].pkg;
 		if (!pkg || buying) {
 			return;
 		}
 		settled.current = true;
-		const trial = startsTrial(plan, plans);
+		const trial = startsTrial(chosen, plans);
 		setBuying(true);
 		try {
 			if (await purchase(pkg, INTAKE_PLUS_SURFACE)) {
-				trackPlusPurchased(posthog, plan, trial);
+				trackPlusPurchased(posthog, chosen, trial);
 				onExit("purchased");
 			}
 		} finally {
@@ -94,30 +103,58 @@ export function PlusStep({ busy, onExit }: Props) {
 	};
 
 	return (
-		<PlusStepView
-			busy={busy}
-			buying={buying}
-			onBuy={buy}
-			onContinueFree={() => {
-				settled.current = true;
-				trackPlusContinuedFree(posthog, side);
-				onExit("dismissed");
-			}}
-			onPick={(next) => {
-				if (next !== plan) {
-					playSoftPress();
-					trackPlusPlanPicked(posthog, next);
-				}
-				setPicked(next);
-			}}
-			onRetry={retry}
-			onSide={switchTo}
-			owned={isPlus}
-			plan={plan}
-			plans={plans}
-			retrying={retrying || isLoading}
-			side={side}
-			unavailable={unavailable}
-		/>
+		<>
+			<PlusStepView
+				busy={busy}
+				buying={buying}
+				onBuy={() => buy(plan)}
+				onContinueFree={() => {
+					settled.current = true;
+					trackPlusContinuedFree(posthog, side);
+					onExit("dismissed");
+				}}
+				onPick={(next) => {
+					if (next !== plan) {
+						playSoftPress();
+						trackPlusPlanPicked(posthog, next);
+					}
+					setPicked(next);
+				}}
+				onRetry={retry}
+				onSide={switchTo}
+				onTryTalk={() => {
+					trackTalkDemoOpened(posthog);
+					setDemoOpen(true);
+				}}
+				owned={isPlus}
+				plan={plan}
+				plans={plans}
+				retrying={retrying || isLoading}
+				side={side}
+				unavailable={unavailable}
+			/>
+			<TalkDemo
+				keepTalkingLabel={keepTalkingLabel(plan, plans)}
+				// Back on the step; after crisis support, on past it to Xolace (nothing on the
+				// safety path is about Xolace+, #704).
+				onClose={() => {
+					setDemoOpen(false);
+					if (demoSafety.current) {
+						settled.current = true;
+						onExit("dismissed");
+					}
+				}}
+				// Back on the step with the plan it names, its purchase sheet already up.
+				onKeepTalking={() => {
+					setDemoOpen(false);
+					setSide("plus");
+					void buy(plan);
+				}}
+				onSafety={() => {
+					demoSafety.current = true;
+				}}
+				visible={demoOpen}
+			/>
+		</>
 	);
 }
