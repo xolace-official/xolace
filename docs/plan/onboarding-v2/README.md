@@ -23,7 +23,9 @@ render blank as plain HTML. Read them as source: the markup is the layout and co
 
 ## A · Talk to Flux
 
-Screens, in order (from the prototype's state machine):
+Screens, in order, under the app's step names (#704). The prototype's own machine differs in
+places: it calls `interpret` `think`, and Skip and "Keep it" go straight to its `ready` screen.
+The Xolace+ step after `name` is the planned app flow, not in this prototype.
 
 | Step | Shows | Leaves to |
 |---|---|---|
