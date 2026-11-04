@@ -42,6 +42,7 @@ export function HeardStep({
 	return (
 		<View className="flex-1">
 			<ScrollView
+				className="flex-1 overflow-hidden"
 				contentContainerClassName="px-6 pt-5 pb-6"
 				showsVerticalScrollIndicator={false}
 			>

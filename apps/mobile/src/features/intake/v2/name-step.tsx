@@ -2,15 +2,24 @@
 // name" beat after it (#707).
 import { SymbolView } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
-import { TextInput, View } from "react-native";
-import { KeyboardStickyView } from "react-native-keyboard-controller";
+import { useRef } from "react";
+import {
+	ScrollView,
+	type ScrollViewInstance,
+	TextInput,
+	View,
+} from "react-native";
+import { useKeyboardState } from "react-native-keyboard-controller";
 import { AppText } from "@/components/shared/app-text";
 import { suggestHandle } from "@/features/intake/answer-rules";
 import { Flux } from "@/features/intake/v2/flux";
+import { KeyboardStep } from "@/features/intake/v2/keyboard-step";
 import { NAME_MAX_CHARS } from "@/features/intake/v2/machine";
 import { playSoftPress } from "@/lib/haptics";
 
 const FLUX_SIZE = 160;
+/** Flux steps back while the keyboard is up, so the field clears the button. */
+const FLUX_SIZE_TYPING = 96;
 
 type Props = {
 	busy: boolean;
@@ -24,6 +33,8 @@ type Props = {
 export function NameStep({ busy, name, onChange, onKeep, skipped }: Props) {
 	const [muted, foreground] = useThemeColor(["muted", "foreground"]);
 	const blank = name.trim().length === 0;
+	const typing = useKeyboardState((state) => state.isVisible);
+	const scroll = useRef<ScrollViewInstance>(null);
 	const keep = () => {
 		if (blank || busy) {
 			return;
@@ -33,9 +44,27 @@ export function NameStep({ busy, name, onChange, onKeep, skipped }: Props) {
 	};
 
 	return (
-		<View className="flex-1">
-			<View className="flex-1 items-center px-6 pt-6">
-				<Flux mood="happy" size={FLUX_SIZE} />
+		<KeyboardStep
+			footer={
+				<Button isDisabled={blank || busy} onPress={keep}>
+					<Button.Label>Keep it</Button.Label>
+				</Button>
+			}
+		>
+			<ScrollView
+				className="flex-1 overflow-hidden"
+				contentContainerClassName="items-center"
+				keyboardShouldPersistTaps="handled"
+				// A short screen still can't fit it all over the keyboard: keep the field in view.
+				onLayout={() => {
+					if (typing) {
+						scroll.current?.scrollToEnd({ animated: false });
+					}
+				}}
+				ref={scroll}
+				showsVerticalScrollIndicator={false}
+			>
+				<Flux mood="happy" size={typing ? FLUX_SIZE_TYPING : FLUX_SIZE} />
 				<AppText
 					accessibilityRole="header"
 					className="mt-3.5 text-center font-[Poppins-SemiBold] text-[26px] text-foreground leading-[31px]"
@@ -78,15 +107,7 @@ export function NameStep({ busy, name, onChange, onKeep, skipped }: Props) {
 						/>
 					</Button>
 				</View>
-			</View>
-
-			<KeyboardStickyView>
-				<View className="px-6 pb-4">
-					<Button isDisabled={blank || busy} onPress={keep}>
-						<Button.Label>Keep it</Button.Label>
-					</Button>
-				</View>
-			</KeyboardStickyView>
-		</View>
+			</ScrollView>
+		</KeyboardStep>
 	);
 }
