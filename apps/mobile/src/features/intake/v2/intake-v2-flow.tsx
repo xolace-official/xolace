@@ -32,6 +32,7 @@ import { TypeStep } from "@/features/intake/v2/type-step";
 import { useIntakeV2Complete } from "@/features/intake/v2/use-intake-v2-complete";
 import { useReadFirstAnswer } from "@/features/intake/v2/use-read-first-answer";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { useAppStore } from "@/store/store";
 
 export function IntakeV2Flow({ initialName }: { initialName: string }) {
 	const [state, dispatch] = useReducer(
@@ -51,6 +52,8 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 			return;
 		}
 		trackSafetyLate(posthog, reading.safeguardLevel, state.step);
+		// Past the reducer's reach once a save has started, or has already left the intake.
+		useAppStore.getState().setIntakeFirstAnswer(null);
 		dispatch({ resources: reading.resources, type: "LATE_SAFETY" });
 	});
 

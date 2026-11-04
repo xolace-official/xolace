@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Reading, SafetyResource } from "@/features/intake/v2/heard";
 import {
+	firstAnswerToOffer,
 	type IntakeV2Action,
 	type IntakeV2State,
 	initialIntakeV2State,
@@ -731,5 +732,55 @@ describe("a late safety verdict", () => {
 	it("doesn't show support twice", () => {
 		const continued = run(naming(), late, { type: "SAFETY_CONTINUE" });
 		expect(run(continued, late)).toEqual(continued);
+	});
+});
+
+// The Mirror's "Pick up where you left off" quotes this back, unprompted.
+describe("the first answer the Mirror offers back", () => {
+	const said = (text: string) =>
+		run(
+			start(),
+			{ type: "START_TYPING" },
+			{ text, type: "DRAFT_CHANGE" },
+			{
+				type: "SEND",
+			}
+		);
+
+	it("is their words, trimmed", () => {
+		expect(firstAnswerToOffer(said("  Work's been a lot  "))).toBe(
+			"Work's been a lot"
+		);
+	});
+
+	it("is nothing when they skipped", () => {
+		expect(firstAnswerToOffer(run(start(), { type: "SKIP" }))).toBe("");
+	});
+
+	it("is nothing once the answer was routed to crisis support", () => {
+		const routed = run(said("I can't do this anymore"), done(CRISIS));
+		expect(routed.step).toBe("safety");
+		expect(firstAnswerToOffer(routed)).toBe("");
+	});
+
+	it("is nothing when the verdict landed after the read's fallback", () => {
+		const late = run(
+			said("I can't do this anymore"),
+			{ type: "READ_FAILED" },
+			{ resources: CRISIS.resources, type: "LATE_SAFETY" }
+		);
+		expect(firstAnswerToOffer(late)).toBe("");
+	});
+
+	it("is nothing when the talk demo was what tripped the safeguard", () => {
+		const demo = run(
+			said("Work's been a lot"),
+			{ type: "READ_FAILED" },
+			{ type: "CONFIRM_HEARD" },
+			{ entitled: false, type: "KEEP_NAME" },
+			{ type: "PLUS_SAFETY_EXIT" }
+		);
+		expect(demo.step).toBe("done");
+		expect(firstAnswerToOffer(demo)).toBe("");
 	});
 });

@@ -139,6 +139,14 @@ export const initialIntakeV2State = (name: string): IntakeV2State => ({
 export const micOn = (state: IntakeV2State): boolean =>
 	state.listenFailed === null || state.listenFailed === "nothing_heard";
 
+/**
+ * What the Mirror's "Pick up where you left off" may quote back. Nothing once crisis support
+ * was shown, for the answer or in the talk demo: the first home screen doesn't put those
+ * moments back in front of them unasked.
+ */
+export const firstAnswerToOffer = (state: IntakeV2State): string =>
+	state.safetyRouted ? "" : state.answer.trim();
+
 /** A take as an answer: trimmed, and held to a typed answer's length. */
 export const voiceAnswer = (transcript: string): string =>
 	transcript.trim().slice(0, ANSWER_MAX_CHARS).trim();
