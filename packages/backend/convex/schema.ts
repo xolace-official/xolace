@@ -2692,6 +2692,17 @@ export default defineSchema({
 			"conversationId",
 		]),
 
+	// Intake v2's Talk demo (#714): one per person, no words kept. Opened as
+	// the demo shows; `spokeAt` is set the moment its one turn is claimed, and
+	// from then on neither another turn nor another demo is served.
+	talk_demos: defineTable({
+		emotionalProfileId: v.id("emotional_profiles"),
+		// How the one turn ended: Flux's question, or crisis support.
+		endedBy: v.optional(v.union(v.literal("reply"), v.literal("safety"))),
+		openedAt: v.number(),
+		spokeAt: v.optional(v.number()),
+	}).index("by_emotionalProfileId", ["emotionalProfileId"]),
+
 	// Both sides of a companion talk, one row per line, as the Custom LLM
 	// endpoint served it (#588). The only lasting copy; same lifetime as its
 	// session (SESSION_CASCADE_TABLES). The session's rawInput is built from

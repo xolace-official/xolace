@@ -237,3 +237,17 @@ export const drainSparkSpends: DrainStep = async (ctx, profileId) => {
 	}
 	return rows.length === BATCH_SIZE;
 };
+
+/** Intake v2's Talk demo (#714): one row, no words. */
+export const drainTalkDemos: DrainStep = async (ctx, profileId) => {
+	const rows = await ctx.db
+		.query("talk_demos")
+		.withIndex("by_emotionalProfileId", (q) =>
+			q.eq("emotionalProfileId", profileId)
+		)
+		.take(BATCH_SIZE);
+	for (const r of rows) {
+		await ctx.db.delete("talk_demos", r._id);
+	}
+	return rows.length === BATCH_SIZE;
+};

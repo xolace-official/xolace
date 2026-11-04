@@ -26,6 +26,7 @@ import {
 	drainSessions,
 	drainSparkSpends,
 	drainStretches,
+	drainTalkDemos,
 	drainWaitlist,
 } from "./accountDeletionSteps";
 
@@ -120,6 +121,7 @@ export const purgeUser = internalMutation({
 			drainInsights,
 			drainAchievements,
 			drainSparkSpends,
+			drainTalkDemos,
 		];
 
 		let hasMore = false;
