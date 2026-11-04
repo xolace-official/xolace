@@ -91,11 +91,14 @@ export async function recordActivity(
 	const existing = dayRows.find((r) => r.actionType === args.actionType);
 	// The day's first row that counts toward the streak makes it a day showed
 	// up (#694). Several actions are still one day; quotes alone never are.
-	// lastShowedUpDay catches a day a data wipe emptied after it counted.
+	// Only a date past lastShowedUpDay counts: that catches a day a data wipe
+	// emptied after it counted, and a date a move west puts behind the last one,
+	// which also never moves lastShowedUpDay back. The row check still matters
+	// while lastShowedUpDay is unset (backfill seeds the count, not the day).
 	const firstShowedUp =
 		countsTowardStreak(args.actionType) &&
 		!dayRows.some((r) => countsTowardStreak(r.actionType)) &&
-		profile.lastShowedUpDay !== dayKey;
+		dayKey > (profile.lastShowedUpDay ?? "");
 
 	if (existing) {
 		await ctx.db.patch("activity_log", existing._id, {

@@ -263,4 +263,28 @@ describe("days showed up", () => {
 		await record(user, 1);
 		expect(await daysShowedUp(user)).toBe(2);
 	});
+
+	it("a local date behind the last one counted doesn't raise it (timezone moved west)", async () => {
+		const user = await asNewUser();
+		await record(user, 1);
+		await record(user, 0);
+
+		const p = await profile(user);
+		expect(p.daysShowedUp).toBe(1);
+		expect(p.lastShowedUpDay).toBe("2026-01-06");
+		await record(user, 2);
+		expect(await daysShowedUp(user)).toBe(2);
+	});
+
+	it("a move west doesn't reopen a day a data wipe emptied", async () => {
+		const user = await asNewUser();
+		await record(user, 1);
+		await record(user, 0);
+		await user.root.mutation(internal.jobs.dataWipe.wipe, {
+			emotionalProfileId: user.profileId,
+		});
+
+		await record(user, 1);
+		expect(await daysShowedUp(user)).toBe(1);
+	});
 });
