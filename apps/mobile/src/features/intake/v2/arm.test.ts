@@ -15,16 +15,29 @@ describe("freezeIntakeArm", () => {
 		["control", "control"],
 		[undefined, "control"],
 	] as const)("reads flag %s as %s", (flag, expected) => {
-		expect(arm.freezeIntakeArm(() => flag).arm).toBe(expected);
+		expect(arm.freezeIntakeArm("profile_a", () => flag).arm).toBe(expected);
 	});
 
 	it("reads the flag once and keeps that arm for the session", () => {
 		const read = vi.fn().mockReturnValueOnce(undefined).mockReturnValue(true);
-		expect(arm.freezeIntakeArm(read)).toEqual({ arm: "control", fresh: true });
-		expect(arm.freezeIntakeArm(read)).toEqual({
+		expect(arm.freezeIntakeArm("profile_a", read)).toEqual({
+			arm: "control",
+			fresh: true,
+		});
+		expect(arm.freezeIntakeArm("profile_a", read)).toEqual({
 			arm: "control",
 			fresh: false,
 		});
 		expect(read).toHaveBeenCalledTimes(1);
+	});
+
+	it("reads the flag again for the next account in the same process", () => {
+		const read = vi.fn().mockReturnValueOnce(undefined).mockReturnValue(true);
+		arm.freezeIntakeArm("profile_a", read);
+		expect(arm.freezeIntakeArm("profile_b", read)).toEqual({
+			arm: "v2",
+			fresh: true,
+		});
+		expect(read).toHaveBeenCalledTimes(2);
 	});
 });

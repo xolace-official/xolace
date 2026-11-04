@@ -56,7 +56,7 @@ export default function IntakeIndex() {
 
 	// The flows part here, so the flag is read here: after the letter, it has had time to load.
 	const beginIntake = () => {
-		const { arm, fresh } = freezeIntakeArm(() =>
+		const { arm, fresh } = freezeIntakeArm(context.profile._id, () =>
 			posthog.getFeatureFlag(INTAKE_V2_FLAG)
 		);
 		if (fresh) {
