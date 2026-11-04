@@ -162,7 +162,7 @@ the agent's **Voice settings** in ElevenLabs. Every agent needs it, prod's inclu
 | `RANK_MIN_POPULATION` | Minimum population before percentiles show (default 50) | A small number like `3`, so ranks show with few testers |
 | `XOLACER_CHAT_ENABLED` | Xolacer chat kill switch | Match dev |
 
-That's **28 names**. Not in the list on purpose: `CONVEX_SITE_URL` (Convex sets it),
+That's **30 names**. Not in the list on purpose: `CONVEX_SITE_URL` (Convex sets it),
 and `EVAL_OUT` / `TALK_EVAL_MODEL` (local eval runs only).
 
 Never use a `sk_live_`/production secret here. Staging is a test environment.
