@@ -60,7 +60,6 @@ function useShakeHint(eligible: boolean) {
  * `enabled`. The global default is mounted by FeedbackTrayProvider. */
 export function useFeedbackShake({ enabled }: { enabled: boolean }) {
 	const open = useOpenFeedbackTray();
-	useShakeHint(enabled);
 	useShakeToOpen({ enabled, onShake: () => open("shake") });
 }
 
@@ -80,8 +79,12 @@ function useDevMenuTrigger() {
 /** Global shake call site — active on every screen except the reflect canvas. */
 function GlobalFeedbackShake() {
 	const pathname = usePathname();
+	const enabled = pathname !== REFLECT_ROUTE;
 	useDevMenuTrigger();
-	useFeedbackShake({ enabled: pathname !== REFLECT_ROUTE });
+	// The hint lives here alone: the reflect screen stays mounted under the stack, and a
+	// second call site would toast twice when the tip comes due mid-app (#712).
+	useShakeHint(enabled);
+	useFeedbackShake({ enabled });
 	return null;
 }
 
