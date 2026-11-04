@@ -23,6 +23,12 @@ describe("store partialize", () => {
 		expect(persisted).toContain("bridgeIntroSeen");
 	});
 
+	it("the intake arm is persisted, the in-flight answers aren't", () => {
+		const persisted = persistedKeys();
+		expect(persisted).toContain("intakeArms");
+		expect(persisted).not.toContain("intakeAnswers");
+	});
+
 	it("dictationUpsellSeen is persisted", () => {
 		expect(persistedKeys()).toContain("dictationUpsellSeen");
 	});

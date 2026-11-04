@@ -254,6 +254,12 @@ export function trackIntakeArmAssigned(posthog: PostHog, assigned: IntakeArm) {
 	posthog.capture("intake_arm_assigned", { intake_arm: assigned });
 }
 
+/** An arm assigned before this process started: later events still carry it, but it's no new
+ * assignment. */
+export function restoreIntakeArm(kept: IntakeArm) {
+	arm = kept;
+}
+
 /** v2's one answer: how it came in and how long, never the words. */
 export function trackAnswerGiven(
 	posthog: PostHog,

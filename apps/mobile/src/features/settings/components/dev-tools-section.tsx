@@ -162,6 +162,8 @@ export const DevToolsSection = () => {
 		setBusy(true);
 		// No navigation here: `onboardingComplete` is the root guard and swaps the group.
 		resetIntake()
+			// A replay reads the flag again, so a tester can reach the other arm.
+			.then(() => useAppStore.setState({ intakeArms: {} }))
 			.catch((e) => {
 				toast.show({
 					description:

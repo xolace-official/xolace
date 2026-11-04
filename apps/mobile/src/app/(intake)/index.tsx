@@ -2,11 +2,12 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Button, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import {
+	restoreIntakeArm,
 	trackIntakeArmAssigned,
 	trackIntakeStarted,
 } from "@/features/intake/analytics";
@@ -14,7 +15,11 @@ import { FounderMarquee } from "@/features/intake/founder-message/founder-marque
 import { LetterBody } from "@/features/intake/founder-message/letter-body";
 import { FOUNDER_MESSAGE } from "@/features/intake/founder-message/letter-copy";
 import { IntakeBlank } from "@/features/intake/questionnaire/intake-screen";
-import { freezeIntakeArm, INTAKE_V2_FLAG } from "@/features/intake/v2/arm";
+import {
+	freezeIntakeArm,
+	INTAKE_V2_FLAG,
+	waitForIntakeFlag,
+} from "@/features/intake/v2/arm";
 import { GateFade } from "@/features/profile/components/gate-fade";
 import { useFullContext } from "@/lib/convex/use-full-context";
 
@@ -38,6 +43,7 @@ export default function IntakeIndex() {
 	// re-render from restarting the clock.
 	const posthog = usePostHog();
 	const started = useRef(false);
+	const [beginning, setBeginning] = useState(false);
 	useEffect(() => {
 		if (started.current || context === undefined) {
 			return;
@@ -54,15 +60,25 @@ export default function IntakeIndex() {
 
 	const audience = context.profile.sessionCount > 0 ? "existing" : "new";
 
-	// The flows part here, so the flag is read here: after the letter, it has had time to load.
-	const beginIntake = () => {
-		const { arm, fresh } = freezeIntakeArm(context.profile._id, () =>
+	// The flows part here, so the flag is read here. The reload queues behind the one `identify`
+	// started, so a quick tap reads this account's flag, not a missing or anonymous one.
+	const beginIntake = async () => {
+		if (beginning) {
+			return;
+		}
+		setBeginning(true);
+		const account = context.profile._id;
+		await waitForIntakeFlag(account, () => posthog.reloadFeatureFlagsAsync());
+		const { arm, fresh } = freezeIntakeArm(account, () =>
 			posthog.getFeatureFlag(INTAKE_V2_FLAG)
 		);
 		if (fresh) {
 			trackIntakeArmAssigned(posthog, arm);
+		} else {
+			restoreIntakeArm(arm);
 		}
 		router.push(arm === "v2" ? "/(intake)/flux" : "/(intake)/questionnaire");
+		setBeginning(false);
 	};
 
 	return (
@@ -116,7 +132,7 @@ export default function IntakeIndex() {
 			</View>
 
 			<View className="px-6 pt-2">
-				<Button onPress={beginIntake} variant="primary">
+				<Button isDisabled={beginning} onPress={beginIntake} variant="primary">
 					{FOUNDER_MESSAGE.cta}
 				</Button>
 			</View>

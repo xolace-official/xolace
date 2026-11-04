@@ -6,7 +6,11 @@ import { createJSONStorage, devtools, persist } from "zustand/middleware";
 import type { ReadingModeKey } from "@/features/library/reader/reading-mode";
 import type { TextureSetId } from "@/features/reflect/texture-sets";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
-import { createIntakeSlice, type IntakeSlice } from "./intake-slice";
+import {
+	createIntakeSlice,
+	type IntakeSlice,
+	intakePersistedKeys,
+} from "./intake-slice";
 import {
 	createPlusOfferSlice,
 	type PlusOfferSlice,
@@ -417,6 +421,7 @@ export const useAppStore = create<AppState>()(
 					toneTipSeen: s.toneTipSeen,
 					ventIntroSeen: s.ventIntroSeen,
 					xolacerPrimerSeen: s.xolacerPrimerSeen,
+					...intakePersistedKeys(s),
 					...plusOfferPersistedKeys(s),
 				}),
 				storage: createJSONStorage(() => zustandJSONStorage),
