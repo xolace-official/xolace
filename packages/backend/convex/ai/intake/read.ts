@@ -83,15 +83,23 @@ async function phraseFloor(words: string): Promise<SafetyVerdict> {
  */
 const PHRASE_WAIT_MS = 3000;
 
-/** What `work` settles to, or `fallback()` if that takes longer than `ms`. */
+/**
+ * What `work` settles to, or `fallback()` if that takes longer than `ms`. `abort`
+ * stops the work then, so a provider past its deadline doesn't keep running (or
+ * retry) for an answer nobody will read.
+ */
 async function within<T>(
 	work: Promise<T>,
 	ms: number,
-	fallback: () => T
+	fallback: () => T,
+	abort?: AbortController
 ): Promise<T> {
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	const expired = new Promise<T>((resolve) => {
-		timer = setTimeout(() => resolve(fallback()), ms);
+		timer = setTimeout(() => {
+			abort?.abort();
+			resolve(fallback());
+		}, ms);
 	});
 	try {
 		return await Promise.race([work, expired]);
@@ -106,21 +114,32 @@ async function within<T>(
  * can't lose what the other said in time.
  */
 async function engineVerdict(words: string): Promise<SafetyVerdict> {
+	const moderating = new AbortController();
+	const classifying = new AbortController();
 	const [moderation, classification] = await Promise.all([
-		within(moderateInput(words), SAFETY_DEADLINE_MS, () => {
-			console.error("[intake] moderation past the safety deadline");
-			return MODERATION_UNAVAILABLE;
-		}),
 		within(
-			classify(words).catch((err) => {
-				console.error("[intake] classifier failed", err);
+			moderateInput(words, moderating.signal),
+			SAFETY_DEADLINE_MS,
+			() => {
+				console.error("[intake] moderation past the safety deadline");
+				return MODERATION_UNAVAILABLE;
+			},
+			moderating
+		),
+		within(
+			classify(words, classifying.signal).catch((err) => {
+				// The deadline's own abort: it has already logged.
+				if (!classifying.signal.aborted) {
+					console.error("[intake] classifier failed", err);
+				}
 				return UNCLASSIFIED;
 			}),
 			SAFETY_DEADLINE_MS,
 			() => {
 				console.error("[intake] classifier past the safety deadline");
 				return UNCLASSIFIED;
-			}
+			},
+			classifying
 		),
 	]);
 	const verdict = evaluateSafeguard(classification, moderation, []);
@@ -152,7 +171,7 @@ export async function checkAnswerSafety(words: string): Promise<SafetyVerdict> {
 	return await within(engine, PHRASE_WAIT_MS, () => floor);
 }
 
-async function classify(words: string) {
+async function classify(words: string, signal: AbortSignal) {
 	const prompt = buildClassifierPrompt(words, "", true, "open_prompt");
 	const response = await getAnthropicClient().messages.create(
 		{
@@ -162,7 +181,7 @@ async function classify(words: string) {
 			system: prompt.system,
 			thinking: thinkingOff(CLASSIFIER_MODEL),
 		},
-		REQUEST_OPTIONS
+		{ ...REQUEST_OPTIONS, signal }
 	);
 	return parseClassificationResponse(extractTextFromResponse(response));
 }

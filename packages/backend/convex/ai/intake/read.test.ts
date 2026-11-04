@@ -25,6 +25,8 @@ const stub = {
 	reply: JSON.stringify({
 		fields: { weighingOn: { confidence: 0.9, value: ["work"] } },
 	}) as string | Error,
+	/** Each provider call's abort signal, as the code under test passed it. */
+	signals: [] as (AbortSignal | undefined)[],
 };
 
 vi.mock("../../lib/aggregates", () => aggregatesMock());
@@ -38,14 +40,20 @@ vi.mock("../providers/anthropic", async (orig) => {
 		...(await orig<typeof import("../providers/anthropic")>()),
 		getAnthropicClient: () => ({
 			messages: {
-				create: () => (stub.modelHangs ? hangs() : answering.messages.create()),
+				create: (_body: unknown, options?: { signal?: AbortSignal }) => {
+					stub.signals.push(options?.signal);
+					return stub.modelHangs ? hangs() : answering.messages.create();
+				},
 			},
 		}),
 	};
 });
 vi.mock("../providers/moderation", async (orig) => ({
 	...(await orig<typeof import("../providers/moderation")>()),
-	moderateInput: () => stub.moderation(),
+	moderateInput: (_text: string, signal?: AbortSignal) => {
+		stub.signals.push(signal);
+		return stub.moderation();
+	},
 }));
 
 /** A provider call that never answers. Hoisted: the mocks above close over it. */
@@ -71,6 +79,7 @@ beforeEach(() => {
 	stub.limit = { ok: true };
 	stub.modelHangs = false;
 	stub.moderation = () => Promise.resolve(MODERATION_UNAVAILABLE);
+	stub.signals = [];
 	stub.reply = JSON.stringify({
 		fields: { weighingOn: { confidence: 0.9, value: ["work"] } },
 	});
@@ -211,6 +220,19 @@ describe("ai/intake/read.checkAnswerSafety's deadline", () => {
 		stub.modelHangs = true;
 		stub.moderation = hangs;
 		expect(await pastDeadline()).toEqual({ level: "none", resources: [] });
+	});
+
+	it("stops both providers once the deadline passes", async () => {
+		stub.modelHangs = true;
+		stub.moderation = hangs;
+		await pastDeadline();
+		expect(stub.signals).toHaveLength(2);
+		expect(stub.signals.every((signal) => signal?.aborted)).toBe(true);
+	});
+
+	it("leaves a provider that answered in time alone", async () => {
+		await pastDeadline();
+		expect(stub.signals.some((signal) => signal?.aborted)).toBe(false);
 	});
 
 	it("ends well inside the client's 12s wait", () => {

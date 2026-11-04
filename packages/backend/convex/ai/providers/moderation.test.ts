@@ -34,6 +34,16 @@ describe("moderateInput", () => {
 		await expect(result).resolves.toEqual(MODERATION_UNAVAILABLE);
 	});
 
+	it("stops the request as soon as the caller stops waiting", async () => {
+		const fetchSpy = vi.fn(hangingFetch);
+		vi.stubGlobal("fetch", fetchSpy);
+		const caller = new AbortController();
+		const result = moderateInput("words", caller.signal);
+		caller.abort();
+		await expect(result).resolves.toEqual(MODERATION_UNAVAILABLE);
+		expect(fetchSpy.mock.calls[0]?.[1].signal?.aborted).toBe(true);
+	});
+
 	it("returns the verdict of a request that answers in time", async () => {
 		vi.stubGlobal("fetch", async () =>
 			Response.json({
