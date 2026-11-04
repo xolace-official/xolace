@@ -5,7 +5,7 @@
  */
 
 import type { WorkflowId } from "@convex-dev/workflow";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalMutation, mutation } from "./_generated/server";
 import { awardAchievement } from "./achievements/award";
@@ -13,8 +13,10 @@ import { backfillProfile } from "./achievements/backfill";
 import type { AchievementId } from "./achievements/catalog";
 import { deleteResponsesForCard } from "./followUpResponses";
 import { workflow } from "./followUps";
+import { findIntake } from "./intake/save";
 import { rankReplace, reflectionRank } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
+import { INTAKE_V2_VERSION } from "./lib/validators";
 import { migrations } from "./migrations";
 import { localDayKey, shiftDayKey } from "./streaks/activityLog";
 
@@ -267,6 +269,36 @@ export const resetIntake = mutation({
 		await ctx.db.patch("emotional_profiles", profile._id, {
 			onboardingComplete: false,
 			updatedAt: Date.now(),
+		});
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Clear the caller's deferred intake answers (#711, #712) so each question v2 moved out
+ * of the intake is asked again where it lives now. v2 rows only: a v1 row answered
+ * them up front, and clearing them would leave a row no real user can have.
+ */
+export const clearDeferredAnswers = mutation({
+	args: {},
+	handler: async (ctx) => {
+		assertDevToolsEnabled();
+		const { profile } = await requireAuth(ctx);
+		const intake = await findIntake(ctx, profile._id);
+		if (intake?.intakeVersion !== INTAKE_V2_VERSION) {
+			throw new ConvexError({
+				code: "not_v2_intake",
+				message: "Only a v2 intake defers questions; replay intake on v2 first",
+			});
+		}
+		await ctx.db.patch("intake_responses", intake._id, {
+			acquisitionSource: undefined,
+			ageBracket: undefined,
+			copingStyle: undefined,
+			seriesSeen: undefined,
+			seriesWantInApp: undefined,
+			supportFrequency: undefined,
 		});
 		return null;
 	},
