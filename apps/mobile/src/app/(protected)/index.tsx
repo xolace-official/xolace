@@ -102,6 +102,7 @@ export default function ProtectedIndex() {
 	const lastNotification = useAppStore((s) => s.lastNotification);
 	const clearLastNotification = useAppStore((s) => s.clearLastNotification);
 	const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
+	const homeComposing = useAppStore((s) => s.homeComposing);
 	const setHomeSheetBlocking = useAppStore((s) => s.setHomeSheetBlocking);
 	const setHomeSheetOpen = useAppStore((s) => s.setHomeSheetOpen);
 	const reflectSettled = useAppStore((s) => s.reflectSettled);
@@ -224,13 +225,20 @@ export default function ProtectedIndex() {
 		return () => setHomeSheetOpen(false);
 	}, [sheetOpen, setHomeSheetOpen]);
 
-	// Waits its turn behind the home sheets; the screen acknowledges on close.
+	// Waits its turn behind the home sheets and a reflection in progress; the
+	// screen acknowledges on close.
 	useEffect(() => {
-		if (frozenDays > 0 && isFocused && !sheetBlocking && !freezeShown.current) {
+		if (
+			frozenDays > 0 &&
+			isFocused &&
+			!sheetBlocking &&
+			!homeComposing &&
+			!freezeShown.current
+		) {
 			freezeShown.current = true;
 			router.push({ params: { days: frozenDays }, pathname: "/streak-held" });
 		}
-	}, [frozenDays, isFocused, sheetBlocking]);
+	}, [frozenDays, isFocused, sheetBlocking, homeComposing]);
 
 	return (
 		<>

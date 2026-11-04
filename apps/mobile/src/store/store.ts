@@ -28,8 +28,9 @@ type OnboardingSlice = {
 	introSeen: boolean;
 	setIntroSeen: (v: boolean) => void;
 	/** Home's reflect card has left idle: the composer is open (typing or a live mic), or a
-	 * submit is on its way and has no session yet. Transient; the badge unlock moment waits on
-	 * it, since it would close the keyboard over a half-written reflection. */
+	 * submit is on its way and has no session yet. Transient; the badge unlock moment and
+	 * streak-held wait on it, since either would close the keyboard over a half-written
+	 * reflection. */
 	homeComposing: boolean;
 	setHomeComposing: (v: boolean) => void;
 	/** True while any home sheet is open or armed to open. Transient; the reflect tour hides
