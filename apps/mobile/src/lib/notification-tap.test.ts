@@ -241,6 +241,23 @@ describe("notificationTapPlan", () => {
 		).toBeUndefined();
 	});
 
+	it("holds the banner back when the tap opens another screen", () => {
+		for (const type of ["domain_unlock", "kindling_ready"]) {
+			const plan = notificationTapPlan({ logId: "l1", type }, "Ready", 1);
+			expect(plan.banner).toBeUndefined();
+			expect(plan.logId).toBe("l1");
+		}
+	});
+
+	it("keeps the banner for a tap with no route of its own", () => {
+		expect(
+			notificationTapPlan({ logId: "l1", type: "follow_up" }, "Still there?", 1)
+		).toEqual({
+			banner: { content: "Still there?", notificationId: "l1" },
+			logId: "l1",
+		});
+	});
+
 	it("plans nothing for an unrecognised or absent payload", () => {
 		expect(notificationTapPlan({ type: "something_new" }, "hi", 1)).toEqual({});
 		expect(notificationTapPlan(undefined, undefined, 1)).toEqual({});

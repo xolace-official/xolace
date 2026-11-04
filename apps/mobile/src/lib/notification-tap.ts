@@ -89,13 +89,9 @@ export function notificationTapPlan(
 	const plan: NotificationTapPlan = {};
 
 	const logId = typeof data?.logId === "string" ? data.logId : undefined;
-	// A badge push isn't a nudge: its tap opens the badges, not a session, so no
-	// "You were reached" on home and no credit for one.
+	// A badge push isn't a nudge: its tap opens the badges, not a session.
 	if (logId && data?.type !== "achievement") {
 		plan.logId = logId;
-		if (body) {
-			plan.banner = { content: body, notificationId: logId };
-		}
 	}
 
 	if (isChatNotificationType(data?.type)) {
@@ -127,6 +123,14 @@ export function notificationTapPlan(
 		data?.type === "streak_milestone"
 	) {
 		plan.navigation = { action: "push", href: "/(protected)" };
+	}
+
+	// The banner lives on home, so a tap that opens another screen would leave it
+	// waiting there for later. A tap with no route (a follow-up) goes nowhere new.
+	const opensElsewhere =
+		plan.navigation && plan.navigation.href !== "/(protected)";
+	if (logId && body && !opensElsewhere) {
+		plan.banner = { content: body, notificationId: logId };
 	}
 
 	return plan;
