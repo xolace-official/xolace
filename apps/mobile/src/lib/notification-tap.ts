@@ -89,7 +89,9 @@ export function notificationTapPlan(
 	const plan: NotificationTapPlan = {};
 
 	const logId = typeof data?.logId === "string" ? data.logId : undefined;
-	if (logId) {
+	// A badge push isn't a nudge: its tap opens the badges, not a session, so no
+	// "You were reached" on home and no credit for one.
+	if (logId && data?.type !== "achievement") {
 		plan.logId = logId;
 		if (body) {
 			plan.banner = { content: body, notificationId: logId };
