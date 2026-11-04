@@ -32,7 +32,8 @@
       "!**/src-tauri/target",
       "!**/*.gen.ts",
       "!**/uniwind-types.d.ts",
-      "!**/*.svg"
+      "!**/*.svg",
+      "!**/*.dc.html"
     ]
   },
   "formatter": {
