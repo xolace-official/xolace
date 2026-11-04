@@ -1,5 +1,6 @@
 // Drives a Pose on the UI thread. Moves spring between poses (a little overshoot reads as
-// life), with blinking, an idle breath, quick gaze overrides and a nod on top.
+// life), with blinking, an idle breath, quick gaze overrides, a nod, a hop and a talking
+// mouth on top.
 
 import { useCallback, useEffect } from "react";
 import {
@@ -13,7 +14,7 @@ import {
 } from "react-native-reanimated";
 import { isUIRuntime, scheduleOnUI } from "react-native-worklets";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
-import { lerpPose, NEUTRAL, type Pose } from "./pose";
+import { lerpPose, mouthWhileTalking, NEUTRAL, type Pose } from "./pose";
 
 // Tuned by feel in the prototypes (proto/xolace-face): underdamped on purpose, a character
 // settling rather than UI snapping.
@@ -29,6 +30,19 @@ const NOD_DOWN_MS = 170;
 const NOD_GAZE = 0.6;
 const LISTEN_BROW = 0.35;
 const LISTEN_LEAN = 0.2;
+const HOP_UP_MS = 180;
+const TALK_FADE_MS = 160;
+const TALK_SQUASH = 0.25;
+const TALK_SQUASH_HZ = 1.4;
+
+/** Out to 1 and springs back: a nod or a hop. */
+const pulse = (outMs: number) => {
+	"worklet";
+	return withSequence(
+		withTiming(1, { duration: outMs }),
+		withSpring(0, MOVE_SPRING)
+	);
+};
 const MS_PER_S = 1000;
 const FRAME_MS = 16;
 const MAX_FRAME_MS = 48;
@@ -43,6 +57,9 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 	const lookY = useSharedValue(0);
 	const blink = useSharedValue(1);
 	const nodAmount = useSharedValue(0);
+	const hopAmount = useSharedValue(0);
+	// 0 … 1, eased so the mouth doesn't snap shut mid-word when talking stops.
+	const talking = useSharedValue(0);
 	const clock = useSharedValue(0);
 	// The user's live voice level, 0–1, set by whoever owns the audio (Talk's level): it
 	// leans in and lifts the brows a little.
@@ -92,6 +109,9 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 
 	const pose = useDerivedValue<Pose>(() => {
 		const p = lerpPose(from.get(), target.get(), t.get());
+		const c = clock.get();
+		// Reduced motion keeps the pose's own mouth: the words on screen say it's talking.
+		const talkAmount = reduced ? 0 : talking.get();
 		return {
 			...p,
 			browLift: p.browLift + listen.get() * LISTEN_BROW,
@@ -99,7 +119,11 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 			gazeX: p.gazeX + lookX.get(),
 			gazeY: p.gazeY + lookY.get() + nodAmount.get() * NOD_GAZE,
 			lean: p.lean + listen.get() * LISTEN_LEAN,
+			mouthOpen: p.mouthOpen + talkAmount * mouthWhileTalking(c),
 			restless: reduced ? 0 : p.restless,
+			squash:
+				p.squash +
+				talkAmount * TALK_SQUASH * Math.sin(c * TALK_SQUASH_HZ * Math.PI * 2),
 		};
 	});
 
@@ -167,15 +191,39 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		if (reduced) {
 			return;
 		}
-		nodAmount.set(
-			withSequence(
-				withTiming(1, { duration: NOD_DOWN_MS }),
-				withSpring(0, MOVE_SPRING)
-			)
-		);
+		nodAmount.set(pulse(NOD_DOWN_MS));
 	}, [nodAmount, reduced]);
 
-	return { clock, hold, listen, look, nod, nodAmount, pose, to };
+	/** One small happy hop. Dropped under reduced motion, like the nod. */
+	const hop = useCallback(() => {
+		"worklet";
+		if (!reduced) {
+			hopAmount.set(pulse(HOP_UP_MS));
+		}
+	}, [hopAmount, reduced]);
+
+	/** Moves the mouth as if speaking, on top of the pose, until `talk(false)`. */
+	const talk = useCallback(
+		(on: boolean) => {
+			"worklet";
+			talking.set(withTiming(on ? 1 : 0, { duration: TALK_FADE_MS }));
+		},
+		[talking]
+	);
+
+	return {
+		clock,
+		hold,
+		hop,
+		hopAmount,
+		listen,
+		look,
+		nod,
+		nodAmount,
+		pose,
+		talk,
+		to,
+	};
 }
 
 export type FaceHandle = ReturnType<typeof useFace>;

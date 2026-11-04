@@ -3,7 +3,7 @@
 import { Button, PressableFeedback } from "heroui-native";
 import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { FluxStill } from "@/features/intake/v2/flux-still";
+import { Flux } from "@/features/intake/v2/flux";
 import {
 	CHIP_GROUPS,
 	type Chip,
@@ -46,7 +46,7 @@ export function HeardStep({
 				showsVerticalScrollIndicator={false}
 			>
 				<View className="flex-row items-center gap-3">
-					<FluxStill mood="happy" size={FLUX_SIZE} />
+					<Flux mood="happy" size={FLUX_SIZE} />
 					<View className="flex-1">
 						<AppText className="font-[Poppins-SemiBold] text-[12px] text-ember uppercase tracking-[1.7px]">
 							Here&apos;s what I heard

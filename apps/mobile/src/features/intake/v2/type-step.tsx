@@ -4,7 +4,7 @@ import { Button, useThemeColor } from "heroui-native";
 import { TextInput, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { AppText } from "@/components/shared/app-text";
-import { FluxStill } from "@/features/intake/v2/flux-still";
+import { Flux } from "@/features/intake/v2/flux";
 import {
 	ANSWER_MAX_CHARS,
 	type ListenFailure,
@@ -42,7 +42,7 @@ export function TypeStep({
 		<View className="flex-1">
 			<View className="flex-1 px-6 pt-6">
 				<View className="flex-row items-center gap-3">
-					<FluxStill mood="idle" size={FLUX_SIZE} />
+					<Flux mood="idle" size={FLUX_SIZE} />
 					<AppText
 						accessibilityRole="header"
 						className="flex-1 font-[Poppins-SemiBold] text-[20px] text-foreground leading-[26px]"

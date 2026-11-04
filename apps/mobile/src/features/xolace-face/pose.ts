@@ -96,6 +96,32 @@ export const PRESETS = {
 	}),
 } satisfies Record<string, Pose>;
 
+/** Flux's live moods (onboarding-v2 README § Live Flux), on the presets above: no mood gets a
+ * look of its own, so a face means the same thing in the intake as everywhere else. */
+export const MOOD_POSES = {
+	happy: PRESETS.glad,
+	idle: PRESETS.neutral,
+	listening: PRESETS.attentive,
+	talking: PRESETS.speaking,
+	thinking: PRESETS.thinking,
+} as const satisfies Record<string, Pose>;
+
+export type Mood = keyof typeof MOOD_POSES;
+
+const SYLLABLE_HZ = 2.8;
+const PHRASE_HZ = 0.9;
+const TALK_MOUTH_MIN = 0.1;
+const TALK_MOUTH_RANGE = 0.55;
+
+/** `mouthOpen` while talking, from the face's clock in seconds: syllable-fast open and close,
+ * swelling and easing with a slower phrase rhythm so it never visibly loops. */
+export function mouthWhileTalking(seconds: number): number {
+	"worklet";
+	const syllable = Math.abs(Math.sin(seconds * SYLLABLE_HZ * Math.PI));
+	const phrase = 0.7 + 0.3 * Math.sin(seconds * PHRASE_HZ * Math.PI * 2);
+	return TALK_MOUTH_MIN + TALK_MOUTH_RANGE * syllable * phrase;
+}
+
 export function lerpPose(a: Pose, b: Pose, t: number): Pose {
 	"worklet";
 	const out = { ...a };

@@ -6,7 +6,7 @@ import { TextInput, View } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { AppText } from "@/components/shared/app-text";
 import { suggestHandle } from "@/features/intake/answer-rules";
-import { FluxStill } from "@/features/intake/v2/flux-still";
+import { Flux } from "@/features/intake/v2/flux";
 import { NAME_MAX_CHARS } from "@/features/intake/v2/machine";
 import { playSoftPress } from "@/lib/haptics";
 
@@ -35,7 +35,7 @@ export function NameStep({ busy, name, onChange, onKeep, skipped }: Props) {
 	return (
 		<View className="flex-1">
 			<View className="flex-1 items-center px-6 pt-6">
-				<FluxStill mood="happy" size={FLUX_SIZE} />
+				<Flux mood="happy" size={FLUX_SIZE} />
 				<AppText
 					accessibilityRole="header"
 					className="mt-3.5 text-center font-[Poppins-SemiBold] text-[26px] text-foreground leading-[31px]"

@@ -164,6 +164,27 @@ Not chosen:
   segmented control the app uses elsewhere.
 - Today's voice chips on the card.
 
+## 5. Intake v2: Flux, live
+
+`intake/v2/flux.tsx`, on every v2 step except `safety` (#710; design in
+`docs/plan/onboarding-v2/README.md` § Live Flux). Flux is the brand flame, not the Talk
+companion's look.
+
+- **Five moods on the existing presets** (`MOOD_POSES` in `pose.ts`): idle → `neutral`,
+  talking → `speaking`, listening → `attentive`, thinking → `thinking`, happy → `glad`. No mood
+  gets a pose of its own, so a look means the same here as everywhere else.
+- **On top of the pose**: talking moves the mouth at a syllable pace with a slight squash
+  (`face.talk`); happy hops once as it arrives (`face.hop`); listening sends two ember sound
+  rings out from behind the face; thinking shows three thought dots at the top right.
+- **Per step**: `ask` talks while the question types out, then idles; `listen` listens;
+  `type` idles; `interpret` thinks; `followUp` talks for as long as its question takes to say,
+  then idles; `heard` and `name` are happy.
+- **Reduced motion**: the pose alone, with no mouth movement and no hop; one still ring; still
+  dots.
+
+Not built yet: the per-voice tints (they belong to the Plus screen's Talk demo, which
+doesn't exist yet).
+
 ## Notes for the real build
 
 - A gesture must not change mid-drag: keep its identity stable and route handlers through a

@@ -26,6 +26,8 @@ const BREATH_HZ = 1.7;
 const FIDGET_HZ = 4.7;
 const FIDGET_DEG = 2.5;
 const NOD_DROP = 0.03;
+const HOP_RISE = 0.08;
+const HOP_STRETCH = 0.05;
 const LEAN_DEG = 24;
 const TILT_DEG = 12;
 const SQUASH = 0.08;
@@ -64,14 +66,17 @@ export function XolaceFace({
 		const c = face.clock.get();
 		const breath = Math.sin(c * BREATH_HZ);
 		const fidget = Math.sin(c * FIDGET_HZ) * p.restless * FIDGET_DEG;
+		const hop = face.hopAmount.get();
 		return {
 			transform: [
 				{ perspective: 400 },
-				{ translateY: face.nodAmount.get() * size * NOD_DROP },
+				{
+					translateY: (face.nodAmount.get() * NOD_DROP - hop * HOP_RISE) * size,
+				},
 				{ rotateY: `${p.lean * LEAN_DEG}deg` },
 				{ rotateZ: `${p.tilt * TILT_DEG + fidget}deg` },
 				{ scaleX: 1 + p.squash * SQUASH - breath * 0.006 },
-				{ scaleY: 1 - p.squash * SQUASH + breath * 0.012 },
+				{ scaleY: 1 - p.squash * SQUASH + breath * 0.012 + hop * HOP_STRETCH },
 			],
 			// Turn and squash from the base, so it sits on its spot rather than spinning.
 			transformOrigin: "50% 92%",

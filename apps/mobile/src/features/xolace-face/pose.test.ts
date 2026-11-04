@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
 	lerpPose,
+	MOOD_POSES,
+	mouthWhileTalking,
 	NEUTRAL,
 	PRESETS,
 	poseForCheckIn,
@@ -63,5 +65,50 @@ describe("poseForSteadiness", () => {
 	it("clamps scores outside 0–100", () => {
 		expect(poseForSteadiness(150)).toEqual(poseForSteadiness(100));
 		expect(poseForSteadiness(-5)).toEqual(poseForSteadiness(0));
+	});
+});
+
+describe("MOOD_POSES", () => {
+	it("gives no mood a look of its own: each is one of the face's presets", () => {
+		const presets = Object.values(PRESETS);
+		for (const pose of Object.values(MOOD_POSES)) {
+			expect(presets).toContain(pose);
+		}
+	});
+
+	it("looks up and away while thinking, and leans in while listening", () => {
+		expect(MOOD_POSES.thinking.gazeY).toBeLessThan(0);
+		expect(MOOD_POSES.thinking.gazeX).not.toBe(0);
+		expect(MOOD_POSES.listening.lean).toBeGreaterThan(0);
+	});
+
+	it("smiles widest when happy, and only a little at rest", () => {
+		expect(MOOD_POSES.happy.mouth).toBe(1);
+		expect(MOOD_POSES.idle.mouth).toBeGreaterThan(0);
+		expect(MOOD_POSES.idle.mouth).toBeLessThan(MOOD_POSES.happy.mouth);
+	});
+});
+
+describe("mouthWhileTalking", () => {
+	const FPS = 60;
+	// One second of frames, from a few seconds in.
+	const second = Array.from({ length: FPS }, (_, i) =>
+		mouthWhileTalking(3 + i / FPS)
+	);
+
+	it("stays a mouth: never past fully open or shut", () => {
+		for (const t of [0, 0.5, 1.7, 12.3, 99]) {
+			expect(mouthWhileTalking(t)).toBeGreaterThanOrEqual(0);
+			expect(mouthWhileTalking(t)).toBeLessThanOrEqual(1);
+		}
+	});
+
+	it("opens and closes a few times a second, like syllables", () => {
+		expect(Math.min(...second)).toBeLessThan(0.25);
+		expect(Math.max(...second)).toBeGreaterThan(0.5);
+		const peaks = second.filter(
+			(v, i) => i > 0 && i < FPS - 1 && v > second[i - 1] && v >= second[i + 1]
+		);
+		expect(peaks.length).toBeGreaterThanOrEqual(2);
 	});
 });

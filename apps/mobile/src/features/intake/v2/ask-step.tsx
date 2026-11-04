@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
-import { FluxStill } from "@/features/intake/v2/flux-still";
+import { Flux, SAY_MS_PER_CHAR } from "@/features/intake/v2/flux";
 import { playSoftPress } from "@/lib/haptics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
@@ -19,7 +19,6 @@ const QUICK_REPLIES = [
 	"I feel really alone lately",
 ] as const;
 
-const TYPE_MS_PER_CHAR = 38;
 const FLUX_SIZE = 190;
 const MIC_ICON = { android: "mic", ios: "mic.fill", web: "mic" } as const;
 const MIC_ICON_SIZE = 22;
@@ -40,7 +39,7 @@ function useTypedLine(line: string) {
 				}
 				return Math.min(n + 1, line.length);
 			});
-		}, TYPE_MS_PER_CHAR);
+		}, SAY_MS_PER_CHAR);
 		return () => clearInterval(timer);
 	}, [line, reduced]);
 	return { done: shown >= line.length, text: line.slice(0, shown) };
@@ -59,11 +58,7 @@ export function AskStep({ onQuickReply, onSkip, onTalk, onType }: Props) {
 
 	return (
 		<View className="flex-1 items-center px-5 pt-4">
-			<FluxStill
-				key={typed.done ? "idle" : "talking"}
-				mood={typed.done ? "idle" : "talking"}
-				size={FLUX_SIZE}
-			/>
+			<Flux mood={typed.done ? "idle" : "talking"} size={FLUX_SIZE} />
 			<View className="mt-3.5 self-stretch rounded-3xl border border-border bg-surface px-5 py-4">
 				{/* Tail up at Flux. */}
 				<View className="absolute -top-2 left-1/2 -ml-2 size-4 rotate-45 border-border border-t border-l bg-surface" />
