@@ -280,9 +280,9 @@ const UNLOCK_REPLAY: readonly AchievementId[] = ["joined", "first-session"];
  * Arm the badge unlock moment (#693) for the caller with Joined and First
  * session: earns whichever they lack and swaps in a fresh unseen row for
  * the rest, live even if it was backfilled. A dev
- * account from before the backfill (#686) is backfilled first, since live
- * awards skip a profile until then; a bare stamp would make the migration
- * skip it and lose everything else it earned.
+ * account from before the backfill (#686) is backfilled first, since awards
+ * stay quiet until then; a bare stamp would make the migration skip it and
+ * lose everything else it earned.
  */
 export const seedBadgeUnlock = mutation({
 	args: {},
@@ -320,8 +320,8 @@ export const seedBadgeUnlock = mutation({
 
 /**
  * Run the achievements backfill (#701) again for one profile, stamped or
- * not: it only adds what's missing, so it repairs an account the migration
- * skipped because something stamped it first.
+ * not: it only adds what's missing and moves quiet rows to earlier dates, so it
+ * repairs an account the migration skipped because something stamped it first.
  *   bunx convex run devTools:rerunBackfill '{"emotionalProfileId":"..."}'
  */
 export const rerunBackfill = internalMutation({

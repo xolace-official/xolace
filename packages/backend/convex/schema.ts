@@ -637,10 +637,10 @@ export default defineSchema({
 		// Written only by convex/achievements/push.ts.
 		achievementPushCheck: v.optional(v.id("_scheduled_functions")),
 		// --- Achievements (#685, #686) ---
-		// When this profile's achievements were last backfilled. Live awards
-		// (convex/achievements/award.ts) do nothing until it is set, so the
-		// one-off backfill can't race them. New profiles are stamped at creation:
-		// they have nothing to backfill. Survives a data wipe.
+		// When this profile's achievements were last backfilled. Until it is set,
+		// awards (convex/achievements/award.ts) land quietly as backfill rows: no
+		// push, no unlock moment. New profiles are stamped at creation: they have
+		// nothing to backfill. Survives a data wipe.
 		achievementsBackfilledAt: v.optional(v.number()),
 		// Rolling average session duration in seconds.
 		// Helps AI calibrate response length over time.
@@ -2737,6 +2737,10 @@ export default defineSchema({
 		pushedAt: v.optional(v.number()),
 		// When the in-app unlock moment showed it.
 		seenAt: v.optional(v.number()),
+		// How the user hears of it: "live" through the unlock moment and push,
+		// "backfill" only through the quiet summary. Quiet rows aren't all from the
+		// backfill: awards before it land quiet (achievements/award.ts), and so do
+		// live badges left unseen for a week (achievements/unlock.ts).
 		source: v.union(v.literal("live"), v.literal("backfill")),
 		// Sparks credited at award time, so a later catalog change never
 		// rewrites what was earned.

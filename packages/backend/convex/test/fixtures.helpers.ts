@@ -53,7 +53,8 @@ export async function expectCode(run: () => Promise<unknown>, code: string) {
  *
  * Excludes `achievements/push:sendMissedPush` for the same reason: the Joined
  * badge every new profile earns schedules it (#700). Covered by
- * `achievements/push.test.ts`.
+ * `achievements/push.test.ts`. And `achievements/unlock:foldUnseen`, which the
+ * same badge schedules; covered by `achievements/unlock.test.ts`.
  */
 export async function scheduledCalls(
 	root: Root
@@ -62,7 +63,8 @@ export async function scheduledCalls(
 		(j) =>
 			!(
 				j.name.endsWith("streamSetup:addToXolaceChannel") ||
-				j.name.endsWith("achievements/push:sendMissedPush")
+				j.name.endsWith("achievements/push:sendMissedPush") ||
+				j.name.endsWith("achievements/unlock:foldUnseen")
 			)
 	);
 }

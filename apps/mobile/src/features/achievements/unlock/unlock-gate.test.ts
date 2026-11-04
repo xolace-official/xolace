@@ -33,6 +33,7 @@ describe("mayOpenUnlock", () => {
 		"/talk",
 		"/sit-with-this",
 		"/peer-reflections",
+		"/report-reflection",
 		"/session-end",
 		"/trusted-bridge",
 	])("never interrupts %s", (pathname) => {
@@ -49,6 +50,17 @@ describe("mayOpenUnlock", () => {
 		"/browse-player",
 	])("never stacks on another full-screen moment (%s)", (pathname) => {
 		expect(mayOpenUnlock({ homeBusy: false, pathname })).toBe(false);
+	});
+
+	it.each(["/chat/conversation_1", "/xolace-channel", "/rate/conversation_1"])(
+		"never opens over a peer conversation (%s)",
+		(pathname) => {
+			expect(mayOpenUnlock({ homeBusy: false, pathname })).toBe(false);
+		}
+	);
+
+	it("opens on the chats list, once the conversation is left", () => {
+		expect(mayOpenUnlock({ homeBusy: false, pathname: "/connect" })).toBe(true);
 	});
 
 	it("treats a nested crisis route as crisis too", () => {

@@ -1,5 +1,6 @@
 // First sight of the backfill (#701): what the user had already earned before
 // badges arrived, once, in one quiet screen rather than one unlock at a time.
+// Also badges left unseen for a week, for someone who may already know badges.
 // Opened by useBadgeUnlock before any live unlock; the toolbar's close, See
 // them and Android back all dismiss it, and dismissing stamps it seen.
 
@@ -21,6 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { Badge } from "@/features/achievements/badge";
 import type { BackfillSummary } from "@/features/achievements/types";
+import { useLeaveOnce } from "./use-leave-once";
 
 const THUMBNAIL_SIZE = 72;
 
@@ -35,6 +37,8 @@ export function BackfillSummaryScreen() {
 	// What opened the screen, held still: a row backfilled while it's up waits for next time.
 	const [shown, setShown] = useState<BackfillSummary | null>(null);
 	const shownIds = useRef<Id<"user_achievements">[]>([]);
+	const leaveOnce = useLeaveOnce();
+	const dismiss = () => leaveOnce(() => router.back());
 
 	if (shown === null && live) {
 		setShown(live);
@@ -47,9 +51,9 @@ export function BackfillSummaryScreen() {
 	const empty = shown === null && live === null;
 	useEffect(() => {
 		if (empty) {
-			router.back();
+			dismiss();
 		}
-	}, [empty]);
+	}, [empty, dismiss]);
 
 	// Stamp when a navigation action takes it off the stack, not on any unmount:
 	// Android rebuilding the tree on relaunch isn't a dismissal.
@@ -71,7 +75,7 @@ export function BackfillSummaryScreen() {
 			<Stack.Toolbar.Button
 				accessibilityLabel="Close"
 				icon={process.env.EXPO_OS === "ios" ? "xmark" : CloseIcon}
-				onPress={() => router.back()}
+				onPress={dismiss}
 			/>
 		</Stack.Toolbar>
 	);
@@ -87,7 +91,7 @@ export function BackfillSummaryScreen() {
 			{toolbar}
 			<View className="flex-1 items-center justify-center">
 				<AppText className="text-[12px] text-ember uppercase tracking-widest">
-					Badges are here
+					{shown.firstSight ? "Badges are here" : "Since you were last here"}
 				</AppText>
 				<View className="my-8 flex-row flex-wrap justify-center gap-3">
 					{shown.thumbnails.map((thumbnail) => (
@@ -103,17 +107,20 @@ export function BackfillSummaryScreen() {
 					accessibilityRole="header"
 					className="text-center font-serif text-[30px] text-foreground leading-9"
 				>
-					You've already earned {plural(shown.badges, "badge")} and{" "}
-					{plural(shown.sparks, "spark")}
+					{shown.firstSight ? "You've already earned" : "You earned"}{" "}
+					{plural(shown.badges, "badge")} and {plural(shown.sparks, "spark")}
 				</AppText>
-				<AppText className="mt-3 text-center text-[16px] text-foreground/65 leading-6">
-					Everything you did before badges arrived counts.
-				</AppText>
+				{shown.firstSight ? (
+					<AppText className="mt-3 text-center text-[16px] text-foreground/65 leading-6">
+						Everything you did before badges arrived counts.
+					</AppText>
+				) : null}
 			</View>
 			<PressableFeedback
 				accessibilityRole="button"
 				className="h-13 w-full items-center justify-center rounded-2xl bg-accent"
-				onPress={() => router.replace("/achievements")}
+				// Back to the badges if they're what it opened over, rather than a second copy.
+				onPress={() => leaveOnce(() => router.dismissTo("/achievements"))}
 			>
 				<AppText className="font-[Poppins-Medium] text-accent-foreground text-base">
 					See them

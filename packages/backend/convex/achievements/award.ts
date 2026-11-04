@@ -1,3 +1,4 @@
+import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import {
@@ -8,14 +9,26 @@ import {
 import { scheduleMissedBadgeCheck } from "./push";
 
 /**
+ * How long a badge can wait for its unlock moment before it folds into the
+ * summary (unlock.ts). Past the missed-beat push and its quiet retries, and long
+ * enough for someone who comes back weekly to still get theirs.
+ */
+export const FOLD_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
  * Award one achievement live (#685): the single write path for
  * `user_achievements`, called inline in the write site's own transaction.
  *
  * Idempotent: an existing row means nothing happens, and sparks are credited
- * to both counters only alongside an insert. Does nothing for a profile whose
- * `achievementsBackfilledAt` isn't set yet: existing profiles wait for the
- * one-off backfill (#686), so it can date their awards and keep them quiet.
- * A live award schedules the profile's missed-beat push check (#700).
+ * to both counters only alongside an insert. A live award schedules the
+ * profile's missed-beat push check (#700), and its own fold into the summary
+ * if the moment never shows it (unlock.ts).
+ *
+ * A profile whose `achievementsBackfilledAt` isn't set yet is still waiting for
+ * the one-off backfill (#686), and a "first" may be years old, so its award is
+ * written quietly as `source: "backfill"`: kept even if the backfill never
+ * reaches it, but no push and no unlock moment. The backfill redates the row if
+ * its sources show an earlier date.
  *
  * @returns whether this call earned it.
  */
@@ -31,16 +44,22 @@ export async function awardAchievement(
 		return false;
 	}
 	const profile = await ctx.db.get("emotional_profiles", emotionalProfileId);
-	if (profile?.achievementsBackfilledAt === undefined) {
+	if (!profile) {
 		return false;
 	}
+	const backfilled = profile.achievementsBackfilledAt !== undefined;
 	const earned = await insertAward(ctx, profile, achievement, {
 		achievementId,
 		earnedAt,
-		source: "live",
+		source: backfilled ? "live" : "backfill",
 	});
-	if (earned) {
+	if (earned && backfilled) {
 		await scheduleMissedBadgeCheck(ctx, profile);
+		await ctx.scheduler.runAfter(
+			FOLD_AFTER_MS,
+			internal.achievements.unlock.foldUnseen,
+			{ achievementId, emotionalProfileId }
+		);
 	}
 	return earned;
 }

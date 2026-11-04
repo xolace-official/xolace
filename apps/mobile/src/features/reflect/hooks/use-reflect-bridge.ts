@@ -7,10 +7,12 @@ import type {
 import { useAppStore } from "@/store/store";
 
 /**
- * Sets `reflectSettled` for the starter bubble; opens the composer on request (#462), or toasts.
+ * Sets `reflectSettled` for the starter bubble and `homeComposing` for the badge unlock; opens
+ * the composer on request (#462), or toasts.
  */
 export function useReflectBridge(
 	screen: ReflectionStateName,
+	wordsPicked: boolean,
 	isLoading: boolean,
 	dispatch: (action: ReflectionAction) => void
 ) {
@@ -27,6 +29,16 @@ export function useReflectBridge(
 			setSettled(false);
 		};
 	}, [isLoading, setSettled]);
+
+	// Not just the compose screens: dropping the hold at submit would open a held badge over
+	// processing, or over the error screen, whenever the session lands later than the settle.
+	// Picking words on the idle card is a reflection started too; clearing them lets it go.
+	const setComposing = useAppStore((s) => s.setHomeComposing);
+	const composing = screen !== "idle" || wordsPicked;
+	useEffect(() => {
+		setComposing(composing);
+		return () => setComposing(false);
+	}, [composing, setComposing]);
 
 	const requested = useAppStore((s) => s.composerOpenRequested);
 	const clear = useAppStore((s) => s.clearComposerOpenRequest);

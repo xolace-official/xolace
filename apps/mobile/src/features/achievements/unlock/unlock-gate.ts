@@ -1,7 +1,7 @@
 /**
  * Where the badge unlock moment (#693) must wait its turn: crisis help, a
- * vent or session in progress, and the other full-screen moments it would
- * stack on. It opens once the user is somewhere else.
+ * vent or session in progress, a peer conversation, and the other full-screen
+ * moments it would stack on. It opens once the user is somewhere else.
  */
 const HOLD_ROUTES = [
 	// Crisis help and a session's own screens.
@@ -11,7 +11,13 @@ const HOLD_ROUTES = [
 	"/talk",
 	"/sit-with-this",
 	"/peer-reflections",
+	// A sheet over peer reflections: the session is still behind it.
+	"/report-reflection",
 	"/session-end",
+	// A peer conversation: First Xolacer chat lands right after the first message.
+	"/chat",
+	"/xolace-channel",
+	"/rate",
 	// Full-screen moments, this one included.
 	"/badge-unlock",
 	"/badge-backfill",
@@ -28,7 +34,7 @@ export const HOME = "/";
 type Where = {
 	/** expo-router's pathname (groups stripped). */
 	pathname: string;
-	/** Home has a session in progress, a sheet on screen, the streak reveal or the first-run tour. */
+	/** Home has a session or reflection in progress, a sheet on screen, the streak reveal or the first-run tour. */
 	homeBusy: boolean;
 };
 

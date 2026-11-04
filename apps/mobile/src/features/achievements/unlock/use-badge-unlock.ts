@@ -39,12 +39,15 @@ export function useBadgeUnlock() {
 	const activeSession = useQuery(api.sessions.getActive, onHome ? {} : "skip");
 	// A sheet on screen, not one merely armed: a pending follow-up arms for days.
 	const homeSheetOpen = useAppStore((s) => s.homeSheetOpen);
+	// No session exists until submit, so a half-written reflection needs its own hold.
+	const homeComposing = useAppStore((s) => s.homeComposing);
 	const reflectTourActive = useAppStore((s) => s.reflectTourActive);
 	const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
 	const streakRevealBusy = useAppStore((s) => s.streakRevealBusy);
 	// Still loading counts as busy.
 	const homeBusy =
 		activeSession !== null ||
+		homeComposing ||
 		homeSheetOpen ||
 		reflectTourActive ||
 		streakRevealBusy ||

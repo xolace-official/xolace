@@ -38,7 +38,9 @@ const CHAT_PAGE_SIZE = 50;
  * Award one achievement from the backfill: a quiet `source: "backfill"` row,
  * crediting both spark counters alongside the insert. Unlike `awardAchievement`
  * it ignores `achievementsBackfilledAt` (it is what sets it) and never
- * schedules a push. Idempotent: an existing row, live or backfilled, wins.
+ * schedules a push. Idempotent: a live row wins, and a quiet one only moves to
+ * an earlier date. An award from before the stamp is dated when it landed, which
+ * for a "first" can be long after the real one.
  */
 async function awardBackfilled(
 	ctx: MutationCtx,
@@ -46,6 +48,20 @@ async function awardBackfilled(
 	achievementId: AchievementId,
 	earnedAt: number
 ): Promise<void> {
+	const held = await ctx.db
+		.query("user_achievements")
+		.withIndex("by_emotionalProfileId_and_achievementId", (q) =>
+			q
+				.eq("emotionalProfileId", emotionalProfileId)
+				.eq("achievementId", achievementId)
+		)
+		.unique();
+	if (held) {
+		if (held.source === "backfill" && earnedAt < held.earnedAt) {
+			await ctx.db.patch("user_achievements", held._id, { earnedAt });
+		}
+		return;
+	}
 	const achievement = findAchievement(achievementId);
 	const profile = await ctx.db.get("emotional_profiles", emotionalProfileId);
 	if (achievement && profile) {
@@ -69,7 +85,7 @@ function earliest(times: readonly (number | undefined)[]): number | undefined {
  * Backfill one profile in its own transaction: read every source in the
  * decision's table (#686), award what they show with real dates where a source
  * has one (run time otherwise), seed `daysShowedUp`, then stamp
- * `achievementsBackfilledAt` so live awards take over. Skips a stamped profile.
+ * `achievementsBackfilledAt` so awards go live. Skips a stamped profile.
  * First listen comes only from logged listens (logging and its award shipped
  * together, so earlier listens left nothing); First Xolacer chat needs Stream
  * (`backfillXolacerChats`).
@@ -297,24 +313,12 @@ export const awardXolacerChat = internalMutation({
 		emotionalProfileId: v.id("emotional_profiles"),
 	},
 	handler: async (ctx, { earnedAt, emotionalProfileId }) => {
-		const held = await ctx.db
-			.query("user_achievements")
-			.withIndex("by_emotionalProfileId_and_achievementId", (q) =>
-				q
-					.eq("emotionalProfileId", emotionalProfileId)
-					.eq("achievementId", "first-xolacer-chat")
-			)
-			.unique();
-		if (!held) {
-			await awardBackfilled(
-				ctx,
-				emotionalProfileId,
-				"first-xolacer-chat",
-				earnedAt
-			);
-		} else if (held.source === "backfill" && earnedAt < held.earnedAt) {
-			await ctx.db.patch("user_achievements", held._id, { earnedAt });
-		}
+		await awardBackfilled(
+			ctx,
+			emotionalProfileId,
+			"first-xolacer-chat",
+			earnedAt
+		);
 		return null;
 	},
 	returns: v.null(),

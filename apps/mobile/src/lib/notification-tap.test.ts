@@ -209,12 +209,20 @@ describe("notificationTapPlan", () => {
 		});
 	});
 
-	it("routes achievement to the achievements screen", () => {
+	it("routes achievement to the achievements screen, without stacking a copy", () => {
 		expect(
 			notificationTapPlan({ type: "achievement" }, null, 1).navigation
 		).toEqual({
-			action: "push",
+			action: "navigate",
 			href: "/(protected)/achievements",
+		});
+	});
+
+	it("gives a badge push no banner and no session credit", () => {
+		expect(
+			notificationTapPlan({ logId: "l1", type: "achievement" }, "Joined", 1)
+		).toEqual({
+			navigation: { action: "navigate", href: "/(protected)/achievements" },
 		});
 	});
 
@@ -231,6 +239,23 @@ describe("notificationTapPlan", () => {
 		expect(
 			notificationTapPlan({ type: "milestone" }, "Ten days", 1).banner
 		).toBeUndefined();
+	});
+
+	it("holds the banner back when the tap opens another screen", () => {
+		for (const type of ["domain_unlock", "kindling_ready"]) {
+			const plan = notificationTapPlan({ logId: "l1", type }, "Ready", 1);
+			expect(plan.banner).toBeUndefined();
+			expect(plan.logId).toBe("l1");
+		}
+	});
+
+	it("keeps the banner for a tap with no route of its own", () => {
+		expect(
+			notificationTapPlan({ logId: "l1", type: "follow_up" }, "Still there?", 1)
+		).toEqual({
+			banner: { content: "Still there?", notificationId: "l1" },
+			logId: "l1",
+		});
 	});
 
 	it("plans nothing for an unrecognised or absent payload", () => {

@@ -4,18 +4,24 @@
  * wrong: a badge seen in-app still buzzes the phone; several unlocks send
  * several pushes; a second batch inside a day gets through; the quiet window
  * drops the push instead of deferring it; gentle reminders off still pushes;
- * a backfilled badge pushes; a push names sparks; or a streak day with no
- * rung (400) still pushes the old milestone.
+ * a backfilled badge pushes; a push names sparks; a streak day with no rung
+ * (400) still pushes the old milestone; a check already waiting names a
+ * badge earned moments ago, while its unlock moment is still held; the push
+ * lands while the user is in the app, where the moment can still show; a
+ * badge that folded into the summary still pushes; or a badge whose own check
+ * came and went is swept into a later push, days after it was earned.
  */
+import presenceTest from "@convex-dev/presence/test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import rateLimiterSchema from "../../node_modules/@convex-dev/rate-limiter/src/component/schema";
 import { api } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
+import { QUIET_RETRIES } from "../lib/missedBeat";
 import { streakMilestoneCopy } from "../streaks/milestones";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, noopJob, revenuecatMock } from "../test/mocks.helpers";
-import { awardAchievement } from "./award";
-import type { AchievementId } from "./catalog";
+import { awardAchievement, FOLD_AFTER_MS } from "./award";
+import { type AchievementId, findAchievement } from "./catalog";
 
 type Sent = { notification: { title?: string; body?: string; data?: unknown } };
 const sentPushes = vi.hoisted(() => [] as Sent[]);
@@ -36,7 +42,10 @@ const rateLimiterModules = import.meta.glob(
 	"../../node_modules/@convex-dev/rate-limiter/src/component/**/*.ts"
 );
 
-const HOUR = 3_600_000;
+const SECOND = 1000;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
 
 // Fake timers, so the next-day check and the schedule it enqueues really run.
 beforeEach(() => {
@@ -71,6 +80,7 @@ async function notifiable(
 		rateLimiterSchema,
 		rateLimiterModules
 	);
+	presenceTest.register(user.root);
 	await setPrefs(user, { enabled: true, milestone: true, ...notifications });
 	await seeAll(user);
 	return user;
@@ -91,9 +101,6 @@ async function seeAll(user: SeededUser) {
 	});
 }
 
-const nextDay = (user: SeededUser) =>
-	user.root.finishAllScheduledFunctions(vi.runAllTimers);
-
 const logs = (user: SeededUser) =>
 	user.root.run((ctx) => ctx.db.query("notification_log").take(10));
 
@@ -108,6 +115,59 @@ const pendingChecks = (user: SeededUser) =>
 
 const pushes = () =>
 	sentPushes.map(({ notification: { title, body } }) => ({ body, title }));
+
+/** Moves the clock, then runs what came due and what that enqueued. */
+async function advance(user: SeededUser, ms: number) {
+	vi.advanceTimersByTime(ms);
+	await user.root.finishInProgressScheduledFunctions();
+	vi.advanceTimersByTime(1);
+	await user.root.finishInProgressScheduledFunctions();
+}
+
+const stampedPushed = (user: SeededUser, achievementId: AchievementId) =>
+	user.root.run(async (ctx) => {
+		const row = await ctx.db
+			.query("user_achievements")
+			.withIndex("by_emotionalProfileId_and_achievementId", (q) =>
+				q
+					.eq("emotionalProfileId", user.profileId)
+					.eq("achievementId", achievementId)
+			)
+			.unique();
+		return row?.pushedAt !== undefined;
+	});
+
+/**
+ * Past a check with no usual hour, which lands this time tomorrow. Not
+ * `runAllTimers`: that also fires the week-out fold, and every job then runs
+ * with the clock at the end of that week.
+ */
+const nextDay = (user: SeededUser) => advance(user, 25 * HOUR);
+
+/** The app's heartbeat: the user has it open. */
+const openApp = (user: SeededUser) =>
+	user.t.mutation(api.presence.heartbeat, {
+		interval: 30 * SECOND,
+		roomId: "app",
+		sessionId: "this-phone",
+		userId: "",
+	});
+
+const FIRST_SESSION_PUSH = {
+	body: "You said what was there. That's the hardest part.",
+	title: "First session",
+};
+
+/** Always quiet: every hour is before 24. */
+const ALWAYS_QUIET = {
+	quietWindow: { dontReachAfter: 23, dontReachBefore: 24 },
+	timezone: "UTC",
+};
+
+const pushOf = (id: AchievementId) => {
+	const badge = findAchievement(id);
+	return { body: badge?.copy, title: badge?.title };
+};
 
 describe("the missed-badge push (#700)", () => {
 	it("names the one badge that went unseen, the next day", async () => {
@@ -142,7 +202,7 @@ describe("the missed-badge push (#700)", () => {
 		await earn(user, "first-session");
 		vi.advanceTimersByTime(HOUR); // one check covers a later unlock too
 		await earn(user, "first-listen");
-		await nextDay(user); // 08:00 tomorrow
+		await advance(user, 23 * HOUR); // 08:00 tomorrow
 		expect(pushes()).toEqual([
 			{ body: "You earned 2 badges.", title: "Xolace" },
 		]);
@@ -156,12 +216,38 @@ describe("the missed-badge push (#700)", () => {
 		);
 		vi.advanceTimersByTime(HOUR / 2);
 		await earn(user, "sat-with-it");
-		await nextDay(user);
+		await advance(user, 13 * HOUR);
 		expect(sentPushes).toHaveLength(1);
 		expect((await logs(user)).map((l) => l.suppressedReason)).toEqual([
 			undefined,
 			"rate_limit",
 		]);
+	});
+
+	it("pushes once, then folds what stays unseen into the summary", async () => {
+		const user = await notifiable();
+		await earn(user, "first-session");
+
+		await nextDay(user);
+		expect(sentPushes).toHaveLength(1);
+
+		await advance(user, FOLD_AFTER_MS);
+		expect(sentPushes).toHaveLength(1);
+		expect(await user.t.query(api.achievements.unlock.unseen, {})).toEqual([]);
+		const summary = await user.t.query(api.achievements.firstSight.summary, {});
+		expect(summary).toMatchObject({ badges: 1, firstSight: false });
+	});
+
+	it("never pushes a badge that folded before its check", async () => {
+		const user = await notifiable({ enabled: false });
+		await earn(user, "first-session");
+		await advance(user, FOLD_AFTER_MS);
+
+		await setPrefs(user, { enabled: true });
+		await earn(user, "first-listen");
+		await nextDay(user);
+
+		expect(pushes()).toEqual([pushOf("first-listen")]);
 	});
 
 	it("carries the streak-milestone copy on the 7, 30 and 100 rungs", async () => {
@@ -247,5 +333,211 @@ describe("the missed-badge push (#700)", () => {
 		await nextDay(user);
 		await earn(user, "first-talk");
 		expect(await pendingChecks(user)).toBe(1);
+	});
+
+	describe("a check already waiting, and a badge earned just before it", () => {
+		// `notifiable` saw Joined, whose check still lands 24h after signup.
+		const justBeforeTheCheck = 24 * HOUR - 5 * MINUTE;
+		const pastTheCheck = 6 * MINUTE;
+
+		it("leaves it to the unlock moment, and pushes it the next day if missed", async () => {
+			const user = await notifiable();
+			vi.advanceTimersByTime(justBeforeTheCheck);
+			const earnedAt = Date.now();
+			await earn(user, "first-session");
+
+			await advance(user, pastTheCheck);
+			expect(sentPushes).toEqual([]);
+			expect(await stampedPushed(user, "first-session")).toBe(false);
+			expect(await pendingChecks(user)).toBe(1);
+
+			await nextDay(user);
+			expect(pushes()).toEqual([FIRST_SESSION_PUSH]);
+			expect(Date.now() - earnedAt).toBeGreaterThanOrEqual(12 * HOUR);
+		});
+
+		it("stays silent if the held moment then shows it", async () => {
+			const user = await notifiable();
+			vi.advanceTimersByTime(justBeforeTheCheck);
+			await earn(user, "first-session");
+			await advance(user, pastTheCheck);
+
+			await seeAll(user);
+			await nextDay(user);
+			expect(sentPushes).toEqual([]);
+		});
+
+		it("pushes the badge that waited a day and holds back the new one", async () => {
+			const user = await notifiable();
+			await earn(user, "first-session");
+			vi.advanceTimersByTime(justBeforeTheCheck);
+			await earn(user, "first-listen");
+
+			await advance(user, pastTheCheck);
+			expect(pushes()).toEqual([FIRST_SESSION_PUSH]);
+			expect(await stampedPushed(user, "first-session")).toBe(true);
+			expect(await stampedPushed(user, "first-listen")).toBe(false);
+			expect(await pendingChecks(user)).toBe(1);
+		});
+
+		it("gives it the next day even through the quiet window's retries", async () => {
+			const user = await notifiable({
+				quietWindow: { dontReachAfter: 23, dontReachBefore: 24 },
+				timezone: "UTC",
+			});
+			vi.advanceTimersByTime(justBeforeTheCheck);
+			await earn(user, "first-session");
+			await advance(user, pastTheCheck);
+
+			// An hourly retry would push it here, well short of a day.
+			await setPrefs(user, { quietWindow: undefined });
+			await advance(user, 2 * HOUR);
+			expect(sentPushes).toEqual([]);
+
+			await nextDay(user);
+			expect(pushes()).toEqual([FIRST_SESSION_PUSH]);
+		});
+
+		it("still holds back the new one when the older badge's push is held", async () => {
+			const user = await notifiable();
+			await earn(user, "first-session");
+			vi.advanceTimersByTime(justBeforeTheCheck);
+			await earn(user, "first-listen");
+			const { sessionToken } = await openApp(user);
+			await advance(user, pastTheCheck);
+			expect(sentPushes).toEqual([]);
+
+			// The retry an hour on: first-listen is past the hour now, but not
+			// past the hour before the check it was held back from.
+			await user.t.mutation(api.presence.disconnect, { sessionToken });
+			await advance(user, HOUR);
+			expect(pushes()).toEqual([FIRST_SESSION_PUSH]);
+			expect(await stampedPushed(user, "first-listen")).toBe(false);
+			expect(await pendingChecks(user)).toBe(1);
+
+			await nextDay(user);
+			expect(pushes()).toEqual([FIRST_SESSION_PUSH, pushOf("first-listen")]);
+		});
+
+		it("gives the new one its own check when the retries run out", async () => {
+			const user = await notifiable(ALWAYS_QUIET);
+			await earn(user, "first-session");
+			vi.advanceTimersByTime(justBeforeTheCheck);
+			await earn(user, "first-listen");
+			await advance(user, pastTheCheck);
+			for (let retry = 0; retry < QUIET_RETRIES; retry++) {
+				await advance(user, HOUR);
+			}
+			expect(sentPushes).toEqual([]);
+			expect(await pendingChecks(user)).toBe(1);
+
+			await setPrefs(user, { quietWindow: undefined });
+			await nextDay(user);
+			expect(await stampedPushed(user, "first-listen")).toBe(true);
+		});
+	});
+
+	describe("a badge whose own check came and went", () => {
+		it("isn't swept into the push after notifications come back on", async () => {
+			const user = await notifiable({ enabled: false });
+			await earn(user, "first-session");
+			await advance(user, 25 * HOUR); // Its check: not allowed, so no push.
+
+			await advance(user, 4 * DAY);
+			await setPrefs(user, { enabled: true });
+			await earn(user, "first-listen");
+			await advance(user, 25 * HOUR);
+
+			expect(pushes()).toEqual([pushOf("first-listen")]);
+			// The push let it go; the moment hasn't.
+			const unseen = await user.t.query(api.achievements.unlock.unseen, {});
+			expect(unseen.map((a) => a.achievementId)).toContain("first-session");
+		});
+
+		it("isn't swept in after the quiet window outlasts its retries", async () => {
+			const user = await notifiable(ALWAYS_QUIET);
+			await earn(user, "first-session");
+			await advance(user, 25 * HOUR);
+			for (let retry = 0; retry < QUIET_RETRIES; retry++) {
+				await advance(user, HOUR);
+			}
+			expect(await pendingChecks(user)).toBe(0);
+
+			await setPrefs(user, { quietWindow: undefined });
+			await advance(user, 2 * DAY);
+			await earn(user, "first-listen");
+			await advance(user, 25 * HOUR);
+
+			expect(pushes()).toEqual([pushOf("first-listen")]);
+		});
+
+		it("still pushes on the last retry of the latest check", async () => {
+			vi.setSystemTime(Date.UTC(2026, 10, 3, 12));
+			const user = await notifiable(ALWAYS_QUIET);
+			await advance(user, 25 * HOUR); // Past Joined's check, so ours is fresh.
+			await user.root.run((ctx) =>
+				ctx.db.patch("emotional_profiles", user.profileId, {
+					typicalUsagePattern: { dayOfWeek: 3, hourOfDay: 12 },
+				})
+			);
+			// 12:00 tomorrow is the far end of the 12-36h a check can wait, less a
+			// minute: earning at 00:01 lands it 35h59m out at the latest.
+			vi.setSystemTime(Date.UTC(2026, 10, 5, 0, 1));
+			await earn(user, "first-session");
+			await advance(user, 36 * HOUR);
+			for (let retry = 0; retry < QUIET_RETRIES - 1; retry++) {
+				await advance(user, HOUR);
+			}
+			expect(sentPushes).toEqual([]);
+
+			await setPrefs(user, { quietWindow: undefined });
+			await advance(user, HOUR);
+			expect(pushes()).toEqual([FIRST_SESSION_PUSH]);
+		});
+	});
+
+	describe("while the user is in the app", () => {
+		// The check lands 24h after `notifiable`; 5s either side of it.
+		const justBeforeTheCheck = 24 * HOUR - 5 * SECOND;
+		const pastTheCheck = 10 * SECOND;
+
+		it("holds the push, and sends it once they've left", async () => {
+			const user = await notifiable();
+			await earn(user, "first-session");
+			vi.advanceTimersByTime(justBeforeTheCheck);
+			const { sessionToken } = await openApp(user);
+
+			await advance(user, pastTheCheck);
+			expect(sentPushes).toEqual([]);
+			expect(await stampedPushed(user, "first-session")).toBe(false);
+			expect(await pendingChecks(user)).toBe(1);
+
+			await user.t.mutation(api.presence.disconnect, { sessionToken });
+			await advance(user, HOUR);
+			expect(pushes()).toEqual([FIRST_SESSION_PUSH]);
+		});
+
+		it("stays silent if the moment shows it before they leave", async () => {
+			const user = await notifiable();
+			await earn(user, "first-session");
+			vi.advanceTimersByTime(justBeforeTheCheck);
+			await openApp(user);
+			await advance(user, pastTheCheck);
+
+			await seeAll(user);
+			await nextDay(user);
+			expect(sentPushes).toEqual([]);
+		});
+
+		it("doesn't wait on a client that dropped without saying so", async () => {
+			const user = await notifiable();
+			await earn(user, "first-session");
+			// Past the component's timeout (2.5 heartbeats) by the check.
+			vi.advanceTimersByTime(24 * HOUR - 5 * MINUTE);
+			await openApp(user);
+
+			await advance(user, 6 * MINUTE);
+			expect(pushes()).toEqual([FIRST_SESSION_PUSH]);
+		});
 	});
 });
