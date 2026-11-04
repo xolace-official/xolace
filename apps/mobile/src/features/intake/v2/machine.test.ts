@@ -581,6 +581,13 @@ describe("the talk demo's safety exit", () => {
 		expect(run(atPlus(), exit).plusOutcome).toBe("dismissed");
 	});
 
+	it("keeps a purchase that went through while the verdict waited", () => {
+		expect(
+			run(atPlus(), { outcome: "purchased", type: "PLUS_SAFETY_EXIT" })
+				.plusOutcome
+		).toBe("purchased");
+	});
+
 	it("keeps a purchase made before it", () => {
 		expect(
 			run(
@@ -701,6 +708,20 @@ describe("a late safety verdict", () => {
 		expect(run(bought, { type: "SAFETY_CONTINUE" })).toMatchObject({
 			plusOutcome: "purchased",
 			step: "done",
+		});
+	});
+
+	it("never interrupts a restore when the person leaves the Xolace+ screen", () => {
+		const restoring = run(atPlus(), started, late, {
+			outcome: "dismissed",
+			type: "PLUS_EXIT",
+		});
+		expect(restoring).toMatchObject({ safetyRouted: false, step: "plus" });
+		expect(run(restoring, ended)).toMatchObject({
+			plusOutcome: "dismissed",
+			resources: RESOURCES,
+			safetyRouted: true,
+			step: "safety",
 		});
 	});
 

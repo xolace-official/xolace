@@ -110,8 +110,11 @@ export type IntakeV2Action =
 	/** `entitled`: Xolace+ is already theirs, so `plus` is skipped. */
 	| { type: "KEEP_NAME"; entitled: boolean }
 	| { type: "PLUS_EXIT"; outcome: PlusOutcome }
-	/** On from crisis support in the talk demo. */
-	| { type: "PLUS_SAFETY_EXIT" }
+	/**
+	 * On from crisis support in the talk demo. `purchased` when a purchase went through
+	 * while the demo's verdict waited for it.
+	 */
+	| { type: "PLUS_SAFETY_EXIT"; outcome?: "purchased" }
 	| { type: "COMPLETE_FAILED" };
 
 export const initialIntakeV2State = (name: string): IntakeV2State => ({
@@ -362,9 +365,12 @@ export function intakeV2Reducer(
 				...state,
 				plusOutcome: state.plusOutcome ?? action.outcome,
 			};
-			return state.heldSafety
-				? toSafety(exited, state.heldSafety)
-				: { ...exited, step: "done" };
+			if (!state.heldSafety) {
+				return { ...exited, step: "done" };
+			}
+			// A held verdict waits out every store call, not just the one that exits: the last
+			// to end brings support (`afterStoreCall`), with this outcome kept.
+			return state.storeCalls > 0 ? exited : toSafety(exited, state.heldSafety);
 		}
 		// Support was already on screen in the demo, so straight to the save, a held verdict
 		// with it. Xolace+ was offered by then, so it counts as dismissed, as in `toSafety`.
@@ -373,7 +379,7 @@ export function intakeV2Reducer(
 				? {
 						...state,
 						heldSafety: null,
-						plusOutcome: state.plusOutcome ?? "dismissed",
+						plusOutcome: state.plusOutcome ?? action.outcome ?? "dismissed",
 						safetyRouted: true,
 						step: "done",
 					}

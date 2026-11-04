@@ -224,7 +224,9 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 					<PlusStep
 						busy={false}
 						onExit={(outcome) => dispatch({ outcome, type: "PLUS_EXIT" })}
-						onSafetyExit={() => dispatch({ type: "PLUS_SAFETY_EXIT" })}
+						onSafetyExit={(outcome) =>
+							dispatch({ outcome, type: "PLUS_SAFETY_EXIT" })
+						}
 						onStoreCall={onStoreCall}
 					/>
 				);
