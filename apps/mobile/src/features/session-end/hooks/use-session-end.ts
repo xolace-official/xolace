@@ -4,9 +4,20 @@ import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useCallback, useEffect, useRef } from "react";
+import {
+	BROWSE_HREF,
+	type BrowseFamily,
+} from "@/features/session-end/coping-suggestion";
 import { useAppStore } from "@/store/store";
 
 type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
+
+/** What the session-end screen collected, recorded before leaving it. */
+type Feedback = {
+	contributedReflection: boolean | null;
+	postSessionMood?: PostSessionMood;
+	moodPosition?: number;
+};
 
 /** Drives the session-end screen for an already-completed session, read by id
  * (`getActive` is null by now). Feedback is optional enrichment, so closing
@@ -116,14 +127,12 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 		navigateHome();
 	};
 
-	/** Leaves for the kindling: Discovery replaces session-end, and when this
-	 * session's kindling has already landed it opens on top, so back returns to
-	 * Discovery rather than here. */
-	const openKindling = async (
-		ready: boolean,
-		contributedReflection: boolean | null = null,
-		postSessionMood?: PostSessionMood,
-		moodPosition?: number
+	/** Leaves session-end for somewhere other than home: records the feedback first, then
+	 * captures `session_completed` with this exit's own properties. */
+	const leaveFor = async (
+		{ contributedReflection, postSessionMood, moodPosition }: Feedback,
+		exit: Record<string, string | boolean>,
+		navigate: () => void
 	) => {
 		if (busyRef.current || navigatedRef.current) {
 			return;
@@ -136,19 +145,49 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 		);
 		setPendingEventPrompt(null);
 		posthog.capture("session_completed", {
-			action: "open_kindling",
+			...exit,
 			contributed_reflection: contributedReflection,
-			kindling_ready: ready,
 			mood_position: moodPosition ?? null,
 			post_session_mood: postSessionMood ?? null,
 		});
 		navigatedRef.current = true;
-		// Cast until typedRoutes regenerates (see idle-menu's /discovery).
-		router.replace("/discovery" as never);
-		if (ready) {
-			router.push("/(protected)/kindling");
-		}
+		navigate();
 	};
+
+	/** Leaves for the kindling: Discovery replaces session-end, and when this
+	 * session's kindling has already landed it opens on top, so back returns to
+	 * Discovery rather than here. */
+	const openKindling = (
+		ready: boolean,
+		contributedReflection: boolean | null = null,
+		postSessionMood?: PostSessionMood,
+		moodPosition?: number
+	) =>
+		leaveFor(
+			{ contributedReflection, moodPosition, postSessionMood },
+			{ action: "open_kindling", kindling_ready: ready },
+			() => {
+				// Cast until typedRoutes regenerates (see idle-menu's /discovery).
+				router.replace("/discovery" as never);
+				if (ready) {
+					router.push("/(protected)/kindling");
+				}
+			}
+		);
+
+	/** Leaves for the Browse shelf the coping answer picked (#712). The tab replaces
+	 * session-end, anchored on the Browse hub so back lands there. */
+	const openBrowse = (
+		family: BrowseFamily,
+		contributedReflection: boolean | null = null,
+		postSessionMood?: PostSessionMood,
+		moodPosition?: number
+	) =>
+		leaveFor(
+			{ contributedReflection, moodPosition, postSessionMood },
+			{ action: "open_browse", browse_family: family },
+			() => router.replace(BROWSE_HREF[family], { withAnchor: true })
+		);
 
 	const sessionData = session as { distilledText?: string } | null | undefined;
 	const distilledText = sessionData?.distilledText ?? null;
@@ -162,6 +201,7 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 		domainUnlock: session?.domainUnlock,
 		haveMore,
 		isLoading,
+		openBrowse,
 		openKindling,
 		sessionCount,
 		sessionId,

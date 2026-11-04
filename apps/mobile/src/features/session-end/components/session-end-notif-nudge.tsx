@@ -1,14 +1,23 @@
 import { api } from "@xolace/backend/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { Image } from "expo-image";
 import * as Notifications from "expo-notifications";
 import { PressableFeedback } from "heroui-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import {
+	offersCheckIn,
+	type SupportFrequency,
+} from "@/features/session-end/check-in-offer";
+import {
+	SUPPORT_FREQUENCY_COPY,
+	SupportFrequencyChoices,
+} from "@/features/session-end/components/support-frequency-choices";
+import { useRecordDeferredAnswer } from "@/features/session-end/hooks/use-record-deferred-answer";
 import { requestPushToken } from "@/lib/push-token";
 import { useAppStore } from "@/store/store";
 
@@ -19,40 +28,64 @@ const NUDGE_TRANSITION = {
 	type: "timing" as const,
 };
 const FLUX_IMAGE_STYLE = { height: 220, width: 220 } as const;
+/** Lets the session-end screen land before the nudge slides over it. */
+const SHOW_DELAY_MS = 900;
 
+const OFFER_COPY = {
+	body: "A quiet reminder to come back\nwhen you need it.",
+	title: "Want Flux to\ncheck in?",
+};
+
+/** After a session, asks once whether Flux may send reminders. A v2 user who hasn't said
+ * how often they need support is asked that first (#712), and someone it happens to only
+ * now and then is never asked for notifications. */
 export function SessionEndNotifNudge() {
 	const [show, setShow] = useState(false);
 	const [mounted, setMounted] = useState(false);
+	const [stage, setStage] = useState<"frequency" | "offer">("offer");
+	// The stage is picked once: answering drops supportFrequency from `missing`.
+	const stagePicked = useRef(false);
 	const { height } = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 
 	const notifNudgeDismissed = useAppStore((s) => s.notifNudgeDismissed);
 	const setNotifNudgeDismissed = useAppStore((s) => s.setNotifNudgeDismissed);
 	const registerToken = useMutation(api.notifications.registerToken);
+	const missing = useQuery(api.intake.deferred.missing);
+	const missingLoaded = missing !== undefined;
+	const asksFrequency = missing?.includes("supportFrequency") ?? false;
+	const recordAnswer = useRecordDeferredAnswer();
 
 	useEffect(() => {
-		if (notifNudgeDismissed) {
+		// Waits for `missing` so the first beat never swaps under the user.
+		if (notifNudgeDismissed || !missingLoaded || stagePicked.current) {
 			return;
 		}
 
 		let cancelled = false;
-		let t: ReturnType<typeof setTimeout> | undefined;
 
 		Notifications.getPermissionsAsync().then(({ status }) => {
-			if (cancelled) {
+			if (cancelled || status !== "undetermined") {
 				return;
 			}
-			if (status === "undetermined") {
-				setMounted(true);
-				t = setTimeout(() => setShow(true), 900);
-			}
+			stagePicked.current = true;
+			setStage(asksFrequency ? "frequency" : "offer");
+			setMounted(true);
 		});
 
 		return () => {
 			cancelled = true;
-			clearTimeout(t);
 		};
-	}, [notifNudgeDismissed]);
+	}, [notifNudgeDismissed, missingLoaded, asksFrequency]);
+
+	// Apart from picking the stage, so a later `missing` update can't cancel the slide-in.
+	useEffect(() => {
+		if (!mounted) {
+			return;
+		}
+		const t = setTimeout(() => setShow(true), SHOW_DELAY_MS);
+		return () => clearTimeout(t);
+	}, [mounted]);
 
 	const dismiss = () => {
 		setNotifNudgeDismissed(true);
@@ -75,11 +108,24 @@ export function SessionEndNotifNudge() {
 		dismiss();
 	};
 
+	const handleFrequency = async (answer: SupportFrequency) => {
+		if (offersCheckIn(answer)) {
+			setStage("offer");
+		} else {
+			dismiss();
+		}
+		await recordAnswer({
+			question: "supportFrequency",
+			supportFrequency: answer,
+		});
+	};
+
 	const handleLater = () => {
 		Presets.flick();
 		dismiss();
 	};
 
+	const copy = stage === "frequency" ? SUPPORT_FREQUENCY_COPY : OFFER_COPY;
 	const nudgeAnimate = { opacity: show ? 1 : 0, translateY: show ? 0 : height };
 	const containerInsetStyle = {
 		paddingBottom: insets.bottom + 8,
@@ -113,34 +159,42 @@ export function SessionEndNotifNudge() {
 					/>
 					<View className="items-center gap-3">
 						<AppText className="text-center font-semibold text-3xl text-foreground leading-10">
-							Want Flux to{"\n"}check in?
+							{copy.title}
 						</AppText>
 						<AppText className="text-center text-base text-foreground/50 leading-6">
-							A quiet reminder to come back{"\n"}when you need it.
+							{copy.body}
 						</AppText>
 					</View>
 				</View>
 
-				<View className="gap-3">
-					<PressableFeedback
-						accessibilityLabel="Enable reminders"
-						className="items-center rounded-full border border-accent/30 bg-accent/10 py-4"
-						onPress={handleRemindMe}
-					>
-						<AppText className="font-semibold text-accent text-base">
-							Remind me
-						</AppText>
-					</PressableFeedback>
-					<PressableFeedback
-						accessibilityLabel="Dismiss reminder prompt"
-						className="items-center rounded-full border border-border py-4"
-						onPress={handleLater}
-					>
-						<AppText className="font-light text-base text-foreground/30">
-							Maybe later
-						</AppText>
-					</PressableFeedback>
-				</View>
+				{stage === "frequency" ? (
+					<SupportFrequencyChoices
+						onAnswer={handleFrequency}
+						// Skipped, nothing is known: the reminder ask stands, as before #712.
+						onSkip={() => setStage("offer")}
+					/>
+				) : (
+					<View className="gap-3">
+						<PressableFeedback
+							accessibilityLabel="Enable reminders"
+							className="items-center rounded-full border border-accent/30 bg-accent/10 py-4"
+							onPress={handleRemindMe}
+						>
+							<AppText className="font-semibold text-accent text-base">
+								Remind me
+							</AppText>
+						</PressableFeedback>
+						<PressableFeedback
+							accessibilityLabel="Dismiss reminder prompt"
+							className="items-center rounded-full border border-border py-4"
+							onPress={handleLater}
+						>
+							<AppText className="font-light text-base text-foreground/30">
+								Maybe later
+							</AppText>
+						</PressableFeedback>
+					</View>
+				)}
 			</View>
 		</EaseView>
 	);

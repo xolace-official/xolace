@@ -309,3 +309,18 @@ export function trackFirstReflection(posthog: PostHog) {
 		ms_since_intake_started: durationMs(),
 	});
 }
+
+/** A question v2 deferred, answered where it's needed (#712). The answer also lands as the
+ * same person property the intake would have set. */
+export function trackDeferredAnswered(
+	posthog: PostHog,
+	question: "coping_style" | "support_frequency",
+	value: string | string[],
+	surface: "session_end" | "notification_nudge"
+) {
+	posthog.capture("intake_deferred_answered", {
+		$set: { [question]: value },
+		question,
+		surface,
+	});
+}

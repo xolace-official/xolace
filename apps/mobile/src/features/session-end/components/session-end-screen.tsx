@@ -40,6 +40,7 @@ export const SessionEndScreen = ({
 		domainUnlock,
 		dismiss,
 		haveMore,
+		openBrowse,
 		openKindling,
 	} = useSessionEnd(routeSessionId);
 	const { isNight } = useSessionMode();
@@ -71,6 +72,7 @@ export const SessionEndScreen = ({
 				<ExitVariant
 					isNight={isNight}
 					onHaveMore={() => haveMore()}
+					onOpenBrowse={(family) => openBrowse(family)}
 					onOpenKindling={(ready) => openKindling(ready)}
 					sessionId={sessionId ?? undefined}
 				/>
@@ -81,6 +83,7 @@ export const SessionEndScreen = ({
 					isNight={isNight}
 					onDismiss={dismiss}
 					onHaveMore={haveMore}
+					onOpenBrowse={openBrowse}
 					onOpenKindling={openKindling}
 					sessionId={sessionId ?? undefined}
 				/>

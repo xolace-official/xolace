@@ -8,14 +8,16 @@ import { AppText } from "@/components/shared/app-text";
 import { SessionEndUpsell } from "@/features/insights/compounding-upsell";
 import { NIGHT_SESSION_END_EXIT } from "@/features/night-mode/night-copy";
 import { CloseOffer } from "@/features/session-end/components/close-offer";
+import { CopingCloseSlot } from "@/features/session-end/components/coping-close-slot";
 import { JumpMascot } from "@/features/session-end/components/jump-mascot";
-import { KindlingCloseSlot } from "@/features/session-end/components/kindling-close-slot";
+import type { BrowseFamily } from "@/features/session-end/coping-suggestion";
 
 type Phase = "acknowledge" | "close";
 
 type Props = {
 	onHaveMore: () => void;
 	onOpenKindling: (ready: boolean) => void;
+	onOpenBrowse: (family: BrowseFamily) => void;
 	isNight?: boolean;
 	sessionId?: Id<"sessions">;
 };
@@ -36,6 +38,7 @@ const SLIDE_IN = { opacity: 1, translateY: 0 };
 export const ExitVariant = ({
 	onHaveMore,
 	onOpenKindling,
+	onOpenBrowse,
 	isNight = false,
 	sessionId,
 }: Props) => {
@@ -98,7 +101,8 @@ export const ExitVariant = ({
 					>
 						<CloseOffer sessionId={sessionId} variant="exit" />
 						<SessionEndUpsell sessionId={sessionId} />
-						<KindlingCloseSlot
+						<CopingCloseSlot
+							onOpenBrowse={onOpenBrowse}
 							onOpenKindling={onOpenKindling}
 							sessionId={sessionId}
 						/>
