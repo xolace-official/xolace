@@ -1,3 +1,4 @@
+import { useAuth } from "@clerk/expo";
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
 import { useObserve } from "expo-observe";
@@ -11,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { MonthlyEventSheet } from "@/features/awareness-events/components/monthly-event-sheet";
 import { useAwarenessEvent } from "@/features/awareness-events/hooks/use-awareness-event";
+import { echoOf } from "@/features/intake/v2/heard";
 import { ReflectScreen } from "@/features/reflect/components/reflect-screen";
 import { ReturnWelcomeSheet } from "@/features/reflect/components/return-welcome-sheet";
 import { useFollowUpCheckIn } from "@/features/reflect/hooks/use-follow-up-check-in";
@@ -207,6 +209,20 @@ export default function ProtectedIndex() {
 		sessionCount: profile?.sessionCount,
 	});
 
+	// Intake v2's first answer (#707), offered back once on the starter bubble. Only to the
+	// account that gave it; spent with the bubble, whichever way it resolves.
+	const { userId } = useAuth();
+	const firstAnswer = useAppStore((s) => s.intakeFirstAnswer);
+	const setIntakeFirstAnswer = useAppStore((s) => s.setIntakeFirstAnswer);
+	const pickUp =
+		firstAnswer && firstAnswer.userId === userId && fullContext
+			? {
+					name: fullContext.preferences?.displayName ?? "",
+					quote: echoOf(firstAnswer.text),
+					text: firstAnswer.text,
+				}
+			: null;
+
 	// The tour subscribes to this so its coach marks never render under a sheet.
 	const sheetBlocking =
 		returnWelcome.blocking ||
@@ -260,7 +276,11 @@ export default function ProtectedIndex() {
 				{starter.isOpen && (
 					<StarterSuggestionsBubble
 						intake={fullContext?.intake}
-						onResolve={starter.resolve}
+						onResolve={() => {
+							setIntakeFirstAnswer(null);
+							starter.resolve();
+						}}
+						pickUp={pickUp}
 					/>
 				)}
 			</View>

@@ -29,4 +29,18 @@ describe("shapeIntakeSignals", () => {
 		expect(result).toEqual({ disclosureStyle: "all_at_once" });
 		expect(result).not.toHaveProperty("emotionAwareness");
 	});
+
+	// A v2 intake (#715) saves only what the first answer told us.
+	it("passes emotionAwareness alone when disclosureStyle was never told", () => {
+		expect(
+			shapeIntakeSignals({ emotionAwareness: "know_but_no_words" })
+		).toEqual({ emotionAwareness: "know_but_no_words" });
+	});
+
+	it("returns null when the row carries no usable signal, so defaults apply", () => {
+		expect(shapeIntakeSignals({})).toBeNull();
+		expect(
+			shapeIntakeSignals({ emotionAwareness: "prefer_not_to_say" })
+		).toBeNull();
+	});
 });

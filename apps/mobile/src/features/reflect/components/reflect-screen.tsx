@@ -158,6 +158,7 @@ export const ReflectScreen = () => {
 	useReflectBridge(
 		state.screen,
 		state.selectedTextures.length > 0,
+		state.entryText.trim().length > 0,
 		isLoading,
 		dispatch
 	);

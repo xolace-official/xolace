@@ -2,7 +2,7 @@ import { BlurView } from "expo-blur";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { PressableFeedback, useThemeColor } from "heroui-native";
+import { Button, PressableFeedback, useThemeColor } from "heroui-native";
 import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
@@ -28,15 +28,30 @@ const TAIL_LEFT = FLUX_W / 2 - 7;
 // Per-tap token for /connect; module-level so the purity lint sees no render-time clock.
 const navToken = () => String(Date.now());
 const EASING = [0.23, 1, 0.32, 1] as [number, number, number, number];
+// Under the pick-up card the rows are the second choice; the top few keep the card short.
+const ROWS_UNDER_PICK_UP = 3;
+
+const readyLine = (name: string) =>
+	name ? `Ready when you are, ${name}.` : "Ready when you are.";
+
+/** Intake v2's first answer (#707), offered back above the rows. */
+export type PickUp = {
+	name: string;
+	/** What the card shows: the answer's opening words. */
+	quote: string;
+	/** What the composer opens with: the whole answer. */
+	text: string;
+};
 
 type Props = {
 	/** `getFullContext().intake`; null when intake was skipped. Orders the rows only (ADR-0017). */
 	intake: Intake | null | undefined;
 	onResolve: () => void;
+	pickUp?: PickUp | null;
 };
 
 /** Starter suggestions (#460): Flux, bottom-left, speaking a one-time offer of places to begin. */
-export function StarterSuggestionsBubble({ intake, onResolve }: Props) {
+export function StarterSuggestionsBubble({ intake, onResolve, pickUp }: Props) {
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
 	const reduceMotion = useEffectiveReducedMotion();
@@ -50,7 +65,9 @@ export function StarterSuggestionsBubble({ intake, onResolve }: Props) {
 			return;
 		}
 		shownCaptured.current = true;
-		posthog.capture("starter_suggestions_shown");
+		posthog.capture("starter_suggestions_shown", { has_pick_up: !!pickUp });
+		// Once, at mount: `pickUp` is only ever cleared by the resolve that unmounts this.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	// One resolve per showing, even if a second tap lands before the unmount.
@@ -98,7 +115,20 @@ export function StarterSuggestionsBubble({ intake, onResolve }: Props) {
 		}
 	};
 
+	// "Pick up where you left off": the reflection starts from what they told Flux.
+	const pickUpAnswer = (answer: PickUp) => {
+		if (
+			!resolve("starter_suggestion_tapped", { position: 0, row: "pick_up" })
+		) {
+			return;
+		}
+		playSoftPress();
+		requestComposerOpen(answer.text);
+	};
+
 	const fluxBottom = insets.bottom + 16;
+	const rows = orderStarterRows(intake);
+	const shownRows = pickUp ? rows.slice(0, ROWS_UNDER_PICK_UP) : rows;
 
 	return (
 		<View
@@ -160,11 +190,15 @@ export function StarterSuggestionsBubble({ intake, onResolve }: Props) {
 					<View className="flex-row items-start pr-2 pl-4">
 						<View accessibilityRole="header" className="flex-1 pt-1">
 							<AppText className="font-semibold text-[15px] text-foreground">
-								Where would you like to start?
+								{pickUp
+									? readyLine(pickUp.name)
+									: "Where would you like to start?"}
 							</AppText>
-							<AppText className="text-muted text-xs">
-								Suggested for you
-							</AppText>
+							{pickUp ? null : (
+								<AppText className="text-muted text-xs">
+									Suggested for you
+								</AppText>
+							)}
 						</View>
 						<PressableFeedback
 							accessibilityLabel="Close suggestions"
@@ -181,8 +215,27 @@ export function StarterSuggestionsBubble({ intake, onResolve }: Props) {
 						</PressableFeedback>
 					</View>
 
+					{pickUp ? (
+						<View className="mx-4 mt-2 gap-2 rounded-2xl border border-border bg-surface-secondary p-4">
+							<AppText className="font-semibold text-[13px] text-ember">
+								Pick up where you left off
+							</AppText>
+							<AppText className="text-[16px] text-foreground leading-[23px]">
+								&ldquo;{pickUp.quote}&rdquo;
+							</AppText>
+							<Button onPress={() => pickUpAnswer(pickUp)} size="sm">
+								<Button.Label>Reflect on this</Button.Label>
+							</Button>
+						</View>
+					) : null}
+					{pickUp ? (
+						<AppText className="mx-4 mt-3 text-muted text-xs">
+							Or start fresh
+						</AppText>
+					) : null}
+
 					<View className="mt-1">
-						{orderStarterRows(intake).map((row, i) => (
+						{shownRows.map((row, i) => (
 							<PressableFeedback
 								accessibilityLabel={`${row.title}. ${row.subtitle}`}
 								accessibilityRole="button"

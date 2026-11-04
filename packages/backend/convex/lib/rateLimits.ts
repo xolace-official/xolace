@@ -88,6 +88,16 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 	// General settings feedback — 5 per 24h per profile
 	generalFeedback: { kind: "fixed window", period: DAY, rate: 5 },
 
+	// Intake v2's first answer (#708): two model calls and moderation per read.
+	// A first answer, one follow-up and a few "say it again"s fit; past it the
+	// client falls back to the pick-list.
+	intakeAnswerRead: {
+		capacity: 6,
+		kind: "token bucket",
+		period: HOUR,
+		rate: 12,
+	},
+
 	// kindling_ready (docs/paths-v1.md §10) — SEPARATE bucket for the same
 	// reason as followUpNudge: generation itself is already capped to one
 	// kindling per profile per day (pathsGenerate), so this only needs to

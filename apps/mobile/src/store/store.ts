@@ -179,6 +179,9 @@ type ReplySeedSlice = {
 	clearReplySeed: () => void;
 };
 
+/** Intake v2's first answer (#707), held for the account that gave it. */
+export type IntakeFirstAnswer = { text: string; userId: string };
+
 /** Ephemeral. Something outside the reflect screen (#462) asking it to open the card; see
  * useReflectBridge. */
 type ComposerOpenSlice = {
@@ -186,8 +189,15 @@ type ComposerOpenSlice = {
 	reflectSettled: boolean;
 	setReflectSettled: (v: boolean) => void;
 	composerOpenRequested: boolean;
-	requestComposerOpen: () => void;
+	/** Words to open the card with, e.g. intake v2's first answer (#707). Raw user text. */
+	composerOpenText: string | null;
+	requestComposerOpen: (text?: string) => void;
 	clearComposerOpenRequest: () => void;
+	/** Intake v2's first answer (#707), for the Mirror's "Pick up where you left off". Memory
+	 * only: the user's own words never touch disk, so a cold kill drops the offer. Keyed by
+	 * Clerk user, so a sign-out and a second account never see the first one's words. */
+	intakeFirstAnswer: IntakeFirstAnswer | null;
+	setIntakeFirstAnswer: (answer: IntakeFirstAnswer | null) => void;
 	/** The idle menu's scrim is on screen; it can't cover the native header, so the reflect
 	 * screen hides its toolbar buttons. */
 	idleMenuOpen: boolean;
@@ -315,12 +325,15 @@ export const useAppStore = create<AppState>()(
 				...createPlusOfferSlice(set),
 
 				...createIntakeSlice(set),
-				clearComposerOpenRequest: () => set({ composerOpenRequested: false }),
+				clearComposerOpenRequest: () =>
+					set({ composerOpenRequested: false, composerOpenText: null }),
 				clearLastNotification: () => set({ lastNotification: null }),
 				clearReplySeed: () => set({ replySeed: null }),
 				composerOpenRequested: false,
+				composerOpenText: null,
 				hiddenProfileCards: [],
 				idleMenuOpen: false,
+				intakeFirstAnswer: null,
 				isNewVersionAvailable: false,
 
 				isVersionChecked: false,
@@ -333,8 +346,10 @@ export const useAppStore = create<AppState>()(
 				reflectSettled: false,
 
 				replySeed: null,
-				requestComposerOpen: () => set({ composerOpenRequested: true }),
+				requestComposerOpen: (text) =>
+					set({ composerOpenRequested: true, composerOpenText: text ?? null }),
 				setIdleMenuOpen: (v) => set({ idleMenuOpen: v }),
+				setIntakeFirstAnswer: (answer) => set({ intakeFirstAnswer: answer }),
 				setIsNewVersionAvailable: (v) => set({ isNewVersionAvailable: v }),
 				setIsVersionChecked: (v) => set({ isVersionChecked: v }),
 				setLastNotification: (n) => set({ lastNotification: n }),

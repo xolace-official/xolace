@@ -12,7 +12,6 @@ import {
 	type MutationCtx,
 	query,
 } from "../_generated/server";
-import type { ClassificationResult } from "../ai/providers/anthropic";
 import type { ModerationResult } from "../ai/providers/moderation";
 import {
 	CRISIS_RESOURCES,
@@ -21,6 +20,7 @@ import {
 	type SafeguardResult,
 	SUPPORT_RESOURCES,
 	type TalkPeak,
+	UNCLASSIFIED,
 } from "../ai/safeguard";
 import { requireSessionOwnership } from "../lib/auth";
 import { resourceValidator, talkPeakValidator } from "../lib/validators";
@@ -90,19 +90,7 @@ export function peakOf(result: SafeguardResult): TalkPeak | null {
 	};
 }
 
-// Moderation alone, live: the engine's own thresholds with nothing classified,
-// so only moderation's explicit signals can escalate.
-const UNCLASSIFIED: ClassificationResult = {
-	intensity: 0,
-	primaryEmotion: "unclassified",
-	primaryEmotionConfidence: 0,
-	requiresFollowUp: false,
-	specificity: 0,
-	supportNeed: "none",
-	thematicTags: [],
-	userLanguageTags: [],
-};
-
+// Moderation alone, live: only moderation's explicit signals can escalate.
 export const moderationPeak = (m: ModerationResult) =>
 	peakOf(evaluateSafeguard(UNCLASSIFIED, m, []));
 

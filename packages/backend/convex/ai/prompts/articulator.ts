@@ -387,7 +387,7 @@ The read here is clear and well-formed. Trust it. Name the feeling precisely and
 }
 
 const DISCLOSURE_STYLE_CLAIMS: Record<
-	IntakeSignals["disclosureStyle"],
+	NonNullable<IntakeSignals["disclosureStyle"]>,
 	string
 > = {
 	all_at_once:
@@ -426,9 +426,10 @@ function getIntakeInstructions(
 		return "";
 	}
 
-	const claims: string[] = [
-		DISCLOSURE_STYLE_CLAIMS[intakeSignals.disclosureStyle],
-	];
+	const claims: string[] = [];
+	if (intakeSignals.disclosureStyle) {
+		claims.push(DISCLOSURE_STYLE_CLAIMS[intakeSignals.disclosureStyle]);
+	}
 	if (intakeSignals.emotionAwareness) {
 		claims.push(EMOTION_AWARENESS_CLAIMS[intakeSignals.emotionAwareness]);
 	}
