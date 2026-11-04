@@ -87,16 +87,23 @@ export function tickListen(
 /**
  * Send a play's one listen, trying again if the server rejects it. Not a reset of `logged`: a
  * play that counts on its finish tick has already zeroed the tracker, so nothing would resend.
- * Keeps going after the player unmounts, since the listen already happened.
+ * Keeps going after the player unmounts, since the listen already happened, but only while
+ * `sameAccount` holds: the client sends as whoever is signed in now, and a retry after a switch
+ * would credit the play to them.
  */
 export function sendListen(
 	send: () => Promise<unknown>,
+	sameAccount: () => boolean,
 	retriesLeft = LISTEN_RETRIES
 ): void {
 	send().catch((e) => {
 		console.error("[listen-tracker] recordListen failed:", e);
 		if (retriesLeft > 0) {
-			setTimeout(() => sendListen(send, retriesLeft - 1), LISTEN_RETRY_MS);
+			setTimeout(() => {
+				if (sameAccount()) {
+					sendListen(send, sameAccount, retriesLeft - 1);
+				}
+			}, LISTEN_RETRY_MS);
 		}
 	});
 }

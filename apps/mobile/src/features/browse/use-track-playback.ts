@@ -1,3 +1,4 @@
+import { getClerkInstance } from "@clerk/expo";
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useConvex, useMutation } from "convex/react";
@@ -14,6 +15,9 @@ import { type PlaybackReturn, usePlayback } from "@/lib/audio/use-playback";
 export type BoundTrack = NonNullable<
 	FunctionReturnType<typeof api.paths.getBoundAudioTrack>
 >;
+
+/** Who's signed in now, read when a retry fires, which can be after this player unmounts. */
+const currentAccount = () => getClerkInstance().user?.id;
 
 /** Bound-track player (docs/paths-v1.md §3.3, #334). With a `stepId`, a natural finish tends
  * the twig once; abandoning never does. Browse passes none (§9.6). Every play logs one listen
@@ -69,10 +73,14 @@ export function useTrackPlayback(
 		});
 		listen.current = next.tracker;
 		const trackId = p.track?.trackId;
-		if (!(next.logNow && trackId)) {
+		const heardBy = currentAccount();
+		if (!(next.logNow && trackId && heardBy)) {
 			return;
 		}
-		sendListen(() => recordListen({ trackId }));
+		sendListen(
+			() => recordListen({ trackId }),
+			() => currentAccount() === heardBy
+		);
 	}, [
 		p.currentTime,
 		p.isPlaying,

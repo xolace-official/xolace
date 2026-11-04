@@ -185,7 +185,7 @@ describe("sendListen", () => {
 			.mockRejectedValueOnce(new Error("server"))
 			.mockResolvedValue(null);
 
-		sendListen(send);
+		sendListen(send, () => true);
 		await vi.advanceTimersByTimeAsync(RETRY_WINDOW_MS);
 
 		expect(send).toHaveBeenCalledTimes(2);
@@ -198,9 +198,24 @@ describe("sendListen", () => {
 			.fn<() => Promise<null>>()
 			.mockRejectedValue(new Error("account_inactive"));
 
-		sendListen(send);
+		sendListen(send, () => true);
 		await vi.advanceTimersByTimeAsync(RETRY_WINDOW_MS);
 
 		expect(send).toHaveBeenCalledTimes(4);
+	});
+
+	it("stops retrying once another account is signed in", async () => {
+		vi.useFakeTimers();
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		const send = vi
+			.fn<() => Promise<null>>()
+			.mockRejectedValue(new Error("server"));
+		let signedIn = "heard-it";
+
+		sendListen(send, () => signedIn === "heard-it");
+		signedIn = "someone-else";
+		await vi.advanceTimersByTimeAsync(RETRY_WINDOW_MS);
+
+		expect(send).toHaveBeenCalledTimes(1);
 	});
 });
