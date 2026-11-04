@@ -13,6 +13,7 @@ import { SettingsSection } from "@/components/shared/settings-section";
 import { BadgeUnlockDevRow } from "@/features/achievements/unlock/unlock-dev-row";
 import { ReturnWelcomeSheet } from "@/features/reflect/components/return-welcome-sheet";
 import type { ReturnWelcomeTier } from "@/features/reflect/return-welcome-copy";
+import { DeferredQuestionsDevRow } from "@/features/session-end/deferred-dev-row";
 import { StarterSuggestionsDevRows } from "@/features/starter-suggestions/starter-dev-rows";
 import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 import { useAppStore } from "@/store/store";
@@ -231,6 +232,7 @@ export const DevToolsSection = () => {
 				onPress={replayIntake}
 				variant="action"
 			/>
+			<DeferredQuestionsDevRow />
 
 			<StarterSuggestionsDevRows />
 			<BadgeUnlockDevRow />
