@@ -119,7 +119,8 @@ export function BackfillSummaryScreen() {
 			<PressableFeedback
 				accessibilityRole="button"
 				className="h-13 w-full items-center justify-center rounded-2xl bg-accent"
-				onPress={() => leaveOnce(() => router.replace("/achievements"))}
+				// Back to the badges if they're what it opened over, rather than a second copy.
+				onPress={() => leaveOnce(() => router.dismissTo("/achievements"))}
 			>
 				<AppText className="font-[Poppins-Medium] text-accent-foreground text-base">
 					See them

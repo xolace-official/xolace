@@ -209,11 +209,11 @@ describe("notificationTapPlan", () => {
 		});
 	});
 
-	it("routes achievement to the achievements screen", () => {
+	it("routes achievement to the achievements screen, without stacking a copy", () => {
 		expect(
 			notificationTapPlan({ type: "achievement" }, null, 1).navigation
 		).toEqual({
-			action: "push",
+			action: "navigate",
 			href: "/(protected)/achievements",
 		});
 	});

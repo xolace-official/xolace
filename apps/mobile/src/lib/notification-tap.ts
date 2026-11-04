@@ -55,16 +55,20 @@ export function subscribeToNotificationTaps<R extends TapResponse>(
 	return () => subscription.remove();
 }
 
-/** Where a tap navigates. Chat routes carry params, so they differ in kind. */
+/** Where a tap navigates. `navigate` reuses the screen already on top; `push` always stacks. */
 export type TapNavigation =
-	| { action: "navigate"; href: ReturnType<typeof chatNotificationRoute> }
+	| {
+			action: "navigate";
+			href:
+				| ReturnType<typeof chatNotificationRoute>
+				| "/(protected)/achievements";
+	  }
 	| {
 			action: "push";
 			href:
 				| "/(protected)/quotes"
 				| "/(protected)"
 				| "/(protected)/kindling"
-				| "/(protected)/achievements"
 				| "/profile/insights";
 	  };
 
@@ -113,7 +117,7 @@ export function notificationTapPlan(
 		plan.navigation = { action: "push", href: "/(protected)/kindling" };
 	} else if (data?.type === "achievement") {
 		// Off a held screen, so the unlock moment can open over the badges.
-		plan.navigation = { action: "push", href: "/(protected)/achievements" };
+		plan.navigation = { action: "navigate", href: "/(protected)/achievements" };
 	} else if (
 		data?.type === "gentle_return" ||
 		data?.type === "pattern_nudge" ||
