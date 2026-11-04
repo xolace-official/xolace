@@ -33,6 +33,7 @@ describe("mayOpenUnlock", () => {
 		"/talk",
 		"/sit-with-this",
 		"/peer-reflections",
+		"/report-reflection",
 		"/session-end",
 		"/trusted-bridge",
 	])("never interrupts %s", (pathname) => {

@@ -11,6 +11,8 @@ const HOLD_ROUTES = [
 	"/talk",
 	"/sit-with-this",
 	"/peer-reflections",
+	// A sheet over peer reflections: the session is still behind it.
+	"/report-reflection",
 	"/session-end",
 	// A peer conversation: First Xolacer chat lands right after the first message.
 	"/chat",
