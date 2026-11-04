@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { Badge } from "@/features/achievements/badge";
 import type { BackfillSummary } from "@/features/achievements/types";
+import { useLeaveOnce } from "./use-leave-once";
 
 const THUMBNAIL_SIZE = 72;
 
@@ -36,6 +37,8 @@ export function BackfillSummaryScreen() {
 	// What opened the screen, held still: a row backfilled while it's up waits for next time.
 	const [shown, setShown] = useState<BackfillSummary | null>(null);
 	const shownIds = useRef<Id<"user_achievements">[]>([]);
+	const leaveOnce = useLeaveOnce();
+	const dismiss = () => leaveOnce(() => router.back());
 
 	if (shown === null && live) {
 		setShown(live);
@@ -48,9 +51,9 @@ export function BackfillSummaryScreen() {
 	const empty = shown === null && live === null;
 	useEffect(() => {
 		if (empty) {
-			router.back();
+			dismiss();
 		}
-	}, [empty]);
+	}, [empty, dismiss]);
 
 	// Stamp when a navigation action takes it off the stack, not on any unmount:
 	// Android rebuilding the tree on relaunch isn't a dismissal.
@@ -72,7 +75,7 @@ export function BackfillSummaryScreen() {
 			<Stack.Toolbar.Button
 				accessibilityLabel="Close"
 				icon={process.env.EXPO_OS === "ios" ? "xmark" : CloseIcon}
-				onPress={() => router.back()}
+				onPress={dismiss}
 			/>
 		</Stack.Toolbar>
 	);
@@ -116,7 +119,7 @@ export function BackfillSummaryScreen() {
 			<PressableFeedback
 				accessibilityRole="button"
 				className="h-13 w-full items-center justify-center rounded-2xl bg-accent"
-				onPress={() => router.replace("/achievements")}
+				onPress={() => leaveOnce(() => router.replace("/achievements"))}
 			>
 				<AppText className="font-[Poppins-Medium] text-accent-foreground text-base">
 					See them

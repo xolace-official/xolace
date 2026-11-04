@@ -28,6 +28,7 @@ import { BadgeFx, FX_SPILL } from "@/features/achievements/fx/badge-fx";
 import type { UnlockedBadge } from "@/features/achievements/types";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { cn } from "@/lib/utils";
+import { useLeaveOnce } from "./use-leave-once";
 
 const SIDE_GUTTER = 72;
 const MAX_HERO = 240;
@@ -42,6 +43,8 @@ export function BadgeUnlockScreen() {
 	const [shown, setShown] = useState<UnlockedBadge[] | null>(null);
 	const [step, setStep] = useState(0);
 	const shownIds = useRef<Id<"user_achievements">[]>([]);
+	const leaveOnce = useLeaveOnce();
+	const dismiss = () => leaveOnce(() => router.back());
 
 	if (shown === null && live && live.length > 0) {
 		setShown(live);
@@ -54,9 +57,9 @@ export function BadgeUnlockScreen() {
 	const empty = shown === null && live?.length === 0;
 	useEffect(() => {
 		if (empty) {
-			router.back();
+			dismiss();
 		}
-	}, [empty]);
+	}, [empty, dismiss]);
 
 	// Stamp when a navigation action takes it off the stack (close, Lovely, a swipe, Android
 	// back), not on any unmount: Android rebuilding the tree on relaunch isn't a dismissal. An
@@ -81,7 +84,7 @@ export function BadgeUnlockScreen() {
 			<Stack.Toolbar.Button
 				accessibilityLabel="Close"
 				icon={process.env.EXPO_OS === "ios" ? "xmark" : CloseIcon}
-				onPress={() => router.back()}
+				onPress={dismiss}
 			/>
 		</Stack.Toolbar>
 	);
@@ -120,7 +123,7 @@ export function BadgeUnlockScreen() {
 			<PressableFeedback
 				accessibilityRole="button"
 				className="h-13 w-full items-center justify-center rounded-2xl bg-accent"
-				onPress={() => (last ? router.back() : setStep(step + 1))}
+				onPress={() => (last ? dismiss() : setStep(step + 1))}
 			>
 				<AppText className="font-[Poppins-Medium] text-accent-foreground text-base">
 					{last ? "Lovely" : "Next"}
