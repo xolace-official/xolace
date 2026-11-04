@@ -6,6 +6,10 @@ import { useToast } from "heroui-native";
 import { useRef, useState } from "react";
 import { posthog } from "@/config/posthog";
 import {
+	CLIENT_VERSION,
+	useAgeGate,
+} from "@/features/xolacer-chat/age-gate/use-age-gate";
+import {
 	chatLimitError,
 	declineCooldownNote,
 } from "@/features/xolacer-chat/utils";
@@ -16,8 +20,8 @@ import { useAppStore } from "@/store/store";
  * and sends nothing. */
 export type PrimerMode = "gate" | "reference" | null;
 
-/** Everything behind "Ask to talk": the request, its limit toast, and the first-ask primer,
- * whose flag is written only on a successful send. */
+/** Everything behind "Ask to talk": the age gate, the request, its limit toast, and the first-ask
+ * primer, whose flag is written only on a successful send. */
 export function useAskFlow({
 	xolacerProfileId,
 	displayName,
@@ -35,6 +39,7 @@ export function useAskFlow({
 	const primerSeen = useAppStore((s) => s.xolacerPrimerSeen);
 	const setPrimerSeen = useAppStore((s) => s.setXolacerPrimerSeen);
 	const [primerMode, setPrimerMode] = useState<PrimerMode>(null);
+	const ageGate = useAgeGate();
 	// Ref guards the mutation (two taps in one frame both read stale state);
 	// the state drives the button's disabled look.
 	const inFlight = useRef(false);
@@ -49,7 +54,7 @@ export function useAskFlow({
 		}
 		inFlight.current = true;
 		setSending(true);
-		requestConversation({ xolacerProfileId })
+		requestConversation({ clientVersion: CLIENT_VERSION, xolacerProfileId })
 			.then((conversationId) => {
 				if (fromGate) {
 					setPrimerSeen(true);
@@ -64,6 +69,12 @@ export function useAskFlow({
 				openThread(conversationId);
 			})
 			.catch((error: unknown) => {
+				// The status hadn't loaded, or changed under a stale screen: the server's gate
+				// answered instead, and the request goes again after an adult answer.
+				if (ageGate.handleRefusal(error, () => sendRequest(fromGate))) {
+					setPrimerMode(null);
+					return;
+				}
 				const data = chatLimitError(error);
 				toast.show({
 					label:
@@ -86,12 +97,14 @@ export function useAskFlow({
 
 	const handleAsk = () => {
 		playSoftPress();
-		if (primerSeen) {
-			sendRequest(false);
-			return;
-		}
-		posthog.capture("xolacer_primer_shown");
-		setPrimerMode("gate");
+		ageGate.guard(() => {
+			if (primerSeen) {
+				sendRequest(false);
+				return;
+			}
+			posthog.capture("xolacer_primer_shown");
+			setPrimerMode("gate");
+		});
 	};
 
 	const handlePrimerConfirm = () => {
@@ -117,6 +130,7 @@ export function useAskFlow({
 	};
 
 	return {
+		ageGate,
 		handleAsk,
 		handlePrimerClose,
 		handlePrimerConfirm,
