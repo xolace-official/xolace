@@ -5,6 +5,10 @@ const LISTEN_SEC = 60;
  * and how short of the target a play may end (its last tick lands before the end). */
 const TICK_SLACK_SEC = 2;
 const MS_PER_SEC = 1000;
+/** Convex resends a mutation through a dropped connection itself, so a rejection came from the
+ * server. A few spaced tries ride out a bad moment without hammering a lasting error. */
+const LISTEN_RETRIES = 3;
+const LISTEN_RETRY_MS = 5000;
 
 /** One play of the loaded track, and the player status it last saw. */
 export type ListenTracker = {
@@ -78,4 +82,21 @@ export function tickListen(
 			? { ...seen, heard: 0, logged: false }
 			: { ...seen, heard, logged: tracker.logged || logNow },
 	};
+}
+
+/**
+ * Send a play's one listen, trying again if the server rejects it. Not a reset of `logged`: a
+ * play that counts on its finish tick has already zeroed the tracker, so nothing would resend.
+ * Keeps going after the player unmounts, since the listen already happened.
+ */
+export function sendListen(
+	send: () => Promise<unknown>,
+	retriesLeft = LISTEN_RETRIES
+): void {
+	send().catch((e) => {
+		console.error("[listen-tracker] recordListen failed:", e);
+		if (retriesLeft > 0) {
+			setTimeout(() => sendListen(send, retriesLeft - 1), LISTEN_RETRY_MS);
+		}
+	});
 }

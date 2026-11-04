@@ -3,7 +3,11 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useConvex, useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef } from "react";
-import { startListen, tickListen } from "@/features/browse/listen-tracker";
+import {
+	sendListen,
+	startListen,
+	tickListen,
+} from "@/features/browse/listen-tracker";
 import { getLockScreenMetadata } from "@/features/browse/track-lock-screen-metadata";
 import { type PlaybackReturn, usePlayback } from "@/lib/audio/use-playback";
 
@@ -68,9 +72,7 @@ export function useTrackPlayback(
 		if (!(next.logNow && trackId)) {
 			return;
 		}
-		recordListen({ trackId }).catch((e) =>
-			console.error("[useTrackPlayback] recordListen failed:", e)
-		);
+		sendListen(() => recordListen({ trackId }));
 	}, [
 		p.currentTime,
 		p.isPlaying,

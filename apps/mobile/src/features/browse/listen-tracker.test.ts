@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { startListen, tickListen } from "./listen-tracker";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { sendListen, startListen, tickListen } from "./listen-tracker";
 
 const TICK_SEC = 0.5;
 const TICK_MS = TICK_SEC * 1000;
@@ -166,5 +166,41 @@ describe("listen tracker", () => {
 			p.lap();
 		}
 		expect(p.listens).toBe(1);
+	});
+});
+
+describe("sendListen", () => {
+	const RETRY_WINDOW_MS = 60_000;
+
+	afterEach(() => {
+		vi.useRealTimers();
+		vi.restoreAllMocks();
+	});
+
+	it("tries again after a rejection and stops once one lands", async () => {
+		vi.useFakeTimers();
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		const send = vi
+			.fn<() => Promise<null>>()
+			.mockRejectedValueOnce(new Error("server"))
+			.mockResolvedValue(null);
+
+		sendListen(send);
+		await vi.advanceTimersByTimeAsync(RETRY_WINDOW_MS);
+
+		expect(send).toHaveBeenCalledTimes(2);
+	});
+
+	it("gives up on an error that lasts", async () => {
+		vi.useFakeTimers();
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		const send = vi
+			.fn<() => Promise<null>>()
+			.mockRejectedValue(new Error("account_inactive"));
+
+		sendListen(send);
+		await vi.advanceTimersByTimeAsync(RETRY_WINDOW_MS);
+
+		expect(send).toHaveBeenCalledTimes(4);
 	});
 });
