@@ -170,16 +170,20 @@ Not chosen:
 `docs/plan/onboarding-v2/README.md` § Live Flux). Flux is the brand flame, not the Talk
 companion's look.
 
-- **Five moods on the existing presets** (`MOOD_POSES` in `pose.ts`): idle → `neutral`,
-  talking → `speaking`, listening → `attentive`, thinking → `thinking`, happy → `glad`. No mood
-  gets a pose of its own, so a look means the same here as everywhere else.
+- **Six moods on the existing presets** (`MOOD_POSES` in `pose.ts`): idle → `neutral`,
+  talking → `speaking`, listening → `attentive`, thinking → `thinking`, happy → `glad`,
+  warm → `nod`. No mood gets a pose of its own, so a look means the same here as everywhere
+  else.
 - **On top of the pose**: talking moves the mouth at a syllable pace with a slight squash
-  (`face.talk`); happy hops once as it arrives (`face.hop`); listening sends two ember sound
+  (`face.talk`); happy hops once as it arrives (`face.hop`); warm nods once; listening sends two ember sound
   rings out from behind the face; thinking shows three thought dots at the top right.
 - **Per step**: `ask` talks while the question types out, then idles; `listen` listens;
   `type` idles; `interpret` thinks; `followUp` talks for as long as its question takes to say,
-  then idles; `heard` and `name` are happy.
-- **Reduced motion**: the pose alone, with no mouth movement and no hop; one still ring; still
+  then idles; `heard` is warm; `name` is happy.
+- **`heard` is warm, not happy**: the chips sit right above the user's own words, which may be
+  "I feel really alone lately". A grin and a hop there would mock it; the Mirror's soft nod
+  says "I heard you" instead.
+- **Reduced motion**: the pose alone, with no mouth movement, hop or nod; one still ring; still
   dots.
 
 Not built yet: the per-voice tints (they belong to the Plus screen's Talk demo, which

@@ -82,6 +82,12 @@ describe("MOOD_POSES", () => {
 		expect(MOOD_POSES.listening.lean).toBeGreaterThan(0);
 	});
 
+	it("is warm, not a grin, when echoing back what someone said", () => {
+		expect(MOOD_POSES.warm.mouth).toBeGreaterThan(0);
+		expect(MOOD_POSES.warm.mouth).toBeLessThan(MOOD_POSES.happy.mouth);
+		expect(MOOD_POSES.warm.cheeks).toBeLessThan(MOOD_POSES.happy.cheeks);
+	});
+
 	it("smiles widest when happy, and only a little at rest", () => {
 		expect(MOOD_POSES.happy.mouth).toBe(1);
 		expect(MOOD_POSES.idle.mouth).toBeGreaterThan(0);

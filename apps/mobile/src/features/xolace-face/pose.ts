@@ -104,6 +104,8 @@ export const MOOD_POSES = {
 	listening: PRESETS.attentive,
 	talking: PRESETS.speaking,
 	thinking: PRESETS.thinking,
+	// Echoing back someone's own words, which may be heavy: warm, not a grin (like the Mirror).
+	warm: PRESETS.nod,
 } as const satisfies Record<string, Pose>;
 
 export type Mood = keyof typeof MOOD_POSES;
