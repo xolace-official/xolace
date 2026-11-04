@@ -1,7 +1,7 @@
 /**
  * Where the badge unlock moment (#693) must wait its turn: crisis help, a
- * vent or session in progress, and the other full-screen moments it would
- * stack on. It opens once the user is somewhere else.
+ * vent or session in progress, a peer conversation, and the other full-screen
+ * moments it would stack on. It opens once the user is somewhere else.
  */
 const HOLD_ROUTES = [
 	// Crisis help and a session's own screens.
@@ -12,6 +12,10 @@ const HOLD_ROUTES = [
 	"/sit-with-this",
 	"/peer-reflections",
 	"/session-end",
+	// A peer conversation: First Xolacer chat lands right after the first message.
+	"/chat",
+	"/xolace-channel",
+	"/rate",
 	// Full-screen moments, this one included.
 	"/badge-unlock",
 	"/badge-backfill",
