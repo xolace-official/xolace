@@ -9,6 +9,7 @@ import { CohortCard } from "@/features/discovery/components/cohort-card";
 import { DailyQuotesCard } from "@/features/discovery/components/daily-quotes-card";
 import { DiscoveryHeader } from "@/features/discovery/components/discovery-header";
 import { DiscoveryTimelineSection } from "@/features/discovery/components/discovery-timeline-section";
+import { FindingCard } from "@/features/discovery/components/finding-card";
 import { KindlingTodayCard } from "@/features/discovery/components/kindling-today-card";
 import { LibraryStrip } from "@/features/discovery/components/library-strip";
 import {
@@ -37,6 +38,8 @@ export function DiscoveryScreen() {
 				{/* Wide gap: Flux's feet and glow overhang the cohort card's box. */}
 				<View className="gap-10 px-4 pt-10">
 					<CohortCard fallback={v2Intake ? <CampfireCard /> : null} />
+					{/* Day 3 of a v2 intake, until answered or put away (#711). */}
+					<FindingCard />
 					<KindlingTodayCard />
 					<DailyQuotesCard />
 				</View>

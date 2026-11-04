@@ -116,6 +116,20 @@ const prune = <T extends Record<string, unknown>>(props: T): Partial<T> =>
 		Object.entries(props).filter(([, value]) => value !== undefined)
 	) as Partial<T>;
 
+/** How they found Xolace: facts a re-onboard must not overwrite, so `$set_once`. The series
+ * pair only when the branch ran. */
+const findingUsOnce = (
+	answers: Pick<
+		IntakeAnswers,
+		"acquisitionSource" | "seriesSeen" | "seriesWantInApp"
+	>
+) =>
+	prune({
+		acquisition_source: answers.acquisitionSource,
+		series_seen: answers.seriesSeen,
+		series_want_in_app: answers.seriesWantInApp,
+	});
+
 /** The person-property dual-write (T7 §3). `$set_once` holds facts a re-onboard must not
  * overwrite; `displayName` stays out. */
 export function intakePersonProperties(
@@ -133,11 +147,7 @@ export function intakePersonProperties(
 			support_frequency: answers.supportFrequency,
 			weighing_on: answers.weighingOn,
 		}),
-		$set_once: prune({
-			acquisition_source: answers.acquisitionSource,
-			series_seen: answers.seriesSeen,
-			series_want_in_app: answers.seriesWantInApp,
-		}),
+		$set_once: findingUsOnce(answers),
 	};
 }
 
@@ -330,6 +340,22 @@ export function trackDeferredAnswered(
 		$set: { [question]: value },
 		question,
 		surface,
+	});
+}
+
+/** "How did you find Xolace?", answered on Discovery's day-3 card (#711), set as the intake
+ * sets it. */
+export function trackAcquisitionAnswered(
+	posthog: PostHog,
+	answer: Pick<
+		IntakeAnswers,
+		"acquisitionSource" | "seriesSeen" | "seriesWantInApp"
+	>
+) {
+	posthog.capture("intake_deferred_answered", {
+		$set_once: findingUsOnce(answer),
+		question: "acquisition_source",
+		surface: "discovery_card",
 	});
 }
 

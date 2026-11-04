@@ -5,6 +5,7 @@ import { PressableFeedback } from "heroui-native";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { useRecordDeferredAnswer } from "@/features/intake/use-record-deferred-answer";
 import { BrowseSuggestion } from "@/features/session-end/components/browse-suggestion";
 import { KindlingCloseSlot } from "@/features/session-end/components/kindling-close-slot";
 import {
@@ -12,7 +13,6 @@ import {
 	type CopingStyle,
 	copingSuggestion,
 } from "@/features/session-end/coping-suggestion";
-import { useRecordDeferredAnswer } from "@/features/session-end/hooks/use-record-deferred-answer";
 import { cn } from "@/lib/cn";
 import { playSoftPress } from "@/lib/haptics";
 import { useAppStore } from "@/store/store";

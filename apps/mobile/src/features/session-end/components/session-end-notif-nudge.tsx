@@ -9,6 +9,7 @@ import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { useRecordDeferredAnswer } from "@/features/intake/use-record-deferred-answer";
 import {
 	offersCheckIn,
 	type SupportFrequency,
@@ -17,7 +18,6 @@ import {
 	SUPPORT_FREQUENCY_COPY,
 	SupportFrequencyChoices,
 } from "@/features/session-end/components/support-frequency-choices";
-import { useRecordDeferredAnswer } from "@/features/session-end/hooks/use-record-deferred-answer";
 import { requestPushToken } from "@/lib/push-token";
 import { useAppStore } from "@/store/store";
 

@@ -34,12 +34,13 @@ export function DeferredQuestionsDevRow() {
 		// The device's own once-only marks, so each ask can show again here.
 		useAppStore.setState({
 			copingAskSeen: false,
+			findingCardDismissed: false,
 			notifNudgeDismissed: false,
 			shakeHintSeen: false,
 		});
 		toast.show({
 			description:
-				"Coping and frequency ask at the next session end; the reminder step needs notifications not yet decided.",
+				"Coping and frequency ask at the next session end; the reminder step needs notifications not yet decided. The how-you-found-us card waits for day 3.",
 			label: "Deferred questions cleared",
 		});
 	};
