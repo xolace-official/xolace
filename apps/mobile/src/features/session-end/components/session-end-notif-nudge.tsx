@@ -38,11 +38,14 @@ const OFFER_COPY = {
 
 /** After a session, asks once whether Flux may send reminders. A v2 user who hasn't said
  * how often they need support is asked that first (#712), and someone it happens to only
- * now and then is never asked for notifications. */
+ * now and then is never asked for notifications. The frequency question is asked even
+ * when notifications are already decided; only the reminder offer needs them undecided. */
 export function SessionEndNotifNudge() {
 	const [show, setShow] = useState(false);
 	const [mounted, setMounted] = useState(false);
 	const [stage, setStage] = useState<"frequency" | "offer">("offer");
+	// Notifications are still undecided, so the reminder offer can follow the question.
+	const [canOffer, setCanOffer] = useState(true);
 	// The stage is picked once: answering drops supportFrequency from `missing`.
 	const stagePicked = useRef(false);
 	const { height } = useWindowDimensions();
@@ -65,10 +68,12 @@ export function SessionEndNotifNudge() {
 		let cancelled = false;
 
 		Notifications.getPermissionsAsync().then(({ status }) => {
-			if (cancelled || status !== "undetermined") {
+			const undecided = status === "undetermined";
+			if (cancelled || !(undecided || asksFrequency)) {
 				return;
 			}
 			stagePicked.current = true;
+			setCanOffer(undecided);
 			setStage(asksFrequency ? "frequency" : "offer");
 			setMounted(true);
 		});
@@ -109,7 +114,7 @@ export function SessionEndNotifNudge() {
 	};
 
 	const handleFrequency = async (answer: SupportFrequency) => {
-		if (offersCheckIn(answer)) {
+		if (canOffer && offersCheckIn(answer)) {
 			setStage("offer");
 		} else {
 			dismiss();
@@ -171,7 +176,7 @@ export function SessionEndNotifNudge() {
 					<SupportFrequencyChoices
 						onAnswer={handleFrequency}
 						// Skipped, nothing is known: the reminder ask stands, as before #712.
-						onSkip={() => setStage("offer")}
+						onSkip={canOffer ? () => setStage("offer") : dismiss}
 					/>
 				) : (
 					<View className="gap-3">
