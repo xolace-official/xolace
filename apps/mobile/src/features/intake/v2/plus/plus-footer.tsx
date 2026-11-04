@@ -18,6 +18,7 @@ import {
 	planPriceLine,
 	planTag,
 } from "@/features/intake/v2/plus/plans";
+import { PaywallRestoreButton } from "@/features/purchases/screens/paywall-header-actions";
 import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 import { PaywallPlansUnavailable } from "@/features/purchases/screens/paywall-plans-unavailable";
 import { cn } from "@/lib/utils";
@@ -172,7 +173,8 @@ function PlanOption({ onPress, selected, tag, title }: OptionProps) {
 	);
 }
 
-/** Terms and Privacy where the subscription is sold (App Review 3.1.2). */
+/** Terms and Privacy where the subscription is sold (App Review 3.1.2), and Restore so
+ * someone who already subscribed can get it back without leaving intake. */
 function LegalLinks() {
 	const [open, setOpen] = useState<LegalDocument | null>(null);
 	return (
@@ -192,6 +194,7 @@ function LegalLinks() {
 				>
 					Privacy Policy
 				</AppText>
+				<PaywallRestoreButton />
 			</View>
 			<LegalBottomSheet document={open} onClose={() => setOpen(null)} />
 		</>
