@@ -397,6 +397,44 @@ describe("the missed-badge push (#700)", () => {
 			await nextDay(user);
 			expect(pushes()).toEqual([FIRST_SESSION_PUSH]);
 		});
+
+		it("still holds back the new one when the older badge's push is held", async () => {
+			const user = await notifiable();
+			await earn(user, "first-session");
+			vi.advanceTimersByTime(justBeforeTheCheck);
+			await earn(user, "first-listen");
+			const { sessionToken } = await openApp(user);
+			await advance(user, pastTheCheck);
+			expect(sentPushes).toEqual([]);
+
+			// The retry an hour on: first-listen is past the hour now, but not
+			// past the hour before the check it was held back from.
+			await user.t.mutation(api.presence.disconnect, { sessionToken });
+			await advance(user, HOUR);
+			expect(pushes()).toEqual([FIRST_SESSION_PUSH]);
+			expect(await stampedPushed(user, "first-listen")).toBe(false);
+			expect(await pendingChecks(user)).toBe(1);
+
+			await nextDay(user);
+			expect(pushes()).toEqual([FIRST_SESSION_PUSH, pushOf("first-listen")]);
+		});
+
+		it("gives the new one its own check when the retries run out", async () => {
+			const user = await notifiable(ALWAYS_QUIET);
+			await earn(user, "first-session");
+			vi.advanceTimersByTime(justBeforeTheCheck);
+			await earn(user, "first-listen");
+			await advance(user, pastTheCheck);
+			for (let retry = 0; retry < QUIET_RETRIES; retry++) {
+				await advance(user, HOUR);
+			}
+			expect(sentPushes).toEqual([]);
+			expect(await pendingChecks(user)).toBe(1);
+
+			await setPrefs(user, { quietWindow: undefined });
+			await nextDay(user);
+			expect(await stampedPushed(user, "first-listen")).toBe(true);
+		});
 	});
 
 	describe("a badge whose own check came and went", () => {

@@ -69,17 +69,20 @@ function badgePushCopy(badges: Achievement[]): {
 	return { content: `You earned ${badges.length} badges.` };
 }
 
-/** Make this the profile's one waiting check. */
+/**
+ * Make this the profile's one waiting check. `retry` carries a held check on:
+ * when it first ran, so a badge earned near it stays recent through the retries.
+ */
 async function armCheck(
 	ctx: MutationCtx,
 	emotionalProfileId: Id<"emotional_profiles">,
 	at: number,
-	quietRetries?: number
+	retry?: { checkedAt: number; quietRetries: number }
 ): Promise<void> {
 	const checkId = await ctx.scheduler.runAt(
 		at,
 		internal.achievements.push.sendMissedPush,
-		{ emotionalProfileId, ...(quietRetries && { quietRetries }) }
+		{ emotionalProfileId, ...retry }
 	);
 	await ctx.db.patch("emotional_profiles", emotionalProfileId, {
 		achievementPushCheck: checkId,
@@ -115,16 +118,21 @@ export async function scheduleMissedBadgeCheck(
  * The missed-beat check: every live badge still unseen and unpushed, as one
  * push, except those earned too recently to call missed, which wait for a
  * check the next day, and those past `PUSHABLE_FOR_MS`. Holds off through the
- * quiet window and while the user is in the app. Stamps `pushedAt` even when
+ * quiet window and while the user is in the app; "too recently" stays measured
+ * from the check's first run, so a retry an hour on doesn't push a badge earned
+ * just before it, and one earned during the retries still gets its own next-day
+ * check when they end. Stamps `pushedAt` even when
  * the daily cap suppresses it, so a badge over the cap waits for the unlock
  * sheet rather than a later push.
  */
 export const sendMissedPush = internalMutation({
 	args: {
+		/** When a held check first ran; absent on its first run. */
+		checkedAt: v.optional(v.number()),
 		emotionalProfileId: v.id("emotional_profiles"),
 		quietRetries: v.optional(v.number()),
 	},
-	handler: async (ctx, { emotionalProfileId, quietRetries = 0 }) => {
+	handler: async (ctx, { checkedAt, emotionalProfileId, quietRetries = 0 }) => {
 		const rows = await ctx.db
 			.query("user_achievements")
 			.withIndex(
@@ -138,15 +146,18 @@ export const sendMissedPush = internalMutation({
 			)
 			.take(PUSH_LIMIT);
 		const now = Date.now();
+		const firstRun = checkedAt ?? now;
 		const missed = rows
 			.filter(
 				(row) =>
-					row.earnedAt <= now - MISSED_AFTER_MS &&
+					row.earnedAt <= firstRun - MISSED_AFTER_MS &&
 					row.earnedAt > now - PUSHABLE_FOR_MS
 			)
 			// Oldest first, so a single badge's copy is the one the user earned first.
 			.sort((a, b) => a.earnedAt - b.earnedAt);
-		const hasRecent = rows.some((row) => row.earnedAt > now - MISSED_AFTER_MS);
+		const hasRecent = rows.some(
+			(row) => row.earnedAt > firstRun - MISSED_AFTER_MS
+		);
 		const badges = missed.flatMap(
 			(row) => findAchievement(row.achievementId) ?? []
 		);
@@ -164,20 +175,16 @@ export const sendMissedPush = internalMutation({
 		if (!(notifications && achievementPushAllowed(notifications))) {
 			return null;
 		}
-		if (
+		const held =
 			badges.length > 0 &&
 			(inQuietWindow(notifications) ||
-				(await isPresent(ctx, emotionalProfileId)))
-		) {
+				(await isPresent(ctx, emotionalProfileId)));
+		if (held && quietRetries < QUIET_RETRIES) {
 			// Deferred, not dropped: try again once the window opens or they've left.
-			if (quietRetries < QUIET_RETRIES) {
-				await armCheck(
-					ctx,
-					emotionalProfileId,
-					now + QUIET_RETRY_MS,
-					quietRetries + 1
-				);
-			}
+			await armCheck(ctx, emotionalProfileId, now + QUIET_RETRY_MS, {
+				checkedAt: firstRun,
+				quietRetries: quietRetries + 1,
+			});
 			return null;
 		}
 
@@ -193,7 +200,7 @@ export const sendMissedPush = internalMutation({
 				missedPushAt(now, profile?.typicalUsagePattern?.hourOfDay)
 			);
 		}
-		if (badges.length === 0) {
+		if (held || badges.length === 0) {
 			return null;
 		}
 
