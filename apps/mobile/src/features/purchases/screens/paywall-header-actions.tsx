@@ -55,14 +55,23 @@ export function PaywallCloseButton({
 	);
 }
 
-export function PaywallRestoreButton() {
+type RestoreProps = {
+	/** Told as a restore starts, before the store is called, and as it ends. */
+	onRestoring?: (active: boolean) => void;
+};
+
+export function PaywallRestoreButton({ onRestoring }: RestoreProps) {
 	const { restorePurchases } = useRevenueCat();
 	const tintColor = useThemeColor("muted") as string;
 	const [isRestoring, setIsRestoring] = useState(false);
 
 	const handleRestore = () => {
 		setIsRestoring(true);
-		restorePurchases().finally(() => setIsRestoring(false));
+		onRestoring?.(true);
+		restorePurchases().finally(() => {
+			setIsRestoring(false);
+			onRestoring?.(false);
+		});
 	};
 
 	// Android's native header truncates the label ("Restor") without a fixed width; iOS

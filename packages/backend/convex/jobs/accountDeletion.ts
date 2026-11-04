@@ -141,7 +141,7 @@ export const purgeUser = internalMutation({
 
 		// Everything below happens exactly once, deleting the profile and user
 		// rows last.
-		await finalizePurge(ctx, profileId, user._id);
+		await finalizePurge(ctx, profileId, user);
 	},
 	returns: v.null(),
 });

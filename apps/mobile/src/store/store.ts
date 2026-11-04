@@ -6,7 +6,16 @@ import { createJSONStorage, devtools, persist } from "zustand/middleware";
 import type { ReadingModeKey } from "@/features/library/reader/reading-mode";
 import type { TextureSetId } from "@/features/reflect/texture-sets";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
-import { createIntakeSlice, type IntakeSlice } from "./intake-slice";
+import {
+	type AccountFlagsSlice,
+	accountFlagsPersistedKeys,
+	createAccountFlagsSlice,
+} from "./account-flags-slice";
+import {
+	createIntakeSlice,
+	type IntakeSlice,
+	intakePersistedKeys,
+} from "./intake-slice";
 import {
 	createPlusOfferSlice,
 	type PlusOfferSlice,
@@ -65,17 +74,6 @@ type TogglesSlice = {
 	/** One-time flag — once true, tone tip banner never shows again on this device. */
 	toneTipSeen: boolean;
 	setToneTipSeen: (v: boolean) => void;
-	/** One-time flag — once dismissed, session-end notification nudge never shows again. */
-	notifNudgeDismissed: boolean;
-	setNotifNudgeDismissed: (v: boolean) => void;
-	/** One-time flag — once true, session end never asks "What usually helps after?" again on
-	 * this device, answered or not (#712). */
-	copingAskSeen: boolean;
-	setCopingAskSeen: (v: boolean) => void;
-	/** One-time flag — once true, Discovery's "How did you find Xolace?" card never shows
-	 * again on this device (#711). */
-	findingCardDismissed: boolean;
-	setFindingCardDismissed: (v: boolean) => void;
 	/** Version of the reflect tour this device last finished. `0` means none. */
 	reflectTourVersion: number;
 	setReflectTourVersion: (v: number) => void;
@@ -101,9 +99,6 @@ type TogglesSlice = {
 	/** One-time flag — once true, the Lantern (library) welcome never shows again. */
 	libraryIntroSeen: boolean;
 	setLibraryIntroSeen: (v: boolean) => void;
-	/** One-time flag — once true, the home Starter suggestions bubble never shows again (#460). */
-	starterSuggestionsSeen: boolean;
-	setStarterSuggestionsSeen: (v: boolean) => void;
 	/** Dev tools only (honoured under `__DEV__`): treat this account as zero-session for
 	 * Starter suggestions (#465). */
 	devStarterEligible: boolean;
@@ -215,6 +210,7 @@ type ComposerOpenSlice = {
 export type AppState = ThemeSlice &
 	OnboardingSlice &
 	TogglesSlice &
+	AccountFlagsSlice &
 	PlusOfferSlice &
 	IntakeSlice &
 	PreferencesSlice &
@@ -245,10 +241,8 @@ export const useAppStore = create<AppState>()(
 
 				colorThemeId: "default",
 
-				copingAskSeen: false,
 				devStarterEligible: false,
 				dictationUpsellSeen: false,
-				findingCardDismissed: false,
 
 				homeComposing: false,
 				homeSheetBlocking: false,
@@ -268,8 +262,6 @@ export const useAppStore = create<AppState>()(
 				musicIntroSeen: false,
 
 				nightModeEnabled: true,
-
-				notifNudgeDismissed: false,
 
 				pendingEventPrompt: null,
 
@@ -295,9 +287,7 @@ export const useAppStore = create<AppState>()(
 				setBridgeIntroSeen: (v) => set({ bridgeIntroSeen: v }),
 				setChatEnabledCached: (v) => set({ chatEnabledCached: v }),
 				setColorThemeId: (id) => set({ colorThemeId: id }),
-				setCopingAskSeen: (v) => set({ copingAskSeen: v }),
 				setDictationUpsellSeen: (v) => set({ dictationUpsellSeen: v }),
-				setFindingCardDismissed: (v) => set({ findingCardDismissed: v }),
 				setHomeComposing: (v) => set({ homeComposing: v }),
 				setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 				setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
@@ -311,14 +301,12 @@ export const useAppStore = create<AppState>()(
 				setLibraryIntroSeen: (v) => set({ libraryIntroSeen: v }),
 				setMusicIntroSeen: (v) => set({ musicIntroSeen: v }),
 				setNightModeEnabled: (v) => set({ nightModeEnabled: v }),
-				setNotifNudgeDismissed: (v) => set({ notifNudgeDismissed: v }),
 				setPendingEventPrompt: (prompt) => set({ pendingEventPrompt: prompt }),
 				setPreviousTheme: (t) => set({ previousTheme: t }),
 				setReflectTourActive: (v) => set({ reflectTourActive: v }),
 				setReflectTourVersion: (v) => set({ reflectTourVersion: v }),
 				setReturnWelcomeSeenAt: (n) => set({ returnWelcomeSeenAt: n }),
 				setShakeHintSeen: (v) => set({ shakeHintSeen: v }),
-				setStarterSuggestionsSeen: (v) => set({ starterSuggestionsSeen: v }),
 				setStreakRevealBusy: (v) => set({ streakRevealBusy: v }),
 				setSupportAudioIntroSeen: (v) => set({ supportAudioIntroSeen: v }),
 				setTheme: (t) => set({ theme: t }),
@@ -326,7 +314,6 @@ export const useAppStore = create<AppState>()(
 				setVentIntroSeen: (v) => set({ ventIntroSeen: v }),
 				setXolacerPrimerSeen: (v) => set({ xolacerPrimerSeen: v }),
 				shakeHintSeen: false,
-				starterSuggestionsSeen: false,
 				streakRevealBusy: false,
 				supportAudioIntroSeen: false,
 				theme: "system",
@@ -334,6 +321,8 @@ export const useAppStore = create<AppState>()(
 				toneTipSeen: false,
 				ventIntroSeen: false,
 				xolacerPrimerSeen: false,
+
+				...createAccountFlagsSlice(set),
 
 				...createPlusOfferSlice(set),
 
@@ -388,10 +377,8 @@ export const useAppStore = create<AppState>()(
 					bridgeIntroSeen: s.bridgeIntroSeen,
 					chatEnabledCached: s.chatEnabledCached,
 					colorThemeId: s.colorThemeId,
-					copingAskSeen: s.copingAskSeen,
 					devStarterEligible: s.devStarterEligible,
 					dictationUpsellSeen: s.dictationUpsellSeen,
-					findingCardDismissed: s.findingCardDismissed,
 					hiddenProfileCards: s.hiddenProfileCards,
 					introSeen: s.introSeen,
 					lastAcknowledgedStreak: s.lastAcknowledgedStreak,
@@ -399,7 +386,6 @@ export const useAppStore = create<AppState>()(
 					libraryIntroSeen: s.libraryIntroSeen,
 					musicIntroSeen: s.musicIntroSeen,
 					nightModeEnabled: s.nightModeEnabled,
-					notifNudgeDismissed: s.notifNudgeDismissed,
 					pendingEventPrompt: s.pendingEventPrompt,
 					previousTheme: s.previousTheme,
 					readByFire: s.readByFire,
@@ -410,13 +396,14 @@ export const useAppStore = create<AppState>()(
 					seenEventIds: s.seenEventIds,
 					seenMenuItems: s.seenMenuItems,
 					shakeHintSeen: s.shakeHintSeen,
-					starterSuggestionsSeen: s.starterSuggestionsSeen,
 					supportAudioIntroSeen: s.supportAudioIntroSeen,
 					textureSetId: s.textureSetId,
 					theme: s.theme,
 					toneTipSeen: s.toneTipSeen,
 					ventIntroSeen: s.ventIntroSeen,
 					xolacerPrimerSeen: s.xolacerPrimerSeen,
+					...accountFlagsPersistedKeys(s),
+					...intakePersistedKeys(s),
 					...plusOfferPersistedKeys(s),
 				}),
 				storage: createJSONStorage(() => zustandJSONStorage),

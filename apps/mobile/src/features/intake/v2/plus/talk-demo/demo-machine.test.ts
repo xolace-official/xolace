@@ -6,6 +6,8 @@ import {
 	demoReducer,
 	finishedBy,
 	initialDemoState,
+	isSettling,
+	openRefused,
 	refusalOf,
 } from "@/features/intake/v2/plus/talk-demo/demo-machine";
 
@@ -41,6 +43,48 @@ describe("opening", () => {
 		expect(
 			run(initialDemoState(), { reason: "error", type: "OPEN_REFUSED" }).phase
 		).toBe("failed");
+	});
+});
+
+describe("opening on a demo that already ended", () => {
+	const safety = (data: Record<string, unknown>) =>
+		run(
+			initialDemoState(),
+			openRefused(new ConvexError({ code: "demo_safety", ...data }))
+		);
+
+	it("shows crisis support when the safeguard ended it, with what the server sent", () => {
+		expect(safety({ resources: [RESOURCE] })).toMatchObject({
+			phase: "safety",
+			resources: [RESOURCE],
+		});
+	});
+
+	it("still shows no offer when the resources don't read", () => {
+		expect(safety({ resources: "nope" })).toMatchObject({
+			phase: "safety",
+			resources: [],
+		});
+		expect(safety({})).toMatchObject({ phase: "safety", resources: [] });
+	});
+
+	it("doesn't count it as finished again: that turn ended on an earlier screen", () => {
+		expect(finishedBy(safety({ resources: [RESOURCE] }))).toBeNull();
+	});
+
+	it("stays a plain used demo for one that ended on a reply", () => {
+		expect(
+			run(
+				initialDemoState(),
+				openRefused(new ConvexError({ code: "demo_used" }))
+			).phase
+		).toBe("used");
+	});
+
+	it("knows a verdict still out from every other refusal", () => {
+		expect(isSettling(new ConvexError({ code: "demo_settling" }))).toBe(true);
+		expect(isSettling(new ConvexError({ code: "demo_used" }))).toBe(false);
+		expect(isSettling(new Error("offline"))).toBe(false);
 	});
 });
 

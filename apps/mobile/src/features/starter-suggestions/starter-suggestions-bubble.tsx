@@ -66,7 +66,7 @@ export function StarterSuggestionsBubble({ intake, onResolve, pickUp }: Props) {
 		}
 		shownCaptured.current = true;
 		posthog.capture("starter_suggestions_shown", { has_pick_up: !!pickUp });
-		// Once, at mount: `pickUp` is only ever cleared by the resolve that unmounts this.
+		// Once, at mount: what it was offered with, whatever happens to `pickUp` after.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 

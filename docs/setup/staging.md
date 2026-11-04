@@ -113,6 +113,7 @@ means you can copy the value from the dev deployment `groovy-mandrill-892`.
 |---|---|---|
 | `CLERK_JWT_ISSUER_DOMAIN` | Which Clerk instance's tokens are accepted (`auth.config.ts`). **Required to deploy.** | Clerk dev issuer (Step 3) |
 | `CLERK_OAUTH_CLIENT_ID` | Accepts the CLI and desktop's OAuth ID tokens (`auth.config.ts`). Optional: unset, they get "Unauthenticated" | Client ID of the dev instance's OAuth app ([oauth-clients.md](./oauth-clients.md)) |
+| `CLERK_SECRET_KEY` | Removes a deleted account's Clerk user (`jobs/clerkUserDeletion.ts`). **Prod needs its `sk_live_` key or the delete-account promise isn't kept**; unset, deletions wait in `clerk_user_deletions` and retry | Optional. Clerk dev instance key, which really deletes that test account from the instance dev deployments share too |
 | `POSTHOG_PROJECT_TOKEN` | PostHog component project token. **Required to deploy.** | Dev value OK (or a staging PostHog project) |
 | `POSTHOG_HOST` | PostHog API host. Optional | Dev value OK |
 | `POSTHOG_PERSONAL_API_KEY` | PostHog feature-flag evaluation. Optional | Dev value OK |
@@ -161,7 +162,7 @@ the agent's **Voice settings** in ElevenLabs. Every agent needs it, prod's inclu
 | `RANK_MIN_POPULATION` | Minimum population before percentiles show (default 50) | A small number like `3`, so ranks show with few testers |
 | `XOLACER_CHAT_ENABLED` | Xolacer chat kill switch | Match dev |
 
-That's **28 names**. Not in the list on purpose: `CONVEX_SITE_URL` (Convex sets it),
+That's **30 names**. Not in the list on purpose: `CONVEX_SITE_URL` (Convex sets it),
 and `EVAL_OUT` / `TALK_EVAL_MODEL` (local eval runs only).
 
 Never use a `sk_live_`/production secret here. Staging is a test environment.

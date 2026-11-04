@@ -4,6 +4,7 @@
 import type { api } from "@xolace/backend/convex/_generated/api";
 import type { VoiceSlug } from "@xolace/backend/convex/lib/voices";
 import type { FunctionReturnType } from "convex/server";
+import { ConvexError } from "convex/values";
 import { convexErrorCode } from "@/lib/convex-error-code";
 
 export type DemoReply = FunctionReturnType<typeof api.ai.talkDemo.reply.reply>;
@@ -43,6 +44,7 @@ export type DemoState = {
 export type DemoAction =
 	| { type: "OPENED" }
 	| { type: "OPEN_REFUSED"; reason: Refusal }
+	| { type: "OPENED_ON_SAFETY"; resources: readonly SafetyResource[] }
 	| { type: "PICK_VOICE"; voice: VoiceSlug }
 	| { type: "TRY" }
 	| { type: "HEARD"; transcript: string }
@@ -82,6 +84,39 @@ const REFUSALS = new Map<string | undefined, Refusal>([
 export const refusalOf = (error: unknown): Refusal =>
 	REFUSALS.get(convexErrorCode(error)) ?? "error";
 
+const isResource = (value: unknown): value is SafetyResource =>
+	typeof value === "object" &&
+	value !== null &&
+	"label" in value &&
+	"priority" in value &&
+	"source" in value &&
+	"type" in value &&
+	"value" in value;
+
+/** The list a `demo_safety` refusal carries. Empty if it doesn't read: support shows regardless. */
+const resourcesOf = (error: unknown): readonly SafetyResource[] => {
+	const data: unknown = error instanceof ConvexError ? error.data : null;
+	if (
+		typeof data !== "object" ||
+		data === null ||
+		!("resources" in data) ||
+		!Array.isArray(data.resources)
+	) {
+		return [];
+	}
+	return data.resources.filter(isResource);
+};
+
+/** The server won't say how the turn ended yet: it is still running. Ask again shortly. */
+export const isSettling = (error: unknown) =>
+	convexErrorCode(error) === "demo_settling";
+
+/** What a refused open shows. The safeguard ended it: support, however this screen got here. */
+export const openRefused = (error: unknown): DemoAction =>
+	convexErrorCode(error) === "demo_safety"
+		? { resources: resourcesOf(error), type: "OPENED_ON_SAFETY" }
+		: { reason: refusalOf(error), type: "OPEN_REFUSED" };
+
 const refused = (reason: Refusal): DemoPhase =>
 	reason === "error" ? "failed" : reason;
 
@@ -93,6 +128,10 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
 		case "OPEN_REFUSED":
 			return phase === "opening"
 				? { ...state, phase: refused(action.reason) }
+				: state;
+		case "OPENED_ON_SAFETY":
+			return phase === "opening"
+				? { ...state, phase: "safety", resources: action.resources }
 				: state;
 		// Only before anything is said: the reply is spoken in the voice it was asked in.
 		case "PICK_VOICE":
@@ -152,14 +191,15 @@ export function demoReducer(state: DemoState, action: DemoAction): DemoState {
 }
 
 /** How a demo finished, for `intake_talk_demo_finished`: its one turn is over once the reply
- * arrives, whether or not it is heard out. Null while it isn't. */
+ * arrives, whether or not it is heard out. Null while it isn't, and on support reopened from
+ * an earlier demo (no `mode`): no turn was taken on this screen. */
 export function finishedBy(state: DemoState): "reply" | "safety" | null {
 	switch (state.phase) {
 		case "reply":
 		case "done":
 			return "reply";
 		case "safety":
-			return "safety";
+			return state.mode ? "safety" : null;
 		default:
 			return null;
 	}

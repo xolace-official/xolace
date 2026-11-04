@@ -41,6 +41,14 @@ crons.interval(
 	{}
 );
 
+// Retry removing purged accounts from Clerk.
+crons.interval(
+	"retry clerk user deletions",
+	isProd ? { hours: 1 } : { hours: 12 },
+	internal.jobs.clerkUserDeletion.sweep,
+	{}
+);
+
 // Retry deleting ElevenLabs' copy of talks the webhook missed (#595).
 crons.interval(
 	"sweep talk provider copies",

@@ -12,6 +12,8 @@ import {
 	demoReducer,
 	finishedBy,
 	initialDemoState,
+	isSettling,
+	openRefused,
 	refusalOf,
 } from "@/features/intake/v2/plus/talk-demo/demo-machine";
 import { useTypedLine } from "@/features/intake/v2/use-typed-line";
@@ -25,7 +27,13 @@ import {
 /** Past the typed-out reply, how long its audio may take before the way on shows anyway. */
 const SAID_GRACE_MS = 15_000;
 
-/** `onSafety`: the safeguard ended it; from here, closing goes on past the Xolace+ step. */
+/** While a reopened demo's earlier turn is still running: how often to ask how it ended. */
+const SETTLE_RETRY_MS = 2000;
+
+/**
+ * `onSafety`: the safeguard ended it; from here, closing goes on past the Xolace+ step. Also
+ * called when the answer lands after this screen closed, so the verdict isn't lost with it.
+ */
 export function useTalkDemo({ onSafety }: { onSafety: () => void }) {
 	const posthog = usePostHog();
 	const [state, dispatch] = useReducer(
@@ -47,6 +55,7 @@ export function useTalkDemo({ onSafety }: { onSafety: () => void }) {
 
 	useEffect(() => {
 		let live = true;
+		let retry: ReturnType<typeof setTimeout> | undefined;
 		const run = async () => {
 			try {
 				const opened = await openDemo({});
@@ -55,14 +64,20 @@ export function useTalkDemo({ onSafety }: { onSafety: () => void }) {
 					dispatch({ type: "OPENED" });
 				}
 			} catch (error) {
-				if (live) {
-					dispatch({ reason: refusalOf(error), type: "OPEN_REFUSED" });
+				if (!live) {
+					return;
+				}
+				if (isSettling(error)) {
+					retry = setTimeout(() => void run(), SETTLE_RETRY_MS);
+				} else {
+					dispatch(openRefused(error));
 				}
 			}
 		};
 		void run();
 		return () => {
 			live = false;
+			clearTimeout(retry);
 		};
 	}, [openDemo]);
 
@@ -70,6 +85,10 @@ export function useTalkDemo({ onSafety }: { onSafety: () => void }) {
 	const send = useEffectEvent(async () => {
 		try {
 			const answer = await sendLine({ line: state.line, voice: state.voice });
+			// Directly, not through the reducer: this screen may have closed during the wait.
+			if (answer.route === "safety") {
+				onSafety();
+			}
 			dispatch({ reply: answer, type: "REPLIED" });
 		} catch (error) {
 			dispatch({ reason: refusalOf(error), type: "REPLY_REFUSED" });
@@ -124,11 +143,17 @@ export function useTalkDemo({ onSafety }: { onSafety: () => void }) {
 		return () => clearTimeout(timer);
 	}, [state.phase, reply.done, heard]);
 
-	const ended = finishedBy(state);
-	const track = useEffectEvent(() => {
-		if (ended === "safety") {
+	// Reopened on support as well as tripped here: either way, the way out is past the step.
+	const onSupport = state.phase === "safety";
+	const announceSupport = useEffectEvent(() => {
+		if (onSupport) {
 			onSafety();
 		}
+	});
+	useEffect(() => announceSupport(), [onSupport]);
+
+	const ended = finishedBy(state);
+	const track = useEffectEvent(() => {
 		if (ended) {
 			trackTalkDemoFinished(posthog, {
 				endedBy: ended,

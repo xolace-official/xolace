@@ -1,5 +1,6 @@
 /** Dev tools row that replays the asks intake v2 moved into the app (#712); the server
  * honours it only with DEV_TOOLS_ENABLED. */
+import { useAuth } from "@clerk/expo";
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
 import { SymbolView } from "expo-symbols";
@@ -16,6 +17,7 @@ const DEFERRED_ICON = {
 
 export function DeferredQuestionsDevRow() {
 	const { toast } = useToast();
+	const { userId } = useAuth();
 	const muted = useTokenColor("muted");
 	const clearDeferredAnswers = useMutation(api.devTools.clearDeferredAnswers);
 
@@ -31,13 +33,17 @@ export function DeferredQuestionsDevRow() {
 			});
 			return;
 		}
-		// The device's own once-only marks, so each ask can show again here.
-		useAppStore.setState({
-			copingAskSeen: false,
-			findingCardDismissed: false,
-			notifNudgeDismissed: false,
-			shakeHintSeen: false,
-		});
+		// The once-only marks kept on this device, so each ask can show again here.
+		useAppStore.setState({ shakeHintSeen: false });
+		if (userId) {
+			useAppStore
+				.getState()
+				.clearAccountFlags(userId, [
+					"copingAskSeen",
+					"findingCardDismissed",
+					"notifNudgeDismissed",
+				]);
+		}
 		toast.show({
 			description:
 				"Coping and frequency ask at the next session end; the reminder step needs notifications not yet decided. The how-you-found-us card waits for day 3.",

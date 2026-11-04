@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { Reading } from "@/features/intake/v2/heard";
+import type { Reading, SafetyResource } from "@/features/intake/v2/heard";
 import {
+	firstAnswerToOffer,
 	type IntakeV2Action,
 	type IntakeV2State,
 	initialIntakeV2State,
@@ -287,6 +288,18 @@ describe("plus", () => {
 		).toMatchObject({ plusOutcome: "entitled", step: "done" });
 	});
 
+	// A fallback isn't a safety verdict: only the safety route takes Xolace+ away.
+	it("is still offered after a read that failed", () => {
+		expect(
+			run(
+				answered(),
+				{ type: "READ_FAILED" },
+				{ type: "CONFIRM_HEARD" },
+				{ entitled: false, type: "KEEP_NAME" }
+			)
+		).toMatchObject({ plusShown: true, safetyRouted: false, step: "plus" });
+	});
+
 	it("ignores an exit from anywhere but plus", () => {
 		const naming = run(start(), { type: "SKIP" });
 		expect(run(naming, { outcome: "dismissed", type: "PLUS_EXIT" })).toEqual(
@@ -532,5 +545,263 @@ describe("safety", () => {
 			safetyRouted: true,
 			step: "done",
 		});
+	});
+});
+
+// Support was on screen inside the demo, so the exit goes straight on to the save.
+describe("the talk demo's safety exit", () => {
+	const atPlus = () =>
+		run(start(), { type: "SKIP" }, { entitled: false, type: "KEEP_NAME" });
+	const exit: IntakeV2Action = { type: "PLUS_SAFETY_EXIT" };
+
+	it("takes the save off the Xolace+ screen", () => {
+		expect(run(atPlus(), exit)).toMatchObject({
+			safetyRouted: true,
+			step: "done",
+		});
+	});
+
+	it("never goes back to Xolace+ when the save fails", () => {
+		expect(run(atPlus(), exit, { type: "COMPLETE_FAILED" }).step).toBe("name");
+	});
+
+	it("saves again from the name without offering Xolace+", () => {
+		expect(
+			run(
+				atPlus(),
+				exit,
+				{ type: "COMPLETE_FAILED" },
+				{ entitled: false, type: "KEEP_NAME" }
+			).step
+		).toBe("done");
+	});
+
+	// Xolace+ was on screen, so this is a dismissal, the same as a late verdict leaving it.
+	it("counts as a dismissal, since Xolace+ was offered", () => {
+		expect(run(atPlus(), exit).plusOutcome).toBe("dismissed");
+	});
+
+	it("keeps a purchase that went through while the verdict waited", () => {
+		expect(
+			run(atPlus(), { outcome: "purchased", type: "PLUS_SAFETY_EXIT" })
+				.plusOutcome
+		).toBe("purchased");
+	});
+
+	it("keeps a purchase made before it", () => {
+		expect(
+			run(
+				atPlus(),
+				{ outcome: "purchased", type: "PLUS_EXIT" },
+				{ type: "COMPLETE_FAILED" },
+				exit
+			).plusOutcome
+		).toBe("purchased");
+	});
+
+	it("doesn't show support twice for a verdict held behind a restore", () => {
+		const held = run(
+			atPlus(),
+			{ active: true, type: "STORE_CALL" },
+			{ resources: [], type: "LATE_SAFETY" },
+			exit
+		);
+		expect(held.step).toBe("done");
+		expect(run(held, { type: "COMPLETE_FAILED" }).step).toBe("name");
+	});
+
+	it("ignores the exit from anywhere but plus", () => {
+		const naming = run(start(), { type: "SKIP" });
+		expect(run(naming, exit)).toEqual(naming);
+	});
+});
+
+// A read that outlived the client's wait: the pick-list stood in, then the verdict landed.
+describe("a late safety verdict", () => {
+	const RESOURCES: SafetyResource[] = [
+		{
+			label: "Ghana Emergency Line",
+			priority: 1,
+			source: "crisis_line",
+			type: "phone",
+			value: "112",
+		},
+	];
+	const late: IntakeV2Action = { resources: RESOURCES, type: "LATE_SAFETY" };
+	const started: IntakeV2Action = { active: true, type: "STORE_CALL" };
+	const ended: IntakeV2Action = { active: false, type: "STORE_CALL" };
+
+	const fellBack = () =>
+		run(
+			start(),
+			{ text: "Work's been a lot", type: "QUICK_REPLY" },
+			{ type: "READ_FAILED" }
+		);
+	const naming = () => run(fellBack(), { type: "CONFIRM_HEARD" });
+	const atPlus = () => run(naming(), { entitled: false, type: "KEEP_NAME" });
+
+	it("takes the person to support from wherever they got to", () => {
+		for (const state of [
+			fellBack(),
+			naming(),
+			atPlus(),
+			run(fellBack(), { type: "SAY_AGAIN" }),
+		]) {
+			expect(run(state, late)).toMatchObject({
+				heard: { weighingOn: [] },
+				resources: RESOURCES,
+				safetyRouted: true,
+				step: "safety",
+			});
+		}
+	});
+
+	it("takes Xolace+ away once support has been shown", () => {
+		const routed = run(naming(), late, { type: "SAFETY_CONTINUE" });
+		expect(routed.step).toBe("name");
+		expect(run(routed, { entitled: false, type: "KEEP_NAME" })).toMatchObject({
+			plusShown: false,
+			step: "done",
+		});
+	});
+
+	it("doesn't ask for the name twice when it left the Xolace+ screen", () => {
+		expect(run(atPlus(), late, { type: "SAFETY_CONTINUE" })).toMatchObject({
+			plusOutcome: "dismissed",
+			step: "done",
+		});
+	});
+
+	it("never interrupts a purchase", () => {
+		const buying = run(atPlus(), started, late);
+		expect(buying.step).toBe("plus");
+		expect(buying.safetyRouted).toBe(false);
+	});
+
+	it("never interrupts a restore that outlasts a purchase", () => {
+		const both = run(atPlus(), started, started, late, ended);
+		expect(both.step).toBe("plus");
+		expect(run(both, ended).step).toBe("safety");
+	});
+
+	it("shows support once a purchase is cancelled", () => {
+		expect(run(atPlus(), started, late, ended)).toMatchObject({
+			resources: RESOURCES,
+			safetyRouted: true,
+			step: "safety",
+		});
+	});
+
+	it("shows support after a purchase goes through, keeping the purchase", () => {
+		const bought = run(
+			atPlus(),
+			started,
+			late,
+			{ outcome: "purchased", type: "PLUS_EXIT" },
+			ended
+		);
+		expect(bought).toMatchObject({
+			plusOutcome: "purchased",
+			safetyRouted: true,
+			step: "safety",
+		});
+		expect(run(bought, { type: "SAFETY_CONTINUE" })).toMatchObject({
+			plusOutcome: "purchased",
+			step: "done",
+		});
+	});
+
+	it("never interrupts a restore when the person leaves the Xolace+ screen", () => {
+		const restoring = run(atPlus(), started, late, {
+			outcome: "dismissed",
+			type: "PLUS_EXIT",
+		});
+		expect(restoring).toMatchObject({ safetyRouted: false, step: "plus" });
+		expect(run(restoring, ended)).toMatchObject({
+			plusOutcome: "dismissed",
+			resources: RESOURCES,
+			safetyRouted: true,
+			step: "safety",
+		});
+	});
+
+	it("still interrupts once a purchase has ended", () => {
+		expect(run(atPlus(), started, ended, late).step).toBe("safety");
+	});
+
+	it("leaves the Xolace+ screen alone without a verdict", () => {
+		const cancelled = run(atPlus(), started, ended);
+		expect(cancelled).toMatchObject({ safetyRouted: false, step: "plus" });
+	});
+
+	it("holds through a save, and shows support if the save fails", () => {
+		const saving = run(atPlus(), { outcome: "dismissed", type: "PLUS_EXIT" });
+		const held = run(saving, late);
+		expect(held.step).toBe("done");
+		expect(run(held, { type: "COMPLETE_FAILED" })).toMatchObject({
+			safetyRouted: true,
+			step: "safety",
+		});
+	});
+
+	it("doesn't go back to Xolace+ when a save fails after support", () => {
+		const saving = run(atPlus(), late, { type: "SAFETY_CONTINUE" });
+		expect(saving.step).toBe("done");
+		expect(run(saving, { type: "COMPLETE_FAILED" }).step).toBe("name");
+	});
+
+	it("doesn't show support twice", () => {
+		const continued = run(naming(), late, { type: "SAFETY_CONTINUE" });
+		expect(run(continued, late)).toEqual(continued);
+	});
+});
+
+// The Mirror's "Pick up where you left off" quotes this back, unprompted.
+describe("the first answer the Mirror offers back", () => {
+	const said = (text: string) =>
+		run(
+			start(),
+			{ type: "START_TYPING" },
+			{ text, type: "DRAFT_CHANGE" },
+			{
+				type: "SEND",
+			}
+		);
+
+	it("is their words, trimmed", () => {
+		expect(firstAnswerToOffer(said("  Work's been a lot  "))).toBe(
+			"Work's been a lot"
+		);
+	});
+
+	it("is nothing when they skipped", () => {
+		expect(firstAnswerToOffer(run(start(), { type: "SKIP" }))).toBe("");
+	});
+
+	it("is nothing once the answer was routed to crisis support", () => {
+		const routed = run(said("I can't do this anymore"), done(CRISIS));
+		expect(routed.step).toBe("safety");
+		expect(firstAnswerToOffer(routed)).toBe("");
+	});
+
+	it("is nothing when the verdict landed after the read's fallback", () => {
+		const late = run(
+			said("I can't do this anymore"),
+			{ type: "READ_FAILED" },
+			{ resources: CRISIS.resources, type: "LATE_SAFETY" }
+		);
+		expect(firstAnswerToOffer(late)).toBe("");
+	});
+
+	it("is nothing when the talk demo was what tripped the safeguard", () => {
+		const demo = run(
+			said("Work's been a lot"),
+			{ type: "READ_FAILED" },
+			{ type: "CONFIRM_HEARD" },
+			{ entitled: false, type: "KEEP_NAME" },
+			{ type: "PLUS_SAFETY_EXIT" }
+		);
+		expect(demo.step).toBe("done");
+		expect(firstAnswerToOffer(demo)).toBe("");
 	});
 });

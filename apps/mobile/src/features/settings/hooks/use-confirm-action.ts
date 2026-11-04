@@ -7,7 +7,7 @@ const CONFIRM_CONFIG = {
 	deleteAccount: {
 		confirmLabel: "Delete account",
 		description:
-			"You will be signed out immediately. Your account and all associated data will be permanently deleted within the next hour. This action cannot be undone.",
+			"You will be signed out immediately. Your account and all associated data will be permanently deleted within a few hours. Signing back in before then cancels the deletion. After that, it cannot be undone.",
 		isDestructive: true,
 		showLoading: true,
 		title: "Delete account",

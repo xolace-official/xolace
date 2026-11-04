@@ -110,6 +110,16 @@ describe("intake v2 arms (#704)", () => {
 			.map(([, props]) => props);
 
 	describe("per-arm intake events", () => {
+		it("stamps events with a kept arm after a cold kill, without assigning it again", () => {
+			analytics.trackIntakeStarted(posthog, 0);
+			analytics.restoreIntakeArm("v2");
+			analytics.trackIntakeCompleted(posthog, "dismissed_paywall", {});
+			expect(captured("intake_arm_assigned")).toEqual([]);
+			expect(captured("intake_completed")[0]).toMatchObject({
+				intake_arm: "v2",
+			});
+		});
+
 		it("stamps intake_completed with the arm", () => {
 			analytics.trackIntakeStarted(posthog, 0);
 			analytics.trackIntakeArmAssigned(posthog, "v2");
@@ -162,6 +172,14 @@ describe("intake v2 arms (#704)", () => {
 			analytics.trackSafetyRouted(posthog, "crisis");
 			expect(captured("intake_safety_routed")).toEqual([
 				{ intake_arm: "v2", safeguard_level: "crisis" },
+			]);
+		});
+
+		it("records a late safety verdict and where it found the person", () => {
+			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackSafetyLate(posthog, "elevated", "plus");
+			expect(captured("intake_safety_late")).toEqual([
+				{ intake_arm: "v2", safeguard_level: "elevated", step: "plus" },
 			]);
 		});
 

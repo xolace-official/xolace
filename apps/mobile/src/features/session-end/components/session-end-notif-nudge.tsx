@@ -19,7 +19,7 @@ import {
 	SupportFrequencyChoices,
 } from "@/features/session-end/components/support-frequency-choices";
 import { requestPushToken } from "@/lib/push-token";
-import { useAppStore } from "@/store/store";
+import { useAccountFlag } from "@/store/use-account-flag";
 
 const NUDGE_EASING: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 const NUDGE_TRANSITION = {
@@ -51,8 +51,9 @@ export function SessionEndNotifNudge() {
 	const { height } = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 
-	const notifNudgeDismissed = useAppStore((s) => s.notifNudgeDismissed);
-	const setNotifNudgeDismissed = useAppStore((s) => s.setNotifNudgeDismissed);
+	const [notifNudgeDismissed, markDismissed] = useAccountFlag(
+		"notifNudgeDismissed"
+	);
 	const registerToken = useMutation(api.notifications.registerToken);
 	const missing = useQuery(api.intake.deferred.missing);
 	const missingLoaded = missing !== undefined;
@@ -93,7 +94,7 @@ export function SessionEndNotifNudge() {
 	}, [mounted]);
 
 	const dismiss = () => {
-		setNotifNudgeDismissed(true);
+		markDismissed();
 		setShow(false);
 	};
 

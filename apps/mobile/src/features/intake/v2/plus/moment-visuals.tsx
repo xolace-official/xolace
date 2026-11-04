@@ -28,8 +28,8 @@ const BAR_CLASS =
 	"flex-row items-center gap-3 rounded-full border border-ember/30 bg-surface-secondary py-2 pr-3.5 pl-2";
 
 /**
- * Talk's play bar: "Try it" opens the Talk demo (#714). Without `onTry` (the dev preview) it
- * only shows what the demo looks like, and says so to a screen reader.
+ * Talk's play bar: "Try it" opens the Talk demo (#714). Without `onTry` (the dev preview,
+ * or during the save) it only shows what the demo looks like, and says so to a screen reader.
  */
 export function TalkBar({ onTry }: { onTry?: () => void }) {
 	// Themed, not in `@theme static`, so it is read through Uniwind.
