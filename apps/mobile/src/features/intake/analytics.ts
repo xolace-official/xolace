@@ -6,6 +6,7 @@ import { INTAKE_VERSION } from "@xolace/backend/convex/lib/validators";
 import type { PostHog } from "posthog-react-native";
 import { SERIES_BRANCH_VALUE } from "@/features/intake/questions";
 import type { IntakeArm } from "@/features/intake/v2/arm";
+import type { FollowUp, Reading } from "@/features/intake/v2/heard";
 import type { AnswerMode, HeardSource } from "@/features/intake/v2/machine";
 import type { IntakeAnswers } from "@/store/intake-slice";
 
@@ -259,6 +260,38 @@ export function trackHeardConfirmed(
 		chips_removed: changes.removed,
 		...prune({ intake_arm: arm }),
 		read,
+	});
+}
+
+/** Flux asked its one follow-up (#708): which field it was for, never the words. */
+export function trackFollowUpShown(posthog: PostHog, field: FollowUp["field"]) {
+	posthog.capture("intake_follow_up_shown", {
+		field,
+		...prune({ intake_arm: arm }),
+	});
+}
+
+/** The safeguard sent the answer to crisis support instead of chips (#708). */
+export function trackSafetyRouted(
+	posthog: PostHog,
+	level: Reading["safeguardLevel"]
+) {
+	posthog.capture("intake_safety_routed", {
+		...prune({ intake_arm: arm }),
+		safeguard_level: level,
+	});
+}
+
+/** Why the answer couldn't be read; the pick-list stands in (#708). */
+export type ReadFallbackReason = "error" | "timeout";
+
+export function trackReadFallback(
+	posthog: PostHog,
+	reason: ReadFallbackReason
+) {
+	posthog.capture("intake_read_fallback", {
+		...prune({ intake_arm: arm }),
+		reason,
 	});
 }
 

@@ -1,9 +1,19 @@
 /** What the first answer told us, in `intake.v2.complete`'s own terms (#704). */
 import type { api } from "@xolace/backend/convex/_generated/api";
-import type { FunctionArgs } from "convex/server";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { MAX_SELECTIONS } from "@/features/intake/questions";
 
 type CompleteArgs = FunctionArgs<typeof api.intake.v2.complete>;
+
+/** Flux's reading of the answer (#708): the safety route, or what it heard. */
+export type Reading = FunctionReturnType<typeof api.ai.intake.read.firstAnswer>;
+type HeardReading = Extract<Reading, { route: "heard" }>;
+/** The one follow-up a reading may ask, and the field it is for. */
+export type FollowUp = NonNullable<HeardReading["followUp"]>;
+export type SafetyResource = Extract<
+	Reading,
+	{ route: "safety" }
+>["resources"][number];
 
 /** The four fields a first answer can fill. `weighingOn` is always held as a list. */
 export type Heard = Omit<
@@ -144,6 +154,23 @@ const chipsOf = (heard: Heard): string[] => [
 	),
 	...heard.weighingOn.map((value) => `weighingOn:${value}`),
 ];
+
+/** A reading's fields as chips, on. The confidences stay with the reader. */
+export function heardOf({
+	disclosureStyle,
+	emotionAwareness,
+	intent,
+	weighingOn,
+}: HeardReading["fields"]): Heard {
+	return {
+		weighingOn: weighingOn?.value ?? [],
+		...(intent ? { intent: intent.value } : {}),
+		...(disclosureStyle ? { disclosureStyle: disclosureStyle.value } : {}),
+		...(emotionAwareness ? { emotionAwareness: emotionAwareness.value } : {}),
+	};
+}
+
+export const heardNothing = (heard: Heard) => chipsOf(heard).length === 0;
 
 /** Chips tapped off and on, against what the answer was read as. Counts only, never values. */
 export function chipChanges(read: Heard, final: Heard) {

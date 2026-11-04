@@ -9,6 +9,7 @@ const MOOD_POSES = {
 	happy: PRESETS.glad,
 	idle: PRESETS.neutral,
 	talking: PRESETS.speaking,
+	thinking: PRESETS.thinking,
 } as const;
 
 export type FluxMood = keyof typeof MOOD_POSES;

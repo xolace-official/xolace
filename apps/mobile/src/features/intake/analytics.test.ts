@@ -143,6 +143,32 @@ describe("intake v2 arms (#704)", () => {
 		});
 	});
 
+	describe("reading the first answer (#708)", () => {
+		it("records the follow-up's field, never its question or the reply", () => {
+			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackFollowUpShown(posthog, "weighingOn");
+			expect(captured("intake_follow_up_shown")).toEqual([
+				{ field: "weighingOn", intake_arm: "v2" },
+			]);
+		});
+
+		it("records the safety route with its level", () => {
+			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackSafetyRouted(posthog, "crisis");
+			expect(captured("intake_safety_routed")).toEqual([
+				{ intake_arm: "v2", safeguard_level: "crisis" },
+			]);
+		});
+
+		it("records why the pick-list stood in for a reading", () => {
+			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackReadFallback(posthog, "timeout");
+			expect(captured("intake_read_fallback")).toEqual([
+				{ intake_arm: "v2", reason: "timeout" },
+			]);
+		});
+	});
+
 	describe("trackFirstReflection", () => {
 		it("times the first reflection from intake start, once", () => {
 			analytics.trackIntakeStarted(posthog, 0);

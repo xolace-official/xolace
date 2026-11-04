@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { Reading } from "@/features/intake/v2/heard";
 import {
 	type IntakeV2Action,
 	type IntakeV2State,
@@ -166,6 +167,182 @@ describe("done", () => {
 		expect(run(done, { type: "COMPLETE_FAILED" })).toEqual({
 			...done,
 			step: "name",
+		});
+	});
+});
+
+const WORK_READING = {
+	fields: {
+		intent: { confidence: 0.9, value: "get_through_hard_moment" },
+		weighingOn: { confidence: 0.85, value: ["work"] },
+	},
+	route: "heard",
+	safeguardLevel: "none",
+} as const satisfies Reading;
+
+const ASKS_TOPIC = {
+	fields: { intent: { confidence: 0.8, value: "understand_feelings" } },
+	followUp: { field: "weighingOn", question: "Is it mostly work, or home?" },
+	route: "heard",
+	safeguardLevel: "none",
+} as const satisfies Reading;
+
+const CRISIS = {
+	resources: [
+		{
+			label: "Ghana Emergency Line",
+			priority: 3,
+			source: "crisis_line",
+			type: "phone",
+			value: "112",
+		},
+	],
+	route: "safety",
+	safeguardLevel: "crisis",
+} as const satisfies Reading;
+
+const done = (reading: Reading): IntakeV2Action => ({
+	reading,
+	type: "READ_DONE",
+});
+
+describe("reading", () => {
+	it("shows what was read as chips to tap off", () => {
+		expect(run(answered(), done(WORK_READING))).toMatchObject({
+			heard: { intent: "get_through_hard_moment", weighingOn: ["work"] },
+			read: "model",
+			step: "heard",
+		});
+	});
+
+	it("remembers what was read, apart from what the user taps", () => {
+		expect(
+			run(answered(), done(WORK_READING), {
+				field: "weighingOn",
+				type: "TOGGLE_CHIP",
+				value: "work",
+			})
+		).toMatchObject({
+			heard: { weighingOn: [] },
+			readAs: { intent: "get_through_hard_moment", weighingOn: ["work"] },
+		});
+	});
+
+	it("shows the pick-list when nothing was read clearly", () => {
+		expect(
+			run(answered(), done({ ...WORK_READING, fields: {} }))
+		).toMatchObject({
+			heard: { weighingOn: [] },
+			read: "pick_list",
+			step: "heard",
+		});
+	});
+
+	it("asks the one follow-up when a key field was unclear", () => {
+		expect(run(answered(), done(ASKS_TOPIC))).toMatchObject({
+			followUp: {
+				field: "weighingOn",
+				question: "Is it mostly work, or home?",
+			},
+			step: "followUp",
+		});
+	});
+
+	it("goes to safety with no chips on an elevated or crisis answer", () => {
+		const safety = run(answered(), done(CRISIS));
+		expect(safety).toMatchObject({
+			heard: { weighingOn: [] },
+			resources: CRISIS.resources,
+			step: "safety",
+		});
+		expect(
+			run(safety, { field: "weighingOn", type: "TOGGLE_CHIP", value: "work" })
+		).toEqual(safety);
+	});
+});
+
+describe("followUp", () => {
+	const asked = () => run(answered(), done(ASKS_TOPIC));
+
+	it("reads the answer again with the reply", () => {
+		expect(
+			run(
+				asked(),
+				{ text: " my job, mostly ", type: "FOLLOW_UP_DRAFT_CHANGE" },
+				{ type: "FOLLOW_UP_SEND" }
+			)
+		).toMatchObject({ followUpReply: "my job, mostly", step: "interpret" });
+	});
+
+	it("never asks a second follow-up", () => {
+		const reread = run(
+			asked(),
+			{ text: "not sure", type: "FOLLOW_UP_DRAFT_CHANGE" },
+			{ type: "FOLLOW_UP_SEND" },
+			done(ASKS_TOPIC)
+		);
+		expect(reread.step).toBe("heard");
+	});
+
+	it("keeps the first reading's chips when skipped", () => {
+		expect(run(asked(), { type: "FOLLOW_UP_SKIP" })).toMatchObject({
+			heard: { intent: "understand_feelings", weighingOn: [] },
+			read: "model",
+			step: "heard",
+		});
+	});
+
+	it("keeps the first reading's chips when the second read fails", () => {
+		expect(
+			run(
+				asked(),
+				{ text: "work", type: "FOLLOW_UP_DRAFT_CHANGE" },
+				{ type: "FOLLOW_UP_SEND" },
+				{ type: "READ_FAILED" }
+			)
+		).toMatchObject({
+			heard: { intent: "understand_feelings" },
+			read: "model",
+			step: "heard",
+		});
+	});
+
+	it("can still route to safety on the reply", () => {
+		expect(
+			run(
+				asked(),
+				{ text: "I want to die", type: "FOLLOW_UP_DRAFT_CHANGE" },
+				{ type: "FOLLOW_UP_SEND" },
+				done(CRISIS)
+			)
+		).toMatchObject({ heard: { weighingOn: [] }, step: "safety" });
+	});
+
+	it("gives a new answer its own follow-up after saying it again", () => {
+		const again = run(
+			asked(),
+			{ type: "FOLLOW_UP_SKIP" },
+			{ type: "SAY_AGAIN" },
+			{ text: "still tired", type: "DRAFT_CHANGE" },
+			{ type: "SEND" }
+		);
+		expect(again).toMatchObject({ followUp: null, followUpReply: null });
+		expect(run(again, done(ASKS_TOPIC)).step).toBe("followUp");
+	});
+});
+
+describe("safety", () => {
+	it("goes on to the name with nothing heard, and never past it to Xolace+", () => {
+		const named = run(
+			answered(),
+			done(CRISIS),
+			{ type: "SAFETY_CONTINUE" },
+			{ type: "KEEP_NAME" }
+		);
+		expect(named).toMatchObject({
+			heard: { weighingOn: [] },
+			safetyRouted: true,
+			step: "done",
 		});
 	});
 });
