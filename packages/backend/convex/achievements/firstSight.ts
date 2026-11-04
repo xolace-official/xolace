@@ -10,7 +10,9 @@ import { findAchievement } from "./catalog";
  * route, never the one-at-a-time unlock moment. Dismissing it stamps every row
  * it counted seen; a row backfilled later (a new catalog entry) brings it back.
  * Held until the profile is stamped: quiet awards can land before the backfill
- * (award.ts), and the summary should count them along with the rest.
+ * (award.ts), and the summary should count them along with the rest. It also
+ * counts live badges left unseen for a week (unlock.ts), which can reach someone
+ * who already knows badges; `firstSight` tells the screen which one it's talking to.
  */
 
 /** Far above any backfill: every rung of a long streak plus every one-off. */
@@ -39,6 +41,21 @@ export const summary = query({
 		if (rows.length === 0) {
 			return null;
 		}
+		const [seenLive, seenQuiet] = await Promise.all(
+			(["live", "backfill"] as const).map((source) =>
+				ctx.db
+					.query("user_achievements")
+					.withIndex(
+						"by_emotionalProfileId_and_source_and_seenAt_and_pushedAt",
+						(q) =>
+							q
+								.eq("emotionalProfileId", profile._id)
+								.eq("source", source)
+								.gt("seenAt", 0)
+					)
+					.first()
+			)
+		);
 
 		// The biggest first, one per image: open-ended streak rungs share art.
 		const ranked = [...rows].sort(
@@ -64,6 +81,7 @@ export const summary = query({
 
 		return {
 			badges: rows.length,
+			firstSight: !(seenLive || seenQuiet),
 			ids: rows.map((row) => row._id),
 			// What they awarded at the time, not today's catalog values.
 			sparks: rows.reduce((sum, row) => sum + row.sparks, 0),
@@ -80,6 +98,7 @@ export const summary = query({
 		v.null(),
 		v.object({
 			badges: v.number(),
+			firstSight: v.boolean(),
 			ids: v.array(v.id("user_achievements")),
 			sparks: v.number(),
 			thumbnails: v.array(

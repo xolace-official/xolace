@@ -5,10 +5,10 @@
  * or one user stamps another's badges as seen.
  */
 import { describe, expect, it, vi } from "vitest";
-import { api } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../test/mocks.helpers";
-import { awardAchievement } from "./award";
+import { awardAchievement, FOLD_AFTER_MS } from "./award";
 import type { AchievementId } from "./catalog";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
@@ -119,5 +119,96 @@ describe("markSeen", () => {
 		});
 
 		expect(await unseenOf(a)).toHaveLength(1);
+	});
+});
+
+/**
+ * Old binaries never open the moment, so what they earn stays unseen. A week
+ * on it folds into the summary, rather than a row of moments on update.
+ */
+describe("foldUnseen", () => {
+	const fold = (user: SeededUser, achievementId: AchievementId) =>
+		user.root.mutation(internal.achievements.unlock.foldUnseen, {
+			achievementId,
+			emotionalProfileId: user.profileId,
+		});
+	const summaryOf = (user: SeededUser) =>
+		user.t.query(api.achievements.firstSight.summary, {});
+
+	it("is armed for a week after a live award", async () => {
+		const user = await asNewUser();
+		const before = Date.now();
+		await earn(user, "first-session");
+
+		const jobs = await user.root.run((ctx) =>
+			ctx.db.system.query("_scheduled_functions").collect()
+		);
+		const armed = jobs.find(
+			(j) =>
+				j.name.endsWith("foldUnseen") &&
+				j.args[0]?.achievementId === "first-session"
+		);
+
+		expect(armed?.args[0]?.emotionalProfileId).toBe(user.profileId);
+		expect(armed?.scheduledTime).toBeGreaterThanOrEqual(before + FOLD_AFTER_MS);
+	});
+
+	it("moves an unseen badge from the moment to one summary", async () => {
+		const user = await asNewUser();
+		await earn(user, "first-session", "streak-3");
+
+		await fold(user, "joined");
+		await fold(user, "first-session");
+
+		const ids = (await unseenOf(user)).map((a) => a.achievementId);
+		expect(ids).toEqual(["streak-3"]);
+		const summary = await summaryOf(user);
+		expect(summary?.badges).toBe(2);
+		expect(summary?.firstSight).toBe(true);
+	});
+
+	it("leaves a badge the moment already showed alone", async () => {
+		const user = await asNewUser();
+		const shown = await unseenOf(user);
+		await user.t.mutation(api.achievements.unlock.markSeen, {
+			ids: shown.map((a) => a.id),
+		});
+
+		await fold(user, "joined");
+
+		expect(await summaryOf(user)).toBeNull();
+	});
+
+	it("doesn't call it first sight for someone who has seen a badge", async () => {
+		const user = await asNewUser();
+		await user.t.mutation(api.achievements.unlock.markSeen, {
+			ids: (await unseenOf(user)).map((a) => a.id),
+		});
+		await earn(user, "first-session");
+
+		await fold(user, "first-session");
+
+		expect((await summaryOf(user))?.firstSight).toBe(false);
+	});
+
+	it("is dismissed by the summary's own stamp", async () => {
+		const user = await asNewUser();
+		await fold(user, "joined");
+		const summary = await summaryOf(user);
+
+		await user.t.mutation(api.achievements.firstSight.markSeen, {
+			ids: summary?.ids ?? [],
+		});
+
+		expect(await summaryOf(user)).toBeNull();
+		expect(await unseenOf(user)).toEqual([]);
+	});
+
+	it("does nothing for a profile that no longer holds the badge", async () => {
+		const user = await asNewUser();
+
+		await expect(fold(user, "first-session")).resolves.toBeNull();
+
+		expect(await summaryOf(user)).toBeNull();
 	});
 });

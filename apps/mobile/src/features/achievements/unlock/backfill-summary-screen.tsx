@@ -1,5 +1,6 @@
 // First sight of the backfill (#701): what the user had already earned before
 // badges arrived, once, in one quiet screen rather than one unlock at a time.
+// Also badges left unseen for a week, for someone who may already know badges.
 // Opened by useBadgeUnlock before any live unlock; the toolbar's close, See
 // them and Android back all dismiss it, and dismissing stamps it seen.
 
@@ -87,7 +88,7 @@ export function BackfillSummaryScreen() {
 			{toolbar}
 			<View className="flex-1 items-center justify-center">
 				<AppText className="text-[12px] text-ember uppercase tracking-widest">
-					Badges are here
+					{shown.firstSight ? "Badges are here" : "Since you were last here"}
 				</AppText>
 				<View className="my-8 flex-row flex-wrap justify-center gap-3">
 					{shown.thumbnails.map((thumbnail) => (
@@ -103,12 +104,14 @@ export function BackfillSummaryScreen() {
 					accessibilityRole="header"
 					className="text-center font-serif text-[30px] text-foreground leading-9"
 				>
-					You've already earned {plural(shown.badges, "badge")} and{" "}
-					{plural(shown.sparks, "spark")}
+					{shown.firstSight ? "You've already earned" : "You earned"}{" "}
+					{plural(shown.badges, "badge")} and {plural(shown.sparks, "spark")}
 				</AppText>
-				<AppText className="mt-3 text-center text-[16px] text-foreground/65 leading-6">
-					Everything you did before badges arrived counts.
-				</AppText>
+				{shown.firstSight ? (
+					<AppText className="mt-3 text-center text-[16px] text-foreground/65 leading-6">
+						Everything you did before badges arrived counts.
+					</AppText>
+				) : null}
 			</View>
 			<PressableFeedback
 				accessibilityRole="button"

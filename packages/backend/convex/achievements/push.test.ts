@@ -6,8 +6,9 @@
  * drops the push instead of deferring it; gentle reminders off still pushes;
  * a backfilled badge pushes; a push names sparks; a streak day with no rung
  * (400) still pushes the old milestone; a check already waiting names a
- * badge earned moments ago, while its unlock moment is still held; or the
- * push lands while the user is in the app, where the moment can still show.
+ * badge earned moments ago, while its unlock moment is still held; the push
+ * lands while the user is in the app, where the moment can still show; or a
+ * badge that folded into the summary still pushes.
  */
 import presenceTest from "@convex-dev/presence/test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -183,7 +184,7 @@ describe("the missed-badge push (#700)", () => {
 		await earn(user, "first-session");
 		vi.advanceTimersByTime(HOUR); // one check covers a later unlock too
 		await earn(user, "first-listen");
-		await nextDay(user); // 08:00 tomorrow
+		await advance(user, 23 * HOUR); // 08:00 tomorrow
 		expect(pushes()).toEqual([
 			{ body: "You earned 2 badges.", title: "Xolace" },
 		]);
@@ -197,11 +198,40 @@ describe("the missed-badge push (#700)", () => {
 		);
 		vi.advanceTimersByTime(HOUR / 2);
 		await earn(user, "sat-with-it");
-		await nextDay(user);
+		await advance(user, 13 * HOUR);
 		expect(sentPushes).toHaveLength(1);
 		expect((await logs(user)).map((l) => l.suppressedReason)).toEqual([
 			undefined,
 			"rate_limit",
+		]);
+	});
+
+	it("pushes once, then folds what stays unseen into the summary", async () => {
+		const user = await notifiable();
+		await earn(user, "first-session");
+
+		await nextDay(user); // Runs the check and, a week on, the fold.
+
+		expect(sentPushes).toHaveLength(1);
+		expect(await user.t.query(api.achievements.unlock.unseen, {})).toEqual([]);
+		const summary = await user.t.query(api.achievements.firstSight.summary, {});
+		expect(summary).toMatchObject({ badges: 1, firstSight: false });
+	});
+
+	it("never pushes a badge that folded before its check", async () => {
+		const user = await notifiable({ enabled: false });
+		await earn(user, "first-session");
+		await nextDay(user);
+
+		await setPrefs(user, { enabled: true });
+		await earn(user, "first-listen");
+		await nextDay(user);
+
+		expect(pushes()).toEqual([
+			{
+				body: expect.not.stringContaining("2 badges"),
+				title: expect.any(String),
+			},
 		]);
 	});
 

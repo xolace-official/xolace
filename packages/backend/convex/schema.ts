@@ -2737,6 +2737,10 @@ export default defineSchema({
 		pushedAt: v.optional(v.number()),
 		// When the in-app unlock moment showed it.
 		seenAt: v.optional(v.number()),
+		// How the user hears of it: "live" through the unlock moment and push,
+		// "backfill" only through the quiet summary. Quiet rows aren't all from the
+		// backfill: awards before it land quiet (achievements/award.ts), and so do
+		// live badges left unseen for a week (achievements/unlock.ts).
 		source: v.union(v.literal("live"), v.literal("backfill")),
 		// Sparks credited at award time, so a later catalog change never
 		// rewrites what was earned.
