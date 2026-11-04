@@ -19,7 +19,8 @@ import { type Achievement, findAchievement } from "./catalog";
  * badge earned just before the check is left out: its unlock moment may only
  * be held by the session it was earned in, so it gets a check of its own. The
  * push also waits while the user is in the app, where the moment can still
- * show what went unseen.
+ * show what went unseen. A badge whose own check came and went without a push
+ * isn't picked up by a later one; it waits for the moment or the summary.
  * Backfill rows never push. Badge names and copy are lock-screen safe (#683);
  * sparks never reach the lock screen.
  */
@@ -33,6 +34,14 @@ const PUSH_LIMIT = 50;
  * missed: the user may still be in the session holding its unlock moment.
  */
 const MISSED_AFTER_MS = 3_600_000;
+
+/**
+ * Older than this, a badge's own check has come and gone: under an hour to the
+ * check that passes it over, up to 36h to its own, then a day of retries. It
+ * went unpushed because notifications were off or the retries ran out, and a
+ * later badge's push shouldn't announce it days on.
+ */
+const PUSHABLE_FOR_MS = 3 * 24 * 3_600_000;
 
 /**
  * May we push a badge? `achievement` is absent on rows written before it
@@ -105,9 +114,10 @@ export async function scheduleMissedBadgeCheck(
 /**
  * The missed-beat check: every live badge still unseen and unpushed, as one
  * push, except those earned too recently to call missed, which wait for a
- * check the next day. Holds off through the quiet window and while the user is
- * in the app. Stamps `pushedAt` even when the daily cap suppresses it, so a
- * badge over the cap waits for the unlock sheet rather than a later push.
+ * check the next day, and those past `PUSHABLE_FOR_MS`. Holds off through the
+ * quiet window and while the user is in the app. Stamps `pushedAt` even when
+ * the daily cap suppresses it, so a badge over the cap waits for the unlock
+ * sheet rather than a later push.
  */
 export const sendMissedPush = internalMutation({
 	args: {
@@ -129,10 +139,14 @@ export const sendMissedPush = internalMutation({
 			.take(PUSH_LIMIT);
 		const now = Date.now();
 		const missed = rows
-			.filter((row) => row.earnedAt <= now - MISSED_AFTER_MS)
+			.filter(
+				(row) =>
+					row.earnedAt <= now - MISSED_AFTER_MS &&
+					row.earnedAt > now - PUSHABLE_FOR_MS
+			)
 			// Oldest first, so a single badge's copy is the one the user earned first.
 			.sort((a, b) => a.earnedAt - b.earnedAt);
-		const hasRecent = missed.length < rows.length;
+		const hasRecent = rows.some((row) => row.earnedAt > now - MISSED_AFTER_MS);
 		const badges = missed.flatMap(
 			(row) => findAchievement(row.achievementId) ?? []
 		);
