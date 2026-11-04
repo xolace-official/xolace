@@ -11,6 +11,7 @@ import { useState } from "react";
 import { SettingsRow } from "@/components/shared/settings-row";
 import { SettingsSection } from "@/components/shared/settings-section";
 import { BadgeUnlockDevRow } from "@/features/achievements/unlock/unlock-dev-row";
+import { PlusPreviewDevRow } from "@/features/intake/v2/plus/plus-preview-dev-row";
 import { ReturnWelcomeSheet } from "@/features/reflect/components/return-welcome-sheet";
 import type { ReturnWelcomeTier } from "@/features/reflect/return-welcome-copy";
 import { DeferredQuestionsDevRow } from "@/features/session-end/deferred-dev-row";
@@ -233,6 +234,7 @@ export const DevToolsSection = () => {
 				variant="action"
 			/>
 			<DeferredQuestionsDevRow />
+			<PlusPreviewDevRow />
 
 			<StarterSuggestionsDevRows />
 			<BadgeUnlockDevRow />

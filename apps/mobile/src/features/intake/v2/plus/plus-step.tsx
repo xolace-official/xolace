@@ -3,8 +3,6 @@
 // intake; never shown on the safety path or to someone who has Xolace+ (the machine's rule).
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
-import { ScrollView, View } from "react-native";
-import { AppText } from "@/components/shared/app-text";
 import {
 	INTAKE_PLUS_SURFACE,
 	trackPlusContinuedFree,
@@ -13,18 +11,13 @@ import {
 	trackPlusShown,
 	trackPlusSwitched,
 } from "@/features/intake/analytics";
-import { Flux } from "@/features/intake/v2/flux";
 import type { PlusOutcome, PlusSide } from "@/features/intake/v2/machine";
-import { MomentCards } from "@/features/intake/v2/plus/moment-cards";
 import { defaultPlan, startsTrial } from "@/features/intake/v2/plus/plans";
-import { PlusFooter } from "@/features/intake/v2/plus/plus-footer";
-import { PlusSwitch } from "@/features/intake/v2/plus/plus-switch";
+import { PlusStepView } from "@/features/intake/v2/plus/plus-step-view";
 import { usePlusPlans } from "@/features/intake/v2/plus/use-plus-plans";
 import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/lib/haptics";
-
-const FLUX_SIZE = 80;
 
 type Props = {
 	/** The intake is being saved after this step. */
@@ -101,64 +94,30 @@ export function PlusStep({ busy, onExit }: Props) {
 	};
 
 	return (
-		<View className="flex-1">
-			<View className="flex-row items-center justify-between gap-3 px-5 pt-4">
-				<View className="flex-1 gap-1.5">
-					<View className="self-start rounded-full bg-ember/15 px-2.5 py-1">
-						<AppText className="font-[Poppins-SemiBold] text-[12px] text-ember">
-							Xolace+
-						</AppText>
-					</View>
-					<AppText
-						accessibilityRole="header"
-						className="font-[Poppins-SemiBold] text-[24px] text-foreground leading-[28px]"
-					>
-						{"Same rough week.\nTwo ways it goes."}
-					</AppText>
-				</View>
-				{/* Grey and resting on Free, in full colour and happy on Plus. */}
-				<Flux
-					mood={side === "plus" ? "happy" : "idle"}
-					palette={side === "plus" ? undefined : "muted"}
-					size={FLUX_SIZE}
-				/>
-			</View>
-
-			<PlusSwitch onChange={switchTo} side={side} />
-
-			<ScrollView
-				className="mt-3.5 flex-1"
-				contentContainerClassName="px-5 pb-2"
-				showsVerticalScrollIndicator={false}
-			>
-				<MomentCards side={side} />
-			</ScrollView>
-
-			<PlusFooter
-				busy={busy}
-				buying={buying}
-				onBuy={buy}
-				onContinueFree={() => {
-					settled.current = true;
-					trackPlusContinuedFree(posthog, side);
-					onExit("dismissed");
-				}}
-				onPick={(next) => {
-					if (next !== plan) {
-						playSoftPress();
-						trackPlusPlanPicked(posthog, next);
-					}
-					setPicked(next);
-				}}
-				onRetry={retry}
-				onSeePlus={() => switchTo("plus")}
-				owned={isPlus}
-				plan={plan}
-				plans={plans}
-				retrying={retrying || isLoading}
-				side={side}
-				unavailable={unavailable}
-			/>
-		</View>
+		<PlusStepView
+			busy={busy}
+			buying={buying}
+			onBuy={buy}
+			onContinueFree={() => {
+				settled.current = true;
+				trackPlusContinuedFree(posthog, side);
+				onExit("dismissed");
+			}}
+			onPick={(next) => {
+				if (next !== plan) {
+					playSoftPress();
+					trackPlusPlanPicked(posthog, next);
+				}
+				setPicked(next);
+			}}
+			onRetry={retry}
+			onSide={switchTo}
+			owned={isPlus}
+			plan={plan}
+			plans={plans}
+			retrying={retrying || isLoading}
+			side={side}
+			unavailable={unavailable}
+		/>
 	);
 }

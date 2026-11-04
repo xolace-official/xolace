@@ -3,6 +3,7 @@
 import { Button, Spinner } from "heroui-native";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
+import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { LegalBottomSheet } from "@/components/shared/legal-bottom-sheet";
 import {
@@ -19,7 +20,6 @@ import {
 } from "@/features/intake/v2/plus/plans";
 import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 import { PaywallPlansUnavailable } from "@/features/purchases/screens/paywall-plans-unavailable";
-import { useTokenColor } from "@/lib/use-token-color";
 import { cn } from "@/lib/utils";
 
 const PLAN_LABEL: Record<PlanId, string> = {
@@ -28,7 +28,7 @@ const PLAN_LABEL: Record<PlanId, string> = {
 };
 const PLAN_ORDER: PlanId[] = ["annual", "monthly"];
 
-type Props = {
+export type PlusFooterProps = {
 	/** The intake is being saved: nothing on it may be tapped again. */
 	busy: boolean;
 	/** A purchase is in flight. */
@@ -47,7 +47,7 @@ type Props = {
 	unavailable: boolean;
 };
 
-export function PlusFooter(props: Props) {
+export function PlusFooter(props: PlusFooterProps) {
 	const { busy, buying, onContinueFree, owned, side } = props;
 	return (
 		<View className="gap-1 px-5 pt-3">
@@ -74,7 +74,7 @@ export function PlusFooter(props: Props) {
 function FreeSideFooter({
 	busy,
 	onSeePlus,
-}: Pick<Props, "busy" | "onSeePlus">) {
+}: Pick<PlusFooterProps, "busy" | "onSeePlus">) {
 	return (
 		<>
 			<Button isDisabled={busy} onPress={onSeePlus} variant="outline">
@@ -87,10 +87,11 @@ function FreeSideFooter({
 	);
 }
 
-function PlusSideFooter(props: Props) {
+function PlusSideFooter(props: PlusFooterProps) {
 	const { busy, buying, onBuy, onPick, owned, plan, plans, unavailable } =
 		props;
-	const ink = useTokenColor("offer-ink");
+	// Themed, not in `@theme static`, so it is read through Uniwind.
+	const ink = useCSSVariable("--color-offer-ink") as string;
 	if (unavailable) {
 		return (
 			<PaywallPlansUnavailable

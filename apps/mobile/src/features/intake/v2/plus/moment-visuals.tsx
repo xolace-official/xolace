@@ -3,6 +3,7 @@
 import { SymbolView } from "expo-symbols";
 import { View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
+import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { icon } from "@/features/insights/domains";
 import { useTokenColor } from "@/lib/use-token-color";
@@ -26,7 +27,8 @@ const PLAY = icon("play.fill", "play_arrow");
  * says so to a screen reader instead of pretending to be a button.
  */
 export function TalkBar() {
-	const ink = useTokenColor("offer-ink");
+	// Themed, not in `@theme static`, so it is read through Uniwind.
+	const ink = useCSSVariable("--color-offer-ink") as string;
 	return (
 		<View
 			accessibilityLabel="A short talk with Flux. Coming soon."

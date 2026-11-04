@@ -131,6 +131,8 @@ export default function ProtectedLayout() {
 					    expo-router 58+ picks it first. */}
 					<Stack.Screen name="upgrade" options={PAYWALL_OPTIONS} />
 					<Stack.Screen name="streak-held" options={PLAYER_OPTIONS} />
+					{/* Dev only: intake v2's Xolace+ step on sample plans (#713). */}
+					<Stack.Screen name="intake-plus-preview" options={PLAYER_OPTIONS} />
 					{/* The close button (or Android back) is the no-guilt dismiss. */}
 					<Stack.Screen name="follow-up" options={PLAYER_OPTIONS} />
 					{/* Same dismiss as follow-up; reduced motion fades it in instead (#693). */}
