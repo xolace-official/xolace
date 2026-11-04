@@ -9,13 +9,17 @@ import {
 	rateLimiterMock,
 } from "../../test/mocks.helpers";
 import {
+	EMPTY_CATEGORIES,
 	MODERATION_UNAVAILABLE,
 	type ModerationResult,
 } from "../providers/moderation";
+import { checkAnswerSafety, SAFETY_DEADLINE_MS } from "./read";
 
 /** What every stubbed model call answers: the classifier and the reader alike. */
 const stub = {
 	limit: { ok: true },
+	/** The model never answers, whatever `reply` says. */
+	modelHangs: false,
 	moderation: (): Promise<ModerationResult> =>
 		Promise.resolve(MODERATION_UNAVAILABLE),
 	reply: JSON.stringify({
@@ -28,20 +32,44 @@ vi.mock("../../lib/rateLimits", async (orig) => ({
 	...(await orig<typeof import("../../lib/rateLimits")>()),
 	...rateLimiterMock(() => stub.limit),
 }));
-vi.mock("../providers/anthropic", async (orig) => ({
-	...(await orig<typeof import("../providers/anthropic")>()),
-	...anthropicMock(() => stub.reply),
-}));
+vi.mock("../providers/anthropic", async (orig) => {
+	const answering = anthropicMock(() => stub.reply).getAnthropicClient();
+	return {
+		...(await orig<typeof import("../providers/anthropic")>()),
+		getAnthropicClient: () => ({
+			messages: {
+				create: () => (stub.modelHangs ? hangs() : answering.messages.create()),
+			},
+		}),
+	};
+});
 vi.mock("../providers/moderation", async (orig) => ({
 	...(await orig<typeof import("../providers/moderation")>()),
 	moderateInput: () => stub.moderation(),
 }));
 
-/** A provider call that never answers. */
-const hangs = () => new Promise<never>(() => undefined);
+/** A provider call that never answers. Hoisted: the mocks above close over it. */
+function hangs() {
+	return new Promise<never>(() => undefined);
+}
+
+/** Moderation sure of self-harm intent: the engine's crisis on its own. */
+const SELF_HARM: ModerationResult = {
+	categories: { ...EMPTY_CATEGORIES, "self-harm/intent": true },
+	categoryScores: { "self-harm": 0.9, "self-harm/intent": 0.95 },
+	flagged: true,
+};
+
+/** A classifier reply that escalates with no moderation behind it. */
+const DESPAIRING = JSON.stringify({
+	granularLabel: "despair",
+	intensity: 9,
+	primaryEmotion: "sadness",
+});
 
 beforeEach(() => {
 	stub.limit = { ok: true };
+	stub.modelHangs = false;
 	stub.moderation = () => Promise.resolve(MODERATION_UNAVAILABLE);
 	stub.reply = JSON.stringify({
 		fields: { weighingOn: { confidence: 0.9, value: ["work"] } },
@@ -147,6 +175,49 @@ describe("ai/intake/read.firstAnswer", () => {
 					answer: "Work's been a lot",
 				}),
 			"rate_limited"
+		);
+	});
+});
+
+describe("ai/intake/read.checkAnswerSafety's deadline", () => {
+	// Words that hit no phrase: only the providers can flag them.
+	const UNPHRASED = "I keep thinking everyone would cope fine without me";
+
+	/** The verdict once the deadline has passed, on a clock nothing real waits on. */
+	const pastDeadline = async () => {
+		vi.useFakeTimers();
+		try {
+			const verdict = checkAnswerSafety(UNPHRASED);
+			await vi.advanceTimersByTimeAsync(SAFETY_DEADLINE_MS);
+			return await verdict;
+		} finally {
+			vi.useRealTimers();
+		}
+	};
+
+	it("keeps moderation's flag when the classifier hangs", async () => {
+		stub.modelHangs = true;
+		stub.moderation = () => Promise.resolve(SELF_HARM);
+		expect((await pastDeadline()).level).toBe("crisis");
+	});
+
+	it("keeps the classifier's read when moderation hangs", async () => {
+		stub.moderation = hangs;
+		stub.reply = DESPAIRING;
+		expect((await pastDeadline()).level).toBe("elevated");
+	});
+
+	it("still answers when both providers hang, leaving the phrase floor", async () => {
+		stub.modelHangs = true;
+		stub.moderation = hangs;
+		expect(await pastDeadline()).toEqual({ level: "none", resources: [] });
+	});
+
+	it("ends well inside the client's 12s wait", () => {
+		const CLIENT_WAIT_MS = 12_000;
+		const ROOM_FOR_THE_ROUND_TRIP_MS = 3000;
+		expect(SAFETY_DEADLINE_MS).toBeLessThanOrEqual(
+			CLIENT_WAIT_MS - ROOM_FOR_THE_ROUND_TRIP_MS
 		);
 	});
 });

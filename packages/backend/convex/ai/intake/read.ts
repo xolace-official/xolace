@@ -23,7 +23,7 @@ import {
 	parseClassificationResponse,
 	thinkingOff,
 } from "../providers/anthropic";
-import { moderateInput } from "../providers/moderation";
+import { MODERATION_UNAVAILABLE, moderateInput } from "../providers/moderation";
 import {
 	CRISIS_RESOURCES,
 	evaluateSafeguard,
@@ -41,10 +41,19 @@ import {
 } from "./reading";
 
 /**
- * Two tries of 5s fit inside the client's 12s wait (`use-read-first-answer`), so a
- * retry never outlives the person's screen.
+ * Each try's limit, not the call's: the retry's delay comes on top and follows the
+ * provider's `retry-after`, so two tries can outlast the client's 12s wait
+ * (`use-read-first-answer`). The reader may, at the cost of the chips;
+ * {@link SAFETY_DEADLINE_MS} holds the safeguard to its own limit.
  */
 const REQUEST_OPTIONS = { maxRetries: 1, timeout: 5000 };
+
+/**
+ * How long the safeguard waits on each provider. A verdict the client has stopped
+ * waiting for is lost, and the person carries on as if nothing was said, so this
+ * leaves the client's 12s wait room for auth, the rate limit and a slow network.
+ */
+export const SAFETY_DEADLINE_MS = 8000;
 
 /** Twice the type step's cap: room for the answer and the follow-up reply. */
 const MAX_WORDS_CHARS = 2000;
@@ -74,14 +83,45 @@ async function phraseFloor(words: string): Promise<SafetyVerdict> {
  */
 const PHRASE_WAIT_MS = 3000;
 
-/** Moderation and the classifier through the safeguard engine. Never rejects. */
+/** What `work` settles to, or `fallback()` if that takes longer than `ms`. */
+async function within<T>(
+	work: Promise<T>,
+	ms: number,
+	fallback: () => T
+): Promise<T> {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const expired = new Promise<T>((resolve) => {
+		timer = setTimeout(() => resolve(fallback()), ms);
+	});
+	try {
+		return await Promise.race([work, expired]);
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
+/**
+ * Moderation and the classifier through the safeguard engine. Never rejects, and
+ * ends by {@link SAFETY_DEADLINE_MS}. Each has its own deadline, so one hanging
+ * can't lose what the other said in time.
+ */
 async function engineVerdict(words: string): Promise<SafetyVerdict> {
 	const [moderation, classification] = await Promise.all([
-		moderateInput(words),
-		classify(words).catch((err) => {
-			console.error("[intake] classifier failed", err);
-			return UNCLASSIFIED;
+		within(moderateInput(words), SAFETY_DEADLINE_MS, () => {
+			console.error("[intake] moderation past the safety deadline");
+			return MODERATION_UNAVAILABLE;
 		}),
+		within(
+			classify(words).catch((err) => {
+				console.error("[intake] classifier failed", err);
+				return UNCLASSIFIED;
+			}),
+			SAFETY_DEADLINE_MS,
+			() => {
+				console.error("[intake] classifier past the safety deadline");
+				return UNCLASSIFIED;
+			}
+		),
 	]);
 	const verdict = evaluateSafeguard(classification, moderation, []);
 	// A content-policy rejection turns a mirror away; here it just means no escalation.
@@ -95,7 +135,8 @@ async function engineVerdict(words: string): Promise<SafetyVerdict> {
  * over moderation and the classifier. A new user has no history to escalate on.
  * Support never waits on a provider: a clear crisis phrase answers at once, and
  * a loose one gives moderation {@link PHRASE_WAIT_MS} to raise it before it
- * stands. A classifier failure leaves moderation and the phrase floor standing.
+ * stands. A provider that fails or passes the deadline leaves the other and the
+ * phrase floor standing.
  */
 export async function checkAnswerSafety(words: string): Promise<SafetyVerdict> {
 	const floor = await phraseFloor(words);
@@ -108,15 +149,7 @@ export async function checkAnswerSafety(words: string): Promise<SafetyVerdict> {
 	if (floor.level === "none") {
 		return await engine;
 	}
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	const waited = new Promise<SafetyVerdict>((resolve) => {
-		timer = setTimeout(() => resolve(floor), PHRASE_WAIT_MS);
-	});
-	try {
-		return await Promise.race([engine, waited]);
-	} finally {
-		clearTimeout(timer);
-	}
+	return await within(engine, PHRASE_WAIT_MS, () => floor);
 }
 
 async function classify(words: string) {
