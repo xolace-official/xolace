@@ -163,6 +163,7 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 						onSayAgain={() => dispatch({ type: "SAY_AGAIN" })}
 						onToggle={(chip) => dispatch({ ...chip, type: "TOGGLE_CHIP" })}
 						read={state.read}
+						readAs={state.readAs}
 					/>
 				);
 			case "name":

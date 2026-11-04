@@ -24,6 +24,8 @@ type Props = {
 	onSayAgain: () => void;
 	onToggle: (chip: Chip) => void;
 	read: HeardSource | null;
+	/** What the model read, before any tap: only these can show as dropped. */
+	readAs: Heard;
 };
 
 export function HeardStep({
@@ -33,8 +35,8 @@ export function HeardStep({
 	onSayAgain,
 	onToggle,
 	read,
+	readAs,
 }: Props) {
-	// A chip off after a reading was dropped by the user; on the pick-list it was never on.
 	const readByModel = read === "model";
 
 	return (
@@ -75,6 +77,8 @@ export function HeardStep({
 							<View className="flex-row flex-wrap gap-2">
 								{group.chips.map((chip) => {
 									const on = isOn(heard, chip);
+									// Struck through only when Flux read it and the user dropped it.
+									const dropped = !on && isOn(readAs, chip);
 									return (
 										// A toggle chip, not a button.
 										<PressableFeedback
@@ -96,7 +100,7 @@ export function HeardStep({
 												className={cn(
 													"font-[Poppins-Medium] text-[14px]",
 													on ? "text-foreground" : "text-muted",
-													!on && readByModel && "line-through"
+													dropped && "line-through"
 												)}
 											>
 												{chip.label}
