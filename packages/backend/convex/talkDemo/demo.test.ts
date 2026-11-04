@@ -5,6 +5,7 @@ import {
 	MODERATION_UNAVAILABLE,
 	type ModerationResult,
 } from "../ai/providers/moderation";
+import { CRISIS_RESOURCES } from "../ai/safeguard";
 import { expectCode } from "../test/fixtures.helpers";
 import { asNewUser, asUnauthed } from "../test/harness.helpers";
 import {
@@ -12,7 +13,7 @@ import {
 	anthropicMock,
 	revenuecatMock,
 } from "../test/mocks.helpers";
-import { DEMO_CAP_MS, DEMO_OPENING } from "./demo";
+import { DEMO_CAP_MS, DEMO_OPENING, DEMO_SETTLE_MS } from "./demo";
 
 const QUESTION =
 	"That stings. Was it the credit, or that nobody in the room noticed it was yours?";
@@ -183,6 +184,45 @@ describe("talkDemo", () => {
 		expect(reply.route === "safety" && reply.resources.length).toBeGreaterThan(
 			0
 		);
+	});
+
+	it("reopens on crisis support, not as a spent demo, once the safeguard ended it", async () => {
+		const user = await asNewUser();
+		await user.t.mutation(api.talkDemo.demo.open, {});
+		await user.t.action(api.ai.talkDemo.reply.reply, {
+			line: CRISIS,
+			voice: "wren",
+		});
+		await expect(
+			user.t.mutation(api.talkDemo.demo.open, {})
+		).rejects.toMatchObject({
+			data: { code: "demo_safety", resources: CRISIS_RESOURCES },
+		});
+	});
+
+	it("won't call a demo spent while its turn's verdict is still out", async () => {
+		vi.useFakeTimers({ shouldAdvanceTime: true });
+		const user = await asNewUser();
+		await user.t.mutation(api.talkDemo.demo.open, {});
+		// As `reply` leaves it mid-flight: the turn claimed, how it ended not yet known.
+		await user.root.run(async (ctx) => {
+			const demo = await ctx.db
+				.query("talk_demos")
+				.withIndex("by_emotionalProfileId", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.unique();
+			if (!demo) {
+				throw new Error("expected the opened demo");
+			}
+			await ctx.db.patch("talk_demos", demo._id, { spokeAt: Date.now() });
+		});
+		await expectCode(
+			() => user.t.mutation(api.talkDemo.demo.open, {}),
+			"demo_settling"
+		);
+		// A turn that never reported back (its action died) can't hold the demo forever.
+		vi.setSystemTime(Date.now() + DEMO_SETTLE_MS + 1000);
 		await expectCode(
 			() => user.t.mutation(api.talkDemo.demo.open, {}),
 			"demo_used"

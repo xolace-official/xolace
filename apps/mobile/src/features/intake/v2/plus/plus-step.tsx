@@ -152,6 +152,11 @@ export function PlusStep({ busy, onExit }: Props) {
 				}}
 				onSafety={() => {
 					demoSafety.current = true;
+					// Closed while Flux was thinking: bring support back, it opens on the server's
+					// word. Not once this step has moved on, or over a purchase.
+					if (!settled.current) {
+						setDemoOpen(true);
+					}
 				}}
 				visible={demoOpen}
 			/>

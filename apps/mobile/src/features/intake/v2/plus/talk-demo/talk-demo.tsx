@@ -39,7 +39,10 @@ export type TalkDemoProps = {
 	/** The X, "Back to the week", Android's back, or on from crisis support. */
 	onClose: () => void;
 	onKeepTalking: () => void;
-	/** The safeguard ended the demo: its close then goes past the step, nothing sold (#704). */
+	/**
+	 * The safeguard ended the demo: its close then goes past the step, nothing sold (#704).
+	 * Can come after the demo closed, while the answer was on its way.
+	 */
 	onSafety: () => void;
 	visible: boolean;
 };
