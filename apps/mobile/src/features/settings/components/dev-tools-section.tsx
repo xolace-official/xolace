@@ -16,6 +16,7 @@ import { ReturnWelcomeSheet } from "@/features/reflect/components/return-welcome
 import type { ReturnWelcomeTier } from "@/features/reflect/return-welcome-copy";
 import { DeferredQuestionsDevRow } from "@/features/session-end/deferred-dev-row";
 import { StarterSuggestionsDevRows } from "@/features/starter-suggestions/starter-dev-rows";
+import { AgeGateDevRow } from "@/features/xolacer-chat/age-gate/age-gate-dev-row";
 import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 import { useAppStore } from "@/store/store";
 
@@ -234,6 +235,7 @@ export const DevToolsSection = () => {
 				variant="action"
 			/>
 			<DeferredQuestionsDevRow />
+			<AgeGateDevRow />
 			<PlusPreviewDevRow />
 
 			<StarterSuggestionsDevRows />
