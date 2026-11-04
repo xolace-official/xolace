@@ -1,4 +1,5 @@
 /** Dev tools rows for Starter suggestions (#465); the flag is honoured only under `__DEV__`. */
+import { useAuth } from "@clerk/expo";
 import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor, useToast } from "heroui-native";
@@ -11,6 +12,7 @@ const MAP_ICON = { android: "map", ios: "map", web: "map" } as const;
 export function StarterSuggestionsDevRows() {
 	const router = useRouter();
 	const { toast } = useToast();
+	const { userId } = useAuth();
 	const muted = useThemeColor("muted") as string;
 	const icon = <SymbolView name={MAP_ICON} size={17} tintColor={muted} />;
 
@@ -19,9 +21,13 @@ export function StarterSuggestionsDevRows() {
 	const arm = (asNewUser: boolean) => {
 		useAppStore.setState({
 			devStarterEligible: asNewUser,
-			starterSuggestionsSeen: false,
 			...(asNewUser && { reflectTourVersion: 0 }),
 		});
+		if (userId) {
+			useAppStore
+				.getState()
+				.clearAccountFlags(userId, ["starterSuggestionsSeen"]);
+		}
 		toast.show({
 			label: asNewUser
 				? "Starter suggestions armed · new user"

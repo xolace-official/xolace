@@ -3,6 +3,7 @@ import {
 	REFLECT_TOUR_VERSION,
 	shouldShowReflectTour,
 } from "@/features/reflect-tour/tour-copy";
+import { hasAccountFlag } from "./account-flags-slice";
 import { useAppStore } from "./store";
 
 type State = ReturnType<typeof useAppStore.getState>;
@@ -80,6 +81,96 @@ describe("store partialize", () => {
 	it("intake answers are NOT persisted", () => {
 		const persisted = persistedKeys();
 		expect(persisted).not.toContain("intakeAnswers");
+	});
+});
+
+describe("account flags", () => {
+	const noFlags = {
+		accountFlags: {},
+		copingAskSeen: false,
+		findingCardDismissed: false,
+		notifNudgeDismissed: false,
+		starterSuggestionsSeen: false,
+	};
+	const has = (owner: string, flag: Parameters<typeof hasAccountFlag>[2]) =>
+		hasAccountFlag(useAppStore.getState(), owner, flag);
+
+	it("one account's flag doesn't silence a second account on the device", () => {
+		useAppStore.setState(noFlags);
+		useAppStore.getState().markAccountFlag("user_a", "copingAskSeen");
+		useAppStore.getState().markAccountFlag("user_a", "starterSuggestionsSeen");
+
+		expect(has("user_a", "copingAskSeen")).toBe(true);
+		expect(has("user_a", "starterSuggestionsSeen")).toBe(true);
+		expect(has("user_b", "copingAskSeen")).toBe(false);
+		expect(has("user_b", "starterSuggestionsSeen")).toBe(false);
+	});
+
+	it("a device-wide mark from before the update stands in until it's claimed", () => {
+		useAppStore.setState({ ...noFlags, notifNudgeDismissed: true });
+		expect(has("user_a", "notifNudgeDismissed")).toBe(true);
+	});
+
+	it("the first account signed in claims the old marks, freeing later accounts", () => {
+		useAppStore.setState({
+			...noFlags,
+			findingCardDismissed: true,
+			starterSuggestionsSeen: true,
+		});
+		const { claimLegacyAccountFlags } = useAppStore.getState();
+		claimLegacyAccountFlags("user_a");
+		claimLegacyAccountFlags("user_b");
+
+		expect(has("user_a", "findingCardDismissed")).toBe(true);
+		expect(has("user_a", "starterSuggestionsSeen")).toBe(true);
+		expect(has("user_a", "copingAskSeen")).toBe(false);
+		expect(has("user_b", "findingCardDismissed")).toBe(false);
+		expect(has("user_b", "starterSuggestionsSeen")).toBe(false);
+	});
+
+	it("claiming keeps what the account already had", () => {
+		useAppStore.setState({
+			...noFlags,
+			accountFlags: { user_a: ["copingAskSeen"] },
+			notifNudgeDismissed: true,
+		});
+		useAppStore.getState().claimLegacyAccountFlags("user_a");
+		expect(useAppStore.getState().accountFlags.user_a).toEqual([
+			"copingAskSeen",
+			"notifNudgeDismissed",
+		]);
+	});
+
+	it("clearing is scoped to one account, and to the named flags", () => {
+		useAppStore.setState({
+			...noFlags,
+			accountFlags: {
+				user_a: ["copingAskSeen", "notifNudgeDismissed"],
+				user_b: ["copingAskSeen"],
+			},
+		});
+		const { clearAccountFlags } = useAppStore.getState();
+
+		clearAccountFlags("user_a", ["copingAskSeen"]);
+		expect(has("user_a", "copingAskSeen")).toBe(false);
+		expect(has("user_a", "notifNudgeDismissed")).toBe(true);
+
+		clearAccountFlags("user_a");
+		expect(has("user_a", "notifNudgeDismissed")).toBe(false);
+		expect(has("user_b", "copingAskSeen")).toBe(true);
+	});
+
+	// Unclaimed old marks have to survive too: the update can land while signed out.
+	it("flags and unclaimed old marks are persisted", () => {
+		expect(persistedKeys()).toEqual(
+			expect.arrayContaining([
+				"accountFlags",
+				"copingAskSeen",
+				"findingCardDismissed",
+				"notifNudgeDismissed",
+				"starterSuggestionsSeen",
+			])
+		);
 	});
 });
 

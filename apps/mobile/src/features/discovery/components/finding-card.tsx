@@ -14,7 +14,7 @@ import {
 import { useRecordDeferredAnswer } from "@/features/intake/use-record-deferred-answer";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { playSoftPress } from "@/lib/haptics";
-import { useAppStore } from "@/store/store";
+import { useAccountFlag } from "@/store/use-account-flag";
 
 const FADE_MS = 320;
 /** How long the thank-you line holds before the card goes. */
@@ -23,14 +23,13 @@ const THANKS_MS = 2400;
 /**
  * "How did you find Xolace?" on Discovery from a v2 user's third day (#711): one tap, with
  * the series pair on the same card after short video (Back returns to the source). "Not
- * now" puts it away for good on this device; an answer saves through
+ * now" puts it away for good for this account; an answer saves through
  * `intake.deferred.record` and the card thanks them and goes.
  */
 export function FindingCard() {
 	const missing = useQuery(api.intake.deferred.missing);
 	const completedAt = useFullContext()?.intake?.completedAt;
-	const dismissed = useAppStore((s) => s.findingCardDismissed);
-	const setDismissed = useAppStore((s) => s.setFindingCardDismissed);
+	const [dismissed, markDismissed] = useAccountFlag("findingCardDismissed");
 	const recordAnswer = useRecordDeferredAnswer();
 	const [showing, setShowing] = useState(false);
 	const [thanked, setThanked] = useState(false);
@@ -71,7 +70,7 @@ export function FindingCard() {
 	};
 
 	const notNow = () => {
-		setDismissed(true);
+		markDismissed();
 		setShowing(false);
 	};
 	const back = () => setPicks({});

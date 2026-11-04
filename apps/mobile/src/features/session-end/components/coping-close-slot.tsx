@@ -15,7 +15,7 @@ import {
 } from "@/features/session-end/coping-suggestion";
 import { cn } from "@/lib/cn";
 import { playSoftPress } from "@/lib/haptics";
-import { useAppStore } from "@/store/store";
+import { useAccountFlag } from "@/store/use-account-flag";
 
 // The intake's coping choices, shortened for one tap. "Outside things (substances,
 // meds)" is left out of this quick ask; "Rather not say" still declines.
@@ -36,7 +36,7 @@ type Props = {
 
 /**
  * Session end's suggestion slot (#712). For a v2 user who hasn't said how they cope, it
- * asks "What usually helps after?" once per device, and the answer picks the Kindling or
+ * asks "What usually helps after?" once per account, and the answer picks the Kindling or
  * Browse suggestion under it. Everyone else gets today's Kindling slot.
  */
 export const CopingCloseSlot = ({
@@ -45,8 +45,7 @@ export const CopingCloseSlot = ({
 	onOpenBrowse,
 }: Props) => {
 	const missing = useQuery(api.intake.deferred.missing);
-	const seen = useAppStore((s) => s.copingAskSeen);
-	const setCopingAskSeen = useAppStore((s) => s.setCopingAskSeen);
+	const [seen, markSeen] = useAccountFlag("copingAskSeen");
 	// Read once: marking the ask seen below must not take it away mid-screen.
 	const [unseen] = useState(!seen);
 	const [asking, setAsking] = useState(false);
@@ -61,9 +60,9 @@ export const CopingCloseSlot = ({
 
 	useEffect(() => {
 		if (asking) {
-			setCopingAskSeen(true);
+			markSeen();
 		}
-	}, [asking, setCopingAskSeen]);
+	}, [asking, markSeen]);
 
 	const kindlingSlot = (fallback?: BrowseFamily) => (
 		<KindlingCloseSlot

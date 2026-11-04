@@ -12,6 +12,7 @@ import {
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useNotifications } from "@/lib/use-notifications";
 import { AppPresence } from "@/providers/app-presence";
+import { useClaimLegacyAccountFlags } from "@/store/use-account-flag";
 
 const SCREEN_OPTIONS = {
 	contentStyle: { backgroundColor: "transparent" },
@@ -75,6 +76,7 @@ export default function ProtectedLayout() {
 	// Opens the backfill summary, then the badge unlock moment, over whatever is
 	// up, when it may interrupt (#693, #701).
 	useBadgeUnlock();
+	useClaimLegacyAccountFlags();
 	const reducedMotion = useEffectiveReducedMotion();
 	const background = useThemeColor("background");
 	// Small native sheets sized to their rows. iOS 26 paints its own glass behind
