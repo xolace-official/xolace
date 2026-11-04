@@ -38,7 +38,19 @@ export function BadgeUnlockScreen() {
 	const insets = useSafeAreaInsets();
 	const headerHeight = useHeaderHeight();
 	const live = useQuery(api.achievements.unlock.unseen);
-	const markSeen = useMutation(api.achievements.unlock.markSeen);
+	// Off the list at once, so a badge earned before this lands opens without the ones just shown.
+	const markSeen = useMutation(
+		api.achievements.unlock.markSeen
+	).withOptimisticUpdate((store, { ids }) => {
+		const current = store.getQuery(api.achievements.unlock.unseen, {});
+		if (current !== undefined) {
+			store.setQuery(
+				api.achievements.unlock.unseen,
+				{},
+				current.filter((b) => !ids.includes(b.id))
+			);
+		}
+	});
 	// What opened the moment, held still: a badge earned while it's up waits for the next one.
 	const [shown, setShown] = useState<UnlockedBadge[] | null>(null);
 	const [step, setStep] = useState(0);
