@@ -150,6 +150,46 @@ describe("fields", () => {
 		});
 	});
 
+	it("suggests a field read just under the floor, without putting it on", async () => {
+		// A real read of "tired from being strong" + "people depending on you, the edge to succeed".
+		const reading = await read({
+			fields: {
+				emotionAwareness: { confidence: 0.4, value: "know_but_no_words" },
+				intent: { confidence: 0.5, value: "get_through_hard_moment" },
+				weighingOn: { confidence: 0.6, value: ["relationships", "purpose"] },
+			},
+		});
+		expect(reading).toMatchObject({
+			fields: {},
+			suggested: {
+				intent: { confidence: 0.5, value: "get_through_hard_moment" },
+				weighingOn: { confidence: 0.6, value: ["relationships", "purpose"] },
+			},
+		});
+		expect(reading).not.toHaveProperty("suggested.emotionAwareness");
+	});
+
+	it("never suggests a field it already put on", async () => {
+		const reading = await read({
+			fields: {
+				intent: { confidence: 0.6, value: "feel_less_alone" },
+				weighingOn: { confidence: 0.9, value: ["work"] },
+			},
+		});
+		expect(reading).toMatchObject({
+			fields: { weighingOn: { value: ["work"] } },
+			suggested: { intent: { value: "feel_less_alone" } },
+		});
+		expect(reading).not.toHaveProperty("suggested.weighingOn");
+		expect(reading).not.toHaveProperty("fields.intent");
+	});
+
+	it("leaves suggested out when nothing reads in its band", async () => {
+		expect(await read(JSON.parse(CONFIDENT_WORK))).not.toHaveProperty(
+			"suggested"
+		);
+	});
+
 	it("rejects when the reader's text isn't a reading at all", async () => {
 		await expect(
 			readFirstAnswer(

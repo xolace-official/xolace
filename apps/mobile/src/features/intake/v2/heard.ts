@@ -155,7 +155,7 @@ const chipsOf = (heard: Heard): string[] => [
 	...heard.weighingOn.map((value) => `weighingOn:${value}`),
 ];
 
-/** A reading's fields as chips, on. The confidences stay with the reader. */
+/** A reading's fields as chips, on (or, for `suggested`, marked). The confidences stay with the reader. */
 export function heardOf({
 	disclosureStyle,
 	emotionAwareness,
@@ -171,6 +171,15 @@ export function heardOf({
 }
 
 export const heardNothing = (heard: Heard) => chipsOf(heard).length === 0;
+
+/** How many chips a reading suggested. */
+export const suggestionCount = (suggested: Heard) => chipsOf(suggested).length;
+
+/** Suggested chips the user tapped on. A count, never values. */
+export function suggestionsTaken(suggested: Heard, final: Heard): number {
+	const after = new Set(chipsOf(final));
+	return chipsOf(suggested).filter((chip) => after.has(chip)).length;
+}
 
 /** Chips tapped off and on, against what the answer was read as. Counts only, never values. */
 export function chipChanges(read: Heard, final: Heard) {

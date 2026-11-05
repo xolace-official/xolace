@@ -139,20 +139,23 @@ describe("intake v2 arms (#704)", () => {
 			]);
 		});
 
-		it("counts the chips tapped off and on", () => {
+		it("counts the chips tapped off and on, and the suggestions taken", () => {
 			analytics.trackIntakeArmAssigned(posthog, "v2");
-			analytics.trackHeardConfirmed(posthog, "pick_list", {
-				added: 2,
-				kept: 0,
-				removed: 0,
-			});
+			analytics.trackHeardConfirmed(
+				posthog,
+				"suggested",
+				{ added: 2, kept: 0, removed: 0 },
+				{ shown: 3, taken: 1 }
+			);
 			expect(captured("intake_heard_confirmed")).toEqual([
 				{
 					chips_added: 2,
 					chips_kept: 0,
 					chips_removed: 0,
+					chips_suggested: 3,
 					intake_arm: "v2",
-					read: "pick_list",
+					read: "suggested",
+					suggestions_taken: 1,
 				},
 			]);
 		});

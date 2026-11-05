@@ -273,18 +273,24 @@ export function trackAnswerGiven(
 	});
 }
 
-/** "That's me" on v2's chips: counts against what the answer was read as. */
+/**
+ * "That's me" on v2's chips: counts against what the answer was read as, and how many of
+ * the suggested chips were tapped on.
+ */
 export function trackHeardConfirmed(
 	posthog: PostHog,
 	read: HeardSource,
-	changes: { added: number; kept: number; removed: number }
+	changes: { added: number; kept: number; removed: number },
+	suggestions: { shown: number; taken: number }
 ) {
 	posthog.capture("intake_heard_confirmed", {
 		chips_added: changes.added,
 		chips_kept: changes.kept,
 		chips_removed: changes.removed,
+		chips_suggested: suggestions.shown,
 		...prune({ intake_arm: arm }),
 		read,
+		suggestions_taken: suggestions.taken,
 	});
 }
 

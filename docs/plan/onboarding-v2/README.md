@@ -93,7 +93,7 @@ on the existing Skia + Reanimated Xolace face (`features/xolace-face`, see
 | Mood | Used on | Motion |
 |---|---|---|
 | idle | `ask` after the question has typed out, `type` | Slow bob, blink every ~4 s, small smile |
-| talking | `ask` while the question types, the Talk demo reply | Mouth opens and closes, slight squash |
+| talking | `ask` while the question types, the Talk demo reply | The `speaking` pose, held still: no mouth motion (the typed words say it) |
 | listening | `listen` | Leans in, eyes a little bigger, sound rings pulse out |
 | thinking | `interpret` | Eyes up and to the side, three thought dots |
 | happy | `name`, the Plus side of I | Closed happy eyes, open smile, small bounce |

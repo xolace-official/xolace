@@ -34,7 +34,21 @@ const KEY_FIELDS = ["weighingOn", "intent"] as const;
 const confidentValidator = <T extends GenericValidator>(value: T) =>
 	v.object({ confidence: v.number(), value });
 
-/** The action's return: the safety route, or the fields to show as chips and at most one follow-up. */
+const fieldsValidator = v.object({
+	disclosureStyle: v.optional(
+		confidentValidator(intakeAnswerValidators.disclosureStyle)
+	),
+	emotionAwareness: v.optional(
+		confidentValidator(intakeAnswerValidators.emotionAwareness)
+	),
+	intent: v.optional(confidentValidator(intakeAnswerValidators.intent)),
+	weighingOn: v.optional(confidentValidator(intakeAnswerValidators.weighingOn)),
+});
+
+/**
+ * The action's return: the safety route, or the fields to show as chips and at most one
+ * follow-up. `fields` go on as chips; `suggested` are shown but left off.
+ */
 export const readingValidator = v.union(
 	v.object({
 		resources: v.array(resourceValidator),
@@ -42,18 +56,7 @@ export const readingValidator = v.union(
 		safeguardLevel: v.union(v.literal("elevated"), v.literal("crisis")),
 	}),
 	v.object({
-		fields: v.object({
-			disclosureStyle: v.optional(
-				confidentValidator(intakeAnswerValidators.disclosureStyle)
-			),
-			emotionAwareness: v.optional(
-				confidentValidator(intakeAnswerValidators.emotionAwareness)
-			),
-			intent: v.optional(confidentValidator(intakeAnswerValidators.intent)),
-			weighingOn: v.optional(
-				confidentValidator(intakeAnswerValidators.weighingOn)
-			),
-		}),
+		fields: fieldsValidator,
 		followUp: v.optional(
 			v.object({
 				field: v.union(...KEY_FIELDS.map((field) => v.literal(field))),
@@ -62,6 +65,8 @@ export const readingValidator = v.union(
 		),
 		route: v.literal("heard"),
 		safeguardLevel: v.union(v.literal("none"), v.literal("gentle")),
+		/** Read, but not plainly enough to put on: the person taps them on if they fit. */
+		suggested: v.optional(fieldsValidator),
 	})
 );
 
@@ -82,8 +87,18 @@ const FALLBACK_QUESTIONS: Record<KeyField, string> = {
 /** One short question, not a paragraph. */
 const MAX_QUESTION_CHARS = 140;
 
-/** Below this the field is left out: the person taps it on if it fits, we never guess. */
+/** Below this the field is never put on: the person taps it on if it fits, we never guess. */
 const CONFIDENCE_FLOOR = 0.7;
+
+/**
+ * From here up to {@link CONFIDENCE_FLOOR} a field is only suggested. An answer about how
+ * something feels rarely reads above 0.6, and a pick-list with nothing marked after a
+ * follow-up reads as not having been heard at all.
+ */
+const SUGGEST_FLOOR = 0.5;
+
+/** Which reads a pass keeps: the ones to put on, or the ones only to suggest. */
+type Band = "confident" | "suggested";
 
 /** The same cap `intake.v2.complete` enforces. */
 const MAX_TOPICS = 3;
@@ -112,14 +127,18 @@ const isRecord = (x: unknown): x is Record<string, unknown> =>
 const isOneOf = <T extends string>(allowed: readonly T[], x: unknown): x is T =>
 	allowed.some((value) => value === x);
 
-/** A confidence in [0, 1] at or above the floor, or null. */
-function confidentEnough(raw: Record<string, unknown>): number | null {
+/** A confidence in [0, 1] inside the band, or null. */
+function confidenceIn(raw: Record<string, unknown>, band: Band): number | null {
 	const c = raw.confidence;
 	if (typeof c !== "number" || !Number.isFinite(c)) {
 		return null;
 	}
 	const confidence = Math.min(Math.max(c, 0), 1);
-	return confidence >= CONFIDENCE_FLOOR ? confidence : null;
+	const inBand =
+		band === "confident"
+			? confidence >= CONFIDENCE_FLOOR
+			: confidence >= SUGGEST_FLOOR && confidence < CONFIDENCE_FLOOR;
+	return inBand ? confidence : null;
 }
 
 /** The model's JSON object, out of whatever it wrapped it in. Throws when there is none. */
@@ -136,24 +155,32 @@ function parseObject(raw: string): Record<string, unknown> {
 	return parsed;
 }
 
-/** One single-answer field, when read clearly as a value the intake allows. */
-function readOne<T extends string>(raw: unknown, allowed: readonly T[]) {
+/** One single-answer field, when read within the band as a value the intake allows. */
+function readOne<T extends string>(
+	raw: unknown,
+	allowed: readonly T[],
+	band: Band
+) {
 	if (!isRecord(raw)) {
 		return;
 	}
-	const confidence = confidentEnough(raw);
+	const confidence = confidenceIn(raw, band);
 	const { value } = raw;
 	return confidence !== null && isOneOf(allowed, value)
 		? { confidence, value }
 		: undefined;
 }
 
-/** The topics, when read clearly: the allowed ones, deduplicated, at most three. */
-function readTopics<T extends string>(raw: unknown, allowed: readonly T[]) {
+/** The topics, when read within the band: the allowed ones, deduplicated, at most three. */
+function readTopics<T extends string>(
+	raw: unknown,
+	allowed: readonly T[],
+	band: Band
+) {
 	if (!(isRecord(raw) && Array.isArray(raw.value))) {
 		return;
 	}
-	const confidence = confidentEnough(raw);
+	const confidence = confidenceIn(raw, band);
 	const value = [
 		...new Set(raw.value.filter((t): t is T => isOneOf(allowed, t))),
 	].slice(0, MAX_TOPICS);
@@ -162,19 +189,21 @@ function readTopics<T extends string>(raw: unknown, allowed: readonly T[]) {
 		: undefined;
 }
 
-/** The fields read clearly enough to show; the rest are left out, never guessed. */
-function fieldsFrom(raw: Record<string, unknown>): ReadFields {
+/** The fields read within the band; the rest are left out, never guessed. */
+function fieldsFrom(raw: Record<string, unknown>, band: Band): ReadFields {
 	const given = isRecord(raw.fields) ? raw.fields : {};
-	const intent = readOne(given.intent, ALLOWED.intent);
+	const intent = readOne(given.intent, ALLOWED.intent, band);
 	const disclosureStyle = readOne(
 		given.disclosureStyle,
-		ALLOWED.disclosureStyle
+		ALLOWED.disclosureStyle,
+		band
 	);
 	const emotionAwareness = readOne(
 		given.emotionAwareness,
-		ALLOWED.emotionAwareness
+		ALLOWED.emotionAwareness,
+		band
 	);
-	const weighingOn = readTopics(given.weighingOn, ALLOWED.weighingOn);
+	const weighingOn = readTopics(given.weighingOn, ALLOWED.weighingOn, band);
 	return {
 		...(intent ? { intent } : {}),
 		...(weighingOn ? { weighingOn } : {}),
@@ -241,12 +270,14 @@ export async function readFirstAnswer(
 		};
 	}
 	const raw = parseObject(await reader);
-	const fields = fieldsFrom(raw);
+	const fields = fieldsFrom(raw, "confident");
+	const suggested = fieldsFrom(raw, "suggested");
 	const followUp = followUpFor(raw, fields, !!input.followUp);
 	return {
 		fields,
 		route: "heard",
 		safeguardLevel: safety.level,
 		...(followUp ? { followUp } : {}),
+		...(Object.keys(suggested).length > 0 ? { suggested } : {}),
 	};
 }

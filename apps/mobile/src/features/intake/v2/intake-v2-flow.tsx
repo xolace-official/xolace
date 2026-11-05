@@ -14,7 +14,12 @@ import {
 import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
 import { AskStep } from "@/features/intake/v2/ask-step";
 import { FollowUpStep } from "@/features/intake/v2/follow-up-step";
-import { chipChanges, type Reading } from "@/features/intake/v2/heard";
+import {
+	chipChanges,
+	type Reading,
+	suggestionCount,
+	suggestionsTaken,
+} from "@/features/intake/v2/heard";
 import { HeardStep } from "@/features/intake/v2/heard-step";
 import { InterpretStep } from "@/features/intake/v2/interpret-step";
 import { ListenStep } from "@/features/intake/v2/listen-step";
@@ -209,7 +214,11 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 							trackHeardConfirmed(
 								posthog,
 								state.read ?? "pick_list",
-								chipChanges(state.readAs, state.heard)
+								chipChanges(state.readAs, state.heard),
+								{
+									shown: suggestionCount(state.suggested),
+									taken: suggestionsTaken(state.suggested, state.heard),
+								}
 							);
 							dispatch({ type: "CONFIRM_HEARD" });
 						}}
@@ -217,6 +226,7 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 						onToggle={(chip) => dispatch({ ...chip, type: "TOGGLE_CHIP" })}
 						read={state.read}
 						readAs={state.readAs}
+						suggested={state.suggested}
 					/>
 				);
 			case "plus":

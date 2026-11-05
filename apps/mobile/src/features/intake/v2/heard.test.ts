@@ -7,6 +7,7 @@ import {
 	type Heard,
 	isOn,
 	NOTHING_HEARD,
+	suggestionsTaken,
 	toggleChip,
 } from "@/features/intake/v2/heard";
 
@@ -99,6 +100,17 @@ describe("chipChanges", () => {
 		expect(
 			chipChanges(NOTHING_HEARD, { intent: "just_looking", weighingOn: [] })
 		).toEqual({ added: 1, kept: 0, removed: 0 });
+	});
+});
+
+describe("suggestionsTaken", () => {
+	it("counts only the suggested chips that ended up on", () => {
+		const suggested: Heard = {
+			intent: "get_through_hard_moment",
+			weighingOn: ["relationships", "purpose"],
+		};
+		const final: Heard = { weighingOn: ["purpose", "work"] };
+		expect(suggestionsTaken(suggested, final)).toBe(1);
 	});
 });
 

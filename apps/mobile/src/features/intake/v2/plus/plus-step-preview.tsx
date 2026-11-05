@@ -56,6 +56,13 @@ export function PlusStepPreview() {
 				onPick={setPicked}
 				onRetry={() => undefined}
 				onSide={setSide}
+				// The demo talks to the backend; here "Try it" only shows how it looks in intake.
+				onTryTalk={() =>
+					toast.show({
+						description: "Opens the Talk demo in intake.",
+						label: "Preview",
+					})
+				}
 				owned={false}
 				plan={picked ?? defaultPlan(plans)}
 				plans={plans}

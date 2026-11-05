@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
 	lerpPose,
 	MOOD_POSES,
-	mouthWhileTalking,
 	NEUTRAL,
 	PRESETS,
 	poseForCheckIn,
@@ -92,29 +91,5 @@ describe("MOOD_POSES", () => {
 		expect(MOOD_POSES.happy.mouth).toBe(1);
 		expect(MOOD_POSES.idle.mouth).toBeGreaterThan(0);
 		expect(MOOD_POSES.idle.mouth).toBeLessThan(MOOD_POSES.happy.mouth);
-	});
-});
-
-describe("mouthWhileTalking", () => {
-	const FPS = 60;
-	// One second of frames, from a few seconds in.
-	const second = Array.from({ length: FPS }, (_, i) =>
-		mouthWhileTalking(3 + i / FPS)
-	);
-
-	it("stays a mouth: never past fully open or shut", () => {
-		for (const t of [0, 0.5, 1.7, 12.3, 99]) {
-			expect(mouthWhileTalking(t)).toBeGreaterThanOrEqual(0);
-			expect(mouthWhileTalking(t)).toBeLessThanOrEqual(1);
-		}
-	});
-
-	it("opens and closes a few times a second, like syllables", () => {
-		expect(Math.min(...second)).toBeLessThan(0.25);
-		expect(Math.max(...second)).toBeGreaterThan(0.5);
-		const peaks = second.filter(
-			(v, i) => i > 0 && i < FPS - 1 && v > second[i - 1] && v >= second[i + 1]
-		);
-		expect(peaks.length).toBeGreaterThanOrEqual(2);
 	});
 });

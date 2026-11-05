@@ -7,6 +7,7 @@
  * A timeout or error is the client's to absorb: it falls back to the
  * pick-list, so this throws rather than inventing a reading.
  */
+import type Anthropic from "@anthropic-ai/sdk";
 import { ConvexError, v } from "convex/values";
 import { internal } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
@@ -173,17 +174,41 @@ export async function checkAnswerSafety(words: string): Promise<SafetyVerdict> {
 
 async function classify(words: string, signal: AbortSignal) {
 	const prompt = buildClassifierPrompt(words, "", true, "open_prompt");
-	const response = await getAnthropicClient().messages.create(
-		{
-			max_tokens: 512,
-			messages: [{ content: prompt.user, role: "user" }],
-			model: CLASSIFIER_MODEL,
-			system: prompt.system,
-			thinking: thinkingOff(CLASSIFIER_MODEL),
-		},
-		{ ...REQUEST_OPTIONS, signal }
-	);
-	return parseClassificationResponse(extractTextFromResponse(response));
+	const ask = async (messages: Anthropic.MessageParam[]) =>
+		extractTextFromResponse(
+			await getAnthropicClient().messages.create(
+				{
+					max_tokens: 512,
+					messages,
+					model: CLASSIFIER_MODEL,
+					system: prompt.system,
+					thinking: thinkingOff(CLASSIFIER_MODEL),
+				},
+				{ ...REQUEST_OPTIONS, signal }
+			)
+		);
+	const question: Anthropic.MessageParam = {
+		content: prompt.user,
+		role: "user",
+	};
+	const raw = await ask([question]);
+	try {
+		return parseClassificationResponse(raw);
+	} catch {
+		// Haiku sometimes declines in prose ("I can't classify…") instead of JSON.
+		// One more try, as `classifierAction` does; the safety deadline bounds both.
+		return parseClassificationResponse(
+			await ask([
+				question,
+				{ content: raw, role: "assistant" },
+				{
+					content:
+						"Your response was not valid JSON. Respond with ONLY a valid JSON object, no other text.",
+					role: "user",
+				},
+			])
+		);
+	}
 }
 
 /** The reader model call. Exported, with the safeguard, for the live eval. */

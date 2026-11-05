@@ -1,6 +1,5 @@
 // Drives a Pose on the UI thread. Moves spring between poses (a little overshoot reads as
-// life), with blinking, an idle breath, quick gaze overrides, a nod, a hop and a talking
-// mouth on top.
+// life), with blinking, an idle breath, quick gaze overrides, a nod and a hop on top.
 
 import { useCallback, useEffect } from "react";
 import {
@@ -14,7 +13,7 @@ import {
 } from "react-native-reanimated";
 import { isUIRuntime, scheduleOnUI } from "react-native-worklets";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
-import { lerpPose, mouthWhileTalking, NEUTRAL, type Pose } from "./pose";
+import { lerpPose, NEUTRAL, type Pose } from "./pose";
 
 // Tuned by feel in the prototypes (proto/xolace-face): underdamped on purpose, a character
 // settling rather than UI snapping.
@@ -31,9 +30,6 @@ const NOD_GAZE = 0.6;
 const LISTEN_BROW = 0.35;
 const LISTEN_LEAN = 0.2;
 const HOP_UP_MS = 180;
-const TALK_FADE_MS = 160;
-const TALK_SQUASH = 0.25;
-const TALK_SQUASH_HZ = 1.4;
 
 /** Out to 1 and springs back: a nod or a hop. */
 const pulse = (outMs: number) => {
@@ -58,8 +54,6 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 	const blink = useSharedValue(1);
 	const nodAmount = useSharedValue(0);
 	const hopAmount = useSharedValue(0);
-	// 0 … 1, eased so the mouth doesn't snap shut mid-word when talking stops.
-	const talking = useSharedValue(0);
 	const clock = useSharedValue(0);
 	// The user's live voice level, 0–1, set by whoever owns the audio (Talk's level): it
 	// leans in and lifts the brows a little.
@@ -109,9 +103,6 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 
 	const pose = useDerivedValue<Pose>(() => {
 		const p = lerpPose(from.get(), target.get(), t.get());
-		const c = clock.get();
-		// Reduced motion keeps the pose's own mouth: the words on screen say it's talking.
-		const talkAmount = reduced ? 0 : talking.get();
 		return {
 			...p,
 			browLift: p.browLift + listen.get() * LISTEN_BROW,
@@ -119,11 +110,7 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 			gazeX: p.gazeX + lookX.get(),
 			gazeY: p.gazeY + lookY.get() + nodAmount.get() * NOD_GAZE,
 			lean: p.lean + listen.get() * LISTEN_LEAN,
-			mouthOpen: p.mouthOpen + talkAmount * mouthWhileTalking(c),
 			restless: reduced ? 0 : p.restless,
-			squash:
-				p.squash +
-				talkAmount * TALK_SQUASH * Math.sin(c * TALK_SQUASH_HZ * Math.PI * 2),
 		};
 	});
 
@@ -202,15 +189,6 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		}
 	}, [hopAmount, reduced]);
 
-	/** Moves the mouth as if speaking, on top of the pose, until `talk(false)`. */
-	const talk = useCallback(
-		(on: boolean) => {
-			"worklet";
-			talking.set(withTiming(on ? 1 : 0, { duration: TALK_FADE_MS }));
-		},
-		[talking]
-	);
-
 	return {
 		clock,
 		hold,
@@ -221,7 +199,6 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		nod,
 		nodAmount,
 		pose,
-		talk,
 		to,
 	};
 }

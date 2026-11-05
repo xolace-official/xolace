@@ -5,11 +5,9 @@ import { View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import type { PlusSide } from "@/features/intake/v2/machine";
-import {
-	KindlingHold,
-	TalkBar,
-} from "@/features/intake/v2/plus/moment-visuals";
+import { KindlingHold } from "@/features/intake/v2/plus/moment-visuals";
 import { SteadinessExample } from "@/features/intake/v2/plus/steadiness-example";
+import { TalkBar } from "@/features/intake/v2/plus/talk-bar";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +47,7 @@ const MOMENTS: Moment[] = [
 ];
 
 type Props = {
-	/** Opens the Talk demo; absent where it shouldn't open (the dev preview, during the save). */
+	/** Opens the Talk demo; absent where it shouldn't open (during the save). */
 	onTryTalk?: () => void;
 	side: PlusSide;
 };

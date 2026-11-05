@@ -1,7 +1,7 @@
 // Flux, live (README § Live Flux, #710): the Xolace face posed by the step's mood, with the
-// mood's own motion on top. Talking moves the mouth, happy hops once as it arrives, warm nods
-// once, listening sends sound rings out, thinking shows three thought dots. Under reduced
-// motion the pose alone says it: no hop, nod or mouth, still rings and dots.
+// mood's own motion on top. Talking holds its pose (the typed words say it), happy hops once
+// as it arrives, warm nods once, listening sends sound rings out, thinking shows three thought
+// dots. Under reduced motion the pose alone says it: no hop or nod, still rings and dots.
 import { useEffect, useEffectEvent, useState } from "react";
 import { View } from "react-native";
 import Animated, {
@@ -46,7 +46,6 @@ export function Flux({ mood, palette, size }: Props) {
 	const face = useFace(MOOD_POSES[mood]);
 
 	useEffect(() => face.to(MOOD_POSES[mood]), [face.to, mood]);
-	useEffect(() => face.talk(mood === "talking"), [face.talk, mood]);
 	// Once per arrival at the mood: the motion setting loading later mustn't play it again.
 	const arrive = useEffectEvent(() => {
 		if (mood === "happy") {
