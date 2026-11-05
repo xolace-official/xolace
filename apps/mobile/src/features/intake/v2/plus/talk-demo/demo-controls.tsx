@@ -132,7 +132,7 @@ function Typing({ demo }: Pick<Props, "demo">) {
 	const [placeholderColor] = useThemeColor(["muted"]);
 	const { dispatch, state } = demo;
 	return (
-		<View className="gap-2 px-5 pt-2">
+		<View className="gap-2 px-5 pt-2 pb-4">
 			<AppText className="text-[13px] text-muted">
 				The mic&apos;s off, so type it instead.
 			</AppText>
