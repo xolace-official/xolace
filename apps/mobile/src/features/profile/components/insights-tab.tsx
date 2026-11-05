@@ -17,6 +17,7 @@ import { useMoodDelta } from "@/features/profile/hooks/use-mood-delta";
 import type { ProfileSummary } from "@/features/profile/hooks/use-profile-summary";
 import { useReflectionRank } from "@/features/profile/hooks/use-reflection-rank";
 import { useWeekIntensity } from "@/features/profile/hooks/use-week-intensity";
+import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/store";
 
 /** The Insights tab: the user's own patterns, each card gated on enough sessions
@@ -83,9 +84,11 @@ export function InsightsTab({
 				</View>
 			)}
 
-			{/* Widest lens first. Always rendered: the card carries its own pending state. */}
+			{/* Widest lens first. Always rendered: the card carries its own pending state.
+          The steadiness row's bottom margin spaces it; without that row, it
+          brings its own. */}
 			{rank && (
-				<View className="mb-4">
+				<View className={cn("mb-4", !hasEnoughForChart && "mt-4")}>
 					<RankCard rank={rank} staggerDelay={300} />
 				</View>
 			)}
