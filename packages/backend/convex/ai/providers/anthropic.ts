@@ -136,7 +136,6 @@ export function extractTextFromResponse(message: Anthropic.Message): string {
  * @returns The normalized and validated ClassificationResult constructed from the parsed input.
  */
 export function parseClassificationResponse(raw: string): ClassificationResult {
-	console.log("raw ", raw);
 	// Take the JSON object out of whatever the model wrapped it in. Fences are
 	// the common case; on crisis input Haiku also appends a hotline note AFTER
 	// the closing fence, and stripping fences alone left that prose in the
