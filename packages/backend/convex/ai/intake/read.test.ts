@@ -22,6 +22,8 @@ const stub = {
 	modelHangs: false,
 	moderation: (): Promise<ModerationResult> =>
 		Promise.resolve(MODERATION_UNAVAILABLE),
+	/** Answers to give first, one per call, before falling back to `reply`. */
+	replies: [] as string[],
 	reply: JSON.stringify({
 		fields: { weighingOn: { confidence: 0.9, value: ["work"] } },
 	}) as string | Error,
@@ -35,7 +37,9 @@ vi.mock("../../lib/rateLimits", async (orig) => ({
 	...rateLimiterMock(() => stub.limit),
 }));
 vi.mock("../providers/anthropic", async (orig) => {
-	const answering = anthropicMock(() => stub.reply).getAnthropicClient();
+	const answering = anthropicMock(
+		() => stub.replies.shift() ?? stub.reply
+	).getAnthropicClient();
 	return {
 		...(await orig<typeof import("../providers/anthropic")>()),
 		getAnthropicClient: () => ({
@@ -80,6 +84,7 @@ beforeEach(() => {
 	stub.modelHangs = false;
 	stub.moderation = () => Promise.resolve(MODERATION_UNAVAILABLE);
 	stub.signals = [];
+	stub.replies = [];
 	stub.reply = JSON.stringify({
 		fields: { weighingOn: { confidence: 0.9, value: ["work"] } },
 	});
@@ -241,5 +246,15 @@ describe("ai/intake/read.checkAnswerSafety's deadline", () => {
 		expect(SAFETY_DEADLINE_MS).toBeLessThanOrEqual(
 			CLIENT_WAIT_MS - ROOM_FOR_THE_ROUND_TRIP_MS
 		);
+	});
+});
+
+describe("ai/intake/read.checkAnswerSafety's classifier", () => {
+	it("asks again when the classifier answers in prose, not JSON", async () => {
+		stub.replies = ["I can't classify this without more context."];
+		stub.reply = DESPAIRING;
+		expect(
+			(await checkAnswerSafety("everyone would cope fine without me")).level
+		).toBe("elevated");
 	});
 });
