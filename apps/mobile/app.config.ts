@@ -370,7 +370,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
 		url: "https://u.expo.dev/9b49d23b-d85c-48c9-84a4-db117b864dd3",
 	},
 	userInterfaceStyle: "automatic",
-	version: "1.15.0",
+	version: "1.16.0",
 	web: {
 		favicon: "./assets/images/favicon.png",
 		output: "static",
