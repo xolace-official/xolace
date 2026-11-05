@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>I · Same week, steadier</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;background:#07060C}
+a{color:#C9C7F5}a:hover{color:#E7E6FF}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(4px)}}
+@keyframes wave{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.55}50%{transform:scale(1.08);opacity:.9}}
+@keyframes ringin{from{stroke-dasharray:0 400}}
+@keyframes open{from{opacity:0;transform:scale(.9) translateY(30px)}to{opacity:1;transform:none}}
+@keyframes caret{0%,100%{opacity:1}50%{opacity:0}}
+.ghost{background:none;border:0;color:#C9C7F5;font:inherit;font-size:15px;font-weight:500;padding:10px 8px;cursor:pointer;min-height:44px}
+.ghost:hover{color:#ECEBF3}
+.ember{border:0;border-radius:999px;background:#E8AA4E;color:#1A1206;font:inherit;font-size:16px;font-weight:600;min-height:54px;cursor:pointer}
+.ember:hover{background:#F0BC6A}
+.light{border:0;border-radius:999px;background:#ECEBF3;color:#0B0912;font:inherit;font-size:16px;font-weight:600;min-height:56px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.light:hover{background:#FFFFFF}
+.seg{position:relative;z-index:1;flex:1;border:0;background:none;font:inherit;font-size:15px;font-weight:600;min-height:44px;cursor:pointer}
+.swap{animation:rise .35s ease both}
+.scroll{scrollbar-width:none}
+.player{display:flex;align-items:center;gap:12px;width:100%;padding:8px 14px 8px 8px;border-radius:999px;border:1px solid #3A2F55;background:#0E0A18;color:#ECEBF3;font:inherit;cursor:pointer;text-align:left}
+.player:hover{border-color:#E8AA4E}
+</style>
+</helmet>
+<div style="{{rootStyle}}">
+  <div style="position: absolute; top: 52px; left: 20px; right: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <span style="align-self: flex-start; padding: 4px 10px; border-radius: 999px; background: #2E2B5C; color: #E1E0FF; font-size: 12px; font-weight: 600">Xolace+</span>
+      <h1 style="margin: 0; font-size: 24px; line-height: 1.15; font-weight: 600">Same rough week.<br>Two ways it goes.</h1>
+    </div>
+    <dc-import name="FluxChar" mood="{{fluxMood}}" tint="{{fluxTint}}" size="{{fluxSize}}" hint-size="80px,92px"></dc-import>
+  </div>
+
+  <div role="radiogroup" aria-label="Compare" style="position: absolute; top: 158px; left: 20px; right: 20px; height: 52px; box-sizing: border-box; padding: 4px; border-radius: 999px; background: #15131F; border: 1px solid #2E2A40; display: flex">
+    <span aria-hidden="true" style="{{thumbStyle}}"></span>
+    <button type="button" class="seg" role="radio" aria-checked="{{freeOn}}" onClick="{{setFree}}" style="{{freeLabel}}">Free</button>
+    <button type="button" class="seg" role="radio" aria-checked="{{plusOn}}" onClick="{{setPlus}}" style="{{plusLabel}}">With Plus</button>
+  </div>
+
+  <div class="scroll" style="position: absolute; top: 224px; left: 0; right: 0; bottom: 150px; overflow-y: auto; padding: 0 20px 8px; display: flex; flex-direction: column; gap: 10px">
+
+    <article style="{{cardStyle}}">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px">
+        <p style="margin: 0; font-size: 15px; font-weight: 600">Work won't leave your head.</p>
+        <span style="font-size: 12px; color: #8F8DA3; white-space: nowrap">Tue night</span>
+      </div>
+      <sc-if value="{{isFree}}" hint-placeholder-val="{{true}}">
+        <p class="swap" style="margin: 0; font-size: 14px; line-height: 1.5; color: #9C9AAE">You type it once and the Mirror names it.</p>
+      </sc-if>
+      <sc-if value="{{isPlus}}" hint-placeholder-val="{{false}}">
+        <div class="swap" style="display: flex; flex-direction: column; gap: 12px">
+          <p style="margin: 0; font-size: 19px; line-height: 1.25; font-weight: 600; color: #F6C77E">Talk it out before it's named.</p>
+          <button type="button" class="player" onClick="{{openDemo}}" aria-label="Try a 20-second talk with Flux">
+            <span style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; background: #E8AA4E; color: #1A1206; display: flex; align-items: center; justify-content: center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z"></path></svg>
+            </span>
+            <span aria-hidden="true" style="flex-grow: 1; display: flex; align-items: center; gap: 3px; height: 28px">
+              <sc-for list="{{talkBars}}" as="b" hint-placeholder-count="22"><span style="{{b.style}}"></span></sc-for>
+            </span>
+            <span style="font-size: 13px; font-weight: 600; color: #F6C77E; white-space: nowrap">Try it</span>
+          </button>
+        </div>
+      </sc-if>
+    </article>
+
+    <article style="{{cardStyle}}">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px">
+        <p style="margin: 0; font-size: 15px; font-weight: 600">You know what it is. Now what?</p>
+        <span style="font-size: 12px; color: #8F8DA3; white-space: nowrap">Thu night</span>
+      </div>
+      <sc-if value="{{isFree}}" hint-placeholder-val="{{true}}">
+        <p class="swap" style="margin: 0; font-size: 14px; line-height: 1.5; color: #9C9AAE">The Mirror says it's guilt. Then you're on your own with it.</p>
+      </sc-if>
+      <sc-if value="{{isPlus}}" hint-placeholder-val="{{false}}">
+        <div class="swap" style="display: flex; flex-direction: column; gap: 10px">
+          <p style="margin: 0; font-size: 19px; line-height: 1.25; font-weight: 600; color: #F6C77E">Get support, not just a name.</p>
+          <div aria-hidden="true" style="position: relative; height: 172px; overflow: hidden">
+            <span style="position: absolute; left: 50%; top: -70px; width: 200px; height: 200px; margin-left: -100px; border-radius: 50%; border: 1.5px dashed #5A4A78"></span>
+            <span style="position: absolute; left: 50%; top: -10px; width: 90px; height: 80px; margin-left: -45px; border-radius: 50%; background: #E8AA4E; filter: blur(26px); animation: breathe 3.6s ease-in-out infinite"></span>
+            <span style="position: absolute; left: 50%; top: 12px; transform: translateX(-50%); padding: 7px 18px; border-radius: 999px; background: #2A2033; border: 1px solid #8A6430; font-size: 15px; font-weight: 600; color: #F6EBDD">guilt</span>
+            <sc-for list="{{supports}}" as="sp" hint-placeholder-count="3">
+              <span style="{{sp.pos}}">
+                <span style="width: 44px; height: 44px; border-radius: 50%; background: #1E1830; border: 1px solid #5A4A78; display: flex; align-items: center; justify-content: center; color: #E1E0FF">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{sp.icon}}"></path></svg>
+                </span>
+                <span style="font-size: 11px; color: #CFCDE0; white-space: nowrap">{{sp.label}}</span>
+              </span>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </article>
+
+    <article style="{{cardStyle}}">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px">
+        <p style="margin: 0; font-size: 15px; font-weight: 600">Why does this keep happening?</p>
+        <span style="font-size: 12px; color: #8F8DA3; white-space: nowrap">Sun night</span>
+      </div>
+      <sc-if value="{{isFree}}" hint-placeholder-val="{{true}}">
+        <p class="swap" style="margin: 0; font-size: 14px; line-height: 1.5; color: #9C9AAE">You can tell it's been heavy. Not what's building, or since when.</p>
+      </sc-if>
+      <sc-if value="{{isPlus}}" hint-placeholder-val="{{false}}">
+        <div class="swap" style="display: flex; flex-direction: column; gap: 12px">
+          <p style="margin: 0; font-size: 19px; line-height: 1.25; font-weight: 600; color: #F6C77E">Catch what's compounding.</p>
+          <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+            <sc-for list="{{rings}}" as="rg" hint-placeholder-count="3">
+              <span style="display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center">
+                <span style="position: relative; width: 68px; height: 68px">
+                  <svg width="68" height="68" viewBox="0 0 68 68" style="position: absolute; inset: 0">
+                    <circle cx="34" cy="34" r="22" fill="{{rg.disc}}"></circle>
+                    <circle cx="34" cy="34" r="31" fill="none" stroke="#2A2638" stroke-width="6" stroke-linecap="round" stroke-dasharray="162.3 194.8" transform="rotate(120 34 34)"></circle>
+                    <circle cx="34" cy="34" r="31" fill="none" stroke="{{rg.color}}" stroke-width="6" stroke-linecap="round" stroke-dasharray="{{rg.dash}}" transform="rotate(120 34 34)" style="animation: ringin 1s cubic-bezier(.2,.8,.2,1) both"></circle>
+                  </svg>
+                  <span style="position: absolute; left: 0; right: 0; bottom: -2px; display: flex; justify-content: center; color: {{rg.color}}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{rg.icon}}"></path></svg>
+                  </span>
+                </span>
+                <span style="font-size: 12px; font-weight: 600; color: #ECEBF3; line-height: 1.2">{{rg.label}}</span>
+                <span style="{{rg.wordStyle}}">{{rg.word}}</span>
+              </span>
+            </sc-for>
+          </div>
+          <p style="margin: 0; padding: 10px 12px; border-radius: 14px; background: #2A1E10; font-size: 13px; line-height: 1.45; color: #F6DDB4">Work &amp; Studies has been heavier than your usual for 3 weeks. Flux noticed before it boiled over.</p>
+        </div>
+      </sc-if>
+    </article>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; bottom: 22px; display: flex; flex-direction: column">
+    <sc-if value="{{isFree}}" hint-placeholder-val="{{true}}">
+      <button type="button" onClick="{{setPlus}}" style="min-height: 54px; border-radius: 999px; border: 1px solid #5B5390; background: #1A1530; color: #ECEBF3; font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px">
+        See it with Plus <span aria-hidden="true" style="display: inline-block; animation: nudge 1.2s ease-in-out infinite">→</span>
+      </button>
+      <p style="margin: 8px 0 0; font-size: 12px; color: #8F8DA3; text-align: center">Saying it stays free.</p>
+      <button type="button" class="ghost" onClick="{{setFree}}" style="align-self: center; color: #8F8DA3; font-size: 13px; padding: 4px 8px">Continue free</button>
+    </sc-if>
+    <sc-if value="{{isPlus}}" hint-placeholder-val="{{false}}">
+      <button type="button" class="ember">Start my free week</button>
+      <p style="margin: 8px 0 0; font-size: 12px; color: #CFCDE0; text-align: center">Then [YEARLY PRICE] a year. Cancel any time.</p>
+      <button type="button" class="ghost" onClick="{{setFree}}" style="align-self: center; color: #8F8DA3; font-size: 13px; padding: 4px 8px">Continue free</button>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{demoOpen}}" hint-placeholder-val="{{false}}">
+    <section role="dialog" aria-label="Talk demo" style="position: absolute; inset: 0; background: #0B0716; animation: open .4s cubic-bezier(.2,.8,.2,1) both">
+      <div aria-hidden="true" style="{{glowStyle}}"></div>
+      <div style="position: absolute; top: 52px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: center">
+        <span style="padding: 4px 10px; border-radius: 999px; background: #2E2B5C; color: #E1E0FF; font-size: 12px; font-weight: 600">Talk · demo</span>
+        <button type="button" onClick="{{closeDemo}}" aria-label="Close demo" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid #2E2A40; background: #15112A; color: #ECEBF3; display: flex; align-items: center; justify-content: center; cursor: pointer">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+        </button>
+      </div>
+      <div style="position: absolute; top: 104px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center">
+        <dc-import name="FluxChar" mood="{{demoMood}}" tint="{{voice}}" size="{{demoSize}}" hint-size="180px,208px"></dc-import>
+        <p style="margin: 4px 0 0; font-size: 13px; color: #CFCDE0">{{voiceLine}}</p>
+      </div>
+      <div style="position: absolute; top: 352px; left: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px">
+        <sc-if value="{{showUser}}" hint-placeholder-val="{{false}}">
+          <div style="align-self: flex-end; max-width: 260px; padding: 10px 14px; border-radius: 18px 18px 4px 18px; background: #2E2B5C; font-size: 15px; line-height: 1.4; animation: rise .3s ease both">{{userText}}</div>
+        </sc-if>
+        <p aria-live="polite" style="margin: 0; min-height: 120px; font-size: 19px; line-height: 1.45; font-weight: 500">{{fluxText}}<span style="{{fluxCaret}}">▍</span></p>
+      </div>
+      <sc-if value="{{dIntro}}" hint-placeholder-val="{{true}}">
+        <div style="position: absolute; left: 20px; right: 20px; bottom: 26px; display: flex; flex-direction: column; gap: 12px; animation: rise .4s ease both">
+          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px">
+            <sc-for list="{{voices}}" as="v" hint-placeholder-count="4">
+              <button type="button" onClick="{{v.pick}}" aria-pressed="{{v.on}}" style="{{v.style}}">{{v.label}}</button>
+            </sc-for>
+          </div>
+          <button type="button" class="light" onClick="{{tryIt}}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3"></path></svg>
+            Try me: say anything
+          </button>
+        </div>
+      </sc-if>
+      <sc-if value="{{dDone}}" hint-placeholder-val="{{false}}">
+        <div style="position: absolute; left: 20px; right: 20px; bottom: 26px; display: flex; flex-direction: column; gap: 6px; animation: rise .4s ease both">
+          <button type="button" class="ember" onClick="{{closeDemo}}">Keep talking · 7 days free</button>
+          <button type="button" class="ghost" onClick="{{closeDemo}}" style="align-self: center">Back to the week</button>
+        </div>
+      </sc-if>
+    </section>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+const INTRO = "Before the Mirror names it, talk it through with me. I'll ask, you answer, and we get underneath it together. Try me.";
+const USER = 'my manager took credit for my work again. in front of everyone.';
+const REPLY = "That stings. Before we put a name on it: was it the credit, or that nobody in the room noticed it was yours?";
+const VOICES = [['Sage', 'sage', 'calm, grounded'], ['Wren', 'wren', 'warm, unhurried'], ['Vesper', 'vesper', 'low, soft'], ['Ash', 'ash', 'clear, steady']];
+const GLOW = { sage: '#74C69D', wren: '#F7A8A0', vesper: '#8278F0', ash: '#90A7CB' };
+const ARC = 162.3;
+const CIRC = 194.8;
+const ICONS = {
+  work: 'M4 8h16v11H4z M9 8V5h6v3',
+  rest: 'M3 18V8 M3 13h18v5 M21 18v-3 M7 13v-2h5v2',
+  love: 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z',
+  sit: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 9v3l2 2',
+  sound: 'M4 10v4 M8 7v10 M12 4v16 M16 8v8 M20 11v2',
+  person: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M5 20c1-4 4-6 7-6s6 2 7 6',
+};
+
+class Component extends DCLogic {
+  state = { plus: false, demo: '', k: 0, u: 0, r: 0, voice: 'wren' };
+
+  componentWillUnmount() { clearInterval(this._ti); clearTimeout(this._t); }
+
+  run(key, text, ms, done) {
+    clearInterval(this._ti);
+    this.setState({ [key]: 0 });
+    this._ti = setInterval(() => {
+      const v = this.state[key] + 1;
+      this.setState({ [key]: v });
+      if (v >= text.length) { clearInterval(this._ti); if (done) done(); }
+    }, ms);
+  }
+
+  openDemo() {
+    clearTimeout(this._t);
+    this.setState({ demo: 'intro', u: 0, r: 0 });
+    this.run('k', INTRO, 30);
+  }
+
+  tryIt() {
+    clearTimeout(this._t);
+    this.setState({ demo: 'listening', r: 0 });
+    this.run('u', USER, 45, () => {
+      this._t = setTimeout(() => {
+        this.setState({ demo: 'reply' });
+        this.run('r', REPLY, 28, () => this.setState({ demo: 'done' }));
+      }, 600);
+    });
+  }
+
+  renderVals() {
+    const { plus, demo, k, u, r, voice } = this.state;
+    const meta = VOICES.find((v) => v[1] === voice) || VOICES[1];
+    const introTyping = demo === 'intro' && k < INTRO.length;
+    const showReply = demo === 'reply' || demo === 'done';
+    const ring = (label, value, tone, word, icon) => {
+      const color = tone === 'ember' ? '#E8AA4E' : '#A7A5EB';
+      return {
+        label, word, icon: ICONS[icon], color,
+        dash: ((ARC * value) / 100).toFixed(1) + ' ' + CIRC,
+        disc: tone === 'ember' ? 'rgba(232,170,78,0.14)' : 'rgba(167,165,235,0.10)',
+        wordStyle: 'font-size: 11px; font-weight: 500; color: ' + (tone === 'ember' ? '#F6C77E' : '#B4B2C6'),
+      };
+    };
+    return {
+      rootStyle: 'width: 390px; height: 844px; position: relative; overflow: hidden; box-sizing: border-box; color: #ECEBF3; font-family: Poppins, system-ui, sans-serif; transition: background .5s ease; background: ' + (plus ? '#0D0A15' : '#07060C'),
+      cardStyle: 'display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; border-radius: 22px; transition: background .4s ease, border-color .4s ease; ' +
+        (plus ? 'background: #151022; border: 1px solid #3A2F55' : 'background: #110F1A; border: 1px solid #262236'),
+      isFree: !plus, isPlus: plus,
+      freeOn: plus ? 'false' : 'true', plusOn: plus ? 'true' : 'false',
+      thumbStyle: 'position: absolute; top: 4px; bottom: 4px; width: calc(50% - 4px); border-radius: 999px; transition: left .35s cubic-bezier(.2,.8,.2,1), background .35s ease; left: ' + (plus ? '50%' : '4px') + '; background: ' + (plus ? '#E8AA4E' : '#2E2A40'),
+      freeLabel: 'color: ' + (plus ? '#B4B2C6' : '#ECEBF3'),
+      plusLabel: 'color: ' + (plus ? '#1A1206' : '#B4B2C6'),
+      fluxMood: plus ? 'happy' : 'idle',
+      fluxTint: plus ? 'flux' : 'ash',
+      fluxSize: 80,
+      talkBars: Array.from({ length: 22 }, (_, i) => ({
+        style: 'flex: 1; height: ' + (6 + ((i * 29) % 20)) + 'px; border-radius: 2px; background: #F6C77E; opacity: .8; transform-origin: center; animation: wave ' + (0.7 + ((i * 7) % 5) / 10) + 's ease-in-out ' + ((i % 4) * 0.1) + 's infinite',
+      })),
+      supports: [
+        { label: 'Sit with it', icon: ICONS.sit, pos: 'position: absolute; left: calc(50% - 87px); top: 58px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px' },
+        { label: 'A soft sound', icon: ICONS.sound, pos: 'position: absolute; left: 50%; top: 108px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px' },
+        { label: 'A Xolacer', icon: ICONS.person, pos: 'position: absolute; left: calc(50% + 87px); top: 58px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px' },
+      ],
+      rings: [
+        ring('Work & Studies', 38, 'ember', 'Heavier lately', 'work'),
+        ring('Health & Rest', 72, 'accent', 'Steady', 'rest'),
+        ring('Love & Friendship', 64, 'accent', 'Easing', 'love'),
+      ],
+      demoOpen: demo !== '',
+      dIntro: demo === 'intro', dDone: demo === 'done',
+      demoMood: demo === 'listening' ? 'listening' : demo === 'reply' || introTyping ? 'talking' : demo === 'done' ? 'happy' : 'idle',
+      demoSize: 180,
+      voice, voiceLine: meta[0] + ' · ' + meta[2],
+      voices: VOICES.map(([label, id]) => {
+        const on = id === voice;
+        return {
+          label, on: on ? 'true' : 'false',
+          style: 'min-height: 44px; border-radius: 14px; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; ' +
+            (on ? 'background: #2E2B5C; border: 1px solid #A7A5EB; color: #ECEBF3' : 'background: #15112A; border: 1px solid #2B2245; color: #CFCDE0'),
+          pick: () => { this.setState({ voice: id }); this.run('k', INTRO, 30); },
+        };
+      }),
+      glowStyle: 'position: absolute; left: 50%; top: 80px; width: 420px; height: 360px; margin-left: -210px; border-radius: 50%; filter: blur(90px); opacity: .16; transition: background .5s ease; background: ' + GLOW[voice],
+      showUser: demo === 'listening' || showReply,
+      userText: USER.slice(0, u),
+      fluxText: showReply ? REPLY.slice(0, r) : demo === 'listening' ? '' : INTRO.slice(0, k),
+      fluxCaret: introTyping || demo === 'reply' ? 'color: #E8AA4E; animation: caret .8s steps(1) infinite' : 'display: none',
+      setFree: () => this.setState({ plus: false }),
+      setPlus: () => this.setState({ plus: true }),
+      openDemo: () => this.openDemo(),
+      tryIt: () => this.tryIt(),
+      closeDemo: () => { clearInterval(this._ti); clearTimeout(this._t); this.setState({ demo: '' }); },
+    };
+  }
+}
+</script>
+</body>
+</html>

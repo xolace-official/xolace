@@ -11,6 +11,8 @@ import {
 	type QueryCtx,
 	query,
 } from "./_generated/server";
+import { awardAchievement } from "./achievements/award";
+import { requireAdult, seekerWhenUnknown } from "./age/gate";
 import {
 	createXolacerChannel,
 	deleteStreamUser,
@@ -1247,23 +1249,19 @@ async function deriveOrigin(
 }
 
 export const requestConversation = mutation({
-	args: { xolacerProfileId: v.id("emotional_profiles") },
+	args: {
+		/** The app version asking. Absent from binaries that predate the age
+		 * gate (#716), which have no date-of-birth step to send the user to. */
+		clientVersion: v.optional(v.string()),
+		xolacerProfileId: v.id("emotional_profiles"),
+	},
 	handler: async (ctx, args) => {
 		if (!chatEnabled()) {
 			throw new Error("Xolacer chat is not available");
 		}
-		const { profile } = await requireAuth(ctx);
+		const { profile, user } = await requireAuth(ctx);
 		if (profile._id === args.xolacerProfileId) {
 			throw new Error("Cannot request a conversation with yourself");
-		}
-
-		const xolacer = await getXolacerProfileByProfileId(
-			ctx,
-			args.xolacerProfileId
-		);
-		const openCount = await countOpen(ctx, args.xolacerProfileId);
-		if (!xolacerAvailable(xolacer, openCount)) {
-			throw new Error("This xolacer is not taking conversations right now");
 		}
 
 		// `reverse` is the row where these two hold the opposite roles. A block
@@ -1274,6 +1272,28 @@ export const requestConversation = mutation({
 			profile._id,
 			args.xolacerProfileId
 		);
+
+		// A conversation that is already pending or open carries on (#716).
+		// Anything else starts or restarts one, so it answers to the age gate,
+		// ahead of availability: a minor is told why, not that the Xolacer is busy.
+		const live =
+			existing?.status === "requested" || existing?.status === "open";
+		if (!live) {
+			await requireAdult(
+				ctx,
+				{ profile, user },
+				seekerWhenUnknown(args.clientVersion)
+			);
+		}
+
+		const xolacer = await getXolacerProfileByProfileId(
+			ctx,
+			args.xolacerProfileId
+		);
+		const openCount = await countOpen(ctx, args.xolacerProfileId);
+		if (!xolacerAvailable(xolacer, openCount)) {
+			throw new Error("This xolacer is not taking conversations right now");
+		}
 
 		if (existing) {
 			// One conversation per pair, ever. Re-requesting reopens the same row.
@@ -1361,6 +1381,9 @@ export const requestConversation = mutation({
 			userProfileId: profile._id,
 			xolacerProfileId: args.xolacerProfileId,
 		});
+		// Only a fresh pair's request (#696): a re-request reopens a row this
+		// seeker already asked on, so it has nothing new to earn.
+		await awardAchievement(ctx, profile._id, "asked-for-chat");
 		await captureRequestSent(ctx, profile._id, origin);
 		await notifyConversation(
 			ctx,
@@ -1378,13 +1401,14 @@ export const requestConversation = mutation({
 export const getForAccept = internalQuery({
 	args: { conversationId: v.id("xolacer_conversations") },
 	handler: async (ctx, args) => {
-		const { conversation, role } = await requireConversationParticipant(
-			ctx,
-			args.conversationId
-		);
+		const { conversation, profile, role, user } =
+			await requireConversationParticipant(ctx, args.conversationId);
 		if (role !== "xolacer") {
 			throw new Error("Only the xolacer can accept");
 		}
+		// A declared minor can't take a request; an undeclared Xolacer can until
+		// Xolacer setup asks for a date of birth.
+		await requireAdult(ctx, { profile, user }, "allow");
 		if (conversation.status !== "requested") {
 			throw new Error("Request is no longer pending");
 		}
@@ -1794,17 +1818,28 @@ export const blockConversation = action({
 });
 
 export const resumeConversation = mutation({
-	args: { conversationId: v.id("xolacer_conversations") },
+	args: {
+		/** As on `requestConversation`: absent from binaries without the age gate (#716). */
+		clientVersion: v.optional(v.string()),
+		conversationId: v.id("xolacer_conversations"),
+	},
 	handler: async (ctx, args) => {
 		if (!chatEnabled()) {
 			throw new Error("Xolacer chat is not available");
 		}
-		const { conversation } = await requireConversationParticipant(
-			ctx,
-			args.conversationId
-		);
+		const { conversation, profile, role, user } =
+			await requireConversationParticipant(ctx, args.conversationId);
 		if (conversation.status !== "resting") {
 			return { resumed: conversation.status === "open" };
+		}
+		// Picking a resting chat back up is the seeker restarting it, the same
+		// as a re-request (#716). The Xolacer's side isn't asked.
+		if (role === "user") {
+			await requireAdult(
+				ctx,
+				{ profile, user },
+				seekerWhenUnknown(args.clientVersion)
+			);
 		}
 
 		const xolacer = await getXolacerProfileByProfileId(
@@ -2041,6 +2076,22 @@ export const notifyNewMessage = internalMutation({
 					: null;
 		const delivery =
 			!alreadyCounted && senderRole ? { conversationId, senderRole } : null;
+
+		// The seeker's own first message once the Xolacer has accepted (#696),
+		// whatever the row's status now: a resting pair still talking counts.
+		// Never the Xolacer's side, whose accepting or reply earns the seeker
+		// nothing, and never a redelivery of an event already counted.
+		const seekerSpokeAfterAccept =
+			!alreadyCounted &&
+			senderRole === "user" &&
+			conversation.acceptedAt !== undefined;
+		if (seekerSpokeAfterAccept) {
+			await awardAchievement(
+				ctx,
+				conversation.userProfileId,
+				"first-xolacer-chat"
+			);
+		}
 
 		// Stream cannot deliver into a channel we consider shut, but a resting or
 		// blocked pair whose channel Stream has not frozen yet would still arrive
@@ -2456,6 +2507,7 @@ export const publishProfile = mutation({
 		if (!user.isXolacer) {
 			throw new Error("Not a xolacer");
 		}
+		await requireAdult(ctx, { profile, user }, "allow");
 
 		const xolacer = await getXolacerProfileByProfileId(ctx, profile._id);
 		if (

@@ -23,12 +23,16 @@ import {
 	type StreamCredential,
 	writeStreamCredential,
 } from "@/features/xolacer-chat/stream-credential";
+import { registerStreamHaptics } from "@/features/xolacer-chat/stream-haptics";
 import { useAppStore } from "@/store/store";
 import { useStreamTheme } from "./stream-theme";
 
 /** Public Stream key, read at build time so `Chat` mounts from the first frame; the token is
  * still minted server-side. */
 const STREAM_API_KEY = process.env.EXPO_PUBLIC_STREAM_API_KEY;
+
+// Module scope, so it lands before any Stream component mounts.
+registerStreamHaptics();
 
 /** `ready`: user set and offline db open, socket or not. `unavailable`: no client possible (no
  * key, key mismatch, no token). `connecting`: the gap before the db opens. */

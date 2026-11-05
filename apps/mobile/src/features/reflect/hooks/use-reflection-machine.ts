@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/expo";
 import { AppMetrics } from "expo-observe";
 import { usePostHog } from "posthog-react-native";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { trackFirstReflection } from "@/features/intake/analytics";
 import { useDictation } from "@/features/reflect/hooks/use-dictation";
 import { useSession } from "@/features/reflect/hooks/use-session";
 import {
@@ -248,6 +249,7 @@ export function useReflectionMachine() {
 				freeze_occurred: freezeOccurredRef.current,
 				input_length: state.entryText.length,
 			});
+			trackFirstReflection(posthog);
 			submitTimestampRef.current = Date.now();
 		} catch (error) {
 			dispatchError(extractErrorMessage(error));
@@ -281,6 +283,7 @@ export function useReflectionMachine() {
 				freeze_occurred: false,
 				input_length: state.selectedTextures.length,
 			});
+			trackFirstReflection(posthog);
 			submitTimestampRef.current = Date.now();
 		} catch (error) {
 			dispatchError(extractErrorMessage(error));

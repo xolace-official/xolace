@@ -71,3 +71,24 @@ export const talkDirectnessValidator = v.union(
 	v.literal("straight")
 );
 export type TalkDirectness = Infer<typeof talkDirectnessValidator>;
+
+// How the companion looks (Talk's voice-and-look sheet): a preset by name, never the
+// drawing, so the drawing stays ours to change. Unset = "xolace", the brand flame.
+export const talkLookValidator = v.union(
+	v.literal("xolace"),
+	v.literal("tide"),
+	v.literal("moss"),
+	v.literal("dusk"),
+	v.literal("ember"),
+	v.literal("theme"),
+	v.literal("chalk")
+);
+export type TalkLook = Infer<typeof talkLookValidator>;
+
+// Which of a talk's two views shows: the transcript, or the companion large.
+// Unset = "conversation".
+export const talkViewValidator = v.union(
+	v.literal("conversation"),
+	v.literal("companion")
+);
+export type TalkView = Infer<typeof talkViewValidator>;

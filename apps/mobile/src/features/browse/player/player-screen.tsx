@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import {
 	CrisisLine,
 	GlyphButton,
+	RepeatButton,
 	usePlayerInk,
 	VolumeRow,
 } from "./player-controls";
@@ -191,6 +192,13 @@ function Player() {
 								{track?.title ?? " "}
 							</AppText>
 						</View>
+						<RepeatButton
+							on={p.loop}
+							onChange={(on) => {
+								playSoftPress();
+								p.setLoop(on);
+							}}
+						/>
 					</View>
 
 					<View className="mt-7">

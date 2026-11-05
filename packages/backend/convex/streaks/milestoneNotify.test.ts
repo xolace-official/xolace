@@ -1,15 +1,16 @@
 // @vitest-environment edge-runtime
 /**
- * #439: streak milestone push. What can go wrong: it fires off-cadence, fires
- * twice for the same streak (a second action the same day), fires with
- * notifications or the sub-flag off, uses the wrong copy, or rides the
- * session-count milestone instead of the streak.
+ * #439, #700: streak milestones. Badge pushes replaced their push, so what can
+ * go wrong now: a milestone still pushes on its own, a milestone day with no
+ * badge rung (400) pushes anything, savers stop earning, or the copy the
+ * 7/30/100 badges carry drifts.
  */
 import { describe, expect, it, vi } from "vitest";
 import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, noopJob, revenuecatMock } from "../test/mocks.helpers";
+import { localDayKey } from "./activityLog";
 import { streakMilestoneCopy } from "./milestones";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
@@ -56,6 +57,20 @@ const setPrefs = (
 			notifications: { ...p.notifications, ...notifications },
 		});
 	});
+const savers = async (user: SeededUser) =>
+	(
+		await user.root.run((ctx) =>
+			ctx.db.get("emotional_profiles", user.profileId)
+		)
+	)?.streakSavers;
+/** Badge-push checks ever scheduled for this backend. */
+const badgeChecks = (user: SeededUser) =>
+	user.root.run(
+		async (ctx) =>
+			(await ctx.db.system.query("_scheduled_functions").collect()).filter(
+				(f) => f.name.includes("achievements/push")
+			).length
+	);
 const scheduledPushes = (user: SeededUser) =>
 	user.root.run(async (ctx) =>
 		(await ctx.db.system.query("_scheduled_functions").collect())
@@ -78,42 +93,47 @@ describe("streakMilestoneCopy (#439)", () => {
 	});
 });
 
-describe("streak milestone push (#439)", () => {
-	it("schedules once, on day 7, with notifications on", async () => {
+describe("streak milestones after badge pushes (#700)", () => {
+	it("never push on their own: savers still earn, silently", async () => {
 		const user = await asNewUser();
 		await setPrefs(user, { enabled: true, milestone: true });
-		await recordDays(user, 0, 6);
-		expect(await scheduledPushes(user)).toEqual([]);
-		await record(user, 6);
-		await record(user, 6); // a second action the same day doesn't re-fire
-		expect(await scheduledPushes(user)).toEqual([streakMilestoneCopy(7)]);
-		await recordDays(user, 7, 8);
-		expect(await scheduledPushes(user)).toHaveLength(1);
-	});
-
-	it("stays silent with notifications off", async () => {
-		const user = await asNewUser(); // fresh prefs: enabled false
 		await recordDays(user, 0, 7);
 		expect(await scheduledPushes(user)).toEqual([]);
+		expect(await savers(user)).toBe(1);
 	});
 
-	it("the streakMilestone sub-flag overrides the milestone family", async () => {
-		const off = await asNewUser();
-		await setPrefs(off, {
-			enabled: true,
-			milestone: true,
-			streakMilestone: false,
+	it("a 400-day streak day with no rung sends nothing", async () => {
+		const user = await asNewUser();
+		await setPrefs(user, { enabled: true, milestone: true });
+		await user.root.run(async (ctx) => {
+			await ctx.db.patch("emotional_profiles", user.profileId, {
+				currentStreak: 399,
+				longestStreak: 399,
+				streakSavers: 0,
+			});
+			await ctx.db.insert("activity_log", {
+				actionType: "library",
+				count: 1,
+				createdAt: at(0),
+				dayKey: localDayKey(at(0), "UTC"),
+				emotionalProfileId: user.profileId,
+				updatedAt: at(0),
+			});
 		});
-		await recordDays(off, 0, 7);
-		expect(await scheduledPushes(off)).toEqual([]);
+		const checksBefore = await badgeChecks(user);
 
-		const on = await asNewUser();
-		await setPrefs(on, {
-			enabled: true,
-			milestone: false,
-			streakMilestone: true,
+		await user.t.mutation(internal.streaks.manual.recordActivityManual, {
+			actionType: "library",
+			emotionalProfileId: user.profileId,
+			timestamp: at(1),
 		});
-		await recordDays(on, 0, 7);
-		expect(await scheduledPushes(on)).toEqual([streakMilestoneCopy(7)]);
+
+		const profile = await user.root.run((ctx) =>
+			ctx.db.get("emotional_profiles", user.profileId)
+		);
+		expect(profile?.currentStreak).toBe(400);
+		expect(profile?.streakSavers).toBe(1);
+		expect(await scheduledPushes(user)).toEqual([]);
+		expect(await badgeChecks(user)).toBe(checksBefore);
 	});
 });

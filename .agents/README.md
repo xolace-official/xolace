@@ -11,6 +11,7 @@ file only when your task touches its topic.
 | `rules/convex.md` | touching `packages/backend/convex` or any client's Convex usage |
 | `rules/expo-monorepo.md` | changing mobile dependencies, Metro or EAS config |
 | `rules/testing.md` | choosing what to run, writing tests, PR proof |
+| `rules/pull-requests.md` | writing or editing a PR body |
 | `rules/env-and-secrets.md` | adding/using env vars, worktree env files |
 | `rules/release.md` | anything deploy- or release-shaped (stub until Phase 3) |
 

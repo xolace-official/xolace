@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Where every question goes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;background:#07060C}
+a{color:#C9C7F5}a:hover{color:#E7E6FF}
+</style>
+</helmet>
+<div style="width: 1360px; height: 1420px; box-sizing: border-box; padding: 64px 72px; background: #07060C; color: #ECEBF3; font-family: Poppins, system-ui, sans-serif; display: flex; flex-direction: column; gap: 28px">
+  <header style="display: flex; flex-direction: column; gap: 12px; max-width: 900px">
+    <p style="margin: 0; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: #E8AA4E; font-weight: 600">Applies to A, B and C</p>
+    <h1 style="margin: 0; font-size: 44px; line-height: 1.08; font-weight: 600; letter-spacing: -0.02em">Where every question goes</h1>
+    <p style="margin: 0; font-size: 17px; line-height: 1.55; color: #B4B2C6">Each intake question moves to the first moment its answer changes something on screen. Same fields in intake_responses, filled over the first days instead of in one sitting. Anything never answered keeps today's "rather not say" default.</p>
+  </header>
+
+  <div role="table" aria-label="Question relocation" style="display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; border: 1px solid #262236">
+    <div role="row" style="display: grid; grid-template-columns: 210px 150px minmax(0, 1fr) minmax(0, 1fr); gap: 24px; padding: 14px 24px; background: #15131F; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #B4B2C6; font-weight: 600">
+      <span role="columnheader">Today's question</span>
+      <span role="columnheader">Asked how</span>
+      <span role="columnheader">New moment</span>
+      <span role="columnheader">What the answer changes, right then</span>
+    </div>
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="13">
+      <div role="row" style="{{r.rowStyle}}">
+        <span role="cell" style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">{{r.q}}</span><span style="font-size: 12px; color: #8F8DA3">{{r.field}}</span></span>
+        <span role="cell"><span style="{{r.howStyle}}">{{r.how}}</span></span>
+        <span role="cell" style="font-size: 14px; line-height: 1.45; color: #ECEBF3">{{r.when}}</span>
+        <span role="cell" style="font-size: 14px; line-height: 1.45; color: #B4B2C6">{{r.payoff}}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+    <div style="padding: 18px 20px; border-radius: 18px; background: #110F1A; border: 1px solid #262236; display: flex; gap: 12px; align-items: center">
+      <span style="padding: 4px 10px; border-radius: 999px; background: #1F2A22; color: #BFE6CB; font-size: 12px; font-weight: 600">Inferred</span>
+      <span style="font-size: 14px; color: #CFCDE0">Read from what they do. No question at all.</span>
+    </div>
+    <div style="padding: 18px 20px; border-radius: 18px; background: #110F1A; border: 1px solid #262236; display: flex; gap: 12px; align-items: center">
+      <span style="padding: 4px 10px; border-radius: 999px; background: #2E2B5C; color: #E1E0FF; font-size: 12px; font-weight: 600">One tap</span>
+      <span style="font-size: 14px; color: #CFCDE0">A card in context, always with Skip.</span>
+    </div>
+    <div style="padding: 18px 20px; border-radius: 18px; background: #110F1A; border: 1px solid #262236; display: flex; gap: 12px; align-items: center">
+      <span style="padding: 4px 10px; border-radius: 999px; background: #4A3415; color: #F6DDB4; font-size: 12px; font-weight: 600">Gate</span>
+      <span style="font-size: 14px; color: #CFCDE0">Must be answered before a feature opens.</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1420}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const pill = 'display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; ';
+    const how = {
+      Inferred: pill + 'background: #1F2A22; color: #BFE6CB',
+      'One tap': pill + 'background: #2E2B5C; color: #E1E0FF',
+      Gate: pill + 'background: #4A3415; color: #F6DDB4',
+      Moved: pill + 'background: #1A1726; color: #CFCDE0; border: 1px solid #3A3550',
+      Stays: pill + 'background: #ECEBF3; color: #0B0912',
+      Cut: pill + 'background: transparent; color: #E58A8A; border: 1px dashed #7A3A3A',
+    };
+    const data = [
+      ['Founder letter', 'screen', 'Stays', 'Right after sign-in, as today.', 'Sets the tone before anything is asked.'],
+      ['Name', 'displayName', 'One tap', 'Prefilled "Camper ####" with the dice. In A it closes the intake; in B and C it is offered the first time someone else could see it.', 'Nobody invents a name before they have said anything.'],
+      ['"Hey, name" beat', 'screen', 'Cut', 'Gone. The name is confirmed on the same screen.', 'One less chat-like stop that says nothing new.'],
+      ['Noted, Why we ask, Why this exists', 'screens', 'Cut', 'Gone. The privacy line moves under the one question that needs it.', 'The reason sits next to the ask, not a screen before it.'],
+      ['Why you came', 'intent', 'Inferred', 'The first home starter they tap: Reflect, Vent, Listen or Xolacer.', 'Already reorders the starter rows today; now it learns from the tap itself.'],
+      ["What's weighing on you", 'weighingOn', 'Inferred', 'Pulled from the first entry, shown as an "Is this about work?" chip they can correct.', 'Topic chips on the reflection; seeds Insights later.'],
+      ['How aware of feelings', 'emotionAwareness', 'One tap', '"Did that name it?" under the first Mirror result.', '"Not really" shows nearby words straight away.'],
+      ['Disclosure style', 'disclosureStyle', 'One tap', '"How should I say things back?" on the first result: gently, straight, like a poem.', 'The reflection rewrites itself in that tone on tap.'],
+      ['How you cope', 'copingStyle', 'One tap', 'At session end: "What usually helps after?"', 'Picks the Kindling or Browse suggestion shown right under it.'],
+      ['How often you need support', 'supportFrequency', 'One tap', '"Does this happen a lot?" after a session, paired with the existing notification soft-ask.', '"Most days" offers a check-in; the OS permission prompt follows only a yes.'],
+      ['Age', 'ageBracket', 'Gate', 'Before the first Xolacer chat.', 'Decides who they can be matched with; under-18 routing stays a hard gate.'],
+      ['How you found us', 'acquisitionSource', 'One tap', 'Day-3 card on Discovery, dismissible.', 'Attribution only, so it waits until they have come back.'],
+      ['Seen the series? Want it in-app?', 'series follow-ups', 'One tap', 'Same day-3 card, only after "Short video".', 'Branch kept, moved with its parent.'],
+      ['Shake to give feedback', 'screen', 'Moved', 'Tip after the third session.', 'Taught when they have something to say.'],
+      ['Campfire count', 'screen', 'Moved', 'Discovery, as the "This week" cohort card.', 'Social proof where they browse, not a wall before the app.'],
+      ['Xolace+ deck and Plans', 'screens', 'Moved', 'One screen after the intake: concept F, G or H.', 'Sold on what it does for them, right after they said what they need.'],
+    ];
+    const rows = data.map(([q, field, h, when, payoff], i) => ({
+      q, field, how: h, when, payoff,
+      howStyle: how[h],
+      rowStyle: 'display: grid; grid-template-columns: 210px 150px minmax(0, 1fr) minmax(0, 1fr); gap: 24px; padding: 14px 24px; align-items: start; border-top: 1px solid #1E1B2B; background: ' + (i % 2 ? '#0B0A12' : '#07060C'),
+    }));
+    return { rows };
+  }
+}
+</script>
+</body>
+</html>

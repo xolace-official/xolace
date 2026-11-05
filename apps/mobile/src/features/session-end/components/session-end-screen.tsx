@@ -12,7 +12,6 @@ import { UnlockBeat } from "@/features/session-end/components/unlock-beat";
 import { useSessionEnd } from "@/features/session-end/hooks/use-session-end";
 import { playSessionComplete } from "@/lib/haptics";
 
-type PostSessionMood = "lighter" | "same" | "heavier" | "unsure";
 type PathType = "solo" | "peers" | "exit";
 
 type Props = {
@@ -41,6 +40,8 @@ export const SessionEndScreen = ({
 		domainUnlock,
 		dismiss,
 		haveMore,
+		openBrowse,
+		openKindling,
 	} = useSessionEnd(routeSessionId);
 	const { isNight } = useSessionMode();
 	const insetsStyle = [
@@ -71,6 +72,8 @@ export const SessionEndScreen = ({
 				<ExitVariant
 					isNight={isNight}
 					onHaveMore={() => haveMore()}
+					onOpenBrowse={(family) => openBrowse(family)}
+					onOpenKindling={(ready) => openKindling(ready)}
 					sessionId={sessionId ?? undefined}
 				/>
 			) : (
@@ -78,12 +81,10 @@ export const SessionEndScreen = ({
 					contributeByDefault={contributeByDefault}
 					distilledText={distilledText}
 					isNight={isNight}
-					onDismiss={(contributed: boolean | null, mood?: PostSessionMood) =>
-						dismiss(contributed, mood)
-					}
-					onHaveMore={(contributed: boolean | null, mood?: PostSessionMood) =>
-						haveMore(contributed, mood)
-					}
+					onDismiss={dismiss}
+					onHaveMore={haveMore}
+					onOpenBrowse={openBrowse}
+					onOpenKindling={openKindling}
 					sessionId={sessionId ?? undefined}
 				/>
 			)}

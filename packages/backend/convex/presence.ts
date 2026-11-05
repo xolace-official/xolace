@@ -131,3 +131,16 @@ export async function presentProfileIds(
 	);
 	return new Set(online.map((p) => p.userId as Id<"emotional_profiles">));
 }
+
+/**
+ * Is this one person in the app right now? For a server-side decision about
+ * them, where `presentProfileIds` would read the whole room and can truncate.
+ * Never return this to a client (see `list`).
+ */
+export async function isPresent(
+	ctx: QueryCtx,
+	emotionalProfileId: Id<"emotional_profiles">
+): Promise<boolean> {
+	const rooms = await presence.listUser(ctx, emotionalProfileId, true, 1);
+	return rooms.length > 0;
+}

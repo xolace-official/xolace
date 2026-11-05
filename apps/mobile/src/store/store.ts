@@ -6,7 +6,16 @@ import { createJSONStorage, devtools, persist } from "zustand/middleware";
 import type { ReadingModeKey } from "@/features/library/reader/reading-mode";
 import type { TextureSetId } from "@/features/reflect/texture-sets";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
-import { createIntakeSlice, type IntakeSlice } from "./intake-slice";
+import {
+	type AccountFlagsSlice,
+	accountFlagsPersistedKeys,
+	createAccountFlagsSlice,
+} from "./account-flags-slice";
+import {
+	createIntakeSlice,
+	type IntakeSlice,
+	intakePersistedKeys,
+} from "./intake-slice";
 import {
 	createPlusOfferSlice,
 	type PlusOfferSlice,
@@ -27,6 +36,12 @@ type ThemeSlice = {
 type OnboardingSlice = {
 	introSeen: boolean;
 	setIntroSeen: (v: boolean) => void;
+	/** Home's reflect card has left idle: the composer is open (typing or a live mic), or a
+	 * submit is on its way and has no session yet. Transient; the badge unlock moment and
+	 * streak-held wait on it, since either would close the keyboard over a half-written
+	 * reflection. */
+	homeComposing: boolean;
+	setHomeComposing: (v: boolean) => void;
 	/** True while any home sheet is open or armed to open. Transient; the reflect tour hides
 	 * its coach marks while set. */
 	homeSheetBlocking: boolean;
@@ -39,6 +54,10 @@ type OnboardingSlice = {
 	 * persisted version. */
 	reflectTourActive: boolean;
 	setReflectTourActive: (v: boolean) => void;
+	/** The streak calendar reveal is due or playing on home. Transient; the badge unlock
+	 * moment waits on it, so the two never stack. */
+	streakRevealBusy: boolean;
+	setStreakRevealBusy: (v: boolean) => void;
 };
 
 type PendingEventPrompt = {
@@ -55,9 +74,6 @@ type TogglesSlice = {
 	/** One-time flag — once true, tone tip banner never shows again on this device. */
 	toneTipSeen: boolean;
 	setToneTipSeen: (v: boolean) => void;
-	/** One-time flag — once dismissed, session-end notification nudge never shows again. */
-	notifNudgeDismissed: boolean;
-	setNotifNudgeDismissed: (v: boolean) => void;
 	/** Version of the reflect tour this device last finished. `0` means none. */
 	reflectTourVersion: number;
 	setReflectTourVersion: (v: number) => void;
@@ -83,9 +99,6 @@ type TogglesSlice = {
 	/** One-time flag — once true, the Lantern (library) welcome never shows again. */
 	libraryIntroSeen: boolean;
 	setLibraryIntroSeen: (v: boolean) => void;
-	/** One-time flag — once true, the home Starter suggestions bubble never shows again (#460). */
-	starterSuggestionsSeen: boolean;
-	setStarterSuggestionsSeen: (v: boolean) => void;
 	/** Dev tools only (honoured under `__DEV__`): treat this account as zero-session for
 	 * Starter suggestions (#465). */
 	devStarterEligible: boolean;
@@ -169,6 +182,9 @@ type ReplySeedSlice = {
 	clearReplySeed: () => void;
 };
 
+/** Intake v2's first answer (#707), held for the account that gave it. */
+export type IntakeFirstAnswer = { text: string; userId: string };
+
 /** Ephemeral. Something outside the reflect screen (#462) asking it to open the card; see
  * useReflectBridge. */
 type ComposerOpenSlice = {
@@ -176,8 +192,15 @@ type ComposerOpenSlice = {
 	reflectSettled: boolean;
 	setReflectSettled: (v: boolean) => void;
 	composerOpenRequested: boolean;
-	requestComposerOpen: () => void;
+	/** Words to open the card with, e.g. intake v2's first answer (#707). Raw user text. */
+	composerOpenText: string | null;
+	requestComposerOpen: (text?: string) => void;
 	clearComposerOpenRequest: () => void;
+	/** Intake v2's first answer (#707), for the Mirror's "Pick up where you left off". Memory
+	 * only: the user's own words never touch disk, so a cold kill drops the offer. Keyed by
+	 * Clerk user, so a sign-out and a second account never see the first one's words. */
+	intakeFirstAnswer: IntakeFirstAnswer | null;
+	setIntakeFirstAnswer: (answer: IntakeFirstAnswer | null) => void;
 	/** The idle menu's scrim is on screen; it can't cover the native header, so the reflect
 	 * screen hides its toolbar buttons. */
 	idleMenuOpen: boolean;
@@ -187,6 +210,7 @@ type ComposerOpenSlice = {
 export type AppState = ThemeSlice &
 	OnboardingSlice &
 	TogglesSlice &
+	AccountFlagsSlice &
 	PlusOfferSlice &
 	IntakeSlice &
 	PreferencesSlice &
@@ -216,9 +240,11 @@ export const useAppStore = create<AppState>()(
 				chatEnabledCached: false,
 
 				colorThemeId: "default",
+
 				devStarterEligible: false,
 				dictationUpsellSeen: false,
 
+				homeComposing: false,
 				homeSheetBlocking: false,
 				homeSheetOpen: false,
 
@@ -236,8 +262,6 @@ export const useAppStore = create<AppState>()(
 				musicIntroSeen: false,
 
 				nightModeEnabled: true,
-
-				notifNudgeDismissed: false,
 
 				pendingEventPrompt: null,
 
@@ -264,6 +288,7 @@ export const useAppStore = create<AppState>()(
 				setChatEnabledCached: (v) => set({ chatEnabledCached: v }),
 				setColorThemeId: (id) => set({ colorThemeId: id }),
 				setDictationUpsellSeen: (v) => set({ dictationUpsellSeen: v }),
+				setHomeComposing: (v) => set({ homeComposing: v }),
 				setHomeSheetBlocking: (v) => set({ homeSheetBlocking: v }),
 				setHomeSheetOpen: (v) => set({ homeSheetOpen: v }),
 				setIntroSeen: (v) => set({ introSeen: v }),
@@ -276,21 +301,20 @@ export const useAppStore = create<AppState>()(
 				setLibraryIntroSeen: (v) => set({ libraryIntroSeen: v }),
 				setMusicIntroSeen: (v) => set({ musicIntroSeen: v }),
 				setNightModeEnabled: (v) => set({ nightModeEnabled: v }),
-				setNotifNudgeDismissed: (v) => set({ notifNudgeDismissed: v }),
 				setPendingEventPrompt: (prompt) => set({ pendingEventPrompt: prompt }),
 				setPreviousTheme: (t) => set({ previousTheme: t }),
 				setReflectTourActive: (v) => set({ reflectTourActive: v }),
 				setReflectTourVersion: (v) => set({ reflectTourVersion: v }),
 				setReturnWelcomeSeenAt: (n) => set({ returnWelcomeSeenAt: n }),
 				setShakeHintSeen: (v) => set({ shakeHintSeen: v }),
-				setStarterSuggestionsSeen: (v) => set({ starterSuggestionsSeen: v }),
+				setStreakRevealBusy: (v) => set({ streakRevealBusy: v }),
 				setSupportAudioIntroSeen: (v) => set({ supportAudioIntroSeen: v }),
 				setTheme: (t) => set({ theme: t }),
 				setToneTipSeen: (v) => set({ toneTipSeen: v }),
 				setVentIntroSeen: (v) => set({ ventIntroSeen: v }),
 				setXolacerPrimerSeen: (v) => set({ xolacerPrimerSeen: v }),
 				shakeHintSeen: false,
-				starterSuggestionsSeen: false,
+				streakRevealBusy: false,
 				supportAudioIntroSeen: false,
 				theme: "system",
 
@@ -298,15 +322,20 @@ export const useAppStore = create<AppState>()(
 				ventIntroSeen: false,
 				xolacerPrimerSeen: false,
 
+				...createAccountFlagsSlice(set),
+
 				...createPlusOfferSlice(set),
 
 				...createIntakeSlice(set),
-				clearComposerOpenRequest: () => set({ composerOpenRequested: false }),
+				clearComposerOpenRequest: () =>
+					set({ composerOpenRequested: false, composerOpenText: null }),
 				clearLastNotification: () => set({ lastNotification: null }),
 				clearReplySeed: () => set({ replySeed: null }),
 				composerOpenRequested: false,
+				composerOpenText: null,
 				hiddenProfileCards: [],
 				idleMenuOpen: false,
+				intakeFirstAnswer: null,
 				isNewVersionAvailable: false,
 
 				isVersionChecked: false,
@@ -319,8 +348,10 @@ export const useAppStore = create<AppState>()(
 				reflectSettled: false,
 
 				replySeed: null,
-				requestComposerOpen: () => set({ composerOpenRequested: true }),
+				requestComposerOpen: (text) =>
+					set({ composerOpenRequested: true, composerOpenText: text ?? null }),
 				setIdleMenuOpen: (v) => set({ idleMenuOpen: v }),
+				setIntakeFirstAnswer: (answer) => set({ intakeFirstAnswer: answer }),
 				setIsNewVersionAvailable: (v) => set({ isNewVersionAvailable: v }),
 				setIsVersionChecked: (v) => set({ isVersionChecked: v }),
 				setLastNotification: (n) => set({ lastNotification: n }),
@@ -355,7 +386,6 @@ export const useAppStore = create<AppState>()(
 					libraryIntroSeen: s.libraryIntroSeen,
 					musicIntroSeen: s.musicIntroSeen,
 					nightModeEnabled: s.nightModeEnabled,
-					notifNudgeDismissed: s.notifNudgeDismissed,
 					pendingEventPrompt: s.pendingEventPrompt,
 					previousTheme: s.previousTheme,
 					readByFire: s.readByFire,
@@ -366,13 +396,14 @@ export const useAppStore = create<AppState>()(
 					seenEventIds: s.seenEventIds,
 					seenMenuItems: s.seenMenuItems,
 					shakeHintSeen: s.shakeHintSeen,
-					starterSuggestionsSeen: s.starterSuggestionsSeen,
 					supportAudioIntroSeen: s.supportAudioIntroSeen,
 					textureSetId: s.textureSetId,
 					theme: s.theme,
 					toneTipSeen: s.toneTipSeen,
 					ventIntroSeen: s.ventIntroSeen,
 					xolacerPrimerSeen: s.xolacerPrimerSeen,
+					...accountFlagsPersistedKeys(s),
+					...intakePersistedKeys(s),
 					...plusOfferPersistedKeys(s),
 				}),
 				storage: createJSONStorage(() => zustandJSONStorage),

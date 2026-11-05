@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useRef } from "react";
 import { wipeReflectDraft } from "@/features/reflect/reflect-draft";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
+import { useAppStore } from "@/store/store";
 
 export type RetentionOption = "indefinite" | "6_months" | "1_year";
 
@@ -12,7 +13,7 @@ export const useDataSettings = () => {
 	const updatePreferences = usePreferenceMutation();
 	const requestDataWipe = useMutation(api.users.requestDataWipe);
 	const requestDeletion = useMutation(api.users.requestDeletion);
-	const { signOut } = useAuth();
+	const { signOut, userId } = useAuth();
 	const deletionRequested = useRef(false);
 
 	const contributeAnonymously = preferences?.contributeByDefault ?? false;
@@ -51,6 +52,11 @@ export const useDataSettings = () => {
 		if (!deletionRequested.current) {
 			await requestDeletion();
 			deletionRequested.current = true;
+			// Coming back before Clerk's copy is gone is this same id, and these flags
+			// shouldn't outlive the account they were asked on.
+			if (userId) {
+				useAppStore.getState().clearAccountFlags(userId);
+			}
 		}
 		// The patch invalidates every requireAuth-gated subscription, so the
 		// session must go. A failure propagates to the confirm dialog's toast.

@@ -9,6 +9,7 @@ import {
 	PRIVACY_POLICY,
 	TERMS_OF_SERVICE,
 } from "@/components/shared/legal-content";
+import { cn } from "@/lib/utils";
 
 const SPINNER_ENTERING = FadeIn.delay(50);
 
@@ -32,7 +33,7 @@ export function PaywallCta({ label, onPress, isBusy, isDisabled }: Props) {
 			<Button
 				accessibilityLabel={label}
 				accessibilityRole="button"
-				className={`rounded-2xl${isBusy ? "self-center" : "w-full"}`}
+				className={cn("rounded-2xl", isBusy ? "self-center" : "w-full")}
 				isDisabled={isDisabled}
 				isIconOnly={isBusy}
 				layout={LinearTransition.springify()}

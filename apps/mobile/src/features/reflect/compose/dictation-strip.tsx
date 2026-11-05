@@ -33,13 +33,14 @@ const WaveBar = ({
 	weight: number;
 }) => {
 	const style = useAnimatedStyle(() => {
-		// The recorder normalises -160..0 dB to 0..1, so room tone already sits
-		// around 0.7 and speech lives in the top of the range.
-		const level = Math.min(1, Math.max(0, (metering.get() - 0.7) / 0.25));
+		// Already 0–1 from room tone to loud speech (lib/audio/metering-level).
 		return {
-			height: withTiming(BAR_MIN + (BAR_MAX - BAR_MIN) * level * weight, {
-				duration: 90,
-			}),
+			height: withTiming(
+				BAR_MIN + (BAR_MAX - BAR_MIN) * metering.get() * weight,
+				{
+					duration: 90,
+				}
+			),
 		};
 	});
 	return (

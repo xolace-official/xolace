@@ -56,6 +56,8 @@ export const ACKNOWLEDGE_MODEL = "claude-haiku-5-5";
 export const SLOT_FILL_MODEL = "claude-haiku-5-5";
 export const CHAT_MODERATION_MODEL = "claude-haiku-5-5";
 export const FOLLOW_UP_CARD_MODEL = "claude-haiku-5-5";
+export const INTAKE_READER_MODEL = "claude-haiku-5-5";
+export const TALK_DEMO_MODEL = "claude-haiku-5-5";
 
 /**
  * Thinking off, like for like with the 4.x models these routes were tuned
@@ -134,7 +136,6 @@ export function extractTextFromResponse(message: Anthropic.Message): string {
  * @returns The normalized and validated ClassificationResult constructed from the parsed input.
  */
 export function parseClassificationResponse(raw: string): ClassificationResult {
-	console.log("raw ", raw);
 	// Take the JSON object out of whatever the model wrapped it in. Fences are
 	// the common case; on crisis input Haiku also appends a hotline note AFTER
 	// the closing fence, and stripping fences alone left that prose in the

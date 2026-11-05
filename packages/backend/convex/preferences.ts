@@ -12,7 +12,9 @@ import {
 } from "./lib/validators";
 import {
 	talkDirectnessValidator,
+	talkLookValidator,
 	talkPaceValidator,
+	talkViewValidator,
 	voiceSlugValidator,
 } from "./lib/voices";
 
@@ -151,6 +153,7 @@ export const update = mutation({
 				// Accepted so the object a client read back is still a legal argument.
 				// Without it, any caller that spreads the stored preferences instead of
 				// building a literal would fail argument validation outright.
+				achievement: v.optional(v.boolean()),
 				chat: v.optional(v.boolean()),
 				enabled: v.boolean(),
 				gentleReturn: v.boolean(),
@@ -162,6 +165,8 @@ export const update = mutation({
 				reach: v.optional(
 					v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))
 				),
+				// DEPRECATED(remove-after: data): value ignored since badge pushes
+				// replaced the streak-milestone push (#700); see DEPRECATIONS.md.
 				streakMilestone: v.optional(v.boolean()),
 				timezone: v.optional(v.string()),
 			})
@@ -183,7 +188,11 @@ export const update = mutation({
 		spaceName: v.optional(v.union(v.string(), v.null())),
 		spaceNamePromptDismissed: v.optional(v.boolean()),
 		talkDirectness: v.optional(v.union(talkDirectnessValidator, v.null())),
+		// The companion's look, by preset name.
+		talkLook: v.optional(talkLookValidator),
 		talkPace: v.optional(talkPaceValidator),
+		// The talk view they last chose; kept for every talk.
+		talkView: v.optional(talkViewValidator),
 		// The companion in a talk (#603); null clears back to the default.
 		talkVoice: v.optional(v.union(voiceSlugValidator, v.null())),
 		theme: v.optional(
@@ -295,6 +304,12 @@ export const update = mutation({
 		}
 		if (args.talkDirectness !== undefined) {
 			patch.talkDirectness = args.talkDirectness ?? undefined;
+		}
+		if (args.talkLook !== undefined) {
+			patch.talkLook = args.talkLook;
+		}
+		if (args.talkView !== undefined) {
+			patch.talkView = args.talkView;
 		}
 
 		if (Object.keys(patch).length > 0) {

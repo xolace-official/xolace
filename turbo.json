@@ -32,7 +32,8 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", "out/**"]
     },
     "check-types": {
-      "dependsOn": ["^codegen", "codegen"]
+      "dependsOn": ["^codegen", "codegen"],
+      "passThroughEnv": ["NEXT_PUBLIC_*", "CLERK_SECRET_KEY"]
     },
     "lint": {},
     "test": {

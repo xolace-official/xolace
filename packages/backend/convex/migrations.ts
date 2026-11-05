@@ -8,10 +8,11 @@ import { Migrations } from "@convex-dev/migrations";
 // Or from the admin's Search index page, which also shows what's missing.
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
+import { backfillProfile } from "./achievements/backfill";
 import { reflectionRank } from "./lib/aggregates";
+import { FREEZE_CAP } from "./lib/streakFreezes";
 import { searchTextOf, trackSearchTextOf } from "./library/searchText";
 import { localDayKey, shiftDayKey } from "./streaks/activityLog";
-import { FREEZE_CAP } from "./streaks/state";
 
 export const migrations = new Migrations<DataModel>(components.migrations);
 
@@ -228,6 +229,26 @@ export const backfillTrackIndex = migrations.define({
 		}
 	},
 	table: "audio_tracks",
+});
+
+// Achievements backfill (#686, #701): each existing profile quietly gets what
+// it already earned, dated where a source has a date, sparks credited, and
+// `daysShowedUp` seeded; then `achievementsBackfilledAt` makes its awards live.
+// One profile per batch: each reads every session it has, and one over the
+// transaction limits stops the run at that cursor. Idempotent — stamped profiles
+// are skipped. Do a full run on staging with prod-sized data first (`dryRun`
+// only tries one batch). On prod, run it right after the deploy, since until a
+// profile is stamped its awards land quietly, with no push or unlock moment.
+// Then the Stream pass:
+//   bunx convex run migrations:run '{"fn": "migrations:backfillAchievements"}'
+//   bunx convex run achievements/backfill:backfillXolacerChats
+// Add to runAll only once it has completed on prod.
+export const backfillAchievements = migrations.define({
+	batchSize: 1,
+	migrateOne: async (ctx, doc) => {
+		await backfillProfile(ctx, doc);
+	},
+	table: "emotional_profiles",
 });
 
 export const runAll = migrations.runner([

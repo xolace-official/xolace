@@ -5,6 +5,10 @@ import { AppText } from "@/components/shared/app-text";
 import { SettingsSection } from "@/components/shared/settings-section";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { TalkChips } from "@/features/talk/talk-chips";
+import {
+	DIRECTNESS_OPTIONS,
+	PACE_OPTIONS,
+} from "@/features/talk/talk-style-options";
 import { TalkVoicePicker } from "@/features/talk/talk-voice-picker";
 import { useCompanionName } from "@/features/talk/use-companion-name";
 import { useTalkStyle } from "@/features/talk/use-talk-style";
@@ -40,23 +44,12 @@ export function TalkStyleSection() {
 				<TalkVoicePicker />
 			</Row>
 			<Row label="Pace">
-				<TalkChips
-					onPress={setPace}
-					options={[
-						{ label: "Slower", value: "slower" },
-						{ label: "Normal", value: "normal" },
-					]}
-					value={pace}
-				/>
+				<TalkChips onPress={setPace} options={PACE_OPTIONS} value={pace} />
 			</Row>
 			<Row label="Directness">
 				<TalkChips
 					onPress={setDirectness}
-					options={[
-						{ label: "Gentle", value: "gentle" },
-						{ label: "In between", value: "balanced" },
-						{ label: "Straight", value: "straight" },
-					]}
+					options={DIRECTNESS_OPTIONS}
 					value={directness}
 				/>
 			</Row>

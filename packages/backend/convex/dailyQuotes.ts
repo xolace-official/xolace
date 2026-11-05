@@ -10,6 +10,7 @@ import {
 	mutation,
 	query,
 } from "./_generated/server";
+import { awardAchievement } from "./achievements/award";
 import {
 	MODERATION_UNAVAILABLE,
 	moderateInput,
@@ -238,6 +239,8 @@ export const save = mutation({
 			savedQuoteCount: (profile.savedQuoteCount ?? 0) + 1,
 			updatedAt: Date.now(),
 		});
+		// Kept on unsave: the badge marks the first save, not the archive.
+		await awardAchievement(ctx, profile._id, "first-quote");
 		return null;
 	},
 	returns: v.null(),

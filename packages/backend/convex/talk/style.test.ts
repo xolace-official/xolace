@@ -4,10 +4,11 @@
  * the person's companion pick, then their mirror voice, then Vesper; pace
  * or directness don't reach the talk; a settings change moves a talk already
  * running; "slow down" doesn't stick for the next talk, or lands through
- * someone else's talk or a closed one.
+ * someone else's talk or a closed one; the look or the chosen view don't
+ * save.
  */
 import { describe, expect, it, vi } from "vitest";
-import { internal } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { VOICE_CATALOG } from "../lib/voices";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
@@ -132,5 +133,21 @@ describe("the companion's voice, pace and directness", () => {
 			(await user.root.mutation(internal.talk.companion.slowDown, key(talk))).ok
 		).toBe(false);
 		expect((await startTalk(user)).speed).toBe(1);
+	});
+});
+
+describe("the companion's look and the talk view", () => {
+	it("saves the look by name and the view, and leaves them unset until chosen", async () => {
+		const user = await asNewUser();
+		const before = await user.t.query(api.preferences.get, {});
+		expect(before.talkLook).toBeUndefined();
+		expect(before.talkView).toBeUndefined();
+		await user.t.mutation(api.preferences.update, {
+			talkLook: "moss",
+			talkView: "companion",
+		});
+		const after = await user.t.query(api.preferences.get, {});
+		expect(after.talkLook).toBe("moss");
+		expect(after.talkView).toBe("companion");
 	});
 });

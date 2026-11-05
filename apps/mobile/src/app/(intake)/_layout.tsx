@@ -26,6 +26,7 @@ export default function IntakeLayout() {
 		<Stack screenOptions={SCREEN_OPTIONS}>
 			<Stack.Screen name="index" />
 			<Stack.Screen name="questionnaire" />
+			<Stack.Screen name="flux" />
 			<Stack.Screen name="paywall" />
 			{/* The one intake screen with a header: PaywallScreen hangs its buttons
           off the native toolbar. Still a linear step, so forward-only. */}

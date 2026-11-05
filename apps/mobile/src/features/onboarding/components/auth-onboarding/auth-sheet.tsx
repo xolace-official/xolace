@@ -24,6 +24,7 @@ import { AppleIcon } from "@/features/auth/components/apple-icon";
 import { GoogleIcon } from "@/features/auth/components/google-icon";
 import { useProviderSignIn } from "@/features/auth/use-provider-sign-in";
 import { playSoftPress } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 import { useDeckColor } from "./deck-color";
 
 const SPINNER_ENTERING = FadeIn.delay(50);
@@ -87,7 +88,10 @@ export const AuthSheetBlock = ({
 
 			<View className="mb-4 gap-3 px-6">
 				<Button
-					className={`${BUTTON_CLASS}${loadingProvider === "google" ? "self-center" : ""}`}
+					className={cn(
+						BUTTON_CLASS,
+						loadingProvider === "google" && "self-center"
+					)}
 					isDisabled={loadingProvider !== null}
 					isIconOnly={loadingProvider === "google"}
 					layout={BUTTON_LAYOUT}
@@ -107,7 +111,10 @@ export const AuthSheetBlock = ({
 					)}
 				</Button>
 				<Button
-					className={`${APPLE_BUTTON_CLASS}${loadingProvider === "apple" ? "self-center" : ""}`}
+					className={cn(
+						APPLE_BUTTON_CLASS,
+						loadingProvider === "apple" && "self-center"
+					)}
 					isDisabled={loadingProvider !== null}
 					isIconOnly={loadingProvider === "apple"}
 					layout={BUTTON_LAYOUT}

@@ -22,6 +22,8 @@ const DICTATION_BIT_RATE = 32_000;
 // Scribe's own 30s timeout plus room for the upload; offline, an action waits
 // for the socket indefinitely.
 const UPLOAD_TIMEOUT_MS = 45_000;
+// The countdown shows whole seconds.
+const COUNTDOWN_TICK_MS = 1000;
 
 export type PlusDictationPhase = "idle" | "listening" | "writing";
 
@@ -58,8 +60,9 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 	const cappedOn = useQuery(api.dictation.plus.status)?.cappedOn ?? null;
 	// Loading reads as under the cap; the server refuses an over-cap take anyway.
 	const convex = useConvex();
-	const { startRecording, stopRecording, metering, isRecording, durationMs } =
+	const { startRecording, stopRecording, metering, getDurationMs } =
 		useMeteringRecorder(DICTATION_BIT_RATE);
+	const [remainingMs, setRemainingMs] = useState(MAX_TAKE_MS);
 	const transcribe = useAction(api.dictation.plus.transcribe);
 	const { ensureConsent } = useVoiceProcessingConsent();
 	const consentRef = useRef<Promise<void> | null>(null);
@@ -121,7 +124,7 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 			return;
 		}
 		const take = takeRef.current;
-		const takeMs = durationMs;
+		const takeMs = getDurationMs();
 		setPhaseSynced("writing");
 		const uri = await stopRecording();
 		// Only a failure at Scribe sends later takes on device; a local one doesn't.
@@ -210,6 +213,21 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 		return () => clearTimeout(t);
 	}, [phase]);
 
+	// The countdown ticks once a second; the recorder itself never re-renders this.
+	const tickCountdown = useEffectEvent(() =>
+		setRemainingMs(Math.max(0, MAX_TAKE_MS - getDurationMs()))
+	);
+	useEffect(() => {
+		if (phase !== "listening") {
+			return;
+		}
+		const t = setInterval(tickCountdown, COUNTDOWN_TICK_MS);
+		return () => {
+			clearInterval(t);
+			setRemainingMs(MAX_TAKE_MS);
+		};
+	}, [phase]);
+
 	// Leaving the screen ends the take but keeps what was said, including a take
 	// that began after they had already gone.
 	useEffect(() => {
@@ -232,10 +250,7 @@ export function usePlusDictation(onTranscript: (text: string) => void) {
 		metering,
 		note,
 		phase,
-		// Until the recorder reports this take, durationMs is still the last one's.
-		remainingMs: isRecording
-			? Math.max(0, MAX_TAKE_MS - durationMs)
-			: MAX_TAKE_MS,
+		remainingMs,
 		stop: () => void stop(),
 	};
 

@@ -4,10 +4,14 @@ import { useMutation } from "convex/react";
 import { useToast } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
+import {
+	type IntensityBucket,
+	intensityBucket,
+} from "@/features/session-end/mood-scale";
 
 type Chip = { key: string; label: string };
 
-const CHIPS_BY_INTENSITY: Record<string, readonly Chip[]> = {
+const CHIPS_BY_INTENSITY: Record<IntensityBucket, readonly Chip[]> = {
 	high: [
 		{ key: "mirror_missed", label: "The mirror missed" },
 		{ key: "something_happened", label: "Something happened" },
@@ -28,27 +32,21 @@ const CHIPS_BY_INTENSITY: Record<string, readonly Chip[]> = {
 	],
 };
 
-const QUESTIONS_BY_INTENSITY: Record<string, string> = {
+const QUESTIONS_BY_INTENSITY: Record<IntensityBucket, string> = {
 	high: "What's bearing down hardest right now?",
 	low: "What's underneath the heaviness?",
 	mid: "What's keeping it this heavy?",
 };
 
-function intensityBucket(intensity: number): string {
-	if (intensity <= 2) {
-		return "low";
-	}
-	if (intensity === 3) {
-		return "mid";
-	}
-	return "high";
-}
-
+/** `fixedIntensity` (1–5) skips the flame step: the mood slider's drag depth already
+ * said how much heavier. */
 export function useHeavierFeedback(
 	sessionId: Id<"sessions"> | undefined,
-	onClose: () => void
+	onClose: () => void,
+	fixedIntensity?: number
 ) {
-	const [intensity, setIntensity] = useState(0);
+	const [chosenIntensity, setIntensity] = useState(0);
+	const intensity = fixedIntensity ?? chosenIntensity;
 	const [selectedChip, setSelectedChip] = useState<string | null>(null);
 	const [text, setText] = useState("");
 

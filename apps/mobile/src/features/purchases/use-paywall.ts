@@ -23,6 +23,8 @@ export type PaywallSurface =
 	| "profile_insight"
 	// Post-signup intake, session 0 (#266); `(intake)/plans` reuses this surface.
 	| "intake"
+	// Intake v2's Xolace+ step, "Same week, two ways" (#713). Not a route: it sells in place.
+	| "intake_same_week"
 	// A free user's tap on a Browse track row (#340, §9.4). The slug rides on browse_paywall_*.
 	| "browse"
 	// Session-end's free-user upsell line (docs/paths-v1.md §12, #337). A fixed slot,

@@ -63,6 +63,7 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
 	// Not homeSheetBlocking: that stays up through a follow-up's whole pending wait.
 	const homeSheetOpen = useAppStore((s) => s.homeSheetOpen);
 	const tourActive = useAppStore((s) => s.reflectTourActive);
+	const setStreakRevealBusy = useAppStore((s) => s.setStreakRevealBusy);
 
 	const headerColor = useThemeColor("accent") as string;
 	const headerTextColor = useThemeColor("accent-foreground") as string;
@@ -111,6 +112,12 @@ export const StreakCalendar = ({ currentStreak, reviveStreak }: Props) => {
 	// The rekindled count plays the reveal once the offer is gone.
 	const revealPending = offer === undefined && step === "reveal";
 	const revealing = miniLayout !== null;
+	// Holds the badge unlock moment while a reveal is due or playing (#693).
+	const revealBusy = revealing || (revealPending && !reducedMotion);
+	useEffect(() => {
+		setStreakRevealBusy(revealBusy);
+		return () => setStreakRevealBusy(false);
+	}, [revealBusy, setStreakRevealBusy]);
 
 	useEffect(() => {
 		// No user id, no owner to acknowledge for.

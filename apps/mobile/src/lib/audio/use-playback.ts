@@ -18,6 +18,9 @@ export type Playable = { url: string; expiresAt: number; durationSec: number };
 const EXPIRY_MARGIN_MS = 5 * 60 * 1000;
 const MINT_RETRIES = 3;
 const MINT_BACKOFF_MS = 500;
+/** A loop wrap reads as the end of one status tick and the start of the next: the time
+ * left before the wrap plus the time played after it stays under this. */
+const LAP_WINDOW_SEC = 2;
 
 export type PlaybackReturn<T> = {
 	/** undefined while minting, null when there's nothing to play. */
@@ -34,6 +37,12 @@ export type PlaybackReturn<T> = {
 	/** 0–1. Survives a re-mint: the rebuilt player is set to it on load. */
 	volume: number;
 	setVolume: (volume: number) => void;
+	/** Repeat this track. Survives a re-mint like `volume`. */
+	loop: boolean;
+	setLoop: (loop: boolean) => void;
+	/** Natural plays to the end while looping. A looping player never reports `didJustFinish`,
+	 * so this is the finish signal then. */
+	laps: number;
 };
 
 /** Signed-URL playback shared by every player (#411). R2 URLs expire hourly, so a late resume
@@ -52,6 +61,9 @@ export function usePlayback<T extends Playable>(
 		null
 	);
 	const [volume, setVolumeState] = useState(1);
+	const [loop, setLoop] = useState(false);
+	const [laps, setLaps] = useState(0);
+	const lastTime = useRef(0);
 	// Identity for audio focus: the ref object itself, not its contents.
 	const focus = useRef(null);
 
@@ -109,6 +121,7 @@ export function usePlayback<T extends Playable>(
 		pending.current = null;
 		(async () => {
 			if (seek > 0) {
+				lastTime.current = seek;
 				await player.seekTo(seek);
 			}
 			// Someone else started (or a recorder yielded) while this one loaded:
@@ -134,6 +147,34 @@ export function usePlayback<T extends Playable>(
 		// eslint-disable-next-line react-hooks/immutability -- expo-audio AudioPlayer.volume is a documented mutable setter
 		player.volume = volume;
 	}, [player, volume]);
+
+	useEffect(() => {
+		// eslint-disable-next-line react-hooks/immutability -- expo-audio AudioPlayer.loop is a documented mutable setter
+		player.loop = loop;
+	}, [player, loop]);
+
+	// A rebuilt player starts at 0; the old one's end-of-track time isn't a wrap.
+	useEffect(() => {
+		lastTime.current = 0;
+	}, [player]);
+
+	// Native looping wraps to 0 without a finish event; spot the wrap instead.
+	// Seeks set `lastTime` to their target first, so a jump back isn't a lap. A
+	// lock-screen seek bypasses that, but only one landing inside the window reads as a wrap.
+	useEffect(() => {
+		const prev = lastTime.current;
+		lastTime.current = status.currentTime;
+		if (
+			loop &&
+			status.playing &&
+			status.duration > 0 &&
+			status.currentTime < prev &&
+			status.duration - prev + status.currentTime < LAP_WINDOW_SEC
+		) {
+			setLaps((n) => n + 1);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps -- a wrap shows up only as a time change
+	}, [status.currentTime]);
 
 	// A lock-screen play command resumes the native player without passing
 	// through `toggle`, so claim focus from the status too.
@@ -191,6 +232,7 @@ export function usePlayback<T extends Playable>(
 			}
 			await claimAudioSession(focus, () => player.pause());
 			if (status.didJustFinish) {
+				lastTime.current = 0;
 				await player.seekTo(0);
 			}
 			if (!holdsAudioFocus(focus)) {
@@ -216,6 +258,7 @@ export function usePlayback<T extends Playable>(
 			if (await remintIfExpired(clamped, status.playing)) {
 				return;
 			}
+			lastTime.current = clamped;
 			await player.seekTo(clamped);
 		} catch (e) {
 			console.error("[usePlayback] seek failed:", e);
@@ -229,7 +272,10 @@ export function usePlayback<T extends Playable>(
 		error,
 		isLoaded: status.isLoaded,
 		isPlaying: status.playing,
+		laps,
+		loop,
 		seekTo,
+		setLoop,
 		setVolume: (v) => setVolumeState(Math.max(0, Math.min(1, v))),
 		toggle,
 		track,

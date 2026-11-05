@@ -4,9 +4,10 @@ import Animated, { type AnimatedStyle } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { Tour } from "@/components/ui/tour";
 import { MicButton } from "@/features/reflect/components/mic-button";
-import { PresenceDot } from "@/features/reflect/components/presence-dot";
 import type { CardContent } from "@/features/reflect/compose/resolve-card-content";
 import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
+import type { FaceHandle } from "@/features/xolace-face/use-face";
+import { XolaceFace } from "@/features/xolace-face/xolace-face";
 import { playSoftPress } from "@/lib/haptics";
 import { a11yHidden } from "@/lib/utils";
 
@@ -14,9 +15,13 @@ import { a11yHidden } from "@/lib/utils";
  * The resting card has `overflow: hidden`, so a long prompt ran under the echo. Uncapped once open.
  */
 const REST_PROMPT_LINES = 4;
+/** Small: the writing is the focus. The prompt beside it wraps sooner, which is accepted. */
+const FACE_SIZE = 40;
 
 type Props = {
 	card: CardContent;
+	/** The Xolace face, where the presence dot was; Flux still hands off into this corner. */
+	face: FaceHandle;
 	expanded: boolean;
 	isRecording: boolean;
 	controlsStyle: AnimatedStyle<ViewStyle>;
@@ -28,6 +33,7 @@ type Props = {
 /** The card's top row: the prompt, with the composer's controls arriving as it opens. */
 export const MorphCardHeader = ({
 	card,
+	face,
 	expanded,
 	isRecording,
 	controlsStyle,
@@ -46,7 +52,7 @@ export const MorphCardHeader = ({
 	return (
 		<View className="flex-row items-center gap-2">
 			<Animated.View style={controlsStyle}>
-				<PresenceDot />
+				<XolaceFace face={face} size={FACE_SIZE} />
 			</Animated.View>
 			{/* The prompt stays visible while writing, so the tour's first step is the line. */}
 			<Tour.Step
