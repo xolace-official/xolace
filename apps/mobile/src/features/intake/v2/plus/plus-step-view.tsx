@@ -15,7 +15,7 @@ const FLUX_SIZE = 80;
 
 export type PlusStepViewProps = Omit<PlusFooterProps, "onSeePlus"> & {
 	onSide: (side: PlusSide) => void;
-	/** "Try it" on the Talk card (#714); absent in the dev preview and during the save. */
+	/** "Try it" on the Talk card (#714); absent during the save. */
 	onTryTalk?: () => void;
 };
 
