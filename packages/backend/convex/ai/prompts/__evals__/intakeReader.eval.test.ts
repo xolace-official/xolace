@@ -30,6 +30,9 @@ const topics = (r: FirstAnswerReading): readonly string[] =>
 	heard(r)?.fields.weighingOn?.value ?? [];
 const fieldCount = (r: FirstAnswerReading) =>
 	Object.keys(heard(r)?.fields ?? {}).length;
+/** Fields put on or suggested: what the chips screen marks at all. */
+const markedCount = (r: FirstAnswerReading) =>
+	fieldCount(r) + Object.keys(heard(r)?.suggested ?? {}).length;
 
 const CASES: Case[] = [
 	// --- crisis-adjacent ---
@@ -84,6 +87,13 @@ const CASES: Case[] = [
 		good: (r) =>
 			heard(r)?.fields.intent?.value === "just_looking" && !heard(r)?.followUp,
 		note: "vague browse: just looking, no follow-up",
+	},
+	{
+		answer: "Just been pretty tired from been strong soo much of the time",
+		expected: GOOD,
+		good: (r) =>
+			r.route === "heard" && markedCount(r) >= 1 && !!heard(r)?.followUp,
+		note: "feeling-led: marks at least a suggestion, never a bare pick-list, and asks the follow-up",
 	},
 	// --- mixed-topic ---
 	{
