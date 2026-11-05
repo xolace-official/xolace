@@ -4,7 +4,41 @@ All notable changes to Xolace are documented here.
 
 ---
 
-## [Unreleased]
+## [1.16.0] - Unreleased
+
+### Added
+
+- **Achievements, badges and sparks** — Xolace now recognizes people for showing up and trying things. A new Achievements screen (from the profile) lists every achievement by category: getting started, streak, showing up, exploring and understanding. Each one has its own badge and awards sparks. A new badge opens a full-screen unlock moment, held back over a half-written reflection, a vent, crisis help or a peer conversation. Up to three badges can be pinned to the profile. A spark card on the profile shows the balance, sparks earned, latest and pinned badges, and buys a streak freeze for 50 sparks. Existing users get the badges they had already earned, with a one-time summary instead of a replay (#702, #706).
+- **A new start (intake v2)** — behind the `intake-v2` PostHog flag, the questionnaire after sign-in is replaced by one question from Flux, answered by typing or out loud. Flux reads the answer into intake fields, may ask one follow-up, then shows what it heard as chips the person can correct. Fields it is less sure of (read at 0.5–0.7) show as outlined "Flux's guess" chips, off until tapped. Every answer goes through the safety check first; an elevated or crisis read routes to support from wherever the person is. The flow ends on a Xolace+ step ("same week, two ways") with a one-turn Talk demo, whose words are not kept and whose reply audio is deleted after a short time (#717–#720).
+- **Questions asked later, not up front** — what intake v2 no longer asks has its own moment: date of birth before a person's first Xolacer request, a "How did you find Xolace?" card on Discovery on day 3, coping style at the end of a session, and how often to check in as a session-end notification nudge. These one-time asks are kept per account, not per device (#718, #719).
+- **Age gate for Xolacer chats** — for every user, not just intake v2: a seeker is asked their date of birth once before requesting or resuming a Xolacer chat, and declared minors are refused with an explanation instead of "busy". Xolacers who declare a minor's age can't accept requests or publish a profile. The date of birth is stored apart from emotional data and survives a data wipe (#718).
+- **The Xolace face** — Flux now has a living face. It sits in Talk's header, takes the presence dot's place in the Reflect composer (its eyes follow the end of what you're writing), nods beside "The Mirror", and sits at the centre of the steadiness dial, more or less restless with the score, with a "Reading the face" sheet that explains it. Respects reduced motion (#667, #668, #672).
+- **"How do you feel now?" slider** — after a mirror, one heavier ↔ lighter slider with the face reacting live replaces the four pills. "Heavier" opens the follow-up straight on its question, using the drag depth as the intensity (#671).
+- **Talk: voice and look, and a Companion view** — everything set before a talk (voice, look, pace, directness) now lives in one sheet from the consent card, with a voice carousel that plays each sample and seven looks for the companion. Mid-talk, a switch moves between the Conversation transcript and a Companion view with Flux large on screen, leaning in as you speak and smiling back when touched. The chosen view is kept for every talk (#669, #673, #674).
+- **Profile tabs** — the profile now has collapsible Insights and Follow-ups tabs. The Follow-ups tab shows what's waiting, what's coming up, and the full history by month (it used to stop at five), with a badge for cards waiting (#666).
+- **Streak freezes on the profile** — the profile shows how many freezes are ready, so a missed day being covered is no longer a guess (#676).
+- **Repeat one** in the Browse player; each lap counts as a finish (#676).
+- **Clear an event prompt** from the home event chip (#676).
+- **Animated mascots** on session end and streak-held (still under reduced motion), and session end's Kindling card now opens Discovery (#676).
+- **Discovery** shows the campfire count; the shake-to-report tip waits for the third session (#718).
+
+### Changed
+
+- **Listening counts as showing up** — a Browse listen (60 seconds heard, or a shorter track's end) now counts toward the streak and days showed up (#702).
+- **Badge pushes replace the streak-milestone push** — one push for badges still unseen, at most once a day. The 7/30/100-day streak push no longer sends (#702, #706).
+- **Account deletion removes the sign-in account too** — the purge now also deletes the Clerk user (email, name, linked sign-ins), retried until Clerk confirms. The delete dialog's timing and wording are corrected (#719).
+
+### Fixed
+
+- **Chat haptics** — message long-press, reactions and the voice recorder in Xolacer chat never buzzed in production (and reported an error each time). They now go through the app's own haptics (#665).
+- **Mic waveform** in vent and reflect dictation no longer re-renders ~20 times a second, and its range fits speech instead of squeezing it at the top (#665).
+- **Button spinners** on sign-in sit centred again, and the paywall buttons got their rounded corners and full width back (#665).
+- **Talk companion** — no longer crashes on a voice or look added after a build shipped; ending a talk or a dropped line shows "Ending…" instead of "Connecting…"; the faces and aurora stop drawing under other screens and the sheet (#674).
+- **Intake safety** — a safety verdict that arrived late is no longer dropped, and the classifier's vote is kept when it answers in prose instead of JSON. Classification no longer logs the model's reply, which quoted the person's own words (#719, #720).
+- **Achievements** — awards are no longer lost for a profile whose backfill had stalled; a move west or a data wipe no longer counts a day twice; a double tap or a badge push no longer stacks screens; rejected listens are retried (#706).
+- On a profile with no sessions, the rank card no longer sits flush against the Xolace+ row (#720).
+
+## [1.15.0] - Released (2026-10-29)
 
 ### Added
 
