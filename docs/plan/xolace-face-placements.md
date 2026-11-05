@@ -174,8 +174,8 @@ companion's look.
   talking → `speaking`, listening → `attentive`, thinking → `thinking`, happy → `glad`,
   warm → `nod`. No mood gets a pose of its own, so a look means the same here as everywhere
   else.
-- **On top of the pose**: talking moves the mouth at a syllable pace with a slight squash
-  (`face.talk`); happy hops once as it arrives (`face.hop`); warm nods once; listening sends two ember sound
+- **On top of the pose**: talking holds the `speaking` pose with no mouth motion (a moving
+  mouth read badly; the typed words already say it's talking); happy hops once as it arrives (`face.hop`); warm nods once; listening sends two ember sound
   rings out from behind the face; thinking shows three thought dots at the top right.
 - **Per step**: `ask` talks while the question types out, then idles; `listen` listens;
   `type` idles; `interpret` thinks; `followUp` talks for as long as its question takes to say,
