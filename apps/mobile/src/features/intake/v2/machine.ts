@@ -32,8 +32,11 @@ export type IntakeV2Step =
 /** How the answer came in; `voice` is a take from `listen`. */
 export type AnswerMode = "quick_reply" | "typed" | "voice" | "skipped";
 
-/** Where the chips came from: the model's reading, or the pick-list it falls back to. */
-export type HeardSource = "model" | "pick_list";
+/**
+ * Where the chips came from: the model's reading, only its suggestions (read, but not
+ * plainly enough to put on), or the pick-list it falls back to.
+ */
+export type HeardSource = "model" | "suggested" | "pick_list";
 
 /** The mic can't be used: no permission, or no recognizer. It stays off for the intake. */
 export type MicFailure = "denied" | "unavailable";
@@ -72,6 +75,8 @@ export type IntakeV2State = {
 	read: HeardSource | null;
 	/** `heard` as the model read it, before any tap: what the chip counts compare against. */
 	readAs: Heard;
+	/** What the model half-read: marked on the chips, never put on for them. */
+	suggested: Heard;
 	/** What `safety` shows: the safeguard's own resources for this answer. */
 	resources: SafetyResource[];
 	/** Crisis support was shown, for the answer or in the talk demo: no Xolace+ on the way to the Mirror (#704). */
@@ -136,6 +141,7 @@ export const initialIntakeV2State = (name: string): IntakeV2State => ({
 	safetyRouted: false,
 	step: "ask",
 	storeCalls: 0,
+	suggested: NOTHING_HEARD,
 });
 
 /** A denied or missing mic stays off for the rest of the intake; asking again only bounces. */
@@ -163,6 +169,7 @@ const FRESH_READ = {
 	read: null,
 	readAs: NOTHING_HEARD,
 	resources: [],
+	suggested: NOTHING_HEARD,
 } as const satisfies Partial<IntakeV2State>;
 
 /**
@@ -184,6 +191,7 @@ function toSafety(
 		resources,
 		safetyRouted: true,
 		step: "safety",
+		suggested: NOTHING_HEARD,
 	};
 }
 
@@ -212,13 +220,26 @@ function afterStoreCall(state: IntakeV2State, active: boolean): IntakeV2State {
 		: next;
 }
 
+function sourceOf(heard: Heard, suggested: Heard): HeardSource {
+	if (!heardNothing(heard)) {
+		return "model";
+	}
+	return heardNothing(suggested) ? "pick_list" : "suggested";
+}
+
 function afterReading(state: IntakeV2State, reading: Reading): IntakeV2State {
 	if (reading.route === "safety") {
 		return toSafety(state, reading.resources);
 	}
 	const heard = heardOf(reading.fields);
-	const read: HeardSource = heardNothing(heard) ? "pick_list" : "model";
-	const next = { ...state, heard, read, readAs: heard };
+	const suggested = heardOf(reading.suggested ?? {});
+	const next = {
+		...state,
+		heard,
+		read: sourceOf(heard, suggested),
+		readAs: heard,
+		suggested,
+	};
 	// One follow-up per answer, whatever a later reading asks.
 	if (reading.followUp && state.followUp === null) {
 		return { ...next, followUp: reading.followUp, step: "followUp" };

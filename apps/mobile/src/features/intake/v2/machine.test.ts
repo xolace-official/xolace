@@ -428,6 +428,47 @@ describe("reading", () => {
 		});
 	});
 
+	it("marks a half-read without putting it on", () => {
+		expect(
+			run(
+				answered(),
+				done({
+					...WORK_READING,
+					fields: {},
+					suggested: {
+						weighingOn: {
+							confidence: 0.6,
+							value: ["relationships", "purpose"],
+						},
+					},
+				})
+			)
+		).toMatchObject({
+			heard: { weighingOn: [] },
+			read: "suggested",
+			readAs: { weighingOn: [] },
+			step: "heard",
+			suggested: { weighingOn: ["relationships", "purpose"] },
+		});
+	});
+
+	it("reads as the model's when anything was put on, suggestions or not", () => {
+		expect(
+			run(
+				answered(),
+				done({
+					...WORK_READING,
+					suggested: {
+						emotionAwareness: { confidence: 0.6, value: "numb_or_cant_tell" },
+					},
+				})
+			)
+		).toMatchObject({
+			read: "model",
+			suggested: { emotionAwareness: "numb_or_cant_tell" },
+		});
+	});
+
 	it("asks the one follow-up when a key field was unclear", () => {
 		expect(run(answered(), done(ASKS_TOPIC))).toMatchObject({
 			followUp: {
