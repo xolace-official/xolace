@@ -2,11 +2,20 @@ import { v } from "convex/values";
 import { DOMAINS } from "./understandingVocab";
 import {
 	talkDirectnessValidator,
+	talkLookValidator,
 	talkPaceValidator,
+	talkViewValidator,
 	voiceSlugValidator,
 } from "./voices";
 
 /** One of the 8 scored domains (CONTEXT.md). */
+/** The client platform a row came from. */
+export const platformValidator = v.union(
+	v.literal("ios"),
+	v.literal("android"),
+	v.literal("web")
+);
+
 export const domainValidator = v.union(...DOMAINS.map((d) => v.literal(d)));
 
 export const resourceValidator = v.object({
@@ -187,6 +196,13 @@ export const insightFeatureValidator = v.union(
  */
 export const INTAKE_VERSION = 1;
 
+/**
+ * Stamp for an intake completed through the one-answer flow (intake v2,
+ * #704): only what the first answer could tell, the rest asked later by the
+ * feature that needs it. Same rules as {@link INTAKE_VERSION}.
+ */
+export const INTAKE_V2_VERSION = 2;
+
 // ===========================================================
 // KINDLING — audio_tracks (#328, spec docs/paths-v1.md §3.2)
 // ===========================================================
@@ -284,6 +300,13 @@ export const intakeAnswerValidators = {
 		v.literal("editorial"),
 		v.literal("other")
 	),
+	/**
+	 * @deprecated Nothing reads it. Age is a date of birth asked at the gate
+	 * that needs it (`api.age.declarations.declare`, #716).
+	 */
+	// DEPRECATED(remove-after: app >= first version without the v1 intake,
+	// #704): v1 binaries still send it to `intake.complete`, so the arg and the
+	// `intake_responses` column stay until then.
 	ageBracket: v.union(
 		v.literal("under_18"),
 		v.literal("18_24"),
@@ -362,6 +385,18 @@ export const intakeAnswerValidators = {
 	),
 };
 
+/**
+ * The same answer columns as stored on an `intake_responses` row, every one
+ * optional: a v2 intake saves only what the first answer told us, and the
+ * deferred questions fill the rest later, if ever (#715). A widening of
+ * {@link intakeAnswerValidators}, so every v1 row still validates. Absent
+ * means "not asked yet" (or, for the series pair, "the branch never fired"),
+ * never "declined".
+ */
+export const intakeRowAnswerValidators = v
+	.object(intakeAnswerValidators)
+	.partial().fields;
+
 // --- Xolacer chat (#344) ---
 
 /** Which seat of a conversation a profile holds. */
@@ -396,6 +431,7 @@ export const preferencesDocValidator = v.object({
 	mirrorTone: mirrorToneValidator,
 	motionPreference: v.optional(motionPreferenceValidator),
 	notifications: v.object({
+		achievement: v.optional(v.boolean()),
 		chat: v.optional(v.boolean()),
 		enabled: v.boolean(),
 		gentleReturn: v.boolean(),
@@ -429,8 +465,10 @@ export const preferencesDocValidator = v.object({
 	spaceName: v.optional(v.string()),
 	spaceNamePromptDismissed: v.optional(v.boolean()),
 	talkDirectness: v.optional(talkDirectnessValidator),
+	talkLook: v.optional(talkLookValidator),
 	talkNameAsked: v.optional(v.boolean()),
 	talkPace: v.optional(talkPaceValidator),
+	talkView: v.optional(talkViewValidator),
 	talkVoice: v.optional(voiceSlugValidator),
 	theme: v.union(v.literal("light"), v.literal("dark"), v.literal("system")),
 	voice: v.optional(voiceSlugValidator),
@@ -444,5 +482,6 @@ export const activityActionTypeValidator = v.union(
 	v.literal("library"),
 	v.literal("sit_with_this"),
 	v.literal("daily_mood"),
-	v.literal("quotes")
+	v.literal("quotes"),
+	v.literal("listen")
 );

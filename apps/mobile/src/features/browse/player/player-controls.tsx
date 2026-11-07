@@ -5,6 +5,7 @@ import { Pressable, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 
 import { AppText } from "@/components/shared/app-text";
+import { cn } from "@/lib/utils";
 
 export function usePlayerInk() {
 	return String(useCSSVariable("--color-player-ink"));
@@ -35,6 +36,38 @@ export function GlyphButton({
 			style={{ height: size + 20, width: size + 20 }}
 		>
 			<SymbolView name={name} size={size} tintColor={ink} />
+		</Pressable>
+	);
+}
+
+/** Repeat-one toggle: dim when off, a filled pill when on. */
+export function RepeatButton({
+	on,
+	onChange,
+}: {
+	on: boolean;
+	onChange: (on: boolean) => void;
+}) {
+	const ink = usePlayerInk();
+	return (
+		<Pressable
+			accessibilityLabel="Repeat this track"
+			accessibilityRole="switch"
+			accessibilityState={{ checked: on }}
+			className={cn(
+				"h-9 w-9 items-center justify-center rounded-full active:opacity-50",
+				on && "bg-player-ink/20"
+			)}
+			hitSlop={12}
+			onPress={() => onChange(!on)}
+		>
+			<SymbolView
+				name={{ android: "repeat_one", ios: "repeat.1", web: "repeat_one" }}
+				size={18}
+				style={on ? undefined : DIM}
+				tintColor={ink}
+				weight="semibold"
+			/>
 		</Pressable>
 	);
 }

@@ -15,6 +15,7 @@
  *  - channel type: GET/PUT /channeltypes/{name}; blocklists: GET/POST /blocklists, PUT /blocklists/{name}
  *  - system msg:   POST /channels/messaging/{id}/message { message: { type: "system", ... }, skip_push }
  *  - flag message: POST /moderation/flag { target_message_id }
+ *  - search:       GET /search?payload={ filter_conditions, message_filter_conditions, sort, limit }
  *  - webhook sig:  hex HMAC-SHA256 of the raw body, keyed by the API secret
  */
 
@@ -304,6 +305,47 @@ export async function getStreamUnreadCount(userId: string): Promise<number> {
 		throw new Error("Stream /unread returned no total");
 	}
 	return total;
+}
+
+/**
+ * When `userId` first posted in a messaging channel, or null if they never
+ * have. GET /search?payload= with the channel's cid and the sender as filters,
+ * oldest first, one result: the server-side form of the client's `search`.
+ */
+export async function firstStreamMessageAt(
+	channelId: string,
+	userId: string
+): Promise<number | null> {
+	const response = await streamRequest("GET", "/search", {
+		query: {
+			payload: JSON.stringify({
+				filter_conditions: { cid: `messaging:${channelId}` },
+				limit: 1,
+				message_filter_conditions: { "user.id": userId },
+				sort: [{ direction: 1, field: "created_at" }],
+			}),
+		},
+	});
+	const results = response.results;
+	if (!Array.isArray(results)) {
+		throw new Error("Stream /search returned no results");
+	}
+	const first: unknown = results[0];
+	if (first === undefined) {
+		return null;
+	}
+	const message =
+		typeof first === "object" && first !== null && "message" in first
+			? first.message
+			: undefined;
+	const createdAt =
+		typeof message === "object" && message !== null && "created_at" in message
+			? Date.parse(String(message.created_at))
+			: Number.NaN;
+	if (Number.isNaN(createdAt)) {
+		throw new Error("Stream /search returned a message with no created_at");
+	}
+	return createdAt;
 }
 
 /**

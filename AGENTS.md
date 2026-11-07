@@ -47,6 +47,20 @@ Put a dependency in the package that uses it; shared versions come from the root
 - **deployment**: a Convex deployment unless said otherwise: `prod`, `staging`
   (the shared backend for `dev`), `preview`, a per-worktree `dev`, and the dedicated
   `e2e` one.
+- **achievement**: one specific thing a user has done that Xolace recognizes (joined,
+  a 10-day streak). Rewards showing up and trying things, never how much someone
+  struggles. Not a streak **milestone**, which only drives savers.
+- **badge**: the visual mark of exactly one achievement. No tiers; each rung of a
+  ladder (5-, 10-, 20-day streak) is its own achievement with its own badge.
+- **spark**: the points an achievement awards; sized by how much showing up it took,
+  never by struggle. A user has **sparks earned** (lifetime, only grows) and a
+  **spark balance** (what's left to spend, e.g. on a streak freeze). Distinct from
+  *ember*, *kindling*, and the vent's spark particles.
+- **showed up** (a day): a local day on which the user did at least one thing that
+  counts toward the streak. Several actions are still one day; a day a freeze or
+  revive covered is not one. **Days showed up** is the lifetime total, gaps
+  allowed, never resets. Same days as the **streak**, which counts them only in a
+  row.
 
 ## Hit every surface
 

@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A · Talk to Flux</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+body{margin:0;background:#07060C}
+a{color:#C9C7F5}a:hover{color:#E7E6FF}
+@keyframes wave{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes caret{0%,100%{opacity:1}50%{opacity:0}}
+.screen{animation:rise .45s ease both}
+.ghost{background:none;border:0;color:#C9C7F5;font:inherit;font-size:15px;font-weight:500;padding:12px 8px;cursor:pointer;min-height:44px}
+.ghost:hover{color:#ECEBF3}
+.cta{border:0;border-radius:999px;background:#ECEBF3;color:#0B0912;font:inherit;font-size:16px;font-weight:600;min-height:54px;cursor:pointer}
+.cta:hover{background:#FFFFFF}
+.chip{font:inherit;cursor:pointer;min-height:40px}
+.reply{font:inherit;cursor:pointer;min-height:44px;padding:10px 16px;border-radius:999px;border:1px solid #3A3550;background:#15131F;color:#ECEBF3;font-size:14px;font-weight:500}
+.reply:hover{border-color:#A7A5EB;background:#1E1B2E}
+.composer{font:inherit;cursor:text;flex-grow:1;min-width:0;min-height:52px;padding:0 18px;border:0;background:none;color:#8F8DA3;font-size:16px;text-align:left}
+textarea:focus,input:focus{outline:2px solid #A7A5EB;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; box-sizing: border-box; background: #07060C; color: #ECEBF3; font-family: Poppins, system-ui, sans-serif">
+  <div aria-hidden="true" style="position: absolute; left: 50%; top: 120px; width: 460px; height: 380px; margin-left: -230px; border-radius: 50%; background: #E8AA4E; opacity: 0.09; filter: blur(80px)"></div>
+
+  <div style="position: absolute; top: 58px; left: 24px; right: 24px; display: flex; gap: 6px" aria-label="{{stepLabel}}">
+    <sc-for list="{{segments}}" as="seg" hint-placeholder-count="3">
+      <span style="{{seg.style}}"></span>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{isAsk}}" hint-placeholder-val="{{true}}">
+    <section class="screen" style="position: absolute; inset: 84px 20px 30px; display: flex; flex-direction: column; align-items: center">
+      <dc-import name="FluxChar" mood="{{introMood}}" size="{{askSize}}" tint="flux" hint-size="190px,219px"></dc-import>
+      <div style="position: relative; margin-top: 14px; align-self: stretch; padding: 18px 20px; border-radius: 24px; background: #15131F; border: 1px solid #2E2A40">
+        <span aria-hidden="true" style="position: absolute; top: -9px; left: 50%; margin-left: -9px; width: 18px; height: 18px; background: #15131F; border-left: 1px solid #2E2A40; border-top: 1px solid #2E2A40; transform: rotate(45deg)"></span>
+        <p aria-live="polite" style="margin: 0; min-height: 84px; font-size: 21px; line-height: 1.4; font-weight: 500">{{introText}}<span style="{{caretStyle}}">▍</span></p>
+      </div>
+
+      <div style="flex-grow: 1"></div>
+
+      <sc-if value="{{introDone}}" hint-placeholder-val="{{true}}">
+        <div style="align-self: stretch; display: flex; flex-direction: column; gap: 12px; animation: rise .4s ease both">
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center">
+            <sc-for list="{{replies}}" as="r" hint-placeholder-count="3">
+              <button type="button" class="reply" onClick="{{r.pick}}">{{r.label}}</button>
+            </sc-for>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: 999px; background: #110F1A; border: 1px solid #2E2A40">
+            <button type="button" class="composer" onClick="{{goType}}">Tell Flux anything…</button>
+            <button type="button" onClick="{{startListen}}" aria-label="Talk instead of typing" style="width: 48px; height: 48px; flex-shrink: 0; border-radius: 50%; border: 0; background: #E8AA4E; color: #1A1206; display: flex; align-items: center; justify-content: center; cursor: pointer">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><path d="M12 18v3"></path></svg>
+            </button>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span style="font-size: 12px; color: #8F8DA3">Talk or type. Flux keeps the words, never the audio.</span>
+            <button type="button" class="ghost" onClick="{{skipAll}}" style="font-size: 13px; color: #8F8DA3; padding: 8px 0">Skip</button>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{isListen}}" hint-placeholder-val="{{false}}">
+    <section class="screen" style="position: absolute; inset: 84px 24px 40px; display: flex; flex-direction: column; align-items: center; text-align: center">
+      <dc-import name="FluxChar" mood="listening" size="{{listenSize}}" tint="flux" hint-size="150px,173px"></dc-import>
+      <p style="margin: 6px 0 0; font-size: 13px; color: #E8AA4E; font-weight: 600; letter-spacing: 0.08em">LISTENING · {{clock}}</p>
+      <div aria-hidden="true" style="height: 56px; margin-top: 12px; display: flex; align-items: center; gap: 5px">
+        <sc-for list="{{bars}}" as="b" hint-placeholder-count="22">
+          <span style="{{b.style}}"></span>
+        </sc-for>
+      </div>
+      <p aria-live="polite" style="margin: 18px 0 0; min-height: 150px; font-size: 19px; line-height: 1.5; color: #ECEBF3; text-align: left; align-self: stretch">{{transcript}}<span style="color: #E8AA4E">▍</span></p>
+      <div style="flex-grow: 1"></div>
+      <button type="button" onClick="{{finishListen}}" aria-label="Done talking" style="width: 76px; height: 76px; border-radius: 50%; border: 2px solid #E8AA4E; background: #1A1206; color: #E8AA4E; display: flex; align-items: center; justify-content: center; cursor: pointer">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.5"></rect></svg>
+      </button>
+      <p style="margin: 10px 0 0; font-size: 14px; color: #B4B2C6">Tap when you're done</p>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{isType}}" hint-placeholder-val="{{false}}">
+    <section class="screen" style="position: absolute; inset: 88px 24px 40px; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <dc-import name="FluxChar" mood="idle" size="{{tinySize}}" tint="flux" hint-size="64px,74px"></dc-import>
+        <p style="margin: 0; font-size: 20px; line-height: 1.3; font-weight: 600">What's been sitting with you lately?</p>
+      </div>
+      <label for="vent-text" style="margin-top: 22px; font-size: 13px; color: #B4B2C6">A sentence is plenty</label>
+      <textarea id="vent-text" value="{{typed}}" onChange="{{onType}}" rows="6" placeholder="Start anywhere…" style="margin-top: 8px; box-sizing: border-box; width: 100%; padding: 16px; border-radius: 18px; border: 1px solid #2E2A40; background: #110F1A; color: #ECEBF3; font: inherit; font-size: 17px; line-height: 1.5; resize: none"></textarea>
+      <div style="flex-grow: 1"></div>
+      <button type="button" class="cta" onClick="{{startThink}}">Send to Flux</button>
+      <button type="button" class="ghost" onClick="{{startListen}}" style="align-self: center">Talk instead</button>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{isThink}}" hint-placeholder-val="{{false}}">
+    <section class="screen" style="position: absolute; inset: 88px 24px 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px">
+      <dc-import name="FluxChar" mood="thinking" size="{{thinkSize}}" tint="flux" hint-size="180px,208px"></dc-import>
+      <p style="margin: 6px 0 0; font-size: 17px; color: #ECEBF3; animation: rise .5s ease both">Hearing "{{echo}}"…</p>
+      <p style="margin: 0; font-size: 17px; color: #CFCDE0; animation: rise .5s ease .8s both">{{noticed}}</p>
+      <p style="margin: 0; font-size: 17px; color: #B4B2C6; animation: rise .5s ease 1.6s both">Getting the fire going…</p>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{isHeard}}" hint-placeholder-val="{{false}}">
+    <section class="screen" style="position: absolute; inset: 84px 24px 40px; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <dc-import name="FluxChar" mood="happy" size="{{smallSize}}" tint="flux" hint-size="80px,92px"></dc-import>
+        <div>
+          <p style="margin: 0; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #E8AA4E; font-weight: 600">Here's what I heard</p>
+          <h1 style="margin: 6px 0 0; font-size: 24px; line-height: 1.15; font-weight: 600">Tap anything that's off.</h1>
+        </div>
+      </div>
+      <p style="margin: 18px 0 0; padding-left: 12px; border-left: 2px solid #E8AA4E; font-size: 14px; line-height: 1.45; color: #CFCDE0">From "{{echo}}"</p>
+      <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 18px">
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <p style="margin: 0; font-size: 13px; color: #B4B2C6">{{g.label}}</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <sc-for list="{{g.chips}}" as="chip" hint-placeholder-count="2">
+                <button type="button" class="chip" onClick="{{chip.toggle}}" aria-pressed="{{chip.on}}" style="{{chip.style}}">{{chip.label}}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin: 22px 0 0; padding: 12px 14px; border-radius: 14px; background: #110F1A; font-size: 13px; line-height: 1.5; color: #B4B2C6">This only shapes your first reflection. Change it any time in Settings › About you.</p>
+      <div style="flex-grow: 1"></div>
+      <button type="button" class="cta" onClick="{{goName}}">That's me</button>
+      <button type="button" class="ghost" onClick="{{startListen}}" style="align-self: center">Say it again</button>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{isName}}" hint-placeholder-val="{{false}}">
+    <section class="screen" style="position: absolute; inset: 88px 24px 40px; display: flex; flex-direction: column; align-items: center; text-align: center">
+      <dc-import name="FluxChar" mood="happy" size="{{nameSize}}" tint="flux" hint-size="160px,185px"></dc-import>
+      <h1 style="margin: 14px 0 0; font-size: 26px; line-height: 1.2; font-weight: 600">Got it. One last thing: a name for the fire.</h1>
+      <p style="margin: 10px 0 0; font-size: 15px; line-height: 1.5; color: #B4B2C6">We picked one. It's the only name anyone here will see.</p>
+      <div style="margin-top: 26px; align-self: stretch; display: flex; gap: 10px; align-items: center">
+        <label for="camper-name" style="position: absolute; left: -9999px">Your name here</label>
+        <input id="camper-name" value="{{name}}" onChange="{{onName}}" maxlength="30" style="flex-grow: 1; min-width: 0; height: 56px; box-sizing: border-box; padding: 0 18px; border-radius: 16px; border: 1px solid #2E2A40; background: #110F1A; color: #ECEBF3; font: inherit; font-size: 18px; font-weight: 500">
+        <button type="button" onClick="{{reroll}}" aria-label="Suggest another name" style="width: 56px; height: 56px; border-radius: 16px; border: 1px solid #2E2A40; background: #15131F; color: #ECEBF3; display: flex; align-items: center; justify-content: center; cursor: pointer">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"></circle><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"></circle><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"></circle><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"></circle></svg>
+        </button>
+      </div>
+      <div style="flex-grow: 1"></div>
+      <button type="button" class="cta" onClick="{{goReady}}" style="align-self: stretch">Keep it</button>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{isReady}}" hint-placeholder-val="{{false}}">
+    <section class="screen" style="position: absolute; inset: 60px 20px 32px; display: flex; flex-direction: column">
+      <p style="margin: 0; font-size: 14px; color: #B4B2C6">Mirror</p>
+      <h1 style="margin: 6px 0 0; font-size: 28px; line-height: 1.2; font-weight: 600">Ready when you are, {{name}}.</h1>
+      <sc-if value="{{hasContext}}" hint-placeholder-val="{{true}}">
+        <div style="margin-top: 24px; padding: 20px; border-radius: 22px; background: #110F1A; border: 1px solid #2E2A40; display: flex; flex-direction: column; gap: 12px">
+          <p style="margin: 0; font-size: 13px; color: #E8AA4E; font-weight: 600">Pick up where you left off</p>
+          <p style="margin: 0; font-size: 18px; line-height: 1.45">"{{quote}}"</p>
+          <button type="button" class="cta" onClick="{{restart}}" style="min-height: 48px; font-size: 15px">Reflect on this</button>
+        </div>
+      </sc-if>
+      <p style="margin: 24px 0 10px; font-size: 13px; color: #B4B2C6">Or start fresh</p>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <sc-for list="{{homeRows}}" as="row" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-radius: 18px; background: #15131F">
+            <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 600">{{row.title}}</span><span style="font-size: 13px; color: #B4B2C6">{{row.sub}}</span></span>
+            <span aria-hidden="true" style="color: #8F8DA3">›</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="flex-grow: 1"></div>
+      <button type="button" class="ghost" onClick="{{restart}}" style="align-self: center; color: #8F8DA3">Restart prototype</button>
+    </section>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+const INTRO = "Hey, I'm Flux. Before anything else… what's been sitting with you lately?";
+const WORDS = 'Honestly work has been a lot. I keep saying I\'m fine but I\'m not sleeping, and I don\'t really talk to anyone about it. I think I just need somewhere to put it.'.split(' ');
+const NAMES = ['Camper 4127', 'Quiet Ember', 'Night Owl 88', 'Soft Static', 'Camper 9031'];
+// Stand-in for the real extraction (an LLM call returning intake fields). Keyword rules, prototype only.
+const has = (t, words) => words.some((w) => t.includes(w));
+function infer(raw) {
+  const t = raw.toLowerCase();
+  const count = raw.split(/\s+/).filter(Boolean).length;
+  const weighing = [];
+  if (has(t, ['work', 'job', 'boss', 'manager', 'office'])) weighing.push('Work');
+  if (has(t, ['sleep', 'tired', 'exhausted', 'sick', 'health'])) weighing.push('Health');
+  if (has(t, ['partner', 'boyfriend', 'girlfriend', 'relationship', 'breakup', 'husband', 'wife'])) weighing.push('Relationships');
+  if (has(t, ['mom', 'dad', 'family', 'parents', 'sister', 'brother'])) weighing.push('Family');
+  if (has(t, ['money', 'rent', 'bills', 'debt'])) weighing.push('Money');
+  if (has(t, ['died', 'passed', 'loss', 'grief', 'funeral'])) weighing.push('A loss');
+  if (has(t, ["can't name", 'cant name', "don't know", 'something', 'off'])) weighing.push("Can't name it");
+  let intent = 'Get through a hard moment';
+  if (has(t, ['alone', 'lonely', 'no one', 'nobody'])) intent = 'Feel less alone';
+  else if (has(t, ["can't name", 'cant name', 'understand', 'why', "don't know"])) intent = 'Understand what I’m feeling';
+  else if (has(t, ['curious', 'looking around', 'just checking'])) intent = 'Just looking around';
+  const carry = [];
+  carry.push(count > 25 ? 'Let it all out at once' : count < 8 ? 'Keep it brief' : 'Share a bit at a time');
+  if (has(t, ["can't name", 'cant name', "don't know", 'something'])) carry.push('Can tell something’s off, not what');
+  if (has(t, ["don't really talk", 'to myself', 'no one', "don't tell"])) carry.push('Hard to share');
+  return [
+    { label: 'Why you came', chips: [intent] },
+    { label: 'Weighing on you', chips: weighing.length ? weighing : ['Not sure yet'] },
+    { label: 'How you put it', chips: carry },
+  ];
+}
+
+class Component extends DCLogic {
+  state = { s: 'ask', k: 0, n: 0, typed: '', said: '', name: NAMES[0], nameIx: 0, on: {}, ctx: true };
+
+  componentDidMount() { this.typeIntro(); }
+  componentWillUnmount() { clearInterval(this._iv); clearInterval(this._ti); clearTimeout(this._t); }
+
+  typeIntro() {
+    clearInterval(this._ti);
+    this.setState({ k: 0 });
+    this._ti = setInterval(() => {
+      const k = this.state.k + 1;
+      if (k >= INTRO.length) clearInterval(this._ti);
+      this.setState({ k });
+    }, 38);
+  }
+
+  go(s) { clearInterval(this._iv); clearTimeout(this._t); this.setState({ s }); }
+
+  startListen() {
+    this.go('listen');
+    this.setState({ n: 0, typed: '', said: WORDS.join(' '), on: {} });
+    this._iv = setInterval(() => {
+      const n = this.state.n + 1;
+      if (n >= WORDS.length) clearInterval(this._iv);
+      this.setState({ n });
+    }, 170);
+  }
+
+  startThink() {
+    this.go('think');
+    this._t = setTimeout(() => this.setState({ s: 'heard' }), 2700);
+  }
+
+  renderVals() {
+    const { s, n, k, on, typed } = this.state;
+    const introDone = k >= INTRO.length;
+    const step = s === 'heard' ? 2 : s === 'name' || s === 'ready' ? 3 : 1;
+    const segments = [1, 2, 3].map((i) => ({
+      style: 'flex: 1; height: 4px; border-radius: 2px; background: ' + (i <= step ? '#E8AA4E' : '#262236'),
+    }));
+    const bars = Array.from({ length: 22 }, (_, i) => ({
+      style: 'width: 6px; height: ' + (20 + ((i * 37) % 36)) + 'px; border-radius: 3px; background: #E8AA4E; opacity: ' +
+        (0.5 + ((i * 13) % 50) / 100) + '; transform-origin: center; animation: wave ' + (0.7 + ((i * 7) % 6) / 10) + 's ease-in-out ' + ((i % 5) * 0.08) + 's infinite',
+    }));
+    const secs = Math.round(n * 0.17 * 2.4);
+    const said = this.state.said || "Work has been a lot";
+    const inferred = infer(said);
+    const groups = inferred.map((g) => ({
+      label: g.label,
+      chips: g.chips.map((label) => {
+        const id = g.label + ':' + label;
+        const isOn = on[id] ?? true;
+        return {
+          label,
+          on: isOn ? 'true' : 'false',
+          style: 'padding: 8px 14px; border-radius: 999px; font-size: 14px; font-weight: 500; ' + (isOn
+            ? 'background: #2E2B5C; color: #ECEBF3; border: 1px solid #A7A5EB'
+            : 'background: transparent; color: #8F8DA3; border: 1px dashed #3A3550; text-decoration: line-through'),
+          toggle: () => this.setState({ on: { ...this.state.on, [id]: !isOn } }),
+        };
+      }),
+    }));
+    const replies = ["Work's been a lot", "I can't name it", 'I feel really alone lately'].map((label) => ({
+      label, pick: () => { this.setState({ typed: '', said: label, on: {} }); this.startThink(); },
+    }));
+    const firstWords = said.split(/\s+/).slice(0, 7).join(' ');
+    const echo = firstWords.length < said.length ? firstWords + '…' : said;
+    const topics = inferred[1].chips.filter((c) => c !== 'Not sure yet');
+    return {
+      isAsk: s === 'ask', isListen: s === 'listen', isType: s === 'type', isThink: s === 'think',
+      isHeard: s === 'heard', isName: s === 'name', isReady: s === 'ready',
+      stepLabel: 'Step ' + step + ' of 3',
+      introText: INTRO.slice(0, k),
+      introDone,
+      introMood: introDone ? 'idle' : 'talking',
+      caretStyle: introDone ? 'display: none' : 'color: #E8AA4E; animation: caret .8s steps(1) infinite',
+      askSize: 190, listenSize: 150, tinySize: 64, thinkSize: 180, smallSize: 80, nameSize: 160,
+      segments, bars, groups, replies,
+      transcript: WORDS.slice(0, n).join(' '),
+      clock: '0:' + String(secs).padStart(2, '0'),
+      echo,
+      noticed: topics.length ? 'Noticing ' + topics.join(' and ').toLowerCase() + '…' : 'Noticing how you carry it…',
+      quote: echo,
+      typed,
+      name: this.state.name,
+      hasContext: this.state.ctx,
+      homeRows: [
+        { title: 'Reflect', sub: 'Type it, get the feeling named back' },
+        { title: 'Vent', sub: 'Say it out loud. Nothing is kept' },
+        { title: 'Listen', sub: 'Music and support audio' },
+      ],
+      startListen: () => this.startListen(),
+      finishListen: () => this.startThink(),
+      startThink: () => { this.setState({ said: typed.trim() || "Work has been a lot", on: {} }); this.startThink(); },
+      goType: () => this.go('type'),
+      goName: () => this.go('name'),
+      goReady: () => this.go('ready'),
+      skipAll: () => { this.go('ready'); this.setState({ ctx: false }); },
+      onType: (e) => this.setState({ typed: e.target.value }),
+      onName: (e) => this.setState({ name: e.target.value }),
+      reroll: () => {
+        const nameIx = (this.state.nameIx + 1) % NAMES.length;
+        this.setState({ nameIx, name: NAMES[nameIx] });
+      },
+      restart: () => { this.go('ask'); this.setState({ n: 0, on: {}, typed: '', said: '', ctx: true }); this.typeIntro(); },
+    };
+  }
+}
+</script>
+</body>
+</html>

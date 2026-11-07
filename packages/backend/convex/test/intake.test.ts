@@ -1,31 +1,20 @@
 // @vitest-environment edge-runtime
 /**
- * `intake.complete` — the terminal mutation of the intake flow (#262).
+ * `intake.complete` — the terminal mutation of the v1 intake flow (#262).
+ * v2's save path is tested beside it in `convex/intake/`.
  *
  * What matters here is the single transaction: the answers row, the Q1
  * display name, and the `onboardingComplete` gate all land together or not at
  * all, and the multi-select cap a validator can't express holds.
  */
-import type { FunctionArgs } from "convex/server";
 import { describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
+import { V1_ANSWERS as ANSWERS } from "../intake/fixtures.helpers";
 import { expectCode } from "./fixtures.helpers";
 import { asNewUser, type SeededUser } from "./harness.helpers";
 import { aggregatesMock } from "./mocks.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
-
-const ANSWERS: FunctionArgs<typeof api.intake.complete> = {
-	acquisitionSource: "friend_family",
-	ageBracket: "25_34",
-	copingStyle: ["outside_things"],
-	disclosureStyle: "bit_at_a_time",
-	displayName: "Wren",
-	emotionAwareness: "know_but_no_words",
-	intent: "understand_feelings",
-	supportFrequency: "occasionally",
-	weighingOn: ["work", "a_loss"],
-};
 
 const readIntake = (user: SeededUser) =>
 	user.root.run((ctx) =>

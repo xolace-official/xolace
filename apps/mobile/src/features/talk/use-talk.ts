@@ -19,6 +19,7 @@ import { type ThreadLine, useThread } from "@/features/talk/use-thread";
 
 export type Presence =
 	| "Connecting…"
+	| "Ending…"
 	| "Listening"
 	| "Thinking…"
 	| "Speaking"
@@ -59,7 +60,7 @@ export function useTalk(reopen?: {
 		wrapUpMs(TALK_CEILING_MS) / 1000
 	);
 	const [thinking, setThinking] = useState(false);
-	/** The person chose to end: leaving no longer asks first. */
+	/** The talk is ending (the person chose to, or the line dropped): leaving no longer asks first. */
 	const [ending, setEnding] = useState(false);
 	// "Just end": the mirror is made for the timeline, not shown now.
 	const mirrorLater = useRef(false);
@@ -84,6 +85,8 @@ export function useTalk(reopen?: {
 		if (!sessionId) {
 			return;
 		}
+		// A dropped line ends the talk too.
+		setEnding(true);
 		const later = mirrorLater.current;
 		try {
 			// Back to the home underneath: its reflect screen picks the session up
@@ -185,18 +188,26 @@ export function useTalk(reopen?: {
 				withTiming(Math.max(mic, lift(getOutputVolume())), { duration: 80 })
 			);
 		}, 80);
-		return () => clearInterval(id);
+		return () => {
+			clearInterval(id);
+			// A dropped line goes quiet: the face shouldn't stay leaned in while it ends.
+			micLevel.set(withTiming(0, { duration: 80 }));
+			level.set(withTiming(0, { duration: 80 }));
+		};
 	}, [connected, isMuted, getInputVolume, getOutputVolume, level, micLevel]);
 
-	const presence: Presence = connected
-		? isSpeaking
-			? "Speaking"
-			: thinking
-				? "Thinking…"
-				: isMuted
-					? "Mic off"
-					: "Listening"
-		: "Connecting…";
+	// Ending reads first: the line can still be up for a moment after the person ends.
+	const presence: Presence = ending
+		? "Ending…"
+		: connected
+			? isSpeaking
+				? "Speaking"
+				: thinking
+					? "Thinking…"
+					: isMuted
+						? "Mic off"
+						: "Listening"
+			: "Connecting…";
 
 	return {
 		clockFromS,

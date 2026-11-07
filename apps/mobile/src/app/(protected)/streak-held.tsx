@@ -1,15 +1,12 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
-import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { PressableFeedback } from "heroui-native";
 import { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
-
-// Placeholder until the freeze illustration lands.
-const ART = require("@/assets/images/flux/flux-campfire.png");
+import { CampfireMascot } from "@/features/streak/campfire-mascot";
 
 /** Shown once after a streak freeze covered missed days (#436); opened by home with the count
  * settle() returned. */
@@ -31,13 +28,7 @@ export default function StreakHeld() {
 			style={{ paddingBottom: insets.bottom + 16, paddingTop: insets.top + 24 }}
 		>
 			<View className="flex-1 items-center justify-center">
-				<Image
-					accessibilityIgnoresInvertColors
-					accessible={false}
-					contentFit="contain"
-					source={ART}
-					style={styles.art}
-				/>
+				<CampfireMascot />
 				<AppText className="mt-8 text-[11px] text-foreground/45 uppercase tracking-widest">
 					Streak held
 				</AppText>
@@ -67,7 +58,3 @@ export default function StreakHeld() {
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	art: { height: 260, width: 260 },
-});

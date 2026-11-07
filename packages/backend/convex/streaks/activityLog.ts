@@ -1,11 +1,8 @@
-import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
-import {
-	isStreakMilestone,
-	streakMilestoneAllowed,
-	streakMilestoneCopy,
-} from "./milestones";
+import { awardAchievement } from "../achievements/award";
+import { awardShowingUpRung, awardStreakRungs } from "../achievements/ladders";
+import { isStreakMilestone } from "./milestones";
 import { earnFreeze, SAVER_CAP, settleStreak } from "./state";
 
 export type ActivityActionType = Doc<"activity_log">["actionType"];
@@ -16,11 +13,16 @@ export type ActivityActionType = Doc<"activity_log">["actionType"];
 export const ACTION_WEIGHTS: Record<ActivityActionType, number> = {
 	daily_mood: 1,
 	library: 1,
+	listen: 1,
 	quotes: 0,
 	reflect: 1,
 	sit_with_this: 1,
 	vent: 1,
 };
+
+/** Does this action count toward the streak (and days showed up)? */
+const countsTowardStreak = (actionType: ActivityActionType) =>
+	ACTION_WEIGHTS[actionType] > 0;
 
 /**
  * Local calendar day ("YYYY-MM-DD") for a timestamp in an IANA timezone.
@@ -79,15 +81,24 @@ export async function recordActivity(
 	const dayKey = localDayKey(now, state.timezone);
 	const previousDayKey = state.lastCoveredDay;
 
-	const existing = await ctx.db
+	// At most one row per action type.
+	const dayRows = await ctx.db
 		.query("activity_log")
 		.withIndex("by_emotionalProfileId_and_dayKey_and_actionType", (q) =>
-			q
-				.eq("emotionalProfileId", args.emotionalProfileId)
-				.eq("dayKey", dayKey)
-				.eq("actionType", args.actionType)
+			q.eq("emotionalProfileId", args.emotionalProfileId).eq("dayKey", dayKey)
 		)
-		.unique();
+		.collect();
+	const existing = dayRows.find((r) => r.actionType === args.actionType);
+	// The day's first row that counts toward the streak makes it a day showed
+	// up (#694). Several actions are still one day; quotes alone never are.
+	// Only a date past lastShowedUpDay counts: that catches a day a data wipe
+	// emptied after it counted, and a date a move west puts behind the last one,
+	// which also never moves lastShowedUpDay back. The row check still matters
+	// while lastShowedUpDay is unset (backfill seeds the count, not the day).
+	const firstShowedUp =
+		countsTowardStreak(args.actionType) &&
+		!dayRows.some((r) => countsTowardStreak(r.actionType)) &&
+		dayKey > (profile.lastShowedUpDay ?? "");
 
 	if (existing) {
 		await ctx.db.patch("activity_log", existing._id, {
@@ -105,8 +116,23 @@ export async function recordActivity(
 		});
 	}
 
+	// Every completed reflect or vent lands here, so the first one earns it;
+	// the helper skips any after that.
+	const isSession = args.actionType === "reflect" || args.actionType === "vent";
+	if (isSession) {
+		await awardAchievement(ctx, args.emotionalProfileId, "first-session", now);
+	}
+	// A tended breathing twig; a solo session's "Sit with this" logs reflect,
+	// so finalizeCompletion awards that one (#695).
+	if (args.actionType === "sit_with_this") {
+		await awardAchievement(ctx, args.emotionalProfileId, "sat-with-it", now);
+	}
+	if (args.actionType === "listen") {
+		await awardAchievement(ctx, args.emotionalProfileId, "first-listen", now);
+	}
+
 	// Zero-weight actions (quotes) log history but never touch the streak.
-	if (ACTION_WEIGHTS[args.actionType] === 0) {
+	if (!countsTowardStreak(args.actionType)) {
 		return;
 	}
 
@@ -125,9 +151,10 @@ export async function recordActivity(
 	} else if (previousDayKey === shiftDayKey(dayKey, -1)) {
 		newStreak = profile.currentStreak + 1;
 		freezes = await earnFreeze(ctx, profile, dayKey, newStreak, freezes);
+		// Silently (#700): the streak badge's push stands in for the old
+		// milestone push, and a milestone with no rung (400) sends nothing.
 		if (isStreakMilestone(newStreak)) {
 			savers = Math.min(savers + 1, SAVER_CAP);
-			await notifyStreakMilestone(ctx, args.emotionalProfileId, newStreak, now);
 		}
 	} else {
 		newStreak = 1;
@@ -140,10 +167,9 @@ export async function recordActivity(
 		}
 	}
 
-	const newLongestStreak = Math.max(
-		newStreak,
-		profile.longestStreak ?? profile.currentStreak
-	);
+	const daysShowedUp = (profile.daysShowedUp ?? 0) + 1;
+	const previousLongestStreak = profile.longestStreak ?? profile.currentStreak;
+	const newLongestStreak = Math.max(newStreak, previousLongestStreak);
 
 	await ctx.db.patch("emotional_profiles", args.emotionalProfileId, {
 		currentStreak: newStreak,
@@ -151,6 +177,7 @@ export async function recordActivity(
 		streakFreezes: freezes,
 		...(savers !== (profile.streakSavers ?? 0) && { streakSavers: savers }),
 		...(brokenStreak && { brokenStreak }),
+		...(firstShowedUp && { daysShowedUp, lastShowedUpDay: dayKey }),
 		// lastSessionAt keeps meaning "last completed reflect" (#426) — nudges,
 		// Return Welcome and plus-offers read it. Never moves backward.
 		...(args.actionType === "reflect" && {
@@ -158,35 +185,15 @@ export async function recordActivity(
 		}),
 		updatedAt: now,
 	});
-}
-
-/**
- * Streak milestone push (#439). Only reached on the day the streak first
- * steps onto a milestone, so a second action that day can't re-fire it.
- * Freezes and revives never push — milestones are the only interruption.
- */
-async function notifyStreakMilestone(
-	ctx: MutationCtx,
-	emotionalProfileId: Id<"emotional_profiles">,
-	streak: number,
-	now: number
-): Promise<void> {
-	const preferences = await ctx.db
-		.query("preferences")
-		.withIndex("by_profile", (q) =>
-			q.eq("emotionalProfileId", emotionalProfileId)
-		)
-		.unique();
-	if (!streakMilestoneAllowed(preferences?.notifications)) {
-		return;
+	await awardStreakRungs(
+		ctx,
+		args.emotionalProfileId,
+		{ from: previousLongestStreak, to: newLongestStreak },
+		now
+	);
+	if (firstShowedUp) {
+		await awardShowingUpRung(ctx, args.emotionalProfileId, daysShowedUp, now);
 	}
-	await ctx.scheduler.runAfter(0, internal.notifications.schedule, {
-		content: streakMilestoneCopy(streak),
-		emotionalProfileId,
-		scheduledFor: now,
-		triggerReason: `Streak reached ${streak}`,
-		type: "streak_milestone",
-	});
 }
 
 /** The instant a local day begins. Two passes land right across a DST change. */

@@ -55,9 +55,14 @@ export function subscribeToNotificationTaps<R extends TapResponse>(
 	return () => subscription.remove();
 }
 
-/** Where a tap navigates. Chat routes carry params, so they differ in kind. */
+/** Where a tap navigates. `navigate` reuses the screen already on top; `push` always stacks. */
 export type TapNavigation =
-	| { action: "navigate"; href: ReturnType<typeof chatNotificationRoute> }
+	| {
+			action: "navigate";
+			href:
+				| ReturnType<typeof chatNotificationRoute>
+				| "/(protected)/achievements";
+	  }
 	| {
 			action: "push";
 			href:
@@ -84,11 +89,9 @@ export function notificationTapPlan(
 	const plan: NotificationTapPlan = {};
 
 	const logId = typeof data?.logId === "string" ? data.logId : undefined;
-	if (logId) {
+	// A badge push isn't a nudge: its tap opens the badges, not a session.
+	if (logId && data?.type !== "achievement") {
 		plan.logId = logId;
-		if (body) {
-			plan.banner = { content: body, notificationId: logId };
-		}
 	}
 
 	if (isChatNotificationType(data?.type)) {
@@ -110,6 +113,9 @@ export function notificationTapPlan(
 		plan.navigation = { action: "push", href: "/profile/insights" };
 	} else if (data?.type === "kindling_ready") {
 		plan.navigation = { action: "push", href: "/(protected)/kindling" };
+	} else if (data?.type === "achievement") {
+		// Off a held screen, so the unlock moment can open over the badges.
+		plan.navigation = { action: "navigate", href: "/(protected)/achievements" };
 	} else if (
 		data?.type === "gentle_return" ||
 		data?.type === "pattern_nudge" ||
@@ -117,6 +123,14 @@ export function notificationTapPlan(
 		data?.type === "streak_milestone"
 	) {
 		plan.navigation = { action: "push", href: "/(protected)" };
+	}
+
+	// The banner lives on home, so a tap that opens another screen would leave it
+	// waiting there for later. A tap with no route (a follow-up) goes nowhere new.
+	const opensElsewhere =
+		plan.navigation && plan.navigation.href !== "/(protected)";
+	if (logId && body && !opensElsewhere) {
+		plan.banner = { content: body, notificationId: logId };
 	}
 
 	return plan;

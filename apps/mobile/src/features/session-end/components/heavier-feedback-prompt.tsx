@@ -10,9 +10,17 @@ type Props = {
 	sessionId?: Id<"sessions">;
 	isOpen: boolean;
 	onClose: () => void;
+	/** 1–5 from the mood slider's drag depth; skips the flame step and opens on the
+	 * question for that intensity. */
+	intensity?: number;
 };
 
-export function HeavierFeedbackPrompt({ sessionId, isOpen, onClose }: Props) {
+export function HeavierFeedbackPrompt({
+	sessionId,
+	isOpen,
+	onClose,
+	intensity: fixedIntensity,
+}: Props) {
 	const {
 		intensity,
 		setIntensity,
@@ -24,7 +32,7 @@ export function HeavierFeedbackPrompt({ sessionId, isOpen, onClose }: Props) {
 		questionText,
 		canSubmit,
 		handleSubmit,
-	} = useHeavierFeedback(sessionId, onClose);
+	} = useHeavierFeedback(sessionId, onClose, fixedIntensity);
 
 	return (
 		<FeedbackSheet.Frame
@@ -36,7 +44,9 @@ export function HeavierFeedbackPrompt({ sessionId, isOpen, onClose }: Props) {
 				How did that land?
 			</FeedbackSheet.Header>
 
-			<FlameIntensitySelector onChange={setIntensity} value={intensity} />
+			{fixedIntensity === undefined && (
+				<FlameIntensitySelector onChange={setIntensity} value={intensity} />
+			)}
 
 			{intensity > 0 && (
 				<EaseView

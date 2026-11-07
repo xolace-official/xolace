@@ -50,16 +50,26 @@ export async function expectCode(run: () => Promise<unknown>, code: string) {
  * unconditionally on every onboarding (#374), so it would otherwise show up in
  * every fixture built through `asNewUser`. It has its own coverage in
  * `users.test.ts`; use `allScheduledCalls` there instead of this.
+ *
+ * Excludes `achievements/push:sendMissedPush` for the same reason: the Joined
+ * badge every new profile earns schedules it (#700). Covered by
+ * `achievements/push.test.ts`. And `achievements/unlock:foldUnseen`, which the
+ * same badge schedules; covered by `achievements/unlock.test.ts`.
  */
 export async function scheduledCalls(
 	root: Root
 ): Promise<{ name: string; args: Record<string, unknown> }[]> {
 	return (await allScheduledCalls(root)).filter(
-		(j) => !j.name.endsWith("streamSetup:addToXolaceChannel")
+		(j) =>
+			!(
+				j.name.endsWith("streamSetup:addToXolaceChannel") ||
+				j.name.endsWith("achievements/push:sendMissedPush") ||
+				j.name.endsWith("achievements/unlock:foldUnseen")
+			)
 	);
 }
 
-/** `scheduledCalls`, without the `addToXolaceChannel` filter. */
+/** `scheduledCalls`, without its filters. */
 export async function allScheduledCalls(
 	root: Root
 ): Promise<{ name: string; args: Record<string, unknown> }[]> {

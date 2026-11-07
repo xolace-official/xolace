@@ -70,6 +70,21 @@ interface RecentMetadataEntry {
 	riskFlag?: boolean;
 }
 
+/**
+ * Nothing classified: the engine's own thresholds over moderation alone, for
+ * a check that runs without (or lost) the classifier.
+ */
+export const UNCLASSIFIED: ClassificationResult = {
+	intensity: 0,
+	primaryEmotion: "unclassified",
+	primaryEmotionConfidence: 0,
+	requiresFollowUp: false,
+	specificity: 0,
+	supportNeed: "none",
+	thematicTags: [],
+	userLanguageTags: [],
+};
+
 // --- Resources ---
 
 // Xolace first-party contact — included in every resource set so users

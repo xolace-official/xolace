@@ -4,20 +4,15 @@ import { useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
-import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { Tour } from "@/components/ui/tour";
 import { StreakCalendar } from "@/features/reflect/components/streak-calendar";
+import { EventPromptChip } from "@/features/reflect/compose/event-prompt-chip";
 import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { playSoftPress } from "@/lib/haptics";
 
 const QUOTE_ICON_NAME = { android: "auto_awesome", ios: "sparkles" } as const;
-const EVENT_ICON_NAME = {
-	android: "favorite",
-	ios: "heart.fill",
-	web: "favorite",
-} as const;
 
 type Props = {
 	eventPrompt: string | null;
@@ -26,7 +21,8 @@ type Props = {
 };
 
 /**
- * The Perch strip above the card (#257). The event pill tracks the event period, not the prompt.
+ * The Perch strip above the card (#257). The event pill shows while a prompt is pending, and
+ * tapping it can clear the prompt.
  */
 export const ComposeChrome = ({
 	eventPrompt,
@@ -35,7 +31,6 @@ export const ComposeChrome = ({
 }: Props) => {
 	const router = useRouter();
 	const accentColor = useThemeColor("accent") as string;
-	const [eventColor] = useCSSVariable(["--color-event"]);
 	const todayQuotes = useQuery(api.dailyQuotes.getToday);
 	const hasQuote = !!(todayQuotes?.session ?? todayQuotes?.curated);
 	const context = useFullContext();
@@ -91,21 +86,7 @@ export const ComposeChrome = ({
 					)}
 				</View>
 
-				{!!eventPrompt && (
-					<View className="max-w-full flex-row items-center gap-1.5 self-start rounded-full bg-event/15 px-3 py-1">
-						<SymbolView
-							name={EVENT_ICON_NAME}
-							size={11}
-							tintColor={String(eventColor)}
-						/>
-						<AppText
-							className="shrink font-semibold text-event text-xs"
-							numberOfLines={1}
-						>
-							{eventLabel ?? "This month"}
-						</AppText>
-					</View>
-				)}
+				{!!eventPrompt && <EventPromptChip label={eventLabel} />}
 			</View>
 		</View>
 	);

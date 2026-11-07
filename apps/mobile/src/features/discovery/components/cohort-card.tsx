@@ -1,7 +1,7 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, {
 	Easing,
@@ -139,13 +139,17 @@ function useBubbleIn(
 }
 
 /** Weekly speech bubble from Flux: how many campers carried the viewer's last emotion, then
- * "You are not alone." Inert; renders nothing without an honest number (convex/cohort.ts). */
-export function CohortCard() {
+ * "You are not alone." Inert; without an honest number (convex/cohort.ts) it renders
+ * `fallback`, or nothing. */
+export function CohortCard({ fallback = null }: { fallback?: ReactNode }) {
 	const card = useQuery(api.cohort.getWeeklyCohortCard);
 	const reduced = useEffectiveReducedMotion();
 
-	if (!card || card.status === "hidden") {
+	if (!card) {
 		return null;
+	}
+	if (card.status === "hidden") {
+		return fallback;
 	}
 
 	// Separate component so the timers and springs start when the card appears,

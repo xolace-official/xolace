@@ -9,6 +9,7 @@ import {
 	mutation,
 	query,
 } from "./_generated/server";
+import { awardAchievement } from "./achievements/award";
 import { EPISODIC_CONNECT_FLOOR } from "./ai/routing";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { deriveClaimStrength } from "./lib/claimStrength";
@@ -123,6 +124,22 @@ async function finalizeCompletion(
 		timestamp: now,
 	});
 
+	// Exploring badges a completion can earn (#695), on the same sessions the
+	// backfill reads (#686). A solo path is the "Sit with this" choice.
+	const pathChosen = opts.pathChosen ?? session.pathChosen;
+	if (session.entryType === "talk") {
+		await awardAchievement(ctx, session.emotionalProfileId, "first-talk", now);
+	}
+	if (pathChosen === "solo" && opts.pathCompleted && session.exerciseId) {
+		await awardAchievement(ctx, session.emotionalProfileId, "sat-with-it", now);
+		await awardAchievement(
+			ctx,
+			session.emotionalProfileId,
+			"first-exercise",
+			now
+		);
+	}
+
 	const requiresFollowUp = computeRequiresFollowUp({
 		confirmationState: session.confirmationState,
 		escalationTriggered: session.escalationTriggered,
@@ -167,7 +184,6 @@ async function finalizeCompletion(
 	// peers, or exit — not the abandoned-session cron's stranded reconciliation
 	// (pathCompleted: false, no pathChosen). Premium gate lives inside
 	// `generate.run`; off the critical path.
-	const pathChosen = opts.pathChosen ?? session.pathChosen;
 	if (opts.pathCompleted && pathChosen) {
 		await ctx.scheduler.runAfter(0, internal.ai.paths.generate.run, {
 			emotionalProfileId: session.emotionalProfileId,
@@ -191,6 +207,7 @@ async function applyPostSessionFeedback(
 	feedback: {
 		contributedReflection?: boolean;
 		postSessionMood?: Doc<"sessions">["postSessionMood"];
+		moodPosition?: number;
 	},
 	/** Completion already scheduled an evaluation that will read this mood. */
 	evaluating = false
@@ -202,6 +219,9 @@ async function applyPostSessionFeedback(
 		...(feedback.postSessionMood
 			? { postSessionMood: feedback.postSessionMood }
 			: {}),
+		...(feedback.moodPosition === undefined
+			? {}
+			: { moodPosition: feedback.moodPosition }),
 		updatedAt: Date.now(),
 	});
 
@@ -225,6 +245,13 @@ async function applyPostSessionFeedback(
 			{
 				sessionId: session._id,
 			}
+		);
+		// The opt-in, as the backfill reads it (#686): the pooled reflection
+		// keeps no link back to the profile.
+		await awardAchievement(
+			ctx,
+			session.emotionalProfileId,
+			"shared-reflection"
 		);
 	}
 }
@@ -545,11 +572,20 @@ export const completePath = mutation({
 export const recordPostSessionFeedback = mutation({
 	args: {
 		contributedReflection: v.optional(v.boolean()),
+		/** The slider's exact position, 0 heavier … 1 lighter. Newer clients only. */
+		moodPosition: v.optional(v.number()),
 		postSessionMood: v.optional(postSessionMoodValidator),
 		sessionId: v.id("sessions"),
 	},
 	handler: async (ctx, args) => {
 		const { session } = await requireSessionOwnership(ctx, args.sessionId);
+
+		if (
+			args.moodPosition !== undefined &&
+			!(args.moodPosition >= 0 && args.moodPosition <= 1)
+		) {
+			throw new ConvexError({ code: "mood_position_out_of_range" });
+		}
 
 		if (session.state !== "completed") {
 			throw new Error(
@@ -559,6 +595,7 @@ export const recordPostSessionFeedback = mutation({
 
 		await applyPostSessionFeedback(ctx, session, {
 			contributedReflection: args.contributedReflection,
+			moodPosition: args.moodPosition,
 			postSessionMood: args.postSessionMood,
 		});
 

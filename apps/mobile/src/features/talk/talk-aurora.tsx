@@ -6,13 +6,11 @@ import { useThemeColor } from "heroui-native";
 import { useEffect } from "react";
 import { StyleSheet, useWindowDimensions } from "react-native";
 import {
-	Easing,
 	type SharedValue,
 	useDerivedValue,
+	useFrameCallback,
 	useReducedMotion,
 	useSharedValue,
-	withRepeat,
-	withTiming,
 } from "react-native-reanimated";
 
 const SKSL = `
@@ -92,15 +90,27 @@ half4 main(float2 fragCoord) {
 
 const SHADER = Skia.RuntimeEffect.Make(SKSL);
 
+const LOOP_MS = 14_000;
+const FRAME_MS = 16;
+// A dropped frame is clamped so a hitch doesn't play back as a lurch.
+const MAX_FRAME_MS = 48;
+
 type Props = {
 	level: SharedValue<number>;
 	/** Rays hang from the top (0) or rise from the bottom (1). */
 	flip?: 0 | 1;
 	/** Fraction of the screen the canvas covers, anchored to its edge. */
 	coverage?: number;
+	/** `false` while it's out of sight: the loop stops and nothing redraws it. */
+	running?: boolean;
 };
 
-export function TalkAurora({ level, flip = 0, coverage = 1 }: Props) {
+export function TalkAurora({
+	level,
+	flip = 0,
+	coverage = 1,
+	running = true,
+}: Props) {
 	const { width, height } = useWindowDimensions();
 	const reduced = useReducedMotion();
 	const accent = useThemeColor("accent");
@@ -110,22 +120,29 @@ export function TalkAurora({ level, flip = 0, coverage = 1 }: Props) {
 	const c = Skia.Color(accent);
 	const tint = [c[0], c[1], c[2]];
 
-	useEffect(() => {
-		if (reduced) {
-			return;
-		}
-		phase.set(0);
-		phase.set(
-			withRepeat(
-				withTiming(1, { duration: 14_000, easing: Easing.linear }),
-				-1,
-				false
-			)
+	// Stepped per frame rather than looped, so a pause resumes where it stopped. Every rate in
+	// the shader is a whole multiple of its time, so wrapping at 1 is seamless.
+	const loop = useFrameCallback((info) => {
+		const delta = Math.min(
+			info.timeSincePreviousFrame ?? FRAME_MS,
+			MAX_FRAME_MS
 		);
-	}, [reduced, phase]);
+		phase.set((phase.get() + delta / LOOP_MS) % 1);
+	}, false);
+	const { setActive } = loop;
+	const animating = running && !reduced;
+	useEffect(() => {
+		setActive(animating);
+		return () => setActive(false);
+	}, [animating, setActive]);
 
+	// A derived value follows every shared value in its closure, read or not, so a hidden
+	// aurora drops the level from it rather than skipping the read.
+	const voice = running ? level : undefined;
 	const uniforms = useDerivedValue(() => {
-		smooth.set(smooth.get() + (level.get() - smooth.get()) * 0.12);
+		if (voice) {
+			smooth.set(smooth.get() + (voice.get() - smooth.get()) * 0.12);
+		}
 		return {
 			u_flip: flip,
 			u_level: reduced ? 0 : smooth.get(),

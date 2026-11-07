@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
 import {
 	internalMutation,
 	internalQuery,
@@ -65,9 +66,41 @@ const notificationLogDocValidator = v.object({
 		v.literal("follow_up"),
 		v.literal("kindling_ready"),
 		v.literal("streak_milestone"),
-		v.literal("domain_unlock")
+		v.literal("domain_unlock"),
+		v.literal("achievement")
 	),
 });
+
+type NotificationType = Doc<"notification_log">["type"];
+
+/** Types with a bucket of their own; the rest share `notification`. */
+const TYPE_BUCKETS: Partial<
+	Record<
+		NotificationType,
+		"achievement" | "domainUnlock" | "kindlingReady" | "streakMilestone"
+	>
+> = {
+	achievement: "achievement",
+	domain_unlock: "domainUnlock",
+	kindling_ready: "kindlingReady",
+	streak_milestone: "streakMilestone",
+};
+
+/**
+ * The rate-limit bucket by type, so follow-up nudges have their own budget and
+ * never starve (or get starved by) the cron nudges. Acute follow-ups fire two
+ * presence checks within ~5h, so they get a dedicated bucket rather than the
+ * gentler 1/day followUpNudge cap.
+ */
+function rateLimitBucket(
+	type: NotificationType,
+	followUpTier: "acute" | "elevated" | "standard" | undefined
+) {
+	if (type === "follow_up") {
+		return followUpTier === "acute" ? "followUpAcute" : "followUpNudge";
+	}
+	return TYPE_BUCKETS[type] ?? "notification";
+}
 
 /**
  * Schedule a notification for delivery.
@@ -95,7 +128,7 @@ export const schedule = internalMutation({
 			v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))
 		),
 		scheduledFor: v.number(),
-		// Defaults to "Xolace"; the unlock push carries its own (#523).
+		// Defaults to "Xolace"; the unlock and badge pushes carry their own.
 		title: v.optional(v.string()),
 		triggerReason: v.string(),
 		type: v.union(
@@ -106,28 +139,14 @@ export const schedule = internalMutation({
 			v.literal("follow_up"),
 			v.literal("kindling_ready"),
 			v.literal("streak_milestone"),
-			v.literal("domain_unlock")
+			v.literal("domain_unlock"),
+			v.literal("achievement")
 		),
 	},
 	handler: async (ctx, args) => {
 		const now = Date.now();
 
-		// Rate limit: select the bucket by type so follow-up nudges have their
-		// own budget and never starve (or get starved by) the cron nudges. Acute
-		// follow-ups fire two presence checks within ~5h, so they get a dedicated
-		// bucket rather than the gentler 1/day followUpNudge cap.
-		const bucket =
-			args.type === "follow_up"
-				? args.followUpTier === "acute"
-					? "followUpAcute"
-					: "followUpNudge"
-				: args.type === "kindling_ready"
-					? "kindlingReady"
-					: args.type === "streak_milestone"
-						? "streakMilestone"
-						: args.type === "domain_unlock"
-							? "domainUnlock"
-							: "notification";
+		const bucket = rateLimitBucket(args.type, args.followUpTier);
 		const { ok } = await rateLimiter.limit(ctx, bucket, {
 			key: args.emotionalProfileId,
 		});

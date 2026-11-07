@@ -5,6 +5,11 @@ import { Button, PressableFeedback, useToast } from "heroui-native";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { AgeGateSheet } from "@/features/xolacer-chat/age-gate/age-gate-sheet";
+import {
+	CLIENT_VERSION,
+	useAgeGate,
+} from "@/features/xolacer-chat/age-gate/use-age-gate";
 import {
 	acceptFailureLabel,
 	chatLimitError,
@@ -25,6 +30,7 @@ export function ThreadStatusBar({
 	const acceptRequest = useAction(api.xolacerChat.acceptRequest);
 	const declineRequest = useMutation(api.xolacerChat.declineRequest);
 	const resumeConversation = useMutation(api.xolacerChat.resumeConversation);
+	const ageGate = useAgeGate();
 
 	const padBottom = Math.max(insets.bottom, 14);
 
@@ -48,15 +54,20 @@ export function ThreadStatusBar({
 			.catch(() => toast.show({ label: "Couldn't decline. Try again." }));
 	};
 
-	const handleResume = () => {
-		playSoftPress();
-		resumeConversation({ conversationId: conversation.id })
+	const resume = () => {
+		resumeConversation({
+			clientVersion: CLIENT_VERSION,
+			conversationId: conversation.id,
+		})
 			.then((result) => {
 				if (!result.resumed) {
 					toast.show({ label: "This one has gone quiet on their end too." });
 				}
 			})
 			.catch((error: unknown) => {
+				if (ageGate.handleRefusal(error, resume)) {
+					return;
+				}
 				const limit = chatLimitError(error);
 				toast.show({
 					label:
@@ -65,6 +76,17 @@ export function ThreadStatusBar({
 							: "Couldn't pick this back up. Try again.",
 				});
 			});
+	};
+
+	// Picking a resting chat back up restarts it, so the seeker meets the age gate
+	// first (#716); the Xolacer's side isn't asked.
+	const handleResume = () => {
+		playSoftPress();
+		if (conversation.role === "user") {
+			ageGate.guard(resume);
+		} else {
+			resume();
+		}
 	};
 
 	const goToRoster = () => {
@@ -154,6 +176,7 @@ export function ThreadStatusBar({
 				</Copy>
 				<Button onPress={handleResume}>Pick this back up</Button>
 				<RatePrompt conversation={conversation} />
+				<AgeGateSheet gate={ageGate} />
 			</Bar>
 		);
 	}

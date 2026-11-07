@@ -5,13 +5,18 @@
  */
 
 import type { WorkflowId } from "@convex-dev/workflow";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalMutation, mutation } from "./_generated/server";
+import { awardAchievement } from "./achievements/award";
+import { backfillProfile } from "./achievements/backfill";
+import type { AchievementId } from "./achievements/catalog";
 import { deleteResponsesForCard } from "./followUpResponses";
 import { workflow } from "./followUps";
+import { findIntake } from "./intake/save";
 import { rankReplace, reflectionRank } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
+import { INTAKE_V2_VERSION } from "./lib/validators";
 import { migrations } from "./migrations";
 import { localDayKey, shiftDayKey } from "./streaks/activityLog";
 
@@ -264,6 +269,133 @@ export const resetIntake = mutation({
 		await ctx.db.patch("emotional_profiles", profile._id, {
 			onboardingComplete: false,
 			updatedAt: Date.now(),
+		});
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Clear the caller's deferred intake answers (#711, #712) so each question v2 moved out
+ * of the intake is asked again where it lives now. v2 rows only: a v1 row answered
+ * them up front, and clearing them would leave a row no real user can have.
+ */
+export const clearDeferredAnswers = mutation({
+	args: {},
+	handler: async (ctx) => {
+		assertDevToolsEnabled();
+		const { profile } = await requireAuth(ctx);
+		const intake = await findIntake(ctx, profile._id);
+		if (intake?.intakeVersion !== INTAKE_V2_VERSION) {
+			throw new ConvexError({
+				code: "not_v2_intake",
+				message: "Only a v2 intake defers questions; replay intake on v2 first",
+			});
+		}
+		await ctx.db.patch("intake_responses", intake._id, {
+			acquisitionSource: undefined,
+			ageBracket: undefined,
+			copingStyle: undefined,
+			seriesSeen: undefined,
+			seriesWantInApp: undefined,
+			supportFrequency: undefined,
+		});
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** Well past what one account holds: one row until corrections ship. */
+const MAX_AGE_DECLARATIONS = 100;
+
+/**
+ * Delete the caller's age declarations (#716) so the date-of-birth gate before a
+ * Xolacer chat asks again, and a different date can be tried. The one way a
+ * declaration is ever removed short of account deletion, which is why it is a
+ * dev tool and nothing more.
+ */
+export const clearAgeDeclarations = mutation({
+	args: {},
+	handler: async (ctx) => {
+		assertDevToolsEnabled();
+		const { user } = await requireAuth(ctx);
+		const declarations = await ctx.db
+			.query("age_declarations")
+			.withIndex("by_user_declared", (q) => q.eq("userId", user._id))
+			.take(MAX_AGE_DECLARATIONS);
+		for (const declaration of declarations) {
+			await ctx.db.delete("age_declarations", declaration._id);
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** Two badges, so a replay shows the Next button and the dots. */
+const UNLOCK_REPLAY: readonly AchievementId[] = ["joined", "first-session"];
+
+/**
+ * Arm the badge unlock moment (#693) for the caller with Joined and First
+ * session: earns whichever they lack and swaps in a fresh unseen row for
+ * the rest, live even if it was backfilled. A dev
+ * account from before the backfill (#686) is backfilled first, since awards
+ * stay quiet until then; a bare stamp would make the migration skip it and
+ * lose everything else it earned.
+ */
+export const seedBadgeUnlock = mutation({
+	args: {},
+	handler: async (ctx) => {
+		assertDevToolsEnabled();
+		const { profile } = await requireAuth(ctx);
+		await backfillProfile(ctx, profile);
+		for (const achievementId of UNLOCK_REPLAY) {
+			const row = await ctx.db
+				.query("user_achievements")
+				.withIndex("by_emotionalProfileId_and_achievementId", (q) =>
+					q
+						.eq("emotionalProfileId", profile._id)
+						.eq("achievementId", achievementId)
+				)
+				.unique();
+			if (row) {
+				// A fresh row, not a cleared seenAt: the app skips ids it already
+				// opened this run. Sparks were credited once and aren't again.
+				const { _creationTime, _id, seenAt, ...fields } = row;
+				await ctx.db.delete("user_achievements", _id);
+				await ctx.db.insert("user_achievements", {
+					...fields,
+					earnedAt: Date.now(),
+					source: "live",
+				});
+			} else {
+				await awardAchievement(ctx, profile._id, achievementId);
+			}
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Run the achievements backfill (#701) again for one profile, stamped or
+ * not: it only adds what's missing and moves quiet rows to earlier dates, so it
+ * repairs an account the migration skipped because something stamped it first.
+ *   bunx convex run devTools:rerunBackfill '{"emotionalProfileId":"..."}'
+ */
+export const rerunBackfill = internalMutation({
+	args: { emotionalProfileId: v.id("emotional_profiles") },
+	handler: async (ctx, args) => {
+		assertDevToolsEnabled();
+		const profile = await ctx.db.get(
+			"emotional_profiles",
+			args.emotionalProfileId
+		);
+		if (!profile) {
+			throw new Error("No such profile");
+		}
+		await backfillProfile(ctx, {
+			...profile,
+			achievementsBackfilledAt: undefined,
 		});
 		return null;
 	},

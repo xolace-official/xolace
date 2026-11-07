@@ -11,6 +11,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { AuroraArc } from "@/components/shared/aurora-arc";
+import { ProfileSparkCard } from "@/features/achievements/profile-spark-card";
 import { ProfileHero } from "@/features/profile/components/profile-hero";
 import { ProfileSkeleton } from "@/features/profile/components/profile-skeleton";
 import { StatBand } from "@/features/profile/components/stat-band";
@@ -58,15 +59,19 @@ export function ProfileHeader({
 				<ProfileSkeleton />
 			)}
 
-			{summary && summary.sessionCount > 0 && (
+			{/* Freezes can be earned by actions other than a session. */}
+			{summary && (summary.sessionCount > 0 || summary.streakFreezes > 0) && (
 				<StatBand
 					currentStreak={summary.currentStreak}
 					longestStreak={summary.longestStreak}
 					sessionCount={summary.sessionCount}
 					staggerDelay={120}
+					streakFreezes={summary.streakFreezes}
 					usualDay={usualDay}
 				/>
 			)}
+
+			{summary ? <ProfileSparkCard /> : null}
 
 			<TopBar height={topBarHeight} title={summary?.displayName} />
 		</View>

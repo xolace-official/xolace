@@ -13,6 +13,7 @@ import { useMorphCardStyles } from "@/features/reflect/compose/morph-card-styles
 import { CARD_PAD } from "@/features/reflect/compose/morph-geometry";
 import type { CardContent } from "@/features/reflect/compose/resolve-card-content";
 import { SelectionEcho } from "@/features/reflect/compose/selection-echo";
+import { useComposeFace } from "@/features/reflect/compose/use-compose-face";
 import type { PlusDictationView } from "@/features/reflect/hooks/use-plus-dictation";
 import { playSoftPress } from "@/lib/haptics";
 import { a11yHidden } from "@/lib/utils";
@@ -71,8 +72,9 @@ export const MorphCard = ({
 		bodyStyle,
 		echoStyle,
 	} = useMorphCardStyles(progress, fade, card.scale);
+	const { face, onWriting } = useComposeFace(expanded, entryText);
 
-	// Flux aims at the presence dot through CARD_PAD, so the padding is geometry,
+	// Flux aims at the header face through CARD_PAD, so the padding is geometry,
 	// not a class.
 	const cardPadding = { padding: CARD_PAD };
 	// Both readings are always mounted; the faded-out one must leave the a11y tree.
@@ -91,6 +93,7 @@ export const MorphCard = ({
 				card={card}
 				controlsStyle={controlsStyle}
 				expanded={expanded}
+				face={face}
 				isRecording={isRecording}
 				onDismiss={onDismiss}
 				onVoiceTap={onVoiceTap}
@@ -116,6 +119,7 @@ export const MorphCard = ({
 				isRecording={isRecording}
 				onChangeText={onChangeText}
 				onSubmit={onSubmit}
+				onWriting={onWriting}
 				plusDictation={plusDictation}
 				style={bodyStyle}
 			/>

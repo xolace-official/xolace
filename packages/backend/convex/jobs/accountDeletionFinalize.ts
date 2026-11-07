@@ -1,5 +1,5 @@
 import { internal } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { rankDelete } from "../lib/aggregates";
 import { deleteConversationRow } from "../lib/conversationErasure";
@@ -8,6 +8,7 @@ import {
 	profilePushDevices,
 	pushNotifications,
 } from "../lib/pushNotifications";
+import { queueClerkUserDeletion } from "./clerkUserDeletion";
 
 export const BATCH_SIZE = 100;
 
@@ -130,7 +131,7 @@ export const drainPushDevices: DrainStep = async (ctx, profileId) => {
 export async function finalizePurge(
 	ctx: MutationCtx,
 	profileId: ProfileId,
-	userId: Id<"users">
+	user: Doc<"users">
 ): Promise<void> {
 	const preferences = await ctx.db
 		.query("preferences")
@@ -147,6 +148,17 @@ export async function finalizePurge(
 		.unique();
 	if (intake) {
 		await ctx.db.delete("intake_responses", intake._id);
+	}
+
+	// Age declarations (#716) hang off the user, not the profile. Bounded with
+	// no drain step: a user has one row until corrections ship, and those are
+	// rate-limited.
+	const declarations = await ctx.db
+		.query("age_declarations")
+		.withIndex("by_user_declared", (q) => q.eq("userId", user._id))
+		.take(BATCH_SIZE);
+	for (const declaration of declarations) {
+		await ctx.db.delete("age_declarations", declaration._id);
 	}
 
 	// A deleted user must never receive a follow-up nudge. Scheduled because
@@ -184,5 +196,7 @@ export async function finalizePurge(
 	await rankDelete(ctx, profileId);
 
 	await ctx.db.delete("emotional_profiles", profileId);
-	await ctx.db.delete("users", userId);
+	await ctx.db.delete("users", user._id);
+	// The sign-in identity goes last, and survives this row in its own queue.
+	await queueClerkUserDeletion(ctx, user.tokenIdentifier);
 }

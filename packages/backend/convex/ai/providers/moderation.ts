@@ -50,20 +50,31 @@ export const MODERATION_UNAVAILABLE: ModerationResult = {
 
 // --- API Call ---
 
+/** Stops a hung request, not a slow one: a late verdict still counts where a caller can wait. */
+export const MODERATION_TIMEOUT_MS = 10_000;
+
 /**
  * Obtains a moderation assessment for the provided text using OpenAI's moderation API.
  *
- * On error or when the API key is not set, returns `MODERATION_UNAVAILABLE` (which has `flagged: false`, all category flags set to `false`, and an empty `categoryScores`).
+ * On error, past {@link MODERATION_TIMEOUT_MS}, once `signal` aborts, or when the API key is not set, returns `MODERATION_UNAVAILABLE` (which has `flagged: false`, all category flags set to `false`, and an empty `categoryScores`).
  *
  * @returns A `ModerationResult` with `flagged` indicating whether the text was flagged, `categories` containing all moderation category flags (any missing keys are set to `false`), and `categoryScores` mapping category names to numeric scores.
  */
-export async function moderateInput(text: string): Promise<ModerationResult> {
+export async function moderateInput(
+	text: string,
+	signal?: AbortSignal
+): Promise<ModerationResult> {
 	const apiKey = process.env.OPENAI_API_KEY;
 	if (!apiKey) {
 		console.warn("OPENAI_API_KEY not set, skipping moderation");
 		return MODERATION_UNAVAILABLE;
 	}
 
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), MODERATION_TIMEOUT_MS);
+	// The caller stopped waiting: drop the request rather than let it run on.
+	const stop = () => controller.abort();
+	signal?.addEventListener("abort", stop, { once: true });
 	try {
 		const response = await fetch("https://api.openai.com/v1/moderations", {
 			body: JSON.stringify({
@@ -75,6 +86,7 @@ export async function moderateInput(text: string): Promise<ModerationResult> {
 				"Content-Type": "application/json",
 			},
 			method: "POST",
+			signal: controller.signal,
 		});
 
 		if (!response.ok) {
@@ -100,5 +112,8 @@ export async function moderateInput(text: string): Promise<ModerationResult> {
 	} catch (error) {
 		console.error("Moderation API error:", error);
 		return MODERATION_UNAVAILABLE;
+	} finally {
+		clearTimeout(timeout);
+		signal?.removeEventListener("abort", stop);
 	}
 }

@@ -50,7 +50,8 @@
 	--resonance-foreground: oklch(0.796 0.0347 167.72);
 
 	--color-ember: oklch(78% 0.13 75);
-	/* Frost — a day a streak freeze held (contribution graph). */
+	/* Frost — a day a streak freeze held (contribution graph). Static, so text
+	 * uses the themed --frost-text instead: this one is 2.3:1 on light surfaces. */
 	--color-frost: oklch(72% 0.12 240);
 	/* Plus night — the Xolace+ offer's own sky (postcard art, path-stack
      * layer). Dark in every theme because the art is. */
@@ -113,6 +114,37 @@
 	--color-archive-tint-2: #f3d3dc;
 	--color-archive-tint-3: #e7e5e2;
 	--color-archive-tint-4: #dce6de;
+
+	/* The Xolace face is a printed brand object: its features are the logo's,
+     * whatever the theme, so a worried look reads the same everywhere. Fixed
+     * on purpose; see the fixed-palette convention in CLAUDE.md. The body
+     * gradients (stop arrays) live in src/features/xolace-face/face-palette.ts. */
+	--color-face-sclera: #ffffff;
+	--color-face-pupil: #1a1426;
+	--color-face-brow: rgba(110, 50, 40, 0.55);
+	--color-face-blush: rgba(255, 120, 140, 0.55);
+	--color-face-highlight: rgba(255, 255, 255, 0.55);
+	--color-face-highlight-clear: rgba(255, 255, 255, 0);
+
+	/* Talk's voice orbs are printed objects too: the same dark glass in either
+     * theme, each voice in its own light → mid → deep colours. Fixed on purpose;
+     * see the fixed-palette convention in apps/mobile/AGENTS.md. */
+	--color-orb-base: #1b1721;
+	--color-orb-rim: rgba(229, 229, 229, 0.13);
+	--color-orb-sheen: rgba(255, 255, 255, 0.1);
+	--color-orb-sheen-clear: rgba(255, 255, 255, 0);
+	--color-orb-ash-light: #ffe2c2;
+	--color-orb-ash-mid: #f59a5b;
+	--color-orb-ash-deep: #d9432a;
+	--color-orb-sage-light: #eef7dc;
+	--color-orb-sage-mid: #8fcb6a;
+	--color-orb-sage-deep: #2b8a5e;
+	--color-orb-vesper-light: #e9eaff;
+	--color-orb-vesper-mid: #9a9efa;
+	--color-orb-vesper-deep: #4a4fe6;
+	--color-orb-wren-light: #ffe9f2;
+	--color-orb-wren-mid: #f59ac0;
+	--color-orb-wren-deep: #d6467a;
 
 	/* The poster's voice is fixed too: `--font-*` is a per-theme variable
      * (nightly swaps the whole family to SN Pro), and a printed object does not
@@ -194,6 +226,7 @@
 	     * text on a light background, so the texture pill labels need a deeper
 	     * pull of the same hue. Dark theme keeps the badge value (see below). */
 			--tone-poetic-text: oklch(48% 0.18 305);
+			--frost-text: oklch(52% 0.12 240);
 			--tone-gentle-text: oklch(46% 0.17 15);
 			--tone-direct-text: oklch(46% 0.15 225);
 			--tone-witnessed-text: oklch(48% 0.15 75);
@@ -364,6 +397,7 @@
 			/* Dark theme reads fine at the badge lightness, so the text variant is
 	     * the same value — unlike light theme, no deeper pull is needed. */
 			--tone-poetic-text: var(--tone-poetic);
+			--frost-text: oklch(72% 0.12 240);
 			--tone-gentle-text: var(--tone-gentle);
 			--tone-direct-text: var(--tone-direct);
 			--tone-witnessed-text: var(--tone-witnessed);
@@ -463,6 +497,8 @@
 	--color-tone-gentle: var(--tone-gentle);
 	--color-tone-direct: var(--tone-direct);
 	--color-tone-witnessed: var(--tone-witnessed);
+
+	--color-frost-text: var(--frost-text);
 
 	--color-tone-poetic-text: var(--tone-poetic-text);
 	--color-tone-gentle-text: var(--tone-gentle-text);

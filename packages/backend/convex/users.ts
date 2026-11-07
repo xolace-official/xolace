@@ -1,14 +1,13 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
+import { awardAchievement } from "./achievements/award";
+import { clerkDeletionInFlight } from "./jobs/clerkUserDeletion";
 import { rankInsert } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
 import { generateDisplayName } from "./lib/displayName";
 import { rateLimiter } from "./lib/rateLimits";
-import {
-	intakeAnswerValidators,
-	preferencesDocValidator,
-} from "./lib/validators";
+import { preferencesDocValidator } from "./lib/validators";
 import schema from "./schema";
 import { streakState } from "./streaks/state";
 
@@ -40,14 +39,12 @@ const profileDocValidator = v.object({
 	...schema.tables.emotional_profiles.validator.fields,
 });
 
-// Full `intake_responses` document shape, mirroring schema.ts exactly.
+// Full `intake_responses` document shape, derived from schema.ts so the two
+// can't drift.
 const intakeResponseDocValidator = v.object({
 	_creationTime: v.number(),
 	_id: v.id("intake_responses"),
-	completedAt: v.number(),
-	emotionalProfileId: v.id("emotional_profiles"),
-	intakeVersion: v.number(),
-	...intakeAnswerValidators,
+	...schema.tables.intake_responses.validator.fields,
 });
 
 /**
@@ -115,10 +112,21 @@ export const getOrCreate = mutation({
 			return existingUser._id;
 		}
 
+		// A purged account's Clerk user is being deleted right now. An account made
+		// here would lose its sign-in when that lands, so wait it out instead.
+		if (await clerkDeletionInFlight(ctx, identity.tokenIdentifier)) {
+			throw new ConvexError({
+				code: "account_deleting",
+				message: "This account is still being deleted",
+			});
+		}
+
 		const now = Date.now();
 
 		// Create emotional profile
 		const profileId = await ctx.db.insert("emotional_profiles", {
+			// A new profile has nothing to backfill, so live awards start now.
+			achievementsBackfilledAt: now,
 			createdAt: now,
 			currentStreak: 0,
 			dominantEmotionTags: [],
@@ -127,6 +135,7 @@ export const getOrCreate = mutation({
 			updatedAt: now,
 		});
 		await rankInsert(ctx, profileId);
+		await awardAchievement(ctx, profileId, "joined", now);
 
 		// Create preferences with defaults
 		await ctx.db.insert("preferences", {

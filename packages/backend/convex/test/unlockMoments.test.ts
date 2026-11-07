@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import rateLimiterSchema from "../../node_modules/@convex-dev/rate-limiter/src/component/schema";
 import { api } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
-import { missedPushAt } from "../compounding/unlocks";
+import { missedPushAt } from "../lib/missedBeat";
 import {
 	runEvaluations,
 	scheduledCalls,
@@ -46,8 +46,17 @@ vi.mock("../ai/providers/anthropic", async (orig) => ({
 	...anthropicMock("A check-in."),
 }));
 vi.mock("../lib/pushNotifications", () => ({
+	// Only this file's push: the session also earns badges, whose push is #700's.
 	sendPushToProfile: async (_ctx: unknown, args: Sent) => {
-		sentPushes.push(args);
+		const { data } = args.notification;
+		if (
+			typeof data === "object" &&
+			data !== null &&
+			"type" in data &&
+			data.type === "domain_unlock"
+		) {
+			sentPushes.push(args);
+		}
 	},
 }));
 vi.mock("../streamSetup", async (orig) => ({
@@ -192,8 +201,10 @@ describe("the missed-unlock push (#523)", () => {
 	}
 	const nextDay = (user: SeededUser) =>
 		user.root.finishAllScheduledFunctions(vi.runAllTimers);
-	const logs = (user: SeededUser) =>
-		user.root.run((ctx) => ctx.db.query("notification_log").take(10));
+	const logs = async (user: SeededUser) =>
+		(
+			await user.root.run((ctx) => ctx.db.query("notification_log").take(10))
+		).filter((l) => l.type === "domain_unlock");
 
 	it("sends generic text that never names the domain, the next day", async () => {
 		const user = await notifiable();

@@ -10,6 +10,7 @@ import {
 	finalizePurge,
 } from "./accountDeletionFinalize";
 import {
+	drainAchievements,
 	drainActivityLog,
 	drainConsentRecords,
 	drainEscalations,
@@ -23,7 +24,9 @@ import {
 	drainReports,
 	drainResonances,
 	drainSessions,
+	drainSparkSpends,
 	drainStretches,
+	drainTalkDemos,
 	drainWaitlist,
 } from "./accountDeletionSteps";
 
@@ -116,6 +119,9 @@ export const purgeUser = internalMutation({
 			drainFrozenDays,
 			drainStretches,
 			drainInsights,
+			drainAchievements,
+			drainSparkSpends,
+			drainTalkDemos,
 		];
 
 		let hasMore = false;
@@ -135,7 +141,7 @@ export const purgeUser = internalMutation({
 
 		// Everything below happens exactly once, deleting the profile and user
 		// rows last.
-		await finalizePurge(ctx, profileId, user._id);
+		await finalizePurge(ctx, profileId, user);
 	},
 	returns: v.null(),
 });

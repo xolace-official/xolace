@@ -155,7 +155,13 @@ export const ReflectScreen = () => {
 	};
 
 	useReplySeed(state.screen, dispatch);
-	useReflectBridge(state.screen, isLoading, dispatch);
+	useReflectBridge(
+		state.screen,
+		state.selectedTextures.length > 0,
+		state.entryText.trim().length > 0,
+		isLoading,
+		dispatch
+	);
 
 	useEffect(() => {
 		if (!context?.profile) {

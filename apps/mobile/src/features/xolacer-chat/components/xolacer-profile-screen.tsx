@@ -21,6 +21,7 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { TopBlur } from "@/components/shared/top-blur";
+import { AgeGateSheet } from "@/features/xolacer-chat/age-gate/age-gate-sheet";
 import { ExpandableAvatar } from "@/features/xolacer-chat/components/expandable-avatar";
 import { Fact } from "@/features/xolacer-chat/components/fact-row";
 import { PresenceDot } from "@/features/xolacer-chat/components/presence-dot";
@@ -118,6 +119,7 @@ function ProfileBody({
 	const router = useRouter();
 	const insets = useSafeAreaInsets();
 	const {
+		ageGate,
 		primerMode,
 		sending,
 		openThread,
@@ -298,6 +300,7 @@ function ProfileBody({
 				onClose={handlePrimerClose}
 				onConfirm={primerMode === "gate" ? handlePrimerConfirm : undefined}
 			/>
+			<AgeGateSheet gate={ageGate} />
 		</View>
 	);
 }

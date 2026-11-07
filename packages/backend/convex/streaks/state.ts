@@ -7,12 +7,8 @@ import {
 } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
 import { updateNotificationPrefs } from "../lib/notificationPrefs";
+import { FREEZE_CAP, FREEZE_EARN_EVERY } from "../lib/streakFreezes";
 import { ACTION_WEIGHTS, localDayKey, shiftDayKey } from "./activityLog";
-
-/** Freezes on hand never exceed this. Xolace+ may raise it later (#427). */
-export const FREEZE_CAP = 2;
-/** One freeze is earned per this many consecutive qualifying days. */
-export const FREEZE_EARN_EVERY = 7;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

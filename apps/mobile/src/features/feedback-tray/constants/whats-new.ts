@@ -22,6 +22,43 @@ export type WhatsNewEntry = {
 /** User-facing release notes, newest first, in plain language; a Convex changelog is a P3 TODO. */
 export const WHATS_NEW: WhatsNewEntry[] = [
 	{
+		date: "November 2026",
+		highlights: [
+			{
+				body: "Xolace now marks the things you've done here, like your first session, a 10-day streak or trying something new. Each badge brings sparks you can spend on a streak freeze, and you can pin your favorites to your profile. Been here a while? The badges you've already earned are waiting.",
+				icon: { android: "emoji_events", ios: "trophy.fill" },
+				title: "Badges for showing up",
+			},
+			{
+				body: "New here? Instead of a list of questions, Flux asks you one thing and listens, typed or out loud, then shows you what it heard so you can fix anything it got wrong.",
+				icon: { android: "waving_hand", ios: "hand.wave.fill" },
+				title: "A gentler first step",
+			},
+			{
+				body: "Flux now has a face. It follows along as you write, nods by your mirror, sits in your steadiness dial, and reacts as you slide between heavier and lighter after a reflection.",
+				icon: { android: "mood", ios: "face.smiling.inverse" },
+				title: "Meet Flux, face to face",
+			},
+			{
+				body: "Pick Flux's voice and look in one place before a talk, and switch to Companion view mid-talk to see it up close. It leans in as you speak, and smiles back if you touch it.",
+				icon: { android: "record_voice_over", ios: "person.wave.2.fill" },
+				title: "Talk, your way",
+			},
+			{
+				body: "Your profile now has Insights and Follow-ups tabs, with every follow-up you've had, not just the last five. You can also see how many streak freezes you have ready.",
+				icon: { android: "account_circle", ios: "person.crop.circle.fill" },
+				title: "A tidier profile",
+			},
+			{
+				body: "Listening in Browse now counts toward your streak, and you can repeat a track. Chat buzzes when it should, deleting your account now removes your sign-in too, and we'll ask your date of birth once before your first Xolacer chat.",
+				icon: { android: "auto_fix_high", ios: "wand.and.stars" },
+				title: "And a few more things",
+			},
+		],
+		id: "1.16.0",
+		label: "Version 1.16.0",
+	},
+	{
 		date: "October 2026",
 		highlights: [
 			{
