@@ -5,6 +5,7 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
 import { PosterSurface } from "@/features/quotes/components/poster/poster-surface";
 
 const BACK_ICON = { android: "chevron_left", ios: "chevron.left" } as const;
@@ -35,9 +36,13 @@ export function HeroCard({
 						hitSlop={12}
 						onPress={onBack}
 					>
-						<View className="h-11 w-11 items-center justify-center rounded-full bg-poster-plate">
+						<GlassSurface
+							className="h-11 w-11 items-center justify-center"
+							interactive
+							radius={22}
+						>
 							<SymbolView name={BACK_ICON} size={17} tintColor={ink} />
-						</View>
+						</GlassSurface>
 					</PressableFeedback>
 
 					{star}

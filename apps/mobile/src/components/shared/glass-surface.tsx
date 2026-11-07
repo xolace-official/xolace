@@ -3,7 +3,7 @@
 import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { useThemeColor } from "heroui-native";
 import type { ReactNode } from "react";
-import { View, type ViewStyle } from "react-native";
+import { View, type StyleProp, type ViewStyle } from "react-native";
 import { useAppTheme } from "@/context/app-theme-context";
 
 // heroui-native's token union only knows built-ins; custom tokens (ember, …) resolve fine at
@@ -24,6 +24,7 @@ type SurfaceProps = {
 	radius?: number;
 	className?: string;
 	tint?: string;
+	style?: StyleProp<ViewStyle>;
 	/** Native press response. Only for a surface that is itself tappable. */
 	interactive?: boolean;
 };
@@ -35,6 +36,7 @@ export function GlassSurface({
 	radius = 32,
 	className,
 	tint,
+	style,
 	interactive,
 }: SurfaceProps) {
 	const surface = useToken("surface");
@@ -49,7 +51,7 @@ export function GlassSurface({
 	const inner = <View className={className}>{children}</View>;
 	if (!isLiquidGlassAvailable()) {
 		return (
-			<View style={[shape, { backgroundColor: surface + "CC" }]}>
+			<View style={[shape, style, { backgroundColor: surface + "CC" }]}>
 				<View style={tint ? { backgroundColor: tintColor + "1A" } : undefined}>
 					{inner}
 				</View>
@@ -64,6 +66,7 @@ export function GlassSurface({
 			isInteractive={interactive}
 			style={[
 				shape,
+				style,
 				interactive && unclipped,
 				{ backgroundColor: surface + "40" },
 			]}
