@@ -17,6 +17,10 @@ import {
 	type NotificationReach,
 	useNotificationSettings,
 } from "@/features/settings/hooks/use-notification-settings";
+import {
+	ReachPrototypeSwitcher,
+	ReachPrototypeTop,
+} from "@/features/settings/reach-prototype/reach-prototype";
 import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
 import { cn } from "@/lib/utils";
 
@@ -138,6 +142,7 @@ export const NotificationsScreen = () => {
 					initialAnimate={{ opacity: 0, translateY: 16 }}
 					transition={{ duration: 280, easing: EASE, type: "timing" }}
 				>
+					<ReachPrototypeTop />
 					<SettingsSection title="Reminders">
 						<SettingsRow
 							icon={settingIcon(NOTIFICATIONS_ICON)}
@@ -266,6 +271,7 @@ export const NotificationsScreen = () => {
 					</SettingsSection>
 				</EaseView>
 			</ScrollView>
+			<ReachPrototypeSwitcher />
 
 			{/* The OS has stopped asking: the toggle stays put and this points at Settings. */}
 			<ConfirmationDialog
