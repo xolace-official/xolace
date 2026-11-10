@@ -3,8 +3,10 @@
  * No list to order: "Where should check-ins find you?" with two choices. Picking Telegram
  * when it isn't linked opens a full-screen link moment. The fallback is stated, not configured.
  */
+
+import { RadioGroup } from "heroui-native";
 import { useState } from "react";
-import { ActivityIndicator, Modal, Pressable, View } from "react-native";
+import { ActivityIndicator, Modal, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { SettingsSection } from "@/components/shared/settings-section";
 import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
@@ -103,31 +105,41 @@ export const VariantC = ({ ch }: { ch: FakeChannels }) => {
 
 	return (
 		<SettingsSection title="Where should check-ins find you?">
-			<View className="gap-2 px-5">
-				{(["push", "telegram"] as const).map((id) => (
-					<Pressable
-						accessibilityRole="radio"
-						className={cn(
-							"flex-row items-center gap-4 rounded-2xl px-4 py-4",
-							chosen === id ? "bg-surface" : "bg-surface/30"
-						)}
-						key={id}
-						onPress={() => choose(id)}
-					>
-						<RadioIconIndicator isSelected={chosen === id} symbol={ICON[id]} />
-						<View className="flex-1 gap-0.5">
-							<AppText className="font-medium text-base text-foreground">
-								{id === "push" ? "A notification" : "A Telegram message"}
-							</AppText>
-							<AppText className="text-foreground/55 text-sm">
-								{id === "push" ? "On this phone" : telegramSubtitle(t)}
-							</AppText>
-						</View>
-						{id === "telegram" && t.kind === "needs_plus" && (
-							<Pill label="Xolace+" tone="accent" />
-						)}
-					</Pressable>
-				))}
+			<View className="px-5">
+				<RadioGroup
+					className="gap-2"
+					onValueChange={(id) => choose(id as ChannelId)}
+					value={chosen}
+				>
+					{(["push", "telegram"] as const).map((id) => (
+						<RadioGroup.Item key={id} value={id}>
+							{({ isSelected }) => (
+								<View
+									className={cn(
+										"flex-row items-center gap-4 rounded-2xl px-4 py-4",
+										isSelected ? "bg-surface" : "bg-surface/30"
+									)}
+								>
+									<RadioIconIndicator
+										isSelected={isSelected}
+										symbol={ICON[id]}
+									/>
+									<View className="flex-1 gap-0.5">
+										<AppText className="font-medium text-base text-foreground">
+											{id === "push" ? "A notification" : "A Telegram message"}
+										</AppText>
+										<AppText className="text-foreground/55 text-sm">
+											{id === "push" ? "On this phone" : telegramSubtitle(t)}
+										</AppText>
+									</View>
+									{id === "telegram" && t.kind === "needs_plus" && (
+										<Pill label="Xolace+" tone="accent" />
+									)}
+								</View>
+							)}
+						</RadioGroup.Item>
+					))}
+				</RadioGroup>
 			</View>
 			{t.kind === "disconnected" && (
 				<AppText className="px-5 pt-3 text-sm text-warning">
