@@ -11,7 +11,6 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { useCSSVariable } from "uniwind";
-import { GlassSurface } from "@/components/shared/glass-surface";
 
 const STAR_ICON = { android: "star_border", ios: "star" } as const;
 const STAR_ON_ICON = { android: "star", ios: "star.fill" } as const;
@@ -63,17 +62,13 @@ export function StarButton({
 					onToggle(!saved);
 				}}
 			>
-				<GlassSurface
-					className="h-11 w-11 items-center justify-center"
-					interactive
-					radius={22}
-				>
+				<View className="h-11 w-11 items-center justify-center rounded-full bg-poster-plate">
 					<SymbolView
 						name={saved ? STAR_ON_ICON : STAR_ICON}
 						size={18}
 						tintColor={ink}
 					/>
-				</GlassSurface>
+				</View>
 			</PressableFeedback>
 		</Animated.View>
 	);

@@ -5,7 +5,6 @@ import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
-import { GlassSurface } from "@/components/shared/glass-surface";
 
 const ARCHIVE_ICON = {
 	android: "open_in_new",
@@ -35,16 +34,12 @@ export function DeckCard({
 					onOpenArchive();
 				}}
 			>
-				<GlassSurface
-					className="flex-row items-center justify-between px-4 py-3"
-					interactive
-					radius={18}
-				>
+				<View className="flex-row items-center justify-between px-1">
 					<AppText className="font-poster-display text-[22px] text-poster-ink">
 						SEE OLD QUOTES
 					</AppText>
 					<SymbolView name={ARCHIVE_ICON} size={20} tintColor={ink} />
-				</GlassSurface>
+				</View>
 			</PressableFeedback>
 		</View>
 	);

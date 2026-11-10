@@ -12,7 +12,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
-import { GlassSurface } from "@/components/shared/glass-surface";
 
 const SHARE_ICON = { android: "share", ios: "square.and.arrow.up" } as const;
 const SHARING_ICON = { android: "refresh", ios: "arrow.2.circlepath" } as const;
@@ -64,10 +63,8 @@ export function ActionRow({
 				onPress={onShare}
 				style={styles.share}
 			>
-				<GlassSurface
-					className="h-13 flex-row items-center justify-center gap-2.5 px-5"
-					interactive
-					radius={14}
+				<View
+					className="h-13 flex-row items-center justify-center gap-2.5 rounded-[14px] bg-poster-plate"
 					style={[styles.pill, shadowStyle]}
 				>
 					<AppText className="font-semibold text-[15px] text-poster-ink">
@@ -78,7 +75,7 @@ export function ActionRow({
 						size={16}
 						tintColor={ink}
 					/>
-				</GlassSurface>
+				</View>
 			</PressableFeedback>
 
 			<Animated.View style={[styles.resonate, popStyle]}>
@@ -91,10 +88,8 @@ export function ActionRow({
 						onReact(resonates ? null : "resonates");
 					}}
 				>
-					<GlassSurface
-						className="h-13 flex-row items-center justify-center gap-2.5 px-5"
-						interactive
-						radius={14}
+					<View
+						className="h-13 flex-row items-center justify-center gap-2.5 rounded-[14px] bg-poster-resonate"
 						style={[styles.pill, shadowStyle]}
 					>
 						<AppText
@@ -108,7 +103,7 @@ export function ActionRow({
 							size={18}
 							tintColor={resonates ? white : inkDeep}
 						/>
-					</GlassSurface>
+					</View>
 				</PressableFeedback>
 			</Animated.View>
 		</View>
