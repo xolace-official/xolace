@@ -1,7 +1,8 @@
+import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { BottomSheet, PressableFeedback } from "heroui-native";
 import { useEffect, useRef, useState } from "react";
 import type { TextInputInstance } from "react-native";
-import { StyleSheet, TextInput, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
 import { AppText } from "@/components/shared/app-text";
@@ -37,6 +38,9 @@ export function QuoteReplySheet({
 	const inputRef = useRef<TextInputInstance>(null);
 	const [draft, setDraft] = useState("");
 	const [isEditing, setEditing] = useState(reply === undefined);
+	// The sheet stays mounted off-screen while closed, so focus only once it
+	// is actually showing; autoFocus would raise the keyboard on screen load.
+	const [isPresented, setPresented] = useState(false);
 	const [faint, ink] = useCSSVariable([
 		"--color-poster-ink-faint",
 		"--color-poster-ink",
@@ -50,6 +54,15 @@ export function QuoteReplySheet({
 			setEditing(reply === undefined);
 		}
 	}, [isOpen, reply]);
+
+	useEffect(() => {
+		if (isOpen && isPresented && isEditing) {
+			inputRef.current?.focus();
+			return;
+		}
+		// A closed sheet keeps its input mounted; drop focus so the keyboard goes too.
+		inputRef.current?.blur();
+	}, [isOpen, isPresented, isEditing]);
 
 	const close = () => onOpenChange(false);
 	const send = async () => {
@@ -73,6 +86,8 @@ export function QuoteReplySheet({
 					enableDynamicSizing={false}
 					enableOverDrag={false}
 					handleIndicatorClassName="bg-poster-ink/25"
+					keyboardBehavior="interactive"
+					onChange={(index) => setPresented(index >= 0)}
 					snapPoints={SNAP_POINTS}
 				>
 					<View className="flex-1 gap-4 px-5 pt-2 pb-8">
@@ -83,15 +98,15 @@ export function QuoteReplySheet({
 						{isEditing ? (
 							<>
 								<View className="min-h-36 flex-1 rounded-[20px] bg-poster-field p-3">
-									<TextInput
-										autoFocus
+									<BottomSheetTextInput
 										accessibilityLabel="Reply to today's thought"
 										maxLength={REPLY_MAX_LENGTH}
 										multiline
 										onChangeText={setDraft}
 										placeholder="What does this bring for you?"
 										placeholderTextColor={faint}
-										ref={inputRef}
+										// gorhom still types `ref` as the pre-0.87 TextInput class; the runtime value is the instance.
+										ref={inputRef as never}
 										style={[styles.input, { color: ink }]}
 										value={draft}
 									/>
@@ -120,11 +135,7 @@ export function QuoteReplySheet({
 										isDisabled={!canSend}
 										onPress={send}
 									>
-										<GlassSurface
-											className="px-5 py-3"
-											interactive
-											radius={22}
-										>
+										<GlassSurface className="px-5 py-3" interactive radius={22}>
 											<AppText className="font-semibold text-[14px] text-poster-ink">
 												{isSending ? "Sharing" : "Share"}
 											</AppText>

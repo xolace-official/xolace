@@ -65,9 +65,12 @@ export function PosterSurface({
 const RADIUS = 28;
 
 const styles = StyleSheet.create({
+	// Grow, not flex: 1, so a sized parent (the hero) fills while an unsized one
+	// (the sharing card) still wraps its content instead of collapsing to zero.
 	clip: {
 		borderRadius: RADIUS,
 		borderWidth: StyleSheet.hairlineWidth,
+		flexGrow: 1,
 		overflow: "hidden",
 	},
 	edge: {
