@@ -606,12 +606,12 @@
 			still_here: "still sitting with it",
 		};
 		const v = {
-			collapse: "A",
-			labels: "A",
-			reveal: "A",
+			collapse: "B",
+			labels: "C",
+			reveal: "B",
 			revealShape: "A",
-			savedAck: "A",
-			voice: "A",
+			savedAck: "B",
+			voice: "B",
 		};
 
 		const FIRST_LINE = {
@@ -672,6 +672,8 @@
 
 		const FIXED = {
 			cap: "I've hit my reply limit for today. You can keep going in Xolace, and I'll be back here tomorrow.",
+			capFree:
+				"That's my 5 replies for today on the free plan. With Xolace+ I can keep talking with you here, up to 50 a day. Or carry on in Xolace now, and I'll be back here tomorrow.",
 			deleted:
 				"Your Xolace account was deleted and this chat is no longer linked. Telegram keeps earlier messages here; delete the chat to remove them.",
 			expired:
@@ -963,9 +965,36 @@
 						return;
 					}
 					if (S.repliesToday >= cap()) {
-						log(`reply cap reached (${cap()}/day, ${S.plan}) → fixed cap line`);
-						send(FIXED.cap, {
-							buttons: [[{ act: "open", label: "Open Xolace", url: true }]],
+						const heavy =
+							S.tier !== "standard" ||
+							S.escalationDerived ||
+							S.crisisSuppressUntil ||
+							S.card.response === "heavier" ||
+							kind === "elevatedText";
+						const upsell = S.plan === "free" && !heavy;
+						log(
+							`reply cap reached (${cap()}/day, ${S.plan}) → ${upsell ? "free cap line + Xolace+ upsell" : "plain cap line, no upsell"}`
+						);
+						send(upsell ? FIXED.capFree : FIXED.cap, {
+							buttons: upsell
+								? [
+										[
+											{ act: "plus", label: "Get Xolace+", url: true },
+											{ act: "open", label: "Open Xolace", url: true },
+										],
+									]
+								: heavy
+									? [
+											[
+												{
+													act: "resources",
+													label: "Support resources",
+													url: true,
+												},
+												{ act: "open", label: "Open Xolace", url: true },
+											],
+										]
+									: [[{ act: "open", label: "Open Xolace", url: true }]],
 						});
 						render();
 						return;
@@ -1254,6 +1283,9 @@
 							? "Opens app → crisis resources (from=telegram)"
 							: "Opens IASP directory"
 					);
+					break;
+				case "plus":
+					toast("Opens Xolace+ paywall (from=telegram_cap)");
 					break;
 				case "open":
 					toast("Opens Xolace (deep link)");
