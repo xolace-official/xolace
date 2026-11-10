@@ -1,7 +1,8 @@
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
+import type { ReactNode } from "react";
 import { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import Animated, {
 	useAnimatedStyle,
@@ -12,6 +13,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
 
 const SHARE_ICON = { android: "share", ios: "square.and.arrow.up" } as const;
 const SHARING_ICON = { android: "refresh", ios: "arrow.2.circlepath" } as const;
@@ -24,17 +26,17 @@ export function ActionRow({
 	isSharingLoading,
 	onShare,
 	onReact,
+	reply,
 }: {
 	resonates: boolean;
 	isSharingLoading?: boolean;
 	onShare: () => void;
 	onReact: (next: "resonates" | null) => void;
+	reply: ReactNode;
 }) {
-	const [ink, inkDeep, white, shadow] = useCSSVariable([
+	const [ink, white] = useCSSVariable([
 		"--color-poster-ink",
-		"--color-poster-ink-deep",
 		"--color-poster-plate",
-		"--color-poster-shadow",
 	]) as string[];
 
 	const pop = useSharedValue(1);
@@ -52,33 +54,9 @@ export function ActionRow({
 		transform: [{ scale: pop.get() }],
 	}));
 
-	const shadowStyle = { shadowColor: shadow };
-
 	return (
-		<View className="mt-4.5 flex-row gap-3">
-			<PressableFeedback
-				accessibilityLabel="Share"
-				accessibilityRole="button"
-				isDisabled={!!isSharingLoading}
-				onPress={onShare}
-				style={styles.share}
-			>
-				<View
-					className="h-13 flex-row items-center justify-center gap-2.5 rounded-[14px] bg-poster-plate"
-					style={[styles.pill, shadowStyle]}
-				>
-					<AppText className="font-semibold text-[15px] text-poster-ink">
-						Share
-					</AppText>
-					<SymbolView
-						name={isSharingLoading ? SHARING_ICON : SHARE_ICON}
-						size={16}
-						tintColor={ink}
-					/>
-				</View>
-			</PressableFeedback>
-
-			<Animated.View style={[styles.resonate, popStyle]}>
+		<View className="mt-2 flex-row items-center gap-3">
+			<Animated.View className="flex-1" style={popStyle}>
 				<PressableFeedback
 					accessibilityLabel="Resonate"
 					accessibilityRole="button"
@@ -88,35 +66,47 @@ export function ActionRow({
 						onReact(resonates ? null : "resonates");
 					}}
 				>
-					<View
-						className="h-13 flex-row items-center justify-center gap-2.5 rounded-[14px] bg-poster-resonate"
-						style={[styles.pill, shadowStyle]}
+					<GlassSurface
+						className="h-13 flex-row items-center justify-center gap-2.5 px-5"
+						interactive
+						radius={26}
+						tint={resonates ? "accent" : undefined}
 					>
 						<AppText
-							className="font-semibold text-[15px]"
-							style={{ color: resonates ? white : inkDeep }}
+							className="font-semibold text-[15px] text-poster-ink"
+							style={{ color: resonates ? white : ink }}
 						>
 							Resonate
 						</AppText>
 						<SymbolView
 							name={resonates ? HEART_ON_ICON : HEART_ICON}
 							size={18}
-							tintColor={resonates ? white : inkDeep}
+							tintColor={resonates ? white : ink}
 						/>
-					</View>
+					</GlassSurface>
 				</PressableFeedback>
 			</Animated.View>
+
+			{reply}
+
+			<PressableFeedback
+				accessibilityLabel="Share"
+				accessibilityRole="button"
+				isDisabled={!!isSharingLoading}
+				onPress={onShare}
+			>
+				<GlassSurface
+					className="h-13 w-13 items-center justify-center"
+					interactive
+					radius={26}
+				>
+					<SymbolView
+						name={isSharingLoading ? SHARING_ICON : SHARE_ICON}
+						size={19}
+						tintColor={ink}
+					/>
+				</GlassSurface>
+			</PressableFeedback>
 		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-	pill: {
-		elevation: 3,
-		shadowOffset: { height: 6, width: 0 },
-		shadowOpacity: 0.1,
-		shadowRadius: 16,
-	},
-	resonate: { flex: 1.15 },
-	share: { flex: 1 },
-});

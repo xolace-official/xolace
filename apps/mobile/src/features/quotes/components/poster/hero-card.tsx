@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCSSVariable } from "uniwind";
-import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
 import { PosterSurface } from "@/features/quotes/components/poster/poster-surface";
 
 const BACK_ICON = { android: "chevron_left", ios: "chevron.left" } as const;
@@ -16,18 +16,23 @@ export function HeroCard({
 	star,
 	actions,
 	children,
+	footer,
 }: {
 	onBack: () => void;
 	star?: ReactNode;
 	actions?: ReactNode;
 	children: ReactNode;
+	footer?: ReactNode;
 }) {
-	const { top } = useSafeAreaInsets();
+	const { bottom, top } = useSafeAreaInsets();
 	const ink = useCSSVariable("--color-poster-ink") as string;
 
 	return (
 		<PosterSurface style={styles.hero}>
-			<View className="px-5 pb-5" style={{ paddingTop: top }}>
+			<View
+				className="flex-1 px-5"
+				style={{ paddingBottom: bottom + 16, paddingTop: top + 8 }}
+			>
 				<View className="flex-row items-start justify-between">
 					<PressableFeedback
 						accessibilityLabel="Back"
@@ -35,29 +40,27 @@ export function HeroCard({
 						hitSlop={12}
 						onPress={onBack}
 					>
-						<View className="h-11 w-11 items-center justify-center rounded-full bg-poster-plate">
+						<GlassSurface
+							className="h-11 w-11 items-center justify-center"
+							interactive
+							radius={22}
+						>
 							<SymbolView name={BACK_ICON} size={17} tintColor={ink} />
-						</View>
+						</GlassSurface>
 					</PressableFeedback>
 
 					{star}
 				</View>
 
-				<AppText className="mt-3.5 max-w-57.5 font-poster-display text-[37px] text-poster-ink leading-[36.8px] tracking-[1.6px]">
-					{"TODAY'S\n"}
-					<AppText className="font-poster-display text-[37px] text-poster-ink-soft leading-9.2 tracking-[1.6px]">
-						QUOTE
-					</AppText>
-				</AppText>
-
-				<View className="mt-5 rounded-[20px] bg-poster-paper p-4.5">
+				<View className="flex-1 justify-center py-8">
 					{children}
 				</View>
 
 				{actions}
+				{footer}
 			</View>
 		</PosterSurface>
 	);
 }
 
-const styles = { hero: { margin: 10 } } as const;
+const styles = { hero: { flex: 1, margin: 10 } } as const;

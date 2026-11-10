@@ -3,7 +3,6 @@ import { StatusBar } from "expo-status-bar";
 import { usePostHog } from "posthog-react-native";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { Presets } from "react-native-pulsar";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { usePaywall } from "@/features/purchases/use-paywall";
@@ -35,7 +34,7 @@ const EASE_TRANSITION = {
 };
 
 export function QuotesScreen() {
-	const { top, bottom } = useSafeAreaInsets();
+	const { top } = useSafeAreaInsets();
 	const router = useRouter();
 	const openPaywall = usePaywall((s) => s.open);
 	const posthog = usePostHog();
@@ -128,12 +127,6 @@ export function QuotesScreen() {
 			<StatusBar hidden />
 			<View className="flex-1 bg-background">
 				<HeartBurst opacity={heartBurst.opacity} scale={heartBurst.scale} />
-				<KeyboardAwareScrollView
-					contentContainerStyle={{ paddingBottom: bottom + 16 }}
-					// Otherwise the first tap on the send pill only dismisses the keyboard.
-					keyboardShouldPersistTaps="handled"
-					showsVerticalScrollIndicator={false}
-				>
 					<HeroCard
 						actions={
 							hasQuote ? (
@@ -141,6 +134,16 @@ export function QuotesScreen() {
 									isSharingLoading={isSharingLoading}
 									onReact={handleReact}
 									onShare={handleShare}
+									reply={
+										<ComposePanel
+											flagged={quote.replyModeration?.flagged ?? false}
+											isSending={isSendingReply}
+											onSend={sendReply}
+											reachSubline={replyReaches && !replyUnmoderated}
+											remembered={replyRemembered && !replyUnmoderated}
+											reply={quote.reply}
+										/>
+									}
 									resonates={quote.reaction === "resonates"}
 								/>
 							) : (
@@ -148,6 +151,16 @@ export function QuotesScreen() {
 								// quote lands.
 								<View className="mt-4 h-12" />
 							)
+						}
+						footer={
+							<DeckCard
+								onOpenArchive={() => {
+									posthog.capture("quote_archive_opened", {
+										kept_count: savedCount ?? 0,
+									});
+									router.push("/(protected)/quotes/archive");
+								}}
+							/>
 						}
 						onBack={goBack}
 						star={
@@ -190,28 +203,6 @@ export function QuotesScreen() {
 							/>
 						)}
 					</HeroCard>
-
-					<DeckCard
-						composer={
-							hasQuote ? (
-								<ComposePanel
-									flagged={quote.replyModeration?.flagged ?? false}
-									isSending={isSendingReply}
-									onSend={sendReply}
-									reachSubline={replyReaches && !replyUnmoderated}
-									remembered={replyRemembered && !replyUnmoderated}
-									reply={quote.reply}
-								/>
-							) : null
-						}
-						onOpenArchive={() => {
-							posthog.capture("quote_archive_opened", {
-								kept_count: savedCount ?? 0,
-							});
-							router.push("/(protected)/quotes/archive");
-						}}
-					/>
-				</KeyboardAwareScrollView>
 
 				<QuoteShareSheet
 					imageUri={shareImageUri}

@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
-import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { useFitFontSize } from "@/features/quotes/use-fit-font-size";
 
@@ -31,7 +30,6 @@ export function PosterBody({
 	onSettled?: () => void;
 }) {
 	const boxHeight = usePosterBoxHeight();
-	const shadow = useCSSVariable("--color-poster-shadow") as string;
 	const fit = useFitFontSize(body);
 	const settled = fit.settled;
 
@@ -49,29 +47,24 @@ export function PosterBody({
 	return (
 		<View>
 			{title ? (
-				<View
-					className="rounded-xl bg-poster-plate p-3"
-					style={[styles.plate, { shadowColor: shadow }]}
+				<AppText
+					adjustsFontSizeToFit
+					className="mb-5 text-center font-poster-display text-[15px] text-poster-ink leading-5 tracking-[2.4px]"
+					minimumFontScale={0.8}
+					numberOfLines={1}
 				>
-					<AppText
-						adjustsFontSizeToFit
-						className="text-center font-poster-display text-[27px] text-poster-ink leading-[34px] tracking-[1.6px]"
-						minimumFontScale={0.8}
-						numberOfLines={1}
-					>
-						{title.toUpperCase()}
-					</AppText>
-				</View>
+					{title.toUpperCase()}
+				</AppText>
 			) : null}
 
 			<View
-				className={title ? "mt-4 overflow-hidden" : "overflow-hidden"}
+				className="overflow-hidden"
 				onLayout={fit.onBoxLayout}
 				style={{ height: boxHeight }}
 			>
 				<AppText
 					allowFontScaling
-					className="font-poster-body text-poster-ink-soft"
+					className="text-center font-poster-body text-poster-ink"
 					style={[bodyType, fit.settled ? null : styles.searching]}
 				>
 					{body}
@@ -80,7 +73,7 @@ export function PosterBody({
 				 * Remounted per candidate so onTextLayout re-fires. */}
 				{fit.settled ? null : (
 					<AppText
-						className="font-poster-body"
+						className="text-center font-poster-body"
 						key={fit.measureKey}
 						onTextLayout={fit.onTextLayout}
 						style={[
@@ -97,11 +90,6 @@ export function PosterBody({
 }
 
 const styles = StyleSheet.create({
-	plate: {
-		shadowOffset: { height: 4, width: 0 },
-		shadowOpacity: 0.07,
-		shadowRadius: 14,
-	},
 	/* The first candidate is the ceiling; never paint it clipped before it settles. */
 	searching: { opacity: 0 },
 	twin: { left: 0, opacity: 0, position: "absolute", right: 0, top: 0 },

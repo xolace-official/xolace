@@ -1,10 +1,10 @@
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
-import type { ReactNode } from "react";
 import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
+import { GlassSurface } from "@/components/shared/glass-surface";
 
 const ARCHIVE_ICON = {
 	android: "open_in_new",
@@ -14,18 +14,14 @@ const ARCHIVE_ICON = {
 /** The poster's second sheet, on the fixed palette so hero and deck read as one printed set
  * (#305). */
 export function DeckCard({
-	composer,
 	onOpenArchive,
 }: {
-	composer?: ReactNode;
 	onOpenArchive: () => void;
 }) {
 	const [ink] = useCSSVariable(["--color-poster-ink"]) as string[];
 
 	return (
-		// mt-0.5: RN margins do not collapse, and the hero already ends in 10pt.
-		<View className="mx-2.5 mt-0.5 mb-6 gap-4 rounded-[28px] bg-poster-deck p-4">
-			{composer}
+		<View className="mt-3">
 			<PressableFeedback
 				accessibilityLabel="See old quotes"
 				accessibilityRole="button"
@@ -34,12 +30,16 @@ export function DeckCard({
 					onOpenArchive();
 				}}
 			>
-				<View className="flex-row items-center justify-between px-1">
+				<GlassSurface
+					className="flex-row items-center justify-between px-4 py-3"
+					interactive
+					radius={18}
+				>
 					<AppText className="font-poster-display text-[22px] text-poster-ink">
 						SEE OLD QUOTES
 					</AppText>
 					<SymbolView name={ARCHIVE_ICON} size={20} tintColor={ink} />
-				</View>
+				</GlassSurface>
 			</PressableFeedback>
 		</View>
 	);

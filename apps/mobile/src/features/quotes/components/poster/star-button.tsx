@@ -1,7 +1,6 @@
 import { SymbolView } from "expo-symbols";
 import { PressableFeedback } from "heroui-native";
 import { useEffect } from "react";
-import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import Animated, {
 	useAnimatedStyle,
@@ -11,6 +10,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { useCSSVariable } from "uniwind";
+import { GlassSurface } from "@/components/shared/glass-surface";
 
 const STAR_ICON = { android: "star_border", ios: "star" } as const;
 const STAR_ON_ICON = { android: "star", ios: "star.fill" } as const;
@@ -62,13 +62,18 @@ export function StarButton({
 					onToggle(!saved);
 				}}
 			>
-				<View className="h-11 w-11 items-center justify-center rounded-full bg-poster-plate">
+				<GlassSurface
+					className="h-11 w-11 items-center justify-center"
+					interactive
+					radius={22}
+					tint={saved ? "accent" : undefined}
+				>
 					<SymbolView
 						name={saved ? STAR_ON_ICON : STAR_ICON}
 						size={18}
 						tintColor={ink}
 					/>
-				</View>
+				</GlassSurface>
 			</PressableFeedback>
 		</Animated.View>
 	);
