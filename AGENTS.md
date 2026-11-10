@@ -61,6 +61,19 @@ Put a dependency in the package that uses it; shared versions come from the root
   revive covered is not one. **Days showed up** is the lifetime total, gaps
   allowed, never resets. Same days as the **streak**, which counts them only in a
   row.
+- **follow-up**: the check-in card Xolace keeps for a session that ended unresolved,
+  from creation until it's answered, dismissed or expires.
+- **outreach**: a message Xolace itself initiates to a user outside the app. Its
+  reason is its **intent** (a nudge, a gentle return, a pattern nudge…). A message
+  relaying something another person did (a chat message) is a notification, not
+  outreach.
+- **channel**: a place outreach can land: push, Telegram, later SMS and others. A user
+  **links** a channel before Xolace may reach them there. Each channel is open to
+  free users or only to Plus, and that can change at any time.
+- **delivery**: one outreach landing, or failing to land, on one channel. One outreach
+  can have several deliveries.
+- **nudge**: an outreach a follow-up sends to invite the user back to its card.
+  Gentle returns and pattern nudges are other intents, not nudges.
 
 ## Hit every surface
 
