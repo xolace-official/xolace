@@ -1,0 +1,1591 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta content="width=device-width, initial-scale=1" name="viewport">
+		<title>PROTOTYPE · Telegram check-in</title>
+		<!--
+  PROTOTYPE — throwaway. Answers wayfinder ticket #732 "Prototype the Telegram check-in conversation"
+  (map #723). Not production code; lives only on branch prototype/telegram-checkin-conversation.
+  Copy variants are switchable; AI replies are canned stand-ins for voice/length, not model output.
+  Safeguard is a keyword fake. Double-click to open.
+-->
+		<style>
+		:root {
+			--bg: #f3f4f6;
+			--panel: #fff;
+			--ink: #111827;
+			--muted: #6b7280;
+			--line: #e5e7eb;
+			--chat: #cfe3c4;
+			--bubble: #fff;
+			--mine: #e1fec6;
+			--btn: rgba(0, 0, 0, 0.18);
+			--accent: #2481cc;
+			--warn: #b45309;
+			--bad: #b91c1c;
+			--ok: #15803d;
+		}
+		* {
+			box-sizing: border-box;
+		}
+		body {
+			margin: 0;
+			font:
+				14px / 1.4 -apple-system,
+				BlinkMacSystemFont,
+				"Segoe UI",
+				Roboto,
+				sans-serif;
+			color: var(--ink);
+			background: var(--bg);
+		}
+		header {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 12px;
+			align-items: baseline;
+			padding: 10px 16px;
+			color: #fff;
+			background: #111827;
+		}
+		header b {
+			font-size: 15px;
+		}
+		header span {
+			font-size: 12px;
+			color: #fbbf24;
+		}
+		.wrap {
+			display: grid;
+			grid-template-columns: 300px 400px 1fr;
+			gap: 14px;
+			align-items: start;
+			padding: 14px;
+		}
+		@media (max-width: 1100px) {
+			.wrap {
+				grid-template-columns: 1fr;
+			}
+		}
+		.card {
+			padding: 12px;
+			margin-bottom: 12px;
+			background: var(--panel);
+			border: 1px solid var(--line);
+			border-radius: 10px;
+		}
+		.card h3 {
+			margin: 0 0 8px;
+			font-size: 12px;
+			color: var(--muted);
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+		}
+		label.row {
+			display: flex;
+			gap: 8px;
+			align-items: center;
+			justify-content: space-between;
+			margin: 5px 0;
+		}
+		select {
+			max-width: 170px;
+			padding: 2px 4px;
+			font: inherit;
+		}
+		.seg {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px;
+			margin: 4px 0 8px;
+		}
+		.seg button,
+		.acts button {
+			padding: 4px 8px;
+			font: inherit;
+			font-size: 12px;
+			cursor: pointer;
+			background: #fff;
+			border: 1px solid var(--line);
+			border-radius: 6px;
+		}
+		.seg button.on {
+			color: #fff;
+			background: var(--accent);
+			border-color: var(--accent);
+		}
+		.acts {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px;
+		}
+		.acts button:hover,
+		.seg button:hover {
+			border-color: var(--accent);
+		}
+		.sub {
+			margin: 6px 0 2px;
+			font-size: 11px;
+			color: var(--muted);
+		}
+
+		/* phone */
+		.phone {
+			position: sticky;
+			top: 10px;
+			padding: 10px;
+			background: #000;
+			border-radius: 34px;
+		}
+		.lock {
+			min-height: 92px;
+			padding: 10px 10px 8px;
+			color: #fff;
+			background: linear-gradient(160deg, #334155, #0f172a);
+			border-radius: 26px 26px 0 0;
+		}
+		.lock .t {
+			margin-bottom: 6px;
+			font-size: 11px;
+			text-align: center;
+			opacity: 0.7;
+		}
+		.notif {
+			padding: 7px 10px;
+			margin-top: 5px;
+			font-size: 12.5px;
+			background: rgba(255, 255, 255, 0.18);
+			border-radius: 14px;
+			backdrop-filter: blur(6px);
+		}
+		.notif .h {
+			display: flex;
+			justify-content: space-between;
+			font-size: 11px;
+			opacity: 0.8;
+		}
+		.notif .b {
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+			-webkit-line-clamp: 2;
+		}
+		.notif.silent {
+			opacity: 0.65;
+		}
+		.tghead {
+			display: flex;
+			gap: 10px;
+			align-items: center;
+			padding: 8px 12px;
+			background: #fff;
+			border-bottom: 1px solid #ddd;
+		}
+		.ava {
+			display: grid;
+			place-items: center;
+			width: 34px;
+			height: 34px;
+			font-weight: 700;
+			color: #fff;
+			background: #7c3aed;
+			border-radius: 50%;
+		}
+		.tghead small {
+			display: block;
+			font-size: 11.5px;
+			color: var(--muted);
+		}
+		.chat {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			height: 520px;
+			padding: 10px 8px;
+			overflow-y: auto;
+			background: var(--chat);
+		}
+		.msg {
+			align-self: flex-start;
+			max-width: 86%;
+		}
+		.msg.me {
+			align-self: flex-end;
+		}
+		.bub {
+			padding: 7px 10px 5px;
+			white-space: pre-wrap;
+			background: var(--bubble);
+			border-radius: 12px 12px 12px 4px;
+			box-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
+		}
+		.me .bub {
+			background: var(--mine);
+			border-radius: 12px 12px 4px 12px;
+		}
+		.bub .meta {
+			margin-top: 2px;
+			font-size: 10.5px;
+			color: #8a9a8a;
+			text-align: right;
+		}
+		.bub blockquote {
+			padding: 3px 8px;
+			margin: 6px 0 2px;
+			background: #f5f3ff;
+			border-left: 3px solid #7c3aed;
+			border-radius: 4px;
+		}
+		.bub.collapsed {
+			font-style: italic;
+			color: var(--muted);
+		}
+		.kb {
+			display: grid;
+			gap: 4px;
+			margin-top: 4px;
+		}
+		.kbrow {
+			display: flex;
+			gap: 4px;
+		}
+		.kb button {
+			position: relative;
+			flex: 1;
+			padding: 7px 6px;
+			font: inherit;
+			font-size: 13px;
+			color: #fff;
+			cursor: pointer;
+			background: var(--btn);
+			border: 0;
+			border-radius: 8px;
+		}
+		.kb button.url::after {
+			position: absolute;
+			top: 2px;
+			right: 5px;
+			font-size: 10px;
+			content: "↗";
+		}
+		.kb button:hover {
+			background: rgba(0, 0, 0, 0.28);
+		}
+		.tags {
+			margin-top: 2px;
+			font-size: 10px;
+			color: #6b21a8;
+		}
+		.typing {
+			align-self: flex-start;
+			padding: 4px 10px;
+			font-size: 12px;
+			color: #4b5563;
+			background: #fff;
+			border-radius: 10px;
+		}
+		.toast {
+			position: absolute;
+			top: 45%;
+			left: 50%;
+			padding: 8px 14px;
+			font-size: 13px;
+			color: #fff;
+			pointer-events: none;
+			background: rgba(0, 0, 0, 0.8);
+			border-radius: 10px;
+			opacity: 0;
+			transform: translateX(-50%);
+			transition: opacity 0.2s;
+		}
+		.toast.on {
+			opacity: 1;
+		}
+		.composer {
+			display: flex;
+			gap: 6px;
+			padding: 8px;
+			background: #fff;
+			border-radius: 0 0 26px 26px;
+		}
+		.composer input {
+			flex: 1;
+			padding: 7px 12px;
+			font: inherit;
+			border: 1px solid #ddd;
+			border-radius: 18px;
+		}
+		.composer button {
+			width: 34px;
+			color: #fff;
+			cursor: pointer;
+			background: var(--accent);
+			border: 0;
+			border-radius: 50%;
+		}
+		.screen {
+			position: relative;
+		}
+
+		/* right */
+		pre.state {
+			padding: 10px;
+			margin: 0;
+			overflow-x: auto;
+			font-size: 12px;
+			color: #d1fae5;
+			background: #0b1020;
+			border-radius: 8px;
+		}
+		ol.log {
+			max-height: 260px;
+			padding-left: 18px;
+			margin: 0;
+			overflow-y: auto;
+			font-size: 12px;
+		}
+		ol.log li {
+			margin: 2px 0;
+		}
+		.tabs {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 4px;
+			margin-bottom: 8px;
+		}
+		.tabs button {
+			padding: 4px 8px;
+			font: inherit;
+			font-size: 12px;
+			cursor: pointer;
+			background: #fff;
+			border: 1px solid var(--line);
+			border-radius: 14px;
+		}
+		.tabs button.on {
+			color: #fff;
+			background: #111827;
+		}
+		.guide p {
+			margin: 6px 0;
+		}
+		.guide .step {
+			padding: 8px;
+			background: #fffbeb;
+			border: 1px solid #fde68a;
+			border-radius: 8px;
+		}
+		.guide .q {
+			padding: 8px;
+			margin-top: 8px;
+			background: #eff6ff;
+			border: 1px solid #bfdbfe;
+			border-radius: 8px;
+		}
+		.primary {
+			color: #fff !important;
+			background: var(--accent) !important;
+			border-color: var(--accent) !important;
+		}
+		</style>
+	</head>
+	<body>
+		<header>
+			<b>Telegram check-in conversation</b>
+			<span
+				>PROTOTYPE · throwaway · ticket #732 · AI replies are canned stand-ins ·
+				safeguard is a keyword fake</span
+			>
+		</header>
+
+		<div class="wrap">
+			<!-- LEFT: controls -->
+			<div>
+				<div class="card">
+					<h3>Situation</h3>
+					<label class="row"
+						>Tier
+						<select id="tier">
+							<option>standard</option>
+							<option>elevated</option>
+							<option>acute</option>
+						</select></label
+					>
+					<label class="row"
+						>escalationDerived <input id="esc" type="checkbox"></label
+					>
+					<label class="row"
+						>Plan
+						<select id="plan">
+							<option value="free">free (5 replies/day)</option>
+							<option value="plus">Plus (50/day)</option>
+						</select></label
+					>
+					<label class="row"
+						>Country
+						<select id="country">
+							<option value="GH">🇬🇭 Ghana</option>
+							<option value="US">🇺🇸 United States</option>
+							<option value="GB">🇬🇧 United Kingdom</option>
+							<option value="">unknown</option>
+						</select></label
+					>
+					<label class="row"
+						>Acute offers “heavier”
+						<input id="acuteHeavier" type="checkbox"></label
+					>
+					<label class="row"
+						>Show dev annotations
+						<input checked id="annot" type="checkbox"></label
+					>
+				</div>
+
+				<div class="card">
+					<h3>Copy variants</h3>
+					<div class="sub">Answer button labels</div>
+					<div class="seg" data-v="labels"></div>
+					<div class="sub">Reveal button</div>
+					<div class="seg" data-v="reveal"></div>
+					<div class="sub">How the reveal reads</div>
+					<div class="seg" data-v="revealShape"></div>
+					<div class="sub">Collapsed line</div>
+					<div class="seg" data-v="collapse"></div>
+					<div class="sub">AI reply voice / length</div>
+					<div class="seg" data-v="voice"></div>
+					<div class="sub">Confirm a saved reflection?</div>
+					<div class="seg" data-v="savedAck"></div>
+				</div>
+
+				<div class="card">
+					<h3>Free play: things that happen</h3>
+					<div class="sub">Outreach</div>
+					<div class="acts">
+						<button data-a="nudge" type="button">Send check-in</button>
+						<button data-a="nudgeQuiet" type="button">
+							Acute in quiet window
+						</button>
+						<button data-a="gentle" type="button">Gentle return</button>
+						<button data-a="pattern" type="button">Pattern nudge</button>
+					</div>
+					<div class="sub">The card, elsewhere</div>
+					<div class="acts">
+						<button data-a="appAnswer" type="button">Answered in app</button>
+						<button data-a="supersede" type="button">Superseded</button>
+						<button data-a="expire" type="button">Expired</button>
+					</div>
+					<div class="sub">Link lifecycle</div>
+					<div class="acts">
+						<button data-a="startGood" type="button">/start good token</button>
+						<button data-a="startBad" type="button">
+							/start expired token
+						</button>
+						<button data-a="stop" type="button">/stop</button>
+						<button data-a="help" type="button">/help</button>
+						<button data-a="unlinkApp" type="button">Unlink in app</button>
+						<button data-a="relinkOther" type="button">
+							Linked from other account
+						</button>
+						<button data-a="oldChat" type="button">(old chat) replaced</button>
+						<button data-a="deleted" type="button">Account deleted</button>
+					</div>
+					<div class="sub">Edges</div>
+					<div class="acts">
+						<button data-a="stranger" type="button">Stranger writes</button>
+						<button data-a="capNow" type="button">Use up reply cap</button>
+						<button data-a="failNext" type="button">Next AI reply fails</button>
+						<button data-a="reset" type="button">Reset chat</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- MIDDLE: phone -->
+			<div>
+				<div class="phone">
+					<div class="lock">
+						<div class="t">Lock screen: what a glance shows</div>
+						<div id="notifs"></div>
+					</div>
+					<div class="tghead">
+						<div class="ava">X</div>
+						<div><b>Xolace</b><small>bot</small></div>
+					</div>
+					<div class="screen">
+						<div class="chat" id="chat"></div>
+						<div class="toast" id="toast"></div>
+					</div>
+					<div class="composer">
+						<input autocomplete="off" id="input" placeholder="Message">
+						<button id="send" title="Send" type="button">➤</button>
+					</div>
+				</div>
+				<div class="sub" style="margin-top:6px">
+					Try typing: “a walk with my sister” · “work was rough again” · “I feel
+					hopeless” · “I want to end it”
+				</div>
+			</div>
+
+			<!-- RIGHT: guided + state -->
+			<div>
+				<div class="card guide">
+					<h3>Guided walkthroughs</h3>
+					<div class="tabs" id="tabs"></div>
+					<div id="guide"></div>
+				</div>
+				<div class="card">
+					<h3>State</h3>
+					<pre class="state" id="state"></pre>
+				</div>
+				<div class="card">
+					<h3>Backend log (what the contract would do)</h3>
+					<ol class="log" id="log"></ol>
+				</div>
+			</div>
+		</div>
+
+		<script>
+		// biome-ignore-all lint: throwaway prototype on a branch that is never merged (#732)
+		"use strict";
+		// ---------- copy ----------
+		const VARIANTS = {
+			collapse: {
+				A: {
+					answered: () => "Checked in ✓",
+					closed: "This check-in has closed.",
+					name: "Checked in ✓",
+				},
+				B: {
+					answered: (r) => `✓ Checked in: ${ANSWER_WORD[r]}`,
+					closed: "This check-in is closed. Nothing to do here.",
+					name: "Says the answer",
+				},
+				C: { answered: () => "Checked in", closed: "Closed", name: "Bare" },
+			},
+			labels: {
+				A: {
+					heavier: "Got heavier",
+					lighter: "Feeling lighter",
+					name: "App's",
+					still_here: "Still sitting with it",
+				},
+				B: {
+					heavier: "Heavier",
+					lighter: "Lighter",
+					name: "Short",
+					still_here: "About the same",
+				},
+				C: {
+					heavier: "🌧 Heavier",
+					lighter: "🌤 Lighter",
+					name: "Emoji",
+					still_here: "☁️ Still with it",
+				},
+			},
+			reveal: {
+				A: { label: "What I noted", name: "What I noted" },
+				B: { label: "What was this about?", name: "What was this about?" },
+				C: { label: "Show me", name: "Show me" },
+			},
+			revealShape: {
+				A: { name: "Add as quote" },
+				B: { name: "Replace line" },
+			},
+			savedAck: {
+				A: { name: "Say it's saved" },
+				B: { name: "Just reply" },
+			},
+			voice: {
+				A: { name: "Brief (2 sentences)" },
+				B: { name: "Warm (3 + question)" },
+				C: { name: "Spare (1 line)" },
+			},
+		};
+		const ANSWER_WORD = {
+			heavier: "heavier",
+			lighter: "lighter",
+			still_here: "still sitting with it",
+		};
+		const v = {
+			collapse: "A",
+			labels: "A",
+			reveal: "A",
+			revealShape: "A",
+			savedAck: "A",
+			voice: "A",
+		};
+
+		const FIRST_LINE = {
+			acute:
+				"Just checking in on what you worked through a little while ago. We're here.",
+			elevated:
+				"A little while ago you let something out here. How's it sitting now?",
+			standard:
+				"A little while ago you let something out here. How's it sitting now?",
+		};
+		const CARD_TEXT = {
+			acute:
+				"A couple of days ago things felt like a lot. No need to say anything big. We're still here.",
+			elevated:
+				"Last week you talked about the falling-out with your brother and how alone it left you. Is that still sitting heavy?",
+			standard:
+				"You've brought work and money here a few times lately. How's it sitting now?",
+		};
+
+		// Canned stand-ins for AI replies. First line is the lock-screen line: never names the domain, never echoes the user.
+		const AI = {
+			elevatedText: {
+				A: "I'm glad you said it. That's a heavy feeling to sit with, and you don't have to sit with it alone. Support is below if you want it.",
+				B: "I'm really glad you told me.\nFeeling like that is exhausting, and it's not something you have to handle on your own. If you want, tell me a bit more, or open Xolace. And if it gets to be too much, support is right there.",
+				C: "I'm glad you told me. Support is below if you need it.",
+			},
+			freeText: {
+				A: "Thanks for telling me. Days like that pile up. Is it the same thing as before, or something new?",
+				B: "Thanks for telling me.\nThat sounds draining, and it makes sense it's still on you. What's been the hardest part of it today? If you want to go deeper, Xolace is the place for that.",
+				C: "Thanks for telling me. Want to talk it through in Xolace?",
+			},
+			heavier: {
+				A: "I'm sorry it's got heavier. You don't have to carry it on your own, so there's support below, and a space in Xolace when you want to work through it.",
+				B: "I'm sorry it's got heavier.\nThat's hard, especially when you'd hoped it would ease. Xolace has a space to work through it at your own pace, and if it feels like too much right now, support is a tap away.",
+				C: "Sorry it's got heavier. Xolace is here when you want it.",
+			},
+			lighter: {
+				A: "Good to hear. What helped, do you think? Anything counts.",
+				B: "That's really good to hear.\nSometimes it eases and we can't say why, and sometimes it was something small. If you feel like it, tell me what helped and I'll keep it with this check-in.",
+				C: "Good to hear. What helped?",
+			},
+			reflectionNoAck: {
+				A: "That's a good thing to know about yourself. Hold on to it.",
+				B: "That's a lovely thing to have.\nIt's worth noticing what helps, because next time it's heavy you'll know one thing that works.",
+				C: "Good thing to know.",
+			},
+			reflectionSaved: {
+				A: "Thank you. I've kept that with this check-in. It's good to know what helps.",
+				B: "Thank you for sharing that.\nI've kept it with this check-in so you can look back on it in Xolace. Small things like that tend to matter more than they look.",
+				C: "Thanks. Saved.",
+			},
+			still_here: {
+				A: "Thanks for being honest about it. Some things take a while to settle, and I'm here if you want to put words to it.",
+				B: "Thank you for telling me.\n“Still sitting with it” is a real answer, not a step backwards. Want to say a little about what's keeping it close? Or open Xolace if you'd rather work through it properly.",
+				C: "Thanks for telling me. I'm here if you want to say more.",
+			},
+		};
+
+		const FIXED = {
+			cap: "I've hit my reply limit for today. You can keep going in Xolace, and I'll be back here tomorrow.",
+			deleted:
+				"Your Xolace account was deleted and this chat is no longer linked. Telegram keeps earlier messages here; delete the chat to remove them.",
+			expired:
+				"This link has expired. Open Xolace → Reach me on… for a new one.",
+			failure: "I couldn't reply just now — I'm still here in Xolace.",
+			gentle:
+				"It's been a little while. No pressure, Xolace is here whenever you want it.",
+			goodbyeApp:
+				"Unlinked. You won't get check-ins here. You can link again in Xolace anytime.",
+			help: "I'm Xolace's check-in bot. When Xolace checks in, it happens here: tap an answer or write back.\n/stop unlinks this chat.",
+			oldChat: "No longer linked to Xolace.",
+			pattern:
+				"Sunday evenings have tended to be heavier for you. If tonight's one of those, Xolace is here.",
+			relinked:
+				"This chat now gets check-ins for the Xolace account you just linked.",
+			revoked:
+				"This chat isn't linked to Xolace anymore. To link it again, open Xolace → Reach me on… for a fresh link.\n\nIf you're in danger right now, call your local emergency number.",
+			stop: "Stopped. This chat is no longer linked, and you won't get check-ins here.\nTo link again, open Xolace → Reach me on…",
+			stranger:
+				"Hi. This bot works with the Xolace app. To get check-ins here, open Xolace → Settings → Reach me on… and link Telegram.\n\nIf you're in danger right now, call your local emergency number.",
+			welcome:
+				"You're linked 👋\nThis is where Xolace will check in on you: a short message with a few buttons. Tap an answer, or just write back.\n\nTelegram shows previews on your lock screen, so the first line of every message stays general.\n\nTo stop, send /stop or unlink in Xolace → Reach me on…",
+		};
+
+		const RESOURCES = {
+			GB: {
+				emergency: "999",
+				lines: [
+					["Suicide Helpline UK", "0800-689-5652"],
+					["CALM", "0800-58-58-58"],
+					["Crisis Text Line", "Text SHOUT to 85258"],
+				],
+			},
+			GH: {
+				emergency: "112",
+				lines: [
+					["Lifeline Ghana", "233-244-846-701"],
+					["National Lifeline", "233-2-444-71279"],
+				],
+			},
+			US: {
+				emergency: "911",
+				lines: [
+					["Suicide & Crisis Lifeline", "988"],
+					["Crisis Text Line", "Text HOME to 741741"],
+				],
+			},
+		};
+		function crisisText() {
+			const r = RESOURCES[S.country];
+			const head =
+				"I'm really glad you told me.\nWhat you're carrying sounds very heavy, and you deserve support right now from someone who can be with you.\n\n";
+			if (!r) {
+				return (
+					head +
+					"If you're in danger, call your local emergency number. You can find a helpline in your country through the button below.\n\nI'm still here, and so is Xolace."
+				);
+			}
+			return (
+				head +
+				`If you're in danger, call ${r.emergency}.\n` +
+				r.lines.map(([l, n]) => `${l}: ${n}`).join("\n") +
+				"\n\nI'm still here, and so is Xolace."
+			);
+		}
+
+		// ---------- state ----------
+		let S,
+			msgSeq,
+			timers = [];
+		function fresh() {
+			return {
+				card: { msgId: null, response: null, revealed: false, status: "none" },
+				country: $("country").value,
+				crisisSuppressUntil: null,
+				escalationDerived: $("esc").checked,
+				failNext: false,
+				identity: {
+					awaitingReflection: null,
+					revokedReason: null,
+					status: "active",
+				},
+				log: [],
+				messages: [],
+				notifs: [],
+				pending: [],
+				plan: $("plan").value,
+				repliesToday: 0,
+				tier: $("tier").value,
+			};
+		}
+		const $ = (id) => document.getElementById(id);
+		const cap = () => (S.plan === "plus" ? 50 : 5);
+		const isOpen = () => ["shown"].includes(S.card.status);
+		function log(t) {
+			S.log.push(t);
+		}
+		function toast(t) {
+			const el = $("toast");
+			el.textContent = t;
+			el.classList.add("on");
+			setTimeout(() => el.classList.remove("on"), 1400);
+			log(`answerCallbackQuery → toast “${t}”`);
+		}
+
+		function send(text, opts = {}) {
+			const m = {
+				buttons: opts.buttons || [],
+				collapsed: false,
+				edited: false,
+				from: "bot",
+				id: ++msgSeq,
+				kind: opts.kind || "",
+				protect: opts.protect !== false,
+				quote: opts.quote || null,
+				silent: !!opts.silent,
+				text,
+			};
+			S.messages.push(m);
+			S.notifs.unshift({
+				silent: m.silent,
+				text:
+					text.split("\n")[0] +
+					(text.includes("\n")
+						? " " + text.split("\n").slice(1).join(" ")
+						: ""),
+			});
+			S.notifs = S.notifs.slice(0, 3);
+			log(
+				`sendMessage #${m.id}${m.protect ? " protect_content" : ""}${m.silent ? " disable_notification" : ""}${m.buttons.length ? " +inline_keyboard" : ""}`
+			);
+			return m;
+		}
+		function edit(m, patch) {
+			Object.assign(m, patch, { edited: true });
+			log(`editMessageText #${m.id} (no notification)`);
+		}
+		function userSays(text) {
+			S.messages.push({ buttons: [], from: "me", id: ++msgSeq, text });
+		}
+
+		// ---------- check-in ----------
+		function answerButtons() {
+			const L = VARIANTS.labels[v.labels];
+			const keys =
+				S.tier === "acute" && !$("acuteHeavier").checked
+					? ["still_here", "lighter"]
+					: ["lighter", "still_here", "heavier"];
+			return keys.map((k) => ({ act: `ans:${k}`, label: L[k] }));
+		}
+		function checkinKeyboard(revealed) {
+			const rows = [answerButtons()];
+			if (!revealed) {
+				rows.push([{ act: "reveal", label: VARIANTS.reveal[v.reveal].label }]);
+			}
+			if (S.escalationDerived) {
+				rows.push([
+					{ act: "resources", label: "Support resources", url: true },
+				]);
+			}
+			return rows;
+		}
+		function nudge(quiet = false) {
+			if (S.identity.status !== "active") {
+				log(
+					"router: telegram ineligible (identity " +
+						S.identity.status +
+						") → falls back to push"
+				);
+				render();
+				return;
+			}
+			if (S.crisisSuppressUntil) {
+				log(
+					"router: suppressed, escalation_active (crisis in last 72 h) → no outreach"
+				);
+				render();
+				return;
+			}
+			if (S.card.msgId && isOpen()) {
+				collapseCard("superseded");
+			}
+			S.card = {
+				msgId: null,
+				response: null,
+				revealed: false,
+				status: "shown",
+			};
+			const silent = quiet && S.tier === "acute";
+			const m = send(FIRST_LINE[S.tier], {
+				buttons: checkinKeyboard(false),
+				kind: "checkin",
+				silent,
+			});
+			S.card.msgId = m.id;
+			log(
+				`enqueue(intent: nudge, tier: ${S.tier}) → router picks telegram → delivery stores chat_id+message_id`
+			);
+			render();
+		}
+		function msgById(id) {
+			return S.messages.find((m) => m.id === id);
+		}
+		function collapseCard(reason) {
+			const m = msgById(S.card.msgId);
+			if (!m) {
+				return;
+			}
+			const C = VARIANTS.collapse[v.collapse];
+			const text =
+				reason === "resolved" ? C.answered(S.card.response) : C.closed;
+			edit(m, { buttons: [], collapsed: true, quote: null, text });
+			if (reason !== "resolved") {
+				S.card.status = reason;
+			}
+			log(`collapse #${m.id} (${reason})`);
+		}
+		function reveal() {
+			if (!isOpen()) {
+				toast("This check-in has closed");
+				collapseCard(S.card.status);
+				render();
+				return;
+			}
+			const m = msgById(S.card.msgId);
+			if (v.revealShape === "A") {
+				edit(m, { buttons: checkinKeyboard(true), quote: CARD_TEXT[S.tier] });
+			} else {
+				edit(m, { buttons: checkinKeyboard(true), text: CARD_TEXT[S.tier] });
+			}
+			S.card.revealed = true;
+			render();
+		}
+		function answer(k) {
+			if (S.card.status === "resolved") {
+				toast("Already answered");
+				collapseCard("resolved");
+				render();
+				return;
+			}
+			if (!isOpen()) {
+				toast("This check-in has closed");
+				collapseCard(S.card.status);
+				render();
+				return;
+			}
+			S.card.status = "resolved";
+			S.card.response = k;
+			log(
+				`followUps.resolveCardCore(card, "${k}", source: telegram) → first answer wins`
+			);
+			toast("Thanks");
+			collapseCard("resolved");
+			if (k === "lighter") {
+				S.identity.awaitingReflection = { until: "+30 min" };
+				log(
+					"channel_identities.awaitingReflection = { cardId, until: +30 min }"
+				);
+			}
+			aiReply(
+				k,
+				k === "heavier"
+					? [
+							[
+								{ act: "resources", label: "Support resources", url: true },
+								{ act: "open", label: "Open Xolace", url: true },
+							],
+						]
+					: []
+			);
+			render();
+		}
+
+		// ---------- AI replies ----------
+		function aiReply(kind, buttons = [], delay = 900) {
+			S.pending.push(1);
+			render();
+			log("sendChatAction: typing");
+			timers.push(
+				setTimeout(() => {
+					S.pending.pop();
+					if (S.failNext) {
+						S.failNext = false;
+						log("AI reply failed after workpool retries → fixed failure line");
+						send(FIXED.failure, {
+							buttons: [[{ act: "open", label: "Open Xolace", url: true }]],
+						});
+						render();
+						return;
+					}
+					if (S.repliesToday >= cap()) {
+						log(`reply cap reached (${cap()}/day, ${S.plan}) → fixed cap line`);
+						send(FIXED.cap, {
+							buttons: [[{ act: "open", label: "Open Xolace", url: true }]],
+						});
+						render();
+						return;
+					}
+					S.repliesToday++;
+					log(
+						`AI reply (single turn, read-only context) ${S.repliesToday}/${cap()}`
+					);
+					send(AI[kind][v.voice], { buttons });
+					render();
+				}, delay)
+			);
+		}
+
+		let burst = null,
+			burstTexts = [];
+		function safeguard(t) {
+			const s = t.toLowerCase();
+			if (
+				/kill myself|end it|suicid|don't want to (be here|live)|hurt myself/.test(
+					s
+				)
+			) {
+				return "crisis";
+			}
+			if (/hopeless|can't cope|worthless|so alone|no point/.test(s)) {
+				return "elevated";
+			}
+			return "none";
+		}
+		function onText(t) {
+			if (!t.trim()) {
+				return;
+			}
+			userSays(t);
+			if (t.trim() === "/stop") {
+				return doAct("stopReply");
+			}
+			if (t.trim() === "/help") {
+				send(FIXED.help);
+				render();
+				return;
+			}
+			if (t.startsWith("/start")) {
+				return doAct(
+					t.trim() === "/start" ? "startBadReply" : "startGoodReply"
+				);
+			}
+			if (S.identity.status === "none") {
+				log(
+					"inbound: stranger → one fixed reply per 24 h, no safeguard, nothing stored"
+				);
+				send(FIXED.stranger);
+				render();
+				return;
+			}
+			if (S.identity.status === "revoked") {
+				log("inbound: revoked identity → fixed reply");
+				send(FIXED.revoked);
+				render();
+				return;
+			}
+			const level = safeguard(t);
+			log(`inbound_events row → safeguard on arrival: ${level}`);
+			if (level === "crisis") {
+				clearTimeout(burst);
+				burstTexts = [];
+				log(
+					`escalation.create(source: telegram${isOpen() ? ", followUpCardId" : ""}) · router suppresses all intents 72 h`
+				);
+				if (isOpen()) {
+					S.escalationDerived = true;
+					$("esc").checked = true;
+					log("open card escalationDerived = true");
+				}
+				S.crisisSuppressUntil = "+72 h";
+				S.identity.awaitingReflection = null;
+				send(crisisText(), {
+					buttons: [
+						[
+							{
+								act: "crisis",
+								label: S.country ? "More support options" : "Find a helpline",
+								url: true,
+							},
+						],
+						[{ act: "open", label: "Open Xolace", url: true }],
+					],
+					kind: "crisis",
+				});
+				render();
+				return;
+			}
+			// reflection capture
+			if (S.identity.awaitingReflection && level === "none") {
+				S.identity.awaitingReflection = null;
+				log("followUpResponses.record(reflection, shareRequested: false)");
+				aiReply(v.savedAck === "A" ? "reflectionSaved" : "reflectionNoAck");
+				render();
+				return;
+			}
+			S.identity.awaitingReflection = null;
+			burstTexts.push(t);
+			clearTimeout(burst);
+			S.pending = [1];
+			render();
+			log("burst window: waiting 6 s after last message (2 s here)");
+			burst = setTimeout(() => {
+				S.pending = [];
+				const elevated = level === "elevated" || S.tier === "elevated";
+				log(`reply to batch of ${burstTexts.length}`);
+				burstTexts = [];
+				aiReply(
+					level === "elevated" ? "elevatedText" : "freeText",
+					elevated
+						? [[{ act: "resources", label: "Support resources", url: true }]]
+						: [],
+					300
+				);
+			}, 2000);
+			render();
+		}
+
+		// ---------- actions ----------
+		function doAct(a) {
+			switch (a) {
+				case "nudge":
+					return nudge(false);
+				case "nudgeQuiet":
+					$("tier").value = "acute";
+					S.tier = "acute";
+					return nudge(true);
+				case "gentle":
+					send(FIXED.gentle, {
+						buttons: [[{ act: "open", label: "Open Xolace", url: true }]],
+					});
+					log(
+						"enqueue(intent: gentle_return): push's text + Open Xolace, no reveal/collapse"
+					);
+					break;
+				case "pattern":
+					send(FIXED.pattern, {
+						buttons: [[{ act: "open", label: "Open Xolace", url: true }]],
+					});
+					log("enqueue(intent: pattern_nudge)");
+					break;
+				case "appAnswer":
+					if (isOpen()) {
+						S.card.status = "resolved";
+						S.card.response = "still_here";
+						log("answered in app (still_here) → collapse edit");
+						collapseCard("resolved");
+					}
+					break;
+				case "supersede":
+					if (isOpen()) {
+						collapseCard("superseded");
+					}
+					break;
+				case "expire":
+					if (isOpen()) {
+						collapseCard("expired");
+					}
+					break;
+				case "startGood":
+					userSays("/start"); /* falls through */
+				case "startGoodReply":
+					log(
+						"/start <token>: hash matches, unused, < 15 min → identity active, telegram first in order, consent telegram_outreach granted, gentleReturn on"
+					);
+					S.identity = {
+						awaitingReflection: null,
+						revokedReason: null,
+						status: "active",
+					};
+					S.crisisSuppressUntil = null;
+					send(FIXED.welcome, { kind: "welcome" });
+					break;
+				case "startBad":
+					userSays("/start"); /* falls through */
+				case "startBadReply":
+					log(
+						"/start <token>: unknown/expired/used → fixed reply, nothing stored"
+					);
+					send(FIXED.expired);
+					break;
+				case "stop":
+					userSays("/stop"); /* falls through */
+				case "stopReply":
+					if (isOpen()) {
+						collapseCard("closed");
+					}
+					S.identity = {
+						awaitingReflection: null,
+						revokedReason: "user_telegram",
+						status: "revoked",
+					};
+					log(
+						"revoke(user_telegram) · consent revoked row · pending deliveries rerouted"
+					);
+					send(FIXED.stop);
+					break;
+				case "help":
+					userSays("/help");
+					send(FIXED.help);
+					break;
+				case "unlinkApp":
+					if (isOpen()) {
+						collapseCard("closed");
+					}
+					S.identity = {
+						awaitingReflection: null,
+						revokedReason: "user_app",
+						status: "revoked",
+					};
+					log("unlinkChannel → revoke(user_app) · consent revoked row");
+					send(FIXED.goodbyeApp);
+					break;
+				case "relinkOther":
+					log(
+						"same chat linked from another Xolace account → old identity revoked(relinked), row moved"
+					);
+					if (isOpen()) {
+						collapseCard("closed");
+					}
+					send(FIXED.relinked);
+					break;
+				case "oldChat":
+					log(
+						"this account linked a different Telegram chat → this chat revoked(relinked)"
+					);
+					if (isOpen()) {
+						collapseCard("closed");
+					}
+					S.identity = {
+						awaitingReflection: null,
+						revokedReason: "relinked",
+						status: "revoked",
+					};
+					send(FIXED.oldChat);
+					break;
+				case "deleted": {
+					log(
+						"purge: cleanupTelegramChat → deleteMessages (last 48 h), collapse open check-in, final note"
+					);
+					const cutoff = S.messages.filter((m) => m.from === "bot").length; // pretend all are < 48 h old
+					S.messages = S.messages.filter((m) => m.from === "me"); // bot can't delete user messages
+					log(`deleted ${cutoff} bot messages; user's own messages stay`);
+					S.identity = {
+						awaitingReflection: null,
+						revokedReason: "account_deleted",
+						status: "revoked",
+					};
+					send(FIXED.deleted);
+					break;
+				}
+				case "stranger":
+					reset();
+					S.identity = {
+						awaitingReflection: null,
+						revokedReason: null,
+						status: "none",
+					};
+					userSays("hi?");
+					send(FIXED.stranger);
+					log("stranger → fixed reply, nothing stored");
+					break;
+				case "capNow":
+					S.repliesToday = cap();
+					log(`repliesToday set to cap (${cap()})`);
+					break;
+				case "failNext":
+					S.failNext = true;
+					break;
+				case "reset":
+					return reset();
+				// keyboard
+				case "reveal":
+					return reveal();
+				case "resources":
+					toast("Opens app → crisis resources (from=telegram)");
+					break;
+				case "crisis":
+					toast(
+						S.country
+							? "Opens app → crisis resources (from=telegram)"
+							: "Opens IASP directory"
+					);
+					break;
+				case "open":
+					toast("Opens Xolace (deep link)");
+					break;
+				default:
+					if (a.startsWith("ans:")) {
+						return answer(a.slice(4));
+					}
+			}
+			render();
+		}
+		function reset() {
+			timers.forEach(clearTimeout);
+			timers = [];
+			clearTimeout(burst);
+			msgSeq = 0;
+			S = fresh();
+			render();
+		}
+
+		// ---------- render ----------
+		function esc(s) {
+			return s.replace(
+				/[&<>]/g,
+				(c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]
+			);
+		}
+		function render() {
+			const annot = $("annot").checked;
+			$("chat").innerHTML =
+				S.messages
+					.map((m) => {
+						const kb = m.buttons.length
+							? `<div class="kb">${m.buttons.map((r) => `<div class="kbrow">${r.map((b) => `<button class="${b.url ? "url" : ""}" data-a="${b.act}">${esc(b.label)}</button>`).join("")}</div>`).join("")}</div>`
+							: "";
+						const tags =
+							annot && m.from === "bot"
+								? `<div class="tags">#${m.id}${m.protect ? " · protect_content" : ""}${m.silent ? " · silent" : ""}${m.edited ? " · edited" : ""}</div>`
+								: "";
+						return `<div class="msg ${m.from === "me" ? "me" : ""}"><div class="bub ${m.collapsed ? "collapsed" : ""}">${esc(m.text)}${m.quote ? `<blockquote>${esc(m.quote)}</blockquote>` : ""}<div class="meta">${m.edited ? "edited " : ""}12:0${m.id % 10}</div></div>${kb}${tags}</div>`;
+					})
+					.join("") +
+				(S.pending.length ? `<div class="typing">Xolace is typing…</div>` : "");
+			$("chat").scrollTop = 1e6;
+			$("notifs").innerHTML =
+				S.notifs
+					.map(
+						(n) =>
+							`<div class="notif ${n.silent ? "silent" : ""}"><div class="h"><b>Xolace</b><span>${n.silent ? "silent · " : ""}now</span></div><div class="b">${esc(n.text)}</div></div>`
+					)
+					.join("") ||
+				`<div class="notif" style="opacity:.4"><div class="b">No notifications</div></div>`;
+			$("state").textContent = JSON.stringify(
+				{
+					card: {
+						response: S.card.response,
+						revealed: S.card.revealed,
+						status: S.card.status,
+						telegramMessage: S.card.msgId && `#${S.card.msgId}`,
+					},
+					channel_identity: S.identity,
+					country: S.country || "unknown",
+					escalationDerived: S.escalationDerived,
+					nextAiReplyFails: S.failNext,
+					plan: S.plan,
+					repliesToday: `${S.repliesToday}/${cap()}`,
+					routerSuppressed: S.crisisSuppressUntil
+						? `escalation_active until ${S.crisisSuppressUntil}`
+						: false,
+					tier: S.tier,
+				},
+				null,
+				2
+			);
+			$("log").innerHTML = S.log.map((l) => `<li>${esc(l)}</li>`).join("");
+			$("log").scrollTop = 1e6;
+			document.querySelectorAll(".seg").forEach((el) => {
+				const k = el.dataset.v;
+				el.innerHTML = Object.entries(VARIANTS[k])
+					.map(
+						([id, o]) =>
+							`<button class="${v[k] === id ? "on" : ""}" data-var="${k}:${id}">${id}: ${esc(o.name)}</button>`
+					)
+					.join("");
+			});
+		}
+
+		// ---------- guided ----------
+		const GUIDES = [
+			{
+				name: "1 · Standard, lighter",
+				q: "Does the reveal read naturally (quote vs replace)? Is “Checked in ✓” enough history, or should the collapsed line say the answer? Should the bot say it saved the reflection?",
+				setup: { tier: "standard" },
+				steps: [
+					[
+						"A standard check-in arrives. Look at the lock screen: only the tier-generic line shows, no domain.",
+						() => doAct("nudge"),
+					],
+					[
+						"Tap the reveal button. The same message is edited in place (no second notification) to show the card text.",
+						() => doAct("reveal"),
+					],
+					[
+						"Answer “lighter”. The message collapses and an AI reply asks what helped; the identity now waits 30 min for a reflection.",
+						() => doAct("ans:lighter"),
+					],
+					[
+						"Write back what helped. It's saved as the card's reflection (not shared).",
+						() => onText("a walk with my sister"),
+					],
+				],
+			},
+			{
+				name: "2 · Elevated, heavier",
+				q: "Is the heavier reply's first line safe on a lock screen? Is two buttons right, or should Open Xolace come first?",
+				setup: { esc: true, tier: "elevated" },
+				steps: [
+					[
+						"An elevated check-in on a card with escalationDerived: the Support resources button rides along from the first message.",
+						() => doAct("nudge"),
+					],
+					[
+						"Reveal: the card text names the brother. That's only ever visible after a tap.",
+						() => doAct("reveal"),
+					],
+					[
+						"Answer “heavier”. The reply carries Support resources + Open Xolace (to the heavier step).",
+						() => doAct("ans:heavier"),
+					],
+				],
+			},
+			{
+				name: "3 · Acute",
+				q: "Should Telegram match the app and drop “heavier” for acute (toggle on the left), or offer all three as the Inbound ticket says?",
+				setup: { esc: true, tier: "acute" },
+				steps: [
+					[
+						"Acute uses push's acute line. Resources button below. The app's acute chips are still-here / lighter only (no heavier).",
+						() => doAct("nudge"),
+					],
+					[
+						"Reveal: the acute card is wound-light by design.",
+						() => doAct("reveal"),
+					],
+					["Answer “still sitting with it”.", () => doAct("ans:still_here")],
+				],
+			},
+			{
+				name: "4 · Free text → crisis",
+				q: "Is the crisis reply's first line (the lock-screen line) right? Is the tone right for something fixed and non-AI? Try the country switch → unknown.",
+				setup: { country: "GH", tier: "standard" },
+				steps: [
+					["A check-in is open.", () => doAct("nudge")],
+					[
+						"The person writes something ordinary. A typing indicator, a pause for more, then one AI reply.",
+						() => onText("work was rough again"),
+					],
+					[
+						"Then something that trips safeguard as crisis. The fixed reply goes out immediately: country resources in the body, a button to the app's crisis screen. The open card becomes escalationDerived; outreach is suppressed 72 h.",
+						() => onText("honestly I just want to end it"),
+					],
+					[
+						"Router: any outreach in the next 72 h is suppressed.",
+						() => doAct("nudge"),
+					],
+				],
+			},
+			{
+				name: "5 · Link, stop, relink",
+				q: "Is the welcome too long? Does it need the lock-screen sentence? Is “/stop” obvious enough without a button?",
+				setup: { fresh: true, tier: "standard" },
+				steps: [
+					[
+						"The person taps the link in the app; Telegram opens and sends /start <token>. The welcome message.",
+						() => doAct("startGood"),
+					],
+					["A check-in arrives.", () => doAct("nudge")],
+					[
+						"They send /stop. The open check-in collapses; the confirmation says how to relink.",
+						() => doAct("stop"),
+					],
+					[
+						"Later they write to the bot anyway: the revoked reply.",
+						() => onText("hello?"),
+					],
+					["They retry an old link: expired.", () => doAct("startBad")],
+					[
+						"A fresh link from the app relinks the same chat, history intact.",
+						() => doAct("startGood"),
+					],
+				],
+			},
+			{
+				name: "6 · Races",
+				q: "Is “This check-in has closed.” clear when a newer one replaced it, or should superseded say something different?",
+				setup: { tier: "standard" },
+				steps: [
+					["A check-in arrives.", () => doAct("nudge")],
+					[
+						"The person answers in the app instead. The Telegram message collapses.",
+						() => doAct("appAnswer"),
+					],
+					[
+						"A stale tap on the collapsed message (simulated): “Already answered”.",
+						() => answer("lighter"),
+					],
+					[
+						"A new check-in, then a newer one supersedes it.",
+						() => doAct("nudge"),
+					],
+					["Superseded.", () => doAct("nudge")],
+				],
+			},
+			{
+				name: "7 · Edges",
+				q: "Does the cap line need to differ for free vs Plus (no upsell in a check-in chat)? Is the account-deleted note clear?",
+				setup: { plan: "free", tier: "standard" },
+				steps: [
+					[
+						"A stranger who never linked writes to the bot.",
+						() => doAct("stranger"),
+					],
+					[
+						"A linked free user, cap used up, writes.",
+						() => {
+							S.identity.status = "active";
+							S.messages = [];
+							S.notifs = [];
+							doAct("capNow");
+							onText("can we talk");
+						},
+					],
+					[
+						"Plus user, AI fails after retries.",
+						() => {
+							$("plan").value = "plus";
+							S.plan = "plus";
+							S.repliesToday = 0;
+							doAct("failNext");
+							onText("still thinking about it");
+						},
+					],
+					[
+						"Account deleted: our last-48 h messages vanish, the person's own stay, and a final note explains.",
+						() => doAct("deleted"),
+					],
+				],
+			},
+		];
+		let G = null,
+			gi = 0;
+		function startGuide(i) {
+			G = GUIDES[i];
+			gi = 0;
+			const s = G.setup;
+			$("tier").value = s.tier || "standard";
+			$("esc").checked = !!s.esc;
+			$("plan").value = s.plan || "free";
+			$("country").value = s.country ?? "GH";
+			reset();
+			if (s.fresh) {
+				S.identity = {
+					awaitingReflection: null,
+					revokedReason: null,
+					status: "none",
+				};
+			}
+			renderGuide();
+			render();
+		}
+		function renderGuide() {
+			$("tabs").innerHTML = GUIDES.map(
+				(g, i) =>
+					`<button class="${G === g ? "on" : ""}" data-g="${i}">${g.name}</button>`
+			).join("");
+			if (!G) {
+				$("guide").innerHTML =
+					"<p>Pick a walkthrough, or use free play on the left. Switch copy variants at any time; they apply to the next message or edit.</p>";
+				return;
+			}
+			const done = gi >= G.steps.length;
+			$("guide").innerHTML =
+				`<div class="step">${done ? "<b>Done.</b> Replay with other copy variants to compare." : `<b>Step ${gi + 1}/${G.steps.length}.</b> ${esc(G.steps[gi][0])}`}</div>
+    <p><button class="primary" data-step ${done ? "disabled" : ""}>${done ? "Finished" : "Run step"}</button> <button data-g="${GUIDES.indexOf(G)}">Restart</button></p>
+    <div class="q"><b>React to:</b> ${esc(G.q)}</div>`;
+		}
+
+		// ---------- wiring ----------
+		document.addEventListener("click", (e) => {
+			const b = e.target.closest("button");
+			if (!b) {
+				return;
+			}
+			if (b.dataset.a) {
+				doAct(b.dataset.a);
+			} else if (b.dataset.var) {
+				const [k, id] = b.dataset.var.split(":");
+				v[k] = id;
+				render();
+			} else if (b.dataset.g !== undefined) {
+				startGuide(+b.dataset.g);
+			} else if (b.hasAttribute("data-step")) {
+				G.steps[gi][1]();
+				gi++;
+				renderGuide();
+			} else if (b.id === "send") {
+				onText($("input").value);
+				$("input").value = "";
+			}
+		});
+		$("input").addEventListener("keydown", (e) => {
+			if (e.key === "Enter") {
+				onText($("input").value);
+				$("input").value = "";
+			}
+		});
+		["tier", "esc", "plan", "country"].forEach((id) =>
+			$(id).addEventListener("change", () => {
+				S.tier = $("tier").value;
+				S.escalationDerived = $("esc").checked;
+				S.plan = $("plan").value;
+				S.country = $("country").value;
+				render();
+			})
+		);
+		["annot", "acuteHeavier"].forEach((id) =>
+			$(id).addEventListener("change", render)
+		);
+		msgSeq = 0;
+		S = fresh();
+		render();
+		renderGuide();
+		</script>
+	</body>
+</html>
