@@ -63,6 +63,9 @@ Put a dependency in the package that uses it; shared versions come from the root
   row.
 - **follow-up**: the check-in card Xolace keeps for a session that ended unresolved,
   from creation until it's answered, dismissed or expires.
+- **answer**: a user's response to a follow-up (lighter, still with it, heavier),
+  given in the app or on a channel. Dismissing a follow-up or letting it expire is
+  not an answer.
 - **outreach**: a message Xolace itself initiates to a user outside the app. Its
   reason is its **intent** (a nudge, a gentle return, a pattern nudge…). A message
   relaying something another person did (a chat message) is a notification, not
