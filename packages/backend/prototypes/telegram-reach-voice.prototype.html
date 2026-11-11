@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta content="width=device-width, initial-scale=1" name="viewport">
+		<title>Telegram Reach voice (PROTOTYPE)</title>
+		<!--
+  PROTOTYPE, throwaway, never merged. Ticket: "How Reach shapes a Telegram message"
+  (xolace-official/xolace#741) on the map "Wayfinder: Outreach layer and Telegram follow-ups" (#723).
+  Question: how should a user's Reach (warm | direct | quiet) change what Telegram says?
+  Builds on the accepted copy from "Prototype the Telegram check-in conversation" (#732).
+  All copy below is hand-written stand-in for the AI reply; nothing calls a model.
+-->
+		<style>
+		:root {
+			--bg: #eef1f4;
+			--panel: #fff;
+			--ink: #1c2430;
+			--muted: #6b7684;
+			--line: #d8dee5;
+			--chat: #cfe3d2;
+			--bubble: #fff;
+			--me: #e2ffc7;
+			--btn: #f3f7fb;
+			--accent: #2a7fc0;
+			--warm: #d9822b;
+			--direct: #3c6e9e;
+			--quiet: #7a7f87;
+			--fixed: #8a5cc2;
+			--floor: #c0392b;
+		}
+		* {
+			box-sizing: border-box;
+		}
+		body {
+			margin: 0;
+			font:
+				14px / 1.4 -apple-system,
+				system-ui,
+				sans-serif;
+			color: var(--ink);
+			background: var(--bg);
+		}
+		header {
+			padding: 12px 16px;
+			background: var(--panel);
+			border-bottom: 1px solid var(--line);
+		}
+		h1 {
+			margin: 0 0 4px;
+			font-size: 16px;
+		}
+		.sub {
+			font-size: 12px;
+			color: var(--muted);
+		}
+		.controls {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 14px;
+			align-items: flex-start;
+			padding: 10px 16px;
+			background: var(--panel);
+			border-bottom: 1px solid var(--line);
+		}
+		.ctl {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+			font-size: 12px;
+		}
+		.ctl > span {
+			font-size: 10px;
+			font-weight: 600;
+			color: var(--muted);
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+		}
+		.seg {
+			display: inline-flex;
+			overflow: hidden;
+			border: 1px solid var(--line);
+			border-radius: 6px;
+		}
+		.seg button {
+			padding: 5px 9px;
+			font: inherit;
+			cursor: pointer;
+			background: #fff;
+			border: 0;
+			border-right: 1px solid var(--line);
+		}
+		.seg button:last-child {
+			border-right: 0;
+		}
+		.seg button.on {
+			color: #fff;
+			background: var(--ink);
+		}
+		.q {
+			max-width: 300px;
+		}
+		.q small {
+			display: block;
+			margin-top: 2px;
+			color: var(--muted);
+		}
+		.tabs {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+			padding: 10px 16px;
+		}
+		.tabs button {
+			padding: 5px 11px;
+			font: inherit;
+			cursor: pointer;
+			background: #fff;
+			border: 1px solid var(--line);
+			border-radius: 999px;
+		}
+		.tabs button.on {
+			color: #fff;
+			background: var(--accent);
+			border-color: var(--accent);
+		}
+		.scen-note {
+			padding: 0 16px 8px;
+			font-size: 12px;
+			color: var(--muted);
+		}
+		.grid {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 12px;
+			padding: 0 16px 16px;
+		}
+		@media (max-width: 1000px) {
+			.grid {
+				grid-template-columns: 1fr;
+			}
+		}
+		.phone {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+			overflow: hidden;
+			background: var(--panel);
+			border: 1px solid var(--line);
+			border-radius: 14px;
+		}
+		.ph-head {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 8px 12px;
+			border-bottom: 1px solid var(--line);
+		}
+		.ph-head b {
+			font-size: 14px;
+		}
+		.pill {
+			padding: 2px 7px;
+			font-size: 10px;
+			font-weight: 600;
+			color: #fff;
+			border-radius: 999px;
+		}
+		.lock {
+			padding: 8px 12px;
+			font-size: 12px;
+			color: #fff;
+			background: #20262e;
+		}
+		.lock .app {
+			font-size: 10px;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			opacity: 0.6;
+		}
+		.lock .len {
+			float: right;
+			font-size: 10px;
+			opacity: 0.6;
+		}
+		.chat {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			min-height: 360px;
+			padding: 10px;
+			background: var(--chat);
+		}
+		.msg {
+			position: relative;
+			max-width: 88%;
+			padding: 7px 10px;
+			white-space: pre-wrap;
+			background: var(--bubble);
+			border-radius: 10px;
+			box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+		}
+		.msg.me {
+			align-self: flex-end;
+			background: var(--me);
+		}
+		.msg .tag {
+			display: block;
+			margin-top: 4px;
+			font-size: 10px;
+			font-weight: 600;
+		}
+		.msg blockquote {
+			padding-left: 8px;
+			margin: 6px 0 0;
+			color: #33404f;
+			border-left: 3px solid var(--accent);
+		}
+		.kb {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+			max-width: 88%;
+			margin-top: 4px;
+		}
+		.kb .row {
+			display: flex;
+			gap: 4px;
+		}
+		.kb button {
+			flex: 1;
+			padding: 6px 4px;
+			font: inherit;
+			font-size: 12px;
+			color: var(--accent);
+			cursor: pointer;
+			background: var(--btn);
+			border: 0;
+			border-radius: 8px;
+		}
+		.kb button.url::after {
+			content: " ↗";
+		}
+		.kb button:disabled {
+			cursor: default;
+			opacity: 0.45;
+		}
+		.sys {
+			align-self: center;
+			padding: 2px 9px;
+			font-size: 11px;
+			color: #3d5a45;
+			background: rgba(255, 255, 255, 0.55);
+			border-radius: 999px;
+		}
+		.state {
+			padding: 8px 12px;
+			font:
+				11px / 1.5 ui-monospace,
+				Menlo,
+				monospace;
+			background: #fafbfc;
+			border-top: 1px solid var(--line);
+		}
+		.state div {
+			display: flex;
+			gap: 8px;
+			justify-content: space-between;
+		}
+		.state span:first-child {
+			color: var(--muted);
+		}
+		.never {
+			padding: 10px 14px;
+			margin: 0 16px 20px;
+			font-size: 12px;
+			background: var(--panel);
+			border: 1px solid var(--line);
+			border-radius: 10px;
+		}
+		.never h2 {
+			margin: 0 0 6px;
+			font-size: 13px;
+		}
+		.never ul {
+			padding-left: 18px;
+			margin: 0;
+		}
+		</style>
+	</head>
+	<body>
+		<header>
+			<h1>
+				How Reach shapes a Telegram message
+				<span class="sub">— PROTOTYPE, throwaway</span>
+			</h1>
+			<div class="sub">
+				Same scenario, one phone per Reach. The dark strip is what the lock
+				screen shows (the first line of the newest message). Tap the buttons in
+				any phone to free-play. Every AI reply here is hand-written stand-in
+				copy.
+			</div>
+		</header>
+
+		<div class="controls">
+			<div class="ctl">
+				<span>Tier</span>
+				<div class="seg" id="tier"></div>
+			</div>
+			<div class="ctl">
+				<span>Plan</span>
+				<div class="seg" id="plan"></div>
+			</div>
+			<div class="ctl">
+				<span>escalationDerived</span>
+				<div class="seg" id="esc"></div>
+			</div>
+			<div class="ctl q">
+				<span>Q1 · First line of a check-in</span>
+				<div class="seg" id="q1"></div>
+				<small id="q1n"></small>
+			</div>
+			<div class="ctl q">
+				<span>Q2 · AI reply voice</span>
+				<div class="seg" id="q2"></div>
+				<small id="q2n"></small>
+			</div>
+			<div class="ctl q">
+				<span>Q3 · When the person is struggling</span>
+				<div class="seg" id="q3"></div>
+				<small id="q3n"></small>
+			</div>
+		</div>
+
+		<div class="tabs" id="tabs"></div>
+		<div class="scen-note" id="scenNote"></div>
+		<div class="grid" id="grid"></div>
+
+		<div class="never">
+			<h2>Reach never touches (in every variant)</h2>
+			<ul>
+				<li>
+					Answer buttons (🌤 Lighter · ☁️ Still with it · 🌧 Heavier), the reveal
+					button and the revealed card text (the follow-up card isn't
+					Reach-aware in the app either).
+				</li>
+				<li>
+					The collapsed line (<code>✓ Checked in: lighter</code>
+					/ closed).
+				</li>
+				<li>
+					The crisis reply, welcome, /stop, goodbye, stranger, revoked, /help,
+					failure and cap lines: fixed copy.
+				</li>
+				<li>
+					Support resources and Open Xolace buttons: their presence follows
+					tier/answer/safeguard, never Reach.
+				</li>
+				<li>
+					Gentle return and pattern nudge already carry push's Reach-shaped text
+					(template pools / notification writer); Telegram sends it as is.
+				</li>
+			</ul>
+		</div>
+
+		<script>
+		// biome-ignore-all lint: throwaway prototype on a branch that is never merged (#741)
+		"use strict";
+		const $ = (id) => document.getElementById(id);
+		const REACHES = ["warm", "direct", "quiet"];
+		const COLORS = {
+			direct: "var(--direct)",
+			fixed: "var(--fixed)",
+			floor: "var(--floor)",
+			quiet: "var(--quiet)",
+			warm: "var(--warm)",
+		};
+
+		const VARIANTS = {
+			q1: {
+				A: {
+					name: "One line for all",
+					note: "Push's tier-generic line, whatever the Reach (v1 as decided).",
+				},
+				B: {
+					name: "By Reach, acute fixed",
+					note: "Standard/elevated get a Reach-shaped generic line; acute keeps push's acute line for everyone.",
+				},
+				C: {
+					name: "By Reach, acute too",
+					note: "Acute also follows Reach (still lock-screen safe).",
+				},
+			},
+			q2: {
+				A: {
+					name: "Warm for all",
+					note: "Reach doesn't reach Telegram replies (v1 today).",
+				},
+				B: {
+					name: "Length only",
+					note: "Same warm tone; direct = 2 sentences + question, quiet = 1 line + short question.",
+				},
+				C: {
+					name: "Tone + length",
+					note: "Direct is plain, no softening; quiet is one line and asks nothing.",
+				},
+			},
+			q3: {
+				A: {
+					name: "Warm floor",
+					note: "Struggling (elevated/acute card, heavier, safeguard elevated, escalationDerived) → warm reply whatever the Reach.",
+				},
+				B: {
+					name: "Reach length, warm tone",
+					note: "Struggling keeps Reach's length but drops plain/terse tone.",
+				},
+				C: { name: "No floor", note: "Reach applies even when struggling." },
+			},
+		};
+
+		// ---------- copy ----------
+		const FIRST_LINE = {
+			A: {
+				acute: {
+					warm: "Just checking in on what you worked through a little while ago. We're here.",
+				},
+				standard: {
+					warm: "A little while ago you let something out here. How's it sitting now?",
+				},
+			},
+			byReach: {
+				acute: {
+					direct: "Checking in after the other day. We're here.",
+					quiet: "Just checking in. We're here.",
+					warm: "Just checking in on what you worked through a little while ago. We're here.",
+				},
+				standard: {
+					direct:
+						"Checking in on what you brought here a few days ago. How is it now?",
+					quiet: "Checking in. How's it sitting?",
+					warm: "A little while ago you let something out here. How's it sitting now?",
+				},
+			},
+		};
+		const CARD_TEXT = {
+			acute:
+				"A couple of days ago things felt like a lot. No need to say anything big. We're still here.",
+			elevated:
+				"Last week you talked about the falling-out with your brother and how alone it left you. Is that still sitting heavy?",
+			standard:
+				"You've brought work and money here a few times lately. How's it sitting now?",
+		};
+
+		// voice key: warm | directLen | quietLen | directPlain | quietPlain
+		const AI = {
+			elevatedText: {
+				directLen:
+					"I'm really glad you told me.\nYou don't have to handle this alone. Support is below, or open Xolace.",
+				directPlain:
+					"I'm glad you said it.\nThat's too much to carry on your own. Support is below, and Xolace is here.",
+				quietLen: "I'm glad you told me. Support is below if you need it.",
+				quietPlain: "I'm glad you told me. Support is below.",
+				warm: "I'm really glad you told me.\nFeeling like that is exhausting, and it's not something you have to handle on your own. If you want, tell me a bit more, or open Xolace. And if it gets to be too much, support is right there.",
+			},
+			freeText: {
+				directLen:
+					"Thanks for telling me.\nThat sounds draining. What's the hardest part today?",
+				directPlain:
+					"Got it.\nSounds like it's still taking a lot out of you. What's the part you keep coming back to?",
+				quietLen: "Thanks for telling me. Want to talk it through in Xolace?",
+				quietPlain: "Thanks for telling me. I'm here.",
+				warm: "Thanks for telling me.\nThat sounds draining, and it makes sense it's still on you. What's been the hardest part of it today? If you want to go deeper, Xolace is the place for that.",
+			},
+			heavier: {
+				directLen:
+					"I'm sorry it's got heavier.\nXolace has space to work through it, and support is below if it's too much.",
+				directPlain:
+					"Sorry it's heavier.\nThat's worth working through, not waiting out. Xolace is ready when you are; support is below if you need it now.",
+				quietLen: "Sorry it's got heavier. Xolace is here when you want it.",
+				quietPlain: "Sorry it's heavier. Support's below, and Xolace is here.",
+				warm: "I'm sorry it's got heavier.\nThat's hard, especially when you'd hoped it would ease. Xolace has a space to work through it at your own pace, and if it feels like too much right now, support is a tap away.",
+			},
+			lighter: {
+				directLen: "That's really good to hear.\nWhat do you think helped?",
+				directPlain: "Good to hear.\nWhat changed, do you think?",
+				quietLen: "Good to hear. What helped?",
+				quietPlain: "Good to hear.",
+				warm: "That's really good to hear.\nSometimes it eases and we can't say why, and sometimes it was something small. If you feel like it, tell me what helped.",
+			},
+			reflection: {
+				directLen:
+					"That's a good thing to know.\nWorth remembering next time it's heavy.",
+				directPlain: "Useful to know.\nThat's one thing you know works now.",
+				quietLen: "Good thing to know.",
+				quietPlain: "Good to know.",
+				warm: "That's a lovely thing to have.\nIt's worth noticing what helps, because next time it's heavy you'll know one thing that works.",
+			},
+			still_here: {
+				directLen:
+					"Thank you for telling me.\nSome things take a while to settle. Want to say what's keeping it close?",
+				directPlain:
+					"Okay, thanks for saying so.\nStill with it after a few days usually means it matters. What's keeping it there?",
+				quietLen: "Thanks for telling me. I'm here if you want to say more.",
+				quietPlain: "Okay. I'm here.",
+				warm: "Thank you for telling me.\n“Still sitting with it” is a real answer, not a step backwards. Want to say a little about what's keeping it close? Or open Xolace if you'd rather work through it properly.",
+			},
+		};
+		// Struggling + Q3=B: Reach length, warm tone (directLen / quietLen are already warm-toned).
+
+		const FIXED = {
+			cap: "I've hit my reply limit for today. You can keep going in Xolace, and I'll be back here tomorrow.",
+			capFree:
+				"That's my 5 replies for today on the free plan. With Xolace+ I can keep talking with you here, up to 50 a day. Or carry on in Xolace now, and I'll be back here tomorrow.",
+			crisis:
+				"I'm really glad you told me.\nWhat you're carrying sounds very heavy, and you deserve support right now from someone who can be with you.\n\nIf you're in danger, call 999.\nSuicide Helpline UK: 0800-689-5652\nCALM: 0800-58-58-58\nCrisis Text Line: Text SHOUT to 85258\n\nI'm still here, and so is Xolace.",
+		};
+		// Push's Reach-shaped text, taken from today's template pools (notificationTemplates.ts).
+		const GENTLE = {
+			direct: "A few days out. What's weighing on you?",
+			quiet: "When you're ready.",
+			warm: "Whenever you're ready, there's space here.",
+		};
+		const PATTERN = {
+			direct: "This is usually when you sit with things.",
+			quiet: "Your usual time.",
+			warm: "Your usual time. Nothing required — just available.",
+		};
+
+		const INVITES = /\?|tell me|say more/i;
+
+		// ---------- state ----------
+		const S = {
+			esc: false,
+			plan: "free",
+			q1: "A",
+			q2: "A",
+			q3: "A",
+			scen: "free",
+			tier: "standard",
+		};
+		const SCENARIOS = {
+			cap: {
+				name: "Daily cap hit",
+				note: "Reply cap reached. Plan and the struggling check pick the line; Reach never does.",
+			},
+			crisis: {
+				name: "Crisis",
+				note: "Safeguard returns crisis. Fixed reply, country resources (GB shown).",
+			},
+			elevatedText: {
+				name: "Free text, safeguard elevated",
+				note: "Safeguard returns elevated on this turn, so the person counts as struggling.",
+			},
+			free: {
+				name: "Free play",
+				note: "Just the check-in. Tap an answer or the reveal in any phone.",
+			},
+			freeText: {
+				name: "Free text",
+				note: "No tap; the person writes back. Safeguard: none.",
+			},
+			gentle: {
+				name: "Gentle return",
+				note: "Push's text (already Reach-shaped) + Open Xolace.",
+			},
+			heavier: {
+				name: "Heavier",
+				note: "Tap Heavier. On acute there's no Heavier button, so this falls back to Still with it.",
+			},
+			lighter: {
+				name: "Lighter → what helped",
+				note: "Tap Lighter, then the person writes what helped (saved as a reflection, never confirmed).",
+			},
+			pattern: {
+				name: "Pattern nudge",
+				note: "Push's text (already Reach-shaped) + Open Xolace.",
+			},
+			still_here: { name: "Still with it", note: "Tap Still with it." },
+		};
+		const phones = {};
+
+		function struggling(p, event) {
+			return (
+				S.tier !== "standard" ||
+				S.esc ||
+				p.answer === "heavier" ||
+				event === "elevatedText"
+			);
+		}
+		function voiceFor(reach, p, event) {
+			const s = struggling(p, event);
+			if (S.q2 === "A") {
+				return { key: "warm", label: "warm (Reach ignored)" };
+			}
+			if (reach === "warm") {
+				return { key: "warm", label: "warm" };
+			}
+			if (s && S.q3 === "A") {
+				return { floor: true, key: "warm", label: "warm (floor)" };
+			}
+			if (S.q2 === "B" || (s && S.q3 === "B")) {
+				return {
+					floor: s && S.q2 === "C",
+					key: `${reach}Len`,
+					label: `${reach} · length only${s && S.q2 === "C" ? " (floor)" : ""}`,
+				};
+			}
+			return { key: `${reach}Plain`, label: `${reach} · tone + length` };
+		}
+		function firstLine(reach) {
+			const t = S.tier === "acute" ? "acute" : "standard";
+			if (S.q1 === "A") {
+				return { src: "push tier-generic", text: FIRST_LINE.A[t].warm };
+			}
+			if (t === "acute" && S.q1 === "B") {
+				return {
+					src: "push acute (fixed)",
+					text: FIRST_LINE.byReach.acute.warm,
+				};
+			}
+			return { src: `${reach} generic`, text: FIRST_LINE.byReach[t][reach] };
+		}
+
+		function newPhone(reach) {
+			return {
+				answer: null,
+				asked: "—",
+				lastSrc: "—",
+				lastVoice: "—",
+				msgs: [],
+				reach,
+				replies: 0,
+				revealed: false,
+			};
+		}
+		function push(p, m) {
+			p.msgs.push(m);
+		}
+
+		function sendCheckin(p) {
+			const fl = firstLine(p.reach);
+			const answers =
+				S.tier === "acute"
+					? [
+							["lighter", "🌤 Lighter"],
+							["still_here", "☁️ Still with it"],
+						]
+					: [
+							["lighter", "🌤 Lighter"],
+							["still_here", "☁️ Still with it"],
+							["heavier", "🌧 Heavier"],
+						];
+			const rows = [
+				answers.map(([id, l]) => ({ id: `ans:${id}`, label: l })),
+				[{ id: "reveal", label: "What was this about?" }],
+			];
+			if (S.esc) {
+				rows.push([{ id: "res", label: "Support resources", url: true }]);
+			}
+			push(p, {
+				checkin: true,
+				kb: rows,
+				tag: fl.src,
+				tagColor: S.q1 === "A" || fl.src.includes("fixed") ? "fixed" : p.reach,
+				text: fl.text,
+			});
+			p.lastSrc = fl.src;
+		}
+		function aiReply(p, event) {
+			const v = voiceFor(p.reach, p, event);
+			const text = AI[event][v.key];
+			const kb = [];
+			const s = struggling(p, event);
+			if (event === "heavier" || event === "elevatedText" || (s && S.esc)) {
+				kb.push([
+					{ id: "res", label: "Support resources", url: true },
+					{ id: "open", label: "Open Xolace", url: true },
+				]);
+			} else if (event === "still_here" || event === "freeText") {
+				kb.push([{ id: "open", label: "Open Xolace", url: true }]);
+			}
+			push(p, {
+				kb,
+				tag: `AI · ${v.label}`,
+				tagColor: v.floor ? "floor" : v.key === "warm" ? "warm" : p.reach,
+				text,
+			});
+			p.lastVoice = v.label;
+			p.asked = INVITES.test(text) ? "yes" : "no";
+			p.replies++;
+		}
+		function tapAnswer(p, ans) {
+			const ck = p.msgs.find((m) => m.checkin);
+			if (!ck || p.answer) {
+				return;
+			}
+			p.answer = ans;
+			const word = {
+				heavier: "heavier",
+				lighter: "lighter",
+				still_here: "still sitting with it",
+			}[ans];
+			push(p, { sys: true, text: "message edited" });
+			ck.text = `✓ Checked in: ${word}`;
+			ck.kb = [];
+			ck.tag = "collapsed (fixed)";
+			ck.tagColor = "fixed";
+			aiReply(p, ans);
+		}
+		function reveal(p) {
+			const ck = p.msgs.find((m) => m.checkin);
+			if (!ck || p.revealed || p.answer) {
+				return;
+			}
+			p.revealed = true;
+			ck.quote = CARD_TEXT[S.tier];
+			ck.kb = ck.kb.filter((r) => !r.some((b) => b.id === "reveal"));
+		}
+
+		function runScenario(p) {
+			const sc = S.scen;
+			if (sc === "gentle" || sc === "pattern") {
+				const t = (sc === "gentle" ? GENTLE : PATTERN)[p.reach];
+				push(p, {
+					kb: [[{ id: "open", label: "Open Xolace", url: true }]],
+					tag: `push's ${p.reach} text`,
+					tagColor: p.reach,
+					text: t,
+				});
+				p.lastSrc = `push template · ${p.reach}`;
+				p.lastVoice = `push (${p.reach})`;
+				p.asked = t.includes("?") ? "yes" : "no";
+				return;
+			}
+			sendCheckin(p);
+			if (sc === "lighter") {
+				tapAnswer(p, "lighter");
+				if (p.asked === "yes") {
+					push(p, {
+						me: true,
+						text: "honestly just went for a long walk and called my sister",
+					});
+					aiReply(p, "reflection");
+				} else {
+					push(p, {
+						sys: true,
+						text: "no invitation → person rarely writes back, so no reflection",
+					});
+				}
+			} else if (sc === "still_here") {
+				tapAnswer(p, "still_here");
+			} else if (sc === "heavier") {
+				tapAnswer(p, S.tier === "acute" ? "still_here" : "heavier");
+			} else if (sc === "freeText") {
+				push(p, {
+					me: true,
+					text: "work's been brutal again, can't switch off",
+				});
+				aiReply(p, "freeText");
+			} else if (sc === "elevatedText") {
+				push(p, {
+					me: true,
+					text: "i just feel like i can't keep doing this every week",
+				});
+				aiReply(p, "elevatedText");
+			} else if (sc === "crisis") {
+				push(p, { me: true, text: "i don't want to be here anymore" });
+				push(p, {
+					kb: [
+						[
+							{ id: "more", label: "More support options", url: true },
+							{ id: "open", label: "Open Xolace", url: true },
+						],
+					],
+					tag: "fixed crisis reply",
+					tagColor: "fixed",
+					text: FIXED.crisis,
+				});
+				p.lastVoice = "fixed";
+				p.asked = "no";
+			} else if (sc === "cap") {
+				push(p, { me: true, text: "and another thing about my manager…" });
+				const s = struggling(p, "cap");
+				let text;
+				let kb;
+				if (S.plan === "plus") {
+					text = FIXED.cap;
+					kb = [[{ id: "open", label: "Open Xolace", url: true }]];
+				} else if (s) {
+					text = FIXED.cap;
+					kb = [
+						[
+							{ id: "res", label: "Support resources", url: true },
+							{ id: "open", label: "Open Xolace", url: true },
+						],
+					];
+				} else {
+					text = FIXED.capFree;
+					kb = [
+						[
+							{ id: "plus", label: "Get Xolace+", url: true },
+							{ id: "open", label: "Open Xolace", url: true },
+						],
+					];
+				}
+				push(p, {
+					kb,
+					tag:
+						"fixed cap line" +
+						(s && S.plan === "free" ? " (struggling, no upsell)" : ""),
+					tagColor: "fixed",
+					text,
+				});
+				p.lastVoice = "fixed";
+				p.asked = "no";
+			}
+		}
+
+		// ---------- render ----------
+		function seg(id, opts, key) {
+			const el = $(id);
+			el.innerHTML = "";
+			for (const [val, label] of opts) {
+				const b = document.createElement("button");
+				b.textContent = label;
+				b.className = S[key] === val ? "on" : "";
+				b.onclick = () => {
+					S[key] = val;
+					reset();
+				};
+				el.append(b);
+			}
+		}
+		function renderControls() {
+			seg(
+				"tier",
+				[
+					["standard", "standard"],
+					["elevated", "elevated"],
+					["acute", "acute"],
+				],
+				"tier"
+			);
+			seg(
+				"plan",
+				[
+					["free", "free"],
+					["plus", "Plus"],
+				],
+				"plan"
+			);
+			seg(
+				"esc",
+				[
+					[false, "off"],
+					[true, "on"],
+				],
+				"esc"
+			);
+			for (const q of ["q1", "q2", "q3"]) {
+				seg(
+					q,
+					Object.entries(VARIANTS[q]).map(([k, v]) => [k, `${k} · ${v.name}`]),
+					q
+				);
+				$(`${q}n`).textContent = VARIANTS[q][S[q]].note;
+			}
+			const tabs = $("tabs");
+			tabs.innerHTML = "";
+			for (const [k, v] of Object.entries(SCENARIOS)) {
+				const b = document.createElement("button");
+				b.textContent = v.name;
+				b.className = S.scen === k ? "on" : "";
+				b.onclick = () => {
+					S.scen = k;
+					reset();
+				};
+				tabs.append(b);
+			}
+			$("scenNote").textContent = SCENARIOS[S.scen].note;
+		}
+		function renderPhone(p) {
+			const el = document.createElement("div");
+			el.className = "phone";
+			const last = [...p.msgs].reverse().find((m) => !(m.me || m.sys));
+			const lockLine = last ? last.text.split("\n")[0] : "";
+			el.innerHTML = `<div class="ph-head"><b>Xolace</b><span class="pill" style="background:${COLORS[p.reach]}">Reach: ${p.reach}</span></div>
+		<div class="lock"><span class="app">Telegram · Xolace</span><span class="len">${lockLine.length} chars</span><div></div></div>
+		<div class="chat"></div>
+		<div class="state"></div>`;
+			el.querySelector(".lock div").textContent = lockLine;
+			const chat = el.querySelector(".chat");
+			for (const m of p.msgs) {
+				if (m.sys) {
+					const d = document.createElement("div");
+					d.className = "sys";
+					d.textContent = m.text;
+					chat.append(d);
+					continue;
+				}
+				const d = document.createElement("div");
+				d.className = `msg${m.me ? " me" : ""}`;
+				d.append(document.createTextNode(m.text));
+				if (m.quote) {
+					const q = document.createElement("blockquote");
+					q.textContent = m.quote;
+					d.append(q);
+				}
+				if (m.tag) {
+					const t = document.createElement("span");
+					t.className = "tag";
+					t.style.color = COLORS[m.tagColor] || "var(--muted)";
+					t.textContent = m.tag;
+					d.append(t);
+				}
+				chat.append(d);
+				if (m.kb?.length) {
+					const kb = document.createElement("div");
+					kb.className = "kb";
+					for (const r of m.kb) {
+						const row = document.createElement("div");
+						row.className = "row";
+						for (const btn of r) {
+							const b = document.createElement("button");
+							b.textContent = btn.label;
+							if (btn.url) {
+								b.className = "url";
+							}
+							if (btn.id.startsWith("ans:")) {
+								b.onclick = () => {
+									tapAnswer(p, btn.id.slice(4));
+									render();
+								};
+							} else if (btn.id === "reveal") {
+								b.onclick = () => {
+									reveal(p);
+									render();
+								};
+							} else {
+								b.disabled = true;
+							}
+							row.append(b);
+						}
+						kb.append(row);
+					}
+					chat.append(kb);
+				}
+			}
+			const words = last && !last.me ? last.text.split(/\s+/).length : 0;
+			el.querySelector(".state").innerHTML = [
+				["first line from", p.lastSrc],
+				["last reply voice", p.lastVoice],
+				["invites a reply", p.asked],
+				["struggling", String(struggling(p, S.scen))],
+				["last msg words", words],
+			]
+				.map(([k, v]) => `<div><span>${k}</span><span>${v}</span></div>`)
+				.join("");
+			return el;
+		}
+		function render() {
+			const g = $("grid");
+			g.innerHTML = "";
+			for (const r of REACHES) {
+				g.append(renderPhone(phones[r]));
+			}
+		}
+		function reset() {
+			for (const r of REACHES) {
+				phones[r] = newPhone(r);
+				runScenario(phones[r]);
+			}
+			renderControls();
+			render();
+		}
+		reset();
+		</script>
+	</body>
+</html>
