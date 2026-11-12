@@ -77,6 +77,11 @@ Put a dependency in the package that uses it; shared versions come from the root
   can have several deliveries.
 - **nudge**: an outreach a follow-up sends to invite the user back to its card.
   Gentle returns and pattern nudges are other intents, not nudges.
+- **letter**: a short, anonymous message of encouragement that one user (the
+  **sender**) writes for a stranger, and Xolace chooses who receives it (the
+  **recipient**). The recipient can **acknowledge** a letter once, without words, and
+  never reply to it. Not an echo (Xolace distils those from many people) and not
+  outreach or a notification (a person writes a letter, not Xolace).
 
 ## Hit every surface
 
