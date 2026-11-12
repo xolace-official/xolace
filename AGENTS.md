@@ -79,11 +79,13 @@ Put a dependency in the package that uses it; shared versions come from the root
   Gentle returns and pattern nudges are other intents, not nudges.
 - **letter**: a short, anonymous message of encouragement that one user (the
   **sender**) writes for a stranger, and Xolace chooses who receives it (the
-  **recipient**). A letter is **received** once Xolace places it with its recipient,
-  whether or not they have read it (not "delivered": that is outreach's word). The
-  recipient can **acknowledge** a letter once, without words, and
-  never reply to it. Not an echo (Xolace distils those from many people) and not
-  outreach or a notification (a person writes a letter, not Xolace).
+  **recipient**, always someone who opted in to receive letters). A letter is
+  **received** once Xolace places it with its recipient, whether or not they have
+  read it (not "delivered": that is outreach's word). The recipient can
+  **acknowledge** a letter once, without words, and never reply to it. Not an echo
+  (Xolace distils those from many people) and not outreach (a person writes a
+  letter, not Xolace). The push telling someone a letter reached them, or that
+  theirs was received or acknowledged, is a notification.
 
 ## Hit every surface
 
