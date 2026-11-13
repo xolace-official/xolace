@@ -24,6 +24,10 @@ against prod.
   `internalQuery` / `internalMutation` / `internalAction`, referenced via `internal.*`.
 - Domain folders: `convex/<feature>/<fn>.ts`, tests beside them. File names are
   camelCase or kebab-case (Biome enforces it).
+- Some older modules still sit flat in `convex/`. When you substantially change one,
+  move that domain into its folder in the same branch, following #778: a public
+  function keeps a deprecated one-line wrapper at its old path until shipped apps
+  stop calling it. Don't move modules you aren't otherwise changing.
 - Actions don't touch `ctx.db`; they call internal queries/mutations. Put `"use node"`
   only in files that need Node APIs, and never import those from client code.
 - Keep each mutation's transaction small; batch large work with the scheduler.
