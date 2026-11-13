@@ -76,6 +76,12 @@ A configured bot isn't enough for outreach to use it: the `outreach_channels` ro
 `telegram` (absent = disabled) is the kill switch and the free/Plus gate. That's an
 admin config edit, not part of this runbook.
 
+With the row on, a signed-in user can link a chat: `outreach/telegram/link:createLink`
+returns `https://t.me/<bot>?start=<token>` (one use, 15 minutes, 10 mints an hour), and
+opening it sends `/start <token>` to the bot, which links the chat and answers with the
+welcome line. A bad, used or expired token gets the "This link has expired" line. The
+token is never stored or logged: the webhook keeps only its SHA-256.
+
 ## Drift check
 
 A daily cron (`check telegram webhook`) calls `getWebhookInfo` and logs an error when:

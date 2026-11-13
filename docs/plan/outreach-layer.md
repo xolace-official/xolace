@@ -452,7 +452,8 @@ are deleted after 30 days by a cron.
 ### 9. Client contract (mobile)
 
 All public, under `convex/outreach/`, using `requireAuth`, with validators on args and
-returns.
+returns. `createLink` is `outreach/telegram/link:createLink`; the rest live in
+`outreach/reachMe.ts` (`api.outreach.reachMe.*`).
 
 | Function | Kind | Notes |
 |---|---|---|

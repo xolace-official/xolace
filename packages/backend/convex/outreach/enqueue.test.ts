@@ -629,6 +629,27 @@ describe("channel config", () => {
 		expect(h.telegram.sends).toHaveLength(0);
 		expect(h.pushes).toHaveLength(1);
 	});
+
+	it("tries first whichever channel the person put first (#766)", async () => {
+		const user = await reachable();
+		await linkTelegram(user, ["telegram", "push"]);
+		await user.t.mutation(api.outreach.reachMe.setFirstChannel, {
+			channel: "push",
+		});
+		await enqueue(user);
+		await drain(user);
+		expect(h.pushes).toHaveLength(1);
+		expect(h.telegram.sends).toHaveLength(0);
+
+		vi.advanceTimersByTime(DAY);
+		await user.t.mutation(api.outreach.reachMe.setFirstChannel, {
+			channel: "telegram",
+		});
+		await enqueue(user);
+		await drain(user);
+		expect(h.telegram.sends).toHaveLength(1);
+		expect(h.pushes).toHaveLength(1);
+	});
 });
 
 describe("fallback", () => {

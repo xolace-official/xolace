@@ -168,6 +168,19 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 	// the shared bucket would swallow the milestone. Cadence caps it anyway.
 	streakMilestone: { kind: "fixed window", period: DAY, rate: 1 },
 
+	// The "this link has expired" reply (#766), per chat: enough for a person
+	// retrying an old link, not a way around the stranger reply's 24 h limit.
+	telegramExpiredLinkReply: {
+		capacity: 5,
+		kind: "token bucket",
+		period: HOUR,
+		rate: 5,
+	},
+
+	// Telegram link tokens (#766): a person mints one each time they tap "Link
+	// Telegram"; ten an hour is far past a real retry loop.
+	telegramLinkMint: { kind: "fixed window", period: HOUR, rate: 10 },
+
 	// A chat with no linked account gets the fixed stranger reply at most once
 	// per 24 h (#765), keyed by chat id.
 	telegramStrangerReply: {

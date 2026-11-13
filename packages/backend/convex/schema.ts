@@ -1368,6 +1368,9 @@ export default defineSchema({
 	inbound_events: defineTable({
 		channel: outreachChannelValidator,
 		externalId: v.string(),
+		// SHA-256 of a `/start <token>` link token (#766). The webhook strips
+		// the token from the payload before storing; cleared once processed.
+		linkTokenHash: v.optional(v.string()),
 		payload: v.any(),
 		providerEventId: v.string(),
 		receivedAt: v.number(),

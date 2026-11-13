@@ -1,5 +1,6 @@
-import type { Doc } from "../_generated/dataModel";
-import type { QueryCtx } from "../_generated/server";
+import type { Doc, Id } from "../_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { updateNotificationPrefs } from "../lib/notificationPrefs";
 import type {
 	ChannelPlan,
 	OutreachChannel,
@@ -23,6 +24,40 @@ export const CHANNEL_DEFAULTS: Record<
 
 /** Absent `channelOrder` on the preferences. */
 export const DEFAULT_CHANNEL_ORDER: readonly OutreachChannel[] = ["push"];
+
+/**
+ * Move `channel` to the front of the person's order (absent = [push]),
+ * keeping the rest as they were.
+ */
+export async function putChannelFirst(
+	ctx: MutationCtx,
+	emotionalProfileId: Id<"emotional_profiles">,
+	channel: OutreachChannel
+): Promise<void> {
+	const prefs = await ctx.db
+		.query("preferences")
+		.withIndex("by_profile", (q) =>
+			q.eq("emotionalProfileId", emotionalProfileId)
+		)
+		.unique();
+	const order = prefs?.notifications.channelOrder ?? DEFAULT_CHANNEL_ORDER;
+	await updateNotificationPrefs(ctx, emotionalProfileId, {
+		channelOrder: [channel, ...order.filter((c) => c !== channel)],
+	});
+}
+
+const REGION_CODE = /^[A-Za-z]{2}$/;
+
+/**
+ * A linked chat's country from the device's region (ISO 3166-1 alpha-2),
+ * uppercased; undefined for anything else. Picks the crisis resources.
+ */
+export function countryFromRegion(
+	regionCode: string | undefined
+): string | undefined {
+	const code = regionCode?.trim();
+	return code && REGION_CODE.test(code) ? code.toUpperCase() : undefined;
+}
 
 /**
  * Which intents each channel takes. Telegram carries only the ones a person

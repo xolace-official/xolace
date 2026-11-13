@@ -9,6 +9,7 @@ import {
 	channelTakesIntent,
 	DEFAULT_CHANNEL_ORDER,
 } from "./channels";
+import { telegramConfigured } from "./telegram/bot";
 import type {
 	FollowUpTier,
 	IneligibilityReason,
@@ -205,6 +206,41 @@ export function isAcuteNudge(input: Pick<RouteInput, "intent" | "tier">) {
 }
 
 /**
+ * The kill switch and the plan: why a channel is closed to this person, or
+ * null when it's open. Shared by routing, linking and `listChannels`.
+ */
+export async function channelClosed(
+	ctx: QueryCtx,
+	channel: OutreachChannel,
+	profile: Doc<"emotional_profiles">
+): Promise<"disabled" | "requires_plus" | null> {
+	const config = await channelConfig(ctx, channel);
+	if (!config.enabled) {
+		return "disabled";
+	}
+	if (config.plan === "plus" && !(await hasPremium(ctx, profile))) {
+		return "requires_plus";
+	}
+	return null;
+}
+
+/**
+ * Why a person can't link or use a channel on this deployment, or null.
+ * `not_configured` here means the deployment has no bot, so Telegram isn't
+ * offered at all; whether a delivery adapter exists is routing's question.
+ */
+export async function channelUnavailable(
+	ctx: QueryCtx,
+	channel: OutreachChannel,
+	profile: Doc<"emotional_profiles">
+): Promise<"not_configured" | "disabled" | "requires_plus" | null> {
+	if (channel === "telegram" && !(await telegramConfigured(ctx))) {
+		return "not_configured";
+	}
+	return await channelClosed(ctx, channel, profile);
+}
+
+/**
  * Whether a channel can take this outreach, bucket aside. Null = eligible.
  */
 export async function channelIneligibility(
@@ -221,12 +257,9 @@ export async function channelIneligibility(
 	if (!(adapter && (await adapter.configured(ctx)))) {
 		return "not_configured";
 	}
-	const config = await channelConfig(ctx, channel);
-	if (!config.enabled) {
-		return "disabled";
-	}
-	if (config.plan === "plus" && !(await hasPremium(ctx, profile))) {
-		return "requires_plus";
+	const closed = await channelClosed(ctx, channel, profile);
+	if (closed) {
+		return closed;
 	}
 
 	if (channel === "push") {

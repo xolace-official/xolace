@@ -8,6 +8,20 @@
 export const STRANGER_REPLY =
 	"Hi. This bot works with the Xolace app. To get check-ins here, open Xolace → Settings → Reach me on… and link Telegram.\n\nIf you're in danger right now, call your local emergency number.";
 
+/** `/start` with a token that's unknown, expired, used or repeated. */
+export const EXPIRED_LINK_REPLY =
+	"This link has expired. Open Xolace → Reach me on… for a new one.";
+
+/** A chat was just linked (#766). */
+export const WELCOME =
+	"You're linked 👋\nThis is where Xolace will check in on you: a short message with a few buttons. Tap an answer, or just write back.\n\nTelegram shows previews on your lock screen, so the first line of every message stays general.\n\nTo stop, send /stop or unlink in Xolace → Reach me on…";
+
+/** The commands a linked chat sees, set for that chat when it links. */
+export const LINKED_COMMANDS = [
+	{ command: "stop", description: "Unlink this chat from Xolace" },
+	{ command: "help", description: "What this bot does" },
+] as const;
+
 /** The bot's profile, set by `configureBot`. */
 export const BOT_PROFILE = {
 	commands: [

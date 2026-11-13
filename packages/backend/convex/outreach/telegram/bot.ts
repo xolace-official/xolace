@@ -44,7 +44,7 @@ async function botRow(ctx: QueryCtx): Promise<Doc<"telegram_bot"> | null> {
  * `configureBot` set up. Without both, Telegram is `not_configured` and the
  * webhook answers 401.
  */
-async function configuredBot(
+export async function configuredBot(
 	ctx: QueryCtx
 ): Promise<Doc<"telegram_bot"> | null> {
 	return telegramToken() ? await botRow(ctx) : null;

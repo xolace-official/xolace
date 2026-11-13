@@ -33,6 +33,33 @@ export function strippedPayload(updateId: number) {
 	return { update_id: updateId };
 }
 
+/**
+ * `/start <token>` (or `/start@bot <token>`): a deep link's payload. Anything
+ * after the first word is dropped with it, so a token never survives.
+ */
+const START_WITH_TOKEN = /^\/start(?:@\w+)?\s+(\S+)/;
+
+/**
+ * Take a link token out of an update before it's stored (#766): the text
+ * keeps only `/start`, and the token comes back as its SHA-256. Any other
+ * update is returned as it came.
+ */
+export async function redactLinkToken(
+	update: TelegramUpdate
+): Promise<{ linkTokenHash?: string; update: TelegramUpdate }> {
+	const token = update.message?.text?.match(START_WITH_TOKEN)?.[1];
+	if (!(update.message && token)) {
+		return { update };
+	}
+	return {
+		linkTokenHash: await sha256Hex(token),
+		update: {
+			...update,
+			message: { ...update.message, entities: undefined, text: "/start" },
+		},
+	};
+}
+
 /** The chat an update belongs to, as a string (Telegram ids are 64-bit). */
 export function updateChatId(update: TelegramUpdate): string | undefined {
 	const id =
@@ -67,10 +94,14 @@ export const telegramWebhook = httpAction(async (ctx, request) => {
 	}
 	const update = asUpdate(body);
 	if (update) {
+		const redacted = await redactLinkToken(update);
 		await ctx.runMutation(internal.outreach.telegram.webhook.receive, {
 			externalId: updateChatId(update),
-			payload: update,
+			payload: redacted.update,
 			updateId: update.update_id,
+			...(redacted.linkTokenHash && {
+				linkTokenHash: redacted.linkTokenHash,
+			}),
 		});
 	}
 	return new Response(null, { status: 200 });
@@ -79,10 +110,11 @@ export const telegramWebhook = httpAction(async (ctx, request) => {
 export const receive = internalMutation({
 	args: {
 		externalId: v.optional(v.string()),
+		linkTokenHash: v.optional(v.string()),
 		payload: v.any(),
 		updateId: v.number(),
 	},
-	handler: async (ctx, { externalId, payload, updateId }) => {
+	handler: async (ctx, { externalId, linkTokenHash, payload, updateId }) => {
 		const providerEventId = String(updateId);
 		const existing = await ctx.db
 			.query("inbound_events")
@@ -96,6 +128,7 @@ export const receive = internalMutation({
 		const eventId = await ctx.db.insert("inbound_events", {
 			channel: "telegram",
 			externalId: externalId ?? "",
+			...(externalId && linkTokenHash && { linkTokenHash }),
 			// Nothing to act on without a chat; keep only the id.
 			payload: externalId ? payload : strippedPayload(updateId),
 			providerEventId,
