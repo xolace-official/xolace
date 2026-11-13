@@ -52,5 +52,29 @@ export function quietWindowEndsAt(
 	}
 	const hoursToGo = (dontReachBefore - local.hour + 24) % 24;
 	const startOfHour = at - (at % MINUTE) - local.minute * MINUTE;
-	return startOfHour + hoursToGo * HOUR;
+	return onLocalHour(timezone, startOfHour + hoursToGo * HOUR, dontReachBefore);
+}
+
+/** Hours either way a clock change can shift a guess. */
+const MAX_CLOCK_CORRECTIONS = 3;
+
+/**
+ * Elapsed hours drift from local hours across a clock change, so nudge the
+ * guess until it lands on `hour:00` local time. A local hour that a spring
+ * forward skips has no exact match; the last guess is the nearest one.
+ */
+function onLocalHour(timezone: string, guess: number, hour: number): number {
+	let t = guess;
+	for (let i = 0; i < MAX_CLOCK_CORRECTIONS; i++) {
+		const local = localTime(timezone, t);
+		if (!local) {
+			return t;
+		}
+		const hoursOff = ((hour - local.hour + 36) % 24) - 12;
+		if (hoursOff === 0 && local.minute === 0) {
+			return t;
+		}
+		t += hoursOff * HOUR - local.minute * MINUTE;
+	}
+	return t;
 }

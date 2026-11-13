@@ -479,6 +479,44 @@ describe("gates", () => {
 		expect(h.pushes).toHaveLength(2);
 	});
 
+	it.each([
+		{
+			// 23:30 EDT on the night clocks fall back: 08:00 the next day is EST.
+			at: Date.UTC(2026, 10, 1, 3, 30),
+			ends: Date.UTC(2026, 10, 1, 13, 0),
+			name: "fall back",
+		},
+		{
+			// 23:30 EST on the night clocks spring forward: 08:00 is EDT.
+			at: Date.UTC(2027, 2, 14, 4, 30),
+			ends: Date.UTC(2027, 2, 14, 12, 0),
+			name: "spring forward",
+		},
+	])(
+		"ends the quiet window at the local hour across a clock change ($name)",
+		async ({ at, ends }) => {
+			vi.setSystemTime(at);
+			const user = await reachable();
+			await setNotifications(user, {
+				quietWindow: { dontReachAfter: 21, dontReachBefore: 8 },
+				timezone: "America/New_York",
+			});
+			const { outreachId } = await enqueue(user);
+			expect((await outreachRow(user, outreachId))?.sendAt).toBe(ends);
+		}
+	);
+
+	it("finds an open escalation-derived card behind many ordinary ones", async () => {
+		const user = await reachable();
+		for (let i = 0; i < 60; i++) {
+			await seedCard(user, { status: "superseded" });
+		}
+		await seedCard(user, { escalationDerived: true, status: "superseded" });
+		expect(await enqueue(user)).toMatchObject({
+			suppressedReason: "escalation_active",
+		});
+	});
+
 	it("suppresses with no_channel when push is off and nothing else is linked", async () => {
 		const user = await reachable();
 		await setNotifications(user, { enabled: false });

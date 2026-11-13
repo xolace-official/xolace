@@ -1185,6 +1185,13 @@ export default defineSchema({
 		// Profile screen: follow-up history, newest first.
 		.index("by_profile_created", ["emotionalProfileId", "createdAt"])
 
+		// Outreach router: is an escalation-derived card still open? (#760)
+		.index("by_profile_escalation_status", [
+			"emotionalProfileId",
+			"escalationDerived",
+			"status",
+		])
+
 		// Workflow cancellation / onComplete lookup.
 		.index("by_workflow", ["workflowId"])
 

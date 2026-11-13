@@ -28,8 +28,6 @@ const HOUR = 3_600_000;
 /** An escalation event holds every routine outreach this long. */
 export const ESCALATION_HOLD_MS = 72 * HOUR;
 
-/** More open cards than this per status is not a real profile; bounds the read. */
-const MAX_OPEN_CARDS_PER_STATUS = 50;
 /** A profile has a handful of rows per channel at most (one per linked chat). */
 const MAX_IDENTITIES_PER_CHANNEL = 10;
 
@@ -88,31 +86,29 @@ export async function escalationOrDormancy(
 	profile: Doc<"emotional_profiles">,
 	now: number
 ): Promise<SuppressedReason | null> {
-	const openEscalationCards: Id<"follow_up_cards">[] = [];
-	for (const status of UNRESOLVED_CARD_STATUSES) {
-		const cards = await ctx.db
-			.query("follow_up_cards")
-			.withIndex("by_profile_status", (q) =>
-				q
-					.eq("emotionalProfileId", input.emotionalProfileId)
-					.eq("status", status)
-			)
-			.take(MAX_OPEN_CARDS_PER_STATUS);
-		for (const card of cards) {
-			if (card.escalationDerived) {
-				openEscalationCards.push(card._id);
-			}
-		}
-	}
-
+	// An escalation-derived card's own nudge passes both holds.
+	const nudgedCard =
+		input.intent === "nudge" && input.followUpId !== undefined
+			? await ctx.db.get("follow_up_cards", input.followUpId)
+			: null;
 	const ownCardNudge =
-		input.intent === "nudge" &&
-		input.followUpId !== undefined &&
-		openEscalationCards.includes(input.followUpId);
+		nudgedCard?.escalationDerived === true &&
+		(UNRESOLVED_CARD_STATUSES as readonly string[]).includes(nudgedCard.status);
 
 	if (!ownCardNudge) {
-		if (openEscalationCards.length > 0) {
-			return "escalation_active";
+		for (const status of UNRESOLVED_CARD_STATUSES) {
+			const openEscalationCard = await ctx.db
+				.query("follow_up_cards")
+				.withIndex("by_profile_escalation_status", (q) =>
+					q
+						.eq("emotionalProfileId", input.emotionalProfileId)
+						.eq("escalationDerived", true)
+						.eq("status", status)
+				)
+				.first();
+			if (openEscalationCard) {
+				return "escalation_active";
+			}
 		}
 		const recentEscalation = await ctx.db
 			.query("escalation_events")

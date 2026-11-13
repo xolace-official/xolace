@@ -1,6 +1,6 @@
 # Developer surfaces and a B2B edition: reaching founders where they work
 
-Researched 2026-10-30. Companion to [`proactive-outreach-channels.md`](./proactive-outreach-channels.md); this doc builds on its "Current Xolace follow-up state" and "Recommended architecture on Convex" and does not repeat them. Specs in this space (MCP, Claude Code, Cursor, Codex, Slack's agent APIs) changed several times in 2026; re-check before building. Tags: **[V]** checked on a primary source this session, **[S]** secondary source only, **[U]** unverified.
+Researched 2026-10-30. Companion to [`proactive-outreach-channel.md`](./proactive-outreach-channel.md); this doc builds on its "Current Xolace follow-up state" and "Recommended architecture on Convex" and does not repeat them. Specs in this space (MCP, Claude Code, Cursor, Codex, Slack's agent APIs) changed several times in 2026; re-check before building. Tags: **[V]** checked on a primary source this session, **[S]** secondary source only, **[U]** unverified.
 
 ## TL;DR
 
@@ -472,7 +472,7 @@ Relative to the companion's phases (0 Groundwork, 1 Telegram + email, 2 SMS, 3 V
 - `apps/cli/AGENTS.md`, `apps/cli/package.json`, `apps/cli/src/index.tsx`, `src/config.ts`, `src/auth/{oauth,session,token-store,file-lock,browser}.ts`
 - `apps/desktop/src-tauri/Cargo.toml`, `tauri.conf.json`
 - `packages/backend/convex/auth.config.ts`, `followUps.ts` (`getReadyCard`, `markReturn`, `resolveCard`), `followUpResponses.ts` (`record`)
-- `docs/research/proactive-outreach-channels.md`
+- `docs/research/proactive-outreach-channel.md`
 - `/Users/nathan/Developer/XolaceInc/sample apps/convex-slack-main/{README.md,package.json,src/client/index.ts,src/component/schema.ts}`
 
 **MCP**
