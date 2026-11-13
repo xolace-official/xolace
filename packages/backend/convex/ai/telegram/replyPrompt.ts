@@ -8,11 +8,7 @@
  * every message on every device.
  */
 import type { Infer } from "convex/values";
-import {
-	DOMAIN_LABELS,
-	DOMAINS,
-	type Domain,
-} from "../../lib/understandingVocab";
+import { DOMAIN_LABELS, type Domain } from "../../lib/understandingVocab";
 import type { reachValidator } from "../../lib/validators";
 import type { SafeguardLevel } from "../safeguard";
 
@@ -51,6 +47,22 @@ export type ReplyInput = {
 
 export type ReplyPrompt = { system: string; user: string };
 
+/**
+ * The only first lines a reply may open with. Telegram shows the first line
+ * on the lock screen, so it says nothing about them: chosen from these, never
+ * written.
+ */
+export const FIRST_LINES = [
+	"Thanks for telling me.",
+	"Thank you for answering.",
+	"Thanks for writing back.",
+	"Good to hear.",
+	"Glad you wrote.",
+	"I hear you.",
+	"I'm here.",
+	"That makes sense.",
+] as const;
+
 /** The lock-screen line: a few words at most. */
 export const FIRST_LINE_MAX_CHARS = 60;
 /** A Telegram reply is a few sentences, never a letter. */
@@ -82,8 +94,8 @@ const TAP_GOAL: Record<TapAnswer, string> = {
 const RULES = `You are Xolace, writing back in a private Telegram chat with someone who uses the Xolace app. Xolace checked in on something they reflected on, and they just answered. You write one reply message.
 
 The first line:
-- Its own line, ${FIRST_LINE_MAX_CHARS} characters at most, a few words.
-- General: Telegram shows it on their lock screen. Never the topic, a life area, a feeling they named, a day, a time, or any of their words. "Thanks for telling me." and "Good to hear." are the kind of line.
+- Its own line, exactly one of these, word for word: ${FIRST_LINES.map((l) => `"${l}"`).join(", ")}
+- Telegram shows it on their lock screen, so it never says anything about them. Pick the one that fits.
 
 The rest:
 - Plain text. No markdown, lists, emoji, quotes around the reply, or sign-off.
@@ -155,65 +167,31 @@ export function buildReplyPrompt(input: ReplyInput): ReplyPrompt {
 
 const WRAPPING_QUOTES = /^["'“”‘’]+|["'“”‘’]+$/g;
 
-/** Every life area, by key and label, as whole words. */
-const LIFE_AREA = new RegExp(
-	`\\b(${[
-		...DOMAINS,
-		...DOMAINS.flatMap((d) => DOMAIN_LABELS[d].toLowerCase().split(/\W+/)),
-	]
-		.filter((w) => w.length > 2)
-		.join("|")})\\b`,
-	"i"
-);
-/** A day, a month or a time: never on the lock screen. */
-const WHEN =
-	/\b(mon|tues?|wed(nes)?|thu(rs)?|fri|sat(ur)?|sun)(day)?s?\b|\b(today|tonight|yesterday|tomorrow|morning|evening|weekend|jan(uary)?|feb(ruary)?|march|april|june|july|aug(ust)?|sept?(ember)?|oct(ober)?|nov(ember)?|dec(ember)?)\b|\d|\b(am|pm)\b/i;
-/** Words of their own a first line may share: the general kind it's made of. */
-const GENERAL_WORDS = new Set([
-	"about",
-	"being",
-	"really",
-	"right",
-	"sharing",
-	"sounds",
-	"still",
-	"thank",
-	"thanks",
-	"there",
-	"these",
-	"those",
-	"telling",
-	"where",
-	"which",
-	"while",
-]);
-/** Their words that would say something on a lock screen. */
-const telling = (text: string) =>
-	(text.toLowerCase().match(/[a-z']{5,}/g) ?? []).filter(
-		(w) => !GENERAL_WORDS.has(w)
-	);
+const normalize = (line: string) =>
+	line
+		.toLowerCase()
+		.replace(/[’‘]/g, "'")
+		.replace(/[.!…]+$/, "")
+		.trim();
+
+const APPROVED = new Set(FIRST_LINES.map(normalize));
 
 /**
- * Whether a first line is general enough for the lock screen: no life area,
- * no day or time, and none of the card's or their own telling words.
+ * Whether a first line may sit on the lock screen: only one of
+ * {@link FIRST_LINES}. No check on free wording can tell a paraphrase of
+ * what they said from a general line, so the line is chosen, not written.
  */
-export function isGeneralLine(line: string, privateTexts: readonly string[]) {
-	if (LIFE_AREA.test(line) || WHEN.test(line)) {
-		return false;
-	}
-	const own = new Set(privateTexts.flatMap(telling));
-	return !telling(line).some((w) => own.has(w));
-}
+export const isApprovedFirstLine = (line: string) =>
+	APPROVED.has(normalize(line));
 
 /**
  * A model reply as it goes out, or null when it breaks the rules code can
- * check: one line only, the first line too long or not general (a life
- * area, a day or time, the card's or their own words), quiet not two lines,
- * or the whole too long.
+ * check: one line only, a first line not from {@link FIRST_LINES}, quiet not
+ * two lines, or the whole too long.
  */
 export function shapeReply(
 	raw: string,
-	rules: { reach: Reach; private?: readonly string[] }
+	rules: { reach: Reach }
 ): string | null {
 	const lines = raw
 		.replace(WRAPPING_QUOTES, "")
@@ -224,7 +202,7 @@ export function shapeReply(
 	if (!first || first.length > FIRST_LINE_MAX_CHARS) {
 		return null;
 	}
-	if (!isGeneralLine(first, rules.private ?? [])) {
+	if (!isApprovedFirstLine(first)) {
 		return null;
 	}
 	// The first line stands alone; quiet is exactly it and one more.

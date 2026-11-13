@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	buildReplyPrompt,
 	FIRST_LINE_MAX_CHARS,
+	FIRST_LINES,
 	type ReplyInput,
 	shapeReply,
 } from "./replyPrompt";
@@ -39,10 +40,7 @@ describe("buildReplyPrompt", () => {
 });
 
 describe("shapeReply", () => {
-	const rules = {
-		private: ["The review at work left me rattled", "Work has been a lot."],
-		reach: "warm" as const,
-	};
+	const rules = { reach: "warm" as const };
 
 	it("keeps a short general first line and the rest", () => {
 		expect(shapeReply('"Good to hear.\n\nWhat helped?"', rules)).toBe(
@@ -50,7 +48,7 @@ describe("shapeReply", () => {
 		);
 	});
 
-	it("refuses one line, a long first line, or the life area up front", () => {
+	it("refuses one line, a long first line, or anything but an approved first line", () => {
 		expect(shapeReply("Good to hear, what helped?", rules)).toBeNull();
 		expect(
 			shapeReply(`${"x".repeat(FIRST_LINE_MAX_CHARS + 1)}\nmore`, rules)
@@ -61,8 +59,9 @@ describe("shapeReply", () => {
 		);
 	});
 
-	it("refuses a first line that names a day, a time, a life area or their words", () => {
+	it("takes only an approved first line, so no paraphrase reaches the lock screen", () => {
 		for (const first of [
+			"Your boss was harsh.",
 			"Tuesday's review left you rattled.",
 			"Rough morning, then.",
 			"Since 9 this has been heavy.",
@@ -71,7 +70,10 @@ describe("shapeReply", () => {
 		]) {
 			expect(shapeReply(`${first}\nWhat helped?`, rules)).toBeNull();
 		}
-		expect(shapeReply("Thanks for telling me.\nMore?", rules)).not.toBeNull();
+		for (const first of FIRST_LINES) {
+			expect(shapeReply(`${first}\nMore?`, rules)).not.toBeNull();
+		}
+		expect(shapeReply("i’m here\nMore?", rules)).not.toBeNull();
 	});
 
 	it("holds quiet to exactly two lines", () => {

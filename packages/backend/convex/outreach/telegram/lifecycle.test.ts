@@ -404,8 +404,19 @@ describe("relinks", () => {
 	it("same chat, second account: the row moves, the old account is revoked relinked", async () => {
 		const { secret, user: first } = await linked();
 		const [row] = await identities(first);
+		// The old link's generation at or past the clock: a relink in the same
+		// millisecond must still get a new one, or a reply in flight would pass.
+		const oldGeneration = Date.now() + 60_000;
+		await first.root.run((ctx) =>
+			ctx.db.patch("channel_identities", row!._id, {
+				linkedAt: oldGeneration,
+			})
+		);
 		const second = await asNewUser(2, first.root);
 		await linkChat(second, secret);
+		expect((await identities(second))[0]?.linkedAt).toBeGreaterThan(
+			oldGeneration
+		);
 
 		expect(await identities(second)).toEqual([
 			expect.objectContaining({

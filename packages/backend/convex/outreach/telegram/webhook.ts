@@ -25,12 +25,20 @@ const optional = (value: unknown, type: "number" | "string") =>
 const hasId = (value: unknown) =>
 	isObject(value) && typeof value.id === "number";
 
+/** A chat: its `id`, and the `type` routing reads. */
+const isChat = (value: unknown) =>
+	hasId(value) && isObject(value) && typeof value.type === "string";
+
+/** A sender: its `id`, and the `username` a link keeps as its handle. */
+const isUser = (value: unknown) =>
+	hasId(value) && isObject(value) && optional(value.username, "string");
+
 /** A message, as far as anything here reads it. */
 const isMessage = (value: unknown) =>
 	isObject(value) &&
-	hasId(value.chat) &&
+	isChat(value.chat) &&
 	optional(value.text, "string") &&
-	(value.from === undefined || hasId(value.from));
+	(value.from === undefined || isUser(value.from));
 
 /** Each update kind this bot handles, checked on the fields it reads. */
 function wellFormed(update: Fields): boolean {
@@ -43,7 +51,7 @@ function wellFormed(update: Fields): boolean {
 		!(
 			isObject(tap) &&
 			typeof tap.id === "string" &&
-			hasId(tap.from) &&
+			isUser(tap.from) &&
 			optional(tap.data, "string") &&
 			(tap.message === undefined || isMessage(tap.message))
 		)
@@ -54,7 +62,7 @@ function wellFormed(update: Fields): boolean {
 	return (
 		member === undefined ||
 		(isObject(member) &&
-			hasId(member.chat) &&
+			isChat(member.chat) &&
 			isObject(member.new_chat_member) &&
 			typeof member.new_chat_member.status === "string")
 	);

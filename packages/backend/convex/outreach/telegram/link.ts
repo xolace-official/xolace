@@ -187,16 +187,19 @@ export async function redeemLinkToken(
 		}
 	}
 
+	const existing = await identityOfChat(ctx, args.chatId);
+	// The link's generation: a reply or a line in flight checks it before it
+	// sends, so every link of this chat gets its own, even within a millisecond.
+	const linkedAt = existing ? Math.max(now, existing.linkedAt + 1) : now;
 	const fields = {
 		emotionalProfileId,
-		linkedAt: now,
+		linkedAt,
 		status: "active" as const,
 		tokenIdentifier: user.tokenIdentifier,
 		...(token.regionCode && { country: token.regionCode }),
 		...(args.displayHandle && { displayHandle: args.displayHandle }),
 		...(args.telegramUserId && { telegramUserId: args.telegramUserId }),
 	};
-	const existing = await identityOfChat(ctx, args.chatId);
 	// This chat, live for another account: it leaves that account.
 	const moved =
 		existing !== null &&
@@ -231,7 +234,7 @@ export async function redeemLinkToken(
 		{
 			chatId: args.chatId,
 			kind: moved ? "relinked" : "welcome",
-			linkedAt: now,
+			linkedAt,
 		},
 		...lines,
 	];

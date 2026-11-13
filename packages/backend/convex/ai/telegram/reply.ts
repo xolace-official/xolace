@@ -45,11 +45,6 @@ export async function writeRaw(prompt: ReplyPrompt): Promise<string> {
  */
 export async function writeReply(input: ReplyInput): Promise<string | null> {
 	const prompt = buildReplyPrompt(input);
-	// What the lock-screen line must not give away.
-	const privateTexts = [
-		input.card?.text ?? "",
-		input.trigger.kind === "text" ? input.trigger.text : "",
-	];
 	for (let attempt = 0; attempt < SHAPE_ATTEMPTS; attempt++) {
 		let raw: string;
 		try {
@@ -58,10 +53,7 @@ export async function writeReply(input: ReplyInput): Promise<string | null> {
 			console.error("[telegram] reply model failed", error);
 			return null;
 		}
-		const reply = shapeReply(raw, {
-			private: privateTexts,
-			reach: input.reach,
-		});
+		const reply = shapeReply(raw, { reach: input.reach });
 		if (reply) {
 			return reply;
 		}

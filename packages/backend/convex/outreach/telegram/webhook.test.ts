@@ -88,6 +88,15 @@ describe("webhook intake", () => {
 		{ message: { text: "hi" }, update_id: 2 },
 		{ callback_query: { data: "a", from: {}, id: "c" }, update_id: 3 },
 		{ my_chat_member: { chat: { id: 1 } }, update_id: 4 },
+		{
+			message: {
+				chat: { id: 1, type: "private" },
+				from: { id: 1, username: 42 },
+				text: "/start abc",
+			},
+			update_id: 5,
+		},
+		{ message: { chat: { id: 1 }, text: "hi" }, update_id: 6 },
 	])(
 		"drops an update whose fields aren't Telegram's shape (%#)",
 		async (body) => {
