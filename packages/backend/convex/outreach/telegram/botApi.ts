@@ -38,9 +38,17 @@ export const TELEGRAM_WEBHOOK_PATH = "/telegram/webhook";
 /** Telegram's header carrying the `secret_token` given to `setWebhook`. */
 export const SECRET_HEADER = "X-Telegram-Bot-Api-Secret-Token";
 
+export const SECOND_MS = 1000;
+/** Blocked by the user, or the chat is gone. */
+export const FORBIDDEN = 403;
+/** Slow down: `retry_after` says for how long. */
+export const TOO_MANY_REQUESTS = 429;
+
 /** A Bot API call Telegram refused. Never carries the token. */
 export class TelegramApiError extends Error {
 	readonly method: string;
+	/** Telegram's own reason, e.g. "Bad Request: message is not modified". */
+	readonly description?: string;
 	/** Telegram's `error_code` (an HTTP status: 400, 403, 429…). */
 	readonly errorCode?: number;
 	/** Seconds to wait, on a 429. */
@@ -59,6 +67,7 @@ export class TelegramApiError extends Error {
 		super(`Telegram Bot API "${method}" failed${code}${detail}`);
 		this.name = "TelegramApiError";
 		this.method = method;
+		this.description = response.description;
 		this.errorCode = response.error_code;
 		this.retryAfter = response.retry_after;
 	}

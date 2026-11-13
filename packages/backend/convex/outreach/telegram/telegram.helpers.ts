@@ -30,11 +30,24 @@ export const STRANGER_CHAT = 4_242_424_242;
 
 type BotCall = { method: string; params: Record<string, unknown> };
 const calls: BotCall[] = [];
+type Refusal = {
+	description: string;
+	error_code: number;
+	parameters?: { retry_after: number };
+};
 const live = {
 	/** Chats every call to which Telegram refuses with a 403 (blocked). */
 	blockedChats: new Set<string>(),
+	/** Refusals for the next calls to a method, one each, in order. */
+	failures: new Map<string, Refusal[]>(),
+	nextMessageId: 100,
 	webhookInfo: {} as Record<string, unknown>,
 };
+
+/** The next call to `method` is refused with this. */
+export function failNext(method: string, refusal: Refusal) {
+	live.failures.set(method, [...(live.failures.get(method) ?? []), refusal]);
+}
 
 /** From now on, Telegram answers 403 to any call naming this chat. */
 export function blockChat(chatId: number | string) {
@@ -51,6 +64,12 @@ function botApiStub(input: RequestInfo | URL, init?: RequestInit) {
 	const method = url.slice(url.lastIndexOf("/") + 1);
 	const params = init?.body ? JSON.parse(String(init.body)) : {};
 	calls.push({ method, params });
+	const refusal = live.failures.get(method)?.shift();
+	if (refusal) {
+		return Promise.resolve(
+			new Response(JSON.stringify({ ok: false, ...refusal }))
+		);
+	}
 	if (live.blockedChats.has(String(params.chat_id))) {
 		return Promise.resolve(
 			new Response(
@@ -70,7 +89,11 @@ function botApiStub(input: RequestInfo | URL, init?: RequestInit) {
 			username: "xolace_dev_bot",
 		},
 		getWebhookInfo: live.webhookInfo,
-		sendMessage: { chat: { id: params.chat_id }, date: 0, message_id: 7 },
+		sendMessage: {
+			chat: { id: params.chat_id },
+			date: 0,
+			message_id: method === "sendMessage" ? live.nextMessageId++ : 0,
+		},
 	};
 	return Promise.resolve(
 		new Response(JSON.stringify({ ok: true, result: results[method] ?? true }))
@@ -92,6 +115,8 @@ export function stubTelegramEachTest() {
 		vi.setSystemTime(NOW);
 		forgetCalls();
 		live.blockedChats.clear();
+		live.failures.clear();
+		live.nextMessageId = 100;
 		setWebhookInfo({ pending_update_count: 0, url: WEBHOOK_URL });
 		vi.stubGlobal("fetch", vi.fn(botApiStub));
 		process.env.TELEGRAM_BOT_TOKEN = "123456:test-token";
@@ -108,6 +133,8 @@ export function stubTelegramEachTest() {
 export function backend(root = asUnauthed()) {
 	root.registerComponent("rateLimiter", rateLimiterSchema, rateLimiterModules);
 	workpoolTest.register(root, "telegramInbound");
+	workpoolTest.register(root, "outreachTelegram");
+	workpoolTest.register(root, "outreachPush");
 	return root;
 }
 export type Backend = ReturnType<typeof backend>;

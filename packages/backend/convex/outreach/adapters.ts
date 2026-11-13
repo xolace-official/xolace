@@ -1,8 +1,10 @@
 import type { Workpool } from "@convex-dev/workpool";
-import type { Doc } from "../_generated/dataModel";
-import type { MutationCtx, QueryCtx } from "../_generated/server";
-import { outreachPushPool } from "./pools";
+import type { Value } from "convex/values";
+import type { Doc, Id } from "../_generated/dataModel";
+import type { ActionCtx, MutationCtx, QueryCtx } from "../_generated/server";
+import { outreachPushPool, outreachTelegramPool } from "./pools";
 import { pushAdapter } from "./push";
+import { telegramAdapter } from "./telegram/adapter";
 import type { ChannelErrorKind, OutreachChannel } from "./validators";
 
 /**
@@ -11,20 +13,59 @@ import type { ChannelErrorKind, OutreachChannel } from "./validators";
  * when it can't: `retry` (try again after `afterMs`), `permanent` (give up,
  * fall back once) or `unreachable` (the person can't be reached there; fall
  * back once).
+ *
+ * A channel whose provider is a database write (push, through its component)
+ * sends inside the delivery mutation. One that calls an outside API (Telegram)
+ * runs as an action: `prepare` decides what to send inside the mutation that
+ * claims the delivery, and `send` makes the call.
  */
-export type ChannelAdapter = {
+type AdapterBase = {
 	channel: OutreachChannel;
 	/** `pull` (the client fetches, e.g. a CLI) is reserved; none is built. */
 	deliveryMode: "push" | "pull";
 	/** Whether this deployment can use the channel at all (a bot token…). */
 	configured: (ctx: QueryCtx) => boolean | Promise<boolean>;
 	pool: Workpool;
+	/** After the send is recorded, in the same transaction. */
+	afterSent?: (
+		ctx: MutationCtx,
+		deliveryId: Id<"outreach_deliveries">
+	) => Promise<void>;
+};
+
+export type MutationAdapter = AdapterBase & {
+	runtime?: "mutation";
 	send: (
 		ctx: MutationCtx,
 		delivery: Doc<"outreach_deliveries">,
 		outreach: Doc<"outreach">
 	) => Promise<DeliveryReceipt>;
 };
+
+export type ActionAdapter<Prepared extends Value = Value> = AdapterBase & {
+	runtime: "action";
+	prepare: (
+		ctx: MutationCtx,
+		delivery: Doc<"outreach_deliveries">,
+		outreach: Doc<"outreach">
+	) => Promise<Prepared>;
+	send: (ctx: ActionCtx, prepared: Prepared) => Promise<DeliveryReceipt>;
+};
+
+export type ChannelAdapter = MutationAdapter | ActionAdapter;
+
+/**
+ * An action adapter for the registry. What `prepare` returns comes back to
+ * `send` unchanged (through `claimForAction`), so the one narrowing is here.
+ */
+function actionAdapter<Prepared extends Value>(
+	adapter: ActionAdapter<Prepared>
+): ActionAdapter {
+	return {
+		...adapter,
+		send: (ctx, prepared) => adapter.send(ctx, prepared as Prepared),
+	};
+}
 
 /** What a successful send leaves on the delivery row. */
 export type DeliveryReceipt = {
@@ -55,4 +96,5 @@ export class ChannelError extends Error {
 /** Channels with an adapter. A channel missing here is `not_configured`. */
 export const ADAPTERS: Partial<Record<OutreachChannel, ChannelAdapter>> = {
 	push: { ...pushAdapter, pool: outreachPushPool },
+	telegram: actionAdapter({ ...telegramAdapter, pool: outreachTelegramPool }),
 };

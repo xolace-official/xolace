@@ -19,6 +19,7 @@ import {
 } from "./_generated/server";
 import { writeFollowUpCard } from "./ai/followUpCard";
 import {
+	ACUTE_NUDGE_BODY,
 	buildFollowUpCardPrompt,
 	fallbackFollowUpCard,
 } from "./ai/prompts/followUpCardWriter";
@@ -44,6 +45,8 @@ import {
 	domainValidator,
 	type safeguardLevelValidator,
 } from "./lib/validators";
+import { collapseCard } from "./outreach/telegram/checkIn";
+import { nudgeFirstLine } from "./outreach/telegram/copy";
 import schema from "./schema";
 import { renderSemanticProfile } from "./semanticProfiles";
 
@@ -390,6 +393,7 @@ export const createAndStart = internalMutation({
 			await ctx.db.patch("follow_up_cards", active._id, {
 				status: "superseded",
 			});
+			await collapseCard(ctx, active._id);
 		}
 
 		const workflowId = await workflow.start(
@@ -439,6 +443,7 @@ export const markCardExpired = internalMutation({
 			return null;
 		}
 		await ctx.db.patch("follow_up_cards", card._id, { status: "expired" });
+		await collapseCard(ctx, card._id);
 		return null;
 	},
 });
@@ -466,7 +471,7 @@ export const sendFollowUpNudge = internalMutation({
 		// A card naming a compounding domain stays in-app: the lock screen isn't private.
 		const body =
 			card.tier === "acute"
-				? "Just checking in on what you worked through a little while ago. We're here."
+				? ACUTE_NUDGE_BODY
 				: card.compoundingDomain
 					? fallbackFollowUpCard(card.tier)
 					: card.cardText;
@@ -483,6 +488,8 @@ export const sendFollowUpNudge = internalMutation({
 			intent: "nudge",
 			provenance: { triggerReason: `follow_up_${card.tier}` },
 			tier: card.tier,
+			// Telegram's history outlives the lock screen: never the card text.
+			variants: { telegram: { body: nudgeFirstLine(card.tier) } },
 		});
 		return null;
 	},

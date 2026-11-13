@@ -1,5 +1,6 @@
 import { httpRouter } from "convex/server";
 import { chatCompletions } from "./ai/talk/chatCompletions";
+import { APP_LINK_PATH_PREFIX, openApp } from "./outreach/telegram/appLinks";
 import { TELEGRAM_WEBHOOK_PATH } from "./outreach/telegram/botApi";
 import { telegramWebhook } from "./outreach/telegram/webhook";
 import { revenuecat } from "./revenuecat";
@@ -39,6 +40,14 @@ http.route({
 	handler: telegramWebhook,
 	method: "POST",
 	path: TELEGRAM_WEBHOOK_PATH,
+});
+
+// The bot's "Open Xolace" and "Support resources" buttons (#768): a redirect
+// into the app's scheme, which Telegram's URL buttons can't open directly.
+http.route({
+	handler: openApp,
+	method: "GET",
+	pathPrefix: APP_LINK_PATH_PREFIX,
 });
 
 // Mounts POST /webhooks/revenuecat — the component verifies the

@@ -1,7 +1,15 @@
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { internal } from "../../_generated/api";
 import { internalAction, internalMutation } from "../../_generated/server";
 import { rateLimiter } from "../../lib/rateLimits";
+import { botApi } from "./botApi";
+import {
+	type Edit,
+	editMessages,
+	editValidator,
+	parseCallbackData,
+	reveal,
+} from "./checkIn";
 import { identityOfChat, isLive, revokeIdentity } from "./lifecycle";
 import { type Line, lineValidator, sendLines } from "./lines";
 import { redeemLinkToken } from "./link";
@@ -12,13 +20,24 @@ import { asUpdate, strippedPayload } from "./webhook";
  * pool. Handled so far: `/start <token>` in a private chat links it (#766);
  * blocking the bot revokes the link, and a linked chat's `/stop` and `/help`
  * (#767). A chat with no linked identity gets one fixed reply per 24 h, a
- * revoked one its own; no safeguard, no escalation and no text kept. Linked
- * chats' taps and replies arrive with their own tickets and are left
- * `ignored` until then.
+ * revoked one its own; no safeguard, no escalation and no text kept. A
+ * check-in's "What was this about?" edits it in place (#768). Answer taps
+ * and replies arrive with their own tickets and are left `ignored` until then.
  */
 
 /** `/stop` or `/help`, bare or as `/stop@bot`, with anything after it. */
 const LINKED_COMMAND = /^\/(stop|help)(?:@\w+)?(?:\s|$)/;
+
+/** What an update needs sent once it's claimed. */
+const replyValidator = v.object({
+	/** A tap's `answerCallbackQuery`, with its toast if any. */
+	callback: v.optional(
+		v.object({ id: v.string(), toast: v.optional(v.string()) })
+	),
+	edits: v.array(editValidator),
+	lines: v.array(lineValidator),
+});
+type Reply = Infer<typeof replyValidator>;
 
 /**
  * Decide what an update needs and close it, in one transaction: the payload
@@ -29,21 +48,51 @@ const LINKED_COMMAND = /^\/(stop|help)(?:@\w+)?(?:\s|$)/;
  */
 export const claimUpdate = internalMutation({
 	args: { eventId: v.id("inbound_events") },
-	handler: async (ctx, { eventId }): Promise<Line[]> => {
+	handler: async (ctx, { eventId }): Promise<Reply> => {
 		const event = await ctx.db.get("inbound_events", eventId);
 		if (event?.status !== "received") {
-			return [];
+			return { edits: [], lines: [] };
 		}
 		const chatId = event.externalId;
 		const update = asUpdate(event.payload);
-		const close = async (status: "ignored" | "processed", lines: Line[]) => {
+		const close = async (
+			status: "ignored" | "processed",
+			lines: Line[],
+			tap?: { callback: Reply["callback"]; edits: Edit[] }
+		): Promise<Reply> => {
 			await ctx.db.patch("inbound_events", eventId, {
 				linkTokenHash: undefined,
 				payload: update ? strippedPayload(update.update_id) : {},
 				status,
 			});
-			return lines;
+			return {
+				edits: tap?.edits ?? [],
+				lines,
+				...(tap?.callback && { callback: tap.callback }),
+			};
 		};
+
+		// A button tap. Only a linked chat's reveal does anything yet.
+		const tap = update?.callback_query;
+		if (tap) {
+			const identity = await identityOfChat(ctx, chatId);
+			const parsed = parseCallbackData(tap.data);
+			const revealed =
+				identity && isLive(identity) && parsed?.action === "reveal"
+					? await reveal(ctx, {
+							chatId,
+							deliveryId: parsed.deliveryId,
+							profileId: identity.emotionalProfileId,
+						})
+					: null;
+			return await close(revealed ? "processed" : "ignored", [], {
+				callback: {
+					id: tap.id,
+					...(revealed?.toast && { toast: revealed.toast }),
+				},
+				edits: revealed?.edits ?? [],
+			});
+		}
 
 		// Blocking the bot. Unblocking changes nothing: it never relinks.
 		const member = update?.my_chat_member;
@@ -103,17 +152,34 @@ export const claimUpdate = internalMutation({
 			? await close("processed", [{ chatId, kind }])
 			: await close("ignored", []);
 	},
-	returns: v.array(lineValidator),
+	returns: replyValidator,
 });
+
+/** Never retried: a lost toast is harmless. */
+async function answerTap(callback: NonNullable<Reply["callback"]>) {
+	try {
+		await botApi.answerCallbackQuery({
+			callback_query_id: callback.id,
+			...(callback.toast && { text: callback.toast }),
+		});
+	} catch (error) {
+		console.error("Telegram answerCallbackQuery failed", error);
+	}
+}
 
 export const processUpdate = internalAction({
 	args: { eventId: v.id("inbound_events") },
 	handler: async (ctx, { eventId }) => {
-		const lines = await ctx.runMutation(
+		const reply = await ctx.runMutation(
 			internal.outreach.telegram.inbound.claimUpdate,
 			{ eventId }
 		);
-		await sendLines(ctx, lines);
+		if (reply.callback) {
+			// First, so the button stops spinning.
+			await answerTap(reply.callback);
+		}
+		await editMessages(ctx, reply.edits);
+		await sendLines(ctx, reply.lines);
 		return null;
 	},
 	returns: v.null(),

@@ -1,3 +1,9 @@
+import {
+	ACUTE_NUDGE_BODY,
+	fallbackFollowUpCard,
+} from "../../ai/prompts/followUpCardWriter";
+import type { FollowUpTier } from "../validators";
+
 /**
  * Every fixed line the Telegram bot sends or shows (#760 §6), taken as drafted
  * in the conversation prototype (#732). Later tickets add their lines here;
@@ -54,3 +60,43 @@ export const BOT_PROFILE = {
 	name: "Xolace",
 	shortDescription: "Check-ins from the Xolace app.",
 } as const;
+
+// ---------------------------------------------------------------------------
+// Check-ins (#768)
+// ---------------------------------------------------------------------------
+
+/**
+ * A follow-up nudge's first line on Telegram: push's tier-generic line, never
+ * the card text, so never the compounding domain, a day or a time. The lock
+ * screen shows it, and the chat history keeps it on every device.
+ */
+export function nudgeFirstLine(tier: FollowUpTier): string {
+	return tier === "acute" ? ACUTE_NUDGE_BODY : fallbackFollowUpCard(tier);
+}
+
+/** The three answers Telegram offers, the app's chips. Acute has no Heavier. */
+export const ANSWER_BUTTONS = {
+	heavier: "🌧 Heavier",
+	lighter: "🌤 Lighter",
+	still_here: "☁️ Still with it",
+} as const;
+
+/** Adds the card text to the same message. */
+export const REVEAL_BUTTON = "What was this about?";
+
+export const SUPPORT_RESOURCES_BUTTON = "Support resources";
+
+export const OPEN_XOLACE_BUTTON = "Open Xolace";
+
+/** A check-in that was answered, once it collapses. */
+export const CHECKED_IN = {
+	heavier: "✓ Checked in: heavier",
+	lighter: "✓ Checked in: lighter",
+	still_here: "✓ Checked in: still sitting with it",
+} as const;
+
+/** Any other check-in that is no longer live. */
+export const CHECK_IN_CLOSED = "This check-in is closed. Nothing to do here.";
+
+/** The toast for a tap on a check-in that has closed. */
+export const CHECK_IN_CLOSED_TOAST = "This check-in has closed";

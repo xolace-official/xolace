@@ -1809,6 +1809,13 @@ export default defineSchema({
 	outreach_deliveries: defineTable({
 		attempts: v.number(),
 		channel: outreachChannelValidator,
+		/**
+		 * Telegram: this message is a live check-in (its buttons still work).
+		 * Cleared, never set false, when it collapses (#768).
+		 */
+		checkInOpen: v.optional(v.literal(true)),
+		/** Telegram: when the check-in was edited to its neutral line (#768). */
+		collapsedAt: v.optional(v.number()),
 		createdAt: v.number(),
 		// The ChannelError kind and a provider code; never raw provider text.
 		error: v.optional(
@@ -1824,11 +1831,16 @@ export default defineSchema({
 		outreachId: v.id("outreach"),
 		providerChatId: v.optional(v.string()),
 		providerMessageId: v.optional(v.string()),
+		/** Telegram: when "What was this about?" added the card text (#768). */
+		revealedAt: v.optional(v.number()),
 		sentAt: v.optional(v.number()),
 		status: deliveryStatusValidator,
 		// The workpool item carrying it, so a reroute can cancel it.
 		workId: v.optional(v.string()),
-	}).index("by_outreach", ["outreachId"]),
+	})
+		.index("by_outreach", ["outreachId"])
+		// A chat's live check-ins, to collapse them when its link ends (#768).
+		.index("by_chat_check_in", ["providerChatId", "checkInOpen"]),
 
 	path_steps: defineTable({
 		actionType: v.string(), // catalog key

@@ -7,14 +7,14 @@ import {
 	type QueryCtx,
 } from "../../_generated/server";
 import type { OutreachChannel, revokedReasonValidator } from "../validators";
+import { collapseChat } from "./checkIn";
 
 /**
  * How a Telegram link ends (#767): every revoke goes through
  * `revokeIdentity`, so each one leaves the row `revoked` with its reason and
  * appends a `telegram_outreach` consent `revoked` row. Losing Plus or the
  * kill switch never comes here: those make the channel ineligible, not
- * unlinked. Collapsing open check-ins on revoke comes with the check-in
- * delivery ticket.
+ * unlinked. A revoke collapses the chat's live check-ins (#768).
  */
 
 type RevokedReason = Infer<typeof revokedReasonValidator>;
@@ -109,7 +109,8 @@ async function revokeConsent(
 
 /**
  * End a live link: `revoked` with its reason, any pending reflection
- * dropped, and a consent `revoked` row for the profile it belonged to.
+ * dropped, its live check-ins collapsed, and a consent `revoked` row for the
+ * profile it belonged to.
  * A row that's already revoked is left as it is.
  */
 export async function revokeIdentity(
@@ -127,6 +128,7 @@ export async function revokeIdentity(
 		status: "revoked",
 	});
 	await revokeConsent(ctx, identity.emotionalProfileId);
+	await collapseChat(ctx, identity.externalId);
 	return true;
 }
 

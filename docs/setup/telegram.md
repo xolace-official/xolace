@@ -91,6 +91,22 @@ another account, or a new chat from the same account, moves the link and tells t
 side. A daily cron (`purge revoked telegram links`) deletes revoked rows 30 days after
 they were revoked; after that the chat is a stranger again.
 
+## Check-ins
+
+With a chat linked and Telegram first in the person's order, follow-up nudges, gentle
+returns and pattern nudges go to Telegram (at most three a day; an acute nudge is never
+held back, anything else over the cap goes by push). They are sent on the
+`outreachTelegram` workpool. A nudge arrives as a check-in: the tier's general line,
+answer buttons, "What was this about?" (which edits the same message to quote the card)
+and, for an escalation-derived card, Support resources. When the follow-up is answered,
+dismissed, expires or is superseded, or the link ends, the message is edited to
+`✓ Checked in: …` or "This check-in is closed" with no buttons. A 403 on a send revokes
+the link and falls back to push once; a 429 waits Telegram's `retry_after`.
+
+The URL buttons (Open Xolace, Support resources) open
+`<CONVEX_SITE_URL>/telegram/open/<target>`, which redirects to the app's `xolace://`
+scheme: Telegram's buttons can't open a custom scheme directly.
+
 ## Drift check
 
 A daily cron (`check telegram webhook`) calls `getWebhookInfo` and logs an error when:

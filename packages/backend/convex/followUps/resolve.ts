@@ -3,6 +3,7 @@ import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { isFollowUpPoolable } from "../lib/poolability";
+import { collapseCard } from "../outreach/telegram/checkIn";
 
 // Same order of magnitude as a product-feedback note — a sentence or a few,
 // never a session transcript.
@@ -107,6 +108,8 @@ export async function resolveCardCore(
 			status: "resolved",
 			userResponse: args.response,
 		});
+		// Answered anywhere: its Telegram check-ins say so and lose their buttons.
+		await collapseCard(ctx, card._id);
 		// An answer is a reading: it can close a stretch, never open one (#519).
 		// Its own transaction, so it can't fail the answer (#529).
 		await ctx.scheduler.runAfter(0, internal.compounding.stretches.evaluate, {

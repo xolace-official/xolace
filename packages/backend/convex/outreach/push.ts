@@ -1,7 +1,7 @@
 import type { Doc } from "../_generated/dataModel";
 import { NUDGE_NOTIFICATION_SOUND } from "../lib/notificationSounds";
 import { sendPushToProfile } from "../lib/pushNotifications";
-import type { ChannelAdapter } from "./adapters";
+import type { MutationAdapter } from "./adapters";
 
 type NotificationType = Doc<"notification_log">["type"];
 
@@ -27,7 +27,7 @@ export function legacyNotificationType(
  * `notification_log` row shipped builds depend on: push's compatibility
  * record (ADR 0001), one per push delivery.
  */
-export const pushAdapter: Omit<ChannelAdapter, "pool"> = {
+export const pushAdapter: Omit<MutationAdapter, "pool"> = {
 	channel: "push",
 	// Expo push needs no deployment config; `sendPushToProfile` reaches every
 	// registered device, or the pre-registry profile-keyed recipient.
