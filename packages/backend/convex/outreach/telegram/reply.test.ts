@@ -370,6 +370,31 @@ describe("a reply to free text", () => {
 		expect(buttonTexts()).toEqual([OPEN_XOLACE_BUTTON]);
 	});
 
+	it("keeps Support resources on the failure line when an elevated reply fails before the model", async () => {
+		const { write } = await checkedIn();
+		stub.moderation = ELEVATED;
+		stub.memoryFails = true;
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+		await write("Some days I don't see the point");
+
+		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
+		expect(buttonTexts()).toEqual([
+			SUPPORT_RESOURCES_BUTTON,
+			OPEN_XOLACE_BUTTON,
+		]);
+	});
+
+	it("screens the whole message, not just what fits the prompt", async () => {
+		const { write } = await checkedIn();
+
+		await write(`${"Long day at work. ".repeat(150)}I want to end my life`);
+
+		expect(stub.asked).toHaveLength(0);
+		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
+		expect(buttonTexts()).toContain(SUPPORT_RESOURCES_BUTTON);
+	});
+
 	it("tries once more when a reply breaks its shape, then fails", async () => {
 		const { write } = await checkedIn();
 		stub.queue = ["One line only."];

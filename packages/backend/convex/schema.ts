@@ -278,6 +278,11 @@ export default defineSchema({
 	})
 		.index("by_channel_external", ["channel", "externalId"])
 		.index("by_profile_channel", ["emotionalProfileId", "channel"])
+		.index("by_profile_channel_status", [
+			"emotionalProfileId",
+			"channel",
+			"status",
+		])
 		.index("by_status_revokedAt", ["status", "revokedAt"]),
 
 	// A minted link token. Only the SHA-256 is stored; 15-minute TTL, one use.

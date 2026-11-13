@@ -456,6 +456,34 @@ describe("gates", () => {
 		expect(delivery?.status).toBe("canceled");
 	});
 
+	it("drops a deferred nudge whose follow-up closed before it sends", async () => {
+		vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
+		const user = await reachable();
+		await setNotifications(user, {
+			quietWindow: { dontReachAfter: 21, dontReachBefore: 8 },
+			timezone: "UTC",
+		});
+		const cardId = await seedCard(user);
+		const { outreachId } = await enqueue(user, {
+			followUpId: cardId,
+			intent: "nudge",
+			tier: "standard",
+		});
+		// Answered in the app overnight.
+		await user.root.run((ctx) =>
+			ctx.db.patch("follow_up_cards", cardId, { status: "resolved" })
+		);
+
+		await drain(user);
+		expect(h.pushes).toHaveLength(0);
+		expect(await outreachRow(user, outreachId)).toMatchObject({
+			outcome: "suppressed",
+			suppressedReason: "card_closed",
+		});
+		const [delivery] = await deliveriesOf(user, outreachId);
+		expect(delivery?.status).toBe("canceled");
+	});
+
 	it("defers to the end of the quiet window, and an acute nudge ignores it", async () => {
 		vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
 		const user = await reachable();

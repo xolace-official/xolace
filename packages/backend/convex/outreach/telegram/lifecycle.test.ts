@@ -101,6 +101,35 @@ describe("unlinkChannel", () => {
 		});
 	});
 
+	it("finds the live link behind more revoked chats than the read bound", async () => {
+		const user = await asNewUser();
+		backend(user.root);
+		const secret = await configure(user.root);
+		await setTelegram(user, { enabled: true, plan: "free" });
+		// Eleven older chats, all unlinked inside the 30-day purge window.
+		await user.root.run(async (ctx) => {
+			for (let n = 1; n <= 11; n++) {
+				await ctx.db.insert("channel_identities", {
+					channel: "telegram",
+					emotionalProfileId: user.profileId,
+					externalId: `old-${n}`,
+					linkedAt: Date.now(),
+					revokedAt: Date.now(),
+					revokedReason: "user_app",
+					status: "revoked",
+					tokenIdentifier: "test|old",
+				});
+			}
+		});
+		await linkChat(user, secret);
+		forgetCalls();
+
+		expect(await telegramEntry(user)).toMatchObject({ linked: true });
+		await unlink(user);
+		await processSoon(user.root);
+		expect(replies()).toEqual([GOODBYE_APP]);
+	});
+
 	it("does nothing a second time, and refuses push", async () => {
 		const { user } = await linked();
 		await unlink(user);

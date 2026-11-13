@@ -370,6 +370,34 @@ describe("What was this about?", () => {
 		expect(sent("sendMessage")).toHaveLength(0);
 	});
 
+	it("a reveal edit retried after the check-in collapsed never shows the card again", async () => {
+		const { user } = await linked();
+		const { workflowId } = await seedCard(user);
+		await nudge(user, workflowId);
+		const { messageId } = theCheckIn();
+		const [delivery] = await deliveries(user);
+		await user.root.mutation(internal.followUps.markCardExpired, {
+			workflowId,
+		});
+		await processSoon(user.root);
+		forgetCalls();
+
+		// A reveal held back by a 429, retried after the collapse.
+		await user.root.action(internal.outreach.telegram.checkIn.edit, {
+			edits: [
+				{
+					chatId: String(CHAT),
+					keyboard: [],
+					messageId: String(messageId),
+					text: `revealed\n\n${CARD_TEXT}`,
+					whileOpen: delivery?._id,
+				},
+			],
+		});
+
+		expect(sent("editMessageText")).toHaveLength(0);
+	});
+
 	it("does nothing for a tap naming another chat's message", async () => {
 		const { secret, user } = await linked();
 		const { workflowId } = await seedCard(user);

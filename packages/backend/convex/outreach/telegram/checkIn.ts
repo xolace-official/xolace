@@ -4,6 +4,7 @@ import type { Doc, Id } from "../../_generated/dataModel";
 import {
 	type ActionCtx,
 	internalAction,
+	internalQuery,
 	type MutationCtx,
 	type QueryCtx,
 } from "../../_generated/server";
@@ -204,8 +205,32 @@ export const editValidator = v.object({
 	keyboard: v.array(v.array(buttonValidator)),
 	messageId: v.string(),
 	text: v.string(),
+	/**
+	 * Only while this check-in is live: a reveal shows the card text and its
+	 * buttons, which a late or retried edit must never put back once the
+	 * check-in has collapsed.
+	 */
+	whileOpen: v.optional(v.id("outreach_deliveries")),
 });
 export type Edit = Infer<typeof editValidator>;
+
+/** The edits still due: none whose check-in has collapsed since. */
+export const dueEdits = internalQuery({
+	args: { edits: v.array(editValidator) },
+	handler: async (ctx, { edits }) => {
+		const due: Edit[] = [];
+		for (const edit of edits) {
+			const delivery = edit.whileOpen
+				? await ctx.db.get("outreach_deliveries", edit.whileOpen)
+				: null;
+			if (!edit.whileOpen || delivery?.checkInOpen) {
+				due.push(edit);
+			}
+		}
+		return due;
+	},
+	returns: v.array(editValidator),
+});
 
 const NOT_MODIFIED = /message is not modified/i;
 
@@ -216,8 +241,13 @@ const NOT_MODIFIED = /message is not modified/i;
  */
 export async function editMessages(
 	ctx: ActionCtx,
-	edits: readonly Edit[]
+	planned: readonly Edit[]
 ): Promise<void> {
+	const edits = planned.some((e) => e.whileOpen)
+		? await ctx.runQuery(internal.outreach.telegram.checkIn.dueEdits, {
+				edits: [...planned],
+			})
+		: planned;
 	for (const [index, edit] of edits.entries()) {
 		try {
 			await botApi.editMessageText({
@@ -505,6 +535,7 @@ export async function reveal(
 				keyboard: message.keyboard,
 				messageId: delivery.providerMessageId,
 				text: message.text,
+				whileOpen: delivery._id,
 				...(message.entities && { entities: message.entities }),
 			},
 		],

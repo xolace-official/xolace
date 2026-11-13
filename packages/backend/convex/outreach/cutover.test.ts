@@ -174,6 +174,31 @@ describe("schedule, deprecated (#764)", () => {
 		expect(logs[0]?.outreachId).toBe(row?._id);
 	});
 
+	it("lets an old-args acute follow_up through its own open escalation card's hold", async () => {
+		const user = await reachable();
+		const { cardId } = await seedCard(user, {
+			escalationDerived: true,
+			tier: "acute",
+		});
+		await user.root.mutation(internal.notifications.schedule, {
+			content: "Checking in after last night.",
+			emotionalProfileId: user.profileId,
+			followUpTier: "acute",
+			scheduledFor: Date.now(),
+			triggerReason: "follow_up_acute",
+			type: "follow_up",
+		});
+		await drain(user);
+
+		const [row] = await outreachRows(user);
+		expect(row).toMatchObject({
+			followUpId: cardId,
+			intent: "nudge",
+			outcome: "queued",
+		});
+		expect(pushes.map((p) => p.notification.data.type)).toEqual(["follow_up"]);
+	});
+
 	it("maps affirmation to a gentle return with provenance.affirmation", async () => {
 		const user = await reachable();
 		await user.root.mutation(internal.notifications.schedule, {

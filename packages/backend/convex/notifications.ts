@@ -17,6 +17,7 @@ import {
 	prunePushDeviceHistory,
 	pushNotifications,
 } from "./lib/pushNotifications";
+import { openEscalationCard } from "./outreach/router";
 import type { OutreachIntent } from "./outreach/validators";
 import { streakState } from "./streaks/state";
 
@@ -144,6 +145,12 @@ export const schedule = internalMutation({
 		}
 		const affirmation = args.type === "affirmation";
 		const intent = LEGACY_TYPE_INTENT[args.type];
+		// Old args name no card. An acute follow-up then is the open
+		// escalation-derived card's own nudge, which its hold must let through.
+		const escalationCard =
+			intent === "nudge" && args.followUpTier === "acute"
+				? await openEscalationCard(ctx, args.emotionalProfileId)
+				: null;
 		await ctx.runMutation(internal.outreach.enqueue.enqueue, {
 			content: {
 				body: args.content,
@@ -162,6 +169,7 @@ export const schedule = internalMutation({
 			},
 			...(intent === "nudge" &&
 				args.followUpTier && { tier: args.followUpTier }),
+			...(escalationCard && { followUpId: escalationCard._id }),
 		});
 		return null;
 	},

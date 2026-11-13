@@ -34,21 +34,35 @@ export function isLive(identity: Doc<"channel_identities">): boolean {
 	return identity.status === "active" || identity.status === "paused";
 }
 
+/** Live statuses first, so revoked history can never crowd a live link out. */
+const IDENTITY_STATUSES = ["active", "paused", "revoked"] as const;
+
 /**
- * A profile's rows on a channel, whatever their status. A relink leaves the
- * old chat's row revoked beside the new one, so callers look at every row.
+ * A profile's rows on a channel: every live one, then the newest revoked. A
+ * relink leaves the old chat's row revoked beside the new one, so callers look
+ * at every row.
  */
 export async function identitiesOf(
 	ctx: QueryCtx,
 	emotionalProfileId: Id<"emotional_profiles">,
 	channel: OutreachChannel
 ): Promise<Doc<"channel_identities">[]> {
-	return await ctx.db
-		.query("channel_identities")
-		.withIndex("by_profile_channel", (q) =>
-			q.eq("emotionalProfileId", emotionalProfileId).eq("channel", channel)
-		)
-		.take(MAX_IDENTITIES_PER_CHANNEL);
+	const rows: Doc<"channel_identities">[] = [];
+	for (const status of IDENTITY_STATUSES) {
+		rows.push(
+			...(await ctx.db
+				.query("channel_identities")
+				.withIndex("by_profile_channel_status", (q) =>
+					q
+						.eq("emotionalProfileId", emotionalProfileId)
+						.eq("channel", channel)
+						.eq("status", status)
+				)
+				.order("desc")
+				.take(MAX_IDENTITIES_PER_CHANNEL))
+		);
+	}
+	return rows;
 }
 
 /** The chat's one row, if it has ever been linked (and not yet purged). */

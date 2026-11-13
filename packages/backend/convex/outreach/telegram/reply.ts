@@ -326,22 +326,35 @@ async function screen(text: string) {
  * and nothing is ever sent twice.
  */
 export async function respond(ctx: ActionCtx, job: ReplyJob): Promise<void> {
-	const progress = { sent: false };
+	const progress: Progress = { sent: false, support: false };
 	try {
 		await reply(ctx, job, progress);
 	} catch (error) {
 		console.error("[telegram] reply failed", error);
 		if (!progress.sent) {
-			await sendFailureLine(ctx, job.chatId);
+			await sendFailureLine(ctx, job.chatId, progress.support);
 		}
 	}
 }
 
-/** The failure line, with Open Xolace when the app link can be made. */
-async function sendFailureLine(ctx: ActionCtx, chatId: string): Promise<void> {
+/**
+ * How far a reply got: whether a message went out, and whether Support
+ * resources are already owed (Heavier, elevated, no safeguard).
+ */
+type Progress = { sent: boolean; support: boolean };
+
+/**
+ * The failure line, with Open Xolace when the app link can be made, and
+ * Support resources when the reply owed them.
+ */
+async function sendFailureLine(
+	ctx: ActionCtx,
+	chatId: string,
+	support: boolean
+): Promise<void> {
 	let keyboard: Keyboard = [];
 	try {
-		keyboard = keyboardOf({ open: true, support: false });
+		keyboard = keyboardOf({ open: true, support });
 	} catch (error) {
 		console.error("[telegram] no app link for the failure line", error);
 	}
@@ -351,7 +364,7 @@ async function sendFailureLine(ctx: ActionCtx, chatId: string): Promise<void> {
 async function reply(
 	ctx: ActionCtx,
 	job: ReplyJob,
-	progress: { sent: boolean }
+	progress: Progress
 ): Promise<void> {
 	const { chatId, identityId, trigger } = job;
 	const send = async (text: string, keyboard: Keyboard) => {
@@ -370,9 +383,12 @@ async function reply(
 		// Heavier carries support and the way back to the app.
 		support = trigger.answer === "heavier";
 		open = support;
+		progress.support = support;
 	} else {
+		// The whole message is screened; only what is kept or shown is cut.
+		const safety = await screen(trigger.text);
+		progress.support = safety.support;
 		const text = trigger.text.slice(0, TEXT_MAX_CHARS);
-		const safety = await screen(text);
 		if (safety.crisis) {
 			await send(
 				CRISIS_HOLDING_LINE,

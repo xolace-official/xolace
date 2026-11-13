@@ -74,6 +74,28 @@ export async function accountDeleted(
 	);
 }
 
+/** The profile's open escalation-derived follow-up, if any. */
+export async function openEscalationCard(
+	ctx: QueryCtx,
+	emotionalProfileId: Id<"emotional_profiles">
+): Promise<Doc<"follow_up_cards"> | null> {
+	for (const status of UNRESOLVED_CARD_STATUSES) {
+		const card = await ctx.db
+			.query("follow_up_cards")
+			.withIndex("by_profile_escalation_status", (q) =>
+				q
+					.eq("emotionalProfileId", emotionalProfileId)
+					.eq("escalationDerived", true)
+					.eq("status", status)
+			)
+			.first();
+		if (card) {
+			return card;
+		}
+	}
+	return null;
+}
+
 /**
  * Gate 3: escalation and dormancy.
  *
@@ -106,19 +128,8 @@ export async function escalationOrDormancy(
 		(UNRESOLVED_CARD_STATUSES as readonly string[]).includes(nudgedCard.status);
 
 	if (!ownCardNudge) {
-		for (const status of UNRESOLVED_CARD_STATUSES) {
-			const openEscalationCard = await ctx.db
-				.query("follow_up_cards")
-				.withIndex("by_profile_escalation_status", (q) =>
-					q
-						.eq("emotionalProfileId", input.emotionalProfileId)
-						.eq("escalationDerived", true)
-						.eq("status", status)
-				)
-				.first();
-			if (openEscalationCard) {
-				return "escalation_active";
-			}
+		if (await openEscalationCard(ctx, input.emotionalProfileId)) {
+			return "escalation_active";
 		}
 		const recentEscalation = await ctx.db
 			.query("escalation_events")

@@ -14,11 +14,13 @@ import {
 	loadNotifications,
 	pickChannel,
 } from "./router";
+import { isCardOpen } from "./telegram/checkIn";
 import {
 	type ChannelErrorKind,
 	channelErrorKindValidator,
 	type OutreachChannel,
 	outreachChannelValidator,
+	type SuppressedReason,
 } from "./validators";
 
 /**
@@ -123,6 +125,36 @@ function failedAttempt(error: ChannelError): Attempt {
 }
 
 /**
+ * Why a queued delivery may no longer go, if it may not. A nudge is about its
+ * follow-up: once that is answered, dismissed or gone, nothing is left to
+ * nudge (a deferral or a retry can outlive it). A quiet-window deferral can
+ * sit for hours, and a deletion request or a crisis in that time still stops
+ * it: gates 2 and 3 run again on its first try.
+ */
+async function heldSince(
+	ctx: MutationCtx,
+	delivery: Doc<"outreach_deliveries">,
+	outreach: Doc<"outreach">
+): Promise<SuppressedReason | null> {
+	if (
+		outreach.followUpId &&
+		!isCardOpen(await ctx.db.get("follow_up_cards", outreach.followUpId))
+	) {
+		return "card_closed";
+	}
+	if (outreach.sendAt === undefined || delivery.attempts > 0) {
+		return null;
+	}
+	const profile = await ctx.db.get(
+		"emotional_profiles",
+		outreach.emotionalProfileId
+	);
+	return !profile || (await accountDeleted(ctx, outreach.emotionalProfileId))
+		? "account_deleted"
+		: await escalationOrDormancy(ctx, outreach, profile, Date.now());
+}
+
+/**
  * Take a queued delivery for a try: the deferred gates run again and the
  * attempt is counted. Null when there's nothing to send.
  */
@@ -145,28 +177,17 @@ async function claim(
 		return null;
 	}
 
-	// A quiet-window deferral can sit for hours. A deletion request or a
-	// crisis in that time still stops it: gates 2 and 3 run again here.
-	if (outreach.sendAt !== undefined && delivery.attempts === 0) {
-		const profile = await ctx.db.get(
-			"emotional_profiles",
-			outreach.emotionalProfileId
-		);
-		const held =
-			!profile || (await accountDeleted(ctx, outreach.emotionalProfileId))
-				? "account_deleted"
-				: await escalationOrDormancy(ctx, outreach, profile, Date.now());
-		if (held) {
-			await ctx.db.patch("outreach_deliveries", deliveryId, {
-				finishedAt: Date.now(),
-				status: "canceled",
-			});
-			await ctx.db.patch("outreach", outreach._id, {
-				outcome: "suppressed",
-				suppressedReason: held,
-			});
-			return null;
-		}
+	const held = await heldSince(ctx, delivery, outreach);
+	if (held) {
+		await ctx.db.patch("outreach_deliveries", deliveryId, {
+			finishedAt: Date.now(),
+			status: "canceled",
+		});
+		await ctx.db.patch("outreach", outreach._id, {
+			outcome: "suppressed",
+			suppressedReason: held,
+		});
+		return null;
 	}
 
 	const attempts = delivery.attempts + 1;
