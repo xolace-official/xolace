@@ -22,10 +22,10 @@ export function legacyNotificationType(
 }
 
 /**
- * Push, rebuilt as the outreach layer's first channel. The payload is the one
- * `notifications.schedule` sends today, and it writes the `notification_log`
- * row shipped builds depend on: push's compatibility record (ADR 0001), one
- * per push delivery.
+ * Push, the outreach layer's first channel. The payload is the one
+ * `notifications.schedule` sent before the cutover (#764), and it writes the
+ * `notification_log` row shipped builds depend on: push's compatibility
+ * record (ADR 0001), one per push delivery.
  */
 export const pushAdapter: Omit<ChannelAdapter, "pool"> = {
 	channel: "push",
@@ -62,8 +62,11 @@ export const pushAdapter: Omit<ChannelAdapter, "pool"> = {
 				body: outreach.content.body,
 				channelId: NUDGE_NOTIFICATION_SOUND.channelId,
 				data: { logId: notificationLogId, type },
-				// iOS reads the sound off the payload, Android off the channel; see
-				// `notifications.schedule`.
+				// iOS reads the sound off the payload; Android ignores it and takes the
+				// sound from the channel. Sending both covers the two platforms in one
+				// call. Deliberately not the `default` channel — that one exists
+				// without a sound on every device already running the app, and a
+				// channel's sound can never be changed after creation.
 				sound: NUDGE_NOTIFICATION_SOUND.sound,
 				title: outreach.content.title ?? "Xolace",
 			},

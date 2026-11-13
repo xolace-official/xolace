@@ -65,6 +65,21 @@ export const generate = internalAction({
 			? "affirmation"
 			: args.notificationType;
 
+		// The true intent goes to the layer (#764); an affirmation swapped in for
+		// it is provenance, which push still reports as the old `affirmation`.
+		const provenance = {
+			reachUsed: reach,
+			triggerReason: args.triggerReason,
+			...(effectiveType === "affirmation" && { affirmation: true }),
+		};
+		const outreachOf = (body: string) => ({
+			content: { body },
+			// One per cron run: `scheduledFor` is the run's clock.
+			dedupeKey: `${args.notificationType}:${args.emotionalProfileId}:${args.scheduledFor}`,
+			emotionalProfileId: args.emotionalProfileId,
+			intent: args.notificationType,
+		});
+
 		// Cold-start path: no personalization until we have enough sessions
 		if (sessionCount < COLD_START_THRESHOLD) {
 			const { content, generatedBy } = pickTemplate(
@@ -73,15 +88,13 @@ export const generate = internalAction({
 				recentNotificationContent
 			);
 
-			await ctx.runMutation(internal.notifications.schedule, {
-				content,
-				emotionalProfileId: args.emotionalProfileId,
-				generatedBy,
-				patternContextUsed: false,
-				reachUsed: reach,
-				scheduledFor: args.scheduledFor,
-				triggerReason: args.triggerReason,
-				type: effectiveType,
+			await ctx.runMutation(internal.outreach.enqueue.enqueue, {
+				...outreachOf(content),
+				provenance: {
+					...provenance,
+					generatedBy,
+					patternContextUsed: false,
+				},
 			});
 			return;
 		}
@@ -200,15 +213,9 @@ export const generate = internalAction({
 			generatedBy = fallback.generatedBy;
 		}
 
-		await ctx.runMutation(internal.notifications.schedule, {
-			content,
-			emotionalProfileId: args.emotionalProfileId,
-			generatedBy,
-			patternContextUsed,
-			reachUsed: reach,
-			scheduledFor: args.scheduledFor,
-			triggerReason: args.triggerReason,
-			type: effectiveType,
+		await ctx.runMutation(internal.outreach.enqueue.enqueue, {
+			...outreachOf(content),
+			provenance: { ...provenance, generatedBy, patternContextUsed },
 		});
 	},
 });

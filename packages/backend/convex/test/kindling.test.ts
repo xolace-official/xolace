@@ -6,6 +6,7 @@
  */
 
 import type { WorkflowId } from "@convex-dev/workflow";
+import workpoolTest from "@convex-dev/workpool/test";
 import { MockEmbeddingModelV3 } from "ai/test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import manifest from "../../scripts/kindling/dev/manifest.json";
@@ -172,6 +173,10 @@ vi.mock("../revenuecat", () =>
 // Sibling jobs `finalizeCompletion` enqueues — neutered so a job firing after
 // the test body can't reach an unregistered component.
 vi.mock("../jobs/profileStats", () => ({ updateAfterSession: noopJob() }));
+vi.mock("../streamSetup", async (orig) => ({
+	...(await orig<typeof import("../streamSetup")>()),
+	addToXolaceChannel: noopJob(),
+}));
 vi.mock("../ai/reflectionAgent/trigger", () => ({
 	onSessionComplete: noopJob(),
 }));
@@ -242,6 +247,8 @@ async function setNotifications(user: SeededUser, enabled: boolean) {
 /** A new user's master switch is off until a push token registers. */
 async function asNotifiableUser() {
 	const user = await asNewUser();
+	// The kindling push goes out through the outreach layer's push pool (#764).
+	workpoolTest.register(user.root, "outreachPush");
 	await setNotifications(user, true);
 	return user;
 }
@@ -521,10 +528,33 @@ describe("ai/paths/generate.run", () => {
 	});
 });
 
-const readNotifications = (user: SeededUser) =>
-	user.root.run((ctx) => ctx.db.query("notification_log").take(10));
+const readNotifications = async (user: SeededUser) => {
+	// Deliveries run on the push workpool, after the mutation that queued them.
+	await user.root.finishAllScheduledFunctions(vi.runAllTimers);
+	return await user.root.run((ctx) =>
+		ctx.db.query("notification_log").take(10)
+	);
+};
+
+/** What the outreach layer decided; suppressions live only here (#764). */
+const readOutreach = (user: SeededUser) =>
+	user.root.run((ctx) =>
+		ctx.db
+			.query("outreach")
+			.withIndex("by_profile_created", (q) =>
+				q.eq("emotionalProfileId", user.profileId)
+			)
+			.take(10)
+	);
 
 describe("the kindling_ready notification (#335)", () => {
+	beforeEach(() => {
+		vi.useFakeTimers({ now: Date.now() });
+	});
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
 	it("fires only after the kindling is written, deep-linking via type alone", async () => {
 		const user = await asNotifiableUser();
 		await generate(user, await seedQualifying(user));
@@ -557,9 +587,13 @@ describe("the kindling_ready notification (#335)", () => {
 
 		expect(await readNotifications(user)).toEqual([]);
 		expect(sentPushes).toEqual([]);
+		// Push is the only channel, and the global switch is push's.
+		expect(await readOutreach(user)).toMatchObject([
+			{ outcome: "suppressed", suppressedReason: "no_channel" },
+		]);
 	});
 
-	it("suppresses for a user dormant 30+ days, logging the existing reason", async () => {
+	it("suppresses for a user dormant 30+ days, recorded on the outreach", async () => {
 		const user = await asNotifiableUser();
 		const sessionId = await seedQualifying(user);
 		await user.root.run(async (ctx) => {
@@ -570,12 +604,14 @@ describe("the kindling_ready notification (#335)", () => {
 
 		await generate(user, sessionId);
 
-		const [log] = await readNotifications(user);
-		expect(log).toMatchObject({
-			delivered: false,
-			suppressedReason: "user_inactive",
-			type: "kindling_ready",
-		});
+		expect(await readNotifications(user)).toEqual([]);
+		expect(await readOutreach(user)).toMatchObject([
+			{
+				intent: "kindling_ready",
+				outcome: "suppressed",
+				suppressedReason: "user_inactive",
+			},
+		]);
 		expect(sentPushes).toEqual([]);
 	});
 
@@ -597,12 +633,14 @@ describe("the kindling_ready notification (#335)", () => {
 
 		await generate(user, sessionId);
 
-		const [log] = await readNotifications(user);
-		expect(log).toMatchObject({
-			delivered: false,
-			suppressedReason: "escalation_active",
-			type: "kindling_ready",
-		});
+		expect(await readNotifications(user)).toEqual([]);
+		expect(await readOutreach(user)).toMatchObject([
+			{
+				intent: "kindling_ready",
+				outcome: "suppressed",
+				suppressedReason: "escalation_active",
+			},
+		]);
 		expect(sentPushes).toEqual([]);
 	});
 
@@ -624,12 +662,14 @@ describe("the kindling_ready notification (#335)", () => {
 
 		await generate(user, sessionId);
 
-		const [log] = await readNotifications(user);
-		expect(log).toMatchObject({
-			delivered: false,
-			suppressedReason: "escalation_active",
-			type: "kindling_ready",
-		});
+		expect(await readNotifications(user)).toEqual([]);
+		expect(await readOutreach(user)).toMatchObject([
+			{
+				intent: "kindling_ready",
+				outcome: "suppressed",
+				suppressedReason: "escalation_active",
+			},
+		]);
 		expect(sentPushes).toEqual([]);
 	});
 
@@ -645,6 +685,7 @@ describe("the kindling_ready notification (#335)", () => {
 			triggerReason: "test",
 			type: "milestone",
 		});
+		await user.root.finishAllScheduledFunctions(vi.runAllTimers);
 		sentPushes.length = 0;
 
 		await generate(user, sessionId);

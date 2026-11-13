@@ -1,3 +1,4 @@
+import type { Doc } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import type {
 	ChannelPlan,
@@ -63,4 +64,15 @@ export async function channelConfig(
 	return row
 		? { enabled: row.enabled, plan: row.plan }
 		: CHANNEL_DEFAULTS[channel];
+}
+
+/**
+ * The badge toggle: `achievement` is absent on rows written before it existed,
+ * and no Settings toggle writes it yet; absent follows `milestone`. The global
+ * switch is push's alone, so it isn't read here.
+ */
+export function achievementToggle(
+	notifications: Doc<"preferences">["notifications"]
+): boolean {
+	return notifications.achievement ?? notifications.milestone;
 }

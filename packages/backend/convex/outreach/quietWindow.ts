@@ -30,8 +30,8 @@ function localTime(
 
 /**
  * When the person's quiet window ends, if `at` is inside it; otherwise null.
- * Same rule as `isInQuietWindow`: quiet before `dontReachBefore` or after
- * `dontReachAfter`, local time. The window ends on the hour `dontReachBefore`.
+ * Quiet before `dontReachBefore` or after `dontReachAfter`, local time. The
+ * window ends on the hour `dontReachBefore`.
  */
 export function quietWindowEndsAt(
 	notifications: Notifications | undefined,

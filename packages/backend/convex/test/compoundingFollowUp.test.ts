@@ -9,7 +9,9 @@
  * only follow-up above standard; the domain reaching the lock screen; and any
  * change to an ordinary follow-up.
  */
+import workpoolTest from "@convex-dev/workpool/test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import rateLimiterSchema from "../../node_modules/@convex-dev/rate-limiter/src/component/schema";
 import { api, internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { compoundingFor } from "../compounding/stretches";
@@ -165,6 +167,10 @@ const workStretch = (user: SeededUser) =>
 			)
 			.first()
 	);
+
+const rateLimiterModules = import.meta.glob(
+	"../../node_modules/@convex-dev/rate-limiter/src/component/**/*.ts"
+);
 
 describe("the compounding follow-up trigger (#522)", () => {
 	it("earns a standard check-in naming the domain, and spends the stretch", async () => {
@@ -354,6 +360,13 @@ describe("the compounding follow-up trigger (#522)", () => {
 
 	it("keeps the push generic", async () => {
 		const user = await asNewUser();
+		// The nudge goes through the outreach layer in its own transaction (#764).
+		user.root.registerComponent(
+			"rateLimiter",
+			rateLimiterSchema,
+			rateLimiterModules
+		);
+		workpoolTest.register(user.root, "outreachPush");
 		await compoundingWork(user);
 		await user.root.run(async (ctx) => {
 			const prefs = await ctx.db
@@ -374,12 +387,15 @@ describe("the compounding follow-up trigger (#522)", () => {
 		await user.root.mutation(internal.followUps.sendFollowUpNudge, {
 			workflowId: card!.workflowId,
 		});
-		const push = scheduled(
-			await scheduledCalls(user.root),
-			"notifications:schedule"
+		const outreach = await user.root.run((ctx) =>
+			ctx.db
+				.query("outreach")
+				.withIndex("by_follow_up", (q) => q.eq("followUpId", card!._id))
+				.first()
 		);
-		expect(push?.args.content).not.toBe(card!.cardText);
-		expect(String(push?.args.content)).not.toMatch(/work/i);
+		expect(outreach?.content.body).toBeDefined();
+		expect(outreach?.content.body).not.toBe(card!.cardText);
+		expect(String(outreach?.content.body)).not.toMatch(/work/i);
 	});
 
 	it("leaves an ordinary follow-up as it was for a free user", async () => {

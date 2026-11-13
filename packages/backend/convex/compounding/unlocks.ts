@@ -16,12 +16,7 @@ import {
 } from "../_generated/server";
 import { awardLadderRungs } from "../achievements/ladders";
 import { requireSessionOwnership } from "../lib/auth";
-import {
-	inQuietWindow,
-	missedPushAt,
-	QUIET_RETRIES,
-	QUIET_RETRY_MS,
-} from "../lib/missedBeat";
+import { missedPushAt } from "../lib/missedBeat";
 import { loadReadings } from "./readings";
 import { computeSteadiness } from "./steadiness";
 
@@ -143,49 +138,36 @@ export const markSeen = mutation({
 
 /**
  * The beat went unseen. Generic text: the lock screen isn't private, so the
- * domain never leaves the app. Milestone family; the weekly cap is the
- * `domainUnlock` bucket in notifications.schedule.
+ * domain never leaves the app. Milestone family; the outreach layer applies
+ * the toggle, the quiet window (deferred to its end) and the weekly
+ * `domainUnlock` bucket (#764).
  */
 export const sendMissedPush = internalMutation({
-	args: { quietRetries: v.optional(v.number()), sessionId: v.id("sessions") },
-	handler: async (ctx, { sessionId, quietRetries = 0 }) => {
+	args: {
+		/**
+		 * @deprecated The caller-side quiet-window retry count; the outreach
+		 * layer defers through the window now (#764). Ignored.
+		 */
+		// DEPRECATED(remove-after: backend deploys after #764 have drained every
+		// re-check scheduled before it): no replacement, nothing reads it.
+		quietRetries: v.optional(v.number()),
+		sessionId: v.id("sessions"),
+	},
+	handler: async (ctx, { sessionId }) => {
 		const session = await ctx.db.get("sessions", sessionId);
 		if (!session?.domainUnlock || session.domainUnlock.seenAt !== undefined) {
 			return null;
 		}
 
-		const prefs = await ctx.db
-			.query("preferences")
-			.withIndex("by_profile", (q) =>
-				q.eq("emotionalProfileId", session.emotionalProfileId)
-			)
-			.unique();
-		const n = prefs?.notifications;
-		if (!(n?.enabled && n.milestone)) {
-			return null;
-		}
-		if (inQuietWindow(n)) {
-			// Deferred, not dropped: try again once the window opens.
-			if (quietRetries < QUIET_RETRIES) {
-				await ctx.scheduler.runAfter(
-					QUIET_RETRY_MS,
-					internal.compounding.unlocks.sendMissedPush,
-					{
-						quietRetries: quietRetries + 1,
-						sessionId,
-					}
-				);
-			}
-			return null;
-		}
-
-		await ctx.scheduler.runAfter(0, internal.notifications.schedule, {
-			content: "Part of your Insights has come into focus.",
+		await ctx.runMutation(internal.outreach.enqueue.enqueue, {
+			content: {
+				body: "Part of your Insights has come into focus.",
+				title: "Something new is ready.",
+			},
+			dedupeKey: `domain_unlock:${sessionId}`,
 			emotionalProfileId: session.emotionalProfileId,
-			scheduledFor: Date.now(),
-			title: "Something new is ready.",
-			triggerReason: "domain_unlock_missed",
-			type: "domain_unlock",
+			intent: "domain_unlock",
+			provenance: { triggerReason: "domain_unlock_missed" },
 		});
 		return null;
 	},

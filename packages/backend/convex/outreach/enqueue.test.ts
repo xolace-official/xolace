@@ -710,18 +710,35 @@ describe("fallback", () => {
 	});
 });
 
-describe("rollout stage 1", () => {
-	// Shipped dark: the push cutover (stage 2) is what moves callers over.
+describe("rollout stage 2: the push cutover (#764)", () => {
 	const sources = import.meta.glob<string>(
 		["../**/*.ts", "!../_generated/**", "!../**/*.test.ts", "!./**"],
 		{ eager: true, import: "default", query: "?raw" }
 	);
+	const reachesOut = (text: string) =>
+		text.includes("internal.outreach.enqueue.enqueue") ||
+		text.includes("suppressionFor(");
 
-	it("has no caller of enqueue outside the outreach layer", () => {
+	it("leaves no caller of the deprecated schedule", () => {
 		expect(Object.keys(sources).length).toBeGreaterThan(50);
 		const callers = Object.entries(sources)
-			.filter(([, text]) => text.includes("internal.outreach.enqueue"))
+			.filter(([, text]) => text.includes("internal.notifications.schedule"))
 			.map(([path]) => path);
 		expect(callers).toEqual([]);
+	});
+
+	it("leaves the quiet window, escalation and dormancy to the layer", () => {
+		const callers = Object.entries(sources).filter(([, text]) =>
+			reachesOut(text)
+		);
+		// The seven `schedule` call sites, the crons and the deprecated wrapper.
+		expect(callers.length).toBeGreaterThanOrEqual(8);
+		// What each of them used to read to gate itself.
+		const gate =
+			/quietWindow|inQuietWindow|escalation_events|by_profile_escalation_status|INACTIVE_THRESHOLD_MS/;
+		const gating = callers
+			.filter(([, text]) => gate.test(text))
+			.map(([path]) => path);
+		expect(gating).toEqual([]);
 	});
 });

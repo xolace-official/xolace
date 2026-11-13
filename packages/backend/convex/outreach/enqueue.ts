@@ -4,12 +4,9 @@ import { internalMutation } from "../_generated/server";
 import { startDelivery } from "./deliver";
 import { quietWindowEndsAt } from "./quietWindow";
 import {
-	accountDeleted,
 	consumeTypeBucket,
-	escalationOrDormancy,
-	intentAllowed,
 	isAcuteNudge,
-	loadNotifications,
+	personGates,
 	pickChannel,
 } from "./router";
 import {
@@ -106,23 +103,11 @@ export const enqueue = internalMutation({
 			suppressedReason: reason,
 		});
 
-		const profile = await ctx.db.get(
-			"emotional_profiles",
-			args.emotionalProfileId
-		);
-		if (!profile || (await accountDeleted(ctx, args.emotionalProfileId))) {
-			return await suppress("account_deleted");
+		const gates = await personGates(ctx, args, now);
+		if (gates.held) {
+			return await suppress(gates.held);
 		}
-
-		const held = await escalationOrDormancy(ctx, args, profile, now);
-		if (held) {
-			return await suppress(held);
-		}
-
-		const notifications = await loadNotifications(ctx, args.emotionalProfileId);
-		if (!intentAllowed(args.intent, notifications)) {
-			return await suppress("toggle_off");
-		}
+		const { notifications, profile } = gates;
 
 		if (!(await consumeTypeBucket(ctx, args))) {
 			return await suppress("rate_limit");

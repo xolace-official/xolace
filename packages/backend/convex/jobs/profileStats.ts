@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
 import { rankReplace } from "../lib/aggregates";
+import { attributeSession } from "../outreach/attribution";
 
 /**
  * Update emotional profile stats after a session completes.
@@ -151,25 +152,11 @@ export const updateAfterSession = internalMutation({
 		// sessionCount just moved — keep the percentile aggregate in step.
 		await rankReplace(ctx, profile);
 
-		// Mark any unresolved notification_log entries within the last 24h as
-		// having resulted in a session — covers organic returns (no tap required).
-		const ATTRIBUTION_WINDOW_MS = 24 * 60 * 60 * 1000;
-		const attributionCutoff = now - ATTRIBUTION_WINDOW_MS;
-		const [attributedLog] = await ctx.db
-			.query("notification_log")
-			.withIndex("by_profile", (q) =>
-				q
-					.eq("emotionalProfileId", args.emotionalProfileId)
-					.gte("sentAt", attributionCutoff)
-			)
-			.order("desc")
-			.take(1);
-
-		if (attributedLog && attributedLog.resultedInSession === undefined) {
-			await ctx.db.patch("notification_log", attributedLog._id, {
-				resultedInSession: true,
-			});
-		}
+		// Attribute this session to the latest push or message the layer
+		// delivered in the last 24h, if nothing has claimed it yet: covers
+		// organic returns (no tap required). Read from the layer (#764); the
+		// push's `notification_log` row is marked too, for shipped builds.
+		await attributeSession(ctx, args.emotionalProfileId, now);
 
 		// Check for milestone notification
 		const milestoneMessages: Record<number, string> = {
@@ -181,26 +168,16 @@ export const updateAfterSession = internalMutation({
 
 		const milestoneMessage = milestoneMessages[newSessionCount];
 		if (milestoneMessage) {
-			// Check if milestone notifications are enabled
-			const preferences = await ctx.db
-				.query("preferences")
-				.withIndex("by_profile", (q) =>
-					q.eq("emotionalProfileId", args.emotionalProfileId)
-				)
-				.unique();
-
-			if (
-				preferences?.notifications.enabled &&
-				preferences.notifications.milestone
-			) {
-				await ctx.scheduler.runAfter(0, internal.notifications.schedule, {
-					content: milestoneMessage,
-					emotionalProfileId: args.emotionalProfileId,
-					scheduledFor: now,
+			// The layer applies the milestone toggle and the push switch (#764).
+			await ctx.runMutation(internal.outreach.enqueue.enqueue, {
+				content: { body: milestoneMessage },
+				dedupeKey: `milestone:${args.emotionalProfileId}:${newSessionCount}`,
+				emotionalProfileId: args.emotionalProfileId,
+				intent: "milestone",
+				provenance: {
 					triggerReason: `Session count reached ${newSessionCount}`,
-					type: "milestone",
-				});
-			}
+				},
+			});
 		}
 	},
 });

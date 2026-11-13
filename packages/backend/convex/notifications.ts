@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import {
 	internalMutation,
@@ -8,7 +9,6 @@ import {
 } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { updateNotificationPrefs } from "./lib/notificationPrefs";
-import { NUDGE_NOTIFICATION_SOUND } from "./lib/notificationSounds";
 import { reconcilePushDevice } from "./lib/pushDevices";
 import {
 	deletePushDevice,
@@ -16,9 +16,8 @@ import {
 	profilePushDevices,
 	prunePushDeviceHistory,
 	pushNotifications,
-	sendPushToProfile,
 } from "./lib/pushNotifications";
-import { rateLimiter } from "./lib/rateLimits";
+import type { OutreachIntent } from "./outreach/validators";
 import { streakState } from "./streaks/state";
 
 // Full `notification_log` document shape, mirroring schema.ts exactly.
@@ -72,42 +71,37 @@ const notificationLogDocValidator = v.object({
 	),
 });
 
-type NotificationType = Doc<"notification_log">["type"];
-
-/** Types with a bucket of their own; the rest share `notification`. */
-const TYPE_BUCKETS: Partial<
-	Record<
-		NotificationType,
-		"achievement" | "domainUnlock" | "kindlingReady" | "streakMilestone"
-	>
+/**
+ * Each old type `schedule` still sends, as an intent. The inverse, for the
+ * push payload, is `legacyNotificationType` in outreach/push.ts.
+ */
+const LEGACY_TYPE_INTENT: Record<
+	Exclude<Doc<"notification_log">["type"], "streak_milestone">,
+	OutreachIntent
 > = {
 	achievement: "achievement",
-	domain_unlock: "domainUnlock",
-	kindling_ready: "kindlingReady",
-	streak_milestone: "streakMilestone",
+	affirmation: "gentle_return",
+	domain_unlock: "domain_unlock",
+	follow_up: "nudge",
+	gentle_return: "gentle_return",
+	kindling_ready: "kindling_ready",
+	milestone: "milestone",
+	pattern_nudge: "pattern_nudge",
 };
 
 /**
- * The rate-limit bucket by type, so follow-up nudges have their own budget and
- * never starve (or get starved by) the cron nudges. Acute follow-ups fire two
- * presence checks within ~5h, so they get a dedicated bucket rather than the
- * gentler 1/day followUpNudge cap.
+ * @deprecated Callers reach out through `outreach.enqueue` (#760, #764).
+ * Kept, with its validator, for calls scheduled before the push cutover:
+ * scheduled functions run the current code with the args they were given.
+ *
+ * Maps today's args onto `enqueue`: `follow_up` → `nudge` (`followUpTier` →
+ * `tier`), `affirmation` → `gentle_return` + `provenance.affirmation`,
+ * `streak_milestone` → nothing sent (#700), `title` → `content.title`.
+ * `scheduledFor` is ignored, as it always was.
  */
-function rateLimitBucket(
-	type: NotificationType,
-	followUpTier: "acute" | "elevated" | "standard" | undefined
-) {
-	if (type === "follow_up") {
-		return followUpTier === "acute" ? "followUpAcute" : "followUpNudge";
-	}
-	return TYPE_BUCKETS[type] ?? "notification";
-}
-
-/**
- * Schedule a notification for delivery.
- * Rate-limited, then dispatched via the push notifications component.
- * Also logs to notification_log for analytics.
- */
+// DEPRECATED(remove-after: backend deploys after #764 have drained every
+// `schedule` call scheduled before it; internal, so no app version gates it):
+// use `internal.outreach.enqueue.enqueue`.
 export const schedule = internalMutation({
 	args: {
 		content: v.string(),
@@ -145,69 +139,33 @@ export const schedule = internalMutation({
 		),
 	},
 	handler: async (ctx, args) => {
-		const now = Date.now();
-
-		const bucket = rateLimitBucket(args.type, args.followUpTier);
-		const { ok } = await rateLimiter.limit(ctx, bucket, {
-			key: args.emotionalProfileId,
-		});
-
-		if (!ok) {
-			await ctx.db.insert("notification_log", {
-				content: args.content,
-				createdAt: now,
-				delivered: false,
-				emotionalProfileId: args.emotionalProfileId,
-				scheduledFor: args.scheduledFor,
-				suppressedReason: "rate_limit",
+		if (args.type === "streak_milestone") {
+			return null;
+		}
+		const affirmation = args.type === "affirmation";
+		const intent = LEGACY_TYPE_INTENT[args.type];
+		await ctx.runMutation(internal.outreach.enqueue.enqueue, {
+			content: {
+				body: args.content,
+				...(args.title !== undefined && { title: args.title }),
+			},
+			emotionalProfileId: args.emotionalProfileId,
+			intent,
+			provenance: {
 				triggerReason: args.triggerReason,
-				type: args.type,
-				...(args.reachUsed && { reachUsed: args.reachUsed }),
+				...(affirmation && { affirmation: true }),
+				...(args.generatedBy && { generatedBy: args.generatedBy }),
 				...(args.patternContextUsed !== undefined && {
 					patternContextUsed: args.patternContextUsed,
 				}),
-				...(args.generatedBy && { generatedBy: args.generatedBy }),
-			});
-			return;
-		}
-
-		// Insert log first so we have the ID to embed in the notification payload.
-		// The client uses this ID to mark resultedInSession when the user taps.
-		const logId = await ctx.db.insert("notification_log", {
-			content: args.content,
-			createdAt: now,
-			delivered: true,
-			emotionalProfileId: args.emotionalProfileId,
-			scheduledFor: args.scheduledFor,
-			sentAt: now,
-			triggerReason: args.triggerReason,
-			type: args.type,
-			...(args.reachUsed && { reachUsed: args.reachUsed }),
-			...(args.patternContextUsed !== undefined && {
-				patternContextUsed: args.patternContextUsed,
-			}),
-			...(args.generatedBy && { generatedBy: args.generatedBy }),
-		});
-
-		// Dispatch to every device this profile has registered. One log row
-		// above, one rate-limit event above, one call here — the device count
-		// changes none of that.
-		await sendPushToProfile(ctx, {
-			emotionalProfileId: args.emotionalProfileId,
-			notification: {
-				body: args.content,
-				channelId: NUDGE_NOTIFICATION_SOUND.channelId,
-				data: { logId, type: args.type },
-				// iOS reads the sound off the payload; Android ignores it and takes the
-				// sound from the channel. Sending both is what covers the two platforms
-				// in one call. Deliberately not the `default` channel — that one exists
-				// without a sound on every device already running the app, and a
-				// channel's sound can never be changed after creation.
-				sound: NUDGE_NOTIFICATION_SOUND.sound,
-				title: args.title ?? "Xolace",
+				...(args.reachUsed && { reachUsed: args.reachUsed }),
 			},
+			...(intent === "nudge" &&
+				args.followUpTier && { tier: args.followUpTier }),
 		});
+		return null;
 	},
+	returns: v.null(),
 });
 
 /**
@@ -367,6 +325,12 @@ export const markResultedInSession = mutation({
 		await ctx.db.patch("notification_log", args.logId, {
 			resultedInSession: true,
 		});
+		// The outreach is what new readers attribute sessions from (#764).
+		if (log.outreachId) {
+			await ctx.db.patch("outreach", log.outreachId, {
+				resultedInSession: true,
+			});
+		}
 		return null;
 	},
 	returns: v.null(),
@@ -460,10 +424,11 @@ export const loadGenerationContext = internalQuery({
 			.order("desc")
 			.take(3);
 
-		// Recent notification content to avoid template repetition
-		const recentNotifications = await ctx.db
-			.query("notification_log")
-			.withIndex("by_profile", (q) =>
+		// Recent outreach copy, to avoid template repetition. Read from the
+		// layer (#764): it holds every channel's, deferred ones included.
+		const recentOutreach = await ctx.db
+			.query("outreach")
+			.withIndex("by_profile_created", (q) =>
 				q.eq("emotionalProfileId", args.emotionalProfileId)
 			)
 			.order("desc")
@@ -489,7 +454,7 @@ export const loadGenerationContext = internalQuery({
 				...profile,
 				currentStreak: (await streakState(ctx, profile)).streak,
 			},
-			recentNotificationContent: recentNotifications.map((n) => n.content),
+			recentNotificationContent: recentOutreach.map((o) => o.content.body),
 			userLanguageTags,
 		};
 	},

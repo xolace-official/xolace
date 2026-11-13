@@ -1,11 +1,10 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
-import { achievementPushAllowed } from "../achievements/push";
-import { INACTIVE_THRESHOLD_MS } from "../jobs/notificationTriggers";
 import { hasPremium } from "../lib/premium";
 import { rateLimiter } from "../lib/rateLimits";
 import { ADAPTERS } from "./adapters";
 import {
+	achievementToggle,
 	channelConfig,
 	channelTakesIntent,
 	DEFAULT_CHANNEL_ORDER,
@@ -27,6 +26,9 @@ import type {
 const HOUR = 3_600_000;
 /** An escalation event holds every routine outreach this long. */
 export const ESCALATION_HOLD_MS = 72 * HOUR;
+
+/** 30 days with no session: the dormancy hold (docs/paths-v1.md §10). */
+export const INACTIVE_THRESHOLD_MS = 30 * 24 * HOUR;
 
 /** A profile has a handful of rows per channel at most (one per linked chat). */
 const MAX_IDENTITIES_PER_CHANNEL = 10;
@@ -86,6 +88,15 @@ export async function escalationOrDormancy(
 	profile: Doc<"emotional_profiles">,
 	now: number
 ): Promise<SuppressedReason | null> {
+	// Dormancy first: it needs no reads, and either hold suppresses.
+	if (
+		DORMANCY_INTENTS.has(input.intent) &&
+		profile.lastSessionAt !== undefined &&
+		now - profile.lastSessionAt > INACTIVE_THRESHOLD_MS
+	) {
+		return "user_inactive";
+	}
+
 	// An escalation-derived card's own nudge passes both holds.
 	const nudgedCard =
 		input.intent === "nudge" && input.followUpId !== undefined
@@ -123,13 +134,6 @@ export async function escalationOrDormancy(
 		}
 	}
 
-	if (
-		DORMANCY_INTENTS.has(input.intent) &&
-		profile.lastSessionAt !== undefined &&
-		now - profile.lastSessionAt > INACTIVE_THRESHOLD_MS
-	) {
-		return "user_inactive";
-	}
 	return null;
 }
 
@@ -153,9 +157,7 @@ export function intentAllowed(
 		case "domain_unlock":
 			return notifications.milestone;
 		case "achievement":
-			// Same fallback as the badge push: absent follows `milestone`. The
-			// global switch is push's alone, so it isn't read here.
-			return achievementPushAllowed({ ...notifications, enabled: true });
+			return achievementToggle(notifications);
 		case "kindling_ready":
 			return true;
 		default:
@@ -164,10 +166,9 @@ export function intentAllowed(
 }
 
 /**
- * Gate 5's buckets: the same mapping as `notifications.schedule`'s
- * `rateLimitBucket`, which goes away when `schedule` wraps `enqueue` (#760
- * rollout stage 2). Types with a bucket of their own; the rest share
- * `notification`. Counted across channels.
+ * Gate 5's buckets, moved unchanged from `notifications.schedule` (#764).
+ * Intents with a bucket of their own; the rest share `notification`. Counted
+ * across channels.
  */
 export function typeBucket(
 	intent: OutreachIntent,
@@ -316,4 +317,71 @@ export async function loadNotifications(
 		)
 		.unique();
 	return prefs?.notifications;
+}
+
+/**
+ * Gates 2–4, read-only: the account, escalation and dormancy, the per-intent
+ * toggle. Either the reason they hold, or what the later gates need.
+ */
+export async function personGates(
+	ctx: QueryCtx,
+	input: RouteInput,
+	now: number
+): Promise<
+	| { held: SuppressedReason }
+	| {
+			held: null;
+			notifications: Notifications | undefined;
+			profile: Doc<"emotional_profiles">;
+	  }
+> {
+	const profile = await ctx.db.get(
+		"emotional_profiles",
+		input.emotionalProfileId
+	);
+	if (!profile || (await accountDeleted(ctx, input.emotionalProfileId))) {
+		return { held: "account_deleted" };
+	}
+	const held = await escalationOrDormancy(ctx, input, profile, now);
+	if (held) {
+		return { held };
+	}
+	const notifications = await loadNotifications(ctx, input.emotionalProfileId);
+	if (!intentAllowed(input.intent, notifications)) {
+		return { held: "toggle_off" };
+	}
+	return { held: null, notifications, profile };
+}
+
+/**
+ * Why `enqueue` would suppress this outreach now, or null if it would go
+ * out: gates 2–4 and the channel walk, read-only. For a caller that pays
+ * before it enqueues (the crons write copy with a model call) to skip work
+ * the layer would drop. Buckets and the quiet window are left to `enqueue`:
+ * a bucket can't be read without spending it, and the quiet window defers
+ * rather than drops.
+ */
+export async function suppressionFor(
+	ctx: QueryCtx,
+	input: RouteInput,
+	now: number
+): Promise<SuppressedReason | null> {
+	const gates = await personGates(ctx, input, now);
+	if (gates.held) {
+		return gates.held;
+	}
+	const order = gates.notifications?.channelOrder ?? DEFAULT_CHANNEL_ORDER;
+	for (const channel of order) {
+		const reason = await channelIneligibility(
+			ctx,
+			channel,
+			input,
+			gates.profile,
+			gates.notifications
+		);
+		if (reason === null) {
+			return null;
+		}
+	}
+	return "no_channel";
 }
