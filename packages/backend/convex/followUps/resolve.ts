@@ -1,8 +1,8 @@
 import { ConvexError, type Infer, v } from "convex/values";
-import { internal } from "./_generated/api";
-import type { Doc, Id } from "./_generated/dataModel";
-import type { MutationCtx } from "./_generated/server";
-import { isFollowUpPoolable } from "./lib/poolability";
+import { internal } from "../_generated/api";
+import type { Doc, Id } from "../_generated/dataModel";
+import type { MutationCtx } from "../_generated/server";
+import { isFollowUpPoolable } from "../lib/poolability";
 
 // Same order of magnitude as a product-feedback note — a sentence or a few,
 // never a session transcript.

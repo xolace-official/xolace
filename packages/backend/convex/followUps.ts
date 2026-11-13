@@ -27,8 +27,8 @@ import {
 	type StretchRef,
 	spendStretch,
 } from "./compounding/stretches";
-import { resolveCardCore, userResponseValidator } from "./followUpResolve";
 import { deleteResponsesForCard } from "./followUpResponses";
+import { resolveCardCore, userResponseValidator } from "./followUps/resolve";
 import { requireAuth } from "./lib/auth";
 import {
 	followUpCadence,

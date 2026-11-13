@@ -10,13 +10,13 @@
  */
 import type { WorkflowId } from "@convex-dev/workflow";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Doc } from "./_generated/dataModel";
-import { resolveCardCore } from "./followUpResolve";
-import { seedSession } from "./test/fixtures.helpers";
-import { asNewUser, type SeededUser } from "./test/harness.helpers";
-import { aggregatesMock } from "./test/mocks.helpers";
+import type { Doc } from "../_generated/dataModel";
+import { seedSession } from "../test/fixtures.helpers";
+import { asNewUser, type SeededUser } from "../test/harness.helpers";
+import { aggregatesMock } from "../test/mocks.helpers";
+import { resolveCardCore } from "./resolve";
 
-vi.mock("./lib/aggregates", () => aggregatesMock());
+vi.mock("../lib/aggregates", () => aggregatesMock());
 
 // Resolving schedules the stretch evaluation; fake timers keep it from firing
 // after the test (it has its own coverage in compounding/stretches.test.ts).

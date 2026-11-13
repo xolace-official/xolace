@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, query } from "./_generated/server";
-import { heavierChoiceValidator, resolveCardCore } from "./followUpResolve";
+import { heavierChoiceValidator, resolveCardCore } from "./followUps/resolve";
 import { requireAuth } from "./lib/auth";
 
 /**

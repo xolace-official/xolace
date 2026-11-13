@@ -20,7 +20,7 @@ import {
 import { Icon, OptionCard } from "@/features/follow-up/stack-cards";
 import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
 
-// Mirrors REFLECTION_MAX_LENGTH in convex/followUpResolve.ts (not imported:
+// Mirrors REFLECTION_MAX_LENGTH in convex/followUps/resolve.ts (not imported:
 // that module is server code).
 const MAX_LENGTH = 2000;
 
