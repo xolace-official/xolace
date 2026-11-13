@@ -1,10 +1,10 @@
+import type { Resource } from "@xolace/backend/convex/lib/crisisResources";
 import { Surface } from "heroui-native";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
-import type { Resource } from "@/features/crisis-resources/types";
 import { removeEmDash } from "@/features/quotes/utils/text-utils";
 import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
 

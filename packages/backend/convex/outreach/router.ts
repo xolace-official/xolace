@@ -1,0 +1,319 @@
+import type { Doc, Id } from "../_generated/dataModel";
+import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { achievementPushAllowed } from "../achievements/push";
+import { INACTIVE_THRESHOLD_MS } from "../jobs/notificationTriggers";
+import { hasPremium } from "../lib/premium";
+import { rateLimiter } from "../lib/rateLimits";
+import { ADAPTERS } from "./adapters";
+import {
+	channelConfig,
+	channelTakesIntent,
+	DEFAULT_CHANNEL_ORDER,
+} from "./channels";
+import type {
+	FollowUpTier,
+	IneligibilityReason,
+	OutreachChannel,
+	OutreachIntent,
+	SuppressedReason,
+} from "./validators";
+
+/**
+ * The outreach router's gates (#760, #728). `enqueue` runs them in the
+ * spec's order; the delivery runner reuses the channel walk for its one
+ * fallback. Callers never gate themselves.
+ */
+
+const HOUR = 3_600_000;
+/** An escalation event holds every routine outreach this long. */
+export const ESCALATION_HOLD_MS = 72 * HOUR;
+
+/** A profile has a handful of rows per channel at most (one per linked chat). */
+const MAX_IDENTITIES_PER_CHANNEL = 10;
+
+/** Statuses a follow-up card is still open in. Superseded stays visible. */
+const UNRESOLVED_CARD_STATUSES = [
+	"pending",
+	"ready",
+	"shown",
+	"superseded",
+] as const;
+
+/** Intents a 30-day silence suppresses. */
+const DORMANCY_INTENTS: ReadonlySet<OutreachIntent> = new Set([
+	"gentle_return",
+	"pattern_nudge",
+	"kindling_ready",
+]);
+
+type Notifications = Doc<"preferences">["notifications"];
+
+export type RouteInput = {
+	emotionalProfileId: Id<"emotional_profiles">;
+	followUpId?: Id<"follow_up_cards">;
+	intent: OutreachIntent;
+	tier?: FollowUpTier;
+};
+
+/** Gate 2: the account is deleted or being purged. */
+export async function accountDeleted(
+	ctx: QueryCtx,
+	emotionalProfileId: Id<"emotional_profiles">
+): Promise<boolean> {
+	const user = await ctx.db
+		.query("users")
+		.withIndex("by_emotional_profile", (q) =>
+			q.eq("emotionalProfileId", emotionalProfileId)
+		)
+		.first();
+	return (
+		!user ||
+		user.accountStatus === "deleted" ||
+		user.accountStatus === "purging"
+	);
+}
+
+/**
+ * Gate 3: escalation and dormancy.
+ *
+ * An open escalation-derived card holds every intent except that card's own
+ * nudge, and the nudge is exempt from the 72 h hold too: the crisis that
+ * raised the event is what the nudge checks in on.
+ */
+export async function escalationOrDormancy(
+	ctx: QueryCtx,
+	input: RouteInput,
+	profile: Doc<"emotional_profiles">,
+	now: number
+): Promise<SuppressedReason | null> {
+	// An escalation-derived card's own nudge passes both holds.
+	const nudgedCard =
+		input.intent === "nudge" && input.followUpId !== undefined
+			? await ctx.db.get("follow_up_cards", input.followUpId)
+			: null;
+	const ownCardNudge =
+		nudgedCard?.escalationDerived === true &&
+		(UNRESOLVED_CARD_STATUSES as readonly string[]).includes(nudgedCard.status);
+
+	if (!ownCardNudge) {
+		for (const status of UNRESOLVED_CARD_STATUSES) {
+			const openEscalationCard = await ctx.db
+				.query("follow_up_cards")
+				.withIndex("by_profile_escalation_status", (q) =>
+					q
+						.eq("emotionalProfileId", input.emotionalProfileId)
+						.eq("escalationDerived", true)
+						.eq("status", status)
+				)
+				.first();
+			if (openEscalationCard) {
+				return "escalation_active";
+			}
+		}
+		const recentEscalation = await ctx.db
+			.query("escalation_events")
+			.withIndex("by_profile", (q) =>
+				q
+					.eq("emotionalProfileId", input.emotionalProfileId)
+					.gte("createdAt", now - ESCALATION_HOLD_MS)
+			)
+			.first();
+		if (recentEscalation) {
+			return "escalation_active";
+		}
+	}
+
+	if (
+		DORMANCY_INTENTS.has(input.intent) &&
+		profile.lastSessionAt !== undefined &&
+		now - profile.lastSessionAt > INACTIVE_THRESHOLD_MS
+	) {
+		return "user_inactive";
+	}
+	return null;
+}
+
+/** Gate 4: the per-intent toggle, the same on every channel. */
+export function intentAllowed(
+	intent: OutreachIntent,
+	notifications: Notifications | undefined
+): boolean {
+	if (!notifications) {
+		// No preferences row: nothing was ever opted into. Kindling has no
+		// toggle of its own; push's global switch still decides for it.
+		return intent === "kindling_ready";
+	}
+	switch (intent) {
+		case "nudge":
+		case "gentle_return":
+			return notifications.gentleReturn;
+		case "pattern_nudge":
+			return notifications.patternNudge;
+		case "milestone":
+		case "domain_unlock":
+			return notifications.milestone;
+		case "achievement":
+			// Same fallback as the badge push: absent follows `milestone`. The
+			// global switch is push's alone, so it isn't read here.
+			return achievementPushAllowed({ ...notifications, enabled: true });
+		case "kindling_ready":
+			return true;
+		default:
+			return false;
+	}
+}
+
+/**
+ * Gate 5's buckets: the same mapping as `notifications.schedule`'s
+ * `rateLimitBucket`, which goes away when `schedule` wraps `enqueue` (#760
+ * rollout stage 2). Types with a bucket of their own; the rest share
+ * `notification`. Counted across channels.
+ */
+export function typeBucket(
+	intent: OutreachIntent,
+	tier: FollowUpTier | undefined
+) {
+	switch (intent) {
+		case "nudge":
+			return tier === "acute" ? "followUpAcute" : "followUpNudge";
+		case "achievement":
+			return "achievement";
+		case "domain_unlock":
+			return "domainUnlock";
+		case "kindling_ready":
+			return "kindlingReady";
+		default:
+			return "notification";
+	}
+}
+
+export async function consumeTypeBucket(
+	ctx: MutationCtx,
+	input: RouteInput
+): Promise<boolean> {
+	const { ok } = await rateLimiter.limit(
+		ctx,
+		typeBucket(input.intent, input.tier),
+		{ key: input.emotionalProfileId }
+	);
+	return ok;
+}
+
+export function isAcuteNudge(input: Pick<RouteInput, "intent" | "tier">) {
+	return input.intent === "nudge" && input.tier === "acute";
+}
+
+/**
+ * Whether a channel can take this outreach, bucket aside. Null = eligible.
+ */
+export async function channelIneligibility(
+	ctx: QueryCtx,
+	channel: OutreachChannel,
+	input: RouteInput,
+	profile: Doc<"emotional_profiles">,
+	notifications: Notifications | undefined
+): Promise<IneligibilityReason | null> {
+	if (!channelTakesIntent(channel, input.intent)) {
+		return "intent_not_allowed";
+	}
+	const adapter = ADAPTERS[channel];
+	if (!adapter?.configured()) {
+		return "not_configured";
+	}
+	const config = await channelConfig(ctx, channel);
+	if (!config.enabled) {
+		return "disabled";
+	}
+	if (config.plan === "plus" && !(await hasPremium(ctx, profile))) {
+		return "requires_plus";
+	}
+
+	if (channel === "push") {
+		// The global switch is push's alone (#760). A profile with no device
+		// rows still reaches the pre-registry profile-keyed recipient
+		// (`sendPushToProfile`), so `no_device` isn't decided here while that
+		// fallback lives.
+		return notifications?.enabled ? null : "push_off";
+	}
+
+	// A relink leaves the old chat's row revoked beside the new one, so look
+	// at every row rather than the first.
+	const identities = await ctx.db
+		.query("channel_identities")
+		.withIndex("by_profile_channel", (q) =>
+			q
+				.eq("emotionalProfileId", input.emotionalProfileId)
+				.eq("channel", channel)
+		)
+		.take(MAX_IDENTITIES_PER_CHANNEL);
+	if (identities.some((identity) => identity.status === "active")) {
+		return null;
+	}
+	if (identities.some((identity) => identity.status === "paused")) {
+		return "paused";
+	}
+	// Never linked reads as revoked: there is no active link either way.
+	return "revoked";
+}
+
+/** Consume the channel's own bucket. Only Telegram has one. */
+async function consumeChannelBucket(
+	ctx: MutationCtx,
+	channel: OutreachChannel,
+	input: RouteInput
+): Promise<boolean> {
+	if (channel !== "telegram") {
+		return true;
+	}
+	const { ok } = await rateLimiter.limit(ctx, "outreachTelegram", {
+		key: input.emotionalProfileId,
+	});
+	// An acute nudge counts toward the day but is never blocked.
+	return ok || isAcuteNudge(input);
+}
+
+/**
+ * Gate 7: walk the person's channel order and take the first eligible
+ * channel, consuming its bucket. `exclude` skips channels already tried (the
+ * fallback).
+ */
+export async function pickChannel(
+	ctx: MutationCtx,
+	input: RouteInput,
+	profile: Doc<"emotional_profiles">,
+	notifications: Notifications | undefined,
+	exclude: readonly OutreachChannel[] = []
+): Promise<OutreachChannel | null> {
+	const order = notifications?.channelOrder ?? DEFAULT_CHANNEL_ORDER;
+	const seen = new Set<OutreachChannel>(exclude);
+	for (const channel of order) {
+		if (seen.has(channel)) {
+			continue;
+		}
+		seen.add(channel);
+		const reason = await channelIneligibility(
+			ctx,
+			channel,
+			input,
+			profile,
+			notifications
+		);
+		if (reason === null && (await consumeChannelBucket(ctx, channel, input))) {
+			return channel;
+		}
+	}
+	return null;
+}
+
+export async function loadNotifications(
+	ctx: QueryCtx,
+	emotionalProfileId: Id<"emotional_profiles">
+): Promise<Notifications | undefined> {
+	const prefs = await ctx.db
+		.query("preferences")
+		.withIndex("by_profile", (q) =>
+			q.eq("emotionalProfileId", emotionalProfileId)
+		)
+		.unique();
+	return prefs?.notifications;
+}

@@ -8,6 +8,7 @@ import r2 from "@convex-dev/r2/convex.config.js";
 import rag from "@convex-dev/rag/convex.config.js";
 import rateLimiter from "@convex-dev/rate-limiter/convex.config.js";
 import workflow from "@convex-dev/workflow/convex.config.js";
+import workpool from "@convex-dev/workpool/convex.config.js";
 import posthog from "@posthog/convex/convex.config.js";
 import { defineApp } from "convex/server";
 import { v } from "convex/values";
@@ -35,6 +36,9 @@ app.use(aggregate, { name: "reflectionRank" });
 app.use(r2);
 // Weekly talk time (#596), reached only through convex/talk/time.ts.
 app.use(credits);
+// Outreach deliveries (#760), one pool per channel; reached only through
+// convex/outreach/pools.ts.
+app.use(workpool, { name: "outreachPush" });
 app.use(posthog, {
 	env: {
 		POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS:

@@ -1,3 +1,9 @@
+import {
+	COUNTRY_RESOURCES,
+	type CountryCode,
+	isCountryCode,
+	LAST_UPDATED,
+} from "@xolace/backend/convex/lib/crisisResources";
 import { useLocalSearchParams } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import {
@@ -11,8 +17,6 @@ import { Linking, ScrollView, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { ResourceItem } from "@/components/shared/resource-item";
-import { COUNTRY_RESOURCES, LAST_UPDATED } from "./data";
-import type { CountryCode } from "./types";
 import { useCrisisResources } from "./use-crisis-resources";
 
 type SelectOption = { value: string; label: string } | undefined;
@@ -50,11 +54,7 @@ export function CrisisResourcesScreen() {
 
 	const handleCountryChange = (option: SelectOption) => {
 		const code = option?.value;
-		setCountry(
-			code && COUNTRY_RESOURCES[code as CountryCode]
-				? (code as CountryCode)
-				: null
-		);
+		setCountry(isCountryCode(code) ? code : null);
 	};
 
 	const handleEmergencyCall = async () => {

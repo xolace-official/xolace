@@ -61,6 +61,31 @@ Put a dependency in the package that uses it; shared versions come from the root
   revive covered is not one. **Days showed up** is the lifetime total, gaps
   allowed, never resets. Same days as the **streak**, which counts them only in a
   row.
+- **follow-up**: the check-in card Xolace keeps for a session that ended unresolved,
+  from creation until it's answered, dismissed or expires.
+- **answer**: a user's response to a follow-up (lighter, still with it, heavier),
+  given in the app or on a channel. Dismissing a follow-up or letting it expire is
+  not an answer.
+- **outreach**: a message Xolace itself initiates to a user outside the app. Its
+  reason is its **intent** (a nudge, a gentle return, a pattern nudge…). A message
+  relaying something another person did (a chat message) is a notification, not
+  outreach.
+- **channel**: a place outreach can land: push, Telegram, later SMS and others. A user
+  **links** a channel before Xolace may reach them there. Each channel is open to
+  free users or only to Plus, and that can change at any time.
+- **delivery**: one outreach landing, or failing to land, on one channel. One outreach
+  can have several deliveries.
+- **nudge**: an outreach a follow-up sends to invite the user back to its card.
+  Gentle returns and pattern nudges are other intents, not nudges.
+- **letter**: a short, anonymous message of encouragement that one user (the
+  **sender**) writes for a stranger, and Xolace chooses who receives it (the
+  **recipient**, always someone who opted in to receive letters). A letter is
+  **received** once Xolace places it with its recipient, whether or not they have
+  read it (not "delivered": that is outreach's word). The recipient can
+  **acknowledge** a letter once, without words, and never reply to it. Not an echo
+  (Xolace distils those from many people) and not outreach (a person writes a
+  letter, not Xolace). The push telling someone a letter reached them, or that
+  theirs was received or acknowledged, is a notification.
 
 ## Hit every surface
 

@@ -43,6 +43,7 @@ const notificationLogDocValidator = v.object({
 			v.literal("not_enough")
 		)
 	),
+	outreachId: v.optional(v.id("outreach")),
 	patternContextUsed: v.optional(v.boolean()),
 	reachUsed: v.optional(
 		v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))

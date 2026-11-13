@@ -35,6 +35,12 @@ export const SESSION_ID_EXEMPT = {
 		"Safety-audit tombstone — retained (profileId stripped) even past account deletion; holds no user text by policy.",
 	feedback:
 		"Profile-scoped structural signal — anonymized in place on account deletion (owner link + text stripped), not cascaded with its session.",
+	notification_log:
+		"Push's compatibility record (ADR 0001); reaches a session only through its optional `outreachId`. Kept per profile like it was before the outreach layer.",
+	outreach:
+		"The per-profile record of what Xolace sent (#760); `followUpId` is provenance and reads as absent once the card is purged. Drained per profile by account deletion and data wipe (#760 slice 9, purge guard #735).",
+	outreach_deliveries:
+		"One row per channel attempt of an `outreach` row; follows that row's lifecycle, not its session's.",
 	talk_charges:
 		"An open talk-time reservation (#596), no text: it must still be released after its session is wiped. The talk-time sweeper removes it within ~2 h.",
 } as const;

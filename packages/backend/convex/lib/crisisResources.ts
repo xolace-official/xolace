@@ -1,4 +1,40 @@
-import type { CountryCode, CountryData } from "./types";
+// Per-country crisis resources (emergency number and helplines). Client-safe: the
+// mobile crisis resources screen and the backend both read this list, so the app
+// and a channel's crisis reply never give a user two different numbers. The
+// safeguard module's Ghana-only list (`ai/safeguard.ts`) is separate for now.
+
+export type Resource = {
+	type: "phone" | "url" | "text" | "email";
+	source:
+		| "crisis_line"
+		| "xolace_support"
+		| "text_support"
+		| "local_service"
+		| "online_resource";
+	priority: number;
+	label: string;
+	value: string;
+	description?: string;
+};
+
+export type CountryCode =
+	| "GH"
+	| "US"
+	| "GB"
+	| "AU"
+	| "CA"
+	| "NG"
+	| "DE"
+	| "KE"
+	| "FR"
+	| "ZA";
+
+export type CountryData = {
+	name: string;
+	flag: string;
+	emergencyNumber: string;
+	resources: Resource[];
+};
 
 export const LAST_UPDATED = "2026-05-19";
 
@@ -687,3 +723,38 @@ export const COUNTRY_RESOURCES: Record<CountryCode, CountryData> = {
 		],
 	},
 };
+
+/** True when `code` is a country this list has resources for. */
+export function isCountryCode(
+	code: string | null | undefined
+): code is CountryCode {
+	return code != null && Object.hasOwn(COUNTRY_RESOURCES, code);
+}
+
+/** Helplines at this priority are the ones to name first in a crisis. */
+const FIRST_LINE_PRIORITY = 1;
+
+export type CrisisContacts = {
+	emergencyNumber: string;
+	/** The country's priority-1 helplines, in display order. */
+	helplines: Resource[];
+};
+
+/**
+ * The emergency number and priority-1 helplines for an ISO country code, or null
+ * when the list has nothing for it (callers fall back to IASP's directory).
+ */
+export function crisisContactsFor(
+	countryCode: string | null | undefined
+): CrisisContacts | null {
+	if (!isCountryCode(countryCode)) {
+		return null;
+	}
+	const country = COUNTRY_RESOURCES[countryCode];
+	return {
+		emergencyNumber: country.emergencyNumber,
+		helplines: country.resources.filter(
+			(r) => r.priority === FIRST_LINE_PRIORITY
+		),
+	};
+}

@@ -55,6 +55,7 @@
     "@convex-dev/rag": "^0.7.6",
     "@convex-dev/rate-limiter": "^0.3.2",
     "@convex-dev/workflow": "^0.4.6",
+    "@convex-dev/workpool": "^0.4.15",
     "@posthog/convex": "^2.1.3",
     "ai": "catalog:",
     "convex": "catalog:",

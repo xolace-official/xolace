@@ -109,6 +109,11 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 	// Notification spam prevention — 1 per 24 hours
 	notification: { kind: "fixed window", period: DAY, rate: 1 },
 
+	// Telegram outreach (#760): at most three a day across every intent on
+	// the channel, so the bot never feels pushy. An acute nudge counts toward
+	// it but is never blocked; full → the router tries the next channel.
+	outreachTelegram: { kind: "fixed window", period: DAY, rate: 3 },
+
 	// Kindling generation (docs/paths-v1.md §2.2), Plus only. One kindling per
 	// profile per day: the first qualifying session of the day generates, every
 	// later session that day is a no-ship (logged `rate_limited`). A user gets

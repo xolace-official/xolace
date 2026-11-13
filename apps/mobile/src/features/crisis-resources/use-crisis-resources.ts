@@ -1,12 +1,13 @@
+import {
+	COUNTRY_RESOURCES,
+	type CountryCode,
+	type CountryData,
+	isCountryCode,
+} from "@xolace/backend/convex/lib/crisisResources";
 import * as Localization from "expo-localization";
 import { useLocalSearchParams } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useState } from "react";
-import { COUNTRY_RESOURCES } from "@/features/crisis-resources/data";
-import type {
-	CountryCode,
-	CountryData,
-} from "@/features/crisis-resources/types";
 
 type UseCrisisResourcesResult = {
 	selectedCountry: CountryCode | null;
@@ -17,9 +18,7 @@ type UseCrisisResourcesResult = {
 /** The device's market if there are resources for it, else null. */
 export function detectCountry(): CountryCode | null {
 	const region = Localization.getLocales()[0]?.regionCode;
-	return region && COUNTRY_RESOURCES[region as CountryCode]
-		? (region as CountryCode)
-		: null;
+	return isCountryCode(region) ? region : null;
 }
 
 export function useCrisisResources(): UseCrisisResourcesResult {

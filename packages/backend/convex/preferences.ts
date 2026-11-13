@@ -17,6 +17,7 @@ import {
 	talkViewValidator,
 	voiceSlugValidator,
 } from "./lib/voices";
+import { outreachChannelValidator } from "./outreach/validators";
 
 /**
  * Get the user's quote preferences (themes, notification settings).
@@ -154,6 +155,9 @@ export const update = mutation({
 				// Without it, any caller that spreads the stored preferences instead of
 				// building a literal would fail argument validation outright.
 				achievement: v.optional(v.boolean()),
+				// Accepted for the same reason, then dropped: channel order is
+				// written only by linking and "Try this first" (convex/outreach).
+				channelOrder: v.optional(v.array(outreachChannelValidator)),
 				chat: v.optional(v.boolean()),
 				enabled: v.boolean(),
 				gentleReturn: v.boolean(),
@@ -331,10 +335,11 @@ export const update = mutation({
 		// toggle. Absent-means-enabled makes that erasure fail open, which is the
 		// worse direction: someone who muted chat would start being pushed again.
 		if (args.notifications !== undefined) {
+			const { channelOrder: _ignored, ...notifications } = args.notifications;
 			await updateNotificationPrefs(
 				ctx,
 				preferences.emotionalProfileId,
-				args.notifications
+				notifications
 			);
 		}
 

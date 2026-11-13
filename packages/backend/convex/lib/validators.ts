@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { outreachChannelValidator } from "../outreach/validators";
 import { DOMAINS } from "./understandingVocab";
 import {
 	talkDirectnessValidator,
@@ -160,7 +161,8 @@ export const consentTypeValidator = v.union(
 	v.literal("pattern_analysis"),
 	v.literal("anonymized_research"),
 	v.literal("voice_processing"),
-	v.literal("therapy_summary_sharing")
+	v.literal("therapy_summary_sharing"),
+	v.literal("telegram_outreach")
 );
 
 export const userFeedbackValidator = v.union(
@@ -432,6 +434,7 @@ export const preferencesDocValidator = v.object({
 	motionPreference: v.optional(motionPreferenceValidator),
 	notifications: v.object({
 		achievement: v.optional(v.boolean()),
+		channelOrder: v.optional(v.array(outreachChannelValidator)),
 		chat: v.optional(v.boolean()),
 		enabled: v.boolean(),
 		gentleReturn: v.boolean(),
