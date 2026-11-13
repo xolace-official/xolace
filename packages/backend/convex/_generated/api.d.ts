@@ -143,6 +143,7 @@ import type * as exercises from "../exercises.js";
 import type * as exercises_embed from "../exercises/embed.js";
 import type * as exercises_match from "../exercises/match.js";
 import type * as feedback from "../feedback.js";
+import type * as followUpResolve from "../followUpResolve.js";
 import type * as followUpResponses from "../followUpResponses.js";
 import type * as followUps from "../followUps.js";
 import type * as http from "../http.js";
@@ -419,6 +420,7 @@ declare const fullApi: ApiFromModules<{
   "exercises/embed": typeof exercises_embed;
   "exercises/match": typeof exercises_match;
   feedback: typeof feedback;
+  followUpResolve: typeof followUpResolve;
   followUpResponses: typeof followUpResponses;
   followUps: typeof followUps;
   http: typeof http;

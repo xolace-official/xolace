@@ -27,6 +27,7 @@ import {
 	type StretchRef,
 	spendStretch,
 } from "./compounding/stretches";
+import { resolveCardCore, userResponseValidator } from "./followUpResolve";
 import { deleteResponsesForCard } from "./followUpResponses";
 import { requireAuth } from "./lib/auth";
 import {
@@ -49,16 +50,6 @@ import { renderSemanticProfile } from "./semanticProfiles";
 const MAX_CARD_CHARS = 200;
 
 export const workflow = new WorkflowManager(components.workflow);
-
-// Card responses the client may send.
-const userResponseValidator = v.union(
-	v.literal("lighter"),
-	v.literal("still_here"),
-	v.literal("heavier"),
-	v.literal("processed"),
-	v.literal("vent"),
-	v.literal("dismissed")
-);
 
 // Active = a card whose lifecycle is still owned by a live workflow.
 // Exported for lib/sessionCascade, which purges cards per-session.
@@ -627,22 +618,13 @@ export const resolveCard = mutation({
 	args: { cardId: v.id("follow_up_cards"), response: userResponseValidator },
 	handler: async (ctx, args) => {
 		const { profile } = await requireAuth(ctx);
-		const card = await ctx.db.get("follow_up_cards", args.cardId);
-		if (!card || card.emotionalProfileId !== profile._id) {
-			return null;
-		}
-		if (card.status === "resolved") {
-			return null; // idempotent
-		}
-		await ctx.db.patch("follow_up_cards", args.cardId, {
-			resolvedAt: Date.now(),
-			status: "resolved",
-			userResponse: args.response,
-		});
-		// An answer is a reading: it can close a stretch, never open one (#519).
-		// Its own transaction, so it can't fail the answer (#529).
-		await ctx.scheduler.runAfter(0, internal.compounding.stretches.evaluate, {
+		// Any unanswered card the user owns, superseded ones included; a second
+		// answer is a no-op. The outcome stays server-side: this returns null.
+		await resolveCardCore(ctx, {
+			cardId: args.cardId,
 			profileId: profile._id,
+			response: args.response,
+			source: "app",
 		});
 		return null;
 	},
