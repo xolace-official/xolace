@@ -28,6 +28,22 @@ import {
 	talkViewValidator,
 	voiceSlugValidator,
 } from "./lib/voices";
+import {
+	channelErrorKindValidator,
+	channelPlanValidator,
+	deliveryStatusValidator,
+	followUpTierValidator,
+	identityStatusValidator,
+	inboundStatusValidator,
+	outreachChannelValidator,
+	outreachContentValidator,
+	outreachIntentValidator,
+	outreachOutcomeValidator,
+	outreachProvenanceValidator,
+	outreachVariantsValidator,
+	revokedReasonValidator,
+	suppressedReasonValidator,
+} from "./outreach/validators";
 
 // =============================================================
 // XOLACE BETA
@@ -221,6 +237,52 @@ export default defineSchema({
 	}).index("by_artKey", ["artKey"]),
 
 	// ===========================================================
+	// OUTREACH CHANNELS (#760, #763)
+	// ===========================================================
+	//
+	// A chat a user linked on a channel (Telegram first). One row per
+	// (channel, externalId): a relink reactivates it. Push has no row here.
+	// Written by the link lifecycle; read by the outreach router.
+	//
+	channel_identities: defineTable({
+		awaitingReflection: v.optional(
+			v.object({ cardId: v.id("follow_up_cards"), until: v.number() })
+		),
+		channel: outreachChannelValidator,
+		country: v.optional(v.string()),
+		// Shown only to the user; never to PostHog or admin.
+		displayHandle: v.optional(v.string()),
+		emotionalProfileId: v.id("emotional_profiles"),
+		// A string: Telegram ids are 64-bit.
+		externalId: v.string(),
+		lastInboundAt: v.optional(v.number()),
+		linkedAt: v.number(),
+		revokedAt: v.optional(v.number()),
+		revokedReason: v.optional(revokedReasonValidator),
+		status: identityStatusValidator,
+		telegramUserId: v.optional(v.string()),
+		tokenIdentifier: v.string(),
+		// Reserved for WhatsApp's 24 h window.
+		windowExpiresAt: v.optional(v.number()),
+	})
+		.index("by_channel_external", ["channel", "externalId"])
+		.index("by_profile_channel", ["emotionalProfileId", "channel"])
+		.index("by_status_revokedAt", ["status", "revokedAt"]),
+
+	// A minted link token. Only the SHA-256 is stored; 15-minute TTL, one use.
+	channel_link_tokens: defineTable({
+		channel: outreachChannelValidator,
+		consentLanguageVersion: v.optional(v.string()),
+		emotionalProfileId: v.id("emotional_profiles"),
+		expiresAt: v.number(),
+		regionCode: v.optional(v.string()),
+		tokenHash: v.string(),
+		usedAt: v.optional(v.number()),
+	})
+		.index("by_hash", ["tokenHash"])
+		.index("by_profile_channel", ["emotionalProfileId", "channel"]),
+
+	// ===========================================================
 	// CHAT MODERATION VERDICTS (#344)
 	// ===========================================================
 	//
@@ -344,7 +406,8 @@ export default defineSchema({
 			v.literal("pattern_analysis"),
 			v.literal("anonymized_research"),
 			v.literal("voice_processing"), // Phase 2
-			v.literal("therapy_summary_sharing") // Phase 3
+			v.literal("therapy_summary_sharing"), // Phase 3
+			v.literal("telegram_outreach") // Linking Telegram (#760)
 		),
 
 		createdAt: v.number(),
@@ -1292,6 +1355,21 @@ export default defineSchema({
 		target: v.union(v.literal("library"), v.literal("audio")),
 	}).index("by_number", ["number"]),
 
+	// One row per provider update a channel's webhook received (Telegram
+	// first), deduped on (channel, providerEventId). Payload text is stripped
+	// once processed; rows are deleted after 30 days.
+	inbound_events: defineTable({
+		channel: outreachChannelValidator,
+		externalId: v.string(),
+		payload: v.any(),
+		providerEventId: v.string(),
+		receivedAt: v.number(),
+		status: inboundStatusValidator,
+	})
+		.index("by_channel_event", ["channel", "providerEventId"])
+		.index("by_status_received", ["status", "receivedAt"])
+		.index("by_received", ["receivedAt"]),
+
 	// Intent-only premium teaser waitlist. During the pre-billing phase, tapping a
 	// blurred insight teaser records a "notify me" intent here (no price, no IAP).
 	// One row per profile per feature; idempotent on re-tap.
@@ -1613,6 +1691,10 @@ export default defineSchema({
 			)
 		),
 
+		// The outreach this push delivered (ADR 0001). Absent on rows written
+		// before the outreach layer.
+		outreachId: v.optional(v.id("outreach")),
+
 		// Whether session/pattern data was available at generation time.
 		patternContextUsed: v.optional(v.boolean()),
 
@@ -1672,6 +1754,71 @@ export default defineSchema({
 
 		// Per-user Reach effectiveness queries (Phase 2 learning layer).
 		.index("by_profile_and_reach", ["emotionalProfileId", "reachUsed"]),
+
+	// ===========================================================
+	// OUTREACH (#760, #763)
+	// ===========================================================
+	//
+	// One row per `outreach.enqueue` call: the record of everything Xolace
+	// sends a user outside the app, suppressions included. `notification_log`
+	// stays as push's compatibility record only (ADR 0001).
+	//
+	outreach: defineTable({
+		answeredAt: v.optional(v.number()),
+		content: outreachContentValidator,
+		createdAt: v.number(),
+		dedupeKey: v.optional(v.string()),
+		emotionalProfileId: v.id("emotional_profiles"),
+		followUpId: v.optional(v.id("follow_up_cards")),
+		intent: outreachIntentValidator,
+		outcome: outreachOutcomeValidator,
+		provenance: outreachProvenanceValidator,
+		resultedInSession: v.optional(v.boolean()),
+		// Quiet-window deferral: delivery runs at this time.
+		sendAt: v.optional(v.number()),
+		suppressedReason: v.optional(suppressedReasonValidator),
+		tier: v.optional(followUpTierValidator),
+		variants: v.optional(outreachVariantsValidator),
+	})
+		.index("by_dedupe", ["dedupeKey"])
+		.index("by_profile_created", ["emotionalProfileId", "createdAt"])
+		.index("by_follow_up", ["followUpId"]),
+
+	// A channel's config: the kill switch and its plan. A missing row means
+	// the coded default (convex/outreach/channels.ts). Written only by
+	// convex/admin/outreachChannels.ts.
+	outreach_channels: defineTable({
+		channel: outreachChannelValidator,
+		enabled: v.boolean(),
+		plan: channelPlanValidator,
+		updatedAt: v.number(),
+		updatedBy: v.optional(v.string()),
+	}).index("by_channel", ["channel"]),
+
+	// One attempt to land an outreach on one channel.
+	outreach_deliveries: defineTable({
+		attempts: v.number(),
+		channel: outreachChannelValidator,
+		createdAt: v.number(),
+		// The ChannelError kind and a provider code; never raw provider text.
+		error: v.optional(
+			v.object({
+				code: v.optional(v.string()),
+				kind: channelErrorKindValidator,
+			})
+		),
+		finishedAt: v.optional(v.number()),
+		isFallback: v.boolean(),
+		// Push: the compatibility row this delivery wrote.
+		notificationLogId: v.optional(v.id("notification_log")),
+		outreachId: v.id("outreach"),
+		providerChatId: v.optional(v.string()),
+		providerMessageId: v.optional(v.string()),
+		sentAt: v.optional(v.number()),
+		status: deliveryStatusValidator,
+		// The workpool item carrying it, so a reroute can cancel it.
+		workId: v.optional(v.string()),
+	}).index("by_outreach", ["outreachId"]),
 
 	path_steps: defineTable({
 		actionType: v.string(), // catalog key
@@ -1798,6 +1945,9 @@ export default defineSchema({
 			// Badge pushes (#700). Optional; absent follows `milestone` — see
 			// `achievementPushAllowed` (convex/achievements/push.ts).
 			achievement: v.optional(v.boolean()),
+			// Which channel the outreach layer tries first, then next. Absent
+			// means [push]. Written only on linking or "Try this first".
+			channelOrder: v.optional(v.array(outreachChannelValidator)),
 			// Xolacer chat: requests, accepts, declines, messages. Optional because
 			// every row written before it existed has to keep working, and absent
 			// means enabled — see `chatNotificationsAllowed`. One toggle for the
@@ -2875,7 +3025,10 @@ export default defineSchema({
 		.index("by_token", ["tokenIdentifier"])
 
 		// Find accounts pending deletion for the purge job.
-		.index("by_deletion", ["accountStatus", "deletionRequestedAt"]),
+		.index("by_deletion", ["accountStatus", "deletionRequestedAt"])
+
+		// Account status from a profile (the outreach router's deletion gate).
+		.index("by_emotional_profile", ["emotionalProfileId"]),
 
 	// ===========================================================
 	// XOLACE CHANNEL CACHE (#376)
