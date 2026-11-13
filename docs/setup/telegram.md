@@ -62,7 +62,8 @@ BotFather (`/revoke`), set the new one and run `configureBot` again.
      `message`, `callback_query`, `my_chat_member`, and `drop_pending_updates: false`;
    - generates a fresh secret and stores its hash plus the bot's `getMe` username;
    - sets the bot's name, description, short description and its `/help` command
-     from `convex/outreach/telegram/copy.ts` (`/stop` joins once it unlinks, #767).
+     from `convex/outreach/telegram/copy.ts`. `/stop` is set per chat when it links
+     and removed when it unlinks.
 5. Message the bot. As a stranger (no linked Xolace account) you get the fixed reply
    once; another message within 24 h gets nothing.
 
@@ -81,6 +82,14 @@ returns `https://t.me/<bot>?start=<token>` (one use, 15 minutes, 10 mints an hou
 opening it sends `/start <token>` to the bot, which links the chat and answers with the
 welcome line. A bad, used or expired token gets the "This link has expired" line. The
 token is never stored or logged: the webhook keeps only its SHA-256.
+
+A link ends from either side: **Unlink** in the app (goodbye line), `/stop` in the chat,
+blocking the bot, or any 403 on a send. Each leaves the row `revoked` with its reason
+and appends a consent `revoked` row; the app shows "disconnected". **Pause** in the app
+stops outreach but the chat can still write to the bot. Linking the same chat from
+another account, or a new chat from the same account, moves the link and tells the old
+side. A daily cron (`purge revoked telegram links`) deletes revoked rows 30 days after
+they were revoked; after that the chat is a stranger again.
 
 ## Drift check
 

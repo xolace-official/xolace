@@ -10,6 +10,7 @@ import {
 	DEFAULT_CHANNEL_ORDER,
 } from "./channels";
 import { telegramConfigured } from "./telegram/bot";
+import { identitiesOf } from "./telegram/lifecycle";
 import type {
 	FollowUpTier,
 	IneligibilityReason,
@@ -30,9 +31,6 @@ export const ESCALATION_HOLD_MS = 72 * HOUR;
 
 /** 30 days with no session: the dormancy hold (docs/paths-v1.md §10). */
 export const INACTIVE_THRESHOLD_MS = 30 * 24 * HOUR;
-
-/** A profile has a handful of rows per channel at most (one per linked chat). */
-const MAX_IDENTITIES_PER_CHANNEL = 10;
 
 /** Statuses a follow-up card is still open in. Superseded stays visible. */
 const UNRESOLVED_CARD_STATUSES = [
@@ -270,16 +268,7 @@ export async function channelIneligibility(
 		return notifications?.enabled ? null : "push_off";
 	}
 
-	// A relink leaves the old chat's row revoked beside the new one, so look
-	// at every row rather than the first.
-	const identities = await ctx.db
-		.query("channel_identities")
-		.withIndex("by_profile_channel", (q) =>
-			q
-				.eq("emotionalProfileId", input.emotionalProfileId)
-				.eq("channel", channel)
-		)
-		.take(MAX_IDENTITIES_PER_CHANNEL);
+	const identities = await identitiesOf(ctx, input.emotionalProfileId, channel);
 	if (identities.some((identity) => identity.status === "active")) {
 		return null;
 	}

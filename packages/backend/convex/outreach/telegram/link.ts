@@ -12,6 +12,14 @@ import { countryFromRegion, putChannelFirst } from "../channels";
 import { channelUnavailable } from "../router";
 import { configuredBot } from "./bot";
 import { sha256Hex } from "./botApi";
+import {
+	FALLBACK_CONSENT_VERSION,
+	grantConsent,
+	identitiesOf,
+	identityOfChat,
+	revokeIdentity,
+} from "./lifecycle";
+import type { Line } from "./lines";
 
 /**
  * Linking a Telegram chat to a Xolace account (#766). The app mints a
@@ -120,19 +128,19 @@ export const createLink = action({
 	returns: v.string(),
 });
 
-/** Consent wording when a token predates `consentLanguageVersion`. */
-const FALLBACK_CONSENT_VERSION = "1.0";
-
 /**
- * Redeem a `/start <token>` in a private chat, in the caller's transaction.
- * A good token is marked used, the chat's identity is upserted `active`,
- * Telegram goes first in the channel order, a `telegram_outreach` consent is
- * granted and gentle return is turned on (by merge; nothing else changes).
- * Anything else (unknown, expired, used, an account no longer active)
- * changes nothing and returns false.
+ * Redeem a `/start <token>` in a private chat, in the caller's transaction,
+ * and return the lines to send; null when the token isn't good (unknown,
+ * expired, used, an account no longer active), with nothing changed.
  *
- * Moving a chat between accounts and retiring an account's older chat
- * (`relinked`) come with #767; here a relink just reactivates the one row.
+ * A good token is marked used, the chat's one row is made `active` for the
+ * token's account (inserted, reactivated or moved), Telegram goes first in
+ * the channel order, a `telegram_outreach` consent is granted and gentle
+ * return is turned on (by merge; nothing else changes).
+ *
+ * Latest link wins both ways (#767): a chat live for another account is
+ * revoked `relinked` there and moves here (the chat is told it moved); this
+ * account's other live chats are revoked `relinked` and told.
  */
 export async function redeemLinkToken(
 	ctx: MutationCtx,
@@ -142,7 +150,7 @@ export async function redeemLinkToken(
 		telegramUserId?: string;
 		tokenHash: string;
 	}
-): Promise<boolean> {
+): Promise<Line[] | null> {
 	const now = Date.now();
 	const token = await ctx.db
 		.query("channel_link_tokens")
@@ -154,7 +162,7 @@ export async function redeemLinkToken(
 		token.usedAt !== undefined ||
 		token.expiresAt <= now
 	) {
-		return false;
+		return null;
 	}
 	const { emotionalProfileId } = token;
 	const user = await ctx.db
@@ -164,9 +172,20 @@ export async function redeemLinkToken(
 		)
 		.first();
 	if (user?.accountStatus !== "active") {
-		return false;
+		return null;
 	}
 	await ctx.db.patch("channel_link_tokens", token._id, { usedAt: now });
+
+	const lines: Line[] = [];
+	// This account's other chats: the newest link is its only one.
+	for (const other of await identitiesOf(ctx, emotionalProfileId, "telegram")) {
+		if (
+			other.externalId !== args.chatId &&
+			(await revokeIdentity(ctx, other, "relinked"))
+		) {
+			lines.push({ chatId: other.externalId, kind: "old_chat" });
+		}
+	}
 
 	const fields = {
 		emotionalProfileId,
@@ -177,12 +196,12 @@ export async function redeemLinkToken(
 		...(args.displayHandle && { displayHandle: args.displayHandle }),
 		...(args.telegramUserId && { telegramUserId: args.telegramUserId }),
 	};
-	const existing = await ctx.db
-		.query("channel_identities")
-		.withIndex("by_channel_external", (q) =>
-			q.eq("channel", "telegram").eq("externalId", args.chatId)
-		)
-		.first();
+	const existing = await identityOfChat(ctx, args.chatId);
+	// This chat, live for another account: it leaves that account.
+	const moved =
+		existing !== null &&
+		existing.emotionalProfileId !== emotionalProfileId &&
+		(await revokeIdentity(ctx, existing, "relinked"));
 	if (existing) {
 		await ctx.db.patch("channel_identities", existing._id, {
 			// A handle removed since the last link goes with it.
@@ -199,19 +218,17 @@ export async function redeemLinkToken(
 		});
 	}
 
-	await ctx.db.insert("consent_records", {
-		consentLanguageVersion:
-			token.consentLanguageVersion ?? FALLBACK_CONSENT_VERSION,
-		consentType: "telegram_outreach",
-		createdAt: now,
+	await grantConsent(
+		ctx,
 		emotionalProfileId,
-		grantedAt: now,
-		status: "granted",
-	});
-
+		token.consentLanguageVersion ?? FALLBACK_CONSENT_VERSION
+	);
 	await putChannelFirst(ctx, emotionalProfileId, "telegram");
 	await updateNotificationPrefs(ctx, emotionalProfileId, {
 		gentleReturn: true,
 	});
-	return true;
+	return [
+		{ chatId: args.chatId, kind: moved ? "relinked" : "welcome" },
+		...lines,
+	];
 }

@@ -1,5 +1,6 @@
 import { ConvexError, type Infer, v } from "convex/values";
-import type { Doc, Id } from "../_generated/dataModel";
+import { internal } from "../_generated/api";
+import type { Doc } from "../_generated/dataModel";
 import { mutation, type QueryCtx, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
 import {
@@ -10,6 +11,7 @@ import {
 } from "./channels";
 import { channelUnavailable, loadNotifications } from "./router";
 import { telegramConfigured } from "./telegram/bot";
+import { identitiesOf, isLive, revokeIdentity } from "./telegram/lifecycle";
 import {
 	type OutreachChannel,
 	outreachChannelValidator,
@@ -18,12 +20,9 @@ import {
 
 /**
  * The client contract behind "Reach me on…" (#766, plan §9): which channels
- * this person has, in their order, and choosing which comes first. Linking
- * itself is `telegram/link:createLink`.
+ * this person has, in their order, choosing which comes first, pausing and
+ * unlinking (#767). Linking itself is `telegram/link:createLink`.
  */
-
-/** A profile has a handful of rows per channel at most (one per linked chat). */
-const MAX_IDENTITIES_PER_CHANNEL = 10;
 
 const channelStatusValidator = v.union(
 	v.literal("linked"),
@@ -51,19 +50,6 @@ type ChannelEntry = Infer<typeof channelEntryValidator>;
 
 /** Every channel a deployment can offer, in the default display order. */
 const ALL_CHANNELS: readonly OutreachChannel[] = ["push", "telegram"];
-
-async function identitiesOf(
-	ctx: QueryCtx,
-	emotionalProfileId: Id<"emotional_profiles">,
-	channel: OutreachChannel
-): Promise<Doc<"channel_identities">[]> {
-	return await ctx.db
-		.query("channel_identities")
-		.withIndex("by_profile_channel", (q) =>
-			q.eq("emotionalProfileId", emotionalProfileId).eq("channel", channel)
-		)
-		.take(MAX_IDENTITIES_PER_CHANNEL);
-}
 
 /** The live link: an active row, else a paused one. */
 function currentLink(identities: Doc<"channel_identities">[]) {
@@ -193,8 +179,73 @@ export const refreshCountry = mutation({
 			return null;
 		}
 		for (const identity of await identitiesOf(ctx, profile._id, "telegram")) {
-			if (identity.status !== "revoked" && identity.country !== country) {
+			if (isLive(identity) && identity.country !== country) {
 				await ctx.db.patch("channel_identities", identity._id, { country });
+			}
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** Push is the app itself: it can't be paused or unlinked here. */
+function linkableChannel(channel: OutreachChannel): "telegram" {
+	if (channel === "push") {
+		throw new ConvexError({ channel, code: "channel_not_linkable" });
+	}
+	return channel;
+}
+
+/**
+ * Unlink a channel from the app: every live link is revoked `user_app` and
+ * its chat gets one goodbye. Unlinking what isn't linked does nothing.
+ */
+export const unlinkChannel = mutation({
+	args: { channel: outreachChannelValidator },
+	handler: async (ctx, { channel }) => {
+		const { profile } = await requireAuth(ctx);
+		const identities = await identitiesOf(
+			ctx,
+			profile._id,
+			linkableChannel(channel)
+		);
+		const chats: string[] = [];
+		for (const identity of identities) {
+			if (await revokeIdentity(ctx, identity, "user_app")) {
+				chats.push(identity.externalId);
+			}
+		}
+		if (chats.length > 0) {
+			await ctx.scheduler.runAfter(0, internal.outreach.telegram.lines.send, {
+				lines: chats.map((chatId) => ({
+					chatId,
+					kind: "goodbye_app" as const,
+				})),
+			});
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Pause or resume a linked channel. Paused, nothing is sent there, but the
+ * person can still write to the bot. `channel_not_linked` with no live link.
+ */
+export const setChannelPaused = mutation({
+	args: { channel: outreachChannelValidator, paused: v.boolean() },
+	handler: async (ctx, { channel, paused }) => {
+		const { profile } = await requireAuth(ctx);
+		const live = (
+			await identitiesOf(ctx, profile._id, linkableChannel(channel))
+		).filter(isLive);
+		if (live.length === 0) {
+			throw new ConvexError({ channel, code: "channel_not_linked" });
+		}
+		const status = paused ? "paused" : "active";
+		for (const identity of live) {
+			if (identity.status !== status) {
+				await ctx.db.patch("channel_identities", identity._id, { status });
 			}
 		}
 		return null;

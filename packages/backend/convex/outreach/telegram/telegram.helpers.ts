@@ -7,8 +7,12 @@
 import workpoolTest from "@convex-dev/workpool/test";
 import { afterEach, beforeEach, vi } from "vitest";
 import rateLimiterSchema from "../../../node_modules/@convex-dev/rate-limiter/src/component/schema";
-import { internal } from "../../_generated/api";
-import { asUnauthed } from "../../test/harness.helpers";
+import { api, internal } from "../../_generated/api";
+import {
+	asAdmin,
+	asUnauthed,
+	type SeededUser,
+} from "../../test/harness.helpers";
 import { SECRET_HEADER, TELEGRAM_WEBHOOK_PATH } from "./botApi";
 
 const rateLimiterModules = import.meta.glob(
@@ -26,7 +30,16 @@ export const STRANGER_CHAT = 4_242_424_242;
 
 type BotCall = { method: string; params: Record<string, unknown> };
 const calls: BotCall[] = [];
-const live = { webhookInfo: {} as Record<string, unknown> };
+const live = {
+	/** Chats every call to which Telegram refuses with a 403 (blocked). */
+	blockedChats: new Set<string>(),
+	webhookInfo: {} as Record<string, unknown>,
+};
+
+/** From now on, Telegram answers 403 to any call naming this chat. */
+export function blockChat(chatId: number | string) {
+	live.blockedChats.add(String(chatId));
+}
 
 /** What `getWebhookInfo` answers next. */
 export function setWebhookInfo(info: Record<string, unknown>) {
@@ -38,6 +51,17 @@ function botApiStub(input: RequestInfo | URL, init?: RequestInit) {
 	const method = url.slice(url.lastIndexOf("/") + 1);
 	const params = init?.body ? JSON.parse(String(init.body)) : {};
 	calls.push({ method, params });
+	if (live.blockedChats.has(String(params.chat_id))) {
+		return Promise.resolve(
+			new Response(
+				JSON.stringify({
+					description: "Forbidden: bot was blocked by the user",
+					error_code: 403,
+					ok: false,
+				})
+			)
+		);
+	}
 	const results: Record<string, unknown> = {
 		getMe: {
 			first_name: "Xolace",
@@ -67,6 +91,7 @@ export function stubTelegramEachTest() {
 		vi.useFakeTimers();
 		vi.setSystemTime(NOW);
 		forgetCalls();
+		live.blockedChats.clear();
 		setWebhookInfo({ pending_update_count: 0, url: WEBHOOK_URL });
 		vi.stubGlobal("fetch", vi.fn(botApiStub));
 		process.env.TELEGRAM_BOT_TOKEN = "123456:test-token";
@@ -127,4 +152,103 @@ export async function processSoon(t: Backend) {
 		vi.advanceTimersByTime(SECOND);
 		await t.finishInProgressScheduledFunctions();
 	}
+}
+
+export const LINK =
+	/^https:\/\/t\.me\/xolace_dev_bot\?start=([A-Za-z0-9_-]{43})$/;
+
+export const setTelegram = (
+	user: SeededUser,
+	config: { enabled: boolean; plan: "free" | "plus" }
+) =>
+	asAdmin(9, user.root).mutation(api.admin.outreachChannels.setChannelConfig, {
+		channel: "telegram",
+		...config,
+	});
+
+export const createLink = (user: SeededUser) =>
+	user.t.action(api.outreach.telegram.link.createLink, {
+		consentLanguageVersion: "telegram-1",
+		regionCode: "gh",
+	});
+
+export const tokenOf = (link: string) => {
+	const token = LINK.exec(link)?.[1];
+	if (!token) {
+		throw new Error(`not a link: ${link}`);
+	}
+	return token;
+};
+
+/** `/start <token>` from a private chat, the way Telegram sends a deep link. */
+export function startUpdate(
+	token: string,
+	chatId = STRANGER_CHAT,
+	username?: string
+) {
+	const update = messageUpdate(chatId, `/start ${token}`);
+	return {
+		...update,
+		message: {
+			...update.message,
+			from: { ...update.message.from, ...(username && { username }) },
+		},
+	};
+}
+
+export async function start(
+	user: SeededUser,
+	secret: string,
+	token: string,
+	chatId = STRANGER_CHAT
+) {
+	await post(user.root, startUpdate(token, chatId, "sam_t"), secret);
+	await processSoon(user.root);
+}
+
+export const notifications = (user: SeededUser) =>
+	user.root.run(
+		async (ctx) =>
+			(
+				await ctx.db
+					.query("preferences")
+					.withIndex("by_profile", (q) =>
+						q.eq("emotionalProfileId", user.profileId)
+					)
+					.unique()
+			)?.notifications
+	);
+
+/** The user's Telegram rows, whatever their status. */
+export const identities = (user: SeededUser) =>
+	user.root.run((ctx) =>
+		ctx.db
+			.query("channel_identities")
+			.withIndex("by_profile_channel", (q) =>
+				q.eq("emotionalProfileId", user.profileId).eq("channel", "telegram")
+			)
+			.take(10)
+	);
+
+export const consents = (user: SeededUser) =>
+	user.root.run((ctx) =>
+		ctx.db
+			.query("consent_records")
+			.withIndex("by_profile_type", (q) =>
+				q
+					.eq("emotionalProfileId", user.profileId)
+					.eq("consentType", "telegram_outreach")
+			)
+			.take(10)
+	);
+
+export const replies = () => sent("sendMessage").map((c) => c.params.text);
+
+/** Mint a link and redeem it from `chatId`: the whole link flow. */
+export async function linkChat(
+	user: SeededUser,
+	secret: string,
+	chatId = STRANGER_CHAT
+) {
+	await start(user, secret, tokenOf(await createLink(user)), chatId);
 }

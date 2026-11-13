@@ -16,6 +16,29 @@ export const EXPIRED_LINK_REPLY =
 export const WELCOME =
 	"You're linked 👋\nThis is where Xolace will check in on you: a short message with a few buttons. Tap an answer, or just write back.\n\nTelegram shows previews on your lock screen, so the first line of every message stays general.\n\nTo stop, send /stop or unlink in Xolace → Reach me on…";
 
+/** Sent to the chat when it's unlinked from the app (#767). */
+export const GOODBYE_APP =
+	"Unlinked. You won't get check-ins here. You can link again in Xolace anytime.";
+
+/** The reply to `/stop` in a linked chat (#767). */
+export const STOP_REPLY =
+	"Stopped. This chat is no longer linked, and you won't get check-ins here.\nTo link again, open Xolace → Reach me on…";
+
+/** `/help` in a linked chat (#767). */
+export const HELP =
+	"I'm Xolace's check-in bot. When Xolace checks in, it happens here: tap an answer or write back.\n/stop unlinks this chat.";
+
+/** A chat already linked to one account is linked by another (#767). */
+export const RELINKED =
+	"This chat now gets check-ins for the Xolace account you just linked.";
+
+/** An account linked a new chat; this, its old one, is told (#767). */
+export const OLD_CHAT = "No longer linked to Xolace.";
+
+/** A chat whose link was revoked writes to the bot (#767). */
+export const REVOKED_REPLY =
+	"This chat isn't linked to Xolace anymore. To link it again, open Xolace → Reach me on… for a fresh link.\n\nIf you're in danger right now, call your local emergency number.";
+
 /** The commands a linked chat sees, set for that chat when it links. */
 export const LINKED_COMMANDS = [
 	{ command: "stop", description: "Unlink this chat from Xolace" },
@@ -24,10 +47,8 @@ export const LINKED_COMMANDS = [
 
 /** The bot's profile, set by `configureBot`. */
 export const BOT_PROFILE = {
-	commands: [
-		// `/stop` joins when it unlinks (#767).
-		{ command: "help", description: "What this bot does" },
-	],
+	// `/stop` is set per linked chat (`LINKED_COMMANDS`), never here.
+	commands: [{ command: "help", description: "What this bot does" }],
 	description:
 		"Xolace's check-in bot. Link it from the Xolace app (Settings → Reach me on…) and check-ins arrive here: tap an answer or write back.\n\nIf you're in danger right now, call your local emergency number.",
 	name: "Xolace",

@@ -12,26 +12,31 @@
 import { describe, expect, it, vi } from "vitest";
 import { api } from "../../_generated/api";
 import { expectCode } from "../../test/fixtures.helpers";
-import {
-	asAdmin,
-	asNewUser,
-	type SeededUser,
-} from "../../test/harness.helpers";
+import { asNewUser, type SeededUser } from "../../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../../test/mocks.helpers";
 import { sha256Hex } from "./botApi";
 import { EXPIRED_LINK_REPLY, LINKED_COMMANDS, WELCOME } from "./copy";
 import {
 	backend,
 	configure,
+	consents,
+	createLink,
 	events,
 	forgetCalls,
 	HOUR,
+	identities,
 	messageUpdate,
+	notifications,
 	post,
 	processSoon,
+	replies,
 	STRANGER_CHAT,
 	sent,
+	setTelegram,
+	start,
+	startUpdate,
 	stubTelegramEachTest,
+	tokenOf,
 } from "./telegram.helpers";
 
 const h = vi.hoisted(() => ({ plus: false }));
@@ -40,8 +45,6 @@ vi.mock("../../lib/aggregates", () => aggregatesMock());
 vi.mock("../../revenuecat", () => revenuecatMock(() => h.plus));
 
 stubTelegramEachTest();
-
-const LINK = /^https:\/\/t\.me\/xolace_dev_bot\?start=([A-Za-z0-9_-]{43})$/;
 
 /** A signed-in user on a deployment with a bot, Telegram switched on. */
 async function linkable(plan: "free" | "plus" = "free") {
@@ -53,81 +56,6 @@ async function linkable(plan: "free" | "plus" = "free") {
 	forgetCalls();
 	return { secret, user };
 }
-
-const setTelegram = (
-	user: SeededUser,
-	config: { enabled: boolean; plan: "free" | "plus" }
-) =>
-	asAdmin(9, user.root).mutation(api.admin.outreachChannels.setChannelConfig, {
-		channel: "telegram",
-		...config,
-	});
-
-const createLink = (user: SeededUser) =>
-	user.t.action(api.outreach.telegram.link.createLink, {
-		consentLanguageVersion: "telegram-1",
-		regionCode: "gh",
-	});
-
-const tokenOf = (link: string) => {
-	const token = LINK.exec(link)?.[1];
-	if (!token) {
-		throw new Error(`not a link: ${link}`);
-	}
-	return token;
-};
-
-/** `/start <token>` from a private chat, the way Telegram sends a deep link. */
-function startUpdate(token: string, chatId = STRANGER_CHAT, username?: string) {
-	const update = messageUpdate(chatId, `/start ${token}`);
-	return {
-		...update,
-		message: {
-			...update.message,
-			from: { ...update.message.from, ...(username && { username }) },
-		},
-	};
-}
-
-async function start(
-	user: SeededUser,
-	secret: string,
-	token: string,
-	chatId = STRANGER_CHAT
-) {
-	await post(user.root, startUpdate(token, chatId, "sam_t"), secret);
-	await processSoon(user.root);
-}
-
-const notifications = (user: SeededUser) =>
-	user.root.run(
-		async (ctx) =>
-			(
-				await ctx.db
-					.query("preferences")
-					.withIndex("by_profile", (q) =>
-						q.eq("emotionalProfileId", user.profileId)
-					)
-					.unique()
-			)?.notifications
-	);
-
-const identities = (user: SeededUser) =>
-	user.root.run((ctx) => ctx.db.query("channel_identities").take(10));
-
-const consents = (user: SeededUser) =>
-	user.root.run((ctx) =>
-		ctx.db
-			.query("consent_records")
-			.withIndex("by_profile_type", (q) =>
-				q
-					.eq("emotionalProfileId", user.profileId)
-					.eq("consentType", "telegram_outreach")
-			)
-			.take(10)
-	);
-
-const replies = () => sent("sendMessage").map((c) => c.params.text);
 
 describe("createLink", () => {
 	it("returns a t.me link and stores only the token's hash", async () => {

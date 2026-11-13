@@ -621,6 +621,48 @@ describe("channel config", () => {
 		expect(h.pushes).toHaveLength(0);
 	});
 
+	it("routes past a paused Telegram, and back once it's resumed (#767)", async () => {
+		const user = await reachable();
+		await linkTelegram(user, ["telegram", "push"]);
+		await user.t.mutation(api.outreach.reachMe.setChannelPaused, {
+			channel: "telegram",
+			paused: true,
+		});
+		await enqueue(user);
+		await drain(user);
+		expect(h.telegram.sends).toHaveLength(0);
+		expect(h.pushes).toHaveLength(1);
+
+		vi.advanceTimersByTime(DAY);
+		await user.t.mutation(api.outreach.reachMe.setChannelPaused, {
+			channel: "telegram",
+			paused: false,
+		});
+		await enqueue(user);
+		await drain(user);
+		expect(h.telegram.sends).toHaveLength(1);
+	});
+
+	it("never routes to a revoked Telegram (#767)", async () => {
+		const user = await reachable();
+		await linkTelegram(user, ["telegram", "push"]);
+		await user.root.run(async (ctx) => {
+			for (const identity of await ctx.db
+				.query("channel_identities")
+				.take(10)) {
+				await ctx.db.patch("channel_identities", identity._id, {
+					revokedAt: Date.now(),
+					revokedReason: "blocked",
+					status: "revoked",
+				});
+			}
+		});
+		await enqueue(user);
+		await drain(user);
+		expect(h.telegram.sends).toHaveLength(0);
+		expect(h.pushes).toHaveLength(1);
+	});
+
 	it("keeps push-only intents off Telegram", async () => {
 		const user = await reachable();
 		await linkTelegram(user, ["telegram", "push"]);

@@ -138,4 +138,13 @@ crons.interval(
 	{}
 );
 
+// Revoked Telegram links are deleted 30 days after revokedAt (#767); the chat
+// is a stranger again after that.
+crons.interval(
+	"purge revoked telegram links",
+	{ hours: 24 },
+	internal.outreach.telegram.lifecycle.purgeRevoked,
+	{}
+);
+
 export default crons;
