@@ -48,6 +48,8 @@ import {
 const stub = vi.hoisted(() => ({
 	/** Every reply-writer call: its system prompt and turn. */
 	asked: [] as { system: string; user: string }[],
+	/** Runs while the reply is being written, as another transaction would. */
+	duringReply: undefined as (() => Promise<unknown>) | undefined,
 	/** Reading the memory preload throws. */
 	memoryFails: false,
 	moderation: null as unknown,
@@ -103,6 +105,7 @@ vi.mock("../../ai/providers/anthropic", async (orig) => ({
 					system: body.system,
 					user: body.messages[0]?.content ?? "",
 				});
+				await stub.duringReply?.();
 				const next = stub.queue.shift() ?? stub.reply;
 				if (next instanceof Error) {
 					throw next;
@@ -131,6 +134,7 @@ const ELEVATED: ModerationResult = {
 stubTelegramEachTest();
 beforeEach(() => {
 	stub.asked = [];
+	stub.duringReply = undefined;
 	stub.memoryFails = false;
 	stub.moderation = CLEAN;
 	stub.queue = [];
@@ -393,6 +397,55 @@ describe("a reply to free text", () => {
 		expect(stub.asked).toHaveLength(0);
 		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
 		expect(buttonTexts()).toContain(SUPPORT_RESOURCES_BUTTON);
+	});
+
+	it("sends nothing when the link ends while the reply is written", async () => {
+		const { user, write } = await checkedIn();
+		stub.duringReply = () =>
+			user.root.run(async (ctx) => {
+				const [identity] = await ctx.db.query("channel_identities").take(1);
+				if (identity) {
+					await ctx.db.patch("channel_identities", identity._id, {
+						revokedAt: Date.now(),
+						revokedReason: "user_telegram",
+						status: "revoked",
+					});
+				}
+			});
+
+		await write("Long day");
+
+		expect(sentMessages()).toHaveLength(0);
+		expect((await identities(user))[0]?.recentTurns).toBeUndefined();
+	});
+
+	it("sends nothing to a chat relinked while the reply is written", async () => {
+		const { user, write } = await checkedIn();
+		stub.duringReply = () =>
+			user.root.run(async (ctx) => {
+				const [identity] = await ctx.db.query("channel_identities").take(1);
+				if (identity) {
+					await ctx.db.patch("channel_identities", identity._id, {
+						linkedAt: identity.linkedAt + 1,
+					});
+				}
+			});
+
+		await write("Long day");
+
+		expect(sentMessages()).toHaveLength(0);
+	});
+
+	it("drops the recent turns a day later, with no further message", async () => {
+		const { user, write } = await checkedIn();
+		await write("Long day");
+		expect((await identities(user))[0]?.recentTurns).toHaveLength(2);
+
+		vi.advanceTimersByTime(24 * 60 * 60 * 1000 + 1);
+		await user.root.finishInProgressScheduledFunctions();
+		await processSoon(user.root);
+
+		expect((await identities(user))[0]?.recentTurns).toBeUndefined();
 	});
 
 	it("tries once more when a reply breaks its shape, then fails", async () => {

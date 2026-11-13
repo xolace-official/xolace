@@ -62,6 +62,11 @@ const tapAnswerValidator = v.union(
 export const replyJobValidator = v.object({
 	chatId: v.string(),
 	identityId: v.id("channel_identities"),
+	/**
+	 * The link this reply is for. A relink reuses the chat's row (another
+	 * account, even), so the row's id alone can't tell an old link from a new.
+	 */
+	linkedAt: v.number(),
 	trigger: v.union(
 		v.object({
 			answer: tapAnswerValidator,
@@ -134,6 +139,24 @@ const asReplyCard = (card: Doc<"follow_up_cards">): ReplyCard => ({
 		isTapAnswer(card.userResponse) && { answer: card.userResponse }),
 });
 
+/** The link a reply was claimed for, still live and not relinked since. */
+const isLinkOf = (
+	identity: Doc<"channel_identities"> | null,
+	linkedAt: number
+): identity is Doc<"channel_identities"> =>
+	identity !== null && isLive(identity) && identity.linkedAt === linkedAt;
+
+/** Whether a reply may still go: its link is live and unchanged. */
+export const isCurrentLink = internalQuery({
+	args: { identityId: v.id("channel_identities"), linkedAt: v.number() },
+	handler: async (ctx, args) =>
+		isLinkOf(
+			await ctx.db.get("channel_identities", args.identityId),
+			args.linkedAt
+		),
+	returns: v.boolean(),
+});
+
 /** A turn is context only while it's recent. */
 const recentTurns = (identity: Doc<"channel_identities">, now: number) =>
 	(identity.recentTurns ?? []).filter((t) => t.at > now - TURNS_TTL_MS);
@@ -143,10 +166,13 @@ export const replyContext = internalQuery({
 	args: {
 		cardId: v.optional(v.id("follow_up_cards")),
 		identityId: v.id("channel_identities"),
+		linkedAt: v.number(),
+		/** The action's clock: a query never reads its own. */
+		now: v.number(),
 	},
 	handler: async (ctx, args) => {
 		const identity = await ctx.db.get("channel_identities", args.identityId);
-		if (!(identity && isLive(identity))) {
+		if (!isLinkOf(identity, args.linkedAt)) {
 			return null;
 		}
 		const profile = await ctx.db.get(
@@ -167,7 +193,7 @@ export const replyContext = internalQuery({
 			.query("preferences")
 			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
 			.unique();
-		const now = Date.now();
+		const { now } = args;
 		return {
 			card: card ? asReplyCard(card) : null,
 			memory: (await talkPreload(ctx, profile, now)).talkMemory,
@@ -194,11 +220,12 @@ export const saveReflection = internalMutation({
 	args: {
 		cardId: v.id("follow_up_cards"),
 		identityId: v.id("channel_identities"),
+		linkedAt: v.number(),
 		text: v.string(),
 	},
 	handler: async (ctx, args) => {
 		const identity = await ctx.db.get("channel_identities", args.identityId);
-		if (!(identity && isLive(identity))) {
+		if (!isLinkOf(identity, args.linkedAt)) {
 			return null;
 		}
 		const existing = await ctx.db
@@ -229,11 +256,12 @@ export const saveReflection = internalMutation({
 export const rememberTurns = internalMutation({
 	args: {
 		identityId: v.id("channel_identities"),
+		linkedAt: v.number(),
 		turns: v.array(turnValidator),
 	},
 	handler: async (ctx, args) => {
 		const identity = await ctx.db.get("channel_identities", args.identityId);
-		if (!(identity && isLive(identity))) {
+		if (!isLinkOf(identity, args.linkedAt)) {
 			return null;
 		}
 		const now = Date.now();
@@ -245,6 +273,31 @@ export const rememberTurns = internalMutation({
 		await ctx.db.patch("channel_identities", identity._id, {
 			recentTurns: [...recentTurns(identity, now), ...added].slice(-TURNS_KEPT),
 		});
+		// Nothing outlives its day, even if no message ever comes again.
+		await ctx.scheduler.runAfter(
+			TURNS_TTL_MS,
+			internal.outreach.telegram.reply.expireTurns,
+			{ identityId: identity._id }
+		);
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** Drop a chat's turns older than a day. */
+export const expireTurns = internalMutation({
+	args: { identityId: v.id("channel_identities") },
+	handler: async (ctx, { identityId }) => {
+		const identity = await ctx.db.get("channel_identities", identityId);
+		if (!identity?.recentTurns) {
+			return null;
+		}
+		const kept = recentTurns(identity, Date.now());
+		if (kept.length < identity.recentTurns.length) {
+			await ctx.db.patch("channel_identities", identityId, {
+				recentTurns: kept.length > 0 ? kept : undefined,
+			});
+		}
 		return null;
 	},
 	returns: v.null(),
@@ -265,13 +318,25 @@ function keyboardOf(buttons: { open: boolean; support: boolean }): Keyboard {
 	return rows;
 }
 
-/** Send one reply, `protect_content` always. A 403 ends the link. */
+/**
+ * Send one reply, `protect_content` always, and only while the link it was
+ * claimed for is live and unchanged: a `/stop`, a block or a relink to
+ * another account can land while the model writes. A 403 ends that link.
+ */
 async function sendReply(
 	ctx: ActionCtx,
-	chatId: string,
+	job: ReplyJob,
 	text: string,
 	keyboard: Keyboard
 ): Promise<boolean> {
+	const { chatId, identityId, linkedAt } = job;
+	const current = await ctx.runQuery(
+		internal.outreach.telegram.reply.isCurrentLink,
+		{ identityId, linkedAt }
+	);
+	if (!current) {
+		return false;
+	}
 	try {
 		await botApi.sendMessage({
 			chat_id: chatId,
@@ -286,7 +351,7 @@ async function sendReply(
 		if (error instanceof TelegramApiError && error.errorCode === FORBIDDEN) {
 			await ctx.runMutation(
 				internal.outreach.telegram.lifecycle.markUnreachable,
-				{ chatId }
+				{ chatId, linkedAt }
 			);
 		} else {
 			console.error("Telegram reply failed", error);
@@ -332,7 +397,7 @@ export async function respond(ctx: ActionCtx, job: ReplyJob): Promise<void> {
 	} catch (error) {
 		console.error("[telegram] reply failed", error);
 		if (!progress.sent) {
-			await sendFailureLine(ctx, job.chatId, progress.support);
+			await sendFailureLine(ctx, job, progress.support);
 		}
 	}
 }
@@ -349,7 +414,7 @@ type Progress = { sent: boolean; support: boolean };
  */
 async function sendFailureLine(
 	ctx: ActionCtx,
-	chatId: string,
+	job: ReplyJob,
 	support: boolean
 ): Promise<void> {
 	let keyboard: Keyboard = [];
@@ -358,7 +423,7 @@ async function sendFailureLine(
 	} catch (error) {
 		console.error("[telegram] no app link for the failure line", error);
 	}
-	await sendReply(ctx, chatId, REPLY_FAILED, keyboard);
+	await sendReply(ctx, job, REPLY_FAILED, keyboard);
 }
 
 async function reply(
@@ -366,10 +431,10 @@ async function reply(
 	job: ReplyJob,
 	progress: Progress
 ): Promise<void> {
-	const { chatId, identityId, trigger } = job;
+	const { chatId, identityId, linkedAt, trigger } = job;
 	const send = async (text: string, keyboard: Keyboard) => {
 		progress.sent = true;
-		return await sendReply(ctx, chatId, text, keyboard);
+		return await sendReply(ctx, job, text, keyboard);
 	};
 	await typing(chatId);
 
@@ -400,6 +465,7 @@ async function reply(
 			await ctx.runMutation(internal.outreach.telegram.reply.saveReflection, {
 				cardId: trigger.reflectionCardId,
 				identityId,
+				linkedAt,
 				text,
 			});
 		}
@@ -412,6 +478,8 @@ async function reply(
 		internal.outreach.telegram.reply.replyContext,
 		{
 			identityId,
+			linkedAt,
+			now: Date.now(),
 			...(trigger.kind === "tap" && { cardId: trigger.cardId }),
 		}
 	);
@@ -434,6 +502,7 @@ async function reply(
 	if (sent) {
 		await ctx.runMutation(internal.outreach.telegram.reply.rememberTurns, {
 			identityId,
+			linkedAt,
 			turns: [
 				{ role: "person", text: person },
 				{ role: "xolace", text: written },

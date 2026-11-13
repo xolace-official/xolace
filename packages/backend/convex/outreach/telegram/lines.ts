@@ -40,6 +40,8 @@ const lineKindValidator = v.union(
 export const lineValidator = v.object({
 	chatId: v.string(),
 	kind: lineKindValidator,
+	/** For a line to a linked chat: that link's `linkedAt`, so a late 403 can't end a newer link. */
+	linkedAt: v.optional(v.number()),
 });
 export type Line = Infer<typeof lineValidator>;
 
@@ -78,7 +80,7 @@ async function sendLine(ctx: ActionCtx, line: Line): Promise<void> {
 			if (LINES[line.kind].toLinkedChat) {
 				await ctx.runMutation(
 					internal.outreach.telegram.lifecycle.markUnreachable,
-					{ chatId: line.chatId }
+					{ chatId: line.chatId, linkedAt: line.linkedAt }
 				);
 			}
 			return;

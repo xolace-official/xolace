@@ -116,6 +116,7 @@ export const claimUpdate = internalMutation({
 				job = {
 					chatId,
 					identityId: identity._id,
+					linkedAt: identity.linkedAt,
 					trigger: {
 						answer: answered.response,
 						cardId: answered.cardId,
@@ -186,7 +187,9 @@ export const claimUpdate = internalMutation({
 				return await close("processed", [{ chatId, kind: "stop" }]);
 			}
 			if (command === "help") {
-				return await close("processed", [{ chatId, kind: "help" }]);
+				return await close("processed", [
+					{ chatId, kind: "help", linkedAt: identity.linkedAt },
+				]);
 			}
 			const text = message.text?.trim();
 			if (!text) {
@@ -202,6 +205,7 @@ export const claimUpdate = internalMutation({
 			return await close("processed", [], undefined, {
 				chatId,
 				identityId: identity._id,
+				linkedAt: identity.linkedAt,
 				trigger: {
 					kind: "text",
 					text,
@@ -242,14 +246,35 @@ export const processUpdate = internalAction({
 			internal.outreach.telegram.inbound.claimUpdate,
 			{ eventId }
 		);
-		if (reply.callback) {
-			// First, so the button stops spinning.
-			await answerTap(reply.callback);
-		}
-		await editMessages(ctx, reply.edits);
-		await sendLines(ctx, reply.lines);
-		if (reply.respond) {
-			await respond(ctx, reply.respond);
+		// The claim has committed and stripped the payload, so a pool retry
+		// would find nothing to do: from here no step may throw past the next.
+		const steps: [string, () => Promise<void>][] = [
+			// The toast first, so the button stops spinning.
+			[
+				"tap",
+				async () => {
+					if (reply.callback) {
+						await answerTap(reply.callback);
+					}
+				},
+			],
+			["edits", () => editMessages(ctx, reply.edits)],
+			["lines", () => sendLines(ctx, reply.lines)],
+			[
+				"reply",
+				async () => {
+					if (reply.respond) {
+						await respond(ctx, reply.respond);
+					}
+				},
+			],
+		];
+		for (const [name, step] of steps) {
+			try {
+				await step();
+			} catch (error) {
+				console.error(`[telegram] inbound ${name} failed`, error);
+			}
 		}
 		return null;
 	},

@@ -130,6 +130,18 @@ describe("unlinkChannel", () => {
 		expect(replies()).toEqual([GOODBYE_APP]);
 	});
 
+	it("a late 403 for an older link of the chat leaves the current link alone", async () => {
+		const { user } = await linked();
+		const [identity] = await identities(user);
+
+		await user.root.mutation(
+			internal.outreach.telegram.lifecycle.markUnreachable,
+			{ chatId: CHAT, linkedAt: (identity?.linkedAt ?? 0) - 1 }
+		);
+
+		expect((await identities(user))[0]?.status).toBe("active");
+	});
+
 	it("does nothing a second time, and refuses push", async () => {
 		const { user } = await linked();
 		await unlink(user);

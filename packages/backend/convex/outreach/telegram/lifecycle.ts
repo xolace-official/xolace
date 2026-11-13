@@ -152,10 +152,20 @@ export async function revokeIdentity(
  * chat is gone): the link is revoked `unreachable`.
  */
 export const markUnreachable = internalMutation({
-	args: { chatId: v.string() },
-	handler: async (ctx, { chatId }) => {
+	args: {
+		chatId: v.string(),
+		/**
+		 * The link the failed send was for. A relink reuses the chat's row with a
+		 * new `linkedAt`; a 403 for the old link must not end the new one.
+		 */
+		linkedAt: v.optional(v.number()),
+	},
+	handler: async (ctx, { chatId, linkedAt }) => {
 		const identity = await identityOfChat(ctx, chatId);
-		if (identity) {
+		if (
+			identity &&
+			(linkedAt === undefined || identity.linkedAt === linkedAt)
+		) {
 			await revokeIdentity(ctx, identity, "unreachable");
 		}
 		return null;

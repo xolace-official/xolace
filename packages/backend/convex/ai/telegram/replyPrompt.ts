@@ -155,19 +155,65 @@ export function buildReplyPrompt(input: ReplyInput): ReplyPrompt {
 
 const WRAPPING_QUOTES = /^["'“”‘’]+|["'“”‘’]+$/g;
 
-/** Each life area as a whole word, for the first-line check. */
-const DOMAIN_WORD = new Map(
-	DOMAINS.map((d) => [d, new RegExp(`\\b${d}\\b`, "i")])
+/** Every life area, by key and label, as whole words. */
+const LIFE_AREA = new RegExp(
+	`\\b(${[
+		...DOMAINS,
+		...DOMAINS.flatMap((d) => DOMAIN_LABELS[d].toLowerCase().split(/\W+/)),
+	]
+		.filter((w) => w.length > 2)
+		.join("|")})\\b`,
+	"i"
 );
+/** A day, a month or a time: never on the lock screen. */
+const WHEN =
+	/\b(mon|tues?|wed(nes)?|thu(rs)?|fri|sat(ur)?|sun)(day)?s?\b|\b(today|tonight|yesterday|tomorrow|morning|evening|weekend|jan(uary)?|feb(ruary)?|march|april|june|july|aug(ust)?|sept?(ember)?|oct(ober)?|nov(ember)?|dec(ember)?)\b|\d|\b(am|pm)\b/i;
+/** Words of their own a first line may share: the general kind it's made of. */
+const GENERAL_WORDS = new Set([
+	"about",
+	"being",
+	"really",
+	"right",
+	"sharing",
+	"sounds",
+	"still",
+	"thank",
+	"thanks",
+	"there",
+	"these",
+	"those",
+	"telling",
+	"where",
+	"which",
+	"while",
+]);
+/** Their words that would say something on a lock screen. */
+const telling = (text: string) =>
+	(text.toLowerCase().match(/[a-z']{5,}/g) ?? []).filter(
+		(w) => !GENERAL_WORDS.has(w)
+	);
+
+/**
+ * Whether a first line is general enough for the lock screen: no life area,
+ * no day or time, and none of the card's or their own telling words.
+ */
+export function isGeneralLine(line: string, privateTexts: readonly string[]) {
+	if (LIFE_AREA.test(line) || WHEN.test(line)) {
+		return false;
+	}
+	const own = new Set(privateTexts.flatMap(telling));
+	return !telling(line).some((w) => own.has(w));
+}
 
 /**
  * A model reply as it goes out, or null when it breaks the rules code can
- * check: one line only, the first line too long or naming the card's life
- * area, quiet not two lines, or the whole too long.
+ * check: one line only, the first line too long or not general (a life
+ * area, a day or time, the card's or their own words), quiet not two lines,
+ * or the whole too long.
  */
 export function shapeReply(
 	raw: string,
-	rules: { domain?: Domain; reach: Reach }
+	rules: { reach: Reach; private?: readonly string[] }
 ): string | null {
 	const lines = raw
 		.replace(WRAPPING_QUOTES, "")
@@ -178,7 +224,7 @@ export function shapeReply(
 	if (!first || first.length > FIRST_LINE_MAX_CHARS) {
 		return null;
 	}
-	if (rules.domain && DOMAIN_WORD.get(rules.domain)?.test(first)) {
+	if (!isGeneralLine(first, rules.private ?? [])) {
 		return null;
 	}
 	// The first line stands alone; quiet is exactly it and one more.

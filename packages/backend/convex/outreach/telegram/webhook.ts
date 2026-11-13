@@ -12,21 +12,65 @@ import { constantTimeEqual, SECRET_HEADER, sha256Hex } from "./botApi";
  * whatever it didn't get.
  */
 
+type Fields = Record<string, unknown>;
+
+const isObject = (value: unknown): value is Fields =>
+	typeof value === "object" && value !== null;
+
+/** Absent, or the given type. */
+const optional = (value: unknown, type: "number" | "string") =>
+	value === undefined || typeof value === type;
+
+/** A chat or a user: an object with a numeric `id`. */
+const hasId = (value: unknown) =>
+	isObject(value) && typeof value.id === "number";
+
+/** A message, as far as anything here reads it. */
+const isMessage = (value: unknown) =>
+	isObject(value) &&
+	hasId(value.chat) &&
+	optional(value.text, "string") &&
+	(value.from === undefined || hasId(value.from));
+
+/** Each update kind this bot handles, checked on the fields it reads. */
+function wellFormed(update: Fields): boolean {
+	if (update.message !== undefined && !isMessage(update.message)) {
+		return false;
+	}
+	const tap = update.callback_query;
+	if (
+		tap !== undefined &&
+		!(
+			isObject(tap) &&
+			typeof tap.id === "string" &&
+			hasId(tap.from) &&
+			optional(tap.data, "string") &&
+			(tap.message === undefined || isMessage(tap.message))
+		)
+	) {
+		return false;
+	}
+	const member = update.my_chat_member;
+	return (
+		member === undefined ||
+		(isObject(member) &&
+			hasId(member.chat) &&
+			isObject(member.new_chat_member) &&
+			typeof member.new_chat_member.status === "string")
+	);
+}
+
 /**
- * An update as Telegram sent it, or null when it isn't one. Only `update_id`
- * is checked; the rest is Telegram's documented shape.
+ * An update as Telegram sent it, or null when it isn't one: `update_id`, and
+ * every field this bot reads on the kinds it handles, narrowed before use.
  */
 export function asUpdate(value: unknown): TelegramUpdate | null {
-	if (
-		typeof value === "object" &&
-		value !== null &&
-		"update_id" in value &&
-		typeof value.update_id === "number"
-	) {
-		return value as TelegramUpdate;
-	}
-	return null;
+	return isUpdate(value) ? value : null;
 }
+
+/** The checks behind {@link asUpdate}, as a guard. */
+const isUpdate = (value: unknown): value is TelegramUpdate =>
+	isObject(value) && typeof value.update_id === "number" && wellFormed(value);
 
 /** What an `inbound_events` row keeps once nothing more is needed from it. */
 export function strippedPayload(updateId: number) {

@@ -39,7 +39,10 @@ describe("buildReplyPrompt", () => {
 });
 
 describe("shapeReply", () => {
-	const rules = { domain: "work" as const, reach: "warm" as const };
+	const rules = {
+		private: ["The review at work left me rattled", "Work has been a lot."],
+		reach: "warm" as const,
+	};
 
 	it("keeps a short general first line and the rest", () => {
 		expect(shapeReply('"Good to hear.\n\nWhat helped?"', rules)).toBe(
@@ -56,6 +59,19 @@ describe("shapeReply", () => {
 		expect(shapeReply("Good to hear.\nWork sounds lighter.", rules)).toBe(
 			"Good to hear.\nWork sounds lighter."
 		);
+	});
+
+	it("refuses a first line that names a day, a time, a life area or their words", () => {
+		for (const first of [
+			"Tuesday's review left you rattled.",
+			"Rough morning, then.",
+			"Since 9 this has been heavy.",
+			"Money sounds tight.",
+			"Still rattled, I hear you.",
+		]) {
+			expect(shapeReply(`${first}\nWhat helped?`, rules)).toBeNull();
+		}
+		expect(shapeReply("Thanks for telling me.\nMore?", rules)).not.toBeNull();
 	});
 
 	it("holds quiet to exactly two lines", () => {

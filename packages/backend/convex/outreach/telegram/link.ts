@@ -228,7 +228,11 @@ export async function redeemLinkToken(
 		gentleReturn: true,
 	});
 	return [
-		{ chatId: args.chatId, kind: moved ? "relinked" : "welcome" },
+		{
+			chatId: args.chatId,
+			kind: moved ? "relinked" : "welcome",
+			linkedAt: now,
+		},
 		...lines,
 	];
 }

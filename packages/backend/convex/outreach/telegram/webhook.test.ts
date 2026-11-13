@@ -82,4 +82,19 @@ describe("webhook intake", () => {
 		expect((await post(t, { hello: "world" }, secret)).status).toBe(200);
 		expect(await events(t)).toHaveLength(0);
 	});
+
+	it.each([
+		{ message: { chat: { id: 1, type: "private" }, text: 123 }, update_id: 1 },
+		{ message: { text: "hi" }, update_id: 2 },
+		{ callback_query: { data: "a", from: {}, id: "c" }, update_id: 3 },
+		{ my_chat_member: { chat: { id: 1 } }, update_id: 4 },
+	])(
+		"drops an update whose fields aren't Telegram's shape (%#)",
+		async (body) => {
+			const t = backend();
+			const secret = await configure(t);
+			expect((await post(t, body, secret)).status).toBe(200);
+			expect(await events(t)).toHaveLength(0);
+		}
+	);
 });
