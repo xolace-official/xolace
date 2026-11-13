@@ -184,6 +184,7 @@ import type * as lib_claimStrength from "../lib/claimStrength.js";
 import type * as lib_cohortCard from "../lib/cohortCard.js";
 import type * as lib_conversationErasure from "../lib/conversationErasure.js";
 import type * as lib_conversationGating from "../lib/conversationGating.js";
+import type * as lib_crisisResources from "../lib/crisisResources.js";
 import type * as lib_displayName from "../lib/displayName.js";
 import type * as lib_followUpCadence from "../lib/followUpCadence.js";
 import type * as lib_missedBeat from "../lib/missedBeat.js";
@@ -461,6 +462,7 @@ declare const fullApi: ApiFromModules<{
   "lib/cohortCard": typeof lib_cohortCard;
   "lib/conversationErasure": typeof lib_conversationErasure;
   "lib/conversationGating": typeof lib_conversationGating;
+  "lib/crisisResources": typeof lib_crisisResources;
   "lib/displayName": typeof lib_displayName;
   "lib/followUpCadence": typeof lib_followUpCadence;
   "lib/missedBeat": typeof lib_missedBeat;

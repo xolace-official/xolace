@@ -1,10 +1,10 @@
+import type { Resource } from "@xolace/backend/convex/lib/crisisResources";
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { MessageSystem, type MessageSystemProps } from "stream-chat-expo";
 import { AppText } from "@/components/shared/app-text";
 import { ResourceItem } from "@/components/shared/resource-item";
-import type { Resource } from "@/features/crisis-resources/types";
 import { useConversationIdentity } from "./message-author";
 
 /** Mirrors `CRISIS_RESOURCES_KIND` in `convex/ai/chat/moderate.ts`. */
