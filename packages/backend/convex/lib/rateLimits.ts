@@ -168,6 +168,15 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 	// the shared bucket would swallow the milestone. Cadence caps it anyway.
 	streakMilestone: { kind: "fixed window", period: DAY, rate: 1 },
 
+	// A chat with no linked account gets the fixed stranger reply at most once
+	// per 24 h (#765), keyed by chat id.
+	telegramStrangerReply: {
+		capacity: 1,
+		kind: "token bucket",
+		period: DAY,
+		rate: 1,
+	},
+
 	// Xolacer suggestion (#570) — each call embeds the session via OpenAI. Fired
 	// on every close-offer mount and xolacer twig tap; a normal day is a handful.
 	// Past it the action falls back to the free ranker rather than failing.

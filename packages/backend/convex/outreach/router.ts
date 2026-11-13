@@ -218,7 +218,7 @@ export async function channelIneligibility(
 		return "intent_not_allowed";
 	}
 	const adapter = ADAPTERS[channel];
-	if (!adapter?.configured()) {
+	if (!(adapter && (await adapter.configured(ctx)))) {
 		return "not_configured";
 	}
 	const config = await channelConfig(ctx, channel);

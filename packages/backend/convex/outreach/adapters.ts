@@ -1,6 +1,6 @@
 import type { Workpool } from "@convex-dev/workpool";
 import type { Doc } from "../_generated/dataModel";
-import type { MutationCtx } from "../_generated/server";
+import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { outreachPushPool } from "./pools";
 import { pushAdapter } from "./push";
 import type { ChannelErrorKind, OutreachChannel } from "./validators";
@@ -17,7 +17,7 @@ export type ChannelAdapter = {
 	/** `pull` (the client fetches, e.g. a CLI) is reserved; none is built. */
 	deliveryMode: "push" | "pull";
 	/** Whether this deployment can use the channel at all (a bot token…). */
-	configured: () => boolean;
+	configured: (ctx: QueryCtx) => boolean | Promise<boolean>;
 	pool: Workpool;
 	send: (
 		ctx: MutationCtx,

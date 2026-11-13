@@ -39,6 +39,8 @@ app.use(credits);
 // Outreach deliveries (#760), one pool per channel; reached only through
 // convex/outreach/pools.ts.
 app.use(workpool, { name: "outreachPush" });
+// Telegram webhook updates (#765), reached only through convex/outreach/pools.ts.
+app.use(workpool, { name: "telegramInbound" });
 app.use(posthog, {
 	env: {
 		POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS:

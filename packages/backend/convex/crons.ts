@@ -129,4 +129,13 @@ crons.cron(
 	{ cursor: null }
 );
 
+// Telegram webhook drift (#765): logs an error when the bot points elsewhere,
+// errors or backs up. Never re-points it; does nothing on a deployment with no bot.
+crons.interval(
+	"check telegram webhook",
+	{ hours: 24 },
+	internal.outreach.telegram.bot.checkWebhook,
+	{}
+);
+
 export default crons;

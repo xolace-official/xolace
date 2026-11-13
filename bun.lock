@@ -258,6 +258,7 @@
         "@convex-dev/rate-limiter": "^0.3.2",
         "@convex-dev/workflow": "^0.4.6",
         "@convex-dev/workpool": "^0.4.15",
+        "@gramio/types": "^10.3.1",
         "@posthog/convex": "^2.1.3",
         "ai": "catalog:",
         "convex": "catalog:",
@@ -854,6 +855,8 @@
     "@gorhom/bottom-sheet": ["@gorhom/bottom-sheet@5.2.14", "", { "dependencies": { "@gorhom/portal": "1.0.14", "invariant": "^2.2.4" }, "peerDependencies": { "@types/react": "*", "@types/react-native": "*", "react": "*", "react-native": "*", "react-native-gesture-handler": ">=2.16.1", "react-native-reanimated": ">=3.16.0 || >=4.0.0-" }, "optionalPeers": ["@types/react", "@types/react-native"] }, "sha512-uLQFlDjp9z+jrOFcMSEldPqL5JdaXL3vXOh+juhwoNvXgTsEorJLjHTugXu+YccAG/0KJnShzKCrb71MHBsvJg=="],
 
     "@gorhom/portal": ["@gorhom/portal@1.0.14", "", { "dependencies": { "nanoid": "^3.3.1" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-MXyL4xvCjmgaORr/rtryDNFy3kU4qUbKlwtQqqsygd0xX3mhKjOLn6mQK8wfu0RkoE0pBE0nAasRoHua+/QZ7A=="],
+
+    "@gramio/types": ["@gramio/types@10.3.1", "", {}, "sha512-K4q9QRMSpHc+B73Vxvf/Xhcbw4VlCoWH2fCUcUWT378yGvpo1i89CqOysj1ZEr4u4LdefPKxVF6b6JDVw9TYDA=="],
 
     "@hono/node-server": ["@hono/node-server@2.1.5", "", { "peerDependencies": { "hono": "^4 || ^5.0.0-0" } }, "sha512-MgP/I06GdvsilDspMk/qmRzpk8LOUStP6jFAbSRi40W09DhoyUn+Mj7eyKICPqeYKybOjVFLVIAQzvu1bfIa7Q=="],
 

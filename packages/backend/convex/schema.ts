@@ -2922,6 +2922,19 @@ export default defineSchema({
 		text: v.string(),
 	}).index("by_session_and_seq", ["sessionId", "seq"]),
 
+	// This deployment's Telegram bot (#765): a single row, absent on a
+	// deployment with no bot. Written by outreach/telegram/bot.ts's
+	// `configureBot` (run by hand), plus the drift cron's last pending count.
+	telegram_bot: defineTable({
+		configuredAt: v.number(),
+		// What the daily drift check last saw, to tell a growing backlog.
+		lastPendingUpdateCount: v.optional(v.number()),
+		// SHA-256 of the webhook `secret_token`; the secret itself is never stored.
+		secretHash: v.string(),
+		// From `getMe`, without the `@`.
+		username: v.string(),
+	}),
+
 	// Topic decoration (#353): a shared topic suffix (`sadness`) may carry its
 	// own cover and display title for the Browse topic grid. One row per slug
 	// across both families; membership stays "≥ 1 active track" — a row here

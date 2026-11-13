@@ -87,4 +87,7 @@ The backend deploys before app-store review clears, so the *old* app runs agains
   `setup:worktree` never symlinks it, so a worktree can't overwrite the main one's.
 - `auth.config.ts` must accept Clerk session JWTs (`aud=convex`) and, from Phase 4,
   Clerk OAuth ID tokens; both resolve to the same `tokenIdentifier`.
+- Telegram (`convex/outreach/telegram/`): `TELEGRAM_BOT_TOKEN` is per deployment and
+  `outreach/telegram/bot:configureBot` is run by hand, never on deploy. Your worktree's
+  dev deployment has no bot unless you make one. Runbook: `docs/setup/telegram.md`.
 - Codegen drift fails CI: commit `convex/_generated` changes with the code.

@@ -1,5 +1,7 @@
 import { httpRouter } from "convex/server";
 import { chatCompletions } from "./ai/talk/chatCompletions";
+import { TELEGRAM_WEBHOOK_PATH } from "./outreach/telegram/botApi";
+import { telegramWebhook } from "./outreach/telegram/webhook";
 import { revenuecat } from "./revenuecat";
 import { streamEvents } from "./streamWebhook";
 import { postCallWebhook } from "./talk/provider";
@@ -29,6 +31,14 @@ http.route({
 	handler: postCallWebhook,
 	method: "POST",
 	path: "/webhooks/elevenlabs",
+});
+
+// Telegram bot updates (#765). Checks X-Telegram-Bot-Api-Secret-Token against
+// the hash `configureBot` stored, and answers 401 on a deployment with no bot.
+http.route({
+	handler: telegramWebhook,
+	method: "POST",
+	path: TELEGRAM_WEBHOOK_PATH,
 });
 
 // Mounts POST /webhooks/revenuecat — the component verifies the
