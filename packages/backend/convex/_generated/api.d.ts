@@ -105,6 +105,8 @@ import type * as ai_talk_turn from "../ai/talk/turn.js";
 import type * as ai_talkDemo_prompt from "../ai/talkDemo/prompt.js";
 import type * as ai_talkDemo_reply from "../ai/talkDemo/reply.js";
 import type * as ai_talkDemo_replying from "../ai/talkDemo/replying.js";
+import type * as ai_telegram_reply from "../ai/telegram/reply.js";
+import type * as ai_telegram_replyPrompt from "../ai/telegram/replyPrompt.js";
 import type * as ai_transcribe from "../ai/transcribe.js";
 import type * as ai_tts from "../ai/tts.js";
 import type * as ai_ventAcknowledge from "../ai/ventAcknowledge.js";
@@ -249,6 +251,7 @@ import type * as outreach_telegram_inbound from "../outreach/telegram/inbound.js
 import type * as outreach_telegram_lifecycle from "../outreach/telegram/lifecycle.js";
 import type * as outreach_telegram_lines from "../outreach/telegram/lines.js";
 import type * as outreach_telegram_link from "../outreach/telegram/link.js";
+import type * as outreach_telegram_reply from "../outreach/telegram/reply.js";
 import type * as outreach_telegram_webhook from "../outreach/telegram/webhook.js";
 import type * as outreach_validators from "../outreach/validators.js";
 import type * as paths from "../paths.js";
@@ -407,6 +410,8 @@ declare const fullApi: ApiFromModules<{
   "ai/talkDemo/prompt": typeof ai_talkDemo_prompt;
   "ai/talkDemo/reply": typeof ai_talkDemo_reply;
   "ai/talkDemo/replying": typeof ai_talkDemo_replying;
+  "ai/telegram/reply": typeof ai_telegram_reply;
+  "ai/telegram/replyPrompt": typeof ai_telegram_replyPrompt;
   "ai/transcribe": typeof ai_transcribe;
   "ai/tts": typeof ai_tts;
   "ai/ventAcknowledge": typeof ai_ventAcknowledge;
@@ -551,6 +556,7 @@ declare const fullApi: ApiFromModules<{
   "outreach/telegram/lifecycle": typeof outreach_telegram_lifecycle;
   "outreach/telegram/lines": typeof outreach_telegram_lines;
   "outreach/telegram/link": typeof outreach_telegram_link;
+  "outreach/telegram/reply": typeof outreach_telegram_reply;
   "outreach/telegram/webhook": typeof outreach_telegram_webhook;
   "outreach/validators": typeof outreach_validators;
   paths: typeof paths;

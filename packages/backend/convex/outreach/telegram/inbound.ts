@@ -15,6 +15,12 @@ import {
 import { identityOfChat, isLive, revokeIdentity } from "./lifecycle";
 import { type Line, lineValidator, sendLines } from "./lines";
 import { redeemLinkToken } from "./link";
+import {
+	type ReplyJob,
+	reflectionWindow,
+	replyJobValidator,
+	respond,
+} from "./reply";
 import { asUpdate, strippedPayload } from "./webhook";
 
 /**
@@ -24,8 +30,8 @@ import { asUpdate, strippedPayload } from "./webhook";
  * (#767). A chat with no linked identity gets one fixed reply per 24 h, a
  * revoked one its own; no safeguard, no escalation and no text kept. A
  * check-in's "What was this about?" edits it in place (#768), and an answer
- * button resolves its follow-up (#769). Replies arrive with their own ticket
- * and are left `ignored` until then.
+ * button resolves its follow-up (#769). The answer and any other text from
+ * a linked chat get an AI reply (#770), sent after the claim commits.
  */
 
 /** `/stop` or `/help`, bare or as `/stop@bot`, with anything after it. */
@@ -39,6 +45,8 @@ const replyValidator = v.object({
 	),
 	edits: v.array(editValidator),
 	lines: v.array(lineValidator),
+	/** An AI reply to write and send (#770). */
+	respond: v.optional(replyJobValidator),
 });
 type Reply = Infer<typeof replyValidator>;
 
@@ -61,7 +69,8 @@ export const claimUpdate = internalMutation({
 		const close = async (
 			status: "ignored" | "processed",
 			lines: Line[],
-			tap?: { callback: Reply["callback"]; edits: Edit[] }
+			tap?: { callback?: Reply["callback"]; edits: Edit[] },
+			respondWith?: ReplyJob
 		): Promise<Reply> => {
 			await ctx.db.patch("inbound_events", eventId, {
 				linkTokenHash: undefined,
@@ -72,6 +81,7 @@ export const claimUpdate = internalMutation({
 				edits: tap?.edits ?? [],
 				lines,
 				...(tap?.callback && { callback: tap.callback }),
+				...(respondWith && { respond: respondWith }),
 			};
 		};
 
@@ -92,15 +102,44 @@ export const claimUpdate = internalMutation({
 						? await reveal(ctx, target)
 						: await answer(ctx, { ...target, response: parsed.action });
 			}
+			const { answered } = reply;
+			let job: ReplyJob | undefined;
+			if (identity && answered) {
+				// Lighter opens the "what helped" window; any other answer closes it.
+				await ctx.db.patch("channel_identities", identity._id, {
+					awaitingReflection: reflectionWindow(
+						answered.response,
+						answered.cardId,
+						Date.now()
+					),
+				});
+				job = {
+					chatId,
+					identityId: identity._id,
+					trigger: {
+						answer: answered.response,
+						cardId: answered.cardId,
+						kind: "tap",
+					},
+				};
+			}
 			// Forged, foreign or repeated taps change nothing: `ignored`.
-			const acted = reply.toast !== undefined || reply.edits.length > 0;
-			return await close(acted ? "processed" : "ignored", [], {
-				callback: {
-					id: tap.id,
-					...(reply.toast && { toast: reply.toast }),
+			const acted =
+				job !== undefined ||
+				reply.toast !== undefined ||
+				reply.edits.length > 0;
+			return await close(
+				acted ? "processed" : "ignored",
+				[],
+				{
+					callback: {
+						id: tap.id,
+						...(reply.toast && { toast: reply.toast }),
+					},
+					edits: reply.edits,
 				},
-				edits: reply.edits,
-			});
+				job
+			);
 		}
 
 		// Blocking the bot. Unblocking changes nothing: it never relinks.
@@ -149,7 +188,27 @@ export const claimUpdate = internalMutation({
 			if (command === "help") {
 				return await close("processed", [{ chatId, kind: "help" }]);
 			}
-			return await close("ignored", []);
+			const text = message.text?.trim();
+			if (!text) {
+				return await close("ignored", []);
+			}
+			// Only the next text inside a Lighter's window can be what helped.
+			const now = Date.now();
+			const window = identity.awaitingReflection;
+			await ctx.db.patch("channel_identities", identity._id, {
+				awaitingReflection: undefined,
+				lastInboundAt: now,
+			});
+			return await close("processed", [], undefined, {
+				chatId,
+				identityId: identity._id,
+				trigger: {
+					kind: "text",
+					text,
+					...(window &&
+						window.until > now && { reflectionCardId: window.cardId }),
+				},
+			});
 		}
 
 		// A stranger, or a chat whose link was revoked: one line a day.
@@ -189,6 +248,9 @@ export const processUpdate = internalAction({
 		}
 		await editMessages(ctx, reply.edits);
 		await sendLines(ctx, reply.lines);
+		if (reply.respond) {
+			await respond(ctx, reply.respond);
+		}
 		return null;
 	},
 	returns: v.null(),

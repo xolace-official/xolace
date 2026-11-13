@@ -257,6 +257,17 @@ export default defineSchema({
 		externalId: v.string(),
 		lastInboundAt: v.optional(v.number()),
 		linkedAt: v.number(),
+		// The last few messages each way, for the next AI reply's context
+		// (#770). Kept 24 h at most, and dropped when the link ends.
+		recentTurns: v.optional(
+			v.array(
+				v.object({
+					at: v.number(),
+					role: v.union(v.literal("person"), v.literal("xolace")),
+					text: v.string(),
+				})
+			)
+		),
 		revokedAt: v.optional(v.number()),
 		revokedReason: v.optional(revokedReasonValidator),
 		status: identityStatusValidator,

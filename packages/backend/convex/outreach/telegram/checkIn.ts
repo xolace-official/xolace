@@ -379,8 +379,15 @@ export async function collapseChat(
 // "What was this about?"
 // ---------------------------------------------------------------------------
 
-/** What a tap needs sent: edits to its messages, and its toast if any. */
-export type TapReply = { edits: Edit[]; toast?: string };
+/**
+ * What a tap needs sent: edits to its messages, its toast if any, and the
+ * card it answered, when it did (an AI reply follows, #770).
+ */
+export type TapReply = {
+	answered?: { cardId: Id<"follow_up_cards">; response: AnswerAction };
+	edits: Edit[];
+	toast?: string;
+};
 
 export const NO_REPLY: TapReply = { edits: [] };
 

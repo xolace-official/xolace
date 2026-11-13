@@ -25,6 +25,9 @@ import {
 } from "./telegram.helpers";
 
 vi.mock("../../lib/aggregates", () => aggregatesMock());
+vi.mock("../../ai/telegram/reply", () => ({
+	writeReply: async () => "Thanks for writing.\nWhat's on your mind?",
+}));
 
 stubTelegramEachTest();
 
@@ -80,8 +83,11 @@ describe("strangers", () => {
 		await post(t, messageUpdate(), secret);
 		await processSoon(t);
 
-		expect(sent("sendMessage")).toHaveLength(0);
-		expect((await events(t))[0]?.status).toBe("ignored");
+		// Answered by the AI reply (#770), never the stranger line.
+		expect(sent("sendMessage").map((c) => c.params.text)).not.toContain(
+			STRANGER_REPLY
+		);
+		expect((await events(t))[0]?.status).toBe("processed");
 	});
 
 	it("get no reply in a group chat", async () => {

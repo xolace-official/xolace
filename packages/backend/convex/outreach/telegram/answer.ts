@@ -11,11 +11,7 @@ import {
 	tappedCheckIn,
 	tierOf,
 } from "./checkIn";
-import {
-	ALREADY_ANSWERED_TOAST,
-	ANSWERED_TOAST,
-	CHECK_IN_CLOSED_TOAST,
-} from "./copy";
+import { ALREADY_ANSWERED_TOAST, CHECK_IN_CLOSED_TOAST } from "./copy";
 
 /**
  * Answering a check-in by tapping in Telegram (#769). Only the answers the
@@ -63,7 +59,11 @@ export async function answer(
 	});
 	switch (outcome) {
 		case "accepted":
-			return { edits: [], toast: ANSWERED_TOAST };
+			// No toast: the AI reply that follows is the acknowledgement (#770).
+			return {
+				answered: { cardId: card._id, response: args.response },
+				edits: [],
+			};
 		case "not_found":
 			return NO_REPLY;
 		default:

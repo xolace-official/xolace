@@ -105,11 +105,19 @@ export const CHECK_IN_CLOSED_TOAST = "This check-in has closed";
 // Answer taps (#769)
 // ---------------------------------------------------------------------------
 
-/**
- * The toast for an answer tap that counted. Fixed for now; the AI reply
- * arrives with its own ticket.
- */
-export const ANSWERED_TOAST = "Thanks for checking in";
-
 /** The toast for a tap on a check-in already answered, here or in the app. */
 export const ALREADY_ANSWERED_TOAST = "Already answered";
+
+// ---------------------------------------------------------------------------
+// AI replies (#770)
+// ---------------------------------------------------------------------------
+
+/** Sent instead of a reply the model couldn't write, with Open Xolace. */
+export const REPLY_FAILED =
+	"I couldn't reply just now — I'm still here in Xolace.";
+
+/**
+ * A crisis text's reply until the crisis path lands (#772): no model, the
+ * failure line, with Support resources and Open Xolace.
+ */
+export const CRISIS_HOLDING_LINE = REPLY_FAILED;

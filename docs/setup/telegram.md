@@ -66,6 +66,11 @@ BotFather (`/revoke`), set the new one and run `configureBot` again.
      and removed when it unlinks.
 5. Message the bot. As a stranger (no linked Xolace account) you get the fixed reply
    once; another message within 24 h gets nothing.
+6. Once linked, a tap or a message gets a short AI reply. It needs
+   `ANTHROPIC_API_KEY` (the reply and the classifier) and `OPENAI_API_KEY`
+   (moderation) on the deployment. With neither safeguard provider the reply still
+   goes out, with Support resources; with no model you get the fixed "I couldn't
+   reply just now" line.
 
 `configureBot` is idempotent: run it again whenever you like. Each run **rotates the
 secret**, so updates signed with the old one are refused from then on. It never runs on
@@ -129,4 +134,5 @@ on the deployment the bot belongs to. On a deployment with no bot it does nothin
 | `configureBot` fails with `TELEGRAM_BOT_TOKEN is not set` | Step 2 on that deployment. |
 | `configureBot` fails with `(401)` from `getMe` | The token is wrong or was revoked. Get it from BotFather again. |
 | The bot never replies | Check the drift log, then rerun `configureBot`. The webhook must be on a deployment that has the route. |
+| Every reply is "I couldn't reply just now" | `ANTHROPIC_API_KEY` is missing or failing on this deployment; the logs say `[telegram] reply model failed`. |
 | Every webhook post gets 401 | No `telegram_bot` row or no token here, or the secret was rotated by a newer `configureBot` (on this or another deployment). Rerun it here. |

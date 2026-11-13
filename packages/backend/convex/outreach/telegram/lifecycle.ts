@@ -108,8 +108,8 @@ async function revokeConsent(
 }
 
 /**
- * End a live link: `revoked` with its reason, any pending reflection
- * dropped, its live check-ins collapsed, and a consent `revoked` row for the
+ * End a live link: `revoked` with its reason, any pending reflection and
+ * recent turns dropped, its live check-ins collapsed, and a consent `revoked` row for the
  * profile it belonged to.
  * A row that's already revoked is left as it is.
  */
@@ -123,6 +123,7 @@ export async function revokeIdentity(
 	}
 	await ctx.db.patch("channel_identities", identity._id, {
 		awaitingReflection: undefined,
+		recentTurns: undefined,
 		revokedAt: Date.now(),
 		revokedReason: reason,
 		status: "revoked",

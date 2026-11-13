@@ -25,7 +25,6 @@ import { appLink } from "./appLinks";
 import {
 	ALREADY_ANSWERED_TOAST,
 	ANSWER_BUTTONS,
-	ANSWERED_TOAST,
 	CHECK_IN_CLOSED,
 	CHECK_IN_CLOSED_TOAST,
 	CHECKED_IN,
@@ -46,6 +45,7 @@ import {
 	messageUpdate,
 	post,
 	processSoon,
+	replies,
 	STRANGER_CHAT,
 	sent,
 	setTelegram,
@@ -71,6 +71,11 @@ vi.mock("@convex-dev/workflow", async (orig) => {
 	}
 	return { ...real, WorkflowManager };
 });
+
+// A tap's AI reply (#770) is reply.test.ts's subject; here it's fixed.
+vi.mock("../../ai/telegram/reply", () => ({
+	writeReply: async () => "Thanks for checking in.\nHow's the rest of today?",
+}));
 
 stubTelegramEachTest();
 afterEach(() => {
@@ -571,6 +576,8 @@ describe("answering by tap", () => {
 		await processSoon(user.root);
 	}
 
+	const toasts = () => sent("answerCallbackQuery").map((c) => c.params.text);
+
 	const appCard = async (user: SeededUser, cardId: Id<"follow_up_cards">) =>
 		(await user.t.query(api.followUps.listForProfile, {})).find(
 			(c) => c._id === cardId
@@ -585,18 +592,14 @@ describe("answering by tap", () => {
 			status: "resolved",
 			userResponse: "lighter",
 		});
-		expect(sent("answerCallbackQuery")).toEqual([
-			{
-				method: "answerCallbackQuery",
-				params: expect.objectContaining({ text: ANSWERED_TOAST }),
-			},
-		]);
+		// No toast: the AI reply that follows acknowledges it (#770).
+		expect(toasts()).toEqual([undefined]);
 		expect(botCalls()[0]?.method).toBe("answerCallbackQuery");
 		expect(collapsedTo()).toEqual([{ buttons: 0, text: CHECKED_IN.lighter }]);
-		expect(sent("sendMessage")).toHaveLength(0);
+		expect(replies()).toEqual([
+			"Thanks for checking in.\nHow's the rest of today?",
+		]);
 	});
-
-	const toasts = () => sent("answerCallbackQuery").map((c) => c.params.text);
 
 	it("after an answer in the app, says it's already answered and collapses again", async () => {
 		const { answer, cardId, secret, user } = await sentCheckIn();
@@ -769,7 +772,7 @@ describe("answering by tap", () => {
 			status: "resolved",
 			userResponse: "lighter",
 		});
-		expect(toasts()).toEqual([ANSWERED_TOAST, ALREADY_ANSWERED_TOAST]);
+		expect(toasts()).toEqual([undefined, ALREADY_ANSWERED_TOAST]);
 		expect(collapsedTo().at(-1)).toEqual({
 			buttons: 0,
 			text: CHECKED_IN.lighter,
