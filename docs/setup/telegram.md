@@ -98,7 +98,10 @@ returns and pattern nudges go to Telegram (at most three a day; an acute nudge i
 held back, anything else over the cap goes by push). They are sent on the
 `outreachTelegram` workpool. A nudge arrives as a check-in: the tier's general line,
 answer buttons, "What was this about?" (which edits the same message to quote the card)
-and, for an escalation-derived card, Support resources. When the follow-up is answered,
+and, for an escalation-derived card, Support resources. Tapping an answer resolves the
+follow-up as if it were answered in the app (the first answer wins, from either side; a
+later tap says "Already answered", a tap on a closed follow-up "This check-in has
+closed"). When the follow-up is answered,
 dismissed, expires or is superseded, or the link ends, the message is edited to
 `✓ Checked in: …` or "This check-in is closed" with no buttons. A 403 on a send revokes
 the link and falls back to push once; a 429 waits Telegram's `retry_after`.

@@ -115,6 +115,22 @@ export const entityValidator = v.object({
 	type: v.literal("blockquote"),
 });
 
+/** An answer a check-in offers as a button. */
+export type AnswerAction = keyof typeof ANSWER_BUTTONS;
+
+/** The answers a check-in offers. Acute has no Heavier, like the app. */
+export function offeredAnswers(tier: FollowUpTier): readonly AnswerAction[] {
+	return tier === "acute"
+		? ["lighter", "still_here"]
+		: ["lighter", "still_here", "heavier"];
+}
+
+/** A nudge's tier, as it was sent; older nudges fall back to the card's. */
+export const tierOf = (
+	outreach: Doc<"outreach">,
+	card: Doc<"follow_up_cards">
+): FollowUpTier => outreach.tier ?? card.tier;
+
 /** A check-in's text and buttons, before or after the reveal. */
 export function checkInMessage(args: {
 	cardText?: string;
@@ -127,12 +143,8 @@ export function checkInMessage(args: {
 	keyboard: Keyboard;
 	text: string;
 } {
-	const answers: (keyof typeof ANSWER_BUTTONS)[] =
-		args.tier === "acute"
-			? ["lighter", "still_here"]
-			: ["lighter", "still_here", "heavier"];
 	const keyboard: Keyboard = [
-		answers.map((answer) => ({
+		offeredAnswers(args.tier).map((answer) => ({
 			callback_data: callbackData(answer, args.deliveryId),
 			text: ANSWER_BUTTONS[answer],
 		})),
@@ -367,35 +379,48 @@ export async function collapseChat(
 // "What was this about?"
 // ---------------------------------------------------------------------------
 
+/** What a tap needs sent: edits to its messages, and its toast if any. */
+export type TapReply = { edits: Edit[]; toast?: string };
+
+export const NO_REPLY: TapReply = { edits: [] };
+
+/** What a tap names, from which chat, linked to which profile. */
+export type TapTarget = {
+	chatId: string;
+	deliveryId: string;
+	profileId: Id<"emotional_profiles">;
+};
+
+/** A tapped check-in, everything in the tap checked against the database. */
+export type TappedCheckIn = {
+	card: Doc<"follow_up_cards"> | null;
+	delivery: Doc<"outreach_deliveries"> & { providerMessageId: string };
+	outreach: Doc<"outreach">;
+};
+
 /**
- * A reveal tap from `chatId`, linked to `profileId`: edit the same message to
- * add the card text as a quote and drop the reveal button. Never a new
- * message, so never a new notification. A tap on a closed check-in gets the
- * closed toast and the collapse again; a second tap does nothing. Everything
- * in the tap is untrusted, so the delivery must be this chat's own.
+ * The check-in a tap from `chatId`, linked to `profileId`, names. Everything
+ * in a tap is untrusted, so the delivery must be this chat's own sent
+ * Telegram message, and a nudge to this profile. Null otherwise.
  */
-export async function reveal(
-	ctx: MutationCtx,
-	args: {
-		chatId: string;
-		deliveryId: string;
-		profileId: Id<"emotional_profiles">;
-	}
-): Promise<{ edits: Edit[]; toast?: string }> {
-	const noReply = { edits: [] };
+export async function tappedCheckIn(
+	ctx: QueryCtx,
+	args: TapTarget
+): Promise<TappedCheckIn | null> {
 	const deliveryId = ctx.db.normalizeId("outreach_deliveries", args.deliveryId);
 	const delivery = deliveryId
 		? await ctx.db.get("outreach_deliveries", deliveryId)
 		: null;
+	const providerMessageId = delivery?.providerMessageId;
 	if (
 		!(
 			delivery &&
+			providerMessageId &&
 			delivery.channel === "telegram" &&
-			delivery.providerChatId === args.chatId &&
-			delivery.providerMessageId
+			delivery.providerChatId === args.chatId
 		)
 	) {
-		return noReply;
+		return null;
 	}
 	const outreach = await ctx.db.get("outreach", delivery.outreachId);
 	if (
@@ -403,22 +428,58 @@ export async function reveal(
 		outreach.intent !== "nudge" ||
 		outreach.emotionalProfileId !== args.profileId
 	) {
-		return noReply;
+		return null;
 	}
-	const card = await cardOfOutreach(ctx, outreach);
+	return {
+		card: await cardOfOutreach(ctx, outreach),
+		delivery: { ...delivery, providerMessageId },
+		outreach,
+	};
+}
 
-	if (!(delivery.checkInOpen && card && isCardOpen(card))) {
-		if (delivery.checkInOpen) {
-			await markCollapsed(ctx, delivery._id);
-		}
-		const collapsed = collapseEdit(delivery, card);
-		return {
-			edits: collapsed ? [collapsed] : [],
-			toast: CHECK_IN_CLOSED_TOAST,
-		};
+/** Whether a tap on this check-in may still act on its card. */
+export const isLiveCheckIn = (
+	tapped: TappedCheckIn
+): tapped is TappedCheckIn & { card: Doc<"follow_up_cards"> } =>
+	tapped.delivery.checkInOpen === true && isCardOpen(tapped.card);
+
+/**
+ * A tap on a check-in that can't take it: the toast, and the collapse sent
+ * again (the first edit may have been lost, or the tap raced it).
+ */
+export async function refuseTap(
+	ctx: MutationCtx,
+	{ card, delivery }: TappedCheckIn,
+	toast: string
+): Promise<TapReply> {
+	if (delivery.checkInOpen) {
+		await markCollapsed(ctx, delivery._id);
 	}
+	const collapsed = collapseEdit(delivery, card);
+	return { edits: collapsed ? [collapsed] : [], toast };
+}
+
+/**
+ * A reveal tap: edit the same message to add the card text as a quote and
+ * drop the reveal button. Never a new message, so never a new notification.
+ * A tap on a closed check-in gets the closed toast and the collapse again; a
+ * second tap does nothing.
+ */
+export async function reveal(
+	ctx: MutationCtx,
+	args: TapTarget
+): Promise<TapReply> {
+	const tapped = await tappedCheckIn(ctx, args);
+	if (!tapped) {
+		return NO_REPLY;
+	}
+	const { delivery, outreach } = tapped;
+	if (!isLiveCheckIn(tapped)) {
+		return await refuseTap(ctx, tapped, CHECK_IN_CLOSED_TOAST);
+	}
+	const { card } = tapped;
 	if (delivery.revealedAt !== undefined) {
-		return noReply;
+		return NO_REPLY;
 	}
 	await ctx.db.patch("outreach_deliveries", delivery._id, {
 		revealedAt: Date.now(),
@@ -428,7 +489,7 @@ export async function reveal(
 		deliveryId: delivery._id,
 		escalationDerived: card.escalationDerived,
 		firstLine: firstLineOf(outreach),
-		tier: outreach.tier ?? card.tier,
+		tier: tierOf(outreach, card),
 	});
 	return {
 		edits: [

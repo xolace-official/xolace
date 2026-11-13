@@ -2,11 +2,13 @@ import { type Infer, v } from "convex/values";
 import { internal } from "../../_generated/api";
 import { internalAction, internalMutation } from "../../_generated/server";
 import { rateLimiter } from "../../lib/rateLimits";
+import { answer } from "./answer";
 import { botApi } from "./botApi";
 import {
 	type Edit,
 	editMessages,
 	editValidator,
+	NO_REPLY,
 	parseCallbackData,
 	reveal,
 } from "./checkIn";
@@ -21,8 +23,9 @@ import { asUpdate, strippedPayload } from "./webhook";
  * blocking the bot revokes the link, and a linked chat's `/stop` and `/help`
  * (#767). A chat with no linked identity gets one fixed reply per 24 h, a
  * revoked one its own; no safeguard, no escalation and no text kept. A
- * check-in's "What was this about?" edits it in place (#768). Answer taps
- * and replies arrive with their own tickets and are left `ignored` until then.
+ * check-in's "What was this about?" edits it in place (#768), and an answer
+ * button resolves its follow-up (#769). Replies arrive with their own ticket
+ * and are left `ignored` until then.
  */
 
 /** `/stop` or `/help`, bare or as `/stop@bot`, with anything after it. */
@@ -72,25 +75,31 @@ export const claimUpdate = internalMutation({
 			};
 		};
 
-		// A button tap. Only a linked chat's reveal does anything yet.
+		// A button tap, on a linked chat's own check-in: an answer or a reveal.
 		const tap = update?.callback_query;
 		if (tap) {
 			const identity = await identityOfChat(ctx, chatId);
 			const parsed = parseCallbackData(tap.data);
-			const revealed =
-				identity && isLive(identity) && parsed?.action === "reveal"
-					? await reveal(ctx, {
-							chatId,
-							deliveryId: parsed.deliveryId,
-							profileId: identity.emotionalProfileId,
-						})
-					: null;
-			return await close(revealed ? "processed" : "ignored", [], {
+			let reply = NO_REPLY;
+			if (identity && isLive(identity) && parsed) {
+				const target = {
+					chatId,
+					deliveryId: parsed.deliveryId,
+					profileId: identity.emotionalProfileId,
+				};
+				reply =
+					parsed.action === "reveal"
+						? await reveal(ctx, target)
+						: await answer(ctx, { ...target, response: parsed.action });
+			}
+			// Forged, foreign or repeated taps change nothing: `ignored`.
+			const acted = reply.toast !== undefined || reply.edits.length > 0;
+			return await close(acted ? "processed" : "ignored", [], {
 				callback: {
 					id: tap.id,
-					...(revealed?.toast && { toast: revealed.toast }),
+					...(reply.toast && { toast: reply.toast }),
 				},
-				edits: revealed?.edits ?? [],
+				edits: reply.edits,
 			});
 		}
 

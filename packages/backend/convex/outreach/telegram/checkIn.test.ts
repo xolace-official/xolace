@@ -23,7 +23,9 @@ import { asNewUser } from "../../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../../test/mocks.helpers";
 import { appLink } from "./appLinks";
 import {
+	ALREADY_ANSWERED_TOAST,
 	ANSWER_BUTTONS,
+	ANSWERED_TOAST,
 	CHECK_IN_CLOSED,
 	CHECK_IN_CLOSED_TOAST,
 	CHECKED_IN,
@@ -34,7 +36,9 @@ import {
 import {
 	backend,
 	blockChat,
+	botCalls,
 	configure,
+	events,
 	failNext,
 	forgetCalls,
 	identities,
@@ -534,6 +538,242 @@ describe("collapse", () => {
 			logged.mock.calls.filter((call) => String(call[0]).includes("Telegram"))
 		).toEqual([]);
 		logged.mockRestore();
+	});
+});
+
+describe("answering by tap", () => {
+	type Sent = Awaited<ReturnType<typeof sentCheckIn>>;
+
+	async function sentCheckIn(card: Partial<Doc<"follow_up_cards">> = {}) {
+		const linkedUser = await linked();
+		const seeded = await seedCard(linkedUser.user, card);
+		await nudge(linkedUser.user, seeded.workflowId);
+		const buttons = keyboardOf(sent("sendMessage")[0])?.flat() ?? [];
+		/** The check-in's button for `text`, as Telegram would send it back. */
+		const answer = (text: string) => {
+			const data = buttons.find((b) => b.text === text)?.callback_data;
+			if (!data) {
+				throw new Error(`no ${text} button`);
+			}
+			return data;
+		};
+		forgetCalls();
+		return { ...linkedUser, ...seeded, answer };
+	}
+
+	async function tap(
+		user: SeededUser,
+		secret: string,
+		data: string,
+		messageId = FIRST_MESSAGE_ID
+	) {
+		await post(user.root, tapUpdate(data, messageId), secret);
+		await processSoon(user.root);
+	}
+
+	const appCard = async (user: SeededUser, cardId: Id<"follow_up_cards">) =>
+		(await user.t.query(api.followUps.listForProfile, {})).find(
+			(c) => c._id === cardId
+		);
+
+	it("resolves the card from Telegram, and the app sees the answer", async () => {
+		const { answer, cardId, secret, user } = await sentCheckIn();
+
+		await tap(user, secret, answer(ANSWER_BUTTONS.lighter));
+
+		expect(await appCard(user, cardId)).toMatchObject({
+			status: "resolved",
+			userResponse: "lighter",
+		});
+		expect(sent("answerCallbackQuery")).toEqual([
+			{
+				method: "answerCallbackQuery",
+				params: expect.objectContaining({ text: ANSWERED_TOAST }),
+			},
+		]);
+		expect(botCalls()[0]?.method).toBe("answerCallbackQuery");
+		expect(collapsedTo()).toEqual([{ buttons: 0, text: CHECKED_IN.lighter }]);
+		expect(sent("sendMessage")).toHaveLength(0);
+	});
+
+	const toasts = () => sent("answerCallbackQuery").map((c) => c.params.text);
+
+	it("after an answer in the app, says it's already answered and collapses again", async () => {
+		const { answer, cardId, secret, user } = await sentCheckIn();
+		await user.t.mutation(api.followUps.resolveCard, {
+			cardId,
+			response: "still_here",
+		});
+		await processSoon(user.root);
+		forgetCalls();
+
+		await tap(user, secret, answer(ANSWER_BUTTONS.lighter));
+
+		expect(toasts()).toEqual([ALREADY_ANSWERED_TOAST]);
+		expect(collapsedTo()).toEqual([
+			{ buttons: 0, text: CHECKED_IN.still_here },
+		]);
+		expect(await appCard(user, cardId)).toMatchObject({
+			userResponse: "still_here",
+		});
+	});
+
+	it("counts any app response but a dismiss as already answered", async () => {
+		const { answer, cardId, secret, user } = await sentCheckIn();
+		await user.t.mutation(api.followUps.resolveCard, {
+			cardId,
+			response: "processed",
+		});
+		await processSoon(user.root);
+		forgetCalls();
+
+		await tap(user, secret, answer(ANSWER_BUTTONS.lighter));
+
+		expect(toasts()).toEqual([ALREADY_ANSWERED_TOAST]);
+		expect(await appCard(user, cardId)).toMatchObject({
+			userResponse: "processed",
+		});
+	});
+
+	it("answered in Telegram first, a later app answer changes nothing", async () => {
+		const { answer, cardId, secret, user } = await sentCheckIn();
+		await tap(user, secret, answer(ANSWER_BUTTONS.heavier));
+
+		await user.t.mutation(api.followUps.resolveCard, {
+			cardId,
+			response: "lighter",
+		});
+
+		expect(await appCard(user, cardId)).toMatchObject({
+			status: "resolved",
+			userResponse: "heavier",
+		});
+	});
+
+	it.each([
+		[
+			"dismissed",
+			async ({ cardId, user }: Sent) => {
+				await user.t.mutation(api.followUps.resolveCard, {
+					cardId,
+					response: "dismissed",
+				});
+			},
+		],
+		[
+			"expired",
+			async ({ user, workflowId }: Sent) => {
+				await user.root.mutation(internal.followUps.markCardExpired, {
+					workflowId,
+				});
+			},
+		],
+		[
+			"superseded",
+			async ({ user }: Sent) => {
+				const sessionId = await seedSession(user.root, user.profileId, {
+					requiresFollowUp: true,
+					state: "completed",
+				});
+				await user.root.mutation(internal.followUps.createAndStart, {
+					cardText: "Something new.",
+					emotionalProfileId: user.profileId,
+					escalationDerived: false,
+					sessionId,
+					signals: {
+						confirmationState: null,
+						granularLabel: null,
+						intensity: 3,
+						primaryEmotion: null,
+						safeguardLevel: null,
+					},
+				});
+			},
+		],
+	])(
+		"on a %s card, says it has closed and collapses again",
+		async (_status, closeCard) => {
+			const checkIn = await sentCheckIn();
+			await closeCard(checkIn);
+			await processSoon(checkIn.user.root);
+			const before = await appCard(checkIn.user, checkIn.cardId);
+			forgetCalls();
+
+			await tap(
+				checkIn.user,
+				checkIn.secret,
+				checkIn.answer(ANSWER_BUTTONS.lighter)
+			);
+
+			expect(toasts()).toEqual([CHECK_IN_CLOSED_TOAST]);
+			expect(collapsedTo()).toEqual([{ buttons: 0, text: CHECK_IN_CLOSED }]);
+			expect(await appCard(checkIn.user, checkIn.cardId)).toEqual(before);
+		}
+	);
+
+	it("ignores malformed, foreign or forged callback data", async () => {
+		const { answer, cardId, secret, user } = await sentCheckIn({
+			tier: "acute",
+		});
+		const deliveryId = answer(ANSWER_BUTTONS.lighter).slice(2);
+		const forged = [
+			"",
+			"x",
+			`z:${deliveryId}`,
+			`l:${deliveryId}:extra`,
+			"l:not-an-id",
+			`l:${cardId}`,
+			`l:${"a".repeat(200)}`,
+			// Never offered on an acute check-in.
+			`h:${deliveryId}`,
+		];
+		for (const data of forged) {
+			await tap(user, secret, data);
+		}
+		// The right data, from a chat that isn't the one it was sent to.
+		const fromElsewhere = tapUpdate(answer(ANSWER_BUTTONS.lighter), 1);
+		fromElsewhere.callback_query.from.id = STRANGER_CHAT + 7;
+		fromElsewhere.callback_query.message.chat.id = STRANGER_CHAT + 7;
+		await post(user.root, fromElsewhere, secret);
+		await processSoon(user.root);
+
+		expect(await appCard(user, cardId)).toMatchObject({ status: "pending" });
+		expect(sent("editMessageText")).toHaveLength(0);
+		// Every tap is still answered, so no button keeps spinning.
+		expect(toasts()).toEqual(Array(forged.length + 1).fill(undefined));
+		// Tap updates are numbered from 50 000; the link's /start is below.
+		const taps = (await events(user.root)).filter(
+			(e) => Number(e.providerEventId) > 50_000
+		);
+		expect(taps.map((e) => e.status)).toEqual(
+			Array(forged.length + 1).fill("ignored")
+		);
+	});
+
+	it("resolves the card once when two taps arrive together", async () => {
+		const { answer, cardId, secret, user } = await sentCheckIn();
+
+		await post(
+			user.root,
+			tapUpdate(answer(ANSWER_BUTTONS.lighter), FIRST_MESSAGE_ID),
+			secret
+		);
+		await post(
+			user.root,
+			tapUpdate(answer(ANSWER_BUTTONS.still_here), FIRST_MESSAGE_ID),
+			secret
+		);
+		await processSoon(user.root);
+
+		expect(await appCard(user, cardId)).toMatchObject({
+			status: "resolved",
+			userResponse: "lighter",
+		});
+		expect(toasts()).toEqual([ANSWERED_TOAST, ALREADY_ANSWERED_TOAST]);
+		expect(collapsedTo().at(-1)).toEqual({
+			buttons: 0,
+			text: CHECKED_IN.lighter,
+		});
 	});
 });
 

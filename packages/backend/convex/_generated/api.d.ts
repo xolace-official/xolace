@@ -239,6 +239,7 @@ import type * as outreach_quietWindow from "../outreach/quietWindow.js";
 import type * as outreach_reachMe from "../outreach/reachMe.js";
 import type * as outreach_router from "../outreach/router.js";
 import type * as outreach_telegram_adapter from "../outreach/telegram/adapter.js";
+import type * as outreach_telegram_answer from "../outreach/telegram/answer.js";
 import type * as outreach_telegram_appLinks from "../outreach/telegram/appLinks.js";
 import type * as outreach_telegram_bot from "../outreach/telegram/bot.js";
 import type * as outreach_telegram_botApi from "../outreach/telegram/botApi.js";
@@ -540,6 +541,7 @@ declare const fullApi: ApiFromModules<{
   "outreach/reachMe": typeof outreach_reachMe;
   "outreach/router": typeof outreach_router;
   "outreach/telegram/adapter": typeof outreach_telegram_adapter;
+  "outreach/telegram/answer": typeof outreach_telegram_answer;
   "outreach/telegram/appLinks": typeof outreach_telegram_appLinks;
   "outreach/telegram/bot": typeof outreach_telegram_bot;
   "outreach/telegram/botApi": typeof outreach_telegram_botApi;

@@ -100,3 +100,16 @@ export const CHECK_IN_CLOSED = "This check-in is closed. Nothing to do here.";
 
 /** The toast for a tap on a check-in that has closed. */
 export const CHECK_IN_CLOSED_TOAST = "This check-in has closed";
+
+// ---------------------------------------------------------------------------
+// Answer taps (#769)
+// ---------------------------------------------------------------------------
+
+/**
+ * The toast for an answer tap that counted. Fixed for now; the AI reply
+ * arrives with its own ticket.
+ */
+export const ANSWERED_TOAST = "Thanks for checking in";
+
+/** The toast for a tap on a check-in already answered, here or in the app. */
+export const ALREADY_ANSWERED_TOAST = "Already answered";
