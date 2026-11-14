@@ -960,11 +960,14 @@ describe("a burst of texts", () => {
 
 		await writeQuickly("Long day", 2 * SECOND);
 		await writeQuickly("I want to end my life", 2 * SECOND);
+		// Within 2 s, well before the 6 s burst would have answered.
+		expect(sentMessages()).toHaveLength(1);
+		expect(lastReply()?.params.text).toBe(crisisReply(crisisContactsFor("GH")));
+
 		await processSoon(user.root);
 
 		expect(stub.asked).toHaveLength(0);
 		expect(sentMessages()).toHaveLength(1);
-		expect(lastReply()?.params.text).toBe(crisisReply(crisisContactsFor("GH")));
 		expect((await identities(user))[0]?.pendingBurst).toBeUndefined();
 	});
 
