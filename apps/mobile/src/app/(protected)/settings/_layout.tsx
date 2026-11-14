@@ -12,6 +12,11 @@ const NOTIFICATIONS_OPTIONS = { title: "Notifications" };
 const DATA_OPTIONS = { title: "Privacy & Data" };
 const ACCOUNT_OPTIONS = { title: "Account" };
 const FOLLOW_OPTIONS = { title: "Follow & Support" };
+/** Its own page sheet over Notifications, closed with Done (#733). */
+const REACH_OPTIONS = {
+	presentation: "pageSheet",
+	title: "Reach me on…",
+} as const;
 
 export default function SettingsLayout() {
 	const router = useRouter();
@@ -34,6 +39,18 @@ export default function SettingsLayout() {
 			<Stack.Screen name="appearance" options={APPEARANCE_OPTIONS} />
 			<Stack.Screen name="mirror" options={MIRROR_OPTIONS} />
 			<Stack.Screen name="notifications" options={NOTIFICATIONS_OPTIONS} />
+			<Stack.Screen name="reach" options={REACH_OPTIONS}>
+				<Stack.Toolbar placement="right">
+					<Stack.Toolbar.Button
+						onPress={() => {
+							playSoftPress();
+							router.back();
+						}}
+					>
+						Done
+					</Stack.Toolbar.Button>
+				</Stack.Toolbar>
+			</Stack.Screen>
 			<Stack.Screen name="data" options={DATA_OPTIONS} />
 			<Stack.Screen name="account" options={ACCOUNT_OPTIONS} />
 			<Stack.Screen name="follow" options={FOLLOW_OPTIONS} />

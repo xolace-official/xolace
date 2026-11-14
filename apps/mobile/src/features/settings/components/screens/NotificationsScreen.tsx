@@ -6,12 +6,14 @@ import { AppText } from "@/components/shared/app-text";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { SettingsRow } from "@/components/shared/settings-row";
 import { SettingsSection } from "@/components/shared/settings-section";
+import { ReachMeOnRow } from "@/features/reach-me-on/components/reach-me-on-row";
 import { HourRadioGroup } from "@/features/settings/components/hour-radio-group";
 import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
 import {
 	CHAT_NOTIFICATIONS_ICON,
 	NOTIFICATIONS_ICON,
 	QUIET_HOURS_ICON,
+	REACH_ME_ON_ICON,
 } from "@/features/settings/components/settings-icons";
 import {
 	type NotificationReach,
@@ -149,6 +151,9 @@ export const NotificationsScreen = () => {
 						/>
 					</SettingsSection>
 				</EaseView>
+
+				{/* Check-ins: where outreach lands (#776). Behind the flag. */}
+				<ReachMeOnRow icon={settingIcon(REACH_ME_ON_ICON)} />
 
 				{gentleReminders && (
 					<>

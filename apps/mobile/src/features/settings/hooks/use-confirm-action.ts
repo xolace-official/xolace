@@ -7,7 +7,7 @@ const CONFIRM_CONFIG = {
 	deleteAccount: {
 		confirmLabel: "Delete account",
 		description:
-			"You will be signed out immediately. Your account and all associated data will be permanently deleted within a few hours. Signing back in before then cancels the deletion. After that, it cannot be undone.",
+			"You will be signed out immediately. Your account and all associated data will be permanently deleted within a few hours. Signing back in before then cancels the deletion. After that, it cannot be undone. If you linked Telegram, Xolace deletes the messages it still can, but Telegram keeps the rest of that chat's history.",
 		isDestructive: true,
 		showLoading: true,
 		title: "Delete account",

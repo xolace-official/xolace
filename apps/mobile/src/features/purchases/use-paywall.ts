@@ -39,7 +39,9 @@ export type PaywallSurface =
 	// A free user's first mic tap after Plus dictation shipped (#559). Once per device.
 	| "dictation"
 	// A free person's tap on Reflect home's talk door (#594).
-	| "talk_door";
+	| "talk_door"
+	// The Telegram card on "Reach me on…" when Telegram needs Xolace+ (#776).
+	| "reach_telegram";
 
 /** `sessionId` rides only with the `kindling` surface (`paths.requestKindling`). */
 type PaywallState = {

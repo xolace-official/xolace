@@ -102,3 +102,8 @@ export const DISPLAY_NAME_ICON: CrossPlatformSymbol = {
 	ios: "textformat",
 	web: "text_fields",
 };
+export const REACH_ME_ON_ICON: CrossPlatformSymbol = {
+	android: "send",
+	ios: "paperplane",
+	web: "send",
+};

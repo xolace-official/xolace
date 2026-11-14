@@ -39,6 +39,8 @@ export const PAYWALL_SURFACE_FEATURE: Record<
 	profile_insight: "insights",
 	profile_row: null,
 	rate_limit: "caps",
+	// No feature row for Telegram check-ins; the surface line below carries it.
+	reach_telegram: null,
 	// Every proactive moment sells the same capability, so all highlight insights.
 	session_close: "insights",
 	settings_row: null,
@@ -56,6 +58,8 @@ export const PAYWALL_SURFACE_LINE: Partial<Record<PaywallSurface, string>> = {
 		"Xolace+ shows you the pattern: how far it's moved from your usual, and since when.",
 	dictation:
 		"Xolace+ writes down what you say more sharply, then leaves it for you to edit.",
+	reach_telegram:
+		"Xolace+ brings your check-ins to Telegram, where you can answer with a tap or write back.",
 	steadiness_numbers:
 		"Your steadiness is already counted. Xolace+ shows you the numbers.",
 	// {name} is the companion's name (#601), filled in by the paywall screen.
