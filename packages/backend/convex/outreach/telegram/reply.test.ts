@@ -561,6 +561,43 @@ describe("a reply to free text", () => {
 		);
 	});
 
+	it("sends no failure line for a burst a data wipe overtook", async () => {
+		const { user, writeQuickly } = await checkedIn();
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		await writeQuickly("Long day", 2 * SECOND);
+		stub.memoryFails = true;
+		// The burst's typing comes after it was taken.
+		beforeNext("sendChatAction", async () => {
+			await user.root.run((ctx) =>
+				eraseTelegramChats(ctx, user.profileId, { accountDeleted: false })
+			);
+			vi.advanceTimersByTime(SECOND);
+		});
+
+		await processSoon(user.root);
+
+		expect(sentMessages().map((c) => c.params.text)).not.toContain(
+			REPLY_FAILED
+		);
+	});
+
+	it("keeps a crisis reply that a data wipe landed during", async () => {
+		const { user, write } = await checkedIn();
+		beforeNext("sendMessage", () =>
+			user.root.run((ctx) =>
+				eraseTelegramChats(ctx, user.profileId, { accountDeleted: false })
+			)
+		);
+
+		await write("I want to end my life");
+
+		expect(lastReply()?.params.text).toBe(crisisReply(crisisContactsFor("GH")));
+		const deleted = sent("deleteMessages").flatMap(
+			(c) => c.params.message_ids as number[]
+		);
+		expect(deleted).not.toContain(lastSentMessageId());
+	});
+
 	it("deletes a reply whose send finished after a data wipe", async () => {
 		const { user, write } = await checkedIn();
 		beforeNext("sendMessage", () =>

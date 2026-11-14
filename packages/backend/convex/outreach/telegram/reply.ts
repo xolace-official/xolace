@@ -772,6 +772,8 @@ export const answerBurst = internalAction({
 		const text = burst.texts.join("\n").slice(0, TEXT_MAX_CHARS);
 		const job: ReplyJob = {
 			chatId: args.chatId,
+			// Its failure line, too, is overtaken by a wipe from here.
+			claimedAt: since,
 			identityId: args.identityId,
 			linkedAt: args.linkedAt,
 			trigger: { kind: "text", text },
@@ -952,7 +954,15 @@ async function answerCrisis(
 		console.error("[telegram] recording a crisis failed", error);
 	}
 	const contacts = crisisContactsFor(country);
-	await sendReply(ctx, job, crisisReply(contacts), crisisKeyboard(contacts));
+	// The person comes first: a wipe racing it never takes these numbers away.
+	await sendReply(
+		ctx,
+		job,
+		crisisReply(contacts),
+		crisisKeyboard(contacts),
+		undefined,
+		{ keep: true }
+	);
 }
 
 // ---------------------------------------------------------------------------
@@ -988,7 +998,9 @@ async function sendReply(
 	text: string,
 	keyboard: Keyboard,
 	/** When the reply began: a wipe after it means it carries old context. */
-	since?: number
+	since?: number,
+	/** A crisis reply: noted, never deleted by a wipe it raced (#772). */
+	{ keep = false }: { keep?: boolean } = {}
 ): Promise<boolean> {
 	const { chatId, identityId, linkedAt } = job;
 	const current = await ctx.runQuery(
@@ -1026,9 +1038,8 @@ async function sendReply(
 	try {
 		await ctx.runMutation(internal.outreach.telegram.lifecycle.recordSent, {
 			chatId,
-			forLink: true,
 			messageId,
-			sentSince,
+			...(!keep && { forLink: true, sentSince }),
 		});
 	} catch (error) {
 		console.error("[telegram] noting a sent reply failed", error);
