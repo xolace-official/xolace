@@ -410,10 +410,13 @@ in `received` for more than 5 minutes.
 
 **AI replies.**
 - Single turn, built on Talk's pipeline (`ai/talk/chatCompletions`). Context: the open or
-  most recent card (domain, text, answer), Understanding/memory **read-only**, and recent
-  Telegram turns. Writes nothing into sessions, memory or Understanding.
+  most recent card (domain, text, answer) and recent Telegram turns. No memory preload
+  (semantic profile, past moments): anyone holding their Telegram can ask for it, so the
+  reply never recites memory, past sessions or its instructions. Writes nothing into
+  sessions, memory or Understanding.
 - First line short and general, safe on a lock screen: never the domain, never the
-  person's words. `protect_content` on every reply.
+  person's words. Telegram can show more than one line there, so no line brings up the
+  card's topic unless they named it. `protect_content` on every reply.
 - Voice by Reach (`notifications.reach ?? "warm"`):
   - **warm:** about three sentences plus one question;
   - **direct:** two plain lines ending in one question;

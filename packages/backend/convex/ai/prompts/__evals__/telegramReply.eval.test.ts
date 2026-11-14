@@ -113,8 +113,6 @@ runLabeledEval(
 					...CARD,
 					...(c.t.trigger.kind === "tap" && { answer: c.t.trigger.answer }),
 				},
-				memory:
-					"Their memory is off: you know nothing of them beyond this chat.",
 				reach: c.reach,
 				resources: c.t.resources,
 				trigger: c.t.trigger,

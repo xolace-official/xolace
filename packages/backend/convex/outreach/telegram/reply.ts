@@ -36,7 +36,6 @@ import {
 } from "../../lib/validators";
 import { localDayKey } from "../../streaks/activityLog";
 import { profileTimezone } from "../../streaks/state";
-import { talkPreload } from "../../talk/remember";
 import { captureOutreach, planOf } from "../analytics";
 import {
 	ESCALATION_HOLD_MS,
@@ -82,10 +81,11 @@ import { identitiesOf, isLive } from "./lifecycle";
 /**
  * AI replies on Telegram (#770): to an answer tap, and to free text from a
  * linked chat (active or paused). Every text goes through the safeguard
- * first. The reply is single-turn, on Talk's model and memory preload, read
- * only: nothing is written to sessions, memory or Understanding. All this
- * keeps is the chat's last few turns (24 h at most) and, after a Lighter, the
- * next text as that card's "what helped".
+ * first. The reply is single-turn, on Talk's model, and knows only the
+ * check-in and the chat: no memory, past reflections or talks, since anyone
+ * holding the person's Telegram can ask it. Nothing is written to sessions,
+ * memory or Understanding. All this keeps is the chat's last few turns (24 h
+ * at most) and, after a Lighter, the next text as that card's "what helped".
  *
  * Caps and bursts (#771): each reply takes one of the day's slots (Plus 50,
  * free 5, on the user's local day), and past the cap gets a fixed line
@@ -163,7 +163,6 @@ const contextValidator = v.object({
 			text: v.string(),
 		})
 	),
-	memory: v.string(),
 	reach: reachValidator,
 	/** A crisis came in on Telegram in the last 72 h (#772). */
 	recentCrisis: v.boolean(),
@@ -277,7 +276,6 @@ export const replyContext = internalQuery({
 		const { now } = args;
 		return {
 			card: card ? asReplyCard(card) : null,
-			memory: (await talkPreload(ctx, profile, now)).talkMemory,
 			reach: prefs?.notifications?.reach ?? "warm",
 			recentCrisis: await telegramCrisisSince(
 				ctx,
@@ -1489,7 +1487,6 @@ async function writeAndSend(
 		}
 		written = await writeReply({
 			card: context.card,
-			memory: context.memory,
 			reach: context.reach,
 			recentCrisis: context.recentCrisis,
 			resources: support,

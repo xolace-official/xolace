@@ -1,6 +1,6 @@
 /**
  * The model call behind a Telegram reply (#770). Single turn, on Talk's
- * model and memory preload; nothing here writes anything.
+ * model; nothing here writes anything.
  */
 import {
 	extractTextFromResponse,

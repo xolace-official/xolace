@@ -18,7 +18,7 @@ import {
 	type ModerationResult,
 } from "../../ai/providers/moderation";
 import { crisisContactsFor } from "../../lib/crisisResources";
-import { seedSession } from "../../test/fixtures.helpers";
+import { seedMetadata, seedSession } from "../../test/fixtures.helpers";
 import { asNewUser, type SeededUser } from "../../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../../test/mocks.helpers";
 import { ESCALATION_HOLD_MS } from "../router";
@@ -64,12 +64,12 @@ import {
 const stub = vi.hoisted(() => ({
 	/** Every reply-writer call: its system prompt and turn. */
 	asked: [] as { system: string; user: string }[],
+	/** Reading the reply's context throws. */
+	contextFails: false,
 	/** Runs while the reply is being written, as another transaction would. */
 	duringReply: undefined as (() => Promise<unknown>) | undefined,
 	/** Runs once while the next text is screened, as other work would. */
 	duringScreen: undefined as (() => Promise<unknown>) | undefined,
-	/** Reading the memory preload throws. */
-	memoryFails: false,
 	/** Moderation's result, or a function picking one from the words. */
 	moderation: null as unknown,
 	/** Whether the user has Xolace+. */
@@ -95,15 +95,17 @@ vi.mock("@convex-dev/workflow", async (orig) => {
 	}
 	return { ...real, WorkflowManager };
 });
-vi.mock("../../talk/remember", async (orig) => {
-	const real = await orig<typeof import("../../talk/remember")>();
+vi.mock("../router", async (orig) => {
+	const real = await orig<typeof import("../router")>();
 	return {
 		...real,
-		talkPreload: (...args: Parameters<typeof real.talkPreload>) => {
-			if (stub.memoryFails) {
-				throw new Error("memory read failed");
+		telegramCrisisSince: (
+			...args: Parameters<typeof real.telegramCrisisSince>
+		) => {
+			if (stub.contextFails) {
+				throw new Error("context read failed");
 			}
-			return real.talkPreload(...args);
+			return real.telegramCrisisSince(...args);
 		},
 	};
 });
@@ -172,7 +174,7 @@ stubTelegramEachTest();
 beforeEach(() => {
 	stub.asked = [];
 	stub.duringReply = undefined;
-	stub.memoryFails = false;
+	stub.contextFails = false;
 	stub.moderation = CLEAN;
 	stub.plus = false;
 	stub.queue = [];
@@ -425,7 +427,7 @@ describe("a reply to free text", () => {
 
 	it("still sends the fixed line when something fails before the model", async () => {
 		const { write } = await checkedIn();
-		stub.memoryFails = true;
+		stub.contextFails = true;
 		vi.spyOn(console, "error").mockImplementation(() => undefined);
 
 		await write("Long day");
@@ -438,7 +440,7 @@ describe("a reply to free text", () => {
 	it("keeps Support resources on the failure line when an elevated reply fails before the model", async () => {
 		const { write } = await checkedIn();
 		stub.moderation = ELEVATED;
-		stub.memoryFails = true;
+		stub.contextFails = true;
 		vi.spyOn(console, "error").mockImplementation(() => undefined);
 
 		await write("Some days I don't see the point");
@@ -574,7 +576,7 @@ describe("a reply to free text", () => {
 		const { user, writeQuickly } = await checkedIn();
 		vi.spyOn(console, "error").mockImplementation(() => undefined);
 		await writeQuickly("Long day", 2 * SECOND);
-		stub.memoryFails = true;
+		stub.contextFails = true;
 		// The burst's typing comes after it was taken.
 		beforeNext("sendChatAction", async () => {
 			await user.root.run((ctx) =>
@@ -814,6 +816,40 @@ describe("what a reply writes", () => {
 		expect(await snapshot()).toEqual(before);
 	});
 
+	it("carries nothing Xolace remembers of them, so a chat can't be asked for it", async () => {
+		const { sessionId, user, write } = await checkedIn();
+		await seedMetadata(user.root, sessionId, user.profileId, {
+			thematicTags: ["sister's wedding"],
+			userLanguageTags: ["left out at the wedding"],
+		});
+		await user.root.run(async (ctx) => {
+			const semanticId = await ctx.db.insert("semantic_profiles", {
+				createdAt: Date.now(),
+				emotionalProfileId: user.profileId,
+				recurringThemes: "feels invisible to their family",
+				version: 1,
+				writerVersion: "test-v1",
+			});
+			await ctx.db.patch("emotional_profiles", user.profileId, {
+				currentSemanticProfileId: semanticId,
+			});
+		});
+
+		await write("What do you remember about me?");
+
+		const [asked] = stub.asked;
+		const prompt = `${asked?.system}\n${asked?.user}`;
+		for (const remembered of [
+			"feels invisible to their family",
+			"sister's wedding",
+			"left out at the wedding",
+			"Their recent moments",
+			"Asked what you remember about them, answer honestly",
+		]) {
+			expect(prompt).not.toContain(remembered);
+		}
+	});
+
 	it("drops the recent turns when the link ends", async () => {
 		const { user, write } = await checkedIn();
 		await write("Long day");
@@ -961,10 +997,10 @@ describe("the daily reply cap", () => {
 	it("doesn't count a reply that failed before the model", async () => {
 		const { useReplies, write } = await checkedIn();
 		vi.spyOn(console, "error").mockImplementation(() => undefined);
-		stub.memoryFails = true;
+		stub.contextFails = true;
 		await write("Long day");
 		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
-		stub.memoryFails = false;
+		stub.contextFails = false;
 
 		await useReplies(DAILY_REPLY_CAP.free);
 
