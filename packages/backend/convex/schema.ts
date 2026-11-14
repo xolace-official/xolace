@@ -278,6 +278,12 @@ export default defineSchema({
 		replyCount: v.optional(replyCountValidator),
 		revokedAt: v.optional(v.number()),
 		revokedReason: v.optional(revokedReasonValidator),
+		// The bot's messages to this chat in the last 48 h, the window Telegram
+		// lets a bot delete them in: account deletion and a data wipe delete
+		// them (#773). Older entries drop off as new ones are added.
+		sentMessages: v.optional(
+			v.array(v.object({ at: v.number(), id: v.string() }))
+		),
 		status: identityStatusValidator,
 		telegramUserId: v.optional(v.string()),
 		tokenIdentifier: v.string(),
@@ -1409,9 +1415,14 @@ export default defineSchema({
 		payload: v.any(),
 		providerEventId: v.string(),
 		receivedAt: v.number(),
+		// Set when the stuck-row cron put it back on the pool (#773); a row
+		// still stuck after that is marked `failed`.
+		requeuedAt: v.optional(v.number()),
 		status: inboundStatusValidator,
 	})
 		.index("by_channel_event", ["channel", "providerEventId"])
+		// A chat's updates, for account deletion and a data wipe (#773).
+		.index("by_channel_external", ["channel", "externalId"])
 		.index("by_status_received", ["status", "receivedAt"])
 		.index("by_received", ["receivedAt"]),
 

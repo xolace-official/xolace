@@ -148,6 +148,44 @@ export async function revokeIdentity(
 	return true;
 }
 
+/** How long Telegram lets a bot delete its own message in a private chat. */
+export const DELETABLE_FOR_MS = 2 * DAY_MS;
+/** A busy Plus chat sends ~120 messages in 48 h; well past that is a bug. */
+const MAX_SENT_KEPT = 300;
+
+/**
+ * Note a message the bot just sent to this chat, so account deletion and a
+ * data wipe can delete it while Telegram still allows (#773). A chat with no
+ * row (a stranger) has nothing to erase.
+ */
+export async function rememberSent(
+	ctx: MutationCtx,
+	chatId: string,
+	messageId: string
+): Promise<void> {
+	const identity = await identityOfChat(ctx, chatId);
+	if (!identity) {
+		return;
+	}
+	const now = Date.now();
+	const kept = (identity.sentMessages ?? []).filter(
+		(m) => m.at > now - DELETABLE_FOR_MS
+	);
+	await ctx.db.patch("channel_identities", identity._id, {
+		sentMessages: [...kept, { at: now, id: messageId }].slice(-MAX_SENT_KEPT),
+	});
+}
+
+/** `rememberSent`, for an action that has just sent. */
+export const recordSent = internalMutation({
+	args: { chatId: v.string(), messageId: v.string() },
+	handler: async (ctx, { chatId, messageId }) => {
+		await rememberSent(ctx, chatId, messageId);
+		return null;
+	},
+	returns: v.null(),
+});
+
 /**
  * A line meant for this chat's live link came back 403 (blocked, or the
  * chat is gone): the link is revoked `unreachable`.

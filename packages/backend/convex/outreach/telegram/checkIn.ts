@@ -364,6 +364,16 @@ export async function collapse(
 	}
 }
 
+/** End these check-ins without an edit: their messages are being deleted. */
+export async function retire(
+	ctx: MutationCtx,
+	deliveries: readonly Doc<"outreach_deliveries">[]
+): Promise<void> {
+	for (const delivery of deliveries) {
+		await markCollapsed(ctx, delivery._id);
+	}
+}
+
 /** Collapse a follow-up's live check-ins: it was answered or closed. */
 export async function collapseCard(
 	ctx: MutationCtx,

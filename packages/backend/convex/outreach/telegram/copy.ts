@@ -43,6 +43,10 @@ export const RELINKED =
 /** An account linked a new chat; this, its old one, is told (#767). */
 export const OLD_CHAT = "No longer linked to Xolace.";
 
+/** The last line a linked chat gets when its Xolace account is deleted (#773). */
+export const ACCOUNT_DELETED =
+	"Your Xolace account was deleted and this chat is no longer linked. Telegram keeps earlier messages here; delete the chat to remove them.";
+
 /** A chat whose link was revoked writes to the bot (#767). */
 export const REVOKED_REPLY =
 	"This chat isn't linked to Xolace anymore. To link it again, open Xolace → Reach me on… for a fresh link.\n\nIf you're in danger right now, call your local emergency number.";

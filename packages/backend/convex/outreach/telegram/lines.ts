@@ -3,6 +3,7 @@ import { internal } from "../../_generated/api";
 import { type ActionCtx, internalAction } from "../../_generated/server";
 import { botApi, TelegramApiError } from "./botApi";
 import {
+	ACCOUNT_DELETED,
 	EXPIRED_LINK_REPLY,
 	GOODBYE_APP,
 	HELP,
@@ -19,12 +20,14 @@ import {
  * Sending the bot's fixed lines (#765–#767). A line is decided in a
  * mutation and sent here, after it commits, never retried: no line goes out
  * twice. A 403 on a line meant for a linked chat revokes it `unreachable`.
+ * Each one sent is remembered for 48 h, for account deletion (#773).
  */
 
 /** Telegram's "the user blocked the bot" (and other forbidden sends). */
 const FORBIDDEN = 403;
 
 const lineKindValidator = v.union(
+	v.literal("account_deleted"),
 	v.literal("expired"),
 	v.literal("goodbye_app"),
 	v.literal("help"),
@@ -54,6 +57,11 @@ const LINES: Record<
 	Line["kind"],
 	{ commands?: "delete" | "set"; text: string; toLinkedChat: boolean }
 > = {
+	account_deleted: {
+		commands: "delete",
+		text: ACCOUNT_DELETED,
+		toLinkedChat: false,
+	},
 	expired: { text: EXPIRED_LINK_REPLY, toLinkedChat: false },
 	goodbye_app: { commands: "delete", text: GOODBYE_APP, toLinkedChat: false },
 	help: { text: HELP, toLinkedChat: true },
@@ -70,10 +78,14 @@ const forbidden = (error: unknown) =>
 
 async function sendLine(ctx: ActionCtx, line: Line): Promise<void> {
 	try {
-		await botApi.sendMessage({
+		const message = await botApi.sendMessage({
 			chat_id: line.chatId,
 			protect_content: true,
 			text: LINES[line.kind].text,
+		});
+		await ctx.runMutation(internal.outreach.telegram.lifecycle.recordSent, {
+			chatId: line.chatId,
+			messageId: String(message.message_id),
 		});
 	} catch (error) {
 		if (forbidden(error)) {

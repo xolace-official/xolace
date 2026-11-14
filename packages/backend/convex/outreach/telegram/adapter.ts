@@ -22,7 +22,12 @@ import {
 	openCheckInsOf,
 } from "./checkIn";
 import { OPEN_XOLACE_BUTTON } from "./copy";
-import { identitiesOf, identityOfChat, isLive } from "./lifecycle";
+import {
+	identitiesOf,
+	identityOfChat,
+	isLive,
+	rememberSent,
+} from "./lifecycle";
 
 /**
  * Telegram, the outreach layer's second channel (#768). A follow-up nudge
@@ -151,6 +156,9 @@ async function afterSent(
 	const outreach =
 		delivery && (await ctx.db.get("outreach", delivery.outreachId));
 	const chatId = delivery?.providerChatId;
+	if (chatId && delivery.providerMessageId) {
+		await rememberSent(ctx, chatId, delivery.providerMessageId);
+	}
 	if (!(delivery && chatId && outreach?.intent === "nudge")) {
 		return;
 	}

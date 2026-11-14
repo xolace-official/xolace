@@ -2,6 +2,12 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
 import {
+	drainChannelIdentities,
+	drainLinkTokens,
+	drainOutreach,
+	eraseForDeletion,
+} from "../outreach/erasure";
+import {
 	drainConversations,
 	drainPushDevices,
 	drainRatingsGiven,
@@ -99,6 +105,12 @@ export const purgeUser = internalMutation({
 		// `purgeSessions` also carries follow_up_cards / session_turns /
 		// emotional_metadata / episodic entries with it (see sessionCascade.ts).
 		const steps = [
+			// First, while the chats' rows and check-ins still say what to
+			// delete and collapse (#773). A no-op once done.
+			eraseForDeletion,
+			drainOutreach,
+			drainChannelIdentities,
+			drainLinkTokens,
 			drainSessions,
 			drainEscalations,
 			drainConsentRecords,

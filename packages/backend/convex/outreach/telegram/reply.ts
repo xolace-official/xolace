@@ -806,13 +806,17 @@ async function sendReply(
 		return false;
 	}
 	try {
-		await botApi.sendMessage({
+		const message = await botApi.sendMessage({
 			chat_id: chatId,
 			protect_content: true,
 			text,
 			...(keyboard.length > 0 && {
 				reply_markup: { inline_keyboard: keyboard },
 			}),
+		});
+		await ctx.runMutation(internal.outreach.telegram.lifecycle.recordSent, {
+			chatId,
+			messageId: String(message.message_id),
 		});
 		return true;
 	} catch (error) {

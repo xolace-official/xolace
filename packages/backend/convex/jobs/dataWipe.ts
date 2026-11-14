@@ -4,6 +4,12 @@ import { internalMutation } from "../_generated/server";
 import { purgeReplyEntries } from "../episodicMemory";
 import { rankReplace } from "../lib/aggregates";
 import { purgeSessions } from "../lib/sessionCascade";
+import {
+	drainInbound,
+	drainOutreach,
+	drainUnusedLinkTokens,
+	eraseForWipe,
+} from "../outreach/erasure";
 
 const BATCH_SIZE = 100;
 
@@ -13,10 +19,14 @@ const BATCH_SIZE = 100;
  *
  * Deletes: sessions, emotional_metadata, session_turns,
  *          reflection_resonances, notification_log, library_reads, activity_log,
- *          frozen_days, compounding_stretches, steadiness_insights
+ *          frozen_days, compounding_stretches, steadiness_insights, outreach,
+ *          outreach_deliveries, the linked chats' inbound_events, an unused
+ *          channel_link_tokens row, and the bot's last 48 h of Telegram
+ *          messages (#773)
  * Anonymizes: escalation_events (strip profileId for safety audit)
  * Resets: emotional_profile counters, the companion's preferred name
- * Keeps: user_achievements, spark_spends, both spark counters, daysShowedUp,
+ * Keeps: channel_identities (the link, its chat history and reflection
+ *        window cleared) and their consent rows (#773); user_achievements, spark_spends, both spark counters, daysShowedUp,
  *        lastShowedUpDay and achievementsBackfilledAt — they record showing up,
  *        not what was said (#685, #694); age_declarations, keyed on the user
  *        and never reached from here, so a wipe can't restate an age past a
@@ -31,6 +41,17 @@ export const wipe = internalMutation({
 	handler: async (ctx, args) => {
 		const { emotionalProfileId } = args;
 		let hasMore = false;
+
+		// ── Outreach and linked chats (#773) ─────────────────────────
+		// First, while the check-ins still exist to collapse. A no-op once done.
+		await eraseForWipe(ctx, emotionalProfileId);
+		if (await drainOutreach(ctx, emotionalProfileId)) {
+			hasMore = true;
+		}
+		if (await drainInbound(ctx, emotionalProfileId)) {
+			hasMore = true;
+		}
+		await drainUnusedLinkTokens(ctx, emotionalProfileId);
 
 		// ── Delete sessions + associated data ────────────────────────
 		const sessions = await ctx.db
