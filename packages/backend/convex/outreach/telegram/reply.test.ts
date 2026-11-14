@@ -513,6 +513,21 @@ describe("a reply to free text", () => {
 		expect((await identities(user))[0]?.pendingBurst).toBeUndefined();
 	});
 
+	it("sends no reply to a tap a data wipe overtook after its claim", async () => {
+		const { tap, user } = await checkedIn();
+		beforeNext("answerCallbackQuery", async () => {
+			await user.root.run((ctx) =>
+				eraseTelegramChats(ctx, user.profileId, { accountDeleted: false })
+			);
+			// The reply starts a moment after the wipe, as it would for real.
+			vi.advanceTimersByTime(SECOND);
+		});
+
+		await tap("lighter");
+
+		expect(sentMessages().map((c) => c.params.text)).not.toContain(stub.reply);
+	});
+
 	it("deletes a reply whose send finished after a data wipe", async () => {
 		const { user, write } = await checkedIn();
 		beforeNext("sendMessage", () =>

@@ -290,6 +290,29 @@ describe("account deletion", () => {
 		expect(deleted).toContain(lastSentMessageId());
 	});
 
+	it("deletes a check-in whose chat account deletion removed while it was sent", async () => {
+		const { user } = await linked();
+		beforeNext("sendMessage", () =>
+			user.root.run(async (ctx) => {
+				for (const row of await ctx.db.query("channel_identities").take(10)) {
+					await ctx.db.delete("channel_identities", row._id);
+				}
+				for (const delivery of await ctx.db
+					.query("outreach_deliveries")
+					.take(10)) {
+					await ctx.db.delete("outreach_deliveries", delivery._id);
+				}
+			})
+		);
+
+		await checkIn(user);
+
+		const deleted = sent("deleteMessages").flatMap(
+			(c) => c.params.message_ids as number[]
+		);
+		expect(deleted).toContain(lastSentMessageId());
+	});
+
 	it("sends no note to a chat it already unlinked", async () => {
 		const { user } = await linked();
 		await user.root.run(async (ctx) => {

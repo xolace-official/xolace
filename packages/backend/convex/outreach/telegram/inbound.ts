@@ -117,6 +117,7 @@ export const claimUpdate = internalMutation({
 				});
 				job = {
 					chatId,
+					claimedAt: Date.now(),
 					identityId: identity._id,
 					linkedAt: identity.linkedAt,
 					trigger: {
@@ -215,6 +216,7 @@ export const claimUpdate = internalMutation({
 			});
 			return await close("processed", [], undefined, {
 				chatId,
+				claimedAt: now,
 				identityId: identity._id,
 				linkedAt: identity.linkedAt,
 				trigger: {

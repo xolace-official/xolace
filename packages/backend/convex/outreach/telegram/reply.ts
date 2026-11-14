@@ -108,6 +108,11 @@ const tapAnswerValidator = v.union(
 /** What a claimed update leaves for a reply, decided in its transaction. */
 export const replyJobValidator = v.object({
 	chatId: v.string(),
+	/**
+	 * When its update was claimed: a wipe or crisis after it overtakes the
+	 * reply, though it lands before the reply starts.
+	 */
+	claimedAt: v.optional(v.number()),
 	identityId: v.id("channel_identities"),
 	/**
 	 * The link this reply is for. A relink reuses the chat's row (another
@@ -1123,15 +1128,21 @@ async function replyToTap(
 	// Heavier carries support and the way back to the app.
 	const heavier = trigger.answer === "heavier";
 	progress.support = heavier;
-	await writeAndSend(ctx, job, progress, {
-		cardId: trigger.cardId,
-		elevated: false,
-		heavier,
-		open: heavier,
-		person: `Tapped: ${ANSWER_BUTTONS[trigger.answer]}`,
-		support: heavier,
-		trigger: { answer: trigger.answer, kind: "tap" },
-	});
+	await writeAndSend(
+		ctx,
+		job,
+		progress,
+		{
+			cardId: trigger.cardId,
+			elevated: false,
+			heavier,
+			open: heavier,
+			person: `Tapped: ${ANSWER_BUTTONS[trigger.answer]}`,
+			support: heavier,
+			trigger: { answer: trigger.answer, kind: "tap" },
+		},
+		job.claimedAt
+	);
 }
 
 /**
@@ -1146,7 +1157,8 @@ async function receiveText(
 	progress: Progress
 ): Promise<void> {
 	const { chatId, identityId, linkedAt } = job;
-	const since = Date.now();
+	// From the claim: a wipe between it and now overtakes this text too.
+	const since = job.claimedAt ?? Date.now();
 	// The chat's burst waits for this text from now, not once it's screened.
 	await ctx.runMutation(internal.outreach.telegram.reply.noteScreening, {
 		identityId,

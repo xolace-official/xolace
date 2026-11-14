@@ -341,6 +341,8 @@ export const settleAttempt = internalMutation({
 export const deliverAction = internalAction({
 	args: { deliveryId: v.id("outreach_deliveries") },
 	handler: async (ctx, { deliveryId }) => {
+		// Before the claim: a wipe from here on overtakes the send.
+		const sentSince = Date.now();
 		const claimed = await ctx.runMutation(
 			internal.outreach.deliver.claimForAction,
 			{ deliveryId }
@@ -353,7 +355,6 @@ export const deliverAction = internalAction({
 			throw new Error("No action adapter for a claimed delivery.");
 		}
 		let attempt: Attempt;
-		const sentSince = Date.now();
 		try {
 			attempt = {
 				ok: true,
