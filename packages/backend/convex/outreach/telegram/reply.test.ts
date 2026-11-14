@@ -18,7 +18,7 @@ import {
 	type ModerationResult,
 } from "../../ai/providers/moderation";
 import { crisisContactsFor } from "../../lib/crisisResources";
-import { seedSession } from "../../test/fixtures.helpers";
+import { seedMetadata, seedSession } from "../../test/fixtures.helpers";
 import { asNewUser, type SeededUser } from "../../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../../test/mocks.helpers";
 import { ESCALATION_HOLD_MS } from "../router";
@@ -812,6 +812,34 @@ describe("what a reply writes", () => {
 		await write("Feeling better now");
 
 		expect(await snapshot()).toEqual(before);
+	});
+
+	it("carries Talk's memory and its rules, so a reply can bring it up and quote it", async () => {
+		const { sessionId, user, write } = await checkedIn();
+		await seedMetadata(user.root, sessionId, user.profileId, {
+			thematicTags: ["sister's wedding"],
+			userLanguageTags: ["left out at the wedding"],
+		});
+		await user.root.run(async (ctx) => {
+			const semanticId = await ctx.db.insert("semantic_profiles", {
+				createdAt: Date.now(),
+				emotionalProfileId: user.profileId,
+				recurringThemes: "feels invisible to their family",
+				version: 1,
+				writerVersion: "test-v1",
+			});
+			await ctx.db.patch("emotional_profiles", user.profileId, {
+				currentSemanticProfileId: semanticId,
+			});
+		});
+
+		await write("What do you remember about me?");
+
+		const [asked] = stub.asked;
+		expect(asked?.system).toContain("feels invisible to their family");
+		expect(asked?.system).toContain(
+			"Asked what you remember about them, answer honestly"
+		);
 	});
 
 	it("drops the recent turns when the link ends", async () => {

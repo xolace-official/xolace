@@ -4,6 +4,7 @@ import type { Doc, Id } from "../../_generated/dataModel";
 import {
 	type ActionCtx,
 	internalAction,
+	internalMutation,
 	type MutationCtx,
 } from "../../_generated/server";
 import {
@@ -98,6 +99,24 @@ export async function eraseTelegramChats(
 		// Never seen in practice: past this, later chats keep their messages.
 		console.error(`[erasure] reached its ${MAX_ERASED_CHATS}-chat limit`);
 	}
+	// Chats that moved to another account: what the bot sent there before the
+	// move is still this account's to delete, and the record goes with it.
+	const movedAway = await ctx.db
+		.query("channel_moved_messages")
+		.withIndex("by_profile_channel", (q) =>
+			q.eq("emotionalProfileId", emotionalProfileId).eq("channel", "telegram")
+		)
+		.take(MAX_ERASED_CHATS);
+	for (const moved of movedAway) {
+		const messageIds = moved.sentMessages
+			.filter((m) => m.at > cutoff)
+			.map((m) => m.id);
+		if (messageIds.length > 0) {
+			// Before the chat's own entry, so a note there still goes last.
+			chats.push({ chatId: moved.externalId, messageIds, note: false });
+		}
+		await ctx.db.delete("channel_moved_messages", moved._id);
+	}
 	for (const identity of identities) {
 		const chatId = identity.externalId;
 		const messageIds = (identity.sentMessages ?? [])
@@ -133,6 +152,108 @@ export async function eraseTelegramChats(
 		);
 	}
 }
+
+/** Inbound updates one pass of `dropInboundBefore` deletes. */
+const INBOUND_BATCH = 100;
+
+/**
+ * A chat moving to another account, in the move's transaction (before the
+ * row is patched to it): nothing from the old account's time may stay where
+ * only the new account's erasure reaches it. The bot's messages from the
+ * last 48 h are kept beside the old account until Telegram can't delete
+ * them; the row's own record of them, and of the old account's last crisis
+ * and last text, is cleared; and the chat's handled updates from before the
+ * move are deleted (they hold no text by now, only that the chat wrote).
+ */
+export async function handOverChat(
+	ctx: MutationCtx,
+	identity: Doc<"channel_identities">,
+	movedAt: number
+): Promise<void> {
+	const sentMessages = (identity.sentMessages ?? []).filter(
+		(m) => m.at > movedAt - DELETABLE_FOR_MS
+	);
+	if (sentMessages.length > 0) {
+		const id = await ctx.db.insert("channel_moved_messages", {
+			channel: identity.channel,
+			emotionalProfileId: identity.emotionalProfileId,
+			externalId: identity.externalId,
+			movedAt,
+			sentMessages,
+		});
+		await ctx.scheduler.runAfter(
+			DELETABLE_FOR_MS,
+			internal.outreach.telegram.erase.dropMovedMessages,
+			{ id }
+		);
+	}
+	// A reply in flight for the old link fails its `linkedAt` check, so the
+	// crisis time no longer guards anything here.
+	await ctx.db.patch("channel_identities", identity._id, {
+		lastCrisisAt: undefined,
+		lastInboundAt: undefined,
+		sentMessages: undefined,
+	});
+	await ctx.scheduler.runAfter(
+		0,
+		internal.outreach.telegram.erase.dropInboundBefore,
+		{ before: movedAt, chatId: identity.externalId }
+	);
+}
+
+/** A moved chat's old messages, 48 h on: none can be deleted any more. */
+export const dropMovedMessages = internalMutation({
+	args: { id: v.id("channel_moved_messages") },
+	handler: async (ctx, { id }) => {
+		// Already gone if the old account's erasure took it.
+		if (await ctx.db.get("channel_moved_messages", id)) {
+			await ctx.db.delete("channel_moved_messages", id);
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * A moved chat's updates from before `before`, a batch at a time. One not
+ * yet handled is left for the pool, which handles it for the chat's new
+ * link and strips it; `after` pages past those.
+ */
+export const dropInboundBefore = internalMutation({
+	args: {
+		/** The `_creationTime` this pass starts after. */
+		after: v.optional(v.number()),
+		before: v.number(),
+		chatId: v.string(),
+	},
+	handler: async (ctx, { after, before, chatId }) => {
+		const events = await ctx.db
+			.query("inbound_events")
+			.withIndex("by_channel_external", (q) =>
+				q
+					.eq("channel", "telegram")
+					.eq("externalId", chatId)
+					.gt("_creationTime", after ?? 0)
+					.lt("_creationTime", before)
+			)
+			.take(INBOUND_BATCH);
+		for (const event of events) {
+			if (event.status !== "received") {
+				await ctx.db.delete("inbound_events", event._id);
+			}
+		}
+		const last = events.at(-1);
+		if (events.length === INBOUND_BATCH && last) {
+			await ctx.scheduler.runAfter(
+				0,
+				internal.outreach.telegram.erase.dropInboundBefore,
+				{ after: last._creationTime, before, chatId }
+			);
+		}
+		return null;
+	},
+	returns: v.null(),
+});
 
 type Outcome =
 	| "done"

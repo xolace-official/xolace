@@ -324,7 +324,10 @@ per chat:
 
 **Relink** reactivates the one row per `(channel, externalId)`: `active`, new `linkedAt`,
 `revokedAt` cleared, profile moved if different. Revoked rows are deleted by a cron 30
-days after `revokedAt`; after that the chat is a stranger.
+days after `revokedAt`; after that the chat is a stranger. A row that moves to another
+account leaves the old account's last 48 h of bot messages in `channel_moved_messages`
+(so the old account's deletion or wipe still deletes them, and the new one's doesn't),
+and the chat's handled `inbound_events` from before the move are deleted.
 
 **Unlink from the app** (`unlinkChannel({ channel })`): revoke `user_app`, one goodbye,
 collapse every open check-in, cancel and reroute pending deliveries.
@@ -407,10 +410,14 @@ in `received` for more than 5 minutes.
 
 **AI replies.**
 - Single turn, built on Talk's pipeline (`ai/talk/chatCompletions`). Context: the open or
-  most recent card (domain, text, answer), Understanding/memory **read-only**, and recent
-  Telegram turns. Writes nothing into sessions, memory or Understanding.
+  most recent card (domain, text, answer), Understanding/memory **read-only** (Talk's
+  preload and its rules: the reply may bring up and quote what Xolace remembers, as Talk
+  does), and recent Telegram turns. The person's text is escaped so it can't close
+  `<their_words>`, and the reply never repeats its own instructions. Writes nothing into
+  sessions, memory or Understanding.
 - First line short and general, safe on a lock screen: never the domain, never the
-  person's words. `protect_content` on every reply.
+  person's words. Telegram can show more than one line there, so no line brings up the
+  card's topic unless they named it. `protect_content` on every reply.
 - Voice by Reach (`notifications.reach ?? "warm"`):
   - **warm:** about three sentences plus one question;
   - **direct:** two plain lines ending in one question;

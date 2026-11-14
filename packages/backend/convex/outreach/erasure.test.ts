@@ -26,6 +26,7 @@ import {
 	consents,
 	createLink,
 	DAY,
+	events,
 	failNext,
 	forgetCalls,
 	HOUR,
@@ -447,5 +448,75 @@ describe("data wipe", () => {
 		expect(rows.inbound).toEqual([]);
 		// The used token stays: it's the record of the link that still stands.
 		expect(rows.tokens.map((t) => t.usedAt !== undefined)).toEqual([true]);
+	});
+});
+
+describe("a chat moved to another account", () => {
+	/**
+	 * The first account's chat, with the welcome (100) and a /help line (101)
+	 * sent to it, moved to a second account, which gets the relinked line
+	 * (102). Every update so far came before the move.
+	 */
+	async function moved() {
+		const { secret, user: first } = await linked();
+		await post(first.root, messageUpdate(STRANGER_CHAT, "/help"), secret);
+		await processSoon(first.root);
+		const second = await asNewUser(2, first.root);
+		await linkChat(second, secret);
+		forgetCalls();
+		return { first, second, secret };
+	}
+
+	it("account deletion of the first account deletes its messages there, and only those", async () => {
+		const { first } = await moved();
+
+		await purge(first);
+
+		expect(deletedIds()).toEqual([WELCOME_ID, WELCOME_ID + 1]);
+		// The chat isn't the first account's any more: no note.
+		expect(sent("sendMessage")).toEqual([]);
+	});
+
+	it("hands over a chat the first account had already unlinked", async () => {
+		const { secret, user: first } = await linked();
+		await post(first.root, messageUpdate(STRANGER_CHAT, "/stop"), secret);
+		await processSoon(first.root);
+		const second = await asNewUser(2, first.root);
+		await linkChat(second, secret);
+		forgetCalls();
+
+		await purge(first);
+
+		// The welcome and the /stop reply; not the second account's welcome.
+		expect(deletedIds()).toEqual([WELCOME_ID, WELCOME_ID + 1]);
+	});
+
+	it("a wipe of either account deletes only that account's messages", async () => {
+		const { first, second } = await moved();
+
+		await wipe(second);
+		expect(deletedIds()).toEqual([WELCOME_ID + 2]);
+
+		forgetCalls();
+		await wipe(first);
+		expect(deletedIds()).toEqual([WELCOME_ID, WELCOME_ID + 1]);
+	});
+
+	it("drops the chat's updates from before the move, and the old messages once Telegram can't delete them", async () => {
+		const { first, second, secret } = await moved();
+		await post(second.root, messageUpdate(STRANGER_CHAT, "/help"), secret);
+		await processSoon(second.root);
+
+		// Only the update sent after the move is left.
+		const inbound = await events(first.root);
+		expect(inbound).toHaveLength(1);
+		expect(inbound[0]?.status).toBe("processed");
+
+		const kept = () =>
+			first.root.run((ctx) => ctx.db.query("channel_moved_messages").take(10));
+		expect(await kept()).toHaveLength(1);
+		vi.advanceTimersByTime(2 * DAY);
+		await processSoon(first.root);
+		expect(await kept()).toEqual([]);
 	});
 });

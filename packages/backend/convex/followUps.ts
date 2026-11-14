@@ -788,6 +788,8 @@ export const purgeForProfile = internalMutation({
 				// Cancel the live workflow so it stops nudging a deleted user.
 				await cancelFollowUpWorkflow(ctx, card.workflowId);
 			}
+			// Its Telegram check-in goes neutral, buttons gone, before the card.
+			await collapseCard(ctx, card._id);
 			await deleteResponsesForCard(ctx, card._id);
 			await ctx.db.delete("follow_up_cards", card._id);
 		}

@@ -4,6 +4,7 @@ import type { MutationCtx } from "../_generated/server";
 import { purgeEpisodicEntries } from "../episodicMemory";
 import { deleteResponsesForCard } from "../followUpResponses";
 import { ACTIVE_STATUSES, cancelFollowUpWorkflow } from "../followUps";
+import { collapseCard } from "../outreach/telegram/checkIn";
 
 /**
  * The reference graph for "what dies when a session dies."
@@ -151,6 +152,9 @@ export async function purgeSessions(
 			if (ACTIVE_STATUSES.has(card.status)) {
 				await cancelFollowUpWorkflow(ctx, card.workflowId);
 			}
+			// A ready or shown card never expires, so its Telegram check-in
+			// (card text revealed, buttons live) would outlive the purge.
+			await collapseCard(ctx, card._id);
 			await deleteResponsesForCard(ctx, card._id);
 			await ctx.db.delete("follow_up_cards", card._id);
 		}

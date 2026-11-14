@@ -20,7 +20,11 @@ import {
 import { seedSession } from "../../test/fixtures.helpers";
 import type { SeededUser } from "../../test/harness.helpers";
 import { asNewUser } from "../../test/harness.helpers";
-import { aggregatesMock, revenuecatMock } from "../../test/mocks.helpers";
+import {
+	aggregatesMock,
+	ragMock,
+	revenuecatMock,
+} from "../../test/mocks.helpers";
 import { appLink } from "./appLinks";
 import {
 	ALREADY_ANSWERED_TOAST,
@@ -56,6 +60,8 @@ const h = vi.hoisted(() => ({ pushes: [] as unknown[] }));
 
 vi.mock("../../lib/aggregates", () => aggregatesMock());
 vi.mock("../../revenuecat", () => revenuecatMock(() => false));
+// Data retention purges episodic entries with a session.
+vi.mock("../../rag", () => ragMock());
 vi.mock("../../lib/pushNotifications", () => ({
 	sendPushToProfile: async (_ctx: unknown, args: unknown) => {
 		h.pushes.push(args);
@@ -486,6 +492,51 @@ describe("collapse", () => {
 		await processSoon(user.root);
 
 		expect(collapsedTo()).toEqual([{ buttons: 0, text: CHECK_IN_CLOSED }]);
+	});
+
+	it("data retention purging its session collapses it, revealed card text and all", async () => {
+		const { secret, user } = await linked();
+		const { cardId, workflowId } = await seedCard(user);
+		await nudge(user, workflowId);
+		const { messageId, reveal } = theCheckIn();
+		await post(user.root, tapUpdate(reveal, messageId), secret);
+		await processSoon(user.root);
+		await user.root.run(async (ctx) => {
+			const prefs = await ctx.db
+				.query("preferences")
+				.withIndex("by_profile", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.unique();
+			if (prefs) {
+				await ctx.db.patch("preferences", prefs._id, {
+					dataRetentionPreference: "6_months",
+				});
+			}
+		});
+		forgetCalls();
+
+		vi.setSystemTime(Date.now() + 185 * 24 * 3_600_000);
+		await user.root.mutation(internal.jobs.dataRetention.enforce, {});
+		await processSoon(user.root);
+
+		expect(
+			await user.root.run((ctx) => ctx.db.get("follow_up_cards", cardId))
+		).toBeNull();
+		expect(collapsedTo()).toEqual([{ buttons: 0, text: CHECK_IN_CLOSED }]);
+		expect((await deliveries(user))[0]?.checkInOpen).toBeUndefined();
+	});
+
+	it("purging the profile's cards collapses it", async () => {
+		const { user } = await sentCheckIn();
+
+		await user.root.mutation(internal.followUps.purgeForProfile, {
+			emotionalProfileId: user.profileId,
+		});
+		await processSoon(user.root);
+
+		expect(collapsedTo()).toEqual([{ buttons: 0, text: CHECK_IN_CLOSED }]);
+		expect((await deliveries(user))[0]?.checkInOpen).toBeUndefined();
 	});
 
 	it("unlinking from the app collapses it", async () => {
