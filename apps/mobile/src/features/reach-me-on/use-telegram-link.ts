@@ -15,6 +15,7 @@ import {
 	type LinkStep,
 	linkFlow,
 	linkMsLeft,
+	shareInFlight,
 } from "@/features/reach-me-on/link-flow";
 import type { ChannelEntry } from "@/features/reach-me-on/reach-view";
 import { convexErrorCode } from "@/lib/convex-error-code";
@@ -48,6 +49,8 @@ export function useTelegramLink(
 	const [step, dispatch] = useReducer(linkFlow, "idle");
 	const [minting, setMinting] = useState(false);
 	const minted = useRef<Minted | null>(null);
+	/** The mint under way: a second tap joins it instead of retiring its link. */
+	const inFlight = useRef<Promise<Minted | null>>(null);
 	/** When the link last opened or copied was minted; its expiry ends the wait. */
 	const [handedOffAt, setHandedOffAt] = useState<number | null>(null);
 	/** Bumped by Cancel: a link minted for an earlier try isn't opened or copied. */
@@ -101,11 +104,7 @@ export function useTelegramLink(
 		[posthog]
 	);
 
-	const mint = async (): Promise<Minted | null> => {
-		const cached = minted.current;
-		if (cached && canReuseLink(cached.at, Date.now())) {
-			return cached;
-		}
+	const mintFresh = async (): Promise<Minted | null> => {
 		setMinting(true);
 		try {
 			const regionCode = deviceRegion();
@@ -122,6 +121,14 @@ export function useTelegramLink(
 		} finally {
 			setMinting(false);
 		}
+	};
+
+	const mint = (): Promise<Minted | null> => {
+		const cached = minted.current;
+		if (cached && canReuseLink(cached.at, Date.now())) {
+			return Promise.resolve(cached);
+		}
+		return shareInFlight(inFlight, mintFresh);
 	};
 
 	const start = () => {

@@ -57,3 +57,24 @@ export function linkMsLeft(mintedAt: number, now: number): number {
 export function canReuseLink(mintedAt: number, now: number): boolean {
 	return linkMsLeft(mintedAt, now) >= REUSE_MARGIN_MS;
 }
+
+/**
+ * Run `run` unless a run is already in flight, in which case join it. Each
+ * mint retires the link before it, so taps landing before the first mint
+ * returns must share that one link.
+ */
+export async function shareInFlight<T>(
+	slot: { current: Promise<T> | null },
+	run: () => Promise<T>
+): Promise<T> {
+	if (slot.current) {
+		return slot.current;
+	}
+	const pending = run();
+	slot.current = pending;
+	try {
+		return await pending;
+	} finally {
+		slot.current = null;
+	}
+}

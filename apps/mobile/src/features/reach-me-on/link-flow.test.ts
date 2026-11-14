@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
 	canReuseLink,
 	isLinking,
 	LINK_LIFETIME_MINUTES,
 	type LinkStep,
 	linkFlow,
+	shareInFlight,
 } from "@/features/reach-me-on/link-flow";
 
 const run = (...events: Parameters<typeof linkFlow>[1][]): LinkStep =>
@@ -127,5 +128,35 @@ describe("canReuseLink", () => {
 		expect(
 			canReuseLink(mintedAt, mintedAt + LINK_LIFETIME_MINUTES * MINUTE)
 		).toBe(false);
+	});
+});
+
+describe("shareInFlight", () => {
+	it("mints once for taps that land before the first mint returns", async () => {
+		const slot: { current: Promise<string> | null } = { current: null };
+		const mint = vi.fn(async () => "link-a");
+		const [first, second] = await Promise.all([
+			shareInFlight(slot, mint),
+			shareInFlight(slot, mint),
+		]);
+		expect(mint).toHaveBeenCalledTimes(1);
+		expect(second).toBe(first);
+	});
+
+	it("mints again once the earlier mint has settled", async () => {
+		const slot: { current: Promise<string> | null } = { current: null };
+		const mint = vi.fn(async () => "link");
+		await shareInFlight(slot, mint);
+		await shareInFlight(slot, mint);
+		expect(mint).toHaveBeenCalledTimes(2);
+	});
+
+	it("lets a later tap retry after a failed mint", async () => {
+		const slot: { current: Promise<string> | null } = { current: null };
+		const failing = vi.fn(async () => {
+			throw new Error("offline");
+		});
+		await expect(shareInFlight(slot, failing)).rejects.toThrow("offline");
+		expect(slot.current).toBeNull();
 	});
 });
