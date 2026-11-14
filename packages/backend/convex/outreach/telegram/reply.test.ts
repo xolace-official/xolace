@@ -64,12 +64,12 @@ import {
 const stub = vi.hoisted(() => ({
 	/** Every reply-writer call: its system prompt and turn. */
 	asked: [] as { system: string; user: string }[],
-	/** Reading the reply's context throws. */
-	contextFails: false,
 	/** Runs while the reply is being written, as another transaction would. */
 	duringReply: undefined as (() => Promise<unknown>) | undefined,
 	/** Runs once while the next text is screened, as other work would. */
 	duringScreen: undefined as (() => Promise<unknown>) | undefined,
+	/** Reading the memory preload throws. */
+	memoryFails: false,
 	/** Moderation's result, or a function picking one from the words. */
 	moderation: null as unknown,
 	/** Whether the user has Xolace+. */
@@ -95,17 +95,15 @@ vi.mock("@convex-dev/workflow", async (orig) => {
 	}
 	return { ...real, WorkflowManager };
 });
-vi.mock("../router", async (orig) => {
-	const real = await orig<typeof import("../router")>();
+vi.mock("../../talk/remember", async (orig) => {
+	const real = await orig<typeof import("../../talk/remember")>();
 	return {
 		...real,
-		telegramCrisisSince: (
-			...args: Parameters<typeof real.telegramCrisisSince>
-		) => {
-			if (stub.contextFails) {
-				throw new Error("context read failed");
+		talkPreload: (...args: Parameters<typeof real.talkPreload>) => {
+			if (stub.memoryFails) {
+				throw new Error("memory read failed");
 			}
-			return real.telegramCrisisSince(...args);
+			return real.talkPreload(...args);
 		},
 	};
 });
@@ -174,7 +172,7 @@ stubTelegramEachTest();
 beforeEach(() => {
 	stub.asked = [];
 	stub.duringReply = undefined;
-	stub.contextFails = false;
+	stub.memoryFails = false;
 	stub.moderation = CLEAN;
 	stub.plus = false;
 	stub.queue = [];
@@ -427,7 +425,7 @@ describe("a reply to free text", () => {
 
 	it("still sends the fixed line when something fails before the model", async () => {
 		const { write } = await checkedIn();
-		stub.contextFails = true;
+		stub.memoryFails = true;
 		vi.spyOn(console, "error").mockImplementation(() => undefined);
 
 		await write("Long day");
@@ -440,7 +438,7 @@ describe("a reply to free text", () => {
 	it("keeps Support resources on the failure line when an elevated reply fails before the model", async () => {
 		const { write } = await checkedIn();
 		stub.moderation = ELEVATED;
-		stub.contextFails = true;
+		stub.memoryFails = true;
 		vi.spyOn(console, "error").mockImplementation(() => undefined);
 
 		await write("Some days I don't see the point");
@@ -576,7 +574,7 @@ describe("a reply to free text", () => {
 		const { user, writeQuickly } = await checkedIn();
 		vi.spyOn(console, "error").mockImplementation(() => undefined);
 		await writeQuickly("Long day", 2 * SECOND);
-		stub.contextFails = true;
+		stub.memoryFails = true;
 		// The burst's typing comes after it was taken.
 		beforeNext("sendChatAction", async () => {
 			await user.root.run((ctx) =>
@@ -816,7 +814,7 @@ describe("what a reply writes", () => {
 		expect(await snapshot()).toEqual(before);
 	});
 
-	it("carries nothing Xolace remembers of them, so a chat can't be asked for it", async () => {
+	it("carries Talk's memory and its rules, so a reply can bring it up and quote it", async () => {
 		const { sessionId, user, write } = await checkedIn();
 		await seedMetadata(user.root, sessionId, user.profileId, {
 			thematicTags: ["sister's wedding"],
@@ -838,16 +836,10 @@ describe("what a reply writes", () => {
 		await write("What do you remember about me?");
 
 		const [asked] = stub.asked;
-		const prompt = `${asked?.system}\n${asked?.user}`;
-		for (const remembered of [
-			"feels invisible to their family",
-			"sister's wedding",
-			"left out at the wedding",
-			"Their recent moments",
-			"Asked what you remember about them, answer honestly",
-		]) {
-			expect(prompt).not.toContain(remembered);
-		}
+		expect(asked?.system).toContain("feels invisible to their family");
+		expect(asked?.system).toContain(
+			"Asked what you remember about them, answer honestly"
+		);
 	});
 
 	it("drops the recent turns when the link ends", async () => {
@@ -997,10 +989,10 @@ describe("the daily reply cap", () => {
 	it("doesn't count a reply that failed before the model", async () => {
 		const { useReplies, write } = await checkedIn();
 		vi.spyOn(console, "error").mockImplementation(() => undefined);
-		stub.contextFails = true;
+		stub.memoryFails = true;
 		await write("Long day");
 		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
-		stub.contextFails = false;
+		stub.memoryFails = false;
 
 		await useReplies(DAILY_REPLY_CAP.free);
 
