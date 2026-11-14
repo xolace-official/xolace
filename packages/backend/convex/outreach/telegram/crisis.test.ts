@@ -305,6 +305,30 @@ describe("the 72 h hold", () => {
 			});
 		}
 	);
+
+	it("holds the open card's own nudge too, though the crisis made it escalation-derived", async () => {
+		const { cardId, user, write } = await linked({});
+		await write(CRISIS_TEXT);
+		const nudge = () =>
+			user.root.mutation(internal.outreach.enqueue.enqueue, {
+				content: { body: "Checking in." },
+				emotionalProfileId: user.profileId,
+				followUpId: cardId,
+				intent: "nudge",
+				provenance: { triggerReason: "test" },
+				tier: "standard",
+			});
+
+		vi.advanceTimersByTime(71 * HOUR);
+		expect(await nudge()).toMatchObject({
+			suppressedReason: "escalation_active",
+		});
+
+		vi.advanceTimersByTime(2 * HOUR);
+		expect(await nudge()).not.toMatchObject({
+			suppressedReason: "escalation_active",
+		});
+	});
 });
 
 describe("the next reply", () => {

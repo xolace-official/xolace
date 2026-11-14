@@ -1,5 +1,6 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { sourceEventSince } from "../escalation/events";
 import { hasPremium } from "../lib/premium";
 import { rateLimiter } from "../lib/rateLimits";
 import { ADAPTERS } from "./adapters";
@@ -118,7 +119,9 @@ export async function escalatedRecently(
  *
  * An open escalation-derived card holds every intent except that card's own
  * nudge, and the nudge is exempt from the 72 h hold too: the crisis that
- * raised the event is what the nudge checks in on.
+ * raised the event is what the nudge checks in on. Not after a Telegram
+ * crisis (#772): that marks whichever card was open, so its nudge waits out
+ * the 72 h like everything else.
  */
 export async function escalationOrDormancy(
 	ctx: QueryCtx,
@@ -151,6 +154,17 @@ export async function escalationOrDormancy(
 		if (await escalatedRecently(ctx, input.emotionalProfileId, now)) {
 			return "escalation_active";
 		}
+	} else if (
+		// A Telegram crisis marks whatever card was open, about anything, so
+		// that card's nudge isn't the check-in on it: hold it for 72 h (#772).
+		(await sourceEventSince(
+			ctx,
+			input.emotionalProfileId,
+			"telegram",
+			now - ESCALATION_HOLD_MS
+		)) !== null
+	) {
+		return "escalation_active";
 	}
 
 	return null;
