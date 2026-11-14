@@ -23,7 +23,7 @@ import { asNewUser, type SeededUser } from "../../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../../test/mocks.helpers";
 import { ESCALATION_HOLD_MS } from "../router";
 import { appLink } from "./appLinks";
-import { DAILY_REPLY_CAP } from "./caps";
+import { BURST_WAIT_MS, DAILY_REPLY_CAP } from "./caps";
 import type { Keyboard } from "./checkIn";
 import {
 	ANSWER_BUTTONS,
@@ -1103,6 +1103,45 @@ describe("a burst of texts", () => {
 
 		expect(sentMessages()).toHaveLength(1);
 		expect(stub.asked).toHaveLength(1);
+		expect(stub.asked[0]?.user).toContain("Long day");
+		expect(stub.asked[0]?.user).toContain("Work again");
+	});
+
+	it("still waits 6 s after the later text when an earlier one finishes screening last", async () => {
+		const { user, writeQuickly } = await checkedIn();
+		const later = { receivedAt: 0 };
+
+		// Screenings run side by side: a later text is queued while this one
+		// is still being screened.
+		stub.duringScreen = async () => {
+			const [identity] = await identities(user);
+			if (!identity) {
+				throw new Error("no identity");
+			}
+			const link = { identityId: identity._id, linkedAt: identity.linkedAt };
+			later.receivedAt = Date.now() + 2 * SECOND;
+			await user.root.mutation(
+				internal.outreach.telegram.reply.noteScreening,
+				link
+			);
+			await user.root.mutation(internal.outreach.telegram.reply.queueText, {
+				...link,
+				chatId: String(STRANGER_CHAT),
+				level: "none",
+				receivedAt: later.receivedAt,
+				since: Date.now(),
+				support: false,
+				text: "Work again",
+			});
+		};
+		await writeQuickly("Long day", 2 * SECOND);
+
+		const [identity] = await identities(user);
+		expect(identity?.pendingBurst?.dueAt).toBe(
+			later.receivedAt + BURST_WAIT_MS
+		);
+		await processSoon(user.root);
+		expect(sentMessages()).toHaveLength(1);
 		expect(stub.asked[0]?.user).toContain("Long day");
 		expect(stub.asked[0]?.user).toContain("Work again");
 	});

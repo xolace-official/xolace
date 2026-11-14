@@ -638,9 +638,9 @@ export const endScreening = internalMutation({
 });
 
 /**
- * Add a screened text to the chat's burst, move its reply to 6 s from now,
- * and schedule that reply. An earlier text's reply finds itself moved and
- * sends nothing; the last one answers the whole burst.
+ * Add a screened text to the chat's burst, move its reply to 6 s after the
+ * latest text's arrival, and schedule that reply. An earlier text's reply
+ * finds itself moved and sends nothing; the last one answers the whole burst.
  */
 export const queueText = internalMutation({
 	args: {
@@ -673,7 +673,12 @@ export const queueText = internalMutation({
 			identity.pendingBurst?.linkedAt === args.linkedAt
 				? identity.pendingBurst
 				: undefined;
-		const dueAt = args.receivedAt + BURST_WAIT_MS;
+		// Texts are screened side by side, so one that arrived earlier can be
+		// queued after a later one: it never moves the reply sooner.
+		const dueAt = Math.max(
+			args.receivedAt + BURST_WAIT_MS,
+			waiting?.dueAt ?? 0
+		);
 		await ctx.db.patch("channel_identities", identity._id, {
 			...doneScreening(identity),
 			pendingBurst: {
@@ -684,16 +689,19 @@ export const queueText = internalMutation({
 				texts: [...(waiting?.texts ?? []), args.text].slice(-BURST_MAX_TEXTS),
 			},
 		});
-		await ctx.scheduler.runAt(
-			Math.max(dueAt, Date.now()),
-			internal.outreach.telegram.reply.answerBurst,
-			{
-				chatId: args.chatId,
-				dueAt,
-				identityId: identity._id,
-				linkedAt: args.linkedAt,
-			}
-		);
+		// Unmoved, the reply already scheduled for it still answers it.
+		if (dueAt !== waiting?.dueAt) {
+			await ctx.scheduler.runAt(
+				Math.max(dueAt, Date.now()),
+				internal.outreach.telegram.reply.answerBurst,
+				{
+					chatId: args.chatId,
+					dueAt,
+					identityId: identity._id,
+					linkedAt: args.linkedAt,
+				}
+			);
+		}
 		return null;
 	},
 	returns: v.null(),
