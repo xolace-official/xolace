@@ -71,20 +71,28 @@ function linkStatus(
 async function channelEntry(
 	ctx: QueryCtx,
 	channel: OutreachChannel,
-	profile: Doc<"emotional_profiles">
+	profile: Doc<"emotional_profiles">,
+	pushOn: boolean
 ): Promise<ChannelEntry> {
 	const unavailable = await channelUnavailable(ctx, channel, profile);
-	const base = {
+	const common = {
 		available: unavailable === null,
 		channel,
 		isFirst: false,
 		requiresPlus: (await channelConfig(ctx, channel)).plan === "plus",
 	};
 	if (channel === "push") {
-		// Push is the app itself: nothing to link.
-		return { ...base, linked: true, status: "linked" };
+		// Push is the app itself: nothing to link. With notifications off the
+		// router skips it (`push_off`), so it isn't open now.
+		return {
+			...common,
+			available: common.available && pushOn,
+			linked: true,
+			status: "linked",
+		};
 	}
 	const identities = await identitiesOf(ctx, profile._id, channel);
+	const base = common;
 	const link = currentLink(identities);
 	if (link) {
 		return {
@@ -129,9 +137,11 @@ export const listChannels = query({
 		const shown = [
 			...new Set([...order, ...ALL_CHANNELS].filter((c) => offered.has(c))),
 		];
+		// As the router reads it: absent preferences are off too.
+		const pushOn = notifications?.enabled === true;
 		const entries: ChannelEntry[] = [];
 		for (const channel of shown) {
-			entries.push(await channelEntry(ctx, channel, profile));
+			entries.push(await channelEntry(ctx, channel, profile, pushOn));
 		}
 		// First = the channel routing would try first: the first in the
 		// person's order that is linked and open to them now.

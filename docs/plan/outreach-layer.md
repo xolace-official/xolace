@@ -467,7 +467,7 @@ returns. `createLink` is `outreach/telegram/link:createLink`; the rest live in
 
 | Function | Kind | Notes |
 |---|---|---|
-| `listChannels` | query | One entry per channel the deployment offers (Telegram omitted when `not_configured`): `channel`, `status` (`linked \| paused \| needs_plus \| disconnected \| not_linked`), `available`, `requiresPlus`, `linked`, `isFirst`, `revokedReason?`, `displayHandle?`. Reactive, so the link step updates live. |
+| `listChannels` | query | One entry per channel the deployment offers (Telegram omitted when `not_configured`): `channel`, `status` (`linked \| paused \| needs_plus \| disconnected \| not_linked`), `available`, `requiresPlus`, `linked`, `isFirst`, `revokedReason?`, `displayHandle?`. Push is `available: false` and never `isFirst` while notifications are off. Reactive, so the link step updates live. |
 | `telegram.createLink` | action | §7. Args `regionCode?`, `consentLanguageVersion`. |
 | `unlinkChannel` | mutation | `{ channel }` |
 | `setChannelPaused` | mutation | `{ channel, paused }` |
