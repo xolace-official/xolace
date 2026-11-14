@@ -18,6 +18,8 @@ import {
 import type { ChannelEntry } from "@/features/reach-me-on/reach-view";
 import { convexErrorCode } from "@/lib/convex-error-code";
 
+type LinkSource = "settings" | "offer_card";
+
 /** Reuse a minted link only well inside its lifetime. */
 const LINK_REUSE_MS = (LINK_LIFETIME_MINUTES - 1) * 60_000;
 /** How long the "Linked" confirmation stays before the card returns. */
@@ -35,7 +37,11 @@ function mintFailure(error: unknown): string {
 }
 
 /** The three-step Telegram link inside its card (#733). */
-export function useTelegramLink(telegram: ChannelEntry | undefined) {
+export function useTelegramLink(
+	telegram: ChannelEntry | undefined,
+	/** Where the link starts: the sheet, or the one-time offer (#777). */
+	source: LinkSource = "settings"
+) {
 	const createLink = useAction(api.outreach.telegram.link.createLink);
 	const posthog = usePostHog();
 	const { toast } = useToast();
@@ -89,7 +95,7 @@ export function useTelegramLink(telegram: ChannelEntry | undefined) {
 			const regionCode = deviceRegion();
 			const url = await createLink({
 				consentLanguageVersion: TELEGRAM_OUTREACH_CONSENT_VERSION,
-				source: "settings",
+				source,
 				...(regionCode && { regionCode }),
 			});
 			minted.current = { at: Date.now(), url };
@@ -106,7 +112,7 @@ export function useTelegramLink(telegram: ChannelEntry | undefined) {
 		posthog.capture("channel_link_started", {
 			channel: "telegram",
 			relink: telegram?.status === "disconnected",
-			source: "settings",
+			source,
 		});
 		dispatch({ type: "start" });
 	};

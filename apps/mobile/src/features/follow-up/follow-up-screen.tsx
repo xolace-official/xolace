@@ -32,6 +32,7 @@ import {
 } from "@/features/follow-up/stack-cards";
 import { StillHereStep } from "@/features/follow-up/still-here-step";
 import { removeEmDash } from "@/features/quotes/utils/text-utils";
+import { TelegramOfferCard } from "@/features/reach-me-on/components/telegram-offer-card";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { playFollowUpEntrance } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
@@ -211,6 +212,13 @@ export function FollowUpScreen() {
 							title={VENT_LABEL}
 						/>
 					</>
+				)}
+				{picked && (
+					<TelegramOfferCard
+						answer={picked}
+						escalationDerived={escalationDerived}
+						tier={tier}
+					/>
 				)}
 				<View
 					className="items-center bg-surface pt-4"

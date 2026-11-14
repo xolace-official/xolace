@@ -106,6 +106,16 @@ describe("account flags", () => {
 		expect(has("user_b", "starterSuggestionsSeen")).toBe(false);
 	});
 
+	// A flag added after the per-account move has no device-wide stand-in.
+	it("the Telegram offer's Not now is kept per account", () => {
+		useAppStore.setState(noFlags);
+		useAppStore.getState().markAccountFlag("user_a", "telegramOfferDismissed");
+		useAppStore.getState().claimLegacyAccountFlags("user_b");
+
+		expect(has("user_a", "telegramOfferDismissed")).toBe(true);
+		expect(has("user_b", "telegramOfferDismissed")).toBe(false);
+	});
+
 	it("a device-wide mark from before the update stands in until it's claimed", () => {
 		useAppStore.setState({ ...noFlags, notifNudgeDismissed: true });
 		expect(has("user_a", "notifNudgeDismissed")).toBe(true);
