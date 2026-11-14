@@ -103,7 +103,7 @@ const TURN_MAX_CHARS = 500;
 /** What the model and the safeguard read of one text. */
 export const TEXT_MAX_CHARS = REFLECTION_MAX_LENGTH;
 /** A burst keeps its latest texts, so a flood can't grow the row. */
-const BURST_MAX_TEXTS = 10;
+export const BURST_MAX_TEXTS = 10;
 
 const tapAnswerValidator = v.union(
 	v.literal("lighter"),
@@ -685,14 +685,31 @@ export const queueText = internalMutation({
 			args.receivedAt + BURST_WAIT_MS,
 			waiting?.dueAt ?? 0
 		);
+		// It takes its place by arrival, so the burst reads as it was sent and
+		// a full one lets go of its earliest text. A burst queued before
+		// arrivals were kept has its texts ahead of any new one.
+		const held = waiting?.texts ?? [];
+		const heldArrivals =
+			waiting?.arrivals?.length === held.length
+				? waiting.arrivals
+				: held.map(() => 0);
+		const later = heldArrivals.findIndex((at) => at > args.receivedAt);
+		const place = later === -1 ? held.length : later;
+		const texts = [...held.slice(0, place), args.text, ...held.slice(place)];
+		const arrivals = [
+			...heldArrivals.slice(0, place),
+			args.receivedAt,
+			...heldArrivals.slice(place),
+		];
 		await ctx.db.patch("channel_identities", identity._id, {
 			...doneScreening(identity),
 			pendingBurst: {
+				arrivals: arrivals.slice(-BURST_MAX_TEXTS),
 				dueAt,
 				level: waiting ? worse(waiting.level, args.level) : args.level,
 				linkedAt: args.linkedAt,
 				support: (waiting?.support ?? false) || args.support,
-				texts: [...(waiting?.texts ?? []), args.text].slice(-BURST_MAX_TEXTS),
+				texts: texts.slice(-BURST_MAX_TEXTS),
 			},
 		});
 		// Unmoved, the reply already scheduled for it still answers it.

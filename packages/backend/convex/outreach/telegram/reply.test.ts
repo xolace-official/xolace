@@ -37,7 +37,7 @@ import {
 	SUPPORT_RESOURCES_BUTTON,
 } from "./copy";
 import { eraseTelegramChats } from "./erase";
-import { REFLECTION_WINDOW_MS, TEXT_MAX_CHARS } from "./reply";
+import { BURST_MAX_TEXTS, REFLECTION_WINDOW_MS, TEXT_MAX_CHARS } from "./reply";
 import {
 	backend,
 	beforeNext,
@@ -1153,6 +1153,108 @@ describe("a burst of texts", () => {
 		expect(sentMessages()).toHaveLength(1);
 		expect(stub.asked[0]?.user).toContain("Long day");
 		expect(stub.asked[0]?.user).toContain("Work again");
+	});
+
+	it("keeps its texts in the order they arrived when an earlier one finishes screening last", async () => {
+		const { user, writeQuickly } = await checkedIn();
+		const earlier = "a".repeat(TEXT_MAX_CHARS);
+
+		// A later, short text is queued while the long earlier one is screened.
+		stub.duringScreen = async () => {
+			const [identity] = await identities(user);
+			if (!identity) {
+				throw new Error("no identity");
+			}
+			const link = { identityId: identity._id, linkedAt: identity.linkedAt };
+			await user.root.mutation(
+				internal.outreach.telegram.reply.noteScreening,
+				link
+			);
+			await user.root.mutation(internal.outreach.telegram.reply.queueText, {
+				...link,
+				chatId: String(STRANGER_CHAT),
+				level: "none",
+				receivedAt: Date.now() + 2 * SECOND,
+				since: Date.now(),
+				support: false,
+				text: "The newest thing I said",
+			});
+		};
+		await writeQuickly(earlier, 2 * SECOND);
+
+		const [identity] = await identities(user);
+		expect(identity?.pendingBurst?.texts).toEqual([
+			earlier,
+			"The newest thing I said",
+		]);
+		await processSoon(user.root);
+		expect(sentMessages()).toHaveLength(1);
+		// Its newest words survive the trim, last, as they were sent.
+		expect(stub.asked[0]?.user).toContain("a\nThe newest thing I said");
+	});
+
+	it("keeps its latest arrivals when an earlier text is queued into a full burst", async () => {
+		const { user } = await checkedIn();
+		const [identity] = await identities(user);
+		if (!identity) {
+			throw new Error("no identity");
+		}
+		const start = Date.now();
+		const queue = (text: string, receivedAt: number) =>
+			user.root.mutation(internal.outreach.telegram.reply.queueText, {
+				chatId: String(STRANGER_CHAT),
+				identityId: identity._id,
+				level: "none",
+				linkedAt: identity.linkedAt,
+				receivedAt,
+				support: false,
+				text,
+			});
+		for (let i = 1; i <= BURST_MAX_TEXTS; i++) {
+			await queue(`text ${i}`, start + i * SECOND);
+		}
+
+		// The oldest of all finishes screening last: it's the one let go.
+		await queue("text 0", start);
+
+		const [after] = await identities(user);
+		expect(after?.pendingBurst?.texts).toEqual(
+			Array.from({ length: BURST_MAX_TEXTS }, (_, i) => `text ${i + 1}`)
+		);
+	});
+
+	it("adds to a burst queued before arrivals were kept, after its texts", async () => {
+		const { user } = await checkedIn();
+		const [identity] = await identities(user);
+		if (!identity) {
+			throw new Error("no identity");
+		}
+		const now = Date.now();
+		await user.root.run((ctx) =>
+			ctx.db.patch("channel_identities", identity._id, {
+				pendingBurst: {
+					dueAt: now + BURST_WAIT_MS,
+					level: "none",
+					linkedAt: identity.linkedAt,
+					support: false,
+					texts: ["Long day"],
+				},
+			})
+		);
+
+		await user.root.mutation(internal.outreach.telegram.reply.queueText, {
+			chatId: String(STRANGER_CHAT),
+			identityId: identity._id,
+			level: "none",
+			linkedAt: identity.linkedAt,
+			receivedAt: now - SECOND,
+			support: false,
+			text: "Work again",
+		});
+
+		const [after] = await identities(user);
+		expect(after?.pendingBurst?.texts).toEqual(["Long day", "Work again"]);
+		expect(after?.pendingBurst?.arrivals).toEqual([0, now - SECOND]);
 	});
 
 	it("carries Support resources when any text in it was elevated", async () => {
