@@ -21,6 +21,7 @@ import {
 	channelErrorKindValidator,
 	type IneligibilityReason,
 	type OutreachChannel,
+	type OutreachMoment,
 	outreachChannelValidator,
 	type SuppressedReason,
 } from "./validators";
@@ -126,6 +127,29 @@ function failedAttempt(error: ChannelError): Attempt {
 	};
 }
 
+/**
+ * Whether the in-app moment a missed-beat push stands in for was shown (or
+ * is gone): "a moment the app showed never pushes". A badge push stands down
+ * once any badge it names was seen.
+ */
+async function momentSeen(
+	ctx: MutationCtx,
+	moment: OutreachMoment
+): Promise<boolean> {
+	if (moment.kind === "domain_unlock") {
+		const session = await ctx.db.get("sessions", moment.sessionId);
+		const unlock = session?.domainUnlock;
+		return !unlock || unlock.seenAt !== undefined;
+	}
+	for (const id of moment.achievementIds) {
+		const row = await ctx.db.get("user_achievements", id);
+		if (!row || row.seenAt !== undefined) {
+			return true;
+		}
+	}
+	return false;
+}
+
 type Recheck =
 	| { kind: "held"; reason: SuppressedReason }
 	/** The person may still be reached, but not on this delivery's channel. */
@@ -135,10 +159,11 @@ type Recheck =
  * Why a queued delivery may no longer go, if it may not. A nudge invites the
  * user back to its follow-up: once they're back (the card is ready or shown)
  * or it's answered, dismissed or gone, nothing is left to nudge (a deferral
- * or a retry can outlive it). A quiet-window deferral can sit for hours,
- * and what changed in that time still counts: on its first try gates 2–4
- * run again (a deletion request, a crisis, a toggle turned off), and so does
- * the channel check (push turned off, a kill switch, a lost plan).
+ * or a retry can outlive it). A missed-beat push stands down once the app
+ * showed its moment. A quiet-window deferral can sit for hours, and what
+ * changed in that time still counts: on its first try gates 2–4 run again
+ * (a deletion request, a crisis, a toggle turned off), and so does the
+ * channel check (push turned off, a kill switch, a lost plan).
  */
 async function heldSince(
 	ctx: MutationCtx,
@@ -154,6 +179,9 @@ async function heldSince(
 		if (!waiting) {
 			return { kind: "held", reason: "card_closed" };
 		}
+	}
+	if (outreach.moment && (await momentSeen(ctx, outreach.moment))) {
+		return { kind: "held", reason: "moment_seen" };
 	}
 	if (outreach.sendAt === undefined || delivery.attempts > 0) {
 		return null;

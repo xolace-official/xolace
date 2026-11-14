@@ -60,7 +60,8 @@ const adminSuppressedReasonValidator = v.union(
 	v.literal("toggle_off"),
 	v.literal("no_channel"),
 	v.literal("account_deleted"),
-	v.literal("card_closed")
+	v.literal("card_closed"),
+	v.literal("moment_seen")
 );
 
 const channelEntryValidator = v.object({

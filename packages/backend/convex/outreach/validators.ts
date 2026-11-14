@@ -49,7 +49,9 @@ export const suppressedReasonValidator = v.union(
 	 * A nudge whose follow-up closed, or the user came back to, before it went
 	 * (answered, dismissed, gone; or ready or shown in the app).
 	 */
-	v.literal("card_closed")
+	v.literal("card_closed"),
+	/** A missed-beat push whose moment the app showed before it went. */
+	v.literal("moment_seen")
 );
 export type SuppressedReason = Infer<typeof suppressedReasonValidator>;
 
@@ -133,6 +135,20 @@ export const inboundStatusValidator = v.union(
 	v.literal("failed"),
 	v.literal("ignored")
 );
+
+/**
+ * The in-app moment a missed-beat push stands in for: the badges it names, or
+ * the session whose unlock beat went unseen. The app showing it before the
+ * push goes (a quiet-window deferral can be hours) stands the push down.
+ */
+export const outreachMomentValidator = v.union(
+	v.object({
+		achievementIds: v.array(v.id("user_achievements")),
+		kind: v.literal("badges"),
+	}),
+	v.object({ kind: v.literal("domain_unlock"), sessionId: v.id("sessions") })
+);
+export type OutreachMoment = Infer<typeof outreachMomentValidator>;
 
 /** Channel-neutral, lock-screen safe. */
 export const outreachContentValidator = v.object({

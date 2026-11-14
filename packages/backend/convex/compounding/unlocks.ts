@@ -167,6 +167,8 @@ export const sendMissedPush = internalMutation({
 			dedupeKey: `domain_unlock:${sessionId}`,
 			emotionalProfileId: session.emotionalProfileId,
 			intent: "domain_unlock",
+			// A beat seen while this waits out the quiet window never pushes.
+			moment: { kind: "domain_unlock", sessionId },
 			provenance: { triggerReason: "domain_unlock_missed" },
 		});
 		return null;
