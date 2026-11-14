@@ -193,7 +193,7 @@ describe("a crisis text", () => {
 });
 
 describe("when the country is unknown", () => {
-	it("points to the local emergency number and gives the IASP button", async () => {
+	it("points to the local emergency number and gives the IASP button as well as more support options", async () => {
 		const { user, write } = await linked();
 		const [identity] = await identities(user);
 		if (!identity) {
@@ -213,6 +213,7 @@ describe("when the country is unknown", () => {
 				text: FIND_A_HELPLINE_BUTTON,
 				url: "https://www.iasp.info/resources/Crisis_Centres/",
 			},
+			{ text: MORE_SUPPORT_BUTTON, url: appLink("support") },
 			{ text: OPEN_XOLACE_BUTTON, url: appLink("app") },
 		]);
 	});

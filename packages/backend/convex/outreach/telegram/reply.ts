@@ -719,15 +719,14 @@ export const recordCrisis = internalMutation({
 });
 
 /**
- * The crisis reply's buttons: the app's crisis screen, or IASP's directory
- * when the country is unknown, then Open Xolace.
+ * The crisis reply's buttons: IASP's directory first when the country is
+ * unknown, then the app's crisis screen and Open Xolace.
  */
 const crisisKeyboard = (contacts: CrisisContacts | null): Keyboard => [
-	[
-		contacts
-			? { text: MORE_SUPPORT_BUTTON, url: appLink("support") }
-			: { text: FIND_A_HELPLINE_BUTTON, url: IASP_DIRECTORY_URL },
-	],
+	...(contacts
+		? []
+		: [[{ text: FIND_A_HELPLINE_BUTTON, url: IASP_DIRECTORY_URL }]]),
+	[{ text: MORE_SUPPORT_BUTTON, url: appLink("support") }],
 	[{ text: OPEN_XOLACE_BUTTON, url: appLink("app") }],
 ];
 

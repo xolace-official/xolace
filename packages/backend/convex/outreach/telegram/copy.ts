@@ -146,7 +146,7 @@ export function crisisReply(contacts: CrisisContacts | null): string {
 /** Opens the app's crisis resources screen, `from=telegram`. */
 export const MORE_SUPPORT_BUTTON = "More support options";
 
-/** IASP's directory, in place of More support options when the country is unknown. */
+/** IASP's directory, first when the country is unknown. */
 export const FIND_A_HELPLINE_BUTTON = "Find a helpline";
 
 // ---------------------------------------------------------------------------
