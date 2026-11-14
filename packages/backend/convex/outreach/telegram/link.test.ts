@@ -215,6 +215,7 @@ describe("listChannels", () => {
 			{
 				available: true,
 				channel: "telegram",
+				everLinked: false,
 				isFirst: false,
 				linked: false,
 				requiresPlus: false,
@@ -227,6 +228,7 @@ describe("listChannels", () => {
 				available: true,
 				channel: "telegram",
 				displayHandle: "sam_t",
+				everLinked: true,
 				isFirst: true,
 				linked: true,
 				requiresPlus: false,
