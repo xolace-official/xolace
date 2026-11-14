@@ -35,6 +35,25 @@ export function isLive(identity: Doc<"channel_identities">): boolean {
 	return identity.status === "active" || identity.status === "paused";
 }
 
+/** The live link among a channel's rows: an active one, else a paused one. */
+export function currentLink(
+	identities: Doc<"channel_identities">[]
+): Doc<"channel_identities"> | undefined {
+	return (
+		identities.find((i) => i.status === "active") ??
+		identities.find((i) => i.status === "paused")
+	);
+}
+
+/** The most recently revoked of a channel's rows. */
+export function lastRevoked(
+	identities: Doc<"channel_identities">[]
+): Doc<"channel_identities"> | undefined {
+	return identities
+		.filter((i) => i.status === "revoked")
+		.sort((a, b) => (b.revokedAt ?? 0) - (a.revokedAt ?? 0))[0];
+}
+
 /** Live statuses first, so revoked history can never crowd a live link out. */
 const IDENTITY_STATUSES = ["active", "paused", "revoked"] as const;
 

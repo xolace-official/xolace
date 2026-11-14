@@ -50,6 +50,20 @@ const DORMANCY_INTENTS: ReadonlySet<OutreachIntent> = new Set([
 
 type Notifications = Doc<"preferences">["notifications"];
 
+/**
+ * 30 days with no session. Holds only `DORMANCY_INTENTS`: nudges,
+ * milestones and achievements still go.
+ */
+export function isDormant(
+	profile: Doc<"emotional_profiles">,
+	now: number
+): boolean {
+	return (
+		profile.lastSessionAt !== undefined &&
+		now - profile.lastSessionAt > INACTIVE_THRESHOLD_MS
+	);
+}
+
 export type RouteInput = {
 	emotionalProfileId: Id<"emotional_profiles">;
 	followUpId?: Id<"follow_up_cards">;
@@ -97,21 +111,30 @@ export async function openEscalationCard(
 	return null;
 }
 
-/** Whether an escalation event was raised for the profile in the last 72 h. */
-export async function escalatedRecently(
+/** The profile's newest escalation event still inside the 72 h hold. */
+export async function latestHeldEscalation(
 	ctx: QueryCtx,
 	emotionalProfileId: Id<"emotional_profiles">,
 	now: number
-): Promise<boolean> {
-	const recent = await ctx.db
+): Promise<Doc<"escalation_events"> | null> {
+	return await ctx.db
 		.query("escalation_events")
 		.withIndex("by_profile", (q) =>
 			q
 				.eq("emotionalProfileId", emotionalProfileId)
 				.gte("createdAt", now - ESCALATION_HOLD_MS)
 		)
+		.order("desc")
 		.first();
-	return recent !== null;
+}
+
+/** Whether an escalation event was raised for the profile in the last 72 h. */
+export async function escalatedRecently(
+	ctx: QueryCtx,
+	emotionalProfileId: Id<"emotional_profiles">,
+	now: number
+): Promise<boolean> {
+	return (await latestHeldEscalation(ctx, emotionalProfileId, now)) !== null;
 }
 
 /**
@@ -130,11 +153,7 @@ export async function escalationOrDormancy(
 	now: number
 ): Promise<SuppressedReason | null> {
 	// Dormancy first: it needs no reads, and either hold suppresses.
-	if (
-		DORMANCY_INTENTS.has(input.intent) &&
-		profile.lastSessionAt !== undefined &&
-		now - profile.lastSessionAt > INACTIVE_THRESHOLD_MS
-	) {
+	if (DORMANCY_INTENTS.has(input.intent) && isDormant(profile, now)) {
 		return "user_inactive";
 	}
 

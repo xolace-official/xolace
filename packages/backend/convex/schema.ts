@@ -89,6 +89,23 @@ export default defineSchema({
 	]),
 
 	// ===========================================================
+	// ADMIN AUDIT LOG (#775)
+	// ===========================================================
+	//
+	// One row each time an admin looks at a user's private records: which
+	// admin, whose records, when. Clerk ids, not profile ids, so a row says
+	// who it was about after the account is gone. Append-only.
+	//
+	admin_audit_log: defineTable({
+		action: v.literal("outreach_viewed"),
+		adminClerkUserId: v.string(),
+		at: v.number(),
+		targetClerkUserId: v.string(),
+	})
+		.index("by_target", ["targetClerkUserId", "at"])
+		.index("by_admin", ["adminClerkUserId", "at"]),
+
+	// ===========================================================
 	// AGE DECLARATIONS (#716)
 	// ===========================================================
 	//

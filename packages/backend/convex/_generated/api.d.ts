@@ -26,6 +26,7 @@ import type * as admin_imports from "../admin/imports.js";
 import type * as admin_library from "../admin/library.js";
 import type * as admin_monthlyEvents from "../admin/monthlyEvents.js";
 import type * as admin_outreachChannels from "../admin/outreachChannels.js";
+import type * as admin_outreachView from "../admin/outreachView.js";
 import type * as admin_searchIndex from "../admin/searchIndex.js";
 import type * as admin_sources from "../admin/sources.js";
 import type * as admin_uploads from "../admin/uploads.js";
@@ -338,6 +339,7 @@ declare const fullApi: ApiFromModules<{
   "admin/library": typeof admin_library;
   "admin/monthlyEvents": typeof admin_monthlyEvents;
   "admin/outreachChannels": typeof admin_outreachChannels;
+  "admin/outreachView": typeof admin_outreachView;
   "admin/searchIndex": typeof admin_searchIndex;
   "admin/sources": typeof admin_sources;
   "admin/uploads": typeof admin_uploads;
