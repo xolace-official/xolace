@@ -598,6 +598,37 @@ describe("a reply to free text", () => {
 		expect(deleted).not.toContain(lastSentMessageId());
 	});
 
+	it("deletes a crisis reply whose send finished after account deletion", async () => {
+		const { user, write } = await checkedIn();
+		beforeNext("sendMessage", () =>
+			user.root.run(async (ctx) => {
+				await eraseTelegramChats(ctx, user.profileId, { accountDeleted: true });
+				// Deletion's last step: the chat's row goes.
+				for (const identity of await ctx.db
+					.query("channel_identities")
+					.withIndex("by_profile_channel", (q) =>
+						q.eq("emotionalProfileId", user.profileId)
+					)
+					.collect()) {
+					await ctx.db.delete("channel_identities", identity._id);
+				}
+			})
+		);
+
+		// The crisis reply is the next message sent; the final note follows it.
+		const crisisId = lastSentMessageId() + 1;
+
+		await write("I want to end my life");
+
+		expect(sentMessages().map((c) => c.params.text)).toContain(
+			crisisReply(crisisContactsFor("GH"))
+		);
+		const deleted = sent("deleteMessages").flatMap(
+			(c) => c.params.message_ids as number[]
+		);
+		expect(deleted).toContain(crisisId);
+	});
+
 	it("deletes a reply whose send finished after a data wipe", async () => {
 		const { user, write } = await checkedIn();
 		beforeNext("sendMessage", () =>

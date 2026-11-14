@@ -999,7 +999,10 @@ async function sendReply(
 	keyboard: Keyboard,
 	/** When the reply began: a wipe after it means it carries old context. */
 	since?: number,
-	/** A crisis reply: noted, never deleted by a wipe it raced (#772). */
+	/**
+	 * A crisis reply: never deleted by a wipe it raced (#772). Account deletion
+	 * still removes it, as it does every message the bot sent.
+	 */
 	{ keep = false }: { keep?: boolean } = {}
 ): Promise<boolean> {
 	const { chatId, identityId, linkedAt } = job;
@@ -1038,8 +1041,10 @@ async function sendReply(
 	try {
 		await ctx.runMutation(internal.outreach.telegram.lifecycle.recordSent, {
 			chatId,
+			// A wipe spares a crisis reply; account deletion doesn't.
+			forLink: true,
 			messageId,
-			...(!keep && { forLink: true, sentSince }),
+			...(!keep && { sentSince }),
 		});
 	} catch (error) {
 		console.error("[telegram] noting a sent reply failed", error);
