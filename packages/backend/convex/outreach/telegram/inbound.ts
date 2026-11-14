@@ -209,7 +209,8 @@ export const claimUpdate = internalMutation({
 					{ chatId, kind: "help", linkedAt: identity.linkedAt },
 				]);
 			}
-			const text = message.text?.trim();
+			// A photo's or a file's caption is their words too, screened the same.
+			const text = (message.text ?? message.caption)?.trim();
 			if (!text) {
 				return await close("ignored", []);
 			}

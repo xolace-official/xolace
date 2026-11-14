@@ -37,6 +37,7 @@ import {
 	identities,
 	linkChat,
 	messageUpdate,
+	photoUpdate,
 	post,
 	processFor,
 	processSoon,
@@ -332,6 +333,20 @@ describe("when recording the crisis fails", () => {
 				provenance: { triggerReason: "test" },
 			})
 		).toMatchObject({ suppressedReason: "escalation_active" });
+	});
+});
+
+describe("a crisis in a photo's caption", () => {
+	it("is screened as text is, and gets the fixed reply", async () => {
+		const { secret, user } = await linked();
+
+		await post(user.root, photoUpdate(STRANGER_CHAT, CRISIS_TEXT), secret);
+		await processSoon(user.root);
+
+		expect(stub.asked).toHaveLength(0);
+		expect(sent("sendMessage")).toHaveLength(1);
+		expect(lastReply()?.params.text).toBe(GHANA_CRISIS_REPLY);
+		expect(await escalations(user)).toHaveLength(1);
 	});
 });
 

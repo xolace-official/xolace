@@ -176,6 +176,22 @@ export function messageUpdate(chatId = STRANGER_CHAT, text = "hello?") {
 	};
 }
 
+/** A photo with no text: its caption when given, else nothing to read. */
+export function photoUpdate(chatId = STRANGER_CHAT, caption?: string) {
+	const { message, update_id } = messageUpdate(chatId);
+	return {
+		message: {
+			chat: message.chat,
+			date: message.date,
+			from: message.from,
+			message_id: message.message_id,
+			photo: [{ file_id: "photo", file_unique_id: "p", height: 90, width: 90 }],
+			...(caption !== undefined && { caption }),
+		},
+		update_id,
+	};
+}
+
 export const post = (t: Backend, update: unknown, secret?: string | null) =>
 	t.fetch(TELEGRAM_WEBHOOK_PATH, {
 		body: JSON.stringify(update),
