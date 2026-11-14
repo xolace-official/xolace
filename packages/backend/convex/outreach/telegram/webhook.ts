@@ -38,6 +38,7 @@ const isMessage = (value: unknown) =>
 	isObject(value) &&
 	isChat(value.chat) &&
 	optional(value.text, "string") &&
+	optional(value.caption, "string") &&
 	(value.from === undefined || isUser(value.from));
 
 /** Each update kind this bot handles, checked on the fields it reads. */

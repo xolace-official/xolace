@@ -28,15 +28,20 @@ import {
 } from "./copy";
 import {
 	backend,
+	beforeNext,
 	configure,
 	DAY,
+	failNext,
 	forgetCalls,
 	HOUR,
 	identities,
 	linkChat,
 	messageUpdate,
+	photoUpdate,
 	post,
+	processFor,
 	processSoon,
+	SECOND,
 	STRANGER_CHAT,
 	sent,
 	setTelegram,
@@ -46,6 +51,8 @@ import {
 const stub = vi.hoisted(() => ({
 	/** Every reply-writer call: its system prompt and turn. */
 	asked: [] as { system: string; user: string }[],
+	/** Recording the next crisis fails once (its escalation event throws). */
+	failEscalation: false,
 	moderation: null as unknown,
 }));
 
@@ -62,6 +69,19 @@ vi.mock("@convex-dev/workflow", async (orig) => {
 		cancel = async () => {};
 	}
 	return { ...real, WorkflowManager };
+});
+vi.mock("../../escalation/events", async (orig) => {
+	const real = await orig<typeof import("../../escalation/events")>();
+	return {
+		...real,
+		raiseEscalation: (...args: Parameters<typeof real.raiseEscalation>) => {
+			if (stub.failEscalation) {
+				stub.failEscalation = false;
+				throw new Error("escalation write failed");
+			}
+			return real.raiseEscalation(...args);
+		},
+	};
 });
 vi.mock("../../ai/providers/moderation", async (orig) => ({
 	...(await orig<typeof import("../../ai/providers/moderation")>()),
@@ -102,6 +122,7 @@ const CLEAN: ModerationResult = {
 stubTelegramEachTest();
 beforeEach(() => {
 	stub.asked = [];
+	stub.failEscalation = false;
 	stub.moderation = CLEAN;
 });
 afterEach(() => {
@@ -189,6 +210,143 @@ describe("a crisis text", () => {
 		});
 		expect(events[0]?.sessionId).toBeUndefined();
 		expect(events[0]?.inboundEventId).toBeDefined();
+	});
+});
+
+describe("when Telegram doesn't take the crisis reply", () => {
+	const SERVER_ERROR = { description: "Bad Gateway", error_code: 502 };
+	const crisisSends = () =>
+		sent("sendMessage").filter((c) => c.params.text === GHANA_CRISIS_REPLY);
+
+	it("waits out a 429's retry_after, then sends it", async () => {
+		const { user, write } = await linked();
+		vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		failNext("sendMessage", {
+			description: "Too Many Requests: retry after 30",
+			error_code: 429,
+			parameters: { retry_after: 30 },
+		});
+
+		await write(CRISIS_TEXT);
+		// Not before Telegram said it may.
+		expect(crisisSends()).toHaveLength(1);
+
+		await processFor(user.root, 30 * SECOND);
+
+		expect(crisisSends()).toHaveLength(2);
+		expect(lastReply()?.params).toMatchObject({
+			protect_content: true,
+			text: GHANA_CRISIS_REPLY,
+		});
+	});
+
+	it("tries again after a server error and a lost connection, and sends it once it goes", async () => {
+		const { write } = await linked();
+		vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		failNext("sendMessage", SERVER_ERROR);
+		beforeNext("sendMessage", async () => {
+			throw new TypeError("fetch failed");
+		});
+
+		await write(CRISIS_TEXT);
+
+		// The connection drops before the 502 is served, so: lost, 502, sent.
+		expect(crisisSends()).toHaveLength(3);
+		expect(sent("sendMessage")).toHaveLength(3);
+	});
+
+	it("gives up after three tries and logs it as an error", async () => {
+		const { user, write } = await linked();
+		vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		const errors = vi
+			.spyOn(console, "error")
+			.mockImplementation(() => undefined);
+		for (let i = 0; i < 4; i++) {
+			failNext("sendMessage", SERVER_ERROR);
+		}
+
+		await write(CRISIS_TEXT);
+		await processSoon(user.root);
+
+		expect(crisisSends()).toHaveLength(3);
+		expect(errors).toHaveBeenCalledWith(
+			expect.stringContaining("crisis reply"),
+			expect.anything()
+		);
+	});
+
+	it("doesn't try again a refusal that would come again", async () => {
+		const { write } = await linked();
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		failNext("sendMessage", {
+			description: "Bad Request: chat not found",
+			error_code: 400,
+		});
+
+		await write(CRISIS_TEXT);
+
+		expect(crisisSends()).toHaveLength(1);
+	});
+
+	it("doesn't try again once the link has ended", async () => {
+		const { user, write } = await linked();
+		vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		failNext("sendMessage", SERVER_ERROR);
+		beforeNext("sendMessage", async () => {
+			const [identity] = await identities(user);
+			if (identity) {
+				await user.root.run((ctx) =>
+					ctx.db.patch("channel_identities", identity._id, {
+						revokedAt: Date.now(),
+						status: "revoked",
+					})
+				);
+			}
+		});
+
+		await write(CRISIS_TEXT);
+
+		expect(crisisSends()).toHaveLength(1);
+	});
+});
+
+describe("when recording the crisis fails", () => {
+	it("still answers, then records it and holds outreach", async () => {
+		const { user, write } = await linked();
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		stub.failEscalation = true;
+
+		await write(CRISIS_TEXT);
+
+		expect(sent("sendMessage")).toHaveLength(1);
+		const events = await escalations(user);
+		expect(events).toHaveLength(1);
+		expect(events[0]?.inboundEventId).toBeDefined();
+		const [identity] = await identities(user);
+		expect(identity?.lastCrisisAt).toBeDefined();
+		vi.advanceTimersByTime(HOUR);
+		expect(
+			await user.root.mutation(internal.outreach.enqueue.enqueue, {
+				content: { body: "Hello." },
+				emotionalProfileId: user.profileId,
+				intent: "gentle_return",
+				provenance: { triggerReason: "test" },
+			})
+		).toMatchObject({ suppressedReason: "escalation_active" });
+	});
+});
+
+describe("a crisis in a photo's caption", () => {
+	it("is screened as text is, and gets the fixed reply", async () => {
+		const { secret, user } = await linked();
+
+		await post(user.root, photoUpdate(STRANGER_CHAT, CRISIS_TEXT), secret);
+		await processSoon(user.root);
+
+		expect(stub.asked).toHaveLength(0);
+		expect(sent("sendMessage")).toHaveLength(1);
+		expect(lastReply()?.params.text).toBe(GHANA_CRISIS_REPLY);
+		expect(await escalations(user)).toHaveLength(1);
 	});
 });
 

@@ -23,7 +23,7 @@ import { asNewUser, type SeededUser } from "../../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../../test/mocks.helpers";
 import { ESCALATION_HOLD_MS } from "../router";
 import { appLink } from "./appLinks";
-import { DAILY_REPLY_CAP } from "./caps";
+import { BURST_WAIT_MS, DAILY_REPLY_CAP } from "./caps";
 import type { Keyboard } from "./checkIn";
 import {
 	ANSWER_BUTTONS,
@@ -37,7 +37,7 @@ import {
 	SUPPORT_RESOURCES_BUTTON,
 } from "./copy";
 import { eraseTelegramChats } from "./erase";
-import { REFLECTION_WINDOW_MS } from "./reply";
+import { BURST_MAX_TEXTS, REFLECTION_WINDOW_MS, TEXT_MAX_CHARS } from "./reply";
 import {
 	backend,
 	beforeNext,
@@ -70,6 +70,7 @@ const stub = vi.hoisted(() => ({
 	duringScreen: undefined as (() => Promise<unknown>) | undefined,
 	/** Reading the memory preload throws. */
 	memoryFails: false,
+	/** Moderation's result, or a function picking one from the words. */
 	moderation: null as unknown,
 	/** Whether the user has Xolace+. */
 	plus: false,
@@ -108,12 +109,14 @@ vi.mock("../../talk/remember", async (orig) => {
 });
 vi.mock("../../ai/providers/moderation", async (orig) => ({
 	...(await orig<typeof import("../../ai/providers/moderation")>()),
-	moderateInput: async () => {
+	moderateInput: async (words: string) => {
 		stub.screened += 1;
 		const meanwhile = stub.duringScreen;
 		stub.duringScreen = undefined;
 		await meanwhile?.();
-		return stub.moderation;
+		return typeof stub.moderation === "function"
+			? stub.moderation(words)
+			: stub.moderation;
 	},
 }));
 vi.mock("../../ai/providers/anthropic", async (orig) => ({
@@ -151,6 +154,12 @@ const CLEAN: ModerationResult = {
 	categories: EMPTY_CATEGORIES,
 	categoryScores: {},
 	flagged: false,
+};
+/** Self-harm intent, high: crisis. */
+const CRISIS: ModerationResult = {
+	categories: EMPTY_CATEGORIES,
+	categoryScores: { "self-harm/intent": 0.9 },
+	flagged: true,
 };
 /** A moderate self-harm signal: elevated, not crisis. */
 const ELEVATED: ModerationResult = {
@@ -1107,6 +1116,147 @@ describe("a burst of texts", () => {
 		expect(stub.asked[0]?.user).toContain("Work again");
 	});
 
+	it("still waits 6 s after the later text when an earlier one finishes screening last", async () => {
+		const { user, writeQuickly } = await checkedIn();
+		const later = { receivedAt: 0 };
+
+		// Screenings run side by side: a later text is queued while this one
+		// is still being screened.
+		stub.duringScreen = async () => {
+			const [identity] = await identities(user);
+			if (!identity) {
+				throw new Error("no identity");
+			}
+			const link = { identityId: identity._id, linkedAt: identity.linkedAt };
+			later.receivedAt = Date.now() + 2 * SECOND;
+			await user.root.mutation(
+				internal.outreach.telegram.reply.noteScreening,
+				link
+			);
+			await user.root.mutation(internal.outreach.telegram.reply.queueText, {
+				...link,
+				chatId: String(STRANGER_CHAT),
+				level: "none",
+				receivedAt: later.receivedAt,
+				since: Date.now(),
+				support: false,
+				text: "Work again",
+			});
+		};
+		await writeQuickly("Long day", 2 * SECOND);
+
+		const [identity] = await identities(user);
+		expect(identity?.pendingBurst?.dueAt).toBe(
+			later.receivedAt + BURST_WAIT_MS
+		);
+		await processSoon(user.root);
+		expect(sentMessages()).toHaveLength(1);
+		expect(stub.asked[0]?.user).toContain("Long day");
+		expect(stub.asked[0]?.user).toContain("Work again");
+	});
+
+	it("keeps its texts in the order they arrived when an earlier one finishes screening last", async () => {
+		const { user, writeQuickly } = await checkedIn();
+		const earlier = "a".repeat(TEXT_MAX_CHARS);
+
+		// A later, short text is queued while the long earlier one is screened.
+		stub.duringScreen = async () => {
+			const [identity] = await identities(user);
+			if (!identity) {
+				throw new Error("no identity");
+			}
+			const link = { identityId: identity._id, linkedAt: identity.linkedAt };
+			await user.root.mutation(
+				internal.outreach.telegram.reply.noteScreening,
+				link
+			);
+			await user.root.mutation(internal.outreach.telegram.reply.queueText, {
+				...link,
+				chatId: String(STRANGER_CHAT),
+				level: "none",
+				receivedAt: Date.now() + 2 * SECOND,
+				since: Date.now(),
+				support: false,
+				text: "The newest thing I said",
+			});
+		};
+		await writeQuickly(earlier, 2 * SECOND);
+
+		const [identity] = await identities(user);
+		expect(identity?.pendingBurst?.texts).toEqual([
+			earlier,
+			"The newest thing I said",
+		]);
+		await processSoon(user.root);
+		expect(sentMessages()).toHaveLength(1);
+		// Its newest words survive the trim, last, as they were sent.
+		expect(stub.asked[0]?.user).toContain("a\nThe newest thing I said");
+	});
+
+	it("keeps its latest arrivals when an earlier text is queued into a full burst", async () => {
+		const { user } = await checkedIn();
+		const [identity] = await identities(user);
+		if (!identity) {
+			throw new Error("no identity");
+		}
+		const start = Date.now();
+		const queue = (text: string, receivedAt: number) =>
+			user.root.mutation(internal.outreach.telegram.reply.queueText, {
+				chatId: String(STRANGER_CHAT),
+				identityId: identity._id,
+				level: "none",
+				linkedAt: identity.linkedAt,
+				receivedAt,
+				support: false,
+				text,
+			});
+		for (let i = 1; i <= BURST_MAX_TEXTS; i++) {
+			await queue(`text ${i}`, start + i * SECOND);
+		}
+
+		// The oldest of all finishes screening last: it's the one let go.
+		await queue("text 0", start);
+
+		const [after] = await identities(user);
+		expect(after?.pendingBurst?.texts).toEqual(
+			Array.from({ length: BURST_MAX_TEXTS }, (_, i) => `text ${i + 1}`)
+		);
+	});
+
+	it("adds to a burst queued before arrivals were kept, after its texts", async () => {
+		const { user } = await checkedIn();
+		const [identity] = await identities(user);
+		if (!identity) {
+			throw new Error("no identity");
+		}
+		const now = Date.now();
+		await user.root.run((ctx) =>
+			ctx.db.patch("channel_identities", identity._id, {
+				pendingBurst: {
+					dueAt: now + BURST_WAIT_MS,
+					level: "none",
+					linkedAt: identity.linkedAt,
+					support: false,
+					texts: ["Long day"],
+				},
+			})
+		);
+
+		await user.root.mutation(internal.outreach.telegram.reply.queueText, {
+			chatId: String(STRANGER_CHAT),
+			identityId: identity._id,
+			level: "none",
+			linkedAt: identity.linkedAt,
+			receivedAt: now - SECOND,
+			support: false,
+			text: "Work again",
+		});
+
+		const [after] = await identities(user);
+		expect(after?.pendingBurst?.texts).toEqual(["Long day", "Work again"]);
+		expect(after?.pendingBurst?.arrivals).toEqual([0, now - SECOND]);
+	});
+
 	it("carries Support resources when any text in it was elevated", async () => {
 		const { writeQuickly, user } = await checkedIn();
 
@@ -1135,6 +1285,67 @@ describe("a burst of texts", () => {
 		expect(stub.asked).toHaveLength(0);
 		expect(sentMessages()).toHaveLength(1);
 		expect((await identities(user))[0]?.pendingBurst).toBeUndefined();
+	});
+
+	it("is screened again as a whole: a crisis split across its texts gets the fixed reply, never the model", async () => {
+		const { user, writeQuickly } = await checkedIn();
+		// No one text says it; together they do.
+		stub.moderation = (words: string) =>
+			words.includes("decided") && words.includes("pills") ? CRISIS : CLEAN;
+
+		await writeQuickly("I've decided", 2 * SECOND);
+		await writeQuickly("tonight", 2 * SECOND);
+		await writeQuickly("I have the pills", 2 * SECOND);
+		expect(sentMessages()).toHaveLength(0);
+		await processSoon(user.root);
+
+		expect(stub.asked).toHaveLength(0);
+		expect(sentMessages()).toHaveLength(1);
+		expect(lastReply()?.params.text).toBe(crisisReply(crisisContactsFor("GH")));
+		const events = await user.root.run((ctx) =>
+			ctx.db
+				.query("escalation_events")
+				.withIndex("by_profile", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.collect()
+		);
+		expect(events).toHaveLength(1);
+		expect(events[0]).toMatchObject({ source: "telegram" });
+	});
+
+	it("carries Support resources when only the whole of it reads elevated", async () => {
+		const { user, writeQuickly } = await checkedIn();
+		stub.moderation = (words: string) =>
+			words.includes("\n") ? ELEVATED : CLEAN;
+
+		await writeQuickly("Long day", 2 * SECOND);
+		await writeQuickly("Anyway", 2 * SECOND);
+		await processSoon(user.root);
+
+		expect(sentMessages()).toHaveLength(1);
+		expect(buttonTexts()).toEqual([SUPPORT_RESOURCES_BUTTON]);
+	});
+
+	it("screens a lone text once, on arrival", async () => {
+		const { user, write } = await checkedIn();
+
+		await write("Long day");
+		await processSoon(user.root);
+
+		expect(sentMessages()).toHaveLength(1);
+		expect(stub.screened).toBe(1);
+	});
+
+	it("keeps its newest words for the model when it runs long", async () => {
+		const { user, writeQuickly } = await checkedIn();
+
+		await writeQuickly("a".repeat(TEXT_MAX_CHARS), 2 * SECOND);
+		await writeQuickly("The newest thing I said", 2 * SECOND);
+		await processSoon(user.root);
+
+		expect(stub.asked).toHaveLength(1);
+		expect(stub.asked[0]?.user).toContain("The newest thing I said");
 	});
 
 	it("drops a waiting burst when the link ends", async () => {

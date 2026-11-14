@@ -176,6 +176,12 @@ export type BurstLevel = Infer<typeof burstLevelValidator>;
  * due (a later text moves it); and the worst of their safeguard results.
  */
 export const pendingBurstValidator = v.object({
+	/**
+	 * When each of `texts` arrived, in step with them: texts are screened side
+	 * by side and can be queued out of order, but are kept in arrival order.
+	 * Absent on a burst queued before it was kept.
+	 */
+	arrivals: v.optional(v.array(v.number())),
 	dueAt: v.number(),
 	level: burstLevelValidator,
 	linkedAt: v.number(),

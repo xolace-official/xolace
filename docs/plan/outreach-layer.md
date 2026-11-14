@@ -365,8 +365,11 @@ A guard test for this is [filed separately](https://github.com/xolace-official/x
 
 **Processing.** The webhook enqueues an internal action on the `telegramInbound`
 workpool, with retries, one chat's updates in order and one at a time. A tap's
-`answerCallbackQuery` is the first step. A cron re-enqueues rows stuck in `received`
-for more than 5 minutes.
+`answerCallbackQuery` is the first step. The AI reply (safeguard, model) is
+scheduled by the claim's own transaction and runs off the pool, so a slow model
+call never holds another chat's update; a chat's texts are screened side by side
+and its burst still answers 6 s after the latest one. A cron re-enqueues rows stuck
+in `received` for more than 5 minutes.
 
 **Who is writing:**
 

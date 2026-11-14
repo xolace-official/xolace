@@ -20,7 +20,8 @@
  *
  * Changes from the original: the proxy throws a typed `TelegramApiError`
  * carrying `error_code` and `retry_after`; the token comes only from
- * `TELEGRAM_BOT_TOKEN`; a constant-time comparison for the webhook secret.
+ * `TELEGRAM_BOT_TOKEN`; a constant-time comparison for the webhook secret;
+ * every call has a deadline.
  * The component's `webhooks` table, `registerRoutes` and `deleteWebhook`
  * aren't copied: the outreach domain owns its table and route.
  */
@@ -43,6 +44,13 @@ export const SECOND_MS = 1000;
 export const FORBIDDEN = 403;
 /** Slow down: `retry_after` says for how long. */
 export const TOO_MANY_REQUESTS = 429;
+
+/**
+ * How long one Bot API call may take, answer included. Past it the call
+ * throws like a network failure, so a hung connection can't hold an action
+ * (or the inbound pool's slot) until the action's own limit.
+ */
+export const BOT_API_TIMEOUT_MS = 15 * SECOND_MS;
 
 /** A Bot API call Telegram refused. Never carries the token. */
 export class TelegramApiError extends Error {
@@ -107,6 +115,7 @@ export const botApi: APIMethods = new Proxy({} as APIMethods, {
 					body: params === undefined ? undefined : JSON.stringify(params),
 					headers: { "Content-Type": "application/json" },
 					method: "POST",
+					signal: AbortSignal.timeout(BOT_API_TIMEOUT_MS),
 				}
 			);
 			const data = (await response.json()) as TelegramAPIResponse;

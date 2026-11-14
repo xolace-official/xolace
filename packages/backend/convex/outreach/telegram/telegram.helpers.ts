@@ -176,6 +176,22 @@ export function messageUpdate(chatId = STRANGER_CHAT, text = "hello?") {
 	};
 }
 
+/** A photo with no text: its caption when given, else nothing to read. */
+export function photoUpdate(chatId = STRANGER_CHAT, caption?: string) {
+	const { message, update_id } = messageUpdate(chatId);
+	return {
+		message: {
+			chat: message.chat,
+			date: message.date,
+			from: message.from,
+			message_id: message.message_id,
+			photo: [{ file_id: "photo", file_unique_id: "p", height: 90, width: 90 }],
+			...(caption !== undefined && { caption }),
+		},
+		update_id,
+	};
+}
+
 export const post = (t: Backend, update: unknown, secret?: string | null) =>
 	t.fetch(TELEGRAM_WEBHOOK_PATH, {
 		body: JSON.stringify(update),
@@ -192,19 +208,29 @@ export const events = (t: Backend) =>
  */
 const PROCESS_HOPS = 15;
 
+/**
+ * Let `ms` pass, run what fell due, then what that scheduled for right away
+ * (an inbound claim's AI reply): a hop the real scheduler takes in
+ * milliseconds shouldn't cost a fake second.
+ */
+async function step(t: Backend, ms: number) {
+	vi.advanceTimersByTime(ms);
+	await t.finishInProgressScheduledFunctions();
+	vi.advanceTimersByTime(0);
+	await t.finishInProgressScheduledFunctions();
+}
+
 /** Run what's due now, a second at a time, without the pool's idle loop. */
 export async function processSoon(t: Backend) {
 	for (let hop = 0; hop < PROCESS_HOPS; hop++) {
-		vi.advanceTimersByTime(SECOND);
-		await t.finishInProgressScheduledFunctions();
+		await step(t, SECOND);
 	}
 }
 
 /** Run what's due over the next `ms` only, a second at a time. */
 export async function processFor(t: Backend, ms: number) {
 	for (let left = ms; left > 0; left -= SECOND) {
-		vi.advanceTimersByTime(Math.min(SECOND, left));
-		await t.finishInProgressScheduledFunctions();
+		await step(t, Math.min(SECOND, left));
 	}
 }
 

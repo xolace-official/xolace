@@ -51,7 +51,13 @@ import {
 	pendingBurstValidator,
 } from "../validators";
 import { appLink } from "./appLinks";
-import { botApi, FORBIDDEN, TelegramApiError } from "./botApi";
+import {
+	botApi,
+	FORBIDDEN,
+	SECOND_MS,
+	TelegramApiError,
+	TOO_MANY_REQUESTS,
+} from "./botApi";
 import {
 	BURST_RECHECK_MS,
 	BURST_WAIT_MS,
@@ -97,7 +103,7 @@ const TURN_MAX_CHARS = 500;
 /** What the model and the safeguard read of one text. */
 export const TEXT_MAX_CHARS = REFLECTION_MAX_LENGTH;
 /** A burst keeps its latest texts, so a flood can't grow the row. */
-const BURST_MAX_TEXTS = 10;
+export const BURST_MAX_TEXTS = 10;
 
 const tapAnswerValidator = v.union(
 	v.literal("lighter"),
@@ -638,9 +644,9 @@ export const endScreening = internalMutation({
 });
 
 /**
- * Add a screened text to the chat's burst, move its reply to 6 s from now,
- * and schedule that reply. An earlier text's reply finds itself moved and
- * sends nothing; the last one answers the whole burst.
+ * Add a screened text to the chat's burst, move its reply to 6 s after the
+ * latest text's arrival, and schedule that reply. An earlier text's reply
+ * finds itself moved and sends nothing; the last one answers the whole burst.
  */
 export const queueText = internalMutation({
 	args: {
@@ -673,27 +679,52 @@ export const queueText = internalMutation({
 			identity.pendingBurst?.linkedAt === args.linkedAt
 				? identity.pendingBurst
 				: undefined;
-		const dueAt = args.receivedAt + BURST_WAIT_MS;
+		// Texts are screened side by side, so one that arrived earlier can be
+		// queued after a later one: it never moves the reply sooner.
+		const dueAt = Math.max(
+			args.receivedAt + BURST_WAIT_MS,
+			waiting?.dueAt ?? 0
+		);
+		// It takes its place by arrival, so the burst reads as it was sent and
+		// a full one lets go of its earliest text. A burst queued before
+		// arrivals were kept has its texts ahead of any new one.
+		const held = waiting?.texts ?? [];
+		const heldArrivals =
+			waiting?.arrivals?.length === held.length
+				? waiting.arrivals
+				: held.map(() => 0);
+		const later = heldArrivals.findIndex((at) => at > args.receivedAt);
+		const place = later === -1 ? held.length : later;
+		const texts = [...held.slice(0, place), args.text, ...held.slice(place)];
+		const arrivals = [
+			...heldArrivals.slice(0, place),
+			args.receivedAt,
+			...heldArrivals.slice(place),
+		];
 		await ctx.db.patch("channel_identities", identity._id, {
 			...doneScreening(identity),
 			pendingBurst: {
+				arrivals: arrivals.slice(-BURST_MAX_TEXTS),
 				dueAt,
 				level: waiting ? worse(waiting.level, args.level) : args.level,
 				linkedAt: args.linkedAt,
 				support: (waiting?.support ?? false) || args.support,
-				texts: [...(waiting?.texts ?? []), args.text].slice(-BURST_MAX_TEXTS),
+				texts: texts.slice(-BURST_MAX_TEXTS),
 			},
 		});
-		await ctx.scheduler.runAt(
-			Math.max(dueAt, Date.now()),
-			internal.outreach.telegram.reply.answerBurst,
-			{
-				chatId: args.chatId,
-				dueAt,
-				identityId: identity._id,
-				linkedAt: args.linkedAt,
-			}
-		);
+		// Unmoved, the reply already scheduled for it still answers it.
+		if (dueAt !== waiting?.dueAt) {
+			await ctx.scheduler.runAt(
+				Math.max(dueAt, Date.now()),
+				internal.outreach.telegram.reply.answerBurst,
+				{
+					chatId: args.chatId,
+					dueAt,
+					identityId: identity._id,
+					linkedAt: args.linkedAt,
+				}
+			);
+		}
 		return null;
 	},
 	returns: v.null(),
@@ -769,29 +800,46 @@ export const answerBurst = internalAction({
 			}
 			return null;
 		}
-		const text = burst.texts.join("\n").slice(0, TEXT_MAX_CHARS);
+		const whole = burst.texts.join("\n");
+		// Past what fits, the newest words: they're what the reply answers.
+		const text = whole.slice(-TEXT_MAX_CHARS);
+		const trigger = { kind: "text" as const, text };
 		const job: ReplyJob = {
 			chatId: args.chatId,
 			// Its failure line, too, is overtaken by a wipe from here.
 			claimedAt: since,
 			identityId: args.identityId,
 			linkedAt: args.linkedAt,
-			trigger: { kind: "text", text },
+			trigger,
 		};
 		const progress: Progress = { sent: false, support: burst.support };
 		await guarded(ctx, job, progress, async () => {
 			await typing(args.chatId);
+			let { level, support } = burst;
+			// Each text was screened alone, and a crisis can be split across
+			// them: screen them together too. A lone text already was.
+			if (burst.texts.length > 1) {
+				const safety = await screen(whole);
+				if (safety.level === "crisis") {
+					progress.sent = true;
+					await answerCrisis(ctx, job, trigger, safety.peak);
+					return;
+				}
+				level = worse(level, safety.level);
+				support ||= safety.support;
+				progress.support = support;
+			}
 			await writeAndSend(
 				ctx,
 				job,
 				progress,
 				{
-					elevated: burst.level === "elevated",
+					elevated: level === "elevated",
 					heavier: false,
 					open: false,
 					person: text,
-					support: burst.support,
-					trigger: { kind: "text", level: burst.level, text },
+					support,
+					trigger: { kind: "text", level, text },
 				},
 				since
 			);
@@ -925,7 +973,8 @@ const crisisKeyboard = (contacts: CrisisContacts | null): Keyboard => [
 
 /**
  * Answer a crisis text at once with the fixed reply, never the model. The
- * reply goes even if recording the crisis fails: the person comes first.
+ * reply goes even if recording the crisis fails: the person comes first, and
+ * the recording is tried again after it, so the hold still starts.
  */
 async function answerCrisis(
 	ctx: ActionCtx,
@@ -933,18 +982,20 @@ async function answerCrisis(
 	trigger: Extract<ReplyJob["trigger"], { kind: "text" }>,
 	peak: TalkPeak | undefined
 ): Promise<void> {
+	const record = {
+		identityId: job.identityId,
+		linkedAt: job.linkedAt,
+		trigger: crisisTriggerOf(peak),
+		...(trigger.inboundEventId && {
+			inboundEventId: trigger.inboundEventId,
+		}),
+	};
 	let country: string | null = null;
+	let recordFailed = false;
 	try {
 		const recorded = await ctx.runMutation(
 			internal.outreach.telegram.reply.recordCrisis,
-			{
-				identityId: job.identityId,
-				linkedAt: job.linkedAt,
-				trigger: crisisTriggerOf(peak),
-				...(trigger.inboundEventId && {
-					inboundEventId: trigger.inboundEventId,
-				}),
-			}
+			record
 		);
 		if (!recorded) {
 			return;
@@ -952,18 +1003,112 @@ async function answerCrisis(
 		country = recorded.country;
 	} catch (error) {
 		console.error("[telegram] recording a crisis failed", error);
+		recordFailed = true;
 	}
-	const contacts = crisisContactsFor(country);
-	// The person comes first: a wipe racing it never takes these numbers away.
-	await sendReply(
-		ctx,
-		job,
-		crisisReply(contacts),
-		crisisKeyboard(contacts),
-		undefined,
-		{ keep: true }
+	const { chatId, identityId, linkedAt } = job;
+	await sendCrisisReply(ctx, { chatId, country, identityId, linkedAt }, 1);
+	if (recordFailed) {
+		// Scheduled, it commits once; nothing of the failed one did.
+		await ctx.scheduler.runAfter(
+			0,
+			internal.outreach.telegram.reply.recordCrisis,
+			record
+		);
+	}
+}
+
+/** Tries at a crisis reply Telegram didn't take, the first among them. */
+const CRISIS_SEND_ATTEMPTS = 3;
+/** The wait before trying a passing failure again, times the tries so far. */
+const CRISIS_RETRY_MS = 2 * SECOND_MS;
+/** Telegram's own server errors, which may pass. */
+const SERVER_ERROR = 500;
+
+const crisisSendValidator = v.object({
+	chatId: v.string(),
+	/** The chat's country when the crisis was recorded; null if unknown. */
+	country: v.union(v.null(), v.string()),
+	identityId: v.id("channel_identities"),
+	linkedAt: v.number(),
+});
+type CrisisSend = Infer<typeof crisisSendValidator>;
+
+/**
+ * How long to wait before trying a failed crisis reply again, or null when
+ * another try wouldn't help: out of tries, or a refusal that would come
+ * again (a 4xx other than a rate limit).
+ */
+function crisisRetryMs(error: unknown, attempt: number): number | null {
+	if (attempt >= CRISIS_SEND_ATTEMPTS) {
+		return null;
+	}
+	if (!(error instanceof TelegramApiError)) {
+		// No answer at all, or a check before the send failed: it may pass.
+		return CRISIS_RETRY_MS * attempt;
+	}
+	if (error.errorCode === TOO_MANY_REQUESTS) {
+		return (error.retryAfter ?? 1) * SECOND_MS;
+	}
+	if (error.errorCode === undefined || error.errorCode >= SERVER_ERROR) {
+		return CRISIS_RETRY_MS * attempt;
+	}
+	return null;
+}
+
+/**
+ * Send the crisis reply, and if Telegram didn't take it for a reason that
+ * may pass, try again later, a few times at most. Each try checks the link
+ * again; a wipe never stops it (it's kept), and nothing sent is sent again.
+ */
+async function sendCrisisReply(
+	ctx: ActionCtx,
+	crisis: CrisisSend,
+	attempt: number
+): Promise<void> {
+	const contacts = crisisContactsFor(crisis.country);
+	let outcome: SendOutcome;
+	try {
+		// The person comes first: a wipe racing it never takes these numbers away.
+		outcome = await trySend(
+			ctx,
+			crisis,
+			crisisReply(contacts),
+			crisisKeyboard(contacts),
+			undefined,
+			{ keep: true }
+		);
+	} catch (error) {
+		// Thrown before Telegram was asked: nothing went out.
+		outcome = { error };
+	}
+	if (typeof outcome !== "object") {
+		return;
+	}
+	const retryMs = crisisRetryMs(outcome.error, attempt);
+	if (retryMs === null) {
+		console.error(
+			`[telegram] crisis reply not sent after ${attempt} tries`,
+			outcome.error
+		);
+		return;
+	}
+	console.warn("[telegram] crisis reply not sent; trying again", outcome.error);
+	await ctx.scheduler.runAfter(
+		retryMs,
+		internal.outreach.telegram.reply.retryCrisisReply,
+		{ attempt: attempt + 1, crisis }
 	);
 }
+
+/** Another try at a crisis reply Telegram didn't take. */
+export const retryCrisisReply = internalAction({
+	args: { attempt: v.number(), crisis: crisisSendValidator },
+	handler: async (ctx, { attempt, crisis }) => {
+		await sendCrisisReply(ctx, crisis, attempt);
+		return null;
+	},
+	returns: v.null(),
+});
 
 // ---------------------------------------------------------------------------
 // Replying
@@ -991,10 +1136,35 @@ function keyboardOf(buttons: {
  * Send one reply, `protect_content` always, and only while the link it was
  * claimed for is live and unchanged: a `/stop`, a block or a relink to
  * another account can land while the model writes. A 403 ends that link.
+ * Whether it went; any other failure is logged.
  */
 async function sendReply(
 	ctx: ActionCtx,
 	job: ReplyJob,
+	text: string,
+	keyboard: Keyboard,
+	/** When the reply began: a wipe after it means it carries old context. */
+	since?: number
+): Promise<boolean> {
+	const outcome = await trySend(ctx, job, text, keyboard, since);
+	if (typeof outcome === "object") {
+		console.error("Telegram reply failed", outcome.error);
+		return false;
+	}
+	return outcome === "sent";
+}
+
+/**
+ * What became of a send: it went; it may not go (the link ended or changed,
+ * a wipe overtook it, or a 403 ended the link); or Telegram didn't take it,
+ * for this reason.
+ */
+type SendOutcome = "sent" | "not_sent" | { error: unknown };
+
+/** `sendReply`, telling a failure that may pass from one that won't. */
+async function trySend(
+	ctx: ActionCtx,
+	job: Pick<ReplyJob, "chatId" | "identityId" | "linkedAt">,
 	text: string,
 	keyboard: Keyboard,
 	/** When the reply began: a wipe after it means it carries old context. */
@@ -1004,14 +1174,14 @@ async function sendReply(
 	 * still removes it, as it does every message the bot sent.
 	 */
 	{ keep = false }: { keep?: boolean } = {}
-): Promise<boolean> {
+): Promise<SendOutcome> {
 	const { chatId, identityId, linkedAt } = job;
 	const current = await ctx.runQuery(
 		internal.outreach.telegram.reply.isCurrentLink,
 		{ identityId, linkedAt, ...(since !== undefined && { since }) }
 	);
 	if (!current) {
-		return false;
+		return "not_sent";
 	}
 	// From when the reply began, not just the send: a wipe in between counts.
 	const sentSince = since ?? Date.now();
@@ -1032,10 +1202,9 @@ async function sendReply(
 				internal.outreach.telegram.lifecycle.markUnreachable,
 				{ chatId, linkedAt }
 			);
-		} else {
-			console.error("Telegram reply failed", error);
+			return "not_sent";
 		}
-		return false;
+		return { error };
 	}
 	// It reached the person: a failure to note it doesn't undo that.
 	try {
@@ -1049,7 +1218,7 @@ async function sendReply(
 	} catch (error) {
 		console.error("[telegram] noting a sent reply failed", error);
 	}
-	return true;
+	return "sent";
 }
 
 /** Shows "typing…" while the reply is written. A lost one is harmless. */

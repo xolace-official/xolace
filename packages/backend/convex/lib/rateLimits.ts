@@ -181,6 +181,15 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 	// Telegram"; ten an hour is far past a real retry loop.
 	telegramLinkMint: { kind: "fixed window", period: HOUR, rate: 10 },
 
+	// A linked chat's voice note, sticker or uncaptioned photo gets the "I can
+	// only read text" line at most once per 24 h, keyed by chat id.
+	telegramMediaOnlyReply: {
+		capacity: 1,
+		kind: "token bucket",
+		period: DAY,
+		rate: 1,
+	},
+
 	// A chat whose link was revoked gets the "how to link again" reply at most
 	// once per 24 h (#767), keyed by chat id.
 	telegramRevokedReply: {
