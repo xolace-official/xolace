@@ -15,6 +15,8 @@ const APP_SCHEME = "xolace://";
 const TARGETS = {
 	/** The app, wherever it opens. */
 	app: "",
+	/** The Xolace+ paywall, from the reply cap's upsell (#771). */
+	plus: "upgrade?surface=telegram_cap",
 	/** The crisis resources screen. */
 	support: "crisis-resources?from=telegram",
 } as const;

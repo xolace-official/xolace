@@ -31,7 +31,8 @@ import { asUpdate, strippedPayload } from "./webhook";
  * revoked one its own; no safeguard, no escalation and no text kept. A
  * check-in's "What was this about?" edits it in place (#768), and an answer
  * button resolves its follow-up (#769). The answer and any other text from
- * a linked chat get an AI reply (#770), sent after the claim commits.
+ * a linked chat get an AI reply (#770), sent after the claim commits; texts
+ * wait out a burst first, and replies are capped per day (#771).
  */
 
 /** `/stop` or `/help`, bare or as `/stop@bot`, with anything after it. */
@@ -208,6 +209,7 @@ export const claimUpdate = internalMutation({
 				linkedAt: identity.linkedAt,
 				trigger: {
 					kind: "text",
+					receivedAt: now,
 					text,
 					...(window &&
 						window.until > now && { reflectionCardId: window.cardId }),

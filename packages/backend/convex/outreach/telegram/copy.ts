@@ -3,6 +3,7 @@ import {
 	fallbackFollowUpCard,
 } from "../../ai/prompts/followUpCardWriter";
 import type { FollowUpTier } from "../validators";
+import { DAILY_REPLY_CAP } from "./caps";
 
 /**
  * Every fixed line the Telegram bot sends or shows (#760 §6), taken as drafted
@@ -121,3 +122,16 @@ export const REPLY_FAILED =
  * failure line, with Support resources and Open Xolace.
  */
 export const CRISIS_HOLDING_LINE = REPLY_FAILED;
+
+// ---------------------------------------------------------------------------
+// Reply caps (#771)
+// ---------------------------------------------------------------------------
+
+/** At the day's reply cap: Plus, or anyone struggling (with Support resources). */
+export const CAP_REPLY =
+	"I've hit my reply limit for today. You can keep going in Xolace, and I'll be back here tomorrow.";
+
+/** At a free user's cap, when they aren't struggling: with Get Xolace+. */
+export const CAP_UPSELL = `That's my ${DAILY_REPLY_CAP.free} replies for today on the free plan. With Xolace+ I can keep talking with you here, up to ${DAILY_REPLY_CAP.plus} a day. Or carry on in Xolace now, and I'll be back here tomorrow.`;
+
+export const GET_PLUS_BUTTON = "Get Xolace+";

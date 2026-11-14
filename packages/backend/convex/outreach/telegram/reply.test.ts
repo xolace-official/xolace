@@ -20,10 +20,15 @@ import {
 import { seedSession } from "../../test/fixtures.helpers";
 import { asNewUser, type SeededUser } from "../../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../../test/mocks.helpers";
+import { ESCALATION_HOLD_MS } from "../router";
 import { appLink } from "./appLinks";
+import { DAILY_REPLY_CAP } from "./caps";
 import type { Keyboard } from "./checkIn";
 import {
 	ANSWER_BUTTONS,
+	CAP_REPLY,
+	CAP_UPSELL,
+	GET_PLUS_BUTTON,
 	OPEN_XOLACE_BUTTON,
 	REPLY_FAILED,
 	SUPPORT_RESOURCES_BUTTON,
@@ -33,11 +38,14 @@ import {
 	backend,
 	configure,
 	forgetCalls,
+	HOUR,
 	identities,
 	linkChat,
 	messageUpdate,
 	post,
+	processFor,
 	processSoon,
+	SECOND,
 	STRANGER_CHAT,
 	sent,
 	setTelegram,
@@ -53,13 +61,17 @@ const stub = vi.hoisted(() => ({
 	/** Reading the memory preload throws. */
 	memoryFails: false,
 	moderation: null as unknown,
+	/** Whether the user has Xolace+. */
+	plus: false,
 	/** What the reply writer answers next, then `reply`. */
 	queue: [] as (string | Error)[],
 	reply: "Thanks for telling me.\nWhat's been on your mind?" as string | Error,
+	/** How many texts the safeguard screened. */
+	screened: 0,
 }));
 
 vi.mock("../../lib/aggregates", () => aggregatesMock());
-vi.mock("../../revenuecat", () => revenuecatMock(() => false));
+vi.mock("../../revenuecat", () => revenuecatMock(() => stub.plus));
 vi.mock("../../lib/pushNotifications", () => ({
 	sendPushToProfile: async () => undefined,
 }));
@@ -86,7 +98,10 @@ vi.mock("../../talk/remember", async (orig) => {
 });
 vi.mock("../../ai/providers/moderation", async (orig) => ({
 	...(await orig<typeof import("../../ai/providers/moderation")>()),
-	moderateInput: async () => stub.moderation,
+	moderateInput: async () => {
+		stub.screened += 1;
+		return stub.moderation;
+	},
 }));
 vi.mock("../../ai/providers/anthropic", async (orig) => ({
 	...(await orig<typeof import("../../ai/providers/anthropic")>()),
@@ -137,7 +152,9 @@ beforeEach(() => {
 	stub.duringReply = undefined;
 	stub.memoryFails = false;
 	stub.moderation = CLEAN;
+	stub.plus = false;
 	stub.queue = [];
+	stub.screened = 0;
 	stub.reply = "Thanks for telling me.\nWhat's been on your mind?";
 });
 afterEach(() => {
@@ -145,6 +162,8 @@ afterEach(() => {
 });
 
 const CHECK_IN_MESSAGE_ID = 101;
+/** Fifty replies through the whole pipeline take a while. */
+const PLUS_CAP_TIMEOUT_MS = 60_000;
 const CARD_TEXT = "Work has been a lot since Tuesday's review at 9am.";
 
 const buttonsOf = (call: { params: Record<string, unknown> } | undefined) =>
@@ -213,7 +232,18 @@ async function checkedIn(card: Partial<Doc<"follow_up_cards">> = {}) {
 		await post(user.root, messageUpdate(STRANGER_CHAT, text), secret);
 		await processSoon(user.root);
 	};
-	return { cardId, sessionId, tap, user, write };
+	/** Sent, but only `ms` passes before the next thing happens. */
+	const writeQuickly = async (text: string, ms: number) => {
+		await post(user.root, messageUpdate(STRANGER_CHAT, text), secret);
+		await processFor(user.root, ms);
+	};
+	/** Spend `n` of today's replies on ordinary texts. */
+	const useReplies = async (n: number) => {
+		for (let i = 0; i < n; i++) {
+			await write(`Ordinary day ${i}`);
+		}
+	};
+	return { cardId, sessionId, tap, useReplies, user, write, writeQuickly };
 }
 
 /** The messages sent, whole (the helper's `replies` is their texts). */
@@ -565,5 +595,226 @@ describe("what a reply writes", () => {
 		await write("/stop");
 
 		expect((await identities(user))[0]?.recentTurns).toBeUndefined();
+	});
+});
+
+describe("the daily reply cap", () => {
+	it("gives a free user five replies, then the upsell with Get Xolace+ and Open Xolace", async () => {
+		const { useReplies, write } = await checkedIn();
+		await useReplies(DAILY_REPLY_CAP.free);
+		expect(stub.asked).toHaveLength(DAILY_REPLY_CAP.free);
+
+		await write("One more thing");
+
+		expect(stub.asked).toHaveLength(DAILY_REPLY_CAP.free);
+		expect(lastReply()?.params).toMatchObject({
+			protect_content: true,
+			text: CAP_UPSELL,
+		});
+		expect(buttonsOf(lastReply())).toEqual([
+			{ text: GET_PLUS_BUTTON, url: appLink("plus") },
+			{ text: OPEN_XOLACE_BUTTON, url: appLink("app") },
+		]);
+	});
+
+	const struggling: [
+		string,
+		Partial<Doc<"follow_up_cards">>,
+		(c: Awaited<ReturnType<typeof checkedIn>>) => Promise<void>,
+	][] = [
+		["an elevated card", { tier: "elevated" }, (c) => c.write("Still here")],
+		["an acute card", { tier: "acute" }, (c) => c.write("Still here")],
+		[
+			"an escalation-derived card",
+			{ escalationDerived: true },
+			(c) => c.write("Still here"),
+		],
+		["a Heavier answer", {}, (c) => c.tap("heavier")],
+		[
+			"an elevated text this turn",
+			{},
+			(c) => {
+				stub.moderation = ELEVATED;
+				return c.write("Some days I don't see the point");
+			},
+		],
+		[
+			"a crisis in the last 72 h",
+			{},
+			async (c) => {
+				await c.user.root.run((ctx) =>
+					ctx.db.insert("escalation_events", {
+						actionTaken: "crisis_line_presented",
+						createdAt: Date.now() - (ESCALATION_HOLD_MS - HOUR),
+						emotionalProfileId: c.user.profileId,
+						resourcesPresented: [],
+						reviewedByHuman: false,
+						sessionId: c.sessionId,
+						triggerConfidence: 0.9,
+						triggerEvidence: "explicit_crisis_language",
+						triggerType: "explicit_crisis_language",
+					})
+				);
+				await c.write("Still here");
+			},
+		],
+	];
+	it.each(struggling)(
+		"gives a free user with %s the plain line with Support resources, never the upsell",
+		async (_name, card, last) => {
+			const c = await checkedIn(card);
+			await c.useReplies(DAILY_REPLY_CAP.free);
+
+			await last(c);
+
+			expect(lastReply()?.params.text).toBe(CAP_REPLY);
+			expect(buttonTexts()).toEqual([
+				SUPPORT_RESOURCES_BUTTON,
+				OPEN_XOLACE_BUTTON,
+			]);
+		}
+	);
+
+	it("still offers the upsell when the only elevated card closed long ago", async () => {
+		const longAgo = Date.now() - 30 * 24 * HOUR;
+		const c = await checkedIn({
+			createdAt: longAgo,
+			resolvedAt: longAgo,
+			status: "resolved",
+			tier: "elevated",
+			userResponse: "heavier",
+		});
+		await c.useReplies(DAILY_REPLY_CAP.free);
+
+		await c.write("One more thing");
+
+		expect(lastReply()?.params.text).toBe(CAP_UPSELL);
+	});
+
+	it("doesn't count a reply the model failed to write", async () => {
+		const { useReplies, write } = await checkedIn();
+		stub.reply = new Error("overloaded");
+		await write("Long day");
+		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
+		stub.reply = "Thanks for telling me.\nWhat's been on your mind?";
+
+		await useReplies(DAILY_REPLY_CAP.free);
+
+		expect(lastReply()?.params.text).toBe(stub.reply);
+	});
+
+	it(
+		"gives Plus fifty replies, then the plain line at the 51st",
+		async () => {
+			stub.plus = true;
+			const { useReplies, write } = await checkedIn();
+			await useReplies(DAILY_REPLY_CAP.plus);
+			expect(stub.asked).toHaveLength(DAILY_REPLY_CAP.plus);
+
+			await write("One more thing");
+
+			expect(stub.asked).toHaveLength(DAILY_REPLY_CAP.plus);
+			expect(lastReply()?.params.text).toBe(CAP_REPLY);
+			expect(buttonTexts()).toEqual([OPEN_XOLACE_BUTTON]);
+		},
+		PLUS_CAP_TIMEOUT_MS
+	);
+
+	it("resets on the user's own day boundary, not UTC's", async () => {
+		const { useReplies, user, write } = await checkedIn();
+		await user.root.run(async (ctx) => {
+			const prefs = await ctx.db
+				.query("preferences")
+				.withIndex("by_profile", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.unique();
+			if (prefs?.notifications) {
+				await ctx.db.patch("preferences", prefs._id, {
+					// 12:00 UTC is 07:00 here; local midnight is 05:00 UTC.
+					notifications: {
+						...prefs.notifications,
+						timezone: "America/New_York",
+					},
+				});
+			}
+		});
+		await useReplies(DAILY_REPLY_CAP.free);
+
+		// 00:30 UTC: a new day in UTC, still the same day in New York.
+		vi.setSystemTime(Date.UTC(2026, 10, 14, 0, 30));
+		await write("Late one");
+		expect(lastReply()?.params.text).toBe(CAP_UPSELL);
+
+		// 05:30 UTC: past midnight in New York.
+		vi.setSystemTime(Date.UTC(2026, 10, 14, 5, 30));
+		await write("Morning");
+		expect(stub.asked).toHaveLength(DAILY_REPLY_CAP.free + 1);
+		expect(lastReply()?.params.text).toBe(
+			"Thanks for telling me.\nWhat's been on your mind?"
+		);
+	});
+});
+
+describe("a burst of texts", () => {
+	it("gets one reply, after the last, to all of them; each was screened on arrival", async () => {
+		const { writeQuickly, user } = await checkedIn();
+
+		await writeQuickly("Long day", 2 * SECOND);
+		await writeQuickly("Work again", 2 * SECOND);
+		await writeQuickly("And then the bus broke down", 2 * SECOND);
+		expect(stub.screened).toBe(3);
+		expect(sent("sendChatAction").length).toBeGreaterThanOrEqual(3);
+		// Four seconds after the last: still waiting.
+		await processFor(user.root, 2 * SECOND);
+		expect(sentMessages()).toHaveLength(0);
+
+		await processSoon(user.root);
+
+		expect(sentMessages()).toHaveLength(1);
+		expect(stub.asked).toHaveLength(1);
+		for (const text of ["Long day", "Work again", "bus broke down"]) {
+			expect(stub.asked[0]?.user).toContain(text);
+		}
+	});
+
+	it("carries Support resources when any text in it was elevated", async () => {
+		const { writeQuickly, user } = await checkedIn();
+
+		stub.moderation = ELEVATED;
+		await writeQuickly("Some days I don't see the point", 2 * SECOND);
+		stub.moderation = CLEAN;
+		await writeQuickly("Anyway", 2 * SECOND);
+		await processSoon(user.root);
+
+		expect(sentMessages()).toHaveLength(1);
+		expect(buttonTexts()).toEqual([SUPPORT_RESOURCES_BUTTON]);
+		expect(stub.asked[0]?.user).toContain("Anyway");
+	});
+
+	it("answers a crisis text at once, and drops the rest of the burst", async () => {
+		const { writeQuickly, user } = await checkedIn();
+
+		await writeQuickly("Long day", 2 * SECOND);
+		await writeQuickly("I want to end my life", 2 * SECOND);
+		await processSoon(user.root);
+
+		expect(stub.asked).toHaveLength(0);
+		expect(sentMessages()).toHaveLength(1);
+		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
+		expect((await identities(user))[0]?.pendingBurst).toBeUndefined();
+	});
+
+	it("drops a waiting burst when the link ends", async () => {
+		const { user, writeQuickly } = await checkedIn();
+
+		await writeQuickly("Long day", 2 * SECOND);
+		await writeQuickly("/stop", 2 * SECOND);
+		forgetCalls();
+		await processSoon(user.root);
+
+		expect(stub.asked).toHaveLength(0);
+		expect(sentMessages()).toHaveLength(0);
+		expect((await identities(user))[0]?.pendingBurst).toBeUndefined();
 	});
 });

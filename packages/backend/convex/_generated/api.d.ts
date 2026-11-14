@@ -245,6 +245,7 @@ import type * as outreach_telegram_answer from "../outreach/telegram/answer.js";
 import type * as outreach_telegram_appLinks from "../outreach/telegram/appLinks.js";
 import type * as outreach_telegram_bot from "../outreach/telegram/bot.js";
 import type * as outreach_telegram_botApi from "../outreach/telegram/botApi.js";
+import type * as outreach_telegram_caps from "../outreach/telegram/caps.js";
 import type * as outreach_telegram_checkIn from "../outreach/telegram/checkIn.js";
 import type * as outreach_telegram_copy from "../outreach/telegram/copy.js";
 import type * as outreach_telegram_inbound from "../outreach/telegram/inbound.js";
@@ -550,6 +551,7 @@ declare const fullApi: ApiFromModules<{
   "outreach/telegram/appLinks": typeof outreach_telegram_appLinks;
   "outreach/telegram/bot": typeof outreach_telegram_bot;
   "outreach/telegram/botApi": typeof outreach_telegram_botApi;
+  "outreach/telegram/caps": typeof outreach_telegram_caps;
   "outreach/telegram/checkIn": typeof outreach_telegram_checkIn;
   "outreach/telegram/copy": typeof outreach_telegram_copy;
   "outreach/telegram/inbound": typeof outreach_telegram_inbound;

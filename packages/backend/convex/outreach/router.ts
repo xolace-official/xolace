@@ -96,6 +96,23 @@ export async function openEscalationCard(
 	return null;
 }
 
+/** Whether an escalation event was raised for the profile in the last 72 h. */
+export async function escalatedRecently(
+	ctx: QueryCtx,
+	emotionalProfileId: Id<"emotional_profiles">,
+	now: number
+): Promise<boolean> {
+	const recent = await ctx.db
+		.query("escalation_events")
+		.withIndex("by_profile", (q) =>
+			q
+				.eq("emotionalProfileId", emotionalProfileId)
+				.gte("createdAt", now - ESCALATION_HOLD_MS)
+		)
+		.first();
+	return recent !== null;
+}
+
 /**
  * Gate 3: escalation and dormancy.
  *
@@ -131,15 +148,7 @@ export async function escalationOrDormancy(
 		if (await openEscalationCard(ctx, input.emotionalProfileId)) {
 			return "escalation_active";
 		}
-		const recentEscalation = await ctx.db
-			.query("escalation_events")
-			.withIndex("by_profile", (q) =>
-				q
-					.eq("emotionalProfileId", input.emotionalProfileId)
-					.gte("createdAt", now - ESCALATION_HOLD_MS)
-			)
-			.first();
-		if (recentEscalation) {
+		if (await escalatedRecently(ctx, input.emotionalProfileId, now)) {
 			return "escalation_active";
 		}
 	}

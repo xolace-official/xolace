@@ -3,6 +3,7 @@ import { internal } from "../../_generated/api";
 import type { Doc, Id } from "../../_generated/dataModel";
 import {
 	type ActionCtx,
+	internalAction,
 	internalMutation,
 	internalQuery,
 	type QueryCtx,
@@ -19,14 +20,27 @@ import {
 	REFLECTION_MAX_LENGTH,
 	resolveCardCore,
 } from "../../followUps/resolve";
+import { hasPremium } from "../../lib/premium";
 import { domainValidator, reachValidator } from "../../lib/validators";
+import { localDayKey } from "../../streaks/activityLog";
+import { profileTimezone } from "../../streaks/state";
 import { talkPreload } from "../../talk/remember";
+import { escalatedRecently, openEscalationCard } from "../router";
+import {
+	type BurstLevel,
+	burstLevelValidator,
+	pendingBurstValidator,
+} from "../validators";
 import { appLink } from "./appLinks";
 import { botApi, FORBIDDEN, TelegramApiError } from "./botApi";
+import { BURST_WAIT_MS, DAILY_REPLY_CAP } from "./caps";
 import { cardOf, isCardOpen, type Keyboard, openCheckInsOf } from "./checkIn";
 import {
 	ANSWER_BUTTONS,
+	CAP_REPLY,
+	CAP_UPSELL,
 	CRISIS_HOLDING_LINE,
+	GET_PLUS_BUTTON,
 	OPEN_XOLACE_BUTTON,
 	REPLY_FAILED,
 	SUPPORT_RESOURCES_BUTTON,
@@ -40,6 +54,11 @@ import { isLive } from "./lifecycle";
  * only: nothing is written to sessions, memory or Understanding. All this
  * keeps is the chat's last few turns (24 h at most) and, after a Lighter, the
  * next text as that card's "what helped".
+ *
+ * Caps and bursts (#771): each reply takes one of the day's slots (Plus 50,
+ * free 5, on the user's local day), and past the cap gets a fixed line
+ * instead. Texts are screened as they arrive, then wait out a burst: one
+ * reply, 6 s after the last, answers them all.
  */
 
 /** After a Lighter, how long the next text counts as what helped. */
@@ -51,6 +70,8 @@ const TURNS_TTL_MS = 24 * 60 * 60 * 1000;
 const TURN_MAX_CHARS = 500;
 /** What the model and the safeguard read of one text. */
 export const TEXT_MAX_CHARS = REFLECTION_MAX_LENGTH;
+/** A burst keeps its latest texts, so a flood can't grow the row. */
+const BURST_MAX_TEXTS = 10;
 
 const tapAnswerValidator = v.union(
 	v.literal("lighter"),
@@ -75,6 +96,8 @@ export const replyJobValidator = v.object({
 		}),
 		v.object({
 			kind: v.literal("text"),
+			/** When the update was claimed: a burst waits from here (#771). */
+			receivedAt: v.optional(v.number()),
 			/** Set when this is the first text inside a Lighter's window. */
 			reflectionCardId: v.optional(v.id("follow_up_cards")),
 			text: v.string(),
@@ -304,11 +327,292 @@ export const expireTurns = internalMutation({
 });
 
 // ---------------------------------------------------------------------------
+// The daily cap (#771)
+// ---------------------------------------------------------------------------
+
+/** Which line a reply past the cap gets. */
+const capLineValidator = v.union(
+	// Plus, not struggling.
+	v.literal("plain"),
+	// Struggling, on any plan: never sold to.
+	v.literal("support"),
+	// Free, not struggling.
+	v.literal("upsell")
+);
+type CapLine = Infer<typeof capLineValidator>;
+
+/** What a reply may do: go, or which cap line it gets instead. */
+const slotValidator = v.union(
+	v.object({ kind: v.literal("reply") }),
+	v.object({ kind: v.literal("capped"), line: capLineValidator })
+);
+
+/** A Heavier answer counts as struggling this long after it was given. */
+const HEAVIER_WINDOW_MS = 72 * 60 * 60 * 1000;
+
+/**
+ * Struggling, beyond this turn: the tapped or open card is elevated, acute
+ * or escalation-derived; the card in view was answered Heavier in the last
+ * 72 h; an escalation-derived card is open; or there was a crisis in the
+ * last 72 h. An old card, long closed, says nothing about today.
+ */
+async function struggling(
+	ctx: QueryCtx,
+	identity: Doc<"channel_identities">,
+	cardId: Id<"follow_up_cards"> | undefined,
+	now: number
+): Promise<boolean> {
+	const profileId = identity.emotionalProfileId;
+	const tapped = cardId ? await ctx.db.get("follow_up_cards", cardId) : null;
+	const card =
+		tapped?.emotionalProfileId === profileId
+			? tapped
+			: await cardInView(ctx, identity);
+	const current = card !== null && (card === tapped || isCardOpen(card));
+	if (
+		card &&
+		((current && (card.tier !== "standard" || card.escalationDerived)) ||
+			(card.userResponse === "heavier" &&
+				(card.resolvedAt ?? 0) > now - HEAVIER_WINDOW_MS))
+	) {
+		return true;
+	}
+	return (
+		(await openEscalationCard(ctx, profileId)) !== null ||
+		(await escalatedRecently(ctx, profileId, now))
+	);
+}
+
+/**
+ * Take one of today's replies, counted on the user's local day for the
+ * account linked now; or, at the cap, say which line goes instead. Null once
+ * the link is no longer the one the reply was for.
+ */
+export const takeReplySlot = internalMutation({
+	args: {
+		/** The tapped card, when a tap is being answered. */
+		cardId: v.optional(v.id("follow_up_cards")),
+		/** The safeguard said elevated this turn. */
+		elevated: v.boolean(),
+		/** This turn is a Heavier tap. */
+		heavier: v.boolean(),
+		identityId: v.id("channel_identities"),
+		linkedAt: v.number(),
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		if (!isLinkOf(identity, args.linkedAt)) {
+			return null;
+		}
+		const profile = await ctx.db.get(
+			"emotional_profiles",
+			identity.emotionalProfileId
+		);
+		if (!profile) {
+			return null;
+		}
+		const now = Date.now();
+		const day = localDayKey(now, await profileTimezone(ctx, profile));
+		const counted = identity.replyCount;
+		const used =
+			counted?.day === day && counted.emotionalProfileId === profile._id
+				? counted.count
+				: 0;
+		const plus = await hasPremium(ctx, profile);
+		if (used < DAILY_REPLY_CAP[plus ? "plus" : "free"]) {
+			await ctx.db.patch("channel_identities", identity._id, {
+				replyCount: { count: used + 1, day, emotionalProfileId: profile._id },
+			});
+			return { kind: "reply" as const };
+		}
+		const isStruggling =
+			args.elevated ||
+			args.heavier ||
+			(await struggling(ctx, identity, args.cardId, now));
+		let line: CapLine = "upsell";
+		if (isStruggling) {
+			line = "support";
+		} else if (plus) {
+			line = "plain";
+		}
+		return { kind: "capped" as const, line };
+	},
+	returns: v.union(v.null(), slotValidator),
+});
+
+/** Give back a slot whose reply never went out: a failure isn't a reply. */
+export const returnReplySlot = internalMutation({
+	args: { identityId: v.id("channel_identities") },
+	handler: async (ctx, { identityId }) => {
+		const identity = await ctx.db.get("channel_identities", identityId);
+		const counted = identity?.replyCount;
+		if (identity && counted && counted.count > 0) {
+			await ctx.db.patch("channel_identities", identityId, {
+				replyCount: { ...counted, count: counted.count - 1 },
+			});
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+// ---------------------------------------------------------------------------
+// Bursts (#771)
+// ---------------------------------------------------------------------------
+
+const worse = (a: BurstLevel, b: BurstLevel): BurstLevel => {
+	const order: BurstLevel[] = ["none", "gentle", "elevated"];
+	return order.indexOf(a) >= order.indexOf(b) ? a : b;
+};
+
+/**
+ * Add a screened text to the chat's burst, move its reply to 6 s from now,
+ * and schedule that reply. An earlier text's reply finds itself moved and
+ * sends nothing; the last one answers the whole burst.
+ */
+export const queueText = internalMutation({
+	args: {
+		chatId: v.string(),
+		identityId: v.id("channel_identities"),
+		level: burstLevelValidator,
+		linkedAt: v.number(),
+		/** When the text arrived; its screening doesn't add to the wait. */
+		receivedAt: v.number(),
+		support: v.boolean(),
+		text: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		if (!isLinkOf(identity, args.linkedAt)) {
+			return null;
+		}
+		const waiting =
+			identity.pendingBurst?.linkedAt === args.linkedAt
+				? identity.pendingBurst
+				: undefined;
+		const dueAt = args.receivedAt + BURST_WAIT_MS;
+		await ctx.db.patch("channel_identities", identity._id, {
+			pendingBurst: {
+				dueAt,
+				level: waiting ? worse(waiting.level, args.level) : args.level,
+				linkedAt: args.linkedAt,
+				support: (waiting?.support ?? false) || args.support,
+				texts: [...(waiting?.texts ?? []), args.text].slice(-BURST_MAX_TEXTS),
+			},
+		});
+		await ctx.scheduler.runAt(
+			Math.max(dueAt, Date.now()),
+			internal.outreach.telegram.reply.answerBurst,
+			{
+				chatId: args.chatId,
+				dueAt,
+				identityId: identity._id,
+				linkedAt: args.linkedAt,
+			}
+		);
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** Drop a waiting burst: a crisis text answers at once and ends it. */
+export const dropBurst = internalMutation({
+	args: { identityId: v.id("channel_identities") },
+	handler: async (ctx, { identityId }) => {
+		const identity = await ctx.db.get("channel_identities", identityId);
+		if (identity?.pendingBurst) {
+			await ctx.db.patch("channel_identities", identityId, {
+				pendingBurst: undefined,
+			});
+		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * Take the burst whose reply is due at `dueAt`, once: null when a later
+ * text moved it, it was already taken or dropped, or its link has changed.
+ */
+export const takeBurst = internalMutation({
+	args: {
+		dueAt: v.number(),
+		identityId: v.id("channel_identities"),
+		linkedAt: v.number(),
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		const burst = identity?.pendingBurst;
+		if (!(identity && burst) || burst.dueAt !== args.dueAt) {
+			return null;
+		}
+		await ctx.db.patch("channel_identities", identity._id, {
+			pendingBurst: undefined,
+		});
+		return isLinkOf(identity, args.linkedAt) && burst.linkedAt === args.linkedAt
+			? burst
+			: null;
+	},
+	returns: v.union(v.null(), pendingBurstValidator),
+});
+
+/** The one reply to a burst, once it has waited 6 s after its last text. */
+export const answerBurst = internalAction({
+	args: {
+		chatId: v.string(),
+		dueAt: v.number(),
+		identityId: v.id("channel_identities"),
+		linkedAt: v.number(),
+	},
+	handler: async (ctx, args) => {
+		const burst = await ctx.runMutation(
+			internal.outreach.telegram.reply.takeBurst,
+			{
+				dueAt: args.dueAt,
+				identityId: args.identityId,
+				linkedAt: args.linkedAt,
+			}
+		);
+		if (!burst) {
+			return null;
+		}
+		const text = burst.texts.join("\n").slice(0, TEXT_MAX_CHARS);
+		const job: ReplyJob = {
+			chatId: args.chatId,
+			identityId: args.identityId,
+			linkedAt: args.linkedAt,
+			trigger: { kind: "text", text },
+		};
+		const progress: Progress = { sent: false, support: burst.support };
+		await guarded(ctx, job, progress, async () => {
+			await typing(args.chatId);
+			await writeAndSend(ctx, job, progress, {
+				elevated: burst.level === "elevated",
+				heavier: false,
+				open: false,
+				person: text,
+				support: burst.support,
+				trigger: { kind: "text", level: burst.level, text },
+			});
+		});
+		return null;
+	},
+	returns: v.null(),
+});
+
+// ---------------------------------------------------------------------------
 // Replying
 // ---------------------------------------------------------------------------
 
-function keyboardOf(buttons: { open: boolean; support: boolean }): Keyboard {
+function keyboardOf(buttons: {
+	open: boolean;
+	plus?: boolean;
+	support: boolean;
+}): Keyboard {
 	const rows: Keyboard = [];
+	if (buttons.plus) {
+		rows.push([{ text: GET_PLUS_BUTTON, url: appLink("plus") }]);
+	}
 	if (buttons.support) {
 		rows.push([{ text: SUPPORT_RESOURCES_BUTTON, url: appLink("support") }]);
 	}
@@ -374,8 +678,6 @@ async function screen(text: string) {
 	const verdict = await checkWordsSafety(text);
 	const safe = verdict.level === "none" || verdict.level === "gentle";
 	return {
-		// Crisis waits for its own path (#772): the fixed line and resources.
-		crisis: verdict.level === "crisis",
 		// Only these, with both providers answering, let a text be kept.
 		keepable: safe && !verdict.unavailable,
 		level: verdict.level,
@@ -385,15 +687,38 @@ async function screen(text: string) {
 }
 
 /**
- * Reply to a claimed tap or text. Runs after the claim commits, so it never
+ * Handle a claimed tap or text. Runs after the claim commits, so it never
  * throws (a retry would find the update claimed and send nothing): anything
  * that fails before a message went out sends the fixed failure line instead,
- * and nothing is ever sent twice.
+ * and nothing is ever sent twice. A tap is answered now; a text is screened
+ * now and joins the chat's burst, answered once it settles.
  */
 export async function respond(ctx: ActionCtx, job: ReplyJob): Promise<void> {
 	const progress: Progress = { sent: false, support: false };
+	const { trigger } = job;
+	await guarded(ctx, job, progress, () =>
+		trigger.kind === "tap"
+			? replyToTap(ctx, job, trigger, progress)
+			: receiveText(ctx, job, trigger, progress)
+	);
+}
+
+/**
+ * How far a reply got: whether a message went out (or the text was handed
+ * to its burst), and whether Support resources are already owed (Heavier,
+ * elevated, no safeguard).
+ */
+type Progress = { sent: boolean; support: boolean };
+
+/** Run `work`; if it throws before anything went out, send the failure line. */
+async function guarded(
+	ctx: ActionCtx,
+	job: ReplyJob,
+	progress: Progress,
+	work: () => Promise<void>
+): Promise<void> {
 	try {
-		await reply(ctx, job, progress);
+		await work();
 	} catch (error) {
 		console.error("[telegram] reply failed", error);
 		if (!progress.sent) {
@@ -401,12 +726,6 @@ export async function respond(ctx: ActionCtx, job: ReplyJob): Promise<void> {
 		}
 	}
 }
-
-/**
- * How far a reply got: whether a message went out, and whether Support
- * resources are already owed (Heavier, elevated, no safeguard).
- */
-type Progress = { sent: boolean; support: boolean };
 
 /**
  * The failure line, with Open Xolace when the app link can be made, and
@@ -426,52 +745,130 @@ async function sendFailureLine(
 	await sendReply(ctx, job, REPLY_FAILED, keyboard);
 }
 
-async function reply(
+async function replyToTap(
 	ctx: ActionCtx,
 	job: ReplyJob,
+	trigger: Extract<ReplyJob["trigger"], { kind: "tap" }>,
 	progress: Progress
 ): Promise<void> {
-	const { chatId, identityId, linkedAt, trigger } = job;
+	await typing(job.chatId);
+	// Heavier carries support and the way back to the app.
+	const heavier = trigger.answer === "heavier";
+	progress.support = heavier;
+	await writeAndSend(ctx, job, progress, {
+		cardId: trigger.cardId,
+		elevated: false,
+		heavier,
+		open: heavier,
+		person: `Tapped: ${ANSWER_BUTTONS[trigger.answer]}`,
+		support: heavier,
+		trigger: { answer: trigger.answer, kind: "tap" },
+	});
+}
+
+/**
+ * A text, on arrival: screened whole (only what is kept or shown is cut). A
+ * crisis is answered at once and ends any burst; anything else may be kept
+ * as what helped, then joins the burst.
+ */
+async function receiveText(
+	ctx: ActionCtx,
+	job: ReplyJob,
+	trigger: Extract<ReplyJob["trigger"], { kind: "text" }>,
+	progress: Progress
+): Promise<void> {
+	const { chatId, identityId, linkedAt } = job;
+	await typing(chatId);
+	const safety = await screen(trigger.text);
+	progress.support = safety.support;
+	// Crisis waits for its own path (#772): the fixed line and resources.
+	if (safety.level === "crisis") {
+		await ctx.runMutation(internal.outreach.telegram.reply.dropBurst, {
+			identityId,
+		});
+		progress.sent = true;
+		await sendReply(
+			ctx,
+			job,
+			CRISIS_HOLDING_LINE,
+			keyboardOf({ open: true, support: true })
+		);
+		return;
+	}
+	const text = trigger.text.slice(0, TEXT_MAX_CHARS);
+	if (trigger.reflectionCardId && safety.keepable) {
+		await ctx.runMutation(internal.outreach.telegram.reply.saveReflection, {
+			cardId: trigger.reflectionCardId,
+			identityId,
+			linkedAt,
+			text,
+		});
+	}
+	await ctx.runMutation(internal.outreach.telegram.reply.queueText, {
+		chatId,
+		identityId,
+		level: safety.level,
+		linkedAt,
+		receivedAt: trigger.receivedAt ?? Date.now(),
+		support: safety.support,
+		text,
+	});
+	// The burst's reply owns failures from here.
+	progress.sent = true;
+}
+
+/** One turn to answer: what the model hears, and what rides with it. */
+type Turn = {
+	cardId?: Id<"follow_up_cards">;
+	elevated: boolean;
+	heavier: boolean;
+	open: boolean;
+	person: string;
+	support: boolean;
+	trigger: ReplyTrigger;
+};
+
+/** The cap line a capped reply gets, and its buttons. */
+function capLine(line: CapLine) {
+	return {
+		keyboard: keyboardOf({
+			open: true,
+			plus: line === "upsell",
+			support: line === "support",
+		}),
+		text: line === "upsell" ? CAP_UPSELL : CAP_REPLY,
+	};
+}
+
+/** Take a slot, then write and send the reply, or the cap line past the cap. */
+async function writeAndSend(
+	ctx: ActionCtx,
+	job: ReplyJob,
+	progress: Progress,
+	turn: Turn
+): Promise<void> {
+	const { identityId, linkedAt } = job;
 	const send = async (text: string, keyboard: Keyboard) => {
 		progress.sent = true;
 		return await sendReply(ctx, job, text, keyboard);
 	};
-	await typing(chatId);
-
-	let support = false;
-	let open = false;
-	let person: string;
-	let replyTrigger: ReplyTrigger;
-	if (trigger.kind === "tap") {
-		person = `Tapped: ${ANSWER_BUTTONS[trigger.answer]}`;
-		replyTrigger = { answer: trigger.answer, kind: "tap" };
-		// Heavier carries support and the way back to the app.
-		support = trigger.answer === "heavier";
-		open = support;
-		progress.support = support;
-	} else {
-		// The whole message is screened; only what is kept or shown is cut.
-		const safety = await screen(trigger.text);
-		progress.support = safety.support;
-		const text = trigger.text.slice(0, TEXT_MAX_CHARS);
-		if (safety.crisis) {
-			await send(
-				CRISIS_HOLDING_LINE,
-				keyboardOf({ open: true, support: true })
-			);
-			return;
+	const slot = await ctx.runMutation(
+		internal.outreach.telegram.reply.takeReplySlot,
+		{
+			elevated: turn.elevated,
+			heavier: turn.heavier,
+			identityId,
+			linkedAt,
+			...(turn.cardId && { cardId: turn.cardId }),
 		}
-		if (trigger.reflectionCardId && safety.keepable) {
-			await ctx.runMutation(internal.outreach.telegram.reply.saveReflection, {
-				cardId: trigger.reflectionCardId,
-				identityId,
-				linkedAt,
-				text,
-			});
-		}
-		person = text;
-		replyTrigger = { kind: "text", level: safety.level, text };
-		support = safety.support;
+	);
+	if (!slot) {
+		return;
+	}
+	if (slot.kind === "capped") {
+		const { keyboard, text } = capLine(slot.line);
+		await send(text, keyboard);
+		return;
 	}
 
 	const context = await ctx.runQuery(
@@ -480,21 +877,28 @@ async function reply(
 			identityId,
 			linkedAt,
 			now: Date.now(),
-			...(trigger.kind === "tap" && { cardId: trigger.cardId }),
+			...(turn.cardId && { cardId: turn.cardId }),
 		}
 	);
+	const giveBack = () =>
+		ctx.runMutation(internal.outreach.telegram.reply.returnReplySlot, {
+			identityId,
+		});
 	if (!context) {
+		await giveBack();
 		return;
 	}
+	const { open, support } = turn;
 	const written = await writeReply({
 		card: context.card,
 		memory: context.memory,
 		reach: context.reach,
 		resources: support,
-		trigger: replyTrigger,
+		trigger: turn.trigger,
 		turns: context.turns satisfies ReplyTurn[],
 	});
 	if (written === null) {
+		await giveBack();
 		await send(REPLY_FAILED, keyboardOf({ open: true, support }));
 		return;
 	}
@@ -504,7 +908,7 @@ async function reply(
 			identityId,
 			linkedAt,
 			turns: [
-				{ role: "person", text: person },
+				{ role: "person", text: turn.person },
 				{ role: "xolace", text: written },
 			],
 		});

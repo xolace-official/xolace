@@ -41,6 +41,8 @@ import {
 	outreachOutcomeValidator,
 	outreachProvenanceValidator,
 	outreachVariantsValidator,
+	pendingBurstValidator,
+	replyCountValidator,
 	revokedReasonValidator,
 	suppressedReasonValidator,
 } from "./outreach/validators";
@@ -257,6 +259,9 @@ export default defineSchema({
 		externalId: v.string(),
 		lastInboundAt: v.optional(v.number()),
 		linkedAt: v.number(),
+		// Texts screened on arrival and waiting out a burst for one reply
+		// (#771). Gone within seconds, and dropped when the link ends.
+		pendingBurst: v.optional(pendingBurstValidator),
 		// The last few messages each way, for the next AI reply's context
 		// (#770). Kept 24 h at most, and dropped when the link ends.
 		recentTurns: v.optional(
@@ -268,6 +273,8 @@ export default defineSchema({
 				})
 			)
 		),
+		// AI replies used on the user's local day, against the plan's cap (#771).
+		replyCount: v.optional(replyCountValidator),
 		revokedAt: v.optional(v.number()),
 		revokedReason: v.optional(revokedReasonValidator),
 		status: identityStatusValidator,

@@ -149,3 +149,35 @@ export const outreachProvenanceValidator = v.object({
 	reachUsed: v.optional(reachValidator),
 	triggerReason: v.string(),
 });
+
+/** A Telegram text's safeguard level once it's past crisis (#771). */
+export const burstLevelValidator = v.union(
+	v.literal("none"),
+	v.literal("gentle"),
+	v.literal("elevated")
+);
+export type BurstLevel = Infer<typeof burstLevelValidator>;
+
+/**
+ * Texts screened on arrival, waiting out a burst for one reply (#771): the
+ * link they came in on, so a relink never inherits them; when the reply is
+ * due (a later text moves it); and the worst of their safeguard results.
+ */
+export const pendingBurstValidator = v.object({
+	dueAt: v.number(),
+	level: burstLevelValidator,
+	linkedAt: v.number(),
+	/** Elevated, or no safeguard, on any of them: Support resources ride along. */
+	support: v.boolean(),
+	texts: v.array(v.string()),
+});
+
+/**
+ * AI replies used on one local day (#771), for the account that used them:
+ * a relink to another account starts from none.
+ */
+export const replyCountValidator = v.object({
+	count: v.number(),
+	day: v.string(),
+	emotionalProfileId: v.id("emotional_profiles"),
+});

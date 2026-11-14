@@ -170,13 +170,24 @@ export const post = (t: Backend, update: unknown, secret?: string | null) =>
 export const events = (t: Backend) =>
 	t.run((ctx) => ctx.db.query("inbound_events").take(50));
 
-/** Hops an update takes through the pool: enqueue, its loop, the action. */
-const PROCESS_HOPS = 10;
+/**
+ * Hops an update takes through the pool (enqueue, its loop, the action),
+ * plus a text's burst window before its reply (#771).
+ */
+const PROCESS_HOPS = 15;
 
 /** Run what's due now, a second at a time, without the pool's idle loop. */
 export async function processSoon(t: Backend) {
 	for (let hop = 0; hop < PROCESS_HOPS; hop++) {
 		vi.advanceTimersByTime(SECOND);
+		await t.finishInProgressScheduledFunctions();
+	}
+}
+
+/** Run what's due over the next `ms` only, a second at a time. */
+export async function processFor(t: Backend, ms: number) {
+	for (let left = ms; left > 0; left -= SECOND) {
+		vi.advanceTimersByTime(Math.min(SECOND, left));
 		await t.finishInProgressScheduledFunctions();
 	}
 }
