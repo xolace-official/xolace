@@ -7,21 +7,21 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { Linking } from "react-native";
 import {
 	deviceRegion,
-	LINK_LIFETIME_MINUTES,
 	TELEGRAM_OUTREACH_CONSENT_VERSION,
 } from "@/features/reach-me-on/link-consent";
 import {
+	canReuseLink,
 	isLinking,
 	type LinkStep,
 	linkFlow,
+	linkMsLeft,
 } from "@/features/reach-me-on/link-flow";
 import type { ChannelEntry } from "@/features/reach-me-on/reach-view";
 import { convexErrorCode } from "@/lib/convex-error-code";
 
 type LinkSource = "settings" | "offer_card";
+type Minted = { url: string; at: number };
 
-/** Reuse a minted link only well inside its lifetime. */
-const LINK_REUSE_MS = (LINK_LIFETIME_MINUTES - 1) * 60_000;
 /** How long the "Linked" confirmation stays before the card returns. */
 const CONFIRMATION_MS = 4000;
 
@@ -47,7 +47,9 @@ export function useTelegramLink(
 	const { toast } = useToast();
 	const [step, dispatch] = useReducer(linkFlow, "idle");
 	const [minting, setMinting] = useState(false);
-	const minted = useRef<{ url: string; at: number } | null>(null);
+	const minted = useRef<Minted | null>(null);
+	/** When the link last opened or copied was minted; its expiry ends the wait. */
+	const [handedOffAt, setHandedOffAt] = useState<number | null>(null);
 	/** Bumped by Cancel: a link minted for an earlier try isn't opened or copied. */
 	const attempt = useRef(0);
 	const stepRef = useRef<LinkStep>(step);
@@ -73,6 +75,18 @@ export function useTelegramLink(
 		return () => clearTimeout(timer);
 	}, [step]);
 
+	// The bot can't redeem the link past its lifetime: say so instead of waiting.
+	useEffect(() => {
+		if (step !== "waiting" || handedOffAt === null) {
+			return;
+		}
+		const timer = setTimeout(
+			() => dispatch({ type: "link_expired" }),
+			Math.max(0, linkMsLeft(handedOffAt, Date.now()))
+		);
+		return () => clearTimeout(timer);
+	}, [step, handedOffAt]);
+
 	// Closing the sheet mid-flow abandons it.
 	useEffect(
 		() => () => {
@@ -87,10 +101,10 @@ export function useTelegramLink(
 		[posthog]
 	);
 
-	const mint = async (): Promise<string | null> => {
+	const mint = async (): Promise<Minted | null> => {
 		const cached = minted.current;
-		if (cached && Date.now() - cached.at < LINK_REUSE_MS) {
-			return cached.url;
+		if (cached && canReuseLink(cached.at, Date.now())) {
+			return cached;
 		}
 		setMinting(true);
 		try {
@@ -101,7 +115,7 @@ export function useTelegramLink(
 				...(regionCode && { regionCode }),
 			});
 			minted.current = { at: Date.now(), url };
-			return url;
+			return minted.current;
 		} catch (error) {
 			toast.show({ label: mintFailure(error), variant: "danger" });
 			return null;
@@ -119,15 +133,20 @@ export function useTelegramLink(
 		dispatch({ type: "start" });
 	};
 
+	const handOff = (link: Minted) => {
+		setHandedOffAt(link.at);
+		dispatch({ type: "link_handed_off" });
+	};
+
 	const openTelegram = async () => {
 		const mine = attempt.current;
-		const url = await mint();
-		if (!url || attempt.current !== mine) {
+		const link = await mint();
+		if (!link || attempt.current !== mine) {
 			return;
 		}
 		try {
-			await Linking.openURL(url);
-			dispatch({ type: "link_handed_off" });
+			await Linking.openURL(link.url);
+			handOff(link);
 		} catch {
 			toast.show({
 				description: "Copy the link and open it where Telegram is installed.",
@@ -139,13 +158,13 @@ export function useTelegramLink(
 
 	const copyLink = async () => {
 		const mine = attempt.current;
-		const url = await mint();
-		if (!url || attempt.current !== mine) {
+		const link = await mint();
+		if (!link || attempt.current !== mine) {
 			return;
 		}
-		await Clipboard.setStringAsync(url);
+		await Clipboard.setStringAsync(link.url);
 		posthog.capture("channel_link_copied", { channel: "telegram" });
-		dispatch({ type: "link_handed_off" });
+		handOff(link);
 		toast.show({
 			description: "Open it in Telegram on your other device. It works once.",
 			label: "Link copied",

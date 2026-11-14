@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { type LinkStep, linkFlow } from "@/features/reach-me-on/link-flow";
+import {
+	canReuseLink,
+	isLinking,
+	LINK_LIFETIME_MINUTES,
+	type LinkStep,
+	linkFlow,
+} from "@/features/reach-me-on/link-flow";
 
 const run = (...events: Parameters<typeof linkFlow>[1][]): LinkStep =>
 	events.reduce<LinkStep>(linkFlow, "idle");
@@ -62,5 +68,64 @@ describe("linkFlow", () => {
 
 	it("ignores a channel update when no link is in progress", () => {
 		expect(run({ linked: true, type: "channel_changed" })).toBe("idle");
+	});
+
+	it("says the link expired while waiting past its lifetime", () => {
+		expect(
+			run(
+				{ type: "start" },
+				{ type: "link_handed_off" },
+				{ type: "link_expired" }
+			)
+		).toBe("expired");
+	});
+
+	it("waits again once a fresh link is handed off", () => {
+		expect(
+			run(
+				{ type: "start" },
+				{ type: "link_handed_off" },
+				{ type: "link_expired" },
+				{ type: "link_handed_off" }
+			)
+		).toBe("waiting");
+	});
+
+	it("ignores an expiry before the link is handed off", () => {
+		expect(run({ type: "start" }, { type: "link_expired" })).toBe("disclose");
+	});
+
+	it("still links when the chat links after the link expired", () => {
+		expect(
+			run(
+				{ type: "start" },
+				{ type: "link_handed_off" },
+				{ type: "link_expired" },
+				{ linked: true, type: "channel_changed" }
+			)
+		).toBe("linked");
+	});
+
+	it("counts the expired step as mid-link", () => {
+		expect(isLinking("expired")).toBe(true);
+	});
+});
+
+describe("canReuseLink", () => {
+	const MINUTE = 60_000;
+	const mintedAt = 1_000_000;
+
+	it("reuses a link with plenty of time left", () => {
+		expect(canReuseLink(mintedAt, mintedAt + 2 * MINUTE)).toBe(true);
+	});
+
+	it("mints again when a link has only a few minutes left", () => {
+		expect(canReuseLink(mintedAt, mintedAt + 13 * MINUTE)).toBe(false);
+	});
+
+	it("never reuses an expired link", () => {
+		expect(
+			canReuseLink(mintedAt, mintedAt + LINK_LIFETIME_MINUTES * MINUTE)
+		).toBe(false);
 	});
 });

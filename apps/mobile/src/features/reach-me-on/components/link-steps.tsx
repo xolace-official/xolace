@@ -1,16 +1,17 @@
 import { Button } from "heroui-native";
 import { ActivityIndicator, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { LINK_DISCLOSURE } from "@/features/reach-me-on/link-consent";
 import {
-	LINK_DISCLOSURE,
 	LINK_LIFETIME_MINUTES,
-} from "@/features/reach-me-on/link-consent";
-import type { LinkStep } from "@/features/reach-me-on/link-flow";
+	type LinkStep,
+} from "@/features/reach-me-on/link-flow";
 import { playSoftPress } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 const STEP_NUMBER: Record<Exclude<LinkStep, "idle">, number> = {
 	disclose: 1,
+	expired: 2,
 	linked: 3,
 	waiting: 2,
 };
@@ -68,6 +69,21 @@ export const LinkSteps = ({
 							• {line}
 						</AppText>
 					))}
+				</>
+			)}
+			{step === "expired" && (
+				<>
+					<AppText className="font-semibold text-foreground text-lg">
+						That link expired
+					</AppText>
+					<AppText className="text-foreground/70 text-sm">
+						Links work for {LINK_LIFETIME_MINUTES} minutes. Open Telegram again
+						for a fresh one.
+					</AppText>
+				</>
+			)}
+			{(step === "disclose" || step === "expired") && (
+				<>
 					<Button
 						isDisabled={disabled || minting}
 						onPress={press(onOpenTelegram)}
