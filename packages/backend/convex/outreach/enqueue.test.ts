@@ -322,6 +322,32 @@ describe("gates", () => {
 		});
 	});
 
+	it("keeps no message for a deleted or purged account", async () => {
+		const user = await reachable();
+		const personal = {
+			content: { body: "Sam, the review went better than you feared." },
+			variants: { telegram: { body: "Sam, about the review." } },
+		};
+		await user.root.run((ctx) =>
+			ctx.db.patch("users", user.userId, { accountStatus: "purging" })
+		);
+		const deleted = await enqueue(user, personal);
+		// The purge's last step: the profile itself is gone.
+		await user.root.run((ctx) =>
+			ctx.db.delete("emotional_profiles", user.profileId)
+		);
+		const purged = await enqueue(user, personal);
+
+		for (const { outreachId } of [deleted, purged]) {
+			const row = await outreachRow(user, outreachId);
+			expect(row).toMatchObject({
+				content: { body: "" },
+				suppressedReason: "account_deleted",
+			});
+			expect(row?.variants).toBeUndefined();
+		}
+	});
+
 	it("holds every intent but its own nudge while an escalation-derived card is open", async () => {
 		const user = await reachable();
 		const cardId = await seedCard(user, {

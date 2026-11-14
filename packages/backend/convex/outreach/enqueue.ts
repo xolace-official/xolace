@@ -80,9 +80,14 @@ export const enqueue = internalMutation({
 			outcome:
 				| { kind: "suppressed"; reason: SuppressedReason }
 				| { kind: "queued"; sendAt: number | null }
-		): Promise<Id<"outreach">> =>
-			await ctx.db.insert("outreach", {
-				content: args.content,
+		): Promise<Id<"outreach">> => {
+			// A deleted account's purge may already have drained its outreach
+			// (or its profile): keep the record, never the message.
+			const keepsMessage = !(
+				outcome.kind === "suppressed" && outcome.reason === "account_deleted"
+			);
+			return await ctx.db.insert("outreach", {
+				content: keepsMessage ? args.content : { body: "" },
 				createdAt: now,
 				emotionalProfileId: args.emotionalProfileId,
 				intent: args.intent,
@@ -91,7 +96,7 @@ export const enqueue = internalMutation({
 				...(args.followUpId && { followUpId: args.followUpId }),
 				...(args.moment && { moment: args.moment }),
 				...(args.tier && { tier: args.tier }),
-				...(args.variants && { variants: args.variants }),
+				...(keepsMessage && args.variants && { variants: args.variants }),
 				...(outcome.kind === "suppressed"
 					? { outcome: "suppressed", suppressedReason: outcome.reason }
 					: {
@@ -99,6 +104,7 @@ export const enqueue = internalMutation({
 							...(outcome.sendAt !== null && { sendAt: outcome.sendAt }),
 						}),
 			});
+		};
 
 		const suppress = async (
 			reason: SuppressedReason
