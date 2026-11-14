@@ -70,6 +70,7 @@ const stub = vi.hoisted(() => ({
 	duringScreen: undefined as (() => Promise<unknown>) | undefined,
 	/** Reading the memory preload throws. */
 	memoryFails: false,
+	/** Moderation's result, or a function picking one from the words. */
 	moderation: null as unknown,
 	/** Whether the user has Xolace+. */
 	plus: false,
@@ -108,12 +109,14 @@ vi.mock("../../talk/remember", async (orig) => {
 });
 vi.mock("../../ai/providers/moderation", async (orig) => ({
 	...(await orig<typeof import("../../ai/providers/moderation")>()),
-	moderateInput: async () => {
+	moderateInput: async (words: string) => {
 		stub.screened += 1;
 		const meanwhile = stub.duringScreen;
 		stub.duringScreen = undefined;
 		await meanwhile?.();
-		return stub.moderation;
+		return typeof stub.moderation === "function"
+			? stub.moderation(words)
+			: stub.moderation;
 	},
 }));
 vi.mock("../../ai/providers/anthropic", async (orig) => ({
@@ -151,6 +154,12 @@ const CLEAN: ModerationResult = {
 	categories: EMPTY_CATEGORIES,
 	categoryScores: {},
 	flagged: false,
+};
+/** Self-harm intent, high: crisis. */
+const CRISIS: ModerationResult = {
+	categories: EMPTY_CATEGORIES,
+	categoryScores: { "self-harm/intent": 0.9 },
+	flagged: true,
 };
 /** A moderate self-harm signal: elevated, not crisis. */
 const ELEVATED: ModerationResult = {
@@ -1174,6 +1183,56 @@ describe("a burst of texts", () => {
 		expect(stub.asked).toHaveLength(0);
 		expect(sentMessages()).toHaveLength(1);
 		expect((await identities(user))[0]?.pendingBurst).toBeUndefined();
+	});
+
+	it("is screened again as a whole: a crisis split across its texts gets the fixed reply, never the model", async () => {
+		const { user, writeQuickly } = await checkedIn();
+		// No one text says it; together they do.
+		stub.moderation = (words: string) =>
+			words.includes("decided") && words.includes("pills") ? CRISIS : CLEAN;
+
+		await writeQuickly("I've decided", 2 * SECOND);
+		await writeQuickly("tonight", 2 * SECOND);
+		await writeQuickly("I have the pills", 2 * SECOND);
+		expect(sentMessages()).toHaveLength(0);
+		await processSoon(user.root);
+
+		expect(stub.asked).toHaveLength(0);
+		expect(sentMessages()).toHaveLength(1);
+		expect(lastReply()?.params.text).toBe(crisisReply(crisisContactsFor("GH")));
+		const events = await user.root.run((ctx) =>
+			ctx.db
+				.query("escalation_events")
+				.withIndex("by_profile", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.collect()
+		);
+		expect(events).toHaveLength(1);
+		expect(events[0]).toMatchObject({ source: "telegram" });
+	});
+
+	it("carries Support resources when only the whole of it reads elevated", async () => {
+		const { user, writeQuickly } = await checkedIn();
+		stub.moderation = (words: string) =>
+			words.includes("\n") ? ELEVATED : CLEAN;
+
+		await writeQuickly("Long day", 2 * SECOND);
+		await writeQuickly("Anyway", 2 * SECOND);
+		await processSoon(user.root);
+
+		expect(sentMessages()).toHaveLength(1);
+		expect(buttonTexts()).toEqual([SUPPORT_RESOURCES_BUTTON]);
+	});
+
+	it("screens a lone text once, on arrival", async () => {
+		const { user, write } = await checkedIn();
+
+		await write("Long day");
+		await processSoon(user.root);
+
+		expect(sentMessages()).toHaveLength(1);
+		expect(stub.screened).toBe(1);
 	});
 
 	it("drops a waiting burst when the link ends", async () => {

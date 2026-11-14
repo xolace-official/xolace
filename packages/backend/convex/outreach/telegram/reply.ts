@@ -783,29 +783,45 @@ export const answerBurst = internalAction({
 			}
 			return null;
 		}
-		const text = burst.texts.join("\n").slice(0, TEXT_MAX_CHARS);
+		const whole = burst.texts.join("\n");
+		const text = whole.slice(0, TEXT_MAX_CHARS);
+		const trigger = { kind: "text" as const, text };
 		const job: ReplyJob = {
 			chatId: args.chatId,
 			// Its failure line, too, is overtaken by a wipe from here.
 			claimedAt: since,
 			identityId: args.identityId,
 			linkedAt: args.linkedAt,
-			trigger: { kind: "text", text },
+			trigger,
 		};
 		const progress: Progress = { sent: false, support: burst.support };
 		await guarded(ctx, job, progress, async () => {
 			await typing(args.chatId);
+			let { level, support } = burst;
+			// Each text was screened alone, and a crisis can be split across
+			// them: screen them together too. A lone text already was.
+			if (burst.texts.length > 1) {
+				const safety = await screen(whole);
+				if (safety.level === "crisis") {
+					progress.sent = true;
+					await answerCrisis(ctx, job, trigger, safety.peak);
+					return;
+				}
+				level = worse(level, safety.level);
+				support ||= safety.support;
+				progress.support = support;
+			}
 			await writeAndSend(
 				ctx,
 				job,
 				progress,
 				{
-					elevated: burst.level === "elevated",
+					elevated: level === "elevated",
 					heavier: false,
 					open: false,
 					person: text,
-					support: burst.support,
-					trigger: { kind: "text", level: burst.level, text },
+					support,
+					trigger: { kind: "text", level, text },
 				},
 				since
 			);
