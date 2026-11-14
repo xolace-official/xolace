@@ -25,8 +25,9 @@ export const outreachTelegramPool = new Workpool(components.outreachTelegram, {
 });
 
 /**
- * Telegram updates (#765), one at a time so one chat's updates are handled
- * in the order they arrived. Shard by chat if replies ever back up behind it.
+ * Telegram updates (#765), one at a time so one chat's updates are claimed
+ * in the order they arrived. Only the claim and its Bot API calls hold the
+ * slot: an AI reply (screening, the model) is scheduled off the pool.
  */
 export const telegramInboundPool = new Workpool(components.telegramInbound, {
 	maxParallelism: 1,

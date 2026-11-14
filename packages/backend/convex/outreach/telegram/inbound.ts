@@ -32,8 +32,9 @@ import { asUpdate, strippedPayload } from "./webhook";
  * revoked one its own; no safeguard, no escalation and no text kept. A
  * check-in's "What was this about?" edits it in place (#768), and an answer
  * button resolves its follow-up (#769). The answer and any other text from
- * a linked chat get an AI reply (#770), sent after the claim commits; texts
- * wait out a burst first, and replies are capped per day (#771).
+ * a linked chat get an AI reply (#770), scheduled by the claim itself so the
+ * pool's one slot is never held by screening or the model; texts wait out a
+ * burst first, and replies are capped per day (#771).
  */
 
 /** `/stop` or `/help`, bare or as `/stop@bot`, with anything after it. */
@@ -47,8 +48,6 @@ const replyValidator = v.object({
 	),
 	edits: v.array(editValidator),
 	lines: v.array(lineValidator),
-	/** An AI reply to write and send (#770). */
-	respond: v.optional(replyJobValidator),
 });
 type Reply = Infer<typeof replyValidator>;
 
@@ -57,7 +56,8 @@ type Reply = Infer<typeof replyValidator>;
  * shrinks to its id and the link token's hash is dropped. Links are made and
  * revoked here, and a once-a-day reply takes its slot before it is sent.
  * The lines are sent after this commits and never retried, so no line is
- * ever sent twice.
+ * ever sent twice. An AI reply is scheduled in the same transaction, so it
+ * runs exactly when the claim commits, outside the inbound pool.
  */
 export const claimUpdate = internalMutation({
 	args: { eventId: v.id("inbound_events") },
@@ -79,11 +79,17 @@ export const claimUpdate = internalMutation({
 				payload: update ? strippedPayload(update.update_id) : {},
 				status,
 			});
+			if (respondWith) {
+				await ctx.scheduler.runAfter(
+					0,
+					internal.outreach.telegram.inbound.respondTo,
+					{ job: respondWith }
+				);
+			}
 			return {
 				edits: tap?.edits ?? [],
 				lines,
 				...(tap?.callback && { callback: tap.callback }),
-				...(respondWith && { respond: respondWith }),
 			};
 		};
 
@@ -281,14 +287,6 @@ export const processUpdate = internalAction({
 			],
 			["edits", () => editMessages(ctx, reply.edits)],
 			["lines", () => sendLines(ctx, reply.lines)],
-			[
-				"reply",
-				async () => {
-					if (reply.respond) {
-						await respond(ctx, reply.respond);
-					}
-				},
-			],
 		];
 		for (const [name, step] of steps) {
 			try {
@@ -297,6 +295,21 @@ export const processUpdate = internalAction({
 				console.error(`[telegram] inbound ${name} failed`, error);
 			}
 		}
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * A claimed tap's or text's AI reply (#770), scheduled by its claim. Off the
+ * inbound pool: screening and the model can take seconds to minutes, and
+ * the pool's one slot is every chat's. Never throws (see `respond`), and a
+ * scheduled action is never retried, so nothing is sent twice.
+ */
+export const respondTo = internalAction({
+	args: { job: replyJobValidator },
+	handler: async (ctx, { job }) => {
+		await respond(ctx, job);
 		return null;
 	},
 	returns: v.null(),

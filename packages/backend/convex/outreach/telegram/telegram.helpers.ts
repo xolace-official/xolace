@@ -192,19 +192,29 @@ export const events = (t: Backend) =>
  */
 const PROCESS_HOPS = 15;
 
+/**
+ * Let `ms` pass, run what fell due, then what that scheduled for right away
+ * (an inbound claim's AI reply): a hop the real scheduler takes in
+ * milliseconds shouldn't cost a fake second.
+ */
+async function step(t: Backend, ms: number) {
+	vi.advanceTimersByTime(ms);
+	await t.finishInProgressScheduledFunctions();
+	vi.advanceTimersByTime(0);
+	await t.finishInProgressScheduledFunctions();
+}
+
 /** Run what's due now, a second at a time, without the pool's idle loop. */
 export async function processSoon(t: Backend) {
 	for (let hop = 0; hop < PROCESS_HOPS; hop++) {
-		vi.advanceTimersByTime(SECOND);
-		await t.finishInProgressScheduledFunctions();
+		await step(t, SECOND);
 	}
 }
 
 /** Run what's due over the next `ms` only, a second at a time. */
 export async function processFor(t: Backend, ms: number) {
 	for (let left = ms; left > 0; left -= SECOND) {
-		vi.advanceTimersByTime(Math.min(SECOND, left));
-		await t.finishInProgressScheduledFunctions();
+		await step(t, Math.min(SECOND, left));
 	}
 }
 
