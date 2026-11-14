@@ -205,6 +205,12 @@ async function reapDeadDevices(
  * Target resolution only — rate limiting and `notification_log` stay per
  * logical notification and happen before this is called, so one nudge remains
  * one rate-limit event and one log row regardless of device count.
+ *
+ * Returns how many devices the notification was handed to Expo for. 0 means
+ * there was nowhere to send it (no token at all, or every device reaped):
+ * the outreach push adapter turns that into `no_device` so it can fall back.
+ * Expo's own send runs later in the component, so a transient Expo failure
+ * never shows up here.
  */
 export async function sendPushToProfile(
 	ctx: MutationCtx,
@@ -212,7 +218,7 @@ export async function sendPushToProfile(
 		emotionalProfileId: Id<"emotional_profiles">;
 		notification: Notification;
 	}
-): Promise<void> {
+): Promise<number> {
 	const devices = await profilePushDevices(ctx, args.emotionalProfileId);
 
 	// DEPRECATED(remove-after: app >= 1.9.0): profile-keyed fallback. A user who
@@ -225,14 +231,14 @@ export async function sendPushToProfile(
 	// last row just died would fall through to a profile-keyed recipient that
 	// registration retired long ago.
 	if (devices.length === 0) {
-		await pushNotifications.sendPushNotification(ctx, {
+		const id = await pushNotifications.sendPushNotification(ctx, {
 			// The recipient may have preferences on and no token at all — never
 			// opened the app on a physical device.
 			allowUnregisteredTokens: true,
 			notification: args.notification,
 			userId: args.emotionalProfileId,
 		});
-		return;
+		return id === null ? 0 : 1;
 	}
 
 	const live = await reapDeadDevices(ctx, devices);
@@ -241,14 +247,15 @@ export async function sendPushToProfile(
 	// these devices were registered, so the profile-keyed recipient above was
 	// retired at that registration and there is nothing left to reach.
 	if (live.length === 0) {
-		return;
+		return 0;
 	}
 
-	await pushNotifications.sendPushNotificationBatch(ctx, {
+	const ids = await pushNotifications.sendPushNotificationBatch(ctx, {
 		allowUnregisteredTokens: true,
 		notifications: live.map((device) => ({
 			notification: args.notification,
 			userId: device._id,
 		})),
 	});
+	return ids.filter((id) => id !== null).length;
 }

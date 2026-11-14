@@ -36,6 +36,8 @@ const h = vi.hoisted(() => ({
 	plus: false,
 	pushes: [] as Sent[],
 	pushFailures: [] as Error[],
+	/** Devices `sendPushToProfile` reaches; 0 = none left to receive it. */
+	pushReach: 1,
 	telegram: {
 		configured: false,
 		failures: [] as Error[],
@@ -52,6 +54,7 @@ vi.mock("../lib/pushNotifications", () => ({
 			throw failure;
 		}
 		h.pushes.push(args);
+		return h.pushReach;
 	},
 }));
 vi.mock("../streamSetup", async (orig) => ({
@@ -105,6 +108,7 @@ beforeEach(() => {
 	vi.setSystemTime(NOW);
 	h.plus = false;
 	h.pushFailures.length = 0;
+	h.pushReach = 1;
 	h.pushes.length = 0;
 	h.telegram.configured = false;
 	h.telegram.failures.length = 0;
@@ -904,6 +908,30 @@ describe("fallback", () => {
 				status: "sent",
 			}),
 		]);
+	});
+
+	it("falls back when push reaches no device, and logs nothing as delivered", async () => {
+		const user = await reachable();
+		await linkTelegram(user, ["push", "telegram"]);
+		// No token at all, or every device reaped: nothing to receive it.
+		h.pushReach = 0;
+		const { outreachId } = await enqueue(user);
+		await drain(user);
+		expect(h.telegram.sends).toEqual(["It's been a little while."]);
+		expect(await deliveriesOf(user, outreachId)).toEqual([
+			expect.objectContaining({
+				channel: "push",
+				error: { code: "no_device", kind: "unreachable" },
+				isFallback: false,
+				status: "unreachable",
+			}),
+			expect.objectContaining({
+				channel: "telegram",
+				isFallback: true,
+				status: "sent",
+			}),
+		]);
+		expect(await user.t.query(api.notifications.list, {})).toEqual([]);
 	});
 
 	it("never falls back a second time", async () => {
