@@ -52,6 +52,11 @@ describe("telegramOfferVisible", () => {
 		);
 	});
 
+	// A restored or deep-linked route can arrive without its params.
+	it("never shows when the card's tier is missing", () => {
+		expect(telegramOfferVisible({ ...base, tier: undefined })).toBe(false);
+	});
+
 	it("stays hidden once dismissed, or with the flag off or still loading", () => {
 		expect(telegramOfferVisible({ ...base, dismissed: true })).toBe(false);
 		expect(telegramOfferVisible({ ...base, flagOn: false })).toBe(false);

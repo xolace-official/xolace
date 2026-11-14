@@ -6,7 +6,8 @@ type OfferAnswer = "lighter" | "still_here";
 export type OfferContext = {
 	/** The answer just given in the app; null before one. */
 	answer: OfferAnswer | "heavier" | "processed" | "vent" | null;
-	tier: "acute" | "elevated" | "standard";
+	/** From the route: missing if it was restored or deep-linked without it. */
+	tier: "acute" | "elevated" | "standard" | undefined;
 	escalationDerived: boolean;
 	/** The `reach-me-on` flag: undefined until PostHog has loaded flags. */
 	flagOn: boolean | undefined;
@@ -20,7 +21,8 @@ export type OfferContext = {
 export function offerMoment(ctx: Omit<OfferContext, "channels">): boolean {
 	return (
 		(ctx.answer === "lighter" || ctx.answer === "still_here") &&
-		ctx.tier !== "acute" &&
+		// Fails closed: a missing tier might be acute.
+		(ctx.tier === "standard" || ctx.tier === "elevated") &&
 		!ctx.escalationDerived &&
 		ctx.flagOn === true &&
 		!ctx.dismissed
