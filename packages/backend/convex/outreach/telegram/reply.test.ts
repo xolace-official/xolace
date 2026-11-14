@@ -53,6 +53,7 @@ import {
 	processFor,
 	processSoon,
 	SECOND,
+	SITE_URL,
 	STRANGER_CHAT,
 	sent,
 	setTelegram,
@@ -499,6 +500,19 @@ describe("a reply to free text", () => {
 		expect((await identities(user))[0]?.recentTurns).toBeUndefined();
 	});
 
+	it("keeps no text and sends nothing when a data wipe lands while it is screened", async () => {
+		const { user, write } = await checkedIn();
+		stub.duringScreen = () =>
+			user.root.run((ctx) =>
+				eraseTelegramChats(ctx, user.profileId, { accountDeleted: false })
+			);
+
+		await write("Long day");
+
+		expect(sentMessages()).toHaveLength(0);
+		expect((await identities(user))[0]?.pendingBurst).toBeUndefined();
+	});
+
 	it("deletes a reply whose send finished after a data wipe", async () => {
 		const { user, write } = await checkedIn();
 		beforeNext("sendMessage", () =>
@@ -808,6 +822,24 @@ describe("the daily reply cap", () => {
 		await write("Long day");
 		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
 		stub.memoryFails = false;
+
+		await useReplies(DAILY_REPLY_CAP.free);
+
+		expect(lastReply()?.params.text).toBe(stub.reply);
+	});
+
+	it("doesn't count a reply that failed before Telegram was asked", async () => {
+		const { useReplies, write } = await checkedIn();
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		stub.moderation = ELEVATED;
+		// The reply's buttons can't be made once it's written.
+		stub.duringReply = async () => {
+			Reflect.deleteProperty(process.env, "CONVEX_SITE_URL");
+		};
+		await write("Some days I don't see the point");
+		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
+		process.env.CONVEX_SITE_URL = SITE_URL;
+		stub.moderation = CLEAN;
 
 		await useReplies(DAILY_REPLY_CAP.free);
 

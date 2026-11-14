@@ -145,7 +145,7 @@ async function linked(card?: Partial<Doc<"follow_up_cards">>) {
 		await post(user.root, messageUpdate(STRANGER_CHAT, text), secret);
 		await processSoon(user.root);
 	};
-	return { cardId, user, write };
+	return { cardId, secret, user, write };
 }
 
 const lastReply = () => sent("sendMessage").at(-1);
@@ -318,6 +318,25 @@ describe("the 72 h hold", () => {
 		vi.advanceTimersByTime(60 * HOUR);
 
 		expect(await enqueue(user, "gentle_return")).toMatchObject({
+			suppressedReason: "escalation_active",
+		});
+	});
+
+	it("keeps the hold with the account when its chat moves to another", async () => {
+		const { secret, user, write } = await linked();
+		await write(CRISIS_TEXT);
+		vi.advanceTimersByTime(20 * HOUR);
+		await write(CRISIS_TEXT);
+		const other = await asNewUser(2, user.root);
+		await setTelegram(other, { enabled: true, plan: "free" });
+		await linkChat(other, secret);
+
+		vi.advanceTimersByTime(60 * HOUR);
+
+		expect(await enqueue(user, "gentle_return")).toMatchObject({
+			suppressedReason: "escalation_active",
+		});
+		expect(await enqueue(other, "gentle_return")).not.toMatchObject({
 			suppressedReason: "escalation_active",
 		});
 	});

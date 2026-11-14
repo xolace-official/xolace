@@ -18,6 +18,8 @@ const BATCH = 100;
  * by deleting them; this is far above what one account links in 30 days.
  */
 const MAX_WIPED_CHATS = 1000;
+/** Updates one pass deletes at most, across chats, to stay within a transaction. */
+const DELETES_PER_PASS = 500;
 
 /** Delete our recent chat messages, collapse the rest, say a last goodbye. */
 export async function eraseForDeletion(
@@ -84,18 +86,29 @@ async function drainChats(
 			q.eq("emotionalProfileId", profileId)
 		)
 		.take(andLinks ? BATCH : MAX_WIPED_CHATS);
+	if (!andLinks && identities.length === MAX_WIPED_CHATS) {
+		// Never seen in practice: past this, a wipe leaves later chats' updates.
+		console.error(`[erasure] wipe reached its ${MAX_WIPED_CHATS}-chat limit`);
+	}
 	let more = andLinks && identities.length === BATCH;
+	let budget = DELETES_PER_PASS;
 	for (const identity of identities) {
+		if (budget === 0) {
+			// The rest wait for the next pass; deleted updates aren't read again.
+			return true;
+		}
+		const take = Math.min(BATCH, budget);
 		const events = await ctx.db
 			.query("inbound_events")
 			.withIndex("by_channel_external", (q) =>
 				q.eq("channel", identity.channel).eq("externalId", identity.externalId)
 			)
-			.take(BATCH);
+			.take(take);
 		for (const event of events) {
 			await ctx.db.delete("inbound_events", event._id);
 		}
-		if (events.length === BATCH) {
+		budget -= events.length;
+		if (events.length === take) {
 			more = true;
 		} else if (andLinks) {
 			await ctx.db.delete("channel_identities", identity._id);

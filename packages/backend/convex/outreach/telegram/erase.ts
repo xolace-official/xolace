@@ -94,6 +94,10 @@ export async function eraseTelegramChats(
 			q.eq("emotionalProfileId", emotionalProfileId).eq("channel", "telegram")
 		)
 		.take(MAX_ERASED_CHATS);
+	if (identities.length === MAX_ERASED_CHATS) {
+		// Never seen in practice: past this, later chats keep their messages.
+		console.error(`[erasure] reached its ${MAX_ERASED_CHATS}-chat limit`);
+	}
 	for (const identity of identities) {
 		const chatId = identity.externalId;
 		const messageIds = (identity.sentMessages ?? [])
@@ -133,8 +137,11 @@ export async function eraseTelegramChats(
 type Outcome =
 	| "done"
 	| "gone"
-	/** Wait, then go on from `left`; `transient` counts against the tries. */
-	| { retryAfterMs: number; transient: boolean };
+	/**
+	 * Wait, then go on from `left`. `tries` is how many the failing batch has
+	 * had, for a passing failure; a rate limit counts none.
+	 */
+	| { retryAfterMs: number; tries?: number };
 
 /** A failure that may pass: Telegram's own server error, or no answer. */
 const isTransient = (error: unknown) =>
@@ -144,16 +151,18 @@ const isTransient = (error: unknown) =>
 
 /**
  * Delete one chat's messages, a batch per call. A batch that failed for a
- * passing reason is kept for another try while `canRetry`.
+ * passing reason is kept for another try until it has had its own
+ * `TRANSIENT_ATTEMPTS`; `firstTries` is what the first batch has had already.
  */
 async function deleteFrom(
 	chat: Chat,
-	canRetry: boolean
+	firstTries: number
 ): Promise<{
 	left: string[];
 	outcome: Outcome;
 }> {
 	let left = chat.messageIds;
+	let tries = firstTries;
 	while (left.length > 0) {
 		const batch = left.slice(0, DELETE_BATCH);
 		try {
@@ -168,7 +177,7 @@ async function deleteFrom(
 						left,
 						outcome: {
 							retryAfterMs: (error.retryAfter ?? 1) * SECOND_MS,
-							transient: false,
+							tries,
 						},
 					};
 				}
@@ -177,18 +186,29 @@ async function deleteFrom(
 					return { left: [], outcome: "gone" };
 				}
 			}
-			if (canRetry && isTransient(error)) {
-				return {
-					left,
-					outcome: { retryAfterMs: TRANSIENT_BACKOFF_MS, transient: true },
-				};
+			if (isTransient(error)) {
+				if (tries < TRANSIENT_ATTEMPTS) {
+					return {
+						left,
+						outcome: {
+							retryAfterMs: TRANSIENT_BACKOFF_MS * tries,
+							tries: tries + 1,
+						},
+					};
+				}
+				// Out of tries: nowhere is left to keep these ids, so say so loudly.
+				console.error(
+					`Telegram deleteMessages gave up on ${batch.length} message(s) after ${TRANSIENT_ATTEMPTS} tries`,
+					error
+				);
+			} else {
+				// Too old or already gone: Telegram skips what it can't delete, so
+				// anything else is logged and the next batch still goes.
+				console.error("Telegram deleteMessages failed", error);
 			}
-			// Too old or already gone: Telegram skips what it can't delete, so
-			// anything else (or a passing failure out of tries) is logged and the
-			// next batch still goes.
-			console.error("Telegram deleteMessages failed", error);
 		}
 		left = left.slice(DELETE_BATCH);
+		tries = 1;
 	}
 	return { left, outcome: "done" };
 }
@@ -199,18 +219,14 @@ async function erase(
 	attempt: number
 ): Promise<void> {
 	for (const [index, chat] of chats.entries()) {
-		const { left, outcome } = await deleteFrom(
-			chat,
-			attempt < TRANSIENT_ATTEMPTS
-		);
+		// `attempt` is the first chat's failing batch's; every later one starts fresh.
+		const { left, outcome } = await deleteFrom(chat, index === 0 ? attempt : 1);
 		if (typeof outcome === "object") {
-			// A passing failure counts against the tries; a rate limit doesn't.
-			const next = outcome.transient ? attempt + 1 : attempt;
 			await ctx.scheduler.runAfter(
-				outcome.retryAfterMs * (outcome.transient ? attempt : 1),
+				outcome.retryAfterMs,
 				internal.outreach.telegram.erase.eraseChats,
 				{
-					attempt: next,
+					attempt: outcome.tries ?? 1,
 					chats: [{ ...chat, messageIds: left }, ...chats.slice(index + 1)],
 				}
 			);

@@ -17,8 +17,10 @@ import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, ragMock, revenuecatMock } from "../test/mocks.helpers";
 import { drainInbound } from "./erasure";
 import { ACCOUNT_DELETED, CHECK_IN_CLOSED } from "./telegram/copy";
+import { eraseTelegramChats } from "./telegram/erase";
 import {
 	backend,
+	beforeNext,
 	botCalls,
 	configure,
 	consents,
@@ -28,6 +30,7 @@ import {
 	forgetCalls,
 	HOUR,
 	identities,
+	lastSentMessageId,
 	linkChat,
 	messageUpdate,
 	post,
@@ -240,6 +243,53 @@ describe("account deletion", () => {
 		}
 	});
 
+	it("gives each chat its own tries, after another chat used them all", async () => {
+		const { user } = await linked();
+		await addChats(user, ["9100001"]);
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		const serverError = {
+			description: "Internal Server Error",
+			error_code: 500,
+		};
+		// Three for the first chat, all its tries; one for the next.
+		for (let i = 0; i < 4; i++) {
+			failNext("deleteMessages", serverError);
+		}
+
+		await purge(user);
+
+		const tries = (chatId: string) =>
+			sent("deleteMessages").filter((c) => c.params.chat_id === chatId).length;
+		const [first, second] = [
+			...new Set(sent("deleteMessages").map((c) => String(c.params.chat_id))),
+		];
+		expect(tries(String(first))).toBe(3);
+		expect(tries(String(second))).toBe(2);
+	});
+
+	it("deletes a check-in whose send finished after its chat was cleared", async () => {
+		const { user } = await linked();
+		beforeNext("sendMessage", () =>
+			user.root.run(async (ctx) => {
+				await eraseTelegramChats(ctx, user.profileId, {
+					accountDeleted: false,
+				});
+				for (const delivery of await ctx.db
+					.query("outreach_deliveries")
+					.take(10)) {
+					await ctx.db.delete("outreach_deliveries", delivery._id);
+				}
+			})
+		);
+
+		await checkIn(user);
+
+		const deleted = sent("deleteMessages").flatMap(
+			(c) => c.params.message_ids as number[]
+		);
+		expect(deleted).toContain(lastSentMessageId());
+	});
+
 	it("sends no note to a chat it already unlinked", async () => {
 		const { user } = await linked();
 		await user.root.run(async (ctx) => {
@@ -279,6 +329,43 @@ async function addChats(user: SeededUser, chats: readonly string[]) {
 }
 
 describe("data wipe", () => {
+	it("deletes at most 500 updates a pass, and still finishes", async () => {
+		const { user } = await linked();
+		const chats = Array.from({ length: 6 }, (_, i) => String(7_000_000 + i));
+		await addChats(user, chats);
+		await user.root.run(async (ctx) => {
+			for (const chatId of chats) {
+				for (let n = 0; n < 100; n++) {
+					await ctx.db.insert("inbound_events", {
+						channel: "telegram",
+						externalId: chatId,
+						payload: {},
+						providerEventId: `${chatId}_${n}`,
+						receivedAt: Date.now(),
+						status: "processed",
+					});
+				}
+			}
+		});
+		const left = () =>
+			user.root.run(
+				async (ctx) => (await ctx.db.query("inbound_events").take(1000)).length
+			);
+
+		let more = true;
+		let passes = 0;
+		while (more && passes < 5) {
+			const before = await left();
+			more = await user.root.run((ctx) => drainInbound(ctx, user.profileId));
+			expect(before - (await left())).toBeLessThanOrEqual(500);
+			passes += 1;
+		}
+
+		expect(more).toBe(false);
+		expect(passes).toBeGreaterThan(1);
+		expect(await left()).toBe(0);
+	});
+
 	it("finishes with a hundred chats or more, reaching the last one's updates", async () => {
 		const { user } = await linked();
 		const chats = Array.from({ length: 100 }, (_, i) => String(8_000_000 + i));

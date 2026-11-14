@@ -130,24 +130,15 @@ export async function latestHeldEscalation(
 
 /**
  * When the profile's latest Telegram crisis came in (#772), if any. A repeat
- * shares the first one's escalation event, so the event's time isn't it.
+ * shares the first one's escalation event, so the event's time isn't it;
+ * it's kept on the account, so a chat moving elsewhere doesn't take it along.
  */
 export async function lastTelegramCrisisAt(
 	ctx: QueryCtx,
 	emotionalProfileId: Id<"emotional_profiles">
 ): Promise<number | null> {
-	let latest: number | null = null;
-	for (const identity of await identitiesOf(
-		ctx,
-		emotionalProfileId,
-		"telegram"
-	)) {
-		const at = identity.lastCrisisAt;
-		if (at !== undefined && (latest === null || at > latest)) {
-			latest = at;
-		}
-	}
-	return latest;
+	const profile = await ctx.db.get("emotional_profiles", emotionalProfileId);
+	return profile?.lastTelegramCrisisAt ?? null;
 }
 
 /** A Telegram crisis since `since`: a new event, or one merged into an older. */

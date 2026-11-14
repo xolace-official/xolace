@@ -645,12 +645,23 @@ export const queueText = internalMutation({
 		linkedAt: v.number(),
 		/** When the text arrived; its screening doesn't add to the wait. */
 		receivedAt: v.number(),
+		/** When its handling began: a wipe or crisis since drops it. */
+		since: v.optional(v.number()),
 		support: v.boolean(),
 		text: v.string(),
 	},
 	handler: async (ctx, args) => {
 		const identity = await ctx.db.get("channel_identities", args.identityId);
 		if (!isLinkOf(identity, args.linkedAt)) {
+			return null;
+		}
+		if (!keptSince(identity, args.since)) {
+			// Overtaken while it was screened: it joins no burst.
+			await ctx.db.patch(
+				"channel_identities",
+				identity._id,
+				doneScreening(identity)
+			);
 			return null;
 		}
 		const waiting =
@@ -728,6 +739,8 @@ export const answerBurst = internalAction({
 		linkedAt: v.number(),
 	},
 	handler: async (ctx, args) => {
+		// Before the burst is taken: a wipe from here on overtakes its reply.
+		const since = Date.now();
 		const taken = await ctx.runMutation(
 			internal.outreach.telegram.reply.takeBurst,
 			{
@@ -761,14 +774,20 @@ export const answerBurst = internalAction({
 		const progress: Progress = { sent: false, support: burst.support };
 		await guarded(ctx, job, progress, async () => {
 			await typing(args.chatId);
-			await writeAndSend(ctx, job, progress, {
-				elevated: burst.level === "elevated",
-				heavier: false,
-				open: false,
-				person: text,
-				support: burst.support,
-				trigger: { kind: "text", level: burst.level, text },
-			});
+			await writeAndSend(
+				ctx,
+				job,
+				progress,
+				{
+					elevated: burst.level === "elevated",
+					heavier: false,
+					open: false,
+					person: text,
+					support: burst.support,
+					trigger: { kind: "text", level: burst.level, text },
+				},
+				since
+			);
 		});
 		return null;
 	},
@@ -847,10 +866,15 @@ export const recordCrisis = internalMutation({
 			return null;
 		}
 		// Any burst or reply already under way is overtaken: none follows this.
+		const now = Date.now();
 		await ctx.db.patch("channel_identities", identity._id, {
 			...doneScreening(identity),
-			lastCrisisAt: Date.now(),
+			lastCrisisAt: now,
 			pendingBurst: undefined,
+		});
+		// The 72 h hold is the account's, wherever the chat goes next.
+		await ctx.db.patch("emotional_profiles", identity.emotionalProfileId, {
+			lastTelegramCrisisAt: now,
 		});
 		const card = await cardInView(ctx, identity);
 		const openCard =
@@ -969,7 +993,8 @@ async function sendReply(
 	if (!current) {
 		return false;
 	}
-	const sentSince = Date.now();
+	// From when the reply began, not just the send: a wipe in between counts.
+	const sentSince = since ?? Date.now();
 	let messageId: string;
 	try {
 		const message = await botApi.sendMessage({
@@ -1160,6 +1185,7 @@ async function receiveText(
 		level: safety.level,
 		linkedAt,
 		receivedAt: trigger.receivedAt ?? Date.now(),
+		since,
 		support: safety.support,
 		text,
 	});
@@ -1198,11 +1224,13 @@ async function writeAndSend(
 	ctx: ActionCtx,
 	job: ReplyJob,
 	progress: Progress,
-	turn: Turn
+	turn: Turn,
+	/** When the reply began, if earlier than now (a burst, before it was taken). */
+	began?: number
 ): Promise<void> {
 	const { identityId, linkedAt } = job;
 	// Anything cleared from the chat after this, the reply may not send or keep.
-	const since = Date.now();
+	const since = began ?? Date.now();
 	const send = async (text: string, keyboard: Keyboard, from?: number) => {
 		progress.sent = true;
 		return await sendReply(ctx, job, text, keyboard, from);
@@ -1227,15 +1255,25 @@ async function writeAndSend(
 		await send(text, keyboard);
 		return;
 	}
-	const giveBack = () =>
-		ctx.runMutation(internal.outreach.telegram.reply.returnReplySlot, {
+	let givenBack = false;
+	/** Once at most: a slot whose reply never reached the person. */
+	const giveBack = async () => {
+		if (givenBack) {
+			return;
+		}
+		givenBack = true;
+		await ctx.runMutation(internal.outreach.telegram.reply.returnReplySlot, {
 			day: slot.day,
 			emotionalProfileId: slot.emotionalProfileId,
 			identityId,
 		});
+	};
 
 	const { open, support } = turn;
 	let written: string | null;
+	let delivered: boolean;
+	// Anything thrown before Telegram took the reply gives the slot back;
+	// `sendReply` itself throws only before the send.
 	try {
 		const context = await ctx.runQuery(
 			internal.outreach.telegram.reply.replyContext,
@@ -1259,16 +1297,17 @@ async function writeAndSend(
 			trigger: turn.trigger,
 			turns: context.turns satisfies ReplyTurn[],
 		});
+		if (written === null) {
+			await giveBack();
+			await send(REPLY_FAILED, keyboardOf({ open: true, support }));
+			return;
+		}
+		delivered = await send(written, keyboardOf({ open, support }), since);
 	} catch (error) {
 		await giveBack();
 		throw error;
 	}
-	if (written === null) {
-		await giveBack();
-		await send(REPLY_FAILED, keyboardOf({ open: true, support }));
-		return;
-	}
-	if (!(await send(written, keyboardOf({ open, support }), since))) {
+	if (!delivered) {
 		await giveBack();
 		return;
 	}

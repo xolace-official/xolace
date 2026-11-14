@@ -280,8 +280,8 @@ export default defineSchema({
 		// When a data wipe or account deletion last cleared this chat's history
 		// (#773): a reply begun before it may not send or keep anything.
 		historyClearedAt: v.optional(v.number()),
-		// The latest crisis text from this chat (#772). A repeat shares the
-		// first one's escalation event; the 72 h hold counts from this instead.
+		// The latest crisis text from this chat (#772): an AI reply begun before
+		// it isn't sent. The account's 72 h hold reads the profile's own time.
 		lastCrisisAt: v.optional(v.number()),
 		lastInboundAt: v.optional(v.number()),
 		linkedAt: v.number(),
@@ -892,6 +892,11 @@ export default defineSchema({
 		// The local day ("YYYY-MM-DD") daysShowedUp last counted. Survives a data
 		// wipe with it, so a day the wipe emptied of activity can't count again.
 		lastShowedUpDay: v.optional(v.string()),
+		// The latest crisis text this account sent the Telegram bot (#772). A
+		// repeat shares the first one's escalation event, and a chat can move to
+		// another account, so the 72 h hold counts from this. Written only by
+		// outreach/telegram/reply.ts.
+		lastTelegramCrisisAt: v.optional(v.number()),
 
 		// Longest streak ever reached. A record — it never decays, only grows
 		// via Math.max on session completion. Optional for rows created before
