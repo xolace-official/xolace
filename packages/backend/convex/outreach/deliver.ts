@@ -10,15 +10,16 @@ import {
 import { ADAPTERS, type ChannelAdapter, ChannelError } from "./adapters";
 import { captureDelivery } from "./analytics";
 import {
-	accountDeleted,
-	escalationOrDormancy,
+	channelIneligibility,
 	loadNotifications,
+	personGates,
 	pickChannel,
 } from "./router";
 import { isCardOpen } from "./telegram/checkIn";
 import {
 	type ChannelErrorKind,
 	channelErrorKindValidator,
+	type IneligibilityReason,
 	type OutreachChannel,
 	outreachChannelValidator,
 	type SuppressedReason,
@@ -125,19 +126,25 @@ function failedAttempt(error: ChannelError): Attempt {
 	};
 }
 
+type Recheck =
+	| { kind: "held"; reason: SuppressedReason }
+	/** The person may still be reached, but not on this delivery's channel. */
+	| { kind: "closed"; reason: IneligibilityReason };
+
 /**
  * Why a queued delivery may no longer go, if it may not. A nudge invites the
  * user back to its follow-up: once they're back (the card is ready or shown)
  * or it's answered, dismissed or gone, nothing is left to nudge (a deferral
- * or a retry can outlive it). A quiet-window deferral can
- * sit for hours, and a deletion request or a crisis in that time still stops
- * it: gates 2 and 3 run again on its first try.
+ * or a retry can outlive it). A quiet-window deferral can sit for hours,
+ * and what changed in that time still counts: on its first try gates 2–4
+ * run again (a deletion request, a crisis, a toggle turned off), and so does
+ * the channel check (push turned off, a kill switch, a lost plan).
  */
 async function heldSince(
 	ctx: MutationCtx,
 	delivery: Doc<"outreach_deliveries">,
 	outreach: Doc<"outreach">
-): Promise<SuppressedReason | null> {
+): Promise<Recheck | null> {
 	if (outreach.followUpId) {
 		const card = await ctx.db.get("follow_up_cards", outreach.followUpId);
 		const waiting =
@@ -145,19 +152,24 @@ async function heldSince(
 				? card?.status === "pending"
 				: isCardOpen(card);
 		if (!waiting) {
-			return "card_closed";
+			return { kind: "held", reason: "card_closed" };
 		}
 	}
 	if (outreach.sendAt === undefined || delivery.attempts > 0) {
 		return null;
 	}
-	const profile = await ctx.db.get(
-		"emotional_profiles",
-		outreach.emotionalProfileId
+	const gates = await personGates(ctx, outreach, Date.now());
+	if (gates.held) {
+		return { kind: "held", reason: gates.held };
+	}
+	const closed = await channelIneligibility(
+		ctx,
+		delivery.channel,
+		outreach,
+		gates.profile,
+		gates.notifications
 	);
-	return !profile || (await accountDeleted(ctx, outreach.emotionalProfileId))
-		? "account_deleted"
-		: await escalationOrDormancy(ctx, outreach, profile, Date.now());
+	return closed ? { kind: "closed", reason: closed } : null;
 }
 
 /**
@@ -183,15 +195,19 @@ async function claim(
 		return null;
 	}
 
-	const held = await heldSince(ctx, delivery, outreach);
-	if (held) {
+	const recheck = await heldSince(ctx, delivery, outreach);
+	if (recheck) {
 		await ctx.db.patch("outreach_deliveries", deliveryId, {
 			finishedAt: Date.now(),
 			status: "canceled",
 		});
+		// A channel that closed meanwhile is cancelled and rerouted (spec §3).
+		if (recheck.kind === "closed" && (await fallBackOnce(ctx, delivery))) {
+			return null;
+		}
 		await ctx.db.patch("outreach", outreach._id, {
 			outcome: "suppressed",
-			suppressedReason: held,
+			suppressedReason: recheck.kind === "held" ? recheck.reason : "no_channel",
 		});
 		return null;
 	}
@@ -443,24 +459,27 @@ async function finish(
 	}
 }
 
-/** The one fallback per outreach: the next eligible channel, sent now. */
+/**
+ * The one fallback per outreach: the next eligible channel, sent now. Whether
+ * one was started.
+ */
 async function fallBackOnce(
 	ctx: MutationCtx,
 	failed: Doc<"outreach_deliveries">
-) {
+): Promise<boolean> {
 	const deliveries = await ctx.db
 		.query("outreach_deliveries")
 		.withIndex("by_outreach", (q) => q.eq("outreachId", failed.outreachId))
 		.take(MAX_DELIVERIES_PER_OUTREACH);
 	if (deliveries.some((d) => d.isFallback)) {
-		return;
+		return false;
 	}
 	const outreach = await ctx.db.get("outreach", failed.outreachId);
 	const profile =
 		outreach &&
 		(await ctx.db.get("emotional_profiles", outreach.emotionalProfileId));
 	if (!(outreach && profile)) {
-		return;
+		return false;
 	}
 	const channel = await pickChannel(
 		ctx,
@@ -469,11 +488,13 @@ async function fallBackOnce(
 		await loadNotifications(ctx, outreach.emotionalProfileId),
 		deliveries.map((d) => d.channel)
 	);
-	if (channel) {
-		await startDelivery(ctx, {
-			channel,
-			isFallback: true,
-			outreachId: outreach._id,
-		});
+	if (!channel) {
+		return false;
 	}
+	await startDelivery(ctx, {
+		channel,
+		isFallback: true,
+		outreachId: outreach._id,
+	});
+	return true;
 }

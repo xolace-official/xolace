@@ -514,6 +514,80 @@ describe("gates", () => {
 		}
 	);
 
+	it("drops a deferred outreach whose toggle went off before it sends", async () => {
+		vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
+		const user = await reachable();
+		await setNotifications(user, {
+			quietWindow: { dontReachAfter: 21, dontReachBefore: 8 },
+			timezone: "UTC",
+		});
+		const { outreachId } = await enqueue(user);
+		await setNotifications(user, { gentleReturn: false });
+
+		await drain(user);
+		expect(h.pushes).toHaveLength(0);
+		expect(await outreachRow(user, outreachId)).toMatchObject({
+			outcome: "suppressed",
+			suppressedReason: "toggle_off",
+		});
+		const [delivery] = await deliveriesOf(user, outreachId);
+		expect(delivery?.status).toBe("canceled");
+	});
+
+	it("doesn't push a deferred outreach after push was turned off", async () => {
+		vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
+		const user = await reachable();
+		await setNotifications(user, {
+			quietWindow: { dontReachAfter: 21, dontReachBefore: 8 },
+			timezone: "UTC",
+		});
+		const { outreachId } = await enqueue(user, { intent: "achievement" });
+		await setNotifications(user, { enabled: false });
+
+		await drain(user);
+		expect(h.pushes).toHaveLength(0);
+		expect(await outreachRow(user, outreachId)).toMatchObject({
+			outcome: "suppressed",
+			suppressedReason: "no_channel",
+		});
+		expect(await deliveriesOf(user, outreachId)).toEqual([
+			expect.objectContaining({ channel: "push", status: "canceled" }),
+		]);
+	});
+
+	it.each([
+		{ change: { enabled: false, plan: "free" }, name: "kill switch" },
+		{ change: { enabled: true, plan: "plus" }, name: "lost Plus" },
+	] as const)(
+		"reroutes a deferred Telegram outreach when Telegram closes ($name)",
+		async ({ change }) => {
+			vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
+			const user = await reachable();
+			await linkTelegram(user, ["telegram", "push"]);
+			await setNotifications(user, {
+				quietWindow: { dontReachAfter: 21, dontReachBefore: 8 },
+				timezone: "UTC",
+			});
+			const { outreachId } = await enqueue(user);
+			await asAdmin(9, user.root).mutation(
+				api.admin.outreachChannels.setChannelConfig,
+				{ channel: "telegram", ...change }
+			);
+
+			await drain(user);
+			expect(h.telegram.sends).toHaveLength(0);
+			expect(h.pushes).toHaveLength(1);
+			expect(await deliveriesOf(user, outreachId)).toEqual([
+				expect.objectContaining({ channel: "telegram", status: "canceled" }),
+				expect.objectContaining({
+					channel: "push",
+					isFallback: true,
+					status: "sent",
+				}),
+			]);
+		}
+	);
+
 	it("defers to the end of the quiet window, and an acute nudge ignores it", async () => {
 		vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
 		const user = await reachable();
