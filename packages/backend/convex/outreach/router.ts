@@ -1,6 +1,10 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { sourceEventSince } from "../escalation/events";
+import {
+	followUpLifetimeMs,
+	LONGEST_FOLLOW_UP_LIFETIME_MS,
+} from "../lib/followUpCadence";
 import { hasPremium } from "../lib/premium";
 import { rateLimiter } from "../lib/rateLimits";
 import { ADAPTERS } from "./adapters";
@@ -89,13 +93,21 @@ export async function accountDeleted(
 	);
 }
 
-/** The profile's open escalation-derived follow-up, if any. */
+/**
+ * The profile's open escalation-derived follow-up, if any, newest first.
+ *
+ * A pending card's workflow expires it. Ready, shown and superseded cards
+ * have no timer, so they hold only as long as the card would have stayed
+ * pending had the user never come back: coming back to the app, or a newer
+ * session superseding the card, never stretches the hold past that.
+ */
 export async function openEscalationCard(
 	ctx: QueryCtx,
-	emotionalProfileId: Id<"emotional_profiles">
+	emotionalProfileId: Id<"emotional_profiles">,
+	now: number
 ): Promise<Doc<"follow_up_cards"> | null> {
 	for (const status of UNRESOLVED_CARD_STATUSES) {
-		const card = await ctx.db
+		const cards = ctx.db
 			.query("follow_up_cards")
 			.withIndex("by_profile_escalation_status", (q) =>
 				q
@@ -103,9 +115,18 @@ export async function openEscalationCard(
 					.eq("escalationDerived", true)
 					.eq("status", status)
 			)
-			.first();
-		if (card) {
-			return card;
+			.order("desc");
+		for await (const card of cards) {
+			if (status === "pending") {
+				return card;
+			}
+			// Older than any tier's lifetime: so is every card after it.
+			if (card._creationTime <= now - LONGEST_FOLLOW_UP_LIFETIME_MS) {
+				break;
+			}
+			if (card.createdAt + followUpLifetimeMs(card.tier) > now) {
+				return card;
+			}
 		}
 	}
 	return null;
@@ -203,7 +224,7 @@ export async function escalationOrDormancy(
 		(UNRESOLVED_CARD_STATUSES as readonly string[]).includes(nudgedCard.status);
 
 	if (!ownCardNudge) {
-		if (await openEscalationCard(ctx, input.emotionalProfileId)) {
+		if (await openEscalationCard(ctx, input.emotionalProfileId, now)) {
 			return "escalation_active";
 		}
 		if (await escalatedRecently(ctx, input.emotionalProfileId, now)) {

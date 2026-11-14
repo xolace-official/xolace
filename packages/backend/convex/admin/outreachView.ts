@@ -290,7 +290,7 @@ async function activeSuppressions(
 	now: number
 ): Promise<Suppression[]> {
 	const suppressions: Suppression[] = [];
-	const openCard = await openEscalationCard(ctx, profile._id);
+	const openCard = await openEscalationCard(ctx, profile._id, now);
 	const latestEvent = await latestHeldEscalation(ctx, profile._id, now);
 	// A repeated Telegram crisis shares the first one's event: the hold runs
 	// from whichever came last.
@@ -299,7 +299,7 @@ async function activeSuppressions(
 		(await lastTelegramCrisisAt(ctx, profile._id)) ?? Number.NEGATIVE_INFINITY
 	);
 	if (openCard) {
-		// Held until the card closes, however long that is.
+		// Held until the card closes or would have expired.
 		suppressions.push({ kind: "safety" });
 	} else if (heldFrom > now - ESCALATION_HOLD_MS) {
 		suppressions.push({

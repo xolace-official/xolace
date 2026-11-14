@@ -99,6 +99,19 @@ const CADENCE_BY_TIER: Record<FollowUpTier, Omit<Cadence, "tier">> = {
 	standard: { expiryMs: 14 * DAY, stage1Ms: 24 * HOUR, stage2Ms: 3 * DAY },
 };
 
+const lifetimeOf = (c: Omit<Cadence, "tier">) =>
+	c.stage1Ms + c.stage2Ms + c.expiryMs;
+
+/** How long a card of this tier stays pending if the user never returns. */
+export function followUpLifetimeMs(tier: FollowUpTier): number {
+	return lifetimeOf(CADENCE_BY_TIER[tier]);
+}
+
+/** The longest any tier's card stays pending. */
+export const LONGEST_FOLLOW_UP_LIFETIME_MS = Math.max(
+	...Object.values(CADENCE_BY_TIER).map(lifetimeOf)
+);
+
 /** Full cadence (tier + the three durations) for a session. */
 export function followUpCadence(signals: CadenceSignals): Cadence {
 	const tier = followUpTier(signals);

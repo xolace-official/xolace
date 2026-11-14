@@ -347,6 +347,54 @@ describe("gates", () => {
 		).toMatchObject({ outcome: "queued" });
 	});
 
+	it.each(["ready", "shown", "superseded"] as const)(
+		"stops holding once a %s escalation-derived card would have expired",
+		async (status) => {
+			const user = await reachable();
+			// Acute stays pending 45 min + 4 h + 48 h; this one is past that.
+			await seedCard(user, {
+				createdAt: NOW - 60 * HOUR,
+				escalationDerived: true,
+				status,
+				tier: "acute",
+			});
+			expect(await enqueue(user)).toMatchObject({ outcome: "queued" });
+		}
+	);
+
+	it("holds while a seen escalation-derived card is inside its own window", async () => {
+		const user = await reachable();
+		await seedCard(user, {
+			createdAt: NOW - 50 * HOUR,
+			escalationDerived: true,
+			status: "shown",
+			tier: "acute",
+		});
+		expect(await enqueue(user)).toMatchObject({
+			suppressedReason: "escalation_active",
+		});
+	});
+
+	it("finds a live escalation-derived card behind a newer lapsed one", async () => {
+		const user = await reachable();
+		// Standard stays pending 18 days in all; acute under 53 h.
+		await seedCard(user, {
+			createdAt: NOW - 10 * DAY,
+			escalationDerived: true,
+			status: "superseded",
+			tier: "standard",
+		});
+		await seedCard(user, {
+			createdAt: NOW - 3 * DAY,
+			escalationDerived: true,
+			status: "superseded",
+			tier: "acute",
+		});
+		expect(await enqueue(user)).toMatchObject({
+			suppressedReason: "escalation_active",
+		});
+	});
+
 	it("holds every intent for 72 h after an escalation event", async () => {
 		const user = await reachable();
 		await seedEscalation(user, NOW - 71 * HOUR);
