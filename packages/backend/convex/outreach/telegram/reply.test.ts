@@ -528,6 +528,39 @@ describe("a reply to free text", () => {
 		expect(sentMessages().map((c) => c.params.text)).not.toContain(stub.reply);
 	});
 
+	it("sends no cap line to a tap a data wipe overtook", async () => {
+		const { tap, useReplies, user } = await checkedIn();
+		await useReplies(DAILY_REPLY_CAP.free);
+		forgetCalls();
+		beforeNext("answerCallbackQuery", async () => {
+			await user.root.run((ctx) =>
+				eraseTelegramChats(ctx, user.profileId, { accountDeleted: false })
+			);
+			vi.advanceTimersByTime(SECOND);
+		});
+
+		await tap("lighter");
+
+		expect(sentMessages().map((c) => c.params.text)).not.toContain(CAP_UPSELL);
+	});
+
+	it("sends no failure line for a reply a data wipe overtook", async () => {
+		const { user, write } = await checkedIn();
+		stub.reply = new Error("overloaded");
+		stub.duringReply = async () => {
+			await user.root.run((ctx) =>
+				eraseTelegramChats(ctx, user.profileId, { accountDeleted: false })
+			);
+			vi.advanceTimersByTime(SECOND);
+		};
+
+		await write("Long day");
+
+		expect(sentMessages().map((c) => c.params.text)).not.toContain(
+			REPLY_FAILED
+		);
+	});
+
 	it("deletes a reply whose send finished after a data wipe", async () => {
 		const { user, write } = await checkedIn();
 		beforeNext("sendMessage", () =>

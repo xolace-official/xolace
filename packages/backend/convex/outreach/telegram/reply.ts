@@ -1115,7 +1115,8 @@ async function sendFailureLine(
 	} catch (error) {
 		console.error("[telegram] no app link for the failure line", error);
 	}
-	await sendReply(ctx, job, REPLY_FAILED, keyboard);
+	// A wipe since the claim overtakes the failure line as well.
+	await sendReply(ctx, job, REPLY_FAILED, keyboard, job.claimedAt);
 }
 
 async function replyToTap(
@@ -1264,7 +1265,8 @@ async function writeAndSend(
 	}
 	if (slot.kind === "capped") {
 		const { keyboard, text } = capLine(slot.line);
-		await send(text, keyboard);
+		// Overtaken by a wipe, even the cap line stays unsent.
+		await send(text, keyboard, since);
 		return;
 	}
 	let givenBack = false;
@@ -1311,7 +1313,7 @@ async function writeAndSend(
 		});
 		if (written === null) {
 			await giveBack();
-			await send(REPLY_FAILED, keyboardOf({ open: true, support }));
+			await send(REPLY_FAILED, keyboardOf({ open: true, support }), since);
 			return;
 		}
 		delivered = await send(written, keyboardOf({ open, support }), since);
