@@ -36,6 +36,7 @@ import {
 	followUpTierValidator,
 	identityStatusValidator,
 	inboundStatusValidator,
+	linkSourceValidator,
 	outreachChannelValidator,
 	outreachContentValidator,
 	outreachIntentValidator,
@@ -306,6 +307,8 @@ export default defineSchema({
 		emotionalProfileId: v.id("emotional_profiles"),
 		expiresAt: v.number(),
 		regionCode: v.optional(v.string()),
+		/** Where in the app the link was started (#774). */
+		source: v.optional(linkSourceValidator),
 		tokenHash: v.string(),
 		usedAt: v.optional(v.number()),
 	})

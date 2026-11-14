@@ -233,6 +233,7 @@ import type * as migrations from "../migrations.js";
 import type * as monthlyEvents from "../monthlyEvents.js";
 import type * as notifications from "../notifications.js";
 import type * as outreach_adapters from "../outreach/adapters.js";
+import type * as outreach_analytics from "../outreach/analytics.js";
 import type * as outreach_attribution from "../outreach/attribution.js";
 import type * as outreach_channels from "../outreach/channels.js";
 import type * as outreach_deliver from "../outreach/deliver.js";
@@ -544,6 +545,7 @@ declare const fullApi: ApiFromModules<{
   monthlyEvents: typeof monthlyEvents;
   notifications: typeof notifications;
   "outreach/adapters": typeof outreach_adapters;
+  "outreach/analytics": typeof outreach_analytics;
   "outreach/attribution": typeof outreach_attribution;
   "outreach/channels": typeof outreach_channels;
   "outreach/deliver": typeof outreach_deliver;

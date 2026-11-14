@@ -2,6 +2,7 @@ import { type Infer, v } from "convex/values";
 import { internal } from "../../_generated/api";
 import { internalAction, internalMutation } from "../../_generated/server";
 import { rateLimiter } from "../../lib/rateLimits";
+import { captureOutreach, planOf } from "../analytics";
 import { answer } from "./answer";
 import { botApi } from "./botApi";
 import {
@@ -125,6 +126,15 @@ export const claimUpdate = internalMutation({
 					},
 				};
 			}
+			// A toast is a refusal: the check-in it was on has closed.
+			if (identity && reply.toast !== undefined) {
+				const profileId = identity.emotionalProfileId;
+				await captureOutreach(ctx, "telegram_inbound", profileId, async () => ({
+					kind: "tap",
+					outcome: "stale_card",
+					plan: await planOf(ctx, profileId),
+				}));
+			}
 			// Forged, foreign or repeated taps change nothing: `ignored`.
 			const acted =
 				job !== undefined ||
@@ -223,9 +233,15 @@ export const claimUpdate = internalMutation({
 			? (["revoked", "telegramRevokedReply"] as const)
 			: (["stranger", "telegramStrangerReply"] as const);
 		const { ok } = await rateLimiter.limit(ctx, bucket, { key: chatId });
-		return ok
-			? await close("processed", [{ chatId, kind }])
-			: await close("ignored", []);
+		if (!ok) {
+			return await close("ignored", []);
+		}
+		// No live link, so no person to count it under.
+		await captureOutreach(ctx, "telegram_inbound", "telegram_stranger", {
+			kind: "text",
+			outcome: "stranger",
+		});
+		return await close("processed", [{ chatId, kind }]);
 	},
 	returns: replyValidator,
 });

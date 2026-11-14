@@ -37,6 +37,7 @@ import {
 import { localDayKey } from "../../streaks/activityLog";
 import { profileTimezone } from "../../streaks/state";
 import { talkPreload } from "../../talk/remember";
+import { captureOutreach, planOf } from "../analytics";
 import {
 	ESCALATION_HOLD_MS,
 	escalatedRecently,
@@ -45,6 +46,7 @@ import {
 import {
 	type BurstLevel,
 	burstLevelValidator,
+	inboundKindValidator,
 	pendingBurstValidator,
 } from "../validators";
 import { appLink } from "./appLinks";
@@ -308,6 +310,8 @@ export const saveReflection = internalMutation({
 export const rememberTurns = internalMutation({
 	args: {
 		identityId: v.id("channel_identities"),
+		/** The AI reply that went out answered this, for analytics. */
+		inbound: v.optional(inboundKindValidator),
 		linkedAt: v.number(),
 		turns: v.array(turnValidator),
 	},
@@ -315,6 +319,15 @@ export const rememberTurns = internalMutation({
 		const identity = await ctx.db.get("channel_identities", args.identityId);
 		if (!isLinkOf(identity, args.linkedAt)) {
 			return null;
+		}
+		if (args.inbound) {
+			const kind = args.inbound;
+			const profileId = identity.emotionalProfileId;
+			await captureOutreach(ctx, "telegram_inbound", profileId, async () => ({
+				kind,
+				outcome: "ai_reply",
+				plan: await planOf(ctx, profileId),
+			}));
 		}
 		const now = Date.now();
 		const added = args.turns.map((t) => ({
@@ -426,6 +439,8 @@ export const takeReplySlot = internalMutation({
 		/** This turn is a Heavier tap. */
 		heavier: v.boolean(),
 		identityId: v.id("channel_identities"),
+		/** What came in, for analytics. */
+		inbound: v.optional(inboundKindValidator),
 		linkedAt: v.number(),
 	},
 	handler: async (ctx, args) => {
@@ -453,6 +468,13 @@ export const takeReplySlot = internalMutation({
 				replyCount: { count: used + 1, day, emotionalProfileId: profile._id },
 			});
 			return { kind: "reply" as const };
+		}
+		if (args.inbound) {
+			await captureOutreach(ctx, "telegram_inbound", profile._id, {
+				kind: args.inbound,
+				outcome: "cap_reached",
+				plan: plus ? "plus" : "free",
+			});
 		}
 		const isStruggling =
 			args.elevated ||
@@ -1019,6 +1041,7 @@ async function writeAndSend(
 			elevated: turn.elevated,
 			heavier: turn.heavier,
 			identityId,
+			inbound: turn.trigger.kind,
 			linkedAt,
 			...(turn.cardId && { cardId: turn.cardId }),
 		}
@@ -1068,6 +1091,7 @@ async function writeAndSend(
 	if (sent) {
 		await ctx.runMutation(internal.outreach.telegram.reply.rememberTurns, {
 			identityId,
+			inbound: turn.trigger.kind,
 			linkedAt,
 			turns: [
 				{ role: "person", text: turn.person },

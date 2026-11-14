@@ -567,8 +567,14 @@ PostHog or the admin view.
   | `follow_up_resolved` | `surface` (`app \| telegram`), `nudge_channel` (`push \| telegram \| none`), `response`, `tier`, `escalation_derived`, `plan` |
   | `telegram_inbound` | `kind` (`tap \| text`), `outcome` (`ai_reply \| cap_reached \| stale_card \| stranger`), `plan`; not sent for a crisis text |
 
-  Plus the person property `telegram_linked` via `$set`. The webhook drift event is also
-  sent through this helper.
+  | `telegram_webhook_drift` | `problems`, `pending_update_count` |
+
+  Plus the person property `telegram_linked` via `$set` (on `channel_linked`, and on
+  `channel_unlinked` when no live link is left). A stranger's text and the drift event
+  belong to no person: they go under a fixed `distinctId` with
+  `$process_person_profile: false`. `channel_linked.source` comes from `createLink`'s
+  optional `source` arg (default `settings`). A deleted account sends nothing. Built in
+  `convex/outreach/analytics.ts` ([#774](https://github.com/xolace-official/xolace/issues/774)).
 - **Client events** (behind the same flag): `reach_screen_opened`, `channel_link_started`,
   `channel_link_copied`, `channel_link_abandoned`, `channel_order_changed`,
   `channel_offer_shown` / `_tapped` / `_dismissed`. No client "link completed".

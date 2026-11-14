@@ -8,6 +8,7 @@ import {
 	type MutationCtx,
 } from "../_generated/server";
 import { ADAPTERS, type ChannelAdapter, ChannelError } from "./adapters";
+import { captureDelivery } from "./analytics";
 import {
 	accountDeleted,
 	escalationOrDormancy,
@@ -218,6 +219,7 @@ async function settle(
 			status: "sent",
 		});
 		await ADAPTERS[delivery.channel]?.afterSent?.(ctx, delivery._id);
+		await captureDelivery(ctx, delivery, { status: "delivered" });
 		return;
 	}
 	const { afterMs, ...recorded } = attempt.error;
@@ -379,6 +381,10 @@ export const onDeliveryComplete = internalMutation({
 				finishedAt: Date.now(),
 				status: "failed",
 			});
+			await captureDelivery(ctx, delivery, {
+				kind: "permanent",
+				status: "failed",
+			});
 			return null;
 		}
 		if (delivery?.status !== "queued") {
@@ -410,6 +416,10 @@ async function finish(
 	});
 	const delivery = await ctx.db.get("outreach_deliveries", deliveryId);
 	if (delivery) {
+		await captureDelivery(ctx, delivery, {
+			kind: error.kind,
+			status: "failed",
+		});
 		await fallBackOnce(ctx, delivery);
 	}
 }

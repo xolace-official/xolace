@@ -6,6 +6,7 @@ import {
 	type MutationCtx,
 	type QueryCtx,
 } from "../../_generated/server";
+import { captureUnlinked } from "../analytics";
 import type { OutreachChannel, revokedReasonValidator } from "../validators";
 import { collapseChat } from "./checkIn";
 
@@ -130,7 +131,9 @@ async function revokeConsent(
 export async function revokeIdentity(
 	ctx: MutationCtx,
 	identity: Doc<"channel_identities">,
-	reason: RevokedReason
+	reason: RevokedReason,
+	/** The account is relinking another chat, so it stays linked. */
+	options: { accountStaysLinked?: boolean } = {}
 ): Promise<boolean> {
 	if (!isLive(identity)) {
 		return false;
@@ -145,6 +148,12 @@ export async function revokeIdentity(
 	});
 	await revokeConsent(ctx, identity.emotionalProfileId);
 	await collapseChat(ctx, identity.externalId);
+	const stillLinked =
+		options.accountStaysLinked === true ||
+		(
+			await identitiesOf(ctx, identity.emotionalProfileId, identity.channel)
+		).some(isLive);
+	await captureUnlinked(ctx, identity, reason, stillLinked);
 	return true;
 }
 

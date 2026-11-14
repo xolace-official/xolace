@@ -112,6 +112,18 @@ export const revokedReasonValidator = v.union(
 	v.literal("account_deleted")
 );
 
+/** Where in the app a channel link was started (#774). */
+export const linkSourceValidator = v.union(
+	v.literal("settings"),
+	v.literal("offer_card")
+);
+
+/** What came in on Telegram: a button tap or a text (#774). */
+export const inboundKindValidator = v.union(
+	v.literal("tap"),
+	v.literal("text")
+);
+
 export const inboundStatusValidator = v.union(
 	v.literal("received"),
 	v.literal("processed"),
