@@ -105,7 +105,8 @@ export function telegramCard(entry: ChannelEntry): TelegramCardView {
 			};
 		case "needs_plus":
 			return {
-				actions: ["get_plus"],
+				// A kept link can still be ended while it waits for Xolace+.
+				actions: entry.linked ? ["get_plus", "unlink"] : ["get_plus"],
 				description: entry.linked
 					? "Telegram is now part of Xolace+. Your link is kept; check-ins come as notifications until you're on Xolace+."
 					: "Telegram check-ins are part of Xolace+.",

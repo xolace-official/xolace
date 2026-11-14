@@ -24,7 +24,8 @@ export function linkFlow(step: LinkStep, event: LinkEvent): LinkStep {
 		case "start":
 			return "disclose";
 		case "link_handed_off":
-			return step === "idle" ? step : "waiting";
+			// Only mid-link: the chat may have linked before the handoff finished.
+			return isLinking(step) ? "waiting" : step;
 		case "channel_changed":
 			return isLinking(step) && event.linked ? "linked" : step;
 		default:

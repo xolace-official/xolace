@@ -27,9 +27,12 @@ const ACTION_LABEL: Record<TelegramAction, string> = {
 	unlink: "Unlink",
 };
 
-/** A lone action is the card's call to action; Unlink reads as destructive. */
+/**
+ * A lone action, or Get Xolace+, is the card's call to action; Unlink reads
+ * as destructive.
+ */
 function buttonVariant(action: TelegramAction, count: number) {
-	if (count === 1) {
+	if (count === 1 || action === "get_plus") {
 		return "primary";
 	}
 	return action === "unlink" ? "danger-soft" : "secondary";

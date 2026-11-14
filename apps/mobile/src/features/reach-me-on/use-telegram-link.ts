@@ -48,6 +48,8 @@ export function useTelegramLink(
 	const [step, dispatch] = useReducer(linkFlow, "idle");
 	const [minting, setMinting] = useState(false);
 	const minted = useRef<{ url: string; at: number } | null>(null);
+	/** Bumped by Cancel: a link minted for an earlier try isn't opened or copied. */
+	const attempt = useRef(0);
 	const stepRef = useRef<LinkStep>(step);
 	useEffect(() => {
 		stepRef.current = step;
@@ -118,8 +120,9 @@ export function useTelegramLink(
 	};
 
 	const openTelegram = async () => {
+		const mine = attempt.current;
 		const url = await mint();
-		if (!url) {
+		if (!url || attempt.current !== mine) {
 			return;
 		}
 		try {
@@ -135,8 +138,9 @@ export function useTelegramLink(
 	};
 
 	const copyLink = async () => {
+		const mine = attempt.current;
 		const url = await mint();
-		if (!url) {
+		if (!url || attempt.current !== mine) {
 			return;
 		}
 		await Clipboard.setStringAsync(url);
@@ -149,6 +153,7 @@ export function useTelegramLink(
 	};
 
 	const cancel = () => {
+		attempt.current += 1;
 		if (isLinking(step)) {
 			posthog.capture("channel_link_abandoned", { channel: "telegram", step });
 		}

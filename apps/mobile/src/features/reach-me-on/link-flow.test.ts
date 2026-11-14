@@ -50,6 +50,16 @@ describe("linkFlow", () => {
 		).toBe("idle");
 	});
 
+	it("stays linked when the link's handoff finishes after the chat linked", () => {
+		expect(
+			run(
+				{ type: "start" },
+				{ linked: true, type: "channel_changed" },
+				{ type: "link_handed_off" }
+			)
+		).toBe("linked");
+	});
+
 	it("ignores a channel update when no link is in progress", () => {
 		expect(run({ linked: true, type: "channel_changed" })).toBe("idle");
 	});

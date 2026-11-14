@@ -130,7 +130,8 @@ describe("telegramCard", () => {
 				})
 			)
 		).toEqual({
-			actions: ["get_plus"],
+			// The kept link can still be ended.
+			actions: ["get_plus", "unlink"],
 			description:
 				"Telegram is now part of Xolace+. Your link is kept; check-ins come as notifications until you're on Xolace+.",
 			kind: "needs_plus",
@@ -139,11 +140,11 @@ describe("telegramCard", () => {
 	});
 
 	it("sells Xolace+ without a kept link when nothing was linked", () => {
-		expect(
-			telegramCard(
-				telegram({ available: false, requiresPlus: true, status: "needs_plus" })
-			).description
-		).toBe("Telegram check-ins are part of Xolace+.");
+		const view = telegramCard(
+			telegram({ available: false, requiresPlus: true, status: "needs_plus" })
+		);
+		expect(view.description).toBe("Telegram check-ins are part of Xolace+.");
+		expect(view.actions).toEqual(["get_plus"]);
 	});
 
 	it.each([
