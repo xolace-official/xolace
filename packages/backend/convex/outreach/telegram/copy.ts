@@ -51,6 +51,13 @@ export const ACCOUNT_DELETED =
 export const REVOKED_REPLY =
 	"This chat isn't linked to Xolace anymore. To link it again, open Xolace → Reach me on… for a fresh link.\n\nIf you're in danger right now, call your local emergency number.";
 
+/**
+ * A linked chat sends a voice note, sticker or photo with no words: the bot
+ * can't read it, so it says so rather than going quiet.
+ */
+export const MEDIA_ONLY_REPLY =
+	"I can only read text here, so I couldn't take that in. Write it to me in words and I'll answer.\n\nIf you're in danger right now, call your local emergency number.";
+
 /** The commands a linked chat sees, set for that chat when it links. */
 export const LINKED_COMMANDS = [
 	{ command: "stop", description: "Unlink this chat from Xolace" },

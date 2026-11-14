@@ -40,6 +40,18 @@ import { asUpdate, strippedPayload } from "./webhook";
 /** `/stop` or `/help`, bare or as `/stop@bot`, with anything after it. */
 const LINKED_COMMAND = /^\/(stop|help)(?:@\w+)?(?:\s|$)/;
 
+/** What a person can send that may carry no words the bot can read. */
+const WORDLESS_MEDIA = [
+	"animation",
+	"audio",
+	"document",
+	"photo",
+	"sticker",
+	"video",
+	"video_note",
+	"voice",
+] as const;
+
 /** What an update needs sent once it's claimed. */
 const replyValidator = v.object({
 	/** A tap's `answerCallbackQuery`, with its toast if any. */
@@ -212,7 +224,21 @@ export const claimUpdate = internalMutation({
 			// A photo's or a file's caption is their words too, screened the same.
 			const text = (message.text ?? message.caption)?.trim();
 			if (!text) {
-				return await close("ignored", []);
+				// Something they sent that has no words: say it can't be read, once
+				// a day. A service message (a pin, say) gets nothing.
+				const sentMedia = WORDLESS_MEDIA.some(
+					(kind) => message[kind] !== undefined
+				);
+				const { ok } = sentMedia
+					? await rateLimiter.limit(ctx, "telegramMediaOnlyReply", {
+							key: chatId,
+						})
+					: { ok: false };
+				return ok
+					? await close("processed", [
+							{ chatId, kind: "media_only", linkedAt: identity.linkedAt },
+						])
+					: await close("ignored", []);
 			}
 			// Only the next text inside a Lighter's window can be what helped.
 			const now = Date.now();

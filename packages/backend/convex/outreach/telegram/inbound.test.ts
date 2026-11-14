@@ -9,7 +9,7 @@ import { describe, expect, it, vi } from "vitest";
 import { internal } from "../../_generated/api";
 import { asNewUser } from "../../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../../test/mocks.helpers";
-import { STRANGER_REPLY } from "./copy";
+import { MEDIA_ONLY_REPLY, STRANGER_REPLY } from "./copy";
 import {
 	backend,
 	configure,
@@ -18,6 +18,7 @@ import {
 	forgetCalls,
 	HOUR,
 	messageUpdate,
+	photoUpdate,
 	post,
 	processSoon,
 	STRANGER_CHAT,
@@ -147,5 +148,72 @@ describe("the inbound pool's one slot", () => {
 		expect(sent("sendMessage").map((c) => c.params.text)).toEqual([
 			"Thanks for writing.\nWhat's on your mind?",
 		]);
+	});
+});
+
+describe("a linked chat's message with no words", () => {
+	async function linked() {
+		const user = await asNewUser();
+		const t = backend(user.root);
+		const secret = await configure(t);
+		await t.run((ctx) =>
+			ctx.db.insert("channel_identities", {
+				channel: "telegram",
+				emotionalProfileId: user.profileId,
+				externalId: String(STRANGER_CHAT),
+				linkedAt: Date.now(),
+				status: "active",
+				tokenIdentifier: "test|linked",
+			})
+		);
+		forgetCalls();
+		return { secret, t };
+	}
+
+	it("gets one fixed line a day saying only text is read", async () => {
+		const { secret, t } = await linked();
+
+		await post(t, photoUpdate(), secret);
+		await post(t, photoUpdate(), secret);
+		await processSoon(t);
+
+		expect(sent("sendMessage").map((c) => c.params)).toEqual([
+			expect.objectContaining({
+				chat_id: String(STRANGER_CHAT),
+				protect_content: true,
+				text: MEDIA_ONLY_REPLY,
+			}),
+		]);
+
+		vi.advanceTimersByTime(DAY + HOUR);
+		await post(t, photoUpdate(), secret);
+		await processSoon(t);
+		expect(sent("sendMessage")).toHaveLength(2);
+	});
+
+	it("is answered as text when it has a caption", async () => {
+		const { secret, t } = await linked();
+
+		await post(t, photoUpdate(STRANGER_CHAT, "Look at this"), secret);
+		await processSoon(t);
+
+		expect(sent("sendMessage").map((c) => c.params.text)).toEqual([
+			"Thanks for writing.\nWhat's on your mind?",
+		]);
+	});
+
+	it("gets nothing when it's a service message, not something they sent", async () => {
+		const { secret, t } = await linked();
+		const { message, update_id } = photoUpdate();
+		const { photo: _photo, ...pinned } = message;
+
+		await post(
+			t,
+			{ message: { ...pinned, pinned_message: {} }, update_id },
+			secret
+		);
+		await processSoon(t);
+
+		expect(sent("sendMessage")).toHaveLength(0);
 	});
 });
