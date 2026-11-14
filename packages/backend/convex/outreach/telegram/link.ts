@@ -14,6 +14,7 @@ import { channelUnavailable } from "../router";
 import { linkSourceValidator } from "../validators";
 import { configuredBot } from "./bot";
 import { sha256Hex } from "./botApi";
+import { handOverChat } from "./erase";
 import {
 	FALLBACK_CONSENT_VERSION,
 	grantConsent,
@@ -146,7 +147,8 @@ export const createLink = action({
  *
  * Latest link wins both ways (#767): a chat live for another account is
  * revoked `relinked` there and moves here (the chat is told it moved); this
- * account's other live chats are revoked `relinked` and told.
+ * account's other live chats are revoked `relinked` and told. A chat that
+ * was the other account's leaves its history with it (`handOverChat`).
  */
 export async function redeemLinkToken(
 	ctx: MutationCtx,
@@ -210,10 +212,15 @@ export async function redeemLinkToken(
 		...(args.telegramUserId && { telegramUserId: args.telegramUserId }),
 	};
 	// This chat, live for another account: it leaves that account.
+	const otherAccount =
+		existing !== null && existing.emotionalProfileId !== emotionalProfileId;
 	const moved =
-		existing !== null &&
-		existing.emotionalProfileId !== emotionalProfileId &&
-		(await revokeIdentity(ctx, existing, "relinked"));
+		otherAccount && (await revokeIdentity(ctx, existing, "relinked"));
+	if (otherAccount) {
+		// Live or revoked there: what the bot sent under that account stays
+		// that account's to erase, not this one's.
+		await handOverChat(ctx, existing, now);
+	}
 	if (existing) {
 		await ctx.db.patch("channel_identities", existing._id, {
 			// A handle removed since the last link goes with it.

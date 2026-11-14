@@ -324,7 +324,10 @@ per chat:
 
 **Relink** reactivates the one row per `(channel, externalId)`: `active`, new `linkedAt`,
 `revokedAt` cleared, profile moved if different. Revoked rows are deleted by a cron 30
-days after `revokedAt`; after that the chat is a stranger.
+days after `revokedAt`; after that the chat is a stranger. A row that moves to another
+account leaves the old account's last 48 h of bot messages in `channel_moved_messages`
+(so the old account's deletion or wipe still deletes them, and the new one's doesn't),
+and the chat's handled `inbound_events` from before the move are deleted.
 
 **Unlink from the app** (`unlinkChannel({ channel })`): revoke `user_app`, one goodbye,
 collapse every open check-in, cancel and reroute pending deliveries.

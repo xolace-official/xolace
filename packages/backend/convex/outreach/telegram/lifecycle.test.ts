@@ -409,6 +409,8 @@ describe("relinks", () => {
 		const oldGeneration = Date.now() + 60_000;
 		await first.root.run((ctx) =>
 			ctx.db.patch("channel_identities", row!._id, {
+				lastCrisisAt: Date.now(),
+				lastInboundAt: Date.now(),
 				linkedAt: oldGeneration,
 			})
 		);
@@ -425,6 +427,13 @@ describe("relinks", () => {
 				status: "active",
 			}),
 		]);
+		// Nothing of the first account's time stays on the row: its messages
+		// moved aside with it (only the relinked line is the second's).
+		const [moved] = await identities(second);
+		expect(moved?.lastCrisisAt).toBeUndefined();
+		expect(moved?.lastInboundAt).toBeUndefined();
+		expect(row?.sentMessages).toHaveLength(1); // the first one's welcome
+		expect(moved?.sentMessages).toHaveLength(1); // only the relinked line
 		expect(await identities(first)).toEqual([]);
 		expect(await telegramEntry(first)).toMatchObject({
 			linked: false,

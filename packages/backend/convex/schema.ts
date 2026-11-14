@@ -343,6 +343,18 @@ export default defineSchema({
 		.index("by_hash", ["tokenHash"])
 		.index("by_profile_channel", ["emotionalProfileId", "channel"]),
 
+	// The bot's messages to a chat under the account it just moved from, so
+	// that account's deletion or wipe still deletes them, and the new
+	// account's doesn't (#773). Dropped 48 h after the move, when Telegram
+	// no longer lets a bot delete any of them.
+	channel_moved_messages: defineTable({
+		channel: outreachChannelValidator,
+		emotionalProfileId: v.id("emotional_profiles"),
+		externalId: v.string(),
+		movedAt: v.number(),
+		sentMessages: v.array(v.object({ at: v.number(), id: v.string() })),
+	}).index("by_profile_channel", ["emotionalProfileId", "channel"]),
+
 	// ===========================================================
 	// CHAT MODERATION VERDICTS (#344)
 	// ===========================================================
