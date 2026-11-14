@@ -381,15 +381,15 @@ describe("gates", () => {
 
 	it("finds a live escalation-derived card behind a newer lapsed one", async () => {
 		const user = await reachable();
-		// Standard stays pending 18 days in all; acute under 53 h.
+		// Elevated holds the full 72 h; acute lapses with its own window, under 53 h.
 		await seedCard(user, {
-			createdAt: NOW - 10 * DAY,
+			createdAt: NOW - 70 * HOUR,
 			escalationDerived: true,
 			status: "superseded",
-			tier: "standard",
+			tier: "elevated",
 		});
 		await seedCard(user, {
-			createdAt: NOW - 3 * DAY,
+			createdAt: NOW - 60 * HOUR,
 			escalationDerived: true,
 			status: "superseded",
 			tier: "acute",
@@ -398,6 +398,31 @@ describe("gates", () => {
 			suppressedReason: "escalation_active",
 		});
 	});
+
+	it.each(["pending", "ready", "shown", "superseded"] as const)(
+		"holds a %s standard escalation-derived card for 72 h at most",
+		async (status) => {
+			const user = await reachable();
+			// Standard stays pending 18 days, but the hold ends at 72 h, as an
+			// escalation event's does.
+			const cardId = await seedCard(user, {
+				createdAt: NOW - 71 * HOUR,
+				escalationDerived: true,
+				status,
+				tier: "standard",
+			});
+			expect(await enqueue(user)).toMatchObject({
+				suppressedReason: "escalation_active",
+			});
+
+			await user.root.run((ctx) =>
+				ctx.db.patch("follow_up_cards", cardId, {
+					createdAt: NOW - 73 * HOUR,
+				})
+			);
+			expect(await enqueue(user)).toMatchObject({ outcome: "queued" });
+		}
+	);
 
 	it("holds every intent for 72 h after an escalation event", async () => {
 		const user = await reachable();

@@ -299,7 +299,7 @@ async function activeSuppressions(
 		(await lastTelegramCrisisAt(ctx, profile._id)) ?? Number.NEGATIVE_INFINITY
 	);
 	if (openCard) {
-		// Held until the card closes or would have expired.
+		// Held until the card closes, 72 h at most (less for an acute card).
 		suppressions.push({ kind: "safety" });
 	} else if (heldFrom > now - ESCALATION_HOLD_MS) {
 		suppressions.push({

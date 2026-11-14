@@ -1,10 +1,7 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { sourceEventSince } from "../escalation/events";
-import {
-	followUpLifetimeMs,
-	LONGEST_FOLLOW_UP_LIFETIME_MS,
-} from "../lib/followUpCadence";
+import { followUpLifetimeMs } from "../lib/followUpCadence";
 import { hasPremium } from "../lib/premium";
 import { rateLimiter } from "../lib/rateLimits";
 import { ADAPTERS } from "./adapters";
@@ -94,12 +91,19 @@ export async function accountDeleted(
 }
 
 /**
- * The profile's open escalation-derived follow-up, if any, newest first.
- *
- * A pending card's workflow expires it. Ready, shown and superseded cards
- * have no timer, so they hold only as long as the card would have stayed
- * pending had the user never come back: coming back to the app, or a newer
- * session superseding the card, never stretches the hold past that.
+ * How long an escalation-derived card holds routine outreach, from when it was
+ * made: 72 h, as an escalation event does, or less if the card itself would
+ * have expired sooner (acute). Answering or dismissing it ends the hold first.
+ */
+function escalationCardHoldMs(card: Doc<"follow_up_cards">): number {
+	return Math.min(followUpLifetimeMs(card.tier), ESCALATION_HOLD_MS);
+}
+
+/**
+ * The profile's open escalation-derived follow-up still inside its hold, if
+ * any, newest first. A card the user never answers (seen, superseded or
+ * still pending) stops holding after {@link escalationCardHoldMs}, whatever
+ * its tier.
  */
 export async function openEscalationCard(
 	ctx: QueryCtx,
@@ -117,14 +121,11 @@ export async function openEscalationCard(
 			)
 			.order("desc");
 		for await (const card of cards) {
-			if (status === "pending") {
-				return card;
-			}
-			// Older than any tier's lifetime: so is every card after it.
-			if (card._creationTime <= now - LONGEST_FOLLOW_UP_LIFETIME_MS) {
+			// Made before the longest hold: so is every card after it.
+			if (card._creationTime <= now - ESCALATION_HOLD_MS) {
 				break;
 			}
-			if (card.createdAt + followUpLifetimeMs(card.tier) > now) {
+			if (card.createdAt + escalationCardHoldMs(card) > now) {
 				return card;
 			}
 		}
