@@ -201,7 +201,10 @@ export async function rememberSent(
 		sentSince !== undefined &&
 		identity?.historyClearedAt !== undefined &&
 		identity.historyClearedAt >= sentSince;
-	if (clearedSince || (!identity && forLink === true)) {
+	// Account deletion revokes the row before it drains it: a message noted
+	// on it now would miss deletion's snapshot, so it goes as well.
+	const accountGone = !identity || identity.revokedReason === "account_deleted";
+	if (clearedSince || (accountGone && forLink === true)) {
 		await ctx.scheduler.runAfter(
 			0,
 			internal.outreach.telegram.erase.eraseChats,

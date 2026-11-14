@@ -629,6 +629,24 @@ describe("a reply to free text", () => {
 		expect(deleted).toContain(crisisId);
 	});
 
+	it("deletes a crisis reply whose send finished while account deletion drains", async () => {
+		const { user, write } = await checkedIn();
+		// Deletion has cleared and revoked the chat; its row isn't gone yet.
+		beforeNext("sendMessage", () =>
+			user.root.run((ctx) =>
+				eraseTelegramChats(ctx, user.profileId, { accountDeleted: true })
+			)
+		);
+		const crisisId = lastSentMessageId() + 1;
+
+		await write("I want to end my life");
+
+		const deleted = sent("deleteMessages").flatMap(
+			(c) => c.params.message_ids as number[]
+		);
+		expect(deleted).toContain(crisisId);
+	});
+
 	it("deletes a reply whose send finished after a data wipe", async () => {
 		const { user, write } = await checkedIn();
 		beforeNext("sendMessage", () =>
