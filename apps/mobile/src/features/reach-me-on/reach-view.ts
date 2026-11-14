@@ -80,8 +80,22 @@ const NOT_LINKED: TelegramCardView = {
 	kind: "not_linked",
 };
 
+/** With nothing linked, Telegram switched off for everyone offers no link. */
+const SWITCHED_OFF_DESCRIPTION =
+	"Telegram check-ins are off for now. Check-ins come as notifications.";
+
 function withHandle(label: string, handle: string | undefined): string {
 	return handle ? `${label} · @${handle}` : label;
+}
+
+/** A not-linked card: no link while the channel is off (the kill switch). */
+function unlinkedCard(
+	entry: ChannelEntry,
+	view: TelegramCardView
+): TelegramCardView {
+	return entry.available
+		? view
+		: { ...view, actions: [], description: SWITCHED_OFF_DESCRIPTION };
 }
 
 export function telegramCard(entry: ChannelEntry): TelegramCardView {
@@ -116,12 +130,15 @@ export function telegramCard(entry: ChannelEntry): TelegramCardView {
 		case "disconnected": {
 			const warning =
 				entry.revokedReason && DISCONNECTED_WARNING[entry.revokedReason];
-			return warning
-				? { actions: ["link_again"], kind: "disconnected", warning }
-				: NOT_LINKED;
+			return unlinkedCard(
+				entry,
+				warning
+					? { actions: ["link_again"], kind: "disconnected", warning }
+					: NOT_LINKED
+			);
 		}
 		default:
-			return NOT_LINKED;
+			return unlinkedCard(entry, NOT_LINKED);
 	}
 }
 

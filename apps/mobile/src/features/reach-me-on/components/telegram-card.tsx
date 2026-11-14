@@ -89,21 +89,23 @@ export const TelegramCard = ({
 					{view.warning && (
 						<AppText className="text-sm text-warning">{view.warning}</AppText>
 					)}
-					<View className="flex-row flex-wrap gap-2">
-						{view.actions.map((action) => (
-							<Button
-								isDisabled={offline && action !== "get_plus"}
-								key={action}
-								onPress={() => {
-									playSoftPress();
-									run[action]();
-								}}
-								variant={buttonVariant(action, view.actions.length)}
-							>
-								<Button.Label>{ACTION_LABEL[action]}</Button.Label>
-							</Button>
-						))}
-					</View>
+					{view.actions.length > 0 && (
+						<View className="flex-row flex-wrap gap-2">
+							{view.actions.map((action) => (
+								<Button
+									isDisabled={offline && action !== "get_plus"}
+									key={action}
+									onPress={() => {
+										playSoftPress();
+										run[action]();
+									}}
+									variant={buttonVariant(action, view.actions.length)}
+								>
+									<Button.Label>{ACTION_LABEL[action]}</Button.Label>
+								</Button>
+							))}
+						</View>
+					)}
 				</>
 			) : (
 				<LinkSteps
