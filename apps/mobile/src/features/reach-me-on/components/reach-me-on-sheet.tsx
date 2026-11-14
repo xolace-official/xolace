@@ -1,15 +1,15 @@
-import { useConvexConnectionState } from "convex/react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { ChannelCard } from "@/features/reach-me-on/components/channel-card";
 import { TelegramCard } from "@/features/reach-me-on/components/telegram-card";
 import { orderMark } from "@/features/reach-me-on/reach-view";
+import { useOffline } from "@/features/reach-me-on/use-offline";
 import { useReachChannels } from "@/features/reach-me-on/use-reach-channels";
 
 /** "Reach me on…": one card per channel, the First one tried first (#733, #776). */
 export const ReachMeOnSheet = () => {
 	const { channels, setPaused, tryFirst, unlink } = useReachChannels();
-	const offline = !useConvexConnectionState().isWebSocketConnected;
+	const offline = useOffline();
 
 	return (
 		<ScrollView

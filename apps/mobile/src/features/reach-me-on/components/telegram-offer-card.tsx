@@ -1,5 +1,5 @@
 import { api } from "@xolace/backend/convex/_generated/api";
-import { useConvexConnectionState, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { Button } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
@@ -11,6 +11,7 @@ import {
 	offerMoment,
 	telegramOfferVisible,
 } from "@/features/reach-me-on/telegram-offer";
+import { useOffline } from "@/features/reach-me-on/use-offline";
 import { useReachMeOnFlag } from "@/features/reach-me-on/use-reach-channels";
 import { useTelegramLink } from "@/features/reach-me-on/use-telegram-link";
 import { playSoftPress } from "@/lib/haptics";
@@ -33,7 +34,7 @@ export const TelegramOfferCard = (props: Props) => {
 	);
 	const telegram = channels?.find((c) => c.channel === "telegram");
 	const link = useTelegramLink(telegram, "offer_card");
-	const offline = !useConvexConnectionState().isWebSocketConnected;
+	const offline = useOffline();
 	const posthog = usePostHog();
 	const shownLogged = useRef(false);
 
