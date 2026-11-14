@@ -22,7 +22,12 @@ import {
 	openCheckInsOf,
 } from "./checkIn";
 import { OPEN_XOLACE_BUTTON } from "./copy";
-import { identitiesOf, identityOfChat, isLive } from "./lifecycle";
+import {
+	identitiesOf,
+	identityOfChat,
+	isLive,
+	rememberSent,
+} from "./lifecycle";
 
 /**
  * Telegram, the outreach layer's second channel (#768). A follow-up nudge
@@ -145,12 +150,20 @@ async function channelError(
  */
 async function afterSent(
 	ctx: MutationCtx,
-	deliveryId: Id<"outreach_deliveries">
+	deliveryId: Id<"outreach_deliveries">,
+	sentSince?: number
 ): Promise<void> {
 	const delivery = await ctx.db.get("outreach_deliveries", deliveryId);
 	const outreach =
 		delivery && (await ctx.db.get("outreach", delivery.outreachId));
 	const chatId = delivery?.providerChatId;
+	if (chatId && delivery.providerMessageId) {
+		// A wipe while it was sent leaves it off the erase list: deleted now.
+		await rememberSent(ctx, chatId, delivery.providerMessageId, {
+			forLink: true,
+			...(sentSince !== undefined && { sentSince }),
+		});
+	}
 	if (!(delivery && chatId && outreach?.intent === "nudge")) {
 		return;
 	}
@@ -170,6 +183,17 @@ async function afterSent(
 }
 
 export const telegramAdapter: Omit<ActionAdapter<TelegramSend>, "pool"> = {
+	/** Its delivery was drained while it was sent: delete it from the chat. */
+	afterLost: async (ctx, receipt, sentSince) => {
+		if (receipt.providerChatId && receipt.providerMessageId) {
+			await rememberSent(
+				ctx,
+				receipt.providerChatId,
+				receipt.providerMessageId,
+				{ forLink: true, sentSince }
+			);
+		}
+	},
 	afterSent,
 	channel: "telegram",
 	configured: telegramConfigured,

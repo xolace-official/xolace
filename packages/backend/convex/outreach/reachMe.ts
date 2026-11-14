@@ -11,7 +11,13 @@ import {
 } from "./channels";
 import { channelUnavailable, loadNotifications } from "./router";
 import { telegramConfigured } from "./telegram/bot";
-import { identitiesOf, isLive, revokeIdentity } from "./telegram/lifecycle";
+import {
+	currentLink,
+	identitiesOf,
+	isLive,
+	lastRevoked,
+	revokeIdentity,
+} from "./telegram/lifecycle";
 import {
 	type OutreachChannel,
 	outreachChannelValidator,
@@ -50,14 +56,6 @@ type ChannelEntry = Infer<typeof channelEntryValidator>;
 
 /** Every channel a deployment can offer, in the default display order. */
 const ALL_CHANNELS: readonly OutreachChannel[] = ["push", "telegram"];
-
-/** The live link: an active row, else a paused one. */
-function currentLink(identities: Doc<"channel_identities">[]) {
-	return (
-		identities.find((i) => i.status === "active") ??
-		identities.find((i) => i.status === "paused")
-	);
-}
 
 /** A live link's status: Plus-only and not Plus wins, then paused. */
 function linkStatus(
@@ -99,16 +97,14 @@ async function channelEntry(
 	if (unavailable === "requires_plus") {
 		return { ...base, linked: false, status: "needs_plus" };
 	}
-	const lastRevoked = identities
-		.filter((i) => i.status === "revoked")
-		.sort((a, b) => (b.revokedAt ?? 0) - (a.revokedAt ?? 0))[0];
-	if (lastRevoked) {
+	const revoked = lastRevoked(identities);
+	if (revoked) {
 		return {
 			...base,
 			linked: false,
 			status: "disconnected",
-			...(lastRevoked.revokedReason && {
-				revokedReason: lastRevoked.revokedReason,
+			...(revoked.revokedReason && {
+				revokedReason: revoked.revokedReason,
 			}),
 		};
 	}

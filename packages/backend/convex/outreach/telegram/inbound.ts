@@ -2,6 +2,7 @@ import { type Infer, v } from "convex/values";
 import { internal } from "../../_generated/api";
 import { internalAction, internalMutation } from "../../_generated/server";
 import { rateLimiter } from "../../lib/rateLimits";
+import { captureOutreach, planOf } from "../analytics";
 import { answer } from "./answer";
 import { botApi } from "./botApi";
 import {
@@ -31,7 +32,8 @@ import { asUpdate, strippedPayload } from "./webhook";
  * revoked one its own; no safeguard, no escalation and no text kept. A
  * check-in's "What was this about?" edits it in place (#768), and an answer
  * button resolves its follow-up (#769). The answer and any other text from
- * a linked chat get an AI reply (#770), sent after the claim commits.
+ * a linked chat get an AI reply (#770), sent after the claim commits; texts
+ * wait out a burst first, and replies are capped per day (#771).
  */
 
 /** `/stop` or `/help`, bare or as `/stop@bot`, with anything after it. */
@@ -115,6 +117,7 @@ export const claimUpdate = internalMutation({
 				});
 				job = {
 					chatId,
+					claimedAt: Date.now(),
 					identityId: identity._id,
 					linkedAt: identity.linkedAt,
 					trigger: {
@@ -123,6 +126,15 @@ export const claimUpdate = internalMutation({
 						kind: "tap",
 					},
 				};
+			}
+			// A toast is a refusal: the check-in it was on has closed.
+			if (identity && reply.toast !== undefined) {
+				const profileId = identity.emotionalProfileId;
+				await captureOutreach(ctx, "telegram_inbound", profileId, async () => ({
+					kind: "tap",
+					outcome: "stale_card",
+					plan: await planOf(ctx, profileId),
+				}));
 			}
 			// Forged, foreign or repeated taps change nothing: `ignored`.
 			const acted =
@@ -204,10 +216,13 @@ export const claimUpdate = internalMutation({
 			});
 			return await close("processed", [], undefined, {
 				chatId,
+				claimedAt: now,
 				identityId: identity._id,
 				linkedAt: identity.linkedAt,
 				trigger: {
+					inboundEventId: eventId,
 					kind: "text",
+					receivedAt: now,
 					text,
 					...(window &&
 						window.until > now && { reflectionCardId: window.cardId }),
@@ -220,9 +235,15 @@ export const claimUpdate = internalMutation({
 			? (["revoked", "telegramRevokedReply"] as const)
 			: (["stranger", "telegramStrangerReply"] as const);
 		const { ok } = await rateLimiter.limit(ctx, bucket, { key: chatId });
-		return ok
-			? await close("processed", [{ chatId, kind }])
-			: await close("ignored", []);
+		if (!ok) {
+			return await close("ignored", []);
+		}
+		// No live link, so no person to count it under.
+		await captureOutreach(ctx, "telegram_inbound", "telegram_stranger", {
+			kind: "text",
+			outcome: "stranger",
+		});
+		return await close("processed", [{ chatId, kind }]);
 	},
 	returns: replyValidator,
 });

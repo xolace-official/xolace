@@ -147,4 +147,19 @@ crons.interval(
 	{}
 );
 
+// Inbound Telegram updates (#773): rows go 30 days after they arrive; one
+// the pool lost is put back after 5 minutes, and failed if it sticks again.
+crons.interval(
+	"purge old inbound events",
+	{ hours: 24 },
+	internal.outreach.telegram.retention.purgeOldInbound,
+	{}
+);
+crons.interval(
+	"requeue stuck inbound events",
+	{ minutes: 5 },
+	internal.outreach.telegram.retention.requeueStuck,
+	{}
+);
+
 export default crons;

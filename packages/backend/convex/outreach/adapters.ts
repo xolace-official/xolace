@@ -26,10 +26,23 @@ type AdapterBase = {
 	/** Whether this deployment can use the channel at all (a bot token…). */
 	configured: (ctx: QueryCtx) => boolean | Promise<boolean>;
 	pool: Workpool;
-	/** After the send is recorded, in the same transaction. */
+	/**
+	 * After the send is recorded, in the same transaction. `sentSince` is when
+	 * the send began, for an action adapter.
+	 */
 	afterSent?: (
 		ctx: MutationCtx,
-		deliveryId: Id<"outreach_deliveries">
+		deliveryId: Id<"outreach_deliveries">,
+		sentSince?: number
+	) => Promise<void>;
+	/**
+	 * A send that went out after its delivery row was removed (a wipe or
+	 * account deletion drained it meanwhile): the message is still out there.
+	 */
+	afterLost?: (
+		ctx: MutationCtx,
+		receipt: { providerChatId?: string; providerMessageId?: string },
+		sentSince: number
 	) => Promise<void>;
 };
 

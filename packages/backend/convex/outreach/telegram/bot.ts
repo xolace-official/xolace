@@ -8,6 +8,7 @@ import {
 	internalQuery,
 	type QueryCtx,
 } from "../../_generated/server";
+import { captureOutreach } from "../analytics";
 import {
 	botApi,
 	generateSecret,
@@ -209,6 +210,10 @@ export const checkWebhook = internalAction({
 			console.error(
 				`Telegram webhook drift: ${problems.join(", ")} (pending ${info.pending_update_count}). Rerun outreach/telegram/bot:configureBot if the bot should point here.`
 			);
+			await captureOutreach(ctx, "telegram_webhook_drift", "xolace_server", {
+				pending_update_count: info.pending_update_count,
+				problems,
+			});
 		}
 		return null;
 	},

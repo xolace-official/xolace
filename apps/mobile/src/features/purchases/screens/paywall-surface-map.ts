@@ -39,12 +39,16 @@ export const PAYWALL_SURFACE_FEATURE: Record<
 	profile_insight: "insights",
 	profile_row: null,
 	rate_limit: "caps",
+	// No feature row for Telegram check-ins; the surface line below carries it.
+	reach_telegram: null,
 	// Every proactive moment sells the same capability, so all highlight insights.
 	session_close: "insights",
 	settings_row: null,
 	steadiness_numbers: "insights",
 	// No feature row for talks yet; the surface line below carries it.
 	talk_door: null,
+	// Telegram's daily reply cap sits with the other limits.
+	telegram_cap: "caps",
 	timeline_extended: "timeline",
 	week_intensity: "insights",
 };
@@ -56,9 +60,13 @@ export const PAYWALL_SURFACE_LINE: Partial<Record<PaywallSurface, string>> = {
 		"Xolace+ shows you the pattern: how far it's moved from your usual, and since when.",
 	dictation:
 		"Xolace+ writes down what you say more sharply, then leaves it for you to edit.",
+	reach_telegram:
+		"Xolace+ brings your check-ins to Telegram, where you can answer with a tap or write back.",
 	steadiness_numbers:
 		"Your steadiness is already counted. Xolace+ shows you the numbers.",
 	// {name} is the companion's name (#601), filled in by the paywall screen.
 	talk_door:
 		"Xolace+ lets you talk it through out loud with {name}. When you finish, the whole talk becomes your mirror.",
+	telegram_cap:
+		"Xolace+ gives you more replies on Telegram each day, so you can keep writing back.",
 };

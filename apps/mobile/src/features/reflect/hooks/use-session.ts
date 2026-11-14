@@ -56,7 +56,7 @@ export function useSession() {
 	const abandonMutation = useMutation(api.sessions.abandon);
 	const retryMutation = useMutation(api.sessions.retrySession);
 	const recordEscalationResponseMutation = useMutation(
-		api.escalation.recordUserResponse
+		api.escalation.response.recordUserResponse
 	);
 
 	const turnsCount = turns?.length ?? 0;

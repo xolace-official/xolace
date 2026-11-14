@@ -8,8 +8,10 @@ import {
 import { requireAuth } from "../../lib/auth";
 import { updateNotificationPrefs } from "../../lib/notificationPrefs";
 import { rateLimiter } from "../../lib/rateLimits";
+import { captureOutreach, planOf } from "../analytics";
 import { countryFromRegion, putChannelFirst } from "../channels";
 import { channelUnavailable } from "../router";
+import { linkSourceValidator } from "../validators";
 import { configuredBot } from "./bot";
 import { sha256Hex } from "./botApi";
 import {
@@ -61,6 +63,7 @@ export const storeLinkToken = internalMutation({
 	args: {
 		consentLanguageVersion: v.string(),
 		regionCode: v.optional(v.string()),
+		source: v.optional(linkSourceValidator),
 		tokenHash: v.string(),
 	},
 	handler: async (ctx, args) => {
@@ -101,6 +104,7 @@ export const storeLinkToken = internalMutation({
 			expiresAt: now + LINK_TOKEN_TTL_MS,
 			tokenHash: args.tokenHash,
 			...(country && { regionCode: country }),
+			...(args.source && { source: args.source }),
 		});
 		return bot.username;
 	},
@@ -116,6 +120,8 @@ export const createLink = action({
 		consentLanguageVersion: v.string(),
 		/** The device's region (ISO 3166-1 alpha-2), for crisis resources. */
 		regionCode: v.optional(v.string()),
+		/** Where in the app the link was started, for analytics. Default `settings`. */
+		source: v.optional(linkSourceValidator),
 	},
 	handler: async (ctx, args): Promise<string> => {
 		const token = generateLinkToken();
@@ -177,11 +183,14 @@ export async function redeemLinkToken(
 	await ctx.db.patch("channel_link_tokens", token._id, { usedAt: now });
 
 	const lines: Line[] = [];
+	const ownRows = await identitiesOf(ctx, emotionalProfileId, "telegram");
 	// This account's other chats: the newest link is its only one.
-	for (const other of await identitiesOf(ctx, emotionalProfileId, "telegram")) {
+	for (const other of ownRows) {
 		if (
 			other.externalId !== args.chatId &&
-			(await revokeIdentity(ctx, other, "relinked"))
+			(await revokeIdentity(ctx, other, "relinked", {
+				accountStaysLinked: true,
+			}))
 		) {
 			lines.push({ chatId: other.externalId, kind: "old_chat" });
 		}
@@ -230,6 +239,19 @@ export async function redeemLinkToken(
 	await updateNotificationPrefs(ctx, emotionalProfileId, {
 		gentleReturn: true,
 	});
+	await captureOutreach(
+		ctx,
+		"channel_linked",
+		emotionalProfileId,
+		async () => ({
+			$set: { telegram_linked: true },
+			channel: "telegram",
+			plan: await planOf(ctx, emotionalProfileId),
+			// Linked on Telegram before, this chat or another.
+			relink: ownRows.length > 0,
+			source: token.source ?? "settings",
+		})
+	);
 	return [
 		{
 			chatId: args.chatId,

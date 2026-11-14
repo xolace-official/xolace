@@ -134,6 +134,7 @@ const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 		enabled: false,
 		plan: "free",
 	},
+	"admin/outreachView:viewUserOutreach": { clerkUserId: "user_x" },
 	"admin/searchIndex:removeStale": { index: "exercises" },
 	"admin/searchIndex:start": { index: "exercises" },
 	"admin/searchIndex:status": {},

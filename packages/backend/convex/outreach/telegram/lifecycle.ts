@@ -6,6 +6,7 @@ import {
 	type MutationCtx,
 	type QueryCtx,
 } from "../../_generated/server";
+import { captureUnlinked } from "../analytics";
 import type { OutreachChannel, revokedReasonValidator } from "../validators";
 import { collapseChat } from "./checkIn";
 
@@ -32,6 +33,25 @@ export const FALLBACK_CONSENT_VERSION = "1.0";
 
 export function isLive(identity: Doc<"channel_identities">): boolean {
 	return identity.status === "active" || identity.status === "paused";
+}
+
+/** The live link among a channel's rows: an active one, else a paused one. */
+export function currentLink(
+	identities: Doc<"channel_identities">[]
+): Doc<"channel_identities"> | undefined {
+	return (
+		identities.find((i) => i.status === "active") ??
+		identities.find((i) => i.status === "paused")
+	);
+}
+
+/** The most recently revoked of a channel's rows. */
+export function lastRevoked(
+	identities: Doc<"channel_identities">[]
+): Doc<"channel_identities"> | undefined {
+	return identities
+		.filter((i) => i.status === "revoked")
+		.sort((a, b) => (b.revokedAt ?? 0) - (a.revokedAt ?? 0))[0];
 }
 
 /** Live statuses first, so revoked history can never crowd a live link out. */
@@ -122,21 +142,24 @@ async function revokeConsent(
 }
 
 /**
- * End a live link: `revoked` with its reason, any pending reflection and
- * recent turns dropped, its live check-ins collapsed, and a consent `revoked` row for the
+ * End a live link: `revoked` with its reason, any pending reflection,
+ * waiting burst and recent turns dropped, its live check-ins collapsed, and a consent `revoked` row for the
  * profile it belonged to.
  * A row that's already revoked is left as it is.
  */
 export async function revokeIdentity(
 	ctx: MutationCtx,
 	identity: Doc<"channel_identities">,
-	reason: RevokedReason
+	reason: RevokedReason,
+	/** The account is relinking another chat, so it stays linked. */
+	options: { accountStaysLinked?: boolean } = {}
 ): Promise<boolean> {
 	if (!isLive(identity)) {
 		return false;
 	}
 	await ctx.db.patch("channel_identities", identity._id, {
 		awaitingReflection: undefined,
+		pendingBurst: undefined,
 		recentTurns: undefined,
 		revokedAt: Date.now(),
 		revokedReason: reason,
@@ -144,8 +167,82 @@ export async function revokeIdentity(
 	});
 	await revokeConsent(ctx, identity.emotionalProfileId);
 	await collapseChat(ctx, identity.externalId);
+	const stillLinked =
+		options.accountStaysLinked === true ||
+		(
+			await identitiesOf(ctx, identity.emotionalProfileId, identity.channel)
+		).some(isLive);
+	await captureUnlinked(ctx, identity, reason, stillLinked);
 	return true;
 }
+
+/** How long Telegram lets a bot delete its own message in a private chat. */
+export const DELETABLE_FOR_MS = 2 * DAY_MS;
+/** A busy Plus chat sends ~120 messages in 48 h; well past that is a bug. */
+const MAX_SENT_KEPT = 300;
+
+/**
+ * Note a message the bot just sent to this chat, so account deletion and a
+ * data wipe can delete it while Telegram still allows (#773). A chat with no
+ * row (a stranger) has nothing to erase.
+ *
+ * A message sent for a link, whose send began at `sentSince`, can finish
+ * after the chat was cleared: after a wipe, or after deletion removed the
+ * row. Erasure has already taken its list then, so it's deleted now instead.
+ */
+export async function rememberSent(
+	ctx: MutationCtx,
+	chatId: string,
+	messageId: string,
+	{ forLink, sentSince }: { forLink?: boolean; sentSince?: number } = {}
+): Promise<void> {
+	const identity = await identityOfChat(ctx, chatId);
+	const clearedSince =
+		sentSince !== undefined &&
+		identity?.historyClearedAt !== undefined &&
+		identity.historyClearedAt >= sentSince;
+	// Account deletion revokes the row before it drains it: a message noted
+	// on it now would miss deletion's snapshot, so it goes as well.
+	const accountGone = !identity || identity.revokedReason === "account_deleted";
+	if (clearedSince || (accountGone && forLink === true)) {
+		await ctx.scheduler.runAfter(
+			0,
+			internal.outreach.telegram.erase.eraseChats,
+			{ chats: [{ chatId, messageIds: [messageId], note: false }] }
+		);
+		return;
+	}
+	if (!identity) {
+		return;
+	}
+	const now = Date.now();
+	const kept = (identity.sentMessages ?? []).filter(
+		(m) => m.at > now - DELETABLE_FOR_MS
+	);
+	await ctx.db.patch("channel_identities", identity._id, {
+		sentMessages: [...kept, { at: now, id: messageId }].slice(-MAX_SENT_KEPT),
+	});
+}
+
+/** `rememberSent`, for an action that has just sent. */
+export const recordSent = internalMutation({
+	args: {
+		chatId: v.string(),
+		/** Sent for the chat's link (a reply, a linked-chat line), not a stranger. */
+		forLink: v.optional(v.boolean()),
+		messageId: v.string(),
+		/** When the send began. */
+		sentSince: v.optional(v.number()),
+	},
+	handler: async (ctx, { chatId, forLink, messageId, sentSince }) => {
+		await rememberSent(ctx, chatId, messageId, {
+			...(forLink !== undefined && { forLink }),
+			...(sentSince !== undefined && { sentSince }),
+		});
+		return null;
+	},
+	returns: v.null(),
+});
 
 /**
  * A line meant for this chat's live link came back 403 (blocked, or the

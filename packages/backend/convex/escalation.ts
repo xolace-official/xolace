@@ -1,90 +1,22 @@
 import { v } from "convex/values";
-import { internalMutation, mutation } from "./_generated/server";
-import { requireSessionOwnership } from "./lib/auth";
+import { mutation } from "./_generated/server";
 import {
-	actionTakenValidator,
-	resourceValidator,
-	triggerTypeValidator,
-} from "./lib/validators";
+	recordUserResponseCore,
+	userResponseArgs,
+} from "./escalation/response";
 
 /**
- * AI creates an escalation event when safety signals are detected.
- * Enforces triggerEvidence policy: ONLY model confidence categories
- * and trigger type descriptions. NEVER paraphrased user language.
+ * Escalation moved to `convex/escalation/` (#778): events in
+ * `escalation/events.ts`, the user's response in `escalation/response.ts`.
+ * Only this public wrapper stays, for app builds that call the old path.
  */
-export const create = internalMutation({
-	args: {
-		actionTaken: actionTakenValidator,
-		emotionalProfileId: v.id("emotional_profiles"),
-		resourcesPresented: v.array(v.union(v.string(), resourceValidator)),
-		sessionId: v.id("sessions"),
-		triggerConfidence: v.number(),
-		triggerEvidence: v.string(),
-		triggerType: triggerTypeValidator,
-	},
-	handler: async (ctx, args) => {
-		// One event per session: a remade mirror (a talk's "Say more" reopening,
-		// a clarify turn) re-runs the pipeline on a session that already escalated.
-		const existing = await ctx.db
-			.query("escalation_events")
-			.withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-			.first();
-		if (existing) {
-			return existing._id;
-		}
-
-		const eventId = await ctx.db.insert("escalation_events", {
-			actionTaken: args.actionTaken,
-			createdAt: Date.now(),
-			emotionalProfileId: args.emotionalProfileId,
-			resourcesPresented: args.resourcesPresented,
-			reviewedByHuman: false,
-			sessionId: args.sessionId,
-			triggerConfidence: args.triggerConfidence,
-			triggerEvidence: args.triggerEvidence,
-			triggerType: args.triggerType,
-		});
-
-		// Mark the session as having triggered escalation
-		await ctx.db.patch("sessions", args.sessionId, {
-			escalationTriggered: true,
-			updatedAt: Date.now(),
-		});
-
-		return eventId;
-	},
-});
 
 /**
- * Record how the user responded to an escalation.
+ * @deprecated Call `escalation/response:recordUserResponse`.
  */
+// DEPRECATED(remove-after: app >= 1.17.0): moved to escalation/response.recordUserResponse (#778).
 export const recordUserResponse = mutation({
-	args: {
-		sessionId: v.id("sessions"),
-		userResponse: v.union(
-			v.literal("engaged"),
-			v.literal("dismissed"),
-			v.literal("no_response")
-		),
-	},
-	handler: async (ctx, args) => {
-		const { session } = await requireSessionOwnership(ctx, args.sessionId);
-
-		// Find the escalation event for this session
-		const event = await ctx.db
-			.query("escalation_events")
-			.withIndex("by_session", (q) => q.eq("sessionId", args.sessionId))
-			.order("desc")
-			.first();
-
-		if (!event) {
-			throw new Error("No escalation event found for this session");
-		}
-
-		await ctx.db.patch("escalation_events", event._id, {
-			userResponse: args.userResponse,
-		});
-
-		return null;
-	},
+	args: userResponseArgs,
+	handler: recordUserResponseCore,
+	returns: v.null(),
 });

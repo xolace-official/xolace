@@ -1,4 +1,5 @@
 import { vWorkflowId } from "@convex-dev/workflow";
+import { vWorkIdValidator } from "@convex-dev/workpool";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { specialtyValidator } from "./lib/specialties";
@@ -7,6 +8,7 @@ import {
 	chatModerationCategoryValidator,
 	conversationRoleValidator,
 	domainValidator,
+	escalationSourceValidator,
 	insightFeatureValidator,
 	intakeRowAnswerValidators,
 	licenceValidator,
@@ -35,12 +37,15 @@ import {
 	followUpTierValidator,
 	identityStatusValidator,
 	inboundStatusValidator,
+	linkSourceValidator,
 	outreachChannelValidator,
 	outreachContentValidator,
 	outreachIntentValidator,
 	outreachOutcomeValidator,
 	outreachProvenanceValidator,
 	outreachVariantsValidator,
+	pendingBurstValidator,
+	replyCountValidator,
 	revokedReasonValidator,
 	suppressedReasonValidator,
 } from "./outreach/validators";
@@ -83,6 +88,23 @@ export default defineSchema({
 		"dayKey",
 		"actionType",
 	]),
+
+	// ===========================================================
+	// ADMIN AUDIT LOG (#775)
+	// ===========================================================
+	//
+	// One row each time an admin looks at a user's private records: which
+	// admin, whose records, when. Clerk ids, not profile ids, so a row says
+	// who it was about after the account is gone. Append-only.
+	//
+	admin_audit_log: defineTable({
+		action: v.literal("outreach_viewed"),
+		adminClerkUserId: v.string(),
+		at: v.number(),
+		targetClerkUserId: v.string(),
+	})
+		.index("by_target", ["targetClerkUserId", "at"])
+		.index("by_admin", ["adminClerkUserId", "at"]),
 
 	// ===========================================================
 	// AGE DECLARATIONS (#716)
@@ -255,8 +277,17 @@ export default defineSchema({
 		emotionalProfileId: v.id("emotional_profiles"),
 		// A string: Telegram ids are 64-bit.
 		externalId: v.string(),
+		// When a data wipe or account deletion last cleared this chat's history
+		// (#773): a reply begun before it may not send or keep anything.
+		historyClearedAt: v.optional(v.number()),
+		// The latest crisis text from this chat (#772): an AI reply begun before
+		// it isn't sent. The account's 72 h hold reads the profile's own time.
+		lastCrisisAt: v.optional(v.number()),
 		lastInboundAt: v.optional(v.number()),
 		linkedAt: v.number(),
+		// Texts screened on arrival and waiting out a burst for one reply
+		// (#771). Gone within seconds, and dropped when the link ends.
+		pendingBurst: v.optional(pendingBurstValidator),
 		// The last few messages each way, for the next AI reply's context
 		// (#770). Kept 24 h at most, and dropped when the link ends.
 		recentTurns: v.optional(
@@ -268,8 +299,19 @@ export default defineSchema({
 				})
 			)
 		),
+		// AI replies used on the user's local day, against the plan's cap (#771).
+		replyCount: v.optional(replyCountValidator),
 		revokedAt: v.optional(v.number()),
 		revokedReason: v.optional(revokedReasonValidator),
+		// Texts still being screened (#771): a burst waits for them, until
+		// `until` at the latest, so a slow check can't split it.
+		screening: v.optional(v.object({ count: v.number(), until: v.number() })),
+		// The bot's messages to this chat in the last 48 h, the window Telegram
+		// lets a bot delete them in: account deletion and a data wipe delete
+		// them (#773). Older entries drop off as new ones are added.
+		sentMessages: v.optional(
+			v.array(v.object({ at: v.number(), id: v.string() }))
+		),
 		status: identityStatusValidator,
 		telegramUserId: v.optional(v.string()),
 		tokenIdentifier: v.string(),
@@ -292,6 +334,8 @@ export default defineSchema({
 		emotionalProfileId: v.id("emotional_profiles"),
 		expiresAt: v.number(),
 		regionCode: v.optional(v.string()),
+		/** Where in the app the link was started (#774). */
+		source: v.optional(linkSourceValidator),
 		tokenHash: v.string(),
 		usedAt: v.optional(v.number()),
 	})
@@ -848,6 +892,11 @@ export default defineSchema({
 		// The local day ("YYYY-MM-DD") daysShowedUp last counted. Survives a data
 		// wipe with it, so a day the wipe emptied of activity can't count again.
 		lastShowedUpDay: v.optional(v.string()),
+		// The latest crisis text this account sent the Telegram bot (#772). A
+		// repeat shares the first one's escalation event, and a chat can move to
+		// another account, so the 72 h hold counts from this. Written only by
+		// outreach/telegram/reply.ts.
+		lastTelegramCrisisAt: v.optional(v.number()),
 
 		// Longest streak ever reached. A record — it never decays, only grows
 		// via Math.max on session completion. Optional for rows created before
@@ -950,6 +999,10 @@ export default defineSchema({
 		createdAt: v.number(),
 		// Optional: stripped during account deletion anonymization.
 		emotionalProfileId: v.optional(v.id("emotional_profiles")),
+		// The follow-up open when a channel crisis came in (#772).
+		followUpCardId: v.optional(v.id("follow_up_cards")),
+		// The inbound update a channel crisis came in on (#772).
+		inboundEventId: v.optional(v.id("inbound_events")),
 
 		// Which specific resources were presented.
 		// Accepts both legacy string entries and structured Resource objects.
@@ -960,7 +1013,11 @@ export default defineSchema({
 		// For safety team oversight.
 		reviewedByHuman: v.boolean(),
 		reviewerNotes: v.optional(v.string()),
-		sessionId: v.id("sessions"),
+		// The session that escalated. Absent for a channel message (#772).
+		sessionId: v.optional(v.id("sessions")),
+
+		// Where the crisis was raised. Absent = "session" (rows before #772).
+		source: v.optional(escalationSourceValidator),
 
 		// 0.0-1.0. AI's confidence in the risk assessment.
 		triggerConfidence: v.number(),
@@ -994,6 +1051,9 @@ export default defineSchema({
 
 		// Lookup all events for a session.
 		.index("by_session", ["sessionId"])
+
+		// One channel crisis event per open follow-up (#772).
+		.index("by_card", ["followUpCardId"])
 
 		// Unreviewed events queue.
 		.index("by_review_status", ["reviewedByHuman", "createdAt"])
@@ -1390,9 +1450,17 @@ export default defineSchema({
 		payload: v.any(),
 		providerEventId: v.string(),
 		receivedAt: v.number(),
+		// Set when the stuck-row cron put it back on the pool (#773); a row
+		// still stuck after that is marked `failed`.
+		requeuedAt: v.optional(v.number()),
 		status: inboundStatusValidator,
+		// The pool job handling it (#773): while that is still queued or
+		// running, the stuck-row cron leaves the row alone.
+		workId: v.optional(vWorkIdValidator),
 	})
 		.index("by_channel_event", ["channel", "providerEventId"])
+		// A chat's updates, for account deletion and a data wipe (#773).
+		.index("by_channel_external", ["channel", "externalId"])
 		.index("by_status_received", ["status", "receivedAt"])
 		.index("by_received", ["receivedAt"]),
 

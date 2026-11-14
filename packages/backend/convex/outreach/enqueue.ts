@@ -1,6 +1,7 @@
 import { type Infer, v } from "convex/values";
 import type { Id } from "../_generated/dataModel";
 import { internalMutation } from "../_generated/server";
+import { captureRouted } from "./analytics";
 import { startDelivery } from "./deliver";
 import { quietWindowEndsAt } from "./quietWindow";
 import {
@@ -97,11 +98,11 @@ export const enqueue = internalMutation({
 
 		const suppress = async (
 			reason: SuppressedReason
-		): Promise<EnqueueResult> => ({
-			outcome: "suppressed",
-			outreachId: await record({ kind: "suppressed", reason }),
-			suppressedReason: reason,
-		});
+		): Promise<EnqueueResult> => {
+			const outreachId = await record({ kind: "suppressed", reason });
+			await captureRouted(ctx, args, { kind: "suppressed", reason });
+			return { outcome: "suppressed", outreachId, suppressedReason: reason };
+		};
 
 		const gates = await personGates(ctx, args, now);
 		if (gates.held) {
@@ -128,6 +129,11 @@ export const enqueue = internalMutation({
 			isFallback: false,
 			outreachId,
 			...(sendAt !== null && { runAt: sendAt }),
+		});
+		await captureRouted(ctx, args, {
+			channel,
+			deferred: sendAt !== null,
+			kind: "queued",
 		});
 		return { outcome: "queued", outreachId };
 	},

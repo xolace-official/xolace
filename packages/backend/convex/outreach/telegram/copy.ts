@@ -2,7 +2,9 @@ import {
 	ACUTE_NUDGE_BODY,
 	fallbackFollowUpCard,
 } from "../../ai/prompts/followUpCardWriter";
+import type { CrisisContacts } from "../../lib/crisisResources";
 import type { FollowUpTier } from "../validators";
+import { DAILY_REPLY_CAP } from "./caps";
 
 /**
  * Every fixed line the Telegram bot sends or shows (#760 §6), taken as drafted
@@ -40,6 +42,10 @@ export const RELINKED =
 
 /** An account linked a new chat; this, its old one, is told (#767). */
 export const OLD_CHAT = "No longer linked to Xolace.";
+
+/** The last line a linked chat gets when its Xolace account is deleted (#773). */
+export const ACCOUNT_DELETED =
+	"Your Xolace account was deleted and this chat is no longer linked. Telegram keeps earlier messages here; delete the chat to remove them.";
 
 /** A chat whose link was revoked writes to the bot (#767). */
 export const REVOKED_REPLY =
@@ -116,8 +122,46 @@ export const ALREADY_ANSWERED_TOAST = "Already answered";
 export const REPLY_FAILED =
 	"I couldn't reply just now — I'm still here in Xolace.";
 
+// ---------------------------------------------------------------------------
+// Crisis (#772)
+// ---------------------------------------------------------------------------
+
 /**
- * A crisis text's reply until the crisis path lands (#772): no model, the
- * failure line, with Support resources and Open Xolace.
+ * The fixed reply to a crisis text, never the model: the country's emergency
+ * number and priority-1 helplines from the shared list the app's crisis
+ * screen reads, so the bot and the app never give two different numbers.
+ * Null contacts (country unknown) point to the local emergency number; the
+ * Find a helpline button carries the rest.
  */
-export const CRISIS_HOLDING_LINE = REPLY_FAILED;
+export function crisisReply(contacts: CrisisContacts | null): string {
+	const help = contacts
+		? [
+				`If you're in danger right now, call ${contacts.emergencyNumber}.`,
+				...contacts.helplines.map((h) => `${h.label}: ${h.value}`),
+			]
+		: ["If you're in danger right now, call your local emergency number."];
+	return [
+		"I'm really glad you told me.",
+		help.join("\n"),
+		"I'm still here, and so is Xolace.",
+	].join("\n\n");
+}
+
+/** Opens the app's crisis resources screen, `from=telegram`. */
+export const MORE_SUPPORT_BUTTON = "More support options";
+
+/** IASP's directory, first when the country is unknown. */
+export const FIND_A_HELPLINE_BUTTON = "Find a helpline";
+
+// ---------------------------------------------------------------------------
+// Reply caps (#771)
+// ---------------------------------------------------------------------------
+
+/** At the day's reply cap: Plus, or anyone struggling (with Support resources). */
+export const CAP_REPLY =
+	"I've hit my reply limit for today. You can keep going in Xolace, and I'll be back here tomorrow.";
+
+/** At a free user's cap, when they aren't struggling: with Get Xolace+. */
+export const CAP_UPSELL = `That's my ${DAILY_REPLY_CAP.free} replies for today on the free plan. With Xolace+ I can keep talking with you here, up to ${DAILY_REPLY_CAP.plus} a day. Or carry on in Xolace now, and I'll be back here tomorrow.`;
+
+export const GET_PLUS_BUTTON = "Get Xolace+";

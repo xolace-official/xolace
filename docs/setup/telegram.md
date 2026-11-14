@@ -70,7 +70,10 @@ BotFather (`/revoke`), set the new one and run `configureBot` again.
    `ANTHROPIC_API_KEY` (the reply and the classifier) and `OPENAI_API_KEY`
    (moderation) on the deployment. With neither safeguard provider the reply still
    goes out, with Support resources; with no model you get the fixed "I couldn't
-   reply just now" line.
+   reply just now" line. Texts sent close together get one reply, 6 s after the
+   last. Free accounts get 5 replies a day and Plus 50 (on the user's local day);
+   past that comes a fixed cap line, with a Xolace+ upsell only for a free user who
+   isn't struggling.
 
 `configureBot` is idempotent: run it again whenever you like. Each run **rotates the
 secret**, so updates signed with the old one are refused from then on. It never runs on

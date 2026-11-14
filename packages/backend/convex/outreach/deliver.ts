@@ -8,6 +8,7 @@ import {
 	type MutationCtx,
 } from "../_generated/server";
 import { ADAPTERS, type ChannelAdapter, ChannelError } from "./adapters";
+import { captureDelivery } from "./analytics";
 import {
 	accountDeleted,
 	escalationOrDormancy,
@@ -206,7 +207,8 @@ async function claim(
 async function settle(
 	ctx: MutationCtx,
 	delivery: Doc<"outreach_deliveries">,
-	attempt: Attempt
+	attempt: Attempt,
+	sentSince?: number
 ): Promise<void> {
 	if (attempt.ok) {
 		const now = Date.now();
@@ -217,7 +219,8 @@ async function settle(
 			sentAt: now,
 			status: "sent",
 		});
-		await ADAPTERS[delivery.channel]?.afterSent?.(ctx, delivery._id);
+		await ADAPTERS[delivery.channel]?.afterSent?.(ctx, delivery._id, sentSince);
+		await captureDelivery(ctx, delivery, { status: "delivered" });
 		return;
 	}
 	const { afterMs, ...recorded } = attempt.error;
@@ -314,11 +317,20 @@ export const claimForAction = internalMutation({
 });
 
 export const settleAttempt = internalMutation({
-	args: { attempt: attemptValidator, deliveryId: v.id("outreach_deliveries") },
-	handler: async (ctx, { attempt, deliveryId }) => {
+	args: {
+		attempt: attemptValidator,
+		/** Which adapter sent it, for a delivery drained while it was sent. */
+		channel: v.optional(outreachChannelValidator),
+		deliveryId: v.id("outreach_deliveries"),
+		/** When the send began. */
+		sentSince: v.optional(v.number()),
+	},
+	handler: async (ctx, { attempt, channel, deliveryId, sentSince }) => {
 		const delivery = await ctx.db.get("outreach_deliveries", deliveryId);
 		if (delivery?.status === "sending") {
-			await settle(ctx, delivery, attempt);
+			await settle(ctx, delivery, attempt, sentSince);
+		} else if (!delivery && attempt.ok && channel && sentSince !== undefined) {
+			await ADAPTERS[channel]?.afterLost?.(ctx, attempt.receipt, sentSince);
 		}
 		return null;
 	},
@@ -329,6 +341,8 @@ export const settleAttempt = internalMutation({
 export const deliverAction = internalAction({
 	args: { deliveryId: v.id("outreach_deliveries") },
 	handler: async (ctx, { deliveryId }) => {
+		// Before the claim: a wipe from here on overtakes the send.
+		const sentSince = Date.now();
 		const claimed = await ctx.runMutation(
 			internal.outreach.deliver.claimForAction,
 			{ deliveryId }
@@ -355,7 +369,9 @@ export const deliverAction = internalAction({
 		}
 		await ctx.runMutation(internal.outreach.deliver.settleAttempt, {
 			attempt,
+			channel: claimed.channel,
 			deliveryId,
+			sentSince,
 		});
 		return null;
 	},
@@ -377,6 +393,10 @@ export const onDeliveryComplete = internalMutation({
 			await ctx.db.patch("outreach_deliveries", delivery._id, {
 				error: { kind: "permanent" },
 				finishedAt: Date.now(),
+				status: "failed",
+			});
+			await captureDelivery(ctx, delivery, {
+				kind: "permanent",
 				status: "failed",
 			});
 			return null;
@@ -410,6 +430,10 @@ async function finish(
 	});
 	const delivery = await ctx.db.get("outreach_deliveries", deliveryId);
 	if (delivery) {
+		await captureDelivery(ctx, delivery, {
+			kind: error.kind,
+			status: "failed",
+		});
 		await fallBackOnce(ctx, delivery);
 	}
 }

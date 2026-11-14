@@ -484,7 +484,7 @@ export const handleClarification = internalAction({
 				safeguard.triggerType &&
 				session.escalationTriggered !== true
 			) {
-				await ctx.runMutation(internal.escalation.create, {
+				await ctx.runMutation(internal.escalation.events.create, {
 					actionTaken: safeguard.actionTaken,
 					emotionalProfileId: session.emotionalProfileId as ReturnType<
 						typeof v.id<"emotional_profiles">

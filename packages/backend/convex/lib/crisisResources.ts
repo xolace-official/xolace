@@ -724,6 +724,10 @@ export const COUNTRY_RESOURCES: Record<CountryCode, CountryData> = {
 	},
 };
 
+/** IASP's directory of crisis centres: where to go when the country is unknown. */
+export const IASP_DIRECTORY_URL =
+	"https://www.iasp.info/resources/Crisis_Centres/";
+
 /** True when `code` is a country this list has resources for. */
 export function isCountryCode(
 	code: string | null | undefined

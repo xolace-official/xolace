@@ -1,22 +1,34 @@
 /** One-time asks that belong to an account, not the phone: a second account on this device
  * still gets them, and one account's answer never silences another's. */
 
-export type AccountFlag =
+/** Flags that were device-wide booleans before they moved per account. */
+type LegacyAccountFlag =
 	| "copingAskSeen"
 	| "findingCardDismissed"
 	| "notifNudgeDismissed"
 	| "starterSuggestionsSeen";
 
-const ALL_ACCOUNT_FLAGS: readonly AccountFlag[] = [
+export type AccountFlag = LegacyAccountFlag | "telegramOfferDismissed";
+
+const LEGACY_ACCOUNT_FLAGS: readonly LegacyAccountFlag[] = [
 	"copingAskSeen",
 	"findingCardDismissed",
 	"notifNudgeDismissed",
 	"starterSuggestionsSeen",
 ];
 
+const ALL_ACCOUNT_FLAGS: readonly AccountFlag[] = [
+	...LEGACY_ACCOUNT_FLAGS,
+	"telegramOfferDismissed",
+];
+
+const LEGACY_SET = new Set<string>(LEGACY_ACCOUNT_FLAGS);
+const isLegacy = (flag: AccountFlag): flag is LegacyAccountFlag =>
+	LEGACY_SET.has(flag);
+
 /** The top-level booleans are the pre-per-account marks, owner unknown. They stand in for
  * every account until `claimLegacyAccountFlags` hands them to the first one signed in. */
-export type AccountFlagsSlice = Record<AccountFlag, boolean> & {
+export type AccountFlagsSlice = Record<LegacyAccountFlag, boolean> & {
 	/** Flags each account (by Clerk user id) has set. */
 	accountFlags: Record<string, AccountFlag[]>;
 	markAccountFlag: (owner: string, flag: AccountFlag) => void;
@@ -32,16 +44,18 @@ type SetState = (
 ) => void;
 
 export const hasAccountFlag = (
-	s: Pick<AccountFlagsSlice, AccountFlag | "accountFlags">,
+	s: Pick<AccountFlagsSlice, LegacyAccountFlag | "accountFlags">,
 	owner: string,
 	flag: AccountFlag
-): boolean => s[flag] || (s.accountFlags[owner]?.includes(flag) ?? false);
+): boolean =>
+	(isLegacy(flag) && s[flag]) ||
+	(s.accountFlags[owner]?.includes(flag) ?? false);
 
 export const createAccountFlagsSlice = (set: SetState): AccountFlagsSlice => ({
 	accountFlags: {},
 	claimLegacyAccountFlags: (owner) =>
 		set((s) => {
-			const legacy = ALL_ACCOUNT_FLAGS.filter((flag) => s[flag]);
+			const legacy = LEGACY_ACCOUNT_FLAGS.filter((flag) => s[flag]);
 			if (legacy.length === 0) {
 				return {};
 			}
