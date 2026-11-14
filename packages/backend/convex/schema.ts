@@ -276,6 +276,9 @@ export default defineSchema({
 		emotionalProfileId: v.id("emotional_profiles"),
 		// A string: Telegram ids are 64-bit.
 		externalId: v.string(),
+		// When a data wipe or account deletion last cleared this chat's history
+		// (#773): a reply begun before it may not send or keep anything.
+		historyClearedAt: v.optional(v.number()),
 		lastInboundAt: v.optional(v.number()),
 		linkedAt: v.number(),
 		// Texts screened on arrival and waiting out a burst for one reply
@@ -296,6 +299,9 @@ export default defineSchema({
 		replyCount: v.optional(replyCountValidator),
 		revokedAt: v.optional(v.number()),
 		revokedReason: v.optional(revokedReasonValidator),
+		// Texts still being screened (#771): a burst waits for them, until
+		// `until` at the latest, so a slow check can't split it.
+		screening: v.optional(v.object({ count: v.number(), until: v.number() })),
 		// The bot's messages to this chat in the last 48 h, the window Telegram
 		// lets a bot delete them in: account deletion and a data wipe delete
 		// them (#773). Older entries drop off as new ones are added.

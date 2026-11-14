@@ -36,10 +36,12 @@ import {
 	REPLY_FAILED,
 	SUPPORT_RESOURCES_BUTTON,
 } from "./copy";
+import { eraseTelegramChats } from "./erase";
 import { REFLECTION_WINDOW_MS } from "./reply";
 import {
 	backend,
 	configure,
+	failNext,
 	forgetCalls,
 	HOUR,
 	identities,
@@ -61,6 +63,8 @@ const stub = vi.hoisted(() => ({
 	asked: [] as { system: string; user: string }[],
 	/** Runs while the reply is being written, as another transaction would. */
 	duringReply: undefined as (() => Promise<unknown>) | undefined,
+	/** Runs once while the next text is screened, as other work would. */
+	duringScreen: undefined as (() => Promise<unknown>) | undefined,
 	/** Reading the memory preload throws. */
 	memoryFails: false,
 	moderation: null as unknown,
@@ -103,6 +107,9 @@ vi.mock("../../ai/providers/moderation", async (orig) => ({
 	...(await orig<typeof import("../../ai/providers/moderation")>()),
 	moderateInput: async () => {
 		stub.screened += 1;
+		const meanwhile = stub.duringScreen;
+		stub.duringScreen = undefined;
+		await meanwhile?.();
 		return stub.moderation;
 	},
 }));
@@ -158,6 +165,7 @@ beforeEach(() => {
 	stub.plus = false;
 	stub.queue = [];
 	stub.screened = 0;
+	stub.duringScreen = undefined;
 	stub.reply = "Thanks for telling me.\nWhat's been on your mind?";
 });
 afterEach(() => {
@@ -165,6 +173,8 @@ afterEach(() => {
 });
 
 const CHECK_IN_MESSAGE_ID = 101;
+/** A second Telegram chat the same account links. */
+const OTHER_CHAT = 5_151_515_151;
 /** Fifty replies through the whole pipeline take a while. */
 const PLUS_CAP_TIMEOUT_MS = 60_000;
 const CARD_TEXT = "Work has been a lot since Tuesday's review at 9am.";
@@ -246,7 +256,16 @@ async function checkedIn(card: Partial<Doc<"follow_up_cards">> = {}) {
 			await write(`Ordinary day ${i}`);
 		}
 	};
-	return { cardId, sessionId, tap, useReplies, user, write, writeQuickly };
+	return {
+		cardId,
+		secret,
+		sessionId,
+		tap,
+		useReplies,
+		user,
+		write,
+		writeQuickly,
+	};
 }
 
 /** The messages sent, whole (the helper's `replies` is their texts). */
@@ -463,6 +482,19 @@ describe("a reply to free text", () => {
 		await write("Long day");
 
 		expect(sentMessages()).toHaveLength(0);
+	});
+
+	it("sends and keeps nothing when a data wipe lands while the reply is written", async () => {
+		const { user, write } = await checkedIn();
+		stub.duringReply = () =>
+			user.root.run((ctx) =>
+				eraseTelegramChats(ctx, user.profileId, { accountDeleted: false })
+			);
+
+		await write("Long day");
+
+		expect(sentMessages()).toHaveLength(0);
+		expect((await identities(user))[0]?.recentTurns).toBeUndefined();
 	});
 
 	it("drops the recent turns a day later, with no further message", async () => {
@@ -690,6 +722,62 @@ describe("the daily reply cap", () => {
 		expect(lastReply()?.params.text).toBe(CAP_UPSELL);
 	});
 
+	it("counts every chat the account linked, not just this one", async () => {
+		const { secret, useReplies, user } = await checkedIn();
+		await useReplies(DAILY_REPLY_CAP.free);
+
+		await linkChat(user, secret, OTHER_CHAT);
+		forgetCalls();
+		await post(user.root, messageUpdate(OTHER_CHAT, "New phone"), secret);
+		await processSoon(user.root);
+
+		expect(stub.asked).toHaveLength(DAILY_REPLY_CAP.free);
+		expect(lastReply()?.params.text).toBe(CAP_UPSELL);
+	});
+
+	it("doesn't count a reply Telegram didn't take", async () => {
+		const { useReplies, write } = await checkedIn();
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		failNext("sendMessage", {
+			description: "Internal Server Error",
+			error_code: 500,
+		});
+		await write("Long day");
+		expect(sentMessages()).toHaveLength(1);
+
+		await useReplies(DAILY_REPLY_CAP.free);
+
+		expect(stub.asked).toHaveLength(DAILY_REPLY_CAP.free + 1);
+		expect(lastReply()?.params.text).toBe(stub.reply);
+	});
+
+	it("doesn't count a reply that failed before the model", async () => {
+		const { useReplies, write } = await checkedIn();
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		stub.memoryFails = true;
+		await write("Long day");
+		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
+		stub.memoryFails = false;
+
+		await useReplies(DAILY_REPLY_CAP.free);
+
+		expect(lastReply()?.params.text).toBe(stub.reply);
+	});
+
+	it("gives a slot back only to the day and account that took it", async () => {
+		const { useReplies, user } = await checkedIn();
+		await useReplies(2);
+		const [identity] = await identities(user);
+
+		await user.root.mutation(internal.outreach.telegram.reply.returnReplySlot, {
+			day: "2026-11-12",
+			emotionalProfileId: user.profileId,
+			identityId: identity._id,
+		});
+
+		expect((await identities(user))[0]?.replyCount?.count).toBe(2);
+	});
+
 	it("doesn't count a reply the model failed to write", async () => {
 		const { useReplies, write } = await checkedIn();
 		stub.reply = new Error("overloaded");
@@ -775,6 +863,32 @@ describe("a burst of texts", () => {
 		for (const text of ["Long day", "Work again", "bus broke down"]) {
 			expect(stub.asked[0]?.user).toContain(text);
 		}
+	});
+
+	it("waits for a text still being screened, and answers both at once", async () => {
+		const { user, writeQuickly } = await checkedIn();
+
+		await writeQuickly("Long day", 2 * SECOND);
+		// The first text's reply falls due while the second is still screened.
+		stub.duringScreen = async () => {
+			const [identity] = await identities(user);
+			const burst = identity?.pendingBurst;
+			if (burst) {
+				await user.root.action(internal.outreach.telegram.reply.answerBurst, {
+					chatId: String(STRANGER_CHAT),
+					dueAt: burst.dueAt,
+					identityId: identity._id,
+					linkedAt: burst.linkedAt,
+				});
+			}
+		};
+		await writeQuickly("Work again", SECOND);
+		await processSoon(user.root);
+
+		expect(sentMessages()).toHaveLength(1);
+		expect(stub.asked).toHaveLength(1);
+		expect(stub.asked[0]?.user).toContain("Long day");
+		expect(stub.asked[0]?.user).toContain("Work again");
 	});
 
 	it("carries Support resources when any text in it was elevated", async () => {

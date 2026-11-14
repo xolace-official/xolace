@@ -51,7 +51,12 @@ import {
 } from "../validators";
 import { appLink } from "./appLinks";
 import { botApi, FORBIDDEN, TelegramApiError } from "./botApi";
-import { BURST_WAIT_MS, DAILY_REPLY_CAP } from "./caps";
+import {
+	BURST_RECHECK_MS,
+	BURST_WAIT_MS,
+	DAILY_REPLY_CAP,
+	SCREEN_HOLD_MS,
+} from "./caps";
 import { cardOf, isCardOpen, type Keyboard, openCheckInsOf } from "./checkIn";
 import {
 	ANSWER_BUTTONS,
@@ -65,7 +70,7 @@ import {
 	REPLY_FAILED,
 	SUPPORT_RESOURCES_BUTTON,
 } from "./copy";
-import { isLive } from "./lifecycle";
+import { identitiesOf, isLive } from "./lifecycle";
 
 /**
  * AI replies on Telegram (#770): to an answer tap, and to free text from a
@@ -193,14 +198,29 @@ const isLinkOf = (
 ): identity is Doc<"channel_identities"> =>
 	identity !== null && isLive(identity) && identity.linkedAt === linkedAt;
 
-/** Whether a reply may still go: its link is live and unchanged. */
+/**
+ * Nothing was cleared from the chat (a data wipe or account deletion, #773)
+ * since `since`, when a reply began: what it read may still be sent or kept.
+ */
+const keptSince = (identity: Doc<"channel_identities">, since?: number) =>
+	since === undefined ||
+	identity.historyClearedAt === undefined ||
+	identity.historyClearedAt < since;
+
+/**
+ * Whether a reply may still go: its link is live and unchanged, and, given
+ * `since`, nothing was cleared from the chat after the reply began.
+ */
 export const isCurrentLink = internalQuery({
-	args: { identityId: v.id("channel_identities"), linkedAt: v.number() },
-	handler: async (ctx, args) =>
-		isLinkOf(
-			await ctx.db.get("channel_identities", args.identityId),
-			args.linkedAt
-		),
+	args: {
+		identityId: v.id("channel_identities"),
+		linkedAt: v.number(),
+		since: v.optional(v.number()),
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		return isLinkOf(identity, args.linkedAt) && keptSince(identity, args.since);
+	},
 	returns: v.boolean(),
 });
 
@@ -275,11 +295,15 @@ export const saveReflection = internalMutation({
 		cardId: v.id("follow_up_cards"),
 		identityId: v.id("channel_identities"),
 		linkedAt: v.number(),
+		/** When the text's handling began; a wipe after it keeps nothing. */
+		since: v.optional(v.number()),
 		text: v.string(),
 	},
 	handler: async (ctx, args) => {
 		const identity = await ctx.db.get("channel_identities", args.identityId);
-		if (!isLinkOf(identity, args.linkedAt)) {
+		if (
+			!(isLinkOf(identity, args.linkedAt) && keptSince(identity, args.since))
+		) {
 			return null;
 		}
 		const existing = await ctx.db
@@ -313,11 +337,15 @@ export const rememberTurns = internalMutation({
 		/** The AI reply that went out answered this, for analytics. */
 		inbound: v.optional(inboundKindValidator),
 		linkedAt: v.number(),
+		/** When the reply began; a wipe after it keeps nothing. */
+		since: v.optional(v.number()),
 		turns: v.array(turnValidator),
 	},
 	handler: async (ctx, args) => {
 		const identity = await ctx.db.get("channel_identities", args.identityId);
-		if (!isLinkOf(identity, args.linkedAt)) {
+		if (
+			!(isLinkOf(identity, args.linkedAt) && keptSince(identity, args.since))
+		) {
 			return null;
 		}
 		if (args.inbound) {
@@ -385,7 +413,12 @@ type CapLine = Infer<typeof capLineValidator>;
 
 /** What a reply may do: go, or which cap line it gets instead. */
 const slotValidator = v.union(
-	v.object({ kind: v.literal("reply") }),
+	/** A slot taken: `day` and the account say which count to give it back to. */
+	v.object({
+		day: v.string(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		kind: v.literal("reply"),
+	}),
 	v.object({ kind: v.literal("capped"), line: capLineValidator })
 );
 
@@ -457,17 +490,31 @@ export const takeReplySlot = internalMutation({
 		}
 		const now = Date.now();
 		const day = localDayKey(now, await profileTimezone(ctx, profile));
-		const counted = identity.replyCount;
-		const used =
-			counted?.day === day && counted.emotionalProfileId === profile._id
+		const today = (row: Doc<"channel_identities">) => {
+			const counted = row.replyCount;
+			return counted?.day === day && counted.emotionalProfileId === profile._id
 				? counted.count
 				: 0;
+		};
+		// The cap is the account's: every chat it linked counts, not just this one.
+		let used = 0;
+		for (const row of await identitiesOf(ctx, profile._id, "telegram")) {
+			used += today(row);
+		}
 		const plus = await hasPremium(ctx, profile);
 		if (used < DAILY_REPLY_CAP[plus ? "plus" : "free"]) {
 			await ctx.db.patch("channel_identities", identity._id, {
-				replyCount: { count: used + 1, day, emotionalProfileId: profile._id },
+				replyCount: {
+					count: today(identity) + 1,
+					day,
+					emotionalProfileId: profile._id,
+				},
 			});
-			return { kind: "reply" as const };
+			return {
+				day,
+				emotionalProfileId: profile._id,
+				kind: "reply" as const,
+			};
 		}
 		if (args.inbound) {
 			await captureOutreach(ctx, "telegram_inbound", profile._id, {
@@ -491,13 +538,26 @@ export const takeReplySlot = internalMutation({
 	returns: v.union(v.null(), slotValidator),
 });
 
-/** Give back a slot whose reply never went out: a failure isn't a reply. */
+/**
+ * Give back a slot whose reply never went out: a failure isn't a reply. Only
+ * to the count that took it: not a later day's, nor another account's.
+ */
 export const returnReplySlot = internalMutation({
-	args: { identityId: v.id("channel_identities") },
-	handler: async (ctx, { identityId }) => {
+	args: {
+		day: v.string(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		identityId: v.id("channel_identities"),
+	},
+	handler: async (ctx, { day, emotionalProfileId, identityId }) => {
 		const identity = await ctx.db.get("channel_identities", identityId);
 		const counted = identity?.replyCount;
-		if (identity && counted && counted.count > 0) {
+		if (
+			identity &&
+			counted &&
+			counted.day === day &&
+			counted.emotionalProfileId === emotionalProfileId &&
+			counted.count > 0
+		) {
 			await ctx.db.patch("channel_identities", identityId, {
 				replyCount: { ...counted, count: counted.count - 1 },
 			});
@@ -515,6 +575,58 @@ const worse = (a: BurstLevel, b: BurstLevel): BurstLevel => {
 	const order: BurstLevel[] = ["none", "gentle", "elevated"];
 	return order.indexOf(a) >= order.indexOf(b) ? a : b;
 };
+
+/** One text fewer being screened: what to patch onto its chat. */
+function doneScreening(
+	identity: Doc<"channel_identities">
+): Pick<Doc<"channel_identities">, "screening"> {
+	const held = identity.screening;
+	return {
+		screening:
+			held && held.count > 1 && held.until > Date.now()
+				? { ...held, count: held.count - 1 }
+				: undefined,
+	};
+}
+
+/**
+ * A text is about to be screened: its chat's burst waits for it (up to
+ * `SCREEN_HOLD_MS`), so a slow check can't split one burst into two replies.
+ */
+export const noteScreening = internalMutation({
+	args: { identityId: v.id("channel_identities"), linkedAt: v.number() },
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		if (!isLinkOf(identity, args.linkedAt)) {
+			return null;
+		}
+		const now = Date.now();
+		const held = identity.screening;
+		const count = held && held.until > now ? held.count : 0;
+		await ctx.db.patch("channel_identities", identity._id, {
+			screening: { count: count + 1, until: now + SCREEN_HOLD_MS },
+		});
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** A screening that failed: its burst stops waiting for it. */
+export const endScreening = internalMutation({
+	args: { identityId: v.id("channel_identities") },
+	handler: async (ctx, { identityId }) => {
+		const identity = await ctx.db.get("channel_identities", identityId);
+		if (identity?.screening) {
+			await ctx.db.patch(
+				"channel_identities",
+				identityId,
+				doneScreening(identity)
+			);
+		}
+		return null;
+	},
+	returns: v.null(),
+});
 
 /**
  * Add a screened text to the chat's burst, move its reply to 6 s from now,
@@ -543,6 +655,7 @@ export const queueText = internalMutation({
 				: undefined;
 		const dueAt = args.receivedAt + BURST_WAIT_MS;
 		await ctx.db.patch("channel_identities", identity._id, {
+			...doneScreening(identity),
 			pendingBurst: {
 				dueAt,
 				level: waiting ? worse(waiting.level, args.level) : args.level,
@@ -568,7 +681,8 @@ export const queueText = internalMutation({
 
 /**
  * Take the burst whose reply is due at `dueAt`, once: null when a later
- * text moved it, it was already taken or dropped, or its link has changed.
+ * text moved it, it was already taken or dropped, or its link has changed;
+ * `waitUntil` while another text of the chat is still being screened.
  */
 export const takeBurst = internalMutation({
 	args: {
@@ -582,14 +696,23 @@ export const takeBurst = internalMutation({
 		if (!(identity && burst) || burst.dueAt !== args.dueAt) {
 			return null;
 		}
+		const now = Date.now();
+		const held = identity.screening;
+		if (held && held.count > 0 && held.until > now) {
+			return { waitUntil: Math.min(held.until, now + BURST_RECHECK_MS) };
+		}
 		await ctx.db.patch("channel_identities", identity._id, {
 			pendingBurst: undefined,
 		});
 		return isLinkOf(identity, args.linkedAt) && burst.linkedAt === args.linkedAt
-			? burst
+			? { burst }
 			: null;
 	},
-	returns: v.union(v.null(), pendingBurstValidator),
+	returns: v.union(
+		v.null(),
+		v.object({ burst: pendingBurstValidator }),
+		v.object({ waitUntil: v.number() })
+	),
 });
 
 /** The one reply to a burst, once it has waited 6 s after its last text. */
@@ -601,7 +724,7 @@ export const answerBurst = internalAction({
 		linkedAt: v.number(),
 	},
 	handler: async (ctx, args) => {
-		const burst = await ctx.runMutation(
+		const taken = await ctx.runMutation(
 			internal.outreach.telegram.reply.takeBurst,
 			{
 				dueAt: args.dueAt,
@@ -609,7 +732,19 @@ export const answerBurst = internalAction({
 				linkedAt: args.linkedAt,
 			}
 		);
+		if (!taken) {
+			return null;
+		}
+		const { burst, waitUntil } = taken;
+		// A text still being screened may join it: look again shortly.
 		if (!burst) {
+			if (waitUntil !== undefined) {
+				await ctx.scheduler.runAt(
+					waitUntil,
+					internal.outreach.telegram.reply.answerBurst,
+					args
+				);
+			}
 			return null;
 		}
 		const text = burst.texts.join("\n").slice(0, TEXT_MAX_CHARS);
@@ -707,8 +842,9 @@ export const recordCrisis = internalMutation({
 		if (!isLinkOf(identity, args.linkedAt)) {
 			return null;
 		}
-		if (identity.pendingBurst) {
+		if (identity.pendingBurst || identity.screening) {
 			await ctx.db.patch("channel_identities", identity._id, {
+				...doneScreening(identity),
 				pendingBurst: undefined,
 			});
 		}
@@ -817,12 +953,14 @@ async function sendReply(
 	ctx: ActionCtx,
 	job: ReplyJob,
 	text: string,
-	keyboard: Keyboard
+	keyboard: Keyboard,
+	/** When the reply began: a wipe after it means it carries old context. */
+	since?: number
 ): Promise<boolean> {
 	const { chatId, identityId, linkedAt } = job;
 	const current = await ctx.runQuery(
 		internal.outreach.telegram.reply.isCurrentLink,
-		{ identityId, linkedAt }
+		{ identityId, linkedAt, ...(since !== undefined && { since }) }
 	);
 	if (!current) {
 		return false;
@@ -969,8 +1107,22 @@ async function receiveText(
 	progress: Progress
 ): Promise<void> {
 	const { chatId, identityId, linkedAt } = job;
+	const since = Date.now();
+	// The chat's burst waits for this text from now, not once it's screened.
+	await ctx.runMutation(internal.outreach.telegram.reply.noteScreening, {
+		identityId,
+		linkedAt,
+	});
 	await typing(chatId);
-	const safety = await screen(trigger.text);
+	let safety: Awaited<ReturnType<typeof screen>>;
+	try {
+		safety = await screen(trigger.text);
+	} catch (error) {
+		await ctx.runMutation(internal.outreach.telegram.reply.endScreening, {
+			identityId,
+		});
+		throw error;
+	}
 	progress.support = safety.support;
 	// Crisis has its own path (#772): the fixed reply, never the model.
 	if (safety.level === "crisis") {
@@ -984,6 +1136,7 @@ async function receiveText(
 			cardId: trigger.reflectionCardId,
 			identityId,
 			linkedAt,
+			since,
 			text,
 		});
 	}
@@ -1023,7 +1176,10 @@ function capLine(line: CapLine) {
 	};
 }
 
-/** Take a slot, then write and send the reply, or the cap line past the cap. */
+/**
+ * Take a slot, then write and send the reply, or the cap line past the cap.
+ * A slot whose reply doesn't reach the person is given back.
+ */
 async function writeAndSend(
 	ctx: ActionCtx,
 	job: ReplyJob,
@@ -1031,9 +1187,11 @@ async function writeAndSend(
 	turn: Turn
 ): Promise<void> {
 	const { identityId, linkedAt } = job;
-	const send = async (text: string, keyboard: Keyboard) => {
+	// Anything cleared from the chat after this, the reply may not send or keep.
+	const since = Date.now();
+	const send = async (text: string, keyboard: Keyboard, from?: number) => {
 		progress.sent = true;
-		return await sendReply(ctx, job, text, keyboard);
+		return await sendReply(ctx, job, text, keyboard, from);
 	};
 	const slot = await ctx.runMutation(
 		internal.outreach.telegram.reply.takeReplySlot,
@@ -1054,51 +1212,61 @@ async function writeAndSend(
 		await send(text, keyboard);
 		return;
 	}
-
-	const context = await ctx.runQuery(
-		internal.outreach.telegram.reply.replyContext,
-		{
-			identityId,
-			linkedAt,
-			now: Date.now(),
-			...(turn.cardId && { cardId: turn.cardId }),
-		}
-	);
 	const giveBack = () =>
 		ctx.runMutation(internal.outreach.telegram.reply.returnReplySlot, {
+			day: slot.day,
+			emotionalProfileId: slot.emotionalProfileId,
 			identityId,
 		});
-	if (!context) {
-		await giveBack();
-		return;
-	}
+
 	const { open, support } = turn;
-	const written = await writeReply({
-		card: context.card,
-		memory: context.memory,
-		reach: context.reach,
-		recentCrisis: context.recentCrisis,
-		resources: support,
-		trigger: turn.trigger,
-		turns: context.turns satisfies ReplyTurn[],
-	});
+	let written: string | null;
+	try {
+		const context = await ctx.runQuery(
+			internal.outreach.telegram.reply.replyContext,
+			{
+				identityId,
+				linkedAt,
+				now: Date.now(),
+				...(turn.cardId && { cardId: turn.cardId }),
+			}
+		);
+		if (!context) {
+			await giveBack();
+			return;
+		}
+		written = await writeReply({
+			card: context.card,
+			memory: context.memory,
+			reach: context.reach,
+			recentCrisis: context.recentCrisis,
+			resources: support,
+			trigger: turn.trigger,
+			turns: context.turns satisfies ReplyTurn[],
+		});
+	} catch (error) {
+		await giveBack();
+		throw error;
+	}
 	if (written === null) {
 		await giveBack();
 		await send(REPLY_FAILED, keyboardOf({ open: true, support }));
 		return;
 	}
-	const sent = await send(written, keyboardOf({ open, support }));
-	if (sent) {
-		await ctx.runMutation(internal.outreach.telegram.reply.rememberTurns, {
-			identityId,
-			inbound: turn.trigger.kind,
-			linkedAt,
-			turns: [
-				{ role: "person", text: turn.person },
-				{ role: "xolace", text: written },
-			],
-		});
+	if (!(await send(written, keyboardOf({ open, support }), since))) {
+		await giveBack();
+		return;
 	}
+	await ctx.runMutation(internal.outreach.telegram.reply.rememberTurns, {
+		identityId,
+		inbound: turn.trigger.kind,
+		linkedAt,
+		since,
+		turns: [
+			{ role: "person", text: turn.person },
+			{ role: "xolace", text: written },
+		],
+	});
 }
 
 /** A tap's reflection window: Lighter opens one; any other answer none. */

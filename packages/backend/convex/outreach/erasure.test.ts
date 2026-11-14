@@ -23,6 +23,7 @@ import {
 	consents,
 	createLink,
 	DAY,
+	failNext,
 	forgetCalls,
 	HOUR,
 	identities,
@@ -207,6 +208,22 @@ describe("account deletion", () => {
 		);
 		expect(Math.max(...perCall)).toBeLessThanOrEqual(100);
 		expect(deletedIds()).toEqual(expect.arrayContaining(ids));
+	});
+
+	it("tries a batch again when Telegram fails it for a passing reason", async () => {
+		const { user } = await linked();
+		vi.spyOn(console, "error").mockImplementation(() => undefined);
+		failNext("deleteMessages", {
+			description: "Internal Server Error",
+			error_code: 500,
+		});
+
+		await purge(user);
+
+		expect(deletedIds()).toEqual([WELCOME_ID, WELCOME_ID]);
+		expect(sent("sendMessage").map((c) => c.params.text)).toEqual([
+			ACCOUNT_DELETED,
+		]);
 	});
 
 	it("sends no note to a chat it already unlinked", async () => {

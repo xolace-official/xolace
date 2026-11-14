@@ -47,6 +47,8 @@ export const PAYWALL_SURFACE_FEATURE: Record<
 	steadiness_numbers: "insights",
 	// No feature row for talks yet; the surface line below carries it.
 	talk_door: null,
+	// Telegram's daily reply cap sits with the other limits.
+	telegram_cap: "caps",
 	timeline_extended: "timeline",
 	week_intensity: "insights",
 };
@@ -65,4 +67,6 @@ export const PAYWALL_SURFACE_LINE: Partial<Record<PaywallSurface, string>> = {
 	// {name} is the companion's name (#601), filled in by the paywall screen.
 	talk_door:
 		"Xolace+ lets you talk it through out loud with {name}. When you finish, the whole talk becomes your mirror.",
+	telegram_cap:
+		"Xolace+ gives you more replies on Telegram each day, so you can keep writing back.",
 };

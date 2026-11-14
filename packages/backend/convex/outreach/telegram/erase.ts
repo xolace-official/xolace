@@ -29,6 +29,12 @@ import { sendLines } from "./lines";
 
 /** Telegram's limit on ids per `deleteMessages` call. */
 const DELETE_BATCH = 100;
+/** Tries at a batch Telegram failed for a passing reason (5xx, network). */
+const TRANSIENT_ATTEMPTS = 3;
+/** The wait before the next try, times the tries so far. */
+const TRANSIENT_BACKOFF_MS = 2 * SECOND_MS;
+/** Telegram's own server errors start here. */
+const SERVER_ERROR = 500;
 
 const chatValidator = v.object({
 	chatId: v.string(),
@@ -45,6 +51,8 @@ function cleared(
 ): Partial<Doc<"channel_identities">> {
 	const history = {
 		awaitingReflection: undefined,
+		// A reply already being written may not send or keep what was cleared.
+		historyClearedAt: Date.now(),
 		pendingBurst: undefined,
 		recentTurns: undefined,
 		sentMessages: undefined,
@@ -113,10 +121,26 @@ export async function eraseTelegramChats(
 	}
 }
 
-type Outcome = "done" | "gone" | { retryAfterMs: number };
+type Outcome =
+	| "done"
+	| "gone"
+	/** Wait, then go on from `left`; `transient` counts against the tries. */
+	| { retryAfterMs: number; transient: boolean };
 
-/** Delete one chat's messages, a batch per call. */
-async function deleteFrom(chat: Chat): Promise<{
+/** A failure that may pass: Telegram's own server error, or no answer. */
+const isTransient = (error: unknown) =>
+	!(error instanceof TelegramApiError) ||
+	error.errorCode === undefined ||
+	error.errorCode >= SERVER_ERROR;
+
+/**
+ * Delete one chat's messages, a batch per call. A batch that failed for a
+ * passing reason is kept for another try while `canRetry`.
+ */
+async function deleteFrom(
+	chat: Chat,
+	canRetry: boolean
+): Promise<{
 	left: string[];
 	outcome: Outcome;
 }> {
@@ -133,7 +157,10 @@ async function deleteFrom(chat: Chat): Promise<{
 				if (error.errorCode === TOO_MANY_REQUESTS) {
 					return {
 						left,
-						outcome: { retryAfterMs: (error.retryAfter ?? 1) * SECOND_MS },
+						outcome: {
+							retryAfterMs: (error.retryAfter ?? 1) * SECOND_MS,
+							transient: false,
+						},
 					};
 				}
 				// Blocked, or the chat is gone: nothing here to delete or tell.
@@ -141,8 +168,15 @@ async function deleteFrom(chat: Chat): Promise<{
 					return { left: [], outcome: "gone" };
 				}
 			}
+			if (canRetry && isTransient(error)) {
+				return {
+					left,
+					outcome: { retryAfterMs: TRANSIENT_BACKOFF_MS, transient: true },
+				};
+			}
 			// Too old or already gone: Telegram skips what it can't delete, so
-			// anything else is logged and the next batch still goes.
+			// anything else (or a passing failure out of tries) is logged and the
+			// next batch still goes.
 			console.error("Telegram deleteMessages failed", error);
 		}
 		left = left.slice(DELETE_BATCH);
@@ -150,14 +184,26 @@ async function deleteFrom(chat: Chat): Promise<{
 	return { left, outcome: "done" };
 }
 
-async function erase(ctx: ActionCtx, chats: readonly Chat[]): Promise<void> {
+async function erase(
+	ctx: ActionCtx,
+	chats: readonly Chat[],
+	attempt: number
+): Promise<void> {
 	for (const [index, chat] of chats.entries()) {
-		const { left, outcome } = await deleteFrom(chat);
+		const { left, outcome } = await deleteFrom(
+			chat,
+			attempt < TRANSIENT_ATTEMPTS
+		);
 		if (typeof outcome === "object") {
+			// A passing failure counts against the tries; a rate limit doesn't.
+			const next = outcome.transient ? attempt + 1 : attempt;
 			await ctx.scheduler.runAfter(
-				outcome.retryAfterMs,
+				outcome.retryAfterMs * (outcome.transient ? attempt : 1),
 				internal.outreach.telegram.erase.eraseChats,
-				{ chats: [{ ...chat, messageIds: left }, ...chats.slice(index + 1)] }
+				{
+					attempt: next,
+					chats: [{ ...chat, messageIds: left }, ...chats.slice(index + 1)],
+				}
 			);
 			return;
 		}
@@ -169,9 +215,13 @@ async function erase(ctx: ActionCtx, chats: readonly Chat[]): Promise<void> {
 }
 
 export const eraseChats = internalAction({
-	args: { chats: v.array(chatValidator) },
-	handler: async (ctx, { chats }) => {
-		await erase(ctx, chats);
+	args: {
+		/** Tries so far at a batch that failed for a passing reason; 1 first. */
+		attempt: v.optional(v.number()),
+		chats: v.array(chatValidator),
+	},
+	handler: async (ctx, { attempt, chats }) => {
+		await erase(ctx, chats, attempt ?? 1);
 		return null;
 	},
 	returns: v.null(),

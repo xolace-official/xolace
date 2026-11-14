@@ -41,7 +41,9 @@ export type PaywallSurface =
 	// A free person's tap on Reflect home's talk door (#594).
 	| "talk_door"
 	// The Telegram card on "Reach me on…" when Telegram needs Xolace+ (#776).
-	| "reach_telegram";
+	| "reach_telegram"
+	// Get Xolace+ on Telegram's reply-cap line, through the bot's app link (#771).
+	| "telegram_cap";
 
 /** `sessionId` rides only with the `kindling` surface (`paths.requestKindling`). */
 type PaywallState = {
