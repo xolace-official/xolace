@@ -9,6 +9,7 @@ import {
 	type QueryCtx,
 } from "../../_generated/server";
 import { checkWordsSafety } from "../../ai/intake/read";
+import type { TalkPeak } from "../../ai/safeguard";
 import { writeReply } from "../../ai/telegram/reply";
 import type {
 	ReplyCard,
@@ -16,16 +17,31 @@ import type {
 	ReplyTurn,
 	TapAnswer,
 } from "../../ai/telegram/replyPrompt";
+import { raiseEscalation, sourceEventSince } from "../../escalation";
 import {
 	REFLECTION_MAX_LENGTH,
 	resolveCardCore,
 } from "../../followUps/resolve";
+import {
+	type CrisisContacts,
+	crisisContactsFor,
+	IASP_DIRECTORY_URL,
+	type Resource,
+} from "../../lib/crisisResources";
 import { hasPremium } from "../../lib/premium";
-import { domainValidator, reachValidator } from "../../lib/validators";
+import {
+	domainValidator,
+	reachValidator,
+	triggerTypeValidator,
+} from "../../lib/validators";
 import { localDayKey } from "../../streaks/activityLog";
 import { profileTimezone } from "../../streaks/state";
 import { talkPreload } from "../../talk/remember";
-import { escalatedRecently, openEscalationCard } from "../router";
+import {
+	ESCALATION_HOLD_MS,
+	escalatedRecently,
+	openEscalationCard,
+} from "../router";
 import {
 	type BurstLevel,
 	burstLevelValidator,
@@ -39,8 +55,10 @@ import {
 	ANSWER_BUTTONS,
 	CAP_REPLY,
 	CAP_UPSELL,
-	CRISIS_HOLDING_LINE,
+	crisisReply,
+	FIND_A_HELPLINE_BUTTON,
 	GET_PLUS_BUTTON,
+	MORE_SUPPORT_BUTTON,
 	OPEN_XOLACE_BUTTON,
 	REPLY_FAILED,
 	SUPPORT_RESOURCES_BUTTON,
@@ -95,6 +113,8 @@ export const replyJobValidator = v.object({
 			kind: v.literal("tap"),
 		}),
 		v.object({
+			/** The update it came in on, for a crisis's escalation event (#772). */
+			inboundEventId: v.optional(v.id("inbound_events")),
 			kind: v.literal("text"),
 			/** When the update was claimed: a burst waits from here (#771). */
 			receivedAt: v.optional(v.number()),
@@ -126,6 +146,8 @@ const contextValidator = v.object({
 	),
 	memory: v.string(),
 	reach: reachValidator,
+	/** A crisis came in on Telegram in the last 72 h (#772). */
+	recentCrisis: v.boolean(),
 	turns: v.array(turnValidator),
 });
 
@@ -221,6 +243,13 @@ export const replyContext = internalQuery({
 			card: card ? asReplyCard(card) : null,
 			memory: (await talkPreload(ctx, profile, now)).talkMemory,
 			reach: prefs?.notifications?.reach ?? "warm",
+			recentCrisis:
+				(await sourceEventSince(
+					ctx,
+					profile._id,
+					"telegram",
+					now - ESCALATION_HOLD_MS
+				)) !== null,
 			turns: recentTurns(identity, now).map(({ role, text }) => ({
 				role,
 				text,
@@ -515,21 +544,6 @@ export const queueText = internalMutation({
 	returns: v.null(),
 });
 
-/** Drop a waiting burst: a crisis text answers at once and ends it. */
-export const dropBurst = internalMutation({
-	args: { identityId: v.id("channel_identities") },
-	handler: async (ctx, { identityId }) => {
-		const identity = await ctx.db.get("channel_identities", identityId);
-		if (identity?.pendingBurst) {
-			await ctx.db.patch("channel_identities", identityId, {
-				pendingBurst: undefined,
-			});
-		}
-		return null;
-	},
-	returns: v.null(),
-});
-
 /**
  * Take the burst whose reply is due at `dueAt`, once: null when a later
  * text moved it, it was already taken or dropped, or its link has changed.
@@ -599,6 +613,157 @@ export const answerBurst = internalAction({
 	},
 	returns: v.null(),
 });
+
+// ---------------------------------------------------------------------------
+// Crisis (#772)
+// ---------------------------------------------------------------------------
+
+/** What the safeguard said raised the crisis: categories only, never words. */
+const crisisTriggerValidator = v.object({
+	triggerConfidence: v.number(),
+	triggerEvidence: v.string(),
+	triggerType: triggerTypeValidator,
+});
+
+/** A crisis verdict that came without its trigger still escalates. */
+const UNKNOWN_TRIGGER = {
+	triggerConfidence: 0,
+	triggerEvidence: "Safeguard crisis verdict without a named trigger.",
+	triggerType: "implicit_risk_language",
+} as const;
+
+const crisisTriggerOf = (peak: TalkPeak | undefined) =>
+	peak
+		? {
+				triggerConfidence: peak.triggerConfidence,
+				triggerEvidence: peak.triggerEvidence,
+				triggerType: peak.triggerType,
+			}
+		: UNKNOWN_TRIGGER;
+
+/** What the crisis reply names, as the event records it. */
+function presented(contacts: CrisisContacts | null): Resource[] {
+	if (!contacts) {
+		return [
+			{
+				label: FIND_A_HELPLINE_BUTTON,
+				priority: 1,
+				source: "online_resource",
+				type: "url",
+				value: IASP_DIRECTORY_URL,
+			},
+		];
+	}
+	return [
+		{
+			label: "Emergency number",
+			priority: 1,
+			source: "crisis_line",
+			type: "phone",
+			value: contacts.emergencyNumber,
+		},
+		...contacts.helplines,
+	];
+}
+
+/**
+ * A crisis text, in one transaction: end any waiting burst, mark an open
+ * card escalation-derived, and write the escalation event (one per open
+ * card, else one per day), which starts the router's 72 h hold. Returns the
+ * chat's country for the reply, or null once the link is no longer the one
+ * the text came in on.
+ */
+export const recordCrisis = internalMutation({
+	args: {
+		identityId: v.id("channel_identities"),
+		inboundEventId: v.optional(v.id("inbound_events")),
+		linkedAt: v.number(),
+		trigger: crisisTriggerValidator,
+	},
+	handler: async (ctx, args) => {
+		const identity = await ctx.db.get("channel_identities", args.identityId);
+		if (!isLinkOf(identity, args.linkedAt)) {
+			return null;
+		}
+		if (identity.pendingBurst) {
+			await ctx.db.patch("channel_identities", identity._id, {
+				pendingBurst: undefined,
+			});
+		}
+		const card = await cardInView(ctx, identity);
+		const openCard =
+			isCardOpen(card) &&
+			card?.emotionalProfileId === identity.emotionalProfileId
+				? card
+				: null;
+		if (openCard && !openCard.escalationDerived) {
+			await ctx.db.patch("follow_up_cards", openCard._id, {
+				escalationDerived: true,
+			});
+		}
+		await raiseEscalation(ctx, {
+			actionTaken: "crisis_line_presented",
+			emotionalProfileId: identity.emotionalProfileId,
+			resourcesPresented: presented(crisisContactsFor(identity.country)),
+			source: "telegram",
+			...args.trigger,
+			...(args.inboundEventId && { inboundEventId: args.inboundEventId }),
+			...(openCard && { followUpCardId: openCard._id }),
+		});
+		return { country: identity.country ?? null };
+	},
+	returns: v.union(
+		v.null(),
+		v.object({ country: v.union(v.null(), v.string()) })
+	),
+});
+
+/**
+ * The crisis reply's buttons: the app's crisis screen, or IASP's directory
+ * when the country is unknown, then Open Xolace.
+ */
+const crisisKeyboard = (contacts: CrisisContacts | null): Keyboard => [
+	[
+		contacts
+			? { text: MORE_SUPPORT_BUTTON, url: appLink("support") }
+			: { text: FIND_A_HELPLINE_BUTTON, url: IASP_DIRECTORY_URL },
+	],
+	[{ text: OPEN_XOLACE_BUTTON, url: appLink("app") }],
+];
+
+/**
+ * Answer a crisis text at once with the fixed reply, never the model. The
+ * reply goes even if recording the crisis fails: the person comes first.
+ */
+async function answerCrisis(
+	ctx: ActionCtx,
+	job: ReplyJob,
+	trigger: Extract<ReplyJob["trigger"], { kind: "text" }>,
+	peak: TalkPeak | undefined
+): Promise<void> {
+	let country: string | null = null;
+	try {
+		const recorded = await ctx.runMutation(
+			internal.outreach.telegram.reply.recordCrisis,
+			{
+				identityId: job.identityId,
+				linkedAt: job.linkedAt,
+				trigger: crisisTriggerOf(peak),
+				...(trigger.inboundEventId && {
+					inboundEventId: trigger.inboundEventId,
+				}),
+			}
+		);
+		if (!recorded) {
+			return;
+		}
+		country = recorded.country;
+	} catch (error) {
+		console.error("[telegram] recording a crisis failed", error);
+	}
+	const contacts = crisisContactsFor(country);
+	await sendReply(ctx, job, crisisReply(contacts), crisisKeyboard(contacts));
+}
 
 // ---------------------------------------------------------------------------
 // Replying
@@ -681,6 +846,7 @@ async function screen(text: string) {
 		// Only these, with both providers answering, let a text be kept.
 		keepable: safe && !verdict.unavailable,
 		level: verdict.level,
+		peak: verdict.peak,
 		// Elevated, or no safeguard at all: resources ride with the reply.
 		support: !safe || verdict.unavailable,
 	};
@@ -781,18 +947,10 @@ async function receiveText(
 	await typing(chatId);
 	const safety = await screen(trigger.text);
 	progress.support = safety.support;
-	// Crisis waits for its own path (#772): the fixed line and resources.
+	// Crisis has its own path (#772): the fixed reply, never the model.
 	if (safety.level === "crisis") {
-		await ctx.runMutation(internal.outreach.telegram.reply.dropBurst, {
-			identityId,
-		});
 		progress.sent = true;
-		await sendReply(
-			ctx,
-			job,
-			CRISIS_HOLDING_LINE,
-			keyboardOf({ open: true, support: true })
-		);
+		await answerCrisis(ctx, job, trigger, safety.peak);
 		return;
 	}
 	const text = trigger.text.slice(0, TEXT_MAX_CHARS);
@@ -893,6 +1051,7 @@ async function writeAndSend(
 		card: context.card,
 		memory: context.memory,
 		reach: context.reach,
+		recentCrisis: context.recentCrisis,
 		resources: support,
 		trigger: turn.trigger,
 		turns: context.turns satisfies ReplyTurn[],

@@ -4,7 +4,7 @@
  * the inbound pool, the safeguard and the reply writer, with the model and
  * moderation stubbed. What can go wrong: a reply without `protect_content`;
  * elevated text or a safeguard outage without Support resources; a crisis
- * text answered by the model; a text other than the first safe one inside a
+ * text answered by the model (its own path is #772, `crisis.test.ts`); a text other than the first safe one inside a
  * Lighter's window saved as what helped; a reply that writes into sessions,
  * memory or Understanding; a model failure that sends nothing.
  */
@@ -17,6 +17,7 @@ import {
 	MODERATION_UNAVAILABLE,
 	type ModerationResult,
 } from "../../ai/providers/moderation";
+import { crisisContactsFor } from "../../lib/crisisResources";
 import { seedSession } from "../../test/fixtures.helpers";
 import { asNewUser, type SeededUser } from "../../test/harness.helpers";
 import { aggregatesMock, revenuecatMock } from "../../test/mocks.helpers";
@@ -28,7 +29,9 @@ import {
 	ANSWER_BUTTONS,
 	CAP_REPLY,
 	CAP_UPSELL,
+	crisisReply,
 	GET_PLUS_BUTTON,
+	MORE_SUPPORT_BUTTON,
 	OPEN_XOLACE_BUTTON,
 	REPLY_FAILED,
 	SUPPORT_RESOURCES_BUTTON,
@@ -363,7 +366,7 @@ describe("a reply to free text", () => {
 		expect(buttonTexts()).toEqual([SUPPORT_RESOURCES_BUTTON]);
 	});
 
-	it("sends the fixed line with resources at crisis, and asks no model", async () => {
+	it("sends the fixed crisis reply at crisis, and asks no model", async () => {
 		const { write } = await checkedIn();
 
 		await write("I want to end my life");
@@ -371,12 +374,9 @@ describe("a reply to free text", () => {
 		expect(stub.asked).toHaveLength(0);
 		expect(lastReply()?.params).toMatchObject({
 			protect_content: true,
-			text: REPLY_FAILED,
+			text: crisisReply(crisisContactsFor("GH")),
 		});
-		expect(buttonTexts()).toEqual([
-			SUPPORT_RESOURCES_BUTTON,
-			OPEN_XOLACE_BUTTON,
-		]);
+		expect(buttonTexts()).toEqual([MORE_SUPPORT_BUTTON, OPEN_XOLACE_BUTTON]);
 	});
 
 	it("sends the fixed failure line and Open Xolace when the model fails", async () => {
@@ -425,8 +425,7 @@ describe("a reply to free text", () => {
 		await write(`${"Long day at work. ".repeat(150)}I want to end my life`);
 
 		expect(stub.asked).toHaveLength(0);
-		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
-		expect(buttonTexts()).toContain(SUPPORT_RESOURCES_BUTTON);
+		expect(lastReply()?.params.text).toBe(crisisReply(crisisContactsFor("GH")));
 	});
 
 	it("sends nothing when the link ends while the reply is written", async () => {
@@ -801,7 +800,7 @@ describe("a burst of texts", () => {
 
 		expect(stub.asked).toHaveLength(0);
 		expect(sentMessages()).toHaveLength(1);
-		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
+		expect(lastReply()?.params.text).toBe(crisisReply(crisisContactsFor("GH")));
 		expect((await identities(user))[0]?.pendingBurst).toBeUndefined();
 	});
 

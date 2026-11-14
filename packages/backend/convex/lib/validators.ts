@@ -155,6 +155,12 @@ export const talkIssueValidator = v.object({
 	seq: v.optional(v.number()),
 });
 
+/** Where an escalation was raised (#772). */
+export const escalationSourceValidator = v.union(
+	v.literal("session"),
+	v.literal("telegram")
+);
+
 export const actionTakenValidator = v.union(
 	v.literal("resources_shown"),
 	v.literal("warm_handoff_offered"),

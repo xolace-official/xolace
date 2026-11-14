@@ -208,6 +208,7 @@ export const claimUpdate = internalMutation({
 				identityId: identity._id,
 				linkedAt: identity.linkedAt,
 				trigger: {
+					inboundEventId: eventId,
 					kind: "text",
 					receivedAt: now,
 					text,

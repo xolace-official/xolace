@@ -14,7 +14,7 @@ import type { Id } from "../../_generated/dataModel";
 import { action, internalQuery } from "../../_generated/server";
 import { requireAuth } from "../../lib/auth";
 import { rateLimiter } from "../../lib/rateLimits";
-import { phrasePeak } from "../../talk/safety";
+import { peakOf, phrasePeak } from "../../talk/safety";
 import { buildClassifierPrompt } from "../prompts/classifier";
 import {
 	CLASSIFIER_MODEL,
@@ -30,6 +30,7 @@ import {
 	evaluateSafeguard,
 	levelAbove,
 	SUPPORT_RESOURCES,
+	type TalkPeak,
 	UNCLASSIFIED,
 } from "../safeguard";
 import type { ReaderPrompt } from "./prompt";
@@ -67,13 +68,14 @@ export const readerProfileId = internalQuery({
 });
 
 /** Talk's deterministic phrase floor (#599) as a verdict: no model, no budget. */
-async function phraseFloor(words: string): Promise<SafetyVerdict> {
+async function phraseFloor(words: string): Promise<RaisedVerdict> {
 	const phrase = phrasePeak(words);
 	if (!phrase) {
 		return { level: "none", resources: [] };
 	}
 	return {
 		level: phrase.level,
+		peak: phrase,
 		resources: phrase.level === "crisis" ? CRISIS_RESOURCES : SUPPORT_RESOURCES,
 	};
 }
@@ -109,8 +111,13 @@ async function within<T>(
 	}
 }
 
-/** A verdict, and whether neither provider answered (moderation and classifier both failed). */
-export type WordsVerdict = SafetyVerdict & { unavailable: boolean };
+/**
+ * A verdict, and whether neither provider answered (moderation and classifier
+ * both failed). `peak` is what raised an elevated or crisis level, for an
+ * escalation event (#772): categories only, never their words.
+ */
+type RaisedVerdict = SafetyVerdict & { peak?: TalkPeak };
+export type WordsVerdict = RaisedVerdict & { unavailable: boolean };
 
 /**
  * Moderation and the classifier through the safeguard engine. Never rejects, and
@@ -150,13 +157,16 @@ async function engineVerdict(words: string): Promise<WordsVerdict> {
 		moderation === MODERATION_UNAVAILABLE && classification === UNCLASSIFIED;
 	const verdict = evaluateSafeguard(classification, moderation, []);
 	// A content-policy rejection turns a mirror away; here it just means no escalation.
-	return verdict.shouldReject
-		? { level: "none", resources: [], unavailable }
-		: {
-				level: verdict.level,
-				resources: verdict.resourcesPresented,
-				unavailable,
-			};
+	if (verdict.shouldReject) {
+		return { level: "none", resources: [], unavailable };
+	}
+	const peak = peakOf(verdict);
+	return {
+		level: verdict.level,
+		resources: verdict.resourcesPresented,
+		unavailable,
+		...(peak && { peak }),
+	};
 }
 
 /**

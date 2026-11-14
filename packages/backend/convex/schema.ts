@@ -7,6 +7,7 @@ import {
 	chatModerationCategoryValidator,
 	conversationRoleValidator,
 	domainValidator,
+	escalationSourceValidator,
 	insightFeatureValidator,
 	intakeRowAnswerValidators,
 	licenceValidator,
@@ -957,6 +958,10 @@ export default defineSchema({
 		createdAt: v.number(),
 		// Optional: stripped during account deletion anonymization.
 		emotionalProfileId: v.optional(v.id("emotional_profiles")),
+		// The follow-up open when a channel crisis came in (#772).
+		followUpCardId: v.optional(v.id("follow_up_cards")),
+		// The inbound update a channel crisis came in on (#772).
+		inboundEventId: v.optional(v.id("inbound_events")),
 
 		// Which specific resources were presented.
 		// Accepts both legacy string entries and structured Resource objects.
@@ -967,7 +972,11 @@ export default defineSchema({
 		// For safety team oversight.
 		reviewedByHuman: v.boolean(),
 		reviewerNotes: v.optional(v.string()),
-		sessionId: v.id("sessions"),
+		// The session that escalated. Absent for a channel message (#772).
+		sessionId: v.optional(v.id("sessions")),
+
+		// Where the crisis was raised. Absent = "session" (rows before #772).
+		source: v.optional(escalationSourceValidator),
 
 		// 0.0-1.0. AI's confidence in the risk assessment.
 		triggerConfidence: v.number(),
@@ -1001,6 +1010,9 @@ export default defineSchema({
 
 		// Lookup all events for a session.
 		.index("by_session", ["sessionId"])
+
+		// One channel crisis event per open follow-up (#772).
+		.index("by_card", ["followUpCardId"])
 
 		// Unreviewed events queue.
 		.index("by_review_status", ["reviewedByHuman", "createdAt"])

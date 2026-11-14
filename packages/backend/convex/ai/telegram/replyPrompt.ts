@@ -39,6 +39,8 @@ export type ReplyInput = {
 	/** Talk's memory preload, read-only (rules included; memory off says so). */
 	memory: string;
 	reach: Reach;
+	/** A crisis came in on Telegram in the last 72 h (#772). */
+	recentCrisis?: boolean;
 	/** Whether Support resources ride under the reply as a button. */
 	resources: boolean;
 	trigger: ReplyTrigger;
@@ -110,6 +112,9 @@ const RESOURCES_LINE =
 	"A Support resources button sits under your reply. You may say support is right there, below.";
 const NO_RESOURCES_LINE = "There is no support button under this reply.";
 
+const RECENT_CRISIS_LINE =
+	"In the last few days they wrote something here that showed they may be in crisis. Xolace answered with crisis helplines, not a reply. Be steady and gentle: don't make them explain it again, and don't act as if it never happened.";
+
 const domainName = (domain: Domain) => DOMAIN_LABELS[domain].toLowerCase();
 
 function cardLines(card: ReplyCard | null): string {
@@ -158,6 +163,7 @@ export function buildReplyPrompt(input: ReplyInput): ReplyPrompt {
 		.join("\n\n");
 	const user = [
 		cardLines(input.card),
+		...(input.recentCrisis ? [RECENT_CRISIS_LINE] : []),
 		`Earlier in this chat, oldest first:\n${turnLines(input.turns)}`,
 		triggerLines(input.trigger),
 		"Write the reply now: only the message.",

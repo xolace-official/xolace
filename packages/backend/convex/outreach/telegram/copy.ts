@@ -2,6 +2,7 @@ import {
 	ACUTE_NUDGE_BODY,
 	fallbackFollowUpCard,
 } from "../../ai/prompts/followUpCardWriter";
+import type { CrisisContacts } from "../../lib/crisisResources";
 import type { FollowUpTier } from "../validators";
 import { DAILY_REPLY_CAP } from "./caps";
 
@@ -117,11 +118,36 @@ export const ALREADY_ANSWERED_TOAST = "Already answered";
 export const REPLY_FAILED =
 	"I couldn't reply just now — I'm still here in Xolace.";
 
+// ---------------------------------------------------------------------------
+// Crisis (#772)
+// ---------------------------------------------------------------------------
+
 /**
- * A crisis text's reply until the crisis path lands (#772): no model, the
- * failure line, with Support resources and Open Xolace.
+ * The fixed reply to a crisis text, never the model: the country's emergency
+ * number and priority-1 helplines from the shared list the app's crisis
+ * screen reads, so the bot and the app never give two different numbers.
+ * Null contacts (country unknown) point to the local emergency number; the
+ * Find a helpline button carries the rest.
  */
-export const CRISIS_HOLDING_LINE = REPLY_FAILED;
+export function crisisReply(contacts: CrisisContacts | null): string {
+	const help = contacts
+		? [
+				`If you're in danger right now, call ${contacts.emergencyNumber}.`,
+				...contacts.helplines.map((h) => `${h.label}: ${h.value}`),
+			]
+		: ["If you're in danger right now, call your local emergency number."];
+	return [
+		"I'm really glad you told me.",
+		help.join("\n"),
+		"I'm still here, and so is Xolace.",
+	].join("\n\n");
+}
+
+/** Opens the app's crisis resources screen, `from=telegram`. */
+export const MORE_SUPPORT_BUTTON = "More support options";
+
+/** IASP's directory, in place of More support options when the country is unknown. */
+export const FIND_A_HELPLINE_BUTTON = "Find a helpline";
 
 // ---------------------------------------------------------------------------
 // Reply caps (#771)
