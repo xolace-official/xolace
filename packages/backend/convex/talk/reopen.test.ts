@@ -184,7 +184,7 @@ describe("talk.reopen.start (#604)", () => {
 			triggerType: "explicit_crisis_language" as const,
 		};
 		const eventId = await user.root.mutation(
-			internal.escalation.create,
+			internal.escalation.events.create,
 			escalation
 		);
 
@@ -232,7 +232,7 @@ describe("talk.reopen.start (#604)", () => {
 			await user.t.query(api.sessionTurns.listBySession, { sessionId })
 		).toEqual([]);
 		expect(
-			await user.root.mutation(internal.escalation.create, escalation)
+			await user.root.mutation(internal.escalation.events.create, escalation)
 		).toBe(eventId);
 
 		// Its webhook settles its own reservation; a redelivery of the first changes nothing.

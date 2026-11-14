@@ -258,20 +258,23 @@ describe("escalation.create", () => {
 		const sessionId = await seedSession(user.root, user.profileId);
 		const before = (await readSession(user, sessionId)) as Doc<"sessions">;
 
-		const eventId = await user.root.mutation(internal.escalation.create, {
-			emotionalProfileId: user.profileId,
-			sessionId,
-			...event,
-			resourcesPresented: [
-				{
-					label: "Crisis line",
-					priority: 1,
-					source: "crisis_line",
-					type: "phone",
-					value: "988",
-				},
-			],
-		});
+		const eventId = await user.root.mutation(
+			internal.escalation.events.create,
+			{
+				emotionalProfileId: user.profileId,
+				sessionId,
+				...event,
+				resourcesPresented: [
+					{
+						label: "Crisis line",
+						priority: 1,
+						source: "crisis_line",
+						type: "phone",
+						value: "988",
+					},
+				],
+			}
+		);
 
 		const stored = await user.root.run((ctx) =>
 			ctx.db.get("escalation_events", eventId)
@@ -293,12 +296,15 @@ describe("escalation.create", () => {
 		const user = await asNewUser();
 		const sessionId = await seedSession(user.root, user.profileId);
 
-		const eventId = await user.root.mutation(internal.escalation.create, {
-			emotionalProfileId: user.profileId,
-			sessionId,
-			...event,
-			resourcesPresented: ["988 Suicide & Crisis Lifeline"],
-		});
+		const eventId = await user.root.mutation(
+			internal.escalation.events.create,
+			{
+				emotionalProfileId: user.profileId,
+				sessionId,
+				...event,
+				resourcesPresented: ["988 Suicide & Crisis Lifeline"],
+			}
+		);
 
 		const stored = await user.root.run((ctx) =>
 			ctx.db.get("escalation_events", eventId)

@@ -141,6 +141,8 @@ import type * as emotionalMetadata from "../emotionalMetadata.js";
 import type * as episodicImportance from "../episodicImportance.js";
 import type * as episodicMemory from "../episodicMemory.js";
 import type * as escalation from "../escalation.js";
+import type * as escalation_events from "../escalation/events.js";
+import type * as escalation_response from "../escalation/response.js";
 import type * as evals from "../evals.js";
 import type * as exercises from "../exercises.js";
 import type * as exercises_embed from "../exercises/embed.js";
@@ -447,6 +449,8 @@ declare const fullApi: ApiFromModules<{
   episodicImportance: typeof episodicImportance;
   episodicMemory: typeof episodicMemory;
   escalation: typeof escalation;
+  "escalation/events": typeof escalation_events;
+  "escalation/response": typeof escalation_response;
   evals: typeof evals;
   exercises: typeof exercises;
   "exercises/embed": typeof exercises_embed;

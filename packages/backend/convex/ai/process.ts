@@ -454,7 +454,7 @@ export const generateMirror = internalAction({
 
 			// Create escalation event if needed
 			if (plan.isEscalation && safeguard.triggerType) {
-				await ctx.runMutation(internal.escalation.create, {
+				await ctx.runMutation(internal.escalation.events.create, {
 					actionTaken: safeguard.actionTaken,
 					emotionalProfileId: session.emotionalProfileId as ReturnType<
 						typeof v.id<"emotional_profiles">

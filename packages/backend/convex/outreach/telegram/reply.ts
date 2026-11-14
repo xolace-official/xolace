@@ -17,7 +17,7 @@ import type {
 	ReplyTurn,
 	TapAnswer,
 } from "../../ai/telegram/replyPrompt";
-import { raiseEscalation, sourceEventSince } from "../../escalation";
+import { raiseEscalation, sourceEventSince } from "../../escalation/events";
 import {
 	REFLECTION_MAX_LENGTH,
 	resolveCardCore,
