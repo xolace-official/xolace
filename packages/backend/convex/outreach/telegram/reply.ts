@@ -784,7 +784,8 @@ export const answerBurst = internalAction({
 			return null;
 		}
 		const whole = burst.texts.join("\n");
-		const text = whole.slice(0, TEXT_MAX_CHARS);
+		// Past what fits, the newest words: they're what the reply answers.
+		const text = whole.slice(-TEXT_MAX_CHARS);
 		const trigger = { kind: "text" as const, text };
 		const job: ReplyJob = {
 			chatId: args.chatId,

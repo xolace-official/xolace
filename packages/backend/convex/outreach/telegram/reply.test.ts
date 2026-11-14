@@ -37,7 +37,7 @@ import {
 	SUPPORT_RESOURCES_BUTTON,
 } from "./copy";
 import { eraseTelegramChats } from "./erase";
-import { REFLECTION_WINDOW_MS } from "./reply";
+import { REFLECTION_WINDOW_MS, TEXT_MAX_CHARS } from "./reply";
 import {
 	backend,
 	beforeNext,
@@ -1233,6 +1233,17 @@ describe("a burst of texts", () => {
 
 		expect(sentMessages()).toHaveLength(1);
 		expect(stub.screened).toBe(1);
+	});
+
+	it("keeps its newest words for the model when it runs long", async () => {
+		const { user, writeQuickly } = await checkedIn();
+
+		await writeQuickly("a".repeat(TEXT_MAX_CHARS), 2 * SECOND);
+		await writeQuickly("The newest thing I said", 2 * SECOND);
+		await processSoon(user.root);
+
+		expect(stub.asked).toHaveLength(1);
+		expect(stub.asked[0]?.user).toContain("The newest thing I said");
 	});
 
 	it("drops a waiting burst when the link ends", async () => {
