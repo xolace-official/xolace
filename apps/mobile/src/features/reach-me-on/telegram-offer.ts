@@ -32,7 +32,7 @@ export function offerMoment(ctx: Omit<OfferContext, "channels">): boolean {
 /**
  * The one-time "Want the next check-in on Telegram?" offer (#777): only after a
  * lighter or still-with-it answer, never on an acute or crisis card, and only
- * while Telegram is offered, open to this person and not linked.
+ * while Telegram is offered, open to this person and never linked.
  */
 export function telegramOfferVisible(ctx: OfferContext): boolean {
 	if (!offerMoment(ctx)) {
@@ -40,6 +40,13 @@ export function telegramOfferVisible(ctx: OfferContext): boolean {
 	}
 	const telegram = ctx.channels?.find((c) => c.channel === "telegram");
 	// Only someone who never linked: a past link (unlinked, /stop, blocked)
-	// reads as disconnected, and it was often a choice.
-	return telegram?.status === "not_linked" && telegram.available;
+	// reads as disconnected, and it was often a choice. 30 days on the row is
+	// purged and reads not_linked, so `everLinked` decides; absent (an older
+	// backend) counts as linked, since missing an offer costs less than
+	// re-offering to someone who left.
+	return (
+		telegram?.status === "not_linked" &&
+		telegram.available &&
+		telegram.everLinked === false
+	);
 }
