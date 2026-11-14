@@ -126,9 +126,10 @@ function failedAttempt(error: ChannelError): Attempt {
 }
 
 /**
- * Why a queued delivery may no longer go, if it may not. A nudge is about its
- * follow-up: once that is answered, dismissed or gone, nothing is left to
- * nudge (a deferral or a retry can outlive it). A quiet-window deferral can
+ * Why a queued delivery may no longer go, if it may not. A nudge invites the
+ * user back to its follow-up: once they're back (the card is ready or shown)
+ * or it's answered, dismissed or gone, nothing is left to nudge (a deferral
+ * or a retry can outlive it). A quiet-window deferral can
  * sit for hours, and a deletion request or a crisis in that time still stops
  * it: gates 2 and 3 run again on its first try.
  */
@@ -137,11 +138,15 @@ async function heldSince(
 	delivery: Doc<"outreach_deliveries">,
 	outreach: Doc<"outreach">
 ): Promise<SuppressedReason | null> {
-	if (
-		outreach.followUpId &&
-		!isCardOpen(await ctx.db.get("follow_up_cards", outreach.followUpId))
-	) {
-		return "card_closed";
+	if (outreach.followUpId) {
+		const card = await ctx.db.get("follow_up_cards", outreach.followUpId);
+		const waiting =
+			outreach.intent === "nudge"
+				? card?.status === "pending"
+				: isCardOpen(card);
+		if (!waiting) {
+			return "card_closed";
+		}
 	}
 	if (outreach.sendAt === undefined || delivery.attempts > 0) {
 		return null;
