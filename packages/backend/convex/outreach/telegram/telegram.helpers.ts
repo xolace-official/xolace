@@ -40,6 +40,8 @@ const live = {
 	blockedChats: new Set<string>(),
 	/** Refusals for the next calls to a method, one each, in order. */
 	failures: new Map<string, Refusal[]>(),
+	/** Work to run just before the next call to a method answers. */
+	hooks: new Map<string, () => Promise<unknown>>(),
 	nextMessageId: 100,
 	webhookInfo: {} as Record<string, unknown>,
 };
@@ -48,6 +50,14 @@ const live = {
 export function failNext(method: string, refusal: Refusal) {
 	live.failures.set(method, [...(live.failures.get(method) ?? []), refusal]);
 }
+
+/** Run `work` just before Telegram answers the next call to `method`. */
+export function beforeNext(method: string, work: () => Promise<unknown>) {
+	live.hooks.set(method, work);
+}
+
+/** The id Telegram gave the last message sent. */
+export const lastSentMessageId = () => live.nextMessageId - 1;
 
 /** From now on, Telegram answers 403 to any call naming this chat. */
 export function blockChat(chatId: number | string) {
@@ -59,11 +69,16 @@ export function setWebhookInfo(info: Record<string, unknown>) {
 	live.webhookInfo = info;
 }
 
-function botApiStub(input: RequestInfo | URL, init?: RequestInit) {
+async function botApiStub(input: RequestInfo | URL, init?: RequestInit) {
 	const url = String(input);
 	const method = url.slice(url.lastIndexOf("/") + 1);
 	const params = init?.body ? JSON.parse(String(init.body)) : {};
 	calls.push({ method, params });
+	const hook = live.hooks.get(method);
+	if (hook) {
+		live.hooks.delete(method);
+		await hook();
+	}
 	const refusal = live.failures.get(method)?.shift();
 	if (refusal) {
 		return Promise.resolve(
@@ -116,6 +131,7 @@ export function stubTelegramEachTest() {
 		forgetCalls();
 		live.blockedChats.clear();
 		live.failures.clear();
+		live.hooks.clear();
 		live.nextMessageId = 100;
 		setWebhookInfo({ pending_update_count: 0, url: WEBHOOK_URL });
 		vi.stubGlobal("fetch", vi.fn(botApiStub));

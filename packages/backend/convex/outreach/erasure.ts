@@ -13,6 +13,11 @@ import { eraseTelegramChats } from "./telegram/erase";
 type ProfileId = Id<"emotional_profiles">;
 
 const BATCH = 100;
+/**
+ * Chats a wipe reaches in one pass. A wipe keeps the rows, so it can't page
+ * by deleting them; this is far above what one account links in 30 days.
+ */
+const MAX_WIPED_CHATS = 1000;
 
 /** Delete our recent chat messages, collapse the rest, say a last goodbye. */
 export async function eraseForDeletion(
@@ -70,13 +75,16 @@ async function drainChats(
 	profileId: ProfileId,
 	andLinks: boolean
 ): Promise<boolean> {
+	// Deletion removes each row once its updates are gone, so the next pass
+	// starts past it. A wipe keeps the rows: it reads them all every pass,
+	// and is done once no chat has updates left.
 	const identities = await ctx.db
 		.query("channel_identities")
 		.withIndex("by_profile_channel", (q) =>
 			q.eq("emotionalProfileId", profileId)
 		)
-		.take(BATCH);
-	let more = identities.length === BATCH;
+		.take(andLinks ? BATCH : MAX_WIPED_CHATS);
+	let more = andLinks && identities.length === BATCH;
 	for (const identity of identities) {
 		const events = await ctx.db
 			.query("inbound_events")

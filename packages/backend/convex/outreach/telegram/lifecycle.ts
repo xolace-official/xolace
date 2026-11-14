@@ -185,13 +185,30 @@ const MAX_SENT_KEPT = 300;
  * Note a message the bot just sent to this chat, so account deletion and a
  * data wipe can delete it while Telegram still allows (#773). A chat with no
  * row (a stranger) has nothing to erase.
+ *
+ * A message sent for a link, whose send began at `sentSince`, can finish
+ * after the chat was cleared: after a wipe, or after deletion removed the
+ * row. Erasure has already taken its list then, so it's deleted now instead.
  */
 export async function rememberSent(
 	ctx: MutationCtx,
 	chatId: string,
-	messageId: string
+	messageId: string,
+	{ forLink, sentSince }: { forLink?: boolean; sentSince?: number } = {}
 ): Promise<void> {
 	const identity = await identityOfChat(ctx, chatId);
+	const clearedSince =
+		sentSince !== undefined &&
+		identity?.historyClearedAt !== undefined &&
+		identity.historyClearedAt >= sentSince;
+	if (clearedSince || (!identity && forLink === true)) {
+		await ctx.scheduler.runAfter(
+			0,
+			internal.outreach.telegram.erase.eraseChats,
+			{ chats: [{ chatId, messageIds: [messageId], note: false }] }
+		);
+		return;
+	}
 	if (!identity) {
 		return;
 	}
@@ -206,9 +223,19 @@ export async function rememberSent(
 
 /** `rememberSent`, for an action that has just sent. */
 export const recordSent = internalMutation({
-	args: { chatId: v.string(), messageId: v.string() },
-	handler: async (ctx, { chatId, messageId }) => {
-		await rememberSent(ctx, chatId, messageId);
+	args: {
+		chatId: v.string(),
+		/** Sent for the chat's link (a reply, a linked-chat line), not a stranger. */
+		forLink: v.optional(v.boolean()),
+		messageId: v.string(),
+		/** When the send began. */
+		sentSince: v.optional(v.number()),
+	},
+	handler: async (ctx, { chatId, forLink, messageId, sentSince }) => {
+		await rememberSent(ctx, chatId, messageId, {
+			...(forLink !== undefined && { forLink }),
+			...(sentSince !== undefined && { sentSince }),
+		});
 		return null;
 	},
 	returns: v.null(),

@@ -107,6 +107,33 @@ describe("inbound retention", () => {
 		expect((await eventOf(user.root, update))?.status).toBe("processed");
 	});
 
+	it("leaves an update still waiting its turn on the pool", async () => {
+		const { secret, user } = await linked();
+		const update = messageUpdate(STRANGER_CHAT, "/help");
+		await post(user.root, update, secret);
+		vi.advanceTimersByTime(20 * MINUTE);
+		// As if it had been put back once already, and was still queued.
+		const queued = await eventOf(user.root, update);
+		if (!queued) {
+			throw new Error("no event");
+		}
+		await user.root.run((ctx) =>
+			ctx.db.patch("inbound_events", queued._id, {
+				requeuedAt: Date.now() - 10 * MINUTE,
+			})
+		);
+
+		await user.root.mutation(
+			internal.outreach.telegram.retention.requeueStuck,
+			{}
+		);
+		expect((await eventOf(user.root, update))?.status).toBe("received");
+
+		await processSoon(user.root);
+		expect(replies()).toEqual([HELP]);
+		expect((await eventOf(user.root, update))?.status).toBe("processed");
+	});
+
 	it("marks an update still stuck after it was put back failed, without its text", async () => {
 		const { user } = await linked();
 		const update = messageUpdate(STRANGER_CHAT, "/help");

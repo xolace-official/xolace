@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "../../_generated/api";
-import { internalMutation } from "../../_generated/server";
+import type { Doc } from "../../_generated/dataModel";
+import { internalMutation, type MutationCtx } from "../../_generated/server";
 import { telegramInboundPool } from "../pools";
 import { strippedPayload } from "./webhook";
 
@@ -44,7 +45,23 @@ export const purgeOldInbound = internalMutation({
 });
 
 /**
+ * Its pool job hasn't finished: the update is waiting its turn (the pool
+ * runs one at a time) or being handled, not lost.
+ */
+async function stillOnPool(
+	ctx: MutationCtx,
+	event: Doc<"inbound_events">
+): Promise<boolean> {
+	if (event.workId === undefined) {
+		return false;
+	}
+	const { state } = await telegramInboundPool.status(ctx, event.workId);
+	return state !== "finished";
+}
+
+/**
  * Put each update stuck in `received` for 5 minutes back on the pool, once.
+ * One whose job is still queued or running is only slow, and left alone.
  * Handling is idempotent (the claim only takes a `received` row), so one
  * that was merely slow is handled once either way.
  */
@@ -59,13 +76,19 @@ export const requeueStuck = internalMutation({
 			)
 			.take(BATCH);
 		for (const event of stuck) {
+			if (await stillOnPool(ctx, event)) {
+				continue;
+			}
 			if (event.requeuedAt === undefined) {
-				await ctx.db.patch("inbound_events", event._id, { requeuedAt: now });
-				await telegramInboundPool.enqueueAction(
+				const workId = await telegramInboundPool.enqueueAction(
 					ctx,
 					internal.outreach.telegram.inbound.processUpdate,
 					{ eventId: event._id }
 				);
+				await ctx.db.patch("inbound_events", event._id, {
+					requeuedAt: now,
+					workId,
+				});
 			} else if (event.requeuedAt <= now - STUCK_AFTER_MS) {
 				await ctx.db.patch("inbound_events", event._id, {
 					linkTokenHash: undefined,

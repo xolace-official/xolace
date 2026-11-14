@@ -128,13 +128,58 @@ export async function latestHeldEscalation(
 		.first();
 }
 
-/** Whether an escalation event was raised for the profile in the last 72 h. */
+/**
+ * When the profile's latest Telegram crisis came in (#772), if any. A repeat
+ * shares the first one's escalation event, so the event's time isn't it.
+ */
+export async function lastTelegramCrisisAt(
+	ctx: QueryCtx,
+	emotionalProfileId: Id<"emotional_profiles">
+): Promise<number | null> {
+	let latest: number | null = null;
+	for (const identity of await identitiesOf(
+		ctx,
+		emotionalProfileId,
+		"telegram"
+	)) {
+		const at = identity.lastCrisisAt;
+		if (at !== undefined && (latest === null || at > latest)) {
+			latest = at;
+		}
+	}
+	return latest;
+}
+
+/** A Telegram crisis since `since`: a new event, or one merged into an older. */
+export async function telegramCrisisSince(
+	ctx: QueryCtx,
+	emotionalProfileId: Id<"emotional_profiles">,
+	since: number
+): Promise<boolean> {
+	if (
+		(await sourceEventSince(ctx, emotionalProfileId, "telegram", since)) !==
+		null
+	) {
+		return true;
+	}
+	const latest = await lastTelegramCrisisAt(ctx, emotionalProfileId);
+	return latest !== null && latest >= since;
+}
+
+/**
+ * Whether the profile escalated in the last 72 h: an event raised then, or
+ * a Telegram crisis since that shared an older event.
+ */
 export async function escalatedRecently(
 	ctx: QueryCtx,
 	emotionalProfileId: Id<"emotional_profiles">,
 	now: number
 ): Promise<boolean> {
-	return (await latestHeldEscalation(ctx, emotionalProfileId, now)) !== null;
+	if ((await latestHeldEscalation(ctx, emotionalProfileId, now)) !== null) {
+		return true;
+	}
+	const latest = await lastTelegramCrisisAt(ctx, emotionalProfileId);
+	return latest !== null && latest >= now - ESCALATION_HOLD_MS;
 }
 
 /**
@@ -176,12 +221,11 @@ export async function escalationOrDormancy(
 	} else if (
 		// A Telegram crisis marks whatever card was open, about anything, so
 		// that card's nudge isn't the check-in on it: hold it for 72 h (#772).
-		(await sourceEventSince(
+		await telegramCrisisSince(
 			ctx,
 			input.emotionalProfileId,
-			"telegram",
 			now - ESCALATION_HOLD_MS
-		)) !== null
+		)
 	) {
 		return "escalation_active";
 	}

@@ -307,6 +307,21 @@ describe("the 72 h hold", () => {
 		}
 	);
 
+	it("counts from the latest crisis, though it shares the first one's event", async () => {
+		const { user, write } = await linked();
+		await write(CRISIS_TEXT);
+		vi.advanceTimersByTime(20 * HOUR);
+		await write(CRISIS_TEXT);
+		expect(await escalations(user)).toHaveLength(1);
+
+		// 80 h after the first, 60 after the latest.
+		vi.advanceTimersByTime(60 * HOUR);
+
+		expect(await enqueue(user, "gentle_return")).toMatchObject({
+			suppressedReason: "escalation_active",
+		});
+	});
+
 	it("holds the open card's own nudge too, though the crisis made it escalation-derived", async () => {
 		const { cardId, user, write } = await linked({});
 		await write(CRISIS_TEXT);

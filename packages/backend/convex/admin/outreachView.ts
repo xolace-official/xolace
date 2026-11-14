@@ -9,6 +9,7 @@ import {
 	channelIneligibility,
 	ESCALATION_HOLD_MS,
 	isDormant,
+	lastTelegramCrisisAt,
 	latestHeldEscalation,
 	loadNotifications,
 	openEscalationCard,
@@ -290,12 +291,18 @@ async function activeSuppressions(
 	const suppressions: Suppression[] = [];
 	const openCard = await openEscalationCard(ctx, profile._id);
 	const latestEvent = await latestHeldEscalation(ctx, profile._id, now);
+	// A repeated Telegram crisis shares the first one's event: the hold runs
+	// from whichever came last.
+	const heldFrom = Math.max(
+		latestEvent?.createdAt ?? Number.NEGATIVE_INFINITY,
+		(await lastTelegramCrisisAt(ctx, profile._id)) ?? Number.NEGATIVE_INFINITY
+	);
 	if (openCard) {
 		// Held until the card closes, however long that is.
 		suppressions.push({ kind: "safety" });
-	} else if (latestEvent) {
+	} else if (heldFrom > now - ESCALATION_HOLD_MS) {
 		suppressions.push({
-			endsAt: latestEvent.createdAt + ESCALATION_HOLD_MS,
+			endsAt: heldFrom + ESCALATION_HOLD_MS,
 			kind: "safety",
 		});
 	}

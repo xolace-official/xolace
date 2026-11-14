@@ -77,15 +77,20 @@ const forbidden = (error: unknown) =>
 	error instanceof TelegramApiError && error.errorCode === FORBIDDEN;
 
 async function sendLine(ctx: ActionCtx, line: Line): Promise<void> {
+	const { toLinkedChat } = LINES[line.kind];
+	const sentSince = Date.now();
 	try {
 		const message = await botApi.sendMessage({
 			chat_id: line.chatId,
 			protect_content: true,
 			text: LINES[line.kind].text,
 		});
+		// A line for the live link can be overtaken by a wipe; the others (the
+		// goodbye after deletion among them) never are.
 		await ctx.runMutation(internal.outreach.telegram.lifecycle.recordSent, {
 			chatId: line.chatId,
 			messageId: String(message.message_id),
+			...(toLinkedChat && { forLink: true, sentSince }),
 		});
 	} catch (error) {
 		if (forbidden(error)) {

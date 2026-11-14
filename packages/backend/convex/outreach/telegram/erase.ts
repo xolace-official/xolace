@@ -14,7 +14,7 @@ import {
 	TOO_MANY_REQUESTS,
 } from "./botApi";
 import { collapse, openCheckInsOf, retire } from "./checkIn";
-import { DELETABLE_FOR_MS, identitiesOf, isLive } from "./lifecycle";
+import { DELETABLE_FOR_MS, isLive } from "./lifecycle";
 import { sendLines } from "./lines";
 
 /**
@@ -26,6 +26,12 @@ import { sendLines } from "./lines";
  * delete them. Decided in the job's mutation, sent by `eraseChats` after it
  * commits.
  */
+
+/**
+ * Chats one account's erasure reaches. Revoked rows stay 30 days and a
+ * relink to a new chat adds one, so even a busy month is far below this.
+ */
+const MAX_ERASED_CHATS = 200;
 
 /** Telegram's limit on ids per `deleteMessages` call. */
 const DELETE_BATCH = 100;
@@ -81,11 +87,14 @@ export async function eraseTelegramChats(
 ): Promise<void> {
 	const cutoff = Date.now() - DELETABLE_FOR_MS;
 	const chats: Chat[] = [];
-	for (const identity of await identitiesOf(
-		ctx,
-		emotionalProfileId,
-		"telegram"
-	)) {
+	// Every chat the account linked, live or revoked: not a capped few per status.
+	const identities = await ctx.db
+		.query("channel_identities")
+		.withIndex("by_profile_channel", (q) =>
+			q.eq("emotionalProfileId", emotionalProfileId).eq("channel", "telegram")
+		)
+		.take(MAX_ERASED_CHATS);
+	for (const identity of identities) {
 		const chatId = identity.externalId;
 		const messageIds = (identity.sentMessages ?? [])
 			.filter((m) => m.at > cutoff)

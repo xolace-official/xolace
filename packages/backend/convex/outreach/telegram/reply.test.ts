@@ -40,11 +40,13 @@ import { eraseTelegramChats } from "./erase";
 import { REFLECTION_WINDOW_MS } from "./reply";
 import {
 	backend,
+	beforeNext,
 	configure,
 	failNext,
 	forgetCalls,
 	HOUR,
 	identities,
+	lastSentMessageId,
 	linkChat,
 	messageUpdate,
 	post,
@@ -497,6 +499,43 @@ describe("a reply to free text", () => {
 		expect((await identities(user))[0]?.recentTurns).toBeUndefined();
 	});
 
+	it("deletes a reply whose send finished after a data wipe", async () => {
+		const { user, write } = await checkedIn();
+		beforeNext("sendMessage", () =>
+			user.root.run((ctx) =>
+				eraseTelegramChats(ctx, user.profileId, { accountDeleted: false })
+			)
+		);
+
+		await write("Long day");
+
+		const deleted = sent("deleteMessages").flatMap(
+			(c) => c.params.message_ids as number[]
+		);
+		expect(deleted).toContain(lastSentMessageId());
+		expect((await identities(user))[0]?.sentMessages).toBeUndefined();
+	});
+
+	it("sends no AI reply that was being written when a crisis came in", async () => {
+		const { user, write } = await checkedIn();
+		stub.duringReply = async () => {
+			const [identity] = await identities(user);
+			await user.root.mutation(internal.outreach.telegram.reply.recordCrisis, {
+				identityId: identity._id,
+				linkedAt: identity.linkedAt,
+				trigger: {
+					triggerConfidence: 0,
+					triggerEvidence: "test",
+					triggerType: "implicit_risk_language",
+				},
+			});
+		};
+
+		await write("Long day");
+
+		expect(sentMessages()).toHaveLength(0);
+	});
+
 	it("drops the recent turns a day later, with no further message", async () => {
 		const { user, write } = await checkedIn();
 		await write("Long day");
@@ -720,6 +759,17 @@ describe("the daily reply cap", () => {
 		await c.write("One more thing");
 
 		expect(lastReply()?.params.text).toBe(CAP_UPSELL);
+	});
+
+	it("keeps Support resources on the cap line when the safeguard couldn't run", async () => {
+		const { useReplies, write } = await checkedIn();
+		await useReplies(DAILY_REPLY_CAP.free);
+		stub.moderation = MODERATION_UNAVAILABLE;
+
+		await write("One more thing");
+
+		expect(lastReply()?.params.text).toBe(CAP_REPLY);
+		expect(buttonTexts()).toContain(SUPPORT_RESOURCES_BUTTON);
 	});
 
 	it("counts every chat the account linked, not just this one", async () => {

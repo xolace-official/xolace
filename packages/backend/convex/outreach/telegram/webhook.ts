@@ -188,11 +188,12 @@ export const receive = internalMutation({
 			status: externalId ? "received" : "ignored",
 		});
 		if (externalId) {
-			await telegramInboundPool.enqueueAction(
+			const workId = await telegramInboundPool.enqueueAction(
 				ctx,
 				internal.outreach.telegram.inbound.processUpdate,
 				{ eventId }
 			);
+			await ctx.db.patch("inbound_events", eventId, { workId });
 		}
 		return null;
 	},

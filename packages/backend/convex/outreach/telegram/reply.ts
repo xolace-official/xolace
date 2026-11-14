@@ -17,7 +17,7 @@ import type {
 	ReplyTurn,
 	TapAnswer,
 } from "../../ai/telegram/replyPrompt";
-import { raiseEscalation, sourceEventSince } from "../../escalation/events";
+import { raiseEscalation } from "../../escalation/events";
 import {
 	REFLECTION_MAX_LENGTH,
 	resolveCardCore,
@@ -42,6 +42,7 @@ import {
 	ESCALATION_HOLD_MS,
 	escalatedRecently,
 	openEscalationCard,
+	telegramCrisisSince,
 } from "../router";
 import {
 	type BurstLevel,
@@ -199,13 +200,15 @@ const isLinkOf = (
 	identity !== null && isLive(identity) && identity.linkedAt === linkedAt;
 
 /**
- * Nothing was cleared from the chat (a data wipe or account deletion, #773)
- * since `since`, when a reply began: what it read may still be sent or kept.
+ * Nothing overtook a reply that began at `since`: no data wipe or account
+ * deletion cleared the chat (#773), and no crisis came in (#772), whose
+ * fixed reply an older one mustn't follow. Only then may it send or keep.
  */
 const keptSince = (identity: Doc<"channel_identities">, since?: number) =>
 	since === undefined ||
-	identity.historyClearedAt === undefined ||
-	identity.historyClearedAt < since;
+	[identity.historyClearedAt, identity.lastCrisisAt].every(
+		(at) => at === undefined || at < since
+	);
 
 /**
  * Whether a reply may still go: its link is live and unchanged, and, given
@@ -265,13 +268,11 @@ export const replyContext = internalQuery({
 			card: card ? asReplyCard(card) : null,
 			memory: (await talkPreload(ctx, profile, now)).talkMemory,
 			reach: prefs?.notifications?.reach ?? "warm",
-			recentCrisis:
-				(await sourceEventSince(
-					ctx,
-					profile._id,
-					"telegram",
-					now - ESCALATION_HOLD_MS
-				)) !== null,
+			recentCrisis: await telegramCrisisSince(
+				ctx,
+				profile._id,
+				now - ESCALATION_HOLD_MS
+			),
 			turns: recentTurns(identity, now).map(({ role, text }) => ({
 				role,
 				text,
@@ -475,6 +476,8 @@ export const takeReplySlot = internalMutation({
 		/** What came in, for analytics. */
 		inbound: v.optional(inboundKindValidator),
 		linkedAt: v.number(),
+		/** Support resources ride with this turn (elevated, or no safeguard). */
+		support: v.optional(v.boolean()),
 	},
 	handler: async (ctx, args) => {
 		const identity = await ctx.db.get("channel_identities", args.identityId);
@@ -526,6 +529,7 @@ export const takeReplySlot = internalMutation({
 		const isStruggling =
 			args.elevated ||
 			args.heavier ||
+			args.support === true ||
 			(await struggling(ctx, identity, args.cardId, now));
 		let line: CapLine = "upsell";
 		if (isStruggling) {
@@ -842,12 +846,12 @@ export const recordCrisis = internalMutation({
 		if (!isLinkOf(identity, args.linkedAt)) {
 			return null;
 		}
-		if (identity.pendingBurst || identity.screening) {
-			await ctx.db.patch("channel_identities", identity._id, {
-				...doneScreening(identity),
-				pendingBurst: undefined,
-			});
-		}
+		// Any burst or reply already under way is overtaken: none follows this.
+		await ctx.db.patch("channel_identities", identity._id, {
+			...doneScreening(identity),
+			lastCrisisAt: Date.now(),
+			pendingBurst: undefined,
+		});
 		const card = await cardInView(ctx, identity);
 		const openCard =
 			isCardOpen(card) &&
@@ -965,6 +969,8 @@ async function sendReply(
 	if (!current) {
 		return false;
 	}
+	const sentSince = Date.now();
+	let messageId: string;
 	try {
 		const message = await botApi.sendMessage({
 			chat_id: chatId,
@@ -974,11 +980,7 @@ async function sendReply(
 				reply_markup: { inline_keyboard: keyboard },
 			}),
 		});
-		await ctx.runMutation(internal.outreach.telegram.lifecycle.recordSent, {
-			chatId,
-			messageId: String(message.message_id),
-		});
-		return true;
+		messageId = String(message.message_id);
 	} catch (error) {
 		if (error instanceof TelegramApiError && error.errorCode === FORBIDDEN) {
 			await ctx.runMutation(
@@ -990,6 +992,18 @@ async function sendReply(
 		}
 		return false;
 	}
+	// It reached the person: a failure to note it doesn't undo that.
+	try {
+		await ctx.runMutation(internal.outreach.telegram.lifecycle.recordSent, {
+			chatId,
+			forLink: true,
+			messageId,
+			sentSince,
+		});
+	} catch (error) {
+		console.error("[telegram] noting a sent reply failed", error);
+	}
+	return true;
 }
 
 /** Shows "typing…" while the reply is written. A lost one is harmless. */
@@ -1201,6 +1215,7 @@ async function writeAndSend(
 			identityId,
 			inbound: turn.trigger.kind,
 			linkedAt,
+			support: turn.support,
 			...(turn.cardId && { cardId: turn.cardId }),
 		}
 	);

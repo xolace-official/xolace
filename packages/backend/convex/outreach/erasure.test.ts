@@ -15,6 +15,7 @@ import type { Doc } from "../_generated/dataModel";
 import { seedSession } from "../test/fixtures.helpers";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, ragMock, revenuecatMock } from "../test/mocks.helpers";
+import { drainInbound } from "./erasure";
 import { ACCOUNT_DELETED, CHECK_IN_CLOSED } from "./telegram/copy";
 import {
 	backend,
@@ -226,6 +227,19 @@ describe("account deletion", () => {
 		]);
 	});
 
+	it("erases every chat the account linked, past the first ten", async () => {
+		const { user } = await linked();
+		const chats = Array.from({ length: 12 }, (_, i) => String(9_000_000 + i));
+		await addChats(user, chats);
+
+		await purge(user);
+
+		const erased = new Set(sent("deleteMessages").map((c) => c.params.chat_id));
+		for (const chatId of chats) {
+			expect(erased).toContain(chatId);
+		}
+	});
+
 	it("sends no note to a chat it already unlinked", async () => {
 		const { user } = await linked();
 		await user.root.run(async (ctx) => {
@@ -245,7 +259,51 @@ describe("account deletion", () => {
 	});
 });
 
+/** Old chats this account linked once: revoked, each with one recent message. */
+async function addChats(user: SeededUser, chats: readonly string[]) {
+	await user.root.run(async (ctx) => {
+		for (const [i, chatId] of chats.entries()) {
+			await ctx.db.insert("channel_identities", {
+				channel: "telegram",
+				emotionalProfileId: user.profileId,
+				externalId: chatId,
+				linkedAt: Date.now(),
+				revokedAt: Date.now(),
+				revokedReason: "relinked",
+				sentMessages: [{ at: Date.now(), id: String(5000 + i) }],
+				status: "revoked",
+				tokenIdentifier: "test|old",
+			});
+		}
+	});
+}
+
 describe("data wipe", () => {
+	it("finishes with a hundred chats or more, reaching the last one's updates", async () => {
+		const { user } = await linked();
+		const chats = Array.from({ length: 100 }, (_, i) => String(8_000_000 + i));
+		await addChats(user, chats);
+		const last = chats.at(-1) ?? "";
+		await user.root.run((ctx) =>
+			ctx.db.insert("inbound_events", {
+				channel: "telegram",
+				externalId: last,
+				payload: {},
+				providerEventId: "1",
+				receivedAt: Date.now(),
+				status: "processed",
+			})
+		);
+
+		let more = true;
+		for (let pass = 0; pass < 5 && more; pass++) {
+			more = await user.root.run((ctx) => drainInbound(ctx, user.profileId));
+		}
+
+		expect(more).toBe(false);
+		expect((await outreachRows(user)).inbound).toEqual([]);
+	});
+
 	it("keeps the link and its consent, clears history and the reflection window, and sends no note", async () => {
 		const { secret, user } = await linked();
 		await checkIn(user);

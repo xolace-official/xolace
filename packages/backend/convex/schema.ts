@@ -1,4 +1,5 @@
 import { vWorkflowId } from "@convex-dev/workflow";
+import { vWorkIdValidator } from "@convex-dev/workpool";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { specialtyValidator } from "./lib/specialties";
@@ -279,6 +280,9 @@ export default defineSchema({
 		// When a data wipe or account deletion last cleared this chat's history
 		// (#773): a reply begun before it may not send or keep anything.
 		historyClearedAt: v.optional(v.number()),
+		// The latest crisis text from this chat (#772). A repeat shares the
+		// first one's escalation event; the 72 h hold counts from this instead.
+		lastCrisisAt: v.optional(v.number()),
 		lastInboundAt: v.optional(v.number()),
 		linkedAt: v.number(),
 		// Texts screened on arrival and waiting out a burst for one reply
@@ -1445,6 +1449,9 @@ export default defineSchema({
 		// still stuck after that is marked `failed`.
 		requeuedAt: v.optional(v.number()),
 		status: inboundStatusValidator,
+		// The pool job handling it (#773): while that is still queued or
+		// running, the stuck-row cron leaves the row alone.
+		workId: v.optional(vWorkIdValidator),
 	})
 		.index("by_channel_event", ["channel", "providerEventId"])
 		// A chat's updates, for account deletion and a data wipe (#773).
