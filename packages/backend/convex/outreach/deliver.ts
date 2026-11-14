@@ -1,16 +1,27 @@
 import { vOnCompleteArgs } from "@convex-dev/workpool";
-import { v } from "convex/values";
+import { type Infer, v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
-import { internalMutation, type MutationCtx } from "../_generated/server";
-import { ADAPTERS, ChannelError } from "./adapters";
+import {
+	internalAction,
+	internalMutation,
+	type MutationCtx,
+} from "../_generated/server";
+import { ADAPTERS, type ChannelAdapter, ChannelError } from "./adapters";
 import {
 	accountDeleted,
 	escalationOrDormancy,
 	loadNotifications,
 	pickChannel,
 } from "./router";
-import type { ChannelErrorKind, OutreachChannel } from "./validators";
+import { isCardOpen } from "./telegram/checkIn";
+import {
+	type ChannelErrorKind,
+	channelErrorKindValidator,
+	type OutreachChannel,
+	outreachChannelValidator,
+	type SuppressedReason,
+} from "./validators";
 
 /**
  * Delivery (#760): one `outreach_deliveries` row per attempt on a channel,
@@ -59,115 +70,299 @@ async function schedule(
 		await finish(ctx, deliveryId, "failed", { kind: "permanent" });
 		return;
 	}
-	const timing =
-		when.runAt === undefined
+	const options = {
+		context: { deliveryId },
+		onComplete: internal.outreach.deliver.onDeliveryComplete,
+		...(when.runAt === undefined
 			? { runAfter: when.runAfter ?? 0 }
-			: { runAt: when.runAt };
-	const workId = await adapter.pool.enqueueMutation(
-		ctx,
-		internal.outreach.deliver.deliver,
-		{ deliveryId },
-		{
-			context: { deliveryId },
-			onComplete: internal.outreach.deliver.onDeliveryComplete,
-			...timing,
-		}
-	);
+			: { runAt: when.runAt }),
+	};
+	const workId =
+		adapter.runtime === "action"
+			? await adapter.pool.enqueueAction(
+					ctx,
+					internal.outreach.deliver.deliverAction,
+					{ deliveryId },
+					options
+				)
+			: await adapter.pool.enqueueMutation(
+					ctx,
+					internal.outreach.deliver.deliver,
+					{ deliveryId },
+					options
+				);
 	await ctx.db.patch("outreach_deliveries", deliveryId, { workId });
 }
 
-/** Run one delivery through its channel's adapter. */
+const receiptValidator = v.object({
+	notificationLogId: v.optional(v.id("notification_log")),
+	providerChatId: v.optional(v.string()),
+	providerMessageId: v.optional(v.string()),
+});
+
+const attemptErrorValidator = v.object({
+	afterMs: v.optional(v.number()),
+	code: v.optional(v.string()),
+	kind: channelErrorKindValidator,
+});
+
+/** How one try went: a receipt, or the `ChannelError` it threw. */
+const attemptValidator = v.union(
+	v.object({ ok: v.literal(true), receipt: receiptValidator }),
+	v.object({ error: attemptErrorValidator, ok: v.literal(false) })
+);
+type Attempt = Infer<typeof attemptValidator>;
+
+function failedAttempt(error: ChannelError): Attempt {
+	return {
+		error: {
+			kind: error.kind,
+			...(error.afterMs !== undefined && { afterMs: error.afterMs }),
+			...(error.code !== undefined && { code: error.code }),
+		},
+		ok: false,
+	};
+}
+
+/**
+ * Why a queued delivery may no longer go, if it may not. A nudge is about its
+ * follow-up: once that is answered, dismissed or gone, nothing is left to
+ * nudge (a deferral or a retry can outlive it). A quiet-window deferral can
+ * sit for hours, and a deletion request or a crisis in that time still stops
+ * it: gates 2 and 3 run again on its first try.
+ */
+async function heldSince(
+	ctx: MutationCtx,
+	delivery: Doc<"outreach_deliveries">,
+	outreach: Doc<"outreach">
+): Promise<SuppressedReason | null> {
+	if (
+		outreach.followUpId &&
+		!isCardOpen(await ctx.db.get("follow_up_cards", outreach.followUpId))
+	) {
+		return "card_closed";
+	}
+	if (outreach.sendAt === undefined || delivery.attempts > 0) {
+		return null;
+	}
+	const profile = await ctx.db.get(
+		"emotional_profiles",
+		outreach.emotionalProfileId
+	);
+	return !profile || (await accountDeleted(ctx, outreach.emotionalProfileId))
+		? "account_deleted"
+		: await escalationOrDormancy(ctx, outreach, profile, Date.now());
+}
+
+/**
+ * Take a queued delivery for a try: the deferred gates run again and the
+ * attempt is counted. Null when there's nothing to send.
+ */
+async function claim(
+	ctx: MutationCtx,
+	deliveryId: Id<"outreach_deliveries">
+): Promise<{
+	adapter: ChannelAdapter;
+	delivery: Doc<"outreach_deliveries">;
+	outreach: Doc<"outreach">;
+} | null> {
+	const delivery = await ctx.db.get("outreach_deliveries", deliveryId);
+	if (delivery?.status !== "queued") {
+		return null;
+	}
+	const outreach = await ctx.db.get("outreach", delivery.outreachId);
+	const adapter = ADAPTERS[delivery.channel];
+	if (!(outreach && adapter)) {
+		await finish(ctx, deliveryId, "failed", { kind: "permanent" });
+		return null;
+	}
+
+	const held = await heldSince(ctx, delivery, outreach);
+	if (held) {
+		await ctx.db.patch("outreach_deliveries", deliveryId, {
+			finishedAt: Date.now(),
+			status: "canceled",
+		});
+		await ctx.db.patch("outreach", outreach._id, {
+			outcome: "suppressed",
+			suppressedReason: held,
+		});
+		return null;
+	}
+
+	const attempts = delivery.attempts + 1;
+	await ctx.db.patch("outreach_deliveries", deliveryId, {
+		attempts,
+		status: "sending",
+	});
+	return {
+		adapter,
+		delivery: { ...delivery, attempts, status: "sending" },
+		outreach,
+	};
+}
+
+/** Record a try: sent, retried on the channel's pool, or failed for good. */
+async function settle(
+	ctx: MutationCtx,
+	delivery: Doc<"outreach_deliveries">,
+	attempt: Attempt
+): Promise<void> {
+	if (attempt.ok) {
+		const now = Date.now();
+		await ctx.db.patch("outreach_deliveries", delivery._id, {
+			...attempt.receipt,
+			error: undefined,
+			finishedAt: now,
+			sentAt: now,
+			status: "sent",
+		});
+		await ADAPTERS[delivery.channel]?.afterSent?.(ctx, delivery._id);
+		return;
+	}
+	const { afterMs, ...recorded } = attempt.error;
+	if (recorded.kind === "retry" && delivery.attempts < MAX_ATTEMPTS) {
+		await ctx.db.patch("outreach_deliveries", delivery._id, {
+			error: recorded,
+			status: "queued",
+		});
+		await schedule(ctx, delivery.channel, delivery._id, {
+			runAfter: afterMs ?? DEFAULT_RETRY_MS,
+		});
+		return;
+	}
+	await finish(
+		ctx,
+		delivery._id,
+		recorded.kind === "unreachable" ? "unreachable" : "failed",
+		recorded
+	);
+}
+
+/** Run one delivery through its channel's adapter, in one transaction. */
 export const deliver = internalMutation({
 	args: { deliveryId: v.id("outreach_deliveries") },
 	handler: async (ctx, { deliveryId }) => {
-		const delivery = await ctx.db.get("outreach_deliveries", deliveryId);
-		if (delivery?.status !== "queued") {
+		const claimed = await claim(ctx, deliveryId);
+		if (!claimed) {
 			return null;
 		}
-		const outreach = await ctx.db.get("outreach", delivery.outreachId);
-		const adapter = ADAPTERS[delivery.channel];
-		if (!(outreach && adapter)) {
-			await finish(ctx, deliveryId, "failed", { kind: "permanent" });
-			return null;
-		}
-
-		// A quiet-window deferral can sit for hours. A deletion request or a
-		// crisis in that time still stops it: gates 2 and 3 run again here.
-		if (outreach.sendAt !== undefined && delivery.attempts === 0) {
-			const profile = await ctx.db.get(
-				"emotional_profiles",
-				outreach.emotionalProfileId
-			);
-			const held =
-				!profile || (await accountDeleted(ctx, outreach.emotionalProfileId))
-					? "account_deleted"
-					: await escalationOrDormancy(ctx, outreach, profile, Date.now());
-			if (held) {
-				await ctx.db.patch("outreach_deliveries", deliveryId, {
-					finishedAt: Date.now(),
-					status: "canceled",
-				});
-				await ctx.db.patch("outreach", outreach._id, {
-					outcome: "suppressed",
-					suppressedReason: held,
-				});
-				return null;
-			}
-		}
-
-		const attempts = delivery.attempts + 1;
-		await ctx.db.patch("outreach_deliveries", deliveryId, {
-			attempts,
-			status: "sending",
-		});
-
-		try {
-			const receipt = await adapter.send(
-				ctx,
-				{ ...delivery, attempts, status: "sending" },
-				outreach
-			);
-			const now = Date.now();
+		const { adapter, delivery, outreach } = claimed;
+		if (adapter.runtime === "action") {
+			// Scheduled before its adapter changed runtime: send it the other way.
 			await ctx.db.patch("outreach_deliveries", deliveryId, {
-				...receipt,
-				error: undefined,
-				finishedAt: now,
-				sentAt: now,
-				status: "sent",
+				status: "queued",
 			});
+			await schedule(ctx, delivery.channel, deliveryId, {});
+			return null;
+		}
+		let attempt: Attempt;
+		try {
+			attempt = {
+				ok: true,
+				receipt: await adapter.send(ctx, delivery, outreach),
+			};
 		} catch (error) {
 			// Anything else is a bug: let the mutation roll back, and
 			// `onDeliveryComplete` records the failure.
 			if (!(error instanceof ChannelError)) {
 				throw error;
 			}
-			const recorded = {
-				kind: error.kind,
-				...(error.code !== undefined && { code: error.code }),
+			attempt = failedAttempt(error);
+		}
+		await settle(ctx, delivery, attempt);
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * An action adapter's first half: claim the delivery and decide what to send.
+ * Null when nothing is to be sent (including a `prepare` that refused, which
+ * is recorded here).
+ */
+export const claimForAction = internalMutation({
+	args: { deliveryId: v.id("outreach_deliveries") },
+	handler: async (ctx, { deliveryId }) => {
+		const claimed = await claim(ctx, deliveryId);
+		if (!claimed) {
+			return null;
+		}
+		const { adapter, delivery, outreach } = claimed;
+		if (adapter.runtime !== "action") {
+			await finish(ctx, deliveryId, "failed", { kind: "permanent" });
+			return null;
+		}
+		try {
+			return {
+				channel: delivery.channel,
+				prepared: await adapter.prepare(ctx, delivery, outreach),
 			};
-			if (error.kind === "retry" && attempts < MAX_ATTEMPTS) {
-				await ctx.db.patch("outreach_deliveries", deliveryId, {
-					error: recorded,
-					status: "queued",
-				});
-				await schedule(ctx, delivery.channel, deliveryId, {
-					runAfter: error.afterMs ?? DEFAULT_RETRY_MS,
-				});
-				return null;
+		} catch (error) {
+			if (!(error instanceof ChannelError)) {
+				throw error;
 			}
-			await finish(
-				ctx,
-				deliveryId,
-				error.kind === "unreachable" ? "unreachable" : "failed",
-				recorded
-			);
+			await settle(ctx, delivery, failedAttempt(error));
+			return null;
+		}
+	},
+	// What `prepare` returns is the adapter's own shape.
+	returns: v.union(
+		v.null(),
+		v.object({ channel: outreachChannelValidator, prepared: v.any() })
+	),
+});
+
+export const settleAttempt = internalMutation({
+	args: { attempt: attemptValidator, deliveryId: v.id("outreach_deliveries") },
+	handler: async (ctx, { attempt, deliveryId }) => {
+		const delivery = await ctx.db.get("outreach_deliveries", deliveryId);
+		if (delivery?.status === "sending") {
+			await settle(ctx, delivery, attempt);
 		}
 		return null;
 	},
 	returns: v.null(),
 });
 
-/** The workpool's verdict, for what `deliver` couldn't record itself. */
+/** Run one delivery through an action adapter: claim, send, record. */
+export const deliverAction = internalAction({
+	args: { deliveryId: v.id("outreach_deliveries") },
+	handler: async (ctx, { deliveryId }) => {
+		const claimed = await ctx.runMutation(
+			internal.outreach.deliver.claimForAction,
+			{ deliveryId }
+		);
+		if (claimed === null) {
+			return null;
+		}
+		const adapter = ADAPTERS[claimed.channel];
+		if (adapter?.runtime !== "action") {
+			throw new Error("No action adapter for a claimed delivery.");
+		}
+		let attempt: Attempt;
+		try {
+			attempt = {
+				ok: true,
+				receipt: await adapter.send(ctx, claimed.prepared),
+			};
+		} catch (error) {
+			// Anything else is a bug: `onDeliveryComplete` records the failure.
+			if (!(error instanceof ChannelError)) {
+				throw error;
+			}
+			attempt = failedAttempt(error);
+		}
+		await ctx.runMutation(internal.outreach.deliver.settleAttempt, {
+			attempt,
+			deliveryId,
+		});
+		return null;
+	},
+	returns: v.null(),
+});
+
+/** The workpool's verdict, for what the runner couldn't record itself. */
 export const onDeliveryComplete = internalMutation({
 	args: vOnCompleteArgs(v.object({ deliveryId: v.id("outreach_deliveries") })),
 	handler: async (ctx, { context, result }) => {
@@ -175,6 +370,17 @@ export const onDeliveryComplete = internalMutation({
 			"outreach_deliveries",
 			context.deliveryId
 		);
+		// A mutation that threw rolled back to `queued`. An action that threw
+		// after its claim left `sending`, and may already have sent: it fails
+		// without the fallback, so nobody gets the same outreach twice.
+		if (delivery?.status === "sending" && result.kind === "failed") {
+			await ctx.db.patch("outreach_deliveries", delivery._id, {
+				error: { kind: "permanent" },
+				finishedAt: Date.now(),
+				status: "failed",
+			});
+			return null;
+		}
 		if (delivery?.status !== "queued") {
 			return null;
 		}

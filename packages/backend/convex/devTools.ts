@@ -18,6 +18,7 @@ import { rankReplace, reflectionRank } from "./lib/aggregates";
 import { requireAuth } from "./lib/auth";
 import { INTAKE_V2_VERSION } from "./lib/validators";
 import { migrations } from "./migrations";
+import { collapseCard } from "./outreach/telegram/checkIn";
 import { localDayKey, shiftDayKey } from "./streaks/activityLog";
 
 export function assertDevToolsEnabled() {
@@ -177,6 +178,7 @@ export const cleanupStuckFollowUps = mutation({
 					// Placeholder workflowId or already-terminal workflow — nothing to do.
 				}
 				await ctx.db.patch("follow_up_cards", card._id, { status: "expired" });
+				await collapseCard(ctx, card._id);
 
 				// Unpin the session so getStartContext won't treat it as already-started.
 				const session = await ctx.db.get("sessions", card.sessionId);

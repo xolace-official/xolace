@@ -257,6 +257,17 @@ export default defineSchema({
 		externalId: v.string(),
 		lastInboundAt: v.optional(v.number()),
 		linkedAt: v.number(),
+		// The last few messages each way, for the next AI reply's context
+		// (#770). Kept 24 h at most, and dropped when the link ends.
+		recentTurns: v.optional(
+			v.array(
+				v.object({
+					at: v.number(),
+					role: v.union(v.literal("person"), v.literal("xolace")),
+					text: v.string(),
+				})
+			)
+		),
 		revokedAt: v.optional(v.number()),
 		revokedReason: v.optional(revokedReasonValidator),
 		status: identityStatusValidator,
@@ -267,6 +278,11 @@ export default defineSchema({
 	})
 		.index("by_channel_external", ["channel", "externalId"])
 		.index("by_profile_channel", ["emotionalProfileId", "channel"])
+		.index("by_profile_channel_status", [
+			"emotionalProfileId",
+			"channel",
+			"status",
+		])
 		.index("by_status_revokedAt", ["status", "revokedAt"]),
 
 	// A minted link token. Only the SHA-256 is stored; 15-minute TTL, one use.
@@ -1368,6 +1384,9 @@ export default defineSchema({
 	inbound_events: defineTable({
 		channel: outreachChannelValidator,
 		externalId: v.string(),
+		// SHA-256 of a `/start <token>` link token (#766). The webhook strips
+		// the token from the payload before storing; cleared once processed.
+		linkTokenHash: v.optional(v.string()),
 		payload: v.any(),
 		providerEventId: v.string(),
 		receivedAt: v.number(),
@@ -1806,6 +1825,13 @@ export default defineSchema({
 	outreach_deliveries: defineTable({
 		attempts: v.number(),
 		channel: outreachChannelValidator,
+		/**
+		 * Telegram: this message is a live check-in (its buttons still work).
+		 * Cleared, never set false, when it collapses (#768).
+		 */
+		checkInOpen: v.optional(v.literal(true)),
+		/** Telegram: when the check-in was edited to its neutral line (#768). */
+		collapsedAt: v.optional(v.number()),
 		createdAt: v.number(),
 		// The ChannelError kind and a provider code; never raw provider text.
 		error: v.optional(
@@ -1821,11 +1847,16 @@ export default defineSchema({
 		outreachId: v.id("outreach"),
 		providerChatId: v.optional(v.string()),
 		providerMessageId: v.optional(v.string()),
+		/** Telegram: when "What was this about?" added the card text (#768). */
+		revealedAt: v.optional(v.number()),
 		sentAt: v.optional(v.number()),
 		status: deliveryStatusValidator,
 		// The workpool item carrying it, so a reroute can cancel it.
 		workId: v.optional(v.string()),
-	}).index("by_outreach", ["outreachId"]),
+	})
+		.index("by_outreach", ["outreachId"])
+		// A chat's live check-ins, to collapse them when its link ends (#768).
+		.index("by_chat_check_in", ["providerChatId", "checkInOpen"]),
 
 	path_steps: defineTable({
 		actionType: v.string(), // catalog key
@@ -2921,6 +2952,19 @@ export default defineSchema({
 		sessionId: v.id("sessions"),
 		text: v.string(),
 	}).index("by_session_and_seq", ["sessionId", "seq"]),
+
+	// This deployment's Telegram bot (#765): a single row, absent on a
+	// deployment with no bot. Written by outreach/telegram/bot.ts's
+	// `configureBot` (run by hand), plus the drift cron's last pending count.
+	telegram_bot: defineTable({
+		configuredAt: v.number(),
+		// What the daily drift check last saw, to tell a growing backlog.
+		lastPendingUpdateCount: v.optional(v.number()),
+		// SHA-256 of the webhook `secret_token`; the secret itself is never stored.
+		secretHash: v.string(),
+		// From `getMe`, without the `@`.
+		username: v.string(),
+	}),
 
 	// Topic decoration (#353): a shared topic suffix (`sadness`) may carry its
 	// own cover and display title for the Browse topic grid. One row per slug

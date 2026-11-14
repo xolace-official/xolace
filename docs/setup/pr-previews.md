@@ -121,6 +121,7 @@ staging ([staging.md](./staging.md) Step 4, all 28 names), with:
 | `CONVEX_ENV` | `development` (dev cron schedules; keeps previews cheap) |
 | `RANK_MIN_POPULATION` | `1` or `3`, so ranks show with a single tester |
 | `TALK_LLM_SECRET`, `REVENUECAT_WEBHOOK_AUTH`, `ELEVENLABS_WEBHOOK_SECRET` | any random value. Webhooks from ElevenLabs/RevenueCat/Stream never point at a preview |
+| `TELEGRAM_BOT_TOKEN` | **leave unset**. A bot points at one webhook, so a preview sharing staging's token would steal its updates. Previews run without Telegram ([telegram.md](./telegram.md)) |
 | everything else | the staging value |
 
 Or from a terminal where you're logged in to Convex (an agent must not run this):

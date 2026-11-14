@@ -109,12 +109,15 @@ async function within<T>(
 	}
 }
 
+/** A verdict, and whether neither provider answered (moderation and classifier both failed). */
+export type WordsVerdict = SafetyVerdict & { unavailable: boolean };
+
 /**
  * Moderation and the classifier through the safeguard engine. Never rejects, and
  * ends by {@link SAFETY_DEADLINE_MS}. Each has its own deadline, so one hanging
  * can't lose what the other said in time.
  */
-async function engineVerdict(words: string): Promise<SafetyVerdict> {
+async function engineVerdict(words: string): Promise<WordsVerdict> {
 	const moderating = new AbortController();
 	const classifying = new AbortController();
 	const [moderation, classification] = await Promise.all([
@@ -143,33 +146,51 @@ async function engineVerdict(words: string): Promise<SafetyVerdict> {
 			classifying
 		),
 	]);
+	const unavailable =
+		moderation === MODERATION_UNAVAILABLE && classification === UNCLASSIFIED;
 	const verdict = evaluateSafeguard(classification, moderation, []);
 	// A content-policy rejection turns a mirror away; here it just means no escalation.
 	return verdict.shouldReject
-		? { level: "none", resources: [] }
-		: { level: verdict.level, resources: verdict.resourcesPresented };
+		? { level: "none", resources: [], unavailable }
+		: {
+				level: verdict.level,
+				resources: verdict.resourcesPresented,
+				unavailable,
+			};
 }
 
 /**
- * The safeguard over a first answer: talk's phrase floor first, then the engine
- * over moderation and the classifier. A new user has no history to escalate on.
+ * The safeguard over someone's words: talk's phrase floor first, then the
+ * engine over moderation and the classifier, with no history to escalate on.
  * Support never waits on a provider: a clear crisis phrase answers at once, and
  * a loose one gives moderation {@link PHRASE_WAIT_MS} to raise it before it
  * stands. A provider that fails or passes the deadline leaves the other and the
- * phrase floor standing.
+ * phrase floor standing; `unavailable` says both failed. Intake's first answer
+ * and Telegram's free text (#770) both run it.
  */
-export async function checkAnswerSafety(words: string): Promise<SafetyVerdict> {
+export async function checkWordsSafety(words: string): Promise<WordsVerdict> {
 	const floor = await phraseFloor(words);
 	if (floor.level === "crisis") {
-		return floor;
+		return { ...floor, unavailable: false };
 	}
 	const engine = engineVerdict(words).then((verdict) =>
-		levelAbove(floor.level, verdict.level) ? floor : verdict
+		levelAbove(floor.level, verdict.level)
+			? { ...floor, unavailable: verdict.unavailable }
+			: verdict
 	);
 	if (floor.level === "none") {
 		return await engine;
 	}
-	return await within(engine, PHRASE_WAIT_MS, () => floor);
+	return await within(engine, PHRASE_WAIT_MS, () => ({
+		...floor,
+		unavailable: false,
+	}));
+}
+
+/** {@link checkWordsSafety} for a first answer. */
+export async function checkAnswerSafety(words: string): Promise<SafetyVerdict> {
+	const { level, resources } = await checkWordsSafety(words);
+	return { level, resources };
 }
 
 async function classify(words: string, signal: AbortSignal) {

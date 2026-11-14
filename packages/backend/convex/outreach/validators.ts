@@ -44,7 +44,9 @@ export const suppressedReasonValidator = v.union(
 	v.literal("user_inactive"),
 	v.literal("toggle_off"),
 	v.literal("no_channel"),
-	v.literal("account_deleted")
+	v.literal("account_deleted"),
+	/** A nudge whose follow-up closed before it went (answered, dismissed, gone). */
+	v.literal("card_closed")
 );
 export type SuppressedReason = Infer<typeof suppressedReasonValidator>;
 

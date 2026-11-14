@@ -130,6 +130,13 @@ ${sourceRule}
 }
 
 /**
+ * An acute follow-up's nudge, on every channel: recency-anchored and
+ * wound-free, since the lock screen isn't private. The card text stays in-app.
+ */
+export const ACUTE_NUDGE_BODY =
+	"Just checking in on what you worked through a little while ago. We're here.";
+
+/**
  * Defensive fallback used when Haiku is unavailable at card-write time. The row
  * + workflow ALWAYS start (mirrors the FALLBACK_MIRROR pattern) so a
  * safety-relevant follow-up is never silently dropped. Tier-aware so an Acute

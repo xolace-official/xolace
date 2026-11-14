@@ -1,45 +1,19 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
+import { suppressionFor } from "../outreach/router";
 
 const GENTLE_RETURN_WINDOW_MS = 48 * 60 * 60 * 1000; // 48 hours
-// 30-day dormancy suppression, shared with kindling_ready (docs/paths-v1.md §10).
-export const INACTIVE_THRESHOLD_MS = 30 * 24 * 60 * 60 * 1000;
-
 /**
- * Returns the local hour (0–23) for a given IANA timezone using Intl.
- * Available in the Convex V8 runtime.
+ * Profiles per page. Each candidate is asked `suppressionFor`, about ten
+ * index reads; this keeps a page well inside a transaction's read limits.
  */
-function getLocalHour(timezone: string): number {
-	try {
-		const formatted = new Intl.DateTimeFormat("en-US", {
-			hour: "numeric",
-			hour12: false,
-			timeZone: timezone,
-		}).format(new Date());
-		return Number.parseInt(formatted, 10) % 24;
-	} catch {
-		return new Date().getUTCHours();
-	}
-}
+const PAGE_SIZE = 200;
 
 /**
- * Returns true if the current local hour is inside the user's quiet window
- * (i.e., outside active delivery hours).
- */
-export function isInQuietWindow(
-	timezone: string,
-	dontReachBefore: number,
-	dontReachAfter: number
-): boolean {
-	const localHour = getLocalHour(timezone);
-	return localHour < dontReachBefore || localHour > dontReachAfter;
-}
-
-/**
- * Scan profiles and send gentle_return notifications to users
- * who haven't had a session in 48+ hours but are still active
- * (last session within 30 days).
+ * Scan profiles and send gentle_return notifications to users who haven't
+ * had a session in 48+ hours. The outreach layer suppresses the dormant
+ * (30+ days) and defers through the quiet window.
  *
  * Runs on a cron schedule. Processes in batches to stay within
  * transaction limits.
@@ -51,7 +25,6 @@ export const checkGentleReturn = internalMutation({
 	handler: async (ctx, args) => {
 		const now = Date.now();
 		const gentleReturnCutoff = now - GENTLE_RETURN_WINDOW_MS;
-		const inactiveCutoff = now - INACTIVE_THRESHOLD_MS;
 
 		const {
 			page: profiles,
@@ -59,7 +32,7 @@ export const checkGentleReturn = internalMutation({
 			continueCursor,
 		} = await ctx.db
 			.query("emotional_profiles")
-			.paginate({ cursor: args.cursor ?? null, numItems: 500 });
+			.paginate({ cursor: args.cursor ?? null, numItems: PAGE_SIZE });
 
 		for (const profile of profiles) {
 			if (!profile.lastSessionAt) {
@@ -68,37 +41,17 @@ export const checkGentleReturn = internalMutation({
 			if (profile.lastSessionAt > gentleReturnCutoff) {
 				continue;
 			}
-			if (profile.lastSessionAt < inactiveCutoff) {
+			// The layer decides (#764): the toggle, dormancy, escalation and
+			// channel are its gates, and it defers through the quiet window.
+			// Asked first, so no copy is written for an outreach it would drop.
+			if (
+				await suppressionFor(
+					ctx,
+					{ emotionalProfileId: profile._id, intent: "gentle_return" },
+					now
+				)
+			) {
 				continue;
-			}
-
-			const preferences = await ctx.db
-				.query("preferences")
-				.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
-				.unique();
-
-			if (!preferences) {
-				continue;
-			}
-			if (!preferences.notifications.enabled) {
-				continue;
-			}
-			if (!preferences.notifications.gentleReturn) {
-				continue;
-			}
-
-			// Quiet Window gate
-			const { quietWindow, timezone } = preferences.notifications;
-			if (quietWindow && timezone) {
-				if (
-					isInQuietWindow(
-						timezone,
-						quietWindow.dontReachBefore,
-						quietWindow.dontReachAfter
-					)
-				) {
-					continue;
-				}
 			}
 
 			const hoursSince = Math.round(
@@ -150,7 +103,7 @@ export const checkPatternNudge = internalMutation({
 			continueCursor,
 		} = await ctx.db
 			.query("emotional_profiles")
-			.paginate({ cursor: args.cursor ?? null, numItems: 500 });
+			.paginate({ cursor: args.cursor ?? null, numItems: PAGE_SIZE });
 
 		for (const profile of profiles) {
 			if (!profile.typicalUsagePattern) {
@@ -170,33 +123,15 @@ export const checkPatternNudge = internalMutation({
 				continue;
 			}
 
-			const preferences = await ctx.db
-				.query("preferences")
-				.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
-				.unique();
-
-			if (!preferences) {
+			// The layer decides; see checkGentleReturn.
+			if (
+				await suppressionFor(
+					ctx,
+					{ emotionalProfileId: profile._id, intent: "pattern_nudge" },
+					now
+				)
+			) {
 				continue;
-			}
-			if (!preferences.notifications.enabled) {
-				continue;
-			}
-			if (!preferences.notifications.patternNudge) {
-				continue;
-			}
-
-			// Quiet Window gate
-			const { quietWindow, timezone } = preferences.notifications;
-			if (quietWindow && timezone) {
-				if (
-					isInQuietWindow(
-						timezone,
-						quietWindow.dontReachBefore,
-						quietWindow.dontReachAfter
-					)
-				) {
-					continue;
-				}
 			}
 
 			await ctx.scheduler.runAfter(

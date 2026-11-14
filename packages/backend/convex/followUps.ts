@@ -19,6 +19,7 @@ import {
 } from "./_generated/server";
 import { writeFollowUpCard } from "./ai/followUpCard";
 import {
+	ACUTE_NUDGE_BODY,
 	buildFollowUpCardPrompt,
 	fallbackFollowUpCard,
 } from "./ai/prompts/followUpCardWriter";
@@ -44,6 +45,8 @@ import {
 	domainValidator,
 	type safeguardLevelValidator,
 } from "./lib/validators";
+import { collapseCard } from "./outreach/telegram/checkIn";
+import { nudgeFirstLine } from "./outreach/telegram/copy";
 import schema from "./schema";
 import { renderSemanticProfile } from "./semanticProfiles";
 
@@ -390,6 +393,7 @@ export const createAndStart = internalMutation({
 			await ctx.db.patch("follow_up_cards", active._id, {
 				status: "superseded",
 			});
+			await collapseCard(ctx, active._id);
 		}
 
 		const workflowId = await workflow.start(
@@ -439,14 +443,22 @@ export const markCardExpired = internalMutation({
 			return null;
 		}
 		await ctx.db.patch("follow_up_cards", card._id, { status: "expired" });
+		await collapseCard(ctx, card._id);
 		return null;
 	},
 });
 
+/** A card's workflow nudges twice; this bounds the count read. */
+const MAX_NUDGES_PER_CARD = 10;
+
 /**
- * Deliver a follow-up push. Follow-up-only gating (enabled flag only — no
- * per-type toggle, no quiet window, by deliberate early-stage design). Acute
- * tier sends a recency-anchored, wound-free body; the cardText is in-app only.
+ * Nudge a still-pending card through the outreach layer, which decides whether
+ * and where (#764): the toggle, quiet window, escalation hold and channel are
+ * all its gates. Acute tier sends a recency-anchored, wound-free body; the
+ * cardText is in-app only.
+ *
+ * Args unchanged, so sleeping workflows keep calling it. The nudge number in
+ * the dedupe key comes from the card's earlier nudges, not an arg.
  */
 export const sendFollowUpNudge = internalMutation({
 	args: { workflowId: vWorkflowId },
@@ -456,35 +468,28 @@ export const sendFollowUpNudge = internalMutation({
 			return null;
 		}
 
-		const prefs = await ctx.db
-			.query("preferences")
-			.withIndex("by_profile", (q) =>
-				q.eq("emotionalProfileId", card.emotionalProfileId)
-			)
-			.unique();
-		// The master switch is now held on by either family — chat notifications
-		// or the AI's own reaching out — so it no longer implies a follow-up is
-		// wanted. `gentleReturn` is the nudge family this belongs to, and it moves
-		// with the master on every row written before chat had its own toggle.
-		if (!(prefs?.notifications.enabled && prefs.notifications.gentleReturn)) {
-			return null;
-		}
-
 		// A card naming a compounding domain stays in-app: the lock screen isn't private.
 		const body =
 			card.tier === "acute"
-				? "Just checking in on what you worked through a little while ago. We're here."
+				? ACUTE_NUDGE_BODY
 				: card.compoundingDomain
 					? fallbackFollowUpCard(card.tier)
 					: card.cardText;
 
-		await ctx.scheduler.runAfter(0, internal.notifications.schedule, {
-			content: body,
+		const earlier = await ctx.db
+			.query("outreach")
+			.withIndex("by_follow_up", (q) => q.eq("followUpId", card._id))
+			.take(MAX_NUDGES_PER_CARD);
+		await ctx.runMutation(internal.outreach.enqueue.enqueue, {
+			content: { body },
+			dedupeKey: `nudge:${card._id}:${earlier.length + 1}`,
 			emotionalProfileId: card.emotionalProfileId,
-			followUpTier: card.tier,
-			scheduledFor: Date.now(),
-			triggerReason: `follow_up_${card.tier}`,
-			type: "follow_up",
+			followUpId: card._id,
+			intent: "nudge",
+			provenance: { triggerReason: `follow_up_${card.tier}` },
+			tier: card.tier,
+			// Telegram's history outlives the lock screen: never the card text.
+			variants: { telegram: { body: nudgeFirstLine(card.tier) } },
 		});
 		return null;
 	},

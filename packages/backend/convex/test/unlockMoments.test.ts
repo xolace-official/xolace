@@ -8,10 +8,12 @@
  * a session that opens two domains naming only one; "first" when another
  * domain was already open; free users left out; the push naming the domain;
  * the push firing after the beat was seen, with notifications or milestones
- * off, inside the quiet window, or twice in a week; and the push landing
- * anywhere but the next day in the person's usual hour. Retention:
+ * off, or twice in a week; the quiet window dropping it rather than deferring
+ * it to the window's end (#764); and the push landing anywhere but the next
+ * day in the person's usual hour. Retention:
  * unlockRetention.test.ts.
  */
+import workpoolTest from "@convex-dev/workpool/test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import rateLimiterSchema from "../../node_modules/@convex-dev/rate-limiter/src/component/schema";
 import { api } from "../_generated/api";
@@ -195,6 +197,7 @@ describe("the missed-unlock push (#523)", () => {
 			rateLimiterSchema,
 			rateLimiterModules
 		);
+		workpoolTest.register(user.root, "outreachPush");
 		await setPrefs(user, { enabled: true, milestone: true, ...notifications });
 		await workWarming(user);
 		return user;
@@ -231,15 +234,10 @@ describe("the missed-unlock push (#523)", () => {
 		expect(await logs(user)).toEqual([]);
 	});
 
-	it("respects notifications off, milestones off, and the quiet window", async () => {
+	it("respects notifications off and milestones off", async () => {
 		const offs: Partial<Doc<"preferences">["notifications"]>[] = [
 			{ enabled: false },
 			{ milestone: false },
-			// Every hour is before 24: always quiet.
-			{
-				quietWindow: { dontReachAfter: 23, dontReachBefore: 24 },
-				timezone: "UTC",
-			},
 		];
 		for (const [i, off] of offs.entries()) {
 			const user = await notifiable(i + 1, off);
@@ -249,18 +247,27 @@ describe("the missed-unlock push (#523)", () => {
 		expect(sentPushes).toEqual([]);
 	});
 
-	it("waits out the quiet window instead of dropping the push", async () => {
+	it("defers through the quiet window to its end instead of dropping it", async () => {
+		// Open only in the hour three hours after now, so tomorrow's send is quiet.
+		const openHour = (new Date().getUTCHours() + 3) % 24;
 		const user = await notifiable(1, {
-			quietWindow: { dontReachAfter: 23, dontReachBefore: 24 },
+			quietWindow: { dontReachAfter: openHour, dontReachBefore: openHour },
 			timezone: "UTC",
 		});
 		await tonight(user, ["work"]);
-		vi.advanceTimersByTime(37 * HOUR); // past the send: quiet, so it re-checks hourly
-		await user.root.finishInProgressScheduledFunctions();
-		expect(sentPushes).toEqual([]);
-		await setPrefs(user, { quietWindow: undefined });
 		await nextDay(user);
 		expect(sentPushes).toHaveLength(1);
+		// One outreach, deferred by the layer: no caller-side hourly re-checks.
+		const outreach = await user.root.run((ctx) =>
+			ctx.db
+				.query("outreach")
+				.withIndex("by_profile_created", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.take(10)
+		);
+		expect(outreach).toHaveLength(1);
+		expect(new Date(outreach[0]?.sendAt ?? 0).getUTCHours()).toBe(openHour);
 	});
 
 	it("sends at most one a week", async () => {
@@ -274,7 +281,17 @@ describe("the missed-unlock push (#523)", () => {
 		]);
 		await nextDay(user);
 		expect(sentPushes).toHaveLength(1);
-		expect((await logs(user)).map((l) => l.suppressedReason)).toEqual([
+		// One log row per push; the suppression is recorded on the outreach.
+		expect(await logs(user)).toHaveLength(1);
+		const outreach = await user.root.run((ctx) =>
+			ctx.db
+				.query("outreach")
+				.withIndex("by_profile_created", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.take(10)
+		);
+		expect(outreach.map((o) => o.suppressedReason)).toEqual([
 			undefined,
 			"rate_limit",
 		]);

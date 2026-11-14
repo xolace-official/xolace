@@ -81,7 +81,7 @@ All new, in `schema.ts`, owned by `convex/outreach/`. All additive.
 | `channel_link_tokens` | minted link token | `tokenHash` (SHA-256), `emotionalProfileId`, `channel`, `expiresAt`, `usedAt?`, `regionCode?`, `consentLanguageVersion?` |
 | `inbound_events` | provider update | `channel`, `providerEventId`, `externalId`, `payload`, `receivedAt`, `status: received \| processed \| failed \| ignored` |
 | `outreach_channels` | channel (config) | `channel`, `enabled` (kill switch), `plan: free \| plus` |
-| `telegram_bot` | deployment (single row) | webhook `secretHash`, bot `username` (from `getMe`), written only by the setup action |
+| `telegram_bot` | deployment (single row) | webhook `secretHash`, bot `username` (from `getMe`), written by the setup action; the drift cron writes only `lastPendingUpdateCount` |
 
 Indexes the decisions rely on:
 - `outreach`: `by_dedupe` (`dedupeKey`), `by_profile_created` (`emotionalProfileId`, `createdAt`), `by_follow_up`.
@@ -452,7 +452,8 @@ are deleted after 30 days by a cron.
 ### 9. Client contract (mobile)
 
 All public, under `convex/outreach/`, using `requireAuth`, with validators on args and
-returns.
+returns. `createLink` is `outreach/telegram/link:createLink`; the rest live in
+`outreach/reachMe.ts` (`api.outreach.reachMe.*`).
 
 | Function | Kind | Notes |
 |---|---|---|

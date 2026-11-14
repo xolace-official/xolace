@@ -3,7 +3,8 @@
  * #700: badge pushes, which replace the streak-milestone push. What can go
  * wrong: a badge seen in-app still buzzes the phone; several unlocks send
  * several pushes; a second batch inside a day gets through; the quiet window
- * drops the push instead of deferring it; gentle reminders off still pushes;
+ * drops the push instead of the outreach layer deferring it to the window's
+ * end (#764); gentle reminders off still pushes;
  * a backfilled badge pushes; a push names sparks; a streak day with no rung
  * (400) still pushes the old milestone; a check already waiting names a
  * badge earned moments ago, while its unlock moment is still held; the push
@@ -12,11 +13,12 @@
  * came and went is swept into a later push, days after it was earned.
  */
 import presenceTest from "@convex-dev/presence/test";
+import workpoolTest from "@convex-dev/workpool/test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import rateLimiterSchema from "../../node_modules/@convex-dev/rate-limiter/src/component/schema";
 import { api } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
-import { QUIET_RETRIES } from "../lib/missedBeat";
+import { HELD_RETRIES } from "../lib/missedBeat";
 import { streakMilestoneCopy } from "../streaks/milestones";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, noopJob, revenuecatMock } from "../test/mocks.helpers";
@@ -25,6 +27,8 @@ import { type AchievementId, findAchievement } from "./catalog";
 
 type Sent = { notification: { title?: string; body?: string; data?: unknown } };
 const sentPushes = vi.hoisted(() => [] as Sent[]);
+/** Holds the user in the app across retries without hourly heartbeats. */
+const presence = vi.hoisted(() => ({ stuckInApp: false }));
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../revenuecat", () => revenuecatMock(false));
@@ -33,6 +37,14 @@ vi.mock("../lib/pushNotifications", () => ({
 		sentPushes.push(args);
 	},
 }));
+vi.mock("../presence", async (orig) => {
+	const real = await orig<typeof import("../presence")>();
+	return {
+		...real,
+		isPresent: async (...args: Parameters<typeof real.isPresent>) =>
+			presence.stuckInApp || (await real.isPresent(...args)),
+	};
+});
 vi.mock("../streamSetup", async (orig) => ({
 	...(await orig<typeof import("../streamSetup")>()),
 	addToXolaceChannel: noopJob(),
@@ -51,6 +63,7 @@ const DAY = 24 * HOUR;
 beforeEach(() => {
 	vi.useFakeTimers();
 	sentPushes.length = 0;
+	presence.stuckInApp = false;
 });
 afterEach(() => vi.useRealTimers());
 
@@ -81,6 +94,7 @@ async function notifiable(
 		rateLimiterModules
 	);
 	presenceTest.register(user.root);
+	workpoolTest.register(user.root, "outreachPush");
 	await setPrefs(user, { enabled: true, milestone: true, ...notifications });
 	await seeAll(user);
 	return user;
@@ -104,6 +118,16 @@ async function seeAll(user: SeededUser) {
 const logs = (user: SeededUser) =>
 	user.root.run((ctx) => ctx.db.query("notification_log").take(10));
 
+const outreach = (user: SeededUser) =>
+	user.root.run((ctx) =>
+		ctx.db
+			.query("outreach")
+			.withIndex("by_profile_created", (q) =>
+				q.eq("emotionalProfileId", user.profileId)
+			)
+			.take(10)
+	);
+
 const pendingChecks = (user: SeededUser) =>
 	user.root.run(
 		async (ctx) =>
@@ -116,12 +140,17 @@ const pendingChecks = (user: SeededUser) =>
 const pushes = () =>
 	sentPushes.map(({ notification: { title, body } }) => ({ body, title }));
 
+/** Hops a push takes after the check: enqueue, the workpool's loop, the send. */
+const DELIVERY_HOPS = 10;
+
 /** Moves the clock, then runs what came due and what that enqueued. */
 async function advance(user: SeededUser, ms: number) {
 	vi.advanceTimersByTime(ms);
 	await user.root.finishInProgressScheduledFunctions();
-	vi.advanceTimersByTime(1);
-	await user.root.finishInProgressScheduledFunctions();
+	for (let hop = 0; hop < DELIVERY_HOPS; hop++) {
+		vi.advanceTimersByTime(SECOND);
+		await user.root.finishInProgressScheduledFunctions();
+	}
 }
 
 const stampedPushed = (user: SeededUser, achievementId: AchievementId) =>
@@ -156,12 +185,6 @@ const openApp = (user: SeededUser) =>
 const FIRST_SESSION_PUSH = {
 	body: "You said what was there. That's the hardest part.",
 	title: "First session",
-};
-
-/** Always quiet: every hour is before 24. */
-const ALWAYS_QUIET = {
-	quietWindow: { dontReachAfter: 23, dontReachBefore: 24 },
-	timezone: "UTC",
 };
 
 const pushOf = (id: AchievementId) => {
@@ -218,7 +241,9 @@ describe("the missed-badge push (#700)", () => {
 		await earn(user, "sat-with-it");
 		await advance(user, 13 * HOUR);
 		expect(sentPushes).toHaveLength(1);
-		expect((await logs(user)).map((l) => l.suppressedReason)).toEqual([
+		// One log row per push; the suppression is recorded on the outreach.
+		expect(await logs(user)).toHaveLength(1);
+		expect((await outreach(user)).map((o) => o.suppressedReason)).toEqual([
 			undefined,
 			"rate_limit",
 		]);
@@ -311,19 +336,22 @@ describe("the missed-badge push (#700)", () => {
 		expect(sentPushes).toHaveLength(1);
 	});
 
-	it("waits out the quiet window instead of dropping the push", async () => {
+	it("defers through the quiet window to its end instead of dropping it", async () => {
+		// The check lands this time tomorrow; open only three hours after that.
+		const openHour = (new Date().getUTCHours() + 3) % 24;
 		const user = await notifiable({
-			// Every hour is before 24: always quiet.
-			quietWindow: { dontReachAfter: 23, dontReachBefore: 24 },
+			quietWindow: { dontReachAfter: openHour, dontReachBefore: openHour },
 			timezone: "UTC",
 		});
 		await earn(user, "first-session");
-		vi.advanceTimersByTime(37 * HOUR); // past the check: quiet, so it re-checks hourly
-		await user.root.finishInProgressScheduledFunctions();
-		expect(sentPushes).toEqual([]);
-		await setPrefs(user, { quietWindow: undefined });
 		await nextDay(user);
-		expect(sentPushes).toHaveLength(1);
+		expect(sentPushes).toEqual([]);
+		expect(await stampedPushed(user, "first-session")).toBe(true);
+
+		await advance(user, 3 * HOUR);
+		expect(pushes()).toEqual([FIRST_SESSION_PUSH]);
+		const [deferred] = await outreach(user);
+		expect(new Date(deferred?.sendAt ?? 0).getUTCHours()).toBe(openHour);
 	});
 
 	it("schedules one check per profile however many unlocks land", async () => {
@@ -380,24 +408,6 @@ describe("the missed-badge push (#700)", () => {
 			expect(await pendingChecks(user)).toBe(1);
 		});
 
-		it("gives it the next day even through the quiet window's retries", async () => {
-			const user = await notifiable({
-				quietWindow: { dontReachAfter: 23, dontReachBefore: 24 },
-				timezone: "UTC",
-			});
-			vi.advanceTimersByTime(justBeforeTheCheck);
-			await earn(user, "first-session");
-			await advance(user, pastTheCheck);
-
-			// An hourly retry would push it here, well short of a day.
-			await setPrefs(user, { quietWindow: undefined });
-			await advance(user, 2 * HOUR);
-			expect(sentPushes).toEqual([]);
-
-			await nextDay(user);
-			expect(pushes()).toEqual([FIRST_SESSION_PUSH]);
-		});
-
 		it("still holds back the new one when the older badge's push is held", async () => {
 			const user = await notifiable();
 			await earn(user, "first-session");
@@ -419,19 +429,20 @@ describe("the missed-badge push (#700)", () => {
 			expect(pushes()).toEqual([FIRST_SESSION_PUSH, pushOf("first-listen")]);
 		});
 
-		it("gives the new one its own check when the retries run out", async () => {
-			const user = await notifiable(ALWAYS_QUIET);
+		it("gives the new one its own check when the in-app retries run out", async () => {
+			const user = await notifiable();
 			await earn(user, "first-session");
 			vi.advanceTimersByTime(justBeforeTheCheck);
 			await earn(user, "first-listen");
+			presence.stuckInApp = true;
 			await advance(user, pastTheCheck);
-			for (let retry = 0; retry < QUIET_RETRIES; retry++) {
+			for (let retry = 0; retry < HELD_RETRIES; retry++) {
 				await advance(user, HOUR);
 			}
 			expect(sentPushes).toEqual([]);
 			expect(await pendingChecks(user)).toBe(1);
 
-			await setPrefs(user, { quietWindow: undefined });
+			presence.stuckInApp = false;
 			await nextDay(user);
 			expect(await stampedPushed(user, "first-listen")).toBe(true);
 		});
@@ -454,16 +465,17 @@ describe("the missed-badge push (#700)", () => {
 			expect(unseen.map((a) => a.achievementId)).toContain("first-session");
 		});
 
-		it("isn't swept in after the quiet window outlasts its retries", async () => {
-			const user = await notifiable(ALWAYS_QUIET);
+		it("isn't swept in after the in-app retries run out", async () => {
+			const user = await notifiable();
 			await earn(user, "first-session");
+			presence.stuckInApp = true;
 			await advance(user, 25 * HOUR);
-			for (let retry = 0; retry < QUIET_RETRIES; retry++) {
+			for (let retry = 0; retry < HELD_RETRIES; retry++) {
 				await advance(user, HOUR);
 			}
 			expect(await pendingChecks(user)).toBe(0);
 
-			await setPrefs(user, { quietWindow: undefined });
+			presence.stuckInApp = false;
 			await advance(user, 2 * DAY);
 			await earn(user, "first-listen");
 			await advance(user, 25 * HOUR);
@@ -473,7 +485,7 @@ describe("the missed-badge push (#700)", () => {
 
 		it("still pushes on the last retry of the latest check", async () => {
 			vi.setSystemTime(Date.UTC(2026, 10, 3, 12));
-			const user = await notifiable(ALWAYS_QUIET);
+			const user = await notifiable();
 			await advance(user, 25 * HOUR); // Past Joined's check, so ours is fresh.
 			await user.root.run((ctx) =>
 				ctx.db.patch("emotional_profiles", user.profileId, {
@@ -484,13 +496,14 @@ describe("the missed-badge push (#700)", () => {
 			// minute: earning at 00:01 lands it 35h59m out at the latest.
 			vi.setSystemTime(Date.UTC(2026, 10, 5, 0, 1));
 			await earn(user, "first-session");
+			presence.stuckInApp = true;
 			await advance(user, 36 * HOUR);
-			for (let retry = 0; retry < QUIET_RETRIES - 1; retry++) {
+			for (let retry = 0; retry < HELD_RETRIES - 1; retry++) {
 				await advance(user, HOUR);
 			}
 			expect(sentPushes).toEqual([]);
 
-			await setPrefs(user, { quietWindow: undefined });
+			presence.stuckInApp = false;
 			await advance(user, HOUR);
 			expect(pushes()).toEqual([FIRST_SESSION_PUSH]);
 		});

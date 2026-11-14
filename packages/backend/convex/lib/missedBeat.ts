@@ -1,19 +1,16 @@
-import type { Doc } from "../_generated/dataModel";
-import { isInQuietWindow } from "../jobs/notificationTriggers";
-
 /**
  * Missed-beat pushes (#523, #700): an in-app moment that went unseen gets one
- * push the next day, in the person's usual hour, deferred through their quiet
- * window. Shared by domain unlocks and badges.
+ * push the next day, in the person's usual hour. The outreach layer defers it
+ * through their quiet window (#764). Shared by domain unlocks and badges.
  */
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 
-/** Re-check this often while the quiet window holds. */
-export const QUIET_RETRY_MS = HOUR;
-/** Hourly re-checks while the quiet window holds; past a day, let it go. */
-export const QUIET_RETRIES = 24;
+/** Re-check this often while a push is held (the user is in the app). */
+export const HELD_RETRY_MS = HOUR;
+/** Hourly re-checks while a push is held; past a day, let it go. */
+export const HELD_RETRIES = 24;
 
 /**
  * Next day, in their usual hour: the occurrence of `hourUtc` nearest this time
@@ -31,19 +28,4 @@ export function missedPushAt(at: number, hourUtc?: number): number {
 		: tomorrow - t > 12 * HOUR
 			? t + DAY
 			: t;
-}
-
-/** Is it inside the person's quiet window right now? */
-export function inQuietWindow(
-	notifications: Doc<"preferences">["notifications"]
-): boolean {
-	return Boolean(
-		notifications.quietWindow &&
-			notifications.timezone &&
-			isInQuietWindow(
-				notifications.timezone,
-				notifications.quietWindow.dontReachBefore,
-				notifications.quietWindow.dontReachAfter
-			)
-	);
 }

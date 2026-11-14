@@ -2,12 +2,8 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { internalMutation, type MutationCtx } from "../_generated/server";
-import {
-	inQuietWindow,
-	missedPushAt,
-	QUIET_RETRIES,
-	QUIET_RETRY_MS,
-} from "../lib/missedBeat";
+import { HELD_RETRIES, HELD_RETRY_MS, missedPushAt } from "../lib/missedBeat";
+import { achievementToggle } from "../outreach/channels";
 import { isPresent } from "../presence";
 import { type Achievement, findAchievement } from "./catalog";
 
@@ -15,7 +11,8 @@ import { type Achievement, findAchievement } from "./catalog";
  * Badge pushes (#681, #700), which replace the streak-milestone push. A badge
  * the unlock moment showed never pushes. One that went unseen gets one
  * missed-beat check per profile the next day in the person's usual hour, and
- * everything still unseen then goes out as one push, at most one a day. A
+ * everything still unseen then goes out as one push, at most one a day,
+ * through the outreach layer (which defers it through the quiet window, #764). A
  * badge earned just before the check is left out: its unlock moment may only
  * be held by the session it was earned in, so it gets a check of its own. The
  * push also waits while the user is in the app, where the moment can still
@@ -44,17 +41,13 @@ const MISSED_AFTER_MS = 3_600_000;
 const PUSHABLE_FOR_MS = 3 * 24 * 3_600_000;
 
 /**
- * May we push a badge? `achievement` is absent on rows written before it
- * existed, and no Settings toggle writes it yet; absent follows the gentle
- * reminders' `milestone` flag.
+ * May we push a badge? Push's global switch, then the badge toggle (absent
+ * follows the gentle reminders' `milestone` flag).
  */
-export function achievementPushAllowed(
+function achievementPushAllowed(
 	notifications: Doc<"preferences">["notifications"] | undefined
 ): boolean {
-	if (!notifications?.enabled) {
-		return false;
-	}
-	return notifications.achievement ?? notifications.milestone;
+	return Boolean(notifications?.enabled && achievementToggle(notifications));
 }
 
 /** One badge is named; several are counted. */
@@ -117,8 +110,8 @@ export async function scheduleMissedBadgeCheck(
 /**
  * The missed-beat check: every live badge still unseen and unpushed, as one
  * push, except those earned too recently to call missed, which wait for a
- * check the next day, and those past `PUSHABLE_FOR_MS`. Holds off through the
- * quiet window and while the user is in the app; "too recently" stays measured
+ * check the next day, and those past `PUSHABLE_FOR_MS`. Holds off while the
+ * user is in the app (the quiet window is the layer's); "too recently" stays measured
  * from the check's first run, so a retry an hour on doesn't push a badge earned
  * just before it, and one earned during the retries still gets its own next-day
  * check when they end. Stamps `pushedAt` even when
@@ -132,7 +125,12 @@ export const sendMissedPush = internalMutation({
 		emotionalProfileId: v.id("emotional_profiles"),
 		quietRetries: v.optional(v.number()),
 	},
-	handler: async (ctx, { checkedAt, emotionalProfileId, quietRetries = 0 }) => {
+	// `quietRetries` keeps its name for checks already scheduled; it counts
+	// in-app holds now that the layer owns the quiet window (#764).
+	handler: async (
+		ctx,
+		{ checkedAt, emotionalProfileId, quietRetries: heldRetries = 0 }
+	) => {
 		const rows = await ctx.db
 			.query("user_achievements")
 			.withIndex(
@@ -176,14 +174,12 @@ export const sendMissedPush = internalMutation({
 			return null;
 		}
 		const held =
-			badges.length > 0 &&
-			(inQuietWindow(notifications) ||
-				(await isPresent(ctx, emotionalProfileId)));
-		if (held && quietRetries < QUIET_RETRIES) {
-			// Deferred, not dropped: try again once the window opens or they've left.
-			await armCheck(ctx, emotionalProfileId, now + QUIET_RETRY_MS, {
+			badges.length > 0 && (await isPresent(ctx, emotionalProfileId));
+		if (held && heldRetries < HELD_RETRIES) {
+			// Deferred, not dropped: try again once they've left.
+			await armCheck(ctx, emotionalProfileId, now + HELD_RETRY_MS, {
 				checkedAt: firstRun,
-				quietRetries: quietRetries + 1,
+				quietRetries: heldRetries + 1,
 			});
 			return null;
 		}
@@ -207,12 +203,16 @@ export const sendMissedPush = internalMutation({
 		for (const row of missed) {
 			await ctx.db.patch("user_achievements", row._id, { pushedAt: now });
 		}
-		await ctx.scheduler.runAfter(0, internal.notifications.schedule, {
-			...badgePushCopy(badges),
+		const { content, title } = badgePushCopy(badges);
+		await ctx.runMutation(internal.outreach.enqueue.enqueue, {
+			content: { body: content, ...(title !== undefined && { title }) },
+			// One push per check, however many retries it took.
+			dedupeKey: `achievement:${emotionalProfileId}:${firstRun}`,
 			emotionalProfileId,
-			scheduledFor: now,
-			triggerReason: `Unseen badges: ${badges.map((b) => b.achievementId).join(", ")}`,
-			type: "achievement",
+			intent: "achievement",
+			provenance: {
+				triggerReason: `Unseen badges: ${badges.map((b) => b.achievementId).join(", ")}`,
+			},
 		});
 		return null;
 	},

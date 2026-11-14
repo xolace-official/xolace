@@ -1,5 +1,8 @@
 import { httpRouter } from "convex/server";
 import { chatCompletions } from "./ai/talk/chatCompletions";
+import { APP_LINK_PATH_PREFIX, openApp } from "./outreach/telegram/appLinks";
+import { TELEGRAM_WEBHOOK_PATH } from "./outreach/telegram/botApi";
+import { telegramWebhook } from "./outreach/telegram/webhook";
 import { revenuecat } from "./revenuecat";
 import { streamEvents } from "./streamWebhook";
 import { postCallWebhook } from "./talk/provider";
@@ -29,6 +32,22 @@ http.route({
 	handler: postCallWebhook,
 	method: "POST",
 	path: "/webhooks/elevenlabs",
+});
+
+// Telegram bot updates (#765). Checks X-Telegram-Bot-Api-Secret-Token against
+// the hash `configureBot` stored, and answers 401 on a deployment with no bot.
+http.route({
+	handler: telegramWebhook,
+	method: "POST",
+	path: TELEGRAM_WEBHOOK_PATH,
+});
+
+// The bot's "Open Xolace" and "Support resources" buttons (#768): a redirect
+// into the app's scheme, which Telegram's URL buttons can't open directly.
+http.route({
+	handler: openApp,
+	method: "GET",
+	pathPrefix: APP_LINK_PATH_PREFIX,
 });
 
 // Mounts POST /webhooks/revenuecat — the component verifies the

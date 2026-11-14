@@ -11,6 +11,13 @@ import {
 
 /** One of the 8 scored domains (CONTEXT.md). */
 /** The client platform a row came from. */
+/** How a person asked Xolace to sound (`notifications.reach`). */
+export const reachValidator = v.union(
+	v.literal("warm"),
+	v.literal("direct"),
+	v.literal("quiet")
+);
+
 export const platformValidator = v.union(
 	v.literal("ios"),
 	v.literal("android"),
@@ -446,9 +453,7 @@ export const preferencesDocValidator = v.object({
 				dontReachBefore: v.number(),
 			})
 		),
-		reach: v.optional(
-			v.union(v.literal("warm"), v.literal("direct"), v.literal("quiet"))
-		),
+		reach: v.optional(reachValidator),
 		streakMilestone: v.optional(v.boolean()),
 		timezone: v.optional(v.string()),
 	}),

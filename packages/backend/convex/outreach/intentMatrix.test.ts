@@ -1,15 +1,17 @@
 // @vitest-environment edge-runtime
 /**
- * #763: the push intent matrix, the baseline for the push cutover (#760
- * rollout stage 2). One row per intent, sent through today's
- * `notifications.schedule` and through `outreach.enqueue`, recording what the
- * outside world sees: the push payload, its old `type` literal, one
- * `notification_log` row per push, and how many pushes a day's bucket lets
- * through. Plus the follow-up nudge copy today's caller writes.
+ * #763: the push intent matrix, written as the baseline for the push cutover
+ * (#760 rollout stage 2) and kept green through it (#764). One row per
+ * intent, sent through `notifications.schedule` (now the deprecated wrapper,
+ * which old-args calls scheduled before the deploy still reach) and through
+ * `outreach.enqueue`, recording what the outside world sees: the push
+ * payload, its old `type` literal, one `notification_log` row per push, and
+ * how many pushes a day's bucket lets through. The recorded nudge payload and
+ * the follow-up nudge copy pin today's push against drift.
  *
  * The only differences allowed (#760): suppressions leave `notification_log`
  * (ADR 0001); quiet-window deferral, escalation suppression and the global
- * toggle are exercised in enqueue.test.ts.
+ * toggle are exercised in enqueue.test.ts and cutover.test.ts.
  */
 import workpoolTest from "@convex-dev/workpool/test";
 import type { FunctionArgs } from "convex/server";

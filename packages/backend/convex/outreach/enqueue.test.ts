@@ -456,6 +456,34 @@ describe("gates", () => {
 		expect(delivery?.status).toBe("canceled");
 	});
 
+	it("drops a deferred nudge whose follow-up closed before it sends", async () => {
+		vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
+		const user = await reachable();
+		await setNotifications(user, {
+			quietWindow: { dontReachAfter: 21, dontReachBefore: 8 },
+			timezone: "UTC",
+		});
+		const cardId = await seedCard(user);
+		const { outreachId } = await enqueue(user, {
+			followUpId: cardId,
+			intent: "nudge",
+			tier: "standard",
+		});
+		// Answered in the app overnight.
+		await user.root.run((ctx) =>
+			ctx.db.patch("follow_up_cards", cardId, { status: "resolved" })
+		);
+
+		await drain(user);
+		expect(h.pushes).toHaveLength(0);
+		expect(await outreachRow(user, outreachId)).toMatchObject({
+			outcome: "suppressed",
+			suppressedReason: "card_closed",
+		});
+		const [delivery] = await deliveriesOf(user, outreachId);
+		expect(delivery?.status).toBe("canceled");
+	});
+
 	it("defers to the end of the quiet window, and an acute nudge ignores it", async () => {
 		vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
 		const user = await reachable();
@@ -621,12 +649,75 @@ describe("channel config", () => {
 		expect(h.pushes).toHaveLength(0);
 	});
 
+	it("routes past a paused Telegram, and back once it's resumed (#767)", async () => {
+		const user = await reachable();
+		await linkTelegram(user, ["telegram", "push"]);
+		await user.t.mutation(api.outreach.reachMe.setChannelPaused, {
+			channel: "telegram",
+			paused: true,
+		});
+		await enqueue(user);
+		await drain(user);
+		expect(h.telegram.sends).toHaveLength(0);
+		expect(h.pushes).toHaveLength(1);
+
+		vi.advanceTimersByTime(DAY);
+		await user.t.mutation(api.outreach.reachMe.setChannelPaused, {
+			channel: "telegram",
+			paused: false,
+		});
+		await enqueue(user);
+		await drain(user);
+		expect(h.telegram.sends).toHaveLength(1);
+	});
+
+	it("never routes to a revoked Telegram (#767)", async () => {
+		const user = await reachable();
+		await linkTelegram(user, ["telegram", "push"]);
+		await user.root.run(async (ctx) => {
+			for (const identity of await ctx.db
+				.query("channel_identities")
+				.take(10)) {
+				await ctx.db.patch("channel_identities", identity._id, {
+					revokedAt: Date.now(),
+					revokedReason: "blocked",
+					status: "revoked",
+				});
+			}
+		});
+		await enqueue(user);
+		await drain(user);
+		expect(h.telegram.sends).toHaveLength(0);
+		expect(h.pushes).toHaveLength(1);
+	});
+
 	it("keeps push-only intents off Telegram", async () => {
 		const user = await reachable();
 		await linkTelegram(user, ["telegram", "push"]);
 		await enqueue(user, { intent: "achievement" });
 		await drain(user);
 		expect(h.telegram.sends).toHaveLength(0);
+		expect(h.pushes).toHaveLength(1);
+	});
+
+	it("tries first whichever channel the person put first (#766)", async () => {
+		const user = await reachable();
+		await linkTelegram(user, ["telegram", "push"]);
+		await user.t.mutation(api.outreach.reachMe.setFirstChannel, {
+			channel: "push",
+		});
+		await enqueue(user);
+		await drain(user);
+		expect(h.pushes).toHaveLength(1);
+		expect(h.telegram.sends).toHaveLength(0);
+
+		vi.advanceTimersByTime(DAY);
+		await user.t.mutation(api.outreach.reachMe.setFirstChannel, {
+			channel: "telegram",
+		});
+		await enqueue(user);
+		await drain(user);
+		expect(h.telegram.sends).toHaveLength(1);
 		expect(h.pushes).toHaveLength(1);
 	});
 });
@@ -710,18 +801,35 @@ describe("fallback", () => {
 	});
 });
 
-describe("rollout stage 1", () => {
-	// Shipped dark: the push cutover (stage 2) is what moves callers over.
+describe("rollout stage 2: the push cutover (#764)", () => {
 	const sources = import.meta.glob<string>(
 		["../**/*.ts", "!../_generated/**", "!../**/*.test.ts", "!./**"],
 		{ eager: true, import: "default", query: "?raw" }
 	);
+	const reachesOut = (text: string) =>
+		text.includes("internal.outreach.enqueue.enqueue") ||
+		text.includes("suppressionFor(");
 
-	it("has no caller of enqueue outside the outreach layer", () => {
+	it("leaves no caller of the deprecated schedule", () => {
 		expect(Object.keys(sources).length).toBeGreaterThan(50);
 		const callers = Object.entries(sources)
-			.filter(([, text]) => text.includes("internal.outreach.enqueue"))
+			.filter(([, text]) => text.includes("internal.notifications.schedule"))
 			.map(([path]) => path);
 		expect(callers).toEqual([]);
+	});
+
+	it("leaves the quiet window, escalation and dormancy to the layer", () => {
+		const callers = Object.entries(sources).filter(([, text]) =>
+			reachesOut(text)
+		);
+		// The seven `schedule` call sites, the crons and the deprecated wrapper.
+		expect(callers.length).toBeGreaterThanOrEqual(8);
+		// What each of them used to read to gate itself.
+		const gate =
+			/quietWindow|inQuietWindow|escalation_events|by_profile_escalation_status|INACTIVE_THRESHOLD_MS/;
+		const gating = callers
+			.filter(([, text]) => gate.test(text))
+			.map(([path]) => path);
+		expect(gating).toEqual([]);
 	});
 });

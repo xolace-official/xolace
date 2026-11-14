@@ -165,6 +165,10 @@ the agent's **Voice settings** in ElevenLabs. Every agent needs it, prod's inclu
 That's **30 names**. Not in the list on purpose: `CONVEX_SITE_URL` (Convex sets it),
 and `EVAL_OUT` / `TALK_EVAL_MODEL` (local eval runs only).
 
+Telegram is outside that count: staging gets its own shared bot, never prod's or a
+dev one. Set `TELEGRAM_BOT_TOKEN` and run `configureBot` as in
+[telegram.md](./telegram.md).
+
 Never use a `sk_live_`/production secret here. Staging is a test environment.
 
 ## Step 5: (Optional) automatic mobile preview OTAs
