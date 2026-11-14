@@ -1,7 +1,7 @@
 import type { Doc } from "../_generated/dataModel";
 import { NUDGE_NOTIFICATION_SOUND } from "../lib/notificationSounds";
 import { sendPushToProfile } from "../lib/pushNotifications";
-import type { MutationAdapter } from "./adapters";
+import { ChannelError, type MutationAdapter } from "./adapters";
 
 type NotificationType = Doc<"notification_log">["type"];
 
@@ -56,7 +56,7 @@ export const pushAdapter: Omit<MutationAdapter, "pool"> = {
 			...(provenance.generatedBy && { generatedBy: provenance.generatedBy }),
 		});
 
-		await sendPushToProfile(ctx, {
+		const reached = await sendPushToProfile(ctx, {
 			emotionalProfileId: outreach.emotionalProfileId,
 			notification: {
 				body: outreach.content.body,
@@ -71,6 +71,14 @@ export const pushAdapter: Omit<MutationAdapter, "pool"> = {
 				title: outreach.content.title ?? "Xolace",
 			},
 		});
+
+		// Nowhere to land (no token, or every device reaped): not a send. No
+		// compatibility row claims it was delivered, and the delivery ends
+		// `unreachable` so it falls back once (outreach-layer.md §3).
+		if (reached === 0) {
+			await ctx.db.delete("notification_log", notificationLogId);
+			throw new ChannelError("unreachable", { code: "no_device" });
+		}
 
 		return { notificationLogId };
 	},

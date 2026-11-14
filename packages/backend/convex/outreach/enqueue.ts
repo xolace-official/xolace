@@ -14,6 +14,7 @@ import {
 	followUpTierValidator,
 	outreachContentValidator,
 	outreachIntentValidator,
+	outreachMomentValidator,
 	outreachOutcomeValidator,
 	outreachProvenanceValidator,
 	outreachVariantsValidator,
@@ -28,6 +29,8 @@ const enqueueArgs = {
 	emotionalProfileId: v.id("emotional_profiles"),
 	followUpId: v.optional(v.id("follow_up_cards")),
 	intent: outreachIntentValidator,
+	/** A missed-beat push's in-app moment: once the app shows it, the push stands down. */
+	moment: v.optional(outreachMomentValidator),
 	provenance: outreachProvenanceValidator,
 	tier: v.optional(followUpTierValidator),
 	variants: v.optional(outreachVariantsValidator),
@@ -86,6 +89,7 @@ export const enqueue = internalMutation({
 				provenance: args.provenance,
 				...(args.dedupeKey !== undefined && { dedupeKey: args.dedupeKey }),
 				...(args.followUpId && { followUpId: args.followUpId }),
+				...(args.moment && { moment: args.moment }),
 				...(args.tier && { tier: args.tier }),
 				...(args.variants && { variants: args.variants }),
 				...(outcome.kind === "suppressed"

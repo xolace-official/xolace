@@ -354,6 +354,28 @@ describe("the missed-badge push (#700)", () => {
 		expect(new Date(deferred?.sendAt ?? 0).getUTCHours()).toBe(openHour);
 	});
 
+	it("stands down if the moment shows it while the push waits out the quiet window", async () => {
+		const openHour = (new Date().getUTCHours() + 3) % 24;
+		const user = await notifiable({
+			quietWindow: { dontReachAfter: openHour, dontReachBefore: openHour },
+			timezone: "UTC",
+		});
+		await earn(user, "first-session");
+		await nextDay(user);
+		expect(await outreach(user)).toHaveLength(1);
+		// Opened the app before the window ended: the unlock moment showed it.
+		await seeAll(user);
+
+		await advance(user, 3 * HOUR);
+		expect(sentPushes).toEqual([]);
+		expect(await logs(user)).toEqual([]);
+		const [held] = await outreach(user);
+		expect(held).toMatchObject({
+			outcome: "suppressed",
+			suppressedReason: "moment_seen",
+		});
+	});
+
 	it("schedules one check per profile however many unlocks land", async () => {
 		const user = await notifiable();
 		await earn(user, "first-session", "first-listen", "sat-with-it");

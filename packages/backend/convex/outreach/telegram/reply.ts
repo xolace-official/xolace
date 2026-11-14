@@ -465,7 +465,7 @@ async function struggling(
 		return true;
 	}
 	return (
-		(await openEscalationCard(ctx, profileId)) !== null ||
+		(await openEscalationCard(ctx, profileId, now)) !== null ||
 		(await escalatedRecently(ctx, profileId, now))
 	);
 }

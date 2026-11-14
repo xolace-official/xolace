@@ -270,6 +270,43 @@ describe("the missed-unlock push (#523)", () => {
 		expect(new Date(outreach[0]?.sendAt ?? 0).getUTCHours()).toBe(openHour);
 	});
 
+	it("stands down if the beat is seen while the push waits out the quiet window", async () => {
+		const openHour = (new Date().getUTCHours() + 3) % 24;
+		const user = await notifiable(1, {
+			quietWindow: { dontReachAfter: openHour, dontReachBefore: openHour },
+			timezone: "UTC",
+		});
+		const { sessionId } = await tonight(user, ["work"]);
+		// Past tomorrow's missed-beat check, still inside the quiet window.
+		vi.advanceTimersByTime(25 * HOUR);
+		for (let hop = 0; hop < 10; hop++) {
+			await user.root.finishInProgressScheduledFunctions();
+			vi.advanceTimersByTime(1000);
+		}
+		const outreachRows = () =>
+			user.root.run((ctx) =>
+				ctx.db
+					.query("outreach")
+					.withIndex("by_profile_created", (q) =>
+						q.eq("emotionalProfileId", user.profileId)
+					)
+					.take(10)
+			);
+		expect(await outreachRows()).toHaveLength(1);
+		// Opened the app before the window ended: the beat showed.
+		await user.t.mutation(api.compounding.unlocks.markSeen, { sessionId });
+
+		await nextDay(user);
+		expect(sentPushes).toEqual([]);
+		expect(await logs(user)).toEqual([]);
+		expect(await outreachRows()).toEqual([
+			expect.objectContaining({
+				outcome: "suppressed",
+				suppressedReason: "moment_seen",
+			}),
+		]);
+	});
+
 	it("sends at most one a week", async () => {
 		const user = await notifiable();
 		await seedReading(user, 2, ["romance"]);

@@ -149,7 +149,7 @@ export const schedule = internalMutation({
 		// escalation-derived card's own nudge, which its hold must let through.
 		const escalationCard =
 			intent === "nudge" && args.followUpTier === "acute"
-				? await openEscalationCard(ctx, args.emotionalProfileId)
+				? await openEscalationCard(ctx, args.emotionalProfileId, Date.now())
 				: null;
 		await ctx.runMutation(internal.outreach.enqueue.enqueue, {
 			content: {

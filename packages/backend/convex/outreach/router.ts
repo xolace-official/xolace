@@ -1,6 +1,7 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { sourceEventSince } from "../escalation/events";
+import { followUpLifetimeMs } from "../lib/followUpCadence";
 import { hasPremium } from "../lib/premium";
 import { rateLimiter } from "../lib/rateLimits";
 import { ADAPTERS } from "./adapters";
@@ -89,13 +90,28 @@ export async function accountDeleted(
 	);
 }
 
-/** The profile's open escalation-derived follow-up, if any. */
+/**
+ * How long an escalation-derived card holds routine outreach, from when it was
+ * made: 72 h, as an escalation event does, or less if the card itself would
+ * have expired sooner (acute). Answering or dismissing it ends the hold first.
+ */
+function escalationCardHoldMs(card: Doc<"follow_up_cards">): number {
+	return Math.min(followUpLifetimeMs(card.tier), ESCALATION_HOLD_MS);
+}
+
+/**
+ * The profile's open escalation-derived follow-up still inside its hold, if
+ * any, newest first. A card the user never answers (seen, superseded or
+ * still pending) stops holding after {@link escalationCardHoldMs}, whatever
+ * its tier.
+ */
 export async function openEscalationCard(
 	ctx: QueryCtx,
-	emotionalProfileId: Id<"emotional_profiles">
+	emotionalProfileId: Id<"emotional_profiles">,
+	now: number
 ): Promise<Doc<"follow_up_cards"> | null> {
 	for (const status of UNRESOLVED_CARD_STATUSES) {
-		const card = await ctx.db
+		const cards = ctx.db
 			.query("follow_up_cards")
 			.withIndex("by_profile_escalation_status", (q) =>
 				q
@@ -103,9 +119,15 @@ export async function openEscalationCard(
 					.eq("escalationDerived", true)
 					.eq("status", status)
 			)
-			.first();
-		if (card) {
-			return card;
+			.order("desc");
+		for await (const card of cards) {
+			// Made before the longest hold: so is every card after it.
+			if (card._creationTime <= now - ESCALATION_HOLD_MS) {
+				break;
+			}
+			if (card.createdAt + escalationCardHoldMs(card) > now) {
+				return card;
+			}
 		}
 	}
 	return null;
@@ -203,7 +225,7 @@ export async function escalationOrDormancy(
 		(UNRESOLVED_CARD_STATUSES as readonly string[]).includes(nudgedCard.status);
 
 	if (!ownCardNudge) {
-		if (await openEscalationCard(ctx, input.emotionalProfileId)) {
+		if (await openEscalationCard(ctx, input.emotionalProfileId, now)) {
 			return "escalation_active";
 		}
 		if (await escalatedRecently(ctx, input.emotionalProfileId, now)) {

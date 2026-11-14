@@ -210,6 +210,8 @@ export const sendMissedPush = internalMutation({
 			dedupeKey: `achievement:${emotionalProfileId}:${firstRun}`,
 			emotionalProfileId,
 			intent: "achievement",
+			// A badge the moment shows while this waits out the quiet window never pushes.
+			moment: { achievementIds: missed.map((row) => row._id), kind: "badges" },
 			provenance: {
 				triggerReason: `Unseen badges: ${badges.map((b) => b.achievementId).join(", ")}`,
 			},

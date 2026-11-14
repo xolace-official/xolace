@@ -36,6 +36,8 @@ const h = vi.hoisted(() => ({
 	plus: false,
 	pushes: [] as Sent[],
 	pushFailures: [] as Error[],
+	/** Devices `sendPushToProfile` reaches; 0 = none left to receive it. */
+	pushReach: 1,
 	telegram: {
 		configured: false,
 		failures: [] as Error[],
@@ -52,6 +54,7 @@ vi.mock("../lib/pushNotifications", () => ({
 			throw failure;
 		}
 		h.pushes.push(args);
+		return h.pushReach;
 	},
 }));
 vi.mock("../streamSetup", async (orig) => ({
@@ -105,6 +108,7 @@ beforeEach(() => {
 	vi.setSystemTime(NOW);
 	h.plus = false;
 	h.pushFailures.length = 0;
+	h.pushReach = 1;
 	h.pushes.length = 0;
 	h.telegram.configured = false;
 	h.telegram.failures.length = 0;
@@ -347,6 +351,79 @@ describe("gates", () => {
 		).toMatchObject({ outcome: "queued" });
 	});
 
+	it.each(["ready", "shown", "superseded"] as const)(
+		"stops holding once a %s escalation-derived card would have expired",
+		async (status) => {
+			const user = await reachable();
+			// Acute stays pending 45 min + 4 h + 48 h; this one is past that.
+			await seedCard(user, {
+				createdAt: NOW - 60 * HOUR,
+				escalationDerived: true,
+				status,
+				tier: "acute",
+			});
+			expect(await enqueue(user)).toMatchObject({ outcome: "queued" });
+		}
+	);
+
+	it("holds while a seen escalation-derived card is inside its own window", async () => {
+		const user = await reachable();
+		await seedCard(user, {
+			createdAt: NOW - 50 * HOUR,
+			escalationDerived: true,
+			status: "shown",
+			tier: "acute",
+		});
+		expect(await enqueue(user)).toMatchObject({
+			suppressedReason: "escalation_active",
+		});
+	});
+
+	it("finds a live escalation-derived card behind a newer lapsed one", async () => {
+		const user = await reachable();
+		// Elevated holds the full 72 h; acute lapses with its own window, under 53 h.
+		await seedCard(user, {
+			createdAt: NOW - 70 * HOUR,
+			escalationDerived: true,
+			status: "superseded",
+			tier: "elevated",
+		});
+		await seedCard(user, {
+			createdAt: NOW - 60 * HOUR,
+			escalationDerived: true,
+			status: "superseded",
+			tier: "acute",
+		});
+		expect(await enqueue(user)).toMatchObject({
+			suppressedReason: "escalation_active",
+		});
+	});
+
+	it.each(["pending", "ready", "shown", "superseded"] as const)(
+		"holds a %s standard escalation-derived card for 72 h at most",
+		async (status) => {
+			const user = await reachable();
+			// Standard stays pending 18 days, but the hold ends at 72 h, as an
+			// escalation event's does.
+			const cardId = await seedCard(user, {
+				createdAt: NOW - 71 * HOUR,
+				escalationDerived: true,
+				status,
+				tier: "standard",
+			});
+			expect(await enqueue(user)).toMatchObject({
+				suppressedReason: "escalation_active",
+			});
+
+			await user.root.run((ctx) =>
+				ctx.db.patch("follow_up_cards", cardId, {
+					createdAt: NOW - 73 * HOUR,
+				})
+			);
+			expect(await enqueue(user)).toMatchObject({ outcome: "queued" });
+		}
+	);
+
 	it("holds every intent for 72 h after an escalation event", async () => {
 		const user = await reachable();
 		await seedEscalation(user, NOW - 71 * HOUR);
@@ -483,6 +560,110 @@ describe("gates", () => {
 		const [delivery] = await deliveriesOf(user, outreachId);
 		expect(delivery?.status).toBe("canceled");
 	});
+
+	it.each(["ready", "shown"] as const)(
+		"drops a deferred nudge once the user is back to its card (%s)",
+		async (status) => {
+			vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
+			const user = await reachable();
+			await setNotifications(user, {
+				quietWindow: { dontReachAfter: 21, dontReachBefore: 8 },
+				timezone: "UTC",
+			});
+			const cardId = await seedCard(user);
+			const { outreachId } = await enqueue(user, {
+				followUpId: cardId,
+				intent: "nudge",
+				tier: "standard",
+			});
+			// Opened the app at 07:30: `markReturn` made the card ready, and
+			// the sheet may have shown it since.
+			await user.root.run((ctx) =>
+				ctx.db.patch("follow_up_cards", cardId, { status })
+			);
+
+			await drain(user);
+			expect(h.pushes).toHaveLength(0);
+			expect(await outreachRow(user, outreachId)).toMatchObject({
+				outcome: "suppressed",
+				suppressedReason: "card_closed",
+			});
+		}
+	);
+
+	it("drops a deferred outreach whose toggle went off before it sends", async () => {
+		vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
+		const user = await reachable();
+		await setNotifications(user, {
+			quietWindow: { dontReachAfter: 21, dontReachBefore: 8 },
+			timezone: "UTC",
+		});
+		const { outreachId } = await enqueue(user);
+		await setNotifications(user, { gentleReturn: false });
+
+		await drain(user);
+		expect(h.pushes).toHaveLength(0);
+		expect(await outreachRow(user, outreachId)).toMatchObject({
+			outcome: "suppressed",
+			suppressedReason: "toggle_off",
+		});
+		const [delivery] = await deliveriesOf(user, outreachId);
+		expect(delivery?.status).toBe("canceled");
+	});
+
+	it("doesn't push a deferred outreach after push was turned off", async () => {
+		vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
+		const user = await reachable();
+		await setNotifications(user, {
+			quietWindow: { dontReachAfter: 21, dontReachBefore: 8 },
+			timezone: "UTC",
+		});
+		const { outreachId } = await enqueue(user, { intent: "achievement" });
+		await setNotifications(user, { enabled: false });
+
+		await drain(user);
+		expect(h.pushes).toHaveLength(0);
+		expect(await outreachRow(user, outreachId)).toMatchObject({
+			outcome: "suppressed",
+			suppressedReason: "no_channel",
+		});
+		expect(await deliveriesOf(user, outreachId)).toEqual([
+			expect.objectContaining({ channel: "push", status: "canceled" }),
+		]);
+	});
+
+	it.each([
+		{ change: { enabled: false, plan: "free" }, name: "kill switch" },
+		{ change: { enabled: true, plan: "plus" }, name: "lost Plus" },
+	] as const)(
+		"reroutes a deferred Telegram outreach when Telegram closes ($name)",
+		async ({ change }) => {
+			vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
+			const user = await reachable();
+			await linkTelegram(user, ["telegram", "push"]);
+			await setNotifications(user, {
+				quietWindow: { dontReachAfter: 21, dontReachBefore: 8 },
+				timezone: "UTC",
+			});
+			const { outreachId } = await enqueue(user);
+			await asAdmin(9, user.root).mutation(
+				api.admin.outreachChannels.setChannelConfig,
+				{ channel: "telegram", ...change }
+			);
+
+			await drain(user);
+			expect(h.telegram.sends).toHaveLength(0);
+			expect(h.pushes).toHaveLength(1);
+			expect(await deliveriesOf(user, outreachId)).toEqual([
+				expect.objectContaining({ channel: "telegram", status: "canceled" }),
+				expect.objectContaining({
+					channel: "push",
+					isFallback: true,
+					status: "sent",
+				}),
+			]);
+		}
+	);
 
 	it("defers to the end of the quiet window, and an acute nudge ignores it", async () => {
 		vi.setSystemTime(Date.UTC(2026, 10, 13, 23, 30));
@@ -752,6 +933,30 @@ describe("fallback", () => {
 				status: "sent",
 			}),
 		]);
+	});
+
+	it("falls back when push reaches no device, and logs nothing as delivered", async () => {
+		const user = await reachable();
+		await linkTelegram(user, ["push", "telegram"]);
+		// No token at all, or every device reaped: nothing to receive it.
+		h.pushReach = 0;
+		const { outreachId } = await enqueue(user);
+		await drain(user);
+		expect(h.telegram.sends).toEqual(["It's been a little while."]);
+		expect(await deliveriesOf(user, outreachId)).toEqual([
+			expect.objectContaining({
+				channel: "push",
+				error: { code: "no_device", kind: "unreachable" },
+				isFallback: false,
+				status: "unreachable",
+			}),
+			expect.objectContaining({
+				channel: "telegram",
+				isFallback: true,
+				status: "sent",
+			}),
+		]);
+		expect(await user.t.query(api.notifications.list, {})).toEqual([]);
 	});
 
 	it("never falls back a second time", async () => {

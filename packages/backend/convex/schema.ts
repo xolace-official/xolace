@@ -41,6 +41,7 @@ import {
 	outreachChannelValidator,
 	outreachContentValidator,
 	outreachIntentValidator,
+	outreachMomentValidator,
 	outreachOutcomeValidator,
 	outreachProvenanceValidator,
 	outreachVariantsValidator,
@@ -1865,6 +1866,8 @@ export default defineSchema({
 		emotionalProfileId: v.id("emotional_profiles"),
 		followUpId: v.optional(v.id("follow_up_cards")),
 		intent: outreachIntentValidator,
+		// A missed-beat push's in-app moment; absent on rows before it.
+		moment: v.optional(outreachMomentValidator),
 		outcome: outreachOutcomeValidator,
 		provenance: outreachProvenanceValidator,
 		resultedInSession: v.optional(v.boolean()),
