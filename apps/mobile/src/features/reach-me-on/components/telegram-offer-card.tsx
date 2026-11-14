@@ -82,6 +82,8 @@ export const TelegramOfferCard = (props: Props) => {
 								<Button.Label>Link Telegram</Button.Label>
 							</Button>
 							<Button
+								// Still with it has its own "Not now" (close) just above.
+								accessibilityLabel="Not now, don't offer Telegram again"
 								onPress={() => {
 									playSoftPress();
 									posthog.capture("channel_offer_dismissed", {
