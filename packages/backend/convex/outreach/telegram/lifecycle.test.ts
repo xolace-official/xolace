@@ -336,6 +336,87 @@ describe("the 30-day purge", () => {
 	});
 });
 
+/** Sent Telegram deliveries in `chatId`, one outreach row behind them. */
+const seedSent = (user: SeededUser, chatId: string, count: number) =>
+	user.root.run(async (ctx) => {
+		const outreachId = await ctx.db.insert("outreach", {
+			content: { body: "It's been a little while." },
+			createdAt: Date.now(),
+			emotionalProfileId: user.profileId,
+			intent: "gentle_return",
+			outcome: "queued",
+			provenance: { triggerReason: "test" },
+		});
+		for (let n = 0; n < count; n++) {
+			await ctx.db.insert("outreach_deliveries", {
+				attempts: 1,
+				channel: "telegram",
+				createdAt: Date.now(),
+				isFallback: false,
+				outreachId,
+				providerChatId: chatId,
+				providerMessageId: String(1000 + n),
+				status: "sent",
+			});
+		}
+	});
+
+const chatIdsOf = (user: SeededUser) =>
+	user.root.run(async (ctx) =>
+		(await ctx.db.query("outreach_deliveries").take(500)).map(
+			(d) => d.providerChatId ?? null
+		)
+	);
+
+const purge = (user: SeededUser) =>
+	user.root.mutation(internal.outreach.telegram.lifecycle.purgeRevoked, {});
+
+describe("the 30-day purge of a chat's deliveries", () => {
+	it("strips the chat and message ids from the chat's deliveries with the row", async () => {
+		const { user } = await linked();
+		await seedSent(user, CHAT, 3);
+		await seedSent(user, "another-chat", 1);
+		const unlinkedAt = Date.now();
+		await unlink(user);
+		await processSoon(user.root);
+		vi.setSystemTime(unlinkedAt + REVOKED_RETENTION_MS);
+
+		await purge(user);
+
+		expect(await identities(user)).toEqual([]);
+		const deliveries = await user.root.run((ctx) =>
+			ctx.db.query("outreach_deliveries").take(500)
+		);
+		expect(
+			deliveries
+				.filter((d) => d.providerChatId !== "another-chat")
+				.map((d) => [d.providerChatId, d.providerMessageId])
+		).toEqual([
+			[undefined, undefined],
+			[undefined, undefined],
+			[undefined, undefined],
+		]);
+		expect(await chatIdsOf(user)).toContain("another-chat");
+	});
+
+	it("keeps the row until every delivery is stripped, a batch at a time", async () => {
+		const { user } = await linked();
+		await seedSent(user, CHAT, 250);
+		const unlinkedAt = Date.now();
+		await unlink(user);
+		await processSoon(user.root);
+		vi.setSystemTime(unlinkedAt + REVOKED_RETENTION_MS);
+
+		await purge(user);
+		expect(await identities(user)).toHaveLength(1);
+		expect((await chatIdsOf(user)).filter((id) => id === CHAT).length).toBe(50);
+
+		await processSoon(user.root);
+		expect(await identities(user)).toEqual([]);
+		expect(await chatIdsOf(user)).not.toContain(CHAT);
+	});
+});
+
 const OTHER_CHAT = 5_151_515_151;
 
 describe("relinks", () => {

@@ -270,9 +270,15 @@ export const markUnreachable = internalMutation({
 	returns: v.null(),
 });
 
+/** Deliveries one purge pass strips of their chat and message ids. */
+const STRIP_BATCH = 200;
+
 /**
  * Delete revoked rows 30 days after `revokedAt`; after that the chat is a
- * stranger. Runs from a daily cron, a batch at a time.
+ * stranger. Runs from a daily cron, a batch at a time. A chat's deliveries
+ * lose its chat and message ids first, so nothing still ties the chat to a
+ * profile; the row goes only once none are left (a relink in between finds
+ * it and reactivates it, as before).
  */
 export const purgeRevoked = internalMutation({
 	args: {},
@@ -287,10 +293,36 @@ export const purgeRevoked = internalMutation({
 					.lte("revokedAt", Date.now() - REVOKED_RETENTION_MS)
 			)
 			.take(PURGE_BATCH);
+		let budget = STRIP_BATCH;
+		let more = expired.length === PURGE_BATCH;
 		for (const identity of expired) {
+			if (identity.channel === "telegram") {
+				if (budget === 0) {
+					more = true;
+					break;
+				}
+				const sent = await ctx.db
+					.query("outreach_deliveries")
+					.withIndex("by_chat_check_in", (q) =>
+						q.eq("providerChatId", identity.externalId)
+					)
+					.take(budget);
+				for (const delivery of sent) {
+					await ctx.db.patch("outreach_deliveries", delivery._id, {
+						providerChatId: undefined,
+						providerMessageId: undefined,
+					});
+				}
+				budget -= sent.length;
+				if (budget === 0) {
+					// Maybe more of this chat's: strip them before the row goes.
+					more = true;
+					break;
+				}
+			}
 			await ctx.db.delete("channel_identities", identity._id);
 		}
-		if (expired.length === PURGE_BATCH) {
+		if (more) {
 			await ctx.scheduler.runAfter(
 				0,
 				internal.outreach.telegram.lifecycle.purgeRevoked,
