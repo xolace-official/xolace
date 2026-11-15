@@ -1,6 +1,6 @@
 import { ConvexError, type Infer, v } from "convex/values";
 import { internal } from "../_generated/api";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import { mutation, type QueryCtx, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
 import {
@@ -44,6 +44,12 @@ const channelEntryValidator = v.object({
 	channel: outreachChannelValidator,
 	/** The Telegram `@username` (without the `@`), shown only to its owner. */
 	displayHandle: v.optional(v.string()),
+	/**
+	 * Telegram only: this account has linked it at some point. Unlike
+	 * `status`, it outlives the 30-day purge of revoked rows (#777's offer).
+	 * Absent from older deployments.
+	 */
+	everLinked: v.optional(v.boolean()),
 	/** The channel routing tries first: first in order, linked and open. */
 	isFirst: v.boolean(),
 	/** A link exists (active or paused), whatever the plan says now. */
@@ -68,23 +74,58 @@ function linkStatus(
 	return link.status === "paused" ? "paused" : "linked";
 }
 
+/**
+ * Whether this account ever linked Telegram. Every link grants a
+ * `telegram_outreach` consent, and consent rows are append-only and kept until
+ * account deletion, so they outlive the purge of revoked identity rows.
+ */
+async function everLinkedTelegram(
+	ctx: QueryCtx,
+	emotionalProfileId: Id<"emotional_profiles">,
+	identities: Doc<"channel_identities">[]
+): Promise<boolean> {
+	if (identities.length > 0) {
+		return true;
+	}
+	const consent = await ctx.db
+		.query("consent_records")
+		.withIndex("by_profile_type", (q) =>
+			q
+				.eq("emotionalProfileId", emotionalProfileId)
+				.eq("consentType", "telegram_outreach")
+		)
+		.first();
+	return consent !== null;
+}
+
 async function channelEntry(
 	ctx: QueryCtx,
 	channel: OutreachChannel,
-	profile: Doc<"emotional_profiles">
+	profile: Doc<"emotional_profiles">,
+	pushOn: boolean
 ): Promise<ChannelEntry> {
 	const unavailable = await channelUnavailable(ctx, channel, profile);
-	const base = {
+	const common = {
 		available: unavailable === null,
 		channel,
 		isFirst: false,
 		requiresPlus: (await channelConfig(ctx, channel)).plan === "plus",
 	};
 	if (channel === "push") {
-		// Push is the app itself: nothing to link.
-		return { ...base, linked: true, status: "linked" };
+		// Push is the app itself: nothing to link. With notifications off the
+		// router skips it (`push_off`), so it isn't open now.
+		return {
+			...common,
+			available: common.available && pushOn,
+			linked: true,
+			status: "linked",
+		};
 	}
 	const identities = await identitiesOf(ctx, profile._id, channel);
+	const base = {
+		...common,
+		everLinked: await everLinkedTelegram(ctx, profile._id, identities),
+	};
 	const link = currentLink(identities);
 	if (link) {
 		return {
@@ -129,9 +170,11 @@ export const listChannels = query({
 		const shown = [
 			...new Set([...order, ...ALL_CHANNELS].filter((c) => offered.has(c))),
 		];
+		// As the router reads it: absent preferences are off too.
+		const pushOn = notifications?.enabled === true;
 		const entries: ChannelEntry[] = [];
 		for (const channel of shown) {
-			entries.push(await channelEntry(ctx, channel, profile));
+			entries.push(await channelEntry(ctx, channel, profile, pushOn));
 		}
 		// First = the channel routing would try first: the first in the
 		// person's order that is linked and open to them now.

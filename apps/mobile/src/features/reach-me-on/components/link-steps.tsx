@@ -1,20 +1,35 @@
 import { Button } from "heroui-native";
-import { ActivityIndicator, View } from "react-native";
-import { AppText } from "@/components/shared/app-text";
+import { useEffect } from "react";
 import {
-	LINK_DISCLOSURE,
+	AccessibilityInfo,
+	ActivityIndicator,
+	Platform,
+	View,
+} from "react-native";
+import { AppText } from "@/components/shared/app-text";
+import { LINK_DISCLOSURE } from "@/features/reach-me-on/link-consent";
+import {
 	LINK_LIFETIME_MINUTES,
-} from "@/features/reach-me-on/link-consent";
-import type { LinkStep } from "@/features/reach-me-on/link-flow";
+	type LinkStep,
+} from "@/features/reach-me-on/link-flow";
 import { playSoftPress } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 const STEP_NUMBER: Record<Exclude<LinkStep, "idle">, number> = {
 	disclose: 1,
+	expired: 2,
 	linked: 3,
 	waiting: 2,
 };
 const STEPS = [1, 2, 3] as const;
+/**
+ * Steps reached without a tap, read out politely: a live region on Android,
+ * an announcement on iOS (VoiceOver has no live regions).
+ */
+const ANNOUNCE: Partial<Record<LinkStep, string>> = {
+	expired: "That link expired",
+	linked: "Linked. Check-ins come to Telegram first now.",
+};
 
 type Props = {
 	step: Exclude<LinkStep, "idle">;
@@ -37,6 +52,14 @@ export const LinkSteps = ({
 	onDismiss,
 }: Props) => {
 	const current = STEP_NUMBER[step];
+	useEffect(() => {
+		const message = ANNOUNCE[step];
+		if (message && Platform.OS === "ios") {
+			AccessibilityInfo.announceForAccessibilityWithOptions(message, {
+				queue: true,
+			});
+		}
+	}, [step]);
 	const press = (fn: () => void) => () => {
 		playSoftPress();
 		fn();
@@ -60,7 +83,10 @@ export const LinkSteps = ({
 			</View>
 			{step === "disclose" && (
 				<>
-					<AppText className="font-semibold text-foreground text-lg">
+					<AppText
+						accessibilityRole="header"
+						className="font-semibold text-foreground text-lg"
+					>
 						Before you link
 					</AppText>
 					{LINK_DISCLOSURE.map((line) => (
@@ -68,7 +94,32 @@ export const LinkSteps = ({
 							• {line}
 						</AppText>
 					))}
+				</>
+			)}
+			{step === "expired" && (
+				<>
+					<AppText
+						accessibilityLiveRegion="polite"
+						accessibilityRole="header"
+						className="font-semibold text-foreground text-lg"
+					>
+						That link expired
+					</AppText>
+					<AppText className="text-foreground/70 text-sm">
+						Links work for {LINK_LIFETIME_MINUTES} minutes. Open Telegram again
+						for a fresh one.
+					</AppText>
+				</>
+			)}
+			{(step === "disclose" || step === "expired") && (
+				<>
 					<Button
+						// The spinner that replaces the label while minting has no name.
+						accessibilityLabel="Open Telegram"
+						accessibilityState={{
+							busy: minting,
+							disabled: disabled || minting,
+						}}
 						isDisabled={disabled || minting}
 						onPress={press(onOpenTelegram)}
 					>
@@ -92,7 +143,10 @@ export const LinkSteps = ({
 			)}
 			{step === "waiting" && (
 				<>
-					<AppText className="font-semibold text-foreground text-lg">
+					<AppText
+						accessibilityRole="header"
+						className="font-semibold text-foreground text-lg"
+					>
 						Tap Start in Telegram
 					</AppText>
 					<View className="flex-row items-center gap-3">
@@ -116,12 +170,17 @@ export const LinkSteps = ({
 			)}
 			{step === "linked" && (
 				<>
-					<AppText className="font-semibold text-foreground text-lg">
-						Linked
-					</AppText>
-					<AppText className="text-foreground/70 text-sm">
-						Check-ins come to Telegram first now.
-					</AppText>
+					<View accessibilityLiveRegion="polite" className="gap-4">
+						<AppText
+							accessibilityRole="header"
+							className="font-semibold text-foreground text-lg"
+						>
+							Linked
+						</AppText>
+						<AppText className="text-foreground/70 text-sm">
+							Check-ins come to Telegram first now.
+						</AppText>
+					</View>
 					<Button onPress={press(onDismiss)} variant="secondary">
 						<Button.Label>Done</Button.Label>
 					</Button>

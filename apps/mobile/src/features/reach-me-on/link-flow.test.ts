@@ -1,5 +1,12 @@
-import { describe, expect, it } from "vitest";
-import { type LinkStep, linkFlow } from "@/features/reach-me-on/link-flow";
+import { describe, expect, it, vi } from "vitest";
+import {
+	canReuseLink,
+	isLinking,
+	LINK_LIFETIME_MINUTES,
+	type LinkStep,
+	linkFlow,
+	shareInFlight,
+} from "@/features/reach-me-on/link-flow";
 
 const run = (...events: Parameters<typeof linkFlow>[1][]): LinkStep =>
 	events.reduce<LinkStep>(linkFlow, "idle");
@@ -62,5 +69,94 @@ describe("linkFlow", () => {
 
 	it("ignores a channel update when no link is in progress", () => {
 		expect(run({ linked: true, type: "channel_changed" })).toBe("idle");
+	});
+
+	it("says the link expired while waiting past its lifetime", () => {
+		expect(
+			run(
+				{ type: "start" },
+				{ type: "link_handed_off" },
+				{ type: "link_expired" }
+			)
+		).toBe("expired");
+	});
+
+	it("waits again once a fresh link is handed off", () => {
+		expect(
+			run(
+				{ type: "start" },
+				{ type: "link_handed_off" },
+				{ type: "link_expired" },
+				{ type: "link_handed_off" }
+			)
+		).toBe("waiting");
+	});
+
+	it("ignores an expiry before the link is handed off", () => {
+		expect(run({ type: "start" }, { type: "link_expired" })).toBe("disclose");
+	});
+
+	it("still links when the chat links after the link expired", () => {
+		expect(
+			run(
+				{ type: "start" },
+				{ type: "link_handed_off" },
+				{ type: "link_expired" },
+				{ linked: true, type: "channel_changed" }
+			)
+		).toBe("linked");
+	});
+
+	it("counts the expired step as mid-link", () => {
+		expect(isLinking("expired")).toBe(true);
+	});
+});
+
+describe("canReuseLink", () => {
+	const MINUTE = 60_000;
+	const mintedAt = 1_000_000;
+
+	it("reuses a link with plenty of time left", () => {
+		expect(canReuseLink(mintedAt, mintedAt + 2 * MINUTE)).toBe(true);
+	});
+
+	it("mints again when a link has only a few minutes left", () => {
+		expect(canReuseLink(mintedAt, mintedAt + 13 * MINUTE)).toBe(false);
+	});
+
+	it("never reuses an expired link", () => {
+		expect(
+			canReuseLink(mintedAt, mintedAt + LINK_LIFETIME_MINUTES * MINUTE)
+		).toBe(false);
+	});
+});
+
+describe("shareInFlight", () => {
+	it("mints once for taps that land before the first mint returns", async () => {
+		const slot: { current: Promise<string> | null } = { current: null };
+		const mint = vi.fn(async () => "link-a");
+		const [first, second] = await Promise.all([
+			shareInFlight(slot, mint),
+			shareInFlight(slot, mint),
+		]);
+		expect(mint).toHaveBeenCalledTimes(1);
+		expect(second).toBe(first);
+	});
+
+	it("mints again once the earlier mint has settled", async () => {
+		const slot: { current: Promise<string> | null } = { current: null };
+		const mint = vi.fn(async () => "link");
+		await shareInFlight(slot, mint);
+		await shareInFlight(slot, mint);
+		expect(mint).toHaveBeenCalledTimes(2);
+	});
+
+	it("lets a later tap retry after a failed mint", async () => {
+		const slot: { current: Promise<string> | null } = { current: null };
+		const failing = vi.fn(async () => {
+			throw new Error("offline");
+		});
+		await expect(shareInFlight(slot, failing)).rejects.toThrow("offline");
+		expect(slot.current).toBeNull();
 	});
 });

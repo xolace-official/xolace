@@ -8,6 +8,7 @@ import {
 const telegram = (over: Partial<ChannelEntry> = {}): ChannelEntry => ({
 	available: true,
 	channel: "telegram",
+	everLinked: false,
 	isFirst: false,
 	linked: false,
 	requiresPlus: false,
@@ -52,6 +53,11 @@ describe("telegramOfferVisible", () => {
 		);
 	});
 
+	// A restored or deep-linked route can arrive without its params.
+	it("never shows when the card's tier is missing", () => {
+		expect(telegramOfferVisible({ ...base, tier: undefined })).toBe(false);
+	});
+
 	it("stays hidden once dismissed, or with the flag off or still loading", () => {
 		expect(telegramOfferVisible({ ...base, dismissed: true })).toBe(false);
 		expect(telegramOfferVisible({ ...base, flagOn: false })).toBe(false);
@@ -89,5 +95,22 @@ describe("telegramOfferVisible", () => {
 				false
 			);
 		}
+	});
+
+	// 30 days after a revoke the row is purged and the status reads not_linked
+	// again; `everLinked` still remembers.
+	it("never shows once a past link has been purged", () => {
+		const purged = telegram({ everLinked: true });
+		expect(telegramOfferVisible({ ...base, channels: [push, purged] })).toBe(
+			false
+		);
+	});
+
+	// A backend without `everLinked` can't say: assume a past link.
+	it("hides when the backend doesn't say whether Telegram was ever linked", () => {
+		const { everLinked: _, ...unknown } = telegram();
+		expect(telegramOfferVisible({ ...base, channels: [push, unknown] })).toBe(
+			false
+		);
 	});
 });

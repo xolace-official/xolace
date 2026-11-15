@@ -467,7 +467,7 @@ returns. `createLink` is `outreach/telegram/link:createLink`; the rest live in
 
 | Function | Kind | Notes |
 |---|---|---|
-| `listChannels` | query | One entry per channel the deployment offers (Telegram omitted when `not_configured`): `channel`, `status` (`linked \| paused \| needs_plus \| disconnected \| not_linked`), `available`, `requiresPlus`, `linked`, `isFirst`, `revokedReason?`, `displayHandle?`. Reactive, so the link step updates live. |
+| `listChannels` | query | One entry per channel the deployment offers (Telegram omitted when `not_configured`): `channel`, `status` (`linked \| paused \| needs_plus \| disconnected \| not_linked`), `available`, `requiresPlus`, `linked`, `isFirst`, `revokedReason?`, `displayHandle?`, `everLinked?` (Telegram: ever linked on this account, kept past the 30-day purge). Push is `available: false` and never `isFirst` while notifications are off. Reactive, so the link step updates live. |
 | `telegram.createLink` | action | §7. Args `regionCode?`, `consentLanguageVersion`. |
 | `unlinkChannel` | mutation | `{ channel }` |
 | `setChannelPaused` | mutation | `{ channel, paused }` |
@@ -505,7 +505,8 @@ PostHog or the admin view.
   check-in on Telegram?" with **Link Telegram** / **Not now**.
   - Never after heavier, acute or crisis.
   - At most once: "Not now" hides it for good (local flag).
-  - Hidden when Telegram is linked or ineligible for this user.
+  - Hidden when Telegram is linked, was ever linked (`everLinked`), or is ineligible for
+    this user.
 - **Account deletion screen:** add a line that Telegram keeps its chat history.
 - A real sheet component (not the prototype's), and it sends `regionCode` +
   `consentLanguageVersion`.

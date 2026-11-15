@@ -161,6 +161,33 @@ describe("telegramCard", () => {
 		).toEqual({ actions: ["link_again"], kind: "disconnected", warning });
 	});
 
+	it("offers no link when Telegram is switched off and nothing is linked", () => {
+		expect(telegramCard(telegram({ available: false }))).toEqual({
+			actions: [],
+			description:
+				"Telegram check-ins are off for now. Check-ins come as notifications.",
+			kind: "not_linked",
+		});
+	});
+
+	it("keeps the warning but offers no Link again while switched off", () => {
+		expect(
+			telegramCard(
+				telegram({
+					available: false,
+					revokedReason: "blocked",
+					status: "disconnected",
+				})
+			)
+		).toEqual({
+			actions: [],
+			description:
+				"Telegram check-ins are off for now. Check-ins come as notifications.",
+			kind: "disconnected",
+			warning: "Telegram disconnected: the bot was blocked.",
+		});
+	});
+
 	it("treats an unlink from the app as not linked", () => {
 		expect(
 			telegramCard(

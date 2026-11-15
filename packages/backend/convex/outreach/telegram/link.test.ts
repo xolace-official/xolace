@@ -182,9 +182,27 @@ describe("/start <token>", () => {
 const listChannels = (user: SeededUser) =>
 	user.t.query(api.outreach.reachMe.listChannels, {});
 
+/** The global notifications switch (new accounts start with it off). */
+const setPushEnabled = (user: SeededUser, enabled: boolean) =>
+	user.root.run(async (ctx) => {
+		const prefs = await ctx.db
+			.query("preferences")
+			.withIndex("by_profile", (q) =>
+				q.eq("emotionalProfileId", user.profileId)
+			)
+			.unique();
+		if (!prefs) {
+			throw new Error("no preferences row");
+		}
+		await ctx.db.patch("preferences", prefs._id, {
+			notifications: { ...prefs.notifications, enabled },
+		});
+	});
+
 describe("listChannels", () => {
 	it("shows the link as it happens and Telegram first after it", async () => {
 		const { secret, user } = await linkable();
+		await setPushEnabled(user, true);
 		expect(await listChannels(user)).toEqual([
 			{
 				available: true,
@@ -197,6 +215,7 @@ describe("listChannels", () => {
 			{
 				available: true,
 				channel: "telegram",
+				everLinked: false,
 				isFirst: false,
 				linked: false,
 				requiresPlus: false,
@@ -209,12 +228,42 @@ describe("listChannels", () => {
 				available: true,
 				channel: "telegram",
 				displayHandle: "sam_t",
+				everLinked: true,
 				isFirst: true,
 				linked: true,
 				requiresPlus: false,
 				status: "linked",
 			},
 			expect.objectContaining({ channel: "push", isFirst: false }),
+		]);
+	});
+
+	// The router skips push while notifications are off (`push_off`), so
+	// routing tries the next channel in the order, or none.
+	it("never marks push first, or open, while notifications are off", async () => {
+		const { secret, user } = await linkable();
+		expect(
+			(await listChannels(user)).map((c) => [c.channel, c.isFirst, c.available])
+		).toEqual([
+			["push", false, false],
+			["telegram", false, true],
+		]);
+		await start(user, secret, tokenOf(await createLink(user)));
+		await user.t.mutation(api.outreach.reachMe.setFirstChannel, {
+			channel: "push",
+		});
+		expect(
+			(await listChannels(user)).map((c) => [c.channel, c.isFirst])
+		).toEqual([
+			["push", false],
+			["telegram", true],
+		]);
+		await setPushEnabled(user, true);
+		expect(
+			(await listChannels(user)).map((c) => [c.channel, c.isFirst])
+		).toEqual([
+			["push", true],
+			["telegram", false],
 		]);
 	});
 

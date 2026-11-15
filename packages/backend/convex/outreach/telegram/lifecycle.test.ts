@@ -329,7 +329,11 @@ describe("the 30-day purge", () => {
 			{}
 		);
 		expect(await identities(user)).toEqual([]);
-		expect(await telegramEntry(user)).toMatchObject({ status: "not_linked" });
+		// The consent rows outlive the purge: still not someone to offer it to.
+		expect(await telegramEntry(user)).toMatchObject({
+			everLinked: true,
+			status: "not_linked",
+		});
 		forgetCalls();
 		await say(user, secret, "hi");
 		expect(replies()).toEqual([STRANGER_REPLY]);

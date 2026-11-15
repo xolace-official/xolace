@@ -14,9 +14,6 @@ export const LINK_DISCLOSURE = [
 /** Sent with `createLink`, recorded with the consent. */
 export const TELEGRAM_OUTREACH_CONSENT_VERSION = "1.0";
 
-/** How long a minted link works (`LINK_TOKEN_TTL_MS` on the backend). */
-export const LINK_LIFETIME_MINUTES = 15;
-
 /** The device's region (ISO 3166-1 alpha-2), for the crisis resources the bot names. */
 export function deviceRegion(): string | undefined {
 	return Localization.getLocales()[0]?.regionCode ?? undefined;
