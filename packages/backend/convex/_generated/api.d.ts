@@ -233,6 +233,8 @@ import type * as library_sources from "../library/sources.js";
 import type * as library_write from "../library/write.js";
 import type * as migrations from "../migrations.js";
 import type * as monthlyEvents from "../monthlyEvents.js";
+import type * as monthlyEvents_events from "../monthlyEvents/events.js";
+import type * as monthlyEvents_prompt from "../monthlyEvents/prompt.js";
 import type * as notifications from "../notifications.js";
 import type * as outreach_adapters from "../outreach/adapters.js";
 import type * as outreach_analytics from "../outreach/analytics.js";
@@ -547,6 +549,8 @@ declare const fullApi: ApiFromModules<{
   "library/write": typeof library_write;
   migrations: typeof migrations;
   monthlyEvents: typeof monthlyEvents;
+  "monthlyEvents/events": typeof monthlyEvents_events;
+  "monthlyEvents/prompt": typeof monthlyEvents_prompt;
   notifications: typeof notifications;
   "outreach/adapters": typeof outreach_adapters;
   "outreach/analytics": typeof outreach_analytics;
