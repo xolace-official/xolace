@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { query } from "../_generated/server";
-import { trackItems, trackItemValidator } from "../browse/tracks";
+import { trackItems, trackItemValidator } from "../browse/catalogue";
 import { requireAuth } from "../lib/auth";
 import { cardItemValidator } from "./cards";
 import { coverOf, toListItem } from "./entries";

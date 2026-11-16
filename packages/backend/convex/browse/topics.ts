@@ -8,7 +8,7 @@ import {
 	topicTracks,
 	trackItems,
 	trackItemValidator,
-} from "./tracks";
+} from "./catalogue";
 
 /**
  * Topic reads: the topic grid (#339), one topic's tracks, and the topic
@@ -45,8 +45,10 @@ export const topicSlugArgs = { slug: v.string() };
 
 /**
  * Topic screen header: the curated `topics` title (#353), else the slug-derived one the grid uses.
- * Always returns a title, even for an unknown slug. `getTopicHeader` also
- * returns the cover and counts and is `null` for an unpublished topic.
+ * Always returns a title, even for an unknown slug. Registered only at the
+ * old flat path (`browse:getTopicTitle`), for the topic screen and shipped
+ * builds: S8 moves the screen to `getTopicHeader`, which also returns the
+ * cover and counts and is `null` for an unpublished topic.
  */
 export async function getTopicTitleCore(
 	ctx: QueryCtx,
@@ -59,12 +61,6 @@ export async function getTopicTitleCore(
 		.unique();
 	return row?.title || topicTitle(args.slug);
 }
-
-export const getTopicTitle = query({
-	args: topicSlugArgs,
-	handler: getTopicTitleCore,
-	returns: v.string(),
-});
 
 /** Topic screen — both families' active tracks for one shared topic slug. */
 export async function getTopicCore(

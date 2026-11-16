@@ -11,7 +11,7 @@ import {
 	thumbUrlFor,
 	trackItems,
 	trackItemValidator,
-} from "../browse/tracks";
+} from "../browse/catalogue";
 import { requireAuth } from "../lib/auth";
 import { cardItemValidator } from "./cards";
 import { isCrisisQuery } from "./crisisTerms";

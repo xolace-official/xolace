@@ -40,7 +40,8 @@ export function TopicScreen() {
 		params.from && FROM_VALUES.has(params.from) ? params.from : "topic";
 	const posthog = usePostHog();
 	const tracks = useQuery(api.browse.topics.getTopic, { slug });
-	const title = useQuery(api.browse.topics.getTopicTitle, { slug });
+	// The flat path on purpose: S8 switches this to browse/topics.getTopicHeader.
+	const title = useQuery(api.browse.getTopicTitle, { slug });
 	const [segment, setSegment] = useState<Segment>(
 		family === "music" || family === "support" ? family : "all"
 	);

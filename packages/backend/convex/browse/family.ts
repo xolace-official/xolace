@@ -2,7 +2,7 @@ import { paginationOptsValidator } from "convex/server";
 import { type ObjectType, v } from "convex/values";
 import { type QueryCtx, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
-import { familyValidator, trackItems, trackItemValidator } from "./tracks";
+import { familyValidator, trackItems, trackItemValidator } from "./catalogue";
 
 /** Browsing one family's tracks (#339, docs/paths-v1.md §9.3). */
 

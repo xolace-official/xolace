@@ -2,7 +2,8 @@
 /**
  * The flat `browse.ts` paths shipped builds still call answer exactly what
  * the `browse/` paths do, for the same catalogue and the same args, and
- * refuse a signed-out caller the same way.
+ * refuse a signed-out caller the same way. `getTopicTitle` has no `browse/`
+ * path (`getTopicHeader` replaces it in S8), so it is only checked as is.
  */
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -172,14 +173,15 @@ describe("the old browse paths", () => {
 			expect(await user.t.query(api.browse.topics.getTopic, { slug })).toEqual(
 				rows
 			);
-			const title = await user.t.query(api.browse.getTopicTitle, { slug });
-			expect(
-				await user.t.query(api.browse.topics.getTopicTitle, { slug })
-			).toBe(title);
 		}
+		// getTopicTitle stays only at the flat path (S8 replaces it with
+		// getTopicHeader); it still answers the curated title, else the slug's.
 		expect(
 			await user.t.query(api.browse.getTopicTitle, { slug: "sleep" })
 		).toBe("Sleep & rest");
+		expect(
+			await user.t.query(api.browse.getTopicTitle, { slug: "unknown" })
+		).toBe("Unknown");
 		expect(
 			(await user.t.query(api.browse.getTopic, { slug: "sleep" })).map(
 				(r) => r.slug
@@ -187,7 +189,7 @@ describe("the old browse paths", () => {
 		).toEqual(["ep1", "s1", "m1", "m2"]);
 	});
 
-	it("refuse a signed-out caller at both paths", async () => {
+	it("refuse a signed-out caller at every path", async () => {
 		const t = asUnauthed();
 		const slug = { slug: "sleep" };
 		const page = {
@@ -206,7 +208,6 @@ describe("the old browse paths", () => {
 			() => t.query(api.browse.getTopic, slug),
 			() => t.query(api.browse.topics.getTopic, slug),
 			() => t.query(api.browse.getTopicTitle, slug),
-			() => t.query(api.browse.topics.getTopicTitle, slug),
 		]) {
 			await expect(call()).rejects.toThrow(/not_authenticated/);
 		}

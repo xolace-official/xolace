@@ -2,7 +2,7 @@ import { type ObjectType, v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { type QueryCtx, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
-import { attributionFor, thumbUrlFor } from "./tracks";
+import { attributionFor, familyValidator, thumbUrlFor } from "./catalogue";
 
 /**
  * Browse hub reads (#338, docs/paths-v1.md §9.3). Open to every signed-in
@@ -13,7 +13,7 @@ import { attributionFor, thumbUrlFor } from "./tracks";
 export const shelfItemValidator = v.object({
 	_id: v.id("audio_tracks"),
 	attribution: v.optional(v.string()),
-	family: v.union(v.literal("support"), v.literal("music")),
+	family: familyValidator,
 	slug: v.string(),
 	thumbhash: v.optional(v.string()),
 	thumbUrl: v.string(),

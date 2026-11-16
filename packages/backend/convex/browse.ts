@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import { trackItemValidator } from "./browse/catalogue";
 import {
 	listByFamilyArgs,
 	listByFamilyCore,
@@ -18,13 +19,13 @@ import {
 	topicSlugArgs,
 	topicTileValidator,
 } from "./browse/topics";
-import { trackItemValidator } from "./browse/tracks";
 
 /**
  * Browse moved to `convex/browse/`: the hub's shelf and hero in
  * `browse/hub.ts`, a family's list in `browse/family.ts`, the topic reads in
- * `browse/topics.ts`, and the shared catalogue helpers in `browse/tracks.ts`.
+ * `browse/topics.ts`, and the shared catalogue helpers in `browse/catalogue.ts`.
  * Only these public wrappers stay, for app builds that call the old paths.
+ * `getTopicTitle` has no new path: `browse/topics.getTopicHeader` replaces it.
  */
 
 /**
@@ -68,9 +69,11 @@ export const getTopics = query({
 });
 
 /**
- * @deprecated Call `browse/topics:getTopicTitle`.
+ * @deprecated Call `browse/topics:getTopicHeader`, which is `null` for an
+ * unpublished topic where this always returns a title. Not registered under
+ * `browse/`: the topic screen still calls this path until S8.
  */
-// DEPRECATED(remove-after: app >= 1.17.0): moved to browse/topics.getTopicTitle.
+// DEPRECATED(remove-after: app >= first version whose topic screen reads browse/topics.getTopicHeader, S8): replaced by getTopicHeader; core in browse/topics.ts.
 export const getTopicTitle = query({
 	args: topicSlugArgs,
 	handler: getTopicTitleCore,
