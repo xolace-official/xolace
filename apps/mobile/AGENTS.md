@@ -136,7 +136,9 @@ src/features/<feature>/
 The redesign's shared pieces live in `src/components/shared/`, the settings kit in
 `src/components/settings-kit/`, the keyboard helpers in `src/lib/keyboard/`. Where
 production had its own version, new code uses the kit's; the old one stays only for the
-screens that already use it, which move over in cleanup (C1).
+screens that already use it, which move over in cleanup (C1). `src/features/kit-imports.ts`
+(run by `import-cycles.test.ts`) fails when v2 folders, `src/design` or the kit import an
+older piece.
 
 | Need | New code | Old screens only |
 |---|---|---|
@@ -147,7 +149,7 @@ screens that already use it, which move over in cleanup (C1).
 | Native header | `useHeaderOptions()` (`src/lib/header-options.ts`, theme faces) | `useLargeHeaderOptions` |
 
 - **Pieces:** `Card` + `SectionHeader`, `MediaRow` + `Kicker`, `CareRow`, `Avatar`,
-  `BackButton`, `GlassGroup`, `DetachedSheet` (a transparent-modal route), `RollingNumber`,
+  `BackButton`, `GlassGroup`, `DetachedSheet` (its route takes `DETACHED_SHEET`), `RollingNumber`,
   `CountryMenu`, `Flux`, `Aura`. Settings-like pages: `SettingsHeader`, `SectionTitle`,
   `SettingsCard`, `Footnote`, `Rows`, `SwitchRow`, `OpenRow`, `TileRow`, `SettingsDialog`,
   `NameDialog`.

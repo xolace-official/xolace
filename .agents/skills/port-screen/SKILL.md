@@ -64,16 +64,29 @@ Work in this order; each step leaves something you can test.
 - **Shared kit** (`M/AGENTS.md`, "Shared kit"). The prototype's imports map to production:
   - `@/components/<piece>` → `@/components/shared/<piece>`.
   - `@/features/settings-v2/{parts,open-row,tile-row,settings-dialog,name-dialog}` →
-    `@/components/settings-kit/…`. The kit's `Card` is `SettingsCard`; `NameDialog` takes
-    `copy`, `max` and `error` from the screen; review-only `held` is gone.
+    `@/components/settings-kit/…`, with these moves:
+    - `TintPress` → `tint-press.tsx`; `SwitchRow` → `switch-row.tsx`.
+    - `S`, `ROW`, `ROW_TALL`, `LABEL`, `accentTile`, `tileBg` and open-row's `CHEVRON` (now
+      `CHEVRON_GLYPH`) → `settings-layout.ts`.
+    - The kit's `Card` is `SettingsCard`.
+    - `NameDialog` takes `copy`, `max` and `error` from the screen.
+    - Review-only `held` is gone, from `TintPress`, `OpenRow` and `TileRow`.
+    - `SwitchRow`'s `disabled` only dims the row; the switch stays live, so a blocked setting
+      can still explain itself.
+  - `@/components/confirm` (`confirm()`, `ConfirmHost`) → production's `ConfirmationDialog`
+    (`@/components/shared/confirmation-dialog`), held open by the screen's state. The
+    prototype's native alert on iOS 26 isn't ported.
   - `@/lib/{keyboard-spacer,use-keyboard-lift,use-keyboard-shown}` → `@/lib/keyboard/…`.
   - `useTokens().dangerInk` → `useTokenColor("danger-ink")`; `useScheme` →
     `@/design/scheme`; `useHeaderOptions` → `@/lib/header-options`.
   - Sheets in the prototype's `root-screens.ts`: `fitSheet` from `@/lib/root-screen`
-    (it takes the `ScreenContext`; `t.surface` is `surface`).
+    (it takes the `ScreenContext`; `t.surface` is `surface`). A detached sheet's route
+    (`transparentModal`, no animation) takes `DETACHED_SHEET`.
   - `CountryMenu` and `Segmented` take `options` (`{ id, label }`), not fixtures.
   - `Icon` names need an Android twin (`{ ios, android }`).
-  - Toasts: `toast()` from the data hook, never heroui's `useToast`.
+  - Toasts: `toast()` from the data hook, never heroui's `useToast`. `kit-imports.ts` fails
+    on `useToast`, `PressableFeedback`, `SegmentedControl`, `legacyFitSheet` and
+    `useLargeHeaderOptions` in a v2 folder.
   - The first import of a kit file deletes its line from knip's `entry` (`knip.jsonc`).
 - **Pieces from another feature** (the Telegram offer from `reach-me-on`, a streak ring):
   move the piece down a layer in this PR, to `src/lib`, `src/components/shared` or a kit
