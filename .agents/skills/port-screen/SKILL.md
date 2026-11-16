@@ -144,7 +144,8 @@ Done when every state from step 1 has a light and a dark screenshot, or a line i
 
 ## 5. Open the PR
 
-Title `feat(mobile): <screen>` (Conventional Commit), e.g. `feat(mobile): Today`. Body per
+Title `feat(mobile): port <screen>` (Conventional Commit; the subject starts lowercase or
+the title check fails), e.g. `feat(mobile): port Today`. Body per
 `.agents/rules/pull-requests.md`. In it:
 
 - **Problem**: the S-number and the handoff.
