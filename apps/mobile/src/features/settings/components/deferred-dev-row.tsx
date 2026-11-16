@@ -38,15 +38,11 @@ export function DeferredQuestionsDevRow() {
 		if (userId) {
 			useAppStore
 				.getState()
-				.clearAccountFlags(userId, [
-					"copingAskSeen",
-					"findingCardDismissed",
-					"notifNudgeDismissed",
-				]);
+				.clearAccountFlags(userId, ["findingCardDismissed"]);
 		}
 		toast.show({
 			description:
-				"Coping and frequency ask at the next session end; the reminder step needs notifications not yet decided. The how-you-found-us card waits for day 3.",
+				"The how-you-found-us card waits for day 3. Coping, frequency and the reminder aren't asked anywhere since the session end's redesign.",
 			label: "Deferred questions cleared",
 		});
 	};

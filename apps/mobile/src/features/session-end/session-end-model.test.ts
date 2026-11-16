@@ -5,14 +5,17 @@ import {
 } from "@/features/purchases/plus-offer-policy";
 import { FREE, LISTEN, LISTENER, LOADING, STATE } from "./dev/fixtures";
 import {
+	continueStep,
 	ctaLabel,
 	dayOf,
 	fromOf,
+	momentGate,
 	type NextInput,
 	nextKey,
 	type PitchContext,
 	pathOf,
 	pitchAllowed,
+	pitchDismissed,
 	savedMood,
 	wordsToShare,
 } from "./session-end-model";
@@ -101,6 +104,14 @@ describe("nextKey", () => {
 		);
 	});
 
+	it("stops holding after 2 s: an unknown answer counts as no", () => {
+		const offline = { ...FREE.slot, qualifies: undefined, waitedOut: true };
+		expect(nextKey(input(offline))).toBe("none");
+		expect(
+			nextKey(input({ ...STATE.slot, qualifies: undefined, waitedOut: true }))
+		).toBe("none");
+	});
+
 	it("offers a matched listener first, to everyone", () => {
 		expect(nextKey(input(LISTENER.slot))).toBe("listener");
 		expect(nextKey(input({ ...LISTENER.slot, plus: false }))).toBe("listener");
@@ -168,5 +179,49 @@ describe("pitchAllowed", () => {
 		expect(
 			pitchAllowed({ ...stopped, fullStopSince: NOW - PLUS_OFFER_FULL_STOP_MS })
 		).toBe(true);
+	});
+});
+
+describe("Continue", () => {
+	const at = {
+		asked: false,
+		canAsk: true,
+		late: false,
+		moment: 1 as const,
+		pending: false,
+		step: -3,
+	};
+
+	it("asks the heavier follow-up once, from step −3 down", () => {
+		expect(continueStep(at)).toBe("ask");
+		expect(continueStep({ ...at, asked: true })).toBe("go");
+		expect(continueStep({ ...at, step: -2 })).toBe("go");
+		expect(continueStep({ ...at, canAsk: false })).toBe("go");
+		expect(continueStep({ ...at, late: true })).toBe("go");
+	});
+
+	it("ignores a second tap while the follow-up is open or moment 2 is coming", () => {
+		expect(continueStep({ ...at, pending: true })).toBe("ignore");
+		expect(continueStep({ ...at, moment: 2 })).toBe("ignore");
+	});
+
+	it("moves to moment 2 once, however many callers ask", () => {
+		const gate = momentGate();
+		expect(gate.busy).toBe(false);
+		gate.hold();
+		expect(gate.busy).toBe(true);
+		// The sheet closing, then a stray second tap: only the first moves on.
+		expect(gate.enter()).toBe(true);
+		expect(gate.enter()).toBe(false);
+		expect(continueStep({ ...at, pending: gate.busy })).toBe("ignore");
+	});
+});
+
+describe("pitchDismissed", () => {
+	it("counts leaving past an untaken pitch as a no, and nothing else", () => {
+		expect(pitchDismissed("kfree", false)).toBe(true);
+		expect(pitchDismissed("kfree", true)).toBe(false);
+		expect(pitchDismissed("kindling", false)).toBe(false);
+		expect(pitchDismissed(null, false)).toBe(false);
 	});
 });

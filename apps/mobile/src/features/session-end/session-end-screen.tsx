@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef } from "react";
 import { useWindowDimensions, View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
+import { MorphLoader } from "@/components/shared/loader/morph/morph-loader";
 import { SkyWash } from "@/components/shared/sky-wash";
 import { useAppActive } from "@/components/shared/use-app-active";
 import { useBoardY } from "@/design/board";
@@ -101,6 +102,11 @@ export function SessionEndScreen({ scene }: { scene?: Scene }) {
 		<View className="flex-1 bg-background">
 			<StatusBar style={late ? "light" : "auto"} />
 			<SkyWash late={late} scale={SKY_SCALE} />
+			{live ? null : (
+				<View className="absolute inset-0 items-center justify-center">
+					<MorphLoader />
+				</View>
+			)}
 			{live && moment === 1 ? (
 				<MomentOne
 					c1={clocks.c1}

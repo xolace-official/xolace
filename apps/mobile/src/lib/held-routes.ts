@@ -26,7 +26,6 @@ const HELD_ROUTES = [
 	"/badge-backfill",
 	"/follow-up",
 	"/streak-held",
-	"/kindling-announcement",
 	"/browse-intro",
 	"/upgrade",
 	"/browse-player",

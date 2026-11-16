@@ -25,7 +25,7 @@ export type ListenerCard = {
  */
 export type SessionEnd = {
 	state: {
-		/** The session and the streak are in: the arrival can start. */
+		/** The session and the streak are in, or 4 s have passed: the arrival can start. */
 		ready: boolean;
 		/** The night window: the night line, the ember face, Dusk. */
 		late: boolean;
@@ -33,7 +33,8 @@ export type SessionEnd = {
 		from: SessionFrom | null;
 		/** The distilled words to leave for someone; null: nothing to share. */
 		words: string | null;
-		day: { from: number; to: number };
+		/** The streak before and after this session; null when it couldn't be read. */
+		day: { from: number; to: number } | null;
 		/** The next-step slot's inputs; the screen adds the answer's step. */
 		slot: Omit<NextInput, "late" | "step">;
 		listener: ListenerCard | null;

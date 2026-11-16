@@ -15,6 +15,7 @@ export const STATE: SessionEnd["state"] = {
 		pitchAllowed: true,
 		plus: true,
 		qualifies: true,
+		waitedOut: false,
 	},
 	words: "I hold everything together, and nobody sees how tired that makes me.",
 };

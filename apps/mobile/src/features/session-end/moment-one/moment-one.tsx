@@ -32,7 +32,7 @@ type Props = {
 	c2: SharedValue<number>;
 	touched: SharedValue<number>;
 	slider: MoodSlider;
-	day: { from: number; to: number };
+	day: { from: number; to: number } | null;
 	step: number | null;
 	unsure: boolean;
 	late: boolean;
@@ -102,13 +102,15 @@ export function MomentOne(p: Props) {
 				W={W}
 				y={y}
 			/>
-			<DayChip
-				clock={c1}
-				from={p.day.from}
-				reduced={reduced}
-				to={p.day.to}
-				top={y(L.chip.top)}
-			/>
+			{p.day ? (
+				<DayChip
+					clock={c1}
+					from={p.day.from}
+					reduced={reduced}
+					to={p.day.to}
+					top={y(L.chip.top)}
+				/>
+			) : null}
 			<MomentOneHeading
 				clock={c1}
 				late={late}

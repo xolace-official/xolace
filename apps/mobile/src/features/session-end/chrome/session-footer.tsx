@@ -1,12 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, {
 	interpolateColor,
 	type SharedValue,
+	useAnimatedReaction,
 	useAnimatedStyle,
 	useSharedValue,
 	withTiming,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
@@ -47,6 +49,16 @@ export function SessionFooter({
 }: Props) {
 	const well = useTokenColor("surface-secondary");
 	const ink = useTokenColor("foreground");
+	// Taps and VoiceOver reach the button only once it has started to appear.
+	const [shown, setShown] = useState(false);
+	useAnimatedReaction(
+		() => c2.get() >= 0 || c1.get() >= T1.cta.at,
+		(on, was) => {
+			if (on && !was) {
+				scheduleOnRN(setShown, true);
+			}
+		}
+	);
 	const filled = useSharedValue(label === 0 ? 0 : 1);
 	useEffect(() => {
 		filled.set(withTiming(label === 0 ? 0 : 1, FILL));
@@ -79,7 +91,10 @@ export function SessionFooter({
 	return (
 		<>
 			<Animated.View
+				accessibilityElementsHidden={!shown}
 				className="absolute z-21"
+				importantForAccessibility={shown ? "auto" : "no-hide-descendants"}
+				pointerEvents={shown ? "auto" : "none"}
 				style={[{ bottom: C.bottom, left: C.side, right: C.side }, wrap]}
 			>
 				<PressScale

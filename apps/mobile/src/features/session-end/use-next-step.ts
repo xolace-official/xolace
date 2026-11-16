@@ -1,6 +1,7 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
+import { useEffect, useState } from "react";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useAppStore } from "@/store/store";
 import { type NextInput, pitchAllowed } from "./session-end-model";
@@ -16,8 +17,16 @@ export type NextStep = {
  * listener match, Xolace+, whether the session qualifies for kindling and
  * whether it has landed, and whether the free pitch's cadence allows it.
  */
+/** How long the slot holds for the plan and kindling answers (and a listener match). */
+const SLOT_WAIT_MS = 2000;
+
 export function useNextStep(sessionId: Id<"sessions"> | null): NextStep {
 	const listener = useListenerMatch(sessionId);
+	const [waitedOut, setWaitedOut] = useState(false);
+	useEffect(() => {
+		const timer = setTimeout(() => setWaitedOut(true), SLOT_WAIT_MS);
+		return () => clearTimeout(timer);
+	}, []);
 	const { isPlus, isResolved } = usePlusEntitlement();
 	const qualifies = useQuery(
 		api.paths.isKindlingQualifyingSession,
@@ -60,6 +69,7 @@ export function useNextStep(sessionId: Id<"sessions"> | null): NextStep {
 			plus: isPlus,
 			// Undefined holds the slot: until Xolace+ is read, the card can't be chosen.
 			qualifies: isResolved ? sessionId !== null && qualifies : undefined,
+			waitedOut,
 		},
 	};
 }

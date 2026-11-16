@@ -8,9 +8,9 @@ import { COPY } from "./copy";
 import { SESSION_FACE } from "./face/session-face";
 import type { SessionFace } from "./face/use-session-face";
 import type { MoodSlider, SliderHandlers } from "./moment-one/use-mood-slider";
-import { asksFollowUp, SAME } from "./mood-scale";
+import { SAME } from "./mood-scale";
 import type { SessionEnd } from "./session-end-data";
-import { savedMood } from "./session-end-model";
+import { continueStep, momentGate, savedMood } from "./session-end-model";
 import { T1 } from "./session-look";
 import type { SessionClocks } from "./use-session-clocks";
 
@@ -103,7 +103,13 @@ export function useMomentFlow({
 		});
 	};
 
+	/** Synchronous, unlike the moment in state, which lands a render later. */
+	const [gate] = useState(momentGate);
+
 	const toMoment2 = (from = 0) => {
+		if (!gate.enter()) {
+			return;
+		}
 		setAnswer((a) => ({ ...a, moment: 2 }));
 		face.to(SESSION_FACE.watch);
 		clocks.run("c2", from);
@@ -111,21 +117,28 @@ export function useMomentFlow({
 
 	const cont = () => {
 		const a = current.current;
-		if (a.moment !== 1) {
+		const next = continueStep({
+			asked: asked.current,
+			canAsk: session.state.canAskFollowUp,
+			late,
+			moment: a.moment,
+			pending: gate.busy,
+			step: a.step,
+		});
+		if (next === "ignore") {
 			return;
 		}
 		Presets.System.selection();
 		const pos = position.get();
-		const { step } = a;
-		const ask = !(late || asked.current) && session.state.canAskFollowUp;
-		if (step !== null && ask && asksFollowUp(step)) {
+		if (next === "ask" && a.step !== null) {
 			asked.current = true;
+			gate.hold();
 			session.actions.saveMood({
 				moodPosition: pos,
 				postSessionMood: "heavier",
 			});
 			face.to(SESSION_FACE.concern);
-			session.actions.askFollowUp(step, () =>
+			session.actions.askFollowUp(a.step, () =>
 				at(AFTER_SHEET_MS, () => toMoment2())
 			);
 			return;

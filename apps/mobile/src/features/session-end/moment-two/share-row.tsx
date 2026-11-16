@@ -103,12 +103,7 @@ export function ShareRow({
 				</PressScale>
 			</Animated.View>
 			{share === "yes" ? (
-				<Animated.View
-					accessibilityLiveRegion="polite"
-					accessible
-					className={STATUS}
-					style={[STATUS_GAP, left]}
-				>
+				<Animated.View accessible className={STATUS} style={[STATUS_GAP, left]}>
 					<View
 						className="rounded-full"
 						style={{

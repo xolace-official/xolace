@@ -44,7 +44,6 @@ describe("mayOpenUnlock", () => {
 		"/badge-unlock",
 		"/follow-up",
 		"/streak-held",
-		"/kindling-announcement",
 		"/browse-intro",
 		"/upgrade",
 		"/browse-player",

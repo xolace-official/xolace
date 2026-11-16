@@ -70,6 +70,7 @@ export function useSend({ face, clocks, reduced, onShare }: Args) {
 	/** Your star in place: the empty place goes, the face looks at it and hops. */
 	const land = () => {
 		gone.set(fade(1, reduced ? REDUCED_MS : TS.slotOut));
+		// The handoff's `bloom`; the prototype's haptics match maps it to production's dewdrop.
 		Presets.dewdrop();
 		const landAt = reduced ? TS.reducedLand : TS.land;
 		face.briefly(

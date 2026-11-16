@@ -74,6 +74,60 @@ export function dayOf(
 	return { from: countedBefore === false ? Math.max(0, to - 1) : to, to };
 }
 
+/** What a Continue tap does: nothing (moment 2 already, or the follow-up is open), ask the
+ * heavier follow-up first (once, step −3 down, not late, not within its 24 h), or go on. */
+export type ContinueStep = "ignore" | "ask" | "go";
+
+export function continueStep({
+	moment,
+	pending,
+	late,
+	asked,
+	canAsk,
+	step,
+}: {
+	moment: 1 | 2;
+	/** The follow-up sheet is open, or moment 2 is on its way. */
+	pending: boolean;
+	late: boolean;
+	asked: boolean;
+	canAsk: boolean;
+	step: number | null;
+}): ContinueStep {
+	if (moment !== 1 || pending) {
+		return "ignore";
+	}
+	return !(late || asked) && canAsk && asksFollowUp(step) ? "ask" : "go";
+}
+
+/**
+ * Moment 1's way out, taken once: Continue opens the follow-up or moves on,
+ * and the move to moment 2 happens once however many callers ask (a second tap,
+ * the sheet closing). `busy` once either has started.
+ */
+export function momentGate() {
+	let pending = false;
+	let entered = false;
+	return {
+		get busy() {
+			return pending || entered;
+		},
+		/** True the first time only: run the move to moment 2 then. */
+		enter: () => {
+			if (entered) {
+				return false;
+			}
+			entered = true;
+			pending = true;
+			return true;
+		},
+		/** The follow-up opened: Continue waits for it. */
+		hold: () => {
+			pending = true;
+		},
+	};
+}
+
 /** The pinned button: 0 "Skip for now", 1 "Continue", 2 "I'm done for now". */
 export function ctaLabel({
 	moment,
@@ -119,22 +173,26 @@ export type NextInput = {
 	step: number | null;
 	/** The free pitch's cadence allows it (`pitchAllowed`). */
 	pitchAllowed: boolean;
+	/** The slot has held 2 s: anything still unknown counts as no (offline, say). */
+	waitedOut: boolean;
 };
 
 /**
  * One card at most, in order: a matched listener (for everyone), then Xolace+'s
  * kindling and something to listen to, then for free users the ending's one
  * Xolace+ pitch, but never late, never after a heavier answer (step −3 down),
- * and only when the session qualifies and the cadence allows it.
+ * and only when the session qualifies and the cadence allows it. The slot holds
+ * (loading) at most 2 s.
  */
 export function nextKey(input: NextInput): NextKey {
-	const { listener, plus, qualifies, late, step } = input;
-	if (listener === "pending" || qualifies === undefined) {
+	const { listener, plus, late, step, waitedOut } = input;
+	if (listener === "pending" || (input.qualifies === undefined && !waitedOut)) {
 		return "loading";
 	}
 	if (listener === "found") {
 		return "listener";
 	}
+	const qualifies = input.qualifies ?? false;
 	if (plus) {
 		if (qualifies) {
 			return input.kindlingReady ? "kindling" : "kindlingSettingUp";
@@ -182,5 +240,11 @@ export function pitchAllowed(c: PitchContext): boolean {
 	// Shown this session already means it's this pitch: it may stay.
 	return !(stopped || cooling || (shownLast && !shownThis));
 }
+
+/** Leaving with the free pitch shown and not taken is a "no": it spends the cooldown. */
+export const pitchDismissed = (
+	shown: NextKey | null,
+	taken: boolean
+): boolean => shown === "kfree" && !taken;
 
 export const slotEmpty = (key: NextKey): boolean => key === "none";
