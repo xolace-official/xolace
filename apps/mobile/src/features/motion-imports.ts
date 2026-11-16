@@ -21,7 +21,11 @@ const EASE_LEGACY_FILES: ReadonlySet<string> = new Set([
 
 /** Folders outside `features/` that new redesign code lands in, held to the
  * reduced-motion rule like the v2 feature folders. */
-const NEW_MOTION_FOLDERS = ["design/", "components/shared/"];
+const NEW_MOTION_FOLDERS = [
+	"design/",
+	"components/shared/",
+	"components/settings-kit/",
+];
 const REANIMATED = "react-native-reanimated";
 const OS_REDUCED_MOTION = "useReducedMotion";
 const FEATURE = /^features\/([^/]+)\//;
