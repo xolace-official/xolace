@@ -2304,6 +2304,15 @@ export default defineSchema({
 		.index("by_theme_0", ["themes"])
 		.searchIndex("search_text", { searchField: "text" }),
 
+	// Scratch for migrations:tagReflectionAuthors (#790): one row per distinct
+	// (pooled text, author) pair seen on sessions, so a text two profiles both
+	// wrote is left untagged instead of credited to whichever ran first.
+	// Server-only, like reflections.authorTag; unused once the backfill is done.
+	reflection_author_claims: defineTable({
+		authorTag: v.string(),
+		displayText: v.string(),
+	}).index("by_displayText_and_authorTag", ["displayText", "authorTag"]),
+
 	// ===========================================================
 	// 11. REFLECTION REPORTS
 	// ===========================================================

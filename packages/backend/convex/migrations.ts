@@ -196,12 +196,16 @@ export const backfillTrackSearchText = migrations.define({
 // Peer-reflection author tags (#790, ADR 0002): tags the session reflections
 // pooled before the tag existed, so their contributors stop being shown them.
 // The anonymizer pooled `distilledText ?? mirrorText` verbatim, so an exact
-// match finds the row. Not gated on `contributedReflection`: a later opt-out
-// left the row pooled. Seeds are skipped; follow-up shares were re-distilled
-// before pooling, can't be matched, and stay untagged. Idempotent.
+// match finds the row. Two passes, run in order by `tagReflectionAuthorsAll`:
+// claim every (text, author) pair from sessions, then tag each untagged row
+// whose text has exactly one author. A text two profiles both wrote can't be
+// attributed, so its untagged rows are left alone and logged for review.
+// Not gated on `contributedReflection`: a later opt-out left the row pooled.
+// Seeds are skipped; follow-up shares were re-distilled before pooling, can't
+// be matched, and stay untagged. Idempotent.
 // Run once per deployment, after REFLECTION_AUTHOR_KEY is set (throws if not):
-//   bunx convex run migrations:run '{"fn": "migrations:tagReflectionAuthors"}'
-export const tagReflectionAuthors = migrations.define({
+//   bunx convex run migrations:tagReflectionAuthorsAll
+export const claimReflectionAuthors = migrations.define({
 	migrateOne: async (ctx, session) => {
 		const text = session.distilledText ?? session.mirrorText;
 		if (!text) {
@@ -212,23 +216,60 @@ export const tagReflectionAuthors = migrations.define({
 			.withIndex("by_seed_displayText", (q) =>
 				q.eq("isSeed", false).eq("displayText", text)
 			)
-			.take(POOLED_COPIES_MAX);
-		const untagged = pooled.filter((r) => r.authorTag === undefined);
-		if (untagged.length === 0) {
+			.first();
+		if (!pooled) {
 			return;
 		}
 		const authorTag = await authorTagFor(session.emotionalProfileId);
 		if (!authorTag) {
 			throw new Error("Set REFLECTION_AUTHOR_KEY before tagging reflections");
 		}
-		for (const r of untagged) {
-			await ctx.db.patch("reflections", r._id, { authorTag });
+		const claimed = await ctx.db
+			.query("reflection_author_claims")
+			.withIndex("by_displayText_and_authorTag", (q) =>
+				q.eq("displayText", text).eq("authorTag", authorTag)
+			)
+			.unique();
+		if (!claimed) {
+			await ctx.db.insert("reflection_author_claims", {
+				authorTag,
+				displayText: text,
+			});
 		}
 	},
 	table: "sessions",
 });
-/** A session's text pooled more than once (a re-run job) is still one author. */
-const POOLED_COPIES_MAX = 10;
+
+export const tagReflectionAuthors = migrations.define({
+	migrateOne: async (ctx, reflection) => {
+		if (reflection.isSeed || reflection.authorTag !== undefined) {
+			return;
+		}
+		// Claims are unique per (text, author), so two rows mean two authors.
+		const claims = await ctx.db
+			.query("reflection_author_claims")
+			.withIndex("by_displayText_and_authorTag", (q) =>
+				q.eq("displayText", reflection.displayText)
+			)
+			.take(2);
+		if (claims.length > 1) {
+			console.warn(
+				`tagReflectionAuthors: reflection ${reflection._id} has text from more than one profile; left untagged for manual review`
+			);
+			return;
+		}
+		const [claim] = claims;
+		if (claim) {
+			return { authorTag: claim.authorTag };
+		}
+	},
+	table: "reflections",
+});
+
+export const tagReflectionAuthorsAll = migrations.runner([
+	internal.migrations.claimReflectionAuthors,
+	internal.migrations.tagReflectionAuthors,
+]);
 
 // ponytail: random spread, not a rate limiter — ~200 rows over 5 min stays well
 // under OpenAI's embedding limits; move to @convex-dev/workpool if the corpus

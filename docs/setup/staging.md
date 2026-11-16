@@ -118,7 +118,7 @@ means you can copy the value from the dev deployment `groovy-mandrill-892`.
 | `POSTHOG_HOST` | PostHog API host. Optional | Dev value OK |
 | `POSTHOG_PERSONAL_API_KEY` | PostHog feature-flag evaluation. Optional | Dev value OK |
 | `POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS` | How often flags refresh. Optional | Dev value OK, or leave unset |
-| `REFLECTION_AUTHOR_KEY` | Keys the peer-reflection author tag so a contributor is never shown their own ([ADR 0002](../adr/0002-peer-reflection-author-tag.md)). **Never rotate it**: a new key shows every contributor their own again. Unset, sharing and matching still work, with errors logged. After setting it, run `migrations:tagReflectionAuthors` once | New random value (32+ bytes), never prod's |
+| `REFLECTION_AUTHOR_KEY` | Keys the peer-reflection author tag so a contributor is never shown their own ([ADR 0002](../adr/0002-peer-reflection-author-tag.md)). **Never rotate it**: a new key shows every contributor their own again. Unset, sharing and matching still work, with errors logged. After setting it, run `migrations:tagReflectionAuthorsAll` once | New random value (32+ bytes), never prod's |
 | `CONVEX_ENV` | `production` or `development`; picks cron intervals and gates the nightly quote job | **`development`** (keeps staging cheap; `production` would run prod schedules) |
 
 ### AI and voice

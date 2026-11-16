@@ -19,4 +19,4 @@ This weakens the pool's anonymity claim from "untraceable even with full databas
 - **Never rotate the key.** A new key orphans every existing tag, and contributors start seeing their own reflections again.
 - **A missing key fails open.** A reflection is pooled without a tag and the exclusion is skipped, with an error logged both times. Sharing never blocks on config.
 - **Delete and re-signup starts fresh.** The person gets a new profile, so their old reflections can reach them again. Nothing links those reflections to the deleted account.
-- **The backfill tagged only reflections from sessions.** It matched the text against their source sessions. Follow-up shares pooled before the tag existed stay untagged.
+- **The backfill tagged only reflections from sessions.** It matched the text against their source sessions. Follow-up shares pooled before the tag existed stay untagged. So does a text more than one profile wrote, since it can't be attributed; the backfill logs those for review.

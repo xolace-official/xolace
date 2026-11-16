@@ -336,13 +336,20 @@ describe("migrations:tagReflectionAuthors", () => {
 		return sessionId;
 	}
 
-	const runBackfill = (root: SeededUser["root"]) =>
-		root.mutation(internal.migrations.tagReflectionAuthors, {
-			batchSize: 100,
-			cursor: null,
-			dryRun: false,
-			oneBatchOnly: true,
-		});
+	/** Both passes in order, as `tagReflectionAuthorsAll` runs them. */
+	const runBackfill = async (root: SeededUser["root"]) => {
+		for (const pass of [
+			internal.migrations.claimReflectionAuthors,
+			internal.migrations.tagReflectionAuthors,
+		]) {
+			await root.mutation(pass, {
+				batchSize: 100,
+				cursor: null,
+				dryRun: false,
+				oneBatchOnly: true,
+			});
+		}
+	};
 
 	it("tags session reflections pooled before the fix, from distilled or mirror text", async () => {
 		const a = await asNewUser(1);
@@ -358,6 +365,74 @@ describe("migrations:tagReflectionAuthors", () => {
 		expect((await shownTo(b, await matchingSession(b))).sort()).toEqual([
 			"distilled, mine",
 			"mirror, mine",
+		]);
+	});
+
+	it("tags every pooled copy past the first batch, on the first run and on a re-run", async () => {
+		const a = await asNewUser(1);
+		const text = "pooled many times by a re-run job";
+		await sharedBeforeTheFix(a, { distilledText: text });
+		const copies = async () =>
+			await a.root.run((ctx) =>
+				ctx.db
+					.query("reflections")
+					.withIndex("by_seed_displayText", (q) =>
+						q.eq("isSeed", false).eq("displayText", text)
+					)
+					.collect()
+			);
+		const first = (await copies())[0]!;
+		const { _id, _creationTime, ...row } = first;
+		// More than one batch (10), so a single take() can't reach them all.
+		const extra = 15;
+		for (let i = 0; i < extra; i++) {
+			await a.root.run((ctx) => ctx.db.insert("reflections", row));
+		}
+
+		await runBackfill(a.root);
+		const tagged = await copies();
+		expect(tagged).toHaveLength(extra + 1);
+		const tags = new Set(tagged.map((r) => r.authorTag));
+		expect(tags.size).toBe(1);
+		expect([...tags][0]).toEqual(expect.any(String));
+
+		// A copy pooled after the first run, behind already-tagged ones.
+		await a.root.run((ctx) => ctx.db.insert("reflections", row));
+		await runBackfill(a.root);
+		expect((await copies()).filter((r) => r.authorTag === undefined)).toEqual(
+			[]
+		);
+	});
+
+	it("leaves text two profiles both wrote untagged, and still tags the rest", async () => {
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		const a = await asNewUser(1);
+		const b = await asNewUser(2, a.root);
+		const shared = "I just needed someone to listen";
+		await sharedBeforeTheFix(a, { distilledText: shared });
+		await sharedBeforeTheFix(b, { distilledText: shared });
+		await sharedBeforeTheFix(a, { distilledText: "only mine" });
+
+		await runBackfill(a.root);
+
+		const rows = await a.root.run((ctx) =>
+			ctx.db
+				.query("reflections")
+				.withIndex("by_seed_displayText", (q) => q.eq("isSeed", false))
+				.collect()
+		);
+		const tagsOf = (text: string) =>
+			rows.filter((r) => r.displayText === text).map((r) => r.authorTag);
+		expect(tagsOf(shared)).toEqual([undefined, undefined]);
+		expect(tagsOf("only mine")).toEqual([expect.any(String)]);
+		expect(console.warn).toHaveBeenCalledWith(
+			expect.stringContaining("left untagged for manual review")
+		);
+		// Neither author's own exclusion was handed to the other.
+		expect(await shownTo(b, await matchingSession(b))).toEqual([
+			shared,
+			shared,
+			"only mine",
 		]);
 	});
 
