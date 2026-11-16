@@ -15,7 +15,7 @@ import { StartComposer } from "./composer/start-composer";
 import { TALK_COPY } from "./copy";
 import { FootnoteOverlay, TalkChrome } from "./header/talk-chrome";
 import { composerLift, useStageFrame } from "./hero/stage-frame";
-import { TalkHero } from "./hero/talk-hero";
+import { TalkHero, UNMEASURED } from "./hero/talk-hero";
 import { useHeroFace } from "./hero/use-hero-face";
 import { useLookCarousel } from "./hero/use-look-carousel";
 import { useTalkGeometry } from "./motion/talk-geometry";
@@ -43,7 +43,8 @@ export function TalkScreen() {
 	const geo = useTalkGeometry();
 	const index = lookIndex(state.look);
 	const [face, setFace] = useState<number>(LAYOUT.face);
-	const carTop = useSharedValue(0);
+	// Unmeasured until the start screen lays its carousel slot out: the hero waits unseen.
+	const carTop = useSharedValue(UNMEASURED);
 	const startTop = useSharedValue(geo.startTop);
 	const { keyboard } = useKeyboardLift();
 	const lift = useDerivedValue(() =>

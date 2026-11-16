@@ -66,8 +66,7 @@ export function useHeroFace({
 	// It leans in with your voice. Hidden, it stops reading the level.
 	useAnimatedReaction(
 		() => (listening ? level.get() : 0),
-		(v) => listen.set(v),
-		[listening]
+		(v) => listen.set(v)
 	);
 
 	// The smile starts as the finger lands and holds while it stays; a second `to` mid-smile

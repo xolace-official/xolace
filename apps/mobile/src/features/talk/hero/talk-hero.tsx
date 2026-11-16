@@ -18,6 +18,9 @@ import { LookCarouselView } from "./look-carousel";
 import type { StageFrame } from "./stage-frame";
 import type { LookCarousel } from "./use-look-carousel";
 
+/** The carousel's top before the start screen has measured it. */
+export const UNMEASURED = -100_000;
+
 /** The keyframe holds the face fully opaque until 78% of the flight to the pill. */
 const PILL_FADE_FROM = 0.78;
 
@@ -56,6 +59,9 @@ export function TalkHero({
 	const style = useAnimatedStyle(() => {
 		const t = motion.go.get();
 		const top = carTop.get();
+		if (top === UNMEASURED) {
+			return { opacity: 0, top: 0 };
+		}
 		const from = top + height / 2;
 		const stage = frame.get();
 		const stageScale = (LAYOUT.stageFace / face) * stage.scale;

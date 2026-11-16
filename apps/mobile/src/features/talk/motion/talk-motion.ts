@@ -116,10 +116,15 @@ export const SNAP = {
 } as const;
 
 /** A timing that plays as the screen chose (it already took reduced motion into account). */
-export const timing = (
+const LINEAR = Easing.linear;
+
+export function timing(
 	duration: number,
-	easing: WithTimingConfig["easing"] = Easing.linear
-): WithTimingConfig => ({ duration, easing, ...PLAY_AS_CHOSEN });
+	easing?: WithTimingConfig["easing"]
+): WithTimingConfig {
+	"worklet";
+	return { duration, easing: easing ?? LINEAR, ...PLAY_AS_CHOSEN };
+}
 
 /** 0 → 1 over [start, start + length] on a timeline, eased. */
 export function seg(
