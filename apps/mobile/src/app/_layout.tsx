@@ -4,19 +4,6 @@ import "@/global.css";
 import "@/lib/theme-bootstrap";
 
 import { useAuth } from "@clerk/expo";
-import {
-	Nunito_500Medium,
-	Nunito_700Bold,
-	Nunito_800ExtraBold,
-	Nunito_900Black,
-} from "@expo-google-fonts/nunito";
-import {
-	SpaceGrotesk_400Regular,
-	SpaceGrotesk_500Medium,
-	SpaceGrotesk_600SemiBold,
-	SpaceGrotesk_700Bold,
-	useFonts,
-} from "@expo-google-fonts/space-grotesk";
 import * as Sentry from "@sentry/react-native";
 import { useConvexAuth } from "convex/react";
 import { Observe, ObserveRoot, useObserve } from "expo-observe";
@@ -30,6 +17,7 @@ import {
 	UpdateBottomSheet,
 	type UpdateBottomSheetMode,
 } from "@/components/shared/update-bottom-sheet";
+import { useFontPairGuard, useLaunchFonts } from "@/design/fonts";
 import { ReflectDraftGuard } from "@/features/reflect/reflect-draft";
 import { ChatLocalDataGuard } from "@/features/xolacer-chat/chat-local-data-guard";
 import { useOtaUpdate } from "@/helpers/hooks/use-ota-update";
@@ -227,25 +215,17 @@ function RootLayout() {
 		onUpdateReady: handleOtaUpdateReady,
 	});
 
-	const [fontsLoaded, fontError] = useFonts({
-		// Playful (xolace+) theme
-		Nunito_500Medium,
-		Nunito_700Bold,
-		Nunito_800ExtraBold,
-		Nunito_900Black,
-		SpaceGrotesk_400Regular,
-		SpaceGrotesk_500Medium,
-		SpaceGrotesk_600SemiBold,
-		SpaceGrotesk_700Bold,
-	});
+	// The theme's font pair, Default's and the fixed faces (src/design/fonts.ts).
+	const fontsReady = useLaunchFonts();
+	useFontPairGuard();
 
 	useEffect(() => {
-		if (fontsLoaded || fontError) {
+		if (fontsReady) {
 			SplashScreen.hideAsync();
 		}
-	}, [fontsLoaded, fontError]);
+	}, [fontsReady]);
 
-	if (!(fontsLoaded || fontError)) {
+	if (!fontsReady) {
 		return null;
 	}
 	return (

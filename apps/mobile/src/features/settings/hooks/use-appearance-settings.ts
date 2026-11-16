@@ -2,6 +2,7 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Uniwind } from "uniwind";
 import { useAppTheme } from "@/context/app-theme-context";
+import { setThemeWithFonts } from "@/design/fonts";
 import { findVariant, isPremiumTheme, themeVariant } from "@/design/themes";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
@@ -72,7 +73,8 @@ export const useAppearanceSettings = () => {
 		}
 		const mode =
 			storedTheme === "system" ? (isLight ? "light" : "dark") : storedTheme;
-		Uniwind.setTheme(themeVariant(themeId, mode));
+		// Another theme can use another font pair: switch once its faces are in.
+		setThemeWithFonts(themeVariant(themeId, mode));
 		setColorThemeId(themeId);
 		updatePreferences({ colorTheme: themeId });
 	};

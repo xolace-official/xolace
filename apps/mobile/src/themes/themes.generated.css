@@ -3,10 +3,15 @@
 	:root {
 		/* Default, light */
 		@variant light {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "BricolageGrotesque_800ExtraBold";
+			--font-display-bold: "BricolageGrotesque_700Bold";
+			--font-display-semi: "BricolageGrotesque_600SemiBold";
+			--font-normal: "Figtree_400Regular";
+			--font-medium: "Figtree_500Medium";
+			--font-semibold: "Figtree_600SemiBold";
+			--font-bold: "Figtree_700Bold";
+			--font-italic: "Figtree_400Regular_Italic";
+			--font-italic-medium: "Figtree_500Medium_Italic";
 			--background: #f7f5fb;
 			--foreground: #191524;
 			--surface: #ffffff;
@@ -97,10 +102,15 @@
 
 		/* Default, dark */
 		@variant dark {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "BricolageGrotesque_800ExtraBold";
+			--font-display-bold: "BricolageGrotesque_700Bold";
+			--font-display-semi: "BricolageGrotesque_600SemiBold";
+			--font-normal: "Figtree_400Regular";
+			--font-medium: "Figtree_500Medium";
+			--font-semibold: "Figtree_600SemiBold";
+			--font-bold: "Figtree_700Bold";
+			--font-italic: "Figtree_400Regular_Italic";
+			--font-italic-medium: "Figtree_500Medium_Italic";
 			--background: #0e0c15;
 			--foreground: #f3f0fa;
 			--surface: #17141f;
@@ -191,10 +201,15 @@
 
 		/* Quiet Space, light */
 		@variant quiet-light {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "SpaceGrotesk_700Bold";
+			--font-display-bold: "SpaceGrotesk_700Bold";
+			--font-display-semi: "SpaceGrotesk_600SemiBold";
+			--font-normal: "DMSans_400Regular";
+			--font-medium: "DMSans_500Medium";
+			--font-semibold: "DMSans_600SemiBold";
+			--font-bold: "DMSans_700Bold";
+			--font-italic: "DMSans_400Regular_Italic";
+			--font-italic-medium: "DMSans_500Medium_Italic";
 			--background: oklch(97.5% 0.01 210);
 			--foreground: oklch(22% 0.01 210);
 			--surface: oklch(100% 0.008 210);
@@ -285,10 +300,15 @@
 
 		/* Quiet Space, dark */
 		@variant quiet-dark {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "SpaceGrotesk_700Bold";
+			--font-display-bold: "SpaceGrotesk_700Bold";
+			--font-display-semi: "SpaceGrotesk_600SemiBold";
+			--font-normal: "DMSans_400Regular";
+			--font-medium: "DMSans_500Medium";
+			--font-semibold: "DMSans_600SemiBold";
+			--font-bold: "DMSans_700Bold";
+			--font-italic: "DMSans_400Regular_Italic";
+			--font-italic-medium: "DMSans_500Medium_Italic";
 			--background: oklch(13% 0.01 210);
 			--foreground: oklch(98% 0 0);
 			--surface: oklch(20% 0.02 210);
@@ -379,10 +399,15 @@
 
 		/* Reverie, light */
 		@variant reverie-light {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "BricolageGrotesque_800ExtraBold";
+			--font-display-bold: "BricolageGrotesque_700Bold";
+			--font-display-semi: "BricolageGrotesque_600SemiBold";
+			--font-normal: "Figtree_400Regular";
+			--font-medium: "Figtree_500Medium";
+			--font-semibold: "Figtree_600SemiBold";
+			--font-bold: "Figtree_700Bold";
+			--font-italic: "Figtree_400Regular_Italic";
+			--font-italic-medium: "Figtree_500Medium_Italic";
 			--background: oklch(96.5% 0.02 300);
 			--foreground: oklch(20% 0.015 300);
 			--surface: oklch(100% 0.01 300);
@@ -473,10 +498,15 @@
 
 		/* Reverie, dark */
 		@variant reverie-dark {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "BricolageGrotesque_800ExtraBold";
+			--font-display-bold: "BricolageGrotesque_700Bold";
+			--font-display-semi: "BricolageGrotesque_600SemiBold";
+			--font-normal: "Figtree_400Regular";
+			--font-medium: "Figtree_500Medium";
+			--font-semibold: "Figtree_600SemiBold";
+			--font-bold: "Figtree_700Bold";
+			--font-italic: "Figtree_400Regular_Italic";
+			--font-italic-medium: "Figtree_500Medium_Italic";
 			--background: oklch(11% 0.02 300);
 			--foreground: oklch(98% 0 0);
 			--surface: oklch(20% 0.04 300);
@@ -567,10 +597,15 @@
 
 		/* Human Connection, light */
 		@variant human-light {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "BricolageGrotesque_800ExtraBold";
+			--font-display-bold: "BricolageGrotesque_700Bold";
+			--font-display-semi: "BricolageGrotesque_600SemiBold";
+			--font-normal: "Figtree_400Regular";
+			--font-medium: "Figtree_500Medium";
+			--font-semibold: "Figtree_600SemiBold";
+			--font-bold: "Figtree_700Bold";
+			--font-italic: "Figtree_400Regular_Italic";
+			--font-italic-medium: "Figtree_500Medium_Italic";
 			--background: oklch(97% 0.02 40);
 			--foreground: oklch(23% 0.02 40);
 			--surface: oklch(100% 0.01 40);
@@ -661,10 +696,15 @@
 
 		/* Human Connection, dark */
 		@variant human-dark {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "BricolageGrotesque_800ExtraBold";
+			--font-display-bold: "BricolageGrotesque_700Bold";
+			--font-display-semi: "BricolageGrotesque_600SemiBold";
+			--font-normal: "Figtree_400Regular";
+			--font-medium: "Figtree_500Medium";
+			--font-semibold: "Figtree_600SemiBold";
+			--font-bold: "Figtree_700Bold";
+			--font-italic: "Figtree_400Regular_Italic";
+			--font-italic-medium: "Figtree_500Medium_Italic";
 			--background: oklch(13% 0.02 40);
 			--foreground: oklch(98% 0 0);
 			--surface: oklch(22% 0.03 40);
@@ -755,10 +795,15 @@
 
 		/* Emerald, light */
 		@variant emerald-light {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "SpaceGrotesk_700Bold";
+			--font-display-bold: "SpaceGrotesk_700Bold";
+			--font-display-semi: "SpaceGrotesk_600SemiBold";
+			--font-normal: "DMSans_400Regular";
+			--font-medium: "DMSans_500Medium";
+			--font-semibold: "DMSans_600SemiBold";
+			--font-bold: "DMSans_700Bold";
+			--font-italic: "DMSans_400Regular_Italic";
+			--font-italic-medium: "DMSans_500Medium_Italic";
 			--background: oklch(96.5% 0.015 155);
 			--foreground: oklch(18% 0.02 160);
 			--surface: oklch(99% 0.008 155);
@@ -849,10 +894,15 @@
 
 		/* Emerald, dark */
 		@variant emerald-dark {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "SpaceGrotesk_700Bold";
+			--font-display-bold: "SpaceGrotesk_700Bold";
+			--font-display-semi: "SpaceGrotesk_600SemiBold";
+			--font-normal: "DMSans_400Regular";
+			--font-medium: "DMSans_500Medium";
+			--font-semibold: "DMSans_600SemiBold";
+			--font-bold: "DMSans_700Bold";
+			--font-italic: "DMSans_400Regular_Italic";
+			--font-italic-medium: "DMSans_500Medium_Italic";
 			--background: oklch(8% 0.015 160);
 			--foreground: oklch(95% 0.012 155);
 			--surface: oklch(13% 0.025 160);
@@ -943,10 +993,15 @@
 
 		/* Rosé, light */
 		@variant rose-light {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "BricolageGrotesque_800ExtraBold";
+			--font-display-bold: "BricolageGrotesque_700Bold";
+			--font-display-semi: "BricolageGrotesque_600SemiBold";
+			--font-normal: "Figtree_400Regular";
+			--font-medium: "Figtree_500Medium";
+			--font-semibold: "Figtree_600SemiBold";
+			--font-bold: "Figtree_700Bold";
+			--font-italic: "Figtree_400Regular_Italic";
+			--font-italic-medium: "Figtree_500Medium_Italic";
 			--background: oklch(97% 0.015 350);
 			--foreground: oklch(22% 0.02 350);
 			--surface: oklch(99% 0.008 350);
@@ -1037,10 +1092,15 @@
 
 		/* Rosé, dark */
 		@variant rose-dark {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "BricolageGrotesque_800ExtraBold";
+			--font-display-bold: "BricolageGrotesque_700Bold";
+			--font-display-semi: "BricolageGrotesque_600SemiBold";
+			--font-normal: "Figtree_400Regular";
+			--font-medium: "Figtree_500Medium";
+			--font-semibold: "Figtree_600SemiBold";
+			--font-bold: "Figtree_700Bold";
+			--font-italic: "Figtree_400Regular_Italic";
+			--font-italic-medium: "Figtree_500Medium_Italic";
 			--background: oklch(11% 0.015 350);
 			--foreground: oklch(95% 0.012 350);
 			--surface: oklch(17% 0.025 350);
@@ -1131,10 +1191,15 @@
 
 		/* Platinum, light */
 		@variant platinum-light {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "SpaceGrotesk_700Bold";
+			--font-display-bold: "SpaceGrotesk_700Bold";
+			--font-display-semi: "SpaceGrotesk_600SemiBold";
+			--font-normal: "DMSans_400Regular";
+			--font-medium: "DMSans_500Medium";
+			--font-semibold: "DMSans_600SemiBold";
+			--font-bold: "DMSans_700Bold";
+			--font-italic: "DMSans_400Regular_Italic";
+			--font-italic-medium: "DMSans_500Medium_Italic";
 			--background: oklch(97% 0.006 235);
 			--foreground: oklch(20% 0.015 235);
 			--surface: oklch(99% 0.003 235);
@@ -1225,10 +1290,15 @@
 
 		/* Platinum, dark */
 		@variant platinum-dark {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "SpaceGrotesk_700Bold";
+			--font-display-bold: "SpaceGrotesk_700Bold";
+			--font-display-semi: "SpaceGrotesk_600SemiBold";
+			--font-normal: "DMSans_400Regular";
+			--font-medium: "DMSans_500Medium";
+			--font-semibold: "DMSans_600SemiBold";
+			--font-bold: "DMSans_700Bold";
+			--font-italic: "DMSans_400Regular_Italic";
+			--font-italic-medium: "DMSans_500Medium_Italic";
 			--background: oklch(12% 0.01 235);
 			--foreground: oklch(95% 0.006 235);
 			--surface: oklch(18% 0.012 235);
@@ -1319,10 +1389,15 @@
 
 		/* Velvet, light */
 		@variant velvet-light {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "BricolageGrotesque_800ExtraBold";
+			--font-display-bold: "BricolageGrotesque_700Bold";
+			--font-display-semi: "BricolageGrotesque_600SemiBold";
+			--font-normal: "Figtree_400Regular";
+			--font-medium: "Figtree_500Medium";
+			--font-semibold: "Figtree_600SemiBold";
+			--font-bold: "Figtree_700Bold";
+			--font-italic: "Figtree_400Regular_Italic";
+			--font-italic-medium: "Figtree_500Medium_Italic";
 			--background: oklch(96% 0.015 30);
 			--foreground: oklch(18% 0.03 20);
 			--surface: oklch(99% 0.008 30);
@@ -1413,10 +1488,15 @@
 
 		/* Velvet, dark */
 		@variant velvet-dark {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "BricolageGrotesque_800ExtraBold";
+			--font-display-bold: "BricolageGrotesque_700Bold";
+			--font-display-semi: "BricolageGrotesque_600SemiBold";
+			--font-normal: "Figtree_400Regular";
+			--font-medium: "Figtree_500Medium";
+			--font-semibold: "Figtree_600SemiBold";
+			--font-bold: "Figtree_700Bold";
+			--font-italic: "Figtree_400Regular_Italic";
+			--font-italic-medium: "Figtree_500Medium_Italic";
 			--background: oklch(9% 0.02 20);
 			--foreground: oklch(94% 0.015 25);
 			--surface: oklch(14% 0.03 20);
@@ -1507,10 +1587,15 @@
 
 		/* Noir, light */
 		@variant noir-light {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "SpaceGrotesk_700Bold";
+			--font-display-bold: "SpaceGrotesk_700Bold";
+			--font-display-semi: "SpaceGrotesk_600SemiBold";
+			--font-normal: "DMSans_400Regular";
+			--font-medium: "DMSans_500Medium";
+			--font-semibold: "DMSans_600SemiBold";
+			--font-bold: "DMSans_700Bold";
+			--font-italic: "DMSans_400Regular_Italic";
+			--font-italic-medium: "DMSans_500Medium_Italic";
 			--background: oklch(97% 0.015 85);
 			--foreground: oklch(20% 0.02 85);
 			--surface: oklch(99% 0.01 85);
@@ -1601,10 +1686,15 @@
 
 		/* Noir, dark */
 		@variant noir-dark {
-			--font-normal: "SpaceGrotesk-Regular";
-			--font-medium: "SpaceGrotesk-Medium";
-			--font-semibold: "SpaceGrotesk-SemiBold";
-			--font-bold: "SpaceGrotesk-Bold";
+			--font-display: "SpaceGrotesk_700Bold";
+			--font-display-bold: "SpaceGrotesk_700Bold";
+			--font-display-semi: "SpaceGrotesk_600SemiBold";
+			--font-normal: "DMSans_400Regular";
+			--font-medium: "DMSans_500Medium";
+			--font-semibold: "DMSans_600SemiBold";
+			--font-bold: "DMSans_700Bold";
+			--font-italic: "DMSans_400Regular_Italic";
+			--font-italic-medium: "DMSans_500Medium_Italic";
 			--background: oklch(6% 0.006 85);
 			--foreground: oklch(95% 0.015 85);
 			--surface: oklch(11% 0.012 85);
@@ -1695,10 +1785,15 @@
 
 		/* Playful, light */
 		@variant playful-light {
-			--font-normal: "Nunito_500Medium";
-			--font-medium: "Nunito_700Bold";
-			--font-semibold: "Nunito_800ExtraBold";
-			--font-bold: "Nunito_900Black";
+			--font-display: "Nunito_900Black";
+			--font-display-bold: "Nunito_800ExtraBold";
+			--font-display-semi: "Nunito_700Bold";
+			--font-normal: "Nunito_400Regular";
+			--font-medium: "Nunito_500Medium";
+			--font-semibold: "Nunito_600SemiBold";
+			--font-bold: "Nunito_700Bold";
+			--font-italic: "Nunito_400Regular_Italic";
+			--font-italic-medium: "Nunito_500Medium_Italic";
 			--background: #f4f5f6;
 			--foreground: #3c3c3c;
 			--surface: #ffffff;
@@ -1789,10 +1884,15 @@
 
 		/* Playful, dark */
 		@variant playful-dark {
-			--font-normal: "Nunito_500Medium";
-			--font-medium: "Nunito_700Bold";
-			--font-semibold: "Nunito_800ExtraBold";
-			--font-bold: "Nunito_900Black";
+			--font-display: "Nunito_900Black";
+			--font-display-bold: "Nunito_800ExtraBold";
+			--font-display-semi: "Nunito_700Bold";
+			--font-normal: "Nunito_400Regular";
+			--font-medium: "Nunito_500Medium";
+			--font-semibold: "Nunito_600SemiBold";
+			--font-bold: "Nunito_700Bold";
+			--font-italic: "Nunito_400Regular_Italic";
+			--font-italic-medium: "Nunito_500Medium_Italic";
 			--background: #121c21;
 			--foreground: #f1f7fb;
 			--surface: #1b2a31;
@@ -1883,10 +1983,15 @@
 
 		/* Night, light */
 		@variant nightly-light {
-			--font-normal: "SNPro-Regular";
-			--font-medium: "SNPro-Medium";
-			--font-semibold: "SNPro-SemiBold";
-			--font-bold: "SNPro-Bold";
+			--font-display: "BricolageGrotesque_800ExtraBold";
+			--font-display-bold: "BricolageGrotesque_700Bold";
+			--font-display-semi: "BricolageGrotesque_600SemiBold";
+			--font-normal: "Figtree_400Regular";
+			--font-medium: "Figtree_500Medium";
+			--font-semibold: "Figtree_600SemiBold";
+			--font-bold: "Figtree_700Bold";
+			--font-italic: "Figtree_400Regular_Italic";
+			--font-italic-medium: "Figtree_500Medium_Italic";
 			--background: oklch(74% 0.007 265);
 			--foreground: oklch(16% 0.01 265);
 			--surface: oklch(79% 0.006 265);
@@ -1977,10 +2082,15 @@
 
 		/* Night, dark */
 		@variant nightly-dark {
-			--font-normal: "SNPro-Regular";
-			--font-medium: "SNPro-Medium";
-			--font-semibold: "SNPro-SemiBold";
-			--font-bold: "SNPro-Bold";
+			--font-display: "BricolageGrotesque_800ExtraBold";
+			--font-display-bold: "BricolageGrotesque_700Bold";
+			--font-display-semi: "BricolageGrotesque_600SemiBold";
+			--font-normal: "Figtree_400Regular";
+			--font-medium: "Figtree_500Medium";
+			--font-semibold: "Figtree_600SemiBold";
+			--font-bold: "Figtree_700Bold";
+			--font-italic: "Figtree_400Regular_Italic";
+			--font-italic-medium: "Figtree_500Medium_Italic";
 			--background: #0e0c15;
 			--foreground: #f3f0fa;
 			--surface: #17141f;

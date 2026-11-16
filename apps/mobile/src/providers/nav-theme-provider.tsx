@@ -9,6 +9,7 @@ import { useThemeColor } from "heroui-native";
 import { type ReactNode, useEffect } from "react";
 import { Appearance } from "react-native";
 import { useUniwind } from "uniwind";
+import { useThemeFaces } from "@/design/fonts";
 import { findVariant } from "@/design/themes";
 import { useAppStore } from "@/store/store";
 
@@ -22,6 +23,7 @@ export function NavThemeProvider({ children }: { children: ReactNode }) {
 		"border",
 		"accent",
 	]);
+	const faces = useThemeFaces();
 	const isDark = findVariant(theme)?.base === "dark";
 	const base = isDark ? DarkTheme : DefaultTheme;
 
@@ -35,13 +37,13 @@ export function NavThemeProvider({ children }: { children: ReactNode }) {
 			primary: accent,
 			text: foreground,
 		},
-		// Navigator-rendered text (headers, back labels) uses the app face. The
-		// nominal weight comes first so a face carrying its own weight wins.
+		// Navigator-rendered text (headers, back labels) uses the theme's body
+		// face. The nominal weight comes first so a face carrying its own weight wins.
 		fonts: {
-			bold: { fontFamily: "SpaceGrotesk_600SemiBold", fontWeight: "600" },
-			heavy: { fontFamily: "SpaceGrotesk_700Bold", fontWeight: "700" },
-			medium: { fontFamily: "SpaceGrotesk_500Medium", fontWeight: "500" },
-			regular: { fontFamily: "SpaceGrotesk_400Regular", fontWeight: "400" },
+			bold: { fontFamily: faces.semibold, fontWeight: "600" },
+			heavy: { fontFamily: faces.bold, fontWeight: "700" },
+			medium: { fontFamily: faces.medium, fontWeight: "500" },
+			regular: { fontFamily: faces.normal, fontWeight: "400" },
 		},
 	};
 

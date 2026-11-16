@@ -13,6 +13,11 @@
  * Components read them through class names (bg-background, text-muted …) or,
  * when a value has to reach JS, through useThemeColor / useCSSVariable.
  *
+ * Fonts: each theme sets its pair's faces as --font-display, --font-normal …
+ * (src/design/font-pairs.ts), so font-display, font-semibold and the type-*
+ * utilities follow the theme. Never add a numeric font-weight or italic next
+ * to them: each weight and style is its own family.
+ *
  * The fixed "printed object" palettes at the end are static: they are the
  * content, not the container, so they don't follow the theme.
  */
@@ -22,6 +27,8 @@
 
 @import "heroui-native/styles";
 @import "./themes/themes.generated.css";
+/* Font roles, fixed faces and the type-* utilities (scripts/themes/type.ts). */
+@import "./themes/type.generated.css";
 /* Playful restyles HeroUI component classes; must come after heroui-native/styles. */
 @import "./themes/playful-components.css";
 
@@ -208,9 +215,10 @@
 	--color-orb-wren-mid: #f59ac0;
 	--color-orb-wren-deep: #d6467a;
 
-	/* The poster's voice is fixed too: `--font-*` is a per-theme variable
-     * (nightly swaps the whole family to SN Pro), and a printed object does not
-     * change typeface with the chrome behind it. */
+	/* The poster's voice is fixed too: the `--font-<role>` variables follow
+     * the theme's font pair, and a printed object does not change typeface
+     * with the chrome behind it. The redesign's poster uses `font-poster*`
+     * (type.generated.css); these two stay until the old poster goes. */
 	--font-poster-display: "SpaceGrotesk-Bold";
 	--font-poster-body: "SpaceGrotesk-Regular";
 }

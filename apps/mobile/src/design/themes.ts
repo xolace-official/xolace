@@ -1,5 +1,5 @@
 import type { ThemeName } from "uniwind";
-import type { FaceSetId } from "./font-faces";
+import { DEFAULT_FONT_PAIR, type FontPairId } from "./font-pairs";
 import { PRODUCTION_PALETTES } from "./theme-values";
 
 /**
@@ -28,7 +28,8 @@ export type ThemeEntry = {
 	id: string;
 	name: string;
 	tier: ThemeTier;
-	faces: FaceSetId;
+	/** Heading + body faces (src/design/font-pairs.ts). */
+	fonts: FontPairId;
 	light?: Palette;
 	dark?: Palette;
 	/** Not offered in the picker (Night is chosen by the clock). */
@@ -157,58 +158,58 @@ const P = PRODUCTION_PALETTES;
 
 export const THEMES: readonly ThemeEntry[] = [
 	{
-		faces: "grotesk",
+		fonts: "warm",
 		id: "default",
 		name: "Default",
 		tier: "free",
 		...DEFAULT,
 	},
 	{
-		faces: "grotesk",
+		fonts: "clear",
 		id: "quiet",
 		name: "Quiet Space",
 		tier: "free",
 		...P.quiet,
 	},
 	{
-		faces: "grotesk",
+		fonts: "warm",
 		id: "reverie",
 		name: "Reverie",
 		tier: "free",
 		...P.reverie,
 	},
 	{
-		faces: "grotesk",
+		fonts: "warm",
 		id: "human",
 		name: "Human Connection",
 		tier: "free",
 		...P.human,
 	},
 	{
-		faces: "grotesk",
+		fonts: "clear",
 		id: "emerald",
 		name: "Emerald",
 		tier: "premium",
 		...P.emerald,
 	},
-	{ faces: "grotesk", id: "rose", name: "Rosé", tier: "premium", ...P.rose },
+	{ fonts: "warm", id: "rose", name: "Rosé", tier: "premium", ...P.rose },
 	{
-		faces: "grotesk",
+		fonts: "clear",
 		id: "platinum",
 		name: "Platinum",
 		tier: "premium",
 		...P.platinum,
 	},
 	{
-		faces: "grotesk",
+		fonts: "warm",
 		id: "velvet",
 		name: "Velvet",
 		tier: "premium",
 		...P.velvet,
 	},
-	{ faces: "grotesk", id: "noir", name: "Noir", tier: "premium", ...P.noir },
+	{ fonts: "clear", id: "noir", name: "Noir", tier: "premium", ...P.noir },
 	{
-		faces: "nunito",
+		fonts: "playful",
 		id: "playful",
 		name: "Playful",
 		tier: "premium",
@@ -218,7 +219,7 @@ export const THEMES: readonly ThemeEntry[] = [
 	// applies it from 22:00 to 04:00; its light side is production's moonlit one.
 	{
 		dark: DEFAULT.dark,
-		faces: "snPro",
+		fonts: "warm",
 		hiddenFromPicker: true,
 		id: "nightly",
 		light: P.nightly.light,
@@ -298,4 +299,12 @@ export const NIGHT_VARIANT: ThemeName = themeVariant("nightly", "dark");
 
 export function isPremiumTheme(id: string): boolean {
 	return THEME_BY_ID[id]?.tier === "premium";
+}
+
+/** The font pair a Uniwind theme draws in; Default's for anything else ("system"). */
+export function variantFonts(name: string | null): FontPairId {
+	const variant = findVariant(name);
+	return variant
+		? (THEME_BY_ID[variant.themeId]?.fonts ?? DEFAULT_FONT_PAIR)
+		: DEFAULT_FONT_PAIR;
 }
