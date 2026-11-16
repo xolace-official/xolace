@@ -106,6 +106,20 @@ describe("devImportsFromOutside", () => {
 		]);
 	});
 
+	it("allows a big feature's dev/ folders to share, but not across features", () => {
+		const graph = graphOf({
+			"features/letters/write/dev/states.tsx": [
+				local("features/letters/dev/fixtures.ts"),
+			],
+			"features/you/dev/states.tsx": [
+				local("features/letters/dev/fixtures.ts"),
+			],
+		});
+		expect(devImportsFromOutside(graph)).toEqual([
+			"features/you/dev/states.tsx -> features/letters/dev/fixtures.ts",
+		]);
+	});
+
 	it("allows its own dev/ files and the src/dev registry", () => {
 		const graph = graphOf({
 			"dev/registry.ts": [local("features/today/dev/states.ts")],
@@ -144,7 +158,7 @@ describe("devCodeInReleaseGraph", () => {
 			"features/reach-me-on/dev/states.tsx": [
 				local("dev/dev-state.ts", true),
 				local("features/reach-me-on/dev/fixtures.ts"),
-				local("features/reach-me-on/reach-sheet.tsx"),
+				local("features/reach-me-on/reach-sheet-data.tsx"),
 			],
 			"features/reach-me-on/reach-view.ts": [local("dev/dev-state.ts", true)],
 		});

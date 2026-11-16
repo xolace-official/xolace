@@ -9,6 +9,14 @@ export type DevFeature = {
 /** A discovered `dev/states.tsx`: its path under `src/features/` and its exports. */
 export type StatesFile = { readonly path: string; readonly exports: unknown };
 
+/** A file, or one state in it, left out of the registry, and the fix. */
+export type DevProblem = { readonly path: string; readonly message: string };
+
+export type DevRegistry = {
+	readonly features: readonly DevFeature[];
+	readonly problems: readonly DevProblem[];
+};
+
 /** `./reach-me-on/dev/states.tsx`, or a big feature's `./letters/write/dev/states.tsx`:
  * both register under the feature folder (`reach-me-on`, `letters`). */
 const STATES_FILE = /^(?:\.\/)?([^/]+)\/(?:[^/]+\/)*dev\/states\.tsx$/;
@@ -39,39 +47,50 @@ function statesOf(exports: unknown): readonly DevState[] | undefined {
 
 /**
  * The registry, from every feature's `dev/states.tsx`, sorted by feature. A file
- * that breaks the contract throws with its path and the fix, so the dev build
- * says what's wrong the first time anyone opens a state.
+ * or a state that breaks the contract is left out and reported with its path and
+ * the fix, so one bad file never hides the others. CI runs the same rules on the
+ * real files (`states-files.test.ts`).
  */
-export function devFeatures(files: readonly StatesFile[]): DevFeature[] {
+export function devRegistry(files: readonly StatesFile[]): DevRegistry {
 	const byFeature = new Map<string, DevState[]>();
+	const problems: DevProblem[] = [];
 	for (const { path, exports } of files) {
 		const feature = path.match(STATES_FILE)?.[1];
-		if (!feature) {
-			throw new Error(
-				`${path}: dev states live in src/features/<feature>/dev/states.tsx`
-			);
-		}
 		const states = statesOf(exports);
+		if (!feature) {
+			problems.push({
+				message: "dev states live in src/features/<feature>/dev/states.tsx",
+				path,
+			});
+			continue;
+		}
 		if (!states) {
-			throw new Error(
-				`${path}: export \`devStates: readonly DevState[]\` (src/dev/dev-state.ts)`
-			);
+			problems.push({
+				message:
+					"export `devStates: readonly DevState[]` (src/dev/dev-state.ts)",
+				path,
+			});
+			continue;
 		}
 		const listed = byFeature.get(feature) ?? [];
 		for (const state of states) {
 			if (!SEGMENT.test(state.id)) {
-				throw new Error(`${path}: "${state.id}" isn't a kebab-case id`);
+				problems.push({ message: `"${state.id}" isn't a kebab-case id`, path });
+			} else if (listed.some((s) => s.id === state.id)) {
+				problems.push({
+					message: `${feature} already has "${state.id}"`,
+					path,
+				});
+			} else {
+				listed.push(state);
 			}
-			if (listed.some((s) => s.id === state.id)) {
-				throw new Error(`${path}: ${feature} already has "${state.id}"`);
-			}
-			listed.push(state);
 		}
 		byFeature.set(feature, listed);
 	}
-	return [...byFeature]
+	const features = [...byFeature]
 		.map(([feature, states]) => ({ feature, states }))
 		.sort((a, b) => a.feature.localeCompare(b.feature));
+	return { features, problems };
 }
 
 /** The state a link names (`/dev/<feature>/<id>`), if it's registered. */

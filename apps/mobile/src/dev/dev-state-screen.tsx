@@ -1,7 +1,7 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { ScrollView } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { DEV_FEATURES } from "@/dev/discovered";
+import { DEV_REGISTRY } from "@/dev/discovered";
 import { findDevState } from "@/dev/registry";
 
 const UNKNOWN_OPTIONS = { title: "No such state" };
@@ -15,7 +15,7 @@ export function DevStateScreen() {
 		feature: string;
 		state: string;
 	}>();
-	const found = findDevState(DEV_FEATURES, feature, state);
+	const found = findDevState(DEV_REGISTRY.features, feature, state);
 
 	if (!found) {
 		return (
@@ -28,8 +28,8 @@ export function DevStateScreen() {
 					Nothing is registered at dev/{feature}/{state}.
 				</AppText>
 				<AppText color="muted" variant="callout">
-					The index lists every state; a feature adds its own in src/features/
-					{feature}/dev/states.tsx.
+					The index lists every state, and any file it had to leave out. A
+					feature adds its own in src/features/{feature}/dev/states.tsx.
 				</AppText>
 			</ScrollView>
 		);

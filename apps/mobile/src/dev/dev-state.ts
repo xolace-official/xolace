@@ -16,8 +16,9 @@ export type DevState = {
 	readonly Screen: ComponentType;
 	/**
 	 * The header, as the real route sets it: its `title`, or `headerShown: false`
-	 * for a screen that draws its own. Without it the header shows `title`. A state
-	 * always opens pushed: `presentation` isn't applied.
+	 * for a screen that draws its own (which then has no back button: swipe back on
+	 * iOS, the system back on Android). Without it the header shows `title`. A state
+	 * always opens pushed, so `presentation` can't be set.
 	 */
-	readonly options?: NativeStackNavigationOptions;
+	readonly options?: Omit<NativeStackNavigationOptions, "presentation">;
 };

@@ -187,14 +187,19 @@ export function oldFolderImportsFromNewCode(graph: ImportGraph): string[] {
 	return unique(found);
 }
 
-/** 2. A `dev/` folder is imported only by its own files and `src/dev/`, so
- * fixtures never ship inside a screen. */
+/** 2. A feature's `dev/` folders are imported only by its own `dev/` folders (a
+ * big feature's `write/dev/states.tsx` may use its root `dev/` fixtures) and
+ * `src/dev/`, so fixtures never ship inside a screen. */
 export function devImportsFromOutside(graph: ImportGraph): string[] {
 	const found: string[] = [];
 	for (const edge of edges(graph)) {
-		const dev = edge.target && relative(edge.target).match(DEV_FOLDER)?.[1];
+		if (!(edge.target && DEV_FOLDER.test(relative(edge.target)))) {
+			continue;
+		}
 		const from = relative(edge.file);
-		if (dev && !from.startsWith(`${dev}/`) && !from.startsWith(DEV_REGISTRY)) {
+		const ownDev =
+			DEV_FOLDER.test(from) && featureOf(edge.file) === featureOf(edge.target);
+		if (!(ownDev || from.startsWith(DEV_REGISTRY))) {
 			found.push(show(edge));
 		}
 	}

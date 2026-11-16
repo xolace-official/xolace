@@ -4,7 +4,8 @@ import { AppText } from "@/components/shared/app-text";
 import { Card, SectionHeader } from "@/components/shared/card";
 import { PressScale } from "@/components/shared/press-scale";
 import type { DevState } from "@/dev/dev-state";
-import { DEV_FEATURES } from "@/dev/discovered";
+import { DEV_REGISTRY } from "@/dev/discovered";
+import type { DevProblem } from "@/dev/registry";
 import { cn } from "@/lib/cn";
 
 function StateRow({
@@ -36,11 +37,26 @@ function StateRow({
 	);
 }
 
+/** A states file, or a state in it, the registry left out, and the fix. */
+function ProblemRow({ problem, last }: { problem: DevProblem; last: boolean }) {
+	return (
+		<View
+			className={cn("gap-0.5 px-4 py-3", !last && "border-separator border-b")}
+		>
+			<AppText color="dangerInk" variant="callout" weight="semibold">
+				src/features/{problem.path.replace(/^\.\//, "")}
+			</AppText>
+			<AppText variant="footnote">{problem.message}</AppText>
+		</View>
+	);
+}
+
 /**
  * Dev tools › Dev states: every registered state, by feature.
  * @public Opened by its route shim's `__DEV__` require, which knip can't follow.
  */
 export function DevIndexScreen() {
+	const { features, problems } = DEV_REGISTRY;
 	return (
 		<ScrollView
 			contentContainerClassName="gap-module px-gutter pt-2 pb-16"
@@ -50,12 +66,26 @@ export function DevIndexScreen() {
 				Each screen state on fixtures, no backend needed. Open one by link to
 				screenshot it.
 			</AppText>
-			{DEV_FEATURES.length === 0 && (
+			{problems.length > 0 && (
+				<View className="gap-2">
+					<SectionHeader title="Left out" />
+					<Card flat>
+						{problems.map((problem, i) => (
+							<ProblemRow
+								key={`${problem.path}:${problem.message}`}
+								last={i === problems.length - 1}
+								problem={problem}
+							/>
+						))}
+					</Card>
+				</View>
+			)}
+			{features.length === 0 && (
 				<AppText variant="body">
 					No states yet: add a feature's dev/states.tsx.
 				</AppText>
 			)}
-			{DEV_FEATURES.map(({ feature, states }) => (
+			{features.map(({ feature, states }) => (
 				<View className="gap-2" key={feature}>
 					<SectionHeader title={feature} />
 					<Card flat>
