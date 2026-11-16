@@ -12,10 +12,6 @@ const REACH_ME_ON_FLAG = "reach-me-on";
 /** The flag's value: undefined until PostHog has loaded flags. */
 export function useReachMeOnFlag(): boolean | undefined {
 	const value = useFeatureFlag(REACH_ME_ON_FLAG);
-	// TEMP local override, do not commit: forces the flag on in dev builds.
-	if (__DEV__) {
-		return true;
-	}
 	return value === undefined ? undefined : value === true;
 }
 
