@@ -1,13 +1,13 @@
 /** Feature layering guard (migration plan Phase 5): no feature cycles, `purchases` imports no
- * feature, no runtime file cycles; and the feature-shape rules for v2 folders
+ * feature, no runtime file cycles; and the feature-shape rules for ported folders
  * (`feature-shape.ts`). Each failure lists the imports to move. */
 import { describe, expect, it } from "vitest";
 import {
 	backendCallsOutsideDataHooks,
-	crossFeatureImportsFromV2,
+	crossFeatureImportsFromPorted,
 	devImportsFromOutside,
+	oldFolderImportsFromNewCode,
 	staleListings,
-	v2ImportsOfOldFolders,
 } from "@/features/feature-shape";
 import {
 	buildGraph,
@@ -114,10 +114,10 @@ describe("feature shape (apps/mobile/AGENTS.md)", () => {
 		).toEqual([]);
 	});
 
-	it("keeps each <name>-v2 folder off its old folder, which C3 deletes", () => {
+	it("keeps new code off the old folders it replaces", () => {
 		expect(
-			v2ImportsOfOldFolders(graph),
-			"Copy what the v2 folder needs into it, or move it down to src/lib or src/components"
+			oldFolderImportsFromNewCode(graph),
+			"Delete the old code your screen replaces, or move the piece old screens still share down to src/lib or src/components first; take a replaced folder off LEGACY_FEATURES"
 		).toEqual([]);
 	});
 
@@ -128,16 +128,16 @@ describe("feature shape (apps/mobile/AGENTS.md)", () => {
 		).toEqual([]);
 	});
 
-	it("calls Convex, PostHog and the toast only from use-*.ts in v2 folders", () => {
+	it("calls Convex, PostHog and the toast only from use-*.ts in ported folders", () => {
 		expect(
 			backendCallsOutsideDataHooks(graph),
 			"Move the call into the feature's data hook (use-<feature>.ts) and pass the result down"
 		).toEqual([]);
 	});
 
-	it("keeps v2 folders off other features; shared pieces move down a layer", () => {
+	it("keeps ported folders off each other; shared pieces move down a layer", () => {
 		expect(
-			crossFeatureImportsFromV2(graph),
+			crossFeatureImportsFromPorted(graph),
 			"Move the shared piece to src/lib, src/components/shared or a kit in src/components/<kit>; compose features in the route, not the screen"
 		).toEqual([]);
 	});

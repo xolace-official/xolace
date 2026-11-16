@@ -20,7 +20,7 @@ const EASE_LEGACY_FILES: ReadonlySet<string> = new Set([
 ]);
 
 /** Folders outside `features/` that new redesign code lands in, held to the
- * reduced-motion rule like the v2 feature folders. */
+ * reduced-motion rule like the ported feature folders. */
 const NEW_MOTION_FOLDERS = [
 	"design/",
 	"components/shared/",

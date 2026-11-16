@@ -5,8 +5,8 @@ description: Port one redesign screen PR (S1–S22) from the prototype into apps
 
 # Port a screen
 
-One S-PR from the phasing: a prototype feature becomes one v2 feature folder in
-`apps/mobile` that replaces the old screen outright (there is no flag: nothing ships to
+One S-PR from the phasing: a prototype feature becomes one feature folder in
+`apps/mobile` that replaces the old screen in place (there is no flag: nothing ships to
 the stores until the redesign is complete), proven state by state. Every S-PR comes out
 in the same **shape** (`apps/mobile/AGENTS.md`, "Feature shape"), so 22 of them review alike.
 
@@ -38,8 +38,12 @@ the screen calls, and every gap with the B-PR that fills it.
 
 Work in this order; each step leaves something you can test.
 
-- **Folder.** Final name if free, `<name>-v2` if an old folder holds it. A new folder is
-  checked from its first commit; never add it to `LEGACY_FEATURES`.
+- **Folder.** Always the final name, never `<name>-v2`. If the name is free, a new folder,
+  checked from its first commit; never add it to `LEGACY_FEATURES`. If an old folder
+  holds it (`reflect`, `settings`, `session-end`…), replace that folder in place: first
+  move any part other old screens still import down a layer (`src/lib`,
+  `src/components/shared`) and point them at it, so nothing imports a half-replaced
+  folder; then rewrite the folder in the shape and take it off `LEGACY_FEATURES`.
 - **Copy.** Strings from `P/src/fixtures/<feature>.ts` into `copy.ts`. Fake data from the
   same file becomes fixtures in `dev/`.
 - **Model.** Every function that turns data into what to show (in the prototype's
@@ -87,7 +91,7 @@ Work in this order; each step leaves something you can test.
   - `Icon` names need an Android twin (`{ ios, android }`).
   - Toasts: `toast()` from the data hook, never heroui's `useToast`. `kit-imports.ts` fails
     on `useToast`, `PressableFeedback`, `SegmentedControl`, `legacyFitSheet` and
-    `useLargeHeaderOptions` in a v2 folder.
+    `useLargeHeaderOptions` in a ported folder.
   - The first import of a kit file deletes its line from knip's `entry` (`knip.jsonc`).
 - **Pieces from another feature** (the Telegram offer from `reach-me-on`, a streak ring):
   move the piece down a layer in this PR, to `src/lib`, `src/components/shared` or a kit
@@ -99,9 +103,12 @@ Work in this order; each step leaves something you can test.
 
 ## 3. Wire it
 
-- **Route shim.** The production route under `M/src/app/(protected)/` renders the v2
-  screen in place of the old one; delete the old screen's code once nothing imports it
-  (its folder may still be `LEGACY_FEATURES` until C3).
+- **Route shim.** Point the production route under `M/src/app/(protected)/` at the new
+  screen, and in the same PR delete the old screen code it replaces plus anything only
+  that code used. A folder left empty goes, with its `LEGACY_FEATURES` line. New code
+  never imports an old folder (`import-cycles.test.ts` fails and names the import). A
+  Convex function that lost its last caller is deprecated (a wrapper and a
+  `DEPRECATIONS.md` line), never removed: the store app still calls it.
 - **A tab** (Today S1, Explore S7, You S5, Connect S17). Each tab route under
   `M/src/app/(protected)/(tabs)/<tab>/index.tsx` hosts the old screen that did its job
   until then: swap that shim for your screen. The tab's label, icon and options are its
@@ -114,8 +121,10 @@ Work in this order; each step leaves something you can test.
   those stack a second copy of the tabs.
 - **Stack entry.** New routes go in the feature's `screens.ts`. A new feature adds one
   import and one spread to `M/src/features/navigation/root-screens.ts`.
-- **A host** (an overlay or listener above the stack, like the arrivals host): one
-  entry in `M/src/features/navigation/hosts.ts`; don't edit the layout.
+- **A host** (a component kept mounted above the stack while signed in, that listens and
+  renders nothing or draws over every screen, like the arrivals moment): one entry in
+  `ROOT_HOSTS` (`M/src/features/navigation/hosts.ts`); don't edit the layout. It isn't a
+  route; a screen it opens is a stack entry it navigates to.
 - **Dev states.** One per state the handoff shows, in `dev/`, feeding the screen
   fixtures through the same `{ state, actions }` type. Register them with `src/dev/`
   (A2). Before A2 lands, the states are fixtures plus tests only; say so in the PR.
@@ -135,7 +144,7 @@ Done when every state from step 1 has a light and a dark screenshot, or a line i
 
 ## 5. Open the PR
 
-Title `feat(mobile): <screen> v2` (Conventional Commit). Body per
+Title `feat(mobile): <screen>` (Conventional Commit), e.g. `feat(mobile): Today`. Body per
 `.agents/rules/pull-requests.md`. In it:
 
 - **Problem**: the S-number and the handoff.

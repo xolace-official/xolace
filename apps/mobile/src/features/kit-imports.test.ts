@@ -35,7 +35,7 @@ const LEGACY = {
 };
 
 describe("replacedPiecesInNewCode", () => {
-	it("flags each older piece in a v2 folder, src/design and the shared kit", () => {
+	it("flags each older piece in a ported folder, src/design and the shared kit", () => {
 		const graph = graphOf({
 			...LEGACY,
 			"components/settings-kit/row.tsx": [

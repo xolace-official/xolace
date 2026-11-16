@@ -2,10 +2,10 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
 	backendCallsOutsideDataHooks,
-	crossFeatureImportsFromV2,
+	crossFeatureImportsFromPorted,
 	devImportsFromOutside,
+	oldFolderImportsFromNewCode,
 	staleListings,
-	v2ImportsOfOldFolders,
 } from "@/features/feature-shape";
 import { type Import, type ImportGraph, SRC } from "@/features/import-graph";
 
@@ -32,22 +32,39 @@ const graphOf = (entries: Record<string, Import[]>): ImportGraph =>
 		Object.entries(entries).map(([rel, imports]) => [file(rel), imports])
 	);
 
-describe("v2ImportsOfOldFolders", () => {
-	it("flags a <name>-v2 file importing <name>", () => {
+describe("oldFolderImportsFromNewCode", () => {
+	it("flags a ported folder or a lower layer importing an old folder, types included", () => {
 		const graph = graphOf({
-			"features/talk-v2/talk-screen.tsx": [local("features/talk/voice.ts")],
+			"components/shared/card.tsx": [local("features/discovery/tile.tsx")],
+			"design/type.ts": [local("features/reflect/faces.ts", true)],
+			"features/today/today-screen.tsx": [
+				local("features/discovery/components/discovery-screen.tsx"),
+			],
 		});
-		expect(v2ImportsOfOldFolders(graph)).toEqual([
-			"features/talk-v2/talk-screen.tsx -> features/talk/voice.ts",
+		expect(oldFolderImportsFromNewCode(graph)).toEqual([
+			"components/shared/card.tsx -> features/discovery/tile.tsx",
+			"design/type.ts -> features/reflect/faces.ts",
+			"features/today/today-screen.tsx -> features/discovery/components/discovery-screen.tsx",
 		]);
 	});
 
-	it("allows imports inside the v2 folder and from old folders into lower layers", () => {
+	it("allows old folders among themselves, inside one folder, the hub, routes and purchases", () => {
 		const graph = graphOf({
-			"features/talk-v2/talk-screen.tsx": [local("features/talk-v2/copy.ts")],
-			"features/talk/talk-screen.tsx": [local("lib/haptics.ts")],
+			"app/(protected)/(tabs)/today/index.tsx": [
+				local("features/discovery/components/discovery-screen.tsx"),
+			],
+			"features/discovery/discovery-screen.tsx": [
+				local("features/browse/browse-home.tsx"),
+				local("features/discovery/tile.tsx"),
+			],
+			"features/navigation/root-screens.ts": [
+				local("features/streak/screens.ts"),
+			],
+			"features/today/today-screen.tsx": [
+				local("features/purchases/use-paywall.ts"),
+			],
 		});
-		expect(v2ImportsOfOldFolders(graph)).toEqual([]);
+		expect(oldFolderImportsFromNewCode(graph)).toEqual([]);
 	});
 });
 
@@ -162,27 +179,34 @@ describe("backendCallsOutsideDataHooks", () => {
 	});
 });
 
-describe("crossFeatureImportsFromV2", () => {
-	it("flags a v2 folder importing another feature, types included", () => {
+describe("crossFeatureImportsFromPorted", () => {
+	it("flags a ported folder importing another ported feature, types included", () => {
 		const graph = graphOf({
 			"features/today/today-screen.tsx": [
-				local("features/streak/streak-ring.tsx"),
+				local("features/letters/letter-card.tsx"),
 				local("features/you/you-model.ts", true),
 			],
 		});
-		expect(crossFeatureImportsFromV2(graph)).toEqual([
-			"features/today/today-screen.tsx -> features/streak/streak-ring.tsx",
+		expect(crossFeatureImportsFromPorted(graph)).toEqual([
+			"features/today/today-screen.tsx -> features/letters/letter-card.tsx",
 			"features/today/today-screen.tsx -> features/you/you-model.ts",
 		]);
 	});
 
-	it("treats a new folder as v2 without a listing", () => {
+	it("treats a new folder as ported without a listing", () => {
 		const graph = graphOf({
-			"features/peers/peers-screen.tsx": [local("features/streak/x.ts")],
+			"features/peers/peers-screen.tsx": [local("features/you/x.ts")],
 		});
-		expect(crossFeatureImportsFromV2(graph)).toEqual([
-			"features/peers/peers-screen.tsx -> features/streak/x.ts",
+		expect(crossFeatureImportsFromPorted(graph)).toEqual([
+			"features/peers/peers-screen.tsx -> features/you/x.ts",
 		]);
+	});
+
+	it("leaves an import of an old folder to oldFolderImportsFromNewCode", () => {
+		const graph = graphOf({
+			"features/today/today-screen.tsx": [local("features/streak/x.ts")],
+		});
+		expect(crossFeatureImportsFromPorted(graph)).toEqual([]);
 	});
 
 	it("allows the shared modules, lower layers, old folders and the navigation hub", () => {
@@ -196,7 +220,7 @@ describe("crossFeatureImportsFromV2", () => {
 				local("components/shared/app-text.tsx"),
 			],
 		});
-		expect(crossFeatureImportsFromV2(graph)).toEqual([]);
+		expect(crossFeatureImportsFromPorted(graph)).toEqual([]);
 	});
 });
 
