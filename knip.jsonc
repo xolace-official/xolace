@@ -12,6 +12,7 @@
         "src/components/settings-kit/name-dialog.tsx",
         "src/components/settings-kit/open-row.tsx",
         "src/components/settings-kit/parts.tsx",
+        "src/components/settings-kit/switch-row.tsx",
         "src/components/settings-kit/tile-row.tsx",
         "src/components/shared/aura.tsx",
         "src/components/shared/avatar.tsx",

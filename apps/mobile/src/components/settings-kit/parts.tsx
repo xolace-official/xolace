@@ -1,10 +1,11 @@
 import { Stack } from "expo-router";
 import { Children, isValidElement, type ReactNode } from "react";
-import { Switch, View, type ViewStyle } from "react-native";
-import { LABEL, ROW, S } from "@/components/settings-kit/settings-layout";
+import { View, type ViewStyle } from "react-native";
+import { LABEL, S } from "@/components/settings-kit/settings-layout";
 import { AppText } from "@/components/shared/app-text";
 import { cn } from "@/lib/cn";
 import { useHeaderOptions } from "@/lib/header-options";
+import { a11yHidden } from "@/lib/utils";
 
 /**
  * Native large title in the theme's heading face, the minimal back button and the see-through bar.
@@ -25,19 +26,19 @@ export function SectionTitle({
 	children,
 	inset = S.titleInset,
 	aside,
-	gap = TITLE_GAP,
+	pb = TITLE_GAP,
 }: {
 	children: string;
 	inset?: number;
 	aside?: string;
-	/** Space under the title, above its card. */
-	gap?: number;
+	/** Space under the title, above its card (the prototype's name). */
+	pb?: number;
 }) {
 	return (
 		<View
 			accessibilityRole="header"
 			className="flex-row items-baseline justify-between pr-8"
-			style={{ paddingBottom: gap, paddingLeft: inset }}
+			style={{ paddingBottom: pb, paddingLeft: inset }}
 		>
 			<AppText
 				className="text-[12px] text-accent leading-4 tracking-[1.2px]"
@@ -129,10 +130,10 @@ export function Rows({
 	children: ReactNode;
 	from?: number;
 }) {
-	// toArray keys every element (by its own key, or its place).
-	const rows = Children.toArray(children);
+	// Rows are elements; toArray keys each one uniquely (its own key, or its place).
+	const rows = Children.toArray(children).filter(isValidElement);
 	return rows.map((row, i) => (
-		<View key={isValidElement(row) ? row.key : String(row)}>
+		<View key={row.key}>
 			{row}
 			{i < rows.length - 1 ? <Hairline from={from} /> : null}
 		</View>
@@ -154,39 +155,5 @@ export function Label({
 		<AppText className={cn("flex-1", LABEL, className)} variant="body">
 			{children}
 		</AppText>
-	);
-}
-
-/**
- * @public The redesign's shared kit (F5), for the screen PRs.
- */
-export function SwitchRow({
-	label,
-	value,
-	onChange,
-	disabled = false,
-	a11y,
-}: {
-	label: string;
-	value: boolean;
-	onChange: (v: boolean) => void;
-	disabled?: boolean;
-	a11y?: string;
-}) {
-	return (
-		<View className={ROW}>
-			<Label>{label}</Label>
-			<View className={disabled ? "opacity-45" : "opacity-100"}>
-				<Switch
-					accessibilityLabel={a11y ?? label}
-					disabled={disabled}
-					ios_backgroundColorClassName="accent-foreground/16"
-					onValueChange={onChange}
-					trackColorOffClassName="accent-foreground/16"
-					trackColorOnClassName="accent-accent"
-					value={value}
-				/>
-			</View>
-		</View>
 	);
 }
