@@ -1,5 +1,5 @@
 import type { TalkView } from "@xolace/backend/convex/lib/voices";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import type { Phase } from "../talk-model";
 import type { TalkMotion } from "./use-talk-motion";
 
@@ -16,22 +16,24 @@ export function usePhaseMotion(
 ) {
 	const before = phase === "start";
 	const was = useRef<boolean | null>(null);
-	useEffect(() => {
+	// Plays for the view the talk opens in at that moment; only the phase starts a move.
+	const play = useEffectEvent((startScreen: boolean) => {
 		const first = was.current === null;
-		const changed = was.current !== before;
-		was.current = before;
+		const changed = was.current !== startScreen;
+		was.current = startScreen;
 		if (first) {
-			if (before) {
+			if (startScreen) {
 				motion.playIntro();
 			} else {
 				motion.settle(view);
 			}
 		} else if (changed) {
-			if (before) {
+			if (startScreen) {
 				motion.playBack();
 			} else {
 				motion.playGo(view);
 			}
 		}
-	}, [before]);
+	});
+	useEffect(() => play(before), [before]);
 }

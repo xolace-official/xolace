@@ -48,6 +48,8 @@ export type TalkScreen = {
 		week: WeekLeft;
 		/** The first talk: the microphone hasn't been asked for yet. */
 		micAsk: boolean;
+		/** Start was tapped and that attempt is still under way (the mic ask, the server). */
+		starting: boolean;
 		/** The voice whose sample is playing. */
 		sample: VoiceSlug | null;
 		/** When the open talk's time runs out, on this device's clock. */
@@ -59,7 +61,8 @@ export type TalkScreen = {
 		micLevel: SharedValue<number>;
 	};
 	actions: {
-		/** Start talking: asks for the microphone the first time, then connects. */
+		/** Start talking: asks for the microphone the first time, then connects. Once per
+		 * attempt: taps while one is under way are ignored. Plays the Start haptic. */
 		begin: () => void;
 		send: (text: string) => void;
 		toggleMic: () => void;

@@ -1,6 +1,6 @@
 import { useIsFocused } from "expo-router/react-navigation";
-import { useEffect, useState } from "react";
-import { AccessibilityInfo, View } from "react-native";
+import { useEffect, useEffectEvent, useState } from "react";
+import { View } from "react-native";
 import Animated, {
 	useAnimatedStyle,
 	useDerivedValue,
@@ -12,7 +12,6 @@ import { useKeyboardLift } from "@/lib/keyboard/use-keyboard-lift";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { lookAt, lookIndex } from "./companion-look";
 import { StartComposer } from "./composer/start-composer";
-import { TALK_COPY } from "./copy";
 import { FootnoteOverlay, TalkChrome } from "./header/talk-chrome";
 import { composerLift, useStageFrame } from "./hero/stage-frame";
 import { TalkHero, UNMEASURED } from "./hero/talk-hero";
@@ -30,6 +29,7 @@ import { useTalkScreen } from "./talk-data";
 import { heardCount } from "./talk-model";
 import { ThreadLayer } from "./thread/thread-layer";
 import { useKeepAwakeWhile } from "./use-keep-awake-while";
+import { useTalkAnnouncements } from "./use-talk-announcements";
 
 /**
  * Talk (handoff `talk.md`): one screen, one tree, phases start → connecting → talk →
@@ -86,20 +86,13 @@ export function TalkScreen() {
 	const frame = useStageFrame(geo, keyboard);
 
 	// A sheet, a pushed screen or Start stops the sample (the start screen leaves the front).
+	const stopSample = useEffectEvent(() => actions.stopSample());
 	useEffect(() => {
 		if (focused && before) {
-			return () => actions.stopSample();
+			return () => stopSample();
 		}
 	}, [focused, before]);
-	// The caption is a live region: each finished line is read.
-	const latest = state.turns.at(-1);
-	const finished = latest && !latest.live ? latest.id : -1;
-	useEffect(() => {
-		if (latest && finished >= 0 && !before) {
-			const who = latest.speaker === "person" ? TALK_COPY.live.you : state.name;
-			AccessibilityInfo.announceForAccessibility(`${who}: ${latest.text}`);
-		}
-	}, [finished]);
+	useTalkAnnouncements(state);
 
 	const stageStyle = useAnimatedStyle(() => ({
 		opacity: motion.stage.get(),
@@ -108,84 +101,87 @@ export function TalkScreen() {
 
 	return (
 		<View className="flex-1 bg-background">
-			<TalkAurora
-				inTalk={!before}
-				running={focused && !reduced}
-				talking={talking}
-			/>
-			<TalkStart
-				before={before}
-				carTop={carTop}
-				face={face}
-				geo={geo}
-				index={index}
-				motion={motion}
-				onDot={carousel.goTo}
-				onFit={(o) =>
-					setFace((f) => Math.min(LAYOUT.face, Math.max(LAYOUT.minFace, f - o)))
-				}
-				orbs={focused && before && !reduced}
-				reduced={reduced}
-				startTop={startTop}
-			/>
-			<ThreadLayer
-				focused={focused}
-				geo={geo}
-				lift={lift}
-				motion={motion}
-				offset={geo.insets.bottom + LAYOUT.composerGap - KEYBOARD_GAP}
-				open={state.view === "conversation" && !before}
-				reduced={reduced}
-			/>
-			<Animated.View
-				accessibilityElementsHidden={!(before || onStage)}
-				className="absolute inset-0"
-				importantForAccessibility={
-					before || onStage ? "auto" : "no-hide-descendants"
-				}
-				pointerEvents="box-none"
-				style={stageStyle}
-			>
-				<TalkHero
+			<LeaveGuard reduced={reduced}>
+				<TalkAurora
+					inTalk={!before}
+					running={focused && !reduced}
+					talking={talking}
+				/>
+				<TalkStart
 					before={before}
-					carousel={carousel}
 					carTop={carTop}
 					face={face}
-					frame={frame}
 					geo={geo}
-					hero={hero.face}
 					index={index}
 					motion={motion}
+					onDot={carousel.goTo}
+					onFit={(o) =>
+						setFace((f) =>
+							Math.min(LAYOUT.face, Math.max(LAYOUT.minFace, f - o))
+						)
+					}
+					orbs={focused && before && !reduced}
+					reduced={reduced}
+					startTop={startTop}
 				/>
-				{before ? null : (
-					<TalkStage
+				<ThreadLayer
+					focused={focused}
+					geo={geo}
+					lift={lift}
+					motion={motion}
+					offset={geo.insets.bottom + LAYOUT.composerGap - KEYBOARD_GAP}
+					open={state.view === "conversation" && !before}
+					reduced={reduced}
+				/>
+				<Animated.View
+					accessibilityElementsHidden={!(before || onStage)}
+					className="absolute inset-0"
+					importantForAccessibility={
+						before || onStage ? "auto" : "no-hide-descendants"
+					}
+					pointerEvents="box-none"
+					style={stageStyle}
+				>
+					<TalkHero
+						before={before}
+						carousel={carousel}
+						carTop={carTop}
+						face={face}
 						frame={frame}
 						geo={geo}
+						hero={hero.face}
+						index={index}
 						motion={motion}
-						onRelax={hero.relax}
-						onSmile={hero.smile}
-						onSmileBack={hero.smileBack}
-						reduced={reduced}
-						touchable={state.phase === "talk" && onStage}
 					/>
-				)}
-			</Animated.View>
-			<TalkChrome
-				before={before}
-				focused={focused}
-				geo={geo}
-				lift={lift}
-				motion={motion}
-			/>
-			<StartComposer
-				before={before}
-				geo={geo}
-				lift={lift}
-				motion={motion}
-				startTop={startTop}
-			/>
-			<FootnoteOverlay before={before} motion={motion} startTop={startTop} />
-			<LeaveGuard reduced={reduced} />
+					{before ? null : (
+						<TalkStage
+							frame={frame}
+							geo={geo}
+							motion={motion}
+							onRelax={hero.relax}
+							onSmile={hero.smile}
+							onSmileBack={hero.smileBack}
+							reduced={reduced}
+							touchable={state.phase === "talk" && onStage}
+						/>
+					)}
+				</Animated.View>
+				<TalkChrome
+					before={before}
+					focused={focused}
+					geo={geo}
+					lift={lift}
+					motion={motion}
+				/>
+				<StartComposer
+					before={before}
+					geo={geo}
+					lift={lift}
+					motion={motion}
+					startTop={startTop}
+				/>
+				<FootnoteOverlay before={before} motion={motion} startTop={startTop} />
+			</LeaveGuard>
 		</View>
 	);
 }

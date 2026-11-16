@@ -77,6 +77,7 @@ export const TALK_COPY = {
 		lookValue: (label: string, n: number, of: number) =>
 			`${label}, ${n} of ${of}`,
 		micOff: "Microphone is off. Turn it on in Settings to talk.",
+		openSettings: "Open Settings",
 		options: "Talk options",
 		pace: "Pace",
 		paceLabel: (pace: string, directness: string) =>

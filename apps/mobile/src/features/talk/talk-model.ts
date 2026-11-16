@@ -15,6 +15,8 @@ export type Phase = "start" | "connecting" | "talk" | "ending";
 
 /** Where the talk stands, as the voice pipeline reports it. */
 export type TalkStatus = {
+	/** Why the last start or end didn't work, if it didn't. */
+	error?: string | null;
 	/** Start was pressed and the talk is being set up (or is up). */
 	started: boolean;
 	connected: boolean;
@@ -26,10 +28,12 @@ export type TalkStatus = {
 /**
  * The start screen until Start is pressed (or "Say more" reopened a talk, which goes
  * straight in); then connecting, the talk and its ending. A talk that fails before it
- * connects comes back to the start screen, with its error.
+ * connects comes back to the start screen, with its error: a reopened one too, where
+ * Start tries again on the same session.
  */
 export function phaseOf(talk: TalkStatus, reopened: boolean): Phase {
-	if (!(talk.started || talk.connected || talk.wasLive || reopened)) {
+	const goingIn = reopened && !talk.error;
+	if (!(talk.started || talk.connected || talk.wasLive || goingIn)) {
 		return "start";
 	}
 	if (talk.presence === "Ending…") {

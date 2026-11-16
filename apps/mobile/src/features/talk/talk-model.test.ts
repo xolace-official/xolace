@@ -46,6 +46,12 @@ describe("phaseOf", () => {
 		expect(phaseOf(idle, true)).toBe("connecting");
 	});
 
+	it("comes back to the start screen when a reopened talk can't start", () => {
+		expect(phaseOf({ ...idle, error: "Talk time resets Monday" }, true)).toBe(
+			"start"
+		);
+	});
+
 	it("is ending once the talk is ending, even with the line still up", () => {
 		expect(
 			phaseOf(

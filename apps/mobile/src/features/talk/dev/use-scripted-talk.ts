@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type { TalkStatus } from "../talk-model";
 import type { Presence } from "../use-talk";
 import type { Turn } from "../use-thread";
@@ -115,12 +115,16 @@ export function useScriptedTalk(seed: Seed | undefined, week: number) {
 		at(end + PACE.nextAfterMs, () => say(i + 1, until));
 	};
 
-	useEffect(() => {
+	// A seeded presence holds for a while, then it listens. Once, on open.
+	const hold = useEffectEvent(() => {
 		if (seed?.holdMs) {
 			at(seed.holdMs, () => presence("Listening"));
 		}
-		return clear;
-		// Once, on open.
+	});
+	const stop = useEffectEvent(() => clear());
+	useEffect(() => {
+		hold();
+		return () => stop();
 	}, []);
 
 	const level = useSimulatedLevel(

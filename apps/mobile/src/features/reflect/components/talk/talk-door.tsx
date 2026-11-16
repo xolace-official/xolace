@@ -26,7 +26,7 @@ export function useTalkDoor() {
 		dialog,
 		onPress: () => {
 			// `isPlus` reads false while loading: don't upsell a Plus person who
-			// tapped early. Under 3 min but not 0 goes on: the consent card explains it (#586).
+			// tapped early. Under 3 min but not 0 goes on: Talk's start screen explains it (#586).
 			if (isPlus) {
 				if (time?.secondsLeft === 0) {
 					setDialog("used");

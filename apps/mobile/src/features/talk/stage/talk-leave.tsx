@@ -1,4 +1,5 @@
-import { Pressable, View } from "react-native";
+import { useEffect, useEffectEvent } from "react";
+import { BackHandler, Pressable, View } from "react-native";
 import Animated, { FadeIn, FadeOut, ZoomIn } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
@@ -27,12 +28,21 @@ type Props = {
 /**
  * Leaving mid-talk asks first (production's leave dialog): make the mirror now, just end
  * (it waits in the timeline), or keep talking. A centred card (320 wide) over a blurred
- * talk, dimmed by a 42% scrim. Back or swipe-back would otherwise hang up and make the
+ * talk, dimmed by its scrim (`--color-talk-scrim`). Back or swipe-back would otherwise hang up and make the
  * mirror without a word.
  */
 export function TalkLeave({ reduced, onMirror, onJustEnd, onKeep }: Props) {
 	const scheme = useScheme();
 	const { leave, justEnd } = TALK_COPY.live;
+	// Android's back while the card is up keeps talking, like tapping outside it.
+	const keep = useEffectEvent(() => onKeep());
+	useEffect(() => {
+		const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+			keep();
+			return true;
+		});
+		return () => sub.remove();
+	}, []);
 	return (
 		<Animated.View
 			accessibilityViewIsModal
@@ -43,7 +53,7 @@ export function TalkLeave({ reduced, onMirror, onJustEnd, onKeep }: Props) {
 			<BlurView className="absolute inset-0" intensity={BLUR} tint={scheme} />
 			<Pressable
 				accessibilityLabel={leave.keep}
-				className="absolute inset-0 bg-black/42"
+				className="absolute inset-0 bg-talk-scrim"
 				onPress={onKeep}
 			/>
 			<Animated.View

@@ -10,7 +10,7 @@ import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { useScheme } from "@/design/scheme";
 import { press } from "@/design/springs";
-import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
+import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 import { TALK_COPY } from "../copy";
 import type { TalkGeometry } from "../motion/talk-geometry";
@@ -110,13 +110,10 @@ export function StartComposer({ geo, motion, startTop, lift, before }: Props) {
 				>
 					<Pressable
 						accessibilityRole="button"
-						accessibilityState={{ disabled: low }}
+						accessibilityState={{ busy: state.starting, disabled: low }}
 						className="flex-1 items-center justify-center"
-						disabled={low}
-						onPress={() => {
-							playAffirmativePress();
-							actions.begin();
-						}}
+						disabled={low || state.starting}
+						onPress={actions.begin}
 						onPressIn={() =>
 							pressed.set(press(START_PRESS, motion.reduced.get()))
 						}

@@ -6,14 +6,16 @@ import {
 	requestRecordingPermissionsAsync,
 } from "expo-audio";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { Linking } from "react-native";
 import { toast } from "@/components/shared/toast";
+import { playAffirmativePress } from "@/lib/haptics";
 import { useCompanionName } from "@/lib/talk/use-companion-name";
 import { useTalkStyle } from "@/lib/talk/use-talk-style";
 import { useTalkTime } from "@/lib/talk/use-talk-time";
 import { useVoicePreview } from "@/lib/talk/use-voice-preview";
 import { TALK_COPY } from "./copy";
+import { createStartGate } from "./start-gate";
 import type { TalkScreen } from "./talk-data";
 import { isLow, phaseOf, resourceUrl } from "./talk-model";
 import { useTalk } from "./use-talk";
@@ -64,6 +66,9 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 			talk.sessionId ? { sessionId: talk.sessionId } : "skip"
 		) ?? null;
 	const [micAsk, setMicAsk] = useState(false);
+	// Held from the first tap on Start until that attempt is over: one session per Start.
+	const [gate] = useState(createStartGate);
+	const [starting, setStarting] = useState(false);
 	const justEnded = useRef(false);
 	const week = time === undefined || time === null ? time : time.secondsLeft;
 
@@ -73,12 +78,13 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 			.then((p) => setMicAsk(p.status === "undetermined"))
 			.catch(() => setMicAsk(false));
 	}, []);
-	// A reopened talk goes straight in. Once, on open.
-	useEffect(() => {
+	// A reopened talk goes straight in, once, on open.
+	const startReopened = useEffectEvent(() => {
 		if (reopen) {
 			void talk.start();
 		}
-	}, []);
+	});
+	useEffect(() => startReopened(), []);
 	// "Just end" says so once the talk has gone; a talk that couldn't end stays, and says why.
 	useEffect(() => {
 		if (talk.error) {
@@ -96,20 +102,33 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 
 	return {
 		actions: {
-			async begin() {
-				preview.stop();
-				if (isLow(week) || talk.started) {
-					return;
-				}
-				// The first talk's system alert; `start` asks again, and the OS answers at once.
-				const { granted } = await requestRecordingPermissionsAsync();
-				setMicAsk(false);
-				if (!granted) {
-					toast(TALK_COPY.start.micOff, { variant: "warning" });
-					return;
-				}
-				void talk.start();
-			},
+			begin: () =>
+				void gate.run(async () => {
+					preview.stop();
+					if (isLow(week) || talk.started) {
+						return;
+					}
+					setStarting(true);
+					playAffirmativePress();
+					try {
+						// The first talk's system alert; `start` asks again, and the OS answers at once.
+						const { granted } = await requestRecordingPermissionsAsync();
+						setMicAsk(false);
+						if (!granted) {
+							toast(TALK_COPY.start.micOff, {
+								action: {
+									label: TALK_COPY.start.openSettings,
+									onPress: () => void Linking.openSettings(),
+								},
+								variant: "warning",
+							});
+							return;
+						}
+						await talk.start();
+					} finally {
+						setStarting(false);
+					}
+				}),
 			end() {
 				justEnded.current = false;
 				talk.end();
@@ -158,6 +177,7 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 			presence: talk.presence,
 			reopened: reopen !== undefined,
 			sample: preview.playingSlug,
+			starting,
 			turns: talk.turns,
 			view: style.view,
 			voice: style.voice,

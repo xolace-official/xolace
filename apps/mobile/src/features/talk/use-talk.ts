@@ -253,12 +253,16 @@ export function useTalk(reopen?: {
 			// A new talk starts unended, its mirror shown when it ends.
 			mirrorLater.current = false;
 			setEnding(false);
-			// Asked once, from the consent card; the OS remembers the answer.
+			// Asked once, from Start; the OS remembers the answer.
 			const { granted } = await AudioModule.requestRecordingPermissionsAsync();
 			if (!granted) {
 				return setError(
 					"A talk needs the microphone. You can allow it in Settings."
 				);
+			}
+			// Left during the mic ask: don't reserve a talk for a screen that's gone.
+			if (!mounted.current) {
+				return;
 			}
 			setStarted(true);
 			try {
@@ -272,6 +276,12 @@ export function useTalk(reopen?: {
 					speed,
 					firstMessage,
 				} = await startTalk(reopen ? { reopen: reopen.sessionId } : {});
+				// Left while connecting: close the session (its reserved time goes back) and
+				// never open the mic with no screen to end it from.
+				if (!mounted.current) {
+					endTalk({ sessionId }).catch(console.warn);
+					return;
+				}
 				sessionRef.current = sessionId;
 				setSessionId(sessionId);
 				setEndsAt(Date.now() + msLeft);

@@ -9,9 +9,11 @@ import type {
 } from "@xolace/backend/convex/lib/voices";
 import { requestRecordingPermissionsAsync } from "expo-audio";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
+import { playAffirmativePress } from "@/lib/haptics";
 import type { Directness } from "@/lib/talk/use-talk-style";
 import { useVoicePreview } from "@/lib/talk/use-voice-preview";
+import { createStartGate } from "../start-gate";
 import {
 	type TalkHelp,
 	type TalkScreen,
@@ -49,17 +51,30 @@ export function FixtureTalk(p: FixtureTalkProps) {
 	const [view, setView] = useState<TalkView>(p.view ?? "companion");
 	const [micAsk, setMicAsk] = useState(p.micAsk ?? false);
 
-	const begin = async () => {
-		preview.stop();
-		if (micAsk) {
-			const { granted } = await requestRecordingPermissionsAsync();
-			setMicAsk(false);
-			if (!granted) {
+	const [gate] = useState(createStartGate);
+	const [starting, setStarting] = useState(false);
+
+	const begin = () =>
+		gate.run(async () => {
+			preview.stop();
+			if (talk.status.started) {
 				return;
 			}
-		}
-		talk.begin();
-	};
+			setStarting(true);
+			playAffirmativePress();
+			try {
+				if (micAsk) {
+					const { granted } = await requestRecordingPermissionsAsync();
+					setMicAsk(false);
+					if (!granted) {
+						return;
+					}
+				}
+				talk.begin();
+			} finally {
+				setStarting(false);
+			}
+		});
 	const value: TalkScreen = {
 		actions: {
 			begin: () => void begin(),
@@ -96,6 +111,7 @@ export function FixtureTalk(p: FixtureTalkProps) {
 			presence: talk.status.presence,
 			reopened: false,
 			sample: preview.playingSlug,
+			starting,
 			turns: talk.turns,
 			view,
 			voice,
@@ -103,17 +119,19 @@ export function FixtureTalk(p: FixtureTalkProps) {
 		},
 	};
 
-	useEffect(() => {
+	// The state's one step, once it has opened (as the prototype's Review jumps did).
+	const playStep = useEffectEvent(() => {
 		const steps: Record<Step, () => void> = {
 			begin: value.actions.begin,
 			leave: () => router.back(),
 			sample: () => value.actions.pickVoice(voice),
 		};
-		const step = p.step ? steps[p.step] : undefined;
-		if (!step) {
-			return;
+		if (p.step) {
+			steps[p.step]();
 		}
-		const id = setTimeout(step, STEP_AT_MS);
+	});
+	useEffect(() => {
+		const id = setTimeout(playStep, STEP_AT_MS);
 		return () => clearTimeout(id);
 	}, []);
 
