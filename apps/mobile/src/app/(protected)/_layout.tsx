@@ -2,7 +2,6 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Stack } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
-import { useBadgeUnlock } from "@/features/achievements/unlock/use-badge-unlock";
 import { NowPlayingHost } from "@/features/browse/now-playing/now-playing-host";
 import { ROOT_HOSTS } from "@/features/navigation/hosts";
 import { ROOT_SCREENS } from "@/features/navigation/root-screens";
@@ -27,9 +26,6 @@ export default function ProtectedLayout() {
 	// launch tap survives in the native cache, so `(intake)`'s layout discards it
 	// explicitly to keep "intake wins, a pending deep link is not preserved" (T3, #234).
 	useNotifications();
-	// Opens the backfill summary, then the badge unlock moment, over whatever is
-	// up, when it may interrupt (#693, #701).
-	useBadgeUnlock();
 	useClaimLegacyAccountFlags();
 	const reducedMotion = useEffectiveReducedMotion();
 	const background = useThemeColor("background");

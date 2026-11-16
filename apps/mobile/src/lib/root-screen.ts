@@ -42,17 +42,6 @@ export const PLAYER_OPTIONS = {
 	presentation: "fullScreenModal",
 } as const satisfies NativeStackNavigationOptions;
 
-/** A transparent, untitled native header that only carries the screen's Stack.Toolbar
- * buttons, so they get the system's glass. */
-export const TOOLBAR_HEADER = {
-	// Android would add its own up arrow beside the close.
-	headerBackVisible: false,
-	headerShadowVisible: false,
-	headerShown: true,
-	headerTransparent: true,
-	title: "",
-} as const satisfies NativeStackNavigationOptions;
-
 /** Slides up from the bottom; with reduced motion it fades in instead. */
 export const riseOrFade = ({
 	reducedMotion,

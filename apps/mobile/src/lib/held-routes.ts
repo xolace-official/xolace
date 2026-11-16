@@ -21,9 +21,7 @@ const HELD_ROUTES = [
 	"/chat",
 	"/xolace-channel",
 	"/rate",
-	// Full-screen moments, the badge unlock included.
-	"/badge-unlock",
-	"/badge-backfill",
+	// Full-screen moments. (A badge's arrival is an overlay, not a route: it holds itself.)
 	"/follow-up",
 	"/streak-held",
 	"/browse-intro",

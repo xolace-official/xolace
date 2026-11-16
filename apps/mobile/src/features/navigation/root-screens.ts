@@ -1,4 +1,3 @@
-import { achievementsScreens } from "@/features/achievements/screens";
 import { browseScreens } from "@/features/browse/screens";
 import { crisisResourcesScreens } from "@/features/crisis-resources/screens";
 import { followUpScreens } from "@/features/follow-up/screens";
@@ -26,7 +25,6 @@ import type { RootScreen } from "@/lib/root-screen";
  * feature adds a line here (one import, one spread, alphabetical).
  */
 export const ROOT_SCREENS: readonly RootScreen[] = [
-	...achievementsScreens,
 	...browseScreens,
 	...crisisResourcesScreens,
 	...followUpScreens,

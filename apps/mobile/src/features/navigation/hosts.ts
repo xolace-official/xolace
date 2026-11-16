@@ -1,4 +1,5 @@
 import type { ComponentType } from "react";
+import { ArrivalsHost } from "@/features/achievements/arrival/arrivals-host";
 
 /**
  * A host: a component the `(protected)` layout keeps mounted above its stack
@@ -32,4 +33,7 @@ export type RootHost = {
  * (presence, the now-playing audio, the badge unlock) stay in the layout until
  * the screen PR that replaces them moves them here.
  */
-export const ROOT_HOSTS: readonly RootHost[] = [];
+export const ROOT_HOSTS: readonly RootHost[] = [
+	// A badge's arrival and the streak milestone, drawn over every screen (S6).
+	{ Host: ArrivalsHost, name: "arrivals" },
+];
