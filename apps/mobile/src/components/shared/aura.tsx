@@ -47,13 +47,15 @@ export function Aura({
 	const reduced = useEffectiveReducedMotion();
 	const focused = useIsFocused();
 	const periodMs = driftMs * useLoopScale();
+	const running = focused && !reduced;
 	// Settling rather than `paused`: an EaseView mounted paused never starts its loop (Ease 0.9).
-	const run = useLoopRun(focused, periodMs);
+	// `reduced` is in `running` so the key moves when the setting loads as false and the loop starts.
+	const run = useLoopRun(running, periodMs);
 	const drift = loopOrSettle({
 		from: REST,
 		periodMs,
 		reduced,
-		running: focused,
+		running,
 		to: { scale: driftScale, translateX: driftX, translateY: driftY },
 	});
 

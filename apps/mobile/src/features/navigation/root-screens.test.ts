@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROOT_SCREENS } from "@/features/navigation/root-screens";
-import { fitSheet, screenOptions } from "@/lib/root-screen";
+import { DETACHED_SHEET, fitSheet, screenOptions } from "@/lib/root-screen";
 
 const PROTECTED = path.resolve(import.meta.dirname, "../../app/(protected)");
 
@@ -153,5 +153,15 @@ describe("fitSheet, the redesign's form sheet", () => {
 				sheetGrabberVisible: true,
 			});
 		}
+	});
+});
+
+describe("DETACHED_SHEET, the route under a DetachedSheet", () => {
+	it("is a transparent modal with no animation of its own", () => {
+		expect(DETACHED_SHEET).toStrictEqual({
+			animation: "none",
+			contentStyle: { backgroundColor: "transparent" },
+			presentation: "transparentModal",
+		});
 	});
 });

@@ -28,8 +28,8 @@ export const useSheetClose = () => use(SheetClose);
 /**
  * A floating sheet that lets things overflow its top edge (Flux pops over it).
  * It settles in on the Settle spring and drags down to dismiss; with reduced
- * motion it fades in and out instead. Its route is a transparent modal
- * (`presentation: "transparentModal"`), so the screen behind stays put.
+ * motion it fades in and out instead. Its route takes `DETACHED_SHEET`
+ * (`src/lib/root-screen.ts`), a transparent modal, so the screen behind stays put.
  * @public The redesign's shared kit (F5), for the screen PRs.
  */
 export function DetachedSheet({
@@ -107,9 +107,11 @@ export function DetachedSheet({
 			</Animated.View>
 			<GestureDetector gesture={pan}>
 				<Animated.View
-					// VoiceOver stays in the sheet; the scrim's Close is reachable by escape.
+					// VoiceOver stays in the sheet, so the scrim's Close is out of reach:
+					// the escape gesture (two-finger Z) closes it instead.
 					accessibilityViewIsModal
 					className="absolute right-2.5 left-2.5 rounded-[42px] border-continuous bg-surface shadow-sheet"
+					onAccessibilityEscape={animateOut}
 					style={[{ bottom: sheetBottom(insets.bottom) }, sheet]}
 				>
 					<SheetClose value={animateOut}>{children}</SheetClose>

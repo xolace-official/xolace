@@ -90,3 +90,16 @@ export const fitSheet = ({
 	sheetCornerRadius: SHEET_RADIUS,
 	sheetGrabberVisible: true,
 });
+
+/**
+ * The route under a `DetachedSheet` (components/shared/detached-sheet.tsx): a
+ * transparent modal with no animation of its own, so the screen behind stays put
+ * and the sheet draws its own scrim, slide and fade.
+ *
+ * @public The redesign's shared kit (F5): Welcome back, from its screen PR.
+ */
+export const DETACHED_SHEET = {
+	animation: "none",
+	contentStyle: { backgroundColor: "transparent" },
+	presentation: "transparentModal",
+} as const satisfies NativeStackNavigationOptions;
