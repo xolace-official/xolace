@@ -5,12 +5,13 @@
  *      plus everything that depends on them (`--filter=...<pkg>`).
  *   3. Test files that sit next to changed source (`foo.ts` -> `foo.test.ts`)
  *      and changed test files, run through the owning package's runner.
+ *   4. A warning (never a failure) for changed `.tsx` files over 200 lines.
  *
  * Usage: bun run check:changed [--base <ref>] [--list]
  *   --list  print the plan and exit without running anything.
  */
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, posix } from "node:path";
 
 import {
@@ -53,6 +54,9 @@ const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mts", ".cts"];
 const TEST_INFIXES = [".test", ".spec"] as const;
 const TEST_FILE_PATTERN = /\.(test|spec)\.[cm]?[jt]sx?$/;
 const DECLARATION_FILE_PATTERN = /\.d\.[cm]?ts$/;
+
+/** The code-style limit for a component file; past it, split by screen area. */
+const LONG_FILE_LINES = 200;
 
 /** Everything a passing local run still does not prove. Printed at the end. */
 const CI_ONLY = [
@@ -140,6 +144,22 @@ export const resolveTestFiles = (
 	}
 	return [...tests].sort();
 };
+
+export interface LongFile {
+	file: string;
+	lines: number;
+}
+
+/** Changed, existing `.tsx` files (tests aside) over the line limit, longest first. */
+export const findLongFiles = (
+	files: readonly string[],
+	countLines: (file: string) => number
+): LongFile[] =>
+	files
+		.filter((file) => file.endsWith(".tsx") && !isTestFile(file))
+		.map((file) => ({ file, lines: countLines(file) }))
+		.filter(({ lines }) => lines > LONG_FILE_LINES)
+		.sort((a, b) => b.lines - a.lines);
 
 export interface TestGroup {
 	/** Package dir, or "" for files outside any package (run with `bun test`). */
@@ -327,7 +347,7 @@ interface StepResult {
 	detail: string;
 	ms: number;
 	name: string;
-	status: "pass" | "fail" | "skip";
+	status: "pass" | "fail" | "skip" | "warn";
 }
 
 const MS_PER_SECOND = 1000;
@@ -434,12 +454,45 @@ const printPlan = (base: string, changed: string[], plan: CheckPlan) => {
 	}
 };
 
-const STATUS_LABEL = { fail: "FAIL", pass: "pass", skip: "skip" } as const;
+const STATUS_LABEL = {
+	fail: "FAIL",
+	pass: "pass",
+	skip: "skip",
+	warn: "WARN",
+} as const;
+
+const lineCount = (path: string): number =>
+	readFileSync(path, "utf8").trimEnd().split("\n").length;
+
+/** Never fails the run: an old long file you only touched still passes. */
+const checkFileLength = (root: string, files: string[]): StepResult => {
+	const name = `file length (.tsx over ${LONG_FILE_LINES} lines)`;
+	heading(name);
+	const long = findLongFiles(files, (file) => lineCount(join(root, file)));
+	for (const { file, lines } of long) {
+		process.stdout.write(`  ${lines}  ${file}\n`);
+	}
+	if (long.length > 0) {
+		process.stdout.write(
+			"  Split by screen area (apps/mobile/AGENTS.md, Feature shape) if this change grew it.\n"
+		);
+	}
+	return {
+		detail:
+			long.length > 0 ? `${long.length} file(s) over` : "none over the limit",
+		ms: 0,
+		name,
+		status: long.length > 0 ? "warn" : "pass",
+	};
+};
 
 const printSummary = (steps: StepResult[], totalMs: number) => {
 	heading(`summary (${formatDuration(totalMs)})`);
 	for (const step of steps) {
-		const time = step.status === "skip" ? "" : ` ${formatDuration(step.ms)}`;
+		const time =
+			step.status === "skip" || step.status === "warn"
+				? ""
+				: ` ${formatDuration(step.ms)}`;
 		process.stdout.write(
 			`  ${STATUS_LABEL[step.status]}${time}  ${step.name}${step.detail ? ` - ${step.detail}` : ""}\n`
 		);
@@ -490,6 +543,8 @@ const main = async (): Promise<number> => {
 		// biome-ignore lint/performance/noAwaitInLoops: sequential on purpose so test output does not interleave
 		steps.push(await runTestGroup(root, group));
 	}
+
+	steps.push(checkFileLength(root, plan.biomeFiles));
 
 	printSummary(steps, performance.now() - start);
 	const failed = steps.some((step) => step.status === "fail");
