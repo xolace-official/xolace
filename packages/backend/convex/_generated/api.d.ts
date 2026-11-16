@@ -116,6 +116,7 @@ import type * as ai_xolacers_suggest from "../ai/xolacers/suggest.js";
 import type * as audio_listens from "../audio/listens.js";
 import type * as avatars from "../avatars.js";
 import type * as browse from "../browse.js";
+import type * as browse_topics from "../browse/topics.js";
 import type * as chatNotifications from "../chatNotifications.js";
 import type * as cohort from "../cohort.js";
 import type * as compounding_detect from "../compounding/detect.js";
@@ -433,6 +434,7 @@ declare const fullApi: ApiFromModules<{
   "audio/listens": typeof audio_listens;
   avatars: typeof avatars;
   browse: typeof browse;
+  "browse/topics": typeof browse_topics;
   chatNotifications: typeof chatNotifications;
   cohort: typeof cohort;
   "compounding/detect": typeof compounding_detect;

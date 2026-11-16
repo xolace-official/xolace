@@ -171,10 +171,41 @@ export const trackItemValidator = v.object({
 	thumbhash: v.optional(v.string()),
 	thumbUrl: v.string(),
 	title: v.string(),
+	// The track's own (primary) topic's display title, for rows that show which
+	// topic a track belongs to (B5). Optional: added after shipped builds.
+	topicTitle: v.optional(v.string()),
 });
 
-export async function toTrackItem(t: Doc<"audio_tracks">) {
-	return {
+/**
+ * Display titles of shared topics, one indexed `topics` read per distinct
+ * slug per call: a page of 30 tracks spans a handful of topics, so a list
+ * never reads a row per track. The curated title, else the slug-derived one
+ * (the grid's rule). Takes a track's `topic` or a bare shared slug.
+ */
+export function topicTitles(ctx: QueryCtx) {
+	const bySlug = new Map<string, Promise<string>>();
+	return (topic: string) => {
+		const slug = topicSlug(topic);
+		let title = bySlug.get(slug);
+		if (!title) {
+			title = ctx.db
+				.query("topics")
+				.withIndex("by_slug", (q) => q.eq("slug", slug))
+				.first()
+				.then((row) => row?.title || topicTitle(slug));
+			bySlug.set(slug, title);
+		}
+		return title;
+	};
+}
+
+/**
+ * Turns `audio_tracks` rows into track items. Make one per query call and map
+ * every row through it, so the rows share one `topicTitles` cache.
+ */
+export function trackItems(ctx: QueryCtx) {
+	const titleOf = topicTitles(ctx);
+	return async (t: Doc<"audio_tracks">) => ({
 		_id: t._id,
 		attribution: attributionFor(t),
 		durationSec: t.durationSec,
@@ -186,7 +217,8 @@ export async function toTrackItem(t: Doc<"audio_tracks">) {
 		thumbhash: t.thumbhash,
 		thumbUrl: await thumbUrlFor(t.thumbKey),
 		title: t.title,
-	};
+		topicTitle: await titleOf(t.topic),
+	});
 }
 
 /** Per-family list — `active` rows only, page size chosen by the client (30). */
@@ -200,7 +232,10 @@ export const listByFamily = query({
 				q.eq("family", args.family).eq("active", true)
 			)
 			.paginate(args.paginationOpts);
-		return { ...result, page: await Promise.all(result.page.map(toTrackItem)) };
+		return {
+			...result,
+			page: await Promise.all(result.page.map(trackItems(ctx))),
+		};
 	},
 	returns: v.object({
 		continueCursor: v.string(),
@@ -323,7 +358,12 @@ export const getTopics = query({
 	),
 });
 
-/** Topic screen header: the curated `topics` title (#353), else the slug-derived one the grid uses. */
+/**
+ * Topic screen header: the curated `topics` title (#353), else the slug-derived one the grid uses.
+ * Always returns a title, even for an unknown slug. New clients should call
+ * `browse/topics.getTopicHeader`, which also returns the cover and counts and is
+ * `null` for an unpublished topic. Kept for shipped builds, which still call it.
+ */
 export const getTopicTitle = query({
 	args: { slug: v.string() },
 	handler: async (ctx, args) => {
@@ -337,37 +377,46 @@ export const getTopicTitle = query({
 	returns: v.string(),
 });
 
+/**
+ * One shared topic's active tracks, in the topic screen's order: support,
+ * then music, then music listed here as its secondary topic. Three indexed
+ * reads of this topic's rows only (bounded catalogue, decision 18). The topic
+ * screen and its header (`browse/topics.getTopicHeader`) both read through
+ * here, so the header's counts always match the rows.
+ */
+export async function topicTracks(ctx: QueryCtx, slug: string) {
+	const musicTopic = `music_topic_${slug}`;
+	const [support, music, alsoMusic] = await Promise.all([
+		ctx.db
+			.query("audio_tracks")
+			.withIndex("by_family_and_topic", (q) =>
+				q.eq("family", "support").eq("topic", `audio_topic_${slug}`)
+			)
+			.take(1000),
+		ctx.db
+			.query("audio_tracks")
+			.withIndex("by_family_and_topic", (q) =>
+				q.eq("family", "music").eq("topic", musicTopic)
+			)
+			.take(1000),
+		// Tracks whose secondary topic this is list after the topic's own.
+		ctx.db
+			.query("audio_tracks")
+			.withIndex("by_family_and_secondaryTopic", (q) =>
+				q.eq("family", "music").eq("secondaryTopic", musicTopic)
+			)
+			.take(1000),
+	]);
+	return [...support, ...music, ...alsoMusic].filter((t) => t.active);
+}
+
 /** Topic screen — both families' active tracks for one shared topic slug. */
 export const getTopic = query({
 	args: { slug: v.string() },
 	handler: async (ctx, args) => {
 		await requireAuth(ctx);
-		const musicTopic = `music_topic_${args.slug}`;
-		const [support, music, alsoMusic] = await Promise.all([
-			ctx.db
-				.query("audio_tracks")
-				.withIndex("by_family_and_topic", (q) =>
-					q.eq("family", "support").eq("topic", `audio_topic_${args.slug}`)
-				)
-				.take(1000),
-			ctx.db
-				.query("audio_tracks")
-				.withIndex("by_family_and_topic", (q) =>
-					q.eq("family", "music").eq("topic", musicTopic)
-				)
-				.take(1000),
-			// Tracks whose secondary topic this is list after the topic's own.
-			ctx.db
-				.query("audio_tracks")
-				.withIndex("by_family_and_secondaryTopic", (q) =>
-					q.eq("family", "music").eq("secondaryTopic", musicTopic)
-				)
-				.take(1000),
-		]);
 		return await Promise.all(
-			[...support, ...music, ...alsoMusic]
-				.filter((t) => t.active)
-				.map(toTrackItem)
+			(await topicTracks(ctx, args.slug)).map(trackItems(ctx))
 		);
 	},
 	returns: v.array(trackItemValidator),
