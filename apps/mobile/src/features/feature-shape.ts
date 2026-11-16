@@ -91,8 +91,10 @@ const APP_WIDE_READS: Readonly<Record<string, string>> = {
 	"lib/motion/use-effective-reduced-motion.ts":
 		"the user's reduced-motion setting, read by every animated part",
 };
-/** The toast is a side effect of an action, so it lives in the data hook too. */
+/** The toast is a side effect of an action, so it lives in the data hook too: the
+ * app's `toast()` (new code) and heroui's `useToast` (the old screens). */
 const TOAST = { name: "useToast", specifier: "heroui-native" };
+const TOAST_ENTRY = "components/shared/toast.tsx";
 const DATA_HOOK = /^use-[^/]+\.ts$/;
 /** The nearest `dev/` inside a feature, at any depth (`letters/write/dev/`). */
 const DEV_FOLDER = /^(features\/[^/]+\/(?:[^/]+\/)*?dev)\//;
@@ -162,7 +164,11 @@ function backendWrappers(graph: ImportGraph): Set<string> {
 			!Object.hasOwn(APP_WIDE_READS, relative(file))
 	);
 	const wrappers = new Set(
-		outside.filter((file) => graph.get(file)?.some(importsBackendPackage))
+		outside.filter(
+			(file) =>
+				relative(file) === TOAST_ENTRY ||
+				graph.get(file)?.some(importsBackendPackage)
+		)
 	);
 	let grew = true;
 	while (grew) {
