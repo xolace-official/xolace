@@ -4,7 +4,8 @@ import { mutation, type QueryCtx, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
 import { emotionFamily } from "../lib/understandingVocab";
 import { recentUnderstandings } from "../understanding";
-import { cardItemValidator, entryIdsWithFacet, toListItem } from "./entries";
+import { cardItemValidator } from "./cards";
+import { entryIdsWithFacet, toListItem } from "./entries";
 import { hubValidator, toHub } from "./hubs";
 import { cardSignals, continueReading } from "./reads";
 

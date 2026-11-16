@@ -1,3 +1,7 @@
+import {
+	paginationOptsValidator,
+	paginationResultValidator,
+} from "convex/server";
 import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import {
@@ -10,6 +14,7 @@ import { awardReadRungs } from "../achievements/ladders";
 import { requireAuth } from "../lib/auth";
 import { recordActivity } from "../streaks/activityLog";
 import { listenMin } from "./audio";
+import { cardItemValidator } from "./cards";
 import { toListItem } from "./entries";
 
 /**
@@ -22,6 +27,8 @@ import { toListItem } from "./entries";
 export const HELPED_FLOOR = 15;
 // Unfinished reads walked to find Continue; past this many retracted/unstarted in a row, there's none.
 const CONTINUE_SCAN = 50;
+// Saved rows read per page, whatever the client asks for.
+const SAVED_PAGE_MAX = 100;
 
 type EntryId = Id<"library_entries">;
 type ProfileId = Id<"emotional_profiles">;
@@ -59,18 +66,40 @@ async function bumpTotals(
 	}
 }
 
-/** Views, listen time (#411) and this reader's saved state, for every entry card. */
+type CardSignals = {
+	// Optional in the type, as in `cardItemValidator`, so client types built on
+	// a card still accept the list items that carry no read mark (`getNext`).
+	finished?: boolean;
+	listenMin: number | undefined;
+	position?: number | undefined;
+	saved: boolean;
+	views: number;
+};
+
+/**
+ * Views, listen time (#411), and this reader's saved state and read mark, for
+ * every entry card. `finished` and `position` come off the same read row as
+ * `saved`, so the mark costs no extra read. Pass the row when the caller
+ * already has it (Saved walks them) to skip that read too.
+ */
 export async function cardSignals(
 	ctx: QueryCtx,
 	profileId: ProfileId,
-	entryId: EntryId
-) {
+	entryId: EntryId,
+	known?: Doc<"library_reads">
+): Promise<CardSignals> {
 	const [t, r, listen] = await Promise.all([
 		totalsRow(ctx, entryId),
-		readRow(ctx, profileId, entryId),
+		known ?? readRow(ctx, profileId, entryId),
 		listenMin(ctx, entryId),
 	]);
-	return { listenMin: listen, saved: r?.saved ?? false, views: t?.views ?? 0 };
+	return {
+		finished: r?.finishedAt !== undefined,
+		listenMin: listen,
+		position: r?.position,
+		saved: r?.saved ?? false,
+		views: t?.views ?? 0,
+	};
 }
 
 /** Attaches `cardSignals` to already-shaped list items. */
@@ -117,6 +146,46 @@ export async function continueReading(
 		position: r.position!,
 	};
 }
+
+/**
+ * Saved (Lantern): this reader's saved entries, newest saved first, as the
+ * same cards every other list returns. Retracted entries drop out like they do
+ * from every list; a page can come back short because of them. Rows saved
+ * before `savedAt` existed follow the dated ones until
+ * `migrations:backfillLibrarySavedAt` runs.
+ */
+export const listSaved = query({
+	args: { paginationOpts: paginationOptsValidator },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
+		const numItems = Math.max(
+			1,
+			Math.min(Math.floor(args.paginationOpts.numItems), SAVED_PAGE_MAX)
+		);
+		const result = await ctx.db
+			.query("library_reads")
+			.withIndex("by_emotionalProfileId_and_saved_and_savedAt", (q) =>
+				q.eq("emotionalProfileId", profile._id).eq("saved", true)
+			)
+			.order("desc")
+			.paginate({ ...args.paginationOpts, numItems });
+		const cards = await Promise.all(
+			result.page.map(async (r) => {
+				const e = await ctx.db.get("library_entries", r.entryId);
+				if (!e?.active) {
+					return null;
+				}
+				const [item, signals] = await Promise.all([
+					toListItem(e),
+					cardSignals(ctx, profile._id, e._id, r),
+				]);
+				return { ...item, ...signals };
+			})
+		);
+		return { ...result, page: cards.filter((c) => c !== null) };
+	},
+	returns: paginationResultValidator(cardItemValidator),
+});
 
 /** The reader's own row plus the end-of-read total. */
 export const getReaderState = query({
@@ -221,6 +290,12 @@ export const record = mutation({
 		}
 		if (args.saved !== undefined) {
 			patch.saved = args.saved;
+			// Saving again keeps its place in Saved; unsaving clears it.
+			if (args.saved && !row.saved) {
+				patch.savedAt = Date.now();
+			} else if (!args.saved && row.savedAt !== undefined) {
+				patch.savedAt = undefined;
+			}
 		}
 		if (args.helped !== undefined && args.helped !== row.helped) {
 			patch.helped = args.helped;

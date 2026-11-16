@@ -1672,11 +1672,18 @@ export default defineSchema({
 		lastReadAt: v.optional(v.number()), // last open or position write — orders Continue reading (#419)
 		position: v.optional(v.number()), // resume: 0–1 of the scrollable body
 		saved: v.boolean(),
+		savedAt: v.optional(v.number()), // set on save, cleared on unsave — orders Saved, newest first
 		viewedAt: v.optional(v.number()), // first reader open — the one view
 	})
 		.index("by_emotionalProfileId_and_entryId", [
 			"emotionalProfileId",
 			"entryId",
+		])
+		// Saved, newest first. Rows saved before `savedAt` existed sort last until backfilled.
+		.index("by_emotionalProfileId_and_saved_and_savedAt", [
+			"emotionalProfileId",
+			"saved",
+			"savedAt",
 		])
 		// finishedAt first so Continue reading only walks unfinished rows (#419).
 		.index("by_emotionalProfileId_and_finishedAt_and_lastReadAt", [

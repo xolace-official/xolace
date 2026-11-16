@@ -13,8 +13,9 @@ import {
 	trackItemValidator,
 } from "../browse";
 import { requireAuth } from "../lib/auth";
+import { cardItemValidator } from "./cards";
 import { isCrisisQuery } from "./crisisTerms";
-import { cardItemValidator, coverOf, toListItem } from "./entries";
+import { coverOf, toListItem } from "./entries";
 import { withCardSignals } from "./reads";
 import { asWords } from "./searchText";
 
