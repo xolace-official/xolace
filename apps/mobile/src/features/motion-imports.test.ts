@@ -82,12 +82,13 @@ describe("staleEaseListings", () => {
 });
 
 describe("osReducedMotionReads", () => {
-	it("flags Reanimated's useReducedMotion in new motion code", () => {
+	it("flags Reanimated's useReducedMotion, or the whole module, in new motion code", () => {
 		const graph = graphOf({
 			"components/shared/aura.tsx": [
 				pkg("react-native-reanimated", ["useReducedMotion", "withTiming"]),
 			],
 			"design/flux.tsx": [pkg("react-native-reanimated", ["useReducedMotion"])],
+			"features/letters/seal.tsx": [pkg("react-native-reanimated", ["*"])],
 			"features/today/hero/glow.tsx": [
 				pkg("react-native-reanimated", ["useReducedMotion"]),
 			],
@@ -95,6 +96,7 @@ describe("osReducedMotionReads", () => {
 		expect(osReducedMotionReads(graph)).toEqual([
 			"components/shared/aura.tsx -> react-native-reanimated useReducedMotion",
 			"design/flux.tsx -> react-native-reanimated useReducedMotion",
+			"features/letters/seal.tsx -> react-native-reanimated *",
 			"features/today/hero/glow.tsx -> react-native-reanimated useReducedMotion",
 		]);
 	});

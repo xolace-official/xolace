@@ -64,19 +64,23 @@ const isNewMotionCode = (file: string) => {
 		: NEW_MOTION_FOLDERS.some((folder) => file.startsWith(folder));
 };
 
+/** Bindings that reach Reanimated's OS-only read: the hook itself, or the whole module
+ * (`import * as Reanimated`, then `Reanimated.useReducedMotion()`). */
+const OS_READS = [OS_REDUCED_MOTION, "*"];
+
 /**
  * 2. New motion code reads reduced motion through `useEffectiveReducedMotion()`, never
- * Reanimated's `useReducedMotion` (the OS setting alone, which ignores the in-app choice).
+ * Reanimated's `useReducedMotion` (the OS setting at launch, ignoring the in-app choice). Direct
+ * `AccessibilityInfo` reads aren't checked: the same import makes screen-reader announcements,
+ * and an import can't tell the two apart.
  */
 export function osReducedMotionReads(graph: ImportGraph): string[] {
 	return [...graph].flatMap(([file, imports]) =>
 		imports
 			.filter(
-				(imp) =>
-					imp.specifier === REANIMATED &&
-					imp.names.includes(OS_REDUCED_MOTION) &&
-					isNewMotionCode(relative(file))
+				(imp) => imp.specifier === REANIMATED && isNewMotionCode(relative(file))
 			)
-			.map(() => `${relative(file)} -> ${REANIMATED} ${OS_REDUCED_MOTION}`)
+			.flatMap((imp) => imp.names.filter((name) => OS_READS.includes(name)))
+			.map((name) => `${relative(file)} -> ${REANIMATED} ${name}`)
 	);
 }
