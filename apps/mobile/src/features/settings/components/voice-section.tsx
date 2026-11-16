@@ -13,9 +13,9 @@ import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { RadioIconIndicator } from "@/features/settings/components/radio-icon-indicator";
 import { useVoiceSettings } from "@/features/settings/hooks/use-voice-settings";
-import { useVoicePreview } from "@/features/talk/use-voice-preview";
-import { VOICE_OPTIONS, type VoiceValue } from "@/features/talk/voice-options";
 import { playSoftPress } from "@/lib/haptics";
+import { useVoicePreview } from "@/lib/talk/use-voice-preview";
+import { VOICE_OPTIONS, type VoiceValue } from "@/lib/talk/voice-options";
 import { cn } from "@/lib/utils";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];

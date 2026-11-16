@@ -19,8 +19,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { AppText } from "@/components/shared/app-text";
-import { TALK_CAST } from "@/features/talk/voice-options";
 import { playSoftPress, tap } from "@/lib/haptics";
+import { TALK_CAST } from "@/lib/talk/voice-options";
 import { cn } from "@/lib/utils";
 import { VoiceSlot } from "./voice-slot";
 

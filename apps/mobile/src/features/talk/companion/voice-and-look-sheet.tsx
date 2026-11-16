@@ -13,14 +13,14 @@ import { useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BottomSheetBlurOverlay } from "@/components/bottom-sheet-blur-overlay";
 import { AppText } from "@/components/shared/app-text";
-import { TalkChips } from "@/features/talk/talk-chips";
+import { TalkChips } from "@/components/talk-chips";
 import {
 	DIRECTNESS_OPTIONS,
 	PACE_OPTIONS,
-} from "@/features/talk/talk-style-options";
-import { useCompanionName } from "@/features/talk/use-companion-name";
-import { useTalkStyle } from "@/features/talk/use-talk-style";
-import { useVoicePreview } from "@/features/talk/use-voice-preview";
+} from "@/features/settings/components/talk/talk-style-options";
+import { useCompanionName } from "@/lib/talk/use-companion-name";
+import { useTalkStyle } from "@/lib/talk/use-talk-style";
+import { useVoicePreview } from "@/lib/talk/use-voice-preview";
 import { GlassClose } from "./glass-close";
 import { LookTiles } from "./look-tiles";
 import { useClipLevel } from "./use-clip-level";

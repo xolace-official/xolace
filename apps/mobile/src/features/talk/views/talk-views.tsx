@@ -12,8 +12,8 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import type { Talk } from "@/features/talk/use-talk";
-import { useTalkStyle } from "@/features/talk/use-talk-style";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useTalkStyle } from "@/lib/talk/use-talk-style";
 import { CompanionStage } from "./companion-stage";
 import { TalkViewSwitch } from "./talk-view-switch";
 

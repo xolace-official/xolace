@@ -13,7 +13,7 @@ import {
 	type VoiceSlug,
 } from "@xolace/backend/convex/lib/voices";
 import { useQuery } from "convex/react";
-import { lookOf } from "@/features/talk/companion/companion-look";
+import { lookOf } from "@/lib/talk/talk-looks";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
 export type Directness = TalkDirectness | "balanced";

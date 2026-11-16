@@ -11,9 +11,9 @@ import { DialogBlurBackdrop } from "@/components/dialog-blur-backdrop";
 import { AppText } from "@/components/shared/app-text";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
-import { TALK_TIME_RESETS } from "@/features/talk/talk-copy";
-import { useCompanionName } from "@/features/talk/use-companion-name";
-import { useTalkTime } from "@/features/talk/use-talk-time";
+import { TALK_TIME_RESETS } from "@/lib/talk/talk-time";
+import { useCompanionName } from "@/lib/talk/use-companion-name";
+import { useTalkTime } from "@/lib/talk/use-talk-time";
 
 export function useTalkDoor() {
 	const { isPlus, isResolved } = usePlusEntitlement();

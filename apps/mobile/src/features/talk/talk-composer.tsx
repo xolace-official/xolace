@@ -13,9 +13,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { GlassSurface } from "@/components/shared/glass-surface";
-import { useCompanionName } from "@/features/talk/use-companion-name";
 import type { Talk } from "@/features/talk/use-talk";
 import { playSoftPress } from "@/lib/haptics";
+import { useCompanionName } from "@/lib/talk/use-companion-name";
 import { cn } from "@/lib/utils";
 
 const hasGlass = isLiquidGlassAvailable();

@@ -11,9 +11,9 @@ import { GlassSurface } from "@/components/shared/glass-surface";
 import { useAppTheme } from "@/context/app-theme-context";
 import { HeaderFace } from "@/features/talk/header-face";
 import { JUST_END, MIRROR_LATER } from "@/features/talk/talk-copy";
-import { useCompanionName } from "@/features/talk/use-companion-name";
 import type { Talk } from "@/features/talk/use-talk";
-import { useTimeLeft } from "@/features/talk/use-time-left";
+import { useCompanionName } from "@/lib/talk/use-companion-name";
+import { useTimeLeft } from "@/lib/talk/use-time-left";
 
 const ios = Platform.OS === "ios";
 // Only iOS 26 paints glass behind a transparent header; older iOS gets a blur.

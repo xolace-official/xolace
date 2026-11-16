@@ -5,8 +5,8 @@ import {
 	useAudioPlayerStatus,
 } from "expo-audio";
 import { useRef, useState } from "react";
-import { VOICE_PREVIEWS } from "@/features/talk/voice-options";
 import { claimAudioSession, holdsAudioFocus } from "@/lib/audio/session";
+import { VOICE_PREVIEWS } from "@/lib/talk/voice-options";
 
 type UseVoicePreviewReturn = {
 	/** For a caller that also reads the clip (the voice orb's level). */

@@ -15,9 +15,9 @@ import {
 	TALK_TIME_RESETS,
 	talkTimeLine,
 } from "@/features/talk/talk-copy";
-import { useCompanionName } from "@/features/talk/use-companion-name";
 import type { Talk } from "@/features/talk/use-talk";
-import { useTalkTime } from "@/features/talk/use-talk-time";
+import { useCompanionName } from "@/lib/talk/use-companion-name";
+import { useTalkTime } from "@/lib/talk/use-talk-time";
 
 function Row({
 	icon,

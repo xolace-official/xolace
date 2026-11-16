@@ -4,12 +4,12 @@ import { SymbolView } from "expo-symbols";
 import { Button, useThemeColor } from "heroui-native";
 import { TextInput, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { TalkChips } from "@/components/talk-chips";
 import { DemoListen } from "@/features/intake/v2/plus/talk-demo/demo-listen";
 import { LINE_MAX_CHARS } from "@/features/intake/v2/plus/talk-demo/demo-machine";
 import type { useTalkDemo } from "@/features/intake/v2/plus/talk-demo/use-talk-demo";
-import { TalkChips } from "@/features/talk/talk-chips";
-import { TALK_CAST } from "@/features/talk/voice-options";
 import { playSoftPress } from "@/lib/haptics";
+import { TALK_CAST } from "@/lib/talk/voice-options";
 
 const MIC_ICON = { android: "mic", ios: "mic.fill", web: "mic" } as const;
 const PLAY_ICON = {

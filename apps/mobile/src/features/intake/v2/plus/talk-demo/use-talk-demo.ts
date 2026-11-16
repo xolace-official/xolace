@@ -17,12 +17,12 @@ import {
 	refusalOf,
 } from "@/features/intake/v2/plus/talk-demo/demo-machine";
 import { useTypedLine } from "@/features/intake/v2/use-typed-line";
-import { useVoicePreview } from "@/features/talk/use-voice-preview";
 import {
 	claimAudioSession,
 	holdsAudioFocus,
 	releaseAudioFocus,
 } from "@/lib/audio/session";
+import { useVoicePreview } from "@/lib/talk/use-voice-preview";
 
 /** Past the typed-out reply, how long its audio may take before the way on shows anyway. */
 const SAID_GRACE_MS = 15_000;

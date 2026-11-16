@@ -3,15 +3,15 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { SettingsSection } from "@/components/shared/settings-section";
+import { TalkChips } from "@/components/talk-chips";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
-import { TalkChips } from "@/features/talk/talk-chips";
 import {
 	DIRECTNESS_OPTIONS,
 	PACE_OPTIONS,
-} from "@/features/talk/talk-style-options";
-import { TalkVoicePicker } from "@/features/talk/talk-voice-picker";
-import { useCompanionName } from "@/features/talk/use-companion-name";
-import { useTalkStyle } from "@/features/talk/use-talk-style";
+} from "@/features/settings/components/talk/talk-style-options";
+import { TalkVoicePicker } from "@/features/settings/components/talk/talk-voice-picker";
+import { useCompanionName } from "@/lib/talk/use-companion-name";
+import { useTalkStyle } from "@/lib/talk/use-talk-style";
 
 function Row({
 	label,

@@ -3,11 +3,11 @@
 
 import { SymbolView } from "expo-symbols";
 import { useThemeColor } from "heroui-native";
-import { TalkChips } from "@/features/talk/talk-chips";
-import { useTalkStyle } from "@/features/talk/use-talk-style";
-import { useVoicePreview } from "@/features/talk/use-voice-preview";
-import { TALK_CAST } from "@/features/talk/voice-options";
+import { TalkChips } from "@/components/talk-chips";
 import { playSoftPress } from "@/lib/haptics";
+import { useTalkStyle } from "@/lib/talk/use-talk-style";
+import { useVoicePreview } from "@/lib/talk/use-voice-preview";
+import { TALK_CAST } from "@/lib/talk/voice-options";
 
 export function TalkVoicePicker() {
 	const { voice, setVoice } = useTalkStyle();

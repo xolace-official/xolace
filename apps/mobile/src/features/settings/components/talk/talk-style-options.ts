@@ -1,8 +1,8 @@
 // The talk's pace and directness choices, shared by settings and the voice-and-look sheet.
 
 import type { TalkPace } from "@xolace/backend/convex/lib/voices";
-import type { Chip } from "@/features/talk/talk-chips";
-import type { Directness } from "@/features/talk/use-talk-style";
+import type { Chip } from "@/components/talk-chips";
+import type { Directness } from "@/lib/talk/use-talk-style";
 
 export const PACE_OPTIONS: Chip<TalkPace>[] = [
 	{ label: "Slower", value: "slower" },

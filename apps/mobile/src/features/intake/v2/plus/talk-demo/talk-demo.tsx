@@ -15,8 +15,8 @@ import { DemoControls } from "@/features/intake/v2/plus/talk-demo/demo-controls"
 import type { DemoPhase } from "@/features/intake/v2/plus/talk-demo/demo-machine";
 import { useTalkDemo } from "@/features/intake/v2/plus/talk-demo/use-talk-demo";
 import { SafetyStep } from "@/features/intake/v2/safety-step";
-import { TALK_CAST } from "@/features/talk/voice-options";
 import { playSoftPress } from "@/lib/haptics";
+import { TALK_CAST } from "@/lib/talk/voice-options";
 import { useTokenColor } from "@/lib/use-token-color";
 
 const FLUX_SIZE = 168;

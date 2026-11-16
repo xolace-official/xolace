@@ -5,8 +5,8 @@ import { SymbolView } from "expo-symbols";
 import { PressableFeedback, useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { useTalkStyle } from "@/features/talk/use-talk-style";
-import { TALK_CAST } from "@/features/talk/voice-options";
+import { useTalkStyle } from "@/lib/talk/use-talk-style";
+import { TALK_CAST } from "@/lib/talk/voice-options";
 import { VoiceOrb } from "./voice-orb";
 
 const ORB = 40;

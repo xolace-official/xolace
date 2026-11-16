@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { LOOKS, lookOf } from "@/features/talk/companion/companion-look";
-import { talkVoiceOf } from "@/features/talk/use-talk-style";
+import { lookOf, TALK_LOOKS } from "@/lib/talk/talk-looks";
+import { talkVoiceOf } from "@/lib/talk/use-talk-style";
 
 // The backend ships before store review clears, so an old build can read a look or voice
 // added after it shipped.
@@ -10,7 +10,7 @@ describe("lookOf", () => {
 	});
 
 	it("shows an unknown or unset look as the default", () => {
-		expect(LOOKS[lookOf("aurora")]).toBeDefined();
+		expect(TALK_LOOKS).toContain(lookOf("aurora"));
 		expect(lookOf("aurora")).toBe("xolace");
 		expect(lookOf("toString")).toBe("xolace");
 		expect(lookOf(undefined)).toBe("xolace");

@@ -7,7 +7,7 @@ import { useFace } from "@/components/xolace-face/use-face";
 import { XolaceFace } from "@/components/xolace-face/xolace-face";
 import { LOOKS } from "@/features/talk/companion/companion-look";
 import type { Talk } from "@/features/talk/use-talk";
-import { useTalkStyle } from "@/features/talk/use-talk-style";
+import { useTalkStyle } from "@/lib/talk/use-talk-style";
 import { poseForPresence } from "./presence-pose";
 
 const SIZE = 34;

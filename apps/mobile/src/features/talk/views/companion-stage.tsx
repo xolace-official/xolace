@@ -19,11 +19,11 @@ import { useFace } from "@/components/xolace-face/use-face";
 import { XolaceFace } from "@/components/xolace-face/xolace-face";
 import { LOOKS } from "@/features/talk/companion/companion-look";
 import { poseForPresence } from "@/features/talk/presence-pose";
-import { useCompanionName } from "@/features/talk/use-companion-name";
 import type { Talk } from "@/features/talk/use-talk";
-import { useTalkStyle } from "@/features/talk/use-talk-style";
 import { playSoftPress } from "@/lib/haptics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useCompanionName } from "@/lib/talk/use-companion-name";
+import { useTalkStyle } from "@/lib/talk/use-talk-style";
 
 /** Room the view switch takes under the header. */
 export const SWITCH_SPACE = 52;

@@ -10,7 +10,7 @@ import { AppText } from "@/components/shared/app-text";
 import { MorphLoader } from "@/components/shared/loader/morph/morph-loader";
 import { removeEmDash } from "@/features/quotes/utils/text-utils";
 import { useMirrorAudio } from "@/features/reflect/hooks/use-mirror-audio";
-import { TalkTranscript } from "@/features/talk/talk-thread";
+import { TalkTranscript } from "@/features/timeline/components/talk-transcript";
 import {
 	getEmotionEmoji,
 	getEmotionLabel,

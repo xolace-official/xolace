@@ -24,8 +24,8 @@ import {
 	UpdateRow,
 	useVersionLabel,
 } from "@/features/settings/components/update-row";
-import { useTalkTime } from "@/features/talk/use-talk-time";
 import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
+import { useTalkTime } from "@/lib/talk/use-talk-time";
 import { useAppStore } from "@/store/store";
 
 const styles = StyleSheet.create({

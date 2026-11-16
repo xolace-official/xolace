@@ -21,7 +21,7 @@ import {
 } from "@/features/settings/components/settings-icons";
 import { useAccountSettings } from "@/features/settings/hooks/use-account-settings";
 import { useConfirmAction } from "@/features/settings/hooks/use-confirm-action";
-import { COMPANION_FALLBACK_NAME } from "@/features/talk/talk-copy";
+import { COMPANION_FALLBACK_NAME } from "@/lib/talk/use-companion-name";
 
 const EASE: [number, number, number, number] = [0.455, 0.03, 0.515, 0.955];
 

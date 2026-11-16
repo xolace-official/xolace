@@ -6,8 +6,8 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import { MIN_TALK_S } from "@/features/talk/talk-copy";
-import { useTalkTime } from "@/features/talk/use-talk-time";
+import { MIN_TALK_S } from "@/lib/talk/talk-time";
+import { useTalkTime } from "@/lib/talk/use-talk-time";
 
 /** Null for a typed mirror. */
 export function useTalkSayMore(sessionId: Id<"sessions"> | null) {
