@@ -16,6 +16,11 @@ import {
 	type ImportGraph,
 	relative,
 } from "@/features/import-graph";
+import {
+	easeImportsOutsideEaseTs,
+	osReducedMotionReads,
+	staleEaseListings,
+} from "@/features/motion-imports";
 
 const ENTITLEMENTS_FEATURE = "purchases";
 const graph = buildGraph();
@@ -129,6 +134,29 @@ describe("feature shape (apps/mobile/AGENTS.md)", () => {
 		expect(
 			crossFeatureImportsFromV2(graph),
 			"Move the shared piece to src/lib, src/components/shared or a kit in src/components/<kit>; compose features in the route, not the screen"
+		).toEqual([]);
+	});
+});
+
+describe("motion (apps/mobile/AGENTS.md)", () => {
+	it("imports react-native-ease only in src/design/ease.ts", () => {
+		expect(
+			easeImportsOutsideEaseTs(graph),
+			"Import EaseView and its types from @/design/ease, loops from @/design/ease-loops or ease-breath"
+		).toEqual([]);
+	});
+
+	it("lists only legacy Ease files that still import it", () => {
+		expect(
+			staleEaseListings(graph),
+			"Remove these from EASE_LEGACY_FILES in motion-imports.ts"
+		).toEqual([]);
+	});
+
+	it("reads reduced motion through useEffectiveReducedMotion in new code", () => {
+		expect(
+			osReducedMotionReads(graph),
+			"Use useEffectiveReducedMotion() from @/lib/motion/use-effective-reduced-motion: it honours the in-app setting"
 		).toEqual([]);
 	});
 });
