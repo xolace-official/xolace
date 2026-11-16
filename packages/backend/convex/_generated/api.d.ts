@@ -217,6 +217,7 @@ import type * as lib_voices from "../lib/voices.js";
 import type * as lib_xolacerSuggestion from "../lib/xolacerSuggestion.js";
 import type * as library_admin from "../library/admin.js";
 import type * as library_audio from "../library/audio.js";
+import type * as library_cards from "../library/cards.js";
 import type * as library_crisisTerms from "../library/crisisTerms.js";
 import type * as library_embed from "../library/embed.js";
 import type * as library_entries from "../library/entries.js";
@@ -533,6 +534,7 @@ declare const fullApi: ApiFromModules<{
   "lib/xolacerSuggestion": typeof lib_xolacerSuggestion;
   "library/admin": typeof library_admin;
   "library/audio": typeof library_audio;
+  "library/cards": typeof library_cards;
   "library/crisisTerms": typeof library_crisisTerms;
   "library/embed": typeof library_embed;
   "library/entries": typeof library_entries;
