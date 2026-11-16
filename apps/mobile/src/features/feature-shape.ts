@@ -33,7 +33,6 @@ const REPLACED_FEATURES = [
 	"reach-me-on",
 	"reflect",
 	"reflect-tour",
-	"session-end",
 	"settings",
 	"sit-with-this",
 	"starter-suggestions",

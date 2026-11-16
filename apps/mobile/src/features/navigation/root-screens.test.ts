@@ -90,7 +90,6 @@ const pinned = (reduced: boolean, glass: boolean) => {
 		"crisis-resources": NO_GESTURE,
 		"follow-up": PLAYER,
 		"intake-plus-preview": PLAYER,
-		"kindling-announcement": { animation: rise, gestureEnabled: false },
 		"kindling/index": undefined,
 		"library/[slug]": { animation: reduced ? "fade" : "default" },
 		"peer-reflections": NO_GESTURE,

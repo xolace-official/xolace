@@ -60,6 +60,7 @@ describe("movedPath", () => {
 		["/browse/topic/sleep", "/explore/topic/sleep"],
 		["/browse/library/hub/grief", "/explore/library/hub/grief"],
 		["/profile", "/you"],
+		["/kindling-announcement", "/session-end"],
 	])("sends %s to %s", (from, to) => {
 		expect(movedPath(from)).toBe(to);
 	});

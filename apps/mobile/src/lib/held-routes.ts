@@ -15,6 +15,8 @@ const HELD_ROUTES = [
 	// A sheet over peer reflections: the session is still behind it.
 	"/report-reflection",
 	"/session-end",
+	// A sheet over the session end: the moment is still behind it.
+	"/session-follow-up",
 	// A peer conversation: First Xolacer chat lands right after the first message.
 	"/chat",
 	"/xolace-channel",
