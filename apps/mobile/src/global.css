@@ -25,8 +25,13 @@
 /* Playful restyles HeroUI component classes; must come after heroui-native/styles. */
 @import "./themes/playful-components.css";
 
-/* Class names for the variables HeroUI doesn't map itself. */
-@theme inline {
+/*
+ * Class names for the variables HeroUI doesn't map itself. Static, so JS can
+ * read one (useCSSVariable, useThemeColor) before any class uses it; Uniwind
+ * still resolves each var() per theme. (Not `@theme inline static`: Biome
+ * can't parse two modifiers.)
+ */
+@theme static {
 	--color-subtle: var(--subtle);
 	--color-accent-ink: var(--accent-ink);
 	--color-accent-wash: var(--accent-wash);
