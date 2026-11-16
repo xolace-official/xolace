@@ -4,6 +4,7 @@ import {
 	backendCallsOutsideDataHooks,
 	crossFeatureImportsFromV2,
 	devImportsFromOutside,
+	staleListings,
 	v2ImportsOfOldFolders,
 } from "@/features/feature-shape";
 import { type Import, type ImportGraph, SRC } from "@/features/import-graph";
@@ -64,6 +65,20 @@ describe("devImportsFromOutside", () => {
 		]);
 	});
 
+	it("finds dev/ at any depth in a big feature", () => {
+		const graph = graphOf({
+			"features/letters/read/read-screen.tsx": [
+				local("features/letters/write/dev/drafts.ts"),
+			],
+			"features/letters/write/dev/states.tsx": [
+				local("features/letters/write/dev/drafts.ts"),
+			],
+		});
+		expect(devImportsFromOutside(graph)).toEqual([
+			"features/letters/read/read-screen.tsx -> features/letters/write/dev/drafts.ts",
+		]);
+	});
+
 	it("allows its own dev/ files and the src/dev registry", () => {
 		const graph = graphOf({
 			"dev/registry.ts": [local("features/today/dev/states.ts")],
@@ -88,8 +103,38 @@ describe("backendCallsOutsideDataHooks", () => {
 				pkg("heroui-native", ["useToast"]),
 				local("lib/convex/use-stable-query.ts"),
 			],
+			"lib/convex/use-stable-query.ts": [pkg("convex/react", ["useQuery"])],
 		});
 		expect(backendCallsOutsideDataHooks(graph)).toHaveLength(5);
+	});
+
+	it("flags any app file that reaches the backend, and a namespace import of heroui", () => {
+		const graph = graphOf({
+			"features/today/hero/hero.tsx": [
+				local("lib/speech/use-voice-input.ts"),
+				local("lib/talk-helper.ts"),
+				pkg("heroui-native", ["*"]),
+			],
+			"lib/speech/use-voice-input.ts": [pkg("convex/react", ["useAction"])],
+			"lib/talk-helper.ts": [local("lib/speech/use-voice-input.ts")],
+		});
+		expect(backendCallsOutsideDataHooks(graph)).toEqual([
+			"features/today/hero/hero.tsx -> lib/speech/use-voice-input.ts",
+			"features/today/hero/hero.tsx -> lib/talk-helper.ts",
+			"features/today/hero/hero.tsx -> heroui-native",
+		]);
+	});
+
+	it("allows the listed app-wide reads", () => {
+		const graph = graphOf({
+			"features/today/hero/hero.tsx": [
+				local("lib/motion/use-effective-reduced-motion.ts"),
+			],
+			"lib/motion/use-effective-reduced-motion.ts": [
+				pkg("convex/react", ["useQuery"]),
+			],
+		});
+		expect(backendCallsOutsideDataHooks(graph)).toEqual([]);
 	});
 
 	it("allows data hooks, type-only imports, other heroui parts and old folders", () => {
@@ -120,8 +165,20 @@ describe("crossFeatureImportsFromV2", () => {
 		]);
 	});
 
-	it("allows the shared modules, lower layers and old folders", () => {
+	it("treats a new folder as v2 without a listing", () => {
 		const graph = graphOf({
+			"features/peers/peers-screen.tsx": [local("features/streak/x.ts")],
+		});
+		expect(crossFeatureImportsFromV2(graph)).toEqual([
+			"features/peers/peers-screen.tsx -> features/streak/x.ts",
+		]);
+	});
+
+	it("allows the shared modules, lower layers, old folders and the navigation hub", () => {
+		const graph = graphOf({
+			"features/navigation/root-screens.ts": [
+				local("features/today/screens.ts"),
+			],
 			"features/reflect/reflect-screen.tsx": [local("features/streak/x.ts")],
 			"features/today/today-screen.tsx": [
 				local("features/purchases/use-paywall.ts"),
@@ -129,5 +186,12 @@ describe("crossFeatureImportsFromV2", () => {
 			],
 		});
 		expect(crossFeatureImportsFromV2(graph)).toEqual([]);
+	});
+});
+
+describe("staleListings", () => {
+	it("names listed folders that no longer exist", () => {
+		expect(staleListings(["navigation", "streak"])).toContain("talk");
+		expect(staleListings(["navigation", "streak"])).not.toContain("streak");
 	});
 });

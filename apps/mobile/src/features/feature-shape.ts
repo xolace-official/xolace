@@ -10,16 +10,50 @@ import {
 } from "@/features/import-graph";
 
 /**
- * Redesign feature folders on a name no old folder holds. `<name>-v2` folders
- * are v2 without a listing. A v2 folder on a new free name is added here.
+ * The feature folders that predate the shape, in their old layouts. Every other
+ * folder is held to it, so a new one is checked from its first commit. This list
+ * only shrinks: C3 deletes these folders, and a name with no folder fails the test.
  */
-const V2_FEATURES: ReadonlySet<string> = new Set([
-	"explore",
-	"letters",
-	"return",
-	"today",
-	"you",
+const LEGACY_FEATURES: ReadonlySet<string> = new Set([
+	"achievements",
+	"auth",
+	"awareness-events",
+	"browse",
+	"consent",
+	"crisis-resources",
+	"discovery",
+	"feedback-tray",
+	"follow-up",
+	"idle-menu",
+	"insights",
+	"intake",
+	"kindling",
+	"library",
+	"night-mode",
+	"onboarding",
+	"peer-reflection",
+	"profile",
+	"purchases",
+	"quotes",
+	"reach-me-on",
+	"reflect",
+	"reflect-tour",
+	"session-end",
+	"settings",
+	"sit-with-this",
+	"starter-suggestions",
+	"streak",
+	"talk",
+	"timeline",
+	"trusted-bridge",
+	"vent",
+	"xolace-face",
+	"xolacer-chat",
 ]);
+
+/** Folders under `features/` that compose every feature rather than being one:
+ * `navigation` spreads each feature's `screens.ts` into the stack. */
+const HUBS: ReadonlySet<string> = new Set(["navigation"]);
 
 /**
  * Features a v2 folder may import: lower-layer modules other features build
@@ -31,7 +65,11 @@ const SHARED_FEATURES: Readonly<Record<string, string>> = {
 };
 
 const isV2Feature = (feature: string) =>
-	feature.endsWith("-v2") || V2_FEATURES.has(feature);
+	!(LEGACY_FEATURES.has(feature) || HUBS.has(feature));
+
+/** Listed legacy folders and hubs that no longer exist: drop them from the lists. */
+export const staleListings = (features: readonly string[]): string[] =>
+	[...LEGACY_FEATURES, ...HUBS].filter((f) => !features.includes(f));
 
 /** Packages only a data hook may import (as values): Convex, PostHog, the API. */
 const BACKEND_PACKAGES = [
@@ -40,16 +78,20 @@ const BACKEND_PACKAGES = [
 	/^posthog-react-native$/,
 	/^@xolace\/backend\/(convex\/_generated\/)?api$/,
 ];
-/** The app's own wrappers around those (`src/`-relative). */
-const BACKEND_WRAPPERS = [
-	/^lib\/convex\//,
-	/^lib\/use-preference-mutation\.ts$/,
-	/^config\/posthog\.ts$/,
-];
+/**
+ * App-wide reads a part may use directly, though they reach Convex inside, each
+ * with why. Any other file outside `features/` that reaches Convex or PostHog
+ * counts as calling the backend.
+ */
+const APP_WIDE_READS: Readonly<Record<string, string>> = {
+	"lib/motion/use-effective-reduced-motion.ts":
+		"the user's reduced-motion setting, read by every animated part",
+};
 /** The toast is a side effect of an action, so it lives in the data hook too. */
 const TOAST = { name: "useToast", specifier: "heroui-native" };
 const DATA_HOOK = /^use-[^/]+\.ts$/;
-const DEV_FOLDER = /^features\/([^/]+)\/dev\//;
+/** The nearest `dev/` inside a feature, at any depth (`letters/write/dev/`). */
+const DEV_FOLDER = /^(features\/[^/]+\/(?:[^/]+\/)*?dev)\//;
 /** `src/dev/`: the dev-states registry, the one place outside a feature that
  * may import its `dev/` folder. */
 const DEV_REGISTRY = "dev/";
@@ -88,33 +130,61 @@ export function v2ImportsOfOldFolders(graph: ImportGraph): string[] {
 	return unique(found);
 }
 
-/** 2. A feature's `dev/` is imported only by its own `dev/` files and `src/dev/`,
- * so fixtures never ship inside a screen. */
+/** 2. A `dev/` folder is imported only by its own files and `src/dev/`, so
+ * fixtures never ship inside a screen. */
 export function devImportsFromOutside(graph: ImportGraph): string[] {
 	const found: string[] = [];
 	for (const edge of edges(graph)) {
-		const owner = edge.target && relative(edge.target).match(DEV_FOLDER)?.[1];
+		const dev = edge.target && relative(edge.target).match(DEV_FOLDER)?.[1];
 		const from = relative(edge.file);
-		if (
-			owner &&
-			!from.startsWith(`features/${owner}/dev/`) &&
-			!from.startsWith(DEV_REGISTRY)
-		) {
+		if (dev && !from.startsWith(`${dev}/`) && !from.startsWith(DEV_REGISTRY)) {
 			found.push(show(edge));
 		}
 	}
 	return unique(found);
 }
 
-const callsBackend = ({ imp, target }: Edge) =>
+const importsBackendPackage = (imp: Import) =>
 	!imp.typeOnly &&
 	(BACKEND_PACKAGES.some((p) => p.test(imp.specifier)) ||
-		(imp.specifier === TOAST.specifier && imp.names.includes(TOAST.name)) ||
-		(target !== undefined &&
-			BACKEND_WRAPPERS.some((p) => p.test(relative(target)))));
+		(imp.specifier === TOAST.specifier &&
+			(imp.names.includes(TOAST.name) || imp.names.includes("*"))));
 
-/** 3. In a v2 folder, only `use-*.ts` data hooks call Convex, PostHog or the toast. */
+/** Files outside `features/` that reach the backend, directly or through each other. */
+function backendWrappers(graph: ImportGraph): Set<string> {
+	const outside = [...graph.keys()].filter(
+		(file) =>
+			featureOf(file) === undefined &&
+			!Object.hasOwn(APP_WIDE_READS, relative(file))
+	);
+	const wrappers = new Set(
+		outside.filter((file) => graph.get(file)?.some(importsBackendPackage))
+	);
+	let grew = true;
+	while (grew) {
+		grew = false;
+		for (const file of outside) {
+			const reaches = graph
+				.get(file)
+				?.some(
+					(imp) => !imp.typeOnly && imp.targets.some((t) => wrappers.has(t))
+				);
+			if (!wrappers.has(file) && reaches) {
+				wrappers.add(file);
+				grew = true;
+			}
+		}
+	}
+	return wrappers;
+}
+
+/** 3. In a v2 folder, only `use-*.ts` data hooks call Convex, PostHog or the toast,
+ * directly or through an app wrapper (`lib/convex/*`, `lib/speech/use-voice-input`…). */
 export function backendCallsOutsideDataHooks(graph: ImportGraph): string[] {
+	const wrappers = backendWrappers(graph);
+	const callsBackend = ({ imp, target }: Edge) =>
+		importsBackendPackage(imp) ||
+		(!imp.typeOnly && target !== undefined && wrappers.has(target));
 	const found: string[] = [];
 	for (const edge of edges(graph)) {
 		const from = featureOf(edge.file);

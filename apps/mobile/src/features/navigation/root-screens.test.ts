@@ -6,10 +6,16 @@ import { screenOptions } from "@/lib/root-screen";
 
 const PROTECTED = path.resolve(import.meta.dirname, "../../app/(protected)");
 
+/** Metro's platform variants: a route can exist only as `foo.ios.tsx`. */
+const ROUTE_FILES = [".tsx", ".ios.tsx", ".android.tsx", ".native.tsx"];
+
 /** A stack entry names a route file (`quotes/index`) or a folder with its own layout. */
 const routeExists = (name: string) =>
-	existsSync(path.join(PROTECTED, `${name}.tsx`)) ||
-	existsSync(path.join(PROTECTED, name, "_layout.tsx"));
+	ROUTE_FILES.some(
+		(ext) =>
+			existsSync(path.join(PROTECTED, `${name}${ext}`)) ||
+			existsSync(path.join(PROTECTED, name, `_layout${ext}`))
+	);
 
 describe("ROOT_SCREENS", () => {
 	it("names only routes that exist under (protected)", () => {

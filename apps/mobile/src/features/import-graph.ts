@@ -21,7 +21,8 @@ export type Import = {
 	/** Source files under `src/` it resolves to on any platform; empty for packages. */
 	targets: string[];
 	typeOnly: boolean;
-	/** Named value bindings (`import { useToast } from ...`), without type-only ones. */
+	/** Named value bindings (`import { useToast } from ...`), without type-only
+	 * ones; `*` for a namespace import (`import * as H from ...`). */
 	names: string[];
 };
 
@@ -47,11 +48,15 @@ function importBindings(node: ts.ImportDeclaration) {
 	}
 	const named = clause.namedBindings;
 	const elements = named && ts.isNamedImports(named) ? named.elements : [];
+	const namespace = named !== undefined && ts.isNamespaceImport(named);
 	const names = clause.isTypeOnly
 		? []
-		: elements
-				.filter((e) => !e.isTypeOnly)
-				.map((e) => (e.propertyName ?? e.name).text);
+		: [
+				...elements
+					.filter((e) => !e.isTypeOnly)
+					.map((e) => (e.propertyName ?? e.name).text),
+				...(namespace ? ["*"] : []),
+			];
 	const typeOnly =
 		clause.isTypeOnly ||
 		(!clause.name &&

@@ -37,8 +37,8 @@ the screen calls, and every gap with the B-PR that fills it.
 
 Work in this order; each step leaves something you can test.
 
-- **Folder.** Final name if free, `<name>-v2` if an old folder holds it. A v2 folder on a
-  free name must be in `V2_FEATURES` (`M/src/features/feature-shape.ts`); add it if not.
+- **Folder.** Final name if free, `<name>-v2` if an old folder holds it. A new folder is
+  checked from its first commit; never add it to `LEGACY_FEATURES`.
 - **Copy.** Strings from `P/src/fixtures/<feature>.ts` into `copy.ts`. Fake data from the
   same file becomes fixtures in `dev/`.
 - **Model.** Every function that turns data into what to show (in the prototype's
@@ -52,6 +52,11 @@ Work in this order; each step leaves something you can test.
 - **Screen and parts.** Components into area folders, each under ~200 lines. Meet
   `M/AGENTS.md` conventions and §7.4's composition rules as you port: they're why the
   code is moving, not a later pass.
+- **Pieces from another feature** (the Telegram offer from `reach-me-on`, a streak ring):
+  move the piece down a layer in this PR, to `src/lib`, `src/components/shared` or a kit
+  in `src/components/<kit>` (architecture §7.4), and point the old feature at it too. Or
+  compose the two features in the route shim. `SHARED_FEATURES` grows only with the
+  owner's yes, named in the PR.
 - **Leave out** review-only code: `*-jumps.ts`, stubs, `__xolace*` globals,
   `useReviewParams`, `?at=` params. The states they opened become dev states.
 

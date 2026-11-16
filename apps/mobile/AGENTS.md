@@ -58,8 +58,10 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
 
 ## Feature shape
 
-Every redesign (v2) feature folder, and every old one a sweep reworks, has this shape.
-`src/features/reach-me-on/` is the closest example today.
+Every feature folder created from now on (the redesign's v2 folders and any new
+feature) has this shape, and so does every old one a sweep reworks. The closest
+example today is `src/features/reach-me-on/`'s model, data hooks and tests; its
+`components/` folder is the legacy layout.
 
 ```
 src/features/<feature>/
@@ -95,9 +97,10 @@ src/features/<feature>/
   need moves down a layer.
 - **Root screens.** A feature's stack entries and options go in its `screens.ts`;
   `src/features/navigation/root-screens.ts` spreads them.
-- **Enforced** for v2 folders by `src/features/import-cycles.test.ts` (rules and the
-  v2 list in `feature-shape.ts`); `bun run check:changed` warns on `.tsx` over 200
-  lines. Porting a prototype screen: the `port-screen` skill.
+- **Enforced** by `src/features/import-cycles.test.ts` for every folder not on
+  `LEGACY_FEATURES` in `feature-shape.ts` (today's folders; the list only shrinks);
+  `bun run check:changed` warns on `.tsx` over 200 lines. Porting a prototype screen:
+  the `port-screen` skill.
 
 ## Release
 

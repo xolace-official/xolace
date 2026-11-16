@@ -6,6 +6,7 @@ import {
 	backendCallsOutsideDataHooks,
 	crossFeatureImportsFromV2,
 	devImportsFromOutside,
+	staleListings,
 	v2ImportsOfOldFolders,
 } from "@/features/feature-shape";
 import {
@@ -91,6 +92,18 @@ describe("import graph", () => {
 });
 
 describe("feature shape (apps/mobile/AGENTS.md)", () => {
+	it("lists only legacy folders and hubs that still exist", () => {
+		const features = [
+			...new Set(
+				[...graph.keys()].map(featureOf).filter((f) => f !== undefined)
+			),
+		];
+		expect(
+			staleListings(features),
+			"Remove deleted folders from LEGACY_FEATURES / HUBS in feature-shape.ts"
+		).toEqual([]);
+	});
+
 	it("keeps each <name>-v2 folder off its old folder, which C3 deletes", () => {
 		expect(
 			v2ImportsOfOldFolders(graph),
