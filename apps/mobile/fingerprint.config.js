@@ -25,17 +25,32 @@ const JS_ONLY_EXTRA_KEYS = [
 	"revenueCat",
 ];
 
+// package.json fields that native builds read: Reanimated's static feature flags
+// (pod install and Gradle configure) and react-native-enriched-markdown's build
+// options (its podspec and build.gradle). The fingerprint hashes only
+// package.json `scripts`, so a change to these would otherwise not change it.
+/** @type {readonly string[]} */
+const NATIVE_PACKAGE_JSON_KEYS = ["enriched-markdown", "reanimated"];
+
+const packageJson = require("./package.json");
+
 /** @type {import('@expo/fingerprint').Config} */
 const config = {
-	// bun applies the root `patchedDependencies` (../../patches) at install. The
-	// fingerprint hashes native modules by name and version only, so a patch to
-	// a native module's code would otherwise not change it.
 	extraSources: [
+		// bun applies the root `patchedDependencies` (../../patches) at install.
+		// The fingerprint hashes native modules by name and version only, so a
+		// patch to a native module's code would otherwise not change it.
 		{
 			filePath: "../../patches",
 			reasons: ["bunPatchedDependencies"],
 			type: "dir",
 		},
+		...NATIVE_PACKAGE_JSON_KEYS.map((key) => ({
+			contents: JSON.stringify(packageJson[key] ?? null),
+			id: `packageJson:${key}`,
+			reasons: ["packageJsonNativeBuildOptions"],
+			type: /** @type {const} */ ("contents"),
+		})),
 	],
 	/**
 	 * @param {{ type: string; id?: string }} source
