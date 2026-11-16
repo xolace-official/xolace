@@ -2,14 +2,16 @@ import { ActivityIndicator, ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { ChannelCard } from "@/features/reach-me-on/components/channel-card";
 import { TelegramCard } from "@/features/reach-me-on/components/telegram-card";
+import { useReachSheet } from "@/features/reach-me-on/reach-sheet";
 import { orderMark } from "@/features/reach-me-on/reach-view";
-import { useOffline } from "@/features/reach-me-on/use-offline";
-import { useReachChannels } from "@/features/reach-me-on/use-reach-channels";
 
-/** "Reach me on…": one card per channel, the First one tried first (#733, #776). */
+/** "Reach me on…": one card per channel, the First one tried first (#733, #776).
+ * Reads its `ReachSheetProvider`: Convex in the app, fixtures in a dev state. */
 export const ReachMeOnSheet = () => {
-	const { channels, setPaused, tryFirst, unlink } = useReachChannels();
-	const offline = useOffline();
+	const {
+		state: { channels, offline },
+		actions: { setPaused, tryFirst, unlink },
+	} = useReachSheet();
 
 	return (
 		<ScrollView

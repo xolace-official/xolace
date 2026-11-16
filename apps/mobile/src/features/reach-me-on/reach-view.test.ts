@@ -1,31 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { push, telegram } from "@/features/reach-me-on/dev/fixtures";
 import {
-	type ChannelEntry,
 	orderMark,
 	reachRowValue,
 	sheetOrder,
 	telegramCard,
 } from "@/features/reach-me-on/reach-view";
-
-const push = (partial: Partial<ChannelEntry> = {}): ChannelEntry => ({
-	available: true,
-	channel: "push",
-	isFirst: false,
-	linked: true,
-	requiresPlus: false,
-	status: "linked",
-	...partial,
-});
-
-const telegram = (partial: Partial<ChannelEntry> = {}): ChannelEntry => ({
-	available: true,
-	channel: "telegram",
-	isFirst: false,
-	linked: false,
-	requiresPlus: false,
-	status: "not_linked",
-	...partial,
-});
 
 describe("reachRowValue", () => {
 	it("says Telegram when Telegram is linked, active and first", () => {
