@@ -40,19 +40,37 @@ export const appEventValidator = v.object({
 
 export type AppEvent = Infer<typeof appEventValidator>;
 
-/** An admin upload lives in file storage; hand it out as `imageUrl`, the field
- * every shipped app already reads. */
+/**
+ * An event as `appEventValidator` describes it, field by field: a column
+ * added to `monthlyEvents` later never reaches the strict validator (which
+ * would throw for every shipped build) until it's added here on purpose.
+ * An admin upload lives in file storage; hand it out as `imageUrl`, the field
+ * every shipped app already reads.
+ */
 export async function toAppEvent(
 	ctx: QueryCtx,
 	event: Doc<"monthlyEvents">
 ): Promise<AppEvent> {
-	const { editedBy: _editedBy, imageStorageId, ...rest } = event;
-	if (!imageStorageId) {
-		return rest;
-	}
-	const url = await ctx.storage.getUrl(imageStorageId);
-	const imageUrl = url ?? event.imageUrl;
-	return imageUrl === undefined ? rest : { ...rest, imageUrl };
+	const uploaded = event.imageStorageId
+		? await ctx.storage.getUrl(event.imageStorageId)
+		: null;
+	return {
+		_creationTime: event._creationTime,
+		_id: event._id,
+		body: event.body,
+		// Unset optional fields come out `undefined`, which Convex drops.
+		ctaLabel: event.ctaLabel,
+		ctaRoute: event.ctaRoute,
+		endDate: event.endDate,
+		imageUrl: uploaded ?? event.imageUrl,
+		linkUrl: event.linkUrl,
+		priority: event.priority,
+		sessionPrompt: event.sessionPrompt,
+		slug: event.slug,
+		startDate: event.startDate,
+		title: event.title,
+		updatedAt: event.updatedAt,
+	};
 }
 
 /** The latest-ending events, newest end first. Bounded by `MAX_EVENTS`. */

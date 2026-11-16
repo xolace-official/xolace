@@ -23,8 +23,18 @@ import { appEventValidator, recentEvents, toAppEvent } from "./events";
  *   `pendingEventPrompt`, now on the server). Never extended.
  * - **Passed**: nothing carried, and it never comes back.
  *
- * Each choice is one row in `monthly_event_states`; the only change after the
- * first choice is read → written.
+ * Each choice is one row in `monthly_event_states`. Transitions after the
+ * first choice:
+ *
+ * | from    | read  | written            | passed                |
+ * | ------- | ----- | ------------------ | --------------------- |
+ * | read    | —     | written, same week | passed, carry cleared |
+ * | written | stays | —                  | stays*                |
+ * | passed  | stays | stays              | —                     |
+ *
+ * Passed is final: "It won't come back". *The greeting never offers it on a
+ * written prompt: "Write about it" closes the greeting, and "Still here."
+ * hides rows that were already done.
  */
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -35,6 +45,22 @@ const MAX_CARRIED = 5;
 /** Rows deleted per batch on wipe and account deletion. */
 const BATCH_SIZE = 100;
 const LOCAL_DAY = /^\d{4}-\d{2}-\d{2}$/;
+const HOUR_MS = 60 * 60 * 1000;
+/** Local time runs from UTC−12 to UTC+14: the calendar days someone on Earth
+ * could be living in right now lie between these offsets. */
+const EARLIEST_OFFSET_MS = -12 * HOUR_MS;
+const LATEST_OFFSET_MS = 14 * HOUR_MS;
+
+const utcDay = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+/** Whether the event is on somewhere right now. The server doesn't know the
+ * user's timezone, so this admits every day any timezone could be in. */
+function isOnSomewhere(event: Doc<"monthlyEvents">, now: number): boolean {
+	return (
+		event.startDate <= utcDay(now + LATEST_OFFSET_MS) &&
+		event.endDate >= utcDay(now + EARLIEST_OFFSET_MS)
+	);
+}
 
 const promptChoiceValidator = v.union(
 	v.literal("read"),
@@ -156,9 +182,10 @@ async function startCarry(
 /**
  * Record what the user did with an event's prompt: `read` (went back from
  * the prompt page), `written` (Write about it) or `passed` (Let it pass).
- * The first choice wins, except that read can become written. Read and
- * written carry the prompt to the reflect card for `CARRY_MS` when the event
- * has one. Idempotent; returns the state as it stands.
+ * Read and written carry the prompt to the reflect card for `CARRY_MS` when
+ * the event has one. A first choice needs the event to be on (somewhere);
+ * after that only read → written and read → passed change anything (table
+ * at the top). Idempotent; returns the state as it stands.
  */
 export const choose = mutation({
 	args: {
@@ -181,7 +208,21 @@ export const choose = mutation({
 				});
 				return { carryUntil: existing.carryUntil, choice };
 			}
+			if (existing.choice === "read" && choice === "passed") {
+				// The read row stays tappable on the greeting. Letting it pass
+				// takes it off the reflect card too; the scheduled expireCarry
+				// then finds no carry and does nothing.
+				await ctx.db.patch("monthly_event_states", existing._id, {
+					carryUntil: undefined,
+					choice,
+				});
+				return { choice };
+			}
 			return { carryUntil: existing.carryUntil, choice: existing.choice };
+		}
+
+		if (!isOnSomewhere(event, now)) {
+			throw new ConvexError({ code: "event_not_active" });
 		}
 
 		const stateId = await ctx.db.insert("monthly_event_states", {

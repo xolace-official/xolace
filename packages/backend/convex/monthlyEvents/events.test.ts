@@ -51,6 +51,62 @@ describe("monthlyEvents/events.getActive", () => {
 		expect(event).not.toHaveProperty("imageStorageId");
 	});
 
+	it("answers a row with every schema field, handing out only the app's", async () => {
+		const user = await asNewUser();
+		const eventId = await user.root.run(async (ctx) => {
+			const imageStorageId = await ctx.storage.store(
+				new Blob(["img"], { type: "image/webp" })
+			);
+			// Every field of `monthlyEvents` in schema.ts. A new column belongs
+			// here too, and in `toAppEvent` only if users should see it.
+			return ctx.db.insert("monthlyEvents", {
+				body: "Body",
+				ctaLabel: "Find support",
+				ctaRoute: "/(protected)/crisis-resources",
+				editedBy: "user_admin_1",
+				endDate: "2026-06-30",
+				imageStorageId,
+				imageUrl: "https://example.com/old.webp",
+				linkUrl: "https://example.com/article",
+				priority: 1,
+				sessionPrompt: "What have you been carrying?",
+				slug: "june-2026",
+				startDate: "2026-06-01",
+				title: "This month",
+				updatedAt: 1,
+			});
+		});
+		const [event] = await user.t.query(api.monthlyEvents.events.getActive, {});
+		expect(Object.keys(event ?? {}).sort()).toEqual([
+			"_creationTime",
+			"_id",
+			"body",
+			"ctaLabel",
+			"ctaRoute",
+			"endDate",
+			"imageUrl",
+			"linkUrl",
+			"priority",
+			"sessionPrompt",
+			"slug",
+			"startDate",
+			"title",
+			"updatedAt",
+		]);
+		expect(event?._id).toBe(eventId);
+		// The upload wins over the stored URL.
+		expect(event?.imageUrl).not.toBe("https://example.com/old.webp");
+	});
+
+	it("leaves unset optional fields out", async () => {
+		const user = await asNewUser();
+		await addEvent(user, "2026-06-30");
+		const [event] = await user.t.query(api.monthlyEvents.events.getActive, {});
+		for (const key of ["ctaLabel", "imageUrl", "linkUrl", "sessionPrompt"]) {
+			expect(event).not.toHaveProperty(key);
+		}
+	});
+
 	it("returns the latest-ending events, at most MAX_EVENTS", async () => {
 		const user = await asNewUser();
 		// Monthly events for five years: the oldest drop off.

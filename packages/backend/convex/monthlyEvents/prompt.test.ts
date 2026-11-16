@@ -22,9 +22,15 @@ import {
 	type SeededUser,
 } from "../test/harness.helpers";
 import { aggregatesMock } from "../test/mocks.helpers";
-import { CARRY_MS, drainPromptStates } from "./prompt";
+import { CARRY_MS } from "./prompt";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
+// Account deletion's push teardown: the component isn't registered in tests.
+vi.mock("../lib/pushNotifications", async (orig) => ({
+	...(await orig<typeof import("../lib/pushNotifications")>()),
+	profilePushDevices: async () => [],
+	pushNotifications: { removeToken: async () => null },
+}));
 
 const NOW = Date.UTC(2026, 5, 10, 12);
 const TODAY = "2026-06-10";
@@ -137,6 +143,36 @@ describe("let it pass", () => {
 		expect(await waiting(user, "2026-06-29")).toBeNull();
 	});
 
+	it("after a read, takes the prompt off the reflect card too", async () => {
+		const user = await asNewUser();
+		const eventId = await addEvent(user);
+		await choose(user, eventId, "read");
+		expect(await carried(user)).not.toBeNull();
+		expect(await choose(user, eventId, "passed")).toEqual({
+			choice: "passed",
+		});
+		expect(await carried(user)).toBeNull();
+		expect(await waiting(user)).toBeNull();
+		const [row] = await stateRows(user);
+		expect(row?.choice).toBe("passed");
+		expect(row).not.toHaveProperty("carryUntil");
+		// The expiry scheduled by the read finds nothing to clear.
+		await advance(user, CARRY_MS);
+		expect(await carried(user)).toBeNull();
+		expect((await stateRows(user))[0]?.choice).toBe("passed");
+	});
+
+	it("after a write, changes nothing (the greeting never offers it)", async () => {
+		const user = await asNewUser();
+		const eventId = await addEvent(user);
+		await choose(user, eventId, "written");
+		expect(await choose(user, eventId, "passed")).toEqual({
+			carryUntil: NOW + CARRY_MS,
+			choice: "written",
+		});
+		expect(await carried(user)).not.toBeNull();
+	});
+
 	it("is final: a later read or write changes nothing", async () => {
 		const user = await asNewUser();
 		const eventId = await addEvent(user);
@@ -200,7 +236,11 @@ describe("read and written: kept for 7 days", () => {
 		expect(await waiting(user)).toBeNull();
 	});
 
-	it("survives two taps at once as one row", async () => {
+	// convex-test runs these one after the other, so this proves the second
+	// tap is a no-op. In production they can overlap: both read the state with
+	// `.unique()`, the first insert commits, and the second conflicts on that
+	// read and retries, landing in the same no-op.
+	it("keeps one row for a repeated tap", async () => {
 		const user = await asNewUser();
 		const eventId = await addEvent(user);
 		const results = await Promise.allSettled([
@@ -258,18 +298,17 @@ describe("expiry", () => {
 		expect(await carried(user)).not.toBeNull();
 	});
 
-	it("shows the latest-ending prompt when two are carried", async () => {
+	it("shows the prompt with the latest carryUntil when two are carried", async () => {
 		const user = await asNewUser();
-		const may = await addEvent(user, {
-			endDate: "2026-05-31",
-			slug: "may",
-			startDate: "2026-05-01",
-		});
-		const june = await addEvent(user, { slug: "june" });
-		await choose(user, may, "read");
+		const first = await addEvent(user, { slug: "first" });
+		const second = await addEvent(user, { priority: 2, slug: "second" });
+		await choose(user, first, "read");
 		await advance(user, 60_000);
-		await choose(user, june, "read");
-		expect((await carried(user))?.eventId).toBe(june);
+		await choose(user, second, "read");
+		expect(await carried(user)).toMatchObject({
+			carryUntil: NOW + 60_000 + CARRY_MS,
+			eventId: second,
+		});
 	});
 
 	it("skips a carried prompt whose event was deleted", async () => {
@@ -322,6 +361,47 @@ describe("auth", () => {
 		expect(await carried(ama)).not.toBeNull();
 	});
 
+	it("refuses a first choice on an event that's on nowhere", async () => {
+		// NOW is 2026-06-10 12:00 UTC: the 9th has ended everywhere (UTC−12 is
+		// at the 10th's midnight); the 11th has begun at UTC+14; the 12th hasn't.
+		const user = await asNewUser();
+		const ended = await addEvent(user, {
+			endDate: "2026-06-09",
+			slug: "ended",
+			startDate: "2026-06-01",
+		});
+		const future = await addEvent(user, {
+			endDate: "2026-06-30",
+			slug: "future",
+			startDate: "2026-06-12",
+		});
+		const tomorrow = await addEvent(user, {
+			endDate: "2026-06-30",
+			slug: "tomorrow",
+			startDate: "2026-06-11",
+		});
+		await expect(choose(user, ended, "passed")).rejects.toThrow(
+			/event_not_active/
+		);
+		await expect(choose(user, future, "read")).rejects.toThrow(
+			/event_not_active/
+		);
+		expect(await choose(user, tomorrow, "passed")).toEqual({
+			choice: "passed",
+		});
+		expect(await stateRows(user)).toHaveLength(1);
+	});
+
+	it("still lets a read become passed after the event ends", async () => {
+		const user = await asNewUser();
+		const eventId = await addEvent(user, { endDate: "2026-06-10" });
+		await choose(user, eventId, "read");
+		await advance(user, 2 * 24 * 60 * 60 * 1000);
+		expect(await choose(user, eventId, "passed")).toEqual({
+			choice: "passed",
+		});
+	});
+
 	it("refuses an event that doesn't exist", async () => {
 		const user = await asNewUser();
 		const eventId = await addEvent(user);
@@ -333,7 +413,7 @@ describe("auth", () => {
 });
 
 describe("erasure", () => {
-	it("a data wipe and account deletion drop the user's choices", async () => {
+	it("a data wipe drops the user's choices", async () => {
 		const user = await asNewUser();
 		const eventId = await addEvent(user);
 		await choose(user, eventId, "read");
@@ -341,9 +421,20 @@ describe("erasure", () => {
 			emotionalProfileId: user.profileId,
 		});
 		expect(await stateRows(user)).toEqual([]);
+		expect((await waiting(user))?._id).toBe(eventId);
+	});
 
-		await choose(user, eventId, "passed");
-		await user.root.run((ctx) => drainPromptStates(ctx, user.profileId));
+	it("account deletion drops them, through the real purge", async () => {
+		const user = await asNewUser();
+		const eventId = await addEvent(user);
+		await choose(user, eventId, "read");
+		await user.root.run((ctx) =>
+			ctx.db.patch("users", user.userId, { accountStatus: "purging" })
+		);
+		await user.root.mutation(internal.jobs.accountDeletion.purgeUser, {
+			userId: user.userId,
+		});
+		await user.root.finishAllScheduledFunctions(vi.runAllTimers);
 		expect(await stateRows(user)).toEqual([]);
 	});
 });
