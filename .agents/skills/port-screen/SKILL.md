@@ -55,7 +55,14 @@ Work in this order; each step leaves something you can test.
   `use-<feature>.ts` with the **same** `{ state, actions }` type; only the bodies change,
   to Convex calls (`useStableQuery` for user-driven args), PostHog events and toasts. The
   screens keep reading the same interface. No store wraps Convex. A field the backend
-  doesn't serve yet comes from a fixture in `dev/` behind the hook, named in the PR.
+  doesn't serve yet gets a placeholder in the hook or the model (release code, so never
+  from `dev/`), named in the PR with the B-PR that replaces it.
+- **Provider.** `<screen>-data.tsx` holds the screen's `{ state, actions }` type, its
+  context, `use<Screen>()` and `<Screen>Data`, which fills it from the data hook; the
+  route shim renders `<Screen>Data` around the screen. Every hook a part calls that
+  reads data or acts (a data hook, Convex, PostHog, the toast, the paywall store) comes
+  through the provider instead; hooks that only draw stay in the part. That is what
+  lets a dev state show the whole screen without reaching the backend.
 - **Screen and parts.** Components into area folders, each under ~200 lines. Meet
   `M/AGENTS.md` conventions and §7.4's composition rules as you port: they're why the
   code is moving, not a later pass.
@@ -134,13 +141,16 @@ Work in this order; each step leaves something you can test.
   route; a screen it opens is a stack entry it navigates to. It sits after the native
   stack, so it can't draw over a natively presented screen and positions itself
   absolutely.
-- **Dev states** (`M/AGENTS.md`, "Dev states"; the example is `M/src/features/reach-me-on/`).
-  One per state the handoff shows, and one for each state the prototype's `*-jumps.ts`
-  opened. The screen reads the feature's provider; the route fills it from the data hook,
-  a dev state from fixtures, through the same `{ state, actions }` type. List them as
-  `devStates` in the feature's `dev/states.tsx` (`id`, `title`, `Screen`, header
-  `options`), with the fixtures beside it, which the model tests reuse. Nothing else to
-  register: `src/dev/` finds the file. Only `dev/` and `src/dev/` import `dev/`.
+- **Dev states** (`M/AGENTS.md`, "Dev states"; the example is `M/src/features/reach-me-on/`:
+  `reach-sheet-data.tsx`, `dev/fixture-sheet.tsx`, `dev/states.tsx`). One per state the
+  handoff shows, and one for each state the prototype's `*-jumps.ts` opened. A dev state
+  renders the screen under its provider filled from fixtures, through the same
+  `{ state, actions }` type, with actions that do nothing. List them as `devStates` in
+  the feature's `dev/states.tsx` (`id` as a string literal, `title`, `Screen`, header
+  `options`), with the fixtures beside it. The model tests import those fixtures too:
+  test files are outside the import graph, so check 2 doesn't see them. Nothing else to
+  register: `src/dev/` finds the file, and `src/dev/states-files.test.ts` checks it.
+  Only the feature's own `dev/` folders and `src/dev/` import a `dev/`.
 
 ## 4. Prove it
 
@@ -151,8 +161,9 @@ Work in this order; each step leaves something you can test.
 - Screenshots of every state the PR changes, light and dark, on a simulator through
   argent (`describe` before every tap; use a simulator no other session holds; stop your
   sessions when done). Open each one by its link, `xolace://dev/<feature>/<state>`
-  (argent `open-url`), in a signed-in dev build on your worktree's Metro; Account ›
-  Dev tools › Dev states lists them. Put the matching prototype render beside each one.
+  (argent `open-url`), in a dev build on your worktree's Metro, signed in and past
+  intake; Account › Dev tools › Dev states lists them. Put the matching prototype render
+  beside each one.
 
 Done when every state from step 1 is a dev state with a light and a dark screenshot, or
 has a line in "Could not verify" saying why not.
