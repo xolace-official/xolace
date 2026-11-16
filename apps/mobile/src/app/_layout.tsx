@@ -17,7 +17,7 @@ import {
 	UpdateBottomSheet,
 	type UpdateBottomSheetMode,
 } from "@/components/shared/update-bottom-sheet";
-import { useFontPairGuard, useLaunchFonts } from "@/design/fonts";
+import { useLaunchFonts } from "@/design/fonts";
 import { ReflectDraftGuard } from "@/features/reflect/reflect-draft";
 import { ChatLocalDataGuard } from "@/features/xolacer-chat/chat-local-data-guard";
 import { useOtaUpdate } from "@/helpers/hooks/use-ota-update";
@@ -217,7 +217,6 @@ function RootLayout() {
 
 	// The theme's font pair, Default's and the fixed faces (src/design/fonts.ts).
 	const fontsReady = useLaunchFonts();
-	useFontPairGuard();
 
 	useEffect(() => {
 		if (fontsReady) {

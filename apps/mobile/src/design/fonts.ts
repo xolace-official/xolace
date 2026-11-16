@@ -1,6 +1,6 @@
 import { isLoaded, loadAsync, useFonts } from "expo-font";
 import { useEffect, useState } from "react";
-import { type ThemeName, Uniwind, useCSSVariable, useUniwind } from "uniwind";
+import { type ThemeName, Uniwind, useCSSVariable } from "uniwind";
 import {
 	DEFAULT_FONT_PAIR,
 	FONT_PAIR_IDS,
@@ -54,13 +54,32 @@ function loadPair(id: FontPairId): Promise<void> {
 	return p;
 }
 
+/** Bumped on every switch, so a pair that loads late can't undo a later switch. */
+let latestSwitch = 0;
+
 /**
- * Switches Uniwind to a theme once its font pair is in. If a face fails to
- * load it switches anyway: the colours matter more than the face.
+ * The one way the app switches theme after launch (theme-switch.test.ts checks
+ * no other file calls `Uniwind.setTheme`). Text drawn before its face is
+ * loaded keeps the system face until it re-renders, so a theme whose pair
+ * isn't in yet waits for it; one that is switches now, in the same tick. If a
+ * face fails to load it switches anyway: the colours matter more than the
+ * face. "system" is Default's light or dark, whose pair is always loaded.
  */
-export function setThemeWithFonts(name: ThemeName): Promise<void> {
-	const apply = () => Uniwind.setTheme(name);
-	return loadPair(variantFonts(name)).then(apply, apply);
+export function setThemeWithFonts(name: ThemeName | "system"): void {
+	latestSwitch += 1;
+	const id = latestSwitch;
+	// Uniwind's own "system" isn't in its ThemeName union.
+	const apply = () => {
+		if (id === latestSwitch) {
+			Uniwind.setTheme(name as ThemeName);
+		}
+	};
+	const pair = variantFonts(name);
+	if (isPairLoaded(pair)) {
+		apply();
+		return;
+	}
+	loadPair(pair).then(apply, apply);
 }
 
 /**
@@ -75,20 +94,7 @@ export function useLaunchFonts(): boolean {
 	return loaded || error != null;
 }
 
-/**
- * Mounted once at the root: if anything switched Uniwind to a theme whose pair
- * isn't loaded (a path that didn't go through `setThemeWithFonts`), load it.
- */
-export function useFontPairGuard(): void {
-	const pair = useFontPair();
-	useEffect(() => {
-		if (!isPairLoaded(pair)) {
-			loadPair(pair).catch(() => undefined);
-		}
-	}, [pair]);
-}
-
-/** @public Loads every pair, for screens that preview themes (the redesign's theme strip). True once they are in. */
+/** Loads every pair, for screens that preview themes (the Appearance carousel). True once they are in. */
 export function useAllFontPairs(): boolean {
 	const [loaded, setLoaded] = useState(() => FONT_PAIR_IDS.every(isPairLoaded));
 	useEffect(() => {
@@ -106,12 +112,6 @@ export function useAllFontPairs(): boolean {
 		};
 	}, [loaded]);
 	return loaded;
-}
-
-/** The font pair of the theme in front (the scoped theme's inside a ScopedTheme). */
-function useFontPair(): FontPairId {
-	const { theme } = useUniwind();
-	return variantFonts(theme);
 }
 
 export type ThemeFaces = Record<FontRole, string>;

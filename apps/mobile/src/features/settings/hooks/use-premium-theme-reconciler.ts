@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { Uniwind } from "uniwind";
+import { type ThemeName, Uniwind } from "uniwind";
+import { setThemeWithFonts } from "@/design/fonts";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 import { useAppStore } from "@/store/store";
@@ -39,7 +40,7 @@ export function usePremiumThemeReconciler() {
 			setPreviousTheme(null);
 		}
 		if (plan.applyBaseTheme !== null) {
-			Uniwind.setTheme(plan.applyBaseTheme as never);
+			setThemeWithFonts(plan.applyBaseTheme as ThemeName | "system");
 		}
 	}, [isPlus, isResolved, colorThemeId, updatePreferences]);
 }

@@ -6,6 +6,7 @@ import Animated, {
 	useAnimatedScrollHandler,
 	useSharedValue,
 } from "react-native-reanimated";
+import { useAllFontPairs } from "@/design/fonts";
 import { FREE_THEMES, PREMIUM_THEMES } from "@/design/themes";
 import { getInitialThemeCarouselIndex } from "@/features/settings/components/get-initial-theme-carousel-index";
 import { ThemeCarouselGlow } from "@/features/settings/components/theme-carousel-glow";
@@ -61,6 +62,10 @@ export const ThemeCarousel = ({
 	onPremiumThemePress,
 }: Props) => {
 	const { width: windowWidth } = useWindowDimensions();
+	// Each card draws in its own theme's font pair; text drawn before its face
+	// loads keeps the system face, so the cards remount once every pair is in.
+	const fontsReady = useAllFontPairs();
+	const cardKey = fontsReady ? "fonts" : "no-fonts";
 	const viewportWidth = windowWidth - SECTION_INSET * 2;
 	const { sidePadding, cardCenters } = useMemo(
 		() => buildLayout(viewportWidth),
@@ -136,6 +141,7 @@ export const ThemeCarousel = ({
 					>
 						<ThemePreviewCard
 							isActive={activeThemeId === theme.id}
+							key={cardKey}
 							onPress={() => onFreeThemePress(theme.id)}
 							theme={theme}
 							width={CARD_WIDTH}
@@ -160,6 +166,7 @@ export const ThemeCarousel = ({
 							<ThemePreviewCard
 								isActive={activeThemeId === theme.id}
 								isLocked={!isPlus}
+								key={cardKey}
 								onPress={() => onPremiumThemePress(theme.id)}
 								theme={theme}
 								width={CARD_WIDTH}
