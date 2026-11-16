@@ -255,6 +255,15 @@ describe("listRecent", () => {
 		expect(await recent(a)).toEqual(["theirs"]);
 		expect(await recent(b)).toEqual(["mine, just shared"]);
 	});
+
+	it("rejects a limit that isn't an integer", async () => {
+		const a = await asNewUser(1);
+		for (const limit of [Number.NaN, Number.POSITIVE_INFINITY, 2.5]) {
+			await expect(
+				a.t.query(api.reflections.listRecent, { limit })
+			).rejects.toThrow("limit must be an integer");
+		}
+	});
 });
 
 describe("what the peers path returns", () => {

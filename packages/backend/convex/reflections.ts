@@ -173,6 +173,11 @@ export const listRecent = query({
 		limit: v.number(),
 	},
 	handler: async (ctx, args) => {
+		// `v.number()` admits NaN and fractions; NaN would never satisfy
+		// takeKept's stop check and scan the whole active pool.
+		if (!Number.isInteger(args.limit)) {
+			throw new Error("limit must be an integer");
+		}
 		const { profile } = await requireAuth(ctx);
 		const notOwn = await notContributedBy(profile._id);
 
