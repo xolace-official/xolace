@@ -120,25 +120,32 @@ src/features/<feature>/
 The redesign's motion lives in `src/design/`: `springs.ts` (the named springs, press and
 breath on Reanimated), `ease.ts` (their react-native-ease twins), `ease-loops.ts`,
 `ease-breath.ts`, `entering.ts` (`riseIn`, `fadeUp`) and `motion.ts` (loop timing for the
-hour).
+hour). Night timing follows `useSessionMode().isNight`, which is re-read when the app comes to
+the foreground, not by the minute like the prototype's clock.
 
 - **Ease for loops only.** An infinite loop goes on Ease (`loopProps`, `loopOrSettle` in
   `ease-loops.ts`; `breathProps`, `usePhasedBreath` in `ease-breath.ts`): a Reanimated loop
-  writes props every frame, an Ease loop costs nothing at rest. Enters, fades, presses, colour toggles, chips and swaps stay on
-  Reanimated. `fadeUpProps` and `stateTransition` exist only for the prototype pieces
+  writes props every frame, an Ease loop costs nothing at rest. Enters, fades, presses,
+  colour toggles, chips and swaps stay on Reanimated. `fadeUpProps` and `stateTransition` exist only for the prototype pieces
   already on Ease; don't move another state-driven animation over.
 - **`src/design/ease.ts` is the only import of `react-native-ease`**, types included. The
   legacy feature folders and three listed files predate it (`EASE_LEGACY_FILES` in
   `src/features/motion-imports.ts`, which only shrinks); move them over when their screens
   are redone.
-- **Reduced motion:** read `useEffectiveReducedMotion()` (the in-app setting, then the OS)
-  and pass it as `reduced`, never Reanimated's `useReducedMotion` (OS only). Ease ignores
-  Reduce Motion, so every Ease helper takes `reduced`: enters become the 200 ms fade, loops
-  rest at `from`. The protected layout's `ReducedMotionConfig` makes Reanimated skip
-  animations when reduced, so the helpers' reduced fades opt out (`ReduceMotion.Never`);
-  do the same for any reduced fade you write.
-- **Ease 0.9 gotchas:** a loop restarts only on remount (key it with `useLoopRun` or the
-  period); a view mounted `paused` never starts its loop, so stop by settling, not `paused`;
+- **Reduced motion:** read `useEffectiveReducedMotion()` and pass it as `reduced`. It puts
+  the in-app setting first and follows the OS when that is "system", while signed out and
+  while preferences load. Never use Reanimated's `useReducedMotion` (the OS value at launch).
+  The OS value comes from one app-wide store (`src/lib/motion/os-reduced-motion.ts`), right
+  from the first render. Ease ignores Reduce Motion, so every Ease helper takes `reduced`:
+  enters become the 200 ms fade, loops rest at `from`. Reduced, `press()` applies its value
+  at once.
+- **Play as chosen.** Reanimated decides again for itself (`ReducedMotionConfig` in the
+  protected layout, the OS elsewhere), which would snap a fade the helpers chose, or snap
+  everything for someone who chose "full". So every animation the helpers start carries
+  `reduceMotion: ReduceMotion.Never` (`PLAY_AS_CHOSEN` in `springs.ts`). Do the same in any
+  animation you write that already took `reduced` into account.
+- **Ease 0.9 gotchas:** a loop restarts only on remount (key it with `useLoopRun(running,
+  periodMs)`); a view mounted `paused` never starts its loop, so stop by settling, not `paused`;
   no `borderColor` (the border turns black: wrap a plain bordered `View`) and no `skewX`.
   argent's recorder misses Ease-only motion; record with `xcrun simctl io recordVideo`.
 - `src/features/import-cycles.test.ts` enforces the import and reduced-motion rules for
