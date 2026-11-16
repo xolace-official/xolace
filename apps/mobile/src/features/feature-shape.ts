@@ -40,7 +40,6 @@ const REPLACED_FEATURES = [
 	"streak",
 	"timeline",
 	"trusted-bridge",
-	"vent",
 	"xolacer-chat",
 ];
 
