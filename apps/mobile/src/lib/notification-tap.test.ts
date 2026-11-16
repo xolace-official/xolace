@@ -273,14 +273,15 @@ describe("notificationTapPlan in the v2 shell", () => {
 		"streak_milestone",
 	];
 
-	it("shows Today for a tap that went home, with its banner", () => {
+	it("goes back to the Today tab for a tap that went home, with its banner", () => {
 		for (const type of HOME_TYPES) {
 			expect(
 				notificationTapPlan({ logId: "l1", type }, "Ten days", 1, "v2")
 			).toEqual({
 				banner: { content: "Ten days", notificationId: "l1" },
 				logId: "l1",
-				navigation: { action: "navigate", href: "/today" },
+				// Back to the tabs, not `navigate`: over an open thread that stacks a second (tabs).
+				navigation: { action: "dismissTo", href: "/today" },
 			});
 		}
 	});

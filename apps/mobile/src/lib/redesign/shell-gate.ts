@@ -56,10 +56,9 @@ export function resolveShell(sources: ShellSources): Shell {
 }
 
 /**
- * Reads the shell the first time it is asked for and keeps it until the app
- * restarts, as `intake-v2` keeps its arm: switching shells under a running app
- * would tear down every tab. A flag that changes, or loads late, applies from
- * the next launch.
+ * Reads the shell the first time it is asked for and keeps it, in memory, until
+ * the app restarts: switching shells under a running app would tear down every
+ * tab. A flag that changes, or loads late, applies from the next launch.
  */
 export function createShellGate(sources: ShellSources): () => Shell {
 	let frozen: Shell | undefined;

@@ -32,13 +32,21 @@ export async function setStoredShell(shell: Shell | null): Promise<void> {
 
 /**
  * This launch's shell: read the first time anything asks, then fixed until the
- * app restarts. The first ask comes from the `(protected)` layout, after sign-in,
- * by which point PostHog has its flags from the device or the network; a flag
- * not loaded by then counts as off for this launch. Never call it at module
- * scope: that would read before PostHog has loaded anything.
+ * app restarts.
  *
- * Route shims switch on it (`currentShell() === "v2"`); v2 feature folders never
- * read it, since they only exist in the v2 shell.
+ * Per launch, in memory, not per account: signing out and in as someone else in
+ * the same launch keeps the first account's shell until the next launch.
+ * (`intake-v2` instead keeps an arm per account on the device; a shell only has
+ * to hold still while the app runs.)
+ *
+ * The first read must stay inside `(protected)`: its layout asks first, after
+ * sign-in, by which point PostHog has its flags from the device or the network;
+ * a flag not loaded by then counts as off for the launch. Anything above it (the
+ * root layout, a launch cover, the auth or intake groups, module scope) would
+ * freeze the shell before the flags are in. `shell-readers.test.ts` holds the
+ * list of files allowed to read it: routes and layouts under `(protected)`, the
+ * notification tap and the Dev tools row. A v2 feature folder never reads it; it
+ * only exists in the v2 shell.
  */
 export const currentShell = createShellGate({
 	dev: __DEV__,

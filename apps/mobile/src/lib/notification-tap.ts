@@ -56,15 +56,19 @@ export function subscribeToNotificationTaps<R extends TapResponse>(
 	return () => subscription.remove();
 }
 
-/** Where a tap navigates. `navigate` reuses the screen already on top; `push` always stacks. */
+/**
+ * Where a tap navigates. `navigate` reuses the screen already on top; `push`
+ * always stacks; `dismissTo` goes back to the route if it is anywhere in the
+ * stack (the tabs, under a chat thread) and replaces only if it isn't.
+ */
 export type TapNavigation =
 	| {
 			action: "navigate";
 			href:
 				| ReturnType<typeof chatNotificationRoute>
-				| "/(protected)/achievements"
-				| "/today";
+				| "/(protected)/achievements";
 	  }
+	| { action: "dismissTo"; href: "/today" }
 	| {
 			action: "push";
 			href:
@@ -83,12 +87,14 @@ export type NotificationTapPlan = {
 };
 
 /**
- * Home in each shell. The old one stacks Reflect, its landing route; the v2
- * shell's home is Today, a tab, which is shown rather than stacked again.
+ * Home in each shell. The old one stacks Reflect, its landing route. The v2
+ * shell's home is Today, a tab: back to the tabs wherever they are in the stack,
+ * since `navigate` reuses only the top screen and would stack a second `(tabs)`
+ * over an open thread.
  */
 const HOME: Record<Shell, TapNavigation> = {
 	v1: { action: "push", href: "/(protected)" },
-	v2: { action: "navigate", href: "/today" },
+	v2: { action: "dismissTo", href: "/today" },
 };
 
 /** Everything a tap should cause, from its payload and the launch's shell. Chat

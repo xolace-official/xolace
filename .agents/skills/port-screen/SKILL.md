@@ -100,7 +100,8 @@ Work in this order; each step leaves something you can test.
 
 - **Route shim.** The production route under `M/src/app/(protected)/` renders the v2
   screen or the old one: `currentShell() === "v2" ? <V2 /> : <Old />`
-  (`M/src/lib/redesign/shell.ts`). Only routes read the shell; a v2 folder never does.
+  (`M/src/lib/redesign/shell.ts`). Only routes and layouts under `(protected)` read the
+  shell (`shell-readers.test.ts`); a v2 folder never does.
   Old routes stay. A stack route that only exists in one shell sends the other shell on
   with `<ReturnTo href />` (`M/src/lib/return-to.tsx`), never `<Redirect>`, which
   stacks a second copy of the tabs (see `profile/index.tsx`).
@@ -113,8 +114,8 @@ Work in this order; each step leaves something you can test.
   import and one spread to `M/src/features/navigation/root-screens.ts`. A v2 screen
   that takes over an old route with a different presentation lists its own entry with
   `shell: "v2"`; the old feature's entry stays as it is.
-- **A host** (an overlay or listener above the stack, like the arrivals host) mounts in
-  the `(protected)` layout as `{shell === "v2" && <Host />}`.
+- **A host** (an overlay or listener above the stack, like the arrivals host) is one
+  entry in `M/src/features/navigation/hosts.ts` with its shell; don't edit the layout.
 - **On the simulator**, start Metro with `EXPO_PUBLIC_REDESIGN_V2=on` (and `--clear`), or
   pick the shell in Account › Dev tools › Shell. PostHog's flag is off in dev builds.
 - **Dev states.** One per state the handoff shows, in `dev/`, feeding the screen

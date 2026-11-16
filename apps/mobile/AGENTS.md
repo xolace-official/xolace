@@ -133,23 +133,27 @@ src/features/<feature>/
 
 ## Redesign flag
 
-The redesign ships behind PostHog's `redesign-v2`, read once per launch and kept until
-the app restarts (`currentShell()`, `src/lib/redesign/shell.ts`): `v1` is today's
-Discovery · Browse · Connect, `v2` is Today · Explore · Connect · You. Dev builds take
-Account › Dev tools › Shell first, then `EXPO_PUBLIC_REDESIGN_V2=on|off` (restart Metro
-with `--clear`), then the flag, which PostHog leaves off in dev.
+The redesign ships behind PostHog's boolean `redesign-v2`, read once per launch and kept
+in memory until the app restarts (`currentShell()`, `src/lib/redesign/shell.ts`; per
+launch, not per account): `v1` is today's Discovery · Browse · Connect, `v2` is Today ·
+Explore · Connect · You. Dev builds take Account › Dev tools › Shell first, then
+`EXPO_PUBLIC_REDESIGN_V2=on|off` (restart Metro with `--clear`), then the flag, which
+PostHog leaves off in dev.
 
-- Only routes and the layouts read the shell. A route shim renders the v2 screen or the
-  old one; v2 folders never read it.
+- Routes and layouts under `(protected)`, the notification tap and the Dev tools row read
+  the shell; never a v2 feature folder (`shell-readers.test.ts`). The first read stays in
+  the `(protected)` layout, after sign-in and PostHog's flags: nothing above it (root
+  layout, launch cover) may read it.
 - The `(tabs)` layout draws `V2_TABS` (`src/features/navigation/tabs.ts`) in v2, the old
-  `components/app-tabs.tsx` otherwise, and sends a tab route the shell doesn't show to its
-  place in this one (`ELSEWHERE` there). A stack route that exists in one shell only uses
-  `<ReturnTo href />` (`src/lib/return-to.tsx`), never `<Redirect>`: a replace into the
-  tabs stacks a second copy of them.
+  `components/app-tabs.tsx` (its triggers are `V1_TABS`) otherwise, and sends a tab route
+  the shell doesn't show to its place in this one (`ELSEWHERE`, `tabRedirect`). A stack
+  route in one shell only uses `<ReturnTo href />` (`src/lib/return-to.tsx`, `dismissTo`),
+  never `<Redirect>`: a replace into the tabs stacks a second copy of them.
 - A v2 screen that takes over an old route lists its own `screens.ts` entry with
-  `shell: "v2"`; `rootScreensFor(shell)` picks it over the old one.
-- Notification taps take the shell (`notificationTapPlan`): home is Reflect in v1, the
-  Today tab in v2.
+  `shell: "v2"`; `rootScreensFor(shell)` picks it over the old one. An overlay or listener
+  for one shell only is an entry in `src/features/navigation/hosts.ts`.
+- Notification taps take the shell (`notificationTapPlan`): home pushes Reflect in v1 and
+  goes back to the Today tab (`dismissTo`) in v2.
 
 ## Shared kit
 

@@ -4,6 +4,7 @@ import { useThemeColor } from "heroui-native";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
 import { useBadgeUnlock } from "@/features/achievements/unlock/use-badge-unlock";
 import { NowPlayingHost } from "@/features/browse/now-playing/now-playing-host";
+import { hostsFor } from "@/features/navigation/hosts";
 import { rootScreensFor } from "@/features/navigation/root-screens";
 import { UnreadIconBadge } from "@/features/xolacer-chat/components/unread-icon-badge";
 import {
@@ -21,10 +22,13 @@ const SCREEN_OPTIONS = {
 	contentStyle: { backgroundColor: "transparent" },
 	headerShown: false,
 };
+/** In v2 the tabs are the landing screen: `/` hands over to them with a replace,
+ * which would otherwise slide Today in from the side at launch. */
+const V2_TABS_OPTIONS = { ...NO_GESTURE, animation: "none" } as const;
 
 export default function ProtectedLayout() {
-	// The first read of the launch's shell (redesign-v2), fixed from here on. A
-	// host that lives in one shell only mounts below as `{shell === "v2" && <Host />}`.
+	// The first read of the launch's shell (redesign-v2), fixed from here on. It
+	// must stay here, after sign-in, not above (shell.ts).
 	const shell = currentShell();
 	// Here, not at the root: an unfinished user should not pay for push. The
 	// launch tap survives in the native cache, so `(intake)`'s layout discards it
@@ -61,7 +65,10 @@ export default function ProtectedLayout() {
 				/>
 				<Stack screenOptions={SCREEN_OPTIONS}>
 					<Stack.Screen name="index" />
-					<Stack.Screen name="(tabs)" options={NO_GESTURE} />
+					<Stack.Screen
+						name="(tabs)"
+						options={shell === "v2" ? V2_TABS_OPTIONS : NO_GESTURE}
+					/>
 					{/* Each feature's own entries, from its `screens.ts`, for this shell. */}
 					{rootScreensFor(shell).map((screen) => (
 						<Stack.Screen
@@ -71,6 +78,10 @@ export default function ProtectedLayout() {
 						/>
 					))}
 				</Stack>
+				{/* This shell's overlays and listeners, from features/navigation/hosts.ts. */}
+				{hostsFor(shell).map(({ name, Host }) => (
+					<Host key={name} />
+				))}
 			</StreamChatProvider>
 		</StreamOverlayProvider>
 	);

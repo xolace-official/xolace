@@ -10,6 +10,7 @@ import { AppState, Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { FullRippleLoader } from "@/components/shared/loader/ripple/full-ripple-loader";
 import { MonthlyEventSheet } from "@/features/awareness-events/components/monthly-event-sheet";
 import { useAwarenessEvent } from "@/features/awareness-events/hooks/use-awareness-event";
 import { echoOf } from "@/features/intake/v2/heard";
@@ -104,7 +105,17 @@ function NotificationBanner({
 
 /** The landing route: Reflect in the old shell; the v2 shell lands on Today, the first tab. */
 export default function ProtectedIndex() {
-	return currentShell() === "v2" ? <ReturnTo href="/today" /> : <ReflectHome />;
+	return currentShell() === "v2" ? <ToToday /> : <ReflectHome />;
+}
+
+/** The launch loader stays up while the tabs mount, so launch never shows an empty frame. */
+function ToToday() {
+	return (
+		<>
+			<FullRippleLoader />
+			<ReturnTo href="/today" />
+		</>
+	);
 }
 
 function ReflectHome() {

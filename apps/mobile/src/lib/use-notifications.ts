@@ -131,10 +131,13 @@ export function useNotifications() {
 							.notificationId as Id<"notification_log">,
 					});
 				}
-				if (plan.navigation?.action === "navigate") {
-					router.navigate(plan.navigation.href);
-				} else if (plan.navigation) {
-					router.push(plan.navigation.href);
+				const navigation = plan.navigation;
+				if (navigation?.action === "navigate") {
+					router.navigate(navigation.href);
+				} else if (navigation?.action === "dismissTo") {
+					router.dismissTo(navigation.href);
+				} else if (navigation) {
+					router.push(navigation.href);
 				}
 			}
 		);
