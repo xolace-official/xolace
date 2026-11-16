@@ -27,6 +27,10 @@ export const listItemValidator = v.object({
  * state (#410), and their read mark. `finished` and `position` are optional
  * only so the validator reads as additive; `cardSignals` always sets
  * `finished`, and `position` whenever the reader has one.
+ *
+ * Read them together: `position` is the last place written, so a finished
+ * entry can still carry one (even 1), and it can be 0. Check `finished` first;
+ * only an unfinished entry with `position > 0` is partway.
  */
 export const cardItemValidator = v.object({
 	...listItemValidator.fields,

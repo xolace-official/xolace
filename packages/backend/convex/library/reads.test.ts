@@ -4,7 +4,7 @@
  * (`finished`, `position`) every entry card now carries.
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { api } from "../_generated/api";
+import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import {
 	asNewUser,
@@ -245,6 +245,11 @@ describe("library.reads.listSaved", () => {
 			paginationOpts: { cursor: null, numItems: 0 },
 		});
 		expect(one.page).toHaveLength(1);
+
+		const nan = await user.t.query(api.library.reads.listSaved, {
+			paginationOpts: { cursor: null, numItems: Number.NaN },
+		});
+		expect(nan.page).toHaveLength(100);
 	});
 });
 
@@ -305,5 +310,39 @@ describe("the read mark on entry cards", () => {
 			position: 0.4,
 			saved: true,
 		});
+	});
+});
+
+describe("migrations:backfillLibrarySavedAt", () => {
+	it("dates saved rows that have no savedAt from their creation, and nothing else", async () => {
+		const user = await asNewUser();
+		const ids = await seedEntries(user, ["undated", "dated", "unsaved"]);
+		// lastReadAt and viewedAt are later than creation; the backfill ignores them.
+		const undated = await insertRead(user, ids.undated, {
+			lastReadAt: Date.now() + 1000,
+			saved: true,
+			viewedAt: Date.now() + 500,
+		});
+		const dated = await insertRead(user, ids.dated, {
+			saved: true,
+			savedAt: 7,
+		});
+		const unsaved = await insertRead(user, ids.unsaved, {});
+
+		await user.root.mutation(internal.migrations.backfillLibrarySavedAt, {
+			batchSize: 100,
+			cursor: null,
+			dryRun: false,
+			oneBatchOnly: true,
+		});
+
+		const rows = await user.root.run(async (ctx) => ({
+			dated: await ctx.db.get("library_reads", dated),
+			undated: await ctx.db.get("library_reads", undated),
+			unsaved: await ctx.db.get("library_reads", unsaved),
+		}));
+		expect(rows.undated?.savedAt).toBe(rows.undated?._creationTime);
+		expect(rows.dated?.savedAt).toBe(7);
+		expect(rows.unsaved?.savedAt).toBeUndefined();
 	});
 });

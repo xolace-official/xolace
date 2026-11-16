@@ -158,10 +158,11 @@ export const listSaved = query({
 	args: { paginationOpts: paginationOptsValidator },
 	handler: async (ctx, args) => {
 		const { profile } = await requireAuth(ctx);
-		const numItems = Math.max(
-			1,
-			Math.min(Math.floor(args.paginationOpts.numItems), SAVED_PAGE_MAX)
-		);
+		// v.number() lets NaN and ±Infinity through, and paginate throws on them.
+		const asked = args.paginationOpts.numItems;
+		const numItems = Number.isFinite(asked)
+			? Math.max(1, Math.min(Math.floor(asked), SAVED_PAGE_MAX))
+			: SAVED_PAGE_MAX;
 		const result = await ctx.db
 			.query("library_reads")
 			.withIndex("by_emotionalProfileId_and_saved_and_savedAt", (q) =>

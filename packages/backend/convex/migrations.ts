@@ -195,13 +195,14 @@ export const backfillTrackSearchText = migrations.define({
 
 // Lantern's Saved list: dates rows saved before `savedAt` existed, so they
 // sort among the rest instead of after them. Nothing recorded the save itself;
-// the reader's last read, first open or the row's creation is the closest
-// stand-in. Writes only saved rows still missing it — safe to re-run.
+// the row's creation is the earliest it can have happened, and exact for a
+// save made from a card. (A later read would push an old save to the top.)
+// Writes only saved rows still missing it — safe to re-run.
 //   bunx convex run migrations:run '{"fn": "migrations:backfillLibrarySavedAt"}'
 export const backfillLibrarySavedAt = migrations.define({
 	migrateOne: async (_ctx, doc) => {
 		if (doc.saved && doc.savedAt === undefined) {
-			return { savedAt: doc.lastReadAt ?? doc.viewedAt ?? doc._creationTime };
+			return { savedAt: doc._creationTime };
 		}
 	},
 	table: "library_reads",
