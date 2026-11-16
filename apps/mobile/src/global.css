@@ -242,6 +242,17 @@
 	/* What dims a talk under its leave card, in either theme. */
 	--color-talk-scrim: rgba(0, 0, 0, 0.42);
 
+	/* Vent is a printed object: production's own dark room, the same in every
+     * theme, with its cream, ash, ember and amber. Fixed on purpose; see the
+     * fixed-palette convention in apps/mobile/AGENTS.md. The values Skia and
+     * colour interpolation need as numbers live in
+     * src/features/vent/vent-palette.ts. */
+	--color-vent-page: #0a0a0d;
+	--color-vent-cream: #f5f0e8;
+	--color-vent-ash: #9399a8;
+	--color-vent-ember: #c4883f;
+	--color-vent-amber: #e8a84c;
+
 	/* The poster's voice is fixed too: the `--font-<role>` variables follow
      * the theme's font pair, and a printed object does not change typeface
      * with the chrome behind it. The redesign's poster uses `font-poster*`

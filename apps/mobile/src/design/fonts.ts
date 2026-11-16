@@ -1,6 +1,6 @@
 import { isLoaded, loadAsync, useFonts } from "expo-font";
 import { useEffect, useState } from "react";
-import { type ThemeName, Uniwind, useCSSVariable } from "uniwind";
+import { type ThemeName, Uniwind, useCSSVariable, useUniwind } from "uniwind";
 import {
 	DEFAULT_FONT_PAIR,
 	FIXED_FACES,
@@ -123,6 +123,12 @@ export function useFixedFaces(...faces: FixedFace[]): boolean {
 		sourcesFor(faces.map((face) => FIXED_FACES[face]))
 	);
 	return loaded || error != null;
+}
+
+/** The active theme's font pair, for text drawn outside AppText (Skia). */
+export function useFontPair(): FontPairId {
+	const { theme } = useUniwind();
+	return variantFonts(theme);
 }
 
 /** Loads every pair, for screens that preview themes (the Appearance carousel). True once they are in. */

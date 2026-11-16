@@ -67,6 +67,17 @@ export const FONT_PAIRS: Record<FontPairId, Record<FontRole, string>> = {
 
 export const FONT_PAIR_IDS = Object.keys(FONT_PAIRS) as FontPairId[];
 
+/**
+ * Each pair's body family name, as written inside the font files. Skia text (Vent's burning
+ * words) asks the system font manager for a family and weight, and finds the faces expo-font
+ * registered by it (`src/design/skia-face.ts`).
+ */
+export const BODY_FAMILY: Record<FontPairId, string> = {
+	clear: "DM Sans",
+	playful: "Nunito",
+	warm: "Figtree",
+};
+
 /** Default's pair, and the one night mode uses: always loaded at launch. */
 export const DEFAULT_FONT_PAIR: FontPairId = "warm";
 
