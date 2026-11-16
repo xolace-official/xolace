@@ -277,6 +277,7 @@ import type * as preferences from "../preferences.js";
 import type * as premium from "../premium.js";
 import type * as presence from "../presence.js";
 import type * as privacy_retention from "../privacy/retention.js";
+import type * as privacy_retentionCutoff from "../privacy/retentionCutoff.js";
 import type * as productFeedback from "../productFeedback.js";
 import type * as productFeedbackFlags from "../productFeedbackFlags.js";
 import type * as profile from "../profile.js";
@@ -600,6 +601,7 @@ declare const fullApi: ApiFromModules<{
   premium: typeof premium;
   presence: typeof presence;
   "privacy/retention": typeof privacy_retention;
+  "privacy/retentionCutoff": typeof privacy_retentionCutoff;
   productFeedback: typeof productFeedback;
   productFeedbackFlags: typeof productFeedbackFlags;
   profile: typeof profile;
