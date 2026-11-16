@@ -36,8 +36,8 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   the `ThemeName` union and `toggleTheme`.
 - **Platform code:** `.ios.tsx` / `.android.tsx` / `.web.tsx`; Uniwind `ios:`/`android:`.
 - **UI kit:** HeroUI Native first; bottom sheets via `@gorhom/bottom-sheet`.
-- **State:** Zustand (persisted slices only for theme/toggles); `useState` for trivial
-  local UI only. Backend logic in `services/`, never in components.
+- **State:** see "Feature shape". Backend calls live in the feature's `use-*.ts` data
+  hook, never in components.
 - **Convex reads with user-driven args** (paging, filters, tabs): `useStableQuery` /
   `useStablePaginatedQuery`, so the UI doesn't blank while new args load.
 - **Reanimated:** `.get()` / `.set()` on shared values, never `.value`.
@@ -55,6 +55,52 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
 - **Variants:** `APP_VARIANT` (development/preview/production) picks the bundle id
   (`com.xolaceincorg.xolace.dev` / `.preview` / base). Plain `ios`/`android` builds the
   production id; use the variant scripts.
+
+## Feature shape
+
+Every feature folder created from now on (the redesign's v2 folders and any new
+feature) has this shape, and so does every old one a sweep reworks. The closest
+example today is `src/features/reach-me-on/`'s model, data hooks and tests; its
+`components/` folder is the legacy layout.
+
+```
+src/features/<feature>/
+  copy.ts                  every user-facing string, as one object
+  <feature>-model.ts       pure: data in, what to show out. No React, no Convex
+  <feature>-model.test.ts
+  use-<feature>.ts         the data hook: the one file that calls Convex, PostHog, the toast
+  <feature>-screen.tsx     composes the parts and reads the hook (~100 lines)
+  screens.ts               its entries in the (protected) stack
+  <area>/                  parts, named for the screen area they draw (hero/, link-steps/)
+  dev/                     fixtures and dev states
+  AGENTS.md                only for rules the code can't show
+```
+
+- **Data hook.** Returns `{ state, actions }`; errors, retries, analytics and toasts
+  live there, so parts only draw. A big feature has one per screen. Its second
+  adapter is the fixtures in `dev/`, which feed tests and dev states.
+- **Model.** Whatever turns data into what to show is a pure function in the model,
+  tested with vitest: the fastest feedback in the app.
+- **State.** Server truth: Convex, through the data hook. Device-only for one feature:
+  that feature, via `src/lib/storage/unified-storage.ts`. App-wide (theme, account
+  flags): `src/store`. One screen's UI: `useState`, or the feature's provider when
+  parts share it.
+- **Folders by area.** Sub-folders name a part of the screen; a part and its hook sit
+  together. A big feature splits by screen (`letters/{write,read,shelf}/`), with the
+  pieces they share at its root.
+- **Names.** The root glossary's words in file, function and type names. A v2 folder
+  takes the final name where it's free (`today`, `you`, `letters`) and `<name>-v2`
+  where an old folder holds it, renamed once the old one is deleted.
+- **Composition.** Features meet in routes, not screens: a v2 feature imports only
+  itself, lower layers (`src/lib`, `src/components/shared`, kits in
+  `src/components/<kit>`) and `SHARED_FEATURES` (`purchases`). A piece two features
+  need moves down a layer.
+- **Root screens.** A feature's stack entries and options go in its `screens.ts`;
+  `src/features/navigation/root-screens.ts` spreads them.
+- **Enforced** by `src/features/import-cycles.test.ts` for every folder not on
+  `LEGACY_FEATURES` in `feature-shape.ts` (today's folders; the list only shrinks);
+  `bun run check:changed` warns on `.tsx` over 200 lines. Porting a prototype screen:
+  the `port-screen` skill.
 
 ## Release
 

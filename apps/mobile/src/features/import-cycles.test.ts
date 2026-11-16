@@ -1,177 +1,31 @@
 /** Feature layering guard (migration plan Phase 5): no feature cycles, `purchases` imports no
- * feature, no runtime file cycles. */
-import path from "node:path";
-import ts from "typescript";
+ * feature, no runtime file cycles; and the feature-shape rules for v2 folders
+ * (`feature-shape.ts`). Each failure lists the imports to move. */
 import { describe, expect, it } from "vitest";
+import {
+	backendCallsOutsideDataHooks,
+	crossFeatureImportsFromV2,
+	devImportsFromOutside,
+	staleListings,
+	v2ImportsOfOldFolders,
+} from "@/features/feature-shape";
+import {
+	buildGraph,
+	featureOf,
+	findCycles,
+	type ImportGraph,
+	relative,
+} from "@/features/import-graph";
 
-const APP_ROOT = path.resolve(import.meta.dirname, "../..");
-const SRC = path.join(APP_ROOT, "src");
-// Metro's lookup order per platform: `foo.ios.tsx`, then `foo.native.tsx`, then
-// `foo.tsx`. An import is an edge to whatever each platform would load.
-const PLATFORM_SUFFIXES = [
-	[".ios", ".native", ""],
-	[".android", ".native", ""],
-	[".web", ""],
-];
 const ENTITLEMENTS_FEATURE = "purchases";
-
-type Edge = { to: string; typeOnly: boolean };
-
-function readConfig(): ts.ParsedCommandLine {
-	const config = ts.getParsedCommandLineOfConfigFile(
-		path.join(APP_ROOT, "tsconfig.json"),
-		{},
-		{ ...ts.sys, onUnRecoverableConfigFileDiagnostic: () => undefined }
-	);
-	if (!config) {
-		throw new Error("Could not read apps/mobile/tsconfig.json");
-	}
-	return config;
-}
-
-function isTypeOnlyImport(node: ts.ImportDeclaration): boolean {
-	const clause = node.importClause;
-	if (!clause) {
-		return false;
-	}
-	if (clause.isTypeOnly) {
-		return true;
-	}
-	const named = clause.namedBindings;
-	return (
-		!clause.name &&
-		named !== undefined &&
-		ts.isNamedImports(named) &&
-		named.elements.length > 0 &&
-		named.elements.every((e) => e.isTypeOnly)
-	);
-}
-
-function buildGraph(): Map<string, Edge[]> {
-	const config = readConfig();
-	const host = ts.createCompilerHost(config.options);
-	// Resolving per platform also catches an import backed only by
-	// `foo.ios.tsx` + `foo.android.tsx`, which plain resolution drops.
-	const platformOptions = PLATFORM_SUFFIXES.map((moduleSuffixes) => ({
-		...config.options,
-		moduleSuffixes,
-	}));
-	const files = config.fileNames.filter(
-		(f) =>
-			f.startsWith(`${SRC}/`) &&
-			!f.endsWith(".d.ts") &&
-			!/\.(test|spec)\.tsx?$/.test(f)
-	);
-	const graph = new Map<string, Edge[]>();
-	for (const file of files) {
-		const source = ts.createSourceFile(
-			file,
-			ts.sys.readFile(file) ?? "",
-			ts.ScriptTarget.Latest
-		);
-		const edges: Edge[] = [];
-		const add = (specifier: string, typeOnly: boolean) => {
-			const targets = new Set<string>();
-			for (const options of platformOptions) {
-				const resolved = ts.resolveModuleName(
-					specifier,
-					file,
-					options,
-					host
-				).resolvedModule;
-				if (resolved && !resolved.isExternalLibraryImport) {
-					targets.add(resolved.resolvedFileName);
-				}
-			}
-			for (const to of targets) {
-				edges.push({ to, typeOnly });
-			}
-		};
-		const visit = (node: ts.Node) => {
-			if (
-				ts.isImportDeclaration(node) &&
-				ts.isStringLiteral(node.moduleSpecifier)
-			) {
-				add(node.moduleSpecifier.text, isTypeOnlyImport(node));
-			} else if (
-				ts.isExportDeclaration(node) &&
-				node.moduleSpecifier &&
-				ts.isStringLiteral(node.moduleSpecifier)
-			) {
-				add(node.moduleSpecifier.text, node.isTypeOnly);
-			} else if (
-				ts.isCallExpression(node) &&
-				node.arguments.length === 1 &&
-				ts.isStringLiteral(node.arguments[0]) &&
-				(node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-					(ts.isIdentifier(node.expression) &&
-						node.expression.text === "require"))
-			) {
-				add(node.arguments[0].text, false);
-			}
-			ts.forEachChild(node, visit);
-		};
-		visit(source);
-		graph.set(file, edges);
-	}
-	return graph;
-}
-
-/** Strongly connected components with more than one node (Tarjan). */
-function findCycles(nodes: string[], next: (n: string) => string[]) {
-	let counter = 0;
-	const index = new Map<string, number>();
-	const low = new Map<string, number>();
-	const stack: string[] = [];
-	const onStack = new Set<string>();
-	const cycles: string[][] = [];
-	const connect = (v: string) => {
-		index.set(v, counter);
-		low.set(v, counter);
-		counter++;
-		stack.push(v);
-		onStack.add(v);
-		for (const w of next(v)) {
-			if (!index.has(w)) {
-				connect(w);
-				low.set(v, Math.min(low.get(v) ?? 0, low.get(w) ?? 0));
-			} else if (onStack.has(w)) {
-				low.set(v, Math.min(low.get(v) ?? 0, index.get(w) ?? 0));
-			}
-		}
-		if (low.get(v) === index.get(v)) {
-			const component: string[] = [];
-			let w: string | undefined;
-			do {
-				w = stack.pop();
-				if (w !== undefined) {
-					onStack.delete(w);
-					component.push(w);
-				}
-			} while (w !== undefined && w !== v);
-			if (component.length > 1) {
-				cycles.push(component.sort());
-			}
-		}
-	};
-	for (const n of nodes) {
-		if (!index.has(n)) {
-			connect(n);
-		}
-	}
-	return cycles;
-}
-
-const relative = (file: string) => path.relative(SRC, file);
-const featureOf = (file: string) =>
-	relative(file).match(/^features\/([^/]+)\//)?.[1];
+const graph = buildGraph();
 
 /** `a -> b` feature pairs, each with the file imports that create it. */
-function featureEdges(graph: Map<string, Edge[]>): Map<string, string[]> {
+function featureEdges(importGraph: ImportGraph): Map<string, string[]> {
 	const pairs = new Map<string, string[]>();
-	for (const [file, edges] of graph) {
+	for (const [file, imports] of importGraph) {
 		const from = featureOf(file);
-		for (const { to } of edges) {
+		for (const to of imports.flatMap((i) => i.targets)) {
 			const target = featureOf(to);
 			if (!(from && target) || from === target) {
 				continue;
@@ -187,7 +41,6 @@ function featureEdges(graph: Map<string, Edge[]>): Map<string, string[]> {
 }
 
 describe("import graph", () => {
-	const graph = buildGraph();
 	const pairs = featureEdges(graph);
 	const features = [
 		...new Set([...graph.keys()].map(featureOf).filter((f) => f !== undefined)),
@@ -199,6 +52,8 @@ describe("import graph", () => {
 		expect(graph.size).toBeGreaterThan(0);
 		expect(features).toContain(ENTITLEMENTS_FEATURE);
 		expect(pairs.size).toBeGreaterThan(0);
+		const packages = [...graph.values()].flat().map((i) => i.specifier);
+		expect(packages).toContain("convex/react");
 	});
 
 	it("has no cycles between feature folders", () => {
@@ -226,11 +81,54 @@ describe("import graph", () => {
 	it("has no runtime import cycles between files", () => {
 		const next = (file: string) =>
 			(graph.get(file) ?? [])
-				.filter((e) => !e.typeOnly && graph.has(e.to))
-				.map((e) => e.to);
+				.filter((i) => !i.typeOnly)
+				.flatMap((i) => i.targets)
+				.filter((to) => graph.has(to));
 		const cycles = findCycles([...graph.keys()], next).map((c) =>
 			c.map(relative)
 		);
 		expect(cycles).toEqual([]);
+	});
+});
+
+describe("feature shape (apps/mobile/AGENTS.md)", () => {
+	it("lists only legacy folders and hubs that still exist", () => {
+		const features = [
+			...new Set(
+				[...graph.keys()].map(featureOf).filter((f) => f !== undefined)
+			),
+		];
+		expect(
+			staleListings(features),
+			"Remove deleted folders from LEGACY_FEATURES / HUBS in feature-shape.ts"
+		).toEqual([]);
+	});
+
+	it("keeps each <name>-v2 folder off its old folder, which C3 deletes", () => {
+		expect(
+			v2ImportsOfOldFolders(graph),
+			"Copy what the v2 folder needs into it, or move it down to src/lib or src/components"
+		).toEqual([]);
+	});
+
+	it("imports a feature's dev/ only from that dev/ or src/dev/", () => {
+		expect(
+			devImportsFromOutside(graph),
+			"Fixtures and dev states never ship: the dev state renders the screen, not the reverse"
+		).toEqual([]);
+	});
+
+	it("calls Convex, PostHog and the toast only from use-*.ts in v2 folders", () => {
+		expect(
+			backendCallsOutsideDataHooks(graph),
+			"Move the call into the feature's data hook (use-<feature>.ts) and pass the result down"
+		).toEqual([]);
+	});
+
+	it("keeps v2 folders off other features; shared pieces move down a layer", () => {
+		expect(
+			crossFeatureImportsFromV2(graph),
+			"Move the shared piece to src/lib, src/components/shared or a kit in src/components/<kit>; compose features in the route, not the screen"
+		).toEqual([]);
 	});
 });

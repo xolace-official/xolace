@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+	findLongFiles,
 	findOwningPackage,
 	isBiomeSupported,
 	isInertPath,
@@ -204,5 +205,23 @@ describe("plumbing helpers", () => {
 			listOnly: true,
 		});
 		expect(() => parseArgs(["--base"])).toThrow();
+	});
+});
+
+describe("findLongFiles", () => {
+	test("lists changed .tsx files over 200 lines, longest first", () => {
+		const lines: Record<string, number> = {
+			"apps/mobile/src/a.tsx": 201,
+			"apps/mobile/src/b.tsx": 200,
+			"apps/mobile/src/c.test.tsx": 900,
+			"apps/mobile/src/c.tsx": 640,
+			"apps/mobile/src/d.ts": 900,
+		};
+		expect(
+			findLongFiles(Object.keys(lines), (file) => lines[file] ?? 0)
+		).toEqual([
+			{ file: "apps/mobile/src/c.tsx", lines: 640 },
+			{ file: "apps/mobile/src/a.tsx", lines: 201 },
+		]);
 	});
 });

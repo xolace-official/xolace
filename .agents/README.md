@@ -21,9 +21,15 @@ Per-package rules live in each package's `AGENTS.md`.
 
 Third-party skills are kept to a minimum (decision D9). Add one only when a task needs
 it, record it in the root `skills-lock.json`, and prefer small repo-specific skills under
-`.agents/skills/` (e.g. `test-mobile`, `pr-watch`). Checked in today:
-`vercel-react-best-practices` (`.claude/skills/`; see `rules/code-style.md` for the
-rules it must not override).
+`.agents/skills/` (e.g. `test-mobile`, `pr-watch`). A repo-owned skill has no lock entry
+(the lock pins upstream sources); Claude Code finds it through a symlink in
+`.claude/skills/`.
+
+| Skill | Owner | Use when |
+|---|---|---|
+| `port-screen` | repo | porting a redesign screen (S1–S22) into `apps/mobile` |
+| `animate-expo`, `react-native-best-practices` | third-party (`skills-lock.json`) | mobile motion and performance |
+| `vercel-react-best-practices` | third-party, in `.claude/skills/` | React advice; `rules/code-style.md` says which rules it must not override |
 
 ## Keeping this lean
 
