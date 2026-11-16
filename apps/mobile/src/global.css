@@ -70,6 +70,11 @@
 	--color-browse-music-foreground: var(--browse-music-foreground);
 	--color-browse-topics: var(--browse-topics);
 	--color-browse-topics-foreground: var(--browse-topics-foreground);
+	/* Playful's lips (bg-accent-lip, border-b-default-lip …); transparent in every other theme. */
+	--color-accent-lip: var(--accent-lip);
+	--color-default-lip: var(--default-lip);
+	--color-danger-lip: var(--danger-lip);
+	--color-warning-lip: var(--warning-lip);
 }
 
 /*
