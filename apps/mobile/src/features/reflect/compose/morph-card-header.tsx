@@ -3,11 +3,11 @@ import { Pressable, View } from "react-native";
 import Animated, { type AnimatedStyle } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { Tour } from "@/components/ui/tour";
+import type { FaceHandle } from "@/components/xolace-face/use-face";
+import { XolaceFace } from "@/components/xolace-face/xolace-face";
 import { MicButton } from "@/features/reflect/components/mic-button";
 import type { CardContent } from "@/features/reflect/compose/resolve-card-content";
 import { TOUR_STEPS } from "@/features/reflect-tour/tour-copy";
-import type { FaceHandle } from "@/features/xolace-face/use-face";
-import { XolaceFace } from "@/features/xolace-face/xolace-face";
 import { playSoftPress } from "@/lib/haptics";
 import { a11yHidden } from "@/lib/utils";
 

@@ -42,7 +42,6 @@ const REPLACED_FEATURES = [
 	"timeline",
 	"trusted-bridge",
 	"vent",
-	"xolace-face",
 	"xolacer-chat",
 ];
 
@@ -96,6 +95,7 @@ const NEW_LAYERS = [
 	"design/",
 	"components/shared/",
 	"components/settings-kit/",
+	"components/xolace-face/",
 	"lib/keyboard/",
 ];
 

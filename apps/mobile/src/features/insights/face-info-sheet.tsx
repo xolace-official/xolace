@@ -10,9 +10,9 @@ import {
 	type Pose,
 	PRESETS,
 	poseForSteadiness,
-} from "@/features/xolace-face/pose";
-import { useFace } from "@/features/xolace-face/use-face";
-import { XolaceFace } from "@/features/xolace-face/xolace-face";
+} from "@/components/xolace-face/pose";
+import { useFace } from "@/components/xolace-face/use-face";
+import { XolaceFace } from "@/components/xolace-face/xolace-face";
 
 const ROW_FACE = 64;
 const RESTLESS_EXAMPLE = 15;

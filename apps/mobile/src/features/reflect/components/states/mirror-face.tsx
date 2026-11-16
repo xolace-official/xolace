@@ -1,8 +1,8 @@
 import { useIsFocused } from "expo-router/react-navigation";
 import { useEffect } from "react";
-import { PRESETS } from "@/features/xolace-face/pose";
-import { useFace } from "@/features/xolace-face/use-face";
-import { XolaceFace } from "@/features/xolace-face/xolace-face";
+import { PRESETS } from "@/components/xolace-face/pose";
+import { useFace } from "@/components/xolace-face/use-face";
+import { XolaceFace } from "@/components/xolace-face/xolace-face";
 
 /** After the processing → mirror swap has settled, so the nod is seen. */
 const NOD_DELAY_MS = 450;

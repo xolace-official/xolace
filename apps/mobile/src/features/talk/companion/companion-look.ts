@@ -2,9 +2,9 @@
 // the drawing behind it stays ours to change.
 
 import type { TalkLook } from "@xolace/backend/convex/lib/voices";
-import type { BodyName } from "@/features/xolace-face/bodies";
-import type { EyeStyle } from "@/features/xolace-face/face-geo";
-import type { PaletteName } from "@/features/xolace-face/face-palette";
+import type { BodyName } from "@/components/xolace-face/bodies";
+import type { EyeStyle } from "@/components/xolace-face/face-geo";
+import type { PaletteName } from "@/components/xolace-face/face-palette";
 
 type Look = { body: BodyName; eyes: EyeStyle; palette: PaletteName };
 

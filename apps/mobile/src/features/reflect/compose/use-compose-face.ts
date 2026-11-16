@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { NEUTRAL } from "@/components/xolace-face/pose";
+import { useFace } from "@/components/xolace-face/use-face";
 import {
 	GAZE_AHEAD,
 	GAZE_AT_YOU,
@@ -7,8 +9,6 @@ import {
 	leanSteps,
 	type Writing,
 } from "@/features/reflect/compose/compose-face-gaze";
-import { NEUTRAL } from "@/features/xolace-face/pose";
-import { useFace } from "@/features/xolace-face/use-face";
 
 /** How long a pause in the writing before it looks up at you. */
 const PAUSE_MS = 1400;

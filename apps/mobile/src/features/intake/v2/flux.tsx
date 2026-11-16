@@ -14,10 +14,10 @@ import Animated, {
 	withSequence,
 	withTiming,
 } from "react-native-reanimated";
-import type { PaletteName } from "@/features/xolace-face/face-palette";
-import { MOOD_POSES, type Mood } from "@/features/xolace-face/pose";
-import { useFace } from "@/features/xolace-face/use-face";
-import { XolaceFace } from "@/features/xolace-face/xolace-face";
+import type { PaletteName } from "@/components/xolace-face/face-palette";
+import { MOOD_POSES, type Mood } from "@/components/xolace-face/pose";
+import { useFace } from "@/components/xolace-face/use-face";
+import { XolaceFace } from "@/components/xolace-face/xolace-face";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const RING_MS = 1800;
