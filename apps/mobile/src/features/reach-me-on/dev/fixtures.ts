@@ -23,3 +23,30 @@ export const telegram = (
 	status: "not_linked",
 	...partial,
 });
+
+/** Nothing linked: push carries the check-ins. */
+export const NOT_LINKED = [push({ isFirst: true }), telegram()];
+
+/** Telegram linked, open, and tried first. */
+export const LINKED = [
+	telegram({
+		displayHandle: "river_stone",
+		everLinked: true,
+		isFirst: true,
+		linked: true,
+		status: "linked",
+	}),
+	push(),
+];
+
+/** A kept link after Telegram became Xolace+-only. */
+export const NEEDS_PLUS = [
+	push({ isFirst: true }),
+	telegram({
+		available: false,
+		everLinked: true,
+		linked: true,
+		requiresPlus: true,
+		status: "needs_plus",
+	}),
+];

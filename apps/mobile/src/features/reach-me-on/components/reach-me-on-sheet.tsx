@@ -2,7 +2,7 @@ import { ActivityIndicator, ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { ChannelCard } from "@/features/reach-me-on/components/channel-card";
 import { TelegramCard } from "@/features/reach-me-on/components/telegram-card";
-import { useReachSheet } from "@/features/reach-me-on/reach-sheet";
+import { useReachSheet } from "@/features/reach-me-on/reach-sheet-data";
 import { orderMark } from "@/features/reach-me-on/reach-view";
 
 /** "Reach me on…": one card per channel, the First one tried first (#733, #776).
@@ -10,7 +10,7 @@ import { orderMark } from "@/features/reach-me-on/reach-view";
 export const ReachMeOnSheet = () => {
 	const {
 		state: { channels, offline },
-		actions: { setPaused, tryFirst, unlink },
+		actions: { tryFirst },
 	} = useReachSheet();
 
 	return (
@@ -35,14 +35,7 @@ export const ReachMeOnSheet = () => {
 			) : (
 				channels.map((entry) =>
 					entry.channel === "telegram" ? (
-						<TelegramCard
-							entry={entry}
-							key={entry.channel}
-							offline={offline}
-							onSetPaused={(paused) => setPaused("telegram", paused)}
-							onTryFirst={() => tryFirst("telegram")}
-							onUnlink={() => unlink("telegram")}
-						/>
+						<TelegramCard entry={entry} key={entry.channel} />
 					) : (
 						<ChannelCard
 							channel={entry.channel}
