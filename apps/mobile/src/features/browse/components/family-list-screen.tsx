@@ -63,7 +63,7 @@ export function FamilyListScreen() {
 	}, [family, musicIntroSeen, supportAudioIntroSeen]);
 
 	const { results, status, isLoading, loadMore } = useStablePaginatedQuery(
-		api.browse.listByFamily,
+		api.browse.family.listByFamily,
 		{ family },
 		{ initialNumItems: PAGE_SIZE }
 	);

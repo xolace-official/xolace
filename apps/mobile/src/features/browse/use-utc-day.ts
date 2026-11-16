@@ -7,7 +7,7 @@ const utcClock = () => {
 	return { day: Math.floor(hour / 24), hour };
 };
 
-/** UTC days and hours since epoch for `api.browse.getNewShelf`. Re-read on every return to the
+/** UTC days and hours since epoch for `api.browse.hub.getNewShelf`. Re-read on every return to the
  * foreground: a backgrounded app can live for days. */
 export function useUtcDay() {
 	const [clock, setClock] = useState(utcClock);

@@ -7,8 +7,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
-import { asNewUser, type SeededUser } from "./harness.helpers";
-import { aggregatesMock } from "./mocks.helpers";
+import { asNewUser, type SeededUser } from "../test/harness.helpers";
+import { aggregatesMock } from "../test/mocks.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../ai/paths/audioTracks", () => ({
@@ -61,7 +61,7 @@ async function seed(user: SeededUser, tracks: Track[]) {
 	});
 }
 
-describe("browse.listByFamily", () => {
+describe("browse.family.listByFamily", () => {
 	it("pages one family's active tracks and skips retired rows", async () => {
 		const user = await asNewUser();
 		await seed(user, [
@@ -71,7 +71,7 @@ describe("browse.listByFamily", () => {
 			base("m1", "music", "music_topic_calm_peace"),
 		]);
 
-		const first = await user.t.query(api.browse.listByFamily, {
+		const first = await user.t.query(api.browse.family.listByFamily, {
 			family: "support",
 			paginationOpts: { cursor: null, numItems: 1 },
 		});
@@ -80,7 +80,7 @@ describe("browse.listByFamily", () => {
 		expect(first.page[0].attribution).toBe("Sage");
 		expect(first.isDone).toBe(false);
 
-		const second = await user.t.query(api.browse.listByFamily, {
+		const second = await user.t.query(api.browse.family.listByFamily, {
 			family: "support",
 			paginationOpts: { cursor: first.continueCursor, numItems: 5 },
 		});
@@ -89,7 +89,7 @@ describe("browse.listByFamily", () => {
 	});
 });
 
-describe("browse.getTopics", () => {
+describe("browse.topics.getTopics", () => {
 	it("lists one tile per shared topic with ≥ 1 active track in either family", async () => {
 		const user = await asNewUser();
 		await seed(user, [
@@ -100,7 +100,7 @@ describe("browse.getTopics", () => {
 			base("s2", "support", "audio_topic_grief", { active: false }),
 		]);
 
-		const topics = await user.t.query(api.browse.getTopics, {});
+		const topics = await user.t.query(api.browse.topics.getTopics, {});
 		expect(topics.map((t) => [t.slug, t.supportCount, t.musicCount])).toEqual([
 			["calm_peace", 0, 1],
 			["sadness", 1, 2],
@@ -136,7 +136,7 @@ describe("browse.getTopics", () => {
 			});
 		});
 
-		const topics = await user.t.query(api.browse.getTopics, {});
+		const topics = await user.t.query(api.browse.topics.getTopics, {});
 		expect(topics.map((t) => [t.slug, t.title, t.thumbUrl])).toEqual([
 			["anxiety", "Anxiety", "https://r2.test/thumb/s5.webp"],
 			["calm_peace", "Calm peace", "https://r2.test/thumb/calm.webp"],
@@ -145,7 +145,7 @@ describe("browse.getTopics", () => {
 	});
 });
 
-describe("browse.getTopic", () => {
+describe("browse.topics.getTopic", () => {
 	it("returns both families' active tracks for one topic, episodes carrying series fields", async () => {
 		const user = await asNewUser();
 		await seed(user, [
@@ -164,7 +164,9 @@ describe("browse.getTopic", () => {
 			base("m3", "music", "music_topic_calm_peace"),
 		]);
 
-		const tracks = await user.t.query(api.browse.getTopic, { slug: "sadness" });
+		const tracks = await user.t.query(api.browse.topics.getTopic, {
+			slug: "sadness",
+		});
 		expect(
 			tracks.map((t) => [t.slug, t.family, t.series, t.episodeNumber])
 		).toEqual([
@@ -190,10 +192,12 @@ describe("secondary topics", () => {
 			}),
 		]);
 
-		const tracks = await user.t.query(api.browse.getTopic, { slug: "sadness" });
+		const tracks = await user.t.query(api.browse.topics.getTopic, {
+			slug: "sadness",
+		});
 		expect(tracks.map((t) => t.slug)).toEqual(["m1", "m2"]);
 
-		const topics = await user.t.query(api.browse.getTopics, {});
+		const topics = await user.t.query(api.browse.topics.getTopics, {});
 		expect(topics.map((t) => [t.slug, t.musicCount])).toEqual([
 			["calm_peace", 1],
 			["sadness", 2],
@@ -209,7 +213,7 @@ describe("secondary topics", () => {
 			}),
 		]);
 
-		const topics = await user.t.query(api.browse.getTopics, {});
+		const topics = await user.t.query(api.browse.topics.getTopics, {});
 		expect(topics.map((t) => [t.slug, t.musicCount])).toEqual([
 			["calm_peace", 1],
 			["sadness", 1],
@@ -217,7 +221,7 @@ describe("secondary topics", () => {
 	});
 });
 
-describe("browse.getTopicTitle", () => {
+describe("browse.topics.getTopicTitle", () => {
 	it("uses the curated title, else the one derived from the slug", async () => {
 		const user = await asNewUser();
 		await user.root.run(async (ctx) => {
@@ -229,10 +233,14 @@ describe("browse.getTopicTitle", () => {
 			});
 		});
 		expect(
-			await user.t.query(api.browse.getTopicTitle, { slug: "sleep_rest" })
+			await user.t.query(api.browse.topics.getTopicTitle, {
+				slug: "sleep_rest",
+			})
 		).toBe("Sleep & Rest");
 		expect(
-			await user.t.query(api.browse.getTopicTitle, { slug: "self_worth" })
+			await user.t.query(api.browse.topics.getTopicTitle, {
+				slug: "self_worth",
+			})
 		).toBe("Self worth");
 	});
 });
@@ -254,7 +262,7 @@ describe("topicTitle on track items (B5)", () => {
 			});
 		});
 
-		const { page } = await user.t.query(api.browse.listByFamily, {
+		const { page } = await user.t.query(api.browse.family.listByFamily, {
 			family: "support",
 			paginationOpts: { cursor: null, numItems: 10 },
 		});
@@ -274,7 +282,9 @@ describe("topicTitle on track items (B5)", () => {
 			}),
 		]);
 
-		const tracks = await user.t.query(api.browse.getTopic, { slug: "sadness" });
+		const tracks = await user.t.query(api.browse.topics.getTopic, {
+			slug: "sadness",
+		});
 		expect(tracks.map((t) => [t.slug, t.topicTitle])).toEqual([
 			["m1", "Sadness"],
 			["m2", "Calm peace"],
@@ -292,7 +302,9 @@ describe("topicTitle on track items (B5)", () => {
 			}),
 		]);
 
-		const [item] = await user.t.query(api.browse.getTopic, { slug: "sadness" });
+		const [item] = await user.t.query(api.browse.topics.getTopic, {
+			slug: "sadness",
+		});
 		const { _id, ...rest } = item;
 		expect(rest).toEqual({
 			attribution: "Sage",

@@ -996,7 +996,7 @@ describe("a browse play beside a bound twig (§9.6, #341)", () => {
 
 		// Everything "Browse more like this" and the strip can reach: the topic
 		// list, and the player's mint for a *different* track in that topic.
-		const topic = await user.t.query(api.browse.getTopic, {
+		const topic = await user.t.query(api.browse.topics.getTopic, {
 			slug: CATALOGUE_TOPIC.replace(/^(audio|music)_topic_/, ""),
 		});
 		const other =

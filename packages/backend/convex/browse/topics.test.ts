@@ -100,7 +100,9 @@ describe("browse.topics.getTopicHeader", () => {
 		});
 
 		// The counts are the topic screen's rows.
-		const rows = await user.t.query(api.browse.getTopic, { slug: "sleep" });
+		const rows = await user.t.query(api.browse.topics.getTopic, {
+			slug: "sleep",
+		});
 		expect(rows.filter((r) => r.family === "support")).toHaveLength(2);
 		expect(rows.filter((r) => r.family === "music")).toHaveLength(2);
 	});
@@ -123,7 +125,7 @@ describe("browse.topics.getTopicHeader", () => {
 			});
 		});
 
-		const tiles = await user.t.query(api.browse.getTopics, {});
+		const tiles = await user.t.query(api.browse.topics.getTopics, {});
 		for (const tile of tiles) {
 			expect(await header(user, tile.slug)).toEqual(tile);
 		}
@@ -192,10 +194,10 @@ describe("browse.topics.getTopicHeader", () => {
 
 		expect(await header(user, "grief")).toBeNull();
 		// The grid and the topic screen agree it isn't published.
-		expect(await user.t.query(api.browse.getTopics, {})).toEqual([]);
-		expect(await user.t.query(api.browse.getTopic, { slug: "grief" })).toEqual(
-			[]
-		);
+		expect(await user.t.query(api.browse.topics.getTopics, {})).toEqual([]);
+		expect(
+			await user.t.query(api.browse.topics.getTopic, { slug: "grief" })
+		).toEqual([]);
 	});
 
 	it("requires a signed-in user, like the other browse reads", async () => {
