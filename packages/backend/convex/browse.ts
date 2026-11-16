@@ -358,7 +358,12 @@ export const getTopics = query({
 	),
 });
 
-/** Topic screen header: the curated `topics` title (#353), else the slug-derived one the grid uses. */
+/**
+ * Topic screen header: the curated `topics` title (#353), else the slug-derived one the grid uses.
+ * Always returns a title, even for an unknown slug. New clients should call
+ * `browse/topics.getTopicHeader`, which also returns the cover and counts and is
+ * `null` for an unpublished topic. Kept for shipped builds, which still call it.
+ */
 export const getTopicTitle = query({
 	args: { slug: v.string() },
 	handler: async (ctx, args) => {
