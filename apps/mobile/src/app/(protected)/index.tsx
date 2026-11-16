@@ -25,6 +25,8 @@ import {
 	computeUserVariant,
 } from "@/helpers/utils/user-variant";
 import { useFullContext } from "@/lib/convex/use-full-context";
+import { currentShell } from "@/lib/redesign/shell";
+import { ReturnTo } from "@/lib/return-to";
 import { useAppStore } from "@/store/store";
 
 const BANNER_INITIAL = { opacity: 0 };
@@ -100,7 +102,12 @@ function NotificationBanner({
 	);
 }
 
+/** The landing route: Reflect in the old shell; the v2 shell lands on Today, the first tab. */
 export default function ProtectedIndex() {
+	return currentShell() === "v2" ? <ReturnTo href="/today" /> : <ReflectHome />;
+}
+
+function ReflectHome() {
 	const lastNotification = useAppStore((s) => s.lastNotification);
 	const clearLastNotification = useAppStore((s) => s.clearLastNotification);
 	const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);

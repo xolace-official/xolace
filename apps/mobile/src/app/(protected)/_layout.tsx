@@ -4,13 +4,14 @@ import { useThemeColor } from "heroui-native";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
 import { useBadgeUnlock } from "@/features/achievements/unlock/use-badge-unlock";
 import { NowPlayingHost } from "@/features/browse/now-playing/now-playing-host";
-import { ROOT_SCREENS } from "@/features/navigation/root-screens";
+import { rootScreensFor } from "@/features/navigation/root-screens";
 import { UnreadIconBadge } from "@/features/xolacer-chat/components/unread-icon-badge";
 import {
 	StreamChatProvider,
 	StreamOverlayProvider,
 } from "@/features/xolacer-chat/providers/stream-chat-provider";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { currentShell } from "@/lib/redesign/shell";
 import { NO_GESTURE, screenOptions } from "@/lib/root-screen";
 import { useNotifications } from "@/lib/use-notifications";
 import { AppPresence } from "@/providers/app-presence";
@@ -22,6 +23,9 @@ const SCREEN_OPTIONS = {
 };
 
 export default function ProtectedLayout() {
+	// The first read of the launch's shell (redesign-v2), fixed from here on. A
+	// host that lives in one shell only mounts below as `{shell === "v2" && <Host />}`.
+	const shell = currentShell();
 	// Here, not at the root: an unfinished user should not pay for push. The
 	// launch tap survives in the native cache, so `(intake)`'s layout discards it
 	// explicitly to keep "intake wins, a pending deep link is not preserved" (T3, #234).
@@ -58,8 +62,8 @@ export default function ProtectedLayout() {
 				<Stack screenOptions={SCREEN_OPTIONS}>
 					<Stack.Screen name="index" />
 					<Stack.Screen name="(tabs)" options={NO_GESTURE} />
-					{/* Each feature's own entries, from its `screens.ts`. */}
-					{ROOT_SCREENS.map((screen) => (
+					{/* Each feature's own entries, from its `screens.ts`, for this shell. */}
+					{rootScreensFor(shell).map((screen) => (
 						<Stack.Screen
 							key={screen.name}
 							name={screen.name}

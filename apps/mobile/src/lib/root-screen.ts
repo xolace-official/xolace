@@ -19,6 +19,12 @@ export type ScreenContext = {
 export type RootScreen = {
 	/** The route path under `src/app/(protected)/`, without the extension. */
 	readonly name: string;
+	/**
+	 * `v2`: listed only in the redesign's shell, where it replaces any entry of
+	 * the same name. How a v2 screen takes over an old route with its own
+	 * presentation, leaving the old feature's entry alone.
+	 */
+	readonly shell?: "v2";
 	readonly options?:
 		| NativeStackNavigationOptions
 		| ((context: ScreenContext) => NativeStackNavigationOptions);
