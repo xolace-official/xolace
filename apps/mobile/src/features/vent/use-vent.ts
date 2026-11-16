@@ -43,7 +43,7 @@ export function useVent(): VentBackend {
 	const { isPlus } = usePlusEntitlement();
 	const introSeen = useAppStore((s) => s.ventIntroSeen);
 	const setIntroSeen = useAppStore((s) => s.setVentIntroSeen);
-	const { startRecording, stopRecording, metering, getDurationMs } =
+	const { startRecording, stopRecording, metering, getDurationMs, getUri } =
 		useMeteringRecorder();
 	const processVentAudio = useAction(api.vent.processVentAudio);
 	const { ensureConsent } = useVoiceProcessingConsent();
@@ -63,6 +63,9 @@ export function useVent(): VentBackend {
 	const result = useRef<VentResult | null>(null);
 	const burnt = useRef(false);
 	const durationAtStop = useRef(0);
+	// Where this take is written, kept from the start so a drop can delete it even when the
+	// recorder is already gone.
+	const takeUri = useRef<string | null>(null);
 	// Started with the vent, so the write lands while they speak; the upload waits on it.
 	const consent = useRef<Promise<void> | null>(null);
 
@@ -118,6 +121,7 @@ export function useVent(): VentBackend {
 			return "failed" as const;
 		}
 		setMicOff(false);
+		takeUri.current = getUri();
 		const write = ensureConsent();
 		write.catch(() => undefined); // surfaced when the upload awaits it
 		consent.current = write;
@@ -158,6 +162,7 @@ export function useVent(): VentBackend {
 		});
 		setStage("processing");
 		const uri = await stopRecording();
+		takeUri.current = null;
 		if (!uri) {
 			// Recording failed: the burn plays anyway, then straight to gone.
 			result.current = "error";
@@ -187,8 +192,11 @@ export function useVent(): VentBackend {
 		// Off "recording" before the await, so a late stop() can't upload the dropped take.
 		setStage("gone");
 		posthog.capture("vent_closed", { reason, state: "recording" });
-		// Stopped before the screen goes, while the recorder is still there to stop.
-		const uri = await stopRecording();
+		// Stopped before the screen goes, while the recorder is still there to stop. When it has
+		// already gone (closed while the mic was starting) stopping fails, and the take's path
+		// from the start is deleted instead.
+		const uri = (await stopRecording()) ?? takeUri.current;
+		takeUri.current = null;
 		if (reason !== "unmounted") {
 			router.back();
 		}

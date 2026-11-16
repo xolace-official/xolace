@@ -22,6 +22,9 @@ export type UseMeteringRecorderReturn = {
 	// Read on demand: the take's length is not React state, so a recording
 	// doesn't re-render its screen on every poll.
 	getDurationMs: () => number;
+	/** Where the take is being written, once recording has started (null before). Read it then: a
+	 * screen that closes mid-take may release the recorder before it can be asked again. */
+	getUri: () => string | null;
 };
 
 // Lower bitRate for longer takes that must still fit Convex's 1MB v.bytes().
@@ -98,6 +101,7 @@ export function useMeteringRecorder(
 
 	return {
 		getDurationMs: () => recorder.getStatus().durationMillis,
+		getUri: () => recorder.uri ?? null,
 		metering: meteringValue,
 		startRecording,
 		stopRecording,

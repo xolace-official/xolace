@@ -1,3 +1,4 @@
+import type { SkTypeface } from "@shopify/react-native-skia";
 import { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, PixelRatio } from "react-native";
 import { withTiming } from "react-native-reanimated";
@@ -20,7 +21,11 @@ import type { VentBackend } from "@/features/vent/vent-backend";
 import type { Vent, VentPhase } from "@/features/vent/vent-data";
 import { replyWords } from "@/features/vent/vent-model";
 import { WORD_BURN_MS } from "@/features/vent/words/burn-shader";
-import { buildWordLayer } from "@/features/vent/words/word-layer";
+import { layerBuilder } from "@/features/vent/words/layer-builder";
+import {
+	buildWordLayer,
+	type WordRect,
+} from "@/features/vent/words/word-layer";
 
 /** v2: "Gone." comes up this long after the words start to burn (Reduce Motion: once they fade). */
 const GONE_AFTER_MS = WORD_BURN_MS + 500;
@@ -37,6 +42,8 @@ export type VentSeed = {
 	field?: FieldPhase;
 	settled?: boolean;
 };
+
+type WordLayout = { rects: WordRect[]; fontSize: number; lineH: number };
 
 const say = (s: string) => AccessibilityInfo.announceForAccessibility(s);
 
@@ -61,6 +68,22 @@ export function useVentFlow(
 		seed.settled ?? false,
 		backend.state.level
 	);
+	// The burn image is drawn once the words are laid out, and again if the body face loads
+	// after that, until they start to burn.
+	const [layers] = useState(() =>
+		layerBuilder<WordLayout, SkTypeface>(({ rects, fontSize, lineH }, face) => {
+			const scale = PixelRatio.get();
+			scheduleOnUI(() => {
+				"worklet";
+				field.layer.set(buildWordLayer(rects, fontSize, lineH, scale, face));
+			});
+		})
+	);
+	useEffect(() => {
+		if (typeface) {
+			layers.faceLoaded(typeface);
+		}
+	}, [typeface, layers]);
 	const [phase, setPhaseState] = useState<VentPhase>(first);
 	const [running, setRunning] = useState(true);
 	const [starts, setStarts] = useState<number[] | null>(null);
@@ -160,6 +183,7 @@ export function useVentFlow(
 
 	const toAsh = () => {
 		setPhase("ash");
+		layers.burning();
 		// Reduce Motion: no shader, the words fade out together.
 		if (reduced) {
 			field.wordsShown.set(
@@ -225,16 +249,9 @@ export function useVentFlow(
 			flick: (x, y) => release("flick", x, y),
 			onBurnComplete: () => act().burnt(),
 			onWordsLaidOut: (rects, fontSize, lineH) => {
-				if (reduced) {
-					return;
+				if (!reduced) {
+					layers.laidOut({ fontSize, lineH, rects });
 				}
-				const scale = PixelRatio.get();
-				scheduleOnUI(() => {
-					"worklet";
-					field.layer.set(
-						buildWordLayer(rects, fontSize, lineH, scale, typeface)
-					);
-				});
 			},
 			openSettings: () => act().openSettings(),
 			support: () => act().support(),
