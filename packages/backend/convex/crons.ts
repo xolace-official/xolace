@@ -1,5 +1,6 @@
 import { cronJobs } from "convex/server";
 import { internal } from "./_generated/api";
+import { retentionRunIntervalHours } from "./privacy/retentionCutoff";
 
 // Set CONVEX_ENV=production on the prod deployment, leave unset (or "development") on dev.
 // Dev gets much longer intervals to avoid burning resources during development.
@@ -28,7 +29,8 @@ crons.interval(
 // Enforce data retention policies
 crons.interval(
 	"enforce data retention",
-	isProd ? { hours: 24 } : { hours: 72 },
+	// Shared with privacy/retention's count, which counts up to the next run.
+	{ hours: retentionRunIntervalHours(isProd) },
 	internal.jobs.dataRetention.enforce,
 	{}
 );

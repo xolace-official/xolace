@@ -427,6 +427,13 @@ export const chatModerationCategoryValidator = v.union(
 	v.literal("contact")
 );
 
+/** `preferences.dataRetentionPreference`: how long sessions are kept. */
+export const dataRetentionPreferenceValidator = v.union(
+	v.literal("indefinite"),
+	v.literal("6_months"),
+	v.literal("1_year")
+);
+
 // Full `preferences` document shape, mirroring schema.ts's `preferences` table.
 // Shared by preferences.ts and users.ts so the two return validators can never drift.
 export const preferencesDocValidator = v.object({
@@ -435,11 +442,7 @@ export const preferencesDocValidator = v.object({
 	avatarId: v.optional(v.string()),
 	colorTheme: v.optional(v.string()),
 	contributeByDefault: v.boolean(),
-	dataRetentionPreference: v.union(
-		v.literal("indefinite"),
-		v.literal("6_months"),
-		v.literal("1_year")
-	),
+	dataRetentionPreference: dataRetentionPreferenceValidator,
 	displayName: v.optional(v.string()),
 	emotionalProfileId: v.id("emotional_profiles"),
 	libraryAudiences: v.optional(v.array(v.string())),
