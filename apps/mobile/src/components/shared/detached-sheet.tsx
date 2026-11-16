@@ -107,6 +107,8 @@ export function DetachedSheet({
 			</Animated.View>
 			<GestureDetector gesture={pan}>
 				<Animated.View
+					// VoiceOver stays in the sheet; the scrim's Close is reachable by escape.
+					accessibilityViewIsModal
 					className="absolute right-2.5 left-2.5 rounded-[42px] border-continuous bg-surface shadow-sheet"
 					style={[{ bottom: sheetBottom(insets.bottom) }, sheet]}
 				>

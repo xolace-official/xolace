@@ -17,7 +17,7 @@ import { useScheme } from "@/design/scheme";
 import { cn } from "@/lib/cn";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** A chevron stays in Xolace; ↗ leaves it. */
+/** A chevron stays in Xolace; ↗ leaves it. Defaults to a chevron on a row you can press. */
 type Trail = "chevron" | "out" | "none";
 
 const CHEVRON: IconName = { android: "chevron_right", ios: "chevron.right" };
@@ -56,7 +56,7 @@ export function TileRow({
 	icon,
 	mark,
 	tile = "accent",
-	trail = "chevron",
+	trail,
 	danger = false,
 	last = false,
 	shrinkValue = false,
@@ -70,6 +70,8 @@ export function TileRow({
 	const dark = useScheme() === "dark";
 	const glyph = tile === "neutral" ? foreground : accent;
 	const hasTile = Boolean(icon || mark);
+	// A row that does nothing promises nothing: no chevron unless asked.
+	const end = trail ?? (onPress ? "chevron" : "none");
 	const body = (
 		<>
 			{hasTile ? (
@@ -114,7 +116,7 @@ export function TileRow({
 					{value}
 				</AppText>
 			) : null}
-			{trail === "chevron" ? (
+			{end === "chevron" ? (
 				<Icon
 					color={subtle}
 					name={CHEVRON}
@@ -122,7 +124,7 @@ export function TileRow({
 					weight="semibold"
 				/>
 			) : null}
-			{trail === "out" ? (
+			{end === "out" ? (
 				<Icon color={subtle} name={OUT} size={OUT_GLYPH} weight="semibold" />
 			) : null}
 			{last ? null : <Hairline from={hasTile ? S.lineFromTile : S.lineFrom} />}
