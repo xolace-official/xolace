@@ -1,6 +1,6 @@
 // One eye: sclera, pupil, glints and lids, recomputed from the geometry on the UI thread.
 
-import { Circle, Oval, Path, Skia } from "@shopify/react-native-skia";
+import { Circle, Group, Oval, Path, Skia } from "@shopify/react-native-skia";
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
 import {
 	clamp,
@@ -21,6 +21,11 @@ const GAZE_X = 2.6;
 const GAZE_Y = 2.8;
 // Below this openness the glint would float outside a nearly shut eye.
 const GLINT_MIN_OPEN = 0.45;
+// The crescent (eyeShape 1): an arch over the eye, `M x−7.5 ey+2.5 Q x ey−6.5 x+7.5 ey+2.5`.
+const ARCH_HALF = 7.5;
+const ARCH_FOOT = 2.5;
+const ARCH_PEAK = 6.5;
+const ARCH_WIDTH = 2.4;
 
 type Props = PartProps & { colors: FeatureColors; eyes: EyeStyle };
 
@@ -70,38 +75,59 @@ export function FaceEye({ colors, eyes, geo, side, spread }: Props) {
 		path.quadTo(x, g.ey + 4, x + EYE_RX, g.ey);
 		return path.detach();
 	});
-	const lidOpacity = useDerivedValue(() =>
-		clamp((0.35 - geo.get().open) / 0.2, 0, 1)
+	const lidOpacity = useDerivedValue(
+		() => clamp((0.35 - geo.get().open) / 0.2, 0, 1) * (1 - geo.get().shape)
 	);
+	// eyeShape cross-fades the open eye out and the crescent in.
+	const openOpacity = useDerivedValue(() => 1 - geo.get().shape);
+	const archOpacity = useDerivedValue(() => geo.get().shape);
+	const arch = useDerivedValue(() => {
+		const g = geo.get();
+		const x = g.cx + side * spread;
+		const path = Skia.PathBuilder.Make();
+		path.moveTo(x - ARCH_HALF, g.ey + ARCH_FOOT);
+		path.quadTo(x, g.ey - ARCH_PEAK, x + ARCH_HALF, g.ey + ARCH_FOOT);
+		return path.detach();
+	});
 
 	return (
 		<>
-			<Oval color={colors.sclera} rect={sclera} />
-			<Oval color={colors.pupil} rect={pupil} />
-			<Circle
-				color={colors.highlight}
-				cx={glintX}
-				cy={glintY}
-				opacity={glintOpacity}
-				r={glintR}
-			/>
-			{eyes === "sparkle" && (
-				<SecondGlint
+			<Group opacity={openOpacity}>
+				<Oval color={colors.sclera} rect={sclera} />
+				<Oval color={colors.pupil} rect={pupil} />
+				<Circle
 					color={colors.highlight}
-					glintX={glintX}
-					glintY={glintY}
+					cx={glintX}
+					cy={glintY}
 					opacity={glintOpacity}
+					r={glintR}
 				/>
-			)}
-			{eyes === "sleepy" && (
-				<HeavyLid color={colors.brow} geo={geo} side={side} spread={spread} />
-			)}
+				{eyes === "sparkle" && (
+					<SecondGlint
+						color={colors.highlight}
+						glintX={glintX}
+						glintY={glintY}
+						opacity={glintOpacity}
+					/>
+				)}
+				{eyes === "sleepy" && (
+					<HeavyLid color={colors.brow} geo={geo} side={side} spread={spread} />
+				)}
+			</Group>
 			<Path
 				color={colors.pupil}
 				opacity={lidOpacity}
 				path={lid}
 				strokeCap="round"
 				strokeWidth={2}
+				style="stroke"
+			/>
+			<Path
+				color={colors.pupil}
+				opacity={archOpacity}
+				path={arch}
+				strokeCap="round"
+				strokeWidth={ARCH_WIDTH}
 				style="stroke"
 			/>
 		</>

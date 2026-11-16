@@ -15,6 +15,12 @@ describe("lerpPose", () => {
 		expect(lerpPose(NEUTRAL, PRESETS.glad, 1)).toEqual(PRESETS.glad);
 	});
 
+	it("keeps the round eyes by default and blends toward the crescent", () => {
+		expect(NEUTRAL.eyeShape).toBe(0);
+		const crescent = { ...NEUTRAL, eyeShape: 1 };
+		expect(lerpPose(NEUTRAL, crescent, 0.5).eyeShape).toBeCloseTo(0.5);
+	});
+
 	it("blends every dial halfway at t = 0.5", () => {
 		const mid = lerpPose(NEUTRAL, PRESETS.glad, 0.5);
 		expect(mid.mouth).toBeCloseTo((NEUTRAL.mouth + PRESETS.glad.mouth) / 2);

@@ -27,6 +27,8 @@ export type Geo = {
 	mouth: number;
 	mouthOpen: number;
 	open: number;
+	/** 0 round … 1 crescent (`Pose.eyeShape`). */
+	shape: number;
 };
 
 export type PartProps = { geo: SharedValue<Geo>; side: number; spread: number };

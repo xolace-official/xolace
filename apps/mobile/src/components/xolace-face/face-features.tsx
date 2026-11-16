@@ -56,6 +56,7 @@ export function FaceFeatures({
 			mouth: p.mouth,
 			mouthOpen: clamp(p.mouthOpen, 0, 1),
 			open: clamp(p.eyeOpen, 0, 1.1),
+			shape: clamp(p.eyeShape, 0, 1),
 		};
 	});
 
