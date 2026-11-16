@@ -32,8 +32,8 @@ const FLY_R = [6.2, 0.64] as const;
 const TURN = [5.2, 0.68] as const;
 const CLOSE = [8.7, 0.87] as const;
 const SPRING_BACK = [14, 0.8] as const;
-export const FRICTION = 3.8;
-export const SETTLE_SPEED = 2.2;
+const FRICTION = 3.8;
+const SETTLE_SPEED = 2.2;
 const SNAP_MS = 260;
 const SLOW_MS = 700;
 const BACK_MS = 600;
@@ -183,7 +183,7 @@ export function poseAt(e: Engine, age: number): Pose {
 }
 
 /** Flying home from wherever it was let go, `c` ms into the close. */
-export function closeAt(cp: Pose, e: Engine, c: number): Pose {
+function closeAt(cp: Pose, e: Engine, c: number): Pose {
 	"worklet";
 	const rm = e.reduced;
 	const p = rm ? 0 : fs(c / 1000, CLOSE[0], CLOSE[1]);

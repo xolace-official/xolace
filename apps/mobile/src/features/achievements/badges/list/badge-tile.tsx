@@ -22,7 +22,7 @@ import { cn } from "@/lib/cn";
 import { useTokenColor } from "@/lib/use-token-color";
 
 const TILE_W = 92;
-export const MEDALLION = 84;
+const MEDALLION = 84;
 const PIN_ICON = 11;
 const PIN: IconName = { android: "keep", ios: "pin.fill" };
 

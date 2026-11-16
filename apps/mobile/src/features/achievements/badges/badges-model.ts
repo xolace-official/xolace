@@ -58,7 +58,7 @@ export type BadgesView = {
 };
 
 /** The server's view of one badge, in a known category or (for `latest`) by its id. */
-export function badgeView(a: AchievementView, family?: Family): BadgeView {
+function badgeView(a: AchievementView, family?: Family): BadgeView {
 	return {
 		art: artOf(a.art),
 		copy: a.copy,

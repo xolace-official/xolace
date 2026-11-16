@@ -18,7 +18,7 @@ import {
 } from "@/features/achievements/motion-math";
 
 /** The board's phone. */
-export const BOARD = { h: 844, status: 54, w: 390 } as const;
+const BOARD = { h: 844, status: 54, w: 390 } as const;
 /** The badge's centre and radius, on the board (236 pt). */
 export const HELD = { r: 118, y: 318 } as const;
 export const COIN = HELD.r * 2;
@@ -57,9 +57,9 @@ export const RV = {
 } as const;
 /** Next between badges; the close; the milestone stepping aside; the badge after it. */
 export const X_MS = 440;
-export const CLOSE_MS = 260;
+const CLOSE_MS = 260;
 export const CLOSE_GO_MS = 300;
-export const OUT_MS = 360;
+const OUT_MS = 360;
 export const BADGE_AFTER_MS = 200;
 const HOP_MS = 360;
 const HOP = 16;
@@ -68,9 +68,9 @@ const MS_STOP = 8400;
 const FALL_STOP = 7100;
 const BURST_LAST = 26 * 12 + 3500;
 const PUFF_MS = 1500;
-export const REDUCED_MS = 300;
+const REDUCED_MS = 300;
 /** Production's fx loops repeat on these; the loop that takes over when the clock stops is a multiple of all three. */
-export const GLOW_MS = 2800;
+const GLOW_MS = 2800;
 export const SPARKLE_MS = 2400;
 export const SHIMMER_EVERY = 6000;
 export const FX_LOOP_MS = 84_000;

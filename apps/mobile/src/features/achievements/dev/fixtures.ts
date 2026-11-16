@@ -39,7 +39,7 @@ const progress = (current: number, target: number, unit: string) => ({
 	unit,
 });
 
-export const JOINED = badge({
+const JOINED = badge({
 	achievementId: "joined",
 	copy: "You found your way to the fire.",
 	earnedAt: on(7, 18),
@@ -67,14 +67,14 @@ const S5 = badge({
 	sparks: 10,
 	title: "5 days by the fire",
 });
-export const S7 = badge({
+const S7 = badge({
 	achievementId: "streak-7",
 	copy: "7 days by the fire. The flame's holding steady.",
 	earnedAt: on(11, 1),
 	sparks: 10,
 	title: "7 days by the fire",
 });
-export const S10 = badge({
+const S10 = badge({
 	achievementId: "streak-10",
 	copy: "Ten days. You keep coming back.",
 	earnedAt: on(11, 4),
@@ -82,14 +82,14 @@ export const S10 = badge({
 	sparks: 25,
 	title: "10 days by the fire",
 });
-export const S14 = badge({
+const S14 = badge({
 	achievementId: "streak-14",
 	copy: "Two weeks by the fire.",
 	progress: progress(12, 14, "days in a row"),
 	sparks: 25,
 	title: "14 days by the fire",
 });
-export const S30 = locked([
+const S30 = locked([
 	"streak-30",
 	"30 days by the fire",
 	"30 days. This is a rhythm now.",
@@ -132,7 +132,7 @@ const U5 = badge({
 	sparks: 25,
 	title: "5 days showing up",
 });
-export const U10 = badge({
+const U10 = badge({
 	achievementId: "showing-up-10",
 	copy: "You've come back 10 different days.",
 	earnedAt: on(10, 29),
@@ -154,7 +154,7 @@ const LATER_SHOWING_UP = [50, 100, 250, 500, 1000].map(
 		d < 250 ? 50 : 100,
 	]
 );
-export const TALK = badge({
+const TALK = badge({
 	achievementId: "first-talk",
 	copy: "You talked it through out loud.",
 	earnedAt: on(8, 2),
@@ -176,7 +176,7 @@ const READ_5 = badge({
 	sparks: 25,
 	title: "Read 5",
 });
-export const QUOTE = locked([
+const QUOTE = locked([
 	"first-quote",
 	"First quote saved",
 	"You saved words that spoke to you.",
@@ -222,7 +222,7 @@ const UND_1 = badge({
 	sparks: 50,
 	title: "First area unlocked",
 });
-export const UND_3 = badge({
+const UND_3 = badge({
 	achievementId: "understanding-3",
 	copy: "The picture is filling in.",
 	progress: progress(2, 3, "areas unlocked"),

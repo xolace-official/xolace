@@ -97,7 +97,7 @@ export function lastSevenDays(today: Date, locale?: string): string[] {
 	);
 }
 
-export const arrivingBadge = (b: UnseenBadge): ArrivingBadge => ({
+const arrivingBadge = (b: UnseenBadge): ArrivingBadge => ({
 	art: artOf(b.art),
 	copy: b.copy,
 	family: familyOfId(b.achievementId),
