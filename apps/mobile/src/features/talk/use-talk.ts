@@ -14,8 +14,8 @@ import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { endWithRetry } from "@/features/talk/end-with-retry";
-import { TALK_TIME_RESETS } from "@/features/talk/talk-copy";
 import { type ThreadLine, useThread } from "@/features/talk/use-thread";
+import { TALK_TIME_RESETS } from "@/lib/talk/talk-time";
 
 export type Presence =
 	| "Connecting…"

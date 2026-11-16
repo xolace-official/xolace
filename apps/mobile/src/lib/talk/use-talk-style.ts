@@ -31,7 +31,8 @@ export function useTalkStyle() {
 		setPace: (talkPace: TalkPace) => update({ talkPace }),
 		setView: (talkView: TalkView) => update({ talkView }),
 		setVoice: (talkVoice: VoiceSlug) => update({ talkVoice }),
-		view: prefs?.talkView ?? ("conversation" as const),
+		// A talk opens on the companion until they choose the transcript (Talk v2).
+		view: prefs?.talkView ?? ("companion" as const),
 		// Unpicked, it speaks in their mirror voice, else Vesper (the server's order).
 		voice: talkVoiceOf(prefs?.talkVoice, prefs?.voice),
 	};

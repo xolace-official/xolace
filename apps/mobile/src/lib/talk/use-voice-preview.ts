@@ -6,7 +6,15 @@ import {
 } from "expo-audio";
 import { useRef, useState } from "react";
 import { claimAudioSession, holdsAudioFocus } from "@/lib/audio/session";
-import { VOICE_PREVIEWS } from "@/lib/talk/voice-options";
+
+/** Static require map for bundled preview clips (dynamic paths don't bundle in
+ * Metro). Regenerate with scratchpad/generate-voice-previews.mjs. */
+const VOICE_PREVIEWS: Record<VoiceSlug, number> = {
+	ash: require("@/assets/sounds/voice-previews/ash.mp3"),
+	sage: require("@/assets/sounds/voice-previews/sage.mp3"),
+	vesper: require("@/assets/sounds/voice-previews/vesper.mp3"),
+	wren: require("@/assets/sounds/voice-previews/wren.mp3"),
+};
 
 type UseVoicePreviewReturn = {
 	/** For a caller that also reads the clip (the voice orb's level). */

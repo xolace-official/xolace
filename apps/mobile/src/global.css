@@ -225,6 +225,20 @@
 	--color-orb-wren-mid: #f59ac0;
 	--color-orb-wren-deep: #d6467a;
 
+	/* Talk's lights are printed too: the soft glow behind the companion's face, in
+     * its look's colour (the Theme and Chalk looks take the accent and the ink),
+     * and the aurora's two lights at the bottom, softer by day. */
+	--color-talk-glow-flux: #ee8fc4;
+	--color-talk-glow-tide: #43c6e8;
+	--color-talk-glow-moss: #8fd18b;
+	--color-talk-glow-dusk: #c56cf0;
+	--color-talk-glow-marigold: #ff8a5c;
+	--color-talk-aurora-a-dark: rgba(140, 110, 255, 0.55);
+	--color-talk-aurora-b-dark: rgba(90, 150, 255, 0.35);
+	--color-talk-aurora-a-light: rgba(140, 110, 255, 0.32);
+	--color-talk-aurora-b-light: rgba(90, 170, 255, 0.22);
+	--color-talk-aurora-clear: rgba(140, 110, 255, 0);
+
 	/* The poster's voice is fixed too: the `--font-<role>` variables follow
      * the theme's font pair, and a printed object does not change typeface
      * with the chrome behind it. The redesign's poster uses `font-poster*`
