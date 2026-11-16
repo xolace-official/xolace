@@ -193,6 +193,21 @@ export const backfillTrackSearchText = migrations.define({
 	table: "audio_tracks",
 });
 
+// Lantern's Saved list: dates rows saved before `savedAt` existed, so they
+// sort among the rest instead of after them. Nothing recorded the save itself;
+// the row's creation is the earliest it can have happened, and exact for a
+// save made from a card. (A later read would push an old save to the top.)
+// Writes only saved rows still missing it — safe to re-run.
+//   bunx convex run migrations:run '{"fn": "migrations:backfillLibrarySavedAt"}'
+export const backfillLibrarySavedAt = migrations.define({
+	migrateOne: async (_ctx, doc) => {
+		if (doc.saved && doc.savedAt === undefined) {
+			return { savedAt: doc._creationTime };
+		}
+	},
+	table: "library_reads",
+});
+
 // Peer-reflection author tags (#790, ADR 0002): tags the session reflections
 // pooled before the tag existed, so their contributors stop being shown them.
 // The anonymizer pooled `distilledText ?? mirrorText` verbatim, so an exact
@@ -339,6 +354,8 @@ export const runAll = migrations.runner([
 	// nothing for pre-#549/#550 rows until they run.
 	internal.migrations.backfillLibrarySearchText,
 	internal.migrations.backfillTrackSearchText,
+	// Idempotent; until it runs, older saves sit at the end of Saved.
+	internal.migrations.backfillLibrarySavedAt,
 	// Library re-ingest can't fill these: its sha gate skips unchanged rows.
 	internal.migrations.backfillLibraryIndex,
 	internal.migrations.backfillTrackIndex,

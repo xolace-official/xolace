@@ -3,7 +3,8 @@ import type { Doc } from "../_generated/dataModel";
 import { query } from "../_generated/server";
 import { toTrackItem, trackItemValidator } from "../browse";
 import { requireAuth } from "../lib/auth";
-import { cardItemValidator, coverOf, toListItem } from "./entries";
+import { cardItemValidator } from "./cards";
+import { coverOf, toListItem } from "./entries";
 import { cardSignals } from "./reads";
 
 /** Library hubs (#405): editorial, ordered reading lists (ADR 0015). */
