@@ -296,5 +296,3 @@ export function useTalk(reopen?: {
 		wasLive,
 	};
 }
-
-export type Talk = ReturnType<typeof useTalk>;
