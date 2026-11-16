@@ -1,4 +1,4 @@
-/** Colour strings as the themes and this screen's tokens write them. Pure. */
+/** A colour's clear twin, from any colour string the themes and tokens write (hex, rgb, oklch). Pure. */
 const HEX = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i;
 const RGB = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i;
 const OKLCH = /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+)/i;

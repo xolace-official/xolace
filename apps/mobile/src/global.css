@@ -278,6 +278,17 @@
 
 	/* Heavy: the light warms a few degrees. */
 	--color-warm-page: #fff8f4;
+
+	/* Reflect's sky over the top of the page (SkyWash): the evening's last light, and dusk late. */
+	--color-evening-sky-1: #e3ccf0;
+	--color-evening-sky-2: #f6d3e2;
+	--color-evening-sky-3: #fde4da;
+	--color-evening-sky-end: rgba(247, 245, 251, 0);
+	--color-dusk-sky-1: #151029;
+	--color-dusk-sky-2: #1b1530;
+	--color-dusk-sky-end: rgba(14, 12, 21, 0);
+	/* The warm glow a title or a quote writes in with (GleamTitle, WriteOn). */
+	--color-write-gleam: #ffc896;
 }
 
 /*
@@ -335,17 +346,6 @@
 	--color-after-late-dot-glow: rgba(245, 176, 79, 0.35);
 	/* The share card's drop (Peers' card). */
 	--color-after-card-shadow: rgba(60, 30, 120, 0.22);
-	/* The titles' and the quote's write-on gleam (Peers' glow copy). */
-	--color-after-write-gleam: #ffc896;
-
-	/* Reflect's evening sky over the top of the page (late: dusk, opaque). */
-	--color-after-sky-1: #e3ccf0;
-	--color-after-sky-2: #f6d3e2;
-	--color-after-sky-3: #fde4da;
-	--color-after-sky-end: rgba(247, 245, 251, 0);
-	--color-after-late-sky-1: #151029;
-	--color-after-late-sky-2: #1b1530;
-	--color-after-late-sky-end: rgba(14, 12, 21, 0);
 
 	/* The next card's art: the kindling trail's avatar fills, the listen tile. */
 	--color-after-kindling-1: #d7f0e6;

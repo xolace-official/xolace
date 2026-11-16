@@ -6,10 +6,10 @@ import Animated, {
 	useDerivedValue,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { WriteOn } from "@/components/shared/write-on";
 import { EASE, T2, TS } from "../session-look";
 import { clamp01 } from "../timeline";
 import { QUOTE } from "./quote-style";
-import { WriteOn } from "./write-on";
 
 /** `.landed .q`: ink → ink 2. On both themes ink 2 sits about 30% of the way from ink to the card. */
 const DIM_TO = 0.7;
@@ -81,6 +81,7 @@ export function ShareQuote({
 					lastFrac={lastFrac}
 					lineCount={lineCount}
 					reduced={reduced}
+					style={QUOTE}
 					text={text}
 					write={write}
 				/>

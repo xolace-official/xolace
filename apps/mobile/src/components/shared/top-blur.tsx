@@ -1,3 +1,5 @@
+// TopBlur: a blur under a transparent native header. For a screen that draws its own
+// chrome and only needs the page to fade over scrolled content, use TopFade (top-fade.tsx).
 // Progressive blur under the transparent header (from clarity-main progressive-blur):
 // one BlurView alpha-masked by an eased gradient plus a --background scrim.
 // Android gets the scrim only; BlurView under a MaskedView is unreliable there.

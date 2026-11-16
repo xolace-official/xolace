@@ -14,8 +14,8 @@ import Animated, {
 	withSpring,
 	withTiming,
 } from "react-native-reanimated";
+import { clearOf } from "@/design/clear-of";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
-import { clearOf } from "../clear-of";
 import type { SessionColors } from "../session-colors";
 import { FOLLOW, LAYOUT, T1 } from "../session-look";
 import { appear } from "../timeline";

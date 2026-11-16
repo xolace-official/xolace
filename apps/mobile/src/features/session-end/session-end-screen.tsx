@@ -3,13 +3,13 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef } from "react";
 import { useWindowDimensions, View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
+import { SkyWash } from "@/components/shared/sky-wash";
 import { useAppActive } from "@/components/shared/use-app-active";
+import { useBoardY } from "@/design/board";
 import { useFixedFaces } from "@/design/fonts";
 import { useScheme } from "@/design/scheme";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
-import { useBoardY } from "./board-y";
 import { SessionFooter } from "./chrome/session-footer";
-import { SessionSky } from "./chrome/sky";
 import { FaceStage } from "./face/face-stage";
 import { useSessionFace } from "./face/use-session-face";
 import { useFaceFit } from "./moment-one/fit";
@@ -26,6 +26,9 @@ import { LAYOUT } from "./session-look";
 import { useMomentFlow } from "./use-moment-flow";
 import { useNextKey } from "./use-next-key";
 import { useSessionClocks } from "./use-session-clocks";
+
+/** The board draws Reflect's sky at .38 over Reflect's .6. */
+const SKY_SCALE = 0.38 / 0.6;
 
 /**
  * After a session (handoff `after.md`): one route, two moments, one face.
@@ -97,7 +100,7 @@ export function SessionEndScreen({ scene }: { scene?: Scene }) {
 	return (
 		<View className="flex-1 bg-background">
 			<StatusBar style={late ? "light" : "auto"} />
-			<SessionSky colors={colors} tone={late ? "late" : "day"} />
+			<SkyWash late={late} scale={SKY_SCALE} />
 			{live && moment === 1 ? (
 				<MomentOne
 					c1={clocks.c1}

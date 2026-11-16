@@ -4,7 +4,7 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
-import { GleamTitle } from "../chrome/gleam-title";
+import { GleamTitle } from "@/components/shared/gleam-title";
 import { COPY } from "../copy";
 import { LAYOUT, T1 } from "../session-look";
 import { appear, riseIn } from "../timeline";

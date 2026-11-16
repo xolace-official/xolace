@@ -1,13 +1,16 @@
+// TopFade: the page colour fading over content scrolled under a screen that draws its
+// own chrome. Use TopBlur (top-blur.tsx) under a transparent native header instead.
+
 import Animated, {
 	type SharedValue,
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { LinearGradient } from "@/components/shared/styled";
+import { clearOf } from "@/design/clear-of";
 import { useTokenColor } from "@/lib/use-token-color";
-import { clearOf } from "../clear-of";
 
 /**
- * Peers' `.topf`: the page fading over scrolled content under the header face,
+ * Peers' `.topf` (You're not alone, After a session): the page fading over scrolled content under the header face,
  * solid to `solid`, clear by `height`. Shown only once the column has scrolled.
  */
 export function TopFade({

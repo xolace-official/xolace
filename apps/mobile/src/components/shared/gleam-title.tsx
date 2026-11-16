@@ -1,12 +1,12 @@
 import { View } from "react-native";
 import Animated, {
+	Easing,
 	type SharedValue,
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { REDUCED_FADE_MS } from "@/design/springs";
 import { useTokenColor } from "@/lib/use-token-color";
-import { EASE, REDUCED_MS } from "../session-look";
-import { clamp01 } from "../timeline";
 
 /** Board `glA`: .7 s a word; the gleam ≤ .3 at 42%, the 5 px blur as a soft copy. */
 const WORD_MS = 700;
@@ -17,6 +17,13 @@ const SOFT_INK = 0.25;
 const NO_OFFSET = { height: 0, width: 0 } as const;
 const RISE = 7;
 const WORD_GAP = 0.22;
+/** `glA`'s ease (the words' write-in). */
+const WRITE = Easing.bezierFn(0.33, 1, 0.68, 1);
+
+const clamp01 = (x: number) => {
+	"worklet";
+	return Math.min(1, Math.max(0, x));
+};
 
 const smoothstep = (a: number, b: number, x: number) => {
 	"worklet";
@@ -38,8 +45,9 @@ type Props = {
 };
 
 /**
- * A title that writes itself in, word by word (board `.tw` `glA`, Peers' and
- * Sit's gleam words) on this screen's clock: opacity smoothstep(0, .6), a 7 pt
+ * A title that writes itself in, word by word (board `.tw` `glA`), on the
+ * caller's clock (ms): After a session's moments, and You're not alone's and Sit
+ * with this's titles: opacity smoothstep(0, .6), a 7 pt
  * rise, a soft copy standing in for the blur, a gleam ≤ .3. Reduce Motion: each
  * word fades over 200 ms. One header for VoiceOver; Dynamic Type caps at 1.25×.
  */
@@ -54,7 +62,7 @@ export function GleamTitle({
 	reduced,
 }: Props) {
 	const ink = useTokenColor("foreground");
-	const glow = useTokenColor("after-write-gleam");
+	const glow = useTokenColor("write-gleam");
 	const style = {
 		fontSize: size,
 		letterSpacing: tracking,
@@ -116,20 +124,20 @@ function Word({
 	const base = useAnimatedStyle(() => {
 		if (reduced) {
 			return {
-				opacity: clamp01((clock.get() - start) / REDUCED_MS),
+				opacity: clamp01((clock.get() - start) / REDUCED_FADE_MS),
 				transform: [{ translateY: 0 }],
 			};
 		}
 		const p = (clock.get() - start) / WORD_MS;
 		return {
 			opacity: p <= 0 ? 0 : smoothstep(0, 0.6, p),
-			transform: [{ translateY: RISE * (1 - EASE.write(clamp01(p))) }],
+			transform: [{ translateY: RISE * (1 - WRITE(clamp01(p))) }],
 		};
 	});
 	const soft = useAnimatedStyle(() => {
 		const p = (clock.get() - start) / WORD_MS;
 		return {
-			opacity: reduced || p <= 0 ? 0 : 1 - EASE.write(clamp01(p / 0.8)),
+			opacity: reduced || p <= 0 ? 0 : 1 - WRITE(clamp01(p / 0.8)),
 		};
 	});
 	const gleam = useAnimatedStyle(() => {

@@ -2,13 +2,23 @@ import MaskedViewBase, {
 	type MaskedViewProps,
 } from "@react-native-masked-view/masked-view";
 import { type ComponentType, useState } from "react";
-import { StyleSheet, type TextLayoutEvent, View } from "react-native";
+import {
+	type StyleProp,
+	StyleSheet,
+	type TextLayoutEvent,
+	type TextStyle,
+	View,
+} from "react-native";
 import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { AppText } from "@/components/shared/app-text";
+import {
+	type Line,
+	WRITE_ON,
+	WriteStrips,
+	writeEnd,
+} from "@/components/shared/write-strips";
 import { useTokenColor } from "@/lib/use-token-color";
-import { QUOTE, WRITE, writeEnd } from "./quote-style";
-import { type Line, WriteStrips } from "./write-strips";
 
 const OPAQUE = "black";
 /** masked-view 0.3.2's class typings predate React 19's JSX types. */
@@ -23,18 +33,28 @@ type Props = {
 	/** How far across its widest line the last line reaches. */
 	lastFrac: SharedValue<number>;
 	reduced: boolean;
+	/** The quote's face and size (Peers and After: Newsreader italic 19.5/27). */
+	style: StyleProp<TextStyle>;
 };
 
 /**
- * The quote writes itself in, line by line (Peers' `WriteOn`): the text is the
+ * A quote writes itself in, line by line (You're not alone's cards, After a
+ * session's share card): the text is the
  * mask, and under it one ink strip per line slides its soft head left to right
  * (420 ms at an even rate; lines 260 ms apart). A warm strip under the text's
  * shadow peaks mid-sweep. The quote itself is the one text VoiceOver reads and
  * Dynamic Type sizes; it's clear until written, then the masks go.
  */
-export function WriteOn({ text, write, lineCount, lastFrac, reduced }: Props) {
+export function WriteOn({
+	text,
+	write,
+	lineCount,
+	lastFrac,
+	reduced,
+	style,
+}: Props) {
 	const ink = useTokenColor("foreground");
-	const glow = useTokenColor("after-write-gleam");
+	const glow = useTokenColor("write-gleam");
 	const [lines, setLines] = useState<Line[]>([]);
 	const [written, setWritten] = useState(reduced);
 	const quote = `“${text}”`;
@@ -72,10 +92,10 @@ export function WriteOn({ text, write, lineCount, lastFrac, reduced }: Props) {
 			<AppText
 				accessible={false}
 				style={[
-					QUOTE,
+					style,
 					{ color: OPAQUE },
 					shadow
-						? { textShadowColor: OPAQUE, textShadowRadius: WRITE.glow.r }
+						? { textShadowColor: OPAQUE, textShadowRadius: WRITE_ON.glow.r }
 						: null,
 				]}
 				variant="body"
@@ -92,7 +112,7 @@ export function WriteOn({ text, write, lineCount, lastFrac, reduced }: Props) {
 				accessible
 				className={written ? "text-foreground" : "text-transparent"}
 				onTextLayout={onLayout}
-				style={QUOTE}
+				style={style}
 				variant="body"
 			>
 				{quote}

@@ -21,7 +21,6 @@ const NAMES = {
 		rail: ["after-rail-heavier", "after-rail-same", "after-rail-lighter"],
 		ready: ["after-ready-ring", "after-ready-glow"],
 		shadow: "after-shadow",
-		sky: ["after-sky-1", "after-sky-2", "after-sky-3", "after-sky-end"],
 		stars: ["lilac", "rose", "peach", "sky"],
 		thumb: "after-thumb",
 		you: ["after-you-core", "peach", "rose"],
@@ -56,7 +55,6 @@ const NAMES = {
 		],
 		ready: ["after-late-ready-ring", "after-late-ready-glow"],
 		shadow: "after-late-shadow",
-		sky: ["after-late-sky-1", "after-late-sky-2", "after-late-sky-end"],
 		stars: [
 			"after-late-star-1",
 			"after-late-star-2",

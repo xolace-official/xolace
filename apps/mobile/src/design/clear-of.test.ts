@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clearOf } from "./clear-of";
+import { clearOf } from "@/design/clear-of";
 
 describe("clearOf", () => {
 	it("keeps the colour and drops the alpha", () => {

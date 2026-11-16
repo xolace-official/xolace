@@ -9,9 +9,10 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { GleamTitle } from "@/components/shared/gleam-title";
+import { TopFade } from "@/components/shared/top-fade";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useTokenColor } from "@/lib/use-token-color";
-import { GleamTitle } from "../chrome/gleam-title";
 import { COPY } from "../copy";
 import type { SessionColors } from "../session-colors";
 import type { ListenerCard } from "../session-end-data";
@@ -22,7 +23,6 @@ import { Band } from "./band";
 import { NextCard } from "./next-card";
 import { PointOfLight } from "./point-of-light";
 import { ShareCard } from "./share-card";
-import { TopFade } from "./top-fade";
 import type { Send } from "./use-send";
 
 const L = LAYOUT;

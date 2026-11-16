@@ -13,7 +13,7 @@ import {
 	vec,
 } from "@shopify/react-native-skia";
 import type { SharedValue } from "react-native-reanimated";
-import { clearOf } from "../clear-of";
+import { clearOf } from "@/design/clear-of";
 
 /** `.cd .lit`: the floor light, 120% × 80% at 50% / 118%; its stops. */
 const FLOOR = {
