@@ -11,7 +11,7 @@ import { Icon } from "@/components/shared/icon";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { VENT_COPY } from "@/features/vent/copy";
 import { useVentScreen } from "@/features/vent/vent-data";
-import { VENT_COLORS } from "@/features/vent/vent-palette";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const DELAY_MS = 1200;
 const IN_MS = 700;
@@ -40,6 +40,7 @@ function CrisisActions({
 	onClose: () => void;
 }) {
 	const pill = useRef<ComponentRef<typeof Pressable>>(null);
+	const cream = useTokenColor("vent-cream");
 	useEffect(() => {
 		const id = setTimeout(() => {
 			const node = findNodeHandle(pill.current);
@@ -62,12 +63,7 @@ function CrisisActions({
 				ref={pill}
 			>
 				<View className="h-10 flex-row items-center gap-2 rounded-full border border-vent-cream/30 bg-vent-cream/10 px-6">
-					<Icon
-						color={VENT_COLORS.cream}
-						name={HEART}
-						size={16}
-						weight="regular"
-					/>
+					<Icon color={cream} name={HEART} size={16} weight="regular" />
 					<AppText
 						className="text-[14px] text-vent-cream leading-[19px]"
 						variant="body"

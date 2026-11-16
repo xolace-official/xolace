@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, AppState, PixelRatio } from "react-native";
+import { AccessibilityInfo, PixelRatio } from "react-native";
 import { withTiming } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
-import { BODY_FAMILY } from "@/design/font-pairs";
-import { useFontPair } from "@/design/fonts";
+import { useSkiaBodyFace } from "@/design/skia-face";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { VENT_COPY } from "@/features/vent/copy";
 import {
@@ -12,12 +11,14 @@ import {
 } from "@/features/vent/field/field-control";
 import { ASH_RUN_MS } from "@/features/vent/field/particle-after";
 import { COMPRESS_MS } from "@/features/vent/field/particle-config";
+import { useDrop } from "@/features/vent/flow/use-drop";
 import { useListening } from "@/features/vent/flow/use-listening";
 import { useVentSounds } from "@/features/vent/flow/use-vent-sounds";
+import { playReply, ventClock } from "@/features/vent/flow/vent-clock";
 import { useVentHaptics } from "@/features/vent/flow/vent-haptics";
 import type { VentBackend } from "@/features/vent/vent-backend";
 import type { Vent, VentPhase } from "@/features/vent/vent-data";
-import { LIT_MS, replyPace, replyWords } from "@/features/vent/vent-model";
+import { replyWords } from "@/features/vent/vent-model";
 import { WORD_BURN_MS } from "@/features/vent/words/burn-shader";
 import { buildWordLayer } from "@/features/vent/words/word-layer";
 
@@ -50,7 +51,7 @@ export function useVentFlow(
 	reduced: boolean,
 	seed: VentSeed = {}
 ) {
-	const family = BODY_FAMILY[useFontPair()];
+	const typeface = useSkiaBodyFace();
 	const hap = useVentHaptics();
 	const [first] = useState<VentPhase>(
 		() => seed.phase ?? (backend.state.introSeen ? "idle" : "intro")
@@ -74,16 +75,14 @@ export function useVentFlow(
 		latest.current = backend;
 	});
 	const act = () => latest.current.actions;
-	const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-	const at = (ms: number, fn: () => void) =>
-		timers.current.push(setTimeout(fn, ms));
-	const clear = () => {
-		for (const t of timers.current) {
-			clearTimeout(t);
-		}
-		timers.current = [];
-	};
-	useEffect(() => () => clear(), []);
+	// Refuses new timers once the screen has gone, so nothing resumes after an await on a
+	// screen that is no longer there.
+	const [clock] = useState(ventClock);
+	const { at, clear } = clock;
+	useEffect(() => {
+		clock.start();
+		return () => clock.stop();
+	}, [clock]);
 	const releasedAt = useRef(0);
 	const reply = backend.state.reply;
 	const words = reply ? replyWords(reply.words) : [];
@@ -114,6 +113,13 @@ export function useVentFlow(
 
 	const startRec = async () => {
 		const got = await act().start();
+		if (!clock.live) {
+			// Closed while the mic was starting: nothing is sent, and the take goes.
+			if (got === "started") {
+				act().drop("unmounted");
+			}
+			return;
+		}
 		if (got !== "started") {
 			hap.errorNotice();
 			return;
@@ -168,18 +174,20 @@ export function useVentFlow(
 	const afterBurn = async () => {
 		field.layer.set(null);
 		field.wordsShown.set(1);
-		field.go("none");
 		setPhase("heard");
-		const voiceMs = await act().speak();
-		const pace = replyPace(words, voiceMs);
-		setStarts(pace.starts);
-		// The reply is read once its voice has finished, not over it.
-		at((pace.starts.at(-1) ?? 0) + LIT_MS, () => say(words.join(" ")));
-		// Crisis keeps its line on screen, with support under it: no burn, no "Gone.".
-		at(
-			pace.ashAt,
-			latest.current.state.reply?.crisis ? () => act().finish() : toAsh
-		);
+		const crisis = latest.current.state.reply?.crisis ?? false;
+		await playReply(words, {
+			// The waiting sparks keep rising until the voice starts: never a blank screen.
+			begin: (starts) => {
+				field.go("none");
+				setStarts(starts);
+			},
+			clock,
+			// Crisis keeps its line on screen, with support under it: no burn, no "Gone.".
+			end: crisis ? () => act().finish() : toAsh,
+			say,
+			speak: () => act().speak(),
+		});
 	};
 
 	// The backend's answer, once the burn has played.
@@ -197,19 +205,10 @@ export function useVentFlow(
 		// Only a new stage moves it on.
 	}, [stage]);
 
-	// v2: closing mid-vent, or leaving the app, drops it: nothing is sent, and it closes.
-	const drop = (reason: "close" | "background") => {
+	const drop = useDrop(phaseRef, (reason) => {
 		clear();
 		hap.softPress();
 		act().drop(reason);
-	};
-	useEffect(() => {
-		const sub = AppState.addEventListener("change", (next) => {
-			if (next === "background" && phaseRef.current === "rec") {
-				drop("background");
-			}
-		});
-		return () => sub.remove();
 	});
 
 	const vent: Vent = {
@@ -233,7 +232,7 @@ export function useVentFlow(
 				scheduleOnUI(() => {
 					"worklet";
 					field.layer.set(
-						buildWordLayer(rects, fontSize, lineH, scale, family)
+						buildWordLayer(rects, fontSize, lineH, scale, typeface)
 					);
 				});
 			},

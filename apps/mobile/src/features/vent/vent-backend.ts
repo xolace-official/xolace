@@ -44,8 +44,11 @@ export type VentBackend = {
 		speak: () => Promise<number | null>;
 		/** The reply has been said and has burned: on to "Gone.". */
 		finish: () => void;
-		/** v2: closed or left mid-recording. Nothing is sent. */
-		drop: (reason: "close" | "background") => void;
+		/**
+		 * v2: closed or left mid-recording. Nothing is sent and the take is deleted. "unmounted":
+		 * the screen is already gone (closed while the mic was starting), so it doesn't navigate.
+		 */
+		drop: (reason: "close" | "background" | "unmounted") => void;
 		/** The X, outside a recording. */
 		close: () => void;
 		/** "Gone." has faded: the screen closes itself. */

@@ -10,7 +10,7 @@ import {
 	type TimingTransition,
 } from "@/design/ease";
 import { VENT_COPY } from "@/features/vent/copy";
-import { VENT_COLORS } from "@/features/vent/vent-palette";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const PULSE = { hi: 0.7, lo: 0.15, ms: 1000 } as const;
 /** v2, Reduce Motion: the ring holds still, halfway. */
@@ -20,12 +20,6 @@ const REC_SCALE = 1.12;
 const MIC = { android: "mic", ios: "mic.fill" } as const;
 const STOP = { android: "stop", ios: "stop.fill" } as const;
 
-const IDLE = { backgroundColor: VENT_COLORS.ash, scale: 1 } as const;
-const REC = {
-	backgroundColor: VENT_COLORS.ember,
-	opacity: 1,
-	scale: REC_SCALE,
-} as const;
 const REC_TIMING: TimingTransition = {
 	duration: REC_MS,
 	easing: EASING.inOutQuad,
@@ -46,8 +40,11 @@ const HALF: TimingTransition = {
 function ringProps(
 	recording: boolean,
 	reduced: boolean,
-	lead: boolean
+	lead: boolean,
+	ink: { ash: string; ember: string }
 ): EaseProps {
+	const IDLE = { backgroundColor: ink.ash, scale: 1 };
+	const REC = { backgroundColor: ink.ember, opacity: 1, scale: REC_SCALE };
 	if (recording) {
 		return {
 			animate: REC,
@@ -88,6 +85,11 @@ type Props = { recording: boolean; reduced: boolean; onPress: () => void };
  * v2: VoiceOver says "Let it go".
  */
 export function VentMicButton({ recording, reduced, onPress }: Props) {
+	const ink = {
+		ash: useTokenColor("vent-ash"),
+		cream: useTokenColor("vent-cream"),
+		ember: useTokenColor("vent-ember"),
+	};
 	// `n` keys the ring: it moves on only when the idle loop has to mount afresh.
 	const [ring, setRing] = useState({ lead: false, n: 0, was: recording });
 	if (ring.was !== recording) {
@@ -115,12 +117,12 @@ export function VentMicButton({ recording, reduced, onPress }: Props) {
 					className="absolute size-15 rounded-full"
 					key={`${ring.n}-${reduced}`}
 					onTransitionEnd={onTransitionEnd}
-					{...ringProps(recording, reduced, ring.lead)}
+					{...ringProps(recording, reduced, ring.lead, ink)}
 				/>
 				<View className="absolute size-14 rounded-full bg-vent-page" />
 				<View className="size-13 items-center justify-center rounded-full bg-white/5">
 					<Icon
-						color={recording ? VENT_COLORS.ember : VENT_COLORS.cream}
+						color={recording ? ink.ember : ink.cream}
 						name={recording ? STOP : MIC}
 						size={recording ? 20 : 24}
 						weight="regular"

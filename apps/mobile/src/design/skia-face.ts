@@ -1,25 +1,16 @@
-import { Skia, type SkTypeface } from "@shopify/react-native-skia";
-
-/** A face the font manager returns for a family it doesn't have draws glyph 0 for everything. */
-const PROBE_SIZE = 12;
-const UPRIGHT = { slant: 0, width: 5 } as const;
+import { type SkTypeface, useTypeface } from "@shopify/react-native-skia";
+import { FONT_PAIRS } from "./font-pairs";
+import { FONT_SOURCES } from "./font-sources";
+import { useFontPair } from "./fonts";
 
 /**
- * A body typeface for Skia text, by family name and weight (`BODY_FAMILY` in font-pairs.ts).
- * Skia's system font manager finds the faces expo-font registered, but for a family that isn't
- * loaded it hands back a face with no glyphs, which would draw nothing; then this falls back to
- * the system face. Runs on either thread.
+ * The active theme's body face (`FONT_PAIRS[pair].normal`) as a Skia typeface, for text Skia
+ * draws itself (Vent's burning words). Skia loads the same font file AppText uses, straight from
+ * its asset: on Android, Skia's system font manager can't see the faces expo-font registered, so
+ * matching by family name would fall back to Roboto. Null until it has loaded; it reloads when
+ * the theme's pair changes.
  */
-export function matchBodyFace(
-	family: string,
-	weight: number
-): SkTypeface | null {
-	"worklet";
-	const mgr = Skia.FontMgr.System();
-	const style = { ...UPRIGHT, weight };
-	const face = mgr.matchFamilyStyle(family, style);
-	if (face && Skia.Font(face, PROBE_SIZE).getGlyphIDs("a")[0] !== 0) {
-		return face;
-	}
-	return mgr.matchFamilyStyle("System", style);
+export function useSkiaBodyFace(): SkTypeface | null {
+	const face = FONT_PAIRS[useFontPair()].normal;
+	return useTypeface(FONT_SOURCES[face]);
 }

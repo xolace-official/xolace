@@ -1,3 +1,4 @@
+export { useBurnHaptic } from "./burn";
 export {
 	playAffirmativePress,
 	/** @public */

@@ -3,8 +3,8 @@ import {
 	ColorType,
 	type SkImage,
 	Skia,
+	type SkTypeface,
 } from "@shopify/react-native-skia";
-import { matchBodyFace } from "@/design/skia-face";
 import type { WordAsh } from "@/features/vent/field/particle-after";
 import { mulberry32 } from "@/features/vent/field/particle-config";
 import { VENT_COLORS } from "@/features/vent/vent-palette";
@@ -130,7 +130,7 @@ export function buildWordLayer(
 	fontSize: number,
 	lineH: number,
 	scale: number,
-	family: string
+	typeface: SkTypeface | null
 ): WordLayer | null {
 	"worklet";
 	if (rects.length === 0) {
@@ -162,8 +162,7 @@ export function buildWordLayer(
 		return null;
 	}
 
-	// The theme's body family, as React Native drew the words.
-	const typeface = matchBodyFace(family, 400);
+	// The theme's body face, as React Native drew the words (the system face until it loads).
 	const font = Skia.Font(typeface ?? undefined, fontSize);
 	const m = font.getMetrics();
 	// React Native centres the glyphs in the line box: the baseline sits half the spare height down.

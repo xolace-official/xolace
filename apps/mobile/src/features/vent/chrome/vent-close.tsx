@@ -6,7 +6,7 @@ import { useFade } from "@/features/vent/chrome/use-fade";
 import { VENT_COPY } from "@/features/vent/copy";
 import type { VentPhase } from "@/features/vent/vent-data";
 import { useVentScreen } from "@/features/vent/vent-data";
-import { VENT_COLORS } from "@/features/vent/vent-palette";
+import { useTokenColor } from "@/lib/use-token-color";
 
 const XMARK = { android: "close", ios: "xmark" } as const;
 const SHOWN: readonly VentPhase[] = [
@@ -29,6 +29,7 @@ const ICON_STYLE = { opacity: 0.5 } as const;
  */
 export function VentClose() {
 	const { state, actions } = useVentScreen();
+	const cream = useTokenColor("vent-cream");
 	const shown = SHOWN.includes(state.phase);
 	const fade = useFade(shown, {
 		delayMs: state.phase === "intro" ? INTRO_DELAY_MS : 0,
@@ -50,7 +51,7 @@ export function VentClose() {
 			>
 				<View className="size-9 items-center justify-center rounded-full bg-white/5">
 					<Icon
-						color={VENT_COLORS.cream}
+						color={cream}
 						name={XMARK}
 						size={15}
 						style={ICON_STYLE}

@@ -78,7 +78,11 @@ export function useFixtureBackend(
 				advance();
 			},
 			close: () => router.back(),
-			drop: () => router.back(),
+			drop: (reason) => {
+				if (reason !== "unmounted") {
+					router.back();
+				}
+			},
 			finish: () => {
 				if (stageRef.current === "heard") {
 					setStage("gone");

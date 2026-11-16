@@ -22,6 +22,15 @@ import { useMeteringRecorder } from "@/lib/audio/use-metering-recorder";
 import { useVoiceProcessingConsent } from "@/lib/consent/use-voice-processing-consent";
 import { useAppStore } from "@/store/store";
 
+/** Deletes a take's file. Nothing about a vent is kept once it's let go or dropped. */
+function deleteTake(uri: string) {
+	try {
+		new File(uri).delete();
+	} catch {
+		// Already gone.
+	}
+}
+
 /**
  * Vent on Convex: production's pipeline (`use-vent-flow.ts` before the redesign), unchanged.
  * Record with metering, consent before any audio leaves the phone, upload, and wait for both
@@ -163,23 +172,28 @@ export function useVent(): VentBackend {
 				result.current = "error";
 			})
 			.finally(() => {
+				// "Your voice is never stored": the take goes once it has been sent, or failed to be.
+				deleteTake(uri);
 				busy.current = false;
 				tryAdvance();
 			});
 	};
 
 	/** v2: a take closed or left mid-vent is dropped: nothing is sent, and its file goes. */
-	const drop = async (reason: "close" | "background") => {
+	const drop = async (reason: "close" | "background" | "unmounted") => {
+		if (stageRef.current !== "recording") {
+			return;
+		}
+		// Off "recording" before the await, so a late stop() can't upload the dropped take.
+		setStage("gone");
 		posthog.capture("vent_closed", { reason, state: "recording" });
 		// Stopped before the screen goes, while the recorder is still there to stop.
 		const uri = await stopRecording();
-		router.back();
+		if (reason !== "unmounted") {
+			router.back();
+		}
 		if (uri) {
-			try {
-				new File(uri).delete();
-			} catch {
-				// Already gone.
-			}
+			deleteTake(uri);
 		}
 	};
 

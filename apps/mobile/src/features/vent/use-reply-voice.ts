@@ -45,13 +45,19 @@ export function useReplyVoice() {
 			hasVoice.current = true;
 			player.replace({ uri: url });
 		},
-		/** Plays it; resolves with its length once it starts, or null with no voice. */
+		/** Plays it; resolves with its length once it starts, or null with no voice (or none in time). */
 		speak: async (): Promise<number | null> => {
 			if (!hasVoice.current) {
 				return null;
 			}
 			const ms = voiceMs ?? (await waitForLength());
 			onLoaded.current = null;
+			// Not loaded in time: the words light at their own pace and the voice is skipped, so it
+			// can't start late and run past "Gone.".
+			if (ms === null) {
+				hasVoice.current = false;
+				return null;
+			}
 			try {
 				await claimAudioSession(focus, () => player.pause());
 				if (holdsAudioFocus(focus)) {
