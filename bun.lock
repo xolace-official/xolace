@@ -109,7 +109,11 @@
         "@convex-dev/presence": "^0.4.0",
         "@elevenlabs/react-native": "1.2.30",
         "@expo-google-fonts/atkinson-hyperlegible-next": "^0.4.1",
+        "@expo-google-fonts/bricolage-grotesque": "^0.4.1",
+        "@expo-google-fonts/dm-sans": "^0.4.2",
+        "@expo-google-fonts/figtree": "^0.4.1",
         "@expo-google-fonts/literata": "^0.4.3",
+        "@expo-google-fonts/newsreader": "^0.4.1",
         "@expo-google-fonts/nunito": "^0.4.2",
         "@expo-google-fonts/space-grotesk": "^0.4.1",
         "@expo/material-symbols": "^0.1.1",
@@ -126,7 +130,6 @@
         "@sentry/react-native": "~8.28.0",
         "@shopify/react-native-skia": "2.14.0",
         "@xolace/backend": "workspace:*",
-        "clsx": "^2.1.1",
         "convex": "catalog:",
         "expo": "~58.0.25",
         "expo-apple-authentication": "~58.0.3",
@@ -748,9 +751,17 @@
 
     "@expo-google-fonts/atkinson-hyperlegible-next": ["@expo-google-fonts/atkinson-hyperlegible-next@0.4.1", "", {}, "sha512-tA5NUQCrb4GnQ8kvghyF6Kqw72zr4zSNmMwhCTcHlsu/jE5JoF8Fje5/WwL44y17Lue99pG9cyq3PW5X/7ZDng=="],
 
+    "@expo-google-fonts/bricolage-grotesque": ["@expo-google-fonts/bricolage-grotesque@0.4.1", "", {}, "sha512-uijLLg+thOrFgw+gXtYA3dQJTBqqqleabcNFpamaYXqUUcbFe0J18C+4nfL0CyGzSJUicxUBLY4Zv7jdHmTGMA=="],
+
+    "@expo-google-fonts/dm-sans": ["@expo-google-fonts/dm-sans@0.4.2", "", {}, "sha512-e/fLH5aCJzkEenz7axvEn8N7IJAKhUwNjIxS75h9j+Ip1M9S7d22M19gJN3A7QW4egVkBJRyQh1hQFhngQn9yA=="],
+
+    "@expo-google-fonts/figtree": ["@expo-google-fonts/figtree@0.4.1", "", {}, "sha512-6IQQddGeR3yZBSwiIjy2kd1gA+5s2esF8JAFw6M1qqU4RUlj4Zxkw9J+gixAtZFgd+QIS875EPHqeYlpaRcCRw=="],
+
     "@expo-google-fonts/literata": ["@expo-google-fonts/literata@0.4.3", "", {}, "sha512-AuxE7NB6Ae1laRK8uTcap5xI2MYTZOXrAWul4SNGBiq4igP7r/q8IO3vdvO/P1MGiRczuyZ1zhTwSm/CaYeq9A=="],
 
     "@expo-google-fonts/material-symbols": ["@expo-google-fonts/material-symbols@0.4.51", "", {}, "sha512-QkNQK848WG/vHFqfBqYcX/vM8dweAR/ORRK1r6qii5V/hdaqn4eYKxmKGj6mg61ty70SPgG1R5uP9XX9jJ3ehQ=="],
+
+    "@expo-google-fonts/newsreader": ["@expo-google-fonts/newsreader@0.4.1", "", {}, "sha512-j96W112+mj/VYP06DCq00w+twyw42w0MY7eHB/XXioNK80BcG0cIk/zogjOENZSY7qejzIFbHE/PZYqlh/6VKQ=="],
 
     "@expo-google-fonts/nunito": ["@expo-google-fonts/nunito@0.4.2", "", {}, "sha512-1KCWphw/I2ugqfs9iRHUCkPTnomNgGPtF4AvqVquoEKxr0EL+mcLNLgeixsslbaSFevRR6/KJAE3sc8g0VaY0Q=="],
 

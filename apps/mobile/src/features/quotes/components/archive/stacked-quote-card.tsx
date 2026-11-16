@@ -153,7 +153,7 @@ export function StackedQuoteCard({
 									accessibilityRole="button"
 									onPress={onSeed}
 								>
-									<AppText className="mt-2.5 font-poster-body font-semibold text-[13.5px] text-poster-ink underline">
+									<AppText className="mt-2.5 font-poster-semi text-[13.5px] text-poster-ink underline">
 										Start something from this →
 									</AppText>
 								</PressableFeedback>

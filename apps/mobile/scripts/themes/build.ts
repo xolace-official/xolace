@@ -8,7 +8,7 @@
  * extras a theme doesn't set, worked out from its own colours). It throws if a
  * variant misses a variable or sets one nobody declared.
  */
-import { FACE_SETS, FONT_ROLES } from "../../src/design/font-faces";
+import { FONT_PAIRS, FONT_ROLES } from "../../src/design/font-pairs";
 import {
 	type Palette,
 	THEME_BY_ID,
@@ -330,7 +330,7 @@ export function renderThemesCss(): string {
 	const palettes = buildPalettes();
 	const blocks = VARIANTS.map((variant) => {
 		const theme = themeOf(variant.themeId);
-		const faces = FACE_SETS[theme.faces];
+		const faces = FONT_PAIRS[theme.fonts];
 		const lines = [
 			...FONT_ROLES.map((r) => `\t\t\t--font-${r}: "${faces[r]}";`),
 			...REQUIRED.map((k) => `\t\t\t--${k}: ${palettes[variant.name][k]};`),

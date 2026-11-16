@@ -1,6 +1,7 @@
 import type React from "react";
 import { createContext, useContext, useMemo } from "react";
-import { type ThemeName, Uniwind, useUniwind } from "uniwind";
+import { type ThemeName, useUniwind } from "uniwind";
+import { setThemeWithFonts } from "@/design/fonts";
 import { findVariant, oppositeVariant } from "@/design/themes";
 
 interface AppThemeContextType {
@@ -25,12 +26,12 @@ export const AppThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 		const isDark = findVariant(theme)?.base === "dark";
 
 		const setTheme = (newTheme: ThemeName) => {
-			Uniwind.setTheme(newTheme);
+			setThemeWithFonts(newTheme);
 		};
 
 		/** Toggles between light and dark within the current colour theme. */
 		const toggleTheme = () => {
-			Uniwind.setTheme(oppositeVariant(theme));
+			setThemeWithFonts(oppositeVariant(theme));
 		};
 
 		return {

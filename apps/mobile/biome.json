@@ -8,6 +8,8 @@
       "!assets",
       "!src/uniwind-types.d.ts",
       "!src/themes/themes.generated.css",
+      "!src/themes/type.generated.css",
+      "!src/design/type-classes.generated.ts",
       "!src/design/theme-names.generated.json"
     ]
   },

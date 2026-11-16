@@ -23,6 +23,20 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
 ## Conventions
 
 - **Text:** never `Text` from `react-native`; use `AppText` (`src/components/shared/app-text`).
+  New code always passes a `variant` (`type-<variant>`: `display`, `title`, `headline`,
+  `body`, `callout`, `footnote`, `caption` … in `src/design/type.ts`); `weight` and
+  `italic` pick the theme's role. Without a `variant` AppText is the old one (body face,
+  size from classes), kept for the screens the redesign hasn't replaced.
+- **Fonts:** each theme picks a font pair (`fonts` in `src/design/themes.ts`, pairs in
+  `src/design/font-pairs.ts`: Bricolage/Figtree, Space Grotesk/DM Sans, Nunito). Outside
+  AppText use the role classes (`font-normal`, `font-semibold`, `font-display-bold`,
+  `font-italic` …), the fixed faces (`font-mirror`, `font-letter`, `font-reader`,
+  `font-poster` …) or `useThemeFaces()` for style-only props. Never a numeric
+  `fontWeight` or `fontStyle: "italic"` with them: each weight is its own family.
+  `src/design/fonts.ts` loads them: the pairs at launch (`useLaunchFonts`), a fixed face
+  on the screen that draws it (`useFixedFaces`). Switch themes only through
+  `setThemeWithFonts`. A new face goes in `font-sources.ts`. `cn` (`src/lib/cn.ts`)
+  treats every `font-*` face as one group, so a later face class replaces an earlier one.
 - **Images:** `expo-image` only.
 - **Styling:** Uniwind `className`; `cn()` to merge, `tv()` for variants.
   `StyleSheet.create()` only when unavoidable. Inline dynamic styles are fine.
@@ -39,7 +53,8 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   values it changes (production-style palettes go in `src/design/theme-values.ts`),
   run `bun run themes` here, restart Metro with `--clear` (`extraThemes` is read at
   start; it rewrites `src/uniwind-types.d.ts`), commit the regenerated
-  `src/themes/themes.generated.css` and `src/design/theme-names.generated.json`.
+  `src/themes/themes.generated.css`, `src/design/theme-names.generated.json` and the
+  type files (`src/themes/type.generated.css`, `src/design/type-classes.generated.ts`).
   The generator (`scripts/themes/build.ts`) fills shared values, derives the
   redesign's extras (`subtle`, `*-ink`, `*-wash`, `heavy-*`, `glass` …) and stops if
   a variable is missing or undeclared; its test fails if the committed files drift.

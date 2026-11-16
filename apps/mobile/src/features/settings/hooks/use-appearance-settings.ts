@@ -1,7 +1,7 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
-import { Uniwind } from "uniwind";
 import { useAppTheme } from "@/context/app-theme-context";
+import { setThemeWithFonts } from "@/design/fonts";
 import { findVariant, isPremiumTheme, themeVariant } from "@/design/themes";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
@@ -49,13 +49,13 @@ export const useAppearanceSettings = () => {
 
 	const setThemeMode = (mode: ThemeMode) => {
 		if (mode === "system") {
-			Uniwind.setTheme("system" as never);
+			setThemeWithFonts("system");
 			storeSetTheme("system");
 			updatePreferences({ theme: "system" });
 			return;
 		}
 		const themeId = findVariant(currentTheme)?.themeId ?? "default";
-		Uniwind.setTheme(themeVariant(themeId, mode));
+		setThemeWithFonts(themeVariant(themeId, mode));
 		storeSetTheme(mode);
 		updatePreferences({ theme: mode });
 	};
@@ -72,7 +72,7 @@ export const useAppearanceSettings = () => {
 		}
 		const mode =
 			storedTheme === "system" ? (isLight ? "light" : "dark") : storedTheme;
-		Uniwind.setTheme(themeVariant(themeId, mode));
+		setThemeWithFonts(themeVariant(themeId, mode));
 		setColorThemeId(themeId);
 		updatePreferences({ colorTheme: themeId });
 	};
