@@ -10,6 +10,7 @@ import {
 } from "react";
 import { AppState, type AppStateStatus } from "react-native";
 import { Uniwind } from "uniwind";
+import { findVariant, NIGHT_VARIANT, themeVariant } from "@/design/themes";
 import { useAppStore } from "@/store/store";
 
 export type SessionMode = "day" | "night";
@@ -33,7 +34,7 @@ function computeMode(): SessionMode {
 }
 
 /** Session mode from the device clock, recomputed on foreground. Night stashes the theme and
- * sets `nightly-dark`; day restores it. */
+ * sets NIGHT_VARIANT (`nightly-dark`); day restores it. */
 export function SessionModeProvider({
 	children,
 }: {
@@ -56,7 +57,7 @@ export function SessionModeProvider({
 		nightAppliedRef.current = true;
 		const current = Uniwind.currentTheme;
 		setPreviousTheme(current);
-		Uniwind.setTheme("nightly-dark");
+		Uniwind.setTheme(NIGHT_VARIANT);
 	}, [setPreviousTheme]);
 
 	const restoreDayTheme = useCallback(() => {
@@ -71,17 +72,15 @@ export function SessionModeProvider({
 		} = useAppStore.getState();
 		setPreviousTheme(null);
 
-		if (previousTheme) {
-			Uniwind.setTheme(previousTheme as never);
+		// A stashed name this build no longer draws falls through to the saved theme.
+		const stashed = findVariant(previousTheme);
+		if (stashed) {
+			Uniwind.setTheme(stashed.name);
 			return;
 		}
 
-		const modeStr = storedTheme === "system" ? "dark" : storedTheme;
-		const nextTheme =
-			colorThemeId === "default"
-				? modeStr
-				: (`${colorThemeId}-${modeStr}` as never);
-		Uniwind.setTheme(nextTheme);
+		const mode = storedTheme === "system" ? "dark" : storedTheme;
+		Uniwind.setTheme(themeVariant(colorThemeId, mode));
 	}, [setPreviousTheme]);
 
 	// Theme swap is gated by the user's night mode preference; session mode is not.

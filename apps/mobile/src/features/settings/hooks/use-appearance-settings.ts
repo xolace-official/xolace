@@ -2,6 +2,7 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Uniwind } from "uniwind";
 import { useAppTheme } from "@/context/app-theme-context";
+import { findVariant, isPremiumTheme, themeVariant } from "@/design/themes";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
 import {
@@ -9,7 +10,6 @@ import {
 	type MotionPreference,
 	resolveMotionPreference,
 } from "@/lib/motion/use-effective-reduced-motion";
-import { THEME_BY_ID } from "@/lib/themes";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 import { useAppStore } from "@/store/store";
 
@@ -54,10 +54,8 @@ export const useAppearanceSettings = () => {
 			updatePreferences({ theme: "system" });
 			return;
 		}
-		const stripped = currentTheme.replace(/-light$/, "").replace(/-dark$/, "");
-		const isBaseOnly = stripped === "light" || stripped === "dark";
-		const nextTheme = isBaseOnly ? mode : (`${stripped}-${mode}` as never);
-		Uniwind.setTheme(nextTheme);
+		const themeId = findVariant(currentTheme)?.themeId ?? "default";
+		Uniwind.setTheme(themeVariant(themeId, mode));
 		storeSetTheme(mode);
 		updatePreferences({ theme: mode });
 	};
@@ -67,17 +65,14 @@ export const useAppearanceSettings = () => {
 	};
 
 	const setColorTheme = (themeId: string) => {
-		// Premium themes need an active Xolace+ entitlement and shipped CSS;
-		// the picker gates the tap, this guards any other caller.
-		const entry = THEME_BY_ID[themeId];
-		if (entry?.tier === "premium" && (!isPlus || entry.available === false)) {
+		// Premium themes need an active Xolace+ entitlement; the picker gates
+		// the tap, this guards any other caller.
+		if (isPremiumTheme(themeId) && !isPlus) {
 			return;
 		}
 		const mode =
 			storedTheme === "system" ? (isLight ? "light" : "dark") : storedTheme;
-		const nextVariant =
-			themeId === "default" ? mode : (`${themeId}-${mode}` as never);
-		Uniwind.setTheme(nextVariant);
+		Uniwind.setTheme(themeVariant(themeId, mode));
 		setColorThemeId(themeId);
 		updatePreferences({ colorTheme: themeId });
 	};

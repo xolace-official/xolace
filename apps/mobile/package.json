@@ -21,6 +21,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
+    "themes": "bun scripts/gen-themes.ts",
     "web": "expo start --web"
   },
   "dependencies": {

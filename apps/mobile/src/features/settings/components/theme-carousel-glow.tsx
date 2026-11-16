@@ -6,7 +6,7 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { ScopedTheme } from "uniwind";
-import type { ThemeEntry } from "@/lib/themes";
+import { type ThemeEntry, themeVariant } from "@/design/themes";
 
 const GLOW_OPACITY = 0.16;
 
@@ -49,7 +49,7 @@ export const ThemeCarouselGlow = ({
 			pointerEvents="none"
 			style={[StyleSheet.absoluteFill, animatedStyle]}
 		>
-			<ScopedTheme theme={theme.variants.dark}>
+			<ScopedTheme theme={themeVariant(theme.id, "dark")}>
 				<View className="flex-1 bg-accent" />
 			</ScopedTheme>
 		</Animated.View>

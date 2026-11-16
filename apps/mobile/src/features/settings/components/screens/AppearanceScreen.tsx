@@ -121,12 +121,9 @@ export const AppearanceScreen = () => {
 		setColorTheme(themeId);
 	};
 
-	const handlePremiumThemePress = (themeId: string, available: boolean) => {
+	const handlePremiumThemePress = (themeId: string) => {
 		if (!isPlus) {
 			openPaywall("premium_theme");
-			return;
-		}
-		if (!available) {
 			return;
 		}
 		playThemeSelect();

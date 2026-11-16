@@ -1,4 +1,4 @@
-import { THEME_BY_ID } from "@/lib/themes";
+import { findVariant, isPremiumTheme } from "@/design/themes";
 
 export type PremiumThemeReset = {
 	/** Drop the premium theme night mode stashed in `previousTheme`. */
@@ -7,13 +7,10 @@ export type PremiumThemeReset = {
 	applyBaseTheme: string | null;
 };
 
-/** True for a variant like `velvet-dark` whose base theme is premium. */
+/** True for a variant like `velvet-dark` whose theme is premium. */
 function isPremiumVariant(variant: string | null): boolean {
-	if (!variant) {
-		return false;
-	}
-	const id = variant.replace(/-(light|dark)$/, "");
-	return THEME_BY_ID[id]?.tier === "premium";
+	const theme = findVariant(variant)?.themeId;
+	return theme !== undefined && isPremiumTheme(theme);
 }
 
 /** Pure decision for dropping a lapsed subscriber off a premium theme. Null
@@ -30,7 +27,7 @@ export function planPremiumThemeReset(input: {
 	if (!input.isResolved || input.isPlus) {
 		return null;
 	}
-	if (THEME_BY_ID[input.colorThemeId]?.tier !== "premium") {
+	if (!isPremiumTheme(input.colorThemeId)) {
 		return null;
 	}
 
