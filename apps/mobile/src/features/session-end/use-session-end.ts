@@ -73,8 +73,9 @@ export function useSessionEndData({
 		}
 	}, [missing, router]);
 
-	// A session that unlocked an area: no beat shows it here any more, but opening the session end
-	// still stands down tomorrow's "you missed it" push, as the old beat did.
+	// Deliberate: a session that unlocked an area marks its unlock seen as the session end opens.
+	// The redesign shows no unlock beat here; Badges' arrival tells the person through the "First
+	// area unlocked" badge instead, so tomorrow's "you missed it" push would only repeat it.
 	const unseenUnlock =
 		session?.domainUnlock !== undefined &&
 		session.domainUnlock.seenAt === undefined;

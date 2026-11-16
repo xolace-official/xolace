@@ -24,6 +24,7 @@ import { useSessionColors } from "./session-colors";
 import { useSessionEnd } from "./session-end-data";
 import { ctaLabel } from "./session-end-model";
 import { LAYOUT } from "./session-look";
+import { useKeptAtMoment2 } from "./use-kept-at-moment-2";
 import { useMomentFlow } from "./use-moment-flow";
 import { useNextKey } from "./use-next-key";
 import { useSessionClocks } from "./use-session-clocks";
@@ -82,6 +83,8 @@ export function SessionEndScreen({ scene }: { scene?: Scene }) {
 	});
 	const { moment, step, unsure } = flow.answer;
 	const next = useNextKey({ late, moment, session, step });
+	// The words as moment 2 opened: a session landing later doesn't pop a card in.
+	const words = useKeptAtMoment2(moment, session.state.words);
 
 	// The arrival starts once, when the session and the faces are in.
 	const started = useRef(false);
@@ -142,7 +145,7 @@ export function SessionEndScreen({ scene }: { scene?: Scene }) {
 					reduced={reduced}
 					send={send}
 					W={W}
-					words={session.state.words}
+					words={words}
 					y={y}
 				/>
 			) : null}

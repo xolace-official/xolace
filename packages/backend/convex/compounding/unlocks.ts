@@ -123,8 +123,8 @@ export const dropColdUnlocks = internalMutation({
 
 /**
  * The session end opened on this session: the missed-beat push stands down.
- * The redesigned session end shows no unlock beat (its handoff moves the
- * extras off the screen), but stands the push down as the old beat did.
+ * The redesigned session end shows no unlock beat; Badges' arrival tells the
+ * person through the "First area unlocked" badge, so the push would repeat it.
  */
 export const markSeen = mutation({
 	args: { sessionId: v.id("sessions") },

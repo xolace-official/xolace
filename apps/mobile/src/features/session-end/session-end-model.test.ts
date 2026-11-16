@@ -9,6 +9,7 @@ import {
 	ctaLabel,
 	dayOf,
 	fromOf,
+	keptAtMoment2,
 	momentGate,
 	type NextInput,
 	nextKey,
@@ -223,5 +224,15 @@ describe("pitchDismissed", () => {
 		expect(pitchDismissed("kfree", true)).toBe(false);
 		expect(pitchDismissed("kindling", false)).toBe(false);
 		expect(pitchDismissed(null, false)).toBe(false);
+	});
+});
+
+describe("keptAtMoment2", () => {
+	it("keeps what moment 2 opened on, whatever lands after", () => {
+		expect(keptAtMoment2(null, 1, "words")).toBeNull();
+		const opened = keptAtMoment2<string | null>(null, 2, null);
+		expect(opened).toEqual({ value: null });
+		// The session lands after the 4 s fallback: "Go gently." stays.
+		expect(keptAtMoment2(opened, 2, "late words")).toBe(opened);
 	});
 });

@@ -241,6 +241,22 @@ export function pitchAllowed(c: PitchContext): boolean {
 	return !(stopped || cooling || (shownLast && !shownThis));
 }
 
+/**
+ * What moment 2 keeps from the moment it opens: before it, nothing; as it opens,
+ * the value then; after, the same box, so a late answer (the session landing
+ * after the arrival's 4 s fallback) never changes what the reader sees.
+ */
+export function keptAtMoment2<T>(
+	kept: { value: T } | null,
+	moment: 1 | 2,
+	live: T
+): { value: T } | null {
+	if (kept !== null || moment !== 2) {
+		return kept;
+	}
+	return { value: live };
+}
+
 /** Leaving with the free pitch shown and not taken is a "no": it spends the cooldown. */
 export const pitchDismissed = (
 	shown: NextKey | null,
