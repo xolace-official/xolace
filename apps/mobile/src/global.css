@@ -57,6 +57,7 @@
 	--color-resonance-foreground: var(--resonance-foreground);
 	--color-glass: var(--glass);
 	--color-glass-edge: var(--glass-edge);
+	--color-backdrop: var(--backdrop);
 	--color-tab-on: var(--tab-on);
 	--color-eink: var(--eink);
 	--color-mk: var(--mk);
@@ -98,6 +99,8 @@
 	--spacing-module: 14px;
 	--spacing-section: 22px;
 	--shadow-card: 0 10px 28px rgb(60 30 120 / 0.1);
+	/* A floating sheet (DetachedSheet): lifted off the page, the shadow above it. */
+	--shadow-sheet: 0 -10px 60px rgb(40 20 90 / 0.3);
 }
 
 @utility rounded-row {
