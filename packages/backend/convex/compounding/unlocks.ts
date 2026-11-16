@@ -121,7 +121,10 @@ export const dropColdUnlocks = internalMutation({
 	returns: v.null(),
 });
 
-/** The beat showed at session end: the push stands down. */
+/** The beat showed at session end: the push stands down. *
+ * @deprecated Only the old session end's unlock beat called it; the redesigned session end has no unlock beat.
+ */
+// DEPRECATED(remove-after: app >= first version with the redesigned session end (S3)): Only the old session end's unlock beat called it; the redesigned session end has no unlock beat.
 export const markSeen = mutation({
 	args: { sessionId: v.id("sessions") },
 	handler: async (ctx, { sessionId }) => {

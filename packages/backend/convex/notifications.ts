@@ -363,7 +363,10 @@ export const markDelivered = internalMutation({
  * Record user feedback on a notification's emotional landing.
  * Called by the "What landed?" card shown after milestone sessions.
  * Ownership-gated: only the receiving profile can record feedback.
+ *
+ * @deprecated Only the old session end's "What landed?" card called it; the redesigned session end shows no card.
  */
+// DEPRECATED(remove-after: app >= first version with the redesigned session end (S3)): Only the old session end's "What landed?" card called it; the redesigned session end shows no card.
 export const recordLandedPublic = mutation({
 	args: {
 		landed: v.union(
@@ -488,7 +491,10 @@ export const list = query({
 /**
  * Return the most recent delivered notification for the current user's profile,
  * or null if none exist. Used by the feedback card shown after milestone sessions.
+ *
+ * @deprecated Only the old session end's "What landed?" card read it; the redesigned session end shows no card.
  */
+// DEPRECATED(remove-after: app >= first version with the redesigned session end (S3)): Only the old session end's "What landed?" card read it; the redesigned session end shows no card.
 export const lastDelivered = query({
 	args: {},
 	handler: async (ctx) => {

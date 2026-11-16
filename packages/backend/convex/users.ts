@@ -242,7 +242,10 @@ export const getMe = query({
 /**
  * Narrow query for the session-end screen's ReachFeedbackCard. Avoids pulling
  * getFullContext into a leaf screen just for one number.
+ *
+ * @deprecated Only the old session end's reach feedback card read it; the redesigned session end shows no card.
  */
+// DEPRECATED(remove-after: app >= first version with the redesigned session end (S3)): Only the old session end's reach feedback card read it; the redesigned session end shows no card.
 export const getSessionCount = query({
 	args: {},
 	handler: async (ctx) => {
