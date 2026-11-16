@@ -14,6 +14,15 @@
  *  4. Someone else's sessions are counted.
  *  5. A heavy user's count reads without bound and fails the query.
  *  6. Signed out, it answers instead of refusing.
+ *
+ * And for `applyRetentionNow`, the alert's "Delete them":
+ *  7. It deletes more or less than the count said, or skips the job's other
+ *     sweeps (feedback, stretches…).
+ *  8. It touches another person's data.
+ *  9. It stops after one batch.
+ * 10. Lengthening or `indefinite` deletes anything, or a purge keeps going
+ *     after the person lengthened it again.
+ * 11. `preferences.update` (what shipped builds call) starts deleting.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
@@ -25,7 +34,8 @@ import {
 	type SeededUser,
 } from "../test/harness.helpers";
 import { aggregatesMock, ragMock } from "../test/mocks.helpers";
-import { MAX_COUNTED, RETENTION_TIERS, type RetentionTier } from "./retention";
+import { MAX_COUNTED } from "./retention";
+import { RETENTION_TIERS, type RetentionTier } from "./retentionCutoff";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../rag", () => ragMock());
@@ -90,6 +100,47 @@ async function setRetention(user: SeededUser, tier: RetentionTier) {
 			dataRetentionPreference: tier,
 		});
 	});
+}
+
+const apply = (user: SeededUser, preference: RetentionTier | "indefinite") =>
+	user.t.mutation(api.privacy.retention.applyRetentionNow, { preference });
+
+const retentionOf = (user: SeededUser) =>
+	user.root.run(
+		async (ctx) =>
+			(
+				await ctx.db
+					.query("preferences")
+					.withIndex("by_profile", (q) =>
+						q.eq("emotionalProfileId", user.profileId)
+					)
+					.unique()
+			)?.dataRetentionPreference
+	);
+
+/** Run the purge's scheduled continuations until none is left; how many ran. */
+async function drainPurge(user: SeededUser) {
+	const ran = new Set<string>();
+	for (let i = 0; i < 20; i++) {
+		const jobs = await user.root.run((ctx) =>
+			ctx.db.system.query("_scheduled_functions").collect()
+		);
+		const next = jobs.find(
+			(j) =>
+				j.state.kind === "pending" &&
+				j.name.includes("continueRetentionPurge") &&
+				!ran.has(j._id)
+		);
+		if (!next) {
+			return ran.size;
+		}
+		ran.add(next._id);
+		await user.root.mutation(
+			internal.privacy.retention.continueRetentionPurge,
+			next.args[0] as never
+		);
+	}
+	throw new Error("the purge never finished");
 }
 
 const sessionIds = (user: SeededUser) =>
@@ -241,4 +292,152 @@ describe("parity with jobs/dataRetention", () => {
 			expect((await sessionIds(user)).sort()).toEqual([...stays].sort());
 		}
 	);
+});
+
+describe("applyRetentionNow", () => {
+	it.each(RETENTION_TIERS)(
+		"%s: deletes exactly the sessions the count reported at the same instant",
+		async (tier) => {
+			const user = await asNewUser();
+			const cutoff = nextRunCutoff(tier);
+			const goes = await seedAt(user, [
+				cutoff - 1,
+				cutoff - DAY,
+				NOW - 900 * DAY,
+			]);
+			const stays = await seedAt(user, [cutoff, cutoff + 1, NOW]);
+
+			const counted = await count(user, tier);
+			expect(await apply(user, tier)).toEqual({ scheduled: false });
+
+			const left = await sessionIds(user);
+			expect(counted.count).toBe(goes.length);
+			expect(left.sort()).toEqual([...stays].sort());
+			expect(await retentionOf(user)).toBe(tier);
+		}
+	);
+
+	it("runs the job's other sweeps at the same cutoff", async () => {
+		const user = await asNewUser();
+		const cutoff = nextRunCutoff("6_months");
+		await user.root.run(async (ctx) => {
+			for (const createdAt of [cutoff - 1, cutoff]) {
+				await ctx.db.insert("feedback", {
+					createdAt,
+					emotionalProfileId: user.profileId,
+					type: "general",
+				});
+				await ctx.db.insert("compounding_stretches", {
+					anchorBaseline: 67,
+					domain: "work",
+					emotionalProfileId: user.profileId,
+					endedAt: createdAt,
+					startedAt: createdAt - 30 * DAY,
+				});
+			}
+		});
+
+		await apply(user, "6_months");
+
+		const kept = await user.root.run(async (ctx) => ({
+			feedback: (
+				await ctx.db
+					.query("feedback")
+					.withIndex("by_profile", (q) =>
+						q.eq("emotionalProfileId", user.profileId)
+					)
+					.collect()
+			).map((f) => f.createdAt),
+			stretches: (
+				await ctx.db
+					.query("compounding_stretches")
+					.withIndex("by_emotionalProfileId_and_endedAt", (q) =>
+						q.eq("emotionalProfileId", user.profileId)
+					)
+					.collect()
+			).map((s) => s.endedAt),
+		}));
+		expect(kept).toEqual({ feedback: [cutoff], stretches: [cutoff] });
+	});
+
+	it("touches only the caller's data", async () => {
+		const mine = await asNewUser(1);
+		const theirs = await asNewUser(2, mine.root);
+		await seedAt(mine, daysAgo(400));
+		const theirSessions = await seedAt(theirs, daysAgo(400, 500));
+
+		await apply(mine, "6_months");
+
+		expect(await sessionIds(mine)).toEqual([]);
+		expect((await sessionIds(theirs)).sort()).toEqual(
+			[...theirSessions].sort()
+		);
+		expect(await retentionOf(theirs)).toBe("indefinite");
+	});
+
+	it("continues past one batch until everything is gone", async () => {
+		const user = await asNewUser();
+		await seedAt(
+			user,
+			Array.from({ length: 120 }, (_, i) => NOW - (400 + i) * DAY)
+		);
+		const kept = await seedAt(user, daysAgo(1));
+
+		expect(await apply(user, "6_months")).toEqual({ scheduled: true });
+		expect((await sessionIds(user)).length).toBe(71);
+
+		expect(await drainPurge(user)).toBe(2);
+		expect(await sessionIds(user)).toEqual(kept);
+	});
+
+	it("stops a purge in progress when retention is lengthened again", async () => {
+		const user = await asNewUser();
+		await seedAt(
+			user,
+			Array.from({ length: 120 }, (_, i) => NOW - (400 + i) * DAY)
+		);
+		await apply(user, "6_months");
+		await user.t.mutation(api.preferences.update, {
+			dataRetentionPreference: "indefinite",
+		});
+
+		await drainPurge(user);
+		expect((await sessionIds(user)).length).toBe(70);
+	});
+
+	it("lengthening, keeping the same value and indefinite delete nothing", async () => {
+		const user = await asNewUser();
+		await setRetention(user, "6_months");
+		const all = await seedAt(user, daysAgo(10, 400, 1000));
+
+		expect(await apply(user, "1_year")).toEqual({ scheduled: false });
+		expect(await retentionOf(user)).toBe("1_year");
+		expect(await apply(user, "1_year")).toEqual({ scheduled: false });
+		expect(await apply(user, "indefinite")).toEqual({ scheduled: false });
+		expect(await retentionOf(user)).toBe("indefinite");
+
+		expect((await sessionIds(user)).sort()).toEqual([...all].sort());
+	});
+
+	it("preferences.update still saves without deleting (shipped builds)", async () => {
+		const user = await asNewUser();
+		const all = await seedAt(user, daysAgo(400, 1000));
+
+		await user.t.mutation(api.preferences.update, {
+			dataRetentionPreference: "6_months",
+		});
+
+		expect(await retentionOf(user)).toBe("6_months");
+		expect((await sessionIds(user)).sort()).toEqual([...all].sort());
+	});
+
+	it("refuses when signed out", async () => {
+		await expectCode(
+			() =>
+				asUnauthed().mutation(api.privacy.retention.applyRetentionNow, {
+					preference: "6_months",
+				}),
+			"not_authenticated"
+		);
+	});
 });

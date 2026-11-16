@@ -1,64 +1,37 @@
 import { v } from "convex/values";
-import type { Id } from "../_generated/dataModel";
-import { type QueryCtx, query } from "../_generated/server";
+import { internal } from "../_generated/api";
+import type { Doc } from "../_generated/dataModel";
+import { internalMutation, mutation, query } from "../_generated/server";
+import { purgeProfilePastCutoff } from "../jobs/dataRetention";
 import { requireAuth } from "../lib/auth";
 import { dataRetentionPreferenceValidator } from "../lib/validators";
+import { updatePreferences } from "../preferences";
+import { nextRunCutoff, sessionsBefore } from "./retentionCutoff";
 
 /**
- * Data retention: what a `dataRetentionPreference` keeps, shared by the job
- * that enforces it (`jobs/dataRetention.ts`, scheduled in `crons.ts`) and the
- * count Settings shows before someone shortens it (redesign B9).
+ * Settings' retention controls for the redesigned Privacy page (redesign B9):
+ * the count its alert shows before someone shortens retention ("N sessions
+ * would go"), and the purge that runs when they confirm.
  *
- * Both read the same cutoff and the same index range from here, so the count
- * can't drift from what the job deletes: the same table, the same comparison
- * (strictly older than the cutoff), and no day boundary (the cutoff is a
- * millisecond instant, not a local day).
+ * Both take their cutoff from `nextRunCutoff`, so what's deleted on confirm
+ * is exactly what was counted. The rule itself lives in `./retentionCutoff`,
+ * and the deletion in `jobs/dataRetention.purgeProfilePastCutoff`, both
+ * shared with the nightly job.
+ *
+ * `preferences.update` still saves a retention preference without deleting
+ * anything (shipped builds have no alert); the nightly job then catches up.
  */
 
-/** The preferences that expire anything, shortest first: the order the job walks them. */
-export const RETENTION_TIERS = ["6_months", "1_year"] as const;
-export type RetentionTier = (typeof RETENTION_TIERS)[number];
+type RetentionPreference = Doc<"preferences">["dataRetentionPreference"];
 
-const HOUR_MS = 60 * 60 * 1000;
-const DAY_MS = 24 * HOUR_MS;
-const DAYS_IN_YEAR = 365;
-const DAYS_IN_MONTH = 30;
-const MONTHS_IN_HALF_YEAR = 6;
-
-/** How long each tier keeps a session. Fixed day counts, not calendar months. */
-const RETENTION_MS: Record<RetentionTier, number> = {
-	"1_year": DAYS_IN_YEAR * DAY_MS,
-	"6_months": MONTHS_IN_HALF_YEAR * DAYS_IN_MONTH * DAY_MS,
-};
-
-/** Rows created strictly before this instant are past `tier`'s retention at `now`. */
-export function retentionCutoff(tier: RetentionTier, now: number): number {
-	return now - RETENTION_MS[tier];
-}
-
-const PROD_RUN_INTERVAL_HOURS = 24;
-const DEV_RUN_INTERVAL_HOURS = 72;
-
-/** How often `crons.ts` runs the retention job: daily in production, every 3 days elsewhere. */
-export function retentionRunIntervalHours(isProd: boolean): number {
-	return isProd ? PROD_RUN_INTERVAL_HOURS : DEV_RUN_INTERVAL_HOURS;
-}
-
-/**
- * A profile's sessions created strictly before `cutoff`, oldest first. The
- * only range retention deletes from; bound it with `.take(n)`.
- */
-export function sessionsBefore(
-	db: QueryCtx["db"],
-	emotionalProfileId: Id<"emotional_profiles">,
-	cutoff: number
-) {
-	return db
-		.query("sessions")
-		.withIndex("by_profile_time", (q) =>
-			q.eq("emotionalProfileId", emotionalProfileId).lt("createdAt", cutoff)
-		);
-}
+/** Longest last: a move down this list shortens retention. */
+const KEEPS_LONGER: readonly RetentionPreference[] = [
+	"6_months",
+	"1_year",
+	"indefinite",
+];
+const shortens = (from: RetentionPreference, to: RetentionPreference) =>
+	KEEPS_LONGER.indexOf(to) < KEEPS_LONGER.indexOf(from);
 
 /**
  * The most sessions the count reads; past it the answer is "more than
@@ -72,17 +45,18 @@ export function sessionsBefore(
 export const MAX_COUNTED = 100;
 
 /**
- * How many of the caller's sessions retention would delete if `retention`
- * became their preference now, up to the job's next run.
+ * How many of the caller's sessions would go if `retention` became their
+ * preference now: what `applyRetentionNow` deletes, and what the nightly job
+ * deletes by its next run for someone who changes it through
+ * `preferences.update`.
  *
  * - **Every session row counts**, not only the ones on the timeline:
  *   `initiated`, `abandoned` and `error` sessions are deleted too, and an
  *   abandoned one can still hold what the person wrote.
  * - **Counted to the next run.** The job runs every
  *   `retentionRunIntervalHours` on its own clock, so a session that crosses
- *   the cutoff before then is deleted at that run. The cutoff is taken that
- *   far ahead: the count may include a session up to one interval early,
- *   never miss one the next run deletes.
+ *   the cutoff before then goes at that run. The count's cutoff is that far
+ *   ahead: it may include a session up to one interval early, never miss one.
  * - **Fetch it once**, imperatively, when the person picks a shorter period
  *   (`convex.query(...)`), not as a `useQuery` subscription: the result
  *   depends on the clock, and nothing re-runs it as time passes.
@@ -97,10 +71,7 @@ export const countSessionsPastRetention = query({
 		if (args.retention === "indefinite") {
 			return { capped: false, count: 0 };
 		}
-		// Same rule as crons.ts's `isProd`.
-		const isProd = process.env.CONVEX_ENV === "production";
-		const nextRun = Date.now() + retentionRunIntervalHours(isProd) * HOUR_MS;
-		const cutoff = retentionCutoff(args.retention, nextRun);
+		const cutoff = nextRunCutoff(args.retention, Date.now());
 		const rows = await sessionsBefore(ctx.db, profile._id, cutoff).take(
 			MAX_COUNTED + 1
 		);
@@ -110,4 +81,91 @@ export const countSessionsPastRetention = query({
 		};
 	},
 	returns: v.object({ capped: v.boolean(), count: v.number() }),
+});
+
+/**
+ * Save a retention preference and, when it shortens retention, delete what
+ * it lets go right away: the alert's "Delete them". Only the redesigned
+ * Settings calls this; `preferences.update` keeps saving without deleting.
+ *
+ * - Saves through `preferences.update`'s own handler.
+ * - Shortening deletes everything the nightly job would for the caller, at
+ *   `nextRunCutoff` (the count's cutoff): one batch inline, the rest in
+ *   `continueRetentionPurge` runs scheduled back to back.
+ * - Lengthening, keeping the same value, and `indefinite` delete nothing.
+ *
+ * Returns `{ scheduled }`: true when a continuation will delete more.
+ */
+export const applyRetentionNow = mutation({
+	args: { preference: dataRetentionPreferenceValidator },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
+		const before = await ctx.db
+			.query("preferences")
+			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profile._id))
+			.unique();
+		await updatePreferences(ctx, {
+			dataRetentionPreference: args.preference,
+		});
+		if (
+			args.preference === "indefinite" ||
+			!before ||
+			!shortens(before.dataRetentionPreference, args.preference)
+		) {
+			return { scheduled: false };
+		}
+		const cutoff = nextRunCutoff(args.preference, Date.now());
+		const { more } = await purgeProfilePastCutoff(ctx, profile._id, cutoff);
+		if (more) {
+			await ctx.scheduler.runAfter(
+				0,
+				internal.privacy.retention.continueRetentionPurge,
+				{
+					cutoff,
+					emotionalProfileId: profile._id,
+					preference: args.preference,
+				}
+			);
+		}
+		return { scheduled: more };
+	},
+	returns: v.object({ scheduled: v.boolean() }),
+});
+
+/**
+ * The rest of an `applyRetentionNow` purge, one batch per run, at the cutoff
+ * it was confirmed with. Stops if the preference has changed since: a
+ * person who lengthened it again keeps what's left.
+ */
+export const continueRetentionPurge = internalMutation({
+	args: {
+		cutoff: v.number(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		preference: v.union(v.literal("6_months"), v.literal("1_year")),
+	},
+	handler: async (ctx, args) => {
+		const prefs = await ctx.db
+			.query("preferences")
+			.withIndex("by_profile", (q) =>
+				q.eq("emotionalProfileId", args.emotionalProfileId)
+			)
+			.unique();
+		if (prefs?.dataRetentionPreference !== args.preference) {
+			return null;
+		}
+		const { more } = await purgeProfilePastCutoff(
+			ctx,
+			args.emotionalProfileId,
+			args.cutoff
+		);
+		if (more) {
+			await ctx.scheduler.runAfter(
+				0,
+				internal.privacy.retention.continueRetentionPurge,
+				args
+			);
+		}
+		return null;
+	},
+	returns: v.null(),
 });
