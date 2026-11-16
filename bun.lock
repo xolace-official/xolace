@@ -130,7 +130,6 @@
         "@sentry/react-native": "~8.28.0",
         "@shopify/react-native-skia": "2.14.0",
         "@xolace/backend": "workspace:*",
-        "clsx": "^2.1.1",
         "convex": "catalog:",
         "expo": "~58.0.25",
         "expo-apple-authentication": "~58.0.3",
