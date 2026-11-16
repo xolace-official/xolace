@@ -61,6 +61,20 @@ Work in this order; each step leaves something you can test.
   argument. `useLoopScale`/`useBreathPeriod` are in `@/design/motion`. Haptic calls carry
   over as they are. Keep each animation on the library the prototype used (its profiles
   were measured that way); anything you add that's new goes on Ease only if it loops.
+- **Shared kit** (`M/AGENTS.md`, "Shared kit"). The prototype's imports map to production:
+  - `@/components/<piece>` → `@/components/shared/<piece>`.
+  - `@/features/settings-v2/{parts,open-row,tile-row,settings-dialog,name-dialog}` →
+    `@/components/settings-kit/…`. The kit's `Card` is `SettingsCard`; `NameDialog` takes
+    `copy`, `max` and `error` from the screen; review-only `held` is gone.
+  - `@/lib/{keyboard-spacer,use-keyboard-lift,use-keyboard-shown}` → `@/lib/keyboard/…`.
+  - `useTokens().dangerInk` → `useTokenColor("danger-ink")`; `useScheme` →
+    `@/design/scheme`; `useHeaderOptions` → `@/lib/header-options`.
+  - Sheets in the prototype's `root-screens.ts`: `fitSheet` from `@/lib/root-screen`
+    (it takes the `ScreenContext`; `t.surface` is `surface`).
+  - `CountryMenu` and `Segmented` take `options` (`{ id, label }`), not fixtures.
+  - `Icon` names need an Android twin (`{ ios, android }`).
+  - Toasts: `toast()` from the data hook, never heroui's `useToast`.
+  - The first import of a kit file deletes its line from knip's `entry` (`knip.jsonc`).
 - **Pieces from another feature** (the Telegram offer from `reach-me-on`, a streak ring):
   move the piece down a layer in this PR, to `src/lib`, `src/components/shared` or a kit
   in `src/components/<kit>` (architecture §7.4), and point the old feature at it too. Or

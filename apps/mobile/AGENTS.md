@@ -63,7 +63,8 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   (`preferences.colorTheme`, the store's `previousTheme`). Switch themes through
   `themeVariant(id, mode)`, `oppositeVariant`, `NIGHT_VARIANT`, `findVariant`.
 - **Platform code:** `.ios.tsx` / `.android.tsx` / `.web.tsx`; Uniwind `ios:`/`android:`.
-- **UI kit:** HeroUI Native first; bottom sheets via `@gorhom/bottom-sheet`.
+- **UI kit:** the shared kit ("Shared kit" below) first, then HeroUI Native; bottom
+  sheets via `@gorhom/bottom-sheet`, sheets that are routes via `fitSheet`.
 - **State:** see "Feature shape". Backend calls live in the feature's `use-*.ts` data
   hook, never in components.
 - **Convex reads with user-driven args** (paging, filters, tabs): `useStableQuery` /
@@ -129,6 +130,40 @@ src/features/<feature>/
   `LEGACY_FEATURES` in `feature-shape.ts` (today's folders; the list only shrinks);
   `bun run check:changed` warns on `.tsx` over 200 lines. Porting a prototype screen:
   the `port-screen` skill.
+
+## Shared kit
+
+The redesign's shared pieces live in `src/components/shared/`, the settings kit in
+`src/components/settings-kit/`, the keyboard helpers in `src/lib/keyboard/`. Where
+production had its own version, new code uses the kit's; the old one stays only for the
+screens that already use it, which move over in cleanup (C1).
+
+| Need | New code | Old screens only |
+|---|---|---|
+| Press feedback | `PressScale` (.96, cards .98, Press curve, optional `haptic`) | heroui `PressableFeedback` |
+| Toast | `toast(message, opts)`, called from the data hook | heroui `useToast` |
+| Segments | `Segmented` (SwiftUI on iOS, Material 3 on Android) | `SegmentedControl` |
+| Form sheet | `fitSheet` (`src/lib/root-screen.ts`: fits its content, grabber, 40 pt, surface) | `legacyFitSheet` |
+| Native header | `useHeaderOptions()` (`src/lib/header-options.ts`, theme faces) | `useLargeHeaderOptions` |
+
+- **Pieces:** `Card` + `SectionHeader`, `MediaRow` + `Kicker`, `CareRow`, `Avatar`,
+  `BackButton`, `GlassGroup`, `DetachedSheet` (a transparent-modal route), `RollingNumber`,
+  `CountryMenu`, `Flux`, `Aura`. Settings-like pages: `SettingsHeader`, `SectionTitle`,
+  `SettingsCard`, `Footnote`, `Rows`, `SwitchRow`, `OpenRow`, `TileRow`, `SettingsDialog`,
+  `NameDialog`.
+- **Colours for native views and SVG:** `useTokenColor("danger-ink")`. Native views go in
+  `ThemedHost`, which passes the theme's light or dark (`useScheme()`, `src/design/scheme.ts`).
+- **Icons:** `Icon` takes an SF Symbol name, or `{ ios, android }` to draw on Android too.
+  Give the kit's callers both.
+- **Third-party components with `className`** come from `styled.ts` (`LinearGradient`,
+  `Image`, `BlurView`), wrapped once.
+- **Keyboard:** `useKeyboardLift` / `useLiftStyle` or `KeyboardSpacer` keep a bar 12 pt over
+  the keyboard (`keyboard-lift-math.ts`); `useKeyboardShown` for layout that switches.
+- **Toast rule:** `toast()` counts as a backend side effect (`feature-shape.ts`), so in a v2
+  folder only `use-*.ts` calls it. `ToastBridge` in `root-provider.tsx` hands it HeroUI's
+  manager.
+- **Before first use:** each kit file is a knip `entry` (`knip.jsonc`) and its exports carry
+  `@public`. The first screen that imports a file deletes its line there.
 
 ## Motion and haptics
 
