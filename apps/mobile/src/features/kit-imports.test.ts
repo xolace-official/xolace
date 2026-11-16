@@ -9,6 +9,7 @@ import {
 const file = (rel: string) => path.join(SRC, rel);
 
 const pkg = (specifier: string, names: string[] = []): Import => ({
+	devOnly: false,
 	names,
 	specifier,
 	targets: [],
@@ -17,6 +18,7 @@ const pkg = (specifier: string, names: string[] = []): Import => ({
 
 /** A local import of another `src/` file, with its named bindings. */
 const local = (rel: string, names: string[]): Import => ({
+	devOnly: false,
 	names,
 	specifier: `@/${rel.replace(/\.tsx?$/, "")}`,
 	targets: [file(rel)],

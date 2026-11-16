@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
 	backendCallsOutsideDataHooks,
 	crossFeatureImportsFromPorted,
+	devCodeInReleaseGraph,
 	devImportsFromOutside,
 	oldFolderImportsFromNewCode,
 	portedFolderImportsFromOldCode,
@@ -14,14 +15,22 @@ const file = (rel: string) => path.join(SRC, rel);
 
 /** A local import of another `src/` file. */
 const local = (rel: string, typeOnly = false): Import => ({
+	devOnly: false,
 	names: [],
 	specifier: `@/${rel.replace(/\.tsx?$/, "")}`,
 	targets: [file(rel)],
 	typeOnly,
 });
 
+/** A `require()` of another `src/` file behind `__DEV__`. */
+const devRequire = (rel: string): Import => ({
+	...local(rel),
+	devOnly: true,
+});
+
 /** A package import, with its named value bindings. */
 const pkg = (specifier: string, names: string[] = []): Import => ({
+	devOnly: false,
 	names,
 	specifier,
 	targets: [],
@@ -108,6 +117,38 @@ describe("devImportsFromOutside", () => {
 			],
 		});
 		expect(devImportsFromOutside(graph)).toEqual([]);
+	});
+});
+
+describe("devCodeInReleaseGraph", () => {
+	it("flags app code importing src/dev/ or a feature's dev/ outside a __DEV__ guard", () => {
+		const graph = graphOf({
+			"app/(protected)/dev/index.tsx": [local("dev/dev-index-screen.tsx")],
+			"features/settings/dev-row.tsx": [
+				local("features/reach-me-on/dev/fixtures.ts"),
+			],
+		});
+		expect(devCodeInReleaseGraph(graph)).toEqual([
+			"app/(protected)/dev/index.tsx -> dev/dev-index-screen.tsx",
+			"features/settings/dev-row.tsx -> features/reach-me-on/dev/fixtures.ts",
+		]);
+	});
+
+	it("allows a require behind __DEV__, type-only imports, and dev code among itself", () => {
+		const graph = graphOf({
+			"app/(protected)/dev/[feature]/[state].tsx": [
+				devRequire("dev/dev-state-screen.tsx"),
+			],
+			"dev/dev-state-screen.tsx": [local("dev/registry.ts")],
+			"dev/registry.ts": [local("features/reach-me-on/dev/states.tsx")],
+			"features/reach-me-on/dev/states.tsx": [
+				local("dev/dev-state.ts", true),
+				local("features/reach-me-on/dev/fixtures.ts"),
+				local("features/reach-me-on/reach-sheet.tsx"),
+			],
+			"features/reach-me-on/reach-view.ts": [local("dev/dev-state.ts", true)],
+		});
+		expect(devCodeInReleaseGraph(graph)).toEqual([]);
 	});
 });
 

@@ -9,6 +9,9 @@
       // Each file is an entry until its first screen PR imports it: delete its
       // line then. This list only shrinks. Their exports carry `@public`.
       "entry": [
+        // Each feature's dev states, found by `require.context` in
+        // src/dev/discovered.ts, which knip can't follow.
+        "src/features/**/dev/states.tsx",
         "src/components/settings-kit/name-dialog.tsx",
         "src/components/settings-kit/open-row.tsx",
         "src/components/settings-kit/parts.tsx",
