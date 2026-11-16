@@ -10,7 +10,7 @@ import {
 	type Geo,
 	PH,
 } from "@/features/achievements/arrival/arrival-motion";
-import { Coin } from "@/features/achievements/coin/coin";
+import { Coin, GREY_AFTER } from "@/features/achievements/coin/coin";
 import { Bloom, Flood } from "@/features/achievements/coin/glow";
 import type { Pose } from "@/features/achievements/coin/pose";
 import { COPY } from "@/features/achievements/copy";
@@ -101,6 +101,8 @@ export function BadgeFace({ eng, fa, geo, i, b, dark }: One) {
 				title: b.title,
 			}}
 			dark={dark}
+			// It drops in from above the screen.
+			greyAfterMs={GREY_AFTER.offScreen}
 			lit={!b.art.unlit}
 			n={i}
 			pose={pose}

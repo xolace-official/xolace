@@ -17,6 +17,7 @@ import { Embers } from "@/features/achievements/arrival/milestone/embers";
 import { Fire } from "@/features/achievements/arrival/milestone/fire";
 import { MilestoneFreeze } from "@/features/achievements/arrival/milestone/milestone-freeze";
 import { Week } from "@/features/achievements/arrival/milestone/week";
+import { OnceShown } from "@/features/achievements/arrival/once-shown";
 import { COPY } from "@/features/achievements/copy";
 import { easeOut, seg } from "@/features/achievements/motion-math";
 
@@ -131,7 +132,9 @@ export function Milestone({
 					geo={geo}
 				/>
 			</Animated.View>
-			<Embers dark={dark} eng={eng} geo={geo} />
+			<OnceShown>
+				<Embers dark={dark} eng={eng} geo={geo} />
+			</OnceShown>
 		</>
 	);
 }

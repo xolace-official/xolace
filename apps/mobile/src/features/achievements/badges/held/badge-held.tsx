@@ -17,7 +17,7 @@ import { HeldChrome } from "@/features/achievements/badges/held/held-chrome";
 import { HeldWords } from "@/features/achievements/badges/held/held-words";
 import { Motes } from "@/features/achievements/badges/held/motes";
 import { useHeld } from "@/features/achievements/badges/held-store";
-import { Coin } from "@/features/achievements/coin/coin";
+import { Coin, GREY_AFTER } from "@/features/achievements/coin/coin";
 import { Bloom, Flood } from "@/features/achievements/coin/glow";
 import { HELD_R, type Pose } from "@/features/achievements/coin/pose";
 import { COPY } from "@/features/achievements/copy";
@@ -125,6 +125,9 @@ export function BadgeHeld({ pose }: { pose: SharedValue<Pose> }) {
 							title: badge.title,
 						}}
 						dark={dark}
+						greyAfterMs={
+							shown?.slot ? GREY_AFTER.onScreen : GREY_AFTER.offScreen
+						}
 						lit={!(locked || badge.art.unlit)}
 						n={shown?.n ?? 0}
 						pose={pose}

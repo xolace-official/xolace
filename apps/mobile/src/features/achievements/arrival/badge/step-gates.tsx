@@ -15,6 +15,7 @@ import {
 	shutAt,
 } from "@/features/achievements/arrival/arrival-motion";
 import { Confetti } from "@/features/achievements/arrival/badge/confetti";
+import { OnceShown } from "@/features/achievements/arrival/once-shown";
 import { useTokenColors } from "@/lib/use-token-color";
 
 /** Under the next badge's colour: the one before it, until the arrival closes. */
@@ -76,7 +77,11 @@ export function PhaseConfetti({
 			}
 		}
 	);
-	return <Confetti eng={eng} front={front} geo={geo} key={gen} />;
+	return (
+		<OnceShown>
+			<Confetti eng={eng} front={front} geo={geo} key={gen} />
+		</OnceShown>
+	);
 }
 
 /**

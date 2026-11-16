@@ -20,7 +20,12 @@ const BAND_STOPS = [0.38, 0.5, 0.62] as const;
 const BAND_START = { x: 0.05, y: 0.29 };
 const BAND_END = { x: 0.95, y: 0.71 };
 /** A Skia canvas that mounts while the page is still hidden never draws, so a locked badge's grey art waits this long. */
-const SKIA_AFTER_MS = 60;
+/**
+ * A Skia canvas that mounts hidden or off screen never draws, so a grey (locked
+ * or fallback) coin's art mounts once the coin is on screen: just after it
+ * lifts from a slot on screen, or once it has landed when it comes from off it.
+ */
+export const GREY_AFTER = { offScreen: 640, onScreen: 60 } as const;
 const SHADOW = { day: "0px 26px 50px -20px", dusk: "0px 26px 50px -18px" };
 
 type Props = {
@@ -30,8 +35,10 @@ type Props = {
 	lit: boolean;
 	/** What the back engraves. */
 	back: { title: string; date: string; sparks: number };
-	/** Bumped on each open, so a locked badge's grey art mounts once the page shows. */
+	/** Bumped on each open, so a grey coin's art mounts again once it's on screen. */
 	n: number;
+	/** How long after the open the grey art may mount (`GREY_AFTER`). */
+	greyAfterMs: number;
 	dark: boolean;
 };
 
@@ -39,7 +46,7 @@ type Props = {
  * The held badge: two faces, each turned on its own (so the face away from you
  * is simply hidden), inside one view that flies. Transforms only.
  */
-export function Coin({ pose, art, lit, back, n, dark }: Props) {
+export function Coin({ pose, art, lit, back, n, greyAfterMs, dark }: Props) {
 	const shadowColor = useTokenColor(
 		dark ? "badge-shadow-dusk" : "badge-shadow-day"
 	);
@@ -59,9 +66,9 @@ export function Coin({ pose, art, lit, back, n, dark }: Props) {
 		if (lit || drawn === n) {
 			return;
 		}
-		const id = setTimeout(() => setDrawn(n), SKIA_AFTER_MS);
+		const id = setTimeout(() => setDrawn(n), greyAfterMs);
 		return () => clearTimeout(id);
-	}, [lit, drawn, n]);
+	}, [lit, drawn, n, greyAfterMs]);
 	const disc = {
 		borderRadius: HELD_R,
 		boxShadow: `${dark ? SHADOW.dusk : SHADOW.day} ${shadowColor}`,

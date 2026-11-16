@@ -14,6 +14,7 @@ import { geoFor, PH } from "@/features/achievements/arrival/arrival-motion";
 import type { Still } from "@/features/achievements/arrival/arrival-start";
 import { BadgeLayer } from "@/features/achievements/arrival/badge/badge-layer";
 import { MilestoneLayer } from "@/features/achievements/arrival/milestone/milestone-layer";
+import { ShownContext } from "@/features/achievements/arrival/once-shown";
 import { cn } from "@/lib/cn";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
@@ -70,49 +71,51 @@ export function Arrival({ badges, milestone, still, onDone, ref }: Props) {
 	}, [badges]);
 
 	return (
-		<View className={cn("flex-1", roomOf(hasMs, dark))}>
-			{milestone ? (
-				<MilestoneLayer
+		<ShownContext value={flow.shown}>
+			<View className={cn("flex-1", roomOf(hasMs, dark))}>
+				{milestone ? (
+					<MilestoneLayer
+						dark={dark}
+						eng={eng}
+						geo={geo}
+						hidden
+						label={milestoneLabel(milestone)}
+						milestone={milestone}
+						on={phase === PH.ms}
+						ref={flow.msRef}
+						rm={rm}
+						wake={flow.wake}
+					/>
+				) : null}
+				<View
+					accessibilityElementsHidden={phase !== PH.badge}
+					className="absolute inset-0"
+					importantForAccessibility={
+						phase === PH.badge ? "auto" : "no-hide-descendants"
+					}
+					pointerEvents={phase === PH.badge ? "box-none" : "none"}
+				>
+					<BadgeLayer
+						badges={badges}
+						dark={dark}
+						eng={eng}
+						fa={flow.fa}
+						first={flow.first.step}
+						geo={geo}
+						titleRef={flow.titleRef}
+						wake={flow.wake}
+					/>
+				</View>
+				<ArrivalChrome
 					dark={dark}
 					eng={eng}
-					geo={geo}
-					hidden
-					label={milestoneLabel(milestone)}
-					milestone={milestone}
-					on={phase === PH.ms}
-					ref={flow.msRef}
-					rm={rm}
-					wake={flow.wake}
-				/>
-			) : null}
-			<View
-				accessibilityElementsHidden={phase !== PH.badge}
-				className="absolute inset-0"
-				importantForAccessibility={
-					phase === PH.badge ? "auto" : "no-hide-descendants"
-				}
-				pointerEvents={phase === PH.badge ? "box-none" : "none"}
-			>
-				<BadgeLayer
-					badges={badges}
-					dark={dark}
-					eng={eng}
-					fa={flow.fa}
-					first={flow.first.step}
-					geo={geo}
-					titleRef={flow.titleRef}
-					wake={flow.wake}
+					first={flow.first}
+					onClose={flow.close}
+					onCta={flow.next}
+					top={geo.dy}
+					total={badges.length}
 				/>
 			</View>
-			<ArrivalChrome
-				dark={dark}
-				eng={eng}
-				first={flow.first}
-				onClose={flow.close}
-				onCta={flow.next}
-				top={geo.dy}
-				total={badges.length}
-			/>
-		</View>
+		</ShownContext>
 	);
 }

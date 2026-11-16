@@ -41,8 +41,12 @@ export function BadgesScreen({ open }: { open?: OpenOnArrival }) {
 	const loaded = state.view !== undefined;
 	const known = open ? state.view?.byId.has(open.id) : undefined;
 
-	// Leaving is the end of the visit: the open badge starts fresh next time.
-	useEffect(() => resetHeld, []);
+	// A visit starts and ends with nothing out, even with another copy of the
+	// screen under this one (a link opened over it): the store is module-wide.
+	useEffect(() => {
+		resetHeld();
+		return resetHeld;
+	}, []);
 
 	useEffect(() => {
 		if (!(open && loaded)) {

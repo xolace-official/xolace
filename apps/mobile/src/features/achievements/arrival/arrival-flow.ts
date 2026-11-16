@@ -27,6 +27,8 @@ import {
 import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
 
 const FOCUS_MS = 60;
+/** The host fades the arrival in over 350 ms; its Skia canvases mount once it's in. */
+const SHOWN_AFTER_MS = 360;
 
 /** VoiceOver focus on a heading as it comes out. */
 const focus = (node: ViewInstance | TextInstance | null | undefined) =>
@@ -62,6 +64,7 @@ export function useArrivalFlow({
 	const step = useRef(first.step);
 	const titles = useRef<(TextInstance | null)[]>([]);
 	const msRef = useRef<ViewInstance>(null);
+	const [shown, setShown] = useState(0);
 
 	const onEvent = (ev: number) => {
 		if (ev === EV.close) {
@@ -94,6 +97,7 @@ export function useArrivalFlow({
 
 	/** A staged arrival opens: a fresh engine and the clock. A held frame stays as it is. */
 	const start = () => {
+		setTimeout(() => setShown((n) => n + 1), SHOWN_AFTER_MS);
 		if (still) {
 			return;
 		}
@@ -136,5 +140,17 @@ export function useArrivalFlow({
 		titles.current[i] = node;
 	};
 
-	return { close, eng, fa, first, msRef, next, phase, start, titleRef, wake };
+	return {
+		close,
+		eng,
+		fa,
+		first,
+		msRef,
+		next,
+		phase,
+		shown,
+		start,
+		titleRef,
+		wake,
+	};
 }
