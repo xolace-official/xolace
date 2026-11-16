@@ -9,6 +9,7 @@ import { useThemeColor } from "heroui-native";
 import { type ReactNode, useEffect } from "react";
 import { Appearance } from "react-native";
 import { useUniwind } from "uniwind";
+import { findVariant } from "@/design/themes";
 import { useAppStore } from "@/store/store";
 
 // Single source of truth for the native route background: the navigator paints every screen
@@ -21,7 +22,7 @@ export function NavThemeProvider({ children }: { children: ReactNode }) {
 		"border",
 		"accent",
 	]);
-	const isDark = theme.includes("dark");
+	const isDark = findVariant(theme)?.base === "dark";
 	const base = isDark ? DarkTheme : DefaultTheme;
 
 	const navTheme: Theme = {

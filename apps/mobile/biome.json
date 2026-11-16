@@ -3,7 +3,13 @@
   "root": false,
   "extends": "//",
   "files": {
-    "includes": ["**", "!assets", "!src/uniwind-types.d.ts"]
+    "includes": [
+      "**",
+      "!assets",
+      "!src/uniwind-types.d.ts",
+      "!src/themes/themes.generated.css",
+      "!src/design/theme-names.generated.json"
+    ]
   },
   "linter": {
     "rules": {

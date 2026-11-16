@@ -2,6 +2,7 @@
  * `getState()` is hydrated. Mirrors use-appearance-settings.ts. */
 import { Appearance } from "react-native";
 import { Uniwind } from "uniwind";
+import { themeVariant } from "@/design/themes";
 import { useAppStore } from "@/store/store";
 
 const { theme, colorThemeId } = useAppStore.getState();
@@ -15,6 +16,5 @@ if (colorThemeId === "default" && theme === "system") {
 				? "dark"
 				: "light"
 			: theme;
-	const variant = colorThemeId === "default" ? mode : `${colorThemeId}-${mode}`;
-	Uniwind.setTheme(variant as never);
+	Uniwind.setTheme(themeVariant(colorThemeId, mode));
 }

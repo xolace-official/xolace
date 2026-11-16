@@ -26,14 +26,27 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
 - **Images:** `expo-image` only.
 - **Styling:** Uniwind `className`; `cn()` to merge, `tv()` for variants.
   `StyleSheet.create()` only when unavoidable. Inline dynamic styles are fine.
+  Shape and space tokens (`global.css`): `rounded-row` 12, `rounded-tile` 20,
+  `rounded-card` 24, `rounded-hero` 36 (all continuous corners), `p-gutter` 16,
+  `gap-module` 14, `mt-section` 22, `shadow-card`.
 - **Colors:** CSS variables (`--background`, `--foreground`, `--accent`, ...), never
   hex, even inline. Every theme defines the same variables. `useThemeColor` from
   `heroui-native` for JS values. A fixed palette is allowed only for the listed
   "printed object" surfaces (quotes poster, vent, auth, Lantern reader pages, Talk's
   voice orbs), still as tokens in `global.css`.
-- **Themes:** new theme = CSS file in `src/themes/` with `<name>-light`/`-dark`
-  variants, import in `global.css`, register in `metro.config.js` `extraThemes`, add to
-  the `ThemeName` union and `toggleTheme`.
+- **Themes:** one registry, `src/design/themes.ts`; never hand-write a theme name
+  list or `${id}-${mode}`. To add a theme: add an entry to `THEMES` with only the
+  values it changes (production-style palettes go in `src/design/theme-values.ts`),
+  run `bun run themes` here, restart Metro with `--clear` (`extraThemes` is read at
+  start; it rewrites `src/uniwind-types.d.ts`), commit the regenerated
+  `src/themes/themes.generated.css` and `src/design/theme-names.generated.json`.
+  The generator (`scripts/themes/build.ts`) fills shared values, derives the
+  redesign's extras (`subtle`, `*-ink`, `*-wash`, `heavy-*`, `glass` …) and stops if
+  a variable is missing or undeclared; its test fails if the committed files drift.
+  A new variable: add it to `REQUIRED` there and map a class name in `global.css`.
+  Never rename a theme id or drop a variant: users have them saved
+  (`preferences.colorTheme`, the store's `previousTheme`). Switch themes through
+  `themeVariant(id, mode)`, `oppositeVariant`, `NIGHT_VARIANT`, `findVariant`.
 - **Platform code:** `.ios.tsx` / `.android.tsx` / `.web.tsx`; Uniwind `ios:`/`android:`.
 - **UI kit:** HeroUI Native first; bottom sheets via `@gorhom/bottom-sheet`.
 - **State:** Zustand (persisted slices only for theme/toggles); `useState` for trivial

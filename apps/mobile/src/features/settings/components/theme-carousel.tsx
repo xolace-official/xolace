@@ -6,11 +6,11 @@ import Animated, {
 	useAnimatedScrollHandler,
 	useSharedValue,
 } from "react-native-reanimated";
+import { FREE_THEMES, PREMIUM_THEMES } from "@/design/themes";
 import { getInitialThemeCarouselIndex } from "@/features/settings/components/get-initial-theme-carousel-index";
 import { ThemeCarouselGlow } from "@/features/settings/components/theme-carousel-glow";
 import { ThemeCarouselItem } from "@/features/settings/components/theme-carousel-item";
 import { ThemePreviewCard } from "@/features/settings/components/theme-preview-card";
-import { FREE_THEMES, PREMIUM_THEMES } from "@/lib/themes";
 
 const CARD_WIDTH = 164;
 const CARD_GAP = 14;
@@ -50,7 +50,7 @@ type Props = {
 	isPlus: boolean;
 	reducedMotion: boolean;
 	onFreeThemePress: (themeId: string) => void;
-	onPremiumThemePress: (themeId: string, available: boolean) => void;
+	onPremiumThemePress: (themeId: string) => void;
 };
 
 export const ThemeCarousel = ({
@@ -159,10 +159,8 @@ export const ThemeCarousel = ({
 						>
 							<ThemePreviewCard
 								isActive={activeThemeId === theme.id}
-								isLocked={!isPlus || theme.available === false}
-								onPress={() =>
-									onPremiumThemePress(theme.id, theme.available !== false)
-								}
+								isLocked={!isPlus}
+								onPress={() => onPremiumThemePress(theme.id)}
 								theme={theme}
 								width={CARD_WIDTH}
 							/>

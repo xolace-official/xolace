@@ -2,14 +2,14 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { ScopedTheme } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
-import type { ThemeEntry } from "@/lib/themes";
+import { type ThemeEntry, themeVariant } from "@/design/themes";
 import { cn } from "@/lib/utils";
 
 type Props = {
 	theme: ThemeEntry;
 	isActive: boolean;
 	onPress: () => void;
-	/** Overrides the default lock (premium + no CSS yet), e.g. premium && !isPlus. */
+	/** Shows the lock badge (a premium theme without Plus). */
 	isLocked?: boolean;
 	width?: number;
 };
@@ -31,11 +31,10 @@ export const ThemePreviewCard = ({
 	theme,
 	isActive,
 	onPress,
-	isLocked: lockedOverride,
+	isLocked = false,
 	width = 130,
 }: Props) => {
-	const isLocked =
-		lockedOverride ?? (theme.tier === "premium" && theme.available === false);
+	const preview = themeVariant(theme.id, "dark");
 
 	return (
 		<Pressable
@@ -44,7 +43,7 @@ export const ThemePreviewCard = ({
 			onPress={onPress}
 			style={{ width }}
 		>
-			<ScopedTheme theme={theme.variants.dark}>
+			<ScopedTheme theme={preview}>
 				<View
 					className={cn(
 						"rounded-[16px]",
@@ -92,7 +91,7 @@ export const ThemePreviewCard = ({
 						initialAnimate={EASE_INITIAL}
 						transition={EASE_TRANSITION}
 					>
-						<ScopedTheme theme={theme.variants.dark}>
+						<ScopedTheme theme={preview}>
 							<AppText className="text-[9px] text-accent">· Active</AppText>
 						</ScopedTheme>
 					</EaseView>

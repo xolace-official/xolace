@@ -1,21 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { ThemeEntry } from "@/lib/themes";
 import { getInitialThemeCarouselIndex } from "./get-initial-theme-carousel-index";
 
-const STUB_VARIANTS: Pick<ThemeEntry, "id" | "variants">[] = [
-	{ id: "default", variants: { dark: "dark", light: "light" } },
-	{ id: "quiet", variants: { dark: "quiet-dark", light: "quiet-light" } },
-	{ id: "reverie", variants: { dark: "reverie-dark", light: "reverie-light" } },
-	{ id: "emerald", variants: { dark: "emerald-dark", light: "emerald-light" } },
-	{ id: "noir", variants: { dark: "noir-dark", light: "noir-light" } },
-];
-
-const THEME_STUBS: ThemeEntry[] = STUB_VARIANTS.map(({ id, variants }) => ({
-	id,
-	name: id,
-	tier: id === "emerald" || id === "noir" ? "premium" : "free",
-	variants,
-}));
+const THEME_STUBS = ["default", "quiet", "reverie", "emerald", "noir"].map(
+	(id) => ({ id })
+);
 
 describe("getInitialThemeCarouselIndex", () => {
 	it("centers on the active free theme", () => {
