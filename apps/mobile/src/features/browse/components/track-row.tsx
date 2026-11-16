@@ -11,7 +11,9 @@ import {
 import { CoverImage } from "@/features/library/cover-image";
 
 export type { BrowseFrom };
-export type TrackItem = FunctionReturnType<typeof api.browse.getTopic>[number];
+export type TrackItem = FunctionReturnType<
+	typeof api.browse.topics.getTopic
+>[number];
 
 export const FAMILY_LABEL = {
 	music: "Music",

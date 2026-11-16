@@ -12,7 +12,7 @@ import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-st
 import { CoverImage } from "@/features/library/cover-image";
 import { playSoftPress } from "@/lib/haptics";
 
-type Topic = FunctionReturnType<typeof api.browse.getTopics>[number];
+type Topic = FunctionReturnType<typeof api.browse.topics.getTopics>[number];
 
 const GUTTER = 16;
 const GAP = 12;
@@ -35,7 +35,7 @@ export function TopicGridScreen() {
 	// Clears the floating mini-player off the last row (none on iOS 26).
 	const playerInset = useMiniPlayerInset();
 	const posthog = usePostHog();
-	const topics = useQuery(api.browse.getTopics, {});
+	const topics = useQuery(api.browse.topics.getTopics, {});
 	const { width } = useWindowDimensions();
 	const tile = (width - GUTTER * 2 - GAP) / 2;
 

@@ -11,7 +11,7 @@ import {
 import { CoverImage } from "@/features/library/cover-image";
 
 export type ShelfItem = FunctionReturnType<
-	typeof api.browse.getNewShelf
+	typeof api.browse.hub.getNewShelf
 >[number];
 
 const TILE = 170;

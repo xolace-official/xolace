@@ -124,8 +124,8 @@ export function BrowseHubScreen() {
 	const { width } = useWindowDimensions();
 	const posthog = usePostHog();
 	const clock = useUtcDay();
-	const shelf = useQuery(api.browse.getNewShelf, clock);
-	const featured = useQuery(api.browse.getFeatured, {});
+	const shelf = useQuery(api.browse.hub.getNewShelf, clock);
+	const featured = useQuery(api.browse.hub.getFeatured, {});
 	const [tip] = useState(pickListeningTip);
 	const mutedTint = useCSSVariable("--muted");
 
