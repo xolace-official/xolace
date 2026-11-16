@@ -4,6 +4,7 @@ import { internalMutation } from "../_generated/server";
 import { purgeReplyEntries } from "../episodicMemory";
 import { rankReplace } from "../lib/aggregates";
 import { purgeSessions } from "../lib/sessionCascade";
+import { drainPromptStates } from "../monthlyEvents/prompt";
 import {
 	drainInbound,
 	drainOutreach,
@@ -18,7 +19,8 @@ const BATCH_SIZE = 100;
  * preferences, and consent records.
  *
  * Deletes: sessions, emotional_metadata, session_turns,
- *          reflection_resonances, notification_log, library_reads, activity_log,
+ *          reflection_resonances, notification_log, library_reads,
+ *          monthly_event_states, activity_log,
  *          frozen_days, compounding_stretches, steadiness_insights, outreach,
  *          outreach_deliveries, the linked chats' inbound_events, an unused
  *          channel_link_tokens row, and the bot's last 48 h of Telegram
@@ -135,6 +137,13 @@ export const wipe = internalMutation({
 		}
 		for (const r of reads) {
 			await ctx.db.delete("library_reads", r._id);
+		}
+
+		// ── Delete monthly prompt choices (B2) ───────────────────────
+		// What they chose on a month's prompt is theirs too. The current
+		// month's prompt waits for them again.
+		if (await drainPromptStates(ctx, emotionalProfileId)) {
+			hasMore = true;
 		}
 
 		// ── Delete activity log ──────────────────────────────────────

@@ -1714,13 +1714,41 @@ export default defineSchema({
 		url: v.optional(v.string()),
 	}).index("by_slug", ["slug"]),
 
+	// What a user chose on a monthly event's prompt (redesign "Coming back",
+	// B2). No row = still waiting. One row per (profile, event), written once:
+	// "read" can only become "written"; "passed" is final, so the prompt never
+	// comes back. `carryUntil` is set while the prompt rides Today's reflect
+	// card (7 days from the first read or write) and cleared when it expires
+	// (scheduled), is used, or is let go. Private: purged by wipe and account
+	// deletion.
+	monthly_event_states: defineTable({
+		carryUntil: v.optional(v.number()),
+		choice: v.union(
+			v.literal("read"),
+			v.literal("passed"),
+			v.literal("written")
+		),
+		chosenAt: v.number(),
+		emotionalProfileId: v.id("emotional_profiles"),
+		eventId: v.id("monthlyEvents"),
+	})
+		.index("by_emotionalProfileId_and_eventId", [
+			"emotionalProfileId",
+			"eventId",
+		])
+		.index("by_emotionalProfileId_and_carryUntil", [
+			"emotionalProfileId",
+			"carryUntil",
+		]),
+
 	// ===========================================================
 	// 17. MONTHLY EVENTS ("Moments" layer — Phase 1)
 	// ===========================================================
 	//
 	// Team-managed awareness events shown once per user per event.
 	// Seed of the "Moments" infrastructure layer.
-	// No server-side date filtering — client filters in local timezone.
+	// Dates are local calendar days: `getActive` leaves the filtering to the
+	// client; `monthlyEvents/prompt.getWaiting` takes the client's local day.
 	//
 	monthlyEvents: defineTable({
 		body: v.string(),
@@ -1761,7 +1789,10 @@ export default defineSchema({
 		updatedAt: v.optional(v.number()),
 	})
 		.index("by_slug", ["slug"])
-		.index("by_priority", ["priority", "startDate"]),
+		.index("by_priority", ["priority", "startDate"])
+		// The app's reads take the latest-ending events, so ended ones drop out
+		// without the server reading the clock (B2).
+		.index("by_endDate", ["endDate"]),
 
 	// ===========================================================
 	// 10. NOTIFICATION LOG
