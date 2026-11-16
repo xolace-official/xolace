@@ -3,7 +3,7 @@ import { posthog } from "@/config/posthog";
 import {
 	REFLECT_TOUR_VERSION,
 	shouldShowReflectTour,
-} from "@/features/reflect-tour/tour-copy";
+} from "@/lib/reflect-tour-version";
 import { useAppStore } from "@/store/store";
 
 /**

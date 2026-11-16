@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	REFLECT_TOUR_VERSION,
 	shouldShowReflectTour,
-} from "@/features/reflect-tour/tour-copy";
+} from "@/lib/reflect-tour-version";
 import { hasAccountFlag } from "./account-flags-slice";
 import { useAppStore } from "./store";
 

@@ -17,8 +17,8 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 
 import { AppText } from "@/components/shared/app-text";
-import { getStreakCopy } from "@/features/streak/streak-copy";
 import { playSessionComplete } from "@/lib/haptics";
+import { getStreakCopy } from "@/lib/streak-copy";
 import { BlastParticles, type BlastParticlesRef } from "./blast-particles";
 import {
 	BLAST_SPRING,

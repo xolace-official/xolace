@@ -1,11 +1,3 @@
-/** Bump when the tour is re-cut. A device stores the version it last finished; anything lower
- * sees the current tour once. */
-export const REFLECT_TOUR_VERSION = 1;
-
-/** Whether the tour should run for a device that last finished `version`. */
-export const shouldShowReflectTour = (version: number) =>
-	version < REFLECT_TOUR_VERSION;
-
 // Indexed by a step's `order` (#259).
 export const TOUR_STEPS = [
 	// A first-run user has seen neither 3am Mode nor a long absence, so the

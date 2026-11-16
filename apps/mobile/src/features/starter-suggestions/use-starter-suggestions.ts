@@ -1,4 +1,4 @@
-import { shouldShowReflectTour } from "@/features/reflect-tour/tour-copy";
+import { shouldShowReflectTour } from "@/lib/reflect-tour-version";
 import { useAppStore } from "@/store/store";
 import { useAccountFlag } from "@/store/use-account-flag";
 

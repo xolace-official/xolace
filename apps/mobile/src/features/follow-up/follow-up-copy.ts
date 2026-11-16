@@ -5,7 +5,7 @@ import {
 	isStreakMilestone,
 	streakMilestoneCopy,
 } from "@xolace/backend/convex/streaks/milestones";
-import { getStreakCopy } from "@/features/streak/streak-copy";
+import { getStreakCopy } from "@/lib/streak-copy";
 
 export type FollowUpResponse =
 	| "lighter"
