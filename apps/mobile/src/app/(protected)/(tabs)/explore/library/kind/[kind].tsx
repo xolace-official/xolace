@@ -7,7 +7,7 @@ export default function LibraryKindRoute() {
 	const known = KINDS.find((k) => k.kind === kind);
 	// A mistyped deep link lands on the home rather than an argument error.
 	if (!known) {
-		return <Redirect href="/browse/library" />;
+		return <Redirect href="/explore/library" />;
 	}
 	return <LibraryListScreen by={{ kind: known.kind }} />;
 }

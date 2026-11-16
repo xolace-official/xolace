@@ -87,7 +87,7 @@ export function HubCarousel({ hubs }: { hubs: Hub[] }) {
 							asChild
 							href={{
 								params: { slug: hub.slug },
-								pathname: "/browse/library/hub/[slug]",
+								pathname: "/explore/library/hub/[slug]",
 							}}
 							key={hub._id}
 						>

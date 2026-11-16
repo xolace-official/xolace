@@ -51,7 +51,7 @@ function Section<T>({
 		return null;
 	}
 	const seeAll = () =>
-		router.push({ params: { q: query, section }, pathname: "/browse/search" });
+		router.push({ params: { q: query, section }, pathname: "/explore/search" });
 	return (
 		<>
 			<SectionTitle

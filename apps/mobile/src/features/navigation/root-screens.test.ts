@@ -1,16 +1,8 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import {
-	ROOT_SCREENS,
-	rootScreensFor,
-} from "@/features/navigation/root-screens";
-import {
-	DETACHED_SHEET,
-	fitSheet,
-	type RootScreen,
-	screenOptions,
-} from "@/lib/root-screen";
+import { ROOT_SCREENS } from "@/features/navigation/root-screens";
+import { DETACHED_SHEET, fitSheet, screenOptions } from "@/lib/root-screen";
 
 const PROTECTED = path.resolve(import.meta.dirname, "../../app/(protected)");
 
@@ -33,39 +25,12 @@ describe("ROOT_SCREENS", () => {
 		expect(missing).toEqual([]);
 	});
 
-	for (const shell of ["v1", "v2"] as const) {
-		it(`lists each route once in the ${shell} shell, apart from the two the layout lists itself`, () => {
-			const names = rootScreensFor(shell).map((s) => s.name);
-			const repeated = names.filter((name, i) => names.indexOf(name) !== i);
-			expect(repeated).toEqual([]);
-			expect(names).not.toContain("index");
-			expect(names).not.toContain("(tabs)");
-		});
-	}
-
-	it("has at most one v2 entry per route, and no other repeats", () => {
-		const keys = ROOT_SCREENS.map((s) => `${s.shell ?? "both"}:${s.name}`);
-		expect(keys.filter((key, i) => keys.indexOf(key) !== i)).toEqual([]);
-	});
-});
-
-describe("rootScreensFor", () => {
-	const OLD_TALK = { name: "talk", options: { gestureEnabled: false } };
-	const NEW_TALK: RootScreen = {
-		name: "talk",
-		options: { animation: "fade" },
-		shell: "v2",
-	};
-	const REFLECT: RootScreen = { name: "reflect", shell: "v2" };
-	const QUOTES = { name: "quotes/index" };
-	const screens = [QUOTES, OLD_TALK, REFLECT, NEW_TALK];
-
-	it("leaves the v2 entries out of the old shell", () => {
-		expect(rootScreensFor("v1", screens)).toEqual([QUOTES, OLD_TALK]);
-	});
-
-	it("lets a v2 entry take over its route in the v2 shell", () => {
-		expect(rootScreensFor("v2", screens)).toEqual([QUOTES, REFLECT, NEW_TALK]);
+	it("lists each route once, apart from the two the layout lists itself", () => {
+		const names = ROOT_SCREENS.map((s) => s.name);
+		const repeated = names.filter((name, i) => names.indexOf(name) !== i);
+		expect(repeated).toEqual([]);
+		expect(names).not.toContain("index");
+		expect(names).not.toContain("(tabs)");
 	});
 });
 
@@ -167,9 +132,10 @@ describe("the routes the layout used to list by hand", () => {
 		it(`keep their options (reduced motion ${context.reducedMotion}, glass ${context.liquidGlass})`, () => {
 			const expected = pinned(context.reducedMotion, context.liquidGlass);
 			const actual = Object.fromEntries(
-				rootScreensFor("v1")
-					.filter((s) => Object.hasOwn(expected, s.name))
-					.map((s) => [s.name, screenOptions(s, context)])
+				ROOT_SCREENS.filter((s) => Object.hasOwn(expected, s.name)).map((s) => [
+					s.name,
+					screenOptions(s, context),
+				])
 			);
 			expect(actual).toStrictEqual(expected);
 		});

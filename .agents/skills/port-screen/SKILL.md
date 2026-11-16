@@ -6,7 +6,8 @@ description: Port one redesign screen PR (S1–S22) from the prototype into apps
 # Port a screen
 
 One S-PR from the phasing: a prototype feature becomes one v2 feature folder in
-`apps/mobile`, switched on by `redesign-v2`, proven state by state. Every S-PR comes out
+`apps/mobile` that replaces the old screen outright (there is no flag: nothing ships to
+the stores until the redesign is complete), proven state by state. Every S-PR comes out
 in the same **shape** (`apps/mobile/AGENTS.md`, "Feature shape"), so 22 of them review alike.
 
 Paths, as the porting docs use them:
@@ -19,8 +20,8 @@ Paths, as the porting docs use them:
 ## 1. Read
 
 1. Your row in `porting/phasing.md` §4.2 "Screens": what it **needs**. Check each
-   dependency is on `dev` (`git log origin/dev`, `gh pr list`). F6 (the flag and v2 tab
-   shell) is required for all of them; if it isn't merged, stop and say so.
+   dependency is on `dev` (`git log origin/dev`, `gh pr list`). F6 (the Today · Explore ·
+   Connect · You tab shell) is required for all of them; if it isn't merged, stop and say so.
 2. Your rows in `porting/screen-map.md` §1.1: prototype screen, production route and
    screen, mark (a/b/c), notes.
 3. The handoff: `P/design/handoff/<feature>.md`, plus its folder if one exists.
@@ -99,25 +100,22 @@ Work in this order; each step leaves something you can test.
 ## 3. Wire it
 
 - **Route shim.** The production route under `M/src/app/(protected)/` renders the v2
-  screen or the old one: `currentShell() === "v2" ? <V2 /> : <Old />`
-  (`M/src/lib/redesign/shell.ts`). Only routes and layouts under `(protected)` read the
-  shell (`shell-readers.test.ts`); a v2 folder never does.
-  Old routes stay. A stack route that only exists in one shell sends the other shell on
-  with `<ReturnTo href />` (`M/src/lib/return-to.tsx`), never `<Redirect>`, which
-  stacks a second copy of the tabs (see `profile/index.tsx`).
-- **A tab.** The tab routes `(tabs)/today`, `explore`, `you` already render placeholder
-  screens from `M/src/features/{today,explore,you}/`: replace the screen, keep the shim.
-  The tab's label, icon and options are its entry in `V2_TABS`
-  (`M/src/features/navigation/tabs.ts`); a tab route one shell doesn't show is sent on
-  by `ELSEWHERE` there (`tabs.test.ts` checks every tab folder is in one or the other).
+  screen in place of the old one; delete the old screen's code once nothing imports it
+  (its folder may still be `LEGACY_FEATURES` until C3).
+- **A tab** (Today S1, Explore S7, You S5, Connect S17). Each tab route under
+  `M/src/app/(protected)/(tabs)/<tab>/index.tsx` hosts the old screen that did its job
+  until then: swap that shim for your screen. The tab's label, icon and options are its
+  entry in `TABS` (`M/src/features/navigation/tabs.ts`); edit only yours.
+- **A path that moves** (a route renamed or folded into a tab): add it to `MOVED` in
+  `tabs.ts` and give the old path a `MovedRoute` shim and an entry in
+  `M/src/features/navigation/screens.ts`, so links and old payloads still land. To send
+  someone into the tabs, use `<ReturnTo href />` (`M/src/lib/return-to.tsx`) or
+  `router.dismissTo`, never `<Redirect>` or `router.navigate` from a pushed screen:
+  those stack a second copy of the tabs.
 - **Stack entry.** New routes go in the feature's `screens.ts`. A new feature adds one
-  import and one spread to `M/src/features/navigation/root-screens.ts`. A v2 screen
-  that takes over an old route with a different presentation lists its own entry with
-  `shell: "v2"`; the old feature's entry stays as it is.
-- **A host** (an overlay or listener above the stack, like the arrivals host) is one
-  entry in `M/src/features/navigation/hosts.ts` with its shell; don't edit the layout.
-- **On the simulator**, start Metro with `EXPO_PUBLIC_REDESIGN_V2=on` (and `--clear`), or
-  pick the shell in Account › Dev tools › Shell. PostHog's flag is off in dev builds.
+  import and one spread to `M/src/features/navigation/root-screens.ts`.
+- **A host** (an overlay or listener above the stack, like the arrivals host): one
+  entry in `M/src/features/navigation/hosts.ts`; don't edit the layout.
 - **Dev states.** One per state the handoff shows, in `dev/`, feeding the screen
   fixtures through the same `{ state, actions }` type. Register them with `src/dev/`
   (A2). Before A2 lands, the states are fixtures plus tests only; say so in the PR.
@@ -143,7 +141,8 @@ Title `feat(mobile): <screen> v2` (Conventional Commit). Body per
 - **Problem**: the S-number and the handoff.
 - **Change**: the feature's file tree as a `diff`.
 - **Surfaces**: mobile; docs if user-visible behaviour changed.
-- **Merge danger**: two-way, behind `redesign-v2`.
+- **Merge danger**: two-way (JS only, nothing in the stores until the redesign is
+  complete); say which old screen it replaces.
 - **Could not verify**: never blank. Always: microphone and voice, purchases, push,
   native auth sheets, haptics, 120 Hz motion. Plus: the carry-overs §5.1 rows still
   open, every field served by a fixture until its B-PR lands, and states with no

@@ -131,29 +131,26 @@ src/features/<feature>/
   `bun run check:changed` warns on `.tsx` over 200 lines. Porting a prototype screen:
   the `port-screen` skill.
 
-## Redesign flag
+## Tabs and the root seams
 
-The redesign ships behind PostHog's boolean `redesign-v2`, read once per launch and kept
-in memory until the app restarts (`currentShell()`, `src/lib/redesign/shell.ts`; per
-launch, not per account): `v1` is today's Discovery · Browse · Connect, `v2` is Today ·
-Explore · Connect · You. Dev builds take Account › Dev tools › Shell first, then
-`EXPO_PUBLIC_REDESIGN_V2=on|off` (restart Metro with `--clear`), then the flag, which
-PostHog leaves off in dev.
+The tabs are Today · Explore · Connect · You (`TABS`, `src/features/navigation/tabs.ts`,
+drawn by `components/app-tabs.tsx`). "/" is still Reflect, outside the tabs, until the
+Today and Reflect screen PRs move the landing. There is no flag: a screen PR replaces the
+old screen outright. Where a screen PR adds to the shell:
 
-- Routes and layouts under `(protected)`, the notification tap and the Dev tools row read
-  the shell; never a v2 feature folder (`shell-readers.test.ts`). The first read stays in
-  the `(protected)` layout, after sign-in and PostHog's flags: nothing above it (root
-  layout, launch cover) may read it.
-- The `(tabs)` layout draws `V2_TABS` (`src/features/navigation/tabs.ts`) in v2, the old
-  `components/app-tabs.tsx` (its triggers are `V1_TABS`) otherwise, and sends a tab route
-  the shell doesn't show to its place in this one (`ELSEWHERE`, `tabRedirect`). A stack
-  route in one shell only uses `<ReturnTo href />` (`src/lib/return-to.tsx`, `dismissTo`),
-  never `<Redirect>`: a replace into the tabs stacks a second copy of them.
-- A v2 screen that takes over an old route lists its own `screens.ts` entry with
-  `shell: "v2"`; `rootScreensFor(shell)` picks it over the old one. An overlay or listener
-  for one shell only is an entry in `src/features/navigation/hosts.ts`.
-- Notification taps take the shell (`notificationTapPlan`): home pushes Reflect in v1 and
-  goes back to the Today tab (`dismissTo`) in v2.
+- **A tab's content:** its route shim, `src/app/(protected)/(tabs)/<tab>/index.tsx`, hosts
+  the old screen that did the job (Today: Discovery, Explore: the Browse hub, You:
+  Profile) until the tab's screen PR swaps it. The tab's label and icon are its `TABS`
+  entry.
+- **A root screen:** an entry in the feature's `screens.ts` (see "Root screens").
+- **A host** (an overlay or listener above the stack): an entry in
+  `src/features/navigation/hosts.ts`. The layout maps them; don't edit its lines.
+- **A path that moved** (`/discovery`, `/browse/**`, `/profile`): `MOVED` in `tabs.ts`
+  says where each lives now, and a `MovedRoute` shim at the old path sends links and old
+  payloads there. Into the tabs, use `<ReturnTo href />` (`src/lib/return-to.tsx`) or
+  `router.dismissTo`; `<Redirect>` or `router.navigate` from a pushed screen stack a
+  second copy of the tabs. Notification taps follow the same rule (`notificationTapPlan`:
+  home is `dismissTo("/")`).
 
 ## Shared kit
 
@@ -174,7 +171,7 @@ older piece.
 
 - **Pieces:** `Card` + `SectionHeader`, `MediaRow` + `Kicker`, `CareRow`, `Avatar`,
   `BackButton`, `GlassGroup`, `DetachedSheet` (its route takes `DETACHED_SHEET`), `RollingNumber`,
-  `CountryMenu`, `Flux`, `Aura`, `PlaceholderScreen` (a screen not ported yet). Settings-like pages: `SettingsHeader`, `SectionTitle`,
+  `CountryMenu`, `Flux`, `Aura`. Settings-like pages: `SettingsHeader`, `SectionTitle`,
   `SettingsCard`, `Footnote`, `Rows`, `SwitchRow`, `OpenRow`, `TileRow`, `SettingsDialog`,
   `NameDialog`.
 - **Colours for native views and SVG:** `useTokenColor("danger-ink")`. Native views go in

@@ -10,7 +10,6 @@ import { AppState, Pressable, View } from "react-native";
 import { EaseView } from "react-native-ease/uniwind";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
-import { FullRippleLoader } from "@/components/shared/loader/ripple/full-ripple-loader";
 import { MonthlyEventSheet } from "@/features/awareness-events/components/monthly-event-sheet";
 import { useAwarenessEvent } from "@/features/awareness-events/hooks/use-awareness-event";
 import { echoOf } from "@/features/intake/v2/heard";
@@ -26,8 +25,6 @@ import {
 	computeUserVariant,
 } from "@/helpers/utils/user-variant";
 import { useFullContext } from "@/lib/convex/use-full-context";
-import { currentShell } from "@/lib/redesign/shell";
-import { ReturnTo } from "@/lib/return-to";
 import { useAppStore } from "@/store/store";
 
 const BANNER_INITIAL = { opacity: 0 };
@@ -103,22 +100,7 @@ function NotificationBanner({
 	);
 }
 
-/** The landing route: Reflect in the old shell; the v2 shell lands on Today, the first tab. */
 export default function ProtectedIndex() {
-	return currentShell() === "v2" ? <ToToday /> : <ReflectHome />;
-}
-
-/** The launch loader stays up while the tabs mount, so launch never shows an empty frame. */
-function ToToday() {
-	return (
-		<>
-			<FullRippleLoader />
-			<ReturnTo href="/today" />
-		</>
-	);
-}
-
-function ReflectHome() {
 	const lastNotification = useAppStore((s) => s.lastNotification);
 	const clearLastNotification = useAppStore((s) => s.clearLastNotification);
 	const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);

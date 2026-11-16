@@ -44,7 +44,7 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
 				onClose();
 				// replace, not push: reflect stays the "/" landing with no back stack.
 				// Cast until typedRoutes regenerates on next expo start (see /quotes).
-				router.replace("/discovery" as any);
+				router.replace("/today");
 			},
 		},
 		{

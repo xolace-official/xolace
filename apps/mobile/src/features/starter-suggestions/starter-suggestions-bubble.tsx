@@ -101,9 +101,9 @@ export function StarterSuggestionsBubble({ intake, onResolve, pickUp }: Props) {
 		} else if (row.id === "vent") {
 			router.push("/(protected)/voice-vent");
 		} else if (row.id === "lantern") {
-			router.replace("/browse/library", { withAnchor: true });
+			router.replace("/explore/library", { withAnchor: true });
 		} else if (row.id === "listen") {
-			router.replace("/browse");
+			router.replace("/explore");
 		}
 		// The roster, not a conversation. `t` re-applies the segment if the tab
 		// is already mounted on Chats.

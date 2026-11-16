@@ -50,8 +50,8 @@ export function NeedSomeoneRow() {
 }
 
 const WAY_OUTS = [
-	{ href: "/browse/topics", label: "Browse topics" },
-	{ href: "/browse/library/subjects", label: "Lantern subjects" },
+	{ href: "/explore/topics", label: "Browse topics" },
+	{ href: "/explore/library/subjects", label: "Lantern subjects" },
 ] as const;
 
 export function NoResults({ query }: { query: string }) {

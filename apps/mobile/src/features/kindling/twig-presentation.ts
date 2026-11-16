@@ -98,7 +98,7 @@ export function twigBrowseHref(twig: Twig): Href | null {
 			from: "twig-more-like-this",
 			slug: match[2],
 		},
-		pathname: "/browse/topic/[slug]",
+		pathname: "/explore/topic/[slug]",
 	};
 }
 

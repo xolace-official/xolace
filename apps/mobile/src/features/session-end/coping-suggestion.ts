@@ -5,13 +5,13 @@ export type CopingStyle = NonNullable<
 	Doc<"intake_responses">["copingStyle"]
 >[number];
 
-/** The Browse shelves a coping answer can point at (`/browse/list?family=…`). */
+/** The Browse shelves a coping answer can point at (`/explore/list?family=…`). */
 export type BrowseFamily = "support" | "music";
 
 /** Same entry points as the Browse hub's tiles. */
 export const BROWSE_HREF: Record<BrowseFamily, Href> = {
-	music: "/browse/list?family=music",
-	support: "/browse/list?family=support",
+	music: "/explore/list?family=music",
+	support: "/explore/list?family=support",
 };
 
 export type CopingSuggestion =

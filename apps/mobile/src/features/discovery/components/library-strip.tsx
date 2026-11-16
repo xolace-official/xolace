@@ -32,7 +32,7 @@ export function LibraryStrip() {
 	const seeAll = () => {
 		playSoftPress();
 		posthog.capture("discovery_library_strip_tapped");
-		router.push("/browse");
+		router.push("/explore");
 	};
 
 	return (

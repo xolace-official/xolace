@@ -1,8 +1,4 @@
-import { ProfileScreen } from "@/features/profile/components/screens/ProfileScreen";
-import { currentShell } from "@/lib/redesign/shell";
-import { ReturnTo } from "@/lib/return-to";
+import { MovedRoute } from "@/features/navigation/moved-route";
 
-/** The v2 shell has no Profile: it became the You tab. */
-export default function ProfileRoute() {
-	return currentShell() === "v2" ? <ReturnTo href="/you" /> : <ProfileScreen />;
-}
+/** A path that moved into the tabs (`MOVED` in features/navigation/tabs.ts). */
+export default MovedRoute;

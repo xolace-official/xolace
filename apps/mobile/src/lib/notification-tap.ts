@@ -4,7 +4,6 @@ import {
 	chatNotificationRoute,
 	isChatNotificationType,
 } from "@xolace/backend/convex/lib/chatNotifications";
-import type { Shell } from "@/lib/redesign/shell-gate";
 
 /** The shape of an expo-notifications response that this module reads. */
 export type TapResponse = {
@@ -59,7 +58,7 @@ export function subscribeToNotificationTaps<R extends TapResponse>(
 /**
  * Where a tap navigates. `navigate` reuses the screen already on top; `push`
  * always stacks; `dismissTo` goes back to the route if it is anywhere in the
- * stack (the tabs, under a chat thread) and replaces only if it isn't.
+ * stack and replaces the top screen only if it isn't.
  */
 export type TapNavigation =
 	| {
@@ -68,12 +67,11 @@ export type TapNavigation =
 				| ReturnType<typeof chatNotificationRoute>
 				| "/(protected)/achievements";
 	  }
-	| { action: "dismissTo"; href: "/today" }
+	| { action: "dismissTo"; href: "/" }
 	| {
 			action: "push";
 			href:
 				| "/(protected)/quotes"
-				| "/(protected)"
 				| "/(protected)/kindling"
 				| "/profile/insights";
 	  };
@@ -87,23 +85,17 @@ export type NotificationTapPlan = {
 };
 
 /**
- * Home in each shell. The old one stacks Reflect, its landing route. The v2
- * shell's home is Today, a tab: back to the tabs wherever they are in the stack,
- * since `navigate` reuses only the top screen and would stack a second `(tabs)`
- * over an open thread.
+ * Home, Reflect: back to it when it is under the tabs or a thread, rather than
+ * stacking a second copy; put in place of the top screen only when it isn't
+ * there. (`navigate` would reuse only the top screen.)
  */
-const HOME: Record<Shell, TapNavigation> = {
-	v1: { action: "push", href: "/(protected)" },
-	v2: { action: "dismissTo", href: "/today" },
-};
+const HOME: TapNavigation = { action: "dismissTo", href: "/" };
 
-/** Everything a tap should cause, from its payload and the launch's shell. Chat
- * notifications carry no `logId`. */
+/** Everything a tap should cause, from its payload alone. Chat notifications carry no `logId`. */
 export function notificationTapPlan(
 	data: Record<string, any> | null | undefined,
 	body: string | null | undefined,
-	tappedAt: number,
-	shell: Shell
+	tappedAt: number
 ): NotificationTapPlan {
 	const plan: NotificationTapPlan = {};
 
@@ -141,13 +133,12 @@ export function notificationTapPlan(
 		data?.type === "milestone" ||
 		data?.type === "streak_milestone"
 	) {
-		plan.navigation = HOME[shell];
+		plan.navigation = HOME;
 	}
 
 	// The banner lives on home, so a tap that opens another screen would leave it
 	// waiting there for later. A tap with no route (a follow-up) goes nowhere new.
-	const opensElsewhere =
-		plan.navigation && plan.navigation.href !== HOME[shell].href;
+	const opensElsewhere = plan.navigation && plan.navigation.href !== HOME.href;
 	if (logId && body && !opensElsewhere) {
 		plan.banner = { content: body, notificationId: logId };
 	}

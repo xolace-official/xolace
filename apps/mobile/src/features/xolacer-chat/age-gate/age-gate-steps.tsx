@@ -74,7 +74,7 @@ const ALTERNATIVES: {
 		label: "Kindling: a few small things to try, picked for you",
 	},
 	{
-		href: "/browse/library",
+		href: "/explore/library",
 		icon: { android: "menu_book", ios: "book", web: "menu_book" },
 		id: "library",
 		label: "The Library: stories and guides from people who've been there",

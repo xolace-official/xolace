@@ -21,7 +21,7 @@ const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const openSubjects = (letter?: string) =>
 	router.push({
 		params: letter ? { letter } : {},
-		pathname: "/browse/library/subjects",
+		pathname: "/explore/library/subjects",
 	});
 
 export function KindRows() {
@@ -38,7 +38,7 @@ export function KindRows() {
 						onPress={() =>
 							router.push({
 								params: { kind: k.kind },
-								pathname: "/browse/library/kind/[kind]",
+								pathname: "/explore/library/kind/[kind]",
 							})
 						}
 					>

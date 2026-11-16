@@ -1,8 +1,6 @@
 import { Stack } from "expo-router";
 
-const OPTIONS = { headerShown: false };
-
-/** Each tab is its own stack, so iOS finds the scroll view (minimize on scroll, edge effects). */
+/** You's stack. Its screen sets its own header (a transparent bar carrying Settings). */
 export default function YouLayout() {
-	return <Stack screenOptions={OPTIONS} />;
+	return <Stack />;
 }

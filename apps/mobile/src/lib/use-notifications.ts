@@ -12,7 +12,6 @@ import {
 	subscribeToNotificationTaps,
 } from "@/lib/notification-tap";
 import { requestPushToken } from "@/lib/push-token";
-import { currentShell } from "@/lib/redesign/shell";
 import { useAppStore } from "@/store/store";
 
 // Foreground-only handler. The focused thread handles its own events, but chat
@@ -115,8 +114,7 @@ export function useNotifications() {
 				const plan = notificationTapPlan(
 					content.data,
 					content.body,
-					Date.now(),
-					currentShell()
+					Date.now()
 				);
 
 				if (plan.logId) {

@@ -1,8 +1,16 @@
 import { Stack } from "expo-router";
+import { useLargeHeaderOptions } from "@/lib/navigation-options";
 
-const OPTIONS = { headerShown: false };
+// The poster masthead runs full-bleed under the status bar and carries its own
+// datestamp, so the stack header would only duplicate it.
+const TODAY_OPTIONS = { headerShown: false, title: "Today" };
 
-/** Each tab is its own stack, so iOS finds the scroll view (minimize on scroll, edge effects). */
 export default function TodayLayout() {
-	return <Stack screenOptions={OPTIONS} />;
+	const largeHeaderOptions = useLargeHeaderOptions();
+
+	return (
+		<Stack screenOptions={largeHeaderOptions}>
+			<Stack.Screen name="index" options={TODAY_OPTIONS} />
+		</Stack>
+	);
 }

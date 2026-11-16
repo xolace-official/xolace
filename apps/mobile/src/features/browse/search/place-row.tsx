@@ -27,12 +27,12 @@ export function PlaceRow({
 		if (place.kind === "hub") {
 			router.push({
 				params: { slug: place.slug },
-				pathname: "/browse/library/hub/[slug]",
+				pathname: "/explore/library/hub/[slug]",
 			});
 		} else {
 			router.push({
 				params: { slug: place.slug },
-				pathname: "/browse/topic/[slug]",
+				pathname: "/explore/topic/[slug]",
 			});
 		}
 	};
