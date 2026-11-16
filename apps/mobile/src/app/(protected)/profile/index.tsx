@@ -1,5 +1,4 @@
-import { ProfileScreen } from "@/features/profile/components/screens/ProfileScreen";
+import { MovedRoute } from "@/features/navigation/moved-route";
 
-export default function ProfileRoute() {
-	return <ProfileScreen />;
-}
+/** A path that moved (`MOVED` in features/navigation/moved-paths.ts). */
+export default MovedRoute;

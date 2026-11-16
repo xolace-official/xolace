@@ -3,8 +3,8 @@ import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import * as Notifications from "expo-notifications";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 import { suppressedInForeground } from "@/lib/notification-suppression";
 import {
@@ -89,6 +89,13 @@ export function useNotifications() {
 		};
 	}, [isSignedIn, notificationsEnabled, registerToken, updatePreferences]);
 
+	// The screen up when a tap comes, read by the tap handler without resubscribing.
+	const pathname = usePathname();
+	const where = useRef(pathname);
+	useEffect(() => {
+		where.current = pathname;
+	}, [pathname]);
+
 	// Own effect: not torn down per preference resolve, not gated on `notificationsEnabled` (a
 	// tap means the notification was delivered). `subscribeToNotificationTaps` covers cold
 	// starts.
@@ -114,7 +121,8 @@ export function useNotifications() {
 				const plan = notificationTapPlan(
 					content.data,
 					content.body,
-					Date.now()
+					Date.now(),
+					where.current
 				);
 
 				if (plan.logId) {
@@ -129,10 +137,13 @@ export function useNotifications() {
 							.notificationId as Id<"notification_log">,
 					});
 				}
-				if (plan.navigation?.action === "navigate") {
-					router.navigate(plan.navigation.href);
-				} else if (plan.navigation) {
-					router.push(plan.navigation.href);
+				const navigation = plan.navigation;
+				if (navigation?.action === "navigate") {
+					router.navigate(navigation.href);
+				} else if (navigation?.action === "dismissTo") {
+					router.dismissTo(navigation.href);
+				} else if (navigation) {
+					router.push(navigation.href);
 				}
 			}
 		);

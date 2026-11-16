@@ -4,6 +4,7 @@ import {
 	chatNotificationRoute,
 	isChatNotificationType,
 } from "@xolace/backend/convex/lib/chatNotifications";
+import { isHeldRoute } from "@/lib/held-routes";
 
 /** The shape of an expo-notifications response that this module reads. */
 export type TapResponse = {
@@ -55,7 +56,11 @@ export function subscribeToNotificationTaps<R extends TapResponse>(
 	return () => subscription.remove();
 }
 
-/** Where a tap navigates. `navigate` reuses the screen already on top; `push` always stacks. */
+/**
+ * Where a tap navigates. `navigate` reuses the screen already on top; `push`
+ * always stacks; `dismissTo` goes back to the route if it is anywhere in the
+ * stack and replaces the top screen only if it isn't.
+ */
 export type TapNavigation =
 	| {
 			action: "navigate";
@@ -63,11 +68,11 @@ export type TapNavigation =
 				| ReturnType<typeof chatNotificationRoute>
 				| "/(protected)/achievements";
 	  }
+	| { action: "dismissTo"; href: "/" }
 	| {
 			action: "push";
 			href:
 				| "/(protected)/quotes"
-				| "/(protected)"
 				| "/(protected)/kindling"
 				| "/profile/insights";
 	  };
@@ -80,11 +85,24 @@ export type NotificationTapPlan = {
 	navigation?: TapNavigation;
 };
 
-/** Everything a tap should cause, from its payload alone. Chat notifications carry no `logId`. */
+/**
+ * Home, Reflect: back to it when it is under the tabs or a thread, rather than
+ * stacking a second copy; put in place of the top screen only when it isn't
+ * there. (`navigate` would reuse only the top screen.)
+ */
+const HOME: TapNavigation = { action: "dismissTo", href: "/" };
+
+/**
+ * Everything a tap should cause, from its payload and the screen up when it came
+ * (`pathname`). Going home dismisses the screens above home, so a tap on a held
+ * screen (`held-routes.ts`: a vent, a talk, crisis help, a chat) goes nowhere:
+ * nothing in progress is ever torn down. Chat notifications carry no `logId`.
+ */
 export function notificationTapPlan(
 	data: Record<string, any> | null | undefined,
 	body: string | null | undefined,
-	tappedAt: number
+	tappedAt: number,
+	pathname: string
 ): NotificationTapPlan {
 	const plan: NotificationTapPlan = {};
 
@@ -117,18 +135,18 @@ export function notificationTapPlan(
 		// Off a held screen, so the unlock moment can open over the badges.
 		plan.navigation = { action: "navigate", href: "/(protected)/achievements" };
 	} else if (
-		data?.type === "gentle_return" ||
-		data?.type === "pattern_nudge" ||
-		data?.type === "milestone" ||
-		data?.type === "streak_milestone"
+		(data?.type === "gentle_return" ||
+			data?.type === "pattern_nudge" ||
+			data?.type === "milestone" ||
+			data?.type === "streak_milestone") &&
+		!isHeldRoute(pathname)
 	) {
-		plan.navigation = { action: "push", href: "/(protected)" };
+		plan.navigation = HOME;
 	}
 
 	// The banner lives on home, so a tap that opens another screen would leave it
 	// waiting there for later. A tap with no route (a follow-up) goes nowhere new.
-	const opensElsewhere =
-		plan.navigation && plan.navigation.href !== "/(protected)";
+	const opensElsewhere = plan.navigation && plan.navigation.href !== HOME.href;
 	if (logId && body && !opensElsewhere) {
 		plan.banner = { content: body, notificationId: logId };
 	}

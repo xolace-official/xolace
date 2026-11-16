@@ -91,8 +91,8 @@ export function ThreadStatusBar({
 
 	const goToRoster = () => {
 		playSoftPress();
-		// The tab surface is a sibling stack entry, so replace rather than stack.
-		router.replace("/connect");
+		// Back to the tabs under the thread, never a second copy of them.
+		router.dismissTo("/connect");
 	};
 
 	if (conversation.status === "requested") {

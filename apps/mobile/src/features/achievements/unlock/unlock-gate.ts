@@ -1,33 +1,4 @@
-/**
- * Where the badge unlock moment (#693) must wait its turn: crisis help, a
- * vent or session in progress, a peer conversation, and the other full-screen
- * moments it would stack on. It opens once the user is somewhere else.
- */
-const HOLD_ROUTES = [
-	// Crisis help and a session's own screens.
-	"/crisis-resources",
-	"/trusted-bridge",
-	"/voice-vent",
-	"/talk",
-	"/sit-with-this",
-	"/peer-reflections",
-	// A sheet over peer reflections: the session is still behind it.
-	"/report-reflection",
-	"/session-end",
-	// A peer conversation: First Xolacer chat lands right after the first message.
-	"/chat",
-	"/xolace-channel",
-	"/rate",
-	// Full-screen moments, this one included.
-	"/badge-unlock",
-	"/badge-backfill",
-	"/follow-up",
-	"/streak-held",
-	"/kindling-announcement",
-	"/browse-intro",
-	"/upgrade",
-	"/browse-player",
-] as const;
+import { isHeldRoute } from "@/lib/held-routes";
 
 export const HOME = "/";
 
@@ -38,11 +9,11 @@ type Where = {
 	homeBusy: boolean;
 };
 
+/** The badge unlock moment (#693) waits its turn on a held screen (`held-routes.ts`) and
+ * on a busy home; it opens once the user is somewhere else. */
 export function mayOpenUnlock({ homeBusy, pathname }: Where): boolean {
 	if (pathname === HOME) {
 		return !homeBusy;
 	}
-	return !HOLD_ROUTES.some(
-		(route) => pathname === route || pathname.startsWith(`${route}/`)
-	);
+	return !isHeldRoute(pathname);
 }

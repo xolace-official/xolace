@@ -6,6 +6,7 @@ import { insightsScreens } from "@/features/insights/screens";
 import { intakeScreens } from "@/features/intake/screens";
 import { kindlingScreens } from "@/features/kindling/screens";
 import { libraryScreens } from "@/features/library/screens";
+import { navigationScreens } from "@/features/navigation/screens";
 import { peerReflectionScreens } from "@/features/peer-reflection/screens";
 import { purchasesScreens } from "@/features/purchases/screens";
 import { quotesScreens } from "@/features/quotes/screens";
@@ -31,6 +32,7 @@ export const ROOT_SCREENS: readonly RootScreen[] = [
 	...intakeScreens,
 	...kindlingScreens,
 	...libraryScreens,
+	...navigationScreens,
 	...peerReflectionScreens,
 	...purchasesScreens,
 	...quotesScreens,

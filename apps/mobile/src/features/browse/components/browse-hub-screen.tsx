@@ -35,7 +35,7 @@ const ENTRIES: Entry[] = [
 	{
 		bg: "bg-browse-audio",
 		fg: "--color-browse-audio-foreground",
-		href: "/browse/list?family=support",
+		href: "/explore/list?family=support",
 		icon: { android: "graphic_eq", ios: "waveform", web: "graphic_eq" },
 		id: "support",
 		label: "Support audio",
@@ -44,7 +44,7 @@ const ENTRIES: Entry[] = [
 	{
 		bg: "bg-browse-music",
 		fg: "--color-browse-music-foreground",
-		href: "/browse/list?family=music",
+		href: "/explore/list?family=music",
 		icon: { android: "music_note", ios: "music.note", web: "music_note" },
 		id: "music",
 		label: "Music",
@@ -53,7 +53,7 @@ const ENTRIES: Entry[] = [
 	{
 		bg: "bg-browse-topics",
 		fg: "--color-browse-topics-foreground",
-		href: "/browse/topics",
+		href: "/explore/topics",
 		icon: { android: "grid_view", ios: "square.grid.2x2", web: "grid_view" },
 		id: "topics",
 		label: "Topics",
@@ -63,7 +63,7 @@ const ENTRIES: Entry[] = [
 	{
 		bg: "bg-browse-topics",
 		fg: "--color-browse-topics-foreground",
-		href: "/browse/library",
+		href: "/explore/library",
 		icon: { android: "menu_book", ios: "book", web: "menu_book" },
 		id: "lantern",
 		label: "Lantern",

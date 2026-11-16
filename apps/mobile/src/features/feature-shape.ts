@@ -10,19 +10,15 @@ import {
 } from "@/features/import-graph";
 
 /**
- * The feature folders that predate the shape, in their old layouts. Every other
- * folder is held to it, so a new one is checked from its first commit. This list
- * only shrinks: C3 deletes these folders, and a name with no folder fails the test.
+ * Old folders whose screens the redesign replaces. A screen PR takes a folder off
+ * this list when it replaces it in place (rewritten under the same name, in the
+ * shape) or deletes it.
  */
-const LEGACY_FEATURES: ReadonlySet<string> = new Set([
+const REPLACED_FEATURES = [
 	"achievements",
-	"auth",
 	"awareness-events",
 	"browse",
-	"consent",
-	"crisis-resources",
 	"discovery",
-	"feedback-tray",
 	"follow-up",
 	"idle-menu",
 	"insights",
@@ -33,7 +29,6 @@ const LEGACY_FEATURES: ReadonlySet<string> = new Set([
 	"onboarding",
 	"peer-reflection",
 	"profile",
-	"purchases",
 	"quotes",
 	"reach-me-on",
 	"reflect",
@@ -49,6 +44,28 @@ const LEGACY_FEATURES: ReadonlySet<string> = new Set([
 	"vent",
 	"xolace-face",
 	"xolacer-chat",
+];
+
+/**
+ * Old folders the redesign keeps: the sweep (C1) restyles them and brings them
+ * into the shape, then takes them off this list.
+ */
+const RESTYLED_FEATURES = [
+	"auth",
+	"consent",
+	"crisis-resources",
+	"feedback-tray",
+	"purchases",
+];
+
+/**
+ * The old feature folders, which predate the shape. Every other folder is
+ * ported, held to the shape from its first commit. Both lists only shrink, and a
+ * name with no folder fails the test.
+ */
+const LEGACY_FEATURES: ReadonlySet<string> = new Set([
+	...REPLACED_FEATURES,
+	...RESTYLED_FEATURES,
 ]);
 
 /** Folders under `features/` that compose every feature rather than being one:
@@ -56,7 +73,7 @@ const LEGACY_FEATURES: ReadonlySet<string> = new Set([
 const HUBS: ReadonlySet<string> = new Set(["navigation"]);
 
 /**
- * Features a v2 folder may import: lower-layer modules other features build
+ * Features new code may import: lower-layer modules other features build
  * on, each with why. Anything else two features share moves down to
  * `src/lib`, `src/components/shared` or a kit in `src/components/<kit>`.
  */
@@ -64,12 +81,32 @@ const SHARED_FEATURES: Readonly<Record<string, string>> = {
 	purchases: "the entitlements module: usePlusEntitlement, usePaywall",
 };
 
-/** A folder that predates the shape (and the motion rules in `motion-imports.ts`). */
+/** An old folder: it predates the shape (and the motion rules in `motion-imports.ts`). */
 export const isLegacyFeature = (feature: string) =>
 	LEGACY_FEATURES.has(feature);
 
-const isV2Feature = (feature: string) =>
+/** A ported folder: written in the shape, or rewritten into it by its screen PR. */
+const isPortedFeature = (feature: string) =>
 	!(isLegacyFeature(feature) || HUBS.has(feature));
+
+const FEATURE_FOLDER = /^features\/([^/]+)\//;
+
+/** Folders outside `features/` that hold new code: the redesign's lower layers. */
+const NEW_LAYERS = [
+	"design/",
+	"components/shared/",
+	"components/settings-kit/",
+	"lib/keyboard/",
+];
+
+/** New code: a ported feature folder or one of the redesign's lower layers
+ * (`src/`-relative path). */
+export function isNewCode(file: string): boolean {
+	const feature = file.match(FEATURE_FOLDER)?.[1];
+	return feature
+		? isPortedFeature(feature)
+		: NEW_LAYERS.some((layer) => file.startsWith(layer));
+}
 
 /** Listed legacy folders and hubs that no longer exist: drop them from the lists. */
 export const staleListings = (features: readonly string[]): string[] =>
@@ -123,13 +160,23 @@ const show = ({ file, imp, target }: Edge) =>
 
 const unique = (lines: string[]) => [...new Set(lines)];
 
-/** 1. A `<name>-v2` folder never imports `<name>`: C3 deletes the old folder. */
-export function v2ImportsOfOldFolders(graph: ImportGraph): string[] {
+/**
+ * 1. New code never imports old code: a ported folder or a lower layer imports
+ * no folder still on `LEGACY_FEATURES` (bar the shared modules below). A screen
+ * PR deletes the old code it replaces, or replaces the folder in place; a piece
+ * new code needs from an old folder moves down a layer.
+ */
+export function oldFolderImportsFromNewCode(graph: ImportGraph): string[] {
 	const found: string[] = [];
 	for (const edge of edges(graph)) {
-		const from = featureOf(edge.file);
 		const to = edge.target && featureOf(edge.target);
-		if (from?.endsWith("-v2") && to === from.slice(0, -"-v2".length)) {
+		if (
+			to &&
+			isLegacyFeature(to) &&
+			!Object.hasOwn(SHARED_FEATURES, to) &&
+			featureOf(edge.file) !== to &&
+			isNewCode(relative(edge.file))
+		) {
 			found.push(show(edge));
 		}
 	}
@@ -188,7 +235,7 @@ function backendWrappers(graph: ImportGraph): Set<string> {
 	return wrappers;
 }
 
-/** 3. In a v2 folder, only `use-*.ts` data hooks call Convex, PostHog or the toast,
+/** 3. In a ported folder, only `use-*.ts` data hooks call Convex, PostHog or the toast,
  * directly or through an app wrapper (`lib/convex/*`, `lib/speech/use-voice-input`…). */
 export function backendCallsOutsideDataHooks(graph: ImportGraph): string[] {
 	const wrappers = backendWrappers(graph);
@@ -200,7 +247,7 @@ export function backendCallsOutsideDataHooks(graph: ImportGraph): string[] {
 		const from = featureOf(edge.file);
 		if (
 			from &&
-			isV2Feature(from) &&
+			isPortedFeature(from) &&
 			!DATA_HOOK.test(path.basename(edge.file)) &&
 			callsBackend(edge)
 		) {
@@ -210,8 +257,9 @@ export function backendCallsOutsideDataHooks(graph: ImportGraph): string[] {
 	return unique(found);
 }
 
-/** 4. A v2 folder imports no other feature, except the shared modules above. */
-export function crossFeatureImportsFromV2(graph: ImportGraph): string[] {
+/** 4. A ported folder imports no other ported feature, except the shared modules
+ * above: features meet in routes. (An old folder it imports is check 1.) */
+export function crossFeatureImportsFromPorted(graph: ImportGraph): string[] {
 	const found: string[] = [];
 	for (const edge of edges(graph)) {
 		const from = featureOf(edge.file);
@@ -220,7 +268,33 @@ export function crossFeatureImportsFromV2(graph: ImportGraph): string[] {
 			from &&
 			to &&
 			from !== to &&
-			isV2Feature(from) &&
+			isPortedFeature(from) &&
+			!isLegacyFeature(to) &&
+			!Object.hasOwn(SHARED_FEATURES, to)
+		) {
+			found.push(show(edge));
+		}
+	}
+	return unique(found);
+}
+
+/**
+ * 5. Old code never imports a ported folder: an old folder imports nothing a
+ * screen PR has rewritten (bar the shared modules and the hub). So a folder
+ * replaced in place while other old screens still used parts of it had those
+ * parts moved down a layer first, and nothing imports a half-replaced folder.
+ */
+export function portedFolderImportsFromOldCode(graph: ImportGraph): string[] {
+	const found: string[] = [];
+	for (const edge of edges(graph)) {
+		const from = featureOf(edge.file);
+		const to = edge.target && featureOf(edge.target);
+		if (
+			from &&
+			to &&
+			from !== to &&
+			isLegacyFeature(from) &&
+			isPortedFeature(to) &&
 			!Object.hasOwn(SHARED_FEATURES, to)
 		) {
 			found.push(show(edge));

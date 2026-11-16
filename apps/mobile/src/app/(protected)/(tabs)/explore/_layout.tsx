@@ -5,7 +5,7 @@ import { useLargeHeaderOptions } from "@/lib/navigation-options";
 // always have a back button and a tab re-tap pops to the hub.
 export const unstable_settings = { anchor: "index" };
 
-const BROWSE_OPTIONS = { title: "Browse" };
+const EXPLORE_OPTIONS = { title: "Explore" };
 // Sub-screens keep the regular (non-large) title; the hub owns the large one.
 const SUB_OPTIONS = {
 	headerBackButtonDisplayMode: "minimal" as const,
@@ -13,12 +13,12 @@ const SUB_OPTIONS = {
 	title: "",
 };
 
-export default function BrowseLayout() {
+export default function ExploreLayout() {
 	const largeHeaderOptions = useLargeHeaderOptions();
 
 	return (
 		<Stack screenOptions={largeHeaderOptions}>
-			<Stack.Screen name="index" options={BROWSE_OPTIONS} />
+			<Stack.Screen name="index" options={EXPLORE_OPTIONS} />
 			<Stack.Screen name="list" options={SUB_OPTIONS} />
 			<Stack.Screen
 				name="topics"

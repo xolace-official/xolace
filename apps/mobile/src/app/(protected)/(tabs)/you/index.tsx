@@ -1,11 +1,11 @@
 import { useIsFocused } from "expo-router/react-navigation";
 import { useState } from "react";
 import { View } from "react-native";
-import { BrowseHome } from "@/features/browse/search/browse-home";
+import { ProfileScreen } from "@/features/profile/components/screens/ProfileScreen";
 
-/** NativeTabs mounts every tab eagerly (see connect/index.tsx); held until focused so Discovery
- * does not also fire the shelf query. */
-export default function BrowseRoute() {
+/** You hosts the Profile screen until You's own screen (S5) replaces it. NativeTabs mounts every
+ * tab eagerly (see connect/index.tsx); held until focused so launch doesn't also run its queries. */
+export default function YouRoute() {
 	const isFocused = useIsFocused();
 	const [everFocused, setEverFocused] = useState(isFocused);
 	if (isFocused && !everFocused) {
@@ -15,5 +15,5 @@ export default function BrowseRoute() {
 	if (!everFocused) {
 		return <View className="flex-1 bg-background" />;
 	}
-	return <BrowseHome />;
+	return <ProfileScreen />;
 }

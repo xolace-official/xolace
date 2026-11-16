@@ -4,6 +4,7 @@ import { useThemeColor } from "heroui-native";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
 import { useBadgeUnlock } from "@/features/achievements/unlock/use-badge-unlock";
 import { NowPlayingHost } from "@/features/browse/now-playing/now-playing-host";
+import { ROOT_HOSTS } from "@/features/navigation/hosts";
 import { ROOT_SCREENS } from "@/features/navigation/root-screens";
 import { UnreadIconBadge } from "@/features/xolacer-chat/components/unread-icon-badge";
 import {
@@ -67,6 +68,10 @@ export default function ProtectedLayout() {
 						/>
 					))}
 				</Stack>
+				{/* Overlays and listeners features add, from features/navigation/hosts.ts. */}
+				{ROOT_HOSTS.map(({ name, Host }) => (
+					<Host key={name} />
+				))}
 			</StreamChatProvider>
 		</StreamOverlayProvider>
 	);

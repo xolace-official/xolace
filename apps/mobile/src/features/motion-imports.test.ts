@@ -29,7 +29,7 @@ const LEGACY_EASE_FILES = {
 };
 
 describe("easeImportsOutsideEaseTs", () => {
-	it("flags Ease imported anywhere new: a v2 folder, a hub, a shared component, types too", () => {
+	it("flags Ease imported anywhere new: a ported folder, a hub, a shared component, types too", () => {
 		const graph = graphOf({
 			"components/shared/aura.tsx": [
 				{ ...pkg("react-native-ease"), typeOnly: true },

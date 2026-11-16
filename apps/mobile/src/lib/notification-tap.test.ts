@@ -125,12 +125,16 @@ describe("subscribeToNotificationTaps", () => {
 	});
 });
 
+/** Where a tap usually comes in: a tab, nothing in progress. */
+const ON_TABS = "/today";
+
 describe("notificationTapPlan", () => {
 	it("routes a message to the thread", () => {
 		const plan = notificationTapPlan(
 			{ conversationId: "c1", type: "chat_message" },
 			"Sent you a message",
-			1000
+			1000,
+			ON_TABS
 		);
 		expect(plan.navigation).toEqual({
 			action: "navigate",
@@ -147,7 +151,8 @@ describe("notificationTapPlan", () => {
 		const plan = notificationTapPlan(
 			{ type: "xolace_message" },
 			"Posted a new message",
-			1000
+			1000,
+			ON_TABS
 		);
 		expect(plan.navigation).toEqual({
 			action: "navigate",
@@ -158,18 +163,21 @@ describe("notificationTapPlan", () => {
 	it("drops a thread route with no usable conversation id", () => {
 		for (const type of ["chat_accepted", "chat_message"]) {
 			expect(
-				notificationTapPlan({ type }, null, 1000).navigation
+				notificationTapPlan({ type }, null, 1000, ON_TABS).navigation
 			).toBeUndefined();
 			expect(
-				notificationTapPlan({ conversationId: 42, type }, null, 1000).navigation
+				notificationTapPlan({ conversationId: 42, type }, null, 1000, ON_TABS)
+					.navigation
 			).toBeUndefined();
 			expect(
-				notificationTapPlan({ conversationId: "", type }, null, 1000).navigation
+				notificationTapPlan({ conversationId: "", type }, null, 1000, ON_TABS)
+					.navigation
 			).toBeUndefined();
 		}
 		// The Connect-tab types never read the id, so they still route.
 		expect(
-			notificationTapPlan({ type: "chat_expired" }, null, 1000).navigation
+			notificationTapPlan({ type: "chat_expired" }, null, 1000, ON_TABS)
+				.navigation
 		).toEqual({
 			action: "navigate",
 			href: { params: { t: "1000", view: "xolacers" }, pathname: "/connect" },
@@ -178,22 +186,32 @@ describe("notificationTapPlan", () => {
 
 	it("routes quotes and nudges", () => {
 		expect(
-			notificationTapPlan({ screen: "quotes" }, null, 1).navigation
+			notificationTapPlan({ screen: "quotes" }, null, 1, ON_TABS).navigation
 		).toEqual({
 			action: "push",
 			href: "/(protected)/quotes",
 		});
-		for (const type of ["gentle_return", "pattern_nudge", "milestone"]) {
-			expect(notificationTapPlan({ type }, null, 1).navigation).toEqual({
-				action: "push",
-				href: "/(protected)",
+		// Back to Reflect, never `navigate` or `push`: over the tabs or a thread
+		// those stack a second copy of it.
+		for (const type of [
+			"gentle_return",
+			"pattern_nudge",
+			"milestone",
+			"streak_milestone",
+		]) {
+			expect(
+				notificationTapPlan({ type }, null, 1, ON_TABS).navigation
+			).toEqual({
+				action: "dismissTo",
+				href: "/",
 			});
 		}
 	});
 
 	it("routes kindling_ready to the active-kindling screen", () => {
 		expect(
-			notificationTapPlan({ type: "kindling_ready" }, null, 1).navigation
+			notificationTapPlan({ type: "kindling_ready" }, null, 1, ON_TABS)
+				.navigation
 		).toEqual({
 			action: "push",
 			href: "/(protected)/kindling",
@@ -202,7 +220,8 @@ describe("notificationTapPlan", () => {
 
 	it("routes domain_unlock to the insights screen", () => {
 		expect(
-			notificationTapPlan({ type: "domain_unlock" }, null, 1).navigation
+			notificationTapPlan({ type: "domain_unlock" }, null, 1, ON_TABS)
+				.navigation
 		).toEqual({
 			action: "push",
 			href: "/profile/insights",
@@ -211,7 +230,7 @@ describe("notificationTapPlan", () => {
 
 	it("routes achievement to the achievements screen, without stacking a copy", () => {
 		expect(
-			notificationTapPlan({ type: "achievement" }, null, 1).navigation
+			notificationTapPlan({ type: "achievement" }, null, 1, ON_TABS).navigation
 		).toEqual({
 			action: "navigate",
 			href: "/(protected)/achievements",
@@ -220,7 +239,12 @@ describe("notificationTapPlan", () => {
 
 	it("gives a badge push no banner and no session credit", () => {
 		expect(
-			notificationTapPlan({ logId: "l1", type: "achievement" }, "Joined", 1)
+			notificationTapPlan(
+				{ logId: "l1", type: "achievement" },
+				"Joined",
+				1,
+				ON_TABS
+			)
 		).toEqual({
 			navigation: { action: "navigate", href: "/(protected)/achievements" },
 		});
@@ -228,22 +252,32 @@ describe("notificationTapPlan", () => {
 
 	it("carries the banner only when there is both a log id and a body", () => {
 		expect(
-			notificationTapPlan({ logId: "l1", type: "milestone" }, "Ten days", 1)
+			notificationTapPlan(
+				{ logId: "l1", type: "milestone" },
+				"Ten days",
+				1,
+				ON_TABS
+			)
 		).toMatchObject({
 			banner: { content: "Ten days", notificationId: "l1" },
 			logId: "l1",
 		});
 		expect(
-			notificationTapPlan({ logId: "l1" }, null, 1).banner
+			notificationTapPlan({ logId: "l1" }, null, 1, ON_TABS).banner
 		).toBeUndefined();
 		expect(
-			notificationTapPlan({ type: "milestone" }, "Ten days", 1).banner
+			notificationTapPlan({ type: "milestone" }, "Ten days", 1, ON_TABS).banner
 		).toBeUndefined();
 	});
 
 	it("holds the banner back when the tap opens another screen", () => {
 		for (const type of ["domain_unlock", "kindling_ready"]) {
-			const plan = notificationTapPlan({ logId: "l1", type }, "Ready", 1);
+			const plan = notificationTapPlan(
+				{ logId: "l1", type },
+				"Ready",
+				1,
+				ON_TABS
+			);
 			expect(plan.banner).toBeUndefined();
 			expect(plan.logId).toBe("l1");
 		}
@@ -251,7 +285,12 @@ describe("notificationTapPlan", () => {
 
 	it("keeps the banner for a tap with no route of its own", () => {
 		expect(
-			notificationTapPlan({ logId: "l1", type: "follow_up" }, "Still there?", 1)
+			notificationTapPlan(
+				{ logId: "l1", type: "follow_up" },
+				"Still there?",
+				1,
+				ON_TABS
+			)
 		).toEqual({
 			banner: { content: "Still there?", notificationId: "l1" },
 			logId: "l1",
@@ -259,7 +298,46 @@ describe("notificationTapPlan", () => {
 	});
 
 	it("plans nothing for an unrecognised or absent payload", () => {
-		expect(notificationTapPlan({ type: "something_new" }, "hi", 1)).toEqual({});
-		expect(notificationTapPlan(undefined, undefined, 1)).toEqual({});
+		expect(
+			notificationTapPlan({ type: "something_new" }, "hi", 1, ON_TABS)
+		).toEqual({});
+		expect(notificationTapPlan(undefined, undefined, 1, ON_TABS)).toEqual({});
+	});
+
+	it("goes home from anywhere nothing is in progress", () => {
+		for (const pathname of ["/", "/today", "/explore/topics", "/quotes"]) {
+			expect(
+				notificationTapPlan({ type: "milestone" }, null, 1, pathname).navigation
+			).toEqual({ action: "dismissTo", href: "/" });
+		}
+	});
+
+	it("leaves a held screen alone: a home tap there goes nowhere and keeps its banner", () => {
+		for (const pathname of [
+			"/voice-vent",
+			"/talk",
+			"/crisis-resources",
+			"/chat/c1",
+			"/xolace-channel",
+		]) {
+			expect(
+				notificationTapPlan(
+					{ logId: "l1", type: "gentle_return" },
+					"Still here",
+					1,
+					pathname
+				)
+			).toEqual({
+				banner: { content: "Still here", notificationId: "l1" },
+				logId: "l1",
+			});
+		}
+	});
+
+	it("still opens other screens from a held one, since those stack rather than dismiss", () => {
+		expect(
+			notificationTapPlan({ screen: "quotes" }, null, 1, "/voice-vent")
+				.navigation
+		).toEqual({ action: "push", href: "/(protected)/quotes" });
 	});
 });

@@ -18,14 +18,14 @@ export const LINK: Record<
 	LinkKey,
 	{ icon: IconKey; tint: string; href: Href }
 > = {
-	library: { href: "/browse/library", icon: "book", tint: "bg-ember/25" },
+	library: { href: "/explore/library", icon: "book", tint: "bg-ember/25" },
 	music: {
-		href: "/browse/list?family=music",
+		href: "/explore/list?family=music",
 		icon: "music",
 		tint: "bg-accent/20",
 	},
 	support: {
-		href: "/browse/list?family=support",
+		href: "/explore/list?family=support",
 		icon: "waveform",
 		tint: "bg-frost/20",
 	},

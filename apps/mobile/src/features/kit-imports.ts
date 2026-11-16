@@ -2,7 +2,7 @@
  * uses the shared kit's piece, never the older one it replaced. Returns the offending
  * imports as `file -> specifier name`; empty means it holds. Run on the real graph by
  * `import-cycles.test.ts`. Node-only. */
-import { isLegacyFeature } from "@/features/feature-shape";
+import { isNewCode } from "@/features/feature-shape";
 import { type ImportGraph, relative } from "@/features/import-graph";
 
 /** An older piece and how it is imported: by its name from a package, or by its file. */
@@ -26,14 +26,6 @@ const REPLACED: readonly Replaced[] = [
 	},
 ];
 
-/** Folders outside `features/` that hold new code: the redesign's lower layers. */
-const NEW_CODE_FOLDERS = [
-	"design/",
-	"components/shared/",
-	"components/settings-kit/",
-	"lib/keyboard/",
-];
-
 /** The one file that reads heroui's toast manager, to hand it to `toast()`. */
 const TOAST_BRIDGE = "components/shared/toast-bridge.tsx";
 
@@ -46,17 +38,9 @@ const KIT_LEGACY_FILES: ReadonlySet<string> = new Set([
 	"components/shared/resource-item.tsx",
 ]);
 
-const FEATURE = /^features\/([^/]+)\//;
-
-const isNewCode = (file: string) => {
-	if (file === TOAST_BRIDGE || KIT_LEGACY_FILES.has(file)) {
-		return false;
-	}
-	const feature = file.match(FEATURE)?.[1];
-	return feature
-		? !isLegacyFeature(feature)
-		: NEW_CODE_FOLDERS.some((folder) => file.startsWith(folder));
-};
+/** New code (`isNewCode`), bar the toast bridge and the listed files that predate the kit. */
+const heldToKit = (file: string) =>
+	file !== TOAST_BRIDGE && !KIT_LEGACY_FILES.has(file) && isNewCode(file);
 
 /** The older pieces one file imports, as `file -> from name`. */
 function replacedImports(file: string, graph: ImportGraph): string[] {
@@ -75,10 +59,10 @@ function replacedImports(file: string, graph: ImportGraph): string[] {
 	return found;
 }
 
-/** New code (v2 folders, `src/design`, the shared kit) imports none of the older pieces. */
+/** New code (ported folders, `src/design`, the shared kit) imports none of the older pieces. */
 export function replacedPiecesInNewCode(graph: ImportGraph): string[] {
 	return [...graph.keys()]
-		.filter((file) => isNewCode(relative(file)))
+		.filter((file) => heldToKit(relative(file)))
 		.flatMap((file) => replacedImports(file, graph));
 }
 

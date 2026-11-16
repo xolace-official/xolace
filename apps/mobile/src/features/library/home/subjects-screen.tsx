@@ -70,7 +70,7 @@ export function SubjectsScreen() {
 					onPress={() =>
 						router.push({
 							params: { slug: item.slug },
-							pathname: "/browse/library/subject/[slug]",
+							pathname: "/explore/library/subject/[slug]",
 						})
 					}
 				>

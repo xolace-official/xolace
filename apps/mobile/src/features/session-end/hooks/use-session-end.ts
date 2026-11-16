@@ -167,8 +167,7 @@ export function useSessionEnd(sessionId: Id<"sessions"> | null) {
 			{ contributedReflection, moodPosition, postSessionMood },
 			{ action: "open_kindling", kindling_ready: ready },
 			() => {
-				// Cast until typedRoutes regenerates (see idle-menu's /discovery).
-				router.replace("/discovery" as never);
+				router.replace("/today");
 				if (ready) {
 					router.push("/(protected)/kindling");
 				}
