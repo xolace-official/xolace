@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 import { query } from "../_generated/server";
-import { toTrackItem, trackItemValidator } from "../browse";
+import { trackItems, trackItemValidator } from "../browse";
 import { requireAuth } from "../lib/auth";
 import { cardItemValidator } from "./cards";
 import { coverOf, toListItem } from "./entries";
@@ -53,6 +53,7 @@ export const getHub = query({
 			return null;
 		}
 
+		const toTrack = trackItems(ctx);
 		const items = await Promise.all(
 			hub.items.map(async (item) => {
 				if (item.kind === "entry") {
@@ -70,7 +71,7 @@ export const getHub = query({
 				}
 				const t = await ctx.db.get("audio_tracks", item.audioTrackId);
 				return t?.active
-					? { kind: "audio" as const, track: await toTrackItem(t) }
+					? { kind: "audio" as const, track: await toTrack(t) }
 					: null;
 			})
 		);

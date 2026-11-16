@@ -236,3 +236,76 @@ describe("browse.getTopicTitle", () => {
 		).toBe("Self worth");
 	});
 });
+
+describe("topicTitle on track items (B5)", () => {
+	it("carries each track's own topic title: curated, else slug-derived", async () => {
+		const user = await asNewUser();
+		await seed(user, [
+			base("s1", "support", "audio_topic_sleep_rest"),
+			base("s2", "support", "audio_topic_self_worth"),
+			base("s3", "support", "audio_topic_sleep_rest"),
+		]);
+		await user.root.run(async (ctx) => {
+			await ctx.db.insert("topics", {
+				slug: "sleep_rest",
+				thumbKey: "thumb/s.webp",
+				thumbSha256: "s",
+				title: "Sleep & Rest",
+			});
+		});
+
+		const { page } = await user.t.query(api.browse.listByFamily, {
+			family: "support",
+			paginationOpts: { cursor: null, numItems: 10 },
+		});
+		expect(page.map((t) => [t.slug, t.topicTitle])).toEqual([
+			["s1", "Sleep & Rest"],
+			["s2", "Self worth"],
+			["s3", "Sleep & Rest"],
+		]);
+	});
+
+	it("names a secondary-topic track's own topic on the topic screen", async () => {
+		const user = await asNewUser();
+		await seed(user, [
+			base("m1", "music", "music_topic_sadness"),
+			base("m2", "music", "music_topic_calm_peace", {
+				secondaryTopic: "music_topic_sadness",
+			}),
+		]);
+
+		const tracks = await user.t.query(api.browse.getTopic, { slug: "sadness" });
+		expect(tracks.map((t) => [t.slug, t.topicTitle])).toEqual([
+			["m1", "Sadness"],
+			["m2", "Calm peace"],
+		]);
+	});
+
+	it("keeps every field old clients read, with only topicTitle added", async () => {
+		const user = await asNewUser();
+		await seed(user, [
+			base("ep1", "support", "audio_topic_sadness", {
+				episodeNumber: 1,
+				series: "the-spectrum",
+				seriesTitle: "The Spectrum",
+				thumbhash: "hash",
+			}),
+		]);
+
+		const [item] = await user.t.query(api.browse.getTopic, { slug: "sadness" });
+		const { _id, ...rest } = item;
+		expect(rest).toEqual({
+			attribution: "Sage",
+			durationSec: 60,
+			episodeNumber: 1,
+			family: "support",
+			series: "the-spectrum",
+			seriesTitle: "The Spectrum",
+			slug: "ep1",
+			thumbhash: "hash",
+			thumbUrl: "https://r2.test/thumb/ep1.webp",
+			title: "ep1",
+			topicTitle: "Sadness",
+		});
+	});
+});
