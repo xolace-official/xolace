@@ -8,6 +8,7 @@ import {
 } from "@/features/motion-imports";
 
 const pkg = (specifier: string, names: string[] = []): Import => ({
+	devOnly: false,
 	names,
 	specifier,
 	targets: [],

@@ -67,6 +67,10 @@ export default function ProtectedLayout() {
 							options={screenOptions(screen, context)}
 						/>
 					))}
+					{/* Dev states (src/dev): a release build has no route here. */}
+					<Stack.Protected guard={__DEV__}>
+						<Stack.Screen name="dev" />
+					</Stack.Protected>
 				</Stack>
 				{/* Overlays and listeners features add, from features/navigation/hosts.ts. */}
 				{ROOT_HOSTS.map(({ name, Host }) => (

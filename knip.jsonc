@@ -5,10 +5,13 @@
       // Entry files' exports count too: an unused export in a route or a
       // config file is still dead code.
       "includeEntryExports": true,
-      // The redesign's shared kit (F5) lands before the screens that use it.
-      // Each file is an entry until its first screen PR imports it: delete its
-      // line then. This list only shrinks. Their exports carry `@public`.
       "entry": [
+        // Permanent: each feature's dev states, found by `require.context` in
+        // src/dev/discovered.ts, which knip can't follow.
+        "src/features/**/dev/states.tsx",
+        // The redesign's shared kit (F5) lands before the screens that use it.
+        // Each file is an entry until its first screen PR imports it: delete its
+        // line then. These lines only shrink. Their exports carry `@public`.
         "src/components/settings-kit/name-dialog.tsx",
         "src/components/settings-kit/open-row.tsx",
         "src/components/settings-kit/parts.tsx",

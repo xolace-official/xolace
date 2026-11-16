@@ -139,6 +139,10 @@ const DEV_FOLDER = /^(features\/[^/]+\/(?:[^/]+\/)*?dev)\//;
  * may import its `dev/` folder. */
 const DEV_REGISTRY = "dev/";
 
+/** Dev-build code: `src/dev/` and every feature's `dev/` (`src/`-relative path). */
+const isDevCode = (file: string) =>
+	file.startsWith(DEV_REGISTRY) || DEV_FOLDER.test(file);
+
 type Edge = { file: string; imp: Import; target?: string };
 
 /** Every import as an edge; one per in-repo target, or one with no target. */
@@ -183,14 +187,19 @@ export function oldFolderImportsFromNewCode(graph: ImportGraph): string[] {
 	return unique(found);
 }
 
-/** 2. A `dev/` folder is imported only by its own files and `src/dev/`, so
- * fixtures never ship inside a screen. */
+/** 2. A feature's `dev/` folders are imported only by its own `dev/` folders (a
+ * big feature's `write/dev/states.tsx` may use its root `dev/` fixtures) and
+ * `src/dev/`, so fixtures never ship inside a screen. */
 export function devImportsFromOutside(graph: ImportGraph): string[] {
 	const found: string[] = [];
 	for (const edge of edges(graph)) {
-		const dev = edge.target && relative(edge.target).match(DEV_FOLDER)?.[1];
+		if (!(edge.target && DEV_FOLDER.test(relative(edge.target)))) {
+			continue;
+		}
 		const from = relative(edge.file);
-		if (dev && !from.startsWith(`${dev}/`) && !from.startsWith(DEV_REGISTRY)) {
+		const ownDev =
+			DEV_FOLDER.test(from) && featureOf(edge.file) === featureOf(edge.target);
+		if (!(ownDev || from.startsWith(DEV_REGISTRY))) {
 			found.push(show(edge));
 		}
 	}
@@ -296,6 +305,28 @@ export function portedFolderImportsFromOldCode(graph: ImportGraph): string[] {
 			isLegacyFeature(from) &&
 			isPortedFeature(to) &&
 			!Object.hasOwn(SHARED_FEATURES, to)
+		) {
+			found.push(show(edge));
+		}
+	}
+	return unique(found);
+}
+
+/**
+ * 6. Dev states never reach a release build: code outside `src/dev/` and the
+ * features' `dev/` folders reaches them only through a `require()` behind
+ * `__DEV__` (the dev route shims), which a release build folds away before
+ * Metro collects its dependencies. A static import would ship them.
+ */
+export function devCodeInReleaseGraph(graph: ImportGraph): string[] {
+	const found: string[] = [];
+	for (const edge of edges(graph)) {
+		if (
+			edge.target &&
+			!edge.imp.typeOnly &&
+			!edge.imp.devOnly &&
+			isDevCode(relative(edge.target)) &&
+			!isDevCode(relative(edge.file))
 		) {
 			found.push(show(edge));
 		}

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
 	backendCallsOutsideDataHooks,
 	crossFeatureImportsFromPorted,
+	devCodeInReleaseGraph,
 	devImportsFromOutside,
 	oldFolderImportsFromNewCode,
 	portedFolderImportsFromOldCode,
@@ -134,6 +135,20 @@ describe("feature shape (apps/mobile/AGENTS.md)", () => {
 			devImportsFromOutside(graph),
 			"Fixtures and dev states never ship: the dev state renders the screen, not the reverse"
 		).toEqual([]);
+	});
+
+	it("reaches dev states only behind __DEV__, so release builds drop them", () => {
+		expect(
+			devCodeInReleaseGraph(graph),
+			'Open src/dev only from a dev route shim: `__DEV__ ? require("@/dev/…") : null`. A static import ships it'
+		).toEqual([]);
+		// The dev route shims are the guarded way in: without one, the check
+		// above would pass on a graph that never saw a guard.
+		const guarded = [...graph.values()]
+			.flat()
+			.filter((i) => i.devOnly)
+			.flatMap((i) => i.targets.map(relative));
+		expect(guarded).toContain("dev/dev-state-screen.tsx");
 	});
 
 	it("calls Convex, PostHog and the toast only from use-*.ts in ported folders", () => {

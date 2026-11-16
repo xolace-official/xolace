@@ -3,19 +3,18 @@ import { useState } from "react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
-import { usePaywall } from "@/features/purchases/use-paywall";
 import {
 	CardTag,
 	ChannelCard,
 } from "@/features/reach-me-on/components/channel-card";
 import { LinkSteps } from "@/features/reach-me-on/components/link-steps";
+import { useReachSheet } from "@/features/reach-me-on/reach-sheet-data";
 import {
 	type ChannelEntry,
 	orderMark,
 	type TelegramAction,
 	telegramCard,
 } from "@/features/reach-me-on/reach-view";
-import { useTelegramLink } from "@/features/reach-me-on/use-telegram-link";
 import { playSoftPress } from "@/lib/haptics";
 
 const ACTION_LABEL: Record<TelegramAction, string> = {
@@ -38,33 +37,22 @@ function buttonVariant(action: TelegramAction, count: number) {
 	return action === "unlink" ? "danger-soft" : "secondary";
 }
 
-type Props = {
-	entry: ChannelEntry;
-	offline: boolean;
-	onTryFirst: () => void;
-	onSetPaused: (paused: boolean) => void;
-	onUnlink: () => void;
-};
-
-/** The Telegram card, per `listChannels` state, with the link flow inside it. */
-export const TelegramCard = ({
-	entry,
-	offline,
-	onTryFirst,
-	onSetPaused,
-	onUnlink,
-}: Props) => {
+/** The Telegram card, per `listChannels` state, with the link flow inside it.
+ * Reads and acts through the sheet's provider. */
+export const TelegramCard = ({ entry }: { entry: ChannelEntry }) => {
 	const view = telegramCard(entry);
-	const link = useTelegramLink(entry);
-	const openPaywall = usePaywall((s) => s.open);
+	const {
+		state: { link, offline },
+		actions,
+	} = useReachSheet();
 	const [confirmUnlink, setConfirmUnlink] = useState(false);
 
 	const run: Record<TelegramAction, () => void> = {
-		get_plus: () => openPaywall("reach_telegram"),
-		link: link.start,
-		link_again: link.start,
-		pause: () => onSetPaused(true),
-		resume: () => onSetPaused(false),
+		get_plus: actions.getPlus,
+		link: actions.link.start,
+		link_again: actions.link.start,
+		pause: () => actions.setPaused("telegram", true),
+		resume: () => actions.setPaused("telegram", false),
 		unlink: () => setConfirmUnlink(true),
 	};
 
@@ -76,7 +64,7 @@ export const TelegramCard = ({
 			mark={
 				link.step === "idle" || link.step === "linked" ? orderMark(entry) : null
 			}
-			onTryFirst={onTryFirst}
+			onTryFirst={() => actions.tryFirst("telegram")}
 			statusLine={view.statusLine}
 		>
 			{link.step === "idle" ? (
@@ -111,10 +99,10 @@ export const TelegramCard = ({
 				<LinkSteps
 					disabled={offline}
 					minting={link.minting}
-					onCancel={link.cancel}
-					onCopyLink={link.copyLink}
-					onDismiss={link.dismiss}
-					onOpenTelegram={link.openTelegram}
+					onCancel={actions.link.cancel}
+					onCopyLink={actions.link.copyLink}
+					onDismiss={actions.link.dismiss}
+					onOpenTelegram={actions.link.openTelegram}
 					step={link.step}
 				/>
 			)}
@@ -125,7 +113,7 @@ export const TelegramCard = ({
 				isOpen={confirmUnlink}
 				onConfirm={() => {
 					setConfirmUnlink(false);
-					onUnlink();
+					actions.unlink("telegram");
 				}}
 				onOpenChange={setConfirmUnlink}
 				title="Unlink Telegram?"

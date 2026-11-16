@@ -98,16 +98,18 @@ src/features/<feature>/
   <feature>-model.ts       pure: data in, what to show out. No React, no Convex
   <feature>-model.test.ts
   use-<feature>.ts         the data hook: the one file that calls Convex, PostHog, the toast
-  <feature>-screen.tsx     composes the parts and reads the hook (~100 lines)
+  <screen>-data.tsx        the screen's provider: its { state, actions } type, the context,
+                           use<Screen>(), and <Screen>Data, which fills it from the data hook
+  <feature>-screen.tsx     composes the parts, which read the provider (~100 lines)
   screens.ts               its entries in the (protected) stack
   <area>/                  parts, named for the screen area they draw (hero/, link-steps/)
-  dev/                     fixtures and dev states
+  dev/                     fixtures, and states.tsx: the screen's dev states
   AGENTS.md                only for rules the code can't show
 ```
 
 - **Data hook.** Returns `{ state, actions }`; errors, retries, analytics and toasts
   live there, so parts only draw. A big feature has one per screen. Its second
-  adapter is the fixtures in `dev/`, which feed tests and dev states.
+  adapter is the fixtures in `dev/`, which feed tests and dev states (see "Dev states").
 - **Model.** Whatever turns data into what to show is a pure function in the model,
   tested with vitest: the fastest feedback in the app.
 - **State.** Server truth: Convex, through the data hook. Device-only for one feature:
@@ -139,6 +141,43 @@ src/features/<feature>/
   screen PRs replace, and `RESTYLED_FEATURES`, which the sweep reworks; both only shrink);
   `bun run check:changed` warns on `.tsx` over 200 lines. Porting a prototype screen:
   the `port-screen` skill.
+
+## Dev states
+
+A dev build opens any registered screen state on fixtures, with no backend and no data set
+up by hand: `xolace://dev/<feature>/<state>`, or Account › Dev tools › Dev states for the
+list. Dev builds only, signed in and past intake (the routes sit in `(protected)`). The
+worked example is `reach-me-on`: `reach-sheet-data.tsx` and `dev/`.
+
+- **Provider.** A screen and its parts read data and act only through the feature's
+  provider (`<screen>-data.tsx`, `use(Context)`): no part calls a data hook, Convex,
+  PostHog, the toast or a store that acts (the paywall) itself. Hooks that only draw
+  (theme colours, layout, a part's own `useState`) stay in the part. The route wraps
+  the screen in `<Screen>Data`, which fills the provider from the data hook; a dev
+  state fills it from fixtures. Same `{ state, actions }` type, so the screen can't
+  tell, and a tap in a dev state never reaches the backend. A fixture's actions do
+  nothing unless the state needs a tap.
+- **Add a state:** one entry in `devStates` in the feature's `dev/states.tsx`
+  (`DevState`, `src/dev/dev-state.ts`: `id`, `title`, `Screen`, optional header
+  `options`), with literal string ids. `src/dev/discovered.ts` finds every
+  `dev/states.tsx` with `require.context`, so nothing central changes and parallel
+  PRs don't touch the same lines. Fixtures sit beside it in `dev/`; the tests import
+  them too (test files are outside the import graph). A big feature's `dev/` per screen
+  folder all register under the feature, may share each other's fixtures, and keep ids
+  unique across the feature.
+- **Open one:** argent `open-url` or `xcrun simctl openurl <udid>
+  xolace://dev/<feature>/<state>`. A state with `headerShown: false` has no back
+  button: swipe back on iOS, system back on Android.
+- **Mistakes** fail in CI: `src/dev/states-files.test.ts` reads every `dev/states.tsx`
+  and runs the registry's rules (path, kebab-case ids, one id per feature). At run time
+  a bad file is left out and listed on the index; the rest still open.
+- **Release builds** have none of it: the `(protected)` layout routes `dev` only under
+  `Stack.Protected guard={__DEV__}`, and the route shims reach `src/dev` only through
+  `__DEV__ ? require(...) : null`, which Expo's transform (babel-preset-expo, then
+  `@expo/metro-config`'s constant folding) removes before Metro collects
+  dependencies. `import-cycles.test.ts` is the static guard: it fails when anything
+  else imports dev code (`devCodeInReleaseGraph`) or a feature's `dev/` is imported
+  from outside that feature's `dev/` folders and `src/dev` (`devImportsFromOutside`).
 
 ## Tabs and the root seams
 

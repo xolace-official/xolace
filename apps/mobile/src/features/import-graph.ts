@@ -21,6 +21,10 @@ export type Import = {
 	/** Source files under `src/` it resolves to on any platform; empty for packages. */
 	targets: string[];
 	typeOnly: boolean;
+	/** A `require()` or `import()` only a dev build runs: behind `__DEV__` (`if`,
+	 * `? :` or `&&`). A release build folds the branch away before Metro collects
+	 * its dependencies, so the target never reaches the release bundle. */
+	devOnly: boolean;
 	/** Named value bindings (`import { useToast } from ...`), without type-only
 	 * ones; `*` for a namespace import (`import * as H from ...`). */
 	names: string[];
@@ -65,6 +69,40 @@ function importBindings(node: ts.ImportDeclaration) {
 	return { names, typeOnly };
 }
 
+const isDevFlag = (node: ts.Expression): boolean =>
+	ts.isParenthesizedExpression(node)
+		? isDevFlag(node.expression)
+		: ts.isIdentifier(node) && node.text === "__DEV__";
+
+/** A node that runs one branch only under `__DEV__`: `if (__DEV__) a else b`,
+ * `__DEV__ ? a : b`, `__DEV__ && a`. Metro folds these the same way in release. */
+function devBranch(
+	node: ts.Node
+): { condition: ts.Node; dev: ts.Node; other?: ts.Node } | undefined {
+	if (ts.isIfStatement(node) && isDevFlag(node.expression)) {
+		return {
+			condition: node.expression,
+			dev: node.thenStatement,
+			other: node.elseStatement,
+		};
+	}
+	if (ts.isConditionalExpression(node) && isDevFlag(node.condition)) {
+		return {
+			condition: node.condition,
+			dev: node.whenTrue,
+			other: node.whenFalse,
+		};
+	}
+	if (
+		ts.isBinaryExpression(node) &&
+		node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken &&
+		isDevFlag(node.left)
+	) {
+		return { condition: node.left, dev: node.right };
+	}
+	return undefined;
+}
+
 export function buildGraph(): ImportGraph {
 	const config = readConfig();
 	const host = ts.createCompilerHost(config.options);
@@ -88,7 +126,8 @@ export function buildGraph(): ImportGraph {
 		const add = (
 			specifier: string,
 			typeOnly: boolean,
-			names: string[] = []
+			names: string[] = [],
+			devOnly = false
 		) => {
 			const targets = new Set<string>();
 			for (const options of platformOptions) {
@@ -102,9 +141,24 @@ export function buildGraph(): ImportGraph {
 					targets.add(resolved.resolvedFileName);
 				}
 			}
-			imports.push({ names, specifier, targets: [...targets], typeOnly });
+			imports.push({
+				devOnly,
+				names,
+				specifier,
+				targets: [...targets],
+				typeOnly,
+			});
 		};
-		const visit = (node: ts.Node) => {
+		const visit = (node: ts.Node, dev: boolean) => {
+			const guarded = devBranch(node);
+			if (guarded) {
+				visit(guarded.condition, dev);
+				visit(guarded.dev, true);
+				if (guarded.other) {
+					visit(guarded.other, dev);
+				}
+				return;
+			}
 			if (
 				ts.isImportDeclaration(node) &&
 				ts.isStringLiteral(node.moduleSpecifier)
@@ -125,11 +179,11 @@ export function buildGraph(): ImportGraph {
 					(ts.isIdentifier(node.expression) &&
 						node.expression.text === "require"))
 			) {
-				add(node.arguments[0].text, false);
+				add(node.arguments[0].text, false, [], dev);
 			}
-			ts.forEachChild(node, visit);
+			ts.forEachChild(node, (child) => visit(child, dev));
 		};
-		visit(source);
+		visit(source, false);
 		graph.set(file, imports);
 	}
 	return graph;

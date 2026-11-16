@@ -2,6 +2,7 @@ import { Redirect, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { ReachMeOnSheet } from "@/features/reach-me-on/components/reach-me-on-sheet";
+import { ReachSheetData } from "@/features/reach-me-on/reach-sheet-data";
 import { useReachMeOnFlag } from "@/features/reach-me-on/use-reach-channels";
 
 export default function ReachRoute() {
@@ -28,5 +29,9 @@ export default function ReachRoute() {
 			</View>
 		);
 	}
-	return <ReachMeOnSheet />;
+	return (
+		<ReachSheetData>
+			<ReachMeOnSheet />
+		</ReachSheetData>
+	);
 }
