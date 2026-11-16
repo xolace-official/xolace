@@ -97,6 +97,7 @@ const RULES = `You are Xolace, writing back in a private Telegram chat with some
 
 The first line:
 - Its own line, exactly one of these, word for word: ${FIRST_LINES.map((l) => `"${l}"`).join(", ")}
+- Then a line break. Nothing else goes on that line.
 - Telegram shows it on their lock screen, so it never says anything about them. Pick the one that fits.
 
 The rest:
@@ -202,31 +203,61 @@ const APPROVED = new Set(FIRST_LINES.map(normalize));
 export const isApprovedFirstLine = (line: string) =>
 	APPROVED.has(normalize(line));
 
+/** After an opener: its own full stop (or ! or …), a space, then the rest. */
+const AFTER_OPENER = /^([.!…]+)\s+(\S.*)$/;
+
 /**
- * A model reply as it goes out, or null when it breaks the rules code can
- * check: one line only, a first line not from {@link FIRST_LINES}, quiet not
- * two lines, or the whole too long.
+ * A line that runs an approved opener straight into the rest of the reply,
+ * as `[opener, rest]`, or null. The opener must end at its own full stop, so
+ * "I hear you, your boss…" never splits. Lowercasing and the apostrophe swap
+ * keep every index, so the opener keeps the model's own wording.
+ */
+function splitOpener(line: string): [string, string] | null {
+	const lower = line.toLowerCase().replace(/[’‘]/g, "'");
+	for (const opener of APPROVED) {
+		if (!lower.startsWith(opener)) {
+			continue;
+		}
+		const after = AFTER_OPENER.exec(line.slice(opener.length));
+		if (after?.[1] && after[2]) {
+			return [line.slice(0, opener.length + after[1].length), after[2]];
+		}
+	}
+	return null;
+}
+
+/** Which rule a model reply broke. Safe to log: it carries none of the reply. */
+export type ShapeBreak = "empty" | "quiet_too_long" | "too_long";
+
+/**
+ * A model reply as it goes out, or the first rule code can check that it
+ * breaks: nothing at all, quiet past two lines, or the whole too long. An
+ * approved opener run into the rest on one line is split first.
+ *
+ * The first line is no longer held to {@link FIRST_LINES} or
+ * {@link FIRST_LINE_MAX_CHARS} (a real-world test): what the model writes
+ * first can now reach the lock screen.
  */
 export function shapeReply(
 	raw: string,
 	rules: { reach: Reach }
-): string | null {
+): { ok: true; text: string } | { ok: false; reason: ShapeBreak } {
+	const broke = (reason: ShapeBreak) => ({ ok: false as const, reason });
 	const lines = raw
 		.replace(WRAPPING_QUOTES, "")
 		.split("\n")
 		.map((line) => line.trim())
 		.filter(Boolean);
-	const [first] = lines;
-	if (!first || first.length > FIRST_LINE_MAX_CHARS) {
-		return null;
+	const split = lines[0] ? splitOpener(lines[0]) : null;
+	if (split) {
+		lines.splice(0, 1, ...split);
 	}
-	if (!isApprovedFirstLine(first)) {
-		return null;
+	if (lines.length === 0) {
+		return broke("empty");
 	}
-	// The first line stands alone; quiet is exactly it and one more.
-	if (lines.length < 2 || (rules.reach === "quiet" && lines.length !== 2)) {
-		return null;
+	if (rules.reach === "quiet" && lines.length > 2) {
+		return broke("quiet_too_long");
 	}
 	const text = lines.join("\n");
-	return text.length > REPLY_MAX_CHARS ? null : text;
+	return text.length > REPLY_MAX_CHARS ? broke("too_long") : { ok: true, text };
 }

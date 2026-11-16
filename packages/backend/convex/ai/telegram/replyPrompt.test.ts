@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	buildReplyPrompt,
 	FIRST_LINE_MAX_CHARS,
-	FIRST_LINES,
+	REPLY_MAX_CHARS,
 	type ReplyInput,
 	shapeReply,
 } from "./replyPrompt";
@@ -80,46 +80,78 @@ describe("buildReplyPrompt", () => {
 
 describe("shapeReply", () => {
 	const rules = { reach: "warm" as const };
+	const broke = (reason: string) => ({ ok: false, reason });
 
 	it("keeps a short general first line and the rest", () => {
-		expect(shapeReply('"Good to hear.\n\nWhat helped?"', rules)).toBe(
-			"Good to hear.\nWhat helped?"
-		);
+		expect(shapeReply('"Good to hear.\n\nWhat helped?"', rules)).toEqual({
+			ok: true,
+			text: "Good to hear.\nWhat helped?",
+		});
 	});
 
-	it("refuses one line, a long first line, or anything but an approved first line", () => {
-		expect(shapeReply("Good to hear, what helped?", rules)).toBeNull();
+	it("names why it refused: empty or too long", () => {
+		expect(shapeReply("  \n ", rules)).toEqual(broke("empty"));
 		expect(
-			shapeReply(`${"x".repeat(FIRST_LINE_MAX_CHARS + 1)}\nmore`, rules)
-		).toBeNull();
-		expect(shapeReply("Work sounds lighter.\nWhat helped?", rules)).toBeNull();
-		expect(shapeReply("Good to hear.\nWork sounds lighter.", rules)).toBe(
-			"Good to hear.\nWork sounds lighter."
-		);
+			shapeReply(`Good to hear.\n${"x".repeat(REPLY_MAX_CHARS)}`, rules)
+		).toEqual(broke("too_long"));
 	});
 
-	it("takes only an approved first line, so no paraphrase reaches the lock screen", () => {
-		for (const first of [
-			"Your boss was harsh.",
-			"Tuesday's review left you rattled.",
-			"Rough morning, then.",
-			"Since 9 this has been heavy.",
-			"Money sounds tight.",
-			"Still rattled, I hear you.",
+	it("lets any first line through, long, unapproved or alone", () => {
+		for (const raw of [
+			"Your boss was harsh.\nWhat helped?",
+			"Good to hear, what helped?",
+			`${"x".repeat(FIRST_LINE_MAX_CHARS + 1)}\nmore`,
+			"I hear you, your boss sounds like a lot this week.",
 		]) {
-			expect(shapeReply(`${first}\nWhat helped?`, rules)).toBeNull();
+			expect(shapeReply(raw, rules).ok).toBe(true);
 		}
-		for (const first of FIRST_LINES) {
-			expect(shapeReply(`${first}\nMore?`, rules)).not.toBeNull();
-		}
-		expect(shapeReply("i’m here\nMore?", rules)).not.toBeNull();
 	});
 
-	it("holds quiet to exactly two lines", () => {
-		const quiet = { reach: "quiet" as const };
+	it("splits an approved opener from the rest written on the same line", () => {
 		expect(
-			shapeReply("Good to hear.\nTell me if you like.", quiet)
-		).not.toBeNull();
-		expect(shapeReply("Good.\nOne.\nTwo.", quiet)).toBeNull();
+			shapeReply(
+				"Thanks for telling me. That sounds like a heavy week. What's been hardest?",
+				rules
+			)
+		).toEqual({
+			ok: true,
+			text: "Thanks for telling me.\nThat sounds like a heavy week. What's been hardest?",
+		});
+		expect(shapeReply("I’m here! Take your time.", rules)).toEqual({
+			ok: true,
+			text: "I’m here!\nTake your time.",
+		});
+		// The rest of a split line still joins the lines after it.
+		expect(shapeReply("Good to hear. What helped?\nNo rush.", rules)).toEqual({
+			ok: true,
+			text: "Good to hear.\nWhat helped?\nNo rush.",
+		});
+	});
+
+	it("splits only where the opener ends at its own full stop", () => {
+		expect(
+			shapeReply("I hear you, your boss sounds like a lot.", rules)
+		).toEqual({ ok: true, text: "I hear you, your boss sounds like a lot." });
+		expect(
+			shapeReply("Your boss again. Thanks for telling me. Rough.", rules)
+		).toEqual({
+			ok: true,
+			text: "Your boss again. Thanks for telling me. Rough.",
+		});
+	});
+
+	it("holds quiet to two lines at most, split or not", () => {
+		const quiet = { reach: "quiet" as const };
+		expect(shapeReply("I hear you.", quiet).ok).toBe(true);
+		expect(shapeReply("I hear you. Take your time.", quiet)).toEqual({
+			ok: true,
+			text: "I hear you.\nTake your time.",
+		});
+		expect(shapeReply("I hear you. Take your time.\nMore.", quiet)).toEqual(
+			broke("quiet_too_long")
+		);
+		expect(shapeReply("Good to hear.\nOne.\nTwo.", quiet)).toEqual(
+			broke("quiet_too_long")
+		);
 	});
 });

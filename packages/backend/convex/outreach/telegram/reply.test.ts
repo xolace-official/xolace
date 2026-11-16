@@ -17,6 +17,7 @@ import {
 	MODERATION_UNAVAILABLE,
 	type ModerationResult,
 } from "../../ai/providers/moderation";
+import { REPLY_MAX_CHARS } from "../../ai/telegram/replyPrompt";
 import { crisisContactsFor } from "../../lib/crisisResources";
 import { seedMetadata, seedSession } from "../../test/fixtures.helpers";
 import { asNewUser, type SeededUser } from "../../test/harness.helpers";
@@ -707,7 +708,8 @@ describe("a reply to free text", () => {
 
 	it("tries once more when a reply breaks its shape, then fails", async () => {
 		const { write } = await checkedIn();
-		stub.queue = ["One line only."];
+		const tooLong = `Good to hear.\n${"x".repeat(REPLY_MAX_CHARS)}`;
+		stub.queue = [tooLong];
 
 		await write("Long day");
 
@@ -716,7 +718,7 @@ describe("a reply to free text", () => {
 			"Thanks for telling me.\nWhat's been on your mind?"
 		);
 
-		stub.queue = ["Work is hard.\nTell me more.", "Work again.\nMore?"];
+		stub.queue = [tooLong, tooLong];
 		await write("Still long");
 		expect(lastReply()?.params.text).toBe(REPLY_FAILED);
 	});
