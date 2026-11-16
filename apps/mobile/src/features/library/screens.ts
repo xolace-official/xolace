@@ -1,4 +1,4 @@
-import { fitSheet, type RootScreen } from "@/lib/root-screen";
+import { legacyFitSheet, type RootScreen } from "@/lib/root-screen";
 
 export const libraryScreens: readonly RootScreen[] = [
 	// Reduced motion: the Lantern reader crossfades in instead of sliding (#400).
@@ -13,7 +13,7 @@ export const libraryScreens: readonly RootScreen[] = [
 	{
 		name: "reader-appearance",
 		options: (context) => ({
-			...fitSheet(context),
+			...legacyFitSheet(context),
 			sheetLargestUndimmedDetentIndex: "last",
 		}),
 	},

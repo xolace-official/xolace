@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { ROOT_SCREENS } from "@/features/navigation/root-screens";
-import { screenOptions } from "@/lib/root-screen";
+import { fitSheet, screenOptions } from "@/lib/root-screen";
 
 const PROTECTED = path.resolve(import.meta.dirname, "../../app/(protected)");
 
@@ -38,8 +38,14 @@ const ON_GLASS = {
 	background: "#000",
 	liquidGlass: true,
 	reducedMotion: false,
+	surface: "#111",
 };
-const REDUCED = { background: "#000", liquidGlass: false, reducedMotion: true };
+const REDUCED = {
+	background: "#000",
+	liquidGlass: false,
+	reducedMotion: true,
+	surface: "#111",
+};
 
 /**
  * The 28 entries `(protected)/_layout.tsx` listed by hand before `screens.ts`
@@ -134,4 +140,18 @@ describe("the routes the layout used to list by hand", () => {
 			expect(actual).toStrictEqual(expected);
 		});
 	}
+});
+
+describe("fitSheet, the redesign's form sheet", () => {
+	it("fits its content on the surface, with a grabber and 40 pt corners, glass or not", () => {
+		for (const context of [ON_GLASS, REDUCED]) {
+			expect(fitSheet(context)).toStrictEqual({
+				contentStyle: { backgroundColor: "#111" },
+				presentation: "formSheet",
+				sheetAllowedDetents: "fitToContents",
+				sheetCornerRadius: 40,
+				sheetGrabberVisible: true,
+			});
+		}
+	});
 });
