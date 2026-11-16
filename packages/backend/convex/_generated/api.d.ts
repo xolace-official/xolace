@@ -279,6 +279,7 @@ import type * as presence from "../presence.js";
 import type * as productFeedback from "../productFeedback.js";
 import type * as productFeedbackFlags from "../productFeedbackFlags.js";
 import type * as profile from "../profile.js";
+import type * as profile_intensity from "../profile/intensity.js";
 import type * as quotes from "../quotes.js";
 import type * as rag from "../rag.js";
 import type * as reflections from "../reflections.js";
@@ -600,6 +601,7 @@ declare const fullApi: ApiFromModules<{
   productFeedback: typeof productFeedback;
   productFeedbackFlags: typeof productFeedbackFlags;
   profile: typeof profile;
+  "profile/intensity": typeof profile_intensity;
   quotes: typeof quotes;
   rag: typeof rag;
   reflections: typeof reflections;
