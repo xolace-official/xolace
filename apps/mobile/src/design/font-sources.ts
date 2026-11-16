@@ -1,9 +1,11 @@
 /**
  * The font files src/design/fonts.ts loads, by `useFonts` key. One import per
  * face (the per-weight entry points), so a theme's pair loads without pulling
- * in every weight of its family. font-sources.test.ts checks every face the
+ * in every weight of its family. font-pairs.test.ts checks every face the
  * pairs, fixed faces and legacy list name has an entry here.
  */
+import { AtkinsonHyperlegibleNext_400Regular } from "@expo-google-fonts/atkinson-hyperlegible-next/400Regular";
+import { AtkinsonHyperlegibleNext_700Bold } from "@expo-google-fonts/atkinson-hyperlegible-next/700Bold";
 import { BricolageGrotesque_600SemiBold } from "@expo-google-fonts/bricolage-grotesque/600SemiBold";
 import { BricolageGrotesque_700Bold } from "@expo-google-fonts/bricolage-grotesque/700Bold";
 import { BricolageGrotesque_800ExtraBold } from "@expo-google-fonts/bricolage-grotesque/800ExtraBold";
@@ -22,6 +24,7 @@ import { Figtree_700Bold } from "@expo-google-fonts/figtree/700Bold";
 import { Literata_400Regular } from "@expo-google-fonts/literata/400Regular";
 import { Literata_400Regular_Italic } from "@expo-google-fonts/literata/400Regular_Italic";
 import { Literata_600SemiBold } from "@expo-google-fonts/literata/600SemiBold";
+import { Literata_700Bold } from "@expo-google-fonts/literata/700Bold";
 import { Newsreader_400Regular } from "@expo-google-fonts/newsreader/400Regular";
 import { Newsreader_400Regular_Italic } from "@expo-google-fonts/newsreader/400Regular_Italic";
 import { Nunito_400Regular } from "@expo-google-fonts/nunito/400Regular";
@@ -38,6 +41,8 @@ import { SpaceGrotesk_600SemiBold } from "@expo-google-fonts/space-grotesk/600Se
 import { SpaceGrotesk_700Bold } from "@expo-google-fonts/space-grotesk/700Bold";
 
 export const FONT_SOURCES: Readonly<Record<string, number>> = {
+	AtkinsonHyperlegibleNext_400Regular,
+	AtkinsonHyperlegibleNext_700Bold,
 	BricolageGrotesque_600SemiBold,
 	BricolageGrotesque_700Bold,
 	BricolageGrotesque_800ExtraBold,
@@ -56,6 +61,7 @@ export const FONT_SOURCES: Readonly<Record<string, number>> = {
 	Literata_400Regular,
 	Literata_400Regular_Italic,
 	Literata_600SemiBold,
+	Literata_700Bold,
 	Newsreader_400Regular,
 	Newsreader_400Regular_Italic,
 	Nunito_400Regular,

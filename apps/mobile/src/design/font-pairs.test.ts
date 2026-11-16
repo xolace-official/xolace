@@ -7,7 +7,6 @@ import {
 	FONT_PAIR_IDS,
 	FONT_PAIRS,
 	FONT_ROLES,
-	LAUNCH_FIXED,
 	LEGACY_FACES,
 	launchFaces,
 	pairFaces,
@@ -46,7 +45,6 @@ function fontFile(face: string): string {
 }
 
 const sources = read("src/design/font-sources.ts");
-const readerFonts = read("src/features/library/reader/reading-mode.ts");
 const themesCss = read("src/themes/themes.generated.css");
 
 /** One variant's `--font-<role>` values in the generated theme CSS. */
@@ -94,10 +92,10 @@ describe("font pairs", () => {
 		expect(variantFonts(null)).toBe(DEFAULT_FONT_PAIR);
 	});
 
-	it("every face a pair, the launch gate or a legacy screen needs has a source and a file", () => {
+	it("every face a pair, a fixed face or a legacy screen needs has a source and a file", () => {
 		const needed = new Set([
 			...FONT_PAIR_IDS.flatMap(pairFaces),
-			...LAUNCH_FIXED,
+			...Object.values(FIXED_FACES),
 			...LEGACY_FACES,
 		]);
 		for (const face of needed) {
@@ -109,14 +107,6 @@ describe("font pairs", () => {
 		}
 	});
 
-	it("loads every fixed face somewhere: at launch, or in the reader", () => {
-		for (const face of Object.values(FIXED_FACES)) {
-			const atLaunch = (LAUNCH_FIXED as readonly string[]).includes(face);
-			expect(atLaunch || readerFonts.includes(face), face).toBe(true);
-			expect(existsSync(fontFile(face)), face).toBe(true);
-		}
-	});
-
 	it("waits at launch for Default's pair and the active one, each face once", () => {
 		const faces = launchFaces("clear");
 		expect(faces).toEqual([...new Set(faces)]);
@@ -124,7 +114,16 @@ describe("font pairs", () => {
 			expect(faces).toContain(face);
 		}
 		expect(faces).not.toContain(FONT_PAIRS.playful.normal);
-		// On Default only Default's pair loads: no DM Sans.
+		// On Default: Default's pair and the legacy Space Grotesk, nothing else.
+		expect(launchFaces("warm")).toHaveLength(12);
 		expect(launchFaces("warm")).not.toContain(FONT_PAIRS.clear.normal);
+		// Fixed faces load where they're drawn, never at launch.
+		for (const face of [
+			FIXED_FACES.mirror,
+			FIXED_FACES.letter,
+			FIXED_FACES["reader-semi"],
+		]) {
+			expect(launchFaces("clear")).not.toContain(face);
+		}
 	});
 });

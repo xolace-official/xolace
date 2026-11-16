@@ -27,7 +27,7 @@ export const READING_MODES: Record<
 	}
 > = {
 	classic: {
-		blurb: "The app’s own face and theme",
+		blurb: "Space Grotesk on the app’s own theme",
 		// Space Grotesk has no italic, so emphasis is a synthesized slant.
 		face: {
 			bold: "SpaceGrotesk_700Bold",

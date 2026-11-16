@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { type ThemeName, Uniwind, useCSSVariable } from "uniwind";
 import {
 	DEFAULT_FONT_PAIR,
+	FIXED_FACES,
+	type FixedFace,
 	FONT_PAIR_IDS,
 	FONT_PAIRS,
 	FONT_ROLES,
@@ -15,12 +17,13 @@ import { FONT_SOURCES } from "./font-sources";
 import { variantFonts } from "./themes";
 
 /**
- * Font loading. At launch, before the splash hides: the fixed faces the first
- * screens need, Default's pair (also night's), the active theme's pair, and
- * the faces old screens still name. Other pairs load when a theme switches to
- * them (`setThemeWithFonts`), so text never shows a face that isn't there yet.
- * The reader loads Atkinson and Literata bold itself
- * (src/features/library/reader/reading-mode.ts).
+ * Font loading. At launch, before the splash hides: Default's pair (also
+ * night's), the active theme's pair, and the Space Grotesk faces old screens
+ * still draw (`LEGACY_FACES`). Other pairs load when a theme switches to them
+ * (`setThemeWithFonts`), so text never shows a face that isn't there yet.
+ * Fixed faces (mirror, letter, poster, reader) load on the screen that draws
+ * them (`useFixedFaces`); nothing in production draws them yet, so none of
+ * them hold the splash.
  */
 
 function sourcesFor(names: readonly string[]): Record<string, number> {
@@ -56,6 +59,8 @@ function loadPair(id: FontPairId): Promise<void> {
 
 /** Bumped on every switch, so a pair that loads late can't undo a later switch. */
 let latestSwitch = 0;
+/** The theme a switch is waiting to apply while its pair loads, if any. */
+let pendingTheme: ThemeName | "system" | null = null;
 
 /**
  * The one way the app switches theme after launch (theme-switch.test.ts checks
@@ -71,6 +76,7 @@ export function setThemeWithFonts(name: ThemeName | "system"): void {
 	// Uniwind's own "system" isn't in its ThemeName union.
 	const apply = () => {
 		if (id === latestSwitch) {
+			pendingTheme = null;
 			Uniwind.setTheme(name as ThemeName);
 		}
 	};
@@ -79,7 +85,17 @@ export function setThemeWithFonts(name: ThemeName | "system"): void {
 		apply();
 		return;
 	}
+	pendingTheme = name;
 	loadPair(pair).then(apply, apply);
+}
+
+/**
+ * The theme the app is on, or is about to be on if a switch is waiting for
+ * its pair. Read this, not `Uniwind.currentTheme`, to remember the user's
+ * theme (night mode's stash): a switch made just before would be lost.
+ */
+export function targetTheme(): string {
+	return pendingTheme ?? Uniwind.currentTheme;
 }
 
 /**
@@ -91,6 +107,21 @@ export function useLaunchFonts(): boolean {
 	const [pair] = useState(() => variantFonts(Uniwind.currentTheme));
 	const [loaded, error] = useFonts(sourcesFor(launchFaces(pair)));
 	// A face that fails to load falls back to the system face; don't hold the splash for it.
+	return loaded || error != null;
+}
+
+/**
+ * Loads fixed faces for a screen that draws them; true once they're in (or
+ * failed, so a screen never waits on a broken face). Gate the text on it:
+ * text drawn before its face loads keeps the system face.
+ *
+ * @public For the redesign's screens: Letters (`letter`), the mirror and Sit
+ * (`mirror`), the new poster (`poster*`), the reader (`reader*`).
+ */
+export function useFixedFaces(...faces: FixedFace[]): boolean {
+	const [loaded, error] = useFonts(
+		sourcesFor(faces.map((face) => FIXED_FACES[face]))
+	);
 	return loaded || error != null;
 }
 

@@ -96,23 +96,17 @@ export const FIXED_FACES = {
 export type FixedFace = keyof typeof FIXED_FACES;
 
 /**
- * Faces production's screens still name by PostScript name: the old poster's
- * `font-poster-body` ("SpaceGrotesk-Regular", iOS). Its other weights are
- * fixed faces already. Loaded at launch until the redesign's sweep removes
- * the last caller; then delete this list.
+ * Space Grotesk faces production's old screens draw without loading them:
+ * the old quote poster (`font-poster-body` / `font-poster-display`, by
+ * PostScript name on iOS; the archive card's `font-poster-semi`) and the
+ * reader's Classic mode (src/features/library/reader/reading-mode.ts:
+ * regular, its synthesized italic, and bold). Loaded at launch until the
+ * redesign replaces those screens; then delete this list.
  */
-export const LEGACY_FACES = ["SpaceGrotesk_400Regular"] as const;
-
-/** Fixed faces loaded at launch: the mirror, the letter, the poster and the reader's regular, italic and semibold. */
-export const LAUNCH_FIXED = [
-	FIXED_FACES.mirror,
-	FIXED_FACES.letter,
-	FIXED_FACES.poster,
-	FIXED_FACES["poster-medium"],
-	FIXED_FACES["poster-semi"],
-	FIXED_FACES.reader,
-	FIXED_FACES["reader-italic"],
-	FIXED_FACES["reader-semi"],
+export const LEGACY_FACES = [
+	"SpaceGrotesk_400Regular",
+	"SpaceGrotesk_600SemiBold",
+	"SpaceGrotesk_700Bold",
 ] as const;
 
 /** A pair's faces, each once (Space Grotesk's display and display-bold are one). */
@@ -121,14 +115,14 @@ export const pairFaces = (id: FontPairId): string[] => [
 ];
 
 /**
- * Every face the launch gate waits for, with `pair` the active theme's:
- * the fixed launch faces, the legacy faces, Default's pair (night uses it
- * too, so switching to night never waits) and the active pair.
+ * Every face the launch gate waits for, with `pair` the active theme's: the
+ * legacy faces, Default's pair (night uses it too, so switching to night
+ * never waits) and the active pair. Fixed faces load where they're drawn
+ * (`useFixedFaces` in src/design/fonts.ts).
  */
 export function launchFaces(pair: FontPairId): string[] {
 	return [
 		...new Set([
-			...LAUNCH_FIXED,
 			...LEGACY_FACES,
 			...pairFaces(DEFAULT_FONT_PAIR),
 			...pairFaces(pair),

@@ -9,8 +9,7 @@ import {
 	useRef,
 } from "react";
 import { AppState, type AppStateStatus } from "react-native";
-import { Uniwind } from "uniwind";
-import { setThemeWithFonts } from "@/design/fonts";
+import { setThemeWithFonts, targetTheme } from "@/design/fonts";
 import { findVariant, NIGHT_VARIANT, themeVariant } from "@/design/themes";
 import { useAppStore } from "@/store/store";
 
@@ -56,7 +55,8 @@ export function SessionModeProvider({
 			return;
 		}
 		nightAppliedRef.current = true;
-		const current = Uniwind.currentTheme;
+		// A colour theme picked a moment ago may still be loading its pair.
+		const current = targetTheme();
 		setPreviousTheme(current);
 		setThemeWithFonts(NIGHT_VARIANT);
 	}, [setPreviousTheme]);

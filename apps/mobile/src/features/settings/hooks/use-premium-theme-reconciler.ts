@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { type ThemeName, Uniwind } from "uniwind";
-import { setThemeWithFonts } from "@/design/fonts";
+import type { ThemeName } from "uniwind";
+import { setThemeWithFonts, targetTheme } from "@/design/fonts";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 import { useAppStore } from "@/store/store";
@@ -23,7 +23,7 @@ export function usePremiumThemeReconciler() {
 
 		const plan = planPremiumThemeReset({
 			colorThemeId,
-			currentTheme: Uniwind.currentTheme,
+			currentTheme: targetTheme(),
 			isPlus,
 			isResolved,
 			previousTheme,

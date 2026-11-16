@@ -33,8 +33,10 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   `font-italic` …), the fixed faces (`font-mirror`, `font-letter`, `font-reader`,
   `font-poster` …) or `useThemeFaces()` for style-only props. Never a numeric
   `fontWeight` or `fontStyle: "italic"` with them: each weight is its own family.
-  `src/design/fonts.ts` loads them (`useLaunchFonts` at launch); switch to a theme with
-  another pair through `setThemeWithFonts`. A new face goes in `font-sources.ts`.
+  `src/design/fonts.ts` loads them: the pairs at launch (`useLaunchFonts`), a fixed face
+  on the screen that draws it (`useFixedFaces`). Switch themes only through
+  `setThemeWithFonts`. A new face goes in `font-sources.ts`. `cn` (`src/lib/cn.ts`)
+  treats every `font-*` face as one group, so a later face class replaces an earlier one.
 - **Images:** `expo-image` only.
 - **Styling:** Uniwind `className`; `cn()` to merge, `tv()` for variants.
   `StyleSheet.create()` only when unavoidable. Inline dynamic styles are fine.
