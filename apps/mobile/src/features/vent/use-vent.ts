@@ -7,6 +7,7 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
 import { AppState, Linking } from "react-native";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { exitVent } from "@/features/vent/exit-vent";
 import { useReplyVoice } from "@/features/vent/use-reply-voice";
 import type {
 	VentBackend,
@@ -198,7 +199,7 @@ export function useVent(): VentBackend {
 		const uri = (await stopRecording()) ?? takeUri.current;
 		takeUri.current = null;
 		if (reason !== "unmounted") {
-			router.back();
+			exitVent(router);
 		}
 		if (uri) {
 			deleteTake(uri);
@@ -213,7 +214,7 @@ export function useVent(): VentBackend {
 			},
 			close: () => {
 				posthog.capture("vent_closed", { state: stageRef.current });
-				router.back();
+				exitVent(router);
 			},
 			drop,
 			finish: () => {
@@ -225,7 +226,7 @@ export function useVent(): VentBackend {
 				});
 				setStage("gone");
 			},
-			leave: () => router.back(),
+			leave: () => exitVent(router),
 			openSettings: () => {
 				Linking.openSettings().catch(() => undefined);
 			},

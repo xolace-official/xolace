@@ -11,6 +11,7 @@ import {
 	VOICE,
 } from "@/features/vent/dev/fixtures";
 import { usePretendVoice } from "@/features/vent/dev/use-pretend-voice";
+import { exitVent } from "@/features/vent/exit-vent";
 import type { VentBackend, VentStage } from "@/features/vent/vent-backend";
 
 export type VentFixture = {
@@ -77,10 +78,10 @@ export function useFixtureBackend(
 				gate.current.burnt = true;
 				advance();
 			},
-			close: () => router.back(),
+			close: () => exitVent(router),
 			drop: (reason) => {
 				if (reason !== "unmounted") {
-					router.back();
+					exitVent(router);
 				}
 			},
 			finish: () => {
@@ -88,7 +89,7 @@ export function useFixtureBackend(
 					setStage("gone");
 				}
 			},
-			leave: () => router.back(),
+			leave: () => exitVent(router),
 			openSettings: ignore,
 			recordedMs: () => (fx.recordedFrom ?? 0) + Date.now() - startedAt.current,
 			speak: () => Promise.resolve(null),
