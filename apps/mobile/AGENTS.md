@@ -98,16 +98,16 @@ src/features/<feature>/
   <feature>-model.ts       pure: data in, what to show out. No React, no Convex
   <feature>-model.test.ts
   use-<feature>.ts         the data hook: the one file that calls Convex, PostHog, the toast
-  <feature>-screen.tsx     composes the parts and reads the hook (~100 lines)
+  <feature>-screen.tsx     composes the parts; reads the hook, or the provider it fills (~100 lines)
   screens.ts               its entries in the (protected) stack
   <area>/                  parts, named for the screen area they draw (hero/, link-steps/)
-  dev/                     fixtures and dev states
+  dev/                     fixtures, and states.tsx: the screen's dev states
   AGENTS.md                only for rules the code can't show
 ```
 
 - **Data hook.** Returns `{ state, actions }`; errors, retries, analytics and toasts
   live there, so parts only draw. A big feature has one per screen. Its second
-  adapter is the fixtures in `dev/`, which feed tests and dev states.
+  adapter is the fixtures in `dev/`, which feed tests and dev states (see "Dev states").
 - **Model.** Whatever turns data into what to show is a pure function in the model,
   tested with vitest: the fastest feedback in the app.
 - **State.** Server truth: Convex, through the data hook. Device-only for one feature:
@@ -139,6 +139,33 @@ src/features/<feature>/
   screen PRs replace, and `RESTYLED_FEATURES`, which the sweep reworks; both only shrink);
   `bun run check:changed` warns on `.tsx` over 200 lines. Porting a prototype screen:
   the `port-screen` skill.
+
+## Dev states
+
+A dev build opens any registered screen state on fixtures, with no backend and no data set
+up by hand: `xolace://dev/<feature>/<state>`, or Account › Dev tools › Dev states for the
+list. Signed in, dev builds only. The worked example is `reach-me-on`: `reach-sheet.tsx`
+and `dev/`.
+
+- **Provider.** A screen with states reads its feature's provider (`use(Context)`), not
+  the data hook. The route wraps it in the app's adapter, which fills the provider from
+  the data hook; a dev state wraps it in fixtures. Same `{ state, actions }` type, so
+  the screen can't tell. A fixture's actions do nothing unless the state needs a tap.
+- **Add a state:** one entry in `devStates` in the feature's `dev/states.tsx`
+  (`DevState`, `src/dev/dev-state.ts`: `id`, `title`, `Screen`, optional header
+  `options`). `src/dev/discovered.ts` finds every `dev/states.tsx` with
+  `require.context`, so nothing central changes and parallel PRs don't touch the
+  same lines. Fixtures sit beside it in `dev/` and feed the tests too. A big feature's
+  `dev/` per screen folder all register under the feature; ids are unique in it.
+- **Open one:** argent `open-url` or `xcrun simctl openurl <udid>
+  xolace://dev/<feature>/<state>`. A bad file throws with its path and the fix when a
+  dev route first loads.
+- **Release builds** have none of it: the `(protected)` layout routes `dev` only under
+  `Stack.Protected guard={__DEV__}`, and the route shims reach `src/dev` only through
+  `__DEV__ ? require(...) : null`, which Metro folds away before it collects
+  dependencies. `import-cycles.test.ts` fails when anything else imports dev code
+  (`devCodeInReleaseGraph`) or a feature's `dev/` is imported from outside it and
+  `src/dev` (`devImportsFromOutside`).
 
 ## Tabs and the root seams
 

@@ -134,9 +134,13 @@ Work in this order; each step leaves something you can test.
   route; a screen it opens is a stack entry it navigates to. It sits after the native
   stack, so it can't draw over a natively presented screen and positions itself
   absolutely.
-- **Dev states.** One per state the handoff shows, in `dev/`, feeding the screen
-  fixtures through the same `{ state, actions }` type. Register them with `src/dev/`
-  (A2). Before A2 lands, the states are fixtures plus tests only; say so in the PR.
+- **Dev states** (`M/AGENTS.md`, "Dev states"; the example is `M/src/features/reach-me-on/`).
+  One per state the handoff shows, and one for each state the prototype's `*-jumps.ts`
+  opened. The screen reads the feature's provider; the route fills it from the data hook,
+  a dev state from fixtures, through the same `{ state, actions }` type. List them as
+  `devStates` in the feature's `dev/states.tsx` (`id`, `title`, `Screen`, header
+  `options`), with the fixtures beside it, which the model tests reuse. Nothing else to
+  register: `src/dev/` finds the file. Only `dev/` and `src/dev/` import `dev/`.
 
 ## 4. Prove it
 
@@ -146,10 +150,12 @@ Work in this order; each step leaves something you can test.
 - Before the PR: the "Before a PR" row of the root `AGENTS.md` "Verifying".
 - Screenshots of every state the PR changes, light and dark, on a simulator through
   argent (`describe` before every tap; use a simulator no other session holds; stop your
-  sessions when done). Put the matching prototype render beside each one.
+  sessions when done). Open each one by its link, `xolace://dev/<feature>/<state>`
+  (argent `open-url`), in a signed-in dev build on your worktree's Metro; Account ›
+  Dev tools › Dev states lists them. Put the matching prototype render beside each one.
 
-Done when every state from step 1 has a light and a dark screenshot, or a line in
-"Could not verify" saying why not.
+Done when every state from step 1 is a dev state with a light and a dark screenshot, or
+has a line in "Could not verify" saying why not.
 
 ## 5. Open the PR
 
