@@ -82,10 +82,16 @@ Put a dependency in the package that uses it; shared versions come from the root
   **recipient**, always someone who opted in to receive letters). A letter is
   **received** once Xolace places it with its recipient, whether or not they have
   read it (not "delivered": that is outreach's word). The recipient can
-  **acknowledge** a letter once, without words, and never reply to it. Not an echo
-  (Xolace distils those from many people) and not outreach (a person writes a
-  letter, not Xolace). The push telling someone a letter reached them, or that
+  **acknowledge** a letter once, without words, and never reply to it. Not a peer
+  reflection (Xolace distils that from a user's own session) and not outreach (a
+  person writes a letter, not Xolace). The push telling someone a letter reached them, or that
   theirs was received or acknowledged, is a notification.
+- **peer reflection**: a short first-person line Xolace distils from one user's
+  session or follow-up answer and, with their consent, adds anonymously to a shared
+  pool that others feeling something similar are shown. The user it came from is
+  its **contributor**; a contributor is never shown their own. Not a letter (a
+  person writes that to a stranger, Xolace only distils a peer reflection).
+  Avoid "echo", an early name for these.
 
 ## Hit every surface
 
