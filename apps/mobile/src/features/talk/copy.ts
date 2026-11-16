@@ -59,6 +59,7 @@ export const TALK_COPY = {
 	start: {
 		back: "Back",
 		button: "Start talking",
+		couldNotStart: "The talk couldn't start. Try again in a moment.",
 		directness: "Directness",
 		facts: {
 			ai: (name: string) => `${name} is an AI, part of Xolace.`,

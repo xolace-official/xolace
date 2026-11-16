@@ -27,12 +27,21 @@ export type Presence =
 
 // Voice volumes sit low (speech is ~0.05–0.3); the root lifts them into view.
 const lift = (v: number) => Math.min(1, Math.sqrt(Math.max(0, v)));
-const messageOf = (e: unknown) =>
-	e instanceof ConvexError && e.data?.code === "talk_time_used"
-		? `There isn't enough talk time left this week. ${TALK_TIME_RESETS}.`
-		: e instanceof Error
-			? e.message
-			: String(e);
+/** What people read for the server's refusals; anything else as it came. */
+const CODE_MESSAGES: Record<string, string> = {
+	// A reopened talk whose session is still closing (its end call was lost offline,
+	// until the server's sweep closes it) or whose mirror is already kept.
+	not_reopenable:
+		"This talk can't be picked up again right now. Its mirror is in your timeline.",
+	talk_time_used: `There isn't enough talk time left this week. ${TALK_TIME_RESETS}.`,
+};
+const messageOf = (e: unknown) => {
+	const code = e instanceof ConvexError ? e.data?.code : undefined;
+	if (typeof code === "string" && Object.hasOwn(CODE_MESSAGES, code)) {
+		return CODE_MESSAGES[code];
+	}
+	return e instanceof Error ? e.message : String(e);
+};
 
 export function useTalk(reopen?: {
 	sessionId: Id<"sessions">;

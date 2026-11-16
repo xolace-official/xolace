@@ -69,6 +69,8 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 	// Held from the first tap on Start until that attempt is over: one session per Start.
 	const [gate] = useState(createStartGate);
 	const [starting, setStarting] = useState(false);
+	// The mic ask itself failing (not a "no"): shown like the pipeline's own errors.
+	const [startError, setStartError] = useState<string | null>(null);
 	const justEnded = useRef(false);
 	const week = time === undefined || time === null ? time : time.secondsLeft;
 
@@ -103,32 +105,35 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 	return {
 		actions: {
 			begin: () =>
-				void gate.run(async () => {
-					preview.stop();
-					if (isLow(week) || talk.started) {
-						return;
-					}
-					setStarting(true);
-					playAffirmativePress();
-					try {
-						// The first talk's system alert; `start` asks again, and the OS answers at once.
-						const { granted } = await requestRecordingPermissionsAsync();
-						setMicAsk(false);
-						if (!granted) {
-							toast(TALK_COPY.start.micOff, {
-								action: {
-									label: TALK_COPY.start.openSettings,
-									onPress: () => void Linking.openSettings(),
-								},
-								variant: "warning",
-							});
+				void gate
+					.run(async () => {
+						setStartError(null);
+						preview.stop();
+						if (isLow(week) || talk.started) {
 							return;
 						}
-						await talk.start();
-					} finally {
-						setStarting(false);
-					}
-				}),
+						setStarting(true);
+						playAffirmativePress();
+						try {
+							// The first talk's system alert; `start` asks again, and the OS answers at once.
+							const { granted } = await requestRecordingPermissionsAsync();
+							setMicAsk(false);
+							if (!granted) {
+								toast(TALK_COPY.start.micOff, {
+									action: {
+										label: TALK_COPY.start.openSettings,
+										onPress: () => void Linking.openSettings(),
+									},
+									variant: "warning",
+								});
+								return;
+							}
+							await talk.start();
+						} finally {
+							setStarting(false);
+						}
+					})
+					.catch(() => setStartError(TALK_COPY.start.couldNotStart)),
 			end() {
 				justEnded.current = false;
 				talk.end();
@@ -164,7 +169,7 @@ export function useTalkScreenData(reopen?: Reopen): TalkScreen {
 			clockFromS: talk.clockFromS,
 			directness: style.directness,
 			endsAt: talk.connected ? talk.endsAt : null,
-			error: talk.error,
+			error: talk.error ?? startError,
 			help,
 			live: talk.live,
 			look: style.look,
