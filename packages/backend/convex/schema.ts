@@ -2352,11 +2352,17 @@ export default defineSchema({
 	//
 	// The anonymized peer reflection pool.
 	//
-	// CRITICAL: NO reference to users, profiles, or sessions.
-	// When a user contributes a reflection, the link is severed
-	// at creation time. This is structural, not policy. Even
-	// with full database access, you cannot trace a reflection
-	// back to its author.
+	// NO reference to users, profiles, or sessions. What this
+	// guarantees, and no more (ADR 0002): a reflection cannot be
+	// traced to its contributor without REFLECTION_AUTHOR_KEY,
+	// which only the server holds. Two caveats a feature must not
+	// build past:
+	// - `authorTag` is an HMAC of the contributor's profile id
+	//   under that key, so the key plus the profiles table links
+	//   a tagged row to its contributor.
+	// - A session keeps an exact copy of the text it contributed
+	//   (`distilledText`), so database access alone can link a
+	//   session-sourced row to its session by matching text.
 	//
 	// The content is AI-distilled — not raw user text.
 	// The AI rewrites to capture emotional essence while
@@ -2366,6 +2372,11 @@ export default defineSchema({
 		// Deliberately imprecise — rounded to nearest day
 		// to prevent timing-based de-anonymization.
 		addedAt: v.number(),
+		// Keyed hash of the contributor's profile id (lib/reflectionAuthor.ts),
+		// so a contributor is never shown their own. Server-only: stripped from
+		// every client and admin response. Unset on seeds, on rows pooled while
+		// the key was missing, and on follow-up shares pooled before #790.
+		authorTag: v.optional(v.string()),
 		// The AI-distilled reflection text.
 		// Written by the articulation engine to capture emotional
 		// essence without identifying details. 1-3 sentences.

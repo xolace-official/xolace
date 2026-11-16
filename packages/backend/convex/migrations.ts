@@ -10,6 +10,7 @@ import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { backfillProfile } from "./achievements/backfill";
 import { reflectionRank } from "./lib/aggregates";
+import { authorTagFor } from "./lib/reflectionAuthor";
 import { FREEZE_CAP } from "./lib/streakFreezes";
 import { searchTextOf, trackSearchTextOf } from "./library/searchText";
 import { localDayKey, shiftDayKey } from "./streaks/activityLog";
@@ -191,6 +192,43 @@ export const backfillTrackSearchText = migrations.define({
 	},
 	table: "audio_tracks",
 });
+
+// Peer-reflection author tags (#790, ADR 0002): tags the session reflections
+// pooled before the tag existed, so their contributors stop being shown them.
+// The anonymizer pooled `distilledText ?? mirrorText` verbatim, so an exact
+// match finds the row. Not gated on `contributedReflection`: a later opt-out
+// left the row pooled. Seeds are skipped; follow-up shares were re-distilled
+// before pooling, can't be matched, and stay untagged. Idempotent.
+// Run once per deployment, after REFLECTION_AUTHOR_KEY is set (throws if not):
+//   bunx convex run migrations:run '{"fn": "migrations:tagReflectionAuthors"}'
+export const tagReflectionAuthors = migrations.define({
+	migrateOne: async (ctx, session) => {
+		const text = session.distilledText ?? session.mirrorText;
+		if (!text) {
+			return;
+		}
+		const pooled = await ctx.db
+			.query("reflections")
+			.withIndex("by_seed_displayText", (q) =>
+				q.eq("isSeed", false).eq("displayText", text)
+			)
+			.take(POOLED_COPIES_MAX);
+		const untagged = pooled.filter((r) => r.authorTag === undefined);
+		if (untagged.length === 0) {
+			return;
+		}
+		const authorTag = await authorTagFor(session.emotionalProfileId);
+		if (!authorTag) {
+			throw new Error("Set REFLECTION_AUTHOR_KEY before tagging reflections");
+		}
+		for (const r of untagged) {
+			await ctx.db.patch("reflections", r._id, { authorTag });
+		}
+	},
+	table: "sessions",
+});
+/** A session's text pooled more than once (a re-run job) is still one author. */
+const POOLED_COPIES_MAX = 10;
 
 // ponytail: random spread, not a rate limiter — ~200 rows over 5 min stays well
 // under OpenAI's embedding limits; move to @convex-dev/workpool if the corpus

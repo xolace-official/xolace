@@ -118,6 +118,7 @@ means you can copy the value from the dev deployment `groovy-mandrill-892`.
 | `POSTHOG_HOST` | PostHog API host. Optional | Dev value OK |
 | `POSTHOG_PERSONAL_API_KEY` | PostHog feature-flag evaluation. Optional | Dev value OK |
 | `POSTHOG_FLAGS_POLLING_INTERVAL_SECONDS` | How often flags refresh. Optional | Dev value OK, or leave unset |
+| `REFLECTION_AUTHOR_KEY` | Keys the peer-reflection author tag so a contributor is never shown their own ([ADR 0002](../adr/0002-peer-reflection-author-tag.md)). **Never rotate it**: a new key shows every contributor their own again. Unset, sharing and matching still work, with errors logged. After setting it, run `migrations:tagReflectionAuthors` once | New random value (32+ bytes), never prod's |
 | `CONVEX_ENV` | `production` or `development`; picks cron intervals and gates the nightly quote job | **`development`** (keeps staging cheap; `production` would run prod schedules) |
 
 ### AI and voice
@@ -162,7 +163,7 @@ the agent's **Voice settings** in ElevenLabs. Every agent needs it, prod's inclu
 | `RANK_MIN_POPULATION` | Minimum population before percentiles show (default 50) | A small number like `3`, so ranks show with few testers |
 | `XOLACER_CHAT_ENABLED` | Xolacer chat kill switch | Match dev |
 
-That's **30 names**. Not in the list on purpose: `CONVEX_SITE_URL` (Convex sets it),
+That's **31 names**. Not in the list on purpose: `CONVEX_SITE_URL` (Convex sets it),
 and `EVAL_OUT` / `TALK_EVAL_MODEL` (local eval runs only).
 
 Telegram is outside that count: staging gets its own shared bot, never prod's or a
