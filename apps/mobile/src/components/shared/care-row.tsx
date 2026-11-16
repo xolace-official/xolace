@@ -9,6 +9,8 @@ import { useTokenColor } from "@/lib/use-token-color";
 const PHONE: IconName = { android: "call", ios: "phone.fill" };
 const PHONE_GLYPH = 13;
 const ROW_RADIUS = 22;
+/** The 40 pt pill reaches 44 pt to the finger. */
+const PILL_HIT_SLOP = { bottom: 2, top: 2 };
 
 /** The action pill: `care` is a care line (danger wash); `accent` is the peer row. */
 const pill = tv({
@@ -58,6 +60,7 @@ export function CareRow({
 			<PressScale
 				accessibilityLabel={`${action}: ${title}`}
 				className={pill({ tone })}
+				hitSlop={PILL_HIT_SLOP}
 				onPress={onPress}
 			>
 				{phone ? (

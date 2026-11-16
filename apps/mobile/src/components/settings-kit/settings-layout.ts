@@ -23,6 +23,11 @@ export const S = {
 
 /** A card row: 52 min, 11 / 16 padding, 12 gap (S.rowMin, S.rowPadV - 1, S.rowPadH). */
 export const ROW = "min-h-13 flex-row items-center gap-3 px-4 py-2.75";
+/**
+ * A radio or link row in a card: 12 / 16 padding (S.rowPadV, S.rowPadH).
+ * @public The redesign's shared kit (F5): Appearance's choices, from its screen PR.
+ */
+export const ROW_TALL = "min-h-13 flex-row items-center gap-3 px-4 py-3";
 /** A card row's label at 16 / 22 (S.label, S.labelLine). */
 export const LABEL = "text-[16px] leading-[22px]";
 

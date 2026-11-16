@@ -101,6 +101,10 @@
 	--shadow-card: 0 10px 28px rgb(60 30 120 / 0.1);
 	/* A floating sheet (DetachedSheet): lifted off the page, the shadow above it. */
 	--shadow-sheet: 0 -10px 60px rgb(40 20 90 / 0.3);
+	/* A small dialog's card (SettingsDialog): a deep, soft drop in every theme. */
+	--shadow-dialog: 0 24px 60px -24px rgb(0 0 0 / 0.45);
+	/* The scrim under a small dialog: the same dim in every theme. */
+	--color-scrim: rgb(0 0 0 / 0.28);
 }
 
 @utility rounded-row {
@@ -125,6 +129,9 @@
 
 /* Fixed palettes: printed objects, the same in every theme. */
 @theme static {
+	/* Ink on content art (an avatar's own gradient), which is the same in every theme. */
+	--color-on-art: #ffffff;
+
 	/* Plus night — the Xolace+ offer's own sky (postcard art, path-stack
      * layer). Dark in every theme because the art is. */
 	--color-plus-night: #0b0716;

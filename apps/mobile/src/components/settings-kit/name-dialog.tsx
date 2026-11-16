@@ -83,7 +83,7 @@ export function NameDialog({
 				)}
 			>
 				<TextInput
-					accessibilityLabel={copy.title}
+					accessibilityLabel={copy.field}
 					autoCapitalize={autoCapitalize}
 					autoCorrect={false}
 					autoFocus

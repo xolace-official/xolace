@@ -45,7 +45,7 @@ export function Avatar({
 			>
 				{/* The heading face, so it caps Dynamic Type as headings do. */}
 				<AppText
-					className="text-white"
+					className="text-on-art"
 					style={{
 						fontFamily: faces["display-bold"],
 						fontSize: size * INITIAL,

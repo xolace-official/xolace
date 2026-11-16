@@ -68,7 +68,11 @@ export function TileRow({
 	const foreground = useTokenColor("foreground");
 	const subtle = useTokenColor("subtle");
 	const dark = useScheme() === "dark";
-	const glyph = tile === "neutral" ? foreground : accent;
+	// The provider's neutral tile keeps the ink glyph, even on a danger row.
+	let glyph = danger ? dangerColor : accent;
+	if (tile === "neutral") {
+		glyph = foreground;
+	}
 	const hasTile = Boolean(icon || mark);
 	// A row that does nothing promises nothing: no chevron unless asked.
 	const end = trail ?? (onPress ? "chevron" : "none");
@@ -83,11 +87,7 @@ export function TileRow({
 				>
 					{mark ??
 						(icon ? (
-							<Icon
-								color={danger ? dangerColor : glyph}
-								name={icon}
-								size={TILE_GLYPH}
-							/>
+							<Icon color={glyph} name={icon} size={TILE_GLYPH} />
 						) : null)}
 				</View>
 			) : null}

@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 
 /**
  * A small dialog (board `.nd`): a card near the top so the keyboard never
- * covers it, over the theme's backdrop; Cancel and the main button side by side.
+ * covers it, over a soft scrim (the same in every theme); Cancel and the main button side by side.
  */
 type Props = {
 	open: boolean;
@@ -49,10 +49,10 @@ export function SettingsDialog({
 			transparent
 			visible={open}
 		>
-			<View className="flex-1 bg-backdrop">
+			<View className="flex-1 bg-scrim">
 				<View
 					accessibilityViewIsModal
-					className="absolute right-6 left-6 rounded-[24px] border-continuous bg-surface px-5 pt-5 pb-4 shadow-overlay"
+					className="absolute right-6 left-6 rounded-[24px] border-continuous bg-surface px-5 pt-5 pb-4 shadow-dialog"
 					style={{ top }}
 				>
 					<AppText

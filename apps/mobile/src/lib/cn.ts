@@ -76,7 +76,14 @@ export const RADIUS_NAMES = ["row", "tile", "card", "hero", "field"];
 export const SPACING_NAMES = ["gutter", "module", "section"];
 
 /** `shadow-<x>`: ours and HeroUI's. */
-export const SHADOW_NAMES = ["card", "sheet", "surface", "overlay", "field"];
+export const SHADOW_NAMES = [
+	"card",
+	"dialog",
+	"sheet",
+	"surface",
+	"overlay",
+	"field",
+];
 
 const SAFE_OFFSET = /^safe-(or|offset)-/;
 
