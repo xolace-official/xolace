@@ -1,6 +1,6 @@
 import { api } from "@xolace/backend/convex/_generated/api";
-import { useQuery } from "convex/react";
-import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
+import { useConvexAuth, useQuery } from "convex/react";
+import { useOSReducedMotion } from "./os-reduced-motion";
 
 /** Tri-state motion preference: "system" follows the OS setting, "reduced" and "full" force it. */
 export type MotionPreference = "system" | "reduced" | "full";
@@ -25,16 +25,21 @@ export function isReducedMotion(
 	return preference === "reduced";
 }
 
-/** The one resolver every motion surface reads: stored tri-state plus the live OS flag. Full
- * motion while preferences load. */
+/** The one resolver every motion surface reads: stored tri-state plus the live OS flag. Signed
+ * out (first run, the launch cover) and while preferences load, it follows the OS. */
 export const useEffectiveReducedMotion = (): boolean => {
-	const preferences = useQuery(api.preferences.get);
-	const { reduceMotionEnabled } = useAccessibilityInfo();
+	const { isAuthenticated } = useConvexAuth();
+	// preferences.get requires auth: skip it before sign-in rather than throw.
+	const preferences = useQuery(
+		api.preferences.get,
+		isAuthenticated ? {} : "skip"
+	);
+	const os = useOSReducedMotion();
 
 	const preference = resolveMotionPreference(
 		preferences?.motionPreference,
 		preferences?.reducedMotion
 	);
 
-	return isReducedMotion(preference, reduceMotionEnabled);
+	return isReducedMotion(preference, os);
 };

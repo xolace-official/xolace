@@ -64,8 +64,12 @@ const SHARED_FEATURES: Readonly<Record<string, string>> = {
 	purchases: "the entitlements module: usePlusEntitlement, usePaywall",
 };
 
+/** A folder that predates the shape (and the motion rules in `motion-imports.ts`). */
+export const isLegacyFeature = (feature: string) =>
+	LEGACY_FEATURES.has(feature);
+
 const isV2Feature = (feature: string) =>
-	!(LEGACY_FEATURES.has(feature) || HUBS.has(feature));
+	!(isLegacyFeature(feature) || HUBS.has(feature));
 
 /** Listed legacy folders and hubs that no longer exist: drop them from the lists. */
 export const staleListings = (features: readonly string[]): string[] =>

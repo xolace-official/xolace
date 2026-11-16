@@ -83,6 +83,7 @@ Settings.preloadPresets([
 	"Murmur", // peerReflections mount, unsure mood
 	"Breath", // processingBreath fallback
 	"Swell", // insights overall dial fill, plays on mount
+	"Dewdrop", // contributed confirmation; the redesign's twig landing and words going out
 ]);
 
 // Expo Router's boundary swallows render crashes, so RouteError reports to

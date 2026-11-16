@@ -52,6 +52,15 @@ Work in this order; each step leaves something you can test.
 - **Screen and parts.** Components into area folders, each under ~200 lines. Meet
   `M/AGENTS.md` conventions and §7.4's composition rules as you port: they're why the
   code is moving, not a later pass.
+- **Motion and haptics** (`M/AGENTS.md`, "Motion and haptics"). `@/design/ease`,
+  `springs` and `entering` keep the prototype's names; loops (`loopProps`, `useLoopRun`,
+  `loopOrSettle`) come from `@/design/ease-loops` and the breath (`breath*`,
+  `usePhasedBreath`) from `@/design/ease-breath`. The prototype's `useReducedMotion()`
+  becomes `useEffectiveReducedMotion()`, and `useOSReducedMotion()` (the OS setting alone)
+  comes from `@/lib/motion/os-reduced-motion`. `press(to)` takes `reduced` as its second
+  argument. `useLoopScale`/`useBreathPeriod` are in `@/design/motion`. Haptic calls carry
+  over as they are. Keep each animation on the library the prototype used (its profiles
+  were measured that way); anything you add that's new goes on Ease only if it loops.
 - **Pieces from another feature** (the Telegram offer from `reach-me-on`, a streak ring):
   move the piece down a layer in this PR, to `src/lib`, `src/components/shared` or a kit
   in `src/components/<kit>` (architecture §7.4), and point the old feature at it too. Or
