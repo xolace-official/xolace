@@ -30,9 +30,10 @@ export const MIN_USUAL_DAYS = 7;
 
 /**
  * Read cap: four of `getWeekIntensity`'s 300-row weeks. Read newest first,
- * so if a very heavy user ever hits it, it's the oldest days that thin out.
+ * so if a very heavy user ever hits it, it's the oldest days that drop out
+ * (see `wholeDays`).
  */
-const MAX_MOMENTS = 1200;
+export const USUAL_MAX_MOMENTS = 1200;
 
 /** The value at fraction `p` (0–1) of ascending `sorted`, interpolating
  * linearly between ranks (the common "type 7" quantile). */
@@ -46,8 +47,15 @@ export function quantile(sorted: readonly number[], p: number): number {
 	return sorted[lo] + (sorted[hi] - sorted[lo]) * (rank - lo);
 }
 
-/** Local midnight of the day `ms` falls on (`getWeekIntensity`'s day). */
-export function startOfLocalDay(ms: number): number {
+/**
+ * Local midnight of the day `ms` falls on: the runtime's day, which is UTC on
+ * Convex, not the user's. This must stay the same day `getWeekIntensity`
+ * buckets its bars by (`Date#getDay` in `profile.ts`). If either one moves to
+ * the user's timezone (as `localDay` in `ai/context.ts` does for
+ * `lib/claimStrength.ts`), move the other with it, or a day's bar and the band
+ * it's compared against will disagree about which day a moment is on.
+ */
+function startOfLocalDay(ms: number): number {
 	const d = new Date(ms);
 	d.setHours(0, 0, 0, 0);
 	return d.getTime();
@@ -59,6 +67,24 @@ export function usualWindowStart(now: number): number {
 	// Calendar arithmetic, not 24 h steps, so a DST change can't shift the edge.
 	d.setDate(d.getDate() - (USUAL_WINDOW_DAYS - 1));
 	return d.getTime();
+}
+
+/**
+ * `newestFirst` as read with a cap of `cap` rows, minus the oldest day when
+ * the cap was reached: that day may have been read only in part, and a day
+ * averaged from some of its moments isn't that day's value. Under the cap
+ * every row in the window was read, so nothing is dropped.
+ */
+export function wholeDays<T extends { createdAt: number }>(
+	newestFirst: readonly T[],
+	cap: number
+): readonly T[] {
+	const oldest = newestFirst.at(-1);
+	if (newestFirst.length < cap || oldest === undefined) {
+		return newestFirst;
+	}
+	const cut = startOfLocalDay(oldest.createdAt);
+	return newestFirst.filter((m) => startOfLocalDay(m.createdAt) !== cut);
 }
 
 export type UsualBand = {
@@ -111,6 +137,12 @@ export function usualBand(
  *
  * Not Plus-gated: it summarises recent days rather than browsing them, and
  * the design draws it on the free card.
+ *
+ * Time: Convex caches a query's result with the `Date.now()` it ran at, and
+ * re-runs it when the rows it read change, not when the clock does. So the
+ * window's edge may not move at (UTC) midnight until the user writes a new
+ * moment, and until then the band can cover one day more than 28. Kept on
+ * purpose: `getWeekIntensity` reads time the same way, so the two move together.
  */
 export const getUsualBand = query({
 	args: {},
@@ -124,8 +156,8 @@ export const getUsualBand = query({
 					.gte("createdAt", usualWindowStart(Date.now()))
 			)
 			.order("desc")
-			.take(MAX_MOMENTS);
-		return usualBand(moments);
+			.take(USUAL_MAX_MOMENTS);
+		return usualBand(wholeDays(moments, USUAL_MAX_MOMENTS));
 	},
 	returns: v.union(
 		v.null(),

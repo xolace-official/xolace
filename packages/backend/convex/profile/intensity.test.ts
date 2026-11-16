@@ -11,6 +11,7 @@
  *  4. A moment sits in a different day here than under its bar on the card
  *     (`getWeekIntensity`), so "above your usual" contradicts the chart.
  *  5. One user's moments shape another's band; a signed-out call gets one.
+ *  6. At the read cap, the oldest day is averaged from only the rows that fit.
  *
  * Times are built in the runtime's local zone (`new Date(y, m, d, …)`), as
  * the code buckets them, so the suite holds whatever zone it runs in.
@@ -18,6 +19,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../_generated/api";
 import {
+	classificationArgs,
 	expectCode,
 	seedMetadata,
 	seedSession,
@@ -31,9 +33,11 @@ import { aggregatesMock, revenuecatMock } from "../test/mocks.helpers";
 import {
 	MIN_USUAL_DAYS,
 	quantile,
+	USUAL_MAX_MOMENTS,
 	USUAL_WINDOW_DAYS,
 	usualBand,
 	usualWindowStart,
+	wholeDays,
 } from "./intensity";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
@@ -144,6 +148,34 @@ describe("usualBand", () => {
 			low: 4,
 			median: 4,
 		});
+	});
+});
+
+describe("wholeDays", () => {
+	const newestFirst = [
+		{ createdAt: at(0, 9) },
+		{ createdAt: at(-1, 20) },
+		{ createdAt: at(-2, 23) },
+		{ createdAt: at(-2, 0) },
+	];
+
+	it("keeps everything under the cap: the window was read in full", () => {
+		expect(wholeDays(newestFirst, newestFirst.length + 1)).toEqual(newestFirst);
+	});
+
+	it("drops the whole oldest day at the cap: it may be partly read", () => {
+		expect(wholeDays(newestFirst, newestFirst.length)).toEqual(
+			newestFirst.slice(0, 2)
+		);
+	});
+
+	it("drops everything when the cap is all one day", () => {
+		const oneDay = [{ createdAt: at(0, 10) }, { createdAt: at(0, 8) }];
+		expect(wholeDays(oneDay, oneDay.length)).toEqual([]);
+	});
+
+	it("keeps an empty read empty", () => {
+		expect(wholeDays([], 0)).toEqual([]);
 	});
 });
 
@@ -272,5 +304,45 @@ describe("profile.intensity.getUsualBand", () => {
 		});
 		// And the bars are the per-day averages: 2 + i for the day i back.
 		expect(sorted).toEqual([2, 3, 4, 5, 6, 7, 8]);
+	});
+	it("leaves out the oldest day when the read cap cuts through it", async () => {
+		const user = await asNewUser();
+		// Eight days of steady 5s, then a ninth (oldest) day whose last 8 rows
+		// are 10s and earlier rows 1s. Newest first, the cap is reached 8 rows
+		// into that day: averaged as read it would be a 10 its rows don't give.
+		const perDay = (USUAL_MAX_MOMENTS - 8) / 8;
+		const steady = Array.from({ length: 8 }, (_, day) =>
+			Array.from({ length: perDay }, (_, i) => ({
+				createdAt: at(-day, 1, 0, i),
+				intensity: 5,
+			}))
+		).flat();
+		const oldestDay = Array.from({ length: 20 }, (_, i) => ({
+			createdAt: at(-8, 1, 0, i),
+			intensity: i >= 12 ? 10 : 1,
+		}));
+		const all = [...steady, ...oldestDay];
+		expect(all.length).toBeGreaterThan(USUAL_MAX_MOMENTS);
+		await user.root.run(async (ctx) => {
+			const sessionId = await ctx.db.insert("sessions", {
+				createdAt: NOW,
+				emotionalProfileId: user.profileId,
+				entryType: "open_prompt",
+				kept: true,
+				state: "completed",
+				updatedAt: NOW,
+			});
+			for (const m of all) {
+				await ctx.db.insert("emotional_metadata", {
+					...classificationArgs({
+						emotionalProfileId: user.profileId,
+						sessionId,
+					}),
+					...m,
+				});
+			}
+		});
+
+		expect(await band(user)).toEqual({ days: 8, high: 5, low: 5, median: 5 });
 	});
 });
