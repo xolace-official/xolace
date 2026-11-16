@@ -7,15 +7,17 @@
  *  1. The warning lies: it counts a different table, cutoff or comparison
  *     than `jobs/dataRetention` deletes, so more or fewer sessions go than it
  *     said. The parity tests run the real job on the same data.
- *  2. Off by one at the cutoff: a session exactly 180 (or 365) days old is
- *     kept by the job (strictly older goes), so it must not be counted.
- *  3. Someone else's sessions are counted.
- *  4. A heavy user's count reads without bound and fails the query.
- *  5. Signed out, it answers instead of refusing.
+ *  2. It under-warns: a session that crosses the cutoff before the job's
+ *     next run is deleted then but wasn't counted, so no alert showed.
+ *  3. Off by one at the cutoff: a session exactly at it is kept by the job
+ *     (strictly older goes), so it must not be counted.
+ *  4. Someone else's sessions are counted.
+ *  5. A heavy user's count reads without bound and fails the query.
+ *  6. Signed out, it answers instead of refusing.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import { expectCode, seedSession } from "../test/fixtures.helpers";
 import {
 	asNewUser,
@@ -23,33 +25,41 @@ import {
 	type SeededUser,
 } from "../test/harness.helpers";
 import { aggregatesMock, ragMock } from "../test/mocks.helpers";
-import {
-	MAX_COUNTED,
-	RETENTION_TIERS,
-	type RetentionPreference,
-	type RetentionTier,
-	retentionCutoff,
-} from "./retention";
+import { MAX_COUNTED, RETENTION_TIERS, type RetentionTier } from "./retention";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../rag", () => ragMock());
 
-const DAY = 86_400_000;
+const HOUR = 3_600_000;
+const DAY = 24 * HOUR;
 const NOW = Date.UTC(2026, 10, 16, 12);
 
-/** Literal day counts, not the module's constants: a drift there must fail here. */
+/** Literal values, not the module's constants: a drift there must fail here. */
 const DAYS_KEPT: Record<RetentionTier, number> = {
 	"1_year": 365,
 	"6_months": 180,
 };
+/** The retention cron's interval outside production (`CONVEX_ENV` unset). */
+const DEV_RUN_HOURS = 72;
+const PROD_RUN_HOURS = 24;
+
+/** What the job's next run, `DEV_RUN_HOURS` from now, deletes: strictly older than this. */
+const nextRunCutoff = (tier: RetentionTier) =>
+	NOW + DEV_RUN_HOURS * HOUR - DAYS_KEPT[tier] * DAY;
 
 beforeEach(() => {
 	vi.useFakeTimers();
 	vi.setSystemTime(NOW);
 });
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+	vi.useRealTimers();
+	vi.unstubAllEnvs();
+});
 
-const count = (user: SeededUser, retention: RetentionPreference) =>
+const count = (
+	user: SeededUser,
+	retention: Doc<"preferences">["dataRetentionPreference"]
+) =>
 	user.t.query(api.privacy.retention.countSessionsPastRetention, {
 		retention,
 	});
@@ -97,7 +107,7 @@ const sessionIds = (user: SeededUser) =>
 describe("countSessionsPastRetention", () => {
 	it("counts what each retention value would remove", async () => {
 		const user = await asNewUser();
-		await seedAt(user, daysAgo(0, 30, 179, 181, 364, 366, 1000));
+		await seedAt(user, daysAgo(0, 30, 170, 190, 350, 380, 1000));
 
 		expect(await count(user, "indefinite")).toEqual({
 			capped: false,
@@ -120,17 +130,43 @@ describe("countSessionsPastRetention", () => {
 	});
 
 	it.each(RETENTION_TIERS)(
-		"%s: a session exactly at the cutoff stays; a millisecond older goes",
+		"%s: a session exactly at the next run's cutoff stays; a millisecond older goes",
 		async (tier) => {
 			const user = await asNewUser();
-			const cutoff = NOW - DAYS_KEPT[tier] * DAY;
-			await seedAt(user, [cutoff]);
+			await seedAt(user, [nextRunCutoff(tier)]);
 			expect(await count(user, tier)).toEqual({ capped: false, count: 0 });
 
-			await seedAt(user, [cutoff - 1]);
+			await seedAt(user, [nextRunCutoff(tier) - 1]);
 			expect(await count(user, tier)).toEqual({ capped: false, count: 1 });
 		}
 	);
+
+	it("counts a session that crosses the cutoff before the next run", async () => {
+		const user = await asNewUser();
+		// Two hours short of 180 days: kept today, deleted by the next run.
+		await seedAt(user, [NOW - 180 * DAY + 2 * HOUR]);
+		expect(await count(user, "6_months")).toEqual({
+			capped: false,
+			count: 1,
+		});
+	});
+
+	it("looks ahead one production interval in production", async () => {
+		vi.stubEnv("CONVEX_ENV", "production");
+		const user = await asNewUser();
+		const cutoff = NOW + PROD_RUN_HOURS * HOUR - 180 * DAY;
+		await seedAt(user, [cutoff, cutoff + HOUR]);
+		expect(await count(user, "6_months")).toEqual({
+			capped: false,
+			count: 0,
+		});
+
+		await seedAt(user, [cutoff - 1]);
+		expect(await count(user, "6_months")).toEqual({
+			capped: false,
+			count: 1,
+		});
+	});
 
 	it("counts only the caller's sessions", async () => {
 		const mine = await asNewUser(1);
@@ -147,11 +183,10 @@ describe("countSessionsPastRetention", () => {
 
 	it(`stops reading past ${MAX_COUNTED} and says so`, async () => {
 		const user = await asNewUser();
-		const old = Array.from(
-			{ length: MAX_COUNTED },
-			(_, i) => daysAgo(400 + i)[0]
+		await seedAt(
+			user,
+			Array.from({ length: MAX_COUNTED }, (_, i) => NOW - (400 + i) * DAY)
 		);
-		await seedAt(user, old);
 		expect(await count(user, "6_months")).toEqual({
 			capped: false,
 			count: MAX_COUNTED,
@@ -177,11 +212,11 @@ describe("countSessionsPastRetention", () => {
 
 describe("parity with jobs/dataRetention", () => {
 	it.each(RETENTION_TIERS)(
-		"%s: the job deletes exactly the sessions the count counted",
+		"%s: the job deletes nothing uncounted now, and exactly the counted sessions at its next run",
 		async (tier) => {
 			const user = await asNewUser(1);
 			const other = await asNewUser(2, user.root);
-			const cutoff = retentionCutoff(tier, NOW);
+			const cutoff = nextRunCutoff(tier);
 			const goes = await seedAt(user, [
 				cutoff - 1,
 				cutoff - DAY,
@@ -193,11 +228,17 @@ describe("parity with jobs/dataRetention", () => {
 			await setRetention(other, tier);
 
 			const counted = await count(user, tier);
-			await user.root.mutation(internal.jobs.dataRetention.enforce, { tier });
-
-			const left = await sessionIds(user);
 			expect(counted).toEqual({ capped: false, count: goes.length });
-			expect(left.sort()).toEqual([...stays].sort());
+
+			// A run now deletes only counted sessions.
+			await user.root.mutation(internal.jobs.dataRetention.enforce, { tier });
+			const afterNow = await sessionIds(user);
+			expect(stays.every((id) => afterNow.includes(id))).toBe(true);
+
+			// The next run deletes the rest of them, and nothing else.
+			vi.setSystemTime(NOW + DEV_RUN_HOURS * HOUR);
+			await user.root.mutation(internal.jobs.dataRetention.enforce, { tier });
+			expect((await sessionIds(user)).sort()).toEqual([...stays].sort());
 		}
 	);
 });

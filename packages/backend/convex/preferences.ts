@@ -6,6 +6,7 @@ import { updateNotificationPrefs } from "./lib/notificationPrefs";
 import { hasPremium, requirePremium } from "./lib/premium";
 import { validateSpaceName } from "./lib/spaceName";
 import {
+	dataRetentionPreferenceValidator,
 	mirrorToneValidator,
 	motionPreferenceValidator,
 	preferencesDocValidator,
@@ -129,13 +130,7 @@ export const update = mutation({
 	args: {
 		colorTheme: v.optional(v.string()),
 		contributeByDefault: v.optional(v.boolean()),
-		dataRetentionPreference: v.optional(
-			v.union(
-				v.literal("indefinite"),
-				v.literal("6_months"),
-				v.literal("1_year")
-			)
-		),
+		dataRetentionPreference: v.optional(dataRetentionPreferenceValidator),
 		mirrorTone: v.optional(mirrorToneValidator),
 		// Tri-state motion preference. Source of truth going forward.
 		motionPreference: v.optional(motionPreferenceValidator),

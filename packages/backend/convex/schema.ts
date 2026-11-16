@@ -7,6 +7,7 @@ import {
 	activityActionTypeValidator,
 	chatModerationCategoryValidator,
 	conversationRoleValidator,
+	dataRetentionPreferenceValidator,
 	domainValidator,
 	escalationSourceValidator,
 	insightFeatureValidator,
@@ -2058,11 +2059,7 @@ export default defineSchema({
 
 		// How long to keep session data before auto-purge.
 		// "indefinite" is default. Gives users explicit control.
-		dataRetentionPreference: v.union(
-			v.literal("indefinite"),
-			v.literal("6_months"),
-			v.literal("1_year")
-		),
+		dataRetentionPreference: dataRetentionPreferenceValidator,
 
 		// Profile identity fields (added for profile screen v1).
 		// displayName: warm auto-generated default (nature/light vocabulary), user-editable. Max 30 chars.
