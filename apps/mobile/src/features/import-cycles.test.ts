@@ -17,6 +17,11 @@ import {
 	relative,
 } from "@/features/import-graph";
 import {
+	KIT_REPLACEMENTS,
+	replacedPiecesInNewCode,
+	staleKitListings,
+} from "@/features/kit-imports";
+import {
 	easeImportsOutsideEaseTs,
 	osReducedMotionReads,
 	staleEaseListings,
@@ -157,6 +162,22 @@ describe("motion (apps/mobile/AGENTS.md)", () => {
 		expect(
 			osReducedMotionReads(graph),
 			"Use useEffectiveReducedMotion() from @/lib/motion/use-effective-reduced-motion: it honours the in-app setting"
+		).toEqual([]);
+	});
+});
+
+describe("shared kit (apps/mobile/AGENTS.md)", () => {
+	it("keeps new code on the kit's piece, one of each", () => {
+		expect(
+			replacedPiecesInNewCode(graph),
+			`Use the shared kit instead: ${KIT_REPLACEMENTS}`
+		).toEqual([]);
+	});
+
+	it("lists only legacy kit files that still use an older piece", () => {
+		expect(
+			staleKitListings(graph),
+			"Remove these from KIT_LEGACY_FILES in kit-imports.ts"
 		).toEqual([]);
 	});
 });

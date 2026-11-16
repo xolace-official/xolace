@@ -33,7 +33,9 @@ import {
 	type CnOptions,
 	cx,
 	defaultConfig,
+	type TV,
 	type TWMergeConfig,
+	tv as tvBase,
 } from "tailwind-variants";
 import { FIXED_FACES, FONT_ROLES } from "@/design/font-pairs";
 import { TYPE_CLASS } from "@/design/type-classes.generated";
@@ -74,7 +76,14 @@ export const RADIUS_NAMES = ["row", "tile", "card", "hero", "field"];
 export const SPACING_NAMES = ["gutter", "module", "section"];
 
 /** `shadow-<x>`: ours and HeroUI's. */
-export const SHADOW_NAMES = ["card", "surface", "overlay", "field"];
+export const SHADOW_NAMES = [
+	"card",
+	"dialog",
+	"sheet",
+	"surface",
+	"overlay",
+	"field",
+];
 
 const SAFE_OFFSET = /^safe-(or|offset)-/;
 
@@ -123,3 +132,12 @@ export function cn(...args: CnOptions): string {
 	const merged = cx(args);
 	return merged ? twMerge(merged) : "";
 }
+
+/** tailwind-variants' `tv` with our merge config on every call. Import it from
+ * here, not from the package, so a variant merges the way `cn` does. */
+export const tv: TV = (options, config) =>
+	tvBase(options, {
+		...config,
+		twMerge: config?.twMerge ?? true,
+		twMergeConfig: twMergeConfig as unknown as TWMergeConfig,
+	});

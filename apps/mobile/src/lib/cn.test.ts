@@ -9,6 +9,7 @@ import {
 	SHADOW_NAMES,
 	SPACING_NAMES,
 	TYPE_NAMES,
+	tv,
 } from "./cn";
 import { cn as utilsCn } from "./utils";
 
@@ -124,5 +125,26 @@ describe("cn", () => {
 		expect(new Set(RADIUS_NAMES)).toEqual(new Set(radii));
 		expect(new Set(SPACING_NAMES)).toEqual(new Set(declared("spacing")));
 		expect(SHADOW_NAMES).toEqual(expect.arrayContaining(declared("shadow")));
+	});
+});
+
+describe("tv", () => {
+	it("merges our names in variants", () => {
+		const text = tv({
+			base: "type-body text-foreground",
+			variants: { big: { true: "type-title" } },
+		});
+		expect(text({ big: true })).toBe("text-foreground type-title");
+	});
+
+	it("survives a later import of heroui-native/utils", async () => {
+		const heroui = await import("heroui-native/utils");
+		expect(heroui.cn("type-body", "type-title")).toBe("type-body type-title");
+		expect(cn("type-body", "type-title")).toBe("type-title");
+		const card = tv({
+			base: "rounded-card shadow-card",
+			variants: { flat: { true: "shadow-none" } },
+		});
+		expect(card({ flat: true })).toBe("rounded-card shadow-none");
 	});
 });

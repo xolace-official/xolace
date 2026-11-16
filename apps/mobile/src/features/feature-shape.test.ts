@@ -125,6 +125,17 @@ describe("backendCallsOutsideDataHooks", () => {
 		]);
 	});
 
+	it("flags the app's toast() outside use-*.ts, and allows it in one", () => {
+		const graph = graphOf({
+			"components/shared/toast.tsx": [pkg("heroui-native", ["Toast"])],
+			"features/today/hero/hero.tsx": [local("components/shared/toast.tsx")],
+			"features/today/use-today.ts": [local("components/shared/toast.tsx")],
+		});
+		expect(backendCallsOutsideDataHooks(graph)).toEqual([
+			"features/today/hero/hero.tsx -> components/shared/toast.tsx",
+		]);
+	});
+
 	it("allows the listed app-wide reads", () => {
 		const graph = graphOf({
 			"features/today/hero/hero.tsx": [

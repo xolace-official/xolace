@@ -4,6 +4,8 @@ import type { NativeStackNavigationOptions } from "expo-router";
 export type ScreenContext = {
 	/** The theme's `--background`, for sheets that can't show glass. */
 	readonly background: string;
+	/** The theme's `--surface`: the redesign's sheets are drawn on it. */
+	readonly surface: string;
 	/** iOS 26 paints its own glass behind a transparent sheet. */
 	readonly liquidGlass: boolean;
 	readonly reducedMotion: boolean;
@@ -58,9 +60,10 @@ export const riseOrFade = ({
 	animation: reducedMotion ? "fade" : "slide_from_bottom",
 });
 
-/** Small native sheets sized to their rows. iOS 26 paints its own glass behind a
- * transparent screen; iOS 18 and Android show transparent literally. */
-export const fitSheet = ({
+/** The old screens' sheets sized to their rows. iOS 26 paints its own glass behind a
+ * transparent screen; iOS 18 and Android show transparent literally. New screens use
+ * `fitSheet`. */
+export const legacyFitSheet = ({
 	background,
 	liquidGlass,
 }: ScreenContext): NativeStackNavigationOptions => ({
@@ -69,3 +72,34 @@ export const fitSheet = ({
 	sheetAllowedDetents: "fitToContents",
 	sheetGrabberVisible: true,
 });
+
+/** The redesign's sheet corner. */
+const SHEET_RADIUS = 40;
+
+/**
+ * The redesign's form sheet: sized to its content, a grabber, 40 pt corners, on
+ * the theme's surface (opaque on iOS 26 too: the boards draw it that way). The
+ * prototype's `fitSheet`; spread it to change one thing (`sheetAllowedDetents`).
+ */
+export const fitSheet = ({
+	surface,
+}: ScreenContext): NativeStackNavigationOptions => ({
+	contentStyle: { backgroundColor: surface },
+	presentation: "formSheet",
+	sheetAllowedDetents: "fitToContents",
+	sheetCornerRadius: SHEET_RADIUS,
+	sheetGrabberVisible: true,
+});
+
+/**
+ * The route under a `DetachedSheet` (components/shared/detached-sheet.tsx): a
+ * transparent modal with no animation of its own, so the screen behind stays put
+ * and the sheet draws its own scrim, slide and fade.
+ *
+ * @public The redesign's shared kit (F5): Welcome back, from its screen PR.
+ */
+export const DETACHED_SHEET = {
+	animation: "none",
+	contentStyle: { backgroundColor: "transparent" },
+	presentation: "transparentModal",
+} as const satisfies NativeStackNavigationOptions;

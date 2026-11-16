@@ -32,10 +32,12 @@ export default function ProtectedLayout() {
 	useClaimLegacyAccountFlags();
 	const reducedMotion = useEffectiveReducedMotion();
 	const background = useThemeColor("background");
+	const surface = useThemeColor("surface");
 	const context = {
 		background,
 		liquidGlass: isLiquidGlassAvailable(),
 		reducedMotion,
+		surface,
 	};
 
 	return (

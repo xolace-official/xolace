@@ -5,6 +5,7 @@ import {
 	KeyboardAvoidingView,
 	KeyboardProvider,
 } from "react-native-keyboard-controller";
+import { ToastBridge } from "@/components/shared/toast-bridge";
 import { posthog } from "@/config/posthog";
 import { AppThemeProvider } from "@/context/app-theme-context";
 import { SessionModeProvider } from "@/context/session-mode-context";
@@ -54,6 +55,8 @@ export function RootProvider({ children }: { children: React.ReactNode }) {
                       inside HeroUI (purchase/restore toasts). */}
 									<RevenueCatProvider>
 										<PremiumThemeReconciler />
+										{/* Hands HeroUI's toast manager to the app's toast(). */}
+										<ToastBridge />
 										<FeedbackTrayProvider>{children}</FeedbackTrayProvider>
 									</RevenueCatProvider>
 								</HeroUINativeProvider>

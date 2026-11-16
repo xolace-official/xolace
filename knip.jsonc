@@ -5,6 +5,30 @@
       // Entry files' exports count too: an unused export in a route or a
       // config file is still dead code.
       "includeEntryExports": true,
+      // The redesign's shared kit (F5) lands before the screens that use it.
+      // Each file is an entry until its first screen PR imports it: delete its
+      // line then. This list only shrinks. Their exports carry `@public`.
+      "entry": [
+        "src/components/settings-kit/name-dialog.tsx",
+        "src/components/settings-kit/open-row.tsx",
+        "src/components/settings-kit/parts.tsx",
+        "src/components/settings-kit/switch-row.tsx",
+        "src/components/settings-kit/tile-row.tsx",
+        "src/components/shared/aura.tsx",
+        "src/components/shared/avatar.tsx",
+        "src/components/shared/back-button.tsx",
+        "src/components/shared/care-row.tsx",
+        "src/components/shared/country-menu.tsx",
+        "src/components/shared/detached-sheet.tsx",
+        "src/components/shared/flux.tsx",
+        "src/components/shared/media-row.tsx",
+        "src/components/shared/rolling-number.tsx",
+        "src/components/shared/segmented.tsx",
+        "src/components/shared/styled.ts",
+        "src/lib/keyboard/keyboard-spacer.tsx",
+        "src/lib/keyboard/use-keyboard-lift.ts",
+        "src/lib/keyboard/use-keyboard-shown.ts"
+      ],
       // Read by @expo/fingerprint, and by path from metro.config.js: their
       // exports are consumed by tools knip can't follow.
       "ignore": ["fingerprint.config.js", "metro-stubs/**"],
