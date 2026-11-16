@@ -50,7 +50,6 @@ const REPLACED_FEATURES = [
  */
 const RESTYLED_FEATURES = [
 	"auth",
-	"consent",
 	"crisis-resources",
 	"feedback-tray",
 	"purchases",
