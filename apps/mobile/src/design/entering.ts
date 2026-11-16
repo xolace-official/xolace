@@ -12,7 +12,7 @@ import {
 	enter,
 	FADE_IN,
 } from "./ease";
-import { EASE_OUT, REDUCED_FADE_MS, SETTLE } from "./springs";
+import { EASE_OUT, PLAY_AS_CHOSEN, REDUCED_FADE_MS, SETTLE } from "./springs";
 
 /**
  * The boards' enters. Reduced, each is the 200 ms fade.
@@ -21,10 +21,16 @@ import { EASE_OUT, REDUCED_FADE_MS, SETTLE } from "./springs";
  * - `fadeUpProps`: the same fadeUp as EaseView props, for the elements already on Ease.
  */
 
-/** The reduced enter. It opts out of `ReducedMotionConfig` (see `REDUCED` in springs.ts),
- * which would otherwise skip it and snap. */
+/** The reduced enter. Like every enter here it plays as chosen (`PLAY_AS_CHOSEN` in
+ * springs.ts), so Reanimated's own reduce-motion mode doesn't skip it. */
 const reducedEnter = () =>
 	FadeIn.duration(REDUCED_FADE_MS).reduceMotion(ReduceMotion.Never);
+
+/** `animation` after `delay` ms, played as chosen. */
+function after(delay: number, animation: number): number {
+	"worklet";
+	return withDelay(delay, animation, ReduceMotion.Never);
+}
 
 /** Rise: fade up from `dy` on the Settle spring, after `delay` ms. */
 export function riseIn(delay: number, reduced: boolean, dy = 14) {
@@ -35,11 +41,18 @@ export function riseIn(delay: number, reduced: boolean, dy = 14) {
 		"worklet";
 		return {
 			animations: {
-				opacity: withDelay(
+				opacity: after(
 					delay,
-					withTiming(1, { duration: 360, easing: EASE_OUT })
+					withTiming(1, { duration: 360, easing: EASE_OUT, ...PLAY_AS_CHOSEN })
 				),
-				transform: [{ translateY: withDelay(delay, withSpring(0, SETTLE)) }],
+				transform: [
+					{
+						translateY: after(
+							delay,
+							withSpring(0, { ...SETTLE, ...PLAY_AS_CHOSEN })
+						),
+					},
+				],
 			},
 			initialValues: { opacity: 0, transform: [{ translateY: dy }] },
 		};
@@ -61,12 +74,15 @@ export function fadeUp(
 		"worklet";
 		return {
 			animations: {
-				opacity: withDelay(delay, withTiming(1, { duration: ms, easing })),
+				opacity: after(
+					delay,
+					withTiming(1, { duration: ms, easing, ...PLAY_AS_CHOSEN })
+				),
 				transform: [
 					{
-						translateY: withDelay(
+						translateY: after(
 							delay,
-							withTiming(0, { duration: ms, easing })
+							withTiming(0, { duration: ms, easing, ...PLAY_AS_CHOSEN })
 						),
 					},
 				],

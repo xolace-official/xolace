@@ -14,7 +14,7 @@ type Worklet = () => {
 	animations: { opacity: unknown; transform: unknown[] };
 };
 
-describe("Reanimated enters", () => {
+describe("Reanimated enters (each played as chosen: reduceMotion never)", () => {
 	it("reduced: the 200 ms fade, played even under ReducedMotionConfig", () => {
 		expect(riseIn(300, true)).toMatchObject(REDUCED_ENTER);
 		expect(fadeUp(300, 500, 20, true)).toMatchObject(REDUCED_ENTER);
@@ -28,19 +28,25 @@ describe("Reanimated enters", () => {
 		});
 		expect(frame.animations.opacity).toEqual({
 			animation: {
-				config: { duration: 360, easing: EASE_OUT },
+				config: { duration: 360, easing: EASE_OUT, reduceMotion: "never" },
 				kind: "timing",
 				to: 1,
 			},
 			delay: 120,
 			kind: "delay",
+			reduceMotion: "never",
 		});
 		expect(frame.animations.transform).toEqual([
 			{
 				translateY: {
-					animation: { config: SETTLE, kind: "spring", to: 0 },
+					animation: {
+						config: { ...SETTLE, reduceMotion: "never" },
+						kind: "spring",
+						to: 0,
+					},
 					delay: 120,
 					kind: "delay",
+					reduceMotion: "never",
 				},
 			},
 		]);
@@ -50,12 +56,13 @@ describe("Reanimated enters", () => {
 		const frame = (fadeUp(50, 380, 8, false) as Worklet)();
 		const timing = (to: number) => ({
 			animation: {
-				config: { duration: 380, easing: EASE_OUT },
+				config: { duration: 380, easing: EASE_OUT, reduceMotion: "never" },
 				kind: "timing",
 				to,
 			},
 			delay: 50,
 			kind: "delay",
+			reduceMotion: "never",
 		});
 		expect(frame.initialValues).toEqual({
 			opacity: 0,

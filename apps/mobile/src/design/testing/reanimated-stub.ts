@@ -26,10 +26,15 @@ export const withSpring = (to: number, config?: object) => ({
 	to,
 });
 
-export const withDelay = (delay: number, animation: object) => ({
+export const withDelay = (
+	delay: number,
+	animation: object,
+	reduceMotion?: string
+) => ({
 	animation,
 	delay,
 	kind: "delay",
+	reduceMotion,
 });
 
 class LayoutBuilder {

@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { NONE } from "./ease";
-import { loopOrSettle, loopProps, SETTLE_BACK_MS } from "./ease-loops";
+import {
+	leadInDone,
+	loopOrSettle,
+	loopProps,
+	runFor,
+	SETTLE_BACK_MS,
+	startRun,
+} from "./ease-loops";
 
 vi.mock("react-native-reanimated", () => import("./testing/reanimated-stub"));
 vi.mock("react-native-ease/uniwind", () => ({ EaseView: () => null }));
@@ -88,5 +95,44 @@ describe("loopOrSettle", () => {
 			loopOrSettle({ from, periodMs: 1800, reduced: true, running: true, to })
 				.transition
 		).toEqual(NONE);
+	});
+});
+
+describe("the loop run (useLoopRun, usePhasedBreath)", () => {
+	const stopped = startRun(false, "4800");
+
+	it("same input, same object: no re-render", () => {
+		expect(runFor(stopped, false, "4800")).toBe(stopped);
+	});
+
+	it("turning on starts a new run; turning off keeps the count", () => {
+		const on = runFor(stopped, true, "4800");
+		expect(on).toEqual({ looping: false, n: 1, timing: "4800", was: true });
+		expect(runFor(on, false, "4800")).toMatchObject({ n: 1, was: false });
+	});
+
+	it("a new period while running starts again (the night slowdown)", () => {
+		const on = runFor(stopped, true, "4800");
+		const looping = leadInDone(on, true, true);
+		expect(runFor(looping, true, "6720")).toEqual({
+			looping: false,
+			n: 2,
+			timing: "6720",
+			was: true,
+		});
+	});
+
+	it("a new period while stopped waits for the next start", () => {
+		expect(runFor(stopped, false, "6720")).toMatchObject({
+			n: 0,
+			timing: "6720",
+		});
+	});
+
+	it("the lead-in ends into the loop only when it finished while running", () => {
+		const on = runFor(stopped, true, "4800");
+		expect(leadInDone(on, true, true).looping).toBe(true);
+		expect(leadInDone(on, true, false)).toBe(on);
+		expect(leadInDone(on, false, true)).toBe(on);
 	});
 });

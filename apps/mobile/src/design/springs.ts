@@ -49,27 +49,33 @@ export const BREATH = {
 export const NIGHT_SLOWDOWN = 1.4;
 export const REDUCED_FADE_MS = 200;
 
+/**
+ * Every helper here already knows whether motion is reduced (`reduced`, from
+ * `useEffectiveReducedMotion()`), so each animation it starts plays as chosen. Reanimated's own
+ * "System" mode would decide again: `ReducedMotionConfig` (only in the protected layout) skips
+ * animations when motion is reduced, and elsewhere the OS setting alone does, so a user who set
+ * "full" would still get snaps. Spread this into every config.
+ */
+export const PLAY_AS_CHOSEN = { reduceMotion: ReduceMotion.Never } as const;
+
 const PRESS_TIMING: WithTimingConfig = {
 	duration: PRESS.duration,
 	easing: PRESS.easing,
+	...PLAY_AS_CHOSEN,
 };
 
-/**
- * The reduced crossfade. `ReducedMotionConfig` in the protected layout sets Reanimated's
- * "System" to `Always` when motion is reduced, which would skip this fade and snap; it is the
- * designed reduced motion, so it opts out (`Never`).
- */
-export const REDUCED: WithTimingConfig = {
+/** The reduced crossfade: 200 ms on `withTiming`'s default curve. */
+const REDUCED: WithTimingConfig = {
 	duration: REDUCED_FADE_MS,
-	reduceMotion: ReduceMotion.Never,
+	...PLAY_AS_CHOSEN,
 };
 
 export type SpringName = "settle" | "glide" | "bloom" | "pop";
 const SPRINGS: Record<SpringName, WithSpringConfig> = {
-	bloom: BLOOM,
-	glide: GLIDE,
-	pop: POP,
-	settle: SETTLE,
+	bloom: { ...BLOOM, ...PLAY_AS_CHOSEN },
+	glide: { ...GLIDE, ...PLAY_AS_CHOSEN },
+	pop: { ...POP, ...PLAY_AS_CHOSEN },
+	settle: { ...SETTLE, ...PLAY_AS_CHOSEN },
 };
 
 /** Animate with a named spring, or the 200 ms fade when motion is reduced. */
@@ -78,10 +84,13 @@ export function spring(name: SpringName, to: number, reduced: boolean) {
 	return reduced ? withTiming(to, REDUCED) : withSpring(to, SPRINGS[name]);
 }
 
-/** The press: 150 ms on the press curve. Snaps when motion is reduced. */
-export function press(to: number) {
+/**
+ * The press: 150 ms on the press curve. Reduced, the value is applied at once (no transform
+ * animates), as the prototype's PressScale and hero hold already skipped the press when reduced.
+ */
+export function press(to: number, reduced: boolean) {
 	"worklet";
-	return withTiming(to, PRESS_TIMING);
+	return reduced ? to : withTiming(to, PRESS_TIMING);
 }
 
 /** The boards' ease-out (`riseIn`, `fadeUp`). */

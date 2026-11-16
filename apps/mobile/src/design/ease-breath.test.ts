@@ -1,9 +1,23 @@
 import { describe, expect, it, vi } from "vitest";
-import { breathAt, breathPhase, breathProps, breathRest } from "./ease-breath";
+import { NONE } from "./ease";
+import {
+	breathAt,
+	breathPhase,
+	breathProps,
+	breathRest,
+	usePhasedBreath,
+} from "./ease-breath";
 import { loopProps } from "./ease-loops";
 
 vi.mock("react-native-reanimated", () => import("./testing/reanimated-stub"));
 vi.mock("react-native-ease/uniwind", () => ({ EaseView: () => null }));
+// usePhasedBreath's only hook is useState: a first render is its initial state.
+vi.mock("react", () => ({
+	useState: (init: unknown) => [
+		typeof init === "function" ? init() : init,
+		() => undefined,
+	],
+}));
 
 const SINE: [number, number, number, number] = [0.37, 0, 0.63, 1];
 
@@ -51,5 +65,39 @@ describe("phased breath", () => {
 
 	it("at the end of a half there is nothing left: the plain sine", () => {
 		expect(breathRest(1)).toEqual(SINE);
+	});
+});
+
+describe("usePhasedBreath, first render", () => {
+	const from = { opacity: 0.4 };
+	const to = { opacity: 1 };
+	const breath = {
+		from,
+		mix: (k: number) => ({ opacity: 0.4 + 0.6 * k }),
+		periodMs: 2400,
+		phaseMs: 600,
+		reduced: false,
+		running: true,
+		to,
+	};
+	const resting = { animate: from, initialAnimate: from, transition: NONE };
+
+	it("plays the rest of the current half first", () => {
+		const { props } = usePhasedBreath(breath);
+		expect(props.animate).toEqual(to);
+		expect(props.initialAnimate).toEqual({
+			opacity: 0.4 + 0.6 * breathAt(0.5),
+		});
+		expect(props.transition).toMatchObject({ duration: 600 });
+	});
+
+	it("rests at `from` when stopped, reduced, or with no period (no NaN)", () => {
+		expect(usePhasedBreath({ ...breath, running: false }).props).toEqual(
+			resting
+		);
+		expect(usePhasedBreath({ ...breath, reduced: true }).props).toEqual(
+			resting
+		);
+		expect(usePhasedBreath({ ...breath, periodMs: 0 }).props).toEqual(resting);
 	});
 });

@@ -6,7 +6,7 @@ import {
 	type EaseProps,
 	type Transition,
 } from "./ease";
-import { loopProps, rest } from "./ease-loops";
+import { leadInDone, loopProps, rest, runFor, startRun } from "./ease-loops";
 
 /**
  * The breath on Ease: a sine there and back, and a breath that starts partway through its
@@ -57,8 +57,10 @@ type PhasedBreath = {
 	periodMs: number;
 	/** How far into the cycle it starts, in ms (a CSS negative delay, as a positive number). */
 	phaseMs: number;
-	/** Off (or reduced): rest at `from`, at once. */
+	/** Off: rest at `from`, at once. */
 	running: boolean;
+	/** Reduced motion: no breath, it rests at `from`. */
+	reduced: boolean;
 	/** One value between `from` and `to` (0 → 1). */
 	mix: (k: number) => AnimateProps;
 };
@@ -75,7 +77,8 @@ export function breathPhase(periodMs: number, phaseMs: number) {
 /**
  * A breath that starts partway through its cycle, so elements breathing out of step show that
  * offset from their first frame. It plays the rest of the current half (`breathRest`), then
- * remounts at that end and loops whole halves. Stopping returns it to `from` at once.
+ * remounts at that end and loops whole halves. Stopped, reduced or with no period, it rests at
+ * `from` at once.
  *
  * Spread `props` onto the EaseView and pass `key` and `onTransitionEnd` with them.
  *
@@ -87,29 +90,35 @@ export function usePhasedBreath({
 	periodMs,
 	phaseMs,
 	running,
+	reduced,
 	mix,
 }: PhasedBreath): {
 	props: EaseProps;
 	key: string;
 	onTransitionEnd: (e: { finished: boolean }) => void;
 } {
-	const [run, setRun] = useState({ looping: false, n: 0, was: running });
-	if (run.was !== running) {
-		setRun({ looping: false, n: run.n + (running ? 1 : 0), was: running });
+	const on = running && !reduced && periodMs > 0;
+	const timing = `${periodMs}/${phaseMs}`;
+	const [run, setRun] = useState(() => startRun(on, timing));
+	const now = runFor(run, on, timing);
+	if (now !== run) {
+		setRun(now);
+	}
+	// A new run (turned on, or a new period or phase) remounts and plays the lead-in again; the
+	// loop then mounts afresh where the lead-in ended (Ease loops only what a view mounts with).
+	const key = `${now.n}-${now.looping ? "loop" : "lead"}`;
+	const onTransitionEnd = ({ finished }: { finished: boolean }) => {
+		// Only this run's lead-in counts: a late end from an earlier run changes nothing.
+		setRun((current) =>
+			current.n === now.n ? leadInDone(current, on, finished) : current
+		);
+	};
+	if (!on) {
+		return { key, onTransitionEnd, props: rest(from) };
 	}
 	const { half, rising, u, leadMs } = breathPhase(periodMs, phaseMs);
 	const end = rising ? to : from;
 	const other = rising ? from : to;
-	// The loop mounts afresh where the lead-in ended (Ease loops only what a view mounts with).
-	const key = `${run.n}-${run.looping ? "loop" : "lead"}`;
-	const onTransitionEnd = ({ finished }: { finished: boolean }) => {
-		if (finished && running && !run.looping) {
-			setRun({ ...run, looping: true });
-		}
-	};
-	if (!running) {
-		return { key, onTransitionEnd, props: rest(from) };
-	}
 	const loop: Transition = {
 		duration: half,
 		easing: EASING.sineInOut,
@@ -117,7 +126,7 @@ export function usePhasedBreath({
 		type: "timing",
 	};
 	// Too little of the half left to play on its own, or the lead-in is done: loop from the turn.
-	if (leadMs < MIN_LEAD_MS || run.looping) {
+	if (leadMs < MIN_LEAD_MS || now.looping) {
 		return {
 			key,
 			onTransitionEnd,

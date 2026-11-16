@@ -46,7 +46,8 @@ export const rest = (from: AnimateProps): EaseProps => ({
  * An infinite loop. Reduced (or a period of 0): no loop, the element rests at `from`.
  *
  * Ease restarts a loop only when an `animate` value changes, not when its duration does. If the
- * period can change while mounted (the night slowdown), put `periodMs` in the EaseView's `key`.
+ * period can change while mounted (the night slowdown), key the EaseView with
+ * `useLoopRun(running, periodMs)`.
  */
 export function loopProps({
 	from,
@@ -71,18 +72,62 @@ export function loopProps({
 	};
 }
 
+/** Where a stoppable loop is: how many times it has (re)started, whether its lead-in is done
+ * (`usePhasedBreath`), and the `running` and timing it last saw. */
+export type LoopRun = {
+	looping: boolean;
+	n: number;
+	timing: string;
+	was: boolean;
+};
+
+export const startRun = (running: boolean, timing = ""): LoopRun => ({
+	looping: false,
+	n: 0,
+	timing,
+	was: running,
+});
+
 /**
- * A key for a loop that stops and starts again: it moves on each time `running` turns on, so
- * the EaseView remounts and its loop runs again.
+ * The run for this render. Turning on, or a new timing (the night slowdown) while running,
+ * starts it again: `n` moves on, so a key built on it remounts the EaseView (Ease restarts a
+ * loop only on remount) and a phased breath plays its lead-in again. Same input, same object.
+ */
+export function runFor(
+	run: LoopRun,
+	running: boolean,
+	timing: string
+): LoopRun {
+	if (run.was === running && run.timing === timing) {
+		return run;
+	}
+	const restart = running && !(run.was && run.timing === timing);
+	return { looping: false, n: run.n + (restart ? 1 : 0), timing, was: running };
+}
+
+/** A phased breath's lead-in ended: from here it loops whole halves. */
+export function leadInDone(
+	run: LoopRun,
+	running: boolean,
+	finished: boolean
+): LoopRun {
+	return finished && running && !run.looping ? { ...run, looping: true } : run;
+}
+
+/**
+ * A key for a loop that stops and starts again, or whose period changes while mounted: it moves
+ * on each time `running` turns on or `periodMs` changes while running.
  *
  * @public For the stoppable loops (Aura, Flux, Today's glow), ported from F5 on.
  */
-export function useLoopRun(running: boolean): number {
-	const [run, setRun] = useState({ n: 0, was: running });
-	if (run.was !== running) {
-		setRun({ n: run.n + (running ? 1 : 0), was: running });
+export function useLoopRun(running: boolean, periodMs = 0): number {
+	const timing = String(periodMs);
+	const [run, setRun] = useState(() => startRun(running, timing));
+	const next = runFor(run, running, timing);
+	if (next !== run) {
+		setRun(next);
 	}
-	return run.n;
+	return next.n;
 }
 
 /** How long a stopped loop takes to ease back to rest (`loopOrSettle`). */
