@@ -2,23 +2,23 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
 import { purgeSessions } from "../lib/sessionCascade";
-
-const TIERS = ["6_months", "1_year"] as const;
-type Tier = (typeof TIERS)[number];
-
-const RETENTION_MS: Record<Tier, number> = {
-	"1_year": 365 * 24 * 60 * 60 * 1000,
-	"6_months": 6 * 30 * 24 * 60 * 60 * 1000,
-};
+import {
+	RETENTION_TIERS,
+	type RetentionTier,
+	retentionCutoff,
+	sessionsBefore,
+} from "../privacy/retention";
 
 const tierValidator = v.union(v.literal("6_months"), v.literal("1_year"));
 
 const BATCH_SIZE = 50;
 const PREFS_PAGE_SIZE = 100;
 
-function nextTier(tier: Tier): Tier | null {
-	const idx = TIERS.indexOf(tier);
-	return idx >= 0 && idx < TIERS.length - 1 ? TIERS[idx + 1] : null;
+function nextTier(tier: RetentionTier): RetentionTier | null {
+	const idx = RETENTION_TIERS.indexOf(tier);
+	return idx >= 0 && idx < RETENTION_TIERS.length - 1
+		? RETENTION_TIERS[idx + 1]
+		: null;
 }
 
 /**
@@ -33,7 +33,7 @@ export const enforce = internalMutation({
 		tier: v.optional(tierValidator),
 	},
 	handler: async (ctx, args) => {
-		const tier: Tier = args.tier ?? TIERS[0];
+		const tier: RetentionTier = args.tier ?? RETENTION_TIERS[0];
 		const cursor = args.cursor ?? null;
 		const priorPending = args.sessionWorkPending ?? false;
 
@@ -46,18 +46,17 @@ export const enforce = internalMutation({
 			.withIndex("by_retention", (q) => q.eq("dataRetentionPreference", tier))
 			.paginate({ cursor, numItems: PREFS_PAGE_SIZE });
 
-		const cutoff = Date.now() - RETENTION_MS[tier];
+		// Shared with privacy/retention's count, so Settings' warning matches
+		// what this deletes.
+		const cutoff = retentionCutoff(tier, Date.now());
 		let moreSessionWork = priorPending;
 
 		for (const pref of prefs) {
-			const oldSessions = await ctx.db
-				.query("sessions")
-				.withIndex("by_profile_time", (q) =>
-					q
-						.eq("emotionalProfileId", pref.emotionalProfileId)
-						.lt("createdAt", cutoff)
-				)
-				.take(BATCH_SIZE);
+			const oldSessions = await sessionsBefore(
+				ctx.db,
+				pref.emotionalProfileId,
+				cutoff
+			).take(BATCH_SIZE);
 
 			if (oldSessions.length === BATCH_SIZE) {
 				moreSessionWork = true;
