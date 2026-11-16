@@ -37,6 +37,8 @@ type Props = {
 	unsure: boolean;
 	late: boolean;
 	colors: SessionColors;
+	/** The face's light and shadow (dusk on a dark theme). */
+	lightColors: SessionColors;
 	reduced: boolean;
 	onUnsure: () => void;
 };
@@ -92,7 +94,7 @@ export function MomentOne(p: Props) {
 		>
 			<FaceLight
 				clock={c1}
-				colors={colors}
+				colors={p.lightColors}
 				fit={fit}
 				grab={slider.grab}
 				pos={slider.pos}

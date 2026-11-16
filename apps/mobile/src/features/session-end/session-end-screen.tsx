@@ -5,6 +5,7 @@ import { useWindowDimensions, View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import { useAppActive } from "@/components/shared/use-app-active";
 import { useFixedFaces } from "@/design/fonts";
+import { useScheme } from "@/design/scheme";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useBoardY } from "./board-y";
 import { SessionFooter } from "./chrome/session-footer";
@@ -43,6 +44,10 @@ export function SessionEndScreen({ scene }: { scene?: Scene }) {
 	const active = useAppActive();
 	const running = focused && active;
 	const colors = useSessionColors(late ? "late" : "day");
+	// The face's light was drawn for a light page by day and the dusk page late; on a
+	// dark theme by day the day light reads as a spotlight, so it takes the dusk light.
+	const dark = useScheme() === "dark";
+	const lightColors = useSessionColors(late || dark ? "late" : "day");
 	const faces = useFixedFaces("mirror");
 	const clocks = useSessionClocks();
 	const touched = useSharedValue(0);
@@ -101,6 +106,7 @@ export function SessionEndScreen({ scene }: { scene?: Scene }) {
 					day={session.state.day}
 					fit={fit.fit}
 					late={late}
+					lightColors={lightColors}
 					onBottom={fit.onBottom}
 					onTop={fit.onTop}
 					onUnsure={flow.pickUnsure}
