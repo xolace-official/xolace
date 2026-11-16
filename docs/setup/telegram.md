@@ -82,8 +82,30 @@ deploy.
 ## Turning Telegram on
 
 A configured bot isn't enough for outreach to use it: the `outreach_channels` row for
-`telegram` (absent = disabled) is the kill switch and the free/Plus gate. That's an
-admin config edit, not part of this runbook.
+`telegram` is the kill switch and the free/Plus gate. With no row, Telegram falls back to
+`CHANNEL_DEFAULTS` (off), and the app's card says "Telegram check-ins are off for now"
+with no **Link** button.
+
+Turn it on with the admin mutation. For your dev deployment, from `packages/backend`:
+
+```sh
+bunx convex run admin/outreachChannels:setChannelConfig \
+  '{"channel":"telegram","enabled":true,"plan":"free"}' \
+  --identity '{"subject":"local-dev","issuer":"local","role":"admin"}'
+```
+
+`--identity` stands in for an admin's Clerk token (`adminMutation` checks the `role`
+claim). Use `"plan":"plus"` to try the Xolace+ gate, and `"enabled":false` to switch it
+off again; nobody is unlinked either way. The change takes effect at once, and the open
+sheet updates live.
+
+Staging or prod: an admin runs the same mutation (the dashboard → **Functions** →
+`admin/outreachChannels:setChannelConfig` → **Run**, acting as a user with
+`"role": "admin"`). An agent never runs it there.
+
+On mobile, the "Reach me on…" row in Settings → Notifications also needs the
+`reach-me-on` PostHog flag on for your user. Flags load at launch, so restart the app
+after changing it.
 
 With the row on, a signed-in user can link a chat: `outreach/telegram/link:createLink`
 returns `https://t.me/<bot>?start=<token>` (one use, 15 minutes, 10 mints an hour), and

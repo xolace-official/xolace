@@ -4,9 +4,24 @@ import { internalMutation, mutation, query } from "./_generated/server";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { hasPremium } from "./lib/premium";
 import { rateLimiter } from "./lib/rateLimits";
-import { loadSemanticMatches, matchByTags } from "./lib/reflectionMatching";
+import {
+	authorTagFor,
+	notContributedBy,
+	toClientReflection,
+} from "./lib/reflectionAuthor";
+import {
+	loadSemanticMatches,
+	matchByTags,
+	takeKept,
+} from "./lib/reflectionMatching";
 
-// Full `reflections` document shape, mirroring schema.ts's `reflections` table.
+/** Most reflections the peers path shows at once. */
+const MATCH_LIMIT = 4;
+/** Most rows `listRecent` returns, whatever the client asks. */
+const RECENT_LIMIT_MAX = 20;
+
+// A `reflections` document as clients see it: schema.ts's table minus
+// `authorTag`, which never leaves the server (ADR 0002).
 const reflectionDocValidator = v.object({
 	_creationTime: v.number(),
 	_id: v.id("reflections"),
@@ -28,6 +43,8 @@ const reflectionDocValidator = v.object({
 /**
  * Match reflections for a session based on its emotional metadata.
  * Accepts sessionId, verifies ownership, derives emotion from metadata.
+ * Never returns the viewer's own reflections; returns fewer than four
+ * rather than fill the gap with them.
  */
 export const matchForSession = query({
 	args: {
@@ -39,23 +56,24 @@ export const matchForSession = query({
 			args.sessionId
 		);
 
+		const notOwn = await notContributedBy(profile._id);
+
 		// Xolace+: precomputed semantic matches lead. Empty when nothing was
 		// precomputed or the user isn't premium — the free path is unchanged.
 		const semantic =
 			session.semanticMatchIds?.length && (await hasPremium(ctx, profile))
-				? await loadSemanticMatches(ctx, session)
+				? await loadSemanticMatches(ctx, session, notOwn)
 				: [];
-		if (semantic.length >= 4) {
-			return semantic.slice(0, 4);
+		if (semantic.length >= MATCH_LIMIT) {
+			return semantic.slice(0, MATCH_LIMIT).map(toClientReflection);
 		}
 
 		// Top up from the tag cascade, deduping against the semantic results.
-		const fallback = await matchByTags(ctx, args.sessionId);
+		const fallback = await matchByTags(ctx, args.sessionId, notOwn);
 		const semanticIds = new Set(semantic.map((r) => r._id));
-		return [
-			...semantic,
-			...fallback.filter((r) => !semanticIds.has(r._id)),
-		].slice(0, 4);
+		return [...semantic, ...fallback.filter((r) => !semanticIds.has(r._id))]
+			.slice(0, MATCH_LIMIT)
+			.map(toClientReflection);
 	},
 	returns: v.array(reflectionDocValidator),
 });
@@ -148,19 +166,30 @@ export const hasResonated = query({
 
 /**
  * Fallback: list recent active reflections when matchForSession returns empty.
+ * Never returns the viewer's own reflections.
  */
 export const listRecent = query({
 	args: {
 		limit: v.number(),
 	},
 	handler: async (ctx, args) => {
-		await requireAuth(ctx);
+		// `v.number()` admits NaN and fractions; NaN would never satisfy
+		// takeKept's stop check and scan the whole active pool.
+		if (!Number.isInteger(args.limit)) {
+			throw new Error("limit must be an integer");
+		}
+		const { profile } = await requireAuth(ctx);
+		const notOwn = await notContributedBy(profile._id);
 
-		return await ctx.db
-			.query("reflections")
-			.withIndex("by_status", (q) => q.eq("status", "active"))
-			.order("desc")
-			.take(Math.min(args.limit, 20));
+		const recent = await takeKept(
+			ctx.db
+				.query("reflections")
+				.withIndex("by_status", (q) => q.eq("status", "active"))
+				.order("desc"),
+			Math.min(args.limit, RECENT_LIMIT_MAX),
+			notOwn
+		);
+		return recent.map(toClientReflection);
 	},
 	returns: v.array(reflectionDocValidator),
 });
@@ -248,18 +277,31 @@ export const reportReflection = mutation({
 });
 
 /**
- * Insert an anonymized reflection into the pool.
- * No profile reference — anonymity is structural.
+ * Insert an anonymized reflection into the pool. Stores the contributor's
+ * author tag, never their id (ADR 0002). `contributorProfileId` is optional
+ * only for jobs scheduled before #790: without it the row pools untagged.
  */
 export const contribute = internalMutation({
 	args: {
+		contributorProfileId: v.optional(v.id("emotional_profiles")),
 		displayText: v.string(),
 		granularLabel: v.optional(v.string()),
 		intensity: v.number(),
 		primaryEmotion: v.string(),
 		thematicTags: v.array(v.string()),
 	},
-	handler: async (ctx, args) => {
+	handler: async (ctx, { contributorProfileId, ...args }) => {
+		const authorTag = contributorProfileId
+			? await authorTagFor(contributorProfileId)
+			: null;
+		if (!authorTag) {
+			console.error(
+				contributorProfileId
+					? "REFLECTION_AUTHOR_KEY is not set: pooling a peer reflection without an author tag"
+					: "Pooling a peer reflection without an author tag: no contributor given"
+			);
+		}
+
 		// Round to nearest day then add random jitter within that day to
 		// prevent timing correlation attacks across low-traffic periods.
 		const now = Date.now();
@@ -268,6 +310,7 @@ export const contribute = internalMutation({
 
 		const reflectionId = await ctx.db.insert("reflections", {
 			addedAt: roundedDay + jitter,
+			...(authorTag ? { authorTag } : {}),
 			displayText: args.displayText,
 			granularLabel: args.granularLabel,
 			intensity: args.intensity,

@@ -202,6 +202,7 @@ import type * as lib_premium from "../lib/premium.js";
 import type * as lib_pushDevices from "../lib/pushDevices.js";
 import type * as lib_pushNotifications from "../lib/pushNotifications.js";
 import type * as lib_rateLimits from "../lib/rateLimits.js";
+import type * as lib_reflectionAuthor from "../lib/reflectionAuthor.js";
 import type * as lib_reflectionMatching from "../lib/reflectionMatching.js";
 import type * as lib_sessionCascade from "../lib/sessionCascade.js";
 import type * as lib_spaceName from "../lib/spaceName.js";
@@ -515,6 +516,7 @@ declare const fullApi: ApiFromModules<{
   "lib/pushDevices": typeof lib_pushDevices;
   "lib/pushNotifications": typeof lib_pushNotifications;
   "lib/rateLimits": typeof lib_rateLimits;
+  "lib/reflectionAuthor": typeof lib_reflectionAuthor;
   "lib/reflectionMatching": typeof lib_reflectionMatching;
   "lib/sessionCascade": typeof lib_sessionCascade;
   "lib/spaceName": typeof lib_spaceName;

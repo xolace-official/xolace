@@ -53,11 +53,16 @@ export async function writeReply(input: ReplyInput): Promise<string | null> {
 			console.error("[telegram] reply model failed", error);
 			return null;
 		}
-		const reply = shapeReply(raw, { reach: input.reach });
-		if (reply) {
-			return reply;
+		const shaped = shapeReply(raw, { reach: input.reach });
+		if (shaped.ok) {
+			return shaped.text;
 		}
-		console.warn("[telegram] reply broke its shape", { attempt });
+		// The rule only, never the reply: it answers someone's private words.
+		console.warn("[telegram] reply broke its shape", {
+			attempt,
+			reach: input.reach,
+			reason: shaped.reason,
+		});
 	}
 	return null;
 }

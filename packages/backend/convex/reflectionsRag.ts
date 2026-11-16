@@ -7,6 +7,7 @@ import {
 	internalMutation,
 	internalQuery,
 } from "./_generated/server";
+import { notContributedBy } from "./lib/reflectionAuthor";
 import { NO_GRANULAR_LABEL, REFLECTION_POOL_NAMESPACE, rag } from "./rag";
 
 // =============================================================
@@ -151,7 +152,7 @@ export const getSessionForSemantic = internalQuery({
  * Apply the intensity ±3 proximity filter to the semantic candidates and
  * persist the top matches. Candidates arrive as raw keys (reflection ids)
  * ordered by relevance; we keep order, drop non-active / out-of-window
- * rows, and store the top 4.
+ * rows and the session owner's own reflections, and store the top 4.
  */
 export const finalizeSemanticMatches = internalMutation({
 	args: {
@@ -160,6 +161,12 @@ export const finalizeSemanticMatches = internalMutation({
 		sessionId: v.id("sessions"),
 	},
 	handler: async (ctx, args) => {
+		const session = await ctx.db.get("sessions", args.sessionId);
+		if (!session) {
+			return;
+		}
+		const notOwn = await notContributedBy(session.emotionalProfileId);
+
 		const matched: Id<"reflections">[] = [];
 		for (const key of args.candidateKeys) {
 			const id = ctx.db.normalizeId("reflections", key);
@@ -167,7 +174,7 @@ export const finalizeSemanticMatches = internalMutation({
 				continue;
 			}
 			const r = await ctx.db.get("reflections", id);
-			if (!r || r.status !== "active") {
+			if (!r || r.status !== "active" || !notOwn(r)) {
 				continue;
 			}
 			if (

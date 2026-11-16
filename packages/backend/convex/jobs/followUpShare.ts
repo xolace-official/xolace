@@ -25,6 +25,7 @@ async function readShare(ctx: QueryCtx, responseId: Id<"follow_up_responses">) {
 		return null;
 	}
 	return {
+		contributorProfileId: session.emotionalProfileId,
 		mirrorText: session.mirrorText ?? "",
 		sessionId: session._id,
 		shareable: isFollowUpPoolable({
@@ -45,6 +46,7 @@ export const loadForShare = internalQuery({
 	returns: v.union(
 		v.null(),
 		v.object({
+			contributorProfileId: v.id("emotional_profiles"),
 			mirrorText: v.string(),
 			sessionId: v.id("sessions"),
 			shareable: v.boolean(),
@@ -72,7 +74,10 @@ export const contributeIfShareable = internalMutation({
 		if (!current?.shareable || current.text !== sourceText) {
 			return null;
 		}
-		await ctx.runMutation(internal.reflections.contribute, reflection);
+		await ctx.runMutation(internal.reflections.contribute, {
+			...reflection,
+			contributorProfileId: current.contributorProfileId,
+		});
 		return null;
 	},
 	returns: v.null(),
@@ -99,7 +104,8 @@ export const releaseShare = internalMutation({
 /**
  * Share a follow-up "what helped?" reflection (#449) into the peer pool the
  * way session text gets there: moderated, then through the same voice-
- * preserving anonymizer, then `reflections.contribute` (no author link).
+ * preserving anonymizer, then `reflections.contribute` (an author tag, never
+ * the author's id; ADR 0002).
  * Gates are re-read at run time so a revoked share never lands. Fails closed:
  * a flagged text or a NULL distillation shares nothing. A thrown error
  * (outage) retries with backoff, then releases the marker so a re-submit can
