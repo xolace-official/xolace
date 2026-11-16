@@ -1,7 +1,7 @@
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useThemeColor } from "heroui-native";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import { MiniPlayerAccessory } from "@/features/browse/now-playing/mini-player-accessory";
 import { MiniPlayerOverlay } from "@/features/browse/now-playing/mini-player-overlay";
 import { useMiniPlayerShown } from "@/features/browse/now-playing/now-playing-store";
@@ -30,20 +30,22 @@ export default function AppTabs() {
 	// nothing.
 	const unread = useUnreadBadge();
 	const showPlayer = useMiniPlayerShown();
-	// iOS 26 docks the player in the bar; elsewhere (iOS below 26, Android) it floats above it.
-	const nativeAccessory = isLiquidGlassAvailable();
+	// iOS 26 has Liquid Glass: its own bar, and a slot that docks the player. Elsewhere (iOS
+	// below 26, Android) the bar is the theme's background, opaque at the scroll edge too, and
+	// the player floats above it.
+	const glass = isLiquidGlassAvailable();
 
 	return (
 		<View className="flex-1">
 			<NativeTabs
-				// iOS draws its own bar (glass on 26, blur before); Android's takes the theme.
-				backgroundColor={Platform.OS === "android" ? background : undefined}
+				backgroundColor={glass ? undefined : background}
+				disableTransparentOnScrollEdge={!glass}
 				hidden={hidden}
 				minimizeBehavior="onScrollDown"
 				screenListeners={SCREEN_LISTENERS}
 				tintColor={accent}
 			>
-				{showPlayer && nativeAccessory && (
+				{showPlayer && glass && (
 					<NativeTabs.BottomAccessory>
 						<MiniPlayerAccessory />
 					</NativeTabs.BottomAccessory>
@@ -65,7 +67,7 @@ export default function AppTabs() {
 					</NativeTabs.Trigger>
 				))}
 			</NativeTabs>
-			{showPlayer && !nativeAccessory && <MiniPlayerOverlay />}
+			{showPlayer && !glass && <MiniPlayerOverlay />}
 		</View>
 	);
 }

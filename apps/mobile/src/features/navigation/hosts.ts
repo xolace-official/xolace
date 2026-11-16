@@ -8,6 +8,12 @@ import type { ComponentType } from "react";
  * renders nothing or draws over every screen: the arrivals moment, a letter
  * that just arrived.
  *
+ * Hosts are React Native siblings after the native stack, so they draw over
+ * the stack's ordinary screens only: never over a natively presented one (the
+ * `fullScreenModal` player, a form sheet). One that draws positions itself
+ * absolutely (`absolute inset-0`, or pinned to an edge) and lets touches through
+ * where it draws nothing (`pointerEvents="box-none"`).
+ *
  * A screen goes in its feature's `screens.ts` instead (spread by
  * `root-screens.ts`): a route in the stack, opened by navigating to it, with
  * its own options. A host that opens a screen does it by navigating to that

@@ -34,7 +34,8 @@ const styles = StyleSheet.create({
 // Half the dock's h-14, so the Playful lip slab is the same pill.
 const DOCK_RADIUS = 28;
 
-/** Floating pill above the tab bar. `replace`s to "/" so no back stack accumulates. */
+/** Floating pill above the tab bar. Back to Reflect ("/") if it is under the tabs, else in
+ * their place: never a second Reflect. */
 export function ReflectDock() {
 	const router = useRouter();
 	const accent = useThemeColor("accent");
@@ -45,7 +46,7 @@ export function ReflectDock() {
 
 	const goToReflect = () => {
 		playSoftPress();
-		router.replace("/");
+		router.dismissTo("/");
 	};
 
 	const dockFace = (

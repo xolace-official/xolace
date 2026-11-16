@@ -5,6 +5,7 @@ import {
 	crossFeatureImportsFromPorted,
 	devImportsFromOutside,
 	oldFolderImportsFromNewCode,
+	portedFolderImportsFromOldCode,
 	staleListings,
 } from "@/features/feature-shape";
 import { type Import, type ImportGraph, SRC } from "@/features/import-graph";
@@ -228,5 +229,34 @@ describe("staleListings", () => {
 	it("names listed folders that no longer exist", () => {
 		expect(staleListings(["navigation", "streak"])).toContain("talk");
 		expect(staleListings(["navigation", "streak"])).not.toContain("streak");
+	});
+});
+
+describe("portedFolderImportsFromOldCode", () => {
+	it("flags an old folder importing a ported one, types included", () => {
+		const graph = graphOf({
+			"features/discovery/library-strip.tsx": [
+				local("features/today/rail/rail.tsx"),
+				local("features/letters/letter-model.ts", true),
+			],
+		});
+		expect(portedFolderImportsFromOldCode(graph)).toEqual([
+			"features/discovery/library-strip.tsx -> features/today/rail/rail.tsx",
+			"features/discovery/library-strip.tsx -> features/letters/letter-model.ts",
+		]);
+	});
+
+	it("allows old folders among themselves, the hub, purchases and routes", () => {
+		const graph = graphOf({
+			"app/(protected)/(tabs)/today/index.tsx": [
+				local("features/today/today-screen.tsx"),
+			],
+			"features/discovery/library-strip.tsx": [
+				local("features/browse/use-open-track.ts"),
+				local("features/navigation/tabs.ts"),
+				local("features/purchases/use-paywall.ts"),
+			],
+		});
+		expect(portedFolderImportsFromOldCode(graph)).toEqual([]);
 	});
 });

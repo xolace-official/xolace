@@ -60,30 +60,3 @@ export const TABS: readonly TabSpec[] = [
 		name: "you",
 	},
 ];
-
-/**
- * Paths that moved, and where they live now. Shipped builds, notification
- * payloads and outside links still open the old ones; each has a route under
- * `(protected)` that sends it on (`MovedRoute`). A path matches with everything
- * under it, which moves along: `/browse/topic/sleep` is `/explore/topic/sleep`.
- */
-const MOVED: Readonly<Record<string, string>> = {
-	browse: "/explore",
-	discovery: "/today",
-	profile: "/you",
-};
-
-/** Paths under a moved one that stayed where they were (not tabs yet). */
-const STAYED: readonly string[] = ["/profile/insights"];
-
-/** Where a moved path lives now, or null if it didn't move. */
-export function movedPath(pathname: string): string | null {
-	const [, root = "", ...rest] = pathname.split("/");
-	if (!Object.hasOwn(MOVED, root) || STAYED.includes(pathname)) {
-		return null;
-	}
-	return [MOVED[root], ...rest].filter(Boolean).join("/");
-}
-
-/** The old roots that moved, for the route checks. */
-export const movedRoots = (): string[] => Object.keys(MOVED);

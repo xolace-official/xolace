@@ -287,7 +287,7 @@ function ProfileBody({
 					<OtherListeners
 						onPress={() => {
 							playSoftPress();
-							router.push({ params: { specialty }, pathname: "/connect" });
+							router.dismissTo({ params: { specialty }, pathname: "/connect" });
 						}}
 						specialty={specialty}
 					/>

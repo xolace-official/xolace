@@ -123,11 +123,11 @@ src/features/<feature>/
   No `<name>-v2` folders.
 - **Replacing old code.** There is no flag: a screen PR points the route shim at the new
   screen and deletes the old screen code it replaces, plus anything only that code used.
-  New code never imports an old folder (one still on `LEGACY_FEATURES`); the PR that
-  replaces or deletes a folder takes it off the list. When a folder is replaced in place
-  while other old screens still use parts of it, the same PR first moves those parts
-  down a layer (`src/lib`, `src/components/shared`), so nothing imports a half-replaced
-  folder.
+  New code never imports an old folder (one still on `LEGACY_FEATURES`), and old code
+  never imports a ported one; the PR that replaces or deletes a folder takes it off the
+  list. When a folder is replaced in place while other old screens still use parts of
+  it, the same PR first moves those parts down a layer (`src/lib`,
+  `src/components/shared`), so nothing imports a half-replaced folder.
 - **Composition.** Features meet in routes, not screens: a ported feature imports only
   itself, lower layers (`src/lib`, `src/components/shared`, kits in
   `src/components/<kit>`) and `SHARED_FEATURES` (`purchases`). A piece two features
@@ -135,7 +135,8 @@ src/features/<feature>/
 - **Root screens.** A feature's stack entries and options go in its `screens.ts`;
   `src/features/navigation/root-screens.ts` spreads them.
 - **Enforced** by `src/features/import-cycles.test.ts` for every folder not on
-  `LEGACY_FEATURES` in `feature-shape.ts` (the old folders; the list only shrinks);
+  `LEGACY_FEATURES` in `feature-shape.ts` (the old folders: `REPLACED_FEATURES`, which
+  screen PRs replace, and `RESTYLED_FEATURES`, which the sweep reworks; both only shrink);
   `bun run check:changed` warns on `.tsx` over 200 lines. Porting a prototype screen:
   the `port-screen` skill.
 
@@ -156,13 +157,20 @@ old screen outright. Where a screen PR adds to the shell:
   signed in, whatever screen is up: it listens and renders nothing, or draws over every
   screen (the arrivals moment). It is not a route: nothing navigates to it and it has no
   options, which is what a root screen is. A host that opens a screen navigates to that
-  screen's route. The layout maps the list; don't edit its lines.
-- **A path that moved** (`/discovery`, `/browse/**`, `/profile`): `MOVED` in `tabs.ts`
-  says where each lives now, and a `MovedRoute` shim at the old path sends links and old
-  payloads there. Into the tabs, use `<ReturnTo href />` (`src/lib/return-to.tsx`) or
-  `router.dismissTo`; `<Redirect>` or `router.navigate` from a pushed screen stack a
-  second copy of the tabs. Notification taps follow the same rule (`notificationTapPlan`:
-  home is `dismissTo("/")`).
+  screen's route. Hosts are siblings after the native stack, so they can't draw over a
+  natively presented screen (the player, a form sheet) and position themselves
+  absolutely. The layout maps the list; don't edit its lines.
+- **A path that moved** (`/discovery`, `/browse/**`, `/profile`; next, `/streak-held` and
+  `/kindling-announcement`): `MOVED` in `src/features/navigation/moved-paths.ts` says
+  where each lives now, a tab or a root screen, and whether its subpaths moved too. Its
+  `MovedRoute` shim at the old path (plus `[...rest]` for subpaths, and an entry in
+  `navigation/screens.ts`) sends links and old payloads there; `moved-paths.test.ts`
+  checks all three.
+- **Navigating to a route that may already be in the stack** (a tab, Reflect): use
+  `<ReturnTo href />` (`src/lib/return-to.tsx`) or `router.dismissTo`, never `<Redirect>`,
+  `router.replace` or `router.navigate` from a pushed screen: those stack a second copy.
+  Notification taps follow the same rule (`notificationTapPlan`: home is `dismissTo("/")`,
+  except on a held screen in `src/lib/held-routes.ts`, where a tap tears nothing down).
 
 ## Shared kit
 

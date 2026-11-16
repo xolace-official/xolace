@@ -99,7 +99,10 @@ export function TopicGridScreen() {
 					className="active:opacity-60"
 					onPress={() => {
 						playSoftPress();
-						router.push(`/explore/topic/${item.slug}` as never);
+						router.push({
+							params: { slug: item.slug },
+							pathname: "/explore/topic/[slug]",
+						});
 					}}
 					style={{
 						marginBottom: GAP + 4,

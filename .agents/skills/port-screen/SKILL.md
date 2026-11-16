@@ -39,11 +39,13 @@ the screen calls, and every gap with the B-PR that fills it.
 Work in this order; each step leaves something you can test.
 
 - **Folder.** Always the final name, never `<name>-v2`. If the name is free, a new folder,
-  checked from its first commit; never add it to `LEGACY_FEATURES`. If an old folder
+  checked from its first commit; never add it to `feature-shape.ts`'s old-folder lists. If an old folder
   holds it (`reflect`, `settings`, `session-end`…), replace that folder in place: first
   move any part other old screens still import down a layer (`src/lib`,
   `src/components/shared`) and point them at it, so nothing imports a half-replaced
-  folder; then rewrite the folder in the shape and take it off `LEGACY_FEATURES`.
+  folder; then rewrite the folder in the shape and take it off `REPLACED_FEATURES`
+  (`feature-shape.ts`). `import-cycles.test.ts` fails both ways: new code importing an
+  old folder, and an old folder importing a ported one.
 - **Copy.** Strings from `P/src/fixtures/<feature>.ts` into `copy.ts`. Fake data from the
   same file becomes fixtures in `dev/`.
 - **Model.** Every function that turns data into what to show (in the prototype's
@@ -105,7 +107,7 @@ Work in this order; each step leaves something you can test.
 
 - **Route shim.** Point the production route under `M/src/app/(protected)/` at the new
   screen, and in the same PR delete the old screen code it replaces plus anything only
-  that code used. A folder left empty goes, with its `LEGACY_FEATURES` line. New code
+  that code used. A folder left empty goes, with its `REPLACED_FEATURES` line. New code
   never imports an old folder (`import-cycles.test.ts` fails and names the import). A
   Convex function that lost its last caller is deprecated (a wrapper and a
   `DEPRECATIONS.md` line), never removed: the store app still calls it.
@@ -113,18 +115,25 @@ Work in this order; each step leaves something you can test.
   `M/src/app/(protected)/(tabs)/<tab>/index.tsx` hosts the old screen that did its job
   until then: swap that shim for your screen. The tab's label, icon and options are its
   entry in `TABS` (`M/src/features/navigation/tabs.ts`); edit only yours.
-- **A path that moves** (a route renamed or folded into a tab): add it to `MOVED` in
-  `tabs.ts` and give the old path a `MovedRoute` shim and an entry in
-  `M/src/features/navigation/screens.ts`, so links and old payloads still land. To send
-  someone into the tabs, use `<ReturnTo href />` (`M/src/lib/return-to.tsx`) or
-  `router.dismissTo`, never `<Redirect>` or `router.navigate` from a pushed screen:
-  those stack a second copy of the tabs.
+- **A path that moves** (a route renamed, folded into a tab, or replaced by a new root
+  screen, like `/streak-held` → welcome back): add it to `MOVED` in
+  `M/src/features/navigation/moved-paths.ts` (`subtree: true` if its subpaths move too),
+  give the old path a `MovedRoute` shim (and `[...rest]` for a subtree) and an entry in
+  `M/src/features/navigation/screens.ts`. `moved-paths.test.ts` checks all three and
+  that the target is a real route.
+- **Navigating to a route that may already be in the stack** (a tab, Reflect): use
+  `<ReturnTo href />` (`M/src/lib/return-to.tsx`) or `router.dismissTo`, never
+  `<Redirect>`, `router.replace` or `router.navigate` from a pushed screen: those stack a
+  second copy. Never dismiss a held screen (`M/src/lib/held-routes.ts`: a vent, a talk,
+  crisis help, a chat) from a notification or a timer.
 - **Stack entry.** New routes go in the feature's `screens.ts`. A new feature adds one
   import and one spread to `M/src/features/navigation/root-screens.ts`.
 - **A host** (a component kept mounted above the stack while signed in, that listens and
   renders nothing or draws over every screen, like the arrivals moment): one entry in
   `ROOT_HOSTS` (`M/src/features/navigation/hosts.ts`); don't edit the layout. It isn't a
-  route; a screen it opens is a stack entry it navigates to.
+  route; a screen it opens is a stack entry it navigates to. It sits after the native
+  stack, so it can't draw over a natively presented screen and positions itself
+  absolutely.
 - **Dev states.** One per state the handoff shows, in `dev/`, feeding the screen
   fixtures through the same `{ state, actions }` type. Register them with `src/dev/`
   (A2). Before A2 lands, the states are fixtures plus tests only; say so in the PR.

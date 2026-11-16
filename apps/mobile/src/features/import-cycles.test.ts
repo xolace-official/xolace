@@ -7,6 +7,7 @@ import {
 	crossFeatureImportsFromPorted,
 	devImportsFromOutside,
 	oldFolderImportsFromNewCode,
+	portedFolderImportsFromOldCode,
 	staleListings,
 } from "@/features/feature-shape";
 import {
@@ -114,10 +115,17 @@ describe("feature shape (apps/mobile/AGENTS.md)", () => {
 		).toEqual([]);
 	});
 
-	it("keeps new code off the old folders it replaces", () => {
+	it("keeps new code off the old folders", () => {
 		expect(
 			oldFolderImportsFromNewCode(graph),
-			"Delete the old code your screen replaces, or move the piece old screens still share down to src/lib or src/components first; take a replaced folder off LEGACY_FEATURES"
+			"A folder your screen replaces (REPLACED_FEATURES): delete the old code, or replace the folder in place and take it off the list. Any old folder: move the piece new code needs down to src/lib or src/components"
+		).toEqual([]);
+	});
+
+	it("keeps old folders off the ported ones", () => {
+		expect(
+			portedFolderImportsFromOldCode(graph),
+			"Old screens still use a part of a folder that was replaced in place: move that part down to src/lib or src/components/shared and point both at it"
 		).toEqual([]);
 	});
 

@@ -10,21 +10,15 @@ import {
 } from "@/features/import-graph";
 
 /**
- * The old feature folders: they predate the shape and hold the screens the
- * redesign replaces. Every other folder is ported, held to the shape from its
- * first commit. A screen PR takes a folder off this list when it replaces it in
- * place (rewritten under the same name, in the shape) or deletes it. The list
- * only shrinks, and a name with no folder fails the test.
+ * Old folders whose screens the redesign replaces. A screen PR takes a folder off
+ * this list when it replaces it in place (rewritten under the same name, in the
+ * shape) or deletes it.
  */
-const LEGACY_FEATURES: ReadonlySet<string> = new Set([
+const REPLACED_FEATURES = [
 	"achievements",
-	"auth",
 	"awareness-events",
 	"browse",
-	"consent",
-	"crisis-resources",
 	"discovery",
-	"feedback-tray",
 	"follow-up",
 	"idle-menu",
 	"insights",
@@ -35,7 +29,6 @@ const LEGACY_FEATURES: ReadonlySet<string> = new Set([
 	"onboarding",
 	"peer-reflection",
 	"profile",
-	"purchases",
 	"quotes",
 	"reach-me-on",
 	"reflect",
@@ -51,6 +44,28 @@ const LEGACY_FEATURES: ReadonlySet<string> = new Set([
 	"vent",
 	"xolace-face",
 	"xolacer-chat",
+];
+
+/**
+ * Old folders the redesign keeps: the sweep (C1) restyles them and brings them
+ * into the shape, then takes them off this list.
+ */
+const RESTYLED_FEATURES = [
+	"auth",
+	"consent",
+	"crisis-resources",
+	"feedback-tray",
+	"purchases",
+];
+
+/**
+ * The old feature folders, which predate the shape. Every other folder is
+ * ported, held to the shape from its first commit. Both lists only shrink, and a
+ * name with no folder fails the test.
+ */
+const LEGACY_FEATURES: ReadonlySet<string> = new Set([
+	...REPLACED_FEATURES,
+	...RESTYLED_FEATURES,
 ]);
 
 /** Folders under `features/` that compose every feature rather than being one:
@@ -146,11 +161,10 @@ const show = ({ file, imp, target }: Edge) =>
 const unique = (lines: string[]) => [...new Set(lines)];
 
 /**
- * 1. New code never imports the old code the redesign replaces: a ported folder
- * or a lower layer imports no folder still on `LEGACY_FEATURES` (bar the shared
- * modules below). Its screen PR deletes that code, or takes the folder off the
- * list by replacing it in place; old screens that still need a piece of it get
- * the piece moved down a layer first.
+ * 1. New code never imports old code: a ported folder or a lower layer imports
+ * no folder still on `LEGACY_FEATURES` (bar the shared modules below). A screen
+ * PR deletes the old code it replaces, or replaces the folder in place; a piece
+ * new code needs from an old folder moves down a layer.
  */
 export function oldFolderImportsFromNewCode(graph: ImportGraph): string[] {
 	const found: string[] = [];
@@ -256,6 +270,31 @@ export function crossFeatureImportsFromPorted(graph: ImportGraph): string[] {
 			from !== to &&
 			isPortedFeature(from) &&
 			!isLegacyFeature(to) &&
+			!Object.hasOwn(SHARED_FEATURES, to)
+		) {
+			found.push(show(edge));
+		}
+	}
+	return unique(found);
+}
+
+/**
+ * 5. Old code never imports a ported folder: an old folder imports nothing a
+ * screen PR has rewritten (bar the shared modules and the hub). So a folder
+ * replaced in place while other old screens still used parts of it had those
+ * parts moved down a layer first, and nothing imports a half-replaced folder.
+ */
+export function portedFolderImportsFromOldCode(graph: ImportGraph): string[] {
+	const found: string[] = [];
+	for (const edge of edges(graph)) {
+		const from = featureOf(edge.file);
+		const to = edge.target && featureOf(edge.target);
+		if (
+			from &&
+			to &&
+			from !== to &&
+			isLegacyFeature(from) &&
+			isPortedFeature(to) &&
 			!Object.hasOwn(SHARED_FEATURES, to)
 		) {
 			found.push(show(edge));
