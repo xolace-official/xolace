@@ -29,6 +29,7 @@ import {
 	REST_POSE,
 } from "@/features/achievements/coin/pose";
 import { COPY } from "@/features/achievements/copy";
+import { useLater } from "@/features/achievements/later";
 import { playAffirmativePress, playErrorNotice, tap } from "@/lib/haptics";
 
 /** The board's phone: positions are from its top, on a 54 pt status bar. */
@@ -129,6 +130,9 @@ export function useBadgeEngine({
 	const locked = badge?.earnedAt === undefined;
 	const eng = useSharedValue<Engine | null>(null);
 	const cur = useRef({ badge, out });
+	const later = useLater();
+	const focus = (node: ViewInstance | TextInstance | null) =>
+		later(() => focusNow(node), FOCUS_MS);
 	useEffect(() => {
 		cur.current = { badge, out };
 	});
@@ -193,7 +197,8 @@ export function useBadgeEngine({
 		const e = fresh(o, geo(top, width), locked, reduced);
 		eng.set(e);
 		pose.set(poseAt(e, o.opts.still ? STILL_AGE : 0));
-		focus(title.current);
+		const id = setTimeout(() => focusNow(title.current), FOCUS_MS);
+		return () => clearTimeout(id);
 	}, [n, top, width, reduced, eng, pose, title]);
 
 	const wake = () => setStopped(0);
@@ -230,10 +235,10 @@ export function useBadgeEngine({
 	return { close, gestures: useGestures(eng, wake), locked, turn };
 }
 
-function focus(node: ViewInstance | TextInstance | null) {
+function focusNow(node: ViewInstance | TextInstance | null) {
 	const tag = node ? findNodeHandle(node) : null;
 	if (tag) {
-		setTimeout(() => AccessibilityInfo.setAccessibilityFocus(tag), FOCUS_MS);
+		AccessibilityInfo.setAccessibilityFocus(tag);
 	}
 }
 

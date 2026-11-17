@@ -31,9 +31,14 @@ const FADE_MS = 350;
  * It can't draw over a natively presented screen, and the gate keeps it off
  * those (`held-routes.ts`).
  */
-export function ArrivalsHost() {
+export function ArrivalsHost({
+	isPresented,
+}: {
+	/** A native sheet or modal is up at this pathname (`navigation/presented-routes.ts`). */
+	isPresented: (pathname: string) => boolean;
+}) {
 	return (
-		<ArrivalData>
+		<ArrivalData isPresented={isPresented}>
 			<ArrivalOverlay />
 		</ArrivalData>
 	);

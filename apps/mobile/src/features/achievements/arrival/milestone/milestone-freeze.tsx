@@ -33,7 +33,7 @@ export function MilestoneFreeze({
 	eng: SharedValue<Eng>;
 	geo: Geo;
 	dark: boolean;
-	freeze: Milestone["freeze"];
+	freeze: NonNullable<Milestone["freeze"]>;
 }) {
 	const separator = useTokenColor("separator");
 	const frost = useTokenColor("frost");

@@ -1,4 +1,4 @@
-import { api } from "@xolace/backend/convex/_generated/api";
+import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";

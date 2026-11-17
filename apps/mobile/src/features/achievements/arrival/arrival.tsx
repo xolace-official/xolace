@@ -10,7 +10,7 @@ import {
 	type Milestone,
 	milestoneLabel,
 } from "@/features/achievements/arrival/arrival-model";
-import { geoFor, PH } from "@/features/achievements/arrival/arrival-motion";
+import { EV, geoFor, PH } from "@/features/achievements/arrival/arrival-motion";
 import type { Still } from "@/features/achievements/arrival/arrival-start";
 import { BadgeLayer } from "@/features/achievements/arrival/badge/badge-layer";
 import { MilestoneLayer } from "@/features/achievements/arrival/milestone/milestone-layer";
@@ -25,6 +25,12 @@ const roomOf = (hasMs: boolean, dark: boolean) => {
 	}
 	return dark ? "bg-arrival-fire-dusk" : "bg-arrival-fire-day";
 };
+
+/** The milestone's cards that aren't drawn play no haptic: the week's today flick, the freeze's Feather. */
+const silentEvents = (m: Milestone | null): number[] => [
+	...(m?.week ? [] : [EV.today]),
+	...(m?.freeze ? [] : [EV.token]),
+];
 
 /** Starts an arrival staged hidden (by the host): a fresh engine and the clock. */
 export type ArrivalHandle = { start: () => void };
@@ -55,6 +61,7 @@ export function Arrival({ badges, milestone, still, onDone, ref }: Props) {
 		hasMilestone: hasMs,
 		onDone,
 		reduced: rm,
+		silent: silentEvents(milestone),
 		still,
 		total: badges.length,
 	});

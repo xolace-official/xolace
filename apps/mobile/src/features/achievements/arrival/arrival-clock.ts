@@ -133,7 +133,12 @@ export function useArrivalClock({
 			}
 			return e;
 		});
-		// Production's fx loops carry on from here without the clock.
+		// Production's fx loops (`badge-fx.tsx`: the glow's breath, the shimmer, the
+		// rim sparkles) carry on from here without the clock, as the prototype ported
+		// them and measured (arrivals-v2 NOTES): one 84 s linear loop of the badge's
+		// age that several worklets read every frame. On Reanimated, not Ease, on
+		// purpose: an Ease loop animates one view's props and can't feed a shared
+		// value, and these three are derived from one clock.
 		if (loopFrom >= 0) {
 			fa.set(loopFrom);
 			fa.set(

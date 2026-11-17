@@ -9,6 +9,7 @@ import { ArrivalsProvider } from "@/features/achievements/arrival/arrival-data";
 import {
 	type ArrivalPlan,
 	arrivalPlan,
+	lastSevenDays,
 	type UnseenBadge,
 } from "@/features/achievements/arrival/arrival-model";
 import type { Still } from "@/features/achievements/arrival/arrival-start";
@@ -27,7 +28,6 @@ function fixturePlan(
 	const plan = arrivalPlan({
 		opened: NONE,
 		summary: backfill ? BACKFILL : null,
-		today: ARRIVAL_DAY,
 		unseen,
 	});
 	if (plan?.kind === "backfill") {
@@ -46,9 +46,11 @@ function fixturePlan(
 				...b,
 				art: { ...b.art, source: fixtureArt(b.id) },
 			})),
+			// The designed cards, which the live plan leaves out until the server serves them.
 			milestone: plan.milestone && {
 				...plan.milestone,
 				freeze: capped ? "capped" : "earned",
+				week: lastSevenDays(ARRIVAL_DAY),
 			},
 		};
 	}

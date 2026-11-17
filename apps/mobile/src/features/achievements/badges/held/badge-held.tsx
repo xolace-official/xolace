@@ -1,5 +1,10 @@
 import { useEffect, useRef } from "react";
-import { type TextInstance, useWindowDimensions, View } from "react-native";
+import {
+	BackHandler,
+	type TextInstance,
+	useWindowDimensions,
+	View,
+} from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -68,6 +73,18 @@ export function BadgeHeld({ pose }: { pose: SharedValue<Pose> }) {
 		);
 		glowSv.set(glow);
 	}, [o.x, o.y, W, H, glow, reach, glowSv]);
+
+	// Android's back puts a held badge back, as the edge swipe does on iOS, instead of leaving.
+	useEffect(() => {
+		if (!open) {
+			return;
+		}
+		const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+			close();
+			return true;
+		});
+		return () => sub.remove();
+	}, [open, close]);
 
 	return (
 		<GestureDetector gesture={gestures.pan}>

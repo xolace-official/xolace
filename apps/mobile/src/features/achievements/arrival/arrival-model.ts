@@ -40,10 +40,18 @@ export type Milestone = {
 	/** Yesterday's count, which rolls over to `day`. */
 	from: number;
 	line: string;
-	/** Whether this milestone's freeze was added, or one was already held. */
-	freeze: "earned" | "capped";
-	/** The last seven days' letters, ending today. */
-	days: readonly string[];
+	/**
+	 * What the milestone added: its streak saver, or none because one is held.
+	 * Null until the server says (an additive field on `unlock.unseen`): the
+	 * card shows only what's known, never a guess.
+	 */
+	freeze: "earned" | "capped" | null;
+	/**
+	 * The seven days ending on the day the rung was earned, every one showed up.
+	 * Null until the server dates the rung and says which days a freeze covered:
+	 * a rung can arrive days late, and a covered day isn't one showed up.
+	 */
+	week: readonly string[] | null;
 };
 
 export type ArrivalPlan =
@@ -88,10 +96,10 @@ export function milestoneDayOf(achievementId: string): number | null {
 	return isStreakMilestone(day) ? day : null;
 }
 
-/** "Tu We Th Fr Sa Su Mo": the last seven days' letters, ending today. */
-export function lastSevenDays(today: Date, locale?: string): string[] {
+/** "Tu We Th Fr Sa Su Mo": seven days' letters, ending on `last`. */
+export function lastSevenDays(last: Date, locale?: string): string[] {
 	return Array.from({ length: WEEK }, (_, i) =>
-		new Date(today.getTime() - (WEEK - 1 - i) * DAY_MS)
+		new Date(last.getTime() - (WEEK - 1 - i) * DAY_MS)
 			.toLocaleDateString(locale, { weekday: "short" })
 			.slice(0, LETTERS)
 	);
@@ -115,12 +123,10 @@ export function arrivalPlan({
 	unseen,
 	summary,
 	opened,
-	today,
 }: {
 	unseen: readonly UnseenBadge[];
 	summary: BackfillSummary | null;
 	opened: ReadonlySet<string>;
-	today: Date;
 }): ArrivalPlan | null {
 	if (summary?.ids.some((id) => !opened.has(id))) {
 		return {
@@ -151,18 +157,21 @@ export function arrivalPlan({
 				? null
 				: {
 						day,
-						days: lastSevenDays(today),
-						// Placeholder until the server says whether the saver was added (see the PR).
-						freeze: "earned",
+						freeze: null,
 						from: day - 1,
 						line: getStreakCopy(day) ?? lead?.copy ?? "",
+						week: null,
 					},
 	};
 }
 
 /** The milestone's one VoiceOver element. */
 export function milestoneLabel(m: Milestone): string {
-	return COPY.milestone.label(m.day, m.line, COPY.milestone[m.freeze].title);
+	return COPY.milestone.label(
+		m.day,
+		m.line,
+		m.freeze ? COPY.milestone[m.freeze].title : null
+	);
 }
 
 type Where = {
@@ -170,13 +179,18 @@ type Where = {
 	pathname: string;
 	/** Home has a session or reflection in progress, a sheet on screen, the streak reveal or the first-run tour. */
 	homeBusy: boolean;
+	/** A natively presented screen (a form or page sheet, a modal) is up: the overlay would play behind it. */
+	presented: boolean;
 };
 
 /**
  * An arrival waits its turn on a held screen (`held-routes.ts`) and on a busy
  * home; it opens once the user is somewhere else (#693).
  */
-export function mayArrive({ homeBusy, pathname }: Where): boolean {
+export function mayArrive({ homeBusy, pathname, presented }: Where): boolean {
+	if (presented) {
+		return false;
+	}
 	if (pathname === "/") {
 		return !homeBusy;
 	}

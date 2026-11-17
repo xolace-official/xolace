@@ -33,7 +33,13 @@ const subscribeAppState = (onChange: () => void) => {
 };
 const isForeground = () => AppState.currentState === "active";
 
-export function useArrivals(): Arrivals {
+/**
+ * `isPresented`: whether a native sheet or modal is up at a pathname. The
+ * navigation hub derives it from the routes' options and hands it in.
+ */
+export function useArrivals(
+	isPresented: (pathname: string) => boolean
+): Arrivals {
 	const pathname = usePathname();
 	// Never from the background: Android can rebuild the screen tree before the user is back.
 	const foreground = useSyncExternalStore(subscribeAppState, isForeground);
@@ -78,7 +84,9 @@ export function useArrivals(): Arrivals {
 	// Rows already handed to an arrival this run. If the stamp never lands
 	// (offline), they come back on the next launch rather than in a loop now.
 	const opened = useRef(new Set<string>());
-	const mayOpen = foreground && mayArrive({ homeBusy, pathname });
+	const mayOpen =
+		foreground &&
+		mayArrive({ homeBusy, pathname, presented: isPresented(pathname) });
 
 	useEffect(() => {
 		// The summary goes first, so wait until it's known whether there is one.
@@ -88,7 +96,6 @@ export function useArrivals(): Arrivals {
 		const next = arrivalPlan({
 			opened: opened.current,
 			summary,
-			today: new Date(),
 			unseen,
 		});
 		if (!next) {

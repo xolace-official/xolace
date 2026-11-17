@@ -24,6 +24,7 @@ import {
 	toClose,
 	toNextBadge,
 } from "@/features/achievements/arrival/arrival-start";
+import { useLater } from "@/features/achievements/later";
 import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
 
 const FOCUS_MS = 60;
@@ -31,13 +32,12 @@ const FOCUS_MS = 60;
 const SHOWN_AFTER_MS = 360;
 
 /** VoiceOver focus on a heading as it comes out. */
-const focus = (node: ViewInstance | TextInstance | null | undefined) =>
-	setTimeout(() => {
-		const tag = node ? findNodeHandle(node) : null;
-		if (tag) {
-			AccessibilityInfo.setAccessibilityFocus(tag);
-		}
-	}, FOCUS_MS);
+const focusNow = (node: ViewInstance | TextInstance | null | undefined) => {
+	const tag = node ? findNodeHandle(node) : null;
+	if (tag) {
+		AccessibilityInfo.setAccessibilityFocus(tag);
+	}
+};
 
 /**
  * The arrival's flow: the engine and its clock, the phase (milestone, then
@@ -49,12 +49,15 @@ export function useArrivalFlow({
 	hasMilestone,
 	reduced,
 	still,
+	silent,
 	onDone,
 }: {
 	total: number;
 	hasMilestone: boolean;
 	reduced: boolean;
 	still?: Still;
+	/** Events not felt: a card that isn't drawn (the week, the freeze) plays no haptic. */
+	silent: readonly number[];
 	onDone: () => void;
 }) {
 	const [first] = useState(() => startEng(hasMilestone, reduced, still));
@@ -65,13 +68,16 @@ export function useArrivalFlow({
 	const titles = useRef<(TextInstance | null)[]>([]);
 	const msRef = useRef<ViewInstance>(null);
 	const [shown, setShown] = useState(0);
+	const later = useLater();
+	const focus = (node: ViewInstance | TextInstance | null | undefined) =>
+		later(() => focusNow(node), FOCUS_MS);
 
 	const onEvent = (ev: number) => {
 		if (ev === EV.close) {
 			onDone();
 		} else if (ev === EV.idle) {
 			clock.setActive(false);
-		} else {
+		} else if (!silent.includes(ev)) {
 			playArrivalHaptic(ev);
 		}
 	};
@@ -97,7 +103,7 @@ export function useArrivalFlow({
 
 	/** A staged arrival opens: a fresh engine and the clock. A held frame stays as it is. */
 	const start = () => {
-		setTimeout(() => setShown((n) => n + 1), SHOWN_AFTER_MS);
+		later(() => setShown((n) => n + 1), SHOWN_AFTER_MS);
 		if (still) {
 			return;
 		}

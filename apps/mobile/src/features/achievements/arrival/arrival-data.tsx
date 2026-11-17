@@ -35,8 +35,18 @@ export function ArrivalsProvider({
 }
 
 /** The app's adapter. */
-export function ArrivalData({ children }: { children: ReactNode }) {
-	return <ArrivalsProvider value={useArrivals()}>{children}</ArrivalsProvider>;
+export function ArrivalData({
+	isPresented,
+	children,
+}: {
+	isPresented: (pathname: string) => boolean;
+	children: ReactNode;
+}) {
+	return (
+		<ArrivalsProvider value={useArrivals(isPresented)}>
+			{children}
+		</ArrivalsProvider>
+	);
 }
 
 export function useArrivalsState(): Arrivals {

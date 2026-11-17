@@ -118,19 +118,24 @@ export function Milestone({
 						</AppText>
 					</Animated.View>
 				</Animated.View>
-				<Week
-					dark={dark}
-					days={milestone.days}
-					eng={eng}
-					geo={geo}
-					to={milestone.day}
-				/>
-				<MilestoneFreeze
-					dark={dark}
-					eng={eng}
-					freeze={milestone.freeze}
-					geo={geo}
-				/>
+				{/* Only what the server has said: no card stands in for a guess. */}
+				{milestone.week ? (
+					<Week
+						dark={dark}
+						days={milestone.week}
+						eng={eng}
+						geo={geo}
+						to={milestone.day}
+					/>
+				) : null}
+				{milestone.freeze ? (
+					<MilestoneFreeze
+						dark={dark}
+						eng={eng}
+						freeze={milestone.freeze}
+						geo={geo}
+					/>
+				) : null}
 			</Animated.View>
 			<OnceShown>
 				<Embers dark={dark} eng={eng} geo={geo} />

@@ -90,8 +90,8 @@ export const COPY = {
 			title: "You earned a freeze",
 		},
 		inARow: (days: number) => `${days} in a row`,
-		label: (day: number, line: string, freeze: string) =>
-			`${day} days in a row. ${line} ${freeze}.`,
+		label: (day: number, line: string, freeze: string | null) =>
+			`${day} days in a row. ${line}${freeze ? ` ${freeze}.` : ""}`,
 		lastSeven: "The last 7 days",
 	},
 	pins: {

@@ -21,7 +21,6 @@ const plan = (over: Partial<Parameters<typeof arrivalPlan>[0]>) =>
 	arrivalPlan({
 		opened: NONE,
 		summary: null,
-		today: ARRIVAL_DAY,
 		unseen: [],
 		...over,
 	});
@@ -82,9 +81,18 @@ describe("arrivalPlan", () => {
 		expect(p?.kind === "badges" && p.badges[0]?.id).toBe("streak-7");
 		expect(p?.kind === "badges" && p.milestone).toMatchObject({
 			day: 7,
-			freeze: "earned",
 			from: 6,
 			line: "A week. You made a week.",
+		});
+	});
+
+	it("claims no freeze and lights no week until the server says (#811 review)", () => {
+		const p = plan({ unseen: DAY_7 });
+		// A milestone adds a streak saver, not a freeze, and only below its cap;
+		// the rung may arrive late and a frozen day isn't one showed up.
+		expect(p?.kind === "badges" && p.milestone).toMatchObject({
+			freeze: null,
+			week: null,
 		});
 	});
 
@@ -108,28 +116,54 @@ describe("arrivalPlan", () => {
 });
 
 describe("milestoneLabel", () => {
-	it("is one sentence for VoiceOver", () => {
+	const milestone = () => {
 		const p = plan({ unseen: DAY_7 });
 		if (p?.kind !== "badges" || !p.milestone) {
 			throw new Error("expected a milestone");
 		}
-		expect(milestoneLabel(p.milestone)).toBe(
-			"7 days in a row. A week. You made a week. You earned a freeze."
+		return p.milestone;
+	};
+
+	it("is one sentence for VoiceOver, saying nothing of a freeze it can't vouch for", () => {
+		expect(milestoneLabel(milestone())).toBe(
+			"7 days in a row. A week. You made a week."
+		);
+	});
+
+	it("names the freeze once it's known", () => {
+		expect(milestoneLabel({ ...milestone(), freeze: "capped" })).toBe(
+			"7 days in a row. A week. You made a week. You already hold a freeze."
 		);
 	});
 });
 
 describe("mayArrive (the quiet-moment gate, #693)", () => {
 	it("opens on a calm home screen and over ordinary screens", () => {
-		expect(mayArrive({ homeBusy: false, pathname: "/" })).toBe(true);
-		expect(mayArrive({ homeBusy: false, pathname: "/achievements" })).toBe(
-			true
-		);
-		expect(mayArrive({ homeBusy: true, pathname: "/today" })).toBe(true);
+		expect(
+			mayArrive({ homeBusy: false, pathname: "/", presented: false })
+		).toBe(true);
+		expect(
+			mayArrive({
+				homeBusy: false,
+				pathname: "/achievements",
+				presented: false,
+			})
+		).toBe(true);
+		expect(
+			mayArrive({ homeBusy: true, pathname: "/today", presented: false })
+		).toBe(true);
+	});
+
+	it("waits while a native sheet or modal is up, wherever it is (#811 review)", () => {
+		expect(
+			mayArrive({ homeBusy: false, pathname: "/achievements", presented: true })
+		).toBe(false);
 	});
 
 	it("waits while home is busy", () => {
-		expect(mayArrive({ homeBusy: true, pathname: "/" })).toBe(false);
+		expect(mayArrive({ homeBusy: true, pathname: "/", presented: false })).toBe(
+			false
+		);
 	});
 
 	it.each([
@@ -141,6 +175,8 @@ describe("mayArrive (the quiet-moment gate, #693)", () => {
 		"/follow-up",
 		"/browse-player",
 	])("never interrupts %s", (pathname) => {
-		expect(mayArrive({ homeBusy: false, pathname })).toBe(false);
+		expect(mayArrive({ homeBusy: false, pathname, presented: false })).toBe(
+			false
+		);
 	});
 });

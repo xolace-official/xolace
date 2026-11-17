@@ -1,5 +1,6 @@
-import type { ComponentType } from "react";
+import { type ComponentType, createElement } from "react";
 import { ArrivalsHost } from "@/features/achievements/arrival/arrivals-host";
+import { isPresentedRoute } from "@/features/navigation/presented-routes";
 
 /**
  * A host: a component the `(protected)` layout keeps mounted above its stack
@@ -33,7 +34,12 @@ export type RootHost = {
  * (presence, the now-playing audio, the badge unlock) stay in the layout until
  * the screen PR that replaces them moves them here.
  */
+/** The arrival, told which routes are natively presented (it would play unseen behind them). */
+function Arrivals() {
+	return createElement(ArrivalsHost, { isPresented: isPresentedRoute });
+}
+
 export const ROOT_HOSTS: readonly RootHost[] = [
 	// A badge's arrival and the streak milestone, drawn over every screen (S6).
-	{ Host: ArrivalsHost, name: "arrivals" },
+	{ Host: Arrivals, name: "arrivals" },
 ];
