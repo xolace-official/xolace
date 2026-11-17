@@ -21,6 +21,7 @@ import {
 import {
 	fixtureInsights,
 	fixtureIntensity,
+	type WeekFixture,
 } from "@/features/you/home/dev/insights-fixtures";
 import {
 	followUpItems,
@@ -48,6 +49,8 @@ export type YouFixture = {
 	hidden?: readonly ("calendar" | "rank" | "week")[];
 	/** This week paged back one (Xolace+). */
 	earlierWeek?: boolean;
+	/** This week's data: the board's, before a usual, or empty. */
+	week?: WeekFixture;
 	/** No follow-ups at all: the empty state. */
 	noFollowUps?: boolean;
 };
@@ -62,6 +65,7 @@ export function fixtureYou({
 	hidden = [],
 	noFollowUps = kind === "new",
 	earlierWeek = false,
+	week = "board",
 }: YouFixture = {}): YouHome {
 	const summary = { ...fixtureSummary(kind), streakFreezes: freezes };
 	const shelf = fixtureShelf(kind, badges, freezes);
@@ -108,7 +112,7 @@ export function fixtureYou({
 			intensity:
 				hidden.includes("week") || summary.sessionCount < 1
 					? null
-					: fixtureIntensity({ earlier: earlierWeek, plus }),
+					: fixtureIntensity({ earlier: earlierWeek, plus, week }),
 			patterns: patternRows(
 				summary.sessionCount,
 				"lighter",

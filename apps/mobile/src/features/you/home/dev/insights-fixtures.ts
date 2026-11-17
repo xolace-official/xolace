@@ -18,30 +18,44 @@ const NAMES = [
 const LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
 /** The board's week, Monday 9 Nov 2026; today is Thursday. */
 const WEEK = [4.4, 7.6, 5.2, 3.1, null, null, null];
+const EARLIER = [5.1, 4.2, 6.4, 3.9, 4.8, null, 2.6];
+const EMPTY = [null, null, null, null, null, null, null];
 const TODAY = 3;
+const USUAL = { high: 5.6, low: 3.8, median: 4.7 };
+
+/**
+ * `board`: the board's week. `no-usual`: the same week in someone's first weeks, before B8 has
+ * enough days for a usual. `empty`: Monday morning, nothing yet.
+ */
+export type WeekFixture = "board" | "no-usual" | "empty";
 
 export function fixtureIntensity({
 	plus,
 	earlier = false,
+	week = "board",
 }: {
 	plus: boolean;
 	/** A past week: Xolace+ paged back one. */
 	earlier?: boolean;
+	week?: WeekFixture;
 }): IntensityWeek {
+	const values = earlier ? EARLIER : week === "empty" ? EMPTY : WEEK;
+	const today = week === "empty" ? 0 : TODAY;
 	const days: IntensityDay[] = NAMES.map((dayName, i) => ({
 		dayName,
-		intensity: earlier ? [5.1, 4.2, 6.4, 3.9, 4.8, null, 2.6][i] : WEEK[i],
-		isToday: !earlier && i === TODAY,
+		intensity: values[i],
+		isToday: !earlier && i === today,
 		label: LETTERS[i],
 	}));
 	return {
 		days,
-		earliest: false,
+		earliest: week === "no-usual",
 		label: earlier ? "2 – 8 Nov" : "This week",
 		offset: earlier ? -1 : 0,
 		pager: plus,
-		start: earlier ? new Date(2026, 10, 2) : new Date(2026, 10, 9),
-		usual: { high: 5.6, low: 3.8, median: 4.7 },
+		// UTC Mondays, as `weekStart` gives them.
+		start: new Date(Date.UTC(2026, 10, earlier ? 2 : 9)),
+		usual: week === "no-usual" ? null : USUAL,
 	};
 }
 

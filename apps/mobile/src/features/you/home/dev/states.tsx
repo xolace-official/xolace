@@ -93,6 +93,22 @@ export const devStates: readonly DevState[] = [
 		title: "This week paged back a week (Xolace+)",
 	},
 	{
+		id: "this-week-no-usual",
+		options: OPTIONS,
+		Screen: () => (
+			<FixtureYou fixture={{ week: "no-usual" }} start={{ toWeek: true }} />
+		),
+		title: "This week in the first weeks: no usual yet",
+	},
+	{
+		id: "this-week-empty",
+		options: OPTIONS,
+		Screen: () => (
+			<FixtureYou fixture={{ week: "empty" }} start={{ toWeek: true }} />
+		),
+		title: "This week on Monday morning: nothing yet",
+	},
+	{
 		id: "this-week-free",
 		options: OPTIONS,
 		Screen: () => (
