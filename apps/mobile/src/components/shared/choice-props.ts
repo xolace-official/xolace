@@ -13,6 +13,8 @@ export type ChoiceProps<T extends string> = {
 export type SegmentedProps<T extends string> = ChoiceProps<T> & {
 	style?: StyleProp<ViewStyle>;
 	className?: string;
+	/** Plays on a change; the selection tick by default. */
+	haptic?: () => void;
 };
 
 /** The label of the chosen option, or the value itself if no option has it. */

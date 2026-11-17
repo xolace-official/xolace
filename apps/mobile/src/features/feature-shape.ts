@@ -38,7 +38,6 @@ const REPLACED_FEATURES = [
 	"sit-with-this",
 	"starter-suggestions",
 	"streak",
-	"talk",
 	"timeline",
 	"trusted-bridge",
 	"vent",

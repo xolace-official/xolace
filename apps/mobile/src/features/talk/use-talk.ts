@@ -14,8 +14,8 @@ import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { useSharedValue, withTiming } from "react-native-reanimated";
 import { endWithRetry } from "@/features/talk/end-with-retry";
-import { TALK_TIME_RESETS } from "@/features/talk/talk-copy";
 import { type ThreadLine, useThread } from "@/features/talk/use-thread";
+import { TALK_TIME_RESETS } from "@/lib/talk/talk-time";
 
 export type Presence =
 	| "Connecting…"
@@ -27,12 +27,21 @@ export type Presence =
 
 // Voice volumes sit low (speech is ~0.05–0.3); the root lifts them into view.
 const lift = (v: number) => Math.min(1, Math.sqrt(Math.max(0, v)));
-const messageOf = (e: unknown) =>
-	e instanceof ConvexError && e.data?.code === "talk_time_used"
-		? `There isn't enough talk time left this week. ${TALK_TIME_RESETS}.`
-		: e instanceof Error
-			? e.message
-			: String(e);
+/** What people read for the server's refusals; anything else as it came. */
+const CODE_MESSAGES: Record<string, string> = {
+	// A reopened talk whose session is still closing (its end call was lost offline,
+	// until the server's sweep closes it) or whose mirror is already kept.
+	not_reopenable:
+		"This talk can't be picked up again right now. Its mirror is in your timeline.",
+	talk_time_used: `There isn't enough talk time left this week. ${TALK_TIME_RESETS}.`,
+};
+const messageOf = (e: unknown) => {
+	const code = e instanceof ConvexError ? e.data?.code : undefined;
+	if (typeof code === "string" && Object.hasOwn(CODE_MESSAGES, code)) {
+		return CODE_MESSAGES[code];
+	}
+	return e instanceof Error ? e.message : String(e);
+};
 
 export function useTalk(reopen?: {
 	sessionId: Id<"sessions">;
@@ -253,12 +262,16 @@ export function useTalk(reopen?: {
 			// A new talk starts unended, its mirror shown when it ends.
 			mirrorLater.current = false;
 			setEnding(false);
-			// Asked once, from the consent card; the OS remembers the answer.
+			// Asked once, from Start; the OS remembers the answer.
 			const { granted } = await AudioModule.requestRecordingPermissionsAsync();
 			if (!granted) {
 				return setError(
 					"A talk needs the microphone. You can allow it in Settings."
 				);
+			}
+			// Left during the mic ask: don't reserve a talk for a screen that's gone.
+			if (!mounted.current) {
+				return;
 			}
 			setStarted(true);
 			try {
@@ -272,6 +285,12 @@ export function useTalk(reopen?: {
 					speed,
 					firstMessage,
 				} = await startTalk(reopen ? { reopen: reopen.sessionId } : {});
+				// Left while connecting: close the session (its reserved time goes back) and
+				// never open the mic with no screen to end it from.
+				if (!mounted.current) {
+					endTalk({ sessionId }).catch(console.warn);
+					return;
+				}
 				sessionRef.current = sessionId;
 				setSessionId(sessionId);
 				setEndsAt(Date.now() + msLeft);
@@ -296,5 +315,3 @@ export function useTalk(reopen?: {
 		wasLive,
 	};
 }
-
-export type Talk = ReturnType<typeof useTalk>;

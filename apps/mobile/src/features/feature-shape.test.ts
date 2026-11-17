@@ -282,7 +282,7 @@ describe("crossFeatureImportsFromPorted", () => {
 
 describe("staleListings", () => {
 	it("names listed folders that no longer exist", () => {
-		expect(staleListings(["navigation", "streak"])).toContain("talk");
+		expect(staleListings(["navigation", "streak"])).toContain("timeline");
 		expect(staleListings(["navigation", "streak"])).not.toContain("streak");
 	});
 });

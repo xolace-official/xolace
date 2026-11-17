@@ -7,9 +7,9 @@ import { View } from "react-native";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { OFFER_MASCOT, OfferCard } from "@/features/intake/paywall/offer-card";
-import { useVoicePreview } from "@/features/talk/use-voice-preview";
-import { VOICE_OPTIONS } from "@/features/talk/voice-options";
 import { playSoftPress } from "@/lib/haptics";
+import { useVoicePreview } from "@/lib/talk/use-voice-preview";
+import { VOICE_OPTIONS } from "@/lib/talk/voice-options";
 
 const PLAY = {
 	android: "play_arrow",

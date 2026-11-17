@@ -19,17 +19,13 @@
         "src/components/settings-kit/tile-row.tsx",
         "src/components/shared/aura.tsx",
         "src/components/shared/avatar.tsx",
-        "src/components/shared/back-button.tsx",
         "src/components/shared/care-row.tsx",
         "src/components/shared/country-menu.tsx",
         "src/components/shared/detached-sheet.tsx",
         "src/components/shared/flux.tsx",
         "src/components/shared/media-row.tsx",
         "src/components/shared/rolling-number.tsx",
-        "src/components/shared/segmented.tsx",
-        "src/components/shared/styled.ts",
         "src/lib/keyboard/keyboard-spacer.tsx",
-        "src/lib/keyboard/use-keyboard-lift.ts",
         "src/lib/keyboard/use-keyboard-shown.ts"
       ],
       // Read by @expo/fingerprint, and by path from metro.config.js: their

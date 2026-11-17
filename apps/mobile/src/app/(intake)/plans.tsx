@@ -2,7 +2,7 @@
  * has no back edge. */
 import { useIntakeComplete } from "@/features/intake/use-intake-complete";
 import { PaywallScreen } from "@/features/purchases/screens/paywall-screen";
-import { useCompanionName } from "@/features/talk/use-companion-name";
+import { useCompanionName } from "@/lib/talk/use-companion-name";
 
 export default function IntakePlans() {
 	const completeIntake = useIntakeComplete();

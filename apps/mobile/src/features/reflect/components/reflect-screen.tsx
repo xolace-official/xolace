@@ -22,6 +22,10 @@ import { GaveUpState } from "@/features/reflect/components/states/gave-up-state"
 import { MirrorState } from "@/features/reflect/components/states/mirror-state";
 import { PathSelectionState } from "@/features/reflect/components/states/path-selection-state";
 import { ProcessingState } from "@/features/reflect/components/states/processing-state";
+import {
+	TalkDoorDialog,
+	useTalkDoor,
+} from "@/features/reflect/components/talk/talk-door";
 import { ComposeScreen } from "@/features/reflect/compose/compose-screen";
 import { DictationUpsellDialog } from "@/features/reflect/compose/dictation-upsell-dialog";
 import { MAX_TURNS } from "@/features/reflect/hooks/reflection-reducer";
@@ -34,7 +38,6 @@ import {
 	SCREEN_TRANSITIONS,
 } from "@/features/reflect/reflect-transitions";
 import type { ReflectionStateName } from "@/features/reflect/types";
-import { TalkDoorDialog, useTalkDoor } from "@/features/talk/talk-door";
 import { computeQuietReturn } from "@/helpers/utils/user-variant";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { useAppStore } from "@/store/store";
