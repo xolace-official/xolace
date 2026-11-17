@@ -1,4 +1,3 @@
-import { Linking } from "react-native";
 import { EnrichedMarkdownText } from "react-native-enriched-markdown";
 import { AppText } from "@/components/shared/app-text";
 import { COPY } from "@/features/lantern/copy";
@@ -17,7 +16,8 @@ const A11Y_LABELS = { blockquote: { quote: "Quote" } };
 
 /** The body: the renderer handles headings, links, alt text, lists and quotes for screen readers. */
 export function ReaderBody() {
-	const { entry, prefs } = useReaderScreen().state;
+	const { state, actions } = useReaderScreen();
+	const { entry, prefs } = state;
 	const style = useMarkdownStyle(prefs.mode, prefs.size, useReadingFonts());
 	return (
 		<EnrichedMarkdownText
@@ -25,7 +25,7 @@ export function ReaderBody() {
 			flavor="github"
 			markdown={prepareBody(entry.markdown)}
 			markdownStyle={style}
-			onLinkPress={({ url }) => Linking.openURL(url)}
+			onLinkPress={({ url }) => actions.openLink(url)}
 		/>
 	);
 }

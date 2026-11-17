@@ -1,5 +1,5 @@
 /** The old Lantern row's copy and share (see `library-row.tsx`); they go with Browse in S7. */
-import type { api } from "@xolace/backend/convex/_generated/api";
+import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
 import * as Linking from "expo-linking";
 import type { usePostHog } from "posthog-react-native";

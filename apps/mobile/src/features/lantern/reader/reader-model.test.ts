@@ -14,6 +14,7 @@ import {
 	minutesLeft,
 	mmss,
 	pickUpAt,
+	placeKeeper,
 	prepareBody,
 	READ_OPENS_AT,
 	resumeOnOpen,
@@ -52,6 +53,36 @@ describe("the place kept on leaving", () => {
 		expect(leaveShare(400, 1000)).toBe(0.4);
 		expect(leaveShare(990, 1000)).toBe(0);
 		expect(leaveShare(1200, 1000)).toBe(0);
+	});
+});
+
+describe("keeping the place across a reflow", () => {
+	it("scrolls to the same share once the new height is in", () => {
+		const keep = placeKeeper();
+		keep.arm(500, 2000); // a quarter in
+		expect(keep.sized(3000)).toBe(750);
+	});
+
+	it("scrolls once: a later height change doesn't move the reader", () => {
+		const keep = placeKeeper();
+		keep.arm(500, 2000);
+		keep.sized(3000);
+		expect(keep.sized(3200)).toBeNull();
+	});
+
+	it("drops a share whose reflow kept the height, so the dock's padding doesn't jump it", () => {
+		const keep = placeKeeper();
+		keep.arm(500, 2000);
+		keep.settle();
+		expect(keep.sized(2079)).toBeNull();
+	});
+
+	it("holds the share between the top and the end, and arms nothing before a layout", () => {
+		const keep = placeKeeper();
+		keep.arm(2400, 2000); // overscrolled past the end
+		expect(keep.sized(1000)).toBe(1000);
+		keep.arm(300, 0);
+		expect(keep.sized(1000)).toBeNull();
 	});
 });
 

@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode, use, useMemo } from "react";
 import type {
 	NextEntry,
 	ReaderEntry,
@@ -8,9 +8,11 @@ import {
 	ReaderGone,
 	ReaderSkeleton,
 } from "@/features/lantern/reader/reader-skeleton";
-import type {
-	ReaderAudio,
-	ReaderAudioActions,
+import {
+	type ReaderAudio,
+	type ReaderAudioActions,
+	type ReaderClock,
+	useEntryAudio,
 } from "@/features/lantern/reader/use-entry-audio";
 import {
 	useReader,
@@ -48,6 +50,8 @@ export type Reader = {
 		openHelpline: () => void;
 		openSources: () => void;
 		openAppearance: () => void;
+		/** A link in the body or the credit; says so when it can't open. */
+		openLink: (url: string) => void;
 		/** The reader reached the end of the article (Finished waits on its dwell). */
 		reachEnd: () => void;
 		/** Leaving: the read share to keep, or null to keep the old place. */
@@ -59,6 +63,15 @@ export type Reader = {
 };
 
 const ReaderContext = createContext<Reader | null>(null);
+/** Apart from the reader's own: it ticks while the narration plays. */
+const ClockContext = createContext<ReaderClock>({
+	currentTime: 0,
+	duration: 0,
+});
+type EntryAudio = { state: ReaderAudio; actions: ReaderAudioActions };
+const EntryAudioContext = createContext<EntryAudio | null>(null);
+
+export const ReaderClockProvider = ClockContext;
 
 export function ReaderProvider({
 	value,
@@ -91,9 +104,46 @@ export function ReaderData({
 		return <ReaderGone />;
 	}
 	return (
-		<Loaded entry={entry} showHelpline={showHelpline}>
-			{children}
-		</Loaded>
+		<AudioHost entry={entry}>
+			<Loaded entry={entry} showHelpline={showHelpline}>
+				{children}
+			</Loaded>
+		</AudioHost>
+	);
+}
+
+/**
+ * The narration, above the reader: a status tick re-renders this and the clock's readers (the
+ * dock's time), while `children`, made by the parent, stay as they are unless the rarely changing
+ * part (started, playing…) does.
+ */
+function AudioHost({
+	entry,
+	children,
+}: {
+	entry: ReaderEntry;
+	children: ReactNode;
+}) {
+	const audio = useEntryAudio(entry._id, entry.slug, !!entry.listenMin);
+	const { actions } = audio;
+	const { failed, playing, preview, previewEnded, started, transcript } =
+		audio.state;
+	const { currentTime, duration } = audio.clock;
+	const value = useMemo(
+		() => ({
+			actions,
+			state: { failed, playing, preview, previewEnded, started, transcript },
+		}),
+		[actions, failed, playing, preview, previewEnded, started, transcript]
+	);
+	const clock = useMemo(
+		() => ({ currentTime, duration }),
+		[currentTime, duration]
+	);
+	return (
+		<ClockContext value={clock}>
+			<EntryAudioContext value={value}>{children}</EntryAudioContext>
+		</ClockContext>
 	);
 }
 
@@ -106,12 +156,19 @@ function Loaded({
 	showHelpline: boolean;
 	children: ReactNode;
 }) {
+	const audio = use(EntryAudioContext);
+	if (!audio) {
+		throw new Error("The reader's audio host is missing");
+	}
 	return (
-		<ReaderProvider value={useReader(entry, { showHelpline })}>
+		<ReaderProvider value={useReader(entry, { audio, showHelpline })}>
 			{children}
 		</ReaderProvider>
 	);
 }
+
+/** The narration's time, for the dock alone. */
+export const useReaderClock = () => use(ClockContext);
 
 export function useReaderScreen(): Reader {
 	const value = use(ReaderContext);

@@ -21,6 +21,7 @@ export type Sources = {
 		/** undefined while it loads. */
 		sources: ReaderEntry["sources"] | undefined;
 	};
+	actions: { openLink: (url: string) => void };
 };
 
 /** The narration as text (Xolace+, never in the preview), on the reading page. */

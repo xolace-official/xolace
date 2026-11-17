@@ -30,13 +30,7 @@ import {
 } from "@/features/lantern/reader/reader-model";
 import { ReaderPageScope } from "@/features/lantern/reader/reader-page";
 import { BackToTop, PickUpPill } from "@/features/lantern/reader/reader-pills";
-import {
-	useKeepPlace,
-	useLeaveAt,
-	useOpenAt,
-	useReachEnd,
-	useStartAt,
-} from "@/features/lantern/reader/reader-scroll";
+import { useScrollMoments } from "@/features/lantern/reader/reader-scroll";
 import { READING_MODES } from "@/features/lantern/reader/reading-modes";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColor } from "@/lib/use-token-color";
@@ -100,11 +94,14 @@ function ReaderView({ startAt }: { startAt?: number }) {
 		toY((position ?? 0) * maxScroll);
 	};
 
-	useOpenAt(resumeOnOpen(state.opensAt, position), maxScroll, scroll);
-	useStartAt(startAt, maxScroll, scroll);
-	useKeepPlace(state.prefs.mode, state.prefs.size, y, maxScroll, scroll);
-	useLeaveAt(y, maxScroll, actions.leaveAt);
-	useReachEnd(y, endAt, actions.reachEnd);
+	useScrollMoments({
+		endAt,
+		maxScroll,
+		opensAt: resumeOnOpen(state.opensAt, position),
+		scroll,
+		startAt,
+		y,
+	});
 
 	const title = (
 		<ReaderTitle
@@ -151,8 +148,10 @@ function ReaderView({ startAt }: { startAt?: number }) {
 				>
 					{f.ax ? null : title}
 				</Animated.View>
+				{/* Under the Aa sheet the page still scrolls, but nothing on it takes a tap. */}
 				<View
 					className="rounded-t-[28px] px-6 pt-6"
+					pointerEvents={focused ? "auto" : "none"}
 					style={{
 						backgroundColor: page,
 						borderCurve: "continuous",
@@ -174,7 +173,6 @@ function ReaderView({ startAt }: { startAt?: number }) {
 				titleStyle={styles.barTitle}
 				y={y}
 			/>
-			<FireDim />
 			<PickUpPill
 				at={maxScroll > 0 ? pickUpAt(state.opensAt, position) : null}
 				bottom={pillBottom}
@@ -192,7 +190,9 @@ function ReaderView({ startAt }: { startAt?: number }) {
 				onPress={toTop}
 				y={y}
 			/>
-			<AudioDock bottom={insets.bottom} />
+			<AudioDock bottom={insets.bottom} inert={!focused} />
+			{/* By the fire's dim goes over everything, the pills and the dock too (§5.2). */}
+			<FireDim />
 		</View>
 	);
 }

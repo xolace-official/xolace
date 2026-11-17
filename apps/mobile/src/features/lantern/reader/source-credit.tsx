@@ -1,4 +1,4 @@
-import { Linking, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
@@ -24,7 +24,8 @@ const ICON = {
  * the publisher's, which opens the original. The Listen pill sits on its right when there's audio.
  */
 export function SourceCredit() {
-	const { entry } = useReaderScreen().state;
+	const { state, actions } = useReaderScreen();
+	const { entry } = state;
 	const { name, line, href, logoUrl, xolace } = headerCredit(entry);
 	return (
 		<View className="mb-6 flex-row items-center gap-3">
@@ -34,7 +35,7 @@ export function SourceCredit() {
 				accessibilityRole={href ? "link" : undefined}
 				className="flex-1 flex-row items-center gap-3 active:opacity-70"
 				disabled={!href}
-				onPress={() => (href ? Linking.openURL(href) : undefined)}
+				onPress={() => (href ? actions.openLink(href) : undefined)}
 			>
 				<View
 					className={cn(

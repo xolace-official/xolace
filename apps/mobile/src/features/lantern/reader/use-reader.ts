@@ -8,6 +8,7 @@ import type { Id } from "@xolace/backend/dataModel";
 import { useQuery } from "convex/react";
 import { router, useLocalSearchParams } from "expo-router";
 import { usePostHog } from "posthog-react-native";
+import { Linking } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { toast } from "@/components/shared/toast";
 import { COPY } from "@/features/lantern/copy";
@@ -17,7 +18,11 @@ import {
 	REFLECT_PROMPT,
 	type ReaderEntry,
 } from "@/features/lantern/reader/reader-model";
-import { useEntryAudio } from "@/features/lantern/reader/use-entry-audio";
+import type {
+	ReaderAudio,
+	ReaderAudioActions,
+} from "@/features/lantern/reader/use-entry-audio";
+import { usePushOnce } from "@/features/lantern/reader/use-push-once";
 import {
 	useReadSignals,
 	useRecord,
@@ -36,9 +41,21 @@ type Params = { from?: ReaderFrom; hub?: string; stepId?: Id<"path_steps"> };
 export const useReaderEntry = (slug: string) =>
 	useQuery(api.library.entries.getEntry, { slug });
 
+/** Opens a link outside the app; a toast when nothing can open it. */
+export const openLink = (url: string) => {
+	Linking.openURL(url).catch(() => toast(COPY.reader.linkFailed));
+};
+
 export function useReader(
 	entry: ReaderEntry,
-	{ showHelpline }: { showHelpline: boolean }
+	{
+		audio,
+		showHelpline,
+	}: {
+		/** The narration, from the host above (its time stays out of the reader). */
+		audio: { state: ReaderAudio; actions: ReaderAudioActions };
+		showHelpline: boolean;
+	}
 ): Reader {
 	const { from, hub, stepId } = useLocalSearchParams<Params>();
 	const posthog = usePostHog();
@@ -50,24 +67,28 @@ export function useReader(
 		stepId,
 	});
 	const next = useQuery(api.library.next.getNext, { entryId: entry._id, hub });
-	const audio = useEntryAudio(entry._id, entry.slug, !!entry.listenMin);
 	const prefs = useReadingPrefs();
 	const record = useRecord();
 	const { share } = useEntryActions();
 	const setPrompt = useAppStore((s) => s.setPendingEventPrompt);
+	const once = usePushOnce();
 	const state = signals.state;
 
 	return {
 		actions: {
 			audio: audio.actions,
 			leaveAt: signals.leaveAt,
-			openAppearance: () => router.push("/reader-appearance"),
-			openHelpline: () => router.push("/crisis-resources?from=library"),
+			openAppearance: () => once(() => router.push("/reader-appearance")),
+			openHelpline: () =>
+				once(() => router.push("/crisis-resources?from=library")),
+			openLink,
 			openSources: () =>
-				router.push({
-					params: { slug: entry.slug },
-					pathname: "/reader-sources",
-				}),
+				once(() =>
+					router.push({
+						params: { slug: entry.slug },
+						pathname: "/reader-sources",
+					})
+				),
 			reachEnd: signals.reachEnd,
 			reflect: () => {
 				const prompt = entry.reflectPrompt ?? REFLECT_PROMPT;

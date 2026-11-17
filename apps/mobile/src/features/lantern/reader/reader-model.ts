@@ -54,6 +54,35 @@ export function leaveShare(y: number, maxScroll: number) {
 	return at >= RESUME_CEILING ? 0 : at;
 }
 
+/**
+ * Keeping your place across a reflow (a mode, a size, the reading fonts arriving): take the read
+ * share before the new layout, scroll to the same share once the new height is in. Armed once:
+ * a reflow that leaves the height as it was gets no new size, so `settle` drops the share and a
+ * later, unrelated size change (the dock's padding) doesn't jump the reader.
+ */
+export function placeKeeper() {
+	let share: number | null = null;
+	return {
+		/** The text is about to reflow. */
+		arm(y: number, maxScroll: number) {
+			share = maxScroll > 0 ? Math.min(1, Math.max(0, y / maxScroll)) : null;
+		},
+		/** The reflow's window passed without a new height. */
+		settle() {
+			share = null;
+		},
+		/** A new height: where to scroll, once; null when nothing is armed. */
+		sized(maxScroll: number) {
+			if (share === null) {
+				return null;
+			}
+			const to = share * maxScroll;
+			share = null;
+			return to;
+		},
+	};
+}
+
 /** "4 min left": never below a minute. Runs on the UI thread too. */
 export function minutesLeft(readMin: number, y: number, maxScroll: number) {
 	"worklet";

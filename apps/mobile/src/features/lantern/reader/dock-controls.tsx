@@ -18,7 +18,10 @@ import { fadeUp } from "@/design/entering";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { COPY } from "@/features/lantern/copy";
 import { LT } from "@/features/lantern/lantern-style";
-import { useReaderScreen } from "@/features/lantern/reader/reader-data";
+import {
+	useReaderClock,
+	useReaderScreen,
+} from "@/features/lantern/reader/reader-data";
 import { mmss } from "@/features/lantern/reader/reader-model";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColors } from "@/lib/use-token-color";
@@ -89,8 +92,9 @@ export function Transport() {
 	const { state, actions } = useReaderScreen();
 	const [page] = useTokenColors(["background"]);
 	const a = state.audio;
+	const { currentTime, duration } = useReaderClock();
 	const title = state.entry.title;
-	const left = Math.max(a.duration - a.currentTime, 0);
+	const left = Math.max(duration - currentTime, 0);
 	return (
 		<>
 			<IconButton
@@ -113,7 +117,7 @@ export function Transport() {
 				// Skip 15 s by swiping up or down on play, not a scrubber (#400).
 				accessibilityRole="adjustable"
 				accessibilityValue={{
-					text: COPY.reader.dock.value(mmss(a.currentTime), mmss(left)),
+					text: COPY.reader.dock.value(mmss(currentTime), mmss(left)),
 				}}
 				className="size-10 items-center justify-center rounded-full bg-foreground active:scale-92"
 				hitSlop={8}

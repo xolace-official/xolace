@@ -2,9 +2,9 @@ import { Stack } from "expo-router";
 import type { ReactNode } from "react";
 import {
 	ActivityIndicator,
-	Linking,
 	Pressable,
 	ScrollView,
+	useWindowDimensions,
 	View,
 } from "react-native";
 import { AppText } from "@/components/shared/app-text";
@@ -23,6 +23,9 @@ import {
 import { useTokenColor } from "@/lib/use-token-color";
 
 const LINK = { android: "open_in_new", ios: "arrow.up.right" } as const;
+/** The sources sheet fits its content up to production's cap, then scrolls (large text, many
+ * sources). */
+const SOURCES_MAX = 0.7;
 
 /** A sheet on the reading page, as production's are: its background follows the mode. */
 function OnPage({
@@ -61,10 +64,15 @@ function PageFill({ fill, children }: { fill: boolean; children: ReactNode }) {
 
 /** View sources (production's `entry-credits.tsx`): what this was adapted from, then the licence. */
 export function SourcesSheet() {
-	const { page, sources } = useSources().state;
+	const { state, actions } = useSources();
+	const { page, sources } = state;
+	const { height } = useWindowDimensions();
 	return (
 		<OnPage page={page}>
-			<View className="pt-7 pb-11">
+			<ScrollView
+				contentContainerClassName="pt-7 pb-11"
+				style={{ maxHeight: height * SOURCES_MAX }}
+			>
 				<View className="px-6 pt-0.5 pb-3.5">
 					<AppText
 						accessibilityRole="header"
@@ -84,7 +92,11 @@ export function SourcesSheet() {
 				</View>
 				{sources === undefined ? <ActivityIndicator className="py-6" /> : null}
 				{sources?.map((s, i) => (
-					<SourceRow key={`${s.name}-${i}`} source={s} />
+					<SourceRow
+						key={`${s.name}-${i}`}
+						onOpen={actions.openLink}
+						source={s}
+					/>
 				))}
 				{sources ? (
 					<AppText
@@ -95,13 +107,19 @@ export function SourcesSheet() {
 						{attributionLines(sources).join("\n")}
 					</AppText>
 				) : null}
-			</View>
+			</ScrollView>
 		</OnPage>
 	);
 }
 
 /** "NHS – Insomnia · Author": the page title opens the page when there is one. */
-function SourceRow({ source: s }: { source: ReaderEntry["sources"][number] }) {
+function SourceRow({
+	source: s,
+	onOpen,
+}: {
+	source: ReaderEntry["sources"][number];
+	onOpen: (url: string) => void;
+}) {
 	const muted = useTokenColor("muted");
 	const href = s.pageUrl;
 	return (
@@ -117,9 +135,7 @@ function SourceRow({ source: s }: { source: ReaderEntry["sources"][number] }) {
 			accessibilityRole={href ? "link" : "text"}
 			className="flex-row items-center gap-3 px-6 py-3 active:opacity-70"
 			disabled={!href}
-			onPress={() =>
-				href ? Linking.openURL(href).catch(() => undefined) : undefined
-			}
+			onPress={() => (href ? onOpen(href) : undefined)}
 		>
 			<AppText
 				className="flex-1 text-[14px] leading-[19.6px]"

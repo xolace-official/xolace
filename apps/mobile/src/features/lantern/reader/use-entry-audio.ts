@@ -8,7 +8,8 @@ import type { Id } from "@xolace/backend/dataModel";
 import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { usePushOnce } from "@/features/lantern/reader/use-push-once";
 import { logDropped } from "@/features/lantern/reader/use-read-signals";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlayback } from "@/lib/audio/use-playback";
@@ -17,14 +18,11 @@ import { trackLibrary } from "@/lib/library-analytics";
 
 const SKIP_S = 15;
 
-/** What the dock and the Listen pill show. */
+/** What the dock and the Listen pill show; it changes rarely (not with the time). */
 export type ReaderAudio = {
 	/** The dock is up. */
 	started: boolean;
 	playing: boolean;
-	/** Seconds. */
-	currentTime: number;
-	duration: number;
 	/** A free reader's 30 s preview. */
 	preview: boolean;
 	/** The preview ran out: Keep listening takes the transport's place. */
@@ -34,6 +32,9 @@ export type ReaderAudio = {
 	/** Xolace+ and the full asset: the transcript is there. */
 	transcript: boolean;
 };
+
+/** Where the narration is, in seconds. It ticks while playing: only the dock's time reads it. */
+export type ReaderClock = { currentTime: number; duration: number };
 
 export type ReaderAudioActions = {
 	toggle: () => void;
@@ -47,7 +48,7 @@ export function useEntryAudio(
 	entryId: Id<"library_entries">,
 	slug: string,
 	hasAudio: boolean
-): { state: ReaderAudio; actions: ReaderAudioActions } {
+): { state: ReaderAudio; clock: ReaderClock; actions: ReaderAudioActions } {
 	const convex = useConvex();
 	const posthog = usePostHog();
 	const openPaywall = usePaywall((s) => s.open);
@@ -66,7 +67,7 @@ export function useEntryAudio(
 		(t) => ({ artist: "Lantern", artworkUrl: t.coverUrl, title: t.title })
 	);
 	const [started, setStarted] = useState(false);
-	const [played, setPlayed] = useState(false); // once per open, not per resume
+	const played = useRef(false); // once per open, not per resume
 
 	// Latched per URL so a re-mint clears it; didJustFinish is one status tick wide.
 	const [endedUrl, setEndedUrl] = useState<string>();
@@ -111,44 +112,57 @@ export function useEntryAudio(
 	}, [listened, isAuthenticated, record, entryId]);
 
 	const preview = p.track?.preview ?? false;
-	return {
-		actions: {
-			close: () => {
-				if (p.isPlaying) {
-					p.toggle();
-				}
-				setStarted(false);
-			},
-			keepListening: () => {
-				trackLibrary(posthog, "library_paywall_tapped", {
-					slug,
-					trigger: "audio_preview",
-				});
-				openPaywall("library_audio");
-			},
-			openTranscript: () =>
-				router.push({ params: { entryId }, pathname: "/reader-transcript" }),
-			skip: (by) => p.seekTo(p.currentTime + by * SKIP_S),
-			toggle: () => {
-				// Listen, play and pause: a light impact (handoff §12).
-				tap();
-				setStarted(true);
-				if (previewEnded) {
-					return; // the dock shows the upsell
-				}
-				if (!played) {
-					setPlayed(true);
-					trackLibrary(posthog, "library_audio_played", {
-						preview: p.track?.preview ?? !isPlus,
-						slug,
-					});
-				}
-				p.toggle();
-			},
+	// The actions keep one identity for the reader's life and read the playback as it is when
+	// tapped: the reader's context doesn't change with every status tick.
+	const once = usePushOnce();
+	const live = useRef({ isPlus, p, previewEnded });
+	useLayoutEffect(() => {
+		live.current = { isPlus, p, previewEnded };
+	});
+	const [actions] = useState<ReaderAudioActions>(() => ({
+		close: () => {
+			if (live.current.p.isPlaying) {
+				live.current.p.toggle();
+			}
+			setStarted(false);
 		},
+		keepListening: () => {
+			trackLibrary(posthog, "library_paywall_tapped", {
+				slug,
+				trigger: "audio_preview",
+			});
+			openPaywall("library_audio");
+		},
+		openTranscript: () =>
+			once(() =>
+				router.push({ params: { entryId }, pathname: "/reader-transcript" })
+			),
+		skip: (by) => {
+			const now = live.current.p;
+			now.seekTo(now.currentTime + by * SKIP_S);
+		},
+		toggle: () => {
+			// Listen, play and pause: a light impact (handoff §12).
+			tap();
+			setStarted(true);
+			const now = live.current;
+			if (now.previewEnded) {
+				return; // the dock shows the upsell
+			}
+			if (!played.current) {
+				played.current = true;
+				trackLibrary(posthog, "library_audio_played", {
+					preview: now.p.track?.preview ?? !now.isPlus,
+					slug,
+				});
+			}
+			now.p.toggle();
+		},
+	}));
+	return {
+		actions,
+		clock: { currentTime: p.currentTime, duration: p.duration },
 		state: {
-			currentTime: p.currentTime,
-			duration: p.duration,
 			failed: p.error !== null,
 			playing: p.isPlaying,
 			preview,

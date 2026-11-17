@@ -3,7 +3,7 @@
  * here from `features/library` when Lantern's redesign (S9) replaced that folder; they go with
  * Browse in Explore's screen PR (S7).
  */
-import { api } from "@xolace/backend/convex/_generated/api";
+import { api } from "@xolace/backend/api";
 import { useMutation } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { Link } from "expo-router";

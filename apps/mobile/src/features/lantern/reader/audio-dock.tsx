@@ -19,7 +19,10 @@ import {
 	Progress,
 	Transport,
 } from "@/features/lantern/reader/dock-controls";
-import { useReaderScreen } from "@/features/lantern/reader/reader-data";
+import {
+	useReaderClock,
+	useReaderScreen,
+} from "@/features/lantern/reader/reader-data";
 import { mmss } from "@/features/lantern/reader/reader-model";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
@@ -35,7 +38,14 @@ const BAR_MAX_SCALE = 1.5;
  * reader's preview ends, Keep listening takes the transport's place. Its own toolbar group after
  * the body; appearing never takes focus.
  */
-export function AudioDock({ bottom }: { bottom: number }) {
+export function AudioDock({
+	bottom,
+	inert,
+}: {
+	bottom: number;
+	/** Under the Aa sheet. */
+	inert: boolean;
+}) {
 	const { state, actions } = useReaderScreen();
 	const reduced = useEffectiveReducedMotion();
 	const dark = useScheme() === "dark";
@@ -43,7 +53,6 @@ export function AudioDock({ bottom }: { bottom: number }) {
 	if (!a.started) {
 		return null;
 	}
-	const share = a.duration > 0 ? Math.min(a.currentTime / a.duration, 1) : 0;
 	return (
 		<Animated.View
 			accessibilityLabel={COPY.reader.dock.label}
@@ -59,6 +68,7 @@ export function AudioDock({ bottom }: { bottom: number }) {
 					? FadeOut.duration(REDUCED_FADE_MS)
 					: SlideOutDown.duration(OUT_MS).easing(Easing.in(Easing.cubic))
 			}
+			pointerEvents={inert ? "none" : "auto"}
 			style={{ borderCurve: "continuous", paddingBottom: bottom + 8 }}
 		>
 			<BlurView
@@ -67,7 +77,7 @@ export function AudioDock({ bottom }: { bottom: number }) {
 				tint={dark ? "dark" : "light"}
 			/>
 			<View className="absolute inset-0 bg-surface/80" />
-			<Progress reduced={reduced} share={share} />
+			<DockProgress reduced={reduced} />
 			<View className="flex-row items-center gap-2.5 p-3">
 				<View className="size-11 overflow-hidden rounded-row bg-cover-scrim">
 					<CoverImage
@@ -92,11 +102,13 @@ export function AudioDock({ bottom }: { bottom: number }) {
 						numberOfLines={1}
 						variant="caption"
 					>
-						{a.failed
-							? COPY.reader.dock.unavailable
-							: a.previewEnded
-								? COPY.reader.dock.previewEnded
-								: `${mmss(a.currentTime)} / ${mmss(a.duration)}`}
+						{a.failed ? (
+							COPY.reader.dock.unavailable
+						) : a.previewEnded ? (
+							COPY.reader.dock.previewEnded
+						) : (
+							<DockTime />
+						)}
 					</AppText>
 				</View>
 				{a.previewEnded ? (
@@ -121,4 +133,16 @@ export function AudioDock({ bottom }: { bottom: number }) {
 			</View>
 		</Animated.View>
 	);
+}
+
+/** The two pieces that follow the narration's time, so only they re-render as it ticks. */
+function DockProgress({ reduced }: { reduced: boolean }) {
+	const { currentTime, duration } = useReaderClock();
+	const share = duration > 0 ? Math.min(currentTime / duration, 1) : 0;
+	return <Progress reduced={reduced} share={share} />;
+}
+
+function DockTime() {
+	const { currentTime, duration } = useReaderClock();
+	return `${mmss(currentTime)} / ${mmss(duration)}`;
 }

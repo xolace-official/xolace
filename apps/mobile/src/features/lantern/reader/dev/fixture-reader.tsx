@@ -10,6 +10,7 @@ import { card } from "@/features/lantern/dev/entries";
 import { NIGHT, TRANSCRIPT } from "@/features/lantern/reader/dev/reads";
 import {
 	type Reader,
+	ReaderClockProvider,
 	ReaderProvider,
 } from "@/features/lantern/reader/reader-data";
 import type {
@@ -28,7 +29,10 @@ import {
 	SourcesProvider,
 	TranscriptProvider,
 } from "@/features/lantern/reader/sheets/sheets-data";
-import type { ReaderAudio } from "@/features/lantern/reader/use-entry-audio";
+import type {
+	ReaderAudio,
+	ReaderClock,
+} from "@/features/lantern/reader/use-entry-audio";
 import type { ReadingPrefs } from "@/features/lantern/reader/use-reading-prefs";
 
 const ignore = () => undefined;
@@ -41,7 +45,9 @@ export const SIGNALS: ReaderState = {
 	position: null,
 	saved: false,
 };
-const IDLE: ReaderAudio = {
+/** A still frame of the narration: what it shows and where it is. */
+type FixtureAudio = ReaderAudio & ReaderClock;
+const IDLE: FixtureAudio = {
 	currentTime: 0,
 	duration: 0,
 	failed: false,
@@ -52,7 +58,7 @@ const IDLE: ReaderAudio = {
 	transcript: false,
 };
 /** The board's dock: 1:12 into a 7 minute listen, Xolace+. */
-export const LISTENING: ReaderAudio = {
+export const LISTENING: FixtureAudio = {
 	...IDLE,
 	currentTime: 72,
 	duration: 7 * SECONDS,
@@ -61,7 +67,7 @@ export const LISTENING: ReaderAudio = {
 	transcript: true,
 };
 /** A free reader's 30 s preview, spent. */
-export const PREVIEW_ENDED: ReaderAudio = {
+export const PREVIEW_ENDED: FixtureAudio = {
 	...IDLE,
 	currentTime: 30,
 	duration: 30,
@@ -81,11 +87,12 @@ export function FixtureReader({
 }: {
 	entry?: ReaderEntry;
 	signals?: ReaderState;
-	audio?: ReaderAudio;
+	audio?: FixtureAudio;
 	prefs?: ReadingPrefs;
 	opensAt?: Reader["state"]["opensAt"];
 	startAt?: number;
 }) {
+	const { currentTime, duration, ...shown } = audio;
 	const value: Reader = {
 		actions: {
 			audio: {
@@ -98,6 +105,7 @@ export function FixtureReader({
 			leaveAt: ignore,
 			openAppearance: ignore,
 			openHelpline: ignore,
+			openLink: ignore,
 			openSources: ignore,
 			reachEnd: ignore,
 			reflect: ignore,
@@ -107,7 +115,7 @@ export function FixtureReader({
 			toggleSave: ignore,
 		},
 		state: {
-			audio,
+			audio: shown,
 			entry,
 			next: card("small-things"),
 			opensAt,
@@ -117,9 +125,11 @@ export function FixtureReader({
 		},
 	};
 	return (
-		<ReaderProvider value={value}>
-			<ReaderScreen startAt={startAt} />
-		</ReaderProvider>
+		<ReaderClockProvider value={{ currentTime, duration }}>
+			<ReaderProvider value={value}>
+				<ReaderScreen startAt={startAt} />
+			</ReaderProvider>
+		</ReaderClockProvider>
 	);
 }
 
@@ -149,8 +159,17 @@ export function FixtureAppearance({
 	);
 }
 
-export const FixtureSources = () => (
-	<SourcesProvider value={{ state: { page: "app", sources: NIGHT.sources } }}>
+export const FixtureSources = ({
+	sources = NIGHT.sources,
+}: {
+	sources?: ReaderEntry["sources"];
+}) => (
+	<SourcesProvider
+		value={{
+			actions: { openLink: ignore },
+			state: { page: "app", sources },
+		}}
+	>
 		<AsSheet>
 			<SourcesSheet />
 		</AsSheet>

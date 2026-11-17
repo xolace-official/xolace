@@ -79,6 +79,7 @@ export const COPY = {
 		helpedCount: (n: number) => `${n} people found this helpful`,
 		helpedHint: "Tap again to undo",
 		helpline: "Need to talk to someone? Find support near you",
+		linkFailed: "Couldn’t open that link",
 		listen: (min: number) => `Listen · ${min}m`,
 		listenLabel: (min: number) =>
 			`Listen, ${min} ${min === 1 ? "minute" : "minutes"}`,

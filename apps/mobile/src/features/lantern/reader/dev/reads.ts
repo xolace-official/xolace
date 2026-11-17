@@ -99,6 +99,11 @@ export const NIGHT: ReaderEntry = read("thoughts-at-night", {
 	],
 });
 
+/** Six sources, for a sources sheet taller than its cap. */
+export const MANY_SOURCES: ReaderEntry["sources"] = [1, 2, 3].flatMap((n) =>
+	NIGHT.sources.map((s) => ({ ...s, pageTitle: `${s.pageTitle} (${n})` }))
+);
+
 /** A story written for Lantern, with a curator's content note. */
 export const WINTER: ReaderEntry = read("winter", {
 	contentNote: "Talks about the death of a parent.",

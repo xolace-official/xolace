@@ -10,7 +10,11 @@ import {
 	PREVIEW_ENDED,
 	SIGNALS,
 } from "@/features/lantern/reader/dev/fixture-reader";
-import { FINE, WINTER } from "@/features/lantern/reader/dev/reads";
+import {
+	FINE,
+	MANY_SOURCES,
+	WINTER,
+} from "@/features/lantern/reader/dev/reads";
 import {
 	ReaderGone,
 	ReaderSkeleton,
@@ -137,8 +141,15 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "sources-sheet",
 		options: NO_BAR,
-		Screen: FixtureSources,
+		Screen: () => <FixtureSources />,
 		title: "View sources",
+	},
+	{
+		id: "sources-sheet-long",
+		options: NO_BAR,
+		// Past the sheet's cap: it scrolls to the last source and the licence.
+		Screen: () => <FixtureSources sources={MANY_SOURCES} />,
+		title: "View sources, more than fit",
 	},
 	{
 		id: "transcript-sheet",

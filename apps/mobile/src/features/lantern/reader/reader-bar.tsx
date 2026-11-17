@@ -1,11 +1,6 @@
 import { router } from "expo-router";
-import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import Animated, {
-	type SharedValue,
-	useAnimatedReaction,
-} from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
+import Animated, { type SharedValue } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { CoverImage } from "@/components/shared/cover-image";
 import { LinearGradient } from "@/components/shared/styled";
@@ -13,8 +8,8 @@ import { COPY } from "@/features/lantern/copy";
 import { COVER_SCRIM } from "@/features/lantern/cover-palette";
 import { CoverButton } from "@/features/lantern/reader/cover-button";
 import type { Fold, FoldStyles } from "@/features/lantern/reader/cover-fold";
+import { MinutesLeft } from "@/features/lantern/reader/minutes-left";
 import { useReaderScreen } from "@/features/lantern/reader/reader-data";
-import { minutesLeft } from "@/features/lantern/reader/reader-model";
 
 /** Capped so the bar stays one row; the full text is in the labels (#400). */
 const BAR_MAX_SCALE = 1.5;
@@ -156,46 +151,5 @@ export function BarRow({
 				onPress={actions.openAppearance}
 			/>
 		</View>
-	);
-}
-
-/** "4 min left", once past the fold. React hears only when the number changes. */
-function MinutesLeft({
-	readMin,
-	y,
-	maxScroll,
-	from,
-}: {
-	readMin: number;
-	y: SharedValue<number>;
-	maxScroll: number;
-	from: number;
-}) {
-	const [left, setLeft] = useState<number | null>(null);
-	useAnimatedReaction(
-		() => {
-			const v = y.get();
-			return v <= from || maxScroll <= 0
-				? null
-				: minutesLeft(readMin, v, maxScroll);
-		},
-		(now, prev) => {
-			if (now !== prev) {
-				scheduleOnRN(setLeft, now);
-			}
-		}
-	);
-	if (left === null) {
-		return null;
-	}
-	return (
-		<AppText
-			className="text-[12px] text-cover-ink/78 leading-[15px]"
-			maxFontSizeMultiplier={BAR_MAX_SCALE}
-			variant="caption"
-			weight="medium"
-		>
-			{COPY.reader.minutesLeft(left)}
-		</AppText>
 	);
 }
