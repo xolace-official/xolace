@@ -63,6 +63,13 @@ const CHAT = {
 	title: "",
 };
 const NO_GESTURE = { gestureEnabled: false };
+const FIT_SHEET = {
+	contentStyle: { backgroundColor: "#111" },
+	presentation: "formSheet",
+	sheetAllowedDetents: "fitToContents",
+	sheetCornerRadius: 40,
+	sheetGrabberVisible: true,
+};
 const SHEET = {
 	presentation: "formSheet",
 	sheetAllowedDetents: "fitToContents",
@@ -91,7 +98,11 @@ const pinned = (reduced: boolean, glass: boolean) => {
 			presentation: "formSheet",
 			sheetGrabberVisible: true,
 		},
-		"reader-appearance": { ...fit, sheetLargestUndimmedDetentIndex: "last" },
+		// The redesign's sheet since S9b (Lantern's reader).
+		"reader-appearance": {
+			...FIT_SHEET,
+			sheetLargestUndimmedDetentIndex: "last",
+		},
 		"report-reflection": fit,
 		"session-end": NO_GESTURE,
 		"sit-with-this": NO_GESTURE,

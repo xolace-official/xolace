@@ -23,7 +23,6 @@ const REPLACED_FEATURES = [
 	"insights",
 	"intake",
 	"kindling",
-	"library",
 	"night-mode",
 	"onboarding",
 	"peer-reflection",

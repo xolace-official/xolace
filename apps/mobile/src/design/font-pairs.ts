@@ -73,7 +73,7 @@ export const DEFAULT_FONT_PAIR: FontPairId = "warm";
 /**
  * Faces that don't follow the theme. CSS variable `--font-<key>`, set once in
  * `@theme static`. The reader's Atkinson and Literata bold load in the reader
- * itself (src/features/library/reader/reading-mode.ts).
+ * itself (src/features/lantern/reader/reading-modes.ts).
  */
 export const FIXED_FACES = {
 	/** The reader, "Clear". */
@@ -98,10 +98,8 @@ export type FixedFace = keyof typeof FIXED_FACES;
 /**
  * Space Grotesk faces production's old screens draw without loading them:
  * the old quote poster (`font-poster-body` / `font-poster-display`, by
- * PostScript name on iOS; the archive card's `font-poster-semi`) and the
- * reader's Classic mode (src/features/library/reader/reading-mode.ts:
- * regular, its synthesized italic, and bold). Loaded at launch until the
- * redesign replaces those screens; then delete this list.
+ * PostScript name on iOS; the archive card's `font-poster-semi`). Loaded at
+ * launch until the redesign replaces those screens; then delete this list.
  */
 export const LEGACY_FACES = [
 	"SpaceGrotesk_400Regular",

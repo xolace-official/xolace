@@ -21,7 +21,7 @@ export const KINDS: readonly Kind[] = ["explainer", "advice", "story"];
 export const isKind = (k: string | undefined): k is Kind =>
 	KINDS.includes(k as Kind);
 
-const capitalise = (s: string) =>
+export const capitalise = (s: string) =>
 	s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : s;
 const words = (slug: string) => slug.replace(/-/g, " ");
 /** A facet slug as a name: "asking-for-help" → "Asking for help". */
@@ -80,7 +80,7 @@ export function hubCountLine(n: {
 }
 
 /** At or past this a read is done; there's nothing to pick up (production's `RESUME_CEILING`). */
-const RESUME_CEILING = 0.98;
+export const RESUME_CEILING = 0.98;
 
 export type ReadMark = { kind: "read" } | { kind: "partway"; share: number };
 
