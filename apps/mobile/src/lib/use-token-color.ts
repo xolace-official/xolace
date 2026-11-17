@@ -5,3 +5,8 @@ import { useThemeColor } from "heroui-native";
 export function useTokenColor(token: string): string {
 	return (useThemeColor as (t: string) => string)(token);
 }
+
+/** `useTokenColor` for a list of tokens of any length, in one hook call. */
+export function useTokenColors(tokens: readonly string[]): string[] {
+	return (useThemeColor as (t: string[]) => string[])([...tokens]);
+}

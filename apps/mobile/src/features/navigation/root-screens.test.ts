@@ -49,19 +49,12 @@ const REDUCED = {
 
 /**
  * The 28 entries `(protected)/_layout.tsx` listed by hand before `screens.ts`
- * (#792), with the options each resolved to, as literals: a change to a shared
- * preset shows up here. Changing a route's presentation on purpose? Edit its pin.
+ * (#792), less the two badge moments S6 made an overlay, with the options each
+ * resolved to, as literals: a change to a shared preset shows up here. Changing a route's presentation on purpose? Edit its pin.
  */
 const PLAYER = {
 	animation: "slide_from_bottom",
 	presentation: "fullScreenModal",
-};
-const TOOLBAR = {
-	headerBackVisible: false,
-	headerShadowVisible: false,
-	headerShown: true,
-	headerTransparent: true,
-	title: "",
 };
 const CHAT = {
 	headerBackButtonDisplayMode: "minimal",
@@ -82,8 +75,6 @@ const pinned = (reduced: boolean, glass: boolean) => {
 	};
 	const rise = reduced ? "fade" : "slide_from_bottom";
 	return {
-		"badge-backfill": { ...PLAYER, ...TOOLBAR, animation: rise },
-		"badge-unlock": { ...PLAYER, ...TOOLBAR, animation: rise },
 		"browse-intro": { ...PLAYER, gestureEnabled: false },
 		"browse-player": PLAYER,
 		"chat/[conversationId]": CHAT,

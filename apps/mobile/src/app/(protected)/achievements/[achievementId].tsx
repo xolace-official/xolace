@@ -1,7 +1,15 @@
 import { useLocalSearchParams } from "expo-router";
-import { BadgeDetailScreen } from "@/features/achievements/badge-detail-screen";
+import { ReturnTo } from "@/lib/return-to";
 
+/**
+ * The old badge detail page's path: a badge now opens in place over
+ * Achievements (`?open=`), so a link here goes there.
+ */
 export default function BadgeDetailRoute() {
 	const { achievementId } = useLocalSearchParams<{ achievementId: string }>();
-	return <BadgeDetailScreen achievementId={achievementId} />;
+	return (
+		<ReturnTo
+			href={{ params: { open: achievementId }, pathname: "/achievements" }}
+		/>
+	);
 }

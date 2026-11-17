@@ -358,3 +358,51 @@
 	--color-after-listen-ink: #2e7f93;
 	--color-after-late-listen: rgba(125, 211, 232, 0.14);
 }
+
+/* Badges and their arrival are printed objects: each family's colour, the
+ * bronze back and the fire's room are the same in every theme, picked by the
+ * scheme (`-dusk` / `-day`). Fixed on purpose; see the fixed-palette convention
+ * in apps/mobile/AGENTS.md. Skia and SVG stop lists live in
+ * src/features/achievements/badge-palette.ts. */
+@theme static {
+	/* The page a held badge floods with, and its glow (bloom, motes). */
+	--color-badge-night-dusk: #1b1d48;
+	--color-badge-night-day: #e7e7f7;
+	--color-badge-night-glow: #f5a03a;
+	--color-badge-dawn-dusk: #4a1f35;
+	--color-badge-dawn-day: #f9e5ec;
+	--color-badge-dawn-glow: #ff9fb4;
+	--color-badge-green-dusk: #1b3223;
+	--color-badge-green-day: #e5efe4;
+	--color-badge-green-glow: #e8c35c;
+	--color-badge-teal-dusk: #132d44;
+	--color-badge-teal-day: #dfeaf4;
+	--color-badge-teal-glow: #ffd27a;
+	--color-badge-aurora-dusk: #1f1947;
+	--color-badge-aurora-day: #ebe5fb;
+	--color-badge-aurora-glow: #c4a8ff;
+
+	/* The coin: its engraving, the engraving's dark edge, its shadow, the band of light. */
+	--color-badge-engrave: #f6cf8a;
+	--color-badge-engrave-edge: rgba(0, 0, 0, 0.55);
+	--color-badge-shadow-dusk: rgba(0, 0, 0, 0.55);
+	--color-badge-shadow-day: rgba(40, 24, 60, 0.35);
+	--color-badge-band: rgba(255, 255, 255, 0.55);
+	--color-badge-band-clear: rgba(255, 255, 255, 0);
+
+	/* The arrival: the fire's room, its button, the count, the week, the freeze. */
+	--color-arrival-fire-dusk: #17111a;
+	--color-arrival-fire-day: #fff6ea;
+	--color-arrival-cta-dusk: #f3f0fa;
+	--color-arrival-cta-ink-dusk: #17102f;
+	--color-arrival-count-ghost-dusk: #3a3140;
+	--color-arrival-count-lit-dusk: #f5b04f;
+	--color-arrival-count-ghost-day: #e9decf;
+	--color-arrival-count-lit-day: #b86a10;
+	--color-arrival-check-dusk: #2a1600;
+	--color-arrival-today-ring: rgba(242, 163, 58, 0.32);
+	--color-arrival-frost-wash-dusk: rgba(143, 195, 240, 0.14);
+	--color-arrival-frost-wash-day: #e3effb;
+	--color-arrival-dot-off-dusk: rgba(255, 255, 255, 0.09);
+	--color-arrival-dot-off-day: rgba(25, 21, 36, 0.09);
+}

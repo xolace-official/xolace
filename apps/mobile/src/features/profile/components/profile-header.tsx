@@ -11,9 +11,9 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { AuroraArc } from "@/components/shared/aurora-arc";
-import { ProfileSparkCard } from "@/features/achievements/profile-spark-card";
 import { ProfileHero } from "@/features/profile/components/profile-hero";
 import { ProfileSkeleton } from "@/features/profile/components/profile-skeleton";
+import { ProfileSparkCard } from "@/features/profile/components/profile-spark-card";
 import { StatBand } from "@/features/profile/components/stat-band";
 import type { ProfileSummary } from "@/features/profile/hooks/use-profile-summary";
 

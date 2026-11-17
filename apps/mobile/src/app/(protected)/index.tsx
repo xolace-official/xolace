@@ -17,7 +17,6 @@ import { ReflectScreen } from "@/features/reflect/components/reflect-screen";
 import { ReturnWelcomeSheet } from "@/features/reflect/components/return-welcome-sheet";
 import { useFollowUpCheckIn } from "@/features/reflect/hooks/use-follow-up-check-in";
 import { useReturnWelcome } from "@/features/reflect/hooks/use-return-welcome";
-import { shouldShowReflectTour } from "@/features/reflect-tour/tour-copy";
 import { StarterSuggestionsBubble } from "@/features/starter-suggestions/starter-suggestions-bubble";
 import { useStarterSuggestions } from "@/features/starter-suggestions/use-starter-suggestions";
 import {
@@ -25,6 +24,7 @@ import {
 	computeUserVariant,
 } from "@/helpers/utils/user-variant";
 import { useFullContext } from "@/lib/convex/use-full-context";
+import { shouldShowReflectTour } from "@/lib/reflect-tour-version";
 import { useAppStore } from "@/store/store";
 
 const BANNER_INITIAL = { opacity: 0 };

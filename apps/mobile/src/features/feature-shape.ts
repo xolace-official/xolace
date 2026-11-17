@@ -15,7 +15,6 @@ import {
  * shape) or deletes it.
  */
 const REPLACED_FEATURES = [
-	"achievements",
 	"awareness-events",
 	"browse",
 	"discovery",
