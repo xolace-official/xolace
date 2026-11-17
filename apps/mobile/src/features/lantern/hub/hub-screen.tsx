@@ -1,7 +1,7 @@
 import { Link, Stack, useIsFocused } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import Animated, {
 	useAnimatedReaction,
 	useAnimatedScrollHandler,
@@ -25,6 +25,7 @@ import { useTokenColors } from "@/lib/use-token-color";
 
 /** The bar's height below the safe area: a hub measures its fold from it (Explore's topic). */
 const NAV_BAR = 44;
+const IOS = Platform.OS === "ios";
 const GONE_GAP = 48;
 
 /**
@@ -53,8 +54,11 @@ export function HubScreen() {
 		}
 	);
 	const hub = state.hub;
+	// iOS runs the cover under a see-through bar; Android's bar is opaque, in the page colour,
+	// with the cover below it, so it keeps the page's ink and needs no folded edge.
+	const underBar = IOS;
 	// On the cover: white ink. Folded, or with no cover to sit on, the page's.
-	const onCover = hub !== null && !folded;
+	const onCover = underBar && hub !== null && !folded;
 
 	return (
 		<>
@@ -73,7 +77,7 @@ export function HubScreen() {
 			) : null}
 			<Animated.ScrollView
 				className="bg-background"
-				// The cover runs under the bar: offset 0 is the top of the screen.
+				// iOS: the cover runs under the bar, so offset 0 is the top of the screen.
 				contentContainerStyle={{ paddingBottom: LS.bottom }}
 				contentInsetAdjustmentBehavior="never"
 				onScroll={onScroll}
@@ -86,8 +90,10 @@ export function HubScreen() {
 						center
 						className="px-8 text-[15px]"
 						color="muted"
-						// No cover: clear the bar the cover would have run under.
-						style={{ paddingTop: insets.top + NAV_BAR + GONE_GAP }}
+						// No cover: clear the bar the cover would have run under (iOS).
+						style={{
+							paddingTop: underBar ? insets.top + NAV_BAR + GONE_GAP : GONE_GAP,
+						}}
 						variant="callout"
 					>
 						{COPY.lists.hubGone}
@@ -110,7 +116,9 @@ export function HubScreen() {
 					)}
 				</View>
 			</Animated.ScrollView>
-			<FoldedEdge barBottom={insets.top + NAV_BAR} on={folded} />
+			{underBar ? (
+				<FoldedEdge barBottom={insets.top + NAV_BAR} on={folded} />
+			) : null}
 			{/* The cover's resting frame: what a hub card zooms into. */}
 			<Link.AppleZoomTarget>
 				<View

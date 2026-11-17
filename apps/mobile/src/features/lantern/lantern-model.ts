@@ -183,13 +183,21 @@ export function subjectsList(subjects: readonly Subject[]) {
 	return { headers, heights, items, offsets };
 }
 
+/** The item `?letter=` opens A–Z at: that letter's header, or -1 for the top. */
+export function letterIndex(
+	list: ReturnType<typeof subjectsList>,
+	letter: string | undefined
+) {
+	return letter
+		? list.items.findIndex((it) => it.kind === "letter" && it.letter === letter)
+		: -1;
+}
+
 /** Where `?letter=` opens A–Z: that letter's offset, or the top. */
 export function letterOffset(
 	list: ReturnType<typeof subjectsList>,
 	letter: string | undefined
 ) {
-	const i = letter
-		? list.items.findIndex((it) => it.kind === "letter" && it.letter === letter)
-		: -1;
+	const i = letterIndex(list, letter);
 	return i > 0 ? list.offsets[i] : 0;
 }

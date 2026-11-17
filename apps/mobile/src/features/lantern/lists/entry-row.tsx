@@ -43,14 +43,21 @@ type Props = {
  */
 export function EntryRow({ entry, from, actions, index, hub }: Props) {
 	const [accent, foreground] = useTokenColors(["accent", "foreground"]);
-	const [pending, setPending] = useState<boolean | null>(null);
-	const saved = pending ?? entry.saved;
+	// Keyed by the entry: a recycled row (LegendList) never shows another entry's tap.
+	const [pending, setPending] = useState<{ id: string; saved: boolean } | null>(
+		null
+	);
+	const held = pending?.id === entry._id ? pending.saved : null;
+	const saved = held ?? entry.saved;
 	const toggleSave = () => {
-		if (pending !== null) {
+		if (held !== null) {
 			return;
 		}
-		setPending(!saved);
-		actions.setSaved(entry, !saved).finally(() => setPending(null));
+		const id = entry._id;
+		setPending({ id, saved: !saved });
+		actions
+			.setSaved(entry, !saved)
+			.finally(() => setPending((p) => (p?.id === id ? null : p)));
 	};
 	return (
 		<View className="flex-row items-center pr-1.5">

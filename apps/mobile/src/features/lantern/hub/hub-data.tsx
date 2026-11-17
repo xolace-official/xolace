@@ -27,7 +27,7 @@ export type HubListen = {
 	play: (track: HubTrack) => void;
 	/** Pauses what's playing. */
 	toggle: () => void;
-	/** The full player; locked, the paywall. */
+	/** The card itself: plays it if it isn't playing, then the full player; locked, the paywall. */
 	open: (track: HubTrack) => void;
 };
 

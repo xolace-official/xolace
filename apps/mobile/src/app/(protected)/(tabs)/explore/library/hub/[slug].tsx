@@ -1,14 +1,20 @@
 import { useLocalSearchParams } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import {
+	clearNowPlaying,
+	nowPlayingPlayback,
 	setNowPlaying,
 	togglePlayback,
 	useNowPlaying,
-	useNowPlayingPlayback,
+	useNowPlayingIsPlaying,
 } from "@/features/browse/now-playing/now-playing-store";
-import { playStep } from "@/features/browse/now-playing/play-on-load";
+import { mintOf, playStep } from "@/features/browse/now-playing/play-on-load";
 import { useOpenTrack } from "@/features/browse/use-open-track";
-import { HubData, type HubListen } from "@/features/lantern/hub/hub-data";
+import {
+	HubData,
+	type HubListen,
+	type HubTrack,
+} from "@/features/lantern/hub/hub-data";
 import { HubScreen } from "@/features/lantern/hub/hub-screen";
 
 const FROM = "library-hub";
@@ -29,30 +35,52 @@ export default function LanternHubRoute() {
 
 function useHubListen(): HubListen {
 	const posthog = usePostHog();
-	const { open, locked } = useOpenTrack(FROM);
-	const np = useNowPlaying();
-	const p = useNowPlayingPlayback(np?.slug);
-	const loaded = np?.slug ?? null;
+	const { open: openTrack, locked } = useOpenTrack(FROM);
+	const loaded = useNowPlaying()?.slug ?? null;
+	// A boolean: the hub doesn't re-render on every status tick. The full playback is read only
+	// when an action needs it.
+	const playing = useNowPlayingIsPlaying();
+
+	/** Starts `track` here, whatever's loaded; false when it's the paywall's instead. */
+	const start = (track: HubTrack) => {
+		const p = nowPlayingPlayback();
+		const step = playStep({
+			loaded,
+			locked,
+			mint: mintOf(p),
+			playing: p.isPlaying,
+			slug: track.slug,
+		});
+		if (step === "paywall") {
+			return false;
+		}
+		if (step === "resume") {
+			togglePlayback(p, posthog);
+		} else if (step === "reload") {
+			// A failed mint stays failed under the same slug: drop it so the host mints afresh.
+			clearNowPlaying();
+			setNowPlaying({ from: FROM, slug: track.slug }, { play: true });
+		} else if (step === "load") {
+			setNowPlaying({ from: FROM, slug: track.slug }, { play: true });
+		}
+		return true;
+	};
+
 	return {
 		locked,
 		nowPlaying: loaded,
-		open,
+		// The card itself: it plays if it isn't already, then the full player (the prototype's).
+		// Locked, the paywall.
+		open: (track) => {
+			start(track);
+			openTrack(track);
+		},
 		play: (track) => {
-			const step = playStep({
-				loaded,
-				locked,
-				playing: p.isPlaying,
-				slug: track.slug,
-			});
-			if (step === "paywall") {
-				open(track);
-			} else if (step === "resume") {
-				togglePlayback(p, posthog);
-			} else if (step === "load") {
-				setNowPlaying({ from: FROM, slug: track.slug }, { play: true });
+			if (!start(track)) {
+				openTrack(track);
 			}
 		},
-		playing: p.isPlaying,
-		toggle: () => togglePlayback(p, posthog),
+		playing,
+		toggle: () => togglePlayback(nowPlayingPlayback(), posthog),
 	};
 }

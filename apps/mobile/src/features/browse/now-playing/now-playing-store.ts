@@ -41,6 +41,7 @@ function subscribe(listener: () => void) {
 const getCurrent = () => current;
 const getPlayback = () => playback;
 const getLoaded = () => !!playback?.track;
+const getIsPlaying = () => !!playback?.isPlaying;
 
 const noop = () => {};
 /** What a reader sees before the host has published. */
@@ -82,7 +83,8 @@ export function setNowPlaying(next: NowPlaying, options?: { play?: boolean }) {
 		// Never show the previous track's status under the new slug.
 		playback = null;
 		played = false;
-		attentionPending = true;
+		// A track played in place never went through the player: nothing to lift for later.
+		attentionPending = options?.play !== true;
 	}
 	current = next;
 	emit();
@@ -150,6 +152,12 @@ export function useNowPlayingPlayback(slug?: string): Playback {
 /** A boolean snapshot, so the tab layout doesn't re-render on every status tick. */
 const useNowPlayingLoaded = () =>
 	useSyncExternalStore(subscribe, getLoaded, getLoaded);
+/** Whether the loaded track is playing, as a boolean snapshot: a list that marks it doesn't
+ * re-render on every status tick. */
+export const useNowPlayingIsPlaying = () =>
+	useSyncExternalStore(subscribe, getIsPlaying, getIsPlaying);
+/** The live playback, read once (an action's moment), or the idle shape. */
+export const nowPlayingPlayback = (): Playback => playback ?? IDLE;
 
 /** Mini-player capsule plus its gap above the tab bar; floating UI over the tabs must clear it. */
 export const MINI_PLAYER_CLEARANCE = 64;

@@ -22,7 +22,19 @@ import { useAppStore } from "@/store/store";
 export function useHome(): Home {
 	const home = useQuery(api.library.home.getHome, {});
 	const subjects = useQuery(api.library.home.getSubjects, {});
-	const setReadingAs = useMutation(api.library.home.setReadingAs);
+	// The answer shows at once: the card goes and the bar's menu ticks before the round trip.
+	const setReadingAs = useMutation(
+		api.library.home.setReadingAs
+	).withOptimisticUpdate((store, { audiences }) => {
+		const cur = store.getQuery(api.library.home.getHome, {});
+		if (cur) {
+			store.setQuery(
+				api.library.home.getHome,
+				{},
+				{ ...cur, readingAs: audiences }
+			);
+		}
+	});
 	const { share } = useEntryActions();
 	const posthog = usePostHog();
 	const arrival = useArrival();

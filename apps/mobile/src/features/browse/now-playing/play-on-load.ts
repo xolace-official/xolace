@@ -8,28 +8,46 @@
 export type PlayStep =
 	/** A free listener: the paywall, before anything loads. */
 	| "paywall"
-	/** It's already loaded and paused: resume it, as it is (no reload). */
+	/** It's loaded and paused: resume it, as it is (no reload). */
 	| "resume"
 	/** It's already playing: nothing to do. */
 	| "nothing"
-	/** Something else or nothing is loaded: load this one and play it once it's in. */
-	| "load";
+	/** Something else, nothing, or this one still minting: load it, and play it once it's in. */
+	| "load"
+	/** This one's mint failed: drop it and load it again, then play. */
+	| "reload";
 
 export function playStep(n: {
 	slug: string;
 	locked: boolean;
 	/** The slug the now-playing track has loaded, if any. */
 	loaded: string | null;
+	/** Where that track's mint is: in, still coming, or failed (null, or retries spent). */
+	mint: "in" | "pending" | "failed";
 	playing: boolean;
 }): PlayStep {
 	if (n.locked) {
 		return "paywall";
 	}
-	if (n.loaded !== n.slug) {
+	if (n.loaded !== n.slug || n.mint === "pending") {
 		return "load";
+	}
+	if (n.mint === "failed") {
+		return "reload";
 	}
 	return n.playing ? "nothing" : "resume";
 }
+
+/** A playback's mint, for `playStep`. */
+export const mintOf = (p: {
+	track: unknown;
+	error: unknown;
+}): "in" | "pending" | "failed" => {
+	if (p.error || p.track === null) {
+		return "failed";
+	}
+	return p.track === undefined ? "pending" : "in";
+};
 
 /**
  * The slug waiting to play once it's loaded, after a `setNowPlaying`. Asked to play: that slug.

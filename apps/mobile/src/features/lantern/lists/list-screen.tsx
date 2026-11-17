@@ -1,6 +1,6 @@
 import { LegendList } from "@legendapp/list/react-native";
 import { Stack } from "expo-router";
-import { View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { LS } from "@/features/lantern/lantern-style";
 import { EntryRow } from "@/features/lantern/lists/entry-row";
@@ -45,6 +45,9 @@ export function ListScreen() {
 							</AppText>
 						</View>
 					)
+				}
+				ListFooterComponent={
+					state.loadingMore ? <ActivityIndicator className="py-6" /> : null
 				}
 				onEndReached={state.canLoadMore ? actions.loadMore : undefined}
 				onEndReachedThreshold={LOAD_AHEAD}

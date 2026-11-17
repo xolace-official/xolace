@@ -1,12 +1,13 @@
 import { router, Stack } from "expo-router";
-import { FlatList, Pressable, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHeaderHeight } from "expo-router/react-navigation";
+import { FlatList, Platform, Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Icon } from "@/components/shared/icon";
 import { COPY } from "@/features/lantern/copy";
 import { subjectHref } from "@/features/lantern/lantern-links";
 import {
 	facetLabel,
+	letterIndex,
 	letterOffset,
 	SUBJECTS_LAYOUT,
 	subjectsList,
@@ -17,8 +18,7 @@ import { useSubjectsScreen } from "@/features/lantern/subjects/subjects-data";
 import { useHeaderOptions } from "@/lib/header-options";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** iOS 26's small-title bar, below the safe area. */
-const SMALL_BAR = 54;
+const IOS = Platform.OS === "ios";
 const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
 
 /**
@@ -26,15 +26,18 @@ const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
  * the bar while its subjects scroll. `?letter=` opens at that letter. Changed: the rows are a fixed
  * height, so it jumps straight there instead of waiting for layout.
  *
- * The top inset is set by hand rather than `automatic`: React Native pins sticky headers at
- * `contentInset.top`, and only knows it as a prop, so a letter pins just under the bar.
+ * On iOS the list runs under the see-through bar with its top inset set by hand rather than
+ * `automatic`: React Native pins sticky headers at `contentInset.top`, and only knows it as a
+ * prop, so a letter pins just under the bar. Android's bar is opaque and the list starts below
+ * it; `contentInset` and `contentOffset` are iOS-only, so it opens at the letter by index.
  */
 export function SubjectsScreen() {
 	const { state } = useSubjectsScreen();
 	const header = useHeaderOptions("small");
-	const insets = useSafeAreaInsets();
-	const bar = insets.top + SMALL_BAR;
+	const headerHeight = useHeaderHeight();
+	const bar = IOS ? headerHeight : 0;
 	const list = subjectsList(state.subjects ?? []);
+	const at = letterIndex(list, state.letter);
 	return (
 		<>
 			<Stack.Screen options={{ ...header, title: COPY.lists.subjects }} />
@@ -48,13 +51,18 @@ export function SubjectsScreen() {
 					contentContainerStyle={{ paddingBottom: LS.bottom }}
 					contentInset={{ top: bar }}
 					contentInsetAdjustmentBehavior="never"
-					contentOffset={{ x: 0, y: letterOffset(list, state.letter) - bar }}
+					contentOffset={
+						IOS
+							? { x: 0, y: letterOffset(list, state.letter) - bar }
+							: undefined
+					}
 					data={list.items}
 					getItemLayout={(_, i) => ({
 						index: i,
 						length: list.heights[i],
 						offset: list.offsets[i],
 					})}
+					initialScrollIndex={IOS || at <= 0 ? undefined : at}
 					keyExtractor={(it) =>
 						it.kind === "letter" ? `letter-${it.letter}` : it.slug
 					}

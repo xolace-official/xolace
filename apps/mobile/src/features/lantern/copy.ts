@@ -24,8 +24,8 @@ export const COPY = {
 	},
 	listen: {
 		kicker: (min: number) => `Listen · ${min} min`,
-		label: (title: string, min: number, locked: boolean) =>
-			`${title}, support audio, ${min} ${min === 1 ? "minute" : "minutes"}${locked ? ", Xolace+" : ""}`,
+		label: (title: string, kind: string, min: number, locked: boolean) =>
+			`${title}, ${kind.toLowerCase()}, ${min} ${min === 1 ? "minute" : "minutes"}${locked ? ", Xolace+" : ""}`,
 		locked: "Xolace+, locked",
 		pause: (title: string) => `Pause ${title}`,
 		play: (title: string) => `Play ${title}`,

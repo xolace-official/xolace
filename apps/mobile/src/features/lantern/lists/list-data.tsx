@@ -21,6 +21,8 @@ export type EntryList = {
 		empty: string;
 		/** Saved pages; the others load at once. */
 		canLoadMore: boolean;
+		/** A further page is on its way. */
+		loadingMore: boolean;
 	};
 	actions: EntryActions & { loadMore: () => void };
 };

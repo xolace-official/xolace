@@ -34,15 +34,22 @@ export function useEntryList(of: ListOf): EntryList {
 		{ initialNumItems: SAVED_PAGE }
 	);
 	useOpened(of);
+	const loadMore = usePastEmptyPages(isSaved, saved);
 
 	if (isSaved) {
+		// Retired entries drop out of a page, so a page can come back empty with more behind it:
+		// it's still loading until paging is exhausted.
+		const waiting =
+			saved.status === "LoadingFirstPage" ||
+			(saved.results.length === 0 && saved.status !== "Exhausted");
 		return {
-			actions: { ...actions, loadMore: () => saved.loadMore(SAVED_PAGE) },
+			actions: { ...actions, loadMore },
 			state: {
 				canLoadMore: saved.status === "CanLoadMore",
 				empty: COPY.lists.savedEmpty,
 				from: "saved",
-				items: saved.status === "LoadingFirstPage" ? undefined : saved.results,
+				items: waiting ? undefined : saved.results,
+				loadingMore: saved.status === "LoadingMore",
 				title: COPY.lists.saved,
 			},
 		};
@@ -54,8 +61,41 @@ export function useEntryList(of: ListOf): EntryList {
 			empty: COPY.lists.empty,
 			from: kind ? "kind" : "subject",
 			items: entries,
+			loadingMore: false,
 			title: kind ? COPY.kinds[kind].label : facetLabel(subject ?? ""),
 		},
+	};
+}
+
+/**
+ * A page that came back empty (every entry on it retired) loads the next one at once, until a
+ * page brings something or paging is exhausted: the list never sits empty, or stalls at its
+ * end, with more behind it. Returns the list's own `loadMore`, which marks where it asked.
+ */
+function usePastEmptyPages(
+	on: boolean,
+	saved: {
+		results: readonly unknown[];
+		status: string;
+		loadMore: (n: number) => void;
+	}
+) {
+	// The count when the last page was asked for (the first page: 0); null once one brought more.
+	const askedAt = useRef<number | null>(0);
+	const { results, status, loadMore } = saved;
+	useEffect(() => {
+		if (!on || status !== "CanLoadMore" || askedAt.current === null) {
+			return;
+		}
+		if (results.length === askedAt.current) {
+			loadMore(SAVED_PAGE);
+		} else {
+			askedAt.current = null;
+		}
+	}, [on, status, results.length, loadMore]);
+	return () => {
+		askedAt.current = results.length;
+		loadMore(SAVED_PAGE);
 	};
 }
 

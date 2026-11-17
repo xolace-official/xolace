@@ -28,9 +28,11 @@ export function useHub(slug: string, listen: HubListen): Hub {
 		actions: {
 			...entryActions,
 			open,
-			// Play and pause: a light impact (handoff §12).
+			// Play and pause: a light impact (handoff §12). Locked, the paywall's own tap alone.
 			play: (track) => {
-				tap();
+				if (!listen.locked) {
+					tap();
+				}
 				play(track);
 			},
 			toggle: () => {

@@ -103,7 +103,14 @@ export function FixtureList({
 		<ListProvider
 			value={{
 				actions: { ...STILL, loadMore: ignore },
-				state: { canLoadMore: false, empty, from, items, title },
+				state: {
+					canLoadMore: false,
+					empty,
+					from,
+					items,
+					loadingMore: false,
+					title,
+				},
 			}}
 		>
 			<ListScreen />
