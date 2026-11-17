@@ -29,9 +29,8 @@ type Props = {
  * Digits that roll to a new value (from 0 on mount), on the UI thread, in plain
  * views: a SwiftUI-hosted number (`RollingNumber`) is left at a stale frame
  * inside a transformed parent. Reduce Motion: they just change. The digits grow
- * with Dynamic Type up to the display cap, and so does each line. The sparks
- * card's number (from the prototype's You tab); moves down a layer when a
- * second feature needs it.
+ * with Dynamic Type up to the display cap, and so does each line. Achievements'
+ * sparks and You's streak and freezes (in the collapsing header, hence plain views).
  */
 export function RollDigits({
 	value,

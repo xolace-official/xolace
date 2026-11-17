@@ -12,7 +12,6 @@ import type { Badges } from "@/features/achievements/badges/badges-data";
 import {
 	type BadgeView,
 	badgesView,
-	freezeRefusal,
 	freezeView,
 	pinRefusal,
 	pinRefused,
@@ -24,6 +23,7 @@ import {
 	playErrorNotice,
 	playSoftPress,
 } from "@/lib/haptics";
+import { freezeRefusal } from "@/lib/streak-freeze";
 
 /** The refusal's warning lands just after the press's soft tap, not on top of it. */
 const WARN_AFTER_MS = 120;

@@ -17,7 +17,11 @@ const MaskedView = MaskedViewClass as unknown as ComponentType<
 >;
 
 /**
- * The fade under Talk's header (the prototype's Today band). Production's
+ * BandBlur: blur plus page tint under chrome a screen draws itself, solid down to `solid`.
+ * Use TopBlur (top-blur.tsx) under a transparent native header, TopFade (top-fade.tsx) for a
+ * plain page fade with no blur.
+ *
+ * A soft scroll edge (Talk's thread, You's docked bar; the prototype's Today band). Production's
  * `components/shared/top-blur.tsx` recipe: one native blur under an
  * eased alpha mask, with the page tint over it. Here the band is solid at full
  * strength down to `solid`, then both fade to nothing. One blur costs a third of

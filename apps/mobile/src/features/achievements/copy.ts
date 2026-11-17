@@ -56,14 +56,8 @@ export const COPY = {
 	},
 	freeze: {
 		buy: (price: number) => `Buy a freeze · ${price}`,
-		capped: (cap: number) => `You're holding the max of ${cap} freezes.`,
-		failed: "Couldn't buy a freeze. Try again.",
 		holds: (freezes: number, cap: number) =>
 			`Covers one missed day · you hold ${freezes} of ${cap}`,
-		lapsed: "Your streak ended. Show up today, then buy one.",
-		notEnough: "Not enough sparks for a freeze yet.",
-		short: (sparks: number) =>
-			`${sparks} more ${sparks === 1 ? "spark" : "sparks"} to buy one.`,
 		title: "Buy a streak freeze",
 	},
 	list: {

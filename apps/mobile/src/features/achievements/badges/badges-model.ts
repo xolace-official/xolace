@@ -13,6 +13,7 @@ import {
 	progressShare,
 } from "@/features/achievements/achievements-model";
 import { COPY } from "@/features/achievements/copy";
+import { freezeReason } from "@/lib/streak-freeze";
 
 /** One badge as the list and its page draw it. */
 export type BadgeView = {
@@ -157,35 +158,12 @@ export type SparkShelf = FunctionReturnType<
 /** The freeze card at the foot: its line, and why the buy is off (null when it's on). */
 export type FreezeView = { line: string; reason: string | null; buy: string };
 
-/** Mirrors `sparks.buyFreeze`'s checks, in production's order (profile-spark-card). */
+/** Production's checks, shared with You's freeze explanation (`lib/streak-freeze.ts`). */
 export function freezeView(shelf: SparkShelf): FreezeView {
-	const { balance, freezeCap, freezePrice, freezes, streakLapsed } = shelf;
-	const short = freezePrice - balance;
-	let reason: string | null = null;
-	if (streakLapsed) {
-		reason = COPY.freeze.lapsed;
-	} else if (short > 0) {
-		reason = COPY.freeze.short(short);
-	} else if (freezes >= freezeCap) {
-		reason = COPY.freeze.capped(freezeCap);
-	}
+	const reason = freezeReason(shelf);
 	return {
-		buy: COPY.freeze.buy(freezePrice),
-		line: reason ?? COPY.freeze.holds(freezes, freezeCap),
+		buy: COPY.freeze.buy(shelf.freezePrice),
+		line: reason ?? COPY.freeze.holds(shelf.freezes, shelf.freezeCap),
 		reason,
 	};
-}
-
-/** What a refused buy says: a race the card hadn't caught up with, or a failure. */
-export function freezeRefusal(code: unknown, freezeCap: number): string {
-	switch (code) {
-		case "freeze_cap_reached":
-			return COPY.freeze.capped(freezeCap);
-		case "insufficient_sparks":
-			return COPY.freeze.notEnough;
-		case "streak_lapsed":
-			return COPY.freeze.lapsed;
-		default:
-			return COPY.freeze.failed;
-	}
 }

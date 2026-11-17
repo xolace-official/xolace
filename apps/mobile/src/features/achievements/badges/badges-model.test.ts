@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
 	badgesView,
-	freezeRefusal,
 	freezeView,
 	heldHint,
 	pinRefusal,
@@ -122,18 +121,6 @@ describe("freezeView", () => {
 		).toBe("Your streak ended. Show up today, then buy one.");
 		expect(freezeView({ ...SHELF, balance: 49, freezes: 0 }).reason).toBe(
 			"1 more spark to buy one."
-		);
-	});
-
-	it("explains a refused buy", () => {
-		expect(freezeRefusal("insufficient_sparks", 2)).toBe(
-			"Not enough sparks for a freeze yet."
-		);
-		expect(freezeRefusal("freeze_cap_reached", 2)).toBe(
-			"You're holding the max of 2 freezes."
-		);
-		expect(freezeRefusal(undefined, 2)).toBe(
-			"Couldn't buy a freeze. Try again."
 		);
 	});
 });
