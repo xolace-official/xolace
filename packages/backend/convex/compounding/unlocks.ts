@@ -14,6 +14,7 @@ import {
 	type MutationCtx,
 	mutation,
 } from "../_generated/server";
+import { rungsCounting } from "../achievements/catalog";
 import { awardLadderRungs } from "../achievements/ladders";
 import { requireSessionOwnership } from "../lib/auth";
 import { missedPushAt } from "../lib/missedBeat";
@@ -122,14 +123,42 @@ export const dropColdUnlocks = internalMutation({
 });
 
 /**
- * The session end opened on this session: the missed-beat push stands down.
- * The redesigned session end shows no unlock beat; Badges' arrival tells the
- * person through the "First area unlocked" badge, so the push would repeat it.
+ * Whether a session's unlock earned an area badge (the catalogue's
+ * `areas_unlocked` ladder): a rung lies above the areas stamped before the
+ * session and at or below those stamped by it, as `recordUnlock` awards them.
+ */
+export function unlockEarnsBadge(
+	unlocked: readonly { at: number }[],
+	sessionAt: number
+): boolean {
+	const before = unlocked.filter((u) => u.at < sessionAt).length;
+	const after = unlocked.filter((u) => u.at <= sessionAt).length;
+	return rungsCounting("areas_unlocked").some(
+		(r) => before < r.target && r.target <= after
+	);
+}
+
+/**
+ * The unlock was seen: the missed-beat push stands down. The old session end
+ * called it when its unlock beat showed. The redesigned one shows no beat and
+ * passes `whenBadged`: only an unlock that earned an area badge is marked,
+ * since Badges' arrival tells the person about it and the push would repeat
+ * it; any other unlock stays unseen, so the next-day push still tells them.
  */
 export const markSeen = mutation({
-	args: { sessionId: v.id("sessions") },
-	handler: async (ctx, { sessionId }) => {
-		const { session } = await requireSessionOwnership(ctx, sessionId);
+	args: {
+		sessionId: v.id("sessions"),
+		/** Only if this unlock earned an area badge. Newer clients only; absent: always. */
+		whenBadged: v.optional(v.boolean()),
+	},
+	handler: async (ctx, { sessionId, whenBadged }) => {
+		const { session, profile } = await requireSessionOwnership(ctx, sessionId);
+		if (
+			whenBadged &&
+			!unlockEarnsBadge(profile.unlockedDomains ?? [], session.createdAt)
+		) {
+			return null;
+		}
 		if (session.domainUnlock && session.domainUnlock.seenAt === undefined) {
 			await ctx.db.patch("sessions", sessionId, {
 				domainUnlock: { ...session.domainUnlock, seenAt: Date.now() },

@@ -73,15 +73,16 @@ export function useSessionEndData({
 		}
 	}, [missing, router]);
 
-	// Deliberate: a session that unlocked an area marks its unlock seen as the session end opens.
-	// The redesign shows no unlock beat here; Badges' arrival tells the person through the "First
-	// area unlocked" badge instead, so tomorrow's "you missed it" push would only repeat it.
+	// Deliberate: no unlock beat shows here any more. An unlock that earned an area badge is marked
+	// seen as the session end opens (`whenBadged`): Badges' arrival announces it, so tomorrow's
+	// "you missed it" push would repeat it. Any other unlock (no badge for the 2nd area, or the 4th
+	// to 7th) stays unseen, and the push is how the person hears of it.
 	const unseenUnlock =
 		session?.domainUnlock !== undefined &&
 		session.domainUnlock.seenAt === undefined;
 	useEffect(() => {
 		if (sessionId && unseenUnlock) {
-			markUnlockSeen({ sessionId }).catch(() => undefined);
+			markUnlockSeen({ sessionId, whenBadged: true }).catch(() => undefined);
 		}
 	}, [sessionId, unseenUnlock, markUnlockSeen]);
 
