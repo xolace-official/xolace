@@ -3,7 +3,9 @@
  * actions }` as the app. Taps change nothing and reach nothing, except the Aa sheet's, which
  * change it on screen; the narration is a still frame.
  */
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
+import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { card } from "@/features/lantern/dev/entries";
 import { NIGHT, TRANSCRIPT } from "@/features/lantern/reader/dev/reads";
 import {
@@ -140,19 +142,36 @@ export function FixtureAppearance({
 				state: prefs,
 			}}
 		>
-			<AaSheet />
+			<AsSheet>
+				<AaSheet />
+			</AsSheet>
 		</AppearanceProvider>
 	);
 }
 
 export const FixtureSources = () => (
 	<SourcesProvider value={{ state: { page: "app", sources: NIGHT.sources } }}>
-		<SourcesSheet />
+		<AsSheet>
+			<SourcesSheet />
+		</AsSheet>
 	</SourcesProvider>
 );
 
 export const FixtureTranscript = () => (
 	<TranscriptProvider value={{ state: { page: "app", text: TRANSCRIPT } }}>
-		<TranscriptSheet />
+		<AsSheet>
+			<TranscriptSheet />
+		</AsSheet>
 	</TranscriptProvider>
 );
+
+/** The sheets are form sheets in the app; a dev state opens them pushed, so they clear the
+ * status bar themselves. */
+function AsSheet({ children }: { children: ReactNode }) {
+	const { top } = useSafeAreaInsets();
+	return (
+		<View className="flex-1 bg-surface" style={{ paddingTop: top }}>
+			{children}
+		</View>
+	);
+}

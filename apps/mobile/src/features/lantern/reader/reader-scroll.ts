@@ -28,8 +28,8 @@ export function useOpenAt(
 	}, [share, maxScroll, scroll]);
 }
 
-/** Dev states only: open at a fixed offset (a frozen frame), or the end, once the layout has
- * settled (the body measures after the first layout). */
+/** Dev states only: open at a fixed offset (a frozen frame), measured from the end when
+ * negative, once the layout has settled (the body measures after the first layout). */
 const SETTLE_MS = 450;
 export function useStartAt(
 	at: number | undefined,
@@ -43,7 +43,10 @@ export function useStartAt(
 		}
 		const t = setTimeout(() => {
 			done.current = true;
-			scroll.current?.scrollTo({ animated: false, y: Math.min(at, maxScroll) });
+			scroll.current?.scrollTo({
+				animated: false,
+				y: at < 0 ? Math.max(0, maxScroll + at) : Math.min(at, maxScroll),
+			});
 		}, SETTLE_MS);
 		return () => clearTimeout(t);
 	}, [at, maxScroll, scroll]);

@@ -48,7 +48,7 @@ const SHEET_BOTTOM = 96;
 export function ReaderScreen({
 	startAt,
 }: {
-	/** Dev states only: open scrolled this far, or to the end (Infinity). */
+	/** Dev states only: open scrolled this far; negative counts from the end. */
 	startAt?: number;
 }) {
 	const { mode } = useReaderScreen().state.prefs;

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { FINE, NIGHT, WINTER } from "@/features/lantern/reader/dev/reads";
 import {
 	attributionLines,
+	creditMark,
 	dwellLeft,
 	END_SLACK,
 	endOfRead,
@@ -108,6 +109,12 @@ describe("copy", () => {
 		});
 	});
 
+	it("marks the credit with Xolace's x, or the publisher's initial", () => {
+		expect(creditMark({ name: "Xolace", xolace: true })).toBe("x");
+		expect(creditMark({ name: "[Publisher]", xolace: false })).toBe("P");
+		expect(creditMark({ name: "mind", xolace: false })).toBe("M");
+	});
+
 	it("lists each licence line once, and Xolace's when there's no source", () => {
 		expect(attributionLines(NIGHT.sources)).toHaveLength(1);
 		expect(attributionLines([])).toEqual(["© Xolace"]);
@@ -115,9 +122,7 @@ describe("copy", () => {
 
 	it("drops the leading title and leads a callout with its kind", () => {
 		expect(prepareBody("# Title\n\nBody")).toBe("Body");
-		expect(prepareBody("> [!TIP]\n> Try this")).toBe(
-			"> **Tip**\n>\n> Try this"
-		);
+		expect(prepareBody("> [!TIP]\n> Try this")).toBe("> **Tip**\\\n> Try this");
 	});
 
 	it("writes the dock's times", () => {

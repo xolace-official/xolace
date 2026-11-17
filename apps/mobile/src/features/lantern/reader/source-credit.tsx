@@ -5,16 +5,18 @@ import { PressScale } from "@/components/shared/press-scale";
 import { Image } from "@/components/shared/styled";
 import { COPY } from "@/features/lantern/copy";
 import { useReaderScreen } from "@/features/lantern/reader/reader-data";
-import { headerCredit } from "@/features/lantern/reader/reader-model";
+import {
+	creditMark,
+	headerCredit,
+} from "@/features/lantern/reader/reader-model";
+import { cn } from "@/lib/cn";
 import { useTokenColors } from "@/lib/use-token-color";
 
-const XOLACE_LOGO = require("@/assets/images/icon.png");
 const MARK = 36;
 const ICON = {
 	listen: { android: "headphones", ios: "headphones" },
 	note: { android: "info", ios: "exclamationmark.circle" },
 	pause: { android: "pause", ios: "pause.fill" },
-	source: { android: "account_balance", ios: "building.columns" },
 } as const;
 
 /**
@@ -23,7 +25,6 @@ const ICON = {
  */
 export function SourceCredit() {
 	const { entry } = useReaderScreen().state;
-	const [muted] = useTokenColors(["muted"]);
 	const { name, line, href, logoUrl, xolace } = headerCredit(entry);
 	return (
 		<View className="mb-6 flex-row items-center gap-3">
@@ -36,17 +37,26 @@ export function SourceCredit() {
 				onPress={() => (href ? Linking.openURL(href) : undefined)}
 			>
 				<View
-					className="items-center justify-center overflow-hidden rounded-full bg-surface-secondary"
+					className={cn(
+						"items-center justify-center overflow-hidden rounded-full",
+						xolace ? "bg-accent" : "bg-surface-secondary"
+					)}
 					style={{ height: MARK, width: MARK }}
 				>
-					{xolace || logoUrl ? (
+					{logoUrl && !xolace ? (
 						<Image
 							contentFit="cover"
-							source={xolace ? XOLACE_LOGO : { uri: logoUrl }}
+							source={{ uri: logoUrl }}
 							style={{ height: MARK, width: MARK }}
 						/>
 					) : (
-						<Icon color={muted} name={ICON.source} size={15} />
+						<AppText
+							className="text-[17px] leading-[20px]"
+							color={xolace ? "accentForeground" : "muted"}
+							variant="display"
+						>
+							{creditMark({ name, xolace })}
+						</AppText>
 					)}
 				</View>
 				<View className="min-w-0 flex-1">

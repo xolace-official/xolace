@@ -19,9 +19,10 @@ import {
 /** The reader draws its own bar, as its route does. */
 const NO_BAR = { headerShown: false };
 /** The board's offsets on the classic read at 18 pt (handoff §13). */
-const AT = { folded: 520, listening: 430 } as const;
+const AT = { finished: -560, folded: 520, listening: 430 } as const;
 const END = Number.POSITIVE_INFINITY;
 const PARTWAY = { ...SIGNALS, position: 0.4 };
+const FINISHED = { ...SIGNALS, finished: true, helpedCount: 212 };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */
 export const devStates: readonly DevState[] = [
@@ -88,13 +89,14 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "reader-end",
 		options: NO_BAR,
-		Screen: () => (
-			<FixtureReader
-				signals={{ ...SIGNALS, finished: true, helpedCount: 212 }}
-				startAt={END}
-			/>
-		),
+		Screen: () => <FixtureReader signals={FINISHED} startAt={AT.finished} />,
 		title: "The end of a read: Finished, the count, Up next",
+	},
+	{
+		id: "reader-reflect",
+		options: NO_BAR,
+		Screen: () => <FixtureReader signals={FINISHED} startAt={END} />,
+		title: "Reflect on this, the helpline, Back to top",
 	},
 	{
 		id: "reader-story",
@@ -122,25 +124,25 @@ export const devStates: readonly DevState[] = [
 	},
 	{
 		id: "aa-sheet",
-		options: { title: "" },
+		options: NO_BAR,
 		Screen: () => <FixtureAppearance />,
 		title: "The Aa sheet",
 	},
 	{
 		id: "aa-sheet-clear",
-		options: { title: "" },
+		options: NO_BAR,
 		Screen: () => <FixtureAppearance initial={{ ...CLASSIC, mode: "clear" }} />,
 		title: "The Aa sheet, Clear",
 	},
 	{
 		id: "sources-sheet",
-		options: { title: "" },
+		options: NO_BAR,
 		Screen: FixtureSources,
 		title: "View sources",
 	},
 	{
 		id: "transcript-sheet",
-		options: { title: "" },
+		options: NO_BAR,
 		Screen: FixtureTranscript,
 		title: "The transcript",
 	},

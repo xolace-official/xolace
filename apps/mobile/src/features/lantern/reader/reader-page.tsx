@@ -1,5 +1,10 @@
 import type { ReactNode } from "react";
-import { ScopedTheme, ScopedVariables, useCSSVariable } from "uniwind";
+import {
+	ScopedTheme,
+	ScopedVariables,
+	useCSSVariable,
+	useUniwind,
+} from "uniwind";
 import type { ReaderPage } from "@/features/lantern/reader/reading-modes";
 
 /** The theme roles a reading page sets, and its token for each (`--color-reader-<page>-*`). */
@@ -35,17 +40,20 @@ export function ReaderPageScope({
 			ROLES.map(([, token]) => `--color-reader-${key}-${token}`)
 		) as string[]
 	).map(String);
-	if (page === "app") {
-		return children;
-	}
+	const { theme } = useUniwind();
+	// One shape for every page, so changing the mode never remounts the reader (its scroll and
+	// its place would go): Classic is the app's own theme with nothing swapped.
 	const variables: Record<string, string> = {};
-	ROLES.forEach(([role], i) => {
-		// Classes resolve through `--<role>`, hooks through `--color-<role>`: both move.
-		variables[`--${role}`] = values[i];
-		variables[`--color-${role}`] = values[i];
-	});
+	if (page !== "app") {
+		ROLES.forEach(([role], i) => {
+			// Classes resolve through `--<role>`, hooks through `--color-<role>`: both move.
+			variables[`--${role}`] = values[i];
+			variables[`--color-${role}`] = values[i];
+		});
+	}
+	const scope = page === "app" ? theme : page === "night" ? "dark" : "light";
 	return (
-		<ScopedTheme theme={page === "night" ? "dark" : "light"}>
+		<ScopedTheme theme={scope}>
 			<ScopedVariables variables={variables}>{children}</ScopedVariables>
 		</ScopedTheme>
 	);

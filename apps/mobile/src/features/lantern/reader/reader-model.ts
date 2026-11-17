@@ -90,11 +90,14 @@ const LEADING_H1 = /^#[ \t]+[^\n]*\n*/;
 const ALERT_MARKER =
 	/^>[ \t]*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][ \t]*$/gim;
 
-/** Stored GFM → what the renderer is handed: no leading title, callouts led by their kind. */
+/**
+ * Stored GFM → what the renderer is handed: no leading title, and a callout led by its kind in
+ * bold, on its own line right above its text (a hard break, not a new paragraph).
+ */
 export function prepareBody(markdown: string) {
 	return markdown
 		.replace(LEADING_H1, "")
-		.replace(ALERT_MARKER, (_, type: string) => `> **${capitalise(type)}**\n>`);
+		.replace(ALERT_MARKER, (_, type: string) => `> **${capitalise(type)}**\\`);
 }
 
 const XOLACE = "Xolace";
@@ -120,6 +123,14 @@ export function headerCredit({ reuse, sources }: Credited) {
 		name: XOLACE,
 		xolace: true,
 	};
+}
+
+/** The credit's round mark when there's no logo: Xolace's "x", or the publisher's initial. */
+export function creditMark(credit: { name: string; xolace: boolean }) {
+	if (credit.xolace) {
+		return "x";
+	}
+	return (credit.name.match(/[A-Za-z0-9]/)?.[0] ?? "").toUpperCase();
 }
 
 /** The licence lines after the body: each once, in source order. */
