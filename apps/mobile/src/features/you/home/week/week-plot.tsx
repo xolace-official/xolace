@@ -4,9 +4,11 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { AppText } from "@/components/shared/app-text";
+import { BODY_MAX_SCALE } from "@/design/type";
 import { UsualBand, UsualLabel } from "@/features/you/home/week/usual-band";
 import { WeekBar } from "@/features/you/home/week/week-bar";
 import {
+	dayAt,
 	type IntensityDay,
 	levelY,
 	PLOT_H,
@@ -19,14 +21,16 @@ import { useTokenColor } from "@/lib/use-token-color";
 
 /** Day letters sit 6 pt under the bars, 12 pt tall: the bars' baseline from the bottom. */
 const BASE = 18;
-const DAYS = 7;
 /** Before the readout claims the touch, as on Your days. */
 const HOLD_MS = 180;
-/** The scale labels' gutter (§6), and their line height. */
+/**
+ * The scale labels' gutter (§6), and their line height before Dynamic Type. AppText caps body
+ * text at `BODY_MAX_SCALE` (1.8), so a label is at most 19.8 pt tall: the four, 24 pt apart,
+ * never crowd, and all four stay at every text size. A label wider than the gutter shrinks.
+ */
 const GUTTER = 64;
 const LABEL_LINE = 11;
-/** At this text scale the four labels would crowd: drop Mild (§6 allows three). */
-const CROWDED_SCALE = 1.9;
+const LABEL_MIN_SCALE = 0.6;
 
 /**
  * The plot: your usual behind seven bars, the scale in its own right gutter with each label on
@@ -58,12 +62,8 @@ export function WeekPlot({
 
 	const pick = (x: number) => {
 		"worklet";
-		const w = plotW.get();
-		if (w <= 0) {
-			return;
-		}
-		const i = Math.max(0, Math.min(DAYS - 1, Math.floor((x / w) * DAYS)));
-		if (i !== held.get()) {
+		const i = dayAt(x, plotW.get());
+		if (i !== null && i !== held.get()) {
 			held.set(i);
 			scheduleOnRN(onHeld, i);
 		}
@@ -81,8 +81,9 @@ export function WeekPlot({
 			held.set(-1);
 			scheduleOnRN(onHeld, null);
 		});
-	const scale =
-		fontScale >= CROWDED_SCALE ? SCALE.filter((s) => s.at !== 3.75) : SCALE;
+	// iOS scales `lineHeight` itself, so the line stays fixed; only the offset follows the
+	// text's own (capped) scale.
+	const labelH = LABEL_LINE * Math.min(fontScale, BODY_MAX_SCALE);
 
 	return (
 		<View className="mt-1.5 flex-row">
@@ -126,15 +127,17 @@ export function WeekPlot({
 				importantForAccessibility="no-hide-descendants"
 				style={{ height: PLOT_H + BASE, marginLeft: 12, width: GUTTER }}
 			>
-				{scale.map((s) => (
+				{SCALE.map((s) => (
 					<AppText
-						className="absolute right-0 text-right text-[9px]"
+						adjustsFontSizeToFit
+						className="absolute right-0 left-0 text-right text-[9px]"
 						color="subtle"
 						key={s.label}
+						minimumFontScale={LABEL_MIN_SCALE}
 						numberOfLines={1}
 						style={{
-							bottom: BASE + levelY(s.at) - (LABEL_LINE * fontScale) / 2,
-							lineHeight: LABEL_LINE * fontScale,
+							bottom: BASE + levelY(s.at) - labelH / 2,
+							lineHeight: LABEL_LINE,
 						}}
 						variant="caption"
 						weight="medium"

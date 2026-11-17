@@ -1,11 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
 	BAR_MAX,
 	BAR_MIN,
 	barHeight,
+	dayAt,
 	heldReadout,
 	type IntensityDay,
 	levelY,
+	MAX_WEEKS_BACK,
+	pagedOffset,
 	peakIndex,
 	relationTo,
 	SCALE,
@@ -120,24 +123,85 @@ describe("weekSentence", () => {
 });
 
 describe("dates", () => {
-	const thursday = new Date(2026, 10, 12, 15, 0);
+	const utc = (d: number, h = 0) => new Date(Date.UTC(2026, 10, d, h));
+	const thursday = utc(12, 15);
 
-	it("starts weeks on Monday and pages back a week at a time", () => {
-		expect(weekStart(thursday, 0)).toEqual(new Date(2026, 10, 9));
-		expect(weekStart(thursday, -1)).toEqual(new Date(2026, 10, 2));
-		expect(weekStart(new Date(2026, 10, 15, 23), 0)).toEqual(
-			new Date(2026, 10, 9)
-		);
+	it("starts weeks on Monday (UTC) and pages back a week at a time", () => {
+		expect(weekStart(thursday, 0)).toEqual(utc(9));
+		expect(weekStart(thursday, -1)).toEqual(utc(2));
+		expect(weekStart(utc(15, 23), 0)).toEqual(utc(9));
+		expect(weekStart(utc(16, 0), 0)).toEqual(utc(16));
 	});
 
 	it("writes a day as the board does", () => {
 		expect(shortDate(weekStart(thursday, 0), 1)).toBe("Tue 10 Nov");
-		expect(shortDate(new Date(2026, 9, 26), 6)).toBe("Sun 1 Nov");
+		expect(shortDate(new Date(Date.UTC(2026, 9, 26)), 6)).toBe("Sun 1 Nov");
+	});
+
+	// The server cuts weeks in UTC; the device's zone must not move a label off its bar.
+	describe.each([["America/New_York"], ["Australia/Sydney"], ["Asia/Kolkata"]])(
+		"on a device in %s",
+		(zone) => {
+			const was = process.env.TZ;
+			beforeAll(() => {
+				process.env.TZ = zone;
+			});
+			afterAll(() => {
+				process.env.TZ = was;
+			});
+
+			it("labels the server's week at the week boundary", () => {
+				// New York, Sunday 22 Nov 20:00 (local) is Monday 23 Nov 01:00 UTC: the server's
+				// week is already 23 Nov, and its Monday bar is 23 Nov.
+				const nySunday = utc(23, 1);
+				expect(weekStart(nySunday, 0)).toEqual(utc(23));
+				expect(shortDate(weekStart(nySunday, 0), 0)).toBe("Mon 23 Nov");
+				// Sydney, Monday 23 Nov 07:00 (local) is Sunday 22 Nov 20:00 UTC: still the week
+				// of 16 Nov on the server.
+				const sydneyMonday = utc(22, 20);
+				expect(weekStart(sydneyMonday, 0)).toEqual(utc(16));
+				expect(shortDate(weekStart(sydneyMonday, 0), 6)).toBe("Sun 22 Nov");
+				expect(shortDate(weekStart(sydneyMonday, -1), 0)).toBe("Mon 9 Nov");
+			});
+		}
+	);
+});
+
+describe("dayAt", () => {
+	it("maps a finger to its day, clamped to the plot", () => {
+		expect(dayAt(0, 210)).toBe(0);
+		expect(dayAt(29.9, 210)).toBe(0);
+		expect(dayAt(30, 210)).toBe(1);
+		expect(dayAt(209, 210)).toBe(6);
+		expect(dayAt(-12, 210)).toBe(0);
+		expect(dayAt(400, 210)).toBe(6);
+	});
+
+	it("waits for layout", () => {
+		expect(dayAt(10, 0)).toBeNull();
+	});
+});
+
+describe("pagedOffset", () => {
+	it("pages from the week shown, never past this week", () => {
+		expect(pagedOffset({ by: -1, earliest: false, shown: 0 })).toBe(-1);
+		expect(pagedOffset({ by: 1, earliest: false, shown: -3 })).toBe(-2);
+		expect(pagedOffset({ by: 1, earliest: false, shown: 0 })).toBe(0);
+	});
+
+	it("stops at the earliest week and at the server's limit", () => {
+		expect(pagedOffset({ by: -1, earliest: true, shown: -4 })).toBe(-4);
+		expect(
+			pagedOffset({ by: -1, earliest: false, shown: -MAX_WEEKS_BACK })
+		).toBe(-MAX_WEEKS_BACK);
+		// Two quick taps at -51 while -52 loads: both page from -51.
+		expect(pagedOffset({ by: -1, earliest: false, shown: -51 })).toBe(-52);
+		expect(pagedOffset({ by: -1, earliest: false, shown: -51 })).toBe(-52);
 	});
 });
 
 describe("heldReadout", () => {
-	const start = new Date(2026, 10, 9);
+	const start = new Date(Date.UTC(2026, 10, 9));
 
 	it("reads a day against your usual, in one line", () => {
 		expect(
@@ -179,12 +243,20 @@ describe("heldReadout", () => {
 });
 
 describe("weekA11y", () => {
-	it("reads each day with moments against your usual, once", () => {
+	it("reads every day against your usual, naming today", () => {
 		expect(weekA11y(BOARD, USUAL)).toBe(
-			"Intensity by day. Monday, within your usual. Tuesday, above your usual. Wednesday, within your usual. Thursday, below your usual"
+			"Intensity by day. Monday, within your usual. Tuesday, above your usual. Wednesday, within your usual. Thursday, today, below your usual. Friday, still ahead. Saturday, still ahead. Sunday, still ahead"
 		);
-		expect(weekA11y(week([7.6, null]), null)).toBe(
-			"Intensity by day. Monday, high intensity"
+	});
+
+	it("says the level without a usual, and reads an empty week", () => {
+		const past = week([7.6, null, null, null, null, null, null], -1);
+		expect(weekA11y(past, null)).toBe(
+			"Intensity by day. Monday, high intensity. Tuesday, no moments. Wednesday, no moments. Thursday, no moments. Friday, no moments. Saturday, no moments. Sunday, no moments"
+		);
+		const monday = week(new Array<number | null>(7).fill(null), 0);
+		expect(weekA11y(monday, USUAL)).toMatch(
+			/^Intensity by day\. Monday, today, no moments\. Tuesday, still ahead/
 		);
 	});
 });

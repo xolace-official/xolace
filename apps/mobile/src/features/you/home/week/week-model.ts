@@ -114,23 +114,68 @@ export function weekSentence({
 	return back ? `${head} ${COPY.week.backBy(back.dayName)}` : head;
 }
 
-const MONTH = new Intl.DateTimeFormat("en-GB", { month: "short" });
+/** The server's days are UTC days, so the dates under them are UTC dates too. */
+const MONTH = new Intl.DateTimeFormat("en-GB", {
+	month: "short",
+	timeZone: "UTC",
+});
 const DAY_MS = 86_400_000;
 const DAYS_IN_WEEK = 7;
+/** How far back Xolace+ can page (`MAX_WEEKS_BACK` in `profile.getWeekIntensity`). */
+export const MAX_WEEKS_BACK = 52;
 
-/** Monday 00:00 (local) of the week `offset` weeks from the one holding `now`. */
+/**
+ * Monday 00:00 UTC of the week `offset` weeks from the one holding `now`. UTC because
+ * `profile.getWeekIntensity` cuts its weeks, days and `isToday` on the Convex runtime's clock,
+ * which is UTC, whatever the device's time zone.
+ */
 export function weekStart(now: Date, offset: number): Date {
 	const monday = new Date(now);
-	monday.setHours(0, 0, 0, 0);
-	monday.setDate(monday.getDate() - ((monday.getDay() + 6) % DAYS_IN_WEEK));
-	monday.setDate(monday.getDate() + offset * DAYS_IN_WEEK);
+	monday.setUTCHours(0, 0, 0, 0);
+	monday.setUTCDate(
+		monday.getUTCDate() -
+			((monday.getUTCDay() + 6) % DAYS_IN_WEEK) +
+			offset * DAYS_IN_WEEK
+	);
 	return monday;
 }
 
-/** "Tue 10 Nov". */
+/** "Tue 10 Nov", the UTC date of day `index` of the week from `start`. */
 export function shortDate(start: Date, index: number): string {
-	const date = new Date(start.getTime() + index * DAY_MS + DAY_MS / 2);
-	return `${COPY.week.weekdays[index]} ${date.getDate()} ${MONTH.format(date)}`;
+	const date = new Date(start.getTime() + index * DAY_MS);
+	return `${COPY.week.weekdays[index]} ${date.getUTCDate()} ${MONTH.format(date)}`;
+}
+
+/** The day under a finger `x` pt into a plot `width` wide; null before layout. */
+export function dayAt(x: number, width: number): number | null {
+	"worklet";
+	if (width <= 0) {
+		return null;
+	}
+	return Math.max(
+		0,
+		Math.min(DAYS_IN_WEEK - 1, Math.floor((x / width) * DAYS_IN_WEEK))
+	);
+}
+
+/**
+ * The week an arrow asks for, paged from the week on screen (not the last one asked for, so
+ * taps while the next week loads don't run past the end): never later than this week, never
+ * earlier than the earliest.
+ */
+export function pagedOffset({
+	shown,
+	by,
+	earliest,
+}: {
+	shown: number;
+	by: -1 | 1;
+	earliest: boolean;
+}): number {
+	if (by < 0 && earliest) {
+		return shown;
+	}
+	return Math.max(-MAX_WEEKS_BACK, Math.min(0, shown + by));
 }
 
 /**
@@ -163,17 +208,26 @@ export function heldReadout({
 	return { detail: day.detail, value: `${date} · ${said}` };
 }
 
-/** The plot's spoken label: each day with moments (the sentence under it is read on its own). */
+/**
+ * The plot's spoken label: every day, today named, empty days read too, so an empty week is
+ * more than its title (the sentence under it is read on its own).
+ */
 export function weekA11y(
 	days: readonly IntensityDay[],
 	usual: Usual | null
 ): string {
-	const read = days
-		.filter((d) => d.intensity !== null)
-		.map((d) =>
-			usual && d.intensity !== null
-				? `${d.dayName}, ${COPY.week.relation[relationTo(d.intensity, usual)]}`
-				: `${d.dayName}, ${COPY.week.level(d.intensity ?? 0)}`
-		);
+	const todayIndex = days.findIndex((d) => d.isToday);
+	const read = days.map((d, i) => {
+		const name = d.isToday ? `${d.dayName}, ${COPY.week.today}` : d.dayName;
+		if (d.intensity === null) {
+			const ahead = todayIndex >= 0 && i > todayIndex;
+			return `${name}, ${ahead ? COPY.week.ahead : COPY.week.none}`;
+		}
+		return `${name}, ${
+			usual
+				? COPY.week.relation[relationTo(d.intensity, usual)]
+				: COPY.week.level(d.intensity)
+		}`;
+	});
 	return [COPY.week.chart, ...read].join(". ");
 }

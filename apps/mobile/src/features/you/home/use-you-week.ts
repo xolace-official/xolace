@@ -11,6 +11,7 @@ import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import {
 	type IntensityDay,
+	pagedOffset,
 	type Usual,
 	weekStart,
 } from "@/features/you/home/week/week-model";
@@ -26,7 +27,7 @@ export type IntensityWeek = {
 	label: string;
 	/** Xolace+ pages with arrows; free users see the frosted earlier-weeks gate. */
 	pager: boolean;
-	/** Monday of the week shown, local. */
+	/** Monday 00:00 UTC of the week shown: the server's weeks are UTC days. */
 	start: Date;
 };
 
@@ -76,7 +77,18 @@ export function useYouWeek(enabled: boolean, sessionCount: number) {
 				});
 				openPaywall("week_intensity");
 			},
-			pageWeek: (by: -1 | 1) => setOffset((w) => Math.min(0, w + by)),
+			/** From the week on screen, so taps while the next loads can't overshoot. */
+			pageWeek: (by: -1 | 1) => {
+				if (week) {
+					setOffset(
+						pagedOffset({
+							by,
+							earliest: week.isEarliestWeek,
+							shown: week.weekOffset,
+						})
+					);
+				}
+			},
 			/** The card was seen: production's teaser analytics. */
 			weekSeen: () => posthog.capture("teaser_viewed", { feature: FEATURE }),
 		},

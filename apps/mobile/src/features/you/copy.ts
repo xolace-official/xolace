@@ -238,7 +238,7 @@ export const COPY = {
 		forming: "Nothing yet this week. Its shape is still forming.",
 		heaviest: (day: string) => `Heaviest on ${day}.`,
 		heaviestAgainst: (day: string, relation: "above" | "within" | "below") =>
-			`Heaviest on ${day}, ${relation === "within" ? "within" : relation} your usual.`,
+			`Heaviest on ${day}, ${relation} your usual.`,
 		infoFree:
 			"Each bar is how heavy your moments felt that day; averaged from the intensity (1-10) of what you brought. Only this week shows in full; browsing earlier weeks is part of Xolace+.",
 		infoLabel: (label: string) => `About ${label.replace(/^This/, "this")}`,
@@ -260,7 +260,7 @@ export const COPY = {
 			minimal: "Minimal",
 			moderate: "Moderate",
 		},
-		title: "This week",
+		today: "today",
 		usual: "your usual",
 		weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
 	},
