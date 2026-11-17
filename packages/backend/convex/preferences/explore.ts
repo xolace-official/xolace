@@ -2,7 +2,10 @@ import type { Infer } from "convex/values";
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { requireAuth } from "../lib/auth";
-import { exploreContinueItemValidator } from "../lib/validators";
+import {
+	exploreContinueItemValidator,
+	exploreHiddenContinueValidator,
+} from "../lib/validators";
 import { preferencesRow, requirePreferencesRow } from "./row";
 
 /**
@@ -11,8 +14,12 @@ import { preferencesRow, requirePreferencesRow } from "./row";
  * - **"Remove from here"** on a "Pick up where you left off" card hides that
  *   card. Kept per item (a track or a Lantern entry) with when it was hidden.
  * - **"Don't use my sessions here"** turns off what Explore suggests from
- *   their sessions ("Because you named…"). No server query reads it yet: the
- *   client hides the section, and a server-side For you must honour it too.
+ *   their sessions ("Because you named…"). It's a privacy promise, not a
+ *   display choice. No server query personalises Explore yet, so today the
+ *   client keeps it by hiding the section. **Any server-side personalisation
+ *   of Explore (B6's `browse.forYou` and anything like it) must read
+ *   `exploreUsesSessions` and must not use the person's sessions, their
+ *   Understanding or anything derived from them when it's false.**
  *
  * Neither changes anything outside Explore.
  */
@@ -35,12 +42,14 @@ export const get = query({
 		const { profile } = await requireAuth(ctx);
 		const prefs = await preferencesRow(ctx, profile._id);
 		return {
-			hiddenContinue: (prefs?.exploreHiddenContinue ?? []).map((h) => h.item),
+			hiddenContinue: prefs?.exploreHiddenContinue ?? [],
 			usesSessions: prefs?.exploreUsesSessions ?? true,
 		};
 	},
 	returns: v.object({
-		hiddenContinue: v.array(exploreContinueItemValidator),
+		// With `hiddenAt`, so whoever decides whether a card the person went
+		// back to after hiding it shows again can compare the two times.
+		hiddenContinue: v.array(exploreHiddenContinueValidator),
 		usesSessions: v.boolean(),
 	}),
 });

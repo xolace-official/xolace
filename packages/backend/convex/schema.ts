@@ -2076,7 +2076,10 @@ export default defineSchema({
 		// once the person goes back to it after hiding it, if it chooses to.
 		exploreHiddenContinue: v.optional(v.array(exploreHiddenContinueValidator)),
 		// "Don't use my sessions here": false = Explore suggests nothing from
-		// their sessions ("Because you named…"). Undefined = true.
+		// their sessions ("Because you named…"). Undefined = true. A privacy
+		// promise: any server-side Explore personalisation (B6's
+		// `browse.forYou`) must read it and must not use their sessions, or
+		// anything derived from them, when it's false.
 		exploreUsesSessions: v.optional(v.boolean()),
 
 		// You cards taken off the profile in Settings › Appearance (redesign

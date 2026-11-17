@@ -112,14 +112,12 @@ describe("preferences/explore", () => {
 			item: { id: entry, kind: "entry" },
 		});
 
-		expect((await read(user)).hiddenContinue).toEqual([
-			{ id: track, kind: "track" },
-			{ id: entry, kind: "entry" },
-		]);
-		expect(await storedHidden(user)).toEqual([
+		const expected = [
 			{ hiddenAt: NOW, item: { id: track, kind: "track" } },
 			{ hiddenAt: NOW + 1000, item: { id: entry, kind: "entry" } },
-		]);
+		];
+		expect((await read(user)).hiddenContinue).toEqual(expected);
+		expect(await storedHidden(user)).toEqual(expected);
 	});
 
 	it("lists a card removed twice once, newest, with the later time", async () => {
@@ -130,7 +128,7 @@ describe("preferences/explore", () => {
 		vi.setSystemTime(NOW + 5000);
 		await hideTrack(user, a);
 
-		expect(await storedHidden(user)).toEqual([
+		expect((await read(user)).hiddenContinue).toEqual([
 			{ hiddenAt: NOW, item: { id: b, kind: "track" } },
 			{ hiddenAt: NOW + 5000, item: { id: a, kind: "track" } },
 		]);
@@ -144,7 +142,7 @@ describe("preferences/explore", () => {
 		}
 		const kept = (await read(user)).hiddenContinue;
 		expect(kept).toHaveLength(MAX_HIDDEN_CONTINUE);
-		expect(kept.map((item) => item.id)).toEqual(ids.slice(1));
+		expect(kept.map((h) => h.item.id)).toEqual(ids.slice(1));
 	});
 
 	it("turns sessions off and back on", async () => {
@@ -171,7 +169,7 @@ describe("preferences/explore", () => {
 			usesSessions: false,
 		});
 		expect(await read(user)).toEqual({
-			hiddenContinue: [{ id: track, kind: "track" }],
+			hiddenContinue: [{ hiddenAt: NOW, item: { id: track, kind: "track" } }],
 			usesSessions: false,
 		});
 	});
