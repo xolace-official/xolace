@@ -1,0 +1,63 @@
+import { describe, expect, it } from "vitest";
+import { toExercise } from "./catalogue";
+import {
+	LET_IT_LAND,
+	MAKE_ROOM,
+	REFLECT_SLOTS,
+	RESET,
+	SOFTEN_TOWARD_IT,
+	SPEAK_TO_IT,
+} from "./dev/fixtures";
+import { arcSize, canSwap, closeLabel, swapChoices } from "./sit-model";
+
+describe("the screen around the beats", () => {
+	it("sizes the arcs by beat", () => {
+		expect(arcSize("pre", "breath")).toBe("small");
+		expect(arcSize("play", "mirror")).toBe("small");
+		expect(arcSize("play", "sync")).toBe("full");
+		expect(arcSize("play", "haptic")).toBe("mid");
+		expect(arcSize("play", "prompt")).toBe("gone");
+		expect(arcSize("close", "prompt")).toBe("full");
+	});
+
+	it("labels close by where Sit came from", () => {
+		expect(closeLabel("kindling", "pre")).toBe("Back to your kindling");
+		expect(closeLabel("kindling", "play")).toBe("Leave Sit with this");
+		expect(closeLabel("reflect", "pre")).toBe("Leave Sit with this");
+	});
+
+	it("offers “Something different” only within a reflection, twice at most", () => {
+		const base = {
+			from: "reflect",
+			kind: "text",
+			linkOn: true,
+			sheetOpen: false,
+			stage: "play",
+			swaps: 0,
+		} as const;
+		expect(canSwap(base)).toBe(true);
+		expect(canSwap({ ...base, linkOn: false })).toBe(false);
+		expect(canSwap({ ...base, linkOn: false, stage: "pre" })).toBe(true);
+		expect(canSwap({ ...base, from: "kindling" })).toBe(false);
+		expect(canSwap({ ...base, swaps: 2 })).toBe(false);
+		expect(canSwap({ ...base, kind: "prompt" })).toBe(false);
+		expect(canSwap({ ...base, sheetOpen: true })).toBe(false);
+		expect(canSwap({ ...base, stage: "close" })).toBe(false);
+	});
+
+	it("hides “Try something simpler” while Three breaths is playing", () => {
+		const reset = toExercise(RESET, {});
+		const room = toExercise(MAKE_ROOM, {});
+		expect(
+			swapChoices({ nextBest: room, reset }, "let_it_land").map((c) => c.title)
+		).toEqual(["Try something simpler", "Try something else"]);
+		expect(swapChoices({ nextBest: room, reset }, "reset")).toEqual([
+			{
+				id: room.key,
+				sub: "Make room · about a minute",
+				title: "Try something else",
+			},
+		]);
+		expect(swapChoices({ nextBest: null, reset: null }, "x")).toEqual([]);
+	});
+});

@@ -33,7 +33,6 @@ const REPLACED_FEATURES = [
 	"reflect",
 	"reflect-tour",
 	"settings",
-	"sit-with-this",
 	"starter-suggestions",
 	"streak",
 	"timeline",

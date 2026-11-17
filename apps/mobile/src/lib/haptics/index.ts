@@ -1,3 +1,4 @@
+export { type BreathStep, useBreathHaptics } from "./breath";
 export { useBurnHaptic } from "./burn";
 export {
 	playAffirmativePress,
@@ -25,7 +26,6 @@ export {
 	useProcessingBreathHaptic,
 } from "./haptics";
 export type {
-	BreathPhase,
 	/** @public */
 	HapticName,
 } from "./haptics.types";
