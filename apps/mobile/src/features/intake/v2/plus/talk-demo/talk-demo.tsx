@@ -8,14 +8,14 @@ import { Modal, ScrollView, View } from "react-native";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import type { PaletteName } from "@/components/xolace-face/face-palette";
+import type { Mood } from "@/components/xolace-face/pose";
 import { Flux } from "@/features/intake/v2/flux";
 import { DemoControls } from "@/features/intake/v2/plus/talk-demo/demo-controls";
 import type { DemoPhase } from "@/features/intake/v2/plus/talk-demo/demo-machine";
 import { useTalkDemo } from "@/features/intake/v2/plus/talk-demo/use-talk-demo";
 import { SafetyStep } from "@/features/intake/v2/safety-step";
 import { TALK_CAST } from "@/features/talk/voice-options";
-import type { PaletteName } from "@/features/xolace-face/face-palette";
-import type { Mood } from "@/features/xolace-face/pose";
 import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 

@@ -7,6 +7,9 @@ import {
 	withSpring,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { poseForCheckIn } from "@/components/xolace-face/pose";
+import { MOVE_SPRING, useFace } from "@/components/xolace-face/use-face";
+import { XolaceFace } from "@/components/xolace-face/xolace-face";
 import { useMoodSlider } from "@/features/session-end/hooks/use-mood-slider";
 import {
 	hasSparkle,
@@ -16,9 +19,6 @@ import {
 	stepOf,
 	wordsFor,
 } from "@/features/session-end/mood-scale";
-import { poseForCheckIn } from "@/features/xolace-face/pose";
-import { MOVE_SPRING, useFace } from "@/features/xolace-face/use-face";
-import { XolaceFace } from "@/features/xolace-face/xolace-face";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { cn } from "@/lib/utils";
 import { MoodTrack } from "./mood-track";

@@ -1,7 +1,7 @@
 // Where the composer's face looks and how far it leans, from what you've written. Pure, so
 // the mapping is tested apart from the layout that measures it.
 
-import { type Pose, PRESETS } from "@/features/xolace-face/pose";
+import { type Pose, PRESETS } from "@/components/xolace-face/pose";
 
 /** Where the writing ends: the last line's end across the field (x) and down it (y), 0–1. */
 export type Writing = { text: string; x: number; y: number };

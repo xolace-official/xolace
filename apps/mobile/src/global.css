@@ -197,7 +197,7 @@
 	/* The Xolace face is a printed brand object: its features are the logo's,
      * whatever the theme, so a worried look reads the same everywhere. Fixed
      * on purpose; see the fixed-palette convention in CLAUDE.md. The body
-     * gradients (stop arrays) live in src/features/xolace-face/face-palette.ts. */
+     * gradients (stop arrays) live in src/components/xolace-face/face-palette.ts. */
 	--color-face-sclera: #ffffff;
 	--color-face-pupil: #1a1426;
 	--color-face-brow: rgba(110, 50, 40, 0.55);

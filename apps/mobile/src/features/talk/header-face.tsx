@@ -2,12 +2,12 @@
 // breathes, holds itself for what the talk is doing, and nods when you finish a line.
 
 import { useEffect, useRef } from "react";
+import { NEUTRAL } from "@/components/xolace-face/pose";
+import { useFace } from "@/components/xolace-face/use-face";
+import { XolaceFace } from "@/components/xolace-face/xolace-face";
 import { LOOKS } from "@/features/talk/companion/companion-look";
 import type { Talk } from "@/features/talk/use-talk";
 import { useTalkStyle } from "@/features/talk/use-talk-style";
-import { NEUTRAL } from "@/features/xolace-face/pose";
-import { useFace } from "@/features/xolace-face/use-face";
-import { XolaceFace } from "@/features/xolace-face/xolace-face";
 import { poseForPresence } from "./presence-pose";
 
 const SIZE = 34;

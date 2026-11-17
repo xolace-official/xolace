@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PRESETS } from "@/features/xolace-face/pose";
+import { PRESETS } from "@/components/xolace-face/pose";
 import {
 	gazeAtWriting,
 	leanPose,

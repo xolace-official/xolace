@@ -14,14 +14,14 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { PRESETS } from "@/components/xolace-face/pose";
+import { useFace } from "@/components/xolace-face/use-face";
+import { XolaceFace } from "@/components/xolace-face/xolace-face";
 import { LOOKS } from "@/features/talk/companion/companion-look";
 import { poseForPresence } from "@/features/talk/presence-pose";
 import { useCompanionName } from "@/features/talk/use-companion-name";
 import type { Talk } from "@/features/talk/use-talk";
 import { useTalkStyle } from "@/features/talk/use-talk-style";
-import { PRESETS } from "@/features/xolace-face/pose";
-import { useFace } from "@/features/xolace-face/use-face";
-import { XolaceFace } from "@/features/xolace-face/xolace-face";
 import { playSoftPress } from "@/lib/haptics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 

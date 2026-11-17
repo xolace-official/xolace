@@ -4,9 +4,9 @@
 
 import { useIsFocused } from "expo-router/react-navigation";
 import { useEffect } from "react";
-import { PRESETS, poseForSteadiness } from "@/features/xolace-face/pose";
-import { useFace } from "@/features/xolace-face/use-face";
-import { XolaceFace } from "@/features/xolace-face/xolace-face";
+import { PRESETS, poseForSteadiness } from "@/components/xolace-face/pose";
+import { useFace } from "@/components/xolace-face/use-face";
+import { XolaceFace } from "@/components/xolace-face/xolace-face";
 
 // It settles into its steadiness pose about when the ticks finish filling.
 const SETTLE_MS = 900;

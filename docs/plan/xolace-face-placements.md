@@ -5,7 +5,7 @@ The prototypes live on the throwaway branch `proto/xolace-face` only; they are t
 source for what each option looked and felt like. Rebuild the winners properly when
 implementing; don't promote the prototype code.
 
-The shared face itself is built: `apps/mobile/src/features/xolace-face/` (`XolaceFace`,
+The shared face itself is built: `apps/mobile/src/components/xolace-face/` (`XolaceFace`,
 `useFace`, the poses). Each placement below builds on it.
 
 ## Ground rules

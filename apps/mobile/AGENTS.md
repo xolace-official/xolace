@@ -233,6 +233,8 @@ older piece.
   `CountryMenu`, `Flux`, `Aura`. Settings-like pages: `SettingsHeader`, `SectionTitle`,
   `SettingsCard`, `Footnote`, `Rows`, `SwitchRow`, `OpenRow`, `TileRow`, `SettingsDialog`,
   `NameDialog`.
+- **The Xolace face** is a kit: `src/components/xolace-face/` (`XolaceFace`, `useFace`, the
+  poses). Where it may appear: `docs/plan/xolace-face-placements.md`.
 - **Colours for native views and SVG:** `useTokenColor("danger-ink")`. Native views go in
   `ThemedHost`, which passes the theme's light or dark (`useScheme()`, `src/design/scheme.ts`).
 - **Icons:** `Icon` takes an SF Symbol name, or `{ ios, android }` to draw on Android too.
