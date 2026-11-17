@@ -434,6 +434,48 @@ export const dataRetentionPreferenceValidator = v.union(
 	v.literal("1_year")
 );
 
+// The redesign's preferences (B7). Each closed set is a literal union so
+// clients get typed values. Only ever add a literal: the schema validates
+// every stored row against it, so dropping one would fail the push while a
+// row still holds it, and the backend deploys before the client that sends a
+// new value, so a widened union is always live first. Clients should skip a
+// value they don't know (a newer build may have written it).
+
+/** A You card someone can take off their profile (Settings › Appearance › Profile).
+ * Production's ids, so the device-local choice carries over unchanged. */
+export const profileCardValidator = v.union(
+	v.literal("calendar"),
+	v.literal("rank"),
+	v.literal("week")
+);
+
+/** The background behind the daily quote (`quotes.md` §1), in the sheet's order. */
+export const quoteBackgroundValidator = v.union(
+	v.literal("poster"),
+	v.literal("first-light"),
+	v.literal("mountain-air"),
+	v.literal("deep-forest"),
+	v.literal("night"),
+	v.literal("quiet-lake"),
+	v.literal("golden-meadow"),
+	v.literal("birds-at-dusk"),
+	v.literal("last-light"),
+	v.literal("hearth")
+);
+
+/** A card on Explore's "Pick up where you left off": a track (an episode
+ * included) or a Lantern entry. */
+export const exploreContinueItemValidator = v.union(
+	v.object({ id: v.id("audio_tracks"), kind: v.literal("track") }),
+	v.object({ id: v.id("library_entries"), kind: v.literal("entry") })
+);
+
+/** A Continue card taken off with "Remove from here", and when. */
+export const exploreHiddenContinueValidator = v.object({
+	hiddenAt: v.number(),
+	item: exploreContinueItemValidator,
+});
+
 // Full `preferences` document shape, mirroring schema.ts's `preferences` table.
 // Shared by preferences.ts and users.ts so the two return validators can never drift.
 export const preferencesDocValidator = v.object({
@@ -445,6 +487,9 @@ export const preferencesDocValidator = v.object({
 	dataRetentionPreference: dataRetentionPreferenceValidator,
 	displayName: v.optional(v.string()),
 	emotionalProfileId: v.id("emotional_profiles"),
+	exploreHiddenContinue: v.optional(v.array(exploreHiddenContinueValidator)),
+	exploreUsesSessions: v.optional(v.boolean()),
+	hiddenProfileCards: v.optional(v.array(profileCardValidator)),
 	libraryAudiences: v.optional(v.array(v.string())),
 	mirrorTone: mirrorToneValidator,
 	motionPreference: v.optional(motionPreferenceValidator),
@@ -469,6 +514,7 @@ export const preferencesDocValidator = v.object({
 	personalMemoryEnabled: v.optional(v.boolean()),
 	preferredInputType: v.union(v.literal("text"), v.literal("voice")),
 	preferredName: v.optional(v.string()),
+	quoteBackground: v.optional(quoteBackgroundValidator),
 	quotes: v.optional(
 		v.object({
 			notificationEnabled: v.boolean(),

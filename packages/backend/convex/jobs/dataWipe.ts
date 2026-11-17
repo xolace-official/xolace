@@ -26,7 +26,8 @@ const BATCH_SIZE = 100;
  *          channel_link_tokens row, and the bot's last 48 h of Telegram
  *          messages (#773)
  * Anonymizes: escalation_events (strip profileId for safety audit)
- * Resets: emotional_profile counters, the companion's preferred name
+ * Resets: emotional_profile counters, the companion's preferred name, the
+ *         Continue cards removed from Explore (`exploreHiddenContinue`)
  * Keeps: channel_identities (the link, its chat history and reflection
  *        window cleared) and their consent rows (#773); user_achievements, spark_spends, both spark counters, daysShowedUp,
  *        lastShowedUpDay and achievementsBackfilledAt — they record showing up,
@@ -265,7 +266,11 @@ export const wipe = internalMutation({
 		}
 
 		// ── Forget the companion's private name for them (#602) ──────
-		// The next talk asks again.
+		// The next talk asks again. And the Continue cards they removed from
+		// Explore (B7): each names something they listened to or read, the
+		// history `library_reads` above already goes with. The rest of
+		// preferences are choices, not history, and stay (including
+		// `exploreUsesSessions`, which is a consent).
 		const preferences = await ctx.db
 			.query("preferences")
 			.withIndex("by_profile", (q) =>
@@ -274,9 +279,12 @@ export const wipe = internalMutation({
 			.unique();
 		if (
 			preferences &&
-			(preferences.preferredName || preferences.talkNameAsked)
+			(preferences.preferredName ||
+				preferences.talkNameAsked ||
+				preferences.exploreHiddenContinue)
 		) {
 			await ctx.db.patch("preferences", preferences._id, {
+				exploreHiddenContinue: undefined,
 				preferredName: undefined,
 				talkNameAsked: undefined,
 			});

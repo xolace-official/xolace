@@ -10,11 +10,14 @@ import {
 	dataRetentionPreferenceValidator,
 	domainValidator,
 	escalationSourceValidator,
+	exploreHiddenContinueValidator,
 	insightFeatureValidator,
 	intakeRowAnswerValidators,
 	licenceValidator,
 	motionPreferenceValidator,
 	platformValidator,
+	profileCardValidator,
+	quoteBackgroundValidator,
 	resourceValidator,
 	safeguardLevelValidator,
 	supportNeedValidator,
@@ -2067,6 +2070,22 @@ export default defineSchema({
 		displayName: v.optional(v.string()),
 		emotionalProfileId: v.id("emotional_profiles"),
 
+		// Explore's "Pick up where you left off" cards taken off with "Remove
+		// from here" (redesign B7), newest last, at most
+		// `MAX_HIDDEN_CONTINUE`. `hiddenAt` lets Continue show a card again
+		// once the person goes back to it after hiding it, if it chooses to.
+		exploreHiddenContinue: v.optional(v.array(exploreHiddenContinueValidator)),
+		// "Don't use my sessions here": false = Explore suggests nothing from
+		// their sessions ("Because you named…"). Undefined = true. A privacy
+		// promise: any server-side Explore personalisation (B6's
+		// `browse.forYou`) must read it and must not use their sessions, or
+		// anything derived from them, when it's false.
+		exploreUsesSessions: v.optional(v.boolean()),
+
+		// You cards taken off the profile in Settings › Appearance (redesign
+		// B7). Undefined = none hidden. Display only: nothing else changes.
+		hiddenProfileCards: v.optional(v.array(profileCardValidator)),
+
 		// Lantern "Reading as…" (#409): audience facet slugs the reader chose.
 		// Undefined = never answered (the home shows the one-time card); [] =
 		// dismissed, which is an answer — For you then reads the Understanding alone.
@@ -2147,6 +2166,11 @@ export default defineSchema({
 		// What the companion calls them when it isn't their displayName (#602):
 		// private, never shown to other Xolacers. Cleared by a data wipe.
 		preferredName: v.optional(v.string()),
+
+		// The background behind the daily quote (redesign B7). Undefined =
+		// Poster. Kept apart from `quotes`, whose presence opts the account into
+		// the nightly generator and whose `themes` are content slugs.
+		quoteBackground: v.optional(quoteBackgroundValidator),
 
 		// Daily Quotes feature preferences.
 		// Undefined until the user first visits the quotes screen.
