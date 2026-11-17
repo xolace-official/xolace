@@ -5,9 +5,9 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { toast } from "@/components/shared/toast";
-import { COPY, type ReportReason } from "../copy";
+import type { ReportReason } from "../copy";
 import { useGoneStore } from "../gone-store";
-import { MOTION } from "../peers-look";
+import { outcomeOf, type ReportAnswer, settleIn } from "./report-outcome";
 import type { ReportSheet } from "./report-sheet-data";
 
 /**
@@ -34,33 +34,30 @@ export function useReportSheetData(): ReportSheet {
 
 	const send = async (id: string, reason: ReportReason) => {
 		const pickedAt = Date.now();
+		let answer: ReportAnswer;
+		try {
+			answer = await report({
+				reason,
+				reflectionId: id as Id<"reflections">,
+			});
+		} catch {
+			answer = "failed";
+		}
+		const { fold, toast: message, track } = outcomeOf(answer);
+		if (track) {
+			posthog.capture("peer_reflection_reported", { reason });
+		}
 		// The sheet is gone by the time the answer comes, so this timer isn't
 		// the sheet's: it only folds the card and shows the toast.
-		const settle = (message: string, fold: boolean) => {
-			const wait = Math.max(0, MOTION.afterSheetMs - (Date.now() - pickedAt));
-			setTimeout(() => {
+		setTimeout(
+			() => {
 				if (fold) {
 					leave(id, "reported");
 				}
 				toast(message);
-			}, wait);
-		};
-		try {
-			const result = await report({
-				reason,
-				reflectionId: id as Id<"reflections">,
-			});
-			if (result.rateLimited) {
-				settle(COPY.toast.reportLimited, false);
-			} else if (result.alreadyReported) {
-				settle(COPY.toast.alreadyReported, true);
-			} else {
-				settle(COPY.toast.reported, true);
-				posthog.capture("peer_reflection_reported", { reason });
-			}
-		} catch {
-			settle(COPY.toast.failed, false);
-		}
+			},
+			settleIn(pickedAt, Date.now())
+		);
 	};
 
 	return {
