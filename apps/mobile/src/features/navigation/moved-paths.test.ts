@@ -36,9 +36,23 @@ describe("MOVED", () => {
 		const listed = new Map(
 			navigationScreens.map((screen) => [screen.name, screen.options])
 		);
-		for (const { root } of movedRoots()) {
-			for (const shim of shimsOf(root)) {
+		for (const { root, paths } of movedRoots()) {
+			for (const shim of [
+				...shimsOf(root),
+				...paths.map((p) => `${root}/${p}`),
+			]) {
 				expect(listed.get(shim), shim).toEqual({ animation: "none" });
+			}
+		}
+	});
+
+	it("keeps a shim at each single moved subpath, sent to a real route", () => {
+		for (const { root, paths } of movedRoots()) {
+			for (const sub of paths) {
+				expect(exists(`${root}/${sub}`), `${root}/${sub}`).toBe(true);
+				const to = movedPath(`/${root}/${sub}`);
+				expect(to && isRoute(to), `/${root}/${sub} -> ${to}`).toBe(true);
+				expect(to && movedPath(to)).toBeNull();
 			}
 		}
 	});
@@ -60,13 +74,15 @@ describe("movedPath", () => {
 		["/browse/topic/sleep", "/explore/topic/sleep"],
 		["/browse/library/hub/grief", "/explore/library/hub/grief"],
 		["/profile", "/you"],
+		["/profile/insights", "/you/steadiness"],
 		["/kindling-announcement", "/session-end"],
 	])("sends %s to %s", (from, to) => {
 		expect(movedPath(from)).toBe(to);
 	});
 
 	it.each([
-		"/profile/insights",
+		"/profile/insights/more",
+		"/profile/elsewhere",
 		"/discovery/anything",
 		"/today",
 		"/explore/topics",

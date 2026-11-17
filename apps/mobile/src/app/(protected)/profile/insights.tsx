@@ -1,5 +1,4 @@
-import { InsightsScreen } from "@/features/insights/insights-screen";
+import { MovedRoute } from "@/features/navigation/moved-route";
 
-export default function InsightsRoute() {
-	return <InsightsScreen />;
-}
+/** A path that moved (`MOVED` in features/navigation/moved-paths.ts). */
+export default MovedRoute;

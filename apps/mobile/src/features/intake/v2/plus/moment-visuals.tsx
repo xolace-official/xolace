@@ -5,16 +5,25 @@ import { useState } from "react";
 import { View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { AppText } from "@/components/shared/app-text";
-import { icon } from "@/features/insights/domains";
+import type { IconName } from "@/components/shared/icon";
 import { useTokenColor } from "@/lib/use-token-color";
 
 const SUPPORT_ICON_SIZE = 20;
 
 const SUPPORTS = [
-	{ icon: icon("clock", "schedule"), label: "Sit with it" },
-	{ icon: icon("waveform", "graphic_eq"), label: "A soft sound" },
-	{ icon: icon("person.fill", "person"), label: "A Xolacer" },
-] as const;
+	{
+		icon: { android: "schedule", ios: "clock", web: "schedule" },
+		label: "Sit with it",
+	},
+	{
+		icon: { android: "graphic_eq", ios: "waveform", web: "graphic_eq" },
+		label: "A soft sound",
+	},
+	{
+		icon: { android: "person", ios: "person.fill", web: "person" },
+		label: "A Xolacer",
+	},
+] as const satisfies readonly { icon: IconName; label: string }[];
 
 // The feeling on top, its supports in a row below, joined by three curves: a branch,
 // read top to bottom as "named, then where it can go".

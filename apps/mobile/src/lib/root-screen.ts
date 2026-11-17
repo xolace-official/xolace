@@ -44,7 +44,9 @@ export const PLAYER_OPTIONS = {
 
 /** The old screens' sheets sized to their rows. iOS 26 paints its own glass behind a
  * transparent screen; iOS 18 and Android show transparent literally. New screens use
- * `fitSheet`. */
+ * `fitSheet`.
+ * @public No screen uses it since Steadiness moved to `fitSheet` (S5c); it goes with its
+ * `kit-imports.ts` entry in cleanup (C1). */
 export const legacyFitSheet = ({
 	background,
 	liquidGlass,

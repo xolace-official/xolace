@@ -10,4 +10,5 @@ export const navigationScreens: readonly RootScreen[] = [
 	{ name: "discovery", options: MOVED },
 	{ name: "kindling-announcement", options: MOVED },
 	{ name: "profile/index", options: MOVED },
+	{ name: "profile/insights", options: MOVED },
 ];

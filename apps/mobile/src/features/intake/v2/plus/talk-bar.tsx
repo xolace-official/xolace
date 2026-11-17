@@ -14,7 +14,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
-import { icon } from "@/features/insights/domains";
+import type { IconName } from "@/components/shared/icon";
 import { playSoftPress } from "@/lib/haptics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,11 @@ const BARS = Array.from({ length: BAR_COUNT }, (_, i) => ({
 }));
 const PLAY_ICON_SIZE = 16;
 
-const PLAY = icon("play.fill", "play_arrow");
+const PLAY: IconName = {
+	android: "play_arrow",
+	ios: "play.fill",
+	web: "play_arrow",
+};
 const BAR_CLASS =
 	"flex-row items-center gap-3 rounded-full border bg-surface-secondary p-2";
 

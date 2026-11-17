@@ -103,7 +103,7 @@ export function useYou(): YouHome {
 			openPlus: () => openPaywall("profile_row"),
 			openSettings: () => router.push("/settings"),
 			// Production's steadiness screen until S5c moves it to /you/steadiness.
-			openSteadiness: () => router.push("/profile/insights"),
+			openSteadiness: () => router.push("/you/steadiness"),
 			pageWeek: week.actions.pageWeek,
 			weekSeen: week.actions.weekSeen,
 		},

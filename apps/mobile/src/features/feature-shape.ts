@@ -20,7 +20,6 @@ const REPLACED_FEATURES = [
 	"discovery",
 	"follow-up",
 	"idle-menu",
-	"insights",
 	"intake",
 	"kindling",
 	"night-mode",

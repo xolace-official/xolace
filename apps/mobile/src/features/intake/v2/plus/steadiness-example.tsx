@@ -2,16 +2,31 @@
 // with example values, marked as an example so nobody reads them as their own.
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { SteadinessRing } from "@/components/shared/steadiness-ring";
+import type { IconName } from "@/components/shared/icon";
 import {
-	COMPOUNDING_SHORT,
-	DOMAIN_META,
-	type Tone,
-} from "@/features/insights/domains";
+	type RingTone,
+	SteadinessRing,
+} from "@/components/shared/steadiness-ring";
 import { cn } from "@/lib/utils";
 
 const RING_SIZE = 68;
 const RING_STROKE = 6;
+
+/** Production's names and icons for the three example parts (insights/domains.ts). */
+const DOMAIN_META = {
+	health: {
+		icon: { android: "bedtime", ios: "bed.double.fill", web: "bedtime" },
+		label: "Health & Rest",
+	},
+	love: {
+		icon: { android: "favorite", ios: "heart.fill", web: "favorite" },
+		label: "Love & Friendship",
+	},
+	work: {
+		icon: { android: "work", ios: "briefcase.fill", web: "work" },
+		label: "Work & Studies",
+	},
+} as const satisfies Record<string, { icon: IconName; label: string }>;
 
 /** Example values only. Colour is state, never domain: ember is "heavier than your usual". */
 const EXAMPLE_RINGS = [
@@ -19,18 +34,18 @@ const EXAMPLE_RINGS = [
 		domain: "work",
 		tone: "ember",
 		value: 38,
-		word: COMPOUNDING_SHORT.compounding,
+		word: "Heavier lately",
 	},
 	{ domain: "health", tone: "accent", value: 72, word: "Steady" },
 	{
 		domain: "love",
 		tone: "accent",
 		value: 64,
-		word: COMPOUNDING_SHORT.easing,
+		word: "Easing",
 	},
 ] as const satisfies readonly {
 	domain: keyof typeof DOMAIN_META;
-	tone: Tone;
+	tone: RingTone;
 	value: number;
 	word: string;
 }[];
