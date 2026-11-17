@@ -113,6 +113,7 @@ import type * as ai_tts from "../ai/tts.js";
 import type * as ai_ventAcknowledge from "../ai/ventAcknowledge.js";
 import type * as ai_xolacers_embed from "../ai/xolacers/embed.js";
 import type * as ai_xolacers_suggest from "../ai/xolacers/suggest.js";
+import type * as audio_formats from "../audio/formats.js";
 import type * as audio_listens from "../audio/listens.js";
 import type * as audio_measurePeaks from "../audio/measurePeaks.js";
 import type * as audio_peaks from "../audio/peaks.js";
@@ -445,6 +446,7 @@ declare const fullApi: ApiFromModules<{
   "ai/ventAcknowledge": typeof ai_ventAcknowledge;
   "ai/xolacers/embed": typeof ai_xolacers_embed;
   "ai/xolacers/suggest": typeof ai_xolacers_suggest;
+  "audio/formats": typeof audio_formats;
   "audio/listens": typeof audio_listens;
   "audio/measurePeaks": typeof audio_measurePeaks;
   "audio/peaks": typeof audio_peaks;
