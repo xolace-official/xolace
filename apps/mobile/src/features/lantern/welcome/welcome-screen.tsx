@@ -8,14 +8,17 @@ import { COPY } from "@/features/lantern/copy";
 import { HoldToBegin } from "@/features/lantern/welcome/hold-to-begin";
 import { useTokenColors } from "@/lib/use-token-color";
 
-const WRITER = require("@/assets/images/flux/writer-flux.png");
+/**
+ * Production's welcome art, hosted in Convex storage. Dev and preview builds talk to the dev
+ * deployment, whose storage bucket differs from prod's.
+ */
+const HERO_IMAGE = __DEV__
+	? "https://groovy-mandrill-892.eu-west-1.convex.cloud/api/storage/5cac4b6b-7e73-4018-8c2d-0c4aa3c0539b"
+	: "https://energetic-guineapig-283.convex.cloud/api/storage/9c662010-379d-411a-90fe-6f429fcfac47";
 
-/** The hero: 64% of the screen, its bottom 22% fading into the page; the art sits at 48%. */
-const HERO = {
-	art: { at: 0.48, h: 258, w: 170 },
-	fade: 0.22,
-	share: 0.64,
-} as const;
+/** The hero: 64% of the screen, its bottom 22% fading into the page. */
+const HERO = { fade: 0.22, share: 0.64 } as const;
+const ART_FADE_MS = 200;
 
 /**
  * Production's Lantern welcome (handoff §7), once, before the home on a first visit: the hero,
@@ -46,22 +49,19 @@ export function WelcomeScreen({ onBegin }: { onBegin: () => void }) {
 					height: heroH,
 				}}
 			>
+				{/* Production's art, over the gradient that shows while it loads. */}
+				<Image
+					accessibilityElementsHidden
+					className="absolute inset-0"
+					contentFit="cover"
+					contentPosition="top"
+					source={HERO_IMAGE}
+					transition={ART_FADE_MS}
+				/>
 				<LinearGradient
 					className="absolute inset-x-0 bottom-0"
 					colors={[clearOf(page), page]}
 					style={{ height: heroH * HERO.fade }}
-				/>
-				<Image
-					accessibilityElementsHidden
-					className="absolute left-1/2"
-					contentFit="contain"
-					source={WRITER}
-					style={{
-						height: HERO.art.h,
-						marginLeft: -HERO.art.w / 2,
-						top: heroH * HERO.art.at - HERO.art.h / 2,
-						width: HERO.art.w,
-					}}
 				/>
 			</View>
 			<View className="flex-1 items-center justify-end gap-3 px-8 pb-11.5">
