@@ -29,7 +29,6 @@ export type DomainItem = FreeView["domains"][number] &
 
 export const icon = (ios: string, android: string) =>
 	({ android, ios, web: android }) as Icon;
-export const GAUGE = icon("gauge.with.needle", "speed");
 
 export const DOMAIN_META: Record<
 	DomainItem["domain"],

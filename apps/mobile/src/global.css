@@ -182,6 +182,11 @@
 	--color-lantern-welcome-2: #4a3b6e;
 	--color-lantern-welcome-3: #9a6f86;
 	--color-lantern-welcome-glow: rgba(255, 196, 120, 0.55);
+
+	/* You's header aurora: a warm light and a cool one, drifting (the board's YouAlive). Fixed
+     * on purpose, like the other auroras; see apps/mobile/AGENTS.md. */
+	--color-you-aura-warm: #f5b04f;
+	--color-you-aura-cool: #b7a3ff;
 	/* Lantern reader pages (#408, S9b): the reading modes' own sheets, laid
      * over the light/dark base by ScopedVariables in
      * src/features/lantern/reader/reader-page.tsx. Warm and low-blue; Night is

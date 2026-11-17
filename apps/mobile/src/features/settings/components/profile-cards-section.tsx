@@ -1,3 +1,5 @@
+import { api } from "@xolace/backend/api";
+import { useMutation, useQuery } from "convex/react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { SettingsRow } from "@/components/shared/settings-row";
@@ -10,10 +12,25 @@ const CARDS: { id: ProfileCardId; label: string }[] = [
 	{ id: "week", label: "Week intensity" },
 ];
 
-/** Lets the person take the numbers off their profile, for the weeks they sting. */
+/**
+ * Lets the person take the numbers off their profile, for the weeks they sting. Kept on the
+ * account (`preferences.profileCards`, B7); a card still hidden only on this device (before
+ * B7, which You uploads) counts as hidden too, and showing it clears both.
+ */
 export function ProfileCardsSection() {
-	const hidden = useAppStore((s) => s.hiddenProfileCards);
-	const toggle = useAppStore((s) => s.toggleProfileCard);
+	const server = useQuery(api.preferences.profileCards.getHidden);
+	const device = useAppStore((s) => s.hiddenProfileCards);
+	const forget = useAppStore((s) => s.toggleProfileCard);
+	const setHidden = useMutation(api.preferences.profileCards.setHidden);
+	const hidden = [...(server ?? []), ...device];
+
+	const toggle = (id: ProfileCardId) => {
+		const hide = !hidden.includes(id);
+		if (device.includes(id)) {
+			forget(id);
+		}
+		setHidden({ card: id, hidden: hide }).catch(() => undefined);
+	};
 
 	return (
 		<SettingsSection title="Profile">

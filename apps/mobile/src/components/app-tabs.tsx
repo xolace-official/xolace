@@ -7,6 +7,7 @@ import { MiniPlayerOverlay } from "@/features/browse/now-playing/mini-player-ove
 import { useMiniPlayerShown } from "@/features/browse/now-playing/now-playing-store";
 import { TABS } from "@/features/navigation/tabs";
 import { useUnreadBadge } from "@/features/xolacer-chat/use-unread-badge";
+import { useYouTabIcon } from "@/features/you/avatar/use-you-tab-icon";
 import { playSoftPress } from "@/lib/haptics";
 import { useTabBarHidden } from "@/lib/tab-bar";
 
@@ -30,6 +31,7 @@ export default function AppTabs() {
 	// nothing.
 	const unread = useUnreadBadge();
 	const showPlayer = useMiniPlayerShown();
+	const avatarIcon = useYouTabIcon();
 	// iOS 26 has Liquid Glass: its own bar, and a slot that docks the player. Elsewhere (iOS
 	// below 26, Android) the bar is the theme's background, opaque at the scroll edge too, and
 	// the player floats above it.
@@ -56,7 +58,9 @@ export default function AppTabs() {
 						key={tab.name}
 						name={tab.name}
 					>
-						<NativeTabs.Trigger.Icon {...tab.icon} />
+						<NativeTabs.Trigger.Icon
+							{...(tab.avatar && avatarIcon ? avatarIcon : tab.icon)}
+						/>
 						<NativeTabs.Trigger.Label>{tab.label}</NativeTabs.Trigger.Label>
 						{tab.badge === "unread" && (
 							// No children at zero: `hidden` alone still painted a "0".

@@ -12,7 +12,7 @@ import {
 	getDateStamp,
 	getGreeting,
 } from "@/features/discovery/greeting";
-import { useProfileSummary } from "@/features/profile/hooks/use-profile-summary";
+import { useProfileSummary } from "@/lib/profile-summary";
 
 const ART = require("@/assets/images/illustrations/discovery-image-bg.png");
 

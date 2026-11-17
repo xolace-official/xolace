@@ -25,7 +25,6 @@ const REPLACED_FEATURES = [
 	"kindling",
 	"night-mode",
 	"onboarding",
-	"profile",
 	"quotes",
 	"reach-me-on",
 	"reflect",
