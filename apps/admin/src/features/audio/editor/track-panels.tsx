@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { StatusBadge } from "@/features/content/status-badge";
 import { formatDate, formatDuration } from "@/features/library/types";
 import { PickFileButton } from "@/features/media/pick-file-button";
+import { AUDIO_ACCEPT } from "@/features/media/use-media-upload";
 import { readAudioDuration } from "../audio-file";
 import { useTrackMedia } from "../audio-provider";
 import { FAMILY_LABEL, topicSlug } from "../types";
@@ -87,7 +88,7 @@ export function AudioPanel() {
 					Retry
 				</Button>
 			) : null}
-			<PickFileButton accept="audio/*" onPick={replace}>
+			<PickFileButton accept={AUDIO_ACCEPT} onPick={replace}>
 				Replace audio
 			</PickFileButton>
 		</div>

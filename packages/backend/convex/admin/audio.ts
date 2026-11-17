@@ -4,6 +4,7 @@ import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { r2, reindexTrack } from "../ai/paths/audioTracks";
 import { CATALOG_BY_KEY, TOPIC_SLUGS, topicTitle } from "../ai/paths/catalog";
+import { formatOf } from "../audio/formats";
 import { measurePeaksLater } from "../audio/trackPeaks";
 import { adminMutation, adminQuery } from "../lib/adminAuth";
 import { licenceValidator, trackSoundValidator } from "../lib/validators";
@@ -416,10 +417,13 @@ function assertDuration(durationSec: number) {
 	}
 }
 
-/** The audio key must be one `audioUploadUrl` minted for this track. */
+/** The audio key must be one `audioUploadUrl` minted for this track, in a format its waveform can be measured from. */
 function assertAudioKey(family: string, slug: string, key: string) {
 	if (!key.startsWith(audioKeyPrefix(family, slug))) {
 		throw new ConvexError(`"${key}" wasn't uploaded for ${family}/${slug}`);
+	}
+	if (!formatOf(key)) {
+		throw new ConvexError(`"${key}" isn't an MP3 or WAV`);
 	}
 }
 

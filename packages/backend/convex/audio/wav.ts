@@ -1,8 +1,8 @@
 import type { DecodedChunk } from "./peaks";
 
 /**
- * A streaming WAV reader for `measurePeaks.ts`: the admin's New track takes
- * "MP3, M4A or WAV", and a WAV is plain samples behind a RIFF header, so it
+ * A streaming WAV reader for `measurePeaks.ts`: uploads take MP3 or WAV
+ * (`formats.ts`), and a WAV is plain samples behind a RIFF header, so it
  * needs no decoder. Integer PCM at 8, 16, 24 or 32 bits and 32-bit float
  * (including WAVE_FORMAT_EXTENSIBLE wrappers of those); anything else throws.
  * Bytes arrive in any chunking; a frame split across chunks is carried over.

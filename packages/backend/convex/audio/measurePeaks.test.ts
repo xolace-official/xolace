@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeWav, TONE_MP3_BASE64 } from "./fixtures.helpers";
-import { formatOf, measureStream } from "./measurePeaks";
+import { measureStream } from "./measurePeaks";
 
 /** `bytes` as a stream of `size`-byte chunks, as a fetch body arrives. */
 function streamOf(bytes: Uint8Array, size: number) {
@@ -18,15 +18,6 @@ function streamOf(bytes: Uint8Array, size: number) {
 }
 
 const TONE_MP3 = Uint8Array.from(atob(TONE_MP3_BASE64), (c) => c.charCodeAt(0));
-
-describe("formatOf", () => {
-	it("knows MP3 and WAV by the key's extension, and nothing else", () => {
-		expect(formatOf("support/grounding/0b8f.mp3")).toBe("mp3");
-		expect(formatOf("music/rain/0b8f.WAV")).toBe("wav");
-		expect(formatOf("support/grounding/0b8f.m4a")).toBeNull();
-		expect(formatOf("support/grounding")).toBeNull();
-	});
-});
 
 describe("measureStream", () => {
 	// The fixture: full-level tone for 1 s, silence for 1 s, a quarter-level

@@ -4,6 +4,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalAction } from "../_generated/server";
 import { r2 } from "../ai/paths/audioTracks";
+import { type AudioFormat, formatOf } from "./formats";
 import { type DecodedChunk, PeakMeter } from "./peaks";
 import { WavDecoder } from "./wav";
 
@@ -15,9 +16,9 @@ import { WavDecoder } from "./wav";
  * (40 MB, 21 minutes).
  *
  * Every track in the catalogue is an MP3. WAV is read directly (`wav.ts`).
- * M4A, which the admin also accepts, has no decoder that runs here without a
- * native ffmpeg: such a track logs and keeps no peaks, and the player draws
- * its plain line, as it does for any track without them.
+ * Uploads take only these two (`formats.ts`); a key in any other format, from
+ * before that, logs and keeps no peaks, and the player draws its plain line,
+ * as it does for any track without them.
  *
  * Best effort, never thrown: a file that won't fetch or decode is logged and
  * skipped. Re-running is the fix, and safe (`trackPeaks.toMeasure` skips a
@@ -32,16 +33,7 @@ type Decoder = {
 	free: () => void;
 };
 
-/** The formats it can decode, by the key's extension. */
-const FORMATS = ["mp3", "wav"] as const;
-type Format = (typeof FORMATS)[number];
-
-export function formatOf(key: string): Format | null {
-	const ext = key.slice(key.lastIndexOf(".") + 1).toLowerCase();
-	return FORMATS.find((f) => f === ext) ?? null;
-}
-
-async function openDecoder(format: Format): Promise<Decoder> {
+async function openDecoder(format: AudioFormat): Promise<Decoder> {
 	if (format === "wav") {
 		const wav = new WavDecoder();
 		return { decode: (bytes) => wav.decode(bytes), free: () => undefined };
@@ -55,7 +47,7 @@ async function openDecoder(format: Format): Promise<Decoder> {
 
 /** The 60 peaks of an audio stream. Throws when it holds no audio it can decode. */
 export async function measureStream(
-	format: Format,
+	format: AudioFormat,
 	stream: ReadableStream<Uint8Array>
 ): Promise<number[]> {
 	const decoder = await openDecoder(format);

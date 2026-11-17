@@ -64,6 +64,7 @@ import { toast } from "sonner";
 import { runAction } from "@/features/content/run-action";
 import { isReservedSlug, isSlug, slugify } from "@/features/content/slug";
 import { formatDuration } from "@/features/library/types";
+import { AUDIO_ACCEPT } from "@/features/media/use-media-upload";
 import {
 	PageHeader,
 	PageHeaderBreadcrumbs,
@@ -272,7 +273,7 @@ export function NewTrackScreen() {
 							<Field data-invalid={shown("audio", false) ? true : undefined}>
 								<FieldLabel>Audio file</FieldLabel>
 								<FileUpload
-									accept="audio/*"
+									accept={AUDIO_ACCEPT}
 									invalid={Boolean(shown("audio", false))}
 									maxFiles={1}
 									maxSize={MAX_AUDIO_BYTES}
@@ -291,7 +292,7 @@ export function NewTrackScreen() {
 												Drop the audio here
 											</span>
 											<span className="type-small">
-												MP3, M4A or WAV, up to 200 MB
+												MP3 or WAV, up to 200 MB
 											</span>
 											<FileUploadTrigger
 												render={<Button size="sm" variant="outline" />}

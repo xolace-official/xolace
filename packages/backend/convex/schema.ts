@@ -164,7 +164,7 @@ export default defineSchema({
 		episodeNumber: v.optional(v.number()),
 		family: v.union(v.literal("support"), v.literal("music")),
 		featured: v.optional(v.boolean()), // hand-picked Browse hero; set from the Convex dashboard
-		key: v.string(), // R2 object key, e.g. `${family}/${slug}.m4a`
+		key: v.string(), // R2 object key, e.g. `${family}/${slug}/<uuid>.mp3`
 
 		// music-family
 		licence: v.optional(licenceValidator), // required at write for family="music"
