@@ -152,13 +152,3 @@ export function CompoundingUpsellLine({
 		</View>
 	);
 }
-
-/** The session-end line: nothing when there's none, or the user has Xolace+. */
-export function SessionEndUpsell({
-	sessionId,
-}: {
-	sessionId?: Id<"sessions">;
-}) {
-	const upsell = useCompoundingUpsell(sessionId ? { sessionId } : "skip");
-	return upsell && <CompoundingUpsellLine upsell={upsell} />;
-}

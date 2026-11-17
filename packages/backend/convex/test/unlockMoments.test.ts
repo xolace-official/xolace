@@ -18,6 +18,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import rateLimiterSchema from "../../node_modules/@convex-dev/rate-limiter/src/component/schema";
 import { api } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
+import { unlockEarnsBadge } from "../compounding/unlocks";
 import { missedPushAt } from "../lib/missedBeat";
 import {
 	runEvaluations,
@@ -234,6 +235,34 @@ describe("the missed-unlock push (#523)", () => {
 		expect(await logs(user)).toEqual([]);
 	});
 
+	it("with whenBadged, stands down only for an unlock that earned an area badge", async () => {
+		const user = await notifiable();
+		const seenAt = async (sessionId: Id<"sessions">) =>
+			(await user.root.run((ctx) => ctx.db.get("sessions", sessionId)))
+				?.domainUnlock?.seenAt;
+		// The first area: understanding-1, which Badges' arrival announces.
+		const first = await tonight(user, ["work"]);
+		await user.t.mutation(api.compounding.unlocks.markSeen, {
+			sessionId: first.sessionId,
+			whenBadged: true,
+		});
+		expect(await seenAt(first.sessionId)).toBeDefined();
+
+		// The second area earns no badge: it stays unseen, so its push still goes.
+		vi.setSystemTime(Date.now() + HOUR);
+		await seedReading(user, 2, ["family"]);
+		await seedReading(user, 1, ["family"]);
+		const second = await tonight(user, ["family"]);
+		expect(second.unlock?.domains).toEqual(["family"]);
+		await user.t.mutation(api.compounding.unlocks.markSeen, {
+			sessionId: second.sessionId,
+			whenBadged: true,
+		});
+		expect(await seenAt(second.sessionId)).toBeUndefined();
+		await nextDay(user);
+		expect(sentPushes).toHaveLength(1);
+	});
+
 	it("respects notifications off and milestones off", async () => {
 		const offs: Partial<Doc<"preferences">["notifications"]>[] = [
 			{ enabled: false },
@@ -332,6 +361,23 @@ describe("the missed-unlock push (#523)", () => {
 			undefined,
 			"rate_limit",
 		]);
+	});
+});
+
+describe("unlockEarnsBadge", () => {
+	const at = (...times: number[]) => times.map((t) => ({ at: t }));
+
+	it("is true when this session's stamps reach an area rung (1, 3, 8)", () => {
+		expect(unlockEarnsBadge(at(10), 10)).toBe(true);
+		expect(unlockEarnsBadge(at(1, 2, 10), 10)).toBe(true);
+		// One session opening areas 2 and 3 crosses the third.
+		expect(unlockEarnsBadge(at(1, 10, 10), 10)).toBe(true);
+	});
+
+	it("is false when they land between rungs, or the session stamped nothing", () => {
+		expect(unlockEarnsBadge(at(1, 10), 10)).toBe(false);
+		expect(unlockEarnsBadge(at(1, 2, 3, 10), 10)).toBe(false);
+		expect(unlockEarnsBadge(at(1), 10)).toBe(false);
 	});
 });
 

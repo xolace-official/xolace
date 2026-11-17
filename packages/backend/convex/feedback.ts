@@ -24,6 +24,8 @@ export const canAskContextual = query({
 	returns: v.boolean(),
 });
 
+/** @deprecated Only the old session end's "not sure" questionnaire read it; Not sure no longer opens a sheet. */
+// DEPRECATED(remove-after: app >= first version with the redesigned session end (S3)): Only the old session end's "not sure" questionnaire read it; Not sure no longer opens a sheet.
 export const canAskUnsureContextual = query({
 	args: {},
 	handler: async (ctx) => {

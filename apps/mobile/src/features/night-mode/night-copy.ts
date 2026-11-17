@@ -13,13 +13,6 @@ export const NIGHT_TEXTURE_WORDS = [
 	"too much",
 ] as const;
 
-/** Activity variant (solo/peers path): replaces "You showed up for yourself today." */
-export const NIGHT_SESSION_END_ACTIVITY =
-	"You can put it down now. It'll still be here tomorrow if you need it.";
-
-/** Exit variant: replaces "Heard." */
-export const NIGHT_SESSION_END_EXIT = "Heard. Rest if you can.";
-
 /** Typing nudge delay; slower cadence for late-night sessions. */
 export const NIGHT_NUDGE_DELAY_MS = 14_000;
 

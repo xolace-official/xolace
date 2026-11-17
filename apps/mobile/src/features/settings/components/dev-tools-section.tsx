@@ -14,7 +14,7 @@ import { BadgeUnlockDevRow } from "@/features/achievements/unlock/unlock-dev-row
 import { PlusPreviewDevRow } from "@/features/intake/v2/plus/plus-preview-dev-row";
 import { ReturnWelcomeSheet } from "@/features/reflect/components/return-welcome-sheet";
 import type { ReturnWelcomeTier } from "@/features/reflect/return-welcome-copy";
-import { DeferredQuestionsDevRow } from "@/features/session-end/deferred-dev-row";
+import { DeferredQuestionsDevRow } from "@/features/settings/components/deferred-dev-row";
 import { DevStatesRow } from "@/features/settings/components/dev-states-row";
 import { StarterSuggestionsDevRows } from "@/features/starter-suggestions/starter-dev-rows";
 import { AgeGateDevRow } from "@/features/xolacer-chat/age-gate/age-gate-dev-row";

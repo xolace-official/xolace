@@ -20,6 +20,8 @@ type Moved = {
 const MOVED: Readonly<Record<string, Moved>> = {
 	browse: { subtree: true, to: "/explore" },
 	discovery: { to: "/today" },
+	// Its beat folded into the session end's next step (S3).
+	"kindling-announcement": { to: "/session-end" },
 	profile: { to: "/you" },
 };
 

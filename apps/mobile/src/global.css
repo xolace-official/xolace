@@ -278,4 +278,83 @@
 
 	/* Heavy: the light warms a few degrees. */
 	--color-warm-page: #fff8f4;
+
+	/* Reflect's sky over the top of the page (SkyWash): the evening's last light, and dusk late. */
+	--color-evening-sky-1: #e3ccf0;
+	--color-evening-sky-2: #f6d3e2;
+	--color-evening-sky-3: #fde4da;
+	--color-evening-sky-end: rgba(247, 245, 251, 0);
+	--color-dusk-sky-1: #151029;
+	--color-dusk-sky-2: #1b1530;
+	--color-dusk-sky-end: rgba(14, 12, 21, 0);
+	/* The warm glow a title or a quote writes in with (GleamTitle, WriteOn). */
+	--color-write-gleam: #ffc896;
+}
+
+/*
+ * After a session's light (design/boards/AfterAlive.dc.html): the glow behind
+ * the face, its shadow, the slider's rail, the band of stars and the point of
+ * light. Light, never a surface, so the same in every theme; each has a late
+ * twin for the night window. The day stars are the Flux spectrum above.
+ */
+@theme static {
+	--color-after-light-neutral: rgba(226, 218, 246, 0.95);
+	--color-after-light-cool: rgba(160, 178, 212, 0.95);
+	--color-after-light-warm: rgba(255, 196, 156, 0.95);
+	--color-after-late-light-neutral: rgba(120, 60, 30, 0.55);
+	--color-after-late-light-cool: rgba(52, 64, 96, 0.9);
+	--color-after-late-light-warm: rgba(150, 80, 40, 0.8);
+	--color-after-shadow: rgba(44, 26, 90, 0.3);
+	--color-after-late-shadow: rgba(0, 0, 0, 0.55);
+
+	--color-after-rail-heavier: #a3b4d4;
+	--color-after-rail-same: #e4deee;
+	--color-after-rail-lighter: #ffc59e;
+	--color-after-late-rail-heavier: #4a5a80;
+	--color-after-late-rail-same: #3a3350;
+	--color-after-late-rail-lighter: #c27a3e;
+	--color-after-thumb: #ffffff;
+	--color-after-late-thumb: #f3f0fa;
+	--color-after-thumb-shadow: rgba(25, 21, 36, 0.22);
+	--color-after-thumb-ring: rgba(25, 21, 36, 0.08);
+
+	--color-after-late-star-1: #f5b04f;
+	--color-after-late-star-2: #ec7a66;
+	--color-after-late-star-3: #f7c77a;
+	--color-after-late-star-4: #e8956b;
+	--color-after-you-core: #fff1e6;
+	--color-after-late-you-core: #fff3d6;
+	--color-after-you-warm: #ff9f7a;
+	--color-after-point: #ffffff;
+	--color-after-late-point: #ffecc8;
+	--color-after-point-glow: rgba(255, 170, 140, 0.95);
+	--color-after-late-point-glow: rgba(245, 176, 79, 0.95);
+	--color-after-point-halo: rgba(255, 141, 180, 0.5);
+	--color-after-late-point-halo: rgba(236, 122, 102, 0.5);
+
+	--color-after-floor: rgba(255, 179, 138, 0.5);
+	--color-after-floor-mid: rgba(255, 141, 180, 0.18);
+	--color-after-late-floor: rgba(245, 176, 79, 0.28);
+	--color-after-late-floor-mid: rgba(236, 122, 102, 0.1);
+	--color-after-ready-ring: rgba(255, 160, 130, 0.5);
+	--color-after-ready-glow: rgba(255, 120, 110, 0.45);
+	--color-after-late-ready-ring: rgba(245, 176, 79, 0.45);
+	--color-after-late-ready-glow: rgba(245, 176, 79, 0.3);
+	--color-after-gleam: rgba(255, 180, 140, 0.85);
+	--color-after-late-gleam: rgba(245, 176, 79, 0.8);
+	--color-after-dot-glow: rgba(255, 160, 140, 0.5);
+	--color-after-late-dot-glow: rgba(245, 176, 79, 0.35);
+	/* The share card's drop (Peers' card). */
+	--color-after-card-shadow: rgba(60, 30, 120, 0.22);
+
+	/* The next card's art: the kindling trail's avatar fills, the listen tile. */
+	--color-after-kindling-1: #d7f0e6;
+	--color-after-kindling-2: #e3dbff;
+	--color-after-kindling-3: #fde9c6;
+	--color-after-late-kindling-1: #2a4a42;
+	--color-after-late-kindling-2: #3a3260;
+	--color-after-late-kindling-3: #4e3d22;
+	--color-after-listen: #e2f2f6;
+	--color-after-listen-ink: #2e7f93;
+	--color-after-late-listen: rgba(125, 211, 232, 0.14);
 }

@@ -27,6 +27,8 @@ export type Pose = {
 	cheeks: number;
 	/** 0 still … 1 fidgety idle motion */
 	restless: number;
+	/** 0 round … 1 crescent: the eyes close into happy arches */
+	eyeShape: number;
 };
 
 const POSE_KEYS = [
@@ -43,6 +45,7 @@ const POSE_KEYS = [
 	"squash",
 	"cheeks",
 	"restless",
+	"eyeShape",
 ] as const satisfies readonly (keyof Pose)[];
 
 export const NEUTRAL: Pose = {
@@ -51,6 +54,7 @@ export const NEUTRAL: Pose = {
 	browLift: 0,
 	cheeks: 0.25,
 	eyeOpen: 1,
+	eyeShape: 0,
 	gazeX: 0,
 	gazeY: 0,
 	lean: 0,
