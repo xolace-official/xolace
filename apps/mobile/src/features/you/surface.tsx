@@ -1,35 +1,7 @@
-import { type ReactNode, useEffect, useState } from "react";
-import {
-	AccessibilityInfo,
-	type StyleProp,
-	View,
-	type ViewStyle,
-} from "react-native";
+import type { ReactNode } from "react";
+import { type StyleProp, View, type ViewStyle } from "react-native";
 import { cn } from "@/lib/cn";
-
-/** The OS's Reduce Transparency, kept current. */
-export function useReduceTransparency(): boolean {
-	const [on, setOn] = useState(false);
-	useEffect(() => {
-		let alive = true;
-		AccessibilityInfo.isReduceTransparencyEnabled()
-			.then((v) => {
-				if (alive) {
-					setOn(v);
-				}
-			})
-			.catch(() => undefined);
-		const sub = AccessibilityInfo.addEventListener(
-			"reduceTransparencyChanged",
-			setOn
-		);
-		return () => {
-			alive = false;
-			sub.remove();
-		};
-	}, []);
-	return on;
-}
+import { useOSReduceTransparency } from "@/lib/os-reduce-transparency";
 
 /**
  * The board's `.gls` card: the glass tint with a hairline edge. Under Reduce Transparency it's
@@ -46,7 +18,7 @@ export function Surface({
 	style?: StyleProp<ViewStyle>;
 	children: ReactNode;
 }) {
-	const solid = useReduceTransparency();
+	const solid = useOSReduceTransparency();
 	return (
 		<View
 			className={cn(

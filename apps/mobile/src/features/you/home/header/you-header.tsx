@@ -1,6 +1,7 @@
+import { useEffect } from "react";
 import { View } from "react-native";
 import { useHeaderScrollY } from "react-native-collapsible-tab";
-import { useAnimatedReaction } from "react-native-reanimated";
+import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { AppText } from "@/components/shared/app-text";
 import { Aura } from "@/components/shared/aura";
@@ -26,7 +27,13 @@ const AURA_TOKENS = ["you-aura-warm", "you-aura-cool"] as const;
  */
 export function YouHeader({ topBarHeight }: { topBarHeight: number }) {
 	const { hero } = useYouHome().state;
-	const { closeTip } = useYouUi();
+	const { tip, closeTip } = useYouUi();
+	// The tip's open state where the scroll worklet can read it, so a closed tip costs no
+	// hop to JS as the header collapses.
+	const tipOpen = useSharedValue(tip.open);
+	useEffect(() => {
+		tipOpen.set(tip.open);
+	}, [tip.open, tipOpen]);
 	const collapse = useHeaderScrollY();
 	const [warm = "", cool = ""] = useTokenColors(AURA_TOKENS);
 
@@ -34,7 +41,7 @@ export function YouHeader({ topBarHeight }: { topBarHeight: number }) {
 	useAnimatedReaction(
 		() => Math.round(collapse.get() / SCROLL_STEP),
 		(now, before) => {
-			if (before !== null && now !== before) {
+			if (tipOpen.get() && before !== null && now !== before) {
 				scheduleOnRN(closeTip);
 			}
 		}

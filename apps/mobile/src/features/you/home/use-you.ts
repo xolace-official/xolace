@@ -6,7 +6,7 @@
 import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
@@ -45,6 +45,8 @@ export function useYou(): YouHome {
 	const openPaywall = usePaywall((s) => s.open);
 	const buyFreeze = useMutation(api.achievements.sparks.buyFreeze);
 	const [buying, setBuying] = useState(false);
+	// Two quick taps land before `buying` re-renders: the ref stops the second purchase.
+	const inFlight = useRef(false);
 
 	const indexed = history
 		? indexHistory(history, todayIn(history.timezone))
@@ -53,7 +55,7 @@ export function useYou(): YouHome {
 		hidden === undefined ? undefined : hidden.includes(card);
 
 	const buy = async () => {
-		if (!shelf || buying) {
+		if (!shelf || inFlight.current) {
 			return;
 		}
 		const reason = freezeReason(shelf);
@@ -61,6 +63,7 @@ export function useYou(): YouHome {
 			toast(reason, { variant: "warning" });
 			return;
 		}
+		inFlight.current = true;
 		setBuying(true);
 		try {
 			await buyFreeze();
@@ -70,6 +73,7 @@ export function useYou(): YouHome {
 				variant: "warning",
 			});
 		} finally {
+			inFlight.current = false;
 			setBuying(false);
 		}
 	};

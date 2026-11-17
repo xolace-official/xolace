@@ -84,7 +84,15 @@ export function StreakCard() {
 				<View className="mt-3 flex-row border-separator border-t-[0.5px] pt-3">
 					<Stat label={streak.momentsLabel} value={String(streak.moments)} />
 					<Divider />
-					<Stat label={COPY.streak.usualDay} value={streak.usualDay} />
+					<Stat
+						label={COPY.streak.usualDay}
+						spoken={
+							streak.usualDay === COPY.streak.none
+								? COPY.streak.noUsualDay
+								: undefined
+						}
+						value={streak.usualDay}
+					/>
 					<Divider />
 					<FreezeStat
 						freezes={streak.freezes}
@@ -101,10 +109,19 @@ function Divider() {
 	return <View className="w-[0.5px] self-stretch bg-separator" />;
 }
 
-function Stat({ value, label }: { value: string; label: string }) {
+function Stat({
+	value,
+	label,
+	spoken,
+}: {
+	value: string;
+	label: string;
+	/** What VoiceOver says when the value alone doesn't read (the dash). */
+	spoken?: string;
+}) {
 	return (
 		<View
-			accessibilityLabel={`${value} ${label}`}
+			accessibilityLabel={spoken ?? `${value} ${label}`}
 			accessible
 			className="flex-1 items-center gap-0.5"
 		>
@@ -146,7 +163,7 @@ function FreezeStat({
 			haptic={playSoftPress}
 			onPress={onPress}
 		>
-			<View className="h-[23px] flex-row items-center gap-1.25">
+			<View className="min-h-[23px] flex-row items-center gap-1.25">
 				<Icon
 					color={has ? frost : subtle}
 					name={{ android: "ac_unit", ios: "snowflake" }}

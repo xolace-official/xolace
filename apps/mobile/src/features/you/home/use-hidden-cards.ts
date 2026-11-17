@@ -7,6 +7,10 @@
 import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useRef } from "react";
+import {
+	mergeHidden,
+	uploadDeviceCards,
+} from "@/features/you/home/hidden-cards-model";
 import type { ProfileCard } from "@/features/you/home/you-model";
 import { useAppStore } from "@/store/store";
 
@@ -16,28 +20,24 @@ export function useHiddenCards(): readonly ProfileCard[] | undefined {
 	const device = useAppStore((s) => s.hiddenProfileCards);
 	const forget = useAppStore((s) => s.toggleProfileCard);
 	const setHidden = useMutation(api.preferences.profileCards.setHidden);
-	// Cards on their way up: a re-run before one lands mustn't send it twice, and the
-	// device's toggle mustn't flip it back.
 	const sending = useRef(new Set<ProfileCard>());
 
 	useEffect(() => {
 		if (server === undefined) {
 			return;
 		}
-		for (const card of device) {
-			if (sending.current.has(card)) {
-				continue;
-			}
-			sending.current.add(card);
-			setHidden({ card, hidden: true })
-				.then(() => forget(card))
-				.catch(() => undefined)
-				.finally(() => sending.current.delete(card));
-		}
+		uploadDeviceCards(device, {
+			// The toggle only ever removes here: `onDevice` is read as each one lands.
+			forget,
+			onDevice: (card) =>
+				useAppStore.getState().hiddenProfileCards.includes(card),
+			sending: sending.current,
+			upload: (card) => setHidden({ card, hidden: true }),
+		});
 	}, [server, device, setHidden, forget]);
 
 	if (server === undefined) {
 		return;
 	}
-	return [...server, ...device.filter((c) => !server.includes(c))];
+	return mergeHidden(server, device);
 }

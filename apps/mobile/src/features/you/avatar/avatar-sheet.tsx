@@ -35,7 +35,7 @@ function AvatarPicker() {
 		}
 	};
 	return (
-		<View accessibilityLabel={COPY.avatar.sheet} className="px-5 pt-2.5 pb-6">
+		<View className="px-5 pt-2.5 pb-6">
 			<View className="mb-3 h-1.25 w-9 self-center rounded-[3px] bg-separator" />
 			<View className="flex-row items-center gap-3.5">
 				{current ? (

@@ -31,7 +31,6 @@ export const COPY = {
 		label: (name: string, locked: boolean) =>
 			`${name}${locked ? ", Xolace+" : ""}`,
 		lock: "The ones with a lock come with Xolace+.",
-		sheet: "Choose your avatar",
 		sub: "Shown here, in the bar, and on your You tab.",
 		title: "Your avatar",
 	},
@@ -177,10 +176,12 @@ export const COPY = {
 		letters: ["M", "T", "W", "T", "F", "S", "S"],
 		moments: (n: number) => (n === 1 ? "moment" : "moments"),
 		none: "—",
+		noUsualDay: "No usual day yet",
 		spare: (sparks: number) => `You have ${plural(sparks, "spark", "sparks")}.`,
 		usualDay: "usual day",
-		week: (shown: number) =>
-			`This week, ${plural(shown, "day", "days")} showed up. See your days`,
+		/** `open`: Your days is shown, so the tap goes there. */
+		week: (shown: number, open: boolean) =>
+			`This week, ${plural(shown, "day", "days")} showed up.${open ? " See your days" : ""}`,
 		weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
 	},
 	tabs: {

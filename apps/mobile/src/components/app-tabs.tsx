@@ -1,5 +1,8 @@
 import { isLiquidGlassAvailable } from "expo-glass-effect";
-import { NativeTabs } from "expo-router/native-tabs";
+import {
+	NativeTabs,
+	type NativeTabsTriggerIconProps,
+} from "expo-router/native-tabs";
 import { useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { MiniPlayerAccessory } from "@/features/browse/now-playing/mini-player-accessory";
@@ -16,6 +19,17 @@ const SCREEN_LISTENERS = {
 		playSoftPress();
 	},
 };
+
+/**
+ * The avatar over a tab's own icon. Android keeps the Material glyph: there `md` wins over
+ * `src`. No `sf`, since on iOS `sf` would win over the avatar.
+ */
+function withAvatar(
+	icon: NativeTabsTriggerIconProps,
+	avatar: NativeTabsTriggerIconProps
+): NativeTabsTriggerIconProps {
+	return "md" in icon && icon.md ? { ...avatar, md: icon.md } : avatar;
+}
 
 /**
  * Today · Explore · Connect · You (`TABS`) on NativeTabs: Liquid Glass on iOS 26,
@@ -59,7 +73,9 @@ export default function AppTabs() {
 						name={tab.name}
 					>
 						<NativeTabs.Trigger.Icon
-							{...(tab.avatar && avatarIcon ? avatarIcon : tab.icon)}
+							{...(tab.avatar && avatarIcon
+								? withAvatar(tab.icon, avatarIcon)
+								: tab.icon)}
 						/>
 						<NativeTabs.Trigger.Label>{tab.label}</NativeTabs.Trigger.Label>
 						{tab.badge === "unread" && (

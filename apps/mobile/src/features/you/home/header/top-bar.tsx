@@ -14,7 +14,7 @@ import { AppText } from "@/components/shared/app-text";
 import { BandBlur } from "@/components/shared/band-blur";
 import { Image } from "@/components/shared/styled";
 import { useYouHome } from "@/features/you/home/you-data";
-import { useReduceTransparency } from "@/features/you/surface";
+import { useOSReduceTransparency } from "@/lib/os-reduce-transparency";
 import { useTokenColor } from "@/lib/use-token-color";
 
 // Collapse px over which the top bar goes from clear to solid (production).
@@ -41,7 +41,7 @@ const UNDER_PILLS = 6;
 export function TopBar({ height }: { height: number }) {
 	const insets = useSafeAreaInsets();
 	const page = useTokenColor("background");
-	const solid = useReduceTransparency();
+	const solid = useOSReduceTransparency();
 	const scrollY = useHeaderScrollY();
 	// The header stops at the collapse range, but the raw value can run past it (a long jump).
 	const { collapseRangeSV } = useCollapsingTabsContext();

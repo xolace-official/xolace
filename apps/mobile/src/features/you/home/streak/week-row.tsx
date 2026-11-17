@@ -39,12 +39,13 @@ export function WeekRow() {
 		return <View className="mt-3.5 h-[52px]" />;
 	}
 	const shown = week.filter((d) => d.state === "lit").length;
+	const open = state.days !== null;
 	return (
 		<PressScale
-			accessibilityLabel={COPY.streak.week(shown)}
+			accessibilityLabel={COPY.streak.week(shown, open)}
 			accessibilityRole="button"
 			className="mt-3.5 flex-row justify-between px-0.5 py-1"
-			disabled={state.days === null}
+			disabled={!open}
 			haptic={playSoftPress}
 			onPress={tapWeek}
 		>
