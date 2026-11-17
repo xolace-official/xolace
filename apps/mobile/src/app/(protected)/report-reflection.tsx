@@ -1,5 +1,10 @@
-import { ReportSheet } from "@/features/peer-reflection/components/report-sheet";
+import { ReportSheetView } from "@/features/peer-reflection/report/report-sheet";
+import { ReportSheetData } from "@/features/peer-reflection/report/report-sheet-data";
 
 export default function ReportReflectionRoute() {
-	return <ReportSheet />;
+	return (
+		<ReportSheetData>
+			<ReportSheetView />
+		</ReportSheetData>
+	);
 }

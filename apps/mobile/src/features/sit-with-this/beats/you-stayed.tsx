@@ -1,10 +1,10 @@
 import { View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { CtaButton } from "@/components/shared/cta-button";
 import { FONTS } from "@/design/type";
 import type { SitClock } from "../clock/use-sit-clock";
 import { COPY } from "../copy";
-import { SitCta } from "../cta/sit-cta";
 
 /** Board `.cls h2`: Bricolage 34/780, line height 1.05, −.03em (800 is the loaded cut). */
 const TITLE = {
@@ -49,11 +49,11 @@ export function StayedDone({ clock, ready, onPress }: DoneProps) {
 		transform: [{ scaleX: Math.max(0, 1 - clock.closeT.get() / DRAIN_MS) }],
 	}));
 	return (
-		<SitCta disabled={!ready} label={COPY.stayed.done} onPress={onPress}>
+		<CtaButton disabled={!ready} label={COPY.stayed.done} onPress={onPress}>
 			<Animated.View
 				className="flex-1 bg-subtle"
 				style={[{ opacity: DRAIN_OPACITY, transformOrigin: "right" }, drain]}
 			/>
-		</SitCta>
+		</CtaButton>
 	);
 }

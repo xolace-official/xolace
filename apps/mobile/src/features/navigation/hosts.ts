@@ -1,6 +1,7 @@
 import { type ComponentType, createElement } from "react";
 import { ArrivalsHost } from "@/features/achievements/arrival/arrivals-host";
 import { isPresentedRoute } from "@/features/navigation/presented-routes";
+import { GoneHost } from "@/features/peer-reflection/gone-host";
 
 /**
  * A host: a component the `(protected)` layout keeps mounted above its stack
@@ -42,4 +43,6 @@ function Arrivals() {
 export const ROOT_HOSTS: readonly RootHost[] = [
 	// A badge's arrival and the streak milestone, drawn over every screen (S6).
 	{ Host: Arrivals, name: "arrivals" },
+	// Clears the peer reflections you put away when you sign out (S15).
+	{ Host: GoneHost, name: "peer-reflections-gone" },
 ];

@@ -407,6 +407,45 @@
 	--color-sit-late-ember-2: #ec7a66;
 }
 
+/*
+ * You're not alone's light (design/boards/PeersAlive.dc.html): the mark's stars
+ * and your star, the point of light, the lit chip and card, the bridge line's
+ * dot. Light, never a surface, so the same in every theme; each has a late twin
+ * for the night window. The day stars and the edge glow are the Flux spectrum
+ * above (late: ember). Read in src/features/peer-reflection/peers-colors.ts.
+ */
+@theme static {
+	--color-peers-late-star-2: #ec7a66;
+	--color-peers-late-star-3: #f7c77a;
+	--color-peers-late-star-4: #e8956b;
+	--color-peers-you-core: #fff1e6;
+	--color-peers-late-you-core: #fff3d6;
+	--color-peers-point: #ffffff;
+	--color-peers-late-point: #ffecc8;
+	--color-peers-point-near: rgba(255, 170, 140, 1);
+	--color-peers-late-point-near: rgba(245, 176, 79, 1);
+	--color-peers-point-far: rgba(255, 141, 180, 1);
+	--color-peers-late-point-far: rgba(236, 122, 102, 1);
+	--color-peers-chip: rgba(255, 255, 255, 0.78);
+	--color-peers-late-chip: rgba(245, 176, 79, 0.13);
+	--color-peers-chip-edge: rgba(255, 160, 130, 0.55);
+	--color-peers-late-chip-edge: rgba(245, 176, 79, 0.45);
+	--color-peers-chip-shadow: rgba(255, 120, 110, 0.6);
+	--color-peers-late-chip-shadow: rgba(245, 176, 79, 0);
+	--color-peers-glyph-ring: rgba(255, 150, 130, 0.9);
+	--color-peers-late-glyph-ring: rgba(245, 176, 79, 0.9);
+	--color-peers-glyph-glow: rgba(255, 160, 140, 0.5);
+	--color-peers-late-glyph-glow: rgba(245, 176, 79, 0.35);
+	--color-peers-floor: rgba(255, 179, 138, 0.44);
+	--color-peers-floor-mid: rgba(255, 141, 180, 0.16);
+	--color-peers-late-floor: rgba(245, 176, 79, 0.24);
+	--color-peers-late-floor-mid: rgba(236, 122, 102, 0.09);
+	--color-peers-dot-glow: rgba(255, 160, 140, 0.45);
+	--color-peers-late-dot-glow: rgba(245, 176, 79, 0.35);
+	/* The card's drop (board `todayCard()`). */
+	--color-peers-card-shadow: rgba(60, 30, 120, 0.22);
+}
+
 /* Badges and their arrival are printed objects: each family's colour, the
  * bronze back and the fire's room are the same in every theme, picked by the
  * scheme (`-dusk` / `-day`). Fixed on purpose; see the fixed-palette convention
