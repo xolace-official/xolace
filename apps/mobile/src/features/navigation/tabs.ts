@@ -13,6 +13,8 @@ export type TabSpec = {
 	readonly badge?: "unread";
 	/** The tab's screens set their own content insets (a cover that runs under the bar). */
 	readonly ownInsets?: boolean;
+	/** Drawn with the person's avatar once it loads; `icon` until then (You). */
+	readonly avatar?: true;
 };
 
 /**
@@ -48,7 +50,7 @@ export const TABS: readonly TabSpec[] = [
 		name: "connect",
 	},
 	{
-		// The avatar replaces this with You (S5).
+		avatar: true,
 		icon: {
 			md: "account_circle",
 			sf: {

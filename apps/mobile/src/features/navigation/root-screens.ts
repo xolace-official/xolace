@@ -16,6 +16,7 @@ import { talkScreens } from "@/features/talk/screens";
 import { trustedBridgeScreens } from "@/features/trusted-bridge/screens";
 import { ventScreens } from "@/features/vent/screens";
 import { xolacerChatScreens } from "@/features/xolacer-chat/screens";
+import { youScreens } from "@/features/you/screens";
 import type { RootScreen } from "@/lib/root-screen";
 
 /**
@@ -43,4 +44,5 @@ export const ROOT_SCREENS: readonly RootScreen[] = [
 	...trustedBridgeScreens,
 	...ventScreens,
 	...xolacerChatScreens,
+	...youScreens,
 ];

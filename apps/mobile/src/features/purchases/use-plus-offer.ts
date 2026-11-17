@@ -27,7 +27,7 @@ type Options = {
 };
 
 /** Runs the facts through the policy and hands back a moment or nothing. Does not record it
- * shown; `PlusOfferCard` does on mount. */
+ * shown; the surface does on mount, through `usePlusOfferPresence`. */
 export function usePlusOffer(
 	surface: PlusOfferSurface,
 	{ enabled = true, sessionId }: Options = {}

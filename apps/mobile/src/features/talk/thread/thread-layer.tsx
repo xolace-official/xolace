@@ -3,11 +3,11 @@ import Animated, {
 	type DerivedValue,
 	useAnimatedStyle,
 } from "react-native-reanimated";
+import { BandBlur } from "@/components/shared/band-blur";
 import { useTokenColor } from "@/lib/use-token-color";
 import type { TalkGeometry } from "../motion/talk-geometry";
 import { LAYOUT } from "../motion/talk-motion";
 import type { TalkMotion } from "../motion/use-talk-motion";
-import { BandBlur } from "./band-blur";
 import { TalkThread } from "./talk-thread";
 
 /**

@@ -9,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { BadgeArt } from "@/components/shared/badge-art";
+import { RollDigits } from "@/components/shared/roll-digits";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import type { SparksView } from "@/features/achievements/badges/badges-model";
 import {
@@ -21,7 +22,6 @@ import {
 	Tipped,
 	usePressTip,
 } from "@/features/achievements/badges/list/press-tip";
-import { RollDigits } from "@/features/achievements/badges/list/roll-digits";
 import { COPY } from "@/features/achievements/copy";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 

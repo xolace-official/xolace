@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { GateFade } from "@/components/shared/gate-fade";
 import {
 	restoreIntakeArm,
 	trackIntakeArmAssigned,
@@ -20,7 +21,6 @@ import {
 	INTAKE_V2_FLAG,
 	waitForIntakeFlag,
 } from "@/features/intake/v2/arm";
-import { GateFade } from "@/features/profile/components/gate-fade";
 import { useFullContext } from "@/lib/convex/use-full-context";
 
 /** The founder message, first screen of intake ("Campfire Stack", #236). No skip; not

@@ -1,5 +1,8 @@
 import { isLiquidGlassAvailable } from "expo-glass-effect";
-import { NativeTabs } from "expo-router/native-tabs";
+import {
+	NativeTabs,
+	type NativeTabsTriggerIconProps,
+} from "expo-router/native-tabs";
 import { useThemeColor } from "heroui-native";
 import { View } from "react-native";
 import { MiniPlayerAccessory } from "@/features/browse/now-playing/mini-player-accessory";
@@ -7,6 +10,7 @@ import { MiniPlayerOverlay } from "@/features/browse/now-playing/mini-player-ove
 import { useMiniPlayerShown } from "@/features/browse/now-playing/now-playing-store";
 import { TABS } from "@/features/navigation/tabs";
 import { useUnreadBadge } from "@/features/xolacer-chat/use-unread-badge";
+import { useYouTabIcon } from "@/features/you/avatar/use-you-tab-icon";
 import { playSoftPress } from "@/lib/haptics";
 import { useTabBarHidden } from "@/lib/tab-bar";
 
@@ -15,6 +19,17 @@ const SCREEN_LISTENERS = {
 		playSoftPress();
 	},
 };
+
+/**
+ * The avatar over a tab's own icon. Android keeps the Material glyph: there `md` wins over
+ * `src`. No `sf`, since on iOS `sf` would win over the avatar.
+ */
+function withAvatar(
+	icon: NativeTabsTriggerIconProps,
+	avatar: NativeTabsTriggerIconProps
+): NativeTabsTriggerIconProps {
+	return "md" in icon && icon.md ? { ...avatar, md: icon.md } : avatar;
+}
 
 /**
  * Today · Explore · Connect · You (`TABS`) on NativeTabs: Liquid Glass on iOS 26,
@@ -30,6 +45,7 @@ export default function AppTabs() {
 	// nothing.
 	const unread = useUnreadBadge();
 	const showPlayer = useMiniPlayerShown();
+	const avatarIcon = useYouTabIcon();
 	// iOS 26 has Liquid Glass: its own bar, and a slot that docks the player. Elsewhere (iOS
 	// below 26, Android) the bar is the theme's background, opaque at the scroll edge too, and
 	// the player floats above it.
@@ -56,7 +72,11 @@ export default function AppTabs() {
 						key={tab.name}
 						name={tab.name}
 					>
-						<NativeTabs.Trigger.Icon {...tab.icon} />
+						<NativeTabs.Trigger.Icon
+							{...(tab.avatar && avatarIcon
+								? withAvatar(tab.icon, avatarIcon)
+								: tab.icon)}
+						/>
 						<NativeTabs.Trigger.Label>{tab.label}</NativeTabs.Trigger.Label>
 						{tab.badge === "unread" && (
 							// No children at zero: `hidden` alone still painted a "0".
