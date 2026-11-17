@@ -4,7 +4,7 @@
  */
 import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Share } from "react-native";
 import { toast } from "@/components/shared/toast";
 import { longDate } from "@/features/achievements/achievements-model";
@@ -55,6 +55,8 @@ export function useBadges(): Badges {
 	});
 	const buyFreeze = useMutation(api.achievements.sparks.buyFreeze);
 	const [buying, setBuying] = useState(false);
+	// Two quick taps land before `buying` re-renders: the ref stops the second purchase.
+	const inFlight = useRef(false);
 	const view = overview ? badgesView(overview) : undefined;
 
 	const togglePin = (b: BadgeView) => {
@@ -88,13 +90,14 @@ export function useBadges(): Badges {
 
 	const freeze = shelf ? freezeView(shelf) : undefined;
 	const buy = async () => {
-		if (!(shelf && freeze) || buying) {
+		if (!(shelf && freeze) || inFlight.current) {
 			return;
 		}
 		if (freeze.reason) {
 			toast(freeze.reason, { variant: "warning" });
 			return;
 		}
+		inFlight.current = true;
 		setBuying(true);
 		try {
 			await buyFreeze();
@@ -104,6 +107,7 @@ export function useBadges(): Badges {
 				variant: "warning",
 			});
 		} finally {
+			inFlight.current = false;
 			setBuying(false);
 		}
 	};
