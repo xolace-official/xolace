@@ -20,13 +20,23 @@ import { WavDecoder } from "./wav";
  * before that, logs and keeps no peaks, and the player draws its plain line,
  * as it does for any track without them.
  *
- * Best effort, never thrown: a file that won't fetch or decode is logged and
- * skipped. Re-running is the fix, and safe (`trackPeaks.toMeasure` skips a
- * track that has its peaks; `trackPeaks.save` skips one whose audio changed).
+ * Best effort, never thrown: a file that won't decode, or decodes to the
+ * wrong length, is logged and skipped. R2 being unreachable or answering
+ * 5xx/429 gets one retry ten minutes later. Measuring again is always safe
+ * (`trackPeaks.toMeasure` skips a track that has its peaks; `trackPeaks.save`
+ * skips one whose audio changed): re-uploading the same file, the admin's
+ * Measure again and re-running the backfill all do it.
  */
 
 /** Long enough to stream the largest file; signed per run, never cached. */
 const URL_TTL_SEC = 10 * 60;
+
+/** One retry after R2 is unreachable or answers 5xx/429, this much later. */
+const RETRY_DELAY_MS = 10 * 60 * 1000;
+
+/** How far the decoded length may stray from `durationSec`: the larger of these. */
+const LENGTH_SLACK = 0.02;
+const LENGTH_SLACK_SEC = 1.5;
 
 type Decoder = {
 	decode: (bytes: Uint8Array) => DecodedChunk;
@@ -45,11 +55,17 @@ async function openDecoder(format: AudioFormat): Promise<Decoder> {
 	return mp3;
 }
 
-/** The 60 peaks of an audio stream. Throws when it holds no audio it can decode. */
+/** A measure of one stream: its 60 peaks, and how long the audio that decoded lasts. */
+type Measured = { peaks: number[]; seconds: number | null };
+
+/**
+ * The 60 peaks of an audio stream. Throws when it holds no audio it can
+ * decode. The stream is cancelled if decoding fails partway.
+ */
 export async function measureStream(
 	format: AudioFormat,
 	stream: ReadableStream<Uint8Array>
-): Promise<number[]> {
+): Promise<Measured> {
 	const decoder = await openDecoder(format);
 	const meter = new PeakMeter();
 	const reader = stream.getReader();
@@ -61,6 +77,9 @@ export async function measureStream(
 			}
 			meter.push(decoder.decode(value));
 		}
+	} catch (error) {
+		await reader.cancel().catch(() => undefined);
+		throw error;
 	} finally {
 		decoder.free();
 		reader.releaseLock();
@@ -69,12 +88,36 @@ export async function measureStream(
 	if (!peaks) {
 		throw new Error("no audio decoded");
 	}
-	return peaks;
+	return { peaks, seconds: meter.seconds };
 }
 
+/**
+ * Whether the audio that decoded is as long as the track says. mpg123 skips
+ * damaged frames without an error, and a truncated object just ends early,
+ * so either would otherwise spread 60 bars over the wrong stretch of audio.
+ * `durationSec` is whole seconds from the browser or the ingest script.
+ */
+export function lengthMismatch(seconds: number | null, durationSec: number) {
+	if (seconds === null) {
+		return "the decoder never gave a sample rate";
+	}
+	const slack = Math.max(LENGTH_SLACK_SEC, durationSec * LENGTH_SLACK);
+	if (Math.abs(seconds - durationSec) <= slack) {
+		return null;
+	}
+	return `decoded ${seconds.toFixed(1)} s of a ${durationSec} s track (damaged or cut short)`;
+}
+
+/** R2 being briefly unavailable, as opposed to a file that isn't there or won't decode. */
+const transient = (status: number) => status === 429 || status >= 500;
+
 export const measure = internalAction({
-	args: { trackId: v.id("audio_tracks") },
-	handler: async (ctx, { trackId }) => {
+	args: {
+		/** Set on the one delayed retry after a transient fetch failure. */
+		retry: v.optional(v.boolean()),
+		trackId: v.id("audio_tracks"),
+	},
+	handler: async (ctx, { retry = false, trackId }) => {
 		const track = await ctx.runQuery(internal.audio.trackPeaks.toMeasure, {
 			trackId,
 		});
@@ -85,20 +128,52 @@ export const measure = internalAction({
 			console.warn(
 				`measurePeaks: ${track.slug} (${track.key}) has no peaks: ${why}`
 			);
+		const retryLater = async (why: string) => {
+			if (retry) {
+				skip(`${why}, again on retry`);
+				return;
+			}
+			console.warn(
+				`measurePeaks: ${track.slug} (${track.key}): ${why}; trying once more in ${RETRY_DELAY_MS / 60_000} minutes`
+			);
+			await ctx.scheduler.runAfter(
+				RETRY_DELAY_MS,
+				internal.audio.measurePeaks.measure,
+				{ retry: true, trackId }
+			);
+		};
 		const format = formatOf(track.key);
 		if (!format) {
 			skip("no decoder for its format; the player draws its line");
 			return null;
 		}
+		let response: Response;
 		try {
-			const response = await fetch(
+			response = await fetch(
 				await r2.getUrl(track.key, { expiresIn: URL_TTL_SEC })
 			);
-			if (!(response.ok && response.body)) {
+		} catch (error) {
+			await retryLater(
+				`couldn't reach R2 (${error instanceof Error ? error.message : String(error)})`
+			);
+			return null;
+		}
+		if (!(response.ok && response.body)) {
+			await response.body?.cancel();
+			if (transient(response.status)) {
+				await retryLater(`R2 answered ${response.status}`);
+			} else {
 				skip(`R2 answered ${response.status}`);
+			}
+			return null;
+		}
+		try {
+			const { peaks, seconds } = await measureStream(format, response.body);
+			const mismatch = lengthMismatch(seconds, track.durationSec);
+			if (mismatch) {
+				skip(mismatch);
 				return null;
 			}
-			const peaks = await measureStream(format, response.body);
 			await ctx.runMutation(internal.audio.trackPeaks.save, {
 				peaks,
 				sha256: track.sha256,

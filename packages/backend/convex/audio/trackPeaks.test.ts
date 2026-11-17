@@ -1,9 +1,10 @@
 // @vitest-environment edge-runtime
 /**
- * `audio_tracks.peaks` end to end: every upload path schedules a measure,
- * the measure writes peaks for the audio it fetched (and only that audio),
- * a track that won't decode is logged and skipped, and the backfill measures
- * only what's missing. R2 is faked at the `r2` seam and its files at `fetch`;
+ * `audio_tracks.peaks` end to end: every upload path schedules a measure for
+ * a support track (never music), the measure writes peaks for the audio it
+ * fetched (and only that audio, at its stated length), a track that won't
+ * decode is logged and skipped, R2 trouble gets one retry, and the backfill
+ * and Measure again measure only what's missing. R2 is faked at the `r2` seam and its files at `fetch`;
  * scheduled measures are run by hand, so the index jobs uploads also
  * schedule never run.
  */
@@ -36,12 +37,20 @@ const STEP_WAV = makeWav(
 	{ bits: 16 }
 );
 const STEP_PEAKS = [...Array(30).fill(1), ...Array(30).fill(0.5)];
+/** STEP_WAV lasts 1.2 s: a track stating 1 s is within the length check's slack. */
+const STEP_SEC = 1;
 const FLAT_PEAKS = Array(PEAK_BARS).fill(0.5);
 
 /** key → what R2 serves for it; anything else is a 404. */
 let files: Map<string, Uint8Array<ArrayBuffer>>;
+/** key → an HTTP status R2 answers with instead of the file. */
+let failing: Map<string, number>;
 const fetchSpy = vi.fn(async (url: string | URL | Request) => {
 	const key = String(url).replace("https://r2.test/", "");
+	const status = failing.get(key);
+	if (status) {
+		return new Response("<Error/>", { status });
+	}
 	const body = files.get(key);
 	return body
 		? new Response(body)
@@ -51,6 +60,7 @@ const fetchSpy = vi.fn(async (url: string | URL | Request) => {
 beforeEach(() => {
 	vi.useFakeTimers();
 	files = new Map();
+	failing = new Map();
 	vi.stubGlobal("fetch", fetchSpy);
 	vi.spyOn(r2, "getUrl").mockImplementation(
 		async (key) => `https://r2.test/${key}`
@@ -74,7 +84,7 @@ function insertTrack(
 	return t.run((ctx) =>
 		ctx.db.insert("audio_tracks", {
 			active: true,
-			durationSec: 300,
+			durationSec: STEP_SEC,
 			family: "support",
 			key: "support/grounding/old.wav",
 			sha256: OTHER_SHA,
@@ -93,30 +103,42 @@ function insertTrack(
 const track = (t: Root, id: Id<"audio_tracks">) =>
 	t.run((ctx) => ctx.db.get("audio_tracks", id));
 
-/** The track ids measures are scheduled for, in order. */
-async function scheduledMeasures(t: Root) {
+type MeasureArgs = { retry?: boolean; trackId: Id<"audio_tracks"> };
+
+/** The measures scheduled so far, in order, with their args. */
+async function scheduledMeasureArgs(t: Root) {
 	const jobs = await t.run((ctx) =>
 		ctx.db.system.query("_scheduled_functions").collect()
 	);
 	// convex-test names it "audio/measurePeaks:measure"; a deployment adds ".js".
 	return jobs
 		.filter((j) => j.name.replace(".js:", ":") === MEASURE)
-		.map((j) => (j.args[0] as { trackId: Id<"audio_tracks"> }).trackId);
+		.map((j) => j.args[0] as MeasureArgs);
 }
 
-const measure = (t: Root, trackId: Id<"audio_tracks">) =>
-	t.action(internal.audio.measurePeaks.measure, { trackId });
+/** The track ids measures are scheduled for, in order. */
+const scheduledMeasures = async (t: Root) =>
+	(await scheduledMeasureArgs(t)).map((a) => a.trackId);
+
+const measure = (t: Root, trackId: Id<"audio_tracks">, retry?: boolean) =>
+	t.action(internal.audio.measurePeaks.measure, { retry, trackId });
+
+const JUNK = new TextEncoder().encode("<html>Service unavailable</html>");
 
 describe("the upload paths", () => {
-	it("measures a new track from the admin once its audio is in", async () => {
+	it("measures a new support track from the admin once its audio is in", async () => {
 		const t = asAdmin();
 		await t.mutation(api.admin.audio.create, {
-			audio: { durationSec: 1, key: "music/rain/a.wav", sha256: SHA },
-			family: "music",
-			slug: "rain",
+			audio: {
+				durationSec: STEP_SEC,
+				key: "support/breathe/a.wav",
+				sha256: SHA,
+			},
+			family: "support",
+			slug: "breathe",
 			thumb: THUMB,
-			title: "Rain",
-			topic: "music_topic_sleep_rest",
+			title: "Breathe",
+			topic: "audio_topic_grief",
 		});
 		const id = (await t.run((ctx) => ctx.db.query("audio_tracks").first()))
 			?._id;
@@ -126,16 +148,47 @@ describe("the upload paths", () => {
 		expect(await scheduledMeasures(t)).toEqual([id]);
 		expect((await track(t, id))?.peaks).toBeUndefined();
 
-		files.set("music/rain/a.wav", STEP_WAV);
+		files.set("support/breathe/a.wav", STEP_WAV);
 		await measure(t, id);
 		expect((await track(t, id))?.peaks).toEqual(STEP_PEAKS);
+	});
+
+	it("never measures music, which draws the plain line", async () => {
+		const t = asAdmin();
+		await t.mutation(api.admin.audio.create, {
+			audio: { durationSec: STEP_SEC, key: "music/rain/a.wav", sha256: SHA },
+			family: "music",
+			slug: "rain",
+			thumb: THUMB,
+			title: "Rain",
+			topic: "music_topic_sleep_rest",
+		});
+		await t.mutation(api.admin.audio.replaceAudio, {
+			durationSec: STEP_SEC,
+			key: "music/rain/b.wav",
+			sha256: OTHER_SHA,
+			slug: "rain",
+		});
+		expect(await scheduledMeasures(t)).toEqual([]);
+		await expect(
+			t.mutation(api.admin.audio.measureWaveform, { slug: "rain" })
+		).rejects.toThrow(/music draws the plain line/);
+		// Even when asked directly, the action leaves it alone.
+		const id = (await t.run((ctx) => ctx.db.query("audio_tracks").first()))
+			?._id;
+		files.set("music/rain/b.wav", STEP_WAV);
+		if (id) {
+			await measure(t, id);
+			expect((await track(t, id))?.peaks).toBeUndefined();
+		}
+		expect(fetchSpy).not.toHaveBeenCalled();
 	});
 
 	it("drops the old audio's peaks on Replace audio, and measures the new audio", async () => {
 		const t = asAdmin();
 		const id = await insertTrack(t, { active: false, peaks: FLAT_PEAKS });
 		await t.mutation(api.admin.audio.replaceAudio, {
-			durationSec: 1,
+			durationSec: STEP_SEC,
 			key: "support/grounding/new.wav",
 			sha256: SHA,
 			slug: "grounding",
@@ -216,6 +269,60 @@ describe("the upload paths", () => {
 		});
 		expect((await track(t, trackId))?.peaks).toBeUndefined();
 		expect(await scheduledMeasures(t)).toEqual([trackId, trackId]);
+
+		// That measure failed: the same audio again tries once more.
+		await upsert({
+			...record,
+			key: "support/breathe/4.wav",
+			sha256: OTHER_SHA,
+		});
+		expect(await scheduledMeasures(t)).toEqual([trackId, trackId, trackId]);
+	});
+
+	it("refuses new upsert audio that isn't MP3 or WAV, but keeps a stored key", async () => {
+		const t = asUnauthed();
+		const record = {
+			durationSec: 300,
+			family: "support" as const,
+			key: "support/old/1.m4a",
+			sha256: SHA,
+			slug: "old",
+			sourceTags: [],
+			tags: [],
+			thumbKey: "thumb/x.webp",
+			thumbSha256: "x",
+			title: "Old",
+			topic: "audio_topic_anxiety",
+		};
+		const upsert = (r: typeof record) =>
+			t.mutation(internal.ai.paths.audioTracks.upsertTrack, { track: r });
+		await expect(upsert(record)).rejects.toThrow(/isn't an MP3 or WAV/);
+		expect(r2.deleteObject).toHaveBeenCalledWith(
+			expect.anything(),
+			"support/old/1.m4a"
+		);
+
+		// A track stored with an M4A before the rule: a metadata edit still lands.
+		await insertTrack(t, {
+			key: "support/old/1.m4a",
+			sha256: SHA,
+			slug: "old",
+		});
+		await expect(
+			upsert({ ...record, title: "Old, renamed" })
+		).resolves.toMatchObject({ action: "unchanged" });
+	});
+
+	it("measures again when the same file comes back to a track with no peaks", async () => {
+		const t = asAdmin();
+		const id = await insertTrack(t, { active: false });
+		await t.mutation(api.admin.audio.replaceAudio, {
+			durationSec: STEP_SEC,
+			key: "support/grounding/again.wav",
+			sha256: OTHER_SHA,
+			slug: "grounding",
+		});
+		expect(await scheduledMeasures(t)).toEqual([id]);
 	});
 });
 
@@ -238,10 +345,7 @@ describe("audio/measurePeaks:measure", () => {
 		});
 		const junk = await insertTrack(t, { key: "support/b/junk.wav", slug: "b" });
 		const m4a = await insertTrack(t, { key: "support/c/x.m4a", slug: "c" });
-		files.set(
-			"support/b/junk.wav",
-			new TextEncoder().encode("<html>Service unavailable</html>")
-		);
+		files.set("support/b/junk.wav", JUNK);
 
 		for (const id of [missing, junk, m4a]) {
 			await expect(measure(t, id)).resolves.toBeNull();
@@ -254,6 +358,72 @@ describe("audio/measurePeaks:measure", () => {
 		]);
 		// The M4A is never downloaded.
 		expect(fetchSpy).toHaveBeenCalledTimes(2);
+	});
+
+	it("skips audio that decodes shorter or longer than the track says", async () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		const t = asUnauthed();
+		// A 60 s track whose stored object holds only 1.2 s: cut short or damaged.
+		const id = await insertTrack(t, { durationSec: 60 });
+		files.set("support/grounding/old.wav", STEP_WAV);
+		await measure(t, id);
+		expect((await track(t, id))?.peaks).toBeUndefined();
+		expect(warn).toHaveBeenCalledWith(
+			"measurePeaks: grounding (support/grounding/old.wav) has no peaks: decoded 1.2 s of a 60 s track (damaged or cut short)"
+		);
+	});
+
+	it("retries once, ten minutes later, when R2 is briefly unavailable", async () => {
+		const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		const t = asUnauthed();
+		const id = await insertTrack(t);
+		failing.set("support/grounding/old.wav", 503);
+		await measure(t, id);
+		expect(await scheduledMeasureArgs(t)).toEqual([
+			{ retry: true, trackId: id },
+		]);
+		const [job] = await t.run((ctx) =>
+			ctx.db.system.query("_scheduled_functions").collect()
+		);
+		expect((job?.scheduledTime ?? 0) - Date.now()).toBeGreaterThanOrEqual(
+			9 * 60 * 1000
+		);
+
+		// Still down on the retry: logged, and no third try.
+		await measure(t, id, true);
+		expect(await scheduledMeasureArgs(t)).toHaveLength(1);
+		expect(warn).toHaveBeenLastCalledWith(
+			"measurePeaks: grounding (support/grounding/old.wav) has no peaks: R2 answered 503, again on retry"
+		);
+
+		// Back up: the retry measures it.
+		failing.clear();
+		files.set("support/grounding/old.wav", STEP_WAV);
+		await measure(t, id, true);
+		expect((await track(t, id))?.peaks).toEqual(STEP_PEAKS);
+	});
+
+	it("retries when R2 can't be reached at all", async () => {
+		vi.spyOn(console, "warn").mockImplementation(() => undefined);
+		const t = asUnauthed();
+		const id = await insertTrack(t);
+		fetchSpy.mockRejectedValueOnce(new TypeError("fetch failed"));
+		await measure(t, id);
+		expect(await scheduledMeasureArgs(t)).toEqual([
+			{ retry: true, trackId: id },
+		]);
+	});
+
+	it("measures again from the admin's Measure again, only while there's no waveform", async () => {
+		const t = asAdmin();
+		const id = await insertTrack(t);
+		await t.mutation(api.admin.audio.measureWaveform, { slug: "grounding" });
+		expect(await scheduledMeasures(t)).toEqual([id]);
+		await t.run((ctx) =>
+			ctx.db.patch("audio_tracks", id, { peaks: FLAT_PEAKS })
+		);
+		await t.mutation(api.admin.audio.measureWaveform, { slug: "grounding" });
+		expect(await scheduledMeasures(t)).toEqual([id]);
 	});
 
 	it("doesn't write peaks for audio the track no longer has", async () => {
@@ -286,7 +456,7 @@ describe("migrations:backfillTrackPeaks", () => {
 			oneBatchOnly: true,
 		});
 
-	it("measures every track still missing peaks, and skips the rest", async () => {
+	it("measures every support track still missing peaks, and skips the rest", async () => {
 		vi.spyOn(console, "warn").mockImplementation(() => undefined);
 		const t = asUnauthed();
 		const live = await insertTrack(t, { key: "support/a/1.wav", slug: "a" });
@@ -297,12 +467,15 @@ describe("migrations:backfillTrackPeaks", () => {
 		});
 		const broken = await insertTrack(t, { key: "support/c/1.wav", slug: "c" });
 		const done = await insertTrack(t, { peaks: FLAT_PEAKS, slug: "d" });
+		const music = await insertTrack(t, {
+			family: "music",
+			key: "music/e/1.wav",
+			slug: "e",
+			topic: "music_topic_sleep_rest",
+		});
 		files.set("support/a/1.wav", STEP_WAV);
 		files.set("support/b/1.wav", STEP_WAV);
-		files.set(
-			"support/c/1.wav",
-			new TextEncoder().encode("<html>Service unavailable</html>")
-		);
+		files.set("support/c/1.wav", JUNK);
 
 		await runBackfill(t);
 		const scheduled = await scheduledMeasures(t);
@@ -316,6 +489,7 @@ describe("migrations:backfillTrackPeaks", () => {
 		expect((await track(t, draft))?.peaks).toEqual(STEP_PEAKS);
 		expect((await track(t, broken))?.peaks).toBeUndefined();
 		expect((await track(t, done))?.peaks).toEqual(FLAT_PEAKS);
+		expect((await track(t, music))?.peaks).toBeUndefined();
 
 		// Re-running schedules only the one still missing them.
 		await runBackfill(t);

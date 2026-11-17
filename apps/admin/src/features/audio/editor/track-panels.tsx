@@ -74,7 +74,7 @@ export function AudioPanel() {
 					src={playingSrc ?? media.audioUrl}
 				/>
 			) : null}
-			<TrackWaveform peaks={saved.peaks} />
+			<TrackWaveform />
 			{saved.failure ? (
 				<Alert variant="coral">
 					<OctagonAlertIcon />

@@ -7,6 +7,7 @@ import {
 	internalQuery,
 	type MutationCtx,
 } from "../../_generated/server";
+import { formatOf } from "../../audio/formats";
 import { measurePeaksLater } from "../../audio/trackPeaks";
 import {
 	licenceValidator,
@@ -159,7 +160,9 @@ const upsertTrackResult = v.object({
  * Kindling script (`upsertTrack`) and admin imports (`imports/apply.ts`):
  * - unchanged `sha256` → delete the freshly-uploaded audio blob, no-op the row
  * - changed `sha256` → replace the row, delete the *old* audio blob
- * - new or changed audio → its peaks are measured in the background
+ * - a support track's new or changed audio, or unchanged audio it has no
+ *   peaks for, is measured in the background (`audio/trackPeaks.ts`)
+ * - new audio that isn't MP3 or WAV is rejected
  * - a thumbnail blob is NEVER deleted (content-addressed key, shared across
  *   rows); an unchanged `thumbSha256` re-uploads to the same key (harmless
  *   overwrite), a changed one just repoints `thumbKey`.
@@ -221,6 +224,14 @@ export async function upsertTrackRecord(
 		.query("audio_tracks")
 		.withIndex("by_slug", (q) => q.eq("slug", track.slug))
 		.unique();
+	// New audio must be MP3 or WAV, what the waveform is measured from
+	// (`audio/formats.ts`); a stored key from before that rule may stay.
+	if (!formatOf(track.key) && track.key !== existing?.key) {
+		await dropUpload(existing?.key);
+		throw new ConvexError(
+			`audio_tracks upsert rejected: slug "${track.slug}" audio "${track.key}" isn't an MP3 or WAV`
+		);
+	}
 	const searchText = trackSearchTextOf(track);
 
 	const reindex = (trackId: Id<"audio_tracks">) =>
@@ -235,7 +246,7 @@ export async function upsertTrackRecord(
 			updatedAt: now,
 		});
 		await reindex(trackId);
-		await measurePeaksLater(ctx, trackId);
+		await measurePeaksLater(ctx, { _id: trackId, family: track.family });
 		return { action: "inserted", trackId };
 	}
 
@@ -260,6 +271,10 @@ export async function upsertTrackRecord(
 			peaks: existing.peaks,
 		});
 		await reindex(existing._id);
+		// The same audio again is a chance to measure what never was.
+		if (existing.peaks === undefined) {
+			await measurePeaksLater(ctx, existing);
+		}
 		const action =
 			existing.thumbSha256 === track.thumbSha256 ? "unchanged" : "updated";
 		return { action, trackId: existing._id };
@@ -270,7 +285,7 @@ export async function upsertTrackRecord(
 	await r2.deleteObject(ctx, oldKey);
 	await reindex(existing._id);
 	// The replace dropped the old audio's peaks.
-	await measurePeaksLater(ctx, existing._id);
+	await measurePeaksLater(ctx, existing);
 	return { action: "updated", trackId: existing._id };
 }
 

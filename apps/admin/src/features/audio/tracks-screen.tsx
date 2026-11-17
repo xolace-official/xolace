@@ -321,13 +321,13 @@ function TracksTable({ tracks }: { tracks: readonly AudioTrack[] }) {
 										New
 									</Badge>
 								) : null}
-								{track.peaks ? null : (
-									// The player draws a plain line; the editor says why.
+								{track.family === "support" && !track.peaks ? (
+									// The player draws a plain line; the editor can measure it again.
 									<Badge variant="neutral">
 										<AudioWaveformIcon />
 										No waveform
 									</Badge>
-								)}
+								) : null}
 							</span>
 							<span className="type-small block truncate text-ink-muted">
 								{track.licence?.artist ?? track.narrators?.join(", ") ?? (

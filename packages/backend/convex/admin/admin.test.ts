@@ -65,6 +65,7 @@ const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 	},
 	"admin/audio:list": {},
 	"admin/audio:markSafetyReviewed": { slug: "x" },
+	"admin/audio:measureWaveform": { slug: "x" },
 	"admin/audio:media": { linkWindow: 0, slug: "x" },
 	"admin/audio:publish": { slug: "x" },
 	"admin/audio:replaceAudio": {

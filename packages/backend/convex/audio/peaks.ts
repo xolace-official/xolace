@@ -54,6 +54,8 @@ const PAGE_BLOCKS = 65_536;
 /** One chunk of decoded audio: a Float32Array per channel, `samplesDecoded` long. */
 export type DecodedChunk = {
 	channelData: readonly Float32Array[];
+	/** Frames per second, once the decoder knows it. */
+	sampleRate?: number;
 	samplesDecoded: number;
 };
 
@@ -68,13 +70,17 @@ export class PeakMeter {
 	#energy = 0;
 	#inBlock = 0;
 	#frames = 0;
+	#sampleRate = 0;
 
-	/** How many frames (samples per channel) it has seen. */
-	get frames() {
-		return this.#frames;
+	/** How long the audio it has seen lasts, or null before a decoder gave its rate. */
+	get seconds(): number | null {
+		return this.#sampleRate > 0 ? this.#frames / this.#sampleRate : null;
 	}
 
-	push({ channelData, samplesDecoded }: DecodedChunk) {
+	push({ channelData, sampleRate, samplesDecoded }: DecodedChunk) {
+		if (sampleRate) {
+			this.#sampleRate = sampleRate;
+		}
 		const channels = channelData.length;
 		if (channels === 0) {
 			return;

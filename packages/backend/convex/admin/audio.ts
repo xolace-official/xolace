@@ -5,7 +5,7 @@ import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { r2, reindexTrack } from "../ai/paths/audioTracks";
 import { CATALOG_BY_KEY, TOPIC_SLUGS, topicTitle } from "../ai/paths/catalog";
 import { formatOf } from "../audio/formats";
-import { measurePeaksLater } from "../audio/trackPeaks";
+import { drawsWaveform, measurePeaksLater } from "../audio/trackPeaks";
 import { adminMutation, adminQuery } from "../lib/adminAuth";
 import {
 	licenceValidator,
@@ -494,7 +494,7 @@ export const create = adminMutation({
 			searchText: trackSearchTextOf(track),
 		});
 		await reindexTrack(ctx, null, id);
-		await measurePeaksLater(ctx, id);
+		await measurePeaksLater(ctx, { _id: id, family });
 		return null;
 	},
 	returns: v.null(),
@@ -523,6 +523,10 @@ export const replaceAudio = adminMutation({
 			if (key !== t.key) {
 				await r2.deleteObject(ctx, key);
 			}
+			// A chance to measure the waveform if it never was.
+			if (t.peaks === undefined) {
+				await measurePeaksLater(ctx, t);
+			}
 			return null;
 		}
 		await writeTrack(ctx, ctx.identity, t, {
@@ -537,7 +541,27 @@ export const replaceAudio = adminMutation({
 			sha256,
 		});
 		await r2.deleteObject(ctx, t.key);
-		await measurePeaksLater(ctx, t._id);
+		await measurePeaksLater(ctx, t);
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * The editor's Measure again, for a support track with no waveform: measures
+ * its stored audio in the background (`audio/measurePeaks.ts`). Nothing to
+ * do once it has peaks; music never draws a waveform.
+ */
+export const measureWaveform = adminMutation({
+	args: { slug: v.string() },
+	handler: async (ctx, { slug }) => {
+		const t = await trackBySlug(ctx, slug);
+		if (!drawsWaveform(t)) {
+			throw trackError(t, "music draws the plain line, not a waveform");
+		}
+		if (t.peaks === undefined) {
+			await measurePeaksLater(ctx, t);
+		}
 		return null;
 	},
 	returns: v.null(),

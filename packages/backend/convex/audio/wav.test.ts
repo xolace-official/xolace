@@ -66,6 +66,23 @@ describe("WavDecoder", () => {
 		expect(decodeAll(trailing, 5)[0]).toHaveLength(FRAMES.length);
 	});
 
+	it("skips metadata of any size before the data, without holding it", () => {
+		// 2 MB of embedded artwork or iXML, odd-sized so it's padded.
+		const size = 2 * 1024 * 1024 + 1;
+		const art = new Uint8Array(8 + size + 1);
+		art.set([..."id3 "].map((c) => c.charCodeAt(0)));
+		new DataView(art.buffer).setUint32(4, size, true);
+		const bytes = makeWav(FRAMES, { bits: 16 }, { before: [art] });
+		for (const chunk of [64 * 1024, 4096 + 3]) {
+			expect(decodeAll(bytes, chunk)[0]).toHaveLength(FRAMES.length);
+		}
+	});
+
+	it("reports the sample rate with the samples", () => {
+		const out = new WavDecoder().decode(makeWav(FRAMES, { bits: 16 }));
+		expect(out.sampleRate).toBe(8000);
+	});
+
 	it("reads to the end when the data size was never filled in", () => {
 		const bytes = makeWav(FRAMES, { bits: 16 }, { dataSize: 0 });
 		expect(decodeAll(bytes, 2)[0]).toHaveLength(FRAMES.length);
