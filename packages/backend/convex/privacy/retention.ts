@@ -92,6 +92,8 @@ export const countSessionsPastRetention = query({
  * - Shortening deletes everything the nightly job would for the caller, at
  *   `nextRunCutoff` (the count's cutoff): one batch inline, the rest in
  *   `continueRetentionPurge` runs scheduled back to back.
+ * - That cutoff deliberately reaches one run interval past the nightly job's
+ *   cutoff, so "Delete them" deletes exactly the sessions the count showed.
  * - Lengthening, keeping the same value, and `indefinite` delete nothing.
  *
  * Returns `{ scheduled }`: true when a continuation will delete more.
@@ -136,6 +138,11 @@ export const applyRetentionNow = mutation({
  * The rest of an `applyRetentionNow` purge, one batch per run, at the cutoff
  * it was confirmed with. Stops if the preference has changed since: a
  * person who lengthened it again keeps what's left.
+ *
+ * Two chains can run at once (6 months, back to indefinite, 6 months again
+ * before the first chain's next run). Both carry the current preference, and
+ * the older one's cutoff is earlier, so it only deletes a subset of what the
+ * newer one does: nothing extra is lost, so there's no chain id to dedupe on.
  */
 export const continueRetentionPurge = internalMutation({
 	args: {

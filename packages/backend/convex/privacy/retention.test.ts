@@ -360,6 +360,86 @@ describe("applyRetentionNow", () => {
 		expect(kept).toEqual({ feedback: [cutoff], stretches: [cutoff] });
 	});
 
+	it("purges steadiness insights and old semantic-profile versions, keeping the current one", async () => {
+		const user = await asNewUser();
+		const cutoff = nextRunCutoff("6_months");
+		const seeded = await user.root.run(async (ctx) => {
+			const version = (n: number, createdAt: number) =>
+				ctx.db.insert("semantic_profiles", {
+					createdAt,
+					emotionalProfileId: user.profileId,
+					version: n,
+					writerVersion: "test-v1",
+				});
+			const insight = (oldestCitedAt: number) =>
+				ctx.db.insert("steadiness_insights", {
+					citedSessionIds: [],
+					domains: ["work"],
+					emotionalProfileId: user.profileId,
+					kind: "thread",
+					oldestCitedAt,
+					runAt: oldestCitedAt,
+					text: "An insight.",
+					writtenAt: oldestCitedAt,
+				});
+			const versions = {
+				// Past the cutoff but current: a profile not rewritten since.
+				current: await version(2, cutoff - 1),
+				old: await version(1, cutoff - DAY),
+			};
+			await ctx.db.patch("emotional_profiles", user.profileId, {
+				currentSemanticProfileId: versions.current,
+			});
+			const insights = {
+				atCutoff: await insight(cutoff),
+				old: await insight(cutoff - 1),
+			};
+			return { insights, versions };
+		});
+
+		await apply(user, "6_months");
+
+		const left = await user.root.run(async (ctx) => ({
+			insights: {
+				atCutoff: await ctx.db.get(
+					"steadiness_insights",
+					seeded.insights.atCutoff
+				),
+				old: await ctx.db.get("steadiness_insights", seeded.insights.old),
+			},
+			versions: {
+				current: await ctx.db.get("semantic_profiles", seeded.versions.current),
+				old: await ctx.db.get("semantic_profiles", seeded.versions.old),
+			},
+		}));
+		expect(left.insights.old).toBeNull();
+		expect(left.insights.atCutoff).not.toBeNull();
+		expect(left.versions.old).toBeNull();
+		expect(left.versions.current).not.toBeNull();
+	});
+
+	it("1 year then 6 months mid-purge: the 6-month cutoff wins and nothing newer goes", async () => {
+		const user = await asNewUser();
+		const sixMonths = nextRunCutoff("6_months");
+		await seedAt(
+			user,
+			Array.from({ length: 120 }, (_, i) => NOW - (400 + i) * DAY)
+		);
+		// Between the two cutoffs: kept by 1 year, let go by 6 months.
+		const between = await seedAt(user, daysAgo(200, 250, 300));
+		const kept = await seedAt(user, [sixMonths, sixMonths + 1, NOW]);
+
+		expect(await apply(user, "1_year")).toEqual({ scheduled: true });
+		expect(await apply(user, "6_months")).toEqual({ scheduled: true });
+		// The 1-year chain is still pending; it stops, the 6-month one finishes.
+		await drainPurge(user);
+
+		const left = await sessionIds(user);
+		expect(left.sort()).toEqual([...kept].sort());
+		expect(between.some((id) => left.includes(id))).toBe(false);
+		expect(await retentionOf(user)).toBe("6_months");
+	});
+
 	it("touches only the caller's data", async () => {
 		const mine = await asNewUser(1);
 		const theirs = await asNewUser(2, mine.root);
