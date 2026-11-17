@@ -2,6 +2,10 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import type { PostHog } from "posthog-react-native";
 import { useSyncExternalStore } from "react";
+import {
+	armPlayOnLoad,
+	takePlayOnLoad,
+} from "@/features/browse/now-playing/play-on-load";
 import type { BrowseFrom } from "@/features/browse/use-open-track";
 import type { BoundTrack } from "@/features/browse/use-track-playback";
 import type { PlaybackReturn } from "@/lib/audio/use-playback";
@@ -58,14 +62,15 @@ const IDLE: Playback = {
 };
 
 // A play asked for with the load (a Lantern hub's listen card plays in place), for the
-// host to start once the track is minted. The slug it was asked for.
+// host to start once the track is minted: the slug it was asked for (`play-on-load.ts`).
 let playOnLoad: string | null = null;
 
-/** `play`: start it as soon as it's loaded, with no player screen to tap play on. */
+/**
+ * `play`: start it as soon as it's loaded, with no player screen to tap play on. Without it,
+ * as before: load only.
+ */
 export function setNowPlaying(next: NowPlaying, options?: { play?: boolean }) {
-	if (options?.play) {
-		playOnLoad = next.slug;
-	}
+	playOnLoad = armPlayOnLoad(playOnLoad, next.slug, options?.play === true);
 	if (
 		current?.slug === next.slug &&
 		current.stepId === next.stepId &&
@@ -107,13 +112,11 @@ const getAttention = () => attention;
 export const useMiniPlayerAttention = () =>
 	useSyncExternalStore(subscribe, getAttention, getAttention);
 
-/** Host only: whether `slug` was asked to play on load. Asks once. */
-export function takePlayOnLoad(slug: string) {
-	const asked = playOnLoad === slug;
-	if (asked) {
-		playOnLoad = null;
-	}
-	return asked;
+/** Host only: whether `slug`, now loaded, was asked to play. Asks once. */
+export function consumePlayOnLoad(slug: string) {
+	const taken = takePlayOnLoad(playOnLoad, slug);
+	playOnLoad = taken.pending;
+	return taken.asked;
 }
 
 /** Host only. */

@@ -1,15 +1,14 @@
 import { Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { CoverImage } from "@/components/shared/cover-image";
+import { Equaliser } from "@/components/shared/equaliser";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { COPY } from "@/features/lantern/copy";
-import { Equaliser } from "@/features/lantern/hub/equaliser";
 import { type HubTrack, useHubScreen } from "@/features/lantern/hub/hub-data";
 import { trackMinutes } from "@/features/lantern/lantern-model";
 import { LS, LT } from "@/features/lantern/lantern-style";
 import { cn } from "@/lib/cn";
-import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColors } from "@/lib/use-token-color";
 
 const L = LS.listen;
@@ -33,7 +32,6 @@ export function ListenCard({
 	index: number;
 }) {
 	const { state, actions } = useHubScreen();
-	const reduced = useEffectiveReducedMotion();
 	const [audio, foreground, background, muted, separator] = useTokenColors([
 		"browse-audio-foreground",
 		"foreground",
@@ -48,8 +46,8 @@ export function ListenCard({
 	const by = [FAMILY[track.family], track.attribution]
 		.filter(Boolean)
 		.join(" · ");
-	const onPlay = () =>
-		now && !locked ? actions.toggle() : actions.play(track);
+	// Playing here: pause. Otherwise play; the route decides between resume, load and paywall.
+	const onPlay = () => (playing ? actions.toggle() : actions.play(track));
 	return (
 		<View
 			className="flex-row items-center"
@@ -91,7 +89,7 @@ export function ListenCard({
 						{playing ? (
 							// The bars mount only on the card that's playing.
 							<View className="absolute inset-0 items-center justify-center bg-cover-scrim/32">
-								<Equaliser reduced={reduced} />
+								<Equaliser playing />
 							</View>
 						) : null}
 						{locked ? (

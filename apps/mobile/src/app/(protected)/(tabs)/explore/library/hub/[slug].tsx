@@ -6,6 +6,7 @@ import {
 	useNowPlaying,
 	useNowPlayingPlayback,
 } from "@/features/browse/now-playing/now-playing-store";
+import { playStep } from "@/features/browse/now-playing/play-on-load";
 import { useOpenTrack } from "@/features/browse/use-open-track";
 import { HubData, type HubListen } from "@/features/lantern/hub/hub-data";
 import { HubScreen } from "@/features/lantern/hub/hub-screen";
@@ -14,7 +15,8 @@ const FROM = "library-hub";
 
 /**
  * A Lantern hub. Its listens play through Browse's one now-playing track (the mini player); the
- * two features meet here, so Lantern never imports the player.
+ * two features meet here, so Lantern never imports the player. The player redesign (S10)
+ * replaces this adapter.
  */
 export default function LanternHubRoute() {
 	const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -30,16 +32,25 @@ function useHubListen(): HubListen {
 	const { open, locked } = useOpenTrack(FROM);
 	const np = useNowPlaying();
 	const p = useNowPlayingPlayback(np?.slug);
+	const loaded = np?.slug ?? null;
 	return {
 		locked,
-		nowPlaying: np?.slug ?? null,
+		nowPlaying: loaded,
 		open,
 		play: (track) => {
-			if (locked) {
+			const step = playStep({
+				loaded,
+				locked,
+				playing: p.isPlaying,
+				slug: track.slug,
+			});
+			if (step === "paywall") {
 				open(track);
-				return;
+			} else if (step === "resume") {
+				togglePlayback(p, posthog);
+			} else if (step === "load") {
+				setNowPlaying({ from: FROM, slug: track.slug }, { play: true });
 			}
-			setNowPlaying({ from: FROM, slug: track.slug }, { play: true });
 		},
 		playing: p.isPlaying,
 		toggle: () => togglePlayback(p, posthog),

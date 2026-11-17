@@ -22,9 +22,10 @@ export type HubListen = {
 	/** The slug loaded in the mini player, if any. */
 	nowPlaying: string | null;
 	playing: boolean;
-	/** Starts a track here, no navigation; locked, the paywall. */
+	/** Plays a track here, no navigation: resumes it if it's loaded, loads it if not; locked,
+	 * the paywall. */
 	play: (track: HubTrack) => void;
-	/** Pauses or resumes what's loaded. */
+	/** Pauses what's playing. */
 	toggle: () => void;
 	/** The full player; locked, the paywall. */
 	open: (track: HubTrack) => void;

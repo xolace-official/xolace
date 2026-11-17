@@ -3,8 +3,8 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect } from "react";
 import {
 	clearNowPlaying,
+	consumePlayOnLoad,
 	publishPlayback,
-	takePlayOnLoad,
 	togglePlayback,
 	useNowPlaying,
 } from "@/features/browse/now-playing/now-playing-store";
@@ -37,7 +37,7 @@ function Runner({ slug, stepId }: { slug: string; stepId?: Id<"path_steps"> }) {
 	useEffect(() => publishPlayback(p));
 	// Asked to play with the load: once minted, play (a toggle before it's loaded queues).
 	useEffect(() => {
-		if (p.track && takePlayOnLoad(slug)) {
+		if (p.track && consumePlayOnLoad(slug)) {
 			togglePlayback(p, posthog);
 		}
 		// On the mint only: `p` is rebuilt every render.
