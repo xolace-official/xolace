@@ -359,6 +359,33 @@
 	--color-after-late-listen: rgba(125, 211, 232, 0.14);
 }
 
+/*
+ * Sit with this's two arcs (design/boards/SitAlive.dc.html): the bottom arc's
+ * fill, the wash over the top arc, the light rising from the floor, the rim
+ * catch and the seam's core. Lit like the Today card, so the same in every
+ * theme, each with a late twin for the night window. The seam, edge light and
+ * thread are the Flux spectrum above (late: ember). Read in
+ * src/features/sit-with-this/arcs/sit-colors.ts.
+ */
+@theme static {
+	--color-sit-bottom: #f1ecff;
+	--color-sit-late-bottom: #1d1730;
+	--color-sit-wash: rgba(236, 231, 255, 0.95);
+	--color-sit-late-wash: rgba(183, 163, 255, 0.08);
+	--color-sit-floor: rgba(255, 179, 138, 0.58);
+	--color-sit-floor-mid: rgba(255, 141, 180, 0.28);
+	--color-sit-late-floor: rgba(245, 176, 79, 0.34);
+	--color-sit-late-floor-mid: rgba(236, 122, 102, 0.15);
+	--color-sit-rim: rgba(255, 236, 224, 1);
+	--color-sit-rim-mid: rgba(255, 141, 180, 0.55);
+	--color-sit-late-rim: rgba(255, 220, 160, 1);
+	--color-sit-late-rim-mid: rgba(236, 122, 102, 0.5);
+	--color-sit-core: #ffffff;
+	--color-sit-late-core: #ffecc8;
+	/* The ember's second stop (seam, edge light and thread, late). */
+	--color-sit-late-ember-2: #ec7a66;
+}
+
 /* Badges and their arrival are printed objects: each family's colour, the
  * bronze back and the fire's room are the same in every theme, picked by the
  * scheme (`-dusk` / `-day`). Fixed on purpose; see the fixed-palette convention

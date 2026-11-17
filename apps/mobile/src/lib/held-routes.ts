@@ -11,6 +11,8 @@ const HELD_ROUTES = [
 	"/voice-vent",
 	"/talk",
 	"/sit-with-this",
+	// A sheet over Sit with this: the exercise is waiting behind it.
+	"/sit-with-this-swap",
 	"/peer-reflections",
 	// A sheet over peer reflections: the session is still behind it.
 	"/report-reflection",
