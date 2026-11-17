@@ -19,6 +19,9 @@ describe("isPresentedRoute", () => {
 		"/intake-plus-preview",
 		"/settings/reach",
 		"/follow-up",
+		"/talk-kept",
+		"/talk-style",
+		"/session-follow-up",
 	])("knows %s is presented over the app", (pathname) => {
 		expect(isPresentedRoute(pathname)).toBe(true);
 	});
