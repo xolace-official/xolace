@@ -1065,6 +1065,23 @@ describe("paths.getBoundAudioTrack (#334)", () => {
 		expect(track?.expiresAt).toBeGreaterThan(before);
 	});
 
+	it("carries the waveform's peaks when they've been measured, and reads tracks from before them", async () => {
+		const user = await asNewUser();
+		const peaks = Array.from({ length: 60 }, (_, i) => (i % 10) / 10);
+		await seedRow(user, { peaks, slug: "measured" });
+		await seedRow(user, { slug: "old" });
+
+		expect(
+			(await user.t.query(api.paths.getBoundAudioTrack, { slug: "measured" }))
+				?.peaks
+		).toEqual(peaks);
+		const old = await user.t.query(api.paths.getBoundAudioTrack, {
+			slug: "old",
+		});
+		expect(old).toMatchObject({ slug: "old", title: "Track" });
+		expect(old && "peaks" in old && old.peaks !== undefined).toBe(false);
+	});
+
 	it("carries verbatim attributionText only when the licence requires it", async () => {
 		const user = await asNewUser();
 		await seedRow(user, {
