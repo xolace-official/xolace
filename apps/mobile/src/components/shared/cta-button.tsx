@@ -15,11 +15,16 @@ type Props = {
 };
 
 /**
- * Sit's call to action (board `.cta`): a 56 pt ink pill with the label in the
- * page's colour, 600 17. Begin, Done, Keep going; You're not alone's actions
- * use it too. A real button with its label.
+ * The redesign's call to action (board `.cta`): a 56 pt ink pill with the
+ * label in the page's colour, 600 17. Sit with this's Begin, Done and Keep
+ * going; You're not alone's Done. A real button with its label.
  */
-export function SitCta({ label, onPress, disabled = false, children }: Props) {
+export function CtaButton({
+	label,
+	onPress,
+	disabled = false,
+	children,
+}: Props) {
 	return (
 		<PressScale
 			accessibilityLabel={label}

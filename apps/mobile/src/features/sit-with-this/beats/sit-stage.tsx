@@ -1,11 +1,11 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { CtaButton } from "@/components/shared/cta-button";
 import { FONTS } from "@/design/type";
 import { playAffirmativePress } from "@/lib/haptics";
 import { Block } from "../chrome/block";
 import type { SitClock } from "../clock/use-sit-clock";
 import { COPY } from "../copy";
-import { SitCta } from "../cta/sit-cta";
 import { LAYOUT } from "../sit-look";
 import type { Beat, Stage } from "../sit-model";
 import { BreathCaption } from "./breath-caption";
@@ -81,7 +81,7 @@ export function SitStage({
 				style={{ bottom: C.beginBottom, left: C.side, right: C.side }}
 			>
 				<Rise order={3} reduced={reduced}>
-					<SitCta
+					<CtaButton
 						label={COPY.begin}
 						onPress={() => {
 							playAffirmativePress();

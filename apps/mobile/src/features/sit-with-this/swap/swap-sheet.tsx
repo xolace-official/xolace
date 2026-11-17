@@ -1,12 +1,12 @@
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { CtaButton } from "@/components/shared/cta-button";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { FONTS } from "@/design/type";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
-import { SitCta } from "../cta/sit-cta";
 import { useSwapSheet } from "./swap-data";
 
 /** Board `.sh h3`: Bricolage 24/740, −.02em (700 is the loaded cut). */
@@ -83,7 +83,7 @@ export function SwapSheetView() {
 						</PressScale>
 					))}
 			<View className="mt-1">
-				<SitCta label={COPY.sheet.keepGoing} onPress={actions.keepGoing} />
+				<CtaButton label={COPY.sheet.keepGoing} onPress={actions.keepGoing} />
 			</View>
 		</View>
 	);

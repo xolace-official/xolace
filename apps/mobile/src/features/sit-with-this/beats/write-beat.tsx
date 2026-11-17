@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Keyboard, TextInput, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { CtaButton } from "@/components/shared/cta-button";
 import { Icon } from "@/components/shared/icon";
 import { useScheme } from "@/design/scheme";
 import { BODY_MAX_SCALE, FONTS } from "@/design/type";
@@ -11,7 +12,6 @@ import {
 } from "@/lib/keyboard/use-keyboard-lift";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
-import { SitCta } from "../cta/sit-cta";
 import { LAYOUT } from "../sit-look";
 
 const W = LAYOUT.write;
@@ -94,7 +94,7 @@ export function WriteBeat({ question, y, onDone }: Props) {
 					liftStyle,
 				]}
 			>
-				<SitCta
+				<CtaButton
 					label={COPY.write.done}
 					onPress={() => {
 						Keyboard.dismiss();
