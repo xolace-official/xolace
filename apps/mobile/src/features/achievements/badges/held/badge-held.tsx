@@ -13,6 +13,7 @@ import {
 	familyTokens,
 	shortDate,
 } from "@/features/achievements/achievements-model";
+import { isArrivalOpen } from "@/features/achievements/arrival-open";
 import { useBadgesScreen } from "@/features/achievements/badges/badges-data";
 import {
 	geo,
@@ -80,6 +81,10 @@ export function BadgeHeld({ pose }: { pose: SharedValue<Pose> }) {
 			return;
 		}
 		const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+			// An arrival open over the page takes back first; it closes, the badge stays.
+			if (isArrivalOpen()) {
+				return false;
+			}
 			close();
 			return true;
 		});

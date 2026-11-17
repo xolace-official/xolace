@@ -5,7 +5,7 @@ import { type ScreenContext, screenOptions } from "@/lib/root-screen";
  * Presentations the native stack shows above everything drawn after it, hosts
  * included (`hosts.ts`): a host's overlay would play unseen behind them.
  */
-const NATIVE_PRESENTATIONS: ReadonlySet<string> = new Set([
+export const NATIVE_PRESENTATIONS: ReadonlySet<string> = new Set([
 	"containedModal",
 	"containedTransparentModal",
 	"formSheet",

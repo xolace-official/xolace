@@ -24,8 +24,8 @@ import {
 	toClose,
 	toNextBadge,
 } from "@/features/achievements/arrival/arrival-start";
-import { useLater } from "@/features/achievements/later";
 import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
+import { useLater } from "@/lib/use-later";
 
 const FOCUS_MS = 60;
 /** The host fades the arrival in over 350 ms; its Skia canvases mount once it's in. */

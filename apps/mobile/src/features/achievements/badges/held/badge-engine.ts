@@ -29,8 +29,8 @@ import {
 	REST_POSE,
 } from "@/features/achievements/coin/pose";
 import { COPY } from "@/features/achievements/copy";
-import { useLater } from "@/features/achievements/later";
 import { playAffirmativePress, playErrorNotice, tap } from "@/lib/haptics";
+import { useLater } from "@/lib/use-later";
 
 /** The board's phone: positions are from its top, on a 54 pt status bar. */
 const BOARD_STATUS = 54;

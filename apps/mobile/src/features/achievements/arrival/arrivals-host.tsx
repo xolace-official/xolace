@@ -18,6 +18,7 @@ import {
 } from "@/features/achievements/arrival/arrival-data";
 import type { Still } from "@/features/achievements/arrival/arrival-start";
 import { BackfillStage } from "@/features/achievements/arrival/backfill/backfill-stage";
+import { setArrivalOpen } from "@/features/achievements/arrival-open";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 /** The fade in and out, as a full-screen modal fades (react-native-screens' 350 ms). */
@@ -73,12 +74,16 @@ export function ArrivalOverlay({ still }: { still?: Still }) {
 		}
 		arrival.current?.start();
 		shown.set(withTiming(1, fade));
+		setArrivalOpen(true);
 		// Android's back closes the moment, as it closed the old route.
 		const sub = BackHandler.addEventListener("hardwareBackPress", () => {
 			leave();
 			return true;
 		});
-		return () => sub.remove();
+		return () => {
+			sub.remove();
+			setArrivalOpen(false);
+		};
 	}, [open]);
 
 	const style = useAnimatedStyle(() => ({ opacity: shown.get() }));
