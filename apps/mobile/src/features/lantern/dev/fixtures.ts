@@ -10,7 +10,7 @@ import type { HubTrack, HubView } from "@/features/lantern/hub/hub-data";
 import type { CardItem, Subject } from "@/features/lantern/lantern-model";
 
 /** A listen placed among a hub's reads: the board's `track:awake`. */
-export const AWAKE: HubTrack = {
+const AWAKE: HubTrack = {
 	_id: "dev-awake" as Id<"audio_tracks">,
 	attribution: "Sage",
 	durationSec: 300,
@@ -171,4 +171,4 @@ export const ofKind = (kind: CardItem["kind"]) =>
 	SLUGS.map((s) => card(s)).filter((e) => e.kind === kind);
 
 /** Saved, newest first: the returning reader's two. */
-export const SAVED: readonly CardItem[] = [card("winter"), card("panic")];
+export const SAVED: readonly CardItem[] = [card("panic"), card("winter")];

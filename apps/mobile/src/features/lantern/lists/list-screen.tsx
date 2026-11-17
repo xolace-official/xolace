@@ -6,6 +6,7 @@ import { LS } from "@/features/lantern/lantern-style";
 import { EntryRow } from "@/features/lantern/lists/entry-row";
 import { useList } from "@/features/lantern/lists/list-data";
 import { RowsSkeleton } from "@/features/lantern/lists/rows-skeleton";
+import { useHeaderOptions } from "@/lib/header-options";
 
 /** A row before it's measured: 12 + 78 + 12, or a little more when the meta wraps. */
 const ROW_ESTIMATE = 106;
@@ -18,9 +19,10 @@ const LOAD_AHEAD = 0.5;
  */
 export function ListScreen() {
 	const { state, actions } = useList();
+	const header = useHeaderOptions("small");
 	return (
 		<>
-			<Stack.Screen options={{ title: state.title }} />
+			<Stack.Screen options={{ ...header, title: state.title }} />
 			<LegendList
 				className="bg-background"
 				contentContainerStyle={{ paddingBottom: LS.bottom, paddingTop: 4 }}

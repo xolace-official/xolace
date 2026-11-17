@@ -208,4 +208,16 @@ export function card(slug: EntrySlug, fresh = false): CardItem {
 	};
 }
 
-export const SLUGS = Object.keys(SEEDS) as EntrySlug[];
+/** The board's order (its `E`), which the kind and subject lists keep. */
+export const SLUGS: readonly EntrySlug[] = [
+	"thoughts-at-night",
+	"small-things",
+	"panic",
+	"winter",
+	"fine",
+	"heart",
+	"exams",
+	"friend",
+	"burnout",
+	"ready",
+];

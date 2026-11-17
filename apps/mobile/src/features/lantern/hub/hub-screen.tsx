@@ -25,6 +25,7 @@ import { useTokenColors } from "@/lib/use-token-color";
 
 /** The bar's height below the safe area: a hub measures its fold from it (Explore's topic). */
 const NAV_BAR = 44;
+const GONE_GAP = 48;
 
 /**
  * A hub (handoff §3.2): its cover full width under a transparent bar, the title, the intro and the
@@ -52,6 +53,8 @@ export function HubScreen() {
 		}
 	);
 	const hub = state.hub;
+	// On the cover: white ink. Folded, or with no cover to sit on, the page's.
+	const onCover = hub !== null && !folded;
 
 	return (
 		<>
@@ -60,13 +63,13 @@ export function HubScreen() {
 					...header,
 					// The cover runs under the bar with its own band: no soft edge, no blur.
 					headerBlurEffect: undefined,
-					headerTintColor: folded ? foreground : coverInk,
+					headerTintColor: onCover ? coverInk : foreground,
 					headerTitle: () => <BarTitle on={folded} text={hub?.title ?? ""} />,
 					scrollEdgeEffects: { top: "hidden" },
 				}}
 			/>
 			{focused ? (
-				<StatusBar style={folded ? (dark ? "light" : "dark") : "light"} />
+				<StatusBar style={onCover || dark ? "light" : "dark"} />
 			) : null}
 			<Animated.ScrollView
 				className="bg-background"
@@ -76,13 +79,15 @@ export function HubScreen() {
 				onScroll={onScroll}
 				scrollEventThrottle={16}
 			>
-				<HubHeader hub={hub} />
+				{hub === null ? null : <HubHeader hub={hub} />}
 				{hub === undefined ? <RowsSkeleton count={4} /> : null}
 				{hub === null ? (
 					<AppText
 						center
-						className="px-8 pt-12 text-[15px]"
+						className="px-8 text-[15px]"
 						color="muted"
+						// No cover: clear the bar the cover would have run under.
+						style={{ paddingTop: insets.top + NAV_BAR + GONE_GAP }}
 						variant="callout"
 					>
 						{COPY.lists.hubGone}

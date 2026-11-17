@@ -14,6 +14,7 @@ import {
 import { LS } from "@/features/lantern/lantern-style";
 import { RowsSkeleton } from "@/features/lantern/lists/rows-skeleton";
 import { useSubjectsScreen } from "@/features/lantern/subjects/subjects-data";
+import { useHeaderOptions } from "@/lib/header-options";
 import { useTokenColor } from "@/lib/use-token-color";
 
 /** iOS 26's small-title bar, below the safe area. */
@@ -30,12 +31,13 @@ const CHEVRON = { android: "chevron_right", ios: "chevron.right" } as const;
  */
 export function SubjectsScreen() {
 	const { state } = useSubjectsScreen();
+	const header = useHeaderOptions("small");
 	const insets = useSafeAreaInsets();
 	const bar = insets.top + SMALL_BAR;
 	const list = subjectsList(state.subjects ?? []);
 	return (
 		<>
-			<Stack.Screen options={{ title: COPY.lists.subjects }} />
+			<Stack.Screen options={{ ...header, title: COPY.lists.subjects }} />
 			{state.subjects === undefined ? (
 				<View className="flex-1 bg-background" style={{ paddingTop: bar }}>
 					<RowsSkeleton count={4} />
