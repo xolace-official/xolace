@@ -13,7 +13,7 @@ import Animated from "react-native-reanimated";
 import { useCSSVariable } from "uniwind";
 
 import { AppText } from "@/components/shared/app-text";
-import { CoverImage } from "@/features/library/cover-image";
+import { CoverImage } from "@/components/shared/cover-image";
 import {
 	COVER_BUTTON,
 	CoverGlass,

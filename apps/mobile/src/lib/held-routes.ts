@@ -27,6 +27,7 @@ const HELD_ROUTES = [
 	"/follow-up",
 	"/streak-held",
 	"/browse-intro",
+	"/lantern-welcome",
 	"/upgrade",
 	"/browse-player",
 ] as const;

@@ -4,11 +4,11 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
+import { CoverImage } from "@/components/shared/cover-image";
 import {
 	type BrowseFrom,
 	useOpenTrack,
 } from "@/features/browse/use-open-track";
-import { CoverImage } from "@/features/library/cover-image";
 
 export type { BrowseFrom };
 export type TrackItem = FunctionReturnType<

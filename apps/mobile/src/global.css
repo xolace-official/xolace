@@ -174,6 +174,14 @@
      * src/features/library/reader/cover-palette.ts. */
 	--color-cover-ink: #ffffff;
 	--color-cover-scrim: #000000;
+	/* Lantern's printed bits (S9): the "Read" chip on a row's photo, and the
+     * welcome's hero, a warm glow on dusk violet behind the writer art. The
+     * same on every theme, like the covers they sit on. */
+	--color-lantern-chip: rgba(14, 10, 22, 0.55);
+	--color-lantern-welcome-1: #2a2347;
+	--color-lantern-welcome-2: #4a3b6e;
+	--color-lantern-welcome-3: #9a6f86;
+	--color-lantern-welcome-glow: rgba(255, 196, 120, 0.55);
 	/* Lantern reader pages (#408): the reading modes' own sheets, laid over
      * the light/dark base by ScopedVariables in reader-page.tsx. Warm and
      * low-blue; Night is for reading in the dark. Classic has no tokens here —

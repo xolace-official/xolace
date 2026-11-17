@@ -2,6 +2,10 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import type { PostHog } from "posthog-react-native";
 import { useSyncExternalStore } from "react";
+import {
+	armPlayOnLoad,
+	takePlayOnLoad,
+} from "@/features/browse/now-playing/play-on-load";
 import type { BrowseFrom } from "@/features/browse/use-open-track";
 import type { BoundTrack } from "@/features/browse/use-track-playback";
 import type { PlaybackReturn } from "@/lib/audio/use-playback";
@@ -37,6 +41,7 @@ function subscribe(listener: () => void) {
 const getCurrent = () => current;
 const getPlayback = () => playback;
 const getLoaded = () => !!playback?.track;
+const getIsPlaying = () => !!playback?.isPlaying;
 
 const noop = () => {};
 /** What a reader sees before the host has published. */
@@ -57,7 +62,16 @@ const IDLE: Playback = {
 	volume: 1,
 };
 
-export function setNowPlaying(next: NowPlaying) {
+// A play asked for with the load (a Lantern hub's listen card plays in place), for the
+// host to start once the track is minted: the slug it was asked for (`play-on-load.ts`).
+let playOnLoad: string | null = null;
+
+/**
+ * `play`: start it as soon as it's loaded, with no player screen to tap play on. Without it,
+ * as before: load only.
+ */
+export function setNowPlaying(next: NowPlaying, options?: { play?: boolean }) {
+	playOnLoad = armPlayOnLoad(playOnLoad, next.slug, options?.play === true);
 	if (
 		current?.slug === next.slug &&
 		current.stepId === next.stepId &&
@@ -69,13 +83,15 @@ export function setNowPlaying(next: NowPlaying) {
 		// Never show the previous track's status under the new slug.
 		playback = null;
 		played = false;
-		attentionPending = true;
+		// A track played in place never went through the player: nothing to lift for later.
+		attentionPending = options?.play !== true;
 	}
 	current = next;
 	emit();
 }
 
 export function clearNowPlaying() {
+	playOnLoad = null;
 	if (!(current || playback)) {
 		return;
 	}
@@ -97,6 +113,13 @@ export function releaseMiniPlayerAttention() {
 const getAttention = () => attention;
 export const useMiniPlayerAttention = () =>
 	useSyncExternalStore(subscribe, getAttention, getAttention);
+
+/** Host only: whether `slug`, now loaded, was asked to play. Asks once. */
+export function consumePlayOnLoad(slug: string) {
+	const taken = takePlayOnLoad(playOnLoad, slug);
+	playOnLoad = taken.pending;
+	return taken.asked;
+}
 
 /** Host only. */
 export function publishPlayback(next: Playback | null) {
@@ -129,6 +152,12 @@ export function useNowPlayingPlayback(slug?: string): Playback {
 /** A boolean snapshot, so the tab layout doesn't re-render on every status tick. */
 const useNowPlayingLoaded = () =>
 	useSyncExternalStore(subscribe, getLoaded, getLoaded);
+/** Whether the loaded track is playing, as a boolean snapshot: a list that marks it doesn't
+ * re-render on every status tick. */
+export const useNowPlayingIsPlaying = () =>
+	useSyncExternalStore(subscribe, getIsPlaying, getIsPlaying);
+/** The live playback, read once (an action's moment), or the idle shape. */
+export const nowPlayingPlayback = (): Playback => playback ?? IDLE;
 
 /** Mini-player capsule plus its gap above the tab bar; floating UI over the tabs must clear it. */
 export const MINI_PLAYER_CLEARANCE = 64;

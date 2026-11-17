@@ -1,10 +1,12 @@
-// Lantern instrumentation (#416) in its own `library_*` namespace (#399).
-// Reading is coarse on purpose: opened and finished, no scroll depth.
-import type { api } from "@xolace/backend/convex/_generated/api";
+// Lantern instrumentation (#416) in its own `library_*` namespace (#399), shared by
+// Lantern and Kindling's read twig. Reading is coarse on purpose: opened and
+// finished, no scroll depth.
+import type { api } from "@xolace/backend/api";
+import type { Doc } from "@xolace/backend/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import type { PostHog } from "posthog-react-native";
 
-import type { Kind } from "@/features/library/home/library-copy";
+type Kind = Doc<"library_entries">["kind"];
 
 /** Where a reader open came from; a forgotten one lands as `unknown`. `today` has no surface
  * yet; `next` is Up next (#417). */
@@ -18,6 +20,7 @@ export type ReaderFrom =
 	| "today"
 	| "next"
 	| "continue"
+	| "saved"
 	| "search"
 	| "unknown";
 
@@ -35,10 +38,13 @@ type LibraryEvents = {
 	library_kind_opened: { kind: Kind };
 	library_subject_opened: { subject: string };
 	library_subjects_opened: { letter: string | null };
+	library_saved_opened: undefined;
 	// Reading funnel (#407, #410)
 	library_entry_opened: Entry & { from: ReaderFrom };
 	library_entry_finished: Entry; // by reading or by hearing the full audio
 	library_entry_helped: Entry & { helped: boolean };
+	// The reader's "Pick up at 40%" pill or its Resume action (lantern.md §5.3)
+	library_resume_tapped: Entry;
 	library_entry_shared: Entry;
 	library_reflect_started: Entry & { curated: boolean };
 	// Audio (#411)

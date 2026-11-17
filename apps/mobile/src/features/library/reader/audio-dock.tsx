@@ -22,10 +22,10 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { AppText } from "@/components/shared/app-text";
-import { trackLibrary } from "@/features/library/analytics";
-import { CoverImage } from "@/features/library/cover-image";
+import { CoverImage } from "@/components/shared/cover-image";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { formatTime } from "@/lib/format-time";
+import { trackLibrary } from "@/lib/library-analytics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { TranscriptSheet } from "./transcript-sheet";
 import type { EntryAudio } from "./use-entry-audio";
