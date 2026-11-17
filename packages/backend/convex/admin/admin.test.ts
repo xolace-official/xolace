@@ -65,6 +65,7 @@ const SAMPLE_ARGS: Record<string, Record<string, unknown>> = {
 	},
 	"admin/audio:list": {},
 	"admin/audio:markSafetyReviewed": { slug: "x" },
+	"admin/audio:measureWaveform": { slug: "x" },
 	"admin/audio:media": { linkWindow: 0, slug: "x" },
 	"admin/audio:publish": { slug: "x" },
 	"admin/audio:replaceAudio": {
@@ -754,7 +755,7 @@ describe("admin media", () => {
 				active: false,
 				durationSec: 300,
 				family: "support",
-				key: "support/grounding/old.m4a",
+				key: "support/grounding/old.mp3",
 				safetyReviewedAt: 1,
 				sha256: OTHER_SHA,
 				slug: "grounding",
@@ -799,6 +800,14 @@ describe("admin media", () => {
 		expect(key).toMatch(/^music\/rain\/[0-9a-f-]{36}\.mp3$/);
 		await expect(
 			t.mutation(api.admin.uploads.audioUploadUrl, {
+				// M4A has no decoder for the waveform, so it isn't taken.
+				ext: "m4a" as "mp3",
+				family: "music",
+				slug: "rain",
+			})
+		).rejects.toThrow(/Validator/);
+		await expect(
+			t.mutation(api.admin.uploads.audioUploadUrl, {
 				ext: "mp3",
 				family: "music",
 				slug: "../rain",
@@ -831,6 +840,10 @@ describe("admin media", () => {
 			thumbSha256: SHA,
 		});
 		await expect(create("music/rain/b.mp3")).rejects.toThrow(/already exists/);
+		// Only audio its waveform can be measured from.
+		await expect(create("music/rain/c.m4a")).rejects.toThrow(
+			/isn't an MP3 or WAV/
+		);
 		await expect(
 			t.mutation(api.admin.audio.publish, { slug: "rain" })
 		).rejects.toThrow(/music needs a licence/);
@@ -840,20 +853,20 @@ describe("admin media", () => {
 		const t = await withSupportTrack({ loudness: { lufs: -14, truePeak: -1 } });
 		await t.mutation(api.admin.audio.replaceAudio, {
 			durationSec: 240,
-			key: "support/grounding/new.m4a",
+			key: "support/grounding/new.mp3",
 			sha256: SHA,
 			slug: "grounding",
 		});
 		expect(await stored(t)).toMatchObject({
 			durationSec: 240,
-			key: "support/grounding/new.m4a",
+			key: "support/grounding/new.mp3",
 			sha256: SHA,
 		});
 		expect((await stored(t))?.safetyReviewedAt).toBeUndefined();
 		expect((await stored(t))?.loudness).toBeUndefined();
 		expect(r2.deleteObject).toHaveBeenCalledWith(
 			expect.anything(),
-			"support/grounding/old.m4a"
+			"support/grounding/old.mp3"
 		);
 	});
 
@@ -861,14 +874,14 @@ describe("admin media", () => {
 		const t = await withSupportTrack();
 		await t.mutation(api.admin.audio.replaceAudio, {
 			durationSec: 300,
-			key: "support/grounding/again.m4a",
+			key: "support/grounding/again.mp3",
 			sha256: OTHER_SHA,
 			slug: "grounding",
 		});
-		expect((await stored(t))?.key).toBe("support/grounding/old.m4a");
+		expect((await stored(t))?.key).toBe("support/grounding/old.mp3");
 		expect(r2.deleteObject).toHaveBeenCalledWith(
 			expect.anything(),
-			"support/grounding/again.m4a"
+			"support/grounding/again.mp3"
 		);
 	});
 
@@ -876,11 +889,11 @@ describe("admin media", () => {
 		const t = await withSupportTrack();
 		await t.mutation(api.admin.audio.replaceAudio, {
 			durationSec: 300,
-			key: "support/grounding/old.m4a",
+			key: "support/grounding/old.mp3",
 			sha256: OTHER_SHA,
 			slug: "grounding",
 		});
-		expect((await stored(t))?.key).toBe("support/grounding/old.m4a");
+		expect((await stored(t))?.key).toBe("support/grounding/old.mp3");
 		expect(r2.deleteObject).not.toHaveBeenCalled();
 	});
 
@@ -889,12 +902,12 @@ describe("admin media", () => {
 		await expect(
 			t.mutation(api.admin.audio.replaceAudio, {
 				durationSec: 240,
-				key: "support/grounding/new.m4a",
+				key: "support/grounding/new.mp3",
 				sha256: SHA,
 				slug: "grounding",
 			})
 		).rejects.toThrow(/needs a safety review/);
-		expect((await stored(t))?.key).toBe("support/grounding/old.m4a");
+		expect((await stored(t))?.key).toBe("support/grounding/old.mp3");
 	});
 
 	it("points a track and a topic at an uploaded thumbnail", async () => {
@@ -907,7 +920,7 @@ describe("admin media", () => {
 		expect(
 			await t.query(api.admin.audio.media, { linkWindow: 0, slug: "grounding" })
 		).toEqual({
-			audioUrl: "https://r2.test/support/grounding/old.m4a",
+			audioUrl: "https://r2.test/support/grounding/old.mp3",
 			thumbUrl: `https://r2.test/thumb/${SHA}.webp`,
 		});
 
@@ -958,7 +971,7 @@ describe("admin media", () => {
 		await expect(discard(`thumb/${SHA}.webp`)).rejects.toThrow(
 			/isn't an admin audio upload/
 		);
-		await expect(discard("support/grounding/old.m4a")).rejects.toThrow(
+		await expect(discard("support/grounding/old.mp3")).rejects.toThrow(
 			/isn't an admin audio upload/
 		);
 	});

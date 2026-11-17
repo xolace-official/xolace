@@ -253,6 +253,15 @@ export const trackLoudnessValidator = v.object({
 });
 
 /**
+ * A track's waveform for the player's scrubber: `PEAK_BARS` (60) numbers, 0–1,
+ * one per equal slice of the audio, measured on the server
+ * (`audio/measurePeaks.ts`; the maths in `audio/peaks.ts`). Like loudness it
+ * belongs to the audio: new audio drops it until it is measured again. The
+ * length and range are checked where it's written (`audio/trackPeaks.ts`).
+ */
+export const trackPeaksValidator = v.array(v.number());
+
+/**
  * Music-family: what a listening review heard in the track
  * (scripts/kindling/describe-music.ts), kept for features to come: filters,
  * a mood map, safer sleep picks. Reviews from before the facts were asked

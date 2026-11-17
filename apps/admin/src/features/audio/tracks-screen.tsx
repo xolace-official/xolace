@@ -37,6 +37,7 @@ import {
 	ToggleGroupItem,
 } from "@xolace/ui/components/toggle-group";
 import {
+	AudioWaveformIcon,
 	PlusIcon,
 	SearchIcon,
 	SparklesIcon,
@@ -318,6 +319,13 @@ function TracksTable({ tracks }: { tracks: readonly AudioTrack[] }) {
 									<Badge variant="sky">
 										<SparklesIcon />
 										New
+									</Badge>
+								) : null}
+								{track.family === "support" && !track.peaks ? (
+									// The player draws a plain line; the editor can measure it again.
+									<Badge variant="neutral">
+										<AudioWaveformIcon />
+										No waveform
 									</Badge>
 								) : null}
 							</span>

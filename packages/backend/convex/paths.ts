@@ -9,6 +9,7 @@ import { CATALOG_BY_KEY } from "./ai/paths/catalog";
 import { isTryThis } from "./ai/paths/tryThis";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { hasPremium, requirePremium } from "./lib/premium";
+import { trackPeaksValidator } from "./lib/validators";
 import { posthog } from "./posthog";
 import { recordActivity } from "./streaks/activityLog";
 import type { Understanding } from "./understanding";
@@ -226,6 +227,9 @@ export const getBoundAudioTrack = query({
 			expiresAt: Date.now() + AUDIO_URL_TTL_SEC * 1000,
 			family: track.family,
 			narrators: track.narrators,
+			// The player's waveform (60 numbers 0–1); absent until measured,
+			// and the player draws a plain line without it.
+			peaks: track.peaks,
 			showCrisisLine: track.tier === 4,
 			slug: track.slug,
 			thumbUrl,
@@ -243,6 +247,7 @@ export const getBoundAudioTrack = query({
 			expiresAt: v.number(),
 			family: v.union(v.literal("support"), v.literal("music")),
 			narrators: v.optional(v.array(v.string())),
+			peaks: v.optional(trackPeaksValidator),
 			showCrisisLine: v.boolean(),
 			slug: v.string(),
 			thumbUrl: v.string(),

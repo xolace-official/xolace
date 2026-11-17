@@ -683,6 +683,50 @@ describe("admin/imports audio", () => {
 		);
 	});
 
+	it("applies a track whose peaks were measured after compare, and keeps them", async () => {
+		const { root, t } = setup();
+		const { trackId } = await t.mutation(
+			internal.ai.paths.audioTracks.upsertTrack,
+			{
+				track: {
+					durationSec: 60,
+					family: "support",
+					key: "support/calm/live.mp3",
+					narrators: ["Sage"],
+					sha256: SHA("a"),
+					slug: "calm",
+					sourceTags: [],
+					tags: ["calm"],
+					thumbhash: THUMBHASH,
+					thumbKey: `thumb/${SHA("b")}.webp`,
+					thumbSha256: SHA("b"),
+					tier: 1,
+					title: "Calm",
+					topic: "audio_topic_grief",
+				},
+			}
+		);
+		const { number } = await compare(t, "audio", [
+			{
+				record: track("calm", { sha256: SHA("a"), title: "Calm, again" }),
+				role: "tracks",
+			},
+		]);
+		// The backfill (or an upload's own measure) lands while it's in review.
+		const peaks = Array.from({ length: 60 }, (_, i) => (i % 5) / 5);
+		await t.mutation(internal.audio.trackPeaks.save, {
+			peaks,
+			sha256: SHA("a"),
+			trackId,
+		});
+
+		await t.mutation(api.admin.imports.apply, { number });
+		await settle(root);
+		expect(item(await run(t, number), "calm").status).toBe("live");
+		const [row] = await t.query(api.admin.audio.list, {});
+		expect(row).toMatchObject({ peaks, title: "Calm, again" });
+	});
+
 	it("counts a licence correction the summary line doesn't show", async () => {
 		const { t } = setup();
 		const licence = {

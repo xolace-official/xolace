@@ -4,8 +4,14 @@ import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { r2, reindexTrack } from "../ai/paths/audioTracks";
 import { CATALOG_BY_KEY, TOPIC_SLUGS, topicTitle } from "../ai/paths/catalog";
+import { formatOf } from "../audio/formats";
+import { drawsWaveform, measurePeaksLater } from "../audio/trackPeaks";
 import { adminMutation, adminQuery } from "../lib/adminAuth";
-import { licenceValidator, trackSoundValidator } from "../lib/validators";
+import {
+	licenceValidator,
+	trackPeaksValidator,
+	trackSoundValidator,
+} from "../lib/validators";
 import { trackSearchTextOf } from "../library/searchText";
 import schema from "../schema";
 import { ADMIN_LIST_LIMIT, adminStamp, assertSlug, notFound } from "./edits";
@@ -49,6 +55,8 @@ const trackRow = v.object({
 	licence: v.optional(licenceValidator),
 	narrators: v.optional(v.array(v.string())),
 	newUntil: v.optional(v.number()),
+	/** The player's waveform; absent until measured, or when the audio can't be. */
+	peaks: v.optional(trackPeaksValidator),
 	retiredAt: v.optional(v.number()),
 	safetyReviewedAt: v.optional(v.number()),
 	secondaryTopic: v.optional(v.string()),
@@ -85,6 +93,7 @@ const toRow = (t: Doc<"audio_tracks">): Infer<typeof trackRow> => ({
 	licence: t.licence,
 	narrators: t.narrators,
 	newUntil: t.newUntil,
+	peaks: t.peaks,
 	retiredAt: t.retiredAt,
 	safetyReviewedAt: t.safetyReviewedAt,
 	secondaryTopic: t.secondaryTopic,
@@ -415,10 +424,13 @@ function assertDuration(durationSec: number) {
 	}
 }
 
-/** The audio key must be one `audioUploadUrl` minted for this track. */
+/** The audio key must be one `audioUploadUrl` minted for this track, in a format its waveform can be measured from. */
 function assertAudioKey(family: string, slug: string, key: string) {
 	if (!key.startsWith(audioKeyPrefix(family, slug))) {
 		throw new ConvexError(`"${key}" wasn't uploaded for ${family}/${slug}`);
+	}
+	if (!formatOf(key)) {
+		throw new ConvexError(`"${key}" isn't an MP3 or WAV`);
 	}
 }
 
@@ -482,6 +494,7 @@ export const create = adminMutation({
 			searchText: trackSearchTextOf(track),
 		});
 		await reindexTrack(ctx, null, id);
+		await measurePeaksLater(ctx, { _id: id, family });
 		return null;
 	},
 	returns: v.null(),
@@ -491,6 +504,7 @@ export const create = adminMutation({
  * Point a track at newly uploaded audio and drop the old file, as the ingest
  * does. New audio is new content, so a support track's safety review goes
  * with it: a live track that needs one can't take new audio until retired.
+ * Its peaks are measured again in the background (`audio/trackPeaks.ts`).
  */
 export const replaceAudio = adminMutation({
 	args: {
@@ -509,6 +523,10 @@ export const replaceAudio = adminMutation({
 			if (key !== t.key) {
 				await r2.deleteObject(ctx, key);
 			}
+			// A chance to measure the waveform if it never was.
+			if (t.peaks === undefined) {
+				await measurePeaksLater(ctx, t);
+			}
 			return null;
 		}
 		await writeTrack(ctx, ctx.identity, t, {
@@ -517,10 +535,33 @@ export const replaceAudio = adminMutation({
 			key,
 			// Measured for the old audio; measure-loudness.ts fills it again.
 			loudness: undefined,
+			// The same, measured again below.
+			peaks: undefined,
 			safetyReviewedAt: t.family === "support" ? undefined : t.safetyReviewedAt,
 			sha256,
 		});
 		await r2.deleteObject(ctx, t.key);
+		await measurePeaksLater(ctx, t);
+		return null;
+	},
+	returns: v.null(),
+});
+
+/**
+ * The editor's Measure again, for a support track with no waveform: measures
+ * its stored audio in the background (`audio/measurePeaks.ts`). Nothing to
+ * do once it has peaks; music never draws a waveform.
+ */
+export const measureWaveform = adminMutation({
+	args: { slug: v.string() },
+	handler: async (ctx, { slug }) => {
+		const t = await trackBySlug(ctx, slug);
+		if (!drawsWaveform(t)) {
+			throw trackError(t, "music draws the plain line, not a waveform");
+		}
+		if (t.peaks === undefined) {
+			await measurePeaksLater(ctx, t);
+		}
 		return null;
 	},
 	returns: v.null(),

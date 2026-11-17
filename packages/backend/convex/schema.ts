@@ -24,6 +24,7 @@ import {
 	talkIssueValidator,
 	talkPeakValidator,
 	trackLoudnessValidator,
+	trackPeaksValidator,
 	trackSoundValidator,
 	triggerTypeValidator,
 } from "./lib/validators";
@@ -163,7 +164,7 @@ export default defineSchema({
 		episodeNumber: v.optional(v.number()),
 		family: v.union(v.literal("support"), v.literal("music")),
 		featured: v.optional(v.boolean()), // hand-picked Browse hero; set from the Convex dashboard
-		key: v.string(), // R2 object key, e.g. `${family}/${slug}.m4a`
+		key: v.string(), // R2 object key, e.g. `${family}/${slug}/<uuid>.mp3`
 
 		// music-family
 		licence: v.optional(licenceValidator), // required at write for family="music"
@@ -172,6 +173,9 @@ export default defineSchema({
 		// support-family
 		narrators: v.optional(v.array(v.string())), // display strings: ["Sage"], ["Sage","Ash"]
 		newUntil: v.optional(v.number()), // ms epoch; in the Browse "New" shelf while > now
+		// Both families: the player's waveform, 60 numbers 0–1, of the audio at
+		// `sha256` (lib/validators.ts trackPeaksValidator, audio/measurePeaks.ts).
+		peaks: v.optional(trackPeaksValidator),
 		retiredAt: v.optional(v.number()), // set when taken down after being live; tells Retired from Draft
 		safetyReviewedAt: v.optional(v.number()),
 
