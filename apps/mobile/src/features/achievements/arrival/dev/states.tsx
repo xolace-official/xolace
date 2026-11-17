@@ -95,8 +95,19 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "milestone-capped",
 		options: OPTIONS,
-		Screen: () => <FixtureArrival capped still={{ at: 5000 }} unseen={DAY_7} />,
+		Screen: () => (
+			<FixtureArrival cards="capped" still={{ at: 5000 }} unseen={DAY_7} />
+		),
 		title: "Day 7, a freeze already held",
+	},
+	{
+		id: "milestone-7-live",
+		options: OPTIONS,
+		Screen: () => (
+			<FixtureArrival cards="live" still={{ at: 5000 }} unseen={DAY_7} />
+		),
+		title:
+			"Day 7, settled, as the app shows it today: no week or freeze card yet",
 	},
 	{
 		id: "milestone-30",

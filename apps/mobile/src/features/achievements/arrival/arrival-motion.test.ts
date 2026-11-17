@@ -68,6 +68,11 @@ describe("liftAt", () => {
 		expect(liftAt(T.lift, false)).toBeCloseTo(0);
 		expect(liftAt(T.lift + T.liftFor, false)).toBe(LIFT);
 	});
+
+	it("stays put when no card comes up under the line", () => {
+		expect(liftAt(T.lift + T.liftFor, false, false)).toBe(0);
+		expect(liftAt(T.lift + T.liftFor, true, false)).toBe(0);
+	});
 });
 
 describe("busy: the clock stops when nothing moves (§6)", () => {

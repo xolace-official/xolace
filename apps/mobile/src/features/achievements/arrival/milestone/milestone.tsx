@@ -50,13 +50,17 @@ export function Milestone({
 	milestone: MilestoneModel;
 }) {
 	const top = (y: number) => ({ top: y + geo.dy });
+	// The lift makes room for the cards under the line; with neither, it stays put.
+	const lifts = milestone.week !== null || milestone.freeze !== null;
 	const out = useAnimatedStyle(() => {
 		const o = outAt(eng.get());
 		return { opacity: 1 - o, transform: [{ translateY: OUT_Y * o }] };
 	});
 	const lift = useAnimatedStyle(() => {
 		const e = eng.get();
-		return { transform: [{ translateY: liftAt(age(e, e.tm), e.rm) }] };
+		return {
+			transform: [{ translateY: liftAt(age(e, e.tm), e.rm, lifts) }],
+		};
 	});
 	const label = useAnimatedStyle(() => {
 		const e = eng.get();
@@ -138,7 +142,7 @@ export function Milestone({
 				) : null}
 			</Animated.View>
 			<OnceShown>
-				<Embers dark={dark} eng={eng} geo={geo} />
+				<Embers dark={dark} eng={eng} geo={geo} lifts={lifts} />
 			</OnceShown>
 		</>
 	);

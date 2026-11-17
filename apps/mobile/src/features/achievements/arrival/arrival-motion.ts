@@ -390,9 +390,15 @@ export function bloomAt(a: number, fa: number, rm: boolean) {
 	);
 }
 
-/** The milestone's lift (−48 pt over 1.9–2.4 s). */
-export function liftAt(m: number, rm: boolean) {
+/**
+ * The milestone's lift (−48 pt over 1.9–2.4 s): it makes room for the week and
+ * freeze cards, so with neither drawn (`lifts` false) nothing moves.
+ */
+export function liftAt(m: number, rm: boolean, lifts = true) {
 	"worklet";
+	if (!lifts) {
+		return 0;
+	}
 	return rm ? LIFT : LIFT * easeIO(seg(m, T.lift, T.lift + T.liftFor));
 }
 

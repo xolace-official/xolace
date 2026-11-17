@@ -48,6 +48,8 @@ export function MilestoneLayer({
 	wake: () => void;
 	ref?: Ref<ViewInstance>;
 }) {
+	// Where Flux is once it has lifted (or not, with no cards to make room for).
+	const lift = milestone.week !== null || milestone.freeze !== null ? LIFT : 0;
 	const tap = Gesture.Tap()
 		.maxDistance(TAP_SLOP)
 		.onEnd((ev, ok) => {
@@ -65,8 +67,8 @@ export function MilestoneLayer({
 				}
 				const inFlux =
 					Math.abs(ev.x - geo.cx) < FLUX_HIT.halfW &&
-					ev.y > FLUX_HIT.top + geo.dy + LIFT &&
-					ev.y < FLUX_HIT.bottom + geo.dy + LIFT;
+					ev.y > FLUX_HIT.top + geo.dy + lift &&
+					ev.y < FLUX_HIT.bottom + geo.dy + lift;
 				if (!e.rm && inFlux) {
 					e.tp = e.now;
 					puff = true;

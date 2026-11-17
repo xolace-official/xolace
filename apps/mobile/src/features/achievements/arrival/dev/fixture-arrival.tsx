@@ -19,11 +19,18 @@ import { ARRIVAL_DAY, BACKFILL } from "@/features/achievements/dev/fixtures";
 
 const NONE = new Set<string>();
 
+/**
+ * What the milestone's cards show: `designed` fills the week and the freeze as
+ * the boards draw them (the server doesn't serve them yet); `live` leaves them
+ * out, as the app does today.
+ */
+type Cards = "designed" | "capped" | "live";
+
 /** The plan the host would stage, with the fixtures' bundled art. */
 function fixturePlan(
 	unseen: readonly UnseenBadge[],
 	backfill: boolean,
-	capped: boolean
+	cards: Cards
 ): ArrivalPlan | null {
 	const plan = arrivalPlan({
 		opened: NONE,
@@ -46,12 +53,14 @@ function fixturePlan(
 				...b,
 				art: { ...b.art, source: fixtureArt(b.id) },
 			})),
-			// The designed cards, which the live plan leaves out until the server serves them.
-			milestone: plan.milestone && {
-				...plan.milestone,
-				freeze: capped ? "capped" : "earned",
-				week: lastSevenDays(ARRIVAL_DAY),
-			},
+			milestone:
+				plan.milestone && cards !== "live"
+					? {
+							...plan.milestone,
+							freeze: cards === "capped" ? "capped" : "earned",
+							week: lastSevenDays(ARRIVAL_DAY),
+						}
+					: plan.milestone,
 		};
 	}
 	return plan;
@@ -60,18 +69,18 @@ function fixturePlan(
 export function FixtureArrival({
 	unseen = [],
 	backfill = false,
-	capped = false,
+	cards = "designed",
 	still,
 }: {
 	unseen?: readonly UnseenBadge[];
 	backfill?: boolean;
-	/** A freeze already held: this milestone's isn't added. */
-	capped?: boolean;
+	/** The milestone's week and freeze cards (`Cards`). */
+	cards?: Cards;
 	still?: Still;
 }) {
 	const value: Arrivals = {
 		actions: { closed: goBack, seeBadges: () => undefined },
-		state: { open: true, plan: fixturePlan(unseen, backfill, capped) },
+		state: { open: true, plan: fixturePlan(unseen, backfill, cards) },
 	};
 	return (
 		<ArrivalsProvider value={value}>

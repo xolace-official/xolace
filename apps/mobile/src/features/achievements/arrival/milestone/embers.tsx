@@ -140,7 +140,7 @@ function ring(c: SkCanvas, g: Geo, m: number, fade: number) {
 	}
 }
 
-function draw(c: SkCanvas, e: Eng, g: Geo, look: Look) {
+function draw(c: SkCanvas, e: Eng, g: Geo, look: Look, lifts: boolean) {
 	"worklet";
 	if (e.rm) {
 		return;
@@ -151,7 +151,7 @@ function draw(c: SkCanvas, e: Eng, g: Geo, look: Look) {
 	}
 	const m = age(e, e.tm);
 	c.save();
-	c.translate(0, liftAt(m, e.rm) + OUT_Y * o);
+	c.translate(0, liftAt(m, e.rm, lifts) + OUT_Y * o);
 	const fade = 1 - o;
 	rising(c, g, m, fade, look);
 	const since = age(e, e.tp);
@@ -172,16 +172,19 @@ export function Embers({
 	eng,
 	geo,
 	dark,
+	lifts,
 }: {
 	eng: SharedValue<Eng>;
 	geo: Geo;
 	dark: boolean;
+	/** Whether the milestone lifts to make room for its cards (`liftAt`). */
+	lifts: boolean;
 }) {
 	const look = dark ? EMBER.dusk : EMBER.day;
 	const picture = useDerivedValue(() => {
 		const rec = Skia.PictureRecorder();
 		const c = rec.beginRecording(Skia.XYWHRect(0, 0, geo.W, geo.H));
-		draw(c, eng.get(), geo, look);
+		draw(c, eng.get(), geo, look, lifts);
 		return rec.finishRecordingAsPicture();
 	});
 	return (
