@@ -103,7 +103,8 @@ const pinned = (reduced: boolean, glass: boolean) => {
 			...FIT_SHEET,
 			sheetLargestUndimmedDetentIndex: "last",
 		},
-		"report-reflection": fit,
+		// The redesign's sheet since S15 (You're not alone).
+		"report-reflection": FIT_SHEET,
 		"session-end": NO_GESTURE,
 		"sit-with-this": NO_GESTURE,
 		"steadiness-face-info": fit,

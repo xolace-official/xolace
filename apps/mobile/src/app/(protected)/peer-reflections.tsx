@@ -1,5 +1,10 @@
-import { PeerReflectionScreen } from "@/features/peer-reflection/components/screen/PeerReflectionScreen";
+import { PeerReflectionData } from "@/features/peer-reflection/peer-reflection-data";
+import { PeerReflectionScreen } from "@/features/peer-reflection/peer-reflection-screen";
 
-export default function PeerReflections() {
-	return <PeerReflectionScreen />;
+export default function PeerReflectionsRoute() {
+	return (
+		<PeerReflectionData>
+			<PeerReflectionScreen />
+		</PeerReflectionData>
+	);
 }

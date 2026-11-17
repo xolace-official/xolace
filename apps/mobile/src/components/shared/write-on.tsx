@@ -3,6 +3,8 @@ import MaskedViewBase, {
 } from "@react-native-masked-view/masked-view";
 import { type ComponentType, useState } from "react";
 import {
+	type AccessibilityActionEvent,
+	type AccessibilityActionInfo,
 	type StyleProp,
 	StyleSheet,
 	type TextLayoutEvent,
@@ -35,6 +37,13 @@ type Props = {
 	reduced: boolean;
 	/** The quote's face and size (Peers and After: Newsreader italic 19.5/27). */
 	style: StyleProp<TextStyle>;
+	/** A clamp (You're not alone's 7 lines, a safety net); the mask clamps with it. */
+	numberOfLines?: number;
+	/** The lines the quote set in, as `onTextLayout` reports them (to tell a clamped quote). */
+	onLines?: (lines: TextLayoutEvent["nativeEvent"]["lines"]) => void;
+	/** VoiceOver's custom actions on the quote (You're not alone: Report, Hide this). */
+	accessibilityActions?: AccessibilityActionInfo[];
+	onAccessibilityAction?: (event: AccessibilityActionEvent) => void;
 };
 
 /**
@@ -52,6 +61,10 @@ export function WriteOn({
 	lastFrac,
 	reduced,
 	style,
+	numberOfLines,
+	onLines,
+	accessibilityActions,
+	onAccessibilityAction,
 }: Props) {
 	const ink = useTokenColor("foreground");
 	const glow = useTokenColor("write-gleam");
@@ -60,7 +73,10 @@ export function WriteOn({
 	const quote = `“${text}”`;
 
 	const onLayout = (e: TextLayoutEvent) => {
-		const ls = e.nativeEvent.lines;
+		const all = e.nativeEvent.lines;
+		onLines?.(all);
+		// iOS reports the lines past a clamp too: the write covers only those shown.
+		const ls = numberOfLines ? all.slice(0, numberOfLines) : all;
 		if (ls.length === 0) {
 			return;
 		}
@@ -91,6 +107,7 @@ export function WriteOn({
 		>
 			<AppText
 				accessible={false}
+				numberOfLines={numberOfLines}
 				style={[
 					style,
 					{ color: OPAQUE },
@@ -108,9 +125,12 @@ export function WriteOn({
 	return (
 		<View>
 			<AppText
+				accessibilityActions={accessibilityActions}
 				accessibilityLabel={quote}
 				accessible
 				className={written ? "text-foreground" : "text-transparent"}
+				numberOfLines={numberOfLines}
+				onAccessibilityAction={onAccessibilityAction}
 				onTextLayout={onLayout}
 				style={style}
 				variant="body"
