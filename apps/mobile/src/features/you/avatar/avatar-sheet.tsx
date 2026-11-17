@@ -27,6 +27,8 @@ function AvatarPicker() {
 	const { state, actions } = useAvatar();
 	const close = useSheetClose();
 	const { avatars, current, isPlus } = state;
+	// The line explains the locks, so it shows only when one is drawn.
+	const anyLocked = avatars?.some((a) => isLocked(a, isPlus)) ?? false;
 	const pick = (avatar: AvatarOption) => {
 		if (actions.pick(avatar)) {
 			close();
@@ -72,7 +74,7 @@ function AvatarPicker() {
 					/>
 				))}
 			</View>
-			{isPlus ? null : (
+			{anyLocked ? (
 				<AppText
 					className="mt-3.5 text-[12.5px] leading-[18px]"
 					color="subtle"
@@ -80,7 +82,7 @@ function AvatarPicker() {
 				>
 					{COPY.avatar.lock}
 				</AppText>
-			)}
+			) : null}
 		</View>
 	);
 }

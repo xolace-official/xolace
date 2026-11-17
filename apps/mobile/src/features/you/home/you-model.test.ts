@@ -64,6 +64,11 @@ describe("streakView", () => {
 		});
 	});
 
+	it("says one day, not one days", () => {
+		const summary = { ...fixtureSummary("regular"), currentStreak: 1 };
+		expect(streakView(summary)?.label).toBe("1 day in a row, best 21");
+	});
+
 	it("hides the best when it's the current run", () => {
 		const summary = { ...fixtureSummary("regular"), longestStreak: 12 };
 		expect(streakView(summary)?.best).toBeNull();

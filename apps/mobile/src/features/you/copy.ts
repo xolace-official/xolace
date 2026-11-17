@@ -77,9 +77,9 @@ export const COPY = {
 			still_here: "Still sitting with it",
 			vent: "Let it out",
 		} as Record<string, string>,
-		ask: "How is it sitting now?",
 		checkIn: "Check in",
 		close: "Close",
+		closeHint: "Closes it. No check-in is coming for this one.",
 		closeLabel: (text: string) => `Close, no check-in is coming: ${text}`,
 		comingUp: "Coming up",
 		comingUpWhen: "Check-in coming",
@@ -90,6 +90,7 @@ export const COPY = {
 		/** "From Thursday", the day the moment was. */
 		from: (weekday: string) => `From ${weekday}`,
 		noAnswer: "No answer",
+		openHint: "Opens the check-in, where you answer how it's sitting.",
 		openLabel: (text: string) => `Check in: ${text}`,
 		superseded:
 			"No check-in is coming for this one. Close it when you're ready.",
@@ -155,7 +156,7 @@ export const COPY = {
 	streak: {
 		best: (n: number) => `Best ${n}`,
 		buy: (price: number) => `Buy one · ${price} sparks`,
-		daysInRow: "days in a row",
+		daysInRow: (n: number) => (n === 1 ? "day in a row" : "days in a row"),
 		ended: "Your next streak starts today",
 		/** Production's freeze row (freeze-row.tsx). */
 		freeze: {
@@ -171,8 +172,8 @@ export const COPY = {
 		},
 		label: (streak: number, best: number) =>
 			best > streak
-				? `${streak} days in a row, best ${best}`
-				: `${streak} days in a row`,
+				? `${plural(streak, "day", "days")} in a row, best ${best}`
+				: `${plural(streak, "day", "days")} in a row`,
 		letters: ["M", "T", "W", "T", "F", "S", "S"],
 		moments: (n: number) => (n === 1 ? "moment" : "moments"),
 		none: "—",

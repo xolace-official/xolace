@@ -109,7 +109,7 @@ export const FIXTURE_FOLLOW_UPS = {
 			card(
 				"f-work",
 				"ready",
-				"The meeting is over, but you're still in the room with it.",
+				"The meeting is over, but you're still in the room with it. How is it sitting now?",
 				7
 			),
 		],

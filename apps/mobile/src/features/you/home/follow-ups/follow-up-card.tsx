@@ -13,9 +13,9 @@ import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 
 /**
- * A card waiting on someone: the day of the moment, "How is it sitting now?" and the card's
- * own line. The answer is given in production's check-in (`/follow-up`), which asks per tier
- * and follows up per answer; a card no check-in is coming for only closes.
+ * A card waiting on someone: the day of the moment and the card's own question. The answer
+ * is given in production's check-in (`/follow-up`), which asks per tier and follows up per
+ * answer; a card no check-in is coming for only closes.
  */
 export function WaitingCard({
 	card,
@@ -28,6 +28,9 @@ export function WaitingCard({
 	const checkIn = look.kind === "check-in";
 	return (
 		<PressScale
+			accessibilityHint={
+				checkIn ? COPY.followUps.openHint : COPY.followUps.closeHint
+			}
 			accessibilityLabel={
 				checkIn
 					? COPY.followUps.openLabel(card.cardText)
@@ -48,19 +51,13 @@ export function WaitingCard({
 				>
 					{look.from}
 				</AppText>
+				{/* The card's own line is the question ("…how's it sitting now?"), written per
+				    moment; the board's fixed ask over it read twice. */}
 				<AppText
 					className="mt-1 text-[17px] leading-[22px] tracking-[-0.17px]"
+					numberOfLines={4}
 					variant="body"
 					weight="bold"
-				>
-					{COPY.followUps.ask}
-				</AppText>
-				<AppText
-					className="mt-1.5 text-[14px] leading-[20.3px]"
-					color="muted"
-					italic
-					numberOfLines={3}
-					variant="callout"
 				>
 					{card.cardText}
 				</AppText>

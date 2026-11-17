@@ -59,7 +59,7 @@ export function StreakCard() {
 								variant="callout"
 								weight="semibold"
 							>
-								{COPY.streak.daysInRow}
+								{COPY.streak.daysInRow(streak.streak)}
 							</AppText>
 						</>
 					) : (
