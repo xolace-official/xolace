@@ -8,7 +8,7 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 import { useHomeScreen } from "@/features/lantern/home/home-data";
-import { PhotoCard } from "@/features/lantern/home/photo-card";
+import { PhotoCard, type PhotoEntry } from "@/features/lantern/home/photo-card";
 import { type CardItem, reasonLine } from "@/features/lantern/lantern-model";
 import { LS } from "@/features/lantern/lantern-style";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
@@ -66,7 +66,7 @@ type CardProps = {
 	itemW: number;
 	scrollX: SharedValue<number>;
 	reduced: boolean;
-	onShare: (entry: CardItem) => void;
+	onShare: (entry: PhotoEntry) => void;
 };
 
 function Card({

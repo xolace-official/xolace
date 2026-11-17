@@ -3,7 +3,6 @@
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { create } from "zustand";
 import { createJSONStorage, devtools, persist } from "zustand/middleware";
-import type { ReadingModeKey } from "@/features/library/reader/reading-mode";
 import type { TextureSetId } from "@/features/reflect/texture-sets";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 import {
@@ -151,6 +150,9 @@ type PreferencesSlice = {
 	hiddenProfileCards: ProfileCardId[];
 	toggleProfileCard: (id: ProfileCardId) => void;
 };
+
+/** The Lantern reader's reading modes (src/features/lantern/reader/reading-modes.ts). */
+export type ReadingModeKey = "classic" | "clear" | "fire";
 
 export type ProfileCardId = "calendar" | "rank" | "week";
 

@@ -20,13 +20,29 @@ const GLASS = isLiquidGlassAvailable();
 const PLAY = { android: "play_arrow", ios: "play.fill" } as const;
 const SHARE = "square.and.arrow.up";
 
+/** What a photo card draws: a card from any list, or Up next (which has no views). */
+export type PhotoEntry = Pick<
+	CardItem,
+	| "_id"
+	| "slug"
+	| "title"
+	| "readMin"
+	| "coverUrl"
+	| "coverThumbhash"
+	| "listenMin"
+> & { views?: number };
+
 type Props = {
-	entry: CardItem;
+	entry: PhotoEntry;
 	kicker: string;
 	width: number;
 	height: number;
 	from: ReaderFrom;
-	onShare: (entry: CardItem) => void;
+	onShare: (entry: PhotoEntry) => void;
+	/** From a hub: the reader's Up next follows its order. */
+	hub?: string;
+	/** In place of production's meta line (Up next shows read and listen times). */
+	meta?: string;
 	/** Continue only: Explore's read bar under the meta (v2). */
 	progress?: number;
 	label?: string;
@@ -44,16 +60,18 @@ export function PhotoCard({
 	height,
 	from,
 	onShare,
+	hub,
+	meta: metaOverride,
 	progress,
 	label,
 }: Props) {
 	const reduced = useEffectiveReducedMotion();
 	const ax = useWindowDimensions().fontScale >= AX_FONT_SCALE;
-	const meta = readTimeLine(entry.readMin, entry.views);
+	const meta = metaOverride ?? readTimeLine(entry.readMin, entry.views);
 	const size = { borderRadius: C.r, height, width };
 	return (
 		<View style={{ height, width }}>
-			<Link asChild href={readerHref(entry.slug, from)}>
+			<Link asChild href={readerHref(entry.slug, from, hub)}>
 				<Link.Trigger withAppleZoom={!reduced}>
 					<PressScale
 						accessibilityLabel={label ?? `${entry.title}. ${kicker}. ${meta}`}
