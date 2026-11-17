@@ -10,13 +10,13 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
-import { useSessionEndHref } from "@/features/kindling/use-session-end-href";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusOffer } from "@/features/purchases/use-plus-offer";
 import { PathChoiceCard } from "@/features/reflect/components/states/path-choice-card";
 import { PathOfferLayer } from "@/features/reflect/components/states/path-offer-layer";
 import { playPathChoice } from "@/lib/haptics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useSessionEndHref } from "@/lib/path-session/session-end-href";
 import { cn } from "@/lib/utils";
 
 type Props = {
