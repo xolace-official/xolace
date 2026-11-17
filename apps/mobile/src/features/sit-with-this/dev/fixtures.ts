@@ -4,7 +4,7 @@
  * Reflect's example. The dev states and the model tests play these through
  * the same model as the app.
  */
-import type { Id } from "@xolace/backend/convex/_generated/dataModel";
+import type { Id } from "@xolace/backend/dataModel";
 import type { CatalogueExercise, Slots } from "../sit-model";
 
 const id = (title: string) => `fixture-${title}` as Id<"exercises">;

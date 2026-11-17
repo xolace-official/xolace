@@ -3,7 +3,8 @@
  * worklet. React hands it over on beat changes only (`use-sit-clock.ts`).
  */
 import type { RunState } from "../run/sit-run";
-import { type Beat, durOf, isBreathing } from "../sit-model";
+import { type Beat, isBreathing } from "../sit-model";
+import { durOf } from "../sit-timing";
 import { PATTERNS, type PhaseKind, type Step } from "./breath";
 
 /** Beat kinds as numbers, for the worklet. */
@@ -64,8 +65,14 @@ export function clockCfg(run: RunState, beat: Beat): ClockCfg {
 
 /** What the clock tells the JS side, in the frame it happens. */
 export type ClockEvents = {
-	/** A breath phase began: its haptic, and VoiceOver hears its label. */
-	phase: (serial: number, kind: PhaseKind, ms: number, caption: number) => void;
+	/** A breath phase began (`first`: the beat's first): its haptic, and VoiceOver hears it. */
+	phase: (
+		serial: number,
+		kind: PhaseKind,
+		ms: number,
+		caption: number,
+		first: boolean
+	) => void;
 	/** A hand pulse. */
 	pulse: (serial: number) => void;
 	/** The beat's time is up. */

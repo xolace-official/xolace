@@ -1,13 +1,15 @@
-import { api } from "@xolace/backend/convex/_generated/api";
-import type { Id } from "@xolace/backend/convex/_generated/dataModel";
+import { api } from "@xolace/backend/api";
+import type { Id } from "@xolace/backend/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { useSessionMode } from "@/context/session-mode-context";
 import { useSessionEndHref } from "@/lib/path-session/session-end-href";
 import { usePathSession } from "@/lib/path-session/use-path-session";
+import { toExercise } from "./catalogue";
 import type { Sit } from "./sit-data";
-import { type SitFrom, toExercise } from "./sit-model";
+import type { SitFrom } from "./sit-model";
+import { useSwapOptions } from "./swap/use-swap-options";
 
 /**
  * Sit with this on Convex: production's data flow, unchanged. From a
@@ -41,6 +43,17 @@ export function useSitData(): Sit {
 	const { isNight } = useSessionMode();
 	const started = useRef(false);
 	const leaving = useRef(false);
+	const opening = useRef(false);
+	const focused = useIsFocused();
+	// Warm the sheet's options while the exercise plays (none for a kindling replay).
+	useSwapOptions(standalone ? null : sessionId);
+
+	// Back in front: "Something different" may open the sheet again.
+	useEffect(() => {
+		if (focused) {
+			opening.current = false;
+		}
+	}, [focused]);
 
 	useEffect(() => {
 		if (standalone || started.current || !sessionId || !session) {
@@ -88,7 +101,14 @@ export function useSitData(): Sit {
 			finish: (completed) => {
 				finish(completed);
 			},
-			openSwap: () => router.push("/sit-with-this-swap"),
+			openSwap: () => {
+				// One sheet, however fast the taps.
+				if (opening.current || !focused) {
+					return;
+				}
+				opening.current = true;
+				router.push("/sit-with-this-swap");
+			},
 		},
 		state: {
 			exercise: result ? toExercise(result.exercise, result.slots) : null,

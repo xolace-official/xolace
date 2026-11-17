@@ -9,11 +9,12 @@ import {
 	playSoftenPulse,
 	useBreathHaptics,
 } from "@/lib/haptics";
-import { type PhaseKind, TOP } from "../clock/breath";
+import type { PhaseKind } from "../clock/breath";
 import { type ClockEvents, clockCfg } from "../clock/clock-config";
+import { phaseSaid } from "../clock/phases";
 import { useSitClock } from "../clock/use-sit-clock";
 import { COPY } from "../copy";
-import type { Beat, Exercise, HandIntensity } from "../sit-model";
+import { type Exercise, type HandIntensity, isBreathing } from "../sit-model";
 import { breathFelt, type RunStart, runReducer, startRun } from "./sit-run";
 
 /** Production's hand pulse by the step's intensity (the old haptic beat). */
@@ -24,18 +25,13 @@ const HAND: Record<HandIntensity, () => void> = {
 };
 const STEP: Record<PhaseKind, BreathStep> = { 0: "in", 1: "top", 2: "out" };
 
-/** What VoiceOver hears at a phase: its label, and Make room's line for it. */
-function phaseSaid(beat: Beat, kind: PhaseKind, caption: number): string {
-	const label = COPY.phases[kind];
-	if (
-		(beat.k === "breath" || beat.k === "sync") &&
-		typeof beat.t !== "string" &&
-		kind !== TOP
-	) {
-		return `${label}. ${beat.t[caption] ?? ""}`;
-	}
-	return label;
-}
+/**
+ * Queued, so a beat's line and its first phase are both heard (an unqueued
+ * announcement cuts off the one before it). The queue option is iOS's; Android
+ * reads each in turn anyway.
+ */
+const announce = (text: string) =>
+	AccessibilityInfo.announceForAccessibilityWithOptions(text, { queue: true });
 
 type Args = {
 	exercise: Exercise;
@@ -83,16 +79,14 @@ export function useSitRun({
 		beatEnd: (serial) => dispatch({ serial, total, type: "advance" }),
 		doneReady: (serial) => dispatch({ serial, type: "doneReady" }),
 		linkReady: () => dispatch({ type: "linkReady" }),
-		phase: (serial, kind, ms, caption) => {
+		phase: (serial, kind, ms, caption, first) => {
 			if (serial !== run.serial || !beat) {
 				return;
 			}
 			if (feel) {
 				breath.play(STEP[kind], ms);
 			}
-			AccessibilityInfo.announceForAccessibility(
-				phaseSaid(beat, kind, caption)
-			);
+			announce(phaseSaid(beat, kind, caption, first));
 		},
 		pulse: (serial) => {
 			if (serial === run.serial && feel && beat?.k === "haptic") {
@@ -128,15 +122,16 @@ export function useSitRun({
 	}, [feel, stop]);
 	useEffect(() => stop, [stop]);
 
-	// VoiceOver hears each beat (a breath's phases are said by the clock).
+	// VoiceOver hears each beat; a breath's caption is said with its phases.
 	const said =
 		run.stage === "close" ? `${COPY.stayed.title} ${COPY.stayed.sub}` : null;
-	const line =
-		run.stage === "play" && beat && typeof beat.t === "string" ? beat.t : null;
+	const spoken =
+		beat && typeof beat.t === "string" && !isBreathing(beat.k) ? beat.t : null;
+	const line = run.stage === "play" ? spoken : null;
 	useEffect(() => {
 		const text = said ?? line;
 		if (text) {
-			AccessibilityInfo.announceForAccessibility(text);
+			announce(text);
 		}
 	}, [said, line]);
 

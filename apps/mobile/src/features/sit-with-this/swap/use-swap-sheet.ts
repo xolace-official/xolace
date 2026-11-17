@@ -1,46 +1,52 @@
-import { api } from "@xolace/backend/convex/_generated/api";
-import type { Id } from "@xolace/backend/convex/_generated/dataModel";
+import { api } from "@xolace/backend/api";
+import type { Id } from "@xolace/backend/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { useRouter } from "expo-router";
+import { useNavigation } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { usePathSession } from "@/lib/path-session/use-path-session";
+import { toExercise } from "../catalogue";
 import { COPY } from "../copy";
-import { swapChoices, toExercise } from "../sit-model";
+import { swapChoices } from "../sit-model";
 import type { SwapSheet } from "./swap-data";
+import { useSwapOptions } from "./use-swap-options";
 
 /** The server's refusals that mean the sheet is out of date: close it and let the queries catch up. */
 const STALE = ["Maximum swaps reached", "Exercise not allowed"];
 
 /**
  * The swap sheet on Convex: production's `exercises.getSwapOptions` (reset and
- * the next best) and `exercises.recordSwap`, unchanged. The options' names and
- * lengths come from the catalogue (`exercises.getById`). A swap closes the
- * sheet; the exercise behind it restarts on the new one, as production's
- * remount did.
+ * the next best) and `exercises.recordSwap`, unchanged; the options' names and
+ * lengths from the catalogue (`use-swap-options.ts`, warm from Sit). A swap
+ * closes the sheet and the exercise behind it restarts on the new one, as
+ * production's remount did. The sheet only ever closes itself, once: a second
+ * tap, or a save landing after a swipe-down, never pops Sit.
  */
 export function useSwapSheetData(): SwapSheet {
-	const router = useRouter();
+	const navigation = useNavigation();
 	const posthog = usePostHog();
 	const { session, sessionId } = usePathSession();
-	const forSession = sessionId ? { sessionId } : "skip";
-	const options = useQuery(api.exercises.getSwapOptions, forSession);
-	const current = useQuery(api.exercises.getForSession, forSession);
-	const reset = useQuery(
-		api.exercises.getById,
-		options?.resetId ? { exerciseId: options.resetId } : "skip"
+	const current = useQuery(
+		api.exercises.getForSession,
+		sessionId ? { sessionId } : "skip"
 	);
-	const nextBest = useQuery(
-		api.exercises.getById,
-		options?.nextBestId ? { exerciseId: options.nextBestId } : "skip"
-	);
+	const { reset, nextBest, ready } = useSwapOptions(sessionId);
 	const recordSwap = useMutation(api.exercises.recordSwap);
 	const [busy, setBusy] = useState(false);
+	const closed = useRef(false);
 	const slots = current?.slots ?? {};
 
+	const close = () => {
+		if (closed.current || !navigation.isFocused()) {
+			return;
+		}
+		closed.current = true;
+		navigation.goBack();
+	};
+
 	const pick = async (id: string) => {
-		if (busy || !sessionId) {
+		if (busy || closed.current || !sessionId) {
 			return;
 		}
 		setBusy(true);
@@ -50,11 +56,11 @@ export function useSwapSheetData(): SwapSheet {
 				sessionId,
 			});
 			posthog.capture("exercise_swapped", { swaps_used: result.swapsUsed });
-			router.back();
+			close();
 		} catch (err) {
 			const msg = err instanceof Error ? err.message : "";
 			if (STALE.some((s) => msg.includes(s))) {
-				router.back();
+				close();
 				return;
 			}
 			toast(COPY.sheet.failed);
@@ -65,7 +71,7 @@ export function useSwapSheetData(): SwapSheet {
 
 	return {
 		actions: {
-			keepGoing: () => router.back(),
+			keepGoing: close,
 			pick: (id) => {
 				pick(id);
 			},
@@ -79,6 +85,7 @@ export function useSwapSheetData(): SwapSheet {
 				},
 				current?.exercise.title ?? null
 			),
+			loading: !(ready && current !== undefined),
 			swaps: session?.swappedExerciseIds?.length ?? 0,
 		},
 	};

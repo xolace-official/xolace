@@ -5,7 +5,8 @@ import { router } from "expo-router";
 import { View } from "react-native";
 import { ScopedTheme } from "uniwind";
 import { type ThemeMode, themeVariant } from "@/design/themes";
-import { swapChoices, toExercise } from "../sit-model";
+import { toExercise } from "../catalogue";
+import { swapChoices } from "../sit-model";
 import { type SwapSheet, SwapSheetProvider } from "../swap/swap-data";
 import { SwapSheetView } from "../swap/swap-sheet";
 import { MAKE_ROOM, REFLECT_SLOTS, RESET } from "./fixtures";
@@ -17,11 +18,14 @@ export function FixtureSwapSheet({
 	current = "let_it_land",
 	swaps = 0,
 	theme = "light",
+	loading = false,
 }: {
 	current?: string;
 	swaps?: number;
 	/** Default's light or dark, whatever the app's theme is. */
 	theme?: ThemeMode;
+	/** The options not in yet. */
+	loading?: boolean;
 }) {
 	const value: SwapSheet = {
 		actions: { keepGoing: back, pick: back },
@@ -34,6 +38,7 @@ export function FixtureSwapSheet({
 				},
 				current
 			),
+			loading,
 			swaps,
 		},
 	};

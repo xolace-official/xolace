@@ -13,6 +13,8 @@ export type SwapSheet = {
 		swaps: number;
 		/** A swap is being recorded: the options don't take a second tap. */
 		busy: boolean;
+		/** The options aren't in yet: their rows hold the space. */
+		loading: boolean;
 	};
 	actions: {
 		/** Record the swap; the exercise restarts at its first beat. */

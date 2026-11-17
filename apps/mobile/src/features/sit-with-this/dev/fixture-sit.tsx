@@ -6,14 +6,10 @@ import { router } from "expo-router";
 import { ScopedTheme } from "uniwind";
 import { useSessionMode } from "@/context/session-mode-context";
 import { NIGHT_VARIANT, type ThemeMode, themeVariant } from "@/design/themes";
+import { toExercise } from "../catalogue";
 import type { RunStart, SitScene } from "../run/sit-run";
 import { type Sit, SitProvider } from "../sit-data";
-import {
-	type CatalogueExercise,
-	type SitFrom,
-	type Slots,
-	toExercise,
-} from "../sit-model";
+import type { CatalogueExercise, SitFrom, Slots } from "../sit-model";
 import { SitWithThisScreen } from "../sit-with-this-screen";
 import { LET_IT_LAND, REFLECT_SLOTS } from "./fixtures";
 

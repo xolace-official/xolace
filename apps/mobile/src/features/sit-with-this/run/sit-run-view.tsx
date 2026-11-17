@@ -21,8 +21,8 @@ import {
 	closeLabel,
 	type Exercise,
 	isBreathing,
-	lengthLabel,
 } from "../sit-model";
+import { lengthLabel } from "../sit-timing";
 import type { SitScene } from "./sit-run";
 import { useSitRun } from "./use-sit-run";
 
@@ -113,7 +113,8 @@ export function SitRunView({ exercise, scene }: Props) {
 				closeLabel={closeLabel(from, stage)}
 				face={face}
 				late={late}
-				onClose={() => actions.finish(false)}
+				// X on "You stayed." finishes: every beat has been played.
+				onClose={() => actions.finish(stage === "close")}
 				onPause={() => setPaused(!paused)}
 				paused={paused}
 				top={y(LAYOUT.header.top)}

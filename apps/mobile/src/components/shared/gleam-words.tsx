@@ -5,6 +5,7 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { gleamRows } from "@/components/shared/gleam-rows";
 import { REDUCED_FADE_MS } from "@/design/springs";
 import { useTokenColor } from "@/lib/use-token-color";
 
@@ -74,27 +75,23 @@ export function GleamWords({
 		letterSpacing: tracking,
 		lineHeight: line,
 	} as const;
-	let i = 0;
-	return rows.map((row) => (
-		<View className="flex-row flex-wrap justify-center" key={row}>
-			{row.split(" ").map((w, j, all) => {
-				const start = at + i * step;
-				i += 1;
-				return (
-					<Word
-						clock={clock}
-						face={face}
-						gap={j === all.length - 1 ? 0 : size * gap}
-						glow={glow}
-						ink={ink}
-						key={`${row}-${w}`}
-						reduced={reduced}
-						start={start}
-						style={style}
-						text={w}
-					/>
-				);
-			})}
+	// Keyed by position: a user's own line can repeat a word.
+	return gleamRows(rows, at, step).map((words, r) => (
+		<View className="flex-row flex-wrap justify-center" key={r}>
+			{words.map((w, j) => (
+				<Word
+					clock={clock}
+					face={face}
+					gap={w.last ? 0 : size * gap}
+					glow={glow}
+					ink={ink}
+					key={j}
+					reduced={reduced}
+					start={w.start}
+					style={style}
+					text={w.text}
+				/>
+			))}
 		</View>
 	));
 }

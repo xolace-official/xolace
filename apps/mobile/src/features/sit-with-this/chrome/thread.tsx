@@ -3,7 +3,8 @@ import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { LinearGradient } from "@/components/shared/styled";
 import type { SitClock } from "../clock/use-sit-clock";
 import { LAYOUT } from "../sit-look";
-import { type Beat, threadWeights } from "../sit-model";
+import type { Beat } from "../sit-model";
+import { threadWeights } from "../sit-timing";
 
 const T = LAYOUT.thread;
 

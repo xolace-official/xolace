@@ -6,7 +6,7 @@ import { AppText } from "@/components/shared/app-text";
 import { GleamLine } from "@/components/shared/gleam-line";
 import { beatTime, type SitClock } from "../clock/use-sit-clock";
 import { COPY } from "../copy";
-import { stagger, words } from "../sit-model";
+import { stagger, words } from "../sit-timing";
 
 /** Board `.tb`: Newsreader italic 27/1.32. */
 const LINE = { line: 35.64, size: 27, tracking: 0 } as const;

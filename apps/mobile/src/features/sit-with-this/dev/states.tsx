@@ -75,6 +75,12 @@ export const devStates: readonly DevState[] = [
 		Screen: () => <FixtureSwapSheet current="reset" swaps={1} theme="dark" />,
 		title: "11 The sheet after a swap to Three breaths",
 	},
+	{
+		id: "swap-sheet-loading",
+		options: SHEET,
+		Screen: () => <FixtureSwapSheet loading />,
+		title: "11 The sheet before its options arrive",
+	},
 	{ id: "paused", title: "12 Paused on a line", ...still(0, WRITTEN, PAUSED) },
 	{
 		id: "paused-breathing",

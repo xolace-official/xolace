@@ -8,7 +8,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
-import { riseOf, type SitClock } from "../clock/use-sit-clock";
+import { riseOf } from "../clock/phases";
+import type { SitClock } from "../clock/use-sit-clock";
 import { COPY } from "../copy";
 import { FADE } from "../sit-look";
 import { SoftCopy } from "../soft-copy";
