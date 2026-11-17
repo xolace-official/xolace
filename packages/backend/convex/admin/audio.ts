@@ -4,6 +4,7 @@ import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { r2, reindexTrack } from "../ai/paths/audioTracks";
 import { CATALOG_BY_KEY, TOPIC_SLUGS, topicTitle } from "../ai/paths/catalog";
+import { measurePeaksLater } from "../audio/trackPeaks";
 import { adminMutation, adminQuery } from "../lib/adminAuth";
 import { licenceValidator, trackSoundValidator } from "../lib/validators";
 import { trackSearchTextOf } from "../library/searchText";
@@ -482,6 +483,7 @@ export const create = adminMutation({
 			searchText: trackSearchTextOf(track),
 		});
 		await reindexTrack(ctx, null, id);
+		await measurePeaksLater(ctx, id);
 		return null;
 	},
 	returns: v.null(),
@@ -491,6 +493,7 @@ export const create = adminMutation({
  * Point a track at newly uploaded audio and drop the old file, as the ingest
  * does. New audio is new content, so a support track's safety review goes
  * with it: a live track that needs one can't take new audio until retired.
+ * Its peaks are measured again in the background (`audio/trackPeaks.ts`).
  */
 export const replaceAudio = adminMutation({
 	args: {
@@ -517,10 +520,13 @@ export const replaceAudio = adminMutation({
 			key,
 			// Measured for the old audio; measure-loudness.ts fills it again.
 			loudness: undefined,
+			// The same, measured again below.
+			peaks: undefined,
 			safetyReviewedAt: t.family === "support" ? undefined : t.safetyReviewedAt,
 			sha256,
 		});
 		await r2.deleteObject(ctx, t.key);
+		await measurePeaksLater(ctx, t._id);
 		return null;
 	},
 	returns: v.null(),

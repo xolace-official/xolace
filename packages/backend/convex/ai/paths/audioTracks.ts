@@ -7,6 +7,7 @@ import {
 	internalQuery,
 	type MutationCtx,
 } from "../../_generated/server";
+import { measurePeaksLater } from "../../audio/trackPeaks";
 import {
 	licenceValidator,
 	trackLoudnessValidator,
@@ -158,6 +159,7 @@ const upsertTrackResult = v.object({
  * Kindling script (`upsertTrack`) and admin imports (`imports/apply.ts`):
  * - unchanged `sha256` → delete the freshly-uploaded audio blob, no-op the row
  * - changed `sha256` → replace the row, delete the *old* audio blob
+ * - new or changed audio → its peaks are measured in the background
  * - a thumbnail blob is NEVER deleted (content-addressed key, shared across
  *   rows); an unchanged `thumbSha256` re-uploads to the same key (harmless
  *   overwrite), a changed one just repoints `thumbKey`.
@@ -233,6 +235,7 @@ export async function upsertTrackRecord(
 			updatedAt: now,
 		});
 		await reindex(trackId);
+		await measurePeaksLater(ctx, trackId);
 		return { action: "inserted", trackId };
 	}
 
@@ -248,12 +251,13 @@ export async function upsertTrackRecord(
 		// Audio blob unchanged: keep the live key, but persist every other
 		// field (title, tags, thumb, licence, ...) — metadata edits must land.
 		// Its measured loudness stays too when the record doesn't carry one
-		// (an admin import never does).
+		// (an admin import never does). Peaks are never in a record: they stay.
 		await ctx.db.replace("audio_tracks", existing._id, {
 			...track,
 			...kept,
 			key: existing.key,
 			loudness: track.loudness ?? existing.loudness,
+			peaks: existing.peaks,
 		});
 		await reindex(existing._id);
 		const action =
@@ -265,6 +269,8 @@ export async function upsertTrackRecord(
 	await ctx.db.replace("audio_tracks", existing._id, { ...track, ...kept });
 	await r2.deleteObject(ctx, oldKey);
 	await reindex(existing._id);
+	// The replace dropped the old audio's peaks.
+	await measurePeaksLater(ctx, existing._id);
 	return { action: "updated", trackId: existing._id };
 }
 
