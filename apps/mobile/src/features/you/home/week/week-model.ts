@@ -5,9 +5,22 @@
  */
 import { COPY } from "@/features/you/copy";
 
+/**
+ * What a held day could say under its date (the board's "2 moments · Work · Overwhelmed · ended
+ * lighter"). No query sends it yet: backend item B17. Undefined until then, and nothing draws it.
+ */
+export type DayDetail = {
+	ended: "lighter" | "same" | "heavier" | null;
+	moments: number;
+	topDomain: string | null;
+	topEmotion: string | null;
+};
+
 /** One day as `profile.getWeekIntensity` sends it: Monday first, intensity the day's mean 1–10. */
 export type IntensityDay = {
 	dayName: string;
+	/** B17's per-day detail; always undefined today. */
+	detail?: DayDetail;
 	intensity: number | null;
 	isToday: boolean;
 	label: string;
@@ -120,7 +133,10 @@ export function shortDate(start: Date, index: number): string {
 	return `${COPY.week.weekdays[index]} ${date.getDate()} ${MONTH.format(date)}`;
 }
 
-/** A held day's two lines, replacing the title row at the same height. */
+/**
+ * A held day's readout, one line in place of the title row: "Tue 10 Nov · above your usual".
+ * `detail` is B17's second line, carried for when it lands; nothing draws it yet.
+ */
 export function heldReadout({
 	days,
 	index,
@@ -134,22 +150,17 @@ export function heldReadout({
 	usual: Usual | null;
 	/** -1 on a past week. */
 	todayIndex: number;
-}): { value: string; caption: string } {
+}): { detail?: DayDetail; value: string } {
 	const day = days[index];
 	const date = shortDate(start, index);
 	if (day.intensity === null) {
 		const ahead = todayIndex >= 0 && index > todayIndex;
-		return {
-			caption: ahead ? COPY.week.ahead : COPY.week.none,
-			value: date,
-		};
+		return { value: `${date} · ${ahead ? COPY.week.ahead : COPY.week.none}` };
 	}
-	return {
-		caption: COPY.week.level(day.intensity),
-		value: usual
-			? `${date} · ${COPY.week.relation[relationTo(day.intensity, usual)]}`
-			: date,
-	};
+	const said = usual
+		? COPY.week.relation[relationTo(day.intensity, usual)]
+		: COPY.week.level(day.intensity);
+	return { detail: day.detail, value: `${date} · ${said}` };
 }
 
 /** The plot's spoken label: each day with moments (the sentence under it is read on its own). */

@@ -139,32 +139,42 @@ describe("dates", () => {
 describe("heldReadout", () => {
 	const start = new Date(2026, 10, 9);
 
-	it("reads a day against your usual", () => {
+	it("reads a day against your usual, in one line", () => {
 		expect(
 			heldReadout({ days: BOARD, index: 1, start, todayIndex: 3, usual: USUAL })
-		).toEqual({
-			caption: "High intensity",
-			value: "Tue 10 Nov · above your usual",
-		});
+		).toEqual({ detail: undefined, value: "Tue 10 Nov · above your usual" });
 	});
 
 	it("tells a day still ahead from a quiet one", () => {
 		expect(
 			heldReadout({ days: BOARD, index: 5, start, todayIndex: 3, usual: USUAL })
-				.caption
-		).toBe("Still ahead");
+				.value
+		).toBe("Sat 14 Nov · still ahead");
 		const past = week([null, 5]);
 		expect(
 			heldReadout({ days: past, index: 0, start, todayIndex: -1, usual: USUAL })
-				.caption
-		).toBe("No moments that day");
+				.value
+		).toBe("Mon 9 Nov · no moments");
 	});
 
-	it("leaves the relation off without a usual", () => {
+	it("says the level without a usual", () => {
 		expect(
 			heldReadout({ days: BOARD, index: 2, start, todayIndex: 3, usual: null })
 				.value
-		).toBe("Wed 11 Nov");
+		).toBe("Wed 11 Nov · moderate intensity");
+	});
+
+	it("carries B17's detail when a day has one", () => {
+		const detail = {
+			ended: "lighter" as const,
+			moments: 2,
+			topDomain: "work",
+			topEmotion: "overwhelmed",
+		};
+		const days = BOARD.map((d, i) => (i === 1 ? { ...d, detail } : d));
+		expect(
+			heldReadout({ days, index: 1, start, todayIndex: 3, usual: USUAL }).detail
+		).toBe(detail);
 	});
 });
 
@@ -174,7 +184,7 @@ describe("weekA11y", () => {
 			"Intensity by day. Monday, within your usual. Tuesday, above your usual. Wednesday, within your usual. Thursday, below your usual"
 		);
 		expect(weekA11y(week([7.6, null]), null)).toBe(
-			"Intensity by day. Monday, High intensity"
+			"Intensity by day. Monday, high intensity"
 		);
 	});
 });

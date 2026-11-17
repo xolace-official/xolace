@@ -229,7 +229,7 @@ export const COPY = {
 			`${label}, ${index + 1} of ${count}${waiting > 0 ? `, ${waiting} waiting` : ""}`,
 	},
 	week: {
-		ahead: "Still ahead",
+		ahead: "still ahead",
 		backBy: (day: string) => `Back inside it by ${day}.`,
 		chart: "Intensity by day",
 		earlier: "Earlier weeks",
@@ -245,9 +245,9 @@ export const COPY = {
 		infoPlus:
 			"Each bar is how heavy your moments felt that day; averaged from the intensity (1-10) of what you brought. Use the arrows above to browse earlier weeks.",
 		level: (v: number) =>
-			`${v >= 7.5 ? "High" : v >= 5 ? "Moderate" : v >= 2.5 ? "Mild" : "Minimal"} intensity`,
+			`${v >= 7.5 ? "high" : v >= 5 ? "moderate" : v >= 2.5 ? "mild" : "minimal"} intensity`,
 		next: "Next week",
-		none: "No moments that day",
+		none: "no moments",
 		prev: "Previous week",
 		relation: {
 			above: "above your usual",

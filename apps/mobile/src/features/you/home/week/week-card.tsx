@@ -71,19 +71,12 @@ export function WeekCard({ week }: { week: IntensityWeek }) {
 		<Surface className="overflow-hidden">
 			<View className="p-4">
 				{readout ? (
-					<View className="min-h-11">
+					<View className="min-h-11 justify-center">
 						<AppText
 							className="text-[17px] leading-[22px] tracking-[-0.17px]"
 							variant="headline"
 						>
 							{readout.value}
-						</AppText>
-						<AppText
-							className="mt-0.75 text-[12.5px] leading-4"
-							color="muted"
-							variant="footnote"
-						>
-							{readout.caption}
 						</AppText>
 					</View>
 				) : (
