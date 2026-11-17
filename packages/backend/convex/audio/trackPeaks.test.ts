@@ -11,7 +11,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
 import { r2 } from "../ai/paths/audioTracks";
-import { allScheduledCalls } from "../test/fixtures.helpers";
 import { asAdmin, asUnauthed } from "../test/harness.helpers";
 import { makeWav } from "./fixtures.helpers";
 import { PEAK_BARS } from "./peaks";
@@ -40,7 +39,7 @@ const STEP_PEAKS = [...Array(30).fill(1), ...Array(30).fill(0.5)];
 const FLAT_PEAKS = Array(PEAK_BARS).fill(0.5);
 
 /** key → what R2 serves for it; anything else is a 404. */
-let files: Map<string, Uint8Array>;
+let files: Map<string, Uint8Array<ArrayBuffer>>;
 const fetchSpy = vi.fn(async (url: string | URL | Request) => {
 	const key = String(url).replace("https://r2.test/", "");
 	const body = files.get(key);
@@ -65,7 +64,8 @@ afterEach(() => {
 	fetchSpy.mockClear();
 });
 
-type Root = ReturnType<typeof asUnauthed>;
+/** Signed in as an admin or not: both can `run`, `mutation` and `action`. */
+type Root = Pick<ReturnType<typeof asAdmin>, "action" | "mutation" | "run">;
 
 function insertTrack(
 	t: Root,
@@ -95,9 +95,13 @@ const track = (t: Root, id: Id<"audio_tracks">) =>
 
 /** The track ids measures are scheduled for, in order. */
 async function scheduledMeasures(t: Root) {
-	return (await allScheduledCalls(t))
-		.filter((j) => j.name === MEASURE)
-		.map((j) => j.args.trackId);
+	const jobs = await t.run((ctx) =>
+		ctx.db.system.query("_scheduled_functions").collect()
+	);
+	// convex-test names it "audio/measurePeaks:measure"; a deployment adds ".js".
+	return jobs
+		.filter((j) => j.name.replace(".js:", ":") === MEASURE)
+		.map((j) => (j.args[0] as { trackId: Id<"audio_tracks"> }).trackId);
 }
 
 const measure = (t: Root, trackId: Id<"audio_tracks">) =>
@@ -305,7 +309,7 @@ describe("migrations:backfillTrackPeaks", () => {
 		expect(scheduled.sort()).toEqual([live, draft, broken].sort());
 
 		// The scheduler would run these; one that won't decode doesn't stop the others.
-		for (const id of scheduled as Id<"audio_tracks">[]) {
+		for (const id of scheduled) {
 			await measure(t, id);
 		}
 		expect((await track(t, live))?.peaks).toEqual(STEP_PEAKS);
