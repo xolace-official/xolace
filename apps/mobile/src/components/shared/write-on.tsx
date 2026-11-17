@@ -75,7 +75,9 @@ export function WriteOn({
 	const onLayout = (e: TextLayoutEvent) => {
 		const all = e.nativeEvent.lines;
 		onLines?.(all);
-		// iOS reports the lines past a clamp too: the write covers only those shown.
+		// A clamped iOS text reports only the clamp's lines (the rest folded into the
+		// last); slicing anyway keeps the write to the lines shown, whatever a
+		// platform reports.
 		const ls = numberOfLines ? all.slice(0, numberOfLines) : all;
 		if (ls.length === 0) {
 			return;

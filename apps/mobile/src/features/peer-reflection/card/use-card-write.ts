@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
 	Easing,
 	type SharedValue,
@@ -6,11 +7,12 @@ import {
 	useSharedValue,
 	withTiming,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { WRITE_ON } from "@/components/shared/write-strips";
-import { PLAY_AS_CHOSEN } from "@/design/springs";
+import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { WRITE_MAX } from "../arrival/arrival-end";
 import { clamp01 } from "../arrival/arrival-time";
-import { LAYOUT } from "../peers-look";
+import { LAYOUT, MOTION } from "../peers-look";
 
 /** A card writes once this much of it is above Done (it rises on schedule either way). */
 const IN_VIEW = 40;
@@ -18,6 +20,8 @@ const IN_VIEW = 40;
 const NOT_YET = -1;
 const OWN = -2;
 const WRITTEN = -3;
+/** The chip row this far in: you can see what you'd press. */
+const ROW_SHOWN = 0.5;
 /** Done's top, above the screen's bottom edge: a card under it isn't in view. */
 const DONE_TOP = LAYOUT.footer.bottom + LAYOUT.footer.height;
 
@@ -117,5 +121,18 @@ export function useCardWrite({
 						WRITE_ON.rowMs
 				)
 	);
-	return { lastFrac, lineCount, rowOpacity, write };
+
+	// Taps wait for what they act on: the card landed and its chip row showing,
+	// so nothing toggles or opens on a card you can't see yet.
+	const [touchable, setTouchable] = useState(false);
+	const landed = start + (reduced ? REDUCED_FADE_MS : MOTION.rise.ms);
+	useAnimatedReaction(
+		() => arrive.get() >= landed && rowOpacity.get() >= ROW_SHOWN,
+		(on, was) => {
+			if (on && !was) {
+				scheduleOnRN(setTouchable, true);
+			}
+		}
+	);
+	return { lastFrac, lineCount, rowOpacity, touchable, write };
 }

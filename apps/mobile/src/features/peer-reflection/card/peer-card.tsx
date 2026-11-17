@@ -74,7 +74,7 @@ export function PeerCard({
 	const start = cardStart(index);
 	const y = useSharedValue(0);
 	const h = useSharedValue(0);
-	const { write, lineCount, lastFrac, rowOpacity } = useCardWrite({
+	const { write, lineCount, lastFrac, rowOpacity, touchable } = useCardWrite({
 		arrive,
 		arriveEnd,
 		listTop,
@@ -110,7 +110,7 @@ export function PeerCard({
 					h.set(e.nativeEvent.layout.height);
 				}
 			}}
-			pointerEvents={gone ? "none" : "auto"}
+			pointerEvents={gone || !touchable ? "none" : "auto"}
 			style={wrap}
 		>
 			{everLit && size.w > 0 ? (

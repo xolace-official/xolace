@@ -67,9 +67,14 @@ export function Quote({
 				lastFrac={lastFrac}
 				lineCount={lineCount}
 				numberOfLines={clipped && !expanded ? Q.clamp : undefined}
-				onAccessibilityAction={(e) =>
-					e.nativeEvent.actionName === "report" ? onReport() : onHide()
-				}
+				onAccessibilityAction={(e) => {
+					const { actionName } = e.nativeEvent;
+					if (actionName === "report") {
+						onReport();
+					} else if (actionName === "hide") {
+						onHide();
+					}
+				}}
 				onLines={onLines}
 				reduced={reduced}
 				style={QUOTE}

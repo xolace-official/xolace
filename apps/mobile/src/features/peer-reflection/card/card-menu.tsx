@@ -25,7 +25,9 @@ export function CardMenu({ onReport, onHide, children }: Props) {
 			{ style: "cancel", text: COPY.menu.cancel },
 		]);
 	return (
-		<Pressable delayLongPress={HOLD_MS} onLongPress={open}>
+		// Not its own stop for TalkBack: the quote carries Report and Hide as
+		// actions, and the chip is the card's one button.
+		<Pressable accessible={false} delayLongPress={HOLD_MS} onLongPress={open}>
 			{children}
 		</Pressable>
 	);
