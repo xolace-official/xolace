@@ -148,6 +148,21 @@ describe("steadinessCard", () => {
 		const none = steadinessCard({ domains: [], overall: null }, false, NOW);
 		expect(none).toEqual({ known: 0, lit: false, parts: [] });
 	});
+
+	it("counts a known part that has gone quiet, as the server does", () => {
+		const quiet = {
+			...love,
+			lastSeenAt: NOW.getTime(),
+			state: "unlocked" as const,
+		};
+		const card = steadinessCard(
+			{ domains: [quiet, self], overall: null },
+			false,
+			NOW
+		);
+		expect(card.lit).toBe(false);
+		expect(card.lit ? null : card.known).toBe(1);
+	});
 });
 
 describe("litTicks", () => {

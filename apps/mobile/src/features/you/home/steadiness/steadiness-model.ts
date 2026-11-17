@@ -91,9 +91,9 @@ export function steadinessCard(
 		.slice(0, PARTS_SHOWN)
 		.map((d) => partOf(d, isPlus));
 	if (view.overall === null) {
-		const known = view.domains.filter(
-			(d) => d.state !== "warming" && d.lastSeenAt === null
-		).length;
+		// As the server counts toward lighting (`compounding/steadiness.ts`): every part past
+		// warming, quiet ones too.
+		const known = view.domains.filter((d) => d.state !== "warming").length;
 		return { known: Math.min(known, PARTS_TO_LIGHT - 1), lit: false, parts };
 	}
 	let trend: Trend = { kind: "locked" };
