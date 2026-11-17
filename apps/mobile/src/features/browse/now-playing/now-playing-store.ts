@@ -57,7 +57,15 @@ const IDLE: Playback = {
 	volume: 1,
 };
 
-export function setNowPlaying(next: NowPlaying) {
+// A play asked for with the load (a Lantern hub's listen card plays in place), for the
+// host to start once the track is minted. The slug it was asked for.
+let playOnLoad: string | null = null;
+
+/** `play`: start it as soon as it's loaded, with no player screen to tap play on. */
+export function setNowPlaying(next: NowPlaying, options?: { play?: boolean }) {
+	if (options?.play) {
+		playOnLoad = next.slug;
+	}
 	if (
 		current?.slug === next.slug &&
 		current.stepId === next.stepId &&
@@ -76,6 +84,7 @@ export function setNowPlaying(next: NowPlaying) {
 }
 
 export function clearNowPlaying() {
+	playOnLoad = null;
 	if (!(current || playback)) {
 		return;
 	}
@@ -97,6 +106,15 @@ export function releaseMiniPlayerAttention() {
 const getAttention = () => attention;
 export const useMiniPlayerAttention = () =>
 	useSyncExternalStore(subscribe, getAttention, getAttention);
+
+/** Host only: whether `slug` was asked to play on load. Asks once. */
+export function takePlayOnLoad(slug: string) {
+	const asked = playOnLoad === slug;
+	if (asked) {
+		playOnLoad = null;
+	}
+	return asked;
+}
 
 /** Host only. */
 export function publishPlayback(next: Playback | null) {

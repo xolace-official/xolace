@@ -3,10 +3,9 @@ import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
-
-import { trackLibrary } from "@/features/library/analytics";
 import { logDropped } from "@/features/library/reader/use-read-signals";
 import { usePlayback } from "@/lib/audio/use-playback";
+import { trackLibrary } from "@/lib/library-analytics";
 
 /** The dock's height above the safe area; the page and Back to top clear it. */
 const DOCK_H = 80;

@@ -9,7 +9,6 @@ import { useCSSVariable } from "uniwind";
 
 import { AppText } from "@/components/shared/app-text";
 import { detectCountry } from "@/features/crisis-resources/use-crisis-resources";
-import { trackLibrary } from "@/features/library/analytics";
 import {
 	COVER_BUTTON,
 	CoverGlass,
@@ -19,6 +18,7 @@ import {
 	shareMessage,
 } from "@/features/library/reader/reader-copy";
 import type { ReaderEntry } from "@/features/library/reader/reader-screen";
+import { trackLibrary } from "@/lib/library-analytics";
 import { useAppStore } from "@/store/store";
 
 const NOTE_ICON = {

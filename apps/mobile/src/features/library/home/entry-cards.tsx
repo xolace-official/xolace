@@ -11,8 +11,7 @@ import { usePostHog } from "posthog-react-native";
 import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
-import type { ReaderFrom } from "@/features/library/analytics";
-import { CoverImage } from "@/features/library/cover-image";
+import { CoverImage } from "@/components/shared/cover-image";
 import { facetLabel, readTimeLine } from "@/features/library/home/library-copy";
 import { COVER_SCRIM } from "@/features/library/reader/cover-palette";
 import { capitalise } from "@/features/library/reader/reader-copy";
@@ -26,6 +25,7 @@ import {
 	SaveButton,
 	useSaveToggle,
 } from "@/features/library/reader/reader-parts";
+import type { ReaderFrom } from "@/lib/library-analytics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +34,7 @@ export type EntryItem = FunctionReturnType<
 >[number];
 
 /** Photo cards' corner, shared with the For you blur that sits over them. */
-export const CARD_RADIUS = 28;
+const CARD_RADIUS = 28;
 // iOS's first accessibility text size (AX1) is ~1.65×; at these titles go uncapped.
 export const AX_FONT_SCALE = 1.6;
 

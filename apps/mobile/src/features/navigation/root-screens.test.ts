@@ -82,6 +82,7 @@ const pinned = (reduced: boolean, glass: boolean) => {
 		"follow-up": PLAYER,
 		"intake-plus-preview": PLAYER,
 		"kindling/index": undefined,
+		"lantern-welcome": { ...PLAYER, gestureEnabled: false },
 		"library/[slug]": { animation: reduced ? "fade" : "default" },
 		"peer-reflections": NO_GESTURE,
 		"quotes/archive": undefined,

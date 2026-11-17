@@ -1,28 +1,11 @@
-/** Lantern home copy (#409). Reader-facing prose says "Lantern", never "library". */
+/** The old reader's and Browse search's copy helpers (#409). Lantern's own live in
+ * `features/lantern`; these go with the old reader (S9b). */
 
-import type { api } from "@xolace/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
-import { capitalise, type Kind } from "@/features/library/reader/reader-copy";
-
-export type { Kind };
-
-type Reason = FunctionReturnType<
-	typeof api.library.home.getHome
->["forYou"][number]["reason"];
+import { capitalise } from "@/features/library/reader/reader-copy";
 
 const words = (slug: string) => slug.replace(/-/g, " ");
 
 export const facetLabel = (slug: string) => capitalise(words(slug));
-
-export const KINDS: { kind: Kind; label: string; line: string }[] = [
-	{
-		kind: "explainer",
-		label: "Explainers",
-		line: "What’s going on, in plain words",
-	},
-	{ kind: "advice", label: "Advice", line: "Small things to try" },
-	{ kind: "story", label: "Stories", line: "People who’ve felt it too" },
-];
 
 // Hand-rolled compact count: Hermes' Intl lacks `notation: 'compact'` on some Android builds.
 const compact = (n: number) =>
@@ -37,15 +20,3 @@ export const readTimeLine = (readMin: number, views = 0, listenMin?: number) =>
 	]
 		.filter(Boolean)
 		.join(" · ");
-
-/** Why For you picked an entry: the card's kicker. */
-export function reasonLine({ axis, slug }: Reason) {
-	// Naive plural; audience slugs are simple nouns (student, parent).
-	if (axis === "audience") {
-		return `For ${words(slug)}s`;
-	}
-	if (axis === "emotion") {
-		return `You named ${words(slug)}`;
-	}
-	return `Around ${words(slug)}`;
-}

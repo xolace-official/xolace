@@ -1,13 +1,19 @@
-import { Redirect, useLocalSearchParams } from "expo-router";
-import { LibraryListScreen } from "@/features/browse/components/library-list-screen";
-import { KINDS } from "@/features/library/home/library-copy";
+import { useLocalSearchParams } from "expo-router";
+import { isKind } from "@/features/lantern/lantern-model";
+import { ListData } from "@/features/lantern/lists/list-data";
+import { ListScreen } from "@/features/lantern/lists/list-screen";
+import { ReturnTo } from "@/lib/return-to";
 
-export default function LibraryKindRoute() {
+/** Explainers, Advice or Stories. */
+export default function LanternKindRoute() {
 	const { kind } = useLocalSearchParams<{ kind: string }>();
-	const known = KINDS.find((k) => k.kind === kind);
-	// A mistyped deep link lands on the home rather than an argument error.
-	if (!known) {
-		return <Redirect href="/explore/library" />;
+	// A mistyped deep link lands on Lantern's home rather than an argument error.
+	if (!isKind(kind)) {
+		return <ReturnTo href="/explore/library" />;
 	}
-	return <LibraryListScreen by={{ kind: known.kind }} />;
+	return (
+		<ListData of={{ kind }}>
+			<ListScreen />
+		</ListData>
+	);
 }

@@ -7,8 +7,8 @@ import { usePostHog } from "posthog-react-native";
 import { Pressable, View } from "react-native";
 
 import { AppText } from "@/components/shared/app-text";
-import { trackLibrary } from "@/features/library/analytics";
 import { playResonanceToggle, playSoftPress } from "@/lib/haptics";
+import { trackLibrary } from "@/lib/library-analytics";
 import { cn } from "@/lib/utils";
 import type { ReaderEntry } from "./reader-screen";
 import { UpNext } from "./up-next";
