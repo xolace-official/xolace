@@ -42,13 +42,6 @@ export const PLAYER_OPTIONS = {
 	presentation: "fullScreenModal",
 } as const satisfies NativeStackNavigationOptions;
 
-/** Slides up from the bottom; with reduced motion it fades in instead. */
-export const riseOrFade = ({
-	reducedMotion,
-}: ScreenContext): NativeStackNavigationOptions => ({
-	animation: reducedMotion ? "fade" : "slide_from_bottom",
-});
-
 /** The old screens' sheets sized to their rows. iOS 26 paints its own glass behind a
  * transparent screen; iOS 18 and Android show transparent literally. New screens use
  * `fitSheet`. */
