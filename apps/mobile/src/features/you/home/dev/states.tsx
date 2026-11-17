@@ -16,8 +16,8 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "docked",
 		options: OPTIONS,
-		Screen: () => <FixtureYou start={{ toDays: true }} />,
-		title: "Docked: pills, the avatar and name in the bar",
+		Screen: () => <FixtureYou start={{ toTop: true }} />,
+		title: "Docked: pills, the avatar and name in the bar, Steadiness",
 	},
 	{
 		id: "week",
@@ -73,11 +73,49 @@ export const devStates: readonly DevState[] = [
 		title: "A streak that ended",
 	},
 	{
+		id: "this-week",
+		options: OPTIONS,
+		Screen: () => <FixtureYou start={{ toWeek: true }} />,
+		title: "This week: your usual and the sentence (Xolace+)",
+	},
+	{
+		id: "this-week-held",
+		options: OPTIONS,
+		Screen: () => <FixtureYou start={{ toWeek: true, weekHeld: 1 }} />,
+		title: "This week, holding Tuesday",
+	},
+	{
+		id: "this-week-earlier",
+		options: OPTIONS,
+		Screen: () => (
+			<FixtureYou fixture={{ earlierWeek: true }} start={{ toWeek: true }} />
+		),
+		title: "This week paged back a week (Xolace+)",
+	},
+	{
+		id: "this-week-free",
+		options: OPTIONS,
+		Screen: () => (
+			<FixtureYou fixture={{ plus: false }} start={{ toWeek: true }} />
+		),
+		title: "This week, free: the earlier-weeks gate",
+	},
+	{
+		id: "steadiness-free",
+		options: OPTIONS,
+		Screen: () => (
+			<FixtureYou fixture={{ plus: false }} start={{ toTop: true }} />
+		),
+		title: "Steadiness, free: stage words and the locked trend",
+	},
+	{
 		id: "hidden",
 		options: OPTIONS,
 		Screen: () => (
-			<FixtureYou fixture={{ hidden: ["calendar", "rank"], plus: false }} />
+			<FixtureYou
+				fixture={{ hidden: ["calendar", "rank", "week"], plus: false }}
+			/>
 		),
-		title: "Your days and Among the fires hidden",
+		title: "Your days, Among the fires and This week hidden",
 	},
 ];

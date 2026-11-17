@@ -19,9 +19,14 @@ import {
 	type HistoryKind,
 } from "@/features/you/home/dev/history";
 import {
+	fixtureInsights,
+	fixtureIntensity,
+} from "@/features/you/home/dev/insights-fixtures";
+import {
 	followUpItems,
 	waitingCount,
 } from "@/features/you/home/follow-ups-model";
+import { steadinessCard } from "@/features/you/home/steadiness/steadiness-model";
 import type { YouHome } from "@/features/you/home/you-data";
 import {
 	badgesRowView,
@@ -40,7 +45,9 @@ export type YouFixture = {
 	/** Freezes on hand (the board starts at one, so buying can be shown). */
 	freezes?: number;
 	/** Cards someone hid in Settings. */
-	hidden?: readonly ("calendar" | "rank")[];
+	hidden?: readonly ("calendar" | "rank" | "week")[];
+	/** This week paged back one (Xolace+). */
+	earlierWeek?: boolean;
 	/** No follow-ups at all: the empty state. */
 	noFollowUps?: boolean;
 };
@@ -54,6 +61,7 @@ export function fixtureYou({
 	freezes = kind === "regular" ? 1 : 0,
 	hidden = [],
 	noFollowUps = kind === "new",
+	earlierWeek = false,
 }: YouFixture = {}): YouHome {
 	const summary = { ...fixtureSummary(kind), streakFreezes: freezes };
 	const shelf = fixtureShelf(kind, badges, freezes);
@@ -69,8 +77,12 @@ export function fixtureYou({
 			loadMoreFollowUps: noop,
 			openAvatar: noop,
 			openBadges: noop,
+			openEarlierWeeks: noop,
 			openPlus: noop,
 			openSettings: noop,
+			openSteadiness: noop,
+			pageWeek: noop,
+			weekSeen: noop,
 		},
 		state: {
 			avatar: resolveAvatar(FIXTURE_AVATARS, summary.avatarId),
@@ -93,6 +105,10 @@ export function fixtureYou({
 				sparks: shelf.balance,
 			},
 			hero: heroView(summary, FIXTURE_NOW),
+			intensity:
+				hidden.includes("week") || summary.sessionCount < 1
+					? null
+					: fixtureIntensity({ earlier: earlierWeek, plus }),
 			patterns: patternRows(
 				summary.sessionCount,
 				"lighter",
@@ -100,6 +116,11 @@ export function fixtureYou({
 			),
 			plusRow: !plus,
 			rank: hidden.includes("rank") ? null : rankView(fixtureRank(kind)),
+			steadiness: steadinessCard(
+				fixtureInsights(kind === "new" ? "new" : "regular", plus),
+				plus,
+				FIXTURE_NOW
+			),
 			streak: streakView(summary),
 			week: weekDays(history),
 		},

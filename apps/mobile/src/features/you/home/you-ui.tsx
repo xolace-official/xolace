@@ -19,7 +19,16 @@ export type YouUiStart = {
 	weekRing?: boolean;
 	/** Scrolled to Your days, the header docked. */
 	toDays?: boolean;
+	/** Docked at the top of Insights (Steadiness first). */
+	toTop?: boolean;
+	/** Scrolled to This week. */
+	toWeek?: boolean;
+	/** This week holding a day (Monday 0). */
+	weekHeld?: number;
 };
+
+/** Where Insights scrolls to, docked: a card's top under the pills. */
+export type ScrollTarget = "top" | "days" | "week";
 
 /**
  * The tab's own UI that several parts share: the freeze explanation (drawn by the screen over
@@ -36,8 +45,11 @@ type YouUi = {
 	weekRing: boolean;
 	/** The header's week: Insights, scrolled to Your days, this week's column ringed. */
 	tapWeek: () => void;
-	/** A scroll to Your days the Insights tab performs; the key lets the same one repeat. */
-	scrollToDays: number;
+	/** A scroll the Insights tab performs; the key lets the same one repeat. */
+	scrollTo: { target: ScrollTarget; key: number } | null;
+	/** A day This week opens held on (dev states only). */
+	weekHeld: number | null;
+
 	/** A tab the screen switches to, keyed likewise. */
 	tab: { name: YouTab; key: number } | null;
 };
@@ -53,7 +65,10 @@ export function YouUiProvider({
 }) {
 	const [tip, setTip] = useState({ open: start?.tip ?? false, top: 0 });
 	const [weekRing, setWeekRing] = useState(start?.weekRing ?? false);
-	const [scrollToDays, setScrollToDays] = useState(start?.toDays ? 1 : 0);
+	const [scrollTo, setScrollTo] = useState<YouUi["scrollTo"]>(() => {
+		const target = startTarget(start);
+		return target ? { key: 1, target } : null;
+	});
 	const [tab, setTab] = useState<YouUi["tab"]>(
 		start?.tab ? { key: 0, name: start.tab } : null
 	);
@@ -63,22 +78,33 @@ export function YouUiProvider({
 	const value: YouUi = {
 		closeTip: () => setTip((t) => (t.open ? { ...t, open: false } : t)),
 		placeTip: (top) => setTip((t) => (t.top === top ? t : { ...t, top })),
-		scrollToDays,
+		scrollTo,
 		tab,
 		tapWeek: () => {
 			const key = Date.now();
 			setTip((t) => ({ ...t, open: false }));
 			setTab({ key, name: "insights" });
-			setScrollToDays(key);
+			setScrollTo({ key, target: "days" });
 			setWeekRing(true);
 			clearTimeout(timer.current);
 			timer.current = setTimeout(() => setWeekRing(false), RING_MS);
 		},
 		tip,
 		toggleTip: (top) => setTip((t) => ({ open: !t.open, top })),
+		weekHeld: start?.weekHeld ?? null,
 		weekRing,
 	};
 	return <UiContext value={value}>{children}</UiContext>;
+}
+
+function startTarget(start: YouUiStart | undefined): ScrollTarget | null {
+	if (start?.toWeek) {
+		return "week";
+	}
+	if (start?.toDays) {
+		return "days";
+	}
+	return start?.toTop ? "top" : null;
 }
 
 export function useYouUi(): YouUi {

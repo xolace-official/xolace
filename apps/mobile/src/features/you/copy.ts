@@ -152,6 +152,46 @@ export const COPY = {
 		settings: "Settings",
 		tabs: { followUps: "Follow-ups", insights: "Insights" },
 	},
+	steadiness: {
+		allLabel: "See all of steadiness",
+		domains: {
+			belonging: "Belonging",
+			family: "Family",
+			health: "Health & Rest",
+			love: "Love & Friendship",
+			money: "Money & Home",
+			purpose: "Purpose & Future",
+			self: "Self",
+			work: "Work & Studies",
+		},
+		info: "How the parts of your life have been lately, from how you've used Xolace. It may not reflect your whole life.",
+		infoLabel: "About steadiness",
+		label: (score: number, trend: string | null) =>
+			`Steadiness, ${score} of 100${trend ? `, ${trend.toLowerCase()}` : ""}`,
+		/** What Xolace saw, Xolace+ only (production's COMPOUNDING_WORD): never a grade. */
+		lately: { compounding: "Heavier than your usual", easing: "Easing" },
+		lockedTrend: "Trend with Xolace+",
+		notLit: "Not lit yet",
+		notLitLabel: (known: number) =>
+			`Steadiness, not lit yet. ${known} of 2 parts known so far`,
+		notLitLine: (known: number) =>
+			`Lights up once Xolace knows two parts of your life. ${known} of 2 so far.`,
+		outOf: "/100",
+		quiet: "Not recently",
+		seeAll: "See all",
+		/** How well Xolace knows a part (production's STAGE_WORD): never a grade. */
+		stage: {
+			settled: "Known well",
+			unlocked: "Getting to know it",
+			warming: "Warming up",
+		},
+		title: "Steadiness",
+		trend: (delta: number, since: string) =>
+			delta === 0
+				? `Same as ${since}`
+				: `${delta > 0 ? "Up" : "Down"} ${Math.abs(delta)} since ${since}`,
+		trendBasis: "last week",
+	},
 	streak: {
 		best: (n: number) => `Best ${n}`,
 		buy: (price: number) => `Buy one · ${price} sparks`,
@@ -187,5 +227,41 @@ export const COPY = {
 	tabs: {
 		label: (label: string, waiting: number, index: number, count: number) =>
 			`${label}, ${index + 1} of ${count}${waiting > 0 ? `, ${waiting} waiting` : ""}`,
+	},
+	week: {
+		ahead: "Still ahead",
+		backBy: (day: string) => `Back inside it by ${day}.`,
+		chart: "Intensity by day",
+		earlier: "Earlier weeks",
+		earlierLabel: "See earlier weeks",
+		empty: "No moments logged that week.",
+		forming: "Nothing yet this week. Its shape is still forming.",
+		heaviest: (day: string) => `Heaviest on ${day}.`,
+		heaviestAgainst: (day: string, relation: "above" | "within" | "below") =>
+			`Heaviest on ${day}, ${relation === "within" ? "within" : relation} your usual.`,
+		infoFree:
+			"Each bar is how heavy your moments felt that day; averaged from the intensity (1-10) of what you brought. Only this week shows in full; browsing earlier weeks is part of Xolace+.",
+		infoLabel: (label: string) => `About ${label.replace(/^This/, "this")}`,
+		infoPlus:
+			"Each bar is how heavy your moments felt that day; averaged from the intensity (1-10) of what you brought. Use the arrows above to browse earlier weeks.",
+		level: (v: number) =>
+			`${v >= 7.5 ? "High" : v >= 5 ? "Moderate" : v >= 2.5 ? "Mild" : "Minimal"} intensity`,
+		next: "Next week",
+		none: "No moments that day",
+		prev: "Previous week",
+		relation: {
+			above: "above your usual",
+			below: "below your usual",
+			within: "within your usual",
+		},
+		scale: {
+			high: "High",
+			mild: "Mild",
+			minimal: "Minimal",
+			moderate: "Moderate",
+		},
+		title: "This week",
+		usual: "your usual",
+		weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
 	},
 } as const;
