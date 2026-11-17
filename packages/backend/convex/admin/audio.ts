@@ -7,7 +7,11 @@ import { CATALOG_BY_KEY, TOPIC_SLUGS, topicTitle } from "../ai/paths/catalog";
 import { formatOf } from "../audio/formats";
 import { measurePeaksLater } from "../audio/trackPeaks";
 import { adminMutation, adminQuery } from "../lib/adminAuth";
-import { licenceValidator, trackSoundValidator } from "../lib/validators";
+import {
+	licenceValidator,
+	trackPeaksValidator,
+	trackSoundValidator,
+} from "../lib/validators";
 import { trackSearchTextOf } from "../library/searchText";
 import schema from "../schema";
 import { ADMIN_LIST_LIMIT, adminStamp, assertSlug, notFound } from "./edits";
@@ -51,6 +55,8 @@ const trackRow = v.object({
 	licence: v.optional(licenceValidator),
 	narrators: v.optional(v.array(v.string())),
 	newUntil: v.optional(v.number()),
+	/** The player's waveform; absent until measured, or when the audio can't be. */
+	peaks: v.optional(trackPeaksValidator),
 	retiredAt: v.optional(v.number()),
 	safetyReviewedAt: v.optional(v.number()),
 	secondaryTopic: v.optional(v.string()),
@@ -87,6 +93,7 @@ const toRow = (t: Doc<"audio_tracks">): Infer<typeof trackRow> => ({
 	licence: t.licence,
 	narrators: t.narrators,
 	newUntil: t.newUntil,
+	peaks: t.peaks,
 	retiredAt: t.retiredAt,
 	safetyReviewedAt: t.safetyReviewedAt,
 	secondaryTopic: t.secondaryTopic,

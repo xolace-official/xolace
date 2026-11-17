@@ -24,6 +24,7 @@ import { readAudioDuration } from "../audio-file";
 import { useTrackMedia } from "../audio-provider";
 import { FAMILY_LABEL, topicSlug } from "../types";
 import { useTrackEditor } from "./track-editor-provider";
+import { TrackWaveform } from "./track-waveform";
 
 /** The audio file: a player, processing state, Retry, Replace. */
 export function AudioPanel() {
@@ -73,6 +74,7 @@ export function AudioPanel() {
 					src={playingSrc ?? media.audioUrl}
 				/>
 			) : null}
+			<TrackWaveform peaks={saved.peaks} />
 			{saved.failure ? (
 				<Alert variant="coral">
 					<OctagonAlertIcon />

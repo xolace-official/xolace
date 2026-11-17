@@ -56,6 +56,8 @@ export interface AudioTrack {
 	narrators?: string[];
 	/** In the Browse "New" shelf while this is in the future. */
 	newUntil?: number;
+	/** The player's waveform, 60 bars 0–1, measured on the server after each upload. */
+	peaks?: number[];
 	safetyReviewedAt?: number;
 	/** Music only: another music topic it also lists under in Browse. */
 	secondaryTopic?: string;
