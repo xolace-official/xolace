@@ -1,5 +1,10 @@
-import { VentScreen } from "@/features/vent/components/screen/vent-screen";
+import { VentData } from "@/features/vent/vent-data";
+import { VentScreen } from "@/features/vent/vent-screen";
 
 export default function VoiceVentRoute() {
-	return <VentScreen />;
+	return (
+		<VentData>
+			<VentScreen />
+		</VentData>
+	);
 }

@@ -1,5 +1,8 @@
-/** Particle data precomputed at module load so the per-frame worklet reads
- * plain arrays. Colors are fixed artwork constants (docs/vent-design.md), not theme tokens. */
+/**
+ * Production's particle data, kept exactly: same seed, lattice, numbers and order of `rand()`
+ * calls, so the field is the same field. Precomputed at module load so the per-frame worklet
+ * reads plain arrays. v2 additions (handoff `vent.md`) are marked.
+ */
 
 export const PARTICLE_COUNT = 100;
 export const SPARSE_COUNT = 26;
@@ -10,16 +13,30 @@ export const PERSPECTIVE = 600;
 
 export const ASSEMBLY_MS = 2000;
 export const PULSE_MS = 1200;
-// Burn beats total ~4s: compress → flash → scatter → silence.
+// Burn beats total ~4 s: compress → flash → scatter → silence.
 export const COMPRESS_MS = 600;
 export const FLASH_MS = 140;
 export const SCATTER_MS = 2200;
 export const SILENCE_MS = 1200;
 
-export const FLASH_COLOR = "#FFF3E0";
+/** v2: the ash flakes outlive the sparks by this much, inside the silence beat. */
+export const FLAKE_EXTRA_MS = 900;
+/** v2: the shock ring rides out over this long. */
+export const RING_MS = 900;
+/** v2: the last 15 s before the ceiling are felt. */
+export const NEAR_MS = 15_000;
+/** v2: Reduce Motion's burn is one slow fade. */
+export const RM_FADE_MS = 900;
+/** v2: Reduce Motion's field fades in over this long instead of flying in. */
+export const RM_ENTER_MS = 400;
+/** v2: the waiting sparks start this long before the scatter ends. */
+export const AFTER_LEAD_MS = 400;
+/** v2: after the intro the field gathers from a ring at this share of the entry distance. */
+export const FROM_SPARSE = 0.62;
 
 // Deterministic PRNG so the field looks the same every session.
 function mulberry32(seed: number) {
+	"worklet";
 	let a = seed;
 	return () => {
 		a |= 0;
@@ -30,6 +47,8 @@ function mulberry32(seed: number) {
 	};
 }
 
+export { mulberry32 };
+
 const rand = mulberry32(20_260_610);
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 
@@ -37,13 +56,13 @@ const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
 export const DIR_X: number[] = [];
 export const DIR_Y: number[] = [];
 export const DIR_Z: number[] = [];
-export const SIZE: number[] = []; // 2–4 px (design spec)
+export const SIZE: number[] = []; // 2–4 pt
 export const SPEED: number[] = []; // signed orbit speed multiplier
 export const PHASE0: number[] = []; // per-particle phase offset
 export const DELAY: number[] = []; // entry stagger, ms
-export const ENTRY_X: number[] = []; // unit direction toward screen edge
+export const ENTRY_X: number[] = []; // unit direction toward the screen's edge
 export const ENTRY_Y: number[] = [];
-// Scatter: per-particle velocity (px/ms) + gravity so the burst is non-uniform (design spec).
+// Scatter: per-particle velocity (pt/ms) + gravity so the burst is non-uniform.
 export const SCAT_VX: number[] = [];
 export const SCAT_VY: number[] = [];
 export const SCAT_G: number[] = [];
@@ -73,16 +92,19 @@ for (let i = 0; i < PARTICLE_COUNT; i++) {
 	SCAT_G.push(0.0001 + rand() * 0.0004);
 }
 
-// Color ramp ash gray → ember → amber, indexed instead of interpolated per frame.
+/** v2: every third particle becomes a slow ash flake in the scatter (no new randoms, so
+ * production's sequence and look are untouched). */
+export const FLAKE: boolean[] = DIR_X.map((_, i) => i % 3 === 0);
+
+// Colour ramp ash grey → ember → amber, indexed instead of interpolated per frame.
 export const RAMP_STEPS = 32;
-const RAMP_R: number[] = [];
-const RAMP_G: number[] = [];
-const RAMP_B: number[] = [];
-// Normalized Float32 RGBA per ramp step, avoiding allocations in the setRampColor worklet.
-export const RAMP_COLORS: Float32Array[] = [];
+/** Normalised RGB per ramp step (the atlas tints a white sprite with these). */
+export const RAMP_R: number[] = [];
+export const RAMP_G: number[] = [];
+export const RAMP_B: number[] = [];
 
 const STOPS = [
-	[0x93, 0x99, 0xa8], // #9399A8 cool ash-gray
+	[0x93, 0x99, 0xa8], // #9399A8 cool ash grey
 	[0xc4, 0x88, 0x3f], // #C4883F warming ember
 	[0xe8, 0xa8, 0x4c], // #E8A84C hot amber
 ];
@@ -91,11 +113,7 @@ for (let i = 0; i < RAMP_STEPS; i++) {
 	const p = (i / (RAMP_STEPS - 1)) * (STOPS.length - 1);
 	const lo = Math.min(Math.floor(p), STOPS.length - 2);
 	const f = p - lo;
-	const r = STOPS[lo][0] + (STOPS[lo + 1][0] - STOPS[lo][0]) * f;
-	const g = STOPS[lo][1] + (STOPS[lo + 1][1] - STOPS[lo][1]) * f;
-	const b = STOPS[lo][2] + (STOPS[lo + 1][2] - STOPS[lo][2]) * f;
-	RAMP_R.push(r);
-	RAMP_G.push(g);
-	RAMP_B.push(b);
-	RAMP_COLORS.push(Float32Array.of(r / 255, g / 255, b / 255, 1));
+	RAMP_R.push((STOPS[lo][0] + (STOPS[lo + 1][0] - STOPS[lo][0]) * f) / 255);
+	RAMP_G.push((STOPS[lo][1] + (STOPS[lo + 1][1] - STOPS[lo][1]) * f) / 255);
+	RAMP_B.push((STOPS[lo][2] + (STOPS[lo + 1][2] - STOPS[lo][2]) * f) / 255);
 }

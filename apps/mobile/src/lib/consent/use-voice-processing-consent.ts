@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import {
 	hasCurrentVoiceConsent,
 	VOICE_PROCESSING_CONSENT_VERSION,
-} from "@/features/consent/voice-processing-consent";
+} from "@/lib/consent/voice-processing-consent";
 
 /** Gate before any audio goes to ElevenLabs: `ensureConsent` resolves once consent is on
  * record; send nothing before then. */

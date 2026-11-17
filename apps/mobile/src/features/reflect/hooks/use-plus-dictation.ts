@@ -5,12 +5,12 @@ import { useIsFocused } from "expo-router/react-navigation";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { AppState } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
-import { useVoiceProcessingConsent } from "@/features/consent/use-voice-processing-consent";
 import {
 	fallbackNote,
 	takeFailedNote,
 } from "@/features/reflect/hooks/dictation-fallback";
 import { useMeteringRecorder } from "@/lib/audio/use-metering-recorder";
+import { useVoiceProcessingConsent } from "@/lib/consent/use-voice-processing-consent";
 import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
 
 /** One take's ceiling; the server rejects anything larger (convex/dictation/plus.ts). */

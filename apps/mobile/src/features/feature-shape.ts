@@ -40,7 +40,6 @@ const REPLACED_FEATURES = [
 	"streak",
 	"timeline",
 	"trusted-bridge",
-	"vent",
 	"xolacer-chat",
 ];
 
@@ -50,7 +49,6 @@ const REPLACED_FEATURES = [
  */
 const RESTYLED_FEATURES = [
 	"auth",
-	"consent",
 	"crisis-resources",
 	"feedback-tray",
 	"purchases",
