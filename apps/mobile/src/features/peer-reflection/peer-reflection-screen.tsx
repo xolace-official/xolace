@@ -101,6 +101,7 @@ export function PeerReflectionScreen({ scene }: { scene?: PeersScene }) {
 					none={none}
 					reduced={reduced}
 					stars={stage.mark.stars}
+					ui={ui}
 					W={W}
 				/>
 				{loading ? (

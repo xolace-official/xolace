@@ -25,8 +25,6 @@ export const EASE = {
 	move: Easing.bezierFn(0.34, 1.2, 0.64, 1),
 	/** `.gly::after`: the ember's core filling. */
 	pop: Easing.bezier(0.34, 1.56, 0.64, 1),
-	/** `ring` (None yet). */
-	ring: Easing.bezier(0.2, 0.6, 0.3, 1),
 	/** `rise` keyframes' curve (opacity, 0 → 40%). */
 	rise: Easing.bezierFn(0.34, 1.18, 0.64, 1),
 } as const;
