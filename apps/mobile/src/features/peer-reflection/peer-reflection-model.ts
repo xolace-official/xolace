@@ -55,25 +55,55 @@ export function resultsOf(
 	return { rows: [], set: "none", status: "ready" };
 }
 
+/** Results that are in. */
+export type Ready = Extract<Results, { status: "ready" }>;
+
+const NONE: Ready = { rows: [], set: "none", status: "ready" };
+
 /**
- * The visit keeps the first results it showed: the arrival, each card's star
- * and a reported card's fold all hang on a card's place, so a reflection that
- * leaves the pool or a new close match never reshuffles the screen. Live rows
- * still update a card's count by id.
+ * What the visit keeps once its results are first in. Reflections put away on
+ * an earlier visit (reported or hidden this app run) are left out; if none is
+ * left, it's None yet. The visit then keeps these: the arrival, each card's
+ * star and a card's fold all hang on its place, so a reflection that leaves
+ * the pool or a new close match never reshuffles the screen.
  */
-export function keepFirst(
-	kept: Results | null,
-	latest: Results
-): Results | null {
-	if (kept?.status === "ready") {
-		if (latest.status !== "ready") {
-			return kept;
-		}
-		const byId = new Map(latest.rows.map((r) => [r._id, r]));
-		return { ...kept, rows: kept.rows.map((r) => byId.get(r._id) ?? r) };
+export function firstOf(
+	latest: Results,
+	gone: Readonly<Record<string, Gone>>
+): Ready | null {
+	if (latest.status !== "ready") {
+		return null;
 	}
-	return latest.status === "ready" ? latest : null;
+	const rows = latest.rows.filter((r) => gone[r._id] === undefined);
+	return rows.length > 0 ? { ...latest, rows } : NONE;
 }
+
+/**
+ * The kept cards with their live counts, by id, from every query still
+ * answering (the match, and recent ones while the visit shows them).
+ */
+export function liveCounts(
+	kept: Ready,
+	...sources: (readonly ReflectionRow[] | undefined)[]
+): Ready {
+	const byId = new Map<string, ReflectionRow>();
+	for (const rows of sources) {
+		for (const r of rows ?? []) {
+			byId.set(r._id, r);
+		}
+	}
+	return { ...kept, rows: kept.rows.map((r) => byId.get(r._id) ?? r) };
+}
+
+/**
+ * Production asks for recent ones only once the match comes back empty; a
+ * visit showing them keeps asking, so their counts stay live after a close
+ * match turns up.
+ */
+export const wantsRecent = (
+	kept: Ready | null,
+	matched: readonly unknown[] | undefined
+) => kept?.set === "recent" || matched?.length === 0;
 
 /**
  * Others who felt it: production's `resonanceCount` counts you once you have

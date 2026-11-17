@@ -5,11 +5,14 @@ import {
 	announcementOf,
 	bridgeShows,
 	cardsOf,
+	firstOf,
 	flipped,
-	keepFirst,
+	type Gone,
+	liveCounts,
 	othersOf,
 	recount,
 	resultsOf,
+	wantsRecent,
 } from "./peer-reflection-model";
 
 describe("resultsOf", () => {
@@ -50,37 +53,84 @@ describe("resultsOf", () => {
 	});
 });
 
-describe("keepFirst", () => {
-	const first = resultsOf(MATCH, undefined);
-
+describe("firstOf", () => {
 	it("keeps nothing while loading", () => {
-		expect(keepFirst(null, { status: "loading" })).toBeNull();
+		expect(firstOf({ status: "loading" }, {})).toBeNull();
 	});
 
 	it("keeps the first ready results", () => {
-		expect(keepFirst(null, first)).toBe(first);
+		expect(firstOf(resultsOf(MATCH, undefined), {})).toEqual({
+			rows: MATCH,
+			set: "match",
+			status: "ready",
+		});
 	});
 
+	it("leaves out reflections put away on an earlier visit", () => {
+		const kept = firstOf(resultsOf(MATCH, undefined), {
+			m2: "hidden",
+			m4: "reported",
+		});
+		expect(kept?.rows.map((r) => r._id)).toEqual(["m1", "m3"]);
+		expect(kept?.set).toBe("match");
+	});
+
+	it("is None yet when every one was put away", () => {
+		const gone = Object.fromEntries(
+			RECENT.map((r): [string, Gone] => [r._id, "hidden"])
+		);
+		expect(firstOf(resultsOf([], RECENT), gone)).toEqual({
+			rows: [],
+			set: "none",
+			status: "ready",
+		});
+	});
+});
+
+describe("liveCounts", () => {
+	const first = firstOf(resultsOf(MATCH, undefined), {})!;
+
 	it("never reshuffles: a new match or a reflection leaving keeps the cards in place", () => {
-		const later = resultsOf([MATCH[2], RECENT[0], MATCH[0]], undefined);
-		const kept = keepFirst(first, later);
-		expect(kept).toMatchObject({ set: "match" });
-		expect(kept?.status === "ready" && kept.rows.map((r) => r._id)).toEqual([
-			"m1",
-			"m2",
-			"m3",
-			"m4",
-		]);
+		const shown = liveCounts(first, [MATCH[2], RECENT[0], MATCH[0]]);
+		expect(shown.set).toBe("match");
+		expect(shown.rows.map((r) => r._id)).toEqual(["m1", "m2", "m3", "m4"]);
 	});
 
 	it("still takes a card's live count by id", () => {
-		const later = resultsOf(recount(MATCH, "m3", true), undefined);
-		const kept = keepFirst(first, later);
-		expect(kept?.status === "ready" && kept.rows[2].resonanceCount).toBe(22);
+		expect(liveCounts(first, recount(MATCH, "m3", true)).rows[2]).toMatchObject(
+			{ resonanceCount: 22 }
+		);
 	});
 
 	it("holds through a reload", () => {
-		expect(keepFirst(first, { status: "loading" })).toBe(first);
+		expect(liveCounts(first, undefined, undefined).rows).toEqual(MATCH);
+	});
+
+	it("keeps a recent visit's counts live once a close match turns up", () => {
+		const kept = firstOf(resultsOf([], RECENT), {})!;
+		const later = recount(RECENT, RECENT[1]._id, true);
+		const shown = liveCounts(kept, MATCH, later);
+		expect(shown.set).toBe("recent");
+		expect(shown.rows[1].resonanceCount).toBe(RECENT[1].resonanceCount + 1);
+	});
+});
+
+describe("wantsRecent", () => {
+	it("waits for the match", () => {
+		expect(wantsRecent(null, undefined)).toBe(false);
+	});
+
+	it("asks once nothing matches", () => {
+		expect(wantsRecent(null, [])).toBe(true);
+	});
+
+	it("skips when the session has matches", () => {
+		expect(wantsRecent(null, MATCH)).toBe(false);
+	});
+
+	it("keeps asking while the visit shows recent ones, after a match turns up", () => {
+		const kept = firstOf(resultsOf([], RECENT), {});
+		expect(wantsRecent(kept, MATCH)).toBe(true);
 	});
 });
 

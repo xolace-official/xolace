@@ -14,11 +14,13 @@ import type { PeerReflection } from "./peer-reflection-data";
 import {
 	bridgeShows,
 	cardsOf,
+	firstOf,
 	flipped,
-	keepFirst,
-	type Results,
+	liveCounts,
+	type Ready,
 	recount,
 	resultsOf,
+	wantsRecent,
 } from "./peer-reflection-model";
 
 /** Production's fallback: four recent reflections when nothing matches. */
@@ -72,18 +74,21 @@ export function usePeerReflectionData(): PeerReflection {
 		api.reflections.matchForSession,
 		sessionId ? { sessionId } : "skip"
 	);
+	const [kept, setKept] = useState<Ready | null>(null);
 	const recent = useQuery(
 		api.reflections.listRecent,
-		matched !== undefined && matched.length === 0 ? RECENT : "skip"
+		wantsRecent(kept, matched) ? RECENT : "skip"
 	);
-	const [kept, setKept] = useState<Results | null>(null);
-	const latest = resultsOf(matched, recent);
-	const shown = keepFirst(kept, latest);
-	if (shown?.status === "ready" && kept?.status !== "ready") {
-		setKept(shown);
+	let first = kept;
+	if (first === null) {
+		first = firstOf(resultsOf(matched, recent), gone);
+		if (first) {
+			setKept(first);
+		}
 	}
-	const rows = shown?.status === "ready" ? shown.rows : [];
-	const set = shown?.status === "ready" ? shown.set : "match";
+	const shown = first && liveCounts(first, matched, recent);
+	const rows = shown?.rows ?? [];
+	const set = shown?.set ?? "match";
 	const reflectionIds =
 		rows.length > 0 ? rows.map((r) => r._id as Id<"reflections">) : NO_IDS;
 	const resonated = useQuery(
