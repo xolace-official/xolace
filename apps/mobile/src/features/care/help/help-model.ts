@@ -128,16 +128,13 @@ export function helpView(choice: HelpChoice): HelpView {
 }
 
 /** The toasts when a row can't open (production's wording), by what it opens. */
-export function failureOf(kind: LineKind): {
-	cannot: string;
-	failed: string;
-} {
+export function failureOf(kind: LineKind): string {
 	switch (kind) {
 		case "call":
-			return { cannot: COPY.toast.noPhone, failed: COPY.toast.noDialer };
+			return COPY.toast.noDialer;
 		case "email":
-			return { cannot: COPY.toast.noMail, failed: COPY.toast.mailFailed };
+			return COPY.toast.noMail;
 		default:
-			return { cannot: COPY.toast.linkFailed, failed: COPY.toast.linkFailed };
+			return COPY.toast.linkFailed;
 	}
 }

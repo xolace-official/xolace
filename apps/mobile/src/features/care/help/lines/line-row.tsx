@@ -64,7 +64,12 @@ export function LineRow({ line, index }: { line: LineView; index: number }) {
 				</View>
 				{action ? (
 					<PressScale
-						accessibilityLabel={`${action.label} ${line.title}`}
+						// A call says its number too, so it can be dialled by hand if the call fails.
+						accessibilityLabel={
+							action.kind === "call"
+								? `${action.label} ${line.title}, ${line.sub}`
+								: `${action.label} ${line.title}`
+						}
 						accessibilityRole={action.kind === "open" ? "link" : "button"}
 						className={pill({ tone: line.tone })}
 						haptic={playSoftPress}

@@ -1,10 +1,11 @@
 import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { CtaButton } from "@/components/shared/cta-button";
 import { Icon } from "@/components/shared/icon";
 import { useBridgeScreen } from "@/features/care/bridge/bridge-data";
-import { PrimaryButton } from "@/features/care/bridge/chrome/buttons";
 import { COPY } from "@/features/care/bridge/copy";
 import { IntroMascot } from "@/features/care/bridge/intro/intro-mascot";
+import { playSoftPress } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 
 const ROW_GLYPH = 18;
@@ -52,7 +53,11 @@ export function BridgeIntro() {
 				</View>
 			</ScrollView>
 			<View className="px-4 pt-3 pb-safe-or-4">
-				<PrimaryButton label={COPY.intro.begin} onPress={actions.begin} />
+				<CtaButton
+					haptic={playSoftPress}
+					label={COPY.intro.begin}
+					onPress={actions.begin}
+				/>
 			</View>
 		</View>
 	);

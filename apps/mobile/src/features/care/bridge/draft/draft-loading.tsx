@@ -1,4 +1,5 @@
-import { View } from "react-native";
+import { useEffect } from "react";
+import { AccessibilityInfo, Platform, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Flux } from "@/components/shared/flux";
 import { useBridgeScreen } from "@/features/care/bridge/bridge-data";
@@ -11,6 +12,13 @@ const FLUX_SIZE = 132;
 /** While the draft is written: Flux thinking, and the words being found for them. */
 export function DraftLoading() {
 	const { state } = useBridgeScreen();
+	const title = COPY.loading.title(recipientOf(state.recipient.name));
+	// The live region below is Android's; VoiceOver hears it as an announcement.
+	useEffect(() => {
+		if (Platform.OS === "ios") {
+			AccessibilityInfo.announceForAccessibility(title);
+		}
+	}, [title]);
 	return (
 		<View
 			accessibilityLiveRegion="polite"
@@ -23,9 +31,7 @@ export function DraftLoading() {
 				pose="thinking"
 				width={FLUX_SIZE}
 			/>
-			<ShimmerText
-				text={COPY.loading.title(recipientOf(state.recipient.name))}
-			/>
+			<ShimmerText text={title} />
 			<AppText center color="muted" variant="callout">
 				{COPY.loading.sub}
 			</AppText>

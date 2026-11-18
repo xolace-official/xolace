@@ -1,6 +1,13 @@
 import { useEffect, useRef } from "react";
-import { ScrollView, type TextInputInstance, View } from "react-native";
+import { type TextInputInstance, View } from "react-native";
+import {
+	KeyboardAwareScrollView,
+	KeyboardStickyView,
+} from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { BackButton } from "@/components/shared/back-button";
+import { CtaButton } from "@/components/shared/cta-button";
 import type { IconName } from "@/components/shared/icon";
 import { useBridgeScreen } from "@/features/care/bridge/bridge-data";
 import {
@@ -11,15 +18,15 @@ import {
 	RELATIONSHIPS,
 	type Relationship,
 } from "@/features/care/bridge/bridge-model";
-import { PrimaryButton } from "@/features/care/bridge/chrome/buttons";
 import { QuotaHint } from "@/features/care/bridge/chrome/quota-hint";
-import { RoundButton } from "@/features/care/bridge/chrome/round-button";
 import { COPY } from "@/features/care/bridge/copy";
 import { Chips } from "@/features/care/bridge/recipient/chips";
 import { Field } from "@/features/care/bridge/recipient/field";
-import { KeyboardSpacer } from "@/lib/keyboard/keyboard-spacer";
+import { playSoftPress } from "@/lib/haptics";
 
 const CLOSE: IconName = { android: "close", ios: "xmark" };
+/** Production's: keeps a focused field clear of the keyboard and the button above it. */
+const KEYBOARD_GAP = 110;
 /** Long enough for the address section to lay out before focus scrolls to it. */
 const FOCUS_DELAY_MS = 50;
 const isRelationship = (s: string): s is Relationship =>
@@ -43,6 +50,7 @@ export function RecipientStep() {
 	const { state, actions } = useBridgeScreen();
 	const { name, relationship, addressTerm } = state.recipient;
 	const addressRef = useRef<TextInputInstance>(null);
+	const insets = useSafeAreaInsets();
 
 	// A chosen relationship reveals the address field: focus it so it scrolls above the keyboard.
 	useEffect(() => {
@@ -56,13 +64,15 @@ export function RecipientStep() {
 	return (
 		<View className="flex-1">
 			<View className="px-4 pt-2">
-				<RoundButton
+				<BackButton
+					haptic={playSoftPress}
 					icon={CLOSE}
 					label={COPY.recipient.close}
 					onPress={actions.dismiss}
 				/>
 			</View>
-			<ScrollView
+			<KeyboardAwareScrollView
+				bottomOffset={KEYBOARD_GAP}
 				className="flex-1"
 				contentContainerClassName="gap-6 px-4 pt-4 pb-6"
 				keyboardDismissMode="interactive"
@@ -123,16 +133,19 @@ export function RecipientStep() {
 						/>
 					</View>
 				) : null}
-			</ScrollView>
-			<View className="gap-1.5 px-4 pt-2 pb-safe-or-4">
-				<PrimaryButton
-					disabled={!canWrite(name)}
-					label={COPY.recipient.write}
-					onPress={actions.write}
-				/>
-				<QuotaHint />
-			</View>
-			<KeyboardSpacer />
+			</KeyboardAwareScrollView>
+			{/* Rides on the keyboard while it's up; tucks into the safe area when it's down. */}
+			<KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
+				<View className="gap-1.5 bg-background px-4 pt-2 pb-safe-or-4">
+					<CtaButton
+						disabled={!canWrite(name)}
+						haptic={playSoftPress}
+						label={COPY.recipient.write}
+						onPress={actions.write}
+					/>
+					<QuotaHint />
+				</View>
+			</KeyboardStickyView>
 		</View>
 	);
 }

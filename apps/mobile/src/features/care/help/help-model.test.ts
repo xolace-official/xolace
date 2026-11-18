@@ -118,15 +118,9 @@ describe("a line", () => {
 });
 
 describe("failureOf", () => {
-	it("keeps production's toasts", () => {
-		expect(failureOf("call")).toEqual({
-			cannot: COPY.toast.noPhone,
-			failed: COPY.toast.noDialer,
-		});
-		expect(failureOf("email")).toEqual({
-			cannot: COPY.toast.noMail,
-			failed: COPY.toast.mailFailed,
-		});
-		expect(failureOf("open").failed).toBe(COPY.toast.linkFailed);
+	it("keeps production's toasts for a line nothing could open", () => {
+		expect(failureOf("call")).toBe(COPY.toast.noDialer);
+		expect(failureOf("email")).toBe(COPY.toast.noMail);
+		expect(failureOf("open")).toBe(COPY.toast.linkFailed);
 	});
 });

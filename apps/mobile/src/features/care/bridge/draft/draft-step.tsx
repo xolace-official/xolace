@@ -1,24 +1,28 @@
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
+import {
+	KeyboardAwareScrollView,
+	KeyboardStickyView,
+} from "react-native-keyboard-controller";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
+import { BackButton } from "@/components/shared/back-button";
+import { CtaButton } from "@/components/shared/cta-button";
 import { Flux } from "@/components/shared/flux";
 import type { IconName } from "@/components/shared/icon";
 import { useBridgeScreen } from "@/features/care/bridge/bridge-data";
 import { recipientOf } from "@/features/care/bridge/bridge-model";
-import {
-	PrimaryButton,
-	QuietButton,
-} from "@/features/care/bridge/chrome/buttons";
+import { QuietButton } from "@/features/care/bridge/chrome/buttons";
 import { DonePill } from "@/features/care/bridge/chrome/done-pill";
-import { RoundButton } from "@/features/care/bridge/chrome/round-button";
 import { COPY } from "@/features/care/bridge/copy";
 import { DraftCard } from "@/features/care/bridge/draft/draft-card";
 import { DraftLoading } from "@/features/care/bridge/draft/draft-loading";
 import { DraftNotice } from "@/features/care/bridge/draft/draft-notice";
-import { KeyboardSpacer } from "@/lib/keyboard/keyboard-spacer";
+import { playSoftPress } from "@/lib/haptics";
 
-const BACK: IconName = { android: "arrow_back", ios: "chevron.left" };
 const FLUX_W = 44;
 const FLUX_H = 56;
+/** Production's: keeps the draft's caret clear of the keyboard and the two buttons above it. */
+const KEYBOARD_GAP = 170;
 /** The native large title's size, which the prototype drew this with. */
 const TITLE = { fontSize: 34, lineHeight: 38 } as const;
 
@@ -28,12 +32,13 @@ export function DraftStep() {
 	const { draft } = state;
 	const name = recipientOf(state.recipient.name);
 	const loading = draft.status === "loading";
+	const insets = useSafeAreaInsets();
 
 	return (
 		<View className="flex-1">
 			<View className="h-14 flex-row items-center justify-between px-4">
-				<RoundButton
-					icon={BACK}
+				<BackButton
+					haptic={playSoftPress}
 					label={COPY.draft.back}
 					onPress={actions.back}
 				/>
@@ -52,7 +57,8 @@ export function DraftStep() {
 				<DraftLoading />
 			) : (
 				<>
-					<ScrollView
+					<KeyboardAwareScrollView
+						bottomOffset={KEYBOARD_GAP}
 						className="flex-1"
 						contentContainerClassName="gap-3.5 px-4 pt-3 pb-5"
 						keyboardDismissMode="interactive"
@@ -68,15 +74,17 @@ export function DraftStep() {
 						</View>
 						<DraftNotice />
 						<DraftCard />
-					</ScrollView>
-					<View className="gap-1.5 px-4 pt-2 pb-safe-or-4">
-						<PrimaryButton
-							label={COPY.draft.share(name)}
-							onPress={actions.share}
-						/>
-						<QuietButton label={COPY.draft.later} onPress={actions.dismiss} />
-					</View>
-					<KeyboardSpacer />
+					</KeyboardAwareScrollView>
+					<KeyboardStickyView offset={{ closed: 0, opened: insets.bottom }}>
+						<View className="gap-1.5 bg-background px-4 pt-2 pb-safe-or-4">
+							<CtaButton
+								haptic={playSoftPress}
+								label={COPY.draft.share(name)}
+								onPress={actions.share}
+							/>
+							<QuietButton label={COPY.draft.later} onPress={actions.dismiss} />
+						</View>
+					</KeyboardStickyView>
 				</>
 			)}
 		</View>

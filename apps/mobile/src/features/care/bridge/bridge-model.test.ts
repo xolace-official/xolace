@@ -8,14 +8,12 @@ import {
 	noticeOf,
 	quotaHintOf,
 	recipientOf,
-	sentencesOf,
 } from "@/features/care/bridge/bridge-model";
 import { COPY } from "@/features/care/bridge/copy";
 import {
 	FREE_ONE_LEFT,
 	FREE_OUT,
 	LONG_NAME,
-	MUM_DRAFT,
 	PLUS_OUT,
 	PLUS_SPARE,
 } from "@/features/care/bridge/dev/fixtures";
@@ -85,14 +83,9 @@ describe("quotaHintOf", () => {
 	});
 });
 
-describe("sentencesOf", () => {
-	it("splits a draft after each full stop, question or exclamation", () => {
-		const sentences = sentencesOf(MUM_DRAFT);
-		expect(sentences).toHaveLength(3);
-		expect(sentences.join(" ")).toBe(MUM_DRAFT);
-	});
-
-	it("keeps a draft with no ending whole", () => {
-		expect(sentencesOf("Hey")).toEqual(["Hey"]);
+describe("the draft's title", () => {
+	it("ends with one full stop, even after a name that has one", () => {
+		expect(COPY.draft.title("Mum")).toBe("A message for Mum.");
+		expect(COPY.draft.title("Mr. Ade.")).toBe("A message for Mr. Ade.");
 	});
 });

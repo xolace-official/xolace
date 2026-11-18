@@ -2,6 +2,7 @@ import type { Ref } from "react";
 import { TextInput, type TextInputInstance, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { useScheme } from "@/design/scheme";
+import { BODY_MAX_SCALE } from "@/design/type";
 import { charactersLeft } from "@/features/care/bridge/bridge-model";
 import { COPY } from "@/features/care/bridge/copy";
 
@@ -27,12 +28,13 @@ export function Field({
 	const left = charactersLeft(value, max);
 	return (
 		<View className="gap-1.5">
-			<View className="h-13 justify-center rounded-row border border-separator bg-surface px-4">
+			<View className="min-h-13 justify-center rounded-row border border-separator bg-surface px-4 py-2">
 				<TextInput
 					accessibilityLabel={label}
 					autoFocus={autoFocus}
 					className="py-0 font-normal text-[17px] text-foreground"
 					keyboardAppearance={scheme}
+					maxFontSizeMultiplier={BODY_MAX_SCALE}
 					maxLength={max}
 					onChangeText={onChange}
 					placeholder={placeholder}

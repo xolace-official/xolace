@@ -23,9 +23,7 @@ export const COPY = {
 	title: "Get help now",
 	toast: {
 		linkFailed: "Unable to open link.",
-		mailFailed: "Unable to open mail app.",
 		noDialer: "Unable to open dialer. Please dial manually.",
 		noMail: "No mail app found",
-		noPhone: "Phone calls not supported on this device",
 	},
 } as const;

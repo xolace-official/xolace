@@ -6,14 +6,14 @@ import { Icon, type IconName } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { useScheme } from "@/design/scheme";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
+import { BODY_MAX_SCALE } from "@/design/type";
 import { useBridgeScreen } from "@/features/care/bridge/bridge-data";
-import { sentencesOf } from "@/features/care/bridge/bridge-model";
 import { COPY } from "@/features/care/bridge/copy";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** A written draft settles in a sentence at a time, 270 ms apart, each over 400 ms. */
-const SETTLE_STEP_MS = 270;
+/** A freshly written draft fades in over 400 ms (one block: on Fabric, text nested in text
+ * isn't a view of its own, so a per-sentence fade wouldn't play). */
 const SETTLE_MS = 400;
 const LOCK: IconName = { android: "lock", ios: "lock" };
 const LOCK_GLYPH = 11;
@@ -22,25 +22,18 @@ const TOP = { textAlignVertical: "top" } as const;
 
 function Settling({ text }: { text: string }) {
 	const reduced = useEffectiveReducedMotion();
-	const sentences = sentencesOf(text);
 	return (
-		<AppText style={{ lineHeight: DRAFT_LINE }} variant="body">
-			{sentences.map((s, i) => (
-				<Animated.Text
-					entering={
-						reduced
-							? undefined
-							: FadeIn.duration(SETTLE_MS)
-									.delay(i * SETTLE_STEP_MS)
-									.reduceMotion(PLAY_AS_CHOSEN.reduceMotion)
-					}
-					// Sentences don't move: the index is their identity.
-					key={i}
-				>
-					{i < sentences.length - 1 ? `${s} ` : s}
-				</Animated.Text>
-			))}
-		</AppText>
+		<Animated.View
+			entering={
+				reduced
+					? undefined
+					: FadeIn.duration(SETTLE_MS).reduceMotion(PLAY_AS_CHOSEN.reduceMotion)
+			}
+		>
+			<AppText style={{ lineHeight: DRAFT_LINE }} variant="body">
+				{text}
+			</AppText>
+		</Animated.View>
 	);
 }
 
@@ -63,6 +56,7 @@ export function DraftCard() {
 					autoFocus
 					className="min-h-50 p-0 font-normal text-[17px] text-foreground leading-[25.5px]"
 					keyboardAppearance={scheme}
+					maxFontSizeMultiplier={BODY_MAX_SCALE}
 					multiline
 					onChangeText={actions.setDraft}
 					style={TOP}

@@ -1,5 +1,6 @@
 import ArrowBack from "@expo/material-symbols/arrow_back.xml";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
+import { goBack } from "@/components/shared/back-button";
 import { COPY } from "@/features/care/help/copy";
 import { playSoftPress } from "@/lib/haptics";
 import { useHeaderOptions } from "@/lib/header-options";
@@ -7,7 +8,6 @@ import { useHeaderOptions } from "@/lib/header-options";
 const INDEX_OPTIONS = { title: COPY.title };
 
 export default function CrisisResourcesLayout() {
-	const router = useRouter();
 	const headerOptions = useHeaderOptions();
 
 	return (
@@ -19,7 +19,9 @@ export default function CrisisResourcesLayout() {
 						icon={process.env.EXPO_OS === "ios" ? "chevron.left" : ArrowBack}
 						onPress={() => {
 							playSoftPress();
-							router.back();
+							// A cold-start deep link leaves nothing behind: home, not a dead button
+							// (the screen has no swipe back).
+							goBack();
 						}}
 					/>
 				</Stack.Toolbar>

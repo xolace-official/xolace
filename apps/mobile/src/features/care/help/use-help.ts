@@ -13,50 +13,42 @@ import { COPY } from "@/features/care/help/copy";
 import { detectCountry } from "@/features/care/help/detect-country";
 import type { HelpScreenData } from "@/features/care/help/help-data";
 import {
+	choiceOf,
 	countryOf,
-	failureOf,
 	type HelpChoice,
 	helpView,
 	type LineKind,
 } from "@/features/care/help/help-model";
+import { openOrSay } from "@/features/care/help/open-line";
 
-/** Opens `url`, or says why it couldn't. True once the system took it. */
-async function open(url: string, kind: LineKind): Promise<boolean> {
-	const { cannot, failed } = failureOf(kind);
-	let canOpen = false;
-	try {
-		canOpen = await Linking.canOpenURL(url);
-	} catch {
-		canOpen = false;
-	}
-	if (!canOpen) {
-		toast(cannot);
-		return false;
-	}
-	try {
-		await Linking.openURL(url);
-	} catch {
-		toast(failed);
-	}
-	return true;
-}
+/** Opens a line now (no capability check first) and toasts only if the phone can't. */
+const open = (url: string, kind: LineKind) =>
+	openOrSay(url, kind, { openURL: Linking.openURL, say: (m) => toast(m) });
 
 export function useHelp(): HelpScreenData {
 	const { from } = useLocalSearchParams<{ from?: string }>();
 	const posthog = usePostHog();
-	const [choice, setChoice] = useState<HelpChoice>(
-		() => detectCountry() ?? "elsewhere"
+	const [choice, setChoice] = useState<HelpChoice>(() =>
+		choiceOf(detectCountry())
 	);
 	const view = helpView(choice);
+	/** An event that can't throw into a call. */
+	const capture = (event: string, props: Record<string, string | null>) => {
+		try {
+			posthog.capture(event, props);
+		} catch {
+			// Analytics is best effort here.
+		}
+	};
 	const country = countryOf(choice);
 
 	// Once, with the country it opened on (the menu may change it later).
-	const opened = useRef(false);
+	const counted = useRef(false);
 	useEffect(() => {
-		if (opened.current) {
+		if (counted.current) {
 			return;
 		}
-		opened.current = true;
+		counted.current = true;
 		posthog.capture("crisis_resources_opened", {
 			country: country ?? "unrecognized",
 			entry_point: from ?? "idle_button",
@@ -69,12 +61,9 @@ export function useHelp(): HelpScreenData {
 				if (!view.emergency) {
 					return;
 				}
-				const opened = await open(`tel:${view.emergency}`, "call");
-				if (opened) {
-					posthog.capture("emergency_call_tapped", {
-						country,
-						from: from ?? null,
-					});
+				const called = await open(`tel:${view.emergency}`, "call");
+				if (called) {
+					capture("emergency_call_tapped", { country, from: from ?? null });
 				}
 			},
 			choose: setChoice,
@@ -82,13 +71,14 @@ export function useHelp(): HelpScreenData {
 				if (!line.action) {
 					return;
 				}
-				posthog.capture("crisis_resource_tapped", {
+				// The line first: analytics never stands between someone and a crisis line.
+				await open(line.action.url, line.action.kind);
+				capture("crisis_resource_tapped", {
 					country,
 					from: from ?? null,
 					source: line.source,
 					type: line.type,
 				});
-				await open(line.action.url, line.action.kind);
 			},
 			reportError: async () => {
 				await open(`mailto:${COPY.supportEmail}`, "email");

@@ -12,13 +12,15 @@ export const COPY = {
 			"Hey — I've been working through something lately and I'd really like to talk to you about it. Could we find some time soon?",
 		label: "YOUR WORDS",
 		later: "Not right now",
-		mascot: "Flux with a bundle",
+		mascot: "Flux with a paper boat",
 		privacy: "Used only to write your draft · never stored",
 		rateLimited:
 			"That's every draft you have today. It comes back tomorrow, the template below is yours to edit in the meantime.",
 		share: (name: string) => `Share with ${name}`,
 		sub: "Shaped around what you felt. Edit it until it sounds like you, then share when you're ready.",
-		title: (name: string) => `A message for ${name}.`,
+		// No second full stop when the name already ends in one ("Mr. Ade." is never "..").
+		title: (name: string) =>
+			/[.!?…]$/.test(name) ? `A message for ${name}` : `A message for ${name}.`,
 	},
 	intro: {
 		begin: "Begin",

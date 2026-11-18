@@ -96,9 +96,3 @@ export function quotaHintOf(quota: BridgeQuota | undefined): QuotaHint | null {
 		text: out ? COPY.quota.freeOut : COPY.quota.freeLeft(quota.draftsRemaining),
 	};
 }
-
-const SENTENCE_END = /(?<=[.!?])\s+/;
-
-/** A written draft in sentences, which settle in one after another. */
-export const sentencesOf = (draft: string): string[] =>
-	draft.split(SENTENCE_END).filter((s) => s.length > 0);
