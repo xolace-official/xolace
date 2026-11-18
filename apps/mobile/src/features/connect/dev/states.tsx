@@ -11,6 +11,8 @@ import {
 	MAYA,
 	NO_CHATS,
 	SEEKER_REQUEST,
+	XOLACER,
+	XOLACER_UNPUBLISHED,
 } from "./fixtures";
 
 /** The screen sets its own header, as the tab's stack does. */
@@ -30,7 +32,7 @@ export const devStates: readonly DevState[] = [
 		Screen: () => (
 			<FixtureConnect
 				conversations={[CHANNEL_ROW, SEEKER_REQUEST, MAYA, KOJO, ESI]}
-				myProfile={{ paused: false }}
+				status={XOLACER}
 			/>
 		),
 		title: "Chats as a Xolacer: a new request, the profile button",
@@ -41,7 +43,7 @@ export const devStates: readonly DevState[] = [
 		Screen: () => (
 			<FixtureConnect
 				conversations={[CHANNEL_ROW, DIRECT_REQUEST, SEEKER_REQUEST, MAYA]}
-				myProfile={{ paused: false }}
+				status={XOLACER}
 			/>
 		),
 		title: "Chats as a Xolacer: a direct request beside one after a session",
@@ -49,7 +51,7 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "chats-xolacer-setup",
 		options: OWN,
-		Screen: () => <FixtureConnect setupBanner />,
+		Screen: () => <FixtureConnect status={XOLACER_UNPUBLISHED} />,
 		title: "Chats as a Xolacer before publishing: the setup banner",
 	},
 	{
@@ -73,13 +75,13 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "loading",
 		options: OWN,
-		Screen: () => <FixtureConnect phase="loading" />,
+		Screen: () => <FixtureConnect loading />,
 		title: "Connect loading",
 	},
 	{
 		id: "disabled",
 		options: OWN,
-		Screen: () => <FixtureConnect phase="disabled" />,
+		Screen: () => <FixtureConnect status={{ enabled: false }} />,
 		title: "Chat switched off",
 	},
 	{

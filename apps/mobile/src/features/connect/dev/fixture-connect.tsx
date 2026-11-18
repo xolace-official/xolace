@@ -6,26 +6,19 @@ import { useHeaderOptions } from "@/lib/header-options";
 import { ArchivedProvider } from "../archived/archived-data";
 import { ArchivedScreen } from "../archived/archived-screen";
 import { ConnectProvider, type ConnectScreenData } from "../connect-data";
+import { type ChatStatus, connectState } from "../connect-model";
 import { ConnectScreen } from "../connect-screen";
 import { COPY } from "../copy";
 import {
-	archivedCount,
 	archivedRows,
 	type ConversationRow,
-	chatRows,
-	chatsEmpty,
 	type PairRowView,
 	type Segment,
 	type StreamSnapshot,
 } from "../list/chats-model";
 import type { RowActions } from "../list/row-actions";
-import {
-	type DirectoryRow,
-	filterChips,
-	presentIds,
-	rosterCards,
-} from "../roster/roster-model";
-import { CONVERSATIONS, DIRECTORY, NOW, STREAM } from "./fixtures";
+import { type DirectoryRow, presentIds } from "../roster/roster-model";
+import { CONVERSATIONS, DIRECTORY, NOW, SEEKER, STREAM } from "./fixtures";
 
 const noop = () => undefined;
 
@@ -52,9 +45,9 @@ export type ConnectFixture = {
 	directory?: DirectoryRow[] | null;
 	segment?: Segment;
 	filter?: string | null;
-	phase?: "loading" | "disabled";
-	setupBanner?: boolean;
-	myProfile?: { paused: boolean } | null;
+	/** Undefined: still loading. */
+	status?: ChatStatus;
+	loading?: boolean;
 };
 
 export function FixtureConnect({
@@ -63,9 +56,8 @@ export function FixtureConnect({
 	directory = DIRECTORY,
 	segment: initialSegment = "chats",
 	filter: initialFilter = null,
-	phase,
-	setupBanner = false,
-	myProfile = null,
+	status = SEEKER,
+	loading = false,
 }: ConnectFixture) {
 	const header = useHeaderOptions("large");
 	const [segment, setSegment] = useState<Segment>(initialSegment);
@@ -82,30 +74,16 @@ export function FixtureConnect({
 			setSegment,
 		},
 		deleting,
-		state: phase
-			? { phase }
-			: {
-					archivedCount: archivedCount(conversations),
-					empty: chatsEmpty(conversations),
-					myProfile,
-					phase: "ready",
-					roster: {
-						cards:
-							directory === null
-								? undefined
-								: rosterCards(
-										directory,
-										conversations,
-										filter,
-										presentIds(directory)
-									),
-						filter,
-						filters: filterChips(directory ?? [], filter),
-					},
-					rows: chatRows(conversations, stream, NOW),
-					segment,
-					setupBanner,
-				},
+		state: connectState({
+			conversations: loading ? undefined : conversations,
+			directory: directory ?? undefined,
+			filter,
+			now: NOW,
+			picked: segment,
+			presentSnapshot: directory ? presentIds(directory) : null,
+			status: loading ? undefined : status,
+			stream,
+		}),
 	};
 	return (
 		<ConnectProvider value={value}>

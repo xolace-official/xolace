@@ -1,6 +1,7 @@
 /** Connect on fixtures: the prototype's people (Maya, Kojo, Esi) as production rows. Feeds the
  * dev states and the model tests. */
 import type { Id } from "@xolace/backend/dataModel";
+import type { ChatStatus } from "../connect-model";
 import type {
 	ConversationRow,
 	PairConversation,
@@ -46,6 +47,26 @@ const pair = (
 		xolacerProfileId: PEOPLE.maya,
 		...over,
 	}) as PairConversation;
+
+/** `status` for someone who isn't a Xolacer, and the Xolacer variants. */
+export const SEEKER: ChatStatus = {
+	enabled: true,
+	isXolacer: false,
+	myProfileId: profile("profile_me"),
+	xolacerActive: false,
+	xolacerProfileComplete: false,
+};
+export const XOLACER: ChatStatus = {
+	...SEEKER,
+	isXolacer: true,
+	xolacerActive: true,
+	xolacerProfileComplete: true,
+};
+export const XOLACER_PAUSED: ChatStatus = { ...XOLACER, xolacerActive: false };
+export const XOLACER_UNPUBLISHED: ChatStatus = {
+	...XOLACER,
+	xolacerProfileComplete: false,
+};
 
 export const CHANNEL_ROW: ConversationRow = {
 	channelType: "xolace_broadcast",
