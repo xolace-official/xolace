@@ -1,3 +1,4 @@
+import type { Id } from "@xolace/backend/dataModel";
 import { describe, expect, it } from "vitest";
 import {
 	cubicBetween,
@@ -327,6 +328,32 @@ describe("keepKindling (the last snapshot once the server closes it)", () => {
 		expect(keepKindling(open, null, ended({ c: "skipped" }), true)).toBeNull();
 	});
 
+	it("keeps a passed-by step unlit beside the one tended", () => {
+		const kept = keepKindling(
+			{
+				closed: false,
+				seen: false,
+				view: {
+					id: "k1",
+					twigs: [
+						twig("done", "a"),
+						twig("pending", "b"),
+						twig("pending", "c"),
+					],
+				},
+			},
+			null,
+			ended({ b: "done", c: "skipped" }),
+			true
+		);
+		expect(kept?.closed).toBe(true);
+		expect(kept?.view.twigs.map((t) => t.state)).toEqual([
+			"done",
+			"done",
+			"skipped",
+		]);
+	});
+
 	it("drops it on the next blur once Today has shown it", () => {
 		const closed = keepKindling(open, null, ended({ c: "done" }), false);
 		const seen = keepKindling(closed ?? null, null, undefined, true);
@@ -347,14 +374,18 @@ describe("keepKindling (the last snapshot once the server closes it)", () => {
 });
 
 describe("kindlingOutcome", () => {
+	const dismissed: Parameters<typeof kindlingOutcome>[0] = {
+		_id: "k1" as Id<"paths">,
+		status: "dismissed",
+		twigs: [{ _id: "a" as Id<"path_steps">, state: "pending" }],
+	};
+
 	it("reads how the latest kindling ended", () => {
 		expect(kindlingOutcome(null)).toBeNull();
-		expect(
-			kindlingOutcome({
-				_id: "k1",
-				status: "dismissed",
-				twigs: [{ _id: "a", state: "pending" }],
-			} as unknown as Parameters<typeof kindlingOutcome>[0])
-		).toEqual({ completed: false, id: "k1", states: { a: "pending" } });
+		expect(kindlingOutcome(dismissed)).toEqual({
+			completed: false,
+			id: "k1",
+			states: { a: "pending" },
+		});
 	});
 });

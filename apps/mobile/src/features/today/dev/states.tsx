@@ -11,6 +11,11 @@ export const devStates: readonly DevState[] = [
 	{ id: "day", title: "03 Day", ...today({ phase: "day" }) },
 	{ id: "late", title: "04 Late (night mode)", ...today({ phase: "late" }) },
 	{
+		id: "late-loading",
+		title: "Late, the shelf still loading (the quiet row keeps its place)",
+		...today({ modules: "loading", phase: "late" }),
+	},
+	{
 		id: "evening-dark",
 		title: "01 Evening, dark",
 		...today({ phase: "evening", theme: "dark" }),
@@ -98,8 +103,44 @@ export const devStates: readonly DevState[] = [
 	},
 	{
 		id: "empty-day",
-		title: "Empty day: no kindling, no campfire",
-		...today({ campfire: "none", kindling: "none", phase: "day" }),
+		title: "Empty day: no kindling, campfire, tracks, moments or word",
+		...today({
+			campfire: "none",
+			kindling: "none",
+			modules: "none",
+			phase: "day",
+		}),
+	},
+	{
+		id: "rail-free",
+		title: "A free member's rail: locked tracks",
+		...today({ free: true, phase: "evening" }),
+	},
+	{
+		id: "late-free",
+		title: "Late, free: the quiet row locked",
+		...today({ free: true, phase: "late" }),
+	},
+	{
+		id: "word-late",
+		title: "First open, with today's word arriving late (it still inks in)",
+		...today({ intro: true, lateWord: true, phase: "evening" }),
+	},
+	{
+		id: "finding",
+		title:
+			"Day 3 of a v2 intake: “How did you find Xolace?” under the campfire",
+		...today({ finding: true, phase: "day" }),
+	},
+	{
+		id: "modules-loading",
+		title: "The rail, moments and word still loading",
+		...today({ modules: "loading", phase: "day" }),
+	},
+	{
+		id: "modules-dark",
+		title: "The rail, moments and word, dark",
+		...today({ phase: "evening", theme: "dark" }),
 	},
 	{
 		id: "phases",
@@ -108,7 +149,7 @@ export const devStates: readonly DevState[] = [
 	},
 	{
 		id: "offline",
-		title: "Offline (no name, no streak)",
+		title: "Offline (no name, no streak, nothing below loaded)",
 		...today({ offline: true, phase: "day" }),
 	},
 	{

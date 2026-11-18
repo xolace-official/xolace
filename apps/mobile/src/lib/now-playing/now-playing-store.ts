@@ -198,7 +198,7 @@ export const useNowPlayingIsPlaying = () =>
 export const nowPlayingPlayback = (): Playback => playback ?? IDLE;
 
 /** Mini-player capsule plus its gap above the tab bar; floating UI over the tabs must clear it. */
-export const MINI_PLAYER_CLEARANCE = 64;
+const MINI_PLAYER_CLEARANCE = 64;
 /** Whether the mini-player (accessory on iOS 26, overlay elsewhere) is on screen. */
 export function useMiniPlayerShown() {
 	return useNowPlayingLoaded();

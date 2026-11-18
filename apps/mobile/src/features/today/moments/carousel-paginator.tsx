@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import type { SharedValue } from "react-native-reanimated";
 import Animated, {
 	Easing,
@@ -61,14 +61,19 @@ export function CarouselPaginator({
 	});
 
 	return (
-		<View style={styles.paginatorContainer}>
-			<Animated.View style={[styles.dotsContainer, containerAnimatedStyle]}>
+		<View
+			className="absolute inset-x-0 bottom-0 h-5 items-center justify-center overflow-hidden"
+			pointerEvents="none"
+		>
+			<Animated.View
+				className="flex-row items-center justify-center"
+				style={containerAnimatedStyle}
+			>
 				{dots.map((_, index) => (
 					<AnimatedDot
 						dotColor={dotColor}
 						dotSize={dotSize}
 						index={index}
-						// eslint-disable-next-line react/no-array-index-key -- dots are pure page positions, no other identity exists
 						key={index}
 						spacing={spacing}
 						visibleDotsIndices={visibleDotsIndices}
@@ -90,6 +95,9 @@ type AnimatedDotProps = {
 	dotSize: number;
 	dotColor: string;
 };
+
+/** The dots are the ink at 34% (production's `foreground` + `56`). */
+const DOT_ALPHA = 0.34;
 
 function AnimatedDot({
 	index,
@@ -136,31 +144,10 @@ function AnimatedDot({
 
 	return (
 		<Animated.View style={rContainerStyle}>
-			<Animated.View style={[styles.dot, rDotStyle]} />
+			<Animated.View
+				className="items-start justify-center rounded-full"
+				style={[{ opacity: DOT_ALPHA }, rDotStyle]}
+			/>
 		</Animated.View>
 	);
 }
-
-const styles = StyleSheet.create({
-	dot: {
-		alignItems: "flex-start",
-		borderRadius: 9999,
-		justifyContent: "center",
-	},
-	dotsContainer: {
-		alignItems: "center",
-		flexDirection: "row",
-		justifyContent: "center",
-	},
-	paginatorContainer: {
-		alignItems: "center",
-		bottom: 0,
-		height: 20,
-		justifyContent: "center",
-		left: 0,
-		overflow: "hidden",
-		pointerEvents: "none",
-		position: "absolute",
-		right: 0,
-	},
-});

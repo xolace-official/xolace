@@ -1,4 +1,4 @@
-import { StyleSheet, View } from "react-native";
+import { View } from "react-native";
 import Animated, {
 	Extrapolation,
 	interpolate,
@@ -14,6 +14,8 @@ type Props = {
 	totalCards: number;
 	cardBackground: string;
 	shadowColor: string;
+	/** The board adds a 1 pt hairline to production's 5 pt shadow. */
+	hairline: string;
 	children: React.ReactNode;
 };
 
@@ -25,6 +27,7 @@ export function AnimatedCarouselCard({
 	totalCards,
 	cardBackground,
 	shadowColor,
+	hairline,
 	children,
 }: Props) {
 	const extendedInputRange = [
@@ -83,9 +86,10 @@ export function AnimatedCarouselCard({
 
 	return (
 		<Animated.View
+			className="absolute"
 			collapsable={false}
+			pointerEvents="none"
 			style={[
-				styles.cardContainer,
 				{
 					height: cardHeight,
 					width: cardWidth,
@@ -94,16 +98,14 @@ export function AnimatedCarouselCard({
 				animatedStyle,
 			]}
 		>
-			<Animated.View style={[styles.flexFull, rRotateStyle]}>
+			<Animated.View className="flex-1" style={rRotateStyle}>
 				<View
+					className="flex-1 overflow-hidden rounded-[25px] border-continuous"
 					collapsable={false}
-					style={[
-						styles.cardShadow,
-						{
-							backgroundColor: cardBackground,
-							boxShadow: `0 0 5px 0 ${shadowColor}`,
-						},
-					]}
+					style={{
+						backgroundColor: cardBackground,
+						boxShadow: `0 0 5px 0 ${shadowColor}, 0 0 0 1px ${hairline}`,
+					}}
 				>
 					{children}
 				</View>
@@ -111,19 +113,3 @@ export function AnimatedCarouselCard({
 		</Animated.View>
 	);
 }
-
-const styles = StyleSheet.create({
-	cardContainer: {
-		pointerEvents: "none",
-		position: "absolute",
-	},
-	cardShadow: {
-		borderCurve: "continuous",
-		borderRadius: 25,
-		flex: 1,
-		overflow: "hidden",
-	},
-	flexFull: {
-		flex: 1,
-	},
-});

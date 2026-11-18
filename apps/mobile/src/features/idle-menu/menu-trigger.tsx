@@ -45,7 +45,7 @@ export const MenuTrigger = ({ isOpen, isOpenJS, onPress }: Props) => {
 			accessibilityHint={
 				isOpenJS
 					? "Closes navigation options"
-					: "Opens navigation options: Discovery, Vent, Settings"
+					: "Opens navigation options: Today, Vent, Settings"
 			}
 			accessibilityLabel={isOpenJS ? "Close menu" : "Open menu"}
 			accessibilityRole="button"

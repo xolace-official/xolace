@@ -1,49 +1,36 @@
-// The timeline's emotion labels and row shape, moved here when the timeline became Moments
-// (S5d): Discovery's moments carousel is their last reader, and goes with Today's port (S1).
+import type { api } from "@xolace/backend/api";
+import type { FunctionReturnType } from "convex/server";
 
-export interface TimelineEntry {
-	confirmationState: string | null;
-	createdAt: number;
-	entryType: string;
-	granularLabel: string | null;
-	hasMirrorAudio: boolean;
+/** One row of `sessions.listForTimeline`'s page. */
+type TimelineRow = FunctionReturnType<
+	typeof api.sessions.listForTimeline
+>["page"][number];
+
+/** A moment as Today's carousel draws it. */
+export type MomentView = {
 	id: string;
-	mirrorText: string;
-	pathChosen: string | null;
-	primaryEmotion: string | null;
-	toneUsed: string | null;
-}
-
-/** Shape returned by `sessions.listForTimeline` per enriched session. */
-type TimelineSession = {
-	_id: string;
-	mirrorText: string;
-	entryType: string;
-	hasMirrorAudio: boolean;
-	primaryEmotion: string | null;
-	granularLabel: string | null;
-	pathChosen: string | null;
-	toneUsed: string | null;
-	confirmationState: string | null;
-	createdAt: number;
+	/** The mirror's line, with production's em dashes turned to commas. */
+	quote: string;
+	/** The finer label when there is one, else the session's primary emotion. */
+	emotion: string | null;
+	/** The mirror was spoken: a speaker badge. */
+	audio: boolean;
 };
 
-/** Maps a `listForTimeline` result row to the client-side `TimelineEntry` shape. */
-export function toTimelineEntry(session: TimelineSession): TimelineEntry {
+/** A timeline row as a moment (production's `toTimelineEntry` + `discovery-moment-card`). */
+export function momentView(row: TimelineRow): MomentView {
 	return {
-		confirmationState: session.confirmationState,
-		createdAt: session.createdAt,
-		entryType: session.entryType,
-		granularLabel: session.granularLabel,
-		hasMirrorAudio: session.hasMirrorAudio,
-		id: session._id,
-		mirrorText: session.mirrorText,
-		pathChosen: session.pathChosen,
-		primaryEmotion: session.primaryEmotion,
-		toneUsed: session.toneUsed,
+		audio: row.hasMirrorAudio,
+		emotion: row.granularLabel ?? row.primaryEmotion,
+		id: row._id,
+		quote: row.mirrorText
+			.replace(/\s*—\s*/g, ", ")
+			.replace(/ {2}/g, " ")
+			.trim(),
 	};
 }
 
+/** The production emotion map, moved from Discovery's `timeline-entry.ts` (its last reader). */
 const EMOTION_EMOJI: Record<string, string> = {
 	ambivalence: "⚖️",
 	anger: "😤",

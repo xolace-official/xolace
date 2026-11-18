@@ -9,6 +9,9 @@ import { useKeptKindling } from "../kindling/use-kept-kindling";
 import { type Today, TodayProvider } from "../today-data";
 import { headerCopy, type TodayPhase } from "../today-model";
 import { TodayScreen } from "../today-screen";
+import { useFixtureCovers } from "./covers";
+import { FIXTURE_ACTIONS } from "./fixture-actions";
+import { FixtureFinding } from "./fixture-finding";
 import {
 	FIXTURE_CAMPFIRE,
 	FIXTURE_DAY,
@@ -17,20 +20,12 @@ import {
 	FIXTURE_NAME,
 	FIXTURE_STREAK,
 	FIXTURE_WEEKDAY,
+	type FixtureModules,
+	lowerModules,
 } from "./fixtures";
 
-const ACTIONS: Today["actions"] = {
-	// Talk and Vent open their real screens; a cold Sit isn't offered yet (hero-model's DOORS).
-	openDoor: (door) =>
-		door === "sit" ? undefined : router.push(DOOR_HREF[door]),
-	openHelp: () => router.push("/crisis-resources"),
-	openKindling: () => router.push("/kindling"),
-	openReflect: () => router.back(),
-	openStreak: () => router.navigate("/you"),
-};
-
-const DOOR_HREF = { talk: "/talk", vent: "/voice-vent" } as const;
-
+/** A slow network: the word arrives while the first open is still playing. */
+const WORD_AFTER_MS = 1200;
 /** Let the screen land before the streak grows, as coming back to Today does. */
 const IGNITE_AFTER_MS = 600;
 /** As if back from the kindling's step: the card has landed before the step counts. */
@@ -76,6 +71,14 @@ export type FixtureProps = {
 	/** With `kindling: "last"`: the kindling is put out instead, so the card goes. */
 	putOut?: boolean;
 	campfire?: keyof typeof FIXTURE_CAMPFIRE | "none";
+	/** A free member: the rail's tracks show the lock and open Xolace+. */
+	free?: boolean;
+	/** Today's word loads a moment after the screen opens, as on a slow network. */
+	lateWord?: boolean;
+	/** The intake's day-3 card in Today's slot under the campfire. */
+	finding?: boolean;
+	/** The rail, your moments and the word: the board's, none at all, or still loading. */
+	modules?: FixtureModules;
 };
 
 function FixtureToday({
@@ -90,7 +93,20 @@ function FixtureToday({
 	tend = false,
 	putOut = false,
 	campfire = "count",
+	modules = "board",
+	finding = false,
+	lateWord = false,
+	free = false,
 }: FixtureProps) {
+	const covers = useFixtureCovers();
+	const [wordIn, setWordIn] = useState(!lateWord);
+	useEffect(() => {
+		if (wordIn) {
+			return;
+		}
+		const id = setTimeout(() => setWordIn(true), WORD_AFTER_MS);
+		return () => clearTimeout(id);
+	}, [wordIn]);
 	const phase = usePhase(start, cycle);
 	const [grown, setGrown] = useState(false);
 	const [tended, setTended] = useState(false);
@@ -132,10 +148,7 @@ function FixtureToday({
 			last.twigs.map((t) => [t.id, putOut ? t.state : "done"])
 		),
 	};
-	const kindlingView = useKeptKindling(
-		server,
-		server === null ? outcome : undefined
-	);
+	const kindlingView = useKeptKindling(server, outcome);
 	const state: Today["state"] = {
 		campfire: campfire === "none" ? null : FIXTURE_CAMPFIRE[campfire],
 		card: { monthPrompt: monthPrompt ? FIXTURE_MONTH_PROMPT : null },
@@ -144,6 +157,9 @@ function FixtureToday({
 		greeting,
 		intro,
 		kindling: kindlingView,
+		...lowerModules(offline ? "loading" : modules, covers),
+		...(wordIn ? {} : { word: undefined }),
+		listenLocked: free,
 		phase,
 		streak: offline
 			? null
@@ -156,8 +172,8 @@ function FixtureToday({
 		<ScopedTheme
 			theme={phase === "late" ? NIGHT_VARIANT : themeVariant("default", theme)}
 		>
-			<TodayProvider value={{ actions: ACTIONS, state }}>
-				<TodayScreen />
+			<TodayProvider value={{ actions: FIXTURE_ACTIONS, state }}>
+				<TodayScreen finding={finding ? <FixtureFinding /> : undefined} />
 			</TodayProvider>
 		</ScopedTheme>
 	);

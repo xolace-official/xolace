@@ -1,6 +1,8 @@
 import { createContext, type ReactNode, use } from "react";
 import type { CampfireView } from "./campfire/campfire-model";
 import type { KindlingView } from "./kindling/kindling-model";
+import type { MomentView } from "./moments/moments-model";
+import type { RailTile } from "./rail/rail-model";
 import type { Door, TodayPhase } from "./today-model";
 import { useTodayData } from "./use-today";
 
@@ -38,6 +40,16 @@ export type Today = {
 		campfire: CampfireView | null;
 		/** The local day ("YYYY-MM-DD"): a new day remounts the page, so its intro can play. */
 		day: string;
+		/** Something to listen to (the hub's New shelf); undefined while it loads. */
+		rail: RailTile[] | undefined;
+		/** The track playing now, so its tile shows the meter. */
+		playingSlug: string | null;
+		/** A free member: tracks open Xolace+, so tiles show the lock. */
+		listenLocked: boolean;
+		/** Your latest moments (the timeline's first page); undefined while it loads. */
+		moments: MomentView[] | undefined;
+		/** Today's quote; null with none, undefined while it loads. */
+		word: string | null | undefined;
 	};
 	actions: {
 		/** The lifebuoy: Get help. */
@@ -50,6 +62,14 @@ export type Today = {
 		openDoor: (door: Door) => void;
 		/** The kindling card and its Begin. */
 		openKindling: () => void;
+		/** A rail tile or the quiet row: the player for Plus, the paywall for free. */
+		openTrack: (tile: RailTile) => void;
+		/** The rail's See all. */
+		openExplore: () => void;
+		openMoment: (id: string) => void;
+		openMoments: () => void;
+		/** The word, into Quotes. */
+		openQuotes: () => void;
 	};
 };
 
@@ -73,11 +93,7 @@ export function useToday(): Today {
 	return today;
 }
 
-/**
- * The app's adapter: Today on Convex, the device and the router.
- * @public The Today tab's route moves onto it in S1d, with the last modules; until then the
- * tab still hosts Discovery and Today opens from its dev states.
- */
+/** The app's adapter: Today on Convex, the device and the router (the Today tab's route). */
 export function TodayData({ children }: { children: ReactNode }) {
 	const value = useTodayData();
 	return <TodayProvider value={value}>{children}</TodayProvider>;

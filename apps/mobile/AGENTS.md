@@ -192,8 +192,8 @@ Today and Reflect screen PRs move the landing. There is no flag: a screen PR rep
 old screen outright. Where a screen PR adds to the shell:
 
 - **A tab's content:** its route shim, `src/app/(protected)/(tabs)/<tab>/index.tsx`, hosts
-  the old screen that did the job (Today: Discovery, Explore: the Browse hub, You:
-  Profile) until the tab's screen PR swaps it. The tab's label and icon are its `TABS`
+  the old screen that did the job (Explore: the Browse hub) until the tab's screen PR
+  swaps it. Today, Connect and You are swapped. The tab's label and icon are its `TABS`
   entry.
 - **A root screen:** an entry in the feature's `screens.ts` (see "Root screens").
 - **A host:** an entry in `ROOT_HOSTS` (`src/features/navigation/hosts.ts`). A host is a

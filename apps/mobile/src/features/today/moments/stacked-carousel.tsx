@@ -1,15 +1,17 @@
-import { useThemeColor } from "heroui-native";
-import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { Pressable, useWindowDimensions, View } from "react-native";
+import { Presets } from "react-native-pulsar";
 import Animated, {
 	useAnimatedReaction,
 	useAnimatedScrollHandler,
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
-import { tap } from "@/lib/haptics";
+import { useTokenColors } from "@/lib/use-token-color";
 import { AnimatedCarouselCard } from "./animated-carousel-card";
 import { CarouselPaginator } from "./carousel-paginator";
+
+/** The carousel's height: the resting card plus the paginator row (40). */
+export const carouselHeightFor = (cardHeight: number) => cardHeight + 40;
 
 const STACK_OFFSET = 8;
 const PAGINATOR_VISIBLE_DOTS = 3;
@@ -33,14 +35,19 @@ export const StackedCarousel = <T,>({
 	cardHeight = 180,
 }: StackedCarouselProps<T>) => {
 	const { width: screenWidth } = useWindowDimensions();
-	const cardBackground = useThemeColor("surface");
-	const shadowColor = useThemeColor("foreground") + "0D";
-	const dotColor = useThemeColor("foreground") + "56";
+	// Production mixed alpha into the theme's hex; themes aren't all hex, so the dots take
+	// the ink at an opacity (paginator) and the shadow is fixed.
+	const [cardBackground, dotColor, hairline, shadowColor] = useTokenColors([
+		"surface",
+		"foreground",
+		"separator",
+		"today-moment-shadow",
+	]);
 
 	// Every child is absolute, so the container needs an explicit height: the
 	// resting card plus the paginator row. Overflow is clipped, so the scale-1.15
 	// swipe peak crops instead of needing headroom.
-	const carouselHeight = cardHeight + 40;
+	const carouselHeight = carouselHeightFor(cardHeight);
 
 	const scrollX = useSharedValue(0);
 
@@ -56,20 +63,25 @@ export const StackedCarousel = <T,>({
 		() => Math.round(currentPageIndex.get()),
 		(curr, prev) => {
 			if (curr !== prev && prev !== null) {
-				scheduleOnRN(tap);
+				Presets.System.selection();
 			}
 		}
 	);
 
 	return (
-		<View style={[styles.container, { height: carouselHeight }]}>
+		// justify-start, not center: the absolute cards take their static position
+		// from this, and centering pulled the card down over the paginator dots.
+		<View
+			className="items-center justify-start overflow-hidden"
+			style={{ height: carouselHeight }}
+		>
 			{data.map((item, index) => (
 				<AnimatedCarouselCard
 					cardBackground={cardBackground}
 					cardHeight={cardHeight}
 					cardWidth={cardWidth}
+					hairline={hairline}
 					index={index}
-					// eslint-disable-next-line react/no-array-index-key -- generic T carries no id; card position is the identity
 					key={index}
 					scrollX={scrollX}
 					shadowColor={shadowColor}
@@ -82,6 +94,11 @@ export const StackedCarousel = <T,>({
 			{/* Invisible list over the cards: the sole touch target, driving both
 			 * scroll and onCardPress (the card visuals are pointerEvents:none). */}
 			<Animated.FlatList
+				// Prototype: kept from VoiceOver. It is a touch layer of unlabelled pressables
+				// whose scroll bars VoiceOver reads ("Vertical scroll bar, 4 pages"); the cards
+				// under it carry the words.
+				accessibilityElementsHidden
+				className="absolute z-1000"
 				contentContainerStyle={{
 					// Without a matching paddingRight the last card cannot scroll to center.
 					paddingLeft: (screenWidth - cardWidth) / 2,
@@ -92,6 +109,7 @@ export const StackedCarousel = <T,>({
 				decelerationRate="fast"
 				disableIntervalMomentum
 				horizontal
+				importantForAccessibility="no-hide-descendants"
 				onScroll={scrollHandler}
 				renderItem={({ item, index }) => (
 					<Pressable
@@ -102,14 +120,12 @@ export const StackedCarousel = <T,>({
 				scrollEventThrottle={16}
 				showsHorizontalScrollIndicator={false}
 				snapToInterval={cardWidth}
-				style={[
-					styles.scrollDriver,
-					{ height: cardHeight + STACK_OFFSET * 6, width: screenWidth },
-				]}
+				style={{ height: cardHeight + STACK_OFFSET * 6, width: screenWidth }}
 			/>
 
 			<View
-				style={[styles.paginatorWrap, { top: cardHeight, width: screenWidth }]}
+				className="absolute bottom-0"
+				style={{ top: cardHeight, width: screenWidth }}
 			>
 				<CarouselPaginator
 					currentPageIndex={currentPageIndex}
@@ -123,21 +139,3 @@ export const StackedCarousel = <T,>({
 		</View>
 	);
 };
-
-const styles = StyleSheet.create({
-	container: {
-		alignItems: "center",
-		// flex-start, not center: the absolute cards take their static position
-		// from this, and centering pulled the card down over the paginator dots.
-		justifyContent: "flex-start",
-		overflow: "hidden",
-	},
-	paginatorWrap: {
-		bottom: 0,
-		position: "absolute",
-	},
-	scrollDriver: {
-		position: "absolute",
-		zIndex: 1000,
-	},
-});
