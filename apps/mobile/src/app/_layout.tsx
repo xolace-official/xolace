@@ -18,6 +18,7 @@ import {
 	type UpdateBottomSheetMode,
 } from "@/components/shared/update-bottom-sheet";
 import { useLaunchFonts } from "@/design/fonts";
+import { isGroupOpen, rootGate } from "@/features/navigation/root-gate";
 import { ReflectDraftGuard } from "@/features/reflect/reflect-draft";
 import { useOtaUpdate } from "@/helpers/hooks/use-ota-update";
 import { useVersionCheck } from "@/helpers/hooks/use-version-check";
@@ -94,20 +95,23 @@ const AppContent = () => {
 	// and Convex dedupes every downstream read.
 	const context = useFullContext(!isAuthenticated);
 	usePostHogIdentity();
-	const onboardingComplete = context?.profile.onboardingComplete === true;
-	const intakeGateLoading = isAuthenticated && context === undefined;
+	// `undefined` only while the query is in flight (the gate waits on it once signed
+	// in); an answered query with no flag on the profile is "not done", as before.
+	const onboardingComplete =
+		context === undefined
+			? undefined
+			: context.profile.onboardingComplete === true;
+	const gate = rootGate({
+		authenticated: isAuthenticated,
+		authLoading: isAuthLoading,
+		introSeen,
+		onboardingComplete,
+	});
 
 	// Breadcrumb the route-group guard's inputs: a wrong (auth) landing on a cold
 	// start is either a Clerk cache miss or a Clerk/Convex desync.
 	useEffect(() => {
 		Sentry.setUser(userId ? { id: userId } : null);
-		const group = isAuthenticated
-			? onboardingComplete
-				? "(protected)"
-				: "(intake)"
-			: introSeen
-				? "(auth)"
-				: "(onboarding)";
 		Sentry.addBreadcrumb({
 			category: "auth.guard",
 			data: {
@@ -115,15 +119,15 @@ const AppContent = () => {
 				clerkSignedIn: !!isSignedIn,
 				convexAuthenticated: isAuthenticated,
 				convexAuthLoading: isAuthLoading,
-				intakeGateLoading,
 				introSeen,
-				onboardingComplete,
+				onboardingComplete: onboardingComplete ?? null,
 			},
 			level:
 				isClerkLoaded && isSignedIn && !isAuthenticated ? "warning" : "info",
-			message: `route guard → ${group}`,
+			message: `route guard → ${gate}`,
 		});
 	}, [
+		gate,
 		introSeen,
 		isAuthenticated,
 		isAuthLoading,
@@ -131,7 +135,6 @@ const AppContent = () => {
 		isSignedIn,
 		userId,
 		onboardingComplete,
-		intakeGateLoading,
 	]);
 	const pathname = usePathname();
 	const params = useGlobalSearchParams();
@@ -156,7 +159,7 @@ const AppContent = () => {
 
 	// Hold the loader while the gate query is in flight rather than bouncing
 	// the user out of (protected) a frame later.
-	if (isAuthLoading || intakeGateLoading) {
+	if (gate === "loading") {
 		return <FullRippleLoader />;
 	}
 	return (
@@ -165,16 +168,16 @@ const AppContent = () => {
 			<ChatLocalDataGuard />
 			<ReflectDraftGuard />
 			<Stack screenOptions={ROOT_SCREEN_OPTIONS}>
-				<Stack.Protected guard={!(isAuthenticated || introSeen)}>
+				<Stack.Protected guard={isGroupOpen(gate, "(onboarding)")}>
 					<Stack.Screen name="(onboarding)" options={NO_HEADER} />
 				</Stack.Protected>
-				<Stack.Protected guard={!isAuthenticated && introSeen}>
+				<Stack.Protected guard={isGroupOpen(gate, "(auth)")}>
 					<Stack.Screen name="(auth)" options={NO_HEADER} />
 				</Stack.Protected>
-				<Stack.Protected guard={isAuthenticated && !onboardingComplete}>
+				<Stack.Protected guard={isGroupOpen(gate, "(intake)")}>
 					<Stack.Screen name="(intake)" options={NO_HEADER} />
 				</Stack.Protected>
-				<Stack.Protected guard={isAuthenticated && onboardingComplete}>
+				<Stack.Protected guard={isGroupOpen(gate, "(protected)")}>
 					<Stack.Screen name="(protected)" options={NO_HEADER} />
 				</Stack.Protected>
 			</Stack>
