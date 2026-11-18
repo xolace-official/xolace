@@ -49,7 +49,12 @@ export function StayedDone({ clock, ready, onPress }: DoneProps) {
 		transform: [{ scaleX: Math.max(0, 1 - clock.closeT.get() / DRAIN_MS) }],
 	}));
 	return (
-		<CtaButton disabled={!ready} label={COPY.stayed.done} onPress={onPress}>
+		<CtaButton
+			dimWhenDisabled={false}
+			disabled={!ready}
+			label={COPY.stayed.done}
+			onPress={onPress}
+		>
 			<Animated.View
 				className="flex-1 bg-subtle"
 				style={[{ opacity: DRAIN_OPACITY, transformOrigin: "right" }, drain]}

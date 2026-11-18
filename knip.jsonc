@@ -14,7 +14,6 @@
         // line then. These lines only shrink. Their exports carry `@public`.
         "src/components/shared/avatar.tsx",
         "src/components/shared/care-row.tsx",
-        "src/components/shared/country-menu.tsx",
         "src/components/shared/media-row.tsx",
         "src/components/shared/rolling-number.tsx",
         "src/lib/keyboard/keyboard-spacer.tsx",

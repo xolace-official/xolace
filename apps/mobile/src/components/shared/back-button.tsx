@@ -26,12 +26,21 @@ export function BackButton({
 	style,
 	className,
 	label = "Back",
+	icon = CHEVRON,
+	onPress = goBack,
+	haptic,
 }: {
 	/** A colour string for the chevron (`useTokenColor`); the theme's ink by default. */
 	tint?: string;
 	style?: StyleProp<ViewStyle>;
 	className?: string;
 	label?: string;
+	/** Another glyph for the same button (a close ×). */
+	icon?: IconName;
+	/** A screen's own way back (a step back, a dismiss); `goBack` by default. */
+	onPress?: () => void;
+	/** Plays on press: a named haptic from `@/lib/haptics`. */
+	haptic?: () => void;
 }) {
 	const foreground = useTokenColor("foreground");
 	return (
@@ -39,11 +48,12 @@ export function BackButton({
 			<PressScale
 				accessibilityLabel={label}
 				className="size-11 items-center justify-center"
-				onPress={goBack}
+				haptic={haptic}
+				onPress={onPress}
 			>
 				<Icon
 					color={tint ?? foreground}
-					name={CHEVRON}
+					name={icon}
 					size={GLYPH}
 					weight="semibold"
 				/>
