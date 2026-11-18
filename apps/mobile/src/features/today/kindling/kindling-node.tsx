@@ -6,7 +6,6 @@ import {
 	Skia,
 } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
-import { useTokenColor } from "@/lib/use-token-color";
 import {
 	easeCssFn,
 	easeOutFn,
@@ -19,22 +18,22 @@ import { BEAT, NODE } from "./kindling-model";
 import { Ping, Spark } from "./node-effects";
 
 const CHECK = Skia.Path.MakeFromSVGString(NODE.check) ?? Skia.Path.Make();
-const POP: readonly (readonly [number, number])[] = [
+const POP = [
 	[0, 1],
 	[0.35, 1.32],
 	[1, 1],
-];
+] as const;
 const TAU = Math.PI * 2;
-/** The waiting ring: ink 3 at 35%; an arriving node's comes up to full as it turns over. */
-const WAIT_ALPHA = 0.35;
+const WAIT = NODE.waitAlpha;
 
-/** Theme colours the nodes take: the card, the well, the waiting ring, the current violet and the lit ember. */
+/** The nodes' colours: the card, the well, the waiting ring, the current violet, the lit ember and the check. */
 export type NodeColours = {
 	surface: string;
 	well: string;
 	waitStroke: string;
 	violet: string;
 	ember: string;
+	check: string;
 };
 
 type Props = {
@@ -51,10 +50,9 @@ type Props = {
 };
 
 /**
- * One step on the path (milestone-stepper's node, transit-route-progress's
- * breathing ring and pings). Everything derives from `beat` (ms since the
- * step was tended) and the breathing clock; radii carry the breath, so the
- * loop allocates nothing.
+ * One step on the path (milestone-stepper's node, transit-route-progress's breathing ring and
+ * pings). Everything derives from `beat` (ms since the step was tended) and the breathing
+ * clock; radii carry the breath, so the loop allocates nothing.
  */
 export function KindlingNode({
 	x,
@@ -68,7 +66,6 @@ export function KindlingNode({
 }: Props) {
 	const done = state === "done";
 	const current = state === "current";
-	const check = useTokenColor("today-kindling-check");
 
 	const transform = useDerivedValue(() => {
 		const b = beat.get();
@@ -106,9 +103,8 @@ export function KindlingNode({
 				? interpolateColors(turn.get(), [0, 1], [c.waitStroke, c.violet])
 				: c.waitStroke
 	);
-	const strokeOpacity = useDerivedValue(() =>
-		done ? 1 : current ? WAIT_ALPHA + (1 - WAIT_ALPHA) * turn.get() : WAIT_ALPHA
-	);
+	const lit = useDerivedValue(() => (done ? 1 : current ? turn.get() : 0));
+	const strokeOpacity = useDerivedValue(() => WAIT + (1 - WAIT) * lit.get());
 	const strokeW = useDerivedValue(() =>
 		done ? 1 : current ? 1.5 + 1.5 * turn.get() : 1.5
 	);
@@ -183,7 +179,7 @@ export function KindlingNode({
 			) : null}
 			{done ? (
 				<Path
-					color={check}
+					color={c.check}
 					end={checkEnd}
 					path={CHECK}
 					strokeCap="round"

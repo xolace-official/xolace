@@ -284,6 +284,8 @@ export const NODE = {
 		[13, -27, 1.3],
 		[-12, -26, 1.3],
 	],
+	/** The waiting ring: ink 3 at 35%; an arriving node's comes up to full as it turns over. */
+	waitAlpha: 0.35,
 	waiting: 0.86,
 } as const;
 

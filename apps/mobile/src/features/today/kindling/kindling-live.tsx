@@ -43,6 +43,7 @@ const TOKENS = [
 	"ember",
 	"accent-ink",
 	"muted",
+	"today-kindling-check",
 ] as const;
 
 type Props = {
@@ -53,7 +54,7 @@ type Props = {
 
 /** The steps from your last session, as a path you tend (handoff `today.md` §4.5). */
 export function KindlingLive({ kindling, width, onScreen }: Props) {
-	const [surface, well, subtle, violet, ember, accentInk, muted] =
+	const [surface, well, subtle, violet, ember, accentInk, muted, check] =
 		useTokenColors(TOKENS);
 	const { actions } = useToday();
 	const { live, reduced, low } = useTodayFrame();
@@ -132,7 +133,7 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 				<KindlingPath
 					beat={kin.beat}
 					clock={clock}
-					colours={{ ember, surface, violet, waitStroke: subtle, well }}
+					colours={{ check, ember, surface, violet, waitStroke: subtle, well }}
 					current={kin.current}
 					dash={subtle}
 					done={kin.shown.map((s) => s === "done")}
