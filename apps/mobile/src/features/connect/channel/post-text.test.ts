@@ -42,6 +42,44 @@ describe("plainText", () => {
 			"a b c d e f g snake_case 2*3*4"
 		);
 	});
+
+	it("drops a line's heading, quote and list marks", () => {
+		expect(plainText("# Big news")).toBe("Big news");
+		expect(plainText("###### Small print")).toBe("Small print");
+		expect(plainText("> Said once\n> > said twice")).toBe(
+			"Said once\nsaid twice"
+		);
+		expect(plainText("- one\n* two\n+ three\n1. four\n12. five")).toBe(
+			"one\ntwo\nthree\nfour\nfive"
+		);
+		expect(plainText("#hashtag and 3 - 2")).toBe("#hashtag and 3 - 2");
+	});
+
+	it("keeps an image's words, not its mark", () => {
+		expect(plainText("![a lantern at dusk](https://x.co/l.png)")).toBe(
+			"a lantern at dusk"
+		);
+	});
+
+	it("clears nested marks", () => {
+		expect(plainText("***both*** and **bold _italic_** and ~~**gone**~~")).toBe(
+			"both and bold italic and gone"
+		);
+	});
+
+	it("keeps escaped marks as the characters they are", () => {
+		expect(plainText("\\*not italic\\* and 2\\*3")).toBe(
+			"*not italic* and 2*3"
+		);
+		expect(plainText("\\# not a heading")).toBe("# not a heading");
+		expect(plainText("a \\\\ b")).toBe("a \\ b");
+	});
+
+	it("reads a link whose address has parentheses", () => {
+		expect(
+			plainText("[Foo](https://en.wikipedia.org/wiki/Foo_(bar)) here")
+		).toBe("Foo here");
+	});
 });
 
 describe("postLinks", () => {
@@ -50,5 +88,16 @@ describe("postLinks", () => {
 			"https://a.co/x",
 		]);
 		expect(postLinks("No links here.")).toEqual([]);
+	});
+
+	it("keeps parentheses in an address, and leaves images out", () => {
+		expect(
+			postLinks(
+				"[Foo](https://en.wikipedia.org/wiki/Foo_(bar)), https://en.wikipedia.org/wiki/Baz_(qux). ![pic](https://x.co/p.png)"
+			)
+		).toEqual([
+			"https://en.wikipedia.org/wiki/Foo_(bar)",
+			"https://en.wikipedia.org/wiki/Baz_(qux)",
+		]);
 	});
 });

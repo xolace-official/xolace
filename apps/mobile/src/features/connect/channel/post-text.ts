@@ -4,22 +4,51 @@
 /** A first paragraph this short, followed by more, reads as the post's title. */
 const TITLE_MAX = 80;
 
-const MARKDOWN_LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
-const BARE_URL = /https?:\/\/[^\s)<>\]]+/g;
+/** `[words](target)`, or an image's `![words](target)`; a target may hold one level of
+ * parentheses (`…/wiki/Foo_(bar)`). */
+const MARKDOWN_LINK = /(!?)\[([^\]]+)\]\(((?:[^()\s]|\([^()\s]*\))+)\)/g;
+const BARE_URL = /https?:\/\/(?:[^\s()<>\]]|\([^\s()<>]*\))+/g;
 const EMPHASIS =
 	/(\*\*|__|~~|`)(.+?)\1|(?<![\w*])[*_](?!\s)(.+?)(?<!\s)[*_](?![\w*])/g;
+/** A line's block marks: quotes (nested too), then a heading's hashes or a list's bullet or
+ * number. */
+const LINE_MARKS =
+	/^[ \t]*(?:>[ \t]?)*[ \t]*(?:#{1,6}[ \t]+|[-*+][ \t]+|\d+\.[ \t]+)?/gm;
+/** A backslash-escaped mark (`\*` is a literal star). */
+const ESCAPED = /\\([\\`*_{}[\]()#+\-.!~>|])/g;
+/** Escaped marks wait in the private-use area while the marks around them come off. */
+const HELD = 0xe0_00;
+const HELD_CHAR = /[\ue000-\ue0ff]/g;
 const TRAILING_PUNCTUATION = /[.,;:!?]+$/;
 
 /** What a reader hears or a title shows: the words without the markdown around them. */
 export function plainText(markdown: string): string {
-	return markdown
-		.replace(MARKDOWN_LINK, "$1")
-		.replace(EMPHASIS, (_, _mark, wrapped, single) => wrapped ?? single);
+	let text = markdown
+		.replace(ESCAPED, (_, mark: string) =>
+			String.fromCharCode(HELD + mark.charCodeAt(0))
+		)
+		.replace(LINE_MARKS, "")
+		.replace(MARKDOWN_LINK, "$2");
+	// Again until nothing changes, so nested marks (`***both***`, `**bold _italic_**`) clear.
+	let before: string;
+	do {
+		before = text;
+		text = text.replace(
+			EMPHASIS,
+			(_, _mark, wrapped?: string, single?: string) => wrapped ?? single ?? ""
+		);
+	} while (text !== before);
+	return text.replace(HELD_CHAR, (held) =>
+		String.fromCharCode(held.charCodeAt(0) - HELD)
+	);
 }
 
-/** Every link in a post, in order, once each: markdown links' targets, then bare URLs. */
+/** Every link in a post, in order, once each: markdown links' targets, then bare URLs. An
+ * image isn't one: Stream doesn't draw it. */
 export function postLinks(markdown: string): string[] {
-	const named = [...markdown.matchAll(MARKDOWN_LINK)].map((m) => m[2] ?? "");
+	const named = [...markdown.matchAll(MARKDOWN_LINK)]
+		.filter((m) => m[1] !== "!")
+		.map((m) => m[3] ?? "");
 	const bare = [...markdown.replace(MARKDOWN_LINK, "").matchAll(BARE_URL)].map(
 		(m) => m[0].replace(TRAILING_PUNCTUATION, "")
 	);
