@@ -3,7 +3,7 @@
  * reaction toggle and hold. The card draws; Stream does.
  */
 import type { GestureResponderEvent } from "react-native";
-import { useMessageContext } from "stream-chat-expo";
+import { useMessageContext, useMessagesContext } from "stream-chat-expo";
 import { playSoftPress } from "@/lib/haptics";
 import { deviceClock } from "../../device-clock";
 import { postView } from "../channel-model";
@@ -11,12 +11,20 @@ import { postView } from "../channel-model";
 export function usePost() {
 	const { contextMenuAnchorRef, handleToggleReaction, message, onLongPress } =
 		useMessageContext();
+	const { retrySendMessage } = useMessagesContext();
 	return {
 		/** The view Stream lifts into its overlay on a hold. */
 		anchor: contextMenuAnchorRef,
 		/** Stream's overlay: the seven reactions above, Copy below. */
 		hold: (event?: GestureResponderEvent) =>
 			onLongPress({ emitter: "messageContent", event }),
+		/** Stream's resend, as its overlay's "Resend" does, for a broadcast that didn't send. */
+		resend: () => {
+			playSoftPress();
+			retrySendMessage(message).catch((error: unknown) =>
+				console.error("[connect] channel resend failed", error)
+			);
+		},
 		toggle: (type: string) => {
 			playSoftPress();
 			handleToggleReaction(type).catch((error: unknown) =>

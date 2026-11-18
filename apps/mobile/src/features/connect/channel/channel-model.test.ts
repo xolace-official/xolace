@@ -75,6 +75,73 @@ describe("postView", () => {
 	});
 });
 
+describe("postView's kinds", () => {
+	const at = new Date(NOW - 2 * HOUR).toISOString();
+	const text = "Quiet hours\n\nNudges wait until morning.";
+	const reaction_groups = { hug: { count: 3 } };
+
+	it("draws a post as a post, with its reactions", () => {
+		const v = postView({ created_at: at, reaction_groups, text }, NOW, US);
+		expect(v).toMatchObject({
+			edited: false,
+			kind: "post",
+			title: "Quiet hours",
+		});
+		expect(v.reactions).toHaveLength(1);
+	});
+
+	it("keeps none of a removed post: no words, no reactions, one quiet line", () => {
+		for (const removed of [
+			{ type: "deleted" },
+			{ deleted_at: at, type: "regular" },
+		]) {
+			const v = postView(
+				{ created_at: at, reaction_groups, text, ...removed },
+				NOW,
+				US
+			);
+			expect(v).toMatchObject({
+				body: "",
+				edited: false,
+				kind: "deleted",
+				reactions: [],
+				title: null,
+			});
+			expect(v.a11y.replace(/\u202f/g, " ")).toBe(
+				"This post was removed. 7:41 PM"
+			);
+		}
+	});
+
+	it("tells the sender a broadcast didn't send, either way Stream marks it", () => {
+		for (const failed of [{ type: "error" }, { status: "failed" }]) {
+			const v = postView(
+				{ created_at: at, reaction_groups, text, ...failed },
+				NOW,
+				US
+			);
+			expect(v).toMatchObject({
+				kind: "failed",
+				reactions: [],
+				title: "Quiet hours",
+			});
+			expect(v.a11y).toContain("This post didn't send");
+		}
+	});
+
+	it("marks an edited post, and says it after the time", () => {
+		const v = postView(
+			{ created_at: at, message_text_updated_at: at, text },
+			NOW,
+			US
+		);
+		expect(v.edited).toBe(true);
+		expect(v.a11y.replace(/\u202f/g, " ")).toBe(
+			"Quiet hours. Nudges wait until morning. 7:41 PM, edited"
+		);
+	});
+});
+
 describe("channelState", () => {
 	const channel = { cid: "xolace:camp" } as unknown as Channel;
 

@@ -25,6 +25,10 @@ export type DevMessage = {
 	/** Minutes before now. */
 	ago: number;
 	failed?: boolean;
+	/** Removed by its author: Stream keeps it in the list as `deleted`. */
+	deleted?: boolean;
+	/** Its words changed after it was sent. */
+	edited?: boolean;
 	reaction?: string;
 	/** Many people's reactions (the channel's cards): counts, and whether one is yours. */
 	reactions?: readonly { type: string; count: number; mine?: boolean }[];
@@ -70,6 +74,13 @@ function reactionsOf(m: DevMessage, at: string, other: { id: string }) {
 	};
 }
 
+function devType(m: DevMessage) {
+	if (m.deleted) {
+		return "deleted";
+	}
+	return m.failed ? "error" : "regular";
+}
+
 function makeClient(
 	messages: readonly DevMessage[],
 	channelId: string,
@@ -94,9 +105,11 @@ function makeClient(
 				created_at: at,
 				id: `dev-${i}`,
 				...reactionsOf(m, at, maya),
+				...(m.deleted ? { deleted_at: at } : {}),
+				...(m.edited ? { message_text_updated_at: at } : {}),
 				status: m.failed ? "failed" : "received",
 				text: m.text,
-				type: m.failed ? "error" : "regular",
+				type: devType(m),
 				updated_at: at,
 				user: m.mine ? me : maya,
 			} as never;

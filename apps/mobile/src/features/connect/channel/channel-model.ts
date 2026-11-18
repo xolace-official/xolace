@@ -18,7 +18,14 @@ export type PostReaction = {
 	hint: string;
 };
 
+/** A post as it stands: on the card, removed by the broadcaster (Stream keeps it in the list as
+ * `deleted`), or a broadcast of yours that didn't reach Stream. */
+export type PostKind = "post" | "deleted" | "failed";
+
 export type PostView = {
+	kind: PostKind;
+	/** The broadcaster changed its words after posting (Stream's `message_text_updated_at`). */
+	edited: boolean;
 	title: string | null;
 	body: string;
 	when: string;
@@ -29,6 +36,10 @@ export type PostView = {
 /** What a post carries, as Stream's message has it. */
 export type PostMessage = {
 	text?: string;
+	type?: string;
+	status?: string;
+	deleted_at?: Date | string | null;
+	message_text_updated_at?: Date | string | null;
 	created_at?: Date | string;
 	reaction_groups?: Record<string, { count: number }> | null;
 	own_reactions?: readonly { type: string }[] | null;
@@ -83,22 +94,53 @@ function postReactions(m: PostMessage): PostReaction[] {
 	});
 }
 
+/** Stream's own tests: `deleted` for a removed message, `error` or `failed` for one that didn't
+ * send (`Message.tsx`, `errorOrFailed`). */
+export function postKind(m: PostMessage): PostKind {
+	if (m.type === "deleted" || m.deleted_at) {
+		return "deleted";
+	}
+	return m.type === "error" || m.status === "failed" ? "failed" : "post";
+}
+
 export function postView(
 	m: PostMessage,
 	now: number,
 	clock: Clock = {}
 ): PostView {
-	const { title, body } = splitPost(m.text ?? "");
+	const kind = postKind(m);
 	const at = m.created_at ? new Date(m.created_at).getTime() : now;
 	// Stream's separator above the card already says the day; the card says the time.
 	const when = whenLabel(at, at, clock);
+	if (kind === "deleted") {
+		// Nothing of what it said, and nothing left to react to.
+		return {
+			a11y: `${CHANNEL.removed} ${when}`,
+			body: "",
+			edited: false,
+			kind,
+			reactions: [],
+			title: null,
+			when,
+		};
+	}
+	const { title, body } = splitPost(m.text ?? "");
+	const edited = kind === "post" && Boolean(m.message_text_updated_at);
 	return {
-		a11y: [title, body, when]
+		a11y: [
+			title,
+			body,
+			kind === "failed" ? CHANNEL.notSent : null,
+			edited ? `${when}, ${CHANNEL.edited.toLowerCase()}` : when,
+		]
 			.map((part) => part?.replace(/[.\s]+$/, ""))
 			.filter(Boolean)
 			.join(". "),
 		body,
-		reactions: postReactions(m),
+		edited,
+		kind,
+		// A post that never reached Stream has no one's reactions, and can't take yours.
+		reactions: kind === "post" ? postReactions(m) : [],
 		title,
 		when,
 	};

@@ -13,13 +13,15 @@ const CHANNEL = {
 };
 const DAY_MIN = 1440;
 
+const BADGES: DevMessage = {
+	ago: 2 * DAY_MIN,
+	mine: false,
+	text: "Badges are here\n\nEverything you did before today counts. Have a look in You.",
+};
+
 /** The prototype's two posts, newest last. */
 const POSTS: DevMessage[] = [
-	{
-		ago: 2 * DAY_MIN,
-		mine: false,
-		text: "Badges are here\n\nEverything you did before today counts. Have a look in You.",
-	},
+	BADGES,
 	{
 		ago: 120,
 		mine: false,
@@ -57,6 +59,36 @@ const LONG: DevMessage[] = [
 	...POSTS,
 ];
 
+/** A post the broadcaster removed, and one they edited, between the two. */
+const CHANGED: DevMessage[] = [
+	{ ...BADGES, ago: 3 * DAY_MIN },
+	{
+		ago: 2 * DAY_MIN,
+		deleted: true,
+		mine: false,
+		reactions: [{ count: 5, type: "hug" }],
+		text: "Testing, testing.",
+	},
+	{
+		ago: DAY_MIN,
+		edited: true,
+		mine: false,
+		reactions: [{ count: 7, type: "thanks" }],
+		text: "Quiet hours\n\nFrom tonight, nudges wait until morning if you've set a Quiet Window.",
+	},
+];
+
+/** The broadcaster's own post that didn't reach Stream, under one that did. */
+const NOT_SENT: DevMessage[] = [
+	...POSTS,
+	{
+		ago: 2,
+		failed: true,
+		mine: true,
+		text: "Lantern is down for ten minutes\n\nWe're moving it to a faster server. Back by 9.",
+	},
+];
+
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */
 export const devStates: readonly DevState[] = [
 	{
@@ -76,6 +108,18 @@ export const devStates: readonly DevState[] = [
 		options: CHANNEL,
 		Screen: () => <FixtureChannel canPost posts={POSTS} />,
 		title: "Xolace channel as the broadcaster: the composer",
+	},
+	{
+		id: "channel-changed",
+		options: CHANNEL,
+		Screen: () => <FixtureChannel posts={CHANGED} />,
+		title: "Xolace channel: a removed post and an edited one",
+	},
+	{
+		id: "channel-not-sent",
+		options: CHANNEL,
+		Screen: () => <FixtureChannel canPost posts={NOT_SENT} />,
+		title: "Xolace channel as the broadcaster: a post that didn't send",
 	},
 	{
 		id: "channel-offline",

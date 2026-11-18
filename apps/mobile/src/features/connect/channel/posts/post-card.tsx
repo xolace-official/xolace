@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { useTokenColor } from "@/lib/use-token-color";
 import type { PostReaction } from "../channel-model";
 import { CHANNEL } from "../copy";
+import { NotSent, RemovedPost } from "./post-states";
 import { usePost } from "./use-post";
 
 const PLUS = { android: "add", ios: "plus" } as const;
@@ -18,8 +19,11 @@ const CARD_RADIUS = 24;
  * paging, read state and the hold overlay stay Stream's.
  */
 export function PostCard() {
-	const { anchor, hold, toggle, view } = usePost();
+	const { anchor, hold, resend, toggle, view } = usePost();
 	const muted = useTokenColor("muted");
+	if (view.kind === "deleted") {
+		return <RemovedPost a11y={view.a11y} when={view.when} />;
+	}
 	return (
 		<View className="px-3.5 pb-3">
 			{/* Stream types its anchor against its own RN types; it is a plain View ref. */}
@@ -48,21 +52,27 @@ export function PostCard() {
 						) : null}
 					</Pressable>
 					<View className="flex-row flex-wrap items-center gap-2 pt-1.5">
-						{view.reactions.map((r) => (
-							<ReactionChip
-								key={r.type}
-								onPress={() => toggle(r.type)}
-								reaction={r}
-							/>
-						))}
-						<PressScale
-							accessibilityLabel={CHANNEL.add}
-							accessibilityRole="button"
-							className="size-8 items-center justify-center rounded-full bg-surface-secondary"
-							onPress={() => hold()}
-						>
-							<Icon color={muted} name={PLUS} size={12} />
-						</PressScale>
+						{view.kind === "failed" ? (
+							<NotSent onResend={resend} />
+						) : (
+							<>
+								{view.reactions.map((r) => (
+									<ReactionChip
+										key={r.type}
+										onPress={() => toggle(r.type)}
+										reaction={r}
+									/>
+								))}
+								<PressScale
+									accessibilityLabel={CHANNEL.add}
+									accessibilityRole="button"
+									className="size-8 items-center justify-center rounded-full bg-surface-secondary"
+									onPress={() => hold()}
+								>
+									<Icon color={muted} name={PLUS} size={12} />
+								</PressScale>
+							</>
+						)}
 						{/* Already in the post's label. */}
 						<AppText
 							accessibilityElementsHidden
@@ -71,7 +81,7 @@ export function PostCard() {
 							importantForAccessibility="no"
 							variant="caption"
 						>
-							{view.when}
+							{view.edited ? `${view.when} · ${CHANNEL.edited}` : view.when}
 						</AppText>
 					</View>
 				</Card>
