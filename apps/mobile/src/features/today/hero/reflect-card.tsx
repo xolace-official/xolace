@@ -178,7 +178,7 @@ export function ReflectCard() {
 						input={input}
 						inputLabel={(placeholders[0] ?? "").replace("…", "")}
 						mic={{ ...mic, x: input.x + mic.x, y: input.y + mic.y }}
-						onDoors={hold.choose}
+						onDoors={hold.chooseFromA11y}
 						prompt={
 							monthPrompt ? `${COPY.card.monthLabel}. ${monthPrompt}` : prompt
 						}

@@ -33,7 +33,7 @@ export function HeroPressable({ hold, style, children, ...rest }: Props) {
 			delayLongPress={hold.holdable ? HERO.holdMs : undefined}
 			disabled={hold.chosen}
 			importantForAccessibility="no-hide-descendants"
-			onLongPress={hold.holdable ? hold.choose : undefined}
+			onLongPress={hold.holdable ? () => hold.choose() : undefined}
 			onPressIn={hold.pressIn}
 			onPressMove={hold.pressMove}
 			onPressOut={hold.pressOut}

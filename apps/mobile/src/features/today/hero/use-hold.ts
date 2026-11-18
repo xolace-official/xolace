@@ -170,11 +170,12 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		rimOpacity.set(1);
 	};
 
-	const choose = () => {
-		if (!(holdable && canChoose(touch.current))) {
+	/** A full hold opens the doors; `a11y` is VoiceOver's action, which a drift doesn't bar. */
+	const choose = (a11y = false) => {
+		if (!(holdable && canChoose(touch.current, a11y))) {
 			return;
 		}
-		step({ type: "choose" });
+		step({ a11y, type: "choose" });
 		holding.set(false);
 		setChosen(true);
 		rim.set(1);
@@ -229,6 +230,7 @@ export function useHold(reduced: boolean, holdable: boolean) {
 	return {
 		body,
 		choose,
+		chooseFromA11y: () => choose(true),
 		chosen,
 		holdable,
 		pressIn,

@@ -100,6 +100,19 @@ describe("the hold", () => {
 		expect(holdNext(chosen, { type: "unchoose" })).toEqual(HOLD_REST);
 	});
 
+	it("lets VoiceOver's action open the doors after a finger drifted", () => {
+		const drifted = run([
+			{ type: "in", x: 100, y: 100 },
+			{ type: "move", x: 100, y: 130 },
+			{ type: "out" },
+		]);
+		expect(drifted.phase).toBe("drifted");
+		expect(holdNext(drifted, { a11y: true, type: "choose" }).phase).toBe(
+			"chosen"
+		);
+		expect(holdNext(drifted, { type: "choose" }).phase).toBe("drifted");
+	});
+
 	it("lets VoiceOver's action open the doors at rest", () => {
 		expect(holdNext(HOLD_REST, { type: "choose" }).phase).toBe("chosen");
 	});

@@ -139,7 +139,8 @@ export type HoldEvent =
 	| { type: "in"; x: number; y: number }
 	| { type: "move"; x: number; y: number }
 	| { type: "out" }
-	| { type: "choose" }
+	/** `a11y`: VoiceOver's doors action, which sends no touch, so a drift before it doesn't count. */
+	| { type: "choose"; a11y?: boolean }
 	| { type: "unchoose" };
 
 export const HOLD_REST: HoldState = { phase: "rest", x: 0, y: 0 };
@@ -156,7 +157,7 @@ export function holdNext(s: HoldState, e: HoldEvent): HoldState {
 		case "out":
 			return s.phase === "holding" ? { ...s, phase: "rest" } : s;
 		case "choose":
-			return canChoose(s) ? { ...s, phase: "chosen" } : s;
+			return canChoose(s, e.a11y) ? { ...s, phase: "chosen" } : s;
 		case "unchoose":
 			return s.phase === "chosen" ? HOLD_REST : s;
 		default:
@@ -164,9 +165,12 @@ export function holdNext(s: HoldState, e: HoldEvent): HoldState {
 	}
 }
 
-/** The doors open from a full hold, or VoiceOver's action at rest; never after a drift. */
-export const canChoose = (s: HoldState) =>
-	s.phase === "holding" || s.phase === "rest";
+/**
+ * The doors open from a full hold, never after a drift. VoiceOver's action opens them
+ * whenever they're closed: it isn't a touch, so a finger's earlier drift doesn't bar it.
+ */
+export const canChoose = (s: HoldState, a11y = false) =>
+	a11y ? s.phase !== "chosen" : s.phase === "holding" || s.phase === "rest";
 
 /** A tap opens Reflect unless the finger drifted first (onPress can land before or after onPressOut). */
 export const canTap = (s: HoldState) =>
