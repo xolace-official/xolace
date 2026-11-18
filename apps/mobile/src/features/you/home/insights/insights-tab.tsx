@@ -15,8 +15,7 @@ import { useYouHome } from "@/features/you/home/you-data";
 import { useYouUi } from "@/features/you/home/you-ui";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** The docked tab bar's height, and the room left under the pills when Your days scrolls up. */
-const DOCKED_TABS = 52;
+/** The room left under the pills when Your days scrolls up. */
 const UNDER_PILLS = 12;
 /** Just past the collapse range, so the header stays docked. */
 const PAST_DOCK = 2;
@@ -35,8 +34,13 @@ export function InsightsTab({ minHeader }: { minHeader: number }) {
 	const { state, actions } = useYouHome();
 	const { scrollTo } = useYouUi();
 	const { scrollRef } = useTabPageContext();
-	const { collapseRangeSV } = useCollapsingTabsContext();
+	const { collapseRangeSV, tabBarHeight } = useCollapsingTabsContext();
 	const cardY = useRef({ days: 0, top: 0, week: 0 });
+	// A ref, not a dep: `scrollTo` is never cleared, so a dep would scroll again on each change.
+	const tabBar = useRef(tabBarHeight);
+	useEffect(() => {
+		tabBar.current = tabBarHeight;
+	}, [tabBarHeight]);
 	const measure = (card: "days" | "week") => (e: LayoutChangeEvent) => {
 		cardY.current[card] = e.nativeEvent.layout.y;
 	};
@@ -47,15 +51,19 @@ export function InsightsTab({ minHeader }: { minHeader: number }) {
 		if (!scrollTo) {
 			return;
 		}
-		const dock = collapseRangeSV.get() + PAST_DOCK;
-		const y = Math.max(
-			dock,
-			cardY.current[scrollTo.target] - minHeader - DOCKED_TABS - UNDER_PILLS
-		);
-		const timer = setTimeout(
-			() => scrollRef.current?.scrollTo({ animated: !reduced, y }),
-			SCROLL_AFTER_MS
-		);
+		// The collapse range, the cards' y and the tab bar's height are read when it fires (the
+		// header and cards may still be laying out); the native header's height is the one now.
+		const timer = setTimeout(() => {
+			const dock = collapseRangeSV.get() + PAST_DOCK;
+			const y = Math.max(
+				dock,
+				cardY.current[scrollTo.target] -
+					minHeader -
+					tabBar.current -
+					UNDER_PILLS
+			);
+			scrollRef.current?.scrollTo({ animated: !reduced, y });
+		}, SCROLL_AFTER_MS);
 		return () => clearTimeout(timer);
 	}, [scrollTo, collapseRangeSV, minHeader, scrollRef, reduced]);
 
