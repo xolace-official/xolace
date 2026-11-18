@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { GestureResponderEvent } from "react-native";
 import { Presets } from "react-native-pulsar";
 import {
@@ -40,6 +40,9 @@ export function useHold(reduced: boolean, holdable: boolean) {
 	const body = useSharedValue(1);
 	const holding = useSharedValue(false);
 	const swept = useRef(false);
+	// The Bloom as the doors land: cancelled by Write instead and on unmount.
+	const bloom = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+	useEffect(() => () => clearTimeout(bloom.current), []);
 	const touch = useRef(HOLD_REST);
 	const step = (e: HoldEvent) => {
 		const before = touch.current;
@@ -190,11 +193,15 @@ export function useHold(reduced: boolean, holdable: boolean) {
 			})
 		);
 		// The doors land: the last tile finishes its burst.
-		setTimeout(playSessionComplete, reduced ? 0 : doorsLandMs(DOORS.length));
+		bloom.current = setTimeout(
+			playSessionComplete,
+			reduced ? 0 : doorsLandMs(DOORS.length)
+		);
 	};
 
 	const unchoose = () => {
 		step({ type: "unchoose" });
+		clearTimeout(bloom.current);
 		setChosen(false);
 		rim.set(
 			withTiming(0, {
