@@ -2,12 +2,12 @@
 // with example values, marked as an example so nobody reads them as their own.
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
+import { SteadinessRing } from "@/components/shared/steadiness-ring";
 import {
 	COMPOUNDING_SHORT,
 	DOMAIN_META,
 	type Tone,
 } from "@/features/insights/domains";
-import { SteadinessRing } from "@/features/insights/steadiness-ring";
 import { cn } from "@/lib/utils";
 
 const RING_SIZE = 68;

@@ -5,6 +5,7 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
+import { SteadinessRing } from "@/components/shared/steadiness-ring";
 import {
 	COMPOUNDING_SHORT,
 	COMPOUNDING_WORD,
@@ -17,7 +18,6 @@ import {
 	toneOf,
 	trendBasis,
 } from "@/features/insights/domains";
-import { SteadinessRing } from "@/features/insights/steadiness-ring";
 import { TrendChip } from "@/features/insights/trend-chip";
 import { useTokenColor } from "@/lib/use-token-color";
 
