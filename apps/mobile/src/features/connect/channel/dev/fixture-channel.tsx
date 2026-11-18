@@ -9,7 +9,9 @@ import {
 	type DevMessage,
 	useDevChannel,
 } from "../../thread/dev/dev-stream";
-import { ChannelProvider, type ChannelState } from "../channel-data";
+import type { StreamStatus } from "../../thread/thread-model";
+import { ChannelProvider } from "../channel-data";
+import { channelState } from "../channel-model";
 import { ChannelScreen } from "../channel-screen";
 
 const XOLACE = { id: "xolace_broadcaster", name: "Xolace" };
@@ -17,12 +19,12 @@ const noop = () => undefined;
 
 export function FixtureChannel({
 	posts = [],
-	body = "messages",
+	stream = "ready",
 	online = true,
 	canPost = false,
 }: {
 	posts?: readonly DevMessage[];
-	body?: ChannelState["body"];
+	stream?: StreamStatus;
 	online?: boolean;
 	canPost?: boolean;
 }) {
@@ -36,7 +38,8 @@ export function FixtureChannel({
 			<ChannelProvider
 				value={{
 					actions: { retry: noop },
-					state: { body, channel: body === "messages" ? channel : null },
+					// The dev channel holds its state from the start.
+					state: channelState(stream, true, channel),
 				}}
 			>
 				<ChannelScreen />

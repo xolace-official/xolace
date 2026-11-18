@@ -1,6 +1,7 @@
+import type { Channel } from "stream-chat";
 import { describe, expect, it } from "vitest";
 import { NOW } from "../dev/fixtures";
-import { channelBody, postView, splitPost } from "./channel-model";
+import { channelState, postView, splitPost } from "./channel-model";
 
 const HOUR = 3_600_000;
 const US = { hour12: true, locale: "en-US" };
@@ -74,11 +75,35 @@ describe("postView", () => {
 	});
 });
 
-describe("channelBody", () => {
-	it("waits for Stream and the channel's state, and offers a retry on failure", () => {
-		expect(channelBody("connecting", false)).toBe("connecting");
-		expect(channelBody("ready", false)).toBe("connecting");
-		expect(channelBody("ready", true)).toBe("messages");
-		expect(channelBody("unavailable", true)).toBe("unavailable");
+describe("channelState", () => {
+	const channel = { cid: "xolace:camp" } as unknown as Channel;
+
+	it("draws the list, with its channel, once Stream is up and the channel holds state", () => {
+		expect(channelState("ready", true, channel)).toEqual({
+			body: "messages",
+			channel,
+		});
+	});
+
+	it("waits while Stream connects, even with a channel in hand", () => {
+		expect(channelState("connecting", true, channel)).toEqual({
+			body: "connecting",
+		});
+		expect(channelState("connecting", false, null)).toEqual({
+			body: "connecting",
+		});
+	});
+
+	it("waits for the channel's state, and for a channel at all", () => {
+		expect(channelState("ready", false, channel)).toEqual({
+			body: "connecting",
+		});
+		expect(channelState("ready", true, null)).toEqual({ body: "connecting" });
+	});
+
+	it("offers a retry once Stream fails, whatever it held", () => {
+		expect(channelState("unavailable", true, channel)).toEqual({
+			body: "unavailable",
+		});
 	});
 });

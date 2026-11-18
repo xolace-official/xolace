@@ -26,7 +26,7 @@ export function ChannelScreen() {
 				}}
 			/>
 			<BodyFrame>
-				{state.body === "messages" && state.channel ? (
+				{state.body === "messages" ? (
 					<ChannelMessages channel={state.channel} />
 				) : state.body === "unavailable" ? (
 					<MessagesFailed

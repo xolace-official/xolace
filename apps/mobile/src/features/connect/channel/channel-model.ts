@@ -1,5 +1,6 @@
 /** The Xolace channel: a Stream message in, the card it draws out, and what the body shows while
  * Stream comes up. Pure. */
+import type { Channel } from "stream-chat";
 import { type Clock, whenLabel } from "../list/chats-model";
 import { REACTIONS } from "../reactions";
 import type { StreamStatus } from "../thread/thread-model";
@@ -103,13 +104,24 @@ export function postView(
 	};
 }
 
-/** The body: Stream's list once the channel holds state, else the skeleton or the retry. */
-export function channelBody(
+/** What the screen draws: Stream's list once the channel holds state, else the skeleton, or the
+ * retry after Stream failed. Only the list carries the channel. */
+export type ChannelState =
+	| { body: "messages"; channel: Channel }
+	| { body: "connecting" }
+	| { body: "unavailable" };
+
+/** The screen's state from Stream's status, whether the channel holds state yet, and the channel.
+ * The hook and the dev fixture both build it here. */
+export function channelState(
 	stream: StreamStatus,
-	channelReady: boolean
-): "messages" | "connecting" | "unavailable" {
+	ready: boolean,
+	channel: Channel | null
+): ChannelState {
 	if (stream === "unavailable") {
-		return "unavailable";
+		return { body: "unavailable" };
 	}
-	return stream === "ready" && channelReady ? "messages" : "connecting";
+	return stream === "ready" && ready && channel
+		? { body: "messages", channel }
+		: { body: "connecting" };
 }

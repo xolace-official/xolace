@@ -92,13 +92,13 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "channel-connecting",
 		options: CHANNEL,
-		Screen: () => <FixtureChannel body="connecting" />,
+		Screen: () => <FixtureChannel stream="connecting" />,
 		title: "Xolace channel while Stream connects",
 	},
 	{
 		id: "channel-unavailable",
 		options: CHANNEL,
-		Screen: () => <FixtureChannel body="unavailable" />,
+		Screen: () => <FixtureChannel stream="unavailable" />,
 		title: "Xolace channel when messages can't load",
 	},
 ];

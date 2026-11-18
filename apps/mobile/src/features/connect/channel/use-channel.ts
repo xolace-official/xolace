@@ -10,7 +10,7 @@ import { useMemo } from "react";
 import { useStreamConnection } from "@/lib/stream-chat/stream-chat-provider";
 import { useLocalChannelState } from "../thread/use-thread-channel";
 import type { ChannelScreenData } from "./channel-data";
-import { channelBody } from "./channel-model";
+import { channelState } from "./channel-model";
 
 export function useChannel(): ChannelScreenData {
 	// Usually a no-op (Connect already connected); matters for a push deep link or a cold launch.
@@ -30,9 +30,6 @@ export function useChannel(): ChannelScreenData {
 	const ready = useLocalChannelState(channel);
 	return {
 		actions: { retry: stream.retry },
-		state: {
-			body: channelBody(stream.status, ready),
-			channel: ready ? channel : null,
-		},
+		state: channelState(stream.status, ready, channel),
 	};
 }
