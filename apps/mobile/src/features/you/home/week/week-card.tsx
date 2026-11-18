@@ -74,10 +74,21 @@ export function WeekCard({ week }: { week: IntensityWeek }) {
 					<View className="min-h-11 justify-center">
 						<AppText
 							className="text-[17px] leading-[22px] tracking-[-0.17px]"
+							numberOfLines={1}
 							variant="headline"
 						>
 							{readout.value}
 						</AppText>
+						{readout.caption ? (
+							<AppText
+								className="mt-0.75 text-[12.5px] leading-4"
+								color="muted"
+								numberOfLines={1}
+								variant="footnote"
+							>
+								{readout.caption}
+							</AppText>
+						) : null}
 					</View>
 				) : (
 					<View className="min-h-11 flex-row items-center gap-1.75">

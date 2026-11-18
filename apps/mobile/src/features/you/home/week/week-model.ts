@@ -4,22 +4,27 @@
  * in, what to draw and say out.
  */
 import { COPY } from "@/features/you/copy";
+import { feelingOf } from "@/features/you/moments/moments-model";
 
 /**
- * What a held day could say under its date (the board's "2 moments · Work · Overwhelmed · ended
- * lighter"). No query sends it yet: backend item B17. Undefined until then, and nothing draws it.
+ * What a held day says under its date (the board's "2 moments · Work · Overwhelmed · ended
+ * lighter"): `getWeekIntensity({ withDetail: true })`'s per-day detail (backend B17). Only on
+ * days with moments; missing from a backend without it, and then nothing draws a second line.
  */
 export type DayDetail = {
+	/** How the day's last moment ended; null when it wasn't answered. */
 	ended: "lighter" | "same" | "heavier" | null;
 	moments: number;
+	/** A steadiness domain key ("work"), or null. */
 	topDomain: string | null;
+	/** The classifier's word ("overwhelm"), or null. */
 	topEmotion: string | null;
 };
 
 /** One day as `profile.getWeekIntensity` sends it: Monday first, intensity the day's mean 1–10. */
 export type IntensityDay = {
 	dayName: string;
-	/** B17's per-day detail; always undefined today. */
+	/** B17's per-day detail, asked for with `withDetail`. */
 	detail?: DayDetail;
 	intensity: number | null;
 	isToday: boolean;
@@ -178,9 +183,35 @@ export function pagedOffset({
 	return Math.max(-MAX_WEEKS_BACK, Math.min(0, shown + by));
 }
 
+const DOMAINS: Readonly<Record<string, string>> = COPY.steadiness.domains;
+
 /**
- * A held day's readout, one line in place of the title row: "Tue 10 Nov · above your usual".
- * `detail` is B17's second line, carried for when it lands; nothing draws it yet.
+ * A held day's second line, from B17's detail: "2 moments · Work & Studies · Overwhelm · ended
+ * lighter". Each part only when the day says it, so a day of unanswered moments is "1 moment ·
+ * Work & Studies". Null with no detail (a backend without B17) or no moments. The feeling is worded
+ * as Moments words it (`feelingOf`), so a day and its moments agree.
+ */
+export function detailLine(detail: DayDetail | undefined): string | null {
+	if (!detail || detail.moments < 1) {
+		return null;
+	}
+	const domain =
+		detail.topDomain && Object.hasOwn(DOMAINS, detail.topDomain)
+			? DOMAINS[detail.topDomain]
+			: null;
+	return [
+		COPY.week.moments(detail.moments),
+		domain,
+		feelingOf(null, detail.topEmotion),
+		detail.ended ? COPY.week.ended[detail.ended] : null,
+	]
+		.filter(Boolean)
+		.join(" · ");
+}
+
+/**
+ * A held day's readout in place of the title row: "Tue 10 Nov · above your usual", and under it
+ * `caption`, B17's line (`detailLine`), or null when there's none to draw.
  */
 export function heldReadout({
 	days,
@@ -195,17 +226,20 @@ export function heldReadout({
 	usual: Usual | null;
 	/** -1 on a past week. */
 	todayIndex: number;
-}): { detail?: DayDetail; value: string } {
+}): { caption: string | null; value: string } {
 	const day = days[index];
 	const date = shortDate(start, index);
 	if (day.intensity === null) {
 		const ahead = todayIndex >= 0 && index > todayIndex;
-		return { value: `${date} · ${ahead ? COPY.week.ahead : COPY.week.none}` };
+		return {
+			caption: null,
+			value: `${date} · ${ahead ? COPY.week.ahead : COPY.week.none}`,
+		};
 	}
 	const said = usual
 		? COPY.week.relation[relationTo(day.intensity, usual)]
 		: COPY.week.level(day.intensity);
-	return { detail: day.detail, value: `${date} · ${said}` };
+	return { caption: detailLine(day.detail), value: `${date} · ${said}` };
 }
 
 /**

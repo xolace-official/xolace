@@ -302,6 +302,12 @@ export const COPY = {
 		earlier: "Earlier weeks",
 		earlierLabel: "See earlier weeks",
 		empty: "No moments logged that week.",
+		/** How a held day ended, its last words (B17): "ended lighter". */
+		ended: {
+			heavier: "ended heavier",
+			lighter: "ended lighter",
+			same: "about the same",
+		},
 		forming: "Nothing yet this week. Its shape is still forming.",
 		heaviest: (day: string) => `Heaviest on ${day}.`,
 		heaviestAgainst: (day: string, relation: "above" | "within" | "below") =>
@@ -313,6 +319,8 @@ export const COPY = {
 			"Each bar is how heavy your moments felt that day; averaged from the intensity (1-10) of what you brought. Use the arrows above to browse earlier weeks.",
 		level: (v: number) =>
 			`${v >= 7.5 ? "high" : v >= 5 ? "moderate" : v >= 2.5 ? "mild" : "minimal"} intensity`,
+		/** A held day's count, the first words of its second line. */
+		moments: (n: number) => plural(n, "moment", "moments"),
 		next: "Next week",
 		none: "no moments",
 		prev: "Previous week",

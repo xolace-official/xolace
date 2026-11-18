@@ -82,7 +82,29 @@ export const devStates: readonly DevState[] = [
 		id: "this-week-held",
 		options: OPTIONS,
 		Screen: () => <FixtureYou start={{ toWeek: true, weekHeld: 1 }} />,
-		title: "This week, holding Tuesday",
+		title: "This week, holding Tuesday: its day and how it ended",
+	},
+	{
+		id: "this-week-held-sparse",
+		options: OPTIONS,
+		Screen: () => (
+			<FixtureYou
+				fixture={{ week: "sparse" }}
+				start={{ toWeek: true, weekHeld: 1 }}
+			/>
+		),
+		title: "This week, holding a day that named nothing: only its count",
+	},
+	{
+		id: "this-week-held-no-detail",
+		options: OPTIONS,
+		Screen: () => (
+			<FixtureYou
+				fixture={{ week: "no-detail" }}
+				start={{ toWeek: true, weekHeld: 1 }}
+			/>
+		),
+		title: "This week, holding Tuesday on a backend without the day's detail",
 	},
 	{
 		id: "this-week-earlier",

@@ -3,7 +3,9 @@ import {
 	BAR_MAX,
 	BAR_MIN,
 	barHeight,
+	type DayDetail,
 	dayAt,
+	detailLine,
 	heldReadout,
 	type IntensityDay,
 	levelY,
@@ -206,7 +208,7 @@ describe("heldReadout", () => {
 	it("reads a day against your usual, in one line", () => {
 		expect(
 			heldReadout({ days: BOARD, index: 1, start, todayIndex: 3, usual: USUAL })
-		).toEqual({ detail: undefined, value: "Tue 10 Nov · above your usual" });
+		).toEqual({ caption: null, value: "Tue 10 Nov · above your usual" });
 	});
 
 	it("tells a day still ahead from a quiet one", () => {
@@ -228,17 +230,67 @@ describe("heldReadout", () => {
 		).toBe("Wed 11 Nov · moderate intensity");
 	});
 
-	it("carries B17's detail when a day has one", () => {
-		const detail = {
-			ended: "lighter" as const,
-			moments: 2,
-			topDomain: "work",
-			topEmotion: "overwhelmed",
-		};
-		const days = BOARD.map((d, i) => (i === 1 ? { ...d, detail } : d));
+	it("says B17's line under the date when the day has a detail", () => {
+		const days = BOARD.map((d, i) => (i === 1 ? { ...d, detail: TUESDAY } : d));
 		expect(
-			heldReadout({ days, index: 1, start, todayIndex: 3, usual: USUAL }).detail
-		).toBe(detail);
+			heldReadout({ days, index: 1, start, todayIndex: 3, usual: USUAL })
+		).toEqual({
+			caption: "2 moments · Work & Studies · Overwhelm · ended lighter",
+			value: "Tue 10 Nov · above your usual",
+		});
+	});
+
+	it("says no second line for a day without moments, whatever it carries", () => {
+		const days = BOARD.map((d, i) => (i === 5 ? { ...d, detail: TUESDAY } : d));
+		expect(
+			heldReadout({ days, index: 5, start, todayIndex: 3, usual: USUAL })
+				.caption
+		).toBeNull();
+	});
+});
+
+const TUESDAY: DayDetail = {
+	ended: "lighter",
+	moments: 2,
+	topDomain: "work",
+	topEmotion: "overwhelm",
+};
+
+describe("detailLine", () => {
+	it("says the board's Tuesday", () => {
+		expect(detailLine(TUESDAY)).toBe(
+			"2 moments · Work & Studies · Overwhelm · ended lighter"
+		);
+	});
+
+	it("hides when there's no detail (a backend without B17) or no moments", () => {
+		expect(detailLine(undefined)).toBeNull();
+		expect(detailLine({ ...TUESDAY, moments: 0 })).toBeNull();
+	});
+
+	it("leaves out what the day didn't say", () => {
+		const none = {
+			ended: null,
+			moments: 1,
+			topDomain: null,
+			topEmotion: null,
+		} as const;
+		expect(detailLine(none)).toBe("1 moment");
+		expect(detailLine({ ...none, topEmotion: "self-doubt" })).toBe(
+			"1 moment · Self doubt"
+		);
+		expect(detailLine({ ...none, ended: "same", topDomain: "health" })).toBe(
+			"1 moment · Health & Rest · about the same"
+		);
+		expect(detailLine({ ...none, ended: "heavier" })).toBe(
+			"1 moment · ended heavier"
+		);
+	});
+
+	it("skips a domain it has no name for", () => {
+		expect(detailLine({ ...TUESDAY, topDomain: "constructor" })).toBe(
+			"2 moments · Overwhelm · ended lighter"
+		);
 	});
 });
 
