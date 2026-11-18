@@ -1,12 +1,11 @@
 import { useState } from "react";
+import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
-import type { IconName } from "@/components/shared/icon";
-import {
-	type CardAction,
-	ChannelCard,
-} from "@/features/reach-me-on/components/channel-card";
+import { Icon } from "@/components/shared/icon";
+import { ChannelCard } from "@/features/reach-me-on/components/channel-card";
 import { LinkSteps } from "@/features/reach-me-on/components/link-steps";
+import { Pill, type PillTone } from "@/features/reach-me-on/components/pill";
 import { useReachSheet } from "@/features/reach-me-on/reach-sheet-data";
 import {
 	type ChannelEntry,
@@ -14,43 +13,43 @@ import {
 	type TelegramAction,
 	telegramCard,
 } from "@/features/reach-me-on/reach-view";
+import { useTokenColor } from "@/lib/use-token-color";
 
-const ACTION: Record<TelegramAction, { label: string; icon: IconName }> = {
-	get_plus: {
-		icon: { android: "workspace_premium", ios: "sparkles" },
-		label: "Get Xolace+",
-	},
-	link: { icon: { android: "link", ios: "link" }, label: "Link Telegram" },
-	link_again: {
-		icon: { android: "link", ios: "link" },
-		label: "Link again",
-	},
-	pause: {
-		icon: { android: "pause_circle", ios: "pause.circle" },
-		label: "Pause",
-	},
-	resume: {
-		icon: { android: "play_circle", ios: "play.circle" },
-		label: "Resume",
-	},
-	unlink: {
-		icon: { android: "link_off", ios: "minus.circle" },
-		label: "Unlink",
-	},
+const ACTION_LABEL: Record<TelegramAction, string> = {
+	get_plus: "Get Xolace+",
+	link: "Link Telegram",
+	link_again: "Link again",
+	pause: "Pause",
+	resume: "Resume",
+	unlink: "Unlink",
 };
 
-const BODY = "text-[15px] leading-[21px]";
+const WARNING = {
+	android: "warning",
+	ios: "exclamationmark.triangle.fill",
+} as const;
 
-/** The Telegram card, per `listChannels` state, with the link flow inside it.
- * Reads and acts through the sheet's provider. */
+/** A lone action, or Get Xolace+, is the card's call to action; Unlink reads as destructive. */
+function pillTone(action: TelegramAction, count: number): PillTone {
+	if (count === 1 || action === "get_plus") {
+		return "primary";
+	}
+	return action === "unlink" ? "danger" : "secondary";
+}
+
+/**
+ * The Telegram card, per `listChannels` state, with the link flow inside it (P's `TelegramCard`).
+ * Reads and acts through the sheet's provider.
+ */
 export const TelegramCard = ({ entry }: { entry: ChannelEntry }) => {
 	const view = telegramCard(entry);
+	const ember = useTokenColor("ember-ink");
 	const {
 		state: { link, offline },
 		actions,
 	} = useReachSheet();
 	const [confirmUnlink, setConfirmUnlink] = useState(false);
-	const idle = link.step === "idle";
+	const linking = link.step !== "idle";
 
 	const run: Record<TelegramAction, () => void> = {
 		get_plus: actions.getPlus,
@@ -60,52 +59,67 @@ export const TelegramCard = ({ entry }: { entry: ChannelEntry }) => {
 		resume: () => actions.setPaused("telegram", false),
 		unlink: () => setConfirmUnlink(true),
 	};
-	const rows: CardAction[] = idle
-		? view.actions.map((action) => ({
-				...ACTION[action],
-				danger: action === "unlink",
-				offlineOk: action === "get_plus",
-				onPress: run[action],
-			}))
-		: [];
-	const hasBody = !idle || Boolean(view.description || view.warning);
 
 	return (
 		<>
 			<ChannelCard
-				actions={rows}
 				channel="telegram"
 				disabled={offline}
-				mark={idle || link.step === "linked" ? orderMark(entry) : null}
+				mark={
+					link.step === "idle" || link.step === "linked"
+						? orderMark(entry)
+						: null
+				}
 				onTryFirst={() => actions.tryFirst("telegram")}
-				statusLine={view.statusLine}
-				tag={view.plusBadge ? "Xolace+" : undefined}
+				plusTag={view.plusBadge === true}
+				statusLine={linking ? undefined : view.statusLine}
 			>
-				{hasBody ? (
+				{link.step === "idle" ? (
 					<>
-						{idle && view.description ? (
-							<AppText className={`${BODY} text-foreground/70`} variant="body">
+						{view.description ? (
+							<AppText
+								className="text-[14.5px] text-foreground/70 leading-5"
+								variant="body"
+							>
 								{view.description}
 							</AppText>
 						) : null}
-						{idle && view.warning ? (
-							<AppText className={`${BODY} text-warning`} variant="body">
-								{view.warning}
-							</AppText>
+						{view.warning ? (
+							<View className="flex-row gap-2">
+								<Icon color={ember} name={WARNING} size={14} />
+								<AppText
+									className="flex-1 text-[14.5px] text-ember-ink leading-5"
+									variant="body"
+								>
+									{view.warning}
+								</AppText>
+							</View>
 						) : null}
-						{link.step === "idle" ? null : (
-							<LinkSteps
-								disabled={offline}
-								minting={link.minting}
-								onCancel={actions.link.cancel}
-								onCopyLink={actions.link.copyLink}
-								onDismiss={actions.link.dismiss}
-								onOpenTelegram={actions.link.openTelegram}
-								step={link.step}
-							/>
-						)}
+						{view.actions.length > 0 ? (
+							<View className="flex-row flex-wrap gap-2">
+								{view.actions.map((action) => (
+									<Pill
+										disabled={offline && action !== "get_plus"}
+										key={action}
+										label={ACTION_LABEL[action]}
+										onPress={run[action]}
+										tone={pillTone(action, view.actions.length)}
+									/>
+								))}
+							</View>
+						) : null}
 					</>
-				) : null}
+				) : (
+					<LinkSteps
+						disabled={offline}
+						minting={link.minting}
+						onCancel={actions.link.cancel}
+						onCopyLink={actions.link.copyLink}
+						onDismiss={actions.link.dismiss}
+						onOpenTelegram={actions.link.openTelegram}
+						step={link.step}
+					/>
+				)}
 			</ChannelCard>
 			<ConfirmationDialog
 				confirmLabel="Unlink"

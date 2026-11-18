@@ -30,17 +30,20 @@ const ACTIONS: ReachSheet["actions"] = {
 export function FixtureSheet({
 	channels,
 	step = "idle",
+	offline = false,
 }: {
 	channels: readonly ChannelEntry[];
 	/** Where the Telegram card's link flow stands. */
 	step?: LinkStep;
+	/** No connection: the banner, and every action but Get Xolace+ dimmed. */
+	offline?: boolean;
 }) {
 	const value: ReachSheet = {
 		actions: ACTIONS,
 		state: {
 			channels: sheetOrder(channels),
 			link: { minting: false, step },
-			offline: false,
+			offline,
 		},
 	};
 	return (
