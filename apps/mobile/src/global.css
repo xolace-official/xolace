@@ -166,9 +166,12 @@
      * blurred into the backdrop, so its ink is fixed white-on-black whatever
      * the theme. Fixed on purpose; see the fixed-palette convention in
      * CLAUDE.md. The scrim gradient stops live in
-     * src/features/browse/player/player-palette.ts. */
+     * src/features/player/player-palette.ts. */
 	--color-player-ink: #ffffff;
 	--color-player-scrim: #000000;
+	/* The player's glass under Reduce Transparency (S10), and its drop shadows. */
+	--color-player-glass: #2a2633;
+	--color-player-shadow: rgba(0, 0, 0, 0.6);
 	/* Lantern covers (#407): titles and controls sit on the entry's photo, so
      * the same fixed white-on-black. Scrim stops live in
      * src/features/lantern/cover-palette.ts. */

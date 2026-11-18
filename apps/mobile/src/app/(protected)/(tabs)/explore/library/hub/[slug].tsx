@@ -1,14 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import {
-	clearNowPlaying,
-	nowPlayingPlayback,
-	setNowPlaying,
-	togglePlayback,
-	useNowPlaying,
-	useNowPlayingIsPlaying,
-} from "@/features/browse/now-playing/now-playing-store";
-import { mintOf, playStep } from "@/features/browse/now-playing/play-on-load";
 import { useOpenTrack } from "@/features/browse/use-open-track";
 import {
 	HubData,
@@ -16,11 +7,20 @@ import {
 	type HubTrack,
 } from "@/features/lantern/hub/hub-data";
 import { HubScreen } from "@/features/lantern/hub/hub-screen";
+import {
+	nowPlayingPlayback,
+	retryNowPlaying,
+	setNowPlaying,
+	togglePlayback,
+	useNowPlaying,
+	useNowPlayingIsPlaying,
+} from "@/lib/now-playing/now-playing-store";
+import { mintOf, playStep } from "@/lib/now-playing/play-on-load";
 
 const FROM = "library-hub";
 
 /**
- * A Lantern hub. Its listens play through Browse's one now-playing track (the mini player); the
+ * A Lantern hub. Its listens play through the app's one now-playing track (the mini player); the
  * two features meet here, so Lantern never imports the player. The player redesign (S10)
  * replaces this adapter.
  */
@@ -57,9 +57,10 @@ function useHubListen(): HubListen {
 		if (step === "resume") {
 			togglePlayback(p, posthog);
 		} else if (step === "reload") {
-			// A failed mint stays failed under the same slug: drop it so the host mints afresh.
-			clearNowPlaying();
+			// A failed mint stays failed under the same slug: mint it afresh (playing once in),
+			// keeping the sleep timer that clearing would reset.
 			setNowPlaying({ from: FROM, slug: track.slug }, { play: true });
+			retryNowPlaying();
 		} else if (step === "load") {
 			setNowPlaying({ from: FROM, slug: track.slug }, { play: true });
 		}

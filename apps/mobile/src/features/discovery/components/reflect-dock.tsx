@@ -4,11 +4,11 @@ import { PressableFeedback, useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 
 import { AppText } from "@/components/shared/app-text";
+import { playSoftPress } from "@/lib/haptics";
 import {
 	MINI_PLAYER_CLEARANCE,
 	useMiniPlayerShown,
-} from "@/features/browse/now-playing/now-playing-store";
-import { playSoftPress } from "@/lib/haptics";
+} from "@/lib/now-playing/now-playing-store";
 import { PlayfulLip } from "@/lib/playful/playful-lip";
 import { useIsPlayful, usePlayfulPress } from "@/lib/playful/use-playful";
 

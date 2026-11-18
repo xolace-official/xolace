@@ -1,15 +1,28 @@
-import type { Id } from "@xolace/backend/convex/_generated/dataModel";
+import type { api } from "@xolace/backend/api";
+import type { Id } from "@xolace/backend/dataModel";
+import type { FunctionReturnType } from "convex/server";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import type { PostHog } from "posthog-react-native";
 import { useSyncExternalStore } from "react";
-import {
-	armPlayOnLoad,
-	takePlayOnLoad,
-} from "@/features/browse/now-playing/play-on-load";
-import type { BrowseFrom } from "@/features/browse/use-open-track";
-import type { BoundTrack } from "@/features/browse/use-track-playback";
 import type { PlaybackReturn } from "@/lib/audio/use-playback";
+import { armPlayOnLoad, takePlayOnLoad } from "@/lib/now-playing/play-on-load";
+import { clearSlept, resetSleepTimer } from "@/lib/now-playing/sleep-timer";
 import { useTabBarHidden } from "@/lib/tab-bar";
+
+/** A track as `paths.getBoundAudioTrack` serves it. */
+export type BoundTrack = NonNullable<
+	FunctionReturnType<typeof api.paths.getBoundAudioTrack>
+>;
+
+/** Where a play was reached from (docs/paths-v1.md §13), for `browse_track_played`. */
+export type BrowseFrom =
+	| "hub-new"
+	| "family-list"
+	| "topic"
+	| "discovery-strip"
+	| "twig-more-like-this"
+	| "library-hub"
+	| "search";
 
 export type NowPlaying = {
 	slug: string;
@@ -18,7 +31,8 @@ export type NowPlaying = {
 };
 type Playback = PlaybackReturn<BoundTrack>;
 
-// The one Browse track loaded outside any screen (S4). Module-level because
+// The one track loaded outside any screen (S4): the player and the mini player show it, the
+// player feature's host plays it. Module-level because
 // writers and readers sit in unrelated subtrees. `current` is what to play;
 // `playback` is the live `useTrackPlayback` result the host publishes.
 let current: NowPlaying | null = null;
@@ -28,6 +42,8 @@ let played = false;
 // A new track lifts the mini-player once, when the player closes over it (S4 pulse).
 let attention = 0;
 let attentionPending = false;
+// Bumped by Try again: the host remounts its runner, which mints the track afresh.
+let attempt = 0;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
@@ -85,6 +101,8 @@ export function setNowPlaying(next: NowPlaying, options?: { play?: boolean }) {
 		played = false;
 		// A track played in place never went through the player: nothing to lift for later.
 		attentionPending = options?.play !== true;
+		// The timer carries over to the new track; "Paused by the sleep timer" was the old one's.
+		clearSlept();
 	}
 	current = next;
 	emit();
@@ -92,6 +110,8 @@ export function setNowPlaying(next: NowPlaying, options?: { play?: boolean }) {
 
 export function clearNowPlaying() {
 	playOnLoad = null;
+	// Stopping the track clears the sleep timer; starting a different one keeps it.
+	resetSleepTimer();
 	if (!(current || playback)) {
 		return;
 	}
@@ -100,6 +120,19 @@ export function clearNowPlaying() {
 	attentionPending = false;
 	emit();
 }
+
+/** Try again after a failed load: the host mints the same track afresh. */
+export function retryNowPlaying() {
+	if (!current) {
+		return;
+	}
+	attempt++;
+	emit();
+}
+const getAttempt = () => attempt;
+/** Host only: changes on each Try again. */
+export const useNowPlayingAttempt = () =>
+	useSyncExternalStore(subscribe, getAttempt, getAttempt);
 
 /** Player screen unmount: a track loaded during that visit pulses the mini-player once. */
 export function releaseMiniPlayerAttention() {
@@ -130,6 +163,10 @@ export function publishPlayback(next: Playback | null) {
 /** Play/pause for every control; the first start of a loaded track records
  * `browse_track_played`. */
 export function togglePlayback(p: Playback, posthog: PostHog) {
+	if (!p.isPlaying) {
+		// A play forgets "Paused by the sleep timer".
+		clearSlept();
+	}
 	if (!p.isPlaying && p.track && current?.from && !played) {
 		played = true;
 		posthog.capture("browse_track_played", {
@@ -141,6 +178,8 @@ export function togglePlayback(p: Playback, posthog: PostHog) {
 	p.toggle();
 }
 
+/** What's loaded, read once (an action's moment). */
+export const nowPlaying = () => current;
 export const useNowPlaying = () =>
 	useSyncExternalStore(subscribe, getCurrent, getCurrent);
 /** The live playback, or the idle shape until `slug` is the one loaded and published. */

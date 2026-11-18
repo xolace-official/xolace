@@ -24,6 +24,8 @@ type Moved = {
  */
 const MOVED: Readonly<Record<string, Moved>> = {
 	browse: { subtree: true, to: "/explore" },
+	// The player redesign (S10) took the player's own name.
+	"browse-player": { to: "/player" },
 	discovery: { to: "/today" },
 	// Its beat folded into the session end's next step (S3).
 	"kindling-announcement": { to: "/session-end" },

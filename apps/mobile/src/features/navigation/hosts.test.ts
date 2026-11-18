@@ -5,6 +5,9 @@ import { ROOT_HOSTS } from "@/features/navigation/hosts";
 vi.mock("@/features/achievements/arrival/arrivals-host", () => ({
 	ArrivalsHost: () => null,
 }));
+vi.mock("@/features/player/now-playing/now-playing-host", () => ({
+	NowPlayingHost: () => null,
+}));
 
 describe("ROOT_HOSTS", () => {
 	it("names each host once, since the name is its key", () => {

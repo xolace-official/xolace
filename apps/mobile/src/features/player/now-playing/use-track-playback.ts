@@ -2,19 +2,11 @@ import { getClerkInstance } from "@clerk/expo";
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useConvex, useMutation } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef } from "react";
-import {
-	sendListen,
-	startListen,
-	tickListen,
-} from "@/features/browse/listen-tracker";
-import { getLockScreenMetadata } from "@/features/browse/track-lock-screen-metadata";
 import { type PlaybackReturn, usePlayback } from "@/lib/audio/use-playback";
-
-export type BoundTrack = NonNullable<
-	FunctionReturnType<typeof api.paths.getBoundAudioTrack>
->;
+import type { BoundTrack } from "@/lib/now-playing/now-playing-store";
+import { sendListen, startListen, tickListen } from "./listen-tracker";
+import { getLockScreenMetadata } from "./lock-screen-metadata";
 
 /** Who's signed in now, read when a retry fires, which can be after this player unmounts. */
 const currentAccount = () => getClerkInstance().user?.id;
@@ -24,7 +16,13 @@ const currentAccount = () => getClerkInstance().user?.id;
  * once it's heard for 60 s, or at the end of a shorter track (#697). */
 export function useTrackPlayback(
 	slug: string,
-	options: { stepId?: Id<"path_steps"> } = {}
+	options: {
+		stepId?: Id<"path_steps">;
+		/** The sleep timer's fade, 0–1, on top of the volume. */
+		gain?: number;
+		/** The sleep timer's End of track: stop at this play's end, even on Repeat. */
+		stopAtEnd?: boolean;
+	} = {}
 ): PlaybackReturn<BoundTrack> {
 	const convex = useConvex();
 	const completeStep = useMutation(api.paths.completeStep);
@@ -32,7 +30,8 @@ export function useTrackPlayback(
 	const p = usePlayback(
 		slug,
 		() => convex.query(api.paths.getBoundAudioTrack, { slug }),
-		getLockScreenMetadata
+		getLockScreenMetadata,
+		{ gain: options.gain, stopAtEnd: options.stopAtEnd }
 	);
 	const completed = useRef(false);
 	// Laps already played when this twig armed; only a later one finishes it.

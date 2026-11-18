@@ -78,6 +78,7 @@ describe("movedPath", () => {
 		["/kindling-announcement", "/session-end"],
 		["/timeline", "/moments"],
 		["/timeline/session/abc123", "/moments/session/abc123"],
+		["/browse-player", "/player"],
 	])("sends %s to %s", (from, to) => {
 		expect(movedPath(from)).toBe(to);
 	});
@@ -89,7 +90,7 @@ describe("movedPath", () => {
 		"/today",
 		"/explore/topics",
 		"/connect",
-		"/browse-player",
+		"/player",
 		"/moments",
 		"/",
 	])("leaves %s where it is", (pathname) => {

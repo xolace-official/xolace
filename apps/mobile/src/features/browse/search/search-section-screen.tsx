@@ -10,7 +10,6 @@ import type { ReactElement } from "react";
 import { ActivityIndicator, ScrollView } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { TrackRow } from "@/features/browse/components/track-row";
-import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
 import { EntryRow, RowsSkeleton } from "@/features/browse/search/library-row";
 import { PlaceRow } from "@/features/browse/search/place-row";
 import { useSearchTap } from "@/features/browse/search/search-analytics";
@@ -18,6 +17,7 @@ import {
 	SECTION_TITLE,
 	type SearchSection,
 } from "@/features/browse/search/search-sections";
+import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 
 const PAGE_SIZE = 20;
 

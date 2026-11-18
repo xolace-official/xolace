@@ -29,7 +29,7 @@ const HELD_ROUTES = [
 	"/browse-intro",
 	"/lantern-welcome",
 	"/upgrade",
-	"/browse-player",
+	"/player",
 ] as const;
 
 /** Whether `pathname` (expo-router's, groups stripped) is one of those screens or under one. */
