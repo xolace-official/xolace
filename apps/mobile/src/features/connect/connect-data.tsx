@@ -16,7 +16,8 @@ export type ConnectRoute = {
 };
 
 export type ConnectState =
-	| { phase: "loading" }
+	/** The segment still follows the route (a push to Xolacers shows Xolacers while it loads). */
+	| { phase: "loading"; segment: Segment }
 	/** The chat kill switch is off. */
 	| { phase: "disabled" }
 	| {

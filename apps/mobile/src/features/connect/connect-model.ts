@@ -69,7 +69,7 @@ export type ConnectInputs = {
 
 export function connectState(i: ConnectInputs): ConnectState {
 	if (i.status === undefined || i.conversations === undefined) {
-		return { phase: "loading" };
+		return { phase: "loading", segment: i.picked ?? "chats" };
 	}
 	if (!i.status.enabled) {
 		return { phase: "disabled" };

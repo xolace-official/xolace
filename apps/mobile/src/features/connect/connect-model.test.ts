@@ -48,6 +48,16 @@ describe("connectState", () => {
 		);
 	});
 
+	it("keeps the routed segment while loading", () => {
+		expect(
+			connectState(inputs({ conversations: undefined, picked: "xolacers" }))
+		).toEqual({ phase: "loading", segment: "xolacers" });
+		expect(connectState(inputs({ status: undefined }))).toEqual({
+			phase: "loading",
+			segment: "chats",
+		});
+	});
+
 	it("shows the setup banner only to a Xolacer who hasn't published", () => {
 		expect(ready({ status: XOLACER_UNPUBLISHED }).setupBanner).toBe(true);
 		expect(ready({ status: XOLACER }).setupBanner).toBe(false);

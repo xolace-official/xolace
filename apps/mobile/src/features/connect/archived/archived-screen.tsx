@@ -3,6 +3,7 @@ import { AppText } from "@/components/shared/app-text";
 import { COPY } from "../copy";
 import { DeleteDialog } from "../header/connect-chrome";
 import { ChatsList } from "../list/chats-list";
+import { ListSkeleton } from "../list/list-skeleton";
 import { useArchivedScreen } from "./archived-data";
 
 const BOTTOM = 40;
@@ -18,7 +19,9 @@ export function ArchivedScreen() {
 				actions={actions}
 				bottom={BOTTOM}
 				footer={
-					rows?.length === 0 ? (
+					rows === undefined ? (
+						<ListSkeleton />
+					) : rows.length === 0 ? (
 						// Unarchiving the last chat lands here rather than popping the screen, so the
 						// empty state says what this place is for.
 						<View className="items-center gap-2 px-10 py-16">

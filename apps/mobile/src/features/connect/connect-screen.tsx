@@ -92,7 +92,7 @@ export function ConnectScreen() {
 						<Segmented
 							onChange={(v: Segment) => actions.setSegment(v)}
 							options={COPY.segments}
-							value={ready ? ready.segment : "chats"}
+							value={state.segment}
 						/>
 						{ready?.setupBanner ? (
 							<SetupBanner onPress={actions.openSetup} />
