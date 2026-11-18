@@ -8,12 +8,15 @@ import { StatusBar } from "./bar/status-bar";
 import { THREAD } from "./copy";
 import {
 	BlockDialog,
+	ThreadIdentity,
 	ThreadTitle,
 	ThreadToolbar,
 } from "./header/thread-chrome";
 import { ThreadMessages } from "./messages/thread-messages";
 import { ThreadSkeleton } from "./messages/thread-skeleton";
 import { useThreadScreen } from "./thread-data";
+
+const IOS = process.env.EXPO_OS === "ios";
 
 /** A centred note in the thread's body. */
 function Note({ title, body }: { title?: string; body: string }) {
@@ -43,8 +46,10 @@ export function ThreadScreen() {
 			<Stack.Screen
 				options={{
 					gestureEnabled: overlay === "none",
+					// The back button stays when iOS's left slot holds the identity.
+					headerBackVisible: true,
 					headerTitle:
-						state.phase === "ready"
+						state.phase === "ready" && !IOS
 							? () => (
 									<ThreadTitle
 										channel={state.channel}
@@ -57,6 +62,7 @@ export function ThreadScreen() {
 						state.phase === "ready" ? state.conversation.counterpartName : "",
 				}}
 			/>
+			<ThreadIdentity />
 			<ThreadToolbar />
 			<BodyFrame>
 				<ThreadBody />

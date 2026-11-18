@@ -51,6 +51,7 @@ export function FixtureThread({
 	typing = false,
 	liveTyping = false,
 	online = true,
+	lastHere,
 	phase,
 }: {
 	conversation: ThreadConversation;
@@ -61,12 +62,24 @@ export function FixtureThread({
 	/** Maya types on and off, through the client, for as long as the state is open. */
 	liveTyping?: boolean;
 	online?: boolean;
+	/** Away instead of here: last here this many milliseconds before the state opened. */
+	lastHere?: number;
 	phase?: "loading" | "gone";
 }) {
 	const { client, channel } = useDevChannel(
 		messages,
 		conversation.streamChannelId ?? "dev-none",
-		typing
+		typing,
+		lastHere === undefined
+			? {}
+			: {
+					author: {
+						id: conversation.counterpartProfileId,
+						last_active: new Date(Date.now() - lastHere).toISOString(),
+						name: conversation.counterpartName,
+						online: false,
+					},
+				}
 	);
 	useDevTyping(client, channel, liveTyping);
 	const [blockOpen, setBlockOpen] = useState(false);
