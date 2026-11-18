@@ -4,7 +4,7 @@ import {
 	mintOf,
 	playStep,
 	takePlayOnLoad,
-} from "@/features/browse/now-playing/play-on-load";
+} from "@/lib/now-playing/play-on-load";
 
 const AWAKE = "not-the-only-one-awake";
 const RAIN = "rain-on-a-tin-roof";

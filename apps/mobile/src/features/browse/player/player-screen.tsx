@@ -14,18 +14,18 @@ import {
 	type BrowseFrom,
 	FAMILY_LABEL,
 } from "@/features/browse/components/track-row";
+import type { PaywallSurface } from "@/features/purchases/use-paywall";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+import { formatTime } from "@/lib/format-time";
+import { playSoftPress } from "@/lib/haptics";
+import { imageSource } from "@/lib/image-source";
 import {
 	clearNowPlaying,
 	releaseMiniPlayerAttention,
 	setNowPlaying,
 	togglePlayback,
 	useNowPlayingPlayback,
-} from "@/features/browse/now-playing/now-playing-store";
-import type { PaywallSurface } from "@/features/purchases/use-paywall";
-import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
-import { formatTime } from "@/lib/format-time";
-import { playSoftPress } from "@/lib/haptics";
-import { imageSource } from "@/lib/image-source";
+} from "@/lib/now-playing/now-playing-store";
 import { cn } from "@/lib/utils";
 import {
 	CrisisLine,

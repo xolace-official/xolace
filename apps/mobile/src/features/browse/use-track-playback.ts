@@ -2,7 +2,6 @@ import { getClerkInstance } from "@clerk/expo";
 import { api } from "@xolace/backend/convex/_generated/api";
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { useConvex, useMutation } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import { useEffect, useRef } from "react";
 import {
 	sendListen,
@@ -11,10 +10,7 @@ import {
 } from "@/features/browse/listen-tracker";
 import { getLockScreenMetadata } from "@/features/browse/track-lock-screen-metadata";
 import { type PlaybackReturn, usePlayback } from "@/lib/audio/use-playback";
-
-export type BoundTrack = NonNullable<
-	FunctionReturnType<typeof api.paths.getBoundAudioTrack>
->;
+import type { BoundTrack } from "@/lib/now-playing/now-playing-store";
 
 /** Who's signed in now, read when a retry fires, which can be after this player unmounts. */
 const currentAccount = () => getClerkInstance().user?.id;

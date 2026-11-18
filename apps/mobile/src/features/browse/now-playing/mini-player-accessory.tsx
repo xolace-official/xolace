@@ -13,15 +13,15 @@ import {
 	MarqueeTitle,
 	useAttentionPulse,
 } from "@/features/browse/now-playing/mini-player-motion";
+import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
+import { playSoftPress } from "@/lib/haptics";
+import { imageSource } from "@/lib/image-source";
 import {
 	clearNowPlaying,
 	togglePlayback,
 	useNowPlaying,
 	useNowPlayingPlayback,
-} from "@/features/browse/now-playing/now-playing-store";
-import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
-import { playSoftPress } from "@/lib/haptics";
-import { imageSource } from "@/lib/image-source";
+} from "@/lib/now-playing/now-playing-store";
 import { cn } from "@/lib/utils";
 
 // Object form: a bare SF name renders nothing on Android.

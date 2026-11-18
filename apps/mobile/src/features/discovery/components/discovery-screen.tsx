@@ -1,9 +1,5 @@
 import { INTAKE_V2_VERSION } from "@xolace/backend/convex/lib/validators";
 import { ScrollView, View } from "react-native";
-import {
-	MINI_PLAYER_CLEARANCE,
-	useMiniPlayerShown,
-} from "@/features/browse/now-playing/now-playing-store";
 import { CampfireCard } from "@/features/discovery/components/campfire-card";
 import { CohortCard } from "@/features/discovery/components/cohort-card";
 import { DailyQuotesCard } from "@/features/discovery/components/daily-quotes-card";
@@ -17,6 +13,10 @@ import {
 	ReflectDock,
 } from "@/features/discovery/components/reflect-dock";
 import { useFullContext } from "@/lib/convex/use-full-context";
+import {
+	MINI_PLAYER_CLEARANCE,
+	useMiniPlayerShown,
+} from "@/lib/now-playing/now-playing-store";
 
 /** First tab. The masthead runs under the status bar, so this screen pads the safe area itself. */
 export function DiscoveryScreen() {

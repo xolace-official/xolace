@@ -3,7 +3,7 @@ import { useQuery } from "convex/react";
 import { Skeleton } from "heroui-native";
 import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
+import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 import { useConversationRowActions } from "../use-conversation-row-actions";
 import { ChatsList } from "./chats-list";
 import { ConversationActions } from "./conversation-actions";

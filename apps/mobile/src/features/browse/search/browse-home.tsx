@@ -10,7 +10,6 @@ import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { BrowseHubScreen } from "@/features/browse/components/browse-hub-screen";
 import { TrackRow } from "@/features/browse/components/track-row";
-import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
 import {
 	EntryRow,
 	RowsSkeleton,
@@ -30,6 +29,7 @@ import {
 	type SearchSection,
 } from "@/features/browse/search/search-sections";
 import { useStableQuery } from "@/lib/convex/use-stable-query";
+import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 import { useDebounce } from "@/lib/use-debounce";
 import { cn } from "@/lib/utils";
 

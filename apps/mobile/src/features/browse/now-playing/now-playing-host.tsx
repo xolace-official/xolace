@@ -1,15 +1,15 @@
 import type { Id } from "@xolace/backend/convex/_generated/dataModel";
 import { usePostHog } from "posthog-react-native";
 import { useEffect } from "react";
+import { useTrackPlayback } from "@/features/browse/use-track-playback";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import {
 	clearNowPlaying,
 	consumePlayOnLoad,
 	publishPlayback,
 	togglePlayback,
 	useNowPlaying,
-} from "@/features/browse/now-playing/now-playing-store";
-import { useTrackPlayback } from "@/features/browse/use-track-playback";
-import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
+} from "@/lib/now-playing/now-playing-store";
 
 /** Owns the Browse track's audio above every screen (S4), so closing the player leaves it
  * playing. Renders nothing. */

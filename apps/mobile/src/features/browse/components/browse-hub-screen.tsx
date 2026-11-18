@@ -10,10 +10,10 @@ import { useCSSVariable } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
 import { pickListeningTip } from "@/features/browse/components/listening-tip";
 import { ShelfTile } from "@/features/browse/components/shelf-tile";
-import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
 import { useUtcDay } from "@/features/browse/use-utc-day";
 import { playSoftPress } from "@/lib/haptics";
 import { imageSource } from "@/lib/image-source";
+import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 import { PlayfulLip } from "@/lib/playful/playful-lip";
 import { useIsPlayful, usePlayfulPress } from "@/lib/playful/use-playful";
 

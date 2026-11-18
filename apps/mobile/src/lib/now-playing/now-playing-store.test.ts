@@ -3,7 +3,7 @@ import {
 	clearNowPlaying,
 	consumePlayOnLoad,
 	setNowPlaying,
-} from "@/features/browse/now-playing/now-playing-store";
+} from "@/lib/now-playing/now-playing-store";
 
 const AWAKE = "not-the-only-one-awake";
 const RAIN = "rain-on-a-tin-roof";

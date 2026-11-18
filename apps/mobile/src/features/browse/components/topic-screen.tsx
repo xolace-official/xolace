@@ -7,7 +7,7 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
+import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 import { type Segment, type TopicRow, topicRows } from "../topic-sections";
 import { BrowseFilterMenu, type FilterOption } from "./browse-filter-menu";
 import {

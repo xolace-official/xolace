@@ -1,14 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
 import { usePostHog } from "posthog-react-native";
-import {
-	clearNowPlaying,
-	nowPlayingPlayback,
-	setNowPlaying,
-	togglePlayback,
-	useNowPlaying,
-	useNowPlayingIsPlaying,
-} from "@/features/browse/now-playing/now-playing-store";
-import { mintOf, playStep } from "@/features/browse/now-playing/play-on-load";
 import { useOpenTrack } from "@/features/browse/use-open-track";
 import {
 	HubData,
@@ -16,6 +7,15 @@ import {
 	type HubTrack,
 } from "@/features/lantern/hub/hub-data";
 import { HubScreen } from "@/features/lantern/hub/hub-screen";
+import {
+	clearNowPlaying,
+	nowPlayingPlayback,
+	setNowPlaying,
+	togglePlayback,
+	useNowPlaying,
+	useNowPlayingIsPlaying,
+} from "@/lib/now-playing/now-playing-store";
+import { mintOf, playStep } from "@/lib/now-playing/play-on-load";
 
 const FROM = "library-hub";
 

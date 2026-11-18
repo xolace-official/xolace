@@ -1,15 +1,27 @@
-import type { Id } from "@xolace/backend/convex/_generated/dataModel";
+import type { api } from "@xolace/backend/api";
+import type { Id } from "@xolace/backend/dataModel";
+import type { FunctionReturnType } from "convex/server";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import type { PostHog } from "posthog-react-native";
 import { useSyncExternalStore } from "react";
-import {
-	armPlayOnLoad,
-	takePlayOnLoad,
-} from "@/features/browse/now-playing/play-on-load";
-import type { BrowseFrom } from "@/features/browse/use-open-track";
-import type { BoundTrack } from "@/features/browse/use-track-playback";
 import type { PlaybackReturn } from "@/lib/audio/use-playback";
+import { armPlayOnLoad, takePlayOnLoad } from "@/lib/now-playing/play-on-load";
 import { useTabBarHidden } from "@/lib/tab-bar";
+
+/** A track as `paths.getBoundAudioTrack` serves it. */
+export type BoundTrack = NonNullable<
+	FunctionReturnType<typeof api.paths.getBoundAudioTrack>
+>;
+
+/** Where a play was reached from (docs/paths-v1.md §13), for `browse_track_played`. */
+export type BrowseFrom =
+	| "hub-new"
+	| "family-list"
+	| "topic"
+	| "discovery-strip"
+	| "twig-more-like-this"
+	| "library-hub"
+	| "search";
 
 export type NowPlaying = {
 	slug: string;
