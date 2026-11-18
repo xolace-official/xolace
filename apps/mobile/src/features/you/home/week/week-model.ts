@@ -202,24 +202,45 @@ const isDomain = (key: string): key is DetailDomain =>
 	Object.hasOwn(DOMAINS, key);
 
 /**
+ * Text sizes (the window's `fontScale`) above which line 2 drops a part so its ending still fits
+ * one row. The card shrinks the line to 0.8 at most, and has about 311 pt for it on a 375 pt phone.
+ * The longest lines, measured at 12.5 pt in the widest body face (DM Sans), fit up to:
+ * - "99 moments · Belonging · Disappointment · about the same", 342 pt: 1.137;
+ * - without the domain, 277 pt: 1.405;
+ * - the count and the ending, 175 pt: 2.23 (AppText caps body text at 1.8).
+ * Rounded down. So iOS's Large and xLarge sizes say it all, xxLarge and xxxLarge drop the domain,
+ * and the accessibility sizes drop the feeling too.
+ */
+export const DROP_DOMAIN_ABOVE = 1.13;
+export const DROP_FEELING_ABOVE = 1.4;
+
+/**
  * A held day's second line, from B17's detail: "2 moments · Work · Overwhelm · ended lighter".
  * Each part only when the day says it, so a day of unanswered moments is "1 moment · Work". Null
  * with no detail or no moments. The domain is its one-word name (`COPY.week.domains`), so the
- * line fits one row. The feeling is cased as Moments cases a word (`feelingOf`), but it's the
- * day's most frequent primary emotion, where a moment shows its finer label when it has one.
+ * line fits one row; at larger text sizes the domain, then the feeling, give way so the ending
+ * (always last) stays on it. The feeling is cased as Moments cases a word (`feelingOf`), but it's
+ * the day's most frequent primary emotion, where a moment shows its finer label when it has one.
  */
-export function detailLine(detail: DayDetail | undefined): string | null {
+export function detailLine(
+	detail: DayDetail | undefined,
+	fontScale = 1
+): string | null {
 	if (!detail || detail.moments < 1) {
 		return null;
 	}
 	const domain =
-		detail.topDomain && isDomain(detail.topDomain)
+		fontScale <= DROP_DOMAIN_ABOVE &&
+		detail.topDomain &&
+		isDomain(detail.topDomain)
 			? DOMAINS[detail.topDomain]
 			: null;
+	const feeling =
+		fontScale <= DROP_FEELING_ABOVE ? feelingOf(null, detail.topEmotion) : null;
 	return [
 		COPY.week.moments(detail.moments),
 		domain,
-		feelingOf(null, detail.topEmotion),
+		feeling,
 		detail.ended ? COPY.week.ended[detail.ended] : null,
 	]
 		.filter(Boolean)
@@ -236,6 +257,7 @@ export function heldReadout({
 	start,
 	usual,
 	todayIndex,
+	fontScale = 1,
 }: {
 	days: readonly IntensityDay[];
 	index: number;
@@ -243,6 +265,8 @@ export function heldReadout({
 	usual: Usual | null;
 	/** -1 on a past week. */
 	todayIndex: number;
+	/** The window's text size (`useWindowDimensions().fontScale`), for `detailLine`. */
+	fontScale?: number;
 }): { caption: string | null; value: string } {
 	const day = days[index];
 	const date = shortDate(start, index);
@@ -256,7 +280,10 @@ export function heldReadout({
 	const said = usual
 		? COPY.week.relation[relationTo(day.intensity, usual)]
 		: COPY.week.level(day.intensity);
-	return { caption: detailLine(day.detail), value: `${date} · ${said}` };
+	return {
+		caption: detailLine(day.detail, fontScale),
+		value: `${date} · ${said}`,
+	};
 }
 
 /**

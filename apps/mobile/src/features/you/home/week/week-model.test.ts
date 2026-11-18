@@ -6,6 +6,8 @@ import {
 	barHeight,
 	type DayDetail,
 	type DetailDomain,
+	DROP_DOMAIN_ABOVE,
+	DROP_FEELING_ABOVE,
 	dayAt,
 	detailLine,
 	heldReadout,
@@ -301,6 +303,57 @@ describe("detailLine", () => {
 			expect(name).toMatch(/^\S+$/);
 			expect(detailLine({ ...TUESDAY, topDomain: key })).toContain(name);
 		}
+	});
+
+	describe("at larger text sizes", () => {
+		const ENDED = COPY.week.ended.lighter;
+		const parts = (scale: number) =>
+			(detailLine(TUESDAY, scale) ?? "").split(" · ");
+
+		it("keeps the domain up to its threshold and drops it above", () => {
+			for (const scale of [0.82, 1, 1.118, DROP_DOMAIN_ABOVE]) {
+				expect(parts(scale)).toEqual(["2 moments", "Work", "Overwhelm", ENDED]);
+			}
+			for (const scale of [DROP_DOMAIN_ABOVE + 0.01, 1.235, 1.353]) {
+				expect(parts(scale)).toEqual(["2 moments", "Overwhelm", ENDED]);
+			}
+		});
+
+		it("drops the feeling too at accessibility sizes", () => {
+			expect(parts(DROP_FEELING_ABOVE)).toEqual([
+				"2 moments",
+				"Overwhelm",
+				ENDED,
+			]);
+			for (const scale of [DROP_FEELING_ABOVE + 0.01, 1.8, 3.1]) {
+				expect(parts(scale)).toEqual(["2 moments", ENDED]);
+			}
+		});
+
+		it("always ends on how the day ended, at every size", () => {
+			for (let scale = 0.8; scale <= 3.2; scale += 0.05) {
+				expect(parts(scale).at(-1)).toBe(ENDED);
+				expect(parts(scale)[0]).toBe("2 moments");
+			}
+		});
+
+		it("passes the size through the held readout", () => {
+			const days = BOARD.map((d, i) =>
+				i === 1 ? { ...d, detail: TUESDAY } : d
+			);
+			const start = new Date(Date.UTC(2026, 10, 9));
+			const at = (fontScale: number) =>
+				heldReadout({
+					days,
+					fontScale,
+					index: 1,
+					start,
+					todayIndex: 3,
+					usual: USUAL,
+				}).caption;
+			expect(at(1)).toBe("2 moments · Work · Overwhelm · ended lighter");
+			expect(at(1.235)).toBe("2 moments · Overwhelm · ended lighter");
+		});
 	});
 
 	it("skips a domain it has no name for", () => {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { COPY } from "@/features/you/copy";
 import type { IntensityWeek } from "@/features/you/home/use-you-week";
@@ -33,6 +33,7 @@ const CAPTION_MIN_SCALE = 0.8;
 export function WeekCard({ week }: { week: IntensityWeek }) {
 	const { actions } = useYouHome();
 	const { weekHeld } = useYouUi();
+	const { fontScale } = useWindowDimensions();
 	const [info, setInfo] = useState(false);
 	const [held, setHeld] = useState<number | null>(weekHeld);
 	const seen = useRef(false);
@@ -58,6 +59,7 @@ export function WeekCard({ week }: { week: IntensityWeek }) {
 			? null
 			: heldReadout({
 					days: week.days,
+					fontScale,
 					index: held,
 					start: week.start,
 					todayIndex,
@@ -84,7 +86,8 @@ export function WeekCard({ week }: { week: IntensityWeek }) {
 						</AppText>
 						{/* One line, so holding a day never moves the plot. The longest line a day can
 						    say (~330–342 pt at 12.5 pt in the three body faces) is wider than a 375 pt
-						    phone's card (~311 pt): it shrinks to fit rather than lose its ending. */}
+						    phone's card (~311 pt): it shrinks to fit, and at larger text sizes drops
+						    parts (`detailLine`), rather than lose its ending. */}
 						{readout.caption ? (
 							<AppText
 								adjustsFontSizeToFit
