@@ -21,6 +21,9 @@ import { tap } from "@/lib/haptics";
 
 /** The ⓘ's explanation sits under the title row. */
 const TIP_TOP = 56;
+/** How far a held day's second line may shrink to stay on one row: the longest needs ~0.91
+ * at default text size and ~0.85 one Dynamic Type step up. */
+const CAPTION_MIN_SCALE = 0.8;
 
 /**
  * This week (you.md §6): production's intensity card with your usual, a held day's readout in
@@ -79,10 +82,15 @@ export function WeekCard({ week }: { week: IntensityWeek }) {
 						>
 							{readout.value}
 						</AppText>
+						{/* One line, so holding a day never moves the plot. The longest line a day can
+						    say (~330–342 pt at 12.5 pt in the three body faces) is wider than a 375 pt
+						    phone's card (~311 pt): it shrinks to fit rather than lose its ending. */}
 						{readout.caption ? (
 							<AppText
+								adjustsFontSizeToFit
 								className="mt-0.75 text-[12.5px] leading-4"
 								color="muted"
+								minimumFontScale={CAPTION_MIN_SCALE}
 								numberOfLines={1}
 								variant="footnote"
 							>
