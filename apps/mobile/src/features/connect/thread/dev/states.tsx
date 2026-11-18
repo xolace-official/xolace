@@ -1,7 +1,7 @@
 /** A thread on fixtures: `xolace://dev/connect/<id>`. The profile's states are in
  * `xolacer/dev/states.tsx`. */
 import type { DevState } from "@/dev/dev-state";
-import type { DevMessage } from "./dev-stream";
+import type { DevMessage } from "./dev-messages";
 import { FixtureThread } from "./fixture-thread";
 import {
 	CLOSED,

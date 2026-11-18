@@ -16,12 +16,8 @@ import {
 	threadState,
 } from "../thread-model";
 import { ThreadScreen } from "../thread-screen";
-import {
-	DevChat,
-	type DevMessage,
-	useDevChannel,
-	useDevTyping,
-} from "./dev-stream";
+import type { DevMessage } from "./dev-messages";
+import { DevChat, useDevChannel, useDevTyping } from "./dev-stream";
 
 const noop = () => undefined;
 

@@ -4,11 +4,8 @@ import {
 	XOLACE_BROADCAST_CHANNEL_TYPE,
 	XOLACE_CHANNEL_ID,
 } from "@xolace/backend/convex/lib/streamSetup";
-import {
-	DevChat,
-	type DevMessage,
-	useDevChannel,
-} from "../../thread/dev/dev-stream";
+import type { DevMessage } from "../../thread/dev/dev-messages";
+import { DevChat, useDevChannel } from "../../thread/dev/dev-stream";
 import type { StreamStatus } from "../../thread/thread-model";
 import { ChannelProvider } from "../channel-data";
 import { channelState } from "../channel-model";

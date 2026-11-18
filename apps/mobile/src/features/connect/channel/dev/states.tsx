@@ -1,6 +1,6 @@
 /** The Xolace channel on fixtures: `xolace://dev/connect/<id>`. */
 import type { DevState } from "@/dev/dev-state";
-import type { DevMessage } from "../../thread/dev/dev-stream";
+import type { DevMessage } from "../../thread/dev/dev-messages";
 import { FixtureChannel } from "./fixture-channel";
 
 /** The channel sets its own title; the stack gives it the minimal back button. */
