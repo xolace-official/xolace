@@ -1,5 +1,5 @@
 import { createContext, type ReactNode, use } from "react";
-import type { TodayPhase } from "./today-model";
+import type { Door, TodayPhase } from "./today-model";
 import { useTodayData } from "./use-today";
 
 /**
@@ -22,6 +22,11 @@ export type Today = {
 		} | null;
 		/** The first open of the day: the greeting's words, the rise, the word's ink. */
 		intro: boolean;
+		/** The Reflect card. */
+		card: {
+			/** This month's prompt, read or written about this week: it takes the card's question. */
+			monthPrompt: string | null;
+		};
 		/** The local day ("YYYY-MM-DD"): a new day remounts the page, so its intro can play. */
 		day: string;
 	};
@@ -30,8 +35,10 @@ export type Today = {
 		openHelp: () => void;
 		/** The streak chip: where the streak lives (You). */
 		openStreak: () => void;
-		/** The toolbar's Reflect pill and, until S2, the Reflect card. */
+		/** The Reflect card and the toolbar's pill. S2 zooms the card into Reflect. */
 		openReflect: () => void;
+		/** A door the hold opened: Talk, Vent or Sit with this. */
+		openDoor: (door: Door) => void;
 	};
 };
 

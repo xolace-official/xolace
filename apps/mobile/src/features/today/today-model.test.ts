@@ -3,6 +3,7 @@ import {
 	headerCopy,
 	introDue,
 	localDay,
+	monthPromptOnCard,
 	nextStreakShown,
 	nextWakeHour,
 	parseIntroDay,
@@ -196,5 +197,28 @@ describe("device records are per user", () => {
 describe("localDay", () => {
 	it("is the device's date", () => {
 		expect(localDay(new Date(2026, 0, 5, 23, 30))).toBe("2026-01-05");
+	});
+});
+
+describe("monthPromptOnCard", () => {
+	const NOW = 1000;
+	it("shows the carried prompt this week", () => {
+		expect(
+			monthPromptOnCard({ carryUntil: NOW + 1, prompt: "What weighs?" }, NOW)
+		).toBe("What weighs?");
+	});
+
+	it("shows nothing once its week ends, with none, or while loading", () => {
+		expect(
+			monthPromptOnCard({ carryUntil: NOW, prompt: "What weighs?" }, NOW)
+		).toBeNull();
+		expect(monthPromptOnCard(null, NOW)).toBeNull();
+		expect(monthPromptOnCard(undefined, NOW)).toBeNull();
+	});
+
+	it("never shows an empty prompt", () => {
+		expect(
+			monthPromptOnCard({ carryUntil: NOW + 1, prompt: "  " }, NOW)
+		).toBeNull();
 	});
 });

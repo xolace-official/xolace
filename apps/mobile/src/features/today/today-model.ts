@@ -62,6 +62,25 @@ export function headerCopy(
 	};
 }
 
+/** The doors a hold on the Reflect card opens. */
+export type Door = "talk" | "vent" | "sit";
+
+/**
+ * The month's prompt on the card: while it's carried (`monthlyEvents/prompt.getCarried`,
+ * read or written about), until its week ends. The server clears it then too; `use-today`
+ * re-reads this at `carryUntil`, so it also goes on time while the app is open.
+ */
+export function monthPromptOnCard(
+	carried: { prompt: string; carryUntil: number } | null | undefined,
+	now: number
+): string | null {
+	if (!carried || carried.carryUntil <= now) {
+		return null;
+	}
+	const prompt = carried.prompt.trim();
+	return prompt ? prompt : null;
+}
+
 /** The first open of the day plays once: the words, the rise, the ink. */
 export const introDue = (playedDay: string | null, today: string): boolean =>
 	playedDay !== today;

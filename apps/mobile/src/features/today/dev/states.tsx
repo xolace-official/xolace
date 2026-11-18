@@ -36,6 +36,16 @@ export const devStates: readonly DevState[] = [
 		...today({ ignite: true, phase: "evening" }),
 	},
 	{
+		id: "month-prompt",
+		title: "This month's prompt on the card",
+		...today({ monthPrompt: true, phase: "evening" }),
+	},
+	{
+		id: "month-prompt-dark",
+		title: "This month's prompt, dark",
+		...today({ monthPrompt: true, phase: "day", theme: "dark" }),
+	},
+	{
 		id: "phases",
 		title: "The sky through the day (cycles every 4 s)",
 		...today({ cycle: true, phase: "dawn" }),
