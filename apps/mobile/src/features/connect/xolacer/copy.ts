@@ -13,7 +13,6 @@ export const PROFILE = {
 	hereNow: "here now",
 	nameHereNow: (name: string) => `${name}, here now`,
 	newXolacer: "New Xolacer",
-	notEnoughRated: "Not enough conversations rated yet",
 	notRightNow: (name: string) =>
 		`${name} isn't taking new conversations at the moment. Nothing to do with you. Try someone else on the roster.`,
 	notRightNowTitle: "Not right now",
