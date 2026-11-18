@@ -587,9 +587,9 @@
 
 /*
  * Connect's printed objects (prototype `features/connect`): a Xolacer's avatar
- * art when they have no photo (one pair per person, picked by their id), the
- * Xolace channel's flame and its post art. Content art, the same in every
- * theme. Read in src/features/connect/connect-colors.ts.
+ * art when they have no photo (one pair per person, picked by their id) and
+ * the Xolace channel's flame. Content art, the same in every theme. Read in
+ * src/features/connect/connect-colors.ts.
  */
 @theme static {
 	--color-connect-art-violet-from: #9e8cf2;
@@ -601,7 +601,4 @@
 	--color-connect-flame-1: #ffd9a8;
 	--color-connect-flame-2: #f2a33a;
 	--color-connect-flame-3: #c46a12;
-	--color-connect-post-1: #2e2650;
-	--color-connect-post-2: #6b5bb8;
-	--color-connect-post-3: #c77ab0;
 }

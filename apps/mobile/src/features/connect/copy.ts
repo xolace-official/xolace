@@ -113,7 +113,6 @@ export const COPY = {
 			]
 				.filter(Boolean)
 				.join(". "),
-		more: "More actions",
 		unread: (n: number) => `${n} unread message${n === 1 ? "" : "s"}`,
 	},
 	segments: [

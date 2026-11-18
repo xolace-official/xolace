@@ -7,8 +7,7 @@ const ART = [
 	["connect-art-rose-from", "connect-art-rose-to"],
 ] as const;
 const FLAME = ["connect-flame-1", "connect-flame-2", "connect-flame-3"];
-const POST = ["connect-post-1", "connect-post-2", "connect-post-3"];
-const ALL = [...ART.flat(), ...FLAME, ...POST];
+const ALL = [...ART.flat(), ...FLAME];
 const HASH_MUL = 31;
 
 /** A stable pick from the art pairs for an id: the same person always wears the same art. */
@@ -20,7 +19,7 @@ function artIndex(id: string): number {
 	return h % ART.length;
 }
 
-/** Connect's fixed art, read once: the avatar pairs, the Xolace flame, the channel's post art. */
+/** Connect's fixed art, read once: the avatar pairs and the Xolace flame. */
 export function useConnectColors() {
 	const c = useTokenColors(ALL);
 	const pairs = ART.map(
@@ -30,6 +29,5 @@ export function useConnectColors() {
 	return {
 		art: (id: string) => pairs[artIndex(id)] ?? pairs[0],
 		flame: [c[at], c[at + 1], c[at + 2]] as const,
-		post: [c[at + 3], c[at + 4], c[at + 5]] as const,
 	};
 }
