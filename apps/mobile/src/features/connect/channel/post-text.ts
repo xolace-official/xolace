@@ -1,13 +1,14 @@
 /** A post's text: the title split from the body, the words without their markdown, and its
  * links. Pure. */
 
+import { bareLinks, type FoundLink } from "./bare-links";
+
 /** A first paragraph this short, followed by more, reads as the post's title. */
 const TITLE_MAX = 80;
 
 /** `[words](target)`, or an image's `![words](target)`; a target may hold one level of
  * parentheses (`…/wiki/Foo_(bar)`). */
 const MARKDOWN_LINK = /(!?)\[([^\]]+)\]\(((?:[^()\s]|\([^()\s]*\))+)\)/g;
-const BARE_URL = /https?:\/\/(?:[^\s()<>\]]|\([^\s()<>]*\))+/g;
 const EMPHASIS =
 	/(\*\*|__|~~|`)(.+?)\1|(?<![\w*])[*_](?!\s)(.+?)(?<!\s)[*_](?![\w*])/g;
 /** A line's block marks: quotes (nested too), then a heading's hashes or a list's bullet or
@@ -19,7 +20,6 @@ const ESCAPED = /\\([\\`*_{}[\]()#+\-.!~>|])/g;
 /** Escaped marks wait in the private-use area while the marks around them come off. */
 const HELD = 0xe0_00;
 const HELD_CHAR = /[\ue000-\ue0ff]/g;
-const TRAILING_PUNCTUATION = /[.,;:!?]+$/;
 /** The only links a post opens: the web and email. Not `tel:`, `sms:`, or another app's. */
 const OPENABLE = /^(https?:\/\/|mailto:)/i;
 
@@ -51,22 +51,18 @@ export function plainText(markdown: string): string {
 }
 
 /** A link in a post: where it goes, and the words it shows (a markdown link's, or the address). */
-export type FoundLink = { url: string; words: string };
 
-/** Every link in a post it may open, in order, once each: markdown links, then bare URLs. An
- * image isn't one: Stream doesn't draw it. */
+/** Every link in a post it may open, once each: markdown links, then the ones Stream finds in
+ * the words (`bareLinks`), in the order they're written. An image isn't one: Stream doesn't
+ * draw it. */
 export function postLinks(markdown: string): FoundLink[] {
 	const named = [...markdown.matchAll(MARKDOWN_LINK)]
 		.filter((m) => m[1] !== "!")
 		.map((m) => ({ url: m[3] ?? "", words: plainText(m[2] ?? "") }));
-	const bare = [...markdown.replace(MARKDOWN_LINK, "").matchAll(BARE_URL)].map(
-		(m) => {
-			const url = m[0].replace(TRAILING_PUNCTUATION, "");
-			return { url, words: url };
-		}
-	);
+	// Markdown links blanked, not removed, so the rest keeps its places.
+	const rest = markdown.replace(MARKDOWN_LINK, (m) => " ".repeat(m.length));
 	const seen = new Set<string>();
-	return [...named, ...bare].filter(({ url }) => {
+	return [...named, ...bareLinks(rest)].filter(({ url }) => {
 		if (!isOpenableLink(url) || seen.has(url)) {
 			return false;
 		}

@@ -126,6 +126,18 @@ describe("isOpenableLink", () => {
 		}
 	});
 
+	it("lists addresses without a scheme and emails, as Stream links them", () => {
+		expect(
+			postLinks(
+				"[Notes](https://a.co/n) at xolace.app/notes or notes@xolace.app"
+			)
+		).toEqual([
+			{ url: "https://a.co/n", words: "Notes" },
+			{ url: "http://xolace.app/notes", words: "xolace.app/notes" },
+			{ url: "mailto:notes@xolace.app", words: "notes@xolace.app" },
+		]);
+	});
+
 	it("leaves out links a post won't open", () => {
 		expect(
 			postLinks("[call](tel:988), [app](xolace://x) and [site](https://a.co)")
