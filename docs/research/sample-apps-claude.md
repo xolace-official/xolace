@@ -1187,7 +1187,9 @@ organizational form of Inner Forecast.
 ## J. Money and access
 
 These are monetization mechanics that came up along the way. They are listed because
-several are also care mechanics.
+several are also care mechanics. For ways users can *earn* (Sound Seasons, a creator
+pool, paid Xolacers, sparks into rewards), see
+[`earn-while-helping.md`](earn-while-helping.md).
 
 | Idea | Novelty | From |
 |---|---|---|
