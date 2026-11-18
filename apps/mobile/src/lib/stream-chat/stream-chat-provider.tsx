@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/expo";
-import { api } from "@xolace/backend/convex/_generated/api";
+import { api } from "@xolace/backend/api";
 import { useAction, useQuery } from "convex/react";
 import {
 	createContext,
