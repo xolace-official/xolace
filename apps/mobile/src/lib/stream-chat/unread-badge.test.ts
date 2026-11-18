@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	type BadgeEvent,
 	badgeFromEvents,
-} from "@/features/xolacer-chat/unread-badge";
+} from "@/lib/stream-chat/unread-badge";
 
 const fold = (events: BadgeEvent[], start = 0) =>
 	events.reduce(badgeFromEvents, start);

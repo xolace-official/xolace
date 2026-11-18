@@ -12,20 +12,20 @@ import {
 } from "react";
 import { StreamChat } from "stream-chat";
 import { Chat, OverlayProvider } from "stream-chat-expo";
-import { connectPlan } from "@/features/xolacer-chat/connect-plan";
+import { connectPlan } from "@/lib/stream-chat/connect-plan";
 import {
 	attachOfflineDb,
 	chatLocalDataGeneration,
 	chatLocalDataSettled,
-} from "@/features/xolacer-chat/offline-db";
+} from "@/lib/stream-chat/offline-db";
 import {
 	readStreamCredential,
 	type StreamCredential,
 	writeStreamCredential,
-} from "@/features/xolacer-chat/stream-credential";
-import { registerStreamHaptics } from "@/features/xolacer-chat/stream-haptics";
+} from "@/lib/stream-chat/stream-credential";
+import { registerStreamHaptics } from "@/lib/stream-chat/stream-haptics";
+import { useStreamTheme } from "@/lib/stream-chat/stream-theme";
 import { useAppStore } from "@/store/store";
-import { useStreamTheme } from "./stream-theme";
 
 /** Public Stream key, read at build time so `Chat` mounts from the first frame; the token is
  * still minted server-side. */

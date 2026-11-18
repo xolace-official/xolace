@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
-import { useStreamStatus } from "@/features/xolacer-chat/providers/stream-chat-provider";
+import { useStreamStatus } from "@/lib/stream-chat/stream-chat-provider";
 
 /** Live unread count for a row, read from `channel.countUnread()` on every client event.
  * Passive: never opens the socket; counts exist only once `useChatWarmup` watched the channel. */

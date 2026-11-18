@@ -19,10 +19,10 @@ import {
 } from "@/components/shared/update-bottom-sheet";
 import { useLaunchFonts } from "@/design/fonts";
 import { ReflectDraftGuard } from "@/features/reflect/reflect-draft";
-import { ChatLocalDataGuard } from "@/features/xolacer-chat/chat-local-data-guard";
 import { useOtaUpdate } from "@/helpers/hooks/use-ota-update";
 import { useVersionCheck } from "@/helpers/hooks/use-version-check";
 import { useFullContext } from "@/lib/convex/use-full-context";
+import { ChatLocalDataGuard } from "@/lib/stream-chat/chat-local-data-guard";
 import { usePostHogIdentity } from "@/lib/use-posthog-identity";
 import { NavThemeProvider } from "@/providers/nav-theme-provider";
 import { RootProvider } from "@/providers/root-provider";

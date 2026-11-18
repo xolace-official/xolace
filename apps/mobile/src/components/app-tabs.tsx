@@ -8,10 +8,10 @@ import { View } from "react-native";
 import { MiniPlayerAccessory } from "@/features/browse/now-playing/mini-player-accessory";
 import { MiniPlayerOverlay } from "@/features/browse/now-playing/mini-player-overlay";
 import { TABS } from "@/features/navigation/tabs";
-import { useUnreadBadge } from "@/features/xolacer-chat/use-unread-badge";
 import { useYouTabIcon } from "@/features/you/avatar/use-you-tab-icon";
 import { playSoftPress } from "@/lib/haptics";
 import { useMiniPlayerShown } from "@/lib/now-playing/now-playing-store";
+import { useUnreadBadge } from "@/lib/stream-chat/use-unread-badge";
 import { useTabBarHidden } from "@/lib/tab-bar";
 
 const SCREEN_LISTENERS = {

@@ -1,6 +1,6 @@
 import * as Notifications from "expo-notifications";
 import { useEffect } from "react";
-import { useUnreadBadge } from "@/features/xolacer-chat/use-unread-badge";
+import { useUnreadBadge } from "@/lib/stream-chat/use-unread-badge";
 
 /** Mirrors Stream's unread total onto the app icon; mounted above the Stack. Skipped while
  * unknown, so a push-set badge (`chatNotifications.sendMessagePush`) survives a cold start

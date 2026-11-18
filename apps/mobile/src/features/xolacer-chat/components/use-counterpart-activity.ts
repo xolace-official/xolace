@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { StreamChat } from "stream-chat";
-import { useStreamStatus } from "../providers/stream-chat-provider";
+import { useStreamStatus } from "@/lib/stream-chat/stream-chat-provider";
 
 export type CounterpartPresence =
 	| { online: true }

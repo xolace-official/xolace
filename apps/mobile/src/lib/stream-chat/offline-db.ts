@@ -1,6 +1,6 @@
 import { StreamChat } from "stream-chat";
 import { OfflineDB, SqliteClient } from "stream-chat-expo";
-import { clearStreamCredential } from "@/features/xolacer-chat/stream-credential";
+import { clearStreamCredential } from "@/lib/stream-chat/stream-credential";
 import { useAppStore } from "@/store/store";
 
 /** Attaches the sqlite store; `setOfflineDBApi` is a no-op once set. Opens no file (that is

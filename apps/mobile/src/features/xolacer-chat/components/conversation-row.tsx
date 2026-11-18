@@ -5,12 +5,12 @@ import { useCSSVariable, withUniwind } from "uniwind";
 import { AppText } from "@/components/shared/app-text";
 import type { rowAccessibilityActions } from "@/features/xolacer-chat/components/swipeable-conversation-row";
 import { formatCompactTime } from "@/features/xolacer-chat/format-time";
-import { useConversationUnreadCount } from "@/features/xolacer-chat/use-conversation-unread-count";
 import {
 	canHoldUnread,
 	formatUnreadBadge,
 	unreadBadge,
 } from "@/features/xolacer-chat/utils";
+import { useConversationUnreadCount } from "@/lib/stream-chat/use-conversation-unread-count";
 import { cn } from "@/lib/utils";
 import type { ConversationList } from "./chats-list";
 import { rowPresentation } from "./conversation-row-labels";

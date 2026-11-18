@@ -1,7 +1,7 @@
 import { useCallback, useSyncExternalStore } from "react";
 import type { StreamChat } from "stream-chat";
-import { useStreamStatus } from "@/features/xolacer-chat/providers/stream-chat-provider";
-import { badgeFromEvents } from "@/features/xolacer-chat/unread-badge";
+import { useStreamStatus } from "@/lib/stream-chat/stream-chat-provider";
+import { badgeFromEvents } from "@/lib/stream-chat/unread-badge";
 
 /** Per-client total, keyed by user: the SDK writes `total_unread_count` only at handshake, and
  * a sign-out reconnects the same singleton as someone else. */

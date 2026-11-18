@@ -3,9 +3,9 @@ import {
 	chatLocalDataGeneration,
 	chatLocalDataSettled,
 	hydrateChannelsFromCache,
-} from "@/features/xolacer-chat/offline-db";
+} from "@/lib/stream-chat/offline-db";
+import { useStreamConnection } from "@/lib/stream-chat/stream-chat-provider";
 import type { ConversationList } from "./components/chats-list";
-import { useStreamConnection } from "./providers/stream-chat-provider";
 
 /** `queryChannels` caps at 30; rows past the cap (warmed most-recent-first) are never watched,
  * so their unread badge stays blank. Accepted ceiling. */
