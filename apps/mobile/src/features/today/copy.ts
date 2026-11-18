@@ -114,6 +114,25 @@ export const COPY = {
 		sub: "People you can reach, any time",
 		title: "If tonight is heavy",
 	},
+	/** The listening rail (board `.rail`), from the hub's New shelf. */
+	listen: {
+		family: { music: "Music", support: "Support audio" },
+		hint: "Hold to preview",
+		lateTitle: "For the quiet",
+		playing: ", playing",
+		quietHint: "Opens the player",
+		seeAll: "See all",
+		seeAllLabel: "See all in Explore",
+		title: "Something to listen to",
+	},
+	/** Your moments (production's carousel). */
+	moments: {
+		/** VoiceOver: what a moment card does. */
+		openHint: "Opens this moment",
+		seeAll: "See all",
+		seeAllLabel: "See all moments",
+		title: "Your moments",
+	},
 	/** VoiceOver only: the toolbar's Reflect pill. */
 	opensReflect: "Opens Reflect",
 	/** The eyebrow's second half, after the weekday ("Thursday · evening"). */
@@ -127,4 +146,14 @@ export const COPY = {
 	streakHint: "Opens You",
 	streakLabel: (n: number) => (n === 1 ? "1 day streak" : `${n} day streak`),
 	title: "Today",
+	/** A word for today: today's quote, into Quotes. */
+	word: {
+		eyebrow: "TODAY'S WORD",
+		/** Production's quotes card line, when there's no quote to show yet. */
+		fallback:
+			"Curated lines for the day, and the ones your own sessions left behind.",
+		label: "Open daily quotes",
+		sub: "Chosen for you · tap to reply",
+		title: "A word for today",
+	},
 } as const;

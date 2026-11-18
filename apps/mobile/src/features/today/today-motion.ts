@@ -22,6 +22,8 @@ export const popFn = Easing.bezierFn(0.3, 1.5, 0.5, 1);
 export const sparkFn = Easing.bezierFn(0.2, 0.8, 0.3, 1);
 /** Streak flame ignite (overshoots). */
 export const igniteFn = Easing.bezierFn(0.3, 1.6, 0.5, 1);
+/** The word's ink. */
+export const EASE_INK = Easing.bezier(0.15, 0.7, 0.3, 1);
 /** Toolbar Reflect pill swelling in. */
 export const EASE_SWELL = Easing.bezier(0.34, 1.3, 0.64, 1);
 /** CSS `ease`. */

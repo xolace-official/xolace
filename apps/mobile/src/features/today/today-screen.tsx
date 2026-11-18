@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import Animated, {
 	type SharedValue,
@@ -15,6 +15,8 @@ import { TodayHeader } from "./header/today-header";
 import { ReflectCard } from "./hero/reflect-card";
 import { KindlingCard } from "./kindling/kindling-card";
 import { LateModules } from "./late/late-modules";
+import { MomentsSection } from "./moments/moments-section";
+import { ListenRail } from "./rail/listen-rail";
 import { SkyCanvas } from "./sky/sky-canvas";
 import { skyTop } from "./sky/sky-model";
 import { useClock, useLive } from "./today-clock";
@@ -22,6 +24,7 @@ import { useToday } from "./today-data";
 import { TodayFrame, type TodayFrameValue } from "./today-frame";
 import { TodayToolbar } from "./today-toolbar";
 import { useQualityGate } from "./use-quality-gate";
+import { WordCard } from "./word/word-card";
 
 const BOTTOM_ROOM = 150;
 /** Page padding each side. */
@@ -29,8 +32,16 @@ const PAGE_X = 16;
 /** Long enough for the words, the rise and the ink (450 + 2400 ms) to finish. */
 const INTRO_WINDOW_MS = 3200;
 
+type Props = {
+	/**
+	 * Another feature's card the route composes in, under the campfire by day: the intake's
+	 * "How did you find Xolace?" (features meet in routes, not screens).
+	 */
+	finding?: ReactNode;
+};
+
 /** Today: a sky that keeps the hour, the Reflect card as its horizon, then up to five quiet modules. */
-export function TodayScreen() {
+export function TodayScreen({ finding }: Props) {
 	const insets = useSafeAreaInsets();
 	const { height } = useWindowDimensions();
 	const { state } = useToday();
@@ -76,6 +87,7 @@ export function TodayScreen() {
 						style={{ backgroundColor: top, height, top: -height }}
 					/>
 					<TodayBody
+						finding={finding}
 						flameClock={flameClock}
 						// A new day (Today stays mounted for days) replays the first open, once.
 						key={state.day}
@@ -100,10 +112,11 @@ export function TodayScreen() {
 
 type BodyProps = Omit<TodayFrameValue, "intro" | "low"> & {
 	flameClock: SharedValue<number>;
+	finding: ReactNode;
 };
 
 /** The page under the sky: the header, the hero and the modules for the hour. */
-function TodayBody({ flameClock, ...frame }: BodyProps) {
+function TodayBody({ flameClock, finding, ...frame }: BodyProps) {
 	const { width } = useWindowDimensions();
 	const { state } = useToday();
 	// The first open of the day plays once: anything that mounts after this window
@@ -132,7 +145,10 @@ function TodayBody({ flameClock, ...frame }: BodyProps) {
 				<>
 					<KindlingCard width={width - PAGE_X * 2} />
 					<CampfireCard />
-					{/* S1d: the rail, moments and the word. */}
+					{finding}
+					<ListenRail />
+					<MomentsSection />
+					<WordCard />
 				</>
 			)}
 		</TodayFrame>

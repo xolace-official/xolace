@@ -98,8 +98,23 @@ export const devStates: readonly DevState[] = [
 	},
 	{
 		id: "empty-day",
-		title: "Empty day: no kindling, no campfire",
-		...today({ campfire: "none", kindling: "none", phase: "day" }),
+		title: "Empty day: no kindling, campfire, tracks, moments or word",
+		...today({
+			campfire: "none",
+			kindling: "none",
+			modules: "none",
+			phase: "day",
+		}),
+	},
+	{
+		id: "modules-loading",
+		title: "The rail, moments and word still loading",
+		...today({ modules: "loading", phase: "day" }),
+	},
+	{
+		id: "modules-dark",
+		title: "The rail, moments and word, dark",
+		...today({ phase: "evening", theme: "dark" }),
 	},
 	{
 		id: "phases",
@@ -108,7 +123,7 @@ export const devStates: readonly DevState[] = [
 	},
 	{
 		id: "offline",
-		title: "Offline (no name, no streak)",
+		title: "Offline (no name, no streak, nothing below loaded)",
 		...today({ offline: true, phase: "day" }),
 	},
 	{

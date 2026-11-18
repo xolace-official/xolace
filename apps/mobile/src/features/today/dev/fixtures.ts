@@ -1,5 +1,8 @@
 import type { CampfireView } from "../campfire/campfire-model";
 import type { KindlingView, TwigView } from "../kindling/kindling-model";
+import type { MomentView } from "../moments/moments-model";
+import type { RailTile } from "../rail/rail-model";
+import { COVERS } from "./covers";
 
 /** Today's fake data: the board's Thursday, Ama and a 12-day streak (`P/src/fixtures/today.ts`). */
 export const FIXTURE_WEEKDAY = "Thursday";
@@ -66,3 +69,73 @@ export const FIXTURE_CAMPFIRE = {
 	stats: { count: 1240, kind: "stats", lighterPercent: 62 },
 	warming: { emotion: "self doubt", kind: "warming" },
 } satisfies Record<string, CampfireView>;
+
+/** The board's rail (`P/src/fixtures/today.ts` RAIL), as the New shelf would send it. */
+export const FIXTURE_RAIL: RailTile[] = [
+	{
+		cover: COVERS.a1,
+		family: "support",
+		id: "r1",
+		slug: "voice",
+		sub: "Support audio",
+		title: "A voice for this",
+	},
+	{
+		cover: COVERS.a2,
+		family: "music",
+		id: "r2",
+		slug: "quiet",
+		sub: "Music",
+		title: "Low sound for the quiet",
+	},
+	{
+		cover: COVERS.a3,
+		family: "support",
+		id: "r3",
+		slug: "arrives",
+		sub: "Support audio",
+		title: "When it all arrives",
+	},
+	{
+		cover: COVERS.a2,
+		family: "music",
+		id: "r4",
+		slug: "rain",
+		sub: "Music",
+		title: "Rain on the tent",
+	},
+];
+
+/** The board's moments (`TODAY_MOMENTS`). */
+export const FIXTURE_MOMENTS: MomentView[] = [
+	{
+		audio: true,
+		emotion: "overwhelm",
+		id: "m1",
+		quote:
+			"You're not behind. You're tired of running at a pace that was never yours.",
+	},
+	{
+		audio: false,
+		emotion: "stress",
+		id: "m2",
+		quote:
+			"You can set it down for tonight. It will still be there to look at tomorrow.",
+	},
+	{
+		audio: false,
+		emotion: "self-doubt",
+		id: "m3",
+		quote: "That it matters this much shows you what you care about.",
+	},
+	{
+		audio: true,
+		emotion: "homesickness",
+		id: "m4",
+		quote:
+			"Missing home doesn't mean you chose wrong. It means you had somewhere worth missing.",
+	},
+];
+
+/** The board's word for today. */
+export const FIXTURE_WORD = "Slow is still moving.";

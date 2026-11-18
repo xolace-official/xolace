@@ -23,7 +23,8 @@ import {
 	type StreakShown,
 	todayPhase,
 } from "./today-model";
-import { useModules } from "./use-today-modules";
+import { useTodayActions } from "./use-today-actions";
+import { useLowerModules, useModules } from "./use-today-modules";
 
 /**
  * Where each door goes. Sit with this is offered only once Sit can start from Today on its
@@ -157,6 +158,8 @@ export function useTodayData(): Today {
 	const intro = useIntro(day, userId);
 	const monthPrompt = useMonthPrompt(now);
 	const { campfire, kindling } = useModules();
+	const lower = useLowerModules();
+	const moduleActions = useTodayActions();
 
 	// A double tap on a door or the kindling would stack two screens.
 	const pushOnce = usePushOnce();
@@ -167,6 +170,7 @@ export function useTodayData(): Today {
 
 	return {
 		actions: {
+			...moduleActions,
 			openDoor: (door) => pushOnce(() => router.push(DOOR_HREF[door])),
 			openHelp: () => router.push("/crisis-resources"),
 			// The header and Begin both open it: one screen per tap.
@@ -180,6 +184,7 @@ export function useTodayData(): Today {
 		},
 		state: {
 			campfire,
+			...lower,
 			card: { monthPrompt },
 			day,
 			eyebrow,

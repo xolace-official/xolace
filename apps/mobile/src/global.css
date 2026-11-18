@@ -447,6 +447,10 @@
 	--color-today-campfire-ember: #ffc46b;
 	--color-today-campfire-ember-glow: rgba(255, 170, 80, 0.6);
 	--color-today-campfire-glow: rgba(255, 168, 90, 0.34);
+	/* A moment card's soft halo (production's 0 0 5px at 5%) and a rail tile's art lifting
+     * under a held finger: shadows, the same on every page. */
+	--color-today-moment-shadow: rgba(20, 16, 40, 0.05);
+	--color-today-rail-lift-shadow: rgba(60, 30, 120, 0.4);
 }
 
 /*

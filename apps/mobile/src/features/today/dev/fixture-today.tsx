@@ -9,27 +9,19 @@ import { useKeptKindling } from "../kindling/use-kept-kindling";
 import { type Today, TodayProvider } from "../today-data";
 import { headerCopy, type TodayPhase } from "../today-model";
 import { TodayScreen } from "../today-screen";
+import { FIXTURE_ACTIONS } from "./fixture-actions";
 import {
 	FIXTURE_CAMPFIRE,
 	FIXTURE_DAY,
 	FIXTURE_KINDLING,
+	FIXTURE_MOMENTS,
 	FIXTURE_MONTH_PROMPT,
 	FIXTURE_NAME,
+	FIXTURE_RAIL,
 	FIXTURE_STREAK,
 	FIXTURE_WEEKDAY,
+	FIXTURE_WORD,
 } from "./fixtures";
-
-const ACTIONS: Today["actions"] = {
-	// Talk and Vent open their real screens; a cold Sit isn't offered yet (hero-model's DOORS).
-	openDoor: (door) =>
-		door === "sit" ? undefined : router.push(DOOR_HREF[door]),
-	openHelp: () => router.push("/crisis-resources"),
-	openKindling: () => router.push("/kindling"),
-	openReflect: () => router.back(),
-	openStreak: () => router.navigate("/you"),
-};
-
-const DOOR_HREF = { talk: "/talk", vent: "/voice-vent" } as const;
 
 /** Let the screen land before the streak grows, as coming back to Today does. */
 const IGNITE_AFTER_MS = 600;
@@ -76,6 +68,8 @@ export type FixtureProps = {
 	/** With `kindling: "last"`: the kindling is put out instead, so the card goes. */
 	putOut?: boolean;
 	campfire?: keyof typeof FIXTURE_CAMPFIRE | "none";
+	/** The rail, your moments and the word: the board's, none at all, or still loading. */
+	modules?: "board" | "none" | "loading";
 };
 
 function FixtureToday({
@@ -90,6 +84,7 @@ function FixtureToday({
 	tend = false,
 	putOut = false,
 	campfire = "count",
+	modules = "board",
 }: FixtureProps) {
 	const phase = usePhase(start, cycle);
 	const [grown, setGrown] = useState(false);
@@ -141,6 +136,7 @@ function FixtureToday({
 		greeting,
 		intro,
 		kindling: kindlingView,
+		...lowerModules(offline ? "loading" : modules),
 		phase,
 		streak: offline
 			? null
@@ -153,11 +149,32 @@ function FixtureToday({
 		<ScopedTheme
 			theme={phase === "late" ? NIGHT_VARIANT : themeVariant("default", theme)}
 		>
-			<TodayProvider value={{ actions: ACTIONS, state }}>
+			<TodayProvider value={{ actions: FIXTURE_ACTIONS, state }}>
 				<TodayScreen />
 			</TodayProvider>
 		</ScopedTheme>
 	);
+}
+
+/** The rail, moments and word: loading is undefined, none is empty (the word null). */
+function lowerModules(
+	modules: NonNullable<FixtureProps["modules"]>
+): Pick<Today["state"], "rail" | "moments" | "word" | "playingSlug"> {
+	if (modules === "loading") {
+		return {
+			moments: undefined,
+			playingSlug: null,
+			rail: undefined,
+			word: undefined,
+		};
+	}
+	const board = modules === "board";
+	return {
+		moments: board ? FIXTURE_MOMENTS : [],
+		playingSlug: null,
+		rail: board ? FIXTURE_RAIL : [],
+		word: board ? FIXTURE_WORD : null,
+	};
 }
 
 /** The real route draws its own chrome: no header. */
