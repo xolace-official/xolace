@@ -8,6 +8,8 @@ import { fixture } from "./fixture-player";
 import { AT, HEAVY, MUSIC, NO_PEAKS, SPOKEN } from "./fixtures";
 
 const SPOKEN_AT = { at: AT.spoken, track: SPOKEN } as const;
+/** A seek that lands 800 ms late, as a streamed one does (handoff review round 1). */
+const SLOW_SEEK = { ...SPOKEN_AT, at: 60, seekLatencyMs: 800 } as const;
 /** The board's running timer: 30 minutes, 28 left; and its last 30 s. */
 const TIMER = { ...pickSleep(30), left: 1680 };
 const FADING = { ...pickSleep(30), left: 24 };
@@ -34,6 +36,16 @@ export const devStates: readonly DevState[] = [
 		id: "music-repeat",
 		title: "07 Music, Repeat on: the length",
 		...fixture({ at: AT.music, repeat: true, still: true, track: MUSIC }),
+	},
+	{
+		id: "slow-seek",
+		title: "Scrub, the seek landing 800 ms late",
+		...fixture(SLOW_SEEK),
+	},
+	{
+		id: "slow-seek-unguarded",
+		title: "Scrub, 800 ms late, without the guard (the bug)",
+		...fixture({ ...SLOW_SEEK, unguarded: true }),
 	},
 	{
 		id: "timer",
