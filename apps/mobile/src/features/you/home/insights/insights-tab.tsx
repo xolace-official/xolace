@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { View } from "react-native";
+import { type LayoutChangeEvent, View } from "react-native";
 import {
 	Tabs,
 	useCollapsingTabsContext,
@@ -9,6 +9,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DaysCard } from "@/features/you/home/insights/days-card";
 import { Chips, Patterns } from "@/features/you/home/insights/patterns";
 import { PlusRow, RankCard } from "@/features/you/home/insights/rank-card";
+import { SteadinessCard } from "@/features/you/home/steadiness/steadiness-card";
+import { WeekCard } from "@/features/you/home/week/week-card";
 import { useYouHome } from "@/features/you/home/you-data";
 import { useYouUi } from "@/features/you/home/you-ui";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
@@ -23,35 +25,39 @@ const SCROLL_AFTER_MS = 220;
 const TAB_BAR_ROOM = 110;
 
 /**
- * Insights: production's cards in production's order, gated the same way (Steadiness and This
- * week join them in S5b). The words card is gone. Hidden cards stay hidden.
+ * Insights (you.md §5): Steadiness, Your days, the chips, Your patterns, Among the fires, This
+ * week, then the one Xolace+ row for free users. Production's gates; the words card is gone.
+ * Hidden cards stay hidden.
  */
 export function InsightsTab({ minHeader }: { minHeader: number }) {
 	const insets = useSafeAreaInsets();
 	const reduced = useEffectiveReducedMotion();
 	const { state, actions } = useYouHome();
-	const { scrollToDays } = useYouUi();
+	const { scrollTo } = useYouUi();
 	const { scrollRef } = useTabPageContext();
 	const { collapseRangeSV } = useCollapsingTabsContext();
-	const daysY = useRef(0);
+	const cardY = useRef({ days: 0, top: 0, week: 0 });
+	const measure = (card: "days" | "week") => (e: LayoutChangeEvent) => {
+		cardY.current[card] = e.nativeEvent.layout.y;
+	};
 
-	// The header's week asks for Your days: scroll it up under the pills (a jump under Reduce
-	// Motion).
+	// The header's week asks for Your days (a dev state for another card): scroll it up under
+	// the pills, docked (a jump under Reduce Motion).
 	useEffect(() => {
-		if (scrollToDays === 0) {
+		if (!scrollTo) {
 			return;
 		}
 		const dock = collapseRangeSV.get() + PAST_DOCK;
 		const y = Math.max(
 			dock,
-			daysY.current - minHeader - DOCKED_TABS - UNDER_PILLS
+			cardY.current[scrollTo.target] - minHeader - DOCKED_TABS - UNDER_PILLS
 		);
 		const timer = setTimeout(
 			() => scrollRef.current?.scrollTo({ animated: !reduced, y }),
 			SCROLL_AFTER_MS
 		);
 		return () => clearTimeout(timer);
-	}, [scrollToDays, collapseRangeSV, minHeader, scrollRef, reduced]);
+	}, [scrollTo, collapseRangeSV, minHeader, scrollRef, reduced]);
 
 	return (
 		<Tabs.ScrollView
@@ -63,18 +69,25 @@ export function InsightsTab({ minHeader }: { minHeader: number }) {
 			}}
 			showsVerticalScrollIndicator={false}
 		>
+			{state.steadiness ? (
+				<SteadinessCard
+					card={state.steadiness}
+					onSeeAll={actions.openSteadiness}
+				/>
+			) : null}
 			{state.days ? (
-				<View
-					onLayout={(e) => {
-						daysY.current = e.nativeEvent.layout.y;
-					}}
-				>
+				<View onLayout={measure("days")}>
 					<DaysCard history={state.days} />
 				</View>
 			) : null}
 			{state.chips.length > 0 ? <Chips tags={state.chips} /> : null}
 			{state.patterns.length > 0 ? <Patterns rows={state.patterns} /> : null}
 			{state.rank ? <RankCard rank={state.rank} /> : null}
+			{state.intensity ? (
+				<View onLayout={measure("week")}>
+					<WeekCard week={state.intensity} />
+				</View>
+			) : null}
 			{state.plusRow ? <PlusRow onPress={actions.openPlus} /> : null}
 		</Tabs.ScrollView>
 	);

@@ -1,6 +1,7 @@
 /**
  * The You tab's data hook: production's profile reads (summary, history, the sparks shelf,
- * avatars, mood, rank, follow-ups), the hidden cards (B7), the freeze buy and the doors out.
+ * avatars, mood, rank, follow-ups), Steadiness and This week, the hidden cards (B7), the
+ * freeze buy and the doors out.
  * The one file here that calls Convex, PostHog, the paywall or the toast.
  */
 import { api } from "@xolace/backend/api";
@@ -18,6 +19,8 @@ import {
 } from "@/features/you/home/days-model";
 import { useHiddenCards } from "@/features/you/home/use-hidden-cards";
 import { useYouFollowUps } from "@/features/you/home/use-you-follow-ups";
+import { useYouSteadiness } from "@/features/you/home/use-you-steadiness";
+import { useYouWeek } from "@/features/you/home/use-you-week";
 import type { YouHome } from "@/features/you/home/you-data";
 import {
 	badgesRowView,
@@ -51,6 +54,12 @@ export function useYou(): YouHome {
 	const indexed = history
 		? indexHistory(history, todayIn(history.timezone))
 		: undefined;
+	const steadiness = useYouSteadiness();
+	const sessionCount = summary?.sessionCount ?? 0;
+	const weekHidden = hidden === undefined ? undefined : hidden.includes("week");
+	// Production's gate: the chart from the first moment.
+	const showWeek = weekHidden === false && sessionCount >= 1;
+	const week = useYouWeek(showWeek, sessionCount);
 	const hides = (card: "calendar" | "rank") =>
 		hidden === undefined ? undefined : hidden.includes(card);
 
@@ -90,8 +99,13 @@ export function useYou(): YouHome {
 			loadMoreFollowUps: followUps.actions.loadMore,
 			openAvatar: () => router.push("/avatar"),
 			openBadges: () => router.push("/achievements"),
+			openEarlierWeeks: week.actions.openEarlierWeeks,
 			openPlus: () => openPaywall("profile_row"),
 			openSettings: () => router.push("/settings"),
+			// Production's steadiness screen until S5c moves it to /you/steadiness.
+			openSteadiness: () => router.push("/profile/insights"),
+			pageWeek: week.actions.pageWeek,
+			weekSeen: week.actions.weekSeen,
 		},
 		state: {
 			avatar: avatars ? resolveAvatar(avatars, summary?.avatarId) : undefined,
@@ -108,6 +122,12 @@ export function useYou(): YouHome {
 					}
 				: undefined,
 			hero: summary ? heroView(summary, new Date()) : undefined,
+			intensity:
+				summary === undefined || weekHidden === undefined
+					? undefined
+					: showWeek
+						? week.state
+						: null,
 			patterns: summary
 				? patternRows(summary.sessionCount, mood, summary.typicalUsagePattern)
 				: [],
@@ -120,6 +140,7 @@ export function useYou(): YouHome {
 					: rankHidden || rank === null
 						? null
 						: rankView(rank),
+			steadiness,
 			streak: summary ? streakView(summary) : undefined,
 			week: indexed ? weekDays(indexed) : undefined,
 		},

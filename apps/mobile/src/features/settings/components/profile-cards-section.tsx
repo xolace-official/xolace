@@ -10,7 +10,7 @@ import { type ProfileCardId, useAppStore } from "@/store/store";
 const CARDS: { id: ProfileCardId; label: string }[] = [
 	{ id: "calendar", label: "Your days" },
 	{ id: "rank", label: "Among the fires" },
-	{ id: "week", label: "Week intensity" },
+	{ id: "week", label: "This week" },
 ];
 
 /**

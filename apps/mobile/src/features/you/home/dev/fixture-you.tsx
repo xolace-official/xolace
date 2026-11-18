@@ -1,5 +1,7 @@
 /** The You tab on fixtures: the real screen under providers the fixtures fill. Its own UI (the
- * freeze explanation, the week's ring, the tabs) still answers taps. */
+ * freeze explanation, the week's ring, the tabs) still answers taps, and This week pages
+ * between the board's week and the one before. */
+import { useState } from "react";
 import {
 	fixtureYou,
 	type YouFixture,
@@ -15,8 +17,14 @@ export function FixtureYou({
 	fixture?: YouFixture;
 	start?: YouUiStart;
 }) {
+	const [earlier, setEarlier] = useState(fixture?.earlierWeek ?? false);
+	const value = fixtureYou({ ...fixture, earlierWeek: earlier });
+	const you = {
+		...value,
+		actions: { ...value.actions, pageWeek: (by: -1 | 1) => setEarlier(by < 0) },
+	};
 	return (
-		<YouProvider value={fixtureYou(fixture)}>
+		<YouProvider value={you}>
 			<YouUiProvider start={start}>
 				<YouScreen />
 			</YouUiProvider>

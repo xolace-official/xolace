@@ -5,7 +5,9 @@ import type {
 	FollowUpCard,
 	FollowUpItem,
 } from "@/features/you/home/follow-ups-model";
+import type { SteadinessCard } from "@/features/you/home/steadiness/steadiness-model";
 import { useYou } from "@/features/you/home/use-you";
+import type { IntensityWeek } from "@/features/you/home/use-you-week";
 import type {
 	BadgesRow,
 	Hero,
@@ -43,6 +45,9 @@ export type YouHome = {
 		patterns: PatternRow[];
 		/** Among the fires; null when hidden. */
 		rank: RankCard | null | undefined;
+		steadiness: SteadinessCard | undefined;
+		/** This week; null when hidden, or before the first moment. */
+		intensity: IntensityWeek | null | undefined;
 		/** Free users get the one Xolace+ row at the end. */
 		plusRow: boolean;
 		followUps: {
@@ -63,6 +68,12 @@ export type YouHome = {
 		/** Close a card no check-in is coming for. */
 		closeFollowUp: (card: FollowUpCard) => void;
 		loadMoreFollowUps: () => void;
+		openSteadiness: () => void;
+		/** Free users: the earlier-weeks gate (the paywall). */
+		openEarlierWeeks: () => void;
+		pageWeek: (by: -1 | 1) => void;
+		/** This week came into view (production's teaser analytics). */
+		weekSeen: () => void;
 	};
 };
 
