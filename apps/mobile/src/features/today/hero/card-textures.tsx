@@ -11,7 +11,6 @@ import {
 	vec,
 } from "@shopify/react-native-skia";
 import { PixelRatio } from "react-native";
-import { CARD_LIGHT } from "../today-palette";
 import { HERO, LIGHT } from "./hero-model";
 
 /** Room around the card for the shadow's and the edge light's blur (σ 22). */
@@ -27,6 +26,8 @@ type Sizes = {
 	edgeW: number;
 	edgeH: number;
 	edgeColors: string[];
+	/** The inner shadows' colours, in `LIGHT.inner`'s order. */
+	innerColors: string[];
 };
 
 /**
@@ -42,8 +43,8 @@ export function useCardTextures({
 	edgeW,
 	edgeH,
 	edgeColors,
+	innerColors,
 }: Sizes) {
-	const inner = late ? CARD_LIGHT.innerLate : CARD_LIGHT.inner;
 	const edgeTex = useTexture(
 		<RoundedRect
 			height={LIGHT.edgeH}
@@ -60,7 +61,7 @@ export function useCardTextures({
 			<BlurMask blur={LIGHT.edgeBlur} style="normal" />
 		</RoundedRect>,
 		{ height: edgeH, width: edgeW },
-		[pillW, late]
+		[pillW, late, edgeColors.join()]
 	);
 	const innerTex = useTexture(
 		<Group transform={[{ scale: PR }]}>
@@ -68,10 +69,10 @@ export function useCardTextures({
 				box={rrect(rect(-1, -1, w + 2, h + 2), HERO.radius, HERO.radius)}
 				color={CLEAR}
 			>
-				{inner.map((l) => (
+				{LIGHT.inner.map((l, i) => (
 					<BoxShadow
 						blur={l.blur * h}
-						color={l.color}
+						color={innerColors[i]}
 						dx={0}
 						dy={-l.dy * h}
 						inner
@@ -81,7 +82,7 @@ export function useCardTextures({
 			</Box>
 		</Group>,
 		{ height: Math.ceil(h * PR), width: Math.ceil(w * PR) },
-		[w, h, late]
+		[w, h, late, innerColors.join()]
 	);
 
 	return { edgeTex, innerTex };

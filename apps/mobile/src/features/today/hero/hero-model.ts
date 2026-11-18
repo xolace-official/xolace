@@ -33,6 +33,17 @@ export const HERO = {
 	ticks: [1 / 3, 2 / 3],
 } as const;
 
+/** The card's fixed light (`--color-today-card-*`, global.css), in card-light's order. */
+export const CARD_TOKENS = [
+	"today-card-edge-late-1",
+	"today-card-edge-late-2",
+	"today-card-inner-1",
+	"today-card-inner-2",
+	"today-card-inner-late-1",
+	"today-card-inner-late-2",
+	"today-card-shadow",
+] as const;
+
 /** The light's geometry and breath. Tuned down in review: don't raise these. */
 export const LIGHT = {
 	edge: { high: 0.26, low: 0.18 },
@@ -41,6 +52,15 @@ export const LIGHT = {
 	edgeH: 40,
 	edgeInset: 40,
 	edgeLate: { high: 0.18, low: 0.12 },
+	/**
+	 * The inner light as stacked inner shadows (ember-charge's recipe): each is the card's
+	 * outline pushed up by `dy` × its height so only its lower rim shows, softened by `blur` ×
+	 * height. Their colours are `--color-today-card-inner(-late)-*`.
+	 */
+	inner: [
+		{ blur: 0.22, dy: 0.3 },
+		{ blur: 0.12, dy: 0.15 },
+	],
 } as const;
 
 /** Choices burst out of the hint line: from (110 pt apart, centred; +74) at .2, 1.05 at 74%, 560 ms, 60 ms apart. */

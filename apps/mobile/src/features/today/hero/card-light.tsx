@@ -12,10 +12,9 @@ import type { SharedValue } from "react-native-reanimated";
 import { EaseView } from "@/design/ease";
 import { loopOrSettle, useLoopRun } from "@/design/ease-loops";
 import { useTokenColors } from "@/lib/use-token-color";
-import { CARD_LIGHT } from "../today-palette";
 import { CardRim } from "./card-rim";
 import { BLEED, useCardTextures } from "./card-textures";
-import { HERO, LIGHT } from "./hero-model";
+import { CARD_TOKENS, HERO, LIGHT } from "./hero-model";
 
 /** The Flux spectrum: the edge light by day and the hold rim. */
 const SPECTRUM = ["peach", "rose", "lilac", "sky"] as const;
@@ -64,8 +63,11 @@ export function CardLight({
 	low,
 }: Props) {
 	const spectrum = useTokenColors(SPECTRUM);
+	const [edgeLate1, edgeLate2, inner1, inner2, innerLate1, innerLate2, shadow] =
+		useTokenColors(CARD_TOKENS);
 	const edge = late ? LIGHT.edgeLate : LIGHT.edge;
-	const edgeColors = late ? [...CARD_LIGHT.edgeLate] : spectrum;
+	const edgeColors = late ? [edgeLate1, edgeLate2] : spectrum;
+	const innerColors = late ? [innerLate1, innerLate2] : [inner1, inner2];
 	const pillW = w - LIGHT.edgeInset * 2;
 	const edgeW = pillW + BLEED * 2;
 	const edgeH = LIGHT.edgeH + BLEED * 2;
@@ -75,6 +77,7 @@ export function CardLight({
 		edgeH,
 		edgeW,
 		h,
+		innerColors,
 		late,
 		pillW,
 		w,
@@ -112,7 +115,7 @@ export function CardLight({
 				}}
 			>
 				<RoundedRect
-					color={CARD_LIGHT.shadow}
+					color={shadow}
 					height={h + s.spread * 2}
 					r={HERO.radius + s.spread}
 					width={w + s.spread * 2}
