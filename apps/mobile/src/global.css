@@ -774,3 +774,45 @@
 	--color-connect-flame-2: #f2a33a;
 	--color-connect-flame-3: #c46a12;
 }
+
+/*
+ * Letters' printed object (handoff `letters.md` §4): the paper, its back and
+ * shadow per light (Day; Dusk for every dark theme; Night), the ink, and the
+ * ember of the seal, the marks, the stamp and the glow. Paper stays paper in
+ * every theme. Read in src/features/letters/letter-paper.ts.
+ */
+@theme static {
+	--color-letter-paper-day: #fbf5e9;
+	--color-letter-back-day: #f0e5d0;
+	--color-letter-shadow-day: rgba(80, 45, 10, 0.45);
+	--color-letter-edge-day: rgba(120, 80, 30, 0.14);
+	--color-letter-paper-dusk: #f2eadb;
+	--color-letter-back-dusk: #e3d6be;
+	--color-letter-paper-night: #e6dcc8;
+	--color-letter-back-night: #d4c5aa;
+	--color-letter-shadow-dark: rgba(0, 0, 0, 0.8);
+	--color-letter-ink: #2b2233;
+	--color-letter-ink-faint: rgba(43, 34, 51, 0.42);
+	/* The faint line where two thirds meet. */
+	--color-letter-crease: rgba(120, 80, 30, 0.07);
+	/* The ember, lit from the upper left: seal, marks, the card mark's dot. */
+	--color-letter-ember-1: #f7b567;
+	--color-letter-ember-2: #e9822f;
+	--color-letter-ember-3: #b4532a;
+	--color-letter-seal-shadow: rgba(120, 50, 10, 0.6);
+	--color-letter-mark-glow: rgba(245, 160, 70, 0.45);
+	--color-letter-ack-ring: rgba(233, 130, 47, 0.45);
+	/* The glow behind the folded letter while the check runs. */
+	--color-letter-glow-1: rgba(245, 160, 70, 0.8);
+	--color-letter-glow-2: rgba(236, 122, 102, 0.3);
+	--color-letter-glow-clear: rgba(236, 122, 102, 0);
+	/* The bright ember the sent letter shrinks into, and its sparks. */
+	--color-letter-heart-1: #ffe6b8;
+	--color-letter-heart-2: #f4a24a;
+	--color-letter-heart-clear: rgba(233, 130, 47, 0);
+	/* The acknowledge stamp: warmer than the seal, with a pale inner rim. */
+	--color-letter-stamp-1: #f9c27a;
+	--color-letter-stamp-rim: rgba(255, 235, 200, 0.35);
+	/* Ink on the ember button (Send, Write a letter). */
+	--color-letter-on-ember: #2a1805;
+}

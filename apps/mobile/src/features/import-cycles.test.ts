@@ -140,7 +140,7 @@ describe("feature shape (apps/mobile/AGENTS.md)", () => {
 	it("reaches dev states only behind __DEV__, so release builds drop them", () => {
 		expect(
 			devCodeInReleaseGraph(graph),
-			'Open src/dev only from a dev route shim: `__DEV__ ? require("@/dev/…") : null`. A static import ships it'
+			'Open src/dev only from a dev route shim, or a fixture adapter seeding itself until its contract lands (Letters, until S21): `__DEV__ ? require("@/dev/…") : null`. A static import ships it'
 		).toEqual([]);
 		// The dev route shims are the guarded way in: without one, the check
 		// above would pass on a graph that never saw a guard.

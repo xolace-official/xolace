@@ -49,8 +49,9 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   "printed object" surfaces (quotes poster, vent, first run, Lantern reader pages, Talk's
   voice orbs, look glows, aurora and leave scrim, Today's sky and light, Today's
   Reflect-card doors and light, Today's kindling and campfire firelight, Connect's avatar
-  art and Xolace flame, Reflect's sky and light), still as tokens in `global.css`. Today's sky is the hour's, not
-  the theme's, and its gradient stops stay strings in `features/today/sky/` because
+  art and Xolace flame, Reflect's sky and light, Letters' paper and ember), still as
+  tokens in `global.css`. Today's sky is the hour's, not the theme's, and its gradient
+  stops stay strings in `features/today/sky/` because
   worklets interpolate them. Connect's art is content a person or the brand wears, the
   same in every theme. First run's colours are `first-run-*` tokens too; only the
   colours a worklet mixes per frame stay RGB triplets, in `features/first-run/first-run-palette.ts`.
@@ -184,6 +185,10 @@ worked example is `reach-me-on`: `reach-sheet-data.tsx` and `dev/`.
   dependencies. `import-cycles.test.ts` is the static guard: it fails when anything
   else imports dev code (`devCodeInReleaseGraph`) or a feature's `dev/` is imported
   from outside that feature's `dev/` folders and `src/dev` (`devImportsFromOutside`).
+- **One exception:** a fixture adapter may seed itself from `src/dev` the same way,
+  `__DEV__ ? require("@/dev/…") : null` with the require typed
+  (`typeof import("@/dev/…")`), until its contract lands. Today that's Letters
+  (`features/letters/letters-memory.ts` via `src/dev/letters-seed.ts`); S21 removes it.
 
 ## The root guard
 
