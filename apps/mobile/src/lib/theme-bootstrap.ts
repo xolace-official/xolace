@@ -1,5 +1,6 @@
 /** Applies the persisted theme to Uniwind before React renders; storage is synchronous so
- * `getState()` is hydrated. Mirrors use-appearance-settings.ts. */
+ * `getState()` is hydrated. Settings › Appearance (`features/settings/appearance/use-appearance.ts`)
+ * applies a change while the app runs. */
 import { Appearance } from "react-native";
 import { Uniwind } from "uniwind";
 import { themeVariant } from "@/design/themes";

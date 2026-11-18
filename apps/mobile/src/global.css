@@ -271,6 +271,70 @@
 	/* What dims a talk under its leave card, in either theme. */
 	--color-talk-scrim: rgba(0, 0, 0, 0.42);
 
+	/* Settings' printed objects, the same in every theme (P/design/handoff/settings.md §4).
+     * Fixed on purpose; see the fixed-palette convention in apps/mobile/AGENTS.md.
+     * The Plus card: its violet gradient, the button's ink and its shadow. */
+	--color-plus-card-from: #2a1f4a;
+	--color-plus-card-to: #4b32c2;
+	--color-plus-card-ink: #3a2a8c;
+	--color-plus-card-glow: rgba(60, 40, 160, 0.7);
+	/* Settings › Appearance (S19). */
+	/* Settings › Mirror (S19). */
+	/* The sample card: each tone's light (board `.ly.<tone>`: a linear a → b → c and a soft
+     * glow, drawn with stopOpacity), its ink, and the card's shadow. Direct goes dark in dark. */
+	--color-mirror-adaptive-a: #26265a;
+	--color-mirror-adaptive-b: #3f44a8;
+	--color-mirror-adaptive-c: #6a79dc;
+	--color-mirror-adaptive-glow: #a0afff;
+	--color-mirror-poetic-a: #100e24;
+	--color-mirror-poetic-b: #231b48;
+	--color-mirror-poetic-c: #3a2b66;
+	--color-mirror-poetic-glow: #7864dc;
+	--color-mirror-gentle-a: #ffe3d6;
+	--color-mirror-gentle-b: #f9cbcf;
+	--color-mirror-gentle-c: #f0b5c4;
+	--color-mirror-gentle-glow: #fff3ea;
+	--color-mirror-direct: #f1f0f4;
+	--color-mirror-direct-dark: #1c1b22;
+	--color-mirror-witnessed-a: #1c120c;
+	--color-mirror-witnessed-b: #2b1a10;
+	--color-mirror-witnessed-c: #3a2010;
+	--color-mirror-witnessed-glow: #f28c30;
+	--color-mirror-witnessed-ember: #be461e;
+	--color-mirror-ink-gentle: #2a1a22;
+	--color-mirror-ink-direct: #17151e;
+	--color-mirror-ink-direct-dark: #edecf2;
+	/* The Hear chip and Direct's edge on the light cards (ink at 8%). */
+	--color-mirror-on-light: rgba(25, 21, 36, 0.08);
+	--color-mirror-shadow: rgba(30, 20, 70, 0.55);
+	/* The still orbs' inner shade at the bottom (with stopOpacity). */
+	--color-mirror-orb-shade: #000000;
+	/* Auto's still orb, beside Talk's voices (`--color-orb-*`). */
+	--color-orb-auto-light: #f4f1ff;
+	--color-orb-auto-mid: #b7b0d8;
+	--color-orb-auto-deep: #6d6890;
+	/* Settings › Notifications (S19). */
+	/* The lock-screen sample: its dusk sky and lights (opaque; the SVG stops take their alpha in
+     * `stopOpacity`), its shadow, the pill and bubble glass, the app mark. Then the day bar's
+     * night span, sun and the sample's dot. */
+	--color-notify-dusk-top: #151838;
+	--color-notify-dusk-mid: #2b2458;
+	--color-notify-dusk-low: #5a3a6e;
+	--color-notify-glow: #7878ff;
+	--color-notify-warm: #ffaa6e;
+	--color-notify-rose: #dc6e78;
+	--color-notify-shadow: rgba(30, 20, 70, 0.6);
+	--color-notify-pill: rgba(10, 10, 30, 0.42);
+	--color-notify-bubble: rgba(245, 240, 255, 0.2);
+	--color-notify-mark-from: #7b62f0;
+	--color-notify-mark-to: #4b32c2;
+	--color-notify-night-edge: #2b2a63;
+	--color-notify-night-mid: #3b3080;
+	--color-notify-sun: #ffd58a;
+	--color-notify-sun-edge: rgba(245, 184, 97, 0.22);
+	--color-notify-sun-clear: rgba(245, 184, 97, 0);
+	--color-notify-dot: #f2a33a;
+
 	/* Vent is a printed object: production's own dark room, the same in every
      * theme, with its cream, ash, ember and amber. Fixed on purpose; see the
      * fixed-palette convention in apps/mobile/AGENTS.md. The values Skia and

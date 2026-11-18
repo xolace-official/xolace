@@ -10,36 +10,6 @@ export const SPACE_NAME_ICON: CrossPlatformSymbol = {
 	ios: "person.text.rectangle",
 	web: "badge",
 };
-export const APPEARANCE_ICON: CrossPlatformSymbol = {
-	android: "palette",
-	ios: "paintbrush.pointed",
-	web: "palette",
-};
-export const REPLAY_ICON: CrossPlatformSymbol = {
-	android: "replay",
-	ios: "arrow.counterclockwise",
-	web: "replay",
-};
-export const MIRROR_ICON: CrossPlatformSymbol = {
-	android: "format_quote",
-	ios: "quote.bubble",
-	web: "format_quote",
-};
-export const NOTIFICATIONS_ICON: CrossPlatformSymbol = {
-	android: "notifications",
-	ios: "bell",
-	web: "notifications",
-};
-export const CHAT_NOTIFICATIONS_ICON: CrossPlatformSymbol = {
-	android: "forum",
-	ios: "bubble.left.and.bubble.right",
-	web: "forum",
-};
-export const QUIET_HOURS_ICON: CrossPlatformSymbol = {
-	android: "bedtime",
-	ios: "moon.zzz",
-	web: "bedtime",
-};
 export const SHARE_ICON: CrossPlatformSymbol = {
 	android: "groups",
 	ios: "person.2.wave.2",
@@ -75,35 +45,8 @@ export const EMAIL_ICON: CrossPlatformSymbol = {
 	ios: "envelope",
 	web: "email",
 };
-export const SHIELD_ICON: CrossPlatformSymbol = {
-	android: "shield",
-	ios: "lock.shield",
-	web: "shield",
-};
-export const HEART_ICON: CrossPlatformSymbol = {
-	android: "favorite",
-	ios: "heart",
-	web: "favorite",
-};
-export const PLUS_TIER_ICON: CrossPlatformSymbol = {
-	android: "auto_awesome",
-	ios: "sparkles",
-	web: "auto_awesome",
-};
-
-export const TALK_TIME_ICON: CrossPlatformSymbol = {
-	android: "graphic_eq",
-	ios: "waveform",
-	web: "graphic_eq",
-};
-
 export const DISPLAY_NAME_ICON: CrossPlatformSymbol = {
 	android: "text_fields",
 	ios: "textformat",
 	web: "text_fields",
-};
-export const REACH_ME_ON_ICON: CrossPlatformSymbol = {
-	android: "send",
-	ios: "paperplane",
-	web: "send",
 };

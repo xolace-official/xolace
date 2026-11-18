@@ -1,9 +1,9 @@
 import ArrowBack from "@expo/material-symbols/arrow_back.xml";
 import { Stack, useRouter } from "expo-router";
 import { playSoftPress } from "@/lib/haptics";
-import { useLargeHeaderOptions } from "@/lib/navigation-options";
+import { useHeaderOptions } from "@/lib/header-options";
 
-/** Settings stack with a large transparent header. Only the root gets a custom back control: a
+/** Settings stack with the redesign's native header (large title, see-through on iOS, opaque on Android). Only the root gets a custom back control: a
  * nested stack root has no native one. */
 const SETTINGS_OPTIONS = { title: "Settings" };
 const APPEARANCE_OPTIONS = { title: "Appearance" };
@@ -20,10 +20,10 @@ const REACH_OPTIONS = {
 
 export default function SettingsLayout() {
 	const router = useRouter();
-	const largeHeaderOptions = useLargeHeaderOptions();
+	const headerOptions = useHeaderOptions();
 
 	return (
-		<Stack screenOptions={largeHeaderOptions}>
+		<Stack screenOptions={headerOptions}>
 			<Stack.Screen name="index" options={SETTINGS_OPTIONS}>
 				<Stack.Toolbar placement="left">
 					<Stack.Toolbar.Button

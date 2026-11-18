@@ -13,10 +13,6 @@
         // Each file is an entry until its first screen PR imports it: delete its
         // line then. These lines only shrink. Their exports carry `@public`.
         "src/components/settings-kit/name-dialog.tsx",
-        "src/components/settings-kit/open-row.tsx",
-        "src/components/settings-kit/parts.tsx",
-        "src/components/settings-kit/switch-row.tsx",
-        "src/components/settings-kit/tile-row.tsx",
         "src/components/shared/avatar.tsx",
         "src/components/shared/care-row.tsx",
         "src/components/shared/country-menu.tsx",
