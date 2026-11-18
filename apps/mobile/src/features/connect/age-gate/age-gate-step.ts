@@ -1,4 +1,4 @@
-import type { api } from "@xolace/backend/convex/_generated/api";
+import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
 import { chatLimitError } from "../chat-rules";
 

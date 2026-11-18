@@ -1,4 +1,4 @@
-import { api } from "@xolace/backend/convex/_generated/api";
+import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import Constants from "expo-constants";
 import { useRef, useState } from "react";

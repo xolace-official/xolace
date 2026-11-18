@@ -1,5 +1,5 @@
-import { api } from "@xolace/backend/convex/_generated/api";
-import type { Id } from "@xolace/backend/convex/_generated/dataModel";
+import { api } from "@xolace/backend/api";
+import type { Id } from "@xolace/backend/dataModel";
 import { useQuery } from "convex/react";
 import type { ThreadConversation } from "./thread-model";
 
