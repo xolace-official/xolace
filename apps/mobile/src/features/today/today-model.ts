@@ -67,8 +67,8 @@ export type Door = "talk" | "vent" | "sit";
 
 /**
  * The month's prompt on the card: while it's carried (`monthlyEvents/prompt.getCarried`,
- * read or written about), until its week ends. The server clears it then too; this hides it
- * on time if the app is open across the moment.
+ * read or written about), until its week ends. The server clears it then too; `use-today`
+ * re-reads this at `carryUntil`, so it also goes on time while the app is open.
  */
 export function monthPromptOnCard(
 	carried: { prompt: string; carryUntil: number } | null | undefined,

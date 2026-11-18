@@ -119,6 +119,25 @@ function useIntro(day: string, userId: string | null | undefined): boolean {
 	return intro.due;
 }
 
+/** setTimeout's longest delay; a prompt's week is far shorter. */
+const MAX_TIMER_MS = 2 ** 31 - 1;
+
+/** This month's prompt on the card, gone the moment its week ends, even while Today stays open. */
+function useMonthPrompt(now: Date): string | null {
+	const carried = useQuery(api.monthlyEvents.prompt.getCarried);
+	const [ended, setEnded] = useState(0);
+	const until = carried?.carryUntil;
+	useEffect(() => {
+		const ms = until === undefined ? 0 : until - Date.now();
+		if (until === undefined || ms <= 0 || ms > MAX_TIMER_MS) {
+			return;
+		}
+		const id = setTimeout(() => setEnded(until), ms);
+		return () => clearTimeout(id);
+	}, [until]);
+	return monthPromptOnCard(carried, Math.max(now.getTime(), ended));
+}
+
 /** Today in the app: the profile summary, the hour and night mode, and the device. */
 export function useTodayData(): Today {
 	const summary = useProfileSummary();
@@ -135,8 +154,7 @@ export function useTodayData(): Today {
 	);
 	const streak = useStreak(summary?.currentStreak, day, userId);
 	const intro = useIntro(day, userId);
-	const carried = useQuery(api.monthlyEvents.prompt.getCarried);
-	const monthPrompt = monthPromptOnCard(carried, now.getTime());
+	const monthPrompt = useMonthPrompt(now);
 
 	// A double tap on a door would stack two screens.
 	const pushOnce = usePushOnce();
