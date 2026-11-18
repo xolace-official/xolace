@@ -14,6 +14,7 @@ import { kindlingView } from "./kindling/kindling-model";
 import { useKeptKindling } from "./kindling/use-kept-kindling";
 import { momentView } from "./moments/moments-model";
 import { railTiles } from "./rail/rail-model";
+import { wordLine } from "./word/word-model";
 
 type CampfireStats = FunctionReturnType<typeof api.intake.campfireStats>;
 
@@ -109,9 +110,6 @@ export function useLowerModules() {
 				: timeline.results.slice(0, MOMENT_COUNT).map(momentView),
 		playingSlug: isPlaying ? (nowPlaying?.slug ?? null) : null,
 		rail: shelf === undefined ? undefined : railTiles(shelf),
-		word:
-			quote === undefined
-				? undefined
-				: (quote.curated?.text ?? quote.session?.text ?? null),
+		word: wordLine(quote),
 	};
 }

@@ -1,7 +1,8 @@
+import type { Id } from "@xolace/backend/dataModel";
 import type { CampfireView } from "../campfire/campfire-model";
 import type { KindlingView, TwigView } from "../kindling/kindling-model";
-import type { MomentView } from "../moments/moments-model";
-import type { RailTile } from "../rail/rail-model";
+import { type MomentView, momentView } from "../moments/moments-model";
+import { type RailTile, railTiles } from "../rail/rail-model";
 import type { Today } from "../today-data";
 import { COVERS } from "./covers";
 
@@ -71,72 +72,77 @@ export const FIXTURE_CAMPFIRE = {
 	warming: { emotion: "self doubt", kind: "warming" },
 } satisfies Record<string, CampfireView>;
 
-/** The board's rail (`P/src/fixtures/today.ts` RAIL), as the New shelf would send it. */
-export const FIXTURE_RAIL: RailTile[] = [
-	{
-		cover: COVERS.a1,
-		family: "support",
-		id: "r1",
-		slug: "voice",
-		sub: "Support audio",
-		title: "A voice for this",
-	},
-	{
-		cover: COVERS.a2,
-		family: "music",
-		id: "r2",
-		slug: "quiet",
-		sub: "Music",
-		title: "Low sound for the quiet",
-	},
-	{
-		cover: COVERS.a3,
-		family: "support",
-		id: "r3",
-		slug: "arrives",
-		sub: "Support audio",
-		title: "When it all arrives",
-	},
-	{
-		cover: COVERS.a2,
-		family: "music",
-		id: "r4",
-		slug: "rain",
-		sub: "Music",
-		title: "Rain on the tent",
-	},
-];
+type Shelf = Parameters<typeof railTiles>[0];
+type TimelineRow = Parameters<typeof momentView>[0];
 
-/** The board's moments (`TODAY_MOMENTS`). */
+const shelfItem = (
+	slug: string,
+	title: string,
+	family: "music" | "support",
+	cover: string
+): Shelf[number] => ({
+	_id: slug as Id<"audio_tracks">,
+	attribution: undefined,
+	family,
+	slug,
+	thumbhash: undefined,
+	thumbUrl: cover,
+	title,
+});
+
+/** The board's rail (`P/src/fixtures/today.ts` RAIL), as the New shelf sends it. */
+export const FIXTURE_RAIL: RailTile[] = railTiles([
+	shelfItem("voice", "A voice for this", "support", COVERS.a1),
+	shelfItem("quiet", "Low sound for the quiet", "music", COVERS.a2),
+	shelfItem("arrives", "When it all arrives", "support", COVERS.a3),
+	shelfItem("rain", "Rain on the tent", "music", COVERS.a2),
+]);
+
+const timelineRow = (
+	id: string,
+	mirrorText: string,
+	granularLabel: string,
+	hasMirrorAudio: boolean
+): TimelineRow => ({
+	_id: id as Id<"sessions">,
+	confirmationState: null,
+	createdAt: 0,
+	entryType: "open_prompt",
+	granularLabel,
+	hasMirrorAudio,
+	mirrorText,
+	pathChosen: null,
+	primaryEmotion: null,
+	toneUsed: null,
+});
+
+/** The board's moments (`TODAY_MOMENTS`), as the timeline's first page sends them. */
 export const FIXTURE_MOMENTS: MomentView[] = [
-	{
-		audio: true,
-		emotion: "overwhelm",
-		id: "m1",
-		quote:
-			"You're not behind. You're tired of running at a pace that was never yours.",
-	},
-	{
-		audio: false,
-		emotion: "stress",
-		id: "m2",
-		quote:
-			"You can set it down for tonight. It will still be there to look at tomorrow.",
-	},
-	{
-		audio: false,
-		emotion: "self-doubt",
-		id: "m3",
-		quote: "That it matters this much shows you what you care about.",
-	},
-	{
-		audio: true,
-		emotion: "homesickness",
-		id: "m4",
-		quote:
-			"Missing home doesn't mean you chose wrong. It means you had somewhere worth missing.",
-	},
-];
+	timelineRow(
+		"m1",
+		"You're not behind. You're tired of running at a pace that was never yours.",
+		"overwhelm",
+		true
+	),
+	timelineRow(
+		"m2",
+		"You can set it down for tonight. It will still be there to look at tomorrow.",
+		"stress",
+		false
+	),
+	timelineRow(
+		"m3",
+		"That it matters this much shows you what you care about.",
+		"self-doubt",
+		false
+	),
+	timelineRow(
+		"m4",
+		"Missing home doesn't mean you chose wrong. It means you had somewhere worth missing.",
+		"homesickness",
+		true
+	),
+].map(momentView);
 
 /** The board's word for today. */
 export const FIXTURE_WORD = "Slow is still moving.";
