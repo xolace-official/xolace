@@ -6,18 +6,20 @@ import "@/lib/theme-bootstrap";
 import { useAuth } from "@clerk/expo";
 import * as Sentry from "@sentry/react-native";
 import { useConvexAuth } from "convex/react";
-import { Observe, ObserveRoot, useObserve } from "expo-observe";
+import { Observe, ObserveRoot } from "expo-observe";
 import { Stack, useGlobalSearchParams, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
 import { Settings } from "react-native-pulsar";
-import { FullRippleLoader } from "@/components/shared/loader/ripple/full-ripple-loader";
 import {
 	UpdateBottomSheet,
 	type UpdateBottomSheetMode,
 } from "@/components/shared/update-bottom-sheet";
 import { useLaunchFonts } from "@/design/fonts";
+import { LaunchCover } from "@/features/launch/launch-cover";
+import { LaunchHold } from "@/features/launch/launch-hold";
+import { useLaunchHold } from "@/features/launch/launch-store";
 import { isGroupOpen, rootGate } from "@/features/navigation/root-gate";
 import { ReflectDraftGuard } from "@/features/reflect/reflect-draft";
 import { useOtaUpdate } from "@/helpers/hooks/use-ota-update";
@@ -54,6 +56,8 @@ Observe.configure({
 });
 
 SplashScreen.preventAutoHideAsync();
+// The launch cover's first frame is the native splash's last, so the native one hides with no fade.
+SplashScreen.setOptions({ fade: false });
 
 Settings.enableSound(false);
 Settings.preloadPresets([
@@ -146,13 +150,6 @@ const AppContent = () => {
 	const pathname = usePathname();
 	const params = useGlobalSearchParams();
 	const previousPathname = useRef<string | undefined>(undefined);
-	const { markInteractive } = useObserve();
-
-	useEffect(() => {
-		if (!isAuthLoading) {
-			markInteractive();
-		}
-	}, [isAuthLoading, markInteractive]);
 
 	useEffect(() => {
 		if (previousPathname.current !== pathname) {
@@ -164,10 +161,10 @@ const AppContent = () => {
 		}
 	}, [pathname, params, posthog]);
 
-	// Hold the loader while the gate query is in flight rather than bouncing
-	// the user out of (protected) a frame later.
+	// Render no routes while the gate is finding out, rather than bouncing someone out of
+	// (protected) a frame later: at launch the cover stays up; after it, a quiet loading state.
 	if (gate === "loading") {
-		return <FullRippleLoader />;
+		return <LaunchHold reason="gate" />;
 	}
 	return (
 		<>
@@ -222,29 +219,27 @@ function RootLayout() {
 		onUpdateReady: handleOtaUpdateReady,
 	});
 
-	// The theme's font pair, Default's and the fixed faces (src/design/fonts.ts).
+	// The theme's font pair, Default's and the fixed faces (src/design/fonts.ts). The launch
+	// cover (src/features/launch) hides the native splash and stays up until they're in.
 	const fontsReady = useLaunchFonts();
+	useLaunchHold(!fontsReady, "fonts");
 
-	useEffect(() => {
-		if (fontsReady) {
-			SplashScreen.hideAsync();
-		}
-	}, [fontsReady]);
-
-	if (!fontsReady) {
-		return null;
-	}
 	return (
-		<RootProvider>
-			<NavThemeProvider>
-				<AppContent />
-				<UpdateBottomSheet
-					isOpen={updateSheetOpen}
-					mode={updateSheetMode}
-					onOpenChange={setUpdateSheetOpen}
-				/>
-			</NavThemeProvider>
-		</RootProvider>
+		<>
+			{fontsReady ? (
+				<RootProvider>
+					<NavThemeProvider>
+						<AppContent />
+						<UpdateBottomSheet
+							isOpen={updateSheetOpen}
+							mode={updateSheetMode}
+							onOpenChange={setUpdateSheetOpen}
+						/>
+					</NavThemeProvider>
+				</RootProvider>
+			) : null}
+			<LaunchCover />
+		</>
 	);
 }
 

@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/react-native";
 import { Observe } from "expo-observe";
 import type { ErrorBoundaryProps } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,6 +17,9 @@ export function RouteError({ error, retry }: ErrorBoundaryProps) {
 	useEffect(() => {
 		Sentry.captureException(error);
 		Observe.reportError(error);
+		// A crash in the root layout takes the launch cover with it, which would otherwise have
+		// hidden the native splash and left this screen under it.
+		SplashScreen.hideAsync().catch(() => undefined);
 	}, [error]);
 
 	return (

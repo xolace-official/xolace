@@ -29,8 +29,9 @@ const NIGHT_START = 22;
 const NIGHT_END = 4;
 const HOURS_IN_DAY = 24;
 
-/** Returns true if the given hour (0–23) falls in the night window (22:00–04:00). */
-function isNightHour(hour: number): boolean {
+/** Returns true if the given hour (0–23) falls in the night window (22:00–04:00). Also read by the
+ * launch cover, which sits above this provider. */
+export function isNightHour(hour: number): boolean {
 	return hour >= NIGHT_START || hour < NIGHT_END;
 }
 
