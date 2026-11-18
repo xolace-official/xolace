@@ -25,6 +25,7 @@ import { useAppTheme } from "@/context/app-theme-context";
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { playSoftPress } from "@/lib/haptics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { PROFILE } from "./copy";
 
 const EASE = Easing.out(Easing.quad);
 const TIMING = { duration: 250, easing: EASE, ...PLAY_AS_CHOSEN };
@@ -151,10 +152,9 @@ export function ExpandableAvatar({
 	return (
 		<>
 			<Pressable
-				accessibilityLabel={`View ${name}'s photo`}
+				accessibilityLabel={PROFILE.viewPhoto(name)}
 				accessibilityRole="imagebutton"
-				// The overlay copy stands in for it while open, so it looks like one
-				// photo moving rather than two.
+				// The overlay copy stands in while open: one photo moving, not two.
 				className={open ? "opacity-0" : undefined}
 				onPress={expand}
 				ref={anchor}
@@ -173,7 +173,7 @@ export function ExpandableAvatar({
 			>
 				<GestureHandlerRootView style={StyleSheet.absoluteFill}>
 					<Pressable
-						accessibilityLabel="Close photo"
+						accessibilityLabel={PROFILE.closePhoto}
 						accessibilityRole="button"
 						onPress={collapse}
 						style={StyleSheet.absoluteFill}

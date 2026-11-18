@@ -2,6 +2,7 @@
 export const PROFILE = {
 	ask: "Ask to talk",
 	askSub: "They'll get a request and can accept when they're ready.",
+	closePhoto: "Close photo",
 	cooldown: "Not right now",
 	edit: "Edit your profile",
 	expect: "What to expect",
@@ -53,6 +54,7 @@ export const PROFILE = {
 		pendingLimit: (max: number) =>
 			`You're already waiting on ${max} Xolacers. Give them a moment to reply.`,
 	},
+	viewPhoto: (name: string) => `View ${name}'s photo`,
 	who: (name: string) =>
 		`${name} is a trained peer Xolacer, not a therapist. No diagnoses, no clinical advice.`,
 	whoLabel: "Who they are",
