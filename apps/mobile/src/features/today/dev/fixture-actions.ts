@@ -26,4 +26,5 @@ export const FIXTURE_ACTIONS: Today["actions"] = {
 	openReflect: () => router.push("/reflect"),
 	openStreak: () => router.navigate("/you"),
 	openTrack: () => undefined,
+	rekindle: () => undefined,
 };

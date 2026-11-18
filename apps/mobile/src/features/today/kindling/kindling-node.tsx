@@ -6,14 +6,8 @@ import {
 	Skia,
 } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
-import {
-	easeCssFn,
-	easeOutFn,
-	keyframes,
-	popFn,
-	seg,
-	sparkFn,
-} from "../today-motion";
+import { keyframes } from "@/design/keyframes";
+import { easeCssFn, easeOutFn, popFn, seg, sparkFn } from "../today-motion";
 import { BEAT, NODE } from "./kindling-model";
 import { Ping, Spark } from "./node-effects";
 

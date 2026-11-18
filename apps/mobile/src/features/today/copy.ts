@@ -146,6 +146,19 @@ export const COPY = {
 		late: "late",
 	} satisfies Record<TodayPhase, string>,
 	reflect: "Reflect",
+	/** A streak that broke yesterday, revived with one saver (production's chip and sheet). */
+	rekindle: {
+		ask: "Use 1 streak saver",
+		chip: "Tap to rekindle",
+		desc: (n: number) =>
+			`Your ${n}-day streak went quiet. You can rekindle it until tonight.`,
+		failed: "Couldn't rekindle it. Try again.",
+		gone: "That streak can't be rekindled any more.",
+		label: (n: number) => `${n}-day streak went quiet. Tap to rekindle`,
+		notNow: "Not now",
+		quiet: (n: number) => `Your ${n}-day streak went quiet`,
+		title: "The embers are still warm",
+	},
 	streakHint: "Opens You",
 	streakLabel: (n: number) => (n === 1 ? "1 day streak" : `${n} day streak`),
 	title: "Today",

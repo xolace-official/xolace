@@ -10,12 +10,13 @@ import Animated, {
 import { AppText } from "@/components/shared/app-text";
 import { Icon, type IconName } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
+import { keyframes } from "@/design/keyframes";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useTokenColors } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import { useTodayFrame } from "../today-frame";
 import type { Door as DoorId } from "../today-model";
-import { keyframes, riseFn } from "../today-motion";
+import { riseFn } from "../today-motion";
 import { BURST, burstFromX } from "./hero-model";
 
 /** Each door's look: its tile and icon ink are `--color-door-*` (global.css). */

@@ -7,7 +7,7 @@ import {
 	vec,
 } from "@shopify/react-native-skia";
 import { PixelRatio } from "react-native";
-import { arcsAt } from "../clock/breath";
+import { arcsAt } from "@/design/breath-arc";
 import { LIGHT as L } from "../sit-look";
 import type { SitColors } from "./sit-colors";
 import { BLEED, SEAM_PAD } from "./use-arc-lights";

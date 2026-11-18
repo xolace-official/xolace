@@ -2,10 +2,8 @@
 // is T7 §2.3 verbatim and the single source of `step_key` and `step_index`.
 // `username` records only whether the suggested handle was kept, never the handle.
 
-import { INTAKE_VERSION } from "@xolace/backend/convex/lib/validators";
 import type { PostHog } from "posthog-react-native";
 import { SERIES_BRANCH_VALUE } from "@/features/intake/questions";
-import type { IntakeArm } from "@/features/intake/v2/arm";
 import type { FollowUp, Reading } from "@/features/intake/v2/heard";
 import type {
 	AnswerMode,
@@ -17,6 +15,16 @@ import type {
 } from "@/features/intake/v2/machine";
 import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 import type { PaywallSurface } from "@/features/purchases/use-paywall";
+import {
+	findingUsOnce,
+	type IntakeArm,
+	intakeArmProps,
+	intakeDurationMs,
+	intakePersonProperties,
+	prune,
+	setIntakeArm,
+	startIntakeClock,
+} from "@/lib/intake-analytics";
 import type { IntakeAnswers } from "@/store/intake-slice";
 
 type StepType = "founder" | "question" | "interstitial" | "paywall";
@@ -112,50 +120,6 @@ export function declinedCount(answers: IntakeAnswers): number {
 	return Object.values(answers).filter(isDeclined).length;
 }
 
-const prune = <T extends Record<string, unknown>>(props: T): Partial<T> =>
-	Object.fromEntries(
-		Object.entries(props).filter(([, value]) => value !== undefined)
-	) as Partial<T>;
-
-/** How they found Xolace: facts a re-onboard must not overwrite, so `$set_once`. The series
- * pair only when the branch ran. */
-const findingUsOnce = (
-	answers: Pick<
-		IntakeAnswers,
-		"acquisitionSource" | "seriesSeen" | "seriesWantInApp"
-	>
-) =>
-	prune({
-		acquisition_source: answers.acquisitionSource,
-		series_seen: answers.seriesSeen,
-		series_want_in_app: answers.seriesWantInApp,
-	});
-
-/** The person-property dual-write (T7 §3). `$set_once` holds facts a re-onboard must not
- * overwrite; `displayName` stays out. */
-export function intakePersonProperties(
-	answers: IntakeAnswers,
-	version = INTAKE_VERSION
-) {
-	return {
-		$set: prune({
-			age_bracket: answers.ageBracket,
-			coping_style: answers.copingStyle,
-			disclosure_style: answers.disclosureStyle,
-			emotion_awareness: answers.emotionAwareness,
-			intake_version: version,
-			intent: answers.intent,
-			support_frequency: answers.supportFrequency,
-			weighing_on: answers.weighingOn,
-		}),
-		$set_once: findingUsOnce(answers),
-	};
-}
-
-/** Start of the clock behind `duration_ms`. Module-level: intake restarts at the founder
- * message after a cold kill. */
-let startedAt = 0;
-
 /** Carried from `intake_started` onto `intake_completed`; only the first event sees the session
  * count. */
 let returningUser = false;
@@ -164,18 +128,10 @@ let returningUser = false;
 // purchase completes, so teardown could otherwise emit a second `intake_completed`.
 let completedFired = false;
 
-const durationMs = () => (startedAt === 0 ? 0 : Date.now() - startedAt);
-
-/** The `intake-v2` arm (#704), once read. Every event after it carries it. */
-let arm: IntakeArm | undefined;
-
-let firstReflectionFired = false;
-
 export function trackIntakeStarted(posthog: PostHog, sessionCount: number) {
-	startedAt = Date.now();
+	startIntakeClock();
 	returningUser = sessionCount > 0;
 	completedFired = false;
-	firstReflectionFired = false;
 	posthog.capture("intake_started", {
 		is_returning_user: sessionCount > 0,
 		session_count: sessionCount,
@@ -211,7 +167,7 @@ export function trackQuestionnaireCompleted(
 	posthog.capture("intake_questionnaire_completed", {
 		branched_series: branchedSeries(answers),
 		declined_count: declinedCount(answers),
-		duration_ms: durationMs(),
+		duration_ms: intakeDurationMs(),
 		...intakePersonProperties(answers),
 	});
 }
@@ -238,8 +194,8 @@ export function trackIntakeCompleted(
 	completedFired = true;
 	posthog.capture("intake_completed", {
 		branched_series: branchedSeries(answers),
-		duration_ms: durationMs(),
-		...prune({ intake_arm: arm }),
+		duration_ms: intakeDurationMs(),
+		...intakeArmProps(),
 		is_returning_user: returningUser,
 		outcome,
 	});
@@ -250,14 +206,14 @@ export function trackIntakeCompleted(
  * the flag is read, so this is each arm's start.
  */
 export function trackIntakeArmAssigned(posthog: PostHog, assigned: IntakeArm) {
-	arm = assigned;
+	setIntakeArm(assigned);
 	posthog.capture("intake_arm_assigned", { intake_arm: assigned });
 }
 
 /** An arm assigned before this process started: later events still carry it, but it's no new
  * assignment. */
 export function restoreIntakeArm(kept: IntakeArm) {
-	arm = kept;
+	setIntakeArm(kept);
 }
 
 /** v2's one answer: how it came in and how long, never the words. */
@@ -269,7 +225,7 @@ export function trackAnswerGiven(
 	posthog.capture("intake_answer_given", {
 		answer_length: answer.length,
 		answer_mode: mode,
-		...prune({ intake_arm: arm }),
+		...intakeArmProps(),
 	});
 }
 
@@ -288,7 +244,7 @@ export function trackHeardConfirmed(
 		chips_kept: changes.kept,
 		chips_removed: changes.removed,
 		chips_suggested: suggestions.shown,
-		...prune({ intake_arm: arm }),
+		...intakeArmProps(),
 		read,
 		suggestions_taken: suggestions.taken,
 	});
@@ -298,7 +254,7 @@ export function trackHeardConfirmed(
 export function trackFollowUpShown(posthog: PostHog, field: FollowUp["field"]) {
 	posthog.capture("intake_follow_up_shown", {
 		field,
-		...prune({ intake_arm: arm }),
+		...intakeArmProps(),
 	});
 }
 
@@ -308,7 +264,7 @@ export function trackSafetyRouted(
 	level: Reading["safeguardLevel"]
 ) {
 	posthog.capture("intake_safety_routed", {
-		...prune({ intake_arm: arm }),
+		...intakeArmProps(),
 		safeguard_level: level,
 	});
 }
@@ -323,7 +279,7 @@ export function trackSafetyLate(
 	step: IntakeV2Step
 ) {
 	posthog.capture("intake_safety_late", {
-		...prune({ intake_arm: arm }),
+		...intakeArmProps(),
 		safeguard_level: level,
 		step,
 	});
@@ -337,23 +293,8 @@ export function trackReadFallback(
 	reason: ReadFallbackReason
 ) {
 	posthog.capture("intake_read_fallback", {
-		...prune({ intake_arm: arm }),
+		...intakeArmProps(),
 		reason,
-	});
-}
-
-/**
- * The first reflection sent after an intake in this session, timed from intake start, for
- * either arm. A cold kill in between loses it: the clock is per process.
- */
-export function trackFirstReflection(posthog: PostHog) {
-	if (startedAt === 0 || firstReflectionFired) {
-		return;
-	}
-	firstReflectionFired = true;
-	posthog.capture("intake_first_reflection", {
-		...prune({ intake_arm: arm }),
-		ms_since_intake_started: durationMs(),
 	});
 }
 
@@ -405,7 +346,7 @@ export const INTAKE_PLUS_SURFACE =
 
 const plusProps = (props: Record<string, unknown>) => ({
 	...props,
-	...prune({ intake_arm: arm }),
+	...intakeArmProps(),
 	surface: INTAKE_PLUS_SURFACE,
 });
 

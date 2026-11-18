@@ -1,8 +1,9 @@
 import { BlurMask, Circle, Group } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { clearOf } from "@/design/clear-of";
+import { keyframes } from "@/design/keyframes";
 import { useTokenColors } from "@/lib/use-token-color";
-import { keyframes, seg, trimFn } from "../today-motion";
+import { seg, trimFn } from "../today-motion";
 import { alongX, alongY, type PathGeometry } from "./kindling-geometry";
 import { BEAT, WISP } from "./kindling-model";
 

@@ -46,14 +46,14 @@ describe("oldFolderImportsFromNewCode", () => {
 	it("flags a ported folder or a lower layer importing an old folder, types included", () => {
 		const graph = graphOf({
 			"components/shared/card.tsx": [local("features/quotes/tile.tsx")],
-			"design/type.ts": [local("features/reflect/faces.ts", true)],
+			"design/type.ts": [local("features/streak/faces.ts", true)],
 			"features/today/today-screen.tsx": [
 				local("features/quotes/components/quotes-screen.tsx"),
 			],
 		});
 		expect(oldFolderImportsFromNewCode(graph)).toEqual([
 			"components/shared/card.tsx -> features/quotes/tile.tsx",
-			"design/type.ts -> features/reflect/faces.ts",
+			"design/type.ts -> features/streak/faces.ts",
 			"features/today/today-screen.tsx -> features/quotes/components/quotes-screen.tsx",
 		]);
 	});
@@ -223,7 +223,7 @@ describe("backendCallsOutsideDataHooks", () => {
 
 	it("allows data hooks, type-only imports, other heroui parts and old folders", () => {
 		const graph = graphOf({
-			"features/reflect/compose.tsx": [pkg("convex/react", ["useQuery"])],
+			"features/streak/streak-card.tsx": [pkg("convex/react", ["useQuery"])],
 			"features/today/hero/hero.tsx": [
 				{ ...pkg("@xolace/backend/convex/_generated/api"), typeOnly: true },
 				pkg("heroui-native", ["Button"]),
@@ -270,7 +270,7 @@ describe("crossFeatureImportsFromPorted", () => {
 			"features/navigation/root-screens.ts": [
 				local("features/today/screens.ts"),
 			],
-			"features/reflect/reflect-screen.tsx": [local("features/streak/x.ts")],
+			"features/quotes/quote-screen.tsx": [local("features/streak/x.ts")],
 			"features/today/today-screen.tsx": [
 				local("features/purchases/use-paywall.ts"),
 				local("components/shared/app-text.tsx"),

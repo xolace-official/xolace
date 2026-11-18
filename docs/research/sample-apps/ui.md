@@ -34,7 +34,7 @@ Each item: what the sample repo does and where, then → what it could become in
 ## Motion and feedback
 
 **Live dictation waveform (P).** 16 kHz chunks into a scrolling Reanimated SVG bar window (`components/chat-screen/RecordingAnimation.tsx`).
-→ Fits `reflect/hooks/use-plus-dictation.ts` and vent dictation. With Skia, voice amplitude could softly drive the Xolace face/mascot.
+→ Fits `reflect/write/dictation/use-plus-dictation.ts` and vent dictation. With Skia, voice amplitude could softly drive the Xolace face/mascot.
 
 **"Drop it in" motion (P).** Photos fly from the grid into the composer (`components/chat-screen/attachments/AttachmentFlight.tsx`, `useAttachmentFlights.ts`).
 → For adding photos to reflections or gratitude entries.

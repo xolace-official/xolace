@@ -9,7 +9,8 @@ import {
 	vec,
 } from "@shopify/react-native-skia";
 import type { SharedValue } from "react-native-reanimated";
-import { easeInOutFn, keyframes } from "../today-motion";
+import { keyframes } from "@/design/keyframes";
+import { easeInOutFn } from "../today-motion";
 import { EMBER, EMBERS, STAR, STARS } from "./sky-model";
 import type { SkyMotion } from "./use-sky-motion";
 

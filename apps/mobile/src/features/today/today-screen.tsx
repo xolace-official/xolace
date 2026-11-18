@@ -8,7 +8,9 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScrollViewMarker } from "react-native-screens/experimental";
 import { useScheme } from "@/design/scheme";
+import { useClock, useLive } from "@/lib/motion/clock";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { useQualityGate } from "@/lib/motion/use-quality-gate";
 import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 import { CampfireCard } from "./campfire/campfire-card";
 import { TodayHeader } from "./header/today-header";
@@ -19,12 +21,10 @@ import { MomentsSection } from "./moments/moments-section";
 import { ListenRail } from "./rail/listen-rail";
 import { SkyCanvas } from "./sky/sky-canvas";
 import { skyTop } from "./sky/sky-model";
-import { useClock, useLive } from "./today-clock";
 import { useToday } from "./today-data";
 import { TodayFrame, type TodayFrameValue } from "./today-frame";
 import { TodaySlot } from "./today-slot";
 import { TodayToolbar } from "./today-toolbar";
-import { useQualityGate } from "./use-quality-gate";
 import { WordCard } from "./word/word-card";
 
 const BOTTOM_ROOM = 150;

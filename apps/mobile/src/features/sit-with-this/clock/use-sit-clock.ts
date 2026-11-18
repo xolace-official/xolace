@@ -5,8 +5,9 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
+import { ARC, arcsAt } from "@/design/breath-arc";
 import { arcPath } from "./arc-path";
-import { ARC, approach, arcsAt, breathAt, clamp01 } from "./breath";
+import { approach, breathAt, clamp01 } from "./breath";
 import { type ClockEvents, K, MODE } from "./clock-config";
 import { useClockValues } from "./clock-values";
 import {

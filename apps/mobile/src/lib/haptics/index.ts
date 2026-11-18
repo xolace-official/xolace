@@ -10,6 +10,7 @@ export {
 	playGentlePresence,
 	/** @public */
 	playHaptic,
+	/** @public In the haptic vocabulary (haptics.test.ts pins it); Today's zoom and Write may call it again. */
 	playHomeEntrance,
 	playMirrorArrival,
 	playOnboardingEntrance,
@@ -21,6 +22,7 @@ export {
 	playSoftenPulse,
 	playSoftPress,
 	playTextureSelect,
+	/** @public In the haptic vocabulary (haptics.test.ts pins it); Today's zoom and Write may call it again. */
 	playTypingBegin,
 	tap,
 	useProcessingBreathHaptic,

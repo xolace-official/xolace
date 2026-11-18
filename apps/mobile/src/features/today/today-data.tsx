@@ -24,6 +24,11 @@ export type Today = {
 			/** Grows once a day when the flame should ignite (the first thing that counted). */
 			igniteKey: number;
 		} | null;
+		/**
+		 * A streak that broke yesterday and one saver can bring back, until the day ends; null
+		 * with none on offer. `busy` while the revive is on its way.
+		 */
+		rekindle: { streak: number; busy: boolean } | null;
 		/** The first open of the day: the greeting's words, the rise, the word's ink. */
 		intro: boolean;
 		/** The Reflect card. */
@@ -56,6 +61,8 @@ export type Today = {
 		openHelp: () => void;
 		/** The streak chip: where the streak lives (You). */
 		openStreak: () => void;
+		/** Spend one streak saver on the streak on offer. */
+		rekindle: () => void;
 		/** The Reflect card and the toolbar's pill. S2 zooms the card into Reflect. */
 		openReflect: () => void;
 		/** A door the hold opened: Talk, Vent or Sit with this. */

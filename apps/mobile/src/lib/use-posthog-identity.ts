@@ -1,8 +1,8 @@
 import { useConvexAuth } from "convex/react";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
-import { intakePersonProperties } from "@/features/intake/analytics";
 import { useFullContext } from "@/lib/convex/use-full-context";
+import { intakePersonProperties } from "@/lib/intake-analytics";
 import { useAppStore } from "@/store/store";
 
 /** Identifies on `emotional_profiles._id`, the distinctId server captures and RevenueCat use;

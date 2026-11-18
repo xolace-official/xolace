@@ -58,14 +58,6 @@ type OnboardingSlice = {
 	 * a follow-up is merely pending. */
 	homeSheetOpen: boolean;
 	setHomeSheetOpen: (v: boolean) => void;
-	/** The first-run tour is on screen. Transient; the streak reveal waits on this, not on the
-	 * persisted version. */
-	reflectTourActive: boolean;
-	setReflectTourActive: (v: boolean) => void;
-	/** The streak calendar reveal is due or playing on home. Transient; the badge unlock
-	 * moment waits on it, so the two never stack. */
-	streakRevealBusy: boolean;
-	setStreakRevealBusy: (v: boolean) => void;
 };
 
 type PendingEventPrompt = {
@@ -79,12 +71,6 @@ type TogglesSlice = {
 	/** When true, SessionModeProvider auto-activates 3am Mode between 10pm–4am. */
 	nightModeEnabled: boolean;
 	setNightModeEnabled: (v: boolean) => void;
-	/** One-time flag — once true, tone tip banner never shows again on this device. */
-	toneTipSeen: boolean;
-	setToneTipSeen: (v: boolean) => void;
-	/** Version of the reflect tour this device last finished. `0` means none. */
-	reflectTourVersion: number;
-	setReflectTourVersion: (v: number) => void;
 	/** One-time flag — once true, bridge first-run intro modal never shows again. */
 	bridgeIntroSeen: boolean;
 	setBridgeIntroSeen: (v: boolean) => void;
@@ -212,10 +198,6 @@ type ComposerOpenSlice = {
 	 * Clerk user, so a sign-out and a second account never see the first one's words. */
 	intakeFirstAnswer: IntakeFirstAnswer | null;
 	setIntakeFirstAnswer: (answer: IntakeFirstAnswer | null) => void;
-	/** The idle menu's scrim is on screen; it can't cover the native header, so the reflect
-	 * screen hides its toolbar buttons. */
-	idleMenuOpen: boolean;
-	setIdleMenuOpen: (v: boolean) => void;
 };
 
 export type AppState = ThemeSlice &
@@ -288,9 +270,7 @@ export const useAppStore = create<AppState>()(
 							),
 						};
 					}),
-				reflectTourActive: false,
 
-				reflectTourVersion: 0,
 				returnWelcomeSeenAt: null,
 
 				seatHeld: false,
@@ -318,23 +298,17 @@ export const useAppStore = create<AppState>()(
 				setNightModeEnabled: (v) => set({ nightModeEnabled: v }),
 				setPendingEventPrompt: (prompt) => set({ pendingEventPrompt: prompt }),
 				setPreviousTheme: (t) => set({ previousTheme: t }),
-				setReflectTourActive: (v) => set({ reflectTourActive: v }),
-				setReflectTourVersion: (v) => set({ reflectTourVersion: v }),
 				setReturnWelcomeSeenAt: (n) => set({ returnWelcomeSeenAt: n }),
 				setSeatHeld: (v) => set({ seatHeld: v }),
 				setShakeHintSeen: (v) => set({ shakeHintSeen: v }),
-				setStreakRevealBusy: (v) => set({ streakRevealBusy: v }),
 				setSupportAudioIntroSeen: (v) => set({ supportAudioIntroSeen: v }),
 				setTheme: (t) => set({ theme: t }),
-				setToneTipSeen: (v) => set({ toneTipSeen: v }),
 				setVentIntroSeen: (v) => set({ ventIntroSeen: v }),
 				setXolacerPrimerSeen: (v) => set({ xolacerPrimerSeen: v }),
 				shakeHintSeen: false,
-				streakRevealBusy: false,
 				supportAudioIntroSeen: false,
 				theme: "system",
 
-				toneTipSeen: false,
 				ventIntroSeen: false,
 				xolacerPrimerSeen: false,
 
@@ -350,7 +324,6 @@ export const useAppStore = create<AppState>()(
 				composerOpenRequested: false,
 				composerOpenText: null,
 				hiddenProfileCards: [],
-				idleMenuOpen: false,
 				intakeFirstAnswer: null,
 				isNewVersionAvailable: false,
 
@@ -366,7 +339,6 @@ export const useAppStore = create<AppState>()(
 				replySeed: null,
 				requestComposerOpen: (text) =>
 					set({ composerOpenRequested: true, composerOpenText: text ?? null }),
-				setIdleMenuOpen: (v) => set({ idleMenuOpen: v }),
 				setIntakeFirstAnswer: (answer) => set({ intakeFirstAnswer: answer }),
 				setIsNewVersionAvailable: (v) => set({ isNewVersionAvailable: v }),
 				setIsVersionChecked: (v) => set({ isVersionChecked: v }),
@@ -407,7 +379,6 @@ export const useAppStore = create<AppState>()(
 					readByFire: s.readByFire,
 					readerTextSize: s.readerTextSize,
 					readingMode: s.readingMode,
-					reflectTourVersion: s.reflectTourVersion,
 					returnWelcomeSeenAt: s.returnWelcomeSeenAt,
 					seenEventIds: s.seenEventIds,
 					seenMenuItems: s.seenMenuItems,
@@ -415,7 +386,6 @@ export const useAppStore = create<AppState>()(
 					supportAudioIntroSeen: s.supportAudioIntroSeen,
 					textureSetId: s.textureSetId,
 					theme: s.theme,
-					toneTipSeen: s.toneTipSeen,
 					ventIntroSeen: s.ventIntroSeen,
 					xolacerPrimerSeen: s.xolacerPrimerSeen,
 					...accountFlagsPersistedKeys(s),

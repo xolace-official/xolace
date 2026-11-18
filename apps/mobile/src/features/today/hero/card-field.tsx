@@ -1,8 +1,8 @@
 import { View } from "react-native";
 import { Icon } from "@/components/shared/icon";
+import { RotatingPlaceholder } from "@/components/shared/rotating-placeholder";
 import { useTokenColor } from "@/lib/use-token-color";
 import type { Frame } from "./card-a11y";
-import { RotatingPlaceholder } from "./placeholder";
 
 const MIC = 19;
 

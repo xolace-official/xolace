@@ -125,12 +125,3 @@ export function plusOfferCandidates(
 ): PlusOfferMoment[] {
 	return SURFACE_MOMENTS[surface].filter((m) => conditionMet[m] === true);
 }
-
-/** The surface a moment belongs to. Every moment lives at exactly one surface. */
-export function plusOfferSurfaceForMoment(
-	moment: PlusOfferMoment
-): PlusOfferSurface {
-	return (Object.keys(SURFACE_MOMENTS) as PlusOfferSurface[]).find((s) =>
-		SURFACE_MOMENTS[s].includes(moment)
-	)!;
-}

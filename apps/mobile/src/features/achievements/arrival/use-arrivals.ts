@@ -16,7 +16,6 @@ import {
 	arrivalPlan,
 	mayArrive,
 } from "@/features/achievements/arrival/arrival-model";
-import { shouldShowReflectTour } from "@/lib/reflect-tour-version";
 import { useAppStore } from "@/store/store";
 
 /**
@@ -55,17 +54,9 @@ export function useArrivals(
 	const homeSheetOpen = useAppStore((s) => s.homeSheetOpen);
 	// No session exists until submit, so a half-written reflection needs its own hold.
 	const homeComposing = useAppStore((s) => s.homeComposing);
-	const reflectTourActive = useAppStore((s) => s.reflectTourActive);
-	const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
-	const streakRevealBusy = useAppStore((s) => s.streakRevealBusy);
 	// Still loading counts as busy.
-	const reflectBusy =
-		onReflect &&
-		(activeSession !== null ||
-			homeComposing ||
-			reflectTourActive ||
-			shouldShowReflectTour(reflectTourVersion));
-	const homeBusy = reflectBusy || homeSheetOpen || streakRevealBusy;
+	const reflectBusy = onReflect && (activeSession !== null || homeComposing);
+	const homeBusy = reflectBusy || homeSheetOpen;
 	const markUnseen = useMutation(
 		api.achievements.unlock.markSeen
 	).withOptimisticUpdate((store, { ids }) => {

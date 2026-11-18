@@ -1,25 +1,10 @@
+import { type DayPhase, PHASE_HOURS, phaseForHour } from "@/lib/day-phase";
 import { COPY } from "./copy";
 
 /** The hour Today keeps: its sky, its greeting and how much it shows. */
-export type TodayPhase = "dawn" | "day" | "evening" | "late";
+export type TodayPhase = DayPhase;
 
-/** Phase windows by hour: dawn 4–9, day 9–17, evening 17–22, late 22–4. */
-const PHASE_HOURS = { dawn: 4, day: 9, evening: 17, late: 22 } as const;
 const HOURS_IN_DAY = 24;
-
-/** The phase an hour (0–23) falls in. */
-export function phaseForHour(hour: number): TodayPhase {
-	if (hour >= PHASE_HOURS.late || hour < PHASE_HOURS.dawn) {
-		return "late";
-	}
-	if (hour < PHASE_HOURS.day) {
-		return "dawn";
-	}
-	if (hour < PHASE_HOURS.evening) {
-		return "day";
-	}
-	return "evening";
-}
 
 /**
  * Today's phase. Late is the night window with night mode on (`useSessionMode().isNight`,

@@ -1,8 +1,4 @@
 import { describe, expect, it } from "vitest";
-import {
-	REFLECT_TOUR_VERSION,
-	shouldShowReflectTour,
-} from "@/lib/reflect-tour-version";
 import { hasAccountFlag } from "./account-flags-slice";
 import { useAppStore } from "./store";
 
@@ -181,22 +177,6 @@ describe("account flags", () => {
 				"starterSuggestionsSeen",
 			])
 		);
-	});
-});
-
-describe("reflect tour version", () => {
-	it("defaults to 0, so a device that never finished a tour sees the current one", () => {
-		expect(useAppStore.getState().reflectTourVersion).toBe(0);
-		expect(shouldShowReflectTour(0)).toBe(true);
-	});
-
-	it("does not re-show the tour to a device already at the current version", () => {
-		expect(shouldShowReflectTour(REFLECT_TOUR_VERSION)).toBe(false);
-	});
-
-	it("is persisted, so a finished tour stays finished across relaunches", () => {
-		const persisted = persistedKeys();
-		expect(persisted).toContain("reflectTourVersion");
 	});
 });
 

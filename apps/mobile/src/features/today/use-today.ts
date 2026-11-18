@@ -10,6 +10,7 @@ import { playSoftPress } from "@/lib/haptics";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 import { usePushOnce } from "@/lib/use-push-once";
+import { useRekindle } from "./rekindle/use-rekindle";
 import type { Today } from "./today-data";
 import {
 	type Door,
@@ -167,6 +168,7 @@ export function useTodayData(): Today {
 	const { campfire, kindling } = useModules();
 	const lower = useLowerModules();
 	const moduleActions = useTodayActions();
+	const { offer: rekindle, rekindle: spendSaver } = useRekindle();
 
 	// A double tap on a door or the kindling would stack two screens.
 	const pushOnce = usePushOnce();
@@ -189,6 +191,7 @@ export function useTodayData(): Today {
 				}),
 			openReflect,
 			openStreak: () => router.navigate("/you"),
+			rekindle: () => void spendSaver(),
 		},
 		state: {
 			campfire,
@@ -200,6 +203,7 @@ export function useTodayData(): Today {
 			intro,
 			kindling,
 			phase,
+			rekindle,
 			streak,
 		},
 	};

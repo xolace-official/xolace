@@ -75,7 +75,7 @@ describe("replacedPiecesInNewCode", () => {
 			"features/browse/screens.ts": [
 				local("lib/root-screen.ts", ["legacyFitSheet"]),
 			],
-			"features/reflect/screen.tsx": [
+			"features/quotes/screen.tsx": [
 				pkg("heroui-native", ["PressableFeedback"]),
 			],
 			"features/today/hero/hero.tsx": [
