@@ -54,8 +54,17 @@ describe("postView", () => {
 			["🫂", 24, false],
 			["❤️", 41, true],
 		]);
-		expect(v.reactions[1]?.a11y).toBe("Love, 41, you reacted");
-		expect(v.reactions[0]?.hint).toBe("Adds your reaction");
+		expect(v.reactions.map((r) => r.a11y)).toEqual(["Hug, 24", "Love, 41"]);
+	});
+
+	it("hints what a tap does with one reaction each: take yours back, or swap it", () => {
+		const v = postView(post, NOW, US);
+		expect(v.reactions.map((r) => r.hint)).toEqual([
+			"Changes your reaction to this one",
+			"Takes your reaction back",
+		]);
+		const none = postView({ ...post, own_reactions: [] }, NOW, US);
+		expect(none.reactions[0]?.hint).toBe("Adds your reaction");
 	});
 
 	it("gives the time of day, whatever the day (the separator says the day)", () => {

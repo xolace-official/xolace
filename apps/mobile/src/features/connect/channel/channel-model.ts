@@ -9,6 +9,9 @@ import { CHANNEL } from "./copy";
 /** A first paragraph this short, followed by more, reads as the post's title. */
 const TITLE_MAX = 80;
 
+/** What a tap on a reaction does to yours. */
+type ReactionTap = "add" | "swap" | "remove";
+
 export type PostReaction = {
 	type: string;
 	emoji: string;
@@ -96,22 +99,26 @@ export function splitPost(text: string): {
 /** The reactions a card shows: the seven in picker order, only those someone used. */
 function postReactions(m: PostMessage): PostReaction[] {
 	const own = new Set((m.own_reactions ?? []).map((r) => r.type));
-	return REACTIONS.flatMap(([type, emoji]) => {
+	return REACTIONS.flatMap(([type, emoji, name]) => {
 		const count = m.reaction_groups?.[type]?.count ?? 0;
 		if (count <= 0) {
 			return [];
 		}
 		const mine = own.has(type);
+		// One reaction each (`enforceUniqueReaction`): a tap on another swaps yours for it.
+		let tap: ReactionTap = "add";
+		if (mine) {
+			tap = "remove";
+		} else if (own.size > 0) {
+			tap = "swap";
+		}
 		return [
 			{
-				a11y: CHANNEL.reaction(
-					CHANNEL.reactionNames[type] ?? type,
-					count,
-					mine
-				),
+				// Yours is `selected`, which VoiceOver says itself.
+				a11y: CHANNEL.reaction(name, count),
 				count,
 				emoji,
-				hint: CHANNEL.reactionHint(mine),
+				hint: CHANNEL.reactionHint[tap],
 				mine,
 				type,
 			},

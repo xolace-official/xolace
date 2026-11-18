@@ -8,6 +8,9 @@ export const CHANNEL = {
 	/** The header's lifebuoy, as in the thread. */
 	help: "Get help now",
 	lock: "Xolace talks to the whole camp, not back. Drop a reaction instead.",
+	/** The card's VoiceOver action: Stream's hold overlay, with the reactions, Copy, and for the
+	 * broadcaster Edit and Delete. */
+	more: "Reactions and more",
 	/** A broadcast of yours that didn't reach Stream. */
 	notSent: "This post didn't send.",
 	/** A link in a post, as a VoiceOver action: "Open xolace.app/lantern". */
@@ -15,20 +18,14 @@ export const CHANNEL = {
 		`Open ${url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}`,
 	/** The sender's composer. */
 	placeholder: "Post to the whole camp",
-	/** "Hug, 24, you reacted" */
-	reaction: (name: string, count: number, mine: boolean) =>
-		`${name}, ${count}${mine ? ", you reacted" : ""}`,
-	reactionHint: (mine: boolean) =>
-		mine ? "Takes your reaction back" : "Adds your reaction",
-	reactionNames: {
-		fire: "Fire",
-		growth: "Growth",
-		hug: "Hug",
-		laugh: "Laugh",
-		love: "Love",
-		smile: "Smile",
-		thanks: "Thanks",
-	} as Record<string, string>,
+	/** "Hug, 24". Yours is the chip's selected state. */
+	reaction: (name: string, count: number) => `${name}, ${count}`,
+	/** One reaction each: a tap adds yours, swaps it for this one, or takes it back. */
+	reactionHint: {
+		add: "Adds your reaction",
+		remove: "Takes your reaction back",
+		swap: "Changes your reaction to this one",
+	},
 	/** Where the broadcaster removed a post. */
 	removed: "This post was removed.",
 	resend: "Send again",

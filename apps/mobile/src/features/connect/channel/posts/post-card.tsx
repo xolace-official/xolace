@@ -35,7 +35,7 @@ export function PostCard() {
 					    their own buttons beside it (a pressable parent would swallow them). */}
 					<Pressable
 						accessibilityActions={[
-							{ label: CHANNEL.add, name: "longpress" },
+							{ label: CHANNEL.more, name: "longpress" },
 							...view.links.map((url) => ({
 								label: CHANNEL.openLink(url),
 								name: url,
