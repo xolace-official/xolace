@@ -29,9 +29,12 @@ export function useDismissThreadNotifications(conversationId: string) {
 						)
 					)
 				)
-				.catch((error) =>
-					console.log("[connect] failed to clear conversation tray", error)
-				);
+				.catch((error) => {
+					// Production's log, kept for development: a tray left as it was harms nothing.
+					if (__DEV__) {
+						console.log("[connect] failed to clear conversation tray", error);
+					}
+				});
 		};
 
 		dismissPresented();
