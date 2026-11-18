@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AppState } from "react-native";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useFullContext } from "@/lib/convex/use-full-context";
+import { useStableQuery } from "@/lib/convex/use-stable-query";
 import {
 	useNowPlaying,
 	useNowPlayingIsPlaying,
@@ -95,7 +96,9 @@ const MOMENT_COUNT = 4;
 
 /** The rail, what's playing, your moments and today's word. */
 export function useLowerModules() {
-	const shelf = useQuery(api.browse.hub.getNewShelf, useUtcClock());
+	// The rotation's args change with the hour on foreground: hold the last shelf meanwhile,
+	// so the rail doesn't drop out and back.
+	const shelf = useStableQuery(api.browse.hub.getNewShelf, useUtcClock());
 	const nowPlaying = useNowPlaying();
 	const isPlaying = useNowPlayingIsPlaying();
 	const timeline = usePaginatedQuery(
