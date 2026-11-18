@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useMutation, useQuery } from "convex/react";
@@ -20,7 +21,8 @@ import { useSwapOptions } from "./swap/use-swap-options";
  * kindling twig (`from=kindling`) replays a completed session's exercise:
  * nothing in the session moves, finishing tends the twig, and it goes back.
  * Today's Sit door (`from=today`) plays Three breaths on its own
- * (`exercises.getStandalone`): no session, no slots, no swap, and it goes back.
+ * (`exercises.getStandalone`): no session, no slots, no swap; finishing it counts the day
+ * (`exercises.completeStandalone`), and it goes back.
  * Nothing written in a prompt is ever sent.
  */
 export function useSitData(): Sit {
@@ -50,6 +52,7 @@ export function useSitData(): Sit {
 	);
 	const result = sitResult(from, forSession, alone);
 	const completeStep = useMutation(api.paths.completeStep);
+	const completeStandalone = useMutation(api.exercises.completeStandalone);
 	const afterPath = useSessionEndHref(standalone ? null : sessionId);
 	const { isNight } = useSessionMode();
 	const started = useRef(false);
@@ -112,6 +115,13 @@ export function useSitData(): Sit {
 			// Finishing tends the kindling twig; leaving early leaves it untouched.
 			if (completed && stepId) {
 				await completeStep({ stepId }).catch(() => undefined);
+			}
+			// From Today, a run to its end counts as a day showed up (the same credit as a
+			// tended breathing twig). It never holds up the way back; a failure is reported.
+			if (completed && standaloneTitle) {
+				completeStandalone({ title: standaloneTitle }).catch((error) =>
+					Sentry.captureException(error)
+				);
 			}
 			// A deep link has no history to go back to: Reflect, the landing, instead.
 			if (router.canGoBack()) {
