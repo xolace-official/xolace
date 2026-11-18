@@ -46,13 +46,14 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
 - **Colors:** CSS variables (`--background`, `--foreground`, `--accent`, ...), never
   hex, even inline. Every theme defines the same variables. `useThemeColor` from
   `heroui-native` for JS values. A fixed palette is allowed only for the listed
-  "printed object" surfaces (quotes poster, vent, auth, Lantern reader pages, Talk's
+  "printed object" surfaces (quotes poster, vent, first run, Lantern reader pages, Talk's
   voice orbs, look glows, aurora and leave scrim, Today's sky and light, Today's
   Reflect-card doors and light, Today's kindling and campfire firelight, Connect's avatar
   art and Xolace flame), still as tokens in `global.css`. Today's sky is the hour's, not
   the theme's, and its gradient stops stay strings in `features/today/sky/` because
   worklets interpolate them. Connect's art is content a person or the brand wears, the
-  same in every theme.
+  same in every theme. First run's colours are `first-run-*` tokens too; only the
+  colours a worklet mixes per frame stay RGB triplets, in `features/first-run/first-run-palette.ts`.
 - **Themes:** one registry, `src/design/themes.ts`; never hand-write a theme name
   list or `${id}-${mode}`. To add a theme: add an entry to `THEMES` with only the
   values it changes (production-style palettes go in `src/design/theme-values.ts`),
@@ -183,6 +184,16 @@ worked example is `reach-me-on`: `reach-sheet-data.tsx` and `dev/`.
   dependencies. `import-cycles.test.ts` is the static guard: it fails when anything
   else imports dev code (`devCodeInReleaseGraph`) or a feature's `dev/` is imported
   from outside that feature's `dev/` folders and `src/dev` (`devImportsFromOutside`).
+
+## The root guard
+
+`src/app/_layout.tsx` shows one of three groups, decided by `rootGate`
+(`src/features/navigation/root-gate.ts`, a pure function with its tests): `(first-run)`
+(promise, story, sign-in) while signed out, `(intake)` until onboarding is complete, then
+`(protected)`. Change who sees what there and in its tests, never with a `<Redirect>` in a
+screen. `seatHeld` (the store) keeps `(first-run)` up for the seated moment after a sign-in;
+the sign-in hook releases it, and an onboarded account goes straight to `(protected)`.
+The launch cover and native splash sit before the guard and aren't first run's.
 
 ## Tabs and the root seams
 

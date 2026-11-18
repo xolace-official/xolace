@@ -23,6 +23,7 @@ import Purchases, {
 } from "react-native-purchases";
 import { appConfig } from "@/config/app";
 import { playAffirmativePress, playErrorNotice } from "@/lib/haptics";
+import { useAppStore } from "@/store/store";
 
 function hasActiveEntitlement(customerInfo: CustomerInfo | null): boolean {
 	if (!customerInfo) {
@@ -72,9 +73,11 @@ export function RevenueCatProvider({
 	const posthog = usePostHog();
 	const { toast } = useToast();
 	const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
+	// Waits for the account too: before `getOrCreate` lands it throws `user_not_found`.
+	const accountPending = useAppStore((s) => s.accountPending);
 	const entitlement = useQuery(
 		api.premium.getEntitlement,
-		isAuthenticated ? {} : "skip"
+		isAuthenticated && !accountPending ? {} : "skip"
 	);
 	const appUserId = entitlement?.appUserId ?? null;
 

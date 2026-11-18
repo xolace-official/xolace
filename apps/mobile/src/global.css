@@ -196,6 +196,71 @@
 	--color-today-flame-core: #ffe2ae;
 	--color-today-ignite-glow: rgba(242, 163, 58, 0.6);
 	--color-today-gleam: rgba(255, 214, 170, 0.95);
+	/* First run (S18): the promise's dusk and day, and the story and seat's night by Flux's fire,
+     * the same in every theme. Colours its worklets mix per frame stay RGB triplets in
+     * src/features/first-run/first-run-palette.ts; see the fixed-palette convention in
+     * apps/mobile/AGENTS.md. */
+	--color-first-run-ground: rgb(7, 6, 5);
+	--color-first-run-button-shadow: rgb(245, 150, 60);
+	--color-first-run-drift-1: rgba(245, 178, 124, 0.1);
+	--color-first-run-drift-2: rgba(168, 132, 178, 0.06);
+	--color-first-run-drift-3: rgba(54, 70, 110, 0.12);
+	--color-first-run-underglow-day-1: rgba(242, 163, 58, 0.26);
+	--color-first-run-underglow-day-2: rgba(242, 163, 58, 0.08);
+	--color-first-run-underglow-day-3: rgba(242, 163, 58, 0);
+	--color-first-run-underglow-dusk-1: rgba(245, 150, 60, 0.24);
+	--color-first-run-underglow-dusk-2: rgba(245, 120, 40, 0.08);
+	--color-first-run-underglow-dusk-3: rgba(245, 120, 40, 0);
+	--color-first-run-mood-foot-1: rgba(0, 0, 0, 0);
+	--color-first-run-mood-foot-2: rgba(0, 0, 0, 0.55);
+	--color-first-run-mood-lift: rgb(245, 160, 70);
+	--color-first-run-mood-glow: rgba(255, 190, 110, 0.8);
+	--color-first-run-coal-1: rgb(255, 244, 220);
+	--color-first-run-coal-2: rgb(255, 181, 74);
+	--color-first-run-coal-3: rgba(255, 140, 40, 0);
+	--color-first-run-ember-flare: rgb(247, 190, 100);
+	--color-first-run-spark: rgb(255, 203, 120);
+	--color-first-run-spark-glow: rgba(255, 160, 60, 0.8);
+	--color-first-run-card-1: rgb(42, 28, 36);
+	--color-first-run-card-2: rgb(26, 18, 24);
+	--color-first-run-card-edge: rgba(255, 220, 210, 0.16);
+	--color-first-run-card-shadow: rgba(0, 0, 0, 0.7);
+	--color-first-run-knot-fill: rgb(122, 74, 42);
+	--color-first-run-knot-ring: rgb(90, 52, 28);
+	--color-first-run-log-1: rgb(107, 65, 38);
+	--color-first-run-log-2: rgb(62, 36, 20);
+	--color-first-run-log-edge: rgba(255, 210, 160, 0.18);
+	--color-first-run-mask: rgb(18, 13, 20);
+	--color-first-run-online: rgb(143, 214, 160);
+	--color-first-run-panel-dot: rgb(228, 218, 255);
+	--color-first-run-panel-fill-1: rgba(120, 95, 210, 0.18);
+	--color-first-run-panel-fill-2: rgba(120, 95, 210, 0.04);
+	--color-first-run-panel-line: rgb(214, 200, 255);
+	--color-first-run-panel-note: rgb(237, 230, 255);
+	--color-first-run-quote-dot: rgb(255, 231, 176);
+	--color-first-run-quote-dot-ring: rgba(247, 213, 140, 0.12);
+	--color-first-run-quote-dot-glow: rgba(247, 180, 90, 0.4);
+	--color-first-run-reflect-mask-1: rgb(0, 0, 0);
+	--color-first-run-reflect-mask-2: rgba(0, 0, 0, 0);
+	--color-first-run-ripple: rgba(200, 230, 242, 0.7);
+	--color-first-run-seat-fire-1: rgba(245, 150, 60, 0.42);
+	--color-first-run-seat-fire-2: rgba(245, 120, 40, 0.12);
+	--color-first-run-seat-fire-3: rgba(245, 120, 40, 0);
+	--color-first-run-seat-glow-1: rgba(255, 200, 120, 0.55);
+	--color-first-run-seat-glow-2: rgba(255, 170, 80, 0);
+	--color-first-run-shoulders: rgb(58, 46, 68);
+	--color-first-run-water: rgba(200, 230, 242, 0.5);
+	--color-first-run-you-fill: rgba(255, 255, 255, 0.035);
+	/* The story's made-up Xolacers' drawn faces. */
+	--color-first-run-face-1-bg: rgb(233, 185, 140);
+	--color-first-run-face-1-hair: rgb(31, 23, 18);
+	--color-first-run-face-1-skin: rgb(139, 90, 67);
+	--color-first-run-face-2-bg: rgb(183, 163, 255);
+	--color-first-run-face-2-hair: rgb(20, 16, 14);
+	--color-first-run-face-2-skin: rgb(94, 59, 44);
+	--color-first-run-face-3-bg: rgb(143, 195, 240);
+	--color-first-run-face-3-hair: rgb(58, 36, 22);
+	--color-first-run-face-3-skin: rgb(192, 138, 104);
 	/* Lantern reader pages (#408, S9b): the reading modes' own sheets, laid
      * over the light/dark base by ScopedVariables in
      * src/features/lantern/reader/reader-page.tsx. Warm and low-blue; Night is

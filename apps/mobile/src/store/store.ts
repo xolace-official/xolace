@@ -35,6 +35,15 @@ type ThemeSlice = {
 type OnboardingSlice = {
 	introSeen: boolean;
 	setIntroSeen: (v: boolean) => void;
+	/** First run is playing someone into their seat after sign-in: the root guard keeps first run
+	 * open until it lets go (src/features/navigation/root-gate.ts). Transient. */
+	seatHeld: boolean;
+	setSeatHeld: (v: boolean) => void;
+	/** A sign-in landed (`setActive`) but its user row isn't there yet (`users.getOrCreate`). Every
+	 * root reader of a `requireAuth` query waits on it: before the row exists those queries throw
+	 * `user_not_found`, and the bootstrap boundary would swap the seat for a loader. Transient. */
+	accountPending: boolean;
+	setAccountPending: (v: boolean) => void;
 	/** Home's reflect card has left idle: the composer is open (typing or a live mic), or a
 	 * submit is on its way and has no session yet. Transient; the badge unlock moment and
 	 * streak-held wait on it, since either would close the keyboard over a half-written
@@ -225,6 +234,7 @@ export const useAppStore = create<AppState>()(
 	devtools(
 		persist(
 			(set) => ({
+				accountPending: false,
 				acknowledgedStreaks: {},
 				addToSeenEventIds: (slug) =>
 					set((s) =>
@@ -283,9 +293,12 @@ export const useAppStore = create<AppState>()(
 				reflectTourVersion: 0,
 				returnWelcomeSeenAt: null,
 
+				seatHeld: false,
+
 				seenEventIds: [],
 
 				seenMenuItems: [],
+				setAccountPending: (v) => set({ accountPending: v }),
 				setBridgeIntroSeen: (v) => set({ bridgeIntroSeen: v }),
 				setChatEnabledCached: (v) => set({ chatEnabledCached: v }),
 				setColorThemeId: (id) => set({ colorThemeId: id }),
@@ -308,6 +321,7 @@ export const useAppStore = create<AppState>()(
 				setReflectTourActive: (v) => set({ reflectTourActive: v }),
 				setReflectTourVersion: (v) => set({ reflectTourVersion: v }),
 				setReturnWelcomeSeenAt: (n) => set({ returnWelcomeSeenAt: n }),
+				setSeatHeld: (v) => set({ seatHeld: v }),
 				setShakeHintSeen: (v) => set({ shakeHintSeen: v }),
 				setStreakRevealBusy: (v) => set({ streakRevealBusy: v }),
 				setSupportAudioIntroSeen: (v) => set({ supportAudioIntroSeen: v }),

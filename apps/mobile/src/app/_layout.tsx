@@ -87,13 +87,16 @@ const ROOT_SCREEN_OPTIONS = { animation: "none", headerShown: false } as const;
 
 const AppContent = () => {
 	const introSeen = useAppStore((s) => s.introSeen);
+	const seatHeld = useAppStore((s) => s.seatHeld);
+	const accountPending = useAppStore((s) => s.accountPending);
 	const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
 	const { isSignedIn, isLoaded: isClerkLoaded, userId } = useAuth();
 	const posthog = usePostHog();
 
 	// The intake gate (T6, #263), hoisted so the root is the single subscriber
 	// and Convex dedupes every downstream read.
-	const context = useFullContext(!isAuthenticated);
+	// Skipped until the account exists too: before `getOrCreate` lands it throws `user_not_found`.
+	const context = useFullContext(!isAuthenticated || accountPending);
 	usePostHogIdentity();
 	// `undefined` only while the query is in flight (the gate waits on it once signed
 	// in); an answered query with no flag on the profile is "not done", as before.
@@ -104,29 +107,32 @@ const AppContent = () => {
 	const gate = rootGate({
 		authenticated: isAuthenticated,
 		authLoading: isAuthLoading,
-		introSeen,
 		onboardingComplete,
+		seatHeld,
 	});
 
-	// Breadcrumb the route-group guard's inputs: a wrong (auth) landing on a cold
+	// Breadcrumb the route-group guard's inputs: a wrong (first-run) landing on a cold
 	// start is either a Clerk cache miss or a Clerk/Convex desync.
 	useEffect(() => {
 		Sentry.setUser(userId ? { id: userId } : null);
 		Sentry.addBreadcrumb({
 			category: "auth.guard",
 			data: {
+				accountPending,
 				clerkLoaded: isClerkLoaded,
 				clerkSignedIn: !!isSignedIn,
 				convexAuthenticated: isAuthenticated,
 				convexAuthLoading: isAuthLoading,
 				introSeen,
 				onboardingComplete: onboardingComplete ?? null,
+				seatHeld,
 			},
 			level:
 				isClerkLoaded && isSignedIn && !isAuthenticated ? "warning" : "info",
 			message: `route guard → ${gate}`,
 		});
 	}, [
+		accountPending,
 		gate,
 		introSeen,
 		isAuthenticated,
@@ -135,6 +141,7 @@ const AppContent = () => {
 		isSignedIn,
 		userId,
 		onboardingComplete,
+		seatHeld,
 	]);
 	const pathname = usePathname();
 	const params = useGlobalSearchParams();
@@ -168,11 +175,8 @@ const AppContent = () => {
 			<ChatLocalDataGuard />
 			<ReflectDraftGuard />
 			<Stack screenOptions={ROOT_SCREEN_OPTIONS}>
-				<Stack.Protected guard={isGroupOpen(gate, "(onboarding)")}>
-					<Stack.Screen name="(onboarding)" options={NO_HEADER} />
-				</Stack.Protected>
-				<Stack.Protected guard={isGroupOpen(gate, "(auth)")}>
-					<Stack.Screen name="(auth)" options={NO_HEADER} />
+				<Stack.Protected guard={isGroupOpen(gate, "(first-run)")}>
+					<Stack.Screen name="(first-run)" options={NO_HEADER} />
 				</Stack.Protected>
 				<Stack.Protected guard={isGroupOpen(gate, "(intake)")}>
 					<Stack.Screen name="(intake)" options={NO_HEADER} />

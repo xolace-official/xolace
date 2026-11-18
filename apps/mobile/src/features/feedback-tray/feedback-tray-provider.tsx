@@ -36,7 +36,10 @@ function useShakeHint(eligible: boolean) {
 	const setShakeHintSeen = useAppStore((s) => s.setShakeHintSeen);
 	const { isAuthenticated } = useConvexAuth();
 	// Skipped once seen too, so a seen hint costs no subscription.
-	const context = useFullContext(!isAuthenticated || shakeHintSeen);
+	const accountPending = useAppStore((s) => s.accountPending);
+	const context = useFullContext(
+		!isAuthenticated || accountPending || shakeHintSeen
+	);
 	const due = shakeTipDue(
 		context && {
 			intakeVersion: context.intake?.intakeVersion,
