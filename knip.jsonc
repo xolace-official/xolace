@@ -15,7 +15,11 @@
         "src/components/shared/media-row.tsx",
         "src/components/shared/rolling-number.tsx",
         "src/lib/keyboard/keyboard-spacer.tsx",
-        "src/lib/keyboard/use-keyboard-shown.ts"
+        "src/lib/keyboard/use-keyboard-shown.ts",
+        // Letters' data seam (S20 PR 1) lands before its screens (PR 2), which
+        // delete these lines.
+        "src/features/letters/use-letters-data.ts",
+        "src/features/letters/device-memory.ts"
       ],
       // Read by @expo/fingerprint, and by path from metro.config.js: their
       // exports are consumed by tools knip can't follow.
