@@ -6,6 +6,7 @@ import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useQuery } from "convex/react";
 import { router } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 import { Share } from "react-native";
 import type { MomentScreenData } from "@/features/you/moments/moment/moment-data";
 import { useMirrorAudio } from "@/features/you/moments/moment/use-mirror-audio";
@@ -28,6 +29,7 @@ export function useMoment(id: string | undefined): MomentScreenData {
 	const audio = useMirrorAudio(sessionId);
 	const moment = details ? momentOf(details, new Date()) : null;
 	const setReplySeed = useAppStore((s) => s.setReplySeed);
+	const posthog = usePostHog();
 
 	const state = (() => {
 		// No id: gone. A deleted or someone else's session throws instead (`MomentGuard`).
@@ -51,6 +53,11 @@ export function useMoment(id: string | undefined): MomentScreenData {
 			again: () => {
 				const seed = reflectSeed(moment?.said ?? null);
 				if (seed) {
+					// Lengths only, never the words (as quotes' `quote_reflection_seeded`).
+					posthog.capture("moment_reflection_seeded", {
+						entry_type: details?.entryType ?? null,
+						seed_length: seed.length,
+					});
 					setReplySeed(seed);
 				}
 				router.dismissTo("/reflect");
