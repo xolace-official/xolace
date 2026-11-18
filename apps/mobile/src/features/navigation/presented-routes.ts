@@ -31,6 +31,8 @@ const ANY_CONTEXT: ScreenContext = {
 export const NESTED_SHEETS = [
 	// Reach me on…, a page sheet over Notifications (`settings/_layout.tsx`).
 	"settings/reach",
+	// Delete my data / Delete account, a form sheet over Privacy & Data.
+	"settings/delete",
 ] as const;
 
 /** Every route the native stack presents over the app, as route names (`chat/[conversationId]`). */

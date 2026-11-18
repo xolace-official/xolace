@@ -3,7 +3,9 @@ steps:
   - echo: Seed a ready standard follow-up card (replaces any active card)
   - tool: open-url
     args: { url: "xolace://settings/account" }
-  - await: { exists: "Sign-in method", timeout: 15000 }
+  - await: { exists: "Your name", timeout: 15000 }
+  # Dev tools sit last on Account: bring them on screen first.
+  - scroll-to: "Bump streak +1"
   - await: { visible: "Bump streak +1" }
   - wait: 500
   - scroll-to: "Seed follow-up · standard"

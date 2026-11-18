@@ -334,6 +334,15 @@
 	--color-notify-sun-edge: rgba(245, 184, 97, 0.22);
 	--color-notify-sun-clear: rgba(245, 184, 97, 0);
 	--color-notify-dot: #f2a33a;
+	/* Settings › Privacy (S19). */
+	/* "What Xolace keeps": the card's soft shadow (board `.keep`). */
+	--color-privacy-shadow: rgba(40, 25, 100, 0.35);
+	/* Settings › Account (S19). */
+	/* Google's sign-in mark in its own four colours, the one brand colour the board keeps. */
+	--color-account-google-blue: #4285f4;
+	--color-account-google-green: #34a853;
+	--color-account-google-yellow: #fbbc05;
+	--color-account-google-red: #ea4335;
 
 	/* Vent is a printed object: production's own dark room, the same in every
      * theme, with its cream, ash, ember and amber. Fixed on purpose; see the

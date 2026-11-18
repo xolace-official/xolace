@@ -11,7 +11,7 @@ steps:
   - echo: 'Dev tools → "Starter suggestions · as new user": seen=false, tour unfinished, account treated as zero-session'
   - tool: open-url
     args: { url: "xolace://settings/account" }
-  - await: { exists: "Sign-in method", timeout: 15000 }
+  - await: { exists: "Your name", timeout: 15000 }
   - scroll-to: "Starter suggestions · as new user"
   - tap: { text: "Starter suggestions · as new user" }
   - run: starter-tour-then-bubble

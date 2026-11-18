@@ -1,7 +1,11 @@
 import ArrowBack from "@expo/material-symbols/arrow_back.xml";
+import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Stack, useRouter } from "expo-router";
 import { playSoftPress } from "@/lib/haptics";
 import { useHeaderOptions } from "@/lib/header-options";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { fitSheet } from "@/lib/root-screen";
+import { useTokenColors } from "@/lib/use-token-color";
 
 /** Settings stack with the redesign's native header (large title, see-through on iOS, opaque on Android). Only the root gets a custom back control: a
  * nested stack root has no native one. */
@@ -21,6 +25,21 @@ const REACH_OPTIONS = {
 export default function SettingsLayout() {
 	const router = useRouter();
 	const headerOptions = useHeaderOptions();
+	const [background, surface] = useTokenColors(["background", "surface"]);
+	const reducedMotion = useEffectiveReducedMotion();
+	const sheetContext = {
+		background,
+		liquidGlass: isLiquidGlassAvailable(),
+		reducedMotion,
+		surface,
+	};
+	/** Privacy & Data's delete sheet (`?kind=data|account`): the redesign's form sheet, fitting
+	 * its content, no header. `presentation` is spelled out for `presented-routes.test.ts`. */
+	const deleteOptions = {
+		...fitSheet(sheetContext),
+		headerShown: false,
+		presentation: "formSheet",
+	} as const;
 
 	return (
 		<Stack screenOptions={headerOptions}>
@@ -52,6 +71,7 @@ export default function SettingsLayout() {
 				</Stack.Toolbar>
 			</Stack.Screen>
 			<Stack.Screen name="data" options={DATA_OPTIONS} />
+			<Stack.Screen name="delete" options={deleteOptions} />
 			<Stack.Screen name="account" options={ACCOUNT_OPTIONS} />
 			<Stack.Screen name="follow" options={FOLLOW_OPTIONS} />
 		</Stack>

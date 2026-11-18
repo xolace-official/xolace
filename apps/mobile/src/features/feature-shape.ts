@@ -28,7 +28,6 @@ const REPLACED_FEATURES = [
 	"reach-me-on",
 	"reflect",
 	"reflect-tour",
-	"settings",
 	"starter-suggestions",
 	"streak",
 	"trusted-bridge",
@@ -69,25 +68,6 @@ const SHARED_FEATURES: Readonly<Record<string, string>> = {
 	purchases: "the entitlements module: usePlusEntitlement, usePaywall",
 };
 
-/**
- * TEMPORARY. The parts of a folder still on `REPLACED_FEATURES` that a screen PR has already
- * ported, held to the shape now although the rest of their folder isn't yet (`src/`-relative
- * prefixes: an area folder or one file). Each check treats them as ported code, including
- * against the old files beside them. The PR that takes the folder off the list deletes its
- * lines: S19b for `settings`.
- */
-const PORTED_AREAS = [
-	"features/settings/home/",
-	"features/settings/appearance/",
-	"features/settings/mirror/",
-	"features/settings/notifications/",
-	"features/settings/settings-switch-row.tsx",
-	"features/settings/use-save-failed.ts",
-];
-
-const inPortedArea = (file: string) =>
-	PORTED_AREAS.some((area) => file.startsWith(area));
-
 /** An old folder: it predates the shape (and the motion rules in `motion-imports.ts`). */
 export const isLegacyFeature = (feature: string) =>
 	LEGACY_FEATURES.has(feature);
@@ -95,20 +75,6 @@ export const isLegacyFeature = (feature: string) =>
 /** A ported folder: written in the shape, or rewritten into it by its screen PR. */
 const isPortedFeature = (feature: string) =>
 	!(isLegacyFeature(feature) || HUBS.has(feature));
-
-/** A file in a ported folder or a ported area (`src/`-relative path). */
-const isPortedFile = (file: string) => {
-	const feature = file.match(FEATURE_FOLDER)?.[1];
-	return (
-		feature !== undefined && (isPortedFeature(feature) || inPortedArea(file))
-	);
-};
-
-/** A ported area importing the old files of its own folder (`settings/home` -> `settings/components`). */
-const intoOldOfOwnFolder = (from: string, to: string) =>
-	inPortedArea(from) &&
-	!inPortedArea(to) &&
-	from.match(FEATURE_FOLDER)?.[1] === to.match(FEATURE_FOLDER)?.[1];
 
 const FEATURE_FOLDER = /^features\/([^/]+)\//;
 
@@ -126,7 +92,7 @@ const NEW_LAYERS = [
 export function isNewCode(file: string): boolean {
 	const feature = file.match(FEATURE_FOLDER)?.[1];
 	return feature
-		? isPortedFile(file)
+		? isPortedFeature(feature)
 		: NEW_LAYERS.some((layer) => file.startsWith(layer));
 }
 
@@ -196,15 +162,12 @@ export function oldFolderImportsFromNewCode(graph: ImportGraph): string[] {
 	const found: string[] = [];
 	for (const edge of edges(graph)) {
 		const to = edge.target && featureOf(edge.target);
-		const from = relative(edge.file);
 		if (
 			to &&
-			edge.target &&
 			isLegacyFeature(to) &&
 			!Object.hasOwn(SHARED_FEATURES, to) &&
-			(featureOf(edge.file) !== to ||
-				intoOldOfOwnFolder(from, relative(edge.target))) &&
-			isNewCode(from)
+			featureOf(edge.file) !== to &&
+			isNewCode(relative(edge.file))
 		) {
 			found.push(show(edge));
 		}
@@ -278,8 +241,10 @@ export function backendCallsOutsideDataHooks(graph: ImportGraph): string[] {
 		(!imp.typeOnly && target !== undefined && wrappers.has(target));
 	const found: string[] = [];
 	for (const edge of edges(graph)) {
+		const from = featureOf(edge.file);
 		if (
-			isPortedFile(relative(edge.file)) &&
+			from &&
+			isPortedFeature(from) &&
 			!DATA_HOOK.test(path.basename(edge.file)) &&
 			callsBackend(edge)
 		) {
@@ -300,7 +265,7 @@ export function crossFeatureImportsFromPorted(graph: ImportGraph): string[] {
 			from &&
 			to &&
 			from !== to &&
-			isPortedFile(relative(edge.file)) &&
+			isPortedFeature(from) &&
 			!isLegacyFeature(to) &&
 			!Object.hasOwn(SHARED_FEATURES, to)
 		) {
@@ -321,20 +286,13 @@ export function portedFolderImportsFromOldCode(graph: ImportGraph): string[] {
 	for (const edge of edges(graph)) {
 		const from = featureOf(edge.file);
 		const to = edge.target && featureOf(edge.target);
-		const old = relative(edge.file);
-		const intoArea =
-			edge.target !== undefined &&
-			from === to &&
-			inPortedArea(relative(edge.target));
 		if (
 			from &&
 			to &&
+			from !== to &&
 			isLegacyFeature(from) &&
-			!inPortedArea(old) &&
-			((from !== to &&
-				isPortedFeature(to) &&
-				!Object.hasOwn(SHARED_FEATURES, to)) ||
-				intoArea)
+			isPortedFeature(to) &&
+			!Object.hasOwn(SHARED_FEATURES, to)
 		) {
 			found.push(show(edge));
 		}
