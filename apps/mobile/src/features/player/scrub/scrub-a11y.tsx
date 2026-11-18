@@ -24,7 +24,10 @@ export function ScrubA11y({
 			accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
 			accessibilityLabel={PLAYER_COPY.position}
 			accessibilityRole="adjustable"
-			accessibilityValue={{ text: positionVo(position, duration) }}
+			// Where the playhead is, not the stale clock while a seek lands (as `PlayheadSync`).
+			accessibilityValue={{
+				text: positionVo(actions.settled(position), duration),
+			}}
 			accessible
 			className="absolute"
 			onAccessibilityAction={(e) =>
