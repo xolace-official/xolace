@@ -256,17 +256,32 @@ export function selectedPart(
 	return scored.find((p) => p.domain === picked) ?? scored[0] ?? null;
 }
 
+/** An open row's first line: your usual and the change, whichever there are. */
+export function openLine(part: PartView, now: Date): string | null {
+	const pieces = [
+		part.usual === null ? null : S.usuallyCap(part.usual),
+		part.trend ? trendSay(part.trend, now) : null,
+	].filter((p): p is string => p !== null);
+	const line = pieces.join(" · ");
+	return line ? line.charAt(0).toUpperCase() + line.slice(1) : null;
+}
+
 /** What a tap on a part does. */
 export type PartTap = "none" | "select" | "toggle-open" | "toggle-peek";
+/** `doors`: free, and the store agrees (no locked card while a new purchase reaches the server). */
 export function tapOf(
 	part: PartView,
 	isPlus: boolean,
-	view: "grid" | "list"
+	view: "grid" | "list",
+	doors = true
 ): PartTap {
 	if (part.warming) {
 		return "none";
 	}
 	if (!isPlus) {
+		if (!doors) {
+			return "none";
+		}
 		// The list keeps production's rows; only the heavier part opens its locked card there.
 		return view === "grid" || part.emberSub ? "toggle-peek" : "none";
 	}

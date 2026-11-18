@@ -35,20 +35,21 @@ export function PartsSection({
 	if (!state || state.parts.length === 0) {
 		return null;
 	}
-	const { parts, plus, now, upsell } = state;
+	const { parts, plus, doors, now, upsell } = state;
 	const selected = plus ? selectedPart(parts, ui.picked) : null;
-	const peeked = plus
-		? null
-		: (parts.find((p) => p.domain === ui.peek) ?? null);
+	const peeked = doors
+		? (parts.find((p) => p.domain === ui.peek) ?? null)
+		: null;
 	const current = plus ? (selected?.domain ?? null) : (peeked?.domain ?? null);
-	const tap = (part: (typeof parts)[number]) => ui.tap(part, plus, current);
+	const tap = (part: (typeof parts)[number]) =>
+		ui.tap(part, { doors, plus }, current);
 	return (
 		<>
 			<View onLayout={(e) => onPartsY(e.nativeEvent.layout.y)}>
 				<PartsHeader />
 			</View>
-			{plus ? null : <UnlockNumbers onPress={actions.numbers} />}
-			{upsell && state.dial.lit ? (
+			{doors ? <UnlockNumbers onPress={actions.numbers} /> : null}
+			{upsell ? (
 				<UpsellLine
 					domain={upsell.domain}
 					onPlaced={onUpsellPlaced}
@@ -59,12 +60,14 @@ export function PartsSection({
 				active={ui.view === "grid"}
 				clock={clock}
 				current={current}
+				doors={doors}
 				onTap={tap}
 				parts={parts}
 				plus={plus}
 			/>
 			<PartsList
 				active={ui.view === "list"}
+				doors={doors}
 				now={now}
 				onKindling={actions.kindling}
 				onTap={tap}

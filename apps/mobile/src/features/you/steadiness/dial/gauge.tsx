@@ -1,5 +1,5 @@
 import { Canvas, Path } from "@shopify/react-native-skia";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { View } from "react-native";
 import { Presets } from "react-native-pulsar";
 import {
@@ -67,12 +67,15 @@ const TICKS = tickPath(
 export function Gauge({
 	dial,
 	plus,
+	doors,
 	now,
 	running,
 	onLocked,
 }: {
 	dial: DialView;
 	plus: boolean;
+	/** Free, and the store agrees: the locked chip. */
+	doors: boolean;
 	now: Date;
 	running: boolean;
 	onLocked: () => void;
@@ -86,6 +89,9 @@ export function Gauge({
 	const { end, opacity } = useSnappedEnd(progress, lit, DIAL_TICKS);
 	const face = useFace(PRESETS.waiting, running);
 	const { to, hold } = face;
+	// Filled this visit: a later score (the hourly re-read) moves the ticks and the face only,
+	// with no second swell.
+	const filled = useRef(false);
 
 	useEffect(() => {
 		if (score === null) {
@@ -96,6 +102,12 @@ export function Gauge({
 			hold(poseForSteadiness(score));
 			return;
 		}
+		if (filled.current) {
+			to(poseForSteadiness(score));
+			return;
+		}
+		filled.current = true;
+		let settled = false;
 		progress.set(
 			withDelay(
 				FILL_DELAY_MS,
@@ -107,10 +119,17 @@ export function Gauge({
 			)
 		);
 		const swell = setTimeout(() => Presets.swell(), FILL_DELAY_MS);
-		const settle = setTimeout(() => to(poseForSteadiness(score)), SETTLE_MS);
+		const settle = setTimeout(() => {
+			settled = true;
+			to(poseForSteadiness(score));
+		}, SETTLE_MS);
 		return () => {
 			clearTimeout(swell);
 			clearTimeout(settle);
+			// Torn down mid-fill (a remount, Strict Mode): the next run fills again.
+			if (!settled) {
+				filled.current = false;
+			}
 		};
 	}, [score, reduced, progress, to, hold]);
 
@@ -183,9 +202,9 @@ export function Gauge({
 						dial.lit && dial.trend ? (
 							<TrendChip arrow now={now} trend={dial.trend} />
 						) : null
-					) : (
+					) : doors ? (
 						<LockedTrendChip onPress={onLocked} />
-					)}
+					) : null}
 				</View>
 			)}
 		</View>

@@ -21,11 +21,12 @@ export function DialCard({ running }: { running: boolean }) {
 	if (!state) {
 		return null;
 	}
-	const { dial, plus, now } = state;
+	const { dial, plus, doors, now } = state;
 	return (
 		<Surface className="items-center pt-5.5 pb-5" radius={28}>
 			<Gauge
 				dial={dial}
+				doors={doors}
 				now={now}
 				onLocked={actions.numbers}
 				plus={plus}

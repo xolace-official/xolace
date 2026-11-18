@@ -50,7 +50,7 @@ const PLUS: DomainItem[] = [
 		trendSince: null,
 	},
 	{
-		baseline: 75,
+		baseline: null,
 		compounding: null,
 		domain: "family",
 		kindling: false,

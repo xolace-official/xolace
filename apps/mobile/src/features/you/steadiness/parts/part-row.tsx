@@ -12,16 +12,15 @@ import { AppText } from "@/components/shared/app-text";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
-import { COPY } from "@/features/you/copy";
 import { rise } from "@/features/you/steadiness/detail/rise";
 import { KindlingRow, NoticedList } from "@/features/you/steadiness/notes";
 import { DOMAIN_ICON } from "@/features/you/steadiness/parts/domain-icon";
 import { Meter } from "@/features/you/steadiness/parts/meter";
 import {
 	type Domain,
+	openLine,
 	type PartView,
 	tapOf,
-	trendSay,
 } from "@/features/you/steadiness/steadiness-model";
 import { TrendChip } from "@/features/you/steadiness/trend-chip";
 import { cn } from "@/lib/cn";
@@ -34,6 +33,8 @@ const CHEVRON_EASE = Easing.bezier(0.23, 1, 0.32, 1);
 
 export type RowProps = {
 	plus: boolean;
+	/** Free, and the store agrees: the locked card opens. */
+	doors: boolean;
 	now: Date;
 	/** The row open in place (Xolace+). */
 	open: Domain | null;
@@ -46,6 +47,7 @@ export type RowProps = {
 export function Row({
 	part,
 	plus,
+	doors,
 	now,
 	open: openPart,
 	onTap,
@@ -61,7 +63,8 @@ export function Row({
 	const subtle = useTokenColor("subtle");
 	const reduced = useEffectiveReducedMotion();
 	const open = openPart === part.domain;
-	const tappable = tapOf(part, plus, "list") !== "none";
+	const tappable = tapOf(part, plus, "list", doors) !== "none";
+	const line = openLine(part, now);
 	const opens = part.value !== null;
 	const chev = useSharedValue(open ? 1 : 0);
 	useEffect(() => {
@@ -151,13 +154,15 @@ export function Row({
 					className="gap-3 pr-3 pb-3.5 pl-16"
 					entering={reduced ? FadeIn.duration(150) : rise}
 				>
-					<AppText
-						className="text-[13px] leading-[18px]"
-						color="muted"
-						variant="footnote"
-					>
-						{`${part.usual === null ? "" : COPY.steadinessScreen.usuallyCap(part.usual)}${part.trend ? ` · ${trendSay(part.trend, now)}` : ""}`}
-					</AppText>
+					{line ? (
+						<AppText
+							className="text-[13px] leading-[18px]"
+							color="muted"
+							variant="footnote"
+						>
+							{line}
+						</AppText>
+					) : null}
 					<NoticedList className="pt-3" items={part.noticed} />
 					{part.kindling ? <KindlingRow onPress={onKindling} /> : null}
 				</Animated.View>

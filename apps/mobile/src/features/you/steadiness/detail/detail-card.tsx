@@ -33,14 +33,13 @@ export function DetailCard({
 	const reduced = useEffectiveReducedMotion();
 	const color = useTokenColor(part.tone === "muted" ? "subtle" : part.tone);
 	const value = part.value ?? 0;
-	const usual = part.usual ?? value;
 	return (
 		<Animated.View entering={reduced ? FadeIn.duration(FADE_MS) : rise}>
 			<Surface className="gap-4 overflow-hidden px-5 pb-5">
 				<HalfGauge
 					color={color}
 					label={`${value} out of 100${part.usual === null ? "" : `, ${S.usually(part.usual)}`}`}
-					usual={usual}
+					usual={part.usual}
 					value={value}
 				/>
 				<View className="flex-row items-center gap-3">

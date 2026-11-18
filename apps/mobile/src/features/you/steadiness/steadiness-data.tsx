@@ -13,7 +13,11 @@ import { useSteadiness } from "@/features/you/steadiness/use-steadiness";
 export type SteadinessScreenData = {
 	state:
 		| {
+				/** Xolace+'s numbers: the server's Xolace+ view. */
 				plus: boolean;
+				/** Free, and the store agrees: the locked chip, Unlock numbers, the locked cards. Off
+				 * for Xolace+, and while a new purchase hasn't reached the server (free view, no doors). */
+				doors: boolean;
 				now: Date;
 				dial: DialView;
 				/** Live first, quiet next, warming last (the server's order). */

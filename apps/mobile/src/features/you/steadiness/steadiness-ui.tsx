@@ -29,7 +29,11 @@ type SteadinessUi = {
 	peek: Domain | null;
 	toParts: boolean;
 	setView: (view: PartsView) => void;
-	tap: (part: PartView, plus: boolean, current: Domain | null) => void;
+	tap: (
+		part: PartView,
+		access: { plus: boolean; doors: boolean },
+		current: Domain | null
+	) => void;
 };
 
 const Context = createContext<SteadinessUi | null>(null);
@@ -55,8 +59,8 @@ export function SteadinessUiProvider({
 			setOpen(null);
 		},
 		/** `current`: the part the detail card shows now, so picking it again does nothing. */
-		tap: (part, plus, current) => {
-			switch (tapOf(part, plus, view)) {
+		tap: (part, { plus, doors }, current) => {
+			switch (tapOf(part, plus, view, doors)) {
 				case "select":
 					if (part.domain !== current) {
 						Presets.flick();

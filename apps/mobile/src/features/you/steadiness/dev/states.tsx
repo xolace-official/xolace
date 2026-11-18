@@ -72,6 +72,21 @@ export const devStates: readonly DevState[] = [
 		title: "Steadiness, free, Work tapped: the locked detail",
 	},
 	{
+		id: "steadiness-just-bought",
+		options: OPTIONS,
+		Screen: () => <FixtureSteadiness bought plus={false} />,
+		title:
+			"Steadiness, just bought Xolace+: the free view until the server catches up, no doors",
+	},
+	{
+		id: "steadiness-family",
+		options: OPTIONS,
+		Screen: () => (
+			<FixtureSteadiness start={{ picked: "family", toParts: true }} />
+		),
+		title: "Steadiness, Family picked: a number but no usual yet, so no mark",
+	},
+	{
 		id: "steadiness-unlit",
 		options: OPTIONS,
 		Screen: () => <FixtureSteadiness plus={false} unlit />,

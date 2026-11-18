@@ -5,9 +5,11 @@ import { PressScale } from "@/components/shared/press-scale";
 import { COPY } from "@/features/you/copy";
 import { Ring } from "@/features/you/steadiness/parts/ring";
 import { ViewFade } from "@/features/you/steadiness/parts/view-fade";
-import type {
-	Domain,
-	PartView,
+import {
+	type Domain,
+	type PartTap,
+	type PartView,
+	tapOf,
 } from "@/features/you/steadiness/steadiness-model";
 import { Surface } from "@/features/you/surface";
 import { cn } from "@/lib/cn";
@@ -18,6 +20,7 @@ const THREE_UP = 3;
 export function PartsGrid({
 	parts,
 	plus,
+	doors,
 	current,
 	onTap,
 	clock,
@@ -25,6 +28,7 @@ export function PartsGrid({
 }: {
 	parts: PartView[];
 	plus: boolean;
+	doors: boolean;
 	current: Domain | null;
 	onTap: (part: PartView) => void;
 	clock: SharedValue<number>;
@@ -40,8 +44,8 @@ export function PartsGrid({
 						key={part.domain}
 						onTap={onTap}
 						part={part}
-						plus={plus}
 						selected={current === part.domain}
+						tap={tapOf(part, plus, "grid", doors)}
 					/>
 				))}
 				{/* Keep a short last row left-aligned under justify-between. */}
@@ -53,33 +57,33 @@ export function PartsGrid({
 
 function Cell({
 	part,
-	plus,
+	tap,
 	selected,
 	onTap,
 	clock,
 	index,
 }: {
 	part: PartView;
-	plus: boolean;
+	tap: PartTap;
 	selected: boolean;
 	onTap: (part: PartView) => void;
 	clock: SharedValue<number>;
 	index: number;
 }) {
 	const label =
-		plus || part.warming
-			? part.label
-			: `${part.label}. ${COPY.steadinessScreen.peekGo}`;
+		tap === "toggle-peek"
+			? `${part.label}. ${COPY.steadinessScreen.peekGo}`
+			: part.label;
 	return (
 		<PressScale
 			accessibilityLabel={label}
-			accessibilityRole={part.warming ? undefined : "button"}
+			accessibilityRole={tap === "none" ? undefined : "button"}
 			accessibilityState={{ selected }}
 			className={cn(
 				"w-[31%] items-center gap-1 rounded-[16px] border-continuous py-2",
 				selected ? "bg-surface-secondary" : "bg-transparent"
 			)}
-			disabled={part.warming}
+			disabled={tap === "none"}
 			onPress={() => onTap(part)}
 			scaleTo={0.97}
 		>

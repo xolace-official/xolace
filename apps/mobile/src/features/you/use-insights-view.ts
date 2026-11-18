@@ -22,13 +22,18 @@ function useHour(): number {
 	return now;
 }
 
-/** `view` is undefined while it loads; `plus` is the server's Xolace+ view, not the store's. */
+/**
+ * `view` is undefined while it loads. `plus`: the server's Xolace+ view (numbers). `isPlus` and
+ * `isResolved`: the store's answer, which leads the server's right after a purchase (webhook lag).
+ */
 export function useInsightsView(): {
 	view: StView | undefined;
 	plus: boolean;
+	isPlus: boolean;
+	isResolved: boolean;
 	now: Date;
 } {
-	const { isPlus } = usePlusEntitlement();
+	const { isPlus, isResolved } = usePlusEntitlement();
 	const now = useHour();
 	// Null until the server sees the entitlement (webhook lag) and after a lapse: the free view
 	// covers both. Stable, so the hourly re-subscribe doesn't blank anything.
@@ -41,5 +46,11 @@ export function useInsightsView(): {
 		api.compounding.insights.freeView,
 		plus ? "skip" : { now }
 	);
-	return { now: new Date(now), plus: Boolean(plus), view: plus ?? free };
+	return {
+		isPlus,
+		isResolved,
+		now: new Date(now),
+		plus: Boolean(plus),
+		view: plus ?? free,
+	};
 }

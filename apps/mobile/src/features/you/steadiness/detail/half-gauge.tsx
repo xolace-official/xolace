@@ -1,5 +1,5 @@
 import { Canvas, Path, Skia } from "@shopify/react-native-skia";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { View } from "react-native";
 import {
 	Easing,
@@ -55,7 +55,8 @@ export function HalfGauge({
 	label,
 }: {
 	value: number;
-	usual: number;
+	/** Null until the part settles: no mark (production's `mark={baseline === null ? null : …}`). */
+	usual: number | null;
 	color: string;
 	label: string;
 }) {
@@ -63,7 +64,9 @@ export function HalfGauge({
 	const track = useTrack();
 	const reduced = useEffectiveReducedMotion();
 	const dv = useSharedValue(reduced ? value : 0);
-	const du = useSharedValue(usual);
+	const du = useSharedValue(usual ?? 0);
+	// Whether the mark showed last time: a mark that appears starts at its place, not from 0.
+	const marked = useRef(usual !== null);
 	const progress = useDerivedValue(() => dv.get() / 100);
 	const { end, opacity } = useSnappedEnd(progress, TICKS, TICKS);
 	const mark = useDerivedValue(() => {
@@ -81,23 +84,26 @@ export function HalfGauge({
 		return p.build();
 	});
 	useEffect(() => {
-		if (reduced) {
-			dv.set(value);
-			du.set(usual);
-			return;
-		}
 		const ease = {
 			duration: REFILL_MS,
 			easing: Easing.out(Easing.cubic),
 			...PLAY_AS_CHOSEN,
 		};
+		const glide = !reduced && marked.current;
+		marked.current = usual !== null;
+		if (usual !== null) {
+			du.set(glide ? withTiming(usual, ease) : usual);
+		}
+		if (reduced) {
+			dv.set(value);
+			return;
+		}
 		const first = dv.get() === 0;
 		dv.set(
 			first
 				? withDelay(FIRST_DELAY_MS, withTiming(value, ease))
 				: withTiming(value, ease)
 		);
-		du.set(withTiming(usual, ease));
 	}, [value, usual, reduced, dv, du]);
 
 	return (
@@ -126,13 +132,15 @@ export function HalfGauge({
 					strokeWidth={WIDTH}
 					style="stroke"
 				/>
-				<Path
-					color={fg}
-					path={mark}
-					strokeCap="round"
-					strokeWidth={WIDTH}
-					style="stroke"
-				/>
+				{usual === null ? null : (
+					<Path
+						color={fg}
+						path={mark}
+						strokeCap="round"
+						strokeWidth={WIDTH}
+						style="stroke"
+					/>
+				)}
 			</Canvas>
 			<View className="absolute top-5.5 right-0 left-0 items-center">
 				<AppText

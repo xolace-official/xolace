@@ -21,11 +21,14 @@ const noop = () => undefined;
 
 export function FixtureSteadiness({
 	plus = true,
+	bought = false,
 	score = 68,
 	unlit = false,
 	start,
 }: {
 	plus?: boolean;
+	/** Free view, but the store says Xolace+ (just bought; the server hasn't caught up). */
+	bought?: boolean;
 	score?: ScoreFixture;
 	unlit?: boolean;
 	start?: SteadinessStart;
@@ -41,10 +44,11 @@ export function FixtureSteadiness({
 		},
 		state: {
 			dial: dialOf(view, plus, ST_NOW),
+			doors: !(plus || bought),
 			now: ST_NOW,
 			parts: partsOf(view, plus, ST_NOW),
 			plus,
-			upsell: view.upsell ? { domain: view.upsell.domain } : null,
+			upsell: view.upsell && !bought ? { domain: view.upsell.domain } : null,
 		},
 	};
 	return (

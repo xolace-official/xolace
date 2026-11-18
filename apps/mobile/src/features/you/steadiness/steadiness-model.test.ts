@@ -7,6 +7,7 @@ import {
 import {
 	dialOf,
 	litTicks,
+	openLine,
 	partsOf,
 	selectedPart,
 	tapOf,
@@ -164,6 +165,32 @@ describe("picking parts", () => {
 		expect(tapOf(freeLove, false, "grid")).toBe("toggle-peek");
 		expect(tapOf(freeLove, false, "list")).toBe("none");
 		expect(tapOf(freeWork, false, "list")).toBe("toggle-peek");
+	});
+
+	it("opens no locked card while a new purchase reaches the server", () => {
+		const freeWork = byDomain(free, "work");
+		if (!freeWork) {
+			throw new Error("fixture changed");
+		}
+		expect(tapOf(freeWork, false, "grid", false)).toBe("none");
+		expect(tapOf(freeWork, false, "list", false)).toBe("none");
+	});
+});
+
+describe("openLine", () => {
+	it("joins the usual and the change, and only what's there", () => {
+		const work = byDomain(plus, "work");
+		const family = byDomain(plus, "family");
+		const belonging = byDomain(plus, "belonging");
+		if (!(work && family && belonging)) {
+			throw new Error("fixture changed");
+		}
+		expect(openLine(work, ST_NOW)).toBe("Usually 66 · down 8 since last week");
+		// Unlocked, not settled: a number but no usual yet, as the server sends it.
+		expect(family.usual).toBeNull();
+		expect(openLine(family, ST_NOW)).toBe("Same as last week");
+		expect(openLine({ ...family, trend: null }, ST_NOW)).toBeNull();
+		expect(openLine(belonging, ST_NOW)).toBe("Usually 55");
 	});
 });
 

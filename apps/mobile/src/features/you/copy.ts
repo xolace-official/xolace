@@ -238,8 +238,9 @@ export const COPY = {
 		now: "now",
 		parts: "Parts of your life",
 		partsAs: "Show parts as",
-		peek: (name: string, work: boolean) =>
-			work
+		/** `heavierLately`: the part the upsell names, so its line speaks to the stretch. */
+		peek: (name: string, heavierLately: boolean) =>
+			heavierLately
 				? `Xolace+ shows how far ${name} has moved from your usual, which way it's heading, and what Xolace noticed about it.`
 				: `Xolace+ shows how steady ${name} has been, your usual for it, and the change since last week.`,
 		peekGo: "See what Xolace+ shows",

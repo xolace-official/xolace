@@ -24,17 +24,20 @@ const SURFACE = "compounding_upsell";
  * The first upsell this visit, held: the query moves on once it's marked shown, and the line
  * must not vanish under the reader. Never for Xolace+ (production's `useHeldUpsell`).
  */
-function useHeldUpsell(live: Upsell | null | undefined, plus: boolean) {
+function useHeldUpsell(live: Upsell | null | undefined, free: boolean) {
 	const [held, setHeld] = useState<Upsell | null>(null);
-	if (!(held || plus) && live) {
+	if (!held && free && live) {
 		setHeld(live);
 	}
-	return plus ? null : held;
+	return free ? held : null;
 }
 
 export function useSteadiness(): SteadinessScreenData {
-	const { view: live, plus, now } = useInsightsView();
-	const upsell = useHeldUpsell(live?.upsell, plus);
+	const { view: live, plus, isPlus, isResolved, now } = useInsightsView();
+	// The doors follow the store, as production's: after a purchase they go at once, though the
+	// server's Xolace+ view (the numbers) can lag behind. The upsell waits for the store's answer.
+	const doors = !isPlus;
+	const upsell = useHeldUpsell(live?.upsell, doors && isResolved && !plus);
 	const markShown = useMutation(api.compounding.upsell.markShown);
 	const posthog = usePostHog();
 	const openPaywall = usePaywall((s) => s.open);
@@ -66,6 +69,7 @@ export function useSteadiness(): SteadinessScreenData {
 		state: view
 			? {
 					dial: dialOf(view, plus, now),
+					doors,
 					now,
 					parts: partsOf(view, plus, now),
 					plus,
