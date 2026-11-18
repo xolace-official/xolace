@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 /**
  * The thread's Stream channel: one stable handle per channel id, held back until it has state
  * (live, from the offline db, or watched), and `touchConversation` on each message you send so the
@@ -24,7 +25,13 @@ function useLocalChannelState(channel: Channel | null) {
 			.then(() =>
 				channel.offlineMode ? undefined : channel.watch({ presence: true })
 			)
-			.catch((error) => console.error("[connect] channel load failed", error))
+			// Offline it fails, and the list stands on the cache with the offline strip: expected,
+			// so not reported.
+			.catch((error: unknown) => {
+				if (__DEV__) {
+					console.error("[connect] channel load failed", error);
+				}
+			})
 			.finally(() => {
 				if (alive) {
 					setSettledCid(channel.cid);
@@ -60,8 +67,9 @@ function useTouchOnSend(
 			if (!myUserId || event.user?.id !== myUserId) {
 				return;
 			}
-			touch({ conversationId: id }).catch((error) =>
-				console.error("[connect] touch failed", error)
+			// A lost touch leaves the Chats list's order and preview stale.
+			touch({ conversationId: id }).catch((error: unknown) =>
+				Sentry.captureException(error, { tags: { action: "touch" } })
 			);
 		});
 		return unsubscribe;

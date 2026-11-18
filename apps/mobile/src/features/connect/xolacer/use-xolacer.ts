@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 /**
  * A Xolacer's profile on Convex: `xolacerProfile`, the ask flow (age gate, primer, request,
  * Kindling twig), rating, report and block, and the ways on. Production's behaviour and events.
@@ -60,7 +61,7 @@ export function useXolacer(
 					router.back();
 				})
 				.catch((error: unknown) => {
-					console.error("[connect] block failed", error);
+					Sentry.captureException(error, { tags: { action: "block" } });
 					setConfirming(false);
 					toast(THREAD.toast.blockFailed, {
 						description: THREAD.toast.tryAgain,

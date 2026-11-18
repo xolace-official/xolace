@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useMutation } from "convex/react";
@@ -31,12 +32,13 @@ export function useFlagMessage(
 				: Promise.reject(new Error("no client")),
 			flag({ context, conversationId, messageId: message.id }),
 		]).then(([stream, tray]) => {
-			// Each half on its own: one landing still says "Flagged", so a failure would go unseen.
+			// Each half on its own: one landing still says "Flagged", so a concerning message that
+			// missed the safety queue would go unseen. Reported, so someone sees it.
 			if (stream.status === "rejected") {
-				console.error("[connect] flag to Stream failed", stream.reason);
+				Sentry.captureException(stream.reason, { tags: { half: "stream" } });
 			}
 			if (tray.status === "rejected") {
-				console.error("[connect] flag to the concern tray failed", tray.reason);
+				Sentry.captureException(tray.reason, { tags: { half: "tray" } });
 			}
 			const landed =
 				stream.status === "fulfilled" || tray.status === "fulfilled";

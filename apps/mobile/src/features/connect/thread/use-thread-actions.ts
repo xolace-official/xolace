@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react-native";
 /**
  * What the thread's bar and menu do: accept, decline, pick back up (behind the age gate for a
  * seeker), block, rate, report, and the ways out. Production's mutations, toasts and haptics.
@@ -91,7 +92,7 @@ export function useThreadActions(
 					router.back();
 				})
 				.catch((error: unknown) => {
-					console.error("[connect] block failed", error);
+					Sentry.captureException(error, { tags: { action: "block" } });
 					// Closed, not left open: nothing was blocked, and the server is idempotent.
 					setConfirming(false);
 					toast(THREAD.toast.blockFailed, {
