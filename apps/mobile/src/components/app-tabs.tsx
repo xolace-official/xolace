@@ -8,11 +8,10 @@ import { View } from "react-native";
 import { MiniPlayerAccessory } from "@/features/browse/now-playing/mini-player-accessory";
 import { MiniPlayerOverlay } from "@/features/browse/now-playing/mini-player-overlay";
 import { TABS } from "@/features/navigation/tabs";
-import { useUnreadBadge } from "@/features/xolacer-chat/use-unread-badge";
 import { useYouTabIcon } from "@/features/you/avatar/use-you-tab-icon";
 import { playSoftPress } from "@/lib/haptics";
 import { useMiniPlayerShown } from "@/lib/now-playing/now-playing-store";
-import { useTabBarHidden } from "@/lib/tab-bar";
+import { useUnreadBadge } from "@/lib/stream-chat/use-unread-badge";
 
 const SCREEN_LISTENERS = {
 	tabPress: () => {
@@ -39,8 +38,6 @@ function withAvatar(
 export default function AppTabs() {
 	const accent = useThemeColor("accent");
 	const background = useThemeColor("background");
-	// Yielded to a screen raising a bottom toolbar: the two share the same strip.
-	const hidden = useTabBarHidden();
 	// Stream's total across every conversation, the same number as the app icon. Null reads as
 	// nothing.
 	const unread = useUnreadBadge();
@@ -56,7 +53,6 @@ export default function AppTabs() {
 			<NativeTabs
 				backgroundColor={glass ? undefined : background}
 				disableTransparentOnScrollEdge={!glass}
-				hidden={hidden}
 				minimizeBehavior="onScrollDown"
 				screenListeners={SCREEN_LISTENERS}
 				tintColor={accent}

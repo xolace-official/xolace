@@ -1,11 +1,6 @@
-import {
-	SPECIALTIES,
-	specialtyLabel,
-} from "@xolace/backend/convex/lib/specialties";
-import { PressableFeedback } from "heroui-native";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { specialtyLabel } from "@xolace/backend/convex/lib/specialties";
+import { StyleSheet, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { playSoftPress } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 const styles = StyleSheet.create({
@@ -48,88 +43,5 @@ export function SpecialtyChips({
 				</View>
 			))}
 		</View>
-	);
-}
-
-/** Roster filter over tags somebody actually declared; client-side over the loaded directory,
- * so no round trip. */
-export function SpecialtyFilter({
-	available,
-	selected,
-	onSelect,
-}: {
-	available: readonly string[];
-	selected: string | null;
-	onSelect: (slug: string | null) => void;
-}) {
-	const offered = SPECIALTIES.filter((specialty) =>
-		available.includes(specialty.slug)
-	);
-	if (offered.length < 2) {
-		return null;
-	}
-
-	return (
-		<ScrollView
-			contentContainerClassName="gap-2 px-0.5"
-			horizontal
-			keyboardShouldPersistTaps="handled"
-			showsHorizontalScrollIndicator={false}
-		>
-			<FilterChip
-				active={selected === null}
-				label="Everyone"
-				onPress={() => onSelect(null)}
-			/>
-			{offered.map((specialty) => (
-				<FilterChip
-					active={selected === specialty.slug}
-					key={specialty.slug}
-					label={specialty.label}
-					onPress={() =>
-						onSelect(selected === specialty.slug ? null : specialty.slug)
-					}
-				/>
-			))}
-		</ScrollView>
-	);
-}
-
-function FilterChip({
-	label,
-	active,
-	onPress,
-}: {
-	label: string;
-	active: boolean;
-	onPress: () => void;
-}) {
-	return (
-		<PressableFeedback
-			accessibilityLabel={`Show ${label}`}
-			accessibilityRole="button"
-			accessibilityState={{ selected: active }}
-			onPress={() => {
-				playSoftPress();
-				onPress();
-			}}
-		>
-			<View
-				className={cn(
-					"rounded-full border px-3 py-1.5",
-					active ? "border-accent bg-accent/12" : "border-border/55 bg-surface"
-				)}
-				style={styles.borderCurve}
-			>
-				<AppText
-					className={cn(
-						"text-xs",
-						active ? "font-semibold text-accent" : "font-medium text-muted"
-					)}
-				>
-					{label}
-				</AppText>
-			</View>
-		</PressableFeedback>
 	);
 }

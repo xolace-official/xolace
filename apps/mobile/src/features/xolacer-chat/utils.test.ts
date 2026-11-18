@@ -1,12 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { sortByPresence } from "@/features/xolacer-chat/presence-ordering";
 import {
 	type ConversationStatus,
 	daysUntil,
 	declineCooldownActive,
 	hasSpoken,
 	resolveMessageIdentity,
-	unreadBadge,
 } from "@/features/xolacer-chat/utils";
 
 describe("declineCooldownActive", () => {
@@ -96,69 +94,6 @@ describe("hasSpoken", () => {
 	}
 });
 
-describe("unreadBadge", () => {
-	// status | count → what the row's pill shows (null = no pill)
-	const cases: {
-		status: ConversationStatus;
-		count: number;
-		expected: { label: string; a11y: string } | null;
-		label: string;
-	}[] = [
-		{
-			count: 0,
-			expected: null,
-			label: "nothing unread, nothing shown",
-			status: "open",
-		},
-		{
-			count: 1,
-			expected: { a11y: "1 unread message", label: "1" },
-			label: "one unread reads singular",
-			status: "open",
-		},
-		{
-			count: 3,
-			expected: { a11y: "3 unread messages", label: "3" },
-			label: "a live conversation shows its count",
-			status: "open",
-		},
-		// A resting thread is still one the user can pick back up, and the row says
-		// so — suppressing the badge would mute the one signal that brings them back.
-		{
-			count: 3,
-			expected: { a11y: "3 unread messages", label: "3" },
-			label: "a quiet conversation still counts",
-			status: "resting",
-		},
-		// "There is something to decide", not "there is something to read".
-		{
-			count: 3,
-			expected: null,
-			label: "an unaccepted request never badges",
-			status: "requested",
-		},
-		{
-			count: 3,
-			expected: null,
-			label: "a finished conversation stops asking",
-			status: "closed",
-		},
-		// The pill has a fixed width; a screen reader does not.
-		{
-			count: 150,
-			expected: { a11y: "150 unread messages", label: "99+" },
-			label: "past the cap the label caps and the announcement does not",
-			status: "open",
-		},
-	];
-
-	for (const c of cases) {
-		it(`${c.label}: status=${c.status} count=${c.count}`, () => {
-			expect(unreadBadge(c.status, c.count)).toEqual(c.expected);
-		});
-	}
-});
-
 describe("resolveMessageIdentity", () => {
 	const THEM = "profile_them";
 
@@ -237,53 +172,4 @@ describe("resolveMessageIdentity", () => {
 			);
 		});
 	}
-});
-
-describe("sortByPresence", () => {
-	const row = (name: string, present: boolean, atCapacity = false) => ({
-		atCapacity,
-		displayName: name,
-		present,
-	});
-
-	it("leaves the input array untouched", () => {
-		const input = [row("Absent", false), row("Present", true)];
-		sortByPresence(input);
-		expect(input.map((x) => x.displayName)).toEqual(["Absent", "Present"]);
-	});
-
-	// The server's order is the tie-break, so two xolacers on the same side of
-	// the presence line keep the ranking the directory already gave them.
-	it("is stable within each group", () => {
-		const sorted = sortByPresence([
-			row("A-absent", false),
-			row("B-present", true),
-			row("C-absent", false),
-			row("D-present", true),
-		]);
-		expect(sorted.map((x) => x.displayName)).toEqual([
-			"B-present",
-			"D-present",
-			"A-absent",
-			"C-absent",
-		]);
-	});
-
-	// A capped xolacer stays visible but dimmed, and capacity is not a presence
-	// signal — it must not shuffle anyone. A present-but-full xolacer still
-	// outranks an absent one with space.
-	it("does not move a capped xolacer", () => {
-		const sorted = sortByPresence([
-			row("Absent-free", false, false),
-			row("Present-full", true, true),
-			row("Absent-full", false, true),
-			row("Present-free", true, false),
-		]);
-		expect(sorted.map((x) => x.displayName)).toEqual([
-			"Present-full",
-			"Present-free",
-			"Absent-free",
-			"Absent-full",
-		]);
-	});
 });

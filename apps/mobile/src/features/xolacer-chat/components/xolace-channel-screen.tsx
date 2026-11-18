@@ -18,7 +18,7 @@ import {
 	WithComponents,
 } from "stream-chat-expo";
 import { AppText } from "@/components/shared/app-text";
-import { useStreamConnection } from "../providers/stream-chat-provider";
+import { useStreamConnection } from "@/lib/stream-chat/stream-chat-provider";
 import { ChatBodyFrame } from "./chat-body-frame";
 import { OfflineStrip } from "./offline-strip";
 import { SafetyStrip } from "./safety-strip";

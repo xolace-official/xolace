@@ -29,8 +29,8 @@ import {
 import type { ThreadConversation } from "@/features/xolacer-chat/components/thread-screen";
 import { ThreadSkeleton } from "@/features/xolacer-chat/components/thread-skeleton";
 import { ThreadStatusBar } from "@/features/xolacer-chat/components/thread-status-bar";
-import { hydrateChannelsFromCache } from "@/features/xolacer-chat/offline-db";
 import { useFlagMessage } from "@/features/xolacer-chat/use-flag-message";
+import { hydrateChannelsFromCache } from "@/lib/stream-chat/offline-db";
 
 /** The message surface, mounted once `Chat` holds a usable client; split out so the screen's
  * Convex chrome renders first. */

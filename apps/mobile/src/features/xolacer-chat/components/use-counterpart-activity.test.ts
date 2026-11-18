@@ -4,7 +4,7 @@ import { useCounterpartActivity } from "./use-counterpart-activity";
 
 // The real provider drags in stream-chat-expo, which needs a window. Only the
 // status read matters here, and the cold-start case is "not ready yet".
-vi.mock("../providers/stream-chat-provider", () => ({
+vi.mock("@/lib/stream-chat/stream-chat-provider", () => ({
 	useStreamStatus: () => ({ client: null, status: "connecting" }),
 }));
 

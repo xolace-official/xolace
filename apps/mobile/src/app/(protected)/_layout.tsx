@@ -4,13 +4,13 @@ import { useThemeColor } from "heroui-native";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
 import { ROOT_HOSTS } from "@/features/navigation/hosts";
 import { ROOT_SCREENS } from "@/features/navigation/root-screens";
-import { UnreadIconBadge } from "@/features/xolacer-chat/components/unread-icon-badge";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { NO_GESTURE, screenOptions } from "@/lib/root-screen";
 import {
 	StreamChatProvider,
 	StreamOverlayProvider,
-} from "@/features/xolacer-chat/providers/stream-chat-provider";
-import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
-import { NO_GESTURE, screenOptions } from "@/lib/root-screen";
+} from "@/lib/stream-chat/stream-chat-provider";
+import { UnreadIconBadge } from "@/lib/stream-chat/unread-icon-badge";
 import { useNotifications } from "@/lib/use-notifications";
 import { AppPresence } from "@/providers/app-presence";
 import { useClaimLegacyAccountFlags } from "@/store/use-account-flag";

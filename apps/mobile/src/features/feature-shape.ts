@@ -79,6 +79,7 @@ const NEW_LAYERS = [
 	"components/settings-kit/",
 	"components/xolace-face/",
 	"lib/keyboard/",
+	"lib/stream-chat/",
 ];
 
 /** New code: a ported feature folder or one of the redesign's lower layers
