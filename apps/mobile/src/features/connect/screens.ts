@@ -1,6 +1,6 @@
 import type { RootScreen } from "@/lib/root-screen";
 
-/** The thread's header: the counterpart in the title slot, help and the menu on the right. */
+/** A chat's header, the thread's and the channel's: who's in the title slot, a minimal back. */
 const THREAD_OPTIONS = {
 	headerBackButtonDisplayMode: "minimal",
 	headerShadowVisible: false,
@@ -8,8 +8,10 @@ const THREAD_OPTIONS = {
 	title: "",
 } as const;
 
-/** Connect's stack entries outside the tab: a thread and a Xolacer's profile. */
+/** Connect's stack entries outside the tab: a thread, the Xolace channel and a Xolacer's
+ * profile. */
 export const connectScreens: readonly RootScreen[] = [
 	{ name: "chat/[conversationId]", options: THREAD_OPTIONS },
+	{ name: "xolace-channel", options: THREAD_OPTIONS },
 	{ name: "xolacer/[profileId]" },
 ];

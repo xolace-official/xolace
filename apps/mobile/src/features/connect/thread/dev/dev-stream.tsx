@@ -26,23 +26,66 @@ export type DevMessage = {
 	ago: number;
 	failed?: boolean;
 	reaction?: string;
+	/** Many people's reactions (the channel's cards): counts, and whether one is yours. */
+	reactions?: readonly { type: string; count: number; mine?: boolean }[];
 };
+
+/** The channel the client holds: the thread's messaging channel by default. `canSend: false` is
+ * a camper in the Xolace channel; `author` names whoever wrote the messages that aren't yours. */
+export type DevChannelKind = {
+	type?: string;
+	canSend?: boolean;
+	author?: { id: string; name: string };
+};
+
+type ReactionGroup = {
+	count: number;
+	first_reaction_at: string;
+	last_reaction_at: string;
+	sum_scores: number;
+};
+
+function reactionsOf(m: DevMessage, at: string, other: { id: string }) {
+	const many =
+		m.reactions ?? (m.reaction ? [{ count: 1, type: m.reaction }] : []);
+	const group = (count: number): ReactionGroup => ({
+		count,
+		first_reaction_at: at,
+		last_reaction_at: at,
+		sum_scores: count,
+	});
+	return {
+		latest_reactions: many.map((r) => ({
+			created_at: at,
+			type: r.type,
+			user: r.mine ? { id: ME } : other,
+			user_id: r.mine ? ME : other.id,
+		})),
+		own_reactions: many
+			.filter((r) => r.mine)
+			.map((r) => ({ created_at: at, type: r.type, user_id: ME })),
+		reaction_groups: Object.fromEntries(
+			many.map((r) => [r.type, group(r.count)])
+		),
+	};
+}
 
 function makeClient(
 	messages: readonly DevMessage[],
 	channelId: string,
-	typing: boolean
+	typing: boolean,
+	kind: DevChannelKind
 ) {
 	const client = new StreamChat("dev-states-key");
 	// `client.channel()` refuses without a user; nothing here ever opens a socket.
 	client.userID = ME;
 	client.user = { id: ME, name: "You" };
-	const channel = client.channel("messaging", channelId, {
-		members: [ME, PEOPLE.maya],
+	const maya = kind.author ?? MAYA;
+	const channel = client.channel(kind.type ?? "messaging", channelId, {
+		members: [ME, maya.id],
 	});
 	const me = { id: ME, name: "You" };
-	const maya = MAYA;
-	// Maya is here: the header reads her presence off the channel's members, as in the app.
+	// The other side is here: the thread's header reads presence off the channel's members.
 	channel.state.members = { [maya.id]: { user: maya, user_id: maya.id } };
 	channel.state.addMessagesSorted(
 		messages.map((m, i) => {
@@ -50,19 +93,7 @@ function makeClient(
 			return {
 				created_at: at,
 				id: `dev-${i}`,
-				latest_reactions: m.reaction
-					? [{ created_at: at, type: m.reaction, user: maya, user_id: maya.id }]
-					: [],
-				reaction_groups: m.reaction
-					? {
-							[m.reaction]: {
-								count: 1,
-								first_reaction_at: at,
-								last_reaction_at: at,
-								sum_scores: 1,
-							},
-						}
-					: {},
+				...reactionsOf(m, at, maya),
 				status: m.failed ? "failed" : "received",
 				text: m.text,
 				type: m.failed ? "error" : "regular",
@@ -75,7 +106,7 @@ function makeClient(
 	channel.data = {
 		...channel.data,
 		own_capabilities: [
-			"send-message",
+			...(kind.canSend === false ? [] : ["send-message"]),
 			"send-reaction",
 			"read-events",
 			"typing-events",
@@ -99,6 +130,8 @@ function makeClient(
 	const quiet = () => Promise.resolve({} as never);
 	client.getAppSettings = quiet;
 	channel.markRead = quiet;
+	channel.sendReaction = quiet;
+	channel.deleteReaction = quiet;
 	channel.watch = quiet;
 	channel.query = quiet;
 	channel.keystroke = quiet;
@@ -110,9 +143,10 @@ function makeClient(
 export function useDevChannel(
 	messages: readonly DevMessage[],
 	channelId: string,
-	typing = false
+	typing = false,
+	kind: DevChannelKind = {}
 ) {
-	const [dev] = useState(() => makeClient(messages, channelId, typing));
+	const [dev] = useState(() => makeClient(messages, channelId, typing, kind));
 	return dev;
 }
 
