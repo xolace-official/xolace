@@ -14,6 +14,8 @@ import {
 	closeLabel,
 	isStandalone,
 	sitFrom,
+	sitResult,
+	sitSource,
 	swapChoices,
 } from "./sit-model";
 
@@ -79,5 +81,47 @@ describe("the screen around the beats", () => {
 			},
 		]);
 		expect(swapChoices({ nextBest: null, reset: null }, "x")).toEqual([]);
+	});
+});
+
+describe("where Sit reads its exercise", () => {
+	const ids = { path: "path-session", route: "twig-session" };
+
+	it("reads a reflection's path session", () => {
+		expect(sitSource("reflect", ids)).toEqual({
+			sessionId: "path-session",
+			standalone: null,
+		});
+	});
+
+	it("reads a kindling twig's session from the route, or none", () => {
+		expect(sitSource("kindling", ids)).toEqual({
+			sessionId: "twig-session",
+			standalone: null,
+		});
+		expect(
+			sitSource("kindling", { path: "path-session", route: undefined })
+		).toEqual({
+			sessionId: null,
+			standalone: null,
+		});
+	});
+
+	it("plays Three breaths from Today, with no session", () => {
+		expect(sitSource("today", ids)).toEqual({
+			sessionId: null,
+			standalone: "reset",
+		});
+	});
+
+	it("composes the result from the read its source uses", () => {
+		const forSession = { exercise: "matched", slots: { mirror_line: "Mine." } };
+		expect(sitResult("reflect", forSession, "alone")).toBe(forSession);
+		expect(sitResult("today", forSession, "alone")).toEqual({
+			exercise: "alone",
+			slots: {},
+		});
+		expect(sitResult("today", undefined, undefined)).toBeUndefined();
+		expect(sitResult("today", undefined, null)).toBeNull();
 	});
 });

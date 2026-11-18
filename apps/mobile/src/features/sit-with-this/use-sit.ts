@@ -10,11 +10,8 @@ import { useSessionEndHref } from "@/lib/path-session/session-end-href";
 import { usePathSession } from "@/lib/path-session/use-path-session";
 import { toExercise } from "./catalogue";
 import type { Sit } from "./sit-data";
-import { isStandalone, sitFrom } from "./sit-model";
+import { isStandalone, sitFrom, sitResult, sitSource } from "./sit-model";
 import { useSwapOptions } from "./swap/use-swap-options";
-
-/** What Today's Sit door plays: Three breaths. */
-const TODAY_EXERCISE = "reset";
 
 /**
  * Sit with this on Convex: production's data flow, unchanged. From a
@@ -38,12 +35,10 @@ export function useSitData(): Sit {
 	const posthog = usePostHog();
 	const stepId = params.stepId as Id<"path_steps"> | undefined;
 	const pathSession = usePathSession();
-	let sessionId: Id<"sessions"> | null = pathSession.sessionId;
-	if (from === "kindling") {
-		sessionId = (params.sessionId as Id<"sessions"> | undefined) ?? null;
-	} else if (from === "today") {
-		sessionId = null;
-	}
+	const { sessionId, standalone: standaloneTitle } = sitSource(from, {
+		path: pathSession.sessionId,
+		route: params.sessionId as Id<"sessions"> | undefined,
+	});
 	const { session, startPath, completePath } = pathSession;
 	const forSession = useQuery(
 		api.exercises.getForSession,
@@ -51,10 +46,9 @@ export function useSitData(): Sit {
 	);
 	const alone = useQuery(
 		api.exercises.getStandalone,
-		from === "today" ? { title: TODAY_EXERCISE } : "skip"
+		standaloneTitle ? { title: standaloneTitle } : "skip"
 	);
-	const result =
-		from === "today" ? alone && { exercise: alone, slots: {} } : forSession;
+	const result = sitResult(from, forSession, alone);
 	const completeStep = useMutation(api.paths.completeStep);
 	const afterPath = useSessionEndHref(standalone ? null : sessionId);
 	const { isNight } = useSessionMode();
