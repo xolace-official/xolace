@@ -132,10 +132,7 @@ function FixtureToday({
 			last.twigs.map((t) => [t.id, putOut ? t.state : "done"])
 		),
 	};
-	const kindlingView = useKeptKindling(
-		server,
-		server === null ? outcome : undefined
-	);
+	const kindlingView = useKeptKindling(server, outcome);
 	const state: Today["state"] = {
 		campfire: campfire === "none" ? null : FIXTURE_CAMPFIRE[campfire],
 		card: { monthPrompt: monthPrompt ? FIXTURE_MONTH_PROMPT : null },
