@@ -128,6 +128,12 @@ export const devStates: readonly DevState[] = [
 		title: "Archived: a wrapped-up chat and a declined request",
 	},
 	{
+		id: "archived-loading",
+		options: OWN,
+		Screen: () => <FixtureArchived loading />,
+		title: "Archived loading: the row skeleton",
+	},
+	{
 		id: "archived-empty",
 		options: OWN,
 		Screen: () => <FixtureArchived conversations={CONVERSATIONS.slice(0, 4)} />,

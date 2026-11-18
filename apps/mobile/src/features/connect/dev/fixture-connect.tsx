@@ -97,8 +97,10 @@ export function FixtureConnect({
 
 export function FixtureArchived({
 	conversations = CONVERSATIONS,
+	loading = false,
 }: {
 	conversations?: ConversationRow[];
+	loading?: boolean;
 }) {
 	const header = useHeaderOptions("small");
 	const { actions, deleting } = useFixtureRows();
@@ -108,7 +110,9 @@ export function FixtureArchived({
 				actions,
 				deleting,
 				state: {
-					rows: archivedRows(conversations, STREAM, NOW, deviceClock()),
+					rows: loading
+						? undefined
+						: archivedRows(conversations, STREAM, NOW, deviceClock()),
 				},
 			}}
 		>
