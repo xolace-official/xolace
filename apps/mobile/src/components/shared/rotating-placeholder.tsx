@@ -10,8 +10,10 @@ import {
 	NONE,
 } from "@/design/ease";
 import { useTokenColor } from "@/lib/use-token-color";
-import { TIMING } from "../today-motion";
 
+/** A new line every 5 s; each swap takes 0.5 s. */
+const EVERY_MS = 5000;
+const SWAP_MS = 500;
 const RISE = 6;
 const BLUR = 3;
 /** The soft copy's glyphs under their halo: a 3 pt blur, approximated (the board: ink at 22%, halo at 69%). */
@@ -29,13 +31,13 @@ const RISE_EASE: CubicBezier = EASING.easeOut;
 
 type Props = {
 	items: readonly string[];
-	/** The rotation runs (Today live, the field on screen and empty); stopped, the line holds. */
+	/** The rotation runs (the screen live, the field on screen and empty); stopped, the line holds. */
 	running: boolean;
 	reduced: boolean;
 };
 
 /**
- * The field's placeholder offers a way in every 5 s (rotating-suggestions-input,
+ * A text field's placeholder that offers a way in every 5 s (rotating-suggestions-input,
  * slowed): the next line comes up 6 pt out of a 3 pt blur over 0.5 s. All lines are laid out
  * once; a JS timer moves to the next line every 5 s (one small render) and the swap plays
  * natively (react-native-ease). Stopping holds the line that's up.
@@ -49,10 +51,7 @@ export function RotatingPlaceholder({ items, running, reduced }: Props) {
 		if (!running || count < 2) {
 			return;
 		}
-		const id = setInterval(
-			() => setSwaps((n) => n + 1),
-			TIMING.placeholderEvery
-		);
+		const id = setInterval(() => setSwaps((n) => n + 1), EVERY_MS);
 		return () => clearInterval(id);
 	}, [running, count]);
 	return (
@@ -90,7 +89,7 @@ const SHOWN = { opacity: 1, translateY: 0 };
 const HIDDEN = { opacity: 0, translateY: 0 };
 
 function swap(easing: CubicBezier): EaseProps["transition"] {
-	const ms = TIMING.placeholderSwap;
+	const ms = SWAP_MS;
 	return {
 		opacity: { duration: ms, easing, type: "timing" },
 		transform: { duration: ms, easing: RISE_EASE, type: "timing" },
@@ -144,7 +143,7 @@ function Line({ text, first, up, arrive, reduced, ink }: LineProps) {
 						animate={{ opacity: 0 }}
 						initialAnimate={{ opacity: 1 }}
 						transition={{
-							duration: TIMING.placeholderSwap,
+							duration: SWAP_MS,
 							easing: SWAP_A2,
 							type: "timing",
 						}}

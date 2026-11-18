@@ -1,6 +1,6 @@
 import { Skia, type SkPath } from "@shopify/react-native-skia";
 import { useSharedValue } from "react-native-reanimated";
-import { ARC, type Arcs, arcsAt } from "./breath";
+import { ARC, type Arcs, arcsAt } from "@/design/breath-arc";
 import { type ClockCfg, IDLE_CFG } from "./clock-config";
 import { G } from "./phases";
 

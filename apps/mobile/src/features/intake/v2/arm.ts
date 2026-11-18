@@ -1,11 +1,10 @@
 /** Which intake a new user gets (#704). Read when the founder letter's CTA is tapped, the
  * last moment before the flows part, after waiting briefly for the flag to load. */
 
+import type { IntakeArm } from "@/lib/intake-analytics";
 import { useAppStore } from "@/store/store";
 
 export const INTAKE_V2_FLAG = "intake-v2";
-
-export type IntakeArm = "control" | "v2";
 
 /** Long enough for a flag request and the one it may queue behind, short enough not to strand
  * someone on a CTA that doesn't respond. */

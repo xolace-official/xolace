@@ -14,8 +14,8 @@ const DEFAULT_FRAME_MS = 16;
 const STEP_SLACK = 0.9;
 
 /**
- * Whether Today's loops may run at all: the tab is in front, the app is in the
- * foreground and Reduce Motion is off. Every clock on Today starts from this.
+ * Whether a screen's loops may run at all: the screen is in front, the app is in the
+ * foreground and Reduce Motion is off. Every clock a screen runs starts from this.
  */
 export function useLive(reduced: boolean): boolean {
 	const focused = useIsFocused();

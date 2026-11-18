@@ -8,7 +8,8 @@ import {
 	type SkPath,
 } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
-import { easeInOutFn, keyframes, seg, trimFn } from "../today-motion";
+import { keyframes } from "@/design/keyframes";
+import { easeInOutFn, seg, trimFn } from "../today-motion";
 import { alongX, alongY, type PathGeometry } from "./kindling-geometry";
 import { BEAT, PAD, PATH_H, STROKE, WISP } from "./kindling-model";
 import { KindlingNode, type NodeColours } from "./kindling-node";

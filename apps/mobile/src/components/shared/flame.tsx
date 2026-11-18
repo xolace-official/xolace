@@ -1,10 +1,15 @@
 import type { SharedValue } from "react-native-reanimated";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, { Easing, useAnimatedStyle } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { EaseView } from "@/design/ease";
 import { loopOrSettle, useLoopRun } from "@/design/ease-loops";
+import { keyframes } from "@/design/keyframes";
 import { useTokenColors } from "@/lib/use-token-color";
-import { easeInOutFn, igniteFn, keyframes } from "../today-motion";
+
+/** Ignite (overshoots). */
+const igniteFn = Easing.bezierFn(0.3, 1.6, 0.5, 1);
+/** CSS `ease-in-out`, for the lean. */
+const easeInOutFn = Easing.bezierFn(0.42, 0, 0.58, 1);
 
 /** The board's 18 pt vector flame (24 pt viewBox). */
 const SIZE = 18;

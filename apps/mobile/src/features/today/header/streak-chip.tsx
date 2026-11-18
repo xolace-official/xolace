@@ -9,16 +9,17 @@ import Animated, {
 	useSharedValue,
 	withTiming,
 } from "react-native-reanimated";
+import { Flame } from "@/components/shared/flame";
 import { PressScale } from "@/components/shared/press-scale";
 import { RollingNumber } from "@/components/shared/rolling-number";
+import { keyframes } from "@/design/keyframes";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { cn } from "@/lib/cn";
 import { playSessionComplete } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import { useToday } from "../today-data";
-import { easeOutFn, keyframes } from "../today-motion";
-import { Flame } from "./flame";
+import { easeOutFn } from "../today-motion";
 
 /** Let the return into Today land before the day is counted on screen. */
 const SETTLE_MS = 450;

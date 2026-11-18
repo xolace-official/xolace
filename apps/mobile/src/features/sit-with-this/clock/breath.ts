@@ -1,47 +1,13 @@
 /**
- * Production's dual breath, frame by frame (board `arcsAt`, `breathAt`), as
- * worklets.
+ * Production's dual breath, frame by frame (board `breathAt`), as worklets.
  *
- * - Geometry: the old `dual-breath.constants.ts` and
- *   `use-dual-breath-animation.ts`, exactly: sizes as ratios of the canvas,
- *   lerped rest → peak by `p`; the pair centred vertically; the bottom shape
- *   anchored `GAP` below the top one; the wobble added to both base radii.
+ * - Geometry: `design/breath-arc.ts` (board `arcsAt`).
  * - Timings: production's `TIMINGS` (the old `paced-orb.tsx`).
  * - Easing: inhale bezier(.4, 0, .2, 1), exhale bezier(.2, 0, .1, 1), solved
  *   as the board's `bez` does (8 Newton steps).
  */
+import { ARC } from "@/design/breath-arc";
 import type { BreathPattern } from "../sit-model";
-
-export const ARC = {
-	BOT_CORNERS: {
-		bottomLeft: [0.98, 1.1],
-		bottomRight: [1.08, 1.02],
-		topLeft: [0.28, 0.3],
-		topRight: [0.32, 0.26],
-	},
-	GAP: 14,
-	SHAPE: {
-		bot: {
-			peak: { h: 0.54, r: 56, w: 0.86 },
-			rest: { h: 0.2, r: 40, w: 0.74 },
-		},
-		top: {
-			peak: { h: 0.32, r: 40, w: 0.74 },
-			rest: { h: 0.6, r: 54, w: 0.82 },
-		},
-	},
-	/** Corner multipliers {x, y}: tight where the arcs face each other, round outside. */
-	TOP_CORNERS: {
-		bottomLeft: [0.26, 0.32],
-		bottomRight: [0.3, 0.26],
-		topLeft: [1.02, 1.08],
-		topRight: [1.1, 0.98],
-	},
-	WOBBLE: 6,
-	WOBBLE_MS: 880,
-} as const;
-
-export type Corners = typeof ARC.TOP_CORNERS | typeof ARC.BOT_CORNERS;
 
 /** 0 inhale, 1 top ("A little more"), 2 exhale. */
 export type PhaseKind = 0 | 1 | 2;
@@ -70,11 +36,6 @@ export const PATTERNS: Record<BreathPattern, readonly Step[]> = {
 
 export const cycleMs = (pattern: BreathPattern) =>
 	PATTERNS[pattern].reduce((a, s) => a + s[1], 0);
-
-const lerp = (a: number, b: number, t: number) => {
-	"worklet";
-	return a + (b - a) * t;
-};
 
 export const clamp01 = (v: number) => {
 	"worklet";
@@ -125,43 +86,6 @@ const exhaleEase = (u: number) => {
 	"worklet";
 	return bezier(0.2, 0, 0.1, 1, u);
 };
-
-export type Box = { x: number; y: number; w: number; h: number; r: number };
-export type Arcs = { top: Box; bot: Box; seamY: number };
-
-/** Board `arcsAt(W, H, p, wob, gap)`: production's two rounded rects at breath progress `p`. */
-export function arcsAt(
-	W: number,
-	H: number,
-	p: number,
-	wob: number,
-	gap: number = ARC.GAP
-): Arcs {
-	"worklet";
-	const S = ARC.SHAPE;
-	const tH = lerp(S.top.rest.h * H, S.top.peak.h * H, p);
-	const bH = lerp(S.bot.rest.h * H, S.bot.peak.h * H, p);
-	const y0 = (H - tH - gap - bH) / 2;
-	const tW = lerp(S.top.rest.w * W, S.top.peak.w * W, p);
-	const bW = lerp(S.bot.rest.w * W, S.bot.peak.w * W, p);
-	return {
-		bot: {
-			h: bH,
-			r: lerp(S.bot.rest.r, S.bot.peak.r, p) + wob,
-			w: bW,
-			x: (W - bW) / 2,
-			y: y0 + tH + gap,
-		},
-		seamY: y0 + tH + gap / 2,
-		top: {
-			h: tH,
-			r: lerp(S.top.rest.r, S.top.peak.r, p) + wob,
-			w: tW,
-			x: (W - tW) / 2,
-			y: y0,
-		},
-	};
-}
 
 export type BreathAt = {
 	p: number;

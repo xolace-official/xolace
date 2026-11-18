@@ -20,8 +20,6 @@ export const trimFn = Easing.bezierFn(0.45, 0, 0.25, 1);
 export const popFn = Easing.bezierFn(0.3, 1.5, 0.5, 1);
 /** Kindling sparks. */
 export const sparkFn = Easing.bezierFn(0.2, 0.8, 0.3, 1);
-/** Streak flame ignite (overshoots). */
-export const igniteFn = Easing.bezierFn(0.3, 1.6, 0.5, 1);
 /** The word's ink. */
 export const EASE_INK = Easing.bezier(0.15, 0.7, 0.3, 1);
 /** Toolbar Reflect pill swelling in. */
@@ -52,9 +50,6 @@ export const TIMING = {
 	night: 1600,
 	/** Sky palettes crossfade. */
 	palette: 600,
-	/** Placeholder rotation and swap. */
-	placeholderEvery: 5000,
-	placeholderSwap: 500,
 	/** Ridge fills. */
 	ridges: 900,
 	/** First open: modules rise, each in its slot. */
@@ -77,31 +72,6 @@ export function clamp01(x: number) {
 export function seg(t: number, a: number, b: number) {
 	"worklet";
 	return clamp01((t - a) / (b - a));
-}
-
-/**
- * A CSS keyframe track: `stops` are offsets (0…1) with values, and the
- * animation's timing function applies within each segment, as CSS does.
- */
-export function keyframes(
-	p: number,
-	stops: readonly (readonly [number, number])[],
-	ease: (x: number) => number
-) {
-	"worklet";
-	const first = stops[0];
-	if (!first || p <= first[0]) {
-		return first ? first[1] : 0;
-	}
-	for (let i = 0; i < stops.length - 1; i += 1) {
-		const a = stops[i];
-		const b = stops[i + 1];
-		if (a && b && p <= b[0]) {
-			return a[1] + (b[1] - a[1]) * ease((p - a[0]) / (b[0] - a[0]));
-		}
-	}
-	const last = stops.at(-1);
-	return last ? last[1] : 0;
 }
 
 /** Every module below the hero sits 32 pt from the one above. */

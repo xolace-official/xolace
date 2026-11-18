@@ -1,5 +1,5 @@
 import { Skia, type SkPath } from "@shopify/react-native-skia";
-import type { Box, Corners } from "./breath";
+import type { Box, Corners } from "@/design/breath-arc";
 
 /**
  * One arc as a rounded rect with per-corner radii (xray-bag-scan's

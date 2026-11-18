@@ -9,8 +9,8 @@ import { scheduleOnRN } from "react-native-worklets";
 /**
  * ember-charge-widget's quality gate (ember-motion `quality`): on the first
  * open, let the screen settle for six smooth frames, then count two seconds of
- * real frame times. More than six frames over 24 ms and Today steps down once:
- * half the particles, no blurs. It never steps back up that session.
+ * real frame times. More than six frames over 24 ms and the screen steps down once
+ * (Today: half the particles, no blurs). It never steps back up that session.
  */
 const QUALITY = {
 	allowed: 6,

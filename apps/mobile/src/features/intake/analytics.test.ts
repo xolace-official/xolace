@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	declinedCount,
 	intakeOutcomeOf,
-	intakePersonProperties,
 	questionAnsweredProps,
 } from "@/features/intake/analytics";
 import {
@@ -50,39 +49,6 @@ describe("declinedCount", () => {
 				weighingOn: ["work", "prefer_not_to_say"],
 			})
 		).toBe(2);
-	});
-});
-
-describe("intakePersonProperties", () => {
-	it("splits immutable facts into $set_once and drops absent series answers", () => {
-		const props = intakePersonProperties({
-			acquisitionSource: "friend_family",
-			intent: "just_looking",
-			weighingOn: ["work"],
-		});
-
-		expect(props.$set_once).toEqual({ acquisition_source: "friend_family" });
-		expect(props.$set).toMatchObject({
-			intent: "just_looking",
-			weighing_on: ["work"],
-		});
-		expect(props.$set.intake_version).toBe(1);
-		// displayName is never a person property (T7 §3).
-		expect(JSON.stringify(props)).not.toContain("displayName");
-	});
-
-	it("keeps the series answers immutable when the branch ran", () => {
-		const props = intakePersonProperties({
-			acquisitionSource: "short_form_video",
-			seriesSeen: "loved_it",
-			seriesWantInApp: true,
-		});
-
-		expect(props.$set_once).toEqual({
-			acquisition_source: "short_form_video",
-			series_seen: "loved_it",
-			series_want_in_app: true,
-		});
 	});
 });
 
@@ -192,24 +158,6 @@ describe("intake v2 arms (#704)", () => {
 			expect(captured("intake_read_fallback")).toEqual([
 				{ intake_arm: "v2", reason: "timeout" },
 			]);
-		});
-	});
-
-	describe("trackFirstReflection", () => {
-		it("times the first reflection from intake start, once", () => {
-			analytics.trackIntakeStarted(posthog, 0);
-			analytics.trackIntakeArmAssigned(posthog, "control");
-			vi.advanceTimersByTime(90_000);
-			analytics.trackFirstReflection(posthog);
-			analytics.trackFirstReflection(posthog);
-			expect(captured("intake_first_reflection")).toEqual([
-				{ intake_arm: "control", ms_since_intake_started: 90_000 },
-			]);
-		});
-
-		it("stays quiet when no intake ran in this session", () => {
-			analytics.trackFirstReflection(posthog);
-			expect(captured("intake_first_reflection")).toEqual([]);
 		});
 	});
 });

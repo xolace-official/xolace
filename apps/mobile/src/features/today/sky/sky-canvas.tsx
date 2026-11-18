@@ -1,8 +1,8 @@
 import { Canvas, vec } from "@shopify/react-native-skia";
 import { useDerivedValue } from "react-native-reanimated";
 import { useScheme } from "@/design/scheme";
+import { useClock } from "@/lib/motion/clock";
 import { useTokenColor } from "@/lib/use-token-color";
-import { useClock } from "../today-clock";
 import { useTodayFrame } from "../today-frame";
 import type { TodayPhase } from "../today-model";
 import { SkyClouds, SkyMoon, SkySun } from "./sky-bodies";

@@ -1,7 +1,8 @@
 import { BlurMask, Path, type SkPath } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
+import { keyframes } from "@/design/keyframes";
 import { useTokenColors } from "@/lib/use-token-color";
-import { easeInOutFn, keyframes, seg, trimFn } from "../today-motion";
+import { easeInOutFn, seg, trimFn } from "../today-motion";
 import { BEAT, STROKE } from "./kindling-model";
 
 /** pulseRun: the highlight runs 0 → 30% of the loop, seen from 6% to 30%. */
