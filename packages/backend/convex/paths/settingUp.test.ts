@@ -11,8 +11,10 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import rateLimiterSchema from "../../node_modules/@convex-dev/rate-limiter/src/component/schema";
 import { api, internal } from "../_generated/api";
 import type { Doc, Id } from "../_generated/dataModel";
+import { internalMutation } from "../_generated/server";
 import {
 	scheduledCalls,
 	seedMetadata,
@@ -46,7 +48,12 @@ const goodReply = JSON.stringify([
 
 const stub = vi.hoisted(() => ({
 	isPlus: true,
+	notifyThrows: false,
+	// The real rate-limiter component instead of the stubs below; the test
+	// registers it.
+	realLimiter: false,
 	reply: "" as string | Error,
+	slotCheckThrows: false,
 	// The day's kindling slot, read (`check`) and spent (`limit`) separately,
 	// so a test can open the gate and still lose the slot at write.
 	slotOpen: true,
@@ -56,14 +63,50 @@ const stub = vi.hoisted(() => ({
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../posthog", () => ({ posthog: { capture: async () => {} } }));
 vi.mock("../rag", () => ragMock());
-vi.mock("../lib/rateLimits", async (orig) => ({
-	...(await orig<typeof import("../lib/rateLimits")>()),
-	rateLimiter: {
-		check: async () => ({ ok: stub.slotOpen }),
-		limit: async () => ({ ok: stub.slotSpendable }),
-		reset: async () => {},
-	},
-}));
+vi.mock("../lib/rateLimits", async (orig) => {
+	const actual = await orig<typeof import("../lib/rateLimits")>();
+	type Check = typeof actual.rateLimiter.check;
+	type Limit = typeof actual.rateLimiter.limit;
+	return {
+		...actual,
+		rateLimiter: {
+			check: async (...args: Parameters<Check>) => {
+				if (stub.realLimiter) {
+					return await actual.rateLimiter.check(...args);
+				}
+				if (stub.slotCheckThrows) {
+					throw new Error("rate limiter unavailable");
+				}
+				return { ok: stub.slotOpen };
+			},
+			limit: async (...args: Parameters<Limit>) =>
+				stub.realLimiter
+					? await actual.rateLimiter.limit(...args)
+					: { ok: stub.slotSpendable },
+			reset: async () => {},
+		},
+	};
+});
+// The kindling_ready push is outreach's (its own tests); here it only needs
+// to be able to fail after the kindling is written.
+vi.mock("../ai/paths/notify", async () => {
+	const { v } = await import("convex/values");
+	return {
+		notifyReady: internalMutation({
+			args: {
+				emotionalProfileId: v.id("emotional_profiles"),
+				pathId: v.id("paths"),
+			},
+			handler: async () => {
+				if (stub.notifyThrows) {
+					throw new Error("outreach down");
+				}
+				return null;
+			},
+			returns: v.null(),
+		}),
+	};
+});
 vi.mock("../ai/providers/anthropic", async (orig) => ({
 	...(await orig<typeof import("../ai/providers/anthropic")>()),
 	...anthropicMock(() => stub.reply),
@@ -73,7 +116,10 @@ vi.mock("../revenuecat", () => revenuecatMock(() => stub.isPlus));
 beforeEach(() => {
 	vi.useFakeTimers();
 	stub.isPlus = true;
+	stub.notifyThrows = false;
+	stub.realLimiter = false;
 	stub.reply = goodReply;
+	stub.slotCheckThrows = false;
 	stub.slotOpen = true;
 	stub.slotSpendable = true;
 });
@@ -108,19 +154,30 @@ type RunArgs = {
 	settingUpAt?: number;
 };
 
+/** Every `generate.run` queued for this session, oldest first. */
+async function queuedRuns(
+	user: SeededUser,
+	sessionId: Id<"sessions">
+): Promise<RunArgs[]> {
+	return (await scheduledCalls(user.root))
+		.filter(
+			(c) =>
+				c.name.endsWith("ai/paths/generate:run") &&
+				c.args.sessionId === sessionId
+		)
+		.map((c) => c.args as RunArgs);
+}
+
 /** The `generate.run` queued for this session, with the args it carries. */
 async function queuedRun(
 	user: SeededUser,
 	sessionId: Id<"sessions">
 ): Promise<RunArgs> {
-	const run = (await scheduledCalls(user.root)).find(
-		(c) =>
-			c.name.endsWith("ai/paths/generate:run") && c.args.sessionId === sessionId
-	);
+	const [run] = await queuedRuns(user, sessionId);
 	if (!run) {
 		throw new Error("expected generate.run to be queued");
 	}
-	return run.args as RunArgs;
+	return run;
 }
 
 /** Run the queued `generate.run` now, as the scheduler would. */
@@ -455,5 +512,116 @@ describe("clears go to the exact session and mark", () => {
 
 		// Left to its own run or the backstop.
 		expect(await markOf(user, sessionId)).toBe(mark);
+	});
+});
+
+describe("the mark never gets in the way", () => {
+	it("completes the session, unmarked, when the check throws", async () => {
+		const user = await asNewUser();
+		const sessionId = await seedQualifying(user);
+		stub.slotCheckThrows = true;
+		const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+		await complete(user, sessionId);
+
+		const session = await user.root.run((ctx) =>
+			ctx.db.get("sessions", sessionId)
+		);
+		expect(session?.state).toBe("completed");
+		expect(await markOf(user, sessionId)).toBeNull();
+		expect(await backstops(user, sessionId)).toEqual([]);
+		// The run is still queued, exactly as before B13.
+		expect(await queuedRun(user, sessionId)).toEqual({
+			emotionalProfileId: user.profileId,
+			sessionId,
+		});
+		expect(logged).toHaveBeenCalledWith(
+			"kindling: setting-up mark skipped",
+			expect.objectContaining({ sessionId })
+		);
+	});
+
+	it("re-queued: the older run lands, the newer mark stays until its own run ends", async () => {
+		const user = await asNewUser();
+		const sessionId = await seedQualifying(user);
+		await complete(user, sessionId);
+		vi.setSystemTime(Date.now() + 1000);
+		await user.t.mutation(api.paths.requestKindling, { sessionId });
+		const [older, newer] = await queuedRuns(user, sessionId);
+		expect(newer.settingUpAt).toBeGreaterThan(older.settingUpAt ?? 0);
+
+		await user.root.action(internal.ai.paths.generate.run, older);
+
+		// The kindling is live, so Today shows it, never "setting up"; the newer
+		// mark is still there, for the run still in flight.
+		expect(await user.t.query(api.paths.getActive, {})).toMatchObject({
+			sessionId,
+		});
+		expect(await settingUp(user)).toBeNull();
+		expect(await markOf(user, sessionId)).toBe(newer.settingUpAt);
+
+		// That run finds the day's slot spent and clears its own mark.
+		stub.slotOpen = false;
+		await user.root.action(internal.ai.paths.generate.run, newer);
+		expect(await markOf(user, sessionId)).toBeNull();
+	});
+
+	it("a notifyReady throw after the write leaves the kindling and no mark", async () => {
+		const user = await asNewUser();
+		const sessionId = await seedQualifying(user);
+		await complete(user, sessionId);
+		stub.notifyThrows = true;
+		const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+
+		await runQueued(user, sessionId);
+
+		expect(logged).toHaveBeenCalledWith(
+			"kindling: generation failed",
+			expect.objectContaining({ message: "outreach down", sessionId })
+		);
+		expect(await markOf(user, sessionId)).toBeNull();
+		expect(await settingUp(user)).toBeNull();
+		expect(await user.t.query(api.paths.getActive, {})).toMatchObject({
+			sessionId,
+		});
+	});
+});
+
+describe("with the real rate limiter", () => {
+	const rateLimiterModules = import.meta.glob(
+		"../../node_modules/@convex-dev/rate-limiter/src/component/**/*.ts"
+	);
+
+	it("checks pathsGenerate on this profile's key without spending it, so a second session that day isn't marked", async () => {
+		stub.realLimiter = true;
+		const user = await asNewUser();
+		user.root.registerComponent(
+			"rateLimiter",
+			rateLimiterSchema,
+			rateLimiterModules
+		);
+		const first = await seedQualifying(user);
+
+		// Marking checked the slot twice (queue + the run's gate); only the
+		// write spends it, so the kindling still lands.
+		await complete(user, first);
+		expect(await markOf(user, first)).toEqual(expect.any(Number));
+		await runQueued(user, first);
+		expect(await user.t.query(api.paths.getActive, {})).toMatchObject({
+			sessionId: first,
+		});
+		expect(await markOf(user, first)).toBeNull();
+
+		// Same day: the slot is spent, so the second session is never marked.
+		const second = await seedQualifying(user);
+		await complete(user, second);
+		expect(await markOf(user, second)).toBeNull();
+		expect((await queuedRun(user, second)).settingUpAt).toBeUndefined();
+
+		// Another member's slot is their own.
+		const other = await asNewUser(2, user.root);
+		const theirs = await seedQualifying(other);
+		await complete(other, theirs);
+		expect(await markOf(other, theirs)).toEqual(expect.any(Number));
 	});
 });

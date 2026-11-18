@@ -20,7 +20,9 @@ import { type Understanding, understandingOf } from "../understanding";
  * - **Set** by `queueKindling`, the one place generation is queued, only when
  *   the run is going to try: a Plus member, a qualifying Understanding and the
  *   day's slot still open. Those are `generate.run`'s own gates, so a second
- *   qualifying session on the same day never flashes "setting up".
+ *   qualifying session on the same day never flashes "setting up". The mark
+ *   is best-effort: if checking for it throws, session completion goes on
+ *   without one.
  * - **Cleared** on every outcome: by `generateDb.write` in the transaction
  *   that inserts the kindling (so `getActive` and `get` flip together), by
  *   `generate.run` on any exit that made none, and by a backstop scheduled
@@ -87,24 +89,48 @@ export async function queueKindling(
 	profileId: Id<"emotional_profiles">,
 	sessionId: Id<"sessions">
 ): Promise<void> {
-	const settingUpAt = (await willTry(ctx, profileId, sessionId))
-		? Date.now()
-		: undefined;
-	if (settingUpAt !== undefined) {
-		await ctx.db.patch("sessions", sessionId, {
-			kindlingSettingUpAt: settingUpAt,
-		});
-		await ctx.scheduler.runAfter(
-			SETTING_UP_MAX_MS,
-			internal.paths.settingUp.clear,
-			{ sessionId, settingUpAt }
-		);
-	}
+	const settingUpAt = await markSettingUp(ctx, profileId, sessionId);
 	await ctx.scheduler.runAfter(0, internal.ai.paths.generate.run, {
 		emotionalProfileId: profileId,
 		sessionId,
 		...(settingUpAt === undefined ? {} : { settingUpAt }),
 	});
+}
+
+/**
+ * Mark the session as setting up if the run will try; the mark's value, or
+ * undefined without one. Best-effort: it runs inside session completion, and
+ * a hint for Today's card must never fail that. Any throw (the entitlement or
+ * the rate limiter unavailable, say) leaves no mark and the run is queued
+ * as before. The backstop goes on the scheduler before the patch, so if the
+ * patch is what throws, nothing is left without one.
+ */
+async function markSettingUp(
+	ctx: MutationCtx,
+	profileId: Id<"emotional_profiles">,
+	sessionId: Id<"sessions">
+): Promise<number | undefined> {
+	try {
+		if (!(await willTry(ctx, profileId, sessionId))) {
+			return undefined;
+		}
+		const settingUpAt = Date.now();
+		await ctx.scheduler.runAfter(
+			SETTING_UP_MAX_MS,
+			internal.paths.settingUp.clear,
+			{ sessionId, settingUpAt }
+		);
+		await ctx.db.patch("sessions", sessionId, {
+			kindlingSettingUpAt: settingUpAt,
+		});
+		return settingUpAt;
+	} catch (error) {
+		console.error("kindling: setting-up mark skipped", {
+			message: error instanceof Error ? error.message : String(error),
+			sessionId,
+		});
+		return undefined;
+	}
 }
 
 /** `generate.run`'s gates, cheapest first; the run checks them again itself. */
