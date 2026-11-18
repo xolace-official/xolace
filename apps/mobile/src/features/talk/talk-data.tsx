@@ -68,7 +68,7 @@ export type TalkScreen = {
 		toggleMic: () => void;
 		/** Ends the talk; its mirror comes now. */
 		end: () => void;
-		/** Ends the talk; its mirror waits in the timeline. */
+		/** Ends the talk; its mirror waits in Moments. */
 		justEnd: () => void;
 		setLook: (look: TalkLook) => void;
 		/** Chooses a voice and plays its sample, or stops the one playing. */

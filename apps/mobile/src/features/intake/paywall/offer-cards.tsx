@@ -247,7 +247,7 @@ export function InsightsOfferCard({ width }: { width: number }) {
 const CAPS = [
 	{ free: "3 an hour", label: "Reflections", plus: "No cap" },
 	{ free: "1 a day", label: "Voice vents", plus: "No cap" },
-	{ free: "30 days", label: "Timeline", plus: "All of it" },
+	{ free: "30 days", label: "Moments", plus: "All of them" },
 	{ free: "Generic", label: "Daily quotes", plus: "Your words" },
 	{ free: "Auto", label: "Mirror tone", plus: "You pick" },
 ];
