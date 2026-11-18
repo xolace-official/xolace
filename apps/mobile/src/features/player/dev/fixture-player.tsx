@@ -76,7 +76,8 @@ function FixturePlayer({
 	const value: Player = {
 		actions: {
 			close: () => router.back(),
-			openCrisisHelp: () => undefined,
+			// The crisis-line state proves the whole line opens help (a real route, no backend).
+			openCrisisHelp: () => router.push("/crisis-resources"),
 			retry: () => undefined,
 			seek,
 			setRepeat,
