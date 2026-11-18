@@ -100,7 +100,9 @@ describe("time", () => {
 		expect(settledPosition(120, seek, 400)).toBe(300);
 		// Within a second of the target: landed, the clock leads again.
 		expect(settledPosition(299.4, seek, 400)).toBe(299.4);
-		// It never lands: after a second the clock wins anyway.
+		// Still landing a second and a half on (a slow streamed seek).
+		expect(settledPosition(121, seek, 1500)).toBe(300);
+		// It never lands: after the cap the clock wins anyway.
 		expect(settledPosition(120, seek, SEEK_SETTLE_MS)).toBe(120);
 		expect(settledPosition(120, null, 400)).toBe(120);
 	});

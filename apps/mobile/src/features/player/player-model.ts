@@ -92,8 +92,9 @@ export function snapToBar(f: number, bars: number): number {
 	return bars > 0 ? Math.round(f * bars) / bars : f;
 }
 
-/** How long a seek's target stands in for the reported time at most. */
-export const SEEK_SETTLE_MS = 1000;
+/** How long a seek's target stands in for the reported time at most. A streamed (R2) seek can
+ * take a second or two to report; past this, the clock wins even if it never landed. */
+export const SEEK_SETTLE_MS = 3000;
 /** The clock within this of a seek's target: the seek has landed. */
 const SEEK_LANDED_S = 1;
 
@@ -102,7 +103,7 @@ export type Seek = { to: number; at: number };
 
 /**
  * Where the playhead is. A streamed seek reports late, so until the clock comes within 1 s of
- * its target (or 1 s passes) the target stands in: the playhead doesn't flick back after a
+ * its target (or 3 s pass) the target stands in: the playhead doesn't flick back after a
  * scrub, and quick skips in a row step on from where the previous one went.
  */
 export function settledPosition(
