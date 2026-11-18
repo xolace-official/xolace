@@ -109,6 +109,15 @@ export const COPY = {
 		},
 		sub: "Pick whichever feels right.",
 		title: "Where to from here?",
+		/** Production's gave-up card (`feedback.submit`, `gave_up`), after Leave it here. */
+		whatHappened: {
+			options: [
+				{ id: "mirror_kept_missing", label: "The mirror kept missing" },
+				{ id: "figured_it_out", label: "I found it myself" },
+				{ id: "needed_to_vent", label: "I just needed to express it" },
+			],
+			title: "What happened?",
+		},
 	},
 	notQuite: {
 		cancel: "Cancel",

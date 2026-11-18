@@ -14,6 +14,7 @@ import { useReflect } from "../reflect-data";
 import { useReflectDraw } from "../reflect-draw";
 import { PathTile } from "./path-tile";
 import { SpaceName } from "./space-name";
+import { WhatHappened } from "./what-happened";
 
 const N = LAYOUT.next;
 /** Board `.nh h2`: Bricolage 28/740, −.025em. */
@@ -138,6 +139,7 @@ export function NextStage() {
 					/>
 				))}
 			</View>
+			<WhatHappened />
 			<SpaceName />
 		</View>
 	);

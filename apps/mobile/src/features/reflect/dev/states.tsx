@@ -1,7 +1,7 @@
 /** Reflect on fixtures: `xolace://dev/reflect/<id>`. Each stage of the board (write, wait, the
  * mirror and its sub-states, care, Where next, Heard), late and dark, plus the brief's states:
  * first open, streaming, error, offline, seeded and long text. Sends answer from the simulated
- * server (`use-fixture-reflect.ts`). */
+ * server (`use-fixture-reflect.ts`). Dictation's states are in `write/dev/states.tsx`. */
 import type { DevState } from "@/dev/dev-state";
 import { COPY } from "../copy";
 import { waitError } from "../reflect-model";
@@ -25,8 +25,6 @@ const HEAVY = {
 	stage: "mirror" as const,
 };
 const SEED = "I said I was fine, and I wasn’t.";
-/** As `dictation-fallback.ts` words it when the day's budget is spent. */
-const TAKE_NOTE = "Sharper dictation is back tomorrow.";
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */
 export const devStates: readonly DevState[] = [
@@ -55,41 +53,6 @@ export const devStates: readonly DevState[] = [
 		id: "nudge",
 		title: "A pause in the writing (the nudge)",
 		...reflect({ nudge: true, text: "I keep replaying" }),
-	},
-	{
-		id: "listening",
-		title: "Holding the mic",
-		...reflect({ listening: true, text: "I keep" }),
-	},
-	{
-		id: "take-countdown",
-		title: "A Plus take's last seconds counting down",
-		...reflect({
-			listening: true,
-			take: { note: null, remainingMs: 9000, writing: false },
-			text: "I keep",
-		}),
-	},
-	{
-		id: "take-writing",
-		title: "A Plus take being written down (send waits)",
-		...reflect({
-			take: { note: null, remainingMs: null, writing: true },
-			text: "I keep",
-		}),
-	},
-	{
-		id: "take-note",
-		title: "A Plus take's note: fell back to on-device",
-		...reflect({
-			take: { note: TAKE_NOTE, remainingMs: null, writing: false },
-			text: "I keep",
-		}),
-	},
-	{
-		id: "upsell",
-		title: "The first mic tap's Plus upsell",
-		...reflect({ upsellOpen: true }),
 	},
 	{
 		id: "seeded",
@@ -211,6 +174,11 @@ export const devStates: readonly DevState[] = [
 		id: "where-next-dark",
 		title: "Where next, dark",
 		...reflect({ ...SENT, stage: "next", theme: "dark" }),
+	},
+	{
+		id: "gave-up-next",
+		title: "Where next after Leave it here: what happened?",
+		...reflect({ ...SENT, stage: "next", whatHappened: true }),
 	},
 	{
 		id: "space-name",

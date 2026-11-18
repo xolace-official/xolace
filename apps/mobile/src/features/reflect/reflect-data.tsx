@@ -12,14 +12,10 @@ import type { TextureSetId } from "./texture-sets";
 import { useReflectData } from "./use-reflect";
 
 /**
- * Everything Reflect reads and does, one session from the field to "Heard". Two adapters fill
- * it: production's session machine on Convex (`ReflectData`, `use-reflect.ts`) and the
- * prototype's simulated server in its dev states (`dev/fixture-reflect.tsx`).
- *
- * The session lives on the server, so closing Reflect at any stage keeps it; the next open picks
- * it up from `sessions.getActive`. The mirror's sub-states (Not quite, picking a line, the care
- * card, the tile chosen on Where next) are screen state the parts share, kept here so a dev
- * state can open on any of them.
+ * Everything Reflect reads and does, one session from the field to "Heard": filled by production's
+ * session machine (`use-reflect.ts`) or the dev states' simulated server (`dev/`). The session
+ * lives on the server, so closing at any stage keeps it. The mirror's sub-states (Not quite, a
+ * picked line, the care card, the chosen tile) are kept here so a dev state can open on any.
  */
 export type Reflect = {
 	state: {
@@ -41,11 +37,7 @@ export type Reflect = {
 		listening: boolean;
 		/** A sheet is over Write (the starter bubble): the field leaves the keyboard down. */
 		sheetOpen: boolean;
-		/**
-		 * A Plus take (Scribe): `writing` while it's written down after the mic lets go (send waits);
-		 * `remainingMs` while listening, for the countdown; `note` between takes, on a fallback to
-		 * on-device dictation or a lost take.
-		 */
+		/** A Plus take: `writing` after the mic lets go (send waits), its countdown, a fallback's note. */
 		take: { writing: boolean; remainingMs: number | null; note: string | null };
 		/** Bumped each time a finished take lands in the text (the drop, S2). */
 		takeN: number;
@@ -107,6 +99,8 @@ export type Reflect = {
 		nextPick: PathId | null;
 		/** Production's space-name prompt, asked once on Where next. */
 		spaceNameOpen: boolean;
+		/** Left at the turn cap: Where next asks what happened, once. */
+		whatHappened: boolean;
 
 		// Heard
 		/** The streak, counted when the session completed; null until it reads. */
@@ -152,6 +146,7 @@ export type Reflect = {
 		closeNotQuite: () => void;
 		/** After two tries: production's `gave_up`, then Where next. */
 		leaveIt: () => void;
+		answerWhatHappened: (option: string) => void;
 		setVersion: (mv: 1 | 2) => void;
 		toggleAudio: () => void;
 

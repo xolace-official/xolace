@@ -63,7 +63,7 @@ export function useReflectData(): Reflect {
 	const pending = useAppStore((st) => st.pendingEventPrompt);
 	// The route's starter bubble raises it while it's up over Write.
 	const sheetOpen = useAppStore((st) => st.homeSheetOpen);
-	const submitMiss = useMutation(api.feedback.submit);
+	const submitFeedback = useMutation(api.feedback.submit);
 	const audio = useMirrorAudio(m.sessionId);
 	const talk = useTalkSayMore(m.sessionId);
 	const versions = useMirrorVersions(m.sessionId, m.mirrorText, m.turnsCount);
@@ -72,6 +72,8 @@ export function useReflectData(): Reflect {
 	const [flash, setFlash] = useState({ line: -1, n: 0 });
 	const [liftN, setLiftN] = useState(0);
 	const [missTurn, setMissTurn] = useState(-1);
+	// Production's gave-up card: asked once, after Leave it here.
+	const [asked, setAsked] = useState<"asking" | "answered" | null>(null);
 
 	const next = useWhereNext(m);
 	const refining = s.screen === "processing" && s.lastFeedbackType !== null;
@@ -122,6 +124,25 @@ export function useReflectData(): Reflect {
 
 	return {
 		actions: {
+			answerWhatHappened: (option) => {
+				setAsked("answered");
+				if (!m.sessionId) {
+					return;
+				}
+				submitFeedback({
+					selectedOption: option,
+					sessionId: m.sessionId,
+					type: "gave_up",
+				})
+					.then(() =>
+						posthog.capture("feedback_submitted", {
+							has_option: true,
+							has_text: false,
+							type: "gave_up",
+						})
+					)
+					.catch(reportFailure);
+			},
 			cancelSpeaking: takes.cancel,
 			choosePath: (path) => setUi((u) => ({ ...u, nextPick: path })),
 			close: next.close,
@@ -133,7 +154,10 @@ export function useReflectData(): Reflect {
 			dismissUpsell: m.dictationUpsell.onNotNow,
 			finish: next.finish,
 			goPath: next.goPath,
-			leaveIt: () => void m.handleGaveUpPathSelection(),
+			leaveIt: () => {
+				setAsked(asked ?? "asking");
+				void m.handleGaveUpPathSelection();
+			},
 			notNow: () => void m.handleEscalationDismiss(),
 			notQuite: (line) => {
 				if (line === undefined) {
@@ -154,7 +178,7 @@ export function useReflectData(): Reflect {
 					return;
 				}
 				setMissTurn(m.turnsCount);
-				submitMiss({
+				submitFeedback({
 					selectedOption: reason,
 					sessionId: m.sessionId,
 					turnIndex: m.turnsCount,
@@ -273,6 +297,7 @@ export function useReflectData(): Reflect {
 			turns: m.turnsCount,
 			upsellOpen: m.dictationUpsell.isOpen,
 			waitStage: waitStageOf(m.processingStage),
+			whatHappened: asked === "asking" && stage === "next",
 			yourWords: paired.words,
 		},
 	};

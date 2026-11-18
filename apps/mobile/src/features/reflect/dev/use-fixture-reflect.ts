@@ -76,6 +76,7 @@ const FIXTURE_DEFAULTS: FixtureState = {
 	turns: 0,
 	upsellOpen: false,
 	waitStage: 0,
+	whatHappened: false,
 };
 
 const S_MS = 1000;
@@ -142,6 +143,7 @@ export function useFixtureReflect(initial: Partial<FixtureState>): Reflect {
 
 	return {
 		actions: {
+			answerWhatHappened: () => patch({ whatHappened: false }),
 			cancelSpeaking: () => {
 				patch({ listening: false });
 				toast(COPY.write.cancelled);
@@ -155,7 +157,8 @@ export function useFixtureReflect(initial: Partial<FixtureState>): Reflect {
 			finish: () => undefined,
 			goPath: (path) =>
 				path === "exit" ? patch({ stage: "heard" }) : undefined,
-			leaveIt: () => patch({ nextPick: null, stage: "next" }),
+			leaveIt: () =>
+				patch({ nextPick: null, stage: "next", whatHappened: true }),
 			notNow: () => patch({ nextPick: null, stage: "next" }),
 			notQuite: (line) => {
 				if (line === undefined) {
