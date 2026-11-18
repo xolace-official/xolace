@@ -1,4 +1,4 @@
-import { createContext, type ReactNode, use, useMemo } from "react";
+import { createContext, use } from "react";
 import {
 	MessageAuthor,
 	type MessageAuthorProps,
@@ -14,8 +14,9 @@ type ThreadConversation = {
 	role: "user" | "xolacer";
 };
 
-/** The conversation behind the mounted override tree. A context, because `WithComponents` never
- * re-reads its overrides, so a closure would freeze at the first render. */
+/** The conversation behind the mounted override tree. Nothing provides it since the thread moved
+ * to `connect/thread`, so the broadcast channel's overrides read `null` and fall back to Stream's
+ * own; the channel's port (S17c) deletes this file with them. */
 const ConversationIdentityContext = createContext<{
 	conversation: ThreadConversation;
 } | null>(null);
