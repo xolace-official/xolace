@@ -6,13 +6,14 @@ import { scheduleOnRN } from "react-native-worklets";
 import { AppText } from "@/components/shared/app-text";
 import { Card } from "@/components/shared/card";
 import { Image } from "@/components/shared/styled";
+import { clearOf } from "@/design/clear-of";
 import { EaseView } from "@/design/ease";
 import { loopOrSettle, useLoopRun } from "@/design/ease-loops";
+import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import { useToday } from "../today-data";
 import { useOnScreen, useShown, useTodayFrame } from "../today-frame";
 import { MODULE_GAP } from "../today-motion";
-import { CAMPFIRE_LIGHT } from "../today-palette";
 import { todayRiseProps } from "../today-rise";
 import { CampfireEmbers } from "./campfire-embers";
 import { campfireLine } from "./campfire-model";
@@ -35,6 +36,8 @@ const GLOW_UP = { opacity: 1, scale: 1.06, translateX: 10 };
 export function CampfireCard() {
 	const { state } = useToday();
 	const { live, reduced, intro, low } = useTodayFrame();
+	// The warmth off its lower edge: fixed firelight, fading out.
+	const warmth = useTokenColor("today-campfire-glow");
 	const top = useSharedValue(0);
 	const onScreen = useOnScreen(top, CARD_H);
 	// The glow and the embers are native loops (react-native-ease) that stop off screen.
@@ -94,7 +97,9 @@ export function CampfireCard() {
 						pointerEvents="none"
 						{...glow}
 						className="absolute -bottom-16.5 -left-10 h-32.5 w-57.5"
-						style={{ backgroundImage: CAMPFIRE_LIGHT.glow }}
+						style={{
+							backgroundImage: `radial-gradient(closest-side, ${warmth}, ${clearOf(warmth)})`,
+						}}
 					/>
 					<View style={FIRE}>
 						<Image

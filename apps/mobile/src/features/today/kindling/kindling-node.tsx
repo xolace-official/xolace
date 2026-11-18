@@ -6,6 +6,7 @@ import {
 	Skia,
 } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
+import { useTokenColor } from "@/lib/use-token-color";
 import {
 	easeCssFn,
 	easeOutFn,
@@ -14,7 +15,6 @@ import {
 	seg,
 	sparkFn,
 } from "../today-motion";
-import { KINDLING_LIGHT } from "../today-palette";
 import { BEAT, NODE } from "./kindling-model";
 import { Ping, Spark } from "./node-effects";
 
@@ -68,6 +68,7 @@ export function KindlingNode({
 }: Props) {
 	const done = state === "done";
 	const current = state === "current";
+	const check = useTokenColor("today-kindling-check");
 
 	const transform = useDerivedValue(() => {
 		const b = beat.get();
@@ -182,7 +183,7 @@ export function KindlingNode({
 			) : null}
 			{done ? (
 				<Path
-					color={KINDLING_LIGHT.check}
+					color={check}
 					end={checkEnd}
 					path={CHECK}
 					strokeCap="round"

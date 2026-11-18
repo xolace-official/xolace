@@ -1,7 +1,7 @@
 import { Circle } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
+import { useTokenColor } from "@/lib/use-token-color";
 import { easeOutFn, seg, sparkFn } from "../today-motion";
-import { KINDLING_LIGHT } from "../today-palette";
 import { BEAT, NODE } from "./kindling-model";
 
 /** A ring going out from the node as the light arrives: 1 → 3, .7 → 0. */
@@ -42,6 +42,7 @@ export function Spark({
 	s: readonly [number, number, number];
 	beat: SharedValue<number>;
 }) {
+	const spark = useTokenColor("today-kindling-spark");
 	const e = useDerivedValue(() =>
 		sparkFn(seg(beat.get(), BEAT.sparksAt, BEAT.sparksAt + BEAT.sparks))
 	);
@@ -53,13 +54,5 @@ export function Spark({
 			? 1 - e.get()
 			: 0;
 	});
-	return (
-		<Circle
-			color={KINDLING_LIGHT.spark}
-			cx={cx}
-			cy={cy}
-			opacity={opacity}
-			r={s[2]}
-		/>
-	);
+	return <Circle color={spark} cx={cx} cy={cy} opacity={opacity} r={s[2]} />;
 }

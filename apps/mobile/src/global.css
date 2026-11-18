@@ -433,6 +433,20 @@
 	--color-today-card-inner-late-1: rgba(236, 122, 102, 0.08);
 	--color-today-card-inner-late-2: rgba(245, 176, 79, 0.13);
 	--color-today-card-shadow: rgba(60, 30, 120, 0.22);
+	/* Kindling's fire (kindling/): a tended node's check, the soft amber under the lit
+     * stroke (the stroke itself is the theme's ember), the highlight that runs it, the
+     * sparks and the wisp's glow and core. Campfire's warmth (campfire/): its rising
+     * embers, their glow and the glow off the card's lower edge. Firelight, the same in
+     * every theme; the wash and the wisp's far glow derive from the theme's ember. */
+	--color-today-kindling-check: #ffffff;
+	--color-today-kindling-glow: #ffb36b;
+	--color-today-kindling-pulse: #fff4da;
+	--color-today-kindling-spark: #ffc27a;
+	--color-today-kindling-wisp-glow: rgba(255, 190, 110, 0.75);
+	--color-today-kindling-wisp-core: #fff1d6;
+	--color-today-campfire-ember: #ffc46b;
+	--color-today-campfire-ember-glow: rgba(255, 170, 80, 0.6);
+	--color-today-campfire-glow: rgba(255, 168, 90, 0.34);
 }
 
 /*

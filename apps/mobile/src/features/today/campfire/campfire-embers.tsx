@@ -6,7 +6,7 @@ import {
 	NONE,
 	type TimingTransition,
 } from "@/design/ease";
-import { CAMPFIRE_LIGHT } from "../today-palette";
+import { useTokenColors } from "@/lib/use-token-color";
 
 /** [left, top, dx, period s, delay s] inside the 78 × 104 fire (the board's `.emb`). */
 const EMBERS: readonly (readonly [number, number, number, number, number])[] = [
@@ -18,7 +18,6 @@ const EMBERS: readonly (readonly [number, number, number, number, number])[] = [
 ];
 const RISE = 78;
 const DOT = 3;
-const GLOW = CAMPFIRE_LIGHT.emberGlow;
 
 /** Fades in by 12% of its life, then out to the end. */
 const FADE_IN_AT = 0.12;
@@ -83,6 +82,10 @@ function Ember({
 	running: boolean;
 }) {
 	const [, , dx, periodS, delayS] = e;
+	const [ember, emberGlow] = useTokenColors([
+		"today-campfire-ember",
+		"today-campfire-ember-glow",
+	]);
 	const period = periodS * 1000;
 	const start = (((-delayS / periodS) % 1) + 1) % 1;
 	const [run, setRun] = useState({ looping: start === 0, n: 0, was: running });
@@ -170,7 +173,10 @@ function Ember({
 			<EaseView
 				{...inner}
 				className="flex-1 rounded-full"
-				style={{ backgroundColor: CAMPFIRE_LIGHT.ember, boxShadow: GLOW }}
+				style={{
+					backgroundColor: ember,
+					boxShadow: `0 0 6px 2px ${emberGlow}`,
+				}}
 			/>
 		</EaseView>
 	);

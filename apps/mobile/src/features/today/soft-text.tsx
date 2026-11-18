@@ -7,11 +7,12 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { clearOf } from "@/design/clear-of";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useTokenColor } from "@/lib/use-token-color";
 
-/** The soft copy's glyphs under their halo (the board: ink at 22%, halo at 69%). */
-const SOFT_GLYPHS = 0.35;
+/** The soft copy's glyphs under their halo (the board: ink at 22%, halo at 69%), from the resolved ink. */
+const SOFT = { glyphs: 0.22, halo: 0.69 } as const;
 
 type Props = Omit<ComponentProps<typeof AppText>, "children"> & {
 	text: string;
@@ -100,8 +101,8 @@ export function SoftText({
 					style={[
 						style,
 						{
-							color: `${ink}38`,
-							textShadowColor: `${ink}B0`,
+							color: clearOf(ink, SOFT.glyphs),
+							textShadowColor: clearOf(ink, SOFT.halo),
 							textShadowRadius: blur,
 						},
 					]}

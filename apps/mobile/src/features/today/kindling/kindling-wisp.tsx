@@ -1,9 +1,13 @@
 import { BlurMask, Circle, Group } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
+import { clearOf } from "@/design/clear-of";
+import { useTokenColors } from "@/lib/use-token-color";
 import { keyframes, seg, trimFn } from "../today-motion";
-import { KINDLING_LIGHT } from "../today-palette";
 import { alongX, alongY, type PathGeometry } from "./kindling-geometry";
 import { BEAT, WISP } from "./kindling-model";
+
+/** The wisp's far glow: the lit stroke's ember at 35%. */
+const WISP_FAR = 0.35;
 
 /** wispRun: in by 8%, out from 88%. */
 const WISP_OPACITY: readonly (readonly [number, number])[] = [
@@ -69,6 +73,12 @@ function WispDot({
 	alpha: number;
 	low: boolean;
 }) {
+	// The glow and core are fixed light; the far glow follows the theme's ember.
+	const [ember, glow, core] = useTokenColors([
+		"ember",
+		"today-kindling-wisp-glow",
+		"today-kindling-wisp-core",
+	]);
 	const table = geo.tables[j];
 	const t = useDerivedValue(() =>
 		seg(beat.get(), BEAT.travelAt + delay, BEAT.travelAt + delay + BEAT.travel)
@@ -82,13 +92,13 @@ function WispDot({
 	);
 	return (
 		<Group opacity={opacity}>
-			<Circle color={KINDLING_LIGHT.wisp.far} cx={cx} cy={cy} r={r + 8}>
+			<Circle color={clearOf(ember, WISP_FAR)} cx={cx} cy={cy} r={r + 8}>
 				{low ? null : <BlurMask blur={r + 6} style="normal" />}
 			</Circle>
-			<Circle color={KINDLING_LIGHT.wisp.glow} cx={cx} cy={cy} r={r + 4}>
+			<Circle color={glow} cx={cx} cy={cy} r={r + 4}>
 				{low ? null : <BlurMask blur={r} style="normal" />}
 			</Circle>
-			<Circle color={KINDLING_LIGHT.wisp.core} cx={cx} cy={cy} r={r} />
+			<Circle color={core} cx={cx} cy={cy} r={r} />
 		</Group>
 	);
 }

@@ -9,6 +9,7 @@ import Animated, {
 import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 import { RollingNumber } from "@/components/shared/rolling-number";
+import { clearOf } from "@/design/clear-of";
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { useTokenColors } from "@/lib/use-token-color";
 import { COPY } from "../copy";
@@ -17,7 +18,6 @@ import { useClock } from "../today-clock";
 import { useToday } from "../today-data";
 import { useTodayFrame } from "../today-frame";
 import { EASE_CSS, glideFn } from "../today-motion";
-import { KINDLING_LIGHT } from "../today-palette";
 import { pathGeometry } from "./kindling-geometry";
 import { BEAT, type KindlingView, nextRow, PATH_H } from "./kindling-model";
 import { KindlingPath } from "./kindling-path";
@@ -30,6 +30,10 @@ const COUNT = 13;
 /** The warm wash sits at (-30, 10) in the card; the body starts inside the card's padding (18, 16). */
 const WASH = { x: -48, y: -6 } as const;
 const washWidth = (lit: number) => 40 + lit * 70;
+/** The warm wash: the lit stroke's ember at 17%, fading out. */
+const WASH_ALPHA = 0.17;
+const washOf = (ember: string) =>
+	`radial-gradient(closest-side, ${clearOf(ember, WASH_ALPHA)}, ${clearOf(ember)})`;
 const PEEK_MS = 420;
 const TOKENS = [
 	"surface",
@@ -95,7 +99,7 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 				className="absolute h-32.5"
 				pointerEvents="none"
 				style={[
-					{ backgroundImage: KINDLING_LIGHT.wash, left: WASH.x, top: WASH.y },
+					{ backgroundImage: washOf(ember), left: WASH.x, top: WASH.y },
 					washStyle,
 				]}
 			/>

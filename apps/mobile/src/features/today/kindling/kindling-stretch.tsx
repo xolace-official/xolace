@@ -1,7 +1,7 @@
 import { BlurMask, Path, type SkPath } from "@shopify/react-native-skia";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
+import { useTokenColors } from "@/lib/use-token-color";
 import { easeInOutFn, keyframes, seg, trimFn } from "../today-motion";
-import { KINDLING_LIGHT } from "../today-palette";
 import { BEAT, STROKE } from "./kindling-model";
 
 /** pulseRun: the highlight runs 0 → 30% of the loop, seen from 6% to 30%. */
@@ -39,6 +39,11 @@ export function Stretch({
 	/** The lit stroke: the theme's ember. */
 	ember: string;
 }) {
+	// The soft amber under the lit stroke and the highlight that runs it: fixed firelight.
+	const [amber, highlight] = useTokenColors([
+		"today-kindling-glow",
+		"today-kindling-pulse",
+	]);
 	// The lit stroke trims on in step with the wisp.
 	const end = useDerivedValue(() =>
 		drawing
@@ -69,7 +74,7 @@ export function Stretch({
 	return (
 		<>
 			<Path
-				color={KINDLING_LIGHT.glow}
+				color={amber}
 				end={end}
 				opacity={STROKE.glow.opacity}
 				path={path}
@@ -89,7 +94,7 @@ export function Stretch({
 			/>
 			{drawing ? null : (
 				<Path
-					color={KINDLING_LIGHT.pulse}
+					color={highlight}
 					end={pulseEnd}
 					opacity={pulseOpacity}
 					path={path}
