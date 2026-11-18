@@ -31,7 +31,6 @@ const REPLACED_FEATURES = [
 	"settings",
 	"starter-suggestions",
 	"streak",
-	"timeline",
 	"trusted-bridge",
 	"xolacer-chat",
 ];

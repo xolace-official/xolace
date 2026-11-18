@@ -4,8 +4,10 @@ import { useRouter } from "expo-router";
 import { PressableFeedback } from "heroui-native";
 import { useWindowDimensions, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import type { TimelineEntry } from "@/features/timeline/types";
-import { toTimelineEntry } from "@/features/timeline/utils";
+import {
+	type TimelineEntry,
+	toTimelineEntry,
+} from "@/features/discovery/timeline-entry";
 import { playSoftPress } from "@/lib/haptics";
 import { DiscoveryMomentCard } from "./discovery-moment-card";
 import { MomentsSkeleton } from "./skeletons";
@@ -39,14 +41,14 @@ export function DiscoveryTimelineSection() {
 
 	const goToTimeline = () => {
 		playSoftPress();
-		router.push("/(protected)/timeline");
+		router.push("/moments");
 	};
 
 	const goToSession = (entry: TimelineEntry) => {
 		playSoftPress();
 		router.push({
 			params: { id: entry.id },
-			pathname: "/(protected)/timeline/session/[id]",
+			pathname: "/moments/session/[id]",
 		});
 	};
 

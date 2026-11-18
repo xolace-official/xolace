@@ -285,7 +285,7 @@ export function PaywallScreen({
 							icon={TIMELINE_ICON}
 							id="timeline"
 							isHighlighted={highlightedFeature === "timeline"}
-							title="Extended timeline"
+							title="All your moments"
 						/>
 						<PaywallFeatureItem
 							description="More reflections, vents, and message drafts per day"

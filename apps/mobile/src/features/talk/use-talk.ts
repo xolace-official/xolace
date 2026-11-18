@@ -1,6 +1,6 @@
 // One live talk (#593): the ElevenLabs conversation, its thread and the voice
 // levels. Ending hands off to reflect's processing → mirror, or "Just end" files
-// the mirror in the timeline. "Say more" reopens it with its thread (#604).
+// the mirror in Moments. "Say more" reopens it with its thread (#604).
 
 import { useConversation } from "@elevenlabs/react-native";
 import { api } from "@xolace/backend/convex/_generated/api";
@@ -32,7 +32,7 @@ const CODE_MESSAGES: Record<string, string> = {
 	// A reopened talk whose session is still closing (its end call was lost offline,
 	// until the server's sweep closes it) or whose mirror is already kept.
 	not_reopenable:
-		"This talk can't be picked up again right now. Its mirror is in your timeline.",
+		"This talk can't be picked up again right now. Its mirror is in Moments.",
 	talk_time_used: `There isn't enough talk time left this week. ${TALK_TIME_RESETS}.`,
 };
 const messageOf = (e: unknown) => {
