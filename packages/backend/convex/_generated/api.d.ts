@@ -276,6 +276,7 @@ import type * as outreach_telegram_retention from "../outreach/telegram/retentio
 import type * as outreach_telegram_webhook from "../outreach/telegram/webhook.js";
 import type * as outreach_validators from "../outreach/validators.js";
 import type * as paths from "../paths.js";
+import type * as paths_settingUp from "../paths/settingUp.js";
 import type * as plusOffers from "../plusOffers.js";
 import type * as posthog from "../posthog.js";
 import type * as preferences from "../preferences.js";
@@ -610,6 +611,7 @@ declare const fullApi: ApiFromModules<{
   "outreach/telegram/webhook": typeof outreach_telegram_webhook;
   "outreach/validators": typeof outreach_validators;
   paths: typeof paths;
+  "paths/settingUp": typeof paths_settingUp;
   plusOffers: typeof plusOffers;
   posthog: typeof posthog;
   preferences: typeof preferences;

@@ -2,7 +2,7 @@ import { v } from "convex/values";
 import { internal } from "../../_generated/api";
 import type { Id } from "../../_generated/dataModel";
 import { type ActionCtx, internalAction } from "../../_generated/server";
-import { rateLimiter } from "../../lib/rateLimits";
+import { kindlingSlotOpen } from "../../paths/settingUp";
 import { posthog } from "../../posthog";
 import { embedSessionText } from "../helpers/embedSessionText";
 import {
@@ -49,6 +49,8 @@ const MAX_TOKENS = 512;
 type Args = {
 	sessionId: Id<"sessions">;
 	emotionalProfileId: Id<"emotional_profiles">;
+	/** Set when `queueKindling` marked the session as setting up (paths/settingUp.ts). */
+	settingUpAt?: number;
 };
 
 /**
@@ -90,23 +92,24 @@ async function logNoShip(
 	});
 }
 
-async function generate(ctx: ActionCtx, args: Args): Promise<void> {
-	const context = await ctx.runQuery(
-		internal.ai.paths.generateDb.getContext,
-		args
-	);
+/** True once a kindling landed; false on every exit that made none. */
+async function generate(ctx: ActionCtx, args: Args): Promise<boolean> {
+	const context = await ctx.runQuery(internal.ai.paths.generateDb.getContext, {
+		emotionalProfileId: args.emotionalProfileId,
+		sessionId: args.sessionId,
+	});
 	if (!context) {
-		return;
+		return false;
 	}
 
 	// One kindling per profile per day. `check` here so a spent slot skips
 	// the model call; the slot is only consumed (`limit`) once there is
 	// something to write — a provider error or a no-ship must not burn the
-	// day's single chance.
-	const limitKey = { key: args.emotionalProfileId };
-	if (!(await rateLimiter.check(ctx, "pathsGenerate", limitKey)).ok) {
+	// day's single chance. The same check `queueKindling` makes before it says
+	// "setting up".
+	if (!(await kindlingSlotOpen(ctx, args.emotionalProfileId))) {
 		await logNoShip(ctx, args, "rate_limited", 0);
-		return;
+		return false;
 	}
 
 	// Tonight's text, embedded at most once, only when a search needs it, and
@@ -184,12 +187,13 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
 
 	if (twigs.length < MIN_TWIGS) {
 		await logNoShip(ctx, args, "fewer_than_min_twigs", twigs.length);
-		return;
+		return false;
 	}
 
 	// The slot is consumed inside `write`, in the same transaction as the
 	// rows: a failed write rolls the limit back too, so the day's chance is
-	// never burned on a kindling that did not land.
+	// never burned on a kindling that did not land. It also ends the session's
+	// "setting up" in that transaction.
 	const pathId = await ctx.runMutation(internal.ai.paths.generateDb.write, {
 		...args,
 		completionTokens: response.usage.output_tokens,
@@ -207,7 +211,7 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
 	});
 	if (pathId === null) {
 		await logNoShip(ctx, args, "rate_limited", twigs.length);
-		return;
+		return false;
 	}
 
 	// Fires only now — after the kindling is written (docs/paths-v1.md §10).
@@ -216,23 +220,39 @@ async function generate(ctx: ActionCtx, args: Args): Promise<void> {
 		emotionalProfileId: args.emotionalProfileId,
 		pathId,
 	});
+	return true;
 }
 
 export const run = internalAction({
 	args: {
 		emotionalProfileId: v.id("emotional_profiles"),
 		sessionId: v.id("sessions"),
+		/**
+		 * The session's `kindlingSettingUpAt`, when `queueKindling` set one.
+		 * Optional: runs queued before B13, and ones that never said "setting
+		 * up", carry none and clear nothing.
+		 */
+		settingUpAt: v.optional(v.number()),
 	},
 	handler: async (ctx, args) => {
 		// Every read, gate and model call sits before the single write mutation,
 		// so a caught throw leaves either a whole kindling or none — never a
 		// replaced previous with no successor.
+		let made = false;
 		try {
-			await generate(ctx, args);
+			made = await generate(ctx, args);
 		} catch (error) {
 			console.error("kindling: generation failed", {
 				message: error instanceof Error ? error.message : String(error),
 				sessionId: args.sessionId,
+			});
+		}
+		// No kindling came of it: end "setting up" now rather than at the
+		// backstop. A landed kindling already cleared it inside `write`.
+		if (!made && args.settingUpAt !== undefined) {
+			await ctx.runMutation(internal.paths.settingUp.clear, {
+				sessionId: args.sessionId,
+				settingUpAt: args.settingUpAt,
 			});
 		}
 		return null;

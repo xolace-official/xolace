@@ -731,9 +731,11 @@ describe("the completion hook", () => {
 			await scheduledCalls(user.root),
 			"ai/paths/generate:run"
 		);
+		// A qualifying Plus session is marked as setting up (paths/settingUp.ts).
 		expect(call?.args).toEqual({
 			emotionalProfileId: user.profileId,
 			sessionId,
+			settingUpAt: expect.any(Number),
 		});
 	});
 
@@ -780,7 +782,11 @@ describe("requestKindling (free → Plus at session-end)", () => {
 			c.name.endsWith("ai/paths/generate:run")
 		);
 		expect(runs.map((c) => c.args)).toEqual([
-			{ emotionalProfileId: user.profileId, sessionId },
+			{
+				emotionalProfileId: user.profileId,
+				sessionId,
+				settingUpAt: expect.any(Number),
+			},
 		]);
 	});
 
@@ -796,6 +802,7 @@ describe("requestKindling (free → Plus at session-end)", () => {
 		expect(call?.args).toEqual({
 			emotionalProfileId: user.profileId,
 			sessionId,
+			settingUpAt: expect.any(Number),
 		});
 	});
 });
