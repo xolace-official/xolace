@@ -20,10 +20,25 @@ describe("bareLinks", () => {
 		).toEqual(["mailto:me@a.co", "https://www.b.org/c"]);
 	});
 
-	it("leaves file names, versions and words with dots alone", () => {
-		expect(bareLinks("readme.md, Node.js, v1.2.3, e.g. this. End.")).toEqual(
-			[]
-		);
+	it("leaves versions and words with dots alone", () => {
+		expect(bareLinks("Node.js, v1.2.3, e.g. this. End.")).toEqual([]);
+	});
+
+	it("links a file name on a real top-level domain, as Stream's tap does", () => {
+		// `.md` is Moldova's: Stream makes "readme.md" tappable, so VoiceOver gets it too.
+		expect(bareLinks("See readme.md")).toEqual([
+			{ url: "http://readme.md", words: "readme.md" },
+		]);
+	});
+
+	it("finds an address on any top-level domain, as Stream does", () => {
+		expect(bareLinks("The studio moved to xolace.studio/camp.")).toEqual([
+			{ url: "http://xolace.studio/camp", words: "xolace.studio/camp" },
+		]);
+	});
+
+	it("leaves a name before an email alone, as Stream does", () => {
+		expect(bareLinks("Thanks @sam.k@xolace.app")).toEqual([]);
 	});
 
 	it("keeps parentheses in an address", () => {
