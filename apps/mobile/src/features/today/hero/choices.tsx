@@ -50,6 +50,8 @@ export function Choices({ onBack }: { onBack: () => void }) {
 	return (
 		<View
 			className="absolute inset-0 gap-3 overflow-hidden px-4.5 pt-6 pb-3"
+			// VoiceOver's two-finger scrub is Write instead.
+			onAccessibilityEscape={onBack}
 			style={{ borderRadius: HERO.radius }}
 		>
 			<FadeUp delay={BURST.titleAt}>

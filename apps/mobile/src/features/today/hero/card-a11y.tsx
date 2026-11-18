@@ -1,3 +1,4 @@
+import type { ComponentRef, Ref } from "react";
 import { View } from "react-native";
 import { COPY } from "../copy";
 
@@ -14,6 +15,8 @@ type Props = {
 	inputLabel: string;
 	/** Only while the card is at rest: then the input, mic and the doors action are there too. */
 	onDoors?: () => void;
+	/** The card's button, for VoiceOver to come back to after Write instead. */
+	cardRef?: Ref<ComponentRef<typeof View>>;
 };
 
 /**
@@ -32,6 +35,7 @@ export function CardA11y({
 	doorsAction,
 	inputLabel,
 	onDoors,
+	cardRef,
 }: Props) {
 	return (
 		<View className="absolute inset-0" pointerEvents="none">
@@ -49,6 +53,7 @@ export function CardA11y({
 						onDoors?.();
 					}
 				}}
+				ref={cardRef}
 				style={at(card)}
 			/>
 			{onDoors ? (

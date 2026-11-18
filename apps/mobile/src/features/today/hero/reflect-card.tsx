@@ -1,6 +1,6 @@
 import { useIsFocused } from "expo-router";
-import { useEffect, useState } from "react";
-import { View } from "react-native";
+import { type ComponentRef, useEffect, useRef, useState } from "react";
+import { AccessibilityInfo, View } from "react-native";
 import Animated, {
 	useAnimatedStyle,
 	useSharedValue,
@@ -54,6 +54,26 @@ export function ReflectCard() {
 			release();
 		}
 	}, [focused, release, rest]);
+
+	// Write instead: VoiceOver goes back to the card, which comes back in place of the doors.
+	const cardRef = useRef<ComponentRef<typeof View>>(null);
+	const [refocus, setRefocus] = useState(false);
+	const writeInstead = () => {
+		unchoose();
+		setRefocus(true);
+	};
+	useEffect(() => {
+		if (!refocus || chosen) {
+			return;
+		}
+		const id = setTimeout(() => {
+			setRefocus(false);
+			if (cardRef.current) {
+				AccessibilityInfo.sendAccessibilityEvent(cardRef.current, "focus");
+			}
+		}, HERO.bodyOutMs);
+		return () => clearTimeout(id);
+	}, [refocus, chosen]);
 
 	const top = useSharedValue(0);
 	const onScreen = useOnScreen(top, size?.h ?? FALLBACK_H);
@@ -148,10 +168,11 @@ export function ReflectCard() {
 				style={scaleStyle}
 			>
 				{chosen ? (
-					<Choices onBack={hold.unchoose} />
+					<Choices onBack={writeInstead} />
 				) : size && input && mic ? (
 					<CardA11y
 						card={{ height: size.h, width: size.w, x: 0, y: 0 }}
+						cardRef={cardRef}
 						doorsAction={doors.action}
 						hint={doors.a11yHint}
 						input={input}
