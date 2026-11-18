@@ -315,39 +315,3 @@ describe("portedFolderImportsFromOldCode", () => {
 		expect(portedFolderImportsFromOldCode(graph)).toEqual([]);
 	});
 });
-
-// TEMPORARY with `PORTED_AREAS`: S19b deletes this block when `settings` leaves the list.
-describe("ported areas of a listed folder (settings)", () => {
-	it("holds an area to the shape, and leaves the old files beside it alone", () => {
-		const graph = graphOf({
-			"features/settings/components/screens/DataScreen.tsx": [
-				pkg("convex/react", ["useQuery"]),
-				local("features/settings/home/home-model.ts"),
-			],
-			"features/settings/home/plus/plus-card.tsx": [
-				pkg("convex/react", ["useQuery"]),
-				local("features/settings/components/settings-icons.ts"),
-				local("features/reach-me-on/reach-view.ts"),
-				local("features/today/today-model.ts"),
-			],
-			"features/settings/home/use-settings-home.ts": [
-				pkg("convex/react", ["useQuery"]),
-				local("features/settings/mirror/mirror-model.ts"),
-				local("features/purchases/use-paywall.ts"),
-			],
-		});
-		expect(backendCallsOutsideDataHooks(graph)).toEqual([
-			"features/settings/home/plus/plus-card.tsx -> convex/react",
-		]);
-		expect(oldFolderImportsFromNewCode(graph)).toEqual([
-			"features/settings/home/plus/plus-card.tsx -> features/settings/components/settings-icons.ts",
-			"features/settings/home/plus/plus-card.tsx -> features/reach-me-on/reach-view.ts",
-		]);
-		expect(crossFeatureImportsFromPorted(graph)).toEqual([
-			"features/settings/home/plus/plus-card.tsx -> features/today/today-model.ts",
-		]);
-		expect(portedFolderImportsFromOldCode(graph)).toEqual([
-			"features/settings/components/screens/DataScreen.tsx -> features/settings/home/home-model.ts",
-		]);
-	});
-});
