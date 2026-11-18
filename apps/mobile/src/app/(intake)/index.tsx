@@ -1,8 +1,8 @@
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { Button, useThemeColor } from "heroui-native";
 import { usePostHog } from "posthog-react-native";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
@@ -35,6 +35,13 @@ export default function IntakeIndex() {
 	const posthog = usePostHog();
 	const started = useRef(false);
 	const leaving = useRef(false);
+	// Re-armed whenever the letter is back on top. Flux holds Android's back, so this is a
+	// second guard: a letter that came back must still begin.
+	useFocusEffect(
+		useCallback(() => {
+			leaving.current = false;
+		}, [])
+	);
 	useEffect(() => {
 		if (started.current || context === undefined) {
 			return;
@@ -51,7 +58,7 @@ export default function IntakeIndex() {
 
 	const audience = context.profile.sessionCount > 0 ? "existing" : "new";
 
-	// Once: two taps in one frame would push Flux twice. Forward-only, so it never resets.
+	// Once: two taps in one frame would push Flux twice.
 	const beginIntake = () => {
 		if (leaving.current) {
 			return;
