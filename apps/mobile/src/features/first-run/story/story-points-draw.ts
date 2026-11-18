@@ -1,40 +1,20 @@
-import {
-	Canvas,
-	Picture,
-	type SkCanvas,
-	Skia,
-	TileMode,
-} from "@shopify/react-native-skia";
-import { StyleSheet } from "react-native";
-import { type SharedValue, useDerivedValue } from "react-native-reanimated";
+import { type SkCanvas, Skia, TileMode } from "@shopify/react-native-skia";
 import { STORY } from "../copy";
-import {
-	BOARD,
-	clamp,
-	ease,
-	easeIO,
-	lerp,
-	mod,
-	seg,
-	TAU,
-} from "../first-run-motion";
-import { css, FIRE_COLORS, STORY_COLORS } from "../first-run-palette";
-import { seedPicture } from "../skia-words";
-import { useCanvasKick } from "../stage";
+import type { FireInk } from "../fire-ink";
+import { clamp, ease, easeIO, lerp, mod, seg, TAU } from "../first-run-motion";
+import { css, STORY_COLORS } from "../first-run-palette";
 import {
 	AUTH,
 	ageAuth,
 	ageOf,
 	ageSeat,
 	ageT,
-	beatPose,
 	bIf,
 	FIRE0,
 	FLD,
 	PROV,
 	SEAT_PT,
 	type SEng,
-	seatOpen,
 	VENT_O,
 } from "./story-scene";
 
@@ -72,23 +52,30 @@ const BANDS = [
 ];
 const SPARK_N = 10;
 
-function spark(c: SkCanvas, x: number, y: number, sz: number, o: number) {
+function spark(
+	c: SkCanvas,
+	ink: FireInk,
+	x: number,
+	y: number,
+	sz: number,
+	o: number
+) {
 	"worklet";
 	if (o <= 0.003) {
 		return;
 	}
 	const g = Skia.Paint();
-	g.setColor(Skia.Color(FIRE_COLORS.sparkGlow));
+	g.setColor(Skia.Color(ink.sparkGlow));
 	g.setAlphaf(0.75 * o);
 	g.setMaskFilter(Skia.MaskFilter.MakeBlur(0, 3, true));
 	c.drawCircle(x, y, sz / 2 + 1, g);
 	const d = Skia.Paint();
-	d.setColor(Skia.Color(FIRE_COLORS.spark));
+	d.setColor(Skia.Color(ink.spark));
 	d.setAlphaf(o);
 	c.drawCircle(x, y, sz / 2, d);
 }
 
-export function cover(c: SkCanvas, e: SEng, a: number) {
+export function cover(c: SkCanvas, e: SEng, a: number, ink: FireInk) {
 	"worklet";
 	const bb = bIf(e, 0);
 	const t = ageT(e);
@@ -102,6 +89,7 @@ export function cover(c: SkCanvas, e: SEng, a: number) {
 		const sz = 2 + (i % 3);
 		spark(
 			c,
+			ink,
 			FIRE0.x + Math.sin(p * TAU + i) * 6 + (i % 2 ? 1 : -1) * p * 12,
 			FIRE0.y - 10 - p * (120 + (i % 4) * 20),
 			sz,
@@ -118,6 +106,7 @@ export function cover(c: SkCanvas, e: SEng, a: number) {
 		const r = 30 + 110 * ease(p) + (i % 3) * 14;
 		spark(
 			c,
+			ink,
 			FIRE0.x + Math.cos(ang) * r,
 			FIRE0.y - 6 + Math.sin(ang) * r * 1.2,
 			3 + (i % 2) * 2,
@@ -126,7 +115,7 @@ export function cover(c: SkCanvas, e: SEng, a: number) {
 	}
 }
 
-export function ripples(c: SkCanvas, e: SEng, a: number) {
+export function ripples(c: SkCanvas, e: SEng, a: number, ink: FireInk) {
 	"worklet";
 	const age = ageOf(e, e.ripAt);
 	if (age < 0) {
@@ -140,7 +129,7 @@ export function ripples(c: SkCanvas, e: SEng, a: number) {
 		if (p <= 0 || p >= 1) {
 			continue;
 		}
-		p0.setColor(Skia.Color(STORY_COLORS.ripple));
+		p0.setColor(Skia.Color(ink.ripple));
 		p0.setAlphaf(0.7 * 0.8 * (1 - p) * a);
 		const sx = 1 + 7 * ease(p);
 		const sy = 1 + 4 * ease(p);
@@ -151,7 +140,7 @@ export function ripples(c: SkCanvas, e: SEng, a: number) {
 	}
 }
 
-export function vent(c: SkCanvas, e: SEng, a: number) {
+export function vent(c: SkCanvas, e: SEng, a: number, ink: FireInk) {
 	"worklet";
 	const bb = bIf(e, 2);
 	if (bb > 90_000) {
@@ -177,6 +166,7 @@ export function vent(c: SkCanvas, e: SEng, a: number) {
 		const y = VENT_O.y - p * (80 + (i % 5) * 22) * (1 + 0.9 * v);
 		spark(
 			c,
+			ink,
 			x,
 			y,
 			sz,
@@ -185,7 +175,7 @@ export function vent(c: SkCanvas, e: SEng, a: number) {
 	}
 }
 
-export function embers(c: SkCanvas, e: SEng, a: number) {
+export function embers(c: SkCanvas, e: SEng, a: number, ink: FireInk) {
 	"worklet";
 	const bb = bIf(e, 3);
 	const fa = ageOf(e, e.flareAt);
@@ -210,7 +200,7 @@ export function embers(c: SkCanvas, e: SEng, a: number) {
 			s *= 1 + 1.6 * f;
 			o = Math.min(1, o + f);
 			const g = Skia.Paint();
-			g.setColor(Skia.Color(FIRE_COLORS.emberFlare));
+			g.setColor(Skia.Color(ink.emberFlare));
 			g.setAlphaf(0.6 * f * a);
 			g.setMaskFilter(Skia.MaskFilter.MakeBlur(0, 7, true));
 			c.drawCircle(x, y, s / 2 + 5, g);
@@ -225,7 +215,7 @@ export function embers(c: SkCanvas, e: SEng, a: number) {
 }
 
 /** Signing in: a coal leaves the button for the seat on an arc 120 pt high, then 10 sparks rise. */
-export function seat(c: SkCanvas, e: SEng, so: number) {
+export function seat(c: SkCanvas, e: SEng, so: number, ink: FireInk) {
 	"worklet";
 	const sa = ageSeat(e);
 	if (sa < 0 || so <= 0) {
@@ -254,7 +244,7 @@ export function seat(c: SkCanvas, e: SEng, so: number) {
 			Skia.Shader.MakeRadialGradient(
 				{ x: 0, y: 0 },
 				64,
-				STORY_COLORS.seatGlow.map((k) => Skia.Color(k)),
+				ink.seatGlow.map((k) => Skia.Color(k)),
 				null,
 				TileMode.Clamp
 			)
@@ -280,7 +270,7 @@ export function seat(c: SkCanvas, e: SEng, so: number) {
 			Skia.Shader.MakeRadialGradient(
 				{ x, y },
 				r,
-				FIRE_COLORS.coal.map((k) => Skia.Color(k)),
+				ink.coal.map((k) => Skia.Color(k)),
 				[0, 0.3, 0.55, 0.72],
 				TileMode.Clamp
 			)
@@ -296,6 +286,7 @@ export function seat(c: SkCanvas, e: SEng, so: number) {
 		const r = 14 + 70 * ease(p);
 		spark(
 			c,
+			ink,
 			SEAT_PT.x + Math.cos(ang) * r,
 			SEAT_PT.y - 4 + Math.sin(ang) * r * 1.3,
 			2 + (i % 3),

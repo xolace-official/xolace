@@ -1,8 +1,9 @@
 import { Canvas, Picture, Skia, TileMode } from "@shopify/react-native-skia";
 import { StyleSheet } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
+import { useTokenColors } from "@/lib/use-token-color";
+import { useFireInk } from "../fire-ink";
 import { ease, type Stage, seg, TAU } from "../first-run-motion";
-import { STORY_COLORS } from "../first-run-palette";
 import { seedPicture } from "../skia-words";
 import { useCanvasKick } from "../stage";
 import { drawGlow, glowPose } from "./glow";
@@ -10,6 +11,12 @@ import { ageB, ageSeat, ageT, type SEng, seatOpen } from "./story-scene";
 
 /** Board `.sfire`: the fire glow behind Flux, 400 × 330 at (−30, 270), breathing. */
 const SFIRE = { cx: 170, cy: 435, rx: 200, ry: 165 };
+
+const SEAT_FIRE = [
+	"first-run-seat-fire-1",
+	"first-run-seat-fire-2",
+	"first-run-seat-fire-3",
+] as const;
 
 /**
  * The ground and its glow (no video): two gradients in one Skia canvas. It changes colour per beat
@@ -24,7 +31,8 @@ export function StoryGlow({
 	stage: Stage;
 	gate?: SharedValue<number>;
 }) {
-	const cols = STORY_COLORS.seatFire.map((c) => Skia.Color(c));
+	const ground = useFireInk().ground;
+	const cols = useTokenColors(SEAT_FIRE).map((c) => Skia.Color(c));
 	const kick = useCanvasKick();
 	const picture = useDerivedValue(() => {
 		const rec = Skia.PictureRecorder();
@@ -46,7 +54,8 @@ export function StoryGlow({
 			c,
 			stage,
 			glowPose(t, e.rm, from, e.beat, cross, surge, so, e.vent),
-			so
+			so,
+			ground
 		);
 		const sa = ageSeat(e);
 		if (sa >= 0 || so > 0) {

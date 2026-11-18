@@ -6,19 +6,12 @@ import Animated, {
 import Svg, { Ellipse, Path, Rect } from "react-native-svg";
 import { AppText } from "@/components/shared/app-text";
 import { LinearGradient } from "@/components/shared/styled";
-import { FONTS } from "@/design/type";
+import { useTokenColors } from "@/lib/use-token-color";
 import { STORY, XOLACERS, xolacerLabel } from "../copy";
 import { BOARD_TEXT_MAX } from "../first-run-layout";
 import { ease, fs, lerp, mod, seg } from "../first-run-motion";
-import {
-	BEAT_COLORS,
-	css,
-	FACE_COLORS,
-	ink,
-	STORY_COLORS,
-} from "../first-run-palette";
-import { BeatSection, useIn } from "./beat-parts";
-import { ageOf, bIf, type SEng, XS } from "./story-scene";
+import { BEAT_COLORS, css, ink, STORY_COLORS } from "../first-run-palette";
+import { ageOf, type SEng, XS } from "./story-scene";
 
 const PEACH = BEAT_COLORS.xolacers.lit;
 
@@ -30,7 +23,14 @@ const SLOTS = [
 ];
 
 /** The board's `face()`: a drawn head and shoulders, made up. */
-function Face({ skin, hair, bg }: { skin: string; hair: string; bg: string }) {
+function Face({ j }: { j: number }) {
+	const n = j + 1;
+	const [bg, hair, skin, shoulders] = useTokenColors([
+		`first-run-face-${n}-bg`,
+		`first-run-face-${n}-hair`,
+		`first-run-face-${n}-skin`,
+		"first-run-shoulders",
+	]);
 	return (
 		<View
 			className="size-13 overflow-hidden rounded-full"
@@ -38,10 +38,7 @@ function Face({ skin, hair, bg }: { skin: string; hair: string; bg: string }) {
 		>
 			<Svg height={52} viewBox="0 0 100 100" width={52}>
 				<Rect fill={bg} height={100} width={100} />
-				<Path
-					d="M18 104c2-20 15-31 32-31s30 11 32 31z"
-					fill={STORY_COLORS.shoulders}
-				/>
+				<Path d="M18 104c2-20 15-31 32-31s30 11 32 31z" fill={shoulders} />
 				<Ellipse cx={50} cy={48} fill={skin} rx={17} ry={20} />
 				<Path
 					d="M31 46c0-16 9-26 20-26s20 10 20 25c-6-6-13-9-21-9-7 0-14 4-19 10z"
@@ -53,10 +50,16 @@ function Face({ skin, hair, bg }: { skin: string; hair: string; bg: string }) {
 	);
 }
 
+const CARD_TOKENS = [
+	"first-run-card-1",
+	"first-run-card-2",
+	"first-run-card-shadow",
+] as const;
+
 /** A Xolacer's card at its slot, dragged, flying off or settling in (board `c.xc`). */
 export function XoCard({ eng, j }: { eng: SharedValue<SEng>; j: number }) {
 	const x = XOLACERS[j];
-	const face = FACE_COLORS[j];
+	const [card1, card2, cardShadow] = useTokenColors(CARD_TOKENS);
 	const style = useAnimatedStyle(() => {
 		const e = eng.get();
 		const slot = mod(j - e.xk, 3);
@@ -117,7 +120,7 @@ export function XoCard({ eng, j }: { eng: SharedValue<SEng>; j: number }) {
 			className="absolute top-0 left-0 rounded-[26px] border-continuous"
 			style={[
 				{
-					boxShadow: STORY_COLORS.cardShadow,
+					boxShadow: `0 18px 40px -16px ${cardShadow}`,
 					height: XS.h,
 					transformOrigin: "50% 90%",
 					width: XS.w,
@@ -126,12 +129,11 @@ export function XoCard({ eng, j }: { eng: SharedValue<SEng>; j: number }) {
 			]}
 		>
 			<LinearGradient
-				className="flex-1 rounded-[26px] border-[0.5px] border-continuous px-4.5 pt-4.5 pb-4"
-				colors={STORY_COLORS.card}
-				style={{ borderColor: STORY_COLORS.cardEdge }}
+				className="flex-1 rounded-[26px] border-[0.5px] border-continuous border-first-run-card-edge px-4.5 pt-4.5 pb-4"
+				colors={[card1, card2]}
 			>
 				<View className="flex-row items-center gap-3">
-					<Face bg={face.bg} hair={face.hair} skin={face.skin} />
+					<Face j={j} />
 					<View>
 						<AppText
 							className="text-[19px] leading-[23px] tracking-[-0.19px]"
@@ -176,10 +178,7 @@ export function XoCard({ eng, j }: { eng: SharedValue<SEng>; j: number }) {
 					))}
 				</View>
 				<View className="mt-auto flex-row items-center gap-[7px]">
-					<View
-						className="size-1.5 rounded-full"
-						style={{ backgroundColor: STORY_COLORS.online }}
-					/>
+					<View className="size-1.5 rounded-full bg-first-run-online" />
 					<AppText
 						className="text-[12px] leading-[15px]"
 						maxFontSizeMultiplier={BOARD_TEXT_MAX}

@@ -1,11 +1,16 @@
-import { Pressable } from "react-native";
+import { Pressable, useWindowDimensions } from "react-native";
 import Animated, {
 	type SharedValue,
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { useTokenColors } from "@/lib/use-token-color";
 import { PROMISE } from "../copy";
-import { BOARD_TEXT_MAX } from "../first-run-layout";
+import {
+	CONTROL_MIN_SCALE,
+	CONTROLS_BOTTOM,
+	controlStack,
+} from "../first-run-layout";
 import {
 	clamp,
 	ease,
@@ -22,6 +27,10 @@ import { ageT, ageX, CTA_Y, OPEN, type PEng, X } from "./promise-scene";
 /** Board `.cta`: top 702, 28 pt in, 56 tall, a pill; `.acct`: top 766, 36 tall. */
 const CTA = { h: 56, side: 28, top: 702 };
 const ACCT = { h: 36, top: 766 };
+/** The labels' lines and the room around them. */
+const CTA_LINE = { line: 22, pad: 20 };
+const ACCT_LINE = { line: 19, pad: 12 };
+const ACCT_GAP = ACCT.top - (CTA.top + CTA.h);
 const COAL = 16;
 const RM_FADE_MS = 200;
 
@@ -40,6 +49,19 @@ export function PromiseButton({
 	day: boolean;
 	onGo: (toSeat: boolean) => void;
 }) {
+	const { fontScale } = useWindowDimensions();
+	const [buttonShadow] = useTokenColors(["first-run-button-shadow"]);
+	// Both grow down into the room above the home indicator, then their labels shrink to fit.
+	const [pill, link] = controlStack(
+		CTA.top,
+		ACCT_GAP,
+		CONTROLS_BOTTOM,
+		[
+			{ h: CTA.h, ...CTA_LINE },
+			{ h: ACCT.h, ...ACCT_LINE },
+		],
+		fontScale
+	);
 	const base = day ? PROMISE_COLORS.ink.day : PROMISE_COLORS.ink.dusk;
 	const ember = PROMISE_COLORS.fireEmber;
 	const cta = useAnimatedStyle(() => {
@@ -47,11 +69,11 @@ export function PromiseButton({
 		const t = ageT(e);
 		const x = ageX(e);
 		const rest = {
-			borderRadius: CTA.h / 2,
-			height: CTA.h,
+			borderRadius: pill.h / 2,
+			height: pill.h,
 			left: CTA.side,
 			right: CTA.side,
-			top: CTA.top + stage.dy,
+			top: pill.top + stage.dy,
 		};
 		if (x < 0) {
 			const p = e.rm
@@ -78,7 +100,7 @@ export function PromiseButton({
 		const am = ease(seg(x, 0, X.amber));
 		const k = easeIO(seg(x, X.collapse[0], X.collapse[1]));
 		const side = lerp(CTA.side, stage.W / 2 - COAL / 2, k);
-		const h = lerp(CTA.h, COAL, k);
+		const h = lerp(pill.h, COAL, k);
 		return {
 			backgroundColor: css(mixRGB(base, ember, am)),
 			borderRadius: h / 2,
@@ -88,7 +110,7 @@ export function PromiseButton({
 			right: side,
 			shadowOpacity: 0.55 * am,
 			shadowRadius: 15 * am,
-			top: lerp(CTA.top, CTA_Y - COAL / 2, k) + stage.dy,
+			top: lerp(pill.top, CTA_Y - COAL / 2, k) + stage.dy,
 			transform: [{ translateY: 0 }, { scale: 1 }],
 		};
 	});
@@ -120,7 +142,7 @@ export function PromiseButton({
 				className="absolute"
 				style={[
 					{
-						shadowColor: PROMISE_COLORS.buttonShadow,
+						shadowColor: buttonShadow,
 						shadowOffset: { height: 0, width: 0 },
 					},
 					cta,
@@ -136,7 +158,9 @@ export function PromiseButton({
 				>
 					<Animated.View style={label}>
 						<AppText
-							maxFontSizeMultiplier={BOARD_TEXT_MAX}
+							adjustsFontSizeToFit
+							maxFontSizeMultiplier={pill.max}
+							minimumFontScale={CONTROL_MIN_SCALE}
 							numberOfLines={1}
 							style={{
 								color: css(
@@ -154,15 +178,18 @@ export function PromiseButton({
 			</Animated.View>
 			<Animated.View
 				className="absolute inset-x-0"
-				style={[{ minHeight: ACCT.h, top: ACCT.top + stage.dy }, acct]}
+				style={[{ height: link.h, top: link.top + stage.dy }, acct]}
 			>
 				<Pressable
 					accessibilityRole="button"
-					className="flex-1 items-center justify-center"
+					className="flex-1 items-center justify-center px-7"
 					onPress={() => onGo(true)}
 				>
 					<AppText
-						maxFontSizeMultiplier={BOARD_TEXT_MAX}
+						adjustsFontSizeToFit
+						maxFontSizeMultiplier={link.max}
+						minimumFontScale={CONTROL_MIN_SCALE}
+						numberOfLines={1}
 						style={{
 							color: css(
 								day ? PROMISE_COLORS.ink2.day : PROMISE_COLORS.ink2.dusk

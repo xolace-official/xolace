@@ -2,7 +2,6 @@ import { useState } from "react";
 import { View } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
 import { useFirstRunContext } from "./first-run-data";
-import { STORY_COLORS } from "./first-run-palette";
 import { PromiseView } from "./promise/promise-view";
 import { useFirstRunFaces } from "./skia-words";
 import { useStage } from "./stage";
@@ -31,7 +30,7 @@ export function FirstRunScreen() {
 		setPhase("handoff");
 	};
 	return (
-		<View className="flex-1" style={{ backgroundColor: STORY_COLORS.ground }}>
+		<View className="flex-1 bg-first-run-ground">
 			{phase === "story" ? null : (
 				<PromiseView
 					day={state.day}

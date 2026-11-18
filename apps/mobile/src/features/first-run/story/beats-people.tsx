@@ -3,29 +3,25 @@ import Animated, {
 	type SharedValue,
 	useAnimatedStyle,
 } from "react-native-reanimated";
-import Svg, { Ellipse, Path, Rect } from "react-native-svg";
+import Svg, { Ellipse, Path } from "react-native-svg";
 import { AppText } from "@/components/shared/app-text";
-import { LinearGradient } from "@/components/shared/styled";
 import { FONTS } from "@/design/type";
-import { STORY, XOLACERS, xolacerLabel } from "../copy";
+import { useTokenColors } from "@/lib/use-token-color";
+import { STORY, XOLACERS } from "../copy";
 import { BOARD_TEXT_MAX } from "../first-run-layout";
-import { ease, fs, lerp, mod, seg } from "../first-run-motion";
-import {
-	BEAT_COLORS,
-	css,
-	FACE_COLORS,
-	ink,
-	STORY_COLORS,
-} from "../first-run-palette";
+import { ease, fs, seg } from "../first-run-motion";
+import { ink } from "../first-run-palette";
 import { BeatSection, useIn } from "./beat-parts";
-import { ageOf, bIf, type SEng, XS } from "./story-scene";
+import { bIf, type SEng, XS } from "./story-scene";
 import { XoCard } from "./xolacer-card";
 
 const DONE = 450 + STORY.count * 62;
-const PEACH = BEAT_COLORS.xolacers.lit;
-
 /** 4 · This week: the count is drawn in the words canvas, its embers in the points canvas. */
 export function BeatWeek({ eng }: { eng: SharedValue<SEng> }) {
+	const [dotRing, dotGlow] = useTokenColors([
+		"first-run-quote-dot-ring",
+		"first-run-quote-dot-glow",
+	]);
 	const caption = useIn(eng, 3, DONE - 150, 500, 6);
 	const quote = useIn(eng, 3, DONE + 450, 600, 10);
 	const by = useIn(eng, 3, DONE + 750, 500, 0);
@@ -55,10 +51,9 @@ export function BeatWeek({ eng }: { eng: SharedValue<SEng> }) {
 				style={quote}
 			>
 				<View
-					className="mt-[9px] size-[7px] rounded-full"
+					className="mt-[9px] size-[7px] rounded-full bg-first-run-quote-dot"
 					style={{
-						backgroundColor: STORY_COLORS.quoteDot,
-						boxShadow: STORY_COLORS.quoteDotGlow,
+						boxShadow: `0 0 0 5px ${dotRing}, 0 0 16px 6px ${dotGlow}`,
 					}}
 				/>
 				<AppText
@@ -84,6 +79,7 @@ export function BeatWeek({ eng }: { eng: SharedValue<SEng> }) {
 
 /** 5 · Xolacers: three people's cards to swipe through, and you as a mask. */
 export function BeatXolacers({ eng }: { eng: SharedValue<SEng> }) {
+	const [mask] = useTokenColors(["first-run-mask"]);
 	const pile = useAnimatedStyle(() => {
 		const e = eng.get();
 		const bb = bIf(e, 4);
@@ -117,11 +113,8 @@ export function BeatXolacers({ eng }: { eng: SharedValue<SEng> }) {
 			<Animated.View
 				accessibilityLabel={`${STORY.you.title}. ${STORY.you.sub.replace("\n", " ")}`}
 				accessible
-				className="absolute top-[470px] left-6 h-34 w-26 items-center justify-center gap-1.5 rounded-[22px] border border-continuous"
-				style={[
-					{ backgroundColor: STORY_COLORS.youFill, borderColor: ink(0.1) },
-					you,
-				]}
+				className="absolute top-[470px] left-6 h-34 w-26 items-center justify-center gap-1.5 rounded-[22px] border border-continuous bg-first-run-you-fill"
+				style={[{ borderColor: ink(0.1) }, you]}
 			>
 				<Svg height={26} viewBox="0 0 40 26" width={40}>
 					<Path
@@ -129,20 +122,8 @@ export function BeatXolacers({ eng }: { eng: SharedValue<SEng> }) {
 						fill={ink(0.32)}
 						opacity={0.9}
 					/>
-					<Ellipse
-						cx={12.5}
-						cy={11}
-						fill={STORY_COLORS.mask}
-						rx={4.2}
-						ry={2.6}
-					/>
-					<Ellipse
-						cx={27.5}
-						cy={11}
-						fill={STORY_COLORS.mask}
-						rx={4.2}
-						ry={2.6}
-					/>
+					<Ellipse cx={12.5} cy={11} fill={mask} rx={4.2} ry={2.6} />
+					<Ellipse cx={27.5} cy={11} fill={mask} rx={4.2} ry={2.6} />
 				</Svg>
 				<AppText
 					className="text-[14px] leading-[17px]"

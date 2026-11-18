@@ -1,18 +1,13 @@
-import { Canvas, Picture, Skia, TileMode } from "@shopify/react-native-skia";
 import Animated, {
 	type SharedValue,
 	useAnimatedStyle,
-	useDerivedValue,
 } from "react-native-reanimated";
 import { AnimatedAppText, AppText } from "@/components/shared/app-text";
-import { PATTERN, STORY } from "../copy";
+import { PATTERN } from "../copy";
 import { BOARD_TEXT_MAX } from "../first-run-layout";
 import { clamp, ease, easeIO, lerp, mixRGB, seg } from "../first-run-motion";
 import { BEAT_COLORS, css, ink, STORY_COLORS } from "../first-run-palette";
-import { seedPicture } from "../skia-words";
-import { useCanvasKick } from "../stage";
-import { BeatSection, useIn } from "./beat-parts";
-import { bIf, type SEng, SKY, WE } from "./story-scene";
+import { type SEng, SKY } from "./story-scene";
 
 /** Signal words on production's PatternLine points (x 0–100, y 0–40) mapped into the panel. */
 export const SIG = PATTERN.signal.map(([x, y, t]) => ({
@@ -96,9 +91,8 @@ export function Note({ eng, i }: { eng: SharedValue<SEng>; i: number }) {
 				{n.a}
 			</AppText>
 			<AppText
-				className="text-[15px] leading-[18px]"
+				className="text-[15px] text-first-run-panel-note leading-[18px]"
 				maxFontSizeMultiplier={BOARD_TEXT_MAX}
-				style={{ color: STORY_COLORS.panel.note }}
 				weight="semibold"
 			>
 				{n.b}

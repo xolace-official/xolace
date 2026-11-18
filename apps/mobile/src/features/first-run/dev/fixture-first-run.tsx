@@ -42,6 +42,7 @@ export function FixtureFirstRun({
 			day: day ?? light,
 			reduced: reduced ?? osReduced,
 			scene,
+			sessionHeld: true,
 			start,
 		},
 	};

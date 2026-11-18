@@ -33,6 +33,26 @@ export function useIn(
  * opens. Its label, aside and tag; the sentence is drawn by the words canvas, so the section carries
  * it for VoiceOver.
  */
+/** Hides a beat from VoiceOver and TalkBack unless it's the one on screen and the seat is shut. */
+export function BeatLayer({
+	hidden,
+	children,
+}: {
+	hidden: boolean;
+	children: ReactNode;
+}) {
+	return (
+		<View
+			accessibilityElementsHidden={hidden}
+			className="absolute inset-0"
+			importantForAccessibility={hidden ? "no-hide-descendants" : "auto"}
+			pointerEvents="box-none"
+		>
+			{children}
+		</View>
+	);
+}
+
 export function BeatSection({
 	eng,
 	i,

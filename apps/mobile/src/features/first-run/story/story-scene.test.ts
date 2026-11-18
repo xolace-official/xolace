@@ -17,6 +17,7 @@ import {
 	type SEng,
 	seatOpen,
 	stepStory,
+	storySettled,
 } from "./story-scene";
 
 const FRAME = 16;
@@ -174,5 +175,40 @@ describe("signing in", () => {
 		const ev = run(e, 10_000);
 		expect(ageAuth(e)).toBe(AUTH.seated);
 		expect(ev & (EV.seated | EV.intake)).toBe(0);
+	});
+});
+
+describe("settling under Reduce Motion", () => {
+	function reducedSeat() {
+		const e = freshStory(true, 0, -1, true);
+		e.now = 1000;
+		e.t0 = 1000;
+		e.tb = 1000;
+		e.seatAt = 1000;
+		return e;
+	}
+
+	it("settles once the seat's pieces are in", () => {
+		const e = reducedSeat();
+		expect(storySettled(e)).toBe(false);
+		e.now += 1600;
+		expect(storySettled(e)).toBe(true);
+	});
+
+	it("wakes for a provider button and for Back", () => {
+		const e = reducedSeat();
+		e.now += 1600;
+		beginAuth(e, PROV.google);
+		expect(storySettled(e)).toBe(false);
+		authReset(e);
+		e.now += 1600;
+		closeSeat(e);
+		expect(storySettled(e)).toBe(false);
+	});
+
+	it("never settles with full motion", () => {
+		const e = story(1000, true);
+		e.now += 5000;
+		expect(storySettled(e)).toBe(false);
 	});
 });

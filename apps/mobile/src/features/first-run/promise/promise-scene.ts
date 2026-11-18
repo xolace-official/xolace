@@ -155,6 +155,31 @@ function ageN(e: PEng) {
 	return e.tn >= 0 ? e.now - e.tn : -1;
 }
 
+/** Past the opening's last piece (the account link) under Reduce Motion, with room to spare. */
+const SETTLE_AFTER = OPEN.acct + 1000;
+const AT_REST = 0.001;
+
+/**
+ * Nothing on the promise moves by time alone: Reduce Motion, the opening done, no finger down,
+ * no card named, not letting go, and the lean and press at rest. The frame callback skips while
+ * this holds, so nothing recomputes or re-records; any touch makes it false again.
+ */
+export function promiseSettled(e: PEng) {
+	"worklet";
+	return (
+		e.rm &&
+		e.tx < 0 &&
+		!e.dragging &&
+		!e.down &&
+		(e.tn < 0 || e.now - e.tn > NAME_HOLD + 200) &&
+		ageT(e) > SETTLE_AFTER &&
+		Math.abs(e.lean) < AT_REST &&
+		Math.abs(e.ld) < AT_REST &&
+		Math.abs(e.sq) < AT_REST &&
+		Math.abs(e.sqd) < AT_REST
+	);
+}
+
 /** One frame of the marquee, the lean and the press (board `tick`). */
 export function step(e: PEng, dtMs: number) {
 	"worklet";

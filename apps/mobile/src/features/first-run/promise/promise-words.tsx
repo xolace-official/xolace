@@ -11,14 +11,7 @@ import {
 	smooth,
 } from "../first-run-motion";
 import { css, PROMISE_COLORS } from "../first-run-palette";
-import {
-	drawRun,
-	type FirstRunFaces,
-	layoutWords,
-	type Run,
-	seedPicture,
-	textWidth,
-} from "../skia-words";
+import { drawRun, type FirstRunFaces, seedPicture } from "../skia-words";
 import { useCanvasKick } from "../stage";
 import { ageT, leaveOf, OPEN, type PEng } from "./promise-scene";
 import { BLOCK, HEIGHT, layout, PAD } from "./promise-words-layout";

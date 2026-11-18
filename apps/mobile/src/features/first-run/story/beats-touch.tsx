@@ -1,19 +1,13 @@
-import MaskedViewClass from "@react-native-masked-view/masked-view";
-import type { ComponentType, ReactElement } from "react";
-import { View, type ViewProps } from "react-native";
 import Animated, {
 	type SharedValue,
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
-import { Image, LinearGradient } from "@/components/shared/styled";
-import { FONTS } from "@/design/type";
 import { STORY } from "../copy";
 import { BOARD_TEXT_MAX } from "../first-run-layout";
-import { ease, seg } from "../first-run-motion";
-import { css, ink, STORY_COLORS } from "../first-run-palette";
+import { ink } from "../first-run-palette";
 import { BeatSection, Figure, useIn } from "./beat-parts";
-import { ageOf, bIf, type SEng, WE } from "./story-scene";
+import { type SEng, WE } from "./story-scene";
 
 const CAMP = require("@/assets/images/flux/flux-campfire.png");
 const VENT = require("@/assets/images/flux/vent-bg.png");

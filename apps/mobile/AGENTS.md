@@ -52,8 +52,8 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   art and Xolace flame), still as tokens in `global.css`. Today's sky is the hour's, not
   the theme's, and its gradient stops stay strings in `features/today/sky/` because
   worklets interpolate them. Connect's art is content a person or the brand wears, the
-  same in every theme. First run's palette is RGB triplets in
-  `features/first-run/first-run-palette.ts`, because its Skia worklets mix them per frame.
+  same in every theme. First run's colours are `first-run-*` tokens too; only the
+  colours a worklet mixes per frame stay RGB triplets, in `features/first-run/first-run-palette.ts`.
 - **Themes:** one registry, `src/design/themes.ts`; never hand-write a theme name
   list or `${id}-${mode}`. To add a theme: add an entry to `THEMES` with only the
   values it changes (production-style palettes go in `src/design/theme-values.ts`),

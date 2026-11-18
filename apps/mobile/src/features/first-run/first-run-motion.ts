@@ -74,6 +74,25 @@ export function mixRGB(a: RGB, b: RGB, t: number): RGB {
 }
 
 /** The board's phone. */
+/** The longest step the engines' clock takes in one frame. */
+const MAX_STEP_MS = 100;
+
+/**
+ * The engines' clock: the first frame's timestamp, then each frame's step (at most
+ * `MAX_STEP_MS`). A clock that skipped frames while its scene was settled resumes where it stopped,
+ * so a tap stamped with the paused time still plays its fade instead of jumping past it.
+ */
+export function nextNow(
+	now: number,
+	frame: { timestamp: number; timeSincePreviousFrame: number | null }
+) {
+	"worklet";
+	if (now === 0) {
+		return frame.timestamp;
+	}
+	return now + Math.min(MAX_STEP_MS, frame.timeSincePreviousFrame ?? 16);
+}
+
 export const BOARD = { h: 844, status: 54, w: 390 } as const;
 
 /** The screen, against the board: `dy` moves board tops under the real status bar. */

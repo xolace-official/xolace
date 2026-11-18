@@ -8,12 +8,13 @@ import Animated, {
 import { AppText } from "@/components/shared/app-text";
 import { Image, LinearGradient } from "@/components/shared/styled";
 import { FONTS } from "@/design/type";
+import { useTokenColors } from "@/lib/use-token-color";
 import { STORY } from "../copy";
 import { BOARD_TEXT_MAX } from "../first-run-layout";
 import { ease, seg } from "../first-run-motion";
-import { css, ink, STORY_COLORS } from "../first-run-palette";
-import { BeatSection, Figure, useIn } from "./beat-parts";
-import { ageOf, bIf, type SEng, WE } from "./story-scene";
+import { css, STORY_COLORS } from "../first-run-palette";
+import { BeatSection, Figure } from "./beat-parts";
+import { ageOf, bIf, type SEng } from "./story-scene";
 
 const MIRROR = require("@/assets/images/flux/mirror-v2-bg.png");
 const F1 = { height: 220, left: 214, top: 382, width: 141 };
@@ -25,7 +26,13 @@ const MaskedView = MaskedViewClass as unknown as ComponentType<
 >;
 
 /** 2 · The Mirror: the waterline draws, the reflection reads the feeling back; touch it to ripple. */
+const REFLECT_MASK = [
+	"first-run-reflect-mask-1",
+	"first-run-reflect-mask-2",
+] as const;
+
 export function BeatMirror({ eng }: { eng: SharedValue<SEng> }) {
+	const reflectMask = useTokenColors(REFLECT_MASK) as [string, string];
 	const line = useAnimatedStyle(() => {
 		const e = eng.get();
 		const bb = bIf(e, 1);
@@ -66,8 +73,8 @@ export function BeatMirror({ eng }: { eng: SharedValue<SEng> }) {
 		<BeatSection eng={eng} i={1}>
 			<Figure box={F1} eng={eng} i={1} source={MIRROR} />
 			<Animated.View
-				className="absolute -left-10 h-px w-[470px]"
-				style={[{ backgroundColor: STORY_COLORS.water, top: WATER }, line]}
+				className="absolute -left-10 h-px w-[470px] bg-first-run-water"
+				style={[{ top: WATER }, line]}
 			/>
 			<Animated.View
 				className="absolute"
@@ -76,10 +83,7 @@ export function BeatMirror({ eng }: { eng: SharedValue<SEng> }) {
 			>
 				<MaskedView
 					maskElement={
-						<LinearGradient
-							className="flex-1"
-							colors={STORY_COLORS.reflectMask}
-						/>
+						<LinearGradient className="flex-1" colors={reflectMask} />
 					}
 					style={{ flex: 1 }}
 				>

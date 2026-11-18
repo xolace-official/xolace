@@ -3,6 +3,7 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { intakePersonProperties } from "@/features/intake/analytics";
 import { useFullContext } from "@/lib/convex/use-full-context";
+import { useAppStore } from "@/store/store";
 
 /** Identifies on `emotional_profiles._id`, the distinctId server captures and RevenueCat use;
  * `users._id` split funnels. Runs on app open. */
@@ -11,7 +12,8 @@ export function usePostHogIdentity() {
 	// Skips while signed out: this now mounts at the root (so it also runs
 	// during intake), where a signed-out user would otherwise hit requireAuth.
 	const { isAuthenticated } = useConvexAuth();
-	const context = useFullContext(!isAuthenticated);
+	const accountPending = useAppStore((s) => s.accountPending);
+	const context = useFullContext(!isAuthenticated || accountPending);
 	const identified = useRef<string | null>(null);
 
 	useEffect(() => {

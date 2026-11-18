@@ -62,11 +62,12 @@ export function drawGlow(
 	s: Stage,
 	p: GlowPose,
 	seat: number,
+	ground: string,
 	bright = 1
 ) {
 	"worklet";
 	const fill = Skia.Paint();
-	fill.setColor(Skia.Color(STORY_COLORS.ground));
+	fill.setColor(Skia.Color(ground));
 	c.drawRect(Skia.XYWHRect(0, 0, s.W, s.H), fill);
 	const bottomDy = s.H - BOARD.h;
 	const y = p.y + lerp(bottomDy, s.dy, seat);

@@ -4,7 +4,7 @@
  * beat change, the seat opening, sign-in, and a few one-off haptics.
  */
 import { BEATS } from "../copy";
-import { clamp, ease, easeIO, fs, seg } from "../first-run-motion";
+import { clamp, ease, easeIO, seg } from "../first-run-motion";
 
 export const NB = BEATS.length;
 /** Writing (ember-glow-story): word j from 250 + 60·j over 250; key group k lights 150 + 300·k after. */
@@ -315,6 +315,26 @@ export function goBeat(e: SEng, n: number) {
 }
 
 /** One frame (board `tick`). */
+/** The seat's last piece in, with room to spare. */
+const SEAT_SETTLED = 1500;
+
+/**
+ * Nothing on the story moves by time alone: Reduce Motion, sitting on the seat with no sign-in
+ * under way, its pieces in, the vent at rest. The frame callback skips while this holds; Back or a
+ * provider button makes it false again (the board's gestures do nothing while the seat is open).
+ */
+export function storySettled(e: SEng) {
+	"worklet";
+	return (
+		e.rm &&
+		e.seatAt >= 0 &&
+		e.authAt < 0 &&
+		e.okAt < 0 &&
+		e.vent === 0 &&
+		ageSeat(e) > SEAT_SETTLED
+	);
+}
+
 export function stepStory(e: SEng, dtMs: number) {
 	"worklet";
 	const dt = Math.min(50, dtMs);

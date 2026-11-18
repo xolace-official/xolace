@@ -1,5 +1,6 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useConvexAuth, useQuery } from "convex/react";
+import { useAppStore } from "@/store/store";
 import { useOSReducedMotion } from "./os-reduced-motion";
 
 /** Tri-state motion preference: "system" follows the OS setting, "reduced" and "full" force it. */
@@ -29,10 +30,12 @@ export function isReducedMotion(
  * out (first run, the launch cover) and while preferences load, it follows the OS. */
 export const useEffectiveReducedMotion = (): boolean => {
 	const { isAuthenticated } = useConvexAuth();
-	// preferences.get requires auth: skip it before sign-in rather than throw.
+	const accountPending = useAppStore((s) => s.accountPending);
+	// preferences.get requires an account: skip it before sign-in, and while the seat waits
+	// for `getOrCreate`, rather than throw.
 	const preferences = useQuery(
 		api.preferences.get,
-		isAuthenticated ? {} : "skip"
+		isAuthenticated && !accountPending ? {} : "skip"
 	);
 	const os = useOSReducedMotion();
 

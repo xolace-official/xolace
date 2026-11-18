@@ -1,43 +1,21 @@
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
-import { AccessibilityInfo, View } from "react-native";
+import { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import { Presets } from "react-native-pulsar";
-import {
-	type SharedValue,
-	useFrameCallback,
-	useSharedValue,
-} from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
-import { playSoftPress, useProcessingBreathHaptic } from "@/lib/haptics";
+import type { SharedValue } from "react-native-reanimated";
 import { BEATS, STORY } from "../copy";
-import { useFirstRunContext } from "../first-run-data";
 import { BOARD, type Stage } from "../first-run-motion";
 import { SeatSheet } from "../seat/seat-sheet";
 import type { FirstRunFaces } from "../skia-words";
 import type { AuthProvider } from "../use-sign-in";
 import { BeatMirror } from "./beat-mirror";
+import { BeatLayer } from "./beat-parts";
 import { BeatPlus } from "./beat-plus";
 import { BeatWeek, BeatXolacers } from "./beats-people";
 import { BeatCover, BeatVent } from "./beats-touch";
 import { SeatCall, StoryBars } from "./story-chrome";
 import { StoryGlow } from "./story-glow";
 import { StoryPoints } from "./story-points";
-import {
-	AUTH,
-	authOk,
-	authReset,
-	beginAuth,
-	closeSeat,
-	EV,
-	freshStory,
-	goBeat,
-	NB,
-	openSeat,
-	PROV,
-	type SEng,
-	stepStory,
-} from "./story-scene";
+import { closeSeat, NB, openSeat } from "./story-scene";
 import { StoryWords } from "./story-words";
 import { useStoryEngine } from "./use-story-engine";
 import { useStoryGesture } from "./use-story-gesture";
@@ -51,6 +29,14 @@ export type StoryScene = {
 	aa?: number;
 	zoom?: number;
 };
+
+const BEAT_PARTS = [
+	{ Beat: BeatMirror, i: 1 },
+	{ Beat: BeatVent, i: 2 },
+	{ Beat: BeatWeek, i: 3 },
+	{ Beat: BeatXolacers, i: 4 },
+	{ Beat: BeatPlus, i: 5 },
+] as const;
 
 type Props = {
 	stage: Stage;
@@ -80,6 +66,8 @@ export function StoryView({ stage, faces, seat, gate, statusBar }: Props) {
 		signing,
 		step,
 	} = useStoryEngine(seat, gate);
+	/** Only the beat on screen reads out, and none behind the open seat. */
+	const away = (i: number) => i !== beat || open;
 	const gesture = useStoryGesture(eng, stage.dx, stage.dy);
 	const frame = {
 		height: BOARD.h,
@@ -110,16 +98,21 @@ export function StoryView({ stage, faces, seat, gate, statusBar }: Props) {
 							accessibilityRole="adjustable"
 							accessible
 							className="absolute top-22 left-8 h-[22px] w-50"
+							importantForAccessibility={open ? "no-hide-descendants" : "auto"}
 							onAccessibilityAction={(a) =>
 								step(a.nativeEvent.actionName === "increment" ? 1 : -1)
 							}
 						/>
-						<BeatCover eng={eng} />
-						{shown(1) ? <BeatMirror eng={eng} /> : null}
-						{shown(2) ? <BeatVent eng={eng} /> : null}
-						{shown(3) ? <BeatWeek eng={eng} /> : null}
-						{shown(4) ? <BeatXolacers eng={eng} /> : null}
-						{shown(5) ? <BeatPlus eng={eng} /> : null}
+						<BeatLayer hidden={away(0)}>
+							<BeatCover eng={eng} />
+						</BeatLayer>
+						{BEAT_PARTS.map(({ i, Beat }) =>
+							shown(i) ? (
+								<BeatLayer hidden={away(i)} key={i}>
+									<Beat eng={eng} />
+								</BeatLayer>
+							) : null
+						)}
 						<StoryWords bold={faces.bold} eng={eng} heavy={faces.heavy} />
 					</View>
 				</View>

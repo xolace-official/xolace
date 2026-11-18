@@ -5,6 +5,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { AnimatedAppText, AppText } from "@/components/shared/app-text";
 import { Image, LinearGradient } from "@/components/shared/styled";
+import { useTokenColors } from "@/lib/use-token-color";
 import { MOOD_WORDS, PROMISE } from "../copy";
 import { BOARD_TEXT_MAX } from "../first-run-layout";
 import { mixRGB, type Stage } from "../first-run-motion";
@@ -33,6 +34,13 @@ const MOOD_IMAGES = [
 export const cardWidth = (W: number) => W * WIDTH_RATIO;
 
 /** One mood card on the belt: its place, lean and stretch come from the promise's engine. */
+const MOOD_TOKENS = [
+	"first-run-mood-lift",
+	"first-run-mood-foot-1",
+	"first-run-mood-foot-2",
+	"first-run-mood-glow",
+] as const;
+
 export function MoodCard({
 	i,
 	eng,
@@ -42,6 +50,7 @@ export function MoodCard({
 	eng: SharedValue<PEng>;
 	stage: Stage;
 }) {
+	const [lift, footClear, foot, glow] = useTokenColors(MOOD_TOKENS);
 	const cw = cardWidth(stage.W);
 	const card = useAnimatedStyle(() => {
 		const p = cardPose(eng.get(), i, cw, stage.W);
@@ -82,7 +91,7 @@ export function MoodCard({
 				{
 					height: CARD.h,
 					padding: CARD.inset,
-					shadowColor: MOOD_COLORS.lift,
+					shadowColor: lift,
 					shadowOffset: { height: 10, width: 0 },
 					shadowRadius: 22,
 					transformOrigin: "50% 100%",
@@ -106,7 +115,7 @@ export function MoodCard({
 				/>
 				<LinearGradient
 					className="absolute inset-0"
-					colors={MOOD_COLORS.foot}
+					colors={[footClear, foot]}
 					locations={[0.4, 1]}
 				/>
 				<View className="absolute right-4 bottom-5.5 left-5.5">
@@ -118,7 +127,7 @@ export function MoodCard({
 								fontSize: 18,
 								letterSpacing: 1,
 								lineHeight: WORD_LH,
-								textShadowColor: MOOD_COLORS.word.glow,
+								textShadowColor: glow,
 								textShadowOffset: { height: 0, width: 0 },
 							},
 							word,

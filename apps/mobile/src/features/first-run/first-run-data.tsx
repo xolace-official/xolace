@@ -16,6 +16,9 @@ export type FirstRun = {
 		/** The theme's light: the promise has a day and a dusk; the story is always night. */
 		day: boolean;
 		reduced: boolean;
+		/** A sign-in's session is still held for the seated moment: false once the hold lets go or
+		 * Clerk signs out, which sends a seat that already succeeded back to its buttons. */
+		sessionHeld: boolean;
 		/** Dev states: an age or a step held still. */
 		scene?: { promise?: PromiseScene; story?: StoryScene };
 	};

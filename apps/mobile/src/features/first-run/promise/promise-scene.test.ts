@@ -8,6 +8,7 @@ import {
 	leaveOf,
 	N,
 	type PEng,
+	promiseSettled,
 	step,
 } from "./promise-scene";
 
@@ -83,5 +84,26 @@ describe("the hand-off", () => {
 		e.tx = e.now;
 		run(e, 300);
 		expect(darkOf(e)).toBe(1);
+	});
+});
+
+describe("settling under Reduce Motion", () => {
+	it("settles after the opening, and a touch wakes it", () => {
+		const e = promise(true);
+		run(e, 2000);
+		expect(promiseSettled(e)).toBe(false);
+		run(e, 2000);
+		expect(promiseSettled(e)).toBe(true);
+		e.down = true;
+		expect(promiseSettled(e)).toBe(false);
+		e.down = false;
+		e.tn = e.now;
+		expect(promiseSettled(e)).toBe(false);
+	});
+
+	it("never settles with full motion", () => {
+		const e = promise();
+		run(e, 6000);
+		expect(promiseSettled(e)).toBe(false);
 	});
 });

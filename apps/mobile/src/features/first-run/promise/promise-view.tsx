@@ -12,7 +12,8 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import { LinearGradient } from "@/components/shared/styled";
 import { playGentlePresence, playOnboardingEntrance } from "@/lib/haptics";
-import type { Stage } from "../first-run-motion";
+import { useTokenColors } from "@/lib/use-token-color";
+import { nextNow, type Stage } from "../first-run-motion";
 import { PROMISE_COLORS } from "../first-run-palette";
 import type { FirstRunFaces } from "../skia-words";
 import { MoodBelt } from "./mood-belt";
@@ -21,11 +22,11 @@ import { PromiseButton } from "./promise-button";
 import { PromiseFire, PromiseUnderglow } from "./promise-fire";
 import {
 	ageT,
-	DRIFT,
 	darkOf,
 	FIRE,
 	freshEng,
 	OPEN,
+	promiseSettled,
 	step,
 	X,
 } from "./promise-scene";
@@ -58,6 +59,12 @@ type Props = {
 	onSwap: () => void;
 };
 
+const DRIFT_TOKENS = [
+	"first-run-drift-1",
+	"first-run-drift-2",
+	"first-run-drift-3",
+] as const;
+
 /**
  * The promise: the mood marquee, the words and the button on one engine. Letting go turns the
  * button into a coal that drops into the fire and opens the story's glow from it.
@@ -74,6 +81,7 @@ export function PromiseView({
 }: Props) {
 	const cw = cardWidth(stage.W);
 	const eng = useSharedValue(freshEng(cw, stage.W, reduced, scene?.at ?? -1));
+	const drift = useTokenColors(DRIFT_TOKENS) as [string, string, ...string[]];
 	const thud = () => Presets.thud();
 	usePromiseScene(eng, scene);
 
@@ -84,10 +92,13 @@ export function PromiseView({
 	}, []);
 
 	useFrameCallback((f) => {
+		if (promiseSettled(eng.get())) {
+			return;
+		}
 		let ev = 0;
 		// A plain closure: it runs here on the UI thread, so `ev` comes back out.
 		eng.modify((e) => {
-			e.now = f.timestamp;
+			e.now = nextNow(e.now, f);
 			if (e.t0 === 0) {
 				e.t0 = e.now;
 			}
@@ -151,7 +162,7 @@ export function PromiseView({
 			<StatusBar hidden />
 			<LinearGradient
 				className="absolute inset-0"
-				colors={PROMISE_COLORS.drift}
+				colors={drift}
 				end={{ x: 1, y: 0.5 }}
 				pointerEvents="none"
 				start={{ x: 0, y: 0.5 }}

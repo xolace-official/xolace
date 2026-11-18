@@ -4,11 +4,12 @@ import Animated, {
 	useAnimatedStyle,
 	useDerivedValue,
 } from "react-native-reanimated";
-import { AnimatedAppText, AppText } from "@/components/shared/app-text";
+import { AppText } from "@/components/shared/app-text";
+import { useTokenColors } from "@/lib/use-token-color";
 import { PATTERN, STORY } from "../copy";
 import { BOARD_TEXT_MAX } from "../first-run-layout";
-import { clamp, ease, easeIO, lerp, mixRGB, seg } from "../first-run-motion";
-import { BEAT_COLORS, css, ink, STORY_COLORS } from "../first-run-palette";
+import { ease, seg } from "../first-run-motion";
+import { BEAT_COLORS, css } from "../first-run-palette";
 import { seedPicture } from "../skia-words";
 import { useCanvasKick } from "../stage";
 import { BeatSection, useIn } from "./beat-parts";
@@ -30,6 +31,13 @@ const LAV = BEAT_COLORS.plus.lit;
  * 6 · Xolace+: a panel that starts inside your words (scaled 1.9) and steps back to the pattern, with
  * nothing under it. The line and its dots are drawn in Skia; drag the panel to step back yourself.
  */
+const PANEL_TOKENS = [
+	"first-run-panel-fill-1",
+	"first-run-panel-fill-2",
+	"first-run-panel-line",
+	"first-run-panel-dot",
+] as const;
+
 export function BeatPlus({ eng }: { eng: SharedValue<SEng> }) {
 	const panel = useIn(eng, 5, WE[5], 550, 14);
 	const zoomed = useAnimatedStyle(() => ({
@@ -49,7 +57,8 @@ export function BeatPlus({ eng }: { eng: SharedValue<SEng> }) {
 					(1 - seg(zoomOf(e), 0.05, 0.3)),
 		};
 	});
-	const bg = STORY_COLORS.panel.fill.map((k) => Skia.Color(k));
+	const [fill1, fill2, lineInk, dotInk] = useTokenColors(PANEL_TOKENS);
+	const bg = [fill1, fill2].map((k) => Skia.Color(k));
 	const lb = Skia.PathBuilder.Make();
 	SIG.forEach((p, i) => (i ? lb.lineTo(p.x, p.y) : lb.moveTo(p.x, p.y)));
 	const line = lb.build();
@@ -89,7 +98,7 @@ export function BeatPlus({ eng }: { eng: SharedValue<SEng> }) {
 			p.setStrokeWidth(1.6);
 			p.setStrokeCap(1);
 			p.setStrokeJoin(1);
-			p.setColor(Skia.Color(STORY_COLORS.panel.line));
+			p.setColor(Skia.Color(lineInk));
 			p.setAlphaf(lo);
 			const part = Skia.Path.Trim(line, 0, end, false);
 			if (part) {
@@ -97,7 +106,7 @@ export function BeatPlus({ eng }: { eng: SharedValue<SEng> }) {
 			}
 		}
 		const d = Skia.Paint();
-		d.setColor(Skia.Color(STORY_COLORS.panel.dot));
+		d.setColor(Skia.Color(dotInk));
 		for (const s of SIG) {
 			c.drawCircle(s.x, s.y, DOT / 2, d);
 		}

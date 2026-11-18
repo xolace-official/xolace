@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Pressable, View } from "react-native";
 import Animated, {
 	type SharedValue,
 	useAnimatedStyle,
@@ -16,7 +17,16 @@ import { ink } from "../first-run-palette";
 import type { SEng } from "../story/story-scene";
 import { seatAge, seatedOut } from "./seat-in";
 
-/** "By continuing you agree to the Terms and Privacy Policy." Each opens production's legal sheet. */
+/** Each link's own touch target: 15 pt over and under its 15 pt line makes it about 44 pt. */
+const LINK_SLOP = { bottom: 15, left: 8, right: 8, top: 15 };
+
+/** The lead-in's words, each its own piece so the row wraps word by word at large type. */
+const LEAD = SEAT.termsBefore.trim().split(" ");
+
+/**
+ * "By continuing you agree to the Terms and Privacy Policy." Each link opens production's legal
+ * sheet. VoiceOver reads the lead-in once, from its first word.
+ */
 export function SeatTerms({ eng }: { eng: SharedValue<SEng> }) {
 	const [doc, setDoc] = useState<LegalDocument | null>(null);
 	const style = useAnimatedStyle(() => {
@@ -25,32 +35,39 @@ export function SeatTerms({ eng }: { eng: SharedValue<SEng> }) {
 		return { opacity: inn * (1 - seatedOut(e)) };
 	});
 	const color = ink(0.45);
+	const text = { color, fontSize: 11.5, lineHeight: 15 };
+	const link = (label: string, document: LegalDocument) => (
+		<Pressable
+			accessibilityRole="link"
+			hitSlop={LINK_SLOP}
+			onPress={() => setDoc(document)}
+		>
+			<AppText className="underline" style={text}>
+				{label}
+			</AppText>
+		</Pressable>
+	);
 	return (
 		<Animated.View style={style}>
-			<AppText
-				className="text-center"
-				style={{ color, fontSize: 11.5, lineHeight: 15 }}
-			>
-				{SEAT.termsBefore}
-				<AppText
-					accessibilityRole="link"
-					className="underline"
-					onPress={() => setDoc(TERMS_OF_SERVICE)}
-					style={{ color, fontSize: 11.5 }}
-				>
-					{SEAT.terms}
-				</AppText>
-				{SEAT.termsAnd}
-				<AppText
-					accessibilityRole="link"
-					className="underline"
-					onPress={() => setDoc(PRIVACY_POLICY)}
-					style={{ color, fontSize: 11.5 }}
-				>
-					{SEAT.privacy}
-				</AppText>
-				{SEAT.termsAfter}
-			</AppText>
+			<View className="flex-row flex-wrap items-center justify-center">
+				{LEAD.map((word, i) => (
+					<AppText
+						accessibilityElementsHidden={i > 0}
+						accessibilityLabel={i === 0 ? SEAT.termsBefore.trim() : undefined}
+						importantForAccessibility={i > 0 ? "no" : "auto"}
+						key={word}
+						style={text}
+					>
+						{`${word} `}
+					</AppText>
+				))}
+				{link(SEAT.terms, TERMS_OF_SERVICE)}
+				<AppText style={text}>{SEAT.termsAnd}</AppText>
+				<View className="flex-row">
+					{link(SEAT.privacy, PRIVACY_POLICY)}
+					<AppText style={text}>{SEAT.termsAfter}</AppText>
+				</View>
+			</View>
 			<LegalBottomSheet document={doc} onClose={() => setDoc(null)} />
 		</Animated.View>
 	);

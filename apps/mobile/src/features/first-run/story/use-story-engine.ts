@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo } from "react-native";
 import { Presets } from "react-native-pulsar";
 import {
@@ -9,6 +9,7 @@ import {
 import { scheduleOnRN } from "react-native-worklets";
 import { playSoftPress, useProcessingBreathHaptic } from "@/lib/haptics";
 import { useFirstRunContext } from "../first-run-data";
+import { nextNow } from "../first-run-motion";
 import type { AuthProvider } from "../use-sign-in";
 import {
 	AUTH,
@@ -22,6 +23,7 @@ import {
 	PROV,
 	type SEng,
 	stepStory,
+	storySettled,
 } from "./story-scene";
 import { useStoryScene } from "./use-story-scene";
 
@@ -48,6 +50,9 @@ export function useStoryEngine(seat: boolean, gate: SharedValue<number>) {
 	const [seated, setSeated] = useState(
 		scene?.auth !== undefined && (scene.aa ?? 0) >= AUTH.seated
 	);
+	/** The last sign-in came back signed in, and the seated moment hasn't handed over yet. */
+	const [succeeded, setSucceeded] = useState(false);
+	const handedOff = useRef(false);
 	const breath = useProcessingBreathHaptic();
 	/** The cover mounts first, the other beats after the first frame, one every 120 ms. */
 	const [ready, setReady] = useState(0);
@@ -59,9 +64,10 @@ export function useStoryEngine(seat: boolean, gate: SharedValue<number>) {
 		return () => clearTimeout(id);
 	}, [ready]);
 	useStoryScene(eng, scene);
+	// The story waits on a screen reader (no auto-advance); it follows the reader on and off.
 	useEffect(() => {
 		let alive = true;
-		AccessibilityInfo.isScreenReaderEnabled().then((sr) => {
+		const setSr = (sr: boolean) => {
 			if (alive) {
 				eng.modify((e) => {
 					"worklet";
@@ -69,9 +75,15 @@ export function useStoryEngine(seat: boolean, gate: SharedValue<number>) {
 					return e;
 				});
 			}
-		});
+		};
+		AccessibilityInfo.isScreenReaderEnabled().then(setSr);
+		const sub = AccessibilityInfo.addEventListener(
+			"screenReaderChanged",
+			setSr
+		);
 		return () => {
 			alive = false;
+			sub.remove();
 		};
 	}, [eng]);
 
@@ -93,6 +105,7 @@ export function useStoryEngine(seat: boolean, gate: SharedValue<number>) {
 			setSeated(true);
 		}
 		if (ev & EV.intake) {
+			handedOff.current = true;
 			actions.seated();
 		}
 		if (ev & EV.flick) {
@@ -110,12 +123,15 @@ export function useStoryEngine(seat: boolean, gate: SharedValue<number>) {
 		if (gate.get() === 0) {
 			return;
 		}
+		if (storySettled(eng.get())) {
+			return;
+		}
 		let ev = 0;
 		let b = 0;
 		let first = false;
 		// A plain closure: it runs here on the UI thread, so `ev` and `b` come back out.
 		eng.modify((e) => {
-			e.now = f.timestamp;
+			e.now = nextNow(e.now, f);
 			if (e.t0 === 0) {
 				first = true;
 				e.t0 = e.now;
@@ -137,6 +153,23 @@ export function useStoryEngine(seat: boolean, gate: SharedValue<number>) {
 			scheduleOnRN(setReady, 1);
 		}
 	});
+
+	// The hold let go (its deadline, the background) or Clerk signed out while first run is still
+	// up: nothing will move the root on, so the seat goes back to its buttons instead of a dead end.
+	const lost = succeeded && !state.sessionHeld;
+	useEffect(() => {
+		if (!lost || handedOff.current) {
+			return;
+		}
+		eng.modify((e) => {
+			"worklet";
+			authReset(e);
+			return e;
+		});
+		setSucceeded(false);
+		setSeated(false);
+		setSigning(null);
+	}, [lost, eng]);
 
 	const shown = (i: number) => ready >= i || start === i || beat >= i;
 	const act = (fn: (e: SEng) => void) =>
@@ -161,6 +194,7 @@ export function useStoryEngine(seat: boolean, gate: SharedValue<number>) {
 				"worklet";
 				authOk(e);
 			});
+			setSucceeded(true);
 			return;
 		}
 		act((e) => {

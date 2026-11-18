@@ -1,3 +1,4 @@
+import { useAuth } from "@clerk/expo";
 import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
 import { useScheme } from "@/design/scheme";
@@ -14,6 +15,8 @@ import { useSignIn } from "./use-sign-in";
 export function useFirstRun(): FirstRun {
 	const introSeen = useAppStore((s) => s.introSeen);
 	const setIntroSeen = useAppStore((s) => s.setIntroSeen);
+	const seatHeld = useAppStore((s) => s.seatHeld);
+	const { isSignedIn } = useAuth();
 	const posthog = usePostHog();
 	const [start] = useState<FirstRun["state"]["start"]>(
 		introSeen ? "seat" : "promise"
@@ -30,6 +33,6 @@ export function useFirstRun(): FirstRun {
 			seated: release,
 			signIn,
 		},
-		state: { day, reduced, start },
+		state: { day, reduced, sessionHeld: seatHeld && !!isSignedIn, start },
 	};
 }

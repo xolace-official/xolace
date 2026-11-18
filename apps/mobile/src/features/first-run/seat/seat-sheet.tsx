@@ -14,9 +14,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { AppText } from "@/components/shared/app-text";
 import { LinearGradient } from "@/components/shared/styled";
+import { useTokenColors } from "@/lib/use-token-color";
 import { SEAT } from "../copy";
 import { BOARD, type Stage } from "../first-run-motion";
-import { ink, STORY_COLORS } from "../first-run-palette";
+import { ink } from "../first-run-palette";
 import { type SEng, seatOpen } from "../story/story-scene";
 import type { AuthProvider } from "../use-sign-in";
 import { SeatButton } from "./seat-button";
@@ -56,6 +57,8 @@ type Props = {
  * one column held to the bottom, so they grow with Dynamic Type over Flux and, at the largest
  * sizes, scroll under the back link.
  */
+const LOG_TOKENS = ["first-run-log-1", "first-run-log-2"] as const;
+
 export function SeatSheet({
 	eng,
 	stage,
@@ -66,6 +69,7 @@ export function SeatSheet({
 	onBack,
 	onSignIn,
 }: Props) {
+	const logColors = useTokenColors(LOG_TOKENS) as [string, string];
 	const insets = useSafeAreaInsets();
 	/** Opens on the buttons when the column is taller than the room it has. */
 	const column = useRef<ScrollViewInstance>(null);
@@ -140,17 +144,10 @@ export function SeatSheet({
 					style={[LOG, log]}
 				>
 					<LinearGradient
-						className="flex-1 rounded-[9px] border-t-2"
-						colors={STORY_COLORS.log}
-						style={{ borderTopColor: STORY_COLORS.logEdge }}
+						className="flex-1 rounded-[9px] border-first-run-log-edge border-t-2"
+						colors={logColors}
 					/>
-					<View
-						className="absolute top-[3px] right-1 size-3 rounded-full border-[3px]"
-						style={{
-							backgroundColor: STORY_COLORS.knot.fill,
-							borderColor: STORY_COLORS.knot.ring,
-						}}
-					/>
+					<View className="absolute top-[3px] right-1 size-3 rounded-full border-[3px] border-first-run-knot-ring bg-first-run-knot-fill" />
 				</Animated.View>
 			</View>
 			<ScrollView

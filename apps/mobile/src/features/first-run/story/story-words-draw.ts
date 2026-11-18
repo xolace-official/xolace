@@ -1,24 +1,9 @@
-import {
-	Canvas,
-	Picture,
-	type SkCanvas,
-	Skia,
-	type SkTypeface,
-} from "@shopify/react-native-skia";
-import { StyleSheet } from "react-native";
-import { type SharedValue, useDerivedValue } from "react-native-reanimated";
+import type { SkCanvas } from "@shopify/react-native-skia";
 import { BEATS, STORY } from "../copy";
 import { BOARD, clamp, ease, mixRGB, seg } from "../first-run-motion";
 import { BEAT_COLORS, css, STORY_COLORS } from "../first-run-palette";
-import {
-	drawRun,
-	layoutWords,
-	type Run,
-	seedPicture,
-	textWidth,
-} from "../skia-words";
-import { useCanvasKick } from "../stage";
-import { ageB, beatPose, NB, type SEng, seatOpen, W, WE } from "./story-scene";
+import { drawRun, type Run } from "../skia-words";
+import { type SEng, W, WE } from "./story-scene";
 
 /** Board `.hl`: 32 left, top 120, 34/41, display 720, −.028em, words .22em apart. */
 export const HL = {
