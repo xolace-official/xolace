@@ -9,12 +9,12 @@ import { useConvex, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { usePushOnce } from "@/features/lantern/reader/use-push-once";
 import { logDropped } from "@/features/lantern/reader/use-read-signals";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlayback } from "@/lib/audio/use-playback";
 import { tap } from "@/lib/haptics";
 import { trackLibrary } from "@/lib/library-analytics";
+import { usePushOnce } from "@/lib/use-push-once";
 
 const SKIP_S = 15;
 

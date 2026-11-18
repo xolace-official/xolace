@@ -1,7 +1,7 @@
 /**
- * One sheet at a time: `router.push` doesn't dedupe, so a double tap would stack two. The first
- * push holds the rest until the reader is back in focus (the sheet closed), or, if the push never
- * took the focus, for a moment.
+ * One screen at a time: `router.push` doesn't dedupe, so a double tap would stack two. The first
+ * push holds the rest until the caller's screen is back in focus (what it opened closed), or, if
+ * the push never took the focus, for a moment. Lantern's reader and Today use it.
  */
 import { useIsFocused } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -16,7 +16,7 @@ export function usePushOnce(): (push: () => void) => void {
 			held.current = false;
 		}
 	}, [focused]);
-	// One identity for the reader's life: the audio's actions keep it.
+	// One identity for the screen's life: actions built on it keep it.
 	const [once] = useState(() => (push: () => void) => {
 		if (held.current) {
 			return;

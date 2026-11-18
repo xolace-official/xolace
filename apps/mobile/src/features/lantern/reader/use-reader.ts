@@ -22,7 +22,6 @@ import type {
 	ReaderAudio,
 	ReaderAudioActions,
 } from "@/features/lantern/reader/use-entry-audio";
-import { usePushOnce } from "@/features/lantern/reader/use-push-once";
 import {
 	useReadSignals,
 	useRecord,
@@ -31,6 +30,7 @@ import { useReadingPrefs } from "@/features/lantern/reader/use-reading-prefs";
 import { useEntryActions } from "@/features/lantern/use-entry-actions";
 import { playResonanceToggle, playSoftPress } from "@/lib/haptics";
 import { type ReaderFrom, trackLibrary } from "@/lib/library-analytics";
+import { usePushOnce } from "@/lib/use-push-once";
 import { useAppStore } from "@/store/store";
 
 const DAY_MS = 86_400_000;

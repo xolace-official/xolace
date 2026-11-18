@@ -8,6 +8,7 @@ import { useSessionMode } from "@/context/session-mode-context";
 import { playSoftPress } from "@/lib/haptics";
 import { useProfileSummary } from "@/lib/profile-summary";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
+import { usePushOnce } from "@/lib/use-push-once";
 import type { Today } from "./today-data";
 import {
 	type Door,
@@ -137,6 +138,8 @@ export function useTodayData(): Today {
 	const carried = useQuery(api.monthlyEvents.prompt.getCarried);
 	const monthPrompt = monthPromptOnCard(carried, now.getTime());
 
+	// A double tap on a door would stack two screens.
+	const pushOnce = usePushOnce();
 	const openReflect = () => {
 		playSoftPress();
 		router.dismissTo("/");
@@ -145,7 +148,9 @@ export function useTodayData(): Today {
 	return {
 		actions: {
 			openDoor: (door) =>
-				door === "sit" ? openReflect() : router.push(DOOR_HREF[door]),
+				door === "sit"
+					? openReflect()
+					: pushOnce(() => router.push(DOOR_HREF[door])),
 			openHelp: () => router.push("/crisis-resources"),
 			openReflect,
 			openStreak: () => router.navigate("/you"),
