@@ -33,6 +33,9 @@ export const PROFILE = {
 	ratedLine: (n: number) => `You rated ★${n}. Change`,
 	rateSub: "Only you and Xolace see your score.",
 	rateTitle: (name: string) => `How was talking with ${name}?`,
+	/** The rating line as VoiceOver reads it: no star, no middle dots. */
+	ratingA11y: (rating: number, count: number) =>
+		`Rated ${rating.toFixed(1)} out of 5 across ${count} conversation${count === 1 ? "" : "s"}`,
 	repliesInADay: "replies within a day",
 	requestNote: (name: string) =>
 		`${name} has your request and can accept when they're ready.`,

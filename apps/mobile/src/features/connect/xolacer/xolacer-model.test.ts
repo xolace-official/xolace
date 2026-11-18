@@ -19,15 +19,18 @@ describe("profileView", () => {
 	it("leads with the rating and presence, then since when", () => {
 		const v = profileView(PROFILE_MAYA, NOW, "en-US");
 		expect(v.ratedLine).toBe("★ 4.9 · 32 conversations rated · here now");
+		expect(v.ratedA11y).toBe(
+			"Rated 4.9 out of 5 across 32 conversations, here now"
+		);
 		expect(v.sinceLine).toBe("Xolacer since March");
 		expect(v.tags).toEqual(["Anxiety", "Sleep", "Studies"]);
 		expect(v.nameA11y).toBe("Maya, here now");
 	});
 
 	it("calls someone under the rating threshold new", () => {
-		expect(profileView(PROFILE_KOJO, NOW).ratedLine).toBe(
-			"New Xolacer · replies within a day"
-		);
+		const v = profileView(PROFILE_KOJO, NOW);
+		expect(v.ratedLine).toBe("New Xolacer · replies within a day");
+		expect(v.ratedA11y).toBe("New Xolacer, replies within a day");
 	});
 
 	it("asks to talk when they're free", () => {

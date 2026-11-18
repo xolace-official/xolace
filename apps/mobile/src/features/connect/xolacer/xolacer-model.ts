@@ -34,6 +34,8 @@ export type ProfileView = {
 	nameA11y: string;
 	/** "★ 4.9 · 32 conversations rated · here now", or "New Xolacer · replies within a day". */
 	ratedLine: string;
+	/** The same, spoken: "Rated 4.9 out of 5 across 32 conversations, here now". */
+	ratedA11y: string;
 	sinceLine: string;
 	quote: string;
 	tags: string[];
@@ -123,6 +125,10 @@ export function profileView(
 		p.rating === undefined
 			? PROFILE.newXolacer
 			: PROFILE.rated(p.rating, p.ratingCount);
+	const ratingSpoken =
+		p.rating === undefined
+			? PROFILE.newXolacer
+			: PROFILE.ratingA11y(p.rating, p.ratingCount);
 	const rate = rateCtaState(p);
 	return {
 		cta: ctaOf(p, now),
@@ -136,6 +142,7 @@ export function profileView(
 				: rate === "prompt"
 					? { kind: "prompt" }
 					: { kind: "hidden" },
+		ratedA11y: `${ratingSpoken}, ${presence}`,
 		ratedLine: `${rating} · ${presence}`,
 		sinceLine: PROFILE.since(monthYear(p.xolacerSince, now, locale)),
 		tags: p.specialties.map(specialtyLabel),

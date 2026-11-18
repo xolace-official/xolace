@@ -61,6 +61,7 @@ export function ProfileHero() {
 			</AppText>
 			<View className="items-center gap-0.5">
 				<AppText
+					accessibilityLabel={view.ratedA11y}
 					center
 					className="text-[13.5px]"
 					color="muted"
