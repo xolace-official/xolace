@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { useFixedFaces } from "@/design/fonts";
+import { useScheme } from "@/design/scheme";
 import { FONTS } from "@/design/type";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
@@ -14,7 +15,9 @@ const TIGHTEN = { gap: 8, top: -4 } as const;
  * the mirror's serif, 23 / 1.18.
  */
 export function MonthPrompt({ prompt }: { prompt: string }) {
-	const rose = useTokenColor("month-rose");
+	// On the card's theme surface, so it follows light and dark.
+	const dark = useScheme() === "dark";
+	const rose = useTokenColor(dark ? "month-rose-dark" : "month-rose");
 	// The mirror's serif is a fixed face, loaded where it's drawn; until then the line keeps its place.
 	const ready = useFixedFaces("mirror");
 	return (

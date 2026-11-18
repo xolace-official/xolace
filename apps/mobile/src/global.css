@@ -406,7 +406,8 @@
 /*
  * Today's Reflect card (design/boards/TodayAlive.dc.html `.ch*`, `.ph.wrote`): the three
  * doors a hold opens, pastel tiles with their own ink, and the month prompt's rose label.
- * Printed on the card, so the same in every theme, as the board draws them.
+ * Printed on the card, so the same in every theme, as the board draws them; the label,
+ * set on the card's own surface, has a dark twin.
  */
 @theme static {
 	--color-door-talk: #ffe2cf;
@@ -417,7 +418,10 @@
 	--color-door-sit-ink: #4b32c2;
 	--color-door-label: #2a2140;
 	--color-door-sub: rgba(42, 33, 64, 0.7);
+	/* The month prompt's label: the board's rose by light; by dark a lifted rose that keeps
+     * 4.5:1 on every theme's dark surface (5.65:1 on the lightest, playful's). */
 	--color-month-rose: #a02a5c;
+	--color-month-rose-dark: #f58ab4;
 }
 
 /*
