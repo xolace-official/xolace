@@ -177,28 +177,54 @@ export function tendWait(
 /**
  * The kindling Today keeps for this visit once the server closed it. `getActive` goes null
  * the moment no step is pending (`paths.ts` `settle`), so the last tend would never play and
- * the card would vanish (handoff `kindling.md` §5: keep the last snapshot on screen).
+ * the card would vanish (handoff `kindling.md` §5: keep the last snapshot on screen). But it
+ * also goes null when the kindling is put out, replaced, or Plus lapses, so Today keeps it
+ * only on positive evidence (`paths.getLatest`): this kindling, completed, with a step
+ * newly done.
  */
 export type KeptKindling = {
 	view: KindlingView;
-	/** The server closed it: its last steps show as tended. */
+	/** The server closed it: its last steps show as they ended. */
 	closed: boolean;
 	/** Today has been in front since it closed, so the celebration has had its turn. */
 	seen: boolean;
 };
+
+type LatestKindling = FunctionReturnType<typeof api.paths.getLatest>;
+
+/** How the latest kindling ended (`paths.getLatest`): undefined while it loads. */
+export type KindlingOutcome = {
+	id: string;
+	completed: boolean;
+	states: Partial<Record<string, TwigView["state"]>>;
+} | null;
+
+export function kindlingOutcome(latest: LatestKindling): KindlingOutcome {
+	if (!latest) {
+		return null;
+	}
+	return {
+		completed: latest.status === "completed",
+		id: latest._id,
+		states: Object.fromEntries(latest.twigs.map((t) => [t._id, t.state])),
+	};
+}
 
 const viewKey = (v: KindlingView) =>
 	`${v.id}:${v.twigs.map((t) => `${t.id}=${t.state}`).join(",")}`;
 
 /**
  * The next kept kindling as the server's changes, or undefined when nothing changes. Kept
- * while the server has one; when it goes null, its pending steps turn done (Today can't
- * tell a last pass-by from a tend once the path closes) and it stays until Today has been
- * in front and then isn't (the next blur), or the next visit (a remount keeps nothing).
+ * while the server has one. When it goes null: kept, closed, only if `outcome` says this
+ * kindling completed with a step newly done; its steps then show as they ended (a tend
+ * celebrates, a pass-by stays unlit). A kindling put out, replaced or gone with Plus, or one
+ * whose last step was passed by, drops at once and never tends. A closed one stays until
+ * Today has been in front and then isn't (the next blur), or the next visit.
  */
 export function keepKindling(
 	kept: KeptKindling | null,
 	server: KindlingView | null | undefined,
+	outcome: KindlingOutcome | undefined,
 	focused: boolean
 ): KeptKindling | null | undefined {
 	if (server) {
@@ -210,15 +236,34 @@ export function keepKindling(
 		return;
 	}
 	if (!kept.closed) {
-		const twigs = kept.view.twigs.map((t) =>
-			t.state === "pending" ? { ...t, state: "done" as const } : t
-		);
-		return { closed: true, seen: focused, view: { ...kept.view, twigs } };
+		return outcome === undefined
+			? undefined
+			: closeKept(kept, outcome, focused);
 	}
 	if (focused && !kept.seen) {
 		return { ...kept, seen: true };
 	}
 	return !focused && kept.seen ? null : undefined;
+}
+
+function closeKept(
+	kept: KeptKindling,
+	outcome: KindlingOutcome,
+	focused: boolean
+): KeptKindling | null {
+	if (!outcome?.completed || outcome.id !== kept.view.id) {
+		return null;
+	}
+	const twigs = kept.view.twigs.map((t) => ({
+		...t,
+		state: outcome.states[t.id] ?? t.state,
+	}));
+	const tended = twigs.some(
+		(t, i) => t.state === "done" && kept.view.twigs[i]?.state !== "done"
+	);
+	return tended
+		? { closed: true, seen: focused, view: { ...kept.view, twigs } }
+		: null;
 }
 
 /** The path you tend, from the board's `.kpath`: 322 × 64. */

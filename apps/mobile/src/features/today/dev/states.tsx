@@ -57,6 +57,11 @@ export const devStates: readonly DevState[] = [
 		...today({ kindling: "last", phase: "evening", tend: true }),
 	},
 	{
+		id: "kindling-put-out",
+		title: "Kindling: put out (the card goes, nothing celebrates)",
+		...today({ kindling: "last", phase: "evening", putOut: true, tend: true }),
+	},
+	{
 		id: "kindling-three",
 		title: "Kindling with three steps, one passed by",
 		...today({ kindling: "three", phase: "day" }),

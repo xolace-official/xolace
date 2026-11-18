@@ -5,7 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { useEffect, useState } from "react";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { campfireView } from "./campfire/campfire-model";
-import { kindlingView } from "./kindling/kindling-model";
+import { kindlingOutcome, kindlingView } from "./kindling/kindling-model";
 import { useKeptKindling } from "./kindling/use-kept-kindling";
 
 type CampfireStats = FunctionReturnType<typeof api.intake.campfireStats>;
@@ -50,8 +50,11 @@ export function useModules() {
 	const v2Intake =
 		useFullContext()?.intake?.intakeVersion === INTAKE_V2_VERSION;
 	const stats = useCampfireStatsOnce(cohort?.status === "hidden" && v2Intake);
+	// With no kindling, how the latest ended: a tended one's last step still celebrates.
+	const latest = useQuery(api.paths.getLatest, active === null ? {} : "skip");
 	const kindling = useKeptKindling(
-		active === undefined ? undefined : kindlingView(active)
+		active === undefined ? undefined : kindlingView(active),
+		latest === undefined ? undefined : kindlingOutcome(latest)
 	);
 	return { campfire: campfireView(cohort, stats, v2Intake), kindling };
 }

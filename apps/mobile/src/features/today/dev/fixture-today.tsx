@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScopedTheme } from "uniwind";
 import { NIGHT_VARIANT, type ThemeMode, themeVariant } from "@/design/themes";
+import type { KindlingOutcome } from "../kindling/kindling-model";
 import { useKeptKindling } from "../kindling/use-kept-kindling";
 import { type Today, TodayProvider } from "../today-data";
 import { headerCopy, type TodayPhase } from "../today-model";
@@ -72,6 +73,8 @@ export type FixtureProps = {
 	kindling?: keyof typeof FIXTURE_KINDLING | "none" | "loading";
 	/** A step is tended a moment after the screen opens: the completion plays. */
 	tend?: boolean;
+	/** With `kindling: "last"`: the kindling is put out instead, so the card goes. */
+	putOut?: boolean;
 	campfire?: keyof typeof FIXTURE_CAMPFIRE | "none";
 };
 
@@ -85,6 +88,7 @@ function FixtureToday({
 	monthPrompt = false,
 	kindling = "board",
 	tend = false,
+	putOut = false,
 	campfire = "count",
 }: FixtureProps) {
 	const phase = usePhase(start, cycle);
@@ -110,16 +114,28 @@ function FixtureToday({
 		FIXTURE_WEEKDAY,
 		offline ? null : FIXTURE_NAME
 	);
-	// As the server sends it: tending the last step closes the kindling, so it goes null.
+	// As the server sends it: tending the last step, or putting the kindling out, closes it,
+	// so it goes null; `paths.getLatest` then says how it ended.
 	let server: Today["state"]["kindling"] = null;
+	const last = FIXTURE_KINDLING.last;
 	if (kindling === "loading") {
 		server = undefined;
 	} else if (kindling === "last") {
-		server = tended ? null : FIXTURE_KINDLING.last;
+		server = tended ? null : last;
 	} else if (kindling !== "none") {
 		server = FIXTURE_KINDLING[tended ? "tended" : kindling];
 	}
-	const kindlingView = useKeptKindling(server);
+	const outcome: KindlingOutcome = {
+		completed: !putOut,
+		id: last.id,
+		states: Object.fromEntries(
+			last.twigs.map((t) => [t.id, putOut ? t.state : "done"])
+		),
+	};
+	const kindlingView = useKeptKindling(
+		server,
+		server === null ? outcome : undefined
+	);
 	const state: Today["state"] = {
 		campfire: campfire === "none" ? null : FIXTURE_CAMPFIRE[campfire],
 		card: { monthPrompt: monthPrompt ? FIXTURE_MONTH_PROMPT : null },

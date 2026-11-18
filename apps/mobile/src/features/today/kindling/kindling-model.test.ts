@@ -3,6 +3,7 @@ import {
 	cubicBetween,
 	firstWaiting,
 	keepKindling,
+	kindlingOutcome,
 	kindlingView,
 	newlyTended,
 	nextRow,
@@ -275,22 +276,29 @@ describe("keepKindling (the last snapshot once the server closes it)", () => {
 		id: "k1",
 		twigs: [twig("done", "a"), twig("done", "b"), twig("pending", "c")],
 	};
+	const open = { closed: false, seen: false, view: last };
+	const ended = (
+		states: Record<string, TwigView["state"]>,
+		completed = true,
+		id = "k1"
+	) => ({ completed, id, states });
 
 	it("keeps the server's kindling, and changes nothing while it's the same", () => {
-		const kept = keepKindling(null, last, true);
-		expect(kept).toEqual({ closed: false, seen: false, view: last });
-		expect(keepKindling(kept ?? null, { ...last }, true)).toBeUndefined();
+		expect(keepKindling(null, last, undefined, true)).toEqual(open);
+		expect(keepKindling(open, { ...last }, undefined, true)).toBeUndefined();
 	});
 
-	it("waits while the server loads, and keeps nothing it never had", () => {
-		expect(keepKindling(null, undefined, true)).toBeUndefined();
-		expect(keepKindling(null, null, true)).toBeUndefined();
+	it("waits while the server or the outcome loads, and keeps nothing it never had", () => {
+		expect(keepKindling(null, undefined, undefined, true)).toBeUndefined();
+		expect(keepKindling(null, null, null, true)).toBeUndefined();
+		expect(keepKindling(open, null, undefined, true)).toBeUndefined();
 	});
 
-	it("keeps the last snapshot, tended, when the path closes, so the final tend plays", () => {
+	it("keeps the last snapshot when the last step was tended, so the final tend plays", () => {
 		const kept = keepKindling(
-			{ closed: false, seen: false, view: last },
+			open,
 			null,
+			ended({ a: "done", b: "done", c: "done" }),
 			false
 		);
 		expect(kept?.closed).toBe(true);
@@ -299,35 +307,54 @@ describe("keepKindling (the last snapshot once the server closes it)", () => {
 			"done",
 			"done",
 		]);
-		expect(kept?.view.id).toBe("k1");
 		// It closed while Today was behind the kindling screen; it stays through the blur.
 		expect(kept?.seen).toBe(false);
-		expect(keepKindling(kept ?? null, null, false)).toBeUndefined();
+		expect(keepKindling(kept ?? null, null, undefined, false)).toBeUndefined();
+	});
+
+	it("drops a kindling put out, and never tends it", () => {
+		expect(
+			keepKindling(open, null, ended({ c: "pending" }, false), true)
+		).toBeNull();
+	});
+
+	it("drops it when Plus lapses (no outcome) or another kindling took its place", () => {
+		expect(keepKindling(open, null, null, true)).toBeNull();
+		expect(keepKindling(open, null, ended({}, true, "k2"), true)).toBeNull();
+	});
+
+	it("drops it when the last step was passed by: completed, but nothing to tend", () => {
+		expect(keepKindling(open, null, ended({ c: "skipped" }), true)).toBeNull();
 	});
 
 	it("drops it on the next blur once Today has shown it", () => {
-		const closed = keepKindling(
-			{ closed: false, seen: false, view: last },
-			null,
-			false
-		);
-		const seen = keepKindling(closed ?? null, null, true);
+		const closed = keepKindling(open, null, ended({ c: "done" }), false);
+		const seen = keepKindling(closed ?? null, null, undefined, true);
 		expect(seen?.seen).toBe(true);
-		expect(keepKindling(seen ?? null, null, true)).toBeUndefined();
-		expect(keepKindling(seen ?? null, null, false)).toBeNull();
+		expect(keepKindling(seen ?? null, null, undefined, true)).toBeUndefined();
+		expect(keepKindling(seen ?? null, null, undefined, false)).toBeNull();
 	});
 
 	it("takes a new kindling over the kept one", () => {
-		const closed = keepKindling(
-			{ closed: false, seen: true, view: last },
-			null,
-			true
-		);
+		const closed = keepKindling(open, null, ended({ c: "done" }), true);
 		const fresh = { id: "k2", twigs: [twig("pending", "d")] };
-		expect(keepKindling(closed ?? null, fresh, true)).toEqual({
+		expect(keepKindling(closed ?? null, fresh, undefined, true)).toEqual({
 			closed: false,
 			seen: false,
 			view: fresh,
 		});
+	});
+});
+
+describe("kindlingOutcome", () => {
+	it("reads how the latest kindling ended", () => {
+		expect(kindlingOutcome(null)).toBeNull();
+		expect(
+			kindlingOutcome({
+				_id: "k1",
+				status: "dismissed",
+				twigs: [{ _id: "a", state: "pending" }],
+			} as unknown as Parameters<typeof kindlingOutcome>[0])
+		).toEqual({ completed: false, id: "k1", states: { a: "pending" } });
 	});
 });
