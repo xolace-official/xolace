@@ -22,6 +22,7 @@ import { skyTop } from "./sky/sky-model";
 import { useClock, useLive } from "./today-clock";
 import { useToday } from "./today-data";
 import { TodayFrame, type TodayFrameValue } from "./today-frame";
+import { TodaySlot } from "./today-slot";
 import { TodayToolbar } from "./today-toolbar";
 import { useQualityGate } from "./use-quality-gate";
 import { WordCard } from "./word/word-card";
@@ -145,7 +146,7 @@ function TodayBody({ flameClock, finding, ...frame }: BodyProps) {
 				<>
 					<KindlingCard width={width - PAGE_X * 2} />
 					<CampfireCard />
-					{finding}
+					{finding ? <TodaySlot>{finding}</TodaySlot> : null}
 					<ListenRail />
 					<MomentsSection />
 					<WordCard />

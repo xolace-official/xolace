@@ -10,6 +10,7 @@ import { type Today, TodayProvider } from "../today-data";
 import { headerCopy, type TodayPhase } from "../today-model";
 import { TodayScreen } from "../today-screen";
 import { FIXTURE_ACTIONS } from "./fixture-actions";
+import { FixtureFinding } from "./fixture-finding";
 import {
 	FIXTURE_CAMPFIRE,
 	FIXTURE_DAY,
@@ -68,6 +69,8 @@ export type FixtureProps = {
 	/** With `kindling: "last"`: the kindling is put out instead, so the card goes. */
 	putOut?: boolean;
 	campfire?: keyof typeof FIXTURE_CAMPFIRE | "none";
+	/** The intake's day-3 card in Today's slot under the campfire. */
+	finding?: boolean;
 	/** The rail, your moments and the word: the board's, none at all, or still loading. */
 	modules?: "board" | "none" | "loading";
 };
@@ -85,6 +88,7 @@ function FixtureToday({
 	putOut = false,
 	campfire = "count",
 	modules = "board",
+	finding = false,
 }: FixtureProps) {
 	const phase = usePhase(start, cycle);
 	const [grown, setGrown] = useState(false);
@@ -150,7 +154,7 @@ function FixtureToday({
 			theme={phase === "late" ? NIGHT_VARIANT : themeVariant("default", theme)}
 		>
 			<TodayProvider value={{ actions: FIXTURE_ACTIONS, state }}>
-				<TodayScreen />
+				<TodayScreen finding={finding ? <FixtureFinding /> : undefined} />
 			</TodayProvider>
 		</ScopedTheme>
 	);

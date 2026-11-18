@@ -107,6 +107,12 @@ export const devStates: readonly DevState[] = [
 		}),
 	},
 	{
+		id: "finding",
+		title:
+			"Day 3 of a v2 intake: “How did you find Xolace?” under the campfire",
+		...today({ finding: true, phase: "day" }),
+	},
+	{
 		id: "modules-loading",
 		title: "The rail, moments and word still loading",
 		...today({ modules: "loading", phase: "day" }),
