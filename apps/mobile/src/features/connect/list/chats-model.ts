@@ -1,6 +1,7 @@
 /** The Chats list: Convex's conversation rows plus what Stream holds for each channel, in, the
  * rows as the list draws them, out. Pure. */
 import type { api } from "@xolace/backend/api";
+import { CHAT_REQUEST_SUBTITLE } from "@xolace/backend/convex/lib/chatNotifications";
 import {
 	canDelete,
 	canManualRest,
@@ -138,10 +139,12 @@ function statusOf(
 					label: xolacer ? COPY.chip.newRequest : COPY.chip.waiting,
 					tone: "waiting",
 				},
+				// A request has no channel yet, so no last message: the push's own words, shared
+				// with it so the two can't drift apart.
 				line: xolacer
 					? c.origin === "suggestion"
 						? COPY.line.afterSession
-						: lastText?.trim() || null
+						: CHAT_REQUEST_SUBTITLE
 					: COPY.line.requestSent(c.counterpartName),
 				muted: false,
 				requestDot: xolacer,

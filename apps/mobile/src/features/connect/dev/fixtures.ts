@@ -111,6 +111,16 @@ export const SEEKER_REQUEST = pair({
 	status: "requested",
 	xolacerProfileId: profile("profile_me"),
 });
+/** A seeker asked this Xolacer directly, from the roster. */
+export const DIRECT_REQUEST = pair({
+	counterpartName: "Camper 3QJ9",
+	counterpartProfileId: profile("profile_direct"),
+	id: convo("c_direct"),
+	requestedAt: NOW - 40 * 60_000,
+	role: "xolacer",
+	status: "requested",
+	xolacerProfileId: profile("profile_me"),
+});
 
 export const CONVERSATIONS: ConversationRow[] = [
 	CHANNEL_ROW,

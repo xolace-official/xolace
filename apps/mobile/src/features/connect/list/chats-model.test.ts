@@ -1,8 +1,10 @@
+import { CHAT_REQUEST_SUBTITLE } from "@xolace/backend/convex/lib/chatNotifications";
 import { describe, expect, it } from "vitest";
 import {
 	ADE_DECLINED,
 	ARCHIVED_ONLY,
 	CONVERSATIONS,
+	DIRECT_REQUEST,
 	ESI,
 	KOJO,
 	MAYA,
@@ -71,6 +73,12 @@ describe("pairRow", () => {
 		const r = row(SEEKER_REQUEST);
 		expect(r.chip?.label).toBe("New request");
 		expect(r.line).toBe("Just after a session");
+		expect(r.requestDot).toBe(true);
+	});
+
+	it("gives a direct request the push's words, since it has no channel yet", () => {
+		const r = row(DIRECT_REQUEST);
+		expect(r.line).toBe(CHAT_REQUEST_SUBTITLE);
 		expect(r.requestDot).toBe(true);
 	});
 

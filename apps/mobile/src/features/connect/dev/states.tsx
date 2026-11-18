@@ -5,6 +5,7 @@ import {
 	ARCHIVED_ONLY,
 	CHANNEL_ROW,
 	CONVERSATIONS,
+	DIRECT_REQUEST,
 	ESI,
 	KOJO,
 	MAYA,
@@ -33,6 +34,17 @@ export const devStates: readonly DevState[] = [
 			/>
 		),
 		title: "Chats as a Xolacer: a new request, the profile button",
+	},
+	{
+		id: "chats-xolacer-direct",
+		options: OWN,
+		Screen: () => (
+			<FixtureConnect
+				conversations={[CHANNEL_ROW, DIRECT_REQUEST, SEEKER_REQUEST, MAYA]}
+				myProfile={{ paused: false }}
+			/>
+		),
+		title: "Chats as a Xolacer: a direct request beside one after a session",
 	},
 	{
 		id: "chats-xolacer-setup",
