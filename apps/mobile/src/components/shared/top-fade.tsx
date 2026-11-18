@@ -1,6 +1,5 @@
 // TopFade: the page colour fading over scrolled content, no blur, under chrome a screen draws
-// itself. Use TopBlur (top-blur.tsx) under a transparent native header, BandBlur (band-blur.tsx)
-// when self-drawn chrome needs the content blurred too.
+// itself. BandBlur (band-blur.tsx) when self-drawn chrome needs the content blurred too.
 
 import Animated, {
 	type SharedValue,
