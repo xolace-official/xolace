@@ -10,6 +10,7 @@ import { AppText } from "@/components/shared/app-text";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { PressScale } from "@/components/shared/press-scale";
 import { useTokenColor } from "@/lib/use-token-color";
+import { HeaderIdentity } from "../../parts/header-identity";
 import { XolacerAvatar } from "../../parts/xolacer-avatar";
 import { THREAD } from "../copy";
 import { useThreadScreen } from "../thread-data";
@@ -18,8 +19,10 @@ import { useCounterpartActivity } from "../use-counterpart-activity";
 
 const IOS = process.env.EXPO_OS === "ios";
 const AVATAR = 38;
+/** Help and the menu. */
+const RIGHT_ITEMS = 2;
 
-/** The header's title slot: avatar, name and where things stand. A seeker taps it for the
+/** Who the thread is with: avatar, name and where things stand. A seeker taps it for the
  * Xolacer's profile; a Xolacer looking at a seeker has nowhere to go. Props, not the provider:
  * the native header renders it outside the screen's tree. It reads typing and presence itself,
  * as production's header did: they change every second while someone types, and only this
@@ -82,7 +85,24 @@ export function ThreadTitle({
 	);
 }
 
-/** Right of the title: help, always one tap away (the prototype's lifebuoy, production's crisis
+/** iOS: the identity sits left, after the back button (see `HeaderIdentity`). */
+export function ThreadIdentity() {
+	const { state, actions } = useThreadScreen();
+	if (!IOS || state.phase !== "ready") {
+		return null;
+	}
+	return (
+		<HeaderIdentity rightItems={RIGHT_ITEMS}>
+			<ThreadTitle
+				channel={state.channel}
+				conversation={state.conversation}
+				onOpenProfile={actions.openProfile}
+			/>
+		</HeaderIdentity>
+	);
+}
+
+/** Right of the identity: help, always one tap away (the prototype's lifebuoy, production's crisis
  * resources), then Rate, Report and Block. Block is mounted only when it can act, never
  * `hidden`: a hidden item eats touches on Android. */
 export function ThreadToolbar() {
