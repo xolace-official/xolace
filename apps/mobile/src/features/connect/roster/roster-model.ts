@@ -124,3 +124,17 @@ export const presentIds = (directory: readonly DirectoryRow[]) =>
 	new Set<string>(
 		directory.filter((x) => x.present).map((x) => x.xolacerProfileId)
 	);
+
+/** The roster's presence order between renders. Kept while the directory stays loaded (a
+ * reactive re-sort would slide a card from under a tap); dropped once Connect stops reading the
+ * directory (Chats), so the next visit to Xolacers sorts by who's here then; taken at once on a
+ * load with none held. Focus retakes it separately. */
+export function settleSnapshot(
+	held: ReadonlySet<string> | null,
+	directory: readonly DirectoryRow[] | undefined
+): ReadonlySet<string> | null {
+	if (directory === undefined) {
+		return null;
+	}
+	return held ?? presentIds(directory);
+}

@@ -1,42 +1,32 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { type DirectoryRow, presentIds, settleSnapshot } from "./roster-model";
 
-type DirectoryRow = { xolacerProfileId: string; present: boolean };
-
-/** Presence ranking frozen while the list is on screen, so a reactive re-sort never slides a
- * row out from under a tap; retaken on focus. Null before the first load. */
+/** Presence ranking frozen while the roster is on screen, retaken on focus and on every return
+ * to Xolacers (`settleSnapshot`). Null while the directory isn't loaded. */
 export function usePresenceSnapshot(
 	directory: readonly DirectoryRow[] | undefined
 ) {
-	const [snapshot, setSnapshot] = useState<Set<string> | null>(null);
+	const [snapshot, setSnapshot] = useState<ReadonlySet<string> | null>(null);
+	const settled = settleSnapshot(snapshot, directory);
+	if (settled !== snapshot) {
+		setSnapshot(settled);
+	}
 
-	// Read inside callbacks only: a dependency on the directory identity would
+	// Read inside the focus callback only: a dependency on the directory identity would
 	// re-fire on every presence change and defeat the freeze.
 	const latest = useRef(directory);
 	useEffect(() => {
 		latest.current = directory;
 	}, [directory]);
 
-	const take = useCallback(() => {
-		const rows = latest.current;
-		if (!rows) {
-			return;
-		}
-		setSnapshot(
-			new Set(rows.filter((r) => r.present).map((r) => r.xolacerProfileId))
-		);
-	}, []);
+	useFocusEffect(
+		useCallback(() => {
+			if (latest.current) {
+				setSnapshot(presentIds(latest.current));
+			}
+		}, [])
+	);
 
-	// First load: there is no established order to protect yet, so adopt the
-	// server's answer as soon as it arrives rather than waiting for a refocus.
-	const loaded = directory !== undefined;
-	useEffect(() => {
-		if (loaded && snapshot === null) {
-			take();
-		}
-	}, [loaded, snapshot, take]);
-
-	useFocusEffect(take);
-
-	return snapshot;
+	return settled;
 }

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { CONVERSATIONS, DIRECTORY, PEOPLE } from "../dev/fixtures";
-import { filterChips, presentIds, rosterCards } from "./roster-model";
+import {
+	filterChips,
+	presentIds,
+	rosterCards,
+	settleSnapshot,
+} from "./roster-model";
 
 describe("filterChips", () => {
 	it("offers Everyone and the declared specialties in taxonomy order", () => {
@@ -69,5 +74,32 @@ describe("rosterCards", () => {
 		const before = DIRECTORY.map((x) => x.displayName);
 		rosterCards(DIRECTORY, [], null, presentIds(DIRECTORY));
 		expect(DIRECTORY.map((x) => x.displayName)).toEqual(before);
+	});
+});
+
+describe("settleSnapshot", () => {
+	it("holds the order while the roster is up, and sorts afresh after a visit to Chats", () => {
+		const first = settleSnapshot(null, DIRECTORY);
+		expect([...(first ?? [])]).toEqual([PEOPLE.maya]);
+		// Esi comes online while the roster is up: the order holds, Esi stays last.
+		const esiHere = DIRECTORY.map((x) =>
+			x.xolacerProfileId === PEOPLE.esi ? { ...x, present: true } : x
+		);
+		const held = settleSnapshot(first, esiHere);
+		expect(held).toBe(first);
+		expect(rosterCards(esiHere, [], null, held).map((c) => c.name)).toEqual([
+			"Maya",
+			"Kojo",
+			"Esi",
+		]);
+		// On Chats the directory isn't read; the order lets go.
+		expect(settleSnapshot(first, undefined)).toBeNull();
+		// Back on Xolacers, Esi sorts with the people here now.
+		const back = settleSnapshot(null, esiHere);
+		expect(rosterCards(esiHere, [], null, back).map((c) => c.name)).toEqual([
+			"Maya",
+			"Esi",
+			"Kojo",
+		]);
 	});
 });
