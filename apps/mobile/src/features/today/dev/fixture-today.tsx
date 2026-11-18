@@ -16,18 +16,15 @@ import {
 } from "./fixtures";
 
 const ACTIONS: Today["actions"] = {
-	openDoor: (door) => router.push(DOOR_HREF[door]),
+	openDoor: (door) =>
+		door === "sit" ? router.back() : router.push(DOOR_HREF[door]),
 	openHelp: () => router.push("/crisis-resources"),
 	openReflect: () => router.back(),
 	openStreak: () => router.navigate("/you"),
 };
 
-/** The doors open their real screens, as in the app. */
-const DOOR_HREF = {
-	sit: "/sit-with-this",
-	talk: "/talk",
-	vent: "/voice-vent",
-} as const;
+/** Talk and Vent open their real screens; Sit goes back, as Reflect does here. */
+const DOOR_HREF = { talk: "/talk", vent: "/voice-vent" } as const;
 
 /** Let the screen land before the streak grows, as coming back to Today does. */
 const IGNITE_AFTER_MS = 600;

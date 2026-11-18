@@ -23,12 +23,16 @@ import {
 	todayPhase,
 } from "./today-model";
 
-/** Where each of the card's doors goes. */
+/**
+ * Where Talk and Vent go. Sit with this opens Reflect instead: production's Sit runs only
+ * inside a Reflect session (or a kindling replay), so started cold it would wait forever.
+ * Reflect is where production's Sit path begins; a cold Sit (the prototype's three breaths,
+ * `/sit?from=today`) needs Sit to start without a session first.
+ */
 const DOOR_HREF = {
-	sit: "/sit-with-this",
 	talk: "/talk",
 	vent: "/voice-vent",
-} as const satisfies Record<Door, string>;
+} as const satisfies Record<Exclude<Door, "sit">, string>;
 
 /**
  * Device-only, per account (as `reflect-draft.ts`): the day the first open last played,
@@ -133,14 +137,17 @@ export function useTodayData(): Today {
 	const carried = useQuery(api.monthlyEvents.prompt.getCarried);
 	const monthPrompt = monthPromptOnCard(carried, now.getTime());
 
+	const openReflect = () => {
+		playSoftPress();
+		router.dismissTo("/");
+	};
+
 	return {
 		actions: {
-			openDoor: (door) => router.push(DOOR_HREF[door]),
+			openDoor: (door) =>
+				door === "sit" ? openReflect() : router.push(DOOR_HREF[door]),
 			openHelp: () => router.push("/crisis-resources"),
-			openReflect: () => {
-				playSoftPress();
-				router.dismissTo("/");
-			},
+			openReflect,
 			openStreak: () => router.navigate("/you"),
 		},
 		state: {
