@@ -190,6 +190,12 @@
      * on purpose, like the other auroras; see apps/mobile/AGENTS.md. */
 	--color-you-aura-warm: #f5b04f;
 	--color-you-aura-cool: #b7a3ff;
+	/* Today's light (S1): the streak flame's white-hot core, the chip's glow as it
+     * ignites (ember at .6) and the gleam over the greeting's words. Fire and daylight,
+     * the same in every theme; see the fixed-palette convention in apps/mobile/AGENTS.md. */
+	--color-today-flame-core: #ffe2ae;
+	--color-today-ignite-glow: rgba(242, 163, 58, 0.6);
+	--color-today-gleam: rgba(255, 214, 170, 0.95);
 	/* Lantern reader pages (#408, S9b): the reading modes' own sheets, laid
      * over the light/dark base by ScopedVariables in
      * src/features/lantern/reader/reader-page.tsx. Warm and low-blue; Night is

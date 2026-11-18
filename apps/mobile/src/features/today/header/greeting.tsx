@@ -9,12 +9,11 @@ import Animated, {
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
-import { useTokenColor } from "@/lib/use-token-color";
+import { useTokenColors } from "@/lib/use-token-color";
 import { riseFn, TIMING } from "../today-motion";
-import { GLEAM_GLOW } from "../today-palette";
 
-/** The glow that passes over each word at 55% of its arrival. */
-const GLEAM = { at: 0.55, color: GLEAM_GLOW, radius: 16 } as const;
+/** The glow that passes over each word at 55% of its arrival (`today-gleam`). */
+const GLEAM = { at: 0.55, radius: 16 } as const;
 /** Blur is approximated: a soft copy (faint glyphs, a 5 pt halo) crossfades to the sharp word. */
 const SOFT_RADIUS = 5;
 /** The soft copy's faint glyphs under their halo (the board: ink at 19%, its halo at 63%). */
@@ -64,7 +63,7 @@ function Word({
 	play: boolean;
 	gap: boolean;
 }) {
-	const ink = useTokenColor("foreground");
+	const [ink, gleam] = useTokenColors(["foreground", "today-gleam"]);
 	const p = useSharedValue(play ? 0 : 1);
 
 	useEffect(() => {
@@ -124,8 +123,8 @@ function Word({
 			<Animated.View className="absolute top-0 left-0" style={glow}>
 				<AppText
 					style={{
-						color: GLEAM.color,
-						textShadowColor: GLEAM.color,
+						color: gleam,
+						textShadowColor: gleam,
 						textShadowRadius: GLEAM.radius,
 					}}
 					variant="greeting"

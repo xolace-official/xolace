@@ -3,9 +3,8 @@ import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { EaseView } from "@/design/ease";
 import { loopOrSettle, useLoopRun } from "@/design/ease-loops";
-import { useTokenColor } from "@/lib/use-token-color";
+import { useTokenColors } from "@/lib/use-token-color";
 import { easeInOutFn, igniteFn, keyframes } from "../today-motion";
-import { FLAME_CORE } from "../today-palette";
 
 /** The board's 18 pt vector flame (24 pt viewBox). */
 const SIZE = 18;
@@ -64,7 +63,7 @@ type Props = {
  * can't animate, so it stays on the clock (Reanimated).
  */
 export function Flame({ clock, running, ignite, reduced }: Props) {
-	const ember = useTokenColor("ember");
+	const [ember, coreFill] = useTokenColors(["ember", "today-flame-core"]);
 	const whole = useAnimatedStyle(() => {
 		const p = ignite.get();
 		return {
@@ -110,7 +109,7 @@ export function Flame({ clock, running, ignite, reduced }: Props) {
 				transformOrigin={EASE_ORIGIN}
 			>
 				<Svg height={SIZE} viewBox="0 0 24 24" width={SIZE}>
-					<Path d={CORE} fill={FLAME_CORE} />
+					<Path d={CORE} fill={coreFill} />
 				</Svg>
 			</EaseView>
 		</Animated.View>

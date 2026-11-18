@@ -18,7 +18,6 @@ import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import { useToday } from "../today-data";
 import { easeOutFn, keyframes } from "../today-motion";
-import { IGNITE_GLOW } from "../today-palette";
 import { Flame } from "./flame";
 
 /** Let the return into Today land before the day is counted on screen. */
@@ -52,6 +51,8 @@ type Props = {
 export function StreakChip({ clock, running, elevated, reduced }: Props) {
 	const { state, actions } = useToday();
 	const emberInk = useTokenColor("ember-ink");
+	// The glow as the flame ignites: ember at .6, 24 pt.
+	const igniteGlow = `0 0 24px 6px ${useTokenColor("today-ignite-glow")}`;
 	const focused = useIsFocused();
 	const ignite = useSharedValue(1);
 	// A hidden chip's flame reads a clock that never moves, so its worklet doesn't run each frame.
@@ -114,7 +115,7 @@ export function StreakChip({ clock, running, elevated, reduced }: Props) {
 			<Animated.View
 				className="absolute inset-0 rounded-full"
 				pointerEvents="none"
-				style={[{ boxShadow: IGNITE_GLOW }, glowStyle]}
+				style={[{ boxShadow: igniteGlow }, glowStyle]}
 			/>
 			{/* 38 tall, a pill; 9 / 12 sides, 5 between the flame and the digits. */}
 			<View
