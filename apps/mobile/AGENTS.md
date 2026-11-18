@@ -208,8 +208,11 @@ handoff). A step that loads at launch never draws a loader: it calls `useLaunchH
 reason)`, or renders `<LaunchHold reason />` in place of its content, which holds the cover at
 launch and after it shows a quiet spinner (only past 400 ms). The cover leaves after
 `maxCoverMs` (8 s) whatever still holds it. Native appearance stays on the phone's setting until
-the cover leaves: `src/lib/native-appearance.ts` holds back every `Appearance.setColorScheme`
-(Uniwind's included) and applies the last one then, so set it as usual. The splash colours live
+the cover leaves. `src/lib/native-appearance.ts` is the only writer of the theme and native
+appearance (`applyTheme`, behind `setThemeWithFonts`; `setNativeAppearance`): it holds every
+write back, Uniwind's own included, and applies the last one when the cover leaves.
+`theme-switch.test.ts` fails if another file calls `Uniwind.setTheme` or
+`Appearance.setColorScheme`. The splash colours live
 in `app.config.ts` and `--color-launch-*`; `launch-model.test.ts` keeps them equal to the Default
 theme's backgrounds. Replay each launch path in a dev build: `xolace://dev/launch/<state>`.
 

@@ -1,6 +1,7 @@
 import { isLoaded, loadAsync, useFonts } from "expo-font";
 import { useEffect, useState } from "react";
 import { type ThemeName, Uniwind, useCSSVariable, useUniwind } from "uniwind";
+import { applyTheme } from "@/lib/native-appearance";
 import {
 	DEFAULT_FONT_PAIR,
 	FIXED_FACES,
@@ -63,8 +64,9 @@ let latestSwitch = 0;
 let pendingTheme: ThemeName | "system" | null = null;
 
 /**
- * The one way the app switches theme after launch (theme-switch.test.ts checks
- * no other file calls `Uniwind.setTheme`). Text drawn before its face is
+ * The one way the app switches theme after launch: only this and theme-bootstrap
+ * call `applyTheme` (`lib/native-appearance.ts`, the only writer of the theme and
+ * native appearance; theme-switch.test.ts checks both). Text drawn before its face is
  * loaded keeps the system face until it re-renders, so a theme whose pair
  * isn't in yet waits for it; one that is switches now, in the same tick. If a
  * face fails to load it switches anyway: the colours matter more than the
@@ -73,11 +75,10 @@ let pendingTheme: ThemeName | "system" | null = null;
 export function setThemeWithFonts(name: ThemeName | "system"): void {
 	latestSwitch += 1;
 	const id = latestSwitch;
-	// Uniwind's own "system" isn't in its ThemeName union.
 	const apply = () => {
 		if (id === latestSwitch) {
 			pendingTheme = null;
-			Uniwind.setTheme(name as ThemeName);
+			applyTheme(name);
 		}
 	};
 	const pair = variantFonts(name);

@@ -7,10 +7,10 @@ import {
 import * as SystemUI from "expo-system-ui";
 import { useThemeColor } from "heroui-native";
 import { type ReactNode, useEffect } from "react";
-import { Appearance } from "react-native";
 import { useUniwind } from "uniwind";
 import { useThemeFaces } from "@/design/fonts";
 import { findVariant } from "@/design/themes";
+import { setNativeAppearance } from "@/lib/native-appearance";
 import { useAppStore } from "@/store/store";
 
 // Single source of truth for the native route background: the navigator paints every screen
@@ -60,9 +60,7 @@ export function NavThemeProvider({ children }: { children: ReactNode }) {
 	const colorThemeId = useAppStore((s) => s.colorThemeId);
 	const followsOS = mode === "system" && colorThemeId === "default";
 	useEffect(() => {
-		Appearance.setColorScheme(
-			followsOS ? "unspecified" : isDark ? "dark" : "light"
-		);
+		setNativeAppearance(followsOS ? "system" : isDark ? "dark" : "light");
 	}, [followsOS, isDark]);
 
 	return <ThemeProvider value={navTheme}>{children}</ThemeProvider>;
