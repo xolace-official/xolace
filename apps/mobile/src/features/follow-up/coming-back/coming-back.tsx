@@ -1,6 +1,5 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
-import { useObserve } from "expo-observe";
 import { router } from "expo-router";
 import { useIsFocused } from "expo-router/react-navigation";
 import { useEffect, useRef, useState } from "react";
@@ -16,7 +15,6 @@ import {
 	computeUserVariant,
 } from "@/helpers/utils/user-variant";
 import { useFullContext } from "@/lib/convex/use-full-context";
-import { shouldShowReflectTour } from "@/lib/reflect-tour-version";
 import { useAppStore } from "@/store/store";
 
 /**
@@ -30,17 +28,8 @@ export function ComingBack() {
 	const clearLastNotification = useAppStore((s) => s.clearLastNotification);
 	const setHomeSheetBlocking = useAppStore((s) => s.setHomeSheetBlocking);
 	const setHomeSheetOpen = useAppStore((s) => s.setHomeSheetOpen);
-	const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
 	const isFocused = useIsFocused();
 	const awarenessEvent = useAwarenessEvent();
-	const { markInteractive } = useObserve();
-
-	// Snapshot, not live read: the awareness sheet waits for a launch where the
-	// tour is already behind the user. Persisted state hydrates synchronously,
-	// so this is the real value on the first render.
-	const [tourSeenAtMount] = useState(
-		!shouldShowReflectTour(reflectTourVersion)
-	);
 
 	const fullContext = useFullContext();
 	const profile = fullContext?.profile;
@@ -91,14 +80,6 @@ export function ComingBack() {
 		};
 	}, [profileId, isFocused, settleStreak]);
 
-	// Per-route TTI: ready once the user context query resolves, not at mount.
-	// Only the first markInteractive call per navigation is recorded.
-	useEffect(() => {
-		if (profile) {
-			markInteractive();
-		}
-	}, [profile, markInteractive]);
-
 	const returnWelcome = useReturnWelcome({
 		active: isFocused && !!profile && !followUp.blocking,
 		lastSessionAt: profile?.lastSessionAt,
@@ -108,12 +89,10 @@ export function ComingBack() {
 			: { kind: "first-time" },
 	});
 
-	// ReturnWelcome, FollowUp, then MonthlyEvent; also waits for the tour (see tourSeenAtMount).
+	// ReturnWelcome, FollowUp, then MonthlyEvent. Reflect's tour runs on Reflect, pushed over
+	// Today, so Today is never focused under it: no tour wait here.
 	const awarenessOpen =
-		tourSeenAtMount &&
-		isFocused &&
-		!returnWelcome.blocking &&
-		!followUp.blocking;
+		isFocused && !returnWelcome.blocking && !followUp.blocking;
 	const awarenessShowing = awarenessOpen && awarenessEvent !== null;
 
 	// Reflect's tour and starter bubble wait on this, so they never open under a sheet.
@@ -141,7 +120,8 @@ export function ComingBack() {
 
 	return (
 		<>
-			{lastNotification && (
+			{/* Only while Today is up: the banner's timer starts when it can be seen. */}
+			{lastNotification && isFocused && (
 				<NotificationBanner
 					content={lastNotification.content}
 					onDismiss={clearLastNotification}

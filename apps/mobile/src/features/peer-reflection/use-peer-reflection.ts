@@ -6,6 +6,7 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { useSessionMode } from "@/context/session-mode-context";
+import { goHome } from "@/lib/landing";
 import { useSessionEndHref } from "@/lib/path-session/session-end-href";
 import { usePathSession } from "@/lib/path-session/use-path-session";
 import { COPY } from "./copy";
@@ -66,7 +67,7 @@ export function usePeerReflectionData(): PeerReflection {
 	// No active session (completed or abandoned elsewhere); skipped while finishing.
 	useEffect(() => {
 		if (!(isLoading || sessionId || finishing.current)) {
-			router.dismissTo("/today");
+			goHome();
 		}
 	}, [isLoading, sessionId, router]);
 

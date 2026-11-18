@@ -23,9 +23,10 @@ import {
 import { COPY } from "@/features/care/bridge/copy";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { convexErrorCode } from "@/lib/convex-error-code";
+import { goHome } from "@/lib/landing";
 import { useAppStore } from "@/store/store";
 
-const home = () => router.dismissTo("/today");
+const home = goHome;
 
 export function useBridge(
 	sessionId: Id<"sessions">,

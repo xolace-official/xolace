@@ -1,4 +1,5 @@
 import { useAuth } from "@clerk/expo";
+import { useObserve } from "expo-observe";
 import { useIsFocused } from "expo-router/react-navigation";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -24,6 +25,13 @@ export function ReflectHome() {
 
 	// Same getFullContext query ReflectScreen subscribes to; Convex dedupes it.
 	const fullContext = useFullContext();
+	const { markInteractive } = useObserve();
+	// Per-route TTI, as when Reflect was "/": ready once the user context resolves.
+	useEffect(() => {
+		if (fullContext?.profile) {
+			markInteractive();
+		}
+	}, [fullContext?.profile, markInteractive]);
 
 	// Last of the home sheets. Waits for the tour (see useStarterSuggestions) and
 	// for the reflect card underneath to have arrived.
