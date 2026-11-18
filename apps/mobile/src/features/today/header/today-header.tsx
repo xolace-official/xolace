@@ -43,14 +43,22 @@ export function TodayHeader({
 	return (
 		<Animated.View style={fade}>
 			<View className="min-h-11.5 flex-row items-center justify-between gap-3 px-1">
-				<AppText
-					className="flex-1 tracking-[0.13px]"
-					color="muted"
-					variant="footnote"
-					weight="semibold"
+				{/* As tall as the row, so VoiceOver (top, then left) reads it before the chip. */}
+				<View
+					accessibilityLabel={state.eyebrow}
+					accessibilityRole="text"
+					accessible
+					className="flex-1 justify-center self-stretch"
 				>
-					{state.eyebrow}
-				</AppText>
+					<AppText
+						className="tracking-[0.13px]"
+						color="muted"
+						variant="footnote"
+						weight="semibold"
+					>
+						{state.eyebrow}
+					</AppText>
+				</View>
 				<GlassGroup>
 					<StreakChip
 						clock={flameClock}

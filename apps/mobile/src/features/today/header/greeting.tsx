@@ -8,6 +8,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { clearOf } from "@/design/clear-of";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useTokenColors } from "@/lib/use-token-color";
 import { riseFn, TIMING } from "../today-motion";
@@ -16,8 +17,8 @@ import { riseFn, TIMING } from "../today-motion";
 const GLEAM = { at: 0.55, radius: 16 } as const;
 /** Blur is approximated: a soft copy (faint glyphs, a 5 pt halo) crossfades to the sharp word. */
 const SOFT_RADIUS = 5;
-/** The soft copy's faint glyphs under their halo (the board: ink at 19%, its halo at 63%). */
-const SOFT_INK = 0.35;
+/** The soft copy: faint glyphs (ink at 19%) under their halo (ink at 63%), as the board's blur. */
+const SOFT = { glyphs: 0.19, halo: 0.63 } as const;
 const RISE = 7;
 /** margin-right .24em at 34 pt: 8. */
 const WORD_GAP = "mr-2";
@@ -138,9 +139,8 @@ function Word({
 			<Animated.View className="absolute top-0 left-0" style={soft}>
 				<AppText
 					style={{
-						color: ink,
-						opacity: SOFT_INK,
-						textShadowColor: ink,
+						color: clearOf(ink, SOFT.glyphs),
+						textShadowColor: clearOf(ink, SOFT.halo),
 						textShadowRadius: SOFT_RADIUS,
 					}}
 					variant="greeting"
