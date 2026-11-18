@@ -15,8 +15,7 @@ import { useYouHome } from "@/features/you/home/you-data";
 import { useYouUi } from "@/features/you/home/you-ui";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-/** The docked tab bar's height, and the room left under the pills when Your days scrolls up. */
-const DOCKED_TABS = 52;
+/** The room left under the pills when Your days scrolls up. */
 const UNDER_PILLS = 12;
 /** Just past the collapse range, so the header stays docked. */
 const PAST_DOCK = 2;
@@ -35,7 +34,7 @@ export function InsightsTab({ minHeader }: { minHeader: number }) {
 	const { state, actions } = useYouHome();
 	const { scrollTo } = useYouUi();
 	const { scrollRef } = useTabPageContext();
-	const { collapseRangeSV } = useCollapsingTabsContext();
+	const { collapseRangeSV, tabBarHeight } = useCollapsingTabsContext();
 	const cardY = useRef({ days: 0, top: 0, week: 0 });
 	const measure = (card: "days" | "week") => (e: LayoutChangeEvent) => {
 		cardY.current[card] = e.nativeEvent.layout.y;
@@ -47,17 +46,17 @@ export function InsightsTab({ minHeader }: { minHeader: number }) {
 		if (!scrollTo) {
 			return;
 		}
-		const dock = collapseRangeSV.get() + PAST_DOCK;
-		const y = Math.max(
-			dock,
-			cardY.current[scrollTo.target] - minHeader - DOCKED_TABS - UNDER_PILLS
-		);
-		const timer = setTimeout(
-			() => scrollRef.current?.scrollTo({ animated: !reduced, y }),
-			SCROLL_AFTER_MS
-		);
+		// Read when it fires, not now: the header and cards may still be laying out.
+		const timer = setTimeout(() => {
+			const dock = collapseRangeSV.get() + PAST_DOCK;
+			const y = Math.max(
+				dock,
+				cardY.current[scrollTo.target] - minHeader - tabBarHeight - UNDER_PILLS
+			);
+			scrollRef.current?.scrollTo({ animated: !reduced, y });
+		}, SCROLL_AFTER_MS);
 		return () => clearTimeout(timer);
-	}, [scrollTo, collapseRangeSV, minHeader, scrollRef, reduced]);
+	}, [scrollTo, collapseRangeSV, minHeader, tabBarHeight, scrollRef, reduced]);
 
 	return (
 		<Tabs.ScrollView

@@ -23,8 +23,6 @@ const BAR_FADE_RANGE = [8, 40];
 const TITLE_FADE_RANGE = [0.75, 1];
 /** Once docked, the band reaches under the pills. */
 const DOCK_RANGE = [0.97, 1];
-/** The tab bar's height. */
-const TABS_H = 52;
 /** How far the bar's fade runs below what it covers. */
 const EDGE = 28;
 /** The band starts this far above the bar's foot, so the pills sit in it. */
@@ -44,7 +42,7 @@ export function TopBar({ height }: { height: number }) {
 	const solid = useOSReduceTransparency();
 	const scrollY = useHeaderScrollY();
 	// The header stops at the collapse range, but the raw value can run past it (a long jump).
-	const { collapseRangeSV } = useCollapsingTabsContext();
+	const { collapseRangeSV, tabBarHeight } = useCollapsingTabsContext();
 	const progress = useCollapseProgress();
 	const { avatar, hero } = useYouHome().state;
 
@@ -80,7 +78,7 @@ export function TopBar({ height }: { height: number }) {
 		<Animated.View
 			className="absolute top-0 right-0 left-0 z-10"
 			pointerEvents="none"
-			style={[{ height: height + TABS_H + edge }, barStyle]}
+			style={[{ height: height + tabBarHeight + edge }, barStyle]}
 		>
 			<View
 				className="absolute top-0 right-0 left-0"
@@ -99,7 +97,7 @@ export function TopBar({ height }: { height: number }) {
 			<Animated.View
 				className="absolute right-0 left-0"
 				style={[
-					{ height: TABS_H + OVERLAP + edge, top: height - OVERLAP },
+					{ height: tabBarHeight + OVERLAP + edge, top: height - OVERLAP },
 					dockStyle,
 				]}
 			>
@@ -107,9 +105,9 @@ export function TopBar({ height }: { height: number }) {
 					<View className="flex-1 bg-background" />
 				) : (
 					<BandBlur
-						height={TABS_H + OVERLAP + edge}
+						height={tabBarHeight + OVERLAP + edge}
 						page={page}
-						solid={TABS_H + UNDER_PILLS}
+						solid={tabBarHeight + UNDER_PILLS}
 					/>
 				)}
 			</Animated.View>

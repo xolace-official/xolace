@@ -9,6 +9,7 @@ import { COPY } from "@/features/you/copy";
 import { BadgesRow } from "@/features/you/home/badges/badges-row";
 import { AvatarButton } from "@/features/you/home/header/avatar-button";
 import { TopBar } from "@/features/you/home/header/top-bar";
+import { useCollapseFollowsRange } from "@/features/you/home/header/use-collapse-follows-range";
 import { StreakCard } from "@/features/you/home/streak/streak-card";
 import { useYouHome } from "@/features/you/home/you-data";
 import { useYouUi } from "@/features/you/home/you-ui";
@@ -35,6 +36,7 @@ export function YouHeader({ topBarHeight }: { topBarHeight: number }) {
 		tipOpen.set(tip.open);
 	}, [tip.open, tipOpen]);
 	const collapse = useHeaderScrollY();
+	useCollapseFollowsRange();
 	const [warm = "", cool = ""] = useTokenColors(AURA_TOKENS);
 
 	// The freeze explanation is drawn over the screen, not in the header: any scroll closes it.
