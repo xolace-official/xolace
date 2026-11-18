@@ -22,7 +22,6 @@ const REPLACED_FEATURES = [
 	"intake",
 	"kindling",
 	"night-mode",
-	"onboarding",
 	"quotes",
 	"reach-me-on",
 	"reflect",
@@ -36,7 +35,7 @@ const REPLACED_FEATURES = [
  * Old folders the redesign keeps: the sweep (C1) restyles them and brings them
  * into the shape, then takes them off this list.
  */
-const RESTYLED_FEATURES = ["auth", "feedback-tray", "purchases"];
+const RESTYLED_FEATURES = ["feedback-tray", "purchases"];
 
 /**
  * The old feature folders, which predate the shape. Every other folder is

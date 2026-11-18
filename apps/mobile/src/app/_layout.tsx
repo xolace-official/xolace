@@ -87,6 +87,7 @@ const ROOT_SCREEN_OPTIONS = { animation: "none", headerShown: false } as const;
 
 const AppContent = () => {
 	const introSeen = useAppStore((s) => s.introSeen);
+	const seatHeld = useAppStore((s) => s.seatHeld);
 	const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
 	const { isSignedIn, isLoaded: isClerkLoaded, userId } = useAuth();
 	const posthog = usePostHog();
@@ -104,11 +105,11 @@ const AppContent = () => {
 	const gate = rootGate({
 		authenticated: isAuthenticated,
 		authLoading: isAuthLoading,
-		introSeen,
 		onboardingComplete,
+		seatHeld,
 	});
 
-	// Breadcrumb the route-group guard's inputs: a wrong (auth) landing on a cold
+	// Breadcrumb the route-group guard's inputs: a wrong (first-run) landing on a cold
 	// start is either a Clerk cache miss or a Clerk/Convex desync.
 	useEffect(() => {
 		Sentry.setUser(userId ? { id: userId } : null);
@@ -135,6 +136,7 @@ const AppContent = () => {
 		isSignedIn,
 		userId,
 		onboardingComplete,
+		seatHeld,
 	]);
 	const pathname = usePathname();
 	const params = useGlobalSearchParams();
@@ -168,11 +170,8 @@ const AppContent = () => {
 			<ChatLocalDataGuard />
 			<ReflectDraftGuard />
 			<Stack screenOptions={ROOT_SCREEN_OPTIONS}>
-				<Stack.Protected guard={isGroupOpen(gate, "(onboarding)")}>
-					<Stack.Screen name="(onboarding)" options={NO_HEADER} />
-				</Stack.Protected>
-				<Stack.Protected guard={isGroupOpen(gate, "(auth)")}>
-					<Stack.Screen name="(auth)" options={NO_HEADER} />
+				<Stack.Protected guard={isGroupOpen(gate, "(first-run)")}>
+					<Stack.Screen name="(first-run)" options={NO_HEADER} />
 				</Stack.Protected>
 				<Stack.Protected guard={isGroupOpen(gate, "(intake)")}>
 					<Stack.Screen name="(intake)" options={NO_HEADER} />
