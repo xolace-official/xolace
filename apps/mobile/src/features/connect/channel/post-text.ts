@@ -27,7 +27,8 @@ export function postLinks(markdown: string): string[] {
 }
 
 /** Posts are plain messages. A short first paragraph with more under it is the title (the
- * prototype's cards have one); anything else is all body. */
+ * prototype's cards have one); anything else is all body. A paragraph with a link in it stays
+ * body, where Stream draws the link and a tap opens it: the title is plain text. */
 export function splitPost(text: string): {
 	title: string | null;
 	body: string;
@@ -42,7 +43,8 @@ export function splitPost(text: string): {
 		first &&
 		rest.length > 0 &&
 		!first.includes("\n") &&
-		first.length <= TITLE_MAX
+		first.length <= TITLE_MAX &&
+		postLinks(first).length === 0
 	) {
 		return { body: rest.join("\n\n"), title: first };
 	}

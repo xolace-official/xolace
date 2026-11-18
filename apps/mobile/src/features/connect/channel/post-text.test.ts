@@ -22,6 +22,18 @@ describe("splitPost", () => {
 		expect(splitPost(long).title).toBeNull();
 		expect(splitPost("Two lines\nin one paragraph\n\nmore").title).toBeNull();
 	});
+
+	it("keeps a paragraph with a link in the body, where the link can be tapped", () => {
+		for (const first of [
+			"Read [the note](https://xolace.app/note)",
+			"New at https://xolace.app/lantern",
+		]) {
+			expect(splitPost(`${first}\n\nmore`)).toEqual({
+				body: `${first}\n\nmore`,
+				title: null,
+			});
+		}
+	});
 });
 
 describe("plainText", () => {

@@ -127,7 +127,7 @@ export function postView(
 		body,
 		edited,
 		kind,
-		links: postLinks(body),
+		links: postLinks(m.text ?? ""),
 		// A post that never reached Stream has no one's reactions, and can't take yours.
 		reactions: kind === "post" ? postReactions(m) : [],
 		title,

@@ -75,6 +75,17 @@ describe("links and markdown", () => {
 		]);
 	});
 
+	it("keeps a link in the opening line tappable and in VoiceOver's actions", () => {
+		const v = postView(
+			{ text: "New at https://xolace.app/lantern\n\nEight short reads." },
+			NOW,
+			US
+		);
+		expect(v.title).toBeNull();
+		expect(v.body).toContain("https://xolace.app/lantern");
+		expect(v.links).toEqual(["https://xolace.app/lantern"]);
+	});
+
 	it("reads the words, not the marks", () => {
 		expect(postView({ text }, NOW, US).a11y).toContain(
 			"Quiet hours. Nudges wait until morning. Read how it works or https://xolace.app/lantern"
