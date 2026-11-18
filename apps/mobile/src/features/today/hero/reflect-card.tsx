@@ -14,7 +14,7 @@ import { CardA11y, type Frame, sameFrame } from "./card-a11y";
 import { CardField } from "./card-field";
 import { CardLight } from "./card-light";
 import { Choices } from "./choices";
-import { HERO } from "./hero-model";
+import { DOORS, doorsCopy, HERO } from "./hero-model";
 import { HeroPressable } from "./hero-pressable";
 import { MonthPrompt } from "./month-prompt";
 import { useHold } from "./use-hold";
@@ -23,8 +23,7 @@ const FALLBACK_H = 230;
 
 /**
  * The door into Reflect, and the sky's horizon. Tap: Reflect (S2 zooms into it from
- * here). Hold 0.6 s: the spectrum laps the rim and Talk, Vent and Sit with this rise
- * out of the hint line. No mascot, nothing follows the finger.
+ * here). Hold 0.6 s: the spectrum laps the rim and the doors rise out of the hint line. No mascot, nothing follows the finger.
  */
 export function ReflectCard() {
 	const { state, actions } = useToday();
@@ -32,6 +31,7 @@ export function ReflectCard() {
 	const late = state.phase === "late";
 	const prompt = COPY.card.prompt[state.phase];
 	const { monthPrompt } = state.card;
+	const doors = doorsCopy(DOORS);
 	const hold = useHold(reduced, true);
 	const focused = useIsFocused();
 	const [size, setSize] = useState<{ w: number; h: number } | null>(null);
@@ -134,7 +134,7 @@ export function ReflectCard() {
 						running={running}
 					/>
 					<AppText center color="muted" variant="footnote">
-						{COPY.card.hint}
+						{doors.hint}
 					</AppText>
 				</Animated.View>
 			</HeroPressable>
@@ -149,7 +149,8 @@ export function ReflectCard() {
 				) : size && input && mic ? (
 					<CardA11y
 						card={{ height: size.h, width: size.w, x: 0, y: 0 }}
-						hint={COPY.card.a11yHint}
+						doorsAction={doors.action}
+						hint={doors.a11yHint}
 						input={input}
 						inputLabel={(placeholders[0] ?? "").replace("…", "")}
 						mic={{ ...mic, x: input.x + mic.x, y: input.y + mic.y }}

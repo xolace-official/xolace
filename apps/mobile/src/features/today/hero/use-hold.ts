@@ -11,7 +11,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { press } from "@/design/springs";
 import { playSessionComplete } from "@/lib/haptics";
 import { EASE_CSS, EASE_CSS_OUT, EASE_DRAIN } from "../today-motion";
-import { BURST, HERO } from "./hero-model";
+import { DOORS, doorsLandMs, HERO } from "./hero-model";
 
 const tick = () => Presets.System.selection();
 
@@ -121,7 +121,7 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		);
 		body.set(withTiming(0, { duration: HERO.bodyOutMs, easing: EASE_CSS }));
 		// The doors land: the last tile finishes its burst.
-		setTimeout(playSessionComplete, reduced ? 0 : BURST.ms + BURST.stagger * 2);
+		setTimeout(playSessionComplete, reduced ? 0 : doorsLandMs(DOORS.length));
 	};
 
 	const unchoose = () => {

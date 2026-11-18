@@ -9,6 +9,8 @@ type Props = {
 	mic: Frame;
 	prompt: string;
 	hint: string;
+	/** The doors' VoiceOver action ("Talk or Vent"). */
+	doorsAction: string;
 	inputLabel: string;
 	/** Only while the card is at rest: then the input, mic and the doors action are there too. */
 	onDoors?: () => void;
@@ -27,6 +29,7 @@ export function CardA11y({
 	mic,
 	prompt,
 	hint,
+	doorsAction,
 	inputLabel,
 	onDoors,
 }: Props) {
@@ -34,9 +37,7 @@ export function CardA11y({
 		<View className="absolute inset-0" pointerEvents="none">
 			<View
 				accessibilityActions={
-					onDoors
-						? [{ label: COPY.card.doorsAction, name: "longpress" }]
-						: undefined
+					onDoors ? [{ label: doorsAction, name: "longpress" }] : undefined
 				}
 				accessibilityHint={hint}
 				accessibilityLabel={prompt}

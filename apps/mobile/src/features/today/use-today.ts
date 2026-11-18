@@ -25,15 +25,15 @@ import {
 } from "./today-model";
 
 /**
- * Where Talk and Vent go. Sit with this opens Reflect instead: production's Sit runs only
- * inside a Reflect session (or a kindling replay), so started cold it would wait forever.
- * Reflect is where production's Sit path begins; a cold Sit (the prototype's three breaths,
- * `/sit?from=today`) needs Sit to start without a session first.
+ * Where each door goes. Sit with this is offered only once Sit can start from Today on its
+ * own (`SIT_DOOR` in `hero/hero-model.ts`): production's Sit otherwise runs inside a Reflect
+ * session or a kindling replay.
  */
 const DOOR_HREF = {
+	sit: "/sit-with-this?from=today",
 	talk: "/talk",
 	vent: "/voice-vent",
-} as const satisfies Record<Exclude<Door, "sit">, string>;
+} as const satisfies Record<Door, string>;
 
 /**
  * Device-only, per account (as `reflect-draft.ts`): the day the first open last played,
@@ -147,10 +147,7 @@ export function useTodayData(): Today {
 
 	return {
 		actions: {
-			openDoor: (door) =>
-				door === "sit"
-					? openReflect()
-					: pushOnce(() => router.push(DOOR_HREF[door])),
+			openDoor: (door) => pushOnce(() => router.push(DOOR_HREF[door])),
 			openHelp: () => router.push("/crisis-resources"),
 			openReflect,
 			openStreak: () => router.navigate("/you"),

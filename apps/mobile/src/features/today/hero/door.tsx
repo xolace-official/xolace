@@ -16,30 +16,26 @@ import { COPY } from "../copy";
 import { useTodayFrame } from "../today-frame";
 import type { Door as DoorId } from "../today-model";
 import { keyframes, riseFn } from "../today-motion";
-import { BURST } from "./hero-model";
+import { BURST, burstFromX } from "./hero-model";
 
-type Choice = { id: DoorId; icon: IconName; tile: string; ink: string };
-/** The board's three doors: their tile and icon ink are `--color-door-*` (global.css). */
-export const DOORS: readonly Choice[] = [
-	{
-		icon: { android: "mic", ios: "mic" },
-		id: "talk",
-		ink: "door-talk-ink",
-		tile: "bg-door-talk",
-	},
-	{
-		icon: { android: "graphic_eq", ios: "waveform.path.ecg" },
-		id: "vent",
-		ink: "door-vent-ink",
-		tile: "bg-door-vent",
-	},
-	{
+/** Each door's look: its tile and icon ink are `--color-door-*` (global.css). */
+const LOOK: Record<DoorId, { icon: IconName; tile: string; ink: string }> = {
+	sit: {
 		icon: { android: "waves", ios: "water.waves" },
-		id: "sit",
 		ink: "door-sit-ink",
 		tile: "bg-door-sit",
 	},
-];
+	talk: {
+		icon: { android: "mic", ios: "mic" },
+		ink: "door-talk-ink",
+		tile: "bg-door-talk",
+	},
+	vent: {
+		icon: { android: "graphic_eq", ios: "waveform.path.ecg" },
+		ink: "door-vent-ink",
+		tile: "bg-door-vent",
+	},
+};
 const ICON = 19;
 /** burst keyframes: travel 1 → 0 by 74%, opaque by 55%, scale .2 → 1.05 at 74% → 1. */
 const TRAVEL = [
@@ -59,21 +55,24 @@ const SCALE = [
 
 /** A door bursts out of the hint line (bubble-media-burst), overshooting to 1.05 at 74%. */
 export function Door({
-	door,
+	id,
 	index,
+	count,
 	onPick,
 }: {
-	door: Choice;
+	id: DoorId;
 	index: number;
+	count: number;
 	onPick: (d: DoorId) => void;
 }) {
+	const door = LOOK[id];
 	const { reduced } = useTodayFrame();
 	const [ink, label, sub] = useTokenColors([
 		door.ink,
 		"door-label",
 		"door-sub",
 	]);
-	const copy = COPY.doors[door.id];
+	const copy = COPY.doors[id];
 	// Reduced: the doors are simply there (the card's body has faded out under them).
 	const p = useSharedValue(reduced ? 1 : 0);
 	useEffect(() => {
@@ -92,7 +91,7 @@ export function Door({
 			)
 		);
 	}, [index, p, reduced]);
-	const fromX = BURST.fromX[index] ?? 0;
+	const fromX = burstFromX(index, count);
 	const style = useAnimatedStyle(() => {
 		const v = p.get();
 		const move = keyframes(v, TRAVEL, riseFn);
@@ -111,7 +110,7 @@ export function Door({
 				accessibilityLabel={`${copy.label}, ${copy.sub}`}
 				accessibilityRole="button"
 				className={`flex-1 items-center justify-center gap-1.5 border-continuous ${door.tile}`}
-				onPress={() => onPick(door.id)}
+				onPress={() => onPick(id)}
 				style={{ borderRadius: BURST.tileR }}
 			>
 				<View className="size-10 items-center justify-center rounded-full bg-white/72">

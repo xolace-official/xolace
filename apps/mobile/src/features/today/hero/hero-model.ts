@@ -1,3 +1,6 @@
+import { COPY } from "../copy";
+import type { Door } from "../today-model";
+
 /** The Reflect card, from the board's `.hw`, `.hero`, `.edge`, `.inglow`, `.rim`, `.choices`, `.ch*`. */
 export const HERO = {
 	bodyOutMs: 250,
@@ -38,17 +41,18 @@ export const LIGHT = {
 	edgeLate: { high: 0.18, low: 0.12 },
 } as const;
 
-/** Choices burst out of the hint line: from (+110 / 0 / −110, +74) at .2, 1.05 at 74%, 560 ms, 60 ms apart. */
+/** Choices burst out of the hint line: from (110 pt apart, centred; +74) at .2, 1.05 at 74%, 560 ms, 60 ms apart. */
 export const BURST = {
 	backAt: 400,
 	fadeUpMs: 400,
 	fromScale: 0.2,
-	fromX: [110, 0, -110],
 	fromY: 74,
 	ms: 560,
 	opaqueAt: 0.55,
 	peak: 1.05,
 	peakAt: 0.74,
+	/** Between neighbouring doors' starting points (the board's ±110 for three). */
+	spread: 110,
 	stagger: 60,
 	/** The tiles' height with room to spare; a shorter card shrinks them, down to tileMinH, so "Write instead" fits. */
 	tileH: 112,
@@ -56,3 +60,45 @@ export const BURST = {
 	tileR: 22,
 	titleAt: 220,
 } as const;
+
+/**
+ * Sit with this joins the doors once Sit can start from Today on its own (`from=today`, its
+ * own PR). Until then a cold Sit would wait for a session that never comes.
+ */
+const SIT_DOOR = false;
+
+/** The doors a hold on the card opens, in order. */
+export const DOORS: readonly Door[] = SIT_DOOR
+	? ["talk", "vent", "sit"]
+	: ["talk", "vent"];
+
+/** Where door `index` of `count` starts its burst: they converge from the hint line's centre. */
+export const burstFromX = (index: number, count: number): number =>
+	((count - 1) / 2 - index) * BURST.spread;
+
+/** When the last door lands, after the first starts: the Bloom plays then. */
+export const doorsLandMs = (count: number): number =>
+	BURST.ms + BURST.stagger * Math.max(0, count - 1);
+
+/** "Talk", "Talk or Vent", "Talk, Vent or Sit with this". */
+function listOf(items: readonly string[], last: string): string {
+	if (items.length < 2) {
+		return items[0] ?? "";
+	}
+	return `${items.slice(0, -1).join(", ")} ${last} ${items.at(-1)}`;
+}
+
+/** The card's hint and VoiceOver copy, named for the doors it offers. */
+export function doorsCopy(doors: readonly Door[]): {
+	a11yHint: string;
+	action: string;
+	hint: string;
+} {
+	const labels = doors.map((d) => COPY.doors[d].label);
+	const or = listOf(labels, COPY.card.or);
+	return {
+		a11yHint: COPY.card.a11yHint(listOf(labels, COPY.card.and), doors.length),
+		action: or,
+		hint: COPY.card.hint(or),
+	};
+}

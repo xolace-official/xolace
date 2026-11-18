@@ -7,12 +7,14 @@ import type { TodayPhase } from "./today-model";
 export const COPY = {
 	/** The Reflect card (board `.hero`): its question by phase, the field's rotating lines and the hint. */
 	card: {
-		/** VoiceOver only. */
-		a11yHint: "Opens Reflect. Talk, Vent and Sit with this are in actions.",
-		doorsAction: "Talk, Vent or Sit with this",
-		hint: "Hold the card for Talk, Vent or Sit with this",
+		/** VoiceOver only; `doors` is the doors' list ("Talk and Vent"). */
+		a11yHint: (doors: string, count: number) =>
+			`Opens Reflect. ${doors} ${count === 1 ? "is" : "are"} in actions.`,
+		and: "and",
+		hint: (doors: string) => `Hold the card for ${doors}`,
 		/** The month's prompt on the card while it's carried this week (board `.ph.wrote .tref`). */
 		monthLabel: "THIS MONTH",
+		or: "or",
 		placeholders: {
 			day: [
 				"Write it out…",

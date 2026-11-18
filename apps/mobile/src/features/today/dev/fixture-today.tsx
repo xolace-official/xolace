@@ -16,14 +16,14 @@ import {
 } from "./fixtures";
 
 const ACTIONS: Today["actions"] = {
+	// Talk and Vent open their real screens; a cold Sit isn't offered yet (hero-model's DOORS).
 	openDoor: (door) =>
-		door === "sit" ? router.back() : router.push(DOOR_HREF[door]),
+		door === "sit" ? undefined : router.push(DOOR_HREF[door]),
 	openHelp: () => router.push("/crisis-resources"),
 	openReflect: () => router.back(),
 	openStreak: () => router.navigate("/you"),
 };
 
-/** Talk and Vent open their real screens; Sit goes back, as Reflect does here. */
 const DOOR_HREF = { talk: "/talk", vent: "/voice-vent" } as const;
 
 /** Let the screen land before the streak grows, as coming back to Today does. */

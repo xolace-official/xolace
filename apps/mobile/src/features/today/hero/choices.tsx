@@ -9,8 +9,8 @@ import { useToday } from "../today-data";
 import { useTodayFrame } from "../today-frame";
 import type { Door as DoorId } from "../today-model";
 import { CURVES } from "../today-motion";
-import { DOORS, Door } from "./door";
-import { BURST, HERO } from "./hero-model";
+import { Door } from "./door";
+import { BURST, DOORS, HERO } from "./hero-model";
 
 const FADE_DY = 6;
 /** fadeUp: 6 pt up and in over .4 s, CSS `ease` (react-native-ease). Reduced: the 200 ms fade. */
@@ -26,7 +26,7 @@ function FadeUp({ delay, children }: { delay: number; children: ReactNode }) {
 }
 
 /**
- * "How do you want to let it out?": Talk, Vent and Sit with this, and a way back to writing.
+ * "How do you want to let it out?": the doors (`DOORS`), and a way back to writing.
  * They sit inside the card, which is only as tall as the resting card (about 195 pt late at night,
  * a single-line prompt), so the doors take the room that's left, 112 pt at most and 88 at least,
  * and "Write instead" is never clipped.
@@ -68,7 +68,7 @@ export function Choices({ onBack }: { onBack: () => void }) {
 				style={{ maxHeight: BURST.tileH, minHeight: BURST.tileMinH }}
 			>
 				{DOORS.map((d, i) => (
-					<Door door={d} index={i} key={d.id} onPick={pick} />
+					<Door count={DOORS.length} id={d} index={i} key={d} onPick={pick} />
 				))}
 			</View>
 			<FadeUp delay={BURST.backAt}>
