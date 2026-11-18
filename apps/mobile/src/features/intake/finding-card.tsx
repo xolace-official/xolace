@@ -5,12 +5,13 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
+import { Card } from "@/components/shared/card";
 import {
 	type FindingPicks,
 	findingAnswer,
 	findingCardDue,
 	findingStep,
-} from "@/features/discovery/finding-card";
+} from "@/features/intake/finding-card-model";
 import { useRecordDeferredAnswer } from "@/features/intake/use-record-deferred-answer";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { playSoftPress } from "@/lib/haptics";
@@ -21,7 +22,8 @@ const FADE_MS = 320;
 const THANKS_MS = 2400;
 
 /**
- * "How did you find Xolace?" on Discovery from a v2 user's third day (#711): one tap, with
+ * "How did you find Xolace?" on Today from a v2 user's third day (composed in by the Today
+ * route; it moved here from Discovery with S1) (#711): one tap, with
  * the series pair on the same card after short video (Back returns to the source). "Not
  * now" puts it away for good for this account; an answer saves through
  * `intake.deferred.record` and the card thanks them and goes.
@@ -83,11 +85,12 @@ export function FindingCard() {
 			entering={FadeIn.duration(FADE_MS)}
 			exiting={FadeOut.duration(FADE_MS)}
 		>
-			<View className="gap-3 rounded-3xl border border-border/65 bg-surface px-5 py-5">
+			<Card className="gap-3 px-5 py-5">
 				{thanked ? (
 					<AppText
 						accessibilityLiveRegion="polite"
-						className="font-[Poppins-Medium] text-[17px] text-foreground leading-6"
+						variant="body"
+						weight="medium"
 					>
 						Thank you. It helps us reach people like you.
 					</AppText>
@@ -96,7 +99,9 @@ export function FindingCard() {
 						<View className="flex-row items-start justify-between gap-3">
 							<AppText
 								accessibilityRole="header"
-								className="flex-1 font-[Poppins-Medium] text-[17px] text-foreground leading-6"
+								className="flex-1"
+								variant="body"
+								weight="medium"
 							>
 								{step.question}
 							</AppText>
@@ -107,7 +112,7 @@ export function FindingCard() {
 								hitSlop={8}
 								onPress={aside.onPress}
 							>
-								<AppText className="text-foreground/55 text-sm">
+								<AppText color="muted" variant="footnote">
 									{aside.label}
 								</AppText>
 							</PressableFeedback>
@@ -117,19 +122,17 @@ export function FindingCard() {
 								<PressableFeedback
 									accessibilityLabel={label}
 									accessibilityRole="button"
-									className="rounded-full border border-border/70 px-3.5 py-2"
+									className="rounded-full border border-separator px-3.5 py-2"
 									key={value}
 									onPress={() => choose(value)}
 								>
-									<AppText className="text-foreground/75 text-sm">
-										{label}
-									</AppText>
+									<AppText variant="footnote">{label}</AppText>
 								</PressableFeedback>
 							))}
 						</View>
 					</>
 				)}
-			</View>
+			</Card>
 		</Animated.View>
 	);
 }

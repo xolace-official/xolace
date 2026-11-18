@@ -29,7 +29,7 @@ export const TOUR_STEPS = [
 		title: "Rather say it out loud?",
 	},
 	{
-		description: "Discovery, Vent and Settings.",
+		description: "Today, Vent and Settings.",
 		title: "The rest lives here.",
 	},
 ] as const;

@@ -45,30 +45,30 @@ const graphOf = (entries: Record<string, Import[]>): ImportGraph =>
 describe("oldFolderImportsFromNewCode", () => {
 	it("flags a ported folder or a lower layer importing an old folder, types included", () => {
 		const graph = graphOf({
-			"components/shared/card.tsx": [local("features/discovery/tile.tsx")],
+			"components/shared/card.tsx": [local("features/quotes/tile.tsx")],
 			"design/type.ts": [local("features/reflect/faces.ts", true)],
 			"features/today/today-screen.tsx": [
-				local("features/discovery/components/discovery-screen.tsx"),
+				local("features/quotes/components/quotes-screen.tsx"),
 			],
 		});
 		expect(oldFolderImportsFromNewCode(graph)).toEqual([
-			"components/shared/card.tsx -> features/discovery/tile.tsx",
+			"components/shared/card.tsx -> features/quotes/tile.tsx",
 			"design/type.ts -> features/reflect/faces.ts",
-			"features/today/today-screen.tsx -> features/discovery/components/discovery-screen.tsx",
+			"features/today/today-screen.tsx -> features/quotes/components/quotes-screen.tsx",
 		]);
 	});
 
 	it("allows old folders among themselves, inside one folder, the hub, routes and purchases", () => {
 		const graph = graphOf({
 			"app/(protected)/(tabs)/today/index.tsx": [
-				local("features/discovery/components/discovery-screen.tsx"),
-			],
-			"features/discovery/discovery-screen.tsx": [
-				local("features/browse/browse-home.tsx"),
-				local("features/discovery/tile.tsx"),
+				local("features/quotes/components/quotes-screen.tsx"),
 			],
 			"features/navigation/root-screens.ts": [
 				local("features/streak/screens.ts"),
+			],
+			"features/quotes/quotes-screen.tsx": [
+				local("features/browse/browse-home.tsx"),
+				local("features/quotes/tile.tsx"),
 			],
 			"features/today/today-screen.tsx": [
 				local("features/purchases/use-paywall.ts"),
@@ -290,14 +290,14 @@ describe("staleListings", () => {
 describe("portedFolderImportsFromOldCode", () => {
 	it("flags an old folder importing a ported one, types included", () => {
 		const graph = graphOf({
-			"features/discovery/library-strip.tsx": [
+			"features/quotes/library-strip.tsx": [
 				local("features/today/rail/rail.tsx"),
 				local("features/letters/letter-model.ts", true),
 			],
 		});
 		expect(portedFolderImportsFromOldCode(graph)).toEqual([
-			"features/discovery/library-strip.tsx -> features/today/rail/rail.tsx",
-			"features/discovery/library-strip.tsx -> features/letters/letter-model.ts",
+			"features/quotes/library-strip.tsx -> features/today/rail/rail.tsx",
+			"features/quotes/library-strip.tsx -> features/letters/letter-model.ts",
 		]);
 	});
 
@@ -306,7 +306,7 @@ describe("portedFolderImportsFromOldCode", () => {
 			"app/(protected)/(tabs)/today/index.tsx": [
 				local("features/today/today-screen.tsx"),
 			],
-			"features/discovery/library-strip.tsx": [
+			"features/quotes/library-strip.tsx": [
 				local("features/browse/use-open-track.ts"),
 				local("features/navigation/tabs.ts"),
 				local("features/purchases/use-paywall.ts"),

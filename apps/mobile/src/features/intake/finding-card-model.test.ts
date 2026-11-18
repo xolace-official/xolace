@@ -3,7 +3,7 @@ import {
 	findingAnswer,
 	findingCardDue,
 	findingStep,
-} from "@/features/discovery/finding-card";
+} from "@/features/intake/finding-card-model";
 
 // Intake done mid-afternoon on Mon 2 Nov, local time.
 const INTAKE = new Date(2026, 10, 2, 15, 0).getTime();

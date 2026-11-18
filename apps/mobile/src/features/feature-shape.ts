@@ -17,7 +17,6 @@ import {
 const REPLACED_FEATURES = [
 	"awareness-events",
 	"browse",
-	"discovery",
 	"follow-up",
 	"idle-menu",
 	"intake",

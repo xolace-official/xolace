@@ -36,9 +36,10 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
 	// Primary actions, full rows.
 	const primaryItems: MenuButtonItem[] = [
 		{
-			accessibilityLabel: "Open discovery",
+			accessibilityLabel: "Open Today",
 			iconName: { android: "explore", ios: "safari" },
-			label: "Discovery",
+			label: "Today",
+			// Kept from when this row was Discovery, so a row already seen isn't new again.
 			newKey: "discovery",
 			onPress: () => {
 				onClose();
