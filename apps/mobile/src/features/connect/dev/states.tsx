@@ -8,6 +8,7 @@ import {
 	DIRECT_REQUEST,
 	ESI,
 	KOJO,
+	MANY,
 	MAYA,
 	NO_CHATS,
 	SEEKER_REQUEST,
@@ -53,6 +54,12 @@ export const devStates: readonly DevState[] = [
 		options: OWN,
 		Screen: () => <FixtureConnect status={XOLACER_UNPUBLISHED} />,
 		title: "Chats as a Xolacer before publishing: the setup banner",
+	},
+	{
+		id: "chats-200",
+		options: OWN,
+		Screen: () => <FixtureConnect conversations={MANY} />,
+		title: "Chats at the server's ceiling: 200 rows",
 	},
 	{
 		id: "chats-offline",

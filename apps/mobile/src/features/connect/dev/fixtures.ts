@@ -151,6 +151,25 @@ export const CONVERSATIONS: ConversationRow[] = [
 	ADE_DECLINED,
 	REN_ARCHIVED,
 ];
+/** `myConversations`' ceiling: 200 pair rows, every lifecycle state, to scroll, hold and swipe. */
+const MANY_STATES = ["open", "requested", "resting", "closed"] as const;
+const MANY_NAMES = ["Maya", "Kojo", "Esi", "Ade", "Ren", "Ama", "Kofi", "Yaa"];
+const MANY_COUNT = 200;
+export const MANY: ConversationRow[] = [
+	CHANNEL_ROW,
+	...Array.from({ length: MANY_COUNT }, (_, i) =>
+		pair({
+			counterpartName: `${MANY_NAMES[i % MANY_NAMES.length]} ${i + 1}`,
+			counterpartPresent: i % 5 === 0,
+			id: convo(`c_many_${i}`),
+			lastMessageAt: NOW - i * 3 * HOUR,
+			requestedAt: NOW - (i + 1) * 3 * HOUR,
+			status: MANY_STATES[i % MANY_STATES.length],
+			streamChannelId: `ch_many_${i}`,
+		})
+	),
+];
+
 export const ARCHIVED_ONLY: ConversationRow[] = [
 	CHANNEL_ROW,
 	ADE_DECLINED,
