@@ -4,7 +4,7 @@ import type { KindlingView, TwigView } from "../kindling/kindling-model";
 import { type MomentView, momentView } from "../moments/moments-model";
 import { type RailTile, railTiles } from "../rail/rail-model";
 import type { Today } from "../today-data";
-import { COVERS } from "./covers";
+import type { Covers } from "./covers";
 
 /** Today's fake data: the board's Thursday, Ama and a 12-day streak (`P/src/fixtures/today.ts`). */
 export const FIXTURE_WEEKDAY = "Thursday";
@@ -91,12 +91,13 @@ const shelfItem = (
 });
 
 /** The board's rail (`P/src/fixtures/today.ts` RAIL), as the New shelf sends it. */
-export const FIXTURE_RAIL: RailTile[] = railTiles([
-	shelfItem("voice", "A voice for this", "support", COVERS.a1),
-	shelfItem("quiet", "Low sound for the quiet", "music", COVERS.a2),
-	shelfItem("arrives", "When it all arrives", "support", COVERS.a3),
-	shelfItem("rain", "Rain on the tent", "music", COVERS.a2),
-]);
+const fixtureRail = (covers: Covers): RailTile[] =>
+	railTiles([
+		shelfItem("voice", "A voice for this", "support", covers.a1),
+		shelfItem("quiet", "Low sound for the quiet", "music", covers.a2),
+		shelfItem("arrives", "When it all arrives", "support", covers.a3),
+		shelfItem("rain", "Rain on the tent", "music", covers.a2),
+	]);
 
 const timelineRow = (
 	id: string,
@@ -117,7 +118,7 @@ const timelineRow = (
 });
 
 /** The board's moments (`TODAY_MOMENTS`), as the timeline's first page sends them. */
-export const FIXTURE_MOMENTS: MomentView[] = [
+const FIXTURE_MOMENTS: MomentView[] = [
 	timelineRow(
 		"m1",
 		"You're not behind. You're tired of running at a pace that was never yours.",
@@ -145,14 +146,15 @@ export const FIXTURE_MOMENTS: MomentView[] = [
 ].map(momentView);
 
 /** The board's word for today. */
-export const FIXTURE_WORD = "Slow is still moving.";
+const FIXTURE_WORD = "Slow is still moving.";
 
 /** The rail, moments and word: the board's, none at all, or still loading. */
 export type FixtureModules = "board" | "none" | "loading";
 
 /** The rail, moments and word: loading is undefined, none is empty (the word null). */
 export function lowerModules(
-	modules: FixtureModules
+	modules: FixtureModules,
+	covers: Covers
 ): Pick<
 	Today["state"],
 	"rail" | "moments" | "word" | "playingSlug" | "listenLocked"
@@ -171,7 +173,7 @@ export function lowerModules(
 		listenLocked: false,
 		moments: board ? FIXTURE_MOMENTS : [],
 		playingSlug: null,
-		rail: board ? FIXTURE_RAIL : [],
+		rail: board ? fixtureRail(covers) : [],
 		word: board ? FIXTURE_WORD : null,
 	};
 }

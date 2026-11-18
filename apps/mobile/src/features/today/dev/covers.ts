@@ -1,7 +1,9 @@
+import { useTokenColors } from "@/lib/use-token-color";
+
 /**
  * Stand-ins for production's track covers in the dev states: the board's rail art (`.a1`–
- * `.a3`, two soft watercolour radials on a base), drawn as an SVG data URI that `CoverImage`
- * loads like any other cover. Fixed printed colours, dev only.
+ * `.a3`, a soft highlight and a watercolour radial on a base), drawn from the theme's Flux
+ * spectrum as an SVG data URI that `CoverImage` loads like any other cover. Dev only.
  */
 const SIZE = 200;
 
@@ -21,21 +23,27 @@ function art(base: string, a: Blot, b: Blot) {
 	return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-/** a1 peach / pink, a2 sky / lilac, a3 mint / teal. */
-export const COVERS = {
-	a1: art(
-		"#FFC3A6",
-		{ color: "#FFE3D1", r: 0.6, x: 0.3, y: 0.28 },
-		{ color: "#F48FB1", r: 0.7, x: 0.75, y: 0.72 }
-	),
-	a2: art(
-		"#B9C6F5",
-		{ color: "#D4F2F8", r: 0.6, x: 0.3, y: 0.28 },
-		{ color: "#9E8CF2", r: 0.7, x: 0.7, y: 0.76 }
-	),
-	a3: art(
-		"#BFE6CF",
-		{ color: "#ECF8DF", r: 0.6, x: 0.34, y: 0.3 },
-		{ color: "#73C2AA", r: 0.7, x: 0.7, y: 0.72 }
-	),
-} as const;
+export type Covers = { a1: string; a2: string; a3: string };
+
+/** a1 peach / rose, a2 sky / lilac, a3 lilac / sky, each lit from the top left. */
+export function useFixtureCovers(): Covers {
+	const [peach, rose, lilac, sky, light] = useTokenColors([
+		"peach",
+		"rose",
+		"lilac",
+		"sky",
+		"surface",
+	]);
+	const glow = (x: number, y: number): Blot => ({ color: light, r: 0.6, x, y });
+	const wash = (color: string, x: number, y: number): Blot => ({
+		color,
+		r: 0.7,
+		x,
+		y,
+	});
+	return {
+		a1: art(peach, glow(0.3, 0.28), wash(rose, 0.75, 0.72)),
+		a2: art(sky, glow(0.3, 0.28), wash(lilac, 0.7, 0.76)),
+		a3: art(lilac, glow(0.34, 0.3), wash(sky, 0.7, 0.72)),
+	};
+}

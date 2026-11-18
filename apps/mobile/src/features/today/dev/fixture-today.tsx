@@ -9,6 +9,7 @@ import { useKeptKindling } from "../kindling/use-kept-kindling";
 import { type Today, TodayProvider } from "../today-data";
 import { headerCopy, type TodayPhase } from "../today-model";
 import { TodayScreen } from "../today-screen";
+import { useFixtureCovers } from "./covers";
 import { FIXTURE_ACTIONS } from "./fixture-actions";
 import { FixtureFinding } from "./fixture-finding";
 import {
@@ -97,6 +98,7 @@ function FixtureToday({
 	lateWord = false,
 	free = false,
 }: FixtureProps) {
+	const covers = useFixtureCovers();
 	const [wordIn, setWordIn] = useState(!lateWord);
 	useEffect(() => {
 		if (wordIn) {
@@ -155,7 +157,7 @@ function FixtureToday({
 		greeting,
 		intro,
 		kindling: kindlingView,
-		...lowerModules(offline ? "loading" : modules),
+		...lowerModules(offline ? "loading" : modules, covers),
 		...(wordIn ? {} : { word: undefined }),
 		listenLocked: free,
 		phase,

@@ -28,7 +28,7 @@ const DAY_MS = 86_400_000;
 const localDaysBetween = (from: Date, to: Date) =>
 	Math.round((startOfDay(to).getTime() - startOfDay(from).getTime()) / DAY_MS);
 
-/** Whether Discovery shows the card: their third local day or later, still unanswered, and
+/** Whether Today shows the card: their third local day or later, still unanswered, and
  * not put away with "Not now" by this account. */
 export function findingCardDue(args: {
 	completedAt: number;
