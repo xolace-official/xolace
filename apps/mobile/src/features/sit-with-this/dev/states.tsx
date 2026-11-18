@@ -152,6 +152,11 @@ export const devStates: readonly DevState[] = [
 		title: "A kindling twig’s replay",
 		...play({ from: "kindling", slots: {} }),
 	},
+	{
+		id: "today",
+		title: "From Today’s Sit door: Three breaths on its own",
+		...play({ exercise: RESET, from: "today", slots: {} }),
+	},
 	{ id: "play-make-room", title: "Play: Make room", ...play(ROOM) },
 	{
 		id: "play-soften-toward-it",

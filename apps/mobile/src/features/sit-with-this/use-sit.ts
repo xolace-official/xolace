@@ -1,14 +1,17 @@
+import * as Sentry from "@sentry/react-native";
 import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
+import { BackHandler } from "react-native";
 import { useSessionMode } from "@/context/session-mode-context";
 import { useSessionEndHref } from "@/lib/path-session/session-end-href";
 import { usePathSession } from "@/lib/path-session/use-path-session";
 import { toExercise } from "./catalogue";
 import type { Sit } from "./sit-data";
-import type { SitFrom } from "./sit-model";
+import { isStandalone, sitFrom, sitResult, sitSource } from "./sit-model";
 import { useSwapOptions } from "./swap/use-swap-options";
 
 /**
@@ -17,6 +20,9 @@ import { useSwapOptions } from "./swap/use-swap-options";
  * path starts on arrival and completes before the session end opens. A
  * kindling twig (`from=kindling`) replays a completed session's exercise:
  * nothing in the session moves, finishing tends the twig, and it goes back.
+ * Today's Sit door (`from=today`) plays Three breaths on its own
+ * (`exercises.getStandalone`): no session, no slots, no swap; finishing it counts the day
+ * (`exercises.completeStandalone`), and it goes back.
  * Nothing written in a prompt is ever sent.
  */
 export function useSitData(): Sit {
@@ -26,22 +32,32 @@ export function useSitData(): Sit {
 		sessionId?: string;
 		stepId?: string;
 	}>();
-	const from: SitFrom = params.from === "kindling" ? "kindling" : "reflect";
-	const standalone = from === "kindling";
+	const from = sitFrom(params.from);
+	const standalone = isStandalone(from);
+	const posthog = usePostHog();
 	const stepId = params.stepId as Id<"path_steps"> | undefined;
 	const pathSession = usePathSession();
-	const sessionId = standalone
-		? ((params.sessionId as Id<"sessions"> | undefined) ?? null)
-		: pathSession.sessionId;
+	const { sessionId, standalone: standaloneTitle } = sitSource(from, {
+		path: pathSession.sessionId,
+		route: params.sessionId as Id<"sessions"> | undefined,
+	});
 	const { session, startPath, completePath } = pathSession;
-	const result = useQuery(
+	const forSession = useQuery(
 		api.exercises.getForSession,
 		sessionId ? { sessionId } : "skip"
 	);
+	const alone = useQuery(
+		api.exercises.getStandalone,
+		standaloneTitle ? { title: standaloneTitle } : "skip"
+	);
+	const result = sitResult(from, forSession, alone);
 	const completeStep = useMutation(api.paths.completeStep);
+	const completeStandalone = useMutation(api.exercises.completeStandalone);
 	const afterPath = useSessionEndHref(standalone ? null : sessionId);
 	const { isNight } = useSessionMode();
 	const started = useRef(false);
+	const announced = useRef(false);
+	const begun = useRef(false);
 	const leaving = useRef(false);
 	const opening = useRef(false);
 	const focused = useIsFocused();
@@ -54,6 +70,16 @@ export function useSitData(): Sit {
 			opening.current = false;
 		}
 	}, [focused]);
+
+	// Once per visit, wherever it was opened from: the first screen is up.
+	const exerciseTitle = result?.exercise.title;
+	useEffect(() => {
+		if (!exerciseTitle || announced.current) {
+			return;
+		}
+		announced.current = true;
+		posthog.capture("sit_opened", { exercise: exerciseTitle, from });
+	}, [exerciseTitle, from, posthog]);
 
 	useEffect(() => {
 		if (standalone || started.current || !sessionId || !session) {
@@ -77,17 +103,50 @@ export function useSitData(): Sit {
 			return;
 		}
 		leaving.current = true;
+		// Only a run that had an exercise to play (not the empty or loading "Go back").
+		if (exerciseTitle) {
+			posthog.capture("sit_finished", {
+				completed,
+				exercise: exerciseTitle,
+				from,
+			});
+		}
 		if (standalone) {
 			// Finishing tends the kindling twig; leaving early leaves it untouched.
 			if (completed && stepId) {
 				await completeStep({ stepId }).catch(() => undefined);
 			}
-			router.back();
+			// From Today, a run to its end counts as a day showed up (the same credit as a
+			// tended breathing twig). It never holds up the way back; a failure is reported.
+			if (completed && standaloneTitle) {
+				completeStandalone({ title: standaloneTitle }).catch((error) =>
+					Sentry.captureException(error)
+				);
+			}
+			// A deep link has no history to go back to: Reflect, the landing, instead.
+			if (router.canGoBack()) {
+				router.back();
+			} else {
+				router.replace("/");
+			}
 			return;
 		}
 		await completePath(completed);
 		router.replace(afterPath("solo"));
 	};
+
+	// Android's back button leaves as the close does (swipe back is off): the path and the
+	// analytics see it, instead of the screen just popping.
+	useEffect(() => {
+		if (!focused) {
+			return;
+		}
+		const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+			finish(false);
+			return true;
+		});
+		return () => sub.remove();
+	});
 
 	let status: Sit["state"]["status"] = "ready";
 	if (result === undefined || !(standalone || session)) {
@@ -98,6 +157,12 @@ export function useSitData(): Sit {
 
 	return {
 		actions: {
+			begin: () => {
+				if (exerciseTitle && !begun.current) {
+					begun.current = true;
+					posthog.capture("sit_started", { exercise: exerciseTitle, from });
+				}
+			},
 			finish: (completed) => {
 				finish(completed);
 			},

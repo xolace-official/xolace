@@ -8,7 +8,16 @@ import {
 	SOFTEN_TOWARD_IT,
 	SPEAK_TO_IT,
 } from "./dev/fixtures";
-import { arcSize, canSwap, closeLabel, swapChoices } from "./sit-model";
+import {
+	arcSize,
+	canSwap,
+	closeLabel,
+	isStandalone,
+	sitFrom,
+	sitResult,
+	sitSource,
+	swapChoices,
+} from "./sit-model";
 
 describe("the screen around the beats", () => {
 	it("sizes the arcs by beat", () => {
@@ -24,6 +33,18 @@ describe("the screen around the beats", () => {
 		expect(closeLabel("kindling", "pre")).toBe("Back to your kindling");
 		expect(closeLabel("kindling", "play")).toBe("Leave Sit with this");
 		expect(closeLabel("reflect", "pre")).toBe("Leave Sit with this");
+		expect(closeLabel("today", "pre")).toBe("Back to Today");
+		expect(closeLabel("today", "close")).toBe("Leave Sit with this");
+	});
+
+	it("reads where it was opened, and runs on its own outside a reflection", () => {
+		expect(sitFrom("today")).toBe("today");
+		expect(sitFrom("kindling")).toBe("kindling");
+		expect(sitFrom(undefined)).toBe("reflect");
+		expect(sitFrom("anything")).toBe("reflect");
+		expect(isStandalone("today")).toBe(true);
+		expect(isStandalone("kindling")).toBe(true);
+		expect(isStandalone("reflect")).toBe(false);
 	});
 
 	it("offers “Something different” only within a reflection, twice at most", () => {
@@ -39,6 +60,7 @@ describe("the screen around the beats", () => {
 		expect(canSwap({ ...base, linkOn: false })).toBe(false);
 		expect(canSwap({ ...base, linkOn: false, stage: "pre" })).toBe(true);
 		expect(canSwap({ ...base, from: "kindling" })).toBe(false);
+		expect(canSwap({ ...base, from: "today" })).toBe(false);
 		expect(canSwap({ ...base, swaps: 2 })).toBe(false);
 		expect(canSwap({ ...base, kind: "prompt" })).toBe(false);
 		expect(canSwap({ ...base, sheetOpen: true })).toBe(false);
@@ -59,5 +81,47 @@ describe("the screen around the beats", () => {
 			},
 		]);
 		expect(swapChoices({ nextBest: null, reset: null }, "x")).toEqual([]);
+	});
+});
+
+describe("where Sit reads its exercise", () => {
+	const ids = { path: "path-session", route: "twig-session" };
+
+	it("reads a reflection's path session", () => {
+		expect(sitSource("reflect", ids)).toEqual({
+			sessionId: "path-session",
+			standalone: null,
+		});
+	});
+
+	it("reads a kindling twig's session from the route, or none", () => {
+		expect(sitSource("kindling", ids)).toEqual({
+			sessionId: "twig-session",
+			standalone: null,
+		});
+		expect(
+			sitSource("kindling", { path: "path-session", route: undefined })
+		).toEqual({
+			sessionId: null,
+			standalone: null,
+		});
+	});
+
+	it("plays Three breaths from Today, with no session", () => {
+		expect(sitSource("today", ids)).toEqual({
+			sessionId: null,
+			standalone: "reset",
+		});
+	});
+
+	it("composes the result from the read its source uses", () => {
+		const forSession = { exercise: "matched", slots: { mirror_line: "Mine." } };
+		expect(sitResult("reflect", forSession, "alone")).toBe(forSession);
+		expect(sitResult("today", forSession, "alone")).toEqual({
+			exercise: "alone",
+			slots: {},
+		});
+		expect(sitResult("today", undefined, undefined)).toBeUndefined();
+		expect(sitResult("today", undefined, null)).toBeNull();
 	});
 });

@@ -16,8 +16,8 @@ const fromXs = (count: number) =>
 	Array.from({ length: count }, (_, i) => burstFromX(i, count));
 
 describe("the doors", () => {
-	it("are Talk and Vent until Sit can start from Today", () => {
-		expect(DOORS).toEqual(["talk", "vent"]);
+	it("are Talk, Vent and Sit with this", () => {
+		expect(DOORS).toEqual(["talk", "vent", "sit"]);
 	});
 
 	it("burst from points centred on the hint line, 110 pt apart", () => {

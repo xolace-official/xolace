@@ -14,6 +14,7 @@ import { SitWithThisScreen } from "../sit-with-this-screen";
 import { LET_IT_LAND, REFLECT_SLOTS } from "./fixtures";
 
 const ACTIONS: Sit["actions"] = {
+	begin: () => undefined,
 	finish: () => router.back(),
 	openSwap: () => router.push("/dev/sit-with-this/swap-sheet"),
 };

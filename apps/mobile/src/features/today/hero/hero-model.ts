@@ -84,15 +84,10 @@ export const BURST = {
 } as const;
 
 /**
- * Sit with this joins the doors once Sit can start from Today on its own (`from=today`, its
- * own PR). Until then a cold Sit would wait for a session that never comes.
+ * The doors a hold on the card opens, in order. Sit with this runs on its own from Today
+ * (`/sit-with-this?from=today`: Three breaths, no session).
  */
-const SIT_DOOR = false;
-
-/** The doors a hold on the card opens, in order. */
-export const DOORS: readonly Door[] = SIT_DOOR
-	? ["talk", "vent", "sit"]
-	: ["talk", "vent"];
+export const DOORS: readonly Door[] = ["talk", "vent", "sit"];
 
 /** Where door `index` of `count` starts its burst: they converge from the hint line's centre. */
 export const burstFromX = (index: number, count: number): number =>

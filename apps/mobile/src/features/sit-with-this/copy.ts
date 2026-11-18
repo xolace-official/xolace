@@ -6,6 +6,8 @@
 export const COPY = {
 	/** The first screen's close, when Sit replays a kindling twig. */
 	backToKindling: "Back to your kindling",
+	/** The first screen's close, when Today's Sit door opened it. */
+	backToToday: "Back to Today",
 	begin: "Begin",
 	different: "Something different",
 	empty: { back: "Go back", body: "No exercise available right now." },

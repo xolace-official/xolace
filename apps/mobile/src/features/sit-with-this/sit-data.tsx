@@ -20,7 +20,12 @@ export type Sit = {
 		late: boolean;
 	};
 	actions: {
-		/** Done (true) or leaving early (false): records the path, then the session end. */
+		/** Begin on the first screen: the run starts (analytics only; the run is screen state). */
+		begin: () => void;
+		/**
+		 * Done (true) or leaving early (false). From a reflection: records the path, then the
+		 * session end. Standalone (kindling, Today): tends the twig or counts the day, then back.
+		 */
 		finish: (completed: boolean) => void;
 		/** "Something different": the swap sheet, over the paused exercise. */
 		openSwap: () => void;

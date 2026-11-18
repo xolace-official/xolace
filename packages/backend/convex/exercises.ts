@@ -11,6 +11,7 @@ import {
 } from "./_generated/server";
 import { matchExercise } from "./exercises/match";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
+import { recordActivity } from "./streaks/activityLog";
 
 /**
  * Compute allowed swap target IDs for a session: the reset exercise + the
@@ -253,6 +254,51 @@ export const getById = query({
 		return await ctx.db.get("exercises", args.exerciseId);
 	},
 	returns: v.union(exerciseDocValidator, v.null()),
+});
+
+/**
+ * An exercise that runs on its own, outside a session: Sit with this opened from Today
+ * (Three breaths, `reset`). Looked up by its stable internal title, since ids differ per
+ * deployment; null unless the row is active. Only the titles Today offers are accepted,
+ * so the catalogue can't be listed through it. Free, as `getById` is.
+ */
+export const getStandalone = query({
+	args: { title: v.literal("reset") },
+	handler: async (ctx, args) => {
+		await requireAuth(ctx);
+		const exercise = await ctx.db
+			.query("exercises")
+			.withIndex("by_title", (q) => q.eq("title", args.title))
+			.unique();
+		return exercise?.active ? exercise : null;
+	},
+	returns: v.union(exerciseDocValidator, v.null()),
+});
+
+/**
+ * Three breaths from Today ran to its end: the same streak credit as a tended breathing
+ * twig (`paths.completeStep`), through the same helper, so it's a day showed up and can
+ * unlock "sat-with-it" once. Several the same day are still one day and one award; no
+ * sparks beyond the achievement's. Nothing for a missing or inactive exercise.
+ */
+export const completeStandalone = mutation({
+	args: { title: v.literal("reset") },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
+		const exercise = await ctx.db
+			.query("exercises")
+			.withIndex("by_title", (q) => q.eq("title", args.title))
+			.unique();
+		if (!exercise?.active) {
+			return null;
+		}
+		await recordActivity(ctx, {
+			actionType: "sit_with_this",
+			emotionalProfileId: profile._id,
+		});
+		return null;
+	},
+	returns: v.null(),
 });
 
 /**
