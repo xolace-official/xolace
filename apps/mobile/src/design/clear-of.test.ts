@@ -15,4 +15,9 @@ describe("clearOf", () => {
 			/^rgba\(\d{1,2},\d{1,2},\d{1,2},0\)$/
 		);
 	});
+
+	it("keeps the colour at a given alpha", () => {
+		expect(clearOf("#191524", 0.19)).toBe("rgba(25,21,36,0.19)");
+		expect(clearOf("oklch(100% 0 0)", 0.63)).toBe("rgba(255,255,255,0.63)");
+	});
 });

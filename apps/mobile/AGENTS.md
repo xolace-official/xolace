@@ -47,7 +47,9 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   hex, even inline. Every theme defines the same variables. `useThemeColor` from
   `heroui-native` for JS values. A fixed palette is allowed only for the listed
   "printed object" surfaces (quotes poster, vent, auth, Lantern reader pages, Talk's
-  voice orbs, look glows, aurora and leave scrim), still as tokens in `global.css`.
+  voice orbs, look glows, aurora and leave scrim, Today's sky and light), still as
+  tokens in `global.css`. Today's sky is the hour's, not the theme's, and its gradient
+  stops stay strings in `features/today/sky/` because worklets interpolate them.
 - **Themes:** one registry, `src/design/themes.ts`; never hand-write a theme name
   list or `${id}-${mode}`. To add a theme: add an entry to `THEMES` with only the
   values it changes (production-style palettes go in `src/design/theme-values.ts`),

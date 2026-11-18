@@ -1,4 +1,4 @@
-/** A colour's clear twin, from any colour string the themes and tokens write (hex, rgb, oklch). Pure. */
+/** A colour's clear (or faint) twin, from any colour string the themes and tokens write (hex, rgb, oklch). Pure. */
 const HEX = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i;
 const RGB = /^rgba?\(\s*([\d.]+)[\s,]+([\d.]+)[\s,]+([\d.]+)/i;
 const OKLCH = /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.]+)/i;
@@ -30,22 +30,25 @@ function oklchToRgb(
 	];
 }
 
-/** The same colour, fully clear: a gradient fades into it instead of into grey. */
-export function clearOf(color: string): string {
+/**
+ * The same colour, fully clear: a gradient fades into it instead of into grey. With
+ * `alpha`, the same colour at that opacity (a soft copy's faint ink, a halo).
+ */
+export function clearOf(color: string, alpha = 0): string {
 	const hex = color.match(HEX);
 	if (hex) {
 		const v = Number.parseInt(hex[1], 16);
-		return `rgba(${(v >> 16) & CHANNEL},${(v >> 8) & CHANNEL},${v & CHANNEL},0)`;
+		return `rgba(${(v >> 16) & CHANNEL},${(v >> 8) & CHANNEL},${v & CHANNEL},${alpha})`;
 	}
 	const rgb = color.match(RGB);
 	if (rgb) {
-		return `rgba(${rgb[1]},${rgb[2]},${rgb[3]},0)`;
+		return `rgba(${rgb[1]},${rgb[2]},${rgb[3]},${alpha})`;
 	}
 	const ok = color.match(OKLCH);
 	if (ok) {
 		const l = Number(ok[1]) / (ok[2] ? PERCENT : 1);
 		const [r, g, b] = oklchToRgb(l, Number(ok[3]), Number(ok[4]));
-		return `rgba(${r},${g},${b},0)`;
+		return `rgba(${r},${g},${b},${alpha})`;
 	}
 	return "transparent";
 }

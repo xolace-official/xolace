@@ -1,0 +1,134 @@
+import { useAuth } from "@clerk/expo";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import { useAppActive } from "@/components/shared/use-app-active";
+import { useSessionMode } from "@/context/session-mode-context";
+import { playSoftPress } from "@/lib/haptics";
+import { useProfileSummary } from "@/lib/profile-summary";
+import { zustandJSONStorage } from "@/lib/storage/unified-storage";
+import type { Today } from "./today-data";
+import {
+	headerCopy,
+	introDue,
+	localDay,
+	nextStreakShown,
+	nextWakeHour,
+	parseIntroDay,
+	parseSeenStreak,
+	type StreakShown,
+	todayPhase,
+} from "./today-model";
+
+/**
+ * Device-only, per account (as `reflect-draft.ts`): the day the first open last played,
+ * and the streak as Today last showed it. A record for another account counts as none.
+ */
+const INTRO_KEY = "today-intro-day";
+const STREAK_KEY = "today-seen-streak";
+
+const keep = (key: string, value: object) =>
+	zustandJSONStorage.setItem(key, JSON.stringify(value)).catch(() => undefined);
+
+/**
+ * The time Today keeps: re-read when the app comes to the front (timers sleep in the
+ * background), when the next phase begins and at midnight while it's open.
+ */
+function useNow(): Date {
+	const active = useAppActive();
+	const [now, setNow] = useState(() => new Date());
+	useEffect(() => {
+		if (!active) {
+			return;
+		}
+		setNow(new Date());
+	}, [active]);
+	useEffect(() => {
+		const next = new Date(now);
+		// Hour 24 is the next midnight.
+		next.setHours(nextWakeHour(now.getHours()), 0, 1, 0);
+		const id = setTimeout(
+			() => setNow(new Date()),
+			next.getTime() - now.getTime()
+		);
+		return () => clearTimeout(id);
+	}, [now]);
+	return now;
+}
+
+/**
+ * The streak and the key that ignites its flame, once a day, when it grew. Worked out
+ * during render, so the chip gets the new count and the new key in the same render.
+ */
+function useStreak(
+	count: number | undefined,
+	day: string,
+	userId: string | null | undefined
+): Today["state"]["streak"] {
+	const [shown, setShown] = useState<StreakShown | null>(null);
+	const [toKeep, setToKeep] = useState<object | null>(null);
+	const step = userId
+		? nextStreakShown(shown, count, day, () =>
+				parseSeenStreak(zustandJSONStorage.getItem(STREAK_KEY), userId)
+			)
+		: null;
+	if (step) {
+		setShown(step.shown);
+		setToKeep({ ...step.keep, userId });
+	}
+	useEffect(() => {
+		if (toKeep) {
+			keep(STREAK_KEY, toKeep);
+		}
+	}, [toKeep]);
+	return shown ? { count: shown.count, igniteKey: shown.igniteKey } : null;
+}
+
+/** Whether the first open plays: once a day per account, worked out again when the day turns. */
+function useIntro(day: string, userId: string | null | undefined): boolean {
+	const due = () =>
+		Boolean(userId) &&
+		introDue(
+			parseIntroDay(zustandJSONStorage.getItem(INTRO_KEY), userId ?? ""),
+			day
+		);
+	const [intro, setIntro] = useState(() => ({ day, due: due(), userId }));
+	if (intro.day !== day || intro.userId !== userId) {
+		setIntro({ day, due: due(), userId });
+	}
+	useEffect(() => {
+		if (intro.due && intro.userId) {
+			keep(INTRO_KEY, { day: intro.day, userId: intro.userId });
+		}
+	}, [intro]);
+	return intro.due;
+}
+
+/** Today in the app: the profile summary, the hour and night mode, and the device. */
+export function useTodayData(): Today {
+	const summary = useProfileSummary();
+	const { userId } = useAuth();
+	const { isNight } = useSessionMode();
+	const now = useNow();
+	const day = localDay(now);
+	const phase = todayPhase(now.getHours(), isNight);
+	const weekday = now.toLocaleDateString(undefined, { weekday: "long" });
+	const { eyebrow, greeting } = headerCopy(
+		phase,
+		weekday,
+		summary?.displayName
+	);
+	const streak = useStreak(summary?.currentStreak, day, userId);
+	const intro = useIntro(day, userId);
+
+	return {
+		actions: {
+			openHelp: () => router.push("/crisis-resources"),
+			openReflect: () => {
+				playSoftPress();
+				router.dismissTo("/");
+			},
+			openStreak: () => router.navigate("/you"),
+		},
+		state: { day, eyebrow, greeting, intro, phase, streak },
+	};
+}

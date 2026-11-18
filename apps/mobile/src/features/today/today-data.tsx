@@ -1,0 +1,66 @@
+import { createContext, type ReactNode, use } from "react";
+import type { TodayPhase } from "./today-model";
+import { useTodayData } from "./use-today";
+
+/**
+ * Everything Today reads and does. Two adapters fill it: Convex and the device in the
+ * app (`TodayData`) and fixtures in its dev states (`dev/`). Scroll, clocks and the hold
+ * are screen state (`today-frame.ts`); only what is read, kept or navigated is here.
+ */
+export type Today = {
+	state: {
+		phase: TodayPhase;
+		/** "Thursday · evening". */
+		eyebrow: string;
+		/** "Good evening, Ama"; no name while the profile loads or offline. */
+		greeting: string;
+		/** The day streak; null until it's known (loading, offline). */
+		streak: {
+			count: number;
+			/** Grows once a day when the flame should ignite (the first thing that counted). */
+			igniteKey: number;
+		} | null;
+		/** The first open of the day: the greeting's words, the rise, the word's ink. */
+		intro: boolean;
+		/** The local day ("YYYY-MM-DD"): a new day remounts the page, so its intro can play. */
+		day: string;
+	};
+	actions: {
+		/** The lifebuoy: Get help. */
+		openHelp: () => void;
+		/** The streak chip: where the streak lives (You). */
+		openStreak: () => void;
+		/** The toolbar's Reflect pill and, until S2, the Reflect card. */
+		openReflect: () => void;
+	};
+};
+
+const TodayContext = createContext<Today | null>(null);
+
+export function TodayProvider({
+	value,
+	children,
+}: {
+	value: Today;
+	children: ReactNode;
+}) {
+	return <TodayContext value={value}>{children}</TodayContext>;
+}
+
+export function useToday(): Today {
+	const today = use(TodayContext);
+	if (!today) {
+		throw new Error("useToday needs a TodayProvider above it");
+	}
+	return today;
+}
+
+/**
+ * The app's adapter: Today on Convex, the device and the router.
+ * @public The Today tab's route moves onto it in S1d, with the last modules; until then the
+ * tab still hosts Discovery and Today opens from its dev states.
+ */
+export function TodayData({ children }: { children: ReactNode }) {
+	const value = useTodayData();
+	return <TodayProvider value={value}>{children}</TodayProvider>;
+}
