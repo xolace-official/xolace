@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+	OFFERS_USED,
+	TRIAL_AND_DISCOUNT,
+	TRIAL_ONLY,
+} from "./dev/sample-plans";
+import {
 	ARRIVE_END,
 	HAPPY_AT,
+	keepTalkingLabel,
 	litAt,
 	SAID_MAX,
 	saidWords,
@@ -13,8 +19,21 @@ import {
 describe("saidWords", () => {
 	it("quotes what they said, without its closing full stop", () => {
 		expect(saidWords("Work won’t leave my head.")).toBe(
-			"Work won’t leave my head"
+			"work won’t leave my head"
 		);
+	});
+
+	it("keeps the capital on I, its contractions and an acronym", () => {
+		expect(saidWords("I can't sleep")).toBe("I can't sleep");
+		expect(saidWords("I’m so tired")).toBe("I’m so tired");
+		expect(saidWords("ADHD is loud today")).toBe("ADHD is loud today");
+		expect(saidWords("It won't stop")).toBe("it won't stop");
+	});
+
+	it("never cuts an emoji in half", () => {
+		const said = saidWords(`a${"😭".repeat(60)}`) ?? "";
+		expect(said).toBe(`a${"😭".repeat(SAID_MAX - 1)}…`);
+		expect(said.isWellFormed()).toBe(true);
 	});
 
 	it("falls back to the plain line when nothing was said", () => {
@@ -109,5 +128,23 @@ describe("rows", () => {
 				viewH: 400,
 			})
 		).toBeNull();
+	});
+});
+
+describe("keepTalkingLabel", () => {
+	it("names the free week on yearly when it has one", () => {
+		expect(keepTalkingLabel("annual", TRIAL_ONLY)).toBe(
+			"Keep talking · 7 days free"
+		);
+	});
+
+	it("promises no week the store won't give", () => {
+		expect(keepTalkingLabel("annual", OFFERS_USED)).toBe("Keep talking");
+	});
+
+	it("follows the plan picked, with its discount", () => {
+		expect(keepTalkingLabel("monthly", TRIAL_AND_DISCOUNT)).toBe(
+			"Keep talking · 40% off"
+		);
 	});
 });

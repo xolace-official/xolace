@@ -11,6 +11,8 @@ const HEAD_MAX_SCALE = 1.3;
 
 type Props = {
 	clock: SharedValue<number>;
+	/** The row the person opened, which VoiceOver moves into. */
+	focused: RowId | null;
 	mounted: readonly RowId[];
 	onHeight: (id: RowId, height: number) => void;
 	onToggle: (id: RowId) => void;
@@ -20,7 +22,7 @@ type Props = {
 	voice: VoiceId;
 };
 
-export function FirstLookTable({ mounted, open, ...rest }: Props) {
+export function FirstLookTable({ focused, mounted, open, ...rest }: Props) {
 	return (
 		<View
 			accessibilityLabel={FIRST_LOOK.a11y.table}
@@ -57,6 +59,7 @@ export function FirstLookTable({ mounted, open, ...rest }: Props) {
 			{FIRST_LOOK.rows.map((row, i) => (
 				<TableRow
 					{...rest}
+					focus={focused === row.id}
 					index={i}
 					key={row.id}
 					mounted={mounted.includes(row.id)}

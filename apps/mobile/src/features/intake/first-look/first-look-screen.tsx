@@ -61,6 +61,7 @@ export function FirstLookScreen({ hold }: { hold?: SceneHold }) {
 				<FirstLookHeader face={scene.face} palette={scene.palette} />
 				<FirstLookTable
 					clock={scene.clock}
+					focused={scene.focused}
 					mounted={scene.mounted}
 					onHeight={scroll.onHeight}
 					onToggle={onToggle}

@@ -71,6 +71,28 @@ describe("intake events (#704)", () => {
 		});
 	});
 
+	describe("the first look (S18)", () => {
+		it("closes the step's paywall_opened with a paywall_dismissed on Continue free", () => {
+			analytics.trackIntakeStarted(posthog, 0);
+			analytics.trackPlusShown(posthog);
+			analytics.trackPlusContinuedFree(posthog, true);
+			const surface = analytics.INTAKE_PLUS_SURFACE;
+			expect(captured("paywall_opened")).toEqual([
+				{ session_count: 0, surface },
+			]);
+			expect(captured("paywall_dismissed")).toEqual([
+				{ session_count: 0, surface },
+			]);
+		});
+
+		it("dismisses no paywall for someone it wasn't offered to", () => {
+			analytics.trackIntakeStarted(posthog, 0);
+			analytics.trackPlusContinuedFree(posthog, false);
+			expect(captured("intake_plus_continued_free")).toHaveLength(1);
+			expect(captured("paywall_dismissed")).toEqual([]);
+		});
+	});
+
 	describe("reading the first answer (#708)", () => {
 		it("records the follow-up's field, never its question or the reply", () => {
 			analytics.trackIntakeStarted(posthog, 0);

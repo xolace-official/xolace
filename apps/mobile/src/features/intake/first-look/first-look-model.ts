@@ -1,6 +1,9 @@
 // The first look's rules, pure: what "You said" quotes, when each part of the arrival lands,
-// which face palette a voice gives Flux, and where opening a row scrolls to.
+// which face palette a voice gives Flux, where opening a row scrolls to, and the Talk demo's
+// way on.
 import type { PaletteName } from "@/components/xolace-face/face-palette";
+import { type Plans, planTag } from "@/features/purchases/plans";
+import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 import { FIRST_LOOK, type RowId, type VoiceId } from "./copy";
 
 /** Longer answers are cut at a word, so the line stays a line or two. */
@@ -8,23 +11,47 @@ export const SAID_MAX = 48;
 const ELLIPSIS = "…";
 const TRAILING = /[\s.,;:!?…]+$/u;
 
+/** Split into what a reader sees as characters, so a cut never halves an emoji. Hermes may
+ * lack `Intl.Segmenter`; code points still never leave half a surrogate pair. */
+function graphemes(text: string): string[] {
+	if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+		const segmenter = new Intl.Segmenter(undefined, {
+			granularity: "grapheme",
+		});
+		return Array.from(segmenter.segment(text), (part) => part.segment);
+	}
+	return Array.from(text);
+}
+
+/** "I", its contractions, and an acronym keep their capital mid-sentence. */
+const KEEPS_CAPITAL = /^(I(?:['’]\p{L}+)?|\p{Lu}{2,})(?![\p{Ll}])/u;
+
+/** Lowercased at the start, since the words sit mid-sentence after "You said". */
+const midSentence = (words: string) =>
+	KEEPS_CAPITAL.test(words)
+		? words
+		: `${words.charAt(0).toLocaleLowerCase()}${words.slice(1)}`;
+
 /**
  * The person's own words for "You said …", or null for the plain line: nothing said
  * (skipped), or only punctuation. Whitespace collapses, the closing full stop goes (the
- * sentence goes on), and a long answer is cut at a word with "…".
+ * sentence goes on), the first letter is lowercased unless it's "I" or an acronym, and a long
+ * answer is cut at a word with "…", counted in characters as a reader sees them.
  */
 export function saidWords(answer: string): string | null {
 	const words = answer.replace(/\s+/gu, " ").replace(TRAILING, "").trim();
 	if (!/[\p{L}\p{N}]/u.test(words)) {
 		return null;
 	}
-	if (words.length <= SAID_MAX) {
-		return words;
+	const chars = graphemes(words);
+	if (chars.length <= SAID_MAX) {
+		return midSentence(words);
 	}
-	const cut = words.slice(0, SAID_MAX + 1);
+	const cut = chars.slice(0, SAID_MAX + 1).join("");
 	const space = cut.lastIndexOf(" ");
-	const head = space > 0 ? cut.slice(0, space) : words.slice(0, SAID_MAX);
-	return `${head.replace(TRAILING, "")}${ELLIPSIS}`;
+	const head =
+		space > 0 ? cut.slice(0, space) : chars.slice(0, SAID_MAX).join("");
+	return midSentence(`${head.replace(TRAILING, "")}${ELLIPSIS}`);
 }
 
 // ---- the arrival (the board's play()): one clock, in ms ----
@@ -83,3 +110,10 @@ export const VOICE_PALETTE = {
 	vesper: "dusk",
 	wren: "ember",
 } as const satisfies Record<VoiceId, PaletteName>;
+
+/** The Talk demo's way on (#714): it buys the plan picked on the first look, so it names that
+ * plan's week or discount, and only when the store will give it. */
+export const keepTalkingLabel = (plan: PlanId, plans: Plans): string => {
+	const tag = planTag(plan, plans);
+	return tag ? `Keep talking · ${tag}` : "Keep talking";
+};

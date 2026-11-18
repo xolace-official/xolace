@@ -2,7 +2,6 @@ import type { PurchasesPackage } from "react-native-purchases";
 import { describe, expect, it } from "vitest";
 import {
 	defaultPlan,
-	keepTalkingLabel,
 	type Plans,
 	planCta,
 	planPrice,
@@ -96,25 +95,25 @@ describe("planCta", () => {
 describe("planPriceLine", () => {
 	it("says what the free week turns into", () => {
 		expect(planPriceLine("annual", plans(yearlyWithWeek, null))).toBe(
-			"Then $49.99 a year. Cancel any time."
+			"Then $49.99 a year. Renews automatically. Cancel any time."
 		);
 	});
 
 	it("gives yearly's price without a week", () => {
 		expect(planPriceLine("annual", plans(yearlyPlain, null))).toBe(
-			"$49.99 a year. Cancel any time."
+			"$49.99 a year. Renews automatically. Cancel any time."
 		);
 	});
 
 	it("gives monthly's discount and what it renews at", () => {
 		expect(planPriceLine("monthly", plans(null, monthlyDiscounted))).toBe(
-			"$5.99/mo for your first 3 months, then $9.99/mo. Cancel any time."
+			"$5.99/mo for your first 3 months, then $9.99/mo. Renews automatically. Cancel any time."
 		);
 	});
 
 	it("gives monthly's plain price", () => {
 		expect(planPriceLine("monthly", plans(null, monthlyPlain))).toBe(
-			"$9.99 a month. Cancel any time."
+			"$9.99 a month. Renews automatically. Cancel any time."
 		);
 	});
 
@@ -142,29 +141,6 @@ describe("planTag", () => {
 	});
 });
 
-describe("keepTalkingLabel", () => {
-	it("names the free week on yearly when it has one", () => {
-		expect(
-			keepTalkingLabel("annual", plans(yearlyWithWeek, monthlyPlain))
-		).toBe("Keep talking · 7 days free");
-	});
-
-	it("promises no week the store won't give", () => {
-		expect(
-			keepTalkingLabel("annual", plans(yearlyWithWeek, monthlyPlain, false))
-		).toBe("Keep talking");
-		expect(keepTalkingLabel("annual", plans(yearlyPlain, monthlyPlain))).toBe(
-			"Keep talking"
-		);
-	});
-
-	it("follows the plan picked, with its discount", () => {
-		expect(
-			keepTalkingLabel("monthly", plans(yearlyWithWeek, monthlyDiscounted))
-		).toBe("Keep talking · 40% off");
-	});
-});
-
 describe("planPrice", () => {
 	const yearlyPerMonth = pkg({
 		price: 59.99,
@@ -181,9 +157,9 @@ describe("planPrice", () => {
 		);
 	});
 
-	it("gives a monthly discount as its first-term price", () => {
+	it("gives a monthly discount per month, for its term", () => {
 		expect(planPrice("monthly", plans(yearlyPlain, monthlyDiscounted))).toBe(
-			"$5.99 first 3 months"
+			"$5.99/mo for 3 months"
 		);
 		expect(
 			planPrice("monthly", plans(yearlyPlain, monthlyDiscounted, false))

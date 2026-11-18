@@ -27,6 +27,8 @@ const CHECK_FROM = 0.4;
 
 export type RowProps = {
 	clock: SharedValue<number>;
+	/** Opened by the person, so VoiceOver moves into it. */
+	focus: boolean;
 	index: number;
 	mounted: boolean;
 	/** The open preview's laid-out height, for scrolling to it. */
@@ -72,6 +74,7 @@ export function TableRow(props: RowProps) {
 	}));
 
 	const { body, bodyRef, chevron, measured } = useRowOpen({
+		focus: props.focus,
 		free: row.free,
 		height: row.height,
 		open,
@@ -84,7 +87,7 @@ export function TableRow(props: RowProps) {
 				<AnimatedAppText
 					className="shrink"
 					maxFontSizeMultiplier={TITLE_MAX_SCALE}
-					numberOfLines={1}
+					numberOfLines={2}
 					style={title}
 					variant="callout"
 					weight="semibold"
@@ -143,7 +146,10 @@ export function TableRow(props: RowProps) {
 			)}
 			{row.free ? null : (
 				<Animated.View
+					// A closed row's preview is out of the accessibility tree, not just clipped.
+					accessibilityElementsHidden={!open}
 					className="overflow-hidden"
+					importantForAccessibility={open ? "auto" : "no-hide-descendants"}
 					style={[{ marginRight: BODY_RIGHT }, body]}
 				>
 					{mounted ? (

@@ -290,9 +290,17 @@ export function trackPlusPurchased(
 	);
 }
 
-/** "Continue free" (or "Continue", for someone who has Xolace+). */
-export function trackPlusContinuedFree(posthog: PostHog) {
+/** "Continue free" (or "Continue", for someone who has Xolace+). `offered`: the step was
+ * counted as shown, so its `paywall_opened` gets the `paywall_dismissed` that closes it, as
+ * the paywall's close button sends it. */
+export function trackPlusContinuedFree(posthog: PostHog, offered: boolean) {
 	posthog.capture("intake_plus_continued_free", plusProps({}));
+	if (offered) {
+		posthog.capture("paywall_dismissed", {
+			session_count: 0,
+			surface: INTAKE_PLUS_SURFACE,
+		});
+	}
 }
 
 /** "Try it" on the Talk card opened the Talk demo (#714). */

@@ -12,7 +12,8 @@ type PlanOffer = { eligible: boolean; pkg: PurchasesPackage | null };
 export type Plans = Record<PlanId, PlanOffer>;
 
 const PLAIN_CTA = "Continue with Plus";
-const CANCEL = "Cancel any time.";
+/** Auto-renewal said where the price is (App Review 3.1.2), as the paywall's CTA says it. */
+const CANCEL = "Renews automatically. Cancel any time.";
 
 const introOf = ({ eligible, pkg }: PlanOffer) =>
 	introOfferOf(pkg?.product, eligible);
@@ -57,7 +58,8 @@ export function planPriceLine(plan: PlanId, plans: Plans): string | null {
 	return `${pkg.product.priceString} a ${per}. ${CANCEL}`;
 }
 
-/** A plan's price on its card: yearly also per month, when the store works it out. */
+/** A plan's price on its card, always per period: yearly also per month when the store works
+ * it out, a monthly discount per month for its term. */
 export function planPrice(plan: PlanId, plans: Plans): string | null {
 	const product = plans[plan].pkg?.product;
 	if (!product) {
@@ -65,7 +67,7 @@ export function planPrice(plan: PlanId, plans: Plans): string | null {
 	}
 	const intro = discountOn(plan, plans);
 	if (intro) {
-		return `${intro.price} first ${intro.term}`;
+		return `${intro.price}/mo for ${intro.term}`;
 	}
 	if (plan === "monthly") {
 		return `${product.priceString}/mo`;
@@ -83,10 +85,3 @@ export function planTag(plan: PlanId, plans: Plans): string | null {
 	const intro = discountOn(plan, plans);
 	return intro ? `${intro.percentOff}% off` : null;
 }
-
-/** The Talk demo's way on (#714): it buys the plan picked on the step, so it names that
- * plan's week or discount, and only when the store will give it. */
-export const keepTalkingLabel = (plan: PlanId, plans: Plans): string => {
-	const tag = planTag(plan, plans);
-	return tag ? `Keep talking · ${tag}` : "Keep talking";
-};

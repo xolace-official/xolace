@@ -60,8 +60,8 @@ export function useRowScroll(reduced: boolean) {
 			return;
 		}
 		if (reduced) {
-			follow.set(target);
-			follow.set(IDLE);
+			// Nothing to follow: the row is already at its full height.
+			ref.current?.scrollTo({ animated: false, y: target });
 			return;
 		}
 		follow.set(scrollY.get());

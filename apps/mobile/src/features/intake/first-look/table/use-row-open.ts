@@ -1,6 +1,6 @@
 // A Plus row's opening: one progress times the preview's measured height (the board's until it
-// lays out), so a larger text size opens to fit instead of clipping. An opened row moves
-// VoiceOver focus into its preview.
+// lays out), so a larger text size opens to fit instead of clipping. A row the person opened
+// moves VoiceOver focus into its preview; the arrival opening Talk doesn't.
 import { type ComponentRef, useEffect, useRef } from "react";
 import { AccessibilityInfo, findNodeHandle, type View } from "react-native";
 import {
@@ -18,13 +18,14 @@ import {
 } from "../first-look-motion";
 
 type Options = {
+	focus: boolean;
 	free: boolean;
 	height: number;
 	open: boolean;
 	reduced: boolean;
 };
 
-export function useRowOpen({ free, height, open, reduced }: Options) {
+export function useRowOpen({ focus, free, height, open, reduced }: Options) {
 	const bodyRef = useRef<ComponentRef<typeof View>>(null);
 	const p = useSharedValue(open ? 1 : 0);
 	const o = useSharedValue(open ? 1 : 0);
@@ -51,7 +52,7 @@ export function useRowOpen({ free, height, open, reduced }: Options) {
 	}, [free, o, open, p, reduced]);
 
 	useEffect(() => {
-		if (!open) {
+		if (!focus) {
 			return;
 		}
 		let alive = true;
@@ -64,7 +65,7 @@ export function useRowOpen({ free, height, open, reduced }: Options) {
 		return () => {
 			alive = false;
 		};
-	}, [open]);
+	}, [focus]);
 
 	const body = useAnimatedStyle(() => ({
 		height: p.get() * natural.get(),

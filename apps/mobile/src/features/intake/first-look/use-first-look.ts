@@ -13,18 +13,14 @@ import {
 	trackTalkDemoOpened,
 } from "@/features/intake/analytics";
 import type { PlusOutcome } from "@/features/intake/v2/machine";
-import {
-	defaultPlan,
-	keepTalkingLabel,
-	startsTrial,
-} from "@/features/purchases/plans";
+import { defaultPlan, startsTrial } from "@/features/purchases/plans";
 import { useRevenueCat } from "@/features/purchases/revenuecat-context";
 import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 import { usePlans } from "@/features/purchases/use-plans";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import type { RowId } from "./copy";
 import type { FirstLookValue } from "./first-look-data";
-import { saidWords } from "./first-look-model";
+import { keepTalkingLabel, saidWords } from "./first-look-model";
 
 export type FirstLookStepProps = {
 	/** What they told Flux, for "You said …"; empty when they skipped. */
@@ -96,12 +92,13 @@ export function useFirstLook({
 
 	const buy = async () => {
 		const pkg = plans[plan].pkg;
-		// Xolace+ can land while the demo is open: its "Keep talking" then sells nothing.
-		if (!pkg || buying || isPlus) {
+		// Xolace+ can land while the demo is open: its "Keep talking" then sells nothing. The
+		// ref, not `buying`, guards: two taps in one frame both see `buying` still false.
+		if (!pkg || purchasing.current || isPlus) {
 			return;
 		}
-		const trial = startsTrial(plan, plans);
 		purchasing.current = true;
+		const trial = startsTrial(plan, plans);
 		setBuying(true);
 		onStoreCall(true);
 		try {
@@ -156,7 +153,7 @@ export function useFirstLook({
 			buy: () => void buy(),
 			continueFree: () => {
 				settled.current = true;
-				trackPlusContinuedFree(posthog);
+				trackPlusContinuedFree(posthog, shown.current);
 				onExit("dismissed");
 			},
 			pick: (next) => {

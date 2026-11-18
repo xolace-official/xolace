@@ -5,11 +5,12 @@ import type { Plans } from "@/features/purchases/plans";
 import { defaultPlan } from "@/features/purchases/plans";
 import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 import { FirstLookProvider, type FirstLookValue } from "../first-look-data";
+import { saidWords } from "../first-look-model";
 import { FirstLookScreen } from "../first-look-screen";
 import type { SceneHold } from "../use-first-look-scene";
 import { TRIAL_AND_DISCOUNT } from "./sample-plans";
 
-const SAMPLE_SAID = "Work won’t leave my head";
+const SAMPLE_SAID = saidWords("Work won’t leave my head.");
 
 type Props = Partial<Omit<FirstLookValue["state"], "plan" | "plans">> & {
 	hold?: SceneHold;

@@ -45,6 +45,8 @@ export function useFirstLookScene(
 		return first ? [first] : [];
 	});
 	const [voice, setVoice] = useState<VoiceId>(hold?.voice ?? "flux");
+	// The row the person opened themselves, which VoiceOver follows; the arrival's Talk isn't.
+	const [focused, setFocused] = useState<RowId | null>(null);
 	const lit = settled || heldAt >= HAPPY_AT;
 	const face = useFace(lit ? MOOD_POSES.happy : MOOD_POSES.idle);
 	const clock = useSharedValue(heldAt >= 0 ? heldAt : settled ? SETTLED : 0);
@@ -94,6 +96,7 @@ export function useFirstLookScene(
 		Presets.System.selection();
 		const next = toggled(open, id);
 		setOpen(next);
+		setFocused(next);
 		if (next) {
 			show(next);
 		}
@@ -113,6 +116,7 @@ export function useFirstLookScene(
 	return {
 		clock,
 		face,
+		focused,
 		later,
 		mounted,
 		open,
