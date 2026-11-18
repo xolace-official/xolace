@@ -2751,6 +2751,13 @@ export default defineSchema({
 		// false → ephemeral / vent-originated → distiller/anonymizer skip it.
 		kept: v.optional(v.boolean()),
 
+		// When this session's kindling started being set up: stamped where
+		// `generate.run` is queued for a Plus member whose session qualifies
+		// (paths/settingUp.ts), removed when that run ends, whatever the outcome,
+		// or by the backstop. Present only while setting up, so Today's card can
+		// say so (`paths.settingUp.get`). Never set on older rows.
+		kindlingSettingUpAt: v.optional(v.number()),
+
 		// Which exercise the matcher picked at mirror time.
 		matchedExerciseId: v.optional(v.id("exercises")),
 
@@ -2988,7 +2995,14 @@ export default defineSchema({
 		])
 
 		// After-talk review queue (#606): flagged talks, newest first.
-		.index("by_talkFlaggedAt", ["talkFlaggedAt"]),
+		.index("by_talkFlaggedAt", ["talkFlaggedAt"])
+
+		// Today's kindling card: this profile's session whose kindling is being
+		// set up, newest first, in one read (`paths.settingUp.get`).
+		.index("by_emotionalProfileId_and_kindlingSettingUpAt", [
+			"emotionalProfileId",
+			"kindlingSettingUpAt",
+		]),
 
 	// What a profile spent sparks on (#698), one row per purchase. Written only
 	// through convex/achievements/sparks.ts, in the transaction that lowers

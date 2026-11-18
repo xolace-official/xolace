@@ -10,6 +10,7 @@ import { isTryThis } from "./ai/paths/tryThis";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
 import { hasPremium, requirePremium } from "./lib/premium";
 import { trackPeaksValidator } from "./lib/validators";
+import { qualifiesForKindling, queueKindling } from "./paths/settingUp";
 import { posthog } from "./posthog";
 import { recordActivity } from "./streaks/activityLog";
 import type { Understanding } from "./understanding";
@@ -235,10 +236,7 @@ export const isKindlingQualifyingSession = query({
 			internal.understanding.getUnderstanding,
 			{ sessionId: session._id }
 		);
-		return (
-			understanding?.supportNeed === "light" ||
-			understanding?.supportNeed === "active"
-		);
+		return qualifiesForKindling(understanding);
 	},
 	returns: v.boolean(),
 });
@@ -438,10 +436,7 @@ export const requestKindling = mutation({
 			args.sessionId
 		);
 		if (await hasPremium(ctx, profile)) {
-			await ctx.scheduler.runAfter(0, internal.ai.paths.generate.run, {
-				emotionalProfileId: profile._id,
-				sessionId: session._id,
-			});
+			await queueKindling(ctx, profile._id, session._id);
 		} else {
 			await ctx.db.patch("emotional_profiles", profile._id, {
 				pendingKindlingSessionId: session._id,
