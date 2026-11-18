@@ -203,17 +203,27 @@ export function isMissingMoment(error: unknown) {
 	);
 }
 
+/** A first sentence shorter than this is likely an abbreviation's ("Dr."), not a sentence. */
+const SEED_MIN_WORDS = 3;
+const SEED_MIN_CHARS = 12;
+
 /**
  * What "Reflect on this again" seeds Reflect's question with: the first sentence of what you
- * wrote, so it fits as a prompt (Reflect shows it as `You wrote: “…”`). A talk, or a moment
- * with no words kept, opens Reflect unseeded.
+ * wrote, so it fits as a prompt (Reflect shows it as `You wrote: “…”`). When that "sentence" is
+ * too short to be one (cut at "Dr."), the first line instead. A talk, or a moment with no words
+ * kept, opens Reflect unseeded.
  */
 export function reflectSeed(said: string | null): string | null {
-	const first = said
-		?.trim()
-		.split(/(?<=[.!?])\s/)[0]
-		?.trim();
-	return first ? first : null;
+	const text = said?.trim();
+	if (!text) {
+		return null;
+	}
+	const sentence = text.split(/(?<=[.!?])\s/)[0]?.trim() ?? "";
+	const words = sentence.split(/\s+/).length;
+	if (words >= SEED_MIN_WORDS && sentence.length >= SEED_MIN_CHARS) {
+		return sentence;
+	}
+	return text.split("\n")[0]?.trim() || null;
 }
 
 export function momentOf(s: MomentSession, now: Date): MomentView {

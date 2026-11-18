@@ -60,6 +60,24 @@ export function useReflectBridge(
 	// left while still writing, it would greet the next open with a reply nobody is making.
 	const replySeed = useAppStore((s) => s.replySeed);
 	const clearReplySeed = useAppStore((s) => s.clearReplySeed);
+	// A seed (a quote, a moment) that lands on a kept draft would set its question over words it
+	// isn't about: the draft wins, as a composer-open request does. Checked once per seed, on
+	// arrival (the draft is read at mount), so typing under an accepted seed never clears it.
+	const seen = useRef<string | null>(null);
+	useEffect(() => {
+		if (!replySeed) {
+			seen.current = null;
+			return;
+		}
+		if (seen.current === replySeed) {
+			return;
+		}
+		seen.current = replySeed;
+		if (hasDraft && isWriting(screen)) {
+			clearReplySeed();
+			toast(COPY.write.draftStillHere);
+		}
+	}, [replySeed, hasDraft, screen, clearReplySeed]);
 	useEffect(() => {
 		if (replySeed && !isWriting(screen) && screen !== "processing") {
 			clearReplySeed();

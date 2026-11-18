@@ -181,6 +181,17 @@ describe("reflectSeed", () => {
 		);
 	});
 
+	it("doesn't cut at an abbreviation: the first line instead", () => {
+		expect(reflectSeed("Dr. Mensah said I should rest.\nI can't.")).toBe(
+			"Dr. Mensah said I should rest."
+		);
+		expect(reflectSeed("Ok. Not really.")).toBe("Ok. Not really.");
+	});
+
+	it("keeps a short sentence that is a sentence", () => {
+		expect(reflectSeed("I miss her so. Every day.")).toBe("I miss her so.");
+	});
+
 	it("has nothing to seed from a talk or an empty moment", () => {
 		expect(reflectSeed(null)).toBeNull();
 		expect(reflectSeed("   ")).toBeNull();
