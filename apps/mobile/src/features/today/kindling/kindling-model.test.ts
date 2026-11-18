@@ -327,6 +327,32 @@ describe("keepKindling (the last snapshot once the server closes it)", () => {
 		expect(keepKindling(open, null, ended({ c: "skipped" }), true)).toBeNull();
 	});
 
+	it("keeps a passed-by step unlit beside the one tended", () => {
+		const kept = keepKindling(
+			{
+				closed: false,
+				seen: false,
+				view: {
+					id: "k1",
+					twigs: [
+						twig("done", "a"),
+						twig("pending", "b"),
+						twig("pending", "c"),
+					],
+				},
+			},
+			null,
+			ended({ b: "done", c: "skipped" }),
+			true
+		);
+		expect(kept?.closed).toBe(true);
+		expect(kept?.view.twigs.map((t) => t.state)).toEqual([
+			"done",
+			"done",
+			"skipped",
+		]);
+	});
+
 	it("drops it on the next blur once Today has shown it", () => {
 		const closed = keepKindling(open, null, ended({ c: "done" }), false);
 		const seen = keepKindling(closed ?? null, null, undefined, true);
