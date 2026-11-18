@@ -1,20 +1,19 @@
 /** The thread and a profile on fixtures, through the same providers as the app. */
 import { useState } from "react";
 import type { AgeGate } from "../../age-gate/use-age-gate";
-import { rateCtaState } from "../../chat-rules";
 import { NOW } from "../../dev/fixtures";
+import { deviceClock } from "../../device-clock";
 import {
 	XolacerProvider,
 	type XolacerScreenData,
 } from "../../xolacer/xolacer-data";
-import { type Profile, profileView } from "../../xolacer/xolacer-model";
+import { type Profile, xolacerState } from "../../xolacer/xolacer-model";
 import { XolacerScreen } from "../../xolacer/xolacer-screen";
 import { ThreadProvider, type ThreadScreenData } from "../thread-data";
 import {
 	type StreamStatus,
-	statusBar,
 	type ThreadConversation,
-	threadBody,
+	threadState,
 } from "../thread-model";
 import { ThreadScreen } from "../thread-screen";
 import {
@@ -25,6 +24,17 @@ import {
 } from "./dev-stream";
 
 const noop = () => undefined;
+
+/** A fixture as the query returns it: `undefined` while loading, `null` once gone. */
+function settled<T>(
+	value: T,
+	phase?: "loading" | "gone"
+): T | null | undefined {
+	if (phase === "loading") {
+		return undefined;
+	}
+	return phase === "gone" ? null : value;
+}
 
 const AGE_GATE: AgeGate = {
 	close: noop,
@@ -82,21 +92,12 @@ export function FixtureThread({
 			retry: noop,
 		},
 		ageGate: AGE_GATE,
-		state: phase
-			? { phase }
-			: {
-					bar: statusBar(conversation),
-					blocking: {
-						history: Boolean(conversation.streamChannelId),
-						open: blockOpen,
-						pending: false,
-					},
-					body: threadBody(conversation, stream),
-					channel,
-					conversation,
-					phase: "ready",
-					rate: rateCtaState(conversation),
-				},
+		state: threadState({
+			blocking: { open: blockOpen, pending: false },
+			channel,
+			conversation: settled(conversation, phase),
+			stream,
+		}),
 	};
 	return (
 		<DevChat client={client} online={online}>
@@ -110,11 +111,12 @@ export function FixtureThread({
 export function FixtureXolacer({
 	profile,
 	phase,
-	others = null,
+	specialty,
 }: {
 	profile: Profile;
 	phase?: "loading" | "gone";
-	others?: string | null;
+	/** The route's specialty, as the roster's filter passes it. */
+	specialty?: string;
 }) {
 	const [blockOpen, setBlockOpen] = useState(false);
 	const [primerMode, setPrimer] = useState<"gate" | "reference" | null>(null);
@@ -134,27 +136,15 @@ export function FixtureXolacer({
 			report: noop,
 		},
 		ageGate: AGE_GATE,
-		state: phase
-			? { phase }
-			: {
-					blocking: { history: false, open: blockOpen, pending: false },
-					id: profile.xolacerProfileId,
-					isSelf: profile.isSelf,
-					menu: profile.isSelf
-						? null
-						: {
-								canBlock: profile.conversation !== null,
-								rate: rateCtaState(profile),
-							},
-					muted: !profile.available,
-					others,
-					phase: "ready",
-					photoUrl: profile.photoUrl,
-					present: profile.present,
-					primer: primerMode,
-					sending: false,
-					view: profileView(profile, NOW),
-				},
+		state: xolacerState({
+			blocking: { open: blockOpen, pending: false },
+			locale: deviceClock().locale,
+			now: NOW,
+			primer: primerMode,
+			profile: settled(profile, phase),
+			sending: false,
+			specialty,
+		}),
 	};
 	return (
 		<XolacerProvider value={value}>

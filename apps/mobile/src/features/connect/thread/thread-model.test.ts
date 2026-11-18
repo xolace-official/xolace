@@ -14,6 +14,7 @@ import {
 	resourceRow,
 	statusBar,
 	threadBody,
+	threadState,
 	threadSubtitle,
 } from "./thread-model";
 
@@ -151,5 +152,52 @@ describe("resourceRow", () => {
 		expect(
 			resourceRow({ label: "Text HOME", type: "text", value: "to 741741" })
 		).toMatchObject({ action: null, url: null });
+	});
+});
+
+describe("threadState", () => {
+	const base = {
+		blocking: { open: false, pending: false },
+		channel: null,
+		stream: "ready" as const,
+	};
+
+	it("loads, then says the thread is gone", () => {
+		expect(threadState({ ...base, conversation: undefined })).toEqual({
+			phase: "loading",
+		});
+		expect(threadState({ ...base, conversation: null })).toEqual({
+			phase: "gone",
+		});
+	});
+
+	it("says messages stay when blocking a thread that has a channel", () => {
+		const s = threadState({
+			...base,
+			blocking: { open: true, pending: false },
+			conversation: OPEN,
+		});
+		expect(s.phase === "ready" && s.blocking).toEqual({
+			history: true,
+			open: true,
+			pending: false,
+		});
+	});
+
+	it("has no history to keep before a request is accepted", () => {
+		const s = threadState({ ...base, conversation: REQUESTED });
+		expect(s.phase === "ready" && s.blocking.history).toBe(false);
+		expect(s.phase === "ready" && s.body.kind).toBe("no-channel");
+	});
+
+	it("reads Stream for the body, and the conversation for the bar and Rate", () => {
+		const s = threadState({
+			...base,
+			conversation: OPEN,
+			stream: "connecting",
+		});
+		expect(s.phase === "ready" && s.body).toEqual({ kind: "connecting" });
+		expect(s.phase === "ready" && s.bar).toEqual(statusBar(OPEN));
+		expect(s.phase === "ready" && s.rate).toBe("hidden");
 	});
 });

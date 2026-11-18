@@ -2,7 +2,7 @@ import type { Id } from "@xolace/backend/dataModel";
 import { describe, expect, it } from "vitest";
 import { NOW } from "../dev/fixtures";
 import { PROFILE_KOJO, PROFILE_MAYA } from "../thread/dev/thread-fixtures";
-import { monthYear, profileView } from "./xolacer-model";
+import { monthYear, profileView, xolacerState } from "./xolacer-model";
 
 const DAY = 86_400_000;
 const convo = (
@@ -105,6 +105,81 @@ describe("monthYear", () => {
 		);
 		expect(monthYear(new Date(2025, 8, 1).getTime(), NOW, "fr-FR")).toBe(
 			"septembre 2025"
+		);
+	});
+});
+
+describe("xolacerState", () => {
+	const base = {
+		blocking: { open: false, pending: false },
+		locale: "en-US",
+		now: NOW,
+		primer: null,
+		sending: false,
+		specialty: undefined,
+	};
+	const withConvo = (conversation: ReturnType<typeof convo>) => ({
+		...PROFILE_MAYA,
+		conversation,
+	});
+
+	it("loads, then says the profile is gone", () => {
+		expect(xolacerState({ ...base, profile: undefined })).toEqual({
+			phase: "loading",
+		});
+		expect(xolacerState({ ...base, profile: null })).toEqual({ phase: "gone" });
+	});
+
+	// The dev state `xolacer-talked`: a resting conversation. The block dialog says messages
+	// stay, as the app's does.
+	it("says messages stay once the two of you have spoken", () => {
+		const s = xolacerState({ ...base, profile: withConvo(convo("resting")) });
+		expect(s.phase === "ready" && s.blocking.history).toBe(true);
+		expect(s.phase === "ready" && s.menu?.canBlock).toBe(true);
+	});
+
+	it("has no history for a request, a decline or no conversation", () => {
+		for (const profile of [
+			withConvo(convo("requested")),
+			withConvo(convo("closed", { closedReason: "declined" })),
+			PROFILE_MAYA,
+		]) {
+			const s = xolacerState({ ...base, profile });
+			expect(s.phase === "ready" && s.blocking.history).toBe(false);
+		}
+	});
+
+	it("offers no menu on your own profile, and Block only with a conversation", () => {
+		const self = xolacerState({
+			...base,
+			profile: { ...PROFILE_MAYA, isSelf: true },
+		});
+		expect(self.phase === "ready" && self.menu).toBeNull();
+		const none = xolacerState({ ...base, profile: PROFILE_MAYA });
+		expect(none.phase === "ready" && none.menu?.canBlock).toBe(false);
+	});
+
+	it("names who else listens only for a known specialty", () => {
+		const anxiety = xolacerState({
+			...base,
+			profile: PROFILE_MAYA,
+			specialty: "anxiety",
+		});
+		expect(anxiety.phase === "ready" && anxiety.others).toBe(
+			"anxiety and overthinking"
+		);
+		const unknown = xolacerState({
+			...base,
+			profile: PROFILE_MAYA,
+			specialty: "astrology",
+		});
+		expect(unknown.phase === "ready" && unknown.others).toBeNull();
+	});
+
+	it("writes the page in the given locale", () => {
+		const s = xolacerState({ ...base, locale: "fr-FR", profile: PROFILE_MAYA });
+		expect(s.phase === "ready" && s.view.sinceLine).toBe(
+			`Xolacer since ${monthYear(PROFILE_MAYA.xolacerSince, NOW, "fr-FR")}`
 		);
 	});
 });

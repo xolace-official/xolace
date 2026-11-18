@@ -16,12 +16,7 @@ export const devStates: readonly DevState[] = [
 	{
 		id: "xolacer",
 		options: PROFILE,
-		Screen: () => (
-			<FixtureXolacer
-				others="anxiety and overthinking"
-				profile={PROFILE_MAYA}
-			/>
-		),
+		Screen: () => <FixtureXolacer profile={PROFILE_MAYA} specialty="anxiety" />,
 		title: "Xolacer: ask to talk, others listen too",
 	},
 	{

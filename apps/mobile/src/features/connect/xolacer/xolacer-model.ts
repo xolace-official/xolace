@@ -1,15 +1,21 @@
 /** A Xolacer's profile: `xolacerProfile` in, what the page says and offers out. Production's
  * request rules (the CTA by conversation, cooldown and availability), the prototype's page. Pure. */
 import type { api } from "@xolace/backend/api";
-import { specialtyLabel } from "@xolace/backend/convex/lib/specialties";
+import {
+	isSpecialty,
+	specialtyLabel,
+	specialtyListensTo,
+} from "@xolace/backend/convex/lib/specialties";
 import type { FunctionReturnType } from "convex/server";
 import {
 	declineCooldownActive,
 	declineCooldownNote,
+	hasSpoken,
 	rateCtaState,
 } from "../chat-rules";
 
 import { PROFILE } from "./copy";
+import type { XolacerState } from "./xolacer-data";
 
 export type Profile = NonNullable<
 	FunctionReturnType<typeof api.xolacerChat.xolacerProfile>
@@ -133,5 +139,48 @@ export function profileView(
 		ratedLine: `${rating} · ${presence}`,
 		sinceLine: PROFILE.since(monthYear(p.xolacerSince, now, locale)),
 		tags: p.specialties.map(specialtyLabel),
+	};
+}
+
+/** What `useXolacer` and the dev states read: the profile (`undefined` while it loads, `null`
+ * once it's gone), the clock and locale, the route's specialty, and the screen's own state. */
+export type XolacerInputs = {
+	profile: Profile | null | undefined;
+	now: number;
+	locale?: string;
+	/** The route's specialty param, as it came. */
+	specialty: string | undefined;
+	blocking: { open: boolean; pending: boolean };
+	primer: "gate" | "reference" | null;
+	sending: boolean;
+};
+
+/** The profile's screen state. The hook and the dev states both call it, so the rules (what the
+ * block dialog says, the menu, "Others listen to …") are tested once. */
+export function xolacerState(input: XolacerInputs): XolacerState {
+	const p = input.profile;
+	if (p === undefined) {
+		return { phase: "loading" };
+	}
+	if (p === null) {
+		return { phase: "gone" };
+	}
+	const c = p.conversation;
+	return {
+		// "Your messages stay" only when the two of you have spoken.
+		blocking: { ...input.blocking, history: c ? hasSpoken(c) : false },
+		id: p.xolacerProfileId,
+		isSelf: p.isSelf,
+		menu: p.isSelf ? null : { canBlock: c !== null, rate: rateCtaState(p) },
+		muted: !p.available,
+		others: isSpecialty(input.specialty)
+			? specialtyListensTo(input.specialty)
+			: null,
+		phase: "ready",
+		photoUrl: p.photoUrl,
+		present: p.present,
+		primer: input.primer,
+		sending: input.sending,
+		view: profileView(p, input.now, input.locale),
 	};
 }

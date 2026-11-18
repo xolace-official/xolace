@@ -3,23 +3,19 @@
  * Kindling twig), rating, report and block, and the ways on. Production's behaviour and events.
  */
 import { api } from "@xolace/backend/api";
-import {
-	isSpecialty,
-	specialtyListensTo,
-} from "@xolace/backend/convex/lib/specialties";
+import { isSpecialty } from "@xolace/backend/convex/lib/specialties";
 import type { Id } from "@xolace/backend/dataModel";
 import { useAction, useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { playSoftPress } from "@/lib/haptics";
-import { hasSpoken, rateCtaState } from "../chat-rules";
 import { deviceClock } from "../device-clock";
 import { THREAD } from "../thread/copy";
 import type { ReportTo } from "../thread/thread-data";
 import { useAskFlow } from "./use-ask-flow";
 import type { XolacerRoute, XolacerScreenData } from "./xolacer-data";
-import { profileView } from "./xolacer-model";
+import { xolacerState } from "./xolacer-model";
 
 export function useXolacer(
 	route: XolacerRoute,
@@ -110,35 +106,17 @@ export function useXolacer(
 		},
 	};
 
-	if (profile === undefined) {
-		return { actions, ageGate: ask.ageGate, state: { phase: "loading" } };
-	}
-	if (profile === null) {
-		return { actions, ageGate: ask.ageGate, state: { phase: "gone" } };
-	}
-	const now = Date.now();
 	return {
 		actions,
 		ageGate: ask.ageGate,
-		state: {
-			blocking: {
-				history: conversation ? hasSpoken(conversation) : false,
-				open: confirming,
-				pending: blocking,
-			},
-			id: profile.xolacerProfileId,
-			isSelf: profile.isSelf,
-			menu: profile.isSelf
-				? null
-				: { canBlock: conversation !== null, rate: rateCtaState(profile) },
-			muted: !profile.available,
-			others: specialty ? specialtyListensTo(specialty) : null,
-			phase: "ready",
-			photoUrl: profile.photoUrl,
-			present: profile.present,
+		state: xolacerState({
+			blocking: { open: confirming, pending: blocking },
+			locale: deviceClock().locale,
+			now: Date.now(),
 			primer: ask.primerMode,
+			profile,
 			sending: ask.sending,
-			view: profileView(profile, now, deviceClock().locale),
-		},
+			specialty: route.specialty,
+		}),
 	};
 }

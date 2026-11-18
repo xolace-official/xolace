@@ -2,8 +2,10 @@
  * the bar that stands in for the composer out. Production's rules, the prototype's look. Pure. */
 import type { api } from "@xolace/backend/api";
 import type { FunctionReturnType } from "convex/server";
+import type { Channel } from "stream-chat";
 import { rateCtaState } from "../chat-rules";
 import { THREAD } from "./copy";
+import type { ThreadState } from "./thread-data";
 
 /** `myStreamUserId` is dropped: `client.userID` carries the same value, which lets the list seed
  * this shape. The server still returns it for older clients. */
@@ -250,5 +252,36 @@ export function resourceRow(r: Resource): {
 		sub: r.value,
 		title: r.label,
 		url: null,
+	};
+}
+
+/** What `useThread` and the dev states read: the conversation (`undefined` while it loads,
+ * `null` once it's gone), Stream, the channel, and the block dialog. */
+export type ThreadInputs = {
+	conversation: ThreadConversation | null | undefined;
+	stream: StreamStatus;
+	channel: Channel | null;
+	blocking: { open: boolean; pending: boolean };
+};
+
+/** The thread's screen state. The hook and the dev states both call it, so the rules (what
+ * the block dialog says, the body, the bar, Rate) are tested once. */
+export function threadState(input: ThreadInputs): ThreadState {
+	const c = input.conversation;
+	if (c === undefined) {
+		return { phase: "loading" };
+	}
+	if (c === null) {
+		return { phase: "gone" };
+	}
+	return {
+		bar: statusBar(c),
+		// "Your messages stay" only when there are messages: a channel exists once accepted.
+		blocking: { ...input.blocking, history: Boolean(c.streamChannelId) },
+		body: threadBody(c, input.stream),
+		channel: input.channel,
+		conversation: c,
+		phase: "ready",
+		rate: rateCtaState(c),
 	};
 }

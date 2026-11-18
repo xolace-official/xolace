@@ -5,9 +5,8 @@
  */
 import type { Id } from "@xolace/backend/dataModel";
 import { useStreamConnection } from "@/lib/stream-chat/stream-chat-provider";
-import { rateCtaState } from "../chat-rules";
 import type { ReportTo, ThreadScreenData } from "./thread-data";
-import { statusBar, threadBody } from "./thread-model";
+import { threadState } from "./thread-model";
 import { useDismissThreadNotifications } from "./use-dismiss-thread-notifications";
 import { type FeedbackContext, useFlagMessage } from "./use-flag-message";
 import { useThreadActions } from "./use-thread-actions";
@@ -35,27 +34,14 @@ export function useThread(
 		feedbackContext
 	);
 
-	const all = { ...actions, flag, retry: stream.retry };
-	if (conversation === undefined) {
-		return { actions: all, ageGate, state: { phase: "loading" } };
-	}
-	if (conversation === null) {
-		return { actions: all, ageGate, state: { phase: "gone" } };
-	}
 	return {
-		actions: all,
+		actions: { ...actions, flag, retry: stream.retry },
 		ageGate,
-		state: {
-			bar: statusBar(conversation),
-			blocking: {
-				...blocking,
-				history: Boolean(conversation.streamChannelId),
-			},
-			body: threadBody(conversation, stream.status),
+		state: threadState({
+			blocking,
 			channel,
 			conversation,
-			phase: "ready",
-			rate: rateCtaState(conversation),
-		},
+			stream: stream.status,
+		}),
 	};
 }
