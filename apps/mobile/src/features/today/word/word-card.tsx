@@ -20,6 +20,8 @@ const ART_SCALE = 0.4;
 const ART_CROP_X = 230;
 const ART_CROP_Y = 500;
 const CARD_RADIUS = 24;
+/** Two lines of the quote (25.8 pt each): its room while today's word loads. */
+const LOADING_H = 52;
 /** The grid, scaled and offset so the crop lands in the window (with `absolute`). */
 const ART_FRAME = {
 	height: 1000 * ART_SCALE,
@@ -43,7 +45,13 @@ export function WordCard() {
 	const { intro, reduced } = useTodayFrame();
 	const [line, setLine] = useState<{ w: number; h: number } | null>(null);
 	const word = state.word;
-	const [inking, setInking] = useState(intro && !reduced && Boolean(word));
+	// Decided when the word first arrives: it inks in only while the first open is still
+	// playing. Loading, nothing is decided (and nothing shows).
+	const [ink, setInk] = useState<"wait" | "play" | "done">("wait");
+	if (ink === "wait" && word !== undefined) {
+		setInk(word && intro && !reduced ? "play" : "done");
+	}
+	const inking = ink === "play";
 	// Until the cover has drawn, an inking line stays hidden (no flash of the whole line).
 	const [covered, setCovered] = useState(false);
 	const text = word ?? COPY.word.fallback;
@@ -70,35 +78,39 @@ export function WordCard() {
 						>
 							{COPY.word.eyebrow}
 						</AppText>
-						<View
-							onLayout={(e) =>
-								setLine({
-									h: e.nativeEvent.layout.height,
-									w: e.nativeEvent.layout.width,
-								})
-							}
-						>
-							<AppText
-								className={cn(
-									word
-										? "text-[23px] leading-[25.8px] tracking-[-0.46px]"
-										: "text-[17px] leading-[22px]",
-									inking && !covered && "opacity-0"
-								)}
-								variant={word ? "headlineL" : "subhead"}
+						{word === undefined ? (
+							<View style={{ height: LOADING_H }} />
+						) : (
+							<View
+								onLayout={(e) =>
+									setLine({
+										h: e.nativeEvent.layout.height,
+										w: e.nativeEvent.layout.width,
+									})
+								}
 							>
-								{text}
-							</AppText>
-							{inking && line ? (
-								<InkReveal
-									cover={surface}
-									h={line.h}
-									onCovered={() => setCovered(true)}
-									onDone={() => setInking(false)}
-									w={line.w}
-								/>
-							) : null}
-						</View>
+								<AppText
+									className={cn(
+										word
+											? "text-[23px] leading-[25.8px] tracking-[-0.46px]"
+											: "text-[17px] leading-[22px]",
+										inking && !covered && "opacity-0"
+									)}
+									variant={word ? "headlineL" : "subhead"}
+								>
+									{text}
+								</AppText>
+								{inking && line ? (
+									<InkReveal
+										cover={surface}
+										h={line.h}
+										onCovered={() => setCovered(true)}
+										onDone={() => setInk("done")}
+										w={line.w}
+									/>
+								) : null}
+							</View>
+						)}
 						<AppText color="muted" variant="footnote">
 							{COPY.word.sub}
 						</AppText>

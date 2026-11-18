@@ -107,6 +107,11 @@ export const devStates: readonly DevState[] = [
 		}),
 	},
 	{
+		id: "word-late",
+		title: "First open, with today's word arriving late (it still inks in)",
+		...today({ intro: true, lateWord: true, phase: "evening" }),
+	},
+	{
 		id: "finding",
 		title:
 			"Day 3 of a v2 intake: “How did you find Xolace?” under the campfire",

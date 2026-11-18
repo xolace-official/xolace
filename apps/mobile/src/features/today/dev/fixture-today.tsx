@@ -15,15 +15,16 @@ import {
 	FIXTURE_CAMPFIRE,
 	FIXTURE_DAY,
 	FIXTURE_KINDLING,
-	FIXTURE_MOMENTS,
 	FIXTURE_MONTH_PROMPT,
 	FIXTURE_NAME,
-	FIXTURE_RAIL,
 	FIXTURE_STREAK,
 	FIXTURE_WEEKDAY,
-	FIXTURE_WORD,
+	type FixtureModules,
+	lowerModules,
 } from "./fixtures";
 
+/** A slow network: the word arrives while the first open is still playing. */
+const WORD_AFTER_MS = 1200;
 /** Let the screen land before the streak grows, as coming back to Today does. */
 const IGNITE_AFTER_MS = 600;
 /** As if back from the kindling's step: the card has landed before the step counts. */
@@ -69,10 +70,12 @@ export type FixtureProps = {
 	/** With `kindling: "last"`: the kindling is put out instead, so the card goes. */
 	putOut?: boolean;
 	campfire?: keyof typeof FIXTURE_CAMPFIRE | "none";
+	/** Today's word loads a moment after the screen opens, as on a slow network. */
+	lateWord?: boolean;
 	/** The intake's day-3 card in Today's slot under the campfire. */
 	finding?: boolean;
 	/** The rail, your moments and the word: the board's, none at all, or still loading. */
-	modules?: "board" | "none" | "loading";
+	modules?: FixtureModules;
 };
 
 function FixtureToday({
@@ -89,7 +92,16 @@ function FixtureToday({
 	campfire = "count",
 	modules = "board",
 	finding = false,
+	lateWord = false,
 }: FixtureProps) {
+	const [wordIn, setWordIn] = useState(!lateWord);
+	useEffect(() => {
+		if (wordIn) {
+			return;
+		}
+		const id = setTimeout(() => setWordIn(true), WORD_AFTER_MS);
+		return () => clearTimeout(id);
+	}, [wordIn]);
 	const phase = usePhase(start, cycle);
 	const [grown, setGrown] = useState(false);
 	const [tended, setTended] = useState(false);
@@ -141,6 +153,7 @@ function FixtureToday({
 		intro,
 		kindling: kindlingView,
 		...lowerModules(offline ? "loading" : modules),
+		...(wordIn ? {} : { word: undefined }),
 		phase,
 		streak: offline
 			? null
@@ -158,27 +171,6 @@ function FixtureToday({
 			</TodayProvider>
 		</ScopedTheme>
 	);
-}
-
-/** The rail, moments and word: loading is undefined, none is empty (the word null). */
-function lowerModules(
-	modules: NonNullable<FixtureProps["modules"]>
-): Pick<Today["state"], "rail" | "moments" | "word" | "playingSlug"> {
-	if (modules === "loading") {
-		return {
-			moments: undefined,
-			playingSlug: null,
-			rail: undefined,
-			word: undefined,
-		};
-	}
-	const board = modules === "board";
-	return {
-		moments: board ? FIXTURE_MOMENTS : [],
-		playingSlug: null,
-		rail: board ? FIXTURE_RAIL : [],
-		word: board ? FIXTURE_WORD : null,
-	};
 }
 
 /** The real route draws its own chrome: no header. */

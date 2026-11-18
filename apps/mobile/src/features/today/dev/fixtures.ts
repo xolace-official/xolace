@@ -2,6 +2,7 @@ import type { CampfireView } from "../campfire/campfire-model";
 import type { KindlingView, TwigView } from "../kindling/kindling-model";
 import type { MomentView } from "../moments/moments-model";
 import type { RailTile } from "../rail/rail-model";
+import type { Today } from "../today-data";
 import { COVERS } from "./covers";
 
 /** Today's fake data: the board's Thursday, Ama and a 12-day streak (`P/src/fixtures/today.ts`). */
@@ -139,3 +140,27 @@ export const FIXTURE_MOMENTS: MomentView[] = [
 
 /** The board's word for today. */
 export const FIXTURE_WORD = "Slow is still moving.";
+
+/** The rail, moments and word: the board's, none at all, or still loading. */
+export type FixtureModules = "board" | "none" | "loading";
+
+/** The rail, moments and word: loading is undefined, none is empty (the word null). */
+export function lowerModules(
+	modules: FixtureModules
+): Pick<Today["state"], "rail" | "moments" | "word" | "playingSlug"> {
+	if (modules === "loading") {
+		return {
+			moments: undefined,
+			playingSlug: null,
+			rail: undefined,
+			word: undefined,
+		};
+	}
+	const board = modules === "board";
+	return {
+		moments: board ? FIXTURE_MOMENTS : [],
+		playingSlug: null,
+		rail: board ? FIXTURE_RAIL : [],
+		word: board ? FIXTURE_WORD : null,
+	};
+}
