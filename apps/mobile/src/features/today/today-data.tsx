@@ -44,6 +44,8 @@ export type Today = {
 		rail: RailTile[] | undefined;
 		/** The track playing now, so its tile shows the meter. */
 		playingSlug: string | null;
+		/** A free member: tracks open Xolace+, so tiles show the lock. */
+		listenLocked: boolean;
 		/** Your latest moments (the timeline's first page); undefined while it loads. */
 		moments: MomentView[] | undefined;
 		/** Today's quote; null with none, undefined while it loads. */

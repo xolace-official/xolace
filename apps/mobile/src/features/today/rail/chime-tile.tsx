@@ -11,11 +11,14 @@ import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import { Meter, Wave } from "./rail-eq";
 import { type RailTile, TILE } from "./rail-model";
+import { TileLock } from "./tile-lock";
 
 type Props = {
 	tile: RailTile;
 	angle: SharedValue<number>;
 	playing: boolean;
+	/** A free member's tile: the lock, and it opens Xolace+. */
+	locked: boolean;
 	live: boolean;
 	reduced: boolean;
 	onPlay: () => void;
@@ -30,6 +33,7 @@ export function ChimeTile({
 	tile,
 	angle,
 	playing,
+	locked,
 	live,
 	reduced,
 	onPlay,
@@ -60,8 +64,8 @@ export function ChimeTile({
 				style={{ height: TILE.hang, right: TILE.stringInset, top: -TILE.hang }}
 			/>
 			<Pressable
-				accessibilityHint={COPY.listen.hint}
-				accessibilityLabel={`${tile.title}, ${tile.sub}${playing ? COPY.listen.playing : ""}`}
+				accessibilityHint={locked ? COPY.listen.lockedHint : COPY.listen.hint}
+				accessibilityLabel={`${tile.title}, ${tile.sub}${playing ? COPY.listen.playing : ""}${locked ? COPY.listen.locked : ""}`}
 				accessibilityRole="button"
 				className="gap-2"
 				// Held past this, it was a preview: letting go doesn't start playback.
@@ -94,6 +98,7 @@ export function ChimeTile({
 							uri={tile.cover}
 						/>
 						{playing ? <Meter running={live} /> : null}
+						{locked ? <TileLock /> : null}
 						{preview ? <Wave running={live} /> : null}
 					</View>
 				</EaseView>

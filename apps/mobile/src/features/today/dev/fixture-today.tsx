@@ -70,6 +70,8 @@ export type FixtureProps = {
 	/** With `kindling: "last"`: the kindling is put out instead, so the card goes. */
 	putOut?: boolean;
 	campfire?: keyof typeof FIXTURE_CAMPFIRE | "none";
+	/** A free member: the rail's tracks show the lock and open Xolace+. */
+	free?: boolean;
 	/** Today's word loads a moment after the screen opens, as on a slow network. */
 	lateWord?: boolean;
 	/** The intake's day-3 card in Today's slot under the campfire. */
@@ -93,6 +95,7 @@ function FixtureToday({
 	modules = "board",
 	finding = false,
 	lateWord = false,
+	free = false,
 }: FixtureProps) {
 	const [wordIn, setWordIn] = useState(!lateWord);
 	useEffect(() => {
@@ -154,6 +157,7 @@ function FixtureToday({
 		kindling: kindlingView,
 		...lowerModules(offline ? "loading" : modules),
 		...(wordIn ? {} : { word: undefined }),
+		listenLocked: free,
 		phase,
 		streak: offline
 			? null

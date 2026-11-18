@@ -153,9 +153,13 @@ export type FixtureModules = "board" | "none" | "loading";
 /** The rail, moments and word: loading is undefined, none is empty (the word null). */
 export function lowerModules(
 	modules: FixtureModules
-): Pick<Today["state"], "rail" | "moments" | "word" | "playingSlug"> {
+): Pick<
+	Today["state"],
+	"rail" | "moments" | "word" | "playingSlug" | "listenLocked"
+> {
 	if (modules === "loading") {
 		return {
+			listenLocked: false,
 			moments: undefined,
 			playingSlug: null,
 			rail: undefined,
@@ -164,6 +168,7 @@ export function lowerModules(
 	}
 	const board = modules === "board";
 	return {
+		listenLocked: false,
 		moments: board ? FIXTURE_MOMENTS : [],
 		playingSlug: null,
 		rail: board ? FIXTURE_RAIL : [],

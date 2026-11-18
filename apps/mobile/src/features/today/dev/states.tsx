@@ -112,6 +112,16 @@ export const devStates: readonly DevState[] = [
 		}),
 	},
 	{
+		id: "rail-free",
+		title: "A free member's rail: locked tracks",
+		...today({ free: true, phase: "evening" }),
+	},
+	{
+		id: "late-free",
+		title: "Late, free: the quiet row locked",
+		...today({ free: true, phase: "late" }),
+	},
+	{
 		id: "word-late",
 		title: "First open, with today's word arriving late (it still inks in)",
 		...today({ intro: true, lateWord: true, phase: "evening" }),

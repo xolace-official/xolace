@@ -117,10 +117,13 @@ export const COPY = {
 	/** The listening rail (board `.rail`), from the hub's New shelf. */
 	listen: {
 		family: { music: "Music", support: "Support audio" },
-		hint: "Hold to preview",
+		/** VoiceOver: where a tile goes (holding to preview is touch only). */
+		hint: "Opens the player",
 		lateTitle: "For the quiet",
+		/** A free member's tile: it opens Xolace+. */
+		locked: ", Xolace+",
+		lockedHint: "Part of Xolace+",
 		playing: ", playing",
-		quietHint: "Opens the player",
 		seeAll: "See all",
 		seeAllLabel: "See all in Explore",
 		title: "Something to listen to",

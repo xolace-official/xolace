@@ -63,6 +63,7 @@ export function ListenRail() {
 							angle={angle}
 							key={tile.id}
 							live={live}
+							locked={state.listenLocked}
 							onPlay={() => actions.openTrack(tile)}
 							playing={state.playingSlug === tile.slug}
 							reduced={reduced}

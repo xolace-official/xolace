@@ -4,6 +4,7 @@ import { useConvex, usePaginatedQuery, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useEffect, useState } from "react";
 import { AppState } from "react-native";
+import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import {
 	useNowPlaying,
@@ -103,7 +104,10 @@ export function useLowerModules() {
 		{ initialNumItems: MOMENT_COUNT }
 	);
 	const quote = useQuery(api.dailyQuotes.getToday);
+	const { isPlus, isLoading } = usePlusEntitlement();
 	return {
+		// As every catalogue surface: locked only once the entitlement is known to be free.
+		listenLocked: !(isLoading || isPlus),
 		moments:
 			timeline.status === "LoadingFirstPage"
 				? undefined
