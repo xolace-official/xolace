@@ -1,9 +1,29 @@
-// The Xolace+ step's plans (#713), read off RevenueCat's current offering and nothing else:
-// a seasonal or loyalty discount arrives as that offering's intro price, like any other.
+// What Xolace+ sells and how each plan is worded (#713), read off RevenueCat's current
+// offering and nothing else: a seasonal or loyalty discount arrives as that offering's intro
+// price, like any other. The paywall and intake's Xolace+ step both say it this way.
 import type { PurchasesPackage } from "react-native-purchases";
-import { hasFreeTrial } from "@/features/purchases/screens/paywall-cta-label";
-import { introOfferOf } from "@/features/purchases/screens/paywall-intro-offer";
-import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
+import { introOfferOf } from "@/features/purchases/intro-offer";
+
+export type PlanId = "annual" | "monthly";
+
+const SEVEN_DAYS = ["P1W", "P7D"];
+
+/** The one place a trial claim may appear (#221 §6/§7), read off the product; the period must
+ * be seven days since the copy says "week". */
+export function hasFreeTrial(
+	pkg: PurchasesPackage | null,
+	isEligible: boolean
+): boolean {
+	const product = pkg?.product;
+	if (!(product && isEligible)) {
+		return false;
+	}
+	const period =
+		product.introPrice?.price === 0
+			? product.introPrice.period
+			: (product.defaultOption?.freePhase?.billingPeriod?.iso8601 ?? null);
+	return period != null && SEVEN_DAYS.includes(period.toUpperCase());
+}
 
 /** A store plan and whether this user can still take its intro offer. */
 type PlanOffer = { eligible: boolean; pkg: PurchasesPackage | null };
@@ -54,6 +74,24 @@ export function planPriceLine(plan: PlanId, plans: Plans): string | null {
 	}
 	const per = plan === "annual" ? "year" : "month";
 	return `${pkg.product.priceString} a ${per}. ${CANCEL}`;
+}
+
+/** A plan's price on its card: yearly also per month, when the store works it out. */
+export function planPrice(plan: PlanId, plans: Plans): string | null {
+	const product = plans[plan].pkg?.product;
+	if (!product) {
+		return null;
+	}
+	const intro = discountOn(plan, plans);
+	if (intro) {
+		return `${intro.price} first ${intro.term}`;
+	}
+	if (plan === "monthly") {
+		return `${product.priceString}/mo`;
+	}
+	return product.pricePerMonthString
+		? `${product.priceString}/yr · ${product.pricePerMonthString}/mo`
+		: `${product.priceString}/yr`;
 }
 
 /** The small mark on a plan's option: its free week or its discount. */

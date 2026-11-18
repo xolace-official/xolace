@@ -1,6 +1,6 @@
 import type { PurchasesStoreProduct } from "react-native-purchases";
 import { describe, expect, it } from "vitest";
-import { introOfferOf } from "./paywall-intro-offer";
+import { introOfferOf } from "./intro-offer";
 
 const product = (fields: Record<string, unknown>) =>
 	({

@@ -7,10 +7,10 @@ import { Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
 import type { PlusSide } from "@/features/intake/v2/machine";
-import { defaultPlan } from "@/features/intake/v2/plus/plans";
 import { PlusStepView } from "@/features/intake/v2/plus/plus-step-view";
 import { SAMPLE_SCENARIOS } from "@/features/intake/v2/plus/sample-plans";
-import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
+import type { PlanId } from "@/features/purchases/plans";
+import { defaultPlan } from "@/features/purchases/plans";
 
 export function PlusStepPreview() {
 	const { toast } = useToast();

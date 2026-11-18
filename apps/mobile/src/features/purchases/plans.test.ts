@@ -2,12 +2,14 @@ import type { PurchasesPackage } from "react-native-purchases";
 import { describe, expect, it } from "vitest";
 import {
 	defaultPlan,
+	hasFreeTrial,
 	keepTalkingLabel,
 	type Plans,
 	planCta,
+	planPrice,
 	planPriceLine,
 	planTag,
-} from "@/features/intake/v2/plus/plans";
+} from "@/features/purchases/plans";
 
 const pkg = (product: Record<string, unknown>) =>
 	({
@@ -161,5 +163,55 @@ describe("keepTalkingLabel", () => {
 		expect(
 			keepTalkingLabel("monthly", plans(yearlyWithWeek, monthlyDiscounted))
 		).toBe("Keep talking · 40% off");
+	});
+});
+
+describe("hasFreeTrial", () => {
+	const appStoreTrial = pkg({ introPrice: { period: "P1W", price: 0 } });
+	const playTrial = pkg({
+		defaultOption: { freePhase: { billingPeriod: { iso8601: "P7D" } } },
+	});
+	const shortTrial = pkg({ introPrice: { period: "P3D", price: 0 } });
+
+	it("finds a seven-day trial on either store", () => {
+		expect(hasFreeTrial(appStoreTrial, true)).toBe(true);
+		expect(hasFreeTrial(playTrial, true)).toBe(true);
+	});
+
+	it("never claims a week for a shorter trial, no package or a spent one", () => {
+		expect(hasFreeTrial(shortTrial, true)).toBe(false);
+		expect(hasFreeTrial(null, true)).toBe(false);
+		expect(hasFreeTrial(appStoreTrial, false)).toBe(false);
+		expect(hasFreeTrial(playTrial, false)).toBe(false);
+	});
+});
+
+describe("planPrice", () => {
+	const yearlyPerMonth = pkg({
+		price: 59.99,
+		pricePerMonthString: "$5.00",
+		priceString: "$59.99",
+	});
+
+	it("gives yearly per month when the store works it out", () => {
+		expect(planPrice("annual", plans(yearlyPerMonth, monthlyPlain))).toBe(
+			"$59.99/yr · $5.00/mo"
+		);
+		expect(planPrice("annual", plans(yearlyPlain, monthlyPlain))).toBe(
+			"$49.99/yr"
+		);
+	});
+
+	it("gives a monthly discount as its first-term price", () => {
+		expect(planPrice("monthly", plans(yearlyPlain, monthlyDiscounted))).toBe(
+			"$5.99 first 3 months"
+		);
+		expect(
+			planPrice("monthly", plans(yearlyPlain, monthlyDiscounted, false))
+		).toBe("$9.99/mo");
+	});
+
+	it("is null for a plan the store doesn't sell", () => {
+		expect(planPrice("monthly", plans(yearlyPlain, null))).toBeNull();
 	});
 });

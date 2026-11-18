@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { appConfig } from "@/config/app";
-import type { Plans } from "@/features/intake/v2/plus/plans";
+import type { Plans } from "@/features/purchases/plans";
 import { useRevenueCat } from "@/features/purchases/revenuecat-context";
 import { useIntroEligibility } from "@/features/purchases/use-intro-eligibility";
 
 /** The current offering's two plans, each with this user's intro eligibility. */
-export function usePlusPlans() {
+export function usePlans() {
 	const { isLoading, offerings, purchase, refreshOfferings } = useRevenueCat();
 	const annual = offerings?.current?.annual ?? null;
 	const monthly = offerings?.current?.monthly ?? null;

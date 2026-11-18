@@ -105,12 +105,11 @@ const pinned = (reduced: boolean) => {
 		"steadiness-face-info": FIT_SHEET,
 		"streak-held": PLAYER,
 		"trusted-bridge": undefined,
+		// The Xolace+ paywall draws its own top (S18).
 		upgrade: {
 			gestureEnabled: true,
-			headerShadowVisible: false,
-			headerTransparent: true,
+			headerShown: false,
 			presentation: "fullScreenModal",
-			title: "",
 		},
 		"voice-vent": { animation: "fade", gestureEnabled: false },
 		"xolace-channel": CHAT,

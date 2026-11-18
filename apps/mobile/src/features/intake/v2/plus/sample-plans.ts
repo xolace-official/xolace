@@ -1,7 +1,7 @@
 // Dev only: sample RevenueCat plans for previewing the Xolace+ step (#713) on a simulator,
 // where the store sells nothing and intro eligibility can't be faked. Never sold from.
 import type { PurchasesPackage } from "react-native-purchases";
-import type { Plans } from "@/features/intake/v2/plus/plans";
+import type { Plans } from "@/features/purchases/plans";
 
 type SampleProduct = {
 	identifier: string;

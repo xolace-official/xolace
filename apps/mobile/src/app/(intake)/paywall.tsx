@@ -15,6 +15,7 @@ import Animated, { FadeIn } from "react-native-reanimated";
 
 import { AppText } from "@/components/shared/app-text";
 import { trackStepViewed } from "@/features/intake/analytics";
+import { GradientText } from "@/features/intake/paywall/gradient-text";
 import { intentLine } from "@/features/intake/paywall/intent-line";
 import {
 	InsightsOfferCard,
@@ -28,7 +29,6 @@ import {
 	IntakeScreen,
 } from "@/features/intake/questionnaire/intake-screen";
 import { useIntakeComplete } from "@/features/intake/use-intake-complete";
-import { GradientText } from "@/features/purchases/screens/gradient-text";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/lib/haptics";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";

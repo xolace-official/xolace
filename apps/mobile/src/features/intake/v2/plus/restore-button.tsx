@@ -1,59 +1,8 @@
-import { SymbolView } from "expo-symbols";
+// Restore on intake's Xolace+ step: Restore where the subscription is sold (App Review 3.1.2).
 import { PressableFeedback, Spinner, useThemeColor } from "heroui-native";
-import { usePostHog } from "posthog-react-native";
 import { useState } from "react";
 import { AppText } from "@/components/shared/app-text";
 import { useRevenueCat } from "@/features/purchases/revenuecat-context";
-import {
-	type PaywallSurface,
-	usePaywall,
-} from "@/features/purchases/use-paywall";
-
-const CLOSE_ICON_NAME = {
-	android: "close",
-	ios: "xmark",
-	web: "close",
-} as const;
-
-type CloseProps = {
-	surface?: PaywallSurface;
-	/** Paired with `paywall_opened`'s. `null` while loading, never 0 (a real cohort: intake). */
-	sessionCount?: number | null;
-	/** Overrides the route close; see PaywallScreen's `onExit`. */
-	onClose?: () => void;
-	/** Set once an exit is in flight, so a second tap cannot fire a second `paywall_dismissed`. */
-	isDisabled?: boolean;
-};
-
-export function PaywallCloseButton({
-	surface,
-	sessionCount = null,
-	onClose,
-	isDisabled = false,
-}: CloseProps) {
-	const posthog = usePostHog();
-	const defaultClose = usePaywall((s) => s.close);
-	const closePaywall = onClose ?? defaultClose;
-	const tintColor = useThemeColor("muted") as string;
-
-	return (
-		<PressableFeedback
-			accessibilityLabel="Close"
-			accessibilityRole="button"
-			hitSlop={12}
-			isDisabled={isDisabled}
-			onPress={() => {
-				posthog.capture("paywall_dismissed", {
-					session_count: sessionCount,
-					surface: surface ?? null,
-				});
-				closePaywall();
-			}}
-		>
-			<SymbolView name={CLOSE_ICON_NAME} size={16} tintColor={tintColor} />
-		</PressableFeedback>
-	);
-}
 
 type RestoreProps = {
 	/** Told as a restore starts, before the store is called, and as it ends. */

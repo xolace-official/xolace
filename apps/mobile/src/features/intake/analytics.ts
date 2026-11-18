@@ -15,7 +15,7 @@ import type {
 	PlusOutcome,
 	PlusSide,
 } from "@/features/intake/v2/machine";
-import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
+import type { PlanId } from "@/features/purchases/plans";
 import type { PaywallSurface } from "@/features/purchases/use-paywall";
 import type { IntakeAnswers } from "@/store/intake-slice";
 

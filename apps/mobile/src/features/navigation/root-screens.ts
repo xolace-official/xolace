@@ -8,7 +8,7 @@ import { lanternScreens } from "@/features/lantern/screens";
 import { navigationScreens } from "@/features/navigation/screens";
 import { peerReflectionScreens } from "@/features/peer-reflection/screens";
 import { playerScreens } from "@/features/player/screens";
-import { purchasesScreens } from "@/features/purchases/screens";
+import { plusScreens } from "@/features/plus/screens";
 import { quotesScreens } from "@/features/quotes/screens";
 import { sessionEndScreens } from "@/features/session-end/screens";
 import { sitWithThisScreens } from "@/features/sit-with-this/screens";
@@ -36,7 +36,7 @@ export const ROOT_SCREENS: readonly RootScreen[] = [
 	...navigationScreens,
 	...peerReflectionScreens,
 	...playerScreens,
-	...purchasesScreens,
+	...plusScreens,
 	...quotesScreens,
 	...sessionEndScreens,
 	...sitWithThisScreens,

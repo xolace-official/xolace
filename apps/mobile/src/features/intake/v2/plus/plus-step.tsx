@@ -13,15 +13,15 @@ import {
 	trackTalkDemoOpened,
 } from "@/features/intake/analytics";
 import type { PlusOutcome, PlusSide } from "@/features/intake/v2/machine";
+import { PlusStepView } from "@/features/intake/v2/plus/plus-step-view";
+import { TalkDemo } from "@/features/intake/v2/plus/talk-demo/talk-demo";
+import type { PlanId } from "@/features/purchases/plans";
 import {
 	defaultPlan,
 	keepTalkingLabel,
 	startsTrial,
-} from "@/features/intake/v2/plus/plans";
-import { PlusStepView } from "@/features/intake/v2/plus/plus-step-view";
-import { TalkDemo } from "@/features/intake/v2/plus/talk-demo/talk-demo";
-import { usePlusPlans } from "@/features/intake/v2/plus/use-plus-plans";
-import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
+} from "@/features/purchases/plans";
+import { usePlans } from "@/features/purchases/use-plans";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/lib/haptics";
 
@@ -42,7 +42,7 @@ export function PlusStep({ busy, onExit, onSafetyExit, onStoreCall }: Props) {
 	const posthog = usePostHog();
 	const { isPlus, isResolved } = usePlusEntitlement();
 	const { isLoading, plans, purchase, refreshOfferings, unavailable } =
-		usePlusPlans();
+		usePlans();
 	const [side, setSide] = useState<PlusSide>("free");
 	const [picked, setPicked] = useState<PlanId | null>(null);
 	const [buying, setBuying] = useState(false);

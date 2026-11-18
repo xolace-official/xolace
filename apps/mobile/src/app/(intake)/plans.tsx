@@ -1,7 +1,8 @@
-/** Step 4b, the real paywall; dismiss and purchase both run intake's terminal step since intake
- * has no back edge. */
+/** Step 4b, the real paywall; Continue free and a purchase both run intake's terminal step,
+ * since intake has no back edge. */
 import { useIntakeComplete } from "@/features/intake/use-intake-complete";
-import { PaywallScreen } from "@/features/purchases/screens/paywall-screen";
+import { PlusData } from "@/features/plus/plus-data";
+import { PlusScreen } from "@/features/plus/plus-screen";
 import { useCompanionName } from "@/lib/talk/use-companion-name";
 
 export default function IntakePlans() {
@@ -9,7 +10,7 @@ export default function IntakePlans() {
 	const companionName = useCompanionName();
 
 	return (
-		<PaywallScreen
+		<PlusData
 			companionName={companionName}
 			// Returned, not fire-and-forget: `false` unlatches the paywall's exit guard.
 			onExit={(reason) =>
@@ -18,6 +19,8 @@ export default function IntakePlans() {
 				)
 			}
 			surface="intake"
-		/>
+		>
+			<PlusScreen />
+		</PlusData>
 	);
 }

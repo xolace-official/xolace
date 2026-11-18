@@ -12,15 +12,15 @@ import {
 	TERMS_OF_SERVICE,
 } from "@/components/shared/legal-content";
 import type { PlusSide } from "@/features/intake/v2/machine";
+import { PaywallPlansUnavailable } from "@/features/intake/v2/plus/plans-unavailable";
+import { PaywallRestoreButton } from "@/features/intake/v2/plus/restore-button";
+import type { PlanId } from "@/features/purchases/plans";
 import {
 	type Plans,
 	planCta,
 	planPriceLine,
 	planTag,
-} from "@/features/intake/v2/plus/plans";
-import { PaywallRestoreButton } from "@/features/purchases/screens/paywall-header-actions";
-import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
-import { PaywallPlansUnavailable } from "@/features/purchases/screens/paywall-plans-unavailable";
+} from "@/features/purchases/plans";
 import { cn } from "@/lib/utils";
 
 const PLAN_LABEL: Record<PlanId, string> = {
