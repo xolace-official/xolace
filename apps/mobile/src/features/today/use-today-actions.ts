@@ -4,6 +4,7 @@ import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { playSoftPress } from "@/lib/haptics";
 import type { BrowseFrom } from "@/lib/now-playing/now-playing-store";
+import { usePushOnce } from "@/lib/use-push-once";
 import type { RailTile } from "./rail/rail-model";
 import type { Today } from "./today-data";
 
@@ -20,6 +21,8 @@ export function useTodayActions(): Pick<
 	"openTrack" | "openExplore" | "openMoment" | "openMoments" | "openQuotes"
 > {
 	const posthog = usePostHog();
+	// One screen per tap, however fast the taps.
+	const pushOnce = usePushOnce();
 	const { isPlus, isLoading } = usePlusEntitlement();
 	const locked = !(isLoading || isPlus);
 
@@ -33,29 +36,33 @@ export function useTodayActions(): Pick<
 			return;
 		}
 		posthog.capture("browse_track_opened", track);
-		router.push({
-			params: { from: FROM, slug: tile.slug },
-			pathname: "/player",
-		});
+		pushOnce(() =>
+			router.push({
+				params: { from: FROM, slug: tile.slug },
+				pathname: "/player",
+			})
+		);
 	};
 
 	return {
 		openExplore: () => {
 			playSoftPress();
 			posthog.capture("discovery_library_strip_tapped");
-			router.push("/explore");
+			pushOnce(() => router.push("/explore"));
 		},
 		openMoment: (id) => {
 			playSoftPress();
-			router.push({ params: { id }, pathname: "/moments/session/[id]" });
+			pushOnce(() =>
+				router.push({ params: { id }, pathname: "/moments/session/[id]" })
+			);
 		},
 		openMoments: () => {
 			playSoftPress();
-			router.push("/moments");
+			pushOnce(() => router.push("/moments"));
 		},
 		openQuotes: () => {
 			playSoftPress();
-			router.push("/quotes");
+			pushOnce(() => router.push("/quotes"));
 		},
 		openTrack,
 	};
