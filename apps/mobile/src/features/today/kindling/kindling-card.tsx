@@ -13,7 +13,7 @@ const PAD_Y = 16;
 const CARD_H = 172;
 /** The board's `.card` radius. */
 const RADIUS = 26;
-/** The rise slot after the hero (S1d's modules take 1 and 2). */
+/** The first rise slot after the hero; the campfire takes the next (1), S1d's modules the rest. */
 const RISE_SLOT = 0;
 
 /**
