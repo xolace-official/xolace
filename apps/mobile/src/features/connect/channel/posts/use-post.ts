@@ -10,6 +10,7 @@ import { playSoftPress } from "@/lib/haptics";
 import { deviceClock } from "../../device-clock";
 import { postView } from "../channel-model";
 import { CHANNEL } from "../copy";
+import { isOpenableLink } from "../post-text";
 
 export function usePost() {
 	const { contextMenuAnchorRef, handleToggleReaction, message, onLongPress } =
@@ -23,6 +24,9 @@ export function usePost() {
 			onLongPress({ emitter: "messageContent", event }),
 		/** A link in the post, from VoiceOver's actions (a tap goes through Stream's renderer). */
 		openLink: (url: string) => {
+			if (!isOpenableLink(url)) {
+				return;
+			}
 			// A link the phone can't open is the phone's, not a failure of ours.
 			Linking.openURL(url).catch((error: unknown) => {
 				if (__DEV__) {

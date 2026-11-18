@@ -5,8 +5,24 @@
  * a hold on one opens the overlay.
  */
 import type { ReactNode } from "react";
+import { Linking } from "react-native";
 import { renderText, useMessageContext, useTheme } from "stream-chat-expo";
 import { useResolveClassNames } from "uniwind";
+import { isOpenableLink } from "../post-text";
+
+/** Stream's own tap (check, then open), for the links a post may open; others do nothing.
+ * Stream doesn't catch what this returns, so a link the phone won't open stops here. */
+async function openLink(url: string): Promise<void> {
+	try {
+		if (isOpenableLink(url) && (await Linking.canOpenURL(url))) {
+			await Linking.openURL(url);
+		}
+	} catch (error) {
+		if (__DEV__) {
+			console.error("[connect] channel link failed", error);
+		}
+	}
+}
 
 export function usePostBody(body: string): ReactNode {
 	const { message, onLongPress, onPress, preventPress } = useMessageContext();
@@ -30,6 +46,7 @@ export function usePostBody(body: string): ReactNode {
 		},
 		// The body only: the title above it is the post's first paragraph.
 		message: { ...message, text: body },
+		onLink: openLink,
 		onLongPress,
 		onPress,
 		preventPress,

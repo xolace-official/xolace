@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { plainText, postLinks, splitPost } from "./post-text";
+import { isOpenableLink, plainText, postLinks, splitPost } from "./post-text";
 
 describe("splitPost", () => {
 	it("takes a short first paragraph over more as the title", () => {
@@ -102,5 +102,33 @@ describe("postLinks", () => {
 				words: "https://en.wikipedia.org/wiki/Baz_(qux)",
 			},
 		]);
+	});
+});
+
+describe("isOpenableLink", () => {
+	it("opens the web and email, nothing else", () => {
+		for (const url of [
+			"https://a.co",
+			"http://a.co",
+			"mailto:hi@a.co",
+			"HTTPS://A.CO",
+		]) {
+			expect(isOpenableLink(url)).toBe(true);
+		}
+		for (const url of [
+			"tel:988",
+			"sms:741741",
+			"javascript:alert(1)",
+			"xolace://dev",
+			"a.co",
+		]) {
+			expect(isOpenableLink(url)).toBe(false);
+		}
+	});
+
+	it("leaves out links a post won't open", () => {
+		expect(
+			postLinks("[call](tel:988), [app](xolace://x) and [site](https://a.co)")
+		).toEqual([{ url: "https://a.co", words: "site" }]);
 	});
 });

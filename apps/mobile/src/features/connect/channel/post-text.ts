@@ -20,6 +20,13 @@ const ESCAPED = /\\([\\`*_{}[\]()#+\-.!~>|])/g;
 const HELD = 0xe0_00;
 const HELD_CHAR = /[\ue000-\ue0ff]/g;
 const TRAILING_PUNCTUATION = /[.,;:!?]+$/;
+/** The only links a post opens: the web and email. Not `tel:`, `sms:`, or another app's. */
+const OPENABLE = /^(https?:\/\/|mailto:)/i;
+
+/** Whether a post may open this link, from a tap or VoiceOver. */
+export function isOpenableLink(url: string): boolean {
+	return OPENABLE.test(url);
+}
 
 /** What a reader hears or a title shows: the words without the markdown around them. */
 export function plainText(markdown: string): string {
@@ -46,8 +53,8 @@ export function plainText(markdown: string): string {
 /** A link in a post: where it goes, and the words it shows (a markdown link's, or the address). */
 export type FoundLink = { url: string; words: string };
 
-/** Every link in a post, in order, once each: markdown links, then bare URLs. An image isn't
- * one: Stream doesn't draw it. */
+/** Every link in a post it may open, in order, once each: markdown links, then bare URLs. An
+ * image isn't one: Stream doesn't draw it. */
 export function postLinks(markdown: string): FoundLink[] {
 	const named = [...markdown.matchAll(MARKDOWN_LINK)]
 		.filter((m) => m[1] !== "!")
@@ -60,7 +67,7 @@ export function postLinks(markdown: string): FoundLink[] {
 	);
 	const seen = new Set<string>();
 	return [...named, ...bare].filter(({ url }) => {
-		if (!url || seen.has(url)) {
+		if (!isOpenableLink(url) || seen.has(url)) {
 			return false;
 		}
 		seen.add(url);
