@@ -61,10 +61,8 @@ export function headerCopy(
 export const introDue = (playedDay: string | null, today: string): boolean =>
 	playedDay !== today;
 
-/** The streak as Today last showed it, kept on the device. */
+/** The streak as Today last showed it to this user, kept on the device. */
 export type SeenStreak = {
-	/** The local day it was last shown. */
-	day: string;
 	count: number;
 	/** The local day the flame last ignited, or null if it never has. */
 	ignitedDay: string | null;
@@ -81,17 +79,86 @@ export function streakStep(
 	today: string
 ): { ignite: boolean; next: SeenStreak } {
 	if (!seen) {
-		return { ignite: false, next: { count, day: today, ignitedDay: null } };
+		return { ignite: false, next: { count, ignitedDay: null } };
 	}
 	const ignite = count > seen.count && seen.ignitedDay !== today;
 	return {
 		ignite,
-		next: {
+		next: { count, ignitedDay: ignite ? today : seen.ignitedDay },
+	};
+}
+
+/** The streak as the chip shows it: the count, and a key that grows each time it ignites. */
+export type StreakShown = { count: number; day: string; igniteKey: number };
+
+/**
+ * The next streak to show when the server's count or the day changes, or null when
+ * nothing did. Count and key change in the same step, so the chip sees the new number and
+ * the ignite together and rolls the digits (12 → 13) with the flame.
+ */
+export function nextStreakShown(
+	shown: StreakShown | null,
+	count: number | undefined,
+	day: string,
+	seen: () => SeenStreak | null
+): { shown: StreakShown; keep: SeenStreak } | null {
+	if (count === undefined || (shown?.count === count && shown.day === day)) {
+		return null;
+	}
+	const { ignite, next } = streakStep(seen(), count, day);
+	return {
+		keep: next,
+		shown: {
 			count,
-			day: today,
-			ignitedDay: ignite ? today : seen.ignitedDay,
+			day,
+			igniteKey: (shown?.igniteKey ?? 0) + (ignite ? 1 : 0),
 		},
 	};
+}
+
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+	typeof v === "object" && v !== null;
+
+const parse = (raw: string | null): unknown => {
+	if (!raw) {
+		return null;
+	}
+	try {
+		return JSON.parse(raw);
+	} catch {
+		return null;
+	}
+};
+
+/**
+ * What the device kept for this user: anything stored for another account (signed out,
+ * someone else signed in), or not in the shape Today wrote, counts as nothing.
+ */
+export function parseSeenStreak(
+	raw: string | null,
+	userId: string
+): SeenStreak | null {
+	const v = parse(raw);
+	if (
+		!isRecord(v) ||
+		v.userId !== userId ||
+		typeof v.count !== "number" ||
+		!(v.ignitedDay === null || typeof v.ignitedDay === "string")
+	) {
+		return null;
+	}
+	return { count: v.count, ignitedDay: v.ignitedDay };
+}
+
+/** The day this user's first open last played, or null. */
+export function parseIntroDay(
+	raw: string | null,
+	userId: string
+): string | null {
+	const v = parse(raw);
+	return isRecord(v) && v.userId === userId && typeof v.day === "string"
+		? v.day
+		: null;
 }
 
 /** Device-local "YYYY-MM-DD". */

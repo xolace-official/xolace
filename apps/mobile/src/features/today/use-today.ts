@@ -1,3 +1,4 @@
+import { useAuth } from "@clerk/expo";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { useAppActive } from "@/components/shared/use-app-active";
@@ -11,23 +12,22 @@ import {
 	introDue,
 	localDay,
 	nextPhaseHour,
-	type SeenStreak,
-	streakStep,
+	nextStreakShown,
+	parseIntroDay,
+	parseSeenStreak,
+	type StreakShown,
 	todayPhase,
 } from "./today-model";
 
-/** Device-only: the day the first open last played, and the streak as last shown. */
+/**
+ * Device-only, per account (as `reflect-draft.ts`): the day the first open last played,
+ * and the streak as Today last showed it. A record for another account counts as none.
+ */
 const INTRO_KEY = "today-intro-day";
 const STREAK_KEY = "today-seen-streak";
 
-function readSeen(): SeenStreak | null {
-	try {
-		const raw = zustandJSONStorage.getItem(STREAK_KEY);
-		return raw ? (JSON.parse(raw) as SeenStreak) : null;
-	} catch {
-		return null;
-	}
-}
+const keep = (key: string, value: object) =>
+	zustandJSONStorage.setItem(key, JSON.stringify(value)).catch(() => undefined);
 
 /**
  * The time Today keeps: re-read when the app comes to the front (timers sleep in the
@@ -57,27 +57,56 @@ function useNow(): Date {
 	return now;
 }
 
-/** The streak and the key that ignites its flame, once a day, when it grew. */
-function useStreak(count: number | undefined, day: string) {
-	const [igniteKey, setIgniteKey] = useState(0);
+/**
+ * The streak and the key that ignites its flame, once a day, when it grew. Worked out
+ * during render, so the chip gets the new count and the new key in the same render.
+ */
+function useStreak(
+	count: number | undefined,
+	day: string,
+	userId: string | null | undefined
+): Today["state"]["streak"] {
+	const [shown, setShown] = useState<StreakShown | null>(null);
+	const [toKeep, setToKeep] = useState<object | null>(null);
+	const step = userId
+		? nextStreakShown(shown, count, day, () =>
+				parseSeenStreak(zustandJSONStorage.getItem(STREAK_KEY), userId)
+			)
+		: null;
+	if (step) {
+		setShown(step.shown);
+		setToKeep({ ...step.keep, userId });
+	}
 	useEffect(() => {
-		if (count === undefined) {
-			return;
+		if (toKeep) {
+			keep(STREAK_KEY, toKeep);
 		}
-		const { ignite, next } = streakStep(readSeen(), count, day);
-		zustandJSONStorage
-			.setItem(STREAK_KEY, JSON.stringify(next))
-			.catch(() => undefined);
-		if (ignite) {
-			setIgniteKey((k) => k + 1);
+	}, [toKeep]);
+	return shown ? { count: shown.count, igniteKey: shown.igniteKey } : null;
+}
+
+/** Whether the first open plays: once a day per account, read once per mount. */
+function useIntro(day: string, userId: string | null | undefined): boolean {
+	const [intro] = useState(
+		() =>
+			Boolean(userId) &&
+			introDue(
+				parseIntroDay(zustandJSONStorage.getItem(INTRO_KEY), userId ?? ""),
+				day
+			)
+	);
+	useEffect(() => {
+		if (intro && userId) {
+			keep(INTRO_KEY, { day, userId });
 		}
-	}, [count, day]);
-	return count === undefined ? null : { count, igniteKey };
+	}, [intro, day, userId]);
+	return intro;
 }
 
 /** Today in the app: the profile summary, the hour and night mode, and the device. */
 export function useTodayData(): Today {
 	const summary = useProfileSummary();
+	const { userId } = useAuth();
 	const { isNight } = useSessionMode();
 	const now = useNow();
 	const day = localDay(now);
@@ -88,17 +117,8 @@ export function useTodayData(): Today {
 		weekday,
 		summary?.displayName
 	);
-	const streak = useStreak(summary?.currentStreak, day);
-
-	// Read once per mount: the first open of the day plays, then never again that day.
-	const [intro] = useState(() =>
-		introDue(zustandJSONStorage.getItem(INTRO_KEY), day)
-	);
-	useEffect(() => {
-		if (intro) {
-			zustandJSONStorage.setItem(INTRO_KEY, day).catch(() => undefined);
-		}
-	}, [intro, day]);
+	const streak = useStreak(summary?.currentStreak, day, userId);
+	const intro = useIntro(day, userId);
 
 	return {
 		actions: {

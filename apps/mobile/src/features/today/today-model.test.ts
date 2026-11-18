@@ -4,6 +4,9 @@ import {
 	introDue,
 	localDay,
 	nextPhaseHour,
+	nextStreakShown,
+	parseIntroDay,
+	parseSeenStreak,
 	phaseForHour,
 	streakStep,
 	todayPhase,
@@ -91,30 +94,101 @@ describe("streakStep", () => {
 	it("only remembers the first streak it sees", () => {
 		expect(streakStep(null, 12, DAY)).toEqual({
 			ignite: false,
-			next: { count: 12, day: DAY, ignitedDay: null },
+			next: { count: 12, ignitedDay: null },
 		});
 	});
 
 	it("ignites when the streak grew", () => {
-		const seen = { count: 12, day: "2026-11-17", ignitedDay: null };
-		expect(streakStep(seen, 13, DAY)).toEqual({
+		expect(streakStep({ count: 12, ignitedDay: null }, 13, DAY)).toEqual({
 			ignite: true,
-			next: { count: 13, day: DAY, ignitedDay: DAY },
+			next: { count: 13, ignitedDay: DAY },
 		});
 	});
 
 	it("ignites once a day", () => {
-		const seen = { count: 13, day: DAY, ignitedDay: DAY };
-		expect(streakStep(seen, 14, DAY).ignite).toBe(false);
+		expect(streakStep({ count: 13, ignitedDay: DAY }, 14, DAY).ignite).toBe(
+			false
+		);
 	});
 
 	it("never ignites for a streak that held or ended", () => {
-		const seen = { count: 13, day: "2026-11-17", ignitedDay: null };
+		const seen = { count: 13, ignitedDay: null };
 		expect(streakStep(seen, 13, DAY).ignite).toBe(false);
 		expect(streakStep(seen, 0, DAY)).toEqual({
 			ignite: false,
-			next: { count: 0, day: DAY, ignitedDay: null },
+			next: { count: 0, ignitedDay: null },
 		});
+	});
+});
+
+describe("nextStreakShown (the hook's order of updates)", () => {
+	const DAY = "2026-11-18";
+
+	it("waits while the profile loads", () => {
+		expect(nextStreakShown(null, undefined, DAY, () => null)).toBeNull();
+	});
+
+	it("on a cold start, shows the kept 12 and the loaded 13 as one step that ignites", () => {
+		const kept = { count: 12, ignitedDay: null };
+		const step = nextStreakShown(null, 13, DAY, () => kept);
+		expect(step?.shown).toEqual({ count: 13, day: DAY, igniteKey: 1 });
+		expect(step?.keep).toEqual({ count: 13, ignitedDay: DAY });
+	});
+
+	it("changes the count and the key together while open", () => {
+		const shown = { count: 12, day: DAY, igniteKey: 0 };
+		const first = nextStreakShown(shown, 12, DAY, () => ({
+			count: 12,
+			ignitedDay: null,
+		}));
+		expect(first).toBeNull();
+		const grown = nextStreakShown(shown, 13, DAY, () => ({
+			count: 12,
+			ignitedDay: null,
+		}));
+		expect(grown?.shown).toEqual({ count: 13, day: DAY, igniteKey: 1 });
+	});
+
+	it("doesn't ignite a second time that day", () => {
+		const shown = { count: 13, day: DAY, igniteKey: 1 };
+		const again = nextStreakShown(shown, 14, DAY, () => ({
+			count: 13,
+			ignitedDay: DAY,
+		}));
+		expect(again?.shown.igniteKey).toBe(1);
+		expect(again?.shown.count).toBe(14);
+	});
+});
+
+describe("device records are per user", () => {
+	const A = "user_a";
+	const B = "user_b";
+	const seenA = JSON.stringify({ count: 3, ignitedDay: null, userId: A });
+
+	it("reads this user's streak", () => {
+		expect(parseSeenStreak(seenA, A)).toEqual({ count: 3, ignitedDay: null });
+	});
+
+	it("ignores another user's streak, so B's 30 doesn't ignite on A's 3", () => {
+		expect(parseSeenStreak(seenA, B)).toBeNull();
+	});
+
+	it("ignores a record in the wrong shape, or none", () => {
+		expect(
+			parseSeenStreak(JSON.stringify({ count: "3", userId: A }), A)
+		).toBeNull();
+		expect(parseSeenStreak("not json", A)).toBeNull();
+		expect(parseSeenStreak(null, A)).toBeNull();
+		expect(
+			parseSeenStreak(JSON.stringify({ count: 3, day: "x", userId: A }), A)
+		).toBeNull();
+	});
+
+	it("reads the intro day for this user only", () => {
+		const raw = JSON.stringify({ day: "2026-11-18", userId: A });
+		expect(parseIntroDay(raw, A)).toBe("2026-11-18");
+		expect(parseIntroDay(raw, B)).toBeNull();
+		expect(parseIntroDay("2026-11-18", A)).toBeNull();
 	});
 });
 
