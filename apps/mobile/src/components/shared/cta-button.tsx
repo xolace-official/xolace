@@ -11,6 +11,8 @@ type Props = {
 	label: string;
 	onPress: () => void;
 	disabled?: boolean;
+	/** Waiting on what it already sent: screen readers hear "busy". Pair with `disabled`. */
+	busy?: boolean;
 	/** Disabled, it dims to 40%; off where the fill itself shows the wait (Done's drain). */
 	dimWhenDisabled?: boolean;
 	/** Plays on press: a named haptic from `@/lib/haptics`. */
@@ -30,6 +32,7 @@ export function CtaButton({
 	label,
 	onPress,
 	disabled = false,
+	busy = false,
 	dimWhenDisabled = true,
 	haptic,
 	accessibilityLabel,
@@ -38,7 +41,7 @@ export function CtaButton({
 	return (
 		<PressScale
 			accessibilityLabel={accessibilityLabel ?? label}
-			accessibilityState={{ disabled }}
+			accessibilityState={{ busy, disabled }}
 			className={cn(
 				"items-center justify-center overflow-hidden bg-foreground",
 				disabled && dimWhenDisabled && "opacity-40"

@@ -1,12 +1,12 @@
-import * as Sentry from "@sentry/react-native";
 /**
  * What the thread's bar and menu do: accept, decline, pick back up (behind the age gate for a
  * seeker), block, rate, report, and the ways out. Production's mutations, toasts and haptics.
  */
+import * as Sentry from "@sentry/react-native";
 import { api } from "@xolace/backend/api";
 import { useAction, useMutation } from "convex/react";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Linking } from "react-native";
 import { toast } from "@/components/shared/toast";
 import { playSoftPress } from "@/lib/haptics";
@@ -30,8 +30,19 @@ export function useThreadActions(
 	const ageGate = useAgeGate();
 	const [confirming, setConfirming] = useState(false);
 	const [blocking, setBlocking] = useState(false);
-	// A request is answered once: a second tap while the first is in flight does nothing.
+	// A request is answered once: a second tap while the first is in flight does nothing. The
+	// ref guards (state read in this closure can be a render behind a fast second tap); the
+	// state is for the buttons, which show the wait.
+	const answeringRef = useRef(false);
 	const [answering, setAnswering] = useState(false);
+	const answer = (call: () => Promise<unknown>) => {
+		answeringRef.current = true;
+		setAnswering(true);
+		call().finally(() => {
+			answeringRef.current = false;
+			setAnswering(false);
+		});
+	};
 	const c = conversation;
 
 	const resumeNow = () => {
@@ -60,16 +71,15 @@ export function useThreadActions(
 
 	const actions: Omit<ThreadScreenData["actions"], "retry" | "flag"> = {
 		accept: () => {
-			if (!c || answering) {
+			if (!c || answeringRef.current) {
 				return;
 			}
 			playSoftPress();
-			setAnswering(true);
-			accept({ conversationId: c.id })
-				.catch((error: unknown) =>
+			answer(() =>
+				accept({ conversationId: c.id }).catch((error: unknown) =>
 					toast(acceptFailureLabel(error), { variant: "danger" })
 				)
-				.finally(() => setAnswering(false));
+			);
 		},
 		askBlock: () => {
 			playSoftPress();
@@ -103,15 +113,15 @@ export function useThreadActions(
 				.finally(() => setBlocking(false));
 		},
 		decline: () => {
-			if (!c || answering) {
+			if (!c || answeringRef.current) {
 				return;
 			}
 			playSoftPress();
-			setAnswering(true);
-			decline({ conversationId: c.id })
-				.then(() => router.back())
-				.catch(() => toast(THREAD.toast.declineFailed, { variant: "danger" }))
-				.finally(() => setAnswering(false));
+			answer(() =>
+				decline({ conversationId: c.id })
+					.then(() => router.back())
+					.catch(() => toast(THREAD.toast.declineFailed, { variant: "danger" }))
+			);
 		},
 		// Back to the tabs under the thread, never a second copy of them.
 		findAnother: () => {
@@ -175,6 +185,7 @@ export function useThreadActions(
 	return {
 		actions,
 		ageGate,
+		answering,
 		blocking: { open: confirming, pending: blocking },
 	};
 }

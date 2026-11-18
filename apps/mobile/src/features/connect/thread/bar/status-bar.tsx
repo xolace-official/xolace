@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { CtaButton } from "@/components/shared/cta-button";
 import { PressScale } from "@/components/shared/press-scale";
+import { cn } from "@/lib/cn";
 import { THREAD } from "../copy";
 import { useThreadScreen } from "../thread-data";
 import type { StatusBar as Bar, Run } from "../thread-model";
@@ -32,14 +33,22 @@ function Copy({ runs }: { runs: readonly Run[] }) {
 function SecondPill({
 	label,
 	onPress,
+	busy = false,
 }: {
 	label: string;
 	onPress: () => void;
+	/** Waiting on an answer already sent: dimmed, not pressable, and said so. */
+	busy?: boolean;
 }) {
 	return (
 		<PressScale
 			accessibilityLabel={label}
-			className="h-14 flex-1 items-center justify-center rounded-[28px] border-continuous bg-surface-secondary"
+			accessibilityState={{ busy, disabled: busy }}
+			className={cn(
+				"h-14 flex-1 items-center justify-center rounded-[28px] border-continuous bg-surface-secondary",
+				busy && "opacity-40"
+			)}
+			disabled={busy}
 			onPress={onPress}
 		>
 			<AppText variant="body" weight="semibold">
@@ -71,7 +80,8 @@ function RateLink({ label }: { label: string }) {
  * someone else once it's closed.
  */
 export function StatusBar({ bar }: { bar: Bar }) {
-	const { actions } = useThreadScreen();
+	const { state, actions } = useThreadScreen();
+	const answering = state.phase === "ready" && state.answering;
 	if (bar.kind === "composer") {
 		return null;
 	}
@@ -85,9 +95,18 @@ export function StatusBar({ bar }: { bar: Bar }) {
 			{bar.kind === "accept" ? (
 				<View className="flex-row gap-2.5">
 					<View className="flex-1">
-						<CtaButton label={THREAD.bar.accept} onPress={actions.accept} />
+						<CtaButton
+							busy={answering}
+							disabled={answering}
+							label={THREAD.bar.accept}
+							onPress={actions.accept}
+						/>
 					</View>
-					<SecondPill label={THREAD.bar.decline} onPress={actions.decline} />
+					<SecondPill
+						busy={answering}
+						label={THREAD.bar.decline}
+						onPress={actions.decline}
+					/>
 				</View>
 			) : null}
 			{bar.kind === "resume" ? (

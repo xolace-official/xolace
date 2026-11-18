@@ -167,6 +167,7 @@ describe("resourceRow", () => {
 
 describe("threadState", () => {
 	const base = {
+		answering: false,
 		blocking: { open: false, pending: false },
 		channel: null,
 		stream: "ready" as const,
@@ -192,6 +193,15 @@ describe("threadState", () => {
 			open: true,
 			pending: false,
 		});
+	});
+
+	it("passes an answer in flight through to the bar", () => {
+		const s = threadState({
+			...base,
+			answering: true,
+			conversation: REQUESTED,
+		});
+		expect(s.phase === "ready" && s.answering).toBe(true);
 	});
 
 	it("has no history to keep before a request is accepted", () => {

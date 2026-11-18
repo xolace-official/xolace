@@ -24,7 +24,7 @@ export function useThread(
 	// Usually a no-op (Connect already connected); matters for a push deep link or a cold launch.
 	const stream = useStreamConnection(conversation != null);
 	const channel = useThreadChannel(stream.client, conversation);
-	const { actions, ageGate, blocking } = useThreadActions(
+	const { actions, ageGate, answering, blocking } = useThreadActions(
 		conversation,
 		reportTo
 	);
@@ -38,6 +38,7 @@ export function useThread(
 		actions: { ...actions, flag, retry: stream.retry },
 		ageGate,
 		state: threadState({
+			answering,
 			blocking,
 			channel,
 			conversation,

@@ -93,6 +93,7 @@ export function FixtureThread({
 		},
 		ageGate: AGE_GATE,
 		state: threadState({
+			answering: false,
 			blocking: { open: blockOpen, pending: false },
 			channel,
 			conversation: settled(conversation, phase),

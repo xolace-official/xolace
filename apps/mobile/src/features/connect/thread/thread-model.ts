@@ -260,12 +260,15 @@ export function resourceRow(r: Resource): {
 }
 
 /** What `useThread` and the dev states read: the conversation (`undefined` while it loads,
- * `null` once it's gone), Stream, the channel, and the block dialog. */
+ * `null` once it's gone), Stream, the channel, the block dialog, and
+ * an accept or decline in flight. */
 export type ThreadInputs = {
 	conversation: ThreadConversation | null | undefined;
 	stream: StreamStatus;
 	channel: Channel | null;
 	blocking: { open: boolean; pending: boolean };
+	/** An accept or decline is in flight: the bar's buttons wait. */
+	answering: boolean;
 };
 
 /** The thread's screen state. The hook and the dev states both call it, so the rules (what
@@ -279,6 +282,7 @@ export function threadState(input: ThreadInputs): ThreadState {
 		return { phase: "gone" };
 	}
 	return {
+		answering: input.answering,
 		bar: statusBar(c),
 		// "Your messages stay" only when there are messages: a channel exists once accepted.
 		blocking: { ...input.blocking, history: Boolean(c.streamChannelId) },

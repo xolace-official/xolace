@@ -29,6 +29,8 @@ export type ThreadState =
 			channel: Channel | null;
 			rate: "hidden" | "prompt" | "rated";
 			blocking: { open: boolean; pending: boolean; history: boolean };
+			/** An accept or decline is in flight. */
+			answering: boolean;
 	  };
 
 /** Everything the thread reads and does. Convex and Stream fill it in the app (`ThreadData`),
