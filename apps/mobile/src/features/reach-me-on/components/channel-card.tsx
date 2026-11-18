@@ -1,95 +1,104 @@
-import { SymbolView } from "expo-symbols";
-import { Button, useThemeColor } from "heroui-native";
 import type { ReactNode } from "react";
 import { View } from "react-native";
+import { accentTile } from "@/components/settings-kit/settings-layout";
 import { AppText } from "@/components/shared/app-text";
+import { Icon, type IconName } from "@/components/shared/icon";
+import { useScheme } from "@/design/scheme";
+import { CardTag, Pill } from "@/features/reach-me-on/components/pill";
 import {
 	CHANNEL_NAME,
 	type Channel,
 	type OrderMark,
 } from "@/features/reach-me-on/reach-view";
-import type { CrossPlatformSymbol } from "@/lib/cross-platform-symbol";
-import { playSoftPress } from "@/lib/haptics";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/cn";
+import { useTokenColor } from "@/lib/use-token-color";
 
-const CHANNEL_ICON: Record<Channel, CrossPlatformSymbol> = {
-	push: { android: "notifications", ios: "bell.fill", web: "notifications" },
-	telegram: { android: "send", ios: "paperplane.fill", web: "send" },
+const CHANNEL_ICON: Record<Channel, IconName> = {
+	push: { android: "notifications", ios: "bell.fill" },
+	telegram: { android: "send", ios: "paperplane.fill" },
 };
-
-/** A small accent tag on a card: First, Xolace+. */
-export const CardTag = ({ label }: { label: string }) => (
-	<View className="self-start rounded-full bg-accent/15 px-2.5 py-1">
-		<AppText className="font-medium text-accent text-xs">{label}</AppText>
-	</View>
-);
 
 type Props = {
 	channel: Channel;
 	statusLine?: string;
-	/** From `orderMark`: the First badge, or the Try this first button. */
+	/** From `orderMark`: the First tag and accent border, or a Try this first pill. */
 	mark: OrderMark;
 	onTryFirst: () => void;
-	badges?: ReactNode;
+	/** Telegram off Plus: the Xolace+ tag. */
+	plusTag?: boolean;
 	children: ReactNode;
 	disabled?: boolean;
 };
 
-/** One channel on "Reach me on…": icon, name, status, its order mark and body. */
+/**
+ * One channel on "Reach me on…" (P/src/features/reach/reach-parts.tsx `ChannelCard`): a 22 pt
+ * card with a 36 pt tile (Telegram's own blue on its tile only), name and status, the First or
+ * Xolace+ tag, then its body. The First card carries an accent border.
+ */
 export const ChannelCard = ({
 	channel,
 	statusLine,
 	mark,
 	onTryFirst,
-	badges,
+	plusTag = false,
 	children,
-	disabled,
+	disabled = false,
 }: Props) => {
-	const accent = useThemeColor("accent") as string;
+	const dark = useScheme() === "dark";
+	const accent = useTokenColor("accent");
+	const onTelegram = useTokenColor("on-telegram");
 	const first = mark === "first";
+	const telegram = channel === "telegram";
 	return (
 		<View
 			className={cn(
-				"gap-4 rounded-3xl p-5",
-				first ? "bg-accent/10" : "bg-surface/60"
+				"mx-4 gap-3.5 rounded-[22px] border-continuous bg-surface p-4",
+				first && "border-[1.5px] border-accent/45"
 			)}
 		>
 			<View className="flex-row items-center gap-3">
-				<View className="h-11 w-11 items-center justify-center rounded-2xl bg-accent/15">
-					<SymbolView
+				<View
+					className={cn(
+						"size-9 items-center justify-center rounded-[11px] border-continuous",
+						telegram ? "bg-telegram" : accentTile(dark)
+					)}
+				>
+					<Icon
+						color={telegram ? onTelegram : accent}
 						name={CHANNEL_ICON[channel]}
-						size={22}
-						tintColor={accent}
+						size={17}
 					/>
 				</View>
-				<View className="flex-1 gap-1">
-					<AppText className="font-semibold text-foreground text-lg">
+				<View className="flex-1 gap-px">
+					<AppText
+						className="text-[17px] leading-[22px]"
+						variant="body"
+						weight="semibold"
+					>
 						{CHANNEL_NAME[channel]}
 					</AppText>
-					{statusLine && (
-						<AppText className="text-foreground/55 text-sm">
+					{statusLine ? (
+						<AppText
+							className="text-[13.5px] text-foreground/55 leading-[18px]"
+							variant="body"
+						>
 							{statusLine}
 						</AppText>
-					)}
+					) : null}
 				</View>
-				{first && <CardTag label="First" />}
-				{badges}
+				{first ? <CardTag label="First" /> : null}
+				{plusTag ? <CardTag label="Xolace+" /> : null}
 			</View>
 			{children}
-			{mark === "try_first" && (
-				<Button
-					className="self-start"
-					isDisabled={disabled}
-					onPress={() => {
-						playSoftPress();
-						onTryFirst();
-					}}
-					size="sm"
-					variant="ghost"
-				>
-					<Button.Label>Try this first</Button.Label>
-				</Button>
-			)}
+			{mark === "try_first" ? (
+				<View className="self-start">
+					<Pill
+						disabled={disabled}
+						label="Try this first"
+						onPress={onTryFirst}
+					/>
+				</View>
+			) : null}
 		</View>
 	);
 };

@@ -25,6 +25,12 @@ export const devStates: readonly DevState[] = [
 		title: "Telegram linked, tried first",
 	},
 	{
+		id: "offline",
+		options: OPTIONS,
+		Screen: () => <FixtureSheet channels={LINKED} offline />,
+		title: "Offline: the banner, actions dimmed",
+	},
+	{
 		id: "needs-plus",
 		options: OPTIONS,
 		Screen: () => <FixtureSheet channels={NEEDS_PLUS} />,
