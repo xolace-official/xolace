@@ -30,8 +30,16 @@ export function useFlagMessage(
 				? client.flagMessage(message.id)
 				: Promise.reject(new Error("no client")),
 			flag({ context, conversationId, messageId: message.id }),
-		]).then((results) => {
-			const landed = results.some((r) => r.status === "fulfilled");
+		]).then(([stream, tray]) => {
+			// Each half on its own: one landing still says "Flagged", so a failure would go unseen.
+			if (stream.status === "rejected") {
+				console.error("[connect] flag to Stream failed", stream.reason);
+			}
+			if (tray.status === "rejected") {
+				console.error("[connect] flag to the concern tray failed", tray.reason);
+			}
+			const landed =
+				stream.status === "fulfilled" || tray.status === "fulfilled";
 			toast(landed ? THREAD.toast.flagged : THREAD.toast.flagFailed, {
 				description: landed ? THREAD.toast.flaggedBody : THREAD.toast.tryAgain,
 				variant: landed ? "success" : "danger",
