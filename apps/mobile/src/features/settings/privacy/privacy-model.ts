@@ -84,7 +84,6 @@ export function keepCard({
 	};
 }
 
-/** A delete sheet's words: on Xolace+ the account sheet adds who holds the billing. */
 /**
  * `requestDeletion` refused with `account_inactive` (`requireAuth`): an earlier attempt already
  * deleted the account and then failed to sign out. The server is the truth, so it counts as
@@ -93,6 +92,7 @@ export function keepCard({
 export const deletionAlreadyRequested = (code: string | undefined) =>
 	code === "account_inactive";
 
+/** A delete sheet's words: on Xolace+ the account sheet adds who holds the billing. */
 export function deleteSheet(
 	kind: SheetKind,
 	plus: boolean,
