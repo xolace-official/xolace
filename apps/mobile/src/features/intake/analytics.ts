@@ -2,7 +2,6 @@
 // is T7 §2.3 verbatim and the single source of `step_key` and `step_index`.
 // `username` records only whether the suggested handle was kept, never the handle.
 
-import { INTAKE_VERSION } from "@xolace/backend/convex/lib/validators";
 import type { PostHog } from "posthog-react-native";
 import { SERIES_BRANCH_VALUE } from "@/features/intake/questions";
 import type { FollowUp, Reading } from "@/features/intake/v2/heard";
