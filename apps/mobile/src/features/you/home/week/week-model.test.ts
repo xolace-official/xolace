@@ -1,9 +1,15 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { COPY } from "@/features/you/copy";
 import {
 	BAR_MAX,
 	BAR_MIN,
 	barHeight,
+	type DayDetail,
+	type DetailDomain,
+	DROP_DOMAIN_ABOVE,
+	DROP_FEELING_ABOVE,
 	dayAt,
+	detailLine,
 	heldReadout,
 	type IntensityDay,
 	levelY,
@@ -206,7 +212,7 @@ describe("heldReadout", () => {
 	it("reads a day against your usual, in one line", () => {
 		expect(
 			heldReadout({ days: BOARD, index: 1, start, todayIndex: 3, usual: USUAL })
-		).toEqual({ detail: undefined, value: "Tue 10 Nov · above your usual" });
+		).toEqual({ caption: null, value: "Tue 10 Nov · above your usual" });
 	});
 
 	it("tells a day still ahead from a quiet one", () => {
@@ -228,17 +234,133 @@ describe("heldReadout", () => {
 		).toBe("Wed 11 Nov · moderate intensity");
 	});
 
-	it("carries B17's detail when a day has one", () => {
-		const detail = {
-			ended: "lighter" as const,
-			moments: 2,
-			topDomain: "work",
-			topEmotion: "overwhelmed",
-		};
-		const days = BOARD.map((d, i) => (i === 1 ? { ...d, detail } : d));
+	it("says B17's line under the date when the day has a detail", () => {
+		const days = BOARD.map((d, i) => (i === 1 ? { ...d, detail: TUESDAY } : d));
 		expect(
-			heldReadout({ days, index: 1, start, todayIndex: 3, usual: USUAL }).detail
-		).toBe(detail);
+			heldReadout({ days, index: 1, start, todayIndex: 3, usual: USUAL })
+		).toEqual({
+			caption: "2 moments · Work · Overwhelm · ended lighter",
+			value: "Tue 10 Nov · above your usual",
+		});
+	});
+
+	it("says no second line for a day without moments, whatever it carries", () => {
+		const days = BOARD.map((d, i) => (i === 5 ? { ...d, detail: TUESDAY } : d));
+		expect(
+			heldReadout({ days, index: 5, start, todayIndex: 3, usual: USUAL })
+				.caption
+		).toBeNull();
+	});
+});
+
+const TUESDAY: DayDetail = {
+	ended: "lighter",
+	moments: 2,
+	topDomain: "work",
+	topEmotion: "overwhelm",
+};
+
+describe("detailLine", () => {
+	it("says the board's Tuesday", () => {
+		expect(detailLine(TUESDAY)).toBe(
+			"2 moments · Work · Overwhelm · ended lighter"
+		);
+	});
+
+	it("hides on a day with a bar but no detail (the read cap cut it) or no moments", () => {
+		expect(detailLine(undefined)).toBeNull();
+		expect(detailLine({ ...TUESDAY, moments: 0 })).toBeNull();
+	});
+
+	it("leaves out what the day didn't say", () => {
+		const none = {
+			ended: null,
+			moments: 1,
+			topDomain: null,
+			topEmotion: null,
+		} as const;
+		expect(detailLine(none)).toBe("1 moment");
+		expect(detailLine({ ...none, topEmotion: "self-doubt" })).toBe(
+			"1 moment · Self doubt"
+		);
+		expect(detailLine({ ...none, ended: "same", topDomain: "health" })).toBe(
+			"1 moment · Health · about the same"
+		);
+		expect(detailLine({ ...none, ended: "heavier" })).toBe(
+			"1 moment · ended heavier"
+		);
+	});
+
+	it("names every domain the server can send in one word", () => {
+		const keys = Object.keys(COPY.week.domains);
+		// The same keys as Steadiness's (the server's DOMAINS). The type in week-model makes a
+		// missing key a compile error; this keeps the two lists from drifting at run time.
+		expect([...keys].sort()).toEqual(
+			Object.keys(COPY.steadiness.domains).sort()
+		);
+		for (const key of keys) {
+			const name = COPY.week.domains[key as DetailDomain];
+			expect(name).toMatch(/^\S+$/);
+			expect(detailLine({ ...TUESDAY, topDomain: key })).toContain(name);
+		}
+	});
+
+	describe("at larger text sizes", () => {
+		const ENDED = COPY.week.ended.lighter;
+		const parts = (scale: number) =>
+			(detailLine(TUESDAY, scale) ?? "").split(" · ");
+
+		it("keeps the domain up to its threshold and drops it above", () => {
+			for (const scale of [0.82, 1, DROP_DOMAIN_ABOVE]) {
+				expect(parts(scale)).toEqual(["2 moments", "Work", "Overwhelm", ENDED]);
+			}
+			// iOS's xLarge, xxLarge and xxxLarge.
+			for (const scale of [DROP_DOMAIN_ABOVE + 0.01, 1.118, 1.235, 1.353]) {
+				expect(parts(scale)).toEqual(["2 moments", "Overwhelm", ENDED]);
+			}
+		});
+
+		it("drops the feeling too at accessibility sizes", () => {
+			expect(parts(DROP_FEELING_ABOVE)).toEqual([
+				"2 moments",
+				"Overwhelm",
+				ENDED,
+			]);
+			for (const scale of [DROP_FEELING_ABOVE + 0.01, 1.786, 1.8, 3.1]) {
+				expect(parts(scale)).toEqual(["2 moments", ENDED]);
+			}
+		});
+
+		it("always ends on how the day ended, at every size", () => {
+			for (let scale = 0.8; scale <= 3.2; scale += 0.05) {
+				expect(parts(scale).at(-1)).toBe(ENDED);
+				expect(parts(scale)[0]).toBe("2 moments");
+			}
+		});
+
+		it("passes the size through the held readout", () => {
+			const days = BOARD.map((d, i) =>
+				i === 1 ? { ...d, detail: TUESDAY } : d
+			);
+			const start = new Date(Date.UTC(2026, 10, 9));
+			const at = (fontScale: number) =>
+				heldReadout({
+					days,
+					fontScale,
+					index: 1,
+					start,
+					todayIndex: 3,
+					usual: USUAL,
+				}).caption;
+			expect(at(1)).toBe("2 moments · Work · Overwhelm · ended lighter");
+			expect(at(1.235)).toBe("2 moments · Overwhelm · ended lighter");
+		});
+	});
+
+	it("skips a domain it has no name for", () => {
+		expect(detailLine({ ...TUESDAY, topDomain: "constructor" })).toBe(
+			"2 moments · Overwhelm · ended lighter"
+		);
 	});
 });
 

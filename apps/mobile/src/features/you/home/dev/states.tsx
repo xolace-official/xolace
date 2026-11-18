@@ -82,7 +82,40 @@ export const devStates: readonly DevState[] = [
 		id: "this-week-held",
 		options: OPTIONS,
 		Screen: () => <FixtureYou start={{ toWeek: true, weekHeld: 1 }} />,
-		title: "This week, holding Tuesday",
+		title: "This week, holding Tuesday: its day and how it ended",
+	},
+	{
+		id: "this-week-held-longest",
+		options: OPTIONS,
+		Screen: () => (
+			<FixtureYou
+				fixture={{ week: "longest" }}
+				start={{ toWeek: true, weekHeld: 1 }}
+			/>
+		),
+		title: "This week, holding the longest line a day can say",
+	},
+	{
+		id: "this-week-held-sparse",
+		options: OPTIONS,
+		Screen: () => (
+			<FixtureYou
+				fixture={{ week: "sparse" }}
+				start={{ toWeek: true, weekHeld: 1 }}
+			/>
+		),
+		title: "This week, holding a day that named nothing: only its count",
+	},
+	{
+		id: "this-week-held-capped",
+		options: OPTIONS,
+		Screen: () => (
+			<FixtureYou
+				fixture={{ week: "capped" }}
+				start={{ toWeek: true, weekHeld: 3 }}
+			/>
+		),
+		title: "This week, holding a day the read cap cut: its bar, no second line",
 	},
 	{
 		id: "this-week-earlier",

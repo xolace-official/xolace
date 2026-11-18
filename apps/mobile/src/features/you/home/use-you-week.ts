@@ -43,7 +43,8 @@ export function useYouWeek(enabled: boolean, sessionCount: number) {
 	// Stable, so paging doesn't blank the card and replay its entrance.
 	const week = useStableQuery(
 		api.profile.getWeekIntensity,
-		enabled ? { weekOffset: asked } : "skip"
+		// `withDetail`: each day's second line when held (B17).
+		enabled ? { weekOffset: asked, withDetail: true } : "skip"
 	);
 	const usual = useQuery(
 		api.profile.intensity.getUsualBand,

@@ -3,23 +3,31 @@
  * a held day's readout, and a sentence that says something. Pure: the server's week and band
  * in, what to draw and say out.
  */
+import type { api } from "@xolace/backend/api";
+import type { FunctionReturnType } from "convex/server";
 import { COPY } from "@/features/you/copy";
+import { feelingOf } from "@/features/you/moments/moments-model";
 
 /**
- * What a held day could say under its date (the board's "2 moments · Work · Overwhelmed · ended
- * lighter"). No query sends it yet: backend item B17. Undefined until then, and nothing draws it.
+ * What a held day says under its date (the board's "2 moments · Work · Overwhelmed · ended
+ * lighter"): `getWeekIntensity({ withDetail: true })`'s per-day detail (backend B17). Only on
+ * days with moments, and not on a day the server's read cap cut through: that day keeps its bar
+ * but draws no second line.
  */
 export type DayDetail = {
+	/** How the day's last moment ended; null when it wasn't answered. */
 	ended: "lighter" | "same" | "heavier" | null;
 	moments: number;
+	/** A steadiness domain key ("work"), or null. */
 	topDomain: string | null;
+	/** The classifier's word ("overwhelm"), or null. */
 	topEmotion: string | null;
 };
 
 /** One day as `profile.getWeekIntensity` sends it: Monday first, intensity the day's mean 1–10. */
 export type IntensityDay = {
 	dayName: string;
-	/** B17's per-day detail; always undefined today. */
+	/** B17's per-day detail, asked for with `withDetail`. */
 	detail?: DayDetail;
 	intensity: number | null;
 	isToday: boolean;
@@ -178,9 +186,72 @@ export function pagedOffset({
 	return Math.max(-MAX_WEEKS_BACK, Math.min(0, shown + by));
 }
 
+/** The domain keys the server can send as `topDomain`. */
+export type DetailDomain = NonNullable<
+	NonNullable<
+		FunctionReturnType<
+			typeof api.profile.getWeekIntensity
+		>["days"][number]["detail"]
+	>["topDomain"]
+>;
+
+/** Every key the server can send has a one-word name: a new domain is a type error here. */
+const DOMAINS: Readonly<Record<DetailDomain, string>> = COPY.week.domains;
+
+const isDomain = (key: string): key is DetailDomain =>
+	Object.hasOwn(DOMAINS, key);
+
 /**
- * A held day's readout, one line in place of the title row: "Tue 10 Nov · above your usual".
- * `detail` is B17's second line, carried for when it lands; nothing draws it yet.
+ * Text sizes (the window's `fontScale`) above which line 2 drops a part so its ending still fits
+ * one row. The card shrinks the line to 0.8 at most, and has about 302 pt for it on a 375 pt phone
+ * (317 pt measured on a 390 pt iPhone 17e, less 15). The longest lines, measured at 12.5 pt in the
+ * widest body face (DM Sans), fit up to:
+ * - "99 moments · Belonging · Disappointment · about the same", 342 pt: 1.104;
+ * - without the domain, 277 pt: 1.364;
+ * - the count and the ending, 175 pt: 2.16 (AppText caps body text at 1.8).
+ * Rounded down. With React Native's iOS scales (Large 1, xLarge 1.118, xxLarge 1.235, xxxLarge
+ * 1.353, AX1 1.786), only Large and smaller say it all; xLarge to xxxLarge drop the domain, and
+ * the accessibility sizes drop the feeling too.
+ */
+export const DROP_DOMAIN_ABOVE = 1.1;
+export const DROP_FEELING_ABOVE = 1.36;
+
+/**
+ * A held day's second line, from B17's detail: "2 moments · Work · Overwhelm · ended lighter".
+ * Each part only when the day says it, so a day of unanswered moments is "1 moment · Work". Null
+ * with no detail or no moments. The domain is its one-word name (`COPY.week.domains`), so the
+ * line fits one row; at larger text sizes the domain, then the feeling, give way so the ending
+ * (always last) stays on it. The feeling is cased as Moments cases a word (`feelingOf`), but it's
+ * the day's most frequent primary emotion, where a moment shows its finer label when it has one.
+ */
+export function detailLine(
+	detail: DayDetail | undefined,
+	fontScale = 1
+): string | null {
+	if (!detail || detail.moments < 1) {
+		return null;
+	}
+	const domain =
+		fontScale <= DROP_DOMAIN_ABOVE &&
+		detail.topDomain &&
+		isDomain(detail.topDomain)
+			? DOMAINS[detail.topDomain]
+			: null;
+	const feeling =
+		fontScale <= DROP_FEELING_ABOVE ? feelingOf(null, detail.topEmotion) : null;
+	return [
+		COPY.week.moments(detail.moments),
+		domain,
+		feeling,
+		detail.ended ? COPY.week.ended[detail.ended] : null,
+	]
+		.filter(Boolean)
+		.join(" · ");
+}
+
+/**
+ * A held day's readout in place of the title row: "Tue 10 Nov · above your usual", and under it
+ * `caption`, B17's line (`detailLine`), or null when there's none to draw.
  */
 export function heldReadout({
 	days,
@@ -188,6 +259,7 @@ export function heldReadout({
 	start,
 	usual,
 	todayIndex,
+	fontScale = 1,
 }: {
 	days: readonly IntensityDay[];
 	index: number;
@@ -195,17 +267,25 @@ export function heldReadout({
 	usual: Usual | null;
 	/** -1 on a past week. */
 	todayIndex: number;
-}): { detail?: DayDetail; value: string } {
+	/** The window's text size (`useWindowDimensions().fontScale`), for `detailLine`. */
+	fontScale?: number;
+}): { caption: string | null; value: string } {
 	const day = days[index];
 	const date = shortDate(start, index);
 	if (day.intensity === null) {
 		const ahead = todayIndex >= 0 && index > todayIndex;
-		return { value: `${date} · ${ahead ? COPY.week.ahead : COPY.week.none}` };
+		return {
+			caption: null,
+			value: `${date} · ${ahead ? COPY.week.ahead : COPY.week.none}`,
+		};
 	}
 	const said = usual
 		? COPY.week.relation[relationTo(day.intensity, usual)]
 		: COPY.week.level(day.intensity);
-	return { detail: day.detail, value: `${date} · ${said}` };
+	return {
+		caption: detailLine(day.detail, fontScale),
+		value: `${date} · ${said}`,
+	};
 }
 
 /**

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { COPY } from "@/features/you/copy";
 import type { IntensityWeek } from "@/features/you/home/use-you-week";
@@ -21,6 +21,9 @@ import { tap } from "@/lib/haptics";
 
 /** The ⓘ's explanation sits under the title row. */
 const TIP_TOP = 56;
+/** How far a held day's second line may shrink to stay on one row: the longest needs ~0.88 at
+ * default text size on a 375 pt phone. Past that, `detailLine` drops parts (`DROP_*_ABOVE`). */
+const CAPTION_MIN_SCALE = 0.8;
 
 /**
  * This week (you.md §6): production's intensity card with your usual, a held day's readout in
@@ -30,6 +33,7 @@ const TIP_TOP = 56;
 export function WeekCard({ week }: { week: IntensityWeek }) {
 	const { actions } = useYouHome();
 	const { weekHeld } = useYouUi();
+	const { fontScale } = useWindowDimensions();
 	const [info, setInfo] = useState(false);
 	const [held, setHeld] = useState<number | null>(weekHeld);
 	const seen = useRef(false);
@@ -55,6 +59,7 @@ export function WeekCard({ week }: { week: IntensityWeek }) {
 			? null
 			: heldReadout({
 					days: week.days,
+					fontScale,
 					index: held,
 					start: week.start,
 					todayIndex,
@@ -74,10 +79,27 @@ export function WeekCard({ week }: { week: IntensityWeek }) {
 					<View className="min-h-11 justify-center">
 						<AppText
 							className="text-[17px] leading-[22px] tracking-[-0.17px]"
+							numberOfLines={1}
 							variant="headline"
 						>
 							{readout.value}
 						</AppText>
+						{/* One line, so holding a day never moves the plot. The longest line a day can
+						    say (~330–342 pt at 12.5 pt in the three body faces) is wider than a 375 pt
+						    phone's card (~302 pt): it shrinks to fit, and at larger text sizes drops
+						    parts (`detailLine`), rather than lose its ending. */}
+						{readout.caption ? (
+							<AppText
+								adjustsFontSizeToFit
+								className="mt-0.75 text-[12.5px] leading-4"
+								color="muted"
+								minimumFontScale={CAPTION_MIN_SCALE}
+								numberOfLines={1}
+								variant="footnote"
+							>
+								{readout.caption}
+							</AppText>
+						) : null}
 					</View>
 				) : (
 					<View className="min-h-11 flex-row items-center gap-1.75">
