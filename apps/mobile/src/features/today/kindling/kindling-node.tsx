@@ -25,7 +25,7 @@ const POP: readonly (readonly [number, number])[] = [
 	[1, 1],
 ];
 const TAU = Math.PI * 2;
-/** The waiting ring: ink 3 at 35%. */
+/** The waiting ring: ink 3 at 35%; an arriving node's comes up to full as it turns over. */
 const WAIT_ALPHA = 0.35;
 
 /** Theme colours the nodes take: the card, the well, the waiting ring, the current violet and the lit ember. */
@@ -105,6 +105,9 @@ export function KindlingNode({
 				? interpolateColors(turn.get(), [0, 1], [c.waitStroke, c.violet])
 				: c.waitStroke
 	);
+	const strokeOpacity = useDerivedValue(() =>
+		done ? 1 : current ? WAIT_ALPHA + (1 - WAIT_ALPHA) * turn.get() : WAIT_ALPHA
+	);
 	const strokeW = useDerivedValue(() =>
 		done ? 1 : current ? 1.5 + 1.5 * turn.get() : 1.5
 	);
@@ -169,6 +172,7 @@ export function KindlingNode({
 				color={stroke}
 				cx={0}
 				cy={0}
+				opacity={strokeOpacity}
 				r={NODE.r}
 				strokeWidth={strokeW}
 				style="stroke"
