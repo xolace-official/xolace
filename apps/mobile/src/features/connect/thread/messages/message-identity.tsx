@@ -7,8 +7,11 @@ import {
 import { resolveMessageIdentity } from "../../chat-rules";
 import type { ThreadConversation } from "../thread-model";
 
-/** The conversation behind the mounted override tree. A context, because `WithComponents` never
- * re-reads its overrides, so a closure would freeze at the first render. */
+/** The conversation behind the mounted override tree, read by Stream's overrides that need who's
+ * who: the author avatar here, the crisis card, the quoted reply, the reaction list and the typing
+ * indicator. A context, because `WithComponents` never re-reads its overrides, so a closure would
+ * freeze at the first render. Its own context rather than `useThreadScreen`, which changes with
+ * every thread state (a dialog opening, a send), so every bubble in the list would re-render. */
 const ConversationIdentityContext = createContext<{
 	conversation: ThreadConversation;
 } | null>(null);
