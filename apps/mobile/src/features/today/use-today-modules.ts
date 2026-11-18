@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useFullContext } from "@/lib/convex/use-full-context";
 import { campfireView } from "./campfire/campfire-model";
 import { kindlingView } from "./kindling/kindling-model";
+import { useKeptKindling } from "./kindling/use-kept-kindling";
 
 type CampfireStats = FunctionReturnType<typeof api.intake.campfireStats>;
 
@@ -49,8 +50,8 @@ export function useModules() {
 	const v2Intake =
 		useFullContext()?.intake?.intakeVersion === INTAKE_V2_VERSION;
 	const stats = useCampfireStatsOnce(cohort?.status === "hidden" && v2Intake);
-	return {
-		campfire: campfireView(cohort, stats, v2Intake),
-		kindling: active === undefined ? undefined : kindlingView(active),
-	};
+	const kindling = useKeptKindling(
+		active === undefined ? undefined : kindlingView(active)
+	);
+	return { campfire: campfireView(cohort, stats, v2Intake), kindling };
 }

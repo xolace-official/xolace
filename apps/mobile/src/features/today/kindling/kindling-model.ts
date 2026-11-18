@@ -172,6 +172,53 @@ export function tendWait(
 	return Math.max(TEND.settleMs, busyUntil - nowMs + TEND.gapMs);
 }
 
+/**
+ * The kindling Today keeps for this visit once the server closed it. `getActive` goes null
+ * the moment no step is pending (`paths.ts` `settle`), so the last tend would never play and
+ * the card would vanish (handoff `kindling.md` §5: keep the last snapshot on screen).
+ */
+export type KeptKindling = {
+	view: KindlingView;
+	/** The server closed it: its last steps show as tended. */
+	closed: boolean;
+	/** Today has been in front since it closed, so the celebration has had its turn. */
+	seen: boolean;
+};
+
+const viewKey = (v: KindlingView) =>
+	`${v.id}:${v.twigs.map((t) => `${t.id}=${t.state}`).join(",")}`;
+
+/**
+ * The next kept kindling as the server's changes, or undefined when nothing changes. Kept
+ * while the server has one; when it goes null, its pending steps turn done (Today can't
+ * tell a last pass-by from a tend once the path closes) and it stays until Today has been
+ * in front and then isn't (the next blur), or the next visit (a remount keeps nothing).
+ */
+export function keepKindling(
+	kept: KeptKindling | null,
+	server: KindlingView | null | undefined,
+	focused: boolean
+): KeptKindling | null | undefined {
+	if (server) {
+		return kept && !kept.closed && viewKey(kept.view) === viewKey(server)
+			? undefined
+			: { closed: false, seen: false, view: server };
+	}
+	if (server === undefined || !kept) {
+		return;
+	}
+	if (!kept.closed) {
+		const twigs = kept.view.twigs.map((t) =>
+			t.state === "pending" ? { ...t, state: "done" as const } : t
+		);
+		return { closed: true, seen: focused, view: { ...kept.view, twigs } };
+	}
+	if (focused && !kept.seen) {
+		return { ...kept, seen: true };
+	}
+	return !focused && kept.seen ? null : undefined;
+}
+
 /** The path you tend, from the board's `.kpath`: 322 × 64. */
 export const PATH_W = 322;
 export const PATH_H = 64;

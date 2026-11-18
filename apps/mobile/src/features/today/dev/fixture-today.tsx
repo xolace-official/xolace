@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScopedTheme } from "uniwind";
 import { NIGHT_VARIANT, type ThemeMode, themeVariant } from "@/design/themes";
+import { useKeptKindling } from "../kindling/use-kept-kindling";
 import { type Today, TodayProvider } from "../today-data";
 import { headerCopy, type TodayPhase } from "../today-model";
 import { TodayScreen } from "../today-screen";
@@ -109,12 +110,16 @@ function FixtureToday({
 		FIXTURE_WEEKDAY,
 		offline ? null : FIXTURE_NAME
 	);
-	let kindlingView: Today["state"]["kindling"] = null;
+	// As the server sends it: tending the last step closes the kindling, so it goes null.
+	let server: Today["state"]["kindling"] = null;
 	if (kindling === "loading") {
-		kindlingView = undefined;
+		server = undefined;
+	} else if (kindling === "last") {
+		server = tended ? null : FIXTURE_KINDLING.last;
 	} else if (kindling !== "none") {
-		kindlingView = FIXTURE_KINDLING[tended ? "tended" : kindling];
+		server = FIXTURE_KINDLING[tended ? "tended" : kindling];
 	}
+	const kindlingView = useKeptKindling(server);
 	const state: Today["state"] = {
 		campfire: campfire === "none" ? null : FIXTURE_CAMPFIRE[campfire],
 		card: { monthPrompt: monthPrompt ? FIXTURE_MONTH_PROMPT : null },

@@ -40,6 +40,11 @@ export const FIXTURE_KINDLING = {
 	},
 	/** One of four tended (`01-evening`). */
 	board: { id: "k1", twigs: BOARD_TWIGS },
+	/** Three of four tended: the last one's tend closes the kindling (`getActive` goes null). */
+	last: {
+		id: "k1",
+		twigs: BOARD_TWIGS.map((t, i) => (i < 3 ? { ...t, state: "done" } : t)),
+	},
 	/** Two of four tended: the board's second step has just been done (`06-kindling-tended`). */
 	tended: {
 		id: "k1",

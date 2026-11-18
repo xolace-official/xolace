@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	cubicBetween,
 	firstWaiting,
+	keepKindling,
 	kindlingView,
 	newlyTended,
 	nextRow,
@@ -255,5 +256,67 @@ describe("tendWait", () => {
 
 	it("plays at once with Reduce Motion", () => {
 		expect(tendWait(1000, 3600, true)).toBe(0);
+	});
+});
+
+describe("keepKindling (the last snapshot once the server closes it)", () => {
+	const last = {
+		id: "k1",
+		twigs: [twig("done", "a"), twig("done", "b"), twig("pending", "c")],
+	};
+
+	it("keeps the server's kindling, and changes nothing while it's the same", () => {
+		const kept = keepKindling(null, last, true);
+		expect(kept).toEqual({ closed: false, seen: false, view: last });
+		expect(keepKindling(kept ?? null, { ...last }, true)).toBeUndefined();
+	});
+
+	it("waits while the server loads, and keeps nothing it never had", () => {
+		expect(keepKindling(null, undefined, true)).toBeUndefined();
+		expect(keepKindling(null, null, true)).toBeUndefined();
+	});
+
+	it("keeps the last snapshot, tended, when the path closes, so the final tend plays", () => {
+		const kept = keepKindling(
+			{ closed: false, seen: false, view: last },
+			null,
+			false
+		);
+		expect(kept?.closed).toBe(true);
+		expect(kept?.view.twigs.map((t) => t.state)).toEqual([
+			"done",
+			"done",
+			"done",
+		]);
+		expect(kept?.view.id).toBe("k1");
+		// It closed while Today was behind the kindling screen; it stays through the blur.
+		expect(kept?.seen).toBe(false);
+		expect(keepKindling(kept ?? null, null, false)).toBeUndefined();
+	});
+
+	it("drops it on the next blur once Today has shown it", () => {
+		const closed = keepKindling(
+			{ closed: false, seen: false, view: last },
+			null,
+			false
+		);
+		const seen = keepKindling(closed ?? null, null, true);
+		expect(seen?.seen).toBe(true);
+		expect(keepKindling(seen ?? null, null, true)).toBeUndefined();
+		expect(keepKindling(seen ?? null, null, false)).toBeNull();
+	});
+
+	it("takes a new kindling over the kept one", () => {
+		const closed = keepKindling(
+			{ closed: false, seen: true, view: last },
+			null,
+			true
+		);
+		const fresh = { id: "k2", twigs: [twig("pending", "d")] };
+		expect(keepKindling(closed ?? null, fresh, true)).toEqual({
+			closed: false,
+			seen: false,
+			view: fresh,
+		});
 	});
 });
