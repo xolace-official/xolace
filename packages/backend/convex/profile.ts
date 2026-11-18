@@ -300,7 +300,8 @@ export const getWeekIntensity = query({
 		);
 		const weekEnd = new Date(weekStart.getTime() + 7 * 86_400_000);
 
-		const metadata = await ctx.db
+		// One row past the cap says whether the week ran over it (see partialDay).
+		const read = await ctx.db
 			.query("emotional_metadata")
 			.withIndex("by_profile_createdAt", (q) =>
 				q
@@ -308,7 +309,11 @@ export const getWeekIntensity = query({
 					.gte("createdAt", weekStart.getTime())
 					.lt("createdAt", weekEnd.getTime())
 			)
-			.take(WEEK_MAX_MOMENTS);
+			.take(WEEK_MAX_MOMENTS + 1);
+		// The bars are drawn from the first WEEK_MAX_MOMENTS rows, as always.
+		const metadata = read.slice(0, WEEK_MAX_MOMENTS);
+		const dayIndexOf = (createdAt: number) =>
+			(new Date(createdAt).getDay() + 6) % 7;
 
 		const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 		const DAY_NAMES = [
@@ -324,16 +329,22 @@ export const getWeekIntensity = query({
 		const moments: (typeof metadata)[] = [[], [], [], [], [], [], []];
 
 		for (const m of metadata) {
-			const idx = (new Date(m.createdAt).getDay() + 6) % 7;
+			const idx = dayIndexOf(m.createdAt);
 			buckets[idx].push(m.intensity);
 			moments[idx].push(m);
 		}
 
-		// Read oldest first, so at the cap the last day read may hold only some
-		// of its moments: it gets no detail rather than a wrong count.
+		// Read oldest first. When the week ran over the cap and the first row left
+		// out falls on the same day as the last row kept, that day was read only
+		// in part: it gets no detail rather than a short count. At exactly the
+		// cap, or when the next row starts a later day, every day kept is whole.
+		const lastKept = metadata.at(-1);
+		const firstLeft = read.at(WEEK_MAX_MOMENTS);
 		const partialDay =
-			metadata.length >= WEEK_MAX_MOMENTS
-				? (new Date(metadata.at(-1)?.createdAt ?? now).getDay() + 6) % 7
+			lastKept &&
+			firstLeft &&
+			dayIndexOf(firstLeft.createdAt) === dayIndexOf(lastKept.createdAt)
+				? dayIndexOf(lastKept.createdAt)
 				: -1;
 		const details: (DayDetail | undefined)[] = args.withDetail
 			? await Promise.all(

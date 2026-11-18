@@ -298,21 +298,20 @@ describe("getWeekIntensity withDetail", () => {
 		expect((await details(user)).filter(Boolean)).toHaveLength(0);
 	});
 
-	it("gives no detail to a day the read cap cut through", async () => {
-		const user = await asNewUser();
-		// Monday fills all but 5 rows of the cap; Tuesday has 10, so only 5 of
-		// them are read. Its bar is drawn from those (as before), but a count of
-		// 5 would be wrong, so it gets no detail.
+	/** Monday's rows, then Tuesday's, then Wednesday's, all on one session. */
+	async function seedRows(
+		user: SeededUser,
+		counts: { mon: number; tue: number; wed?: number }
+	) {
 		const sessionId = await seedSession(user.root, user.profileId, {
 			createdAt: on(MON),
 			postSessionMood: "lighter",
 			state: "completed",
 		});
 		const rows = [
-			...Array.from({ length: WEEK_MAX_MOMENTS - 5 }, (_, i) =>
-				on(MON, 1, 0, i)
-			),
-			...Array.from({ length: 10 }, (_, i) => on(TUE, 1, 0, i)),
+			...Array.from({ length: counts.mon }, (_, i) => on(MON, 1, 0, i)),
+			...Array.from({ length: counts.tue }, (_, i) => on(TUE, 1, 0, i)),
+			...Array.from({ length: counts.wed ?? 0 }, (_, i) => on(WED, 1, 0, i)),
 		];
 		await user.root.run(async (ctx) => {
 			for (const createdAt of rows) {
@@ -331,10 +330,45 @@ describe("getWeekIntensity withDetail", () => {
 				});
 			}
 		});
+	}
+
+	it("gives no detail to a day the read cap cut through", async () => {
+		const user = await asNewUser();
+		// Monday fills all but 5 rows of the cap; Tuesday has 10, so only 5 of
+		// them are read. Its bar is drawn from those (as before), but a count of
+		// 5 would be wrong, so it gets no detail.
+		await seedRows(user, { mon: WEEK_MAX_MOMENTS - 5, tue: 10 });
 		const result = await week(user, true);
 		expect(result.days[MON].detail).toMatchObject({
 			moments: WEEK_MAX_MOMENTS - 5,
 		});
+		expect(result.days[TUE].intensity).toBe(5);
+		expect(result.days[TUE].detail).toBeUndefined();
+	});
+
+	it("keeps the last day's detail at exactly the cap", async () => {
+		const user = await asNewUser();
+		await seedRows(user, { mon: WEEK_MAX_MOMENTS - 5, tue: 5 });
+		const result = await week(user, true);
+		expect(result.days[TUE].detail).toMatchObject({ moments: 5 });
+	});
+
+	it("keeps the last day's detail when one row over the cap starts a later day", async () => {
+		const user = await asNewUser();
+		// 301 rows: Tuesday's 5 are all read; the one left out is Wednesday's.
+		await seedRows(user, { mon: WEEK_MAX_MOMENTS - 5, tue: 5, wed: 1 });
+		const result = await week(user, true);
+		expect(result.days[TUE].detail).toMatchObject({ moments: 5 });
+		// Wednesday's row is past the cap: no bar and no detail, as before.
+		expect(result.days[WED]).toMatchObject({ intensity: null });
+		expect(result.days[WED].detail).toBeUndefined();
+	});
+
+	it("drops the last day's detail when one row over the cap is on that day", async () => {
+		const user = await asNewUser();
+		// 301 rows, Tuesday has 6: the sixth is left out, so the 5 read are short.
+		await seedRows(user, { mon: WEEK_MAX_MOMENTS - 5, tue: 6 });
+		const result = await week(user, true);
 		expect(result.days[TUE].intensity).toBe(5);
 		expect(result.days[TUE].detail).toBeUndefined();
 	});

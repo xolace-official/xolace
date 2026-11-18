@@ -14,8 +14,9 @@ import { domainValidator } from "../lib/validators";
  */
 
 /**
- * `getWeekIntensity`'s read cap for one week's moments, read oldest first. At
- * the cap, the last day read may be partial, and it gets no detail.
+ * `getWeekIntensity`'s read cap for one week's moments, read oldest first. It
+ * reads one row more to tell whether the week ran over: if so, and that row is
+ * on the last day kept, that day was read in part and gets no detail.
  */
 export const WEEK_MAX_MOMENTS = 300;
 
