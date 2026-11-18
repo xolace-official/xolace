@@ -60,6 +60,8 @@ export type FixtureProps = {
 	offline?: boolean;
 	/** The streak grows by one just after the screen opens, and the flame ignites. */
 	ignite?: boolean;
+	/** Yesterday's streak went quiet: the rekindle pill asks under the greeting. */
+	rekindle?: boolean;
 	/** Step through the four phases, to watch the sky change hour (and night fall). */
 	cycle?: boolean;
 	/** This month's prompt rides on the card. */
@@ -97,6 +99,7 @@ function FixtureToday({
 	finding = false,
 	lateWord = false,
 	free = false,
+	rekindle = false,
 }: FixtureProps) {
 	const covers = useFixtureCovers();
 	const [wordIn, setWordIn] = useState(!lateWord);
@@ -161,10 +164,13 @@ function FixtureToday({
 		...(wordIn ? {} : { word: undefined }),
 		listenLocked: free,
 		phase,
+		rekindle:
+			rekindle && !offline ? { busy: false, streak: FIXTURE_STREAK } : null,
 		streak: offline
 			? null
 			: {
-					count: FIXTURE_STREAK + (grown ? 1 : 0),
+					// A broken streak counts from nothing until it's rekindled.
+					count: rekindle ? 0 : FIXTURE_STREAK + (grown ? 1 : 0),
 					igniteKey: grown ? 1 : 0,
 				},
 	};

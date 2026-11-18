@@ -1,0 +1,77 @@
+import { useState } from "react";
+import { View } from "react-native";
+import { SettingsDialog } from "@/components/settings-kit/settings-dialog";
+import { AppText } from "@/components/shared/app-text";
+import { Icon } from "@/components/shared/icon";
+import { PressScale } from "@/components/shared/press-scale";
+import { useTokenColor } from "@/lib/use-token-color";
+import { COPY } from "../copy";
+import { useToday } from "../today-data";
+
+/** Where the pill sits under the greeting: 14 below it, 36 tall (`PILL_SLOT`). */
+const TOP = 14;
+const FLAME = 14;
+
+/**
+ * Production's rekindle chip and sheet (#437), in the slot under the greeting: while a
+ * saver can bring back yesterday's streak, a pill asks once; the dialog spends it. The
+ * handoff gives revive no home, so it sits on Today's streak surface.
+ */
+export function RekindlePill({ height }: { height: number }) {
+	const { state, actions } = useToday();
+	const emberInk = useTokenColor("ember-ink");
+	const [open, setOpen] = useState(false);
+	const offer = state.rekindle;
+
+	return (
+		<View style={{ height }}>
+			{offer ? (
+				<PressScale
+					accessibilityLabel={COPY.rekindle.label(offer.streak)}
+					accessibilityRole="button"
+					accessibilityState={{ busy: offer.busy, disabled: offer.busy }}
+					className="self-start"
+					disabled={offer.busy}
+					onPress={() => setOpen(true)}
+					style={{ marginTop: TOP }}
+				>
+					<View className="h-9 flex-row items-center gap-1.5 rounded-full bg-ember-wash px-3.5">
+						<Icon
+							color={emberInk}
+							name={{ android: "local_fire_department", ios: "flame.fill" }}
+							size={FLAME}
+						/>
+						<AppText
+							className="shrink text-ember-ink"
+							numberOfLines={1}
+							variant="footnote"
+						>
+							{COPY.rekindle.quiet(offer.streak)}
+						</AppText>
+						<AppText
+							className="text-ember-ink"
+							variant="footnote"
+							weight="semibold"
+						>
+							{COPY.rekindle.chip}
+						</AppText>
+					</View>
+				</PressScale>
+			) : null}
+			<SettingsDialog
+				cancel={COPY.rekindle.notNow}
+				desc={COPY.rekindle.desc(offer?.streak ?? 0)}
+				ok={COPY.rekindle.ask}
+				onCancel={() => setOpen(false)}
+				onOk={() => {
+					setOpen(false);
+					actions.rekindle();
+				}}
+				open={open && offer !== null}
+				title={COPY.rekindle.title}
+			>
+				{null}
+			</SettingsDialog>
+		</View>
+	);
+}

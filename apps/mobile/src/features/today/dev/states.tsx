@@ -41,6 +41,16 @@ export const devStates: readonly DevState[] = [
 		...today({ ignite: true, phase: "evening" }),
 	},
 	{
+		id: "rekindle",
+		title: "A streak to rekindle (the pill and its dialog)",
+		...today({ phase: "evening", rekindle: true }),
+	},
+	{
+		id: "rekindle-dark",
+		title: "A streak to rekindle, dark",
+		...today({ phase: "day", rekindle: true, theme: "dark" }),
+	},
+	{
 		id: "month-prompt",
 		title: "This month's prompt on the card",
 		...today({ monthPrompt: true, phase: "evening" }),

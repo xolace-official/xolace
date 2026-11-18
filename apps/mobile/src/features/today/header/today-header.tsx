@@ -9,6 +9,7 @@ import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
+import { RekindlePill } from "../rekindle/rekindle-pill";
 import { useToday } from "../today-data";
 import { useScrolledPast, useTodayFrame } from "../today-frame";
 import { Greeting } from "./greeting";
@@ -21,7 +22,8 @@ const LIFEBUOY = 20;
  * Where the return pill sits under the greeting (board `.tpill`: 14 below, 36 tall). The
  * pill shows what coming back left waiting, which needs `followUps.getWaitingCard`
  * (B1); until it lands the slot stays empty, as the prototype's is with nothing
- * waiting. The Reflect card's margin gives the room back, so Today doesn't move.
+ * waiting. The Reflect card's margin gives the room back, so Today doesn't move. A streak
+ * one saver can bring back asks there meanwhile (`RekindlePill`).
  */
 export const PILL_SLOT = 14 + 36;
 
@@ -80,7 +82,7 @@ export function TodayHeader({
 				</GlassGroup>
 			</View>
 			<Greeting intro={intro} reduced={reduced} text={state.greeting} />
-			<View style={{ height: PILL_SLOT }} />
+			<RekindlePill height={PILL_SLOT} />
 		</Animated.View>
 	);
 }
