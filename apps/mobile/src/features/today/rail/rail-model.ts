@@ -32,9 +32,12 @@ export function railTiles(shelf: readonly ShelfItem[]): RailTile[] {
 	}));
 }
 
-/** Something for the quiet, late: the rail's first piece of music, if it has one. */
+/**
+ * Something for the quiet, late: the rail's first piece of music, else its first track (the
+ * row is always there at night while the shelf has anything), else none.
+ */
 export const quietTile = (tiles: readonly RailTile[]): RailTile | null =>
-	tiles.find((t) => t.family === "music") ?? null;
+	tiles.find((t) => t.family === "music") ?? tiles[0] ?? null;
 
 /** The rail, from the board's `.rail*`, `.chime*`, `.str`, `.art`, `.wave`, `.eq`. */
 export const TILE = {

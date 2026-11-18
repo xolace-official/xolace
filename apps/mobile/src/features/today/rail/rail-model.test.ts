@@ -48,7 +48,13 @@ describe("quietTile", () => {
 		expect(quietTile(tiles)?.slug).toBe("quiet");
 	});
 
-	it("is none when the rail has no music", () => {
-		expect(quietTile(railTiles([item("voice", "support")]))).toBeNull();
+	it("falls back to the first track when the rail has no music", () => {
+		expect(quietTile(railTiles([item("voice", "support")]))?.slug).toBe(
+			"voice"
+		);
+	});
+
+	it("is none with nothing on the shelf", () => {
+		expect(quietTile([])).toBeNull();
 	});
 });
