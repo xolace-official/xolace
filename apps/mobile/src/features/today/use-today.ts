@@ -13,6 +13,7 @@ import { usePushOnce } from "@/lib/use-push-once";
 import { useRekindle } from "./rekindle/use-rekindle";
 import type { Today } from "./today-data";
 import {
+	cardMode,
 	type Door,
 	headerCopy,
 	introDue,
@@ -27,6 +28,9 @@ import {
 } from "./today-model";
 import { useTodayActions } from "./use-today-actions";
 import { useLowerModules, useModules } from "./use-today-modules";
+
+/** Reflect: Today's card and the toolbar's pill zoom into it. */
+const REFLECT = "/reflect";
 
 /**
  * Where each door goes. Sit with this from Today plays Three breaths on its own, outside
@@ -166,17 +170,14 @@ export function useTodayData(): Today {
 	const intro = useIntro(day, userId);
 	const monthPrompt = useMonthPrompt(now);
 	const { campfire, kindling } = useModules();
+	// Reflect's open session, so the card can wait with your words or say the mirror is back.
+	const active = useQuery(api.sessions.getActive);
 	const lower = useLowerModules();
 	const moduleActions = useTodayActions();
 	const { offer: rekindle, rekindle: spendSaver } = useRekindle();
 
 	// A double tap on a door or the kindling would stack two screens.
 	const pushOnce = usePushOnce();
-	const openReflect = () =>
-		pushOnce(() => {
-			playSoftPress();
-			router.push("/reflect");
-		});
 
 	return {
 		actions: {
@@ -189,14 +190,14 @@ export function useTodayData(): Today {
 					playSoftPress();
 					router.push("/kindling");
 				}),
-			openReflect,
 			openStreak: () => router.navigate("/you"),
+			pressReflect: playSoftPress,
 			rekindle: () => void spendSaver(),
 		},
 		state: {
 			campfire,
 			...lower,
-			card: { monthPrompt },
+			card: { mode: cardMode(active?.state), monthPrompt, reflect: REFLECT },
 			day,
 			eyebrow,
 			greeting,

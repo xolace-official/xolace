@@ -6,14 +6,13 @@ export type Frame = { x: number; y: number; width: number; height: number };
 
 type Props = {
 	card: Frame;
-	input: Frame;
-	mic: Frame;
+	/** The field's input and mic, while the card shows it (at rest). */
+	field?: { input: Frame; mic: Frame; label: string };
 	prompt: string;
 	hint: string;
 	/** The doors' VoiceOver action ("Talk or Vent"). */
 	doorsAction: string;
-	inputLabel: string;
-	/** Only while the card is at rest: then the input, mic and the doors action are there too. */
+	/** Only while the card is at rest: the doors' action. */
 	onDoors?: () => void;
 	/** The card's button, for VoiceOver to come back to after Write instead. */
 	cardRef?: Ref<ComponentRef<typeof View>>;
@@ -21,19 +20,17 @@ type Props = {
 
 /**
  * What VoiceOver reads on the Reflect card. Its touch surface is hidden from VoiceOver,
- * because S2's Link.Trigger zoom source is a `display: contents` view with no frame and
+ * because the Link.Trigger zoom source is a `display: contents` view with no frame and
  * iOS accessibility skips anything inside a zero-size view; so the card's parts are mirrored here: over the card,
  * outside the link, at the frames the card measured. They take no touches, so a
  * VoiceOver double tap falls through to the card itself and the zoom still runs.
  */
 export function CardA11y({
 	card,
-	input,
-	mic,
+	field,
 	prompt,
 	hint,
 	doorsAction,
-	inputLabel,
 	onDoors,
 	cardRef,
 }: Props) {
@@ -56,15 +53,15 @@ export function CardA11y({
 				ref={cardRef}
 				style={at(card)}
 			/>
-			{onDoors ? (
+			{field ? (
 				<>
 					<View
 						accessibilityHint={COPY.opensReflect}
-						accessibilityLabel={inputLabel}
+						accessibilityLabel={field.label}
 						accessibilityRole="button"
 						accessible
 						className="absolute"
-						style={at(input)}
+						style={at(field.input)}
 					/>
 					<View
 						accessibilityHint={COPY.opensReflect}
@@ -72,7 +69,7 @@ export function CardA11y({
 						accessibilityRole="button"
 						accessible
 						className="absolute"
-						style={at(mic)}
+						style={at(field.mic)}
 					/>
 				</>
 			) : null}

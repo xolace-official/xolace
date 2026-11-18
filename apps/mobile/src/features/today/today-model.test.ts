@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	cardMode,
 	headerCopy,
 	introDue,
 	localDay,
@@ -11,6 +12,31 @@ import {
 	streakStep,
 	todayPhase,
 } from "./today-model";
+
+describe("cardMode", () => {
+	it("waits from Let it out until the mirror lands", () => {
+		expect(cardMode("input_received")).toBe("waiting");
+		expect(cardMode("processing")).toBe("waiting");
+	});
+
+	it("is ready while the mirror is back and not yet answered", () => {
+		expect(cardMode("mirror_delivered")).toBe("ready");
+	});
+
+	it("is the field with no session, before sending, after the mirror, or on an error", () => {
+		for (const state of [
+			null,
+			undefined,
+			"initiated",
+			"confirmed",
+			"path_selected",
+			"path_in_progress",
+			"error",
+		]) {
+			expect(cardMode(state)).toBe("idle");
+		}
+	});
+});
 
 describe("todayPhase", () => {
 	it("is late whenever night mode has the night", () => {

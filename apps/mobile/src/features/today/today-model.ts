@@ -34,6 +34,20 @@ export function nextWakeHour(hour: number): number {
 	return wakes.find((w) => w > hour) ?? HOURS_IN_DAY;
 }
 
+/**
+ * What the Reflect card shows for your open session (board `restWaiting` / `restReady`): your
+ * words with the mirror, the mirror back and not yet read, or the field. From
+ * `sessions.getActive`'s state; an error or a session past its mirror is the field again.
+ */
+export type CardMode = "idle" | "waiting" | "ready";
+
+export function cardMode(state: string | null | undefined): CardMode {
+	if (state === "input_received" || state === "processing") {
+		return "waiting";
+	}
+	return state === "mirror_delivered" ? "ready" : "idle";
+}
+
 /** The top row and greeting: "Thursday · evening", "Good evening, Ama". */
 export function headerCopy(
 	phase: TodayPhase,

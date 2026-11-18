@@ -10,8 +10,8 @@ const DOOR_HREF = {
 } as const;
 
 /**
- * Today's actions in a dev state. Talk, Vent, Get help, the kindling, You and Reflect open
- * their real screens (Reflect pushed over the tabs, as the live card does); Sit opens its
+ * Today's actions in a dev state. Talk, Vent, Get help, the kindling and You open their real
+ * screens. The card zooms into a Reflect dev state (`reflectState`, in `fixtures.ts`); Sit opens its
  * `today` dev state (the `from=today` flow, no session). The catalogue, Moments and Quotes
  * do nothing here: those reads would reach the backend.
  */
@@ -23,8 +23,8 @@ export const FIXTURE_ACTIONS: Today["actions"] = {
 	openMoment: () => undefined,
 	openMoments: () => undefined,
 	openQuotes: () => undefined,
-	openReflect: () => router.push("/reflect"),
 	openStreak: () => router.navigate("/you"),
 	openTrack: () => undefined,
+	pressReflect: () => undefined,
 	rekindle: () => undefined,
 };

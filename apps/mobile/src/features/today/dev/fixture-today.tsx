@@ -1,5 +1,5 @@
 /** Today on fixtures: the real screen under a provider filled from `fixtures.ts`.
- * Help and the streak open their real routes; Reflect goes back (a dev state is pushed). */
+ * Help and the streak open their real routes; the card zooms into a Reflect dev state. */
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScopedTheme } from "uniwind";
@@ -7,7 +7,7 @@ import { NIGHT_VARIANT, type ThemeMode, themeVariant } from "@/design/themes";
 import type { KindlingOutcome } from "../kindling/kindling-model";
 import { useKeptKindling } from "../kindling/use-kept-kindling";
 import { type Today, TodayProvider } from "../today-data";
-import { headerCopy, type TodayPhase } from "../today-model";
+import { type CardMode, headerCopy, type TodayPhase } from "../today-model";
 import { TodayScreen } from "../today-screen";
 import { useFixtureCovers } from "./covers";
 import { FIXTURE_ACTIONS } from "./fixture-actions";
@@ -22,6 +22,7 @@ import {
 	FIXTURE_WEEKDAY,
 	type FixtureModules,
 	lowerModules,
+	reflectState,
 } from "./fixtures";
 
 /** A slow network: the word arrives while the first open is still playing. */
@@ -66,6 +67,8 @@ export type FixtureProps = {
 	cycle?: boolean;
 	/** This month's prompt rides on the card. */
 	monthPrompt?: boolean;
+	/** Your words with the mirror, or the mirror back: the card's face (and the state it zooms to). */
+	reflect?: CardMode;
 	/** The kindling: the board's, or none (S16 draws that), or still loading. */
 	kindling?: keyof typeof FIXTURE_KINDLING | "none" | "loading";
 	/** A step is tended a moment after the screen opens: the completion plays. */
@@ -91,6 +94,7 @@ function FixtureToday({
 	ignite = false,
 	cycle = false,
 	monthPrompt = false,
+	reflect = "idle",
 	kindling = "board",
 	tend = false,
 	putOut = false,
@@ -154,7 +158,11 @@ function FixtureToday({
 	const kindlingView = useKeptKindling(server, outcome);
 	const state: Today["state"] = {
 		campfire: campfire === "none" ? null : FIXTURE_CAMPFIRE[campfire],
-		card: { monthPrompt: monthPrompt ? FIXTURE_MONTH_PROMPT : null },
+		card: {
+			mode: reflect,
+			monthPrompt: monthPrompt ? FIXTURE_MONTH_PROMPT : null,
+			reflect: reflectState(reflect, phase, theme),
+		},
 		day: FIXTURE_DAY,
 		eyebrow,
 		greeting,

@@ -12,7 +12,7 @@ type Props = ComponentProps<typeof Pressable> & {
 };
 
 /**
- * The Reflect card's touch surface. It takes the tap and the hold; S2 wraps it in
+ * The Reflect card's touch surface. It takes the tap and the hold; the card wraps it in
  * Link.Trigger, which hands it onPress and its ref (so the zoom starts from this view). The hold is a long press of 620 ms
  * after a 120 ms rest, so a scroll never lights the rim; only while the card
  * is at rest (use-hold `holdable`). VoiceOver can't see inside Link.Trigger, so the

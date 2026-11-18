@@ -1,3 +1,4 @@
+import { Link } from "expo-router";
 import { View } from "react-native";
 import Animated, {
 	type SharedValue,
@@ -50,12 +51,12 @@ type Props = {
 
 /**
  * Today, scrolled (collapsing-player-header): a page-tinted band with the
- * streak and "Today", and a Reflect pill that swells in once the card has
+ * streak and "Today", and a Reflect pill (it zooms into Reflect, as the card does) that swells in once the card has
  * gone. Thresholds are read in a worklet; no React renders while scrolling.
  */
 export function TodayToolbar({ scrollY, flameClock, live, reduced }: Props) {
 	const page = useTokenColor("background");
-	const { actions } = useToday();
+	const { state, actions } = useToday();
 	const insets = useSafeAreaInsets();
 	const bandOn = useSharedValue(false);
 	const pillOn = useSharedValue(false);
@@ -145,28 +146,46 @@ export function TodayToolbar({ scrollY, flameClock, live, reduced }: Props) {
 					{COPY.title}
 				</AppText>
 				<Animated.View animatedProps={pillProps} style={pillStyle}>
-					<PressScale
+					<Link
+						asChild
+						href={state.card.reflect}
+						onPress={actions.pressReflect}
+					>
+						<Link.Trigger withAppleZoom={!reduced}>
+							<PressScale
+								accessibilityElementsHidden
+								accessible={false}
+								className="h-9.5 flex-row items-center gap-1.5 rounded-full bg-foreground pr-3.5 pl-2.5"
+								importantForAccessibility="no-hide-descendants"
+							>
+								<Icon
+									color={page}
+									name={{ android: "edit", ios: "pencil" }}
+									size={PENCIL}
+									weight="semibold"
+								/>
+								<AppText
+									color="background"
+									maxFontSizeMultiplier={1.3}
+									variant="callout"
+									weight="semibold"
+								>
+									{COPY.reflect}
+								</AppText>
+							</PressScale>
+						</Link.Trigger>
+					</Link>
+					{/* VoiceOver can't see inside the zoom source (a frameless `display: contents`
+					view), so the pill is announced from here. It takes no touches: a double tap
+					falls through to the pill and zooms. */}
+					<View
 						accessibilityHint={COPY.opensReflect}
 						accessibilityLabel={COPY.reflect}
 						accessibilityRole="button"
-						className="h-9.5 flex-row items-center gap-1.5 rounded-full bg-foreground pr-3.5 pl-2.5"
-						onPress={actions.openReflect}
-					>
-						<Icon
-							color={page}
-							name={{ android: "edit", ios: "pencil" }}
-							size={PENCIL}
-							weight="semibold"
-						/>
-						<AppText
-							color="background"
-							maxFontSizeMultiplier={1.3}
-							variant="callout"
-							weight="semibold"
-						>
-							{COPY.reflect}
-						</AppText>
-					</PressScale>
+						accessible
+						className="absolute inset-0"
+						pointerEvents="none"
+					/>
 				</Animated.View>
 			</View>
 		</Animated.View>

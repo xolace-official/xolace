@@ -51,6 +51,26 @@ export const devStates: readonly DevState[] = [
 		...today({ phase: "day", rekindle: true, theme: "dark" }),
 	},
 	{
+		id: "reflect-waiting",
+		title: "Reflect has your words (the card waits; tap zooms in)",
+		...today({ phase: "evening", reflect: "waiting" }),
+	},
+	{
+		id: "reflect-waiting-dark",
+		title: "Reflect has your words, dark",
+		...today({ phase: "day", reflect: "waiting", theme: "dark" }),
+	},
+	{
+		id: "reflect-ready",
+		title: "The mirror is back (the card pings; tap zooms in)",
+		...today({ phase: "evening", reflect: "ready" }),
+	},
+	{
+		id: "reflect-ready-dark",
+		title: "The mirror is back, dark",
+		...today({ phase: "day", reflect: "ready", theme: "dark" }),
+	},
+	{
 		id: "month-prompt",
 		title: "This month's prompt on the card",
 		...today({ monthPrompt: true, phase: "evening" }),

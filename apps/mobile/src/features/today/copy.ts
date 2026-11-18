@@ -48,7 +48,19 @@ export const COPY = {
 			evening: "What's sitting with you right now?",
 			late: "What's carrying over?",
 		} satisfies Record<TodayPhase, string>,
+		/** The mirror came back while you were away (board `restReady`). */
+		ready: {
+			body: "It's waiting for you, whenever you are.",
+			hint: "Tap to open it",
+			title: "Your mirror is ready",
+		},
 		speak: "Speak instead",
+		/** Your words are with the mirror (board `restWaiting`): the card is a way back to them. */
+		waiting: {
+			body: "Finding the words. It'll be here when you're back.",
+			hint: "Tap to wait with it",
+			title: "Still with your words",
+		},
 	},
 	/** Hold the card: the doors rise out of the hint line. */
 	doors: {
