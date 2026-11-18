@@ -14,6 +14,7 @@ import { useAppTheme } from "@/context/app-theme-context";
 const MASK =
 	"linear-gradient(to bottom, rgb(0,0,0) 0%, rgb(0,0,0) 35%, rgba(0,0,0,0.8) 55%, rgba(0,0,0,0.4) 75%, rgba(0,0,0,0) 100%)";
 
+/** @public The shared blur under a transparent native header (see band-blur.tsx, top-fade.tsx). */
 export function TopBlur({ height }: { height: number }) {
 	const { isDark } = useAppTheme();
 	const bg = useThemeColor("background") as string;
