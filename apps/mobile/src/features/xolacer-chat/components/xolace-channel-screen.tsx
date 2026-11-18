@@ -3,6 +3,7 @@ import {
 	XOLACE_CHANNEL_ID,
 } from "@xolace/backend/convex/lib/streamSetup";
 import { Stack } from "expo-router";
+import { Button } from "heroui-native";
 import { useMemo, useState } from "react";
 import {
 	type LayoutChangeEvent,
@@ -29,9 +30,8 @@ import {
 	SUPPORTED_REACTIONS,
 	TEXT_ONLY_CAPABILITIES,
 } from "./thread-channel-config";
-import { useLocalChannelState } from "./thread-messages";
-import { MessagesUnavailable } from "./thread-screen";
 import { ThreadSkeleton } from "./thread-skeleton";
+import { useLocalChannelState } from "./use-local-channel-state";
 import {
 	BroadcastComposerBar,
 	BroadcastMessageAuthor,
@@ -165,6 +165,19 @@ function XolaceChannelMessages() {
 					<BroadcastComposerBar />
 				</Channel>
 			</WithComponents>
+		</View>
+	);
+}
+
+function MessagesUnavailable({ onRetry }: { onRetry: () => void }) {
+	return (
+		<View className="flex-1 items-center justify-center gap-4 px-10">
+			<AppText className="text-center text-[13px] text-muted leading-5">
+				Messages couldn&apos;t load. Check your connection and try again.
+			</AppText>
+			<Button onPress={onRetry} size="sm" variant="secondary">
+				Try again
+			</Button>
 		</View>
 	);
 }

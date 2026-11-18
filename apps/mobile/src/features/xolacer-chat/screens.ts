@@ -22,9 +22,7 @@ const EDIT_PROFILE_OPTIONS = {
 };
 
 export const xolacerChatScreens: readonly RootScreen[] = [
-	{ name: "chat/[conversationId]", options: CHAT_OPTIONS },
 	{ name: "xolace-channel", options: CHAT_OPTIONS },
-	{ name: "xolacer/[profileId]" },
 	{ name: "xolacer-setup" },
 	{ name: "xolacer-edit", options: EDIT_PROFILE_OPTIONS },
 	{ name: "rate/[conversationId]", options: RATE_OPTIONS },

@@ -12,7 +12,6 @@
         // The redesign's shared kit (F5) lands before the screens that use it.
         // Each file is an entry until its first screen PR imports it: delete its
         // line then. These lines only shrink. Their exports carry `@public`.
-        "src/components/shared/care-row.tsx",
         "src/components/shared/media-row.tsx",
         "src/components/shared/rolling-number.tsx",
         "src/lib/keyboard/keyboard-spacer.tsx",

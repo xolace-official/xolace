@@ -18,18 +18,17 @@ const MaskedView = MaskedViewClass as unknown as ComponentType<
 
 /**
  * BandBlur: blur plus page tint under chrome a screen draws itself, solid down to `solid`.
- * Use TopBlur (top-blur.tsx) under a transparent native header, TopFade (top-fade.tsx) for a
- * plain page fade with no blur.
+ * TopFade (top-fade.tsx) for a plain page fade with no blur.
  *
  * A soft scroll edge (Talk's thread, You's docked bar; the prototype's Today band). Production's
- * `components/shared/top-blur.tsx` recipe: one native blur under an
+ * old header blur recipe: one native blur under an
  * eased alpha mask, with the page tint over it. Here the band is solid at full
  * strength down to `solid`, then both fade to nothing. One blur costs a third of
  * the three-level version it replaced, with no visible difference under the tint.
  * Android gets the tint only: a BlurView under a MaskedView is unreliable there.
  */
 const INTENSITY = 40;
-/** top-blur's eased mask across the fade: 1 → .8 → .4 → 0. */
+/** The old header blur's eased mask across the fade: 1 → .8 → .4 → 0. */
 const MASK_STOPS = [
 	[0, 1],
 	[0.31, 0.8],
