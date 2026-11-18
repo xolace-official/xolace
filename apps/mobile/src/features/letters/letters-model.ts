@@ -110,23 +110,31 @@ export function openingLine(text: string): string {
 		: first;
 }
 
+/**
+ * A letter's length, as both limits count it: its words without the space around them (a
+ * starter leaves one on the end). What's sent is trimmed the same way.
+ */
+const letterLength = (text: string): number => text.trim().length;
+
 /** The count under the letter: what's missing under 40, what's left past 400, else nothing. */
 export function countLine(text: string): string {
-	const len = text.trim().length;
+	const len = letterLength(text);
 	if (len === 0) {
 		return "";
 	}
 	if (len < LETTER_MIN) {
 		return LETTERS.write.countUnder(LETTER_MIN - len);
 	}
-	return len > COUNT_FROM
-		? LETTERS.write.countLeft(LETTER_MAX - text.length)
-		: "";
+	return len > COUNT_FROM ? LETTERS.write.countLeft(LETTER_MAX - len) : "";
 }
 
-/** Send is on: writing, long enough, and not a held letter sent again unchanged (#750). */
-export const canSend = (text: string, held: string): boolean =>
-	text.trim().length >= LETTER_MIN && !(held !== "" && text === held);
+/** Send is on: between the limits, and not a held letter sent again unchanged (#750). */
+export function canSend(text: string, held: string): boolean {
+	const len = letterLength(text);
+	return (
+		len >= LETTER_MIN && len <= LETTER_MAX && !(held !== "" && text === held)
+	);
+}
 
 /** A starter goes on the end of the words, after one space, and stays editable. */
 export const withStarter = (text: string, starter: string): string =>

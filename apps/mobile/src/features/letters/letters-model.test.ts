@@ -121,9 +121,19 @@ describe("countLine and canSend", () => {
 		expect(countLine("x".repeat(200))).toBe("");
 		expect(countLine("x".repeat(450))).toBe(LETTERS.write.countLeft(50));
 	});
+	it("counts one length for both limits and what's left: the trimmed words", () => {
+		// A starter leaves a space on the end; it counts toward neither limit.
+		expect(countLine(`${"x".repeat(450)} `)).toBe(LETTERS.write.countLeft(50));
+		expect(countLine(` ${"x".repeat(39)} `)).toBe(LETTERS.write.countUnder(1));
+	});
 	it("needs 40 characters after trimming", () => {
 		expect(canSend(` ${"x".repeat(39)} `, "")).toBe(false);
 		expect(canSend(FORTY, "")).toBe(true);
+	});
+	it("keeps Send off past the limit", () => {
+		expect(canSend("x".repeat(LETTER_MAX), "")).toBe(true);
+		expect(canSend("x".repeat(LETTER_MAX + 1), "")).toBe(false);
+		expect(canSend(` ${"x".repeat(LETTER_MAX)} `, "")).toBe(true);
 	});
 	it("keeps Send off for a held letter's words until they change", () => {
 		expect(canSend(FORTY, FORTY)).toBe(false);

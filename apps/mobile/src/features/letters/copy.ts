@@ -58,10 +58,11 @@ export const LETTERS = {
 		talk: "Talk to a Xolacer",
 		title: "I hear you.",
 	},
-	/** The check's lines (#750). At risk has none; a check that can't finish reads as a pass. */
+	/**
+	 * The check's lines (#750). At risk has none; a check that can't finish reads as a pass. A
+	 * fixable letter's line is the server's (`outcome.line`): it names what to take out.
+	 */
 	check: {
-		fixable:
-			"Letters can’t carry contact details, so no one can be found through one. Could you take out the Instagram handle?",
 		held: "This letter can’t be sent.",
 		lang: "Letters are English-only for now.",
 	},

@@ -5,7 +5,9 @@
  * a release build starts empty, so every screen shows its empty state.
  *
  * It answers every send as a pass: the check's other outcomes are the classifier's, and the
- * writing screen's dev states drive them on fixtures.
+ * writing screen's dev states drive them on fixtures. So a send in any build lands here and
+ * nowhere else: no one receives it. That's acceptable only while letters stay unreleased;
+ * S21 must replace this before they ship.
  */
 import { create } from "zustand";
 import type {
@@ -28,19 +30,25 @@ export type LettersMemory = {
 	push: boolean;
 	sent: readonly SentLetter[];
 	received: readonly ReceivedLetter[];
-	/** Letters written today. */
-	today: number;
+	/** Letters written on `day` (the device's local day, "YYYY-MM-DD"). */
+	written: { day: string; count: number };
 };
 
-type Seed = { SEED: LettersMemory };
+type Seed = typeof import("@/dev/letters-seed");
 const seed: Seed | null = __DEV__ ? require("@/dev/letters-seed") : null;
+
+/** The device's local day, "YYYY-MM-DD": the one-a-day cap turns over at local midnight. */
+export function localDay(now: Date): string {
+	const pad = (n: number) => String(n).padStart(2, "0");
+	return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
 
 const EMPTY: LettersMemory = {
 	optIn: "unset",
 	push: true,
 	received: [],
 	sent: [],
-	today: 0,
+	written: { count: 0, day: "" },
 };
 
 export const useLettersMemory = create<LettersMemory>()(() => ({
@@ -50,9 +58,16 @@ export const useLettersMemory = create<LettersMemory>()(() => ({
 const get = () => useLettersMemory.getState();
 const set = (patch: Partial<LettersMemory>) => useLettersMemory.setState(patch);
 
+/** Letters written on today's local day. */
+const writtenToday = (m: LettersMemory, now: Date): number =>
+	m.written.day === localDay(now) ? m.written.count : 0;
+
 /** Why Write is off, if it is: today's letter first, then three waiting. */
-export function limitOf(m: LettersMemory): WriteLimit | null {
-	if (m.today >= LETTERS_PER_DAY) {
+export function limitOf(
+	m: LettersMemory,
+	now: Date = new Date()
+): WriteLimit | null {
+	if (writtenToday(m, now) >= LETTERS_PER_DAY) {
 		return "today";
 	}
 	const waiting = m.sent.filter((l) => l.status === "waiting").length;
@@ -98,7 +113,11 @@ export const memory = {
 			seen: true,
 			status: "waiting",
 		};
-		set({ sent: [letter, ...get().sent], today: get().today + 1 });
+		const now = new Date();
+		set({
+			sent: [letter, ...get().sent],
+			written: { count: writtenToday(get(), now) + 1, day: localDay(now) },
+		});
 		return { kind: "pass" };
 	},
 	setOptIn: (optIn: Exclude<OptIn, "unset">) => set({ optIn }),

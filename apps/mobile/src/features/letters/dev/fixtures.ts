@@ -3,11 +3,19 @@
  * `src/fixtures/letters.ts`). Dev states and tests read these; the live adapter reaches them
  * only in a dev build, through `src/dev/letters-seed.ts`. S21 deletes the seed.
  */
+import type { LettersMemory } from "../letters-memory";
 import type {
 	LettersStatus,
 	ReceivedLetter,
 	SentLetter,
 } from "../letters-model";
+
+/**
+ * The check's line for the fixable draft below. The server writes each fixable line itself
+ * (`outcome.line`), so this is fixture text, not copy. @public Read by the Letters dev states (S20 PR 2).
+ */
+export const FIXABLE_LINE =
+	"Letters can’t carry contact details, so no one can be found through one. Could you take out the Instagram handle?";
 
 /** Drafts the board writes with. */
 export const DRAFTS = {
@@ -101,9 +109,9 @@ export const STATUS_OPEN: LettersStatus = {
  * @public Re-exported by src/dev/letters-seed.ts, reached only through a `__DEV__` require.
  */
 export const SEED = {
-	optIn: "yes" as const,
+	optIn: "yes",
 	push: true,
 	received: [WAITING, ...RECEIVED_SAMPLE],
 	sent: SENT_SAMPLE,
-	today: 0,
-};
+	written: { count: 0, day: "" },
+} satisfies LettersMemory;

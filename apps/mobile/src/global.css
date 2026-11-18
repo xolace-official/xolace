@@ -793,9 +793,8 @@
 	--color-letter-shadow-dark: rgba(0, 0, 0, 0.8);
 	--color-letter-ink: #2b2233;
 	--color-letter-ink-faint: rgba(43, 34, 51, 0.42);
-	/* The faint line where two thirds meet, and the card mark's envelope edge. */
+	/* The faint line where two thirds meet. */
 	--color-letter-crease: rgba(120, 80, 30, 0.07);
-	--color-letter-mark-edge: rgba(120, 80, 30, 0.38);
 	/* The ember, lit from the upper left: seal, marks, the card mark's dot. */
 	--color-letter-ember-1: #f7b567;
 	--color-letter-ember-2: #e9822f;
@@ -814,9 +813,6 @@
 	/* The acknowledge stamp: warmer than the seal, with a pale inner rim. */
 	--color-letter-stamp-1: #f9c27a;
 	--color-letter-stamp-rim: rgba(255, 235, 200, 0.35);
-	/* Ink on the ember button, the Undo word, the care sheet's scrim and lift. */
+	/* Ink on the ember button (Send, Write a letter). */
 	--color-letter-on-ember: #2a1805;
-	--color-letter-undo: #f2a541;
-	--color-letter-scrim: rgba(14, 12, 21, 0.32);
-	--color-letter-care-shadow: rgba(120, 50, 30, 0.4);
 }

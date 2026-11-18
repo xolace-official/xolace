@@ -27,6 +27,7 @@ const FROM_SCALE = 0.6;
  * The received mark (12 pt): an empty ring while waiting, a lit ember once received, and a
  * ring around it once acknowledged. `ignite` lights it along the ignite curve (800 ms) on mount:
  * pass it only the first time the sender sees the change. Reduce Motion: it fades in, 200 ms.
+ * It's drawn only: the row it sits in says its status (`LETTERS.status.*`) in its label.
  */
 export function ReceivedMark({
 	status,
@@ -48,6 +49,9 @@ export function ReceivedMark({
 		if (!play) {
 			return;
 		}
+		// From unlit every time, so a status that flips while the mark is up ignites too.
+		opacity.set(0);
+		scale.set(reduced ? 1 : FROM_SCALE);
 		if (reduced) {
 			opacity.set(withTiming(1, { duration: M.reducedMs, ...PLAY_AS_CHOSEN }));
 			return;

@@ -20,9 +20,10 @@ const LETTER_CURVES = {
  * Letters (handoff `letters.md` §5): every timing, curve and distance, in one place; the
  * prototype's `LETTER_MOTION`, whole. Motion stays on the UI thread and moves only transform and
  * opacity, and nothing moves at rest: the one repeat (the glow, while the check runs) stops the
- * moment it answers. Ease takes the plain fades and slides; Reanimated the fold, the drag, the
- * rise and the stamp. Reduce Motion: every move is a 200 ms crossfade and every action still
- * works. Durations in ms, distances in pt, angles in degrees.
+ * moment it answers. That glow is the one loop, so it's the one thing on Ease; every state
+ * change (fades, slides, the fold, the drag, the rise, the seal, the stamp) is on Reanimated.
+ * Reduce Motion: every move is a 200 ms crossfade and every action still works. Durations in
+ * ms, distances in pt, angles in degrees.
  */
 export const LETTER_MOTION = {
 	/** Arrive: once, from the fire's side, through a midpoint, to rest. No loop after. */

@@ -6,6 +6,11 @@
  *
  * Reads are narrow on purpose: the Connect card sits under the writing screen, so each part
  * subscribes only to what it draws (a keystroke there redraws none of them).
+ *
+ * Every read is `undefined` while it loads, as a Convex `useQuery` is on its first render. The
+ * in-memory stand-in answers at once, but the screens already treat `undefined` as "loading",
+ * never as empty: the reader waits rather than closing (its `null` means the letter is gone),
+ * and the status draws neither the offer nor Write until it knows.
  */
 import { useShallow } from "zustand/react/shallow";
 import type { ReportReason } from "./copy";
@@ -25,34 +30,37 @@ import type {
 	SentLetter,
 } from "./letters-model";
 
-const statusOf = (m: LettersMemory): LettersStatus => ({
+/** The status, from the server's side of letters. */
+export const statusOf = (m: LettersMemory): LettersStatus => ({
 	optIn: m.optIn,
 	unopenedId: unopenedOf(m),
 	writeLimit: limitOf(m),
 });
 
 /** The one small status read: the opt-in, why Write is off, the unopened letter. @public Read by the Letters screens (S20 PR 2). */
-export function useLettersStatus(): LettersStatus {
+export function useLettersStatus(): LettersStatus | undefined {
 	return useLettersMemory(useShallow(statusOf));
 }
 
 /** Your sent letters, newest first. Withdrawn ones are gone. @public Read by the Letters screens (S20 PR 2). */
-export function useSentLetters(): readonly SentLetter[] {
+export function useSentLetters(): readonly SentLetter[] | undefined {
 	return useLettersMemory((m) => m.sent);
 }
 
 /** Letters for you, newest first, hidden ones included. Reported ones never come back. @public Read by the Letters screens (S20 PR 2). */
-export function useReceivedLetters(): readonly ReceivedLetter[] {
+export function useReceivedLetters(): readonly ReceivedLetter[] | undefined {
 	return useLettersMemory((m) => m.received);
 }
 
 /** One letter for you; `null` once it's gone (reported, or not yours). @public Read by the Letters screens (S20 PR 2). */
-export function useReceivedLetter(id: string): ReceivedLetter | null {
+export function useReceivedLetter(
+	id: string
+): ReceivedLetter | null | undefined {
 	return useLettersMemory((m) => m.received.find((l) => l.id === id) ?? null);
 }
 
 /** Settings › Notifications › Letters, on by default. @public Read by the Letters screens (S20 PR 2). */
-export function useLettersPush(): boolean {
+export function useLettersPush(): boolean | undefined {
 	return useLettersMemory((m) => m.push);
 }
 

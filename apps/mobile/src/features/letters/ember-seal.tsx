@@ -32,6 +32,7 @@ type Props = {
  * Motion they only fade, 200 ms. The caller plays `tap(0.4, 0.8)` at the split.
  */
 export function EmberSeal({ size = 34, split = false }: Props) {
+	const ink = useLetterInk();
 	const reduced = useEffectiveReducedMotion();
 	const move = useSharedValue(split && !reduced ? 1 : 0);
 	const fade = useSharedValue(split ? 1 : 0);
@@ -63,8 +64,22 @@ export function EmberSeal({ size = 34, split = false }: Props) {
 
 	return (
 		<View accessible={false} style={{ height: size, width: size }}>
-			<Half fade={fade} move={move} side="left" size={size} />
-			<Half fade={fade} move={move} side="right" size={size} />
+			<Half
+				fade={fade}
+				fill={ink.emberFill}
+				move={move}
+				shadow={ink.sealShadow}
+				side="left"
+				size={size}
+			/>
+			<Half
+				fade={fade}
+				fill={ink.emberFill}
+				move={move}
+				shadow={ink.sealShadow}
+				side="right"
+				size={size}
+			/>
 		</View>
 	);
 }
@@ -74,13 +89,16 @@ function Half({
 	side,
 	move,
 	fade,
+	fill,
+	shadow,
 }: {
 	size: number;
 	side: "left" | "right";
 	move: SharedValue<number>;
 	fade: SharedValue<number>;
+	fill: string;
+	shadow: string;
 }) {
-	const ink = useLetterInk();
 	const left = side === "left";
 	const shift = left ? -SEAL.shift : SEAL.shift;
 	const turn = left ? SEAL.rotateLeft : SEAL.rotateRight;
@@ -108,8 +126,8 @@ function Half({
 			<View
 				style={{
 					borderRadius: size / 2,
-					boxShadow: ink.sealShadow,
-					experimental_backgroundImage: ink.emberFill,
+					boxShadow: shadow,
+					experimental_backgroundImage: fill,
 					height: size,
 					left: left ? 0 : -size / 2,
 					position: "absolute",
