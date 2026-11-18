@@ -5,6 +5,7 @@ import Animated, {
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
+import { canAppleZoom } from "@/lib/apple-zoom";
 import { COPY } from "../copy";
 import { PILL_SLOT } from "../header/today-header";
 import { useToday } from "../today-data";
@@ -113,7 +114,7 @@ export function ReflectCard() {
 					actions.pressReflect();
 				}}
 			>
-				<Link.Trigger withAppleZoom={!reduced}>
+				<Link.Trigger withAppleZoom={!reduced && canAppleZoom()}>
 					<HeroPressable
 						hold={hold}
 						onLayout={(e) => {

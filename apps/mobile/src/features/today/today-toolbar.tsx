@@ -1,5 +1,5 @@
 import { Link } from "expo-router";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import Animated, {
 	type SharedValue,
 	useAnimatedProps,
@@ -14,6 +14,7 @@ import { BandBlur } from "@/components/shared/band-blur";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
+import { canAppleZoom } from "@/lib/apple-zoom";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "./copy";
 import { StreakChip } from "./header/streak-chip";
@@ -27,10 +28,7 @@ const PILL_AT = 430;
 const HYSTERESIS = 8;
 const BAND_MS = 250;
 const PILL_MS = 420;
-/**
- * The band also follows the scroll over the 20 pt before BAND_AT, so on a fast
- * fling back up it is gone before the greeting's own chip comes into view.
- */
+/** The band follows the scroll over the 20 pt before BAND_AT: on a fling up it's gone first. */
 const HAND_OVER = 20;
 /** The board's row sits 56 pt down a phone with a 60 pt safe area. */
 const ROW_OFFSET = -4;
@@ -41,6 +39,18 @@ const PILL_FROM = 0.4;
 /** The pill shows fully a little before its swell lands. */
 const PILL_OPACITY_GAIN = 2.1;
 const PENCIL = 15;
+const IOS = Platform.OS === "ios";
+const ANNOUNCED = {
+	accessibilityHint: COPY.opensReflect,
+	accessibilityLabel: COPY.reflect,
+	accessibilityRole: "button",
+	accessible: true,
+} as const;
+const HIDDEN = {
+	accessibilityElementsHidden: true,
+	accessible: false,
+	importantForAccessibility: "no-hide-descendants",
+} as const;
 
 type Props = {
 	scrollY: SharedValue<number>;
@@ -151,12 +161,10 @@ export function TodayToolbar({ scrollY, flameClock, live, reduced }: Props) {
 						href={state.card.reflect}
 						onPress={actions.pressReflect}
 					>
-						<Link.Trigger withAppleZoom={!reduced}>
+						<Link.Trigger withAppleZoom={!reduced && canAppleZoom()}>
 							<PressScale
-								accessibilityElementsHidden
-								accessible={false}
+								{...(IOS ? HIDDEN : ANNOUNCED)}
 								className="h-9.5 flex-row items-center gap-1.5 rounded-full bg-foreground pr-3.5 pl-2.5"
-								importantForAccessibility="no-hide-descendants"
 							>
 								<Icon
 									color={page}
@@ -175,17 +183,15 @@ export function TodayToolbar({ scrollY, flameClock, live, reduced }: Props) {
 							</PressScale>
 						</Link.Trigger>
 					</Link>
-					{/* VoiceOver can't see inside the zoom source (a frameless `display: contents`
-					view), so the pill is announced from here. It takes no touches: a double tap
-					falls through to the pill and zooms. */}
-					<View
-						accessibilityHint={COPY.opensReflect}
-						accessibilityLabel={COPY.reflect}
-						accessibilityRole="button"
-						accessible
-						className="absolute inset-0"
-						pointerEvents="none"
-					/>
+					{/* VoiceOver can't see into the zoom source (`display: contents`), so iOS announces
+					the pill here; a double tap falls through to it. TalkBack reads the pill itself. */}
+					{IOS ? (
+						<View
+							{...ANNOUNCED}
+							className="absolute inset-0"
+							pointerEvents="none"
+						/>
+					) : null}
 				</Animated.View>
 			</View>
 		</Animated.View>
