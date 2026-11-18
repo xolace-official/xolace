@@ -6,6 +6,7 @@ import type { PostHog } from "posthog-react-native";
 import { useSyncExternalStore } from "react";
 import type { PlaybackReturn } from "@/lib/audio/use-playback";
 import { armPlayOnLoad, takePlayOnLoad } from "@/lib/now-playing/play-on-load";
+import { clearSlept, resetSleepTimer } from "@/lib/now-playing/sleep-timer";
 import { useTabBarHidden } from "@/lib/tab-bar";
 
 /** A track as `paths.getBoundAudioTrack` serves it. */
@@ -104,6 +105,8 @@ export function setNowPlaying(next: NowPlaying, options?: { play?: boolean }) {
 
 export function clearNowPlaying() {
 	playOnLoad = null;
+	// Stopping the track clears the sleep timer; starting a different one keeps it.
+	resetSleepTimer();
 	if (!(current || playback)) {
 		return;
 	}
@@ -142,6 +145,10 @@ export function publishPlayback(next: Playback | null) {
 /** Play/pause for every control; the first start of a loaded track records
  * `browse_track_played`. */
 export function togglePlayback(p: Playback, posthog: PostHog) {
+	if (!p.isPlaying) {
+		// A play forgets "Paused by the sleep timer".
+		clearSlept();
+	}
 	if (!p.isPlaying && p.track && current?.from && !played) {
 		played = true;
 		posthog.capture("browse_track_played", {
