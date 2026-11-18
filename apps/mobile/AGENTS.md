@@ -200,7 +200,7 @@ old screen outright. Where a screen PR adds to the shell:
   natively presented screen (the player, a form sheet) and position themselves
   absolutely. The layout maps the list; don't edit its lines.
 - **A path that moved** (`/discovery`, `/browse/**`, `/profile`, `/profile/insights`,
-  `/kindling-announcement`; next, `/streak-held`): `MOVED` in
+  `/kindling-announcement`, `/timeline/**`; next, `/streak-held`): `MOVED` in
   `src/features/navigation/moved-paths.ts` says where each lives now, a tab or a root
   screen, and whether its subpaths moved too (`subtree`) or one subpath moved somewhere of
   its own (`paths`: `/profile/insights` → `/you/steadiness`). Its

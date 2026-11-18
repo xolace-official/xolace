@@ -76,6 +76,8 @@ describe("movedPath", () => {
 		["/profile", "/you"],
 		["/profile/insights", "/you/steadiness"],
 		["/kindling-announcement", "/session-end"],
+		["/timeline", "/moments"],
+		["/timeline/session/abc123", "/moments/session/abc123"],
 	])("sends %s to %s", (from, to) => {
 		expect(movedPath(from)).toBe(to);
 	});
@@ -88,6 +90,7 @@ describe("movedPath", () => {
 		"/explore/topics",
 		"/connect",
 		"/browse-player",
+		"/moments",
 		"/",
 	])("leaves %s where it is", (pathname) => {
 		expect(movedPath(pathname)).toBeNull();

@@ -5,4 +5,7 @@ export const youScreens: readonly RootScreen[] = [
 	{ name: "avatar", options: DETACHED_SHEET },
 	// Steadiness' ⓘ: reading the face, sized to its rows.
 	{ name: "steadiness-face-info", options: fitSheet },
+	// Moments draws its own large title; a moment draws its own top.
+	{ name: "moments/index" },
+	{ name: "moments/session/[id]" },
 ];

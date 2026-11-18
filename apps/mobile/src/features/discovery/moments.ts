@@ -1,3 +1,49 @@
+// The timeline's emotion labels and row shape, moved here when the timeline became Moments
+// (S5d): Discovery's moments carousel is their last reader, and goes with Today's port (S1).
+
+export interface TimelineEntry {
+	confirmationState: string | null;
+	createdAt: number;
+	entryType: string;
+	granularLabel: string | null;
+	hasMirrorAudio: boolean;
+	id: string;
+	mirrorText: string;
+	pathChosen: string | null;
+	primaryEmotion: string | null;
+	toneUsed: string | null;
+}
+
+/** Shape returned by `sessions.listForTimeline` per enriched session. */
+type TimelineSession = {
+	_id: string;
+	mirrorText: string;
+	entryType: string;
+	hasMirrorAudio: boolean;
+	primaryEmotion: string | null;
+	granularLabel: string | null;
+	pathChosen: string | null;
+	toneUsed: string | null;
+	confirmationState: string | null;
+	createdAt: number;
+};
+
+/** Maps a `listForTimeline` result row to the client-side `TimelineEntry` shape. */
+export function toTimelineEntry(session: TimelineSession): TimelineEntry {
+	return {
+		confirmationState: session.confirmationState,
+		createdAt: session.createdAt,
+		entryType: session.entryType,
+		granularLabel: session.granularLabel,
+		hasMirrorAudio: session.hasMirrorAudio,
+		id: session._id,
+		mirrorText: session.mirrorText,
+		pathChosen: session.pathChosen,
+		primaryEmotion: session.primaryEmotion,
+		toneUsed: session.toneUsed,
+	};
+}
+
 const EMOTION_EMOJI: Record<string, string> = {
 	ambivalence: "⚖️",
 	anger: "😤",
@@ -63,18 +109,4 @@ export function getEmotionLabel(emotion: string | null): string {
 	}
 	const words = emotion.replace(/-/g, " ");
 	return words.charAt(0).toUpperCase() + words.slice(1);
-}
-
-const PATH_LABELS: Record<string, string> = {
-	exit: "Just needed to say it",
-	peers: "You're not alone",
-	solo: "Sat with this",
-};
-
-/** Display label for a chosen path key; 'Reflected' when null or unknown. */
-export function getPathLabel(pathChosen: string | null): string {
-	if (!pathChosen) {
-		return "Reflected";
-	}
-	return PATH_LABELS[pathChosen] ?? "Reflected";
 }

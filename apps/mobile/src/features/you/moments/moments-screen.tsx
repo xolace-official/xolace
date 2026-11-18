@@ -1,0 +1,103 @@
+import { LegendList } from "@legendapp/list/react-native";
+import { Stack } from "expo-router";
+import { ActivityIndicator, View } from "react-native";
+import { AppText } from "@/components/shared/app-text";
+import { MOMENTS_COPY } from "@/features/you/moments/copy";
+import { MomentCard } from "@/features/you/moments/list/moment-card";
+import { MomentsSkeleton } from "@/features/you/moments/list/moments-skeleton";
+import { WindowDoor } from "@/features/you/moments/list/window-door";
+import { useMomentsScreen } from "@/features/you/moments/moments-data";
+import type { ListItem } from "@/features/you/moments/moments-model";
+import { useAccessibilityInfo } from "@/helpers/hooks/use-accessability-info";
+import { useHeaderOptions } from "@/lib/header-options";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+
+const L = MOMENTS_COPY.list;
+/** A card before it's measured: a two-line quote, the line and the gap. */
+const CARD_ESTIMATE = 128;
+const LOAD_AHEAD = 0.4;
+/** Clears the floating door (the prototype's pb-35), or just the home indicator. */
+const DOOR_CLEAR = 140;
+const END_CLEAR = 40;
+
+/**
+ * Moments (was Timeline): the mirror's line leads each card, grouped by day under a native large
+ * title that folds on scroll. The list is the screen's first descendant (the soft edge needs it);
+ * the free window's door floats after it.
+ */
+export function MomentsScreen() {
+	const { state, actions } = useMomentsScreen();
+	const header = useHeaderOptions();
+	const reduced = useEffectiveReducedMotion();
+	const { screenReaderEnabled } = useAccessibilityInfo();
+	const door = state?.windowDays ?? null;
+	return (
+		<View className="flex-1 bg-background">
+			<Stack.Screen
+				options={{
+					...header,
+					headerBackTitle: "Back",
+					headerShown: true,
+					title: L.title,
+				}}
+			/>
+			<LegendList
+				contentContainerClassName="px-4"
+				contentContainerStyle={{
+					paddingBottom: door === null ? END_CLEAR : DOOR_CLEAR,
+				}}
+				contentInsetAdjustmentBehavior="automatic"
+				data={state?.items ?? []}
+				estimatedItemSize={CARD_ESTIMATE}
+				getItemType={(item) => item.kind}
+				keyExtractor={(item) => item.id}
+				ListEmptyComponent={
+					state === undefined ? (
+						<MomentsSkeleton />
+					) : (
+						<View className="px-6 pt-18">
+							<AppText center color="muted" variant="callout">
+								{L.empty}
+							</AppText>
+						</View>
+					)
+				}
+				ListFooterComponent={
+					state?.loadingMore ? <ActivityIndicator className="py-6" /> : null
+				}
+				onEndReached={state?.canLoadMore ? actions.loadMore : undefined}
+				onEndReachedThreshold={LOAD_AHEAD}
+				renderItem={({ item }: { item: ListItem }) =>
+					item.kind === "when" ? (
+						<AppText
+							accessibilityRole="header"
+							className="px-1 pt-2 pb-2.5 text-[14px]"
+							color="muted"
+							variant="callout"
+							weight="semibold"
+						>
+							{item.when}
+						</AppText>
+					) : (
+						<View className="pb-2.5">
+							<MomentCard
+								index={item.index}
+								moment={item.moment}
+								reduced={reduced}
+								zoom={!(reduced || screenReaderEnabled)}
+							/>
+						</View>
+					)
+				}
+				showsVerticalScrollIndicator={false}
+			/>
+			{door === null ? null : (
+				<WindowDoor
+					days={door}
+					onSeeAll={actions.seeAll}
+					onSeen={actions.doorSeen}
+				/>
+			)}
+		</View>
+	);
+}

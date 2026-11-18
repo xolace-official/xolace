@@ -28,6 +28,8 @@ const MOVED: Readonly<Record<string, Moved>> = {
 	// Its beat folded into the session end's next step (S3).
 	"kindling-announcement": { to: "/session-end" },
 	profile: { paths: { insights: "/you/steadiness" }, to: "/you" },
+	// Renamed Moments (S5d); a session's page moved with it.
+	timeline: { subtree: true, to: "/moments" },
 };
 
 /** Where a moved path lives now, or null if it didn't move. */

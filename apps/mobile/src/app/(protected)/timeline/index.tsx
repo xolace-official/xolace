@@ -1,5 +1,4 @@
-import { TimelineScreen } from "@/features/timeline/components/screens/TimelineScreen";
+import { MovedRoute } from "@/features/navigation/moved-route";
 
-const Timeline = () => <TimelineScreen />;
-
-export default Timeline;
+/** A path that moved (`MOVED` in features/navigation/moved-paths.ts). */
+export default MovedRoute;
