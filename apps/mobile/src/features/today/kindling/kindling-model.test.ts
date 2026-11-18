@@ -1,3 +1,4 @@
+import type { Id } from "@xolace/backend/dataModel";
 import { describe, expect, it } from "vitest";
 import {
 	cubicBetween,
@@ -373,14 +374,18 @@ describe("keepKindling (the last snapshot once the server closes it)", () => {
 });
 
 describe("kindlingOutcome", () => {
+	const dismissed: Parameters<typeof kindlingOutcome>[0] = {
+		_id: "k1" as Id<"paths">,
+		status: "dismissed",
+		twigs: [{ _id: "a" as Id<"path_steps">, state: "pending" }],
+	};
+
 	it("reads how the latest kindling ended", () => {
 		expect(kindlingOutcome(null)).toBeNull();
-		expect(
-			kindlingOutcome({
-				_id: "k1",
-				status: "dismissed",
-				twigs: [{ _id: "a", state: "pending" }],
-			} as unknown as Parameters<typeof kindlingOutcome>[0])
-		).toEqual({ completed: false, id: "k1", states: { a: "pending" } });
+		expect(kindlingOutcome(dismissed)).toEqual({
+			completed: false,
+			id: "k1",
+			states: { a: "pending" },
+		});
 	});
 });
