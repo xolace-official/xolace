@@ -256,6 +256,25 @@ export const getById = query({
 });
 
 /**
+ * An exercise that runs on its own, outside a session: Sit with this opened from Today
+ * (Three breaths, `reset`). Looked up by its stable internal title, since ids differ per
+ * deployment; null unless the row is active. Only the titles Today offers are accepted,
+ * so the catalogue can't be listed through it. Free, as `getById` is.
+ */
+export const getStandalone = query({
+	args: { title: v.literal("reset") },
+	handler: async (ctx, args) => {
+		await requireAuth(ctx);
+		const exercise = await ctx.db
+			.query("exercises")
+			.withIndex("by_title", (q) => q.eq("title", args.title))
+			.unique();
+		return exercise?.active ? exercise : null;
+	},
+	returns: v.union(exerciseDocValidator, v.null()),
+});
+
+/**
  * Record an exercise swap for a session (max 2 swaps enforced).
  */
 export const recordSwap = mutation({
