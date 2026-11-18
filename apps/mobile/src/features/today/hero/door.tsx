@@ -37,6 +37,8 @@ const LOOK: Record<DoorId, { icon: IconName; tile: string; ink: string }> = {
 	},
 };
 const ICON = 19;
+/** Three doors share a narrow card: a long label shrinks to fit (down to 75%) rather than cut off. */
+const FIT = 0.75;
 /** burst keyframes: travel 1 → 0 by 74%, opaque by 55%, scale .2 → 1.05 at 74% → 1. */
 const TRAVEL = [
 	[0, 1],
@@ -117,8 +119,10 @@ export function Door({
 					<Icon color={ink} name={door.icon} size={ICON} weight="semibold" />
 				</View>
 				<AppText
+					adjustsFontSizeToFit
 					className="text-[14.5px] leading-[18px]"
 					maxFontSizeMultiplier={1.3}
+					minimumFontScale={FIT}
 					numberOfLines={1}
 					style={{ color: label }}
 					variant="footnote"
@@ -127,8 +131,10 @@ export function Door({
 					{copy.label}
 				</AppText>
 				<AppText
+					adjustsFontSizeToFit
 					className="-mt-1 text-[11.5px] leading-[14px]"
 					maxFontSizeMultiplier={1.3}
+					minimumFontScale={FIT}
 					numberOfLines={1}
 					style={{ color: sub }}
 					variant="caption"
