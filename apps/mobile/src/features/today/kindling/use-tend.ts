@@ -38,6 +38,8 @@ export function useTend(kindlingId: string, now: States, reduced: boolean) {
 	const [count, setCount] = useState(() => tendedCount(now));
 	const [justDone, setJustDone] = useState(-1);
 	const [tendN, setTendN] = useState(0);
+	/** The NEXT row's step blurs in as the light arrives, until the next peek. */
+	const [fresh, setFresh] = useState(false);
 	const [peek, setPeek] = useState(-1);
 	const [peekN, setPeekN] = useState(0);
 	const [resetN, setResetN] = useState(0);
@@ -55,6 +57,7 @@ export function useTend(kindlingId: string, now: States, reduced: boolean) {
 		}
 		if (sync.reset) {
 			setJustDone(-1);
+			setFresh(false);
 			setPeek(-1);
 			setResetN((n) => n + 1);
 		}
@@ -87,6 +90,7 @@ export function useTend(kindlingId: string, now: States, reduced: boolean) {
 				busyUntil.current = Date.now() + BEAT.end;
 				setJustDone(i);
 				setTendN((n) => n + 1);
+				setFresh(true);
 				setPeek(-1);
 				tap();
 				beat.set(0);
@@ -133,6 +137,7 @@ export function useTend(kindlingId: string, now: States, reduced: boolean) {
 		clearAll(peekTimer.current);
 		setPeek(j);
 		setPeekN((n) => n + 1);
+		setFresh(false);
 		peekTimer.current = [setTimeout(() => setPeek(-1), TEND.peekMs)];
 	};
 
@@ -140,6 +145,7 @@ export function useTend(kindlingId: string, now: States, reduced: boolean) {
 		beat,
 		count,
 		current,
+		fresh,
 		justDone,
 		peek,
 		peekAt,

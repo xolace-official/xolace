@@ -74,9 +74,12 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 	const washStyle = useAnimatedStyle(() => ({ width: wash.get() }));
 
 	const { eyebrow, title } = nextRow(kindling.twigs, kin.shown, kin.peek);
-	// Peeks blur in at once; after a tend the next step blurs in as the light arrives.
-	const tended = kin.peek < 0 && kin.tendN > 0;
-	const textKey = kin.peek >= 0 ? `p${kin.peekN}` : `t${kin.tendN}`;
+	// Peeks blur in at once. Right after a tend the next step blurs in as the light arrives;
+	// once a peek has come and gone, the row comes back at once (P replayed the late blur-in
+	// there, leaving the row blank for 1.35 s).
+	const tended = kin.peek < 0 && kin.fresh;
+	const textKey =
+		kin.peek >= 0 ? `p${kin.peekN}` : `t${kin.tendN}-${kin.peekN}`;
 	const blurIn = {
 		blur: 6,
 		delay: tended ? BEAT.nextAt : 0,
