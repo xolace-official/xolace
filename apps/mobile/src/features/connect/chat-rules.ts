@@ -1,6 +1,10 @@
 /** Chat rules the thread, the profile and the age gate share: production's, unchanged. Pure. */
 export type ConversationStatus = "requested" | "open" | "resting" | "closed";
 
+/** Crisis resources from any chat surface, the thread's and the channel's header alike, for
+ * whatever the moderation lane (#344) misses. Production's route and source. */
+export const CHAT_HELP_HREF = "/crisis-resources?from=xolacer_chat";
+
 /** Whether a message could ever have been exchanged; declined or expired requests never got a
  * channel. */
 export function hasSpoken(conversation: {

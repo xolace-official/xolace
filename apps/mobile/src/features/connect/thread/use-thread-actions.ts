@@ -11,7 +11,11 @@ import { Linking } from "react-native";
 import { toast } from "@/components/shared/toast";
 import { playSoftPress } from "@/lib/haptics";
 import { CLIENT_VERSION, useAgeGate } from "../age-gate/use-age-gate";
-import { acceptFailureLabel, chatLimitError } from "../chat-rules";
+import {
+	acceptFailureLabel,
+	CHAT_HELP_HREF,
+	chatLimitError,
+} from "../chat-rules";
 import { THREAD } from "./copy";
 import type { ReportTo, ThreadScreenData } from "./thread-data";
 import type { ThreadConversation } from "./thread-model";
@@ -130,7 +134,7 @@ export function useThreadActions(
 		},
 		openHelp: () => {
 			playSoftPress();
-			router.push("/crisis-resources?from=xolacer_chat");
+			router.push(CHAT_HELP_HREF);
 		},
 		openProfile: () => {
 			// Only a seeker's counterpart has a public profile.

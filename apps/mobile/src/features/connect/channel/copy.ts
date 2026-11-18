@@ -5,6 +5,8 @@ export const CHANNEL = {
 	edited: "Edited",
 	empty: "Nothing from Xolace yet. Announcements for the whole camp land here.",
 	failed: "Messages couldn't load. Check your connection and try again.",
+	/** The header's lifebuoy, as in the thread. */
+	help: "Get help now",
 	lock: "Xolace talks to the whole camp, not back. Drop a reaction instead.",
 	/** A broadcast of yours that didn't reach Stream. */
 	notSent: "This post didn't send.",

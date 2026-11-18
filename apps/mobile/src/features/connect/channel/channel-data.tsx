@@ -6,7 +6,11 @@ import { useChannel } from "./use-channel";
  * fixtures in its dev states. Reactions and the hold menu are Stream's, per message. */
 export type ChannelScreenData = {
 	state: ChannelState;
-	actions: { retry: () => void };
+	actions: {
+		/** Crisis resources, from the header, as in the thread. */
+		openHelp: () => void;
+		retry: () => void;
+	};
 };
 
 const Context = createContext<ChannelScreenData | null>(null);

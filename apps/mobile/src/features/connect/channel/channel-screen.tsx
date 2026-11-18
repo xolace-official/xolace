@@ -4,6 +4,7 @@ import { BodyFrame, MessagesFailed } from "../parts/chat-frame";
 import { useChannelScreen } from "./channel-data";
 import { CHANNEL } from "./copy";
 import { ChannelTitle } from "./header/channel-title";
+import { ChannelToolbar } from "./header/channel-toolbar";
 import { ChannelMessages } from "./posts/channel-messages";
 import { PostSkeleton } from "./posts/post-skeleton";
 
@@ -25,6 +26,7 @@ export function ChannelScreen() {
 					title: CHANNEL.title,
 				}}
 			/>
+			<ChannelToolbar />
 			<BodyFrame>
 				{state.body === "messages" ? (
 					<ChannelMessages channel={state.channel} />

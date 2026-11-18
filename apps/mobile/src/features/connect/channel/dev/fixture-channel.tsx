@@ -37,7 +37,7 @@ export function FixtureChannel({
 		<DevChat client={client} online={online}>
 			<ChannelProvider
 				value={{
-					actions: { retry: noop },
+					actions: { openHelp: noop, retry: noop },
 					// The dev channel holds its state from the start.
 					state: channelState(stream, true, channel),
 				}}
