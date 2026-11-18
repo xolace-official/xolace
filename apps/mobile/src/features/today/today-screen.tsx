@@ -10,8 +10,10 @@ import { ScrollViewMarker } from "react-native-screens/experimental";
 import { useScheme } from "@/design/scheme";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
+import { CampfireCard } from "./campfire/campfire-card";
 import { TodayHeader } from "./header/today-header";
 import { ReflectCard } from "./hero/reflect-card";
+import { KindlingCard } from "./kindling/kindling-card";
 import { LateModules } from "./late/late-modules";
 import { SkyCanvas } from "./sky/sky-canvas";
 import { skyTop } from "./sky/sky-model";
@@ -22,6 +24,8 @@ import { TodayToolbar } from "./today-toolbar";
 import { useQualityGate } from "./use-quality-gate";
 
 const BOTTOM_ROOM = 150;
+/** Page padding each side. */
+const PAGE_X = 16;
 /** Long enough for the words, the rise and the ink (450 + 2400 ms) to finish. */
 const INTRO_WINDOW_MS = 3200;
 
@@ -122,8 +126,15 @@ function TodayBody({ flameClock, ...frame }: BodyProps) {
 				<TodayHeader flameClock={flameClock} />
 			</View>
 			<ReflectCard />
-			{late ? <LateModules /> : null}
-			{/* S1c, S1d: kindling, campfire, the rail, moments and the word. */}
+			{late ? (
+				<LateModules />
+			) : (
+				<>
+					<KindlingCard width={width - PAGE_X * 2} />
+					<CampfireCard />
+					{/* S1d: the rail, moments and the word. */}
+				</>
+			)}
 		</TodayFrame>
 	);
 }

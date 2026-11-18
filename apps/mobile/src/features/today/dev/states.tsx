@@ -46,6 +46,51 @@ export const devStates: readonly DevState[] = [
 		...today({ monthPrompt: true, phase: "day", theme: "dark" }),
 	},
 	{
+		id: "kindling-tended",
+		title: "Kindling: back from a step (the completion plays)",
+		...today({ phase: "evening", tend: true }),
+	},
+	{
+		id: "kindling-three",
+		title: "Kindling with three steps, one passed by",
+		...today({ kindling: "three", phase: "day" }),
+	},
+	{
+		id: "kindling-all",
+		title: "Kindling: all four tended",
+		...today({ kindling: "all", phase: "evening" }),
+	},
+	{
+		id: "kindling-dark",
+		title: "Kindling and campfire, dark",
+		...today({ phase: "evening", theme: "dark" }),
+	},
+	{
+		id: "no-kindling",
+		title: "No kindling (S16 fills this frame)",
+		...today({ kindling: "none", phase: "evening" }),
+	},
+	{
+		id: "kindling-loading",
+		title: "Kindling still loading",
+		...today({ kindling: "loading", phase: "evening" }),
+	},
+	{
+		id: "campfire-warming",
+		title: "Campfire with no number yet",
+		...today({ campfire: "warming", phase: "day" }),
+	},
+	{
+		id: "campfire-intake",
+		title: "Campfire from the v2 intake's count",
+		...today({ campfire: "stats", kindling: "none", phase: "day" }),
+	},
+	{
+		id: "empty-day",
+		title: "Empty day: no kindling, no campfire",
+		...today({ campfire: "none", kindling: "none", phase: "day" }),
+	},
+	{
 		id: "phases",
 		title: "The sky through the day (cycles every 4 s)",
 		...today({ cycle: true, phase: "dawn" }),

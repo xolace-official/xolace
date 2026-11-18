@@ -8,7 +8,9 @@ import { type Today, TodayProvider } from "../today-data";
 import { headerCopy, type TodayPhase } from "../today-model";
 import { TodayScreen } from "../today-screen";
 import {
+	FIXTURE_CAMPFIRE,
 	FIXTURE_DAY,
+	FIXTURE_KINDLING,
 	FIXTURE_MONTH_PROMPT,
 	FIXTURE_NAME,
 	FIXTURE_STREAK,
@@ -20,6 +22,7 @@ const ACTIONS: Today["actions"] = {
 	openDoor: (door) =>
 		door === "sit" ? undefined : router.push(DOOR_HREF[door]),
 	openHelp: () => router.push("/crisis-resources"),
+	openKindling: () => router.push("/kindling"),
 	openReflect: () => router.back(),
 	openStreak: () => router.navigate("/you"),
 };
@@ -28,6 +31,8 @@ const DOOR_HREF = { talk: "/talk", vent: "/voice-vent" } as const;
 
 /** Let the screen land before the streak grows, as coming back to Today does. */
 const IGNITE_AFTER_MS = 600;
+/** As if back from the kindling's step: the card has landed before the step counts. */
+const TEND_AFTER_MS = 900;
 /** Long enough for each swap to finish and rest (the night front takes 1.6 s). */
 const CYCLE_MS = 4000;
 const PHASES: readonly TodayPhase[] = ["dawn", "day", "evening", "late"];
@@ -62,6 +67,11 @@ export type FixtureProps = {
 	cycle?: boolean;
 	/** This month's prompt rides on the card. */
 	monthPrompt?: boolean;
+	/** The kindling: the board's, or none (S16 draws that), or still loading. */
+	kindling?: keyof typeof FIXTURE_KINDLING | "none" | "loading";
+	/** A step is tended a moment after the screen opens: the completion plays. */
+	tend?: boolean;
+	campfire?: keyof typeof FIXTURE_CAMPFIRE | "none";
 };
 
 function FixtureToday({
@@ -72,9 +82,20 @@ function FixtureToday({
 	ignite = false,
 	cycle = false,
 	monthPrompt = false,
+	kindling = "board",
+	tend = false,
+	campfire = "count",
 }: FixtureProps) {
 	const phase = usePhase(start, cycle);
 	const [grown, setGrown] = useState(false);
+	const [tended, setTended] = useState(false);
+	useEffect(() => {
+		if (!tend) {
+			return;
+		}
+		const id = setTimeout(() => setTended(true), TEND_AFTER_MS);
+		return () => clearTimeout(id);
+	}, [tend]);
 	useEffect(() => {
 		if (!ignite) {
 			return;
@@ -88,12 +109,20 @@ function FixtureToday({
 		FIXTURE_WEEKDAY,
 		offline ? null : FIXTURE_NAME
 	);
+	let kindlingView: Today["state"]["kindling"] = null;
+	if (kindling === "loading") {
+		kindlingView = undefined;
+	} else if (kindling !== "none") {
+		kindlingView = FIXTURE_KINDLING[tended ? "tended" : kindling];
+	}
 	const state: Today["state"] = {
+		campfire: campfire === "none" ? null : FIXTURE_CAMPFIRE[campfire],
 		card: { monthPrompt: monthPrompt ? FIXTURE_MONTH_PROMPT : null },
 		day: FIXTURE_DAY,
 		eyebrow,
 		greeting,
 		intro,
+		kindling: kindlingView,
 		phase,
 		streak: offline
 			? null

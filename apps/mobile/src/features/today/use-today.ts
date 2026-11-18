@@ -23,6 +23,7 @@ import {
 	type StreakShown,
 	todayPhase,
 } from "./today-model";
+import { useModules } from "./use-today-modules";
 
 /**
  * Where each door goes. Sit with this is offered only once Sit can start from Today on its
@@ -155,6 +156,7 @@ export function useTodayData(): Today {
 	const streak = useStreak(summary?.currentStreak, day, userId);
 	const intro = useIntro(day, userId);
 	const monthPrompt = useMonthPrompt(now);
+	const { campfire, kindling } = useModules();
 
 	// A double tap on a door would stack two screens.
 	const pushOnce = usePushOnce();
@@ -167,15 +169,21 @@ export function useTodayData(): Today {
 		actions: {
 			openDoor: (door) => pushOnce(() => router.push(DOOR_HREF[door])),
 			openHelp: () => router.push("/crisis-resources"),
+			openKindling: () => {
+				playSoftPress();
+				router.push("/kindling");
+			},
 			openReflect,
 			openStreak: () => router.navigate("/you"),
 		},
 		state: {
+			campfire,
 			card: { monthPrompt },
 			day,
 			eyebrow,
 			greeting,
 			intro,
+			kindling,
 			phase,
 			streak,
 		},

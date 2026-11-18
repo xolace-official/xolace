@@ -5,6 +5,21 @@ import type { TodayPhase } from "./today-model";
  * board's "Thursday" and "Ama" are the device's weekday and the user's display name.
  */
 export const COPY = {
+	/** The campfire (board `.camp`): this week's cohort, from `cohort.getWeeklyCohortCard`. */
+	campfire: {
+		campers: (n: number) => (n === 1 ? " camper" : " campers"),
+		count: (emotion: string) => ` sat with ${emotion} by the fire this week.`,
+		lighter: (percent: number) =>
+			`When they say how they feel afterwards, ${percent}% say lighter.`,
+		link: "You are not alone.",
+		/** The v2 intake's count when there's no cohort yet (`intake.campfireStats`). */
+		stats: (n: number) =>
+			n === 1
+				? " person has sat by this fire."
+				: " people have sat by this fire.",
+		warming: (emotion: string) =>
+			`Others have sat with ${emotion} by this fire too.`,
+	},
 	/** The Reflect card (board `.hero`): its question by phase, the field's rotating lines and the hint. */
 	card: {
 		/** VoiceOver only; `doors` is the doors' list ("Talk and Vent"). */
@@ -54,6 +69,36 @@ export const COPY = {
 		late: (name: string | null) => (name ? `Still up, ${name}?` : "Still up?"),
 	} satisfies Record<TodayPhase, (name: string | null) => string>,
 	help: "Get help now",
+	/** Your kindling (board `.kin`, `P/src/fixtures/kindling.ts` KINDLING_TODAY). */
+	kindling: {
+		all: (n: number) =>
+			`ALL ${n === 3 ? "THREE" : n === 4 ? "FOUR" : n} TENDED`,
+		allTitle: "The fire's kept. Flux saved it.",
+		begin: "Begin",
+		done: "DONE",
+		doneEyebrow: "THIS KINDLING IS DONE",
+		/** Each kind of step: its title when the server sends none, and how long it asks (production's twig eyebrows). */
+		kinds: {
+			audio: { length: "SOMETHING TO HEAR", title: "A voice for this" },
+			breathing: { length: "A FEW MINUTES", title: "Sit with this" },
+			bridge: { length: "WHEN YOU'RE READY", title: "Tell someone you trust" },
+			music: { length: "SOMETHING TO HEAR", title: "Low sound for the quiet" },
+			read: { length: "SOMETHING TO READ", title: "A few pages for this" },
+			try: { length: "AWAY FROM THE APP", title: "Something to try" },
+			xolacer: {
+				length: "WHEN YOU WANT IT",
+				title: "Someone who has been here",
+			},
+		},
+		later: (length: string) => `LATER · ${length}`,
+		next: (length: string) => `NEXT · ${length}`,
+		/** Follows the rolling count: "{k} of 4 tended". */
+		of: (n: number) => ` of ${n} tended`,
+		open: "Open your kindling",
+		passed: "PASSED BY",
+		seeIt: "See it",
+		title: "Your kindling",
+	},
 	lateCare: {
 		sub: "People you can reach, any time",
 		title: "If tonight is heavy",
