@@ -8,7 +8,14 @@ import {
 	SOFTEN_TOWARD_IT,
 	SPEAK_TO_IT,
 } from "./dev/fixtures";
-import { arcSize, canSwap, closeLabel, swapChoices } from "./sit-model";
+import {
+	arcSize,
+	canSwap,
+	closeLabel,
+	isStandalone,
+	sitFrom,
+	swapChoices,
+} from "./sit-model";
 
 describe("the screen around the beats", () => {
 	it("sizes the arcs by beat", () => {
@@ -24,6 +31,18 @@ describe("the screen around the beats", () => {
 		expect(closeLabel("kindling", "pre")).toBe("Back to your kindling");
 		expect(closeLabel("kindling", "play")).toBe("Leave Sit with this");
 		expect(closeLabel("reflect", "pre")).toBe("Leave Sit with this");
+		expect(closeLabel("today", "pre")).toBe("Back to Today");
+		expect(closeLabel("today", "close")).toBe("Leave Sit with this");
+	});
+
+	it("reads where it was opened, and runs on its own outside a reflection", () => {
+		expect(sitFrom("today")).toBe("today");
+		expect(sitFrom("kindling")).toBe("kindling");
+		expect(sitFrom(undefined)).toBe("reflect");
+		expect(sitFrom("anything")).toBe("reflect");
+		expect(isStandalone("today")).toBe(true);
+		expect(isStandalone("kindling")).toBe(true);
+		expect(isStandalone("reflect")).toBe(false);
 	});
 
 	it("offers “Something different” only within a reflection, twice at most", () => {
@@ -39,6 +58,7 @@ describe("the screen around the beats", () => {
 		expect(canSwap({ ...base, linkOn: false })).toBe(false);
 		expect(canSwap({ ...base, linkOn: false, stage: "pre" })).toBe(true);
 		expect(canSwap({ ...base, from: "kindling" })).toBe(false);
+		expect(canSwap({ ...base, from: "today" })).toBe(false);
 		expect(canSwap({ ...base, swaps: 2 })).toBe(false);
 		expect(canSwap({ ...base, kind: "prompt" })).toBe(false);
 		expect(canSwap({ ...base, sheetOpen: true })).toBe(false);

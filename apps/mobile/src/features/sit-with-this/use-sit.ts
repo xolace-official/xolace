@@ -2,14 +2,18 @@ import { api } from "@xolace/backend/api";
 import type { Id } from "@xolace/backend/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
+import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { useSessionMode } from "@/context/session-mode-context";
 import { useSessionEndHref } from "@/lib/path-session/session-end-href";
 import { usePathSession } from "@/lib/path-session/use-path-session";
 import { toExercise } from "./catalogue";
 import type { Sit } from "./sit-data";
-import type { SitFrom } from "./sit-model";
+import { isStandalone, sitFrom } from "./sit-model";
 import { useSwapOptions } from "./swap/use-swap-options";
+
+/** What Today's Sit door plays: Three breaths. */
+const TODAY_EXERCISE = "reset";
 
 /**
  * Sit with this on Convex: production's data flow, unchanged. From a
@@ -17,6 +21,8 @@ import { useSwapOptions } from "./swap/use-swap-options";
  * path starts on arrival and completes before the session end opens. A
  * kindling twig (`from=kindling`) replays a completed session's exercise:
  * nothing in the session moves, finishing tends the twig, and it goes back.
+ * Today's Sit door (`from=today`) plays Three breaths on its own
+ * (`exercises.getStandalone`): no session, no slots, no swap, and it goes back.
  * Nothing written in a prompt is ever sent.
  */
 export function useSitData(): Sit {
@@ -26,22 +32,33 @@ export function useSitData(): Sit {
 		sessionId?: string;
 		stepId?: string;
 	}>();
-	const from: SitFrom = params.from === "kindling" ? "kindling" : "reflect";
-	const standalone = from === "kindling";
+	const from = sitFrom(params.from);
+	const standalone = isStandalone(from);
+	const posthog = usePostHog();
 	const stepId = params.stepId as Id<"path_steps"> | undefined;
 	const pathSession = usePathSession();
-	const sessionId = standalone
-		? ((params.sessionId as Id<"sessions"> | undefined) ?? null)
-		: pathSession.sessionId;
+	let sessionId: Id<"sessions"> | null = pathSession.sessionId;
+	if (from === "kindling") {
+		sessionId = (params.sessionId as Id<"sessions"> | undefined) ?? null;
+	} else if (from === "today") {
+		sessionId = null;
+	}
 	const { session, startPath, completePath } = pathSession;
-	const result = useQuery(
+	const forSession = useQuery(
 		api.exercises.getForSession,
 		sessionId ? { sessionId } : "skip"
 	);
+	const alone = useQuery(
+		api.exercises.getStandalone,
+		from === "today" ? { title: TODAY_EXERCISE } : "skip"
+	);
+	const result =
+		from === "today" ? alone && { exercise: alone, slots: {} } : forSession;
 	const completeStep = useMutation(api.paths.completeStep);
 	const afterPath = useSessionEndHref(standalone ? null : sessionId);
 	const { isNight } = useSessionMode();
 	const started = useRef(false);
+	const announced = useRef(false);
 	const leaving = useRef(false);
 	const opening = useRef(false);
 	const focused = useIsFocused();
@@ -54,6 +71,16 @@ export function useSitData(): Sit {
 			opening.current = false;
 		}
 	}, [focused]);
+
+	// Once per visit, wherever it was opened from.
+	const exerciseId = result?.exercise.title;
+	useEffect(() => {
+		if (!exerciseId || announced.current) {
+			return;
+		}
+		announced.current = true;
+		posthog.capture("sit_started", { exercise: exerciseId, from });
+	}, [exerciseId, from, posthog]);
 
 	useEffect(() => {
 		if (standalone || started.current || !sessionId || !session) {
@@ -77,6 +104,11 @@ export function useSitData(): Sit {
 			return;
 		}
 		leaving.current = true;
+		posthog.capture("sit_finished", {
+			completed,
+			exercise: exerciseId ?? null,
+			from,
+		});
 		if (standalone) {
 			// Finishing tends the kindling twig; leaving early leaves it untouched.
 			if (completed && stepId) {

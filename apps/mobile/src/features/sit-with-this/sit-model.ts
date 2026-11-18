@@ -45,8 +45,19 @@ export type Exercise = {
 };
 
 export type Stage = "pre" | "play" | "close";
-/** Where Sit was opened: a reflection's path, or a kindling twig's replay. */
-export type SitFrom = "reflect" | "kindling";
+/**
+ * Where Sit was opened: a reflection's path, a kindling twig's replay, or Today's Sit door
+ * (Three breaths on its own, outside any session).
+ */
+export type SitFrom = "reflect" | "kindling" | "today";
+
+/** The route's `from`: anything unknown is a reflection, as before Today and kindling. */
+export function sitFrom(param: string | undefined): SitFrom {
+	return param === "kindling" || param === "today" ? param : "reflect";
+}
+
+/** Outside a reflection, Sit runs on its own: no path to start or complete, no swap. */
+export const isStandalone = (from: SitFrom) => from !== "reflect";
 /** Production allows two swaps (`exercises.recordSwap`). */
 const MAX_SWAPS = 2;
 
@@ -75,9 +86,16 @@ export function arcSize(stage: Stage, kind: BeatKind): ArcSize {
 
 export const isBreathing = (k: BeatKind) => k === "breath" || k === "sync";
 
-/** Close leaves at any beat, without asking; on a kindling's first screen it goes back. */
-export const closeLabel = (from: SitFrom, stage: Stage) =>
-	from === "kindling" && stage === "pre" ? COPY.backToKindling : COPY.leave;
+/** Close leaves at any beat, without asking; on the first screen it says where it goes back to. */
+export function closeLabel(from: SitFrom, stage: Stage): string {
+	if (stage === "pre" && from === "kindling") {
+		return COPY.backToKindling;
+	}
+	if (stage === "pre" && from === "today") {
+		return COPY.backToToday;
+	}
+	return COPY.leave;
+}
 
 type SwapLink = {
 	from: SitFrom;
