@@ -102,7 +102,7 @@ const useKept = create<Kept>()(
 	})
 );
 
-/** One field of the signed-in user's draft or memory. @public Read by the Letters screens (S20 PR 2). */
+/** One field of the signed-in user's draft or memory. */
 export function useKeptField<K extends keyof Mine>(key: K): Mine[K] {
 	const { userId } = useAuth();
 	return useKept((k) => keptFor(k, userId ?? null)[key]);
@@ -110,7 +110,7 @@ export function useKeptField<K extends keyof Mine>(key: K): Mine[K] {
 
 /**
  * Writes for the signed-in user. A send clears the draft (and any held words). Signed out,
- * they do nothing. @public Read by the Letters screens (S20 PR 2).
+ * they do nothing.
  */
 export function useKeep() {
 	const { userId } = useAuth();

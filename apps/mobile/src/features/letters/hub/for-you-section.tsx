@@ -1,0 +1,102 @@
+import { View } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { AppText } from "@/components/shared/app-text";
+import { PLAY_AS_CHOSEN } from "@/design/springs";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { LETTERS } from "../copy";
+import { LETTER_MOTION } from "../letter-motion";
+import { LetterShelf } from "../letter-shelf";
+import { forYouRows } from "../letters-model";
+import { LettersOffer } from "../letters-offer";
+import { openLetter } from "../letters-routes";
+import { HiddenGroup } from "./hidden-group";
+import { useLettersHubScreen } from "./hub-data";
+import { ReceivedRow } from "./received-row";
+
+/** The offer and the shelf leave and arrive in 240 ms (the board's). */
+const SWAP_MS = 240;
+
+export function SectionLabel({ text }: { text: string }) {
+	return (
+		<AppText
+			accessibilityRole="header"
+			className="px-8 pt-[18px] pb-2 uppercase"
+			color="subtle"
+			variant="overline"
+		>
+			{text}
+		</AppText>
+	);
+}
+
+/**
+ * For you (handoff §1): the offer while it hasn't been answered; "off" with Turn on after Not now
+ * (or the Settings switch); otherwise the unopened letter on its shelf, then the letters you've
+ * opened, to reread, and Hidden · N at the foot.
+ */
+export function ForYouSection() {
+	const { state, actions } = useLettersHubScreen();
+	const reduced = useEffectiveReducedMotion();
+	const ms = reduced ? LETTER_MOTION.reducedMs : SWAP_MS;
+	const enter = FadeIn.duration(ms).reduceMotion(PLAY_AS_CHOSEN.reduceMotion);
+	const exit = FadeOut.duration(ms).reduceMotion(PLAY_AS_CHOSEN.reduceMotion);
+	const { optIn, unopenedId } = state.status;
+	const { reread, hidden } = forYouRows(state.received);
+	return (
+		<View>
+			<SectionLabel text={LETTERS.hub.forYou} />
+			{optIn === "unset" ? (
+				<Animated.View
+					className="mx-4 rounded-[20px] border border-continuous border-separator bg-surface p-3.5"
+					exiting={exit}
+				>
+					<LettersOffer onAnswer={actions.answerOffer} short />
+				</Animated.View>
+			) : null}
+			{optIn === "no" ? (
+				<AppText
+					className="mx-8 text-[14px] leading-[20px]"
+					color="muted"
+					variant="detail"
+				>
+					{`${LETTERS.hub.off} `}
+					<AppText
+						accessibilityRole="button"
+						className="text-[14px] leading-[20px]"
+						color="accentInk"
+						onPress={actions.turnOn}
+						variant="detail"
+						weight="semibold"
+					>
+						{LETTERS.hub.turnOn}
+					</AppText>
+				</AppText>
+			) : null}
+			{optIn === "yes" ? (
+				<Animated.View entering={enter}>
+					{unopenedId ? (
+						<Animated.View entering={enter} exiting={exit}>
+							<LetterShelf
+								className="mx-4 border border-continuous border-separator bg-surface"
+								onOpen={() => openLetter(unopenedId)}
+							/>
+						</Animated.View>
+					) : null}
+					{reread.map((l) => (
+						<ReceivedRow key={l.id} letter={l} />
+					))}
+					{unopenedId || reread.length > 0 ? null : (
+						<AppText
+							className="mx-8 text-[14px] leading-[20px]"
+							color="muted"
+							variant="detail"
+						>
+							{LETTERS.hub.nothingYet}
+						</AppText>
+					)}
+					<HiddenGroup letters={hidden} startOpen={state.opens.hidden} />
+				</Animated.View>
+			) : null}
+		</View>
+	);
+}

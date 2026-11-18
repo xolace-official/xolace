@@ -37,34 +37,34 @@ export const statusOf = (m: LettersMemory): LettersStatus => ({
 	writeLimit: limitOf(m),
 });
 
-/** The one small status read: the opt-in, why Write is off, the unopened letter. @public Read by the Letters screens (S20 PR 2). */
+/** The one small status read: the opt-in, why Write is off, the unopened letter. */
 export function useLettersStatus(): LettersStatus | undefined {
 	return useLettersMemory(useShallow(statusOf));
 }
 
-/** Your sent letters, newest first. Withdrawn ones are gone. @public Read by the Letters screens (S20 PR 2). */
+/** Your sent letters, newest first. Withdrawn ones are gone. */
 export function useSentLetters(): readonly SentLetter[] | undefined {
 	return useLettersMemory((m) => m.sent);
 }
 
-/** Letters for you, newest first, hidden ones included. Reported ones never come back. @public Read by the Letters screens (S20 PR 2). */
+/** Letters for you, newest first, hidden ones included. Reported ones never come back. */
 export function useReceivedLetters(): readonly ReceivedLetter[] | undefined {
 	return useLettersMemory((m) => m.received);
 }
 
-/** One letter for you; `null` once it's gone (reported, or not yours). @public Read by the Letters screens (S20 PR 2). */
+/** One letter for you; `null` once it's gone (reported, or not yours). */
 export function useReceivedLetter(
 	id: string
 ): ReceivedLetter | null | undefined {
 	return useLettersMemory((m) => m.received.find((l) => l.id === id) ?? null);
 }
 
-/** Settings › Notifications › Letters, on by default. @public Read by the Letters screens (S20 PR 2). */
+/** Settings › Notifications › Letters, on by default. */
 export function useLettersPush(): boolean | undefined {
 	return useLettersMemory((m) => m.push);
 }
 
-/** @public Read by the Letters screens (S20 PR 2). */
+/** What the screens ask of letters' server side; S21 makes each one a Convex call. */
 export type LettersCalls = {
 	/** The check reads it (1–8 s on the server); the outcome says what the sender sees. */
 	send: (draft: Draft) => Promise<SendOutcome>;
@@ -96,7 +96,7 @@ const CALLS: LettersCalls = {
 	withdraw: async (id) => memory.withdraw(id),
 };
 
-/** The calls, stable across renders. @public Read by the Letters screens (S20 PR 2). */
+/** The calls, stable across renders. */
 export function useLettersCalls(): LettersCalls {
 	return CALLS;
 }

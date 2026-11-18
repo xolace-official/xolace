@@ -4,6 +4,7 @@ import { connectScreens } from "@/features/connect/screens";
 import { followUpScreens } from "@/features/follow-up/screens";
 import { kindlingScreens } from "@/features/kindling/screens";
 import { lanternScreens } from "@/features/lantern/screens";
+import { lettersScreens } from "@/features/letters/screens";
 import { navigationScreens } from "@/features/navigation/screens";
 import { peerReflectionScreens } from "@/features/peer-reflection/screens";
 import { playerScreens } from "@/features/player/screens";
@@ -32,6 +33,7 @@ export const ROOT_SCREENS: readonly RootScreen[] = [
 	...followUpScreens,
 	...kindlingScreens,
 	...lanternScreens,
+	...lettersScreens,
 	...navigationScreens,
 	...peerReflectionScreens,
 	...playerScreens,

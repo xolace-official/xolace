@@ -39,6 +39,7 @@ describe("the screen around the beats", () => {
 
 	it("reads where it was opened, and runs on its own outside a reflection", () => {
 		expect(sitFrom("today")).toBe("today");
+		expect(sitFrom("letter")).toBe("letter");
 		expect(sitFrom("kindling")).toBe("kindling");
 		expect(sitFrom(undefined)).toBe("reflect");
 		expect(sitFrom("anything")).toBe("reflect");
@@ -111,6 +112,17 @@ describe("where Sit reads its exercise", () => {
 		expect(sitSource("today", ids)).toEqual({
 			sessionId: null,
 			standalone: "reset",
+		});
+	});
+
+	it("plays Three breaths from a letter's care, with no session", () => {
+		expect(sitSource("letter", ids)).toEqual({
+			sessionId: null,
+			standalone: "reset",
+		});
+		expect(sitResult("letter", null, "alone")).toEqual({
+			exercise: "alone",
+			slots: {},
 		});
 	});
 

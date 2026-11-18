@@ -46,15 +46,21 @@ export type Exercise = {
 
 export type Stage = "pre" | "play" | "close";
 /**
- * Where Sit was opened: a reflection's path, a kindling twig's replay, or Today's Sit door
- * (Three breaths on its own, outside any session).
+ * Where Sit was opened: a reflection's path, a kindling twig's replay, Today's Sit door, or a
+ * letter's care sheet ("Breathe with me first"). The last two play Three breaths on its own,
+ * outside any session.
  */
-export type SitFrom = "reflect" | "kindling" | "today";
+export type SitFrom = "reflect" | "kindling" | "today" | "letter";
 
 /** The route's `from`: anything unknown is a reflection, as before Today and kindling. */
 export function sitFrom(param: string | undefined): SitFrom {
-	return param === "kindling" || param === "today" ? param : "reflect";
+	return param === "kindling" || param === "today" || param === "letter"
+		? param
+		: "reflect";
 }
+
+/** Today's door and a letter's care play the standalone exercise, with no session. */
+const playsAlone = (from: SitFrom) => from === "today" || from === "letter";
 
 /** Outside a reflection, Sit runs on its own: no path to start or complete, no swap. */
 export const isStandalone = (from: SitFrom) => from !== "reflect";
@@ -64,14 +70,14 @@ export const TODAY_EXERCISE = "reset";
 
 /**
  * Where Sit reads its exercise: a reflection's path session (`getForSession`), a kindling
- * twig's completed session from the route, or, from Today, the standalone exercise
+ * twig's completed session from the route, or, from Today or a letter, the standalone exercise
  * (`getStandalone`) with no session at all.
  */
 export function sitSource<Id extends string>(
 	from: SitFrom,
 	ids: { path: Id | null; route: Id | undefined }
 ): { sessionId: Id | null; standalone: typeof TODAY_EXERCISE | null } {
-	if (from === "today") {
+	if (playsAlone(from)) {
 		return { sessionId: null, standalone: TODAY_EXERCISE };
 	}
 	return {
@@ -90,7 +96,7 @@ export function sitResult<E>(
 	forSession: { exercise: E; slots: Slots } | null | undefined,
 	standalone: E | null | undefined
 ): { exercise: E; slots: Slots } | null | undefined {
-	if (from !== "today") {
+	if (!playsAlone(from)) {
 		return forSession;
 	}
 	return standalone && { exercise: standalone, slots: {} };
