@@ -28,8 +28,12 @@ export function RowPress({
 	actions: RowActions;
 	children: ReactNode;
 }) {
+	// Cancel first: Android lays buttons out neutral, negative, positive in array order and has no
+	// destructive style, so the last slot must be an action and Delete request says what it does.
+	// At most three: Close (an open chat) and Delete (a closed one) never share a row.
 	const menu = () =>
 		Alert.alert(row.name, undefined, [
+			{ style: "cancel", text: COPY.menu.cancel },
 			...(row.menu.canClose
 				? [{ onPress: () => actions.close(row), text: COPY.menu.close }]
 				: []),
@@ -48,7 +52,6 @@ export function RowPress({
 						},
 					]
 				: []),
-			{ style: "cancel", text: COPY.menu.cancel },
 		]);
 	return (
 		<PressScale

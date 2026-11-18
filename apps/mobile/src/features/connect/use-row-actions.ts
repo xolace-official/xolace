@@ -12,8 +12,11 @@ import { COPY } from "./copy";
 import type { ChatRowView, PairRowView } from "./list/chats-model";
 import type { DeleteConfirm, RowActions } from "./list/row-actions";
 
-const fail = (label: string) =>
+/** Production's log line beside the toast, so a failed mutation still shows up in the logs. */
+const fail = (label: string, what: string, error: unknown) => {
+	console.error(`[connect] ${what} failed`, error);
 	toast(label, { description: COPY.toast.tryAgain, variant: "danger" });
+};
 
 export function useRowActions(): {
 	actions: RowActions;
@@ -30,8 +33,12 @@ export function useRowActions(): {
 	const setArchived = (row: PairRowView, to: boolean) =>
 		(to ? archive : unarchive)({ conversationId: row.id })
 			.then(() => true)
-			.catch(() => {
-				fail(to ? COPY.toast.archiveFailed : COPY.toast.unarchiveFailed);
+			.catch((error: unknown) => {
+				fail(
+					to ? COPY.toast.archiveFailed : COPY.toast.unarchiveFailed,
+					"archive toggle",
+					error
+				);
 				return false;
 			});
 
@@ -76,8 +83,8 @@ export function useRowActions(): {
 			askDelete: setDeleteFor,
 			close: (row) => {
 				playAffirmativePress();
-				rest({ conversationId: row.id }).catch(() =>
-					fail(COPY.toast.closeFailed)
+				rest({ conversationId: row.id }).catch((error: unknown) =>
+					fail(COPY.toast.closeFailed, "close", error)
 				);
 			},
 			open,
@@ -92,8 +99,8 @@ export function useRowActions(): {
 				}
 				setDeleteFor(null);
 				playAffirmativePress();
-				remove({ conversationId: row.id }).catch(() =>
-					fail(COPY.toast.deleteFailed)
+				remove({ conversationId: row.id }).catch((error: unknown) =>
+					fail(COPY.toast.deleteFailed, "delete", error)
 				);
 			},
 			open: deleteFor !== null,
