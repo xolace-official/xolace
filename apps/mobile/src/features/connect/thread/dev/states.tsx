@@ -21,6 +21,9 @@ const THREAD = {
 	title: "",
 };
 const DAY_MIN = 1440;
+const DAY_MS = DAY_MIN * 60_000;
+/** A name long enough to truncate, away for days: the header at its widest. */
+const AWAY = { ...OPEN, counterpartName: "Oluwaseun Adebayo-Williamson" };
 
 /** The prototype's evening, then a longer week before it. */
 const TONIGHT: DevMessage[] = [
@@ -102,6 +105,19 @@ export const devStates: readonly DevState[] = [
 			<FixtureThread conversation={OPEN} liveTyping messages={TONIGHT} />
 		),
 		title: "Thread: Maya typing on and off",
+	},
+	{
+		id: "thread-away-long-name",
+		options: THREAD,
+		Screen: () => (
+			<FixtureThread
+				conversation={AWAY}
+				lastHere={3 * DAY_MS}
+				liveTyping
+				messages={TONIGHT}
+			/>
+		),
+		title: "Thread: a long name, last here 3 days ago, typing on and off",
 	},
 	{
 		id: "thread-failed-send",

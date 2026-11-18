@@ -19,11 +19,12 @@ const TYPING_ON = 4;
 const TYPING_CYCLE = 7;
 
 /** The channel the client holds: the thread's messaging channel by default. `canSend: false` is
- * a camper in the Xolace channel; `author` names whoever wrote the messages that aren't yours. */
+ * a camper in the Xolace channel; `author` names whoever wrote the messages that aren't yours,
+ * and how they're seen: here now unless `online: false`, last here at `last_active`. */
 export type DevChannelKind = {
 	type?: string;
 	canSend?: boolean;
-	author?: { id: string; name: string };
+	author?: { id: string; name: string; online?: boolean; last_active?: string };
 };
 
 function makeClient(
