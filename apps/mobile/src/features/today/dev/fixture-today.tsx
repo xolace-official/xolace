@@ -1,5 +1,4 @@
-/** Today on fixtures: the real screen under a provider filled from `fixtures.ts`.
- * Help and the streak open their real routes; the card zooms into a Reflect dev state. */
+/** Today on fixtures, from `fixtures.ts`; Help and the streak open their routes, the card a Reflect dev state. */
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScopedTheme } from "uniwind";
@@ -193,11 +192,9 @@ function FixtureToday({
 	);
 }
 
-/** The real route draws its own chrome: no header. */
-const OWN = { headerShown: false };
-
-/** A dev state's options and screen, spread into its entry next to its `id` and `title`. */
+/** A dev state's options and screen, spread into its entry next to its `id` and `title`. The real
+ * route draws its own chrome: no header. */
 export const today = (props: FixtureProps) => ({
-	options: OWN,
+	options: { headerShown: false },
 	Screen: () => <FixtureToday {...props} />,
 });
