@@ -13,10 +13,12 @@ export type DeleteSheet = {
 		plus: boolean;
 		/** The delete is on its way. */
 		busy: boolean;
+		/** The account is deleted but signing out failed: only Sign out is left, no way to keep it. */
+		deleted: boolean;
 	};
 	actions: {
 		confirm: () => void;
-		/** Keep my data / Keep my account: closes the sheet. */
+		/** Keep my data / Keep my account: closes the sheet (not while busy or deleted). */
 		keep: () => void;
 	};
 };

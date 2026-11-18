@@ -7,6 +7,7 @@ import {
 	nameError,
 	signInOf,
 	spaceShown,
+	spaceUnchanged,
 } from "@/features/settings/account/account-model";
 import {
 	ACCOUNT_FREE_GOOGLE,
@@ -76,6 +77,13 @@ describe("the space's name", () => {
 		expect(canResetSpace(null, "Ember")).toBe(false);
 		expect(canResetSpace("Ember", "Ember")).toBe(false);
 		expect(canResetSpace("Haven", "Ember")).toBe(true);
+	});
+
+	it("saving the dialog as it opened writes nothing (an unnamed space isn't named Ember)", () => {
+		expect(spaceUnchanged(null, "Ember", "Ember")).toBe(true);
+		expect(spaceUnchanged("Haven", "Haven", "Ember")).toBe(true);
+		expect(spaceUnchanged(null, "Haven", "Ember")).toBe(false);
+		expect(spaceUnchanged("Haven", "Ember", "Ember")).toBe(false);
 	});
 });
 

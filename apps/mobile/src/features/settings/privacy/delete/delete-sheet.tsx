@@ -67,6 +67,7 @@ export function DeleteSheetScreen() {
 		state.plus,
 		Platform.OS === "android" ? "android" : "ios"
 	);
+	const left = state.deleted ? C.signOutLeft : null;
 	return (
 		<View className="bg-surface px-5 pt-6.5 pb-8.5">
 			<AppText
@@ -81,14 +82,15 @@ export function DeleteSheetScreen() {
 				className="mt-1.5 text-[15px] text-foreground/68 leading-[21.3px]"
 				variant="body"
 			>
-				{sheet.lead}
+				{left?.lead ?? sheet.lead}
 			</AppText>
 			<View className="mt-4.5 mb-5 rounded-[18px] border-continuous bg-surface-secondary px-4 py-1">
 				<List goes items={sheet.goes} title={C.goes} />
 				<List goes={false} items={sheet.stays} title={C.stays} />
 			</View>
 			<PressScale
-				accessibilityState={{ busy: state.busy }}
+				accessibilityHint={left ? undefined : C.confirmHint}
+				accessibilityState={{ busy: state.busy, disabled: state.busy }}
 				className={cn(
 					"h-13 items-center justify-center rounded-[16px] border-continuous bg-danger",
 					state.busy ? "opacity-60" : "opacity-100"
@@ -102,22 +104,29 @@ export function DeleteSheetScreen() {
 					variant="body"
 					weight="semibold"
 				>
-					{state.busy ? C.working : sheet.confirm}
+					{state.busy ? C.working : (left?.confirm ?? sheet.confirm)}
 				</AppText>
 			</PressScale>
-			<PressScale
-				className="mt-1.5 h-12 items-center justify-center"
-				haptic={playSoftPress}
-				onPress={actions.keep}
-			>
-				<AppText
-					className="text-[17px] text-accent leading-[22px]"
-					variant="body"
-					weight="medium"
+			{left ? null : (
+				<PressScale
+					accessibilityState={{ disabled: state.busy }}
+					className={cn(
+						"mt-1.5 h-12 items-center justify-center",
+						state.busy ? "opacity-45" : "opacity-100"
+					)}
+					disabled={state.busy}
+					haptic={playSoftPress}
+					onPress={actions.keep}
 				>
-					{sheet.keep}
-				</AppText>
-			</PressScale>
+					<AppText
+						className="text-[17px] text-accent leading-[22px]"
+						variant="body"
+						weight="medium"
+					>
+						{sheet.keep}
+					</AppText>
+				</PressScale>
+			)}
 		</View>
 	);
 }

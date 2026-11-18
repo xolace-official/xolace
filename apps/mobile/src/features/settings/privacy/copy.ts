@@ -3,7 +3,7 @@ import type { IconName } from "@/components/shared/icon";
 /**
  * Settings › Privacy & Data and its delete sheet (P/design/handoff/settings-sections.md §1,
  * P/src/fixtures/settings-sections.ts), word for word. Production's own strings are kept where
- * production says more: the Telegram line on deleting an account (`use-confirm-action.ts`) and
+ * production says more: the Telegram line on deleting an account (production's `useConfirmAction`) and
  * the failure toast.
  */
 export const PRIVACY_COPY = {
@@ -104,7 +104,9 @@ export type DeleteSheetCopy = {
 };
 
 export const DELETE_COPY = {
-	/** Production's failure toast (`use-confirm-action.ts`). */
+	/** Spoken on the red button: there's no undo once it's pressed. */
+	confirmHint: "Can't be undone.",
+	/** Production's failure toast (production's `useConfirmAction`). */
 	failed: { description: "Please try again.", title: "Something went wrong" },
 	goes: "Goes",
 	/** On Xolace+: who holds the billing, which deleting the account doesn't end. */
@@ -127,7 +129,7 @@ export const DELETE_COPY = {
 			lead: "You’re signed out now, and everything goes within a few hours. Sign back in before then and nothing is deleted.",
 			stays: [
 				"If a session ever raised a safety concern, an anonymous record of it: none of your words, no name",
-				// Production's sentence (`use-confirm-action.ts`, #773).
+				// Production's sentence (production's `useConfirmAction`, #773).
 				"If you linked Telegram, Xolace deletes the messages it still can, but Telegram keeps the rest of that chat’s history.",
 			],
 			title: "Delete your account?",
@@ -151,6 +153,11 @@ export const DELETE_COPY = {
 			title: "Delete all my data?",
 		},
 	} satisfies Record<SheetKind, DeleteSheetCopy>,
+	/** The account is deleted but signing out failed: all that's left is to sign out. */
+	signOutLeft: {
+		confirm: "Sign out",
+		lead: "Your account is being deleted. Sign out to finish.",
+	},
 	stays: "Stays",
 	working: "Deleting…",
 } as const;

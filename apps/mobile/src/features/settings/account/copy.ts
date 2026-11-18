@@ -67,6 +67,8 @@ export const ACCOUNT_COPY = {
 	} satisfies Record<SignIn, string>,
 	signedOut: "Signed out",
 	signIn: "Sign-in",
+	/** Spoken on the sign-in row's place while Clerk loads. */
+	signInLoading: "Loading how you sign in",
 	yourName: "Your name",
 	yourSpace: "Your space",
 } as const;

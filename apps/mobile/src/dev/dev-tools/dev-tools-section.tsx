@@ -6,11 +6,7 @@
  */
 import { useState } from "react";
 import { View } from "react-native";
-import {
-	Rows,
-	SectionTitle,
-	SettingsCard,
-} from "@/components/settings-kit/parts";
+import { SectionTitle, SettingsCard } from "@/components/settings-kit/parts";
 import { TileRow } from "@/components/settings-kit/tile-row";
 import type { IconName } from "@/components/shared/icon";
 import { type FollowUpTier, useDevTools } from "@/dev/dev-tools/use-dev-tools";
@@ -62,94 +58,93 @@ export function DevToolsSection() {
 		<View>
 			<SectionTitle>Dev tools</SectionTitle>
 			<SettingsCard>
-				<Rows>
+				<TileRow
+					icon={I.states}
+					label="Dev states"
+					onPress={dev.openDevStates}
+				/>
+				<TileRow
+					icon={I.bump}
+					label="Bump streak +1"
+					onPress={() => dev.runStreak("bump")}
+				/>
+				<TileRow
+					icon={I.reset}
+					label="Reset streak to day 1"
+					onPress={() => dev.runStreak("reset")}
+				/>
+				<TileRow
+					icon={I.replay}
+					label="Replay streak reveal"
+					onPress={dev.replayReveal}
+				/>
+				<TileRow
+					icon={I.awareness}
+					label="Reset awareness events"
+					onPress={dev.resetAwareness}
+				/>
+				{/* Delete with features/reflect. */}
+				{RETURN_WELCOME_TIERS.map(({ tier, label }) => (
 					<TileRow
-						icon={I.states}
-						label="Dev states"
-						onPress={dev.openDevStates}
+						icon={I.returnWelcome}
+						key={tier}
+						label={`Return welcome · ${label}`}
+						onPress={() => setPreviewTier(tier)}
 					/>
+				))}
+				{FOLLOW_UP_TIERS.map((tier) => (
 					<TileRow
-						icon={I.bump}
-						label="Bump streak +1"
-						onPress={() => dev.runStreak("bump")}
+						icon={I.followUp}
+						key={tier}
+						label={`Seed follow-up · ${tier}`}
+						onPress={() => dev.seedFollowUp(tier)}
 					/>
-					<TileRow
-						icon={I.reset}
-						label="Reset streak to day 1"
-						onPress={() => dev.runStreak("reset")}
-					/>
-					<TileRow
-						icon={I.replay}
-						label="Replay streak reveal"
-						onPress={dev.replayReveal}
-					/>
-					<TileRow
-						icon={I.awareness}
-						label="Reset awareness events"
-						onPress={dev.resetAwareness}
-					/>
-					{/* Delete with features/reflect. */}
-					{RETURN_WELCOME_TIERS.map(({ tier, label }) => (
-						<TileRow
-							icon={I.returnWelcome}
-							key={tier}
-							label={`Return welcome · ${label}`}
-							onPress={() => setPreviewTier(tier)}
-						/>
-					))}
-					{FOLLOW_UP_TIERS.map((tier) => (
-						<TileRow
-							icon={I.followUp}
-							key={tier}
-							label={`Seed follow-up · ${tier}`}
-							onPress={() => dev.seedFollowUp(tier)}
-						/>
-					))}
-					<TileRow
-						icon={I.intake}
-						label="Replay intake"
-						onPress={dev.replayIntake}
-					/>
-					<TileRow
-						icon={I.deferred}
-						label="Replay deferred questions"
-						onPress={dev.replayDeferred}
-					/>
-					{/* Delete with features/xolacer-chat. */}
-					<TileRow
-						icon={I.age}
-						label="Clear date of birth"
-						onPress={dev.clearAgeGate}
-					/>
-					{/* Delete with features/intake. */}
-					<TileRow
-						icon={I.plus}
-						label="Preview Xolace+ step"
-						onPress={dev.previewPlusStep}
-					/>
-					{/* Delete with features/starter-suggestions. */}
-					<TileRow
-						icon={I.map}
-						label="Starter suggestions · as new user"
-						onPress={() => dev.armStarters(true)}
-					/>
-					{/* Delete with features/starter-suggestions. */}
-					<TileRow
-						icon={I.map}
-						label="Starter suggestions · real gate"
-						onPress={() => dev.armStarters(false)}
-					/>
-					<TileRow
-						icon={I.badge}
-						label="Replay badge unlock"
-						onPress={dev.replayBadge}
-					/>
-					<TileRow
-						icon={I.sentry}
-						label="Send Sentry test error"
-						onPress={dev.sentryTest}
-					/>
-				</Rows>
+				))}
+				<TileRow
+					icon={I.intake}
+					label="Replay intake"
+					onPress={dev.replayIntake}
+				/>
+				<TileRow
+					icon={I.deferred}
+					label="Replay deferred questions"
+					onPress={dev.replayDeferred}
+				/>
+				{/* Delete with features/xolacer-chat. */}
+				<TileRow
+					icon={I.age}
+					label="Clear date of birth"
+					onPress={dev.clearAgeGate}
+				/>
+				{/* Delete with features/intake. */}
+				<TileRow
+					icon={I.plus}
+					label="Preview Xolace+ step"
+					onPress={dev.previewPlusStep}
+				/>
+				{/* Delete with features/starter-suggestions. */}
+				<TileRow
+					icon={I.map}
+					label="Starter suggestions · as new user"
+					onPress={() => dev.armStarters(true)}
+				/>
+				{/* Delete with features/starter-suggestions. */}
+				<TileRow
+					icon={I.map}
+					label="Starter suggestions · real gate"
+					onPress={() => dev.armStarters(false)}
+				/>
+				<TileRow
+					icon={I.badge}
+					label="Replay badge unlock"
+					onPress={dev.replayBadge}
+				/>
+				<TileRow
+					icon={I.sentry}
+					label="Send Sentry test error"
+					last
+					onPress={dev.sentryTest}
+				/>
 			</SettingsCard>
 			<ReturnWelcomeSheet
 				isOpen={previewTier !== null}

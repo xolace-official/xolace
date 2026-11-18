@@ -1,6 +1,7 @@
 import { View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { SectionTitle, SettingsCard } from "@/components/settings-kit/parts";
+import { ROW } from "@/components/settings-kit/settings-layout";
 import { TileRow } from "@/components/settings-kit/tile-row";
 import { useAccountScreen } from "@/features/settings/account/account-data";
 import {
@@ -57,7 +58,10 @@ function AppleMark() {
 /** Sign-in: one row, the provider's mark on a neutral tile (email on the accent tile). */
 export function SignInCard() {
 	const { signIn } = useAccountScreen().state;
-	let row = <TileRow label="" last />;
+	// While Clerk loads: the row's height, named for VoiceOver, with nothing drawn in it.
+	let row = (
+		<View accessibilityLabel={C.signInLoading} accessible className={ROW} />
+	);
 	if (signIn === "apple") {
 		row = (
 			<TileRow

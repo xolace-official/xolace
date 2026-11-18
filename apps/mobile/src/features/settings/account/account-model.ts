@@ -57,6 +57,17 @@ export function errorText(error: unknown): string {
 export const spaceShown = (space: string | null, companion: string) =>
 	space ?? companion;
 
+/**
+ * Saving the space dialog as it opened changes nothing, so nothing is written: an unnamed space
+ * opens on the companion's default, and writing it would name the space "Ember" (hiding Reset
+ * and ending Reflect's naming prompt).
+ */
+export const spaceUnchanged = (
+	space: string | null,
+	draft: string,
+	companion: string
+) => draft === spaceShown(space, companion);
+
 /** "Reset to Ember" is offered only when the space has a name of its own. */
 export const canResetSpace = (space: string | null, companion: string) =>
 	space !== null && space !== companion;

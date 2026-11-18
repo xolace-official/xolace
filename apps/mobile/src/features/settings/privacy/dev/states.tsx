@@ -7,6 +7,7 @@ import {
 import {
 	DELETE_ACCOUNT,
 	DELETE_ACCOUNT_PLUS,
+	DELETE_ACCOUNT_SIGN_OUT_LEFT,
 	DELETE_DATA,
 	DELETE_DATA_BUSY,
 	PRIVACY_1_YEAR_ALERT,
@@ -111,5 +112,11 @@ export const devStates: readonly DevState[] = [
 		options: ACCOUNT_SHEET,
 		Screen: () => <FixtureDeleteSheet state={DELETE_ACCOUNT_PLUS} />,
 		title: "Delete account sheet on Xolace+ (29)",
+	},
+	{
+		id: "delete-account-sign-out-left",
+		options: ACCOUNT_SHEET,
+		Screen: () => <FixtureDeleteSheet state={DELETE_ACCOUNT_SIGN_OUT_LEFT} />,
+		title: "Delete account: deleted, signing out failed",
 	},
 ];

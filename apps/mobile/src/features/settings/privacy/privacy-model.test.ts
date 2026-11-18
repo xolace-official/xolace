@@ -11,6 +11,7 @@ import {
 import {
 	askAfterCount,
 	deleteSheet,
+	deletionAlreadyRequested,
 	keepCard,
 	memoryOn,
 	retentionAlert,
@@ -96,6 +97,14 @@ describe("keepCard", () => {
 		expect(flipped.a11y).toBe(
 			"What Xolace keeps. Your sessions, until you delete them. New sessions kept without their words. Sharing is picked for you after a session. Your voice, and who you write to, are never kept."
 		);
+	});
+});
+
+describe("deletionAlreadyRequested", () => {
+	it("an account_inactive refusal means an earlier attempt deleted it", () => {
+		expect(deletionAlreadyRequested("account_inactive")).toBe(true);
+		expect(deletionAlreadyRequested("unauthenticated")).toBe(false);
+		expect(deletionAlreadyRequested(undefined)).toBe(false);
 	});
 });
 

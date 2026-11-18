@@ -14,6 +14,7 @@ import {
 	nameError,
 	signInOf,
 	spaceShown,
+	spaceUnchanged,
 } from "@/features/settings/account/account-model";
 import {
 	ACCOUNT_COPY as C,
@@ -170,8 +171,15 @@ export function useAccount(): Account {
 					return;
 				}
 				if (editing.kind === "space") {
-					// Optimistic, as production's preference writes are.
 					close();
+					// Unchanged (an unnamed space saved on "Ember") writes nothing.
+					if (
+						space !== undefined &&
+						spaceUnchanged(space, trimmed, COMPANION_FALLBACK_NAME)
+					) {
+						return;
+					}
+					// Optimistic, as production's preference writes are.
 					updatePreferences({ spaceName: trimmed }).catch(saveFailed);
 					return;
 				}

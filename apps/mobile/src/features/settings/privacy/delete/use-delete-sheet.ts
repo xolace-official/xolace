@@ -1,12 +1,14 @@
 import { useAuth } from "@clerk/expo";
 import { api } from "@xolace/backend/api";
 import { useMutation } from "convex/react";
-import { router } from "expo-router";
-import { useRef, useState } from "react";
+import { router, useNavigation } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "@/components/shared/toast";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { DELETE_COPY, type SheetKind } from "@/features/settings/privacy/copy";
 import type { DeleteSheet } from "@/features/settings/privacy/delete/delete-sheet-data";
+import { deletionAlreadyRequested } from "@/features/settings/privacy/privacy-model";
+import { convexErrorCode } from "@/lib/convex-error-code";
 import { useAppStore } from "@/store/store";
 
 /**
@@ -23,26 +25,42 @@ export function useDeleteSheet(
 	const requestDeletion = useMutation(api.users.requestDeletion);
 	const { signOut, userId } = useAuth();
 	const { isPlus } = usePlusEntitlement();
-	const deletionRequested = useRef(false);
+	const navigation = useNavigation();
+	// Set synchronously, so a second tap before React re-renders can't send a second request.
+	const inFlight = useRef(false);
 	const [busy, setBusy] = useState(false);
+	// The account is deleted and only signing out is left: Keep can't promise anything now.
+	const [deleted, setDeleted] = useState(false);
+	const locked = busy || deleted;
+
+	// While a request runs (or once the account is gone) the sheet can't be swiped away.
+	useEffect(() => {
+		navigation.setOptions({ gestureEnabled: !locked });
+	}, [navigation, locked]);
 
 	const deleteData = async () => {
 		await requestDataWipe();
 		await onDataWiped();
-		router.back();
+		// Only close the sheet itself: if it was already left, pop nothing else.
+		if (navigation.isFocused()) {
+			router.back();
+		}
 	};
 
 	const deleteAccount = async () => {
-		// A previous attempt may have deleted and then failed at sign-out;
-		// re-running would throw account_inactive from requireAuth.
-		if (!deletionRequested.current) {
+		try {
 			await requestDeletion();
-			deletionRequested.current = true;
-			// Coming back before Clerk's copy is gone is this same id, and these flags
-			// shouldn't outlive the account they were asked on.
-			if (userId) {
-				useAppStore.getState().clearAccountFlags(userId);
+		} catch (error) {
+			// An earlier attempt deleted it and then failed to sign out; the server is the truth.
+			if (!deletionAlreadyRequested(convexErrorCode(error))) {
+				throw error;
 			}
+		}
+		setDeleted(true);
+		// Coming back before Clerk's copy is gone is this same id, and these flags
+		// shouldn't outlive the account they were asked on.
+		if (userId) {
+			useAppStore.getState().clearAccountFlags(userId);
 		}
 		// The patch invalidates every requireAuth-gated subscription, so the
 		// session must go. A failure lands in the toast below.
@@ -55,12 +73,13 @@ export function useDeleteSheet(
 			await (kind === "data" ? deleteData() : deleteAccount());
 			toast(DELETE_COPY.sheets[kind].done);
 		} catch {
-			// The sheet stays up, so it can be tried again or kept.
+			// The sheet stays up, so it can be tried again (or, before a deletion, kept).
 			toast(DELETE_COPY.failed.title, {
 				description: DELETE_COPY.failed.description,
 				variant: "danger",
 			});
 		} finally {
+			inFlight.current = false;
 			setBusy(false);
 		}
 	};
@@ -68,12 +87,18 @@ export function useDeleteSheet(
 	return {
 		actions: {
 			confirm: () => {
-				if (!busy) {
-					confirm().catch(() => undefined);
+				if (inFlight.current) {
+					return;
+				}
+				inFlight.current = true;
+				confirm().catch(() => undefined);
+			},
+			keep: () => {
+				if (!locked) {
+					router.back();
 				}
 			},
-			keep: () => router.back(),
 		},
-		state: { busy, kind, plus: isPlus },
+		state: { busy, deleted, kind, plus: isPlus },
 	};
 }

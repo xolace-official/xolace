@@ -85,13 +85,24 @@ export const DELETE_ACTIONS: DeleteSheet["actions"] = {
 type Sheet = DeleteSheet["state"];
 
 /** Render 27: Delete all my data. */
-export const DELETE_DATA: Sheet = { busy: false, kind: "data", plus: false };
+export const DELETE_DATA: Sheet = {
+	busy: false,
+	deleted: false,
+	kind: "data",
+	plus: false,
+};
 export const DELETE_DATA_BUSY: Sheet = { ...DELETE_DATA, busy: true };
 /** Delete account, free. */
 export const DELETE_ACCOUNT: Sheet = {
 	busy: false,
+	deleted: false,
 	kind: "account",
 	plus: false,
 };
 /** Render 29: Delete account on Xolace+ (who holds the billing). */
 export const DELETE_ACCOUNT_PLUS: Sheet = { ...DELETE_ACCOUNT, plus: true };
+/** The account was deleted but signing out failed: only Sign out is left. */
+export const DELETE_ACCOUNT_SIGN_OUT_LEFT: Sheet = {
+	...DELETE_ACCOUNT,
+	deleted: true,
+};
