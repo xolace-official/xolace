@@ -311,10 +311,11 @@ describe("detailLine", () => {
 			(detailLine(TUESDAY, scale) ?? "").split(" · ");
 
 		it("keeps the domain up to its threshold and drops it above", () => {
-			for (const scale of [0.82, 1, 1.118, DROP_DOMAIN_ABOVE]) {
+			for (const scale of [0.82, 1, DROP_DOMAIN_ABOVE]) {
 				expect(parts(scale)).toEqual(["2 moments", "Work", "Overwhelm", ENDED]);
 			}
-			for (const scale of [DROP_DOMAIN_ABOVE + 0.01, 1.235, 1.353]) {
+			// iOS's xLarge, xxLarge and xxxLarge.
+			for (const scale of [DROP_DOMAIN_ABOVE + 0.01, 1.118, 1.235, 1.353]) {
 				expect(parts(scale)).toEqual(["2 moments", "Overwhelm", ENDED]);
 			}
 		});
@@ -325,7 +326,7 @@ describe("detailLine", () => {
 				"Overwhelm",
 				ENDED,
 			]);
-			for (const scale of [DROP_FEELING_ABOVE + 0.01, 1.8, 3.1]) {
+			for (const scale of [DROP_FEELING_ABOVE + 0.01, 1.786, 1.8, 3.1]) {
 				expect(parts(scale)).toEqual(["2 moments", ENDED]);
 			}
 		});

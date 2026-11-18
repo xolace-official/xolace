@@ -203,16 +203,18 @@ const isDomain = (key: string): key is DetailDomain =>
 
 /**
  * Text sizes (the window's `fontScale`) above which line 2 drops a part so its ending still fits
- * one row. The card shrinks the line to 0.8 at most, and has about 311 pt for it on a 375 pt phone.
- * The longest lines, measured at 12.5 pt in the widest body face (DM Sans), fit up to:
- * - "99 moments · Belonging · Disappointment · about the same", 342 pt: 1.137;
- * - without the domain, 277 pt: 1.405;
- * - the count and the ending, 175 pt: 2.23 (AppText caps body text at 1.8).
- * Rounded down. So iOS's Large and xLarge sizes say it all, xxLarge and xxxLarge drop the domain,
- * and the accessibility sizes drop the feeling too.
+ * one row. The card shrinks the line to 0.8 at most, and has about 302 pt for it on a 375 pt phone
+ * (317 pt measured on a 390 pt iPhone 17e, less 15). The longest lines, measured at 12.5 pt in the
+ * widest body face (DM Sans), fit up to:
+ * - "99 moments · Belonging · Disappointment · about the same", 342 pt: 1.104;
+ * - without the domain, 277 pt: 1.364;
+ * - the count and the ending, 175 pt: 2.16 (AppText caps body text at 1.8).
+ * Rounded down. With React Native's iOS scales (Large 1, xLarge 1.118, xxLarge 1.235, xxxLarge
+ * 1.353, AX1 1.786), only Large and smaller say it all; xLarge to xxxLarge drop the domain, and
+ * the accessibility sizes drop the feeling too.
  */
-export const DROP_DOMAIN_ABOVE = 1.13;
-export const DROP_FEELING_ABOVE = 1.4;
+export const DROP_DOMAIN_ABOVE = 1.1;
+export const DROP_FEELING_ABOVE = 1.36;
 
 /**
  * A held day's second line, from B17's detail: "2 moments · Work · Overwhelm · ended lighter".
