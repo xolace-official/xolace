@@ -47,6 +47,12 @@ describe("rosterCards", () => {
 		const cards = rosterCards(DIRECTORY, CONVERSATIONS, null, null);
 		expect(cards.find((c) => c.id === PEOPLE.maya)?.talking).toBe(true);
 		expect(cards.find((c) => c.id === PEOPLE.kojo)?.talking).toBe(false);
+		expect(cards.find((c) => c.id === PEOPLE.maya)?.a11y).toMatch(
+			/^Maya, talking with you, Here now, rated 4\.9/
+		);
+		expect(cards.find((c) => c.id === PEOPLE.kojo)?.a11y).not.toMatch(
+			/talking/
+		);
 	});
 
 	it("filters by specialty, then lifts the snapshot's present people", () => {

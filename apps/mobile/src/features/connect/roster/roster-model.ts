@@ -93,15 +93,18 @@ export function rosterCards(
 		: visible;
 	return ranked.map((x) => {
 		const presence = presenceWord(x);
+		const talking = talkingWith.has(x.xolacerProfileId);
 		return {
-			a11y: COPY.roster.card(
-				x.displayName,
+			a11y: COPY.roster.card({
+				bio: x.bio,
+				name: x.displayName,
 				presence,
-				x.rating === undefined
-					? COPY.roster.newXolacer
-					: COPY.roster.ratingA11y(x.rating, x.ratingCount),
-				x.bio
-			),
+				rating:
+					x.rating === undefined
+						? COPY.roster.newXolacer
+						: COPY.roster.ratingA11y(x.rating, x.ratingCount),
+				talking,
+			}),
 			bio: x.bio,
 			id: x.xolacerProfileId,
 			muted: x.atCapacity,
@@ -111,7 +114,7 @@ export function rosterCards(
 			present: x.present,
 			rating: x.rating === undefined ? null : COPY.roster.rating(x.rating),
 			tags: x.specialties.map(specialtyLabel),
-			talking: talkingWith.has(x.xolacerProfileId),
+			talking,
 		};
 	});
 }

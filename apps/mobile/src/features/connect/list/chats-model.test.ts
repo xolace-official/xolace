@@ -53,7 +53,7 @@ describe("pairRow", () => {
 		expect(maya.line).toBe("That sounds like a lot to carry into a Monday.");
 		expect(maya.unread?.label).toBe("2");
 		expect(maya.a11y).toBe(
-			"Conversation with Maya, here right now, 2 unread messages"
+			"Maya, Talking, here right now. That sounds like a lot to carry into a Monday. 2 unread messages"
 		);
 	});
 
@@ -67,6 +67,9 @@ describe("pairRow", () => {
 		expect(kojo.line).toBe("Request sent. Kojo will reply when they can.");
 		expect(kojo.requestDot).toBe(false);
 		expect(kojo.unread).toBeNull();
+		expect(kojo.a11y).toBe(
+			"Kojo, Waiting. Request sent. Kojo will reply when they can"
+		);
 	});
 
 	it("marks a Xolacer's incoming request with a dot", () => {
@@ -74,6 +77,7 @@ describe("pairRow", () => {
 		expect(r.chip?.label).toBe("New request");
 		expect(r.line).toBe("Just after a session");
 		expect(r.requestDot).toBe(true);
+		expect(r.a11y).toBe("Camper 7K2F, New request. Just after a session");
 	});
 
 	it("gives a direct request the push's words, since it has no channel yet", () => {
@@ -93,6 +97,7 @@ describe("pairRow", () => {
 	it("mutes a closed request and offers delete only there", () => {
 		const ade = row(ADE_DECLINED);
 		expect(ade.muted).toBe(true);
+		expect(ade.a11y).toBe("Ade, Closed. Ade couldn't take this one on");
 		expect(ade.line).toBe("Ade couldn't take this one on");
 		expect(ade.menu).toEqual({
 			archived: true,

@@ -205,11 +205,13 @@ export function pairRow(
 		: null;
 	return {
 		...status,
-		a11y: COPY.row.a11y(
-			c.counterpartName,
-			c.counterpartPresent,
-			unread?.a11y ?? null
-		),
+		a11y: COPY.row.a11y({
+			line: status.line,
+			name: c.counterpartName,
+			present: c.counterpartPresent,
+			status: status.chip?.label ?? null,
+			unread: unread?.a11y ?? null,
+		}),
 		conversation: c,
 		id: c.id,
 		kind: "pair",

@@ -70,8 +70,14 @@ export const COPY = {
 		paused: "Your Xolacer profile, you're paused",
 	},
 	roster: {
-		card: (name: string, presence: string, rating: string, bio: string) =>
-			`${name}, ${presence}, ${rating}. ${bio}`,
+		card: (c: {
+			name: string;
+			talking: boolean;
+			presence: string;
+			rating: string;
+			bio: string;
+		}) =>
+			`${c.name}${c.talking ? ", talking with you" : ""}, ${c.presence}, ${c.rating}. ${c.bio}`,
 		emptyBody:
 			"Xolacers are still settling in. They'll show up here as they arrive. Check back soon.",
 		emptyTitle: "No one's here just yet",
@@ -89,8 +95,24 @@ export const COPY = {
 		talking: "Talking",
 	},
 	row: {
-		a11y: (name: string, present: boolean, unread: string | null) =>
-			`Conversation with ${name}${present ? ", here right now" : ""}${unread ? `, ${unread}` : ""}`,
+		/** The prototype's `${name}, ${status}. ${line}`, with presence and unread. A label
+		 * replaces the row's children, so everything they show is said here. */
+		a11y: (row: {
+			name: string;
+			status: string | null;
+			present: boolean;
+			line: string | null;
+			unread: string | null;
+		}) =>
+			[
+				[row.name, row.status, row.present ? "here right now" : null]
+					.filter(Boolean)
+					.join(", "),
+				row.line?.replace(/[.\s]+$/, ""),
+				row.unread,
+			]
+				.filter(Boolean)
+				.join(". "),
 		more: "More actions",
 		unread: (n: number) => `${n} unread message${n === 1 ? "" : "s"}`,
 	},
