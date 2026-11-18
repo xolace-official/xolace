@@ -1,51 +1,56 @@
-import { useIsFocused } from "expo-router";
+import { Link, useIsFocused } from "expo-router";
 import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, View } from "react-native";
 import Animated, {
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
-import { AppText } from "@/components/shared/app-text";
+import { canAppleZoom } from "@/lib/apple-zoom";
 import { COPY } from "../copy";
 import { PILL_SLOT } from "../header/today-header";
 import { useToday } from "../today-data";
 import { useOnScreen, useShown, useTodayFrame } from "../today-frame";
+import { cardA11yHint, cardFace } from "../today-model";
 import { CardA11y, type Frame, sameFrame } from "./card-a11y";
-import { CardField } from "./card-field";
+import { CardBody } from "./card-body";
 import { CardLight } from "./card-light";
 import { Choices } from "./choices";
 import { DOORS, doorsCopy, HERO } from "./hero-model";
 import { HeroPressable } from "./hero-pressable";
-import { MonthPrompt } from "./month-prompt";
 import { useHold } from "./use-hold";
 
 const FALLBACK_H = 230;
 
 /**
- * The door into Reflect, and the sky's horizon. Tap: Reflect (S2 zooms into it from
- * here). Hold 0.6 s: the spectrum laps the rim and the doors rise out of the hint line. No mascot, nothing follows the finger.
+ * The door into Reflect, and the sky's horizon. Tap: the card zooms into Reflect (iOS 18+;
+ * elsewhere, and with Reduce Motion, Reflect's own transition). Hold 0.6 s: the spectrum laps
+ * the rim and the doors rise out of the hint line. Holding a session, it says where a tap lands.
  */
 export function ReflectCard() {
 	const { state, actions } = useToday();
 	const { live, reduced, low } = useTodayFrame();
 	const late = state.phase === "late";
-	const prompt = COPY.card.prompt[state.phase];
-	const { monthPrompt } = state.card;
+	const { mode, reflect } = state.card;
+	const idle = mode === "idle";
+	const face = cardFace(mode);
+	const prompt = face?.title ?? COPY.card.prompt[state.phase];
+	const monthPrompt = face ? null : state.card.monthPrompt;
 	const doors = doorsCopy(DOORS);
-	const hold = useHold(reduced, true);
+	const hold = useHold(reduced, idle);
 	const focused = useIsFocused();
 	const [size, setSize] = useState<{ w: number; h: number } | null>(null);
 	// Where the input and mic sit, for VoiceOver's copy of the card (card-a11y).
 	const [input, setInput] = useState<Frame | null>(null);
 	const [mic, setMic] = useState<Frame | null>(null);
 
-	// Coming back from Talk, Vent or Sit: the card is at rest again.
+	// Coming back from Talk, Vent or Sit: the card is at rest again. Or a mirror started
+	// waiting while the doors were open.
 	const { chosen, unchoose, release, rest } = hold;
 	useEffect(() => {
-		if (!focused && chosen) {
+		if (!(focused && idle) && chosen) {
 			unchoose();
 		}
-	}, [focused, chosen, unchoose]);
+	}, [focused, idle, chosen, unchoose]);
 	// A tap's lit rim lets go once Reflect covers the card, and is drawn back by the time you return.
 	useEffect(() => {
 		if (focused) {
@@ -96,71 +101,70 @@ export function ReflectCard() {
 				marginTop: (late ? HERO.marginTopLate : HERO.marginTop) - PILL_SLOT,
 			}}
 		>
-			{/* S2: `<Link asChild href="/reflect"><Link.Trigger withAppleZoom>` wraps this. */}
-			<HeroPressable
-				hold={hold}
-				onLayout={(e) => {
-					const { width: w, height: h } = e.nativeEvent.layout;
-					if (!size || size.w !== w || size.h !== h) {
-						setSize({ h, w });
-					}
-				}}
-				onPress={() => {
+			<Link
+				asChild
+				href={reflect}
+				onPress={(e) => {
+					// A press that became a scroll or a hold doesn't open Reflect.
 					if (!hold.tapAllowed()) {
+						e.preventDefault();
 						return;
 					}
 					hold.sweep();
-					actions.openReflect();
+					actions.pressReflect();
 				}}
 			>
-				{size ? (
-					<CardLight
-						breathing={running}
-						h={size.h}
-						late={late}
-						low={low}
-						reduced={reduced}
-						rim={hold.rim}
-						rimOpacity={hold.rimOpacity}
-						w={size.w}
-					/>
-				) : null}
-				<Animated.View
-					className="gap-4.5"
-					pointerEvents={chosen ? "none" : "auto"}
-					style={[
-						{
-							paddingBottom: HERO.pad.bottom,
-							paddingHorizontal: HERO.pad.x,
-							paddingTop: HERO.pad.top,
-						},
-						bodyStyle,
-					]}
-				>
-					{monthPrompt ? (
-						<MonthPrompt prompt={monthPrompt} />
-					) : (
-						<AppText
-							center={late}
-							className={late ? "px-2.5 pt-2" : "pr-7.5"}
-							variant="prompt"
+				<Link.Trigger withAppleZoom={!reduced && canAppleZoom()}>
+					<HeroPressable
+						hold={hold}
+						onLayout={(e) => {
+							const { width: w, height: h } = e.nativeEvent.layout;
+							if (!size || size.w !== w || size.h !== h) {
+								setSize({ h, w });
+							}
+						}}
+					>
+						{size ? (
+							<CardLight
+								breathing={running}
+								h={size.h}
+								late={late}
+								low={low}
+								reduced={reduced}
+								rim={hold.rim}
+								rimOpacity={hold.rimOpacity}
+								w={size.w}
+							/>
+						) : null}
+						<Animated.View
+							className="gap-4.5"
+							pointerEvents={chosen ? "none" : "auto"}
+							style={[
+								{
+									paddingBottom: HERO.pad.bottom,
+									paddingHorizontal: HERO.pad.x,
+									paddingTop: HERO.pad.top,
+								},
+								bodyStyle,
+							]}
 						>
-							{prompt}
-						</AppText>
-					)}
-					<CardField
-						key={state.phase}
-						onInput={(f) => !sameFrame(input, f) && setInput(f)}
-						onMic={(f) => !sameFrame(mic, f) && setMic(f)}
-						placeholders={placeholders}
-						reduced={reduced}
-						running={running}
-					/>
-					<AppText center color="muted" variant="footnote">
-						{doors.hint}
-					</AppText>
-				</Animated.View>
-			</HeroPressable>
+							<CardBody
+								hint={face?.hint ?? doors.hint}
+								late={late}
+								mode={mode}
+								monthPrompt={monthPrompt}
+								onInput={(f) => !sameFrame(input, f) && setInput(f)}
+								onMic={(f) => !sameFrame(mic, f) && setMic(f)}
+								phase={state.phase}
+								placeholders={placeholders}
+								prompt={prompt}
+								reduced={reduced}
+								running={running}
+							/>
+						</Animated.View>
+					</HeroPressable>
+				</Link.Trigger>
+			</Link>
 			{/* Outside the touch surface, where VoiceOver can reach them (card-a11y). */}
 			<Animated.View
 				className="absolute inset-0"
@@ -169,16 +173,22 @@ export function ReflectCard() {
 			>
 				{chosen ? (
 					<Choices onBack={writeInstead} />
-				) : size && input && mic ? (
+				) : size && (!idle || (input && mic)) ? (
 					<CardA11y
 						card={{ height: size.h, width: size.w, x: 0, y: 0 }}
 						cardRef={cardRef}
 						doorsAction={doors.action}
-						hint={doors.a11yHint}
-						input={input}
-						inputLabel={(placeholders[0] ?? "").replace("…", "")}
-						mic={{ ...mic, x: input.x + mic.x, y: input.y + mic.y }}
-						onDoors={hold.chooseFromA11y}
+						field={
+							idle && input && mic
+								? {
+										input,
+										label: (placeholders[0] ?? "").replace("…", ""),
+										mic: { ...mic, x: input.x + mic.x, y: input.y + mic.y },
+									}
+								: undefined
+						}
+						hint={cardA11yHint(mode, doors.a11yHint)}
+						onDoors={idle ? hold.chooseFromA11y : undefined}
 						prompt={
 							monthPrompt ? `${COPY.card.monthLabel}. ${monthPrompt}` : prompt
 						}

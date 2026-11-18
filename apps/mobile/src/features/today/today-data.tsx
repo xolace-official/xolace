@@ -1,9 +1,10 @@
+import type { Href } from "expo-router";
 import { createContext, type ReactNode, use } from "react";
 import type { CampfireView } from "./campfire/campfire-model";
 import type { KindlingView } from "./kindling/kindling-model";
 import type { MomentView } from "./moments/moments-model";
 import type { RailTile } from "./rail/rail-model";
-import type { Door, TodayPhase } from "./today-model";
+import type { CardMode, Door, TodayPhase } from "./today-model";
 import { useTodayData } from "./use-today";
 
 /**
@@ -35,6 +36,10 @@ export type Today = {
 		card: {
 			/** This month's prompt, read or written about this week: it takes the card's question. */
 			monthPrompt: string | null;
+			/** Your open session: the field, your words with the mirror, or the mirror back. */
+			mode: CardMode;
+			/** Where the card and the toolbar's pill zoom to: Reflect (a dev state's, on fixtures). */
+			reflect: Href;
 		};
 		/**
 		 * Your kindling: undefined while it loads, null with none (free, none yet, or the
@@ -63,8 +68,8 @@ export type Today = {
 		openStreak: () => void;
 		/** Spend one streak saver on the streak on offer. */
 		rekindle: () => void;
-		/** The Reflect card and the toolbar's pill. S2 zooms the card into Reflect. */
-		openReflect: () => void;
+		/** A tap on the Reflect card or the toolbar's pill: the press. Their link zooms into Reflect. */
+		pressReflect: () => void;
 		/** A door the hold opened: Talk, Vent or Sit with this. */
 		openDoor: (door: Door) => void;
 		/** The kindling card and its Begin. */

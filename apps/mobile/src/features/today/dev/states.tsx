@@ -51,6 +51,46 @@ export const devStates: readonly DevState[] = [
 		...today({ phase: "day", rekindle: true, theme: "dark" }),
 	},
 	{
+		id: "reflect-waiting",
+		title: "Reflect has your words (the card waits; tap zooms in)",
+		...today({ phase: "evening", reflect: "waiting" }),
+	},
+	{
+		id: "reflect-waiting-dark",
+		title: "Reflect has your words, dark",
+		...today({ phase: "day", reflect: "waiting", theme: "dark" }),
+	},
+	{
+		id: "reflect-ready",
+		title: "The mirror is back (the card pings; tap zooms in)",
+		...today({ phase: "evening", reflect: "ready" }),
+	},
+	{
+		id: "reflect-ready-dark",
+		title: "The mirror is back, dark",
+		...today({ phase: "day", reflect: "ready", theme: "dark" }),
+	},
+	{
+		id: "reflect-next",
+		title: "The mirror is confirmed (Where to from here?)",
+		...today({ phase: "evening", reflect: "next" }),
+	},
+	{
+		id: "reflect-failed",
+		title: "The last session didn't go through",
+		...today({ phase: "evening", reflect: "failed" }),
+	},
+	{
+		id: "reflect-failed-dark",
+		title: "The last session didn't go through, dark",
+		...today({ phase: "day", reflect: "failed", theme: "dark" }),
+	},
+	{
+		id: "reflect-loading",
+		title: "The card before its session is known (still, no field)",
+		...today({ phase: "evening", reflect: "loading" }),
+	},
+	{
 		id: "month-prompt",
 		title: "This month's prompt on the card",
 		...today({ monthPrompt: true, phase: "evening" }),

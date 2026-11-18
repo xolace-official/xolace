@@ -201,7 +201,7 @@ The tabs are Today · Explore · Connect · You (`TABS`, `src/features/navigatio
 drawn by `components/app-tabs.tsx`). Today is the landing: "/" (where sign-in, intake and
 old links arrive) hands over to `/today` at once (`(protected)/index.tsx`, `ReturnTo`), so
 the tabs are the bottom of the stack. Home is `dismissTo("/today")` (`LANDING`,
-`src/lib/landing.ts`); Reflect is `/reflect`, pushed over the tabs. What greets someone
+`src/lib/landing.ts`); Reflect is `/reflect`, pushed over the tabs (Today's card and pill zoom into it with `Link.AppleZoom`). What greets someone
 coming back (follow-up check-in, return welcome, the month's awareness sheet, streak held,
 the in-app banner) is composed on Today's route (`features/follow-up/coming-back/`) until
 S4 replaces it; the starter bubble stays with Reflect (its route, `app/(protected)/reflect.tsx`). There is no

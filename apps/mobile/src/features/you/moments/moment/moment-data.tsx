@@ -24,7 +24,7 @@ export type MomentScreenData = {
 		| undefined;
 	actions: {
 		toggleAudio: () => void;
-		/** Back to Reflect, to write again. */
+		/** Into Reflect to write again, its question seeded with your first sentence. */
 		again: () => void;
 		share: () => void;
 	};

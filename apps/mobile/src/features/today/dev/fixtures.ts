@@ -1,9 +1,12 @@
 import type { Id } from "@xolace/backend/dataModel";
+import type { Href } from "expo-router";
+import type { ThemeMode } from "@/design/themes";
 import type { CampfireView } from "../campfire/campfire-model";
 import type { KindlingView, TwigView } from "../kindling/kindling-model";
 import { type MomentView, momentView } from "../moments/moments-model";
 import { type RailTile, railTiles } from "../rail/rail-model";
 import type { Today } from "../today-data";
+import type { CardMode, TodayPhase } from "../today-model";
 import type { Covers } from "./covers";
 
 /** Today's fake data: the board's Thursday, Ama and a 12-day streak (`P/src/fixtures/today.ts`). */
@@ -176,4 +179,30 @@ export function lowerModules(
 		rail: board ? fixtureRail(covers) : [],
 		word: board ? FIXTURE_WORD : null,
 	};
+}
+
+/** The Reflect dev state each face of the card opens, so a tap here never reaches the backend. */
+const REFLECT_STATE = {
+	failed: "error",
+	idle: "first-open",
+	loading: "first-open",
+	next: "where-next",
+	ready: "mirror",
+	waiting: "streaming",
+} as const satisfies Record<CardMode, string>;
+/** Reflect's error state has no dark twin. */
+const LIGHT_ONLY: readonly CardMode[] = ["failed"];
+
+/** Where the card zooms on fixtures: Reflect's dev state for its face, in Today's theme. */
+export function reflectState(
+	mode: CardMode,
+	phase: TodayPhase,
+	theme: ThemeMode
+): Href {
+	if (phase === "late" && mode === "idle") {
+		return "/dev/reflect/late";
+	}
+	const dark =
+		(phase === "late" || theme === "dark") && !LIGHT_ONLY.includes(mode);
+	return `/dev/reflect/${REFLECT_STATE[mode]}${dark ? "-dark" : ""}`;
 }

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { COPY } from "./copy";
 import {
+	cardA11yHint,
+	cardMode,
 	headerCopy,
 	introDue,
 	localDay,
@@ -11,6 +14,53 @@ import {
 	streakStep,
 	todayPhase,
 } from "./today-model";
+
+describe("cardA11yHint", () => {
+	it("offers the doors only at rest", () => {
+		expect(cardA11yHint("idle", "Hold for more")).toBe("Hold for more");
+		expect(cardA11yHint("loading", "Hold for more")).toBe(COPY.opensReflect);
+	});
+
+	it("says where a face's tap lands", () => {
+		expect(cardA11yHint("failed", "Hold for more")).toBe(
+			`${COPY.opensReflect}. ${COPY.card.failed.body}`
+		);
+	});
+});
+
+describe("cardMode", () => {
+	it("waits from Let it out until the mirror lands", () => {
+		expect(cardMode("input_received")).toBe("waiting");
+		expect(cardMode("processing")).toBe("waiting");
+	});
+
+	it("is ready while the mirror is back and not yet answered", () => {
+		expect(cardMode("mirror_delivered")).toBe("ready");
+	});
+
+	it("says Where to from here once the mirror is confirmed", () => {
+		expect(cardMode("confirmed")).toBe("next");
+	});
+
+	it("says an errored session didn't go through", () => {
+		expect(cardMode("error")).toBe("failed");
+	});
+
+	it("holds still until getActive answers", () => {
+		expect(cardMode(undefined)).toBe("loading");
+	});
+
+	it("is the field with no session, before sending, or on a path", () => {
+		for (const state of [
+			null,
+			"initiated",
+			"path_selected",
+			"path_in_progress",
+		]) {
+			expect(cardMode(state)).toBe("idle");
+		}
+	});
+});
 
 describe("todayPhase", () => {
 	it("is late whenever night mode has the night", () => {

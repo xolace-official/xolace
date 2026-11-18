@@ -1,6 +1,7 @@
 import { useNavigation, usePreventZoomTransitionDismissal } from "expo-router";
 import { useEffect } from "react";
 import { BackHandler } from "react-native";
+import { canAppleZoom } from "@/lib/apple-zoom";
 import { useBoardY } from "../layout";
 import { useReflect } from "../reflect-data";
 
@@ -31,8 +32,9 @@ export function useStageGestures() {
 			gestureEnabled: !heard,
 		});
 	}, [navigation, mirror, heard]);
+	// Before iOS 18 there is no zoom to dismiss, and a bounds rect would only turn swipe-back off.
 	usePreventZoomTransitionDismissal(
-		mirror
+		mirror && canAppleZoom()
 			? { unstable_dismissalBoundsRect: { maxY: y(MIRROR_DISMISS_MAX_Y) } }
 			: undefined
 	);
