@@ -11,15 +11,18 @@ import { type Profile, profileView } from "../../xolacer/xolacer-model";
 import { XolacerScreen } from "../../xolacer/xolacer-screen";
 import { ThreadProvider, type ThreadScreenData } from "../thread-data";
 import {
-	type Activity,
 	type StreamStatus,
 	statusBar,
 	type ThreadConversation,
 	threadBody,
-	threadSubtitle,
 } from "../thread-model";
 import { ThreadScreen } from "../thread-screen";
-import { DevChat, type DevMessage, useDevChannel } from "./dev-stream";
+import {
+	DevChat,
+	type DevMessage,
+	useDevChannel,
+	useDevTyping,
+} from "./dev-stream";
 
 const noop = () => undefined;
 
@@ -39,22 +42,27 @@ export function FixtureThread({
 	conversation,
 	messages = [],
 	stream = "ready",
-	activity = { presence: { online: true }, typing: false },
+	typing = false,
+	liveTyping = false,
 	online = true,
 	phase,
 }: {
 	conversation: ThreadConversation;
 	messages?: readonly DevMessage[];
 	stream?: StreamStatus;
-	activity?: Activity;
+	/** Maya is typing as the state opens. Her presence is the dev channel's: here. */
+	typing?: boolean;
+	/** Maya types on and off, through the client, for as long as the state is open. */
+	liveTyping?: boolean;
 	online?: boolean;
 	phase?: "loading" | "gone";
 }) {
 	const { client, channel } = useDevChannel(
 		messages,
 		conversation.streamChannelId ?? "dev-none",
-		activity.typing
+		typing
 	);
+	useDevTyping(client, channel, liveTyping);
 	const [blockOpen, setBlockOpen] = useState(false);
 	const value: ThreadScreenData = {
 		actions: {
@@ -88,7 +96,6 @@ export function FixtureThread({
 					conversation,
 					phase: "ready",
 					rate: rateCtaState(conversation),
-					subtitle: threadSubtitle(conversation, activity, NOW),
 				},
 	};
 	return (

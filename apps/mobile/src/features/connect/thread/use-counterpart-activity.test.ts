@@ -1,19 +1,50 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { mountHook } from "@/lib/test/mount-hook";
-import { useCounterpartActivity } from "./use-counterpart-activity";
-
-// The real provider drags in stream-chat-expo, which needs a window. Only the
-// status read matters here, and the cold-start case is "not ready yet".
-vi.mock("@/lib/stream-chat/stream-chat-provider", () => ({
-	useStreamStatus: () => ({ client: null, status: "connecting" }),
-}));
+import {
+	sameActivity,
+	useCounterpartActivity,
+} from "./use-counterpart-activity";
 
 describe("useCounterpartActivity", () => {
-	// Cold-start deep link: the header mounts before `connectUser`, the provider
-	// hands out `client: null`, and the hook has to idle on it.
-	it("idles until the provider hands out a connected client", () => {
-		expect(() =>
-			mountHook(() => useCounterpartActivity("conv_1", "xolacer_1"))
-		).not.toThrow();
+	// Cold-start deep link, or a thread that isn't open: the title mounts with no channel and
+	// has to idle on it.
+	it("idles without a channel", () => {
+		let read: unknown;
+		mountHook(() => {
+			read = useCounterpartActivity(null, "xolacer_1");
+		});
+		expect(read).toEqual({ presence: null, typing: false });
+	});
+});
+
+describe("sameActivity", () => {
+	const here = { presence: { online: true }, typing: false };
+
+	it("holds through a repeated typing.start", () => {
+		expect(
+			sameActivity({ ...here, typing: true }, { ...here, typing: true })
+		).toBe(true);
+	});
+
+	it("changes when typing starts or stops", () => {
+		expect(sameActivity(here, { ...here, typing: true })).toBe(false);
+	});
+
+	it("changes when they leave, and with when they were last here", () => {
+		const away = { presence: { lastActive: 1, online: false }, typing: false };
+		expect(sameActivity(here, away)).toBe(false);
+		expect(
+			sameActivity(away, {
+				presence: { lastActive: 2, online: false },
+				typing: false,
+			})
+		).toBe(false);
+		expect(sameActivity(away, { ...away })).toBe(true);
+	});
+
+	it("tells unknown presence from any presence", () => {
+		const unknown = { presence: null, typing: false };
+		expect(sameActivity(unknown, { ...unknown })).toBe(true);
+		expect(sameActivity(unknown, here)).toBe(false);
 	});
 });

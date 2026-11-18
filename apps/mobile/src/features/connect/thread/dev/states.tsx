@@ -91,13 +91,17 @@ export const devStates: readonly DevState[] = [
 		id: "thread-typing",
 		options: THREAD,
 		Screen: () => (
-			<FixtureThread
-				activity={{ presence: { online: true }, typing: true }}
-				conversation={OPEN}
-				messages={TONIGHT}
-			/>
+			<FixtureThread conversation={OPEN} messages={TONIGHT} typing />
 		),
 		title: "Thread: Maya typing",
+	},
+	{
+		id: "thread-typing-live",
+		options: THREAD,
+		Screen: () => (
+			<FixtureThread conversation={OPEN} liveTyping messages={TONIGHT} />
+		),
+		title: "Thread: Maya typing on and off",
 	},
 	{
 		id: "thread-failed-send",

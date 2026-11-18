@@ -1,14 +1,13 @@
 /**
  * A thread on Convex and Stream: the conversation (seeded from the list), the Stream connection
- * and channel, the counterpart's typing and presence, the tray cleared on the way in, and what
- * the bar and menu do. Production's behaviour; only the look moved.
+ * and channel, the tray cleared on the way in, and what the bar and menu do. The counterpart's
+ * typing and presence stay out: the header's title reads them (`ThreadTitle`). Production's behaviour; only the look moved.
  */
 import type { Id } from "@xolace/backend/dataModel";
 import { useStreamConnection } from "@/lib/stream-chat/stream-chat-provider";
 import { rateCtaState } from "../chat-rules";
 import type { ReportTo, ThreadScreenData } from "./thread-data";
-import { statusBar, threadBody, threadSubtitle } from "./thread-model";
-import { useCounterpartActivity } from "./use-counterpart-activity";
+import { statusBar, threadBody } from "./thread-model";
 import { useDismissThreadNotifications } from "./use-dismiss-thread-notifications";
 import { type FeedbackContext, useFlagMessage } from "./use-flag-message";
 import { useThreadActions } from "./use-thread-actions";
@@ -26,10 +25,6 @@ export function useThread(
 	// Usually a no-op (Connect already connected); matters for a push deep link or a cold launch.
 	const stream = useStreamConnection(conversation != null);
 	const channel = useThreadChannel(stream.client, conversation);
-	const activity = useCounterpartActivity(
-		conversation?.status === "open" ? conversation.streamChannelId : undefined,
-		conversation?.counterpartProfileId ?? ""
-	);
 	const { actions, ageGate, blocking } = useThreadActions(
 		conversation,
 		reportTo
@@ -61,7 +56,6 @@ export function useThread(
 			conversation,
 			phase: "ready",
 			rate: rateCtaState(conversation),
-			subtitle: threadSubtitle(conversation, activity, Date.now()),
 		},
 	};
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { StreamChat } from "stream-chat";
-import { useStreamStatus } from "@/lib/stream-chat/stream-chat-provider";
+import type { Channel } from "stream-chat";
+import type { Activity } from "./thread-model";
 
 export type CounterpartPresence =
 	| { online: true }
@@ -13,47 +13,62 @@ type CounterpartActivity = {
 
 const IDLE: CounterpartActivity = { presence: null, typing: false };
 
-/** Presence and typing read off the cached channel state, since the header is a sibling of
- * `<Channel>`; needs a client with a user, as `client.channel()` throws otherwise. */
+/** Whether two reads say the same thing: a repeated `typing.start` (Stream relays one about
+ * every second while someone types) or another member's presence changes nothing on screen. */
+export function sameActivity(a: Activity, b: Activity): boolean {
+	if (a.typing !== b.typing) {
+		return false;
+	}
+	if (a.presence === null || b.presence === null) {
+		return a.presence === b.presence;
+	}
+	return (
+		a.presence.online === b.presence.online &&
+		(a.presence.lastActive ?? null) === (b.presence.lastActive ?? null)
+	);
+}
+
+/** Presence and typing read off the thread's channel. Called by the header's title, not the
+ * screen's data: these events come every second while someone types, and only that line shows
+ * them. `null` (no channel yet, or a thread that isn't open) is idle. */
 export function useCounterpartActivity(
-	streamChannelId: string | undefined,
+	channel: Channel | null,
 	counterpartUserId: string
 ): CounterpartActivity {
 	const [activity, setActivity] = useState<CounterpartActivity>(IDLE);
-	const { client } = useStreamStatus();
 
 	useEffect(() => {
-		if (!(client && streamChannelId)) {
+		if (!channel) {
 			return;
 		}
-		const channel = client.channel("messaging", streamChannelId);
-
-		const read = () =>
-			setActivity({
+		const read = () => {
+			const next: CounterpartActivity = {
 				presence: readPresence(channel, counterpartUserId),
 				typing: counterpartUserId in channel.state.typing,
-			});
+			};
+			// The same state back: no render.
+			setActivity((prev) => (sameActivity(prev, next) ? prev : next));
+		};
 		read();
 
 		const subs = [
 			channel.on("typing.start", read),
 			channel.on("typing.stop", read),
-			client.on("user.presence.changed", (event) => {
+			channel.getClient().on("user.presence.changed", (event) => {
 				if (event.user?.id === counterpartUserId) {
 					read();
 				}
 			}),
 		];
 		return () => subs.forEach((sub) => sub.unsubscribe());
-	}, [client, streamChannelId, counterpartUserId]);
+	}, [channel, counterpartUserId]);
 
-	// Derived, not synced: no client/channel means IDLE regardless of what the
-	// last subscription left behind.
-	return client && streamChannelId ? activity : IDLE;
+	// Derived, not synced: no channel means IDLE whatever the last subscription left behind.
+	return channel ? activity : IDLE;
 }
 
 function readPresence(
-	channel: ReturnType<StreamChat["channel"]>,
+	channel: Channel,
 	counterpartUserId: string
 ): CounterpartPresence | null {
 	const user = channel.state.members[counterpartUserId]?.user;

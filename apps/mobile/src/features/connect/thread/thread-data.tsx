@@ -23,7 +23,6 @@ export type ThreadState =
 	| {
 			phase: "ready";
 			conversation: ThreadConversation;
-			subtitle: string;
 			body: ThreadBody;
 			bar: StatusBar;
 			/** Null until the channel has state; the skeleton holds till then. */

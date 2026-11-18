@@ -4,7 +4,7 @@
  * the app's; offline it reports the socket down, which is the offline state.
  */
 import { type ReactNode, useEffect, useState } from "react";
-import { StreamChat } from "stream-chat";
+import { type Channel, StreamChat } from "stream-chat";
 import { Chat } from "stream-chat-expo";
 import { useStreamTheme } from "@/lib/stream-chat/stream-theme";
 import { NOW, PEOPLE } from "../../dev/fixtures";
@@ -12,6 +12,12 @@ import { MINUTE } from "./thread-fixtures";
 
 const ME = "profile_me";
 const SETTLE_MS = 400;
+const MAYA = { id: PEOPLE.maya, name: "Maya", online: true };
+/** Live typing: Stream relays the other side's `typing.start` about every second while they
+ * type, then one `typing.stop`. Seconds typing, then seconds quiet. */
+const TYPING_TICK_MS = 1000;
+const TYPING_ON = 4;
+const TYPING_CYCLE = 7;
 
 export type DevMessage = {
 	mine: boolean;
@@ -35,7 +41,9 @@ function makeClient(
 		members: [ME, PEOPLE.maya],
 	});
 	const me = { id: ME, name: "You" };
-	const maya = { id: PEOPLE.maya, name: "Maya" };
+	const maya = MAYA;
+	// Maya is here: the header reads her presence off the channel's members, as in the app.
+	channel.state.members = { [maya.id]: { user: maya, user_id: maya.id } };
 	channel.state.addMessagesSorted(
 		messages.map((m, i) => {
 			const at = new Date(NOW - m.ago * MINUTE).toISOString();
@@ -106,6 +114,35 @@ export function useDevChannel(
 ) {
 	const [dev] = useState(() => makeClient(messages, channelId, typing));
 	return dev;
+}
+
+/** Maya typing on and off for as long as the state is open, through the client like a socket
+ * event, so the header's subscription and Stream's own indicator both hear it. */
+export function useDevTyping(
+	client: StreamChat,
+	channel: Channel,
+	live: boolean
+) {
+	useEffect(() => {
+		if (!live) {
+			return;
+		}
+		let tick = 0;
+		const id = setInterval(() => {
+			const step = tick % TYPING_CYCLE;
+			tick += 1;
+			if (step <= TYPING_ON) {
+				client.dispatchEvent({
+					channel_id: channel.id,
+					channel_type: channel.type,
+					cid: channel.cid,
+					type: step < TYPING_ON ? "typing.start" : "typing.stop",
+					user: MAYA,
+				});
+			}
+		}, TYPING_TICK_MS);
+		return () => clearInterval(id);
+	}, [client, channel, live]);
 }
 
 export function DevChat({

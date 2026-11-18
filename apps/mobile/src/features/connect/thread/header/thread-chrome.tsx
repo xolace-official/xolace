@@ -5,6 +5,7 @@ import MoreVert from "@expo/material-symbols/more_vert.xml";
 import StarIcon from "@expo/material-symbols/star.xml";
 import { Stack } from "expo-router";
 import { View } from "react-native";
+import type { Channel } from "stream-chat";
 import { AppText } from "@/components/shared/app-text";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { PressScale } from "@/components/shared/press-scale";
@@ -12,23 +13,32 @@ import { useTokenColor } from "@/lib/use-token-color";
 import { XolacerAvatar } from "../../parts/xolacer-avatar";
 import { THREAD } from "../copy";
 import { useThreadScreen } from "../thread-data";
-import type { ThreadConversation } from "../thread-model";
+import { type ThreadConversation, threadSubtitle } from "../thread-model";
+import { useCounterpartActivity } from "../use-counterpart-activity";
 
 const IOS = process.env.EXPO_OS === "ios";
 const AVATAR = 38;
 
 /** The header's title slot: avatar, name and where things stand. A seeker taps it for the
  * Xolacer's profile; a Xolacer looking at a seeker has nowhere to go. Props, not the provider:
- * the native header renders it outside the screen's tree. */
+ * the native header renders it outside the screen's tree. It reads typing and presence itself,
+ * as production's header did: they change every second while someone types, and only this
+ * line shows them, so the list and composer don't render again. */
 export function ThreadTitle({
 	conversation: c,
-	subtitle,
+	channel,
 	onOpenProfile,
 }: {
 	conversation: ThreadConversation;
-	subtitle: string;
+	/** The thread's channel once it has state; activity is read only while the thread is open. */
+	channel: Channel | null;
 	onOpenProfile: () => void;
 }) {
+	const activity = useCounterpartActivity(
+		c.status === "open" ? channel : null,
+		c.counterpartProfileId
+	);
+	const subtitle = threadSubtitle(c, activity, Date.now());
 	const identity = (
 		<View className="flex-row items-center gap-2.5">
 			<XolacerAvatar

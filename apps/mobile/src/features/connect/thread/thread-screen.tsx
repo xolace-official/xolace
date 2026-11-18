@@ -65,9 +65,9 @@ export function ThreadScreen() {
 						state.phase === "ready"
 							? () => (
 									<ThreadTitle
+										channel={state.channel}
 										conversation={state.conversation}
 										onOpenProfile={actions.openProfile}
-										subtitle={state.subtitle}
 									/>
 								)
 							: "",
