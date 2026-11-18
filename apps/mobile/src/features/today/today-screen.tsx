@@ -35,8 +35,9 @@ export function TodayScreen() {
 	const live = useLive(reduced);
 	const tail = useMiniPlayerInset();
 	const scrollY = useSharedValue(0);
-	// The streak flame's flicker, shared by the header's chip and the toolbar's.
-	const flameClock = useClock(live);
+	// The streak flame's flicker, shared by the header's chip and the toolbar's; still
+	// while there's no streak to show.
+	const flameClock = useClock(live && state.streak !== null);
 
 	const onScroll = useAnimatedScrollHandler((e) => {
 		scrollY.set(e.contentOffset.y);
