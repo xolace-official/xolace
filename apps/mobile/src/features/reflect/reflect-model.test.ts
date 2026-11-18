@@ -3,12 +3,15 @@ import { COPY } from "./copy";
 import { LIMIT_MESSAGE, MIRROR_TEXT, RESOURCES, SAMPLE } from "./dev/fixtures";
 import {
 	canSend,
+	holdsArrivals,
+	type MirrorLines,
 	mirrorSentences,
 	pairPhrases,
 	plainLines,
 	promptFor,
 	resourceRows,
 	stageOf,
+	takeCountdown,
 	timeline,
 	WRITE_IN,
 	waitError,
@@ -127,6 +130,29 @@ describe("timeline", () => {
 		expect(words).not.toContain(".");
 		expect(words.slice(0, 4)).toEqual(["It", "sounds", "like", "replaying"]);
 	});
+	it("lights a quoted phrase's first word with its opening quote", () => {
+		const quoted: MirrorLines = [
+			[
+				["You said “", -1],
+				["I feel so stuck at work", 0],
+				["” and that matters.", -1],
+			],
+		];
+		const words = timeline(quoted, false).lines[0]?.words ?? [];
+		expect(words.map((w) => [w.text, w.pair])).toEqual([
+			["You", -1],
+			["said", -1],
+			["“I", 0],
+			["feel", 0],
+			["so", 0],
+			["stuck", 0],
+			["at", 0],
+			["work”", 0],
+			["and", -1],
+			["that", -1],
+			["matters.", -1],
+		]);
+	});
 	it("lights nothing on a mirror with nothing borrowed", () => {
 		expect(timeline(plainLines(["A quiet line."]), false).lights).toBe(false);
 	});
@@ -136,6 +162,13 @@ describe("promptFor", () => {
 	it("asks the evening question, or the late one", () => {
 		expect(promptFor({ late: false })).toBe(COPY.write.prompt.evening);
 		expect(promptFor({ late: true })).toBe(COPY.write.prompt.late);
+	});
+	it("clips a reply seed between graphemes, never inside one", () => {
+		const family = "👨‍👩‍👧";
+		const seed = `${"x".repeat(87)}${family}tail`;
+		expect(promptFor({ late: false, replySeed: seed })).toBe(
+			COPY.write.replySeed(`${"x".repeat(87)}${family}…`)
+		);
 	});
 	it("puts a reply seed first, clipped, and a month's prompt after late", () => {
 		const long = "x".repeat(120);
@@ -208,5 +241,34 @@ describe("waitError", () => {
 
 	it("falls back to production's message when the server gave none", () => {
 		expect(waitError("", false).body).toBe(COPY.wait.failed);
+	});
+});
+
+describe("holdsArrivals", () => {
+	it("holds a badge on an empty field: someone came here to write", () => {
+		expect(holdsArrivals(stageOf("idle"))).toBe(true);
+	});
+
+	it("holds a badge over Heard, after the machine resets to idle", () => {
+		expect(holdsArrivals(stageOf("idle", { heard: true }))).toBe(true);
+	});
+
+	it("holds through the session's stages", () => {
+		for (const screen of ["processing", "mirror", "path-selection"] as const) {
+			expect(holdsArrivals(stageOf(screen))).toBe(true);
+		}
+	});
+});
+
+describe("takeCountdown", () => {
+	it("counts a Plus take's last 30 seconds down", () => {
+		expect(takeCountdown(30_000)).toBe("0:30");
+		expect(takeCountdown(8400)).toBe("0:09");
+		expect(takeCountdown(0)).toBe("0:00");
+	});
+
+	it("stays quiet before then, and with no take", () => {
+		expect(takeCountdown(30_001)).toBeNull();
+		expect(takeCountdown(null)).toBeNull();
 	});
 });

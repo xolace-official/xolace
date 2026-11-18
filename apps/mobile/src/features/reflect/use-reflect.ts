@@ -14,6 +14,7 @@ import { useTalkSayMore } from "./mirror/use-talk-say-more";
 import { NUDGE } from "./motion";
 import type { Reflect, ReflectUi } from "./reflect-data";
 import {
+	holdsArrivals,
 	MAX_CHARS,
 	MAX_TURNS,
 	mirrorSentences,
@@ -60,6 +61,8 @@ export function useReflectData(): Reflect {
 	const posthog = usePostHog();
 	const replySeed = useAppStore((st) => st.replySeed);
 	const pending = useAppStore((st) => st.pendingEventPrompt);
+	// The route's starter bubble raises it while it's up over Write.
+	const sheetOpen = useAppStore((st) => st.homeSheetOpen);
 	const submitMiss = useMutation(api.feedback.submit);
 	const audio = useMirrorAudio(m.sessionId);
 	const talk = useTalkSayMore(m.sessionId);
@@ -94,10 +97,11 @@ export function useReflectData(): Reflect {
 		late ? NUDGE.nightMs : NUDGE.dayMs
 	);
 	const takes = useDictationTakes(m, s.entryText);
+	const plus = m.plusDictation;
 
 	useReflectBridge(
 		s.screen,
-		s.selectedTextures.length > 0,
+		holdsArrivals(stage),
 		s.entryText.trim().length > 0,
 		m.isLoading,
 		dispatch
@@ -164,7 +168,9 @@ export function useReflectData(): Reflect {
 			seePlus: () => openPaywall("rate_limit"),
 			send: () => {
 				const words = s.entryText.trim();
-				if (!(words || s.selectedTextures.length > 0)) {
+				// A Plus take still being heard or written down would be lost to a send.
+				const taking = plus !== null && plus.phase !== "idle";
+				if (taking || !(words || s.selectedTextures.length > 0)) {
 					return false;
 				}
 				typingPause.clearTimer();
@@ -195,6 +201,9 @@ export function useReflectData(): Reflect {
 			stepAway: next.stepAway,
 			stopSpeaking: takes.stop,
 			submitNotQuite: () => {
+				if (!s.clarifyText.trim()) {
+					return;
+				}
 				setUi((u) => ({ ...u, sel: -1 }));
 				void m.submitClarification();
 			},
@@ -249,10 +258,16 @@ export function useReflectData(): Reflect {
 			sel: ui.sel,
 			sentPicks: s.selectedTextures,
 			set,
+			sheetOpen,
 			slow,
 			spaceNameOpen: next.spaceNameOpen,
 			stage,
 			streak: next.streak,
+			take: {
+				note: plus?.phase === "idle" ? plus.note : null,
+				remainingMs: plus?.phase === "listening" ? plus.remainingMs : null,
+				writing: plus?.phase === "writing",
+			},
 			takeN: takes.takeN,
 			text: s.entryText,
 			turns: m.turnsCount,

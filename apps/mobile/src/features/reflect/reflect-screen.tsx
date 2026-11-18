@@ -1,4 +1,3 @@
-import { useNavigation, usePreventZoomTransitionDismissal } from "expo-router";
 import { type JSX, useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, {
@@ -15,8 +14,8 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 import { AmbientLight } from "./chrome/ambient-light";
 import { ReflectHeader } from "./chrome/reflect-header";
 import { ReflectSky } from "./chrome/reflect-sky";
+import { useStageGestures } from "./chrome/use-stage-gestures";
 import { HeardStage } from "./heard/heard-stage";
-import { useBoardY } from "./layout";
 import { MirrorStage } from "./mirror/mirror-stage";
 import { STAGE_FADE_MS } from "./motion";
 import { NextStage } from "./next/next-stage";
@@ -31,8 +30,6 @@ const TAU = Math.PI * 2;
 const BREATH_S = 4.8;
 /** Board `.bglow`: the dim takes .6 s. */
 const DIM_MS = 600;
-/** On the mirror, closing gestures may begin only above the lines (board y). */
-const MIRROR_DISMISS_MAX_Y = 240;
 
 type StageView = "write" | "wait" | "mirror" | "next" | "heard";
 const VIEW_OF: Record<ReflectStage, StageView> = {
@@ -71,22 +68,8 @@ export function ReflectScreen() {
 	const surge = useSharedValue(0);
 	const tide = useSharedValue(0);
 	const liftFrom = useSharedValue({ x: 0, y: 0 });
-	const navigation = useNavigation();
-	const y = useBoardY();
 
-	// A mirror line takes a drag to the right (Not quite). Two system gestures would take it first
-	// and close Reflect: iOS 26's full-screen swipe back, and the zoom's interactive dismissal. On
-	// the mirror the first is off and the second may only begin above the lines, so a swipe down
-	// from the top still tucks Reflect into the card.
-	const mirror = stage === "mirror";
-	useEffect(() => {
-		navigation.setOptions({ fullScreenSwipeEnabled: !mirror });
-	}, [navigation, mirror]);
-	usePreventZoomTransitionDismissal(
-		mirror
-			? { unstable_dismissalBoundsRect: { maxY: y(MIRROR_DISMISS_MAX_Y) } }
-			: undefined
-	);
+	useStageGestures();
 
 	// Dimmed to 5% while it thinks and when the mirror is heavy (board `.bglow.dim`).
 	const dimmed =
@@ -128,6 +111,9 @@ export function ReflectScreen() {
 			<View className="flex-1 bg-background">
 				<ReflectSky late={late} />
 				<AmbientLight late={late} light={draw.light} />
+				{/* First in the tree, so VoiceOver and TalkBack read ✕, the stage's name and help
+				    before the stage; `z-10` keeps it drawn over the stage. */}
+				<ReflectHeader />
 				{stageUp && ready ? (
 					<Animated.View
 						className="absolute inset-0"
@@ -138,7 +124,6 @@ export function ReflectScreen() {
 						<Stage />
 					</Animated.View>
 				) : null}
-				<ReflectHeader />
 			</View>
 		</ReflectDrawContext>
 	);

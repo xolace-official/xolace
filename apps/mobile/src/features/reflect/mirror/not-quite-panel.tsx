@@ -85,7 +85,9 @@ export function NotQuitePanel({ line }: { line: string }) {
 	if (line && line !== kept) {
 		setKept(line);
 	}
-	const ready = nqText.trim().length > 0 || nqReason !== null;
+	// Words, as production asked for: a reason only steers the placeholder, and a refinement
+	// with nothing new in it would only shuffle the same mirror.
+	const ready = nqText.trim().length > 0;
 
 	return (
 		<Animated.View

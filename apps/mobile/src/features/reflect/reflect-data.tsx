@@ -39,6 +39,14 @@ export type Reflect = {
 		nudge: boolean;
 		/** Dictation is taking words. */
 		listening: boolean;
+		/** A sheet is over Write (the starter bubble): the field leaves the keyboard down. */
+		sheetOpen: boolean;
+		/**
+		 * A Plus take (Scribe): `writing` while it's written down after the mic lets go (send waits);
+		 * `remainingMs` while listening, for the countdown; `note` between takes, on a fallback to
+		 * on-device dictation or a lost take.
+		 */
+		take: { writing: boolean; remainingMs: number | null; note: string | null };
 		/** Bumped each time a finished take lands in the text (the drop, S2). */
 		takeN: number;
 		/** The free first-mic-tap upsell (#559) is up. */

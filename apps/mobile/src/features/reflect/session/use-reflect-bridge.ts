@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "@/components/shared/toast";
 import { useAppStore } from "@/store/store";
 import { COPY } from "../copy";
@@ -10,12 +10,12 @@ const isWriting = (screen: ReflectionStateName) =>
 
 /**
  * Reflect's seams with the rest of the app, as production had them: `reflectSettled` for the
- * starter bubble, `homeComposing` for the badge unlock, a composer-open request (#462, #707) and
+ * starter bubble, `homeComposing` to hold the badge unlock while `composing`, a composer-open request (#462, #707) and
  * the quote-reply seed (#316). Reflect opens on its field, so a request only adds words.
  */
 export function useReflectBridge(
 	screen: ReflectionStateName,
-	wordsPicked: boolean,
+	composing: boolean,
 	hasDraft: boolean,
 	isLoading: boolean,
 	dispatch: (action: ReflectionAction) => void
@@ -32,8 +32,8 @@ export function useReflectBridge(
 		};
 	}, [isLoading, setSettled]);
 
+	// `homeComposing` holds a badge arrival over Reflect (`use-arrivals.ts`).
 	const setComposing = useAppStore((s) => s.setHomeComposing);
-	const composing = screen !== "idle" || wordsPicked;
 	useEffect(() => {
 		setComposing(composing);
 		return () => setComposing(false);
@@ -56,7 +56,8 @@ export function useReflectBridge(
 		}
 	}, [requested, text, screen, hasDraft, dispatch, clear]);
 
-	// A reply seed is spent once Reflect leaves writing any way but sending.
+	// A reply seed is spent once Reflect leaves writing any way but sending, closing included:
+	// left while still writing, it would greet the next open with a reply nobody is making.
 	const replySeed = useAppStore((s) => s.replySeed);
 	const clearReplySeed = useAppStore((s) => s.clearReplySeed);
 	useEffect(() => {
@@ -64,4 +65,16 @@ export function useReflectBridge(
 			clearReplySeed();
 		}
 	}, [replySeed, screen, clearReplySeed]);
+	const latest = useRef(screen);
+	useEffect(() => {
+		latest.current = screen;
+	});
+	useEffect(
+		() => () => {
+			if (isWriting(latest.current)) {
+				clearReplySeed();
+			}
+		},
+		[clearReplySeed]
+	);
 }

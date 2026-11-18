@@ -10,6 +10,7 @@ import { useFullContext } from "@/lib/convex/use-full-context";
 import { LANDING } from "@/lib/landing";
 import { useSessionEndHref } from "@/lib/path-session/session-end-href";
 import { useProfileSummary } from "@/lib/profile-summary";
+import { useAppStore } from "@/store/store";
 import { COPY, type PathId } from "../copy";
 import type { ResourceRow } from "../reflect-model";
 import { reportFailure } from "./report-failure";
@@ -33,6 +34,7 @@ export function useWhereNext(m: Machine) {
 	const context = useFullContext();
 	const summary = useProfileSummary();
 	const updatePreferences = useMutation(api.preferences.update);
+	const clearReplySeed = useAppStore((s) => s.clearReplySeed);
 	const [heard, setHeard] = useState<Id<"sessions"> | null>(null);
 	const endHref = useSessionEndHref(heard);
 	const screen = useRef(m.state.screen);
@@ -95,6 +97,8 @@ export function useWhereNext(m: Machine) {
 			if (writing && m.state.entryText.trim()) {
 				toast(COPY.write.draftKept);
 			}
+			// The reply it opened with goes with it; the draft stays.
+			clearReplySeed();
 			leave();
 		},
 		dismissSpaceName: () => {

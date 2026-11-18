@@ -12,6 +12,7 @@ import { cn } from "@/lib/cn";
 import { COPY } from "../copy";
 import { LAYOUT } from "../layout";
 import { useReflect } from "../reflect-data";
+import { takeCountdown } from "../reflect-model";
 import { LevelBars } from "./level-bars";
 import { MicButton } from "./mic-button";
 
@@ -22,7 +23,18 @@ const PILL_INSET = 12;
 /** Let it out and the pill can't grow taller than the bar. */
 const MAX_SCALE = 1.3;
 
-/** The bottom bar: the hold mic + Let it out; while listening, the pill takes Let it out's place. */
+/** The pill's words: a take being written down, the slide-away warning, or listening. */
+function pillLine(writing: boolean, armed: boolean): string {
+	if (writing) {
+		return COPY.write.writingDown;
+	}
+	return armed ? COPY.write.letGoCancel : COPY.write.listening;
+}
+
+/**
+ * The bottom bar: the hold mic + Let it out; while listening, the pill takes Let it out's place
+ * (with a Plus take's last 30 s counting down), and stays while a Plus take is written down.
+ */
 export function BottomBar({
 	onSend,
 	onTap,
@@ -31,18 +43,22 @@ export function BottomBar({
 	onTap: () => void;
 }) {
 	const { state } = useReflect();
-	const { listening } = state;
-	// A take still being written down would be lost to a send.
+	const { listening, take } = state;
+	// A take still being heard or written down (Plus) would be lost to a send.
+	const writing = take.writing;
 	const ready =
-		(state.text.trim().length > 0 || state.picks.length > 0) && !listening;
+		(state.text.trim().length > 0 || state.picks.length > 0) &&
+		!(listening || writing);
+	const countdown = takeCountdown(take.remainingMs);
+	const pillUp = listening || writing;
 	const [armed, setArmed] = useState(false);
 	const pill = useSharedValue(0);
 
 	useEffect(() => {
 		pill.set(
-			withTiming(listening ? 1 : 0, { duration: LISTEN_MS, ...PLAY_AS_CHOSEN })
+			withTiming(pillUp ? 1 : 0, { duration: LISTEN_MS, ...PLAY_AS_CHOSEN })
 		);
-	}, [listening, pill]);
+	}, [pillUp, pill]);
 	const pillStyle = useAnimatedStyle(() => ({ opacity: pill.get() }));
 
 	return (
@@ -80,24 +96,24 @@ export function BottomBar({
 				pointerEvents="none"
 				style={[{ height: BAR.height, left: BAR.mic + PILL_INSET }, pillStyle]}
 			>
-				<LevelBars active={listening} />
+				{writing ? null : <LevelBars active={listening} />}
 				<AppText
-					color={armed ? "subtle" : "foreground"}
+					color={armed && !writing ? "subtle" : "foreground"}
 					maxFontSizeMultiplier={MAX_SCALE}
 					variant="callout"
 					weight="semibold"
 				>
-					{armed ? COPY.write.letGoCancel : COPY.write.listening}
+					{pillLine(writing, armed)}
 				</AppText>
-				{armed ? null : (
+				{armed || writing ? null : (
 					<AppText
-						className="ml-auto"
+						className="ml-auto tabular-nums"
 						color="subtle"
 						maxFontSizeMultiplier={MAX_SCALE}
 						numberOfLines={1}
 						variant="caption"
 					>
-						{COPY.write.slideCancel}
+						{countdown ?? COPY.write.slideCancel}
 					</AppText>
 				)}
 			</Animated.View>

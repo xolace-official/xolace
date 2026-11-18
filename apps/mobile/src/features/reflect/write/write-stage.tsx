@@ -44,7 +44,7 @@ const QUESTION = {
 /** Writing (board card 02, renders 01–03, 15, 20). */
 export function WriteStage() {
 	const { state, actions } = useReflect();
-	const { text, picks, listening, nudge, prompt, late } = state;
+	const { text, picks, listening, nudge, prompt, late, take } = state;
 	const { reduced, live, liftFrom } = useReflectDraw();
 	const y = useBoardY();
 	const focused = useIsFocused();
@@ -115,6 +115,16 @@ export function WriteStage() {
 						running={live && text.length === 0}
 					/>
 				</View>
+				{take.note ? (
+					<AppText
+						accessibilityLiveRegion="polite"
+						className="text-[14px]"
+						color="subtle"
+						variant="subhead"
+					>
+						{take.note}
+					</AppText>
+				) : null}
 				{nudge ? (
 					<Animated.View entering={fadeUp(0, NUDGE.ms, NUDGE.rise, reduced)}>
 						<AppText className="text-[14px]" color="subtle" variant="subhead">

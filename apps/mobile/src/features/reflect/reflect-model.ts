@@ -18,6 +18,23 @@ export type ReflectStage =
 	| "next"
 	| "heard";
 export type CareStep = "main" | "res" | "breath";
+
+/**
+ * Whether a badge arrival waits while Reflect is on this stage. Every stage holds: writing (even
+ * an empty field: someone came here to write), the session's stages, and Heard after the exit,
+ * when the machine has reset to idle. A new stage has to decide here.
+ */
+const HOLDS_ARRIVALS = {
+	heard: true,
+	land: true,
+	mirror: true,
+	next: true,
+	wait: true,
+	write: true,
+} as const satisfies Record<ReflectStage, boolean>;
+
+export const holdsArrivals = (stage: ReflectStage): boolean =>
+	HOLDS_ARRIVALS[stage];
 /** A run of text and the phrase pair it belongs to (−1: plain). */
 export type Seg = readonly [text: string, pair: number];
 /** The mirror, line by line, each a run of segments. */
@@ -31,6 +48,18 @@ export const SLOW_MS = 10_000;
 export const MIN_WAIT_MS = 1600;
 /** The circle closes (.42 s) and bleeds before the mirror takes the stage. */
 export const LAND_MS = 720;
+/** A Plus take shows its countdown for its last 30 s (production's dictation strip). */
+const COUNTDOWN_FROM_MS = 30_000;
+const SECOND_MS = 1000;
+
+/** "0:09" for a Plus take's last 30 s; null before then, or with no take. */
+export function takeCountdown(remainingMs: number | null): string | null {
+	if (remainingMs === null || remainingMs > COUNTDOWN_FROM_MS) {
+		return null;
+	}
+	return `0:${String(Math.ceil(remainingMs / SECOND_MS)).padStart(2, "0")}`;
+}
+
 /** Production's MAX_RAW_INPUT: the server refuses more. */
 export const MAX_CHARS = 5000;
 
@@ -276,6 +305,8 @@ export type MirrorLine = { words: MirrorWord[]; pairs: number[] };
  * The mirror's words in write-in order, with the pairs each line lights. Text that follows a
  * phrase with no space ("said" then ".") stays on that phrase's last word.
  */
+const PUNCTUATION_ONLY = /^[^\p{L}\p{N}]+$/u;
+
 function mirrorWords(lines: MirrorLines): MirrorLine[] {
 	let order = 0;
 	return lines.map((line) => {
@@ -289,6 +320,10 @@ function mirrorWords(lines: MirrorLines): MirrorLine[] {
 					continue;
 				}
 				if (k === 0 && joined && last) {
+					// An opening quote before a borrowed phrase lights with it.
+					if (last.pair < 0 && pair >= 0 && PUNCTUATION_ONLY.test(last.text)) {
+						last.pair = pair;
+					}
 					last.text += w;
 				} else {
 					words.push({ order, pair, text: w });
@@ -342,8 +377,20 @@ export type Timeline = ReturnType<typeof timeline>;
 /** Production's `SEED_CHARS`: a quote-reply seed is clipped to this many characters. */
 const SEED_CHARS = 88;
 
+/**
+ * What a reader counts as characters: grapheme clusters, so a cut never splits an emoji or an
+ * accent from its letter. Code points where the engine has no `Intl.Segmenter`.
+ */
+function graphemes(text: string): string[] {
+	if (typeof Intl.Segmenter !== "function") {
+		return Array.from(text);
+	}
+	const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+	return Array.from(segmenter.segment(text), (s) => s.segment);
+}
+
 function clip(text: string): string {
-	const chars = Array.from(text);
+	const chars = graphemes(text);
 	return chars.length > SEED_CHARS
 		? `${chars.slice(0, SEED_CHARS).join("").trimEnd()}…`
 		: text;

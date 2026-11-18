@@ -31,6 +31,8 @@ export const COPY = {
 	},
 	chrome: {
 		close: "Close, your draft is kept",
+		/** Heard: the session has ended, so ✕ goes on to its end. */
+		closeHeard: "Close",
 		closeWaiting: "Step away, it keeps going",
 		help: "Get help now",
 		labels: {
@@ -206,6 +208,8 @@ export const COPY = {
 		tapClose: "Or just tap what feels close",
 		tapToStart: "Tap the card to start reflecting",
 		wordsStay: "The words stay, the audio doesn’t",
+		/** A Plus take being written down after the mic lets go (production's strip). */
+		writingDown: "Writing it down…",
 	},
 } as const;
 

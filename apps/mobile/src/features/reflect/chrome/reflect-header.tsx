@@ -16,7 +16,8 @@ const BUTTON = { height: H.button, width: H.button };
 /**
  * ✕ on the left, the stage's name in the middle, help on the right: 44 pt glass circles at
  * every stage. ✕ never loses anything: during the wait it steps away and the session keeps
- * going; elsewhere the draft or the mirror waits on Today's card. Help always opens Get help now.
+ * going; on Heard it goes on to the session's end; elsewhere the draft or the mirror waits on
+ * Today's card. Help always opens Get help now.
  */
 export function ReflectHeader() {
 	const { state, actions } = useReflect();
@@ -24,6 +25,16 @@ export function ReflectHeader() {
 	const y = useBoardY();
 	const waiting = state.stage === "wait" || state.stage === "land";
 	const label = COPY.chrome.labels[state.stage];
+	// Heard follows a session that has ended: ✕ goes on to its end, as Continue does.
+	let closeAction = actions.close;
+	let closeLabel: string = COPY.chrome.close;
+	if (waiting) {
+		closeAction = actions.stepAway;
+		closeLabel = COPY.chrome.closeWaiting;
+	} else if (state.stage === "heard") {
+		closeAction = actions.finish;
+		closeLabel = COPY.chrome.closeHeard;
+	}
 
 	return (
 		<View
@@ -33,12 +44,10 @@ export function ReflectHeader() {
 		>
 			<GlassGroup className="p-0">
 				<PressScale
-					accessibilityLabel={
-						waiting ? COPY.chrome.closeWaiting : COPY.chrome.close
-					}
+					accessibilityLabel={closeLabel}
 					accessibilityRole="button"
 					className="items-center justify-center"
-					onPress={waiting ? actions.stepAway : actions.close}
+					onPress={closeAction}
 					style={BUTTON}
 				>
 					<Icon
