@@ -941,6 +941,42 @@ describe("the active-kindling screen API (#333)", () => {
 		).toBe(true);
 	});
 
+	it("getLatest says how the latest kindling ended, with each twig's state", async () => {
+		const { user, active } = await withKindling();
+		const [breathing, xolacer, bridge] = active.twigs;
+		expect(await user.t.query(api.paths.getLatest, {})).toMatchObject({
+			_id: active._id,
+			status: "active",
+		});
+
+		await user.t.mutation(api.paths.completeStep, { stepId: breathing._id });
+		await user.t.mutation(api.paths.completeStep, { stepId: xolacer._id });
+		await user.t.mutation(api.paths.skipStep, { stepId: bridge._id });
+		expect(await user.t.query(api.paths.getActive, {})).toBeNull();
+		const latest = await user.t.query(api.paths.getLatest, {});
+		expect(latest?.status).toBe("completed");
+		expect(
+			Object.fromEntries((latest?.twigs ?? []).map((t) => [t._id, t.state]))
+		).toEqual({
+			[breathing._id]: "done",
+			[bridge._id]: "skipped",
+			[xolacer._id]: "done",
+		});
+	});
+
+	it("getLatest reports a dismissed kindling, and is null for a free user or with none", async () => {
+		const fresh = await asNewUser();
+		expect(await fresh.t.query(api.paths.getLatest, {})).toBeNull();
+
+		const { user, active } = await withKindling();
+		await user.t.mutation(api.paths.dismiss, { pathId: active._id });
+		expect((await user.t.query(api.paths.getLatest, {}))?.status).toBe(
+			"dismissed"
+		);
+		stub.isPlus = false;
+		expect(await user.t.query(api.paths.getLatest, {})).toBeNull();
+	});
+
 	it("another user cannot touch my twigs", async () => {
 		const { user, active } = await withKindling();
 		const other = await asNewUser(2, user.root);

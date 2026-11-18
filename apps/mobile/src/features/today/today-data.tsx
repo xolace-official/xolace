@@ -1,4 +1,6 @@
 import { createContext, type ReactNode, use } from "react";
+import type { CampfireView } from "./campfire/campfire-model";
+import type { KindlingView } from "./kindling/kindling-model";
 import type { Door, TodayPhase } from "./today-model";
 import { useTodayData } from "./use-today";
 
@@ -27,6 +29,13 @@ export type Today = {
 			/** This month's prompt, read or written about this week: it takes the card's question. */
 			monthPrompt: string | null;
 		};
+		/**
+		 * Your kindling: undefined while it loads, null with none (free, none yet, or the
+		 * last one closed). S16 draws plus, free and setting up in the card's frame.
+		 */
+		kindling: KindlingView | null | undefined;
+		/** This week's campers by the fire, or nothing without an honest number. */
+		campfire: CampfireView | null;
 		/** The local day ("YYYY-MM-DD"): a new day remounts the page, so its intro can play. */
 		day: string;
 	};
@@ -39,6 +48,8 @@ export type Today = {
 		openReflect: () => void;
 		/** A door the hold opened: Talk, Vent or Sit with this. */
 		openDoor: (door: Door) => void;
+		/** The kindling card and its Begin. */
+		openKindling: () => void;
 	};
 };
 

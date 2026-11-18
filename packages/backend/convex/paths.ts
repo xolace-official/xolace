@@ -163,6 +163,63 @@ export const getActive = query({
 });
 
 /**
+ * How your latest kindling ended up: its status and each twig's state, or null (free user,
+ * or none yet). Today reads it once `getActive` goes null, to tell a kindling that was
+ * tended to its end (`completed`, with which twigs were done) from one put out
+ * (`dismissed`), replaced, or gone with Plus. Premium-gated like `getActive`.
+ */
+export const getLatest = query({
+	args: {},
+	handler: async (ctx) => {
+		const { profile } = await requireAuth(ctx);
+		if (!(await hasPremium(ctx, profile))) {
+			return null;
+		}
+		const path = await ctx.db
+			.query("paths")
+			.withIndex("by_emotionalProfileId_and_generatedAt", (q) =>
+				q.eq("emotionalProfileId", profile._id)
+			)
+			.order("desc")
+			.first();
+		if (!path) {
+			return null;
+		}
+		const steps = await ctx.db
+			.query("path_steps")
+			.withIndex("by_path", (q) => q.eq("pathId", path._id))
+			.collect();
+		return {
+			_id: path._id,
+			status: path.status,
+			twigs: steps.map((s) => ({ _id: s._id, state: s.state })),
+		};
+	},
+	returns: v.union(
+		v.null(),
+		v.object({
+			_id: v.id("paths"),
+			status: v.union(
+				v.literal("active"),
+				v.literal("replaced"),
+				v.literal("dismissed"),
+				v.literal("completed")
+			),
+			twigs: v.array(
+				v.object({
+					_id: v.id("path_steps"),
+					state: v.union(
+						v.literal("pending"),
+						v.literal("done"),
+						v.literal("skipped")
+					),
+				})
+			),
+		})
+	),
+});
+
+/**
  * Whether this session's `supportNeed` is light/active — the same grade
  * `generate.run` gates on (§1), read here so session-end's slot only fires on
  * a genuine trigger moment. Deliberately tier-blind: ADR 0009's free-user
