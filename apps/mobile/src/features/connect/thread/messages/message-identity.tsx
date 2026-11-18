@@ -7,16 +7,23 @@ import {
 import { resolveMessageIdentity } from "../../chat-rules";
 import type { ThreadConversation } from "../thread-model";
 
-/** The conversation behind the mounted override tree, read by Stream's overrides that need who's
- * who: the author avatar here, the crisis card, the quoted reply, the reaction list and the typing
- * indicator. A context, because `WithComponents` never re-reads its overrides, so a closure would
- * freeze at the first render. Its own context rather than `useThreadScreen`, which changes with
- * every thread state (a dialog opening, a send), so every bubble in the list would re-render. */
-const ConversationIdentityContext = createContext<{
-	conversation: ThreadConversation;
-} | null>(null);
+/** Who's who in the thread: the only fields Stream's overrides read (the author avatar here, the
+ * crisis card, the quoted reply, the reaction list and the typing indicator). */
+type ConversationIdentity = Pick<
+	ThreadConversation,
+	"role" | "counterpartProfileId" | "counterpartName" | "counterpartPhotoUrl"
+>;
 
-/** The conversation behind the currently mounted `WithComponents` override tree. */
+/** A context, because `WithComponents` never re-reads its overrides, so a closure would freeze at
+ * the first render. Its own context rather than `useThreadScreen`, and only these four fields
+ * rather than the conversation: the conversation is a new object on every send
+ * (`touchConversation` patches `lastMessageAt`) and on every render while it's seeded from the
+ * list, and each new value would re-render every bubble that reads it. */
+const ConversationIdentityContext = createContext<ConversationIdentity | null>(
+	null
+);
+
+/** Who's who behind the currently mounted `WithComponents` override tree. */
 export function useConversationIdentity() {
 	return use(ConversationIdentityContext);
 }
@@ -28,10 +35,20 @@ export function ConversationIdentityProvider({
 	conversation: ThreadConversation;
 	children: ReactNode;
 }) {
-	// Kept despite the React Compiler: a new value object here re-renders every
-	// message bubble in the list, and the compiler doesn't stabilize across a
-	// context boundary.
-	const value = useMemo(() => ({ conversation }), [conversation]);
+	const { role, counterpartProfileId, counterpartName, counterpartPhotoUrl } =
+		conversation;
+	// Kept despite the React Compiler: the value must keep its identity until one of these four
+	// fields changes, not the conversation object (see the context), and the compiler would key
+	// it on `conversation`.
+	const value = useMemo(
+		() => ({
+			counterpartName,
+			counterpartPhotoUrl,
+			counterpartProfileId,
+			role,
+		}),
+		[counterpartName, counterpartPhotoUrl, counterpartProfileId, role]
+	);
 	return (
 		<ConversationIdentityContext.Provider value={value}>
 			{children}
@@ -46,7 +63,7 @@ export function ConversationMessageAuthor(props: MessageAuthorProps) {
 	const identity = useConversationIdentity();
 
 	const override = identity
-		? resolveMessageIdentity(message.user?.id, identity.conversation)
+		? resolveMessageIdentity(message.user?.id, identity)
 		: null;
 	if (!(override && message.user)) {
 		return <MessageAuthor {...props} />;

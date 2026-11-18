@@ -31,7 +31,7 @@ export function ConversationMessageSystem(props: MessageSystemProps) {
 		return <MessageSystem {...props} />;
 	}
 	const resources = custom.resources as Resource[];
-	const xolacer = identity?.conversation.role === "xolacer";
+	const xolacer = identity?.role === "xolacer";
 
 	return (
 		<View className="mx-3.5 my-3 gap-2.5 rounded-card border border-danger/25 bg-danger-wash p-4">

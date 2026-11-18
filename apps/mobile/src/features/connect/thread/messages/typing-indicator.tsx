@@ -40,9 +40,7 @@ export function ConversationTypingIndicator() {
 		return null;
 	}
 	const counterpart = Object.values(typing)
-		.map((event) =>
-			resolveMessageIdentity(event.user?.id, identity.conversation)
-		)
+		.map((event) => resolveMessageIdentity(event.user?.id, identity))
 		.find((resolved) => resolved !== null);
 	if (!counterpart) {
 		return null;

@@ -29,9 +29,7 @@ export function ConversationReactionUser({
 
 	const isOwn = reaction.id === client.userID;
 	const counterpart =
-		!isOwn && identity
-			? resolveMessageIdentity(reaction.id, identity.conversation)
-			: null;
+		!isOwn && identity ? resolveMessageIdentity(reaction.id, identity) : null;
 	if (!(isOwn || counterpart)) {
 		return null;
 	}

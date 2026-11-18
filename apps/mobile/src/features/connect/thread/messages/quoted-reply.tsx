@@ -33,7 +33,7 @@ export function ConversationReply(props: ReplyProps) {
 
 	const override =
 		identity && quoted?.user
-			? resolveMessageIdentity(quoted.user.id, identity.conversation)
+			? resolveMessageIdentity(quoted.user.id, identity)
 			: null;
 	if (!(override && quoted?.user)) {
 		return <Reply {...props} />;
