@@ -1,7 +1,13 @@
 import type { Channel } from "stream-chat";
 import { describe, expect, it } from "vitest";
 import { NOW } from "../dev/fixtures";
-import { channelState, postView, splitPost } from "./channel-model";
+import {
+	channelState,
+	plainText,
+	postLinks,
+	postView,
+	splitPost,
+} from "./channel-model";
 
 const HOUR = 3_600_000;
 const US = { hour12: true, locale: "en-US" };
@@ -72,6 +78,37 @@ describe("postView", () => {
 			reactions: [],
 			title: null,
 		});
+	});
+});
+
+describe("links and markdown", () => {
+	const text =
+		"**Quiet hours**\n\nNudges wait until _morning_. Read [how it works](https://xolace.app/quiet) or https://xolace.app/lantern.";
+
+	it("keeps the body's markdown for Stream to render, and its links for VoiceOver", () => {
+		const v = postView({ text }, NOW, US);
+		expect(v.title).toBe("Quiet hours");
+		expect(v.body).toContain("[how it works](https://xolace.app/quiet)");
+		expect(v.links).toEqual([
+			"https://xolace.app/quiet",
+			"https://xolace.app/lantern",
+		]);
+	});
+
+	it("reads the words, not the marks", () => {
+		expect(postView({ text }, NOW, US).a11y).toContain(
+			"Quiet hours. Nudges wait until morning. Read how it works or https://xolace.app/lantern"
+		);
+		expect(plainText("a **b** __c__ ~~d~~ `e` *f* _g_ snake_case 2*3*4")).toBe(
+			"a b c d e f g snake_case 2*3*4"
+		);
+	});
+
+	it("lists each link once, without the sentence's full stop", () => {
+		expect(postLinks("See https://a.co/x. And https://a.co/x again")).toEqual([
+			"https://a.co/x",
+		]);
+		expect(postLinks("No links here.")).toEqual([]);
 	});
 });
 

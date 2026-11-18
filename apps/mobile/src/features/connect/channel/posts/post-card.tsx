@@ -9,6 +9,7 @@ import type { PostReaction } from "../channel-model";
 import { CHANNEL } from "../copy";
 import { NotSent, RemovedPost } from "./post-states";
 import { usePost } from "./use-post";
+import { usePostBody } from "./use-post-body";
 
 const PLUS = { android: "add", ios: "plus" } as const;
 const CARD_RADIUS = 24;
@@ -19,8 +20,9 @@ const CARD_RADIUS = 24;
  * paging, read state and the hold overlay stay Stream's.
  */
 export function PostCard() {
-	const { anchor, hold, resend, toggle, view } = usePost();
+	const { anchor, hold, openLink, resend, toggle, view } = usePost();
 	const muted = useTokenColor("muted");
+	const body = usePostBody(view.body);
 	if (view.kind === "deleted") {
 		return <RemovedPost a11y={view.a11y} when={view.when} />;
 	}
@@ -32,24 +34,26 @@ export function PostCard() {
 					{/* The words are the hold target and one VoiceOver stop; the reactions stay
 					    their own buttons beside it (a pressable parent would swallow them). */}
 					<Pressable
-						accessibilityActions={[{ label: CHANNEL.add, name: "longpress" }]}
+						accessibilityActions={[
+							{ label: CHANNEL.add, name: "longpress" },
+							...view.links.map((url) => ({
+								label: CHANNEL.openLink(url),
+								name: url,
+							})),
+						]}
 						accessibilityLabel={view.a11y}
 						className="gap-2"
-						onAccessibilityAction={() => hold()}
+						onAccessibilityAction={({ nativeEvent }) =>
+							nativeEvent.actionName === "longpress"
+								? hold()
+								: openLink(nativeEvent.actionName)
+						}
 						onLongPress={hold}
 					>
 						{view.title ? (
 							<AppText variant="headline">{view.title}</AppText>
 						) : null}
-						{view.body ? (
-							<AppText
-								className="leading-[22px]"
-								color="muted"
-								variant="callout"
-							>
-								{view.body}
-							</AppText>
-						) : null}
+						{body}
 					</Pressable>
 					<View className="flex-row flex-wrap items-center gap-2 pt-1.5">
 						{view.kind === "failed" ? (

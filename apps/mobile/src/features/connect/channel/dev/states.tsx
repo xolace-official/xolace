@@ -78,6 +78,17 @@ const CHANGED: DevMessage[] = [
 	},
 ];
 
+/** Posts with links and markdown, as Stream renders them on a card. */
+const FORMATTED: DevMessage[] = [
+	BADGES,
+	{
+		ago: 90,
+		mine: false,
+		reactions: [{ count: 18, type: "growth" }],
+		text: "**Quiet hours** are here\n\nFrom tonight, nudges wait until _morning_ if you've set a Quiet Window. **Nothing urgent ever waits.** Read [how it works](https://xolace.app/quiet), or open the new hub at https://xolace.app/lantern",
+	},
+];
+
 /** The broadcaster's own post that didn't reach Stream, under one that did. */
 const NOT_SENT: DevMessage[] = [
 	...POSTS,
@@ -114,6 +125,12 @@ export const devStates: readonly DevState[] = [
 		options: CHANNEL,
 		Screen: () => <FixtureChannel posts={CHANGED} />,
 		title: "Xolace channel: a removed post and an edited one",
+	},
+	{
+		id: "channel-formatted",
+		options: CHANNEL,
+		Screen: () => <FixtureChannel posts={FORMATTED} />,
+		title: "Xolace channel: links and bold in a post",
 	},
 	{
 		id: "channel-not-sent",

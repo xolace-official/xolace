@@ -8,6 +8,9 @@ export const CHANNEL = {
 	lock: "Xolace talks to the whole camp, not back. Drop a reaction instead.",
 	/** A broadcast of yours that didn't reach Stream. */
 	notSent: "This post didn't send.",
+	/** A link in a post, as a VoiceOver action: "Open xolace.app/lantern". */
+	openLink: (url: string) =>
+		`Open ${url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}`,
 	/** The sender's composer. */
 	placeholder: "Post to the whole camp",
 	/** "Hug, 24, you reacted" */

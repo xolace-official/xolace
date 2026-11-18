@@ -27,7 +27,10 @@ export type PostView = {
 	/** The broadcaster changed its words after posting (Stream's `message_text_updated_at`). */
 	edited: boolean;
 	title: string | null;
+	/** Markdown, as posted; the card renders it through Stream. */
 	body: string;
+	/** The links in it, each a VoiceOver action on the card (the card is one stop). */
+	links: string[];
 	when: string;
 	reactions: PostReaction[];
 	a11y: string;
@@ -44,6 +47,28 @@ export type PostMessage = {
 	reaction_groups?: Record<string, { count: number }> | null;
 	own_reactions?: readonly { type: string }[] | null;
 };
+
+const MARKDOWN_LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+const BARE_URL = /https?:\/\/[^\s)<>\]]+/g;
+const EMPHASIS =
+	/(\*\*|__|~~|`)(.+?)\1|(?<![\w*])[*_](?!\s)(.+?)(?<!\s)[*_](?![\w*])/g;
+const TRAILING_PUNCTUATION = /[.,;:!?]+$/;
+
+/** What a reader hears or a title shows: the words without the markdown around them. */
+export function plainText(markdown: string): string {
+	return markdown
+		.replace(MARKDOWN_LINK, "$1")
+		.replace(EMPHASIS, (_, _mark, wrapped, single) => wrapped ?? single);
+}
+
+/** Every link in a post, in order, once each: markdown links' targets, then bare URLs. */
+export function postLinks(markdown: string): string[] {
+	const named = [...markdown.matchAll(MARKDOWN_LINK)].map((m) => m[2] ?? "");
+	const bare = [...markdown.replace(MARKDOWN_LINK, "").matchAll(BARE_URL)].map(
+		(m) => m[0].replace(TRAILING_PUNCTUATION, "")
+	);
+	return [...new Set([...named, ...bare])].filter(Boolean);
+}
 
 /** Posts are plain messages. A short first paragraph with more under it is the title (the
  * prototype's cards have one); anything else is all body. */
@@ -119,17 +144,20 @@ export function postView(
 			body: "",
 			edited: false,
 			kind,
+			links: [],
 			reactions: [],
 			title: null,
 			when,
 		};
 	}
-	const { title, body } = splitPost(m.text ?? "");
+	const split = splitPost(m.text ?? "");
+	const title = split.title === null ? null : plainText(split.title);
+	const body = split.body;
 	const edited = kind === "post" && Boolean(m.message_text_updated_at);
 	return {
 		a11y: [
 			title,
-			body,
+			plainText(body),
 			kind === "failed" ? CHANNEL.notSent : null,
 			edited ? `${when}, ${CHANNEL.edited.toLowerCase()}` : when,
 		]
@@ -139,6 +167,7 @@ export function postView(
 		body,
 		edited,
 		kind,
+		links: postLinks(body),
 		// A post that never reached Stream has no one's reactions, and can't take yours.
 		reactions: kind === "post" ? postReactions(m) : [],
 		title,
