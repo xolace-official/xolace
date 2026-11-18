@@ -1,5 +1,5 @@
 import { browseScreens } from "@/features/browse/screens";
-import { crisisResourcesScreens } from "@/features/crisis-resources/screens";
+import { careScreens } from "@/features/care/screens";
 import { followUpScreens } from "@/features/follow-up/screens";
 import { intakeScreens } from "@/features/intake/screens";
 import { kindlingScreens } from "@/features/kindling/screens";
@@ -13,7 +13,6 @@ import { sessionEndScreens } from "@/features/session-end/screens";
 import { sitWithThisScreens } from "@/features/sit-with-this/screens";
 import { streakScreens } from "@/features/streak/screens";
 import { talkScreens } from "@/features/talk/screens";
-import { trustedBridgeScreens } from "@/features/trusted-bridge/screens";
 import { ventScreens } from "@/features/vent/screens";
 import { xolacerChatScreens } from "@/features/xolacer-chat/screens";
 import { youScreens } from "@/features/you/screens";
@@ -27,7 +26,7 @@ import type { RootScreen } from "@/lib/root-screen";
  */
 export const ROOT_SCREENS: readonly RootScreen[] = [
 	...browseScreens,
-	...crisisResourcesScreens,
+	...careScreens,
 	...followUpScreens,
 	...intakeScreens,
 	...kindlingScreens,
@@ -41,7 +40,6 @@ export const ROOT_SCREENS: readonly RootScreen[] = [
 	...sitWithThisScreens,
 	...streakScreens,
 	...talkScreens,
-	...trustedBridgeScreens,
 	...ventScreens,
 	...xolacerChatScreens,
 	...youScreens,

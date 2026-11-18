@@ -1,7 +1,7 @@
 /** The Lantern reader (#407, #393): one route for every way into an entry, incl.
  * `xolace://library/<slug>`. Full screen, no tab bar. */
 import { useLocalSearchParams } from "expo-router";
-import { detectCountry } from "@/features/crisis-resources/use-crisis-resources";
+import { detectCountry } from "@/features/care/help/detect-country";
 import { ReaderData } from "@/features/lantern/reader/reader-data";
 import { ReaderScreen } from "@/features/lantern/reader/reader-screen";
 

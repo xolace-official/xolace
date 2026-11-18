@@ -31,7 +31,6 @@ const REPLACED_FEATURES = [
 	"settings",
 	"starter-suggestions",
 	"streak",
-	"trusted-bridge",
 	"xolacer-chat",
 ];
 
@@ -39,12 +38,7 @@ const REPLACED_FEATURES = [
  * Old folders the redesign keeps: the sweep (C1) restyles them and brings them
  * into the shape, then takes them off this list.
  */
-const RESTYLED_FEATURES = [
-	"auth",
-	"crisis-resources",
-	"feedback-tray",
-	"purchases",
-];
+const RESTYLED_FEATURES = ["auth", "feedback-tray", "purchases"];
 
 /**
  * The old feature folders, which predate the shape. Every other folder is

@@ -1,0 +1,98 @@
+import { describe, expect, it } from "vitest";
+import {
+	ADDRESS_TERMS,
+	canWrite,
+	charactersLeft,
+	failedStatus,
+	MAX_NAME_LENGTH,
+	noticeOf,
+	quotaHintOf,
+	recipientOf,
+	sentencesOf,
+} from "@/features/care/bridge/bridge-model";
+import { COPY } from "@/features/care/bridge/copy";
+import {
+	FREE_ONE_LEFT,
+	FREE_OUT,
+	LONG_NAME,
+	MUM_DRAFT,
+	PLUS_OUT,
+	PLUS_SPARE,
+} from "@/features/care/bridge/dev/fixtures";
+
+describe("who it's for", () => {
+	it("needs a name that isn't blank", () => {
+		expect(canWrite("")).toBe(false);
+		expect(canWrite("   ")).toBe(false);
+		expect(canWrite("Mum")).toBe(true);
+	});
+
+	it("calls a blank name them", () => {
+		expect(recipientOf("  ")).toBe(COPY.loading.them);
+		expect(recipientOf(" Mum ")).toBe("Mum");
+	});
+
+	it("shows the characters left only near the cap", () => {
+		expect(charactersLeft("Mum", MAX_NAME_LENGTH)).toBeNull();
+		expect(charactersLeft(LONG_NAME, MAX_NAME_LENGTH)).toBe(
+			MAX_NAME_LENGTH - LONG_NAME.length
+		);
+		expect(charactersLeft("x".repeat(MAX_NAME_LENGTH), MAX_NAME_LENGTH)).toBe(
+			0
+		);
+	});
+
+	it("suggests no address terms for a friend", () => {
+		expect(ADDRESS_TERMS.friend).toEqual([]);
+		expect(ADDRESS_TERMS.parent).toContain("Mum");
+	});
+});
+
+describe("a failed draft", () => {
+	it("is out of drafts on the rate-limit code, else an error", () => {
+		expect(failedStatus("bridge_rate_limited")).toBe("rate_limited");
+		expect(failedStatus(undefined)).toBe("error");
+		expect(failedStatus("other")).toBe("error");
+	});
+
+	it("says why the template stands in", () => {
+		expect(noticeOf("rate_limited")?.text).toBe(COPY.draft.rateLimited);
+		expect(noticeOf("error")?.text).toBe(COPY.draft.error);
+		expect(noticeOf("success")).toBeNull();
+		expect(noticeOf("loading")).toBeNull();
+	});
+});
+
+describe("quotaHintOf", () => {
+	it("is silent while loading and for Plus with drafts left", () => {
+		expect(quotaHintOf(undefined)).toBeNull();
+		expect(quotaHintOf(PLUS_SPARE)).toBeNull();
+	});
+
+	it("tells Plus when every draft is used, with no offer", () => {
+		expect(quotaHintOf(PLUS_OUT)).toEqual({
+			plus: null,
+			text: COPY.quota.plusOut,
+		});
+	});
+
+	it("counts a free user's drafts and offers Xolace+", () => {
+		expect(quotaHintOf(FREE_ONE_LEFT)).toEqual({
+			plus: { label: COPY.quota.plusLabel(10), text: COPY.quota.plus(10) },
+			text: COPY.quota.freeLeft(1),
+		});
+		expect(quotaHintOf(FREE_OUT)?.text).toBe(COPY.quota.freeOut);
+	});
+});
+
+describe("sentencesOf", () => {
+	it("splits a draft after each full stop, question or exclamation", () => {
+		const sentences = sentencesOf(MUM_DRAFT);
+		expect(sentences).toHaveLength(3);
+		expect(sentences.join(" ")).toBe(MUM_DRAFT);
+	});
+
+	it("keeps a draft with no ending whole", () => {
+		expect(sentencesOf("Hey")).toEqual(["Hey"]);
+	});
+});

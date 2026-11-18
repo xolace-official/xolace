@@ -1,16 +1,17 @@
 import ArrowBack from "@expo/material-symbols/arrow_back.xml";
 import { Stack, useRouter } from "expo-router";
+import { COPY } from "@/features/care/help/copy";
 import { playSoftPress } from "@/lib/haptics";
-import { useLargeHeaderOptions } from "@/lib/navigation-options";
+import { useHeaderOptions } from "@/lib/header-options";
 
-const INDEX_OPTIONS = { title: "Get Help Now" };
+const INDEX_OPTIONS = { title: COPY.title };
 
 export default function CrisisResourcesLayout() {
 	const router = useRouter();
-	const largeHeaderOptions = useLargeHeaderOptions();
+	const headerOptions = useHeaderOptions();
 
 	return (
-		<Stack screenOptions={largeHeaderOptions}>
+		<Stack screenOptions={headerOptions}>
 			<Stack.Screen name="index" options={INDEX_OPTIONS}>
 				<Stack.Toolbar placement="left">
 					<Stack.Toolbar.Button

@@ -1,5 +1,10 @@
-import { CrisisResourcesScreen } from "@/features/crisis-resources/crisis-resources-screen";
+import { HelpData } from "@/features/care/help/help-data";
+import { HelpScreen } from "@/features/care/help/help-screen";
 
 export default function CrisisResourcesRoute() {
-	return <CrisisResourcesScreen />;
+	return (
+		<HelpData>
+			<HelpScreen />
+		</HelpData>
+	);
 }
