@@ -36,7 +36,13 @@ const WIDEN = LinearTransition.duration(MOTION.widen)
 /** The sleep timer (§4): a glass moon top right; set, it widens into a pill ("28 min"). The menu
  * is SwiftUI's, with the system checkmark on the current choice (`sleep-timer-button.tsx` draws
  * Android's). */
-export function SleepTimerButton({ top }: { top: number }) {
+export function SleepTimerButton({
+	top,
+	reduced,
+}: {
+	top: number;
+	reduced: boolean;
+}) {
 	const { state } = usePlayer();
 	const { choice, pill, fading, voice } = state.sleep;
 	const ink = useTokenColor("player-ink");
@@ -45,7 +51,8 @@ export function SleepTimerButton({ top }: { top: number }) {
 	return (
 		<Animated.View
 			className="absolute"
-			layout={WIDEN}
+			// Reduce Motion: the pill takes its new width at once.
+			layout={reduced ? undefined : WIDEN}
 			style={{ right: P.glassSide, top }}
 		>
 			<PlayerGlass

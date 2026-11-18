@@ -131,7 +131,7 @@ export function PlayerScreen() {
 			</View>
 
 			<CloseButton top={glassTop} />
-			{failed ? null : <SleepTimerButton top={glassTop} />}
+			{failed ? null : <SleepTimerButton reduced={reduced} top={glassTop} />}
 		</Animated.View>
 	);
 }

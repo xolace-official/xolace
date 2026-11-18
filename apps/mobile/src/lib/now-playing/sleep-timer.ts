@@ -29,12 +29,19 @@ export const pickSleep = (choice: SleepChoice): SleepTimer => ({
 	slept: false,
 });
 
-/** One second of play on a timed choice; at 0 the track pauses and the timer clears. */
-export function tickSleep(t: SleepTimer): { next: SleepTimer; pause: boolean } {
-	if (typeof t.choice !== "number") {
+/**
+ * `elapsed` seconds of play on a timed choice: the real time since the last tick, not a count
+ * of ticks, so a timer throttled in the background or with the screen locked still ends on
+ * time. At 0 the track pauses and the timer clears.
+ */
+export function tickSleep(
+	t: SleepTimer,
+	elapsed: number
+): { next: SleepTimer; pause: boolean } {
+	if (typeof t.choice !== "number" || elapsed <= 0) {
 		return { next: t, pause: false };
 	}
-	const left = t.left - 1;
+	const left = t.left - elapsed;
 	return left <= 0
 		? { next: { choice: "off", left: 0, slept: true }, pause: true }
 		: { next: { ...t, left }, pause: false };

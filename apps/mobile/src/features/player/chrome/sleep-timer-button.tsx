@@ -29,7 +29,13 @@ const WIDEN = LinearTransition.duration(MOTION.widen)
 
 /** Android: the moon and pill in the player's glass, opening a Material 3 dropdown (iOS draws
  * SwiftUI's menu, `sleep-timer-button.ios.tsx`). */
-export function SleepTimerButton({ top }: { top: number }) {
+export function SleepTimerButton({
+	top,
+	reduced,
+}: {
+	top: number;
+	reduced: boolean;
+}) {
 	const { state } = usePlayer();
 	const { choice, pill, fading, voice } = state.sleep;
 	const ink = useTokenColor("player-ink");
@@ -43,7 +49,8 @@ export function SleepTimerButton({ top }: { top: number }) {
 	return (
 		<Animated.View
 			className="absolute"
-			layout={WIDEN}
+			// Reduce Motion: the pill takes its new width at once.
+			layout={reduced ? undefined : WIDEN}
 			style={{ right: P.glassSide, top }}
 		>
 			<Pressable

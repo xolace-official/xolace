@@ -20,9 +20,18 @@ export function playbackLevels(
 	const { gain = 1, stopAtEnd = false } = options;
 	return {
 		native: {
-			loop: listener.loop && !stopAtEnd,
-			volume: clamp01(listener.volume) * clamp01(gain),
+			loop: nativeLoop(listener.loop, stopAtEnd),
+			volume: nativeVolume(listener.volume, gain),
 		},
 		shown: { loop: listener.loop, volume: clamp01(listener.volume) },
 	};
 }
+
+/** The native volume: the listener's level times the fade. Its own function, so the volume
+ * effect doesn't re-run on a Repeat change. */
+export const nativeVolume = (volume: number, gain = 1) =>
+	clamp01(volume) * clamp01(gain);
+
+/** The native loop: Repeat, unless this play stops at its end. */
+export const nativeLoop = (loop: boolean, stopAtEnd = false) =>
+	loop && !stopAtEnd;

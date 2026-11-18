@@ -5,7 +5,7 @@ import {
 	useAudioPlayerStatus,
 } from "expo-audio";
 import { useEffect, useRef, useState } from "react";
-import { playbackLevels } from "@/lib/audio/playback-level";
+import { nativeLoop, nativeVolume } from "@/lib/audio/playback-level";
 import {
 	audioFocusEpoch,
 	claimAudioFocus,
@@ -155,13 +155,13 @@ export function usePlayback<T extends Playable>(
 	// was told, and a re-minted player starts back at 1.
 	useEffect(() => {
 		// eslint-disable-next-line react-hooks/immutability -- expo-audio AudioPlayer.volume is a documented mutable setter
-		player.volume = playbackLevels({ loop, volume }, { gain }).native.volume;
-	}, [player, volume, gain, loop]);
+		player.volume = nativeVolume(volume, gain);
+	}, [player, volume, gain]);
 
 	useEffect(() => {
 		// eslint-disable-next-line react-hooks/immutability -- expo-audio AudioPlayer.loop is a documented mutable setter
-		player.loop = playbackLevels({ loop, volume }, { stopAtEnd }).native.loop;
-	}, [player, loop, stopAtEnd, volume]);
+		player.loop = nativeLoop(loop, stopAtEnd);
+	}, [player, loop, stopAtEnd]);
 
 	// A rebuilt player starts at 0; the old one's end-of-track time isn't a wrap.
 	useEffect(() => {

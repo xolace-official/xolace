@@ -92,6 +92,34 @@ export function snapToBar(f: number, bars: number): number {
 	return bars > 0 ? Math.round(f * bars) / bars : f;
 }
 
+/** How long a seek's target stands in for the reported time at most. */
+export const SEEK_SETTLE_MS = 1000;
+/** The clock within this of a seek's target: the seek has landed. */
+const SEEK_LANDED_S = 1;
+
+/** The last seek asked for: where to, and when (ms). */
+export type Seek = { to: number; at: number };
+
+/**
+ * Where the playhead is. A streamed seek reports late, so until the clock comes within 1 s of
+ * its target (or 1 s passes) the target stands in: the playhead doesn't flick back after a
+ * scrub, and quick skips in a row step on from where the previous one went.
+ */
+export function settledPosition(
+	position: number,
+	seek: Seek | null,
+	now: number
+): number {
+	if (
+		!seek ||
+		now - seek.at >= SEEK_SETTLE_MS ||
+		Math.abs(position - seek.to) <= SEEK_LANDED_S
+	) {
+		return position;
+	}
+	return seek.to;
+}
+
 /** Which 30 s mark the finger is past: a selection tick each time it changes. */
 export function tickIndex(f: number, duration: number, every: number): number {
 	"worklet";
@@ -100,7 +128,7 @@ export function tickIndex(f: number, duration: number, every: number): number {
 
 const MINUTE = 60;
 
-/** The pill: "28 min" while more than a minute is left, then "0:45"; "End of track". */
+/** The pill: "28 min" while a minute or more is left, then "0:45"; "End of track". */
 export function sleepPill(t: Pick<SleepTimer, "choice" | "left">): string {
 	if (t.choice === "off") {
 		return "";
@@ -108,10 +136,12 @@ export function sleepPill(t: Pick<SleepTimer, "choice" | "left">): string {
 	if (t.choice === "end") {
 		return PLAYER_COPY.sleepEnd;
 	}
-	if (t.left > MINUTE) {
-		return `${Math.ceil(t.left / MINUTE)} min`;
+	// Whole seconds, rounded up: the timer counts real (fractional) play time.
+	const left = Math.ceil(Math.max(0, t.left));
+	if (left >= MINUTE) {
+		return `${Math.ceil(left / MINUTE)} min`;
 	}
-	return `0:${String(Math.max(0, t.left)).padStart(2, "0")}`;
+	return `0:${String(left).padStart(2, "0")}`;
 }
 
 /** "Sleep timer, off" / "Sleep timer, 28 minutes left" / "Sleep timer, end of track". */
@@ -122,8 +152,9 @@ export function sleepVoice(t: Pick<SleepTimer, "choice" | "left">): string {
 	if (t.choice === "end") {
 		return `${PLAYER_COPY.sleepTitle}, end of track`;
 	}
-	// Minutes, as the pill shows them, while more than a minute is left.
-	const left = t.left > MINUTE ? Math.ceil(t.left / MINUTE) * MINUTE : t.left;
+	// Minutes, as the pill shows them, while a minute or more is left.
+	const secs = Math.ceil(Math.max(0, t.left));
+	const left = secs >= MINUTE ? Math.ceil(secs / MINUTE) * MINUTE : secs;
 	return `${PLAYER_COPY.sleepTitle}, ${fmtVo(left)} left`;
 }
 

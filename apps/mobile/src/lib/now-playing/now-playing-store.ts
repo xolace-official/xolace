@@ -101,6 +101,8 @@ export function setNowPlaying(next: NowPlaying, options?: { play?: boolean }) {
 		played = false;
 		// A track played in place never went through the player: nothing to lift for later.
 		attentionPending = options?.play !== true;
+		// The timer carries over to the new track; "Paused by the sleep timer" was the old one's.
+		clearSlept();
 	}
 	current = next;
 	emit();

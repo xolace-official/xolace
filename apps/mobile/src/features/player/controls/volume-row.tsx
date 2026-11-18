@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { View } from "react-native";
 import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
 import Animated, {
@@ -29,6 +30,14 @@ export function VolumeRow() {
 	const v = useSharedValue(state.volume);
 	const w = useSharedValue(0);
 	const sent = useSharedValue(Math.round(state.volume * LIVE_STEP));
+	const dragging = useSharedValue(false);
+	// The level changed elsewhere (a fixture, the next track): follow it, except under a finger.
+	useEffect(() => {
+		if (!dragging.get()) {
+			v.set(state.volume);
+			sent.set(Math.round(state.volume * LIVE_STEP));
+		}
+	}, [state.volume, v, sent, dragging]);
 	const move = (x: number) => {
 		"worklet";
 		if (w.get() <= 0) {
@@ -44,8 +53,14 @@ export function VolumeRow() {
 	};
 	const pan = usePanGesture({
 		minDistance: 0,
-		onBegin: (e) => move(e.x),
-		onFinalize: () => scheduleOnRN(actions.setVolume, v.get()),
+		onBegin: (e) => {
+			dragging.set(true);
+			move(e.x);
+		},
+		onFinalize: () => {
+			dragging.set(false);
+			scheduleOnRN(actions.setVolume, v.get());
+		},
 		onUpdate: (e) => move(e.x),
 	});
 	const fill = useAnimatedStyle(() => ({ width: `${v.get() * PERCENT}%` }));

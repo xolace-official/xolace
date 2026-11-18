@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { PLAYER_COPY } from "../copy";
 import { usePlayer } from "../player-data";
@@ -17,28 +17,39 @@ export function PlayerFoot() {
 	return (
 		<View
 			className="absolute right-7 left-7"
+			pointerEvents="box-none"
 			style={{ top: fromCover(P.footTop) }}
 		>
 			{track.crisis ? (
-				<AppText className={`${FOOT} text-player-ink/55`} variant="caption">
-					{PLAYER_COPY.crisisLead}
+				// The whole line is the link, as in production: a small target is a poor one on a
+				// heavy track.
+				<Pressable
+					accessibilityRole="link"
+					className="active:opacity-50"
+					hitSlop={8}
+					onPress={actions.openCrisisHelp}
+				>
+					<AppText className={`${FOOT} text-player-ink/55`} variant="caption">
+						{PLAYER_COPY.crisisLead}
+						<AppText
+							className={`${FOOT} text-player-ink/92 underline`}
+							variant="caption"
+						>
+							{PLAYER_COPY.crisisLink}
+						</AppText>
+					</AppText>
+				</Pressable>
+			) : (
+				// The words don't take the touch: a swipe down from them closes the player.
+				<View pointerEvents="none">
 					<AppText
-						accessibilityRole="link"
-						className={`${FOOT} text-player-ink/92 underline`}
-						onPress={actions.openCrisisHelp}
+						className={`${FOOT} text-player-ink/55`}
+						numberOfLines={2}
 						variant="caption"
 					>
-						{PLAYER_COPY.crisisLink}
+						{track.attribution}
 					</AppText>
-				</AppText>
-			) : (
-				<AppText
-					className={`${FOOT} text-player-ink/55`}
-					numberOfLines={2}
-					variant="caption"
-				>
-					{track.attribution}
-				</AppText>
+				</View>
 			)}
 		</View>
 	);

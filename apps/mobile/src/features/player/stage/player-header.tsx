@@ -9,14 +9,17 @@ import { usePlayer } from "../player-data";
 import { fromCover, INK, P } from "../player-metrics";
 
 /** "SUPPORT AUDIO · SAGE", the title (24, two lines at most) and production's 40 pt Repeat one
- * at the right. Both scale with Dynamic Type. */
+ * at the right. Both scale with Dynamic Type. The board's title is 650; the app's faces are
+ * static files with no 650 (font-pairs.ts), so it's the theme's semibold (600). */
 export function PlayerHeader() {
 	const { state, actions } = usePlayer();
 	const ink = useTokenColor("player-ink");
 	const { track, repeat } = state;
 	return (
+		// Only Repeat takes a touch: a swipe down from the title closes the player (§5).
 		<View
 			className="absolute right-5 flex-row items-start gap-3"
+			pointerEvents="box-none"
 			style={{ left: P.side, top: fromCover(P.labelTop) }}
 		>
 			<View

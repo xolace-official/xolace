@@ -8,6 +8,7 @@ import {
 	togglePlayback,
 } from "@/lib/now-playing/now-playing-store";
 import {
+	clearSlept,
 	endOfTrack,
 	setSleepTimer,
 	sleepGain,
@@ -18,6 +19,7 @@ import {
 import { useTrackPlayback } from "./use-track-playback";
 
 const TICK_MS = 1000;
+const MS_PER_S = 1000;
 
 /**
  * The host's runner: plays `slug`, publishes its playback for every reader, starts it when it
@@ -47,20 +49,42 @@ export function useNowPlayingAudio(slug: string, stepId?: Id<"path_steps">) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [p.track, slug]);
 
+	// Any play forgets "Paused by the sleep timer": the lock screen's and headphones' too.
+	useEffect(() => {
+		if (p.isPlaying) {
+			clearSlept();
+		}
+	}, [p.isPlaying]);
+
 	const timed = typeof timer.choice === "number";
 	useEffect(() => {
 		if (!(timed && p.isPlaying)) {
 			return;
 		}
+		// Real play time since the last count: from this play's start, then each fire.
+		let last = Date.now();
+		const count = () => {
+			const now = Date.now();
+			const step = tickSleep(sleepTimer(), (now - last) / MS_PER_S);
+			last = now;
+			return step;
+		};
 		const id = setInterval(() => {
-			const { next, pause } = tickSleep(sleepTimer());
+			const { next, pause } = count();
 			setSleepTimer(next);
 			const live = nowPlayingPlayback();
 			if (pause && live.isPlaying) {
 				live.toggle();
 			}
 		}, TICK_MS);
-		return () => clearInterval(id);
+		return () => {
+			clearInterval(id);
+			// The part-second played since the last fire counts too (a pause, a new track).
+			const { next, pause } = count();
+			if (!pause) {
+				setSleepTimer(next);
+			}
+		};
 	}, [timed, p.isPlaying]);
 
 	useEffect(() => {

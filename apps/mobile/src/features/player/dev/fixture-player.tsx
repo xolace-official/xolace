@@ -22,6 +22,7 @@ import {
 import { PlayerScreen } from "../player-screen";
 
 const TICK_MS = 1000;
+const MS_PER_S = 1000;
 const VOLUME = 0.78;
 
 export type FixtureProps = {
@@ -58,7 +59,7 @@ function FixturePlayer({
 		const id = setInterval(() => {
 			setPosition((p) => (p + 1 >= duration ? (repeat ? 0 : duration) : p + 1));
 			setSleep((t) => {
-				const { next, pause } = tickSleep(t);
+				const { next, pause } = tickSleep(t, TICK_MS / MS_PER_S);
 				if (pause) {
 					setPlaying(false);
 				}
@@ -80,6 +81,7 @@ function FixturePlayer({
 			seek,
 			setRepeat,
 			setSleep: (c) => setSleep(pickSleep(c)),
+			settled: (at) => at,
 			setVolume,
 			skip: (by) => {
 				setPosition((at) => skipTarget(at, by, duration));

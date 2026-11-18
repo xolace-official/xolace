@@ -18,7 +18,7 @@ function run(start: ReturnType<typeof pickSleep>, n: number) {
 	let t = start;
 	let paused = 0;
 	for (let i = 0; i < n; i++) {
-		const step = tickSleep(t);
+		const step = tickSleep(t, 1);
 		t = step.next;
 		paused += step.pause ? 1 : 0;
 	}
@@ -37,7 +37,7 @@ describe("each choice", () => {
 
 	it.each(["off", "end"] as const)("%s has no countdown", (choice) => {
 		expect(pickSleep(choice)).toEqual({ choice, left: 0, slept: false });
-		expect(tickSleep(pickSleep(choice))).toEqual({
+		expect(tickSleep(pickSleep(choice), 1)).toEqual({
 			next: pickSleep(choice),
 			pause: false,
 		});
@@ -62,6 +62,30 @@ describe("the tick to 0", () => {
 		const { t, paused } = run(pickSleep(15), 899);
 		expect(paused).toBe(0);
 		expect(t).toEqual({ choice: 15, left: 1, slept: false });
+	});
+});
+
+describe("real time", () => {
+	it("counts the time that passed, however unevenly the ticks fire", () => {
+		// A throttled timer: late, early and half-second fires.
+		let t = pickSleep(15);
+		for (const s of [1, 2.6, 0.4, 5, 1]) {
+			t = tickSleep(t, s).next;
+		}
+		expect(t.left).toBeCloseTo(900 - 10);
+	});
+
+	it("ends on time when a long-delayed fire overshoots 0", () => {
+		const step = tickSleep({ ...pickSleep(15), left: 3 }, 30);
+		expect(step).toEqual({
+			next: { choice: "off", left: 0, slept: true },
+			pause: true,
+		});
+	});
+
+	it("ignores a fire with no time passed", () => {
+		const t = pickSleep(15);
+		expect(tickSleep(t, 0)).toEqual({ next: t, pause: false });
 	});
 });
 
@@ -103,7 +127,7 @@ describe("the fade", () => {
 		let t = { ...pickSleep(15), left: 40 };
 		let last = sleepGain(t);
 		while (t.choice !== "off") {
-			t = tickSleep(t).next;
+			t = tickSleep(t, 1).next;
 			if (t.choice === "off") {
 				break;
 			}

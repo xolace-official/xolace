@@ -23,15 +23,14 @@ import {
 import type { Player, PlayerClock } from "./player-data";
 import {
 	playerStatus,
+	type Seek,
+	settledPosition,
 	skipTarget,
 	sleepFading,
 	sleepPill,
 	sleepVoice,
 	toPlayerTrack,
 } from "./player-model";
-
-/** How long a seek's target stands in for the reported time. */
-const SEEK_SETTLE_MS = 1000;
 
 type Params = { slug: string; from?: BrowseFrom; stepId?: Id<"path_steps"> };
 
@@ -82,7 +81,7 @@ export function usePlayerData(): { player: Player; clock: PlayerClock } {
 	const { track, isPlaying, loop, volume } = p;
 	// The last seek asked for: the status reports it only after it lands, so quick skips in a row
 	// step on from where the previous one went, not from the stale time.
-	const lastSeek = useRef<{ to: number; at: number } | null>(null);
+	const lastSeek = useRef<Seek | null>(null);
 
 	// A context value (code-style.md's exception): `p` is rebuilt on every status tick, and the
 	// parts should render only when what they show changes. Actions read the live playback.
@@ -96,23 +95,28 @@ export function usePlayerData(): { player: Player; clock: PlayerClock } {
 		};
 		return {
 			actions: {
-				close: () => router.back(),
+				// Cold start or a deep link: the player is the whole stack, so there's nothing to go
+				// back to. Home instead, or an invisible modal is left over the app.
+				close: () =>
+					router.canGoBack() ? router.back() : router.replace("/(protected)"),
 				openCrisisHelp: () => router.push("/crisis-resources"),
 				retry: () => retryNowPlaying(),
 				seek,
 				setRepeat: (on) => live()?.setLoop(on),
 				setSleep: (c) => setSleepTimer(pickSleep(c)),
+				settled: (position) =>
+					settledPosition(position, lastSeek.current, Date.now()),
 				setVolume: (v) => live()?.setVolume(v),
 				skip: (by) => {
 					const pb = live();
 					if (!pb) {
 						return;
 					}
-					const recent = lastSeek.current;
-					const from =
-						recent && Date.now() - recent.at < SEEK_SETTLE_MS
-							? recent.to
-							: pb.currentTime;
+					const from = settledPosition(
+						pb.currentTime,
+						lastSeek.current,
+						Date.now()
+					);
 					seek(skipTarget(from, by, pb.duration));
 				},
 				toggle: () => {

@@ -4,6 +4,8 @@ import { HEAVY, MUSIC, NO_PEAKS, SPOKEN } from "./dev/fixtures";
 import { fmt, fmtVo, positionVo } from "./player-format";
 import {
 	playerStatus,
+	SEEK_SETTLE_MS,
+	settledPosition,
 	showsLength,
 	skipTarget,
 	sleepFading,
@@ -92,6 +94,17 @@ describe("time", () => {
 		expect(skipTarget(485, 15, 492)).toBe(492);
 	});
 
+	it("holds a seek's target until the clock reaches it", () => {
+		const seek = { at: 0, to: 300 };
+		// The stale tick before the seek lands doesn't move the playhead back.
+		expect(settledPosition(120, seek, 400)).toBe(300);
+		// Within a second of the target: landed, the clock leads again.
+		expect(settledPosition(299.4, seek, 400)).toBe(299.4);
+		// It never lands: after a second the clock wins anyway.
+		expect(settledPosition(120, seek, SEEK_SETTLE_MS)).toBe(120);
+		expect(settledPosition(120, null, 400)).toBe(120);
+	});
+
 	it("snaps a waveform release to the nearest bar", () => {
 		expect(snapToBar(0.62, 60)).toBeCloseTo(37 / 60);
 		expect(snapToBar(0.001, 60)).toBe(0);
@@ -109,6 +122,11 @@ describe("the sleep timer", () => {
 		expect(sleepPill({ choice: 30, left: 1680 })).toBe("28 min");
 		expect(sleepPill({ choice: 30, left: 1679 })).toBe("28 min");
 		expect(sleepPill({ choice: 30, left: 61 })).toBe("2 min");
+		// A minute exactly is still minutes, never "0:60".
+		expect(sleepPill({ choice: 30, left: 60 })).toBe("1 min");
+		expect(sleepPill({ choice: 30, left: 59.4 })).toBe("1 min");
+		expect(sleepPill({ choice: 30, left: 59 })).toBe("0:59");
+		expect(sleepPill({ choice: 30, left: 0.2 })).toBe("0:01");
 		expect(sleepPill({ choice: 30, left: 45 })).toBe("0:45");
 		expect(sleepPill({ choice: 30, left: 5 })).toBe("0:05");
 		expect(sleepPill({ choice: "end", left: 0 })).toBe("End of track");
@@ -121,6 +139,12 @@ describe("the sleep timer", () => {
 			"Sleep timer, 28 minutes left"
 		);
 		expect(sleepVoice({ choice: 30, left: 45 })).toBe(
+			"Sleep timer, 45 seconds left"
+		);
+		expect(sleepVoice({ choice: 30, left: 60 })).toBe(
+			"Sleep timer, 1 minute left"
+		);
+		expect(sleepVoice({ choice: 30, left: 44.3 })).toBe(
 			"Sleep timer, 45 seconds left"
 		);
 		expect(sleepVoice({ choice: "end", left: 0 })).toBe(

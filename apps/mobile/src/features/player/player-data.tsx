@@ -42,6 +42,9 @@ export type Player = {
 		retry: () => void;
 		close: () => void;
 		openCrisisHelp: () => void;
+		/** Where the playhead belongs for the clock's `position`: a seek's target until the
+		 * (late-reporting) seek lands, so a status tick doesn't flick it back. */
+		settled: (position: number) => number;
 	};
 };
 
