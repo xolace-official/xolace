@@ -9,8 +9,9 @@ import { router } from "expo-router";
 import { Share } from "react-native";
 import type { MomentScreenData } from "@/features/you/moments/moment/moment-data";
 import { useMirrorAudio } from "@/features/you/moments/moment/use-mirror-audio";
-import { momentOf } from "@/features/you/moments/moments-model";
+import { momentOf, reflectSeed } from "@/features/you/moments/moments-model";
 import { useCompanionName } from "@/lib/talk/use-companion-name";
+import { useAppStore } from "@/store/store";
 
 export function useMoment(id: string | undefined): MomentScreenData {
 	const sessionId = id ? (id as Id<"sessions">) : null;
@@ -26,6 +27,7 @@ export function useMoment(id: string | undefined): MomentScreenData {
 	const current = useCompanionName();
 	const audio = useMirrorAudio(sessionId);
 	const moment = details ? momentOf(details, new Date()) : null;
+	const setReplySeed = useAppStore((s) => s.setReplySeed);
 
 	const state = (() => {
 		// No id: gone. A deleted or someone else's session throws instead (`MomentGuard`).
@@ -45,8 +47,14 @@ export function useMoment(id: string | undefined): MomentScreenData {
 
 	return {
 		actions: {
-			// Seeding Reflect's box with your words waits for its port (S2).
-			again: () => router.dismissTo("/reflect"),
+			// Your first sentence becomes Reflect's question ("You wrote: …"), as a quote's reply does.
+			again: () => {
+				const seed = reflectSeed(moment?.said ?? null);
+				if (seed) {
+					setReplySeed(seed);
+				}
+				router.dismissTo("/reflect");
+			},
 			share: () => {
 				if (moment?.mirror) {
 					Share.share({ message: moment.mirror }).catch(() => undefined);

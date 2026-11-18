@@ -203,6 +203,19 @@ export function isMissingMoment(error: unknown) {
 	);
 }
 
+/**
+ * What "Reflect on this again" seeds Reflect's question with: the first sentence of what you
+ * wrote, so it fits as a prompt (Reflect shows it as `You wrote: “…”`). A talk, or a moment
+ * with no words kept, opens Reflect unseeded.
+ */
+export function reflectSeed(said: string | null): string | null {
+	const first = said
+		?.trim()
+		.split(/(?<=[.!?])\s/)[0]
+		?.trim();
+	return first ? first : null;
+}
+
 export function momentOf(s: MomentSession, now: Date): MomentView {
 	const talk = s.entryType === "talk";
 	const said = s.rawInput?.trim();

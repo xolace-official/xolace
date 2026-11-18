@@ -9,6 +9,7 @@ import {
 	type MomentRow,
 	momentOf,
 	pathOf,
+	reflectSeed,
 	timeOf,
 	toneOf,
 	whenOf,
@@ -161,6 +162,28 @@ describe("momentOf", () => {
 
 	it("drops a repeated feeling word", () => {
 		expect(wordsOf("stress", "stress")).toEqual(["stress"]);
+	});
+});
+
+describe("reflectSeed", () => {
+	it("keeps the first sentence of what you wrote", () => {
+		expect(
+			reflectSeed("I feel so stuck at work. Nobody notices. I'm tired.")
+		).toBe("I feel so stuck at work.");
+		expect(reflectSeed("Why does this keep happening? Again.")).toBe(
+			"Why does this keep happening?"
+		);
+	});
+
+	it("keeps it all with no sentence break", () => {
+		expect(reflectSeed("  replaying the meeting  ")).toBe(
+			"replaying the meeting"
+		);
+	});
+
+	it("has nothing to seed from a talk or an empty moment", () => {
+		expect(reflectSeed(null)).toBeNull();
+		expect(reflectSeed("   ")).toBeNull();
 	});
 });
 
