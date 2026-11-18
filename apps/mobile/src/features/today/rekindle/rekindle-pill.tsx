@@ -35,26 +35,30 @@ export function RekindlePill({ height }: { height: number }) {
 					onPress={() => setOpen(true)}
 					style={{ marginTop: TOP }}
 				>
-					<View className="h-9 flex-row items-center gap-1.5 rounded-full bg-ember-wash px-3.5">
-						<Icon
-							color={emberInk}
-							name={{ android: "local_fire_department", ios: "flame.fill" }}
-							size={FLAME}
-						/>
-						<AppText
-							className="shrink text-ember-ink"
-							numberOfLines={1}
-							variant="footnote"
-						>
-							{COPY.rekindle.quiet(offer.streak)}
-						</AppText>
-						<AppText
-							className="text-ember-ink"
-							variant="footnote"
-							weight="semibold"
-						>
-							{COPY.rekindle.chip}
-						</AppText>
+					{/* The wash is translucent: an opaque surface under it keeps the sky's sun from
+					    shining through the words. */}
+					<View className="overflow-hidden rounded-full bg-surface">
+						<View className="h-9 flex-row items-center gap-1.5 bg-ember-wash px-3.5">
+							<Icon
+								color={emberInk}
+								name={{ android: "local_fire_department", ios: "flame.fill" }}
+								size={FLAME}
+							/>
+							<AppText
+								className="shrink text-ember-ink"
+								numberOfLines={1}
+								variant="footnote"
+							>
+								{COPY.rekindle.quiet(offer.streak)}
+							</AppText>
+							<AppText
+								className="text-ember-ink"
+								variant="footnote"
+								weight="semibold"
+							>
+								{COPY.rekindle.chip}
+							</AppText>
+						</View>
 					</View>
 				</PressScale>
 			) : null}
