@@ -23,6 +23,8 @@ export type PostReaction = {
  * `deleted`), or a broadcast of yours that didn't reach Stream. */
 export type PostKind = "post" | "deleted" | "failed";
 
+export type PostLink = { url: string; label: string };
+
 export type PostView = {
 	kind: PostKind;
 	/** The broadcaster changed its words after posting (Stream's `message_text_updated_at`). */
@@ -30,8 +32,9 @@ export type PostView = {
 	title: string | null;
 	/** Markdown, as posted; the card renders it through Stream. */
 	body: string;
-	/** The links in it, each a VoiceOver action on the card (the card is one stop). */
-	links: string[];
+	/** The links in it, each a VoiceOver action on the card (the card is one stop), named by
+	 * its place here (`link-0`) and labelled uniquely. */
+	links: PostLink[];
 	when: string;
 	reactions: PostReaction[];
 	a11y: string;
@@ -48,6 +51,17 @@ export type PostMessage = {
 	reaction_groups?: Record<string, { count: number }> | null;
 	own_reactions?: readonly { type: string }[] | null;
 };
+
+/** Each link's VoiceOver action label, numbered where two would read the same. */
+function linkActions(text: string): PostLink[] {
+	const times = new Map<string, number>();
+	return postLinks(text).map(({ url, words }) => {
+		const base = CHANNEL.openLink(words, 1);
+		const nth = (times.get(base) ?? 0) + 1;
+		times.set(base, nth);
+		return { label: CHANNEL.openLink(words, nth), url };
+	});
+}
 
 /** The reactions a card shows: the seven in picker order, only those someone used. */
 function postReactions(m: PostMessage): PostReaction[] {
@@ -127,7 +141,7 @@ export function postView(
 		body,
 		edited,
 		kind,
-		links: postLinks(m.text ?? ""),
+		links: linkActions(m.text ?? ""),
 		// A post that never reached Stream has no one's reactions, and can't take yours.
 		reactions: kind === "post" ? postReactions(m) : [],
 		title,

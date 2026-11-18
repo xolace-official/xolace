@@ -13,6 +13,7 @@ import { usePostBody } from "./use-post-body";
 
 const PLUS = { android: "add", ios: "plus" } as const;
 const CARD_RADIUS = 24;
+const LINK_ACTION = "link-";
 
 /**
  * One announcement as the prototype's card (`channel-screen.tsx`): title, body, the reactions
@@ -36,18 +37,26 @@ export function PostCard() {
 					<Pressable
 						accessibilityActions={[
 							{ label: CHANNEL.more, name: "longpress" },
-							...view.links.map((url) => ({
-								label: CHANNEL.openLink(url),
-								name: url,
+							// By place, not address: an address could clash with a standard
+							// action's name (`activate`, `magicTap`).
+							...view.links.map((link, i) => ({
+								label: link.label,
+								name: `${LINK_ACTION}${i}`,
 							})),
 						]}
 						accessibilityLabel={view.a11y}
 						className="gap-2"
-						onAccessibilityAction={({ nativeEvent }) =>
-							nativeEvent.actionName === "longpress"
-								? hold()
-								: openLink(nativeEvent.actionName)
-						}
+						onAccessibilityAction={({ nativeEvent: { actionName } }) => {
+							if (actionName === "longpress") {
+								hold();
+								return;
+							}
+							const link =
+								view.links[Number(actionName.slice(LINK_ACTION.length))];
+							if (link) {
+								openLink(link.url);
+							}
+						}}
 						onLongPress={hold}
 					>
 						{view.title ? (

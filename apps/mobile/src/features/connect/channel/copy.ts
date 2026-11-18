@@ -13,9 +13,11 @@ export const CHANNEL = {
 	more: "Reactions and more",
 	/** A broadcast of yours that didn't reach Stream. */
 	notSent: "This post didn't send.",
-	/** A link in a post, as a VoiceOver action: "Open xolace.app/lantern". */
-	openLink: (url: string) =>
-		`Open ${url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")}`,
+	/** A link in a post, as a VoiceOver action: its words ("Open how it works") or address
+	 * ("Open xolace.app/lantern"), and a number after when two would read the same, since
+	 * iOS tells actions apart by label ("Open xolace.app, 2"). */
+	openLink: (words: string, nth: number) =>
+		`Open ${words.replace(/^(https?:\/\/|mailto:)(www\.)?/, "").replace(/\/$/, "")}${nth > 1 ? `, ${nth}` : ""}`,
 	/** The sender's composer. */
 	placeholder: "Post to the whole camp",
 	/** "Hug, 24". Yours is the chip's selected state. */

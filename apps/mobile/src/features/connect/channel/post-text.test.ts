@@ -85,7 +85,7 @@ describe("plainText", () => {
 describe("postLinks", () => {
 	it("lists each link once, without the sentence's full stop", () => {
 		expect(postLinks("See https://a.co/x. And https://a.co/x again")).toEqual([
-			"https://a.co/x",
+			{ url: "https://a.co/x", words: "https://a.co/x" },
 		]);
 		expect(postLinks("No links here.")).toEqual([]);
 	});
@@ -96,8 +96,11 @@ describe("postLinks", () => {
 				"[Foo](https://en.wikipedia.org/wiki/Foo_(bar)), https://en.wikipedia.org/wiki/Baz_(qux). ![pic](https://x.co/p.png)"
 			)
 		).toEqual([
-			"https://en.wikipedia.org/wiki/Foo_(bar)",
-			"https://en.wikipedia.org/wiki/Baz_(qux)",
+			{ url: "https://en.wikipedia.org/wiki/Foo_(bar)", words: "Foo" },
+			{
+				url: "https://en.wikipedia.org/wiki/Baz_(qux)",
+				words: "https://en.wikipedia.org/wiki/Baz_(qux)",
+			},
 		]);
 	});
 });

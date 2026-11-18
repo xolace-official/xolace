@@ -43,16 +43,29 @@ export function plainText(markdown: string): string {
 	);
 }
 
-/** Every link in a post, in order, once each: markdown links' targets, then bare URLs. An
- * image isn't one: Stream doesn't draw it. */
-export function postLinks(markdown: string): string[] {
+/** A link in a post: where it goes, and the words it shows (a markdown link's, or the address). */
+export type FoundLink = { url: string; words: string };
+
+/** Every link in a post, in order, once each: markdown links, then bare URLs. An image isn't
+ * one: Stream doesn't draw it. */
+export function postLinks(markdown: string): FoundLink[] {
 	const named = [...markdown.matchAll(MARKDOWN_LINK)]
 		.filter((m) => m[1] !== "!")
-		.map((m) => m[3] ?? "");
+		.map((m) => ({ url: m[3] ?? "", words: plainText(m[2] ?? "") }));
 	const bare = [...markdown.replace(MARKDOWN_LINK, "").matchAll(BARE_URL)].map(
-		(m) => m[0].replace(TRAILING_PUNCTUATION, "")
+		(m) => {
+			const url = m[0].replace(TRAILING_PUNCTUATION, "");
+			return { url, words: url };
+		}
 	);
-	return [...new Set([...named, ...bare])].filter(Boolean);
+	const seen = new Set<string>();
+	return [...named, ...bare].filter(({ url }) => {
+		if (!url || seen.has(url)) {
+			return false;
+		}
+		seen.add(url);
+		return true;
+	});
 }
 
 /** Posts are plain messages. A short first paragraph with more under it is the title (the

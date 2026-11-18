@@ -70,8 +70,8 @@ describe("links and markdown", () => {
 		expect(v.title).toBe("Quiet hours");
 		expect(v.body).toContain("[how it works](https://xolace.app/quiet)");
 		expect(v.links).toEqual([
-			"https://xolace.app/quiet",
-			"https://xolace.app/lantern",
+			{ label: "Open how it works", url: "https://xolace.app/quiet" },
+			{ label: "Open xolace.app/lantern", url: "https://xolace.app/lantern" },
 		]);
 	});
 
@@ -83,7 +83,23 @@ describe("links and markdown", () => {
 		);
 		expect(v.title).toBeNull();
 		expect(v.body).toContain("https://xolace.app/lantern");
-		expect(v.links).toEqual(["https://xolace.app/lantern"]);
+		expect(v.links.map((l) => l.url)).toEqual(["https://xolace.app/lantern"]);
+	});
+
+	it("labels each link once: the same words twice get a number", () => {
+		const v = postView(
+			{
+				text: "http://xolace.app and https://xolace.app, [here](https://a.co) and [here](https://b.co)",
+			},
+			NOW,
+			US
+		);
+		expect(v.links.map((l) => l.label)).toEqual([
+			"Open here",
+			"Open here, 2",
+			"Open xolace.app",
+			"Open xolace.app, 2",
+		]);
 	});
 
 	it("reads the words, not the marks", () => {
