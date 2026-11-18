@@ -82,6 +82,7 @@ export function playTextureSelect(): void {
 	run(() => Presets.flick());
 }
 
+/** @public In the vocabulary; nothing calls it since the old composer went. */
 export function playTypingBegin(): void {
 	run(() => Presets.thud());
 }
@@ -110,6 +111,7 @@ export function playOnboardingEntrance(): void {
 	run(() => Presets.cascade());
 }
 
+/** @public In the vocabulary; nothing calls it since the old composer went. */
 export function playHomeEntrance(): void {
 	run(() => Presets.thud());
 }

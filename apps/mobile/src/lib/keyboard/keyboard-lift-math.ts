@@ -2,7 +2,7 @@
  * The keyboard rule for every screen with a text field (Reflect v2 handoff §4), pure:
  *
  * - Keyboard up: whatever sits on the keyboard has its bottom edge exactly 12 pt above
- *   the keyboard's top edge (production's `kbH + 12`, `reflect/compose/morph-card-styles.ts`).
+ *   the keyboard's top edge (production's old Reflect composer: `kbH + 12`).
  * - Keyboard down: it sits on the safe area (at least 16 pt without a home indicator).
  * - Never both, and no jump: `bottom = max(rest, kbH + 12)` is continuous, where a
  *   ternary jumps ~38 pt on the keyboard's first frame.

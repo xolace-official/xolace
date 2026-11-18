@@ -49,7 +49,7 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
   "printed object" surfaces (quotes poster, vent, first run, Lantern reader pages, Talk's
   voice orbs, look glows, aurora and leave scrim, Today's sky and light, Today's
   Reflect-card doors and light, Today's kindling and campfire firelight, Connect's avatar
-  art and Xolace flame), still as tokens in `global.css`. Today's sky is the hour's, not
+  art and Xolace flame, Reflect's sky and light), still as tokens in `global.css`. Today's sky is the hour's, not
   the theme's, and its gradient stops stay strings in `features/today/sky/` because
   worklets interpolate them. Connect's art is content a person or the brand wears, the
   same in every theme. First run's colours are `first-run-*` tokens too; only the
@@ -204,7 +204,7 @@ the tabs are the bottom of the stack. Home is `dismissTo("/today")` (`LANDING`,
 `src/lib/landing.ts`); Reflect is `/reflect`, pushed over the tabs. What greets someone
 coming back (follow-up check-in, return welcome, the month's awareness sheet, streak held,
 the in-app banner) is composed on Today's route (`features/follow-up/coming-back/`) until
-S4 replaces it; the starter bubble stays with Reflect (`reflect-home.tsx`). There is no
+S4 replaces it; the starter bubble stays with Reflect (its route, `app/(protected)/reflect.tsx`). There is no
 flag: a screen PR replaces the old screen outright. Where a screen PR adds to the shell:
 
 - **A tab's content:** its route shim, `src/app/(protected)/(tabs)/<tab>/index.tsx`, hosts
@@ -222,7 +222,7 @@ flag: a screen PR replaces the old screen outright. Where a screen PR adds to th
   absolutely. The layout maps the list; don't edit its lines.
 - **A path that moved** (`/discovery`, `/browse/**`, `/browse-player`, `/profile`,
   `/profile/insights`, `/kindling-announcement`, `/timeline/**`; next, `/streak-held`;
-  "/" itself, Reflect until S2, is the landing hand-off above, not a `MOVED` entry): `MOVED` in
+  "/" itself, Reflect before Today landed, is the landing hand-off above, not a `MOVED` entry): `MOVED` in
   `src/features/navigation/moved-paths.ts` says where each lives now, a tab or a root
   screen, and whether its subpaths moved too (`subtree`) or one subpath moved somewhere of
   its own (`paths`: `/profile/insights` → `/you/steadiness`). Its

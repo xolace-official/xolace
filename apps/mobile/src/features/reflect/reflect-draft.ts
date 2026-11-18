@@ -1,7 +1,7 @@
 import { useAuth } from "@clerk/expo";
 import { useEffect } from "react";
 import { AppState } from "react-native";
-import type { ReflectionStateName } from "@/features/reflect/types";
+import type { ReflectionStateName } from "@/features/reflect/session/types";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 
 /**

@@ -519,6 +519,63 @@
 }
 
 /*
+ * Reflect's light (design/boards/ReflectAlive.dc.html), drawn in Skia and on gradients:
+ * the sky's last light at the top, the bottom glow and the heavy path's tide, plus each
+ * stage's own light below. Light, never a surface, so the same in every theme; each has a
+ * late twin for the night window.
+ */
+@theme static {
+	/* chrome: the sky (reflect-sky.tsx), the bottom glow and the tide (ambient-light.tsx) */
+	--color-reflect-sky-1: #e3ccf0;
+	--color-reflect-sky-2: #f6d3e2;
+	--color-reflect-sky-3: #fde4da;
+	--color-reflect-sky-4: rgba(247, 245, 251, 0);
+	--color-reflect-sky-late-1: #151029;
+	--color-reflect-sky-late-2: #1b1530;
+	--color-reflect-sky-late-3: rgba(14, 12, 21, 0);
+	--color-reflect-glow-1: rgba(255, 179, 138, 0.95);
+	--color-reflect-glow-2: rgba(255, 141, 180, 0.55);
+	--color-reflect-glow-3: rgba(180, 155, 255, 0);
+	--color-reflect-glow-late-1: rgba(245, 176, 79, 0.9);
+	--color-reflect-glow-late-2: rgba(236, 122, 102, 0.45);
+	--color-reflect-glow-late-3: rgba(236, 122, 102, 0);
+	--color-reflect-tide-1: rgba(255, 190, 140, 0.42);
+	--color-reflect-tide-2: rgba(255, 160, 120, 0.18);
+	--color-reflect-tide-3: rgba(255, 160, 120, 0.06);
+	--color-reflect-tide-late-1: rgba(245, 176, 79, 0.22);
+	--color-reflect-tide-late-2: rgba(236, 122, 102, 0.1);
+	--color-reflect-tide-late-3: rgba(236, 122, 102, 0.04);
+	/* write: a finished word's warmth (warm-text.tsx) */
+	--color-reflect-warm: #d9822b;
+	--color-reflect-warm-glow: rgba(242, 163, 58, 0.55);
+	/* write: the hold mic's glow (mic-glow.tsx) */
+	--color-reflect-mic-glow: rgba(255, 179, 138, 0.5);
+	--color-reflect-mic-glow-end: rgba(255, 141, 180, 0);
+	/* wait: the ensō's ink (enso.tsx; the board's `eink`, printed here because the shader takes
+	   RGB and a theme may set it in oklch) and the alpha ramp that fades its paper to the edge */
+	--color-reflect-ink: #b8621e;
+	--color-reflect-ink-late: #f5b04f;
+	--color-reflect-paper-fade-1: rgba(0, 0, 0, 1);
+	--color-reflect-paper-fade-2: rgba(0, 0, 0, 0.6);
+	--color-reflect-paper-fade-3: rgba(0, 0, 0, 0);
+	/* mirror */
+	--color-reflect-mirror-halo: rgba(255, 200, 150, 0.9);
+	--color-reflect-mirror-panel-shadow: rgba(60, 30, 120, 0.3);
+	/* care */
+	--color-reflect-care-shadow: rgba(120, 50, 30, 0.4);
+	--color-reflect-breath-ring: rgba(242, 163, 58, 0.32);
+	--color-reflect-breath-1: rgba(255, 179, 138, 0.5);
+	--color-reflect-breath-2: rgba(255, 141, 180, 0.16);
+	--color-reflect-breath-3: rgba(255, 141, 180, 0);
+	/* next */
+	--color-reflect-tile-shadow: rgba(180, 90, 30, 0.45);
+	--color-reflect-trace-glow: rgba(242, 163, 58, 0.7);
+	--color-reflect-trace-core: #ffffff;
+	/* heard: the glow round "Heard." as it writes in (heard-title.tsx) */
+	--color-reflect-heard-halo: rgba(255, 200, 150, 0.9);
+}
+
+/*
  * After a session's light (design/boards/AfterAlive.dc.html): the glow behind
  * the face, its shadow, the slider's rail, the band of stars and the point of
  * light. Light, never a surface, so the same in every theme; each has a late

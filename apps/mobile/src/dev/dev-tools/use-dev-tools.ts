@@ -45,12 +45,9 @@ export function useDevTools() {
 	};
 
 	return {
-		/** Arms starter suggestions as a new user (a fresh device: the tour replays) or on the real gate. */
+		/** Arms starter suggestions as a new user or on the real gate. */
 		armStarters: (asNewUser: boolean) => {
-			useAppStore.setState({
-				devStarterEligible: asNewUser,
-				...(asNewUser && { reflectTourVersion: 0 }),
-			});
+			useAppStore.setState({ devStarterEligible: asNewUser });
 			if (userId) {
 				useAppStore
 					.getState()

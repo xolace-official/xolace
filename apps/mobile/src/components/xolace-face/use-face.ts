@@ -172,6 +172,17 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		[lookX, lookY]
 	);
 
+	/** Sets the glance at once, with no spring: for a caller that drives it every frame (the
+	 * wait's eyes following the brush). `look`'s spring would restart each frame and lag. */
+	const lookNow = useCallback(
+		(x: number, y: number) => {
+			"worklet";
+			lookX.set(x);
+			lookY.set(y);
+		},
+		[lookX, lookY]
+	);
+
 	/** One gentle nod. Reduced motion drops it; the pose change still explains the moment. */
 	const nod = useCallback(() => {
 		"worklet";
@@ -196,6 +207,7 @@ export function useFace(initial: Pose = NEUTRAL, running = true) {
 		hopAmount,
 		listen,
 		look,
+		lookNow,
 		nod,
 		nodAmount,
 		pose,
