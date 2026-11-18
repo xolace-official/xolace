@@ -1,7 +1,7 @@
 import { useState } from "react";
-import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
-import type { ReturnWelcomeTier } from "@/features/reflect/return-welcome-copy";
-import type { UserVariant } from "@/features/reflect/types";
+import type { QuietReturnTier } from "@/features/follow-up/coming-back/quiet-return-copy";
+import type { ReturnWelcomeTier } from "@/features/follow-up/coming-back/return-welcome-copy";
+import type { UserVariant } from "@/helpers/utils/user-variant";
 import { useAppStore } from "@/store/store";
 
 type Args = {

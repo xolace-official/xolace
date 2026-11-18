@@ -354,7 +354,7 @@ export const ReflectScreen = () => {
 							icon={
 								process.env.EXPO_OS === "ios" ? "person.circle" : AccountCircle
 							}
-							onPress={() => router.replace("/you")}
+							onPress={() => router.dismissTo("/you")}
 						/>
 					</Stack.Toolbar>
 					<Stack.Toolbar placement="right">

@@ -32,8 +32,8 @@ function withAvatar(
 
 /**
  * Today · Explore · Connect · You (`TABS`) on NativeTabs: Liquid Glass on iOS 26,
- * minimizing on scroll down. A sibling stack entry to Reflect (index), reached
- * by router.replace so "/" stays the landing.
+ * minimizing on scroll down. The landing ("/" hands over to Today); Reflect and the
+ * other root screens are pushed over it.
  */
 export default function AppTabs() {
 	const accent = useThemeColor("accent");

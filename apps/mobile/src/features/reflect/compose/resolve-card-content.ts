@@ -1,8 +1,8 @@
-import { NIGHT_HEADLINE } from "@/features/night-mode/night-copy";
 import {
 	QUIET_RETURN_PROMPTS,
 	type QuietReturnTier,
-} from "@/features/reflect/quiet-return-copy";
+} from "@/features/follow-up/coming-back/quiet-return-copy";
+import { NIGHT_HEADLINE } from "@/features/night-mode/night-copy";
 
 export const DEFAULT_PROMPT = "What’s sitting with you right now?";
 

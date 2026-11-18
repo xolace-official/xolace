@@ -37,13 +37,15 @@ export function readReflectDraft(userId: string | null | undefined): string {
 }
 
 // One composer at a time, so one pending write; module-level so a clear from
-// Settings can cancel it.
+// Settings can cancel it. `pendingSave` runs it now (on background, on unmount).
 let pendingWrite: ReturnType<typeof setTimeout> | undefined;
+let pendingSave: (() => void) | undefined;
 const wipeListeners = new Set<() => void>();
 
 export function clearReflectDraft(): Promise<void> {
 	clearTimeout(pendingWrite);
 	pendingWrite = undefined;
+	pendingSave = undefined;
 	return zustandJSONStorage.removeItem(KEY).catch(() => {});
 }
 
@@ -65,7 +67,8 @@ export function onReflectDraftWiped(listener: () => void) {
 }
 
 /**
- * Saves `entryText` while composing: debounced, flushed on background, cancelled on leaving.
+ * Saves `entryText` while composing: debounced, flushed on background and when the screen
+ * goes (a swipe back closes Reflect), cancelled on leaving the composer.
  */
 export function usePersistReflectDraft(
 	userId: string | null | undefined,
@@ -73,6 +76,9 @@ export function usePersistReflectDraft(
 	screen: ReflectionStateName
 ) {
 	const composing = COMPOSE_SCREENS.includes(screen);
+	// Declared first, so on unmount it runs before the write's own cleanup cancels it. A
+	// clear, a send or leaving the composer has already dropped `pendingSave`.
+	useEffect(() => () => pendingSave?.(), []);
 	useEffect(() => {
 		if (!(composing && userId)) {
 			return;
@@ -85,6 +91,7 @@ export function usePersistReflectDraft(
 		const save = () => {
 			clearTimeout(timer);
 			pendingWrite = undefined;
+			pendingSave = undefined;
 			const draft: StoredDraft = { savedAt: Date.now(), text, userId };
 			void zustandJSONStorage
 				.setItem(KEY, JSON.stringify(draft))
@@ -92,6 +99,7 @@ export function usePersistReflectDraft(
 		};
 		const timer = setTimeout(save, WRITE_DEBOUNCE_MS);
 		pendingWrite = timer;
+		pendingSave = save;
 		// Locking the phone may kill the app before the debounce runs. Only while
 		// this write is still pending: a clear has decided the text must not land.
 		const sub = AppState.addEventListener("change", (next) => {
@@ -101,6 +109,10 @@ export function usePersistReflectDraft(
 		});
 		return () => {
 			clearTimeout(timer);
+			if (pendingWrite === timer) {
+				pendingWrite = undefined;
+				pendingSave = undefined;
+			}
 			sub.remove();
 		};
 	}, [userId, text, composing]);

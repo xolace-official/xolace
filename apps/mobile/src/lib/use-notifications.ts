@@ -6,6 +6,7 @@ import * as Notifications from "expo-notifications";
 import { usePathname, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
+import { goHome } from "@/lib/landing";
 import { suppressedInForeground } from "@/lib/notification-suppression";
 import {
 	notificationTapPlan,
@@ -140,8 +141,8 @@ export function useNotifications() {
 				const navigation = plan.navigation;
 				if (navigation?.action === "navigate") {
 					router.navigate(navigation.href);
-				} else if (navigation?.action === "dismissTo") {
-					router.dismissTo(navigation.href);
+				} else if (navigation?.action === "home") {
+					goHome();
 				} else if (navigation) {
 					router.push(navigation.href);
 				}

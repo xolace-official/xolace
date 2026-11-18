@@ -6,6 +6,7 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef, useState } from "react";
 import { useSessionMode } from "@/context/session-mode-context";
 import { usePaywall } from "@/features/purchases/use-paywall";
+import { goHome } from "@/lib/landing";
 import { useAppStore } from "@/store/store";
 import { useFollowUpAsk } from "./follow-up/follow-up-ask";
 import { followUpBucket } from "./mood-scale";
@@ -69,7 +70,7 @@ export function useSessionEndData({
 	useEffect(() => {
 		if (missing && !left.current) {
 			left.current = true;
-			router.dismissTo("/");
+			goHome();
 		}
 	}, [missing, router]);
 
@@ -161,9 +162,7 @@ export function useSessionEndData({
 			complete({ action: "open_kindling", kindling_ready: true });
 			router.push("/kindling");
 		} else if (key === "kindlingSettingUp") {
-			leave({ action: "open_kindling", kindling_ready: false }, () =>
-				router.dismissTo("/today")
-			);
+			leave({ action: "open_kindling", kindling_ready: false }, () => goHome());
 		} else if (key === "kfree") {
 			posthog.capture("plus_upsell_tapped", { surface: "kindling" });
 			complete({ action: "open_paywall" });
@@ -180,15 +179,14 @@ export function useSessionEndData({
 	return {
 		actions: {
 			another: () =>
-				leave({ action: "have_more" }, () => router.dismissTo("/")),
+				leave({ action: "have_more" }, () => router.dismissTo("/reflect")),
 			askFollowUp: (step, onClosed) => {
 				useFollowUpAsk
 					.getState()
 					.open({ bucket: followUpBucket(step), onClosed, sessionId });
 				router.push("/session-follow-up");
 			},
-			done: () =>
-				leave({ action: "dismiss" }, () => router.dismissTo("/today")),
+			done: () => leave({ action: "dismiss" }, () => goHome()),
 			nextShown,
 			openNext,
 			saveMood: (mood) => {

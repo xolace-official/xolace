@@ -4,6 +4,7 @@ import ArrowBack from "@expo/material-symbols/arrow_back.xml";
 import { router, Stack } from "expo-router";
 import { playSoftPress } from "@/lib/haptics";
 import { useHeaderOptions } from "@/lib/header-options";
+import { goHome } from "@/lib/landing";
 
 /** A link to one state opens over the index, so Back lists the others. */
 export const unstable_settings = { initialRouteName: "index" };
@@ -15,7 +16,7 @@ const close = () => {
 	if (router.canGoBack()) {
 		router.back();
 	} else {
-		router.dismissTo("/");
+		goHome();
 	}
 };
 

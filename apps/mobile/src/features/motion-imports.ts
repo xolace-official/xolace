@@ -14,7 +14,6 @@ const EASE = /^react-native-ease(\/|$)/;
  * imports Ease fails the test until it is dropped from here.
  */
 const EASE_LEGACY_FILES: ReadonlySet<string> = new Set([
-	"app/(protected)/index.tsx",
 	"components/shared/resource-item.tsx",
 	"components/ui/heatmap-chart/root.tsx",
 ]);

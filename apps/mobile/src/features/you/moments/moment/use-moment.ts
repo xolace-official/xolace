@@ -45,8 +45,8 @@ export function useMoment(id: string | undefined): MomentScreenData {
 
 	return {
 		actions: {
-			// Reflect is the app's root. Seeding its box with your words waits for its port.
-			again: () => router.dismissTo("/"),
+			// Seeding Reflect's box with your words waits for its port (S2).
+			again: () => router.dismissTo("/reflect"),
 			share: () => {
 				if (moment?.mirror) {
 					Share.share({ message: moment.mirror }).catch(() => undefined);

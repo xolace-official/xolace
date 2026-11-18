@@ -201,10 +201,7 @@ describe("notificationTapPlan", () => {
 		]) {
 			expect(
 				notificationTapPlan({ type }, null, 1, ON_TABS).navigation
-			).toEqual({
-				action: "dismissTo",
-				href: "/",
-			});
+			).toEqual({ action: "home" });
 		}
 	});
 
@@ -308,7 +305,7 @@ describe("notificationTapPlan", () => {
 		for (const pathname of ["/", "/today", "/explore/topics", "/quotes"]) {
 			expect(
 				notificationTapPlan({ type: "milestone" }, null, 1, pathname).navigation
-			).toEqual({ action: "dismissTo", href: "/" });
+			).toEqual({ action: "home" });
 		}
 	});
 
@@ -317,6 +314,8 @@ describe("notificationTapPlan", () => {
 			"/voice-vent",
 			"/talk",
 			"/crisis-resources",
+			// Reflect is pushed over the tabs: home would pop a reflection in progress.
+			"/reflect",
 			"/chat/c1",
 			"/xolace-channel",
 		]) {

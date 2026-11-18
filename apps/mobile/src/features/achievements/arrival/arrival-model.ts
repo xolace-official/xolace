@@ -177,21 +177,25 @@ export function milestoneLabel(m: Milestone): string {
 type Where = {
 	/** expo-router's pathname (groups stripped). */
 	pathname: string;
-	/** Home has a session or reflection in progress, a sheet on screen, the streak reveal or the first-run tour. */
+	/** Home (Today, the landing) has a sheet on screen or the streak reveal, or Reflect has a
+	 * session or reflection in progress or the first-run tour. */
 	homeBusy: boolean;
 	/** A natively presented screen (a form or page sheet, a modal) is up: the overlay would play behind it. */
 	presented: boolean;
 };
 
+/** Where an arrival waits on `homeBusy`: home, and Reflect, which was home until S2. */
+const HOME_ROUTES: ReadonlySet<string> = new Set(["/today", "/reflect"]);
+
 /**
  * An arrival waits its turn on a held screen (`held-routes.ts`) and on a busy
- * home; it opens once the user is somewhere else (#693).
+ * home or Reflect; it opens once the user is somewhere else (#693).
  */
 export function mayArrive({ homeBusy, pathname, presented }: Where): boolean {
 	if (presented) {
 		return false;
 	}
-	if (pathname === "/") {
+	if (HOME_ROUTES.has(pathname)) {
 		return !homeBusy;
 	}
 	return !isHeldRoute(pathname);

@@ -4,6 +4,7 @@ import { GlassGroup } from "@/components/shared/glass-group";
 import { Icon, type IconName } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { cn } from "@/lib/cn";
+import { goHome } from "@/lib/landing";
 import { useTokenColor } from "@/lib/use-token-color";
 
 const CHEVRON: IconName = { android: "arrow_back", ios: "chevron.left" };
@@ -13,8 +14,7 @@ const GLYPH = 17;
  * Back, or home when a deep link left nothing behind.
  * @public The redesign's shared kit (F5), for the screen PRs.
  */
-export const goBack = () =>
-	router.canGoBack() ? router.back() : router.replace("/");
+export const goBack = () => (router.canGoBack() ? router.back() : goHome());
 
 /**
  * A floating glass back button for pushed screens that draw their own top.

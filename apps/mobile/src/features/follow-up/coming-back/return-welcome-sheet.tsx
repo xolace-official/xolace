@@ -8,7 +8,7 @@ import { AppText } from "@/components/shared/app-text";
 import {
 	RETURN_WELCOME,
 	type ReturnWelcomeTier,
-} from "@/features/reflect/return-welcome-copy";
+} from "@/features/follow-up/coming-back/return-welcome-copy";
 
 const MASCOT = require("@/assets/images/flux/flux-point-down-removebg-preview.png");
 

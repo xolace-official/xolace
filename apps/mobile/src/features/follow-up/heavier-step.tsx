@@ -45,7 +45,7 @@ export function HeavierStep({
 	const leaving = useRef(false);
 
 	const pick = (choice: Choice) => {
-		// A double tap would run back() twice and pop past reflect.
+		// A double tap would run back() twice and pop past the screen under the check-in.
 		if (leaving.current) {
 			return;
 		}

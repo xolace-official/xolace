@@ -7,6 +7,7 @@ import { AppText } from "@/components/shared/app-text";
 import { AnimatedRow } from "@/features/idle-menu/animated-row";
 import { GlowIcon } from "@/features/idle-menu/glow-icon";
 import { playSoftPress } from "@/lib/haptics";
+import { goHome } from "@/lib/landing";
 import { useAppStore } from "@/store/store";
 
 type MenuButtonItem = {
@@ -43,8 +44,8 @@ export const MenuButtons = ({ isOpen, onClose }: Props) => {
 			newKey: "discovery",
 			onPress: () => {
 				onClose();
-				// replace, not push: reflect stays the "/" landing with no back stack.
-				router.replace("/today");
+				// Reflect is pushed over the tabs: go back down to Today, never stack a second copy.
+				goHome();
 			},
 		},
 		{

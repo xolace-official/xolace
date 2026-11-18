@@ -61,7 +61,7 @@ export function useDevTools() {
 					? "Starter suggestions armed · new user"
 					: "Starter suggestions · real gate"
 			);
-			router.dismissTo("/");
+			router.dismissTo("/reflect");
 		},
 		clearAgeGate: () =>
 			clearAgeDeclarations()

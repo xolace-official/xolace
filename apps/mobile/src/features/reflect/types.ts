@@ -1,9 +1,4 @@
-import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
-
-export type UserVariant =
-	| { kind: "first-time" }
-	| { kind: "returning" }
-	| { kind: "active" };
+import type { QuietReturnTier } from "@/features/follow-up/coming-back/quiet-return-copy";
 
 export type ReflectionStateName =
 	| "idle"

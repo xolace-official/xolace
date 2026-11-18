@@ -7,6 +7,7 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
 import { BackHandler } from "react-native";
 import { useSessionMode } from "@/context/session-mode-context";
+import { goHome } from "@/lib/landing";
 import { useSessionEndHref } from "@/lib/path-session/session-end-href";
 import { usePathSession } from "@/lib/path-session/use-path-session";
 import { toExercise } from "./catalogue";
@@ -127,7 +128,7 @@ export function useSitData(): Sit {
 			if (router.canGoBack()) {
 				router.back();
 			} else {
-				router.replace("/");
+				goHome();
 			}
 			return;
 		}

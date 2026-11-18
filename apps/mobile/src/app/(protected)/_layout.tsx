@@ -15,6 +15,10 @@ import { useNotifications } from "@/lib/use-notifications";
 import { AppPresence } from "@/providers/app-presence";
 import { useClaimLegacyAccountFlags } from "@/store/use-account-flag";
 
+const NO_ANIMATION = { animation: "none" } as const;
+/** The landing: it replaces "/" without a slide, and nothing sits under it to swipe to. */
+const TABS_OPTIONS = { ...NO_GESTURE, ...NO_ANIMATION };
+
 const SCREEN_OPTIONS = {
 	contentStyle: { backgroundColor: "transparent" },
 	headerShown: false,
@@ -50,8 +54,9 @@ export default function ProtectedLayout() {
 					mode={reducedMotion ? ReduceMotion.Always : ReduceMotion.Never}
 				/>
 				<Stack screenOptions={SCREEN_OPTIONS}>
-					<Stack.Screen name="index" />
-					<Stack.Screen name="(tabs)" options={NO_GESTURE} />
+					{/* "/" hands over to the tabs at once (see its route). */}
+					<Stack.Screen name="index" options={NO_ANIMATION} />
+					<Stack.Screen name="(tabs)" options={TABS_OPTIONS} />
 					{/* Each feature's own entries, from its `screens.ts`. */}
 					{ROOT_SCREENS.map((screen) => (
 						<Stack.Screen

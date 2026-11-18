@@ -43,11 +43,14 @@ export function useArrivals(
 	const pathname = usePathname();
 	// Never from the background: Android can rebuild the screen tree before the user is back.
 	const foreground = useSyncExternalStore(subscribeAppState, isForeground);
-	const onHome = pathname === "/";
+	// Reflect is where a session runs; elsewhere a resumable one is just waiting.
+	const onReflect = pathname === "/reflect";
 	const unseen = useQuery(api.achievements.unlock.unseen);
 	const summary = useQuery(api.achievements.firstSight.summary);
-	// Home is where a session runs; elsewhere a resumable one is just waiting.
-	const activeSession = useQuery(api.sessions.getActive, onHome ? {} : "skip");
+	const activeSession = useQuery(
+		api.sessions.getActive,
+		onReflect ? {} : "skip"
+	);
 	// A sheet on screen, not one merely armed: a pending follow-up arms for days.
 	const homeSheetOpen = useAppStore((s) => s.homeSheetOpen);
 	// No session exists until submit, so a half-written reflection needs its own hold.
@@ -56,13 +59,13 @@ export function useArrivals(
 	const reflectTourVersion = useAppStore((s) => s.reflectTourVersion);
 	const streakRevealBusy = useAppStore((s) => s.streakRevealBusy);
 	// Still loading counts as busy.
-	const homeBusy =
-		activeSession !== null ||
-		homeComposing ||
-		homeSheetOpen ||
-		reflectTourActive ||
-		streakRevealBusy ||
-		shouldShowReflectTour(reflectTourVersion);
+	const reflectBusy =
+		onReflect &&
+		(activeSession !== null ||
+			homeComposing ||
+			reflectTourActive ||
+			shouldShowReflectTour(reflectTourVersion));
+	const homeBusy = reflectBusy || homeSheetOpen || streakRevealBusy;
 	const markUnseen = useMutation(
 		api.achievements.unlock.markSeen
 	).withOptimisticUpdate((store, { ids }) => {
