@@ -71,6 +71,15 @@ export const COPY = {
 	help: "Get help now",
 	/** Your kindling (board `.kin`, `P/src/fixtures/kindling.ts` KINDLING_TODAY). */
 	kindling: {
+		/** VoiceOver: each step's state, and the count. */
+		a11y: {
+			count: (k: number, n: number) => `${k} of ${n} tended`,
+			later: "Later",
+			next: "Next",
+			passed: "Passed by",
+			peekHint: "Shows this step below",
+			tended: "Tended",
+		},
 		all: (n: number) =>
 			`ALL ${n === 3 ? "THREE" : n === 4 ? "FOUR" : n} TENDED`,
 		allTitle: "The fire's kept. Flux saved it.",

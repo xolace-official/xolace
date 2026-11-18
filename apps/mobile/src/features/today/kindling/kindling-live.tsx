@@ -21,9 +21,9 @@ import { EASE_CSS, glideFn } from "../today-motion";
 import { pathGeometry } from "./kindling-geometry";
 import { BEAT, type KindlingView, nextRow, PATH_H } from "./kindling-model";
 import { KindlingPath } from "./kindling-path";
+import { StepTargets } from "./step-targets";
 import { useTend } from "./use-tend";
 
-const HIT = 40;
 /** The path's pulse, wisp and node breath are slow: 30 frames a second is plenty. */
 const PATH_FPS = 30;
 const COUNT = 13;
@@ -104,9 +104,11 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 				]}
 			/>
 			<Pressable
-				accessibilityHint={`${COPY.kindling.title}: ${kin.count}${COPY.kindling.of(total)}`}
 				accessibilityLabel={COPY.kindling.open}
 				accessibilityRole="button"
+				accessibilityValue={{
+					text: COPY.kindling.a11y.count(kin.count, total),
+				}}
 				className="min-h-5.5 flex-row items-center justify-between gap-3"
 				onPress={actions.openKindling}
 			>
@@ -138,21 +140,14 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 					low={low}
 					width={width}
 				/>
-				{geo.nodes.map(([x, y], i) => (
-					<Pressable
-						accessibilityLabel={kindling.twigs[i]?.title}
-						accessibilityRole="button"
-						className="absolute"
-						key={kindling.twigs[i]?.id ?? i}
-						onPress={() => kin.peekAt(i)}
-						style={{
-							height: HIT,
-							left: x - HIT / 2,
-							top: y - HIT / 2,
-							width: HIT,
-						}}
-					/>
-				))}
+				<StepTargets
+					current={kin.current}
+					nodes={geo.nodes}
+					onPeek={kin.peekAt}
+					peek={kin.peek}
+					shown={kin.shown}
+					twigs={kindling.twigs}
+				/>
 			</View>
 			<View className="flex-row items-center gap-3">
 				<View className="flex-1 gap-[3px]">
