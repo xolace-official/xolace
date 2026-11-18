@@ -1,29 +1,49 @@
 import { describe, expect, it } from "vitest";
-import { collapseForRange } from "@/features/you/home/header/header-collapse";
+import { nextCollapse } from "@/features/you/home/header/header-collapse";
 
-/** B17's xxxLarge case: docked at a 300 pt range, then the header grows by 95 pt. */
-const OLD_RANGE = 300;
-const NEW_RANGE = 395;
+/** The device's xxxLarge case: docked at a 475 pt range, then the header grows by 68 pt. */
+const OLD_RANGE = 475;
+const NEW_RANGE = 543;
+/** Insights scrolled to This week. */
+const DEEP = 1111;
 
-describe("collapseForRange", () => {
+describe("nextCollapse", () => {
 	it("docks a header that grew under a page scrolled past its new range", () => {
-		expect(collapseForRange(600, NEW_RANGE)).toBe(NEW_RANGE);
+		expect(
+			nextCollapse({ before: OLD_RANGE, offset: DEEP, range: NEW_RANGE })
+		).toBe(NEW_RANGE);
 	});
 
-	it("follows the page when it sits inside the new range", () => {
-		expect(collapseForRange(340, NEW_RANGE)).toBe(340);
+	it("follows the active tab's offset when it sits inside the new range", () => {
+		expect(
+			nextCollapse({ before: OLD_RANGE, offset: 500, range: NEW_RANGE })
+		).toBe(500);
 	});
 
 	it("stays docked when the header shrinks", () => {
-		expect(collapseForRange(600, OLD_RANGE)).toBe(OLD_RANGE);
+		expect(
+			nextCollapse({ before: NEW_RANGE, offset: DEEP, range: OLD_RANGE })
+		).toBe(OLD_RANGE);
 	});
 
-	it("is open at the top and through iOS's top bounce", () => {
-		expect(collapseForRange(0, NEW_RANGE)).toBe(0);
-		expect(collapseForRange(-40, NEW_RANGE)).toBe(0);
+	it("leaves the collapse alone on the first run and when the range didn't change", () => {
+		expect(nextCollapse({ before: null, offset: DEEP, range: 0 })).toBeNull();
+		expect(
+			nextCollapse({ before: NEW_RANGE, offset: DEEP, range: NEW_RANGE })
+		).toBeNull();
+	});
+
+	it("opens the header when no tab has an offset yet, at the top and in iOS's top bounce", () => {
+		expect(
+			nextCollapse({ before: 0, offset: undefined, range: NEW_RANGE })
+		).toBe(0);
+		expect(nextCollapse({ before: 0, offset: 0, range: NEW_RANGE })).toBe(0);
+		expect(
+			nextCollapse({ before: OLD_RANGE, offset: -40, range: NEW_RANGE })
+		).toBe(0);
 	});
 
 	it("never collapses a header with nothing to collapse", () => {
-		expect(collapseForRange(600, 0)).toBe(0);
+		expect(nextCollapse({ before: OLD_RANGE, offset: DEEP, range: 0 })).toBe(0);
 	});
 });

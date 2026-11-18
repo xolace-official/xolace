@@ -36,6 +36,11 @@ export function InsightsTab({ minHeader }: { minHeader: number }) {
 	const { scrollRef } = useTabPageContext();
 	const { collapseRangeSV, tabBarHeight } = useCollapsingTabsContext();
 	const cardY = useRef({ days: 0, top: 0, week: 0 });
+	// A ref, not a dep: `scrollTo` is never cleared, so a dep would scroll again on each change.
+	const tabBar = useRef(tabBarHeight);
+	useEffect(() => {
+		tabBar.current = tabBarHeight;
+	}, [tabBarHeight]);
 	const measure = (card: "days" | "week") => (e: LayoutChangeEvent) => {
 		cardY.current[card] = e.nativeEvent.layout.y;
 	};
@@ -46,17 +51,21 @@ export function InsightsTab({ minHeader }: { minHeader: number }) {
 		if (!scrollTo) {
 			return;
 		}
-		// Read when it fires, not now: the header and cards may still be laying out.
+		// The collapse range, the cards' y and the tab bar's height are read when it fires (the
+		// header and cards may still be laying out); the native header's height is the one now.
 		const timer = setTimeout(() => {
 			const dock = collapseRangeSV.get() + PAST_DOCK;
 			const y = Math.max(
 				dock,
-				cardY.current[scrollTo.target] - minHeader - tabBarHeight - UNDER_PILLS
+				cardY.current[scrollTo.target] -
+					minHeader -
+					tabBar.current -
+					UNDER_PILLS
 			);
 			scrollRef.current?.scrollTo({ animated: !reduced, y });
 		}, SCROLL_AFTER_MS);
 		return () => clearTimeout(timer);
-	}, [scrollTo, collapseRangeSV, minHeader, tabBarHeight, scrollRef, reduced]);
+	}, [scrollTo, collapseRangeSV, minHeader, scrollRef, reduced]);
 
 	return (
 		<Tabs.ScrollView
