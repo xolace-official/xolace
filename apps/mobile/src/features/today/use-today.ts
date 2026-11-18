@@ -158,7 +158,7 @@ export function useTodayData(): Today {
 	const monthPrompt = useMonthPrompt(now);
 	const { campfire, kindling } = useModules();
 
-	// A double tap on a door would stack two screens.
+	// A double tap on a door or the kindling would stack two screens.
 	const pushOnce = usePushOnce();
 	const openReflect = () => {
 		playSoftPress();
@@ -169,10 +169,12 @@ export function useTodayData(): Today {
 		actions: {
 			openDoor: (door) => pushOnce(() => router.push(DOOR_HREF[door])),
 			openHelp: () => router.push("/crisis-resources"),
-			openKindling: () => {
-				playSoftPress();
-				router.push("/kindling");
-			},
+			// The header and Begin both open it: one screen per tap.
+			openKindling: () =>
+				pushOnce(() => {
+					playSoftPress();
+					router.push("/kindling");
+				}),
 			openReflect,
 			openStreak: () => router.navigate("/you"),
 		},
