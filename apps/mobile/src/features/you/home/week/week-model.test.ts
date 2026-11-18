@@ -1,9 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { COPY } from "@/features/you/copy";
 import {
 	BAR_MAX,
 	BAR_MIN,
 	barHeight,
 	type DayDetail,
+	type DetailDomain,
 	dayAt,
 	detailLine,
 	heldReadout,
@@ -235,7 +237,7 @@ describe("heldReadout", () => {
 		expect(
 			heldReadout({ days, index: 1, start, todayIndex: 3, usual: USUAL })
 		).toEqual({
-			caption: "2 moments · Work & Studies · Overwhelm · ended lighter",
+			caption: "2 moments · Work · Overwhelm · ended lighter",
 			value: "Tue 10 Nov · above your usual",
 		});
 	});
@@ -259,11 +261,11 @@ const TUESDAY: DayDetail = {
 describe("detailLine", () => {
 	it("says the board's Tuesday", () => {
 		expect(detailLine(TUESDAY)).toBe(
-			"2 moments · Work & Studies · Overwhelm · ended lighter"
+			"2 moments · Work · Overwhelm · ended lighter"
 		);
 	});
 
-	it("hides when there's no detail (a backend without B17) or no moments", () => {
+	it("hides on a day with a bar but no detail (the read cap cut it) or no moments", () => {
 		expect(detailLine(undefined)).toBeNull();
 		expect(detailLine({ ...TUESDAY, moments: 0 })).toBeNull();
 	});
@@ -280,11 +282,25 @@ describe("detailLine", () => {
 			"1 moment · Self doubt"
 		);
 		expect(detailLine({ ...none, ended: "same", topDomain: "health" })).toBe(
-			"1 moment · Health & Rest · about the same"
+			"1 moment · Health · about the same"
 		);
 		expect(detailLine({ ...none, ended: "heavier" })).toBe(
 			"1 moment · ended heavier"
 		);
+	});
+
+	it("names every domain the server can send in one word", () => {
+		const keys = Object.keys(COPY.week.domains);
+		// The same keys as Steadiness's (the server's DOMAINS). The type in week-model makes a
+		// missing key a compile error; this keeps the two lists from drifting at run time.
+		expect([...keys].sort()).toEqual(
+			Object.keys(COPY.steadiness.domains).sort()
+		);
+		for (const key of keys) {
+			const name = COPY.week.domains[key as DetailDomain];
+			expect(name).toMatch(/^\S+$/);
+			expect(detailLine({ ...TUESDAY, topDomain: key })).toContain(name);
+		}
 	});
 
 	it("skips a domain it has no name for", () => {

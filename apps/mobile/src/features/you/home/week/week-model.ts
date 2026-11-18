@@ -3,13 +3,16 @@
  * a held day's readout, and a sentence that says something. Pure: the server's week and band
  * in, what to draw and say out.
  */
+import type { api } from "@xolace/backend/api";
+import type { FunctionReturnType } from "convex/server";
 import { COPY } from "@/features/you/copy";
 import { feelingOf } from "@/features/you/moments/moments-model";
 
 /**
  * What a held day says under its date (the board's "2 moments · Work · Overwhelmed · ended
  * lighter"): `getWeekIntensity({ withDetail: true })`'s per-day detail (backend B17). Only on
- * days with moments; missing from a backend without it, and then nothing draws a second line.
+ * days with moments, and not on a day the server's read cap cut through: that day keeps its bar
+ * but draws no second line.
  */
 export type DayDetail = {
 	/** How the day's last moment ended; null when it wasn't answered. */
@@ -183,20 +186,34 @@ export function pagedOffset({
 	return Math.max(-MAX_WEEKS_BACK, Math.min(0, shown + by));
 }
 
-const DOMAINS: Readonly<Record<string, string>> = COPY.steadiness.domains;
+/** The domain keys the server can send as `topDomain`. */
+export type DetailDomain = NonNullable<
+	NonNullable<
+		FunctionReturnType<
+			typeof api.profile.getWeekIntensity
+		>["days"][number]["detail"]
+	>["topDomain"]
+>;
+
+/** Every key the server can send has a one-word name: a new domain is a type error here. */
+const DOMAINS: Readonly<Record<DetailDomain, string>> = COPY.week.domains;
+
+const isDomain = (key: string): key is DetailDomain =>
+	Object.hasOwn(DOMAINS, key);
 
 /**
- * A held day's second line, from B17's detail: "2 moments · Work & Studies · Overwhelm · ended
- * lighter". Each part only when the day says it, so a day of unanswered moments is "1 moment ·
- * Work & Studies". Null with no detail (a backend without B17) or no moments. The feeling is worded
- * as Moments words it (`feelingOf`), so a day and its moments agree.
+ * A held day's second line, from B17's detail: "2 moments · Work · Overwhelm · ended lighter".
+ * Each part only when the day says it, so a day of unanswered moments is "1 moment · Work". Null
+ * with no detail or no moments. The domain is its one-word name (`COPY.week.domains`), so the
+ * line fits one row. The feeling is cased as Moments cases a word (`feelingOf`), but it's the
+ * day's most frequent primary emotion, where a moment shows its finer label when it has one.
  */
 export function detailLine(detail: DayDetail | undefined): string | null {
 	if (!detail || detail.moments < 1) {
 		return null;
 	}
 	const domain =
-		detail.topDomain && Object.hasOwn(DOMAINS, detail.topDomain)
+		detail.topDomain && isDomain(detail.topDomain)
 			? DOMAINS[detail.topDomain]
 			: null;
 	return [

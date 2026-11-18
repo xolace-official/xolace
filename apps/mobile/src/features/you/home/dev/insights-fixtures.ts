@@ -56,19 +56,39 @@ const SPARSE_DETAIL = [
 	day(1, "work", null, null),
 	day(1, null, "grief", null),
 ];
+/** The longest line Tuesday can say: a two-digit count, the longest domain, feeling and ending. */
+const LONGEST_DETAIL = [
+	WEEK_DETAIL[0],
+	day(12, "belonging", "disappointment", "same"),
+	WEEK_DETAIL[2],
+	WEEK_DETAIL[3],
+];
 
 /**
  * `board`: the board's week. `no-usual`: the same week in someone's first weeks, before B8 has
- * enough days for a usual. `empty`: Monday morning, nothing yet. `no-detail`: the board's week
- * from a backend without B17, so a held day has no second line. `sparse`: the board's week whose
- * moments went unanswered and named nothing, so the second line is short.
+ * enough days for a usual. `empty`: Monday morning, nothing yet. `capped`: the board's week
+ * where the server's read cap cut through Thursday, so Thursday keeps its bar but has no detail
+ * and no second line. `sparse`: the board's week whose moments went unanswered and named
+ * nothing, so the second line is short. `longest`: the board's week whose Tuesday says the
+ * longest line there is, to check it fits one row.
  */
 export type WeekFixture =
 	| "board"
 	| "no-usual"
 	| "empty"
-	| "no-detail"
-	| "sparse";
+	| "capped"
+	| "sparse"
+	| "longest";
+
+/** Each fixture's held-day details, Monday first; a day past the list has none. */
+const DETAILS: Record<WeekFixture, readonly DayDetail[]> = {
+	board: WEEK_DETAIL,
+	capped: WEEK_DETAIL.slice(0, TODAY),
+	empty: [],
+	longest: LONGEST_DETAIL,
+	"no-usual": WEEK_DETAIL,
+	sparse: SPARSE_DETAIL,
+};
 
 export function fixtureIntensity({
 	plus,
@@ -82,13 +102,7 @@ export function fixtureIntensity({
 }): IntensityWeek {
 	const values = earlier ? EARLIER : week === "empty" ? EMPTY : WEEK;
 	const today = week === "empty" ? 0 : TODAY;
-	const details = earlier
-		? EARLIER_DETAIL
-		: week === "no-detail"
-			? []
-			: week === "sparse"
-				? SPARSE_DETAIL
-				: WEEK_DETAIL;
+	const details = earlier ? EARLIER_DETAIL : DETAILS[week];
 	const days: IntensityDay[] = NAMES.map((dayName, i) => {
 		const detail = values[i] === null ? undefined : details[i];
 		return {

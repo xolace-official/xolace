@@ -49,7 +49,7 @@ export type YouFixture = {
 	hidden?: readonly ("calendar" | "rank" | "week")[];
 	/** This week paged back one (Xolace+). */
 	earlierWeek?: boolean;
-	/** This week's data: the board's, before a usual, empty, without B17's detail, or sparse. */
+	/** This week's data: the board's, before a usual, empty, cut by the read cap, or sparse. */
 	week?: WeekFixture;
 	/** No follow-ups at all: the empty state. */
 	noFollowUps?: boolean;

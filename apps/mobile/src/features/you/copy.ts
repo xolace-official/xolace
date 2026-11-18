@@ -299,6 +299,20 @@ export const COPY = {
 		ahead: "still ahead",
 		backBy: (day: string) => `Back inside it by ${day}.`,
 		chart: "Intensity by day",
+		/**
+		 * A held day's domain (B17), one word: Steadiness's names ("Love & Friendship") don't fit
+		 * the line beside a feeling and an ending on a 375 pt phone.
+		 */
+		domains: {
+			belonging: "Belonging",
+			family: "Family",
+			health: "Health",
+			love: "Love",
+			money: "Money",
+			purpose: "Purpose",
+			self: "Self",
+			work: "Work",
+		},
 		earlier: "Earlier weeks",
 		earlierLabel: "See earlier weeks",
 		empty: "No moments logged that week.",
