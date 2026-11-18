@@ -26,9 +26,8 @@ import {
 import { useModules } from "./use-today-modules";
 
 /**
- * Where each door goes. Sit with this is offered only once Sit can start from Today on its
- * own (`SIT_DOOR` in `hero/hero-model.ts`): production's Sit otherwise runs inside a Reflect
- * session or a kindling replay.
+ * Where each door goes. Sit with this from Today plays Three breaths on its own, outside
+ * any session (`from=today`).
  */
 const DOOR_HREF = {
 	sit: "/sit-with-this?from=today",
