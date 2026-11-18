@@ -28,21 +28,24 @@ import {
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
-const row = (c: Parameters<typeof pairRow>[0]) => pairRow(c, STREAM, NOW);
+const US = { hour12: true, locale: "en-US" };
+const row = (c: Parameters<typeof pairRow>[0]) => pairRow(c, STREAM, NOW, US);
+/** ICU writes the gap before AM/PM as a narrow no-break space; compare on plain spaces. */
+const plain = (s: string | null | undefined) => s?.replace(/\u202f/g, " ");
 
 describe("chatRows", () => {
 	it("pins the channel first, then the active chats in order", () => {
-		const rows = chatRows(CONVERSATIONS, STREAM, NOW);
+		const rows = chatRows(CONVERSATIONS, STREAM, NOW, US);
 		expect(rows.map((r) => r.id)).toEqual(["xolace", MAYA.id, KOJO.id, ESI.id]);
 	});
 
 	it("gives the channel its last announcement and unread count", () => {
-		const [channel] = chatRows(CONVERSATIONS, STREAM, NOW);
+		const [channel] = chatRows(CONVERSATIONS, STREAM, NOW, US);
 		expect(channel).toMatchObject({
 			a11y: "Xolace, verified, 1 unread message",
 			line: "Camp announcements · A new Lantern hub is open",
-			when: "7:41 pm",
 		});
+		expect(plain(channel?.when)).toBe("7:41 PM");
 	});
 });
 
@@ -161,10 +164,21 @@ describe("unreadBadge", () => {
 
 describe("whenLabel", () => {
 	it("reads time today, weekday this week, date before", () => {
-		expect(whenLabel(NOW, NOW)).toBe("9:41 pm");
-		expect(whenLabel(NOW - 21 * HOUR, NOW)).toBe("12:41 am");
-		expect(whenLabel(NOW - 5 * DAY, NOW)).toBe("Tue");
-		expect(whenLabel(NOW - 18 * DAY, NOW)).toBe("Oct 28");
-		expect(whenLabel(NOW - 400 * DAY, NOW)).toBe("Oct 11, 2025");
+		expect(plain(whenLabel(NOW, NOW, US))).toBe("9:41 PM");
+		expect(plain(whenLabel(NOW - 21 * HOUR, NOW, US))).toBe("12:41 AM");
+		expect(whenLabel(NOW - 5 * DAY, NOW, US)).toBe("Tue");
+		expect(whenLabel(NOW - 18 * DAY, NOW, US)).toBe("Oct 28");
+		expect(whenLabel(NOW - 400 * DAY, NOW, US)).toBe("Oct 11, 2025");
+	});
+
+	it("follows the device's locale and its 24-hour switch", () => {
+		expect(whenLabel(NOW, NOW, { hour12: false, locale: "en-US" })).toBe(
+			"21:41"
+		);
+		expect(whenLabel(NOW, NOW, { hour12: false, locale: "en-GB" })).toBe(
+			"21:41"
+		);
+		expect(whenLabel(NOW - 18 * DAY, NOW, { locale: "en-GB" })).toBe("28 Oct");
+		expect(whenLabel(NOW - 5 * DAY, NOW, { locale: "fr-FR" })).toBe("mar.");
 	});
 });

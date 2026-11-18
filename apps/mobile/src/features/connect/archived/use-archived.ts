@@ -2,6 +2,7 @@
  * dedupes it), the archived rows, and the same row actions. */
 import { api } from "@xolace/backend/api";
 import { useQuery } from "convex/react";
+import { deviceClock } from "../device-clock";
 import { archivedRows } from "../list/chats-model";
 import { useRowActions } from "../use-row-actions";
 import { useStreamSnapshot } from "../use-stream-snapshot";
@@ -24,7 +25,7 @@ export function useArchived(): ArchivedScreenData {
 			rows:
 				conversations === undefined
 					? undefined
-					: archivedRows(conversations, stream, Date.now()),
+					: archivedRows(conversations, stream, Date.now(), deviceClock()),
 		},
 	};
 }

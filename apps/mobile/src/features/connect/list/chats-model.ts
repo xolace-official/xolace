@@ -84,20 +84,31 @@ const startOfDay = (t: number) => {
 	return d.getTime();
 };
 
-/** "9:41 pm" today, "Tue" this week, "Oct 28" before that, with the year once it isn't this one. */
-export function whenLabel(timestamp: number, now: number): string {
+/** The device's way of writing a time: its locale, and 12- or 24-hour as set on the phone.
+ * Undefined fields fall back to the runtime's default. */
+export type Clock = { locale?: string; hour12?: boolean };
+
+/** The time today, the weekday this week, the date before that, with the year once it isn't
+ * this one. Each in the device's own format ("9:41 PM", "21:41", "Tue", "28 Oct"). */
+export function whenLabel(
+	timestamp: number,
+	now: number,
+	clock: Clock = {}
+): string {
 	const date = new Date(timestamp);
 	const days = Math.round((startOfDay(now) - startOfDay(timestamp)) / DAY_MS);
 	if (days <= 0) {
-		const h = date.getHours();
-		const m = String(date.getMinutes()).padStart(2, "0");
-		return `${h % 12 === 0 ? 12 : h % 12}:${m} ${h < 12 ? "am" : "pm"}`;
+		return date.toLocaleTimeString(clock.locale, {
+			hour: "numeric",
+			hour12: clock.hour12,
+			minute: "2-digit",
+		});
 	}
 	if (days <= WEEKDAY_SPAN) {
-		return date.toLocaleDateString("en-US", { weekday: "short" });
+		return date.toLocaleDateString(clock.locale, { weekday: "short" });
 	}
 	const sameYear = date.getFullYear() === new Date(now).getFullYear();
-	return date.toLocaleDateString("en-US", {
+	return date.toLocaleDateString(clock.locale, {
 		day: "numeric",
 		month: "short",
 		...(sameYear ? {} : { year: "numeric" }),
@@ -179,7 +190,8 @@ function statusOf(
 function channelRow(
 	c: BroadcastConversation,
 	stream: StreamSnapshot,
-	now: number
+	now: number,
+	clock: Clock
 ): ChannelRowView {
 	const unread = unreadBadge(stream[c.streamChannelId]?.unread ?? 0);
 	const last = c.lastMessageText?.trim();
@@ -189,14 +201,15 @@ function channelRow(
 		kind: "broadcast",
 		line: last ? `${COPY.channel.sub} · ${last}` : COPY.channel.sub,
 		unread,
-		when: c.lastMessageAt ? whenLabel(c.lastMessageAt, now) : null,
+		when: c.lastMessageAt ? whenLabel(c.lastMessageAt, now, clock) : null,
 	};
 }
 
 export function pairRow(
 	c: PairConversation,
 	stream: StreamSnapshot,
-	now: number
+	now: number,
+	clock: Clock = {}
 ): PairRowView {
 	const live = c.streamChannelId ? stream[c.streamChannelId] : undefined;
 	const status = statusOf(c, live?.lastText);
@@ -224,7 +237,7 @@ export function pairRow(
 		photoUrl: c.counterpartPhotoUrl,
 		present: c.counterpartPresent,
 		unread,
-		when: whenLabel(c.lastMessageAt ?? c.requestedAt, now),
+		when: whenLabel(c.lastMessageAt ?? c.requestedAt, now, clock),
 	};
 }
 
@@ -232,7 +245,8 @@ export function pairRow(
 export function chatRows(
 	conversations: readonly ConversationRow[],
 	stream: StreamSnapshot,
-	now: number
+	now: number,
+	clock: Clock = {}
 ): ChatRowView[] {
 	const channel = conversations.filter(
 		(c): c is BroadcastConversation => c.kind === "broadcast"
@@ -241,8 +255,8 @@ export function chatRows(
 		(c): c is PairConversation => c.kind === "pair" && !c.archived
 	);
 	return [
-		...channel.map((c) => channelRow(c, stream, now)),
-		...pairs.map((c) => pairRow(c, stream, now)),
+		...channel.map((c) => channelRow(c, stream, now, clock)),
+		...pairs.map((c) => pairRow(c, stream, now, clock)),
 	];
 }
 
@@ -250,11 +264,12 @@ export function chatRows(
 export function archivedRows(
 	conversations: readonly ConversationRow[],
 	stream: StreamSnapshot,
-	now: number
+	now: number,
+	clock: Clock = {}
 ): PairRowView[] {
 	return conversations
 		.filter((c): c is PairConversation => c.kind === "pair" && c.archived)
-		.map((c) => pairRow(c, stream, now));
+		.map((c) => pairRow(c, stream, now, clock));
 }
 
 export const archivedCount = (conversations: readonly ConversationRow[]) =>

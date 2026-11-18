@@ -9,6 +9,7 @@ import { ConnectProvider, type ConnectScreenData } from "../connect-data";
 import { type ChatStatus, connectState } from "../connect-model";
 import { ConnectScreen } from "../connect-screen";
 import { COPY } from "../copy";
+import { deviceClock } from "../device-clock";
 import {
 	archivedRows,
 	type ConversationRow,
@@ -75,6 +76,7 @@ export function FixtureConnect({
 		},
 		deleting,
 		state: connectState({
+			clock: deviceClock(),
 			conversations: loading ? undefined : conversations,
 			directory: directory ?? undefined,
 			filter,
@@ -105,7 +107,9 @@ export function FixtureArchived({
 			value={{
 				actions,
 				deleting,
-				state: { rows: archivedRows(conversations, STREAM, NOW) },
+				state: {
+					rows: archivedRows(conversations, STREAM, NOW, deviceClock()),
+				},
 			}}
 		>
 			<Stack.Screen options={{ ...header, title: COPY.archivedTitle }} />

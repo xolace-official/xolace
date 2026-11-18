@@ -6,6 +6,7 @@ import type { FunctionReturnType } from "convex/server";
 import type { ConnectRoute, ConnectState } from "./connect-data";
 import {
 	archivedCount,
+	type Clock,
 	type ConversationRow,
 	chatRows,
 	chatsEmpty,
@@ -65,6 +66,7 @@ export type ConnectInputs = {
 	filter: string | null;
 	presentSnapshot: ReadonlySet<string> | null;
 	now: number;
+	clock?: Clock;
 };
 
 export function connectState(i: ConnectInputs): ConnectState {
@@ -90,7 +92,7 @@ export function connectState(i: ConnectInputs): ConnectState {
 			filter,
 			filters: filterChips(directory ?? [], filter),
 		},
-		rows: chatRows(conversations, i.stream, i.now),
+		rows: chatRows(conversations, i.stream, i.now, i.clock),
 		segment: landingSegment(i.picked, conversations),
 		setupBanner: status.isXolacer && !status.xolacerProfileComplete,
 	};

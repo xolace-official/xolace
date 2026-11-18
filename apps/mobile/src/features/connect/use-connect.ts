@@ -16,6 +16,7 @@ import {
 	routedSegment,
 	routeKey,
 } from "./connect-model";
+import { deviceClock } from "./device-clock";
 import { landingSegment, type Segment } from "./list/chats-model";
 import { usePresenceSnapshot } from "./roster/use-presence-snapshot";
 import { useChatWarmup } from "./use-chat-warmup";
@@ -93,6 +94,7 @@ export function useConnect(route: ConnectRoute): ConnectScreenData {
 		actions,
 		deleting,
 		state: connectState({
+			clock: deviceClock(),
 			conversations,
 			directory,
 			filter,
