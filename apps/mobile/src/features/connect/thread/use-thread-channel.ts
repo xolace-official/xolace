@@ -12,8 +12,9 @@ import { hydrateChannelsFromCache } from "@/lib/stream-chat/offline-db";
 import type { ThreadConversation } from "./thread-model";
 
 /** True once the channel holds state: already live, hydrated from the offline db, or watched.
- * Failure resolves too, so Stream's error indicator shows instead of an endless skeleton. */
-function useLocalChannelState(channel: Channel | null) {
+ * Failure resolves too, so Stream's error indicator shows instead of an endless skeleton. The
+ * Xolace channel uses it too. */
+export function useLocalChannelState(channel: Channel | null) {
 	const [settledCid, setSettledCid] = useState<string | null>(null);
 
 	useEffect(() => {

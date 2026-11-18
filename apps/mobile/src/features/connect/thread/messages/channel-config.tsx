@@ -6,6 +6,7 @@ import type {
 } from "stream-chat-expo";
 import { messageActions as defaultMessageActions } from "stream-chat-expo";
 import { AppText } from "@/components/shared/app-text";
+import { REACTIONS } from "../../reactions";
 import { ConversationMessageSystem } from "./crisis-card";
 import { ConversationMessageAuthor } from "./message-identity";
 import { ChannelErrorIndicator } from "./offline-strip";
@@ -18,27 +19,19 @@ import { ConversationTypingIndicator } from "./typing-indicator";
 // reaction set, no thread replies, no attachments: a deliberate small surface,
 // not a capability gap.
 
-/** The seven reactions (#345), in picker order. `isMain` puts each in the long-press row; the
- * SDK's "+" for more is hidden in `useStreamTheme`. */
-export const SUPPORTED_REACTIONS: ReactionData[] = (
-	[
-		["hug", "🫂"],
-		["love", "❤️"],
-		["thanks", "🙏"],
-		["growth", "🌱"],
-		["fire", "🔥"],
-		["smile", "😊"],
-		["laugh", "😂"],
-	] as const
-).map(([type, emoji]) => ({
-	Icon: ({ size = 24 }) => (
-		<AppText style={{ fontSize: size * 0.8, lineHeight: size }}>
-			{emoji}
-		</AppText>
-	),
-	isMain: true,
-	type,
-}));
+/** The seven reactions (`../../reactions.ts`), in picker order. `isMain` puts each in the
+ * long-press row; the SDK's "+" for more is hidden in `useStreamTheme`. */
+export const SUPPORTED_REACTIONS: ReactionData[] = REACTIONS.map(
+	([type, emoji]) => ({
+		Icon: ({ size = 24 }) => (
+			<AppText style={{ fontSize: size * 0.8, lineHeight: size }}>
+				{emoji}
+			</AppText>
+		),
+		isMain: true,
+		type,
+	})
+);
 
 /** Denying `uploadFile` removes the composer's attachment "+"; capabilities merge per key, so
  * the rest stay intact. */

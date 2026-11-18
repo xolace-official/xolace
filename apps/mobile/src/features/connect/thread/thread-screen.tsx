@@ -1,12 +1,9 @@
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Stack } from "expo-router";
-import { useHeaderHeight } from "expo-router/react-navigation";
-import type { ReactNode } from "react";
-import { Platform, View } from "react-native";
+import { View } from "react-native";
 import { useOverlayContext } from "stream-chat-expo";
 import { AppText } from "@/components/shared/app-text";
-import { PressScale } from "@/components/shared/press-scale";
 import { AgeGateSheet } from "../age-gate/age-gate-sheet";
+import { BodyFrame, MessagesFailed } from "../parts/chat-frame";
 import { StatusBar } from "./bar/status-bar";
 import { THREAD } from "./copy";
 import {
@@ -17,21 +14,6 @@ import {
 import { ThreadMessages } from "./messages/thread-messages";
 import { ThreadSkeleton } from "./messages/thread-skeleton";
 import { useThreadScreen } from "./thread-data";
-
-/** Starts the body below the header: iOS 26's glass header is see-through and content starts at
- * y=0, which would also skew the keyboard offset the messages measure. */
-function BodyFrame({ children }: { children: ReactNode }) {
-	const headerHeight = useHeaderHeight();
-	const underGlass = Platform.OS === "ios" && isLiquidGlassAvailable();
-	return (
-		<View
-			className="flex-1 bg-background"
-			style={{ paddingTop: underGlass ? headerHeight : 0 }}
-		>
-			{children}
-		</View>
-	);
-}
 
 /** A centred note in the thread's body. */
 function Note({ title, body }: { title?: string; body: string }) {
@@ -104,12 +86,11 @@ function ThreadBody() {
 			{body.kind === "no-channel" ? (
 				<Note body={body.note} />
 			) : body.kind === "unavailable" ? (
-				<View className="flex-1 items-center justify-center gap-4 px-10">
-					<AppText center color="muted" variant="callout">
-						{THREAD.messagesFailed}
-					</AppText>
-					<RetryButton onPress={actions.retry} />
-				</View>
+				<MessagesFailed
+					message={THREAD.messagesFailed}
+					onRetry={actions.retry}
+					retry={THREAD.tryAgain}
+				/>
 			) : (
 				<ThreadSkeleton />
 			)}
@@ -131,19 +112,5 @@ function ComposerRoom() {
 		<View className="px-3 pt-1.5 pb-safe-or-4">
 			<View className="h-13 rounded-[26px] bg-surface-secondary" />
 		</View>
-	);
-}
-
-function RetryButton({ onPress }: { onPress: () => void }) {
-	return (
-		<PressScale
-			accessibilityLabel={THREAD.tryAgain}
-			className="min-h-11 justify-center rounded-full bg-surface-secondary px-5"
-			onPress={onPress}
-		>
-			<AppText variant="callout" weight="semibold">
-				{THREAD.tryAgain}
-			</AppText>
-		</PressScale>
 	);
 }

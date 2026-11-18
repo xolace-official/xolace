@@ -1,7 +1,11 @@
-import { XolaceChannelScreen } from "@/features/xolacer-chat/components/xolace-channel-screen";
+import { ChannelData } from "@/features/connect/channel/channel-data";
+import { ChannelScreen } from "@/features/connect/channel/channel-screen";
 
-/** Direct route to the fixed Xolace channel (#375), the only way in for now. No layout in
- * between, as with `chat/[conversationId]`. */
+/** The fixed Xolace channel (#375). No layout in between, as with `chat/[conversationId]`. */
 export default function XolaceChannelRoute() {
-	return <XolaceChannelScreen />;
+	return (
+		<ChannelData>
+			<ChannelScreen />
+		</ChannelData>
+	);
 }

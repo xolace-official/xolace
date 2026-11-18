@@ -8,9 +8,8 @@ import { type Channel, StreamChat } from "stream-chat";
 import { Chat } from "stream-chat-expo";
 import { useStreamTheme } from "@/lib/stream-chat/stream-theme";
 import { NOW, PEOPLE } from "../../dev/fixtures";
-import { MINUTE } from "./thread-fixtures";
+import { type DevMessage, ME, streamMessage } from "./dev-messages";
 
-const ME = "profile_me";
 const SETTLE_MS = 400;
 const MAYA = { id: PEOPLE.maya, name: "Maya", online: true };
 /** Live typing: Stream relays the other side's `typing.start` about every second while they
@@ -19,63 +18,39 @@ const TYPING_TICK_MS = 1000;
 const TYPING_ON = 4;
 const TYPING_CYCLE = 7;
 
-export type DevMessage = {
-	mine: boolean;
-	text: string;
-	/** Minutes before now. */
-	ago: number;
-	failed?: boolean;
-	reaction?: string;
+/** The channel the client holds: the thread's messaging channel by default. `canSend: false` is
+ * a camper in the Xolace channel; `author` names whoever wrote the messages that aren't yours. */
+export type DevChannelKind = {
+	type?: string;
+	canSend?: boolean;
+	author?: { id: string; name: string };
 };
 
 function makeClient(
 	messages: readonly DevMessage[],
 	channelId: string,
-	typing: boolean
+	typing: boolean,
+	kind: DevChannelKind
 ) {
 	const client = new StreamChat("dev-states-key");
 	// `client.channel()` refuses without a user; nothing here ever opens a socket.
 	client.userID = ME;
 	client.user = { id: ME, name: "You" };
-	const channel = client.channel("messaging", channelId, {
-		members: [ME, PEOPLE.maya],
+	const maya = kind.author ?? MAYA;
+	const channel = client.channel(kind.type ?? "messaging", channelId, {
+		members: [ME, maya.id],
 	});
 	const me = { id: ME, name: "You" };
-	const maya = MAYA;
-	// Maya is here: the header reads her presence off the channel's members, as in the app.
+	// The other side is here: the thread's header reads presence off the channel's members.
 	channel.state.members = { [maya.id]: { user: maya, user_id: maya.id } };
 	channel.state.addMessagesSorted(
-		messages.map((m, i) => {
-			const at = new Date(NOW - m.ago * MINUTE).toISOString();
-			return {
-				created_at: at,
-				id: `dev-${i}`,
-				latest_reactions: m.reaction
-					? [{ created_at: at, type: m.reaction, user: maya, user_id: maya.id }]
-					: [],
-				reaction_groups: m.reaction
-					? {
-							[m.reaction]: {
-								count: 1,
-								first_reaction_at: at,
-								last_reaction_at: at,
-								sum_scores: 1,
-							},
-						}
-					: {},
-				status: m.failed ? "failed" : "received",
-				text: m.text,
-				type: m.failed ? "error" : "regular",
-				updated_at: at,
-				user: m.mine ? me : maya,
-			} as never;
-		})
+		messages.map((m, i) => streamMessage(m, i, me, maya) as never)
 	);
 	// What a member of an open thread may do, so the composer is Stream's real one.
 	channel.data = {
 		...channel.data,
 		own_capabilities: [
-			"send-message",
+			...(kind.canSend === false ? [] : ["send-message"]),
 			"send-reaction",
 			"read-events",
 			"typing-events",
@@ -99,6 +74,8 @@ function makeClient(
 	const quiet = () => Promise.resolve({} as never);
 	client.getAppSettings = quiet;
 	channel.markRead = quiet;
+	channel.sendReaction = quiet;
+	channel.deleteReaction = quiet;
 	channel.watch = quiet;
 	channel.query = quiet;
 	channel.keystroke = quiet;
@@ -110,9 +87,10 @@ function makeClient(
 export function useDevChannel(
 	messages: readonly DevMessage[],
 	channelId: string,
-	typing = false
+	typing = false,
+	kind: DevChannelKind = {}
 ) {
-	const [dev] = useState(() => makeClient(messages, channelId, typing));
+	const [dev] = useState(() => makeClient(messages, channelId, typing, kind));
 	return dev;
 }
 
