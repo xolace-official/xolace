@@ -2,7 +2,7 @@
  * Copy for the Return Welcome sheet. Tiers mirror quiet-return-copy.ts plus `recent` (under 14d).
  */
 
-import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
+import type { QuietReturnTier } from "@/features/follow-up/coming-back/quiet-return-copy";
 
 export type ReturnWelcomeTier = QuietReturnTier | "recent";
 

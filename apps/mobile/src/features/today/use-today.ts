@@ -162,10 +162,11 @@ export function useTodayData(): Today {
 
 	// A double tap on a door or the kindling would stack two screens.
 	const pushOnce = usePushOnce();
-	const openReflect = () => {
-		playSoftPress();
-		router.dismissTo("/");
-	};
+	const openReflect = () =>
+		pushOnce(() => {
+			playSoftPress();
+			router.push("/reflect");
+		});
 
 	return {
 		actions: {

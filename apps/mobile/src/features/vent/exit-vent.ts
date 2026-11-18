@@ -1,8 +1,8 @@
 /**
  * Home, as notification taps go there (`notificationTapPlan` in `src/lib/notification-tap.ts`):
- * Reflect today, Today once its screen PR moves the landing.
+ * Today, the landing.
  */
-const HOME = "/";
+const HOME = "/today";
 
 type Navigator = {
 	canGoBack: () => boolean;

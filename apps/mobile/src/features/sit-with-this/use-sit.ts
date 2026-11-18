@@ -127,7 +127,7 @@ export function useSitData(): Sit {
 			if (router.canGoBack()) {
 				router.back();
 			} else {
-				router.replace("/");
+				router.dismissTo("/today");
 			}
 			return;
 		}

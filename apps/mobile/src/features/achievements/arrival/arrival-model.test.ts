@@ -140,7 +140,7 @@ describe("milestoneLabel", () => {
 describe("mayArrive (the quiet-moment gate, #693)", () => {
 	it("opens on a calm home screen and over ordinary screens", () => {
 		expect(
-			mayArrive({ homeBusy: false, pathname: "/", presented: false })
+			mayArrive({ homeBusy: false, pathname: "/today", presented: false })
 		).toBe(true);
 		expect(
 			mayArrive({
@@ -150,7 +150,7 @@ describe("mayArrive (the quiet-moment gate, #693)", () => {
 			})
 		).toBe(true);
 		expect(
-			mayArrive({ homeBusy: true, pathname: "/today", presented: false })
+			mayArrive({ homeBusy: true, pathname: "/explore", presented: false })
 		).toBe(true);
 	});
 
@@ -160,10 +160,12 @@ describe("mayArrive (the quiet-moment gate, #693)", () => {
 		).toBe(false);
 	});
 
-	it("waits while home is busy", () => {
-		expect(mayArrive({ homeBusy: true, pathname: "/", presented: false })).toBe(
-			false
-		);
+	it("waits while home or Reflect is busy", () => {
+		for (const pathname of ["/today", "/reflect"]) {
+			expect(mayArrive({ homeBusy: true, pathname, presented: false })).toBe(
+				false
+			);
+		}
 	});
 
 	it.each([

@@ -69,7 +69,7 @@ export function useSessionEndData({
 	useEffect(() => {
 		if (missing && !left.current) {
 			left.current = true;
-			router.dismissTo("/");
+			router.dismissTo("/today");
 		}
 	}, [missing, router]);
 
@@ -180,7 +180,7 @@ export function useSessionEndData({
 	return {
 		actions: {
 			another: () =>
-				leave({ action: "have_more" }, () => router.dismissTo("/")),
+				leave({ action: "have_more" }, () => router.dismissTo("/reflect")),
 			askFollowUp: (step, onClosed) => {
 				useFollowUpAsk
 					.getState()

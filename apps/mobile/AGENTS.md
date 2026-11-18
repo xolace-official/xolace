@@ -187,9 +187,14 @@ worked example is `reach-me-on`: `reach-sheet-data.tsx` and `dev/`.
 ## Tabs and the root seams
 
 The tabs are Today · Explore · Connect · You (`TABS`, `src/features/navigation/tabs.ts`,
-drawn by `components/app-tabs.tsx`). "/" is still Reflect, outside the tabs, until the
-Today and Reflect screen PRs move the landing. There is no flag: a screen PR replaces the
-old screen outright. Where a screen PR adds to the shell:
+drawn by `components/app-tabs.tsx`). Today is the landing: "/" (where sign-in, intake and
+old links arrive) hands over to `/today` at once (`(protected)/index.tsx`, `ReturnTo`), so
+the tabs are the bottom of the stack. Home is `dismissTo("/today")` (`LANDING`,
+`src/lib/landing.ts`); Reflect is `/reflect`, pushed over the tabs. What greets someone
+coming back (follow-up check-in, return welcome, the month's awareness sheet, streak held,
+the in-app banner) is composed on Today's route (`features/follow-up/coming-back/`) until
+S4 replaces it; the starter bubble stays with Reflect (`reflect-home.tsx`). There is no
+flag: a screen PR replaces the old screen outright. Where a screen PR adds to the shell:
 
 - **A tab's content:** its route shim, `src/app/(protected)/(tabs)/<tab>/index.tsx`, hosts
   the old screen that did the job (Explore: the Browse hub) until the tab's screen PR
@@ -205,7 +210,8 @@ old screen outright. Where a screen PR adds to the shell:
   natively presented screen (the player, a form sheet) and position themselves
   absolutely. The layout maps the list; don't edit its lines.
 - **A path that moved** (`/discovery`, `/browse/**`, `/browse-player`, `/profile`,
-  `/profile/insights`, `/kindling-announcement`, `/timeline/**`; next, `/streak-held`): `MOVED` in
+  `/profile/insights`, `/kindling-announcement`, `/timeline/**`; next, `/streak-held`;
+  "/" itself, Reflect until S2, is the landing hand-off above, not a `MOVED` entry): `MOVED` in
   `src/features/navigation/moved-paths.ts` says where each lives now, a tab or a root
   screen, and whether its subpaths moved too (`subtree`) or one subpath moved somewhere of
   its own (`paths`: `/profile/insights` → `/you/steadiness`). Its
@@ -215,7 +221,7 @@ old screen outright. Where a screen PR adds to the shell:
 - **Navigating to a route that may already be in the stack** (a tab, Reflect): use
   `<ReturnTo href />` (`src/lib/return-to.tsx`) or `router.dismissTo`, never `<Redirect>`,
   `router.replace` or `router.navigate` from a pushed screen: those stack a second copy.
-  Notification taps follow the same rule (`notificationTapPlan`: home is `dismissTo("/")`,
+  Notification taps follow the same rule (`notificationTapPlan`: home is `dismissTo("/today")`,
   except on a held screen in `src/lib/held-routes.ts`, where a tap tears nothing down).
 
 ## Shared kit

@@ -203,7 +203,7 @@ describe("notificationTapPlan", () => {
 				notificationTapPlan({ type }, null, 1, ON_TABS).navigation
 			).toEqual({
 				action: "dismissTo",
-				href: "/",
+				href: "/today",
 			});
 		}
 	});
@@ -308,7 +308,7 @@ describe("notificationTapPlan", () => {
 		for (const pathname of ["/", "/today", "/explore/topics", "/quotes"]) {
 			expect(
 				notificationTapPlan({ type: "milestone" }, null, 1, pathname).navigation
-			).toEqual({ action: "dismissTo", href: "/" });
+			).toEqual({ action: "dismissTo", href: "/today" });
 		}
 	});
 

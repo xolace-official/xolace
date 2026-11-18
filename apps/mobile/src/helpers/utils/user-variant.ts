@@ -1,5 +1,10 @@
-import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
-import type { UserVariant } from "@/features/reflect/types";
+import type { QuietReturnTier } from "@/features/follow-up/coming-back/quiet-return-copy";
+
+/** Who opened the app: never reflected, back after a while, or reflecting lately. */
+export type UserVariant =
+	| { kind: "first-time" }
+	| { kind: "returning" }
+	| { kind: "active" };
 
 type ProfileFields = {
 	sessionCount: number;

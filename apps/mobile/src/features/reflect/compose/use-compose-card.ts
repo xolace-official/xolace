@@ -1,6 +1,6 @@
 import { useState } from "react";
+import type { QuietReturnTier } from "@/features/follow-up/coming-back/quiet-return-copy";
 import { resolveCardContent } from "@/features/reflect/compose/resolve-card-content";
-import type { QuietReturnTier } from "@/features/reflect/quiet-return-copy";
 import { useAppStore } from "@/store/store";
 
 const NUDGE_MESSAGES = [

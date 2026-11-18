@@ -14,7 +14,7 @@ export default function TrustedBridge() {
 
 	// A deep link can arrive with no id: back home rather than cast undefined.
 	if (typeof sessionId !== "string" || sessionId.trim().length === 0) {
-		return <ReturnTo href="/" />;
+		return <ReturnTo href="/today" />;
 	}
 
 	return (

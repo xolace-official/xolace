@@ -10,9 +10,9 @@ import { SectionTitle, SettingsCard } from "@/components/settings-kit/parts";
 import { TileRow } from "@/components/settings-kit/tile-row";
 import type { IconName } from "@/components/shared/icon";
 import { type FollowUpTier, useDevTools } from "@/dev/dev-tools/use-dev-tools";
+import type { ReturnWelcomeTier } from "@/features/follow-up/coming-back/return-welcome-copy";
 // Delete with features/reflect.
-import { ReturnWelcomeSheet } from "@/features/reflect/components/return-welcome-sheet";
-import type { ReturnWelcomeTier } from "@/features/reflect/return-welcome-copy";
+import { ReturnWelcomeSheet } from "@/features/follow-up/coming-back/return-welcome-sheet";
 
 const I = {
 	age: { android: "cake", ios: "birthday.cake" },

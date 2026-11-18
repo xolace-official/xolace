@@ -24,7 +24,6 @@ const graphOf = (entries: Record<string, Import[]>): ImportGraph =>
 	);
 
 const LEGACY_EASE_FILES = {
-	"app/(protected)/index.tsx": [pkg("react-native-ease/uniwind")],
 	"components/shared/resource-item.tsx": [pkg("react-native-ease/uniwind")],
 	"components/ui/heatmap-chart/root.tsx": [pkg("react-native-ease")],
 };

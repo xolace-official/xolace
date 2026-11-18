@@ -102,7 +102,7 @@ export function useReader(
 					curated: !!entry.reflectPrompt,
 					slug: entry.slug,
 				});
-				router.dismissTo("/");
+				router.dismissTo("/reflect");
 			},
 			resumed: () => {
 				playSoftPress();

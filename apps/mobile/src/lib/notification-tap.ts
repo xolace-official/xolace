@@ -5,6 +5,7 @@ import {
 	isChatNotificationType,
 } from "@xolace/backend/convex/lib/chatNotifications";
 import { isHeldRoute } from "@/lib/held-routes";
+import { LANDING } from "@/lib/landing";
 
 /** The shape of an expo-notifications response that this module reads. */
 export type TapResponse = {
@@ -68,7 +69,7 @@ export type TapNavigation =
 				| ReturnType<typeof chatNotificationRoute>
 				| "/(protected)/achievements";
 	  }
-	| { action: "dismissTo"; href: "/" }
+	| { action: "dismissTo"; href: typeof LANDING }
 	| {
 			action: "push";
 			href:
@@ -80,17 +81,17 @@ export type TapNavigation =
 export type NotificationTapPlan = {
 	/** Present when the tap has an analytics row to attribute a session to. */
 	logId?: string;
-	/** Content for the soft framing banner on the reflect screen. */
+	/** Content for the soft framing banner on home (Today). */
 	banner?: { content: string; notificationId: string };
 	navigation?: TapNavigation;
 };
 
 /**
- * Home, Reflect: back to it when it is under the tabs or a thread, rather than
- * stacking a second copy; put in place of the top screen only when it isn't
+ * Home, Today's tab: back to it under whatever is pushed over the tabs, rather
+ * than stacking a second copy; put in place of the top screen only when it isn't
  * there. (`navigate` would reuse only the top screen.)
  */
-const HOME: TapNavigation = { action: "dismissTo", href: "/" };
+const HOME: TapNavigation = { action: "dismissTo", href: LANDING };
 
 /**
  * Everything a tap should cause, from its payload and the screen up when it came
@@ -131,7 +132,7 @@ export function notificationTapPlan(
 		// Steadiness lives in the You tab (/you/steadiness). The old path's MovedRoute shim gets
 		// there the right way from anywhere: back to the tabs when they're in the stack, in the
 		// shim's own place when they aren't. From here, dismissTo would replace the screen on top
-		// when the tabs aren't in the stack (Reflect, on a cold start), and navigate would stack a
+		// when the tabs aren't in the stack yet ("/", on a cold start), and navigate would stack a
 		// second copy of the tabs. The shim's dismissTo would pop a held screen above the tabs,
 		// so a tap on one goes nowhere, as home's does.
 		plan.navigation = { action: "push", href: "/profile/insights" };

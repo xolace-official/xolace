@@ -14,7 +14,7 @@ const GLYPH = 17;
  * @public The redesign's shared kit (F5), for the screen PRs.
  */
 export const goBack = () =>
-	router.canGoBack() ? router.back() : router.replace("/");
+	router.canGoBack() ? router.back() : router.dismissTo("/today");
 
 /**
  * A floating glass back button for pushed screens that draw their own top.

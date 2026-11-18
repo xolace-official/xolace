@@ -25,7 +25,7 @@ import { usePaywall } from "@/features/purchases/use-paywall";
 import { convexErrorCode } from "@/lib/convex-error-code";
 import { useAppStore } from "@/store/store";
 
-const home = () => router.dismissTo("/");
+const home = () => router.dismissTo("/today");
 
 export function useBridge(
 	sessionId: Id<"sessions">,

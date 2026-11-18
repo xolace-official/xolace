@@ -15,7 +15,7 @@ const close = () => {
 	if (router.canGoBack()) {
 		router.back();
 	} else {
-		router.dismissTo("/");
+		router.dismissTo("/today");
 	}
 };
 

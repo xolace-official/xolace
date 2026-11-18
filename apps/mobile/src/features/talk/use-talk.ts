@@ -98,8 +98,8 @@ export function useTalk(reopen?: {
 		setEnding(true);
 		const later = mirrorLater.current;
 		try {
-			// Back to the home underneath: its reflect screen picks the session up
-			// via getActive. Ended with "Just end", it doesn't.
+			// On to Reflect, which picks the session up via getActive (back to it when
+			// the talk was opened from it). Ended with "Just end", it doesn't.
 			if (
 				(await endWithRetry(() =>
 					endTalk(later ? { mirrorLater: true, sessionId } : { sessionId })
@@ -107,7 +107,7 @@ export function useTalk(reopen?: {
 				later
 			) {
 				if (mounted.current) {
-					router.dismissTo("/");
+					router.dismissTo("/reflect");
 				}
 			} else {
 				setEnding(false);

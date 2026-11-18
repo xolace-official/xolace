@@ -66,7 +66,7 @@ export function usePeerReflectionData(): PeerReflection {
 	// No active session (completed or abandoned elsewhere); skipped while finishing.
 	useEffect(() => {
 		if (!(isLoading || sessionId || finishing.current)) {
-			router.replace("/");
+			router.dismissTo("/today");
 		}
 	}, [isLoading, sessionId, router]);
 

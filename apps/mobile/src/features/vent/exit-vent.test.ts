@@ -19,6 +19,6 @@ describe("exitVent", () => {
 		const router = navigator(false);
 		exitVent(router);
 		expect(router.back).not.toHaveBeenCalled();
-		expect(router.dismissTo).toHaveBeenCalledWith("/");
+		expect(router.dismissTo).toHaveBeenCalledWith("/today");
 	});
 });
