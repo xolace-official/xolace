@@ -37,38 +37,6 @@ export function resolveMessageIdentity(
 	};
 }
 
-/** Past this the badge shows `99+`. */
-const UNREAD_CAP = 99;
-
-/** Only open and resting threads carry unread; rows also use this to skip subscribing. */
-export function canHoldUnread(status: ConversationStatus): boolean {
-	return status === "open" || status === "resting";
-}
-
-/** Unread badge for a conversation row, or null. `label` caps at 99+; `a11y` never caps. */
-export function unreadBadge(
-	status: ConversationStatus,
-	count: number
-): { label: string; a11y: string } | null {
-	if (!canHoldUnread(status)) {
-		return null;
-	}
-	return formatUnreadBadge(count);
-}
-
-/** `unreadBadge` without the lifecycle gate, for the Xolace broadcast row (#377). */
-export function formatUnreadBadge(
-	count: number
-): { label: string; a11y: string } | null {
-	if (count <= 0) {
-		return null;
-	}
-	return {
-		a11y: `${count} unread message${count === 1 ? "" : "s"}`,
-		label: count > UNREAD_CAP ? `${UNREAD_CAP}+` : String(count),
-	};
-}
-
 /** The `{ code, max, party, until }` payload of a Convex refusal, or null for any other error. */
 export function chatLimitError(error: unknown): {
 	code?: string;

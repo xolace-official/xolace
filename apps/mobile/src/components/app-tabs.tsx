@@ -12,7 +12,6 @@ import { useYouTabIcon } from "@/features/you/avatar/use-you-tab-icon";
 import { playSoftPress } from "@/lib/haptics";
 import { useMiniPlayerShown } from "@/lib/now-playing/now-playing-store";
 import { useUnreadBadge } from "@/lib/stream-chat/use-unread-badge";
-import { useTabBarHidden } from "@/lib/tab-bar";
 
 const SCREEN_LISTENERS = {
 	tabPress: () => {
@@ -39,8 +38,6 @@ function withAvatar(
 export default function AppTabs() {
 	const accent = useThemeColor("accent");
 	const background = useThemeColor("background");
-	// Yielded to a screen raising a bottom toolbar: the two share the same strip.
-	const hidden = useTabBarHidden();
 	// Stream's total across every conversation, the same number as the app icon. Null reads as
 	// nothing.
 	const unread = useUnreadBadge();
@@ -56,7 +53,6 @@ export default function AppTabs() {
 			<NativeTabs
 				backgroundColor={glass ? undefined : background}
 				disableTransparentOnScrollEdge={!glass}
-				hidden={hidden}
 				minimizeBehavior="onScrollDown"
 				screenListeners={SCREEN_LISTENERS}
 				tintColor={accent}

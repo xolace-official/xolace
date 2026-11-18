@@ -7,7 +7,6 @@ import { useSyncExternalStore } from "react";
 import type { PlaybackReturn } from "@/lib/audio/use-playback";
 import { armPlayOnLoad, takePlayOnLoad } from "@/lib/now-playing/play-on-load";
 import { clearSlept, resetSleepTimer } from "@/lib/now-playing/sleep-timer";
-import { useTabBarHidden } from "@/lib/tab-bar";
 
 /** A track as `paths.getBoundAudioTrack` serves it. */
 export type BoundTrack = NonNullable<
@@ -200,12 +199,9 @@ export const nowPlayingPlayback = (): Playback => playback ?? IDLE;
 
 /** Mini-player capsule plus its gap above the tab bar; floating UI over the tabs must clear it. */
 export const MINI_PLAYER_CLEARANCE = 64;
-/** Whether the mini-player (accessory on iOS 26, overlay elsewhere) is on screen; it yields
- * with the bar. */
+/** Whether the mini-player (accessory on iOS 26, overlay elsewhere) is on screen. */
 export function useMiniPlayerShown() {
-	const loaded = useNowPlayingLoaded();
-	const hidden = useTabBarHidden();
-	return loaded && !hidden;
+	return useNowPlayingLoaded();
 }
 /** Scroll tail a tab screen reserves for the overlay (iOS 26 insets natively). Not tied to the
  * bar hiding: dropping it jumps a list at its end. */

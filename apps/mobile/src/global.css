@@ -584,3 +584,24 @@
 	--color-arrival-dot-off-dusk: rgba(255, 255, 255, 0.09);
 	--color-arrival-dot-off-day: rgba(25, 21, 36, 0.09);
 }
+
+/*
+ * Connect's printed objects (prototype `features/connect`): a Xolacer's avatar
+ * art when they have no photo (one pair per person, picked by their id), the
+ * Xolace channel's flame and its post art. Content art, the same in every
+ * theme. Read in src/features/connect/connect-colors.ts.
+ */
+@theme static {
+	--color-connect-art-violet-from: #9e8cf2;
+	--color-connect-art-violet-to: #5b47c9;
+	--color-connect-art-teal-from: #7fd3e6;
+	--color-connect-art-teal-to: #2f8fa8;
+	--color-connect-art-rose-from: #f7b7c8;
+	--color-connect-art-rose-to: #d6467a;
+	--color-connect-flame-1: #ffd9a8;
+	--color-connect-flame-2: #f2a33a;
+	--color-connect-flame-3: #c46a12;
+	--color-connect-post-1: #2e2650;
+	--color-connect-post-2: #6b5bb8;
+	--color-connect-post-3: #c77ab0;
+}

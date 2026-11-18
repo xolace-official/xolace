@@ -1,19 +1,19 @@
 import { Stack } from "expo-router";
-import { useLargeHeaderOptions } from "@/lib/navigation-options";
+import { COPY } from "@/features/connect/copy";
+import { useHeaderOptions } from "@/lib/header-options";
 
-const CONNECT_OPTIONS = { title: "Connect" };
-const ARCHIVED_OPTIONS = {
-	headerBackButtonDisplayMode: "minimal" as const,
-	title: "Archived",
-};
-
+/** Connect's stack: the tab under its large title, Archived under a small one. */
 export default function ConnectLayout() {
-	const largeHeaderOptions = useLargeHeaderOptions();
+	const large = useHeaderOptions("large");
+	const small = useHeaderOptions("small");
 
 	return (
-		<Stack screenOptions={largeHeaderOptions}>
-			<Stack.Screen name="index" options={CONNECT_OPTIONS} />
-			<Stack.Screen name="archived" options={ARCHIVED_OPTIONS} />
+		<Stack screenOptions={large}>
+			<Stack.Screen name="index" options={{ title: COPY.title }} />
+			<Stack.Screen
+				name="archived"
+				options={{ ...small, title: COPY.archivedTitle }}
+			/>
 		</Stack>
 	);
 }

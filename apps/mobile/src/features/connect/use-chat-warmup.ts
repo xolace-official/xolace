@@ -5,7 +5,7 @@ import {
 	hydrateChannelsFromCache,
 } from "@/lib/stream-chat/offline-db";
 import { useStreamConnection } from "@/lib/stream-chat/stream-chat-provider";
-import type { ConversationList } from "./components/chats-list";
+import type { ConversationRow } from "./list/chats-model";
 
 /** `queryChannels` caps at 30; rows past the cap (warmed most-recent-first) are never watched,
  * so their unread badge stays blank. Accepted ceiling. */
@@ -14,7 +14,7 @@ const MAX_PREFETCH = 30;
 /** Opens the connection and fills `client.activeChannels` (offline db first, then
  * `queryChannels`) while the list is read, so a tapped thread paints on its first frame. */
 export function useChatWarmup(
-	conversations: ConversationList | undefined,
+	conversations: readonly ConversationRow[] | undefined,
 	enabled: boolean
 ) {
 	const { client } = useStreamConnection(enabled);
@@ -44,7 +44,7 @@ export function useChatWarmup(
 			chatLocalDataSettled()
 				.then(async (generation) => {
 					await hydrateChannelsFromCache(client, ids).catch((error) =>
-						console.error("[xolacer-chat] channel cache read failed", error)
+						console.error("[connect] channel cache read failed", error)
 					);
 					if (generation !== chatLocalDataGeneration()) {
 						return;
@@ -62,7 +62,7 @@ export function useChatWarmup(
 					client.dispatchEvent({ type: "channels.queried" });
 				})
 				.catch((error) =>
-					console.warn("[xolacer-chat] channel prefetch failed", error)
+					console.warn("[connect] channel prefetch failed", error)
 				)
 				.finally(() => {
 					inFlight = false;
