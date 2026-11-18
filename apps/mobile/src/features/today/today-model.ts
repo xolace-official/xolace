@@ -113,6 +113,56 @@ export function monthPromptOnCard(
 	return prompt ? prompt : null;
 }
 
+/**
+ * What Today's first screen reads, each undefined while it loads. The campfire's own
+ * reads settle in `campfireSettled` (it waits on the intake's count only when it shows it).
+ */
+export type TodayFold = {
+	phase: TodayPhase;
+	/** The profile summary: the greeting's name and the streak chip. */
+	summary: unknown;
+	/** Reflect's open session: the card's face. */
+	session: unknown;
+	kindling: unknown;
+	campfireSettled: boolean;
+	/** The hub's New shelf: late, it is the page's only module. */
+	rail: unknown;
+};
+
+/**
+ * Today is drawn above the fold, so the launch cover may leave onto it: the header and the
+ * card, then the kindling and the campfire (by day) or the late modules. The rail (by day),
+ * the moments and the word sit below the fold and keep their own loading states.
+ */
+export function todayReady(fold: TodayFold): boolean {
+	if (fold.summary === undefined || fold.session === undefined) {
+		return false;
+	}
+	if (fold.phase === "late") {
+		return fold.rail !== undefined;
+	}
+	return fold.kindling !== undefined && fold.campfireSettled;
+}
+
+/**
+ * Whether the campfire knows what it shows. With no weekly number (`hidden`) a v2 intake
+ * stands the intake's count in, so it also waits for the full context and that count
+ * (`statsSettled`: answered or failed).
+ */
+export function campfireSettled(
+	cohortStatus: string | undefined,
+	v2Intake: boolean | undefined,
+	statsSettled: boolean
+): boolean {
+	if (cohortStatus === undefined) {
+		return false;
+	}
+	if (cohortStatus !== "hidden") {
+		return true;
+	}
+	return v2Intake !== undefined && (!v2Intake || statsSettled);
+}
+
 /** The first open of the day plays once: the words, the rise, the ink. */
 export const introDue = (playedDay: string | null, today: string): boolean =>
 	playedDay !== today;

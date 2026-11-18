@@ -16,6 +16,7 @@ import { kindlingView } from "./kindling/kindling-model";
 import { useKeptKindling } from "./kindling/use-kept-kindling";
 import { momentView } from "./moments/moments-model";
 import { railTiles } from "./rail/rail-model";
+import { campfireSettled } from "./today-model";
 import { wordLine } from "./word/word-model";
 
 type CampfireStats = FunctionReturnType<typeof api.intake.campfireStats>;
@@ -23,11 +24,18 @@ type CampfireStats = FunctionReturnType<typeof api.intake.campfireStats>;
 /**
  * The v2 intake's campfire count, read once per mount and only when asked: it scans recent
  * sessions app-wide, so a live subscription would re-run on every user's session (as
- * production's Discovery read it). A failed read shows nothing.
+ * production's Discovery read it). A failed read shows nothing. `settled` once it answered
+ * or failed, so the launch cover can wait for it.
  */
-function useCampfireStatsOnce(wanted: boolean): CampfireStats | null {
+function useCampfireStatsOnce(wanted: boolean): {
+	stats: CampfireStats | null;
+	settled: boolean;
+} {
 	const convex = useConvex();
-	const [stats, setStats] = useState<CampfireStats | null>(null);
+	const [read, setRead] = useState<{
+		stats: CampfireStats | null;
+		settled: boolean;
+	}>({ settled: false, stats: null });
 	useEffect(() => {
 		if (!wanted) {
 			return;
@@ -35,17 +43,21 @@ function useCampfireStatsOnce(wanted: boolean): CampfireStats | null {
 		let cancelled = false;
 		convex
 			.query(api.intake.campfireStats, {})
-			.then((result) => {
+			.then((stats) => {
 				if (!cancelled) {
-					setStats(result);
+					setRead({ settled: true, stats });
 				}
 			})
-			.catch(() => undefined);
+			.catch(() => {
+				if (!cancelled) {
+					setRead({ settled: true, stats: null });
+				}
+			});
 		return () => {
 			cancelled = true;
 		};
 	}, [convex, wanted]);
-	return stats;
+	return read;
 }
 
 /** Your kindling (`withRead`/`withTry`: this client draws every kind of step) and the campfire. */
@@ -57,14 +69,24 @@ export function useModules() {
 	const cohort = useQuery(api.cohort.getWeeklyCohortCard);
 	// v2 cut the intake's campfire count; it stands in for the cohort until there's a
 	// weekly number of their own (#712), as on production's Discovery.
-	const v2Intake =
-		useFullContext()?.intake?.intakeVersion === INTAKE_V2_VERSION;
-	const stats = useCampfireStatsOnce(cohort?.status === "hidden" && v2Intake);
+	const context = useFullContext();
+	const v2Intake = context?.intake?.intakeVersion === INTAKE_V2_VERSION;
+	const { stats, settled } = useCampfireStatsOnce(
+		cohort?.status === "hidden" && v2Intake
+	);
 	// A tended kindling's last step still celebrates once the server closes it.
 	const kindling = useKeptKindling(
 		active === undefined ? undefined : kindlingView(active)
 	);
-	return { campfire: campfireView(cohort, stats, v2Intake), kindling };
+	return {
+		campfire: campfireView(cohort, stats, v2Intake),
+		campfireSettled: campfireSettled(
+			cohort?.status,
+			context === undefined ? undefined : v2Intake,
+			settled
+		),
+		kindling,
+	};
 }
 
 const HOUR_MS = 3_600_000;

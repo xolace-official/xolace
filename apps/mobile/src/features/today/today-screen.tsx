@@ -39,10 +39,16 @@ type Props = {
 	 * "How did you find Xolace?" (features meet in routes, not screens).
 	 */
 	finding?: ReactNode;
+	/**
+	 * The launch cover has started leaving (`useLaunchRevealed`, from the route). While it is
+	 * up, a first open of the day waits to mount the page, so its rise and greeting play
+	 * under the cover's fade; at rest the page draws under the cover. Fixtures: always.
+	 */
+	revealed?: boolean;
 };
 
 /** Today: a sky that keeps the hour, the Reflect card as its horizon, then up to five quiet modules. */
-export function TodayScreen({ finding }: Props) {
+export function TodayScreen({ finding, revealed = true }: Props) {
 	const insets = useSafeAreaInsets();
 	const { height } = useWindowDimensions();
 	const { state } = useToday();
@@ -87,16 +93,18 @@ export function TodayScreen({ finding }: Props) {
 						pointerEvents="none"
 						style={{ backgroundColor: top, height, top: -height }}
 					/>
-					<TodayBody
-						finding={finding}
-						flameClock={flameClock}
-						// A new day (Today stays mounted for days) replays the first open, once.
-						key={state.day}
-						live={live}
-						reduced={reduced}
-						scrollY={scrollY}
-						viewH={height}
-					/>
+					{state.intro && !revealed ? null : (
+						<TodayBody
+							finding={finding}
+							flameClock={flameClock}
+							// A new day (Today stays mounted for days) replays the first open, once.
+							key={state.day}
+							live={live}
+							reduced={reduced}
+							scrollY={scrollY}
+							viewH={height}
+						/>
+					)}
 				</Animated.ScrollView>
 			</ScrollViewMarker>
 			{late ? null : (

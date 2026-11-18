@@ -32,6 +32,11 @@ export type Today = {
 		rekindle: { streak: number; busy: boolean } | null;
 		/** The first open of the day: the greeting's words, the rise, the word's ink. */
 		intro: boolean;
+		/**
+		 * What shows above the fold is in (`todayReady`): the launch cover may leave onto it.
+		 * Fixtures are always ready.
+		 */
+		ready: boolean;
 		/** The Reflect card. */
 		card: {
 			/** This month's prompt, read or written about this week: it takes the card's question. */
