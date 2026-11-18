@@ -43,7 +43,8 @@ export function Greeting({ text, intro, reduced }: Props) {
 				<Word
 					gap={i < words.length - 1}
 					index={i}
-					key={`${text}-${i}`}
+					// By place: a name that loads mid-intro adds its word and the rest play on.
+					key={i}
 					play={intro && !reduced}
 					text={w}
 				/>
