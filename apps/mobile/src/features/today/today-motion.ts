@@ -30,9 +30,6 @@ export const TIMING = {
 	palette: 600,
 	/** Ridge fills. */
 	ridges: 900,
-	/** First open: modules rise. */
-	rise: 620,
-	riseSlots: [120, 200, 280],
 	/** Greeting word, and the gap between words. */
 	word: 800,
 	wordGap: 120,
