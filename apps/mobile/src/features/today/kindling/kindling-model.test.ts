@@ -6,8 +6,13 @@ import {
 	newlyTended,
 	nextRow,
 	nodesFor,
+	syncTend,
+	TEND,
 	type TwigView,
+	tendAt,
 	tendedCount,
+	tendStart,
+	tendWait,
 } from "./kindling-model";
 
 const twig = (
@@ -175,5 +180,80 @@ describe("newlyTended", () => {
 	it("is -1 when nothing new was tended", () => {
 		expect(newlyTended(["done", "pending"], ["done", "pending"])).toBe(-1);
 		expect(newlyTended(["done", "pending"], ["done", "skipped"])).toBe(-1);
+	});
+});
+
+describe("syncTend (Today's path trailing the server)", () => {
+	const start = tendStart("k1", ["done", "pending", "pending"]);
+
+	it("does nothing while the server's path is unchanged", () => {
+		expect(syncTend(start, "k1", ["done", "pending", "pending"])).toBeNull();
+	});
+
+	it("holds back a step tended elsewhere, to celebrate in front", () => {
+		const step = syncTend(start, "k1", ["done", "done", "pending"]);
+		expect(step).toMatchObject({ changed: false, reset: false });
+		expect(step?.next.shown).toEqual(["done", "pending", "pending"]);
+		// Then it's the one to celebrate, and it doesn't sync twice.
+		expect(
+			newlyTended(step?.next.shown ?? [], ["done", "done", "pending"])
+		).toBe(1);
+		expect(
+			syncTend(step?.next ?? start, "k1", ["done", "done", "pending"])
+		).toBeNull();
+	});
+
+	it("shows a step passed by at once", () => {
+		const step = syncTend(start, "k1", ["done", "skipped", "pending"]);
+		expect(step).toMatchObject({ changed: true, reset: false });
+		expect(step?.next.shown).toEqual(["done", "skipped", "pending"]);
+	});
+
+	it("resets on a new kindling", () => {
+		const step = syncTend(start, "k2", [
+			"pending",
+			"pending",
+			"pending",
+			"pending",
+		]);
+		expect(step).toMatchObject({ changed: true, reset: true });
+		expect(step?.next).toEqual(
+			tendStart("k2", ["pending", "pending", "pending", "pending"])
+		);
+	});
+
+	it("resets when the same kindling's step count changes", () => {
+		const step = syncTend(start, "k1", [
+			"done",
+			"pending",
+			"pending",
+			"pending",
+		]);
+		expect(step).toMatchObject({ reset: true });
+		expect(step?.next.shown).toHaveLength(4);
+	});
+});
+
+describe("tendAt", () => {
+	it("tends one step", () => {
+		expect(tendAt(["done", "pending", "pending"], 1)).toEqual([
+			"done",
+			"done",
+			"pending",
+		]);
+	});
+});
+
+describe("tendWait", () => {
+	it("lets Today settle first", () => {
+		expect(tendWait(1000, 0, false)).toBe(TEND.settleMs);
+	});
+
+	it("queues a second tend behind the one still playing", () => {
+		expect(tendWait(1000, 3600, false)).toBe(3600 - 1000 + TEND.gapMs);
+	});
+
+	it("plays at once with Reduce Motion", () => {
+		expect(tendWait(1000, 3600, true)).toBe(0);
 	});
 });

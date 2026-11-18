@@ -95,6 +95,83 @@ export function newlyTended(
 	return shown.findIndex((s, i) => s !== "done" && now[i] === "done");
 }
 
+type States = readonly TwigView["state"][];
+
+/** Today's path as last drawn, and the server's state it was drawn from. */
+export type TendShown = {
+	id: string;
+	/** The server's states as last seen, so an unchanged path is a no-op. */
+	key: string;
+	shown: TwigView["state"][];
+};
+
+const tendKey = (id: string, now: States) => `${id}:${now.join(",")}`;
+
+export const tendStart = (id: string, now: States): TendShown => ({
+	id,
+	key: tendKey(id, now),
+	shown: [...now],
+});
+
+/**
+ * When the server's path changes, what Today draws (worked out during render), or null when
+ * nothing did. A new kindling, or the same one with a different number of steps, shows at
+ * once and `reset`s the card (the celebration, a peek, their timers). Otherwise a step
+ * newly done is held back, to celebrate when Today is in front (`newlyTended`), and
+ * anything else (a step passed by) follows at once.
+ */
+export function syncTend(
+	prev: TendShown,
+	id: string,
+	now: States
+): { next: TendShown; changed: boolean; reset: boolean } | null {
+	const key = tendKey(id, now);
+	if (prev.key === key) {
+		return null;
+	}
+	if (prev.id !== id || prev.shown.length !== now.length) {
+		return { changed: true, next: tendStart(id, now), reset: true };
+	}
+	const shown = prev.shown.map((s, i) =>
+		now[i] === "done" && s !== "done" ? s : (now[i] ?? s)
+	);
+	const changed = shown.some((s, i) => s !== prev.shown[i]);
+	return {
+		changed,
+		next: { id, key, shown: changed ? shown : prev.shown },
+		reset: false,
+	};
+}
+
+/** The path with step `i` tended: what the celebration turns it into. */
+export const tendAt = (shown: States, i: number): TwigView["state"][] =>
+	shown.map((s, j) => (j === i ? "done" : s));
+
+/** Timings around a tend that Today holds back: let it land, and queue a second behind the first. */
+export const TEND = {
+	/** A second tend waits this long after the first one's choreography. */
+	gapMs: 100,
+	/** A tap on a node shows its step this long. */
+	peekMs: 2600,
+	/** Let Today land before a tended step celebrates. */
+	settleMs: 450,
+} as const;
+
+/**
+ * How long a held-back tend waits before it plays: Today settles first, and a tend that
+ * comes while another is still playing (`busyUntil`) queues behind it. Reduced: at once.
+ */
+export function tendWait(
+	nowMs: number,
+	busyUntil: number,
+	reduced: boolean
+): number {
+	if (reduced) {
+		return 0;
+	}
+	return Math.max(TEND.settleMs, busyUntil - nowMs + TEND.gapMs);
+}
+
 /** The path you tend, from the board's `.kpath`: 322 × 64. */
 export const PATH_W = 322;
 export const PATH_H = 64;

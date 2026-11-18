@@ -8,71 +8,78 @@ import {
 	BEAT,
 	firstWaiting,
 	newlyTended,
+	syncTend,
+	TEND,
 	type TwigView,
+	tendAt,
 	tendedCount,
+	tendStart,
+	tendWait,
 } from "./kindling-model";
 
-/** Let Today land before a tended step celebrates. */
-const SETTLE_MS = 450;
-const PEEK_MS = 2600;
-/** A second tend waits for the first one's choreography to finish. */
-const NEXT_GAP_MS = 100;
-
 type States = TwigView["state"][];
+type Timer = ReturnType<typeof setTimeout>;
+
+const clearAll = (timers: Timer[]) => {
+	for (const id of timers) {
+		clearTimeout(id);
+	}
+};
 
 /**
- * The path as Today shows it, trailing the server: a step tended on another screen
- * celebrates here once, when Today is in front (the card's own choreography, on its leg).
- * Anything else (a step passed by, a new kindling) follows at once. Everything on the path
- * derives from one clock, `beat` (ms since the step was tended).
+ * The path as Today shows it, trailing the server (`syncTend`): a step tended on another
+ * screen celebrates here once, when Today is in front (the card's own choreography, on its
+ * leg). Anything else (a step passed by, a new kindling) follows at once. Everything on the
+ * path derives from one clock, `beat` (ms since the step was tended).
  */
 export function useTend(kindlingId: string, now: States, reduced: boolean) {
 	const focused = useIsFocused();
-	const [shown, setShown] = useState<States>(now);
+	const [tend, setTend] = useState(() => tendStart(kindlingId, now));
 	const [count, setCount] = useState(() => tendedCount(now));
 	const [justDone, setJustDone] = useState(-1);
 	const [tendN, setTendN] = useState(0);
 	const [peek, setPeek] = useState(-1);
 	const [peekN, setPeekN] = useState(0);
+	const [resetN, setResetN] = useState(0);
 	const beat = useSharedValue<number>(BEAT.end);
-	const peekTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const peekTimer = useRef<Timer[]>([]);
 	// The choreography outlives the effect run that starts it (setting `shown` re-runs the effect).
-	const choreo = useRef<ReturnType<typeof setTimeout>[]>([]);
+	const choreo = useRef<Timer[]>([]);
 	const busyUntil = useRef(0);
 
-	// A new kindling, or a change that isn't a fresh tend, shows at once.
-	const nowKey = `${kindlingId}:${now.join(",")}`;
-	const [seen, setSeen] = useState({ id: kindlingId, key: nowKey });
-	if (seen.key !== nowKey) {
-		setSeen({ id: kindlingId, key: nowKey });
-		const synced =
-			seen.id === kindlingId
-				? shown.map((s, i) =>
-						now[i] === "done" && s !== "done" ? s : (now[i] ?? s)
-					)
-				: now;
-		if (
-			synced.some((s, i) => s !== shown[i]) ||
-			synced.length !== shown.length
-		) {
-			setShown(synced);
-			setCount(tendedCount(synced));
+	const sync = syncTend(tend, kindlingId, now);
+	if (sync) {
+		setTend(sync.next);
+		if (sync.changed) {
+			setCount(tendedCount(sync.next.shown));
+		}
+		if (sync.reset) {
+			setJustDone(-1);
+			setPeek(-1);
+			setResetN((n) => n + 1);
 		}
 	}
+	// A new path: whatever was playing for the old one stops.
+	useEffect(() => {
+		if (resetN === 0) {
+			return;
+		}
+		clearAll(choreo.current);
+		clearAll(peekTimer.current);
+		busyUntil.current = 0;
+		beat.set(BEAT.end);
+	}, [beat, resetN]);
 
+	const { shown } = tend;
 	const i = newlyTended(shown, now);
 	useEffect(() => {
 		if (!focused || i < 0) {
 			return;
 		}
-		const wait = Math.max(
-			SETTLE_MS,
-			busyUntil.current - Date.now() + NEXT_GAP_MS
-		);
 		const settle = setTimeout(
 			() => {
-				const next = shown.map((s, j) => (j === i ? "done" : s));
-				setShown(next);
+				const next = tendAt(shown, i);
+				setTend((t) => ({ ...t, shown: next }));
 				if (reduced) {
 					setCount(tendedCount(next));
 					return;
@@ -90,9 +97,7 @@ export function useTend(kindlingId: string, now: States, reduced: boolean) {
 						...PLAY_AS_CHOSEN,
 					})
 				);
-				for (const id of choreo.current) {
-					clearTimeout(id);
-				}
+				clearAll(choreo.current);
 				choreo.current = [
 					setTimeout(() => setCount(tendedCount(next)), BEAT.countAt),
 					setTimeout(() => setJustDone(-1), BEAT.end),
@@ -103,19 +108,15 @@ export function useTend(kindlingId: string, now: States, reduced: boolean) {
 					);
 				}
 			},
-			reduced ? 0 : wait
+			tendWait(Date.now(), busyUntil.current, reduced)
 		);
 		return () => clearTimeout(settle);
 	}, [beat, focused, i, reduced, shown]);
 
 	useEffect(
 		() => () => {
-			if (peekTimer.current) {
-				clearTimeout(peekTimer.current);
-			}
-			for (const id of choreo.current) {
-				clearTimeout(id);
-			}
+			clearAll(peekTimer.current);
+			clearAll(choreo.current);
 		},
 		[]
 	);
@@ -129,13 +130,21 @@ export function useTend(kindlingId: string, now: States, reduced: boolean) {
 			return;
 		}
 		Presets.System.selection();
-		if (peekTimer.current) {
-			clearTimeout(peekTimer.current);
-		}
+		clearAll(peekTimer.current);
 		setPeek(j);
 		setPeekN((n) => n + 1);
-		peekTimer.current = setTimeout(() => setPeek(-1), PEEK_MS);
+		peekTimer.current = [setTimeout(() => setPeek(-1), TEND.peekMs)];
 	};
 
-	return { beat, count, current, justDone, peek, peekAt, peekN, shown, tendN };
+	return {
+		beat,
+		count,
+		current,
+		justDone,
+		peek,
+		peekAt,
+		peekN,
+		shown,
+		tendN,
+	};
 }
