@@ -83,6 +83,8 @@ export const COPY = {
 		all: (n: number) =>
 			`ALL ${n === 3 ? "THREE" : n === 4 ? "FOUR" : n} TENDED`,
 		allTitle: "The fire's kept. Flux saved it.",
+		/** A kind of step this build doesn't know yet. */
+		anyKind: { length: "WHEN YOU'RE READY", title: "A small step" },
 		begin: "Begin",
 		done: "DONE",
 		doneEyebrow: "THIS KINDLING IS DONE",

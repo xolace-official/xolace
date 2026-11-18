@@ -113,6 +113,17 @@ describe("kindlingView", () => {
 		]);
 	});
 
+	it("names a kind this build doesn't know", () => {
+		const newer = {
+			...active,
+			twigs: [{ ...active?.twigs[0], kind: "dance", title: undefined }],
+		} as unknown as Parameters<typeof kindlingView>[0];
+		expect(kindlingView(newer)?.twigs[0]).toMatchObject({
+			length: "WHEN YOU'RE READY",
+			title: "A small step",
+		});
+	});
+
 	it("is none with no kindling, or one with no steps", () => {
 		expect(kindlingView(null)).toBeNull();
 		expect(

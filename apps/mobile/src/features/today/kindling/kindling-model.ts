@@ -6,7 +6,6 @@ import { COPY } from "../copy";
 type ActiveKindling = NonNullable<
 	FunctionReturnType<typeof api.paths.getActive>
 >;
-type TwigKind = ActiveKindling["twigs"][number]["kind"];
 
 /** One step on Today's path. */
 export type TwigView = {
@@ -28,10 +27,13 @@ export function kindlingView(
 	if (!active || active.twigs.length === 0) {
 		return null;
 	}
+	// A kind a newer server sends that this build doesn't know still gets a title and length.
+	const kinds: Partial<Record<string, { length: string; title: string }>> =
+		COPY.kindling.kinds;
 	return {
 		id: active._id,
 		twigs: active.twigs.map((t) => {
-			const kind = COPY.kindling.kinds[t.kind as TwigKind];
+			const kind = kinds[t.kind] ?? COPY.kindling.anyKind;
 			return {
 				id: t._id,
 				length: kind.length,
