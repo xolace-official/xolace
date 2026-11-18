@@ -129,7 +129,12 @@ export function TodayToolbar({ scrollY, flameClock, live, reduced }: Props) {
 				pointerEvents="box-none"
 				style={{ height: BUTTON_H, top: rowTop }}
 			>
-				<StreakChip clock={flameClock} elevated running={live && shown} />
+				<StreakChip
+					clock={flameClock}
+					elevated
+					reduced={reduced}
+					running={live && shown}
+				/>
 				<AppText
 					accessibilityRole="header"
 					className="text-[17px]"

@@ -52,7 +52,11 @@ export function TodayHeader({
 					{state.eyebrow}
 				</AppText>
 				<GlassGroup>
-					<StreakChip clock={flameClock} running={live && !faded} />
+					<StreakChip
+						clock={flameClock}
+						reduced={reduced}
+						running={live && !faded}
+					/>
 					<PressScale
 						accessibilityLabel={COPY.help}
 						accessibilityRole="button"

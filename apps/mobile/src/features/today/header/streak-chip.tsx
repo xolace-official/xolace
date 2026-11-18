@@ -17,7 +17,6 @@ import { playSessionComplete } from "@/lib/haptics";
 import { useTokenColor } from "@/lib/use-token-color";
 import { COPY } from "../copy";
 import { useToday } from "../today-data";
-import { useTodayFrame } from "../today-frame";
 import { easeOutFn, keyframes } from "../today-motion";
 import { IGNITE_GLOW } from "../today-palette";
 import { Flame } from "./flame";
@@ -42,6 +41,7 @@ type Props = {
 	running: boolean;
 	/** The toolbar's copy sits on glass: a white hairline, and it stays silent. */
 	elevated?: boolean;
+	reduced: boolean;
 };
 
 /**
@@ -49,9 +49,8 @@ type Props = {
  * counts each day it ignites: the flame flares to 1.5, the chip glows amber,
  * 12 rolls to 13, one Bloom. No takeover. Nothing shows until the streak is known.
  */
-export function StreakChip({ clock, running, elevated }: Props) {
+export function StreakChip({ clock, running, elevated, reduced }: Props) {
 	const { state, actions } = useToday();
-	const { reduced } = useTodayFrame();
 	const emberInk = useTokenColor("ember-ink");
 	const focused = useIsFocused();
 	const ignite = useSharedValue(1);

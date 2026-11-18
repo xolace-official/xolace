@@ -17,6 +17,25 @@ const ACTIONS: Today["actions"] = {
 
 /** Let the screen land before the streak grows, as coming back to Today does. */
 const IGNITE_AFTER_MS = 600;
+/** Long enough for each swap to finish and rest (the night front takes 1.6 s). */
+const CYCLE_MS = 4000;
+const PHASES: readonly TodayPhase[] = ["dawn", "day", "evening", "late"];
+
+/** The phase, or the next one every few seconds when cycling. */
+function usePhase(start: TodayPhase, cycle: boolean): TodayPhase {
+	const [index, setIndex] = useState(() => PHASES.indexOf(start));
+	useEffect(() => {
+		if (!cycle) {
+			return;
+		}
+		const id = setInterval(
+			() => setIndex((i) => (i + 1) % PHASES.length),
+			CYCLE_MS
+		);
+		return () => clearInterval(id);
+	}, [cycle]);
+	return PHASES[index] ?? start;
+}
 
 export type FixtureProps = {
 	phase: TodayPhase;
@@ -28,15 +47,19 @@ export type FixtureProps = {
 	offline?: boolean;
 	/** The streak grows by one just after the screen opens, and the flame ignites. */
 	ignite?: boolean;
+	/** Step through the four phases, to watch the sky change hour (and night fall). */
+	cycle?: boolean;
 };
 
 function FixtureToday({
-	phase,
+	phase: start,
 	theme = "light",
 	intro = false,
 	offline = false,
 	ignite = false,
+	cycle = false,
 }: FixtureProps) {
+	const phase = usePhase(start, cycle);
 	const [grown, setGrown] = useState(false);
 	useEffect(() => {
 		if (!ignite) {

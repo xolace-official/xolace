@@ -36,6 +36,11 @@ export const devStates: readonly DevState[] = [
 		...today({ ignite: true, phase: "evening" }),
 	},
 	{
+		id: "phases",
+		title: "The sky through the day (cycles every 4 s)",
+		...today({ cycle: true, phase: "dawn" }),
+	},
+	{
 		id: "offline",
 		title: "Offline (no name, no streak)",
 		...today({ offline: true, phase: "day" }),
