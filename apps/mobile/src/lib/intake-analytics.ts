@@ -21,7 +21,8 @@ export const prune = <T extends Record<string, unknown>>(
  * message after a cold kill. */
 let startedAt = 0;
 
-/** The `intake-v2` arm (#704), once read. Every event after it carries it. */
+/** The intake's arm (#704); always `v2` since S18 ended the experiment. Every event after it
+ * carries it. */
 let arm: IntakeArm | undefined;
 
 let firstReflectionFired = false;

@@ -11,16 +11,13 @@ import type {
 	IntakeV2State,
 	IntakeV2Step,
 	PlusOutcome,
-	PlusSide,
 } from "@/features/intake/v2/machine";
 import type { PlanId } from "@/features/purchases/screens/paywall-period-picker";
 import type { PaywallSurface } from "@/features/purchases/use-paywall";
 import {
 	findingUsOnce,
-	type IntakeArm,
 	intakeArmProps,
 	intakeDurationMs,
-	intakePersonProperties,
 	prune,
 	setIntakeArm,
 	startIntakeClock,
@@ -59,27 +56,6 @@ const STEPS = [
 
 export type IntakeStepKey = (typeof STEPS)[number]["key"];
 
-/** Answer-slice key to `step_key`. Q1's answer key is `displayName`. */
-export const STEP_KEY_BY_ANSWER = {
-	acquisitionSource: "acquisition_source",
-	ageBracket: "age_bracket",
-	copingStyle: "coping_style",
-	disclosureStyle: "disclosure_style",
-	displayName: "username",
-	emotionAwareness: "emotion_awareness",
-	intent: "intent",
-	seriesSeen: "series_seen",
-	seriesWantInApp: "series_want_in_app",
-	supportFrequency: "support_frequency",
-	weighingOn: "weighing_on",
-} as const satisfies Record<string, IntakeStepKey>;
-
-/** The `step_key` for an answer key, or nothing if it names no tracked step. */
-export const stepKeyOfAnswer = (name: string): IntakeStepKey | undefined =>
-	STEP_KEY_BY_ANSWER[name as keyof typeof STEP_KEY_BY_ANSWER];
-
-const DECLINED_VALUE = "prefer_not_to_say";
-
 const indexOf = (key: IntakeStepKey) =>
 	STEPS.findIndex((step) => step.key === key);
 
@@ -94,42 +70,19 @@ function stepViewedProps(stepKey: IntakeStepKey) {
 	};
 }
 
-const isDeclined = (value: unknown) =>
-	Array.isArray(value)
-		? value.includes(DECLINED_VALUE)
-		: value === DECLINED_VALUE;
-
-export function questionAnsweredProps(
-	questionKey: IntakeStepKey,
-	value: string | string[]
-) {
-	const multi = Array.isArray(value);
-	return {
-		is_multi: multi,
-		question_index: indexOf(questionKey),
-		question_key: questionKey,
-		value,
-		// Omitted for single-selects per T7 §2.1 rather than sent as 1.
-		...(multi ? { selection_count: value.length } : {}),
-		declined: isDeclined(value),
-	};
-}
-
-/** Questions answered "I'd rather not say" across the whole set. */
-export function declinedCount(answers: IntakeAnswers): number {
-	return Object.values(answers).filter(isDeclined).length;
-}
-
 /** Carried from `intake_started` onto `intake_completed`; only the first event sees the session
  * count. */
 let returningUser = false;
 
-// Intake ends once. The offer deck is still mounted under `(intake)/plans` when a
-// purchase completes, so teardown could otherwise emit a second `intake_completed`.
+// Intake ends once: a purchase and the first look's teardown could otherwise each emit
+// `intake_completed`.
 let completedFired = false;
 
 export function trackIntakeStarted(posthog: PostHog, sessionCount: number) {
 	startIntakeClock();
+	// Every intake is v2 since S18 retired the experiment; events keep the prop so the
+	// funnel's numbers carry on from it.
+	setIntakeArm("v2");
 	returningUser = sessionCount > 0;
 	completedFired = false;
 	posthog.capture("intake_started", {
@@ -143,38 +96,8 @@ export function trackStepViewed(posthog: PostHog, stepKey: IntakeStepKey) {
 	posthog.capture("intake_step_viewed", stepViewedProps(stepKey));
 }
 
-export function trackQuestionAnswered(
-	posthog: PostHog,
-	questionKey: IntakeStepKey,
-	value: string | string[],
-	/** Extra props for a question that needs one, e.g. `username`. */
-	extra?: Record<string, unknown>
-) {
-	posthog.capture("intake_question_answered", {
-		...questionAnsweredProps(questionKey, value),
-		...extra,
-	});
-}
-
 const branchedSeries = (answers: IntakeAnswers) =>
 	answers.acquisitionSource === SERIES_BRANCH_VALUE;
-
-/** Last §3 question answered. Carries the person-property dual-write. */
-export function trackQuestionnaireCompleted(
-	posthog: PostHog,
-	answers: IntakeAnswers
-) {
-	posthog.capture("intake_questionnaire_completed", {
-		branched_series: branchedSeries(answers),
-		declined_count: declinedCount(answers),
-		duration_ms: intakeDurationMs(),
-		...intakePersonProperties(answers),
-	});
-}
-
-export function trackPaywallSkipped(posthog: PostHog) {
-	posthog.capture("intake_paywall_skipped", { reason: "active_entitlement" });
-}
 
 export type IntakeOutcome =
 	| "purchased"
@@ -199,21 +122,6 @@ export function trackIntakeCompleted(
 		is_returning_user: returningUser,
 		outcome,
 	});
-}
-
-/**
- * Fired once, when the founder letter's CTA freezes the arm: `intake_started` comes before
- * the flag is read, so this is each arm's start.
- */
-export function trackIntakeArmAssigned(posthog: PostHog, assigned: IntakeArm) {
-	setIntakeArm(assigned);
-	posthog.capture("intake_arm_assigned", { intake_arm: assigned });
-}
-
-/** An arm assigned before this process started: later events still carry it, but it's no new
- * assignment. */
-export function restoreIntakeArm(kept: IntakeArm) {
-	setIntakeArm(kept);
 }
 
 /** v2's one answer: how it came in and how long, never the words. */
@@ -340,7 +248,8 @@ const OUTCOME_OF_PLUS = {
 export const intakeOutcomeOf = (state: IntakeV2State): IntakeOutcome =>
 	state.plusOutcome === null ? "no_offer" : OUTCOME_OF_PLUS[state.plusOutcome];
 
-/** v2's Xolace+ step, "Same week, two ways" (#713), as the paywall surfaces know it. */
+/** Intake's Xolace+ step as the paywall surfaces know it. The id is the first version's
+ * ("Same week, two ways", #713), kept so its numbers carry on into the first look's. */
 export const INTAKE_PLUS_SURFACE =
 	"intake_same_week" as const satisfies PaywallSurface;
 
@@ -360,8 +269,9 @@ export function trackPlusShown(posthog: PostHog) {
 	});
 }
 
-export function trackPlusSwitched(posthog: PostHog, side: PlusSide) {
-	posthog.capture("intake_plus_switched", plusProps({ side }));
+/** A Plus row opened on the first look, to its preview. */
+export function trackPlusRowOpened(posthog: PostHog, row: string) {
+	posthog.capture("intake_plus_row_opened", plusProps({ row }));
 }
 
 export function trackPlusPlanPicked(posthog: PostHog, plan: PlanId) {
@@ -380,9 +290,17 @@ export function trackPlusPurchased(
 	);
 }
 
-/** "Continue free", from whichever side it was tapped. */
-export function trackPlusContinuedFree(posthog: PostHog, side: PlusSide) {
-	posthog.capture("intake_plus_continued_free", plusProps({ side }));
+/** "Continue free" (or "Continue", for someone who has Xolace+). `offered`: the step was
+ * counted as shown, so its `paywall_opened` gets the `paywall_dismissed` that closes it, as
+ * the paywall's close button sends it. */
+export function trackPlusContinuedFree(posthog: PostHog, offered: boolean) {
+	posthog.capture("intake_plus_continued_free", plusProps({}));
+	if (offered) {
+		posthog.capture("paywall_dismissed", {
+			session_count: 0,
+			surface: INTAKE_PLUS_SURFACE,
+		});
+	}
 }
 
 /** "Try it" on the Talk card opened the Talk demo (#714). */

@@ -1,58 +1,13 @@
 import type { PostHog } from "posthog-react-native";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-	declinedCount,
-	intakeOutcomeOf,
-	questionAnsweredProps,
-} from "@/features/intake/analytics";
+import { intakeOutcomeOf } from "@/features/intake/analytics";
 import {
 	initialIntakeV2State,
 	type PlusOutcome,
 } from "@/features/intake/v2/machine";
 
-describe("questionAnsweredProps", () => {
-	it("omits selection_count for a single-select", () => {
-		expect(questionAnsweredProps("intent", "feel_less_alone")).toEqual({
-			declined: false,
-			is_multi: false,
-			question_index: 2,
-			question_key: "intent",
-			value: "feel_less_alone",
-		});
-	});
-
-	it("counts a multi-select and flags a decline in it", () => {
-		expect(
-			questionAnsweredProps("weighing_on", ["work", "prefer_not_to_say"])
-		).toMatchObject({
-			declined: true,
-			is_multi: true,
-			selection_count: 2,
-		});
-	});
-
-	it("flags a single-select decline", () => {
-		expect(
-			questionAnsweredProps("age_bracket", "prefer_not_to_say").declined
-		).toBe(true);
-	});
-});
-
-describe("declinedCount", () => {
-	it("counts single and multi declines once each", () => {
-		expect(
-			declinedCount({
-				ageBracket: "25_34",
-				copingStyle: ["distract"],
-				intent: "prefer_not_to_say",
-				weighingOn: ["work", "prefer_not_to_say"],
-			})
-		).toBe(2);
-	});
-});
-
-describe("intake v2 arms (#704)", () => {
+describe("intake events (#704)", () => {
 	// Intake analytics keeps its clock and latches per process; each test gets a fresh module.
 	let analytics: typeof import("@/features/intake/analytics");
 	let capture: ReturnType<typeof vi.fn>;
@@ -75,22 +30,11 @@ describe("intake v2 arms (#704)", () => {
 			.filter(([name]) => name === event)
 			.map(([, props]) => props);
 
-	describe("per-arm intake events", () => {
-		it("stamps events with a kept arm after a cold kill, without assigning it again", () => {
+	describe("every intake is v2 (S18)", () => {
+		it("stamps intake_completed with v2, and assigns no arm", () => {
 			analytics.trackIntakeStarted(posthog, 0);
-			analytics.restoreIntakeArm("v2");
-			analytics.trackIntakeCompleted(posthog, "dismissed_paywall", {});
-			expect(captured("intake_arm_assigned")).toEqual([]);
-			expect(captured("intake_completed")[0]).toMatchObject({
-				intake_arm: "v2",
-			});
-		});
-
-		it("stamps intake_completed with the arm", () => {
-			analytics.trackIntakeStarted(posthog, 0);
-			analytics.trackIntakeArmAssigned(posthog, "v2");
 			analytics.trackIntakeCompleted(posthog, "no_offer", {});
-			expect(captured("intake_arm_assigned")).toEqual([{ intake_arm: "v2" }]);
+			expect(captured("intake_arm_assigned")).toEqual([]);
 			expect(captured("intake_completed")[0]).toMatchObject({
 				intake_arm: "v2",
 				outcome: "no_offer",
@@ -98,7 +42,7 @@ describe("intake v2 arms (#704)", () => {
 		});
 
 		it("sends how the answer came in and its length, never the words", () => {
-			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackIntakeStarted(posthog, 0);
 			analytics.trackAnswerGiven(posthog, "typed", "I'm not sleeping");
 			expect(captured("intake_answer_given")).toEqual([
 				{ answer_length: 16, answer_mode: "typed", intake_arm: "v2" },
@@ -106,7 +50,7 @@ describe("intake v2 arms (#704)", () => {
 		});
 
 		it("counts the chips tapped off and on, and the suggestions taken", () => {
-			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackIntakeStarted(posthog, 0);
 			analytics.trackHeardConfirmed(
 				posthog,
 				"suggested",
@@ -127,9 +71,31 @@ describe("intake v2 arms (#704)", () => {
 		});
 	});
 
+	describe("the first look (S18)", () => {
+		it("closes the step's paywall_opened with a paywall_dismissed on Continue free", () => {
+			analytics.trackIntakeStarted(posthog, 0);
+			analytics.trackPlusShown(posthog);
+			analytics.trackPlusContinuedFree(posthog, true);
+			const surface = analytics.INTAKE_PLUS_SURFACE;
+			expect(captured("paywall_opened")).toEqual([
+				{ session_count: 0, surface },
+			]);
+			expect(captured("paywall_dismissed")).toEqual([
+				{ session_count: 0, surface },
+			]);
+		});
+
+		it("dismisses no paywall for someone it wasn't offered to", () => {
+			analytics.trackIntakeStarted(posthog, 0);
+			analytics.trackPlusContinuedFree(posthog, false);
+			expect(captured("intake_plus_continued_free")).toHaveLength(1);
+			expect(captured("paywall_dismissed")).toEqual([]);
+		});
+	});
+
 	describe("reading the first answer (#708)", () => {
 		it("records the follow-up's field, never its question or the reply", () => {
-			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackIntakeStarted(posthog, 0);
 			analytics.trackFollowUpShown(posthog, "weighingOn");
 			expect(captured("intake_follow_up_shown")).toEqual([
 				{ field: "weighingOn", intake_arm: "v2" },
@@ -137,7 +103,7 @@ describe("intake v2 arms (#704)", () => {
 		});
 
 		it("records the safety route with its level", () => {
-			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackIntakeStarted(posthog, 0);
 			analytics.trackSafetyRouted(posthog, "crisis");
 			expect(captured("intake_safety_routed")).toEqual([
 				{ intake_arm: "v2", safeguard_level: "crisis" },
@@ -145,7 +111,7 @@ describe("intake v2 arms (#704)", () => {
 		});
 
 		it("records a late safety verdict and where it found the person", () => {
-			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackIntakeStarted(posthog, 0);
 			analytics.trackSafetyLate(posthog, "elevated", "plus");
 			expect(captured("intake_safety_late")).toEqual([
 				{ intake_arm: "v2", safeguard_level: "elevated", step: "plus" },
@@ -153,7 +119,7 @@ describe("intake v2 arms (#704)", () => {
 		});
 
 		it("records why the pick-list stood in for a reading", () => {
-			analytics.trackIntakeArmAssigned(posthog, "v2");
+			analytics.trackIntakeStarted(posthog, 0);
 			analytics.trackReadFallback(posthog, "timeout");
 			expect(captured("intake_read_fallback")).toEqual([
 				{ intake_arm: "v2", reason: "timeout" },

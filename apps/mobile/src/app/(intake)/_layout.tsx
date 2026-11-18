@@ -25,20 +25,7 @@ export default function IntakeLayout() {
 	return (
 		<Stack screenOptions={SCREEN_OPTIONS}>
 			<Stack.Screen name="index" />
-			<Stack.Screen name="questionnaire" />
 			<Stack.Screen name="flux" />
-			<Stack.Screen name="paywall" />
-			{/* The one intake screen with a header: PaywallScreen hangs its buttons
-          off the native toolbar. Still a linear step, so forward-only. */}
-			<Stack.Screen
-				name="plans"
-				options={{
-					headerShadowVisible: false,
-					headerShown: true,
-					headerTransparent: true,
-					title: "",
-				}}
-			/>
 		</Stack>
 	);
 }

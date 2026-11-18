@@ -16,7 +16,6 @@ describe("isPresentedRoute", () => {
 		"/steadiness-face-info",
 		"/reader-appearance",
 		"/xolacer-edit",
-		"/intake-plus-preview",
 		"/settings/reach",
 		"/follow-up",
 		"/talk-kept",

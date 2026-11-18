@@ -69,7 +69,6 @@ export function useDevTools() {
 				)
 				.catch(failed("Clearing the date of birth failed")),
 		openDevStates: () => router.push("/dev"),
-		previewPlusStep: () => router.push("/intake-plus-preview"),
 		replayBadge: () =>
 			seedBadgeUnlock().catch(failed("Badge unlock replay failed")),
 		replayDeferred: () =>
@@ -90,12 +89,7 @@ export function useDevTools() {
 				.catch(failed("Deferred questions replay failed")),
 		// No navigation: `onboardingComplete` is the root guard and swaps the group.
 		replayIntake: () =>
-			once(() =>
-				resetIntake()
-					// A replay reads the flag again, so a tester can reach the other arm.
-					.then(() => useAppStore.setState({ intakeArms: {} }))
-					.catch(failed("Intake reset failed"))
-			),
+			once(() => resetIntake().catch(failed("Intake reset failed"))),
 		replayReveal: () => {
 			acknowledge(0);
 			toast("Reveal re-armed", {

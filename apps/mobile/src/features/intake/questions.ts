@@ -1,6 +1,7 @@
-// The intake questionnaire as data (T1 #232, T2 #233): the T1 resolution table verbatim.
-// Values are the `intakeAnswerValidators` enums (`convex/lib/validators.ts`), so answers
-// reach `intake.complete` untranslated. "I'd rather not say" appears only on Q2, Q3, Q4, Q6, Q8.
+// The first intake's "Finding us" questions as data (T1 #232, T2 #233), asked now on
+// Discovery's day-3 card; the rest of that questionnaire went with it (S18). Values are the
+// `intakeAnswerValidators` enums (`convex/lib/validators.ts`), so answers reach the backend
+// untranslated.
 import { Platform } from "react-native";
 import type { IntakeAnswers } from "@/store/intake-slice";
 
@@ -33,115 +34,6 @@ const PREFER_NOT_TO_SAY: IntakeChoice = {
 	label: "I'd rather not say",
 	value: "prefer_not_to_say",
 };
-
-/** §1 You. Q1 (username) is its own screen; these are Q2 and Q3. */
-export const SECTION_YOU: readonly IntakeQuestion[] = [
-	{
-		choices: [
-			{ label: "Understand what I'm feeling", value: "understand_feelings" },
-			{ label: "Get through a hard moment", value: "get_through_hard_moment" },
-			{ label: "Feel less alone", value: "feel_less_alone" },
-			{
-				label: "Make this a regular part of my life",
-				value: "make_it_regular",
-			},
-			{ label: "Just looking around", value: "just_looking" },
-			PREFER_NOT_TO_SAY,
-		],
-		name: "intent",
-		question: "What brought you to Xolace?",
-	},
-	{
-		choices: [
-			{ label: "Work", value: "work" },
-			{ label: "Relationships", value: "relationships" },
-			{ label: "Family", value: "family" },
-			{ label: "Identity", value: "identity" },
-			{ label: "Health", value: "health" },
-			{ label: "Money", value: "money" },
-			{ label: "Purpose", value: "purpose" },
-			{ label: "A loss", value: "a_loss" },
-			{ label: "A big change", value: "big_change" },
-			{ label: "Can't name", value: "cant_name_yet" },
-			PREFER_NOT_TO_SAY,
-		],
-		description: `Pick up to ${MAX_SELECTIONS}.`,
-		multiple: true,
-		name: "weighingOn",
-		question: "What's weighing on you lately?",
-		twoUp: true,
-	},
-];
-
-/** §2 How you carry it. Q4 to Q7. */
-export const SECTION_CARRY: readonly IntakeQuestion[] = [
-	{
-		choices: [
-			{
-				label: "I usually know what I feel and can say it",
-				value: "know_and_can_say",
-			},
-			{
-				label: "I know what I feel but can't put words to it",
-				value: "know_but_no_words",
-			},
-			{
-				label: "I can tell something's off but not what",
-				value: "something_off_unclear",
-			},
-			{ label: "I mostly go numb or can't tell", value: "numb_or_cant_tell" },
-			PREFER_NOT_TO_SAY,
-		],
-		name: "emotionAwareness",
-		question: "How aware are you of what you feel?",
-	},
-	{
-		choices: [
-			{ label: "Let it all out at once", value: "all_at_once" },
-			{ label: "Share a bit at a time", value: "bit_at_a_time" },
-			{ label: "Keep it brief", value: "keep_it_brief" },
-			{ label: "Depends on the day", value: "depends" },
-		],
-		name: "disclosureStyle",
-		question: "When something's bothering you, you usually…",
-	},
-	{
-		choices: [
-			{ label: "I don't really know how", value: "dont_know_how" },
-			{
-				label:
-					"I use calming or creative outlets (breathing, journaling, music, art, meditation)",
-				value: "calming_creative",
-			},
-			{ label: "I distract myself", value: "distract" },
-			{
-				label: "I let it out (vent, cry, write it all down)",
-				value: "let_it_out",
-			},
-			{ label: "I lean on people around me", value: "lean_on_people" },
-			{
-				label: "I rely on outside things (substances, meds, other)",
-				value: "outside_things",
-			},
-			PREFER_NOT_TO_SAY,
-		],
-		description: `Pick up to ${MAX_SELECTIONS}.`,
-		multiple: true,
-		name: "copingStyle",
-		question: "How do you usually cope when you're struggling?",
-	},
-	{
-		choices: [
-			{ label: "Occasionally", value: "occasionally" },
-			{ label: "Frequently", value: "frequently" },
-			{ label: "Every day", value: "every_day" },
-			{ label: "Not sure", value: "not_sure" },
-		],
-		name: "supportFrequency",
-		question: "How often do you feel you need support?",
-		twoUp: true,
-	},
-];
 
 /** §3 Finding us. Q8 to Q9, then the series branch. */
 export const SECTION_FINDING: readonly IntakeQuestion[] = [

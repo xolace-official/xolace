@@ -2,8 +2,8 @@ import { Surface, useThemeColor } from "heroui-native";
 import { StyleSheet, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { SegmentedControl } from "@/components/shared/segmented-control";
+import type { IntroOffer } from "@/features/purchases/intro-offer";
 import { cn } from "@/lib/utils";
-import type { IntroOffer } from "./paywall-intro-offer";
 
 export type PlanId = "annual" | "monthly";
 
