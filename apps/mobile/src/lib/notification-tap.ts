@@ -127,7 +127,13 @@ export function notificationTapPlan(
 		}
 	} else if (data?.screen === "quotes") {
 		plan.navigation = { action: "push", href: "/(protected)/quotes" };
-	} else if (data?.type === "domain_unlock") {
+	} else if (data?.type === "domain_unlock" && !isHeldRoute(pathname)) {
+		// Steadiness lives in the You tab (/you/steadiness). The old path's MovedRoute shim gets
+		// there the right way from anywhere: back to the tabs when they're in the stack, in the
+		// shim's own place when they aren't. From here, dismissTo would replace the screen on top
+		// when the tabs aren't in the stack (Reflect, on a cold start), and navigate would stack a
+		// second copy of the tabs. The shim's dismissTo would pop a held screen above the tabs,
+		// so a tap on one goes nowhere, as home's does.
 		plan.navigation = { action: "push", href: "/profile/insights" };
 	} else if (data?.type === "kindling_ready") {
 		plan.navigation = { action: "push", href: "/(protected)/kindling" };

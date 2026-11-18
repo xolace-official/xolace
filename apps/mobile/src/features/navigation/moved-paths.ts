@@ -8,6 +8,11 @@ type Moved = {
 	 * path itself moved and the paths under it stay where they are.
 	 */
 	readonly subtree?: true;
+	/**
+	 * Single subpaths that moved somewhere of their own (`/profile/insights` is
+	 * `/you/steadiness`), each with its own `<root>/<sub>.tsx` shim.
+	 */
+	readonly paths?: Readonly<Record<string, string>>;
 };
 
 /**
@@ -22,22 +27,35 @@ const MOVED: Readonly<Record<string, Moved>> = {
 	discovery: { to: "/today" },
 	// Its beat folded into the session end's next step (S3).
 	"kindling-announcement": { to: "/session-end" },
-	profile: { to: "/you" },
+	profile: { paths: { insights: "/you/steadiness" }, to: "/you" },
 };
 
 /** Where a moved path lives now, or null if it didn't move. */
 export function movedPath(pathname: string): string | null {
 	const [, root = "", ...rest] = pathname.split("/");
 	const moved = Object.hasOwn(MOVED, root) ? MOVED[root] : undefined;
-	if (!moved || (rest.length > 0 && !moved.subtree)) {
+	if (!moved) {
+		return null;
+	}
+	const own = rest.length === 1 ? moved.paths?.[rest[0]] : undefined;
+	if (own) {
+		return own;
+	}
+	if (rest.length > 0 && !moved.subtree) {
 		return null;
 	}
 	return [moved.to, ...rest].join("/");
 }
 
-/** Each moved root and whether its subpaths moved too, for the route checks. */
-export const movedRoots = (): { root: string; subtree: boolean }[] =>
+/** Each moved root, whether its subpaths moved too and its single moved subpaths, for the
+ * route checks. */
+export const movedRoots = (): {
+	root: string;
+	subtree: boolean;
+	paths: string[];
+}[] =>
 	Object.entries(MOVED).map(([root, moved]) => ({
+		paths: Object.keys(moved.paths ?? {}),
 		root,
 		subtree: moved.subtree === true,
 	}));

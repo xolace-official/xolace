@@ -1,5 +1,5 @@
-import { FaceInfoSheet } from "@/features/insights/face-info-sheet";
+import { FaceSheet } from "@/features/you/steadiness/face-sheet";
 
 export default function SteadinessFaceInfoRoute() {
-	return <FaceInfoSheet />;
+	return <FaceSheet />;
 }

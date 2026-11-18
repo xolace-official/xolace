@@ -218,7 +218,7 @@ describe("notificationTapPlan", () => {
 		});
 	});
 
-	it("routes domain_unlock to the insights screen", () => {
+	it("routes domain_unlock to Steadiness through the old path's shim", () => {
 		expect(
 			notificationTapPlan({ type: "domain_unlock" }, null, 1, ON_TABS)
 				.navigation
@@ -332,6 +332,13 @@ describe("notificationTapPlan", () => {
 				logId: "l1",
 			});
 		}
+	});
+
+	it("leaves a held screen alone for domain_unlock, whose shim returns to the tabs", () => {
+		expect(
+			notificationTapPlan({ type: "domain_unlock" }, null, 1, "/voice-vent")
+				.navigation
+		).toBeUndefined();
 	});
 
 	it("still opens other screens from a held one, since those stack rather than dismiss", () => {

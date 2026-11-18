@@ -70,16 +70,7 @@ const FIT_SHEET = {
 	sheetCornerRadius: 40,
 	sheetGrabberVisible: true,
 };
-const SHEET = {
-	presentation: "formSheet",
-	sheetAllowedDetents: "fitToContents",
-	sheetGrabberVisible: true,
-};
-const pinned = (reduced: boolean, glass: boolean) => {
-	const fit = {
-		...SHEET,
-		contentStyle: glass ? undefined : { backgroundColor: "#000" },
-	};
+const pinned = (reduced: boolean) => {
 	const rise = reduced ? "fade" : "slide_from_bottom";
 	return {
 		"browse-intro": { ...PLAYER, gestureEnabled: false },
@@ -107,7 +98,7 @@ const pinned = (reduced: boolean, glass: boolean) => {
 		"report-reflection": FIT_SHEET,
 		"session-end": NO_GESTURE,
 		"sit-with-this": NO_GESTURE,
-		"steadiness-face-info": fit,
+		"steadiness-face-info": FIT_SHEET,
 		"streak-held": PLAYER,
 		"trusted-bridge": undefined,
 		upgrade: {
@@ -133,7 +124,7 @@ const pinned = (reduced: boolean, glass: boolean) => {
 describe("the routes the layout used to list by hand", () => {
 	for (const context of [ON_GLASS, REDUCED]) {
 		it(`keep their options (reduced motion ${context.reducedMotion}, glass ${context.liquidGlass})`, () => {
-			const expected = pinned(context.reducedMotion, context.liquidGlass);
+			const expected = pinned(context.reducedMotion);
 			const actual = Object.fromEntries(
 				ROOT_SCREENS.filter((s) => Object.hasOwn(expected, s.name)).map((s) => [
 					s.name,

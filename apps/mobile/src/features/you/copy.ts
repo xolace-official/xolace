@@ -192,6 +192,73 @@ export const COPY = {
 				: `${delta > 0 ? "Up" : "Down"} ${Math.abs(delta)} since ${since}`,
 		trendBasis: "last week",
 	},
+	/** The Steadiness screen (steadiness.md), production's words where it kept them. */
+	steadinessScreen: {
+		caveat:
+			"This is what Xolace knows from how you've used Xolace. It may not reflect your whole life.",
+		chipLabel: (score: number) => `Steadiness ${score}. Scroll to top`,
+		dialLabel: (score: number, trend: string | null) =>
+			`Overall steadiness, ${score} out of 100.${trend ? ` ${trend.charAt(0).toUpperCase()}${trend.slice(1)}.` : ""}`,
+		/** What the Reflection Agent noticed (production's steadiness-insights.tsx). */
+		eyebrow: {
+			absence: "What never comes up",
+			crowding: "What it's pushed out",
+			relief: "Where relief came from",
+			say_vs_after: "What you say, and what comes after",
+			thread: "One thread",
+		},
+		face: {
+			done: "Got it",
+			lead: "The face shows how steady things have been, not how you feel. It shows that through how much it moves.",
+			noteBody:
+				"A low number doesn't get a frown, and a high one doesn't get a bigger smile. Steadiness isn't the same as happiness.",
+			noteTitle: "Its expression never changes with your score",
+			rows: {
+				restless:
+					"When things have been up and down lately, it fidgets and sways. The more it moves, the less steady the last few weeks have been.",
+				settled:
+					"As things steady, it settles and keeps still. Calm and still means your weeks have been holding steady.",
+				waiting:
+					"Before Xolace knows two parts of your life, it waits quietly with soft eyes. Nothing to read yet.",
+			},
+			title: "Reading the face",
+			titles: { restless: "Restless", settled: "Settled", waiting: "Waiting" },
+		},
+		faceLabel: "Reading the face",
+		gridLabel: "Show as grid",
+		heavier: "Heavier lately",
+		kindling: "Your kindling",
+		kindlingLabel: "Open your kindling",
+		kindlingSub: "A few things from a session about this",
+		listLabel: "Show as list",
+		locked: "vs last week",
+		lockedLabel: "Locked: change since last week. Opens Xolace+.",
+		noticed: (date: string) => `Noticed ${date}`,
+		notLit: "Not lit yet",
+		now: "now",
+		parts: "Parts of your life",
+		partsAs: "Show parts as",
+		/** `heavierLately`: the part the upsell names, so its line speaks to the stretch. */
+		peek: (name: string, heavierLately: boolean) =>
+			heavierLately
+				? `Xolace+ shows how far ${name} has moved from your usual, which way it's heading, and what Xolace noticed about it.`
+				: `Xolace+ shows how steady ${name} has been, your usual for it, and the change since last week.`,
+		peekGo: "See what Xolace+ shows",
+		quietSince: (date: string) => `Not recently · last seen ${date}`,
+		seen: (date: string) => `last seen ${date}`,
+		soFar: (known: number) => `${known} of 2 so far`,
+		title: "Steadiness",
+		unlock: "Unlock numbers",
+		upsell: (name: string) =>
+			`${name} has been heavier lately than your usual.`,
+		upsellGo: "See the pattern",
+		upsellLabel: (name: string) =>
+			`${name} has been heavier lately than your usual. See the pattern with Xolace+.`,
+		usually: (n: number) => `usually ${n}`,
+		usuallyCap: (n: number) => `Usually ${n}`,
+		wait: "Lights up once Xolace knows two parts of your life.",
+		warming: "warming",
+	},
 	streak: {
 		best: (n: number) => `Best ${n}`,
 		buy: (price: number) => `Buy one · ${price} sparks`,
