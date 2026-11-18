@@ -7,11 +7,12 @@ import { COPY } from "./copy";
 import type { SitScene } from "./run/sit-run";
 import { SitRunView } from "./run/sit-run-view";
 import { useSit } from "./sit-data";
+import { SitLoading } from "./sit-loading";
 
 /**
  * Sit with this ("Two arcs, one breath", design/handoff/sit.md), opened from a
- * reflection's path or a kindling twig. Beats run on timers without a touch,
- * so the screen stays on throughout. `scene` is for dev states only.
+ * reflection's path, a kindling twig or Today's Sit door. Beats run on timers without a
+ * touch, so the screen stays on throughout. `scene` is for dev states only.
  */
 export function SitWithThisScreen({ scene }: { scene?: SitScene }) {
 	useKeepAwake();
@@ -37,13 +38,7 @@ export function SitWithThisScreen({ scene }: { scene?: SitScene }) {
 	}
 
 	if (state.status === "loading" || !state.exercise || !facesReady) {
-		return (
-			<View className="flex-1 items-center justify-center bg-background">
-				<AppText color="subtle" variant="callout">
-					{COPY.loading}
-				</AppText>
-			</View>
-		);
+		return <SitLoading onBack={() => actions.finish(false)} />;
 	}
 
 	return (
