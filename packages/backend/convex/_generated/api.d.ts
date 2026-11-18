@@ -291,6 +291,7 @@ import type * as productFeedback from "../productFeedback.js";
 import type * as productFeedbackFlags from "../productFeedbackFlags.js";
 import type * as profile from "../profile.js";
 import type * as profile_intensity from "../profile/intensity.js";
+import type * as profile_weekDetail from "../profile/weekDetail.js";
 import type * as quotes from "../quotes.js";
 import type * as rag from "../rag.js";
 import type * as reflections from "../reflections.js";
@@ -624,6 +625,7 @@ declare const fullApi: ApiFromModules<{
   productFeedbackFlags: typeof productFeedbackFlags;
   profile: typeof profile;
   "profile/intensity": typeof profile_intensity;
+  "profile/weekDetail": typeof profile_weekDetail;
   quotes: typeof quotes;
   rag: typeof rag;
   reflections: typeof reflections;

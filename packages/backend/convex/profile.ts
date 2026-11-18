@@ -5,6 +5,12 @@ import { requireAuth } from "./lib/auth";
 import { seededDisplayName, validateDisplayName } from "./lib/displayName";
 import { hasPremium } from "./lib/premium";
 import { insightFeatureValidator } from "./lib/validators";
+import {
+	type DayDetail,
+	dayDetail,
+	dayDetailValidator,
+	WEEK_MAX_MOMENTS,
+} from "./profile/weekDetail";
 import { streakState } from "./streaks/state";
 
 /**
@@ -258,9 +264,18 @@ function formatWeekLabel(weekStart: Date, weekEnd: Date): string {
  * Intensity data for the P2 chart teaser (Mon–Sun), current week by default.
  * Free tier can only ever request the current week (weekOffset forced to 0
  * server-side); Plus can page up to MAX_WEEKS_BACK weeks into history.
+ *
+ * `withDetail` (redesign B17) adds each day with moments a `detail`: how many,
+ * the top domain and emotion, and how the day ended (`profile/weekDetail.ts`).
+ * Opt-in, so shipped builds, which never ask, read and re-run exactly as before:
+ * the detail reads up to seven sessions (each day's last), and a query that
+ * reads a session re-runs whenever that session changes.
  */
 export const getWeekIntensity = query({
-	args: { weekOffset: v.optional(v.number()) },
+	args: {
+		weekOffset: v.optional(v.number()),
+		withDetail: v.optional(v.boolean()),
+	},
 	handler: async (ctx, args) => {
 		const { profile } = await requireAuth(ctx);
 		const premium = await hasPremium(ctx, profile);
@@ -293,7 +308,7 @@ export const getWeekIntensity = query({
 					.gte("createdAt", weekStart.getTime())
 					.lt("createdAt", weekEnd.getTime())
 			)
-			.take(300);
+			.take(WEEK_MAX_MOMENTS);
 
 		const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 		const DAY_NAMES = [
@@ -306,11 +321,32 @@ export const getWeekIntensity = query({
 			"Sunday",
 		];
 		const buckets: number[][] = [[], [], [], [], [], [], []];
+		const moments: (typeof metadata)[] = [[], [], [], [], [], [], []];
 
 		for (const m of metadata) {
 			const idx = (new Date(m.createdAt).getDay() + 6) % 7;
 			buckets[idx].push(m.intensity);
+			moments[idx].push(m);
 		}
+
+		// Read oldest first, so at the cap the last day read may hold only some
+		// of its moments: it gets no detail rather than a wrong count.
+		const partialDay =
+			metadata.length >= WEEK_MAX_MOMENTS
+				? (new Date(metadata.at(-1)?.createdAt ?? now).getDay() + 6) % 7
+				: -1;
+		const details: (DayDetail | undefined)[] = args.withDetail
+			? await Promise.all(
+					moments.map(async (dayMoments, i) => {
+						const last = dayMoments.at(-1);
+						if (last === undefined || i === partialDay) {
+							return;
+						}
+						const session = await ctx.db.get("sessions", last.sessionId);
+						return dayDetail(dayMoments, session?.postSessionMood ?? null);
+					})
+				)
+			: [];
 
 		const todayIdx = weekOffset === 0 ? (new Date(now).getDay() + 6) % 7 : -1;
 
@@ -318,8 +354,10 @@ export const getWeekIntensity = query({
 			const vals = buckets[i];
 			const avg =
 				vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+			const detail = details[i];
 			return {
 				dayName: DAY_NAMES[i],
+				...(detail ? { detail } : {}),
 				intensity: avg,
 				isToday: i === todayIdx,
 				label,
@@ -351,6 +389,8 @@ export const getWeekIntensity = query({
 		days: v.array(
 			v.object({
 				dayName: v.string(),
+				// Only with `withDetail`, and only on days with moments.
+				detail: v.optional(dayDetailValidator),
 				intensity: v.union(v.number(), v.null()),
 				isToday: v.boolean(),
 				label: v.string(),
