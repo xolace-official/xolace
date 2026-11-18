@@ -29,6 +29,8 @@ export const CHANNEL = {
 	/** Where the broadcaster removed a post. */
 	removed: "This post was removed.",
 	resend: "Send again",
+	/** A resend that didn't reach Stream either. */
+	resendFailed: "Still couldn't send it. Check your connection and try again.",
 	sub: "Camp announcements",
 	title: "Xolace",
 	tryAgain: "Try again",
