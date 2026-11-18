@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useIsFocused, useLocalSearchParams, useRouter } from "expo-router";
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useRef } from "react";
+import { BackHandler } from "react-native";
 import { useSessionMode } from "@/context/session-mode-context";
 import { useSessionEndHref } from "@/lib/path-session/session-end-href";
 import { usePathSession } from "@/lib/path-session/use-path-session";
@@ -118,12 +119,30 @@ export function useSitData(): Sit {
 			if (completed && stepId) {
 				await completeStep({ stepId }).catch(() => undefined);
 			}
-			router.back();
+			// A deep link has no history to go back to: Reflect, the landing, instead.
+			if (router.canGoBack()) {
+				router.back();
+			} else {
+				router.replace("/");
+			}
 			return;
 		}
 		await completePath(completed);
 		router.replace(afterPath("solo"));
 	};
+
+	// Android's back button leaves as the close does (swipe back is off): the path and the
+	// analytics see it, instead of the screen just popping.
+	useEffect(() => {
+		if (!focused) {
+			return;
+		}
+		const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+			finish(false);
+			return true;
+		});
+		return () => sub.remove();
+	});
 
 	let status: Sit["state"]["status"] = "ready";
 	if (result === undefined || !(standalone || session)) {
