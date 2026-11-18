@@ -3,6 +3,7 @@
  * `sessions.getSessionDetails` send, and how the list is grouped by day. `now` is passed in.
  */
 import { MOMENTS_COPY, MONTHS, WEEKDAYS } from "@/features/you/moments/copy";
+import { convexErrorCode } from "@/lib/convex-error-code";
 
 /** The tones a mirror is written in that get a chip; "adaptive" is the server's own pick and has
  * no name to show. */
@@ -169,12 +170,37 @@ export function itemsOf(rows: readonly MomentRow[], now: Date): ListItem[] {
 	return items;
 }
 
-/** The feeling words, lower case, the finer one first: ["overwhelmed", "stress"]. */
+/** The feeling words, lower case, the finer one first: ["overwhelmed", "stress"]. With no
+ * feeling, "reflection" (production's "💭 Reflection" row), so a moment never ends blank. */
 export function wordsOf(granular: string | null, primary: string | null) {
 	const words = [granular, primary]
 		.map((w) => (w ? spaced(w).toLowerCase() : ""))
 		.filter(Boolean);
-	return [...new Set(words)];
+	return words.length > 0
+		? [...new Set(words)]
+		: [MOMENTS_COPY.reflection.toLowerCase()];
+}
+
+/** The codes a session read throws when it isn't yours to see: deleted (retention, a wipe), or
+ * another person's (`requireSessionOwnership`). */
+const MISSING_CODES: ReadonlySet<string> = new Set([
+	"session_not_found",
+	"session_forbidden",
+]);
+
+/**
+ * A moment that isn't there: the session's reads threw that it's gone or not yours, or the id in
+ * the link isn't a session's (`v.id` rejects it; the message names it outside production, which
+ * keeps only "Server Error"). Anything else is a real failure.
+ */
+export function isMissingMoment(error: unknown) {
+	const code = convexErrorCode(error);
+	if (code !== undefined) {
+		return MISSING_CODES.has(code);
+	}
+	return (
+		error instanceof Error && error.message.includes("ArgumentValidationError")
+	);
 }
 
 export function momentOf(s: MomentSession, now: Date): MomentView {

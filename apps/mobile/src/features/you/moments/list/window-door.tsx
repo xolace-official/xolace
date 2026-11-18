@@ -8,9 +8,10 @@ import {
 	GlassSurface,
 } from "@/components/shared/glass-surface";
 import { PressScale } from "@/components/shared/press-scale";
-import { EaseView } from "@/design/ease";
+import { EaseView, NONE } from "@/design/ease";
 import { MOMENTS_COPY } from "@/features/you/moments/copy";
 import { tap } from "@/lib/haptics";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
 const L = MOMENTS_COPY.list;
 /** Above the home indicator, never closer than 12 to the edge, plus 4 (the prototype's). */
@@ -37,18 +38,23 @@ export function WindowDoor({
 	onSeen: () => void;
 }) {
 	const { bottom } = useSafeAreaInsets();
+	const reduced = useEffectiveReducedMotion();
 	// Seen once per visit: the hook keeps the count.
 	useEffect(() => {
 		onSeen();
 	}, [onSeen]);
 	return (
 		// Glass stops rendering under an animated opacity, so the fade runs only where there is
-		// no glass.
+		// no glass. Ease ignores Reduce Motion: reduced, it's simply there.
 		<EaseView
 			animate={{ translateY: 0, ...FADE_OUT }}
-			initialAnimate={{ translateY: RISE, ...FADE_IN }}
+			initialAnimate={
+				reduced
+					? { translateY: 0, ...FADE_OUT }
+					: { translateY: RISE, ...FADE_IN }
+			}
 			style={[styles.bar, { bottom: Math.max(bottom, EDGE) + LIFT }]}
-			transition={{ duration: RISE_MS, type: "timing" }}
+			transition={reduced ? NONE : { duration: RISE_MS, type: "timing" }}
 		>
 			<GlassSurface
 				className="flex-row items-center gap-3 py-3 pr-3 pl-4.5"
@@ -67,7 +73,6 @@ export function WindowDoor({
 					</AppText>
 				</View>
 				<PressScale
-					accessibilityLabel={L.limitLabel(days)}
 					accessibilityRole="button"
 					className="h-10 items-center justify-center rounded-[20px] bg-foreground px-4"
 					haptic={tap}

@@ -1,5 +1,6 @@
 import { LegendList } from "@legendapp/list/react-native";
 import { Stack } from "expo-router";
+import { useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { MOMENTS_COPY } from "@/features/you/moments/copy";
@@ -30,6 +31,9 @@ export function MomentsScreen() {
 	const header = useHeaderOptions();
 	const reduced = useEffectiveReducedMotion();
 	const { screenReaderEnabled } = useAccessibilityInfo();
+	// Cards rise in on arrival only: rows remount as they scroll back into view, and must not
+	// replay it.
+	const [arriving, setArriving] = useState(true);
 	const door = state?.windowDays ?? null;
 	return (
 		<View className="flex-1 bg-background">
@@ -67,6 +71,9 @@ export function MomentsScreen() {
 				}
 				onEndReached={state?.canLoadMore ? actions.loadMore : undefined}
 				onEndReachedThreshold={LOAD_AHEAD}
+				onScrollBeginDrag={() => setArriving(false)}
+				// Rows remount on reuse (cards hold an entering animation and a zoom trigger).
+				recycleItems={false}
 				renderItem={({ item }: { item: ListItem }) =>
 					item.kind === "when" ? (
 						<AppText
@@ -81,9 +88,9 @@ export function MomentsScreen() {
 					) : (
 						<View className="pb-2.5">
 							<MomentCard
-								index={item.index}
 								moment={item.moment}
 								reduced={reduced}
+								rise={arriving ? item.index : null}
 								zoom={!(reduced || screenReaderEnabled)}
 							/>
 						</View>

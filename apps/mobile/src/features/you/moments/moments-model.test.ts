@@ -1,8 +1,10 @@
+import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vitest";
 import {
 	cardOf,
 	dateOf,
 	feelingOf,
+	isMissingMoment,
 	itemsOf,
 	type MomentRow,
 	momentOf,
@@ -153,11 +155,40 @@ describe("momentOf", () => {
 			mirror: null,
 			said: null,
 			tone: null,
-			words: [],
+			words: ["reflection"],
 		});
 	});
 
 	it("drops a repeated feeling word", () => {
 		expect(wordsOf("stress", "stress")).toEqual(["stress"]);
+	});
+});
+
+describe("isMissingMoment", () => {
+	it("is gone when the session was deleted or isn't yours", () => {
+		expect(
+			isMissingMoment(new ConvexError({ code: "session_not_found" }))
+		).toBe(true);
+		expect(
+			isMissingMoment(new ConvexError({ code: "session_forbidden" }))
+		).toBe(true);
+	});
+
+	it("is gone when the link's id isn't a session's", () => {
+		expect(
+			isMissingMoment(
+				new Error(
+					"[CONVEX Q(sessions:getSessionDetails)] ArgumentValidationError: Value does not match validator."
+				)
+			)
+		).toBe(true);
+	});
+
+	it("rethrows anything else", () => {
+		expect(isMissingMoment(new ConvexError({ code: "unauthenticated" }))).toBe(
+			false
+		);
+		expect(isMissingMoment(new Error("Server Error"))).toBe(false);
+		expect(isMissingMoment("boom")).toBe(false);
 	});
 });

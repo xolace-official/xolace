@@ -1,5 +1,6 @@
 import { Skeleton } from "heroui-native";
 import { View } from "react-native";
+import { MOMENTS_COPY } from "@/features/you/moments/copy";
 
 const CARDS = 4;
 
@@ -7,7 +8,12 @@ const CARDS = 4;
  * the line and its chip). */
 export function MomentsSkeleton() {
 	return (
-		<View accessibilityLabel="Loading" className="gap-2.5 pt-4">
+		<View
+			accessibilityLabel={MOMENTS_COPY.list.loading}
+			accessibilityRole="progressbar"
+			accessible
+			className="gap-2.5 pt-4"
+		>
 			<Skeleton className="mx-1 mb-1 h-3.5 w-16 rounded" />
 			{Array.from({ length: CARDS }, (_, i) => (
 				<View

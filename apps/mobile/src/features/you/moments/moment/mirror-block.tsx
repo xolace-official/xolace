@@ -12,6 +12,30 @@ const M = MOMENTS_COPY.moment;
 const PLAY = { android: "play_arrow", ios: "play.fill" } as const;
 const PAUSE = { android: "pause", ios: "pause.fill" } as const;
 
+/** The feeling words under the mirror, or alone on a moment that has none ("reflection" when
+ * there's no feeling either). */
+export function Words({ words }: { words: string[] }) {
+	return (
+		<View className="-mt-2.5 flex-row flex-wrap gap-2">
+			{words.map((w) => (
+				<View
+					className="h-7.5 justify-center rounded-[15px] border-continuous bg-accent-wash px-3"
+					key={w}
+				>
+					<AppText
+						className="text-[13.5px]"
+						color="accentInk"
+						variant="footnote"
+						weight="semibold"
+					>
+						{w}
+					</AppText>
+				</View>
+			))}
+		</View>
+	);
+}
+
 /** A section's small caps label. */
 export const Label = ({ children }: { children: string }) => (
 	<AppText
@@ -25,8 +49,7 @@ export const Label = ({ children }: { children: string }) => (
 	</AppText>
 );
 
-/** The mirror in its own voice, its tone, its play button when it has a voice, and the
- * feeling words. */
+/** The mirror in its own voice, its tone, and its play button when it has a voice. */
 export function MirrorBlock({
 	moment,
 	audio,
@@ -47,7 +70,6 @@ export function MirrorBlock({
 					<PressScale
 						accessibilityLabel={audio.playing ? M.pause : M.play}
 						accessibilityRole="button"
-						accessibilityState={{ selected: audio.playing }}
 						className="size-10 items-center justify-center rounded-full bg-surface-secondary"
 						haptic={tap}
 						onPress={onToggle}
@@ -59,25 +81,6 @@ export function MirrorBlock({
 			<AppText selectable variant="mirror">
 				{moment.mirror}
 			</AppText>
-			{moment.words.length > 0 ? (
-				<View className="flex-row flex-wrap gap-2 pt-3">
-					{moment.words.map((w) => (
-						<View
-							className="h-7.5 justify-center rounded-[15px] border-continuous bg-accent-wash px-3"
-							key={w}
-						>
-							<AppText
-								className="text-[13.5px]"
-								color="accentInk"
-								variant="footnote"
-								weight="semibold"
-							>
-								{w}
-							</AppText>
-						</View>
-					))}
-				</View>
-			) : null}
 		</View>
 	);
 }

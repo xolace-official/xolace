@@ -4,7 +4,11 @@ import { BackButton } from "@/components/shared/back-button";
 import { Icon } from "@/components/shared/icon";
 import { PressScale } from "@/components/shared/press-scale";
 import { MOMENTS_COPY } from "@/features/you/moments/copy";
-import { Label, MirrorBlock } from "@/features/you/moments/moment/mirror-block";
+import {
+	Label,
+	MirrorBlock,
+	Words,
+} from "@/features/you/moments/moment/mirror-block";
 import { useMomentScreen } from "@/features/you/moments/moment/moment-data";
 import { TalkThread } from "@/features/you/moments/moment/talk-thread";
 import { playSoftPress, tap } from "@/lib/haptics";
@@ -77,6 +81,7 @@ export function MomentScreen() {
 						onToggle={actions.toggleAudio}
 					/>
 				) : null}
+				<Words words={moment.words} />
 				{state.thread.length > 0 ? (
 					<View className="gap-2.5">
 						<Label>{M.theTalk}</Label>

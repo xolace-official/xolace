@@ -6,7 +6,8 @@ export type TalkLine = { role: "person" | "companion"; text: string };
 
 /**
  * Everything a moment reads and does. Convex fills it in the app (`MomentData`), fixtures in its
- * dev states. Undefined state means still loading; null, the id led nowhere.
+ * dev states. Undefined state means still loading; null, the id led nowhere (no id here; a
+ * deleted or someone else's session through `MomentGuard`).
  */
 export type MomentScreenData = {
 	state:

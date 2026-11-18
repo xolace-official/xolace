@@ -23,12 +23,13 @@ const QUOTE_LINES = 4;
  */
 export function MomentCard({
 	moment,
-	index,
+	rise,
 	reduced,
 	zoom,
 }: {
 	moment: Card;
-	index: number;
+	/** Its place in the first screenful as the list arrives; null once it has. */
+	rise: number | null;
 	reduced: boolean;
 	zoom: boolean;
 }) {
@@ -36,7 +37,9 @@ export function MomentCard({
 	return (
 		<Animated.View
 			entering={
-				index < RISEN ? riseIn(index * STAGGER_MS, reduced, RISE_DY) : undefined
+				rise !== null && rise < RISEN
+					? riseIn(rise * STAGGER_MS, reduced, RISE_DY)
+					: undefined
 			}
 		>
 			<Link

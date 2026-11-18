@@ -6,7 +6,7 @@ import {
 	getEmotionEmoji,
 	getEmotionLabel,
 	type TimelineEntry,
-} from "@/features/discovery/moments";
+} from "@/features/discovery/timeline-entry";
 import { removeEmDash } from "@/features/quotes/utils/text-utils";
 
 const SPEAKER_ICON: { ios: SFSymbol; android: string; web: string } = {

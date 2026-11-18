@@ -7,7 +7,7 @@ import { AppText } from "@/components/shared/app-text";
 import {
 	type TimelineEntry,
 	toTimelineEntry,
-} from "@/features/discovery/moments";
+} from "@/features/discovery/timeline-entry";
 import { playSoftPress } from "@/lib/haptics";
 import { DiscoveryMomentCard } from "./discovery-moment-card";
 import { MomentsSkeleton } from "./skeletons";

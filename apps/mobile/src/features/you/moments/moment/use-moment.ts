@@ -28,7 +28,8 @@ export function useMoment(id: string | undefined): MomentScreenData {
 	const moment = details ? momentOf(details, new Date()) : null;
 
 	const state = (() => {
-		if (!sessionId || details === null) {
+		// No id: gone. A deleted or someone else's session throws instead (`MomentGuard`).
+		if (!sessionId) {
 			return null;
 		}
 		if (!moment) {

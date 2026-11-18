@@ -43,11 +43,9 @@ export const MOMENTS_COPY = {
 	list: {
 		/** Production's empty line, in the redesign's voice. */
 		empty: "Your moments will appear here after your first reflection.",
-		/** The door's own label, read as one button. */
-		limitLabel: (days: number) =>
-			`You're seeing the last ${windowOf(days)}. Xolace+ keeps every moment. See all`,
 		limitSub: "Xolace+ keeps every moment",
 		limitTitle: (days: number) => `You're seeing the last ${windowOf(days)}`,
+		loading: "Loading your moments",
 		/** A card, read as one link. */
 		row: (quote: string, line: string, tone: string | null) =>
 			[`“${quote}”`, line, tone].filter(Boolean).join(". "),
