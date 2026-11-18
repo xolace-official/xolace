@@ -60,8 +60,10 @@ export const TelegramCard = ({ entry }: { entry: ChannelEntry }) => {
 		unlink: () => setConfirmUnlink(true),
 	};
 
+	// One child of the sheet's gap-3 column: the dialog's closed root still lays out a view, which
+	// would double the gap between the cards.
 	return (
-		<>
+		<View>
 			<ChannelCard
 				channel="telegram"
 				disabled={offline}
@@ -86,7 +88,9 @@ export const TelegramCard = ({ entry }: { entry: ChannelEntry }) => {
 						) : null}
 						{view.warning ? (
 							<View className="flex-row gap-2">
-								<Icon color={ember} name={WARNING} size={14} />
+								<View className="mt-[3px]">
+									<Icon color={ember} name={WARNING} size={14} />
+								</View>
 								<AppText
 									className="flex-1 text-[14.5px] text-ember-ink leading-5"
 									variant="body"
@@ -133,6 +137,6 @@ export const TelegramCard = ({ entry }: { entry: ChannelEntry }) => {
 				onOpenChange={setConfirmUnlink}
 				title="Unlink Telegram?"
 			/>
-		</>
+		</View>
 	);
 };

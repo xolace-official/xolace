@@ -346,6 +346,7 @@
 
 	/* Reach me on (S19c): Telegram's own blue, on its tile only (P/src/fixtures/reach.ts). */
 	--color-telegram: #2aabee;
+	--color-on-telegram: #ffffff;
 
 	/* Vent is a printed object: production's own dark room, the same in every
      * theme, with its cream, ash, ember and amber. Fixed on purpose; see the

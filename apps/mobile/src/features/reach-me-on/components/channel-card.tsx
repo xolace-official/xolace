@@ -46,7 +46,7 @@ export const ChannelCard = ({
 }: Props) => {
 	const dark = useScheme() === "dark";
 	const accent = useTokenColor("accent");
-	const onTelegram = useTokenColor("on-art");
+	const onTelegram = useTokenColor("on-telegram");
 	const first = mark === "first";
 	const telegram = channel === "telegram";
 	return (

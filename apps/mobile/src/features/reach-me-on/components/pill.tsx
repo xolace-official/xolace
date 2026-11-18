@@ -1,8 +1,8 @@
 import { View } from "react-native";
+import { Presets } from "react-native-pulsar";
 import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 import { cn } from "@/lib/cn";
-import { playSoftPress } from "@/lib/haptics";
 
 /**
  * "Reach me on…"'s pieces in Settings v2's language (P/src/features/reach/reach-parts.tsx): pill
@@ -18,7 +18,8 @@ const PILL: Record<PillTone, { bg: string; text: string }> = {
 	secondary: { bg: "bg-surface-secondary", text: "text-foreground" },
 };
 
-/** A 44 pt pill. One haptic, from PressScale; disabled, it dims to 45% and says so. */
+/** A 44 pt pill (grows with larger text). One haptic, the selection tick as P's; disabled, it
+ * dims to 45% and says so. */
 export function Pill({
 	label,
 	tone = "secondary",
@@ -37,12 +38,12 @@ export function Pill({
 			accessibilityRole="button"
 			accessibilityState={{ disabled }}
 			className={cn(
-				"h-11 items-center justify-center rounded-full px-4.5",
+				"min-h-11 items-center justify-center rounded-full px-4.5 py-2.5",
 				p.bg,
 				disabled && "opacity-45"
 			)}
 			disabled={disabled}
-			haptic={playSoftPress}
+			haptic={Presets.System.selection}
 			onPress={onPress}
 		>
 			<AppText

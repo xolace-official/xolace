@@ -1,4 +1,11 @@
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { useEffect } from "react";
+import {
+	AccessibilityInfo,
+	ActivityIndicator,
+	Platform,
+	ScrollView,
+	View,
+} from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Icon } from "@/components/shared/icon";
 import { ChannelCard } from "@/features/reach-me-on/components/channel-card";
@@ -8,6 +15,8 @@ import { orderMark } from "@/features/reach-me-on/reach-view";
 import { useTokenColor } from "@/lib/use-token-color";
 
 const OFFLINE = { android: "wifi_off", ios: "wifi.slash" } as const;
+const OFFLINE_LINE =
+	"You're offline. Changes wait until the connection is back.";
 
 /**
  * "Reach me on…" (#733, #776) in the redesign's look (P/src/features/reach/reach-screen.tsx): the
@@ -21,6 +30,12 @@ export const ReachMeOnSheet = () => {
 		state: { channels, offline },
 		actions: { tryFirst },
 	} = useReachSheet();
+	// The banner is read out when it appears: a live region on Android, an announcement on iOS.
+	useEffect(() => {
+		if (offline && Platform.OS === "ios") {
+			AccessibilityInfo.announceForAccessibility(OFFLINE_LINE);
+		}
+	}, [offline]);
 
 	return (
 		<ScrollView
@@ -36,13 +51,16 @@ export const ReachMeOnSheet = () => {
 				other if it can&apos;t get through.
 			</AppText>
 			{offline ? (
-				<View className="mx-4 flex-row items-center gap-2 rounded-[16px] border-continuous bg-surface-secondary px-3.5 py-2.5">
+				<View
+					accessibilityLiveRegion="polite"
+					className="mx-4 flex-row items-center gap-2 rounded-[16px] border-continuous bg-surface-secondary px-3.5 py-2.5"
+				>
 					<Icon color={subtle} name={OFFLINE} size={14} />
 					<AppText
 						className="flex-1 text-[13.5px] text-foreground/60 leading-[18px]"
 						variant="body"
 					>
-						You&apos;re offline. Changes wait until the connection is back.
+						{OFFLINE_LINE}
 					</AppText>
 				</View>
 			) : null}
