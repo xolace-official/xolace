@@ -11,6 +11,7 @@ import {
 } from "./_generated/server";
 import { matchExercise } from "./exercises/match";
 import { requireAuth, requireSessionOwnership } from "./lib/auth";
+import { recordActivity } from "./streaks/activityLog";
 
 /**
  * Compute allowed swap target IDs for a session: the reset exercise + the
@@ -272,6 +273,32 @@ export const getStandalone = query({
 		return exercise?.active ? exercise : null;
 	},
 	returns: v.union(exerciseDocValidator, v.null()),
+});
+
+/**
+ * Three breaths from Today ran to its end: the same streak credit as a tended breathing
+ * twig (`paths.completeStep`), through the same helper, so it's a day showed up and can
+ * unlock "sat-with-it" once. Several the same day are still one day and one award; no
+ * sparks beyond the achievement's. Nothing for a missing or inactive exercise.
+ */
+export const completeStandalone = mutation({
+	args: { title: v.literal("reset") },
+	handler: async (ctx, args) => {
+		const { profile } = await requireAuth(ctx);
+		const exercise = await ctx.db
+			.query("exercises")
+			.withIndex("by_title", (q) => q.eq("title", args.title))
+			.unique();
+		if (!exercise?.active) {
+			return null;
+		}
+		await recordActivity(ctx, {
+			actionType: "sit_with_this",
+			emotionalProfileId: profile._id,
+		});
+		return null;
+	},
+	returns: v.null(),
 });
 
 /**
