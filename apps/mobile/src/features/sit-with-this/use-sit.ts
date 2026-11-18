@@ -59,6 +59,7 @@ export function useSitData(): Sit {
 	const { isNight } = useSessionMode();
 	const started = useRef(false);
 	const announced = useRef(false);
+	const begun = useRef(false);
 	const leaving = useRef(false);
 	const opening = useRef(false);
 	const focused = useIsFocused();
@@ -72,15 +73,15 @@ export function useSitData(): Sit {
 		}
 	}, [focused]);
 
-	// Once per visit, wherever it was opened from.
-	const exerciseId = result?.exercise.title;
+	// Once per visit, wherever it was opened from: the first screen is up.
+	const exerciseTitle = result?.exercise.title;
 	useEffect(() => {
-		if (!exerciseId || announced.current) {
+		if (!exerciseTitle || announced.current) {
 			return;
 		}
 		announced.current = true;
-		posthog.capture("sit_started", { exercise: exerciseId, from });
-	}, [exerciseId, from, posthog]);
+		posthog.capture("sit_opened", { exercise: exerciseTitle, from });
+	}, [exerciseTitle, from, posthog]);
 
 	useEffect(() => {
 		if (standalone || started.current || !sessionId || !session) {
@@ -104,11 +105,14 @@ export function useSitData(): Sit {
 			return;
 		}
 		leaving.current = true;
-		posthog.capture("sit_finished", {
-			completed,
-			exercise: exerciseId ?? null,
-			from,
-		});
+		// Only a run that had an exercise to play (not the empty or loading "Go back").
+		if (exerciseTitle) {
+			posthog.capture("sit_finished", {
+				completed,
+				exercise: exerciseTitle,
+				from,
+			});
+		}
 		if (standalone) {
 			// Finishing tends the kindling twig; leaving early leaves it untouched.
 			if (completed && stepId) {
@@ -130,6 +134,12 @@ export function useSitData(): Sit {
 
 	return {
 		actions: {
+			begin: () => {
+				if (exerciseTitle && !begun.current) {
+					begun.current = true;
+					posthog.capture("sit_started", { exercise: exerciseTitle, from });
+				}
+			},
 			finish: (completed) => {
 				finish(completed);
 			},

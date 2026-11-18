@@ -98,7 +98,10 @@ export function SitRunView({ exercise, scene }: Props) {
 					doneOn={run.doneOn}
 					length={lengthLabel(exercise)}
 					name={exercise.name}
-					onBegin={begin}
+					onBegin={() => {
+						begin();
+						actions.begin();
+					}}
 					onFinish={() => actions.finish(true)}
 					onPromptDone={next}
 					reduced={reduced}
