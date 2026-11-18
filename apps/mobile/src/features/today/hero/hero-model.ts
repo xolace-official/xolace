@@ -25,6 +25,8 @@ export const HERO = {
 	rimW: 2.5,
 	/** The card's own shadow: 0 10px 28px -16px. */
 	shadow: { blur: 14, dy: 10, spread: -16 },
+	/** A finger that drifts this far from where it landed is scrolling or leaving: no hold, no tap (RN's long-press slop). */
+	slop: 10,
 	/** A tap: the rim runs the rest of its lap this fast, so you see it reach the whole card as Reflect opens. */
 	tapSweepMs: 400,
 	/** Thirds of the hold tick. */
@@ -102,3 +104,50 @@ export function doorsCopy(doors: readonly Door[]): {
 		hint: COPY.card.hint(or),
 	};
 }
+
+/**
+ * The hold, as a finger sees it. `holding` from press-in; a drift past the slop makes it
+ * `drifted` (the rim drains, and neither the doors nor the tap open) until the next
+ * press-in; `chosen` once the doors are open, until Write instead.
+ */
+export type HoldState = {
+	phase: "rest" | "holding" | "drifted" | "chosen";
+	x: number;
+	y: number;
+};
+export type HoldEvent =
+	| { type: "in"; x: number; y: number }
+	| { type: "move"; x: number; y: number }
+	| { type: "out" }
+	| { type: "choose" }
+	| { type: "unchoose" };
+
+export const HOLD_REST: HoldState = { phase: "rest", x: 0, y: 0 };
+
+export function holdNext(s: HoldState, e: HoldEvent): HoldState {
+	switch (e.type) {
+		case "in":
+			return s.phase === "chosen" ? s : { phase: "holding", x: e.x, y: e.y };
+		case "move":
+			return s.phase === "holding" &&
+				Math.hypot(e.x - s.x, e.y - s.y) > HERO.slop
+				? { ...s, phase: "drifted" }
+				: s;
+		case "out":
+			return s.phase === "holding" ? { ...s, phase: "rest" } : s;
+		case "choose":
+			return canChoose(s) ? { ...s, phase: "chosen" } : s;
+		case "unchoose":
+			return s.phase === "chosen" ? HOLD_REST : s;
+		default:
+			return s;
+	}
+}
+
+/** The doors open from a full hold, or VoiceOver's action at rest; never after a drift. */
+export const canChoose = (s: HoldState) =>
+	s.phase === "holding" || s.phase === "rest";
+
+/** A tap opens Reflect unless the finger drifted first (onPress can land before or after onPressOut). */
+export const canTap = (s: HoldState) =>
+	s.phase === "holding" || s.phase === "rest";

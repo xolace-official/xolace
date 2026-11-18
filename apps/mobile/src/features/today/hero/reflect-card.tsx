@@ -86,6 +86,9 @@ export function ReflectCard() {
 					}
 				}}
 				onPress={() => {
+					if (!hold.tapAllowed()) {
+						return;
+					}
 					hold.sweep();
 					actions.openReflect();
 				}}

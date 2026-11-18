@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import type { GestureResponderEvent } from "react-native";
 import { Presets } from "react-native-pulsar";
 import {
 	Easing,
@@ -11,14 +12,24 @@ import { scheduleOnRN } from "react-native-worklets";
 import { press } from "@/design/springs";
 import { playSessionComplete } from "@/lib/haptics";
 import { EASE_CSS, EASE_CSS_OUT, EASE_DRAIN } from "../today-motion";
-import { DOORS, doorsLandMs, HERO } from "./hero-model";
+import {
+	canChoose,
+	canTap,
+	DOORS,
+	doorsLandMs,
+	HERO,
+	HOLD_REST,
+	type HoldEvent,
+	holdNext,
+} from "./hero-model";
 
 const tick = () => Presets.System.selection();
 
 /**
  * Hold the card (habit-bubble-cluster's charge): the rim fills linearly over
  * 620 ms with selection ticks at ⅓ and ⅔; let go early and it drains in
- * 320 ms; at 620 ms the doors open and land on a Bloom. Not `holdable` (a mirror
+ * 320 ms, and drift past the slop and it drains too, opening nothing (`holdNext`); at
+ * 620 ms the doors open and land on a Bloom. Not `holdable` (a mirror
  * waiting or ready), a press only dips the card: the doors are for starting something new.
  */
 export function useHold(reduced: boolean, holdable: boolean) {
@@ -29,6 +40,16 @@ export function useHold(reduced: boolean, holdable: boolean) {
 	const body = useSharedValue(1);
 	const holding = useSharedValue(false);
 	const swept = useRef(false);
+	const touch = useRef(HOLD_REST);
+	const step = (e: HoldEvent) => {
+		const before = touch.current;
+		touch.current = holdNext(before, e);
+		return before;
+	};
+	const at = (e: GestureResponderEvent) => ({
+		x: e.nativeEvent.pageX,
+		y: e.nativeEvent.pageY,
+	});
 
 	// A tick each time the charge crosses a third, only while a finger is down.
 	useAnimatedReaction(
@@ -46,7 +67,8 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		}
 	);
 
-	const pressIn = () => {
+	const pressIn = (e: GestureResponderEvent) => {
+		step({ type: "in", ...at(e) });
 		if (chosen) {
 			return;
 		}
@@ -59,7 +81,19 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		rim.set(withTiming(1, { duration: HERO.holdMs, easing: Easing.linear }));
 	};
 
+	// A drift past the slop lets go of the hold: the rim drains and the card comes back up.
+	const pressMove = (e: GestureResponderEvent) => {
+		const before = step({ type: "move", ...at(e) });
+		if (before.phase !== "holding" || touch.current.phase !== "drifted") {
+			return;
+		}
+		holding.set(false);
+		scale.set(press(1, reduced));
+		rim.set(withTiming(0, { duration: HERO.drainMs, easing: EASE_DRAIN }));
+	};
+
 	const pressOut = () => {
+		step({ type: "out" });
 		holding.set(false);
 		scale.set(press(1, reduced));
 		if (!(chosen || swept.current)) {
@@ -110,9 +144,10 @@ export function useHold(reduced: boolean, holdable: boolean) {
 	};
 
 	const choose = () => {
-		if (!holdable) {
+		if (!(holdable && canChoose(touch.current))) {
 			return;
 		}
+		step({ type: "choose" });
 		holding.set(false);
 		setChosen(true);
 		rim.set(1);
@@ -125,6 +160,7 @@ export function useHold(reduced: boolean, holdable: boolean) {
 	};
 
 	const unchoose = () => {
+		step({ type: "unchoose" });
 		setChosen(false);
 		rim.set(withTiming(0, { duration: HERO.drainMs, easing: EASE_DRAIN }));
 		rimOpacity.set(
@@ -139,6 +175,7 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		chosen,
 		holdable,
 		pressIn,
+		pressMove,
 		pressOut,
 		release,
 		rest,
@@ -146,6 +183,8 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		rimOpacity,
 		scale,
 		sweep,
+		/** A tap opens Reflect, unless the finger drifted first. */
+		tapAllowed: () => canTap(touch.current),
 		unchoose,
 	};
 }
