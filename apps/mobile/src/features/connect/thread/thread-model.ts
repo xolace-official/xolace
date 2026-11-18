@@ -55,25 +55,29 @@ export function longAgo(timestamp: number, now: number): string {
 }
 
 /** The header's second line. An open thread reads Stream's live signal (typing, here, last
- * seen); the rest say where the conversation stands. A seeker sees "Xolacer ·" in front. */
+ * seen); the rest say where the conversation stands. A seeker sees "Xolacer ·" in front; a
+ * Xolacer, with nothing in front, sees the line start with a capital. */
 export function threadSubtitle(
 	c: ThreadConversation,
 	activity: Activity,
 	now: number
 ): string {
-	const who = c.role === "user" ? THREAD.xolacerPrefix : "";
+	const say = (line: string) =>
+		c.role === "user"
+			? `${THREAD.xolacerPrefix}${line}`
+			: `${line.charAt(0).toUpperCase()}${line.slice(1)}`;
 	if (c.status === "open") {
 		if (activity.typing) {
-			return `${who}${THREAD.typing}`;
+			return say(THREAD.typing);
 		}
 		if (!activity.presence) {
-			return `${who}${THREAD.usuallyReplies}`;
+			return say(THREAD.usuallyReplies);
 		}
 		if (activity.presence.online) {
-			return `${who}${THREAD.hereNow}`;
+			return say(THREAD.hereNow);
 		}
 		const last = activity.presence.lastActive;
-		return `${who}${last ? THREAD.lastHere(longAgo(last, now)) : THREAD.offline}`;
+		return say(last ? THREAD.lastHere(longAgo(last, now)) : THREAD.offline);
 	}
 	if (c.status === "requested") {
 		if (c.role !== "xolacer") {

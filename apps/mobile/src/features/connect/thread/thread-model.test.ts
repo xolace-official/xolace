@@ -46,14 +46,24 @@ describe("threadSubtitle", () => {
 		);
 	});
 
-	it("drops the prefix for a Xolacer, who is talking to a seeker", () => {
+	it("drops the prefix for a Xolacer, who is talking to a seeker, and capitalises", () => {
+		const seeker = { ...OPEN, role: "xolacer" as const };
+		expect(threadSubtitle(seeker, { ...idle, typing: true }, NOW)).toBe(
+			"Typing…"
+		);
+		expect(
+			threadSubtitle(seeker, { presence: { online: true }, typing: false }, NOW)
+		).toBe("Here now");
 		expect(
 			threadSubtitle(
-				{ ...OPEN, role: "xolacer" },
-				{ ...idle, typing: true },
+				seeker,
+				{ presence: { lastActive: null, online: false }, typing: false },
 				NOW
 			)
-		).toBe("typing…");
+		).toBe("Offline");
+		expect(threadSubtitle(seeker, idle, NOW)).toBe(
+			"Usually replies within a day"
+		);
 	});
 
 	it("says where a request, a rest or a close stands", () => {
