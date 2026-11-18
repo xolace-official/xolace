@@ -58,7 +58,7 @@ export function MirrorScreen({ opens = {} }: { opens?: MirrorOpens }) {
 	};
 
 	const onTone = (tone: MirrorTone) => {
-		const tap = toneTap(tone, state.tone, state.plus);
+		const tap = toneTap(tone, state.saved.tone, state.plus);
 		if (tap === "peek") {
 			setPeek(tone);
 			actions.reachForTone();
@@ -75,6 +75,7 @@ export function MirrorScreen({ opens = {} }: { opens?: MirrorOpens }) {
 		const tap = orbTap(id, {
 			playing: playingHere("mirror"),
 			plus: state.plus,
+			saved: state.saved,
 			voice: state.voice,
 		});
 		setFocus(tap.focus);
@@ -110,7 +111,12 @@ export function MirrorScreen({ opens = {} }: { opens?: MirrorOpens }) {
 				shown={shown}
 				voice={spoken}
 			/>
-			<TonePills onPick={onTone} plus={state.plus} shown={shown} />
+			<TonePills
+				chosen={state.tone}
+				onPick={onTone}
+				plus={state.plus}
+				shown={shown}
+			/>
 			{state.plus === "free" && shown === "witnessed" ? (
 				<ToneGate onSeePlus={() => actions.openPlus("mirror_tone")} />
 			) : null}

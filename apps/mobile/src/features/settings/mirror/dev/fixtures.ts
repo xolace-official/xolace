@@ -20,6 +20,7 @@ export const MIRROR_GENTLE: MirrorSettings["state"] = {
 	companion: "Ember",
 	playing: null,
 	plus: "plus",
+	saved: { tone: "gentle", voice: "auto" },
 	talk: { directness: "balanced", pace: "normal", voice: "vesper" },
 	tone: "gentle",
 	voice: "auto",
@@ -28,6 +29,7 @@ export const MIRROR_GENTLE: MirrorSettings["state"] = {
 /** Render 13: Poetic. */
 export const MIRROR_POETIC: MirrorSettings["state"] = {
 	...MIRROR_GENTLE,
+	saved: { tone: "poetic", voice: "auto" },
 	tone: "poetic",
 };
 
@@ -35,6 +37,7 @@ export const MIRROR_POETIC: MirrorSettings["state"] = {
 export const MIRROR_WREN_PLAYING: MirrorSettings["state"] = {
 	...MIRROR_POETIC,
 	playing: "wren",
+	saved: { tone: "poetic", voice: "wren" },
 	voice: "wren",
 };
 
@@ -42,6 +45,7 @@ export const MIRROR_WREN_PLAYING: MirrorSettings["state"] = {
 export const MIRROR_FREE: MirrorSettings["state"] = {
 	...MIRROR_GENTLE,
 	plus: "free",
+	saved: { tone: "poetic", voice: "auto" },
 	talk: null,
 	tone: "poetic",
 };

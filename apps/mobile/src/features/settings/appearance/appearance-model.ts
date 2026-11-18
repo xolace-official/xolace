@@ -2,7 +2,6 @@
 import type { ThemeName } from "uniwind";
 import {
 	FREE_THEMES,
-	findVariant,
 	PREMIUM_THEMES,
 	type ThemeMode as Scheme,
 	THEME_BY_ID,
@@ -20,17 +19,15 @@ export function modeNote(mode: ThemeMode, osDark: boolean): string {
 }
 
 /**
- * What Uniwind should draw for a Mode pick, as production's `setThemeMode`: System hands
- * Uniwind "system"; Light or Dark keeps the theme now on screen in that mode.
+ * What Uniwind should draw for a Mode pick: System hands Uniwind "system"; Light or Dark draws
+ * the saved colour theme in that mode. (Production read the theme on screen, so a pick made
+ * while System drew Default lost the colour theme.)
  */
 export function modeTheme(
 	mode: ThemeMode,
-	current: string
+	colorThemeId: string
 ): ThemeName | "system" {
-	if (mode === "system") {
-		return "system";
-	}
-	return themeVariant(findVariant(current)?.themeId ?? "default", mode);
+	return mode === "system" ? "system" : themeVariant(colorThemeId, mode);
 }
 
 /** The mode a picked theme is drawn in: the stored one, or what System shows now. */

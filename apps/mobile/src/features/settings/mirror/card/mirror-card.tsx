@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Pressable, useWindowDimensions, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Icon } from "@/components/shared/icon";
@@ -27,6 +28,7 @@ import { useTokenColors } from "@/lib/use-token-color";
  * its own light and type. A printed object: the same in light and dark, except Direct, which
  * goes dark in dark mode. The Hear chip plays the chosen voice; on Auto there is none.
  */
+/** The board's height; larger text grows the card past it (measured, so the light fills it). */
 const HEIGHT = 318;
 /** mx-4 on the card. */
 const GUTTER = 16;
@@ -59,10 +61,12 @@ export function MirrorCard({
 	const look = cardInk(shown, dark);
 	const [ink, shadow] = useTokenColors([look.ink, "mirror-shadow"]);
 	const t = toneById(shown);
+	const [h, setH] = useState(HEIGHT);
 	return (
 		<View
 			className="mx-4 rounded-[28px] border-continuous"
-			style={{ boxShadow: `0px 18px 40px -26px ${shadow}`, height: HEIGHT }}
+			onLayout={(e) => setH(e.nativeEvent.layout.height)}
+			style={{ boxShadow: `0px 18px 40px -26px ${shadow}`, minHeight: HEIGHT }}
 		>
 			<View
 				className={cn(
@@ -70,13 +74,7 @@ export function MirrorCard({
 					look.edge ? EDGE[look.edge] : "border-transparent"
 				)}
 			>
-				<CardLight
-					dark={dark}
-					h={HEIGHT}
-					reduced={reduced}
-					shown={shown}
-					w={w}
-				/>
+				<CardLight dark={dark} h={h} reduced={reduced} shown={shown} w={w} />
 				<View className="flex-1 px-5.25 pt-4.75 pb-4.25">
 					<AppText
 						className="text-[10.5px] leading-[13px] tracking-[1.26px] opacity-60"

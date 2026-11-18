@@ -38,8 +38,16 @@ describe("row values", () => {
 });
 
 describe("plusCard", () => {
-	it("free: one line and the button", () => {
-		expect(plusCard(false, null).kind).toBe("free");
+	it("free: one line and the button, and a tap opens the paywall", () => {
+		expect(plusCard(false, null)).toMatchObject({
+			kind: "free",
+			opensPaywall: true,
+		});
+	});
+
+	it("Plus never opens the paywall, loaded or not", () => {
+		expect(plusCard(true, { secondsLeft: 60 }).opensPaywall).toBe(false);
+		expect(plusCard(true, undefined).opensPaywall).toBe(false);
 	});
 
 	it("Plus: minutes left and the bar", () => {

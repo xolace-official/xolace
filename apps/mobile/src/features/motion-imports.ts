@@ -42,7 +42,7 @@ export function easeImportsOutsideEaseTs(graph: ImportGraph): string[] {
 				!(
 					file === EASE_ENTRY ||
 					EASE_LEGACY_FILES.has(file) ||
-					isLegacyFeature(featureOfPath(file) ?? "")
+					(isLegacyFeature(featureOfPath(file) ?? "") && !isNewCode(file))
 				)
 		)
 		.map(({ file, specifier }) => `${file} -> ${specifier}`);

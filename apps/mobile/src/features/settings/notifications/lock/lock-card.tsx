@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { View } from "react-native";
 import Animated, {
 	Easing,
@@ -13,6 +14,7 @@ import {
 	NOTIFY_ICONS,
 } from "@/features/settings/notifications/copy";
 import { Dusk } from "@/features/settings/notifications/lock/dusk";
+import { Pill } from "@/features/settings/notifications/lock/held-pill";
 import type { LockSample } from "@/features/settings/notifications/notifications-model";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useTokenColors } from "@/lib/use-token-color";
@@ -23,7 +25,10 @@ import { useTokenColors } from "@/lib/use-token-color";
  * rises in (6 pt, 300 ms) when the voice changes; nothing animates in on open.
  */
 const C = NOTIFY_COPY.sample;
+/** The board's height; a reminder at larger text grows the card past it. */
 const HEIGHT = 250;
+/** The pictured lock screen (date, clock, kicker) stays at its size; the reminder grows. */
+const PICTURE_SCALE = 1;
 const GHOST = 0.28;
 const RISE_MS = 300;
 const RISE_PT = 6;
@@ -44,30 +49,6 @@ const rise = () => {
 	};
 };
 
-function Pill({ text, moon }: { text: string; moon: boolean }) {
-	const [white] = useTokenColors(["on-art"]);
-	return (
-		<View className="absolute top-29 h-7.5 self-center overflow-hidden rounded-full">
-			<BlurView
-				className="flex-1 flex-row items-center gap-1.5 bg-notify-pill px-3.25"
-				intensity={20}
-				tint="dark"
-			>
-				{moon ? (
-					<Icon color={white} name={NOTIFY_ICONS.moon} size={12} />
-				) : null}
-				<AppText
-					className="text-[13px] text-on-art leading-[17px]"
-					variant="body"
-					weight="semibold"
-				>
-					{text}
-				</AppText>
-			</BlurView>
-		</View>
-	);
-}
-
 function Bubble({ line, held }: { line: string; held: boolean }) {
 	const reduced = useEffectiveReducedMotion();
 	const [white, from, to] = useTokenColors([
@@ -77,7 +58,7 @@ function Bubble({ line, held }: { line: string; held: boolean }) {
 	]);
 	return (
 		<View
-			className="absolute right-3 bottom-3.5 left-3 overflow-hidden rounded-[20px] border-continuous"
+			className="overflow-hidden rounded-[20px] border-continuous"
 			style={{ opacity: held ? GHOST : 1 }}
 		>
 			<BlurView
@@ -132,20 +113,23 @@ function Bubble({ line, held }: { line: string; held: boolean }) {
 
 export function LockCard({ sample }: { sample: LockSample }) {
 	const [shadow] = useTokenColors(["notify-shadow"]);
+	const [h, setH] = useState(HEIGHT);
 	return (
 		<View
 			accessibilityLabel={sample.a11y}
 			accessible
 			className="mx-4 rounded-[28px] border-continuous"
+			onLayout={(e) => setH(e.nativeEvent.layout.height)}
 			style={{
 				boxShadow: `0px 18px 40px -26px ${shadow}`,
-				height: HEIGHT,
+				minHeight: HEIGHT,
 			}}
 		>
 			<View className="flex-1 items-center overflow-hidden rounded-[28px] border-continuous pt-5">
-				<Dusk height={HEIGHT} />
+				<Dusk height={h} />
 				<AppText
 					className="text-[13px] text-on-art leading-[17px] opacity-82"
+					maxFontSizeMultiplier={PICTURE_SCALE}
 					variant="body"
 					weight="semibold"
 				>
@@ -153,6 +137,7 @@ export function LockCard({ sample }: { sample: LockSample }) {
 				</AppText>
 				<AppText
 					className="mt-0.5 text-[62px] text-on-art leading-[62px] tracking-[-1.24px] opacity-95"
+					maxFontSizeMultiplier={PICTURE_SCALE}
 					variant="body"
 					weight="semibold"
 				>
@@ -160,14 +145,28 @@ export function LockCard({ sample }: { sample: LockSample }) {
 				</AppText>
 				<AppText
 					className="absolute top-4 right-4 text-[10px] text-on-art leading-[13px] tracking-[1.2px] opacity-50"
+					maxFontSizeMultiplier={PICTURE_SCALE}
 					variant="body"
 					weight="bold"
 				>
 					{C.kicker}
 				</AppText>
-				{sample.show ? <Bubble held={sample.held} line={sample.line} /> : null}
-				{sample.pill ? (
-					<Pill moon={sample.pill.moon} text={sample.pill.text} />
+				{/* The reminder sits in the flow at the bottom (14 pt up, 12 pt in), so larger text
+				 * grows the card instead of covering the clock; the held pill floats just above it. */}
+				{sample.show ? (
+					<View className="mt-auto w-full px-3 pt-3 pb-3.5">
+						<Bubble held={sample.held} line={sample.line} />
+						{sample.pill ? (
+							<Pill
+								moon={sample.pill.moon}
+								place="over-bubble"
+								text={sample.pill.text}
+							/>
+						) : null}
+					</View>
+				) : null}
+				{sample.pill && !sample.show ? (
+					<Pill moon={sample.pill.moon} place="alone" text={sample.pill.text} />
 				) : null}
 			</View>
 		</View>

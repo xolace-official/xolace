@@ -12,8 +12,6 @@ export const MIRROR_COPY = {
 	pace: "Pace",
 	plusName: (label: string) => `${label} · Xolace+`,
 	plusSpoken: "Xolace+",
-	saveFailed: "Couldn't save that",
-	saveFailedHint: "Check your connection and try again.",
 	seePlus: "See Xolace+",
 	stop: "Stop",
 	stopA11y: "Stop the preview",

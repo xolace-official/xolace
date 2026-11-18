@@ -1,30 +1,19 @@
 import { api } from "@xolace/backend/api";
 import { useQuery } from "convex/react";
 import { usePostHog } from "posthog-react-native";
-import { toast } from "@/components/shared/toast";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
-import { MIRROR_COPY } from "@/features/settings/mirror/copy";
 import type { MirrorSettings } from "@/features/settings/mirror/mirror-data";
 import {
 	entitlementOf,
 	shownTone,
 	shownVoice,
 } from "@/features/settings/mirror/mirror-model";
+import { saved } from "@/features/settings/use-save-failed";
 import { useCompanionName } from "@/lib/talk/use-companion-name";
 import { useTalkStyle } from "@/lib/talk/use-talk-style";
 import { useVoicePreview } from "@/lib/talk/use-voice-preview";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
-
-/** Every write here is optimistic; a failed one rolls back (Convex) and says so. */
-const saved = (write: Promise<unknown>) => {
-	write.catch(() => {
-		toast(MIRROR_COPY.saveFailed, {
-			description: MIRROR_COPY.saveFailedHint,
-			variant: "danger",
-		});
-	});
-};
 
 /**
  * Mirror on Convex: production's tone (`tone_changed`, the register complaint on a reach for
@@ -67,6 +56,10 @@ export function useMirrorSettings(): MirrorSettings {
 			companion,
 			playing: preview.playingSlug,
 			plus,
+			saved: {
+				tone: preferences?.mirrorTone ?? "adaptive",
+				voice: preferences?.voice ?? "auto",
+			},
 			talk: isPlus
 				? { directness: talk.directness, pace: talk.pace, voice: talk.voice }
 				: null,

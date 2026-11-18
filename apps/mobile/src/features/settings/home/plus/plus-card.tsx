@@ -34,11 +34,13 @@ export function PlusCard({
 	const white = useTokenColor("on-art");
 	const glow = useTokenColor("plus-card-glow");
 	const plus = card.kind === "plus";
+	const opens = card.opensPaywall;
 	return (
 		<Pressable
 			accessibilityLabel={card.a11y}
-			accessibilityRole="button"
+			accessibilityRole={opens ? "button" : "summary"}
 			className="mx-4 mb-7.5 rounded-[24px] border-continuous"
+			disabled={!opens}
 			onPress={() => {
 				playSoftPress();
 				onPress();
@@ -75,9 +77,11 @@ export function PlusCard({
 						</View>
 					) : null}
 					<View className="flex-1" />
-					<View className="opacity-70">
-						<Icon color={white} name={CHEVRON} size={14} weight="bold" />
-					</View>
+					{opens ? (
+						<View className="opacity-70">
+							<Icon color={white} name={CHEVRON} size={14} weight="bold" />
+						</View>
+					) : null}
 				</View>
 				{plus ? <PlusTime card={card} /> : <FreeOffer />}
 			</LinearGradient>
@@ -96,12 +100,14 @@ function PlusTime({ card }: { card: Extract<Card, { kind: "plus" }> }) {
 					{card.line}
 				</AppText>
 			) : null}
-			<View className="mt-2.5 h-1.5 overflow-hidden rounded-[3px] bg-on-art/20">
-				<View
-					className="h-full rounded-[3px] bg-on-art"
-					style={{ width: `${(card.fill ?? 0) * 100}%` }}
-				/>
-			</View>
+			{card.fill === null ? null : (
+				<View className="mt-2.5 h-1.5 overflow-hidden rounded-[3px] bg-on-art/20">
+					<View
+						className="h-full rounded-[3px] bg-on-art"
+						style={{ width: `${card.fill * 100}%` }}
+					/>
+				</View>
+			)}
 			<View className="mt-2 flex-row justify-between opacity-72">
 				<AppText
 					className="text-[13px] text-on-art leading-[17px]"

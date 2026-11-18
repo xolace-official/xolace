@@ -23,10 +23,6 @@ export const NOTIFY_COPY = {
 	checkIns: "Check-ins",
 	conversations: "Conversations",
 	dayLabels: ["noon", "6 pm", "midnight", "6 am", "noon"],
-	failed: {
-		description: "Check your connection and try again.",
-		title: "Couldn't save that",
-	},
 	notAfter: "Not after",
 	notBefore: "Not before",
 	quiet: "Quiet hours",

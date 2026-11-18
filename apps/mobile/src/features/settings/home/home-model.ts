@@ -36,10 +36,15 @@ export function signInOf(providers: readonly string[]): SignIn {
 /** `talk.time.left`: null off Plus, undefined while it loads. */
 export type TalkTime = { secondsLeft: number } | null | undefined;
 
+/**
+ * Free: the card opens the paywall. Plus: it only shows talk time, as production's Plus row
+ * did, so a subscriber's tap can't count as a paywall open that can never convert.
+ */
 export type PlusCard =
-	| { kind: "free"; a11y: string }
+	| { kind: "free"; a11y: string; opensPaywall: true }
 	| {
 			kind: "plus";
+			opensPaywall: false;
 			/** "12 min of talk left this week"; null until talk time loads. */
 			line: string | null;
 			/** The bar, 0–1; null until talk time loads. */
@@ -49,7 +54,7 @@ export type PlusCard =
 
 export function plusCard(isPlus: boolean, time: TalkTime): PlusCard {
 	if (!isPlus) {
-		return { a11y: C.plus.a11yFree, kind: "free" };
+		return { a11y: C.plus.a11yFree, kind: "free", opensPaywall: true };
 	}
 	if (!time) {
 		return {
@@ -57,6 +62,7 @@ export function plusCard(isPlus: boolean, time: TalkTime): PlusCard {
 			fill: null,
 			kind: "plus",
 			line: null,
+			opensPaywall: false,
 		};
 	}
 	const seconds = Math.max(0, Math.min(time.secondsLeft, WEEKLY_TALK_S));
@@ -66,6 +72,7 @@ export function plusCard(isPlus: boolean, time: TalkTime): PlusCard {
 		fill: seconds / WEEKLY_TALK_S,
 		kind: "plus",
 		line: C.plus.left(minutes),
+		opensPaywall: false,
 	};
 }
 

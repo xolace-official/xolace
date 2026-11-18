@@ -18,6 +18,10 @@ import {
 	versionLabel,
 } from "@/features/settings/home/home-model";
 import type { SettingsHome } from "@/features/settings/home/settings-home-data";
+import {
+	entitlementOf,
+	shownTone,
+} from "@/features/settings/mirror/mirror-model";
 import { useTalkTime } from "@/lib/talk/use-talk-time";
 import { useAppStore } from "@/store/store";
 
@@ -27,9 +31,13 @@ const UPDATES_ENABLED = Updates.isEnabled && !__DEV__;
 /** The manual EAS Update check. It only checks: `useOtaUpdate` in the root layout does the one
  * fetch, and there's no `reloadAsync` here (it crashes, see `update-bottom-sheet.tsx`). */
 function useUpdateCheck() {
-	const { isChecking, isDownloading, isUpdateAvailable, isUpdatePending } =
-		Updates.useUpdates();
-	const { currentlyRunning } = Updates.useUpdates();
+	const {
+		currentlyRunning,
+		isChecking,
+		isDownloading,
+		isUpdateAvailable,
+		isUpdatePending,
+	} = Updates.useUpdates();
 	const [result, setResult] = useState<"up-to-date" | "failed" | null>(null);
 
 	const check = async () => {
@@ -78,7 +86,7 @@ function useUpdateCheck() {
 export function useSettingsHome(): SettingsHome {
 	const preferences = useQuery(api.preferences.get);
 	const { user } = useUser();
-	const { isPlus } = usePlusEntitlement();
+	const { isPlus, isLoading } = usePlusEntitlement();
 	const time = useTalkTime(isPlus);
 	const openPaywall = usePaywall((s) => s.open);
 	const theme = useAppStore((s) => s.theme);
@@ -103,7 +111,11 @@ export function useSettingsHome(): SettingsHome {
 			notifications: notificationsLabel(preferences?.notifications?.enabled),
 			plus: plusCard(isPlus, time),
 			signIn,
-			tone: toneLabel(preferences?.mirrorTone),
+			// What Mirror shows: a free account is mirrored in Adaptive whatever is saved.
+			tone: toneLabel(
+				preferences?.mirrorTone &&
+					shownTone(preferences.mirrorTone, entitlementOf(isPlus, isLoading))
+			),
 			update: update.row,
 			version: update.version,
 		},

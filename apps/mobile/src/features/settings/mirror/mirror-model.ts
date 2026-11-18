@@ -46,16 +46,18 @@ export const cardName = (id: MirrorTone) => {
 };
 
 /**
- * A tone pill's tap: choose it; or, for Witnessed on a free account, show it on the card with
- * the Plus strip and leave the tone as it is (`peek`); while Plus loads, nothing (`wait`).
+ * A tone pill's tap: choose it unless it is the saved one; or, for Witnessed on a free account,
+ * show it on the card with the Plus strip and leave the tone as it is (`peek`); while Plus
+ * loads, nothing (`wait`). It compares with the saved tone, not the one shown, so a lapsed
+ * subscriber's saved Witnessed (shown as Adaptive) is replaced by tapping Adaptive.
  */
 export function toneTap(
 	tone: MirrorTone,
-	chosen: MirrorTone,
+	saved: MirrorTone,
 	plus: Entitlement
 ): "choose" | "peek" | "wait" | "none" {
 	if (!toneById(tone).plus || plus === "plus") {
-		return tone === chosen ? "none" : "choose";
+		return tone === saved ? "none" : "choose";
 	}
 	return plus === "free" ? "peek" : "wait";
 }
@@ -75,11 +77,17 @@ export type OrbTap = {
  */
 export function orbTap(
 	id: VoiceValue,
-	s: { voice: VoiceValue; playing: VoiceSlug | null; plus: Entitlement }
+	s: {
+		voice: VoiceValue;
+		/** Compared on Auto: a lapsed subscriber's saved Sage (shown as Auto) is replaced. */
+		saved: { voice: VoiceValue };
+		playing: VoiceSlug | null;
+		plus: Entitlement;
+	}
 ): OrbTap {
 	if (id === "auto") {
 		return {
-			choose: s.voice === "auto" ? null : "auto",
+			choose: s.saved.voice === "auto" ? null : "auto",
 			focus: null,
 			preview: "stop",
 		};

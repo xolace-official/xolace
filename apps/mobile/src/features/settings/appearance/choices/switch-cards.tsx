@@ -1,14 +1,14 @@
 import { Rows, SettingsCard } from "@/components/settings-kit/parts";
-import { SwitchRow } from "@/components/settings-kit/switch-row";
 import { useAppearanceScreen } from "@/features/settings/appearance/appearance-data";
 import { APPEARANCE_COPY as C } from "@/features/settings/appearance/copy";
+import { SettingsSwitchRow } from "@/features/settings/settings-switch-row";
 
 /** Night mode (10pm–4am): this device's setting. */
 export function NightCard() {
 	const { state, actions } = useAppearanceScreen();
 	return (
 		<SettingsCard>
-			<SwitchRow
+			<SettingsSwitchRow
 				a11y={C.nightA11y}
 				label={C.nightRow}
 				onChange={actions.setNightMode}
@@ -25,7 +25,7 @@ export function ProfileCardsCard() {
 		<SettingsCard>
 			<Rows>
 				{state.profileCards.map((card) => (
-					<SwitchRow
+					<SettingsSwitchRow
 						key={card.id}
 						label={card.label}
 						onChange={(show) => actions.showProfileCard(card.id, show)}

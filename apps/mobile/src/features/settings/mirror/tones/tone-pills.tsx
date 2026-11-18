@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import {
 	Pressable,
 	ScrollView,
@@ -24,24 +24,30 @@ import { useTokenColors } from "@/lib/use-token-color";
  */
 export function TonePills({
 	shown,
+	chosen,
 	plus,
 	onPick,
 }: {
+	/** The pill filled in: the chosen tone, or Witnessed while a free account looks at it. */
 	shown: MirrorTone;
+	/** The radio's checked pill: the tone the mirror answers in, never a peek. */
+	chosen: MirrorTone;
 	plus: Entitlement;
 	onPick: (tone: MirrorTone) => void;
 }) {
 	const [background, foreground] = useTokenColors(["background", "foreground"]);
 	const row = useRef<ScrollViewInstance>(null);
 	// The last two pills sit past the edge, so a row opening on one of them starts at its end.
-	const [atEnd] = useState(() => opensAtEnd(shown));
+	// Once: a later size change (larger text) mustn't pull the row back to its end.
+	const scrollsToEnd = useRef(opensAtEnd(shown));
 	return (
 		<ScrollView
 			accessibilityRole="radiogroup"
 			contentContainerClassName="gap-1.5 px-4 pt-3.5"
 			horizontal
 			onContentSizeChange={() => {
-				if (atEnd) {
+				if (scrollsToEnd.current) {
+					scrollsToEnd.current = false;
 					row.current?.scrollToEnd({ animated: false });
 				}
 			}}
@@ -55,7 +61,7 @@ export function TonePills({
 					<Pressable
 						accessibilityLabel={toneA11y(t.id, plus)}
 						accessibilityRole="radio"
-						accessibilityState={{ checked: on }}
+						accessibilityState={{ checked: chosen === t.id }}
 						className={cn(
 							"h-9 flex-row items-center gap-1.25 rounded-full border-separator px-3.5",
 							on ? "border-0 bg-foreground" : "border bg-surface"

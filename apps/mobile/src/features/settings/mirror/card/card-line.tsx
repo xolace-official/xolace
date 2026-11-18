@@ -1,4 +1,5 @@
-import { View } from "react-native";
+import { useEffect, useRef } from "react";
+import { AccessibilityInfo, Platform, View } from "react-native";
 import Animated, {
 	Easing,
 	LayoutAnimationConfig,
@@ -66,6 +67,21 @@ export function CardLine({
 }) {
 	const ready = useFixedFaces("mirror", "reader", "poster-medium");
 	const t = toneById(shown);
+	// A new tone's line is read out: a live region on Android, an announcement on iOS
+	// (VoiceOver has no live regions). Not on first draw, only when the tone changes.
+	const drawn = useRef(false);
+	useEffect(() => {
+		if (!drawn.current) {
+			drawn.current = true;
+			return;
+		}
+		if (Platform.OS === "ios") {
+			const { lead, line } = toneById(shown);
+			AccessibilityInfo.announceForAccessibility(
+				lead ? `${lead} ${line}` : line
+			);
+		}
+	}, [shown]);
 	return (
 		<View accessibilityLiveRegion="polite">
 			<LayoutAnimationConfig skipEntering>

@@ -27,6 +27,9 @@ export type MirrorSettings = {
 		tone: MirrorTone;
 		/** The mirror's voice ("auto" off Plus, whatever is saved). */
 		voice: VoiceValue;
+		/** What the account has saved, which a tap compares against: a lapsed subscriber's
+		 * saved Witnessed or Sage is replaced by tapping Adaptive or Auto. */
+		saved: { tone: MirrorTone; voice: VoiceValue };
 		/** The preview clip playing now, from either section. */
 		playing: VoiceSlug | null;
 		/** Null off Plus: Talk is hidden. */

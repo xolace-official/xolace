@@ -6,7 +6,6 @@ import {
 	SectionTitle,
 	SettingsCard,
 } from "@/components/settings-kit/parts";
-import { SwitchRow } from "@/components/settings-kit/switch-row";
 import { TileRow } from "@/components/settings-kit/tile-row";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { BlockedBanner } from "@/features/settings/notifications/blocked/blocked-banner";
@@ -26,6 +25,7 @@ import {
 	QuietHours,
 } from "@/features/settings/notifications/quiet/quiet-hours";
 import { ReachPills } from "@/features/settings/notifications/reach/reach-pills";
+import { SettingsSwitchRow } from "@/features/settings/settings-switch-row";
 
 function Section({
 	title,
@@ -72,7 +72,7 @@ export function NotificationsScreen({
 				<LockCard sample={lockSample(state)} />
 				<Section note={C.remindersNote} title={C.reminders}>
 					<SettingsCard>
-						<SwitchRow
+						<SettingsSwitchRow
 							disabled={state.blocked}
 							label={C.remindersRow}
 							onChange={actions.setReminders}
@@ -101,7 +101,7 @@ export function NotificationsScreen({
 						<Section note={quietNote(state.quiet)} title={C.quiet}>
 							<SettingsCard>
 								<View>
-									<SwitchRow
+									<SettingsSwitchRow
 										label={C.quiet}
 										onChange={actions.setQuiet}
 										value={state.quiet !== null}
@@ -121,7 +121,7 @@ export function NotificationsScreen({
 				) : null}
 				<Section note={C.chatNote} title={C.conversations}>
 					<SettingsCard>
-						<SwitchRow
+						<SettingsSwitchRow
 							disabled={state.blocked}
 							label={C.chatRow}
 							onChange={actions.setChat}

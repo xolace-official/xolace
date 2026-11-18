@@ -41,7 +41,6 @@ export const HOME_COPY = {
 		updates: "Check for updates",
 	},
 	signIn: { apple: "Apple", email: "Email", google: "Google" },
-	title: "Settings",
 	updateAvailable: "Available",
 	upToDate: "Up to date",
 	version: (version: string) => `Version ${version}`,

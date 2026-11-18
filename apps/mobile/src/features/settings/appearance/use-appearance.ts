@@ -2,8 +2,6 @@ import { api } from "@xolace/backend/api";
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { useColorScheme } from "react-native";
-import { useUniwind } from "uniwind";
-import { toast } from "@/components/shared/toast";
 import { setThemeWithFonts } from "@/design/fonts";
 import { useScheme } from "@/design/scheme";
 import { themeVariant } from "@/design/themes";
@@ -23,14 +21,11 @@ import {
 	themeNote,
 	themeTap,
 } from "@/features/settings/appearance/appearance-model";
-import { APPEARANCE_COPY as C } from "@/features/settings/appearance/copy";
+import { saveFailed } from "@/features/settings/use-save-failed";
 import { useOSReducedMotion } from "@/lib/motion/os-reduced-motion";
 import { resolveMotionPreference } from "@/lib/motion/use-effective-reduced-motion";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 import { useAppStore } from "@/store/store";
-
-const saveFailed = () =>
-	toast(C.saveFailed, { description: C.saveFailedBody, variant: "danger" });
 
 /** The B7 list on the account, with production's optimistic update. */
 function useProfileCards() {
@@ -74,7 +69,6 @@ export function useAppearance(): Appearance {
 	const nightMode = useAppStore((s) => s.nightModeEnabled);
 	const setNightMode = useAppStore((s) => s.setNightModeEnabled);
 	const setIntroSeen = useAppStore((s) => s.setIntroSeen);
-	const { theme: current } = useUniwind();
 	const scheme = useScheme();
 	const osDark = useColorScheme() === "dark";
 	const osReduce = useOSReducedMotion();
@@ -104,7 +98,7 @@ export function useAppearance(): Appearance {
 				setIntroSeen(false);
 			},
 			setMode: (next) => {
-				setThemeWithFonts(modeTheme(next, current));
+				setThemeWithFonts(modeTheme(next, colorThemeId));
 				setStoredMode(next);
 				save({ theme: next }).catch(saveFailed);
 			},

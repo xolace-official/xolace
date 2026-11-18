@@ -58,8 +58,6 @@ export const APPEARANCE_COPY = {
 		ok: "Replay",
 		title: "Replay intro?",
 	},
-	saveFailed: "Couldn't save that",
-	saveFailedBody: "Check your connection and try again.",
 	theme: "Theme",
 	themeA11y: (name: string, plus: boolean, locked: boolean) =>
 		`${name} theme${plus ? ", Xolace+" : ""}${locked ? ", locked" : ""}`,

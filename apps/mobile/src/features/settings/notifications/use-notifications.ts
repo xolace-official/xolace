@@ -4,7 +4,6 @@ import { useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { AppState, Linking } from "react-native";
-import { toast } from "@/components/shared/toast";
 import { NOTIFY_COPY } from "@/features/settings/notifications/copy";
 import type {
 	Notifications,
@@ -19,19 +18,13 @@ import {
 	quietWith,
 	toQuiet,
 } from "@/features/settings/notifications/notifications-model";
+import { saveFailed } from "@/features/settings/use-save-failed";
 import {
 	getGrantedPushToken,
 	getPushPermissionState,
 	requestPushToken,
 } from "@/lib/push-token";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
-
-/** An optimistic write that failed: Convex has rolled it back; say so. */
-const failed = () =>
-	toast(NOTIFY_COPY.failed.title, {
-		description: NOTIFY_COPY.failed.description,
-		variant: "danger",
-	});
 
 /** Re-reads the OS permission on every foreground, so returning from Settings settles the
  * switches: it can be revoked there without any preference knowing. */
@@ -122,7 +115,7 @@ export function useNotifications(reachMeOn: ReachMeOn | null): Notifications {
 		// Lands after registerToken, whose first-grant auto-enable would otherwise
 		// switch on a family the user didn't ask for.
 		updatePreferences({ notifications: nextNotificationPrefs(next) }).catch(
-			failed
+			saveFailed
 		);
 
 		if (!(next.gentle || next.chat)) {
@@ -139,6 +132,9 @@ export function useNotifications(reachMeOn: ReachMeOn | null): Notifications {
 	};
 
 	const window = notifications?.quietWindow ?? null;
+	// Until preferences load, a switch would write its default over the saved choice (Gentle
+	// reminders carrying `chat: true` over a saved chat-off), so taps wait. Production didn't.
+	const loading = preferences === undefined;
 
 	return {
 		actions: {
@@ -149,6 +145,9 @@ export function useNotifications(reachMeOn: ReachMeOn | null): Notifications {
 				Linking.openSettings().catch(() => undefined);
 			},
 			setChat: (on) => {
+				if (loading) {
+					return;
+				}
 				// Each setter carries the other family's stored choice, never its displayed
 				// value, which reads off whenever the master or the OS blocks delivery.
 				applyToggles({ chat: on, gentle: gentleChoice(notifications) }).catch(
@@ -156,19 +155,25 @@ export function useNotifications(reachMeOn: ReachMeOn | null): Notifications {
 				);
 			},
 			setQuiet: (on) => {
+				if (loading) {
+					return;
+				}
 				updatePreferences({
 					notificationQuietWindow: on ? QUIET_DEFAULT : null,
-				}).catch(failed);
+				}).catch(saveFailed);
 			},
 			setQuietHour: (end, hour) => {
 				updatePreferences({
 					notificationQuietWindow: quietWith(window, end, hour),
-				}).catch(failed);
+				}).catch(saveFailed);
 			},
 			setReach: (reach) => {
-				updatePreferences({ notificationReach: reach }).catch(failed);
+				updatePreferences({ notificationReach: reach }).catch(saveFailed);
 			},
 			setReminders: (on) => {
+				if (loading) {
+					return;
+				}
 				applyToggles({ chat: chatChoice(notifications), gentle: on }).catch(
 					() => undefined
 				);
@@ -178,7 +183,7 @@ export function useNotifications(reachMeOn: ReachMeOn | null): Notifications {
 			alertOpen,
 			blocked: osBlocked,
 			chat: chatNotifications,
-			loading: preferences === undefined,
+			loading,
 			quiet: toQuiet(window),
 			reach: notifications?.reach ?? "warm",
 			reachMeOn,

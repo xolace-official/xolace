@@ -42,6 +42,12 @@ describe("toneTap", () => {
 		expect(toneTap("witnessed", "gentle", "plus")).toBe("choose");
 	});
 
+	it("compares with the saved tone: a lapsed Witnessed is replaced by tapping Adaptive", () => {
+		// Shown as Adaptive off Plus, saved as Witnessed: the tap writes Adaptive.
+		expect(toneTap("adaptive", "witnessed", "free")).toBe("choose");
+		expect(toneTap("adaptive", "adaptive", "free")).toBe("none");
+	});
+
 	it("only shows Witnessed off Plus, and waits while Plus loads", () => {
 		expect(toneTap("witnessed", "gentle", "free")).toBe("peek");
 		expect(toneTap("witnessed", "gentle", "loading")).toBe("wait");
@@ -49,10 +55,17 @@ describe("toneTap", () => {
 });
 
 describe("orbTap", () => {
-	const plus = { playing: null, plus: "plus" as const, voice: "auto" as const };
+	const plus = {
+		playing: null,
+		plus: "plus" as const,
+		saved: { voice: "auto" as const },
+		voice: "auto" as const,
+	};
 
 	it("Auto: chosen, and any clip stops", () => {
-		expect(orbTap("auto", { ...plus, voice: "sage" })).toEqual({
+		expect(
+			orbTap("auto", { ...plus, saved: { voice: "sage" }, voice: "sage" })
+		).toEqual({
 			choose: "auto",
 			focus: null,
 			preview: "stop",
@@ -78,6 +91,15 @@ describe("orbTap", () => {
 		expect(orbTap("wren", { ...s, playing: null }).preview).toEqual({
 			play: "wren",
 		});
+	});
+
+	it("free: Auto replaces a lapsed subscriber's saved voice, shown as Auto", () => {
+		const lapsed = {
+			...MIRROR_FREE,
+			saved: { tone: "poetic" as const, voice: "sage" as const },
+		};
+		expect(orbTap("auto", lapsed).choose).toBe("auto");
+		expect(orbTap("auto", MIRROR_FREE).choose).toBeNull();
 	});
 
 	it("free: a named voice only plays, and the line describes it", () => {
