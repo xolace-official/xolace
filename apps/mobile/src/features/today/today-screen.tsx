@@ -71,6 +71,8 @@ export function TodayScreen() {
 					/>
 					<TodayBody
 						flameClock={flameClock}
+						// A new day (Today stays mounted for days) replays the first open, once.
+						key={state.day}
 						live={live}
 						reduced={reduced}
 						scrollY={scrollY}

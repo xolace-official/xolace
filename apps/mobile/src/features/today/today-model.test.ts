@@ -3,8 +3,8 @@ import {
 	headerCopy,
 	introDue,
 	localDay,
-	nextPhaseHour,
 	nextStreakShown,
+	nextWakeHour,
 	parseIntroDay,
 	parseSeenStreak,
 	phaseForHour,
@@ -44,16 +44,17 @@ describe("todayPhase", () => {
 	});
 });
 
-describe("nextPhaseHour", () => {
-	it("is the next boundary", () => {
-		expect(nextPhaseHour(5)).toBe(9);
-		expect(nextPhaseHour(9)).toBe(17);
-		expect(nextPhaseHour(20)).toBe(22);
+describe("nextWakeHour", () => {
+	it("is the next phase boundary", () => {
+		expect(nextWakeHour(5)).toBe(9);
+		expect(nextWakeHour(9)).toBe(17);
+		expect(nextWakeHour(20)).toBe(22);
+		expect(nextWakeHour(1)).toBe(4);
 	});
 
-	it("wraps to dawn after late begins", () => {
-		expect(nextPhaseHour(23)).toBe(4);
-		expect(nextPhaseHour(1)).toBe(4);
+	it("wakes at midnight after late begins, for the weekday", () => {
+		expect(nextWakeHour(22)).toBe(24);
+		expect(nextWakeHour(23)).toBe(24);
 	});
 });
 

@@ -11,8 +11,8 @@ import {
 	headerCopy,
 	introDue,
 	localDay,
-	nextPhaseHour,
 	nextStreakShown,
+	nextWakeHour,
 	parseIntroDay,
 	parseSeenStreak,
 	type StreakShown,
@@ -31,7 +31,7 @@ const keep = (key: string, value: object) =>
 
 /**
  * The time Today keeps: re-read when the app comes to the front (timers sleep in the
- * background) and when the next phase begins while it's open.
+ * background), when the next phase begins and at midnight while it's open.
  */
 function useNow(): Date {
 	const active = useAppActive();
@@ -44,10 +44,8 @@ function useNow(): Date {
 	}, [active]);
 	useEffect(() => {
 		const next = new Date(now);
-		next.setHours(nextPhaseHour(now.getHours()), 0, 1, 0);
-		if (next <= now) {
-			next.setDate(next.getDate() + 1);
-		}
+		// Hour 24 is the next midnight.
+		next.setHours(nextWakeHour(now.getHours()), 0, 1, 0);
 		const id = setTimeout(
 			() => setNow(new Date()),
 			next.getTime() - now.getTime()
@@ -85,22 +83,24 @@ function useStreak(
 	return shown ? { count: shown.count, igniteKey: shown.igniteKey } : null;
 }
 
-/** Whether the first open plays: once a day per account, read once per mount. */
+/** Whether the first open plays: once a day per account, worked out again when the day turns. */
 function useIntro(day: string, userId: string | null | undefined): boolean {
-	const [intro] = useState(
-		() =>
-			Boolean(userId) &&
-			introDue(
-				parseIntroDay(zustandJSONStorage.getItem(INTRO_KEY), userId ?? ""),
-				day
-			)
-	);
+	const due = () =>
+		Boolean(userId) &&
+		introDue(
+			parseIntroDay(zustandJSONStorage.getItem(INTRO_KEY), userId ?? ""),
+			day
+		);
+	const [intro, setIntro] = useState(() => ({ day, due: due(), userId }));
+	if (intro.day !== day || intro.userId !== userId) {
+		setIntro({ day, due: due(), userId });
+	}
 	useEffect(() => {
-		if (intro && userId) {
-			keep(INTRO_KEY, { day, userId });
+		if (intro.due && intro.userId) {
+			keep(INTRO_KEY, { day: intro.day, userId: intro.userId });
 		}
-	}, [intro, day, userId]);
-	return intro;
+	}, [intro]);
+	return intro.due;
 }
 
 /** Today in the app: the profile summary, the hour and night mode, and the device. */
@@ -129,6 +129,6 @@ export function useTodayData(): Today {
 			},
 			openStreak: () => router.navigate("/you"),
 		},
-		state: { eyebrow, greeting, intro, phase, streak },
+		state: { day, eyebrow, greeting, intro, phase, streak },
 	};
 }

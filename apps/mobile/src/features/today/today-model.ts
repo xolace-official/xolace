@@ -5,6 +5,7 @@ export type TodayPhase = "dawn" | "day" | "evening" | "late";
 
 /** Phase windows by hour: dawn 4–9, day 9–17, evening 17–22, late 22–4. */
 const PHASE_HOURS = { dawn: 4, day: 9, evening: 17, late: 22 } as const;
+const HOURS_IN_DAY = 24;
 
 /** The phase an hour (0–23) falls in. */
 export function phaseForHour(hour: number): TodayPhase {
@@ -33,15 +34,19 @@ export function todayPhase(hour: number, isNight: boolean): TodayPhase {
 	return phase === "late" ? "evening" : phase;
 }
 
-/** The hour the phase next changes after `hour` (0–23), for a timer to wake at. */
-export function nextPhaseHour(hour: number): number {
-	const bounds = [
+/**
+ * The next hour Today has to wake at after `hour` (0–23): a phase boundary, or midnight
+ * (24) for the weekday and the once-a-day intro.
+ */
+export function nextWakeHour(hour: number): number {
+	const wakes = [
 		PHASE_HOURS.dawn,
 		PHASE_HOURS.day,
 		PHASE_HOURS.evening,
 		PHASE_HOURS.late,
+		HOURS_IN_DAY,
 	];
-	return bounds.find((b) => b > hour) ?? PHASE_HOURS.dawn;
+	return wakes.find((w) => w > hour) ?? HOURS_IN_DAY;
 }
 
 /** The top row and greeting: "Thursday · evening", "Good evening, Ama". */

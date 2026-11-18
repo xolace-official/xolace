@@ -7,7 +7,12 @@ import { NIGHT_VARIANT, type ThemeMode, themeVariant } from "@/design/themes";
 import { type Today, TodayProvider } from "../today-data";
 import { headerCopy, type TodayPhase } from "../today-model";
 import { TodayScreen } from "../today-screen";
-import { FIXTURE_NAME, FIXTURE_STREAK, FIXTURE_WEEKDAY } from "./fixtures";
+import {
+	FIXTURE_DAY,
+	FIXTURE_NAME,
+	FIXTURE_STREAK,
+	FIXTURE_WEEKDAY,
+} from "./fixtures";
 
 const ACTIONS: Today["actions"] = {
 	openHelp: () => router.push("/crisis-resources"),
@@ -75,6 +80,7 @@ function FixtureToday({
 		offline ? null : FIXTURE_NAME
 	);
 	const state: Today["state"] = {
+		day: FIXTURE_DAY,
 		eyebrow,
 		greeting,
 		intro,

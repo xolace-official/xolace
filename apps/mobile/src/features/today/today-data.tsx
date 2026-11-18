@@ -22,6 +22,8 @@ export type Today = {
 		} | null;
 		/** The first open of the day: the greeting's words, the rise, the word's ink. */
 		intro: boolean;
+		/** The local day ("YYYY-MM-DD"): a new day remounts the page, so its intro can play. */
+		day: string;
 	};
 	actions: {
 		/** The lifebuoy: Get help. */
