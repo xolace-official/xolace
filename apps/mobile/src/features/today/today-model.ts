@@ -35,17 +35,50 @@ export function nextWakeHour(hour: number): number {
 }
 
 /**
- * What the Reflect card shows for your open session (board `restWaiting` / `restReady`): your
- * words with the mirror, the mirror back and not yet read, or the field. From
- * `sessions.getActive`'s state; an error or a session past its mirror is the field again.
+ * What the Reflect card shows for your open session (board `restWaiting` / `restReady`), from
+ * `sessions.getActive`. A face says where a tap lands: your words with the mirror, the mirror
+ * back, Where to from here (confirmed), or an error. The field shows when a tap starts fresh:
+ * no session, one not sent yet, or one already on its path (Reflect doesn't reopen a path).
+ * Until `getActive` answers (`undefined`) the card is still, so the field doesn't flash first.
  */
-export type CardMode = "idle" | "waiting" | "ready";
+export type CardMode =
+	| "loading"
+	| "idle"
+	| "waiting"
+	| "ready"
+	| "next"
+	| "failed";
 
 export function cardMode(state: string | null | undefined): CardMode {
-	if (state === "input_received" || state === "processing") {
-		return "waiting";
+	switch (state) {
+		case undefined:
+			return "loading";
+		case "input_received":
+		case "processing":
+			return "waiting";
+		case "mirror_delivered":
+			return "ready";
+		case "confirmed":
+			return "next";
+		case "error":
+			return "failed";
+		default:
+			return "idle";
 	}
-	return state === "mirror_delivered" ? "ready" : "idle";
+}
+
+/** The face the card wears for a mode, or none: at rest the field, loading nothing yet. */
+export function cardFace(mode: CardMode) {
+	return mode === "idle" || mode === "loading" ? null : COPY.card[mode];
+}
+
+/** VoiceOver's hint for the card: where a face's tap lands, or the doors' hold at rest. */
+export function cardA11yHint(mode: CardMode, doorsHint: string): string {
+	const face = cardFace(mode);
+	if (face) {
+		return `${COPY.opensReflect}. ${face.body}`;
+	}
+	return mode === "idle" ? doorsHint : COPY.opensReflect;
 }
 
 /** The top row and greeting: "Thursday · evening", "Good evening, Ama". */

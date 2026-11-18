@@ -85,3 +85,29 @@ export function CardReady({ running }: { running: boolean }) {
 		</View>
 	);
 }
+
+/**
+ * Where to from here (`next`) or a session that didn't go through (`failed`): a still dot and
+ * the face's line. No loop: neither is something happening.
+ */
+export function CardNote({
+	body,
+	tone,
+}: {
+	body: string;
+	tone: "ember" | "subtle";
+}) {
+	return (
+		<View className="flex-row items-center gap-3">
+			<View
+				className={
+					tone === "ember" ? "rounded-full bg-ember" : "rounded-full bg-subtle"
+				}
+				style={{ height: DOT, width: DOT }}
+			/>
+			<AppText className={LINE} color="muted" variant="callout">
+				{body}
+			</AppText>
+		</View>
+	);
+}

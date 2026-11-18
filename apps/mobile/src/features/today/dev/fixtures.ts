@@ -183,10 +183,15 @@ export function lowerModules(
 
 /** The Reflect dev state each face of the card opens, so a tap here never reaches the backend. */
 const REFLECT_STATE = {
+	failed: "error",
 	idle: "first-open",
+	loading: "first-open",
+	next: "where-next",
 	ready: "mirror",
 	waiting: "streaming",
 } as const satisfies Record<CardMode, string>;
+/** Reflect's error state has no dark twin. */
+const LIGHT_ONLY: readonly CardMode[] = ["failed"];
 
 /** Where the card zooms on fixtures: Reflect's dev state for its face, in Today's theme. */
 export function reflectState(
@@ -197,6 +202,7 @@ export function reflectState(
 	if (phase === "late" && mode === "idle") {
 		return "/dev/reflect/late";
 	}
-	const dark = phase === "late" || theme === "dark";
+	const dark =
+		(phase === "late" || theme === "dark") && !LIGHT_ONLY.includes(mode);
 	return `/dev/reflect/${REFLECT_STATE[mode]}${dark ? "-dark" : ""}`;
 }

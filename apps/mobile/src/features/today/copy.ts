@@ -26,9 +26,21 @@ export const COPY = {
 		a11yHint: (doors: string, count: number) =>
 			`Opens Reflect. ${doors} ${count === 1 ? "is" : "are"} in actions.`,
 		and: "and",
+		/** The session didn't go through (`error`). Reflect's card says why: a retry, a limit or a no. */
+		failed: {
+			body: "Something got in the way. Open it to see what you can do.",
+			hint: "Tap to open it",
+			title: "That one didn't go through",
+		},
 		hint: (doors: string) => `Hold the card for ${doors}`,
 		/** The month's prompt on the card while it's carried this week (board `.ph.wrote .tref`). */
 		monthLabel: "THIS MONTH",
+		/** The mirror is confirmed and Where to from here is open (`confirmed`). */
+		next: {
+			body: "Your mirror landed. The next step is yours to choose.",
+			hint: "Tap to pick up where you left off",
+			title: "Where to from here?",
+		},
 		or: "or",
 		placeholders: {
 			day: [
@@ -48,9 +60,9 @@ export const COPY = {
 			evening: "What's sitting with you right now?",
 			late: "What's carrying over?",
 		} satisfies Record<TodayPhase, string>,
-		/** The mirror came back while you were away (board `restReady`). */
+		/** The mirror came back while you were away (board `restReady`). Kept only a while. */
 		ready: {
-			body: "It's waiting for you, whenever you are.",
+			body: "It's here for a little while, when you're ready.",
 			hint: "Tap to open it",
 			title: "Your mirror is ready",
 		},

@@ -197,7 +197,12 @@ export function useTodayData(): Today {
 		state: {
 			campfire,
 			...lower,
-			card: { mode: cardMode(active?.state), monthPrompt, reflect: REFLECT },
+			card: {
+				// undefined while loading, null with no session.
+				mode: cardMode(active === null ? null : active?.state),
+				monthPrompt,
+				reflect: REFLECT,
+			},
 			day,
 			eyebrow,
 			greeting,

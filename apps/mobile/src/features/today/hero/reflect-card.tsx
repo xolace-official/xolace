@@ -10,6 +10,7 @@ import { COPY } from "../copy";
 import { PILL_SLOT } from "../header/today-header";
 import { useToday } from "../today-data";
 import { useOnScreen, useShown, useTodayFrame } from "../today-frame";
+import { cardA11yHint, cardFace } from "../today-model";
 import { CardA11y, type Frame, sameFrame } from "./card-a11y";
 import { CardBody } from "./card-body";
 import { CardLight } from "./card-light";
@@ -23,8 +24,7 @@ const FALLBACK_H = 230;
 /**
  * The door into Reflect, and the sky's horizon. Tap: the card zooms into Reflect (iOS 18+;
  * elsewhere, and with Reduce Motion, Reflect's own transition). Hold 0.6 s: the spectrum laps
- * the rim and the doors rise out of the hint line. While Reflect has your words, or its mirror
- * is back, the card says so in place of the field and is only a way back: no hold.
+ * the rim and the doors rise out of the hint line. Holding a session, it says where a tap lands.
  */
 export function ReflectCard() {
 	const { state, actions } = useToday();
@@ -32,9 +32,9 @@ export function ReflectCard() {
 	const late = state.phase === "late";
 	const { mode, reflect } = state.card;
 	const idle = mode === "idle";
-	const face = idle ? null : COPY.card[mode];
+	const face = cardFace(mode);
 	const prompt = face?.title ?? COPY.card.prompt[state.phase];
-	const monthPrompt = idle ? state.card.monthPrompt : null;
+	const monthPrompt = face ? null : state.card.monthPrompt;
 	const doors = doorsCopy(DOORS);
 	const hold = useHold(reduced, idle);
 	const focused = useIsFocused();
@@ -187,7 +187,7 @@ export function ReflectCard() {
 									}
 								: undefined
 						}
-						hint={face ? `${COPY.opensReflect}. ${face.body}` : doors.a11yHint}
+						hint={cardA11yHint(mode, doors.a11yHint)}
 						onDoors={idle ? hold.chooseFromA11y : undefined}
 						prompt={
 							monthPrompt ? `${COPY.card.monthLabel}. ${monthPrompt}` : prompt
