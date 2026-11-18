@@ -4,7 +4,7 @@ import { useToday } from "../today-data";
 import { MODULE_GAP } from "../today-motion";
 import { TodaySection } from "../today-section";
 import { MomentCard } from "./moment-card";
-import { StackedCarousel } from "./stacked-carousel";
+import { carouselHeightFor, StackedCarousel } from "./stacked-carousel";
 
 /** Production's card height and its screen padding, so the centred card's edges line up. */
 const CARD_HEIGHT = 166;
@@ -44,7 +44,7 @@ export function MomentsSection() {
 						)}
 					/>
 				) : (
-					<View style={{ height: CARD_HEIGHT }} />
+					<View style={{ height: carouselHeightFor(CARD_HEIGHT) }} />
 				)}
 			</View>
 		</View>

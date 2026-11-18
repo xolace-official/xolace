@@ -10,6 +10,9 @@ import { useTokenColors } from "@/lib/use-token-color";
 import { AnimatedCarouselCard } from "./animated-carousel-card";
 import { CarouselPaginator } from "./carousel-paginator";
 
+/** The carousel's height: the resting card plus the paginator row (40). */
+export const carouselHeightFor = (cardHeight: number) => cardHeight + 40;
+
 const STACK_OFFSET = 8;
 const PAGINATOR_VISIBLE_DOTS = 3;
 const PAGINATOR_DOT_SIZE = 10;
@@ -44,7 +47,7 @@ export const StackedCarousel = <T,>({
 	// Every child is absolute, so the container needs an explicit height: the
 	// resting card plus the paginator row. Overflow is clipped, so the scale-1.15
 	// swipe peak crops instead of needing headroom.
-	const carouselHeight = cardHeight + 40;
+	const carouselHeight = carouselHeightFor(cardHeight);
 
 	const scrollX = useSharedValue(0);
 
