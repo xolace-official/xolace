@@ -11,6 +11,7 @@ import {
 } from "./moments-model";
 
 const SPEAKER = 22;
+const ACTIVATE = [{ name: "activate" }];
 
 /**
  * Production's `discovery-moment-card.tsx`. The carousel wrapper is pointerEvents "none" and
@@ -27,12 +28,18 @@ export function MomentCard({
 	const accent = useTokenColor("accent");
 	return (
 		<View
+			accessibilityActions={ACTIVATE}
 			accessibilityHint={COPY.moments.openHint}
 			accessibilityLabel={`${getEmotionLabel(entry.emotion)}. ${entry.quote}`}
 			accessibilityRole="button"
 			accessible
 			className="flex-1 justify-between p-4"
-			onAccessibilityTap={onOpen}
+			// VoiceOver's and TalkBack's double tap (onAccessibilityTap is iOS-only).
+			onAccessibilityAction={(e) => {
+				if (e.nativeEvent.actionName === "activate") {
+					onOpen();
+				}
+			}}
 		>
 			{entry.audio ? (
 				<View className="absolute top-3 right-3 size-11 items-center justify-center rounded-full bg-accent-wash">
