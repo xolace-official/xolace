@@ -29,6 +29,8 @@ export function useThreadActions(
 	const ageGate = useAgeGate();
 	const [confirming, setConfirming] = useState(false);
 	const [blocking, setBlocking] = useState(false);
+	// A request is answered once: a second tap while the first is in flight does nothing.
+	const [answering, setAnswering] = useState(false);
 	const c = conversation;
 
 	const resumeNow = () => {
@@ -57,13 +59,16 @@ export function useThreadActions(
 
 	const actions: Omit<ThreadScreenData["actions"], "retry" | "flag"> = {
 		accept: () => {
-			if (!c) {
+			if (!c || answering) {
 				return;
 			}
 			playSoftPress();
-			accept({ conversationId: c.id }).catch((error: unknown) =>
-				toast(acceptFailureLabel(error), { variant: "danger" })
-			);
+			setAnswering(true);
+			accept({ conversationId: c.id })
+				.catch((error: unknown) =>
+					toast(acceptFailureLabel(error), { variant: "danger" })
+				)
+				.finally(() => setAnswering(false));
 		},
 		askBlock: () => {
 			playSoftPress();
@@ -97,13 +102,15 @@ export function useThreadActions(
 				.finally(() => setBlocking(false));
 		},
 		decline: () => {
-			if (!c) {
+			if (!c || answering) {
 				return;
 			}
 			playSoftPress();
+			setAnswering(true);
 			decline({ conversationId: c.id })
 				.then(() => router.back())
-				.catch(() => toast(THREAD.toast.declineFailed, { variant: "danger" }));
+				.catch(() => toast(THREAD.toast.declineFailed, { variant: "danger" }))
+				.finally(() => setAnswering(false));
 		},
 		// Back to the tabs under the thread, never a second copy of them.
 		findAnother: () => {
