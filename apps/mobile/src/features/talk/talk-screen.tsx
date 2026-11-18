@@ -1,134 +1,187 @@
-// The Hearth talk screen (#584, #593): the transcript under the native header,
-// an aurora behind the composer. Consent comes before the first word; "Say
-// more" reopens on its thread (#604) straight into the talk.
-
-import { ConversationProvider } from "@elevenlabs/react-native";
-import { api } from "@xolace/backend/convex/_generated/api";
-import type { Id } from "@xolace/backend/convex/_generated/dataModel";
-import { useConvex } from "convex/react";
-import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
-import { useLocalSearchParams } from "expo-router";
 import { useIsFocused } from "expo-router/react-navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { View } from "react-native";
-import { KeyboardAvoidingView } from "react-native-keyboard-controller";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppText } from "@/components/shared/app-text";
-import { ConsentCard } from "@/features/talk/consent-card";
-import { TalkAurora } from "@/features/talk/talk-aurora";
-import { TalkComposer } from "@/features/talk/talk-composer";
-import { TalkHeader } from "@/features/talk/talk-header";
-import { TalkHelp } from "@/features/talk/talk-help";
-import { TalkLeaveDialog } from "@/features/talk/talk-leave-dialog";
-import { TalkThread } from "@/features/talk/talk-thread";
-import { useTalk } from "@/features/talk/use-talk";
-import type { ThreadLine } from "@/features/talk/use-thread";
-import { SWITCH_SPACE } from "@/features/talk/views/companion-stage";
-import { TalkViews } from "@/features/talk/views/talk-views";
+import Animated, {
+	useAnimatedStyle,
+	useDerivedValue,
+	useSharedValue,
+} from "react-native-reanimated";
+import { playSoftPress } from "@/lib/haptics";
+import { KEYBOARD_GAP } from "@/lib/keyboard/keyboard-lift-math";
+import { useKeyboardLift } from "@/lib/keyboard/use-keyboard-lift";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { lookAt, lookIndex } from "./companion-look";
+import { StartComposer } from "./composer/start-composer";
+import { FootnoteOverlay, TalkChrome } from "./header/talk-chrome";
+import { composerLift, useStageFrame } from "./hero/stage-frame";
+import { TalkHero, UNMEASURED } from "./hero/talk-hero";
+import { useHeroFace } from "./hero/use-hero-face";
+import { useLookCarousel } from "./hero/use-look-carousel";
+import { useTalkGeometry } from "./motion/talk-geometry";
+import { LAYOUT } from "./motion/talk-motion";
+import { usePhaseMotion } from "./motion/use-phase-motion";
+import { useTalkMotion } from "./motion/use-talk-motion";
+import { LeaveGuard } from "./stage/leave-guard";
+import { TalkAurora } from "./stage/talk-aurora";
+import { TalkStage } from "./stage/talk-stage";
+import { TalkStart } from "./start/talk-start";
+import { useTalkScreen } from "./talk-data";
+import { heardCount } from "./talk-model";
+import { ThreadLayer } from "./thread/thread-layer";
+import { useKeepAwakeWhile } from "./use-keep-awake-while";
+import { useTalkAnnouncements } from "./use-talk-announcements";
 
-const KEEP_AWAKE_TAG = "talk";
-
-function Talk({
-	reopen,
-}: {
-	reopen?: { sessionId: Id<"sessions">; thread: ThreadLine[] };
-}) {
-	// A voice talk has long stretches without a touch; keep the screen on while
-	// it is in front.
+/**
+ * Talk (handoff `talk.md`): one screen, one tree, phases start → connecting → talk →
+ * ending. The start screen and the talk share the face, the button that becomes the
+ * composer and one timeline, so nothing that comes back disappears.
+ */
+export function TalkScreen() {
+	const { state, actions } = useTalkScreen();
+	const reduced = useEffectiveReducedMotion();
 	const focused = useIsFocused();
+	const geo = useTalkGeometry();
+	const index = lookIndex(state.look);
+	const [face, setFace] = useState<number>(LAYOUT.face);
+	// Unmeasured until the start screen lays its carousel slot out: the hero waits unseen.
+	const carTop = useSharedValue(UNMEASURED);
+	const startTop = useSharedValue(geo.startTop);
+	const { keyboard } = useKeyboardLift();
+	const lift = useDerivedValue(() =>
+		composerLift(keyboard.get(), geo.insets.bottom)
+	);
+	const before = state.phase === "start";
+	const onStage = !before && state.view === "companion";
+	const talking =
+		state.sample !== null || (!before && state.presence === "Speaking");
+	const listening = state.phase === "talk" && state.presence === "Listening";
+	const motion = useTalkMotion({
+		phase: state.phase,
+		reduced,
+		talking,
+		view: state.view,
+	});
+	usePhaseMotion(motion, state.phase, state.view);
+	// A voice talk has long stretches without a touch; keep the screen on while it's in front.
+	useKeepAwakeWhile(focused);
+	const hero = useHeroFace({
+		before,
+		heard: heardCount(state.turns),
+		level: state.micLevel,
+		listening: listening && onStage,
+		presence: state.presence,
+		running: focused && (before || onStage),
+		sampling: state.sample !== null,
+	});
+	const carousel = useLookCarousel({
+		enabled: before,
+		index,
+		onLand: (i) => {
+			playSoftPress();
+			actions.setLook(lookAt(i));
+			hero.face.hop();
+		},
+		reduced,
+	});
+	const frame = useStageFrame(geo, keyboard);
+
+	// A sheet, a pushed screen or Start stops the sample (the start screen leaves the front).
+	const stopSample = useEffectEvent(() => actions.stopSample());
 	useEffect(() => {
-		if (!focused) {
-			return;
+		if (focused && before) {
+			return () => stopSample();
 		}
-		void activateKeepAwakeAsync(KEEP_AWAKE_TAG);
-		return () => void deactivateKeepAwake(KEEP_AWAKE_TAG);
-	}, [focused]);
-	// Its faces and aurora stop when nothing of the talk shows: a screen pushed over it, or
-	// the full-height voice-and-look sheet, which is a portal and leaves it focused.
-	const [styleOpen, setStyleOpen] = useState(false);
-	const running = focused && !styleOpen;
-	const talk = useTalk(reopen);
-	const insets = useSafeAreaInsets();
-	// Once, on open.
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	useEffect(() => void (reopen && talk.start()), []);
-	const footer =
-		talk.connected || talk.wasLive || reopen ? (
-			talk.error ? (
-				<AppText className="text-center text-danger text-xs">
-					{talk.error}
-				</AppText>
-			) : null
-		) : (
-			<ConsentCard
-				onStyleOpenChange={setStyleOpen}
-				running={running}
-				styleOpen={styleOpen}
-				talk={talk}
-			/>
-		);
+	}, [focused, before]);
+	useTalkAnnouncements(state);
+
+	const stageStyle = useAnimatedStyle(() => ({
+		opacity: motion.stage.get(),
+		transform: [{ scale: 0.96 + 0.04 * motion.stage.get() }],
+	}));
+
 	return (
 		<View className="flex-1 bg-background">
-			<TalkAurora
-				coverage={0.55}
-				flip={1}
-				level={talk.level}
-				running={running}
-			/>
-			{/* The thread and the composer lift together, so the latest line stays in view. */}
-			<KeyboardAvoidingView
-				behavior="padding"
-				className="flex-1"
-				keyboardVerticalOffset={8 - insets.bottom}
-			>
-				<TalkHeader running={running} talk={talk} />
-				{/* Mid-talk, a switch shows the companion large instead of the transcript. */}
-				{talk.started ? (
-					<TalkViews
-						conversation={
-							<TalkThread
-								footer={footer}
-								inset={SWITCH_SPACE}
-								turns={talk.turns}
-							/>
-						}
-						running={running}
-						talk={talk}
+			<LeaveGuard reduced={reduced}>
+				<TalkAurora
+					inTalk={!before}
+					running={focused && !reduced}
+					talking={talking}
+				/>
+				<TalkStart
+					before={before}
+					carTop={carTop}
+					face={face}
+					geo={geo}
+					index={index}
+					motion={motion}
+					onDot={carousel.goTo}
+					onFit={(o) =>
+						setFace((f) =>
+							Math.min(LAYOUT.face, Math.max(LAYOUT.minFace, f - o))
+						)
+					}
+					orbs={focused && before && !reduced}
+					reduced={reduced}
+					startTop={startTop}
+				/>
+				<ThreadLayer
+					focused={focused}
+					geo={geo}
+					lift={lift}
+					motion={motion}
+					offset={geo.insets.bottom + LAYOUT.composerGap - KEYBOARD_GAP}
+					open={state.view === "conversation" && !before}
+					reduced={reduced}
+				/>
+				<Animated.View
+					accessibilityElementsHidden={!(before || onStage)}
+					className="absolute inset-0"
+					importantForAccessibility={
+						before || onStage ? "auto" : "no-hide-descendants"
+					}
+					pointerEvents="box-none"
+					style={stageStyle}
+				>
+					<TalkHero
+						before={before}
+						carousel={carousel}
+						carTop={carTop}
+						face={face}
+						frame={frame}
+						geo={geo}
+						hero={hero.face}
+						index={index}
+						motion={motion}
 					/>
-				) : (
-					<TalkThread footer={footer} turns={talk.turns} />
-				)}
-				<TalkHelp sessionId={talk.sessionId} />
-				{talk.connected && <TalkComposer talk={talk} />}
-			</KeyboardAvoidingView>
-			<TalkLeaveDialog talk={talk} />
+					{before ? null : (
+						<TalkStage
+							frame={frame}
+							geo={geo}
+							motion={motion}
+							onRelax={hero.relax}
+							onSmile={hero.smile}
+							onSmileBack={hero.smileBack}
+							reduced={reduced}
+							touchable={state.phase === "talk" && onStage}
+						/>
+					)}
+				</Animated.View>
+				<TalkChrome
+					before={before}
+					focused={focused}
+					geo={geo}
+					lift={lift}
+					motion={motion}
+				/>
+				<StartComposer
+					before={before}
+					geo={geo}
+					lift={lift}
+					motion={motion}
+					startTop={startTop}
+				/>
+				<FootnoteOverlay before={before} motion={motion} startTop={startTop} />
+			</LeaveGuard>
 		</View>
-	);
-}
-
-export function TalkScreen() {
-	const { reopen } = useLocalSearchParams<{ reopen?: string }>();
-	const sessionId = reopen as Id<"sessions"> | undefined;
-	const convex = useConvex();
-	// Read once, not subscribed: every synced turn would re-send the whole thread
-	// mid-call, and the talk keeps its own thread from here.
-	const [thread, setThread] = useState<ThreadLine[] | Error>();
-	useEffect(() => {
-		if (sessionId) {
-			void convex
-				.query(api.talk.turns.thread, { sessionId })
-				.then(setThread, setThread);
-		}
-	}, [convex, sessionId]);
-	if (thread instanceof Error) {
-		throw thread;
-	}
-	if (sessionId && thread === undefined) {
-		return <View className="flex-1 bg-background" />;
-	}
-	return (
-		<ConversationProvider>
-			<Talk reopen={sessionId && thread ? { sessionId, thread } : undefined} />
-		</ConversationProvider>
 	);
 }

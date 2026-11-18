@@ -45,30 +45,30 @@ const graphOf = (entries: Record<string, Import[]>): ImportGraph =>
 describe("oldFolderImportsFromNewCode", () => {
 	it("flags a ported folder or a lower layer importing an old folder, types included", () => {
 		const graph = graphOf({
-			"components/shared/card.tsx": [local("features/discovery/tile.tsx")],
-			"design/type.ts": [local("features/reflect/faces.ts", true)],
+			"components/shared/card.tsx": [local("features/quotes/tile.tsx")],
+			"design/type.ts": [local("features/streak/faces.ts", true)],
 			"features/today/today-screen.tsx": [
-				local("features/discovery/components/discovery-screen.tsx"),
+				local("features/quotes/components/quotes-screen.tsx"),
 			],
 		});
 		expect(oldFolderImportsFromNewCode(graph)).toEqual([
-			"components/shared/card.tsx -> features/discovery/tile.tsx",
-			"design/type.ts -> features/reflect/faces.ts",
-			"features/today/today-screen.tsx -> features/discovery/components/discovery-screen.tsx",
+			"components/shared/card.tsx -> features/quotes/tile.tsx",
+			"design/type.ts -> features/streak/faces.ts",
+			"features/today/today-screen.tsx -> features/quotes/components/quotes-screen.tsx",
 		]);
 	});
 
 	it("allows old folders among themselves, inside one folder, the hub, routes and purchases", () => {
 		const graph = graphOf({
 			"app/(protected)/(tabs)/today/index.tsx": [
-				local("features/discovery/components/discovery-screen.tsx"),
-			],
-			"features/discovery/discovery-screen.tsx": [
-				local("features/browse/browse-home.tsx"),
-				local("features/discovery/tile.tsx"),
+				local("features/quotes/components/quotes-screen.tsx"),
 			],
 			"features/navigation/root-screens.ts": [
 				local("features/streak/screens.ts"),
+			],
+			"features/quotes/quotes-screen.tsx": [
+				local("features/browse/browse-home.tsx"),
+				local("features/quotes/tile.tsx"),
 			],
 			"features/today/today-screen.tsx": [
 				local("features/purchases/use-paywall.ts"),
@@ -223,7 +223,7 @@ describe("backendCallsOutsideDataHooks", () => {
 
 	it("allows data hooks, type-only imports, other heroui parts and old folders", () => {
 		const graph = graphOf({
-			"features/reflect/compose.tsx": [pkg("convex/react", ["useQuery"])],
+			"features/streak/streak-card.tsx": [pkg("convex/react", ["useQuery"])],
 			"features/today/hero/hero.tsx": [
 				{ ...pkg("@xolace/backend/convex/_generated/api"), typeOnly: true },
 				pkg("heroui-native", ["Button"]),
@@ -270,7 +270,7 @@ describe("crossFeatureImportsFromPorted", () => {
 			"features/navigation/root-screens.ts": [
 				local("features/today/screens.ts"),
 			],
-			"features/reflect/reflect-screen.tsx": [local("features/streak/x.ts")],
+			"features/quotes/quote-screen.tsx": [local("features/streak/x.ts")],
 			"features/today/today-screen.tsx": [
 				local("features/purchases/use-paywall.ts"),
 				local("components/shared/app-text.tsx"),
@@ -282,7 +282,7 @@ describe("crossFeatureImportsFromPorted", () => {
 
 describe("staleListings", () => {
 	it("names listed folders that no longer exist", () => {
-		expect(staleListings(["navigation", "streak"])).toContain("talk");
+		expect(staleListings(["navigation", "streak"])).toContain("quotes");
 		expect(staleListings(["navigation", "streak"])).not.toContain("streak");
 	});
 });
@@ -290,14 +290,14 @@ describe("staleListings", () => {
 describe("portedFolderImportsFromOldCode", () => {
 	it("flags an old folder importing a ported one, types included", () => {
 		const graph = graphOf({
-			"features/discovery/library-strip.tsx": [
+			"features/quotes/library-strip.tsx": [
 				local("features/today/rail/rail.tsx"),
 				local("features/letters/letter-model.ts", true),
 			],
 		});
 		expect(portedFolderImportsFromOldCode(graph)).toEqual([
-			"features/discovery/library-strip.tsx -> features/today/rail/rail.tsx",
-			"features/discovery/library-strip.tsx -> features/letters/letter-model.ts",
+			"features/quotes/library-strip.tsx -> features/today/rail/rail.tsx",
+			"features/quotes/library-strip.tsx -> features/letters/letter-model.ts",
 		]);
 	});
 
@@ -306,7 +306,7 @@ describe("portedFolderImportsFromOldCode", () => {
 			"app/(protected)/(tabs)/today/index.tsx": [
 				local("features/today/today-screen.tsx"),
 			],
-			"features/discovery/library-strip.tsx": [
+			"features/quotes/library-strip.tsx": [
 				local("features/browse/use-open-track.ts"),
 				local("features/navigation/tabs.ts"),
 				local("features/purchases/use-paywall.ts"),

@@ -46,8 +46,14 @@ Moved in from `xolace_app` in Phase 2 (`src/`, `assets/`, `modules/`,
 - **Colors:** CSS variables (`--background`, `--foreground`, `--accent`, ...), never
   hex, even inline. Every theme defines the same variables. `useThemeColor` from
   `heroui-native` for JS values. A fixed palette is allowed only for the listed
-  "printed object" surfaces (quotes poster, vent, auth, Lantern reader pages, Talk's
-  voice orbs), still as tokens in `global.css`.
+  "printed object" surfaces (quotes poster, vent, first run, Lantern reader pages, Talk's
+  voice orbs, look glows, aurora and leave scrim, Today's sky and light, Today's
+  Reflect-card doors and light, Today's kindling and campfire firelight, Connect's avatar
+  art and Xolace flame, Reflect's sky and light), still as tokens in `global.css`. Today's sky is the hour's, not
+  the theme's, and its gradient stops stay strings in `features/today/sky/` because
+  worklets interpolate them. Connect's art is content a person or the brand wears, the
+  same in every theme. First run's colours are `first-run-*` tokens too; only the
+  colours a worklet mixes per frame stay RGB triplets, in `features/first-run/first-run-palette.ts`.
 - **Themes:** one registry, `src/design/themes.ts`; never hand-write a theme name
   list or `${id}-${mode}`. To add a theme: add an entry to `THEMES` with only the
   values it changes (production-style palettes go in `src/design/theme-values.ts`),
@@ -179,16 +185,31 @@ worked example is `reach-me-on`: `reach-sheet-data.tsx` and `dev/`.
   else imports dev code (`devCodeInReleaseGraph`) or a feature's `dev/` is imported
   from outside that feature's `dev/` folders and `src/dev` (`devImportsFromOutside`).
 
+## The root guard
+
+`src/app/_layout.tsx` shows one of three groups, decided by `rootGate`
+(`src/features/navigation/root-gate.ts`, a pure function with its tests): `(first-run)`
+(promise, story, sign-in) while signed out, `(intake)` until onboarding is complete, then
+`(protected)`. Change who sees what there and in its tests, never with a `<Redirect>` in a
+screen. `seatHeld` (the store) keeps `(first-run)` up for the seated moment after a sign-in;
+the sign-in hook releases it, and an onboarded account goes straight to `(protected)`.
+The launch cover and native splash sit before the guard and aren't first run's.
+
 ## Tabs and the root seams
 
 The tabs are Today · Explore · Connect · You (`TABS`, `src/features/navigation/tabs.ts`,
-drawn by `components/app-tabs.tsx`). "/" is still Reflect, outside the tabs, until the
-Today and Reflect screen PRs move the landing. There is no flag: a screen PR replaces the
-old screen outright. Where a screen PR adds to the shell:
+drawn by `components/app-tabs.tsx`). Today is the landing: "/" (where sign-in, intake and
+old links arrive) hands over to `/today` at once (`(protected)/index.tsx`, `ReturnTo`), so
+the tabs are the bottom of the stack. Home is `dismissTo("/today")` (`LANDING`,
+`src/lib/landing.ts`); Reflect is `/reflect`, pushed over the tabs (Today's card and pill zoom into it with `Link.AppleZoom`). What greets someone
+coming back (follow-up check-in, return welcome, the month's awareness sheet, streak held,
+the in-app banner) is composed on Today's route (`features/follow-up/coming-back/`) until
+S4 replaces it; the starter bubble stays with Reflect (its route, `app/(protected)/reflect.tsx`). There is no
+flag: a screen PR replaces the old screen outright. Where a screen PR adds to the shell:
 
 - **A tab's content:** its route shim, `src/app/(protected)/(tabs)/<tab>/index.tsx`, hosts
-  the old screen that did the job (Today: Discovery, Explore: the Browse hub, You:
-  Profile) until the tab's screen PR swaps it. The tab's label and icon are its `TABS`
+  the old screen that did the job (Explore: the Browse hub) until the tab's screen PR
+  swaps it. Today, Connect and You are swapped. The tab's label and icon are its `TABS`
   entry.
 - **A root screen:** an entry in the feature's `screens.ts` (see "Root screens").
 - **A host:** an entry in `ROOT_HOSTS` (`src/features/navigation/hosts.ts`). A host is a
@@ -199,16 +220,19 @@ old screen outright. Where a screen PR adds to the shell:
   screen's route. Hosts are siblings after the native stack, so they can't draw over a
   natively presented screen (the player, a form sheet) and position themselves
   absolutely. The layout maps the list; don't edit its lines.
-- **A path that moved** (`/discovery`, `/browse/**`, `/profile`; next, `/streak-held` and
-  `/kindling-announcement`): `MOVED` in `src/features/navigation/moved-paths.ts` says
-  where each lives now, a tab or a root screen, and whether its subpaths moved too. Its
+- **A path that moved** (`/discovery`, `/browse/**`, `/browse-player`, `/profile`,
+  `/profile/insights`, `/kindling-announcement`, `/timeline/**`; next, `/streak-held`;
+  "/" itself, Reflect before Today landed, is the landing hand-off above, not a `MOVED` entry): `MOVED` in
+  `src/features/navigation/moved-paths.ts` says where each lives now, a tab or a root
+  screen, and whether its subpaths moved too (`subtree`) or one subpath moved somewhere of
+  its own (`paths`: `/profile/insights` → `/you/steadiness`). Its
   `MovedRoute` shim at the old path (plus `[...rest]` for subpaths, and an entry in
   `navigation/screens.ts`) sends links and old payloads there; `moved-paths.test.ts`
   checks all three.
 - **Navigating to a route that may already be in the stack** (a tab, Reflect): use
   `<ReturnTo href />` (`src/lib/return-to.tsx`) or `router.dismissTo`, never `<Redirect>`,
   `router.replace` or `router.navigate` from a pushed screen: those stack a second copy.
-  Notification taps follow the same rule (`notificationTapPlan`: home is `dismissTo("/")`,
+  Notification taps follow the same rule (`notificationTapPlan`: home is `dismissTo("/today")`,
   except on a held screen in `src/lib/held-routes.ts`, where a tap tears nothing down).
 
 ## Shared kit
@@ -233,6 +257,8 @@ older piece.
   `CountryMenu`, `Flux`, `Aura`. Settings-like pages: `SettingsHeader`, `SectionTitle`,
   `SettingsCard`, `Footnote`, `Rows`, `SwitchRow`, `OpenRow`, `TileRow`, `SettingsDialog`,
   `NameDialog`.
+- **The Xolace face** is a kit: `src/components/xolace-face/` (`XolaceFace`, `useFace`, the
+  poses). Where it may appear: `docs/plan/xolace-face-placements.md`.
 - **Colours for native views and SVG:** `useTokenColor("danger-ink")`. Native views go in
   `ThemedHost`, which passes the theme's light or dark (`useScheme()`, `src/design/scheme.ts`).
 - **Icons:** `Icon` takes an SF Symbol name, or `{ ios, android }` to draw on Android too.

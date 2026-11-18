@@ -1,5 +1,6 @@
 import { api } from "@xolace/backend/convex/_generated/api";
 import { useConvexAuth, useQuery } from "convex/react";
+import { useAppStore } from "@/store/store";
 import { useRevenueCat } from "./revenuecat-context";
 
 /** The single entitlement read for all gated UI: server truth OR'd with local SDK state, which
@@ -10,9 +11,11 @@ export function usePlusEntitlement(): {
 	isResolved: boolean;
 } {
 	const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
+	// Waits for the account too: before `getOrCreate` lands it throws `user_not_found`.
+	const accountPending = useAppStore((s) => s.accountPending);
 	const entitlement = useQuery(
 		api.premium.getEntitlement,
-		isAuthenticated ? {} : "skip"
+		isAuthenticated && !accountPending ? {} : "skip"
 	);
 	const { isProUser, isLoading: sdkLoading } = useRevenueCat();
 

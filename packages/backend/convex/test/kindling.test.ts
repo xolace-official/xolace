@@ -731,9 +731,11 @@ describe("the completion hook", () => {
 			await scheduledCalls(user.root),
 			"ai/paths/generate:run"
 		);
+		// A qualifying Plus session is marked as setting up (paths/settingUp.ts).
 		expect(call?.args).toEqual({
 			emotionalProfileId: user.profileId,
 			sessionId,
+			settingUpAt: expect.any(Number),
 		});
 	});
 
@@ -780,7 +782,11 @@ describe("requestKindling (free → Plus at session-end)", () => {
 			c.name.endsWith("ai/paths/generate:run")
 		);
 		expect(runs.map((c) => c.args)).toEqual([
-			{ emotionalProfileId: user.profileId, sessionId },
+			{
+				emotionalProfileId: user.profileId,
+				sessionId,
+				settingUpAt: expect.any(Number),
+			},
 		]);
 	});
 
@@ -796,6 +802,7 @@ describe("requestKindling (free → Plus at session-end)", () => {
 		expect(call?.args).toEqual({
 			emotionalProfileId: user.profileId,
 			sessionId,
+			settingUpAt: expect.any(Number),
 		});
 	});
 });
@@ -941,6 +948,42 @@ describe("the active-kindling screen API (#333)", () => {
 		).toBe(true);
 	});
 
+	it("getLatest says how the latest kindling ended, with each twig's state", async () => {
+		const { user, active } = await withKindling();
+		const [breathing, xolacer, bridge] = active.twigs;
+		expect(await user.t.query(api.paths.getLatest, {})).toMatchObject({
+			_id: active._id,
+			status: "active",
+		});
+
+		await user.t.mutation(api.paths.completeStep, { stepId: breathing._id });
+		await user.t.mutation(api.paths.completeStep, { stepId: xolacer._id });
+		await user.t.mutation(api.paths.skipStep, { stepId: bridge._id });
+		expect(await user.t.query(api.paths.getActive, {})).toBeNull();
+		const latest = await user.t.query(api.paths.getLatest, {});
+		expect(latest?.status).toBe("completed");
+		expect(
+			Object.fromEntries((latest?.twigs ?? []).map((t) => [t._id, t.state]))
+		).toEqual({
+			[breathing._id]: "done",
+			[bridge._id]: "skipped",
+			[xolacer._id]: "done",
+		});
+	});
+
+	it("getLatest reports a dismissed kindling, and is null for a free user or with none", async () => {
+		const fresh = await asNewUser();
+		expect(await fresh.t.query(api.paths.getLatest, {})).toBeNull();
+
+		const { user, active } = await withKindling();
+		await user.t.mutation(api.paths.dismiss, { pathId: active._id });
+		expect((await user.t.query(api.paths.getLatest, {}))?.status).toBe(
+			"dismissed"
+		);
+		stub.isPlus = false;
+		expect(await user.t.query(api.paths.getLatest, {})).toBeNull();
+	});
+
 	it("another user cannot touch my twigs", async () => {
 		const { user, active } = await withKindling();
 		const other = await asNewUser(2, user.root);
@@ -1063,6 +1106,23 @@ describe("paths.getBoundAudioTrack (#334)", () => {
 		});
 		expect(track?.attributionText).toBeUndefined();
 		expect(track?.expiresAt).toBeGreaterThan(before);
+	});
+
+	it("carries the waveform's peaks when they've been measured, and reads tracks from before them", async () => {
+		const user = await asNewUser();
+		const peaks = Array.from({ length: 60 }, (_, i) => (i % 10) / 10);
+		await seedRow(user, { peaks, slug: "measured" });
+		await seedRow(user, { slug: "old" });
+
+		expect(
+			(await user.t.query(api.paths.getBoundAudioTrack, { slug: "measured" }))
+				?.peaks
+		).toEqual(peaks);
+		const old = await user.t.query(api.paths.getBoundAudioTrack, {
+			slug: "old",
+		});
+		expect(old).toMatchObject({ slug: "old", title: "Track" });
+		expect(old && "peaks" in old && old.peaks !== undefined).toBe(false);
 	});
 
 	it("carries verbatim attributionText only when the licence requires it", async () => {
@@ -1991,7 +2051,7 @@ describe("tracks bind on meaning inside the picked topic (#572)", () => {
 		const track = {
 			durationSec: 60,
 			family: "support" as const,
-			key: "k1",
+			key: "k1.mp3",
 			sha256: "a",
 			slug: "s1",
 			sourceTags: [],
@@ -2012,10 +2072,10 @@ describe("tracks bind on meaning inside the picked topic (#572)", () => {
 
 		await upsert({});
 		expect(await reindexes()).toBe(1);
-		await upsert({ durationSec: 61, key: "k2" }); // same audio, a field the index never reads
-		await upsert({ key: "k3", sha256: "b" }); // new audio, same index text
+		await upsert({ durationSec: 61, key: "k2.mp3" }); // same audio, a field the index never reads
+		await upsert({ key: "k3.mp3", sha256: "b" }); // new audio, same index text
 		expect(await reindexes()).toBe(1);
-		await upsert({ key: "k4", title: "Slower breath" });
+		await upsert({ key: "k4.mp3", title: "Slower breath" });
 		expect(await reindexes()).toBe(2);
 		deleteObject.mockRestore();
 	});
@@ -2031,7 +2091,7 @@ describe("tracks bind on meaning inside the picked topic (#572)", () => {
 		const track = {
 			durationSec: 60,
 			family: "music" as const,
-			key: "k1",
+			key: "k1.mp3",
 			licence: {
 				acquiredAt: 0,
 				artist: "Artist",

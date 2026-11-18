@@ -28,6 +28,8 @@ type Props = {
 	onDraft: (v: string) => void;
 	/** What's wrong with the draft (the backend's own validator), or "" when it can be saved. */
 	error: string;
+	/** False keeps Save off with nothing said yet (an empty first-time field). Default true. */
+	canSave?: boolean;
 	onCancel: () => void;
 	onSave: (trimmed: string) => void;
 	/** Shown with `copy.reset` when given. */
@@ -47,6 +49,7 @@ export function NameDialog({
 	draft,
 	onDraft,
 	error,
+	canSave = true,
 	onCancel,
 	onSave,
 	onReset,
@@ -54,7 +57,7 @@ export function NameDialog({
 }: Props) {
 	const bad = error !== "";
 	const save = () => {
-		if (!bad) {
+		if (canSave && !bad) {
 			onSave(draft.trim());
 		}
 	};
@@ -63,7 +66,7 @@ export function NameDialog({
 			cancel={copy.cancel}
 			desc={copy.desc}
 			ok={copy.save}
-			okDisabled={bad}
+			okDisabled={bad || !canSave}
 			onCancel={onCancel}
 			onOk={save}
 			open={open}

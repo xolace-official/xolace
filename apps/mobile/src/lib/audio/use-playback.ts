@@ -5,6 +5,7 @@ import {
 	useAudioPlayerStatus,
 } from "expo-audio";
 import { useEffect, useRef, useState } from "react";
+import { nativeLoop, nativeVolume } from "@/lib/audio/playback-level";
 import {
 	audioFocusEpoch,
 	claimAudioFocus,
@@ -45,12 +46,21 @@ export type PlaybackReturn<T> = {
 	laps: number;
 };
 
+/** What a caller adds on top of the listener's own controls. */
+export type PlaybackOptions = {
+	/** 0–1, multiplied into the volume without moving it (the sleep timer's fade). */
+	gain?: number;
+	/** Stop at the end of this play even with Repeat on (the sleep timer's End of track). */
+	stopAtEnd?: boolean;
+};
+
 /** Signed-URL playback shared by every player (#411). R2 URLs expire hourly, so a late resume
  * re-mints and rebuilds the player. */
 export function usePlayback<T extends Playable>(
 	key: string,
 	fetchTrack: () => Promise<T | null>,
-	lockScreen: (track: T) => AudioMetadata
+	lockScreen: (track: T) => AudioMetadata,
+	{ gain = 1, stopAtEnd = false }: PlaybackOptions = {}
 ): PlaybackReturn<T> {
 	const [track, setTrack] = useState<T | null | undefined>(undefined);
 	const [error, setError] = useState<Error | null>(null);
@@ -145,13 +155,13 @@ export function usePlayback<T extends Playable>(
 	// was told, and a re-minted player starts back at 1.
 	useEffect(() => {
 		// eslint-disable-next-line react-hooks/immutability -- expo-audio AudioPlayer.volume is a documented mutable setter
-		player.volume = volume;
-	}, [player, volume]);
+		player.volume = nativeVolume(volume, gain);
+	}, [player, volume, gain]);
 
 	useEffect(() => {
 		// eslint-disable-next-line react-hooks/immutability -- expo-audio AudioPlayer.loop is a documented mutable setter
-		player.loop = loop;
-	}, [player, loop]);
+		player.loop = nativeLoop(loop, stopAtEnd);
+	}, [player, loop, stopAtEnd]);
 
 	// A rebuilt player starts at 0; the old one's end-of-track time isn't a wrap.
 	useEffect(() => {

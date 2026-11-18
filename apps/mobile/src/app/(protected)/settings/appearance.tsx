@@ -1,5 +1,10 @@
-import { AppearanceScreen } from "@/features/settings/components/screens/AppearanceScreen";
+import { AppearanceData } from "@/features/settings/appearance/appearance-data";
+import { AppearanceScreen } from "@/features/settings/appearance/appearance-screen";
 
-export default function Appearance() {
-	return <AppearanceScreen />;
+export default function AppearanceRoute() {
+	return (
+		<AppearanceData>
+			<AppearanceScreen />
+		</AppearanceData>
+	);
 }

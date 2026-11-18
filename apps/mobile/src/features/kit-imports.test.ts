@@ -72,10 +72,10 @@ describe("replacedPiecesInNewCode", () => {
 			"components/shared/toast-bridge.tsx": [
 				pkg("heroui-native", ["useToast"]),
 			],
-			"features/library/screens.ts": [
+			"features/browse/screens.ts": [
 				local("lib/root-screen.ts", ["legacyFitSheet"]),
 			],
-			"features/settings/screen.tsx": [
+			"features/quotes/screen.tsx": [
 				pkg("heroui-native", ["PressableFeedback"]),
 			],
 			"features/today/hero/hero.tsx": [

@@ -166,24 +166,124 @@
      * blurred into the backdrop, so its ink is fixed white-on-black whatever
      * the theme. Fixed on purpose; see the fixed-palette convention in
      * CLAUDE.md. The scrim gradient stops live in
-     * src/features/browse/player/player-palette.ts. */
+     * src/features/player/player-palette.ts. */
 	--color-player-ink: #ffffff;
 	--color-player-scrim: #000000;
-	/* Lantern reader cover (#407): title and controls sit on the entry's
-     * photo, so the same fixed white-on-black. Scrim stops live in
-     * src/features/library/reader/cover-palette.ts. */
+	/* The player's glass under Reduce Transparency (S10), and its drop shadows. */
+	--color-player-glass: #2a2633;
+	--color-player-shadow: rgba(0, 0, 0, 0.6);
+	/* Lantern covers (#407): titles and controls sit on the entry's photo, so
+     * the same fixed white-on-black. Scrim stops live in
+     * src/features/lantern/cover-palette.ts. */
 	--color-cover-ink: #ffffff;
 	--color-cover-scrim: #000000;
-	/* Lantern reader pages (#408): the reading modes' own sheets, laid over
-     * the light/dark base by ScopedVariables in reader-page.tsx. Warm and
-     * low-blue; Night is for reading in the dark. Classic has no tokens here —
-     * its page is the app theme. */
+	/* Lantern's printed bits (S9): the "Read" chip on a row's photo, and the
+     * welcome's hero, a warm glow on dusk violet behind the writer art. The
+     * same on every theme, like the covers they sit on. */
+	--color-lantern-chip: rgba(14, 10, 22, 0.55);
+	--color-lantern-welcome-1: #2a2347;
+	--color-lantern-welcome-2: #4a3b6e;
+	--color-lantern-welcome-3: #9a6f86;
+	--color-lantern-welcome-glow: rgba(255, 196, 120, 0.55);
+
+	/* You's header aurora: a warm light and a cool one, drifting (the board's YouAlive). Fixed
+     * on purpose, like the other auroras; see apps/mobile/AGENTS.md. */
+	--color-you-aura-warm: #f5b04f;
+	--color-you-aura-cool: #b7a3ff;
+	/* Today's light (S1): the streak flame's white-hot core, the chip's glow as it
+     * ignites (ember at .6) and the gleam over the greeting's words. Fire and daylight,
+     * the same in every theme; see the fixed-palette convention in apps/mobile/AGENTS.md. */
+	--color-today-flame-core: #ffe2ae;
+	--color-today-ignite-glow: rgba(242, 163, 58, 0.6);
+	--color-today-gleam: rgba(255, 214, 170, 0.95);
+	/* First run (S18): the promise's dusk and day, and the story and seat's night by Flux's fire,
+     * the same in every theme. Colours its worklets mix per frame stay RGB triplets in
+     * src/features/first-run/first-run-palette.ts; see the fixed-palette convention in
+     * apps/mobile/AGENTS.md. */
+	--color-first-run-ground: rgb(7, 6, 5);
+	--color-first-run-button-shadow: rgb(245, 150, 60);
+	--color-first-run-drift-1: rgba(245, 178, 124, 0.1);
+	--color-first-run-drift-2: rgba(168, 132, 178, 0.06);
+	--color-first-run-drift-3: rgba(54, 70, 110, 0.12);
+	--color-first-run-underglow-day-1: rgba(242, 163, 58, 0.26);
+	--color-first-run-underglow-day-2: rgba(242, 163, 58, 0.08);
+	--color-first-run-underglow-day-3: rgba(242, 163, 58, 0);
+	--color-first-run-underglow-dusk-1: rgba(245, 150, 60, 0.24);
+	--color-first-run-underglow-dusk-2: rgba(245, 120, 40, 0.08);
+	--color-first-run-underglow-dusk-3: rgba(245, 120, 40, 0);
+	--color-first-run-mood-foot-1: rgba(0, 0, 0, 0);
+	--color-first-run-mood-foot-2: rgba(0, 0, 0, 0.55);
+	--color-first-run-mood-lift: rgb(245, 160, 70);
+	--color-first-run-mood-glow: rgba(255, 190, 110, 0.8);
+	--color-first-run-coal-1: rgb(255, 244, 220);
+	--color-first-run-coal-2: rgb(255, 181, 74);
+	--color-first-run-coal-3: rgba(255, 140, 40, 0);
+	--color-first-run-ember-flare: rgb(247, 190, 100);
+	--color-first-run-spark: rgb(255, 203, 120);
+	--color-first-run-spark-glow: rgba(255, 160, 60, 0.8);
+	--color-first-run-card-1: rgb(42, 28, 36);
+	--color-first-run-card-2: rgb(26, 18, 24);
+	--color-first-run-card-edge: rgba(255, 220, 210, 0.16);
+	--color-first-run-card-shadow: rgba(0, 0, 0, 0.7);
+	--color-first-run-knot-fill: rgb(122, 74, 42);
+	--color-first-run-knot-ring: rgb(90, 52, 28);
+	--color-first-run-log-1: rgb(107, 65, 38);
+	--color-first-run-log-2: rgb(62, 36, 20);
+	--color-first-run-log-edge: rgba(255, 210, 160, 0.18);
+	--color-first-run-mask: rgb(18, 13, 20);
+	--color-first-run-online: rgb(143, 214, 160);
+	--color-first-run-panel-dot: rgb(228, 218, 255);
+	--color-first-run-panel-fill-1: rgba(120, 95, 210, 0.18);
+	--color-first-run-panel-fill-2: rgba(120, 95, 210, 0.04);
+	--color-first-run-panel-line: rgb(214, 200, 255);
+	--color-first-run-panel-note: rgb(237, 230, 255);
+	--color-first-run-quote-dot: rgb(255, 231, 176);
+	--color-first-run-quote-dot-ring: rgba(247, 213, 140, 0.12);
+	--color-first-run-quote-dot-glow: rgba(247, 180, 90, 0.4);
+	--color-first-run-reflect-mask-1: rgb(0, 0, 0);
+	--color-first-run-reflect-mask-2: rgba(0, 0, 0, 0);
+	--color-first-run-ripple: rgba(200, 230, 242, 0.7);
+	--color-first-run-seat-fire-1: rgba(245, 150, 60, 0.42);
+	--color-first-run-seat-fire-2: rgba(245, 120, 40, 0.12);
+	--color-first-run-seat-fire-3: rgba(245, 120, 40, 0);
+	--color-first-run-seat-glow-1: rgba(255, 200, 120, 0.55);
+	--color-first-run-seat-glow-2: rgba(255, 170, 80, 0);
+	--color-first-run-shoulders: rgb(58, 46, 68);
+	--color-first-run-water: rgba(200, 230, 242, 0.5);
+	--color-first-run-you-fill: rgba(255, 255, 255, 0.035);
+	/* The story's made-up Xolacers' drawn faces. */
+	--color-first-run-face-1-bg: rgb(233, 185, 140);
+	--color-first-run-face-1-hair: rgb(31, 23, 18);
+	--color-first-run-face-1-skin: rgb(139, 90, 67);
+	--color-first-run-face-2-bg: rgb(183, 163, 255);
+	--color-first-run-face-2-hair: rgb(20, 16, 14);
+	--color-first-run-face-2-skin: rgb(94, 59, 44);
+	--color-first-run-face-3-bg: rgb(143, 195, 240);
+	--color-first-run-face-3-hair: rgb(58, 36, 22);
+	--color-first-run-face-3-skin: rgb(192, 138, 104);
+	/* Lantern reader pages (#408, S9b): the reading modes' own sheets, laid
+     * over the light/dark base by ScopedVariables in
+     * src/features/lantern/reader/reader-page.tsx. Warm and low-blue; Night is
+     * for reading in the dark. Classic has no tokens here: its page is the
+     * app theme. */
 	--color-reader-paper-bg: #fbf8f1;
 	--color-reader-paper-ink: #2b2724;
 	--color-reader-paper-muted: #6f6760;
+	--color-reader-paper-subtle: #8a8079;
+	--color-reader-paper-card: #ffffff;
+	--color-reader-paper-well: #f1ece1;
+	--color-reader-paper-line: rgba(43, 39, 36, 0.12);
+	--color-reader-paper-accent: #6b4ee6;
+	--color-reader-paper-on-accent: #ffffff;
 	--color-reader-night-bg: #1b1714;
 	--color-reader-night-ink: #e6dccb;
 	--color-reader-night-muted: #9c9080;
+	--color-reader-night-subtle: #857a6c;
+	--color-reader-night-card: #24201c;
+	--color-reader-night-well: #2d2823;
+	--color-reader-night-line: rgba(230, 220, 203, 0.12);
+	--color-reader-night-accent: #c9b6ff;
+	--color-reader-night-on-accent: #1b1714;
 	/* The archive card's chip fill — ink at 7%, so one value sits on every tint */
 	--color-poster-chip: rgba(20, 20, 20, 0.07);
 	/* The archive card tints, cycled by item index (#296). Fixed objects inside
@@ -197,7 +297,7 @@
 	/* The Xolace face is a printed brand object: its features are the logo's,
      * whatever the theme, so a worried look reads the same everywhere. Fixed
      * on purpose; see the fixed-palette convention in CLAUDE.md. The body
-     * gradients (stop arrays) live in src/features/xolace-face/face-palette.ts. */
+     * gradients (stop arrays) live in src/components/xolace-face/face-palette.ts. */
 	--color-face-sclera: #ffffff;
 	--color-face-pupil: #1a1426;
 	--color-face-brow: rgba(110, 50, 40, 0.55);
@@ -225,6 +325,111 @@
 	--color-orb-wren-mid: #f59ac0;
 	--color-orb-wren-deep: #d6467a;
 
+	/* Talk's lights are printed too: the soft glow behind the companion's face, in
+     * its look's colour (the Theme and Chalk looks take the accent and the ink),
+     * and the aurora's two lights at the bottom, softer by day. Fixed on purpose;
+     * see the fixed-palette convention in apps/mobile/AGENTS.md. */
+	--color-talk-glow-flux: #ee8fc4;
+	--color-talk-glow-tide: #43c6e8;
+	--color-talk-glow-moss: #8fd18b;
+	--color-talk-glow-dusk: #c56cf0;
+	--color-talk-glow-marigold: #ff8a5c;
+	--color-talk-aurora-a-dark: rgba(140, 110, 255, 0.55);
+	--color-talk-aurora-b-dark: rgba(90, 150, 255, 0.35);
+	--color-talk-aurora-a-light: rgba(140, 110, 255, 0.32);
+	--color-talk-aurora-b-light: rgba(90, 170, 255, 0.22);
+	--color-talk-aurora-clear: rgba(140, 110, 255, 0);
+	/* What dims a talk under its leave card, in either theme. */
+	--color-talk-scrim: rgba(0, 0, 0, 0.42);
+
+	/* Settings' printed objects, the same in every theme (P/design/handoff/settings.md §4).
+     * Fixed on purpose; see the fixed-palette convention in apps/mobile/AGENTS.md.
+     * The Plus card: its violet gradient, the button's ink and its shadow. */
+	--color-plus-card-from: #2a1f4a;
+	--color-plus-card-to: #4b32c2;
+	--color-plus-card-ink: #3a2a8c;
+	--color-plus-card-glow: rgba(60, 40, 160, 0.7);
+	/* Settings › Appearance (S19). */
+	/* Settings › Mirror (S19). */
+	/* The sample card: each tone's light (board `.ly.<tone>`: a linear a → b → c and a soft
+     * glow, drawn with stopOpacity), its ink, and the card's shadow. Direct goes dark in dark. */
+	--color-mirror-adaptive-a: #26265a;
+	--color-mirror-adaptive-b: #3f44a8;
+	--color-mirror-adaptive-c: #6a79dc;
+	--color-mirror-adaptive-glow: #a0afff;
+	--color-mirror-poetic-a: #100e24;
+	--color-mirror-poetic-b: #231b48;
+	--color-mirror-poetic-c: #3a2b66;
+	--color-mirror-poetic-glow: #7864dc;
+	--color-mirror-gentle-a: #ffe3d6;
+	--color-mirror-gentle-b: #f9cbcf;
+	--color-mirror-gentle-c: #f0b5c4;
+	--color-mirror-gentle-glow: #fff3ea;
+	--color-mirror-direct: #f1f0f4;
+	--color-mirror-direct-dark: #1c1b22;
+	--color-mirror-witnessed-a: #1c120c;
+	--color-mirror-witnessed-b: #2b1a10;
+	--color-mirror-witnessed-c: #3a2010;
+	--color-mirror-witnessed-glow: #f28c30;
+	--color-mirror-witnessed-ember: #be461e;
+	--color-mirror-ink-gentle: #2a1a22;
+	--color-mirror-ink-direct: #17151e;
+	--color-mirror-ink-direct-dark: #edecf2;
+	/* The Hear chip and Direct's edge on the light cards (ink at 8%). */
+	--color-mirror-on-light: rgba(25, 21, 36, 0.08);
+	--color-mirror-shadow: rgba(30, 20, 70, 0.55);
+	/* The still orbs' inner shade at the bottom (with stopOpacity). */
+	--color-mirror-orb-shade: #000000;
+	/* Auto's still orb, beside Talk's voices (`--color-orb-*`). */
+	--color-orb-auto-light: #f4f1ff;
+	--color-orb-auto-mid: #b7b0d8;
+	--color-orb-auto-deep: #6d6890;
+	/* Settings › Notifications (S19). */
+	/* The lock-screen sample: its dusk sky and lights (opaque; the SVG stops take their alpha in
+     * `stopOpacity`), its shadow, the pill and bubble glass, the app mark. Then the day bar's
+     * night span, sun and the sample's dot. */
+	--color-notify-dusk-top: #151838;
+	--color-notify-dusk-mid: #2b2458;
+	--color-notify-dusk-low: #5a3a6e;
+	--color-notify-glow: #7878ff;
+	--color-notify-warm: #ffaa6e;
+	--color-notify-rose: #dc6e78;
+	--color-notify-shadow: rgba(30, 20, 70, 0.6);
+	--color-notify-pill: rgba(10, 10, 30, 0.42);
+	--color-notify-bubble: rgba(245, 240, 255, 0.2);
+	--color-notify-mark-from: #7b62f0;
+	--color-notify-mark-to: #4b32c2;
+	--color-notify-night-edge: #2b2a63;
+	--color-notify-night-mid: #3b3080;
+	--color-notify-sun: #ffd58a;
+	--color-notify-sun-edge: rgba(245, 184, 97, 0.22);
+	--color-notify-sun-clear: rgba(245, 184, 97, 0);
+	--color-notify-dot: #f2a33a;
+	/* Settings › Privacy (S19). */
+	/* "What Xolace keeps": the card's soft shadow (board `.keep`). */
+	--color-privacy-shadow: rgba(40, 25, 100, 0.35);
+	/* Settings › Account (S19). */
+	/* Google's sign-in mark in its own four colours, the one brand colour the board keeps. */
+	--color-account-google-blue: #4285f4;
+	--color-account-google-green: #34a853;
+	--color-account-google-yellow: #fbbc05;
+	--color-account-google-red: #ea4335;
+
+	/* Reach me on (S19c): Telegram's own blue, on its tile only (P/src/fixtures/reach.ts). */
+	--color-telegram: #2aabee;
+	--color-on-telegram: #ffffff;
+
+	/* Vent is a printed object: production's own dark room, the same in every
+     * theme, with its cream, ash, ember and amber. Fixed on purpose; see the
+     * fixed-palette convention in apps/mobile/AGENTS.md. The values Skia and
+     * colour interpolation need as numbers live in
+     * src/features/vent/vent-palette.ts. */
+	--color-vent-page: #0a0a0d;
+	--color-vent-cream: #f5f0e8;
+	--color-vent-ash: #9399a8;
+	--color-vent-ember: #c4883f;
+	--color-vent-amber: #e8a84c;
+
 	/* The poster's voice is fixed too: the `--font-<role>` variables follow
      * the theme's font pair, and a printed object does not change typeface
      * with the chrome behind it. The redesign's poster uses `font-poster*`
@@ -250,4 +455,322 @@
 
 	/* Heavy: the light warms a few degrees. */
 	--color-warm-page: #fff8f4;
+
+	/* Reflect's sky over the top of the page (SkyWash): the evening's last light, and dusk late. */
+	--color-evening-sky-1: #e3ccf0;
+	--color-evening-sky-2: #f6d3e2;
+	--color-evening-sky-3: #fde4da;
+	--color-evening-sky-end: rgba(247, 245, 251, 0);
+	--color-dusk-sky-1: #151029;
+	--color-dusk-sky-2: #1b1530;
+	--color-dusk-sky-end: rgba(14, 12, 21, 0);
+	/* The warm glow a title or a quote writes in with (GleamTitle, WriteOn). */
+	--color-write-gleam: #ffc896;
+}
+
+/*
+ * Today's Reflect card (design/boards/TodayAlive.dc.html `.ch*`, `.ph.wrote`): the three
+ * doors a hold opens, pastel tiles with their own ink, and the month prompt's rose label.
+ * Printed on the card, so the same in every theme, as the board draws them; the label,
+ * set on the card's own surface, has a dark twin.
+ */
+@theme static {
+	--color-door-talk: #ffe2cf;
+	--color-door-talk-ink: #b4561e;
+	--color-door-vent: #ffddea;
+	--color-door-vent-ink: #b23a6b;
+	--color-door-sit: #e6deff;
+	--color-door-sit-ink: #4b32c2;
+	--color-door-label: #2a2140;
+	--color-door-sub: rgba(42, 33, 64, 0.7);
+	/* The month prompt's label: the board's rose by light; by dark a lifted rose that keeps
+     * 4.5:1 on every theme's dark surface (5.65:1 on the lightest, playful's). */
+	--color-month-rose: #a02a5c;
+	--color-month-rose-dark: #f58ab4;
+	/* The card's light, drawn in Skia (hero/card-light.tsx). Tuned down in review: don't raise
+     * these. The late edge light runs ember into coral (by day it's the Flux spectrum); the
+     * inner light is two stacked inner shadows in the board's radial colours, softer late;
+     * the card's own shadow is 0 10px 28px -16px at .22. */
+	--color-today-card-edge-late-1: #f5b04f;
+	--color-today-card-edge-late-2: #ec7a66;
+	--color-today-card-inner-1: rgba(255, 141, 180, 0.16);
+	--color-today-card-inner-2: rgba(255, 179, 138, 0.24);
+	--color-today-card-inner-late-1: rgba(236, 122, 102, 0.08);
+	--color-today-card-inner-late-2: rgba(245, 176, 79, 0.13);
+	--color-today-card-shadow: rgba(60, 30, 120, 0.22);
+	/* Kindling's fire (kindling/): a tended node's check, the soft amber under the lit
+     * stroke (the stroke itself is the theme's ember), the highlight that runs it, the
+     * sparks and the wisp's glow and core. Campfire's warmth (campfire/): its rising
+     * embers, their glow and the glow off the card's lower edge. Firelight, the same in
+     * every theme; the wash and the wisp's far glow derive from the theme's ember. */
+	--color-today-kindling-check: #ffffff;
+	--color-today-kindling-glow: #ffb36b;
+	--color-today-kindling-pulse: #fff4da;
+	--color-today-kindling-spark: #ffc27a;
+	--color-today-kindling-wisp-glow: rgba(255, 190, 110, 0.75);
+	--color-today-kindling-wisp-core: #fff1d6;
+	--color-today-campfire-ember: #ffc46b;
+	--color-today-campfire-ember-glow: rgba(255, 170, 80, 0.6);
+	--color-today-campfire-glow: rgba(255, 168, 90, 0.34);
+	/* A moment card's soft halo (production's 0 0 5px at 5%) and a rail tile's art lifting
+     * under a held finger: shadows, the same on every page. */
+	--color-today-moment-shadow: rgba(20, 16, 40, 0.05);
+	--color-today-rail-lift-shadow: rgba(60, 30, 120, 0.4);
+}
+
+/*
+ * Reflect's light (design/boards/ReflectAlive.dc.html), drawn in Skia and on gradients:
+ * the sky's last light at the top, the bottom glow and the heavy path's tide, plus each
+ * stage's own light below. Light, never a surface, so the same in every theme; each has a
+ * late twin for the night window.
+ */
+@theme static {
+	/* chrome: the sky (reflect-sky.tsx), the bottom glow and the tide (ambient-light.tsx) */
+	--color-reflect-sky-1: #e3ccf0;
+	--color-reflect-sky-2: #f6d3e2;
+	--color-reflect-sky-3: #fde4da;
+	--color-reflect-sky-4: rgba(247, 245, 251, 0);
+	--color-reflect-sky-late-1: #151029;
+	--color-reflect-sky-late-2: #1b1530;
+	--color-reflect-sky-late-3: rgba(14, 12, 21, 0);
+	--color-reflect-glow-1: rgba(255, 179, 138, 0.95);
+	--color-reflect-glow-2: rgba(255, 141, 180, 0.55);
+	--color-reflect-glow-3: rgba(180, 155, 255, 0);
+	--color-reflect-glow-late-1: rgba(245, 176, 79, 0.9);
+	--color-reflect-glow-late-2: rgba(236, 122, 102, 0.45);
+	--color-reflect-glow-late-3: rgba(236, 122, 102, 0);
+	--color-reflect-tide-1: rgba(255, 190, 140, 0.42);
+	--color-reflect-tide-2: rgba(255, 160, 120, 0.18);
+	--color-reflect-tide-3: rgba(255, 160, 120, 0.06);
+	--color-reflect-tide-late-1: rgba(245, 176, 79, 0.22);
+	--color-reflect-tide-late-2: rgba(236, 122, 102, 0.1);
+	--color-reflect-tide-late-3: rgba(236, 122, 102, 0.04);
+	/* write: a finished word's warmth (warm-text.tsx) */
+	--color-reflect-warm: #d9822b;
+	--color-reflect-warm-glow: rgba(242, 163, 58, 0.55);
+	/* write: the hold mic's glow (mic-glow.tsx) */
+	--color-reflect-mic-glow: rgba(255, 179, 138, 0.5);
+	--color-reflect-mic-glow-end: rgba(255, 141, 180, 0);
+	/* wait: the ensō's ink (enso.tsx; the board's `eink`, printed here because the shader takes
+	   RGB and a theme may set it in oklch) and the alpha ramp that fades its paper to the edge */
+	--color-reflect-ink: #b8621e;
+	--color-reflect-ink-late: #f5b04f;
+	--color-reflect-paper-fade-1: rgba(0, 0, 0, 1);
+	--color-reflect-paper-fade-2: rgba(0, 0, 0, 0.6);
+	--color-reflect-paper-fade-3: rgba(0, 0, 0, 0);
+	/* mirror */
+	--color-reflect-mirror-halo: rgba(255, 200, 150, 0.9);
+	--color-reflect-mirror-panel-shadow: rgba(60, 30, 120, 0.3);
+	/* care */
+	--color-reflect-care-shadow: rgba(120, 50, 30, 0.4);
+	--color-reflect-breath-ring: rgba(242, 163, 58, 0.32);
+	--color-reflect-breath-1: rgba(255, 179, 138, 0.5);
+	--color-reflect-breath-2: rgba(255, 141, 180, 0.16);
+	--color-reflect-breath-3: rgba(255, 141, 180, 0);
+	/* next */
+	--color-reflect-tile-shadow: rgba(180, 90, 30, 0.45);
+	--color-reflect-trace-glow: rgba(242, 163, 58, 0.7);
+	--color-reflect-trace-core: #ffffff;
+	/* heard: the glow round "Heard." as it writes in (heard-title.tsx) */
+	--color-reflect-heard-halo: rgba(255, 200, 150, 0.9);
+}
+
+/*
+ * After a session's light (design/boards/AfterAlive.dc.html): the glow behind
+ * the face, its shadow, the slider's rail, the band of stars and the point of
+ * light. Light, never a surface, so the same in every theme; each has a late
+ * twin for the night window. The day stars are the Flux spectrum above.
+ */
+@theme static {
+	--color-after-light-neutral: rgba(226, 218, 246, 0.95);
+	--color-after-light-cool: rgba(160, 178, 212, 0.95);
+	--color-after-light-warm: rgba(255, 196, 156, 0.95);
+	--color-after-late-light-neutral: rgba(120, 60, 30, 0.55);
+	--color-after-late-light-cool: rgba(52, 64, 96, 0.9);
+	--color-after-late-light-warm: rgba(150, 80, 40, 0.8);
+	--color-after-shadow: rgba(44, 26, 90, 0.3);
+	--color-after-late-shadow: rgba(0, 0, 0, 0.55);
+
+	--color-after-rail-heavier: #a3b4d4;
+	--color-after-rail-same: #e4deee;
+	--color-after-rail-lighter: #ffc59e;
+	--color-after-late-rail-heavier: #4a5a80;
+	--color-after-late-rail-same: #3a3350;
+	--color-after-late-rail-lighter: #c27a3e;
+	--color-after-thumb: #ffffff;
+	--color-after-late-thumb: #f3f0fa;
+	--color-after-thumb-shadow: rgba(25, 21, 36, 0.22);
+	--color-after-thumb-ring: rgba(25, 21, 36, 0.08);
+
+	--color-after-late-star-1: #f5b04f;
+	--color-after-late-star-2: #ec7a66;
+	--color-after-late-star-3: #f7c77a;
+	--color-after-late-star-4: #e8956b;
+	--color-after-you-core: #fff1e6;
+	--color-after-late-you-core: #fff3d6;
+	--color-after-you-warm: #ff9f7a;
+	--color-after-point: #ffffff;
+	--color-after-late-point: #ffecc8;
+	--color-after-point-glow: rgba(255, 170, 140, 0.95);
+	--color-after-late-point-glow: rgba(245, 176, 79, 0.95);
+	--color-after-point-halo: rgba(255, 141, 180, 0.5);
+	--color-after-late-point-halo: rgba(236, 122, 102, 0.5);
+
+	--color-after-floor: rgba(255, 179, 138, 0.5);
+	--color-after-floor-mid: rgba(255, 141, 180, 0.18);
+	--color-after-late-floor: rgba(245, 176, 79, 0.28);
+	--color-after-late-floor-mid: rgba(236, 122, 102, 0.1);
+	--color-after-ready-ring: rgba(255, 160, 130, 0.5);
+	--color-after-ready-glow: rgba(255, 120, 110, 0.45);
+	--color-after-late-ready-ring: rgba(245, 176, 79, 0.45);
+	--color-after-late-ready-glow: rgba(245, 176, 79, 0.3);
+	--color-after-gleam: rgba(255, 180, 140, 0.85);
+	--color-after-late-gleam: rgba(245, 176, 79, 0.8);
+	--color-after-dot-glow: rgba(255, 160, 140, 0.5);
+	--color-after-late-dot-glow: rgba(245, 176, 79, 0.35);
+	/* The share card's drop (Peers' card). */
+	--color-after-card-shadow: rgba(60, 30, 120, 0.22);
+
+	/* The next card's art: the kindling trail's avatar fills, the listen tile. */
+	--color-after-kindling-1: #d7f0e6;
+	--color-after-kindling-2: #e3dbff;
+	--color-after-kindling-3: #fde9c6;
+	--color-after-late-kindling-1: #2a4a42;
+	--color-after-late-kindling-2: #3a3260;
+	--color-after-late-kindling-3: #4e3d22;
+	--color-after-listen: #e2f2f6;
+	--color-after-listen-ink: #2e7f93;
+	--color-after-late-listen: rgba(125, 211, 232, 0.14);
+}
+
+/*
+ * Sit with this's two arcs (design/boards/SitAlive.dc.html): the bottom arc's
+ * fill, the wash over the top arc, the light rising from the floor, the rim
+ * catch and the seam's core. Lit like the Today card, so the same in every
+ * theme, each with a late twin for the night window. The seam, edge light and
+ * thread are the Flux spectrum above (late: ember). Read in
+ * src/features/sit-with-this/arcs/sit-colors.ts.
+ */
+@theme static {
+	--color-sit-bottom: #f1ecff;
+	--color-sit-late-bottom: #1d1730;
+	--color-sit-wash: rgba(236, 231, 255, 0.95);
+	--color-sit-late-wash: rgba(183, 163, 255, 0.08);
+	--color-sit-floor: rgba(255, 179, 138, 0.58);
+	--color-sit-floor-mid: rgba(255, 141, 180, 0.28);
+	--color-sit-late-floor: rgba(245, 176, 79, 0.34);
+	--color-sit-late-floor-mid: rgba(236, 122, 102, 0.15);
+	--color-sit-rim: rgba(255, 236, 224, 1);
+	--color-sit-rim-mid: rgba(255, 141, 180, 0.55);
+	--color-sit-late-rim: rgba(255, 220, 160, 1);
+	--color-sit-late-rim-mid: rgba(236, 122, 102, 0.5);
+	--color-sit-core: #ffffff;
+	--color-sit-late-core: #ffecc8;
+	/* The ember's second stop (seam, edge light and thread, late). */
+	--color-sit-late-ember-2: #ec7a66;
+}
+
+/*
+ * You're not alone's light (design/boards/PeersAlive.dc.html): the mark's stars
+ * and your star, the point of light, the lit chip and card, the bridge line's
+ * dot. Light, never a surface, so the same in every theme; each has a late twin
+ * for the night window. The day stars and the edge glow are the Flux spectrum
+ * above (late: ember). Read in src/features/peer-reflection/peers-colors.ts.
+ */
+@theme static {
+	--color-peers-late-star-2: #ec7a66;
+	--color-peers-late-star-3: #f7c77a;
+	--color-peers-late-star-4: #e8956b;
+	--color-peers-you-core: #fff1e6;
+	--color-peers-late-you-core: #fff3d6;
+	--color-peers-point: #ffffff;
+	--color-peers-late-point: #ffecc8;
+	--color-peers-point-near: rgba(255, 170, 140, 1);
+	--color-peers-late-point-near: rgba(245, 176, 79, 1);
+	--color-peers-point-far: rgba(255, 141, 180, 1);
+	--color-peers-late-point-far: rgba(236, 122, 102, 1);
+	--color-peers-chip: rgba(255, 255, 255, 0.78);
+	--color-peers-late-chip: rgba(245, 176, 79, 0.13);
+	--color-peers-chip-edge: rgba(255, 160, 130, 0.55);
+	--color-peers-late-chip-edge: rgba(245, 176, 79, 0.45);
+	--color-peers-chip-shadow: rgba(255, 120, 110, 0.6);
+	--color-peers-late-chip-shadow: rgba(245, 176, 79, 0);
+	--color-peers-glyph-ring: rgba(255, 150, 130, 0.9);
+	--color-peers-late-glyph-ring: rgba(245, 176, 79, 0.9);
+	--color-peers-glyph-glow: rgba(255, 160, 140, 0.5);
+	--color-peers-late-glyph-glow: rgba(245, 176, 79, 0.35);
+	--color-peers-floor: rgba(255, 179, 138, 0.44);
+	--color-peers-floor-mid: rgba(255, 141, 180, 0.16);
+	--color-peers-late-floor: rgba(245, 176, 79, 0.24);
+	--color-peers-late-floor-mid: rgba(236, 122, 102, 0.09);
+	--color-peers-dot-glow: rgba(255, 160, 140, 0.45);
+	--color-peers-late-dot-glow: rgba(245, 176, 79, 0.35);
+	/* The card's drop (board `todayCard()`). */
+	--color-peers-card-shadow: rgba(60, 30, 120, 0.22);
+}
+
+/* Badges and their arrival are printed objects: each family's colour, the
+ * bronze back and the fire's room are the same in every theme, picked by the
+ * scheme (`-dusk` / `-day`). Fixed on purpose; see the fixed-palette convention
+ * in apps/mobile/AGENTS.md. Skia and SVG stop lists live in
+ * src/features/achievements/badge-palette.ts. */
+@theme static {
+	/* The page a held badge floods with, and its glow (bloom, motes). */
+	--color-badge-night-dusk: #1b1d48;
+	--color-badge-night-day: #e7e7f7;
+	--color-badge-night-glow: #f5a03a;
+	--color-badge-dawn-dusk: #4a1f35;
+	--color-badge-dawn-day: #f9e5ec;
+	--color-badge-dawn-glow: #ff9fb4;
+	--color-badge-green-dusk: #1b3223;
+	--color-badge-green-day: #e5efe4;
+	--color-badge-green-glow: #e8c35c;
+	--color-badge-teal-dusk: #132d44;
+	--color-badge-teal-day: #dfeaf4;
+	--color-badge-teal-glow: #ffd27a;
+	--color-badge-aurora-dusk: #1f1947;
+	--color-badge-aurora-day: #ebe5fb;
+	--color-badge-aurora-glow: #c4a8ff;
+
+	/* The coin: its engraving, the engraving's dark edge, its shadow, the band of light. */
+	--color-badge-engrave: #f6cf8a;
+	--color-badge-engrave-edge: rgba(0, 0, 0, 0.55);
+	--color-badge-shadow-dusk: rgba(0, 0, 0, 0.55);
+	--color-badge-shadow-day: rgba(40, 24, 60, 0.35);
+	--color-badge-band: rgba(255, 255, 255, 0.55);
+	--color-badge-band-clear: rgba(255, 255, 255, 0);
+
+	/* The arrival: the fire's room, its button, the count, the week, the freeze. */
+	--color-arrival-fire-dusk: #17111a;
+	--color-arrival-fire-day: #fff6ea;
+	--color-arrival-cta-dusk: #f3f0fa;
+	--color-arrival-cta-ink-dusk: #17102f;
+	--color-arrival-count-ghost-dusk: #3a3140;
+	--color-arrival-count-lit-dusk: #f5b04f;
+	--color-arrival-count-ghost-day: #e9decf;
+	--color-arrival-count-lit-day: #b86a10;
+	--color-arrival-check-dusk: #2a1600;
+	--color-arrival-today-ring: rgba(242, 163, 58, 0.32);
+	--color-arrival-frost-wash-dusk: rgba(143, 195, 240, 0.14);
+	--color-arrival-frost-wash-day: #e3effb;
+	--color-arrival-dot-off-dusk: rgba(255, 255, 255, 0.09);
+	--color-arrival-dot-off-day: rgba(25, 21, 36, 0.09);
+}
+
+/*
+ * Connect's printed objects (prototype `features/connect`): a Xolacer's avatar
+ * art when they have no photo (one pair per person, picked by their id) and
+ * the Xolace channel's flame. Content art, the same in every theme. Read in
+ * src/features/connect/connect-colors.ts.
+ */
+@theme static {
+	--color-connect-art-violet-from: #9e8cf2;
+	--color-connect-art-violet-to: #5b47c9;
+	--color-connect-art-teal-from: #7fd3e6;
+	--color-connect-art-teal-to: #2f8fa8;
+	--color-connect-art-rose-from: #f7b7c8;
+	--color-connect-art-rose-to: #d6467a;
+	--color-connect-flame-1: #ffd9a8;
+	--color-connect-flame-2: #f2a33a;
+	--color-connect-flame-3: #c46a12;
 }

@@ -1,0 +1,200 @@
+/** Today on fixtures, from `fixtures.ts`; Help and the streak open their routes, the card a Reflect dev state. */
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import { ScopedTheme } from "uniwind";
+import { NIGHT_VARIANT, type ThemeMode, themeVariant } from "@/design/themes";
+import type { KindlingOutcome } from "../kindling/kindling-model";
+import { useKeptKindling } from "../kindling/use-kept-kindling";
+import { type Today, TodayProvider } from "../today-data";
+import { type CardMode, headerCopy, type TodayPhase } from "../today-model";
+import { TodayScreen } from "../today-screen";
+import { useFixtureCovers } from "./covers";
+import { FIXTURE_ACTIONS } from "./fixture-actions";
+import { FixtureFinding } from "./fixture-finding";
+import {
+	FIXTURE_CAMPFIRE,
+	FIXTURE_DAY,
+	FIXTURE_KINDLING,
+	FIXTURE_MONTH_PROMPT,
+	FIXTURE_NAME,
+	FIXTURE_STREAK,
+	FIXTURE_WEEKDAY,
+	type FixtureModules,
+	lowerModules,
+	reflectState,
+} from "./fixtures";
+
+/** A slow network: the word arrives while the first open is still playing. */
+const WORD_AFTER_MS = 1200;
+/** Let the screen land before the streak grows, as coming back to Today does. */
+const IGNITE_AFTER_MS = 600;
+/** As if back from the kindling's step: the card has landed before the step counts. */
+const TEND_AFTER_MS = 900;
+/** Long enough for each swap to finish and rest (the night front takes 1.6 s). */
+const CYCLE_MS = 4000;
+const PHASES: readonly TodayPhase[] = ["dawn", "day", "evening", "late"];
+
+/** The phase, or the next one every few seconds when cycling. */
+function usePhase(start: TodayPhase, cycle: boolean): TodayPhase {
+	const [index, setIndex] = useState(() => PHASES.indexOf(start));
+	useEffect(() => {
+		if (!cycle) {
+			return;
+		}
+		const id = setInterval(
+			() => setIndex((i) => (i + 1) % PHASES.length),
+			CYCLE_MS
+		);
+		return () => clearInterval(id);
+	}, [cycle]);
+	return PHASES[index] ?? start;
+}
+
+export type FixtureProps = {
+	phase: TodayPhase;
+	/** Default's light or dark; late is always night mode's theme. */
+	theme?: ThemeMode;
+	/** The first open of the day: the words, the rise. */
+	intro?: boolean;
+	/** Offline or still loading: no name, no streak. */
+	offline?: boolean;
+	/** The streak grows by one just after the screen opens, and the flame ignites. */
+	ignite?: boolean;
+	/** Yesterday's streak went quiet: the rekindle pill asks under the greeting. */
+	rekindle?: boolean;
+	/** Step through the four phases, to watch the sky change hour (and night fall). */
+	cycle?: boolean;
+	/** This month's prompt rides on the card. */
+	monthPrompt?: boolean;
+	/** Your words with the mirror, or the mirror back: the card's face (and the state it zooms to). */
+	reflect?: CardMode;
+	/** The kindling: the board's, or none (S16 draws that), or still loading. */
+	kindling?: keyof typeof FIXTURE_KINDLING | "none" | "loading";
+	/** A step is tended a moment after the screen opens: the completion plays. */
+	tend?: boolean;
+	/** With `kindling: "last"`: the kindling is put out instead, so the card goes. */
+	putOut?: boolean;
+	campfire?: keyof typeof FIXTURE_CAMPFIRE | "none";
+	/** A free member: the rail's tracks show the lock and open Xolace+. */
+	free?: boolean;
+	/** Today's word loads a moment after the screen opens, as on a slow network. */
+	lateWord?: boolean;
+	/** The intake's day-3 card in Today's slot under the campfire. */
+	finding?: boolean;
+	/** The rail, your moments and the word: the board's, none at all, or still loading. */
+	modules?: FixtureModules;
+};
+
+function FixtureToday({
+	phase: start,
+	theme = "light",
+	intro = false,
+	offline = false,
+	ignite = false,
+	cycle = false,
+	monthPrompt = false,
+	reflect = "idle",
+	kindling = "board",
+	tend = false,
+	putOut = false,
+	campfire = "count",
+	modules = "board",
+	finding = false,
+	lateWord = false,
+	free = false,
+	rekindle = false,
+}: FixtureProps) {
+	const covers = useFixtureCovers();
+	const [wordIn, setWordIn] = useState(!lateWord);
+	useEffect(() => {
+		if (wordIn) {
+			return;
+		}
+		const id = setTimeout(() => setWordIn(true), WORD_AFTER_MS);
+		return () => clearTimeout(id);
+	}, [wordIn]);
+	const phase = usePhase(start, cycle);
+	const [grown, setGrown] = useState(false);
+	const [tended, setTended] = useState(false);
+	useEffect(() => {
+		if (!tend) {
+			return;
+		}
+		const id = setTimeout(() => setTended(true), TEND_AFTER_MS);
+		return () => clearTimeout(id);
+	}, [tend]);
+	useEffect(() => {
+		if (!ignite) {
+			return;
+		}
+		const id = setTimeout(() => setGrown(true), IGNITE_AFTER_MS);
+		return () => clearTimeout(id);
+	}, [ignite]);
+
+	const { eyebrow, greeting } = headerCopy(
+		phase,
+		FIXTURE_WEEKDAY,
+		offline ? null : FIXTURE_NAME
+	);
+	// As the server sends it: tending the last step, or putting the kindling out, closes it,
+	// so it goes null; `paths.getLatest` then says how it ended.
+	let server: Today["state"]["kindling"] = null;
+	const last = FIXTURE_KINDLING.last;
+	if (kindling === "loading") {
+		server = undefined;
+	} else if (kindling === "last") {
+		server = tended ? null : last;
+	} else if (kindling !== "none") {
+		server = FIXTURE_KINDLING[tended ? "tended" : kindling];
+	}
+	const outcome: KindlingOutcome = {
+		completed: !putOut,
+		id: last.id,
+		states: Object.fromEntries(
+			last.twigs.map((t) => [t.id, putOut ? t.state : "done"])
+		),
+	};
+	const kindlingView = useKeptKindling(server, outcome);
+	const state: Today["state"] = {
+		campfire: campfire === "none" ? null : FIXTURE_CAMPFIRE[campfire],
+		card: {
+			mode: reflect,
+			monthPrompt: monthPrompt ? FIXTURE_MONTH_PROMPT : null,
+			reflect: reflectState(reflect, phase, theme),
+		},
+		day: FIXTURE_DAY,
+		eyebrow,
+		greeting,
+		intro,
+		kindling: kindlingView,
+		...lowerModules(offline ? "loading" : modules, covers),
+		...(wordIn ? {} : { word: undefined }),
+		listenLocked: free,
+		phase,
+		rekindle:
+			rekindle && !offline ? { busy: false, streak: FIXTURE_STREAK } : null,
+		streak: offline
+			? null
+			: {
+					// A broken streak counts from nothing until it's rekindled.
+					count: rekindle ? 0 : FIXTURE_STREAK + (grown ? 1 : 0),
+					igniteKey: grown ? 1 : 0,
+				},
+	};
+	return (
+		<ScopedTheme
+			theme={phase === "late" ? NIGHT_VARIANT : themeVariant("default", theme)}
+		>
+			<TodayProvider value={{ actions: FIXTURE_ACTIONS, state }}>
+				<TodayScreen finding={finding ? <FixtureFinding /> : undefined} />
+			</TodayProvider>
+		</ScopedTheme>
+	);
+}
+
+/** A dev state's options and screen, spread into its entry next to its `id` and `title`. The real
+ * route draws its own chrome: no header. */
+export const today = (props: FixtureProps) => ({
+	options: { headerShown: false },
+	Screen: () => <FixtureToday {...props} />,
+});

@@ -42,27 +42,11 @@ export const PLAYER_OPTIONS = {
 	presentation: "fullScreenModal",
 } as const satisfies NativeStackNavigationOptions;
 
-/** A transparent, untitled native header that only carries the screen's Stack.Toolbar
- * buttons, so they get the system's glass. */
-export const TOOLBAR_HEADER = {
-	// Android would add its own up arrow beside the close.
-	headerBackVisible: false,
-	headerShadowVisible: false,
-	headerShown: true,
-	headerTransparent: true,
-	title: "",
-} as const satisfies NativeStackNavigationOptions;
-
-/** Slides up from the bottom; with reduced motion it fades in instead. */
-export const riseOrFade = ({
-	reducedMotion,
-}: ScreenContext): NativeStackNavigationOptions => ({
-	animation: reducedMotion ? "fade" : "slide_from_bottom",
-});
-
 /** The old screens' sheets sized to their rows. iOS 26 paints its own glass behind a
  * transparent screen; iOS 18 and Android show transparent literally. New screens use
- * `fitSheet`. */
+ * `fitSheet`.
+ * @public No screen uses it since Steadiness moved to `fitSheet` (S5c); it goes with its
+ * `kit-imports.ts` entry in cleanup (C1). */
 export const legacyFitSheet = ({
 	background,
 	liquidGlass,

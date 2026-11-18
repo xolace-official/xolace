@@ -10,7 +10,11 @@ import { ScrollView, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { BrowseHubScreen } from "@/features/browse/components/browse-hub-screen";
 import { TrackRow } from "@/features/browse/components/track-row";
-import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
+import {
+	EntryRow,
+	RowsSkeleton,
+	SectionTitle,
+} from "@/features/browse/search/library-row";
 import { PlaceRow } from "@/features/browse/search/place-row";
 import {
 	useSearchShape,
@@ -24,9 +28,8 @@ import {
 	SECTION_TITLE,
 	type SearchSection,
 } from "@/features/browse/search/search-sections";
-import { EntryRow, SectionTitle } from "@/features/library/home/entry-cards";
-import { RowsSkeleton } from "@/features/library/skeletons";
 import { useStableQuery } from "@/lib/convex/use-stable-query";
+import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 import { useDebounce } from "@/lib/use-debounce";
 import { cn } from "@/lib/utils";
 
@@ -110,7 +113,7 @@ function SearchResults({ query }: { query: string }) {
 						items={lantern}
 						query={freshLantern && query}
 						row={(e, onOpen) => (
-							<EntryRow entry={e} from="search" key={e._id} onOpen={onOpen} />
+							<EntryRow entry={e} key={e._id} onOpen={onOpen} />
 						)}
 						section="lantern"
 					/>

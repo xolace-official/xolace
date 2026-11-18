@@ -1,4 +1,8 @@
-import type { ComponentType } from "react";
+import { type ComponentType, createElement } from "react";
+import { ArrivalsHost } from "@/features/achievements/arrival/arrivals-host";
+import { isPresentedRoute } from "@/features/navigation/presented-routes";
+import { GoneHost } from "@/features/peer-reflection/gone-host";
+import { NowPlayingHost } from "@/features/player/now-playing/now-playing-host";
 
 /**
  * A host: a component the `(protected)` layout keeps mounted above its stack
@@ -29,7 +33,19 @@ export type RootHost = {
  * Every host a feature adds, mounted in this order after the stack (so later
  * ones draw on top). A feature exports its host from its own folder and adds one
  * entry here; nobody edits the layout's lines. Hosts that predate the list
- * (presence, the now-playing audio, the badge unlock) stay in the layout until
- * the screen PR that replaces them moves them here.
+ * (presence, the badge unlock) stay in the layout until the screen PR that
+ * replaces them moves them here.
  */
-export const ROOT_HOSTS: readonly RootHost[] = [];
+/** The arrival, told which routes are natively presented (it would play unseen behind them). */
+function Arrivals() {
+	return createElement(ArrivalsHost, { isPresented: isPresentedRoute });
+}
+
+export const ROOT_HOSTS: readonly RootHost[] = [
+	// A badge's arrival and the streak milestone, drawn over every screen (S6).
+	{ Host: Arrivals, name: "arrivals" },
+	// Clears the peer reflections you put away when you sign out (S15).
+	{ Host: GoneHost, name: "peer-reflections-gone" },
+	// The now-playing track's audio and its sleep timer, kept above every screen (S10).
+	{ Host: NowPlayingHost, name: "now-playing" },
+];

@@ -12,24 +12,9 @@
         // The redesign's shared kit (F5) lands before the screens that use it.
         // Each file is an entry until its first screen PR imports it: delete its
         // line then. These lines only shrink. Their exports carry `@public`.
-        "src/components/settings-kit/name-dialog.tsx",
-        "src/components/settings-kit/open-row.tsx",
-        "src/components/settings-kit/parts.tsx",
-        "src/components/settings-kit/switch-row.tsx",
-        "src/components/settings-kit/tile-row.tsx",
-        "src/components/shared/aura.tsx",
-        "src/components/shared/avatar.tsx",
-        "src/components/shared/back-button.tsx",
-        "src/components/shared/care-row.tsx",
-        "src/components/shared/country-menu.tsx",
-        "src/components/shared/detached-sheet.tsx",
-        "src/components/shared/flux.tsx",
         "src/components/shared/media-row.tsx",
         "src/components/shared/rolling-number.tsx",
-        "src/components/shared/segmented.tsx",
-        "src/components/shared/styled.ts",
         "src/lib/keyboard/keyboard-spacer.tsx",
-        "src/lib/keyboard/use-keyboard-lift.ts",
         "src/lib/keyboard/use-keyboard-shown.ts"
       ],
       // Read by @expo/fingerprint, and by path from metro.config.js: their
@@ -52,7 +37,11 @@
         "expo-atlas",
         // Native module with no JS import. Removing it changes the native
         // fingerprint, so it goes out with the next store build.
-        "react-native-purchases-ui"
+        "react-native-purchases-ui",
+        // The store review prompt left with the old session end (S3); its new
+        // place is undecided. A native module: removing it changes the
+        // fingerprint, so it goes with the next store build if nothing asks.
+        "expo-store-review"
       ]
     }
   }

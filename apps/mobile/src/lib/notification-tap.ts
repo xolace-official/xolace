@@ -58,8 +58,8 @@ export function subscribeToNotificationTaps<R extends TapResponse>(
 
 /**
  * Where a tap navigates. `navigate` reuses the screen already on top; `push`
- * always stacks; `dismissTo` goes back to the route if it is anywhere in the
- * stack and replaces the top screen only if it isn't.
+ * always stacks; `home` is `goHome()` (`lib/landing.ts`): back to Today from
+ * wherever the user is, a tab or a screen pushed over the tabs.
  */
 export type TapNavigation =
 	| {
@@ -68,7 +68,7 @@ export type TapNavigation =
 				| ReturnType<typeof chatNotificationRoute>
 				| "/(protected)/achievements";
 	  }
-	| { action: "dismissTo"; href: "/" }
+	| { action: "home" }
 	| {
 			action: "push";
 			href:
@@ -80,23 +80,25 @@ export type TapNavigation =
 export type NotificationTapPlan = {
 	/** Present when the tap has an analytics row to attribute a session to. */
 	logId?: string;
-	/** Content for the soft framing banner on the reflect screen. */
+	/** Content for the soft framing banner on home (Today). */
 	banner?: { content: string; notificationId: string };
 	navigation?: TapNavigation;
 };
 
+const HOME: TapNavigation = { action: "home" };
+
 /**
- * Home, Reflect: back to it when it is under the tabs or a thread, rather than
- * stacking a second copy; put in place of the top screen only when it isn't
- * there. (`navigate` would reuse only the top screen.)
+ * Reflect is pushed over the tabs, so going home would pop it: mid-sentence, mid-clarify or
+ * on the mirror. It isn't held for everything (a badge may open over it), only for home.
  */
-const HOME: TapNavigation = { action: "dismissTo", href: "/" };
+const REFLECT = "/reflect";
 
 /**
  * Everything a tap should cause, from its payload and the screen up when it came
  * (`pathname`). Going home dismisses the screens above home, so a tap on a held
- * screen (`held-routes.ts`: a vent, a talk, crisis help, a chat) goes nowhere:
- * nothing in progress is ever torn down. Chat notifications carry no `logId`.
+ * screen (`held-routes.ts`: a vent, a talk, crisis help, a chat) or on Reflect goes
+ * nowhere: nothing in progress is ever torn down. Its banner waits on Today, shown when
+ * the user gets back there. Chat notifications carry no `logId`.
  */
 export function notificationTapPlan(
 	data: Record<string, any> | null | undefined,
@@ -127,7 +129,13 @@ export function notificationTapPlan(
 		}
 	} else if (data?.screen === "quotes") {
 		plan.navigation = { action: "push", href: "/(protected)/quotes" };
-	} else if (data?.type === "domain_unlock") {
+	} else if (data?.type === "domain_unlock" && !isHeldRoute(pathname)) {
+		// Steadiness lives in the You tab (/you/steadiness). The old path's MovedRoute shim gets
+		// there the right way from anywhere: back to the tabs when they're in the stack, in the
+		// shim's own place when they aren't. From here, dismissTo would replace the screen on top
+		// when the tabs aren't in the stack yet ("/", on a cold start), and navigate would stack a
+		// second copy of the tabs. The shim's dismissTo would pop a held screen above the tabs,
+		// so a tap on one goes nowhere, as home's does.
 		plan.navigation = { action: "push", href: "/profile/insights" };
 	} else if (data?.type === "kindling_ready") {
 		plan.navigation = { action: "push", href: "/(protected)/kindling" };
@@ -139,14 +147,15 @@ export function notificationTapPlan(
 			data?.type === "pattern_nudge" ||
 			data?.type === "milestone" ||
 			data?.type === "streak_milestone") &&
-		!isHeldRoute(pathname)
+		!isHeldRoute(pathname) &&
+		pathname !== REFLECT
 	) {
 		plan.navigation = HOME;
 	}
 
 	// The banner lives on home, so a tap that opens another screen would leave it
 	// waiting there for later. A tap with no route (a follow-up) goes nowhere new.
-	const opensElsewhere = plan.navigation && plan.navigation.href !== HOME.href;
+	const opensElsewhere = plan.navigation && plan.navigation !== HOME;
 	if (logId && body && !opensElsewhere) {
 		plan.banner = { content: body, notificationId: logId };
 	}

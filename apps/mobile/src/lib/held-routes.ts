@@ -11,23 +11,25 @@ const HELD_ROUTES = [
 	"/voice-vent",
 	"/talk",
 	"/sit-with-this",
+	// A sheet over Sit with this: the exercise is waiting behind it.
+	"/sit-with-this-swap",
 	"/peer-reflections",
 	// A sheet over peer reflections: the session is still behind it.
 	"/report-reflection",
 	"/session-end",
+	// A sheet over the session end: the moment is still behind it.
+	"/session-follow-up",
 	// A peer conversation: First Xolacer chat lands right after the first message.
 	"/chat",
 	"/xolace-channel",
 	"/rate",
-	// Full-screen moments, the badge unlock included.
-	"/badge-unlock",
-	"/badge-backfill",
+	// Full-screen moments. (A badge's arrival is an overlay, not a route: it holds itself.)
 	"/follow-up",
 	"/streak-held",
-	"/kindling-announcement",
 	"/browse-intro",
+	"/lantern-welcome",
 	"/upgrade",
-	"/browse-player",
+	"/player",
 ] as const;
 
 /** Whether `pathname` (expo-router's, groups stripped) is one of those screens or under one. */

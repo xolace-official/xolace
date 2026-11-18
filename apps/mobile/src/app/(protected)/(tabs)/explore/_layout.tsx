@@ -38,6 +38,10 @@ export default function ExploreLayout() {
 				name="library/subjects"
 				options={{ ...SUB_OPTIONS, title: "Subjects" }}
 			/>
+			<Stack.Screen
+				name="library/saved"
+				options={{ ...SUB_OPTIONS, title: "Saved" }}
+			/>
 		</Stack>
 	);
 }

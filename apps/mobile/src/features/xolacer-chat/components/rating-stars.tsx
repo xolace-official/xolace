@@ -17,43 +17,6 @@ function useStarColors() {
 	return { off: `${muted}30`, on: useThemeColor("warning") as string };
 }
 
-/** Read-only rating for roster rows. Renders nothing without an average (the threshold is
- * server-side); the caller shows `NewXolacerChip` instead. */
-export function RatingStars({
-	rating,
-	ratingCount,
-}: {
-	rating?: number;
-	ratingCount: number;
-}) {
-	const { on, off } = useStarColors();
-	if (rating === undefined) {
-		return null;
-	}
-
-	return (
-		<View
-			accessibilityLabel={`Rated ${rating.toFixed(1)} out of 5 across ${ratingCount} conversations`}
-			accessibilityRole="text"
-			className="flex-row items-center gap-1"
-		>
-			<View className="flex-row gap-px">
-				{VALUES.map((star) => (
-					<SymbolView
-						key={star}
-						name={FILLED}
-						size={10}
-						tintColor={star <= Math.round(rating) ? on : off}
-					/>
-				))}
-			</View>
-			<AppText className="font-semibold text-[11px] text-foreground tabular-nums">
-				{rating.toFixed(1)}
-			</AppText>
-		</View>
-	);
-}
-
 /** The five-star picker on the rating prompt. */
 export function RatingPicker({
 	value,
@@ -84,17 +47,6 @@ export function RatingPicker({
 					</PressableFeedback>
 				);
 			})}
-		</View>
-	);
-}
-
-/** Placeholder where the stars go before a xolacer has five ratings. */
-export function NewXolacerChip() {
-	return (
-		<View className="rounded-full bg-surface-tertiary px-2 py-0.5">
-			<AppText className="font-semibold text-[10px] text-muted uppercase tracking-wide">
-				New Xolacer
-			</AppText>
 		</View>
 	);
 }

@@ -1,11 +1,25 @@
-/** Intake v2, "Talk to Flux" (#704, #707): the `intake-v2` arm's whole intake after the
- * founder letter. Forward-only, like v1's questionnaire: a cold kill restarts at the letter. */
+/** Intake, "Talk to Flux" (#704, #707): everything after the founder letter, ending on the
+ * Xolace+ first look. Forward-only: a cold kill restarts at the letter. */
+import { useEffect } from "react";
+import { BackHandler, Platform } from "react-native";
 import { suggestHandle } from "@/features/intake/answer-rules";
-import { IntakeBlank } from "@/features/intake/questionnaire/intake-screen";
+import { consumesBack } from "@/features/intake/v2/intake-back";
+import { IntakeBlank } from "@/features/intake/v2/intake-screen";
 import { IntakeV2Flow } from "@/features/intake/v2/intake-v2-flow";
 import { useFullContext } from "@/lib/convex/use-full-context";
 
 export default function IntakeFlux() {
+	// Android's back would pop to the letter; iOS's swipe is already off (`_layout`).
+	useEffect(() => {
+		if (Platform.OS !== "android") {
+			return;
+		}
+		const sub = BackHandler.addEventListener("hardwareBackPress", () =>
+			consumesBack("flux")
+		);
+		return () => sub.remove();
+	}, []);
+
 	// Held until the query answers so a saved name is never replaced by a suggestion.
 	const context = useFullContext();
 	if (context === undefined) {

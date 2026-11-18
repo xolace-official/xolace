@@ -24,6 +24,7 @@ export function Segmented<T extends string>({
 	onChange,
 	style,
 	className,
+	haptic = Presets.System.selection,
 }: SegmentedProps<T>) {
 	const resolved = useResolveClassNames(cn("self-stretch", className));
 	return (
@@ -34,7 +35,7 @@ export function Segmented<T extends string>({
 			<Picker
 				modifiers={[pickerStyle("segmented")]}
 				onSelectionChange={(next: T) => {
-					Presets.System.selection();
+					haptic();
 					onChange(next);
 				}}
 				selection={value}

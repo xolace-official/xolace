@@ -201,10 +201,7 @@ describe("notificationTapPlan", () => {
 		]) {
 			expect(
 				notificationTapPlan({ type }, null, 1, ON_TABS).navigation
-			).toEqual({
-				action: "dismissTo",
-				href: "/",
-			});
+			).toEqual({ action: "home" });
 		}
 	});
 
@@ -218,7 +215,7 @@ describe("notificationTapPlan", () => {
 		});
 	});
 
-	it("routes domain_unlock to the insights screen", () => {
+	it("routes domain_unlock to Steadiness through the old path's shim", () => {
 		expect(
 			notificationTapPlan({ type: "domain_unlock" }, null, 1, ON_TABS)
 				.navigation
@@ -308,7 +305,7 @@ describe("notificationTapPlan", () => {
 		for (const pathname of ["/", "/today", "/explore/topics", "/quotes"]) {
 			expect(
 				notificationTapPlan({ type: "milestone" }, null, 1, pathname).navigation
-			).toEqual({ action: "dismissTo", href: "/" });
+			).toEqual({ action: "home" });
 		}
 	});
 
@@ -317,6 +314,8 @@ describe("notificationTapPlan", () => {
 			"/voice-vent",
 			"/talk",
 			"/crisis-resources",
+			// Reflect is pushed over the tabs: home would pop a reflection in progress.
+			"/reflect",
 			"/chat/c1",
 			"/xolace-channel",
 		]) {
@@ -332,6 +331,13 @@ describe("notificationTapPlan", () => {
 				logId: "l1",
 			});
 		}
+	});
+
+	it("leaves a held screen alone for domain_unlock, whose shim returns to the tabs", () => {
+		expect(
+			notificationTapPlan({ type: "domain_unlock" }, null, 1, "/voice-vent")
+				.navigation
+		).toBeUndefined();
 	});
 
 	it("still opens other screens from a held one, since those stack rather than dismiss", () => {

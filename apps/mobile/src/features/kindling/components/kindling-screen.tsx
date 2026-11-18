@@ -19,8 +19,8 @@ import {
 	twigSlug,
 } from "@/features/kindling/twig-presentation";
 import { useXolacerTwigHref } from "@/features/kindling/use-xolacer-twig-href";
-import { trackLibrary } from "@/features/library/analytics";
 import { playSoftPress, playTextureSelect } from "@/lib/haptics";
+import { trackLibrary } from "@/lib/library-analytics";
 import { useLargeHeaderOptions } from "@/lib/navigation-options";
 
 /** The active-kindling screen (docs/paths-v1.md §9.1, #333): the Lantern trail

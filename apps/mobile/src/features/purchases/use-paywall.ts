@@ -21,9 +21,10 @@ export type PaywallSurface =
 	| "session_close"
 	| "mirror_landed"
 	| "profile_insight"
-	// Post-signup intake, session 0 (#266); `(intake)/plans` reuses this surface.
+	// The first intake's paywall, session 0 (#266). Retired with it in S18; kept for its events.
 	| "intake"
-	// Intake v2's Xolace+ step, "Same week, two ways" (#713). Not a route: it sells in place.
+	// Intake's Xolace+ step, now the first look (S18; first "Same week, two ways", #713).
+	// Not a route: it sells in place.
 	| "intake_same_week"
 	// A free user's tap on a Browse track row (#340, §9.4). The slug rides on browse_paywall_*.
 	| "browse"

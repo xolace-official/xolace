@@ -24,7 +24,6 @@ const graphOf = (entries: Record<string, Import[]>): ImportGraph =>
 	);
 
 const LEGACY_EASE_FILES = {
-	"app/(protected)/index.tsx": [pkg("react-native-ease/uniwind")],
 	"components/shared/resource-item.tsx": [pkg("react-native-ease/uniwind")],
 	"components/ui/heatmap-chart/root.tsx": [pkg("react-native-ease")],
 };
@@ -51,9 +50,7 @@ describe("easeImportsOutsideEaseTs", () => {
 				pkg("react-native-ease"),
 				pkg("react-native-ease/uniwind"),
 			],
-			"features/reflect/components/reflect-screen.tsx": [
-				pkg("react-native-ease"),
-			],
+			"features/streak/streak-card.tsx": [pkg("react-native-ease")],
 			...LEGACY_EASE_FILES,
 		});
 		expect(easeImportsOutsideEaseTs(graph)).toEqual([]);
@@ -107,7 +104,7 @@ describe("osReducedMotionReads", () => {
 			"components/ui/thinking-orb.tsx": [
 				pkg("react-native-reanimated", ["useReducedMotion"]),
 			],
-			"features/reflect/mic-button.tsx": [
+			"features/streak/campfire-mascot.tsx": [
 				pkg("react-native-reanimated", ["useReducedMotion"]),
 			],
 			"features/today/hero/glow.tsx": [

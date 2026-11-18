@@ -3,6 +3,7 @@ import {
 	topicUpsertValidator,
 	trackUpsertValidator,
 } from "../ai/paths/audioTracks";
+import { audioFormatValidator } from "../audio/formats";
 import { licenceValidator } from "../lib/validators";
 import { manifestSource } from "../library/sources";
 import schema from "../schema";
@@ -74,8 +75,6 @@ export const MAX_RECORDS = 500;
 /** A body or transcript this long is a mistake, and would crowd the 1 MB item. */
 export const MAX_TEXT_CHARS = 200_000;
 
-const audioExt = v.union(v.literal("mp3"), v.literal("m4a"), v.literal("wav"));
-
 /** One record as the browser sends it, with what its files held. */
 export const dropRecord = v.object({
 	/** The track's audio file, hashed and probed in the browser. */
@@ -83,7 +82,8 @@ export const dropRecord = v.object({
 		v.object({
 			bytes: v.number(),
 			durationSec: v.number(),
-			ext: audioExt,
+			// MP3 or WAV (`audio/formats.ts`); the browser refuses anything else per file.
+			ext: audioFormatValidator,
 			name: v.string(),
 			sha256: v.string(),
 		})

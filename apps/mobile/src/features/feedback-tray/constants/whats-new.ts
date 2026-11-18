@@ -62,7 +62,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
 		date: "October 2026",
 		highlights: [
 			{
-				body: "Xolace+ members can now talk things through with a companion, back and forth, out loud or by typing. Tap the waveform at the top of Reflect. When you're done, your talk becomes a mirror like any reflection, now or later in your timeline. Up to 15 minutes a week.",
+				body: "Xolace+ members can now talk things through with a companion, back and forth, out loud or by typing. Tap the waveform at the top of Reflect. When you're done, your talk becomes a mirror like any reflection, now or later in Moments. Up to 15 minutes a week.",
 				icon: { android: "graphic_eq", ios: "waveform" },
 				title: "Talk it through out loud",
 			},
@@ -358,7 +358,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
 		date: "August 2026",
 		highlights: [
 			{
-				body: "A few of your recent moments now show up on the home tab, right after your daily quote — tap through to see the rest on your timeline.",
+				body: "A few of your recent moments now show up on the home tab, right after your daily quote — tap through to see the rest in Moments.",
 				icon: { android: "view_carousel", ios: "rectangle.stack.fill" },
 				title: "Your Moments, right up front",
 			},

@@ -34,6 +34,7 @@ import {
 	parseRecord,
 	planned,
 	reject,
+	trackVersionOf,
 	type UploadNeed,
 	versionOf,
 } from "./plan";
@@ -303,7 +304,7 @@ export async function compareTrack(
 		media.push({ bytes: d.image.bytes, kind: "thumb", name: d.image.name });
 	}
 	return planned({
-		baseVersion: stored ? versionOf(stored) : undefined,
+		baseVersion: stored ? trackVersionOf(stored) : undefined,
 		changes: stored ? diffViews(trackView(stored), trackView(track)) : [],
 		editedBy: stored?.editedBy,
 		media: media.length > 0 ? media : undefined,

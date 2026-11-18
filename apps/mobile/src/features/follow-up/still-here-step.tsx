@@ -53,8 +53,8 @@ export function StillHereStep({ onClose }: { onClose: () => void }) {
 						posthog.capture("follow_up_still_here_link_tapped", {
 							destination: key,
 						});
-						// Close the modal, then replace reflect with the tab (as the idle menu
-						// does) so reflect stays the "/" landing with no back stack.
+						// Close the modal, then switch tab: replace resolves inside the tab
+						// navigator, so it never stacks a second copy of the tabs.
 						router.back();
 						router.replace(LINK[key].href, { withAnchor: true });
 					}}

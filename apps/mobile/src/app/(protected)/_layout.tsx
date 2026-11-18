@@ -2,20 +2,22 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Stack } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
-import { useBadgeUnlock } from "@/features/achievements/unlock/use-badge-unlock";
-import { NowPlayingHost } from "@/features/browse/now-playing/now-playing-host";
 import { ROOT_HOSTS } from "@/features/navigation/hosts";
 import { ROOT_SCREENS } from "@/features/navigation/root-screens";
-import { UnreadIconBadge } from "@/features/xolacer-chat/components/unread-icon-badge";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+import { NO_GESTURE, screenOptions } from "@/lib/root-screen";
 import {
 	StreamChatProvider,
 	StreamOverlayProvider,
-} from "@/features/xolacer-chat/providers/stream-chat-provider";
-import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
-import { NO_GESTURE, screenOptions } from "@/lib/root-screen";
+} from "@/lib/stream-chat/stream-chat-provider";
+import { UnreadIconBadge } from "@/lib/stream-chat/unread-icon-badge";
 import { useNotifications } from "@/lib/use-notifications";
 import { AppPresence } from "@/providers/app-presence";
 import { useClaimLegacyAccountFlags } from "@/store/use-account-flag";
+
+const NO_ANIMATION = { animation: "none" } as const;
+/** The landing: it replaces "/" without a slide, and nothing sits under it to swipe to. */
+const TABS_OPTIONS = { ...NO_GESTURE, ...NO_ANIMATION };
 
 const SCREEN_OPTIONS = {
 	contentStyle: { backgroundColor: "transparent" },
@@ -27,9 +29,6 @@ export default function ProtectedLayout() {
 	// launch tap survives in the native cache, so `(intake)`'s layout discards it
 	// explicitly to keep "intake wins, a pending deep link is not preserved" (T3, #234).
 	useNotifications();
-	// Opens the backfill summary, then the badge unlock moment, over whatever is
-	// up, when it may interrupt (#693, #701).
-	useBadgeUnlock();
 	useClaimLegacyAccountFlags();
 	const reducedMotion = useEffectiveReducedMotion();
 	const background = useThemeColor("background");
@@ -48,8 +47,6 @@ export default function ProtectedLayout() {
 			<StreamChatProvider>
 				{/* Above the Stack so presence keeps reporting whichever screen is up. */}
 				<AppPresence />
-				{/* The Browse track's audio, outliving the player screen (S4). */}
-				<NowPlayingHost />
 				<UnreadIconBadge />
 				{/* Points Reanimated's "System" at the in-app tri-state. Here, not the
             root: preferences.get needs auth. */}
@@ -57,8 +54,9 @@ export default function ProtectedLayout() {
 					mode={reducedMotion ? ReduceMotion.Always : ReduceMotion.Never}
 				/>
 				<Stack screenOptions={SCREEN_OPTIONS}>
-					<Stack.Screen name="index" />
-					<Stack.Screen name="(tabs)" options={NO_GESTURE} />
+					{/* "/" hands over to the tabs at once (see its route). */}
+					<Stack.Screen name="index" options={NO_ANIMATION} />
+					<Stack.Screen name="(tabs)" options={TABS_OPTIONS} />
 					{/* Each feature's own entries, from its `screens.ts`. */}
 					{ROOT_SCREENS.map((screen) => (
 						<Stack.Screen

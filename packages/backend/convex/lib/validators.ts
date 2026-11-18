@@ -253,6 +253,15 @@ export const trackLoudnessValidator = v.object({
 });
 
 /**
+ * A track's waveform for the player's scrubber: `PEAK_BARS` (60) numbers, 0–1,
+ * one per equal slice of the audio, measured on the server
+ * (`audio/measurePeaks.ts`; the maths in `audio/peaks.ts`). Like loudness it
+ * belongs to the audio: new audio drops it until it is measured again. The
+ * length and range are checked where it's written (`audio/trackPeaks.ts`).
+ */
+export const trackPeaksValidator = v.array(v.number());
+
+/**
  * Music-family: what a listening review heard in the track
  * (scripts/kindling/describe-music.ts), kept for features to come: filters,
  * a mood map, safer sleep picks. Reviews from before the facts were asked
@@ -427,6 +436,55 @@ export const chatModerationCategoryValidator = v.union(
 	v.literal("contact")
 );
 
+/** `preferences.dataRetentionPreference`: how long sessions are kept. */
+export const dataRetentionPreferenceValidator = v.union(
+	v.literal("indefinite"),
+	v.literal("6_months"),
+	v.literal("1_year")
+);
+
+// The redesign's preferences (B7). Each closed set is a literal union so
+// clients get typed values. Only ever add a literal: the schema validates
+// every stored row against it, so dropping one would fail the push while a
+// row still holds it, and the backend deploys before the client that sends a
+// new value, so a widened union is always live first. Clients should skip a
+// value they don't know (a newer build may have written it).
+
+/** A You card someone can take off their profile (Settings › Appearance › Profile).
+ * Production's ids, so the device-local choice carries over unchanged. */
+export const profileCardValidator = v.union(
+	v.literal("calendar"),
+	v.literal("rank"),
+	v.literal("week")
+);
+
+/** The background behind the daily quote (`quotes.md` §1), in the sheet's order. */
+export const quoteBackgroundValidator = v.union(
+	v.literal("poster"),
+	v.literal("first-light"),
+	v.literal("mountain-air"),
+	v.literal("deep-forest"),
+	v.literal("night"),
+	v.literal("quiet-lake"),
+	v.literal("golden-meadow"),
+	v.literal("birds-at-dusk"),
+	v.literal("last-light"),
+	v.literal("hearth")
+);
+
+/** A card on Explore's "Pick up where you left off": a track (an episode
+ * included) or a Lantern entry. */
+export const exploreContinueItemValidator = v.union(
+	v.object({ id: v.id("audio_tracks"), kind: v.literal("track") }),
+	v.object({ id: v.id("library_entries"), kind: v.literal("entry") })
+);
+
+/** A Continue card taken off with "Remove from here", and when. */
+export const exploreHiddenContinueValidator = v.object({
+	hiddenAt: v.number(),
+	item: exploreContinueItemValidator,
+});
+
 // Full `preferences` document shape, mirroring schema.ts's `preferences` table.
 // Shared by preferences.ts and users.ts so the two return validators can never drift.
 export const preferencesDocValidator = v.object({
@@ -435,13 +493,12 @@ export const preferencesDocValidator = v.object({
 	avatarId: v.optional(v.string()),
 	colorTheme: v.optional(v.string()),
 	contributeByDefault: v.boolean(),
-	dataRetentionPreference: v.union(
-		v.literal("indefinite"),
-		v.literal("6_months"),
-		v.literal("1_year")
-	),
+	dataRetentionPreference: dataRetentionPreferenceValidator,
 	displayName: v.optional(v.string()),
 	emotionalProfileId: v.id("emotional_profiles"),
+	exploreHiddenContinue: v.optional(v.array(exploreHiddenContinueValidator)),
+	exploreUsesSessions: v.optional(v.boolean()),
+	hiddenProfileCards: v.optional(v.array(profileCardValidator)),
 	libraryAudiences: v.optional(v.array(v.string())),
 	mirrorTone: mirrorToneValidator,
 	motionPreference: v.optional(motionPreferenceValidator),
@@ -466,6 +523,7 @@ export const preferencesDocValidator = v.object({
 	personalMemoryEnabled: v.optional(v.boolean()),
 	preferredInputType: v.union(v.literal("text"), v.literal("voice")),
 	preferredName: v.optional(v.string()),
+	quoteBackground: v.optional(quoteBackgroundValidator),
 	quotes: v.optional(
 		v.object({
 			notificationEnabled: v.boolean(),

@@ -13,13 +13,14 @@ export type TabSpec = {
 	readonly badge?: "unread";
 	/** The tab's screens set their own content insets (a cover that runs under the bar). */
 	readonly ownInsets?: boolean;
+	/** Drawn with the person's avatar once it loads; `icon` until then (You). */
+	readonly avatar?: true;
 };
 
 /**
  * The tabs, in order: Today · Explore · Connect · You. Until its screen PR, a tab
- * hosts the old screen that did its job (Today: Discovery, Explore: the Browse
- * hub, You: Profile); a screen PR swaps the tab's route shim and edits only its
- * own entry here.
+ * hosts the old screen that did its job (Explore: the Browse hub); a screen PR swaps
+ * the tab's route shim and edits only its own entry here.
  */
 export const TABS: readonly TabSpec[] = [
 	{
@@ -48,7 +49,7 @@ export const TABS: readonly TabSpec[] = [
 		name: "connect",
 	},
 	{
-		// The avatar replaces this with You (S5).
+		avatar: true,
 		icon: {
 			md: "account_circle",
 			sf: {

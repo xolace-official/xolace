@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { burnFromFlashPattern, burnPattern } from "./burn";
 import * as android from "./haptics";
 import * as ios from "./haptics.ios";
 import { type HapticName, hapticNames } from "./haptics.types";
@@ -100,5 +101,43 @@ describe("haptics", () => {
 			"Presets.wave",
 			"CoreHaptics.breathTopHold",
 		]);
+	});
+});
+
+/** Vent's burn (vent.md §14): gather 600 ms, flash 140 ms, as `useBurnHaptic(600, 140)` plays it. */
+describe("the vent burn", () => {
+	const GATHER_MS = 600;
+	const FLASH_MS = 140;
+	const ticks = burnPattern(GATHER_MS, FLASH_MS).discretePattern;
+	const flash = ticks.find((t) => t.time === GATHER_MS && t.amplitude === 1);
+	const gather = ticks.filter((t) => t.time < GATHER_MS);
+	const crackle = ticks.filter((t) => t.time >= GATHER_MS + FLASH_MS);
+
+	it("ticks faster and harder through the gather", () => {
+		expect(gather[0]).toMatchObject({ amplitude: 0.25, time: 0 });
+		const gaps = gather.slice(1).map((t, i) => t.time - (gather[i]?.time ?? 0));
+		expect(gaps.every((g, i) => i === 0 || g < (gaps[i - 1] ?? 0))).toBe(true);
+		expect(gather.at(-1)?.amplitude).toBeGreaterThan(0.5);
+	});
+
+	it("lands one heavy transient on the flash", () => {
+		expect(flash).toMatchObject({ amplitude: 1, frequency: 0.3 });
+	});
+
+	it("crackles from the flash's end, fading to nothing within 1.4 s", () => {
+		expect(crackle[0]).toMatchObject({ amplitude: 0.55, time: 740 });
+		expect(crackle.at(-1)?.time).toBeLessThan(740 + 1400);
+		expect(crackle.at(-1)?.amplitude).toBeLessThan(0.1);
+	});
+
+	it("is the same every time, and a pinch plays it from the flash", () => {
+		expect(burnPattern(GATHER_MS, FLASH_MS)).toEqual(
+			burnPattern(GATHER_MS, FLASH_MS)
+		);
+		const pinched = burnFromFlashPattern(FLASH_MS).discretePattern;
+		expect(pinched[0]).toMatchObject({ amplitude: 1, time: 0 });
+		expect(pinched.slice(1).map((t) => t.time + GATHER_MS)).toEqual(
+			crackle.map((t) => t.time)
+		);
 	});
 });

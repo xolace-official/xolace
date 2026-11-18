@@ -78,7 +78,7 @@ export function QuoteStack({
 							reply_length: item.reply.length,
 						});
 						setReplySeed(item.reply);
-						router.replace("/");
+						router.dismissTo("/reflect");
 					}}
 					onToggle={() => {
 						const opening = item._id !== openId;

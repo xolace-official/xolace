@@ -11,7 +11,7 @@ import { type Trays, trays } from "./screens/registry";
 import { shakeTipDue } from "./trigger/shake-tip";
 import { useShakeToOpen } from "./trigger/use-shake-to-open";
 
-const REFLECT_ROUTE = "/";
+const REFLECT_ROUTE = "/reflect";
 
 /** Opens the tray menu and records the open event; structural only, no free text. */
 function useOpenFeedbackTray() {
@@ -36,7 +36,10 @@ function useShakeHint(eligible: boolean) {
 	const setShakeHintSeen = useAppStore((s) => s.setShakeHintSeen);
 	const { isAuthenticated } = useConvexAuth();
 	// Skipped once seen too, so a seen hint costs no subscription.
-	const context = useFullContext(!isAuthenticated || shakeHintSeen);
+	const accountPending = useAppStore((s) => s.accountPending);
+	const context = useFullContext(
+		!isAuthenticated || accountPending || shakeHintSeen
+	);
 	const due = shakeTipDue(
 		context && {
 			intakeVersion: context.intake?.intakeVersion,
@@ -81,8 +84,8 @@ function GlobalFeedbackShake() {
 	const pathname = usePathname();
 	const enabled = pathname !== REFLECT_ROUTE;
 	useDevMenuTrigger();
-	// The hint lives here alone: the reflect screen stays mounted under the stack, and a
-	// second call site would toast twice when the tip comes due mid-app (#712).
+	// The hint lives here alone: Reflect runs its own shake (off while someone writes), and a
+	// second hint would toast twice when the tip comes due (#712).
 	useShakeHint(enabled);
 	useFeedbackShake({ enabled });
 	return null;

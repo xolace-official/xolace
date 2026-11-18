@@ -8,7 +8,7 @@ steps:
       - tap: { text: Skip }
   - tool: open-url
     args: { url: "xolace://settings/account" }
-  - await: { exists: "Sign-in method", timeout: 15000 }
+  - await: { exists: "Your name", timeout: 15000 }
   - echo: Seed a ready follow-up card (needs DEV_TOOLS_ENABLED on the dev deployment)
   - scroll-to: "Seed follow-up · standard"
   - tap: { text: "Seed follow-up · standard" }

@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+	asksFollowUp,
+	centreOf,
+	followUpBucket,
 	hasSparkle,
-	heavierIntensity,
-	intensityBucket,
 	moodOf,
 	SAME,
 	snap,
+	stepBy,
 	stepOf,
 	wordsFor,
 } from "./mood-scale";
@@ -32,80 +34,71 @@ describe("stepOf", () => {
 		expect(stepOf(0.57)).toBe(1);
 	});
 
-	it("reaches step 5 at each end", () => {
-		expect(stepOf(0)).toBe(-5);
-		expect(stepOf(1)).toBe(5);
-	});
-
-	it("has five steps per half, in order", () => {
-		const lighter = [0.6, 0.7, 0.8, 0.9, 1].map(stepOf);
-		expect(lighter).toEqual([1, 2, 3, 4, 5]);
-		const heavier = [0.4, 0.3, 0.2, 0.1, 0].map(stepOf);
-		expect(heavier).toEqual([-1, -2, -3, -4, -5]);
+	it("has five steps per half, in order, reaching 5 at each end", () => {
+		expect([0.6, 0.7, 0.8, 0.9, 1].map(stepOf)).toEqual([1, 2, 3, 4, 5]);
+		expect([0.4, 0.3, 0.2, 0.1, 0].map(stepOf)).toEqual([-1, -2, -3, -4, -5]);
 	});
 });
 
-describe("moodOf", () => {
+describe("moodOf and wordsFor", () => {
 	it("maps steps to the saved word", () => {
 		expect(moodOf(0)).toBe("same");
 		expect(moodOf(-3)).toBe("heavier");
 		expect(moodOf(2)).toBe("lighter");
 	});
-});
 
-describe("intensityBucket", () => {
-	it("buckets 1–5 as ≤2 low, 3 mid, ≥4 high", () => {
-		expect([1, 2, 3, 4, 5].map(intensityBucket)).toEqual([
-			"low",
-			"low",
-			"mid",
-			"high",
-			"high",
-		]);
-	});
-});
-
-describe("wordsFor", () => {
-	it("follows the buckets in both directions", () => {
-		expect([-1, -2, -3, -4, -5].map(wordsFor)).toEqual([
-			"a little heavier",
-			"a little heavier",
+	it("grades the word: a little, plain, much", () => {
+		expect([-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map(wordsFor)).toEqual([
+			"much heavier",
+			"much heavier",
 			"heavier",
-			"much heavier",
-			"much heavier",
-		]);
-		expect([1, 3, 5].map(wordsFor)).toEqual([
+			"a little heavier",
+			"a little heavier",
+			"the same",
+			"a little lighter",
 			"a little lighter",
 			"lighter",
 			"much lighter",
+			"much lighter",
 		]);
-		expect(wordsFor(0)).toBe("the same");
 	});
 });
 
 describe("hasSparkle", () => {
-	it("starts at lighter (step 3), not a little lighter", () => {
-		expect([0, 1, 2, 3, 4, 5].map(hasSparkle)).toEqual([
-			false,
-			false,
-			false,
-			true,
-			true,
-			true,
-		]);
-		expect(hasSparkle(-5)).toBe(false);
+	it("sparkles from 'lighter' up, never unanswered", () => {
+		expect(hasSparkle(null)).toBe(false);
+		expect(hasSparkle(2)).toBe(false);
+		expect(hasSparkle(3)).toBe(true);
+		expect(hasSparkle(5)).toBe(true);
 	});
 });
 
-describe("heavierIntensity", () => {
-	it("is the drag depth for heavier positions", () => {
-		expect(heavierIntensity(0.4)).toBe(1);
-		expect(heavierIntensity(0.2)).toBe(3);
-		expect(heavierIntensity(0)).toBe(5);
+describe("the heavier follow-up", () => {
+	it("asks only from step −3 down", () => {
+		expect(asksFollowUp(null)).toBe(false);
+		expect(asksFollowUp(-2)).toBe(false);
+		expect(asksFollowUp(-3)).toBe(true);
+		expect(asksFollowUp(-5)).toBe(true);
 	});
 
-	it("is 0 for the same or lighter", () => {
-		expect(heavierIntensity(0.48)).toBe(0);
-		expect(heavierIntensity(0.9)).toBe(0);
+	it("asks the heavier question from −4", () => {
+		expect(followUpBucket(-3)).toBe("mid");
+		expect(followUpBucket(-4)).toBe("high");
+		expect(followUpBucket(-5)).toBe("high");
+	});
+});
+
+describe("VoiceOver's one step", () => {
+	it("lands each step's centre inside that step", () => {
+		for (const step of [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]) {
+			expect(stepOf(snap(centreOf(step)))).toBe(step);
+		}
+	});
+
+	it("moves one step from the centre and stops at the ends", () => {
+		expect(stepBy(null, 1)).toBe(1);
+		expect(stepBy(null, -1)).toBe(-1);
+		expect(stepBy(5, 1)).toBe(5);
+		expect(stepBy(-5, -1)).toBe(-5);
 	});
 });

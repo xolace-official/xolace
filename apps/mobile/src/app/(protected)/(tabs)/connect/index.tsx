@@ -2,7 +2,8 @@ import { useLocalSearchParams } from "expo-router";
 import { useIsFocused } from "expo-router/react-navigation";
 import { useState } from "react";
 import { View } from "react-native";
-import { ConnectScreen } from "@/features/xolacer-chat/components/connect-screen";
+import { ConnectData } from "@/features/connect/connect-data";
+import { ConnectScreen } from "@/features/connect/connect-screen";
 
 /** NativeTabs mounts every tab eagerly (no lazy option), so this is held until first focused;
  * then it stays mounted. */
@@ -27,11 +28,8 @@ export default function ConnectRoute() {
 		return <View className="flex-1 bg-background" />;
 	}
 	return (
-		<ConnectScreen
-			navToken={t}
-			specialty={specialty}
-			stepId={stepId}
-			view={view}
-		/>
+		<ConnectData route={{ navToken: t, specialty, stepId, view }}>
+			<ConnectScreen />
+		</ConnectData>
 	);
 }

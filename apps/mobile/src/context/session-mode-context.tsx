@@ -7,6 +7,7 @@ import {
 	useMemo,
 	useReducer,
 	useRef,
+	useState,
 } from "react";
 import { AppState, type AppStateStatus } from "react-native";
 import { setThemeWithFonts, targetTheme } from "@/design/fonts";
@@ -24,17 +25,37 @@ const SessionModeContext = createContext<SessionModeContextType | undefined>(
 	undefined
 );
 
+const NIGHT_START = 22;
+const NIGHT_END = 4;
+const HOURS_IN_DAY = 24;
+
 /** Returns true if the given hour (0–23) falls in the night window (22:00–04:00). */
 function isNightHour(hour: number): boolean {
-	return hour >= 22 || hour < 4;
+	return hour >= NIGHT_START || hour < NIGHT_END;
+}
+
+/** Milliseconds until the next 22:00 or 04:00 (a second past it), for a timer to wake at. */
+function msToNextBoundary(now: Date): number {
+	const hour = now.getHours();
+	let target = NIGHT_END + HOURS_IN_DAY;
+	if (hour < NIGHT_END) {
+		target = NIGHT_END;
+	} else if (hour < NIGHT_START) {
+		target = NIGHT_START;
+	}
+	const next = new Date(now);
+	// Hour 28 is tomorrow's 04:00.
+	next.setHours(target, 0, 1, 0);
+	return next.getTime() - now.getTime();
 }
 
 function computeMode(): SessionMode {
 	return isNightHour(new Date().getHours()) ? "night" : "day";
 }
 
-/** Session mode from the device clock, recomputed on foreground. Night stashes the theme and
- * sets NIGHT_VARIANT (`nightly-dark`); day restores it. */
+/** Session mode from the device clock, recomputed on foreground and at 22:00 and 04:00 while
+ * the app is open. Night stashes the theme and sets NIGHT_VARIANT (`nightly-dark`); day
+ * restores it. */
 export function SessionModeProvider({
 	children,
 }: {
@@ -94,8 +115,10 @@ export function SessionModeProvider({
 	}, [mode, nightModeEnabled, applyNightTheme, restoreDayTheme]);
 
 	// On app foreground, re-render so mode recomputes with the current hour
+	const [active, setActive] = useState(AppState.currentState === "active");
 	useEffect(() => {
 		const handler = (state: AppStateStatus) => {
+			setActive(state === "active");
 			if (state === "active") {
 				forceRefresh();
 			}
@@ -103,6 +126,16 @@ export function SessionModeProvider({
 		const sub = AppState.addEventListener("change", handler);
 		return () => sub.remove();
 	}, []);
+
+	// While open, wake at the next boundary so night begins and ends on time. Timers sleep
+	// in the background, so the timer stops there and foreground recomputes instead.
+	useEffect(() => {
+		if (!active) {
+			return;
+		}
+		const id = setTimeout(forceRefresh, msToNextBoundary(new Date()));
+		return () => clearTimeout(id);
+	}, [active, mode]);
 
 	const value = useMemo(
 		() => ({ isNight: nightModeEnabled && mode === "night", mode }),

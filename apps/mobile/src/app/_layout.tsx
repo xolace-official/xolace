@@ -18,11 +18,12 @@ import {
 	type UpdateBottomSheetMode,
 } from "@/components/shared/update-bottom-sheet";
 import { useLaunchFonts } from "@/design/fonts";
+import { isGroupOpen, rootGate } from "@/features/navigation/root-gate";
 import { ReflectDraftGuard } from "@/features/reflect/reflect-draft";
-import { ChatLocalDataGuard } from "@/features/xolacer-chat/chat-local-data-guard";
 import { useOtaUpdate } from "@/helpers/hooks/use-ota-update";
 import { useVersionCheck } from "@/helpers/hooks/use-version-check";
 import { useFullContext } from "@/lib/convex/use-full-context";
+import { ChatLocalDataGuard } from "@/lib/stream-chat/chat-local-data-guard";
 import { usePostHogIdentity } from "@/lib/use-posthog-identity";
 import { NavThemeProvider } from "@/providers/nav-theme-provider";
 import { RootProvider } from "@/providers/root-provider";
@@ -86,44 +87,53 @@ const ROOT_SCREEN_OPTIONS = { animation: "none", headerShown: false } as const;
 
 const AppContent = () => {
 	const introSeen = useAppStore((s) => s.introSeen);
+	const seatHeld = useAppStore((s) => s.seatHeld);
+	const accountPending = useAppStore((s) => s.accountPending);
 	const { isAuthenticated, isLoading: isAuthLoading } = useConvexAuth();
 	const { isSignedIn, isLoaded: isClerkLoaded, userId } = useAuth();
 	const posthog = usePostHog();
 
 	// The intake gate (T6, #263), hoisted so the root is the single subscriber
 	// and Convex dedupes every downstream read.
-	const context = useFullContext(!isAuthenticated);
+	// Skipped until the account exists too: before `getOrCreate` lands it throws `user_not_found`.
+	const context = useFullContext(!isAuthenticated || accountPending);
 	usePostHogIdentity();
-	const onboardingComplete = context?.profile.onboardingComplete === true;
-	const intakeGateLoading = isAuthenticated && context === undefined;
+	// `undefined` only while the query is in flight (the gate waits on it once signed
+	// in); an answered query with no flag on the profile is "not done", as before.
+	const onboardingComplete =
+		context === undefined
+			? undefined
+			: context.profile.onboardingComplete === true;
+	const gate = rootGate({
+		authenticated: isAuthenticated,
+		authLoading: isAuthLoading,
+		onboardingComplete,
+		seatHeld,
+	});
 
-	// Breadcrumb the route-group guard's inputs: a wrong (auth) landing on a cold
+	// Breadcrumb the route-group guard's inputs: a wrong (first-run) landing on a cold
 	// start is either a Clerk cache miss or a Clerk/Convex desync.
 	useEffect(() => {
 		Sentry.setUser(userId ? { id: userId } : null);
-		const group = isAuthenticated
-			? onboardingComplete
-				? "(protected)"
-				: "(intake)"
-			: introSeen
-				? "(auth)"
-				: "(onboarding)";
 		Sentry.addBreadcrumb({
 			category: "auth.guard",
 			data: {
+				accountPending,
 				clerkLoaded: isClerkLoaded,
 				clerkSignedIn: !!isSignedIn,
 				convexAuthenticated: isAuthenticated,
 				convexAuthLoading: isAuthLoading,
-				intakeGateLoading,
 				introSeen,
-				onboardingComplete,
+				onboardingComplete: onboardingComplete ?? null,
+				seatHeld,
 			},
 			level:
 				isClerkLoaded && isSignedIn && !isAuthenticated ? "warning" : "info",
-			message: `route guard → ${group}`,
+			message: `route guard → ${gate}`,
 		});
 	}, [
+		accountPending,
+		gate,
 		introSeen,
 		isAuthenticated,
 		isAuthLoading,
@@ -131,7 +141,7 @@ const AppContent = () => {
 		isSignedIn,
 		userId,
 		onboardingComplete,
-		intakeGateLoading,
+		seatHeld,
 	]);
 	const pathname = usePathname();
 	const params = useGlobalSearchParams();
@@ -156,7 +166,7 @@ const AppContent = () => {
 
 	// Hold the loader while the gate query is in flight rather than bouncing
 	// the user out of (protected) a frame later.
-	if (isAuthLoading || intakeGateLoading) {
+	if (gate === "loading") {
 		return <FullRippleLoader />;
 	}
 	return (
@@ -165,16 +175,13 @@ const AppContent = () => {
 			<ChatLocalDataGuard />
 			<ReflectDraftGuard />
 			<Stack screenOptions={ROOT_SCREEN_OPTIONS}>
-				<Stack.Protected guard={!(isAuthenticated || introSeen)}>
-					<Stack.Screen name="(onboarding)" options={NO_HEADER} />
+				<Stack.Protected guard={isGroupOpen(gate, "(first-run)")}>
+					<Stack.Screen name="(first-run)" options={NO_HEADER} />
 				</Stack.Protected>
-				<Stack.Protected guard={!isAuthenticated && introSeen}>
-					<Stack.Screen name="(auth)" options={NO_HEADER} />
-				</Stack.Protected>
-				<Stack.Protected guard={isAuthenticated && !onboardingComplete}>
+				<Stack.Protected guard={isGroupOpen(gate, "(intake)")}>
 					<Stack.Screen name="(intake)" options={NO_HEADER} />
 				</Stack.Protected>
-				<Stack.Protected guard={isAuthenticated && onboardingComplete}>
+				<Stack.Protected guard={isGroupOpen(gate, "(protected)")}>
 					<Stack.Screen name="(protected)" options={NO_HEADER} />
 				</Stack.Protected>
 			</Stack>

@@ -4,6 +4,7 @@ import { internalMutation, internalQuery, query } from "./_generated/server";
 import { hasInsights } from "./compounding/insightStore";
 import { requireAuth } from "./lib/auth";
 import { hasPremium, PLUS_ENTITLEMENT_ID } from "./lib/premium";
+import { queueKindling } from "./paths/settingUp";
 import { posthog } from "./posthog";
 
 // =============================================================
@@ -142,10 +143,7 @@ export const onEntitlementActivated = internalMutation({
 		await ctx.db.patch("emotional_profiles", profile._id, {
 			pendingKindlingSessionId: undefined,
 		});
-		await ctx.scheduler.runAfter(0, internal.ai.paths.generate.run, {
-			emotionalProfileId: profile._id,
-			sessionId: profile.pendingKindlingSessionId,
-		});
+		await queueKindling(ctx, profile._id, profile.pendingKindlingSessionId);
 	},
 });
 

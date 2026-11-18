@@ -61,7 +61,8 @@
     "ai": "catalog:",
     "convex": "catalog:",
     "convex-helpers": "^0.1.128",
-    "convex-revenuecat": "^0.3.2"
+    "convex-revenuecat": "^0.3.2",
+    "mpg123-decoder": "^1.0.3"
   },
   "devDependencies": {
     "@convex-dev/eslint-plugin": "^5.0.0",

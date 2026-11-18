@@ -51,8 +51,21 @@ jobs:
       #   patched. The flagged copy is zod@3.25.76 nested under @expo/cli (the
       #   latest @expo/cli still pins ^3.25.76), which validates local config
       #   on a dev machine and is never bundled into the app.
+      # - GHSA-fc5q-39xc-vjpf picomatch <=4.0.7: ReDoS when matching against a
+      #   crafted extglob *pattern* such as +(*a). Every release is affected
+      #   (4.0.7 is the latest), so no override can fix it yet. Our copies
+      #   (4.0.7, plus 2.3.2 under micromatch and jest-util) are reached only
+      #   through dev and build tooling: knip, vite/vitest, typescript-eslint,
+      #   expo CLI, metro and config plugins, react-native's codegen/SPM
+      #   scripts, fumadocs-mdx, shadcn's dotenvx and ultracite's fast-glob.
+      #   None of our source imports a glob library, no app bundle or server
+      #   runtime loads one, and the patterns are our own config, never user
+      #   input. Remove this once picomatch ships a fix past 4.0.7: override
+      #   the 4.x copy to it in the root package.json, and check whether the
+      #   2.x copies still trip the audit (micromatch and jest-util need ^2).
       - run: >-
           bun audit --audit-level=high
           --ignore=GHSA-vfj7-8cjw-p6xm
           --ignore=GHSA-86w9-cpqp-85rv
           --ignore=GHSA-mrhx-c7xc-m3w5
+          --ignore=GHSA-fc5q-39xc-vjpf

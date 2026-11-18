@@ -29,6 +29,7 @@ import {
 	postSessionMoodValidator,
 	resourceValidator,
 } from "./lib/validators";
+import { queueKindling } from "./paths/settingUp";
 import schema from "./schema";
 import { recordActivity } from "./streaks/activityLog";
 import { finalizeTalk } from "./talk/session";
@@ -183,12 +184,10 @@ async function finalizeCompletion(
 	// Kindling (docs/paths-v1.md §2.1): genuine completion, any path — solo,
 	// peers, or exit — not the abandoned-session cron's stranded reconciliation
 	// (pathCompleted: false, no pathChosen). Premium gate lives inside
-	// `generate.run`; off the critical path.
+	// `generate.run`; off the critical path. Marks the session as setting up
+	// when the run will try (paths/settingUp.ts).
 	if (opts.pathCompleted && pathChosen) {
-		await ctx.scheduler.runAfter(0, internal.ai.paths.generate.run, {
-			emotionalProfileId: session.emotionalProfileId,
-			sessionId: session._id,
-		});
+		await queueKindling(ctx, session.emotionalProfileId, session._id);
 	}
 
 	// Finalize follow-up gate + maybe start the check-in workflow.

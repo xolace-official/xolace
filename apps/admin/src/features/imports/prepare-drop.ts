@@ -34,7 +34,8 @@ const IMAGE: Partial<
 	tracks: { field: "thumbPath", sizes: [1080] },
 };
 
-const AUDIO_EXTENSIONS: readonly AudioExt[] = ["m4a", "mp3", "wav"];
+/** What the waveform can be measured from (`convex/audio/formats.ts`); no M4A. */
+const AUDIO_EXTENSIONS: readonly AudioExt[] = ["mp3", "wav"];
 
 const baseName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
 
@@ -100,7 +101,7 @@ async function readAudio(
 ): Promise<NonNullable<DropRecord["audio"]>> {
 	const ext = AUDIO_EXTENSIONS.find((option) => option === extOf(file.name));
 	if (!ext) {
-		throw new Error(`${file.name}: use an MP3, M4A or WAV file`);
+		throw new Error(`${file.name}: use an MP3 or WAV file`);
 	}
 	return {
 		bytes: file.size,

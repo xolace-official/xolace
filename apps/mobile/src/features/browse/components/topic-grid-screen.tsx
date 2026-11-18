@@ -8,9 +8,9 @@ import { usePostHog } from "posthog-react-native";
 import { useEffect } from "react";
 import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
-import { useMiniPlayerInset } from "@/features/browse/now-playing/now-playing-store";
-import { CoverImage } from "@/features/library/cover-image";
+import { CoverImage } from "@/components/shared/cover-image";
 import { playSoftPress } from "@/lib/haptics";
+import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 
 type Topic = FunctionReturnType<typeof api.browse.topics.getTopics>[number];
 

@@ -49,19 +49,12 @@ const REDUCED = {
 
 /**
  * The 28 entries `(protected)/_layout.tsx` listed by hand before `screens.ts`
- * (#792), with the options each resolved to, as literals: a change to a shared
- * preset shows up here. Changing a route's presentation on purpose? Edit its pin.
+ * (#792), less the two badge moments S6 made an overlay, with the options each
+ * resolved to, as literals: a change to a shared preset shows up here. Changing a route's presentation on purpose? Edit its pin.
  */
 const PLAYER = {
 	animation: "slide_from_bottom",
 	presentation: "fullScreenModal",
-};
-const TOOLBAR = {
-	headerBackVisible: false,
-	headerShadowVisible: false,
-	headerShown: true,
-	headerTransparent: true,
-	title: "",
 };
 const CHAT = {
 	headerBackButtonDisplayMode: "minimal",
@@ -70,41 +63,45 @@ const CHAT = {
 	title: "",
 };
 const NO_GESTURE = { gestureEnabled: false };
-const SHEET = {
+const FIT_SHEET = {
+	contentStyle: { backgroundColor: "#111" },
 	presentation: "formSheet",
 	sheetAllowedDetents: "fitToContents",
+	sheetCornerRadius: 40,
 	sheetGrabberVisible: true,
 };
-const pinned = (reduced: boolean, glass: boolean) => {
-	const fit = {
-		...SHEET,
-		contentStyle: glass ? undefined : { backgroundColor: "#000" },
-	};
+const pinned = (reduced: boolean) => {
 	const rise = reduced ? "fade" : "slide_from_bottom";
 	return {
-		"badge-backfill": { ...PLAYER, ...TOOLBAR, animation: rise },
-		"badge-unlock": { ...PLAYER, ...TOOLBAR, animation: rise },
 		"browse-intro": { ...PLAYER, gestureEnabled: false },
-		"browse-player": PLAYER,
+		// Moved to /player (S10): its shim.
+		"browse-player": { animation: "none" },
 		"chat/[conversationId]": CHAT,
 		"crisis-resources": NO_GESTURE,
 		"follow-up": PLAYER,
-		"intake-plus-preview": PLAYER,
-		"kindling-announcement": { animation: rise, gestureEnabled: false },
 		"kindling/index": undefined,
+		"lantern-welcome": { ...PLAYER, gestureEnabled: false },
 		"library/[slug]": { animation: reduced ? "fade" : "default" },
 		"peer-reflections": NO_GESTURE,
+		// A transparent modal since S10, so swipe down shows what's under it; it fades under
+		// Reduce Motion.
+		player: { animation: rise, presentation: "transparentModal" },
 		"quotes/archive": undefined,
 		"quotes/index": undefined,
 		"rate/[conversationId]": {
 			presentation: "formSheet",
 			sheetGrabberVisible: true,
 		},
-		"reader-appearance": { ...fit, sheetLargestUndimmedDetentIndex: "last" },
-		"report-reflection": fit,
+		// The redesign's sheet since S9b (Lantern's reader).
+		"reader-appearance": {
+			...FIT_SHEET,
+			sheetLargestUndimmedDetentIndex: "last",
+		},
+		// The redesign's sheet since S15 (You're not alone).
+		"report-reflection": FIT_SHEET,
 		"session-end": NO_GESTURE,
 		"sit-with-this": NO_GESTURE,
-		"steadiness-face-info": fit,
+		"steadiness-face-info": FIT_SHEET,
 		"streak-held": PLAYER,
 		"trusted-bridge": undefined,
 		upgrade: {
@@ -130,7 +127,7 @@ const pinned = (reduced: boolean, glass: boolean) => {
 describe("the routes the layout used to list by hand", () => {
 	for (const context of [ON_GLASS, REDUCED]) {
 		it(`keep their options (reduced motion ${context.reducedMotion}, glass ${context.liquidGlass})`, () => {
-			const expected = pinned(context.reducedMotion, context.liquidGlass);
+			const expected = pinned(context.reducedMotion);
 			const actual = Object.fromEntries(
 				ROOT_SCREENS.filter((s) => Object.hasOwn(expected, s.name)).map((s) => [
 					s.name,

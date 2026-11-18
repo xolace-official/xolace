@@ -12,11 +12,11 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { AppText } from "@/components/shared/app-text";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import {
 	useMiniPlayerAttention,
 	useMiniPlayerShown,
-} from "@/features/browse/now-playing/now-playing-store";
-import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
+} from "@/lib/now-playing/now-playing-store";
 
 /** One-shot lift when a new track's player closes (Oyelo `PlayerView.swift`). Only a bump after
  * mount plays, so a remount never replays it. */

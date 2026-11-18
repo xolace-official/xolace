@@ -108,18 +108,6 @@
           }
         }
       }
-    },
-    {
-      "includes": [
-        "src/features/insights/{glass,trend-chip,detail-card,domain-list,overall-dial}.tsx"
-      ],
-      "assist": {
-        "actions": {
-          "source": {
-            "useSortedAttributes": "off"
-          }
-        }
-      }
     }
   ],
   "javascript": {

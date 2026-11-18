@@ -9,6 +9,7 @@ import { Platform, ScrollView, StyleSheet, View } from "react-native";
 import type { PurchasesPackage } from "react-native-purchases";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { appConfig } from "@/config/app";
+import { introOfferOf } from "@/features/purchases/intro-offer";
 import { useRevenueCat } from "@/features/purchases/revenuecat-context";
 import { useIntroEligibility } from "@/features/purchases/use-intro-eligibility";
 import {
@@ -35,7 +36,6 @@ import {
 	THEMES_ICON,
 	TIMELINE_ICON,
 } from "./paywall-icons";
-import { introOfferOf } from "./paywall-intro-offer";
 import { PaywallPeriodPicker, type PlanId } from "./paywall-period-picker";
 import { planDetail } from "./paywall-plan-detail";
 import { PaywallPlansUnavailable } from "./paywall-plans-unavailable";
@@ -285,7 +285,7 @@ export function PaywallScreen({
 							icon={TIMELINE_ICON}
 							id="timeline"
 							isHighlighted={highlightedFeature === "timeline"}
-							title="Extended timeline"
+							title="All your moments"
 						/>
 						<PaywallFeatureItem
 							description="More reflections, vents, and message drafts per day"

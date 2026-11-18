@@ -7,19 +7,24 @@ import {
 	activityActionTypeValidator,
 	chatModerationCategoryValidator,
 	conversationRoleValidator,
+	dataRetentionPreferenceValidator,
 	domainValidator,
 	escalationSourceValidator,
+	exploreHiddenContinueValidator,
 	insightFeatureValidator,
 	intakeRowAnswerValidators,
 	licenceValidator,
 	motionPreferenceValidator,
 	platformValidator,
+	profileCardValidator,
+	quoteBackgroundValidator,
 	resourceValidator,
 	safeguardLevelValidator,
 	supportNeedValidator,
 	talkIssueValidator,
 	talkPeakValidator,
 	trackLoudnessValidator,
+	trackPeaksValidator,
 	trackSoundValidator,
 	triggerTypeValidator,
 } from "./lib/validators";
@@ -159,7 +164,7 @@ export default defineSchema({
 		episodeNumber: v.optional(v.number()),
 		family: v.union(v.literal("support"), v.literal("music")),
 		featured: v.optional(v.boolean()), // hand-picked Browse hero; set from the Convex dashboard
-		key: v.string(), // R2 object key, e.g. `${family}/${slug}.m4a`
+		key: v.string(), // R2 object key, e.g. `${family}/${slug}/<uuid>.mp3`
 
 		// music-family
 		licence: v.optional(licenceValidator), // required at write for family="music"
@@ -168,6 +173,9 @@ export default defineSchema({
 		// support-family
 		narrators: v.optional(v.array(v.string())), // display strings: ["Sage"], ["Sage","Ash"]
 		newUntil: v.optional(v.number()), // ms epoch; in the Browse "New" shelf while > now
+		// Both families: the player's waveform, 60 numbers 0–1, of the audio at
+		// `sha256` (lib/validators.ts trackPeaksValidator, audio/measurePeaks.ts).
+		peaks: v.optional(trackPeaksValidator),
 		retiredAt: v.optional(v.number()), // set when taken down after being live; tells Retired from Draft
 		safetyReviewedAt: v.optional(v.number()),
 
@@ -2058,17 +2066,29 @@ export default defineSchema({
 
 		// How long to keep session data before auto-purge.
 		// "indefinite" is default. Gives users explicit control.
-		dataRetentionPreference: v.union(
-			v.literal("indefinite"),
-			v.literal("6_months"),
-			v.literal("1_year")
-		),
+		dataRetentionPreference: dataRetentionPreferenceValidator,
 
 		// Profile identity fields (added for profile screen v1).
 		// displayName: warm auto-generated default (nature/light vocabulary), user-editable. Max 30 chars.
 		// avatarId: key into the defined totem set. Defaults to "default". Change flow is Wave 2.
 		displayName: v.optional(v.string()),
 		emotionalProfileId: v.id("emotional_profiles"),
+
+		// Explore's "Pick up where you left off" cards taken off with "Remove
+		// from here" (redesign B7), newest last, at most
+		// `MAX_HIDDEN_CONTINUE`. `hiddenAt` lets Continue show a card again
+		// once the person goes back to it after hiding it, if it chooses to.
+		exploreHiddenContinue: v.optional(v.array(exploreHiddenContinueValidator)),
+		// "Don't use my sessions here": false = Explore suggests nothing from
+		// their sessions ("Because you named…"). Undefined = true. A privacy
+		// promise: any server-side Explore personalisation (B6's
+		// `browse.forYou`) must read it and must not use their sessions, or
+		// anything derived from them, when it's false.
+		exploreUsesSessions: v.optional(v.boolean()),
+
+		// You cards taken off the profile in Settings › Appearance (redesign
+		// B7). Undefined = none hidden. Display only: nothing else changes.
+		hiddenProfileCards: v.optional(v.array(profileCardValidator)),
 
 		// Lantern "Reading as…" (#409): audience facet slugs the reader chose.
 		// Undefined = never answered (the home shows the one-time card); [] =
@@ -2150,6 +2170,11 @@ export default defineSchema({
 		// What the companion calls them when it isn't their displayName (#602):
 		// private, never shown to other Xolacers. Cleared by a data wipe.
 		preferredName: v.optional(v.string()),
+
+		// The background behind the daily quote (redesign B7). Undefined =
+		// Poster. Kept apart from `quotes`, whose presence opts the account into
+		// the nightly generator and whose `themes` are content slugs.
+		quoteBackground: v.optional(quoteBackgroundValidator),
 
 		// Daily Quotes feature preferences.
 		// Undefined until the user first visits the quotes screen.
@@ -2726,6 +2751,13 @@ export default defineSchema({
 		// false → ephemeral / vent-originated → distiller/anonymizer skip it.
 		kept: v.optional(v.boolean()),
 
+		// When this session's kindling started being set up: stamped where
+		// `generate.run` is queued for a Plus member whose session qualifies
+		// (paths/settingUp.ts), removed when that run ends, whatever the outcome,
+		// or by the backstop. Present only while setting up, so Today's card can
+		// say so (`paths.settingUp.get`). Never set on older rows.
+		kindlingSettingUpAt: v.optional(v.number()),
+
 		// Which exercise the matcher picked at mirror time.
 		matchedExerciseId: v.optional(v.id("exercises")),
 
@@ -2963,7 +2995,14 @@ export default defineSchema({
 		])
 
 		// After-talk review queue (#606): flagged talks, newest first.
-		.index("by_talkFlaggedAt", ["talkFlaggedAt"]),
+		.index("by_talkFlaggedAt", ["talkFlaggedAt"])
+
+		// Today's kindling card: this profile's session whose kindling is being
+		// set up, newest first, in one read (`paths.settingUp.get`).
+		.index("by_emotionalProfileId_and_kindlingSettingUpAt", [
+			"emotionalProfileId",
+			"kindlingSettingUpAt",
+		]),
 
 	// What a profile spent sparks on (#698), one row per purchase. Written only
 	// through convex/achievements/sparks.ts, in the transaction that lowers

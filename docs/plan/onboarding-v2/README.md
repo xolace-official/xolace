@@ -87,7 +87,7 @@ Chip groups map to intake fields:
 
 The prototype draws Flux as one SVG so the moods could be tried quickly. `warm` is not in the
 prototype; it was added in the app. In the app, build them
-on the existing Skia + Reanimated Xolace face (`features/xolace-face`, see
+on the existing Skia + Reanimated Xolace face (`components/xolace-face`, see
 `docs/plan/xolace-face-placements.md`).
 
 | Mood | Used on | Motion |

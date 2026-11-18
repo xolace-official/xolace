@@ -13,6 +13,10 @@ vi.mock("@xolace/backend/convex/_generated/api", () => ({
 }));
 vi.mock("convex/react", () => ({ useConvexAuth: vi.fn(), useQuery: vi.fn() }));
 vi.mock("./os-reduced-motion", () => ({ useOSReducedMotion: vi.fn() }));
+const store = vi.hoisted(() => ({ accountPending: false }));
+vi.mock("@/store/store", () => ({
+	useAppStore: (pick: (s: typeof store) => unknown) => pick(store),
+}));
 
 /**
  * The redesign's motion helpers take `reduced` from this one resolver. The prototype read the
@@ -54,6 +58,7 @@ describe("useEffectiveReducedMotion", () => {
 	beforeEach(() => {
 		vi.mocked(useQuery).mockReset();
 		vi.mocked(useOSReducedMotion).mockReturnValue(true);
+		store.accountPending = false;
 	});
 
 	it("signed out: skips preferences.get (it requires auth) and follows the OS", () => {
@@ -67,6 +72,13 @@ describe("useEffectiveReducedMotion", () => {
 		vi.mocked(useQuery).mockReturnValue({ motionPreference: "full" });
 		expect(useEffectiveReducedMotion()).toBe(false);
 		expect(useQuery).toHaveBeenCalledWith("preferences.get", {});
+	});
+
+	it("signed in, account still being made: skips preferences.get and follows the OS", () => {
+		signedIn(true);
+		store.accountPending = true;
+		expect(useEffectiveReducedMotion()).toBe(true);
+		expect(useQuery).toHaveBeenCalledWith("preferences.get", "skip");
 	});
 
 	it("signed in, preferences still loading: follows the OS", () => {

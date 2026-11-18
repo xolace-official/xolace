@@ -9,6 +9,7 @@ import { Migrations } from "@convex-dev/migrations";
 import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { backfillProfile } from "./achievements/backfill";
+import { measurePeaksLater } from "./audio/trackPeaks";
 import { reflectionRank } from "./lib/aggregates";
 import { authorTagFor } from "./lib/reflectionAuthor";
 import { FREEZE_CAP } from "./lib/streakFreezes";
@@ -320,6 +321,30 @@ export const backfillTrackIndex = migrations.define({
 				internal.ai.paths.trackSearch.indexTrack,
 				{ trackId: doc._id }
 			);
+		}
+	},
+	table: "audio_tracks",
+});
+
+// Player waveform (B4): measures `peaks` on every support track uploaded
+// before they were measured at upload (music draws the plain line, so it's
+// left out: 10 of 442 tracks in prod today). A migration is a mutation and
+// decoding needs an action, so each row still missing them schedules its own
+// measure (audio/measurePeaks.ts), spread like the index backfills; a few
+// seconds of decoding each. Drafts and retired tracks too: they can go live.
+// A track that won't fetch, decodes to the wrong length, or won't decode logs
+// `measurePeaks: <slug> ... has no peaks: <why>` and stays without them (the
+// player draws its line; the admin marks it "No waveform"); nothing fails the
+// run. R2 being briefly unavailable gets one retry ten minutes later. Idempotent: rows with peaks are skipped here and again in the
+// action, so re-running measures only what's still missing (after a completed
+// run, pass `"reset": true`). Run once per deployment, after the deploy:
+//   bunx convex run migrations:run '{"fn": "migrations:backfillTrackPeaks"}'
+// Add to runAll only once it has completed on prod.
+export const backfillTrackPeaks = migrations.define({
+	migrateOne: async (ctx, doc) => {
+		// Support tracks only: music draws the plain line (audio/trackPeaks.ts).
+		if (doc.peaks === undefined) {
+			await measurePeaksLater(ctx, doc, spread());
 		}
 	},
 	table: "audio_tracks",

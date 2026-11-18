@@ -124,7 +124,10 @@ Work in this order; each step leaves something you can test.
   entry in `TABS` (`M/src/features/navigation/tabs.ts`); edit only yours.
 - **A path that moves** (a route renamed, folded into a tab, or replaced by a new root
   screen, like `/streak-held` → welcome back): add it to `MOVED` in
-  `M/src/features/navigation/moved-paths.ts` (`subtree: true` if its subpaths move too),
+  `M/src/features/navigation/moved-paths.ts` (`subtree: true` if its subpaths move too, as
+  `/timeline/session/<id>` → `/moments/session/<id>`;
+  `paths: { <sub>: <to> }` for one subpath that moves elsewhere, as `/profile/insights` →
+  `/you/steadiness`),
   give the old path a `MovedRoute` shim (and `[...rest]` for a subtree) and an entry in
   `M/src/features/navigation/screens.ts`. `moved-paths.test.ts` checks all three and
   that the target is a real route.

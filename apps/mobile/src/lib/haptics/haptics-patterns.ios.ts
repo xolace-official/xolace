@@ -273,7 +273,7 @@ export const softenPulse: HapticPatternData = {
 	],
 };
 
-/** Synced with PromiseScreen's staggered FadeInDown. First thing the user feels. */
+/** The promise's first words arriving (first run's `promise-view.tsx`). First thing the user feels. */
 export const onboardingEntrance: HapticPatternData = {
 	events: [
 		{

@@ -1,5 +1,10 @@
-import { FollowScreen } from "@/features/settings/components/screens/FollowScreen";
+import { FollowData } from "@/features/settings/follow/follow-data";
+import { FollowScreen } from "@/features/settings/follow/follow-screen";
 
 export default function FollowRoute() {
-	return <FollowScreen />;
+	return (
+		<FollowData>
+			<FollowScreen />
+		</FollowData>
+	);
 }
