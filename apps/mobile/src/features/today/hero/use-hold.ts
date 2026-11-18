@@ -9,7 +9,7 @@ import {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { press } from "@/design/springs";
+import { PLAY_AS_CHOSEN, press } from "@/design/springs";
 import { playSessionComplete } from "@/lib/haptics";
 import { EASE_CSS, EASE_CSS_OUT, EASE_DRAIN } from "../today-motion";
 import {
@@ -78,7 +78,13 @@ export function useHold(reduced: boolean, holdable: boolean) {
 			return;
 		}
 		holding.set(true);
-		rim.set(withTiming(1, { duration: HERO.holdMs, easing: Easing.linear }));
+		rim.set(
+			withTiming(1, {
+				duration: HERO.holdMs,
+				easing: Easing.linear,
+				...PLAY_AS_CHOSEN,
+			})
+		);
 	};
 
 	// A drift past the slop lets go of the hold: the rim drains and the card comes back up.
@@ -89,7 +95,13 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		}
 		holding.set(false);
 		scale.set(press(1, reduced));
-		rim.set(withTiming(0, { duration: HERO.drainMs, easing: EASE_DRAIN }));
+		rim.set(
+			withTiming(0, {
+				duration: HERO.drainMs,
+				easing: EASE_DRAIN,
+				...PLAY_AS_CHOSEN,
+			})
+		);
 	};
 
 	const pressOut = () => {
@@ -97,7 +109,13 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		holding.set(false);
 		scale.set(press(1, reduced));
 		if (!(chosen || swept.current)) {
-			rim.set(withTiming(0, { duration: HERO.drainMs, easing: EASE_DRAIN }));
+			rim.set(
+				withTiming(0, {
+					duration: HERO.drainMs,
+					easing: EASE_DRAIN,
+					...PLAY_AS_CHOSEN,
+				})
+			);
 		}
 	};
 
@@ -116,6 +134,7 @@ export function useHold(reduced: boolean, holdable: boolean) {
 			withTiming(1, {
 				duration: HERO.tapSweepMs * (1 - rim.get()),
 				easing: EASE_CSS_OUT,
+				...PLAY_AS_CHOSEN,
 			})
 		);
 	};
@@ -128,7 +147,12 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		rimOpacity.set(
 			withDelay(
 				HERO.releaseDelayMs,
-				withTiming(0, { duration: HERO.drainMs, easing: EASE_DRAIN })
+				withTiming(0, {
+					duration: HERO.drainMs,
+					easing: EASE_DRAIN,
+					...PLAY_AS_CHOSEN,
+				}),
+				PLAY_AS_CHOSEN.reduceMotion
 			)
 		);
 	};
@@ -152,9 +176,19 @@ export function useHold(reduced: boolean, holdable: boolean) {
 		setChosen(true);
 		rim.set(1);
 		rimOpacity.set(
-			withTiming(HERO.chosenRim, { duration: HERO.rimFadeMs, easing: EASE_CSS })
+			withTiming(HERO.chosenRim, {
+				duration: HERO.rimFadeMs,
+				easing: EASE_CSS,
+				...PLAY_AS_CHOSEN,
+			})
 		);
-		body.set(withTiming(0, { duration: HERO.bodyOutMs, easing: EASE_CSS }));
+		body.set(
+			withTiming(0, {
+				duration: HERO.bodyOutMs,
+				easing: EASE_CSS,
+				...PLAY_AS_CHOSEN,
+			})
+		);
 		// The doors land: the last tile finishes its burst.
 		setTimeout(playSessionComplete, reduced ? 0 : doorsLandMs(DOORS.length));
 	};
@@ -162,11 +196,27 @@ export function useHold(reduced: boolean, holdable: boolean) {
 	const unchoose = () => {
 		step({ type: "unchoose" });
 		setChosen(false);
-		rim.set(withTiming(0, { duration: HERO.drainMs, easing: EASE_DRAIN }));
-		rimOpacity.set(
-			withTiming(1, { duration: HERO.rimFadeMs, easing: EASE_CSS })
+		rim.set(
+			withTiming(0, {
+				duration: HERO.drainMs,
+				easing: EASE_DRAIN,
+				...PLAY_AS_CHOSEN,
+			})
 		);
-		body.set(withTiming(1, { duration: HERO.bodyOutMs, easing: EASE_CSS }));
+		rimOpacity.set(
+			withTiming(1, {
+				duration: HERO.rimFadeMs,
+				easing: EASE_CSS,
+				...PLAY_AS_CHOSEN,
+			})
+		);
+		body.set(
+			withTiming(1, {
+				duration: HERO.bodyOutMs,
+				easing: EASE_CSS,
+				...PLAY_AS_CHOSEN,
+			})
+		);
 	};
 
 	return {
