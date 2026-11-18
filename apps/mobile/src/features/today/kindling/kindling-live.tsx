@@ -118,6 +118,7 @@ export function KindlingLive({ kindling, width, onScreen }: Props) {
 				<View className="flex-row items-center">
 					<RollingNumber
 						color={muted}
+						quick
 						size={COUNT}
 						value={kin.count}
 						weight="regular"
