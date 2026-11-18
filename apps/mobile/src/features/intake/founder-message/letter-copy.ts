@@ -42,7 +42,7 @@ export const FOUNDER_MESSAGE = {
 		],
 	] as Segment[][],
 	signature: "Nathaniel & the Xolace team ♡",
-	/** The line that hands off to the questionnaire. */
+	/** The line that hands off to the rest of intake. */
 	transition:
 		"In a minute we’ll ask you a few short questions, so Xolace can meet you where you actually are.",
 };

@@ -116,12 +116,6 @@ export function DevToolsSection() {
 					label="Clear date of birth"
 					onPress={dev.clearAgeGate}
 				/>
-				{/* Delete with features/intake. */}
-				<TileRow
-					icon={I.plus}
-					label="Preview Xolace+ step"
-					onPress={dev.previewPlusStep}
-				/>
 				{/* Delete with features/starter-suggestions. */}
 				<TileRow
 					icon={I.map}

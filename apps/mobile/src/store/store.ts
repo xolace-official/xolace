@@ -11,11 +11,6 @@ import {
 	createAccountFlagsSlice,
 } from "./account-flags-slice";
 import {
-	createIntakeSlice,
-	type IntakeSlice,
-	intakePersistedKeys,
-} from "./intake-slice";
-import {
 	createPlusOfferSlice,
 	type PlusOfferSlice,
 	plusOfferPersistedKeys,
@@ -205,7 +200,6 @@ export type AppState = ThemeSlice &
 	TogglesSlice &
 	AccountFlagsSlice &
 	PlusOfferSlice &
-	IntakeSlice &
 	PreferencesSlice &
 	UpdateCheckSlice &
 	LastNotificationSlice &
@@ -316,7 +310,6 @@ export const useAppStore = create<AppState>()(
 
 				...createPlusOfferSlice(set),
 
-				...createIntakeSlice(set),
 				clearComposerOpenRequest: () =>
 					set({ composerOpenRequested: false, composerOpenText: null }),
 				clearLastNotification: () => set({ lastNotification: null }),
@@ -389,7 +382,6 @@ export const useAppStore = create<AppState>()(
 					ventIntroSeen: s.ventIntroSeen,
 					xolacerPrimerSeen: s.xolacerPrimerSeen,
 					...accountFlagsPersistedKeys(s),
-					...intakePersistedKeys(s),
 					...plusOfferPersistedKeys(s),
 				}),
 				storage: createJSONStorage(() => zustandJSONStorage),

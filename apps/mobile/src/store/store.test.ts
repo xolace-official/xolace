@@ -20,12 +20,6 @@ describe("store partialize", () => {
 		expect(persisted).toContain("bridgeIntroSeen");
 	});
 
-	it("the intake arm is persisted, the in-flight answers aren't", () => {
-		const persisted = persistedKeys();
-		expect(persisted).toContain("intakeArms");
-		expect(persisted).not.toContain("intakeAnswers");
-	});
-
 	it("dictationUpsellSeen is persisted", () => {
 		expect(persistedKeys()).toContain("dictationUpsellSeen");
 	});
@@ -70,13 +64,6 @@ describe("store partialize", () => {
 		// "Never two sessions in a row" is only enforceable if the id survives a
 		// relaunch — the app is routinely closed between one session and the next.
 		expect(persisted).toContain("plusOfferShownSessionId");
-	});
-
-	// A cold kill mid-intake must restart at the founder message with nothing
-	// half-answered (T6, issue #263).
-	it("intake answers are NOT persisted", () => {
-		const persisted = persistedKeys();
-		expect(persisted).not.toContain("intakeAnswers");
 	});
 });
 

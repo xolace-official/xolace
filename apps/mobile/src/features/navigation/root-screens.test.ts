@@ -79,7 +79,6 @@ const pinned = (reduced: boolean) => {
 		"chat/[conversationId]": CHAT,
 		"crisis-resources": NO_GESTURE,
 		"follow-up": PLAYER,
-		"intake-plus-preview": PLAYER,
 		"kindling/index": undefined,
 		"lantern-welcome": { ...PLAYER, gestureEnabled: false },
 		"library/[slug]": { animation: reduced ? "fade" : "default" },

@@ -1,6 +1,6 @@
 // Intake v2 ("Talk to Flux", #704) on screen: the reducer's step, drawn. The typed (#707) or
 // spoken (#709) answer is read by Flux (#708): chips, one follow-up, or crisis support. Then
-// the name, and Xolace+ once (#713).
+// the name, and Xolace+ once: the first look (S18).
 import { usePostHog } from "posthog-react-native";
 import { useEffect, useEffectEvent, useReducer, useRef } from "react";
 import {
@@ -11,7 +11,7 @@ import {
 	trackSafetyLate,
 	trackSafetyRouted,
 } from "@/features/intake/analytics";
-import { IntakeScreen } from "@/features/intake/questionnaire/intake-screen";
+import { FirstLookStep } from "@/features/intake/first-look/first-look-step";
 import { AskStep } from "@/features/intake/v2/ask-step";
 import { FollowUpStep } from "@/features/intake/v2/follow-up-step";
 import {
@@ -21,16 +21,17 @@ import {
 	suggestionsTaken,
 } from "@/features/intake/v2/heard";
 import { HeardStep } from "@/features/intake/v2/heard-step";
+import { IntakeScreen } from "@/features/intake/v2/intake-screen";
 import { InterpretStep } from "@/features/intake/v2/interpret-step";
 import { ListenStep } from "@/features/intake/v2/listen-step";
 import {
+	firstAnswerToOffer,
 	initialIntakeV2State,
 	intakeV2Reducer,
 	micOn,
 	voiceAnswer,
 } from "@/features/intake/v2/machine";
 import { NameStep } from "@/features/intake/v2/name-step";
-import { PlusStep } from "@/features/intake/v2/plus/plus-step";
 import { IntakeV2Progress } from "@/features/intake/v2/progress";
 import { SafetyStep } from "@/features/intake/v2/safety-step";
 import { TypeStep } from "@/features/intake/v2/type-step";
@@ -121,8 +122,8 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [state.step]);
 
-	// Xolace+ is its own screen, after the three stops the bar counts. `done` stays on the
-	// screen the save left from, busy, until it lands.
+	// Xolace+ (the first look) is its own screen, after the three stops the bar counts. `done`
+	// stays on the screen the save left from, busy, until it lands.
 	const offering =
 		state.step === "plus" ||
 		(state.step === "done" && state.plusShown && !state.safetyRouted);
@@ -229,27 +230,9 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 						suggested={state.suggested}
 					/>
 				);
-			case "plus":
-				return (
-					<PlusStep
-						busy={false}
-						onExit={(outcome) => dispatch({ outcome, type: "PLUS_EXIT" })}
-						onSafetyExit={(outcome) =>
-							dispatch({ outcome, type: "PLUS_SAFETY_EXIT" })
-						}
-						onStoreCall={onStoreCall}
-					/>
-				);
 			case "name":
 			case "done":
-				return offering ? (
-					<PlusStep
-						busy
-						onExit={() => undefined}
-						onSafetyExit={() => undefined}
-						onStoreCall={onStoreCall}
-					/>
-				) : (
+				return (
 					<NameStep
 						busy={state.step === "done"}
 						name={state.name}
@@ -264,9 +247,24 @@ export function IntakeV2Flow({ initialName }: { initialName: string }) {
 		}
 	};
 
+	// The first look runs edge to edge and keeps its own insets.
+	if (offering) {
+		const busy = state.step === "done";
+		return (
+			<FirstLookStep
+				answer={firstAnswerToOffer(state)}
+				busy={busy}
+				onExit={(outcome) => busy || dispatch({ outcome, type: "PLUS_EXIT" })}
+				onSafetyExit={(outcome) =>
+					busy || dispatch({ outcome, type: "PLUS_SAFETY_EXIT" })
+				}
+				onStoreCall={onStoreCall}
+			/>
+		);
+	}
 	return (
 		<IntakeScreen>
-			{!offering && <IntakeV2Progress step={state.step} />}
+			<IntakeV2Progress step={state.step} />
 			{body()}
 		</IntakeScreen>
 	);

@@ -44,9 +44,6 @@ export type MicFailure = "denied" | "unavailable";
 /** How the Xolace+ step (#713) ended; `entitled` is skipped, never shown. */
 export type PlusOutcome = "purchased" | "dismissed" | "entitled";
 
-/** The side of the Xolace+ step: the week on free, or with Plus. */
-export type PlusSide = "free" | "plus";
-
 /** Why talking fell back to typing. */
 export type ListenFailure = MicFailure | "nothing_heard";
 

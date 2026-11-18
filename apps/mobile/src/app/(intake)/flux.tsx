@@ -1,7 +1,7 @@
-/** Intake v2, "Talk to Flux" (#704, #707): the `intake-v2` arm's whole intake after the
- * founder letter. Forward-only, like v1's questionnaire: a cold kill restarts at the letter. */
+/** Intake, "Talk to Flux" (#704, #707): everything after the founder letter, ending on the
+ * Xolace+ first look. Forward-only: a cold kill restarts at the letter. */
 import { suggestHandle } from "@/features/intake/answer-rules";
-import { IntakeBlank } from "@/features/intake/questionnaire/intake-screen";
+import { IntakeBlank } from "@/features/intake/v2/intake-screen";
 import { IntakeV2Flow } from "@/features/intake/v2/intake-v2-flow";
 import { useFullContext } from "@/lib/convex/use-full-context";
 
