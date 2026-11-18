@@ -404,6 +404,23 @@
 }
 
 /*
+ * Today's Reflect card (design/boards/TodayAlive.dc.html `.ch*`, `.ph.wrote`): the three
+ * doors a hold opens, pastel tiles with their own ink, and the month prompt's rose label.
+ * Printed on the card, so the same in every theme, as the board draws them.
+ */
+@theme static {
+	--color-door-talk: #ffe2cf;
+	--color-door-talk-ink: #b4561e;
+	--color-door-vent: #ffddea;
+	--color-door-vent-ink: #b23a6b;
+	--color-door-sit: #e6deff;
+	--color-door-sit-ink: #4b32c2;
+	--color-door-label: #2a2140;
+	--color-door-sub: rgba(42, 33, 64, 0.7);
+	--color-month-rose: #a02a5c;
+}
+
+/*
  * After a session's light (design/boards/AfterAlive.dc.html): the glow behind
  * the face, its shadow, the slider's rail, the band of stars and the point of
  * light. Light, never a surface, so the same in every theme; each has a late

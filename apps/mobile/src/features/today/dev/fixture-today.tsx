@@ -9,16 +9,25 @@ import { headerCopy, type TodayPhase } from "../today-model";
 import { TodayScreen } from "../today-screen";
 import {
 	FIXTURE_DAY,
+	FIXTURE_MONTH_PROMPT,
 	FIXTURE_NAME,
 	FIXTURE_STREAK,
 	FIXTURE_WEEKDAY,
 } from "./fixtures";
 
 const ACTIONS: Today["actions"] = {
+	openDoor: (door) => router.push(DOOR_HREF[door]),
 	openHelp: () => router.push("/crisis-resources"),
 	openReflect: () => router.back(),
 	openStreak: () => router.navigate("/you"),
 };
+
+/** The doors open their real screens, as in the app. */
+const DOOR_HREF = {
+	sit: "/sit-with-this",
+	talk: "/talk",
+	vent: "/voice-vent",
+} as const;
 
 /** Let the screen land before the streak grows, as coming back to Today does. */
 const IGNITE_AFTER_MS = 600;
@@ -54,6 +63,8 @@ export type FixtureProps = {
 	ignite?: boolean;
 	/** Step through the four phases, to watch the sky change hour (and night fall). */
 	cycle?: boolean;
+	/** This month's prompt rides on the card. */
+	monthPrompt?: boolean;
 };
 
 function FixtureToday({
@@ -63,6 +74,7 @@ function FixtureToday({
 	offline = false,
 	ignite = false,
 	cycle = false,
+	monthPrompt = false,
 }: FixtureProps) {
 	const phase = usePhase(start, cycle);
 	const [grown, setGrown] = useState(false);
@@ -80,6 +92,7 @@ function FixtureToday({
 		offline ? null : FIXTURE_NAME
 	);
 	const state: Today["state"] = {
+		card: { monthPrompt: monthPrompt ? FIXTURE_MONTH_PROMPT : null },
 		day: FIXTURE_DAY,
 		eyebrow,
 		greeting,

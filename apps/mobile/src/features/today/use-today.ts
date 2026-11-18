@@ -1,4 +1,6 @@
 import { useAuth } from "@clerk/expo";
+import { api } from "@xolace/backend/api";
+import { useQuery } from "convex/react";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { useAppActive } from "@/components/shared/use-app-active";
@@ -8,9 +10,11 @@ import { useProfileSummary } from "@/lib/profile-summary";
 import { zustandJSONStorage } from "@/lib/storage/unified-storage";
 import type { Today } from "./today-data";
 import {
+	type Door,
 	headerCopy,
 	introDue,
 	localDay,
+	monthPromptOnCard,
 	nextStreakShown,
 	nextWakeHour,
 	parseIntroDay,
@@ -18,6 +22,13 @@ import {
 	type StreakShown,
 	todayPhase,
 } from "./today-model";
+
+/** Where each of the card's doors goes. */
+const DOOR_HREF = {
+	sit: "/sit-with-this",
+	talk: "/talk",
+	vent: "/voice-vent",
+} as const satisfies Record<Door, string>;
 
 /**
  * Device-only, per account (as `reflect-draft.ts`): the day the first open last played,
@@ -119,9 +130,12 @@ export function useTodayData(): Today {
 	);
 	const streak = useStreak(summary?.currentStreak, day, userId);
 	const intro = useIntro(day, userId);
+	const carried = useQuery(api.monthlyEvents.prompt.getCarried);
+	const monthPrompt = monthPromptOnCard(carried, now.getTime());
 
 	return {
 		actions: {
+			openDoor: (door) => router.push(DOOR_HREF[door]),
 			openHelp: () => router.push("/crisis-resources"),
 			openReflect: () => {
 				playSoftPress();
@@ -129,6 +143,14 @@ export function useTodayData(): Today {
 			},
 			openStreak: () => router.navigate("/you"),
 		},
-		state: { day, eyebrow, greeting, intro, phase, streak },
+		state: {
+			card: { monthPrompt },
+			day,
+			eyebrow,
+			greeting,
+			intro,
+			phase,
+			streak,
+		},
 	};
 }

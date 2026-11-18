@@ -11,6 +11,7 @@ import { useScheme } from "@/design/scheme";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { useMiniPlayerInset } from "@/lib/now-playing/now-playing-store";
 import { TodayHeader } from "./header/today-header";
+import { ReflectCard } from "./hero/reflect-card";
 import { LateModules } from "./late/late-modules";
 import { SkyCanvas } from "./sky/sky-canvas";
 import { skyTop } from "./sky/sky-model";
@@ -120,7 +121,7 @@ function TodayBody({ flameClock, ...frame }: BodyProps) {
 			<View className="mx-4">
 				<TodayHeader flameClock={flameClock} />
 			</View>
-			{/* S1b: the Reflect card, the sky's horizon. */}
+			<ReflectCard />
 			{late ? <LateModules /> : null}
 			{/* S1c, S1d: kindling, campfire, the rail, moments and the word. */}
 		</TodayFrame>

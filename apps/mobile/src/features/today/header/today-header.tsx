@@ -23,7 +23,7 @@ const LIFEBUOY = 20;
  * (B1); until it lands the slot stays empty, as the prototype's is with nothing
  * waiting. The Reflect card's margin gives the room back, so Today doesn't move.
  */
-const PILL_SLOT = 14 + 36;
+export const PILL_SLOT = 14 + 36;
 
 /** Eyebrow and the glass group (streak + lifebuoy), then the greeting. */
 export function TodayHeader({

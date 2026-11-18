@@ -5,6 +5,42 @@ import type { TodayPhase } from "./today-model";
  * board's "Thursday" and "Ama" are the device's weekday and the user's display name.
  */
 export const COPY = {
+	/** The Reflect card (board `.hero`): its question by phase, the field's rotating lines and the hint. */
+	card: {
+		/** VoiceOver only. */
+		a11yHint: "Opens Reflect. Talk, Vent and Sit with this are in actions.",
+		doorsAction: "Talk, Vent or Sit with this",
+		hint: "Hold the card for Talk, Vent or Sit with this",
+		/** The month's prompt on the card while it's carried this week (board `.ph.wrote .tref`). */
+		monthLabel: "THIS MONTH",
+		placeholders: {
+			day: [
+				"Write it out…",
+				"Start with one word…",
+				"Or hold the mic and say it",
+			],
+			late: [
+				"Say it, then set it down…",
+				"One line is enough…",
+				"Or hold the mic and say it",
+			],
+		},
+		prompt: {
+			dawn: "What are you waking up with?",
+			day: "What's sitting with you right now?",
+			evening: "What's sitting with you right now?",
+			late: "What's carrying over?",
+		} satisfies Record<TodayPhase, string>,
+		speak: "Speak instead",
+	},
+	/** Hold the card: the doors rise out of the hint line. */
+	doors: {
+		sit: { label: "Sit with this", sub: "Breathe first" },
+		talk: { label: "Talk", sub: "Out loud" },
+		title: "How do you want to let it out?",
+		vent: { label: "Vent", sub: "Let it rip" },
+		writeInstead: "Write instead",
+	},
 	/** The greeting, with the display name when there is one. */
 	greeting: {
 		dawn: (name: string | null) =>

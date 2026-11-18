@@ -1,4 +1,5 @@
 import { Easing } from "react-native-reanimated";
+import type { CubicBezier } from "@/design/ease";
 
 /**
  * Today's curves and clocks, named once. Every value is the board's
@@ -17,6 +18,18 @@ export const igniteFn = Easing.bezierFn(0.3, 1.6, 0.5, 1);
 export const EASE_SWELL = Easing.bezier(0.34, 1.3, 0.64, 1);
 /** CSS `ease`. */
 export const EASE_CSS = Easing.bezier(0.25, 0.1, 0.25, 1);
+/** CSS `ease-out`: a tap's rim running the rest of its lap. */
+export const EASE_CSS_OUT = Easing.bezier(0, 0, 0.58, 1);
+/** Rim draining when the hold is let go early. */
+export const EASE_DRAIN = Easing.bezier(0.3, 0, 0.2, 1);
+
+/** The same curves as react-native-ease tuples, for the parts of Today that run on Ease. */
+export const CURVES: Record<"rise" | "css", CubicBezier> = {
+	/** EASE_CSS: CSS `ease`. */
+	css: [0.25, 0.1, 0.25, 1],
+	/** riseFn. */
+	rise: [0.2, 0.8, 0.2, 1],
+};
 /** CSS `ease-out` and `ease-in-out`. */
 export const easeOutFn = Easing.bezierFn(0, 0, 0.58, 1);
 export const easeInOutFn = Easing.bezierFn(0.42, 0, 0.58, 1);
@@ -28,6 +41,9 @@ export const TIMING = {
 	night: 1600,
 	/** Sky palettes crossfade. */
 	palette: 600,
+	/** Placeholder rotation and swap. */
+	placeholderEvery: 5000,
+	placeholderSwap: 500,
 	/** Ridge fills. */
 	ridges: 900,
 	/** Greeting word, and the gap between words. */
