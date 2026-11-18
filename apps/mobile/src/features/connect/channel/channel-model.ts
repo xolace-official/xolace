@@ -128,7 +128,7 @@ function postReactions(m: PostMessage): PostReaction[] {
 
 /** Stream's own tests: `deleted` for a removed message, `error` or `failed` for one that didn't
  * send (`Message.tsx`, `errorOrFailed`). */
-export function postKind(m: PostMessage): PostKind {
+function postKind(m: PostMessage): PostKind {
 	if (m.type === "deleted" || m.deleted_at) {
 		return "deleted";
 	}
