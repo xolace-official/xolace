@@ -4,9 +4,14 @@
  * bubble's. Stream's link press goes through the message's handlers, so a tap opens the link and
  * a hold on one opens the overlay.
  */
-import type { ReactNode } from "react";
-import { Linking } from "react-native";
-import { renderText, useMessageContext, useTheme } from "stream-chat-expo";
+import { createElement, Fragment, type ReactNode } from "react";
+import { Linking, type TextStyle } from "react-native";
+import {
+	type RenderTextParams,
+	renderText,
+	useMessageContext,
+	useTheme,
+} from "stream-chat-expo";
 import { useResolveClassNames } from "uniwind";
 import { isOpenableLink } from "../post-text";
 
@@ -24,6 +29,38 @@ async function openLink(url: string): Promise<void> {
 	}
 }
 
+type Rules = NonNullable<RenderTextParams["markdownRules"]>;
+type Mark = "em" | "strong";
+type Face = TextStyle;
+
+/** Bold and italic each set the face, so under both one would replace the other. Stream's text
+ * takes its style from the marks around it (`state.style`), so these marks only set that:
+ * bold, italic, or under both the heaviest italic the app loads (no pair ships a semibold
+ * italic). */
+function emphasis(em: Face, strong: Face, both: Face): Rules {
+	const mark =
+		(own: Mark, face: Face): NonNullable<Rules["em"]>["react"] =>
+		(node, output, state) =>
+			createElement(
+				Fragment,
+				{ key: state.key },
+				output(node.content, {
+					...state,
+					[own]: true,
+					style: {
+						...state.style,
+						...(state[own === "em" ? "strong" : "em"] ? both : face),
+					},
+					withinText: true,
+				})
+			);
+	// Only `react`: Stream's markdown merges these over its own rules, which match and parse.
+	return {
+		em: { react: mark("em", em) },
+		strong: { react: mark("strong", strong) },
+	} as Rules;
+}
+
 export function usePostBody(body: string): ReactNode {
 	const { message, onLongPress, onPress, preventPress } = useMessageContext();
 	const { theme } = useTheme();
@@ -32,11 +69,13 @@ export function usePostBody(body: string): ReactNode {
 	);
 	const strong = useResolveClassNames("font-semibold text-foreground");
 	const em = useResolveClassNames("font-italic");
+	const both = useResolveClassNames("font-italic-medium text-foreground");
 	const link = useResolveClassNames("text-accent-ink underline");
 	if (!body) {
 		return null;
 	}
 	return renderText({
+		markdownRules: emphasis(em, strong, both),
 		markdownStyles: {
 			autolink: { ...text, ...link },
 			em,

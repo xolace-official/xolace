@@ -85,7 +85,7 @@ const FORMATTED: DevMessage[] = [
 		ago: 90,
 		mine: false,
 		reactions: [{ count: 18, type: "growth" }],
-		text: "**Quiet hours** are here\n\nFrom tonight, nudges wait until _morning_ if you've set a Quiet Window. **Nothing urgent ever waits.** Read [how it works](https://xolace.app/quiet), or open the new hub at https://xolace.app/lantern",
+		text: "**Quiet hours** are here\n\nFrom tonight, nudges wait until _morning_ if you've set a Quiet Window. **Nothing urgent _ever_ waits.** Read [how it works](https://xolace.app/quiet), or open the new hub at https://xolace.app/lantern",
 	},
 ];
 
