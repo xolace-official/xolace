@@ -130,7 +130,7 @@ export function StreakChip({ clock, running, elevated, reduced }: Props) {
 					reduced={reduced}
 					running={running}
 				/>
-				<RollingNumber color={emberInk} size={DIGITS} value={shown} />
+				<RollingNumber color={emberInk} quick size={DIGITS} value={shown} />
 			</View>
 		</PressScale>
 	);
