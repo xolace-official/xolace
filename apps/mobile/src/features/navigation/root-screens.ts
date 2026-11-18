@@ -28,6 +28,7 @@ import type { RootScreen } from "@/lib/root-screen";
 export const ROOT_SCREENS: readonly RootScreen[] = [
 	...browseScreens,
 	...careScreens,
+	...connectScreens,
 	...followUpScreens,
 	...intakeScreens,
 	...kindlingScreens,
@@ -42,7 +43,6 @@ export const ROOT_SCREENS: readonly RootScreen[] = [
 	...streakScreens,
 	...talkScreens,
 	...ventScreens,
-	...connectScreens,
 	...xolacerChatScreens,
 	...youScreens,
 ];
