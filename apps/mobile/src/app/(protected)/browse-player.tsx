@@ -1,3 +1,4 @@
-import { PlayerScreen } from "@/features/browse/player/player-screen";
+import { MovedRoute } from "@/features/navigation/moved-route";
 
-export default PlayerScreen;
+/** A path that moved (`MOVED` in features/navigation/moved-paths.ts). */
+export default MovedRoute;

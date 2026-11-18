@@ -31,7 +31,8 @@ export type NowPlaying = {
 };
 type Playback = PlaybackReturn<BoundTrack>;
 
-// The one Browse track loaded outside any screen (S4). Module-level because
+// The one track loaded outside any screen (S4): the player and the mini player show it, the
+// player feature's host plays it. Module-level because
 // writers and readers sit in unrelated subtrees. `current` is what to play;
 // `playback` is the live `useTrackPlayback` result the host publishes.
 let current: NowPlaying | null = null;
@@ -41,6 +42,8 @@ let played = false;
 // A new track lifts the mini-player once, when the player closes over it (S4 pulse).
 let attention = 0;
 let attentionPending = false;
+// Bumped by Try again: the host remounts its runner, which mints the track afresh.
+let attempt = 0;
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
@@ -116,6 +119,19 @@ export function clearNowPlaying() {
 	emit();
 }
 
+/** Try again after a failed load: the host mints the same track afresh. */
+export function retryNowPlaying() {
+	if (!current) {
+		return;
+	}
+	attempt++;
+	emit();
+}
+const getAttempt = () => attempt;
+/** Host only: changes on each Try again. */
+export const useNowPlayingAttempt = () =>
+	useSyncExternalStore(subscribe, getAttempt, getAttempt);
+
 /** Player screen unmount: a track loaded during that visit pulses the mini-player once. */
 export function releaseMiniPlayerAttention() {
 	if (!(attentionPending && current)) {
@@ -160,6 +176,8 @@ export function togglePlayback(p: Playback, posthog: PostHog) {
 	p.toggle();
 }
 
+/** What's loaded, read once (an action's moment). */
+export const nowPlaying = () => current;
 export const useNowPlaying = () =>
 	useSyncExternalStore(subscribe, getCurrent, getCurrent);
 /** The live playback, or the idle shape until `slug` is the one loaded and published. */

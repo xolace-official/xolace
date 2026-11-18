@@ -22,6 +22,7 @@ import {
 	useNowPlaying,
 	useNowPlayingPlayback,
 } from "@/lib/now-playing/now-playing-store";
+import { useSleepTimer } from "@/lib/now-playing/sleep-timer";
 import { cn } from "@/lib/utils";
 
 // Object form: a bare SF name renders nothing on Android.
@@ -32,6 +33,7 @@ const PLAY = {
 } as const;
 const PAUSE = { android: "pause", ios: "pause.fill", web: "pause" } as const;
 const CLOSE = { android: "close", ios: "xmark", web: "close" } as const;
+const MOON = { android: "bedtime", ios: "moon.fill", web: "bedtime" } as const;
 
 // 32pt art inside the 48pt capsule, as Apple Music measures it.
 const ART = {
@@ -57,6 +59,8 @@ export function MiniPlayerContent({ inline }: { inline: boolean }) {
 	// Under Reduce Transparency the bar's glass goes flat, so the content gets a solid fill.
 	const { reduceTransparencyEnabled } = useAccessibilityInfo();
 	const pulse = useAttentionPulse();
+	// The player's sleep timer is running: a small moon before the subtitle (S10).
+	const sleeping = useSleepTimer((t) => t.choice !== "off");
 	const track = p.track;
 	if (!(np && track)) {
 		return null;
@@ -70,7 +74,7 @@ export function MiniPlayerContent({ inline }: { inline: boolean }) {
 				...(np.stepId && { stepId: np.stepId }),
 				...(np.from && { from: np.from }),
 			},
-			pathname: "/browse-player",
+			pathname: "/player",
 		});
 	};
 	const toggle = () => {
@@ -113,7 +117,10 @@ export function MiniPlayerContent({ inline }: { inline: boolean }) {
 			<Pressable
 				accessibilityHint="Opens the player"
 				accessibilityLabel={
-					inline ? track.title : `${track.title}, ${FAMILY_LABEL[track.family]}`
+					(inline
+						? track.title
+						: `${track.title}, ${FAMILY_LABEL[track.family]}`) +
+					(sleeping ? ", sleep timer on" : "")
 				}
 				accessibilityRole="button"
 				className="flex-1 flex-row items-center gap-2.5"
@@ -129,9 +136,17 @@ export function MiniPlayerContent({ inline }: { inline: boolean }) {
 						title={track.title}
 					/>
 					{!inline && (
-						<AppText className="text-[13px] text-muted" numberOfLines={1}>
-							{FAMILY_LABEL[track.family]}
-						</AppText>
+						<View className="flex-row items-center gap-1">
+							{sleeping ? (
+								<SymbolView name={MOON} size={12} tintColor={muted} />
+							) : null}
+							<AppText
+								className="flex-1 text-[13px] text-muted"
+								numberOfLines={1}
+							>
+								{FAMILY_LABEL[track.family]}
+							</AppText>
+						</View>
 					)}
 				</View>
 			</Pressable>

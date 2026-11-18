@@ -20,7 +20,7 @@ import { mintOf, playStep } from "@/lib/now-playing/play-on-load";
 const FROM = "library-hub";
 
 /**
- * A Lantern hub. Its listens play through Browse's one now-playing track (the mini player); the
+ * A Lantern hub. Its listens play through the app's one now-playing track (the mini player); the
  * two features meet here, so Lantern never imports the player. The player redesign (S10)
  * replaces this adapter.
  */

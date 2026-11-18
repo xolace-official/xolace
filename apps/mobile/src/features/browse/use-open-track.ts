@@ -35,7 +35,7 @@ export function useOpenTrack(from: BrowseFrom) {
 		});
 		router.push({
 			params: { from, slug: track.slug },
-			pathname: "/browse-player",
+			pathname: "/player",
 		});
 	};
 

@@ -74,7 +74,8 @@ const pinned = (reduced: boolean) => {
 	const rise = reduced ? "fade" : "slide_from_bottom";
 	return {
 		"browse-intro": { ...PLAYER, gestureEnabled: false },
-		"browse-player": PLAYER,
+		// Moved to /player (S10): its shim.
+		"browse-player": { animation: "none" },
 		"chat/[conversationId]": CHAT,
 		"crisis-resources": NO_GESTURE,
 		"follow-up": PLAYER,
@@ -83,6 +84,9 @@ const pinned = (reduced: boolean) => {
 		"lantern-welcome": { ...PLAYER, gestureEnabled: false },
 		"library/[slug]": { animation: reduced ? "fade" : "default" },
 		"peer-reflections": NO_GESTURE,
+		// A transparent modal since S10, so swipe down shows what's under it; it fades under
+		// Reduce Motion.
+		player: { animation: rise, presentation: "transparentModal" },
 		"quotes/archive": undefined,
 		"quotes/index": undefined,
 		"rate/[conversationId]": {

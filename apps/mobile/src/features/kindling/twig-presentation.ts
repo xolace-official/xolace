@@ -119,7 +119,7 @@ export function twigHref(
 			if (!slug) {
 				return null;
 			}
-			return { params: { slug, stepId: twig._id }, pathname: "/browse-player" };
+			return { params: { slug, stepId: twig._id }, pathname: "/player" };
 		}
 		case "read": {
 			const slug = twigSlug(twig);

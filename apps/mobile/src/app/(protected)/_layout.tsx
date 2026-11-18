@@ -2,7 +2,6 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Stack } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
-import { NowPlayingHost } from "@/features/browse/now-playing/now-playing-host";
 import { ROOT_HOSTS } from "@/features/navigation/hosts";
 import { ROOT_SCREENS } from "@/features/navigation/root-screens";
 import { UnreadIconBadge } from "@/features/xolacer-chat/components/unread-icon-badge";
@@ -44,8 +43,6 @@ export default function ProtectedLayout() {
 			<StreamChatProvider>
 				{/* Above the Stack so presence keeps reporting whichever screen is up. */}
 				<AppPresence />
-				{/* The Browse track's audio, outliving the player screen (S4). */}
-				<NowPlayingHost />
 				<UnreadIconBadge />
 				{/* Points Reanimated's "System" at the in-app tri-state. Here, not the
             root: preferences.get needs auth. */}
