@@ -22,12 +22,17 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import { AnimatedBlurView } from "@/components/animated-blur-view";
 import { useAppTheme } from "@/context/app-theme-context";
+import { PLAY_AS_CHOSEN, REDUCED_FADE_MS } from "@/design/springs";
 import { playSoftPress } from "@/lib/haptics";
+import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 
-const TIMING = { duration: 250, easing: Easing.out(Easing.quad) };
+const EASE = Easing.out(Easing.quad);
+const TIMING = { duration: 250, easing: EASE, ...PLAY_AS_CHOSEN };
+const FADE = { duration: REDUCED_FADE_MS, ...PLAY_AS_CHOSEN };
 
 /** Lifts the avatar photo to screen centre over a blur; tap, Android back or drag dismisses.
- * The anchor is measured at tap time, since the Modal blocks scrolling while open. */
+ * The anchor is measured at tap time, since the Modal blocks scrolling while open. With Reduce
+ * Motion the photo doesn't travel: it fades in at the centre, and out again. */
 export function ExpandableAvatar({
 	photoUrl,
 	name,
@@ -41,6 +46,8 @@ export function ExpandableAvatar({
 	const [open, setOpen] = useState(false);
 	const { width, height } = useWindowDimensions();
 	const { isDark } = useAppTheme();
+	const reduced = useEffectiveReducedMotion();
+	const timing = reduced ? FADE : TIMING;
 
 	const expanded = width * 0.7;
 	const centerX = (width - expanded) / 2;
@@ -51,40 +58,49 @@ export function ExpandableAvatar({
 	const y = useSharedValue(0);
 	const size = useSharedValue(0);
 	const scale = useSharedValue(1);
+	const opacity = useSharedValue(1);
 	const blur = useSharedValue(0);
 	const panStart = useSharedValue({ x: 0, y: 0 });
 
 	const recenter = () => {
 		"worklet";
-		blur.set(withTiming(isDark ? 75 : 55, TIMING));
-		size.set(withTiming(expanded, TIMING));
-		x.set(withTiming(centerX, TIMING));
-		y.set(withTiming(centerY, TIMING));
+		blur.set(withTiming(isDark ? 75 : 55, timing));
+		opacity.set(withTiming(1, timing));
+		size.set(withTiming(expanded, timing));
+		x.set(withTiming(centerX, timing));
+		y.set(withTiming(centerY, timing));
+	};
+
+	const close = (finished?: boolean) => {
+		"worklet";
+		if (finished) {
+			scheduleOnRN(setOpen, false);
+		}
 	};
 
 	const collapse = () => {
 		"worklet";
+		blur.set(withTiming(0, timing));
+		scale.set(withTiming(1, timing));
+		if (reduced) {
+			opacity.set(withTiming(0, timing, close)); // where it is, centred or dragged
+			return;
+		}
 		const o = origin.get();
-		blur.set(withTiming(0, TIMING));
-		scale.set(withTiming(1, TIMING));
-		size.set(withTiming(o.size, TIMING));
-		x.set(withTiming(o.x, TIMING));
-		y.set(
-			withTiming(o.y, TIMING, (finished) => {
-				if (finished) {
-					scheduleOnRN(setOpen, false);
-				}
-			})
-		);
+		size.set(withTiming(o.size, timing));
+		x.set(withTiming(o.x, timing));
+		y.set(withTiming(o.y, timing, close));
 	};
 
 	const expand = () => {
 		anchor.current?.measureInWindow((ox, oy, w) => {
 			playSoftPress();
 			origin.set({ size: w, x: ox, y: oy });
-			x.set(ox);
-			y.set(oy);
-			size.set(w);
+			scale.set(1);
+			opacity.set(reduced ? 0 : 1); // reduced: unseen at the centre, then fades in
+			x.set(reduced ? centerX : ox);
+			y.set(reduced ? centerY : oy);
+			size.set(reduced ? expanded : w);
 			setOpen(true);
 		});
 	};
@@ -113,7 +129,7 @@ export function ExpandableAvatar({
 			if (d > expanded / 4) {
 				collapse();
 			} else {
-				scale.set(withTiming(1, TIMING));
+				scale.set(withTiming(1, timing));
 				recenter();
 			}
 		});
@@ -122,6 +138,7 @@ export function ExpandableAvatar({
 		borderRadius: size.get() / 2,
 		height: size.get(),
 		left: x.get(),
+		opacity: opacity.get(),
 		top: y.get(),
 		transform: [{ scale: scale.get() }],
 		width: size.get(),
