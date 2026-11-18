@@ -1,0 +1,100 @@
+import { View } from "react-native";
+import Animated, {
+	Easing,
+	LayoutAnimationConfig,
+	withTiming,
+} from "react-native-reanimated";
+import { AppText } from "@/components/shared/app-text";
+import { useFixedFaces } from "@/design/fonts";
+import { PLAY_AS_CHOSEN } from "@/design/springs";
+import {
+	type MirrorTone,
+	toneById,
+} from "@/features/settings/mirror/mirror-model";
+import { cn } from "@/lib/cn";
+
+/**
+ * The tone's line on the card, in the tone's type: Adaptive and Gentle in the theme's body
+ * face, Poetic in Newsreader italic (`font-mirror`), Witnessed in Literata (`font-reader`)
+ * under a Newsreader italic lead, Direct in Space Grotesk Medium (`font-poster-medium`). The
+ * board's Instrument Serif isn't bundled; these are the fixed faces nearest it (handoff §4).
+ * It rises in when the tone changes (8 pt, 340 ms); with Reduce Motion it changes at once,
+ * and it never animates in with the screen.
+ */
+const RISE = {
+	duration: 340,
+	easing: Easing.bezier(0.2, 0.7, 0.2, 1),
+	...PLAY_AS_CHOSEN,
+};
+const RISE_FROM = 8;
+
+const rise = () => {
+	"worklet";
+	return {
+		animations: {
+			opacity: withTiming(1, RISE),
+			transform: [{ translateY: withTiming(0, RISE) }],
+		},
+		initialValues: { opacity: 0, transform: [{ translateY: RISE_FROM }] },
+	};
+};
+
+/** Size, leading and tracking per tone (board `.ln.<tone>`). */
+const SIZE: Record<MirrorTone, string> = {
+	adaptive: "text-[21px] leading-[27.7px] tracking-[-0.1px]",
+	direct: "text-[20.5px] leading-[26.7px] tracking-[-0.2px]",
+	gentle: "text-[21px] leading-[29px]",
+	poetic: "text-[26px] leading-[30.7px]",
+	witnessed: "text-[25px] leading-[30px]",
+};
+
+/** The fixed face, once it's loaded (until then the body face, so nothing waits). */
+const FACE: Partial<Record<MirrorTone, string>> = {
+	direct: "font-poster-medium",
+	poetic: "font-mirror",
+	witnessed: "font-reader",
+};
+
+export function CardLine({
+	shown,
+	ink,
+	reduced,
+}: {
+	shown: MirrorTone;
+	ink: string;
+	reduced: boolean;
+}) {
+	const ready = useFixedFaces("mirror", "reader", "poster-medium");
+	const t = toneById(shown);
+	return (
+		<View accessibilityLiveRegion="polite">
+			<LayoutAnimationConfig skipEntering>
+				<Animated.View
+					className="gap-2"
+					entering={reduced ? undefined : rise}
+					key={shown}
+				>
+					{t.lead ? (
+						<AppText
+							className={cn(
+								"text-[19px] leading-[22.8px] opacity-80",
+								ready && "font-mirror"
+							)}
+							style={{ color: ink }}
+							variant="body"
+						>
+							{t.lead}
+						</AppText>
+					) : null}
+					<AppText
+						className={cn(SIZE[shown], ready && FACE[shown])}
+						style={{ color: ink }}
+						variant="body"
+					>
+						{t.line}
+					</AppText>
+				</Animated.View>
+			</LayoutAnimationConfig>
+		</View>
+	);
+}
