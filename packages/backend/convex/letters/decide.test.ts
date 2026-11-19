@@ -28,7 +28,14 @@ const decide = (
 	safety: WordsVerdict,
 	verdict: LetterVerdict | null,
 	pattern: "contact" | "link" | null = null
-) => decideLetterCheck({ discounted: null, pattern, safety, verdict });
+) =>
+	decideLetterCheck({
+		discounted: null,
+		pattern,
+		remainder: null,
+		safety,
+		verdict,
+	});
 
 describe("decideLetterCheck", () => {
 	it("passes a kind letter both halves read", () => {
@@ -136,6 +143,7 @@ describe("decideLetterCheck", () => {
 			decideLetterCheck({
 				discounted: PEAK,
 				pattern: null,
+				remainder: null,
 				safety: SAFE,
 				verdict,
 			});
@@ -165,11 +173,120 @@ describe("decideLetterCheck", () => {
 				decideLetterCheck({
 					discounted: PEAK,
 					pattern: "contact",
+					remainder: null,
 					safety: SAFE,
 					verdict: { ...KIND, hostile: true },
 				}).kind
 			).toBe("risk");
 		});
+	});
+
+	describe("routes a cut letter at the higher of the engine's and the uncut level", () => {
+		const ELEVATED_PEAK: TalkPeak = { ...PEAK, level: "elevated" };
+
+		it.each([null, "past_or_others", "current"] as const)(
+			"keeps crisis when the cut left elevated (classifier %s)",
+			(crisisMention) => {
+				expect(
+					decideLetterCheck({
+						discounted: PEAK,
+						pattern: null,
+						remainder: ELEVATED_PEAK,
+						safety: { ...SAFE, level: "elevated", peak: ELEVATED_PEAK },
+						verdict: crisisMention ? { ...KIND, crisisMention } : null,
+					})
+				).toEqual({ kind: "risk", peak: PEAK });
+			}
+		);
+
+		it("keeps the engine's crisis over a lower uncut level", () => {
+			expect(
+				decideLetterCheck({
+					discounted: ELEVATED_PEAK,
+					pattern: null,
+					remainder: null,
+					safety: { ...SAFE, level: "crisis", peak: PEAK },
+					verdict: { ...KIND, crisisMention: "past_or_others" },
+				})
+			).toEqual({ kind: "risk", peak: PEAK });
+		});
+	});
+
+	describe("a past mention moderation's self-harm scores flagged (owner)", () => {
+		const ELEVATED_PEAK: TalkPeak = { ...PEAK, level: "elevated" };
+		const FLAGGED: WordsVerdict = {
+			...SAFE,
+			level: "elevated",
+			peak: ELEVATED_PEAK,
+			selfHarmScoresOnly: true,
+		};
+		const flagged = (
+			change: Partial<Parameters<typeof decideLetterCheck>[0]> = {}
+		) =>
+			decideLetterCheck({
+				discounted: ELEVATED_PEAK,
+				pattern: null,
+				remainder: null,
+				safety: FLAGGED,
+				verdict: { ...KIND, crisisMention: "past_or_others" },
+				...change,
+			});
+
+		it("passes when all four hold", () => {
+			expect(flagged()).toEqual({ kind: "pass" });
+		});
+
+		it("still holds, returns or fixes it after that", () => {
+			expect(
+				flagged({
+					verdict: {
+						...KIND,
+						crisisMention: "past_or_others",
+						fixable: "medical",
+					},
+				})
+			).toEqual({ category: "medical", kind: "fixable" });
+		});
+
+		// Each of the four conditions, dropped in turn, is risk.
+		it("1: never at crisis", () => {
+			expect(
+				flagged({ safety: { ...FLAGGED, level: "crisis", peak: PEAK } })
+			).toEqual({ kind: "risk", peak: PEAK });
+		});
+
+		it("2: only when the floor cut a mention", () => {
+			expect(flagged({ discounted: null })).toEqual({
+				kind: "risk",
+				peak: ELEVATED_PEAK,
+			});
+		});
+
+		it("2: only when what's left after the cut raises nothing", () => {
+			expect(flagged({ remainder: ELEVATED_PEAK })).toEqual({
+				kind: "risk",
+				peak: ELEVATED_PEAK,
+			});
+		});
+
+		it("3: only when moderation's self-harm scores alone raised it", () => {
+			const { selfHarmScoresOnly: _, ...byIntensity } = FLAGGED;
+			expect(flagged({ safety: byIntensity })).toEqual({
+				kind: "risk",
+				peak: ELEVATED_PEAK,
+			});
+		});
+
+		it.each([null, "none", "current"] as const)(
+			"4: only when the classifier answered past_or_others, not %s",
+			(crisisMention) => {
+				expect(
+					flagged({
+						verdict: crisisMention ? { ...KIND, crisisMention } : null,
+					})
+				).toEqual({ kind: "risk", peak: ELEVATED_PEAK });
+			}
+		);
 	});
 
 	it("is unavailable when moderation is down, even if the safeguard answered", () => {

@@ -14,7 +14,7 @@ import type { Id } from "../../_generated/dataModel";
 import { action, internalQuery } from "../../_generated/server";
 import { requireAuth } from "../../lib/auth";
 import { rateLimiter } from "../../lib/rateLimits";
-import { peakOf, phrasePeak } from "../../talk/safety";
+import { moderationPeak, peakOf, phrasePeak } from "../../talk/safety";
 import { buildClassifierPrompt } from "../prompts/classifier";
 import {
 	CLASSIFIER_MODEL,
@@ -24,7 +24,11 @@ import {
 	parseClassificationResponse,
 	thinkingOff,
 } from "../providers/anthropic";
-import { MODERATION_UNAVAILABLE, moderateInput } from "../providers/moderation";
+import {
+	MODERATION_UNAVAILABLE,
+	type ModerationResult,
+	moderateInput,
+} from "../providers/moderation";
 import {
 	CRISIS_RESOURCES,
 	evaluateSafeguard,
@@ -138,7 +142,33 @@ export type WordsVerdict = RaisedVerdict & {
 	 * before the engine.
 	 */
 	moderationUnavailable?: true;
+	/**
+	 * Elevated only because of moderation's self-harm scores: moderation alone
+	 * reads elevated (not crisis), it reads nothing without its self-harm
+	 * scores, and the classifier alone raises nothing. Intake and Telegram
+	 * ignore it; the letters check may pass such a letter when the mention is
+	 * past or someone else's (owner, 19 Nov 2026).
+	 */
+	selfHarmScoresOnly?: true;
 };
+
+/** `moderation` with its self-harm categories and scores taken out. */
+function withoutSelfHarm(moderation: ModerationResult): ModerationResult {
+	return {
+		...moderation,
+		categories: {
+			...moderation.categories,
+			"self-harm": false,
+			"self-harm/instructions": false,
+			"self-harm/intent": false,
+		},
+		categoryScores: Object.fromEntries(
+			Object.entries(moderation.categoryScores).filter(
+				([category]) => !category.startsWith("self-harm")
+			)
+		),
+	};
+}
 
 /**
  * Moderation and the classifier through the safeguard engine. Never rejects, and
@@ -192,12 +222,18 @@ async function engineVerdict(words: string): Promise<WordsVerdict> {
 		};
 	}
 	const peak = peakOf(verdict);
+	const selfHarmScoresOnly =
+		verdict.level === "elevated" &&
+		moderationPeak(moderation)?.level === "elevated" &&
+		!moderationPeak(withoutSelfHarm(moderation)) &&
+		!peakOf(evaluateSafeguard(classification, MODERATION_UNAVAILABLE, []));
 	return {
 		level: verdict.level,
 		resources: verdict.resourcesPresented,
 		unavailable,
 		...moderationFlag,
 		...(peak && { peak }),
+		...(selfHarmScoresOnly && { selfHarmScoresOnly: true as const }),
 	};
 }
 

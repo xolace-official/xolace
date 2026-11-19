@@ -7,8 +7,8 @@
  */
 import type { WordsVerdict } from "../ai/intake/read";
 import type { LetterVerdict } from "../ai/letters/check";
-import { discountedPeak } from "../ai/letters/floor";
-import type { TalkPeak } from "../ai/safeguard";
+import { discountedPeak, letterPhrasePeak } from "../ai/letters/floor";
+import { levelAbove, type TalkPeak } from "../ai/safeguard";
 import { contactLeakIn, urlIn } from "../lib/contactPatterns";
 import type { FixableCategory } from "./lines";
 
@@ -81,20 +81,39 @@ export function patternCategory(text: string): FixableCategory | null {
  * letters floor cut a mention it read as past or someone else's. That cut
  * alone never passes a letter: unless the classifier answered that every
  * mention is past or someone else's, the letter is risk at the uncut level.
- * A classifier that's down, timed out, unparseable or unsure is not a yes.
+ * A classifier that's down, timed out, unparseable or unsure is not a yes. A
+ * risk always routes at the higher of the engine's level and the uncut one, so
+ * a cut never lowers crisis to elevated.
+ *
+ * A past mention moderation flags (owner, 19 Nov 2026): an elevated verdict
+ * passes on, as if the engine said none, only when all four hold: it is
+ * elevated, never crisis; the floor cut a mention and what's left raises
+ * nothing (`remainder` null); moderation's self-harm scores alone raised it
+ * (`selfHarmScoresOnly`); and the classifier answered `past_or_others`.
  */
 export function decideLetterCheck(input: {
 	safety: WordsVerdict;
 	verdict: LetterVerdict | null;
 	pattern: FixableCategory | null;
+	/** Talk's floor peak when the letters floor's cut lowered it. */
 	discounted: TalkPeak | null;
+	/** The letters floor's peak of what's left after the cut. */
+	remainder: TalkPeak | null;
 }): LetterCheck {
-	const { safety, verdict, pattern, discounted } = input;
-	if (safety.level === "elevated" || safety.level === "crisis") {
-		return { kind: "risk", peak: safety.peak ?? null };
-	}
-	if (discounted && verdict?.crisisMention !== "past_or_others") {
-		return { kind: "risk", peak: discounted };
+	const { safety, verdict, pattern, discounted, remainder } = input;
+	const confirmedPast = verdict?.crisisMention === "past_or_others";
+	const engineRisk = safety.level === "elevated" || safety.level === "crisis";
+	const pastMentionFlagged =
+		safety.level === "elevated" &&
+		discounted !== null &&
+		remainder === null &&
+		safety.selfHarmScoresOnly === true &&
+		confirmedPast;
+	if ((engineRisk && !pastMentionFlagged) || (discounted && !confirmedPast)) {
+		const enginePeak = engineRisk ? (safety.peak ?? null) : null;
+		const uncutHigher =
+			discounted && (!engineRisk || levelAbove(discounted.level, safety.level));
+		return { kind: "risk", peak: uncutHigher ? discounted : enginePeak };
 	}
 	if (verdict?.hostile || safety.rejected) {
 		return { kind: "held" };
@@ -140,6 +159,7 @@ export async function checkLetterText(
 	return decideLetterCheck({
 		discounted: discountedPeak(text),
 		pattern,
+		remainder: letterPhrasePeak(text),
 		safety,
 		verdict,
 	});

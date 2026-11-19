@@ -74,13 +74,16 @@ const MENTIONS = [
 	new RegExp(`${NOT_PAST_HABIT}\\bused to ${GAP(3)}${PHRASE}`, "g"),
 	// "I survived a suicide attempt", "recovered from being suicidal".
 	new RegExp(`\\b(?:survived|recovered from) ${GAP(3)}${PHRASE}`, "g"),
-	// Someone else's: "lost my brother to suicide", "died by suicide",
+	// Someone else's: "lost my brother to suicide", "my friend died by suicide",
 	// "my brother's suicide", "the suicide of a friend".
 	new RegExp(
 		`\\blost (?:my|a|our|her|his|their) ${GAP(2)}${WORD} to suicide\\b`,
 		"g"
 	),
-	/\b(?:he|she|they|who) died (?:by|of|from) suicide\b/g,
+	new RegExp(
+		`\\b(?:he|she|they|who|(?:my|our|his|her|their|a|the) ${GAP(2)}${WORD}) died (?:by|of|from) suicide\\b`,
+		"g"
+	),
 	/\b(?:his|her|their|(?:my|our|his|her|their|a|the) [a-z]+'s) suicide\b/g,
 	/\bsuicide of (?:my|a|our|her|his|their) [a-z]+/g,
 ];

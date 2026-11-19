@@ -295,3 +295,51 @@ describe("ai/intake/read.checkWordsSafety's moderation availability", () => {
 		expect(verdict.moderationUnavailable).toBeUndefined();
 	});
 });
+
+/** The owner's past-mention letter as moderation scored it (Letters eval). */
+const PAST_SELF_HARM: ModerationResult = {
+	categories: EMPTY_CATEGORIES,
+	categoryScores: {
+		"self-harm": 0.452,
+		"self-harm/instructions": 0,
+		"self-harm/intent": 0.605,
+	},
+	flagged: false,
+};
+
+describe("ai/intake/read.checkWordsSafety's selfHarmScoresOnly", () => {
+	const words = "Nothing here trips the phrase floor.";
+
+	it("is set when moderation's self-harm scores alone raise elevated", async () => {
+		stub.reply = CALM;
+		stub.moderation = () => Promise.resolve(PAST_SELF_HARM);
+		expect(await checkWordsSafety(words)).toMatchObject({
+			level: "elevated",
+			selfHarmScoresOnly: true,
+		});
+	});
+
+	it("is unset when the classifier's intensity raises elevated", async () => {
+		stub.reply = DESPAIRING;
+		stub.moderation = () => Promise.resolve(CLEAN);
+		const verdict = await checkWordsSafety(words);
+		expect(verdict.level).toBe("elevated");
+		expect(verdict.selfHarmScoresOnly).toBeUndefined();
+	});
+
+	it("is unset when the classifier would raise it too", async () => {
+		stub.reply = DESPAIRING;
+		stub.moderation = () => Promise.resolve(PAST_SELF_HARM);
+		const verdict = await checkWordsSafety(words);
+		expect(verdict.level).toBe("elevated");
+		expect(verdict.selfHarmScoresOnly).toBeUndefined();
+	});
+
+	it("is unset at crisis", async () => {
+		stub.reply = CALM;
+		stub.moderation = () => Promise.resolve(SELF_HARM);
+		const verdict = await checkWordsSafety(words);
+		expect(verdict.level).toBe("crisis");
+		expect(verdict.selfHarmScoresOnly).toBeUndefined();
+	});
+});

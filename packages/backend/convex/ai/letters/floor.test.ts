@@ -24,25 +24,26 @@ const CLEAN: ModerationResult = {
 	flagged: false,
 };
 
-const stub = { moderation: CLEAN };
+const stub = {
+	moderation: CLEAN,
+	/** The safeguard classifier's reply; an Error is the classifier down. */
+	reply: new Error("classifier down") as string | Error,
+};
 
 vi.mock("../providers/moderation", async (orig) => ({
 	...(await orig<typeof import("../providers/moderation")>()),
 	moderateInput: () => Promise.resolve(stub.moderation),
 }));
-// The safeguard's classifier is down, so the engine is moderation alone: the
-// floor is what these tests see.
+// The safeguard's classifier is down unless a test answers for it, so the
+// engine is moderation alone: the floor is what these tests see.
 vi.mock("../providers/anthropic", async (orig) => ({
 	...(await orig<typeof import("../providers/anthropic")>()),
-	getAnthropicClient: () => ({
-		messages: {
-			create: () => Promise.reject(new Error("classifier down")),
-		},
-	}),
+	...(await import("../../test/mocks.helpers")).anthropicMock(() => stub.reply),
 }));
 
 beforeEach(() => {
 	stub.moderation = CLEAN;
+	stub.reply = new Error("classifier down");
 });
 
 /** The classifier's kind verdict: every mention is past or someone else's. */
@@ -83,6 +84,34 @@ const PRESENT: [string, "crisis" | "elevated"][] = [
 	["I tried to kill myself two days ago.", "crisis"],
 	["It happened last night. I tried to end my life.", "crisis"],
 ];
+
+/**
+ * A floor cut must never drop crisis to elevated (review of #857): each keeps
+ * talk's crisis on its present-tense clause.
+ */
+const CRISIS_BESIDE_A_CUT = [
+	"I survived today wanting to kill myself. I want to die.",
+	"I tried to kill myself and I want to die.",
+	"I tried to take my life back but I want to die.",
+];
+
+/** Moderation's scores on the owner's "used to" letter (Letters eval). */
+const PAST_SELF_HARM: ModerationResult = {
+	categories: EMPTY_CATEGORIES,
+	categoryScores: {
+		"self-harm": 0.452,
+		"self-harm/instructions": 0,
+		"self-harm/intent": 0.605,
+	},
+	flagged: false,
+};
+
+/** The safeguard classifier's reading of that letter (Letters eval). */
+const QUIETLY_SAD = JSON.stringify({
+	granularLabel: "sad",
+	intensity: 4,
+	primaryEmotion: "sadness",
+});
 
 const MENTIONS = [
 	"A few years ago I tried to end my life. I'm still here, and some days are good now.",
@@ -223,6 +252,82 @@ describe("the letters check with its floor", () => {
 		stub.moderation = MODERATION_UNAVAILABLE;
 		expect(await check("I want to kill myself.")).toMatchObject({
 			kind: "risk",
+		});
+	});
+
+	it.each(CRISIS_BESIDE_A_CUT)(
+		"keeps crisis beside a cut mention, whatever the classifier says: %s",
+		async (text) => {
+			expect(phrasePeak(text.toLowerCase())?.level).toBe("crisis");
+			for (const verdict of [
+				null,
+				KIND,
+				{ ...KIND, crisisMention: "none" as const },
+				{ ...KIND, crisisMention: "current" as const },
+			]) {
+				expect(await check(text, verdict)).toMatchObject({
+					kind: "risk",
+					peak: { level: "crisis" },
+				});
+			}
+		}
+	);
+
+	it("cuts someone else's death by suicide named with a noun", async () => {
+		const text =
+			"My friend died by suicide, and I still talk to her some nights.";
+		expect(letterPhrasePeak(text)).toBeNull();
+		expect(discountedPeak(text)).not.toBeNull();
+		expect(await check(text)).toEqual({ kind: "pass" });
+		expect(await check(text, null)).toMatchObject({ kind: "risk" });
+	});
+
+	describe("a past mention moderation's self-harm scores flag (owner)", () => {
+		const USED_TO = MENTIONS[2] ?? "";
+
+		beforeEach(() => {
+			stub.moderation = PAST_SELF_HARM;
+			stub.reply = QUIETLY_SAD;
+		});
+
+		it("passes when the classifier confirms it's past", async () => {
+			expect(await check(USED_TO)).toEqual({ kind: "pass" });
+		});
+
+		it.each([null, "none", "current"] as const)(
+			"is risk when the classifier answers %s",
+			async (crisisMention) => {
+				expect(
+					await check(
+						USED_TO,
+						crisisMention ? { ...KIND, crisisMention } : null
+					)
+				).toMatchObject({ kind: "risk", peak: { level: "elevated" } });
+			}
+		);
+
+		it("is risk when moderation reads crisis", async () => {
+			stub.moderation = {
+				...PAST_SELF_HARM,
+				categoryScores: { "self-harm": 0.452, "self-harm/intent": 0.85 },
+			};
+			expect(await check(USED_TO)).toMatchObject({
+				kind: "risk",
+				peak: { level: "crisis" },
+			});
+		});
+
+		it("is risk when the classifier's intensity raised it", async () => {
+			stub.moderation = CLEAN;
+			stub.reply = JSON.stringify({
+				granularLabel: "despair",
+				intensity: 9,
+				primaryEmotion: "sadness",
+			});
+			expect(await check(USED_TO)).toMatchObject({
+				kind: "risk",
+				peak: { level: "elevated" },
+			});
 		});
 	});
 });
