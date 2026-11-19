@@ -114,10 +114,14 @@ export default defineSchema({
 	// who it was about after the account is gone. Append-only.
 	//
 	admin_audit_log: defineTable({
-		action: v.literal("outreach_viewed"),
+		action: v.union(v.literal("outreach_viewed"), v.literal("letter_viewed")),
 		adminClerkUserId: v.string(),
 		at: v.number(),
-		targetClerkUserId: v.string(),
+		// letter_viewed: the review whose letter was read (letters spec §9).
+		letterReviewId: v.optional(v.id("letter_reviews")),
+		// Whose outreach or words were looked at. Absent for a letter whose
+		// sender has since deleted their account.
+		targetClerkUserId: v.optional(v.string()),
 	})
 		.index("by_target", ["targetClerkUserId", "at"])
 		.index("by_admin", ["adminClerkUserId", "at"]),
@@ -1604,7 +1608,9 @@ export default defineSchema({
 			"band",
 			"lastReceivedAt",
 			"tiebreak",
-		]),
+		])
+		// Active pauses, for the admin list.
+		.index("by_paused_until", ["pausedUntil"]),
 
 	// What a person may read (#750): reported letters and held ones, nothing
 	// else.
