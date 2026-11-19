@@ -1,8 +1,7 @@
 import { useHeaderHeight } from "expo-router/react-navigation";
-import { type ComponentRef, useEffect, useRef } from "react";
+import { type ComponentRef, useEffect, useRef, useState } from "react";
 import {
 	type AccessibilityActionEvent,
-	type AccessibilityActionInfo,
 	AccessibilityInfo,
 	findNodeHandle,
 	Platform,
@@ -14,12 +13,18 @@ import { PressScale } from "@/components/shared/press-scale";
 import { playSoftPress } from "@/lib/haptics";
 import { LETTERS } from "../copy";
 import { LETTER_MOTION } from "../letter-motion";
-import type { ReceivedLetter } from "../letters-model";
+import {
+	type ReaderAction,
+	type ReceivedLetter,
+	readerActions,
+	readerSealed,
+} from "../letters-model";
 import { openReport } from "../letters-routes";
 import { ReadActs, ReadFooter } from "./read-acts";
 import { useReaderScreen } from "./read-data";
 import { ReadLetter } from "./read-letter";
 import { useReaderUndo } from "./reader-undo";
+import { useSealedInView } from "./sealed-in-view";
 import { UndoPill } from "./undo-pill";
 
 const O = LETTER_MOTION.open;
@@ -47,7 +52,11 @@ export function Reader({
 	const headerH = useHeaderHeight();
 	const top = (Platform.OS === "ios" ? headerH : 0) + UNDER_HEADER;
 	const u = useReaderUndo(reader);
-	const sealed = !letter.opened;
+	// Open shows at once; the server catches up (or fails, and it seals again).
+	const [openedHere, setOpenedHere] = useState(false);
+	const opening = useRef(false);
+	const sealed = readerSealed(letter, openedHere);
+	const inView = useSealedInView(sealed, top);
 	const words = useRef<ComponentRef<typeof View>>(null);
 	const focus = useRef<ReturnType<typeof setTimeout> | null>(null);
 	useEffect(
@@ -60,11 +69,18 @@ export function Reader({
 	);
 
 	const open = () => {
-		if (!sealed) {
+		if (!sealed || opening.current) {
 			return;
 		}
+		opening.current = true;
+		setOpenedHere(true);
 		playSoftPress();
-		reader.actions.open();
+		reader.actions.open().then((ok) => {
+			if (!ok) {
+				opening.current = false;
+				setOpenedHere(false);
+			}
+		});
 		focus.current = setTimeout(
 			() => {
 				const tag = words.current ? findNodeHandle(words.current) : null;
@@ -78,21 +94,19 @@ export function Reader({
 	const report = () => openReport(letter.id);
 
 	const r = LETTERS.read;
-	let actions: AccessibilityActionInfo[] = [{ label: r.undo, name: "undo" }];
-	if (sealed) {
-		actions = [{ label: r.open, name: "activate" }];
-	} else if (!u.undo) {
-		actions = [
-			...(u.acknowledged
-				? []
-				: [{ label: r.acknowledge, name: "acknowledge" }]),
-			u.hidden
-				? { label: r.unhide, name: "unhide" }
-				: { label: r.hide, name: "hide" },
-			{ label: r.report, name: "report" },
-		];
-	}
-	const run: Record<string, () => void> = {
+	const LABEL: Record<ReaderAction, string> = {
+		acknowledge: r.acknowledge,
+		activate: r.open,
+		hide: r.hide,
+		report: r.report,
+		undo: r.undo,
+		unhide: r.unhide,
+	};
+	const actions = readerActions({ ...u, sealed }).map((name) => ({
+		label: LABEL[name],
+		name,
+	}));
+	const run: Record<ReaderAction, () => void> = {
 		acknowledge: u.acknowledge,
 		activate: open,
 		hide: u.hide,
@@ -100,8 +114,13 @@ export function Reader({
 		undo: u.undoIt,
 		unhide: u.unhide,
 	};
-	const onAction = (e: AccessibilityActionEvent) =>
-		run[e.nativeEvent.actionName]?.();
+	const onAction = (e: AccessibilityActionEvent) => {
+		const name = e.nativeEvent.actionName;
+		if (isAction(name)) {
+			run[name]();
+		}
+	};
+	const isAction = (name: string): name is ReaderAction => name in run;
 	const showActs = !sealed && u.undo === null;
 
 	return (
@@ -110,6 +129,8 @@ export function Reader({
 				contentContainerClassName="grow pb-6"
 				contentContainerStyle={{ paddingTop: top }}
 				contentInsetAdjustmentBehavior="never"
+				onLayout={inView.onViewport}
+				ref={inView.ref}
 				scrollEnabled={!sealed}
 			>
 				<AppText
@@ -124,6 +145,7 @@ export function Reader({
 					hiding={u.undo === "hide"}
 					onAction={onAction}
 					onCommit={open}
+					onLayout={inView.onLetter}
 					reduced={reduced}
 					sealed={sealed}
 					stamped={u.acknowledged}

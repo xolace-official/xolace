@@ -1,5 +1,12 @@
 import { router } from "expo-router";
-import { Pressable, View } from "react-native";
+import { type ComponentRef, useEffect, useRef } from "react";
+import {
+	AccessibilityInfo,
+	findNodeHandle,
+	Pressable,
+	type Text,
+	View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
@@ -19,7 +26,8 @@ const TITLE = { fontSize: 24, letterSpacing: -0.48, lineHeight: 28 } as const;
  * At risk (#750, handoff §3): no send and no rejection line. Reflect's care instead, in its words:
  * "I hear you.", Show me who I can talk to, Breathe with me first (Sit with this, Three breaths),
  * Talk to a Xolacer, Not right now. The draft stays on the device whichever way they go, and the
- * sheet is still here on the way back. It rises 40 pt (320 ms, roll); reduced, it fades.
+ * sheet is still here on the way back. It rises 40 pt (320 ms, roll); reduced, it fades. Once
+ * it's in, VoiceOver moves to "I hear you." (Send has gone, so nothing else holds focus).
  */
 export function WriteCare({
 	open,
@@ -34,6 +42,22 @@ export function WriteCare({
 	const insets = useSafeAreaInsets();
 	const faces = useThemeFaces();
 	const c = LETTERS.care;
+	const title = useRef<ComponentRef<typeof Text>>(null);
+	useEffect(() => {
+		if (!open) {
+			return;
+		}
+		const t = setTimeout(
+			() => {
+				const tag = title.current ? findNodeHandle(title.current) : null;
+				if (typeof tag === "number") {
+					AccessibilityInfo.setAccessibilityFocus(tag);
+				}
+			},
+			reduced ? LETTER_MOTION.reducedMs : M.sheetMs
+		);
+		return () => clearTimeout(t);
+	}, [open, reduced]);
 	return (
 		<View
 			accessibilityViewIsModal={open}
@@ -65,6 +89,7 @@ export function WriteCare({
 			>
 				<AppText
 					accessibilityRole="header"
+					ref={title}
 					style={{ ...TITLE, fontFamily: faces["display-bold"] }}
 					variant="title"
 				>

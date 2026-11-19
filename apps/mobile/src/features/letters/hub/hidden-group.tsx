@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 import Animated, {
 	FadeIn,
+	LayoutAnimationConfig,
 	useAnimatedStyle,
 	useSharedValue,
 	withTiming,
@@ -74,18 +75,21 @@ export function HiddenGroup({
 					/>
 				</Animated.View>
 			</PressScale>
-			{open
-				? letters.map((l) => (
-						<Animated.View
-							entering={FadeIn.duration(
-								reduced ? LETTER_MOTION.reducedMs : MS
-							).reduceMotion(PLAY_AS_CHOSEN.reduceMotion)}
-							key={l.id}
-						>
-							<ReceivedRow letter={l} />
-						</Animated.View>
-					))
-				: null}
+			{/* Open as the screen opens (dev state): the rows are there, not fading in. */}
+			<LayoutAnimationConfig skipEntering>
+				{open
+					? letters.map((l) => (
+							<Animated.View
+								entering={FadeIn.duration(
+									reduced ? LETTER_MOTION.reducedMs : MS
+								).reduceMotion(PLAY_AS_CHOSEN.reduceMotion)}
+								key={l.id}
+							>
+								<ReceivedRow letter={l} />
+							</Animated.View>
+						))
+					: null}
+			</LayoutAnimationConfig>
 		</View>
 	);
 }

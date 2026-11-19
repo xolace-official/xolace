@@ -13,7 +13,14 @@ export function useReader(id: string): LetterReader {
 		actions: {
 			acknowledge: () => calls.acknowledge(id).catch(report),
 			hide: () => calls.hide(id).catch(report),
-			open: () => calls.open(id).catch(report),
+			open: () =>
+				calls.open(id).then(
+					() => true,
+					(error: unknown) => {
+						report(error);
+						return false;
+					}
+				),
 			unhide: () => calls.unhide(id).catch(report),
 		},
 		state: { letter, opens: OPENS },

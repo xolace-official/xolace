@@ -5,7 +5,7 @@ import { AppText } from "@/components/shared/app-text";
 import { PressScale } from "@/components/shared/press-scale";
 import { LETTERS } from "../copy";
 import { LetterLine } from "../letter-sheet";
-import type { SentLetter } from "../letters-model";
+import { type SentLetter, sentShown } from "../letters-model";
 import { ReceivedMark } from "../received-mark";
 
 const WITHDRAW = "withdraw";
@@ -28,9 +28,8 @@ export function SentRow({
 }) {
 	const focused = useIsFocused();
 	const fresh = !letter.seen;
-	// Until the screen is in front, a new status isn't shown lit (a push can land while the sender
-	// is on the writing screen above this one). The key remounts the mark when it lights.
-	const shown = fresh && !focused ? "waiting" : letter.status;
+	// The key remounts the mark when it lights.
+	const shown = sentShown(letter, focused);
 	useEffect(() => {
 		if (focused && fresh) {
 			onSeen(letter.id);
@@ -46,7 +45,7 @@ export function SentRow({
 					? [{ label: LETTERS.withdraw.action, name: WITHDRAW }]
 					: undefined
 			}
-			accessibilityLabel={`${letter.line} ${status}`}
+			accessibilityLabel={`${letter.line}, ${status}`}
 			accessible
 			className="mx-4 flex-row items-center gap-2.5 border-separator border-b px-4 py-3"
 			onAccessibilityAction={(e) => {

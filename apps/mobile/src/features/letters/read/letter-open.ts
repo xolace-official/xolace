@@ -61,9 +61,13 @@ export function useLetterOpen({
 
 	useEffect(() => {
 		if (sealed) {
+			// Sealed, or sealed again after a failed open: whole, with its seal unbroken.
 			top.set(1);
 			bottom.set(1);
 			crease.set(1);
+			progress.set(0);
+			split.set(0);
+			setDragSplit(false);
 			return;
 		}
 		if (reduced) {
@@ -81,7 +85,7 @@ export function useLetterOpen({
 				NEVER
 			)
 		);
-	}, [sealed, reduced, top, bottom, crease]);
+	}, [sealed, reduced, top, bottom, crease, progress, split]);
 
 	useEffect(() => {
 		drift.set(t(hiding ? 1 : 0, reduced ? M.reducedMs : M.hide.ms, DRIFT));

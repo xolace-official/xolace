@@ -8,7 +8,7 @@ import { withStarter } from "../letters-model";
 import { useWriteScreen } from "./write-data";
 
 /** A row of chips is this tall. */
-export const ROW_HEIGHT = 30;
+const ROW_HEIGHT = 30;
 const CHIP_MAX_SCALE = 1.4;
 
 /** For: Anyone by default. */

@@ -1,5 +1,9 @@
-import { View } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { Pressable, View } from "react-native";
+import Animated, {
+	FadeIn,
+	FadeOut,
+	LayoutAnimationConfig,
+} from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
 import { PLAY_AS_CHOSEN } from "@/design/springs";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
@@ -15,6 +19,7 @@ import { ReceivedRow } from "./received-row";
 
 /** The offer and the shelf leave and arrive in 240 ms (the board's). */
 const SWAP_MS = 240;
+const HIT = 10;
 
 export function SectionLabel({ text }: { text: string }) {
 	return (
@@ -43,7 +48,8 @@ export function ForYouSection() {
 	const { optIn, unopenedId } = state.status;
 	const { reread, hidden } = forYouRows(state.received);
 	return (
-		<View>
+		// Nothing fades in as the screen opens: only what changes while it's up.
+		<LayoutAnimationConfig skipEntering>
 			<SectionLabel text={LETTERS.hub.forYou} />
 			{optIn === "unset" ? (
 				<Animated.View
@@ -54,34 +60,43 @@ export function ForYouSection() {
 				</Animated.View>
 			) : null}
 			{optIn === "no" ? (
-				<AppText
-					className="mx-8 text-[14px] leading-[20px]"
-					color="muted"
-					variant="detail"
-				>
-					{`${LETTERS.hub.off} `}
+				<View className="mx-8 flex-row flex-wrap items-baseline">
 					<AppText
-						accessibilityRole="button"
 						className="text-[14px] leading-[20px]"
-						color="accentInk"
-						onPress={actions.turnOn}
+						color="muted"
 						variant="detail"
-						weight="semibold"
 					>
-						{LETTERS.hub.turnOn}
+						{`${LETTERS.hub.off} `}
 					</AppText>
-				</AppText>
+					<Pressable
+						accessibilityRole="button"
+						hitSlop={HIT}
+						onPress={actions.turnOn}
+					>
+						<AppText
+							className="text-[14px] leading-[20px]"
+							color="accentInk"
+							variant="detail"
+							weight="semibold"
+						>
+							{LETTERS.hub.turnOn}
+						</AppText>
+					</Pressable>
+				</View>
 			) : null}
 			{optIn === "yes" ? (
 				<Animated.View entering={enter}>
-					{unopenedId ? (
-						<Animated.View entering={enter} exiting={exit}>
-							<LetterShelf
-								className="mx-4 border border-continuous border-separator bg-surface"
-								onOpen={() => openLetter(unopenedId)}
-							/>
-						</Animated.View>
-					) : null}
+					{/* The shelf fades in alone when a letter arrives, not again with its section. */}
+					<LayoutAnimationConfig skipEntering>
+						{unopenedId ? (
+							<Animated.View entering={enter} exiting={exit}>
+								<LetterShelf
+									className="mx-4 border border-continuous border-separator bg-surface"
+									onOpen={() => openLetter(unopenedId)}
+								/>
+							</Animated.View>
+						) : null}
+					</LayoutAnimationConfig>
 					{reread.map((l) => (
 						<ReceivedRow key={l.id} letter={l} />
 					))}
@@ -97,6 +112,6 @@ export function ForYouSection() {
 					<HiddenGroup letters={hidden} startOpen={state.opens.hidden} />
 				</Animated.View>
 			) : null}
-		</View>
+		</LayoutAnimationConfig>
 	);
 }

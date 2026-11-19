@@ -2,8 +2,12 @@ import * as Sentry from "@sentry/react-native";
 import { toast } from "@/components/shared/toast";
 import { LETTERS } from "../copy";
 import { useKeep, useKeptField } from "../device-memory";
-import { answerOf, type SendAnswer } from "../letters-model";
-import { useLettersCalls, useLettersStatus } from "../use-letters-data";
+import { answerOf, draftAfter, type SendAnswer } from "../letters-model";
+import {
+	useCheckRunning,
+	useLettersCalls,
+	useLettersStatus,
+} from "../use-letters-data";
 import type { LettersWrite, WriteOpens } from "./write-data";
 
 /** The app always opens it writing. */
@@ -23,35 +27,42 @@ export function useWrite(): LettersWrite {
 	const text = useKeptField("text");
 	const forWho = useKeptField("forWho");
 	const held = useKeptField("held");
-	const { keep, clearDraft } = useKeep();
+	const { keep, clearDraft, draftNow } = useKeep();
 	const status = useLettersStatus();
 	const calls = useLettersCalls();
+	const checking = useCheckRunning();
 	return {
 		actions: {
 			send: async (draft) => {
+				let answer: SendAnswer | null = null;
 				try {
 					// What's sent is trimmed, as both limits count it.
-					const outcome = await calls.send({
-						...draft,
-						text: draft.text.trim(),
-					});
-					const answer = answerOf(outcome);
-					if (answer.next === "rise") {
-						clearDraft();
-					}
-					if (answer.next === "back" && answer.held) {
-						keep({ held: draft.text });
-					}
-					return answer;
+					answer = answerOf(
+						await calls.send({ ...draft, text: draft.text.trim() })
+					);
 				} catch (error) {
 					Sentry.captureException(error);
 					toast(LETTERS.write.failed);
-					return NOT_SENT;
 				}
+				// The words may have changed since (Write closed and opened again mid-check).
+				const change = draftAfter(answer, draft.text, draftNow());
+				if (change && "clear" in change) {
+					clearDraft();
+				} else if (change) {
+					keep({ held: change.held });
+				}
+				return answer ?? NOT_SENT;
 			},
 			setForWho: (f) => keep({ forWho: f }),
 			setText: (t) => keep({ text: t }),
 		},
-		state: { forWho, held, limit: status?.writeLimit, opens: OPENS, text },
+		state: {
+			checking,
+			forWho,
+			held,
+			limit: status?.writeLimit,
+			opens: OPENS,
+			text,
+		},
 	};
 }

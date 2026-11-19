@@ -121,6 +121,8 @@ export function useKeep() {
 	};
 	return {
 		clearDraft: () => keep({ forWho: FRESH.forWho, held: "", text: "" }),
+		/** The draft's words as they are now, for an answer that lands after a re-render. */
+		draftNow: () => keptFor(useKept.getState(), userId ?? null).text,
 		keep,
 	};
 }

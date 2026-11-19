@@ -23,7 +23,10 @@ import { useSwapOptions } from "./swap/use-swap-options";
  * nothing in the session moves, finishing tends the twig, and it goes back.
  * Today's Sit door (`from=today`) plays Three breaths on its own
  * (`exercises.getStandalone`): no session, no slots, no swap; finishing it counts the day
- * (`exercises.completeStandalone`), and it goes back.
+ * (`exercises.completeStandalone`), and it goes back. A letter's care sheet (`from=letter`,
+ * Breathe with me first) plays the same Three breaths the same way: it's the same exercise as
+ * from Today, so finishing it counts the day too, and `sit_opened` / `sit_finished` carry
+ * `from: "letter"`.
  * Nothing written in a prompt is ever sent.
  */
 export function useSitData(): Sit {

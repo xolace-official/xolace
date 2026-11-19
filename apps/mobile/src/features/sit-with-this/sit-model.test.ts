@@ -35,6 +35,8 @@ describe("the screen around the beats", () => {
 		expect(closeLabel("reflect", "pre")).toBe("Leave Sit with this");
 		expect(closeLabel("today", "pre")).toBe("Back to Today");
 		expect(closeLabel("today", "close")).toBe("Leave Sit with this");
+		expect(closeLabel("letter", "pre")).toBe("Back to your letter");
+		expect(closeLabel("letter", "play")).toBe("Leave Sit with this");
 	});
 
 	it("reads where it was opened, and runs on its own outside a reflection", () => {

@@ -1,5 +1,5 @@
 import { useFocusEffect } from "expo-router";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { View } from "react-native";
 import Animated, { FadeOut, LinearTransition } from "react-native-reanimated";
 import { AppText } from "@/components/shared/app-text";
@@ -25,7 +25,14 @@ export function SentSection() {
 	const reduced = useEffectiveReducedMotion();
 	const [withdrawing, setWithdrawing] = useState(state.opens.withdraw);
 	const w = LETTERS.withdraw;
-	useFocusEffect(() => () => setWithdrawing(null));
+	// useFocusEffect needs a stable callback (code-style's listed exception to no useCallback).
+	useFocusEffect(useCallback(() => () => setWithdrawing(null), []));
+	// The ask closes if its letter stops waiting while it's up (received, or withdrawn elsewhere).
+	const asking = state.sent.some(
+		(l) => l.id === withdrawing && l.status === "waiting"
+	)
+		? withdrawing
+		: null;
 	return (
 		<View>
 			<SectionLabel text={LETTERS.hub.sent} />
@@ -67,10 +74,10 @@ export function SentSection() {
 				confirmLabel={w.action}
 				description={w.body}
 				isDestructive
-				isOpen={withdrawing !== null}
+				isOpen={asking !== null}
 				onConfirm={() => {
-					if (withdrawing) {
-						actions.withdraw(withdrawing);
+					if (asking) {
+						actions.withdraw(asking);
 					}
 					setWithdrawing(null);
 				}}

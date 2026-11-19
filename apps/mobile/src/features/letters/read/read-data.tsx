@@ -1,8 +1,6 @@
 import { createContext, type ReactNode, use } from "react";
-import type { ReceivedLetter } from "../letters-model";
+import type { ReceivedLetter, Undo } from "../letters-model";
 import { useReader } from "./use-reader";
-
-export type Undo = "ack" | "hide";
 
 /**
  * Everything the reader reads and does. Two adapters fill it: the letters data module in the app
@@ -11,15 +9,17 @@ export type Undo = "ack" | "hide";
  */
 export type LetterReader = {
 	state: {
-		/** Null once it's gone (reported), or for an id that isn't yours. */
 		/** `undefined` while it loads; `null` once it's gone (reported, or not yours). */
 		letter: ReceivedLetter | null | undefined;
 		/** How the reader opens: mid-Undo (dev states). */
 		opens: { undo: Undo | null };
 	};
 	actions: {
-		/** Opening is what lets the next letter be placed. */
-		open: () => void;
+		/**
+		 * Opening is what lets the next letter be placed. Resolves false if it failed: the reader
+		 * has already shown it open, and seals it again.
+		 */
+		open: () => Promise<boolean>;
 		acknowledge: () => void;
 		hide: () => void;
 		unhide: () => void;

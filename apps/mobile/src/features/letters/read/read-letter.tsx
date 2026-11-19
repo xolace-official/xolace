@@ -2,6 +2,7 @@ import { type ComponentRef, type Ref, useState } from "react";
 import {
 	type AccessibilityActionEvent,
 	type AccessibilityActionInfo,
+	type LayoutChangeEvent,
 	useWindowDimensions,
 	View,
 } from "react-native";
@@ -43,6 +44,8 @@ type Props = {
 	wordsRef: Ref<ComponentRef<typeof View>>;
 	actions: AccessibilityActionInfo[];
 	onAction: (e: AccessibilityActionEvent) => void;
+	/** Its frame in the reader's scroll view. */
+	onLayout: (e: LayoutChangeEvent) => void;
 };
 
 /**
@@ -75,6 +78,7 @@ export function ReadLetter(props: Props) {
 
 	return (
 		<Animated.View
+			onLayout={props.onLayout}
 			pointerEvents={hiding ? "none" : "auto"}
 			style={[{ marginHorizontal: SHEET.margin }, o.driftStyle]}
 		>
@@ -169,14 +173,9 @@ export function ReadLetter(props: Props) {
 					<Stamp on={stamped} reduced={reduced} />
 					{wasSealed || sealed ? (
 						<View
+							className="absolute right-0 left-0 items-center"
 							pointerEvents="none"
-							style={{
-								alignItems: "center",
-								left: 0,
-								position: "absolute",
-								right: 0,
-								top: band * 2 - SEAL / 2,
-							}}
+							style={{ top: band * 2 - SEAL / 2 }}
 						>
 							<EmberSeal size={SEAL} split={!sealed || o.dragSplit} />
 						</View>

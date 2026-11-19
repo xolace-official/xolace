@@ -55,7 +55,7 @@ export function WriteFixtureScreen({ fixture }: { fixture: WriteFixture }) {
 							setText("");
 						}
 						if (answer.next === "back" && answer.held) {
-							setHeld(draft.text);
+							setHeld(draft.text.trim());
 						}
 						resolve(answer);
 					}, fixture.checkMs ?? CHECK_MS);
@@ -64,6 +64,7 @@ export function WriteFixtureScreen({ fixture }: { fixture: WriteFixture }) {
 			setText,
 		},
 		state: {
+			checking: false,
 			forWho,
 			held,
 			limit: fixture.limit ?? null,

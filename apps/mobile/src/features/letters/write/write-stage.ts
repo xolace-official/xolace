@@ -1,20 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { AccessibilityInfo, Keyboard } from "react-native";
 import { playAffirmativePress, playSoftPress } from "@/lib/haptics";
-import { LETTERS } from "../copy";
 import { LETTER_MOTION } from "../letter-motion";
-import type { Draft, SendAnswer, WriteLimit } from "../letters-model";
-import type { WriteOpens, WriteStage } from "./write-data";
+import {
+	afterAnswer,
+	type Draft,
+	type SendAnswer,
+	type WriteLimit,
+	type WriteStage,
+	waitLeft,
+} from "../letters-model";
+import type { WriteOpens } from "./write-data";
 
 const M = LETTER_MOTION;
-/** The wait never ends before the fold and the glow's first rise have played (the board's floor). */
-const MIN_WAIT = { full: 1400, reduced: 400 };
 
 /**
  * The writing screen's moves (handoff §3, §5): Send folds the letter while the check reads it;
  * then it rises ("It's on its way." at +2 s), comes back with one line (fixable, held, not
- * English), rests while care rises (at risk), or says the limit. Leaving mid-check stops the
- * moves; the words stay on the device.
+ * English), rests while care rises (at risk), or says the limit (`afterAnswer`). Leaving
+ * mid-check stops the moves; the words stay on the device, and the check stays one at a time
+ * (`useCheckRunning`).
  */
 export function useWriteStage({
 	opens,
@@ -59,31 +64,32 @@ export function useWriteStage({
 	};
 
 	const play = (answer: SendAnswer) => {
-		switch (answer.next) {
-			case "rise":
-				setStage("rise");
-				later(reduced ? 0 : M.send.rise.delayMs, playSoftPress);
-				later(ms(M.send.lineAtMs), () => {
-					setStage("sent");
-					AccessibilityInfo.announceForAccessibility(LETTERS.sent.title);
-				});
-				return;
-			case "care":
-				setStage("rest");
-				later(ms(M.risk.sheetAtMs), () => setCare(true));
-				return;
-			case "limit":
-				setStage("edit");
-				setLimit(answer.reason);
-				return;
-			default:
-				unfold(() => {
-					setLine(answer.line || null);
-					if (answer.line) {
-						AccessibilityInfo.announceForAccessibility(answer.line);
-					}
-				});
+		const moves = afterAnswer(answer, reduced, M);
+		setStage(moves.stage);
+		if (moves.limit) {
+			setLimit(moves.limit);
 		}
+		if (moves.hapticMs !== null) {
+			later(moves.hapticMs, playSoftPress);
+		}
+		const say = () => {
+			if (moves.announce) {
+				AccessibilityInfo.announceForAccessibility(moves.announce);
+			}
+		};
+		const next = moves.next;
+		if (!next) {
+			say();
+			return;
+		}
+		later(next.ms, () => {
+			setStage(next.stage);
+			setLine(next.line);
+			if (next.care) {
+				setCare(true);
+			}
+			say();
+		});
 	};
 
 	const start = (draft: Draft) => {
@@ -93,10 +99,9 @@ export function useWriteStage({
 		setLine(null);
 		setStage("wait");
 		const began = Date.now();
-		const floor = reduced ? MIN_WAIT.reduced : MIN_WAIT.full;
 		send(draft).then((answer) => {
 			if (alive.current) {
-				later(Math.max(0, floor - (Date.now() - began)), () => play(answer));
+				later(waitLeft(Date.now() - began, reduced), () => play(answer));
 			}
 		});
 	};

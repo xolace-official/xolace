@@ -25,7 +25,7 @@ export function ReceivedRow({ letter }: { letter: ReceivedLetter }) {
 	const line = openingLine(letter.text);
 	return (
 		<PressScale
-			accessibilityLabel={`${line} ${sub}`}
+			accessibilityLabel={`${line}, ${sub}`}
 			accessibilityRole="button"
 			card
 			className="mx-4 flex-row items-center gap-2.5 border-separator border-b px-4 py-3"

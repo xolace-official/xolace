@@ -137,6 +137,9 @@ export function closeLabel(from: SitFrom, stage: Stage): string {
 	if (stage === "pre" && from === "today") {
 		return COPY.backToToday;
 	}
+	if (stage === "pre" && from === "letter") {
+		return COPY.backToLetter;
+	}
 	return COPY.leave;
 }
 

@@ -126,6 +126,8 @@ export const LETTERS = {
 		gone: "Reported. The letter is gone.",
 		hide: "Hide",
 		hint: "Drag the letter up to open it",
+		/** Proposed (the prototype has no line): a letter that's gone, or not yours. */
+		notThere: "This letter isn’t here anymore.",
 		open: "Open",
 		report: "Report",
 		rowAcknowledged: "Received · you acknowledged it",

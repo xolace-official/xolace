@@ -3,9 +3,6 @@ import type { LetterFor } from "../copy";
 import type { Draft, SendAnswer, WriteLimit } from "../letters-model";
 import { useWrite } from "./use-write";
 
-/** Where the writing screen is: writing, the check running, what it answered. */
-export type WriteStage = "edit" | "wait" | "rise" | "sent" | "back" | "rest";
-
 /** How the screen opens. The app always opens it writing; dev states open it mid-way. */
 export type WriteOpens = {
 	stage: "edit" | "wait" | "sent" | "rest";
@@ -24,6 +21,11 @@ export type WriteOpens = {
  */
 export type LettersWrite = {
 	state: {
+		/**
+		 * A check is running that this screen didn't start (it was closed mid-check and opened
+		 * again): it waits, Send off, until that one answers.
+		 */
+		checking: boolean;
 		text: string;
 		forWho: LetterFor;
 		/** A held letter's words: Send stays off until they change. */

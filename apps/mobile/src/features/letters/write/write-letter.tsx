@@ -6,7 +6,8 @@ import { loopOrSettle, useLoopRun } from "@/design/ease-loops";
 import { Fade } from "../fade";
 import { LETTER_MOTION } from "../letter-motion";
 import { PAPER_RADIUS, SHEET, useLetterInk } from "../letter-paper";
-import { type LetterPhase, useLetterFold } from "./letter-fold";
+import type { LetterPhase } from "../letters-model";
+import { useLetterFold } from "./letter-fold";
 import { BAND, Band, EMBER, Spark } from "./write-bands";
 
 const M = LETTER_MOTION;

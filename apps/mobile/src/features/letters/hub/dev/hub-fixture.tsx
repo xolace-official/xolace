@@ -27,13 +27,13 @@ export function HubFixtureScreen({ fixture }: { fixture: HubFixture }) {
 	const [sent, setSent] = useState(fixture.sent ?? []);
 	const value: LettersHub = {
 		actions: {
-			answerOffer: (optIn) => setStatus({ ...status, optIn }),
+			answerOffer: (optIn) => setStatus((s) => ({ ...s, optIn })),
 			markSeen: (ids) =>
-				setSent(
-					sent.map((l) => (ids.includes(l.id) ? { ...l, seen: true } : l))
+				setSent((all) =>
+					all.map((l) => (ids.includes(l.id) ? { ...l, seen: true } : l))
 				),
-			turnOn: () => setStatus({ ...status, optIn: "yes" }),
-			withdraw: (id) => setSent(sent.filter((l) => l.id !== id)),
+			turnOn: () => setStatus((s) => ({ ...s, optIn: "yes" })),
+			withdraw: (id) => setSent((all) => all.filter((l) => l.id !== id)),
 		},
 		state: {
 			opens: { hidden: false, withdraw: null, ...fixture.opens },

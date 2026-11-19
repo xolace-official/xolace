@@ -12,6 +12,7 @@
  * never as empty: the reader waits rather than closing (its `null` means the letter is gone),
  * and the status draws neither the offer nor Write until it knows.
  */
+import { create } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 import type { ReportReason } from "./copy";
 import {
@@ -83,13 +84,34 @@ export type LettersCalls = {
 	setPush: (on: boolean) => Promise<void>;
 };
 
+/**
+ * One check in flight across every writing screen: closing Write mid-check and opening it again
+ * mustn't send the same words twice. `send` raises it until the check answers or fails; it lives
+ * here, around the call, so the contract inherits it.
+ */
+const useChecking = create<{ running: boolean }>(() => ({ running: false }));
+
+async function checked(run: () => Promise<SendOutcome>): Promise<SendOutcome> {
+	useChecking.setState({ running: true });
+	try {
+		return await run();
+	} finally {
+		useChecking.setState({ running: false });
+	}
+}
+
+/** A letter's check is running (from this or another writing screen). */
+export function useCheckRunning(): boolean {
+	return useChecking((c) => c.running);
+}
+
 const CALLS: LettersCalls = {
 	acknowledge: async (id) => memory.acknowledge(id),
 	hide: async (id) => memory.hide(id),
 	markSeen: async (ids) => memory.markSeen(ids),
 	open: async (id) => memory.open(id),
 	report: async (id) => memory.report(id),
-	send: async (draft) => memory.send(draft),
+	send: (draft) => checked(async () => memory.send(draft)),
 	setOptIn: async (optIn) => memory.setOptIn(optIn),
 	setPush: async (on) => memory.setPush(on),
 	unhide: async (id) => memory.unhide(id),
