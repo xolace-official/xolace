@@ -38,8 +38,11 @@ export type LetterCheck =
 
 export type LetterCheckDeps = {
 	/**
-	 * The sender's safety: intake's `checkWordsSafety`. Shouldn't reject; if it
-	 * does, `checkLetterText` reads that as this half unavailable.
+	 * The sender's safety: intake's `checkWordsSafety` with the letters phrase
+	 * floor. Moderation down (`moderationUnavailable`) makes this half
+	 * unavailable even if the classifier answered (owner, 19 Nov 2026).
+	 * Shouldn't reject; if it does, `checkLetterText` reads that as this half
+	 * unavailable.
 	 */
 	safety: (text: string) => Promise<WordsVerdict>;
 	/**
@@ -68,8 +71,10 @@ export function patternCategory(text: string): FixableCategory | null {
  *
  * Unavailable when either half couldn't finish, not only both: the safety half
  * guards the sender and the classifier guards the reader, and #750 places
- * nothing a check didn't finish on. A half that did answer still decides what
- * comes before unavailable, so a crisis is never held back behind an outage.
+ * nothing a check didn't finish on. The safety half hasn't finished while
+ * moderation is down, even if its classifier answered. A half that did answer
+ * still decides what comes before unavailable, so a crisis is never held back
+ * behind an outage.
  */
 export function decideLetterCheck(input: {
 	safety: WordsVerdict;
@@ -94,7 +99,7 @@ export function decideLetterCheck(input: {
 	if (fixable) {
 		return { category: fixable, kind: "fixable" };
 	}
-	if (safety.unavailable || !verdict) {
+	if (safety.unavailable || safety.moderationUnavailable || !verdict) {
 		return { kind: "unavailable" };
 	}
 	return { kind: "pass" };

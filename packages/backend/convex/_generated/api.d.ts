@@ -55,6 +55,7 @@ import type * as ai_intake_read from "../ai/intake/read.js";
 import type * as ai_intake_reading from "../ai/intake/reading.js";
 import type * as ai_intakeSignals from "../ai/intakeSignals.js";
 import type * as ai_letters_check from "../ai/letters/check.js";
+import type * as ai_letters_floor from "../ai/letters/floor.js";
 import type * as ai_letters_run from "../ai/letters/run.js";
 import type * as ai_library_embed from "../ai/library/embed.js";
 import type * as ai_mirrorPlan from "../ai/mirrorPlan.js";
@@ -395,6 +396,7 @@ declare const fullApi: ApiFromModules<{
   "ai/intake/reading": typeof ai_intake_reading;
   "ai/intakeSignals": typeof ai_intakeSignals;
   "ai/letters/check": typeof ai_letters_check;
+  "ai/letters/floor": typeof ai_letters_floor;
   "ai/letters/run": typeof ai_letters_run;
   "ai/library/embed": typeof ai_library_embed;
   "ai/mirrorPlan": typeof ai_mirrorPlan;

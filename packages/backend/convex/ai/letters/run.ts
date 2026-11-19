@@ -1,7 +1,8 @@
 /**
  * The letters check's model calls (#750), for an action to pass to
  * `checkLetterText` (`letters/decide.ts`): the sender's safety, intake's
- * recipe word for word, and the letters classifier beside it. Neither stores
+ * recipe with the letters phrase floor (`floor.ts`), and the letters
+ * classifier beside it. Neither stores
  * or logs the letter's words.
  */
 import type { LetterCheckDeps } from "../../letters/decide";
@@ -17,6 +18,7 @@ import {
 	type LetterVerdict,
 	parseLetterCheckResponse,
 } from "./check";
+import { letterPhrasePeak } from "./floor";
 
 /** Each try's limit; {@link SAFETY_DEADLINE_MS} bounds the call as a whole. */
 const REQUEST_OPTIONS = { maxRetries: 1, timeout: 5000 };
@@ -68,5 +70,5 @@ export async function classifyLetter(
 /** The live calls, for the send action and the background re-check. */
 export const letterCheckDeps: LetterCheckDeps = {
 	classify: classifyLetter,
-	safety: checkWordsSafety,
+	safety: (text) => checkWordsSafety(text, letterPhrasePeak),
 };

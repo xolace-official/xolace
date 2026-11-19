@@ -129,6 +129,12 @@ describe("decideLetterCheck", () => {
 		expect(decide(SAFE, null)).toEqual({ kind: "unavailable" });
 		expect(decide(SAFETY_DOWN, null)).toEqual({ kind: "unavailable" });
 	});
+
+	it("is unavailable when moderation is down, even if the safeguard answered", () => {
+		expect(decide({ ...SAFE, moderationUnavailable: true }, KIND)).toEqual({
+			kind: "unavailable",
+		});
+	});
 });
 
 describe("checkLetterText", () => {

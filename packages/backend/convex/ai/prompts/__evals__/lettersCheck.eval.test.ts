@@ -8,21 +8,26 @@
  * without breaking it (grief, faith in passing, a gentle "it gets lighter", a
  * past attempt without detail); the unmistakable hostile letter; and contact
  * attempts the regexes miss. The sender's own safety is intake's safeguard,
- * evaluated with intake, so no case here is about it.
+ * evaluated with intake; the last suite runs the whole check (both halves,
+ * the letters phrase floor) on the kind letters that brush it, which must
+ * pass end to end. That suite also needs OPENAI_API_KEY: without moderation a
+ * letter is unavailable by design.
  */
-import { LETTER_LANGUAGES } from "../../../letters/decide";
+import { describe, expect, it } from "vitest";
+import { checkLetterText, LETTER_LANGUAGES } from "../../../letters/decide";
 import type { FixableCategory } from "../../../letters/lines";
 import {
 	buildLetterCheckPrompt,
 	parseLetterCheckResponse,
 } from "../../letters/check";
+import { letterCheckDeps } from "../../letters/run";
 import {
 	extractTextFromResponse,
 	getAnthropicClient,
 	LETTER_CHECK_MODEL,
 	thinkingOff,
 } from "../../providers/anthropic";
-import { type LabeledCase, runLabeledEval } from "./harness.eval";
+import { hasApiKey, type LabeledCase, runLabeledEval } from "./harness.eval";
 
 type Label = "pass" | "hostile" | "lang" | "unparsed" | FixableCategory;
 type Case = LabeledCase<Label> & { input: string };
@@ -237,4 +242,27 @@ async function classify(c: Case): Promise<Label> {
 
 runLabeledEval("letters check classifier eval (live Haiku)", CASES, classify, {
 	threshold: 0.8,
+});
+
+/** Kind letters that mention suicide or self-harm in the past or of others. */
+const END_TO_END_PASS = [
+	"A few years ago I tried to end my life. I'm still here, and some days are good now. Talking to a counsellor helped me more than I expected. If you can, talk to someone.",
+	"I lost my brother to suicide, and for a long time I didn't think I'd laugh again. I do now. Whatever you're carrying, you don't have to carry it alone.",
+	"I used to think about hurting myself most nights. It got quieter, slowly, once I told someone. I hope you have someone to tell.",
+];
+
+const END_TO_END_TIMEOUT_MS = 30_000;
+
+describe("letters check end to end (live moderation, safeguard and Haiku)", () => {
+	for (const text of END_TO_END_PASS) {
+		it.skipIf(!(hasApiKey() && process.env.OPENAI_API_KEY))(
+			`passes: ${text.slice(0, 40)}…`,
+			async () => {
+				expect((await checkLetterText(text, letterCheckDeps)).kind).toBe(
+					"pass"
+				);
+			},
+			END_TO_END_TIMEOUT_MS
+		);
+	}
 });
