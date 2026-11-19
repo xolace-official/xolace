@@ -4,8 +4,9 @@ import Constants from "expo-constants";
 import { useRef, useState } from "react";
 import { toast } from "@/components/shared/toast";
 import {
-	AGE_PROMPT_VERSION,
+	AGE_PROMPT_VERSIONS,
 	type AgeGateStep,
+	type AgeGateSurface,
 	stepForError,
 	stepForStatus,
 } from "./age-gate-step";
@@ -16,9 +17,10 @@ export const CLIENT_VERSION = Constants.expoConfig?.version ?? "0.0.0";
 
 const PLATFORM = process.env.EXPO_OS === "android" ? "android" : "ios";
 
-/** The age gate in front of a Xolacer request: asks for a date of birth when there's none, and
- * shows where a minor's answer leads. Whatever was waiting on it runs after an adult answer. */
-export function useAgeGate() {
+/** The age gate in front of a Xolacer request (or a letter): asks for a date of birth when
+ * there's none, and shows where a minor's answer leads. Whatever was waiting on it runs after an
+ * adult answer. */
+export function useAgeGate(surface: AgeGateSurface = "xolacer_chat") {
 	const status = useQuery(api.age.declarations.status)?.status;
 	const declare = useMutation(api.age.declarations.declare);
 	const [step, setStep] = useState<AgeGateStep | null>(null);
@@ -68,8 +70,8 @@ export function useAgeGate() {
 			appVersion: CLIENT_VERSION,
 			dateOfBirth,
 			platform: PLATFORM,
-			promptVersion: AGE_PROMPT_VERSION,
-			surface: "xolacer_chat",
+			promptVersion: AGE_PROMPT_VERSIONS[surface],
+			surface,
 		})
 			.then((result) => {
 				const next = stepForStatus(result.status);
@@ -98,6 +100,7 @@ export function useAgeGate() {
 		setDateOfBirth,
 		step,
 		submit,
+		surface,
 	};
 }
 

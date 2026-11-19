@@ -248,7 +248,7 @@ export function backendCallsOutsideDataHooks(graph: ImportGraph): string[] {
  * become a pattern; each goes when its contract lands.
  */
 const DEV_BRIDGES = new Set([
-	// The session end's letter cards draw letters' real tile (Letters, until S21).
+	// The session end's letter cards draw letters' real tile (a dev state has no route).
 	"dev/letters-slots.ts",
 ]);
 
@@ -321,7 +321,7 @@ export function portedFolderImportsFromOldCode(graph: ImportGraph): string[] {
  * 6. Dev states never reach a release build: code outside `src/dev/` and the
  * features' `dev/` folders reaches them only through a `require()` behind
  * `__DEV__` (the dev route shims, and a fixture adapter seeding itself until
- * its contract lands: Letters, until S21), which a release build folds away
+ * its contract lands), which a release build folds away
  * before Metro collects its dependencies. A static import would ship them.
  */
 export function devCodeInReleaseGraph(graph: ImportGraph): string[] {

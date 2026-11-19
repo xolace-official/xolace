@@ -1,26 +1,36 @@
 /**
- * Letters' data: every read and call the screens make, in one place, shaped as `backend.md`
- * §2.3 Letters. This is the seam S21 plugs the contract into: the hook names, their returns and
- * the calls' signatures stay; only the bodies change, to Convex queries and mutations. Until
- * then it reads the in-memory stand-in (`letters-memory.ts`) and calls nothing on the server.
+ * Letters' data: every read and call the screens make, in one place, on the letters contract
+ * (`docs/plan/letters.md` §4; this is §13's seam). The hook names, their returns and the calls'
+ * signatures are S20's; the server's shapes are mapped here (`letters-contract.ts`), so the
+ * screens never see them.
  *
  * Reads are narrow on purpose: the Connect card sits under the writing screen, so each part
- * subscribes only to what it draws (a keystroke there redraws none of them).
+ * subscribes only to what it draws (a keystroke there redraws none of them). Convex shares one
+ * subscription between every part that asks the same query.
  *
- * Every read is `undefined` while it loads, as a Convex `useQuery` is on its first render. The
- * in-memory stand-in answers at once, but the screens already treat `undefined` as "loading",
- * never as empty: the reader waits rather than closing (its `null` means the letter is gone),
- * and the status draws neither the offer nor Write until it knows.
+ * Every read is `undefined` while it loads, never empty: the reader waits rather than closing
+ * (its `null` means the letter is gone), and the status draws neither the offer nor Write until
+ * it knows.
+ *
+ * Anonymity: nothing here logs, captures or reports a letter id. Errors go to the callers, which
+ * hand them to Sentry (the opt-in's retry after the age ask has no caller, so it reports here);
+ * a Convex error carries a code, never the call's args.
  */
-import { useShallow } from "zustand/react/shallow";
-import type { ReportReason } from "./copy";
+import * as Sentry from "@sentry/react-native";
+import { api } from "@xolace/backend/api";
+import type { Id } from "@xolace/backend/dataModel";
+import { useAction, useMutation, useQuery } from "convex/react";
+import { getLocales } from "expo-localization";
+import { askAge } from "@/lib/age-ask";
+import { LETTERS_OFFER_VERSION, type ReportReason } from "./copy";
 import {
-	type LettersMemory,
-	limitOf,
-	memory,
-	unopenedOf,
-	useLettersMemory,
-} from "./letters-memory";
+	aimOf,
+	isAgeRefusal,
+	isLetterGone,
+	type LateRisk,
+	localDay,
+	statusFrom,
+} from "./letters-contract";
 import type {
 	Draft,
 	LettersStatus,
@@ -30,50 +40,59 @@ import type {
 	SentLetter,
 } from "./letters-model";
 
-/** The status, from the server's side of letters. */
-export const statusOf = (m: LettersMemory): LettersStatus => ({
-	optIn: m.optIn,
-	unopenedId: unopenedOf(m),
-	writeLimit: limitOf(m),
-});
+/** A route param or a row's id, as the contract takes it: the server checks it's the caller's. */
+const letterId = (id: string) => id as Id<"letters">;
 
-/** The one small status read: the opt-in, why Write is off, the unopened letter. */
+/** The one small status read: the opt-in, why Write is off, the unopened letter, the invite. */
 export function useLettersStatus(): LettersStatus | undefined {
-	return useLettersMemory(useShallow(statusOf));
+	const status = useQuery(api.letters.status.get);
+	return status && statusFrom(status, localDay(new Date()));
 }
 
-/** Your sent letters, newest first. Withdrawn ones are gone. */
+/** A late re-check's risk, until its care has been shown (`lateRiskShown`). */
+export function useLettersLateRisk(): LateRisk | null | undefined {
+	return useQuery(api.letters.status.get)?.lateRisk;
+}
+
+/** Your sent letters, newest first. Withdrawn and dismissed ones are gone. */
 export function useSentLetters(): readonly SentLetter[] | undefined {
-	return useLettersMemory((m) => m.sent);
+	return useQuery(api.letters.sent.list);
 }
 
 /** Letters for you, newest first, hidden ones included. Reported ones never come back. */
 export function useReceivedLetters(): readonly ReceivedLetter[] | undefined {
-	return useLettersMemory((m) => m.received);
+	return useQuery(api.letters.received.list);
 }
 
-/** One letter for you; `null` once it's gone (reported, or not yours). */
+/**
+ * One letter for you; `null` once it's gone (reported, not yours, or not a letter id). The route
+ * param goes as it is: the server normalizes it.
+ */
 export function useReceivedLetter(
 	id: string
 ): ReceivedLetter | null | undefined {
-	return useLettersMemory((m) => m.received.find((l) => l.id === id) ?? null);
+	return useQuery(api.letters.received.get, { id });
 }
 
 /** Settings › Notifications › Letters, on by default. */
 export function useLettersPush(): boolean | undefined {
-	return useLettersMemory((m) => m.push);
+	return useQuery(api.letters.settings.getPush);
 }
 
-/** What the screens ask of letters' server side; S21 makes each one a Convex call. */
+/** What the screens ask of letters' server side. */
 export type LettersCalls = {
 	/**
 	 * The check reads it (1–8 s on the server); the outcome says what the sender sees. One runs at
-	 * a time: Write calls it through `check-store.ts`.
+	 * a time: Write calls it through `check-store.ts`. A network error or `rate_limited` throws
+	 * (the words stay: Try again); so does an age refusal, after opening the age ask.
 	 */
 	send: (draft: Draft) => Promise<SendOutcome>;
 	withdraw: (id: string) => Promise<"ok" | "received">;
+	/** A returned or late-held letter leaves Sent. */
+	dismiss: (id: string) => Promise<void>;
 	/** The Letters screen showed these statuses: their marks light once, across devices. */
 	markSeen: (ids: readonly string[]) => Promise<void>;
+	/** Yes needs an adult: a refusal opens the age ask, and Yes is sent again after it. */
 	setOptIn: (optIn: Exclude<OptIn, "unset">) => Promise<void>;
 	/** Opening is what lets the next letter be placed. */
 	open: (id: string) => Promise<void>;
@@ -84,22 +103,80 @@ export type LettersCalls = {
 	unhide: (id: string) => Promise<void>;
 	report: (id: string, reason: ReportReason) => Promise<void>;
 	setPush: (on: boolean) => Promise<void>;
+	/** The care for a late risk was shown, at this level. */
+	lateRiskShown: (shown: LateRisk) => Promise<void>;
 };
 
-const CALLS: LettersCalls = {
-	acknowledge: async (id) => memory.acknowledge(id),
-	hide: async (id) => memory.hide(id),
-	markSeen: async (ids) => memory.markSeen(ids),
-	open: async (id) => memory.open(id),
-	report: async (id) => memory.report(id),
-	send: async (draft) => memory.send(draft),
-	setOptIn: async (optIn) => memory.setOptIn(optIn),
-	setPush: async (on) => memory.setPush(on),
-	unhide: async (id) => memory.unhide(id),
-	withdraw: async (id) => memory.withdraw(id),
+/** A letter already gone from another device: its row drops by itself, nothing to say. */
+const unlessGone = (error: unknown) => {
+	if (!isLetterGone(error)) {
+		throw error;
+	}
 };
 
-/** The calls, stable across renders. */
+/** The calls, bound to this Convex client. */
 export function useLettersCalls(): LettersCalls {
-	return CALLS;
+	const send = useAction(api.letters.send.send);
+	const withdraw = useMutation(api.letters.sent.withdraw);
+	const dismiss = useMutation(api.letters.sent.dismiss);
+	const markSeen = useMutation(api.letters.sent.markSeen);
+	const setOptIn = useMutation(api.letters.optIn.set);
+	const open = useMutation(api.letters.received.open);
+	const acknowledge = useMutation(api.letters.received.acknowledge);
+	const hide = useMutation(api.letters.received.hide);
+	const unhide = useMutation(api.letters.received.unhide);
+	const report = useMutation(api.letters.received.report);
+	const setPush = useMutation(api.letters.settings.setPush);
+	const lateRiskShown = useMutation(api.letters.status.lateRiskShown);
+
+	const answer = async (optIn: Exclude<OptIn, "unset">): Promise<void> => {
+		try {
+			await setOptIn({
+				choice: optIn,
+				locale: getLocales()[0]?.languageTag,
+				promptVersion: LETTERS_OFFER_VERSION,
+			});
+		} catch (error) {
+			if (!isAgeRefusal(error)) {
+				throw error;
+			}
+			askAge({
+				error,
+				// Nobody waits on the retry: a failure goes to Sentry (a code, never the args).
+				retry: () => {
+					answer(optIn).catch((e: unknown) => Sentry.captureException(e));
+				},
+				surface: "letters",
+			});
+		}
+	};
+
+	return {
+		acknowledge: (id) =>
+			acknowledge({ id: letterId(id) }).then(() => undefined, unlessGone),
+		dismiss: (id) =>
+			dismiss({ id: letterId(id) }).then(() => undefined, unlessGone),
+		hide: (id) => hide({ id: letterId(id) }).then(() => undefined, unlessGone),
+		lateRiskShown: (shown) => lateRiskShown({ shown }).then(() => undefined),
+		markSeen: (ids) =>
+			markSeen({ ids: ids.map(letterId) }).then(() => undefined),
+		open: (id) => open({ id: letterId(id) }).then(() => undefined, unlessGone),
+		report: (id, reason) =>
+			report({ id: letterId(id), reason }).then(() => undefined, unlessGone),
+		send: async (draft) => {
+			try {
+				return await send({ aim: aimOf(draft.forWho), text: draft.text });
+			} catch (error) {
+				if (isAgeRefusal(error)) {
+					askAge({ error, retry: () => undefined, surface: "letters" });
+				}
+				throw error;
+			}
+		},
+		setOptIn: answer,
+		setPush: (on) => setPush({ on }).then(() => undefined),
+		unhide: (id) =>
+			unhide({ id: letterId(id) }).then(() => undefined, unlessGone),
+		withdraw: (id) => withdraw({ id: letterId(id) }),
+	};
 }

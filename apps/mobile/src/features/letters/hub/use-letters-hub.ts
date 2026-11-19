@@ -25,6 +25,7 @@ export function useLettersHub(): LettersHub | undefined {
 	return {
 		actions: {
 			answerOffer: (optIn) => calls.setOptIn(optIn).catch(report),
+			dismiss: (id) => calls.dismiss(id).catch(report),
 			markSeen: (ids) => calls.markSeen(ids).catch(report),
 			turnOn: () => calls.setOptIn("yes").catch(report),
 			// "received": it was placed first; the row now says so, nothing else to do.

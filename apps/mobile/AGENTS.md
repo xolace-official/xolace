@@ -189,8 +189,8 @@ worked example is `reach-me-on`: `reach-sheet-data.tsx` and `dev/`.
   from outside that feature's `dev/` folders and `src/dev` (`devImportsFromOutside`).
 - **One exception:** a fixture adapter may seed itself from `src/dev` the same way,
   `__DEV__ ? require("@/dev/…") : null` with the require typed
-  (`typeof import("@/dev/…")`), until its contract lands. Today that's Letters
-  (`features/letters/letters-memory.ts` via `src/dev/letters-seed.ts`); S21 removes it.
+  (`typeof import("@/dev/…")`), until its contract lands. None does today (Letters'
+  stand-in went when S21 put it on the contract).
 
 ## The root guard
 

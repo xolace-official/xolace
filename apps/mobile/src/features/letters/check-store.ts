@@ -1,6 +1,6 @@
 /**
  * The letter check, one at a time across every writing screen. It sits beside the seam
- * (`use-letters-data.ts`) and wraps whatever `send` is, the stand-in now and Convex at S21:
+ * (`use-letters-data.ts`) and wraps its `send`, the contract's check action:
  * closing Write mid-check and opening it again mustn't send the same words twice, and an answer
  * that came back while Write was closed must still reach the writer.
  */
@@ -9,7 +9,7 @@ import type { SendAnswer } from "./letters-model";
 
 /**
  * Past this, a check that hasn't answered stops holding Write. The server's check takes 1–8 s,
- * but a Convex mutation sent offline (S21) stays pending until the phone is back online, and the
+ * but a Convex action sent offline stays pending until the phone is back online, and the
  * writer mustn't be locked out of Write meanwhile. If its answer comes later, it still lands
  * (the draft change, the line or care), unless another check has started since.
  */

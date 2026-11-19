@@ -10,8 +10,15 @@ type AgeStatus = FunctionReturnType<
  * where its answer leads. `declined` is "Prefer not to say", which only the client knows. */
 export type AgeGateStep = "ask" | "declined" | "not_available" | "under_13";
 
-/** Bump when the date-of-birth step's wording changes; the server records it with each answer. */
-export const AGE_PROMPT_VERSION = "xolacer_chat.v1";
+/** Where the date of birth is asked: a Xolacer request, or Letters (through the age-ask host). */
+export type AgeGateSurface = "xolacer_chat" | "letters";
+
+/** Bump a surface's version when its date-of-birth step's wording changes; the server records it
+ * with each answer. */
+export const AGE_PROMPT_VERSIONS: Record<AgeGateSurface, string> = {
+	letters: "letters.v1",
+	xolacer_chat: "xolacer_chat.v1",
+};
 
 /** The step a status needs before a request, or null when nothing stands in the way. While the
  * status loads the request goes ahead: the server gate answers with `stepForError`'s codes. */

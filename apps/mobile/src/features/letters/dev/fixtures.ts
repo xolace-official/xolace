@@ -1,9 +1,7 @@
 /**
  * Letters on fixtures: the board's drafts, sample letters and sent lists (prototype
- * `src/fixtures/letters.ts`). Dev states and tests read these; the live adapter reaches them
- * only in a dev build, through `src/dev/letters-seed.ts`. S21 deletes the seed.
+ * `src/fixtures/letters.ts`). Dev states and tests read these; the app reads the contract.
  */
-import type { LettersMemory } from "../letters-memory";
 import type {
 	LettersStatus,
 	ReceivedLetter,
@@ -96,19 +94,8 @@ export const RECEIVED_SAMPLE: readonly ReceivedLetter[] = [
 export const WAITING = receivedLetter("warm", { opened: false });
 
 export const STATUS_OPEN: LettersStatus = {
+	invite: true,
 	optIn: "yes",
 	unopenedId: null,
 	writeLimit: null,
 };
-
-/**
- * What a dev build's live adapter starts with: a letter waiting, the board's sent list.
- * @public Re-exported by src/dev/letters-seed.ts, reached only through a `__DEV__` require.
- */
-export const SEED = {
-	optIn: "yes",
-	push: true,
-	received: [WAITING, ...RECEIVED_SAMPLE],
-	sent: SENT_SAMPLE,
-	written: { count: 0, day: "" },
-} satisfies LettersMemory;

@@ -159,8 +159,8 @@ export function useNotifications(
 				);
 			},
 			setLetters: (on) => {
-				// A blocked phone can't deliver it: the same alert as the other switches. Until the
-				// letters contract (S21), the switch is all letters keep; nothing registers a token.
+				// A blocked phone can't deliver it: the same alert as the other switches. It sets only
+				// letters' flag (`letters.settings.setPush`); the pushes still need notifications on.
 				if (loading || letters === null) {
 					return;
 				}

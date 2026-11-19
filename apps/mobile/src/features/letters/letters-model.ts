@@ -15,7 +15,24 @@ import type { LETTER_MOTION } from "./letter-motion";
 export type OptIn = "unset" | "yes" | "no";
 /** Why Write is off, if it is: today's letter first, then three waiting. Nothing else. */
 export type WriteLimit = "today" | "three";
-export type SentStatus = "waiting" | "received" | "acknowledged";
+/**
+ * `returned`: not placed in time, or a late re-check turned it back. `held`: a late re-check held
+ * it after it read as sent. Both can be dismissed, and neither lights the received mark.
+ */
+export type SentStatus =
+	| "waiting"
+	| "received"
+	| "acknowledged"
+	| "returned"
+	| "held";
+
+/** Received or acknowledged: the mark is lit. */
+export const sentLit = (status: SentStatus): boolean =>
+	status === "received" || status === "acknowledged";
+
+/** A row the sender can take out of Sent (`letters.sent.dismiss`). */
+export const sentDismissable = (status: SentStatus): boolean =>
+	status === "returned" || status === "held";
 
 /** A sent letter as its sender sees it: its opening line and status, nothing about the recipient. */
 export type SentLetter = {
@@ -43,6 +60,11 @@ export type LettersStatus = {
 	writeLimit: WriteLimit | null;
 	/** The letter waiting to be opened (only while receiving is on); it blocks any other. */
 	unopenedId: string | null;
+	/**
+	 * Xolace still asks for letters: false while more are waiting than recipients can take
+	 * (decision C). Only the session end's write card reads it; Write stays open.
+	 */
+	invite: boolean;
 };
 
 export type Draft = { text: string; forWho: LetterFor };
@@ -198,8 +220,8 @@ export const END_CARD_FRESH: EndCardMemory = {
 /**
  * What letters may offer at a session end, before the session's own rules (step ≥ 0, not
  * late), which session end's `nextKey` applies. `waiting`: a letter is waiting to be opened.
- * `write`: no safeguard, the sender can write, and the card neither showed in the last 7 days
- * nor is resting 30 days after three passes.
+ * `write`: no safeguard, the sender can write, Xolace is still inviting letters, and the card
+ * neither showed in the last 7 days nor is resting 30 days after three passes.
  */
 export type EndCardOffer = { waiting: boolean; write: boolean };
 
@@ -215,6 +237,7 @@ export function endCardOffer(
 		waiting: status.unopenedId !== null,
 		write:
 			!safeguard &&
+			status.invite &&
 			status.writeLimit === null &&
 			!recent &&
 			now >= memory.offUntil,

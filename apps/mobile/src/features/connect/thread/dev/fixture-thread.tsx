@@ -42,6 +42,7 @@ const AGE_GATE: AgeGate = {
 	setDateOfBirth: noop,
 	step: null,
 	submit: noop,
+	surface: "xolacer_chat",
 };
 
 export function FixtureThread({

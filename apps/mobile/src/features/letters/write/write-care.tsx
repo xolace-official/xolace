@@ -33,11 +33,17 @@ export function WriteCare({
 	open,
 	reduced,
 	onClose,
+	onLeave,
 }: {
 	open: boolean;
 	reduced: boolean;
 	/** Not right now, or a tap on the scrim: the letter unfolds, no line. */
 	onClose: () => void;
+	/**
+	 * Before a button opens another screen. Write keeps the sheet for the way back; the late-risk
+	 * host, drawn over the stack, closes it so it doesn't cover the screen it opened.
+	 */
+	onLeave?: () => void;
 }) {
 	const insets = useSafeAreaInsets();
 	const faces = useThemeFaces();
@@ -98,17 +104,30 @@ export function WriteCare({
 				<AppText color="muted" variant="callout">
 					{c.body}
 				</AppText>
-				<Big label={c.show} onPress={() => router.push("/crisis-resources")} />
+				<Big
+					label={c.show}
+					onPress={() => {
+						onLeave?.();
+						router.push("/crisis-resources");
+					}}
+				/>
 				<Quiet
 					label={c.breathe}
-					onPress={() =>
+					onPress={() => {
+						onLeave?.();
 						router.push({
 							params: { from: "letter" },
 							pathname: "/sit-with-this",
-						})
-					}
+						});
+					}}
 				/>
-				<Quiet label={c.talk} onPress={() => router.dismissTo("/connect")} />
+				<Quiet
+					label={c.talk}
+					onPress={() => {
+						onLeave?.();
+						router.dismissTo("/connect");
+					}}
+				/>
 				<PressScale
 					accessibilityRole="button"
 					className="min-h-11 items-center justify-center"

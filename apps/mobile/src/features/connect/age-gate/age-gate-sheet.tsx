@@ -44,11 +44,16 @@ export function AgeGateSheet({ gate }: { gate: AgeGate }) {
 									onContinue={gate.submit}
 									onDecline={gate.decline}
 									saving={gate.saving}
+									surface={gate.surface}
 									value={gate.dateOfBirth}
 								/>
 							)}
 							{gate.step !== null && gate.step !== "ask" && (
-								<RefusalStep onClose={gate.close} step={gate.step} />
+								<RefusalStep
+									onClose={gate.close}
+									step={gate.step}
+									surface={gate.surface}
+								/>
 							)}
 						</View>
 					</BottomSheetScrollView>

@@ -12,7 +12,7 @@ import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-mo
 import { useTokenColor } from "@/lib/use-token-color";
 import { LETTER_MOTION } from "./letter-motion";
 import { useLetterInk } from "./letter-paper";
-import type { SentStatus } from "./letters-model";
+import { type SentStatus, sentLit } from "./letters-model";
 
 const M = LETTER_MOTION;
 const SIZE = M.mark.size;
@@ -24,8 +24,8 @@ const UNLIT_OPACITY = 0.5;
 const FROM_SCALE = 0.6;
 
 /**
- * The received mark (12 pt): an empty ring while waiting, a lit ember once received, and a
- * ring around it once acknowledged. `ignite` lights it along the ignite curve (800 ms) on mount:
+ * The received mark (12 pt): an empty ring while waiting (or returned, or held), a lit ember once
+ * received, and a ring around it once acknowledged. `ignite` lights it along the ignite curve (800 ms) on mount:
  * pass it only the first time the sender sees the change. Reduce Motion: it fades in, 200 ms.
  * It's drawn only: the row it sits in says its status (`LETTERS.status.*`) in its label.
  */
@@ -40,7 +40,7 @@ export function ReceivedMark({
 	const subtle = useTokenColor("subtle");
 	const surface = useTokenColor("surface");
 	const reduced = useEffectiveReducedMotion();
-	const lit = status !== "waiting";
+	const lit = sentLit(status);
 	const play = ignite && lit;
 	const opacity = useSharedValue(play ? 0 : 1);
 	const scale = useSharedValue(play && !reduced ? FROM_SCALE : 1);

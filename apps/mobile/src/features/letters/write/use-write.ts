@@ -3,6 +3,7 @@ import { toast } from "@/components/shared/toast";
 import { check, useCheckRunning, useUnplayedAnswer } from "../check-store";
 import { LETTERS } from "../copy";
 import { useKeep, useKeptField } from "../device-memory";
+import { isAgeRefusal, isNoSession } from "../letters-contract";
 import { answerOf, draftAfter, type SendAnswer } from "../letters-model";
 import { useLettersCalls, useLettersStatus } from "../use-letters-data";
 import type { LettersWrite, WriteOpens } from "./write-data";
@@ -44,6 +45,14 @@ export function useWrite(): LettersWrite {
 								await calls.send({ ...draft, text: draft.text.trim() })
 							);
 						} catch (error) {
+							// Refused on age: the seam opened the age ask; the words stay for Send.
+							if (isAgeRefusal(error)) {
+								return null;
+							}
+							if (isNoSession(error)) {
+								toast(LETTERS.write.noSession);
+								return null;
+							}
 							Sentry.captureException(error);
 							toast(LETTERS.write.failed);
 							return null;

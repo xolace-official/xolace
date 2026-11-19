@@ -1,5 +1,7 @@
 import { type ComponentType, createElement } from "react";
 import { ArrivalsHost } from "@/features/achievements/arrival/arrivals-host";
+import { AgeAskHost } from "@/features/connect/age-gate/age-ask-host";
+import { LateRiskHost } from "@/features/letters/late-risk-host";
 import { isPresentedRoute } from "@/features/navigation/presented-routes";
 import { GoneHost } from "@/features/peer-reflection/gone-host";
 import { NowPlayingHost } from "@/features/player/now-playing/now-playing-host";
@@ -41,6 +43,11 @@ function Arrivals() {
 	return createElement(ArrivalsHost, { isPresented: isPresentedRoute });
 }
 
+/** Letters' late-risk care, which waits while a native presentation would hide it. */
+function LateRisk() {
+	return createElement(LateRiskHost, { isPresented: isPresentedRoute });
+}
+
 export const ROOT_HOSTS: readonly RootHost[] = [
 	// A badge's arrival and the streak milestone, drawn over every screen (S6).
 	{ Host: Arrivals, name: "arrivals" },
@@ -48,4 +55,8 @@ export const ROOT_HOSTS: readonly RootHost[] = [
 	{ Host: GoneHost, name: "peer-reflections-gone" },
 	// The now-playing track's audio and its sleep timer, kept above every screen (S10).
 	{ Host: NowPlayingHost, name: "now-playing" },
+	// The date-of-birth ask for Letters' opt-in and send, which can't draw Connect's (S21).
+	{ Host: AgeAskHost, name: "age-ask" },
+	// A late re-check's care for a letter that read as sent, at the next open (S21).
+	{ Host: LateRisk, name: "letters-late-risk" },
 ];
