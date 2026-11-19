@@ -9,9 +9,9 @@
 > Web, desktop and the CLI read the same contract later; the admin UI is a placeholder,
 > so B12 ships admin functions only.
 >
-> **Status:** the owner settled #743's open items A–D on 19 November 2026 and the push
-> half of E; the opt-in's home (E) waits on their confirmation (§"Owner's decisions").
-> Everything else follows the settled tickets.
+> **Status: decided.** The owner settled #743's five open items on 19 November 2026
+> (§"Owner's decisions"); everything else follows the settled tickets. Ready to build in
+> the slices at the end.
 
 Domain terms (root `AGENTS.md` → Glossary): **letter**, **sender**, **recipient**,
 **received** (placed with the recipient, read or not), **acknowledge**. Never "message",
@@ -60,14 +60,14 @@ held as hostile). Fixable and at-risk letters are never stored (#750).
 | `text` | `string` | Trimmed, 40–500 characters |
 | `aim` | `optional(letterAim)` | The sender's "For"; absent = anyone. Steers matching only; never returned to a recipient |
 | `language` | `string` | From the check (`"en"` at launch) |
-| `status` | `"unchecked" \| "waiting" \| "received" \| "held" \| "returned"` | `unchecked`: the check couldn't finish, re-check pending. `held`: hostile, kept for review, never placed. `returned`: see owner decision C |
+| `status` | `"unchecked" \| "waiting" \| "received" \| "held" \| "returned"` | `unchecked`: the check couldn't finish, re-check pending. `held`: hostile, kept for review, never placed. `returned`: not placed within 30 days, or a late re-check failed (decision C) |
 | `createdAt` | `number` | When it was sent |
 | `checkedAt` | `optional(number)` | When it passed the check: the FIFO key and the start of the 72 h aim window |
 | `recheckCount` | `optional(number)` | Background re-checks spent |
 | `recipientProfileId` | `optional(id)` | Set at placement |
 | `receivedAt`, `openedAt`, `acknowledgedAt`, `hiddenAt` | `optional(number)` | The recipient's side. Hide is reversible (`hiddenAt` cleared) |
 | `reportedAt` | `optional(number)` | Gone from the recipient at once; kept for review |
-| `senderSeen` | `optional("received" \| "acknowledged")` | The latest status the sender has seen (`markSeen`) |
+| `senderSeen` | `optional("received" \| "acknowledged" \| "returned")` | The latest status the sender has seen (`markSeen`) |
 | `textHash` | `optional(string)` | Held letters only: SHA-256 of the trimmed text, so the same words are refused again |
 
 Indexes: `by_sender_created` `[senderProfileId, createdAt]` (Sent list, the daily cap),
@@ -126,7 +126,7 @@ admin's Clerk subject). `reason` is the report's: `"unkind" | "selling" | "priva
 ```
 send ─► check ─┬─ pass ───────────────► waiting ─► placed: received ─► opened ─► acknowledged
                ├─ unavailable ─► unchecked ─(re-check passes)─┘     │            hidden / reported
-               ├─ held ─► held (review, strike; never placed)       └─► (no match) ─► owner decision C
+               ├─ held ─► held (review, strike; never placed)       └─► 30 days unplaced ─► returned
                └─ fixable · risk · lang ─► nothing stored
 waiting / unchecked ─► withdraw ─► row deleted
 ```
@@ -221,9 +221,10 @@ that doesn't exist.
 
 | Function | Kind | Args | Returns |
 |---|---|---|---|
-| `letters.status.get` | query | — | `{ optIn: "unset" \| "yes" \| "no", writeLimit: "today" \| "three" \| null, unopenedId: Id<"letters"> \| null }` |
+| `letters.status.get` | query | — | `{ optIn: "unset" \| "yes" \| "no", writeLimit: "today" \| "three" \| null, unopenedId: Id<"letters"> \| null, invite: boolean }` (`invite`: decision C) |
 | `letters.send.send` | action | `{ text, aim? }` | `SendOutcome` (§3) |
-| `letters.sent.list` | query | — | `{ id, line, status: "waiting" \| "received" \| "acknowledged", seen }[]`, newest first, at most 50 |
+| `letters.sent.list` | query | — | `{ id, line, status: "waiting" \| "received" \| "acknowledged" \| "returned", seen }[]`, newest first, at most 50 |
+| `letters.sent.dismiss` | mutation | `{ id }` | `null`; a returned letter leaves Sent and its row is deleted |
 | `letters.sent.withdraw` | mutation | `{ id }` | `"ok" \| "received"` (a letter already gone reads `"ok"`) |
 | `letters.sent.markSeen` | mutation | `{ ids }` (≤ 50) | `null` |
 | `letters.received.list` | query | — | `{ id, text, opened, acknowledged, hidden }[]`, newest first, at most 100, hidden included, reported never |
@@ -244,7 +245,7 @@ Notes:
 - **`unopenedId`** is only set while `optIn` is `yes`, matching S20's `unopenedOf`.
 - **`line`** is cut on the server with the same rule as `openingLine` (first paragraph,
   ≤ 46 characters at a word), so the Sent list never ships the whole text.
-- **`seen`** is `status === "waiting"` or `senderSeen === status`.
+- **`seen`** is `status === "waiting"` or `senderSeen === status` (`senderSeen` also takes `"returned"`).
 - **The 5 s undo stays on the client** (S20 holds Acknowledge and Hide for 5 s before
   calling), so the server needs no undo and the sender's push never waits.
 - **Turning receiving off** (`choice: "no"` after `"yes"`): the person leaves the pool
@@ -306,7 +307,7 @@ The first that passes gets the letter: `status: received`, `recipientProfileId`,
 1. refresh pool rows whose `poolCheckAt` passed (bounded batches, rescheduling itself);
 2. walk `waiting` letters by `checkedAt` (FIFO, #749) and `place` each, in batches,
    stopping a batch once the pool has nothing left for a language;
-3. apply owner decision C to letters past their wait;
+3. return letters still waiting `LETTER_WAIT_DAYS` (30) after they passed (decision C);
 4. schedule re-checks for `unchecked` letters that are due.
 
 #### 5.4 Re-checks
@@ -315,7 +316,7 @@ An `unchecked` letter is re-checked by `letters.check.recheck` (internal action)
 growing intervals (5 min, 30 min, 2 h, then each sweep), with the same check as send
 minus the parts that need the sender in the room. It is never placed unchecked. A late
 `pass` makes it `waiting`; a late `risk` writes the escalation and deletes the letter; a
-late `held` holds it (review, strike); a late `fixable` or `lang` is owner decision C's
+late `held` holds it (review, strike); a late `fixable` or `lang` is decision C's
 "returned" path.
 
 #### 5.5 Aims
@@ -387,12 +388,14 @@ server finds the sender.
 
 ### 10. Deletion, wipe and retention
 
-Owner decision B. The drain steps and the wipe follow it; until then the defaults
-below are the recommendation.
+As decided in B (§"Owner's decisions"): drain steps in `jobs/accountDeletion.ts` for
+each letters table, the same steps from `jobs/dataWipe.ts` (keeping `optIn` and the push
+switch), the retention cutoff applied to each person's own side in the nightly job, and a
+daily `letters.retention.run` for reviewed text and old strikes.
 
 ### 11. Analytics
 
-Owner decision D. Server-side PostHog captures in the mutations that see each event, as
+As decided in D (§"Owner's decisions"). Server-side PostHog captures in the mutations that see each event, as
 `age_declared` does (a failed capture never rolls back the write). Never the text, a
 letter id, or anything that links a sender's event to a recipient's.
 
@@ -424,14 +427,14 @@ hook names, returns and call signatures stay, except where marked.
 | `withdraw`, `markSeen`, `open`, `acknowledge`, `hide`, `unhide` | the mutations above | — |
 | `report(id, reason)` | `letters.received.report` | — |
 | `setOptIn(choice)` | `letters.optIn.set` | **Changes:** sends `locale` and `promptVersion`, and handles `age_required` / `age_restricted` by opening Connect's age gate (`surface: "letters"`). Send handles the same errors |
-| (none) | owner decision C | If letters can be returned, `SentStatus` gains `"returned"` and a row line |
+| (none) | `returned` (decision C) | `SentStatus` gains `"returned"`: its row says "Not placed. No one it fit came along this time." and can be dismissed (`letters.sent.dismiss`, a mutation added with decision C). It frees a waiting slot |
 
 ---
 
 ## Owner's decisions
 
 #743 left five items open. Each had a recommendation and one alternative. **The owner took
-the recommendation for A–D (19 November 2026).** E: see its note.
+every recommendation (19 November 2026)**, with E's pushes kept movable to outreach.
 
 ### A. Sparks and achievements
 
@@ -525,7 +528,7 @@ sending more letters to more people.
 
 ### E. The contract shape
 
-**Recommended:** this spec as written: own tables in `convex/letters/`, the opt-in in
+**Decided (the recommendation):** this spec as written: own tables in `convex/letters/`, the opt-in in
 `letter_profiles` plus an appended consent record, the push switch in
 `preferences.notifications`, pushes through a letters push mutation on
 `sendPushToProfile` (a notification, as chat's are), and the client undo kept on the
@@ -538,7 +541,7 @@ outreach's `enqueue` later means rewriting that one function's body (three push-
 intents, Telegram excluded); callers, the client's tap routes and the `data` payloads
 stay.
 
-**Why the opt-in sits on a letters row, not in `preferences`** (owner asked):
+**Why the opt-in sits on a letters row, not in `preferences`** (owner asked, then agreed):
 
 1. **Matching needs a row of its own anyway.** It reads more than the opt-in: the pool
    state (`pool`, `poolCheckAt`), the copied session signals (`aim`, `band`,
@@ -560,7 +563,7 @@ The cost is one more table and one read where Settings shows the toggle
 (`letters.status.get` already returns `optIn`). The push switch is a plain notification
 preference, so it does go in `preferences.notifications.letters`.
 
-**Alternative:** fewer new pieces: the opt-in as a top-level `preferences` field (it
+**Alternative (not taken):** fewer new pieces: the opt-in as a top-level `preferences` field (it
 could be indexed there), the pool state on a separate letters row, and the three pushes
 as new push-only intents on outreach's `enqueue` (quiet window, dedupe and the deletion
 gate for free). It files letter pushes under outreach, which the glossary says they
