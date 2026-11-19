@@ -43,6 +43,61 @@ export type KindlingColours = {
 	onViolet: string;
 };
 
+/** The tend's light (§4): `--color-kindling-fx-*`, the same in both schemes but the smoke. */
+const FX = [
+	"kindling-fx-glow",
+	"kindling-fx-glow-warm",
+	"kindling-fx-glow-edge",
+	"kindling-fx-glow-clear",
+	"kindling-fx-core",
+	"kindling-fx-hot",
+	"kindling-fx-warm",
+	"kindling-fx-ember",
+	"kindling-fx-flash",
+	"kindling-fx-fire-ember",
+] as const;
+
+export type SparkColours = {
+	glow: [string, string, string, string];
+	core: string;
+	hot: string;
+	warm: string;
+	ember: string;
+	flash: string;
+	fireEmber: string;
+	smoke: string;
+};
+
+export function useSparkColours(): SparkColours {
+	const dark = useScheme() === "dark";
+	const [
+		glow = "",
+		glowWarm = "",
+		glowEdge = "",
+		glowClear = "",
+		core = "",
+		hot = "",
+		warm = "",
+		ember = "",
+		flash = "",
+		fireEmber = "",
+		smoke = "",
+	] = useTokenColors([
+		...FX,
+		dark ? "kindling-fx-smoke-dark" : "kindling-fx-smoke",
+	]);
+	return {
+		core,
+		ember,
+		fireEmber,
+		flash,
+		glow: [glow, glowWarm, glowEdge, glowClear],
+		hot,
+		smoke,
+		warm,
+	};
+}
+
 export function useKindlingColours(): KindlingColours {
 	const dark = useScheme() === "dark";
 	const names = [...FIXED.map((n) => (dark ? `${n}-dark` : n)), ...THEME];
