@@ -215,6 +215,58 @@ describe("notificationTapPlan", () => {
 		});
 	});
 
+	it("opens a letter placed with you in the reader, by id", () => {
+		expect(
+			notificationTapPlan(
+				{ letterId: "lt1", type: "letter_for_you" },
+				"Someone wrote you a letter",
+				1,
+				ON_TABS
+			)
+		).toEqual({
+			navigation: {
+				action: "push",
+				href: { params: { id: "lt1" }, pathname: "/letters/read/[id]" },
+			},
+		});
+	});
+
+	it("drops a letter tap with no usable id", () => {
+		for (const letterId of [undefined, "", 7]) {
+			expect(
+				notificationTapPlan(
+					{ letterId, type: "letter_for_you" },
+					null,
+					1,
+					ON_TABS
+				).navigation
+			).toBeUndefined();
+		}
+	});
+
+	it("opens the Letters screen when yours is received or acknowledged, without stacking a copy", () => {
+		for (const type of ["letter_received", "letter_acknowledged"]) {
+			expect(
+				notificationTapPlan({ type }, null, 1, ON_TABS).navigation
+			).toEqual({ action: "navigate", href: "/(protected)/letters" });
+		}
+	});
+
+	it("opens letters over a held screen, since those stack rather than dismiss", () => {
+		expect(
+			notificationTapPlan(
+				{ letterId: "lt1", type: "letter_for_you" },
+				null,
+				1,
+				"/voice-vent"
+			).navigation?.action
+		).toBe("push");
+		expect(
+			notificationTapPlan({ type: "letter_received" }, null, 1, "/talk")
+				.navigation
+		).toEqual({ action: "navigate", href: "/(protected)/letters" });
+	});
+
 	it("routes domain_unlock to Steadiness through the old path's shim", () => {
 		expect(
 			notificationTapPlan({ type: "domain_unlock" }, null, 1, ON_TABS)

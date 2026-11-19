@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { View } from "react-native";
 import { AppText } from "@/components/shared/app-text";
 import { Segmented } from "@/components/shared/segmented";
@@ -19,11 +20,16 @@ const BOTTOM = 140;
 
 /**
  * Connect: the one place a human answers. Chats and Xolacers behind one native segment, under
- * the stack's large title, which folds on scroll. Letters (S20) adds its card between the title
- * and the segment. One list scrolls the page: the chats are its rows; the roster, the skeleton
- * and the notes under the chats are its footer.
+ * the stack's large title, which folds on scroll. Letters' card sits between the title and the
+ * segment. One list scrolls the page: the chats are its rows; the roster, the skeleton and the
+ * notes under the chats are its footer.
  */
-export function ConnectScreen() {
+export function ConnectScreen({
+	letters = null,
+}: {
+	/** Letters' card, composed in by the route: features meet in routes. */
+	letters?: ReactNode;
+}) {
 	const { state, actions, deleting } = useConnectScreen();
 
 	if (state.phase === "disabled") {
@@ -88,7 +94,7 @@ export function ConnectScreen() {
 				}
 				header={
 					<View className="gap-3.5 px-4 pt-2 pb-3.5">
-						{/* Letters (S20): its Connect card goes here, above the segment. */}
+						{letters}
 						<Segmented
 							onChange={(v: Segment) => actions.setSegment(v)}
 							options={COPY.segments}

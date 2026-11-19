@@ -3,13 +3,22 @@ import {
 	PLUS_OFFER_COOLDOWN_MS,
 	PLUS_OFFER_FULL_STOP_MS,
 } from "@/features/purchases/plus-offer-policy";
-import { FREE, LISTEN, LISTENER, LOADING, STATE } from "./dev/fixtures";
+import {
+	FREE,
+	LETTER_WAITING,
+	LETTER_WRITE,
+	LISTEN,
+	LISTENER,
+	LOADING,
+	STATE,
+} from "./dev/fixtures";
 import {
 	continueStep,
 	ctaLabel,
 	dayOf,
 	fromOf,
 	keptAtMoment2,
+	letterPassed,
 	momentGate,
 	type NextInput,
 	nextKey,
@@ -140,6 +149,77 @@ describe("nextKey", () => {
 		expect(nextKey(input(FREE.slot, { step: -2 }))).toBe("kfree");
 		expect(nextKey(input({ ...FREE.slot, pitchAllowed: false }))).toBe("none");
 		expect(nextKey(input({ ...FREE.slot, qualifies: false }))).toBe("none");
+	});
+});
+
+describe("nextKey with letters", () => {
+	const READ = { waiting: true, write: true };
+	const WRITE = { waiting: false, write: true };
+	const NONE = { waiting: false, write: false };
+	const PLUS_SETTING_UP = { ...STATE.slot, kindlingReady: false };
+
+	it("holds the slot until letters answer, then 2 s at most", () => {
+		expect(nextKey(input({ ...FREE.slot, letters: undefined }))).toBe(
+			"loading"
+		);
+		expect(
+			nextKey(input({ ...FREE.slot, letters: undefined, waitedOut: true }))
+		).toBe("kfree");
+	});
+
+	it("puts a matched listener above both letter cards", () => {
+		expect(nextKey(input({ ...LISTENER.slot, letters: READ }))).toBe(
+			"listener"
+		);
+	});
+
+	it("offers the waiting letter, then writing one, above the free pitch", () => {
+		expect(nextKey(input(LETTER_WAITING.slot))).toBe("letterRead");
+		expect(nextKey(input(LETTER_WRITE.slot))).toBe("letterWrite");
+		expect(nextKey(input({ ...FREE.slot, letters: NONE }))).toBe("kfree");
+	});
+
+	it("puts a waiting letter above kindling, and kindling above writing one", () => {
+		expect(nextKey(input({ ...STATE.slot, letters: READ }))).toBe("letterRead");
+		expect(nextKey(input({ ...STATE.slot, letters: WRITE }))).toBe("kindling");
+	});
+
+	it("collides with kindling setting up as with kindling", () => {
+		expect(nextKey(input({ ...PLUS_SETTING_UP, letters: READ }))).toBe(
+			"letterRead"
+		);
+		expect(nextKey(input({ ...PLUS_SETTING_UP, letters: WRITE }))).toBe(
+			"kindlingSettingUp"
+		);
+	});
+
+	it("doesn't need the session to qualify, and doesn't wait on it past 2 s", () => {
+		const free = { ...FREE.slot, letters: WRITE, qualifies: false };
+		expect(nextKey(input(free))).toBe("letterWrite");
+		const plus = { ...STATE.slot, letters: WRITE, qualifies: false };
+		expect(nextKey(input({ ...plus, listen: true }))).toBe("letterWrite");
+		const pending = { ...FREE.slot, letters: READ, qualifies: undefined };
+		expect(nextKey(input(pending))).toBe("loading");
+		expect(nextKey(input({ ...pending, waitedOut: true }))).toBe("letterRead");
+	});
+
+	it("never follows a heavier answer, no answer, or a late session", () => {
+		for (const extra of [{ step: -1 }, { step: null }, { late: true }]) {
+			expect(nextKey(input(LETTER_WAITING.slot, extra))).not.toMatch(/letter/);
+			expect(nextKey(input(LETTER_WRITE.slot, extra))).not.toMatch(/letter/);
+		}
+		expect(nextKey(input(LETTER_WRITE.slot, { step: 0 }))).toBe("letterWrite");
+		// A step of −1 or −2 still allows the free pitch, as production did.
+		expect(nextKey(input(LETTER_WRITE.slot, { step: -1 }))).toBe("kfree");
+	});
+});
+
+describe("letterPassed", () => {
+	it("counts leaving with the write card shown and untaken", () => {
+		expect(letterPassed("letterWrite", false)).toBe(true);
+		expect(letterPassed("letterWrite", true)).toBe(false);
+		expect(letterPassed("letterRead", false)).toBe(false);
+		expect(letterPassed(null, false)).toBe(false);
 	});
 });
 

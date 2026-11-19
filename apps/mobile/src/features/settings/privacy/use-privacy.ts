@@ -15,6 +15,7 @@ import {
 	type PastRetention,
 	retentionPick,
 } from "@/features/settings/privacy/privacy-model";
+import type { ComposedSwitch } from "@/features/settings/settings-switch-row";
 import { saveFailed } from "@/features/settings/use-save-failed";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
@@ -27,7 +28,7 @@ import { usePreferenceMutation } from "@/lib/use-preference-mutation";
  * nothing re-runs it as time passes. A `useQuery` held while the alert is up would also change
  * the number under the reader's eyes if a session landed or the nightly purge ran meanwhile.
  */
-export function usePrivacy(): Privacy {
+export function usePrivacy(letters: ComposedSwitch): Privacy {
 	const preferences = useQuery(api.preferences.get);
 	const updatePreferences = usePreferenceMutation();
 	const applyRetentionNow = useMutation(
@@ -125,6 +126,7 @@ export function usePrivacy(): Privacy {
 			setMemory: (on) => {
 				updatePreferences({ personalMemoryEnabled: on }).catch(saveFailed);
 			},
+			setReceiveLetters: (on) => letters?.set(on),
 			setShare: (on) => {
 				updatePreferences({ contributeByDefault: on }).catch(saveFailed);
 			},
@@ -136,6 +138,7 @@ export function usePrivacy(): Privacy {
 			past,
 			pending,
 			policyOpen,
+			receiveLetters: letters?.on ?? false,
 			retention,
 			share: preferences?.contributeByDefault ?? false,
 		},

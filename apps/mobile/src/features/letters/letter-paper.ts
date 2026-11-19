@@ -63,6 +63,7 @@ const NAMES = [
 	"letter-ember-3",
 	"letter-seal-shadow",
 	"letter-mark-glow",
+	"letter-mark-edge",
 	"letter-ack-ring",
 	"letter-glow-1",
 	"letter-glow-2",
@@ -98,6 +99,8 @@ export function useLetterInk() {
 		light,
 		markAcknowledged: (surface: string) =>
 			`0px 0px 0px 2.5px ${surface}, 0px 0px 0px 4px ${c["letter-ack-ring"]}`,
+		/** Connect's Letters mark: the envelope's edge. */
+		markEdge: c["letter-mark-edge"],
 		markGlow: `0px 0px 8px 1px ${c["letter-mark-glow"]}`,
 		paper: c[`letter-paper-${light}`],
 		sealShadow: `0px 2px 6px -2px ${c["letter-seal-shadow"]}`,

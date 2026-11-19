@@ -2,6 +2,7 @@ import { createContext, type ReactNode, use } from "react";
 import type { Retention, SheetKind } from "@/features/settings/privacy/copy";
 import type { PastRetention } from "@/features/settings/privacy/privacy-model";
 import { usePrivacy } from "@/features/settings/privacy/use-privacy";
+import type { ComposedSwitch } from "@/features/settings/settings-switch-row";
 
 /**
  * Everything Settings › Privacy & Data reads and does. Two adapters fill it: Convex in the app
@@ -15,6 +16,8 @@ export type Privacy = {
 		memory: boolean;
 		/** `contributeByDefault`. */
 		share: boolean;
+		/** Letters' opt-in (composed in by the route): off until it's "yes". */
+		receiveLetters: boolean;
 		/** `dataRetentionPreference`, as saved. */
 		retention: Retention;
 		/** A shorter period being counted or asked about; the list shows it meanwhile. */
@@ -29,6 +32,7 @@ export type Privacy = {
 	actions: {
 		setMemory: (on: boolean) => void;
 		setShare: (on: boolean) => void;
+		setReceiveLetters: (on: boolean) => void;
 		pickRetention: (retention: Retention) => void;
 		/** The alert's Cancel: the previous choice stays. */
 		cancelRetention: () => void;
@@ -53,9 +57,17 @@ export function PrivacyProvider({
 	return <PrivacyContext value={value}>{children}</PrivacyContext>;
 }
 
-/** The app's adapter. */
-export function PrivacyData({ children }: { children: ReactNode }) {
-	return <PrivacyProvider value={usePrivacy()}>{children}</PrivacyProvider>;
+/** The app's adapter, with letters' opt-in composed in by the route. */
+export function PrivacyData({
+	letters,
+	children,
+}: {
+	letters: ComposedSwitch;
+	children: ReactNode;
+}) {
+	return (
+		<PrivacyProvider value={usePrivacy(letters)}>{children}</PrivacyProvider>
+	);
 }
 
 export function usePrivacyScreen(): Privacy {

@@ -6,10 +6,13 @@ export const STATE: SessionEnd["state"] = {
 	day: { from: 12, to: 13 },
 	from: "peers",
 	late: false,
+	/** Letters' tile is composed in by the route; the letter states draw the real one. */
+	letterTile: null,
 	listener: null,
 	ready: true,
 	slot: {
 		kindlingReady: true,
+		letters: { waiting: false, write: false },
 		listen: false,
 		listener: "none",
 		pitchAllowed: true,
@@ -53,3 +56,15 @@ export const NOTHING: SessionEnd["state"] = {
 };
 
 export const LATE: SessionEnd["state"] = { ...STATE, late: true };
+
+/** Render 30 (Letters): free, a letter waiting to be opened; it outranks the pitch. */
+export const LETTER_WAITING: SessionEnd["state"] = {
+	...FREE,
+	slot: { ...FREE.slot, letters: { waiting: true, write: true } },
+};
+
+/** Render 29 (Letters): free, nothing waiting, the sender can write; it outranks the pitch. */
+export const LETTER_WRITE: SessionEnd["state"] = {
+	...FREE,
+	slot: { ...FREE.slot, letters: { waiting: false, write: true } },
+};

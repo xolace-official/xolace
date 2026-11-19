@@ -23,6 +23,11 @@ export const NOTIFY_COPY = {
 	checkIns: "Check-ins",
 	conversations: "Conversations",
 	dayLabels: ["noon", "6 pm", "midnight", "6 am", "noon"],
+	/** Letters (S20): every letter push, separate from Privacy › Receive letters. */
+	letters: "Letters",
+	lettersNote:
+		"One line when a letter is placed with you: “Someone wrote you a letter.” Never what it says. During quiet hours it waits until they end.",
+	lettersRow: "Letters",
 	notAfter: "Not after",
 	notBefore: "Not before",
 	quiet: "Quiet hours",

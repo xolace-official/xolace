@@ -807,6 +807,8 @@
 	--color-letter-seal-shadow: rgba(120, 50, 10, 0.6);
 	--color-letter-mark-glow: rgba(245, 160, 70, 0.45);
 	--color-letter-ack-ring: rgba(233, 130, 47, 0.45);
+	/* The envelope's edge on Connect's Letters mark. */
+	--color-letter-mark-edge: rgba(120, 80, 30, 0.38);
 	/* The glow behind the folded letter while the check runs. */
 	--color-letter-glow-1: rgba(245, 160, 70, 0.8);
 	--color-letter-glow-2: rgba(236, 122, 102, 0.3);

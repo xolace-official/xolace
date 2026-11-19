@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { View } from "react-native";
 import Animated, {
 	type SharedValue,
@@ -43,6 +43,7 @@ type Props = {
 	words: string | null;
 	next: NextKey;
 	listener: ListenerCard | null;
+	letterTile: ReactNode;
 	send: Send;
 	c2: SharedValue<number>;
 	cs: SharedValue<number>;
@@ -164,6 +165,7 @@ export function MomentTwo(p: Props) {
 						c2={c2}
 						colors={colors}
 						k={p.next}
+						letterTile={p.letterTile}
 						listener={p.listener}
 						noneTop={!words}
 						onPress={p.onNext}

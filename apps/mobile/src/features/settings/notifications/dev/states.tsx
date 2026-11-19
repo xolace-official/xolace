@@ -6,6 +6,7 @@ import {
 	NOTIFY_BLOCKED_ALERT,
 	NOTIFY_DIRECT_10PM,
 	NOTIFY_HELD,
+	NOTIFY_LETTERS_OFF,
 	NOTIFY_LOADING,
 	NOTIFY_QUIET_OFF,
 	NOTIFY_QUIET_VOICE,
@@ -24,6 +25,12 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixtureNotifications state={NOTIFY_HELD} />,
 		title: "Notifications: Warm, held by quiet hours",
+	},
+	{
+		id: "notifications-letters-off",
+		options: OPTIONS,
+		Screen: () => <FixtureNotifications state={NOTIFY_LETTERS_OFF} />,
+		title: "Notifications: letters' pushes off (Letters, S20)",
 	},
 	{
 		id: "notifications-direct-10pm",

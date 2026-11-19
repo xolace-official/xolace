@@ -89,6 +89,15 @@ export function PrivacyScreen({
 						/>
 					</SettingsCard>
 				</Section>
+				<Section note={C.lettersNote} title={C.letters}>
+					<SettingsCard>
+						<SettingsSwitchRow
+							label={C.lettersRow}
+							onChange={actions.setReceiveLetters}
+							value={state.receiveLetters}
+						/>
+					</SettingsCard>
+				</Section>
 				<Section note={C.keepNote} title={C.keep}>
 					<KeepSessions />
 				</Section>

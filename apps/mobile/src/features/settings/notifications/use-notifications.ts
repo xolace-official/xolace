@@ -18,6 +18,7 @@ import {
 	quietWith,
 	toQuiet,
 } from "@/features/settings/notifications/notifications-model";
+import type { ComposedSwitch } from "@/features/settings/settings-switch-row";
 import { saveFailed } from "@/features/settings/use-save-failed";
 import {
 	getGrantedPushToken,
@@ -54,7 +55,10 @@ function useOsBlocked() {
 
 /** Settings › Notifications on Convex, the push token and the OS permission (production's
  * `useNotificationSettings`, same calls in the same order). */
-export function useNotifications(reachMeOn: ReachMeOn | null): Notifications {
+export function useNotifications(
+	reachMeOn: ReachMeOn | null,
+	letters: ComposedSwitch
+): Notifications {
 	const preferences = useQuery(api.preferences.get);
 	const updatePreferences = usePreferenceMutation();
 	const registerToken = useMutation(api.notifications.registerToken);
@@ -154,6 +158,15 @@ export function useNotifications(reachMeOn: ReachMeOn | null): Notifications {
 					() => undefined
 				);
 			},
+			setLetters: (on) => {
+				// A blocked phone can't deliver it: the same alert as the other switches. Until the
+				// letters contract (S21), the switch is all letters keep; nothing registers a token.
+				if (on && osBlocked) {
+					setAlertOpen(true);
+					return;
+				}
+				letters?.set(on);
+			},
 			setQuiet: (on) => {
 				if (loading) {
 					return;
@@ -183,6 +196,7 @@ export function useNotifications(reachMeOn: ReachMeOn | null): Notifications {
 			alertOpen,
 			blocked: osBlocked,
 			chat: chatNotifications,
+			letters: !osBlocked && (letters?.on ?? false),
 			loading,
 			quiet: toQuiet(window),
 			reach: notifications?.reach ?? "warm",

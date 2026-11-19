@@ -152,12 +152,21 @@ export function ctaLabel({
  */
 export type NextKey =
 	| "listener"
+	| "letterRead"
 	| "kindling"
 	| "kindlingSettingUp"
+	| "letterWrite"
 	| "listen"
 	| "kfree"
 	| "loading"
 	| "none";
+
+/**
+ * What letters may offer, before this session's own rules (composed in by the route: letters'
+ * `endCardOffer`). `waiting`: a letter waits to be opened. `write`: no safeguard, the sender
+ * can write, and the card is neither resting a week after showing nor 30 days after three passes.
+ */
+export type LetterOffer = { waiting: boolean; write: boolean };
 
 export type NextInput = {
 	/** A listener match: still asking, one found, or none (for everyone, not plan-gated). */
@@ -169,6 +178,8 @@ export type NextInput = {
 	kindlingReady: boolean;
 	/** A track to suggest (no backend pick yet: open question 8). */
 	listen: boolean;
+	/** Letters' two cards; undefined while letters load. */
+	letters: LetterOffer | undefined;
 	late: boolean;
 	step: number | null;
 	/** The free pitch's cadence allows it (`pitchAllowed`). */
@@ -177,26 +188,44 @@ export type NextInput = {
 	waitedOut: boolean;
 };
 
+/** A letter card follows only a steady answer (the same or lighter), never late. Unanswered isn't steady. */
+const steadyFor = (late: boolean, step: number | null): boolean =>
+	!late && step !== null && step >= 0;
+
 /**
- * One card at most, in order: a matched listener (for everyone), then Xolace+'s
- * kindling and something to listen to, then for free users the ending's one
- * Xolace+ pitch, but never late, never after a heavier answer (step −3 down),
- * and only when the session qualifies and the cadence allows it. The slot holds
- * (loading) at most 2 s.
+ * One card at most, in order (letters' handoff §2 fitted into production's slot):
+ * 1. a matched listener, for everyone;
+ * 2. a letter waiting to be opened, after a steady answer;
+ * 3. Xolace+: kindling, or "setting up" until it lands;
+ * 4. write a letter, after a steady answer; it outranks the free pitch (handoff §7);
+ * 5. Xolace+: something to listen to;
+ * 6. free: the ending's one Xolace+ pitch, never late, never after a heavier answer (step −3
+ *    down), and only when the session qualifies and the cadence allows it;
+ * 7. nothing.
+ * The slot holds (loading) at most 2 s for the listener match, the plan and kindling, and letters.
  */
 export function nextKey(input: NextInput): NextKey {
 	const { listener, plus, late, step, waitedOut } = input;
-	if (listener === "pending" || (input.qualifies === undefined && !waitedOut)) {
+	const unknown = input.qualifies === undefined || input.letters === undefined;
+	if (listener === "pending" || (unknown && !waitedOut)) {
 		return "loading";
 	}
 	if (listener === "found") {
 		return "listener";
 	}
+	const steady = steadyFor(late, step);
+	const letters = input.letters ?? { waiting: false, write: false };
+	if (steady && letters.waiting) {
+		return "letterRead";
+	}
 	const qualifies = input.qualifies ?? false;
+	if (plus && qualifies) {
+		return input.kindlingReady ? "kindling" : "kindlingSettingUp";
+	}
+	if (steady && letters.write) {
+		return "letterWrite";
+	}
 	if (plus) {
-		if (qualifies) {
-			return input.kindlingReady ? "kindling" : "kindlingSettingUp";
-		}
 		return input.listen ? "listen" : "none";
 	}
 	if (!qualifies || late || asksFollowUp(step) || !input.pitchAllowed) {
@@ -262,5 +291,9 @@ export const pitchDismissed = (
 	shown: NextKey | null,
 	taken: boolean
 ): boolean => shown === "kfree" && !taken;
+
+/** Leaving with the write card shown and not taken passes it over (three running: 30 days off). */
+export const letterPassed = (shown: NextKey | null, taken: boolean): boolean =>
+	shown === "letterWrite" && !taken;
 
 export const slotEmpty = (key: NextKey): boolean => key === "none";
