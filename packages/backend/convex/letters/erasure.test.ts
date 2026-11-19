@@ -1,0 +1,571 @@
+// @vitest-environment edge-runtime
+/**
+ * The letters contract, slice 5 (spec: docs/plan/letters.md §10, decision B):
+ * what account deletion, a data wipe, the retention setting and the daily
+ * letters retention do to letters, reviews, blocks, strikes and pauses.
+ */
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { api, internal } from "../_generated/api";
+import type { Doc, Id } from "../_generated/dataModel";
+import {
+	asNewUser,
+	asUnauthed,
+	type SeededUser,
+} from "../test/harness.helpers";
+import { aggregatesMock, posthogMock } from "../test/mocks.helpers";
+import { DAY_MS } from "./rules";
+
+vi.mock("../lib/aggregates", () => aggregatesMock());
+vi.mock("../posthog", () => posthogMock());
+// Account deletion's push teardown: the component isn't registered in tests.
+vi.mock("../lib/pushNotifications", async (orig) => ({
+	...(await orig<typeof import("../lib/pushNotifications")>()),
+	profilePushDevices: async () => [],
+	pushNotifications: { removeToken: async () => null },
+}));
+
+// 2026-11-19 12:00 UTC.
+const NOW = Date.UTC(2026, 10, 19, 12);
+const TEXT =
+	"I don't know what you're carrying tonight, but the night ends. Be gentle with yourself.";
+
+beforeEach(() => {
+	vi.useFakeTimers();
+	vi.setSystemTime(NOW);
+});
+afterEach(() => vi.useRealTimers());
+
+type Root = SeededUser["root"];
+type ProfileId = Id<"emotional_profiles">;
+
+async function pair(root = asUnauthed()) {
+	const sender = await asNewUser(1, root);
+	const reader = await asNewUser(2, root);
+	return { reader, root, sender };
+}
+
+/** A letter row; received ones need a `recipientProfileId`. */
+function letter(
+	root: Root,
+	fields: Partial<Doc<"letters">> & Pick<Doc<"letters">, "status">
+) {
+	return root.run((ctx) =>
+		ctx.db.insert("letters", {
+			createdAt: NOW,
+			language: "en",
+			text: TEXT,
+			...(fields.status === "received" && {
+				checkedAt: NOW,
+				receivedAt: NOW,
+			}),
+			...fields,
+		})
+	);
+}
+
+function review(
+	root: Root,
+	letterId: Id<"letters">,
+	fields: Partial<Doc<"letter_reviews">> & Pick<Doc<"letter_reviews">, "kind">
+) {
+	return root.run((ctx) =>
+		ctx.db.insert("letter_reviews", {
+			createdAt: NOW,
+			letterId,
+			state: "open",
+			...fields,
+		})
+	);
+}
+
+function letterProfile(
+	root: Root,
+	profileId: ProfileId,
+	fields: Partial<Doc<"letter_profiles">> = {}
+) {
+	return root.run((ctx) =>
+		ctx.db.insert("letter_profiles", {
+			emotionalProfileId: profileId,
+			lastReceivedAt: 0,
+			optIn: "yes",
+			pool: "out",
+			tiebreak: 0.5,
+			...fields,
+		})
+	);
+}
+
+const block = (root: Root, recipient: ProfileId, sender: ProfileId) =>
+	root.run((ctx) =>
+		ctx.db.insert("letter_blocks", {
+			cause: "hide",
+			createdAt: NOW,
+			recipientProfileId: recipient,
+			senderProfileId: sender,
+		})
+	);
+
+const strike = (
+	root: Root,
+	sender: ProfileId,
+	reviewId: Id<"letter_reviews">,
+	at = NOW
+) =>
+	root.run((ctx) =>
+		ctx.db.insert("letter_strikes", {
+			at,
+			cause: "held",
+			reviewId,
+			senderProfileId: sender,
+		})
+	);
+
+const get = <T extends "letters" | "letter_reviews" | "letter_strikes">(
+	root: Root,
+	table: T,
+	id: Id<T>
+) => root.run((ctx) => ctx.db.get(table, id));
+
+const profileRow = (root: Root, profileId: ProfileId) =>
+	root.run((ctx) =>
+		ctx.db
+			.query("letter_profiles")
+			.withIndex("by_profile", (q) => q.eq("emotionalProfileId", profileId))
+			.unique()
+	);
+
+const allBlocks = (root: Root) =>
+	root.run((ctx) => ctx.db.query("letter_blocks").take(20));
+const allStrikes = (root: Root) =>
+	root.run((ctx) => ctx.db.query("letter_strikes").take(20));
+
+/** Which ends of a letter row still hold it (a field `undefined` is absent). */
+async function ends(root: Root, id: Id<"letters">) {
+	const row = await get(root, "letters", id);
+	return (
+		row && { recipient: row.recipientProfileId, sender: row.senderProfileId }
+	);
+}
+
+async function deleteAccount(user: SeededUser) {
+	await user.root.run((ctx) =>
+		ctx.db.patch("users", user.userId, { accountStatus: "purging" })
+	);
+	await user.root.mutation(internal.jobs.accountDeletion.purgeUser, {
+		userId: user.userId,
+	});
+}
+
+const wipe = (user: SeededUser) =>
+	user.root.mutation(internal.jobs.dataWipe.wipe, {
+		emotionalProfileId: user.profileId,
+	});
+
+describe("account deletion", () => {
+	it("a sender's unplaced and held letters go; received ones stay with their recipients", async () => {
+		const { reader, root, sender } = await pair();
+		const from = { senderProfileId: sender.profileId };
+		const waiting = await letter(root, { ...from, status: "waiting" });
+		const unchecked = await letter(root, { ...from, status: "unchecked" });
+		const returned = await letter(root, { ...from, status: "returned" });
+		const held = await letter(root, { ...from, status: "held" });
+		const heldReview = await review(root, held, { kind: "held" });
+		const kept = await letter(root, {
+			...from,
+			recipientProfileId: reader.profileId,
+			status: "received",
+		});
+		const reported = await letter(root, {
+			...from,
+			recipientProfileId: reader.profileId,
+			reportedAt: NOW,
+			status: "received",
+		});
+		const reportReview = await review(root, reported, {
+			kind: "report",
+			reason: "unkind",
+			reporterProfileId: reader.profileId,
+		});
+
+		await deleteAccount(sender);
+
+		for (const id of [waiting, unchecked, returned, held, reported]) {
+			expect(await get(root, "letters", id)).toBeNull();
+		}
+		for (const id of [heldReview, reportReview]) {
+			expect(await get(root, "letter_reviews", id)).toBeNull();
+		}
+		expect(await ends(root, kept)).toEqual({
+			recipient: reader.profileId,
+			sender: undefined,
+		});
+		const list = await reader.t.query(api.letters.received.list, {});
+		expect(list.map((l) => l.id)).toEqual([kept]);
+	});
+
+	it("a sender's strikes, pause, blocks and letters row go", async () => {
+		const { reader, root, sender } = await pair();
+		const held = await letter(root, {
+			senderProfileId: sender.profileId,
+			status: "held",
+		});
+		await strike(
+			root,
+			sender.profileId,
+			await review(root, held, { kind: "held" })
+		);
+		await block(root, reader.profileId, sender.profileId);
+		await letterProfile(root, sender.profileId, {
+			pausedBy: "strikes",
+			pausedUntil: NOW + 30 * DAY_MS,
+		});
+
+		await deleteAccount(sender);
+
+		expect(await allStrikes(root)).toEqual([]);
+		expect(await allBlocks(root)).toEqual([]);
+		expect(await profileRow(root, sender.profileId)).toBeNull();
+	});
+
+	it("a recipient's letters leave them; the sender's Sent row keeps its status", async () => {
+		const { reader, root, sender } = await pair();
+		const acknowledged = await letter(root, {
+			acknowledgedAt: NOW,
+			hiddenAt: NOW,
+			openedAt: NOW,
+			recipientProfileId: reader.profileId,
+			senderProfileId: sender.profileId,
+			status: "received",
+		});
+		const reported = await letter(root, {
+			recipientProfileId: reader.profileId,
+			reportedAt: NOW,
+			senderProfileId: sender.profileId,
+			status: "received",
+		});
+		const report = await review(root, reported, {
+			kind: "report",
+			reason: "selling",
+			reporterProfileId: reader.profileId,
+		});
+		// Its sender already deleted their account: nobody holds it now.
+		const orphan = await letter(root, {
+			recipientProfileId: reader.profileId,
+			status: "received",
+		});
+		await block(root, reader.profileId, sender.profileId);
+		await letterProfile(root, reader.profileId);
+
+		await deleteAccount(reader);
+
+		expect(await ends(root, acknowledged)).toEqual({
+			recipient: undefined,
+			sender: sender.profileId,
+		});
+		expect(
+			(await get(root, "letters", acknowledged))?.hiddenAt
+		).toBeUndefined();
+		expect(await get(root, "letters", orphan)).toBeNull();
+		// The report stays for review, cut from the reporter.
+		const kept = await get(root, "letter_reviews", report);
+		expect(kept?.state).toBe("open");
+		expect(kept?.reporterProfileId).toBeUndefined();
+		expect(await get(root, "letters", reported)).not.toBeNull();
+		expect(await allBlocks(root)).toEqual([]);
+		expect(await profileRow(root, reader.profileId)).toBeNull();
+
+		const sent = await sender.t.query(api.letters.sent.list, {});
+		expect(sent.map((s) => [s.id, s.status])).toEqual(
+			expect.arrayContaining([
+				[acknowledged, "acknowledged"],
+				[reported, "received"],
+			])
+		);
+	});
+});
+
+describe("data wipe", () => {
+	it("drops their letters like deletion, keeps the opt-in, and resets the pool", async () => {
+		const { reader, root, sender } = await pair();
+		const unopened = await letter(root, {
+			recipientProfileId: reader.profileId,
+			senderProfileId: sender.profileId,
+			status: "received",
+		});
+		const own = await letter(root, {
+			senderProfileId: reader.profileId,
+			status: "waiting",
+		});
+		await block(root, reader.profileId, sender.profileId);
+		await letterProfile(root, reader.profileId, {
+			aim: "grief",
+			band: "heavier",
+			language: "en",
+			lastSentDay: "2026-11-19",
+			locale: "en-GB",
+			metadataAt: NOW,
+			pool: "ready",
+			poolCheckAt: NOW + DAY_MS,
+			unopenedLetterId: unopened,
+		});
+
+		await wipe(reader);
+
+		expect(await get(root, "letters", own)).toBeNull();
+		expect(await ends(root, unopened)).toEqual({
+			recipient: undefined,
+			sender: sender.profileId,
+		});
+		expect(await reader.t.query(api.letters.received.list, {})).toEqual([]);
+		expect(await allBlocks(root)).toEqual([]);
+		const row = await profileRow(root, reader.profileId);
+		expect(row).toMatchObject({
+			language: "en",
+			lastSentDay: "2026-11-19",
+			locale: "en-GB",
+			optIn: "yes",
+			pool: "out",
+		});
+		expect(row?.aim).toBeUndefined();
+		expect(row?.band).toBeUndefined();
+		expect(row?.unopenedLetterId).toBeUndefined();
+		expect(row?.poolCheckAt).toBeUndefined();
+	});
+
+	it("keeps a sender's strikes, pause and other people's blocks of them", async () => {
+		const { reader, root, sender } = await pair();
+		const held = await letter(root, {
+			senderProfileId: sender.profileId,
+			status: "held",
+		});
+		await strike(
+			root,
+			sender.profileId,
+			await review(root, held, { kind: "held" })
+		);
+		await block(root, reader.profileId, sender.profileId);
+		await letterProfile(root, sender.profileId, {
+			pausedBy: "admin",
+			pausedUntil: NOW + 30 * DAY_MS,
+		});
+
+		await wipe(sender);
+
+		expect(await get(root, "letters", held)).toBeNull();
+		expect(await allStrikes(root)).toHaveLength(1);
+		expect(await allBlocks(root)).toHaveLength(1);
+		expect(await profileRow(root, sender.profileId)).toMatchObject({
+			pausedBy: "admin",
+			pausedUntil: NOW + 30 * DAY_MS,
+		});
+	});
+});
+
+describe("the retention setting", () => {
+	async function sixMonths(user: SeededUser) {
+		await user.root.run(async (ctx) => {
+			const prefs = await ctx.db
+				.query("preferences")
+				.withIndex("by_profile", (q) =>
+					q.eq("emotionalProfileId", user.profileId)
+				)
+				.unique();
+			if (prefs) {
+				await ctx.db.patch("preferences", prefs._id, {
+					dataRetentionPreference: "6_months",
+				});
+			}
+		});
+	}
+	const OLD = NOW - 200 * DAY_MS;
+	const RECENT = NOW - 10 * DAY_MS;
+
+	it("deletes each side's own letters past the cutoff, never the other side's", async () => {
+		const { reader, root, sender } = await pair();
+		await sixMonths(sender);
+		const oldReturned = await letter(root, {
+			createdAt: OLD,
+			senderProfileId: sender.profileId,
+			status: "returned",
+		});
+		const oldReceived = await letter(root, {
+			createdAt: OLD,
+			receivedAt: OLD,
+			recipientProfileId: reader.profileId,
+			senderProfileId: sender.profileId,
+			status: "received",
+		});
+		const recent = await letter(root, {
+			createdAt: RECENT,
+			senderProfileId: sender.profileId,
+			status: "returned",
+		});
+
+		await root.mutation(internal.jobs.dataRetention.enforce, {
+			tier: "6_months",
+		});
+
+		expect(await get(root, "letters", oldReturned)).toBeNull();
+		expect(await get(root, "letters", recent)).not.toBeNull();
+		// Still the reader's: their own setting keeps it.
+		expect(await ends(root, oldReceived)).toEqual({
+			recipient: reader.profileId,
+			sender: undefined,
+		});
+		expect(
+			(await reader.t.query(api.letters.received.list, {})).map((l) => l.id)
+		).toEqual([oldReceived]);
+	});
+
+	it("takes old letters from a recipient and frees their unopened slot", async () => {
+		const { reader, root, sender } = await pair();
+		await sixMonths(reader);
+		const old = await letter(root, {
+			createdAt: OLD,
+			receivedAt: OLD,
+			recipientProfileId: reader.profileId,
+			senderProfileId: sender.profileId,
+			status: "received",
+		});
+		await letterProfile(root, reader.profileId, { unopenedLetterId: old });
+
+		await root.mutation(internal.jobs.dataRetention.enforce, {
+			tier: "6_months",
+		});
+
+		expect(await ends(root, old)).toEqual({
+			recipient: undefined,
+			sender: sender.profileId,
+		});
+		expect(await reader.t.query(api.letters.received.list, {})).toEqual([]);
+		expect(
+			(await profileRow(root, reader.profileId))?.unopenedLetterId
+		).toBeUndefined();
+		const [sent] = await sender.t.query(api.letters.sent.list, {});
+		expect(sent?.status).toBe("received");
+	});
+
+	it("keeps a letter still under review, cut from its sender", async () => {
+		const { reader, root, sender } = await pair();
+		await sixMonths(sender);
+		const reported = await letter(root, {
+			createdAt: OLD,
+			receivedAt: OLD,
+			recipientProfileId: reader.profileId,
+			reportedAt: RECENT,
+			senderProfileId: sender.profileId,
+			status: "received",
+		});
+		await review(root, reported, {
+			createdAt: RECENT,
+			kind: "report",
+			reason: "other",
+		});
+
+		await root.mutation(internal.jobs.dataRetention.enforce, {
+			tier: "6_months",
+		});
+
+		expect(await ends(root, reported)).toEqual({
+			recipient: reader.profileId,
+			sender: undefined,
+		});
+	});
+});
+
+describe("letters.retention.run", () => {
+	it("deletes reviewed text 30 days after the decision", async () => {
+		const { reader, root, sender } = await pair();
+		const decidedAt = NOW - 31 * DAY_MS;
+		const held = await letter(root, {
+			senderProfileId: sender.profileId,
+			status: "held",
+		});
+		const heldReview = await review(root, held, {
+			decidedAt,
+			kind: "held",
+			state: "dismissed",
+		});
+		// A report on a letter its sender still has: the review goes, their Sent row stays.
+		const sendersOwn = await letter(root, {
+			recipientProfileId: reader.profileId,
+			reportedAt: NOW,
+			senderProfileId: sender.profileId,
+			status: "received",
+		});
+		const sendersOwnReview = await review(root, sendersOwn, {
+			decidedAt,
+			kind: "report",
+			state: "confirmed",
+		});
+		// A report on a letter whose sender is gone: nobody holds it.
+		const orphan = await letter(root, {
+			recipientProfileId: reader.profileId,
+			reportedAt: NOW,
+			status: "received",
+		});
+		await review(root, orphan, {
+			decidedAt,
+			kind: "report",
+			state: "confirmed",
+		});
+		const recent = await letter(root, {
+			senderProfileId: sender.profileId,
+			status: "held",
+		});
+		await review(root, recent, {
+			decidedAt: NOW - 10 * DAY_MS,
+			kind: "held",
+			state: "confirmed",
+		});
+
+		await root.mutation(internal.letters.retention.run, {});
+
+		expect(await get(root, "letters", held)).toBeNull();
+		expect(await get(root, "letter_reviews", heldReview)).toBeNull();
+		expect(await get(root, "letters", sendersOwn)).not.toBeNull();
+		expect(await get(root, "letter_reviews", sendersOwnReview)).toBeNull();
+		expect(await get(root, "letters", orphan)).toBeNull();
+		expect(await get(root, "letters", recent)).not.toBeNull();
+	});
+
+	it("deletes undecided text after 180 days, and strikes after 120", async () => {
+		const { root, sender } = await pair();
+		const stale = await letter(root, {
+			senderProfileId: sender.profileId,
+			status: "held",
+		});
+		const staleReview = await review(root, stale, {
+			createdAt: NOW - 181 * DAY_MS,
+			kind: "held",
+		});
+		const pending = await letter(root, {
+			senderProfileId: sender.profileId,
+			status: "held",
+		});
+		const pendingReview = await review(root, pending, {
+			createdAt: NOW - 100 * DAY_MS,
+			kind: "held",
+		});
+		const oldStrike = await strike(
+			root,
+			sender.profileId,
+			staleReview,
+			NOW - 121 * DAY_MS
+		);
+		const liveStrike = await strike(
+			root,
+			sender.profileId,
+			pendingReview,
+			NOW - 100 * DAY_MS
+		);
+
+		await root.mutation(internal.letters.retention.run, {});
+
+		expect(await get(root, "letters", stale)).toBeNull();
+		expect(await get(root, "letter_reviews", staleReview)).toBeNull();
+		expect(await get(root, "letters", pending)).not.toBeNull();
+		expect(await get(root, "letter_strikes", oldStrike)).toBeNull();
+		expect(await get(root, "letter_strikes", liveStrike)).not.toBeNull();
+	});
+});

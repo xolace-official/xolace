@@ -1,6 +1,6 @@
 import { cronJobs } from "convex/server";
 import { internal } from "./_generated/api";
-import { SWEEP_EVERY_HOURS } from "./letters/rules";
+import { RETENTION_EVERY_HOURS, SWEEP_EVERY_HOURS } from "./letters/rules";
 import { retentionRunIntervalHours } from "./privacy/retentionCutoff";
 
 // Set CONVEX_ENV=production on the prod deployment, leave unset (or "development") on dev.
@@ -58,6 +58,14 @@ crons.interval(
 	"sweep letters",
 	isProd ? { hours: SWEEP_EVERY_HOURS } : { hours: 12 },
 	internal.letters.sweep.run,
+	{}
+);
+
+// Letters: reviewed text and old strikes past their time (letters spec §10).
+crons.interval(
+	"letters retention",
+	{ hours: RETENTION_EVERY_HOURS },
+	internal.letters.retention.run,
 	{}
 );
 

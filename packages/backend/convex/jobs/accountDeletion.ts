@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import { internalMutation } from "../_generated/server";
+import { drainLettersForDeletion } from "../letters/erasure";
 import { drainPromptStates } from "../monthlyEvents/prompt";
 import {
 	drainChannelIdentities,
@@ -136,6 +137,7 @@ export const purgeUser = internalMutation({
 			drainSparkSpends,
 			drainTalkDemos,
 			drainPromptStates,
+			drainLettersForDeletion,
 		];
 
 		let hasMore = false;

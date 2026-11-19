@@ -125,6 +125,15 @@ export const RECHECK_DELAYS_MS = [
 
 export const AIM_WINDOW_MS = AIM_WINDOW_HOURS * HOUR_MS;
 
+/** A decided review's letter text is kept this long after the decision (decision B). */
+export const REVIEW_KEEP_DAYS = 30;
+/** An undecided review's letter text is kept at most this long. */
+export const REVIEW_OPEN_MAX_DAYS = 180;
+/** Past this a strike can no longer start or extend a pause, so it goes. */
+export const STRIKE_KEEP_DAYS = STRIKE_WINDOW_DAYS + PAUSE_DAYS;
+/** Retention runs once a day. */
+export const RETENTION_EVERY_HOURS = 24;
+
 /**
  * How far past its due time a re-check must be before the sweep runs it
  * itself: room for the scheduled one to land first.

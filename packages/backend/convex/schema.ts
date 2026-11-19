@@ -1553,7 +1553,10 @@ export default defineSchema({
 		createdAt: v.number(),
 		recipientProfileId: v.id("emotional_profiles"),
 		senderProfileId: v.id("emotional_profiles"),
-	}).index("by_pair", ["recipientProfileId", "senderProfileId"]),
+	})
+		.index("by_pair", ["recipientProfileId", "senderProfileId"])
+		// A sender's account deletion (decision B).
+		.index("by_sender", ["senderProfileId"]),
 
 	// One row per person who has answered the offer or sent a letter: the
 	// opt-in, the matching pool state, and the sender's caps. No row = opt-in
@@ -1632,7 +1635,11 @@ export default defineSchema({
 		),
 	})
 		.index("by_state_created", ["state", "createdAt"])
-		.index("by_letter", ["letterId"]),
+		.index("by_letter", ["letterId"])
+		// A reporter's deletion or wipe cuts them from their reports.
+		.index("by_reporter", ["reporterProfileId"])
+		// Reviewed text goes 30 days after the decision (decision B).
+		.index("by_decided", ["decidedAt"]),
 
 	// One row: what the hourly sweep last worked out for every client (§9).
 	letter_stats: defineTable({
@@ -1648,7 +1655,10 @@ export default defineSchema({
 		cause: v.union(v.literal("held"), v.literal("report")),
 		reviewId: v.id("letter_reviews"),
 		senderProfileId: v.id("emotional_profiles"),
-	}).index("by_sender_at", ["senderProfileId", "at"]),
+	})
+		.index("by_sender_at", ["senderProfileId", "at"])
+		// Strikes past `STRIKE_KEEP_DAYS` go (decision B).
+		.index("by_at", ["at"]),
 
 	// ===========================================================
 	// LETTERS (B12, #743)

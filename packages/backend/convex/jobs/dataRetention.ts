@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { internalMutation, type MutationCtx } from "../_generated/server";
+import { purgeLettersPastCutoff } from "../letters/retention";
 import { purgeSessions } from "../lib/sessionCascade";
 import {
 	RETENTION_TIERS,
@@ -25,8 +26,8 @@ function nextTier(tier: RetentionTier): RetentionTier | null {
 /**
  * One bounded pass of everything retention deletes for one profile, at
  * `cutoff`: sessions (with their cascade), old semantic-profile versions,
- * closed stretches, steadiness insights and feedback. At most `BATCH_SIZE`
- * rows of each.
+ * closed stretches, steadiness insights, feedback and letters. At most
+ * `BATCH_SIZE` rows of each (letters: their own batch).
  *
  * Shared by this job and the purge Settings runs when someone shortens
  * retention (`privacy/retention.applyRetentionNow`), so the two can't drift.
@@ -115,6 +116,14 @@ export async function purgeProfilePastCutoff(
 		await ctx.db.delete("feedback", record._id);
 	}
 
+	// Letters: what they sent and what they received, each side on its own.
+	const moreLetters = await purgeLettersPastCutoff(
+		ctx,
+		emotionalProfileId,
+		cutoff,
+		Date.now()
+	);
+
 	const moreSessions = oldSessions.length === BATCH_SIZE;
 	return {
 		// Versions are read oldest first, so a batch with any kept version
@@ -124,7 +133,8 @@ export async function purgeProfilePastCutoff(
 			deletedVersions === BATCH_SIZE ||
 			oldStretches.length === BATCH_SIZE ||
 			oldInsights.length === BATCH_SIZE ||
-			feedbackRecords.length === BATCH_SIZE,
+			feedbackRecords.length === BATCH_SIZE ||
+			moreLetters,
 		moreSessions,
 	};
 }
