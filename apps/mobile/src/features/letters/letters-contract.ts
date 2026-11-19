@@ -54,6 +54,10 @@ export const isAgeRefusal = (error: unknown): boolean => {
 	return code === "age_required" || code === "age_restricted";
 };
 
+/** Send refused before the writer's first finished session. */
+export const isNoSession = (error: unknown): boolean =>
+	convexErrorCode(error) === "no_session";
+
 /**
  * The letter is gone (reported from another device, or not yours): its row drops by itself,
  * so the call that found it gone has nothing to say.
@@ -63,10 +67,19 @@ export const isLetterGone = (error: unknown): boolean =>
 
 /**
  * Whether the care for a late risk shows now. It shows only when the app opens or comes back to
- * the front (`armed`), never over what someone is doing; one already up stays up.
+ * the front (`armed`), never over what someone is doing; one already up stays up. It waits while
+ * the screen is `covered`: Write (which draws its own care) or a natively presented screen, which
+ * a host can't draw over, so the care would be heard without being seen.
  */
-export const lateCareDue = (
-	risk: LateRisk | null | undefined,
-	armed: boolean,
-	showing: LateRisk | null
-): LateRisk | null => (showing === null && armed && risk ? risk : null);
+export const lateCareDue = ({
+	risk,
+	armed,
+	covered,
+	showing,
+}: {
+	risk: LateRisk | null | undefined;
+	armed: boolean;
+	covered: boolean;
+	showing: LateRisk | null;
+}): LateRisk | null =>
+	showing === null && armed && !covered && risk ? risk : null;

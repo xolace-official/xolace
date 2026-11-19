@@ -1,6 +1,6 @@
 import * as Sentry from "@sentry/react-native";
 import { usePathname } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { AppState } from "react-native";
 import { useEffectiveReducedMotion } from "@/lib/motion/use-effective-reduced-motion";
 import { LETTER_MOTION } from "./letter-motion";
@@ -18,15 +18,23 @@ const WRITE_PATH = "/letters/write";
  * §5.4, owner F5): the next time the app opens or comes back to the front, the sender gets the
  * care a `risk` answer shows at Send. Once it has risen the server hears which level was shown
  * (`lateRiskShown`), so it doesn't come back; a crisis raised meanwhile still does, next open.
- * It waits while Write is up, so it never stacks on Write's own care. Kept above the stack while
- * signed in; it draws only while the care is up.
+ *
+ * It waits while Write is up (never stacking on Write's own care) and while a natively presented
+ * screen is (`isPresented`: a host draws under those, so the care would be heard unseen). Still
+ * covered once the open's window has passed, it waits for the next open. Kept above the stack
+ * while signed in; it draws only while the care is up.
  */
-export function LateRiskHost() {
+export function LateRiskHost({
+	isPresented,
+}: {
+	isPresented: (pathname: string) => boolean;
+}) {
 	const risk = useLettersLateRisk();
 	const calls = useLettersCalls();
 	const reduced = useEffectiveReducedMotion();
-	const onWrite = usePathname() === WRITE_PATH;
-	// True from launch and each return to the front, until the care has shown once.
+	const pathname = usePathname();
+	const covered = pathname === WRITE_PATH || isPresented(pathname);
+	// True from launch and each return to the front, for the open's window or until the care shows.
 	const [armed, setArmed] = useState(true);
 	const [showing, setShowing] = useState<LateRisk | null>(null);
 	// Heard for this showing already (a re-render mustn't call it twice).
@@ -41,7 +49,7 @@ export function LateRiskHost() {
 		return () => sub.remove();
 	}, []);
 
-	const due = lateCareDue(risk, armed && !onWrite, showing);
+	const due = lateCareDue({ armed, covered, risk, showing });
 	useEffect(() => {
 		if (due === null) {
 			return;
@@ -51,6 +59,14 @@ export function LateRiskHost() {
 		setArmed(false);
 	}, [due]);
 
+	// Read at the timer's end, so a new `calls` object on a re-render doesn't restart the wait.
+	const reportShown = useEffectEvent((shown: LateRisk) => {
+		heard.current = true;
+		calls
+			.lateRiskShown(shown)
+			.catch((error: unknown) => Sentry.captureException(error));
+	});
+
 	// Heard only once the care has risen on screen, at the level it showed. Closed sooner, it isn't
 	// heard, and shows again at the next open.
 	useEffect(() => {
@@ -58,26 +74,21 @@ export function LateRiskHost() {
 			return;
 		}
 		const t = setTimeout(
-			() => {
-				heard.current = true;
-				calls
-					.lateRiskShown(showing)
-					.catch((error: unknown) => Sentry.captureException(error));
-			},
+			() => reportShown(showing),
 			reduced ? LETTER_MOTION.reducedMs : LETTER_MOTION.risk.sheetMs
 		);
 		return () => clearTimeout(t);
-	}, [showing, reduced, calls]);
+	}, [showing, reduced]);
 
-	// Nothing to show as the app opened (after a reconnect's fresh status has had time to land):
-	// a risk found later waits for the next open, rather than rising over what someone is doing.
+	// The open's window: a risk that arrives later, or one still covered by then, waits for the
+	// next open rather than rising over what someone is doing.
 	useEffect(() => {
-		if (risk !== null || !armed) {
+		if (!armed) {
 			return;
 		}
 		const t = setTimeout(() => setArmed(false), ARMED_MS);
 		return () => clearTimeout(t);
-	}, [risk, armed]);
+	}, [armed]);
 
 	const close = () => setShowing(null);
 	return (

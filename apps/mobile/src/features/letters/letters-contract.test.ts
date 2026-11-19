@@ -5,6 +5,7 @@ import {
 	aimOf,
 	isAgeRefusal,
 	isLetterGone,
+	isNoSession,
 	lateCareDue,
 	localDay,
 	statusFrom,
@@ -88,6 +89,11 @@ describe("errors", () => {
 		expect(isAgeRefusal(new Error("offline"))).toBe(false);
 	});
 
+	it("knows a send refused before a first session", () => {
+		expect(isNoSession(new ConvexError({ code: "no_session" }))).toBe(true);
+		expect(isNoSession(new ConvexError({ code: "age_required" }))).toBe(false);
+	});
+
 	it("knows a letter already gone", () => {
 		expect(isLetterGone(new ConvexError({ code: "letter_not_found" }))).toBe(
 			true
@@ -97,21 +103,32 @@ describe("errors", () => {
 });
 
 describe("lateCareDue", () => {
+	const OPEN = {
+		armed: true,
+		covered: false,
+		risk: "crisis",
+		showing: null,
+	} as const;
+
 	it("shows a late risk when the app opens", () => {
-		expect(lateCareDue("elevated", true, null)).toBe("elevated");
-		expect(lateCareDue("crisis", true, null)).toBe("crisis");
+		expect(lateCareDue({ ...OPEN, risk: "elevated" })).toBe("elevated");
+		expect(lateCareDue(OPEN)).toBe("crisis");
 	});
 
 	it("waits for the next open rather than rising over what someone is doing", () => {
-		expect(lateCareDue("crisis", false, null)).toBeNull();
+		expect(lateCareDue({ ...OPEN, armed: false })).toBeNull();
+	});
+
+	it("waits while Write or a natively presented screen covers the app", () => {
+		expect(lateCareDue({ ...OPEN, covered: true })).toBeNull();
 	});
 
 	it("shows nothing while the status loads or there's nothing to show", () => {
-		expect(lateCareDue(undefined, true, null)).toBeNull();
-		expect(lateCareDue(null, true, null)).toBeNull();
+		expect(lateCareDue({ ...OPEN, risk: undefined })).toBeNull();
+		expect(lateCareDue({ ...OPEN, risk: null })).toBeNull();
 	});
 
 	it("never stacks a second care over one already up", () => {
-		expect(lateCareDue("crisis", true, "elevated")).toBeNull();
+		expect(lateCareDue({ ...OPEN, showing: "elevated" })).toBeNull();
 	});
 });
