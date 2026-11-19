@@ -72,9 +72,9 @@ held as hostile). Fixable and at-risk letters are never stored (#750).
 | `recipientProfileId` | `optional(id)` | Set at placement |
 | `receivedAt`, `openedAt`, `acknowledgedAt`, `hiddenAt` | `optional(number)` | The recipient's side. Hide is reversible (`hiddenAt` cleared) |
 | `reportedAt` | `optional(number)` | Gone from the recipient at once; kept for review |
-| `senderSeen` | `optional("received" \| "acknowledged" \| "returned")` | The latest status the sender has seen (`markSeen`) |
+| `senderSeen` | `optional("received" \| "acknowledged" \| "returned" \| "held")` | The latest status the sender has seen (`markSeen`) |
 | `textHash` | `optional(string)` | Held letters only: SHA-256 of the trimmed text, so the same words are refused again |
-| `heldLate` | `optional(boolean)` | Set when a re-check held a letter that read as sent (§5.4): its Sent row shows `held` until the sender dismisses it, then this is cleared and the row stays for its review |
+| `heldLate` | `optional(boolean)` | Set when a re-check held a letter that read as sent (§5.4): its Sent row shows `held` until the sender dismisses it, then this is cleared and the row stays for its review (or is deleted, when the same words were already held and this copy has no review of its own) |
 
 Indexes: `by_sender_created` `[senderProfileId, createdAt]` (Sent list, the daily cap),
 `by_sender_status` `[senderProfileId, status]` (three waiting), `by_recipient_received`
@@ -147,9 +147,12 @@ indexes `by_sender_at` and `by_at` (the 120-day cleanup). No text.
     "who read this person's words" for any review the person could still ask about; the
     row holds no text.
   - **On the sender's account deletion** their `letter_viewed` rows (a new
-    `by_action_target` index) lose `targetClerkUserId`, so the log keeps which admin opened which review and when, but
-    no longer names a deleted person. A data wipe leaves them: the wipe doesn't remove
-    the account, and the log records what admins did, not what the sender said.
+    `by_action_target` index) lose `targetClerkUserId`, so the log keeps which admin
+    opened which review and when, but no longer names a deleted person. The id written
+    and cleared is the subject of the user's verified `tokenIdentifier`, never
+    `users.authProviderAccountId` (legacy rows can hold a client placeholder there).
+    A data wipe leaves them: the wipe doesn't remove the account, and the log records
+    what admins did, not what the sender said.
   - Built in slice 5. `outreach_viewed` rows are untouched: their retention is
     outreach's to settle.
 
@@ -192,8 +195,14 @@ saw "This letter can't be sent" and kept their words). One a re-check held later
      that only mentions a crisis phrase (past tense, or about someone else: "a few years
      ago I tried to end my life", "I lost my brother to suicide") doesn't raise; the
      engine decides those. A present-tense, first-person phrase raises exactly as
-     talk's floor does. Intake's floor is unchanged;
-   - the letters classifier (`ai/letters/check.ts`, one Haiku call, 8 s): returns
+     talk's floor does. Only the mention's own span is cut ("since my brother's
+     suicide", "a week ago I tried to …"); whatever is left of the sentence is floored
+     as usual, so "since my brother's suicide I want to kill myself too" still raises,
+     and "tried to …" with a recent time ("last night", "again today") is never a
+     mention. Intake's floor is unchanged;
+   - the letters classifier (`ai/letters/check.ts`, one Haiku call, 8 s; its model,
+     `LETTER_CHECK_MODEL`, sits beside the prompt version there, not in
+     `ai/providers/anthropic.ts`, so changing it is a letters change only): returns
      `{ hostile, fixable: category | null, language }` (off-topic is one of the fixable
      categories). The letter goes inside tags the prompt calls data to judge, never
      instructions, and any tag in the text is neutralised first.
@@ -222,8 +231,9 @@ saw "This letter can't be sent" and kept their words). One a re-check held later
    set `lastSentDay`, capture analytics. A **held** letter skips the caps (it's kept for
    review whatever else was sent) but still sets `lastSentDay`, so a sender adds at most
    one held letter a day to the review queue, paused or not, and then meets the same
-   `limit: today` as anyone. The same held words twice, even from two devices at once,
-   are one row and one strike.
+   `limit: today` as anyone. Two different held letters stored at once (two devices):
+   the second reads the first's day and answers `limit: today`, unstored. The same held
+   words twice, even from two devices at once, are one row and one strike.
 
 `send`'s args: `{ text: string, aim?: letterAim }`. `returns` (the S20 `SendOutcome`,
 as a union validator):
@@ -266,7 +276,14 @@ towns, employers), and whether the text is a letter to a reader at all.
 - **Evals:** `ai/prompts/__evals__/lettersCheck.eval.test.ts` on the existing harness,
   with a fixture set per category, kind letters that must pass (grief, faith mentioned
   in passing, "it gets better" said gently), and contact attempts the regexes miss.
-  Runs only with `RUN_EVALS=1`.
+  Runs only with `RUN_EVALS=1`. The sexual letter, the invitation to meet and the vivid
+  self-harm detail are anchors: each must be flagged, whatever the overall pass rate.
+  CI's **Letters eval** (`.github/workflows/letters-gate.yml`, `test:evals:letters`)
+  runs it on PRs touching the letters check, its floor, `ai/providers/anthropic.ts`,
+  intake's `read.ts` or its classifier prompt (`ai/prompts/classifier.ts`), with
+  read-only permissions and one run per PR at a time. Without `OPENAI_API_KEY` the
+  moderation-backed cases skip with a warning; that becomes a failure once the secret is
+  set.
 
 ### 4. Client functions
 
@@ -279,7 +296,7 @@ letter that doesn't exist.
 | Function | Kind | Args | Returns |
 |---|---|---|---|
 | `letters.status.get` | query | — | `{ optIn: "unset" \| "yes" \| "no", writeLimit: "today" \| "three" \| null, unopenedId: Id<"letters"> \| null, invite: boolean, lastSentDay: string \| null, lateRisk: "elevated" \| "crisis" \| null }` (`invite`: decision C; `lateRisk`: §5.4) |
-| `letters.status.lateRiskShown` | mutation | — | `null`; clears `lateRisk` once the client has shown intake's care |
+| `letters.status.lateRiskShown` | mutation | `{ shown?: "elevated" \| "crisis" }` | `null`; clears `lateRisk` once the client has shown intake's care. With `shown`, it clears only a stored level at or below it, so a crisis raised while support resources were on screen stays to be shown. Without it (older clients), whatever is stored clears |
 | `letters.send.send` | action | `{ text, aim? }` | `SendOutcome` (§3) |
 | `letters.sent.list` | query | — | `{ id, line, status: "waiting" \| "received" \| "acknowledged" \| "returned" \| "held", seen }[]`, newest first, at most 50 (`held` only for a late hold, §5.4) |
 | `letters.sent.dismiss` | mutation | `{ id }` | `null`; a returned letter leaves Sent and its row is deleted; a late-held one leaves Sent and its row stays for review |
@@ -350,14 +367,16 @@ the earliest of freshness ending and the 7-day rest ending.
 (`checkedAt` + `AIM_WINDOW_HOURS`, 72) reads `by_pool_aim` with its aim, `heavier`
 first, then `lighter`; after the window (or with no aim) it reads `by_pool_band`,
 `heavier` first. Candidates are read lazily in index order (longest since a letter, then
-`tiebreak`), at most `CANDIDATES_TRIED_MAX` (100) per band, and each is checked live:
+`tiebreak`), at most `CANDIDATES_TRIED_MAX` (50) per band, and each is checked live:
 
 - not the sender, no `letter_blocks` row for the pair (turned away **for this sender**);
 - may still receive at all (`mayReceive`: opted in, adult, the account active and not
   being deleted or wiped), not inside their quiet window now (`quietWindowEndsAt`,
   `outreach/quietWindow.ts`; skipped, not reserved, #749), and no open acute or
-  escalation-derived follow-up (`follow_up_cards` indexes) (turned away **for
-  themselves**).
+  escalation-derived follow-up (turned away **for themselves**). Escalation-derived
+  cards have their own index, so that check is exact; acute ones are looked for among
+  the newest `FOLLOW_UP_PROBE_MAX` (20) open cards per status (a card is only
+  superseded by one at least as heavy, so an open acute card is never buried).
 
 The first that passes gets the letter: `status: received`, `recipientProfileId`,
 `receivedAt`, the recipient's `unopenedLetterId`, `lastReceivedAt`, a new `tiebreak`,
@@ -370,13 +389,17 @@ After the walk (never during it, so no row moves under the index), each such can
 is refreshed: `pool: out` with `poolCheckAt` at the end of their quiet window, or
 `FOLLOW_UP_LOOK_AGAIN_MS` (1 h, one sweep) later while a hard follow-up is open, capped
 by freshness ending. Someone turned away only for this sender stays `ready` for others
-and is stepped past. Each try is about ten reads; a placement runs in its own mutation.
+and is stepped past. Each try is about ten reads (twenty-odd with the follow-up probe),
+so two bands of 50 stay far inside a mutation's limits; the walk also stops early once
+the transaction is down to `PLACE_BUDGET_RESERVE` (200 queries or 2,000 documents),
+which it keeps for its writes. A placement runs in its own mutation.
 
 #### 5.3 The hourly sweep
 
-`crons.ts` → `letters.sweep.run` every `SWEEP_EVERY_HOURS` (1). `run` only starts a
-chain of internal mutations, each working in bounded pages (`SWEEP_BATCH`, 50) that
-schedule their own next page, and starting the next step when done:
+`crons.ts` → `letters.sweep.run` every `SWEEP_EVERY_HOURS` (1). `run` only starts four
+internal mutations side by side, so one failing never starves the others; each works
+in bounded pages (`SWEEP_BATCH`, 50) and schedules its own next page. `placeWaiting`
+starts `PLACE_AFTER_MS` (2 min) after the rest, so the refresh has usually run:
 
 1. **`refreshDue`**: pool rows whose `poolCheckAt` passed. A refresh always moves
    `poolCheckAt` on, so the walk ends.
@@ -384,15 +407,19 @@ schedule their own next page, and starting the next step when done:
    cursor (the last `checkedAt` and id). A letter waiting `LETTER_WAIT_DAYS` (30) since
    it passed is **returned** (decision C); returns and skips are cheap and run a page to
    a mutation. A **placement reads the pool, so each runs in a mutation of its own** and
-   the next is scheduled after it. Once a letter finds no one, the rest of this sweep
-   skips its language (inside an aim window, its language and aim): the next letter
-   would read the same pool.
+   the next is scheduled after it. Once a letter finds no one because of the pool
+   (every candidate it reached was turned away for themselves, or there were none), the
+   rest of this sweep skips its language (inside an aim window, its language and aim):
+   the next letter would read the same pool. When someone was turned away only for its
+   sender (their own row, a block), or the walk stopped at its cap or budget, only that
+   sender's letters there are skipped, so another sender's letter still tries.
 3. **`uncheckedDue`**: `unchecked` letters. One unchecked `LETTER_WAIT_DAYS` after it was
    written is returned; otherwise, once its `recheckDueAt` is `RECHECK_OVERDUE_MS`
    (10 min) past (the scheduled re-check didn't land, or failed before it wrote), the
    sweep starts one itself and moves `recheckDueAt` on, at most `RECHECK_SWEEP_MAX` (25)
    a sweep: during a classifier outage every unchecked letter is due at once.
-4. **`invite`**: works out decision C's flag and writes `letter_stats`.
+4. **`invite`**: works out decision C's flag and writes `letter_stats` only when it
+   changes, so clients subscribed to `status.get` don't re-run every hour.
 
 Two sweeps overlapping only repeat work: every write re-reads the row it changes.
 
@@ -411,11 +438,15 @@ next time they open the app (owner F5):
 
 - **`risk`** sets `letter_profiles.lateRisk` (`elevated` or `crisis`, never lowered).
   `status.get` returns it; the client shows intake's crisis care, then calls
-  `status.lateRiskShown`, which clears it.
+  `status.lateRiskShown({ shown })` with the level it showed, which clears it.
 - **`held`** sets `letters.heldLate`. The letter comes back into Sent with status `held`
   ("This letter can't be sent"), `seen` like any other status, until the sender
-  dismisses it with `sent.dismiss`; the row stays for its review. An unchecked letter still
-unchecked `LETTER_WAIT_DAYS` (30) after it was written is returned too.
+  dismisses it with `sent.dismiss`; the row stays for its review. If the same words were
+  already held (sent again and held at send while this one waited), it adds no second
+  review or strike, and dismissing it deletes the row.
+
+An unchecked letter still unchecked `LETTER_WAIT_DAYS` (30) after it was written is
+returned too.
 
 #### 5.5 Aims
 
@@ -499,7 +530,7 @@ server finds the sender.
 | Function | Kind | Does |
 |---|---|---|
 | `listQueue` | `adminQuery` | Open reviews, oldest first, paginated: `{ reviewId, kind, reason?, createdAt, priorStrikes }`. No text |
-| `openReview` | `adminMutation` | The letter's text for one review; writes an `admin_audit_log` row (`letter_viewed`) |
+| `openReview` | `adminMutation` | The letter's text for one review; writes an `admin_audit_log` row (`letter_viewed`). A decided review also says `closedBy`: `"admin"` (a person decided it) or `"account_deleted"` (the sender's deletion closed it as dismissed) |
 | `decide` | `adminMutation` | `{ reviewId, decision: "confirm" \| "dismiss" }`. Confirm on a report adds a strike (and may pause) |
 | `pauseSender` / `liftPause` | `adminMutation` | By `reviewId`; `liftPause` also takes `listPauses`' `pauseRef`. `pausedBy: "admin"` |
 | `listPauses` | `adminQuery` | Active pauses: `{ pauseRef, until, pausedBy, strikes }` (`pauseRef` is the `letter_profiles` row's id: stable across calls, so `liftPause` can take it, and never the person's `emotional_profiles` id) |
@@ -584,7 +615,7 @@ test that no captured screen name contains a letter id.
 |---|---|---|
 | `useLettersStatus` | `letters.status.get` | `unopenedId` is an `Id<"letters">` (a string on the client). **Gains** `invite` (decision C: `endCardOffer` offers the session-end write card only while it's `true`) and `lastSentDay` (§4: compare it with the device's local day to lift `writeLimit: "today"` after midnight) |
 | `useSentLetters` | `letters.sent.list` | `SentStatus` **gains** `"held"`: a letter a background re-check held after it read as sent. Its row says "This letter can't be sent", is marked seen like any other, and can be dismissed (`letters.sent.dismiss`). Optional to handle well; an unknown status must not crash the row |
-| (none) | `letters.status.get`'s `lateRisk`, `letters.status.lateRiskShown` | **New, optional:** when `lateRisk` is set at app open, show intake's crisis care (the same screen `risk` shows at send), then call `lateRiskShown`. Until S21 handles it, the flag stays set and nothing breaks |
+| (none) | `letters.status.get`'s `lateRisk`, `letters.status.lateRiskShown` | **New, optional:** when `lateRisk` is set at app open, show intake's crisis care (the same screen `risk` shows at send), then call `lateRiskShown({ shown })` with the level shown. Until S21 handles it, the flag stays set and nothing breaks |
 | `useReceivedLetters` | `letters.received.list` | — |
 | `useReceivedLetter(id)` | `letters.received.get` | Pass the route param as it is: the server normalizes it, and a bad id reads `null` |
 | `useLettersPush` / `setPush` | `letters.settings.getPush` / `setPush` | — |
@@ -625,9 +656,10 @@ cap stops volume, but not letters written for the streak.
 
 - **Sender deletes their account:** waiting and unchecked letters are deleted. Received
   letters stay with their recipients with `senderProfileId` cut, so the account's link is
-  gone and the letter is anonymous text, as pooled peer reflections are. Held text goes;
-  open reviews of their letters close as dismissed. Strikes, pauses, blocks and their
-  `letter_profiles` row go.
+  gone and the letter is anonymous text, as pooled peer reflections are. Letters under
+  an open review (held or reported) are kept, cut from the sender: the review closes as
+  dismissed and their text goes 30 days later, on the decided clock (F4). Strikes,
+  pauses, blocks and their `letter_profiles` row go.
 - **Recipient deletes their account:** the letters they received are deleted. The
   sender's Sent row keeps the status it had (it never learns why a letter stopped
   changing). Their reports stay for review with `reporterProfileId` cut. Their blocks go.
@@ -789,8 +821,16 @@ Five calls on the built slices, each now in the code and tested:
   aged out and cleared of the sender's id.
 - **The letters floor** (F1): the three kinds of mention pass, present tense still
   routes to risk, and moderation down is unavailable (F2).
-- **Late outcomes** (F5): a late risk is returned once and cleared; a late hold shows in
-  Sent until dismissed and keeps its row; a letter held at send never shows.
+- **Late outcomes** (F5): a late risk is returned once and cleared, and an `elevated`
+  `shown` never clears a `crisis`; a late hold shows in Sent until dismissed and keeps
+  its row; a late hold of words already held adds no review or strike; a letter held at
+  send never shows; two held letters at once, the second answers `today`.
+- **The sweep:** a letter whose only candidate is its own sender doesn't stop another
+  sender's letter; its steps start side by side; the invite flag is written only when
+  it changes; an escalation-derived follow-up is found under more cards than the probe
+  reads.
+- **Admin:** `openReview`'s `closedBy` tells a person's dismissal from a deletion's;
+  dismissing a held review after a wipe takes back only its strike.
 
 ## Out of scope
 
