@@ -9,8 +9,9 @@
 > Web, desktop and the CLI read the same contract later; the admin UI is a placeholder,
 > so B12 ships admin functions only.
 >
-> **Status: draft, waiting for the owner** on the five items #743 left open
-> (§"Owner's decisions"). Everything else follows the settled tickets.
+> **Status:** the owner settled #743's open items A–D on 19 November 2026 and the push
+> half of E; the opt-in's home (E) waits on their confirmation (§"Owner's decisions").
+> Everything else follows the settled tickets.
 
 Domain terms (root `AGENTS.md` → Glossary): **letter**, **sender**, **recipient**,
 **received** (placed with the recipient, read or not), **acknowledge**. Never "message",
@@ -333,7 +334,7 @@ modelled on `chatNotifications.send`: `sendPushToProfile` directly, not outreach
 `enqueue` (the glossary: a letter isn't outreach, and its pushes aren't Xolace reaching
 out). It honours `notifications.enabled` and `notifications.letters !== false`, and the
 quiet window: inside it, the same mutation is scheduled for `quietWindowEndsAt` and runs
-its checks again then (open question 31: quiet hours decide).
+its checks again then (open question 31: quiet hours decide). It is the one place that knows how a letter push goes out, so moving letters onto outreach later changes only its body (owner decision E).
 
 | `type` | To | When | Copy (`LETTERS.push`, open question 28) | `data` |
 |---|---|---|---|---|
@@ -429,11 +430,12 @@ hook names, returns and call signatures stay, except where marked.
 
 ## Owner's decisions
 
-#743 left five items open. Each has a recommendation and one alternative. **Pending.**
+#743 left five items open. Each had a recommendation and one alternative. **The owner took
+the recommendation for A–D (19 November 2026).** E: see its note.
 
 ### A. Sparks and achievements
 
-**Recommended:** sending a letter earns one achievement, **First letter** (10 sparks, the
+**Decided (the recommendation):** sending a letter earns one achievement, **First letter** (10 sparks, the
 smallest size), when a first letter is stored as `waiting` (the check passed). Nothing
 else: a letter doesn't count as showing up, there's no ladder (5, 10, 25 letters), and
 nothing for being received, acknowledged, or receiving one.
@@ -445,13 +447,13 @@ nothing for being received, acknowledged, or receiving one.
   currency. Rewarding a recipient rewards being chosen, and matching favours heavier
   sessions: that's sparks for struggle.
 
-**Alternative:** a stored letter also counts as showing up for the day (a new
+**Alternative (not taken):** a stored letter also counts as showing up for the day (a new
 `activity_log` action type), with the same single First letter achievement. The 1-a-day
 cap stops volume, but not letters written for the streak.
 
 ### B. Retention and deletion
 
-**Recommended:**
+**Decided (the recommendation):**
 
 - **Sender deletes their account:** waiting and unchecked letters are deleted. Received
   letters stay with their recipients with `senderProfileId` cut, so the account's link is
@@ -473,13 +475,13 @@ cap stops volume, but not letters written for the streak.
   when they can no longer change anything. Escalations follow their existing rule
   (anonymised, kept).
 
-**Alternative:** a received letter is deleted when its sender deletes their account, so
+**Alternative (not taken):** a received letter is deleted when its sender deletes their account, so
 nothing written by a deleted account survives anywhere. Simpler to promise; the
 recipient's letter disappears from their list without explanation.
 
 ### C. Supply and demand
 
-**Recommended:**
+**Decided (the recommendation):**
 
 - **Expiry:** a letter still waiting `LETTER_WAIT_DAYS` (30) after it passed the check is
   **returned**: `status: "returned"`, no longer matched, and it frees one of the three
@@ -496,13 +498,13 @@ recipient's letter disappears from their list without explanation.
   launch, the team and beta users write real letters through the ordinary flow on
   staging and then production.
 
-**Alternative:** no expiry. A letter waits until it's placed or withdrawn; the sender's
+**Alternative (not taken):** no expiry. A letter waits until it's placed or withdrawn; the sender's
 three slots can stay full, so a sender may be unable to write for weeks when supply runs
 ahead.
 
 ### D. The success measure
 
-**Recommended:** one primary measure, read monthly, with guardrails, and no per-person
+**Decided (the recommendation):** one primary measure, read monthly, with guardrails, and no per-person
 counts.
 
 - **Primary, "reached":** acknowledged ÷ opened, over letters opened in the period.
@@ -516,7 +518,7 @@ counts.
 - **Never measured:** letters per sender, streaks of writing, a recipient's sessions or
   feelings after a letter (that would use emotional data for analytics, invariant 6).
 
-**Alternative:** primary = recipients who come back for a session within 14 days of
+**Alternative (not taken):** primary = recipients who come back for a session within 14 days of
 opening a letter, against opted-in recipients who didn't get one. It measures what we
 hope letters do, but it's an engagement metric, and pressure to raise it pushes towards
 sending more letters to more people.
@@ -524,15 +526,45 @@ sending more letters to more people.
 ### E. The contract shape
 
 **Recommended:** this spec as written: own tables in `convex/letters/`, the opt-in in
-`letter_profiles` plus an appended consent record, pushes through a letters push mutation
-on `sendPushToProfile` (a notification, as chat's are), and the client undo kept on the
+`letter_profiles` plus an appended consent record, the push switch in
+`preferences.notifications`, pushes through a letters push mutation on
+`sendPushToProfile` (a notification, as chat's are), and the client undo kept on the
 client.
 
-**Alternative:** fewer new pieces: the opt-in and the push switch both as `preferences`
-fields, and the three pushes as new push-only intents on outreach's `enqueue` (quiet
-window, dedupe and the deletion gate for free). Cheaper to build; it files letter pushes
-under outreach, which the glossary says they aren't, and matching would scan
-`preferences` (no index on a nested field) instead of a pool.
+**Pushes (owner, 19 Nov 2026): plain push for now, free to move to outreach later.** Every
+letter push goes through one function, `letters/push.ts` `send({ to, type, letterId? })`,
+and nothing else in `convex/letters/` knows how a push is sent. Moving letters onto
+outreach's `enqueue` later means rewriting that one function's body (three push-only
+intents, Telegram excluded); callers, the client's tap routes and the `data` payloads
+stay.
+
+**Why the opt-in sits on a letters row, not in `preferences`** (owner asked):
+
+1. **Matching needs a row of its own anyway.** It reads more than the opt-in: the pool
+   state (`pool`, `poolCheckAt`), the copied session signals (`aim`, `band`,
+   `metadataAt`), `lastReceivedAt`, `tiebreak`, `unopenedLetterId`, and the sender side
+   (`lastSentDay`, `pausedUntil`). None of that is a preference. The opt-in is the field
+   that decides whether that state may exist at all, so it belongs beside it: one indexed
+   read per candidate, and opting out clears the pool fields in the same write.
+2. **`preferences` is a hot row.** The app subscribes to it (`preferences.get`) and the
+   settings screens write it. Pool fields change at every session and placement, so on
+   `preferences` they'd re-run every subscriber and collide with settings writes for no
+   reason.
+3. **Privacy.** The pool fields are derived from someone's sessions. `preferences.get`
+   returns the row to the client and survives a data wipe; letters' state has to reset
+   on a wipe and never leave the server.
+4. **One source of truth.** Opt-in in `preferences` with the pool on a letters row means
+   two places to keep in step on every opt-in, opt-out, wipe and deletion.
+
+The cost is one more table and one read where Settings shows the toggle
+(`letters.status.get` already returns `optIn`). The push switch is a plain notification
+preference, so it does go in `preferences.notifications.letters`.
+
+**Alternative:** fewer new pieces: the opt-in as a top-level `preferences` field (it
+could be indexed there), the pool state on a separate letters row, and the three pushes
+as new push-only intents on outreach's `enqueue` (quiet window, dedupe and the deletion
+gate for free). It files letter pushes under outreach, which the glossary says they
+aren't, and splits the opt-in from the state it governs.
 
 ---
 
