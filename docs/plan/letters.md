@@ -149,12 +149,14 @@ letter can't be sent" and kept their words). The recipient sees a letter from
 2. **Same held words?** If the trimmed text hashes to one of this sender's held letters,
    answer `held` again with no model call and no second strike.
 3. **Regexes** (pure, no spend): contact details and URLs from the shared helper
-   (`convex/lib/contactPatterns.ts`, §3.1). A hit answers `fixable` with its fixed line.
+   (`convex/lib/contactPatterns.ts`, §3.1). A hit is fixable, and the classifier is
+   skipped; the safety half still runs, so a phone number never hides a sender at risk.
 4. **In parallel, each with its own deadline:**
    - `checkWordsSafety(text)` from `ai/intake/read.ts` (phrase floor, OpenAI
      moderation, the Haiku safeguard; 8 s);
    - the letters classifier (`ai/letters/check.ts`, one Haiku call, 8 s): returns
-     `{ hostile, fixable: category | null, offTopic, language, confidence }`.
+     `{ hostile, fixable: category | null, language, confidence }` (off-topic is one
+     of the fixable categories).
 5. **Decide**, first that applies:
    - safeguard `elevated` or `crisis` → **`risk`**: an escalation row (`source:
      "letter"`, the verdict's `peak` as evidence, never the text), nothing stored.
@@ -162,8 +164,10 @@ letter can't be sent" and kept their words). The recipient sees a letter from
      stored `held` with `textHash`, a `letter_reviews` row, a strike (§8).
    - classifier `language` not in `LETTER_LANGUAGES` (`["en"]`) → **`lang`**.
    - a `fixable` category → **`fixable`** with that category's fixed line.
-   - the safeguard and the classifier both unavailable → **`unavailable`**: stored
+   - the safeguard or the classifier unavailable → **`unavailable`**: stored
      `unchecked`, re-checked in the background (§5.4). Reads to the sender as pass.
+     Either half, not only both: one guards the sender, the other the reader, and
+     #750 places nothing a check didn't finish on.
    - otherwise → **`pass`**: stored `waiting`, then a match is tried at once (§5).
 6. **Store** (internal mutation): re-check the caps (a lost race answers `limit`), insert,
    set `lastSentDay`, capture analytics.
