@@ -29,6 +29,7 @@ export function TopicTile({ tile, size }: { tile: Tile; size: number }) {
 			<Link.Trigger withAppleZoom={!reduced && canAppleZoom()}>
 				<PressScale
 					accessibilityLabel={`${tile.title}, ${counts}`}
+					accessibilityRole="link"
 					haptic={playSoftPress}
 					scaleTo={GRID.press}
 					style={{ gap: GRID.textGap, width: size }}
