@@ -25,10 +25,14 @@ vi.mock("uniwind", async () => {
 	};
 });
 
+/** The module's state on the JS global, which outlives a module reload by design. */
+const appGlobal = globalThis as { __xolaceNativeAppearance?: unknown };
+
 /** A fresh launch: the module and its mocks loaded anew, nothing written yet. */
 async function launch() {
 	vi.resetModules();
 	onWindow.mockClear();
+	appGlobal.__xolaceNativeAppearance = undefined;
 	// The mocked module object outlives resetModules: give it React Native's setter back.
 	const { Appearance } = await import("react-native");
 	Appearance.setColorScheme = onWindow;
@@ -91,7 +95,7 @@ describe("native appearance", () => {
 		setNativeAppearance("light");
 		expect(onWindow).toHaveBeenLastCalledWith("light");
 		setNativeAppearance("system");
-		expect(onWindow).toHaveBeenLastCalledWith("unspecified");
+		expect(onWindow).toHaveBeenLastCalledWith("auto");
 		applyTheme("dark");
 		expect(onWindow).toHaveBeenLastCalledWith("dark");
 		expect(onWindow).toHaveBeenCalledTimes(3);
@@ -103,5 +107,47 @@ describe("native appearance", () => {
 		expect(Appearance.setColorScheme).not.toBe(onWindow);
 		releaseNativeAppearance();
 		expect(Appearance.setColorScheme).toBe(onWindow);
+	});
+
+	it("drops Uniwind's write for a custom theme, so the app's own light or dark stands", async () => {
+		const {
+			applyTheme,
+			setNativeAppearance,
+			releaseNativeAppearance,
+			Uniwind,
+		} = await launch();
+		// Default dark, then the night theme: NavThemeProvider's "dark" doesn't run again.
+		applyTheme("dark");
+		setNativeAppearance("dark");
+		applyTheme("night-dark" as never);
+		expect(Uniwind.setTheme).toHaveBeenLastCalledWith("night-dark");
+		releaseNativeAppearance();
+		expect(onWindow).toHaveBeenCalledExactlyOnceWith("dark");
+		applyTheme("ocean-dark" as never);
+		expect(onWindow).toHaveBeenCalledTimes(1);
+		const { Appearance } = await import("react-native");
+		expect(Appearance.setColorScheme).toBe(onWindow);
+	});
+
+	it("survives a fast refresh while held: still holding, React Native's setter kept", async () => {
+		const { setNativeAppearance } = await launch();
+		setNativeAppearance("light");
+		vi.resetModules();
+		const again = await import("./native-appearance");
+		const { Appearance } = await import("react-native");
+		expect(Appearance.setColorScheme).not.toBe(onWindow);
+		again.setNativeAppearance("dark");
+		again.releaseNativeAppearance();
+		expect(onWindow).toHaveBeenCalledExactlyOnceWith("dark");
+		expect(Appearance.setColorScheme).toBe(onWindow);
+	});
+
+	it("survives a fast refresh after release: writes still go straight through", async () => {
+		const { releaseNativeAppearance } = await launch();
+		releaseNativeAppearance();
+		vi.resetModules();
+		const again = await import("./native-appearance");
+		again.setNativeAppearance("light");
+		expect(onWindow).toHaveBeenCalledExactlyOnceWith("light");
 	});
 });
