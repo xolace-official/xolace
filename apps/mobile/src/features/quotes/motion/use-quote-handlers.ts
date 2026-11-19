@@ -7,12 +7,16 @@ import {
 	tap,
 } from "@/lib/haptics";
 import { QUOTE_COPY } from "../copy";
+import type { DailyQuoteSlot } from "../offer/daily-quote-offer";
 import type { KeptCard, QuoteBackground } from "../quotes-model";
 import { tileTap } from "../quotes-model";
 import type { QuotesScreenValue } from "../quotes-screen-data";
 import { isSheetView, useQuoteUi } from "./quote-ui";
 
 export type QuoteHandlers = ReturnType<typeof quoteHandlers>;
+
+/** The daily quote offer rises after the heart's burst and its toast have landed. */
+const OFFER_AFTER_MS = 900;
 
 /**
  * Everything a tap does on Quotes: the provider's actions joined to the screen's own UI store.
@@ -24,6 +28,20 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 	const now = () => live.current.state;
 	const act = () => live.current.actions;
 
+	/** The first resonate or keep on a device that never offered the daily quote raises it once,
+	 * unless another sheet is up by then. */
+	const maybeOffer = () => {
+		if (!now().offerDailyQuote) {
+			return;
+		}
+		act().offerShown();
+		setTimeout(() => {
+			if (ui().view === "today" && !ui().clear) {
+				ui().set({ view: "offer" });
+			}
+		}, OFFER_AFTER_MS);
+	};
+
 	const resonate = () => {
 		const on = !now().resonated;
 		act().setResonated(on);
@@ -31,6 +49,18 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 		if (on) {
 			ui().burst();
 			ui().showToast(QUOTE_COPY.toasts.resonate);
+			maybeOffer();
+		}
+	};
+
+	const answerOffer = async (slot: DailyQuoteSlot | null) => {
+		ui().set({ view: "today" });
+		if (slot) {
+			playAffirmativePress();
+		}
+		const line = await act().answerOffer(slot);
+		if (line) {
+			ui().showToast(line);
 		}
 	};
 
@@ -52,7 +82,9 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 		ui().showToast(QUOTE_COPY.toasts.kept);
 		if (!(await act().setSaved(true))) {
 			ui().showToast(QUOTE_COPY.errors.generic);
+			return;
 		}
+		maybeOffer();
 	};
 
 	const pick = async (b: QuoteBackground) => {
@@ -132,6 +164,9 @@ function quoteHandlers(live: { current: QuotesScreenValue }) {
 		keptAt: (hist: number) => {
 			ui().set({ hist });
 			act().keptAt(hist);
+		},
+		offerAnswer: (slot: DailyQuoteSlot | null) => {
+			answerOffer(slot).catch(() => ui().showToast(QUOTE_COPY.errors.generic));
 		},
 		pause: () => ui().set({ paused: !ui().paused }),
 		pick: (b: QuoteBackground) => {

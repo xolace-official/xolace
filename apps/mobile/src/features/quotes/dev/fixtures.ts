@@ -111,6 +111,7 @@ export function fixtureState(
 		kept: KEPT,
 		keptCount: 14,
 		lowPower: false,
+		offerDailyQuote: false,
 		quote: QUOTES.medium,
 		reason: reasonLine({
 			hasSessionToday: true,

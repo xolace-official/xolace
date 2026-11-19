@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, use } from "react";
 import type { QuoteUi, ShareFmt } from "./motion/quote-ui";
+import type { DailyQuoteSlot } from "./offer/daily-quote-offer";
 import type { KeptCard, QuoteBackground, Reason } from "./quotes-model";
 import { useQuotes } from "./use-quotes";
 
@@ -29,6 +30,11 @@ export type QuotesState = {
 	active: boolean;
 	soundOn: boolean;
 	kept: readonly KeptCard[];
+	/**
+	 * The daily quote was never chosen and this device hasn't offered it: the first resonate or
+	 * keep raises the offer (B19).
+	 */
+	offerDailyQuote: boolean;
 	/** A dev state opens on a sheet, Words you kept, or Clear view. */
 	initialUi?: Partial<QuoteUi>;
 };
@@ -54,6 +60,10 @@ export type QuotesActions = {
 	/** The still, saved or shared; resolves with an error to show, or null. */
 	saveImage: (fmt: ShareFmt) => Promise<string | null>;
 	shareImage: (fmt: ShareFmt) => Promise<string | null>;
+	/** The daily quote offer is up: this device won't show it again. */
+	offerShown: () => void;
+	/** Its answer: a time turns it on, null is Not now. Resolves with a line to show. */
+	answerOffer: (slot: DailyQuoteSlot | null) => Promise<string | null>;
 };
 
 export type QuotesScreenValue = { state: QuotesState; actions: QuotesActions };
@@ -71,13 +81,16 @@ export function useQuotesScreen(): QuotesScreenValue {
 /** Fills the screen from Convex. A dev state renders `QuotesScreenProvider` with fixtures. */
 export function QuotesScreenData({
 	initialUi,
+	tappedQuoteId,
 	children,
 }: {
 	/** A link's way in: `/quotes?view=kept` opens on Words you kept. */
 	initialUi?: Partial<QuoteUi>;
+	/** The quote a daily quote push opened (`/quotes?quote=<id>`): counted as opened. */
+	tappedQuoteId?: string;
 	children: ReactNode;
 }) {
-	const { state, actions } = useQuotes();
+	const { state, actions } = useQuotes(tappedQuoteId);
 	return (
 		<Context value={{ actions, state: { ...state, initialUi } }}>
 			{children}

@@ -14,7 +14,9 @@ export type QuoteView =
 	| "kept"
 	| "share"
 	| "gate"
-	| "gateBackground";
+	| "gateBackground"
+	/** The one-time daily quote offer (B19). */
+	| "offer";
 export type ShareFmt = "story" | "square";
 
 export type QuoteUi = {
@@ -67,6 +69,7 @@ const SHEETS: readonly QuoteView[] = [
 	"share",
 	"gate",
 	"gateBackground",
+	"offer",
 ];
 /** Views that raise a sheet over the quote. */
 export const isSheetView = (v: QuoteView) => SHEETS.includes(v);

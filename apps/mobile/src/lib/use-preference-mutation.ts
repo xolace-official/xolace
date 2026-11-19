@@ -1,5 +1,16 @@
 import { api } from "@xolace/backend/convex/_generated/api";
+import type { Doc } from "@xolace/backend/dataModel";
 import { useMutation } from "convex/react";
+
+type NotificationPrefs = Doc<"preferences">["notifications"];
+type DailyQuote = NonNullable<NotificationPrefs["dailyQuote"]>;
+
+/** Mirrors the server: setting the daily quote clears a pause and touches no other flag. */
+function dailyQuotePatch(
+	choice: Pick<DailyQuote, "enabled" | "slot">
+): Partial<NotificationPrefs> {
+	return { dailyQuote: { enabled: choice.enabled, slot: choice.slot } };
+}
 
 /** The one optimistic-update mutation for preferences; Convex dedupes the underlying
  * `useQuery`, so sharing is free. */
@@ -13,6 +24,7 @@ export const usePreferenceMutation = () =>
 
 			const hasNotificationsChange =
 				args.notifications !== undefined ||
+				args.notificationDailyQuote !== undefined ||
 				args.notificationReach !== undefined ||
 				args.notificationQuietWindow !== undefined ||
 				args.notificationTimezone !== undefined;
@@ -33,6 +45,8 @@ export const usePreferenceMutation = () =>
 						...(args.notificationTimezone !== undefined && {
 							timezone: args.notificationTimezone,
 						}),
+						...(args.notificationDailyQuote !== undefined &&
+							dailyQuotePatch(args.notificationDailyQuote)),
 					}
 				: undefined;
 

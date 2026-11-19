@@ -1,6 +1,10 @@
 import { createContext, type ReactNode, use } from "react";
 import type { Reach } from "@/features/settings/notifications/copy";
-import type { Quiet } from "@/features/settings/notifications/notifications-model";
+import type {
+	DailyQuote,
+	DailyQuoteSlot,
+	Quiet,
+} from "@/features/settings/notifications/notifications-model";
 import { useNotifications } from "@/features/settings/notifications/use-notifications";
 import type { ComposedSwitch } from "@/features/settings/settings-switch-row";
 
@@ -23,6 +27,8 @@ export type Notifications = {
 		/** As shown: off while the phone blocks them. */
 		reminders: boolean;
 		chat: boolean;
+		/** The daily quote push: off while the phone blocks it. */
+		dailyQuote: DailyQuote;
 		/** Letters' push switch (composed in by the route): off while the phone blocks it; null
 		 * while it, or the screen, loads. */
 		letters: boolean | null;
@@ -35,6 +41,8 @@ export type Notifications = {
 	actions: {
 		setReminders: (on: boolean) => void;
 		setChat: (on: boolean) => void;
+		setDailyQuote: (on: boolean) => void;
+		setDailyQuoteSlot: (slot: DailyQuoteSlot) => void;
 		setLetters: (on: boolean) => void;
 		setReach: (reach: Reach) => void;
 		setQuiet: (on: boolean) => void;

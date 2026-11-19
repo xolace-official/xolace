@@ -10,8 +10,10 @@ import {
 
 const ignore = () => undefined;
 const ACTIONS: QuotesActions = {
+	answerOffer: () => Promise.resolve(null),
 	close: ignore,
 	keptAt: ignore,
+	offerShown: ignore,
 	openPlus: ignore,
 	pickBackground: () => Promise.resolve(true),
 	reflect: ignore,

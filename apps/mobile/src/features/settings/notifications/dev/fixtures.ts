@@ -8,6 +8,8 @@ export const NOTIFY_ACTIONS: Notifications["actions"] = {
 	openReachMeOn: ignore,
 	openSettings: ignore,
 	setChat: ignore,
+	setDailyQuote: ignore,
+	setDailyQuoteSlot: ignore,
 	setLetters: ignore,
 	setQuiet: ignore,
 	setQuietHour: ignore,
@@ -22,6 +24,7 @@ export const NOTIFY_HELD: State = {
 	alertOpen: false,
 	blocked: false,
 	chat: true,
+	dailyQuote: { on: true, paused: false, slot: "morning" },
 	letters: true,
 	loading: false,
 	quiet: { after: 21, before: 8 },
@@ -45,6 +48,18 @@ export const NOTIFY_QUIET_OFF: State = { ...NOTIFY_HELD, quiet: null };
 /** Reminders off: How I reach out and Quiet hours hide, the pill says so. */
 export const NOTIFY_REMINDERS_OFF: State = { ...NOTIFY_HELD, reminders: false };
 
+/** The daily quote off: the time choice hides. */
+export const NOTIFY_DAILY_QUOTE_OFF: State = {
+	...NOTIFY_HELD,
+	dailyQuote: { on: false, paused: false, slot: "morning" },
+};
+
+/** The daily quote paused by its backoff after quotes went unopened. */
+export const NOTIFY_DAILY_QUOTE_PAUSED: State = {
+	...NOTIFY_HELD,
+	dailyQuote: { on: false, paused: true, slot: "evening" },
+};
+
 /** Letters' pushes off (on by default, apart from Privacy › Receive letters). */
 export const NOTIFY_LETTERS_OFF: State = { ...NOTIFY_HELD, letters: false };
 
@@ -53,6 +68,7 @@ export const NOTIFY_BLOCKED: State = {
 	...NOTIFY_HELD,
 	blocked: true,
 	chat: false,
+	dailyQuote: { on: false, paused: false, slot: "morning" },
 	letters: false,
 	reminders: false,
 };

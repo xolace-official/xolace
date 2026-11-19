@@ -9,11 +9,19 @@ import { useEffect, useRef, useState } from "react";
 import { usePaywall } from "@/features/purchases/use-paywall";
 import { usePlusEntitlement } from "@/features/purchases/use-plus-entitlement";
 import { useStablePaginatedQuery } from "@/lib/convex/use-stable-query";
+import { deviceTimezone, preparePushDelivery } from "@/lib/push-delivery";
+import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 import { useAppStore } from "@/store/store";
 import { useSoundMemory } from "./background/sound-memory";
 import { STILLS } from "./background/stills";
 import { useLoopRest } from "./background/use-loop-rest";
 import { QUOTE_COPY } from "./copy";
+import {
+	type DailyQuoteSlot,
+	mayOfferDailyQuote,
+	offerAnswer,
+} from "./offer/daily-quote-offer";
+import { useOfferMemory } from "./offer/offer-memory";
 import {
 	KEPT_PREFETCH,
 	keptCard,
@@ -80,11 +88,19 @@ function patchToday(
 	);
 }
 
-/** Quotes' data: today's quote, the catalogue and the choice, Words you kept, and every write. */
-export function useQuotes(): QuotesScreenValue {
+/**
+ * Quotes' data: today's quote, the catalogue and the choice, Words you kept, the daily quote
+ * offer, and every write. `tappedQuoteId`: the quote a daily quote push opened.
+ */
+export function useQuotes(tappedQuoteId?: string): QuotesScreenValue {
 	const posthog = usePostHog();
 	const today = useQuery(api.dailyQuotes.getToday);
 	const prefs = useQuery(api.preferences.getQuotePreferences);
+	const allPrefs = useQuery(api.preferences.get);
+	const updatePreferences = usePreferenceMutation();
+	const registerToken = useMutation(api.notifications.registerToken);
+	const markOpened = useMutation(api.dailyQuotes.opened.markOpened);
+	const offerSeen = useOfferMemory((s) => s.seen);
 	const catalogue = useQuery(api.quoteBackgrounds.catalogue.list);
 	const savedKey = useQuery(api.preferences.quoteBackground.get);
 	const live = useQuery(api.sessions.getActive);
@@ -126,6 +142,7 @@ export function useQuotes(): QuotesScreenValue {
 	const tracked = useRef({ gate: false, viewed: false });
 
 	const raw = today?.session ?? today?.curated ?? null;
+	const opened = useRef(new Set<string>());
 	const waiting = today !== undefined && prefs !== undefined && raw === null;
 
 	// A first visit (no quote preferences yet) signs up quietly, any curated quote and no
@@ -165,6 +182,19 @@ export function useQuotes(): QuotesScreenValue {
 			quote_type: raw.type,
 		});
 	}, [raw, today?.hasSessionToday, posthog]);
+	// The quote on screen, and the one a push opened (a day late, it's no longer today's), count
+	// as opened: the daily quote push skips an opened day and starts its backoff over.
+	useEffect(() => {
+		for (const id of [raw?._id, tappedQuoteId]) {
+			if (!id || opened.current.has(id)) {
+				continue;
+			}
+			opened.current.add(id);
+			markOpened({ quoteId: id as Id<"daily_quotes"> }).catch((e: unknown) =>
+				console.error("[quotes] markOpened failed", e)
+			);
+		}
+	}, [raw?._id, tappedQuoteId, markOpened]);
 	useEffect(() => {
 		if (!today?.sessionLocked || tracked.current.gate) {
 			return;
@@ -193,6 +223,12 @@ export function useQuotes(): QuotesScreenValue {
 		kept: kept.results.map(keptCard),
 		keptCount: today?.savedCount ?? 0,
 		lowPower: rest.lowPower,
+		offerDailyQuote: mayOfferDailyQuote({
+			chosen: allPrefs
+				? allPrefs.notifications.dailyQuote !== undefined
+				: undefined,
+			seen: offerSeen,
+		}),
 		quote: raw ? { text: plainQuote(raw.text), title: raw.title } : null,
 		reason: reasonLine({
 			hasSessionToday: today?.hasSessionToday ?? false,
@@ -225,8 +261,48 @@ export function useQuotes(): QuotesScreenValue {
 			})
 			.catch((e: unknown) => readable(e));
 
+	/** Turns push on first when this device isn't delivering, the way Settings does. */
+	const answer = (slot: DailyQuoteSlot | null): Promise<string | null> => {
+		posthog.capture("daily_quote_offer_answered", {
+			answer: slot ?? "not_now",
+		});
+		const write = () =>
+			updatePreferences({ notificationDailyQuote: offerAnswer(slot) });
+		if (!slot) {
+			return write().then(() => null);
+		}
+		return preparePushDelivery(
+			allPrefs?.notifications.enabled === true,
+			// Push for the daily quote alone: no first-grant auto-enable of the rest.
+			(pushToken) => registerToken({ autoEnable: false, pushToken })
+		).then((readiness): Promise<string | null> | string | null => {
+			if (readiness === "blocked") {
+				return QUOTE_COPY.dailyQuote.blocked;
+			}
+			if (readiness === "unavailable") {
+				return QUOTE_COPY.errors.generic;
+			}
+			const timezone = deviceTimezone();
+			const zone =
+				readiness === "registered" && timezone
+					? { notificationTimezone: timezone }
+					: {};
+			return updatePreferences({
+				...zone,
+				notificationDailyQuote: offerAnswer(slot),
+			}).then(() =>
+				QUOTE_COPY.dailyQuote.turnedOn(QUOTE_COPY.dailyQuote.slots[slot])
+			);
+		});
+	};
+
 	return {
 		actions: {
+			answerOffer: (slot) =>
+				answer(slot).catch((e: unknown) => {
+					console.error("[quotes] daily quote offer failed", e);
+					return QUOTE_COPY.errors.generic;
+				}),
 			close: () => router.back(),
 			keptAt: (index) => {
 				if (
@@ -235,6 +311,10 @@ export function useQuotes(): QuotesScreenValue {
 				) {
 					kept.loadMore(KEPT_PAGE);
 				}
+			},
+			offerShown: () => {
+				useOfferMemory.setState({ seen: true });
+				posthog.capture("daily_quote_offer_shown", {});
 			},
 			openPlus: (from) => {
 				posthog.capture("quote_plus_opened", { from });

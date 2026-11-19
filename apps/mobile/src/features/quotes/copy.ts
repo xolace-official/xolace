@@ -25,6 +25,23 @@ export const QUOTE_COPY = {
 		},
 	},
 	clearHint: "Tap anywhere to bring everything back",
+	/**
+	 * The one-time daily quote offer (B19), the first time someone resonates with or keeps a
+	 * quote. Never shown again, whatever they answer.
+	 */
+	dailyQuote: {
+		blocked:
+			"Notifications are off for Xolace. You can allow them in Settings.",
+		body: "One a day, at a time that suits you. You can change it or turn it off in Settings.",
+		chooseTime: "Choose time",
+		label: "A daily quote",
+		send: "That time",
+		slots: { afternoon: "Afternoon", evening: "Evening", morning: "Morning" },
+		title: "Want a quote like this each morning?",
+		turnedOn: (slot: string) =>
+			`Today’s quote will come each ${slot.toLowerCase()}`,
+		yes: "Yes",
+	},
 	edit: "Edit",
 	error: "Today’s words didn’t arrive.",
 	errors: {

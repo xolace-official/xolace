@@ -4,6 +4,8 @@ import { FixtureNotifications } from "@/features/settings/notifications/dev/fixt
 import {
 	NOTIFY_BLOCKED,
 	NOTIFY_BLOCKED_ALERT,
+	NOTIFY_DAILY_QUOTE_OFF,
+	NOTIFY_DAILY_QUOTE_PAUSED,
 	NOTIFY_DIRECT_10PM,
 	NOTIFY_HELD,
 	NOTIFY_LETTERS_OFF,
@@ -25,6 +27,18 @@ export const devStates: readonly DevState[] = [
 		options: OPTIONS,
 		Screen: () => <FixtureNotifications state={NOTIFY_HELD} />,
 		title: "Notifications: Warm, held by quiet hours",
+	},
+	{
+		id: "notifications-daily-quote-off",
+		options: OPTIONS,
+		Screen: () => <FixtureNotifications state={NOTIFY_DAILY_QUOTE_OFF} />,
+		title: "Notifications: the daily quote off (B19)",
+	},
+	{
+		id: "notifications-daily-quote-paused",
+		options: OPTIONS,
+		Screen: () => <FixtureNotifications state={NOTIFY_DAILY_QUOTE_PAUSED} />,
+		title: "Notifications: the daily quote paused after unopened ones",
 	},
 	{
 		id: "notifications-letters-off",

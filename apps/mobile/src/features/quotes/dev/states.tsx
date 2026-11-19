@@ -65,6 +65,15 @@ export const devStates: readonly DevState[] = [
 	},
 	{ id: "write", ...state("Write back", "poster", {}, { view: "writing" }) },
 	{
+		id: "daily-quote-offer",
+		...state(
+			"The daily quote offer, after a first resonate",
+			"first-light",
+			{ offerDailyQuote: true, resonated: true },
+			{ view: "offer" }
+		),
+	},
+	{
 		id: "sent",
 		...state(
 			"Reply kept safe",

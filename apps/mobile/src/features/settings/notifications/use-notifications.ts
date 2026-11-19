@@ -11,6 +11,8 @@ import type {
 } from "@/features/settings/notifications/notifications-data";
 import {
 	chatChoice,
+	dailyQuoteChoice,
+	dailyQuoteOf,
 	gentleChoice,
 	gentleRemindersOn,
 	nextNotificationPrefs,
@@ -20,11 +22,8 @@ import {
 } from "@/features/settings/notifications/notifications-model";
 import type { ComposedSwitch } from "@/features/settings/settings-switch-row";
 import { saveFailed } from "@/features/settings/use-save-failed";
-import {
-	getGrantedPushToken,
-	getPushPermissionState,
-	requestPushToken,
-} from "@/lib/push-token";
+import { deviceTimezone, preparePushDelivery } from "@/lib/push-delivery";
+import { getGrantedPushToken, getPushPermissionState } from "@/lib/push-token";
 import { usePreferenceMutation } from "@/lib/use-preference-mutation";
 
 /** Re-reads the OS permission on every foreground, so returning from Settings settles the
@@ -68,70 +67,85 @@ export function useNotifications(
 
 	const notifications = preferences?.notifications;
 
-	// A blocked OS makes both switches read off, so flipping one runs the enable path.
+	// A blocked OS makes every switch read off, so flipping one runs the enable path.
 	const gentleReminders = !osBlocked && gentleRemindersOn(notifications);
 	const chatNotifications =
 		!osBlocked && chatNotificationsAllowed(notifications);
+	const dailyQuote = dailyQuoteOf(notifications);
+	const dailyQuoteOn = !osBlocked && dailyQuote.on;
+	const delivering = gentleReminders || chatNotifications || dailyQuoteOn;
 
 	const syncTimezone = async () => {
+		const timezone = deviceTimezone();
+		if (!timezone) {
+			return;
+		}
 		try {
-			const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-			if (timezone) {
-				await updatePreferences({ notificationTimezone: timezone });
-			}
+			await updatePreferences({ notificationTimezone: timezone });
 		} catch {
 			// Non-blocking
 		}
 	};
 
-	/** Moves both switches at once. Only turning on from a non-delivering state
-	 * consults the OS; nothing is written when the permission route runs out. */
+	/** Turning a kind on from a non-delivering state consults the OS first. False: write nothing
+	 * (the phone blocks it, which opens the alert, or no token came). `autoEnable: false` registers
+	 * the device for the daily quote alone, without the server's first-grant switch-everything-on. */
+	const readyToDeliver = async (autoEnable = true) => {
+		const readiness = await preparePushDelivery(delivering, (pushToken) =>
+			registerToken(autoEnable ? { pushToken } : { autoEnable, pushToken })
+		);
+		if (readiness === "blocked") {
+			setOsBlocked(true);
+			setAlertOpen(true);
+			return false;
+		}
+		setOsBlocked(false);
+		if (readiness === "registered") {
+			await syncTimezone();
+		}
+		return readiness !== "unavailable";
+	};
+
+	/** Nothing wants delivery any more: drop this installation's token (another device's stays). */
+	const dropToken = async () => {
+		try {
+			const token = await getGrantedPushToken();
+			if (token) {
+				await removeToken({ pushToken: token });
+			}
+		} catch {
+			// Best-effort
+		}
+	};
+
+	/** Moves gentle reminders and chat at once; the daily quote keeps its stored choice. */
 	const applyToggles = async (next: { gentle: boolean; chat: boolean }) => {
 		const turningOn =
 			(next.gentle && !gentleReminders) || (next.chat && !chatNotifications);
-		const alreadyDelivering = gentleReminders || chatNotifications;
-
-		if (turningOn) {
-			const permission = await getPushPermissionState();
-			if (permission === "blocked") {
-				setOsBlocked(true);
-				setAlertOpen(true);
-				return;
-			}
-			setOsBlocked(false);
-
-			// The token is dropped when both families go quiet, so re-register here.
-			if (permission === "undetermined" || !alreadyDelivering) {
-				const token = await requestPushToken();
-				if (!token) {
-					return;
-				}
-				try {
-					await registerToken({ pushToken: token });
-				} catch {
-					// Nothing is written, so the switch stays where it was.
-					return;
-				}
-				await syncTimezone();
-			}
+		if (turningOn && !(await readyToDeliver())) {
+			return;
 		}
-
 		// Lands after registerToken, whose first-grant auto-enable would otherwise
 		// switch on a family the user didn't ask for.
-		updatePreferences({ notifications: nextNotificationPrefs(next) }).catch(
-			saveFailed
-		);
+		updatePreferences({
+			notifications: nextNotificationPrefs(next),
+		}).catch(saveFailed);
+		// The daily quote still needs this device's token.
+		if (!(next.gentle || next.chat || dailyQuoteChoice(notifications))) {
+			await dropToken();
+		}
+	};
 
-		if (!(next.gentle || next.chat)) {
-			try {
-				// Scoped to this installation; another device's token must stay.
-				const token = await getGrantedPushToken();
-				if (token) {
-					await removeToken({ pushToken: token });
-				}
-			} catch {
-				// Best-effort
-			}
+	/** The daily quote: its own switch, so it touches no other kind or the master. */
+	const applyDailyQuote = async (on: boolean) => {
+		if (on && !dailyQuoteOn && !(await readyToDeliver(false))) {
+			return;
+		}
+		updatePreferences({
+			notificationDailyQuote: { enabled: on, slot: dailyQuote.slot },
+		}).catch(saveFailed);
+		if (!(on || gentleReminders || chatNotifications)) {
+			await dropToken();
 		}
 	};
 
@@ -157,6 +171,20 @@ export function useNotifications(
 				applyToggles({ chat: on, gentle: gentleChoice(notifications) }).catch(
 					() => undefined
 				);
+			},
+			setDailyQuote: (on) => {
+				if (loading) {
+					return;
+				}
+				applyDailyQuote(on).catch(() => undefined);
+			},
+			setDailyQuoteSlot: (slot) => {
+				updatePreferences({
+					notificationDailyQuote: {
+						enabled: dailyQuoteChoice(notifications),
+						slot,
+					},
+				}).catch(saveFailed);
 			},
 			setLetters: (on) => {
 				// A blocked phone can't deliver it: the same alert as the other switches. It sets only
@@ -199,6 +227,7 @@ export function useNotifications(
 			alertOpen,
 			blocked: osBlocked,
 			chat: chatNotifications,
+			dailyQuote: { ...dailyQuote, on: dailyQuoteOn },
 			letters: loading || letters === null ? null : !osBlocked && letters.on,
 			loading,
 			quiet: toQuiet(window),
