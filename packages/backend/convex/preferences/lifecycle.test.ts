@@ -17,6 +17,7 @@ import { api, internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock, ragMock } from "../test/mocks.helpers";
+import { seedQuoteBackgrounds } from "../test/quoteBackgrounds.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 vi.mock("../rag", () => ragMock());
@@ -56,12 +57,13 @@ async function withoutPreferencesRow() {
 
 /** Every redesign field set, through the new mutations. */
 async function setAll(user: SeededUser) {
+	await seedQuoteBackgrounds(user.root);
 	await user.t.mutation(api.preferences.profileCards.setHidden, {
 		card: "week",
 		hidden: true,
 	});
 	await user.t.mutation(api.preferences.quoteBackground.set, {
-		background: "last-light",
+		background: "rain-window",
 	});
 	await user.t.mutation(api.preferences.explore.setUsesSessions, {
 		usesSessions: false,
@@ -136,7 +138,7 @@ describe("erasure", () => {
 		expect(prefs).not.toBeNull();
 		expect(prefs?.exploreHiddenContinue).toBeUndefined();
 		expect(prefs?.hiddenProfileCards).toEqual(["week"]);
-		expect(prefs?.quoteBackground).toBe("last-light");
+		expect(prefs?.quoteBackground).toBe("rain-window");
 		expect(prefs?.exploreUsesSessions).toBe(false);
 	});
 

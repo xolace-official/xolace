@@ -461,19 +461,31 @@ export const profileCardValidator = v.union(
 	v.literal("week")
 );
 
-/** The background behind the daily quote (`quotes.md` §1), in the sheet's order. */
-export const quoteBackgroundValidator = v.union(
-	v.literal("poster"),
-	v.literal("first-light"),
-	v.literal("mountain-air"),
-	v.literal("deep-forest"),
-	v.literal("night"),
-	v.literal("quiet-lake"),
-	v.literal("golden-meadow"),
-	v.literal("birds-at-dusk"),
-	v.literal("last-light"),
-	v.literal("hearth")
+/**
+ * The background behind the daily quote: a key in the `quote_backgrounds`
+ * catalogue (B18). Widened from B7's fixed list of ten so backgrounds can be
+ * added, retired or moved between free and Xolace+ without a release; every
+ * key that list accepted is still a string, so the change is additive.
+ */
+export const quoteBackgroundValidator = v.string();
+
+/** A background is a photo (`still`) or a hosted video loop (`loop`). */
+export const quoteBackgroundKindValidator = v.union(
+	v.literal("still"),
+	v.literal("loop")
 );
+
+/** The words' colour over it: `dark` on the light Poster, `light` over the scrim. */
+export const quoteBackgroundInkValidator = v.union(
+	v.literal("light"),
+	v.literal("dark")
+);
+
+/** One hosted file of a loop, with the SHA-256 the upload script compares. */
+export const quoteBackgroundFileValidator = v.object({
+	sha256: v.string(),
+	storageId: v.id("_storage"),
+});
 
 /** A card on Explore's "Pick up where you left off": a track (an episode
  * included) or a Lantern entry. */

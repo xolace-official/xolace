@@ -1,0 +1,156 @@
+[
+  {
+    "key": "poster",
+    "name": "Poster",
+    "kind": "still",
+    "ink": "dark",
+    "plus": false
+  },
+  {
+    "key": "first-light",
+    "name": "First light",
+    "kind": "still",
+    "ink": "light",
+    "plus": false
+  },
+  {
+    "key": "night",
+    "name": "Night",
+    "kind": "still",
+    "ink": "light",
+    "plus": false
+  },
+  {
+    "key": "mountain-air",
+    "name": "Mountain air",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "deep-forest",
+    "name": "Deep forest",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "still-water",
+    "name": "Still water",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "dunes",
+    "name": "Dunes",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "shallows",
+    "name": "Shallows",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "snowfield",
+    "name": "Snowfield",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "wildflowers",
+    "name": "Wildflowers",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "moonrise",
+    "name": "Moonrise",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "dusk-clouds",
+    "name": "Dusk clouds",
+    "kind": "still",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "rain-window",
+    "name": "Rain on glass",
+    "kind": "loop",
+    "ink": "light",
+    "plus": false
+  },
+  {
+    "key": "quiet-lake",
+    "name": "Quiet lake",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "shoreline",
+    "name": "Shoreline",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "hearth",
+    "name": "Hearth",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "forest-rain",
+    "name": "Forest rain",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "golden-meadow",
+    "name": "Golden meadow",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "snowfall",
+    "name": "Snowfall",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "night-sky",
+    "name": "Night sky",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "stream",
+    "name": "Stream",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  },
+  {
+    "key": "above-clouds",
+    "name": "Above clouds",
+    "kind": "loop",
+    "ink": "light",
+    "plus": true
+  }
+]

@@ -92,3 +92,7 @@ The backend deploys before app-store review clears, so the *old* app runs agains
   `outreach/telegram/bot:configureBot` is run by hand, never on deploy. Your worktree's
   dev deployment has no bot unless you make one. Runbook: `docs/setup/telegram.md`.
 - Codegen drift fails CI: commit `convex/_generated` changes with the code.
+- Quote backgrounds (`convex/quoteBackgrounds/`, B18) are a catalogue per deployment:
+  until `bun run quote-backgrounds:upload` has run there, `catalogue.list` is empty and
+  the app shows only what it draws in code. The art goes through
+  `quote-backgrounds:process` first; both scripts' headers say how.

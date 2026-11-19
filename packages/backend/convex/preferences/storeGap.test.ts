@@ -15,6 +15,7 @@ import { api } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { asNewUser, type SeededUser } from "../test/harness.helpers";
 import { aggregatesMock } from "../test/mocks.helpers";
+import { seedQuoteBackgrounds } from "../test/quoteBackgrounds.helpers";
 
 vi.mock("../lib/aggregates", () => aggregatesMock());
 
@@ -41,12 +42,13 @@ const row = (user: SeededUser) =>
 
 /** Every redesign field set, through the new mutations. */
 async function setAll(user: SeededUser) {
+	await seedQuoteBackgrounds(user.root);
 	await user.t.mutation(api.preferences.profileCards.setHidden, {
 		card: "rank",
 		hidden: true,
 	});
 	await user.t.mutation(api.preferences.quoteBackground.set, {
-		background: "birds-at-dusk",
+		background: "rain-window",
 	});
 	await user.t.mutation(api.preferences.explore.setUsesSessions, {
 		usesSessions: false,
@@ -107,7 +109,7 @@ describe("redesign preferences and shipped builds", () => {
 			exploreHiddenContinue: [{ item: { id: entryId, kind: "entry" } }],
 			exploreUsesSessions: false,
 			hiddenProfileCards: ["rank"],
-			quoteBackground: "birds-at-dusk",
+			quoteBackground: "rain-window",
 		});
 	});
 
