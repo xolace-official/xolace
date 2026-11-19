@@ -19,7 +19,6 @@ const REPLACED_FEATURES = [
 	"browse",
 	"follow-up",
 	"intake",
-	"kindling",
 	"quotes",
 	"reach-me-on",
 	"starter-suggestions",
