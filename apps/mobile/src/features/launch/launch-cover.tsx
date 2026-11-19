@@ -1,8 +1,7 @@
-import * as Sentry from "@sentry/react-native";
 import { Image } from "expo-image";
 import { useObserve } from "expo-observe";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import { Platform, View } from "react-native";
 import Animated, {
 	Easing,
@@ -20,16 +19,18 @@ import { useOSReducedMotion } from "@/lib/motion/os-reduced-motion";
 import { releaseNativeAppearance } from "@/lib/native-appearance";
 import { useAppStore } from "@/store/store";
 import { LAUNCH_COPY } from "./copy";
+import { runCoverClock } from "./launch-clock";
 import {
 	COVER_CLASS,
-	coverMayLeave,
 	EXIT_LIFT,
+	type HoldReason,
 	logoBox,
 	LAUNCH_TIMING as T,
 } from "./launch-model";
 import { useLaunch } from "./launch-store";
+import { useLaunchReports } from "./use-launch-reports";
 
-/** The native splash's own logo (`app.config.ts`, `expo-splash-screen`). */
+/** The native splash's own logo (`native-splash.ts`, `expo-splash-screen`). */
 const LOGO = require("@/assets/images/icons/splash-icon.png");
 const BOX = logoBox(Platform.OS);
 const LOGO_SIZE = { height: BOX, width: BOX };
@@ -47,10 +48,13 @@ const BREATH_PEAK = { scale: BREATH.scale, translateY: -BREATH.rise };
 export function LaunchCover() {
 	const run = useLaunch((s) => s.run);
 	const gone = useLaunch((s) => s.phase === "gone");
-	if (gone) {
-		return null;
-	}
-	return <Cover key={run} />;
+	return (
+		<>
+			{/* Outlives the cover: a launch that timed out is interactive when its holds clear. */}
+			<CoverClock key={`clock-${run}`} />
+			{gone ? null : <Cover key={`cover-${run}`} />}
+		</>
+	);
 }
 
 /** Hides the native splash, once per process; the cover under it is the same picture. */
@@ -63,6 +67,32 @@ function hideNativeSplash() {
 	SplashScreen.hideAsync().catch(() => undefined);
 }
 
+/** When the cover leaves (`launch-clock.ts`), with the app's reports. One per cover. */
+function CoverClock() {
+	const { markInteractive } = useObserve();
+	const reports = useLaunchReports();
+	const timedOut = useEffectEvent((holds: readonly HoldReason[]) =>
+		reports.coverTimedOut(holds)
+	);
+	// Time to interactive: under the cover nothing can be tapped, and after a timeout the first
+	// screen is still loading until its holds clear.
+	const interactive = useEffectEvent((coverTimedOut: boolean) =>
+		markInteractive({ params: { coverTimedOut } })
+	);
+	useEffect(
+		() =>
+			runCoverClock(useLaunch, {
+				hideNativeSplash,
+				interactive,
+				leave: () => useLaunch.getState().leave(),
+				releaseNativeAppearance,
+				timedOut,
+			}),
+		[]
+	);
+	return null;
+}
+
 /** One breath, slower at night, as Today's loops: read once, the cover is up for seconds. */
 const launchBreathPeriod = () =>
 	breathPeriod(
@@ -72,75 +102,40 @@ const launchBreathPeriod = () =>
 
 function Cover() {
 	const reduced = useOSReducedMotion();
-	const { markInteractive } = useObserve();
-	const holds = useLaunch((s) => s.holds);
+	const leaving = useLaunch((s) => s.phase !== "cover");
 	const scheme = useLaunch((s) => s.scheme);
 	const [period] = useState(launchBreathPeriod);
-	const [timedOut, setTimedOut] = useState(false);
-	const [leaving, setLeaving] = useState(false);
 	const opacity = useSharedValue(1);
 	const lift = useSharedValue(0);
 
+	// The clock let it go: fade over the first screen, a small lift unless Reduce Motion is on.
 	useEffect(() => {
-		const timers = [
-			// If the art never reports it is on screen, don't leave the native splash up.
-			setTimeout(hideNativeSplash, T.nativeHideFallbackMs),
-			// Never hang: past this, whatever still loads shows its own quiet state.
-			setTimeout(() => setTimedOut(true), T.maxCoverMs),
-		];
-		return () => {
-			for (const id of timers) {
-				clearTimeout(id);
-			}
-		};
-	}, []);
-
-	const mayLeave = coverMayLeave(holds, timedOut);
-	// Leave once nothing holds it, after the first screen has had a frame on screen.
-	useEffect(() => {
-		if (!mayLeave || leaving) {
+		if (!leaving) {
 			return;
 		}
-		const id = setTimeout(() => {
-			const { holds: still, leave, done } = useLaunch.getState();
-			if (still.length > 0) {
-				Sentry.addBreadcrumb({
-					category: "launch.cover",
-					data: { holds: still },
-					level: "warning",
-					message: "launch cover timed out",
-				});
-			}
-			hideNativeSplash();
-			releaseNativeAppearance();
-			// Time to interactive: under the cover nothing could be tapped yet.
-			markInteractive();
-			setLeaving(true);
-			leave();
-			const duration = reduced ? T.reducedExitMs : T.exitMs;
-			if (!reduced) {
-				lift.set(
-					withTiming(1, {
-						duration,
-						easing: Easing.out(Easing.cubic),
-						...PLAY_AS_CHOSEN,
-					})
-				);
-			}
-			opacity.set(
-				withTiming(
-					0,
-					{ duration, easing: Easing.out(Easing.quad), ...PLAY_AS_CHOSEN },
-					(finished) => {
-						if (finished) {
-							scheduleOnRN(done);
-						}
-					}
-				)
+		const duration = reduced ? T.reducedExitMs : T.exitMs;
+		if (!reduced) {
+			lift.set(
+				withTiming(1, {
+					duration,
+					easing: Easing.out(Easing.cubic),
+					...PLAY_AS_CHOSEN,
+				})
 			);
-		}, T.settleMs);
-		return () => clearTimeout(id);
-	}, [mayLeave, leaving, reduced, lift, opacity, markInteractive]);
+		}
+		const { done } = useLaunch.getState();
+		opacity.set(
+			withTiming(
+				0,
+				{ duration, easing: Easing.out(Easing.quad), ...PLAY_AS_CHOSEN },
+				(finished) => {
+					if (finished) {
+						scheduleOnRN(done);
+					}
+				}
+			)
+		);
+	}, [leaving, reduced, lift, opacity]);
 
 	const coverStyle = useAnimatedStyle(() => ({ opacity: opacity.get() }));
 	const liftStyle = useAnimatedStyle(() => {

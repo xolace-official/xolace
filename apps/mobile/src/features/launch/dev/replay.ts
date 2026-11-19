@@ -1,6 +1,7 @@
 import { type Href, router } from "expo-router";
 import { Uniwind } from "uniwind";
 import { findVariant } from "@/design/themes";
+import type { HoldReason } from "@/features/launch/launch-model";
 import { useLaunch } from "@/features/launch/launch-store";
 
 /**
@@ -10,7 +11,7 @@ import { useLaunch } from "@/features/launch/launch-store";
  */
 export type LaunchReplay = {
 	/** What holds the cover, as the real step would (`gate`, `bootstrap`). */
-	reason: string;
+	reason: HoldReason;
 	/** How long that loading takes. Past `LAUNCH_TIMING.maxCoverMs` the cover leaves anyway. */
 	holdMs: number;
 	/** The first screen under the cover: `dismissTo` for a tab, `replace` for anything else. */

@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { LAUNCH_COPY } from "./copy";
-import { LAUNCH_TIMING } from "./launch-model";
+import { holdShows, waitForQuietSpinner } from "./launch-clock";
+import type { HoldReason } from "./launch-model";
 import { useLaunchHold, useLaunchRevealed } from "./launch-store";
 
 /**
@@ -11,24 +12,22 @@ import { useLaunchHold, useLaunchRevealed } from "./launch-store";
  * it is a quiet loading state on the theme's background: a spinner, shown only if the wait runs
  * past `quietSpinnerAfterMs`, so a load that resolves at once shows nothing.
  */
-export function LaunchHold({ reason }: { reason: string }) {
+export function LaunchHold({ reason }: { reason: HoldReason }) {
 	useLaunchHold(true, reason);
 	const revealed = useLaunchRevealed();
-	return revealed ? <QuietLoading /> : null;
-}
-
-function QuietLoading() {
-	const [shown, setShown] = useState(false);
+	const [spinnerDue, setSpinnerDue] = useState(false);
 	useEffect(() => {
-		const id = setTimeout(
-			() => setShown(true),
-			LAUNCH_TIMING.quietSpinnerAfterMs
-		);
-		return () => clearTimeout(id);
-	}, []);
+		if (revealed) {
+			return waitForQuietSpinner(() => setSpinnerDue(true));
+		}
+	}, [revealed]);
+	const shows = holdShows(revealed, spinnerDue);
+	if (shows === "nothing") {
+		return null;
+	}
 	return (
 		<View className="flex-1 items-center justify-center bg-background">
-			{shown ? (
+			{shows === "spinner" ? (
 				<Animated.View entering={FadeIn}>
 					<ActivityIndicator
 						accessibilityLabel={LAUNCH_COPY.loading}

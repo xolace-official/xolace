@@ -19,7 +19,6 @@ import {
 import { useLaunchFonts } from "@/design/fonts";
 import { LaunchCover } from "@/features/launch/launch-cover";
 import { LaunchHold } from "@/features/launch/launch-hold";
-import { useLaunchHold } from "@/features/launch/launch-store";
 import { isGroupOpen, rootGate } from "@/features/navigation/root-gate";
 import { ReflectDraftGuard } from "@/features/reflect/reflect-draft";
 import { useOtaUpdate } from "@/helpers/hooks/use-ota-update";
@@ -220,9 +219,9 @@ function RootLayout() {
 	});
 
 	// The theme's font pair, Default's and the fixed faces (src/design/fonts.ts). The launch
-	// cover (src/features/launch) hides the native splash and stays up until they're in.
+	// cover (src/features/launch) stays up until they're in; if they hang past it, the hold shows
+	// its quiet spinner rather than an empty window.
 	const fontsReady = useLaunchFonts();
-	useLaunchHold(!fontsReady, "fonts");
 
 	return (
 		<>
@@ -237,7 +236,9 @@ function RootLayout() {
 						/>
 					</NavThemeProvider>
 				</RootProvider>
-			) : null}
+			) : (
+				<LaunchHold reason="fonts" />
+			)}
 			<LaunchCover />
 		</>
 	);

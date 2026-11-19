@@ -5,6 +5,7 @@ import { NATIVE_SPLASH } from "../../../native-splash";
 import {
 	COVER_CLASS,
 	coverMayLeave,
+	type HoldReason,
 	initialLaunch,
 	isRevealed,
 	LAUNCH_TIMING,
@@ -71,7 +72,7 @@ describe("the launch cover matches the native splash", () => {
 	});
 });
 
-const up = (holds: string[] = []): LaunchState => ({
+const up = (holds: HoldReason[] = []): LaunchState => ({
 	...initialLaunch("dark"),
 	holds,
 });

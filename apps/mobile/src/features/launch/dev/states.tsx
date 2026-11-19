@@ -2,6 +2,7 @@
 import type { DevState } from "@/dev/dev-state";
 import { LaunchHold } from "@/features/launch/launch-hold";
 import { LAUNCH_TIMING } from "@/features/launch/launch-model";
+import type { LaunchReplay } from "./replay";
 import { ReplayScreen } from "./replay-screen";
 
 const NO_HEADER = { headerShown: false };
@@ -11,8 +12,8 @@ const SLOW_MS = 3000;
 const RETRY_MS = 2500;
 
 const TODAY = { dismissTo: "/today" } as const;
-const FAST = { holdMs: 0, reason: "gate", under: TODAY };
-const SLOW = { holdMs: SLOW_MS, reason: "gate", under: TODAY };
+const FAST: LaunchReplay = { holdMs: 0, reason: "gate", under: TODAY };
+const SLOW: LaunchReplay = { holdMs: SLOW_MS, reason: "gate", under: TODAY };
 const SIGNED_OUT = {
 	holdMs: 600,
 	reason: "gate",
@@ -28,8 +29,12 @@ const DEEP_LINK = {
 	reason: "gate",
 	under: { replace: "/achievements" },
 } as const;
-const RETRY = { holdMs: RETRY_MS, reason: "bootstrap", under: TODAY };
-const STUCK = { holdMs: 0, reason: "gate" };
+const RETRY: LaunchReplay = {
+	holdMs: RETRY_MS,
+	reason: "bootstrap",
+	under: TODAY,
+};
+const STUCK: LaunchReplay = { holdMs: 0, reason: "gate" };
 
 /** @public Found by `src/dev/discovered.ts` (`require.context`), which knip can't follow. */
 export const devStates: readonly DevState[] = [

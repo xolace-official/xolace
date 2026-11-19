@@ -1,8 +1,8 @@
 /**
  * The launch cover's numbers and rules, in one place. The cover's first frame has to be the
- * native splash's last one (`app.config.ts`, `expo-splash-screen`): the same art, the same box,
+ * native splash's last one (`native-splash.ts`, `expo-splash-screen`): the same art, the same box,
  * the same colour (`--color-launch-*` in global.css). `launch-model.test.ts` holds this file, the
- * app config, global.css and the Default theme's backgrounds together.
+ * splash options, global.css and the Default theme's backgrounds together.
  */
 export type LaunchScheme = "light" | "dark";
 
@@ -13,7 +13,7 @@ export const COVER_CLASS: Record<LaunchScheme, string> = {
 };
 
 /**
- * The app config's `imageWidth`: the native splash draws the logo aspect-fit in a square this
+ * The splash's `imageWidth`: the native splash draws the logo aspect-fit in a square this
  * size, centred. iOS draws it at 200 pt; Android 12+ puts it in the icon's 288 dp canvas at 76 dp,
  * centred on the window, so the cover draws it there at that size.
  */
@@ -60,10 +60,13 @@ export const EXIT_LIFT = { scale: 1.05, translateY: -6 } as const;
  */
 export type LaunchPhase = "cover" | "exiting" | "gone";
 
+/** What can hold the cover at launch: the font pair, the root gate, the account's bootstrap. */
+export type HoldReason = "fonts" | "gate" | "bootstrap";
+
 export type LaunchState = {
 	phase: LaunchPhase;
-	/** What still holds the cover up, one entry per hold (`fonts`, `gate`, `bootstrap`). */
-	holds: readonly string[];
+	/** What still holds the cover up, one entry per hold. */
+	holds: readonly HoldReason[];
 	/** Bumped by a dev replay, so the cover remounts from its first frame. */
 	run: number;
 	/** The cover's light or dark: the phone's at launch, as the native splash is. */
@@ -71,8 +74,8 @@ export type LaunchState = {
 };
 
 export type LaunchEvent =
-	| { type: "hold"; reason: string }
-	| { type: "release"; reason: string }
+	| { type: "hold"; reason: HoldReason }
+	| { type: "release"; reason: HoldReason }
 	| { type: "leave" }
 	| { type: "done" }
 	| { type: "replay"; scheme: LaunchScheme };
@@ -85,7 +88,10 @@ export const initialLaunch = (scheme: LaunchScheme): LaunchState => ({
 });
 
 /** Drops one hold with this reason, if there is one. */
-function without(holds: readonly string[], reason: string): readonly string[] {
+function without(
+	holds: readonly HoldReason[],
+	reason: HoldReason
+): readonly HoldReason[] {
 	const at = holds.indexOf(reason);
 	return at === -1 ? holds : [...holds.slice(0, at), ...holds.slice(at + 1)];
 }
@@ -123,7 +129,7 @@ export function launchStep(
 
 /** The cover may start leaving: nothing holds it, or it has been up for `maxCoverMs`. */
 export const coverMayLeave = (
-	holds: readonly string[],
+	holds: readonly HoldReason[],
 	timedOut: boolean
 ): boolean => holds.length === 0 || timedOut;
 
